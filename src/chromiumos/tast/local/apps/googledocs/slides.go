@@ -27,7 +27,10 @@ import (
 // slideName represents the name of the Google Slides web area.
 const slideName = "Google Slides"
 
-var slideWebArea = nodewith.NameContaining(slideName).Role(role.RootWebArea)
+var (
+	slideWebArea = nodewith.NameContaining(slideName).Role(role.RootWebArea)
+	navigation   = nodewith.Role(role.Navigation).Ancestor(slideWebArea)
+)
 
 // NewGoogleSlides returns an action that creates a new google slides from web.
 func NewGoogleSlides(ctx context.Context, tconn *chrome.TestConn, br *browser.Browser, uiHandler cuj.UIActionHandler, newWindow bool) error {
@@ -45,10 +48,10 @@ func NewGoogleSlides(ctx context.Context, tconn *chrome.TestConn, br *browser.Br
 	if err := webutil.WaitForQuiescence(ctx, conn, longUITimeout); err != nil {
 		return errors.Wrap(err, "failed to wait for page to finish loading")
 	}
-	filmstripView := nodewith.Name("Filmstrip view").Role(role.TabPanel)
 	gotIt := nodewith.Name("Got it").First()
+
 	return uiauto.Combine("confirm to enter Google Slides",
-		ui.WithTimeout(longUITimeout).WaitUntilExists(filmstripView),
+		ui.WithTimeout(longUITimeout).WaitUntilExists(navigation),
 		uiauto.IfSuccessThen(ui.Exists(gotIt), ui.DoDefault(gotIt)),
 	)(ctx)
 }
@@ -57,10 +60,10 @@ func NewGoogleSlides(ctx context.Context, tconn *chrome.TestConn, br *browser.Br
 func NewSlide(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, title, content, pageNumber string) action.Action {
 	ui := uiauto.New(tconn)
 	newSlide := nodewith.Name("New slide (Ctrl+M)").Role(role.Button).Ancestor(slideWebArea)
-	filmstripView := nodewith.Name("Filmstrip view").Role(role.Navigation).Ancestor(slideWebArea)
 	titleNode := nodewith.Name("title").Role(role.StaticText).Ancestor(slideWebArea).First()
-	pageNumberText := nodewith.Name(pageNumber).Role(role.StaticText).Ancestor(filmstripView)
+	pageNumberText := nodewith.Name(pageNumber).Role(role.StaticText).Ancestor(navigation)
 	textNode := nodewith.Name("text").Role(role.StaticText).Ancestor(slideWebArea).First()
+
 	return uiauto.NamedCombine(fmt.Sprintf("create a new slide with page number %s and edit its content", pageNumber),
 		ui.WaitUntilExists(newSlide),
 		ui.WithTimeout(longUITimeout).DoDefaultUntil(newSlide,
