@@ -62,8 +62,8 @@ type Helper struct {
 	// BiosServiceClient provides bios related services such as GBBFlags manipulation.
 	BiosServiceClient fwpb.BiosServiceClient
 
-	// CgptServiceClient provides cgpt related services such as reading CGPT table.
-	CgptServiceClient fwpb.CgptServiceClient
+	// KernelServiceClient provides kernel related services such as reading CGPT table.
+	KernelServiceClient fwpb.KernelServiceClient
 
 	// TPMServiceClient provides TPM related services.
 	TPMServiceClient fwpb.TPMServiceClient
@@ -319,15 +319,15 @@ func (h *Helper) RequireRPCUtils(ctx context.Context) error {
 	return nil
 }
 
-// RequireCgptServiceClient creates a firmware.CgptServiceClient, unless one already exists.
-func (h *Helper) RequireCgptServiceClient(ctx context.Context) error {
-	if h.CgptServiceClient != nil {
+// RequireKernelServiceClient creates a firmware.KernelServiceClient, unless one already exists.
+func (h *Helper) RequireKernelServiceClient(ctx context.Context) error {
+	if h.KernelServiceClient != nil {
 		return nil
 	}
 	if err := h.RequireRPCClient(ctx); err != nil {
 		return errors.Wrap(err, "requiring RPC client")
 	}
-	h.CgptServiceClient = fwpb.NewCgptServiceClient(h.RPCClient.Conn)
+	h.KernelServiceClient = fwpb.NewKernelServiceClient(h.RPCClient.Conn)
 	return nil
 }
 
@@ -359,7 +359,7 @@ func (h *Helper) RequireTPMServiceClient(ctx context.Context) error {
 // CloseRPCConnection shuts down the RPC client (if present), and removes any RPC clients that the Helper was tracking.
 func (h *Helper) CloseRPCConnection(ctx context.Context) error {
 	defer func() {
-		h.RPCClient, h.RPCUtils, h.BiosServiceClient, h.CgptServiceClient, h.TPMServiceClient = nil, nil, nil, nil, nil
+		h.RPCClient, h.RPCUtils, h.BiosServiceClient, h.KernelServiceClient, h.TPMServiceClient = nil, nil, nil, nil, nil
 	}()
 	if h.RPCClient != nil {
 		testing.ContextLog(ctx, "Closing RPCClient connection")

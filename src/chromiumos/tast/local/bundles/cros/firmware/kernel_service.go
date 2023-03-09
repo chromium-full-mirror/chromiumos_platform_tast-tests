@@ -1,0 +1,264 @@
+// Copyright 2023 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package firmware
+
+import (
+	"context"
+	"os"
+	"strconv"
+	"strings"
+
+	"github.com/golang/protobuf/ptypes/empty"
+	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/emptypb"
+
+	"chromiumos/tast/common/testexec"
+	"chromiumos/tast/errors"
+	"chromiumos/tast/local/kernel"
+	pb "chromiumos/tast/services/cros/firmware"
+	"chromiumos/tast/testing"
+)
+
+func init() {
+	testing.AddService(&testing.Service{
+		Register: func(srv *grpc.Server, s *testing.ServiceState) {
+			pb.RegisterKernelServiceServer(srv, &KernelService{s: s})
+		},
+	})
+}
+
+// KernelService implements tast.cros.firmware.KernelService.
+type KernelService struct {
+	s *testing.ServiceState
+}
+
+// labelToLabelEnum maps the partition label name from cgpt table to the PartitionLabel enum.
+var labelToLabelEnum = map[string]pb.PartitionLabel{
+	"KERN-A":   pb.PartitionLabel_KERNEL_A,
+	"KERN-B":   pb.PartitionLabel_KERNEL_B,
+	"MINIOS-A": pb.PartitionLabel_MINIOS_A,
+	"MINIOS-B": pb.PartitionLabel_MINIOS_B,
+	"ROOT-A":   pb.PartitionLabel_ROOTFS_A,
+	"ROOT-B":   pb.PartitionLabel_ROOTFS_B,
+}
+
+// GetCgptTable returns structure containing metadata with CGPT partitions
+func (ks *KernelService) GetCgptTable(ctx context.Context, req *pb.GetCgptTableRequest) (resp *pb.GetCgptTableResponse, err error) {
+	testing.ContextLog(ctx, "Reading CGPT table for device ", req.BlockDevice)
+	partitionTable, err := kernel.GetCgptTable(ctx, req.BlockDevice)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to read cgpt table")
+	}
+
+	return &pb.GetCgptTableResponse{CgptTable: partitionTable}, nil
+}
+
+// GetRawHeader returns the raw header of CGPT partition (first 4096 bytes)
+func (ks *KernelService) GetRawHeader(ctx context.Context, req *pb.GetRawHeaderRequest) (*pb.GetRawHeaderResponse, error) {
+	if err := testexec.CommandContext(ctx, "dd", "if="+req.PartitionPath, "of=/tmp/cgpt-header", "bs=4096", "count=1", "conv=sync").Run(); err != nil {
+		return nil, errors.Wrap(err, "failed to read raw header from partition")
+	}
+	defer os.Remove("/tmp/cgpt-header")
+	rawHeader, err := os.ReadFile("/tmp/cgpt-header")
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to read raw header dump")
+	}
+	return &pb.GetRawHeaderResponse{
+		RawHeader: rawHeader,
+	}, nil
+}
+
+// WriteRawHeader writes the raw CGPT header into chosen partitionpartition
+func (ks *KernelService) WriteRawHeader(ctx context.Context, req *pb.WriteRawHeaderRequest) (*empty.Empty, error) {
+	if err := os.WriteFile("/tmp/cgpt-header", req.RawHeader, os.FileMode(0666)); err != nil {
+		return nil, errors.Wrap(err, "failed to save raw header into temporary file")
+	}
+	defer os.Remove("/tmp/cgpt-header")
+	if err := testexec.CommandContext(ctx, "dd", "if=/tmp/cgpt-header", "of="+req.PartitionPath, "bs=4096", "count=1", "conv=sync").Run(); err != nil {
+		return nil, errors.Wrap(err, "failed to write raw header into partition")
+	}
+	return &empty.Empty{}, nil
+}
+
+// RestoreCgptAttributes restores CGPT partition attributes directly dumped from GetCgptTable
+func (ks *KernelService) RestoreCgptAttributes(ctx context.Context, req *pb.RestoreCgptAttributesRequest) (*empty.Empty, error) {
+	testing.ContextLog(ctx, "Restoring passed CGPT attributes to: ", req.BlockDevice)
+	for _, part := range req.CgptTable {
+		if len(part.Attrs) == 0 {
+			continue
+		}
+		cgptAddCmdline := []string{"add", "-i", strconv.Itoa(int(part.PartitionNumber))}
+		for _, attr := range part.Attrs {
+			switch attr.Name {
+			case "legacy_boot":
+				cgptAddCmdline = append(cgptAddCmdline, "-B", strconv.Itoa(int(attr.Value)))
+			case "priority":
+				cgptAddCmdline = append(cgptAddCmdline, "-P", strconv.Itoa(int(attr.Value)))
+			case "tries":
+				cgptAddCmdline = append(cgptAddCmdline, "-T", strconv.Itoa(int(attr.Value)))
+			case "successful":
+				cgptAddCmdline = append(cgptAddCmdline, "-S", strconv.Itoa(int(attr.Value)))
+			case "required":
+				cgptAddCmdline = append(cgptAddCmdline, "-R", strconv.Itoa(int(attr.Value)))
+			}
+		}
+		cgptAddCmdline = append(cgptAddCmdline, req.BlockDevice)
+		testing.ContextLog(ctx, "Restoring CGPT metadata: ", strings.Join(cgptAddCmdline, " "))
+		if err := testexec.CommandContext(ctx, "cgpt", cgptAddCmdline...).Run(testexec.DumpLogOnError); err != nil {
+			return &emptypb.Empty{}, errors.Wrap(err, "failed to restore cgpt attributes")
+		}
+	}
+
+	return &empty.Empty{}, nil
+}
+
+// BackupPartition backs up partition and saves to a file.
+func (ks *KernelService) BackupPartition(ctx context.Context, req *pb.Partition) (*pb.PartitionInfo, error) {
+	var rootDev string
+	if req.RootDev != "" {
+		rootDev = req.RootDev
+	} else {
+		var err error
+		rootDev, err = kernel.GetCurrentRootDevice(ctx, false)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get root device")
+		}
+	}
+
+	table, path, err := kernel.BackupPartition(ctx, rootDev, req.Label)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not back up partition")
+	}
+
+	return &pb.PartitionInfo{
+		Label:      req.Label,
+		BackupPath: path,
+		RootDev:    rootDev,
+		Table:      table,
+	}, nil
+}
+
+// RestorePartition restores partition from backup.
+func (ks *KernelService) RestorePartition(ctx context.Context, req *pb.PartitionInfo) (*empty.Empty, error) {
+	if err := kernel.RestorePartition(ctx, req.BackupPath, req.Table.PartitionPath); err != nil {
+		return nil, errors.Wrap(err, "could not restore partition from backup")
+	}
+
+	label := kernel.LabelEnumToLabel[req.Label]
+	if _, err := ks.RestoreCgptAttributes(ctx, &pb.RestoreCgptAttributesRequest{
+		BlockDevice: req.RootDev,
+		CgptTable:   map[string]*pb.CgptPartition{label: req.Table},
+	}); err != nil {
+		return nil, errors.Wrap(err, "failed to retore CGPT attributes")
+	}
+
+	return &empty.Empty{}, nil
+}
+
+// BackupKernel backs up both kernel A and B copies, and corresponding ROOTFS verity hashes and saves them to a file.
+func (ks *KernelService) BackupKernel(ctx context.Context, req *empty.Empty) (*pb.KernelBackup, error) {
+	kernA, err := ks.BackupPartition(ctx, &pb.Partition{Label: pb.PartitionLabel_KERNEL_A})
+	if err != nil {
+		// If backing up partition fails, unfinished backup file is already deleted.
+		return nil, errors.Wrap(err, "failed to back up KERN-A")
+	}
+
+	kernB, err := ks.BackupPartition(ctx, &pb.Partition{Label: pb.PartitionLabel_KERNEL_B})
+	if err != nil {
+		// If backing up KERN-B fails, make sure KERN-A back up is cleaned up, KERN-B tmpfile will already be cleaned up.
+		os.Remove(kernA.BackupPath)
+		return nil, errors.Wrap(err, "failed to back up KERN-B")
+	}
+
+	return &pb.KernelBackup{
+		KernA: kernA,
+		KernB: kernB,
+	}, nil
+}
+
+// RestoreKernel restores both kernel A and B, and corresponding rootfs verity hashes from back ups.
+func (ks *KernelService) RestoreKernel(ctx context.Context, req *pb.KernelBackup) (*empty.Empty, error) {
+	if _, err := ks.RestorePartition(ctx, req.KernA); err != nil {
+		return nil, errors.Wrap(err, "failed to restore KERN-A")
+	}
+
+	if _, err := ks.RestorePartition(ctx, req.KernB); err != nil {
+		return nil, errors.Wrap(err, "failed to restore KERN-B")
+	}
+
+	return &empty.Empty{}, nil
+}
+
+// PrioritizeKernelCopy ensures DUT boots to expected kernel copy on next reboot (eg. KERN-A or KERN-B) and makes both kernel copies identical.
+func (ks *KernelService) PrioritizeKernelCopy(ctx context.Context, req *pb.Partition) (*empty.Empty, error) {
+	if err := kernel.PrioritizeKernelCopy(ctx, req.Label); err != nil {
+		return nil, err
+	}
+	return &empty.Empty{}, nil
+}
+
+// GetCurrentCopy returns the current label DUT is using.
+func (ks *KernelService) GetCurrentCopy(ctx context.Context, req *empty.Empty) (*pb.Partition, error) {
+	currPart, err := kernel.GetCurrentKernel(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to query current kernel copy")
+	}
+	testing.ContextLog(ctx, "DUT is currently booted to ", currPart.Label)
+	return &pb.Partition{Label: labelToLabelEnum[currPart.Label]}, nil
+}
+
+// VerifyKernelCopy checks that DUT is currently booted to expected kernel copy.
+func (ks *KernelService) VerifyKernelCopy(ctx context.Context, req *pb.Partition) (*empty.Empty, error) {
+	expLabel := kernel.LabelEnumToLabel[req.Label]
+	currPart, err := kernel.GetCurrentKernel(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to query current kernel copy")
+	}
+	testing.ContextLog(ctx, "DUT is currently booted to ", currPart.Label)
+
+	currCopy, _ := kernel.GetCopyFromLabel(currPart.Label)
+	expCopy, _ := kernel.GetCopyFromLabel(expLabel)
+	if currCopy != expCopy {
+		return nil, errors.Errorf("expected kernel copy to be %q but was booted to %q", expCopy, currPart.Label)
+	}
+	return &empty.Empty{}, nil
+}
+
+// BackupRootfsVerityHash saves the verity hash for given kernel from the corresponding rootfs partition.
+func (ks *KernelService) BackupRootfsVerityHash(ctx context.Context, req *pb.PartitionInfo) (*pb.RootfsVerityHashBackup, error) {
+	offset, size, backupPath, err := kernel.BackupRootfsVerityHash(ctx, req.RootDev, req.Table)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not back up rootfs verity hash")
+	}
+
+	return &pb.RootfsVerityHashBackup{
+		Label:      req.Label,
+		RootDev:    req.RootDev,
+		Offset:     int64(offset),
+		HashSize:   int64(size),
+		BackupPath: backupPath,
+	}, nil
+}
+
+// RestoreRootfsVerityHash saves the verity hash for given kernel from the corresponding rootfs partition.
+func (ks *KernelService) RestoreRootfsVerityHash(ctx context.Context, req *pb.RootfsVerityHashBackup) (*empty.Empty, error) {
+	if err := kernel.RestoreRootfsVerityHash(ctx, req.Offset, req.BackupPath, req.RootDev, req.Label); err != nil {
+		return nil, errors.Wrap(err, "could not restore rootfs verity hash")
+	}
+
+	return &empty.Empty{}, nil
+}
+
+// CorruptRootfsVerityHash corrupts verity hash for given kernel copy.
+func (ks *KernelService) CorruptRootfsVerityHash(ctx context.Context, req *pb.RootfsVerityHashBackup) (*empty.Empty, error) {
+	if corruptErr := kernel.CorruptRootfsVerityHash(ctx, req.Offset, req.HashSize, req.RootDev, req.Label); corruptErr != nil {
+		if restoreErr := kernel.RestoreRootfsVerityHash(ctx, req.Offset, req.BackupPath, req.RootDev, req.Label); restoreErr != nil {
+			return nil, errors.Wrapf(restoreErr, "could not corrupt rootfs verity hash and failed to restore it back to original hash: %v", corruptErr)
+		}
+		return nil, errors.Wrap(corruptErr, "could not corrupt rootfs verity hash")
+	}
+
+	return &empty.Empty{}, nil
+}

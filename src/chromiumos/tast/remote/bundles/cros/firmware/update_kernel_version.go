@@ -27,7 +27,7 @@ func init() {
 		// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		SoftwareDeps: []string{"chrome"},
-		ServiceDeps:  []string{"tast.cros.firmware.CgptService"},
+		ServiceDeps:  []string{"tast.cros.firmware.KernelService"},
 		Fixture:      fixture.DevMode,
 	})
 }
@@ -66,8 +66,8 @@ func rebootDUT(ctx context.Context, h *firmware.Helper, s *testing.State) error 
 		return errors.Wrap(err, "failed to reconnect to the RPC service on DUT")
 	}
 
-	s.Log("Reconnecting to CgptService on DUT")
-	if err := h.RequireCgptServiceClient(ctx); err != nil {
+	s.Log("Reconnecting to KernelService on DUT")
+	if err := h.RequireKernelServiceClient(ctx); err != nil {
 		return errors.Wrap(err, "failed to reconnect to BiosServiceClient on DUT")
 	}
 
@@ -113,9 +113,9 @@ func setKernelImageVersion(ctx context.Context, h *firmware.Helper, s *testing.S
 func UpdateKernelVersion(ctx context.Context, s *testing.State) {
 	h := s.FixtValue().(*fixture.Value).Helper
 
-	s.Log("Acquiring CgptService")
-	if err := h.RequireCgptServiceClient(ctx); err != nil {
-		s.Fatal("Requiring CgptServiceClient: ", err)
+	s.Log("Acquiring KernelService")
+	if err := h.RequireKernelServiceClient(ctx); err != nil {
+		s.Fatal("Requiring KernelServiceClient: ", err)
 	}
 
 	s.Log("Getting root device")
@@ -127,24 +127,19 @@ func UpdateKernelVersion(ctx context.Context, s *testing.State) {
 	s.Logf("Root device is %s", rootDev)
 
 	s.Log("Reading CGPT table")
-	originalCgptTable, err := h.CgptServiceClient.GetCgptTable(ctx, &pb.GetCgptTableRequest{
+	originalCgptTable, err := h.KernelServiceClient.GetCgptTable(ctx, &pb.GetCgptTableRequest{
 		BlockDevice: string(rootDev),
 	})
 	if err != nil {
 		s.Fatalf("Failed to acquire CGPT table for root device %s: %s", rootDev, err)
 	}
 
-	kernApath := ""
-	for _, part := range originalCgptTable.CgptTable {
-		if part.Label == "KERN-A" {
-			kernApath = part.PartitionPath
-			s.Log("KERN-A partition is: ", kernApath)
-			break
-		}
-	}
-	if kernApath == "" {
+	kernAPart, ok := originalCgptTable.CgptTable["KERN-A"]
+	if !ok {
 		s.Fatal("Failed to find KERN-A partition, check your DUT integrity")
 	}
+	kernApath := kernAPart.PartitionPath
+	s.Log("KERN-A partition is: ", kernApath)
 
 	oldKernelVersion, err := kernelImageVersion(ctx, h, kernApath)
 	if err != nil {
@@ -153,7 +148,7 @@ func UpdateKernelVersion(ctx context.Context, s *testing.State) {
 
 	defer func() {
 		s.Log("Restoring original CGPT table")
-		if _, err := h.CgptServiceClient.RestoreCgptAttributes(ctx, &pb.RestoreCgptAttributesRequest{
+		if _, err := h.KernelServiceClient.RestoreCgptAttributes(ctx, &pb.RestoreCgptAttributesRequest{
 			CgptTable:   originalCgptTable.CgptTable,
 			BlockDevice: string(rootDev),
 		}); err != nil {
@@ -176,23 +171,26 @@ func UpdateKernelVersion(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Reading new CGPT table")
-	newCgptTable, err := h.CgptServiceClient.GetCgptTable(ctx, &pb.GetCgptTableRequest{
+	newCgptTable, err := h.KernelServiceClient.GetCgptTable(ctx, &pb.GetCgptTableRequest{
 		BlockDevice: string(rootDev),
 	})
 	if err != nil {
 		s.Fatalf("Failed to acquire CGPT table for root device %s: %s", rootDev, err)
 	}
+
+	kernAPart, ok = newCgptTable.CgptTable["KERN-A"]
+	if !ok {
+		s.Fatal("Failed to find KERN-A partition")
+	}
+
 	successful := false
-	for _, part := range newCgptTable.CgptTable {
-		if part.Label == "KERN-A" {
-			for _, attr := range part.Attrs {
-				if attr.Name == "successful" && attr.Value == 1 {
-					successful = true
-					break
-				}
-			}
+	for _, attr := range kernAPart.Attrs {
+		if attr.Name == "successful" && attr.Value == 1 {
+			successful = true
+			break
 		}
 	}
+
 	if !successful {
 		s.Fatal("KERN-A did not boot successfully")
 	}
