@@ -51,9 +51,14 @@ func init() {
 
 func MemoryFileExecTelemetry(ctx context.Context, s *testing.State) {
 	const (
-		// This binary is installed by the chromeos-base/tast-local-helpers-cros package.
-		// It creates a memfd, populates it and attempts to perform a fexecve syscall on it.
-		binPath = "/usr/local/libexec/tast/helpers/local/cros/security.MemoryFileExecTelemetry.memfd_fexecve"
+		// These binaries are installed by the
+		// chromeos-base/tast-local-helpers-cros package.
+		// This program attempts to perform a fexecve syscall on a memfd
+		// populated with the binary supplied to it.
+		memfdBinPath = "/usr/local/libexec/tast/helpers/local/cros/security.MemoryFileExecTelemetry.memfd_fexecve"
+		// This is supplied to `memfdBinPath` as an argument. It simply
+		// returns an error if successfully executed.
+		testBinPath = "/usr/local/libexec/tast/helpers/local/cros/security.MemoryFileExecTelemetry.test_bin"
 	)
 
 	// |cleanupCtx| is used for setting a timeout that includes the cleanup
@@ -106,10 +111,7 @@ func MemoryFileExecTelemetry(ctx context.Context, s *testing.State) {
 
 	// Verifies the blockage of memfd execution in ChromeOS and acts as a
 	// trigger for the detection and reporting mechanism.
-	// The binary is supplied as an argument to itself, as the program
-	// needs an arbitrary binary to load to memory and attempt to perform
-	// the fexecve syscall on it.
-	cmd := testexec.CommandContext(ctx, binPath, binPath)
+	cmd := testexec.CommandContext(ctx, memfdBinPath, testBinPath)
 	if err := cmd.Run(testexec.DumpLogOnError); err != nil {
 		s.Fatalf("%q failed: %v", shutil.EscapeSlice(cmd.Args), err)
 	}

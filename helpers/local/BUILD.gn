@@ -158,6 +158,12 @@ executable("security.MemoryFileExecTelemetry.memfd_fexecve") {
   ]
 }
 
+executable("security.MemoryFileExecTelemetry.test_bin") {
+  sources = [
+    "security.MemoryFileExecTelemetry.test_bin.c",
+  ]
+}
+
 executable("security.Minijail.staticbashexec") {
   ldflags = [ "-static" ]
   sources = [
@@ -211,6 +217,7 @@ group("all") {
     ":security.AltSyscall.clock_adjtime",
     ":security.AltSyscall.mmap",
     ":security.AltSyscall.read",
+    ":security.MemoryFileExecTelemetry.test_bin",
     ":security.MemoryFileExecTelemetry.memfd_fexecve",
     ":security.Minijail.bpfdeny",
     ":security.MinijailSeccomp.fail",
