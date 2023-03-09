@@ -28,23 +28,20 @@ func ConvertPowerPerfValue(ctx context.Context, values *perf.Values) map[string]
 	}
 
 	powerDict := map[string]interface{}{
-		// TODO: see b/271917877
-		// In general, each metric is measured with the same number of times, there could
-		// be an exception occasionally. For example "discharge_mwh" seems to be measured
-		// less often.
+		// sample_count indicates how many time each metric has been collected
 		"sample_count": 0,
-		// TODO: see b/271917877
-		// Not every tracker records time unfortunately. We can probably ignore this for now.
+		// sample_duration is the time interval between two data points
 		"sample_duration": 0,
-		"average":         nil,
-		"data":            nil,
+		// average is the mean of each metric
+		"average": nil,
+		// data is all the data points collected for each metric
+		"data": nil,
 	}
 
 	innerDataMap := make(map[string][]float64)
 	innerAverageMap := make(map[string]float64)
 
 	for metric, value := range measurement {
-		powerDict["sample_count"] = len(value)
 		innerDataMap[metric.Name] = value
 		sum := 0.0
 		for _, num := range value {
@@ -61,6 +58,15 @@ func ConvertPowerPerfValue(ctx context.Context, values *perf.Values) map[string]
 
 	powerDict["data"] = innerDataMap
 	powerDict["average"] = innerAverageMap
+
+	if value, ok := innerDataMap["t"]; ok {
+		var sampleCount = len(value)
+		powerDict["sample_count"] = sampleCount
+		if sampleCount > 1 {
+			var totalDuration = value[sampleCount-1] - value[0]
+			powerDict["sample_duration"] = totalDuration / (float64(sampleCount) - 1)
+		}
+	}
 
 	return powerDict
 }
@@ -81,7 +87,7 @@ func CreatePowerLogDict(ctx context.Context, testName string, powerDict map[stri
 		// 	"name": "timestamp",
 		// 	"type": "TIMESTAMP"
 		// 	},
-		"timestamp": time.Now(),
+		"timestamp": time.Now().Unix(),
 		"test":      testName,
 		"dut":       GetDeviceInfo(ctx),
 		"power":     powerDict,
