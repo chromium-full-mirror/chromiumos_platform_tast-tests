@@ -40,7 +40,7 @@ func init() {
 			"tij@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:firmware", "firmware_ec"},
+		Attr:         []string{"group:firmware"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Keyboard()),
 		Fixture:      fixture.NormalMode,
 		Timeout:      2 * time.Minute,
@@ -48,17 +48,22 @@ func init() {
 		Params: []testing.Param{{
 			Val:               servoECKeyboard,
 			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnFormFactor(hwdep.Detachable, hwdep.Convertible)),
+			ExtraAttr:         []string{"firmware_ec"},
 		}, {
-			Name: "usb_keyboard",
-			Val:  servoUSBKeyboard,
+			Name:      "usb_keyboard",
+			Val:       servoUSBKeyboard,
+			ExtraAttr: []string{"firmware_ec"},
 		}, {
 			Name:              "detachable",
 			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Detachable)),
 			Val:               detachableKeyboard,
+			// TODO: When stable, change firmware_unstable to a firmware_ec and add linto@chromium.org to gerrit review.
+			ExtraAttr: []string{"firmware_unstable"},
 		}, {
 			Name:              "convertible",
 			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Convertible)),
 			Val:               convertibleKeyboard,
+			ExtraAttr:         []string{"firmware_ec"},
 		}},
 	})
 }
