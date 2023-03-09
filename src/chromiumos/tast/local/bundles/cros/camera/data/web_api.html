@@ -6,7 +6,6 @@
   <script src="third_party/blackframe.js"></script>
 <script>
 const resolutions = [[640, 480], [1280, 720]];
-let isVideoInputFound = false;
 let scriptReady = false;
 let isTestDone = false;
 let enumerateDevicesError = '';
@@ -74,19 +73,15 @@ function saveResult(resolution, verdict) {
 
 // Check if a video input exists
 async function checkVideoInput() {
+  let isVideoInputFound = false;
   addLog('checkVideoInput');
   try {
     const devices = await navigator.mediaDevices.enumerateDevices();
-    findVideoInput(devices);
+    isVideoInputFound = devices.some((dev) => dev.kind == 'videoinput');
   } catch (error) {
     gotEnumerateDevicesError(error);
   }
   return isVideoInputFound;
-}
-
-function findVideoInput(devices) {
-  addLog('findVideoInput');
-  isVideoInputFound = devices.some((dev) => dev.kind == 'videoinput');
 }
 
 function gotEnumerateDevicesError(error) {
@@ -173,6 +168,7 @@ CameraTest.prototype = {
       this.localVideo.srcObject = this.localStream;
     } catch (error) {
       this.gotUserMediaError(error);
+      throw error;
     }
   },
 
