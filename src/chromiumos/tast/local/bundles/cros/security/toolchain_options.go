@@ -68,11 +68,6 @@ var prunePaths = []string{
 var nowAllowlist = []string{
 	// FIXME: crbug.com/535032
 	"/opt/google/chrome/nacl_helper_nonsfi",
-
-	// Allowed in crbug.com/682434.
-	"/usr/lib64/conntrack-tools/ct_helper_*.so",
-	"/usr/lib/conntrack-tools/ct_helper_*.so",
-	"/usr/sbin/nfct",
 }
 
 var relroAllowlist = []string{
