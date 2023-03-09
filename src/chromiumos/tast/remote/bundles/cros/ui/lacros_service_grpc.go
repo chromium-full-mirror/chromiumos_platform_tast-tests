@@ -20,7 +20,8 @@ func init() {
 		Func:         LacrosServiceGRPC,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Check basic functionality of LacrosService",
-		Contacts:     []string{"ythjkt@google.com", "chromeos-sw-engprod@google.com"},
+		BugComponent: "crbug:OS>LaCrOS",
+		Contacts:     []string{"chromeos-sw-engprod@google.com", "ythjkt@google.com"},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "lacros"},
 		Params: []testing.Param{
