@@ -25,7 +25,9 @@ func init() {
 		Func:         LogoutCleanup,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies all processes owned by chronos are destroyed on logout",
+		BugComponent: "b:1331478", // ChromeOS > Software > Core > SessionManager
 		Contacts: []string{
+			"chromeos-session-manager@google.com",
 			"hidehiko@chromium.org",
 		},
 		SoftwareDeps: []string{"chrome"},

@@ -22,9 +22,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: RemoteOwnership,
-		Desc: "Verifies that Ownership API can be used to set device policies (as an enterprise might do)",
+		Func:         RemoteOwnership,
+		Desc:         "Verifies that Ownership API can be used to set device policies (as an enterprise might do)",
+		BugComponent: "b:1331478", // ChromeOS > Software > Core > SessionManager
 		Contacts: []string{
+			"chromeos-session-manager@google.com",
 			"hidehiko@chromium.org",
 		},
 		Data: []string{"testcert.p12"},

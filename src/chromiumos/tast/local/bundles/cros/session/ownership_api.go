@@ -29,9 +29,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: OwnershipAPI,
-		Desc: "Verifies that Ownership API works for a local device owner",
+		Func:         OwnershipAPI,
+		Desc:         "Verifies that Ownership API works for a local device owner",
+		BugComponent: "b:1331478", // ChromeOS > Software > Core > SessionManager
 		Contacts: []string{
+			"chromeos-session-manager@google.com",
 			"hidehiko@chromium.org",
 		},
 		Data: []string{"testcert.p12"},

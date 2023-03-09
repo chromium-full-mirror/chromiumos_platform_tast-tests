@@ -20,7 +20,9 @@ func init() {
 		Func:         RejectDuplicate,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Ensures that the session_manager won't start the same session twice",
+		BugComponent: "b:1331478", // ChromeOS > Software > Core > SessionManager
 		Contacts: []string{
+			"chromeos-session-manager@google.com",
 			"hidehiko@chromium.org",
 		},
 		SoftwareDeps: []string{"chrome"},
