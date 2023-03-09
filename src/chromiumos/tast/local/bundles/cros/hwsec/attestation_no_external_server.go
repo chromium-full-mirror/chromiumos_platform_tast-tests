@@ -14,6 +14,7 @@ import (
 	apb "chromiumos/system_api/attestation_proto"
 	"chromiumos/tast/common/hwsec"
 	"chromiumos/tast/common/testexec"
+	"chromiumos/tast/ctxutil"
 	hwseclocal "chromiumos/tast/local/hwsec"
 	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/testing"
@@ -51,6 +52,11 @@ func isTPM2(ctx context.Context) bool {
 // AttestationNoExternalServer runs through the attestation flow, including enrollment, cert, sign challenge.
 // Also, it verifies the the key access functionality. All the external dependencies are replaced with the locally generated server responses.
 func AttestationNoExternalServer(ctx context.Context, s *testing.State) {
+	// Give it 20 seconds to clean up while enabling local infra.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 20*time.Second)
+	defer cancel()
+
 	s.Log("Restarting ui job")
 	if err := upstart.RestartJob(ctx, "ui"); err != nil {
 		s.Fatal("Failed to restart ui job: ", err)
@@ -79,14 +85,14 @@ func AttestationNoExternalServer(ctx context.Context, s *testing.State) {
 	}
 
 	ali := hwseclocal.NewAttestationLocalInfra(helper.DaemonController())
-	if err := ali.Enable(ctx); err != nil {
+	if err := ali.Enable(ctx, cleanupCtx, helper); err != nil {
 		s.Fatal("Failed to enable local test infra feature: ", err)
 	}
 	defer func(ctx context.Context) {
 		if err := ali.Disable(ctx); err != nil {
 			s.Error("Failed to disable local test infra feature: ", err)
 		}
-	}(ctx)
+	}(cleanupCtx)
 
 	s.Log("TPM is ensured to be ready")
 	if err := helper.EnsureIsPreparedForEnrollment(ctx, hwsec.DefaultPreparationForEnrolmentTimeout); err != nil {
@@ -117,7 +123,7 @@ func AttestationNoExternalServer(ctx context.Context, s *testing.State) {
 		if err := mountInfo.CleanUpMount(ctx, username); err != nil {
 			s.Error("Failed to cleanup: ", err)
 		}
-	}(ctx)
+	}(cleanupCtx)
 
 	for _, param := range []struct {
 		name     string

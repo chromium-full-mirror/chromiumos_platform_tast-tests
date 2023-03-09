@@ -96,3 +96,66 @@ func (s *Snapshot) Pop(filename string) error {
 	s.Remove(filename)
 	return nil
 }
+
+// SaveFrom reads the content from dut[filename], and stores it in snapshot.table[keypath].
+// If the snapshot is saved before, overrides it.
+func (s *Snapshot) SaveFrom(filename, keypath string) error {
+	if !filepath.IsAbs(filename) {
+		return errors.New("not an absolute path")
+	}
+	content, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return errors.Wrapf(err, "failed to read file %s", filename)
+	}
+	stat, err := os.Stat(filename)
+	if err != nil {
+		return errors.Wrap(err, "failed to get file's stat")
+	}
+
+	rawStat, ok := stat.Sys().(*syscall.Stat_t)
+	if !ok {
+		return errors.New("failed to get raw stat of the file")
+	}
+	s.table[keypath] = snapshotValue{content, stat.Mode(), int(rawStat.Uid), int(rawStat.Gid)}
+	return nil
+}
+
+// RestoreTo restores the snapshot from snapshot.table[keypath] to dut[filename].
+// Note that the snapshot entry is not removed after the operation.
+func (s *Snapshot) RestoreTo(keypath, filename string) error {
+	snapshot, ok := s.table[keypath]
+	if !ok {
+		return errors.Errorf("snapshot of path %s not found", keypath)
+	}
+	if err := ioutil.WriteFile(filename, snapshot.content, snapshot.mode); err != nil {
+		return errors.Wrapf(err, "failed to restore the file %s from snapshot", filename)
+	}
+	// Always set the permission again; necessary when the file exist already when calling WriteFile.
+	if err := os.Chmod(filename, snapshot.mode); err != nil {
+		return errors.Wrap(err, "failed to restore file permission")
+	}
+	if err := os.Chown(filename, snapshot.uid, snapshot.gid); err != nil {
+		return errors.Wrap(err, "failed to restore file ownership")
+	}
+	return nil
+}
+
+// StashFrom stores the snapshot from dut[filename] with key as snapshot.table[keypath] and delete the file.
+func (s *Snapshot) StashFrom(filename, keypath string) error {
+	if err := s.SaveFrom(filename, keypath); err != nil {
+		return errors.Wrap(err, "failed to take a snapshot")
+	}
+	if err := os.Remove(filename); err != nil {
+		return errors.Wrap(err, "failed to remove the file")
+	}
+	return nil
+}
+
+// PopTo restores file from table[keypath] to dut[filename] and deletes the snapshot for restoration as well.
+func (s *Snapshot) PopTo(keypath, filename string) error {
+	if err := s.RestoreTo(keypath, filename); err != nil {
+		return errors.Wrap(err, "failed to restore from snapshot")
+	}
+	s.Remove(keypath)
+	return nil
+}
