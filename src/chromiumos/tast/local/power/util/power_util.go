@@ -260,21 +260,19 @@ func GetCPUName(ctx context.Context) string {
 	checkRE := regexp.MustCompile(checkPattern)
 	if err != nil || checkRE.MatchString(string(readResult)) {
 		grepCmd := "grep model.name /proc/cpuinfo | cut -f 2 -d: | head -1"
-		grepResult, err := testexec.CommandContext(ctx, "bash", "-c", grepCmd).Output()
+		readResult, err = testexec.CommandContext(ctx, "bash", "-c", grepCmd).Output()
 		if err != nil {
 			testing.ContextLog(ctx, "Could not find the CPU name")
 			return ""
 		}
-
-		// Remove bloat from CPU name, e.g.
-		// Intel Core(TM) i5-7Y57 CPU@1.2GHz             -> Intel Core i5-7Y57
-		// AMD A10-7850K APU with Radeon(TM) R7 Graphics -> AMD A10-7850K
-		trimPattern := ` (@|processor|apu|soc|radeon).*|\(.*?\)| cpu`
-		trimRE := regexp.MustCompile(trimPattern)
-		trimmedResult := trimRE.ReplaceAll(grepResult, []byte(""))
-		return strings.TrimSpace(string(trimmedResult))
 	}
-	return strings.TrimSpace(string(readResult))
+	// Remove bloat from CPU name, e.g.
+	// Intel(R) Core(TM) i5-7Y57 CPU@1.2GHz          -> Intel Core i5-7Y57
+	// AMD A10-7850K APU with Radeon(TM) R7 Graphics -> AMD A10-7850K
+	trimPattern := `(?i) (@|processor|apu|soc|radeon).*|\(.*?\)| cpu`
+	trimRE := regexp.MustCompile(trimPattern)
+	trimmedResult := trimRE.ReplaceAll(readResult, []byte(""))
+	return strings.TrimSpace(string(trimmedResult))
 }
 
 // GetCPUNum returns the number of CPUs.
@@ -283,24 +281,32 @@ func GetCPUNum() int {
 }
 
 // GetCPUCore returns the number of cores per CPU according to lscpu.
-// Minimum return is 1
+// A returning of 0 means invalid.
 func GetCPUCore(ctx context.Context) int {
-	var coresPerSocket, sockets int64
-	cmd1 := "lscpu | grep 'Core(s)' | cut -d ':' -f 2"
-	readResult, err1 := testexec.CommandContext(ctx, "bash", "-c", cmd1).Output()
-	coresPerSocket, err2 := strconv.ParseInt(strings.TrimSpace(string(readResult)), 10, 64)
+	const cmd1 = "lscpu | grep 'Core(s)' | cut -d ':' -f 2"
+	const cmd2 = "lscpu | grep 'Socket(s)' | cut -d ':' -f 2"
+	readResult1, err1 := testexec.CommandContext(ctx, "bash", "-c", cmd1).Output()
+	readResult2, err2 := testexec.CommandContext(ctx, "bash", "-c", cmd2).Output()
 	if err1 != nil || err2 != nil {
-		testing.ContextLog(ctx, "Failed to get cores per socket")
-		coresPerSocket = 1
+		testing.ContextLog(ctx, "Failed to read lscpu")
+		// return an invalid number
+		return 0
 	}
-	cmd2 := "lscpu | grep 'Socket(s)' | cut -d ':' -f 2"
-	readResult, err1 = testexec.CommandContext(ctx, "bash", "-c", cmd2).Output()
-	sockets, err2 = strconv.ParseInt(strings.TrimSpace(string(readResult)), 10, 64)
-	if err1 != nil || err2 != nil {
-		testing.ContextLog(ctx, "Failed to get socket numbers")
-		sockets = 1
+	corePerSocketList := strings.Split(strings.TrimSpace(string(readResult1)), "\n")
+	socketList := strings.Split(strings.TrimSpace(string(readResult2)), "\n")
+	var sum int64
+	for i, core := range corePerSocketList {
+		var singleCoresPerSocket, singleSocket int64
+		var err error
+		if singleCoresPerSocket, err = strconv.ParseInt(strings.TrimSpace(core), 10, 64); err != nil {
+			testing.ContextLog(ctx, "Failed to get number of cores per socket: ", err)
+		}
+		if singleSocket, err = strconv.ParseInt(strings.TrimSpace(socketList[i]), 10, 64); err != nil {
+			testing.ContextLog(ctx, "Failed to get number of socket: ", err)
+		}
+		sum += singleCoresPerSocket * singleSocket
 	}
-	return int(coresPerSocket * sockets)
+	return int(sum)
 }
 
 // GetCPUThreads return the threads per CPU.
