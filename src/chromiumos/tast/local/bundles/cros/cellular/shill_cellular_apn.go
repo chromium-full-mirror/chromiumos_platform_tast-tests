@@ -10,7 +10,9 @@ import (
 	"time"
 
 	"chromiumos/tast/common/shillconst"
+	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/errors"
 	"chromiumos/tast/local/cellular"
 	"chromiumos/tast/testing"
 )
@@ -134,30 +136,18 @@ func ShillCellularApn(ctx context.Context, s *testing.State) {
 	// profile and Cellular.UseAttachAPN gets erased.
 	// Disable cellular and re-enable it again so the test starts after the first ReAttach has completed,
 	// and there is no longer a need to trigger a new ReAttach.
-	if _, err = helper.Disable(ctx); err != nil {
+	if _, err := helper.Disable(ctx); err != nil {
 		s.Fatal("Failed to disable cellular: ", err)
 	}
-	if _, err = helper.Enable(ctx); err != nil {
+	if _, err := helper.Enable(ctx); err != nil {
 		s.Fatal("Failed to enable cellular: ", err)
 	}
-	// Verify that a connectable Cellular service exists and ensure it is connected.
-	service, err := helper.FindServiceForDevice(ctx)
-	if err != nil {
-		s.Fatal("Unable to find Cellular Service for Device: ", err)
-	}
-	if err = helper.WaitForEnabledState(ctx, true); err != nil {
+	if err := helper.WaitForEnabledState(ctx, true); err != nil {
 		s.Fatal("Cellular service did not reach Enabled state: ", err)
 	}
-
-	testing.ContextLog(ctx, "Connecting")
-	if isConnected, err := service.IsConnected(ctx); err != nil {
-		s.Fatal("Unable to get IsConnected for Service: ", err)
-	} else if !isConnected {
-		if _, err := helper.ConnectToDefault(ctx); err != nil {
-			s.Fatal("Unable to Connect to Service: ", err)
-		}
+	if _, err := helper.Connect(ctx); err != nil {
+		s.Fatal("Unable to Connect to Service: ", err)
 	}
-
 	serviceLastAttachAPN, err := helper.GetCellularLastAttachAPN(ctx)
 	if err != nil {
 		s.Fatal("Error getting Service properties: ", err)
@@ -178,6 +168,20 @@ func ShillCellularApn(ctx context.Context, s *testing.State) {
 	if apnName != expectedLastGoodAPN {
 		s.Fatalf("Last good APN doesn't match: got %q, want %q", apnName, expectedLastGoodAPN)
 	}
+	ipv4, ipv6, err := helper.GetNetworkProvisionedCellularIPTypes(ctx)
+	if err != nil {
+		s.Fatal("Failed to read network provisioned IP types: ", err)
+	}
+	s.Log("ipv4: ", ipv4, " ipv6: ", ipv6)
 
-	// TODO(b/193056754): do some basic connectivity test. Check IP type.
+	verifyHostIPConnectivity := func(ctx context.Context) error {
+		if err := cellular.VerifyIPConnectivityUsingCurl(ctx, testexec.CommandContext, ipv4, ipv6, "/usr/bin"); err != nil {
+			return errors.Wrap(err, "failed connectivity test")
+		}
+		return nil
+	}
+
+	if err := helper.RunTestOnCellularInterface(ctx, verifyHostIPConnectivity); err != nil {
+		s.Fatal("Failed to run test on cellular interface: ", err)
+	}
 }
