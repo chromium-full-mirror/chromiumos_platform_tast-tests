@@ -8,6 +8,8 @@ import (
 	"context"
 	"encoding/json"
 	"io/ioutil"
+	"net/http"
+	"net/url"
 	"path"
 	"time"
 
@@ -110,14 +112,37 @@ func SavePowerLogJSON(ctx context.Context, outDir string, powerLogDict map[strin
 	return nil
 }
 
+// UploadToDashboard uploads the power test metrics to go/power-dashboard-view.
+func UploadToDashboard(ctx context.Context, powerLogDict map[string]interface{}, uploadurl string) error {
+	var urlActual string
+	if uploadurl == "" {
+		urlActual = "http://chrome-power.appspot.com/rapl"
+	} else {
+		urlActual = uploadurl
+	}
+	powerLogJSON, err := json.Marshal(powerLogDict)
+	if err != nil {
+		return errors.Wrap(err, "failed to marshal data when uploading to dashboard")
+	}
+	urlParams := url.Values{}
+	urlParams.Add("data", string(powerLogJSON))
+	if _, err = http.PostForm(urlActual, urlParams); err != nil {
+		return errors.Wrap(err, "failed to upload to power dashboard")
+	}
+	return nil
+}
+
 // GeneratePowerLogAndSaveToCrosbolt generates power_log.json and upload results to crosbolt.
 func GeneratePowerLogAndSaveToCrosbolt(ctx context.Context, outDir, testName string, values *perf.Values) error {
 	powerDict := ConvertPowerPerfValue(ctx, values)
-
 	powerLogDict := CreatePowerLogDict(ctx, testName, powerDict)
 
 	if err := SavePowerLogJSON(ctx, outDir, powerLogDict); err != nil {
 		return errors.Wrap(err, "failed to generate power_log.json")
+	}
+
+	if err := UploadToDashboard(ctx, powerLogDict, ""); err != nil {
+		return errors.Wrap(err, "failed to upload to power dashboard")
 	}
 
 	if powerDict == nil {
