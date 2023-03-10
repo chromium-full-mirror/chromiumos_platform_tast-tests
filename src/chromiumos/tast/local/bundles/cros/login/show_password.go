@@ -108,7 +108,9 @@ func ShowPassword(ctx context.Context, s *testing.State) {
 	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
 
 	// Wait for the login screen to be ready for PIN / Password entry.
-	if st, err := lockscreen.WaitState(ctx, tconn, func(st lockscreen.State) bool { return st.ReadyForPassword }, 30*time.Second); err != nil {
+	if st, err := lockscreen.WaitState(ctx, tconn, func(st lockscreen.State) bool {
+		return st.ReadyForPassword && st.AreAllUserImagesLoaded
+	}, 30*time.Second); err != nil {
 		s.Fatalf("Failed waiting for the login screen to be ready for PIN / Password entry: %v, last state: %+v", err, st)
 	}
 
