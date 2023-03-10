@@ -31,7 +31,7 @@ func init() {
 		Contacts:     []string{"arc-commercial@google.com", "mhasank@chromium.org"},
 		// ChromeOS > Software > ARC++ > Commercial
 		BugComponent: "b:157100",
-		Attr:         []string{"group:mainline", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic", "group:criticalstaging"},
 		SoftwareDeps: []string{"chrome", "play_store"},
 		Timeout:      4 * time.Minute,
 		VarDeps: []string{

@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/errors"
@@ -27,7 +28,7 @@ func init() {
 		Contacts:     []string{"arc-commercial@google.com", "cros-arc-te@google.com", "cpiao@google.com"},
 		// ChromeOS > Software > ARC++ > Commercial
 		BugComponent: "b:157100",
-		Attr:         []string{"group:mainline", "informational", "group:arc-functional", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "informational", "group:arc-functional", "group:hw_agnostic", "group:criticalstaging"},
 		Timeout:      6 * time.Minute,
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
@@ -37,6 +38,9 @@ func init() {
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}},
 		Fixture: "familyLinkUnicornArcPolicyLogin",
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.ArcEnabled{}, pci.VerifiedFunctionalityOS),
+		},
 	})
 }
 

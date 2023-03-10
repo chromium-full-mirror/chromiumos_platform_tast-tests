@@ -32,7 +32,7 @@ func init() {
 		// ChromeOS > Software > ARC++ > Commercial
 		BugComponent: "b:157100",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic", "group:criticalstaging"},
 		Timeout:      4 * time.Minute,
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_container", "no_tablet_form_factor"},
