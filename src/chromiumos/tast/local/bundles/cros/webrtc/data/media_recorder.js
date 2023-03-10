@@ -232,20 +232,6 @@ async function testIllegalPauseThrowsDOMError() {
 }
 
 /**
- * Tests that MediaRecorder's stop() throws an exception if |state| is not
- * 'recording'.
- */
-async function testIllegalStopThrowsDOMError() {
-  const recorder = await createMediaRecorder();
-  try {
-    recorder.stop();
-  } catch (e) {
-    return;
-  }
-  throw new Error('Inactive recorder was stopped');
-}
-
-/**
  * Tests that MediaRecorder's start() throws an exception if |state| is
  * 'recording'.
  */

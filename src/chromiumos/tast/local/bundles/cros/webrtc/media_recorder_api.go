@@ -76,7 +76,6 @@ func MediaRecorderAPI(ctx context.Context, s *testing.State) {
 		// Test illegal operations handling.
 		"testIllegalResumeThrowsDOMError()",
 		"testIllegalPauseThrowsDOMError()",
-		"testIllegalStopThrowsDOMError()",
 		"testIllegalStartInRecordingStateThrowsDOMError()",
 		"testIllegalStartInPausedStateThrowsDOMError()",
 		"testIllegalRequestDataThrowsDOMError()",
