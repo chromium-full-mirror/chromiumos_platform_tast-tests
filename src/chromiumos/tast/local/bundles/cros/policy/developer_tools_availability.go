@@ -33,18 +33,18 @@ func init() {
 		// TODO(crbug/1125548): add functionality to verify policy with force installed extension.
 		Desc: "Behavior of the DeveloperToolsAvailability policy, check whether developer tools can be opened on chrome://user-actions page",
 		Contacts: []string{
-			"pmarko@google.com",
+			"cros-engprod-muc@google.com",
+			"pmarko@google.com", // Test author
 		},
 		SoftwareDeps: []string{"chrome"},
-		BugComponent: "b:1111593",
-		Attr:         []string{"group:mainline", "group:hw_agnostic"},
+		BugComponent: "b:1263917", // ChromeOS > Software > Commercial (Enterprise) > Testing
+		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
 		Params: []testing.Param{{
 			Fixture: fixture.ChromePolicyLoggedIn,
 			Val:     browser.TypeAsh,
 		}, {
 			Name:              "lacros",
 			ExtraSoftwareDeps: []string{"lacros"},
-			ExtraAttr:         []string{"informational"},
 			Fixture:           fixture.LacrosPolicyLoggedIn,
 			Val:               browser.TypeLacros,
 		}},
