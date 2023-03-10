@@ -36,6 +36,21 @@ func TypeFilter(t gopacket.LayerType, check func(gopacket.Layer) bool) Filter {
 	}
 }
 
+// AnyOfTypesFilter returns a Filter which ensures the packet contains any Layer
+// within type list |ts| and passes the check function on the layer if check()
+// is given.
+func AnyOfTypesFilter(ts []gopacket.LayerType, check func(gopacket.Layer) bool) Filter {
+	return func(p gopacket.Packet) bool {
+		for _, t := range ts {
+			layer := p.Layer(t)
+			if layer != nil && (check == nil || check(layer)) {
+				return true
+			}
+		}
+		return false
+	}
+}
+
 // negateFilter returns a Filter which flips the boolean value returned by
 // filter callback in parameter list.
 func negateFilter(filter Filter) Filter {
