@@ -229,10 +229,17 @@ func (f *nearbyShareAndroidFixture) SetUp(ctx context.Context, s *testing.FixtSt
 		if err := adbDevice.ShowTouches(ctx, true); err != nil {
 			s.Log("Failed to enable show_touches setting: ", err)
 		}
-		updateBtn := uiDevice.Object(ui.DescriptionContains("Update"))
+		// The UI locator for the "Update" button is sometimes different based on the device.
+		updateBtn1 := uiDevice.Object(ui.DescriptionContains("Update"))
+		updateBtn2 := uiDevice.Object(ui.TextContains("Update"), ui.ClassName("android.widget.Button"))
 		if err := testing.Poll(ctx, func(context.Context) error {
-			if err := updateBtn.Exists(ctx); err == nil { // button is present
-				if err := updateBtn.Click(ctx); err != nil {
+			if err := updateBtn1.Exists(ctx); err == nil { // button is present
+				if err := updateBtn1.Click(ctx); err != nil {
+					return errors.Wrap(err, "failed to click update button")
+				}
+			}
+			if err := updateBtn2.Exists(ctx); err == nil { // button is present
+				if err := updateBtn2.Click(ctx); err != nil {
 					return errors.Wrap(err, "failed to click update button")
 				}
 			}
