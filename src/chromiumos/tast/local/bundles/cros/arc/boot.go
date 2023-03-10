@@ -97,7 +97,6 @@ func init() {
 				numTrials:    1,
 				ioUringBlock: true,
 			},
-			ExtraAttr:         []string{"group:mainline", "informational"},
 			ExtraSoftwareDeps: []string{"android_vm", "io_uring"},
 			Timeout:           5 * time.Minute,
 		}, {
