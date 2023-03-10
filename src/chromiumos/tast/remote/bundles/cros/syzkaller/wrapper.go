@@ -69,9 +69,9 @@ var boardArchMapping = map[string]targetArch{
 	"guybrush": {amd64, amd64},
 	"brya":     {amd64, amd64},
 
-	"strongbad": {arm, arm64},
-	"kukui":     {arm, arm64},
+	"kukui": {arm, arm64},
 
+	"strongbad": {arm64, arm64},
 	"trogdor":   {arm64, arm64},
 	"herobrine": {arm64, arm64},
 
