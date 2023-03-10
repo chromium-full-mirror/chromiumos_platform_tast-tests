@@ -449,7 +449,7 @@ func waitWindowStateFullscreen(tconn *chrome.TestConn, winTitle string) uiauto.A
 		testing.ContextLog(ctx, "Check if the window is in fullscreen state")
 		if err := ash.WaitForCondition(ctx, tconn, func(w *ash.Window) bool {
 			return strings.Contains(w.Title, winTitle) && w.State == ash.WindowStateFullscreen
-		}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+		}, &testing.PollOptions{Timeout: 15 * time.Second}); err != nil {
 			return errors.Wrap(err, "failed to wait for fullscreen")
 		}
 		return nil
@@ -461,7 +461,7 @@ func waitWindowStateExitFullscreen(tconn *chrome.TestConn, winTitle string) uiau
 		testing.ContextLog(ctx, "Check if the window is in fullscreen state")
 		if err := ash.WaitForCondition(ctx, tconn, func(w *ash.Window) bool {
 			return strings.Contains(w.Title, winTitle) && w.State != ash.WindowStateFullscreen
-		}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+		}, &testing.PollOptions{Timeout: 15 * time.Second}); err != nil {
 			return errors.Wrap(err, "failed to wait for exit from fullscreen")
 		}
 		return nil

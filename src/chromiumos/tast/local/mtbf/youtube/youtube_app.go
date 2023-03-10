@@ -35,6 +35,7 @@ const (
 	playBtnDesc     = "Play video"
 	pauseBtnDesc    = "Pause video"
 	playerViewID    = youtubePkg + ":id/player_view"
+	moreOptionsID   = youtubePkg + ":id/player_overflow_button"
 	bottomSheetID   = youtubePkg + ":id/design_bottom_sheet"
 	optionsDialogID = youtubePkg + ":id/bottom_sheet_list_view"
 	uiWaitTime      = 3 * time.Second // this is for arc-obj, not for uiauto.Context
@@ -449,56 +450,74 @@ func (y *YtApp) checkYoutubeAppPIP(ctx context.Context) error {
 	)(ctx)
 }
 
+type fullscreenState string
+
+const (
+	enterFullscreen fullscreenState = "Enter fullscreen"
+	exitFullscreen  fullscreenState = "Exit fullscreen"
+)
+
 // EnterFullScreen switches youtube video to full screen.
 func (y *YtApp) EnterFullScreen(ctx context.Context) error {
 	// If the youtube app is already in full screen, skip the process to go fullscreen.
-	if err := waitWindowStateFullscreen(y.tconn, YoutubeWindowTitle)(ctx); err == nil {
+	if isFullScreen, err := y.isFullscreen(ctx); err != nil {
+		return err
+	} else if isFullScreen {
 		return nil
 	}
 
-	const fullscreenDesc = "Enter fullscreen"
-	fsBtn := y.d.Object(androidui.Description(fullscreenDesc))
 	playerView := y.d.Object(androidui.ID(playerViewID))
+	enterFsBtn := y.d.Object(androidui.Description(string(enterFullscreen)))
 
-	startTime := time.Now()
-	if err := uiauto.NamedAction("make Youtube app fullscreen",
-		uiauto.Retry(retryTimes, uiauto.Combine("enter fullscreen",
-			cuj.FindAndClick(playerView, uiWaitTime),
-			cuj.FindAndClick(fsBtn, uiWaitTime),
-			waitWindowStateFullscreen(y.tconn, YoutubeWindowTitle),
-		)),
-	)(ctx); err != nil {
-		return errors.Wrap(err, "failed to enter fullscreen")
-	}
-
-	testing.ContextLogf(ctx, "Elapsed time when doing enter fullscreen %.3f s", time.Since(startTime).Seconds())
-	return nil
+	return uiauto.Retry(retryTimes, uiauto.NamedCombine("exit Youtube from fullscreen",
+		uiauto.IfFailThen(enterFsBtn.Exists, cuj.FindAndClick(playerView, uiWaitTime)),
+		cuj.FindAndClick(enterFsBtn, uiWaitTime),
+		waitWindowStateFullscreen(y.tconn, YoutubeWindowTitle),
+	))(ctx)
 }
 
 // ExitFullScreen exits Youtube video from fullscreen.
 func (y *YtApp) ExitFullScreen(ctx context.Context) error {
 	// If the youtube app is already not in full screen, skip the process to exit fullscreen.
-	if err := waitWindowStateExitFullscreen(y.tconn, YoutubeWindowTitle)(ctx); err == nil {
+	if isFullScreen, err := y.isFullscreen(ctx); err != nil {
+		return err
+	} else if !isFullScreen {
 		return nil
 	}
 
-	const exitFullscreenDesc = "Exit fullscreen"
-	exitFsBtn := y.d.Object(androidui.Description(exitFullscreenDesc))
 	playerView := y.d.Object(androidui.ID(playerViewID))
+	exitFsBtn := y.d.Object(androidui.Description(string(exitFullscreen)))
 
-	startTime := time.Now()
-	if err := uiauto.NamedAction("exit Youtube from fullscreen",
-		uiauto.Retry(retryTimes, uiauto.Combine("exit fullscreen",
+	return uiauto.Retry(retryTimes, uiauto.Combine("exit Youtube from fullscreen",
+		uiauto.IfFailThen(exitFsBtn.Exists, cuj.FindAndClick(playerView, uiWaitTime)),
+		cuj.FindAndClick(exitFsBtn, uiWaitTime),
+		waitWindowStateExitFullscreen(y.tconn, YoutubeWindowTitle),
+	))(ctx)
+}
+
+func (y *YtApp) isFullscreen(ctx context.Context) (bool, error) {
+	moreBtn := y.d.Object(androidui.ID(moreOptionsID))
+	playerView := y.d.Object(androidui.ID(playerViewID))
+	// If the "More Options" button is not on the display, click on the video to bring it up.
+	if err := uiauto.IfFailThen(moreBtn.Exists,
+		// It might not successfully call out the buttons on the low-end DUTs.
+		uiauto.Retry(retryTimes, uiauto.NamedCombine("click video to bring up setting buttons",
 			cuj.FindAndClick(playerView, uiWaitTime),
-			cuj.FindAndClick(exitFsBtn, uiWaitTime),
-			waitWindowStateExitFullscreen(y.tconn, YoutubeWindowTitle),
+			cuj.WaitForExists(moreBtn, uiWaitTime),
 		)),
 	)(ctx); err != nil {
-		return errors.Wrap(err, "failed to exit fullscreen")
+		return false, err
 	}
-
-	testing.ContextLogf(ctx, "Elapsed time when doing exit full screen %.3f s", time.Since(startTime).Seconds())
-	return nil
+	enterFsBtn := y.d.Object(androidui.Description(string(enterFullscreen)))
+	exitFsBtn := y.d.Object(androidui.Description(string(exitFullscreen)))
+	controlBtn, err := cuj.FindAnyExists(ctx, uiWaitTime, enterFsBtn, exitFsBtn)
+	if err != nil {
+		return false, err
+	}
+	if controlBtn == enterFsBtn {
+		return false, nil
+	}
+	return true, nil
 }
 
 // PauseAndPlayVideo verifies video playback on youtube app.
