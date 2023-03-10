@@ -13,6 +13,7 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/testing"
 )
 
 // OpenAppAndGetStartTime launches a new activity, starts it and records start time.
@@ -30,6 +31,44 @@ func OpenAppAndGetStartTime(ctx context.Context, tconn *chrome.TestConn, a *arc.
 	}
 
 	return time.Since(startTime), act, nil
+}
+
+// WaitForExists returns an action function which waits for a view matching the selector to appear.
+func WaitForExists(obj *ui.Object, timeout time.Duration) action.Action {
+	return func(ctx context.Context) error {
+		if err := obj.WaitForExists(ctx, timeout); err != nil {
+			return errors.Wrap(err, "failed to wait for the target object")
+		}
+		return nil
+	}
+}
+
+// FindAnyExists returns the first found node, otherwise error if none of them are found.
+func FindAnyExists(ctx context.Context, timeout time.Duration, finders ...*ui.Object) (*ui.Object, error) {
+	var targetFinder *ui.Object
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		for _, finder := range finders {
+			if err := finder.Exists(ctx); err != nil {
+				continue
+			}
+			targetFinder = finder
+			return nil
+		}
+		return errors.New("failed to find objects")
+	}, &testing.PollOptions{Timeout: timeout}); err != nil {
+		return nil, err
+	}
+	return targetFinder, nil
+}
+
+// WaitUntilGone returns an action function which waits for a view matching the selector to disappear.
+func WaitUntilGone(obj *ui.Object, timeout time.Duration) action.Action {
+	return func(ctx context.Context) error {
+		if err := obj.WaitUntilGone(ctx, timeout); err != nil {
+			return errors.Wrap(err, "failed to wait for the target object disappear")
+		}
+		return nil
+	}
 }
 
 // FindAndClick returns an action function which finds and clicks Android ui object.
