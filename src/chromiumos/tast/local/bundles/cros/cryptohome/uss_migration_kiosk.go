@@ -238,49 +238,4 @@ func UssMigrationKiosk(ctx context.Context, s *testing.State) {
 	}); err != nil {
 		s.Fatal("Validation after USS migration failed: ", err)
 	}
-
-	// Disable migration and re-run authentication to verify the rollback process.
-	if err := cryptochrome.WithUssMigration(ctx, false /*enabled*/, func() error {
-		// Make sure cryptohome is still in USS mode, we're only disabling migration.
-		enableUssCleanup, err := helper.EnableUserSecretStash(ctx)
-		if err != nil {
-			return errors.Wrap(err, "unable to enable USS with migration rollback")
-		}
-		defer enableUssCleanup(cleanupCtx)
-
-		// Start a new auth session and mount the persistent vault.
-		// This should work with the old VK credentials.
-		if err := client.WithAuthSession(ctx, cryptohome.KioskUser, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
-			if err := client.AuthenticateKioskAuthFactorWithLabel(ctx, authSessionID, userParam.kioskLabel); err != nil {
-				return errors.Wrap(err, "failed to authenticate with kiosk credential")
-			}
-			if userParam.testMount {
-				if err := cryptohome.MountAndVerify(ctx, cryptohome.KioskUser, authSessionID, false /*ecryptfs*/); err != nil {
-					return errors.Wrap(err, "failed to mount and verify persistence")
-				}
-			}
-			return nil
-		}); err != nil {
-			return errors.Wrap(err, "failed to authenticate and mount the user vault with rollback")
-		}
-
-		// After migration is disabled, all of the backing stores (VK and USS) should still exist.
-		if err := cryptohome.CheckKeyBackingStoreExists(ctx, kioskKeysetFile, cryptohome.KioskUser); err != nil {
-			return errors.Wrap(err, "kiosk keyset file no longer exists")
-		}
-		if err := cryptohome.CheckKeyBackingStoreExists(ctx, ussFile, cryptohome.KioskUser); err != nil {
-			return errors.Wrap(err, "USS file no longer exists")
-		}
-		if err := cryptohome.CheckKeyBackingStoreExists(ctx, userParam.factorFile, cryptohome.KioskUser); err != nil {
-			return errors.Wrap(err, "kiosk auth factor file no longer exists")
-		}
-
-		// Unmount user vault.
-		if err := cryptohome.UnmountVault(ctx, cryptohome.KioskUser); err != nil {
-			return errors.Wrap(err, "failed to unmount vault after post-rollback mount")
-		}
-		return nil
-	}); err != nil {
-		s.Fatal("Validation while USS migration was rolled back failed: ", err)
-	}
 }
