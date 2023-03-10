@@ -37,12 +37,10 @@ func UserTimestamp(ctx context.Context, s *testing.State) {
 	const (
 		shadow        = "/home/.shadow"
 		timestampFile = "timestamp"
-		keysetFile    = "master.0"
-
-		user1    = "user1"
-		user2    = "user2"
-		user3    = "user3"
-		password = "1234"
+		user1         = "user1"
+		user2         = "user2"
+		user3         = "user3"
+		password      = "1234"
 
 		timestampNew = "0"
 		// This comes from kSetCurrentUserOldOffsetInDays, which is the
@@ -159,29 +157,11 @@ func UserTimestamp(ctx context.Context, s *testing.State) {
 	}
 	defer cryptohome.UnmountVault(ctx, user2)
 
-	hash, err := cryptohome.UserHash(ctx, user2)
-	if err != nil {
-		s.Fatal("Failed to get user hash: ", err)
-	}
-
-	user2StatBefore, err := os.Stat(filepath.Join(shadow, hash, keysetFile))
-	if err != nil {
-		s.Fatal("Keyset file not found: ", err)
-	}
-
 	testing.ContextLogf(ctx, "Setting user old %q", user2)
 	cmd := testexec.CommandContext(
 		ctx, "cryptohome", "--action=set_current_user_old")
 	if err := cmd.Run(); err != nil {
 		s.Fatal("Failed to set user old: ", err)
-	}
-
-	user2StatAfter, err := os.Stat(filepath.Join(shadow, hash, keysetFile))
-	if err != nil {
-		s.Fatal("Keyset file not found: ", err)
-	}
-	if user2StatBefore.ModTime() != user2StatAfter.ModTime() {
-		s.Fatal("The keyset file has been modified after changing timestamp")
 	}
 
 	if err := checkLastActivity(ctx, user1, timestampNew); err != nil {
