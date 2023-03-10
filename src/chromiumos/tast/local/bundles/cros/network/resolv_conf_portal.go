@@ -90,6 +90,9 @@ func ResolvConfPortal(ctx context.Context, s *testing.State) {
 	if err := m.WaitForDefaultService(ctx, baseSvc); err != nil {
 		s.Fatal("Failed to wait for the base network to become the default network: ", err)
 	}
+	if err := dns.WaitForNameServers(ctx, baseSvc, append(baseConfig.IPv4Nameservers, baseConfig.IPv6Nameservers...)); err != nil {
+		s.Fatal("Failed to wait for the base network to properly have all nameservers: ", err)
+	}
 
 	// Assert that /etc/resolv.conf is populated with base config.
 	// DNS proxy should not be used on non-online networks.
@@ -126,6 +129,9 @@ func ResolvConfPortal(ctx context.Context, s *testing.State) {
 	}()
 	if err := m.WaitForDefaultService(ctx, newSvc); err != nil {
 		s.Fatal("Failed to wait for the new network to become the default network: ", err)
+	}
+	if err := dns.WaitForNameServers(ctx, newSvc, append(newConfig.IPv4Nameservers, newConfig.IPv6Nameservers...)); err != nil {
+		s.Fatal("Failed to wait for the new network to properly have all nameservers: ", err)
 	}
 
 	// Assert /etc/resolv.conf content after the new network is added.

@@ -17,6 +17,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
+
 	"chromiumos/tast/common/crypto/certificate"
 	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/common/testexec"
@@ -679,6 +681,37 @@ func EnvOptionsFromConfig(config Config, nameSuffix string, priority int) virtua
 	return opts
 }
 
+// WaitForNameServers waits until svc contains nameservers in its IPConfig.
+func WaitForNameServers(ctx context.Context, svc *shill.Service, nameservers []string) error {
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		cfgs, err := svc.GetIPConfigs(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to get IPConfig")
+		}
+		gotNss := make(map[string]struct{})
+		for _, cfg := range cfgs {
+			p, err := cfg.GetIPProperties(ctx)
+			if err != nil {
+				return errors.Wrap(err, "failed to get IPConfig properties")
+			}
+			for _, nameserver := range p.NameServers {
+				gotNss[nameserver] = struct{}{}
+			}
+		}
+		wantNss := make(map[string]struct{})
+		for _, nameserver := range nameservers {
+			wantNss[nameserver] = struct{}{}
+		}
+		if !cmp.Equal(gotNss, wantNss) {
+			return errors.Errorf("Nameservers mismatch: got %v, want %v", gotNss, wantNss)
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
+		return errors.Wrap(err, "failed to wait for nameservers")
+	}
+	return nil
+}
+
 // NewShillService creates a shill service with a certain DNS configuration.
 func NewShillService(ctx context.Context, opts virtualnet.EnvOptions, pool *subnet.Pool) (*shill.Service, *virtualnet.Env, error) {
 	m, err := shill.NewManager(ctx)
@@ -689,12 +722,23 @@ func NewShillService(ctx context.Context, opts virtualnet.EnvOptions, pool *subn
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to set up shill service")
 	}
-	if err := svc.WaitForProperty(ctx, shillconst.ServicePropertyState, shillconst.ServiceStateOnline, 10*time.Second); err != nil {
+	success := false
+	defer func() {
+		if success {
+			return
+		}
 		if err := r.Cleanup(ctx); err != nil {
 			testing.ContextLog(ctx, "Failed to cleanup router: ", err)
 		}
+	}()
+	if err := svc.WaitForProperty(ctx, shillconst.ServicePropertyState, shillconst.ServiceStateOnline, 10*time.Second); err != nil {
 		return nil, nil, errors.Wrap(err, "failed to wait for shill service to be online")
 	}
+	if err := WaitForNameServers(ctx, svc, append(opts.IPv4DNSServers, opts.IPv6DNSServers...)); err != nil {
+		return nil, nil, err
+	}
+
+	success = true
 	return svc, r, nil
 }
 
