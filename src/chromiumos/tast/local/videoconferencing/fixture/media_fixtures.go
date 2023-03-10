@@ -576,3 +576,18 @@ func (f *mediaFixtureImpl) togglePlatformEffects(ctx context.Context, platformEf
 		return ensureFileGone(ctx, platformEffectsForceDisablePath)
 	}
 }
+
+// FakeCameraHALFixture returns a fake Camera HAL fixture implementation with customized configuration.
+func FakeCameraHALFixture(enabledPlatformEffect bool, fakeInputFile string) testing.FixtureImpl {
+	camConfig := cameraConfig{
+		cameraType:      testutil.UseFakeHALCamera,
+		platformEffect:  platformEffectEnabled,
+		fakeCameraInput: fakeInputFile,
+	}
+
+	if !enabledPlatformEffect {
+		camConfig.platformEffect = platformEffectDisabled
+	}
+
+	return mediaSetupFixture(internalMic, camConfig)
+}
