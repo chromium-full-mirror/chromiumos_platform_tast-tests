@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/local/bundles/cros/videoconferencing/fixture"
+	"chromiumos/tast/local/videoconferencing/fixture"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
 )

@@ -15,7 +15,6 @@ import (
 	"chromiumos/tast/local/a11y"
 	"chromiumos/tast/local/apps/googlemeet"
 	"chromiumos/tast/local/bundles/cros/videoconferencing/commontype"
-	"chromiumos/tast/local/bundles/cros/videoconferencing/fixture"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -23,6 +22,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/ossettings"
 	"chromiumos/tast/local/chrome/uiauto/role"
+	"chromiumos/tast/local/videoconferencing/fixture"
 	"chromiumos/tast/testing"
 )
 

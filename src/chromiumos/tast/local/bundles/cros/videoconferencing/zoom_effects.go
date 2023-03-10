@@ -11,12 +11,12 @@ import (
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/apps/zoom"
 	"chromiumos/tast/local/bundles/cros/videoconferencing/commontype"
-	"chromiumos/tast/local/bundles/cros/videoconferencing/fixture"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/vctray"
+	"chromiumos/tast/local/videoconferencing/fixture"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
 )
