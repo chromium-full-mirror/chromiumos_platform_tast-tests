@@ -156,6 +156,14 @@ func ChameleonSwitchMode(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get the Chameleond instance: ", err)
 	}
 
+	connectedPortMap := graphics.ChameleonGetConnectedPortMap(ctx)
+	isSupposedConnected := connectedPortMap[graphics.ChameleonGetPortname(portStr)]
+
+	if !isSupposedConnected {
+		s.Logf("Port %s (%s) is not connected, won't test", graphics.ChameleonGetPortname(portStr), portStr)
+		return
+	}
+
 	shouldUsePort, port, err := graphics.ChameleonShouldUsePort(ctx, cham, portStr)
 	if err != nil {
 		s.Fatalf("Failed to determine if plug can be used for port %s: %s", portStr, err)

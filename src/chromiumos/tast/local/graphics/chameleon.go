@@ -19,6 +19,8 @@ import (
 	"strings"
 	"time"
 
+	"gopkg.in/yaml.v2"
+
 	"chromiumos/tast/common/chameleon"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
@@ -71,6 +73,27 @@ type ChameleonTest struct {
 	Iterations int         // Number of iterations for stress tests
 	Display    DisplayMode // The initial display mode
 }
+
+const chameleonConfigDirectory = "/usr/local/graphics/config/chameleon"
+const chameleonConfigFilesExtension = "yaml"
+
+// ChameleonConfigYaml is used to retrieve yaml configs
+type ChameleonConfigYaml struct {
+	Ports       []string `yaml:"connected_ports"`
+	ChameleonIP string   `yaml:"chameleon_ip"`
+	HostIP      string   `yaml:"host_ip"`
+}
+
+// Yaml config files have connected portnames as Port0, Port1, etc.
+// These port names are used in tests according to below mapping to map with actual chameleon portname
+var portMap = map[string]string{
+	"dp1":   "Port0",
+	"dp2":   "Port1",
+	"hdmi1": "Port2",
+	"hdmi2": "Port3",
+}
+
+var supportedPorts = []string{"Port0", "Port1", "Port2", "Port3"}
 
 // RGB is an in-memory image whose At method returns color.RGBA values.
 // This is used for the Chameleon which return RGB pixels for its screenshots.
@@ -216,6 +239,59 @@ func ChameleonGetURL() (string, error) {
 	return chamURL, nil
 }
 
+// ChameleonGetHostname retries the Chameleon's Hostname
+func ChameleonGetHostname() (string, error) {
+	if (chameleonHost.Value()) == "" {
+		//Todo: support local config file
+		return "", errors.New("failed to get chameleon hostname")
+	}
+
+	return chameleonHost.Value(), nil
+}
+
+// ChameleonGetPortMapping returns connected port to boolean mapping
+func ChameleonGetPortMapping(connectedPorts []string) map[string]bool {
+	connectedPortMap := make(map[string]bool)
+
+	for _, port := range supportedPorts {
+		connected := false
+		for _, connectedPort := range connectedPorts {
+			if port == connectedPort {
+				connected = true
+				break
+			}
+		}
+		connectedPortMap[port] = connected
+	}
+
+	return connectedPortMap
+}
+
+// ChameleonGetConnectedPortMap will return connectedportsmap retrieved from yaml file or supportedports if yaml read fails
+func ChameleonGetConnectedPortMap(ctx context.Context) map[string]bool {
+	chamHost, err := ChameleonGetHostname()
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to get chameleon hostname")
+	}
+
+	//TODO(kenil): use lab labels here
+	config, err := ReadChameleonConfig(chamHost)
+	connectedPorts := config.Ports
+	if err != nil {
+		connectedPorts = supportedPorts
+		testing.ContextLog(ctx, "Reading yaml config failed, Now verifying all ports")
+	}
+
+	testing.ContextLogf(ctx, "The following ports should be connected according to the device config: %s", connectedPorts)
+	connectedPortMap := ChameleonGetPortMapping(connectedPorts)
+	return connectedPortMap
+}
+
+// ChameleonGetPortname will return actual portname based on portStr
+func ChameleonGetPortname(portStr string) string {
+	return portMap[portStr]
+}
+
 // ChameleonGetConnection retrieves the connected Chameleond instance and resets the logs.
 func ChameleonGetConnection(ctx context.Context) (chameleon.Chameleond, error) {
 	chamURL, err := ChameleonGetURL()
@@ -236,6 +312,24 @@ func ChameleonGetConnection(ctx context.Context) (chameleon.Chameleond, error) {
 
 	testing.ContextLog(ctx, "Connected to Chameleon")
 	return cham, nil
+}
+
+// ReadChameleonConfig retrieves hostname for yaml config files and return results
+func ReadChameleonConfig(filename string) (ChameleonConfigYaml, error) {
+
+	chameleonConfigFilePath := fmt.Sprintf("%s/%s.%s", chameleonConfigDirectory, filename, chameleonConfigFilesExtension)
+
+	contents, err := os.ReadFile(chameleonConfigFilePath)
+	if err != nil {
+		return ChameleonConfigYaml{}, errors.Wrap(err, "error reading file")
+	}
+
+	var chameleonConfigYaml ChameleonConfigYaml
+	if err := yaml.Unmarshal(contents, &chameleonConfigYaml); err != nil {
+		return ChameleonConfigYaml{}, errors.Wrapf(err, "unable to parse %s.yaml file", filename)
+	}
+
+	return chameleonConfigYaml, nil
 }
 
 // ChameleonShouldUsePort determines whether a port is physically plugged for usage.

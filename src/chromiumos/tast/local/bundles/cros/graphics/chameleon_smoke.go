@@ -34,12 +34,26 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		VarDeps:      []string{"graphics.chameleon_ip"},
 		Fixture:      "gpuWatchHangs",
-		Timeout:      chrome.LoginTimeout + time.Minute,
+		Params: []testing.Param{{
+			Name: "dp1",
+			Val:  "dp1",
+		}, {
+			Name: "dp2",
+			Val:  "dp2",
+		}, {
+			Name: "hdmi1",
+			Val:  "hdmi1",
+		}, {
+			Name: "hdmi2",
+			Val:  "hdmi2",
+		}},
+		Timeout: chrome.LoginTimeout + time.Minute,
 	})
 }
 
 func ChameleonSmoke(ctx context.Context, s *testing.State) {
-	validPorts := 0
+	portStr := s.Param().(string)
+
 	// Log into Chrome to ensure there is something on the screen.
 	// Strictly speaking Chrome is not needed for this test.
 	cr, err := chrome.New(ctx)
@@ -60,21 +74,32 @@ func ChameleonSmoke(ctx context.Context, s *testing.State) {
 	cham, err := graphics.ChameleonGetConnection(ctx)
 
 	defer graphics.ChameleonSaveLogsAndOutputOnError(ctx, cham, s.HasError, s.OutDir())
-
 	if err != nil {
 		s.Fatal("Failed to get the Chameleond instance: ", err)
 	}
 
-	supportedPorts := [...]string{"dp1", "dp2", "hdmi1", "hdmi2"}
-	for _, portStr := range supportedPorts {
-		s.Logf("Inspecting Port %s", portStr)
-		shouldUsePort, port, err := graphics.ChameleonShouldUsePort(ctx, cham, portStr)
-		if err != nil {
-			s.Fatalf("Failed to determine if plug can be used for port %d: %s", port, err)
-		}
-		if !shouldUsePort {
-			s.Fatalf("Chameleon is not plugged into port %d", port)
-		}
+	connectedPortMap := graphics.ChameleonGetConnectedPortMap(ctx)
+
+	s.Logf("Inspecting port %s", portStr)
+	shouldUsePort, port, err := graphics.ChameleonShouldUsePort(ctx, cham, portStr)
+	if err != nil {
+		s.Fatalf("Failed to determine if plug can be used for port %d: %s", port, err)
+	}
+
+	// Check if the port is part of connectedports - if yes, it should be connected to be passed, if no, it should not be connected to be passed
+	isSupposedConnected := connectedPortMap[graphics.ChameleonGetPortname(portStr)]
+
+	if isSupposedConnected && !shouldUsePort {
+		s.Fatalf("Port %d (%s) is not plugged in Chameleon but expected to be", port, portStr)
+	}
+
+	if !isSupposedConnected && shouldUsePort {
+		s.Fatalf("Port %d (%s) is plugged in Chameleon even though it should not be", port, portStr)
+	}
+
+	if !isSupposedConnected && !shouldUsePort {
+		s.Logf("Port %d (%s) is not plugged in Chameleon as expected", port, portStr)
+	} else {
 		if err = graphics.ChameleonPlug(ctx, cham, port); err != nil {
 			s.Fatalf("Failed to get stable video input from a physically plugged port %d: %s", port, err)
 		}
@@ -95,11 +120,5 @@ func ChameleonSmoke(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatalf("Failed to unplug a physically plugged port %d: %s ", port, err)
 		}
-		validPorts++
-	}
-
-	s.Logf("Found %d valid Chameleon ports", validPorts)
-	if validPorts == 0 {
-		s.Error("No working Chameleon device found")
 	}
 }
