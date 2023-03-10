@@ -29,12 +29,12 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name:      "ash",
-				Fixture:   fixture.TelemetryExtensionOverrideOEMName,
+				Fixture:   fixture.TelemetryExtensionSkipOEMNameCheck,
 				ExtraAttr: []string{"informational"},
 			},
 			{
 				Name:      "lacros",
-				Fixture:   fixture.TelemetryExtensionOverrideOEMNameLacros,
+				Fixture:   fixture.TelemetryExtensionSkipOEMNameCheckLacros,
 				ExtraAttr: []string{"informational"},
 			},
 		},

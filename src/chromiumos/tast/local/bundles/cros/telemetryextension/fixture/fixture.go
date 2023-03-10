@@ -16,7 +16,6 @@ import (
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/fsutil"
-	"chromiumos/tast/local/bundles/cros/telemetryextension/vendorutils"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
@@ -31,10 +30,10 @@ import (
 
 // Fixture names.
 const (
-	TelemetryExtension                      = "telemetryExtension"
-	TelemetryExtensionLacros                = "telemetryExtensionLacros"
-	TelemetryExtensionOverrideOEMName       = "telemetryExtensionOverrideOEMName"
-	TelemetryExtensionOverrideOEMNameLacros = "telemetryExtensionOverrideOEMNameLacros"
+	TelemetryExtension                       = "telemetryExtension"
+	TelemetryExtensionLacros                 = "telemetryExtensionLacros"
+	TelemetryExtensionSkipOEMNameCheck       = "telemetryExtensionSkipOEMNameCheck"
+	TelemetryExtensionSkipOEMNameCheckLacros = "telemetryExtensionSkipOEMNameCheckLacros"
 )
 
 const (
@@ -75,14 +74,14 @@ func init() {
 		Data:            extFiles(),
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name: TelemetryExtensionOverrideOEMName,
+		Name: TelemetryExtensionSkipOEMNameCheck,
 		Desc: "Telemetry Extension fixture with running PWA and companion Telemetry Extension on devices that are not officially supported yet",
 		Contacts: []string{
 			"chromeos-oem-services@google.com", // Use team email for tickets.
 			"bkersting@google.com",
 			"lamzin@google.com",
 		},
-		Impl:            newTelemetryExtensionFixture(overrideOEMName()),
+		Impl:            newTelemetryExtensionFixture(skipOEMNameCheck()),
 		SetUpTimeout:    chrome.LoginTimeout + 30*time.Second + cleanupTimeout,
 		TearDownTimeout: cleanupTimeout,
 		PreTestTimeout:  10 * time.Second,
@@ -90,14 +89,14 @@ func init() {
 		Data:            extFiles(),
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name: TelemetryExtensionOverrideOEMNameLacros,
+		Name: TelemetryExtensionSkipOEMNameCheckLacros,
 		Desc: "Telemetry Extension fixture with running PWA and companion Telemetry Extension in Lacros browser on devices that are not officially supported yet",
 		Contacts: []string{
 			"chromeos-oem-services@google.com", // Use team email for tickets.
 			"bkersting@google.com",
 			"lamzin@google.com",
 		},
-		Impl:            newTelemetryExtensionFixture(lacros(), overrideOEMName()),
+		Impl:            newTelemetryExtensionFixture(lacros(), skipOEMNameCheck()),
 		SetUpTimeout:    chrome.LoginTimeout + 30*time.Second + cleanupTimeout,
 		TearDownTimeout: cleanupTimeout,
 		PreTestTimeout:  10 * time.Second,
@@ -118,9 +117,9 @@ func lacros() func(*telemetryExtensionFixture) {
 	}
 }
 
-func overrideOEMName() func(*telemetryExtensionFixture) {
+func skipOEMNameCheck() func(*telemetryExtensionFixture) {
 	return func(f *telemetryExtensionFixture) {
-		f.overrideOEMName = true
+		f.skipOEMNameCheck = true
 	}
 }
 
@@ -137,8 +136,8 @@ func newTelemetryExtensionFixture(opts ...option) *telemetryExtensionFixture {
 
 // telemetryExtensionFixture implements testing.FixtureImpl.
 type telemetryExtensionFixture struct {
-	bt              browser.Type
-	overrideOEMName bool
+	bt               browser.Type
+	skipOEMNameCheck bool
 
 	dir     string
 	cr      *chrome.Chrome
@@ -292,9 +291,8 @@ func (f *telemetryExtensionFixture) setupChromeForConsumers(ctx context.Context,
 	}
 
 	var opts []chrome.Option
-	if err := f.addOverrideOEMNameChromeArg(ctx, &opts); err != nil {
-		return err
-	}
+	f.addSkipOEMNameCheckChromeArg(ctx, &opts)
+
 	if f.bt == browser.TypeAsh {
 		opts = append(opts, chrome.UnpackedExtension(dir))
 	}
@@ -368,13 +366,8 @@ func (f *telemetryExtensionFixture) setupConnectionToExtension(ctx context.Conte
 	return nil
 }
 
-func (f *telemetryExtensionFixture) addOverrideOEMNameChromeArg(ctx context.Context, opts *[]chrome.Option) error {
-	if f.overrideOEMName {
-		vendorName, err := vendorutils.FetchVendor(ctx)
-		if err != nil {
-			return errors.Wrap(err, "failed to fetch vendor name")
-		}
-		*opts = append(*opts, chrome.ExtraArgs("--telemetry-extension-manufacturer-override-for-testing="+vendorName))
+func (f *telemetryExtensionFixture) addSkipOEMNameCheckChromeArg(ctx context.Context, opts *[]chrome.Option) {
+	if f.skipOEMNameCheck {
+		*opts = append(*opts, chrome.ExtraArgs("--telemetry-extension-skip-manufacturer-check-for-testing"))
 	}
-	return nil
 }
