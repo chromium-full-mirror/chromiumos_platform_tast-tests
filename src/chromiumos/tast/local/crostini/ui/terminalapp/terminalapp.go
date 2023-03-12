@@ -149,7 +149,7 @@ func LaunchSSH(ctx context.Context, tconn *chrome.TestConn, sshArgs string) (*Te
 // dismissLeaveAppDialogIfShown dimisses the "Leave app?" dialog if shown.
 func (ta *TerminalApp) dismissLeaveAppDialogIfShown() uiauto.Action {
 	return uiauto.IfSuccessThen(
-		ta.ui.WithTimeout(3*time.Second).WaitUntilExists(terminalLeaveButton),
+		ta.ui.WithTimeout(time.Second).WaitUntilExists(terminalLeaveButton),
 		ta.ui.LeftClickUntil(
 			terminalLeaveButton,
 			ta.ui.WithTimeout(time.Second).WaitUntilGone(terminalLeaveButton),
@@ -218,6 +218,7 @@ func (ta *TerminalApp) ExitSSH() uiauto.Action {
 		ta.Kb.AccelAction("Esc"),
 		ta.dismissLeaveAppDialogIfShown(),
 		ta.Kb.AccelAction("Ctrl+Shift+W"),
+		ta.dismissLeaveAppDialogIfShown(),
 	)
 }
 
