@@ -22,7 +22,7 @@ import (
 
 	"chromiumos/tast/errors"
 	"chromiumos/tast/testing"
-	"chromiumos/tast/testutil"
+	"go.chromium.org/tast/core/testutil"
 )
 
 // crashFile contains information about a crash file used by tests.

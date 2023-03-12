@@ -12,7 +12,7 @@ import (
 	"testing"
 
 	"chromiumos/tast/errors"
-	"chromiumos/tast/testutil"
+	"go.chromium.org/tast/core/testutil"
 )
 
 // statAll attempts to stat all given files, returning an error if any call fails.

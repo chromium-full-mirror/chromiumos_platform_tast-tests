@@ -19,8 +19,8 @@ import (
 	"chromiumos/tast/local/crostini"
 	"chromiumos/tast/local/crostini/ui/settings"
 	"chromiumos/tast/local/crostini/ui/terminalapp"
-	"chromiumos/tast/shutil"
 	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/shutil"
 )
 
 func init() {

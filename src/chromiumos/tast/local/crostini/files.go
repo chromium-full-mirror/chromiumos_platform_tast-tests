@@ -11,7 +11,7 @@ import (
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/vm"
-	"chromiumos/tast/shutil"
+	"go.chromium.org/tast/core/shutil"
 )
 
 // RemoveContainerFile removes a file from the container's file system. This is

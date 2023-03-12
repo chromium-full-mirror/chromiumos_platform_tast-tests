@@ -13,9 +13,9 @@ import (
 	"chromiumos/tast/dut"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/firmware"
-	"chromiumos/tast/shutil"
 	"chromiumos/tast/ssh"
 	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/shutil"
 )
 
 // FWImageType is the type of firmware (RO or RW).

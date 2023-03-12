@@ -15,8 +15,8 @@ import (
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/hardware/iio"
-	"chromiumos/tast/shutil"
 	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/shutil"
 )
 
 func init() {

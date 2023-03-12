@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"chromiumos/tast/testutil"
+	"go.chromium.org/tast/core/testutil"
 )
 
 func TestParseStatFile(t *testing.T) {

@@ -19,10 +19,10 @@ import (
 	"chromiumos/tast/common/utils"
 	"chromiumos/tast/dut"
 	"chromiumos/tast/errors"
-	"chromiumos/tast/shutil"
 	"chromiumos/tast/ssh"
 	"chromiumos/tast/ssh/linuxssh"
 	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/shutil"
 )
 
 // DisplayScript is the script installed on chart tablet for displaying chart.

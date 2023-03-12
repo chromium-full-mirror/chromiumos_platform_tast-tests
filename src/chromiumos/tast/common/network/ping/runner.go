@@ -13,9 +13,9 @@ import (
 
 	"chromiumos/tast/common/network/cmd"
 	"chromiumos/tast/errors"
-	"chromiumos/tast/shutil"
 	"chromiumos/tast/testing"
-	"chromiumos/tast/testutil"
+	"go.chromium.org/tast/core/shutil"
+	"go.chromium.org/tast/core/testutil"
 )
 
 const pingCmd = "ping"

@@ -13,8 +13,8 @@ import (
 
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
-	"chromiumos/tast/shutil"
 	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/shutil"
 )
 
 // RegexpPred returns a function to be passed to WaitForLogcat that returns true if a given regexp is matched in that line.

@@ -21,9 +21,9 @@ import (
 	"chromiumos/tast/common/upstart"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/fsutil"
-	"chromiumos/tast/shutil"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/timing"
+	"go.chromium.org/tast/core/shutil"
 )
 
 const (

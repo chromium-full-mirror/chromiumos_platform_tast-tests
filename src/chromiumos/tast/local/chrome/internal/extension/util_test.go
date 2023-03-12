@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"chromiumos/tast/testutil"
+	"go.chromium.org/tast/core/testutil"
 )
 
 func TestComputeExtensionID(t *testing.T) {

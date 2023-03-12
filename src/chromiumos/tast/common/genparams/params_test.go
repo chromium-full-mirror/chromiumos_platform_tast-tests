@@ -13,7 +13,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/kylelemons/godebug/diff"
 
-	"chromiumos/tast/testutil"
+	"go.chromium.org/tast/core/testutil"
 )
 
 // fakeTestingT is a fake implementation of TestingT.

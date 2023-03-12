@@ -15,7 +15,7 @@ import (
 
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
-	"chromiumos/tast/shutil"
+	"go.chromium.org/tast/core/shutil"
 )
 
 // top represents the top profiler.

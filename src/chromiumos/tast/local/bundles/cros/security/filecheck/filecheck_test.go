@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"chromiumos/tast/testutil"
+	"go.chromium.org/tast/core/testutil"
 )
 
 // fakeFileInfo is an implementation of os.FileInfo used for unit tests.

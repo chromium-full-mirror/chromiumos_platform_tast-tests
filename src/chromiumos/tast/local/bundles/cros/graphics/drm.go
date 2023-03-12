@@ -13,9 +13,9 @@ import (
 	"time"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/shutil"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/shutil"
 )
 
 var drmErrorRegex = regexp.MustCompile(`ERROR:`)

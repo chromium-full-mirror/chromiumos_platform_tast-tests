@@ -11,7 +11,7 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/crostini"
 	"chromiumos/tast/local/power"
-	"chromiumos/tast/shutil"
+	"go.chromium.org/tast/core/shutil"
 )
 
 // CrostiniConfig is the config to run in Crostini.

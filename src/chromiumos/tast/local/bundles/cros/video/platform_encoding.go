@@ -26,9 +26,9 @@ import (
 	"chromiumos/tast/local/media/encoding"
 	"chromiumos/tast/local/media/videotype"
 	"chromiumos/tast/local/power"
-	"chromiumos/tast/shutil"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/shutil"
 )
 
 // regExpFPSVP8 is the regexp to find the FPS output from the VP8 binary log.

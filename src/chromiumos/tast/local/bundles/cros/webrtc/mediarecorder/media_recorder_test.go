@@ -9,7 +9,7 @@ import (
 	"os"
 	"testing"
 
-	"chromiumos/tast/testutil"
+	"go.chromium.org/tast/core/testutil"
 )
 
 // TestComputeNumFrames checks whether mediarecorder.TestComputeNumFrames returns correct

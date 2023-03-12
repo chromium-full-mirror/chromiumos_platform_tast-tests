@@ -18,7 +18,7 @@ import (
 
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/errors"
-	"chromiumos/tast/testutil"
+	"go.chromium.org/tast/core/testutil"
 )
 
 func loadJSON(path string) (interface{}, error) {

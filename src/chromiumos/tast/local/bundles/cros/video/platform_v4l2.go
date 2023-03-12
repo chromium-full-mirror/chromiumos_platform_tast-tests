@@ -14,8 +14,8 @@ import (
 
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/shutil"
 	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/shutil"
 )
 
 // v4l2SummaryRegExp is the regexp to find the summary result from the binary log.

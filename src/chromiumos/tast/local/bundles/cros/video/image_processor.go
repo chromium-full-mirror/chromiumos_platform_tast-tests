@@ -14,8 +14,8 @@ import (
 	"chromiumos/tast/local/gtest"
 	"chromiumos/tast/local/media/logging"
 	"chromiumos/tast/local/sysutil"
-	"chromiumos/tast/shutil"
 	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/shutil"
 )
 
 const imageProcessorUnitTestBin = "image_processor_test"

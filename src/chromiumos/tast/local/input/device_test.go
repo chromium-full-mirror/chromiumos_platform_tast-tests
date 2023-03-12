@@ -10,7 +10,7 @@ import (
 	"reflect"
 	"testing"
 
-	"chromiumos/tast/testutil"
+	"go.chromium.org/tast/core/testutil"
 )
 
 func TestReadDevices(t *testing.T) {

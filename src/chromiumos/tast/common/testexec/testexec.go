@@ -44,8 +44,8 @@ import (
 
 	"chromiumos/tast/errors"
 	tastexec "chromiumos/tast/exec"
-	"chromiumos/tast/shutil"
 	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/shutil"
 )
 
 // Cmd represents an external command being prepared or run.

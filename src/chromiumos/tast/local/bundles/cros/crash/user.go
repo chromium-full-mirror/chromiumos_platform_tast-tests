@@ -26,8 +26,8 @@ import (
 	localcrash "chromiumos/tast/local/crash"
 	"chromiumos/tast/local/syslog"
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/shutil"
 	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/shutil"
 )
 
 const (

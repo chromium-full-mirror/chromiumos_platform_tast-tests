@@ -14,7 +14,7 @@ import (
 
 	"github.com/mafredri/cdp/protocol/runtime"
 
-	"chromiumos/tast/testutil"
+	"go.chromium.org/tast/core/testutil"
 )
 
 // fakeConsoleAPICalledClient is a fake implementation of ConsoleAPICalledClient.

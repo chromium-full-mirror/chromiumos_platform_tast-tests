@@ -11,7 +11,7 @@ import (
 	"reflect"
 	"testing"
 
-	"chromiumos/tast/testutil"
+	"go.chromium.org/tast/core/testutil"
 )
 
 func TestGetSensors(t *testing.T) {

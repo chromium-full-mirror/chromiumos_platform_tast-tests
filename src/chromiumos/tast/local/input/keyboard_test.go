@@ -20,7 +20,7 @@ import (
 	"golang.org/x/sys/unix"
 
 	"chromiumos/tast/errors"
-	"chromiumos/tast/testutil"
+	"go.chromium.org/tast/core/testutil"
 )
 
 // testBuffer implements io.WriteCloser.

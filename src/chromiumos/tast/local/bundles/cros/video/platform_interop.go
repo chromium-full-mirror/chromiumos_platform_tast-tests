@@ -17,9 +17,9 @@ import (
 	"chromiumos/tast/local/coords"
 	"chromiumos/tast/local/media/encoding"
 	"chromiumos/tast/local/media/videotype"
-	"chromiumos/tast/shutil"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/shutil"
 )
 
 // Function type to generate per-frame MD5SUM reference values for file.

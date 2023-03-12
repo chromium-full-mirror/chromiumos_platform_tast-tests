@@ -27,8 +27,8 @@ import (
 	"chromiumos/tast/local/gtest"
 	"chromiumos/tast/local/sysutil"
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/shutil"
 	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/shutil"
 )
 
 const (

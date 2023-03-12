@@ -26,10 +26,10 @@ import (
 	dlcutil "chromiumos/tast/local/dlc"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/vm"
-	"chromiumos/tast/shutil"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
 	"chromiumos/tast/timing"
+	"go.chromium.org/tast/core/shutil"
 )
 
 // UnstableModels is list of models on which the Crostini tests are flaky.

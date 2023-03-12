@@ -14,8 +14,8 @@ import (
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/colorcmp"
 	"chromiumos/tast/local/crostini"
-	"chromiumos/tast/shutil"
 	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/shutil"
 )
 
 type toolkitConfig struct {

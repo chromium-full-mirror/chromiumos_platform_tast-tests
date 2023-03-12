@@ -20,8 +20,8 @@ import (
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
-	"chromiumos/tast/shutil"
 	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/shutil"
 )
 
 // ListTests returns a list of tests in the gtest executable.
@@ -37,11 +37,14 @@ func ListTests(ctx context.Context, exec string) ([]string, error) {
 // list of test names. The format of output should be:
 //
 // TestSuiteA.
-//   TestCase1
-//   TestCase2
+//
+//	TestCase1
+//	TestCase2
+//
 // TestSuiteB.
-//   TestCase3
-//   TestCase4
+//
+//	TestCase3
+//	TestCase4
 //
 // etc. The each returned test name is formatted into "TestSuite.TestCase".
 func parseTestList(content string) []string {

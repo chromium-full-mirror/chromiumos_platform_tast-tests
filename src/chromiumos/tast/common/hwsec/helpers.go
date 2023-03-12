@@ -23,8 +23,8 @@ import (
 
 	tmpb "chromiumos/system_api/tpm_manager_proto"
 	"chromiumos/tast/errors"
-	"chromiumos/tast/shutil"
 	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/shutil"
 )
 
 const ussFlagFile = "/var/lib/cryptohome/uss_enabled"

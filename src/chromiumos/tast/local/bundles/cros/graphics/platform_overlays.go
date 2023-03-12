@@ -12,9 +12,9 @@ import (
 
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/shutil"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/shutil"
 )
 
 // overlay defines the parameters for a HW overlay (a.k.a. DRM plane).

@@ -18,7 +18,7 @@ import (
 
 	"chromiumos/tast/remote/dutfs"
 	"chromiumos/tast/services/cros/baserpc"
-	"chromiumos/tast/testutil"
+	"go.chromium.org/tast/core/testutil"
 )
 
 // startTestPair starts a pair of remote file system server and client.

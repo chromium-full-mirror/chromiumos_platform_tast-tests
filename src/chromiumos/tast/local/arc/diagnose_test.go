@@ -1,3 +1,7 @@
+// Copyright 2023 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 package arc
 
 import (
@@ -7,7 +11,7 @@ import (
 	"testing"
 
 	"chromiumos/tast/errors"
-	"chromiumos/tast/testutil"
+	"go.chromium.org/tast/core/testutil"
 )
 
 func verifyDiagnose(t *testing.T, logcat, exp string) {

@@ -11,7 +11,7 @@ import (
 
 	uda "chromiumos/system_api/user_data_auth_proto"
 	"chromiumos/tast/errors"
-	"chromiumos/tast/shutil"
+	"go.chromium.org/tast/core/shutil"
 )
 
 // cryptohomeBinary is used to interact with the cryptohomed process over

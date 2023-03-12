@@ -20,7 +20,7 @@ import (
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/fsutil"
-	"chromiumos/tast/shutil"
+	"go.chromium.org/tast/core/shutil"
 )
 
 // perf represents the perf profiler.

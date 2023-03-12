@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"chromiumos/tast/errors"
-	"chromiumos/tast/testutil"
+	"go.chromium.org/tast/core/testutil"
 )
 
 // These are the names of the mock platforms whose configs we will define.

@@ -23,8 +23,9 @@ import (
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/dbusutil"
-	"chromiumos/tast/shutil"
 	"chromiumos/tast/testing"
+
+	"go.chromium.org/tast/core/shutil"
 )
 
 const (

@@ -21,9 +21,9 @@ import (
 	"chromiumos/tast/remote/dutfs"
 	"chromiumos/tast/remote/firmware/fingerprint/rpcdut"
 	"chromiumos/tast/remote/firmware/reporters"
-	"chromiumos/tast/shutil"
 	"chromiumos/tast/ssh"
 	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/shutil"
 )
 
 type firmwareMetadata struct {

@@ -22,8 +22,8 @@ import (
 	"chromiumos/tast/local/bundles/cros/arc/cpuset"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/sysutil"
-	"chromiumos/tast/shutil"
 	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/shutil"
 )
 
 type cpuSetConfig struct {

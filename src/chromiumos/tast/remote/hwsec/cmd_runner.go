@@ -16,8 +16,8 @@ import (
 	"chromiumos/tast/common/hwsec"
 	"chromiumos/tast/dut"
 	"chromiumos/tast/errors"
-	"chromiumos/tast/shutil"
 	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/shutil"
 )
 
 // CmdRunnerRemote implements CmdRunner for remote test.

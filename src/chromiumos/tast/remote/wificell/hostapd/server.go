@@ -26,11 +26,11 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/network/iw"
 	"chromiumos/tast/remote/wificell/fileutil"
-	"chromiumos/tast/shutil"
 	"chromiumos/tast/ssh"
 	"chromiumos/tast/ssh/linuxssh"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/timing"
+	"go.chromium.org/tast/core/shutil"
 )
 
 const (

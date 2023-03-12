@@ -14,9 +14,9 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/hwsec/util"
 	hwseclocal "chromiumos/tast/local/hwsec"
-	"chromiumos/tast/shutil"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/shutil"
 )
 
 func init() {

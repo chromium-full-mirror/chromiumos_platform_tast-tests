@@ -18,7 +18,7 @@ import (
 	"github.com/mafredri/cdp/rpcc"
 
 	"chromiumos/tast/errors"
-	"chromiumos/tast/testutil"
+	"go.chromium.org/tast/core/testutil"
 )
 
 func TestReadDebuggingPort(t *testing.T) {

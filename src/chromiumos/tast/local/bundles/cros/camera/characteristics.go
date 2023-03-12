@@ -11,8 +11,8 @@ import (
 
 	"chromiumos/tast/autocaps"
 	"chromiumos/tast/local/gtest"
-	"chromiumos/tast/shutil"
 	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/shutil"
 )
 
 func init() {

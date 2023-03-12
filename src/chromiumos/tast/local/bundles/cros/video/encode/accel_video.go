@@ -25,8 +25,8 @@ import (
 	"chromiumos/tast/local/media/logging"
 	"chromiumos/tast/local/media/videotype"
 	"chromiumos/tast/local/sysutil"
-	"chromiumos/tast/shutil"
 	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/shutil"
 )
 
 // Duration of the interval during which CPU usage will be measured in the performance test.

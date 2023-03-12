@@ -13,7 +13,7 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/services/cros/meta"
 	"chromiumos/tast/testing"
-	"chromiumos/tast/testutil"
+	"go.chromium.org/tast/core/testutil"
 )
 
 func init() {
