@@ -79,7 +79,7 @@ func init() {
 				Fixture:           fixture.LacrosTabletVK,
 				Val:               append(voiceTestIMEs, voiceTestIMEsNewData...),
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
-				ExtraSoftwareDeps: []string{"lacros_stable"},
+				ExtraSoftwareDeps: []string{"lacros_stable", "lacros"},
 				ExtraSearchFlags:  util.IMESearchFlags(voiceTestIMEsNewData),
 				ExtraAttr:         []string{"informational"},
 			},
@@ -128,9 +128,12 @@ func VirtualKeyboardSpeech(ctx context.Context, s *testing.State) {
 				outDir := filepath.Join(s.OutDir(), testName)
 				faillog.DumpUITreeWithScreenshotOnError(ctx, outDir, s.HasError, cr, "ui_tree_"+testName)
 
+				vkbCtx.SwitchToKeyboard() // Return to text input after test.
+
 				if err := vkbCtx.HideVirtualKeyboard()(ctx); err != nil {
 					s.Log("Failed to hide virtual keyboard: ", err)
 				}
+
 			}(cleanupCtx)
 
 			verifyAudioInputAction := uiauto.Combine("verify audio input",

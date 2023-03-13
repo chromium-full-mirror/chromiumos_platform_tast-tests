@@ -466,7 +466,7 @@ func (vkbCtx *VirtualKeyboardContext) SwitchToKeyboard() uiauto.Action {
 			vkbCtx.ui.WithTimeout(500*time.Millisecond).WaitUntilExists(showAccessPointsBtn),
 			vkbCtx.ui.LeftClick(showAccessPointsBtn),
 		),
-		vkbCtx.ui.LeftClick(KeyFinder.Name("Back")),
+		vkbCtx.ui.LeftClick(NodeFinder.NameRegex(regexp.MustCompile("(Back)|(^keyboard)"))),
 	)
 }
 
