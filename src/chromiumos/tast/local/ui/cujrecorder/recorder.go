@@ -583,6 +583,7 @@ func (r *Recorder) StartTracingWithName(ctx context.Context, outDir, traceName, 
 	if err != nil {
 		return errors.Wrap(err, "failed to start tracing")
 	}
+	r.Annotate(ctx, "Start_tracing")
 	r.sessions[tracePath] = sess
 	r.activeSession = sess
 	return nil
@@ -597,6 +598,7 @@ func (r *Recorder) StopTracing(ctx context.Context) error {
 	if err := r.activeSession.Stop(); err != nil {
 		return errors.Wrap(err, "failed to stop tracing")
 	}
+	r.Annotate(ctx, "Stop_tracing")
 	r.activeSession = nil
 	return nil
 }

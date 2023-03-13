@@ -1012,12 +1012,6 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 			}
 		}
 
-		// Start tracing now.
-		if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
-			return errors.Wrap(err, "failed to start tracing")
-		}
-		defer recorder.StopTracing(ctx)
-
 		if err := meetConn.WaitForExpr(ctx, "hrTelemetryApi.isInMeeting()"); err != nil {
 			return errors.Wrap(err, "failed to wait for entering meeting")
 		}
@@ -1117,6 +1111,20 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 			//   kernel does not support the reporting mechanism.
 			errc <- graphics.MeasureGPUCounters(ctx, meetTimeout, pv)
 		}()
+
+		// Record trace for 30 seconds.
+		// See go/trace-in-cuj-tests about rules for tracing.
+		traceDuration := 30 * time.Second
+		if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
+			return errors.Wrap(err, "failed to start tracing")
+		}
+		if err := testing.Sleep(ctx, traceDuration); err != nil {
+			return errors.Wrap(err, "failed to sleep")
+		}
+		if err := recorder.StopTracing(ctx); err != nil {
+			return errors.Wrap(err, "failed to stop tracing")
+		}
+		meetTimeout = time.Duration(meetTimeout - traceDuration)
 
 		if meet.docs {
 			if err := action.Combine(

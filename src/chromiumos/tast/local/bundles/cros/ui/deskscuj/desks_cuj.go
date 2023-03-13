@@ -151,12 +151,6 @@ func Run(ctx context.Context, s *testing.State) {
 	}
 
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
-		// Start tracing now.
-		if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
-			return errors.Wrap(err, "failed to start tracing")
-		}
-		defer recorder.StopTracing(ctx)
-
 		// Open a window within recorder.Run to ensure we collect
 		// PageLoad.PaintTiming.NavigationToFirstContentfulPaint.
 		if err := ash.ActivateDeskAtIndex(ctx, tconn, 0); err != nil {
@@ -194,6 +188,19 @@ func Run(ctx context.Context, s *testing.State) {
 
 			i := 0
 			for endTime := time.Now().Add(deskSwitchingDuration); time.Now().Before(endTime); {
+				// Record trace from starting cycling with search-bracket to completing 4 cycles.
+				// See go/trace-in-cuj-tests about rules for tracing.
+				if deskSwitcher.recordTrace {
+					if cycles == 0 {
+						if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
+							return errors.Wrap(err, "failed to start tracing")
+						}
+					} else if cycles == 4 {
+						if err := recorder.StopTracing(ctx); err != nil {
+							return errors.Wrap(err, "failed to stop tracing")
+						}
+					}
+				}
 				i = (i + 1) % len(deskSwitcher.itinerary)
 				nextDesk := deskSwitcher.itinerary[i]
 

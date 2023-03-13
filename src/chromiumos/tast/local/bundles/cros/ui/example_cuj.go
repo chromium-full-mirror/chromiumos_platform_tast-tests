@@ -162,18 +162,15 @@ func ExampleCUJ(ctx context.Context, s *testing.State) {
 	// recorder.Run runs the provided function, and collects metrics
 	// during its execution.
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
-		// [Optional] Start tracing.
-		if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
-			return errors.Wrap(err, "failed to start tracing")
-		}
-		defer recorder.StopTracing(ctx)
-
 		const (
 			chromiumURL     = "https://chromium.org/Home"
 			issueTrackerURL = "https://bugs.chromium.org/p/chromium/issues/list"
 			searchQuery     = "This is my example search query for the Chromium website"
 			testDuration    = 10 * time.Minute
 		)
+
+		// [Optional] Only record trace for one iteration.
+		var traceDone bool
 
 		// We want the test to run for about 10 minutes to collect
 		// meaningful performance and power metrics. In this test, we
@@ -246,6 +243,14 @@ func ExampleCUJ(ctx context.Context, s *testing.State) {
 				s.Logf("Failed to wait for the tab %s to quiesce", issueTrackerURL)
 			}
 
+			// [Optional] Start tracing.
+			// See go/trace-in-cuj-tests about rules for tracing.
+			if !traceDone {
+				if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
+					return errors.Wrap(err, "failed to start tracing")
+				}
+			}
+
 			// Since the Chromium bug tracker is a scrollable page,
 			// scroll up and down using the mouse wheel.
 			for _, direction := range []string{"Down", "Up"} {
@@ -260,6 +265,14 @@ func ExampleCUJ(ctx context.Context, s *testing.State) {
 				if err := inputsimulations.RepeatKeyPress(ctx, kw, direction, 200*time.Millisecond, 15); err != nil {
 					return errors.Wrapf(err, "failed to repeatedly press the %s arrow key", direction)
 				}
+			}
+
+			// [Optional] Stop tracing.
+			if !traceDone {
+				if err := recorder.StopTracing(ctx); err != nil {
+					return errors.Wrap(err, "failed to stop tracing")
+				}
+				traceDone = true
 			}
 
 			// Generating Ash smoothness involves interacting with the

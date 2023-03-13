@@ -50,6 +50,9 @@ type paragraph struct {
 	// cleanUp performs any cleanup actions that are needed to limit
 	// anything that could affect typing further paragraphs.
 	cleanUp action.Action
+
+	// recordTrace indicates whether to record trace.
+	recordTrace bool
 }
 
 // These values for typing speed were chosen to be equidistant, and to
@@ -100,6 +103,7 @@ func getParagraphs(pc pointer.Context, cr *chrome.Chrome, tconn *chrome.TestConn
 			description: fmt.Sprintf("English WPM %d", fastTypingSpeed),
 			body:        englishString,
 			language:    ime.DefaultInputMethod,
+			recordTrace: true,
 		},
 		{
 			description: "Lorem Ipsum",

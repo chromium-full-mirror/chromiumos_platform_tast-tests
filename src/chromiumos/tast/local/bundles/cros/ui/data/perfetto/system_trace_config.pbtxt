@@ -3,9 +3,6 @@
 # Enable periodic flushing of the trace buffer into the output file.
 write_into_file: true
 
-# Max duration: 1 min.
-duration_ms: 30000
-
 # Writes the userspace buffer into the file every 2 seconds.
 # The data rate of a typical trace is ~1-4 MB/s. So a 8MB in-memory buffer can hold for up
 # write periods of ~2 seconds before starting to lose data.
@@ -15,133 +12,139 @@ file_write_period_ms: 2000
 # We need to guarantee that events stay within some defined sorting window (for the importer).
 flush_period_ms: 20000
 
-# Stops the tracing session after 300,000,000 bytes have been written.
-max_file_size_bytes: 300000000
+# Stops the tracing session after 200,000,000 bytes have been written.
+max_file_size_bytes: 200000000
 
 # Buffer 0: for process stats, system stats.
 buffers {
-    size_kb: 7168
-    fill_policy: RING_BUFFER
+   size_kb: 7168
+   fill_policy: RING_BUFFER
 }
 
 # Buffer 1: for ftrace.
 buffers {
-    size_kb: 7168
-    fill_policy: RING_BUFFER
+   size_kb: 7168
+   fill_policy: RING_BUFFER
 }
 
 # Buffer 2: for chromium trace and metadata.
 buffers {
-    size_kb: 14336
-    fill_policy: RING_BUFFER
+   size_kb: 14336
+   fill_policy: RING_BUFFER
 }
 
 # Scheduling details.
 data_sources: {
-    config {
-        name: "linux.process_stats"
-        target_buffer: 0
-        process_stats_config {
-            scan_all_processes_on_start: true
-            proc_stats_poll_ms: 1000
-        }
-    }
+   config {
+       name: "linux.process_stats"
+       target_buffer: 0
+       process_stats_config {
+           scan_all_processes_on_start: true
+           proc_stats_poll_ms: 1000
+       }
+   }
 }
 
 # System stats.
 data_sources: {
-    config {
-        name: "linux.sys_stats"
-        target_buffer: 0
-        sys_stats_config {
-            # CPU frequency.
-            cpufreq_period_ms: 1000
-            # Kernel meminfo.
-            meminfo_period_ms: 1000
-            # Virtual memory stats.
-            vmstat_period_ms: 1000
-            # Kernel activity information.
-            stat_period_ms: 1000
-            # CPU times since boot.
-            stat_counters: STAT_CPU_TIMES
-            # Num processes forked since boot.
-            stat_counters: STAT_FORK_COUNT
-        }
-    }
+   config {
+       name: "linux.sys_stats"
+       target_buffer: 0
+       sys_stats_config {
+           # CPU frequency.
+           cpufreq_period_ms: 1000
+           # Kernel meminfo.
+           meminfo_period_ms: 1000
+           # Virtual memory stats.
+           vmstat_period_ms: 1000
+           # Kernel activity information.
+           stat_period_ms: 1000
+           # CPU times since boot.
+           stat_counters: STAT_CPU_TIMES
+           # Num processes forked since boot.
+           stat_counters: STAT_FORK_COUNT
+       }
+   }
+}
+
+# Reporting the list of available frequency for each CPU.
+data_sources: {
+   config {
+       name: "linux.system_info"
+       target_buffer: 0
+   }
 }
 
 # Ftrace.
 data_sources: {
-    config {
-        name: "linux.ftrace"
-        target_buffer: 1
-        ftrace_config {
-            # Enables symbol name resolution against /proc/kallsyms.
-            symbolize_ksyms: true
+   config {
+       name: "linux.ftrace"
+       target_buffer: 1
+       ftrace_config {
+           # Enables symbol name resolution against /proc/kallsyms.
+           symbolize_ksyms: true
 
-            # Scheduling information & process tracking. Useful for:
-            # - what is happening on each CPU at each moment
-            # - why a thread was descheduled
-            # - parent/child relationships between processes and threads.
-            ftrace_events: "power/suspend_resume"
-            ftrace_events: "sched/sched_blocked_reason"
-            ftrace_events: "sched/sched_process_free"
-            ftrace_events: "sched/sched_switch"
-            ftrace_events: "task/task_newtask"
-            ftrace_events: "task/task_rename"
+           # Scheduling information & process tracking. Useful for:
+           # - what is happening on each CPU at each moment
+           # - why a thread was descheduled
+           # - parent/child relationships between processes and threads.
+           ftrace_events: "sched/sched_blocked_reason"
+           ftrace_events: "sched/sched_switch"
+           ftrace_events: "sched/sched_process_exit"
+           ftrace_events: "sched/sched_process_free"
+           ftrace_events: "task/task_newtask"
+           ftrace_events: "task/task_rename"
 
-            # User process page faults.
-            ftrace_events: "exceptions/page_fault_user"
+           # Wakeup info. Allows you to compute how long a task was
+           # blocked due to CPU contention.
+           ftrace_events: "sched/sched_waking"
+           ftrace_events: "sched/sched_wakeup_new"
 
-            # Wakeup info. Allows you to compute how long a task was
-            # blocked due to CPU contention.
-            ftrace_events: "sched/sched_waking"
-            ftrace_events: "sched/sched_wakeup_new"
+           # Cpu frequency and idle state changes.
+           ftrace_events: "power/suspend_resume"
+           ftrace_events: "power/cpu_frequency"
+           ftrace_events: "power/cpu_idle"
 
-            # Cpu events.
-            ftrace_events: "power/cpu_frequency"
-            ftrace_events: "power/cpu_idle"
-
-            compact_sched {
-                # When enabled, specific high-volume events are encoded in a denser format than normal.
-                enabled: true
-            }
-        }
-    }
+           compact_sched {
+               # When enabled, specific high-volume events are encoded in a denser format than normal.
+               enabled: true
+           }
+       }
+   }
 }
 
 # Chrome trace events.
 data_sources: {
-    config {
-        name: "org.chromium.trace_event"
-        target_buffer: 2
-        chrome_config {
-            # Categories: toplevel, cc, gpu, startup, viz, ui, views, benchmark, input, memory-infra.
-            trace_config: "{\"record_mode\":\"record-until-full\",\"included_categories\":[\"toplevel\",\"cc\",\"gpu\",\"startup\",\"viz\",\"ui\",\"views\",\"benchmark\",\"input\",\"memory-infra\"],\"memory_dump_config\":{}}"
-            # When enabled, the data source should only fill in fields in the output that are not potentially privacy sensitive.
-            privacy_filtering_enabled: false
-            # Don't convert the trace data to the legacy JSON format.
-            convert_to_legacy_json: false
-            # Priority of the tracing session client.
-            client_priority: UNKNOWN
-        }
-    }
+   config {
+       name: "org.chromium.trace_event"
+       target_buffer: 2
+       chrome_config {
+           # Categories: cc, benchmark, input.
+           trace_config: "{\"record_mode\":\"record-until-full\",\"included_categories\":[\"cc\",\"benchmark\",\"input\"],\"memory_dump_config\":{}}"
+           # When enabled, the data source should only fill in fields in the output that are not potentially privacy sensitive.
+           privacy_filtering_enabled: false
+           # Don't convert the trace data to the legacy JSON format.
+           convert_to_legacy_json: false
+           # Priority of the tracing session client.
+           client_priority: UNKNOWN
+       }
+   }
 }
 
 # Chrome trace metadata.
 data_sources: {
-    config {
-        name: "org.chromium.trace_metadata"
-        target_buffer: 2
-        chrome_config {
-            # Categories: toplevel, cc, gpu, startup, viz, ui, views, benchmark, input, memory-infra.
-            trace_config: "{\"record_mode\":\"record-until-full\",\"included_categories\":[\"toplevel\",\"cc\",\"gpu\",\"startup\",\"viz\",\"ui\",\"views\",\"benchmark\",\"input\",\"memory-infra\"],\"memory_dump_config\":{}}"
-            # When enabled, the data source should only fill in fields in the output that are not potentially privacy sensitive.
-            privacy_filtering_enabled: false
-            # Don't convert the trace data to the legacy JSON format.
-            convert_to_legacy_json: false
-            # Priority of the tracing session client.
-            client_priority: UNKNOWN
-        }
-    }
+   config {
+       name: "org.chromium.trace_metadata"
+       target_buffer: 2
+       chrome_config {
+           # Categories: cc, benchmark, input.
+           trace_config: "{\"record_mode\":\"record-until-full\",\"included_categories\":[\"cc\",\"benchmark\",\"input\"],\"memory_dump_config\":{}}"
+           # When enabled, the data source should only fill in fields in the output that are not potentially privacy sensitive.
+           privacy_filtering_enabled: false
+           # Don't convert the trace data to the legacy JSON format.
+           convert_to_legacy_json: false
+           # Priority of the tracing session client.
+           client_priority: UNKNOWN
+       }
+   }
 }

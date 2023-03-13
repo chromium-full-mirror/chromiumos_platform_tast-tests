@@ -92,12 +92,6 @@ func ArcYoutubeCUJ(ctx context.Context, s *testing.State) {
 	}
 
 	if err := recorder.Run(ctx, func(ctx context.Context) (retErr error) {
-		// Start tracing now.
-		if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
-			return errors.Wrap(err, "failed to start tracing")
-		}
-		defer recorder.StopTracing(ctx)
-
 		// Launch the ARC YouTube app.
 		if err := act.Start(ctx, tconn); err != nil {
 			return errors.Wrap(err, "failed to start ARC++ YouTube app")
@@ -204,10 +198,24 @@ func ArcYoutubeCUJ(ctx context.Context, s *testing.State) {
 		s.Log("Initial video position (after waiting for everything to load): ", videoPosition)
 
 		recorder.Annotate(ctx, "Start_watching_video")
+
+		var traceRecorded bool
 		for endTime := time.Now().Add(10 * time.Minute); time.Now().Before(endTime); {
+			if !traceRecorded {
+				// See go/trace-in-cuj-tests about rules for tracing.
+				if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
+					return errors.Wrap(err, "failed to start tracing")
+				}
+			}
 			const verificationInterval = 30 * time.Second
 			if err := testing.Sleep(ctx, verificationInterval); err != nil {
 				return errors.Wrapf(err, "failed to wait %s", verificationInterval)
+			}
+			if !traceRecorded {
+				if err := recorder.StopTracing(ctx); err != nil {
+					return errors.Wrap(err, "failed to stop tracing")
+				}
+				traceRecorded = true
 			}
 
 			// Get the current position along the timeline of video playback, and

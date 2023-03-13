@@ -160,12 +160,6 @@ func Run(ctx context.Context, s *testing.State) {
 	defer ime.DefaultInputMethod.Activate(tconn)(closeCtx)
 
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
-		// Start tracing now.
-		if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
-			return errors.Wrap(err, "failed to start tracing")
-		}
-		defer recorder.StopTracing(ctx)
-
 		recorder.Annotate(ctx, "Open_new_Google_Doc")
 		const docsURL = "https://docs.new"
 		if err := conn.Navigate(ctx, docsURL); err != nil {
@@ -272,6 +266,13 @@ func Run(ctx context.Context, s *testing.State) {
 				return errors.Wrapf(err, "failed to activate %s", p.language.Name)
 			}
 
+			// See go/trace-in-cuj-tests about rules for tracing.
+			if p.recordTrace {
+				if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
+					return errors.Wrap(err, "failed to start tracing")
+				}
+			}
+
 			// If |customTypeAction| is not supplied, type the paragraph
 			// at |mediumTypingSpeed|.
 			if p.customTypeAction != nil {
@@ -280,6 +281,12 @@ func Run(ctx context.Context, s *testing.State) {
 				}
 			} else if err := typeParagraphAction(ctx, kw, p.body+"[Enter]", mediumTypingSpeed)(ctx); err != nil {
 				return errors.Wrap(err, "failed to type paragraph")
+			}
+
+			if p.recordTrace {
+				if err := recorder.StopTracing(ctx); err != nil {
+					return errors.Wrap(err, "failed to stop tracing")
+				}
 			}
 
 			// Take a screenshot after each paragraph has been written.

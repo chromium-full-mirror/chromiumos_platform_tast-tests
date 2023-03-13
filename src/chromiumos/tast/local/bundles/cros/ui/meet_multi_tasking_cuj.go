@@ -313,12 +313,6 @@ func MeetMultiTaskingCUJ(ctx context.Context, s *testing.State) {
 			}
 		}
 
-		// Start tracing now.
-		if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
-			return errors.Wrap(err, "failed to start tracing")
-		}
-		defer recorder.StopTracing(ctx)
-
 		if err := meetConn.WaitForExpr(ctx, "hrTelemetryApi.isInMeeting()"); err != nil {
 			return errors.Wrap(err, "failed to wait for entering meeting")
 		}
@@ -351,6 +345,11 @@ func MeetMultiTaskingCUJ(ctx context.Context, s *testing.State) {
 
 		if err := inputsimulations.DoAshWorkflows(ctx, tconn, pc); err != nil {
 			return errors.Wrap(err, "failed to do Ash workflows")
+		}
+
+		// See go/trace-in-cuj-tests about rules for tracing.
+		if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
+			return errors.Wrap(err, "failed to start tracing")
 		}
 
 		// 1. Multi-tasking with Google Docs by opening a large Docs file and scrolling through the file.
@@ -458,6 +457,10 @@ func MeetMultiTaskingCUJ(ctx context.Context, s *testing.State) {
 		s.Logf("Scrolling down the Gmail inbox for %s", gmailScrollTimeout)
 		if err := inputsimulations.ScrollDownFor(ctx, tpw, tw, 500*time.Millisecond, gmailScrollTimeout); err != nil {
 			return err
+		}
+
+		if err := recorder.StopTracing(ctx); err != nil {
+			return errors.Wrap(err, "failed to stop tracing")
 		}
 
 		// Navigate away to record PageLoad.PaintTiming.NavigationToLargestContentfulPaint2.

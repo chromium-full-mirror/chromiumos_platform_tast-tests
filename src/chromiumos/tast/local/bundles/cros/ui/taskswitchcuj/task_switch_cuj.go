@@ -231,12 +231,6 @@ func Run(ctx context.Context, s *testing.State) {
 	numAppWindows++
 
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
-		// Start tracing now.
-		if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
-			return errors.Wrap(err, "failed to start tracing")
-		}
-		defer recorder.StopTracing(ctx)
-
 		recorder.Annotate(ctx, "Open_Aquarium")
 		// Open another Chrome tab so we can save the tab connection.
 		// We will use this tab connection to navigate away from the
@@ -272,6 +266,18 @@ func Run(ctx context.Context, s *testing.State) {
 			s.Log(taskSwitcher.description)
 			cycles := 0
 			for endTime := time.Now().Add(taskSwitchingDuration); time.Now().Before(endTime); {
+				if taskSwitcher.recordTrace {
+					if cycles == 0 {
+						// See go/trace-in-cuj-tests about rules for tracing.
+						if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
+							return errors.Wrap(err, "failed to start tracing")
+						}
+					} else if cycles == numWindows {
+						if err := recorder.StopTracing(ctx); err != nil {
+							return errors.Wrap(err, "failed to stop tracing")
+						}
+					}
+				}
 				if err := taskSwitcher.run(ctx); err != nil {
 					return errors.Wrapf(err, "failed to switch to next window using %s", taskSwitcher.name)
 				}

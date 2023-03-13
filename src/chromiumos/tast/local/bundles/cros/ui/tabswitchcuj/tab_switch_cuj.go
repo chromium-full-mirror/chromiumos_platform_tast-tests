@@ -313,15 +313,6 @@ func testBody(ctx context.Context, test *tabSwitchVariables) error {
 		if len(test.webPages) == 0 {
 			return errors.New("test scenario does not specify any web pages")
 		}
-
-		// Record tracing in the first iteration.
-		if index == 0 {
-			if err := test.recorder.StartTracing(ctx, test.outDir, test.perfettoConfigPath); err != nil {
-				return errors.Wrap(err, "failed to start tracing")
-			}
-			defer test.recorder.StopTracing(ctx)
-		}
-
 		// Switch through tabs in a skip-order fashion.
 		// Note: when skipSize = N-1, then the skip-order is 1,1,1,1 ... N times
 		// Therefore i + skipSize + 1 % N holds when 0 <= skipSize < N-1
@@ -331,6 +322,18 @@ func testBody(ctx context.Context, test *tabSwitchVariables) error {
 		endTime := time.Now().Add(coreTestDuration/time.Duration(len(test.webPages)) + time.Second)
 		test.recorder.Annotate(ctx, "Start_tab_switching_"+data.name)
 		for time.Now().Before(endTime) {
+			if index == 0 && i == 0 {
+				if skipSize == 0 {
+					// See go/trace-in-cuj-tests about rules for tracing.
+					if err := test.recorder.StartTracing(ctx, test.outDir, test.perfettoConfigPath); err != nil {
+						return errors.Wrap(err, "failed to start tracing")
+					}
+				} else if skipSize == 1 {
+					if err := test.recorder.StopTracing(ctx); err != nil {
+						return errors.Wrap(err, "failed to stop tracing")
+					}
+				}
+			}
 			tabToClick := nodewith.HasClass("TabIcon").Nth(currentTab)
 			if err := action.Combine(
 				"click on tab and move mouse back to the center of the display",

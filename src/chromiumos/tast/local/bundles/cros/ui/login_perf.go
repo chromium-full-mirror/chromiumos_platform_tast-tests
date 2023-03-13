@@ -685,11 +685,10 @@ func testFunction(
 	// CUJ TPS metrics recording wrapper
 	cujFunc := func(ctx context.Context) error {
 		if runTracing {
-			// Start tracing now.
+			// See go/trace-in-cuj-tests about rules for tracing.
 			if err := cujRecorder.StartTracingWithName(ctx, s.OutDir(), name+"-trace.data.gz", s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
 				return errors.Wrap(err, "failed to start tracing")
 			}
-			defer cujRecorder.StopTracing(ctx)
 		}
 
 		var err error
@@ -703,6 +702,13 @@ func testFunction(
 		if err != nil {
 			return err
 		}
+
+		if runTracing {
+			if err := cujRecorder.StopTracing(ctx); err != nil {
+				return errors.Wrap(err, "failed to stop tracing")
+			}
+		}
+
 		visible := 0
 		if visible, err = countVisibleWindows(ctx, cr); err != nil {
 			return err

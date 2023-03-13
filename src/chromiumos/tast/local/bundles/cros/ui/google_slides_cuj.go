@@ -135,12 +135,6 @@ func GoogleSlidesCUJ(ctx context.Context, s *testing.State) {
 	defer faillog.DumpUITreeOnError(closeCtx, s.OutDir(), s.HasError, tconn)
 
 	if err := recorder.Run(ctx, func(ctx context.Context) (retErr error) {
-		// Start tracing now.
-		if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
-			return errors.Wrap(err, "failed to start tracing")
-		}
-		defer recorder.StopTracing(ctx)
-
 		// Open Google Slides file.
 		if err := slidesConn.Navigate(ctx, slidesURL); err != nil {
 			return errors.Wrapf(err, "failed to navigate to %s", slidesURL)
@@ -157,6 +151,13 @@ func GoogleSlidesCUJ(ctx context.Context, s *testing.State) {
 		// Ash.Smoothness.PercentDroppedFrames_1sWindow.
 		i := 0
 		for endTime := time.Now().Add(slidesScrollTimeout); time.Now().Before(endTime); {
+			// See go/trace-in-cuj-tests about rules for tracing.
+			if i == 0 {
+				if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
+					return errors.Wrap(err, "failed to start tracing")
+				}
+			}
+
 			if err := inputsimulations.RepeatKeyPress(ctx, kw, "Down", time.Second, 10); err != nil {
 				return errors.Wrap(err, "failed to scroll down with down arrow")
 			}
@@ -191,6 +192,13 @@ func GoogleSlidesCUJ(ctx context.Context, s *testing.State) {
 					return errors.Wrap(err, "failed to do Ash workflows")
 				}
 			}
+
+			if i == 0 {
+				if err := recorder.StopTracing(ctx); err != nil {
+					return errors.Wrap(err, "failed to stop tracing")
+				}
+			}
+
 			i++
 		}
 

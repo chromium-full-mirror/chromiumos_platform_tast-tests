@@ -171,14 +171,21 @@ func DebugLacrosPerf(ctx context.Context, s *testing.State) {
 	}
 
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
-		// Start tracing now.
+		// See go/trace-in-cuj-tests about rules for tracing.
 		if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
 			return errors.Wrap(err, "failed to start tracing")
 		}
-		defer recorder.StopTracing(ctx)
 
 		s.Logf("Wait for %v to gather more data", debugLacrosTestWaitDuration)
-		return testing.Sleep(ctx, debugLacrosTestWaitDuration)
+		if err := testing.Sleep(ctx, debugLacrosTestWaitDuration); err != nil {
+			return errors.Wrap(err, "failed to sleep")
+		}
+
+		if err := recorder.StopTracing(ctx); err != nil {
+			return errors.Wrap(err, "failed to stop tracing")
+		}
+
+		return nil
 	}); err != nil {
 		s.Fatal("Failed to run the test scenario: ", err)
 	}

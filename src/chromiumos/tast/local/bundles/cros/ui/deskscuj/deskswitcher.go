@@ -23,9 +23,10 @@ import (
 // |run| takes in the currently active desk and the expected next desk,
 // and activates the next desk.
 type deskSwitchWorkflow struct {
-	name      string // name is a name satisfying the conditions for recorder.Annotate.
-	itinerary []int
-	run       func(context.Context, int, int) error
+	name        string // name is a name satisfying the conditions for recorder.Annotate.
+	itinerary   []int
+	run         func(context.Context, int, int) error
+	recordTrace bool // recordTrace indicates whether to record trace.
 }
 
 // getKeyboardSearchBracketWorkflow returns the workflow for switching
@@ -46,6 +47,7 @@ func getKeyboardSearchBracketWorkflow(tconn *chrome.TestConn, kw *input.Keyboard
 			}
 			return kw.Accel(ctx, direction)
 		},
+		recordTrace: true,
 	}
 }
 

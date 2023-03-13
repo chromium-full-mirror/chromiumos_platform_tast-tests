@@ -306,8 +306,8 @@ func WindowArrangementCUJ(ctx context.Context, s *testing.State) {
 	traceRecorded := false
 	if !tabletMode {
 		f = func(ctx context.Context) error {
+			// See go/trace-in-cuj-tests about rules for tracing.
 			if !traceRecorded {
-				// Start tracing now.S
 				if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
 					return errors.Wrap(err, "failed to start tracing")
 				}
@@ -319,15 +319,6 @@ func WindowArrangementCUJ(ctx context.Context, s *testing.State) {
 		}
 	} else {
 		f = func(ctx context.Context) error {
-			if !traceRecorded {
-				// Start tracing now.
-				if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
-					return errors.Wrap(err, "failed to start tracing")
-				}
-				traceRecorded = true
-				defer recorder.StopTracing(ctx)
-			}
-
 			return windowarrangementcuj.RunTablet(ctx, closeCtx, br, tconn, ui, pc)
 		}
 	}

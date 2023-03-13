@@ -130,11 +130,10 @@ func QuickCheckCUJ(ctx context.Context, s *testing.State) {
 
 	var elapsed time.Duration
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
-		// Start tracing now.S
+		// See go/trace-in-cuj-tests about rules for tracing.
 		if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
 			return errors.Wrap(err, "failed to start tracing")
 		}
-		defer recorder.StopTracing(ctx)
 
 		start := time.Now()
 
@@ -213,6 +212,10 @@ func QuickCheckCUJ(ctx context.Context, s *testing.State) {
 		s.Log("Waiting to simulate a user passively reading the email thread (bottom scroll position)")
 		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 			return errors.Wrap(err, "failed to sleep (bottom scroll position)")
+		}
+
+		if err := recorder.StopTracing(ctx); err != nil {
+			return errors.Wrap(err, "failed to stop tracing")
 		}
 
 		info, err := display.GetPrimaryInfo(ctx, tconn)

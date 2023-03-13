@@ -33,6 +33,7 @@ type taskSwitchWorkflow struct {
 	name        string
 	description string
 	run         action.Action
+	recordTrace bool
 }
 
 // initializeSwitchTaskByHotseat returns a taskSwitchWorkflow representing
@@ -170,6 +171,7 @@ func initializeSwitchTaskByOverviewMode(ctx context.Context, tconn *chrome.TestC
 	return taskSwitchWorkflow{
 		name:        "Overview",
 		description: "Cycle through open applications using the overview mode",
+		recordTrace: true,
 		run: func(ctx context.Context) error {
 			if err := setOverviewMode(ctx); err != nil {
 				return errors.Wrap(err, "failed to enter overview mode")

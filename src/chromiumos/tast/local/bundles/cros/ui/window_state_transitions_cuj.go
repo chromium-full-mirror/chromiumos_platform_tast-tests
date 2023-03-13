@@ -189,17 +189,7 @@ func WindowStateTransitionsCUJ(ctx context.Context, s *testing.State) {
 	}
 
 	// Conduct the performance measurement.
-	traceRecorded := false
 	if err := recorder.RunFor(ctx, func(ctx context.Context) error {
-		if !traceRecorded {
-			// Start tracing now.
-			if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
-				return errors.Wrap(err, "failed to start tracing")
-			}
-			traceRecorded = true
-			defer recorder.StopTracing(ctx)
-		}
-
 		if err := dragUnmaximizeAndMaximize(ctx); err != nil {
 			return errors.Wrap(err, "failed to drag to unmaximize and maximize the window")
 		}

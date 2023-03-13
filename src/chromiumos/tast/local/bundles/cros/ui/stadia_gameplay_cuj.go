@@ -225,13 +225,6 @@ func StadiaGameplayCUJ(ctx context.Context, s *testing.State) {
 	}()
 
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
-		// Start tracing now.
-		tracePath := filepath.Join(s.OutDir(), "trace.data.gz")
-		if err := recorder.StartTracing(ctx, tracePath, s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
-			return errors.Wrap(err, "failed to start tracing")
-		}
-		defer recorder.StopTracing(ctx)
-
 		// Hard code the game playing routine.
 		// Enter the menu.
 		if err := stadiacuj.PressKey(ctx, kb, "Enter", 10*time.Second); err != nil {

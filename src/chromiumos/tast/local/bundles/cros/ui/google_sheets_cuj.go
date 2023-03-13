@@ -163,12 +163,6 @@ func GoogleSheetsCUJ(ctx context.Context, s *testing.State) {
 	defer faillog.DumpUITreeOnError(closeCtx, s.OutDir(), s.HasError, tconn)
 
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
-		// Start tracing now.
-		if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
-			return errors.Wrap(err, "failed to start tracing")
-		}
-		defer recorder.StopTracing(ctx)
-
 		// Open Google Sheets file.
 		recorder.Annotate(ctx, "Opening_Google_Sheets_file")
 		if err := sheetConn.Navigate(ctx, sheetURL); err != nil {
@@ -190,6 +184,9 @@ func GoogleSheetsCUJ(ctx context.Context, s *testing.State) {
 
 			// run is a function that performs a single instance of scrolling.
 			run action.Action
+
+			// recordTrace indicates whether to record trace.
+			recordTrace bool
 		}{
 			{
 				description: "mouse_click",
@@ -215,6 +212,7 @@ func GoogleSheetsCUJ(ctx context.Context, s *testing.State) {
 				run: func(ctx context.Context) error {
 					return inputsimulations.ScrollMouseDownFor(ctx, mw, 200*time.Millisecond, individualScrollTimeout)
 				},
+				recordTrace: true,
 			},
 			{
 				description: "trackpad_gestures",
@@ -230,8 +228,22 @@ func GoogleSheetsCUJ(ctx context.Context, s *testing.State) {
 			},
 		} {
 			recorder.Annotate(ctx, "Scroll_with_"+scroller.description)
+
+			// See go/trace-in-cuj-tests about rules for tracing.
+			if scroller.recordTrace {
+				if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
+					return errors.Wrap(err, "failed to start tracing")
+				}
+			}
+
 			if err := scroller.run(ctx); err != nil {
 				return errors.Wrapf(err, "failed to scroll %s", scroller.description)
+			}
+
+			if scroller.recordTrace {
+				if err := recorder.StopTracing(ctx); err != nil {
+					return errors.Wrap(err, "failed to stop tracing")
+				}
 			}
 
 			if err := inputsimulations.RunDragMouseCycle(ctx, tconn, info); err != nil {
