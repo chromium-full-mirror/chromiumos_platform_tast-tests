@@ -28,6 +28,10 @@ import (
 // goroutines, if a spawned goroutine panics, the whole test bundle crashes
 // and all logs of why the panic occurred are lost. |Run| logs this panic to
 // make these issues easier to debug.
+//
+// This function relies on |ctx| remaining open for the full duration of the
+// function |f|. If |ctx| is closed early (for example because the caller goes
+// out of scope), then |f| is terminated early.
 func Run(ctx context.Context, f func(ctx context.Context), prefix string) {
 	go func() {
 		defer func(ctx context.Context) {
