@@ -43,6 +43,7 @@ type logicalCPUInfo struct {
 	ScalingCurrentFrequencyKhz jsontypes.Uint32 `json:"scaling_current_frequency_khz"`
 	IdleTimeUserHz             jsontypes.Uint64 `json:"idle_time_user_hz"`
 	CStates                    []cStateInfo     `json:"c_states"`
+	CoreID                     jsontypes.Uint32 `json:"core_id"`
 }
 
 type cpuVirtualizationInfo struct {
