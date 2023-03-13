@@ -144,7 +144,7 @@ func MarketingOptIn(ctx context.Context, s *testing.State) {
 	}
 
 	a11yDoneButton := nodewith.Name(a11yDoneButtonName).Role(role.Button)
-	if err := ui.WaitUntilExists(a11yButton)(ctx); err != nil {
+	if err := ui.WaitUntilExists(a11yDoneButton)(ctx); err != nil {
 		s.Fatal("Failed to wait until accessibility done button is shown: ", err)
 	}
 	if err := ui.LeftClick(a11yDoneButton)(ctx); err != nil {
