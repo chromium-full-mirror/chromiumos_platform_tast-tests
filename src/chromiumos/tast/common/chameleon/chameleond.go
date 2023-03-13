@@ -316,6 +316,10 @@ type Chameleond interface {
 	// Stops capturing audio and returns recorded data path and format.
 	StopCapturingAudio(ctx context.Context, portID PortID) (path string, format AudioSampleFormat, err error)
 
+	// StopCapturingAudioAndGetToken calls the Chameleond RPC method of the same name.
+	// Stops capturing audio and returns a token (which points to recorded data) and format.
+	StopCapturingAudioAndGetToken(ctx context.Context, portID PortID) (response map[string]string, err error)
+
 	// StartPlayingAudio calls the Chameleond RPC method of the same name.
 	// Starts playing audio data at given path using given format and port.
 	//
@@ -331,6 +335,11 @@ type Chameleond interface {
 	// CopyFileToChameleon calls the Chameleond RPC method of the same name.
 	// Copies a file to chameleon. Return a token which refers the file is successfully stored.
 	CopyFileToChameleon(ctx context.Context, content []byte, filename string) (token string, err error)
+
+	// GetFileFromChameleon calls the Chameleond RPC method of the same name.
+	// Gets the file data that stored in chameleon in a binary form.
+	// Use the token to specify the file that you want to get.
+	GetFileFromChameleon(ctx context.Context, token string) (content []byte, err error)
 
 	// DeleteFileInChameleon calls the Chameleond RPC method of the same name.
 	// Deletes file that stored in chameleon. Use the token to specify the file that you want to delete.
@@ -924,6 +933,14 @@ func (c *CommonChameleond) StopCapturingAudio(ctx context.Context, portID PortID
 	return path, format, nil
 }
 
+// StopCapturingAudioAndGetToken calls the Chameleond RPC method of the same name.
+// This implements Chameleond.StopCapturingAudioAndGetToken, see that for more details.
+func (c *CommonChameleond) StopCapturingAudioAndGetToken(ctx context.Context, portID PortID) (response map[string]string, err error) {
+	response = make(map[string]string)
+	err = c.RPC("StopCapturingAudioAndGetToken").Args(portID.Int()).Returns(&response).Call(ctx)
+	return response, err
+}
+
 // StartPlayingAudio calls the Chameleond RPC method of the same name.
 // This implements Chameleond.StartPlayingAudio, see that for more details.
 func (c *CommonChameleond) StartPlayingAudio(ctx context.Context, portID PortID, path string, format *AudioDataFormat) error {
@@ -941,6 +958,13 @@ func (c *CommonChameleond) StartPlayingAudioWithToken(ctx context.Context, portI
 // Return a token which refers the file is successfully stored.
 func (c *CommonChameleond) CopyFileToChameleon(ctx context.Context, content []byte, filename string) (token string, err error) {
 	return c.RPC("CopyFileToChameleon").Args(content, filename).CallForString(ctx)
+}
+
+// GetFileFromChameleon calls the Chameleond RPC method of the same name.
+// Gets the file data that stored in chameleon. Use the token to specify the file that you want to get.
+// The data is returned in a binary form
+func (c *CommonChameleond) GetFileFromChameleon(ctx context.Context, token string) (content []byte, err error) {
+	return c.RPC("GetFileFromChameleon").Args(token).CallForBytes(ctx)
 }
 
 // DeleteFileInChameleon calls the Chameleond RPC method of the same name.
