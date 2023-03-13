@@ -47,8 +47,20 @@ func InstallApp(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn
 		confirm   = nodewith.Role(role.Button).NameRegex(regexp.MustCompile(`Add (app|extension)`))
 		emailRE   = regexp.MustCompile(`^[-.+\w]+@([-.+\w]+?\.)+[-.+\w]+$`)
 		account   = nodewith.Role(role.PopUpButton).NameRegex(emailRE)
+		// User account restricts for the new (dogfood) CWS page.
+		newAccountRE = regexp.MustCompile(`^Google Account:[^\(]+\([-.+\w]+@([-.+\w]+?\.)+[-.+\w]+\)`)
+		newAccount   = nodewith.Role(role.Button).NameRegex(newAccountRE)
 	)
 	ui := uiauto.New(tconn)
+
+	// Helper to wait for the account element on the  current CWS page or the new
+	// dogfood CWS page.
+	waitForAccount := func(ctx context.Context) error {
+		if err := ui.WithTimeout(5 * time.Second).WaitUntilExists(account)(ctx); err == nil {
+			return nil
+		}
+		return ui.WithTimeout(5 * time.Second).WaitUntilExists(newAccount)(ctx)
+	}
 
 	// Check if the account has been added to Chrome Web Store page.
 	// There might be a timing issue that the account has been added to Lacros profile but not yet propagated to the web page
@@ -56,14 +68,14 @@ func InstallApp(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn
 	// If this happens, it fails to load the app page with the account. See crbug.com/1322246 for details.
 	// To get around it for recovery it gives a retry by reloading the page to the app page URL.
 	// TODO(crbug.com/1375314): Figure out how to avoid this timing issue in product, rather than in tests.
-	if err := ui.WithTimeout(5 * time.Second).WaitUntilExists(account)(ctx); err != nil {
+	if err := waitForAccount(ctx); err != nil {
 		if err := br.ReloadActiveTab(ctx); err != nil {
 			return errors.Wrap(err, "failed to reload page")
 		}
 		if err := cws.Navigate(ctx, app.URL); err != nil {
 			return errors.Wrapf(err, "failed to navigate page: %v", app.URL)
 		}
-		if err := ui.WithTimeout(5 * time.Second).WaitUntilExists(account)(ctx); err != nil {
+		if err := waitForAccount(ctx); err != nil {
 			return errors.Wrap(err, "failed to wait for account to be added")
 		}
 	}
