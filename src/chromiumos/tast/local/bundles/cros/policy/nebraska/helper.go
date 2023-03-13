@@ -7,6 +7,7 @@ package nebraska
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -25,11 +26,26 @@ type Helper struct {
 	clearLSBRelease bool
 }
 
+// UpdatePayload represents the JSON structure for the update payload to be used by nebraska.
+// It controls the nebraska response.
+type UpdatePayload struct {
+	Appid             string  `json:"appid"`
+	IsDelta           bool    `json:"is_delta"`
+	MetadataSignature *string `json:"metadata_signature"`
+	MetadataSize      int     `json:"metadata_size"`
+	Sha256Hex         string  `json:"sha256_hex"`
+	Size              int     `json:"size"`
+	TargetVersion     string  `json:"target_version"`
+	Version           int     `json:"version"`
+}
+
 const logFileName = "nebraska.log"
 const statefulLSBRelease = "/mnt/stateful_partition/etc/lsb-release"
 
-// Start starts a new instance of Nebraska in a separate temp directory.
-func Start(ctx context.Context) (*Helper, error) {
+// StartWithMetadata creates the update_payload.json metadata file with the provided contents
+// and starts a new instance of Nebraska in a separate temp directory.
+// The provided metadata file allows Nebraska to respond that there's some update available.
+func StartWithMetadata(ctx context.Context, updatePayload *UpdatePayload) (*Helper, error) {
 	success := false
 	tmpDir, err := ioutil.TempDir("", "nebraska-")
 	if err != nil {
@@ -41,9 +57,23 @@ func Start(ctx context.Context) (*Helper, error) {
 		}
 	}()
 
-	instance, err := nebraska.Start(ctx, tmpDir, []string{
-		"--log-file", filepath.Join(tmpDir, logFileName),
-	})
+	var params = []string{"--log-file", filepath.Join(tmpDir, logFileName)}
+
+	if updatePayload != nil {
+		jsonContents, err := json.Marshal(updatePayload)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to serialize update payload")
+		}
+
+		if err := ioutil.WriteFile("/var/update_payload.json", jsonContents, 0644); err != nil {
+			return nil, errors.Wrap(err, "failed to write update_payload.json contents to disk on DUT")
+		}
+
+		params = append([]string{"--update-metadata", "/var", "--update-payloads-address", "file:///var"}, params...)
+	}
+
+	instance, err := nebraska.Start(ctx, tmpDir, params)
+
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to start nebraska")
 	}
@@ -53,6 +83,11 @@ func Start(ctx context.Context) (*Helper, error) {
 		tmpDir:   tmpDir,
 		instance: instance,
 	}, nil
+}
+
+// Start starts a new instance of Nebraska in a separate temp directory.
+func Start(ctx context.Context) (*Helper, error) {
+	return StartWithMetadata(ctx, nil)
 }
 
 // Stop stops the Nebraska instance and cleans up temporary files.
