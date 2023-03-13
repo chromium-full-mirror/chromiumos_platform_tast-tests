@@ -74,9 +74,9 @@ func USBResumeFromSuspend(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to sleep for 5 seconds: ", err)
 	}
 
-	s.Log("Waking DUT from suspend by a tab on power button")
-	if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.DurTab); err != nil {
-		s.Fatal("Failed to press power button: ", err)
+	s.Log("Pressing ENTER to resume from suspend")
+	if err := h.Servo.PressKey(ctx, "<enter>", servo.DurTab); err != nil {
+		s.Fatal("Failed to press ENTER key: ", err)
 	}
 	s.Log(ctx, "Checking for S0 powerstate")
 	if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "S0"); err != nil {
@@ -109,27 +109,32 @@ func USBResumeFromSuspend(ctx context.Context, s *testing.State) {
 // checkUSBSuspendResume checks the kernel message file, and scans for the associated usb
 // events for a specified port in the following order: usb_dev_suspend, and usb_dev_resume.
 func checkUSBSuspendResume(ctx context.Context, h *firmware.Helper, usbBusNum int, log string) error {
-	var (
-		reSuspend = fmt.Sprintf(`usb%d:\s*usb_dev_suspend.*returned 0`, usbBusNum)
-		reResume  = fmt.Sprintf(`usb%d:\s*usb_dev_resume.*returned 0`, usbBusNum)
-	)
+	var usbEvents []string
+	for _, event := range []string{"usb_dev_suspend", "usb_dev_resume"} {
+		reCallAction := `(` + fmt.Sprintf(`usb%d:.*calling\s*%s`, usbBusNum, event) +
+			`|` + fmt.Sprintf(`calling\s*usb%d.*%s`, usbBusNum, event) + `)`
+		reActionSuccess := `(` + fmt.Sprintf(`usb%d:.*%s.*returned\s*0`, usbBusNum, event) +
+			`|` + fmt.Sprintf(`call\s*usb%d.*returned\s*0`, usbBusNum) + `)`
+		usbEvents = append(usbEvents, reCallAction, reActionSuccess)
+	}
 	// Scan for the kernel message file, and expect to find usb_dev_suspend
-	// first, before reaching usb_dev_resume.
-	var foundUSBEvents []string
-	expMatch := regexp.MustCompile(reSuspend)
+	// first, before reaching usb_dev_resume. Pop out the event found from usbEvents.
 	scanner := bufio.NewScanner(strings.NewReader(log))
 	for scanner.Scan() {
-		if match := expMatch.FindStringSubmatch(scanner.Text()); match != nil {
-			foundUSBEvents = append(foundUSBEvents, match[0])
-			expMatch = regexp.MustCompile(reResume)
+		if len(usbEvents) > 0 {
+			if match := regexp.MustCompile(usbEvents[0]).FindStringSubmatch(scanner.Text()); match != nil {
+				testing.ContextLogf(ctx, "Found usb event: %s", match[0])
+				usbEvents = usbEvents[1:]
+			}
 		}
 	}
 	if err := scanner.Err(); err != nil {
 		return errors.Wrap(err, "failed to scan kernal message file")
 	}
-	// Verify two usb events were found, namely usb_dev_suspend and usb_dev_resume.
-	if len(foundUSBEvents) != 2 {
-		return errors.Errorf("found unexpected number of usb events, and got %s", foundUSBEvents)
+	// Verify all usb events were found. Namely, calling usb_dev_suspend and usb_dev_resume
+	// were both successful.
+	if len(usbEvents) != 0 {
+		return errors.Errorf("got %d usb events not found, check test log for details", len(usbEvents))
 	}
 	return nil
 }
