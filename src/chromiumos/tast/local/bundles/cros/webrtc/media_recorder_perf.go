@@ -51,6 +51,10 @@ func init() {
 			Val:     mediaRecorderPerfTest{enableHWAccel: false, profile: "VP9", browserType: browser.TypeAsh},
 			Fixture: "chromeVideoWithFakeWebcamAndSWEncoding",
 		}, {
+			Name:    "av1_sw",
+			Val:     mediaRecorderPerfTest{enableHWAccel: false, profile: "AV1", browserType: browser.TypeAsh},
+			Fixture: "chromeVideoWithFakeWebcamAndSWEncoding",
+		}, {
 			Name:              "h264_hw",
 			Val:               mediaRecorderPerfTest{enableHWAccel: true, profile: "H264", browserType: browser.TypeAsh},
 			ExtraSoftwareDeps: []string{caps.HWEncodeH264, "proprietary_codecs"},
