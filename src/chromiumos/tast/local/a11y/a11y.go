@@ -15,10 +15,13 @@ import (
 	"time"
 
 	"chromiumos/tast/errors"
+	"chromiumos/tast/local/audio/crastestclient"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/testing"
 )
@@ -119,6 +122,130 @@ func NewChromeVoxConn(ctx context.Context, c *chrome.Chrome) (*ChromeVoxConn, er
 	}
 
 	return &ChromeVoxConn{extConn}, nil
+}
+
+// SetUpChromeVoxData contains useful objects for ChromeVox tests and is
+// returned by SetUpChromeVox. Most notably, TearDown is a function that should
+// be run in a defer statement by the caller to properly tear-down ChromeVox.
+// CVConn and SM will remain alive until TearDown is called.
+type SetUpChromeVoxData struct {
+	CVConn   *ChromeVoxConn
+	SM       *SpeechMonitor
+	TearDown func() error
+}
+
+// SetUpChromeVox executes common ChromeVox setup code. Returns a
+// SetUpChromeVoxData. When the error is nil, SetUpChromeVoxData will contain a
+// non-nil TearDown function. The caller should call it in a defer statement
+// for proper cleanup.
+func SetUpChromeVox(ctx, cleanupCtx context.Context, cr *chrome.Chrome, vd VoiceData, ed TTSEngineData, bt browser.Type, html string) (_ SetUpChromeVoxData, e error) {
+	var cleanUpFuncs []func() error
+	tearDown := func() error {
+		var errs []error
+		// Iterate backwards over cleanUpFuncs, since these are deferred methods.
+		for i := len(cleanUpFuncs) - 1; i >= 0; i-- {
+			step := cleanUpFuncs[i]
+			if err := step(); err != nil {
+				errs = append(errs, err)
+			}
+		}
+
+		if len(errs) > 0 {
+			return errors.Errorf("failed ChromeVox tear down steps: %q", errs)
+		}
+
+		return nil
+	}
+
+	// Tears down ChromeVox if SetUpChromeVox encountered an error.
+	defer func() {
+		if e != nil {
+			tearDown()
+		}
+	}()
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return SetUpChromeVoxData{}, errors.Wrap(err, "failed to create Test API connection")
+	}
+
+	// Mute the device to avoid noisiness.
+	if err := crastestclient.Mute(ctx); err != nil {
+		return SetUpChromeVoxData{}, errors.Wrap(err, "failed to mute device")
+	}
+	cleanUpFuncs = append(cleanUpFuncs, func() error {
+		crastestclient.Unmute(cleanupCtx)
+		return nil
+	})
+
+	// Setup a browser.
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, bt)
+	if err != nil {
+		return SetUpChromeVoxData{}, errors.Wrap(err, "failed to open the browser")
+	}
+	cleanUpFuncs = append(cleanUpFuncs, func() error {
+		closeBrowser(ctx)
+		return nil
+	})
+
+	brConn, err := NewTabWithHTML(ctx, br, html)
+	if err != nil {
+		return SetUpChromeVoxData{}, errors.Wrap(err, "failed to open a new tab with HTML")
+	}
+	cleanUpFuncs = append(cleanUpFuncs, func() error {
+		brConn.Close()
+		return nil
+	})
+
+	// Close the extra new tab page.
+	if err := br.CloseWithURL(ctx, chrome.NewTabURL); err != nil {
+		return SetUpChromeVoxData{}, errors.Wrap(err, "failed to close new tab page")
+	}
+
+	if err := SetFeatureEnabled(ctx, tconn, SpokenFeedback, true); err != nil {
+		return SetUpChromeVoxData{}, errors.Wrap(err, "failed to enable ChromeVox")
+	}
+	cleanUpFuncs = append(cleanUpFuncs, func() error {
+		if err := ClearFeature(ctx, tconn, SpokenFeedback); err != nil {
+			return errors.Wrap(err, "failed to disable ChromeVox")
+		}
+
+		return nil
+	})
+
+	cvconn, err := NewChromeVoxConn(ctx, cr)
+	if err != nil {
+		return SetUpChromeVoxData{}, errors.Wrap(err, "failed to connect to the ChromeVox background page")
+	}
+	cleanUpFuncs = append(cleanUpFuncs, func() error {
+		cvconn.Close()
+		return nil
+	})
+
+	sm, err := RelevantSpeechMonitor(ctx, cr, tconn, ed)
+	if err != nil {
+		return SetUpChromeVoxData{}, errors.Wrap(err, "failed to connect to the TTS background page")
+	}
+	cleanUpFuncs = append(cleanUpFuncs, func() error {
+		sm.Close()
+		return nil
+	})
+
+	if err := cvconn.SetVoice(ctx, vd); err != nil {
+		return SetUpChromeVoxData{}, errors.Wrap(err, "failed to set the ChromeVox voice")
+	}
+
+	if err := SetTTSRate(ctx, tconn, 1.0); err != nil {
+		return SetUpChromeVoxData{}, errors.Wrap(err, "failed to change TTS rate")
+	}
+
+	// Wait for ChromeVox to focus the root web area.
+	rootWebArea := nodewith.Role(role.RootWebArea).First()
+	if err = cvconn.WaitForFocusedNode(ctx, tconn, rootWebArea); err != nil {
+		return SetUpChromeVoxData{}, errors.Wrap(err, "failed to wait for initial ChromeVox focus")
+	}
+
+	return SetUpChromeVoxData{cvconn, sm, tearDown}, nil
 }
 
 // focusedNode returns the currently focused node of ChromeVox.
@@ -397,7 +524,7 @@ type UtteranceData struct {
 }
 
 func (ud UtteranceData) String() string {
-	return fmt.Sprintf("'%s' (lang: %s, rate: %.2f, pitch: %.2f)", ud.Utterance, ud.Options.Lang, ud.Options.Pitch, ud.Options.Rate)
+	return fmt.Sprintf("'%s' (lang: %s, rate: %.2f, pitch: %.2f)", ud.Utterance, ud.Options.Lang, ud.Options.Rate, ud.Options.Pitch)
 }
 
 // SpeechExpectation defines an interface for a speech expectation.
