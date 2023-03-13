@@ -19,6 +19,14 @@ message ClientIdResponse {
   string clientId = 1;
 }
 
+message CreateTempDirResponse {
+  string path = 1;
+}
+
+message RemoveTempDirRequest {
+  string path = 1;
+}
+
 enum BrowserType {
   ASH = 0;
   LACROS = 1;
@@ -37,14 +45,21 @@ message ActionRequest {
   BrowserType browser_type = 1;
 }
 
+message TestCopyFileToDriveRequest {
+  string dataPath = 1;
+}
+
 // DataLeakPreventionService provides RPC methods to run data leak prevention related operations.
 service DataLeakPreventionService {
   rpc EnrollAndLogin(EnrollAndLoginRequest) returns (google.protobuf.Empty) {}
   rpc StopChrome(google.protobuf.Empty) returns (google.protobuf.Empty) {}
   rpc ClientID(google.protobuf.Empty) returns (ClientIdResponse) {}
+  rpc CreateTempDir(google.protobuf.Empty) returns (CreateTempDirResponse) {}
+  rpc RemoveTempDir(RemoveTempDirRequest) returns (google.protobuf.Empty) {}
   rpc ClipboardCopyPaste(ActionRequest) returns (google.protobuf.Empty) {}
   rpc Print(ActionRequest) returns (google.protobuf.Empty) {}
   rpc Screenshot(ActionRequest) returns (google.protobuf.Empty) {}
   rpc Screenshare(ActionRequest) returns (google.protobuf.Empty) {}
+  rpc TestCopyFileToDrive(TestCopyFileToDriveRequest) returns (google.protobuf.Empty) {}
 }
 

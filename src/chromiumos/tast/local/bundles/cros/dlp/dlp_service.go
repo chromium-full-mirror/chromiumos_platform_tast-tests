@@ -14,21 +14,25 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/google/uuid"
 	"google.golang.org/grpc"
 
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/dlp/clipboard"
+	"chromiumos/tast/local/bundles/cros/dlp/files"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/lacros"
 	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
 	"chromiumos/tast/local/chrome/uiauto"
+	"chromiumos/tast/local/chrome/uiauto/filesapp"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/chrome/uiauto/state"
 	"chromiumos/tast/local/chrome/webutil"
 	"chromiumos/tast/local/cryptohome"
+	"chromiumos/tast/local/drivefs"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/screenshot"
 	"chromiumos/tast/local/session"
@@ -108,11 +112,29 @@ func (service *DataLeakPreventionService) ClientID(ctx context.Context, req *emp
 	return &pb.ClientIdResponse{ClientId: *p.DeviceId}, nil
 }
 
+// CreateTempDir creates a temporary directory in tmp and returns its path.
+func (service *DataLeakPreventionService) CreateTempDir(ctx context.Context, req *empty.Empty) (*pb.CreateTempDirResponse, error) {
+	dir, err := os.MkdirTemp("", "")
+	if err != nil {
+		return nil, err
+	}
+	return &pb.CreateTempDirResponse{Path: dir}, nil
+}
+
+// RemoveTempDir removes the temporary directory with its contents.
+func (service *DataLeakPreventionService) RemoveTempDir(ctx context.Context, req *pb.RemoveTempDirRequest) (*empty.Empty, error) {
+	err := os.RemoveAll(req.Path)
+	if err != nil {
+		return &empty.Empty{}, err
+	}
+	return &empty.Empty{}, nil
+}
+
 // createHTMLTextPage creates an HTML page with some text.
 func createHTMLTextPage(path string) error {
 	textContent := []byte("<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'><title>Random Text</title></head><body>Sample text about random things.</body></html>")
 	if err := os.WriteFile(path, textContent, 0644); err != nil {
-		return errors.Wrap(err, "failed write a file")
+		return errors.Wrap(err, "failed to write a file")
 	}
 	return nil
 }
@@ -121,7 +143,7 @@ func createHTMLTextPage(path string) error {
 func createHTMLTextAreaPage(path string) (*nodewith.Finder, error) {
 	inputContent := []byte("<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'><title>Editable Text Box</title></head><body><textarea aria-label='textarea' rows='1' cols='100'></textarea></body></html>")
 	if err := os.WriteFile(path, inputContent, 0644); err != nil {
-		return nil, errors.Wrap(err, "failed write a file")
+		return nil, errors.Wrap(err, "failed to write a file")
 	}
 	textAreaNode := nodewith.Name("textarea").Role(role.TextField).State(state.Editable, true).First()
 	return textAreaNode, nil
@@ -140,6 +162,31 @@ func setupBrowser(ctx context.Context, chrome *chrome.Chrome, browserType pb.Bro
 	}
 
 	return br, closeBrowser, nil
+}
+
+// copyToDriveAndVerifyWarning tries to copy the file to Google Drive.
+// If waitForWarning is true waits for DLP warning to appear, otherwise ensures it doesn't appear.
+func copyToDriveAndVerifyWarning(ctx context.Context, ui *uiauto.Context, f *filesapp.FilesApp, kb *input.KeyboardEventWriter, filename string, waitForWarning bool) error {
+	if err := uiauto.Combine("copy the file to Google Drive",
+		f.OpenDownloads(),
+		f.CopyFileToClipboard(filename),
+		f.OpenDrive(),
+		f.PasteFileFromClipboard(kb),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to copy file to Google Drive")
+	}
+
+	dialogNode := nodewith.Name("Copy confidential file?")
+	if waitForWarning {
+		if err := ui.WaitUntilExists(dialogNode)(ctx); err != nil {
+			return errors.Wrap(err, "failed to wait for DLP warning")
+		}
+	} else {
+		if err := ui.EnsureGoneFor(dialogNode, 10*time.Second)(ctx); err != nil {
+			return errors.Wrap(err, "failed to ensure DLP warning gone")
+		}
+	}
+	return nil
 }
 
 // ClipboardCopyPaste performs a copy and paste action.
@@ -383,4 +430,95 @@ func (service *DataLeakPreventionService) Screenshare(ctx context.Context, req *
 
 	return &empty.Empty{}, nil
 
+}
+
+// TestCopyFileToDrive tests copying a DLP restricted file to Google Drive.
+func (service *DataLeakPreventionService) TestCopyFileToDrive(ctx context.Context, req *pb.TestCopyFileToDriveRequest) (_ *empty.Empty, retErr error) {
+	_, err := drivefs.NewDriveFs(ctx, service.chrome.NormalizedUser())
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to start DriveFS")
+	}
+
+	tconn, err := service.chrome.TestAPIConn(ctx)
+	if err != nil {
+		return &empty.Empty{}, errors.Wrap(err, "failed to connect to test API")
+	}
+
+	// Download the file.
+	if err := files.DownloadFile(ctx, tconn, service.chrome.Browser(), http.Dir(req.DataPath)); err != nil {
+		return &empty.Empty{}, errors.Wrap(err, "failed to download file")
+	}
+
+	keyboard, err := input.VirtualKeyboard(ctx)
+	if err != nil {
+		return &empty.Empty{}, errors.Wrap(err, "failed to get keyboard")
+	}
+	defer keyboard.Close()
+
+	ui := uiauto.New(tconn)
+
+	// Open the Files app.
+	filesApp, err := filesapp.Launch(ctx, tconn)
+	if err != nil {
+		return &empty.Empty{}, errors.Wrap(err, "failed to launch the Files App")
+	}
+	defer filesApp.Close(ctx)
+
+	if err := filesApp.OpenDownloads()(ctx); err != nil {
+		return &empty.Empty{}, errors.Wrap(err, "failed to open Downloads")
+	}
+
+	// Rename the file to a unique name and check that it's still managed.
+	// This also ensures that different tests don't interact with each other, after copying the file to Drive.
+	uuid, err := uuid.NewRandom()
+	if err != nil {
+		return &empty.Empty{}, err
+	}
+	dlFileName := fmt.Sprintf("data-%s.txt", uuid.String())
+	if err := filesApp.RenameFile(keyboard, files.DlFileName, dlFileName)(ctx); err != nil {
+		return &empty.Empty{}, errors.Wrap(err, "failed to rename the file")
+	}
+
+	if err := files.IsFileManaged(ctx, ui, tconn, keyboard, dlFileName, true); err != nil {
+		return &empty.Empty{}, errors.Wrap(err, "file isn't managed after renaming")
+	}
+
+	// Copy to Drive and cancel the warning.
+	if err := copyToDriveAndVerifyWarning(ctx, ui, filesApp, keyboard, dlFileName, true); err != nil {
+		return &empty.Empty{}, errors.Wrap(err, "failed to copy the file")
+	}
+
+	if err := files.CancelWarningAndVerify(ctx, ui, tconn, keyboard, dlFileName); err != nil {
+		return &empty.Empty{}, errors.Wrap(err, "failed to cancel the paste")
+	}
+
+	// Copy again and accept the warning.
+	if err := copyToDriveAndVerifyWarning(ctx, ui, filesApp, keyboard, dlFileName, true); err != nil {
+		return &empty.Empty{}, errors.Wrap(err, "failed to copy the file")
+	}
+
+	if err := files.AcceptWarningAndVerify(ctx, ui, tconn, keyboard, dlFileName); err != nil {
+		return &empty.Empty{}, errors.Wrap(err, "failed to proceed the paste")
+	}
+
+	if err := files.IsFileManaged(ctx, ui, tconn, keyboard, dlFileName, false); err != nil {
+		return &empty.Empty{}, errors.Wrap(err, "file is managed after copying")
+	}
+
+	// Delete the file and copy again.
+	if err := filesApp.DeleteFileOrFolder(keyboard, dlFileName)(ctx); err != nil {
+		return &empty.Empty{}, errors.Wrap(err, "failed to delete the file")
+	}
+
+	// Warning should be bypassed silently.
+	if err := copyToDriveAndVerifyWarning(ctx, ui, filesApp, keyboard, dlFileName, false); err != nil {
+		return &empty.Empty{}, errors.Wrap(err, "failed to copy the file")
+	}
+
+	// Delete the file so we don't unnecessarily take space in Drive.
+	if err := filesApp.DeleteFileOrFolder(keyboard, dlFileName)(ctx); err != nil {
+		return &empty.Empty{}, errors.Wrap(err, "failed to delete the file")
+	}
+
+	return &empty.Empty{}, nil
 }

@@ -29,7 +29,8 @@ import (
 	"chromiumos/tast/testing"
 )
 
-const downloadPage = "/download.html"
+// DownloadPage is the suffix of the HTML page with the download.
+const DownloadPage = "/download.html"
 
 // DlFileName is the name of the downloaded file used for testing.
 const DlFileName = "data.txt"
@@ -64,7 +65,7 @@ func DownloadFile(ctx context.Context, tconn *chrome.TestConn, br *browser.Brows
 	defer server.Close()
 
 	// Open the local page with the file to download.
-	conn, err := br.NewConn(ctx, server.URL+downloadPage)
+	conn, err := br.NewConn(ctx, server.URL+DownloadPage)
 	if err != nil {
 		return errors.Wrap(err, "failed to open browser")
 	}

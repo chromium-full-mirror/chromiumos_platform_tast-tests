@@ -52,6 +52,20 @@ type EventsBundle struct {
 	warnProceed []reportingutil.InputEvent
 }
 
+const (
+	// HTMLFile is the path of the HTML download page.
+	HTMLFile = "dlp/download.html"
+
+	// DataFile is the path of the file that's downloaded in the test.
+	DataFile = "dlp/data.txt"
+
+	// RemoteHTMLFile is the name of the remote HTML file.
+	RemoteHTMLFile = "download.html"
+
+	// RemoteDataFile is the name of the remote file that's downloaded in the test.
+	RemoteDataFile = "data.txt"
+)
+
 // RetrieveEvents returns events for every restriction level having a timestamp greater than `testStartTime` with the given `clientID`.
 func RetrieveEvents(ctx context.Context, customerID, APIKey, clientID string, testStartTime time.Time) (*EventsBundle, error) {
 
