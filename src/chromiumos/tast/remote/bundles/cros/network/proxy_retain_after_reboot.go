@@ -33,7 +33,8 @@ func init() {
 			"edgar.chang@cienet.com",
 		},
 		BugComponent: "b:1131775", // ChromeOS > Software > System Services > Connectivity
-		Attr:         []string{"group:network", "network_e2e_unstable"},
+		// TODO(b/275127708): Move this test to network suite.
+		Attr: []string{"group:wificell", "wificell_e2e_unstable"},
 		ServiceDeps: []string{
 			"tast.cros.browser.ChromeService",
 			"tast.cros.network.ProxySettingService",

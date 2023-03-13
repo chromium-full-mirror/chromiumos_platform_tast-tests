@@ -39,7 +39,7 @@ func init() {
 			"jason.hsiao@cienet.com",
 		},
 		BugComponent: "b:1131775", // ChromeOS > Software > System Services > Connectivity
-		Attr:         []string{"group:network", "network_e2e_unstable"},
+		Attr:         []string{"group:wificell", "wificell_e2e_unstable"},
 		ServiceDeps: []string{
 			"tast.cros.browser.ChromeService",
 			"tast.cros.browser.LacrosService",
