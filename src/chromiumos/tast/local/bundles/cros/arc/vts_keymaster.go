@@ -19,7 +19,6 @@ import (
 )
 
 func init() {
-	// TODO(edmanp): crbug/1126302. Replace master by principal.
 	testing.AddTest(&testing.Test{
 		Func:         VTSKeymaster,
 		LacrosStatus: testing.LacrosVariantUnneeded,
@@ -33,7 +32,7 @@ func init() {
 		Timeout:      4 * time.Minute,
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_p"},
-			// TODO(edmanp): Download only one file for the current architecture.
+			// TODO(b/273223557): Download only one file for the current architecture.
 			ExtraData: []string{
 				"VtsHalKeymasterV3_0TargetTest_arm",
 				"VtsHalKeymasterV3_0TargetTest_arm64",
