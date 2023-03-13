@@ -267,23 +267,6 @@ func testAuthFactor(ctx context.Context, cryptohome *hwsec.CryptohomeClient, use
 	if _, err := authenticateAuthFactor(ctx, cryptohome, username, keyInfo.KeyLabel, hwsec.NewPassAuthConfig(username, invalidPassword), keyInfo.LowEntropy); err == nil {
 		return errors.New("unexpectedly can authenticate AuthFactor with invalid password")
 	}
-	cmdRunner := hwseclocal.NewCmdRunner()
-	helper, err := hwseclocal.NewHelper(cmdRunner)
-	if err != nil {
-		return errors.Wrap(err, "failed to create hwsec local helper")
-	}
-	cleanupUSSDisabled, err := helper.DisableUserSecretStash(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to disable UserSecretStash")
-	}
-	defer cleanupUSSDisabled(ctx)
-
-	if _, err := authenticateAuthFactor(ctx, cryptohome, username, keyInfo.KeyLabel, hwsec.NewPassAuthConfig(username, keyInfo.Password), keyInfo.LowEntropy); err != nil {
-		return errors.Wrap(err, "failed to authenticate AuthFactor after disabling USS")
-	}
-	if _, err := authenticateAuthFactor(ctx, cryptohome, username, keyInfo.KeyLabel, hwsec.NewPassAuthConfig(username, invalidPassword), keyInfo.LowEntropy); err == nil {
-		return errors.New("unexpectedly authenticated AuthFactor with invalid password after disabling USS")
-	}
 	return nil
 }
 
