@@ -119,9 +119,8 @@ func HandoverInterRat(ctx context.Context, s *testing.State) {
 			}
 		}
 
-		// TODO: move away from explicit interface use with b/255775799
-		if err := dutConn.CommandContext(ctx, "curl", "--interface", tf.InterfaceName, "google.com").Run(); err != nil {
-			s.Fatal("Failed to curl google.com on DUT using cellular interface: ", err)
+		if _, _, err := tf.VerifyConnectivity(ctx); err != nil {
+			s.Fatal("Failed to verify cellular connectivity: ", err)
 		}
 	}
 }

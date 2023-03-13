@@ -26,7 +26,7 @@ func init() {
 		ServiceDeps:  []string{"tast.cros.cellular.RemoteCellularService"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "callboxManagedFixture",
-		Timeout:      5 * time.Minute,
+		Timeout:      7 * time.Minute,
 		Params: []testing.Param{
 			{
 				// names are defined <tech>_<#CCs>_<MIMO>_<CA BANDS>
@@ -253,27 +253,12 @@ func init() {
 }
 
 func AssertCellularData(ctx context.Context, s *testing.State) {
-	testURL := "google.com"
 	dutConn := s.DUT().Conn()
 	tf := s.FixtValue().(*manager.TestFixture)
 	tc := s.Param().(*manager.ConfigureCallboxRequestBody)
+	// ConnectToCallbox will already verify IP connectivity as part of the test
+	// so no additional check is needed.
 	if err := tf.ConnectToCallbox(ctx, dutConn, tc); err != nil {
 		s.Fatal("Failed to initialize cellular connection: ", err)
-	}
-
-	// Assert cellular connection on DUT can connect to a URL like ethernet can
-	ethernetResult, err := dutConn.CommandContext(ctx, "curl", "--interface", "eth0", testURL).Output()
-	if err != nil {
-		s.Fatalf("Failed to curl %q on DUT using ethernet interface: %v", testURL, err)
-	}
-
-	cellularResult, err := dutConn.CommandContext(ctx, "curl", "--interface", tf.InterfaceName, testURL).Output()
-	if err != nil {
-		s.Fatalf("Failed to curl %q on DUT using cellular interface: %v", testURL, err)
-	}
-	ethernetResultStr := string(ethernetResult)
-	cellularResultStr := string(cellularResult)
-	if ethernetResultStr != cellularResultStr {
-		s.Fatal("Ethernet and cellular curl output not equal")
 	}
 }

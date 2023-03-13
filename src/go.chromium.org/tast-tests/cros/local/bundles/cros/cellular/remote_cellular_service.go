@@ -14,11 +14,13 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/mmconst"
 	"go.chromium.org/tast-tests/cros/common/shillconst"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast-tests/cros/local/hermes"
 	"go.chromium.org/tast-tests/cros/local/modemfwd"
 	"go.chromium.org/tast-tests/cros/local/modemmanager"
+	"go.chromium.org/tast-tests/cros/local/network"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	cellular_pb "go.chromium.org/tast-tests/cros/services/cros/cellular"
 	"go.chromium.org/tast/core/errors"
@@ -38,6 +40,7 @@ type RemoteCellularService struct {
 	state           *testing.ServiceState
 	helper          *cellular.Helper
 	modemfwdStopped bool
+	netUnlock       func()
 }
 
 // SetUp initialize the DUT for cellular testing.
@@ -76,8 +79,26 @@ func (s *RemoteCellularService) SetUp(ctx context.Context, req *empty.Empty) (*e
 	return &empty.Empty{}, nil
 }
 
-// Reinit reinitializes the DUT for cellular testing between tests.
-func (s *RemoteCellularService) Reinit(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+// PreTest runs before every cellular test.
+func (s *RemoteCellularService) PreTest(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+	// Prevent check_ethernet.hook from interrupting test if network is temporarily
+	// disabled. Automatically unlocked after 30 minutes, so unlock and lock it
+	// between each test.
+	if unlock, err := network.LockCheckNetworkHook(ctx); err != nil {
+		s.netUnlock = nil
+		// Just report error if fail to acquire lock, since it's not strictly required.
+		testing.ContextLog(ctx, "Failed to lock the check network hook: ", err)
+	} else {
+		s.netUnlock = unlock
+	}
+	return &empty.Empty{}, nil
+}
+
+// PostTest runs after every cellular test.
+func (s *RemoteCellularService) PostTest(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+	if s.netUnlock != nil {
+		s.netUnlock()
+	}
 	return &empty.Empty{}, nil
 }
 
@@ -343,6 +364,80 @@ func (s *RemoteCellularService) ConfigureSar(ctx context.Context, req *cellular_
 	}
 
 	return &empty.Empty{}, nil
+}
+
+// VerifyIPConnectivity verifies that the DUT has network connectivity using the provided addresses.
+func (s *RemoteCellularService) VerifyIPConnectivity(ctx context.Context, req *cellular_pb.VerifyIPConnectivityRequest) (*cellular_pb.VerifyIPConnectivityResponse, error) {
+	if s.helper == nil {
+		return nil, errors.New("Cellular helper not available, SetUp must be called first")
+	}
+
+	if req.IPv4Address == "" {
+		return nil, errors.New("no IPv4 address provided")
+	}
+
+	if req.IPv6Address == "" {
+		return nil, errors.New("no IPv6 address provided")
+	}
+
+	ipv4, ipv6, err := s.helper.GetNetworkProvisionedCellularIPTypes(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to read network provisioned IP types")
+	}
+
+	testCon := func(ctx context.Context) error {
+		if req.Method == cellular_pb.VerifyIPConnectivityRequest_Curl {
+			return testConnectionCurl(ctx, ipv4, ipv6, req.IPv4Address, req.IPv6Address)
+		}
+
+		return testConnectionPing(ctx, ipv4, ipv6, req.IPv4Address, req.IPv6Address)
+	}
+
+	if err := s.helper.RunTestOnCellularInterface(ctx, testCon); err != nil {
+		return nil, errors.Wrap(err, "failed to run test on cellular interface")
+	}
+
+	return &cellular_pb.VerifyIPConnectivityResponse{
+		Ipv4: ipv4,
+		Ipv6: ipv6,
+	}, nil
+}
+
+func testConnectionPing(ctx context.Context, ipv4, ipv6 bool, ipv4Addr, ipv6Addr string) error {
+	if !ipv4 && !ipv6 {
+		return errors.New("failed to run ping test, neither IPv4 nor IPv6 connection available")
+	}
+
+	if ipv4 {
+		if out, err := testexec.CommandContext(ctx, "ping", "-c1", "-w1", "-4", ipv4Addr).Output(); err != nil {
+			return errors.Wrapf(err, "failed ipv4 ping to %q: %s", ipv4Addr, string(out))
+		}
+	}
+	if ipv6 {
+		if out, err := testexec.CommandContext(ctx, "ping", "-c1", "-w1", "-6", ipv6Addr).Output(); err != nil {
+			return errors.Wrapf(err, "failed ipv6 ping to %q: %s", ipv6Addr, string(out))
+		}
+	}
+	return nil
+}
+
+func testConnectionCurl(ctx context.Context, ipv4, ipv6 bool, ipv4Addr, ipv6Addr string) error {
+	if !ipv4 && !ipv6 {
+		return errors.New("failed to run curl test, neither IPv4 nor IPv6 connection available")
+	}
+
+	if ipv4 {
+		if out, err := testexec.CommandContext(ctx, "curl", "-m", "5", "-4", ipv4Addr).Output(); err != nil {
+			return errors.Wrapf(err, "failed ipv4 curl to %q: %s", ipv4Addr, string(out))
+		}
+	}
+
+	if ipv6 {
+		if out, err := testexec.CommandContext(ctx, "curl", "-m", "5", "-6", ipv6Addr).Output(); err != nil {
+			return errors.Wrapf(err, "failed ipv6 curl to %q: %s", ipv6Addr, string(out))
+		}
+	}
+	return nil
 }
 
 // WaitForNextSms waits until a single sms added signal is received.

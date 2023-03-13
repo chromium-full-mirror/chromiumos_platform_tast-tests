@@ -15,6 +15,12 @@ service RemoteCellularService {
   // SetUp initialize the DUT for cellular testing.
   rpc SetUp(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
+  // PreTest runs before every cellular test.
+  rpc PreTest(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  // PostTest runs after every cellular test.
+  rpc PostTest(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
   // TearDown releases any held resources and reverts the changes made in SetUp.
   rpc TearDown(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
@@ -38,6 +44,9 @@ service RemoteCellularService {
 
   // QueryLTESignal returns information about the attached LTE signal.
   rpc QueryLTESignal(google.protobuf.Empty) returns (QueryLTESignalResponse) {}
+
+  // VerifyIPConnectivity verifies that the DUT can ping the provided addresses.
+  rpc VerifyIPConnectivity(VerifyIPConnectivityRequest) returns (VerifyIPConnectivityResponse) {}
 
   // DisableSar disables dynamic SAR on the DUT.
   rpc DisableSar(google.protobuf.Empty) returns (google.protobuf.Empty) {}
@@ -104,4 +113,19 @@ message WaitForNextSmsResponse {
 
 message QueryModemTypeResponse {
    uint32 modem_type = 1;
+}
+
+message VerifyIPConnectivityRequest {
+  string IPv4Address = 1;
+  string IPv6Address = 2;
+  enum CheckMethod {
+    Ping = 0;
+    Curl = 1;
+  }
+  CheckMethod method = 3;
+}
+
+message VerifyIPConnectivityResponse {
+  bool ipv4 = 1;
+  bool ipv6 = 2;
 }

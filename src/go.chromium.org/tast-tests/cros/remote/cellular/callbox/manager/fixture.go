@@ -27,8 +27,11 @@ const (
 	setUpTimeout    = 3 * time.Minute
 	tearDownTimeout = 3 * time.Minute
 	resetTimeout    = 1 * time.Second
-	postTestTimeout = 1 * time.Second
-	testURL         = "google.com"
+	postTestTimeout = 1 * time.Minute
+	preTestTimeout  = 1 * time.Minute
+	testURLIPv4     = "ipv6-test.com"
+	// Use callbox DAU address since IPv6 is not supported in lab (b/255775799).
+	testURLIPv6 = DAUAddressIPv6
 )
 
 func init() {
@@ -42,6 +45,7 @@ func init() {
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		PostTestTimeout: postTestTimeout,
+		PreTestTimeout:  preTestTimeout,
 		TearDownTimeout: tearDownTimeout,
 		ServiceDeps:     []string{"tast.cros.cellular.RemoteCellularService"},
 		Vars:            []string{"callboxManager", "callbox"},
@@ -107,15 +111,8 @@ func (tf *TestFixture) SetUp(ctx context.Context, s *testing.FixtState) interfac
 		}
 	}
 
-	cl, err := rpc.Dial(ctx, dut, s.RPCHint())
-	if err != nil {
-		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
-	}
-	tf.rpcClient = cl
-
-	tf.RemoteCellularClient = cellular.NewRemoteCellularServiceClient(cl.Conn)
-	if _, err := tf.RemoteCellularClient.SetUp(ctx, &empty.Empty{}); err != nil {
-		s.Fatal("Failed to initialize cellular shill service on DUT: ", err)
+	if err := tf.initRemoteClient(ctx, s.DUT(), s.RPCHint()); err != nil {
+		s.Fatal("Failed to initialize remote cellular client: ", err)
 	}
 
 	if resp, err := tf.RemoteCellularClient.QueryInterface(ctx, &empty.Empty{}); err != nil {
@@ -126,6 +123,34 @@ func (tf *TestFixture) SetUp(ctx context.Context, s *testing.FixtState) interfac
 	}
 
 	return tf
+}
+
+// initRemoteClient initializes/reinitializes the remote cellular client which may be disconnected due to a network error.
+func (tf *TestFixture) initRemoteClient(ctx context.Context, dut *dut.DUT, hint *testing.RPCHint) error {
+	// Close previous client if it already exists.
+	if tf.RemoteCellularClient != nil {
+		if _, err := tf.RemoteCellularClient.TearDown(ctx, &empty.Empty{}); err != nil {
+			testing.ContextLog(ctx, "Failed to tear down cellular remote service: ", err)
+		}
+
+		if err := tf.rpcClient.Close(ctx); err != nil {
+			testing.ContextLog(ctx, "Failed to close DUT RPC client: ", err)
+		}
+		tf.RemoteCellularClient = nil
+		tf.rpcClient = nil
+	}
+
+	cl, err := rpc.Dial(ctx, dut, hint)
+	if err != nil {
+		return errors.Wrap(err, "failed to connect to the RPC service on the DUT")
+	}
+	tf.rpcClient = cl
+
+	tf.RemoteCellularClient = cellular.NewRemoteCellularServiceClient(cl.Conn)
+	if _, err := tf.RemoteCellularClient.SetUp(ctx, &empty.Empty{}); err != nil {
+		return errors.Wrap(err, "failed to initialize cellular shill service on DUT")
+	}
+	return nil
 }
 
 // ConnectToCallbox function handles initial test setup and wraps parameters.
@@ -178,20 +203,32 @@ func (tf *TestFixture) ConnectToCallbox(ctx context.Context, dutConn *ssh.Conn, 
 	tf.InterfaceName = resp.Name
 
 	// verify cellular connection by curling a website
-	curlArgs := []string{"-m", "5", "--interface", tf.InterfaceName, testURL}
 	retryCount := 0
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		retryCount++
-		testing.ContextLogf(ctx, "curling %q attempt: %d", testURL, retryCount)
-		if _, err := dutConn.CommandContext(ctx, "curl", curlArgs...).Output(); err != nil {
-			return err
-		}
-
-		return nil
+		testing.ContextLogf(ctx, "verifying IP connectivity, attempt: %d", retryCount)
+		_, _, err := tf.VerifyConnectivity(ctx)
+		return err
 	}, &testing.PollOptions{Timeout: time.Minute, Interval: time.Second}); err != nil {
-		return errors.Wrapf(err, "failed curl %q on DUT using cellular interface", "google.com")
+		return errors.Wrap(err, "failed to verify cellular connectivity")
 	}
 	return nil
+}
+
+// VerifyConnectivity verifies the DUT has network connectivity.
+func (tf *TestFixture) VerifyConnectivity(ctx context.Context) (ipv4, ipv6 bool, err error) {
+	req := cellular.VerifyIPConnectivityRequest{
+		IPv4Address: testURLIPv4,
+		IPv6Address: testURLIPv6,
+	}
+
+	resp, err := tf.RemoteCellularClient.VerifyIPConnectivity(ctx, &req)
+	if err != nil {
+		return false, false, errors.Wrap(err, "failed to verify network connectivity")
+	} else if !resp.Ipv4 && !resp.Ipv6 {
+		return false, false, errors.New("no IPv4 or IPv6 connectivity found")
+	}
+	return resp.Ipv4, resp.Ipv6, nil
 }
 
 // ToggleConnection disables and then re-enables the device, and then reconnects to the default cellular service.
@@ -243,12 +280,34 @@ func (tf *TestFixture) Reset(ctx context.Context) error {
 	return nil
 }
 
-// PreTest does nothing currently, but is required for the test fixture.
+// PreTest initializes the test fixture before each test run.
 func (tf *TestFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
+	if tf.RemoteCellularClient == nil {
+		// Remote client not running, may have failed a previous initialization.
+		if err := tf.initRemoteClient(ctx, s.DUT(), s.RPCHint()); err != nil {
+			s.Fatal("Failed to initialize remote cellular client: ", err)
+		}
+		if _, err := tf.RemoteCellularClient.PreTest(ctx, &empty.Empty{}); err != nil {
+			s.Fatal("Failed PreTest initialization on remote client: ", err)
+		}
+	} else if _, err := tf.RemoteCellularClient.PreTest(ctx, &empty.Empty{}); err != nil {
+		// Failed to call pre-test, remote client may have been disconnected so attempt to restart it.
+		if err := tf.initRemoteClient(ctx, s.DUT(), s.RPCHint()); err != nil {
+			s.Fatal("Failed to initialize remote cellular client: ", err)
+		}
+
+		// Attempt pre-test a second time.
+		if _, err := tf.RemoteCellularClient.PreTest(ctx, &empty.Empty{}); err != nil {
+			s.Fatal("Failed PreTest initialization on remote client: ", err)
+		}
+	}
 }
 
-// PostTest does nothing currently, but is required for the test fixture.
+// PostTest cleans up the test fixture after each test run.
 func (tf TestFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
+	if _, err := tf.RemoteCellularClient.PostTest(ctx, &empty.Empty{}); err != nil {
+		s.Fatal("Failed PostTest cleanup on remote client: ", err)
+	}
 }
 
 // TearDown releases resources held open by the test fixture.

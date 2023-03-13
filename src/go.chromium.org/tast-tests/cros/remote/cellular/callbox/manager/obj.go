@@ -9,6 +9,12 @@ import (
 	"fmt"
 )
 
+// Addresses of callbox DAU web services.
+const (
+	DAUAddressIPv4 = "www.ipv4.dau.dau"
+	DAUAddressIPv6 = "www.ipv6.dau.dau"
+)
+
 // Band represents a RAT frequency band.
 type Band string
 
