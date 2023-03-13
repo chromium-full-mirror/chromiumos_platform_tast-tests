@@ -15,6 +15,7 @@ import (
 	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/local/shill"
 	"chromiumos/tast/local/sysutil"
+	"chromiumos/tast/lsbrelease"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/wlan"
 )
@@ -33,6 +34,21 @@ func init() {
 		// List of requirements this test satisfies.
 		Requirements: []string{tdreq.WiFiDrvSupportCrOS, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 	})
+}
+
+// Reven's WiFi driver is upstream iwlwifi instead of specific
+// drivers for other ChromiumOS boards. The path of the WiFi
+// module should be separated from other ChromiumOS boards.
+var expectedFlexWLANDriver = map[wlan.DeviceID]map[string]string{
+	wlan.Intel8265: {
+		"5.10": "wireless/intel/iwlwifi/iwlwifi.ko",
+	},
+	wlan.Intel9000: {
+		"5.10": "wireless/intel/iwlwifi/iwlwifi.ko",
+	},
+	wlan.IntelAX201: {
+		"5.10": "wireless/intel/iwlwifi/iwlwifi.ko",
+	},
 }
 
 var expectedWLANDriver = map[wlan.DeviceID]map[string]string{
@@ -166,6 +182,7 @@ func Driver(ctx context.Context, s *testing.State) {
 		intelVendorNum   = "0x8086"
 		support160MHz    = '0'
 		supportOnly80MHz = '2'
+		flexBoard        = "reven"
 	)
 
 	logBandwidthSupport := func(ctx context.Context, dev *wlan.DevInfo) {
@@ -206,7 +223,22 @@ func Driver(ctx context.Context, s *testing.State) {
 	// 160 MHz / 80 MHz wide channels and log this information.
 	logBandwidthSupport(ctx, devInfo)
 
-	if _, ok := expectedWLANDriver[devInfo.ID]; !ok {
+	var wlanDriverList map[wlan.DeviceID]map[string]string
+
+	lsb, err := lsbrelease.Load()
+	if err != nil {
+		s.Fatal("Failed to parses a text file in the /etc/lsb-release: ", err)
+	}
+
+	if board, ok := lsb[lsbrelease.Board]; !ok {
+		s.Errorf("Failed to find %s in /etc/lsb-release", lsbrelease.Board)
+	} else if board == flexBoard {
+		wlanDriverList = expectedFlexWLANDriver
+	} else {
+		wlanDriverList = expectedWLANDriver
+	}
+
+	if _, ok := wlanDriverList[devInfo.ID]; !ok {
 		s.Fatal("Unexpected device ", devInfo.Name)
 	}
 
@@ -215,8 +247,7 @@ func Driver(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get uname: ", err)
 	}
 	baseRevision := strings.Join(strings.Split(u.Release, ".")[:2], ".")
-
-	expectedPath, ok := expectedWLANDriver[devInfo.ID][baseRevision]
+	expectedPath, ok := wlanDriverList[devInfo.ID][baseRevision]
 	if !ok {
 		s.Fatalf("Unexpected base revision %v for device %v", baseRevision, devInfo.Name)
 	}
