@@ -496,28 +496,39 @@ func (y *YtApp) ExitFullScreen(ctx context.Context) error {
 }
 
 func (y *YtApp) isFullscreen(ctx context.Context) (bool, error) {
-	moreBtn := y.d.Object(androidui.ID(moreOptionsID))
-	playerView := y.d.Object(androidui.ID(playerViewID))
-	// If the "More Options" button is not on the display, click on the video to bring it up.
-	if err := uiauto.IfFailThen(moreBtn.Exists,
-		// It might not successfully call out the buttons on the low-end DUTs.
-		uiauto.Retry(retryTimes, uiauto.NamedCombine("click video to bring up setting buttons",
-			cuj.FindAndClick(playerView, uiWaitTime),
-			cuj.WaitForExists(moreBtn, uiWaitTime),
-		)),
-	)(ctx); err != nil {
-		return false, err
-	}
 	enterFsBtn := y.d.Object(androidui.Description(string(enterFullscreen)))
 	exitFsBtn := y.d.Object(androidui.Description(string(exitFullscreen)))
-	controlBtn, err := cuj.FindAnyExists(ctx, uiWaitTime, enterFsBtn, exitFsBtn)
-	if err != nil {
+	var controlBtn *androidui.Object
+	if err := uiauto.Retry(retryTimes, func(context.Context) (err error) {
+		if err := y.showMoreOptionsButton(ctx); err != nil {
+			return err
+		}
+		// The settings buttons might have happened to disappear, so none of them could be found.
+		controlBtn, err = cuj.FindAnyExists(ctx, uiWaitTime, enterFsBtn, exitFsBtn)
+		if err != nil {
+			return err
+		}
+		return nil
+	})(ctx); err != nil {
 		return false, err
 	}
 	if controlBtn == enterFsBtn {
 		return false, nil
 	}
 	return true, nil
+}
+
+// showMoreOptionsButton checks if the "More Options" button is not on the display, click on the video to bring it up.
+func (y *YtApp) showMoreOptionsButton(ctx context.Context) (err error) {
+	moreBtn := y.d.Object(androidui.ID(moreOptionsID))
+	playerView := y.d.Object(androidui.ID(playerViewID))
+	return uiauto.IfFailThen(moreBtn.Exists,
+		// It might not successfully call out the buttons on the low-end DUTs.
+		uiauto.Retry(retryTimes, uiauto.NamedCombine("click video to bring up setting buttons",
+			cuj.FindAndClick(playerView, uiWaitTime),
+			cuj.WaitForExists(moreBtn, uiWaitTime),
+		)),
+	)(ctx)
 }
 
 // PauseAndPlayVideo verifies video playback on youtube app.
