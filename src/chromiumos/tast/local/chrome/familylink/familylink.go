@@ -230,7 +230,7 @@ func CreateUsageTimeLimitPolicy() *policy.UsageTimeLimit {
 	}
 
 	hour, _, _ := now.Clock()
-	resetTime := policy.UsageTimeLimitValueTimeUsageLimitResetAt{
+	resetTime := policy.RefTime{
 		// Make sure the policy doesn't reset before the test ends
 		Hour:   (hour + 2) % 24,
 		Minute: 0,

@@ -72,7 +72,7 @@ func DailyTimeLimit(ctx context.Context, s *testing.State) {
 	// 2m after logged in) without changing the system clock. Family Link users
 	// have restrictions to prevent manipulating the system clock.
 	reset := now.Add(resetInMin).In(location)
-	usageLimitPolicy.Val.TimeUsageLimit.ResetAt = &policy.UsageTimeLimitValueTimeUsageLimitResetAt{
+	usageLimitPolicy.Val.TimeUsageLimit.ResetAt = &policy.RefTime{
 		Hour:   reset.Hour(),
 		Minute: reset.Minute(),
 	}
