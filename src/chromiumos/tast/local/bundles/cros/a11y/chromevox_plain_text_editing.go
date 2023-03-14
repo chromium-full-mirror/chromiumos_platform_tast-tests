@@ -10,12 +10,8 @@ import (
 
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/a11y"
-	"chromiumos/tast/local/audio/crastestclient"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
-	"chromiumos/tast/local/chrome/browser/browserfixt"
-	"chromiumos/tast/local/chrome/uiauto/nodewith"
-	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/testing"
 )
 
@@ -28,7 +24,7 @@ func init() {
 			"chromeos-a11y-eng@google.com", // Mailing list
 			"katie@chromium.org",           // Test author
 		},
-		BugComponent: "b:1272895",
+		BugComponent: "b:1272895", // ChromeOS Public Tracker > Experiences > Accessibility > Features > ChromeVox
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
@@ -49,72 +45,31 @@ func ChromevoxPlainTextEditing(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to create Test API connection: ", err)
-	}
 
-	// Mute the device to avoid noisiness.
-	if err := crastestclient.Mute(ctx); err != nil {
-		s.Fatal("Failed to mute: ", err)
+	vd := a11y.VoiceData{
+		ExtID:  a11y.GoogleTTSExtensionID,
+		Locale: "en-US",
 	}
-	defer crastestclient.Unmute(cleanupCtx)
-
-	// Setup a browser before opening a new tab.
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
-	if err != nil {
-		s.Fatal("Failed to open the browser: ", err)
-	}
-	defer closeBrowser(ctx)
-
-	c, err := a11y.NewTabWithHTML(ctx, br, `<label for='singleLine'>singleLine</label>
-<input type='text' id='singleLine' value='Single line field'><br>
-<label for='textarea'>textArea</label>
-<textarea id='textarea'>Line 1
-line 2
-line 3</textarea>`)
-	if err != nil {
-		s.Fatal("Failed to open a new tab with HTML: ", err)
-	}
-	defer c.Close()
-
-	// Close the extra new tab page.
-	if err := br.CloseWithURL(ctx, chrome.NewTabURL); err != nil {
-		s.Fatal("Failed to close new tab page: ", err)
-	}
-
-	if err := a11y.SetFeatureEnabled(ctx, tconn, a11y.SpokenFeedback, true); err != nil {
-		s.Fatal("Failed to enable spoken feedback: ", err)
-	}
-	defer func() {
-		if err := a11y.ClearFeature(cleanupCtx, tconn, a11y.SpokenFeedback); err != nil {
-			s.Error("Failed to disable spoken feedback: ", err)
-		}
-	}()
-
-	// Connect to ChromeVox.
-	cvconn, err := a11y.NewChromeVoxConn(ctx, cr)
-	if err != nil {
-		s.Fatal("Failed to connect to the ChromeVox background page: ", err)
-	}
-	defer cvconn.Close()
-
-	// Get a speech monitor for the Google TTS engine.
 	ed := a11y.TTSEngineData{
 		ExtID:                     a11y.GoogleTTSExtensionID,
 		UseOnSpeakWithAudioStream: false,
 	}
-	sm, err := a11y.RelevantSpeechMonitor(ctx, cr, tconn, ed)
+	bt := s.Param().(browser.Type)
+	const html = `<label for='singleLine'>singleLine</label>
+<input type='text' id='singleLine' value='Single line field'><br>
+<label for='textarea'>textArea</label>
+<textarea id='textarea'>Line 1
+line 2
+line 3</textarea>`
+	cvData, err := a11y.SetUpChromeVox(ctx, cleanupCtx, cr, vd, ed, bt, html)
 	if err != nil {
-		s.Fatal("Failed to connect to the TTS background page: ", err)
+		s.Fatal("Failed to set up ChromeVox: ", err)
 	}
-	defer sm.Close()
-
-	// Wait for ChromeVox to focus the root web area.
-	rootWebArea := nodewith.Role(role.RootWebArea).First()
-	if err = cvconn.WaitForFocusedNode(ctx, tconn, rootWebArea); err != nil {
-		s.Error("Failed to wait for initial ChromeVox focus: ", err)
-	}
+	defer func() {
+		if err := cvData.TearDown(); err != nil {
+			s.Fatal("Failed to tear down ChromeVox test: ", err)
+		}
+	}()
 
 	const nextObject = "Search+Right"
 	const lang = "en-US"
@@ -135,7 +90,7 @@ line 3</textarea>`)
 			[]a11y.SpeechExpectation{
 				a11y.NewOptionsExpectation("textArea", lang, 1.0, 1.0),
 				a11y.NewOptionsExpectation("Line 1 line 2 line 3", lang, 1.0, 1.0),
-				a11y.NewOptionsExpectation("Text area", lang, .8, 1.0)},
+				a11y.NewOptionsExpectation("Text area", lang, 0.8, 1.0)},
 		},
 		{
 			[]string{"Right"},
@@ -170,7 +125,7 @@ line 3</textarea>`)
 	}
 
 	for _, step := range testSteps {
-		if err := a11y.PressKeysAndConsumeExpectations(ctx, sm, step.keyCommands, step.expectations); err != nil {
+		if err := a11y.PressKeysAndConsumeExpectations(ctx, cvData.SM, step.keyCommands, step.expectations); err != nil {
 			s.Error("Error when pressing keys and expecting speech: ", err)
 		}
 	}
