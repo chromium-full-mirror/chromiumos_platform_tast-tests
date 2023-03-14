@@ -27,14 +27,13 @@ const (
 	checkInterval      = 1 * time.Second
 	cleanTime          = 10 * time.Second
 	dischargeThreshold = 55.0
-	extraTime          = 1 * time.Minute
 	h264Video          = "720_h264.mp4"
 	vp8Video           = "720_vp8.webm"
 	vp9Video           = "720_vp9.webm"
 	playbackTime       = 1 * time.Minute
 	stabilizeTime      = 10 * time.Second
 	// We need to record twice, once for RAPL and once for system_power.
-	testTime = extraTime + 2*playbackTime
+	testTime = 10 * time.Minute
 )
 
 var (
@@ -97,17 +96,6 @@ func VideoRenderingPower(ctx context.Context, s *testing.State) {
 		}
 	}()
 
-	// Get a browser instance ready to start playing the video.
-	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
-	defer server.Close()
-	url := path.Join(server.URL, video)
-	conn, err := cr.NewConn(ctx, url)
-	if err != nil {
-		s.Fatal("Cannot create new tab for video playback: ", err)
-	}
-	defer conn.Close()
-	defer conn.CloseTarget(cleanupCtx)
-
 	// Add the default power test configuration.
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -116,9 +104,6 @@ func VideoRenderingPower(ctx context.Context, s *testing.State) {
 	sup.Add(setup.PowerTest(ctx, tconn, powerTestOptions, battDischarge))
 	if err := sup.Check(ctx); err != nil {
 		s.Fatal("Setup failed: ", err)
-	}
-	if err := cpu.WaitUntilIdle(ctx); err != nil {
-		s.Error("Failed to wait for CPU to become idle: ", err)
 	}
 
 	// Setup up the metrics for recording.
@@ -133,6 +118,20 @@ func VideoRenderingPower(ctx context.Context, s *testing.State) {
 	if err := metrics.Start(ctx); err != nil {
 		s.Fatal("Failed to start metrics: ", err)
 	}
+
+	// Get a browser instance ready to start playing the video.
+	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
+	defer server.Close()
+	if err := cpu.WaitUntilIdle(ctx); err != nil {
+		s.Error("Failed to wait for CPU to become idle: ", err)
+	}
+	url := path.Join(server.URL, video)
+	conn, err := cr.NewConn(ctx, url)
+	if err != nil {
+		s.Fatal("Cannot create new tab for video playback: ", err)
+	}
+	defer conn.Close()
+	defer conn.CloseTarget(cleanupCtx)
 
 	// Wait for document to be completely loaded before recording metrics.
 	if err = conn.WaitForExpr(ctx, "document.readyState === 'complete'"); err != nil {
