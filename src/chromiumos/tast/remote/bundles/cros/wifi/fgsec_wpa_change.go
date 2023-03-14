@@ -409,7 +409,7 @@ func init() {
 func FgsecWpaChange(ctx context.Context, s *testing.State) {
 	tf := s.FixtValue().(*wificell.TestFixture)
 	ssid := ap.RandomSSID("TAST_FGSEC_")
-	apOpts := []ap.Option{ap.SSID(ssid), ap.Mode(ap.Mode80211g), ap.Channel(1)}
+	apOpts := []ap.Option{ap.SSID(ssid), ap.Mode(ap.Mode80211g), ap.Channel(1), ap.PMF(ap.PMFOptional)}
 	servicePath := ""
 
 	connectAP := func(ctx context.Context, sec *secConf) (retErr error) {

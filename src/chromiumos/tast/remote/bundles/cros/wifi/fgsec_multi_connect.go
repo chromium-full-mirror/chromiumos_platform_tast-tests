@@ -65,7 +65,7 @@ func init() {
 						secConf:          wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP)),
 						expectedSecurity: shillconst.SecurityWPA2,
 					}, {
-						apOpts:           []hap.Option{hap.Mode(hap.Mode80211nPure), hap.Channel(48), hap.HTCaps(hap.HTCapHT20)},
+						apOpts:           []hap.Option{hap.Mode(hap.Mode80211nPure), hap.Channel(48), hap.HTCaps(hap.HTCapHT20), hap.PMF(hap.PMFRequired)},
 						secConf:          wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 						expectedSecurity: shillconst.SecurityWPA2WPA3,
 					},
@@ -73,11 +73,11 @@ func init() {
 				ExtraSoftwareDeps: []string{"wpa3_sae"},
 			},
 			{
-				// Wpa2Wpa3 mixed mode for network with two APs configured with Wpa2Wpa3 and Wpa3.
+				// Wpa2Wpa3 mixed mode for network with two APs configured with Wpa2Wpa3 and Wpa2.
 				Name: "wpa2wpa3_23_2",
 				Val: []apConfig{
 					{
-						apOpts:           []hap.Option{hap.Mode(hap.Mode80211nPure), hap.Channel(1), hap.HTCaps(hap.HTCapHT20)},
+						apOpts:           []hap.Option{hap.Mode(hap.Mode80211nPure), hap.Channel(1), hap.HTCaps(hap.HTCapHT20), hap.PMF(hap.PMFOptional)},
 						secConf:          wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModeMixedWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 						expectedSecurity: shillconst.SecurityWPA2WPA3,
 					}, {
@@ -89,15 +89,15 @@ func init() {
 				ExtraSoftwareDeps: []string{"wpa3_sae"},
 			},
 			{
-				// Wpa2Wpa3 mixed mode for network with two APs configured with Wpa2 and Wpa3.
+				// Wpa2Wpa3 mixed mode for network with two APs configured with Wpa2Wpa3 and Wpa3.
 				Name: "wpa2wpa3_23_3",
 				Val: []apConfig{
 					{
-						apOpts:           []hap.Option{hap.Mode(hap.Mode80211nPure), hap.Channel(1), hap.HTCaps(hap.HTCapHT20)},
+						apOpts:           []hap.Option{hap.Mode(hap.Mode80211nPure), hap.Channel(1), hap.HTCaps(hap.HTCapHT20), hap.PMF(hap.PMFOptional)},
 						secConf:          wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModeMixedWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 						expectedSecurity: shillconst.SecurityWPA2WPA3,
 					}, {
-						apOpts:           []hap.Option{hap.Mode(hap.Mode80211nPure), hap.Channel(48), hap.HTCaps(hap.HTCapHT20)},
+						apOpts:           []hap.Option{hap.Mode(hap.Mode80211nPure), hap.Channel(48), hap.HTCaps(hap.HTCapHT20), hap.PMF(hap.PMFRequired)},
 						secConf:          wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 						expectedSecurity: shillconst.SecurityWPA2WPA3,
 					},
@@ -113,7 +113,7 @@ func init() {
 						secConf:          wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModeMixed), wpa.Ciphers(wpa.CipherTKIP, wpa.CipherCCMP), wpa.Ciphers2(wpa.CipherCCMP)),
 						expectedSecurity: shillconst.SecurityWPAWPA2,
 					}, {
-						apOpts:           []hap.Option{hap.Mode(hap.Mode80211nPure), hap.Channel(48), hap.HTCaps(hap.HTCapHT20)},
+						apOpts:           []hap.Option{hap.Mode(hap.Mode80211nPure), hap.Channel(48), hap.HTCaps(hap.HTCapHT20), hap.PMF(hap.PMFRequired)},
 						secConf:          wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 						expectedSecurity: shillconst.SecurityWPAAll,
 					},
@@ -137,7 +137,7 @@ func init() {
 					},
 					{
 						router:           1,
-						apOpts:           []hap.Option{hap.Mode(hap.Mode80211nPure), hap.Channel(1), hap.HTCaps(hap.HTCapHT20)},
+						apOpts:           []hap.Option{hap.Mode(hap.Mode80211nPure), hap.Channel(1), hap.HTCaps(hap.HTCapHT20), hap.PMF(hap.PMFRequired)},
 						secConf:          wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 						expectedSecurity: shillconst.SecurityWPAAll,
 					},
