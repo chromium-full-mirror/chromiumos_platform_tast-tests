@@ -22,8 +22,7 @@ import (
 // FakeAdaptiveChargingMLService manages a fake DBus service which replaces the
 // ml-service TAST=adaptive_charging
 type FakeAdaptiveChargingMLService struct {
-	conn       *dbus.Conn
-	prediction []float64
+	conn *dbus.Conn
 }
 
 const (
@@ -33,23 +32,23 @@ const (
 	member     = "RequestAdaptiveChargingDecision"
 )
 
-// RequestAdaptiveChargingDecision reports the charger unplug time required for the test.
+// RequestAdaptiveChargingDecision always reports that the charger is expected
+// to be unplugged in >8 hours.
 func (f *FakeAdaptiveChargingMLService) RequestAdaptiveChargingDecision(serializedExampleProto []byte) (bool, []float64, *dbus.Error) {
-	return true, f.prediction, nil
+	return true, []float64{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0}, nil
 }
 
 // StartFakeAdaptiveChargingMLService starts a fake version of the ml-service
 // TASK=adaptive_charging. This service will stop when StopService is called on
 // the returned *FakeAdaptiveChargingMLService. If the returned error is not
 // nil, the *FakeAdaptiveChargingMLService will be nil.
-func StartFakeAdaptiveChargingMLService(ctx context.Context, prediction []float64) (*FakeAdaptiveChargingMLService, error) {
+func StartFakeAdaptiveChargingMLService(ctx context.Context) (*FakeAdaptiveChargingMLService, error) {
 	f := new(FakeAdaptiveChargingMLService)
 	var err error
 	f.conn, err = dbus.ConnectSystemBus()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to connect to DBus system bus")
 	}
-	f.prediction = prediction
 
 	var status bool
 	var result []float64
