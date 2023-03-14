@@ -51,7 +51,7 @@ func EnableAloop(ctx context.Context, tconn *chrome.TestConn) (func(ctx context.
 	}
 
 	// Activate the Aloop nodes.
-	if err := activateAloopNodes(ctx, tconn); err != nil {
+	if err := ActivateAloopNodes(ctx, tconn); err != nil {
 		// Unload ALSA loopback if any following setups failed.
 		unload(ctx)
 		return nil, err
@@ -60,12 +60,12 @@ func EnableAloop(ctx context.Context, tconn *chrome.TestConn) (func(ctx context.
 	return unload, nil
 }
 
-// activateAloopNodes activates Aloop nodes as input/output devices.
+// ActivateAloopNodes activates Aloop nodes as input/output devices.
 // Switching nodes via UI interactions is the recommended way, instead of using
 // cras.SetActiveNode() method, as UI will always send the preference input/output
 // devices to CRAS. Calling cras.SetActiveNode() changes the active devices for a
 // moment, but they soon are reverted by UI. See (b/191602192) for details.
-func activateAloopNodes(ctx context.Context, tconn *chrome.TestConn) error {
+func ActivateAloopNodes(ctx context.Context, tconn *chrome.TestConn) error {
 	cleanupCtx := ctx
 	ctx, shortCancel := ctxutil.Shorten(ctx, 2*time.Second)
 	defer shortCancel()

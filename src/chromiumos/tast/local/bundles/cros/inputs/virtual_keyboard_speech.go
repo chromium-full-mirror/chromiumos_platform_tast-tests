@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/local/audio"
 	"chromiumos/tast/local/bundles/cros/inputs/data"
 	"chromiumos/tast/local/bundles/cros/inputs/fixture"
 	"chromiumos/tast/local/bundles/cros/inputs/pre"
@@ -54,14 +55,14 @@ func init() {
 		Timeout:      time.Duration(len(voiceTestIMEs)+len(voiceTestIMEsNewData)) * time.Duration(len(voiceTestMessages)) * time.Minute,
 		Params: []testing.Param{
 			{
-				Fixture:           fixture.TabletVK,
+				Fixture:           fixture.TabletVKStereoAloopLoaded,
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
 				Val:               voiceTestIMEs,
 				ExtraAttr:         []string{"group:input-tools-upstream"},
 			},
 			{
 				Name:              "newdata", // This test will be merged into CQ once it is proved to be stable.
-				Fixture:           fixture.TabletVK,
+				Fixture:           fixture.TabletVKStereoAloopLoaded,
 				Val:               voiceTestIMEsNewData,
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
 				ExtraAttr:         []string{"informational", "group:input-tools-upstream"},
@@ -69,14 +70,14 @@ func init() {
 			},
 			{
 				Name:              "informational",
-				Fixture:           fixture.TabletVK,
+				Fixture:           fixture.TabletVKStereoAloopLoaded,
 				Val:               append(voiceTestIMEs, voiceTestIMEsNewData...),
 				ExtraHardwareDeps: hwdep.D(pre.InputsUnstableModels),
 				ExtraAttr:         []string{"informational"},
 			},
 			{
 				Name:              "lacros",
-				Fixture:           fixture.LacrosTabletVK,
+				Fixture:           fixture.LacrosTabletVKStereoAloopLoaded,
 				Val:               append(voiceTestIMEs, voiceTestIMEsNewData...),
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
 				ExtraSoftwareDeps: []string{"lacros_stable", "lacros"},
@@ -100,11 +101,10 @@ func VirtualKeyboardSpeech(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	// Setup CRAS Aloop for audio test.
-	cleanup, err := voice.EnableAloop(ctx, tconn)
+	err := voice.ActivateAloopNodes(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to load Aloop: ", err)
 	}
-	defer cleanup(cleanupCtx)
 
 	// Launch inputs test web server.
 	its, err := testserver.LaunchBrowser(ctx, s.FixtValue().(fixture.FixtData).BrowserType, cr, tconn)
@@ -142,7 +142,7 @@ func VirtualKeyboardSpeech(ctx context.Context, s *testing.State) {
 				its.ClickFieldUntilVKShown(inputField),
 				vkbCtx.SwitchToVoiceInput(),
 				func(ctx context.Context) error {
-					return voice.AudioFromFile(ctx, s.DataPath(inputData.VoiceFile))
+					return audio.PlayWavToPCM(ctx, s.DataPath(inputData.VoiceFile), "hw:Loopback,0")
 				},
 				util.WaitForFieldTextToBeIgnoringCase(tconn, inputField.Finder(), inputData.ExpectedText),
 			)

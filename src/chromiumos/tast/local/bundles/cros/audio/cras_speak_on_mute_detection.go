@@ -251,11 +251,11 @@ func CrasSpeakOnMuteDetection(ctx context.Context, s *testing.State) {
 		switch param.speechSource {
 		case mouth:
 			// Play to PCM device to simulate speech from mouth.
-			err = internal.PlayWavToPCM(ctx, speechWav, device.AloopPlaybackPCM)
+			err = audio.PlayWavToPCM(ctx, speechWav, device.AloopPlaybackPCM)
 		case speaker:
 			// Play to default device which goes through to CRAS,
 			// to simulate speech played by apps.
-			err = internal.PlayWavToDefault(ctx, speechWav)
+			err = audio.PlayWavToDefault(ctx, speechWav)
 		}
 		if err != nil {
 			s.Fatal("Cannot simulate speech: ", err)

@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/inputs/inputactions"
 	"chromiumos/tast/local/chrome"
@@ -56,6 +57,7 @@ const (
 	ClamshellNonVKWithMultiwordSuggest        = "clamshellNonVKWithMultiwordSuggest"
 	ClamshellNonVKInGAIA                      = "clamshellNonVKInGAIA"
 	TabletVK                                  = "tabletVK"
+	TabletVKStereoAloopLoaded                 = "tabletVKStereoAloopLoaded"
 	TabletVKRestart                           = "tabletVKRestart"
 	TabletVKInGuest                           = "tabletVKInGuest"
 	TabletVKWithMultitouch                    = "tabletVKWithMultitouch"
@@ -71,6 +73,7 @@ const (
 	LacrosClamshellNonVKWithMultiwordSuggest        = "lacrosClamshellNonVKWithMultiwordSuggest"
 	LacrosClamshellNonVKWithDiacriticsOnPKLongpress = "lacrosClamshellWithDiacriticsOnPKLongpress"
 	LacrosTabletVK                                  = "lacrosTabletVK"
+	LacrosTabletVKStereoAloopLoaded                 = "lacrosTabletVKStereoAloopLoaded"
 	LacrosTabletVKInGuest                           = "lacrosTabletVKInGuest"
 	LacrosTabletVKRestart                           = "lacrosTabletVKRestart"
 	LacrosTabletVKWithMultitouch                    = "lacrosTabletVKWithMultitouch"
@@ -257,6 +260,23 @@ func init() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
+		Name: TabletVKStereoAloopLoaded,
+		Desc: "Tablet mode with VK enabled and stereo aloop loaded",
+		Contacts: []string{
+			"alvinjia@google.com",
+			"shengjun@chromium.org",
+			"essential-inputs-team@google.com",
+		},
+		Impl: inputsFixture(tabletMode, true, false, browser.TypeAsh),
+		// Need aloop for route playback to capture.
+		Parent:          fixture.StereoAloopLoaded,
+		SetUpTimeout:    chrome.LoginTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
 		Name: TabletVKRestart,
 		Desc: "Tablet mode with VK enabled, restarting chrome session for every test",
 		Contacts: []string{
@@ -431,6 +451,23 @@ func init() {
 			"essential-inputs-team@google.com",
 		},
 		Impl:            inputsFixture(tabletMode, true, false, browser.TypeLacros),
+		SetUpTimeout:    chrome.LoginTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: LacrosTabletVKStereoAloopLoaded,
+		Desc: "Lacros variant: tablet mode with VK enabled and stereo aloop loaded",
+		Contacts: []string{
+			"alvinjia@google.com",
+			"shengjun@chromium.org",
+			"essential-inputs-team@google.com",
+		},
+		Impl: inputsFixture(tabletMode, true, false, browser.TypeLacros),
+		// Need aloop for route playback to capture.
+		Parent:          fixture.StereoAloopLoaded,
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,

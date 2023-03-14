@@ -199,7 +199,7 @@ func CrasSpeakOnMuteDetectionTransitions(ctx context.Context, s *testing.State) 
 	}()
 
 	// Run playback.
-	if err := internal.PlayWavToPCM(playbackCaptureCtx, speechWav, device.AloopPlaybackPCM); err != nil {
+	if err := audio.PlayWavToPCM(playbackCaptureCtx, speechWav, device.AloopPlaybackPCM); err != nil {
 		s.Error("Cannot run playback: ", err)
 	}
 
