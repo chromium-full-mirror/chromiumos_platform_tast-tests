@@ -10,10 +10,8 @@ import (
 
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/a11y"
-	"chromiumos/tast/local/audio/crastestclient"
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/local/chrome/uiauto/nodewith"
-	"chromiumos/tast/local/chrome/uiauto/role"
+	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/testing"
 )
 
@@ -29,7 +27,7 @@ func init() {
 		BugComponent: "b:1272895",
 		// TODO(https://crbug.com/1159107): Investigate failures and re-enable this test.
 		SoftwareDeps: []string{"chrome"},
-		Pre:          chrome.LoggedIn(),
+		Fixture:      "chromePolicyLoggedIn",
 	})
 }
 
@@ -38,19 +36,10 @@ func ChromevoxTTSProcessingCharacters(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	cr := s.PreValue().(*chrome.Chrome)
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to create Test API connection: ", err)
-	}
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
-	// Mute the device to avoid noisiness.
-	if err := crastestclient.Mute(ctx); err != nil {
-		s.Fatal("Failed to mute: ", err)
-	}
-	defer crastestclient.Unmute(cleanupCtx)
-
-	c, err := a11y.NewTabWithHTML(ctx, cr.Browser(), `<p>.</p>
+	bt := browser.TypeAsh
+	html := `<p>.</p>
 		<p>x.</p>
 		<p>=========</p>
 		<p>&bull; &bull;&bull;</p>
@@ -67,44 +56,24 @@ func ChromevoxTTSProcessingCharacters(ctx context.Context, s *testing.State) {
 		<p>"$1,234.56 (plus tax) for 78&percnt; of your %232 pencils?", they mused</p>
 		<p>x, y.</p>
 		<p>"That's all, folks!"</p>
-		<p>"$1,234.56 (plus tax) for 78&percnt; of your %232 pencils?", they mused</p>`)
-	if err != nil {
-		s.Fatal("Failed to open a new tab with HTML: ", err)
+		<p>"$1,234.56 (plus tax) for 78&percnt; of your %232 pencils?", they mused</p>`
+	vd := a11y.VoiceData{
+		ExtID:  a11y.GoogleTTSExtensionID,
+		Locale: "en-US",
 	}
-	defer c.Close()
-
-	if err := a11y.SetFeatureEnabled(ctx, tconn, a11y.SpokenFeedback, true); err != nil {
-		s.Fatal("Failed to enable spoken feedback: ", err)
-	}
-	defer func(ctx context.Context) {
-		if err := a11y.ClearFeature(ctx, tconn, a11y.SpokenFeedback); err != nil {
-			s.Error("Failed to disable spoken feedback: ", err)
-		}
-	}(cleanupCtx)
-
-	// Connect to ChromeVox.
-	cvconn, err := a11y.NewChromeVoxConn(ctx, cr)
-	if err != nil {
-		s.Fatal("Failed to connect to the ChromeVox background page: ", err)
-	}
-	defer cvconn.Close()
-
-	// Get a speech monitor for the Google TTS engine.
 	ed := a11y.TTSEngineData{
 		ExtID:                     a11y.GoogleTTSExtensionID,
 		UseOnSpeakWithAudioStream: false,
 	}
-	sm, err := a11y.RelevantSpeechMonitor(ctx, cr, tconn, ed)
+	cvData, err := a11y.SetUpChromeVox(ctx, cleanupCtx, cr, vd, ed, bt, html)
 	if err != nil {
-		s.Fatal("Failed to connect to the TTS background page: ", err)
+		s.Fatal("Failed to set up ChromeVox: ", err)
 	}
-	defer sm.Close()
-
-	// Wait for ChromeVox to focus the root web area.
-	rootWebArea := nodewith.Role(role.RootWebArea).First()
-	if err = cvconn.WaitForFocusedNode(ctx, tconn, rootWebArea); err != nil {
-		s.Error("Failed to wait for initial ChromeVox focus: ", err)
-	}
+	defer func() {
+		if err := cvData.TearDown(); err != nil {
+			s.Fatal("Failed to tear down ChromeVox test: ", err)
+		}
+	}()
 
 	nextObject := []string{"Search+Right"}
 	cyclePunctuationMode := []string{"Search+A", "P"}
@@ -203,7 +172,7 @@ func ChromevoxTTSProcessingCharacters(ctx context.Context, s *testing.State) {
 		},
 	}
 	for _, step := range testSteps {
-		if err := a11y.PressKeysAndConsumeExpectations(ctx, sm, step.keyCommands, step.expectations); err != nil {
+		if err := a11y.PressKeysAndConsumeExpectations(ctx, cvData.SM, step.keyCommands, step.expectations); err != nil {
 			s.Error("Error when pressing keys and expecting speech: ", err)
 		}
 	}

@@ -10,10 +10,8 @@ import (
 
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/a11y"
-	"chromiumos/tast/local/audio/crastestclient"
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/local/chrome/uiauto/nodewith"
-	"chromiumos/tast/local/chrome/uiauto/role"
+	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/testing"
 )
 
@@ -29,7 +27,7 @@ func init() {
 		BugComponent: "b:1272895",
 		// TODO(https://crbug.com/1159107): Investigate failures and re-enable this test.
 		SoftwareDeps: []string{"chrome"},
-		Pre:          chrome.LoggedIn(),
+		Fixture:      "chromePolicyLoggedIn",
 	})
 }
 
@@ -38,19 +36,10 @@ func ChromevoxRichTextEditing(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	cr := s.PreValue().(*chrome.Chrome)
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to create Test API connection: ", err)
-	}
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
-	// Mute the device to avoid noisiness.
-	if err := crastestclient.Mute(ctx); err != nil {
-		s.Fatal("Failed to mute: ", err)
-	}
-	defer crastestclient.Unmute(cleanupCtx)
-
-	c, err := a11y.NewTabWithHTML(ctx, cr.Browser(), `<div role="textbox" contenteditable>
+	bt := browser.TypeAsh
+	html := `<div role="textbox" contenteditable>
 <h2>hello</h2>
 <div><br></div>
 <p>This is a <a href="%23test">test</a> of rich text</p>
@@ -65,44 +54,24 @@ func ChromevoxRichTextEditing(ctx context.Context, s *testing.State) {
 <span>I </span><span role="suggestion" aria-description="Username">
 <span role="insertion">was</span>
 <span role="deletion">am</span></span><span> typing</span>
-<p>End</p></div>`)
-	if err != nil {
-		s.Fatal("Failed to open a new tab with HTML: ", err)
+<p>End</p></div>`
+	vd := a11y.VoiceData{
+		ExtID:  a11y.GoogleTTSExtensionID,
+		Locale: "en-US",
 	}
-	defer c.Close()
-
-	if err := a11y.SetFeatureEnabled(ctx, tconn, a11y.SpokenFeedback, true); err != nil {
-		s.Fatal("Failed to enable spoken feedback: ", err)
-	}
-	defer func() {
-		if err := a11y.ClearFeature(cleanupCtx, tconn, a11y.SpokenFeedback); err != nil {
-			s.Error("Failed to disable spoken feedback: ", err)
-		}
-	}()
-
-	// Connect to ChromeVox.
-	cvconn, err := a11y.NewChromeVoxConn(ctx, cr)
-	if err != nil {
-		s.Fatal("Failed to connect to the ChromeVox background page: ", err)
-	}
-	defer cvconn.Close()
-
-	// Get a speech monitor for the Google TTS engine.
 	ed := a11y.TTSEngineData{
 		ExtID:                     a11y.GoogleTTSExtensionID,
 		UseOnSpeakWithAudioStream: false,
 	}
-	sm, err := a11y.RelevantSpeechMonitor(ctx, cr, tconn, ed)
+	cvData, err := a11y.SetUpChromeVox(ctx, cleanupCtx, cr, vd, ed, bt, html)
 	if err != nil {
-		s.Fatal("Failed to connect to the TTS background page: ", err)
+		s.Fatal("Failed to set up ChromeVox: ", err)
 	}
-	defer sm.Close()
-
-	// Wait for ChromeVox to focus the root web area.
-	rootWebArea := nodewith.Role(role.RootWebArea).First()
-	if err = cvconn.WaitForFocusedNode(ctx, tconn, rootWebArea); err != nil {
-		s.Error("Failed to wait for initial ChromeVox focus: ", err)
-	}
+	defer func() {
+		if err := cvData.TearDown(); err != nil {
+			s.Fatal("Failed to tear down ChromeVox test: ", err)
+		}
+	}()
 
 	const nextObject = "Search+Right"
 	const lang = "en-US"
@@ -307,7 +276,7 @@ func ChromevoxRichTextEditing(ctx context.Context, s *testing.State) {
 	}
 
 	for _, step := range testSteps {
-		if err := a11y.PressKeysAndConsumeExpectations(ctx, sm, step.keyCommands, step.expectations); err != nil {
+		if err := a11y.PressKeysAndConsumeExpectations(ctx, cvData.SM, step.keyCommands, step.expectations); err != nil {
 			s.Error("Error when pressing keys and expecting speech: ", err)
 		}
 	}
