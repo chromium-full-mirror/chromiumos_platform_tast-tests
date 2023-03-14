@@ -73,6 +73,14 @@ func init() {
 				suspendDurationAllowanceSeconds: 0.1,
 				numTrials:                       2,
 			},
+		}, {
+			// For local testing
+			Name: "s10c1",
+			Val: testArgsForSuspend{
+				suspendDurationSeconds:          10, /* Long enough to trigger watchdog timeouts */
+				suspendDurationAllowanceSeconds: 0.1,
+				numTrials:                       1,
+			},
 		}},
 	})
 }
@@ -156,6 +164,7 @@ func suspendDUT(ctx context.Context, s *testing.State, seconds int) {
 	s.Log("Resumed")
 }
 
+// Suspend tests ARC clock behavior around host's suspend / resume cycles
 func Suspend(ctx context.Context, s *testing.State) {
 	args := s.Param().(testArgsForSuspend)
 
