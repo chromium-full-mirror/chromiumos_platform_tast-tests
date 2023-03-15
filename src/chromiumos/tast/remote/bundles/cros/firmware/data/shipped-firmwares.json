@@ -96,17 +96,17 @@
    },
    {
       "board_name" : "brya",
+      "firmware_build_cros_version" : "14505.143.0",
+      "model_name" : "anahera"
+   },
+   {
+      "board_name" : "brya",
       "firmware_build_cros_version" : "14505.228.0",
       "model_name" : "anahera"
    },
    {
       "board_name" : "brya",
       "firmware_build_cros_version" : "14505.39.0",
-      "model_name" : "anahera"
-   },
-   {
-      "board_name" : "brya",
-      "firmware_build_cros_version" : "14505.143.0",
       "model_name" : "anahera"
    },
    {
@@ -141,22 +141,27 @@
    },
    {
       "board_name" : "brya",
-      "firmware_build_cros_version" : "14505.288.0",
-      "model_name" : "gimble"
-   },
-   {
-      "board_name" : "brya",
       "firmware_build_cros_version" : "14505.106.0",
       "model_name" : "gimble"
    },
    {
       "board_name" : "brya",
-      "firmware_build_cros_version" : "14505.79.0",
-      "model_name" : "kano"
+      "firmware_build_cros_version" : "14505.288.0",
+      "model_name" : "gimble"
    },
    {
       "board_name" : "brya",
       "firmware_build_cros_version" : "14505.156.0",
+      "model_name" : "kano"
+   },
+   {
+      "board_name" : "brya",
+      "firmware_build_cros_version" : "14505.388.0",
+      "model_name" : "kano"
+   },
+   {
+      "board_name" : "brya",
+      "firmware_build_cros_version" : "14505.79.0",
       "model_name" : "kano"
    },
    {
@@ -166,13 +171,18 @@
    },
    {
       "board_name" : "brya",
+      "firmware_build_cros_version" : "14505.198.0",
+      "model_name" : "osiris"
+   },
+   {
+      "board_name" : "brya",
       "firmware_build_cros_version" : "14505.253.0",
       "model_name" : "osiris"
    },
    {
       "board_name" : "brya",
-      "firmware_build_cros_version" : "14505.198.0",
-      "model_name" : "osiris"
+      "firmware_build_cros_version" : "14505.106.0",
+      "model_name" : "primus"
    },
    {
       "board_name" : "brya",
@@ -182,11 +192,6 @@
    {
       "board_name" : "brya",
       "firmware_build_cros_version" : "14505.57.0",
-      "model_name" : "primus"
-   },
-   {
-      "board_name" : "brya",
-      "firmware_build_cros_version" : "14505.106.0",
       "model_name" : "primus"
    },
    {
@@ -201,6 +206,11 @@
    },
    {
       "board_name" : "brya",
+      "firmware_build_cros_version" : "14505.110.0",
+      "model_name" : "taeko"
+   },
+   {
+      "board_name" : "brya",
       "firmware_build_cros_version" : "14505.228.0",
       "model_name" : "taeko"
    },
@@ -211,22 +221,17 @@
    },
    {
       "board_name" : "brya",
-      "firmware_build_cros_version" : "14505.110.0",
-      "model_name" : "taeko"
-   },
-   {
-      "board_name" : "brya",
       "firmware_build_cros_version" : "14505.165.0",
       "model_name" : "taniks"
    },
    {
       "board_name" : "brya",
-      "firmware_build_cros_version" : "14505.228.0",
+      "firmware_build_cros_version" : "14505.165.0",
       "model_name" : "tarlo"
    },
    {
       "board_name" : "brya",
-      "firmware_build_cros_version" : "14505.165.0",
+      "firmware_build_cros_version" : "14505.228.0",
       "model_name" : "tarlo"
    },
    {
@@ -236,12 +241,12 @@
    },
    {
       "board_name" : "brya",
-      "firmware_build_cros_version" : "14505.241.0",
+      "firmware_build_cros_version" : "14505.177.0",
       "model_name" : "volmar"
    },
    {
       "board_name" : "brya",
-      "firmware_build_cros_version" : "14505.177.0",
+      "firmware_build_cros_version" : "14505.241.0",
       "model_name" : "volmar"
    },
    {
@@ -281,6 +286,11 @@
    },
    {
       "board_name" : "celes",
+      "firmware_build_cros_version" : "7287.92.164",
+      "model_name" : null
+   },
+   {
+      "board_name" : "celes",
       "firmware_build_cros_version" : "7287.92.3",
       "model_name" : null
    },
@@ -295,18 +305,13 @@
       "model_name" : null
    },
    {
-      "board_name" : "celes",
-      "firmware_build_cros_version" : "7287.92.164",
+      "board_name" : "chell",
+      "firmware_build_cros_version" : "7820.158.0",
       "model_name" : null
    },
    {
       "board_name" : "chell",
       "firmware_build_cros_version" : "7820.98.0",
-      "model_name" : null
-   },
-   {
-      "board_name" : "chell",
-      "firmware_build_cros_version" : "7820.158.0",
       "model_name" : null
    },
    {
@@ -371,13 +376,18 @@
    },
    {
       "board_name" : "coral",
+      "firmware_build_cros_version" : "10068.101.0",
+      "model_name" : "blacktip"
+   },
+   {
+      "board_name" : "coral",
       "firmware_build_cros_version" : "10068.71.0",
       "model_name" : "blacktip"
    },
    {
       "board_name" : "coral",
       "firmware_build_cros_version" : "10068.101.0",
-      "model_name" : "blacktip"
+      "model_name" : "blacktip360"
    },
    {
       "board_name" : "coral",
@@ -387,11 +397,6 @@
    {
       "board_name" : "coral",
       "firmware_build_cros_version" : "10068.81.0",
-      "model_name" : "blacktip360"
-   },
-   {
-      "board_name" : "coral",
-      "firmware_build_cros_version" : "10068.101.0",
       "model_name" : "blacktip360"
    },
    {
@@ -476,6 +481,11 @@
    },
    {
       "board_name" : "coral",
+      "firmware_build_cros_version" : "10068.101.0",
+      "model_name" : "nasher"
+   },
+   {
+      "board_name" : "coral",
       "firmware_build_cros_version" : "10068.34.0",
       "model_name" : "nasher"
    },
@@ -496,13 +506,13 @@
    },
    {
       "board_name" : "coral",
-      "firmware_build_cros_version" : "10068.101.0",
-      "model_name" : "nasher"
+      "firmware_build_cros_version" : "10068.86.0",
+      "model_name" : "nasher360"
    },
    {
       "board_name" : "coral",
-      "firmware_build_cros_version" : "10068.86.0",
-      "model_name" : "nasher360"
+      "firmware_build_cros_version" : "10068.113.0",
+      "model_name" : "rabbid"
    },
    {
       "board_name" : "coral",
@@ -512,11 +522,6 @@
    {
       "board_name" : "coral",
       "firmware_build_cros_version" : "10068.82.0",
-      "model_name" : "rabbid"
-   },
-   {
-      "board_name" : "coral",
-      "firmware_build_cros_version" : "10068.113.0",
       "model_name" : "rabbid"
    },
    {
@@ -586,6 +591,11 @@
    },
    {
       "board_name" : "cyan",
+      "firmware_build_cros_version" : "7287.57.100",
+      "model_name" : null
+   },
+   {
+      "board_name" : "cyan",
       "firmware_build_cros_version" : "7287.57.82",
       "model_name" : null
    },
@@ -593,21 +603,6 @@
       "board_name" : "cyan",
       "firmware_build_cros_version" : "7287.57.92",
       "model_name" : null
-   },
-   {
-      "board_name" : "cyan",
-      "firmware_build_cros_version" : "7287.57.100",
-      "model_name" : null
-   },
-   {
-      "board_name" : "dedede",
-      "firmware_build_cros_version" : "13606.504.0",
-      "model_name" : "beadrix"
-   },
-   {
-      "board_name" : "dedede",
-      "firmware_build_cros_version" : "13606.489.0",
-      "model_name" : "beadrix"
    },
    {
       "board_name" : "dedede",
@@ -666,11 +661,6 @@
    },
    {
       "board_name" : "dedede",
-      "firmware_build_cros_version" : "13606.504.0",
-      "model_name" : "cret"
-   },
-   {
-      "board_name" : "dedede",
       "firmware_build_cros_version" : "13606.375.0",
       "model_name" : "cret"
    },
@@ -681,8 +671,8 @@
    },
    {
       "board_name" : "dedede",
-      "firmware_build_cros_version" : "13606.74.0",
-      "model_name" : "drawcia"
+      "firmware_build_cros_version" : "13606.504.0",
+      "model_name" : "cret"
    },
    {
       "board_name" : "dedede",
@@ -706,8 +696,8 @@
    },
    {
       "board_name" : "dedede",
-      "firmware_build_cros_version" : "13606.52.0",
-      "model_name" : "drawlat"
+      "firmware_build_cros_version" : "13606.74.0",
+      "model_name" : "drawcia"
    },
    {
       "board_name" : "dedede",
@@ -732,7 +722,7 @@
    {
       "board_name" : "dedede",
       "firmware_build_cros_version" : "13606.52.0",
-      "model_name" : "drawman"
+      "model_name" : "drawlat"
    },
    {
       "board_name" : "dedede",
@@ -752,6 +742,11 @@
    {
       "board_name" : "dedede",
       "firmware_build_cros_version" : "13606.485.0",
+      "model_name" : "drawman"
+   },
+   {
+      "board_name" : "dedede",
+      "firmware_build_cros_version" : "13606.52.0",
       "model_name" : "drawman"
    },
    {
@@ -1036,8 +1031,8 @@
    },
    {
       "board_name" : "dedede",
-      "firmware_build_cros_version" : "13606.504.0",
-      "model_name" : "storo"
+      "firmware_build_cros_version" : "13606.508.0",
+      "model_name" : "sasukette"
    },
    {
       "board_name" : "dedede",
@@ -1057,7 +1052,7 @@
    {
       "board_name" : "dedede",
       "firmware_build_cros_version" : "13606.504.0",
-      "model_name" : "storo360"
+      "model_name" : "storo"
    },
    {
       "board_name" : "dedede",
@@ -1072,6 +1067,11 @@
    {
       "board_name" : "dedede",
       "firmware_build_cros_version" : "13606.437.0",
+      "model_name" : "storo360"
+   },
+   {
+      "board_name" : "dedede",
+      "firmware_build_cros_version" : "13606.504.0",
       "model_name" : "storo360"
    },
    {
@@ -1081,22 +1081,7 @@
    },
    {
       "board_name" : "edgar",
-      "firmware_build_cros_version" : "7287.167.2",
-      "model_name" : null
-   },
-   {
-      "board_name" : "edgar",
       "firmware_build_cros_version" : "7287.167.13",
-      "model_name" : null
-   },
-   {
-      "board_name" : "edgar",
-      "firmware_build_cros_version" : "7287.167.36",
-      "model_name" : null
-   },
-   {
-      "board_name" : "edgar",
-      "firmware_build_cros_version" : "7287.167.96",
       "model_name" : null
    },
    {
@@ -1110,8 +1095,28 @@
       "model_name" : null
    },
    {
+      "board_name" : "edgar",
+      "firmware_build_cros_version" : "7287.167.2",
+      "model_name" : null
+   },
+   {
+      "board_name" : "edgar",
+      "firmware_build_cros_version" : "7287.167.36",
+      "model_name" : null
+   },
+   {
+      "board_name" : "edgar",
+      "firmware_build_cros_version" : "7287.167.96",
+      "model_name" : null
+   },
+   {
       "board_name" : "elm",
       "firmware_build_cros_version" : "8438.12.0",
+      "model_name" : null
+   },
+   {
+      "board_name" : "elm",
+      "firmware_build_cros_version" : "8438.140.0",
       "model_name" : null
    },
    {
@@ -1125,18 +1130,13 @@
       "model_name" : null
    },
    {
-      "board_name" : "elm",
-      "firmware_build_cros_version" : "8438.140.0",
+      "board_name" : "eve",
+      "firmware_build_cros_version" : "9584.107.0",
       "model_name" : null
    },
    {
       "board_name" : "eve",
       "firmware_build_cros_version" : "9584.86.0",
-      "model_name" : null
-   },
-   {
-      "board_name" : "eve",
-      "firmware_build_cros_version" : "9584.107.0",
       "model_name" : null
    },
    {
@@ -1176,18 +1176,13 @@
    },
    {
       "board_name" : "grunt",
-      "firmware_build_cros_version" : "11031.49.0",
-      "model_name" : "aleena"
-   },
-   {
-      "board_name" : "grunt",
       "firmware_build_cros_version" : "11031.174.0",
       "model_name" : "aleena"
    },
    {
       "board_name" : "grunt",
-      "firmware_build_cros_version" : "11031.34.0",
-      "model_name" : "barla"
+      "firmware_build_cros_version" : "11031.49.0",
+      "model_name" : "aleena"
    },
    {
       "board_name" : "grunt",
@@ -1212,12 +1207,12 @@
    {
       "board_name" : "grunt",
       "firmware_build_cros_version" : "11031.34.0",
-      "model_name" : "careena"
+      "model_name" : "barla"
    },
    {
       "board_name" : "grunt",
       "firmware_build_cros_version" : "11031.86.0",
-      "model_name" : "careena"
+      "model_name" : "barla"
    },
    {
       "board_name" : "grunt",
@@ -1231,13 +1226,18 @@
    },
    {
       "board_name" : "grunt",
-      "firmware_build_cros_version" : "11031.62.0",
-      "model_name" : "kasumi"
+      "firmware_build_cros_version" : "11031.34.0",
+      "model_name" : "careena"
+   },
+   {
+      "board_name" : "grunt",
+      "firmware_build_cros_version" : "11031.86.0",
+      "model_name" : "careena"
    },
    {
       "board_name" : "grunt",
       "firmware_build_cros_version" : "11031.62.0",
-      "model_name" : "kasumi360"
+      "model_name" : "kasumi"
    },
    {
       "board_name" : "grunt",
@@ -1246,8 +1246,8 @@
    },
    {
       "board_name" : "grunt",
-      "firmware_build_cros_version" : "11031.49.0",
-      "model_name" : "liara"
+      "firmware_build_cros_version" : "11031.62.0",
+      "model_name" : "kasumi360"
    },
    {
       "board_name" : "grunt",
@@ -1257,6 +1257,11 @@
    {
       "board_name" : "grunt",
       "firmware_build_cros_version" : "11031.174.0",
+      "model_name" : "liara"
+   },
+   {
+      "board_name" : "grunt",
+      "firmware_build_cros_version" : "11031.49.0",
       "model_name" : "liara"
    },
    {
@@ -1281,21 +1286,6 @@
    },
    {
       "board_name" : "hana",
-      "firmware_build_cros_version" : "8438.60.0",
-      "model_name" : null
-   },
-   {
-      "board_name" : "hana",
-      "firmware_build_cros_version" : "8438.73.0",
-      "model_name" : null
-   },
-   {
-      "board_name" : "hana",
-      "firmware_build_cros_version" : "8438.85.0",
-      "model_name" : null
-   },
-   {
-      "board_name" : "hana",
       "firmware_build_cros_version" : "8438.140.0",
       "model_name" : null
    },
@@ -1313,6 +1303,26 @@
       "board_name" : "hana",
       "firmware_build_cros_version" : "8438.206.0",
       "model_name" : null
+   },
+   {
+      "board_name" : "hana",
+      "firmware_build_cros_version" : "8438.60.0",
+      "model_name" : null
+   },
+   {
+      "board_name" : "hana",
+      "firmware_build_cros_version" : "8438.73.0",
+      "model_name" : null
+   },
+   {
+      "board_name" : "hana",
+      "firmware_build_cros_version" : "8438.85.0",
+      "model_name" : null
+   },
+   {
+      "board_name" : "hatch",
+      "firmware_build_cros_version" : "12672.104.0",
+      "model_name" : "akemi"
    },
    {
       "board_name" : "hatch",
@@ -1341,6 +1351,11 @@
    },
    {
       "board_name" : "hatch",
+      "firmware_build_cros_version" : "12672.58.0",
+      "model_name" : "kindred"
+   },
+   {
+      "board_name" : "hatch",
       "firmware_build_cros_version" : "12672.141.0",
       "model_name" : "kled"
    },
@@ -1351,17 +1366,17 @@
    },
    {
       "board_name" : "hatch",
-      "firmware_build_cros_version" : "12672.28.0",
-      "model_name" : "kohaku"
-   },
-   {
-      "board_name" : "hatch",
       "firmware_build_cros_version" : "12672.117.0",
       "model_name" : "kohaku"
    },
    {
       "board_name" : "hatch",
       "firmware_build_cros_version" : "12672.117.2",
+      "model_name" : "kohaku"
+   },
+   {
+      "board_name" : "hatch",
+      "firmware_build_cros_version" : "12672.28.0",
       "model_name" : "kohaku"
    },
    {
@@ -1378,16 +1393,6 @@
       "board_name" : "hatch",
       "firmware_build_cros_version" : "12672.418.0",
       "model_name" : "nightfury"
-   },
-   {
-      "board_name" : "jacuzzi",
-      "firmware_build_cros_version" : "12573.331.0",
-      "model_name" : "burnet"
-   },
-   {
-      "board_name" : "jacuzzi",
-      "firmware_build_cros_version" : "12573.342.0",
-      "model_name" : "burnet"
    },
    {
       "board_name" : "jacuzzi",
@@ -1412,6 +1417,16 @@
    {
       "board_name" : "jacuzzi",
       "firmware_build_cros_version" : "12573.326.0",
+      "model_name" : "burnet"
+   },
+   {
+      "board_name" : "jacuzzi",
+      "firmware_build_cros_version" : "12573.331.0",
+      "model_name" : "burnet"
+   },
+   {
+      "board_name" : "jacuzzi",
+      "firmware_build_cros_version" : "12573.342.0",
       "model_name" : "burnet"
    },
    {
@@ -1436,11 +1451,6 @@
    },
    {
       "board_name" : "jacuzzi",
-      "firmware_build_cros_version" : "12573.342.0",
-      "model_name" : "esche"
-   },
-   {
-      "board_name" : "jacuzzi",
       "firmware_build_cros_version" : "12573.171.0",
       "model_name" : "esche"
    },
@@ -1466,6 +1476,11 @@
    },
    {
       "board_name" : "jacuzzi",
+      "firmware_build_cros_version" : "12573.342.0",
+      "model_name" : "esche"
+   },
+   {
+      "board_name" : "jacuzzi",
       "firmware_build_cros_version" : "12573.191.0",
       "model_name" : "fennel"
    },
@@ -1473,11 +1488,6 @@
       "board_name" : "jacuzzi",
       "firmware_build_cros_version" : "12573.260.0",
       "model_name" : "fennel"
-   },
-   {
-      "board_name" : "jacuzzi",
-      "firmware_build_cros_version" : "12573.91.0",
-      "model_name" : "juniper"
    },
    {
       "board_name" : "jacuzzi",
@@ -1492,6 +1502,16 @@
    {
       "board_name" : "jacuzzi",
       "firmware_build_cros_version" : "12573.244.0",
+      "model_name" : "juniper"
+   },
+   {
+      "board_name" : "jacuzzi",
+      "firmware_build_cros_version" : "12573.85.0",
+      "model_name" : "juniper"
+   },
+   {
+      "board_name" : "jacuzzi",
+      "firmware_build_cros_version" : "12573.91.0",
       "model_name" : "juniper"
    },
    {
@@ -1516,12 +1536,12 @@
    },
    {
       "board_name" : "jacuzzi",
-      "firmware_build_cros_version" : "12573.342.0",
+      "firmware_build_cros_version" : "12573.202.0",
       "model_name" : "kenzo"
    },
    {
       "board_name" : "jacuzzi",
-      "firmware_build_cros_version" : "12573.202.0",
+      "firmware_build_cros_version" : "12573.342.0",
       "model_name" : "kenzo"
    },
    {
@@ -1536,17 +1556,17 @@
    },
    {
       "board_name" : "jacuzzi",
-      "firmware_build_cros_version" : "12573.342.0",
-      "model_name" : "willow"
-   },
-   {
-      "board_name" : "jacuzzi",
       "firmware_build_cros_version" : "12573.167.0",
       "model_name" : "willow"
    },
    {
       "board_name" : "jacuzzi",
       "firmware_build_cros_version" : "12573.244.0",
+      "model_name" : "willow"
+   },
+   {
+      "board_name" : "jacuzzi",
+      "firmware_build_cros_version" : "12573.342.0",
       "model_name" : "willow"
    },
    {
@@ -1626,16 +1646,6 @@
    },
    {
       "board_name" : "kukui",
-      "firmware_build_cros_version" : "12573.67.0",
-      "model_name" : "kodama"
-   },
-   {
-      "board_name" : "kukui",
-      "firmware_build_cros_version" : "12573.94.0",
-      "model_name" : "kodama"
-   },
-   {
-      "board_name" : "kukui",
       "firmware_build_cros_version" : "12573.147.0",
       "model_name" : "kodama"
    },
@@ -1647,11 +1657,21 @@
    {
       "board_name" : "kukui",
       "firmware_build_cros_version" : "12573.67.0",
-      "model_name" : "krane"
+      "model_name" : "kodama"
+   },
+   {
+      "board_name" : "kukui",
+      "firmware_build_cros_version" : "12573.94.0",
+      "model_name" : "kodama"
    },
    {
       "board_name" : "kukui",
       "firmware_build_cros_version" : "12573.211.0",
+      "model_name" : "krane"
+   },
+   {
+      "board_name" : "kukui",
+      "firmware_build_cros_version" : "12573.67.0",
       "model_name" : "krane"
    },
    {
@@ -1686,12 +1706,12 @@
    },
    {
       "board_name" : "nami",
-      "firmware_build_cros_version" : "10775.19.0",
+      "firmware_build_cros_version" : "10775.145.0",
       "model_name" : "akali360"
    },
    {
       "board_name" : "nami",
-      "firmware_build_cros_version" : "10775.145.0",
+      "firmware_build_cros_version" : "10775.19.0",
       "model_name" : "akali360"
    },
    {
@@ -1703,11 +1723,6 @@
       "board_name" : "nami",
       "firmware_build_cros_version" : "10775.108.2",
       "model_name" : "ekko"
-   },
-   {
-      "board_name" : "nami",
-      "firmware_build_cros_version" : "10775.19.0",
-      "model_name" : "pantheon"
    },
    {
       "board_name" : "nami",
@@ -1727,16 +1742,21 @@
    {
       "board_name" : "nami",
       "firmware_build_cros_version" : "10775.19.0",
+      "model_name" : "pantheon"
+   },
+   {
+      "board_name" : "nami",
+      "firmware_build_cros_version" : "10775.123.0",
+      "model_name" : "sona"
+   },
+   {
+      "board_name" : "nami",
+      "firmware_build_cros_version" : "10775.19.0",
       "model_name" : "sona"
    },
    {
       "board_name" : "nami",
       "firmware_build_cros_version" : "10775.47.0",
-      "model_name" : "sona"
-   },
-   {
-      "board_name" : "nami",
-      "firmware_build_cros_version" : "10775.123.0",
       "model_name" : "sona"
    },
    {
@@ -1758,6 +1778,16 @@
       "board_name" : "nautilus",
       "firmware_build_cros_version" : "10431.32.0",
       "model_name" : null
+   },
+   {
+      "board_name" : "nautilus",
+      "firmware_build_cros_version" : "10431.107.0",
+      "model_name" : "nautilus"
+   },
+   {
+      "board_name" : "nautilus",
+      "firmware_build_cros_version" : "10431.73.0",
+      "model_name" : "nautiluslte"
    },
    {
       "board_name" : "nissa",
@@ -1801,17 +1831,7 @@
    },
    {
       "board_name" : "octopus",
-      "firmware_build_cros_version" : "11297.41.0",
-      "model_name" : "ampton"
-   },
-   {
-      "board_name" : "octopus",
-      "firmware_build_cros_version" : "11297.75.0",
-      "model_name" : "ampton"
-   },
-   {
-      "board_name" : "octopus",
-      "firmware_build_cros_version" : "11297.93.0",
+      "firmware_build_cros_version" : "11297.106.0",
       "model_name" : "ampton"
    },
    {
@@ -1831,6 +1851,21 @@
    },
    {
       "board_name" : "octopus",
+      "firmware_build_cros_version" : "11297.41.0",
+      "model_name" : "ampton"
+   },
+   {
+      "board_name" : "octopus",
+      "firmware_build_cros_version" : "11297.75.0",
+      "model_name" : "ampton"
+   },
+   {
+      "board_name" : "octopus",
+      "firmware_build_cros_version" : "11297.93.0",
+      "model_name" : "ampton"
+   },
+   {
+      "board_name" : "octopus",
       "firmware_build_cros_version" : "11297.313.0",
       "model_name" : "apel"
    },
@@ -1838,21 +1873,6 @@
       "board_name" : "octopus",
       "firmware_build_cros_version" : "11297.314.0",
       "model_name" : "apel"
-   },
-   {
-      "board_name" : "octopus",
-      "firmware_build_cros_version" : "11297.372.0",
-      "model_name" : "bloog"
-   },
-   {
-      "board_name" : "octopus",
-      "firmware_build_cros_version" : "11297.365.0",
-      "model_name" : "bloog"
-   },
-   {
-      "board_name" : "octopus",
-      "firmware_build_cros_version" : "11297.81.0",
-      "model_name" : "bloog"
    },
    {
       "board_name" : "octopus",
@@ -1866,7 +1886,22 @@
    },
    {
       "board_name" : "octopus",
+      "firmware_build_cros_version" : "11297.365.0",
+      "model_name" : "bloog"
+   },
+   {
+      "board_name" : "octopus",
       "firmware_build_cros_version" : "11297.372.0",
+      "model_name" : "bloog"
+   },
+   {
+      "board_name" : "octopus",
+      "firmware_build_cros_version" : "11297.81.0",
+      "model_name" : "bloog"
+   },
+   {
+      "board_name" : "octopus",
+      "firmware_build_cros_version" : "11297.127.0",
       "model_name" : "blooglet"
    },
    {
@@ -1876,18 +1911,8 @@
    },
    {
       "board_name" : "octopus",
-      "firmware_build_cros_version" : "11297.127.0",
-      "model_name" : "blooglet"
-   },
-   {
-      "board_name" : "octopus",
       "firmware_build_cros_version" : "11297.372.0",
-      "model_name" : "blooguard"
-   },
-   {
-      "board_name" : "octopus",
-      "firmware_build_cros_version" : "11297.81.0",
-      "model_name" : "blooguard"
+      "model_name" : "blooglet"
    },
    {
       "board_name" : "octopus",
@@ -1897,6 +1922,16 @@
    {
       "board_name" : "octopus",
       "firmware_build_cros_version" : "11297.152.0",
+      "model_name" : "blooguard"
+   },
+   {
+      "board_name" : "octopus",
+      "firmware_build_cros_version" : "11297.372.0",
+      "model_name" : "blooguard"
+   },
+   {
+      "board_name" : "octopus",
+      "firmware_build_cros_version" : "11297.81.0",
       "model_name" : "blooguard"
    },
    {
@@ -1911,6 +1946,11 @@
    },
    {
       "board_name" : "octopus",
+      "firmware_build_cros_version" : "11297.178.0",
+      "model_name" : "bobba"
+   },
+   {
+      "board_name" : "octopus",
       "firmware_build_cros_version" : "11297.357.0",
       "model_name" : "bobba"
    },
@@ -1921,32 +1961,12 @@
    },
    {
       "board_name" : "octopus",
-      "firmware_build_cros_version" : "11297.178.0",
-      "model_name" : "bobba"
+      "firmware_build_cros_version" : "11297.163.0",
+      "model_name" : "bobba360"
    },
    {
       "board_name" : "octopus",
       "firmware_build_cros_version" : "11297.18.0",
-      "model_name" : "bobba360"
-   },
-   {
-      "board_name" : "octopus",
-      "firmware_build_cros_version" : "11297.29.0",
-      "model_name" : "bobba360"
-   },
-   {
-      "board_name" : "octopus",
-      "firmware_build_cros_version" : "11297.56.0",
-      "model_name" : "bobba360"
-   },
-   {
-      "board_name" : "octopus",
-      "firmware_build_cros_version" : "11297.96.0",
-      "model_name" : "bobba360"
-   },
-   {
-      "board_name" : "octopus",
-      "firmware_build_cros_version" : "11297.163.0",
       "model_name" : "bobba360"
    },
    {
@@ -1966,13 +1986,18 @@
    },
    {
       "board_name" : "octopus",
-      "firmware_build_cros_version" : "11297.69.0",
-      "model_name" : "casta"
+      "firmware_build_cros_version" : "11297.29.0",
+      "model_name" : "bobba360"
    },
    {
       "board_name" : "octopus",
-      "firmware_build_cros_version" : "11297.83.3",
-      "model_name" : "casta"
+      "firmware_build_cros_version" : "11297.56.0",
+      "model_name" : "bobba360"
+   },
+   {
+      "board_name" : "octopus",
+      "firmware_build_cros_version" : "11297.96.0",
+      "model_name" : "bobba360"
    },
    {
       "board_name" : "octopus",
@@ -1982,6 +2007,16 @@
    {
       "board_name" : "octopus",
       "firmware_build_cros_version" : "11297.222.0",
+      "model_name" : "casta"
+   },
+   {
+      "board_name" : "octopus",
+      "firmware_build_cros_version" : "11297.69.0",
+      "model_name" : "casta"
+   },
+   {
+      "board_name" : "octopus",
+      "firmware_build_cros_version" : "11297.83.3",
       "model_name" : "casta"
    },
    {
@@ -2016,16 +2051,6 @@
    },
    {
       "board_name" : "octopus",
-      "firmware_build_cros_version" : "11297.357.0",
-      "model_name" : "droid"
-   },
-   {
-      "board_name" : "octopus",
-      "firmware_build_cros_version" : "11297.75.0",
-      "model_name" : "droid"
-   },
-   {
-      "board_name" : "octopus",
       "firmware_build_cros_version" : "11297.121.0",
       "model_name" : "droid"
    },
@@ -2046,13 +2071,13 @@
    },
    {
       "board_name" : "octopus",
-      "firmware_build_cros_version" : "11297.21.0",
-      "model_name" : "fleex"
+      "firmware_build_cros_version" : "11297.357.0",
+      "model_name" : "droid"
    },
    {
       "board_name" : "octopus",
-      "firmware_build_cros_version" : "11297.46.0",
-      "model_name" : "fleex"
+      "firmware_build_cros_version" : "11297.75.0",
+      "model_name" : "droid"
    },
    {
       "board_name" : "octopus",
@@ -2071,7 +2096,17 @@
    },
    {
       "board_name" : "octopus",
+      "firmware_build_cros_version" : "11297.21.0",
+      "model_name" : "fleex"
+   },
+   {
+      "board_name" : "octopus",
       "firmware_build_cros_version" : "11297.250.0",
+      "model_name" : "fleex"
+   },
+   {
+      "board_name" : "octopus",
+      "firmware_build_cros_version" : "11297.46.0",
       "model_name" : "fleex"
    },
    {
@@ -2121,12 +2156,12 @@
    },
    {
       "board_name" : "octopus",
-      "firmware_build_cros_version" : "11297.94.0",
+      "firmware_build_cros_version" : "11297.83.12",
       "model_name" : "grabbiter"
    },
    {
       "board_name" : "octopus",
-      "firmware_build_cros_version" : "11297.83.12",
+      "firmware_build_cros_version" : "11297.94.0",
       "model_name" : "grabbiter"
    },
    {
@@ -2166,26 +2201,6 @@
    },
    {
       "board_name" : "octopus",
-      "firmware_build_cros_version" : "11297.6.0",
-      "model_name" : "phaser360"
-   },
-   {
-      "board_name" : "octopus",
-      "firmware_build_cros_version" : "11297.54.0",
-      "model_name" : "phaser360"
-   },
-   {
-      "board_name" : "octopus",
-      "firmware_build_cros_version" : "11297.75.0",
-      "model_name" : "phaser360"
-   },
-   {
-      "board_name" : "octopus",
-      "firmware_build_cros_version" : "11297.93.0",
-      "model_name" : "phaser360"
-   },
-   {
-      "board_name" : "octopus",
       "firmware_build_cros_version" : "11297.217.0",
       "model_name" : "phaser360"
    },
@@ -2197,6 +2212,26 @@
    {
       "board_name" : "octopus",
       "firmware_build_cros_version" : "11297.275.0",
+      "model_name" : "phaser360"
+   },
+   {
+      "board_name" : "octopus",
+      "firmware_build_cros_version" : "11297.54.0",
+      "model_name" : "phaser360"
+   },
+   {
+      "board_name" : "octopus",
+      "firmware_build_cros_version" : "11297.6.0",
+      "model_name" : "phaser360"
+   },
+   {
+      "board_name" : "octopus",
+      "firmware_build_cros_version" : "11297.75.0",
+      "model_name" : "phaser360"
+   },
+   {
+      "board_name" : "octopus",
+      "firmware_build_cros_version" : "11297.93.0",
       "model_name" : "phaser360"
    },
    {
@@ -2261,11 +2296,6 @@
    },
    {
       "board_name" : "pyro",
-      "firmware_build_cros_version" : "9042.87.1",
-      "model_name" : null
-   },
-   {
-      "board_name" : "pyro",
       "firmware_build_cros_version" : "9042.183.0",
       "model_name" : null
    },
@@ -2280,6 +2310,16 @@
       "model_name" : null
    },
    {
+      "board_name" : "pyro",
+      "firmware_build_cros_version" : "9042.87.1",
+      "model_name" : null
+   },
+   {
+      "board_name" : "rammus",
+      "firmware_build_cros_version" : "11275.166.0",
+      "model_name" : "leona"
+   },
+   {
       "board_name" : "rammus",
       "firmware_build_cros_version" : "11275.224.0",
       "model_name" : "leona"
@@ -2291,8 +2331,13 @@
    },
    {
       "board_name" : "rammus",
+      "firmware_build_cros_version" : "11275.16.0",
+      "model_name" : "shyvana"
+   },
+   {
+      "board_name" : "rammus",
       "firmware_build_cros_version" : "11275.166.0",
-      "model_name" : "leona"
+      "model_name" : "shyvana"
    },
    {
       "board_name" : "rammus",
@@ -2301,17 +2346,7 @@
    },
    {
       "board_name" : "rammus",
-      "firmware_build_cros_version" : "11275.16.0",
-      "model_name" : "shyvana"
-   },
-   {
-      "board_name" : "rammus",
       "firmware_build_cros_version" : "11275.28.0",
-      "model_name" : "shyvana"
-   },
-   {
-      "board_name" : "rammus",
-      "firmware_build_cros_version" : "11275.166.0",
       "model_name" : "shyvana"
    },
    {
@@ -2366,12 +2401,12 @@
    },
    {
       "board_name" : "reks",
-      "firmware_build_cros_version" : "7287.133.4",
+      "firmware_build_cros_version" : "7287.133.19",
       "model_name" : null
    },
    {
       "board_name" : "reks",
-      "firmware_build_cros_version" : "7287.133.19",
+      "firmware_build_cros_version" : "7287.133.4",
       "model_name" : null
    },
    {
@@ -2451,12 +2486,12 @@
    },
    {
       "board_name" : "sentry",
-      "firmware_build_cros_version" : "7820.91.0",
+      "firmware_build_cros_version" : "7820.156.0",
       "model_name" : null
    },
    {
       "board_name" : "sentry",
-      "firmware_build_cros_version" : "7820.156.0",
+      "firmware_build_cros_version" : "7820.91.0",
       "model_name" : null
    },
    {
@@ -2571,17 +2606,17 @@
    },
    {
       "board_name" : "trogdor",
-      "firmware_build_cros_version" : "13577.52.0",
-      "model_name" : "lazor"
-   },
-   {
-      "board_name" : "trogdor",
       "firmware_build_cros_version" : "13577.102.0",
       "model_name" : "lazor"
    },
    {
       "board_name" : "trogdor",
       "firmware_build_cros_version" : "13577.388.0",
+      "model_name" : "lazor"
+   },
+   {
+      "board_name" : "trogdor",
+      "firmware_build_cros_version" : "13577.52.0",
       "model_name" : "lazor"
    },
    {
@@ -2611,12 +2646,12 @@
    },
    {
       "board_name" : "ultima",
-      "firmware_build_cros_version" : "7287.131.9",
+      "firmware_build_cros_version" : "7287.131.21",
       "model_name" : null
    },
    {
       "board_name" : "ultima",
-      "firmware_build_cros_version" : "7287.131.21",
+      "firmware_build_cros_version" : "7287.131.9",
       "model_name" : null
    },
    {
@@ -2676,16 +2711,6 @@
    },
    {
       "board_name" : "volteer",
-      "firmware_build_cros_version" : "13672.39.0",
-      "model_name" : "delbin"
-   },
-   {
-      "board_name" : "volteer",
-      "firmware_build_cros_version" : "13672.39.2",
-      "model_name" : "delbin"
-   },
-   {
-      "board_name" : "volteer",
       "firmware_build_cros_version" : "13672.248.0",
       "model_name" : "delbin"
    },
@@ -2696,13 +2721,18 @@
    },
    {
       "board_name" : "volteer",
-      "firmware_build_cros_version" : "13672.156.2",
-      "model_name" : "drobit"
+      "firmware_build_cros_version" : "13672.39.0",
+      "model_name" : "delbin"
    },
    {
       "board_name" : "volteer",
-      "firmware_build_cros_version" : "13672.81.0",
-      "model_name" : "eldrid"
+      "firmware_build_cros_version" : "13672.39.2",
+      "model_name" : "delbin"
+   },
+   {
+      "board_name" : "volteer",
+      "firmware_build_cros_version" : "13672.156.2",
+      "model_name" : "drobit"
    },
    {
       "board_name" : "volteer",
@@ -2717,6 +2747,11 @@
    {
       "board_name" : "volteer",
       "firmware_build_cros_version" : "13672.291.0",
+      "model_name" : "eldrid"
+   },
+   {
+      "board_name" : "volteer",
+      "firmware_build_cros_version" : "13672.81.0",
       "model_name" : "eldrid"
    },
    {
@@ -2791,17 +2826,17 @@
    },
    {
       "board_name" : "zork",
-      "firmware_build_cros_version" : "13434.88.0",
-      "model_name" : "berknip"
-   },
-   {
-      "board_name" : "zork",
       "firmware_build_cros_version" : "13434.129.0",
       "model_name" : "berknip"
    },
    {
       "board_name" : "zork",
       "firmware_build_cros_version" : "13434.356.0",
+      "model_name" : "berknip"
+   },
+   {
+      "board_name" : "zork",
+      "firmware_build_cros_version" : "13434.88.0",
       "model_name" : "berknip"
    },
    {
@@ -2861,12 +2896,12 @@
    },
    {
       "board_name" : "zork",
-      "firmware_build_cros_version" : "13434.81.0",
+      "firmware_build_cros_version" : "13434.356.0",
       "model_name" : "morphius"
    },
    {
       "board_name" : "zork",
-      "firmware_build_cros_version" : "13434.356.0",
+      "firmware_build_cros_version" : "13434.81.0",
       "model_name" : "morphius"
    },
    {

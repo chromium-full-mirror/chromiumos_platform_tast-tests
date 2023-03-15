@@ -157,8 +157,8 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 	/*
 		bq query --use_legacy_sql=false --format json -n 3000 'SELECT DISTINCT board_name, model_name, firmware_build_cros_version
 		FROM `google.com:cros-goldeneye.prod.FirmwareQuals`
-		WHERE ship_status="SHIPPED" AND firmware_type <> "TYPE_RW"
-		ORDER BY board_name, model_name' | json_pp > ~/chromiumos/src/platform/tast-tests/src/chromiumos/tast/remote/bundles/cros/firmware/data/shipped-firmwares.json
+		WHERE ship_status <> "NOT_SHIPPED" AND firmware_type <> "TYPE_RW"
+		ORDER BY board_name, model_name, firmware_build_cros_version' | json_pp > ~/chromiumos/src/platform/tast-tests/src/chromiumos/tast/remote/bundles/cros/firmware/data/shipped-firmwares.json
 	*/
 	// The json file was manually deposited as internal data under 'firmware/data'.
 
