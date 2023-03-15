@@ -105,11 +105,14 @@ func NewChromeVoxConn(ctx context.Context, c *chrome.Chrome) (*ChromeVoxConn, er
 			if (!window.TtsBackground) {
 			  window.TtsBackground = (await import('/chromevox/background/tts_background.js')).TtsBackground;
 			}
+			if (!window.ChromeVoxRange) {
+			  window.ChromeVoxRange = (await import('/chromevox/background/chromevox_range.js')).ChromeVoxRange;
+			}
 		  })()`, nil); err != nil {
 			return errors.Wrap(err, "failed to export modules from ChromeVox")
 		}
-		if err := extConn.WaitForExpr(ctx, "ChromeVoxState.instance"); err != nil {
-			return errors.Wrap(err, "ChromeVoxState is unavailable")
+		if err := extConn.WaitForExpr(ctx, "ChromeVoxState.instance && ChromeVoxRange.instance"); err != nil {
+			return errors.Wrap(err, "ChromeVoxState or ChromeVoxRange is unavailable")
 		}
 
 		if err := chrome.AddTastLibrary(ctx, extConn); err != nil {
@@ -251,7 +254,7 @@ func SetUpChromeVox(ctx, cleanupCtx context.Context, cr *chrome.Chrome, vd Voice
 // focusedNode returns the currently focused node of ChromeVox.
 func (cv *ChromeVoxConn) focusedNode(ctx context.Context) (*uiauto.NodeInfo, error) {
 	rangeIsValid := false
-	if err := cv.Eval(ctx, "!!ChromeVoxState.instance.getCurrentRange()", &rangeIsValid); err != nil {
+	if err := cv.Eval(ctx, "!!ChromeVoxRange.current", &rangeIsValid); err != nil {
 		return nil, errors.Wrap(err, "failed to check for current range")
 	}
 
@@ -261,7 +264,7 @@ func (cv *ChromeVoxConn) focusedNode(ctx context.Context) (*uiauto.NodeInfo, err
 
 	var info uiauto.NodeInfo
 	script := fmt.Sprintf(`(() => {
-		const node = ChromeVoxState.instance.getCurrentRange().start.node;
+		const node = ChromeVoxRange.current.start.node;
 		return %s;
 	})()`, uiauto.NodeInfoJS)
 
