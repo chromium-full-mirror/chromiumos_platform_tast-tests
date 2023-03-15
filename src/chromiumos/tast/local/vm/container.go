@@ -848,7 +848,6 @@ func ShrinkDefaultContainer(ctx context.Context, ownerID string) error {
 		"/var/cache",
 		"/var/lib/apt",
 		"/var/lib/dpkg",
-		"/var/log",
 	} {
 		cmd := DefaultContainerCommand(ctx, ownerID, "sudo", "sh", "-c", "[ -e "+shutil.Escape(path)+" ]")
 		if err := cmd.Run(); err != nil {
@@ -857,6 +856,10 @@ func ShrinkDefaultContainer(ctx context.Context, ownerID string) error {
 		cmd = DefaultContainerCommand(ctx, ownerID, "sudo", "rm", "-rf", path)
 		if err := cmd.Run(); err != nil {
 			return err
+		}
+		cmd = DefaultContainerCommand(ctx, ownerID, "sudo", "journalctl", "--rotate", "--vacuum-size=1")
+		if err := cmd.Run(); err != nil {
+			return errors.Wrap(err, "failed to clear journal")
 		}
 	}
 	return nil
