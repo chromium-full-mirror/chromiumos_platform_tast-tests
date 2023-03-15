@@ -11,8 +11,9 @@ import (
 	"chromiumos/tast/local/bundles/cros/ui/docscuj"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/ui/cujrecorder"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -53,6 +54,12 @@ func init() {
 				ExtraAttr: []string{"cuj_experimental"},
 				Val:       browser.TypeAsh,
 				Fixture:   "loggedInToCUJUserWithFieldTrials",
+			},
+			{
+				Name:      "battery_saver",
+				ExtraAttr: []string{"cuj_experimental"},
+				Val:       browser.TypeAsh,
+				Fixture:   "loggedInToCUJUserWithBatterySaver",
 			},
 		},
 	})

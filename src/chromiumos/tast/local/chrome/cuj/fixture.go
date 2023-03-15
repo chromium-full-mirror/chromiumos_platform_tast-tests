@@ -61,6 +61,9 @@ const (
 	setUpTimeout = chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute
 	resetTimeout = 30 * time.Second
 
+	// batterySaverTimeout is the time to enable or disable battery saver.
+	batterySaverTimeout = 10 * time.Second
+
 	webRTCEventLogCommandFlag = "--webrtc-event-logging=/tmp"
 	webRTCEventLogFilePattern = "/tmp/event_log_*.log"
 
@@ -589,6 +592,32 @@ func init() {
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
 		Vars:            []string{"ui.cujAccountPool"},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithBatterySaver",
+		Desc: "CUJ test fixture with battery saver",
+		Contacts: []string{
+			"cwd@google.com",
+			"cros-vm-technology@google.com",
+			"chromeos-perfmetrics-eng@google.com",
+		},
+		Impl:            &batterySaverFixture{},
+		Parent:          "loggedInToCUJUser",
+		SetUpTimeout:    batterySaverTimeout,
+		TearDownTimeout: batterySaverTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithWebRTCEventLoggingAndBatterySaver",
+		Desc: "CUJ test fixture with WebRTC event logging and battery saver",
+		Contacts: []string{
+			"cwd@google.com",
+			"cros-vm-technology@google.com",
+			"chromeos-perfmetrics-eng@google.com",
+		},
+		Impl:            &batterySaverFixture{},
+		Parent:          "loggedInToCUJUserWithWebRTCEventLogging",
+		SetUpTimeout:    batterySaverTimeout,
+		TearDownTimeout: batterySaverTimeout,
 	})
 }
 
@@ -1129,4 +1158,32 @@ func (f *loggedInToCUJUserFixture) PostTest(ctx context.Context, s *testing.Fixt
 			s.Logf("Failed to delete %q: %s", filename, err)
 		}
 	}
+}
+
+type batterySaverFixture struct{}
+
+func (f *batterySaverFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	if err := power.EnableBatterySaver(ctx); err != nil {
+		s.Error("Failed to enable battery saver: ", err)
+	}
+
+	// Return our parent value so that we can add this fixture as a child without
+	// breaking existing tests.
+	return s.ParentValue()
+}
+
+func (f *batterySaverFixture) TearDown(ctx context.Context, s *testing.FixtState) {
+	if err := power.DisableBatterySaver(ctx); err != nil {
+		s.Error("Failed to disable battery saver: ", err)
+	}
+}
+
+func (f *batterySaverFixture) Reset(ctx context.Context) error {
+	return nil
+}
+
+func (f *batterySaverFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
+}
+
+func (f *batterySaverFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
 }

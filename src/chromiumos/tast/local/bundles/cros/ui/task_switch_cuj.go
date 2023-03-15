@@ -11,8 +11,9 @@ import (
 	"chromiumos/tast/local/bundles/cros/ui/taskswitchcuj"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/ui/cujrecorder"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -98,6 +99,25 @@ func init() {
 					BrowserType: browser.TypeAsh,
 				},
 				Fixture: "loggedInToCUJUserWithAppRescue",
+			},
+			{
+				Name:              "battery_saver",
+				ExtraAttr:         []string{"cuj_experimental"},
+				ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
+				Fixture:           "loggedInToCUJUserWithBatterySaver",
+				Val: taskswitchcuj.TaskSwitchTest{
+					BrowserType: browser.TypeAsh,
+				},
+			},
+			{
+				Name:              "tablet_battery_saver",
+				ExtraAttr:         []string{"cuj_experimental"},
+				ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
+				Fixture:           "loggedInToCUJUserWithBatterySaver",
+				Val: taskswitchcuj.TaskSwitchTest{
+					BrowserType: browser.TypeAsh,
+					Tablet:      true,
+				},
 			},
 		},
 	})

@@ -72,6 +72,12 @@ func init() {
 				Val:       browser.TypeAsh,
 				Fixture:   "loggedInToCUJUserWithFieldTrials",
 			},
+			{
+				Name:      "battery_saver",
+				ExtraAttr: []string{"cuj_experimental"},
+				Val:       browser.TypeAsh,
+				Fixture:   "loggedInToCUJUserWithBatterySaver",
+			},
 		},
 	})
 }
