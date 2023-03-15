@@ -309,6 +309,26 @@ func init() {
 		PostTestTimeout: ResetTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: "arcBootedWithPasspoint",
+		Desc: "ARC is booted with kPasspointARCSupport feature enabled",
+		Contacts: []string{
+			"jasongustaman@google.com",
+			"cros-networking@google.com",
+		},
+		Impl: NewArcBootedFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{
+				chrome.ARCEnabled(),
+				chrome.UnRestrictARCCPU(),
+				chrome.EnableFeatures("PasspointARCSupport"),
+			}, nil
+		}),
+		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
+		ResetTimeout:    ResetTimeout,
+		PostTestTimeout: PostTestTimeout,
+		TearDownTimeout: ResetTimeout,
+	})
 }
 
 type bootedFixture struct {

@@ -89,7 +89,7 @@ func init() {
 		}),
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name: "shillSimulatedWiFiWithChromeLoggedIn",
+		Name: "shillSimulatedWiFiWithArcBootedWithPasspoint",
 		Desc: "A fixture that loads the Wi-Fi hardware simulator and ensures Shill is configured correctly",
 		Contacts: []string{
 			"damiendejean@google.com", // fixture maintainer
@@ -98,7 +98,26 @@ func init() {
 		SetUpTimeout:    hwsimTimeout,
 		TearDownTimeout: hwsimTimeout,
 		ResetTimeout:    hwsimTimeout,
-		Parent:          "chromeLoggedIn",
+		Parent:          "arcBootedWithPasspoint",
+		Impl: NewShillSimulatedWiFiFixture(func(s *testing.FixtState) ShillSimulatedWiFi {
+			preData := s.ParentValue().(*arc.PreData)
+			return ShillSimulatedWiFi{
+				Chrome: preData.Chrome,
+				ARC:    preData.ARC,
+			}
+		}),
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "shillSimulatedWiFiWithChromeLoggedInWithPasspoint",
+		Desc: "A fixture that loads the Wi-Fi hardware simulator and ensures Shill is configured correctly",
+		Contacts: []string{
+			"damiendejean@google.com", // fixture maintainer
+			"cros-networking@google.com",
+		},
+		SetUpTimeout:    hwsimTimeout,
+		TearDownTimeout: hwsimTimeout,
+		ResetTimeout:    hwsimTimeout,
+		Parent:          "chromeLoggedInWithPasspoint",
 		Impl: NewShillSimulatedWiFiFixture(func(s *testing.FixtState) ShillSimulatedWiFi {
 			return ShillSimulatedWiFi{
 				Chrome: s.ParentValue().(*chrome.Chrome),

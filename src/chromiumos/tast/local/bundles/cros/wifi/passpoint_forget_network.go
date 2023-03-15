@@ -28,7 +28,7 @@ func init() {
 		Contacts: []string{"cros-networking@google.com", "jasongustaman@google.com"},
 		// ChromeOS > Platform > System > Networking
 		BugComponent: "b:156085",
-		Fixture:      "shillSimulatedWiFiWithChromeLoggedIn",
+		Fixture:      "shillSimulatedWiFiWithChromeLoggedInWithPasspoint",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"wifi", "shill-wifi", "chrome"},
 		LacrosStatus: testing.LacrosVariantUnneeded,

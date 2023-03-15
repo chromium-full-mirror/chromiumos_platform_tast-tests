@@ -50,4 +50,6 @@ const (
 	ChromeLoggedInGuestWithOsSettingsSearchFeedback = "chromeLoggedInGuestWithOsSettingsSearchFeedback"
 	// Ownership cleaned, logged into a user session with flags to enable verbose logging about consent.
 	ChromeLoggedInVerboseConsentLogs = "chromeLoggedInVerboseConsentLogs"
+	// Logged into a user session with PasspointARCSupport flag enabled.
+	ChromeLoggedInWithPasspoint = "chromeLoggedInWithPasspoint"
 )
