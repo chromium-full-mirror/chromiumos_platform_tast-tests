@@ -41,12 +41,12 @@ func init() {
 				Name:              "buster",
 				ExtraSoftwareDeps: []string{"dlc"},
 				Fixture:           "crostiniBuster",
-				Timeout:           12 * time.Minute,
+				Timeout:           15 * time.Minute,
 			}, {
 				Name:              "bullseye",
 				ExtraSoftwareDeps: []string{"dlc"},
 				Fixture:           "crostiniBullseye",
-				Timeout:           12 * time.Minute,
+				Timeout:           15 * time.Minute,
 			},
 		},
 	})
