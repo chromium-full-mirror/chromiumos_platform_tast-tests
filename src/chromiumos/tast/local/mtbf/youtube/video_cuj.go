@@ -219,6 +219,7 @@ func Run(ctx context.Context, resources TestResources, param TestParams) error {
 		}
 	}
 
+	traceRecorder := false
 	run := func(ctx context.Context, videoSource VideoSrc) (retErr error) {
 		defer func(ctx context.Context) {
 			// Make sure to close the arc UI device before calling the function. Otherwise uiautomator might have errors.
@@ -254,10 +255,11 @@ func Run(ctx context.Context, resources TestResources, param TestParams) error {
 		defer cancel()
 
 		// Record tracing in the first iteration.
-		if traceConfigPath != "" {
+		if traceConfigPath != "" && !traceRecorder {
 			if err := recorder.StartTracing(ctx, outDir, traceConfigPath); err != nil {
 				return errors.Wrap(err, "failed to start tracing")
 			}
+			traceRecorder = true
 			defer recorder.StopTracing(ctx)
 		}
 
