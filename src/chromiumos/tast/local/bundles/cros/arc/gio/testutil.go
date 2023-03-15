@@ -93,10 +93,7 @@ func SetupTestApp(ctx context.Context, s *testing.State, testFunc PerformTestFun
 	// Pull out the common values.
 	cr := s.FixtValue().(*arc.PreData).Chrome
 	a := s.FixtValue().(*arc.PreData).ARC
-	d, err := a.NewUIDevice(ctx)
-	if err != nil {
-		s.Fatal("Failed initializing UI Automator: ", err)
-	}
+	d := s.FixtValue().(*arc.PreData).UIDevice
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
