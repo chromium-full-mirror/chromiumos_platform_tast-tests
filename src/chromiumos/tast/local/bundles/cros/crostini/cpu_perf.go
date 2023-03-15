@@ -7,6 +7,7 @@ package crostini
 import (
 	"context"
 	"fmt"
+	"math"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -197,9 +198,18 @@ func testSysbench(ctx context.Context, s *testing.State, errFile *os.File, cont 
 		return nil
 	}
 
+	min := func(x, y int) int {
+		if x < y {
+			return x
+		}
+		return y
+	}
+
 	numCPU := runtime.NumCPU()
+	stepLimit := int(math.Ceil(math.Log2(float64(numCPU))))
 	const repeatNum = 3
-	for numThreads := 1; numThreads <= numCPU; numThreads++ {
+	for step := 0; step <= stepLimit; step++ {
+		numThreads := min(1<<step, numCPU)
 		for numTry := 1; numTry <= repeatNum; numTry++ {
 			s.Logf("Measuring sysbench for %v thread(s) (%v/%v)", numThreads, numTry, repeatNum)
 			if err := measureSysbench(numThreads); err != nil {
