@@ -10,8 +10,10 @@ import (
 	"path/filepath"
 
 	"chromiumos/tast/common/action"
+	"chromiumos/tast/common/android/ui"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/fsutil"
+	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/camera/testutil"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
@@ -44,6 +46,7 @@ const (
 	GAIALoggedInWithFakeHALAndEffectsEnabled       = "gaiaLoggedInWithFakeHALAndEffectsEnabled"
 	GAIALoggedInWithFakeHALAndEffectsDisabled      = "gaiaLoggedInWithFakeHALAndEffectsDisabled"
 	GAIALoggedInLacrosWithFakeHALAndEffectsEnabled = "gaiaLoggedInLacrosWithFakeHALAndEffectsEnabled"
+	GAIALoggedInARCWithFakeHALAndEffectsEnabled    = "gaiaLoggedInARCWithFakeHALAndEffectsEnabled"
 
 	// Fixtures using GAIA login and specifying device mode.
 	GAIALoggedInClamshellWithFakeHALAndEffectsEnabled       = "gaiaLoggedInClamshellWithFakeHALAndEffectsEnabled"
@@ -271,6 +274,23 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name: GAIALoggedInARCWithFakeHALAndEffectsEnabled,
+		Desc: "A fixture with GAIA user logged in and ARC booted using fake HAL camera with platform effects enabled",
+		Contacts: []string{
+			"chrome-knowledge-eng@google.com",
+			"shengjun@google.com",
+		},
+		Data:            []string{fakeHALImageInput},
+		Impl:            mediaSetupFixture(internalMic, halCameraWithPlatformEffectsEnabled),
+		Parent:          gaiaLoggedInARC,
+		SetUpTimeout:    chrome.LoginTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name: NoLogInWithInternalCameraAndEffectsEnabled,
 		Desc: "A fixture with no user logged in using internal camera with platform effects enabled",
 		Contacts: []string{
@@ -305,6 +325,12 @@ type mediaFixtureImpl struct {
 type FixtData struct {
 	cr *chrome.Chrome
 	bt browser.Type
+	// ARC enables interaction with an already-started ARC environment.
+	// It cannot be closed by tests.
+	arc *arc.ARC
+	// UIDevice is a UI Automator device object.
+	// It cannot be closed by tests.
+	dev *ui.Device
 }
 
 // Chrome returns Chrome. This adds support for chrome.HasChrome interface.
@@ -317,10 +343,38 @@ func (fd FixtData) BrowserType() browser.Type {
 	return fd.bt
 }
 
+// ARC returns the ARC instance setup in fixture.
+func (fd FixtData) ARC() *arc.ARC {
+	return fd.arc
+}
+
+// UIDevice returns ARC UI Automator device object setup in fixture.
+func (fd FixtData) UIDevice() *ui.Device {
+	return fd.dev
+}
+
 func (f *mediaFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	var fixtData FixtData
 	parentVal := s.ParentValue()
-	f.cr = parentVal.(baseSetupFixtData).cr
-	bt := parentVal.(baseSetupFixtData).bt
+
+	switch parentVal.(type) {
+	case *baseSetupFixtData:
+		f.cr = parentVal.(*baseSetupFixtData).cr
+		fixtData = FixtData{
+			cr: f.cr,
+			bt: parentVal.(*baseSetupFixtData).bt,
+		}
+	case *arc.PreData:
+		f.cr = parentVal.(*arc.PreData).Chrome
+		fixtData = FixtData{
+			cr:  f.cr,
+			bt:  browser.TypeAsh,
+			arc: parentVal.(*arc.PreData).ARC,
+			dev: parentVal.(*arc.PreData).UIDevice,
+		}
+	default:
+		s.Fatalf("Base fixture %T is not supported", parentVal)
+	}
 
 	if f.cr.LoginMode() != "NoLogin" {
 		// cr.TestAPIConn does not work on login page.
@@ -367,7 +421,7 @@ func (f *mediaFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) inte
 		s.Fatal("Failed to setup camera: ", err)
 	}
 
-	return FixtData{cr: f.cr, bt: bt}
+	return fixtData
 }
 
 func (f *mediaFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {

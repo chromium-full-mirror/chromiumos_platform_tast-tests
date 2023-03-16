@@ -216,7 +216,7 @@ func baseSetupFixture(browserType browser.Type, fOpts chrome.OptionsCallback) te
 	}
 }
 
-// BaseSetupFixtData is the data returned by SetUp and passed to tests.
+// baseSetupFixtData is the data returned by SetUp and passed to tests.
 type baseSetupFixtData struct {
 	cr *chrome.Chrome
 	bt browser.Type
@@ -265,7 +265,7 @@ func (f *baseSetupFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) 
 		}
 	}
 
-	return baseSetupFixtData{f.cr, f.browserType}
+	return &baseSetupFixtData{f.cr, f.browserType}
 }
 
 func (f *baseSetupFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {}
