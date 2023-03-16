@@ -16,6 +16,7 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/crosconfig"
 	"chromiumos/tast/testing"
+
 	"go.chromium.org/tast/core/shutil"
 )
 
@@ -134,6 +135,9 @@ func RunDiagRoutine(ctx context.Context, params RoutineParams) (*RoutineResult, 
 	} else if params.Routine == RoutineBluetoothScanning {
 		// Default runtime for Bluetooth scanning routine is 5 seconds.
 		diagParams = append(diagParams, "--length_seconds=5")
+	} else if params.Routine == RoutineMemory {
+		// 15000 KiB runs for about 3 seconds on a volteer machine
+		diagParams = append(diagParams, "--max_testing_mem_kib=15000")
 	}
 
 	var output string
