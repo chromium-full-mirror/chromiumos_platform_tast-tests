@@ -26,9 +26,14 @@ import (
 )
 
 // VerifyMACUsedForScan forces Scan, collects the pcap and checks for
-// MAC address used in Probe Requests.  If the randomize is turned on
-// none of the macs should be used, and if it is turned off then all
-// of the Probes should be using MAC from the first element.
+// MAC address used in Probe Requests.  The behaviour depends on the
+// |randomize| argument.  If it is set to true then the |macs| contains
+// a list of the previously known MAC addresses and none of them should
+// be used.  If |randomize| is false then the probe request with first
+// element on the list should be present - in ideal conditions only
+// probes with this element should be present but in lab probes from
+// other setups are sometimes overheard, so we only check for the
+// presence of the one with expected MAC.
 func VerifyMACUsedForScan(ctx context.Context, tf *wificell.TestFixture, ap *wificell.APIface,
 	name string, randomize bool, macs []net.HardwareAddr) (retErr error) {
 	resp, err := tf.WifiClient().SetMACRandomize(ctx, &wifi.SetMACRandomizeRequest{Enable: randomize})
@@ -89,6 +94,7 @@ func VerifyMACUsedForScan(ctx context.Context, tf *wificell.TestFixture, ap *wif
 	}
 	testing.ContextLogf(ctx, "Total %d probe requests found", len(packets))
 
+	macFound := false
 	for _, p := range packets {
 		// Get sender address.
 		layer := p.Layer(layers.LayerTypeDot11)
@@ -106,12 +112,16 @@ func VerifyMACUsedForScan(ctx context.Context, tf *wificell.TestFixture, ap *wif
 			// match any previously known (given in `macs` argument).
 			for _, mac := range macs {
 				if bytes.Equal(sender, mac) {
-					return errors.New("Found a probe request with a known MAC: " + mac.String())
+					return errors.New("found a probe request with a known MAC: " + mac.String())
 				}
 			}
-		} else if !bytes.Equal(sender, macs[0]) {
-			return errors.Errorf("found a probe request with a different MAC: got %s, want %s", sender, macs[0])
+		} else if bytes.Equal(sender, macs[0]) {
+			macFound = true
+			break
 		}
+	}
+	if !randomize && !macFound {
+		return errors.Errorf("missing a probe request with MAC: %s", macs[0])
 	}
 	return nil
 }
