@@ -33,6 +33,10 @@ type Lacros struct {
 	ctconn *chrome.TestConn // Ash TestConn.
 }
 
+// ErrAlreadyStoppedBeforeClose is an error returned by Close() if the State
+// of Lacros is already Stopped when the function was called.
+var ErrAlreadyStoppedBeforeClose = errors.New("the Lacros browser was already stopped (or crashed)")
+
 // Browser returns a Browser instance.
 func (l *Lacros) Browser() *browser.Browser {
 	return browser.New(l.sess, false)
@@ -96,6 +100,15 @@ func (l *Lacros) Close(ctx context.Context) error {
 		testing.ContextLog(ctx, "No output directory exists, not saving lacros log file")
 	}
 
+	info, err := lacrosinfo.Snapshot(ctx, l.ctconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get lacros info")
+	}
+	if info.State == "Stopped" {
+		testing.ContextLog(ctx, "The Lacros browser was already stopped before Close()")
+		return ErrAlreadyStoppedBeforeClose
+	}
+
 	// Get all pages. Note that we can't get all targets, because one of them
 	// will be the test extension or devtools and we don't want to kill that.
 	// Further note that this will mean pages are not restored, compared to killing
@@ -106,12 +119,8 @@ func (l *Lacros) Close(ctx context.Context) error {
 		return t.Type == "page" || t.Type == "app"
 	})
 	if err != nil {
+		testing.ContextLogf(ctx, "Last known Lacros state is %s", info.State)
 		return errors.Wrap(err, "failed to query for all targets")
-	}
-
-	info, err := lacrosinfo.Snapshot(ctx, l.ctconn)
-	if err != nil {
-		return errors.Wrap(err, "failed to get lacros info")
 	}
 
 	var sessErr error
