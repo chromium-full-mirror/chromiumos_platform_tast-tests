@@ -196,6 +196,76 @@ func init() {
 					minThroughput: 125 * iperf.Mbps,
 				}},
 			},
+			{
+				// Small packets UDP performance (e.g. for games), STA->AP direction.
+				Name: "upload_udp_small",
+				Val: []sapPerfTestcase{{
+					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band2p4g), tethering.NoUplink(true)},
+					protocol:      iperf.ProtocolUDP,
+					opts:          []iperf.ConfigOption{iperf.DatagramLengthOption(112 * iperf.B)},
+					minThroughput: 40 * iperf.Mbps,
+				}, {
+					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band5g), tethering.NoUplink(true)},
+					protocol:      iperf.ProtocolUDP,
+					opts:          []iperf.ConfigOption{iperf.DatagramLengthOption(112 * iperf.B)},
+					minThroughput: 65 * iperf.Mbps,
+				}, {
+					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band2p4g), tethering.NoUplink(true),
+						tethering.SecMode(wpa.ModePureWPA2)},
+					secConfFac: wpa.NewConfigFactory(
+						"chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP),
+					),
+					protocol:      iperf.ProtocolUDP,
+					opts:          []iperf.ConfigOption{iperf.DatagramLengthOption(112 * iperf.B)},
+					minThroughput: 40 * iperf.Mbps,
+				}, {
+					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band5g), tethering.NoUplink(true),
+						tethering.SecMode(wpa.ModePureWPA2)},
+					secConfFac: wpa.NewConfigFactory(
+						"chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP),
+					),
+					protocol:      iperf.ProtocolUDP,
+					opts:          []iperf.ConfigOption{iperf.DatagramLengthOption(112 * iperf.B)},
+					minThroughput: 65 * iperf.Mbps,
+				}},
+			},
+			{
+				// Small packets UDP performance, AP->STA direction.
+				Name: "download_udp_small",
+				Val: []sapPerfTestcase{{
+					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band2p4g), tethering.NoUplink(true)},
+					protocol:      iperf.ProtocolUDP,
+					reverse:       true,
+					opts:          []iperf.ConfigOption{iperf.DatagramLengthOption(112 * iperf.B)},
+					minThroughput: 40 * iperf.Mbps,
+				}, {
+					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band5g), tethering.NoUplink(true)},
+					protocol:      iperf.ProtocolUDP,
+					reverse:       true,
+					opts:          []iperf.ConfigOption{iperf.DatagramLengthOption(112 * iperf.B)},
+					minThroughput: 65 * iperf.Mbps,
+				}, {
+					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band2p4g), tethering.NoUplink(true),
+						tethering.SecMode(wpa.ModePureWPA2)},
+					secConfFac: wpa.NewConfigFactory(
+						"chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP),
+					),
+					protocol:      iperf.ProtocolUDP,
+					reverse:       true,
+					opts:          []iperf.ConfigOption{iperf.DatagramLengthOption(112 * iperf.B)},
+					minThroughput: 40 * iperf.Mbps,
+				}, {
+					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band5g), tethering.NoUplink(true),
+						tethering.SecMode(wpa.ModePureWPA2)},
+					secConfFac: wpa.NewConfigFactory(
+						"chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP),
+					),
+					protocol:      iperf.ProtocolUDP,
+					reverse:       true,
+					opts:          []iperf.ConfigOption{iperf.DatagramLengthOption(112 * iperf.B)},
+					minThroughput: 65 * iperf.Mbps,
+				}},
+			},
 		},
 	})
 }

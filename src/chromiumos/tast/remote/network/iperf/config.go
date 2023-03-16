@@ -64,6 +64,7 @@ type Config struct {
 	TestTime           time.Duration
 	MaxBandwidth       BitRate
 	WindowSize         ByteSize
+	DatagramLength     ByteSize
 	Port               int
 	PortCount          int
 	ClientIP           string
@@ -150,6 +151,14 @@ func PortOption(port int) ConfigOption {
 func PortCountOption(portCount int) ConfigOption {
 	return func(config *Config) error {
 		config.PortCount = portCount
+		return nil
+	}
+}
+
+// DatagramLengthOption (called Buffer Length by iperf) is used to set length of the UDP Datagram.
+func DatagramLengthOption(len ByteSize) ConfigOption {
+	return func(config *Config) error {
+		config.DatagramLength = len
 		return nil
 	}
 }

@@ -115,5 +115,9 @@ func getClientArguments(config *Config) []string {
 		res = append(res, "-d")
 	}
 
+	if config.DatagramLength > 0 {
+		res = append(res, "-l", strconv.Itoa(int(config.DatagramLength)))
+	}
+
 	return res
 }
