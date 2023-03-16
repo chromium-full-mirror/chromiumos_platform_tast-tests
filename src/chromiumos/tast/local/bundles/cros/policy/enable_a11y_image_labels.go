@@ -17,6 +17,7 @@ import (
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/a11y"
+	"chromiumos/tast/local/a11y/chromevox"
 	"chromiumos/tast/local/audio/crastestclient"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
@@ -180,7 +181,7 @@ func setUpChromeVox(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chro
 		return nil
 	})
 
-	cvConn, err := a11y.NewChromeVoxConn(ctx, cr)
+	cvConn, err := chromevox.NewConn(ctx, cr)
 	if err != nil {
 		return nil, mergeCleanups(cleanups), errors.Errorf("failed to connect to the ChromeVox background page: %s", err)
 	}

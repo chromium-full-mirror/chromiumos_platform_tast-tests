@@ -11,6 +11,7 @@ import (
 
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/a11y"
+	"chromiumos/tast/local/a11y/chromevox"
 	arca11y "chromiumos/tast/local/bundles/cros/arc/a11y"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto/checked"
@@ -47,7 +48,7 @@ func init() {
 	})
 }
 
-func runTestStep(ctx context.Context, cvconn *a11y.ChromeVoxConn, tconn *chrome.TestConn, ew *input.KeyboardEventWriter, step axEventTestStep, isFirstStep bool) error {
+func runTestStep(ctx context.Context, cvconn *chromevox.Conn, tconn *chrome.TestConn, ew *input.KeyboardEventWriter, step axEventTestStep, isFirstStep bool) error {
 	watcher, err := a11y.NewRootWatcher(ctx, tconn, step.eventType)
 	if err != nil {
 		return errors.Wrap(err, "failed to create EventWatcher")
@@ -282,7 +283,7 @@ func AccessibilityEvent(ctx context.Context, s *testing.State) {
 	}
 	defer ew.Close()
 
-	testFunc := func(ctx context.Context, cvconn *a11y.ChromeVoxConn, tconn *chrome.TestConn, currentActivity arca11y.TestActivity) error {
+	testFunc := func(ctx context.Context, cvconn *chromevox.Conn, tconn *chrome.TestConn, currentActivity arca11y.TestActivity) error {
 		for i, test := range testSteps[currentActivity] {
 			if err := runTestStep(ctx, cvconn, tconn, ew, test, i == 0); err != nil {
 				return errors.Wrapf(err, "failed to run a test step %+v", test)

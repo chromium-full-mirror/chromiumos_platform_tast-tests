@@ -51,7 +51,7 @@ func ChromevoxNumberReadingStyle(ctx context.Context, s *testing.State) {
 	}
 	bt := browser.TypeAsh
 	html := "<p>123</p>"
-	cvData, err := a11y.SetUpChromeVox(ctx, ctxCleanup, cr, vd, ed, bt, html)
+	cvData, err := chromevox.SetUpChromeVox(ctx, ctxCleanup, cr, vd, ed, bt, html)
 	if err != nil {
 		s.Fatal("Failed to set up ChromeVox: ", err)
 	}

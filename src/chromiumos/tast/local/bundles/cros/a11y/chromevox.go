@@ -121,7 +121,7 @@ func Chromevox(ctx context.Context, s *testing.State) {
 	td := s.Param().(testParam).testData
 	bt := s.Param().(testParam).browserType
 	const html = "<p>Start</p><p>This is a ChromeVox test</p><p>End</p>"
-	cvData, err := a11y.SetUpChromeVox(ctx, ctxCleanup, cr, td.VoiceData, td.EngineData, bt, html)
+	cvData, err := chromevox.SetUpChromeVox(ctx, ctxCleanup, cr, td.VoiceData, td.EngineData, bt, html)
 	if err != nil {
 		s.Fatal("Failed to set up ChromeVox: ", err)
 	}

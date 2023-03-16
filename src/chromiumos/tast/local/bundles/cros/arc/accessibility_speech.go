@@ -10,6 +10,7 @@ import (
 
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/a11y"
+	"chromiumos/tast/local/a11y/chromevox"
 	"chromiumos/tast/local/arc"
 	arca11y "chromiumos/tast/local/bundles/cros/arc/a11y"
 	"chromiumos/tast/local/chrome"
@@ -221,7 +222,7 @@ func AccessibilitySpeech(ctx context.Context, s *testing.State) {
 		arca11y.ActionActivity:     ActionActivityTestSteps,
 	}
 
-	testFunc := func(ctx context.Context, cvconn *a11y.ChromeVoxConn, tconn *chrome.TestConn, currentActivity arca11y.TestActivity) error {
+	testFunc := func(ctx context.Context, cvconn *chromevox.Conn, tconn *chrome.TestConn, currentActivity arca11y.TestActivity) error {
 		if err := a11y.SetTTSRate(ctx, tconn, 5.0); err != nil {
 			s.Fatal("Failed to change TTS rate: ", err)
 		}

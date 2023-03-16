@@ -11,6 +11,7 @@ import (
 
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/a11y"
+	"chromiumos/tast/local/a11y/chromevox"
 	arca11y "chromiumos/tast/local/bundles/cros/arc/a11y"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto/role"
@@ -352,7 +353,7 @@ func AccessibilityTree(ctx context.Context, s *testing.State) {
 		arca11y.MainActivity, arca11y.EditTextActivity, arca11y.LiveRegionActivity, arca11y.ActionActivity,
 	}
 
-	testFunc := func(ctx context.Context, cvconn *a11y.ChromeVoxConn, tconn *chrome.TestConn, currentActivity arca11y.TestActivity) error {
+	testFunc := func(ctx context.Context, cvconn *chromevox.Conn, tconn *chrome.TestConn, currentActivity arca11y.TestActivity) error {
 		expectedTree := trees[currentActivity]
 		var appRoot *a11y.Node
 		var err error

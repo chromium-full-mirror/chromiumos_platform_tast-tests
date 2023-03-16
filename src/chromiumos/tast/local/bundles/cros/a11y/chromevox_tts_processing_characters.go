@@ -10,6 +10,7 @@ import (
 
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/a11y"
+	"chromiumos/tast/local/a11y/chromevox"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/testing"
@@ -65,7 +66,7 @@ func ChromevoxTTSProcessingCharacters(ctx context.Context, s *testing.State) {
 		ExtID:                     a11y.GoogleTTSExtensionID,
 		UseOnSpeakWithAudioStream: false,
 	}
-	cvData, err := a11y.SetUpChromeVox(ctx, cleanupCtx, cr, vd, ed, bt, html)
+	cvData, err := chromevox.SetUpChromeVox(ctx, cleanupCtx, cr, vd, ed, bt, html)
 	if err != nil {
 		s.Fatal("Failed to set up ChromeVox: ", err)
 	}
