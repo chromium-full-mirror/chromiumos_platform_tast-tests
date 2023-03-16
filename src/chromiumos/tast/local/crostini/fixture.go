@@ -287,7 +287,7 @@ func init() {
 
 	// TODO(b/272366776) : Remove these fixtures once crostini IME flag is on by default.
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeLoggedInForCrostiniWithIme",
+		Name:     "chromeLoggedInForCrostiniWithIME",
 		Desc:     "Logged into a session with Crostini IME support enabled",
 		Contacts: []string{"clumptini@google.com", "sophialin@google.com"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
@@ -309,27 +309,31 @@ func init() {
 
 	// Crostini IME is only supported from Bullseye onwards.
 	testing.AddFixture(&testing.Fixture{
-		Name:            "crostiniBullseyeWithIme",
+		Name:            "crostiniBullseyeWithIME",
 		Desc:            "Install Crostini with Bullseye with IME support enabled",
 		Contacts:        []string{"clumptini@google.com", "sophialin@google.com"},
 		Impl:            &crostiniFixture{preData: preTestDataBullseye},
-		SetUpTimeout:    installationTimeout,
+		SetUpTimeout:    installationTimeout + uninstallationTimeout,
 		ResetTimeout:    checkContainerTimeout,
 		PostTestTimeout: postTestTimeout,
 		TearDownTimeout: uninstallationTimeout,
-		Parent:          "chromeLoggedInForCrostiniWithIme",
+		Parent:          "chromeLoggedInForCrostiniWithIME",
 		Vars:            []string{"keepState"},
 		Data:            []string{GetContainerMetadataArtifact("bullseye", false), GetContainerRootfsArtifact("bullseye", false)},
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "crostiniBullseyeLargeContainerWithIme",
-		Desc:     "Install Crostini with Bullseye in large container with apps installed and IME support enabled",
-		Contacts: []string{"clumptini@google.com", "sophialin@google.com"},
-		Impl:     &crostiniFixture{preData: preTestDataBullseyeLC},
-		Parent:   "chromeLoggedInForCrostiniWithIme",
-		Vars:     []string{"keepState"},
-		Data:     []string{GetContainerMetadataArtifact("bullseye", true), GetContainerRootfsArtifact("bullseye", true)},
+		Name:            "crostiniBullseyeLargeContainerWithIME",
+		Desc:            "Install Crostini with Bullseye in large container with apps installed and IME support enabled",
+		Contacts:        []string{"clumptini@google.com", "sophialin@google.com"},
+		Impl:            &crostiniFixture{preData: preTestDataBullseyeLC},
+		SetUpTimeout:    installationTimeout + uninstallationTimeout,
+		ResetTimeout:    checkContainerTimeout,
+		PostTestTimeout: postTestTimeout,
+		TearDownTimeout: uninstallationTimeout,
+		Parent:          "chromeLoggedInForCrostiniWithIME",
+		Vars:            []string{"keepState"},
+		Data:            []string{GetContainerMetadataArtifact("bullseye", true), GetContainerRootfsArtifact("bullseye", true)},
 	})
 
 }

@@ -10,10 +10,12 @@ package crostini
 // See src/chromiumos/tast/local/crostini/params.go for more documentation
 
 import (
+	"sort"
 	"testing"
 	"time"
 
 	"chromiumos/tast/common/genparams"
+	"chromiumos/tast/local/bundles/cros/crostini/imetestutil"
 	"chromiumos/tast/local/chrome/devicemode"
 	"chromiumos/tast/local/crostini"
 )
@@ -297,7 +299,41 @@ func TestAppWithSnapshotTestParams(t *testing.T) {
 				UseLargeContainer:   true,
 				UseFixture:          true,
 				DeviceMode:          devicemode.ClamshellMode,
-			}})
+			},
+		})
+		genparams.Ensure(t, filename, params)
+	}
+}
+
+var appIMETests = []string{
+	"app_gedit_ime.go",
+}
+
+func TestAppIMETestParams(t *testing.T) {
+	var imeParams []crostini.Param
+
+	imeTestCases := make([]string, 0)
+	for imeTestCase := range imetestutil.IMETestCases {
+		imeTestCases = append(imeTestCases, imeTestCase)
+	}
+	sort.Strings(imeTestCases)
+
+	for _, imeName := range imeTestCases {
+		imeParams = append(imeParams, crostini.Param{
+			Timeout:             15 * time.Minute,
+			StableHardwareDep:   "crostini.CrostiniAppStable",
+			UnstableHardwareDep: "crostini.CrostiniAppUnstable",
+			ExtraSoftwareDeps:   []string{"crostini_app"},
+			UseLargeContainer:   true,
+			UseFixture:          true,
+			DeviceMode:          devicemode.ClamshellMode,
+			TestIME:             true,
+			IMEName:             imeName,
+			Val:                 "\"" + imeName + "\"",
+		})
+	}
+	for _, filename := range appIMETests {
+		params := crostini.MakeTestParamsFromList(t, imeParams)
 		genparams.Ensure(t, filename, params)
 	}
 }

@@ -183,6 +183,16 @@ type Param struct {
 	// Add this for backward-compatibility to preserve names when removing
 	// MinimalSet to add bullseye coverage.
 	NoBusterInTestName bool
+
+	// TestIME controls whether the test case tests IME support.
+	// If yes, the crostiniBullseyeLargeContainerClamshellWithIME will be used.
+	// TODO(b/272366776): Remove this field along with the above fixtures after the
+	// Crostini IME flag is enabled by default.
+	TestIME bool
+
+	// IMEName is used to specify the name of the input method being tested.
+	// This name will be used in naming the test and as a test Val.
+	IMEName string
 }
 
 type generatedParam struct {
@@ -247,6 +257,7 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 	}
 
 	var itLacros = []iterator{{debianVersion: vm.DebianBullseye, stable: true}}
+	var itIME = []iterator{{debianVersion: vm.DebianBullseye, stable: true}, {debianVersion: vm.DebianBullseye, stable: false}}
 	var itManatee = []iterator{{debianVersion: vm.DebianBuster, stable: true}}
 
 	for _, testCase := range baseCases {
@@ -261,7 +272,7 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 			}
 		}
 
-		iterate := func(i iterator, bt browser.Type, isManatee bool) {
+		iterate := func(i iterator, bt browser.Type, isManatee, isIME bool, IMEName string) {
 
 			if (testCase.IsNotMainline || testCase.OnlyStableBoards) && !i.stable {
 				// The stable/unstable distinction is only important for mainline tests
@@ -286,6 +297,10 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 				name = combineName(name, testCase.DeviceMode.String())
 			}
 
+			if isIME {
+				name = combineName(name, IMEName)
+			}
+
 			if !testCase.IsNotMainline && !testCase.OnlyStableBoards {
 				if i.stable {
 					name = combineName(name, "stable")
@@ -293,6 +308,7 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 					name = combineName(name, "unstable")
 				}
 			}
+
 			if testCase.UseGaiaLogin {
 				name = combineName(name, "gaia")
 			}
@@ -340,6 +356,8 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 			if testCase.UseFixture {
 				if testCase.SelfManagedInstall {
 					fixture = ""
+				} else if isIME {
+					fixture = "\"crostiniBullseyeLargeContainerClamshellWithIME\""
 				} else if testCase.UseLargeContainer {
 					suffix := ""
 					if testCase.DeviceMode == devicemode.TabletMode {
@@ -417,19 +435,25 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 			result = append(result, testParam)
 		}
 
-		for _, i := range itChrome {
-			iterate(i, "", false)
+		if testCase.TestIME {
+			for _, i := range itIME {
+				iterate(i, "", false, true, testCase.IMEName)
+			}
+		} else {
+			for _, i := range itChrome {
+				iterate(i, "", false, false, "")
+			}
 		}
 
 		if testCase.TestLacros {
 			for _, i := range itLacros {
-				iterate(i, browser.TypeLacros, false)
+				iterate(i, browser.TypeLacros, false, false, "")
 			}
 		}
 
 		if testCase.TestManatee {
 			for _, i := range itManatee {
-				iterate(i, "", true)
+				iterate(i, "", true, false, "")
 			}
 		}
 	}
