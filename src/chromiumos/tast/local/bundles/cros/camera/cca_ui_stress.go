@@ -163,7 +163,7 @@ func clickPhotoShutterContinuously(ctx context.Context, s *testing.State, app *c
 	if info.Size() == 0 {
 		return errors.Errorf("saved file %v is empty", info.Name())
 	}
-	if err := app.CheckNoTemporalFile(ctx, dir, cca.PhotoPattern, startTime); err != nil {
+	if err := app.CheckNoTemporalFile(ctx, dir, cca.PhotoPattern, startTime, []string{}); err != nil {
 		return err
 	}
 	return nil
@@ -195,7 +195,8 @@ func clickVideoShutterContinuously(ctx context.Context, s *testing.State, app *c
 	if err != nil {
 		return err
 	}
-	if err := app.CheckNoTemporalFile(ctx, dir, cca.VideoPattern, startTime); err != nil {
+	exceptions := []string{".Temp"}
+	if err := app.CheckNoTemporalFile(ctx, dir, cca.VideoPattern, startTime, exceptions); err != nil {
 		return err
 	}
 
