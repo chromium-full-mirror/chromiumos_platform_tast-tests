@@ -34,7 +34,13 @@ func NewGoogleDocs(ctx context.Context, tconn *chrome.TestConn, br *browser.Brow
 		opts = append(opts, browser.WithNewWindow())
 	}
 	testing.ContextLog(ctx, "Start to create google document")
-	conn, err := uiHandler.NewChromeTab(ctx, br, cuj.NewGoogleDocsURL, newWindow)
+	// If there is an account sign-out issue when navigating to a Google Docs page,
+	// it will continue to evaluate the JS expression in br.NewConn until
+	// the test case timeout is exceeded.
+	// Set a short timeout value to return errors earlier.
+	newChromeTabCtx, cancel := context.WithTimeout(ctx, time.Minute)
+	defer cancel()
+	conn, err := uiHandler.NewChromeTab(newChromeTabCtx, br, cuj.NewGoogleDocsURL, newWindow)
 	if err != nil {
 		return errors.Wrap(err, "failed to open the google document")
 	}
