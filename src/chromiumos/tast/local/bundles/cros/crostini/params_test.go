@@ -307,6 +307,7 @@ func TestAppWithSnapshotTestParams(t *testing.T) {
 
 var appIMETests = []string{
 	"app_gedit_ime.go",
+	"app_vscode_ime.go",
 }
 
 func TestAppIMETestParams(t *testing.T) {

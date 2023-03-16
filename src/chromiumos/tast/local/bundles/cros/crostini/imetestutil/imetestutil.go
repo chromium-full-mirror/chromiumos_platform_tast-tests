@@ -38,6 +38,7 @@ var IMETestCases = imeTestDataMap{
 		"konnnitiha",
 		"こんにちは",
 		func(keyboard *input.KeyboardEventWriter) uiauto.Action {
+			// TODO(b/274825850): Test the positioning of the suggestion box for Japanese input.
 			return uiauto.Combine("Enter Japanese",
 				keyboard.TypeAction("konnnitiha"),
 				keyboard.AccelAction("Enter"),

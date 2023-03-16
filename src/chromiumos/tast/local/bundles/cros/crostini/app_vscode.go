@@ -7,11 +7,11 @@ package crostini
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/local/bundles/cros/crostini/crostiniapps"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
@@ -25,18 +25,6 @@ import (
 	"chromiumos/tast/local/vm"
 	"chromiumos/tast/testing"
 )
-
-// https://stackoverflow.com/questions/45033015/how-do-i-turn-off-notifications-globally-in-visual-studio-code.
-const disableNotificationsCommand = `cat << EOF >> /usr/share/code/resources/app/out/vs/workbench/workbench.desktop.main.css
-.monaco-workbench > .notifications-toasts.visible {
-  display: none;
-}
-
-.notifications-toasts {
-  display: none;
-}
-EOF
-`
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -127,15 +115,6 @@ func AppVscode(ctx context.Context, s *testing.State) {
 	}
 	defer terminalApp.Exit(keyboard)(cleanupCtx)
 
-	// Cursor blinking and vscode updates break screenshots.
-	cont.WriteFile(ctx, ".config/Code/User/settings.json", `{"editor.cursorBlinking": "solid","workbench.startupEditor": "None", "update.mode": "none"}`)
-
-	version, err := cont.Command(ctx, "code", "--version").Output()
-	if err != nil {
-		s.Log("Failed to check VS Code version: ", err)
-	}
-	s.Log("VS Code version: ", string(version))
-
 	// Since defers are executed in a stack, this needs to be the last defer so it doesn't close the window before dumping the tree.
 	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree")
 	if err := testCreateFileWithVSCode(ctx, terminalApp, keyboard, tconn, cont, d); err != nil {
@@ -144,40 +123,13 @@ func AppVscode(ctx context.Context, s *testing.State) {
 }
 
 func testCreateFileWithVSCode(ctx context.Context, terminalApp *terminalapp.TerminalApp, keyboard *input.KeyboardEventWriter, tconn *chrome.TestConn, cont *vm.Container, d screenshot.Differ) error {
-	const (
-		testNewFile   = "new.go"
-		testSavedFile = "test.go"
-		testString    = "//This is a test string."
-	)
+	const testString = "//This is a test string."
 
 	ui := uiauto.New(tconn)
-	appWindow := nodewith.NameContaining("Visual Studio Code").Role(role.Window).First()
-	appWindowUnsaved := nodewith.NameStartingWith(fmt.Sprintf("● %s - Visual Studio Code", testNewFile)).Role(role.Window).First()
-	appWindowSaved := nodewith.NameStartingWith(fmt.Sprintf("%s - Visual Studio Code", testSavedFile)).Role(role.Window).First()
-
-	// Sudo is required because the file the command modifies is read-only.
-	cmd := cont.Command(ctx, "sudo", "sh", "-c", disableNotificationsCommand)
-	if _, err := cmd.Output(); err != nil {
-		return errors.Wrapf(err, "failed to run %v", strings.Join(cmd.Args, " "))
-	}
-
 	uda := uidetection.NewDefault(tconn)
+	appWindowSaved := nodewith.NameStartingWith(fmt.Sprintf("%s - Visual Studio Code", crostiniapps.VscodeTestFile)).Role(role.Window).First()
 
-	// Even with the workbench.startupEditor set to None,
-	// it still opens the Get Started tab when it is opened for the first time.
-	// Therefore, open it and close it firstly.
-	if err := uiauto.Combine("open VSCode for the first time",
-		// Launch Visual Studio Code.
-		terminalApp.RunCommand(keyboard, fmt.Sprintf("code --disable-extensions %s", testNewFile)),
-		// Wait until the window is stable.
-		uda.WaitUntilExists(uidetection.Word("File").WithinA11yNode(appWindow).First()),
-		// Left click the app window header to focus.
-		// Do not click the center of the app window, which may unexpectedly
-		// set the theme, see http://b/264336806.
-		ui.LeftClick(nodewith.HasClass("HeaderView").Ancestor(appWindow)),
-		// Press ctrl+Q to exit window.
-		keyboard.AccelAction("ctrl+Q"),
-		ui.WaitUntilGone(appWindow))(ctx); err != nil {
+	if err := crostiniapps.InitialiseVscode(ctx, cont, uda, ui, terminalApp, keyboard); err != nil {
 		return err
 	}
 
@@ -185,25 +137,19 @@ func testCreateFileWithVSCode(ctx context.Context, terminalApp *terminalapp.Term
 	// UI interaction to save file.
 	// File -> Save As -> Type file name -> Save.
 	// This corresponds to step 5 at https://testtracker.googleplex.com/testplans/testcase/detail/4163083?id=18920&revision=232.
-	saveFile := uiauto.Combine("save file from save as... dialouge",
-		uda.LeftClick(uidetection.Word("File").WithinA11yNode(appWindow)),
+	saveFile := uiauto.Combine("save file from save as... dialogue",
+		uda.LeftClick(uidetection.Word("File").WithinA11yNode(crostiniapps.VscodeWindow)),
 		// "Save Workspace As...", "Save", and "Save As..." match the criteria, choose the third one.
 		uda.LeftClick(uidetection.Word("Save").Nth(2)),
 		uda.WaitUntilExists(uidetection.Word("Desktop").WithinA11yNode(saveAsWindow)),
 		keyboard.AccelAction("ctrl+A"),
-		keyboard.TypeAction(testSavedFile),
+		keyboard.TypeAction(crostiniapps.VscodeTestFile),
 		uda.LeftClick(uidetection.Word("Save").WithinA11yNode(saveAsWindow)),
 	)
 
 	// Open the VSCode again, this time, it won't open the Get Started tab.
 	if err := uiauto.Combine("create file with VSCode",
-		// Launch Visual Studio Code.
-		terminalApp.RunCommand(keyboard, fmt.Sprintf("code --disable-extensions %s", testNewFile)),
-		// Sometimes the first character got lost if input immediately.
-		// Wait until the menu exists, indicating the window is launched.
-		uda.WaitUntilExists(uidetection.Word("File").WithinA11yNode(appWindow)),
-		// Left click the app window and type string.
-		ui.LeftClick(appWindowUnsaved),
+		crostiniapps.LaunchVscodeForFile(uda, ui, terminalApp, keyboard, crostiniapps.VscodeNewFile),
 		keyboard.TypeAction(testString),
 		saveFile,
 		ui.WaitUntilExists(appWindowSaved),
@@ -215,7 +161,7 @@ func testCreateFileWithVSCode(ctx context.Context, terminalApp *terminalapp.Term
 	}
 
 	// Check the content of the test file.
-	if err := cont.CheckFileContent(ctx, testSavedFile, testString); err != nil {
+	if err := cont.CheckFileContent(ctx, crostiniapps.VscodeTestFile, testString); err != nil {
 		return errors.Wrap(err, "failed to verify the content of the file")
 	}
 

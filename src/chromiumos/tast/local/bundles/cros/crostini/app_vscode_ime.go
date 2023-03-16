@@ -10,16 +10,16 @@ import (
 
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/local/bundles/cros/crostini/crostiniapps"
 	"chromiumos/tast/local/bundles/cros/crostini/imetestutil"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ime"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
-	"chromiumos/tast/local/chrome/uiauto/nodewith"
-	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/crostini"
 	"chromiumos/tast/local/crostini/ui/terminalapp"
 	"chromiumos/tast/local/input"
+	"chromiumos/tast/local/screenshot"
 	"chromiumos/tast/local/uidetection"
 	"chromiumos/tast/local/vm"
 	"chromiumos/tast/testing"
@@ -27,11 +27,12 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AppGeditIME,
+		Func:         AppVscodeIME,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test IME inputs in Gedit App",
-		Contacts:     []string{"clumptini@google.com", "sophialin@google.com"},
+		Desc:         "Opens Visual Studio Code from terminal and type using an IME",
+		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Vars:         screenshot.ScreenDiffVars,
 		SoftwareDeps: []string{"chrome", "vm_host"},
 		BugComponent: "b:1122570",
 		Params: []testing.Param{
@@ -85,15 +86,15 @@ func init() {
 		},
 	})
 }
-
-func AppGeditIME(ctx context.Context, s *testing.State) {
+func AppVscodeIME(ctx context.Context, s *testing.State) {
 	tconn := s.FixtValue().(crostini.FixtureData).Tconn
-	cont := s.FixtValue().(crostini.FixtureData).Cont
+	cr := s.FixtValue().(crostini.FixtureData).Chrome
 	keyboard := s.FixtValue().(crostini.FixtureData).KB
+	cont := s.FixtValue().(crostini.FixtureData).Cont
 
-	// Reserve time for clean-up tasks.
+	// Use a shortened context for test operations to reserve time for cleanup.
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 15*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
 	// Open Terminal app.
@@ -103,54 +104,45 @@ func AppGeditIME(ctx context.Context, s *testing.State) {
 	}
 	defer terminalApp.Exit(keyboard)(cleanupCtx)
 
-	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
+	// Since defers are executed in a stack, this needs to be the last defer so it doesn't close the window before dumping the tree.
+	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree")
 
 	// Switch back to default IME
 	defer ime.DefaultInputMethod.InstallAndActivate(tconn)(cleanupCtx)
 
 	imeName := s.Param().(string)
 	imeData := imetestutil.IMETestCases[imeName]
-	if err := testUseIMEInGeditFile(ctx, terminalApp, keyboard, tconn, cont, imeData); err != nil {
-		s.Fatal("Failed to use IME in Gedit file: ", err)
+	if err := testUseIMEInVSCode(ctx, terminalApp, keyboard, tconn, cont, imeData); err != nil {
+		s.Fatal("Failed to create file with Visual Studio Code in Terminal: ", err)
 	}
 }
 
-func testUseIMEInGeditFile(ctx context.Context, terminalApp *terminalapp.TerminalApp, keyboard *input.KeyboardEventWriter, tconn *chrome.TestConn, cont *vm.Container, imeData imetestutil.IMETestData) error {
-	const (
-		testFile = "test.txt"
-	)
-
+func testUseIMEInVSCode(ctx context.Context, terminalApp *terminalapp.TerminalApp, keyboard *input.KeyboardEventWriter, tconn *chrome.TestConn, cont *vm.Container, imeData imetestutil.IMETestData) error {
 	ui := uiauto.New(tconn)
 	uda := uidetection.NewDefault(tconn)
-	appWindow := nodewith.NameStartingWith(testFile).Role(role.Window).First()
-	inputMethod := imeData.InputMethod
 
-	if err := uiauto.Combine("Open file with Gedit via the terminal",
-		// Launch Gedit.
-		terminalApp.RunCommand(keyboard, "gedit "+testFile),
-		// Sometimes the first character gets lost if input is entered immediately.
-		// Wait until the menu exists, indicating the window is launched.
-		uda.WaitUntilExists(uidetection.Word("Open").WithinA11yNode(appWindow)),
-		ui.LeftClick(appWindow),
+	if err := crostiniapps.InitialiseVscode(ctx, cont, uda, ui, terminalApp, keyboard); err != nil {
+		return err
+	}
+
+	inputMethod := imeData.InputMethod
+	// Open the VSCode again, this time, it won't open the Get Started tab.
+	if err := uiauto.Combine("create and compose file with VSCode",
+		crostiniapps.LaunchVscodeForFile(uda, ui, terminalApp, keyboard, crostiniapps.VscodeTestFile),
 		inputMethod.InstallAndActivate(tconn),
 		inputMethod.WaitUntilActivated(tconn),
+		// VSCode will read the first keypress as English input, even when the input method is set otherwise.
+		// Enter a backspace first so that the testing string is entered correctly.
+		// TODO(b/274709150): Remove the following line after this bug is fixed.
+		keyboard.AccelAction("Backspace"),
 		imeData.EnterTestStringActionPK(keyboard),
-		// Press ctrl+S to save the file.
-		keyboard.AccelAction("ctrl+S"),
-		// Take screenshot.
-		crostini.TakeAppScreenshot("gedit"),
-		// Press ctrl+W twice to exit window.
-		keyboard.AccelAction("ctrl+W"),
-		keyboard.AccelAction("ctrl+W"),
-		// Check window close.
-		ui.WaitUntilGone(appWindow),
-	)(ctx); err != nil {
+		crostiniapps.SaveFileAndCloseVscode(ui, keyboard, crostiniapps.VscodeTestFile))(ctx); err != nil {
 		return err
 	}
 
 	// Check the content of the test file.
-	if err := cont.CheckFileContent(ctx, testFile, imeData.ExpectedText+"\n"); err != nil {
-		return errors.Wrap(err, "failed to verify the content of the test file")
+	if err := cont.CheckFileContent(ctx, crostiniapps.VscodeTestFile, imeData.ExpectedText); err != nil {
+		return errors.Wrap(err, "failed to verify the content of the file")
 	}
 
 	return nil
