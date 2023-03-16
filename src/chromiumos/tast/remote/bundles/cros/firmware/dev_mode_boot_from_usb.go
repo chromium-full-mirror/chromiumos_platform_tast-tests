@@ -142,11 +142,34 @@ func DevModeBootFromUSB(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to sleep for %s (FirmwareScreen): %v", h.Config.FirmwareScreen, err)
 	}
 
-	// Pressing ctrl_u should trigger a beep sound on
-	// the DUT at this point.
-	s.Logf("Testing shortcuts %q", servo.CtrlU)
-	if err := h.Servo.KeypressWithDuration(ctx, servo.CtrlU, servo.DurTab); err != nil {
-		s.Fatalf("Failed to press %s: %v", servo.CtrlU, err)
+	// Sometimes, the sleep in waiting for the firmware screen to appear
+	// might be too short for a few specific duts. Increase the number of
+	// presses on ctrl_u to ensure that at least one of them is effective.
+	for i := 0; i < 3; i++ {
+		s.Logf("Testing shortcuts %q", servo.CtrlU)
+		if err := h.Servo.KeypressWithDuration(ctx, servo.CtrlU, servo.DurTab); err != nil {
+			s.Fatalf("Failed to press %s: %v", servo.CtrlU, err)
+		}
+
+		if h.Config.ModeSwitcherType == firmware.KeyboardDevSwitcher {
+			// Pressing space leads DUT to the confirmation page
+			// for booting to normal mode, which helps bypass the
+			// fw screen timeout, and ensures an extended stay.
+			s.Log(ctx, "Pressing space key to bypass fw screen timeout")
+			if err := h.Servo.PressKey(ctx, " ", servo.DurTab); err != nil {
+				s.Fatal("Failed to press space: ", err)
+			}
+		}
+
+		if err := testing.Sleep(ctx, 2*time.Second); err != nil {
+			s.Fatal("Failed to sleep for 2 second: ", err)
+		}
+
+		s.Log(ctx, "Pressing esc to return to the developer screen")
+		if err := h.Servo.PressKey(ctx, "<esc>", servo.DurTab); err != nil {
+			s.Fatal("Failed to press esc key: ", err)
+		}
+
 	}
 
 	/*
@@ -247,14 +270,9 @@ func DevModeBootFromUSB(ctx context.Context, s *testing.State) {
 	for _, val := range ctrlUFailMsgs {
 		count := bytes.Count(firmwareLog, []byte(val))
 		s.Logf("Found %d matches for: %q", count, val)
-		if count == 1 {
+		if count > 0 {
 			foundMatch = true
 			break
-		}
-		// Based on the test's procedure, we would expect the
-		// no valid usb screen to only appear once.
-		if count > 1 {
-			s.Fatalf("Found more than one match for %s", val)
 		}
 	}
 	if !foundMatch {
