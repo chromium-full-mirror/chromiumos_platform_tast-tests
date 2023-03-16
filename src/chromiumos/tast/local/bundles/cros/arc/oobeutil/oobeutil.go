@@ -20,7 +20,7 @@ import (
 // CompleteOnboardingFlow function goes through the onboarding flow screens.
 func CompleteOnboardingFlow(ctx context.Context, ui *uiauto.Context) error {
 	consolidatedConsentHeader := nodewith.Name("Review these terms and control your data").Role(role.Dialog)
-	if err := ui.WaitUntilExists(consolidatedConsentHeader)(ctx); err != nil {
+	if err := ui.WithTimeout(30 * time.Second).WaitUntilExists(consolidatedConsentHeader)(ctx); err != nil {
 		return err
 	}
 

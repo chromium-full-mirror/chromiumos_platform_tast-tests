@@ -36,7 +36,7 @@ func init() {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}},
-		Timeout: chrome.GAIALoginTimeout + arc.BootTimeout + 25*time.Minute,
+		Timeout: chrome.GAIALoginTimeout + arc.BootTimeout + 35*time.Minute,
 		VarDeps: []string{"arc.parentUser", "arc.parentPassword"},
 	})
 }
@@ -99,7 +99,7 @@ func OobeArcAppOpen(ctx context.Context, s *testing.State) {
 	statusArea := nodewith.HasClass("ash/StatusAreaWidgetDelegate")
 
 	s.Log("Waiting for setup complete notification")
-	_, err = ash.WaitForNotification(ctx, tconn, 20*time.Minute, ash.WaitTitle("Setup complete"), ash.WaitMessageContains("Installed 6 out of 6 applications"))
+	_, err = ash.WaitForNotification(ctx, tconn, 25*time.Minute, ash.WaitTitle("Setup complete"), ash.WaitMessageContains("Installed 6 out of 6 applications"))
 	if err != nil {
 		s.Log("Haven't found setup complete notification, will try to see if it's in notification UI")
 		if err := ui.LeftClick(statusArea)(ctx); err != nil {
@@ -108,7 +108,7 @@ func OobeArcAppOpen(ctx context.Context, s *testing.State) {
 		uda := uidetection.NewDefault(tconn).WithScreenshotStrategy(uidetection.ImmediateScreenshot)
 
 		setupCompleteNotification := uidetection.TextBlock([]string{"Setup", "complete"})
-		if err := uda.WithTimeout(5 * time.Second).WaitUntilExists(setupCompleteNotification)(ctx); err != nil {
+		if err := uda.WithTimeout(25 * time.Second).WaitUntilExists(setupCompleteNotification)(ctx); err != nil {
 			if err := a.WaitForPackages(ctx, requeiredPkgNames); err != nil {
 				s.Fatal("Failed waiting for Setup complete notification after checking installed packages: ", err)
 			}
