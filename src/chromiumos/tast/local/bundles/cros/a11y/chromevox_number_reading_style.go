@@ -12,7 +12,7 @@ import (
 
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/a11y"
-	"chromiumos/tast/local/bundles/cros/a11y/chromevox"
+	"chromiumos/tast/local/a11y/chromevox"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/testing"
