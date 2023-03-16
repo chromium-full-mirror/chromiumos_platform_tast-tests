@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"chromiumos/tast/common/android/ui"
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
@@ -78,15 +77,7 @@ func DumpBugReportOnError(ctx context.Context, hasError func() bool, a *arc.ARC,
 // ConfigureProvisioningLogs enables verbose logging for important modules and increases the log buffer size.
 func ConfigureProvisioningLogs(ctx context.Context, a *arc.ARC) error {
 	verboseTags := []string{"clouddpc", "Finsky", "Volley", "PlayCommon"}
-	if err := a.EnableVerboseLogging(ctx, verboseTags...); err != nil {
-		return err
-	}
-	return IncreaseLogcatBufferSize(ctx, a)
-}
-
-// IncreaseLogcatBufferSize increases the log buffer size to 10 MB.
-func IncreaseLogcatBufferSize(ctx context.Context, a *arc.ARC) error {
-	return a.Command(ctx, "logcat", "-G", "10M").Run(testexec.DumpLogOnError)
+	return a.EnableVerboseLogging(ctx, verboseTags...)
 }
 
 // ValidateBlockedAppInstall validates that the blocked app cannot be installed or is uninstalled automatically if installed.
