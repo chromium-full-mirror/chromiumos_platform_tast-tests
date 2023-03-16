@@ -7,6 +7,7 @@ package secagentd
 
 import (
 	"context"
+	"strconv"
 	"time"
 
 	"google.golang.org/protobuf/proto"
@@ -16,6 +17,7 @@ import (
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/bundles/cros/secagentd/secagentddbusmonitor"
 	"chromiumos/tast/local/bundles/cros/secagentd/secagentdprocfsscraper"
+	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/testing"
 	xdr "chromiumos/xdr/secagentd"
@@ -34,7 +36,8 @@ func init() {
 		BugComponent: "b:1208373",
 		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		Timeout:      3 * time.Minute,
-		SoftwareDeps: []string{"bpf"},
+		SoftwareDeps: []string{"bpf", "chrome"},
+		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
 
@@ -100,23 +103,35 @@ func copyUUID(from, to *xdr.Process) {
 	}
 }
 
-// ProcessEvents runs a toy program, scrapes expected process and ancestral
-// information from procfs, and verifies it against the events emitted by
-// secagentd over dbus.
-func ProcessEvents(ctx context.Context, s *testing.State) {
+type processEventsParams struct {
+	name             string
+	expBatch         bool
+	expCoalescedTerm bool
+	enableFeatures   []string
+	disableFeatures  []string
+}
+
+func testOneProcessEventsParams(ctx context.Context, s *testing.State, param processEventsParams) {
+	// Restart chrome with the new set of features.
+	cr, err := chrome.New(ctx, chrome.EnableFeatures(param.enableFeatures...), chrome.DisableFeatures(param.disableFeatures...))
+	if err != nil {
+		s.Fatal("Failed to restart chrome: ", err)
+	}
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(cleanupCtx, 10*time.Second)
+	ctx, cancel := ctxutil.Shorten(cleanupCtx, 5*time.Second)
 	defer func(ctx context.Context) {
-		upstart.RestartJob(ctx, "secagentd")
+		cr.Close(cleanupCtx)
 		cancel()
 	}(cleanupCtx)
 
+	const batchIntervalS = 5
 	// Restart secagentd and have it ignore policy and not wait for the first
 	// agent event to be enqueued successfully.
 	if err := upstart.RestartJob(ctx, "secagentd",
 		upstart.WithArg("SECAGENTD_LOG_LEVEL", "-1"),
 		upstart.WithArg("BYPASS_POLICY_FOR_TESTING", "true"),
-		upstart.WithArg("BYPASS_ENQ_OK_WAIT_FOR_TESTING", "true")); err != nil {
+		upstart.WithArg("BYPASS_ENQ_OK_WAIT_FOR_TESTING", "true"),
+		upstart.WithArg("PLUGIN_BATCH_INTERVAL_S_FOR_TESTING", strconv.Itoa(batchIntervalS))); err != nil {
 		s.Fatal("Failed to restart secagentd: ", err)
 	}
 
@@ -145,9 +160,8 @@ func ProcessEvents(ctx context.Context, s *testing.State) {
 	// "signal: Killed"
 	cmd.Wait()
 
-	// Small grace period for the events to be processed and emitted by
-	// secagentd.
-	if err := testing.Sleep(ctx, 3*time.Second); err != nil {
+	// Wait for the current batch to be flushed.
+	if err := testing.Sleep(ctx, 2*batchIntervalS*time.Second); err != nil {
 		s.Fatal("Failed to sleep: ", err)
 	}
 
@@ -179,35 +193,117 @@ func ProcessEvents(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to unmarshal data for a CROS_SECURITY_PROCESS record")
 		}
 		s.Log("Snooped XdrProcessEvent: ", pe.String())
-		exec := pe.GetProcessExec()
-		if exec != nil && exec.GetSpawnProcess() != nil && exec.GetSpawnProcess().GetCanonicalPid() == expPid {
-			execFound = true
-			// Copy the random UUIDs so that proto.Equal() is happy.
-			copyUUID(exec.GetSpawnProcess(), expExec.SpawnProcess)
-			copyUUID(exec.GetProcess(), expExec.Process)
-			copyUUID(exec.GetParentProcess(), expExec.ParentProcess)
-			if !proto.Equal(&expExec, exec) {
-				s.Log("Actual ProcessExec: ", exec.String())
-				s.Log("Expected ProcessExec: ", expExec.String())
-				s.Errorf("Found a ProcessExec event for pid %d but its contents failed to match", expPid)
+
+		var bExecs []*xdr.ProcessExecEvent
+		var bTerminates []*xdr.ProcessTerminateEvent
+		if param.expBatch {
+			for _, v := range pe.GetBatchedEvents() {
+				if v.GetProcessExec() != nil {
+					bExecs = append(bExecs, v.GetProcessExec())
+				}
+				if v.GetProcessTerminate() != nil {
+					bTerminates = append(bTerminates, v.GetProcessTerminate())
+				}
+			}
+		} else {
+			bExecs = append(bExecs, pe.GetProcessExec())
+			bTerminates = append(bTerminates, pe.GetProcessTerminate())
+		}
+
+		for _, exec := range bExecs {
+			if exec != nil && exec.GetSpawnProcess() != nil && exec.GetSpawnProcess().GetCanonicalPid() == expPid {
+				execFound = true
+				// Copy the random UUIDs so that proto.Equal() is happy.
+				copyUUID(exec.GetSpawnProcess(), expExec.SpawnProcess)
+				copyUUID(exec.GetProcess(), expExec.Process)
+				copyUUID(exec.GetParentProcess(), expExec.ParentProcess)
+				// Copy over the terminate timestamp if present.
+				if exec.TerminateTimestampUs != nil {
+					if !param.expCoalescedTerm {
+						s.Errorf("Unexpected terminate timestamp found in ProcessExec event for pid %d", expPid)
+					}
+					expExec.TerminateTimestampUs = proto.Int64(exec.GetTerminateTimestampUs())
+				}
+				if !proto.Equal(&expExec, exec) {
+					s.Log("Actual ProcessExec: ", exec.String())
+					s.Log("Expected ProcessExec: ", expExec.String())
+					s.Errorf("Found a ProcessExec event for pid %d but its contents failed to match", expPid)
+				}
 			}
 		}
-		terminate := pe.GetProcessTerminate()
-		if terminate != nil && terminate.GetProcess() != nil && terminate.GetProcess().GetCanonicalPid() == expPid {
-			terminateFound = true
-			copyUUID(terminate.GetProcess(), expTerm.Process)
-			copyUUID(terminate.GetParentProcess(), expTerm.ParentProcess)
-			if !proto.Equal(&expTerm, terminate) {
-				s.Log("Actual ProcessTerminate: ", terminate.String())
-				s.Log("Expected ProcessTerminate: ", expTerm.String())
-				s.Errorf("Found a ProcessTerminate event for pid %d but its contents failed to match", expPid)
+		for _, terminate := range bTerminates {
+			if terminate != nil && terminate.GetProcess() != nil && terminate.GetProcess().GetCanonicalPid() == expPid {
+				terminateFound = true
+				copyUUID(terminate.GetProcess(), expTerm.Process)
+				copyUUID(terminate.GetParentProcess(), expTerm.ParentProcess)
+				if !proto.Equal(&expTerm, terminate) {
+					s.Log("Actual ProcessTerminate: ", terminate.String())
+					s.Log("Expected ProcessTerminate: ", expTerm.String())
+					s.Errorf("Found a ProcessTerminate event for pid %d but its contents failed to match", expPid)
+				}
 			}
 		}
 	}
 	if !execFound {
 		s.Errorf("Failed to find a matching ProcessExec event for pid %d", expPid)
 	}
-	if !terminateFound {
+	if !param.expCoalescedTerm && !terminateFound {
 		s.Errorf("Failed to find a matching ProcessExit event for pid %d", expPid)
+	}
+	if param.expCoalescedTerm && terminateFound {
+		// Coalescing is best effort and based on timing. Err on the
+		// side of not flaking the test.
+		s.Logf("Found uncoalesced ProcessExit event for pid %d", expPid)
+	}
+}
+
+// ProcessEvents runs a toy program, scrapes expected process and ancestral
+// information from procfs, and verifies it against the events emitted by
+// secagentd over dbus.
+func ProcessEvents(ctx context.Context, s *testing.State) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(cleanupCtx, 10*time.Second)
+	defer func(ctx context.Context) {
+		upstart.RestartJob(ctx, "secagentd")
+		cancel()
+	}(cleanupCtx)
+
+	for _, param := range []processEventsParams{
+		{
+			name:             "batching_disabled",
+			expBatch:         false,
+			expCoalescedTerm: false,
+			enableFeatures:   []string{},
+			disableFeatures: []string{
+				"CrOSLateBootSecagentdBatchEvents",
+				"CrOSLateBootSecagentdCoalesceTerminates"},
+		},
+		{
+			name:             "batching_enabled",
+			expBatch:         true,
+			expCoalescedTerm: false,
+			enableFeatures:   []string{"CrOSLateBootSecagentdBatchEvents"},
+			disableFeatures:  []string{"CrOSLateBootSecagentdCoalesceTerminates"},
+		},
+		{
+			name:             "batching_disabled_coalesce_terminate_enabled",
+			expBatch:         false,
+			expCoalescedTerm: false, // Batching is a prerequisite.
+			enableFeatures:   []string{"CrOSLateBootSecagentdCoalesceTerminates"},
+			disableFeatures:  []string{"CrOSLateBootSecagentdBatchEvents"},
+		},
+		{
+			name:             "batching_and_coalesce_terminate_enabled",
+			expBatch:         true,
+			expCoalescedTerm: true,
+			enableFeatures: []string{
+				"CrOSLateBootSecagentdBatchEvents",
+				"CrOSLateBootSecagentdCoalesceTerminates"},
+			disableFeatures: []string{},
+		},
+	} {
+		s.Run(ctx, param.name, func(ctx context.Context, s *testing.State) {
+			testOneProcessEventsParams(ctx, s, param)
+		})
 	}
 }

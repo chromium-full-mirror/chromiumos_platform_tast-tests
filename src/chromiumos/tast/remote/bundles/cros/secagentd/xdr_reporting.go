@@ -148,8 +148,9 @@ func XdrReporting(ctx context.Context, s *testing.State) {
 
 	testStartTime := time.Now()
 
-	// Restart secagentd and set the heartbeat to 5 seconds.
-	_, err = s.DUT().Conn().CommandContext(ctx, "start", "secagentd", "SET_HEARTBEAT_PERIOD_S_FOR_TESTING=5").Output()
+	// Restart secagentd and set the heartbeat and batch interval to 5 seconds.
+	_, err = s.DUT().Conn().CommandContext(ctx, "start", "secagentd",
+		"SET_HEARTBEAT_PERIOD_S_FOR_TESTING=5", "PLUGIN_BATCH_INTERVAL_S_FOR_TESTING=5").Output()
 	if err != nil {
 		s.Fatal("Failed to start secagentd")
 	}

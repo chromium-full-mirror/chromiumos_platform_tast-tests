@@ -8,6 +8,7 @@ package secagentd
 
 import (
 	"context"
+	"strconv"
 	"time"
 
 	"chromiumos/tast/common/fixture"
@@ -50,7 +51,7 @@ func init() {
 	})
 }
 
-func setXdrPolicy(ctx context.Context, s *testing.State, v bool) {
+func setXdrPolicy(ctx context.Context, s *testing.State, v bool, t string) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 
@@ -65,8 +66,12 @@ func setXdrPolicy(ctx context.Context, s *testing.State, v bool) {
 	// Restart secagentd. Don't pass in the flag that would override policy
 	// checks. But do override the wait for missive to successfully enqueue
 	// an event. Bypassing this wait will make secagentd emit more than one
-	// event and will greatly reduce the chance of a flake.
-	if err := upstart.RestartJob(ctx, "secagentd", upstart.WithArg("BYPASS_ENQ_OK_WAIT_FOR_TESTING", "true")); err != nil {
+	// event and will greatly reduce the chance of a flake. Similarly, reduce
+	// some internal poll delays to emit more events sooner.
+	if err := upstart.RestartJob(ctx, "secagentd",
+		upstart.WithArg("BYPASS_ENQ_OK_WAIT_FOR_TESTING", "true"),
+		upstart.WithArg("SET_HEARTBEAT_PERIOD_S_FOR_TESTING", t),
+		upstart.WithArg("PLUGIN_BATCH_INTERVAL_S_FOR_TESTING", t)); err != nil {
 		s.Fatal("Failed to restart secagentd: ", err)
 	}
 }
@@ -99,7 +104,8 @@ func XdrPolicyCheck(ctx context.Context, s *testing.State) {
 		},
 	} {
 		s.Run(ctx, param.name, func(ctx context.Context, s *testing.State) {
-			setXdrPolicy(ctx, s, param.policy)
+			const batchIntervalS = 1
+			setXdrPolicy(ctx, s, param.policy, strconv.Itoa(batchIntervalS))
 			stop, err := secagentddbusmonitor.SetupDbusMonitor(ctx)
 			if err != nil {
 				s.Fatal("Failed to setup dbus monitoring: ", err)
@@ -109,7 +115,7 @@ func XdrPolicyCheck(ctx context.Context, s *testing.State) {
 			// cause Process events to be emitted if permitted by policy.
 			cmd := testexec.CommandContext(ctx, "/bin/echo")
 			cmd.Wait()
-			testing.Sleep(ctx, 3*time.Second)
+			testing.Sleep(ctx, 2*batchIntervalS*time.Second)
 
 			calledMethods, err := stop()
 			if err != nil {
