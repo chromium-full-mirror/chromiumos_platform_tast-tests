@@ -81,6 +81,9 @@ func ECPowerG3(ctx context.Context, s *testing.State) {
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to connect to servo: ", err)
 	}
+	if err := h.RequireConfig(ctx); err != nil {
+		s.Fatal("Failed to get fw-testing-config: ", err)
+	}
 
 	tc := s.Param().(powerG3Params)
 
@@ -128,9 +131,9 @@ func ECPowerG3(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to power on DUT with power state on: ", err)
 		}
 	} else {
-		s.Log("Power DUT back on with short press of the power button")
-		if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.DurTab); err != nil {
-			s.Fatal("Failed to power on DUT with short press of the power button: ", err)
+		s.Logf("Power DUT back on with power button press of %s", h.Config.HoldPwrButtonPowerOn)
+		if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.Dur(h.Config.HoldPwrButtonPowerOn)); err != nil {
+			s.Fatalf("Failed to power on DUT by pressing power button for hold_pwr_button_poweron(%s): %v", h.Config.HoldPwrButtonPowerOn, err)
 		}
 	}
 
