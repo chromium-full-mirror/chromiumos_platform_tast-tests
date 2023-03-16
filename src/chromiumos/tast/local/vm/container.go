@@ -727,6 +727,19 @@ func (c *Container) RestoreSnapshot(ctx context.Context, snapshotName, logDir st
 		return errors.Wrap(err, "failed to restore snapshot")
 	}
 
+	// If the LXD database is reset, the snapshot's "volatile.idmap.next"
+	// will contain the wrong value, which will be applied to the container
+	// upon resetore. Fix it to the same as "volatile.idmap.current" since
+	// it shouldn't changed.
+	idmap, err := c.VM.LXCCommand(ctx, "config", "get", "penguin", "volatile.idmap.current")
+	if err != nil {
+		return errors.Wrap(err, "failed to get volatile.idmap.current")
+	}
+
+	if _, err := c.VM.LXCCommand(ctx, "config", "set", "penguin", "volatile.idmap.next", shutil.Escape(idmap)); err != nil {
+		return errors.Wrap(err, "failed to set volatile.idmap.next")
+	}
+
 	if err := c.StartAndWait(ctx, logDir); err != nil {
 		return errors.Wrap(err, "failed to start container after restoring snapshot")
 	}
