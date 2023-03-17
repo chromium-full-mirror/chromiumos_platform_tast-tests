@@ -161,3 +161,18 @@ func (*BootPerfService) GetBootPerfRawData(ctx context.Context, _ *empty.Empty) 
 		RawData: raw,
 	}, nil
 }
+
+// GetRebootRawData gathers raw data used in calculating reboot metrics for
+// debugging.
+func (*BootPerfService) GetRebootRawData(ctx context.Context, _ *empty.Empty) (*platform.GetRebootRawDataResponse, error) {
+	// Passed cached bootstat raw data to the client.
+	raw := make(map[string][]byte)
+
+	if err := bootperf.GatherRebootRawDataFiles(raw); err != nil {
+		return nil, err
+	}
+
+	return &platform.GetRebootRawDataResponse{
+		RawData: raw,
+	}, nil
+}

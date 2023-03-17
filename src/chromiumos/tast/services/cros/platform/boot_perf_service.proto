@@ -29,6 +29,9 @@ service BootPerfService {
 
   // Saves boot perf raw data and other files like console-ramoops for debugging.
   rpc GetBootPerfRawData(google.protobuf.Empty) returns (GetBootPerfRawDataResponse) {}
+
+  // Saves boot perf raw data and other files like console-ramoops for debugging.
+  rpc GetRebootRawData(google.protobuf.Empty) returns (GetRebootRawDataResponse) {}
 }
 
 message GetBootPerfMetricsResponse {
@@ -42,6 +45,11 @@ message GetRebootMetricsResponse {
 }
 
 message GetBootPerfRawDataResponse {
+  // Key: file name. Value: file content. Example: "uptime-chrome-exec" => "3.92 24.14"
+  map<string, bytes> raw_data = 1;
+}
+
+message GetRebootRawDataResponse {
   // Key: file name. Value: file content. Example: "uptime-chrome-exec" => "3.92 24.14"
   map<string, bytes> raw_data = 1;
 }

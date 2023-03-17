@@ -155,6 +155,24 @@ func bootPerfOnce(ctx context.Context, s *testing.State, i, iterations int, pv *
 	}
 	appendPerfValues(pv, m.GetMetrics())
 
+	savedRaw := filepath.Join(s.OutDir(), fmt.Sprintf("raw.%03d", i+1))
+	if err = os.Mkdir(savedRaw, 0755); err != nil {
+		s.Fatalf("Failed to create path %s", savedRaw)
+	}
+
+	raw, err := bootPerfService.GetBootPerfRawData(ctx, &empty.Empty{})
+	if err != nil {
+		s.Fatal("Failed to get boot perf raw data: ", err)
+	}
+	saveRawData := func(path string, data map[string][]byte) {
+		for k, v := range data {
+			if err = ioutil.WriteFile(filepath.Join(savedRaw, k), v, 0644); err != nil {
+				s.Fatal("Failed to save raw data: ", err)
+			}
+		}
+	}
+	saveRawData(savedRaw, raw.GetRawData())
+
 	if manualReboot {
 		// For manual reboot testing, skip collecting reboot metrics as they are unavailable.
 		// Also skip collecting raw data as some items that are saved on reboot are unavailable.
@@ -167,22 +185,13 @@ func bootPerfOnce(ctx context.Context, s *testing.State, i, iterations int, pv *
 	}
 	appendPerfValues(pv, m2.GetMetrics())
 
-	// Save raw data for this iteration.
-	savedRaw := filepath.Join(s.OutDir(), fmt.Sprintf("raw.%03d", i+1))
-	if err = os.Mkdir(savedRaw, 0755); err != nil {
-		s.Fatalf("Failed to create path %s", savedRaw)
-	}
-
-	raw, err := bootPerfService.GetBootPerfRawData(ctx, &empty.Empty{})
+	// Save reboot raw data for this iteration.
+	raw2, err := bootPerfService.GetRebootRawData(ctx, &empty.Empty{})
 	if err != nil {
-		s.Fatal("Failed to get boot perf raw data: ", err)
+		s.Fatal("Failed to get reboot raw data: ", err)
 	}
+	saveRawData(savedRaw, raw2.GetRawData())
 
-	for k, v := range raw.GetRawData() {
-		if err = ioutil.WriteFile(filepath.Join(savedRaw, k), v, 0644); err != nil {
-			s.Fatal("Failed to save raw data: ", err)
-		}
-	}
 }
 
 // ensureChromeLogin performs a Chrome login to bypass OOBE if necessary to make

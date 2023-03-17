@@ -712,6 +712,28 @@ func CalculateDiff(results *platform.GetBootPerfMetricsResponse) {
 	}
 }
 
+// GatherRebootRawDataFiles gathers content of raw data files used to calculate
+// reboot timing metrics.
+func GatherRebootRawDataFiles(raw map[string][]byte) error {
+	// Collect sync-rtc-tlsdated-start of the current boot and  sync-rtc-tlsdated-stop of previous boot.
+	files := []string{filepath.Join(bootstatCurrentDir, "sync-rtc-tlsdated-start")}
+	lastBootstatArchive, err := findMostRecentBootstatArchivePath()
+	if err != nil {
+		return err
+	}
+	files = append(files, filepath.Join(lastBootstatArchive, "sync-rtc-tlsdated-stop"))
+
+	for _, f := range files {
+		b, err := ioutil.ReadFile(f)
+		if err != nil {
+			return errors.Wrapf(err, "failed to read from %s", f)
+		}
+		raw[filepath.Base(f)] = b
+	}
+
+	return nil
+}
+
 // GatherMetricRawDataFiles gathers content of raw data files to be returned to
 // the client.
 func GatherMetricRawDataFiles(raw map[string][]byte) error {
@@ -719,13 +741,6 @@ func GatherMetricRawDataFiles(raw map[string][]byte) error {
 	for _, glob := range []string{uptimeFileGlob, diskFileGlob} {
 		list, _ := filepath.Glob(glob) // filepath.Glob() only returns error on malformed glob patterns.
 		files = append(files, list...)
-	}
-
-	// Add sync-rtc-tlsdated-start sync-rtc-tlsdated-stop.
-	files = append(files, filepath.Join(bootstatCurrentDir, "sync-rtc-tlsdated-start"))
-	lastBootstatArchive, err := findMostRecentBootstatArchivePath()
-	if err == nil {
-		files = append(files, filepath.Join(lastBootstatArchive, "sync-rtc-tlsdated-stop"))
 	}
 
 	for _, f := range files {
