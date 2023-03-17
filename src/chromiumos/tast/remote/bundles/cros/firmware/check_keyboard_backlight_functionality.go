@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"path/filepath"
 	"regexp"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -203,7 +202,6 @@ func CheckKeyboardBacklightFunctionality(ctx context.Context, s *testing.State) 
 			s.Fatalf("Failed to read %s: %v", userStepConfigPath, err)
 		}
 		if len(out) != 0 {
-			sort.Strings(out)
 			max, err := strconv.ParseFloat(out[len(out)-1], 64)
 			if err != nil {
 				s.Fatal("Failed to parse for max value: ", err)
