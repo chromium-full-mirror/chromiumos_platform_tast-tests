@@ -37,8 +37,10 @@ func init() {
 		SoftwareDeps: []string{"chrome", "vm_host", "dlc"},
 		HardwareDeps: crostini.CrostiniStable,
 		Attr: []string{
-			"group:mainline",
-			"informational",
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
 		},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DataLeakPreventionRulesList{}, pci.VerifiedFunctionalityOS),

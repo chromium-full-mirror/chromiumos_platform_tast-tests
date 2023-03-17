@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/fixture"
+	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/common/testexec"
@@ -42,17 +43,24 @@ func init() {
 		BugComponent: "b:892101",
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.PrivacyScreen()),
-		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+			"group:hw_agnostic"},
 		Params: []testing.Param{{
 			Fixture: fixture.ChromePolicyLoggedIn,
 			Val:     browser.TypeAsh,
 		}, {
 			Name:              "lacros",
-			ExtraAttr:         []string{"informational"},
 			ExtraSoftwareDeps: []string{"lacros"},
 			Fixture:           fixture.LacrosPolicyLoggedIn,
 			Val:               browser.TypeLacros,
 		}},
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.DataLeakPreventionRulesList{}, pci.VerifiedFunctionalityUI),
+		},
 	})
 }
 
@@ -167,7 +175,7 @@ func DataLeakPreventionRulesListPrivacyScreen(ctx context.Context, s *testing.St
 				s.Error("Failed to open page: ", err)
 			}
 
-			// Wait for privacy screen to be disabled.
+			// GoBigSleepLint - Wait for privacy screen to be disabled.
 			if err := testing.Sleep(ctx, time.Second); err != nil {
 				s.Fatal("Failed to sleep: ", err)
 			}

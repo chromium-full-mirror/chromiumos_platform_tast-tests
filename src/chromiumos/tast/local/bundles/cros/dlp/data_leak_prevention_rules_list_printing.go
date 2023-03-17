@@ -64,27 +64,30 @@ func init() {
 		},
 		BugComponent: "b:892101",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "group:hw_agnostic"},
-		SearchFlags: []*testing.StringPair{{
-			Key: "feature_id",
-			// Block users from sharing confidential information (printing): COM_DATPROT_CUJ3_TASK1_WF1.
-			Value: "screenplay-d55a401f-c039-49bb-8df5-bf438e151525",
-		}, {
-			Key: "feature_id",
-			// Block users from sharing confidential information within company (printing): COM_DATPROT_CUJ4_TASK1_WF1.
-			Value: "screenplay-c44de927-e1a6-4a0d-b788-3944a95a30c2",
-		}, {
-			Key: "feature_id",
-			// Warn users from sharing confidential information (printing): COM_DATPROT_CUJ3_TASK2_WF1.
-			Value: "screenplay-0bf7ad3f-d1e9-436a-87b7-b6cd95880727",
-		}, {
-			Key: "feature_id",
-			// Warn users from sharing confidential information within company (printing): COM_DATPROT_CUJ4_TASK2_WF1.
-			Value: "screenplay-17b0e03a-7ba7-4c66-a81e-2bfcc470a5a4",
-		}, pci.SearchFlag(&policy.DataLeakPreventionRulesList{}, pci.VerifiedFunctionalityUI)},
+		Attr:         []string{"group:hw_agnostic"},
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.DataLeakPreventionRulesList{}, pci.VerifiedFunctionalityUI),
+			{
+				Key: "feature_id",
+				// Block users from sharing confidential information (printing): COM_DATPROT_CUJ3_TASK1_WF1.
+				Value: "screenplay-d55a401f-c039-49bb-8df5-bf438e151525",
+			}, {
+				Key: "feature_id",
+				// Block users from sharing confidential information within company (printing): COM_DATPROT_CUJ4_TASK1_WF1.
+				Value: "screenplay-c44de927-e1a6-4a0d-b788-3944a95a30c2",
+			}, {
+				Key: "feature_id",
+				// Warn users from sharing confidential information (printing): COM_DATPROT_CUJ3_TASK2_WF1.
+				Value: "screenplay-0bf7ad3f-d1e9-436a-87b7-b6cd95880727",
+			}, {
+				Key: "feature_id",
+				// Warn users from sharing confidential information within company (printing): COM_DATPROT_CUJ4_TASK2_WF1.
+				Value: "screenplay-17b0e03a-7ba7-4c66-a81e-2bfcc470a5a4",
+			}},
 		Params: []testing.Param{{
-			Name:    "ash_blocked",
-			Fixture: fixture.ChromePolicyLoggedIn,
+			Name:      "ash_blocked",
+			ExtraAttr: []string{"group:mainline"},
+			Fixture:   fixture.ChromePolicyLoggedIn,
 			Val: printingTestParams{
 				name:                    "blocked",
 				path:                    dlpPrintingBlockedPath,
@@ -94,9 +97,13 @@ func init() {
 				waitTimeSecWarning:      waitTimeSecWarningAsh,
 			},
 		}, {
-			Name:      "ash_allowed",
-			ExtraAttr: []string{"informational"},
-			Fixture:   fixture.ChromePolicyLoggedIn,
+			Name: "ash_allowed",
+			ExtraAttr: []string{
+				"group:golden_tier",
+				"group:medium_low_tier",
+				"group:hardware",
+				"group:complementary"},
+			Fixture: fixture.ChromePolicyLoggedIn,
 			Val: printingTestParams{
 				name:                    "allowed",
 				path:                    dlpPrintingAllowedPath,
@@ -106,9 +113,13 @@ func init() {
 				waitTimeSecWarning:      waitTimeSecWarningAsh,
 			},
 		}, {
-			Name:      "ash_warn_proceeded",
-			ExtraAttr: []string{"informational"},
-			Fixture:   fixture.ChromePolicyLoggedIn,
+			Name: "ash_warn_proceeded",
+			ExtraAttr: []string{
+				"group:golden_tier",
+				"group:medium_low_tier",
+				"group:hardware",
+				"group:complementary"},
+			Fixture: fixture.ChromePolicyLoggedIn,
 			Val: printingTestParams{
 				name:                    "warn_proceded",
 				path:                    dlpPrintingWarnPath,
@@ -118,9 +129,13 @@ func init() {
 				waitTimeSecWarning:      waitTimeSecWarningAsh,
 			},
 		}, {
-			Name:      "ash_warn_cancelled",
-			ExtraAttr: []string{"informational"},
-			Fixture:   fixture.ChromePolicyLoggedIn,
+			Name: "ash_warn_cancelled",
+			ExtraAttr: []string{
+				"group:golden_tier",
+				"group:medium_low_tier",
+				"group:hardware",
+				"group:complementary"},
+			Fixture: fixture.ChromePolicyLoggedIn,
 			Val: printingTestParams{
 				name:                    "warn_cancelled",
 				path:                    dlpPrintingWarnPath,
@@ -130,8 +145,12 @@ func init() {
 				waitTimeSecWarning:      waitTimeSecWarningAsh,
 			},
 		}, {
-			Name:              "lacros_blocked",
-			ExtraAttr:         []string{"informational"},
+			Name: "lacros_blocked",
+			ExtraAttr: []string{
+				"group:golden_tier",
+				"group:medium_low_tier",
+				"group:hardware",
+				"group:complementary"},
 			ExtraSoftwareDeps: []string{"lacros"},
 			Fixture:           fixture.LacrosPolicyLoggedIn,
 			Val: printingTestParams{
@@ -143,8 +162,12 @@ func init() {
 				waitTimeSecWarning:      waitTimeSecWarningLacros,
 			},
 		}, {
-			Name:              "lacros_allowed",
-			ExtraAttr:         []string{"informational"},
+			Name: "lacros_allowed",
+			ExtraAttr: []string{
+				"group:golden_tier",
+				"group:medium_low_tier",
+				"group:hardware",
+				"group:complementary"},
 			ExtraSoftwareDeps: []string{"lacros"},
 			Fixture:           fixture.LacrosPolicyLoggedIn,
 			Val: printingTestParams{
@@ -156,8 +179,12 @@ func init() {
 				waitTimeSecWarning:      waitTimeSecWarningLacros,
 			},
 		}, {
-			Name:              "lacros_warn_proceeded",
-			ExtraAttr:         []string{"informational"},
+			Name: "lacros_warn_proceeded",
+			ExtraAttr: []string{
+				"group:golden_tier",
+				"group:medium_low_tier",
+				"group:hardware",
+				"group:complementary"},
 			ExtraSoftwareDeps: []string{"lacros"},
 			Fixture:           fixture.LacrosPolicyLoggedIn,
 			Val: printingTestParams{
@@ -169,8 +196,12 @@ func init() {
 				waitTimeSecWarning:      waitTimeSecWarningLacros,
 			},
 		}, {
-			Name:              "lacros_warn_cancelled",
-			ExtraAttr:         []string{"informational"},
+			Name: "lacros_warn_cancelled",
+			ExtraAttr: []string{
+				"group:golden_tier",
+				"group:medium_low_tier",
+				"group:hardware",
+				"group:complementary"},
 			ExtraSoftwareDeps: []string{"lacros"},
 			Fixture:           fixture.LacrosPolicyLoggedIn,
 			Val: printingTestParams{

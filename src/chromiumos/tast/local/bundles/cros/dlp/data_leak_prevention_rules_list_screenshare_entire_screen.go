@@ -42,8 +42,13 @@ func init() {
 		},
 		BugComponent: "b:892101",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
-		Data:         []string{"text_1.html", "text_2.html"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+			"group:hw_agnostic"},
+		Data: []string{"text_1.html", "text_2.html"},
 		SearchFlags: []*testing.StringPair{{
 			Key: "feature_id",
 			// Block users from sharing confidential information (screenshare_screen): COM_DATPROT_CUJ3_TASK1_WF1.

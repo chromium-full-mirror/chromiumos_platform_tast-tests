@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/fixture"
+	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/ctxutil"
@@ -64,28 +65,31 @@ func init() {
 		},
 		BugComponent: "b:892101",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "group:hw_agnostic"},
+		Attr:         []string{"group:hw_agnostic"},
 		Data:         []string{"text_1.html", "text_2.html"},
-		SearchFlags: []*testing.StringPair{{
-			Key: "feature_id",
-			// Block users from sharing confidential information (screenshot): COM_DATPROT_CUJ3_TASK1_WF1.
-			Value: "screenplay-715aee69-a224-4849-b7f8-0cefb6864d2d",
-		}, {
-			Key: "feature_id",
-			// Block users from sharing confidential information within company (screenshot): COM_DATPROT_CUJ4_TASK1_WF1.
-			Value: "screenplay-29bf949b-8392-41d1-8fca-07d0e8116875",
-		}, {
-			Key: "feature_id",
-			// Warn users from sharing confidential information (screenshot): COM_DATPROT_CUJ3_TASK2_WF1.
-			Value: "screenplay-51593f5b-b147-4032-b3d2-98acfa692e8a",
-		}, {
-			Key: "feature_id",
-			// Warn users from sharing confidential information within company (screenshot): COM_DATPROT_CUJ4_TASK2_WF1.
-			Value: "screenplay-59a4a2b5-1fb6-4cb4-93eb-b632681822e3",
-		}},
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.DataLeakPreventionRulesList{}, pci.VerifiedFunctionalityUI),
+			{
+				Key: "feature_id",
+				// Block users from sharing confidential information (screenshot): COM_DATPROT_CUJ3_TASK1_WF1.
+				Value: "screenplay-715aee69-a224-4849-b7f8-0cefb6864d2d",
+			}, {
+				Key: "feature_id",
+				// Block users from sharing confidential information within company (screenshot): COM_DATPROT_CUJ4_TASK1_WF1.
+				Value: "screenplay-29bf949b-8392-41d1-8fca-07d0e8116875",
+			}, {
+				Key: "feature_id",
+				// Warn users from sharing confidential information (screenshot): COM_DATPROT_CUJ3_TASK2_WF1.
+				Value: "screenplay-51593f5b-b147-4032-b3d2-98acfa692e8a",
+			}, {
+				Key: "feature_id",
+				// Warn users from sharing confidential information within company (screenshot): COM_DATPROT_CUJ4_TASK2_WF1.
+				Value: "screenplay-59a4a2b5-1fb6-4cb4-93eb-b632681822e3",
+			}},
 		Params: []testing.Param{{
-			Name:    "ash_blocked",
-			Fixture: fixture.ChromePolicyLoggedIn,
+			Name:      "ash_blocked",
+			ExtraAttr: []string{"group:mainline"},
+			Fixture:   fixture.ChromePolicyLoggedIn,
 			Val: screenshotTestParams{
 				name:                  "blocked",
 				path:                  restrictedPath,
@@ -95,8 +99,9 @@ func init() {
 				browserType:           browser.TypeAsh,
 			},
 		}, {
-			Name:    "ash_allowed",
-			Fixture: fixture.ChromePolicyLoggedIn,
+			Name:      "ash_allowed",
+			ExtraAttr: []string{"group:mainline"},
+			Fixture:   fixture.ChromePolicyLoggedIn,
 			Val: screenshotTestParams{
 				name:                  "allowed",
 				path:                  unrestrictedPath,
@@ -106,9 +111,13 @@ func init() {
 				browserType:           browser.TypeAsh,
 			},
 		}, {
-			Name:      "ash_warn_proceeded",
-			ExtraAttr: []string{"informational"},
-			Fixture:   fixture.ChromePolicyLoggedIn,
+			Name: "ash_warn_proceeded",
+			ExtraAttr: []string{
+				"group:golden_tier",
+				"group:medium_low_tier",
+				"group:hardware",
+				"group:complementary"},
+			Fixture: fixture.ChromePolicyLoggedIn,
 			Val: screenshotTestParams{
 				name:                  "warn_proceded",
 				path:                  restrictedPath,
@@ -118,9 +127,13 @@ func init() {
 				browserType:           browser.TypeAsh,
 			},
 		}, {
-			Name:      "ash_warn_cancelled",
-			ExtraAttr: []string{"informational"},
-			Fixture:   fixture.ChromePolicyLoggedIn,
+			Name: "ash_warn_cancelled",
+			ExtraAttr: []string{
+				"group:golden_tier",
+				"group:medium_low_tier",
+				"group:hardware",
+				"group:complementary"},
+			Fixture: fixture.ChromePolicyLoggedIn,
 			Val: screenshotTestParams{
 				name:        "warn_cancelled",
 				path:        restrictedPath,
@@ -128,8 +141,12 @@ func init() {
 				browserType: browser.TypeAsh,
 			},
 		}, {
-			Name:              "lacros_blocked",
-			ExtraAttr:         []string{"informational"},
+			Name: "lacros_blocked",
+			ExtraAttr: []string{
+				"group:golden_tier",
+				"group:medium_low_tier",
+				"group:hardware",
+				"group:complementary"},
 			ExtraSoftwareDeps: []string{"lacros"},
 			Fixture:           fixture.LacrosPolicyLoggedIn,
 			Val: screenshotTestParams{
@@ -141,8 +158,12 @@ func init() {
 				browserType:           browser.TypeLacros,
 			},
 		}, {
-			Name:              "lacros_allowed",
-			ExtraAttr:         []string{"informational"},
+			Name: "lacros_allowed",
+			ExtraAttr: []string{
+				"group:golden_tier",
+				"group:medium_low_tier",
+				"group:hardware",
+				"group:complementary"},
 			ExtraSoftwareDeps: []string{"lacros"},
 			Fixture:           fixture.LacrosPolicyLoggedIn,
 			Val: screenshotTestParams{
@@ -154,8 +175,12 @@ func init() {
 				browserType:           browser.TypeLacros,
 			},
 		}, {
-			Name:              "lacros_warn_proceeded",
-			ExtraAttr:         []string{"informational"},
+			Name: "lacros_warn_proceeded",
+			ExtraAttr: []string{
+				"group:golden_tier",
+				"group:medium_low_tier",
+				"group:hardware",
+				"group:complementary"},
 			ExtraSoftwareDeps: []string{"lacros"},
 			Fixture:           fixture.LacrosPolicyLoggedIn,
 			Val: screenshotTestParams{
@@ -167,8 +192,12 @@ func init() {
 				browserType:           browser.TypeLacros,
 			},
 		}, {
-			Name:              "lacros_warn_cancelled",
-			ExtraAttr:         []string{"informational"},
+			Name: "lacros_warn_cancelled",
+			ExtraAttr: []string{
+				"group:golden_tier",
+				"group:medium_low_tier",
+				"group:hardware",
+				"group:complementary"},
 			ExtraSoftwareDeps: []string{"lacros"},
 			Fixture:           fixture.LacrosPolicyLoggedIn,
 			Val: screenshotTestParams{

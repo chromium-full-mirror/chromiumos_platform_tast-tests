@@ -42,18 +42,23 @@ func init() {
 		},
 		BugComponent: "b:892101",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "group:hw_agnostic"},
+		Attr:         []string{"group:hw_agnostic"},
 		Data:         []string{"text_1.html", "text_2.html", "editable_text_box.html"},
 		Params: []testing.Param{{
-			Name:    "ash",
-			Fixture: fixture.ChromePolicyLoggedIn,
-			Val:     browser.TypeAsh,
+			Name:      "ash",
+			ExtraAttr: []string{"group:mainline"},
+			Fixture:   fixture.ChromePolicyLoggedIn,
+			Val:       browser.TypeAsh,
 		}, {
 			Name:              "lacros",
 			ExtraSoftwareDeps: []string{"lacros"},
-			ExtraAttr:         []string{"informational"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
-			Val:               browser.TypeLacros,
+			ExtraAttr: []string{
+				"group:golden_tier",
+				"group:medium_low_tier",
+				"group:hardware",
+				"group:complementary"},
+			Fixture: fixture.LacrosPolicyLoggedIn,
+			Val:     browser.TypeLacros,
 		}},
 	})
 }

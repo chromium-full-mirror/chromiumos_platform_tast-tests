@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/android/ui"
+	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/local/arc"
@@ -33,9 +34,16 @@ func init() {
 		// ChromeOS > Software > ARC++ > Framework > Chrome Integration
 		BugComponent: "b:537221",
 		SoftwareDeps: []string{"chrome", "android_vm"},
-		Attr:         []string{"group:mainline", "informational"},
-		Fixture:      "fakeDMS",
-		Timeout:      4 * time.Minute,
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary"},
+		Fixture: "fakeDMS",
+		Timeout: 4 * time.Minute,
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.DataLeakPreventionRulesList{}, pci.VerifiedFunctionalityUI),
+		},
 	})
 }
 

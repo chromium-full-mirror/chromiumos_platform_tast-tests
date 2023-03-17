@@ -47,10 +47,15 @@ func init() {
 		BugComponent: "b:892101",
 		SoftwareDeps: []string{"chrome", "lacros"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
-		Data:         []string{"text_1.html", "editable_text_box.html"},
-		Fixture:      "lacrosPolicyLoggedIn",
-		Timeout:      3 * time.Minute,
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+			"group:hw_agnostic"},
+		Data:    []string{"text_1.html", "editable_text_box.html"},
+		Fixture: "lacrosPolicyLoggedIn",
+		Timeout: 3 * time.Minute,
 	})
 }
 

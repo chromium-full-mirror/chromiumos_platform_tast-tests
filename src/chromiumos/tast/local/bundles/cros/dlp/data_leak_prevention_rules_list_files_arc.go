@@ -39,8 +39,10 @@ func init() {
 		// ChromeOS > Software > Commercial (Enterprise) > DLP (Data Loss Prevention)
 		SoftwareDeps: []string{"chrome"},
 		Attr: []string{
-			"group:mainline",
-			"informational",
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
 		},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DataLeakPreventionRulesList{}, pci.VerifiedFunctionalityOS),
