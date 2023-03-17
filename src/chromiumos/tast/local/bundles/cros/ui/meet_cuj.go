@@ -846,6 +846,13 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to grant permissions: ", err)
 	}
 
+	// hrTelemetryApi is defined only after granting video permissions.
+	// Ensure to check that we are properly in the meeting before trying
+	// to apply visual effects.
+	if err := meetConn.WaitForExprWithTimeout(ctx, "hrTelemetryApi.isInMeeting()", time.Minute); err != nil {
+		s.Fatal("Failed to wait to enter the meeting: ", err)
+	}
+
 	moreOptions := nodewith.Name("More options").Role(role.PopUpButton)
 	applyEffects := nodewith.Name("Apply visual effects").Role(role.MenuItem)
 	blur := nodewith.Name("Blur your background").Role(role.ToggleButton).Focusable()
@@ -1010,10 +1017,6 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 			)(ctx); err != nil {
 				return err
 			}
-		}
-
-		if err := meetConn.WaitForExpr(ctx, "hrTelemetryApi.isInMeeting()"); err != nil {
-			return errors.Wrap(err, "failed to wait for entering meeting")
 		}
 
 		if err := meetConn.Eval(ctx, "hrTelemetryApi.setMicMuted(false)", nil); err != nil {
