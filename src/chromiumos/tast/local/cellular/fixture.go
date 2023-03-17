@@ -15,7 +15,7 @@ import (
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
-	"chromiumos/tast/local/cellular"
+	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/hermes"
 	"chromiumos/tast/local/modemfwd"
 	"chromiumos/tast/local/modemmanager"
@@ -79,6 +79,18 @@ func init() {
 		Impl:            &cellularFixture{disableCellularTechnology: true, restartMM: true},
 	})
 	testing.AddFixture(&testing.Fixture{
+		Name:            "cellularArcBooted",
+		Desc:            "Arc tests on cellular interface",
+		Contacts:        []string{"chromeos-cellular-team@google.com", "madhavadas@google.com"},
+		SetUpTimeout:    4 * time.Minute,
+		ResetTimeout:    5 * time.Second,
+		PreTestTimeout:  4 * time.Minute,
+		PostTestTimeout: 3 * time.Minute,
+		TearDownTimeout: 5 * time.Second,
+		Impl:            &cellularFixture{hasArc: true},
+		Parent:          "arcBooted",
+	})
+	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularWithFunctioningRoamingSim",
 		Desc:            "Cellular tests that require a functioning roaming SIM are safe to run",
 		Contacts:        []string{"cros-connectivity@google.com", "nikhilcn@google.com"},
@@ -110,8 +122,9 @@ type cellularFixture struct {
 	useFakeDMS                bool
 	useRoaming                bool
 	checkSim                  bool
+	hasArc                    bool
 	// Fixture variables
-	helper          *cellular.Helper
+	helper          *Helper
 	modemfwdStopped bool
 	sf              *starfish.Starfish
 	netUnlock       func()
@@ -120,6 +133,7 @@ type cellularFixture struct {
 // FixtData holds information made available to tests that specify this fixture.
 type FixtData struct {
 	fdms *fakedms.FakeDMS
+	ARC  *arc.ARC
 }
 
 // FakeDMS implements the HasFakeDMS interface.
@@ -139,9 +153,9 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	}
 	f.sf = sfish
 	if sfish != nil {
-		helper, err := cellular.NewHelper(ctx)
+		helper, err := NewHelper(ctx)
 		if err != nil {
-			s.Fatal("Failed to create cellular.Helper: ", err)
+			s.Fatal("Failed to create Helper: ", err)
 		}
 		// ResetModem needed to detect SIM.
 		if _, err := helper.ResetModem(ctx); err != nil {
@@ -157,11 +171,16 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		}
 	}
 
+	var a *arc.ARC
+	if f.hasArc {
+		a = s.ParentValue().(*arc.PreData).ARC
+	}
+
 	// Give some time for cellular daemons to perform any modem operations. Stopping them via upstart might leave the modem in a bad state.
-	if err := cellular.EnsureUptime(ctx, uptimeBeforeTest); err != nil {
+	if err := EnsureUptime(ctx, uptimeBeforeTest); err != nil {
 		s.Fatal("Failed to wait for system uptime: ", err)
 	}
-	if err := cellular.SetShillVerboseLogging(ctx); err != nil {
+	if err := SetShillVerboseLogging(ctx); err != nil {
 		s.Fatal("Failed to set shill's logging config to verbose: ", err)
 	}
 	// Before stopping modemfwd, check and wait for modemfwd to idle.
@@ -188,15 +207,15 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 
 	if f.disableCellularTechnology {
 		// Check if the modem is exported by ModemManager before calling NewHelper().
-		if _, err := modemmanager.NewModem(ctx); err != nil && cellular.ModemHelperPathExists() {
+		if _, err := modemmanager.NewModem(ctx); err != nil && ModemHelperPathExists() {
 			testing.ContextLog(ctx, "No modem exported by ModemManager, attempting to restart the modem")
-			if err := cellular.RestartModemWithHelper(ctx); err != nil {
+			if err := RestartModemWithHelper(ctx); err != nil {
 				s.Fatal("Failed to restart modem: ", err)
 			}
 		}
-		f.helper, err = cellular.NewHelper(ctx)
+		f.helper, err = NewHelper(ctx)
 		if err != nil {
-			s.Fatal("Failed to create cellular.Helper: ", err)
+			s.Fatal("Failed to create Helper: ", err)
 		}
 		// Disabling cellular in shill, prevents shill from re-enabling cellular
 		// after Modem disable called.
@@ -210,14 +229,14 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		}
 	}
 	if f.useRoaming {
-		err := cellular.SetRoamingPolicy(ctx, true, false)
+		err := SetRoamingPolicy(ctx, true, false)
 		if err != nil {
 			s.Fatal("Failed to set roaming property: ", err)
 		}
 	}
 
 	if f.checkSim {
-		helper, err := cellular.NewHelperWithConnectedCellular(ctx)
+		helper, err := NewHelperWithConnectedCellular(ctx)
 		if err != nil {
 			s.Fatal("Failed to create connected cellular.Helper: ", err)
 		}
@@ -227,7 +246,7 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 			s.Fatal("Failed to disconnect: ", err)
 		}
 	}
-	return &FixtData{fdms}
+	return &FixtData{fdms, a}
 }
 
 func (f *cellularFixture) Reset(ctx context.Context) error { return nil }
@@ -235,9 +254,9 @@ func (f *cellularFixture) Reset(ctx context.Context) error { return nil }
 func (f *cellularFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
 	// If ModemManager isn't exporting a modem, it's possible that the modem has stopped responding due to
 	// b/247984538, attempt to force a restart of the modem on devices that support modemfwd-helpers.
-	if _, err := modemmanager.NewModem(ctx); err != nil && cellular.ModemHelperPathExists() {
+	if _, err := modemmanager.NewModem(ctx); err != nil && ModemHelperPathExists() {
 		testing.ContextLog(ctx, "No modem exported by ModemManager, attempting to restart the modem")
-		if err := cellular.RestartModemWithHelper(ctx); err != nil {
+		if err := RestartModemWithHelper(ctx); err != nil {
 			if s.TestName() != "cellular.IsModemUp" {
 				s.Fatal("Failed to restart modem (precondition): ", err)
 			}
@@ -304,16 +323,16 @@ func (f *cellularFixture) PostTest(ctx context.Context, s *testing.FixtTestState
 		if _, err := stopJob(ctx, modemmanager.JobName); err != nil {
 			testing.ContextLogf(ctx, "Failed to stop job: %q, %s", modemmanager.JobName, err)
 		}
-		if err := upstart.StartJob(ctx, shill.JobName, cellular.GetShillUpstartArgsForVerboseLogging()...); err != nil {
+		if err := upstart.StartJob(ctx, shill.JobName, GetShillUpstartArgsForVerboseLogging()...); err != nil {
 			testing.ContextLogf(ctx, "Failed to restart job: %q, %s", shill.JobName, err)
 		}
-		if err := upstart.StartJob(ctx, modemmanager.JobName, cellular.GetMMUpstartArgsForVerboseLogging()...); err != nil {
+		if err := upstart.StartJob(ctx, modemmanager.JobName, GetMMUpstartArgsForVerboseLogging()...); err != nil {
 			testing.ContextLogf(ctx, "Failed to restart job: %q, %s", modemmanager.JobName, err)
 		}
 		if _, err := modemmanager.NewModem(ctx); err != nil {
 			testing.ContextLog(ctx, "Could not find MM dbus object after restarting ModemManager: ", err)
 		}
-		// Delay starting the next test to avoid any transients caused by restarting MM and shill.
+		// GoBigSleepLint - Delay starting the next test to avoid any transients caused by restarting MM and shill.
 		testing.Sleep(ctx, uptimeBeforeTest)
 	}
 
@@ -340,7 +359,7 @@ func (f *cellularFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 			s.Fatalf("Failed to teardown starfish: %s", err)
 		}
 	}
-	if err := cellular.SetShillDefaultLogging(ctx); err != nil {
+	if err := SetShillDefaultLogging(ctx); err != nil {
 		s.Fatal("Failed to reset shill's logging config: ", err)
 	}
 }
@@ -365,7 +384,7 @@ func stopJob(ctx context.Context, job string) (bool, error) {
 }
 
 func waitForModemFwdToIdle(ctx context.Context) error {
-	if err := cellular.EnsureDaemonUptime(ctx, modemfwd.JobName, uptimeBeforeTest); err != nil {
+	if err := EnsureDaemonUptime(ctx, modemfwd.JobName, uptimeBeforeTest); err != nil {
 		return errors.Wrapf(err, "failed to wait for %v uptime", modemfwd.JobName)
 	}
 	// Before stopping modemfwd, check and wait for flash to complete.
@@ -375,9 +394,9 @@ func waitForModemFwdToIdle(ctx context.Context) error {
 	}
 
 	// Wait for modem to be exported by ModemManager.
-	if _, err := modemmanager.NewModem(ctx); err != nil && cellular.ModemHelperPathExists() {
+	if _, err := modemmanager.NewModem(ctx); err != nil && ModemHelperPathExists() {
 		testing.ContextLog(ctx, "No modem exported by ModemManager, attempting to restart the modem")
-		if err := cellular.RestartModemWithHelper(ctx); err != nil {
+		if err := RestartModemWithHelper(ctx); err != nil {
 			return errors.Wrap(err, "failed to restart modem")
 		}
 	}

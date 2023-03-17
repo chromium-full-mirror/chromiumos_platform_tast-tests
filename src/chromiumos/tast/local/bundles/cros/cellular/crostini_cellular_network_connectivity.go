@@ -8,9 +8,11 @@ import (
 	"context"
 	"time"
 
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/cellular"
 	"chromiumos/tast/local/crostini"
+	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/testing"
 )
 
@@ -42,6 +44,10 @@ func init() {
 }
 
 func CrostiniCellularNetworkConnectivity(ctx context.Context, s *testing.State) {
+	defer upstart.RestartJob(ctx, "ui")
+	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
+	defer cancel()
+
 	cont := s.FixtValue().(crostini.FixtureData).Cont
 
 	helper, err := cellular.NewHelperWithConnectedCellular(ctx)
