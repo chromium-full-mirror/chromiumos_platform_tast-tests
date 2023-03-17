@@ -48,6 +48,15 @@ func init() {
 			pci.SearchFlag(&policy.ChromeOsReleaseChannelDelegated{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.ChromeOsReleaseChannel{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.ChromeOsReleaseChannelDelegated{}, pci.VerifiedFunctionalityOS),
+			{
+				Key: "feature_id",
+				// As an IT leader/manager, I want to specify the release
+				// channel that my organization's devices are receiving updates
+				// from based on my preferences balancing stability and access
+				// to new features.
+				// COM_FOUND_CUJ11_TASK4_WF1
+				Value: "screenplay-37893d3d-3f48-4541-896c-f70c3cf52271",
+			},
 		},
 	})
 }
