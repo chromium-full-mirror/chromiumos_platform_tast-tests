@@ -9,6 +9,7 @@ import (
 	"os"
 	"time"
 
+	"chromiumos/tast/common/perf"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/cellular"
@@ -29,7 +30,7 @@ func init() {
 		Desc:         "Verifies that modemfwd's recovery mechanism works properly",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "danielwinkler@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active"},
+		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "group:cellular_crosbolt", "cellular_crosbolt_perf_nightly", "cellular_crosbolt_unstable"},
 		Fixture:      "cellular",
 		Timeout:      10 * time.Minute,
 		// Run only on Vell, as FM350 is the leading device for recovery
@@ -69,6 +70,7 @@ func waitForFileState(ctx context.Context, path string, desiredExistenceState bo
 func ModemfwdRecovery(ctx context.Context, s *testing.State) {
 	const MaxRecoveryTime = 3 * time.Minute
 	params := s.Param().(recoveryTestParams)
+	perfValues := perf.NewValues()
 
 	// modemfwd is initially stopped in the fixture SetUp
 	if err := modemfwd.StartAndWaitForQuiescence(ctx); err != nil {
@@ -100,6 +102,7 @@ func ModemfwdRecovery(ctx context.Context, s *testing.State) {
 
 	for i := 0; i < params.iterations; i++ {
 		s.Logf("Iteration %d", i)
+		start := time.Now()
 
 		// Emulate broken communications to modem by freezing mbim-proxy. Wait
 		// until primary port goes away, indicating the kernel driver has torn
@@ -129,5 +132,16 @@ func ModemfwdRecovery(ctx context.Context, s *testing.State) {
 		if _, err = cellular.NewHelperWithConnectedCellular(ctx); err != nil {
 			s.Fatal("Failed to connect to a cellular network: ", err)
 		}
+
+		perfValues.Append(perf.Metric{
+			Name:      "cellular_recovery_time",
+			Unit:      "seconds",
+			Direction: perf.SmallerIsBetter,
+			Multiple:  true,
+		}, time.Since(start).Seconds())
+	}
+
+	if err := perfValues.Save(s.OutDir()); err != nil {
+		s.Fatal("Failed saving perf data: ", err)
 	}
 }
