@@ -20,6 +20,18 @@ type Event struct {
 	Index     int
 }
 
+func parseEventTime(input string) (time.Time, error) {
+	var err error
+	for _, timeFmt := range []string{"2006-01-02 15:04:05", "2006-01-02 15:04:05+0000"} {
+		var timestamp time.Time
+		timestamp, err = time.Parse(timeFmt, input)
+		if err == nil {
+			return timestamp, nil
+		}
+	}
+	return time.Time{}, err
+}
+
 // EventlogList returns the result of `elogtool list`.
 // The returned events are sorted from oldest to newest.
 func (r *Reporter) EventlogList(ctx context.Context) ([]Event, error) {
@@ -27,7 +39,6 @@ func (r *Reporter) EventlogList(ctx context.Context) ([]Event, error) {
 	if err != nil {
 		return []Event{}, err
 	}
-	const timeFmt = "2006-01-02 15:04:05"
 	var events []Event
 	// Expecting output similar to this one:
 	//  140 | 2021-09-20 15:11:55 | EC Event | Key Pressed
@@ -41,7 +52,7 @@ func (r *Reporter) EventlogList(ctx context.Context) ([]Event, error) {
 		var timestamp time.Time
 		// If the timestamp is missing, it is printed at 2000-00-00 00:00:00, but that is not a valid date and can't be parsed.
 		if split[1] != "2000-00-00 00:00:00" {
-			timestamp, err = time.Parse(timeFmt, split[1])
+			timestamp, err = parseEventTime(split[1])
 			if err != nil {
 				return []Event{}, err
 			}
