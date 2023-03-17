@@ -2370,3 +2370,30 @@ func (tf *TestFixture) RebootDUT(ctx context.Context, dutIdx DutIdx) (retErr err
 	_, err = tf.duts[dutIdx].wifiClient.EnsureTestProfileAvailable(ctx, &empty.Empty{})
 	return err
 }
+
+// RemoveWiFiInterfaces removes all WiFi interfaces on the DUT using iw commands.
+// It returns a context and function that can be used to restore the interfaces to
+// their previous state.
+func (tf *TestFixture) RemoveWiFiInterfaces(ctx context.Context, dutIdx DutIdx) (shortenCtx context.Context, restore func() error, err error) {
+	iwr := iw.NewRemoteRunner(tf.DUTConn(dutIdx))
+	ifaces, err := iwr.ListInterfaces(ctx)
+	if err != nil {
+		return nil, nil, err
+	}
+	restore = func() error {
+		for _, iface := range ifaces {
+			phy, err := iwr.PhyByID(ctx, iface.PhyNum)
+			if err != nil {
+				return err
+			}
+			if err := iwr.AddInterface(ctx, phy.Name, iface.IfName, iface.IfType, nil); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	for _, iface := range ifaces {
+		iwr.RemoveInterface(ctx, iface.IfName)
+	}
+	return ctx, restore, nil
+}
