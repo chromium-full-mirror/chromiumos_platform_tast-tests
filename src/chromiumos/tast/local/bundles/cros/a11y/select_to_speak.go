@@ -8,26 +8,28 @@ package a11y
 
 import (
 	"context"
-	"time"
+	"fmt"
 
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/a11y"
-	"chromiumos/tast/local/audio/crastestclient"
+	"chromiumos/tast/local/a11y/sts"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/testing"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SelectToSpeak,
-		LacrosStatus: testing.LacrosVariantUnneeded, // TODO(crbug.com/1159107): Test is disabled in continuous testing. Migrate when enabled.
+		LacrosStatus: testing.LacrosVariantNeeded, // TODO(crbug.com/1159107): Test is disabled in continuous testing. Migrate when enabled.
 		Desc:         "A test that invokes Select-to-Speak and verifies the correct speech is given by the Google TTS engine",
 		Contacts: []string{
 			"chromeos-a11y-eng@google.com", // Mailing list
 			"akihiroota@chromium.org",      // Test author
 		},
 		BugComponent: "b:1272897",
-		// TODO(https://crbug.com/1267448): Investigate failures and re-enable this test.
+		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Pre:          chrome.LoggedIn(),
 	})
@@ -35,46 +37,25 @@ func init() {
 
 func SelectToSpeak(ctx context.Context, s *testing.State) {
 	cr := s.PreValue().(*chrome.Chrome)
-	tconn, err := cr.TestAPIConn(ctx)
+
+	ed := a11y.GoogleTTSEngine()
+	text := "This is a select-to-speak test"
+	html := fmt.Sprintf("<p>%s</p>", text)
+	bt := browser.TypeAsh
+	stsData, err := sts.SetUp(ctx, cr, ed, bt, html)
 	if err != nil {
-		s.Fatal("Failed to create Test API connection: ", err)
+		s.Fatal("Failed to set up Select to Speak: ", err)
 	}
-
-	// Shorten deadline to leave time for cleanup
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
-	defer cancel()
-
-	// Mute the device to avoid noisiness.
-	if err := crastestclient.Mute(ctx); err != nil {
-		s.Fatal("Failed to mute: ", err)
-	}
-	defer crastestclient.Unmute(cleanupCtx)
-
-	if err := a11y.SetFeatureEnabled(ctx, tconn, a11y.SelectToSpeak, true); err != nil {
-		s.Fatal("Failed to enable Select-to-Speak: ", err)
-	}
-	defer func(ctx context.Context) {
-		if err := a11y.ClearFeature(ctx, tconn, a11y.SelectToSpeak); err != nil {
-			s.Error("Failed to disable Select-to-Speak: ", err)
+	defer func() {
+		if err := stsData.TearDown(); err != nil {
+			s.Fatal("Failed to tear down Select to Speak test: ", err)
 		}
-	}(cleanupCtx)
+	}()
 
-	ed := a11y.TTSEngineData{ExtID: a11y.GoogleTTSExtensionID, UseOnSpeakWithAudioStream: false}
-	sm, err := a11y.RelevantSpeechMonitor(ctx, cr, tconn, ed)
-	if err != nil {
-		s.Fatal("Failed to connect to the Google TTS background page: ", err)
-	}
-	defer sm.Close()
-
-	c, err := a11y.NewTabWithHTML(ctx, cr.Browser(), "<p>This is a select-to-speak test</p>")
-	if err != nil {
-		s.Fatal("Failed to open a new tab with HTML: ", err)
-	}
-	c.Close()
-
-	// Select all and invoke Select-to-Speak.
-	if err := a11y.PressKeysAndConsumeExpectations(ctx, sm, []string{"Ctrl+A", "Search+S"}, []a11y.SpeechExpectation{a11y.NewStringExpectation("This is a select-to-speak test")}); err != nil {
-		s.Error("Error when pressing keys and expecting speech: ", err)
+	rootWebArea := nodewith.Role(role.RootWebArea).First()
+	textNode := nodewith.Name(text).Role(role.InlineTextBox).Ancestor(rootWebArea)
+	expectations := []a11y.SpeechExpectation{a11y.NewStringExpectation(text)}
+	if err := sts.SetSelectionAndActivate(stsData.Ctx, cr, textNode, 0, len(text), stsData.SM, expectations); err != nil {
+		s.Fatal("Failed to read node: ", err)
 	}
 }
