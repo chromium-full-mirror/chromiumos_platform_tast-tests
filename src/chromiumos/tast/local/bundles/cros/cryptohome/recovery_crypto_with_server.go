@@ -31,7 +31,13 @@ func init() {
 		},
 		BugComponent: "b:1148604", // ChromeOS > Security > Cryptohome > Cryptohome Recovery
 		SoftwareDeps: []string{"chrome", "tpm"},
-		Attr:         []string{"group:mainline", "group:cryptohome", "informational"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+			"group:cryptohome",
+		},
 		VarDeps: []string{
 			"ui.gaiaPoolDefault",
 			"cryptohome.RecoveryCryptoWithServer.accessTokenURL",

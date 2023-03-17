@@ -28,8 +28,14 @@ func init() {
 			"anastasiian@chromium.org",
 		},
 		BugComponent: "b:1148604", // ChromeOS > Security > Cryptohome > Cryptohome Recovery
-		Attr:         []string{"group:mainline", "group:cryptohome", "informational"},
-		Fixture:      "ussAuthSessionFixture",
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+			"group:cryptohome",
+		},
+		Fixture: "ussAuthSessionFixture",
 		// For "no_tpm_dynamic" - see http://b/251789202.
 		SoftwareDeps: []string{"tpm", "no_tpm_dynamic"},
 		// TODO(b/195385797): Run on gooey when the bug is fixed.

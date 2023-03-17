@@ -36,7 +36,11 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
-		Attr:         []string{"group:mainline", "informational"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.ChromePolicyLoggedInLockscreen,
 		SearchFlags: []*testing.StringPair{
@@ -151,8 +155,9 @@ func PinUnlockWeakPinsAllowed(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to enter PIN: ", err)
 			}
 
-			// Sometimes the update on the Continue button is slightly delayed.
-			// Polling here would not work for the restricted state, because that is the state we start from.
+			// GoBigSleepLint - sometimes the update on the Continue button is
+			// slightly delayed. Polling here would not work for the
+			// restricted state, because that is the state we start from.
 			if err := testing.Sleep(ctx, time.Second); err != nil {
 				s.Fatal("Failed to sleep: ", err)
 			}

@@ -39,7 +39,11 @@ func init() {
 		},
 		// ChromeOS > Software > Commercial (Enterprise) > Identity > LURS > Login and Unlock
 		BugComponent: "b:1277575",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary"},
 		SoftwareDeps: []string{"chrome"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		Timeout:      chrome.LoginTimeout + time.Minute,

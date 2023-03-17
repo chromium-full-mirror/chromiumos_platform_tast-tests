@@ -37,8 +37,12 @@ func init() {
 		},
 		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "informational"},
-		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary"},
+		VarDeps: []string{"ui.signinProfileTestExtensionManifestKey"},
 		Params: []testing.Param{{
 			Val: testParams{false, false},
 		}, {

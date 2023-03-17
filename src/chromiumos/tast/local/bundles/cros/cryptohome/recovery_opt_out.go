@@ -34,7 +34,13 @@ func init() {
 			"anastasiian@chromium.org",
 		},
 		BugComponent: "b:1148604", // ChromeOS > Security > Cryptohome > Cryptohome Recovery
-		Attr:         []string{"group:mainline", "group:cryptohome", "informational"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+			"group:cryptohome",
+		},
 		SoftwareDeps: []string{"pinweaver"},
 		// TODO(b/195385797): Run on gooey when the bug is fixed.
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("gooey")),

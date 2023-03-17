@@ -33,7 +33,11 @@ func init() {
 		},
 		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		Timeout:      2*chrome.LoginTimeout + clearTimeout + time.Minute,
 		LacrosStatus: testing.LacrosVariantUnneeded,
@@ -102,8 +106,9 @@ func ClearPasswordAfterInactivity(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to verify value of password field: ", passwordValue)
 	}
 
-	// Wait until password is cleared. We allow some margin of error.
 	const clearTimeoutErrorMargin = 3 * time.Second
+	// GoBigSleepLint - wait until password is cleared. We allow some margin
+	// of error.
 	if err := testing.Sleep(ctx, clearTimeout+clearTimeoutErrorMargin); err != nil {
 		s.Fatal("Failed to sleep: ", err)
 	}
