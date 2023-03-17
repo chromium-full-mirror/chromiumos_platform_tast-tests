@@ -929,6 +929,7 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 		// Open up the collab window inside the recorder to collect
 		// PageLoad.PaintTiming.NavigationToFirstContentfulPaint.
 		var collaborationRE *regexp.Regexp
+		var collaborationConn *chrome.Conn
 		if meet.docs {
 			recorder.Annotate(ctx, "Open_Google_Doc")
 			docsURL := defaultDocsURL
@@ -937,21 +938,21 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 			}
 
 			// Create another browser window and open a Google Docs file.
-			docsConn, err := cs.NewConn(ctx, docsURL, browser.WithNewWindow())
+			collaborationConn, err = cs.NewConn(ctx, docsURL, browser.WithNewWindow())
 			if err != nil {
 				return errors.Wrap(err, "failed to open the Google Docs website")
 			}
-			defer docsConn.Close()
+			defer collaborationConn.Close()
 			s.Log("Creating a Google Docs window")
 			collaborationRE = regexp.MustCompile(`\bDocs\b`)
 		} else if meet.jamboard {
 			// Create another browser window and open a new Jamboard file.
 			recorder.Annotate(ctx, "Open_Jamboard_window")
-			jamboardConn, err := cs.NewConn(ctx, jamboardURL, browser.WithNewWindow())
+			collaborationConn, err = cs.NewConn(ctx, jamboardURL, browser.WithNewWindow())
 			if err != nil {
 				return errors.Wrap(err, "failed to open the Jamboard website")
 			}
-			defer jamboardConn.Close()
+			defer collaborationConn.Close()
 			s.Log("Creating a Jamboard window")
 			if err := ui.LeftClick(nodewith.Name("New Jam").Role(role.Button))(ctx); err != nil {
 				return errors.Wrap(err, "failed to click the new jam button")
@@ -1284,6 +1285,15 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 		if err := <-errc; err != nil {
 			return errors.Wrap(err, "failed to collect GPU counters")
 		}
+
+		// If we have a collaboration window open, navigate away from the page
+		// to collect LCP metrics.
+		if collaborationConn != nil {
+			if err := collaborationConn.Navigate(ctx, chrome.VersionURL); err != nil {
+				return errors.Wrapf(err, "failed to navigate to %s", chrome.VersionURL)
+			}
+		}
+
 		return nil
 	}); err != nil {
 		s.Fatal("Failed to conduct the recorder task: ", err)
