@@ -696,6 +696,7 @@ func (conf *GoogleMeetConference) BackgroundChange(ctx context.Context) error {
 
 	if err := uiauto.Combine("pin to main screen and change background",
 		conf.uiHandler.SwitchToChromeTabByName(meetTitle),
+		conf.closeNotifDialog(),
 		pinToMainScreen,
 		changeBackgroundAndEnterFullScreen(staticBackground),
 		changeBackgroundAndEnterFullScreen(dynamicBackground),
@@ -905,11 +906,18 @@ func (conf *GoogleMeetConference) closeNotifDialog() action.Action {
 		PromptFinder:      gotItButton,
 		ClearButtonFinder: gotItButton,
 	}
+	closeButton := nodewith.Name("Close").Role(role.Button).Ancestor(meetWebArea)
+	closeButtonPrompt := prompts.Prompt{
+		Name:              "Close dialog",
+		PromptFinder:      closeButton,
+		ClearButtonFinder: closeButton,
+	}
 
 	return uiauto.Retry(retryTimes,
 		prompts.ClearPotentialPrompts(
 			conf.tconn,
 			shortUITimeout,
 			prompts.ShowNotificationsPrompt,
-			gotItPrompt))
+			gotItPrompt,
+			closeButtonPrompt))
 }
