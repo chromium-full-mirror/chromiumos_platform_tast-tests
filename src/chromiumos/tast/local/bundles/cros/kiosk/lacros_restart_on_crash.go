@@ -30,6 +30,8 @@ func init() {
 			"chromeos-kiosk-eng+TAST@google.com",
 			"zubeil@google.com", // Test author
 		},
+		// Only golden suite as this test keeps failing - product failure.
+		// Only one suite reduces infa load.
 		Attr:         []string{"group:golden_tier"},
 		BugComponent: "b:892153", // ChromeOS > Software > Commercial (Enterprise) > Kiosk
 		SoftwareDeps: []string{"reboot", "chrome", "lacros"},

@@ -8,6 +8,7 @@ import (
 	"context"
 
 	"chromiumos/tast/common/fixture"
+	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -35,11 +36,13 @@ func init() {
 		},
 		SoftwareDeps: []string{"reboot", "chrome"},
 		Fixture:      fixture.FakeDMSEnrolled,
-		SearchFlags: []*testing.StringPair{{
-			Key: "feature_id",
-			// Chrome app kiosk reads device ID.
-			Value: "screenplay-be4e8241-2469-4b3f-969e-026494fb4ced",
-		}},
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.DeviceLocalAccounts{}, pci.VerifiedFunctionalityOS),
+			{
+				Key: "feature_id",
+				// Chrome app kiosk reads device ID.
+				Value: "screenplay-be4e8241-2469-4b3f-969e-026494fb4ced",
+			}},
 	})
 }
 

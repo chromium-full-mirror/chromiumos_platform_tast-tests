@@ -35,7 +35,11 @@ func init() {
 			"neis@google.com",
 		},
 		BugComponent: "b:892153", // ChromeOS > Software > Commercial (Enterprise) > Kiosk
-		Attr:         []string{"group:mainline", "informational"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.KioskAutoLaunchCleanup,
 		Params: []testing.Param{{
