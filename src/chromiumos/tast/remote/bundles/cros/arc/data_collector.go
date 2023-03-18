@@ -395,12 +395,6 @@ func DataCollector(ctx context.Context, s *testing.State) {
 	}
 
 	genUreadaheadPack := func() (retErr error) {
-		if param.androidPackage == "android-vm-tm" {
-			// Skip so far to unblock other caches work.
-			testing.ContextLog(ctx, "ureadahead generation is skipped for ARCVM-T. Please see b/266029539")
-			return nil
-		}
-
 		service := arc.NewUreadaheadPackServiceClient(cl.Conn)
 		// First boot is needed to be initial boot with removing all user data.
 		request := arcpb.UreadaheadPackRequest{
