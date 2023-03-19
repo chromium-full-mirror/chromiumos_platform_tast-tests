@@ -147,9 +147,9 @@ func PhysicalKeyboardAppCompatGworkspace(ctx context.Context, s *testing.State) 
 				{
 					TestName:    "test dead key [",
 					Description: "test type dead key [ on keyboard",
-					Steps: uiauto.Combine("user type text héllo",
-						kb.TypeAction("h[ello"),
-						util.VerifyTextToBe(tconn, nil, "héllo", util.VerifyInScreenshot),
+					Steps: uiauto.Combine("user type text août",
+						kb.TypeAction("qo[ut"),
+						util.VerifyTextToBe(tconn, nil, "août", util.VerifyInScreenshot),
 					),
 				},
 			},

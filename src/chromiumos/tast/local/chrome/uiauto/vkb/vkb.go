@@ -795,5 +795,8 @@ func (vkbCtx *VirtualKeyboardContext) TypeIgnoreCaseAction(pc pointer.Context, t
 
 // TapHideVitrualKeyboardButton returns an action clicking hidden button to hide the virtual keyboard.
 func (vkbCtx *VirtualKeyboardContext) TapHideVitrualKeyboardButton() uiauto.Action {
-	return vkbCtx.TapNode(KeyFinder.Name("hide keyboard"))
+	return uiauto.RetrySilently(3,
+		uiauto.Combine("hide vk via tapping the hide virtual keyboard key",
+			vkbCtx.TapNode(KeyFinder.Name("hide keyboard")),
+			vkbCtx.WaitUntilHidden()))
 }

@@ -302,7 +302,7 @@ func VerifyTextToBe(tconn *chrome.TestConn, finder *nodewith.Finder, expectedTex
 
 // VerifyTextWithUIDetection returns an action checking the given text is shown on screen using ACUITI.
 func VerifyTextWithUIDetection(tconn *chrome.TestConn, finder *nodewith.Finder, expectedText string) uiauto.Action {
-	ud := uidetection.NewDefault(tconn).WithTimeout(time.Minute).WithScreenshotStrategy(uidetection.ImmediateScreenshot)
+	ud := uidetection.NewDefault(tconn).WithTimeout(time.Minute).WithScreenshotStrategy(uidetection.ImmediateScreenshot).WithScreenshotResizing()
 	if finder != nil {
 		return ud.WaitUntilExists(uidetection.Word(expectedText, uidetection.DisableApproxMatch(true)).WithinA11yNode(finder))
 	}
