@@ -43,6 +43,7 @@ const (
 type vmDataMigrationTestParams struct {
 	poolID       string
 	dataFileName string
+	resume       bool
 }
 
 func init() {
@@ -61,23 +62,38 @@ func init() {
 			tape.ServiceAccountVar,
 			"ui.signinProfileTestExtensionManifestKey",
 		},
-		// TODO(b/268293237): Add test case for resuming migration.
 		Params: []testing.Param{{
-			// Migrate from virtio-fs /data created on ARC P (for arm).
+			// Migrate from virtio-fs /data created on ARC P (for arm) without
+			// interruption.
 			Name: "p_to_r_arm",
 			Val: vmDataMigrationTestParams{
 				poolID:       tape.ArcDataMigrationUnmanaged,
 				dataFileName: vmDataMigrationHomeDataPiArm,
+				resume:       false,
 			},
 			ExtraAttr:         []string{"informational"},
 			ExtraData:         []string{vmDataMigrationHomeDataPiArm},
 			ExtraSoftwareDeps: []string{"arm"},
 		}, {
-			// Migrate from virtio-fs /data created on ARC R (for arm).
+			// Migrate from virtio-fs /data created on ARC R (for arm) without
+			// interruption.
 			Name: "r_to_r_arm",
 			Val: vmDataMigrationTestParams{
 				poolID:       tape.ArcDataMigrationUnmanaged,
 				dataFileName: vmDataMigrationHomeDataRvcArm,
+				resume:       false,
+			},
+			ExtraAttr:         []string{"informational"},
+			ExtraData:         []string{vmDataMigrationHomeDataRvcArm},
+			ExtraSoftwareDeps: []string{"arm"},
+		}, {
+			// Migrate from virtio-fs /data created on ARC R (for arm). The
+			// migration will be interrupted once in the middle and resumed.
+			Name: "r_to_r_arm_resume",
+			Val: vmDataMigrationTestParams{
+				poolID:       tape.ArcDataMigrationUnmanaged,
+				dataFileName: vmDataMigrationHomeDataRvcArm,
+				resume:       true,
 			},
 			ExtraAttr:         []string{"informational"},
 			ExtraData:         []string{vmDataMigrationHomeDataRvcArm},
@@ -133,12 +149,12 @@ func VMDataMigration(ctx context.Context, s *testing.State) {
 		chrome.ExtraArgs(args...),
 	}
 
-	signinAndMigrate(ctx, s, creds, chromeOpts)
+	signinAndMigrate(ctx, s, creds, chromeOpts, params.resume)
 
 	reSignInAndVerifyMigration(ctx, s, creds, chromeOpts)
 }
 
-func signinAndMigrate(ctx context.Context, s *testing.State, creds chrome.Creds, chromeOpts []chrome.Option) {
+func signinAndMigrate(ctx context.Context, s *testing.State, creds chrome.Creds, chromeOpts []chrome.Option, resume bool) {
 	// Use a shortened context for test operations to reserve time for cleanup.
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
@@ -148,7 +164,11 @@ func signinAndMigrate(ctx context.Context, s *testing.State, creds chrome.Creds,
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
-	defer cr.Close(cleanupCtx)
+	defer func() {
+		if cr != nil {
+			cr.Close(cleanupCtx)
+		}
+	}()
 
 	a, err := arc.New(ctx, s.OutDir())
 	if err != nil {
@@ -192,12 +212,44 @@ func signinAndMigrate(ctx context.Context, s *testing.State, creds chrome.Creds,
 	if tconn, err = cr.TestAPIConn(ctx); err != nil {
 		s.Fatal("Failed to reconnect to test API: ", err)
 	}
-	// Go through the migration UX flow.
-	if err := proceedMigrationScreens(ctx, cr, tconn); err != nil {
+	// Go through the migration UX flow. Abort the migration halfway for resume test cases.
+	if err := proceedMigrationScreens(ctx, cr, tconn, resume /* abort */); err != nil {
 		if err := screenshot.Capture(ctx, filepath.Join(s.OutDir(), "proceed-migration-screen-failed.png")); err != nil {
 			testing.ContextLog(ctx, "Failed to take a screenshot: ", err)
 		}
-		s.Fatal("Failed to go through migration screen: ", err)
+		s.Fatal("Failed to go through migration screen for new migrations: ", err)
+	}
+
+	if resume {
+		cr.Close(ctx)
+
+		if cr, err = reSignInChrome(ctx, s, creds, chromeOpts); err != nil {
+			s.Fatal("Failed to re-sign in: ", err)
+		}
+
+		// When the migration ended halfway in the previous session, Chrome will
+		// be immediately restarted after the re-sign in to start the UX flow
+		// for resuming migration. Calling PrepareForRestart() here prevents
+		// connecting to the old Chrome process.
+		if err := chrome.PrepareForRestart(); err != nil {
+			s.Fatal("Failed to prepare for restart after re-sign in: ", err)
+		}
+
+		// Reconnect to Chrome and Test API.
+		if err := cr.Reconnect(ctx); err != nil {
+			s.Fatal("Failed to reconnect for resume: ", err)
+		}
+		if tconn, err = cr.TestAPIConn(ctx); err != nil {
+			s.Fatal("Failed to create Test API connection: ", err)
+		}
+
+		// Go through the migration UX flow for resumed migrations.
+		if err := proceedMigrationScreens(ctx, cr, tconn, false /* abort */); err != nil {
+			if err := screenshot.Capture(ctx, filepath.Join(s.OutDir(), "proceed-resume-migration-screen-failed.png")); err != nil {
+				testing.ContextLog(ctx, "Failed to take a screenshot: ", err)
+			}
+			s.Fatal("Failed to go through migration screen for resumed migrations: ", err)
+		}
 	}
 
 	// Users following the UX flow will reboot the device here, but we only
@@ -310,10 +362,9 @@ func enterMigrationScreen(ctx context.Context, cr *chrome.Chrome, tconn *chrome.
 	return nil
 }
 
-func proceedMigrationScreens(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn) error {
+func proceedMigrationScreens(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, abort bool) error {
 	// UX strings for the migration screens.
 	const (
-		startMigrationButtonText         = "Next"
 		migrationProgressScreenTitleText = "Installing updates"
 		migrationFinishedScreenTitleText = "Finished updating!"
 	)
@@ -322,18 +373,41 @@ func proceedMigrationScreens(ctx context.Context, cr *chrome.Chrome, tconn *chro
 
 	ui := uiauto.New(tconn).WithTimeout(time.Minute)
 
-	nextButton := nodewith.Name(startMigrationButtonText).Role(role.Button)
-	if err := ui.DoDefault(nextButton)(ctx); err != nil {
+	startMigrationButton := nodewith.ClassName("action-button").Role(role.Button)
+	if err := ui.DoDefault(startMigrationButton)(ctx); err != nil {
 		return err
 	}
 
 	start := time.Now()
 
 	inProgressMessage := nodewith.Name(migrationProgressScreenTitleText).Role(role.StaticText)
+	if err := ui.WaitUntilExists(inProgressMessage)(ctx); err != nil {
+		return err
+	}
+
+	// Since we assume that the migration takes at least around 20 seconds for
+	// the pre-migration data used in this test, the progress bar should show
+	// during the migration.
+	progressBarNode := nodewith.Role(role.ProgressIndicator)
+	if err := ui.WaitUntilExists(progressBarNode)(ctx); err != nil {
+		return errors.Wrap(err, "failed to wait for the progress bar to be shown")
+	}
+
+	if abort {
+		// Restart Chrome as soon as the progress bar is shown. The presence of
+		// the progress bar should indicate that the migration has started.
+		// NOTE: It is theoretically possible that the migration finishes before
+		// this Chrome restart takes place, but that should be unlikely as the
+		// migration is assumed to take at least around 20 seconds for the
+		// pre-migration data used in this test.
+		if err := upstart.RestartJob(ctx, "ui"); err != nil {
+			return errors.Wrap(err, "failed to restart Chrome")
+		}
+		return nil
+	}
+
 	finishMessage := nodewith.Name(migrationFinishedScreenTitleText).Role(role.StaticText)
-	if err := uiauto.Combine("go through migration screen",
-		ui.WaitUntilExists(inProgressMessage),
-		ui.WaitUntilExists(finishMessage))(ctx); err != nil {
+	if err := ui.WaitUntilExists(finishMessage)(ctx); err != nil {
 		return err
 	}
 
