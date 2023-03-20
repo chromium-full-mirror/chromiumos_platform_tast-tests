@@ -474,7 +474,7 @@ func (a *AndroidNearbyDevice) GetAndroidAttributes(ctx context.Context) (*Androi
 	}
 	metadata.NearbyShareVersion = nearbyVersion
 
-	nearbyChannel, err := a.Device.ShellCommand(ctx, "sh", "-c", `dumpsys activity service com.google.android.gms/.chimera.PersistentApiService | grep -e "Account Type: .*"`).Output(testexec.DumpLogOnError)
+	nearbyChannel, err := a.Device.ShellCommand(ctx, "sh", "-c", `dumpsys activity service com.google.android.gms/.chimera.PersistentApiServiceNoInstantApps | grep -e "Account Type: .*"`).Output(testexec.DumpLogOnError)
 	if err != nil {
 		return nil, err
 	}
