@@ -35,20 +35,31 @@ func init() {
 		Vars: []string{
 			"mute",
 		},
-		Params: []testing.Param{{
-			ExtraData: []string{tabswitchcuj.WPRArchiveName},
-			Val: tabswitchcuj.TabSwitchParam{
-				BrowserType: browser.TypeAsh,
+		Params: []testing.Param{
+			{
+				ExtraData: []string{tabswitchcuj.WPRArchiveName},
+				Val: tabswitchcuj.TabSwitchParam{
+					BrowserType: browser.TypeAsh,
+				},
+				Fixture: "tabSwitchCUJWPRAsh",
+			}, {
+				Name: "lacros",
+				Val: tabswitchcuj.TabSwitchParam{
+					BrowserType: browser.TypeLacros,
+				},
+				Fixture:           "tabSwitchCUJWPRLacros",
+				ExtraSoftwareDeps: []string{"lacros"},
 			},
-			Fixture: "tabSwitchCUJWPRAsh",
-		}, {
-			Name: "lacros",
-			Val: tabswitchcuj.TabSwitchParam{
-				BrowserType: browser.TypeLacros,
-			},
-			Fixture:           "tabSwitchCUJWPRLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-		}},
+
+			// Experimental variants.
+			{
+				Name:      "backup_ref_ptr",
+				ExtraAttr: []string{"cuj_experimental"},
+				Val: tabswitchcuj.TabSwitchParam{
+					BrowserType: browser.TypeAsh,
+				},
+				Fixture: "tabSwitchCUJWPRAshWithBackupRefPtr",
+			}},
 	})
 }
 

@@ -25,15 +25,24 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{cujrecorder.SystemTraceConfigFile},
 		Timeout:      30 * time.Minute,
-		Params: []testing.Param{{
-			Val:     browser.TypeAsh,
-			Fixture: "loggedInToCUJUser",
-		}, {
-			Name:              "lacros",
-			Val:               browser.TypeLacros,
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           "loggedInToCUJUserLacros",
-		}},
+		Params: []testing.Param{
+			{
+				Val:     browser.TypeAsh,
+				Fixture: "loggedInToCUJUser",
+			}, {
+				Name:              "lacros",
+				Val:               browser.TypeLacros,
+				ExtraSoftwareDeps: []string{"lacros"},
+				Fixture:           "loggedInToCUJUserLacros",
+			},
+
+			// Experimental variants.
+			{
+				Name:      "backup_ref_ptr",
+				ExtraAttr: []string{"cuj_experimental"},
+				Val:       browser.TypeAsh,
+				Fixture:   "loggedInToCUJUserWithBackupRefPtr",
+			}},
 	})
 }
 

@@ -73,6 +73,16 @@ func init() {
 					BrowserType: browser.TypeAsh,
 				},
 			},
+
+			// Experimental variants.
+			{
+				Name:      "backup_ref_ptr",
+				ExtraAttr: []string{"cuj_experimental"},
+				Val: taskswitchcuj.TaskSwitchTest{
+					BrowserType: browser.TypeAsh,
+				},
+				Fixture: "loggedInToCUJUserWithBackupRefPtr",
+			},
 		},
 	})
 }

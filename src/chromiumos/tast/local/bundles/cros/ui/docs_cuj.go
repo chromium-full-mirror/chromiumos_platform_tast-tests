@@ -30,15 +30,24 @@ func init() {
 		Data:         []string{cujrecorder.SystemTraceConfigFile},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Timeout:      30 * time.Minute,
-		Params: []testing.Param{{
-			Val:     browser.TypeAsh,
-			Fixture: "loggedInToCUJUser",
-		}, {
-			Name:              "lacros",
-			Val:               browser.TypeLacros,
-			Fixture:           "loggedInToCUJUserLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-		}},
+		Params: []testing.Param{
+			{
+				Val:     browser.TypeAsh,
+				Fixture: "loggedInToCUJUser",
+			}, {
+				Name:              "lacros",
+				Val:               browser.TypeLacros,
+				Fixture:           "loggedInToCUJUserLacros",
+				ExtraSoftwareDeps: []string{"lacros"},
+			},
+
+			// Experimental variants.
+			{
+				Name:      "backup_ref_ptr",
+				ExtraAttr: []string{"cuj_experimental"},
+				Val:       browser.TypeAsh,
+				Fixture:   "loggedInToCUJUserWithBackupRefPtr",
+			}},
 	})
 }
 

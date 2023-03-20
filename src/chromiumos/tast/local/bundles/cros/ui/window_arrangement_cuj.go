@@ -82,6 +82,16 @@ func init() {
 				Fixture:           "loggedInToCUJUserLacros",
 				ExtraSoftwareDeps: []string{"lacros"},
 			},
+
+			// Experimental variants.
+			{
+				Name:      "clamshell_mode_backup_ref_ptr",
+				ExtraAttr: []string{"cuj_experimental"},
+				Val: windowarrangementcuj.TestParam{
+					BrowserType: browser.TypeAsh,
+				},
+				Fixture: "loggedInToCUJUserWithBackupRefPtr",
+			},
 		},
 	})
 }

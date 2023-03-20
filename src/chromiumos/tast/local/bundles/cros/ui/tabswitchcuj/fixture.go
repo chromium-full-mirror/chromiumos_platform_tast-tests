@@ -35,7 +35,6 @@ func init() {
 		Name: "tabSwitchCUJWPRAsh",
 		Desc: "Composed fixture for TabSwitchCUJ with WPR",
 		Contacts: []string{
-			"amusbach@chromium.org",
 			"xiyuan@chromium.org",
 			"chromeos-perfmetrics-eng@google.com",
 		},
@@ -70,4 +69,26 @@ func init() {
 		TearDownTimeout: chrome.ResetTimeout,
 		Parent:          "tabSwitchCUJWPR",
 	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: "tabSwitchCUJWPRAshWithBackupRefPtr",
+		Desc: "Variant of tabSwitchCUJWPRAsh with BackupRefPtr enabled",
+		Contacts: []string{
+			"ramsaroop@chromium.org",
+			"chromeos-perfmetrics-eng@google.com",
+		},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			opts, err := s.ParentValue().(wpr.FixtValue).FOpt()(ctx, s)
+			if err != nil {
+				return nil, err
+			}
+			opts = append(opts, chrome.EnableFeatures("PartitionAllocBackupRefPtr:enabled-processes/browser-only"))
+			return opts, nil
+		}),
+		SetUpTimeout:    chrome.LoginTimeout + 7*time.Minute,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+		Parent:          "tabSwitchCUJWPR",
+	})
+
 }

@@ -317,7 +317,7 @@ func init() {
 		Name: "loggedInToCUJUserWithWebRTCEventLogging",
 		Desc: "CUJ test fixture with WebRTC event logging",
 		Contacts: []string{
-			"amusbach@chromium.org",
+			"ramsaroop@chromium.org",
 			"chromeos-perfmetrics-eng@google.com",
 		},
 		Data: docsBlockerFiles,
@@ -337,7 +337,7 @@ func init() {
 		Name: "loggedInToCUJUserWithWebRTCEventLoggingLacros",
 		Desc: "Lacros variation of loggedInToCUJUserWithWebRTCEventLogging",
 		Contacts: []string{
-			"amusbach@chromium.org",
+			"ramsaroop@chromium.org",
 			"chromeos-perfmetrics-eng@google.com",
 		},
 		Data: docsBlockerFiles,
@@ -393,6 +393,51 @@ func init() {
 			bt: browser.TypeAsh,
 		},
 		Parent:          "prepareForCUJ",
+		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithBackupRefPtr",
+		Desc: "CUJ fixture with BackupRefPtr enabled",
+		Contacts: []string{
+			"ramsaroop@google.com",
+			"chromeos-perfmetrics-eng@google.com",
+		},
+		Data: docsBlockerFiles,
+		Impl: &loggedInToCUJUserFixture{
+			chromeExtraOpts: []chrome.Option{
+				chrome.EnableFeatures("PartitionAllocBackupRefPtr:enabled-processes/browser-only"),
+			},
+			bt: browser.TypeAsh,
+		},
+		Parent:          "cpuIdleForCUJ",
+		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithBackupRefPtrAndWebRTCEventLogging",
+		Desc: "Variant of loggedInToCUJUserWithBackupRefPtr with WebRTCEventLogging enabled",
+		Contacts: []string{
+			"ramsaroop@google.com",
+			"chromeos-perfmetrics-eng@google.com",
+		},
+		Data: docsBlockerFiles,
+		Impl: &loggedInToCUJUserFixture{
+			chromeExtraOpts: []chrome.Option{
+				chrome.EnableFeatures("PartitionAllocBackupRefPtr:enabled-processes/browser-only"),
+				chrome.ExtraArgs(webRTCEventLogCommandFlag),
+			},
+			bt: browser.TypeAsh,
+		},
+		Parent:          "cpuIdleForCUJ",
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -646,9 +691,6 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 		}
 		opts = append(opts, f.chromeExtraOpts...)
 
-		if f.bt == browser.TypeAsh {
-			opts = append(opts, chrome.UnpackedExtension(docsBlockerExtDir))
-		}
 		if f.bt == browser.TypeLacros {
 			if strings.ToLower(EnableWaylandLoggingVar.Value()) == "true" {
 				opts = append(opts, chrome.ExtraArgs("--lacros-chrome-additional-env=WAYLAND_DEBUG=1"))
@@ -661,7 +703,10 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 			}
 
 			opts = append(opts, chrome.LacrosUnpackedExtension(docsBlockerExtDir))
+		} else {
+			opts = append(opts, chrome.UnpackedExtension(docsBlockerExtDir))
 		}
+
 		if f.fakeCamera {
 			fakeCameraOpts := []string{
 				// See https://webrtc.github.io/webrtc-org/testing/.
