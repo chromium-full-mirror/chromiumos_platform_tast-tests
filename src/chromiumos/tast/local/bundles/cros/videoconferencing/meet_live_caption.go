@@ -42,7 +42,7 @@ func init() {
 		Attr: []string{
 			"group:mainline", "informational", "group:ml_service",
 		},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "camera_feature_effects"},
 		VarDeps: []string{
 			credsVarName,
 		},
