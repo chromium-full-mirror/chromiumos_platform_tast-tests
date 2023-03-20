@@ -81,13 +81,6 @@ const (
 
 const defaultTestTimeout = 30 * time.Minute
 
-// minDevices is a limited subset of devices to reduce lab load for less important tests.
-func minDevices() hwdep.Condition {
-	return hwdep.Model("fleex", "barla", "hana", "redrix", "esche", "lillipup",
-		"atlas", "scarlet", "ezkinil", "robo", "syndra", "caroline", "blorb",
-		"vorticon", "treeya360", "akali360", "jinlon")
-}
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         MeetCUJ,
@@ -111,338 +104,349 @@ func init() {
 		VarDeps: []string{
 			"ui.MeetCUJ.bond_credentials",
 		},
-		Params: []testing.Param{{
-			Name:      "2p",
-			Timeout:   defaultTestTimeout,
-			ExtraAttr: []string{"group:cuj"},
-			Val: meetTest{
-				num:         1,
-				layout:      meetLayoutTiled,
-				cam:         true,
-				browserType: browser.TypeAsh,
+		Params: []testing.Param{
+			// 2p Meet variants. Each of these varaints are of lower priority,
+			// so run them on fewer devices.
+			{
+				Name:      "2p",
+				Timeout:   defaultTestTimeout,
+				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
+				Val: meetTest{
+					num:         1,
+					layout:      meetLayoutTiled,
+					cam:         true,
+					browserType: browser.TypeAsh,
+				},
+				Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
+			}, {
+				Name:      "lacros_2p",
+				Timeout:   defaultTestTimeout,
+				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
+				Val: meetTest{
+					num:         1,
+					layout:      meetLayoutTiled,
+					cam:         true,
+					browserType: browser.TypeLacros,
+				},
+				Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingLacros",
+				ExtraSoftwareDeps: []string{"lacros"},
 			},
-			Fixture:           "loggedInToCUJUserWithWebRTCEventLogging",
-			ExtraHardwareDeps: hwdep.D(minDevices()),
-		}, {
-			Name:    "2p_enterprise",
-			Timeout: defaultTestTimeout,
-			Val: meetTest{
-				num:         1,
-				layout:      meetLayoutTiled,
-				cam:         true,
-				browserType: browser.TypeAsh,
+
+			// 4p Meet variants.
+			{
+				Name:      "4p",
+				Timeout:   defaultTestTimeout,
+				ExtraAttr: []string{"group:cuj"},
+				Val: meetTest{
+					num:         3,
+					layout:      meetLayoutTiled,
+					cam:         true,
+					browserType: browser.TypeAsh,
+				},
+				Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
+			}, {
+				Name:    "4p_enterprise",
+				Timeout: defaultTestTimeout,
+				// Lower priority test, so run on fewer devices.
+				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
+				Val: meetTest{
+					num:         3,
+					layout:      meetLayoutTiled,
+					cam:         true,
+					browserType: browser.TypeAsh,
+				},
+				Fixture: "loggedInToCUJUserEnterpriseWithWebRTCEventLogging",
+			}, {
+				Name:      "lacros_4p",
+				Timeout:   defaultTestTimeout,
+				ExtraAttr: []string{"group:cuj"},
+				Val: meetTest{
+					num:         3,
+					layout:      meetLayoutTiled,
+					cam:         true,
+					browserType: browser.TypeLacros,
+				},
+				Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingLacros",
+				ExtraSoftwareDeps: []string{"lacros"},
+			}, {
+				Name:      "4p_present_notes_split",
+				Timeout:   defaultTestTimeout,
+				ExtraAttr: []string{"group:cuj"},
+				Val: meetTest{
+					num:         3,
+					layout:      meetLayoutTiled,
+					present:     true,
+					docs:        true,
+					split:       true,
+					cam:         true,
+					browserType: browser.TypeAsh,
+				},
+				Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
+			}, {
+				Name:      "lacros_4p_present_notes_split",
+				Timeout:   defaultTestTimeout,
+				ExtraAttr: []string{"group:cuj"},
+				Val: meetTest{
+					num:         3,
+					layout:      meetLayoutTiled,
+					present:     true,
+					docs:        true,
+					split:       true,
+					cam:         true,
+					browserType: browser.TypeLacros,
+				},
+				Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingLacros",
+				ExtraSoftwareDeps: []string{"lacros"},
 			},
-			Fixture: "loggedInToCUJUserEnterpriseWithWebRTCEventLogging",
-		}, {
-			Name:      "lacros_2p",
-			Timeout:   defaultTestTimeout,
-			ExtraAttr: []string{"group:cuj"},
-			Val: meetTest{
-				num:         1,
-				layout:      meetLayoutTiled,
-				cam:         true,
-				browserType: browser.TypeLacros,
+
+			// 16p Meet variants.
+			{
+				Name:      "16p",
+				Timeout:   defaultTestTimeout,
+				ExtraAttr: []string{"group:cuj"},
+				Val: meetTest{
+					num:         15,
+					layout:      meetLayoutTiled,
+					cam:         true,
+					browserType: browser.TypeAsh,
+				},
+				Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
+			}, {
+				Name:    "16p_enterprise",
+				Timeout: defaultTestTimeout,
+				// Lower priority test, so run on fewer devices.
+				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
+				Val: meetTest{
+					num:         15,
+					layout:      meetLayoutTiled,
+					cam:         true,
+					browserType: browser.TypeAsh,
+				},
+				Fixture: "loggedInToCUJUserEnterpriseWithWebRTCEventLogging",
+			}, {
+				Name:      "lacros_16p",
+				Timeout:   defaultTestTimeout,
+				ExtraAttr: []string{"group:cuj"},
+				Val: meetTest{
+					num:         15,
+					layout:      meetLayoutTiled,
+					cam:         true,
+					browserType: browser.TypeLacros,
+				},
+				Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingLacros",
+				ExtraSoftwareDeps: []string{"lacros"},
 			},
-			Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			ExtraHardwareDeps: hwdep.D(minDevices()),
-		}, {
-			Name:      "4p",
-			Timeout:   defaultTestTimeout,
-			ExtraAttr: []string{"group:cuj"},
-			Val: meetTest{
-				num:         3,
-				layout:      meetLayoutTiled,
-				cam:         true,
-				browserType: browser.TypeAsh,
+
+			// 49p Meet variant.
+			{
+				Name:      "49p",
+				Timeout:   defaultTestTimeout,
+				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
+				Val: meetTest{
+					num:         48,
+					layout:      meetLayoutTiled,
+					cam:         true,
+					zoomOut:     true,
+					browserType: browser.TypeAsh,
+				},
+				Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
+				// The list of targeted models which SPERA team uses to analyze.
+				ExtraHardwareDeps: hwdep.D(hwdep.Model("gimble", "magpie", "lazor", "tomato", "volet")),
 			},
-			Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
-		}, {
-			Name:      "4p_enterprise",
-			Timeout:   defaultTestTimeout,
-			ExtraAttr: []string{"group:cuj"},
-			Val: meetTest{
-				num:         3,
-				layout:      meetLayoutTiled,
-				cam:         true,
-				browserType: browser.TypeAsh,
+
+			// Experimental Variants. These variants should only be run on
+			// the minimized list of devices, and are running an A/B test for
+			// particular feature.
+			{
+				// 16p call presenting a Google Doc. This is used as a baseline
+				// for the following 16p_present_notes_split_* variants.
+				Name:      "16p_present_notes_split",
+				Timeout:   defaultTestTimeout,
+				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
+				Val: meetTest{
+					num:         15,
+					layout:      meetLayoutTiled,
+					present:     true,
+					docs:        true,
+					split:       true,
+					cam:         true,
+					zoomOut:     true,
+					browserType: browser.TypeAsh,
+				},
+				Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
+			}, {
+				// 16p_present_notes_split variant with
+				// OneGroupPerRenderer enabled.
+				Name:      "16p_present_notes_split_cgroup",
+				Timeout:   defaultTestTimeout,
+				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
+				Val: meetTest{
+					num:         15,
+					layout:      meetLayoutTiled,
+					present:     true,
+					docs:        true,
+					split:       true,
+					cam:         true,
+					zoomOut:     true,
+					browserType: browser.TypeAsh,
+				},
+				Fixture: "loggedInToCUJUserWithOneGroupPerRenderer",
+			}, {
+				// 16p_present_notes_split variant with
+				// MainThreadCompositingPriority enabled.
+				// TODO(crbug/1410581): Remove this variant when done with testing.
+				Name:      "16p_present_notes_split_maincompositing",
+				Timeout:   defaultTestTimeout,
+				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
+				Val: meetTest{
+					num:         15,
+					layout:      meetLayoutTiled,
+					present:     true,
+					docs:        true,
+					split:       true,
+					cam:         true,
+					zoomOut:     true,
+					browserType: browser.TypeAsh,
+				},
+				Fixture: "loggedInToCUJUserWithMainThreadCompositingPriority",
+			}, {
+				// 49p variant with MainThreadCompositingPriority feature enabled.
+				// TODO(crbug/1410581): Remove this variant when done with testing.
+				Name:      "49p_maincompositing",
+				Timeout:   defaultTestTimeout,
+				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
+				Val: meetTest{
+					num:         48,
+					layout:      meetLayoutTiled,
+					cam:         true,
+					zoomOut:     true,
+					browserType: browser.TypeAsh,
+				},
+				Fixture: "loggedInToCUJUserWithMainThreadCompositingPriority",
+				// Same target models as in the 49p variant.
+				ExtraHardwareDeps: hwdep.D(hwdep.Model("gimble", "magpie", "lazor", "tomato", "volet")),
 			},
-			Fixture:           "loggedInToCUJUserEnterpriseWithWebRTCEventLogging",
-			ExtraHardwareDeps: hwdep.D(minDevices()),
-		}, {
-			// Small meeting.
-			Name:      "4p_present_notes_split",
-			Timeout:   defaultTestTimeout,
-			ExtraAttr: []string{"group:cuj"},
-			Val: meetTest{
-				num:         3,
-				layout:      meetLayoutTiled,
-				present:     true,
-				docs:        true,
-				split:       true,
-				cam:         true,
-				browserType: browser.TypeAsh,
+
+			// Inactive variants. No group should be specified for these tests.
+			{
+				Name:    "2p_enterprise",
+				Timeout: defaultTestTimeout,
+				Val: meetTest{
+					num:         1,
+					layout:      meetLayoutTiled,
+					cam:         true,
+					browserType: browser.TypeAsh,
+				},
+				Fixture: "loggedInToCUJUserEnterpriseWithWebRTCEventLogging",
+			}, {
+				// Long meeting to catch slow performance degradation.
+				Name:    "2p_30m",
+				Timeout: defaultTestTimeout + 30*time.Minute,
+				Val: meetTest{
+					num:         1,
+					layout:      meetLayoutTiled,
+					cam:         true,
+					duration:    30 * time.Minute,
+					browserType: browser.TypeAsh,
+				},
+				Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
+			}, {
+				Name:    "4p_present_notes_split_enterprise",
+				Timeout: defaultTestTimeout,
+				Val: meetTest{
+					num:         3,
+					layout:      meetLayoutTiled,
+					present:     true,
+					docs:        true,
+					split:       true,
+					cam:         true,
+					browserType: browser.TypeAsh,
+				},
+				Fixture: "loggedInToCUJUserEnterpriseWithWebRTCEventLogging",
 			},
-			Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
-		}, {
-			Name:    "4p_present_notes_split_enterprise",
-			Timeout: defaultTestTimeout,
-			Val: meetTest{
-				num:         3,
-				layout:      meetLayoutTiled,
-				present:     true,
-				docs:        true,
-				split:       true,
-				cam:         true,
-				browserType: browser.TypeAsh,
+			{
+				// 4p Meet call with Google Docs, with tab switching and
+				// visual effects.
+				Name:    "4p_notes_effects",
+				Timeout: defaultTestTimeout,
+				Val: meetTest{
+					num:           3,
+					layout:        meetLayoutTiled,
+					docs:          true,
+					cam:           true,
+					effects:       true,
+					tabSwitchDocs: true,
+					browserType:   browser.TypeAsh,
+				},
+				Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
+			}, {
+				// Lacros variant of 4p_notes_effects.
+				Name:    "lacros_4p_notes_effects",
+				Timeout: defaultTestTimeout,
+				Val: meetTest{
+					num:           3,
+					layout:        meetLayoutTiled,
+					docs:          true,
+					cam:           true,
+					effects:       true,
+					tabSwitchDocs: true,
+					browserType:   browser.TypeLacros,
+				},
+				Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingLacros",
+				ExtraSoftwareDeps: []string{"lacros"},
+			}, {
+				// 16p with notes.
+				Name:    "16p_notes",
+				Timeout: defaultTestTimeout,
+				Val: meetTest{
+					num:         15,
+					layout:      meetLayoutTiled,
+					docs:        true,
+					split:       true,
+					cam:         true,
+					browserType: browser.TypeAsh,
+				},
+				Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
+			}, {
+				// 16p with jamboard test.
+				Name:    "16p_jamboard",
+				Timeout: defaultTestTimeout + 15*time.Minute,
+				Val: meetTest{
+					num:         15,
+					layout:      meetLayoutTiled,
+					jamboard:    true,
+					split:       true,
+					cam:         true,
+					browserType: browser.TypeAsh,
+				},
+				Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
+			}, {
+				// 49p with vp8 video codec.
+				Name:    "49p_vp8",
+				Timeout: defaultTestTimeout,
+				Val: meetTest{
+					num:         48,
+					layout:      meetLayoutTiled,
+					cam:         true,
+					zoomOut:     true,
+					browserType: browser.TypeAsh,
+					botsOptions: []bond.AddBotsOption{bond.WithVP9(false, false)},
+				},
+				Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
+			}, {
+				Name:    "lacros_49p",
+				Timeout: defaultTestTimeout,
+				Val: meetTest{
+					num:         48,
+					layout:      meetLayoutTiled,
+					cam:         true,
+					zoomOut:     true,
+					browserType: browser.TypeLacros,
+				},
+				Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingLacros",
+				ExtraSoftwareDeps: []string{"lacros"},
 			},
-			Fixture: "loggedInToCUJUserEnterpriseWithWebRTCEventLogging",
-		}, {
-			// Big meeting.
-			Name:      "16p",
-			Timeout:   defaultTestTimeout,
-			ExtraAttr: []string{"group:cuj"},
-			Val: meetTest{
-				num:         15,
-				layout:      meetLayoutTiled,
-				cam:         true,
-				browserType: browser.TypeAsh,
-			},
-			Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
-		}, {
-			Name:      "16p_enterprise",
-			Timeout:   defaultTestTimeout,
-			ExtraAttr: []string{"group:cuj"},
-			Val: meetTest{
-				num:         15,
-				layout:      meetLayoutTiled,
-				cam:         true,
-				browserType: browser.TypeAsh,
-			},
-			Fixture:           "loggedInToCUJUserEnterpriseWithWebRTCEventLogging",
-			ExtraHardwareDeps: hwdep.D(minDevices()),
-		}, {
-			// Even bigger meeting.
-			Name:      "49p",
-			Timeout:   defaultTestTimeout,
-			ExtraAttr: []string{"group:cuj"},
-			Val: meetTest{
-				num:         48,
-				layout:      meetLayoutTiled,
-				cam:         true,
-				zoomOut:     true,
-				browserType: browser.TypeAsh,
-			},
-			Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
-			// The list of targeted models which SPERA team uses to analyze.
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("gimble", "magpie", "lazor", "tomato", "volet")),
-		}, {
-			// 49p variant with MainThreadCompositingPriority feature enabled.
-			// TODO(crbug/1410581): Remove this variant when done with testing.
-			Name:      "49p_maincompositing",
-			Timeout:   defaultTestTimeout,
-			ExtraAttr: []string{"group:cuj"},
-			Val: meetTest{
-				num:         48,
-				layout:      meetLayoutTiled,
-				cam:         true,
-				zoomOut:     true,
-				browserType: browser.TypeAsh,
-			},
-			Fixture: "loggedInToCUJUserWithMainThreadCompositingPriority",
-			// Same target models as in the 49p variant.
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("gimble", "magpie", "lazor", "tomato", "volet")),
-		}, {
-			Name:    "lacros_49p",
-			Timeout: defaultTestTimeout,
-			Val: meetTest{
-				num:         48,
-				layout:      meetLayoutTiled,
-				cam:         true,
-				zoomOut:     true,
-				browserType: browser.TypeLacros,
-			},
-			Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-		}, {
-			// Big meeting with notes.
-			Name:    "16p_notes",
-			Timeout: defaultTestTimeout,
-			Val: meetTest{
-				num:         15,
-				layout:      meetLayoutTiled,
-				docs:        true,
-				split:       true,
-				cam:         true,
-				browserType: browser.TypeAsh,
-			},
-			Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
-		}, {
-			// 16p with jamboard test.
-			Name:    "16p_jamboard",
-			Timeout: defaultTestTimeout + 15*time.Minute,
-			Val: meetTest{
-				num:         15,
-				layout:      meetLayoutTiled,
-				jamboard:    true,
-				split:       true,
-				cam:         true,
-				browserType: browser.TypeAsh,
-			},
-			Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
-		}, {
-			// Lacros 4p
-			Name:      "lacros_4p",
-			Timeout:   defaultTestTimeout,
-			ExtraAttr: []string{"group:cuj"},
-			Val: meetTest{
-				num:         3,
-				layout:      meetLayoutTiled,
-				cam:         true,
-				browserType: browser.TypeLacros,
-			},
-			Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-		}, {
-			// 49p with vp8 video codec.
-			Name:    "49p_vp8",
-			Timeout: defaultTestTimeout,
-			Val: meetTest{
-				num:         48,
-				layout:      meetLayoutTiled,
-				cam:         true,
-				zoomOut:     true,
-				browserType: browser.TypeAsh,
-				botsOptions: []bond.AddBotsOption{bond.WithVP9(false, false)},
-			},
-			Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
-		}, {
-			// Lacros variation of 16p test
-			Name:      "lacros_16p",
-			Timeout:   defaultTestTimeout,
-			ExtraAttr: []string{"group:cuj"},
-			Val: meetTest{
-				num:         15,
-				layout:      meetLayoutTiled,
-				cam:         true,
-				browserType: browser.TypeLacros,
-			},
-			Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-		}, {
-			// Long meeting to catch slow performance degradation.
-			Name:    "2p_30m",
-			Timeout: defaultTestTimeout + 30*time.Minute,
-			Val: meetTest{
-				num:         1,
-				layout:      meetLayoutTiled,
-				cam:         true,
-				duration:    30 * time.Minute,
-				browserType: browser.TypeAsh,
-			},
-			Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
-		}, {
-			// Lacros 4p with presenting and notes split
-			Name:      "lacros_4p_present_notes_split",
-			Timeout:   defaultTestTimeout,
-			ExtraAttr: []string{"group:cuj"},
-			Val: meetTest{
-				num:         3,
-				layout:      meetLayoutTiled,
-				present:     true,
-				docs:        true,
-				split:       true,
-				cam:         true,
-				browserType: browser.TypeLacros,
-			},
-			Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-		}, {
-			// 16p call presenting a Google Doc.
-			Name:      "16p_present_notes_split",
-			Timeout:   defaultTestTimeout,
-			ExtraAttr: []string{"group:cuj"},
-			Val: meetTest{
-				num:         15,
-				layout:      meetLayoutTiled,
-				present:     true,
-				docs:        true,
-				split:       true,
-				cam:         true,
-				zoomOut:     true,
-				browserType: browser.TypeAsh,
-			},
-			Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
-		}, {
-			// 16p_present_notes_split variant with
-			// OneGroupPerRenderer enabled.
-			Name:      "16p_present_notes_split_cgroup",
-			Timeout:   defaultTestTimeout,
-			ExtraAttr: []string{"group:cuj"},
-			Val: meetTest{
-				num:         15,
-				layout:      meetLayoutTiled,
-				present:     true,
-				docs:        true,
-				split:       true,
-				cam:         true,
-				zoomOut:     true,
-				browserType: browser.TypeAsh,
-			},
-			Fixture:           "loggedInToCUJUserWithOneGroupPerRenderer",
-			ExtraHardwareDeps: hwdep.D(minDevices()),
-		}, {
-			// 16p_present_notes_split variant with
-			// MainThreadCompositingPriority enabled.
-			// TODO(crbug/1410581): Remove this variant when done with testing.
-			Name:      "16p_present_notes_split_maincompositing",
-			Timeout:   defaultTestTimeout,
-			ExtraAttr: []string{"group:cuj"},
-			Val: meetTest{
-				num:         15,
-				layout:      meetLayoutTiled,
-				present:     true,
-				docs:        true,
-				split:       true,
-				cam:         true,
-				zoomOut:     true,
-				browserType: browser.TypeAsh,
-			},
-			Fixture:           "loggedInToCUJUserWithMainThreadCompositingPriority",
-			ExtraHardwareDeps: hwdep.D(minDevices()),
-		}, {
-			// TODO(246324780): Remove when GPU hanging issue is fixed.
-			// This test is primarily to try to reproduce this issue in
-			// the lab.
-			Name:      "lacros_4p_notes_effects",
-			Timeout:   defaultTestTimeout,
-			ExtraAttr: []string{"group:cuj"},
-			Val: meetTest{
-				num:           3,
-				layout:        meetLayoutTiled,
-				docs:          true,
-				cam:           true,
-				effects:       true,
-				tabSwitchDocs: true,
-				browserType:   browser.TypeLacros,
-			},
-			Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingLacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			ExtraHardwareDeps: hwdep.D(minDevices()),
-		}, {
-			Name:    "4p_notes_effects",
-			Timeout: defaultTestTimeout,
-			Val: meetTest{
-				num:           3,
-				layout:        meetLayoutTiled,
-				docs:          true,
-				cam:           true,
-				effects:       true,
-				tabSwitchDocs: true,
-				browserType:   browser.TypeAsh,
-			},
-			Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
-		}},
+		},
 	})
 }
 
