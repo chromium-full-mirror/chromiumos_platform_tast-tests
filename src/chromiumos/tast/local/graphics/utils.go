@@ -35,8 +35,12 @@ const (
 
 var (
 	labels     = []string{"objects", "bytes"}
-	amdRegex   = "(?P<bytes>\\d*) byte  GTT CPU_ACCESS_REQUIRED CPU_GTT_USWC"
-	intelRegex = "(?P<objects>\\d*) shrinkable.*objects, (?P<bytes>\\d*) bytes"
+	amdRegex   = []string{"(?P<bytes>\\d*) byte  GTT CPU_ACCESS_REQUIRED CPU_GTT_USWC"}
+	intelRegex = []string{
+		"(?P<objects>\\d*) shrinkable.*objects, (?P<bytes>\\d*) bytes",
+		// This is for kernels upto v4.19
+		"(?P<objects>[0-9]+) objects, (?P<bytes>[0-9]+) bytes",
+	}
 )
 
 // contains checks if an element of type string exists in a slice of strings.
@@ -50,10 +54,17 @@ func contains(elems []string, v string) bool {
 }
 
 // parseMemory matches the regex pattern groups with the sysfs file contents
-func parseMemory(ctx context.Context, file []byte, memRegexp string) (map[string]int, error) {
+func parseMemory(ctx context.Context, file []byte, memRegexp []string) (map[string]int, error) {
 	results := make(map[string]int)
-	memoryRe := regexp.MustCompile(memRegexp)
-	matches := memoryRe.FindAllStringSubmatch(string(file), -1)
+	var matches [][]string
+	var memoryRe *regexp.Regexp
+	for _, memRegex := range memRegexp {
+		memoryRe = regexp.MustCompile(memRegex)
+		matches = memoryRe.FindAllStringSubmatch(string(file), -1)
+		if len(matches) > 0 {
+			break
+		}
+	}
 	if len(matches) == 0 {
 		return nil, errors.New("failed to find matches in sysfs memory file")
 	}
