@@ -100,6 +100,7 @@ func init() {
 			return []chrome.Option{
 				chrome.GAIALoginPool(s.RequiredVar("wallpaper.googlePhotosAccountPool")),
 				chrome.EnableFeatures("WallpaperGooglePhotosIntegration"),
+				chrome.EnableFeatures("WallpaperGooglePhotosSharedAlbums"),
 				chrome.ExtraArgs("--disable-sync"),
 			}, nil
 		}),

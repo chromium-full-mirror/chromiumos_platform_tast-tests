@@ -27,6 +27,9 @@ var GooglePhotosWallpaperAlbumsButton = nodewith.Name("Albums").Role(role.Toggle
 // GooglePhotosWallpaperAlbum is the name of an album in the GooglePhotosWallpaperCollection.
 const GooglePhotosWallpaperAlbum = "Album 01"
 
+// GooglePhotosWallpaperSharedAlbum is the name of a shared album in the GooglePhotosWallpaperCollection.
+const GooglePhotosWallpaperSharedAlbum = "Shared Album"
+
 // GooglePhotosWallpaperCollection is the name of the Google Photos wallpaper collection.
 const GooglePhotosWallpaperCollection = "Google Photos"
 

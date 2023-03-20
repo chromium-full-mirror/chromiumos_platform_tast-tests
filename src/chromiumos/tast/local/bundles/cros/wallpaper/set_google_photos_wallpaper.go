@@ -14,6 +14,7 @@ import (
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
+	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/media/imgcmp"
 	"chromiumos/tast/local/personalization"
 	"chromiumos/tast/local/screenshot"
@@ -23,7 +24,8 @@ import (
 )
 
 type setGooglePhotosWallpaperParams struct {
-	album string
+	album    string
+	isShared bool
 }
 
 func init() {
@@ -45,12 +47,20 @@ func init() {
 		Params: []testing.Param{{
 			Name: "from_album",
 			Val: setGooglePhotosWallpaperParams{
-				album: constants.GooglePhotosWallpaperAlbum,
+				album:    constants.GooglePhotosWallpaperAlbum,
+				isShared: false,
 			},
 		}, {
 			Name: "from_photos",
 			Val: setGooglePhotosWallpaperParams{
-				album: "",
+				album:    "",
+				isShared: false,
+			},
+		}, {
+			Name: "from_shared_album",
+			Val: setGooglePhotosWallpaperParams{
+				album:    constants.GooglePhotosWallpaperSharedAlbum,
+				isShared: true,
 			},
 		}},
 	})
@@ -83,6 +93,7 @@ func SetGooglePhotosWallpaper(ctx context.Context, s *testing.State) {
 	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
 
 	album := s.Param().(setGooglePhotosWallpaperParams).album
+	isShared := s.Param().(setGooglePhotosWallpaperParams).isShared
 
 	if err := uiauto.Combine("Set a new wallpaper and minimize wallpaper picker",
 		wallpaper.OpenWallpaperPicker(ui),
@@ -91,10 +102,16 @@ func SetGooglePhotosWallpaper(ctx context.Context, s *testing.State) {
 			if len(album) == 0 {
 				return nil
 			}
-			return uiauto.Combine("Select album",
-				ui.LeftClick(constants.GooglePhotosWallpaperAlbumsButton),
-				wallpaper.SelectGooglePhotosAlbum(ui, album),
-			)(ctx)
+			if err := ui.DoDefault(constants.GooglePhotosWallpaperAlbumsButton)(ctx); err != nil {
+				return err
+			}
+			if isShared {
+				sharedText := nodewith.Name("Shared").ClassName("secondary-text")
+				if err := ui.WaitUntilExists(sharedText)(ctx); err != nil {
+					return err
+				}
+			}
+			return wallpaper.SelectGooglePhotosAlbum(ui, album)(ctx)
 		},
 		wallpaper.SelectGooglePhotosPhoto(ui, constants.GooglePhotosWallpaperPhoto),
 		// Navigate to Google Photos subpage and select "Fill" mode for the selected wallpaper.
