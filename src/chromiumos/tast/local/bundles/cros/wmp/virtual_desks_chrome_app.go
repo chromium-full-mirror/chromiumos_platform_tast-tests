@@ -133,25 +133,29 @@ func VirtualDesksChromeApp(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create a new desk: ", err)
 	}
 
-	// Verifies that there are 2 desks.
-	deskMiniViewsInfo, err := ac.NodesInfo(ctx, nodewith.ClassName("DeskMiniView"))
-	if err != nil {
-		s.Fatal("Failed to find desks: ", err)
-	}
-	if len(deskMiniViewsInfo) != 2 {
-		s.Fatalf("Expected %v desks, but got %v instead", 2, len(deskMiniViewsInfo))
+	if err := ash.WaitUntilDesksFinishAnimating(ctx, tconn); err != nil {
+		s.Fatal("Failed to wait for desks to finish animating: ", err)
 	}
 
-	// Exit overview mode.
-	if err := ash.SetOverviewModeAndWait(ctx, tconn, false); err != nil {
+	// Verifies that there are 2 desks.
+	dc, err := ash.GetDeskCount(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to count desks: ", err)
+	}
+	if dc != 2 {
+		s.Fatalf("Expected %d desks, but got %d instead", 2, dc)
+	}
+
+	// Verifies exited overview mode.
+	if err := ash.WaitForOverviewState(ctx, tconn, ash.Hidden, 5*time.Second); err != nil {
 		s.Fatal("Failed to exit overview mode: ", err)
 	}
 
-	// Open a Chrome browser.
+	// Opens a Chrome browser.
 	if err := apps.Launch(ctx, tconn, apps.Chrome.ID); err != nil {
 		s.Fatalf("Failed to open %s: %v", apps.Chrome.Name, err)
 	}
-	if err := ash.WaitForApp(ctx, tconn, apps.Chrome.ID, time.Minute); err != nil {
+	if err := ash.WaitForApp(ctx, tconn, apps.Chrome.ID, 5*time.Second); err != nil {
 		s.Fatalf("%s did not appear in shelf after launch: %s", apps.Chrome.Name, err)
 	}
 
