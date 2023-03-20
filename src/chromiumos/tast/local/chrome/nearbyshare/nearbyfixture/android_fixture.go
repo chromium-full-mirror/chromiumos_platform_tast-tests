@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"chromiumos/tast/common/android"
-	"chromiumos/tast/common/android/ui"
 	nearbycommon "chromiumos/tast/common/cros/nearbyshare"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
@@ -207,53 +206,8 @@ func (f *nearbyShareAndroidFixture) SetUp(ctx context.Context, s *testing.FixtSt
 
 	// Try forcing a GMSCore update if the phone was recently factory restored.
 	// TODO(b/255660878): Remove this once GMSCore provisioning is rolled out to the lab.
-	gmsVersions, err := adbDevice.GMSCoreVersions(ctx)
-	if err != nil {
-		s.Fatal("Failed to get GMSCore versions on the phone: ", err)
-	}
-	if len(gmsVersions) < 2 {
-		s.Log("Single GMSCore version detected, phone was recently factory restored. Attempting GMSCore update")
-		defer func() {
-			if err := adbDevice.DumpUIOnError(cleanupCtx, s.OutDir(), s.HasError); err != nil {
-				s.Log("Failed to save UIAutomator dump: ", err)
-			}
-		}()
-		if err := adbDevice.ForceGMSCoreUpdate(ctx); err != nil {
-			s.Fatal("Failed to force a GMSCore update: ", err)
-		}
-		uiDevice, err := ui.NewDeviceWithRetry(ctx, adbDevice)
-		if err != nil {
-			return errors.Wrap(err, "failed to connect to the UI Automator server")
-		}
-		defer uiDevice.Close(cleanupCtx)
-		if err := adbDevice.ShowTouches(ctx, true); err != nil {
-			s.Log("Failed to enable show_touches setting: ", err)
-		}
-		// The UI locator for the "Update" button is sometimes different based on the device.
-		updateBtn1 := uiDevice.Object(ui.DescriptionContains("Update"))
-		updateBtn2 := uiDevice.Object(ui.TextContains("Update"), ui.ClassName("android.widget.Button"))
-		if err := testing.Poll(ctx, func(context.Context) error {
-			if err := updateBtn1.Exists(ctx); err == nil { // button is present
-				if err := updateBtn1.Click(ctx); err != nil {
-					return errors.Wrap(err, "failed to click update button")
-				}
-			}
-			if err := updateBtn2.Exists(ctx); err == nil { // button is present
-				if err := updateBtn2.Click(ctx); err != nil {
-					return errors.Wrap(err, "failed to click update button")
-				}
-			}
-			v, err := adbDevice.GMSCoreVersions(ctx)
-			if err != nil {
-				return errors.Wrap(err, "failed to get GMSCore versions")
-			}
-			if len(v) < 2 {
-				return errors.New("GMSCore not yet updated")
-			}
-			return nil
-		}, nil); err != nil {
-			s.Fatal("Failed to update GMSCore away from the Android OS bundled version: ", err)
-		}
+	if err := crossdevice.ForceGMSCoreUpdate(ctx, cleanupCtx, adbDevice, s.OutDir(), s.HasError); err != nil {
+		s.Fatal("Failed to update GMSCore: ", err)
 	}
 
 	tags := []string{

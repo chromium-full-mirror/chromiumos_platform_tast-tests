@@ -200,7 +200,7 @@ func (f *crossdeviceAndroidFixture) SetUp(ctx context.Context, s *testing.FixtSt
 
 	// Allocate time for saving logs in case of failure.
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 20*time.Second)
 	defer cancel()
 
 	// We want to ensure we have logs even if the Android device setup fails.
@@ -247,6 +247,12 @@ func (f *crossdeviceAndroidFixture) SetUp(ctx context.Context, s *testing.FixtSt
 		} else {
 			s.Fatal("Cannot log in on Android on an unrooted phone")
 		}
+	}
+
+	// Try forcing a GMSCore update if the phone was recently factory restored.
+	// TODO(b/255660878): Remove this once GMSCore provisioning is rolled out to the lab.
+	if err := ForceGMSCoreUpdate(ctx, cleanupCtx, adbDevice, s.OutDir(), s.HasError); err != nil {
+		s.Fatal("Failed to update GMSCore: ", err)
 	}
 
 	// Prepare the Multidevice Snippet.
