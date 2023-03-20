@@ -146,4 +146,29 @@ func DrivefsPooledStorage(ctx context.Context, s *testing.State) {
 			s.Fatalf("Error retrieving banner with expected class %q. %v", tc.expectedBannerClass, err)
 		}
 	}
+
+	// Validate shared drives for full and 80% warning.
+	if err := uiauto.Combine("navgiate to full shared drive",
+		files.OpenDir("Shared drives", filesapp.FilesTitlePrefix+"Shared drives"),
+		files.OpenFile("full"),
+	)(ctx); err != nil {
+		s.Fatal("Failed to navigate to full shared drive: ", err)
+	}
+	expected := "tast-drive-out-of-shared-drive-space"
+	_, err = files.Info(ctx, nodewith.HasClass(expected).Role("banner").First())
+	if err != nil {
+		s.Fatalf("Error retrieving banner with expected class %q. %v", expected, err)
+	}
+
+	if err = uiauto.Combine("navgiate to warn shared drive",
+		files.OpenDir("Shared drives", filesapp.FilesTitlePrefix+"Shared drives"),
+		files.OpenFile("warn"),
+	)(ctx); err != nil {
+		s.Fatal("Failed to navigate to warn shared drive: ", err)
+	}
+	expected = "tast-drive-low-shared-drive-space"
+	_, err = files.Info(ctx, nodewith.HasClass(expected).Role("banner").First())
+	if err != nil {
+		s.Fatalf("Error retrieving banner with expected class %q. %v", expected, err)
+	}
 }
