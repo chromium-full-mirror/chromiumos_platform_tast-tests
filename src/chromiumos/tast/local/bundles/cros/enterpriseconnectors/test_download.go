@@ -213,13 +213,6 @@ func TestDownload(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	reportOnlyUIEnabled, err := helpers.GetSafeBrowsingExperimentEnabled(ctx, br, "ConnectorsScanningReportOnlyUI")
-	if err != nil {
-		s.Fatal("Failed to determine value of ConnectorsScanningReportOnlyUI: ", err)
-	}
-	// ReportOnlyUI only effective if AllowsImmediateDelivery is true.
-	reportOnlyUIEnabled = reportOnlyUIEnabled && testParams.AllowsImmediateDelivery
-
 	for _, params := range helpers.GetTestFileParams() {
 		if succeeded := s.Run(ctx, params.TestName, func(ctx context.Context, s *testing.State) {
 			cleanupCtx := ctx
@@ -239,8 +232,8 @@ func TestDownload(ctx context.Context, s *testing.State) {
 			dlFileName := params.FileName
 
 			shouldBlockDownload := false
-			// For the report only UI, no blocking should happen.
-			if testParams.ScansEnabled && !reportOnlyUIEnabled {
+			// For the report only UI (AllowsImmediateDelivery==true), no blocking should happen.
+			if testParams.ScansEnabled && !testParams.AllowsImmediateDelivery {
 				if params.IsUnscannable {
 					shouldBlockDownload = !testParams.AllowsUnscannableFiles
 				} else {
