@@ -26,7 +26,7 @@ func init() {
 		BugComponent: "b:1226026",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_prod_esim"},
-		Fixture:      "cellular",
+		Fixture:      "cellularWithFunctioningSim",
 	})
 }
 

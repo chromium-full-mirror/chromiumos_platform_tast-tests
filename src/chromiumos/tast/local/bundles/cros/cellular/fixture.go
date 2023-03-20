@@ -53,6 +53,18 @@ func init() {
 		Parent:          fixture.FakeDMSEnrolled,
 	})
 	testing.AddFixture(&testing.Fixture{
+		Name:            "cellularWithFakeDMSEnrolledAndFunctioningSim",
+		Desc:            "Cellular tests are safe to run that require a functioning SIM and a fake DMS (for managed eSIM profiles) is running",
+		Contacts:        []string{"cros-connectivity@google.com", "jiajunz@google.com"},
+		SetUpTimeout:    3 * time.Minute,
+		ResetTimeout:    5 * time.Second,
+		PreTestTimeout:  4 * time.Minute,
+		PostTestTimeout: 3 * time.Minute,
+		TearDownTimeout: 5 * time.Second,
+		Impl:            &cellularFixture{useFakeDMS: true, checkSim: true},
+		Parent:          fixture.FakeDMSEnrolled,
+	})
+	testing.AddFixture(&testing.Fixture{
 		Name: "cellularModemManager",
 		Desc: "ModemManager tests are safe to run without shill running",
 		Contacts: []string{
@@ -66,6 +78,28 @@ func init() {
 		TearDownTimeout: 5 * time.Second,
 		Impl:            &cellularFixture{disableCellularTechnology: true, restartMM: true},
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name:            "cellularWithFunctioningRoamingSim",
+		Desc:            "Cellular tests that require a functioning roaming SIM are safe to run",
+		Contacts:        []string{"cros-connectivity@google.com", "nikhilcn@google.com"},
+		SetUpTimeout:    4 * time.Minute,
+		ResetTimeout:    5 * time.Second,
+		PreTestTimeout:  4 * time.Minute,
+		PostTestTimeout: 3 * time.Minute,
+		TearDownTimeout: 5 * time.Second,
+		Impl:            &cellularFixture{useRoaming: true, checkSim: true},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name:            "cellularWithFunctioningSim",
+		Desc:            "Cellular tests that require a functioning SIM are safe to run",
+		Contacts:        []string{"cros-connectivity@google.com", "nikhilcn@google.com"},
+		SetUpTimeout:    4 * time.Minute,
+		ResetTimeout:    5 * time.Second,
+		PreTestTimeout:  4 * time.Minute,
+		PostTestTimeout: 3 * time.Minute,
+		TearDownTimeout: 5 * time.Second,
+		Impl:            &cellularFixture{useRoaming: false, checkSim: true},
+	})
 }
 
 // cellularFixture implements testing.FixtureImpl.
@@ -74,6 +108,8 @@ type cellularFixture struct {
 	disableCellularTechnology bool
 	restartMM                 bool
 	useFakeDMS                bool
+	useRoaming                bool
+	checkSim                  bool
 	// Fixture variables
 	helper          *cellular.Helper
 	modemfwdStopped bool
@@ -171,6 +207,24 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	if f.restartMM {
 		if err := upstart.RestartJob(ctx, modemmanager.JobName); err != nil {
 			testing.ContextLogf(ctx, "Failed to restart job: %q, %s", modemmanager.JobName, err)
+		}
+	}
+	if f.useRoaming {
+		err := cellular.SetRoamingPolicy(ctx, true, false)
+		if err != nil {
+			s.Fatal("Failed to set roaming property: ", err)
+		}
+	}
+
+	if f.checkSim {
+		helper, err := cellular.NewHelperWithConnectedCellular(ctx)
+		if err != nil {
+			s.Fatal("Failed to create connected cellular.Helper: ", err)
+		}
+
+		_, err = helper.Disconnect(ctx)
+		if err != nil {
+			s.Fatal("Failed to disconnect: ", err)
 		}
 	}
 	return &FixtData{fdms}

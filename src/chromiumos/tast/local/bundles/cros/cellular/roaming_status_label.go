@@ -38,6 +38,7 @@ func init() {
 				Val: testParameters{
 					roamingSubLabel: "Currently roaming",
 				},
+				Fixture: "cellularWithFunctioningRoamingSim",
 			},
 			{
 				Name:      "on_non_roaming_sim",
@@ -45,6 +46,7 @@ func init() {
 				Val: testParameters{
 					roamingSubLabel: "Not currently roaming",
 				},
+				Fixture: "cellularWithFunctioningSim",
 			},
 		},
 		Timeout: 3 * time.Minute,

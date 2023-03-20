@@ -29,6 +29,7 @@ func init() {
 		BugComponent: "b:1226026",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_roaming"},
+		Fixture:      "cellularWithFunctioningRoamingSim",
 		Timeout:      3 * time.Minute,
 	})
 }
@@ -42,11 +43,6 @@ func ConnectToRoamingSim(ctx context.Context, s *testing.State) {
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
-	}
-
-	err = cellular.SetRoamingPolicy(ctx, true, false)
-	if err != nil {
-		s.Fatal("Failed to set roaming property: ", err)
 	}
 
 	networkName, err := cellular.GetCellularNetwork(ctx)
