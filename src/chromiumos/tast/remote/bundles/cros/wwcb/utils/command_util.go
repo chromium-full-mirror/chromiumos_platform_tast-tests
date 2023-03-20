@@ -29,7 +29,7 @@ func VerifyPowerStatus(ctx context.Context, dut *dut.DUT, isBatteryCharging bool
 		regex := `state:(\s+\w+\s?\w+)`
 		expMatch := regexp.MustCompile(regex)
 
-		out, err := dut.Conn().CommandContext(ctx, "power_supply_info").Output()
+		out, err := dut.Conn().CommandContext(ctx, "sudo", "power_supply_info").Output()
 		if err != nil {
 			return errors.Wrap(err, "failed to retrieve power supply info from DUT")
 		}
