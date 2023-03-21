@@ -27,7 +27,8 @@ func init() {
 		},
 		// ChromeOS > Software > Commercial (Enterprise) > OEM Services.
 		BugComponent: "b:1256717",
-		Attr:         []string{"group:mainline", "informational"}, // b/217770420
+		// TODO(b/274585281): Fix and reenable test.
+		// Attr:         []string{"group:mainline", "informational"}, // b/217770420
 		SoftwareDeps: []string{"vm_host", "wilco"},
 	})
 }

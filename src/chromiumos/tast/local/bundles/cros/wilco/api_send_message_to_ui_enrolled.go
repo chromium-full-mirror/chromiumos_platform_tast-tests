@@ -27,12 +27,13 @@ func init() {
 		},
 		// ChromeOS > Software > Commercial (Enterprise) > OEM Services.
 		BugComponent: "b:1256717",
-		Attr: []string{
-			"group:golden_tier",
-			"group:medium_low_tier",
-			"group:hardware",
-			"group:complementary",
-		},
+		// TODO(b/274585281): Fix and reenable test.
+		// Attr: []string{
+		// 	"group:golden_tier",
+		// 	"group:medium_low_tier",
+		// 	"group:hardware",
+		// 	"group:complementary",
+		// },
 		SoftwareDeps: []string{"reboot", "vm_host", "wilco", "chrome"},
 		Fixture:      "wilcoDTCAllowed",
 	})
