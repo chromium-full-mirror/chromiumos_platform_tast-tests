@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package camera
+package intel
 
 import (
 	"context"
@@ -26,7 +26,7 @@ func init() {
 		Func:         CCAUICaptureOperation,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies capturing of images, video using user-facing and back-facing camera stress test",
-		Contacts:     []string{"chromeos-camera-eng@google.com", "intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
 		Fixture:      "ccaLaunched",
 		Params: []testing.Param{{

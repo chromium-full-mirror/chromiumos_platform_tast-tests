@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package camera
+package intel
 
 import (
 	"context"
@@ -17,11 +17,11 @@ func init() {
 		Func:         CCAUIPreviewLongTakePhoto,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Preview Camera for 1 hour and take photo",
-		Contacts:     []string{"chromeos-camera-eng@google.com", "intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		SoftwareDeps: []string{"camera_app", "chrome"},
 		Fixture:      "ccaLaunched",
 		Timeout:      62 * time.Minute, // Timeout for long duration.
-		BugComponent: "b:978428",
+		BugComponent: "b:157291",       // ChromeOS > External > Intel
 	})
 }
 
