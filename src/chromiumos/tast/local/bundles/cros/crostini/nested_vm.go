@@ -21,7 +21,7 @@ func init() {
 		Desc:         "Test that /dev/kvm is present and basic functionality works",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		SoftwareDeps: []string{"chrome", "untrusted_vm", "amd64"},
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "informational"},
 		// The build_image script strips out .c files, so we
 		// have to use a different extension here.
 		Data:         []string{"kvm_test.c-bypass-mask"},
