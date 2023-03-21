@@ -47,4 +47,6 @@ type DevBoard interface {
 	Close(ctx context.Context) error
 	// GSCToolCommand executes gsctool.
 	GSCToolCommand(ctx context.Context, image string, args ...string) (output []byte, err error)
+	// Executes TCG tests.
+	RunTcgTests(ctx context.Context, outdir string, test_suite string) error
 }

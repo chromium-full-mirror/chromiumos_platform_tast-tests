@@ -7,7 +7,11 @@ package ti50
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"io/ioutil"
+	"log"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -227,4 +231,76 @@ func (a *DUTControlAndreiboard) GSCToolCommand(ctx context.Context, image string
 		return output, errors.Errorf("operation %s: %s", strings.Join(args, " "), resp.Err)
 	}
 	return output, nil
+}
+
+// RunTcgTests executes TCG tests via the DutControl service.
+func (a *DUTControlAndreiboard) RunTcgTests(ctx context.Context, outdir string, test_suite string) (err error) {
+	req := &dutcontrol.RunTcgTestsRequest{Bus: dutcontrol.TpmInterface_SPI, TestSuite: test_suite}
+	stream, err := a.client.RunTcgTests(ctx, req)
+
+	test_err, err := os.Create(filepath.Join(outdir, "test_stderr.log"))
+	if err != nil {
+		return errors.Wrapf(err, "creating log file")
+	}
+	test_out, err := os.Create(filepath.Join(outdir, "test_stdout.log"))
+	if err != nil {
+		return errors.Wrapf(err, "creating log file")
+	}
+	tpm_err, err := os.Create(filepath.Join(outdir, "tpm_server_stderr.log"))
+	if err != nil {
+		return errors.Wrapf(err, "creating log file")
+	}
+	tpm_out, err := os.Create(filepath.Join(outdir, "tpm_server_stdout.log"))
+	if err != nil {
+		return errors.Wrapf(err, "creating log file")
+	}
+	defer func() {
+		test_err.Sync()
+		test_out.Sync()
+		tpm_err.Sync()
+		tpm_out.Sync()
+
+		test_err.Close()
+		test_out.Close()
+		tpm_err.Close()
+		tpm_out.Close()
+
+	}()
+
+	for {
+		resp, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		switch resp := resp.Response.(type) {
+		case *dutcontrol.RunTcgTestsResponse_Logs:
+			if resp.Logs.TestStderr != "" {
+				log.Printf("%s", resp.Logs.TestStderr)
+				test_err.WriteString(resp.Logs.TestStderr)
+			}
+			if resp.Logs.TestStdout != "" {
+				log.Printf("%s", resp.Logs.TestStdout)
+				test_out.WriteString(resp.Logs.TestStdout)
+			}
+			if resp.Logs.TpmServerStderr != "" {
+				log.Printf("%s", resp.Logs.TpmServerStderr)
+				tpm_err.WriteString(resp.Logs.TpmServerStderr)
+			}
+			if resp.Logs.TpmServerStdout != "" {
+				log.Printf("%s", resp.Logs.TpmServerStdout)
+				tpm_out.WriteString(resp.Logs.TpmServerStdout)
+			}
+		case *dutcontrol.RunTcgTestsResponse_Results:
+			for _, file := range resp.Results.Results {
+				log.Printf("Writing result file %s", file.FileName)
+				path := filepath.Join(outdir, file.FileName)
+				os.WriteFile(path, file.Contents, 0644)
+			}
+			if resp.Results.Err != "" {
+				return errors.Errorf("Tests failed: %s", resp.Results.Err)
+			}
+		}
+	}
+
+	return nil
 }
