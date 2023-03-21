@@ -39,14 +39,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Behavior of VirtualKeyboardEnabled and TouchVirtualKeyboardEnabled policies and their mixing by checking that the virtual keyboard (is/is not) displayed as requested by the policy",
 		Contacts: []string{
-			"cros-engprod-muc@google.com",
-			"kamilszarek@google.com",    // Test author of the merge.
-			"giovax@google.com",         // Test author of the initial test for policy.VirtualKeyboardEnabled.
-			"alexanderhartl@google.com", // Test author of the initial test for policy.TouchVirtualKeyboardEnabled.
+			"e14s-eng@google.com",
 		},
-		BugComponent: "b:1263917",
+		BugComponent: "b:95887",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:golden_tier"},
+		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
 		Params: []testing.Param{
 			{
 				Name:    "both",
