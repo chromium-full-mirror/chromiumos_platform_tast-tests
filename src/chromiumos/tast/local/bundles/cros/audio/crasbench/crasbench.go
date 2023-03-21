@@ -76,7 +76,8 @@ func Run(ctx context.Context, s *testing.State) {
 
 	if param.DLC != "" {
 		ctxForUninstallDlc := ctx
-		ctx, cancel := ctxutil.Shorten(ctx, time.Second*3)
+		var cancel context.CancelFunc
+		ctx, cancel = ctxutil.Shorten(ctx, time.Second*3)
 		defer cancel()
 		if err := dlc.Install(ctx, param.DLC, ""); err != nil {
 			s.Fatal("Failed to install dlc: ", err)
