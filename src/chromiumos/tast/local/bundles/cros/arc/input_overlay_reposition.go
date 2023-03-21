@@ -94,6 +94,7 @@ func InputOverlayReposition(ctx context.Context, s *testing.State) {
 			// Verify button group drag works correctly.
 			testDrag(buttonGroup, params.TestConn, mouseDrag, -10, -10),
 			testDrag(buttonGroup, params.TestConn, touchDrag, -10, 10),
+			ui.FocusAndWait(buttonGroup),
 			testKeyDrag(buttonGroup, params.TestConn),
 			testOffscreenDrag(buttonGroup, params.TestConn),
 		)(ctx); err != nil {
@@ -101,12 +102,17 @@ func InputOverlayReposition(ctx context.Context, s *testing.State) {
 		}
 
 		if err := uiauto.Combine("drag actions",
-			// Verify action drag works correctly.
+			// Verify tap action drag works correctly.
 			testDrag(tapAction, params.TestConn, mouseDrag, -10, -10),
 			testDrag(tapAction, params.TestConn, touchDrag, 10, 10),
+			ui.FocusAndWait(tapAction),
+			testKeyDrag(tapAction, params.TestConn),
 			testOffscreenDrag(tapAction, params.TestConn),
+			// Verify move action drag works correctly.
 			testDrag(moveAction, params.TestConn, mouseDrag, -10, -10),
 			testDrag(moveAction, params.TestConn, touchDrag, 10, 10),
+			ui.FocusAndWait(moveAction),
+			testKeyDrag(moveAction, params.TestConn),
 			testOffscreenDrag(moveAction, params.TestConn),
 		)(ctx); err != nil {
 			s.Fatal("Failed to verify action drag correctness: ", err)
@@ -213,7 +219,7 @@ func testKeyDrag(finder *nodewith.Finder, tconn *chrome.TestConn) action.Action 
 			}
 			initialLoc := initialRect.CenterPoint()
 
-			// Type key 3 times
+			// Type key 3 times.
 			if err := kb.Accel(ctx, tc.key); err != nil {
 				return errors.Wrapf(err, "failed to press %s key", tc.key)
 			}
