@@ -62,14 +62,21 @@ const (
 	GpioTi50EcPowerBtnL GpioName = "EC_PWR_BTN_L"
 	// GpioTi50Kso2 is the KSO (column) from GSC to KB
 	GpioTi50Kso2 GpioName = "KSO_02"
-	// GpioTi50EcKso2Inv is the KSO (column) from EC to GSC that should be forward through GSC. This active high though
+	// GpioTi50VolDownOut from GSC (in Tablet Mode)
+	GpioTi50VolDownOut GpioName = "KSO_02"
+	// GpioTi50EcKso2Inv is the KSO (column) from EC to GSC that should be forward through GSC.
+	// This is active high though.
 	GpioTi50EcKso2Inv GpioName = "EC_KSO_02_INV"
+	// GpioTi50VolDownIn is volume down input to GSC that should forward through GSC in Tablet Mode
+	GpioTi50VolDownIn GpioName = "EC_KSO_02_INV"
 	// GpioTi50KsiRefresh is the KSI (row) from KB to GSC that is connected to Refresh
 	GpioTi50KsiRefresh GpioName = "KSI_02"
-	// GpioTi50KsiVolumeUp is the KSI (row) from KB to GSC that is connected to Volume Up
-	GpioTi50KsiVolumeUp GpioName = "KSI_02"
-	// GpioTi50KsiRecovery is the KSI (row) from KB to GSC that is connected to the Recovery Button
-	GpioTi50KsiRecovery GpioName = "KSI_02"
+	// GpioTi50VolumeUpIn is volume up input to GSC that should forward through GSC in Tablet Mode
+	GpioTi50VolUpIn GpioName = "KSI_02"
+	// GpioTi50RecoveryIn is recovery mode switch to GSC that should forward through GSC in Box Mode
+	GpioTi50RecoveryIn GpioName = "KSI_02"
+	// GpioTi50VolumeUpOut is volume up output from GSC while in Tablet Mode
+	GpioTi50VolUpOut GpioName = "EC_KSI_02"
 	// GpioTi50KsiBack is the KSI (row) from KB to GSC that is connected to ChromeOS Back key
 	GpioTi50KsiBack GpioName = "KSI_00"
 )

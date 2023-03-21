@@ -8,12 +8,19 @@ import (
 	"context"
 	"regexp"
 	"time"
+
+	"chromiumos/tast/testing"
 )
 
 const (
 	// promptSuccesses is the number of consecutive successful prompts for
 	// the image to be considered fully booted.
 	promptSuccesses = 3
+)
+
+var (
+	deepSleep *regexp.Regexp = regexp.MustCompile(`Entering deep sleep zzz`)
+	roBoot    *regexp.Regexp = regexp.MustCompile(`Ravn4\|`)
 )
 
 // CommandImage displays a prompt and responds to cli commands.
@@ -86,6 +93,27 @@ func (i *CommandImage) WaitUntilBooted(ctx context.Context, interval time.Durati
 			return ctx.Err()
 		}
 	}
+}
+
+// WaitUntilDeepSleep waits until gsc goes into deep sleep via monitoring print statement
+func (i *CommandImage) WaitUntilDeepSleep(ctx context.Context, interval time.Duration) error {
+	ctx, cancel := context.WithTimeout(ctx, interval)
+	defer cancel()
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		_, err := i.board.ReadSerialSubmatch(ctx, deepSleep)
+		return err
+	}, nil)
+}
+
+// WaitUntilRoBoot waits until initial RO console messages are printed which happens right after
+// reboot or deep sleep resume.
+func (i *CommandImage) WaitUntilRoBoot(ctx context.Context, interval time.Duration) error {
+	ctx, cancel := context.WithTimeout(ctx, interval)
+	defer cancel()
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		_, err := i.board.ReadSerialSubmatch(ctx, roBoot)
+		return err
+	}, nil)
 }
 
 // GetPrompt gets a fresh prompt from the image by  the prompt.
