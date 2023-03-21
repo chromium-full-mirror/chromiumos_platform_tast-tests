@@ -5,6 +5,7 @@
 //go:generate protoc -I . --go_out=plugins=grpc:../../../../.. iwlwifi_pci_rescan.proto
 //go:generate protoc -I . --go_out=plugins=grpc:../../../../.. shill_service.proto
 //go:generate protoc -I . --go_out=plugins=grpc:../../../../.. wifi_service.proto
+//go:generate protoc -I . --go_out=plugins=grpc:../../../../.. hpt_service.proto
 
 package wifi
 
