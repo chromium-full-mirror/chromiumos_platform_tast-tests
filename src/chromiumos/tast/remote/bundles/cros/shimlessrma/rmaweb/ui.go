@@ -279,6 +279,8 @@ func (uiHelper *UIHelper) CalibrateBaseGyroPageOperation(ctx context.Context) er
 		uiHelper.waitForPageToLoad("Calibrate components", timeInSecondToLoadPage),
 		uiHelper.waitAndClickButton("Next", longTimeInSecondToEnableButton),
 		uiHelper.waitForPageToLoad("Calibrating components…", timeInSecondToLoadPage),
+		uiHelper.waitForPageToLoad("Calibration complete", timeInSecondToLoadPage),
+		uiHelper.waitAndClickButton("Next", longTimeInSecondToEnableButton),
 		uiHelper.waitForPageToLoad("Finalizing repair", timeInSecondToLoadPage),
 		uiHelper.waitForPageToLoad("Almost done!", timeInSecondToLoadPage),
 	)(ctx)
