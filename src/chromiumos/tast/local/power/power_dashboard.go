@@ -7,10 +7,12 @@ package power
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"path"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -336,6 +338,77 @@ func SavePowerLogJSON(ctx context.Context, outDir string, powerLogDict map[strin
 	}
 
 	return nil
+}
+
+// containEmpty() is the helper function to check if there is an empty string among args.
+func containEmpty(strs ...string) bool {
+	for _, str := range strs {
+		if str == "" {
+			return true
+		}
+	}
+	return false
+}
+
+// generateDashboardLink generates link to power and thermal dashboard.
+func generateDashboardLink(powerLogDict map[string]interface{}) string {
+	const hwidLinkStr = `
+	<a href="http://goto.google.com/pdash-hwid?query={hwid}">
+	  Link to hwid lookup.
+	</a><br />
+	`
+
+	const pdashLinkStr = `
+	<a href="http://chrome-power.appspot.com/dashboard?board={board}&test={test}&datetime={datetime}">
+	  Link to power dashboard.
+	</a><br />
+	`
+
+	const tdashLinkStr = `
+	<a href="http://chrome-power.appspot.com/thermal_dashboard?note={note}">
+	  Link to thermal dashboard.
+	</a><br />
+	`
+
+	var board, test, hwid, note, datetime string
+	var timeRaw time.Time
+
+	if value, ok := powerLogDict["test"].(string); ok {
+		test = value
+	}
+	if value, ok := powerLogDict["timestamp"].(int64); ok {
+		timeRaw = time.Unix(value, 0).UTC()
+	}
+	datetime = fmt.Sprintf("%d%02d%02d%02d%02d", timeRaw.Year(), int(timeRaw.Month()), timeRaw.Day(), timeRaw.Hour(), timeRaw.Minute())
+	if dutMap, ok := powerLogDict["dut"].(map[string]interface{}); ok {
+		if value, ok := dutMap["board"].(string); ok {
+			board = value
+		}
+		if value, ok := dutMap["note"].(string); ok {
+			note = value
+		}
+		if skuMap, ok := dutMap["sku"].(map[string]interface{}); ok {
+			if value, ok := skuMap["hwid"].(string); ok {
+				hwid = value
+			}
+		}
+	}
+
+	htmlStr := `<!DOCTYPE html><html><body>`
+	r := strings.NewReplacer("{hwid}", hwid, "{board}", board, "{test}", test, "{datetime}", datetime, "{note}", note)
+	if !containEmpty(hwid) {
+		htmlStr += r.Replace(hwidLinkStr)
+	}
+	if !containEmpty(board, test, datetime) {
+		htmlStr += r.Replace(pdashLinkStr)
+	}
+	pattern := `ThermalQual.(full|lab).*`
+	re := regexp.MustCompile(pattern)
+	if re.MatchString(note) && !containEmpty(note) {
+		htmlStr += r.Replace(tdashLinkStr)
+	}
+	htmlStr += `</body></html>`
+	return htmlStr
 }
 
 // UploadToDashboard uploads the power test metrics to go/power-dashboard-view.
