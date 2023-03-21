@@ -30,8 +30,9 @@ func init() {
 		// Given flash_fp_mcu can run into scenarios were it needs to retry a
 		// few times, we delegate a minute for flash_fp_mcu and a minute for
 		// the reboot cleanup.
-		Timeout:      2 * time.Minute,
-		SoftwareDeps: []string{"biometrics_daemon"},
+		Timeout: 2 * time.Minute,
+		// TODO(b/274634861): remove the first_class_servo_working when fixed.
+		SoftwareDeps: []string{"biometrics_daemon", "first_class_servo_working"},
 		HardwareDeps: hwdep.D(hwdep.Fingerprint()),
 		Vars:         []string{"servo"},
 	})
