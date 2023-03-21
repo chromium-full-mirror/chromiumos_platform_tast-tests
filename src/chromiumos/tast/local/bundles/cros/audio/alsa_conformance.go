@@ -66,6 +66,7 @@ var mergeThresholdSize480Models = []string{
 	"kano",
 	"lillipup",
 	"lindar",
+	"marasov",
 	"mithrax",
 	"nereid",
 	"nirwen",
