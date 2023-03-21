@@ -385,3 +385,8 @@ func (c *Cras) SetSpeakOnMuteDetection(ctx context.Context, enabled bool) error 
 func (c *Cras) SetFlossEnabled(ctx context.Context, enabled bool) error {
 	return c.call(ctx, "SetFlossEnabled", enabled).Err
 }
+
+// SetNoiseCancellationEnabled enables or disables noise cancellation.
+func (c *Cras) SetNoiseCancellationEnabled(ctx context.Context, enabled bool) error {
+	return c.call(ctx, "SetNoiseCancellationEnabled", enabled).Err
+}

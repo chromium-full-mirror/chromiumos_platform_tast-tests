@@ -1,0 +1,199 @@
+// Copyright 2023 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package audio
+
+import (
+	"context"
+	"fmt"
+	"math"
+	"path/filepath"
+	"strconv"
+	"time"
+
+	"chromiumos/tast/common/fixture"
+	"chromiumos/tast/common/testexec"
+	"chromiumos/tast/local/audio"
+	"chromiumos/tast/local/bundles/cros/audio/device"
+	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/dlc"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
+)
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func:         CrasNoiseCancellation,
+		Desc:         "Check noise cancellation in CRAS using aloop",
+		Contacts:     []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
+		BugComponent: "b:875484",
+		Attr:         []string{"group:mainline", "informational"},
+		Fixture:      fixture.StereoAloopLoaded,
+		Timeout:      3 * time.Minute,
+		SoftwareDeps: []string{"chrome"},
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Params: []testing.Param{
+			{
+				Name: "no_effects",
+				Val: crasNoiseCancellationParams{
+					captureRate:          48000,
+					expectedRMS:          0.4,
+					expectedRMSTolerance: 0.1,
+				},
+			},
+			{
+				Name: "aec",
+				Val: crasNoiseCancellationParams{
+					captureRate:          48000,
+					expectedRMS:          0.2,
+					expectedRMSTolerance: 0.1,
+					extraCaptureFlags: []string{
+						"--effects=aec",
+					},
+				},
+			},
+			{
+				Name: "nc",
+				Val: crasNoiseCancellationParams{
+					noiseCancellationEnabled: true,
+					captureRate:              48000,
+					expectedRMS:              0.03,
+					expectedRMSTolerance:     0.01,
+					extraCaptureFlags: []string{
+						"--effects=aec",
+					},
+					extraChromeOptions: []chrome.Option{
+						chrome.EnableFeatures("CrOSLateBootAudioAPNoiseCancellation"),
+					},
+				},
+			},
+			{
+				Name: "nc_44100hz",
+				Val: crasNoiseCancellationParams{
+					noiseCancellationEnabled: true,
+					captureRate:              44100,
+					expectedRMS:              0.03,
+					expectedRMSTolerance:     0.01,
+					extraCaptureFlags: []string{
+						"--effects=aec",
+					},
+					extraChromeOptions: []chrome.Option{
+						chrome.EnableFeatures("CrOSLateBootAudioAPNoiseCancellation"),
+					},
+				},
+			},
+		},
+	})
+}
+
+type crasNoiseCancellationParams struct {
+	noiseCancellationEnabled bool
+	captureRate              int
+	expectedRMS              float64
+	expectedRMSTolerance     float64
+	extraCaptureFlags        []string
+	extraChromeOptions       []chrome.Option
+}
+
+func CrasNoiseCancellation(ctx context.Context, s *testing.State) {
+	param := s.Param().(crasNoiseCancellationParams)
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(cleanupCtx, chrome.ResetTimeout)
+	defer cancel()
+	cr, err := chrome.New(ctx, param.extraChromeOptions...)
+	defer cr.Close(cleanupCtx)
+
+	if err := dlc.Install(ctx, "nc-ap-dlc", ""); err != nil {
+		s.Fatal("Cannot install nc-ap-dlc: ", err)
+	}
+
+	if err := audio.SetupLoopback(ctx, cr); err != nil {
+		s.Fatal("Failed to SetupLoopback: ", err)
+	}
+
+	cras, err := audio.NewCras(ctx)
+	if err != nil {
+		s.Fatal("Failed to connect to CRAS: ", err)
+	}
+	if err := cras.SetNoiseCancellationEnabled(ctx, param.noiseCancellationEnabled); err != nil {
+		s.Fatal("Failed to SetNoiseCancellationEnabled: ", err)
+	}
+
+	const noiseDuration = 10 * time.Second
+
+	noiseWave := filepath.Join(s.OutDir(), "noise.wav")
+	if err := testexec.CommandContext(
+		ctx,
+		"sox",
+		"-n", "-L",
+		"-e", "signed-integer",
+		"-b", "16",
+		"-r", strconv.Itoa(param.captureRate),
+		"-c", "2",
+		noiseWave,
+		"synth", strconv.FormatFloat(noiseDuration.Seconds(), 'f', -1, 64),
+		"sine", "300",
+		"gain", "-10",
+	).Run(testexec.DumpLogOnError); err != nil {
+		s.Fatal("Cannot generate noise.wav: ", err)
+	}
+
+	playbackCaptureCtx, cancel := context.WithTimeout(ctx, 2*noiseDuration)
+	defer cancel()
+
+	playbackDone := make(chan struct{})
+	go func() {
+		defer close(playbackDone)
+		// Run playback.
+		if err := audio.PlayWavToPCM(playbackCaptureCtx, noiseWave, device.AloopPlaybackPCM); err != nil {
+			s.Error("Cannot run playback: ", err)
+		}
+	}()
+
+	// Run capture.
+	captureRaw := filepath.Join(s.OutDir(), "capture.raw")
+	if err := testexec.CommandContext(
+		playbackCaptureCtx,
+		"cras_test_client",
+		append(
+			[]string{
+				"-C", captureRaw,
+				"--block_size=480",
+				fmt.Sprintf("--rate=%d", param.captureRate),
+				"--num_channels=1",
+				fmt.Sprintf("--duration=%.0f", noiseDuration.Seconds()),
+			},
+			param.extraCaptureFlags...,
+		)...,
+	).Run(testexec.DumpLogOnError); err != nil {
+		s.Error("Cannot run capture: ", err)
+	}
+	captureWav := filepath.Join(s.OutDir(), "capture.wav")
+	if err := audio.ConvertRawToWav(ctx, captureRaw, captureWav, param.captureRate, 1); err != nil {
+		s.Errorf("Cannot convert %s to %s: %v", captureRaw, captureWav, err)
+	}
+
+	rms, err := audio.GetRmsAmplitude(ctx, audio.TestRawData{
+		Path:          captureRaw,
+		BitsPerSample: 16,
+		Channels:      1,
+		Rate:          param.captureRate,
+	})
+	if err != nil {
+		s.Fatal("Cannot get RMS from capture.raw")
+	}
+	s.Log("Capture RMS: ", rms)
+	if diff := rms - param.expectedRMS; math.Abs(diff) > param.expectedRMSTolerance {
+		s.Fatalf("RMS %g is not within %g±%g (diff: %+g)",
+			rms,
+			param.expectedRMS,
+			param.expectedRMSTolerance,
+			diff,
+		)
+	}
+
+	s.Log("Waiting for playback to complete")
+	<-playbackDone
+}
