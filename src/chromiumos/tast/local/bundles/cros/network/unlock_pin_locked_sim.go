@@ -6,6 +6,8 @@ package network
 
 import (
 	"context"
+	"fmt"
+	"regexp"
 	"time"
 
 	"chromiumos/tast/ctxutil"
@@ -137,6 +139,24 @@ func UnlockPinLockedSim(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait until refresh profile complete: ", err)
 	}
 
+	networkName, err := helper.GetCurrentNetworkName(ctx)
+	if err != nil {
+		s.Fatal("Could not get the Network name: ", err)
+	}
+
+	if err := ui.WaitUntilExists(ossettings.UnlockButton)(ctx); err != nil {
+		// In some cases the unlock button is shown immediately and requires extra setup.
+		// Clicking on the network row will prompt the network to be refreshed and would show the unlock button.
+		networkRegex := fmt.Sprintf(`^Network \d+ of \d+, %s.*`, regexp.QuoteMeta(networkName))
+		networkRow := nodewith.NameRegex(regexp.MustCompile(networkRegex)).ClassName("no-outline").First()
+		if err := ui.LeftClick(networkRow)(ctx); err != nil {
+			s.Fatal("Failed to click into network cellular row: ", err)
+		}
+		if err := ossettings.WaitUntilRefreshProfileCompletes(ctx, tconn); err != nil {
+			s.Fatal("Failed to wait until refresh profile complete: ", err)
+		}
+	}
+
 	var incorrectPinSublabel = nodewith.NameContaining("Incorrect PIN").Role(role.StaticText)
 	if err := uiauto.Combine("Incorrect PIN does not unlock the SIM",
 		ui.LeftClick(ossettings.UnlockButton),
@@ -148,11 +168,6 @@ func UnlockPinLockedSim(ctx context.Context, s *testing.State) {
 		ui.WaitUntilExists(incorrectPinSublabel),
 	)(ctx); err != nil {
 		s.Fatal("Unlock button can still be clicked when incorrect PIN was entered: ", err)
-	}
-
-	networkName, err := helper.GetCurrentNetworkName(ctx)
-	if err != nil {
-		s.Fatal("Could not get the Network name: ", err)
 	}
 
 	if err := uiauto.Combine("Correct PIN unlocks the SIM, and subsequently clicking on the network row initiates a connection",
