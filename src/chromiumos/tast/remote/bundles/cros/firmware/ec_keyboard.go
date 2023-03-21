@@ -27,7 +27,6 @@ type keyboardTest int
 const (
 	servoUSBKeyboard keyboardTest = iota
 	servoECKeyboard
-	detachableKeyboard
 	convertibleKeyboard
 )
 
@@ -54,12 +53,6 @@ func init() {
 			Val:       servoUSBKeyboard,
 			ExtraAttr: []string{"firmware_ec"},
 		}, {
-			Name:              "detachable",
-			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Detachable)),
-			Val:               detachableKeyboard,
-			// TODO: When stable, change firmware_unstable to a firmware_ec and add linto@chromium.org to gerrit review.
-			ExtraAttr: []string{"firmware_unstable"},
-		}, {
 			Name:              "convertible",
 			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Convertible)),
 			Val:               convertibleKeyboard,
@@ -84,13 +77,9 @@ func ECKeyboard(ctx context.Context, s *testing.State) {
 	}
 
 	testType := s.Param().(keyboardTest)
-	// Make sure internal keyboard is connected for detachable/convertible devices.
+	// Make sure internal keyboard is connected for convertible devices.
 	// Isn't always required so attempt test anyway if this fails.
-	if testType == detachableKeyboard {
-		if _, err := h.Servo.CheckAndRunTabletModeCommand(ctx, "basestate attach"); err != nil {
-			s.Log("Failed to set detachable base state to attached: ", err)
-		}
-	} else if testType == convertibleKeyboard {
+	if testType == convertibleKeyboard {
 		if _, err := h.Servo.CheckAndRunTabletModeCommand(ctx, "tabletmode off"); err != nil {
 			s.Log("Failed to set tabletmode to off: ", err)
 		}
@@ -135,7 +124,7 @@ func ECKeyboard(ctx context.Context, s *testing.State) {
 		// This is where the usb keyboard device events that servo emulates are sent.
 		device = "/dev/input/by-id/usb-Google_Servo_LUFA_Keyboard_Emulator-event-kbd"
 
-	default: // Covers servoECKeyboard, detachableKeyboard, convertibleKeyboard cases.
+	default: // Covers servoECKeyboard, convertibleKeyboard cases.
 		if hasKb, err := h.Servo.HasControl(ctx, string(servo.USBKeyboard)); err != nil {
 			s.Fatal("Failed to check for usb keyboard: ", err)
 		} else if hasKb {
