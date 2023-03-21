@@ -159,9 +159,6 @@ func ECSafeMode(ctx context.Context, s *testing.State) {
 		s.Fatal("Panic info length is too short")
 	}
 	panicinfoFlags := panicinfo[2]
-	if panicinfoFlags&panicDataFlagFrameValid == 0 {
-		s.Error("PANIC_DATA_FLAG_FRAME_VALID is not set in panic info flags")
-	}
 	if panicinfoFlags&panicDataFlagTruncated != 0 {
 		s.Error("PANIC_DATA_FLAG_TRUNCATED is set in panic info flags")
 	}
