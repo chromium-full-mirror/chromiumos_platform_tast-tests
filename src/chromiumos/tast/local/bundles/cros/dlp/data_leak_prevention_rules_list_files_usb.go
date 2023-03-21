@@ -106,11 +106,10 @@ func init() {
 		// ChromeOS > Software > Commercial (Enterprise) > DLP (Data Loss Prevention)
 		BugComponent: "b:892101",
 		SoftwareDeps: []string{"chrome"},
-		// TODO(http://b/271146120): Test is disabled until DLP is fixed.
-		// Attr: []string{
-		//	"group:mainline",
-		//	"informational",
-		// },
+		Attr: []string{
+			"group:mainline",
+			"informational",
+		},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DataLeakPreventionRulesList{}, pci.VerifiedFunctionalityOS),
 			{

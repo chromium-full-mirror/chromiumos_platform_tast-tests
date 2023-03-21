@@ -42,11 +42,10 @@ func init() {
 		BugComponent: "b:892101",
 		SoftwareDeps: []string{"chrome", "vm_host", "dlc"},
 		HardwareDeps: crostini.CrostiniStable,
-		// TODO(b/272442908): Enable test when DLP is fixed.
-		// Attr: []string{
-		// 	"group:mainline",
-		// 	"informational",
-		// },
+		Attr: []string{
+			"group:mainline",
+			"informational",
+		},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DataLeakPreventionRulesList{}, pci.VerifiedFunctionalityOS),
 		},
