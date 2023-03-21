@@ -186,6 +186,9 @@ var (
 	// ConnectedStatus is the finder for the connected status text UI in the cellular detail page.
 	ConnectedStatus = nodewith.Name("Connected").Role(role.StaticText)
 
+	// LimitedConnectivityStatus is the finder for the limited connected status text UI in the cellular detail page.
+	LimitedConnectivityStatus = nodewith.Name("Connected, limited connectivity").Role(role.StaticText)
+
 	// SignInToNetwork is the finder for the sign in to network status text UI in the cellular detail page.
 	SignInToNetwork = nodewith.NameContaining("Sign in to network").Role(role.StaticText)
 

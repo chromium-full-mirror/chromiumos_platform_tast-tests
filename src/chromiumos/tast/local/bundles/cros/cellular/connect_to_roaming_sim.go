@@ -62,10 +62,22 @@ func ConnectToRoamingSim(ctx context.Context, s *testing.State) {
 
 	ui := uiauto.New(tconn).WithTimeout(60 * time.Second)
 
-	if err := uiauto.Combine("connect to network and verify connected",
-		ui.LeftClick(ossettings.ConnectButton),
-		ui.WaitUntilExists(ossettings.ConnectedStatus),
-	)(ctx); err != nil {
+	if err := ui.LeftClick(ossettings.ConnectButton)(ctx); err != nil {
+		s.Fatal("Failed to click the connect button: ", err)
+	}
+
+	const notificationTitle = "Network connection error"
+	if _, err := ash.WaitForNotification(ctx, tconn, 30*time.Second, ash.WaitTitle(notificationTitle)); err == nil {
+		ui.LeftClick(ossettings.ConnectButton)(ctx)
+
+		notification, err := ash.WaitForNotification(ctx, tconn, 30*time.Second, ash.WaitTitle(notificationTitle))
+		if err == nil {
+			s.Fatal("Network connection failed: ", notification.Message)
+		}
+	}
+
+	_, err = ui.FindAnyExists(ctx, ossettings.ConnectedStatus, ossettings.LimitedConnectivityStatus)
+	if err != nil {
 		s.Fatal("Failed to connect and verify connected: ", err)
 	}
 
@@ -82,7 +94,6 @@ func ConnectToRoamingSim(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect and verify connected: ", err)
 	}
 
-	const notificationTitle = "Network connection error"
 	if _, err := ash.WaitForNotification(ctx, tconn, 30*time.Second, ash.WaitTitle(notificationTitle)); err != nil {
 		s.Fatalf("Failed waiting for %v: %v", notificationTitle, err)
 	}
