@@ -16,6 +16,7 @@ import (
 	"time"
 
 	fp "chromiumos/tast/common/fingerprint"
+	"chromiumos/tast/common/flashrom"
 	"chromiumos/tast/common/servo"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/dutfs"
@@ -425,9 +426,18 @@ func FlashRWFirmware(ctx context.Context, d *rpcdut.RPCDUT, firmwareFile string)
 		return errors.Errorf("file does not exist: %q", firmwareFile)
 	}
 
-	flashCmd := []string{"flashrom", "--noverify-all", "-V", "-p", "ec:type=fp", "-i", "EC_RW", "-w", firmwareFile}
-	testing.ContextLogf(ctx, "Running command: %q", shutil.EscapeSlice(flashCmd))
-	if output, err := d.Conn().CommandContext(ctx, flashCmd[0], flashCmd[1:]...).CombinedOutput(); err != nil {
+	var flashromConfig flashrom.Config
+	flashromInstance, ctx, cleanup, _, err := flashromConfig.
+		FlashromInit(flashrom.VerbosityDebug).
+		ProgrammerInit(flashrom.ProgrammerEc, "type=fp").
+		SetDut(d.DUT()).
+		Probe(ctx)
+	defer cleanup()
+	if err != nil {
+		return errors.Wrap(err, "flashrom probe failed, unable to build flashrom instance")
+	}
+
+	if output, err := flashromInstance.Write(ctx, firmwareFile, true, false, "", []string{"EC_RW"}); err != nil {
 		return errors.Wrapf(err, "flashrom failed: %q", output)
 	}
 
