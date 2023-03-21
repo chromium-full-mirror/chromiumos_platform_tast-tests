@@ -193,11 +193,11 @@ func testCreateFileWithVSCode(ctx context.Context, terminalApp *terminalapp.Term
 	if err := uiauto.Combine("create file with VSCode",
 		// Launch Visual Studio Code.
 		terminalApp.RunCommand(keyboard, fmt.Sprintf("code --disable-extensions %s", testNewFile)),
-		// Left click the app window and type string.
-		ui.LeftClick(appWindowUnsaved),
 		// Sometimes the first character got lost if input immediately.
 		// Wait until the menu exists, indicating the window is launched.
 		uda.WaitUntilExists(uidetection.Word("File").WithinA11yNode(appWindow)),
+		// Left click the app window and type string.
+		ui.LeftClick(appWindowUnsaved),
 		keyboard.TypeAction(testString),
 		saveFile,
 		ui.WaitUntilExists(appWindowSaved),
