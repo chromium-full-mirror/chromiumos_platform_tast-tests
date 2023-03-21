@@ -36,6 +36,12 @@ import (
 	"chromiumos/tast/timing"
 )
 
+var chromeKeepStateVar = testing.RegisterVarString(
+	"chrome.keepState",
+	"false",
+	"chrome.KeepState decides whether to pass KeepState to Chrome.New by default",
+)
+
 const (
 	// LoginTimeout is the maximum amount of time that Chrome is expected to take to perform login.
 	// Tests that call New with the default fake login mode should declare a timeout that's at least this long.
@@ -237,6 +243,11 @@ func (c *Chrome) LogFilename() string {
 func New(ctx context.Context, opts ...Option) (c *Chrome, retErr error) {
 	if locked {
 		panic("Cannot create Chrome instance while precondition is being used")
+	}
+
+	keepState := chromeKeepStateVar.Value()
+	if keepState == "true" {
+		opts = append(opts, KeepState())
 	}
 
 	ctx, st := timing.Start(ctx, "chrome_new")
