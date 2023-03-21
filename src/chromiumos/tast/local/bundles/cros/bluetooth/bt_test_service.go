@@ -602,11 +602,11 @@ func (bts *BTTestService) PairDeviceWithQuickSettings(ctx context.Context, req *
 		}
 	}()
 
-	// TODO(b/261885619): Investigate why this delay before selecting the device improves how
-	// likely we are to successfully pair with the device.
+	// Include a short delay before attempting to pair with the Bluetooth peripheral since attempting to
+	// pair immediately results in flaky behavior where the device will disappear/reappear sporadically.
 	testing.Sleep(ctx, 5*time.Second)
 
-	deviceFinder := nodewith.NameContaining(req.AdvertisedName).Ancestor(quicksettings.BluetoothPairNewDeviceDialog).Role(role.Button)
+	deviceFinder := nodewith.NameContaining(req.AdvertisedName).Ancestor(quicksettings.BluetoothPairNewDeviceDialog).Role(role.Button).First()
 	toastFinder := nodewith.NameContaining(req.AdvertisedName + " connected").Ancestor(nodewith.HasClass("ToastOverlay"))
 
 	// The device we want to pair with may disappear and reappear in the pairing dialog.
@@ -622,7 +622,7 @@ func (bts *BTTestService) PairDeviceWithQuickSettings(ctx context.Context, req *
 			return errors.Wrap(err, "failed to find and click the device")
 		}
 		return errors.New("failed to pair with the device, retrying")
-	}, &testing.PollOptions{Timeout: time.Minute, Interval: time.Second}); err != nil {
+	}, &testing.PollOptions{Timeout: time.Minute, Interval: 5 * time.Second}); err != nil {
 		return nil, errors.Wrap(err, "failed to pair with the device")
 	}
 

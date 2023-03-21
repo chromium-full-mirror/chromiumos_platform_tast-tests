@@ -6,11 +6,13 @@ package quicksettings
 
 import (
 	"context"
+	"time"
 
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
+	"chromiumos/tast/testing"
 )
 
 // bluetoothDetailedView is the detailed Bluetooth view within the Quick
@@ -40,17 +42,18 @@ var BluetoothDetailedViewToggleButton = nodewith.HasClass("TrayToggleButton").Na
 // within the Quick Settings. This is safe to call even when the Quick Settings
 // are already open.
 func NavigateToBluetoothDetailedView(ctx context.Context, tconn *chrome.TestConn) error {
-	if err := Expand(ctx, tconn); err != nil {
-		return err
-	}
+	ui := uiauto.New(tconn).WithTimeout(5 * time.Second)
 
-	ui := uiauto.New(tconn)
+	// The Quick Settings may be auto-collapsed after being expanded due to notifications or other
+	// events so we continue attempting to navigate to the Bluetooth page for up to one minute.
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		if err := Expand(ctx, tconn); err != nil {
+			return err
+		}
 
-	if err := uiauto.Combine("Click the Bluetooth feature pod label",
-		ui.LeftClick(bluetoothFeaturePodLabelButton),
-		ui.WaitUntilExists(bluetoothDetailedView),
-	)(ctx); err != nil {
-		return err
-	}
-	return nil
+		return uiauto.Combine("Click the Bluetooth feature pod label",
+			ui.LeftClick(bluetoothFeaturePodLabelButton),
+			ui.WaitUntilExists(bluetoothDetailedView),
+		)(ctx)
+	}, &testing.PollOptions{Timeout: time.Minute, Interval: 5 * time.Second})
 }
