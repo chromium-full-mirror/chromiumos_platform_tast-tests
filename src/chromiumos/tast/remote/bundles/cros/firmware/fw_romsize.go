@@ -1,4 +1,4 @@
-// Copyright 2022 The Chromium OS Authors. All rights reserved.
+// Copyright 2022 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -6,9 +6,8 @@ package firmware
 
 import (
 	"context"
-	"strconv"
-	"strings"
 
+	"chromiumos/tast/common/flashrom"
 	"chromiumos/tast/remote/firmware/fixture"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
@@ -40,24 +39,35 @@ func FWROMSize(ctx context.Context, s *testing.State) {
 
 	h := s.FixtValue().(*fixture.Value).Helper
 
-	apSizeStr, err := h.DUT.Conn().CommandContext(ctx, "bash", "-c", "flashrom --get-size -p host | tail -n1").Output()
+	var flashromConfig flashrom.Config
+	flashromHost, ctx, cleanup, _, err := flashromConfig.
+		FlashromInit(flashrom.VerbosityInfo).
+		ProgrammerInit(flashrom.ProgrammerHost, "").
+		SetDut(h.DUT).
+		Probe(ctx)
+	defer cleanup()
+	if err != nil {
+		s.Fatal("Flashrom probe failed, unable to build host flashrom instance: ", err)
+	}
+
+	apSize, _, err := flashromHost.Size(ctx)
 	if err != nil {
 		s.Fatal("Failed to determine AP firmware size: ", err)
 	}
 
-	ecSizeStr, err := h.DUT.Conn().CommandContext(ctx, "bash", "-c", "flashrom --get-size -p ec | tail -n1").Output()
+	flashromEc, ctx, cleanup, _, err := flashromConfig.
+		FlashromInit(flashrom.VerbosityInfo).
+		ProgrammerInit(flashrom.ProgrammerEc, "").
+		SetDut(h.DUT).
+		Probe(ctx)
+	defer cleanup()
+	if err != nil {
+		s.Fatal("Flashrom probe failed, unable to build ec flashrom instance: ", err)
+	}
+
+	ecSize, _, err := flashromEc.Size(ctx)
 	if err != nil {
 		s.Fatal("Failed to determine EC firmware size: ", err)
-	}
-
-	apSize, err := strconv.Atoi(strings.TrimSuffix(string(apSizeStr), "\n"))
-	if err != nil {
-		s.Fatal("Failed to parse AP firmware size as integer: ", err)
-	}
-
-	ecSize, err := strconv.Atoi(strings.TrimSuffix(string(ecSizeStr), "\n"))
-	if err != nil {
-		s.Fatal("Failed to parse EC firmware size as integer: ", err)
 	}
 
 	s.Log("AP firmware size in kilobytes: ", apSize/1024)
