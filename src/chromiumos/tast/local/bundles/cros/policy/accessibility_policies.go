@@ -31,13 +31,13 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks set values for the Accessability polices in the chrome.accessibilityFeatures map",
 		Contacts: []string{
-			"cros-engprod-muc@google.com",
-			"kamilszarek@google.com", // Test author.
+			"chromium-accessibility@chromium.org",
 		},
-		BugComponent: "b:1263917",
+		// ChromeOS Public Tracker > Experiences > Accessibility
+		BugComponent: "b:1272759",
 		SoftwareDeps: []string{"chrome"},
 		// autoclick case needs to be disabled.
-		Attr:    []string{},
+		Attr:    []string{"group:hw_agnostic"},
 		Fixture: fixture.ChromePolicyLoggedIn,
 		Params: []testing.Param{
 			// TODO(crbug.com/1186655): Find a way to close/avoid the dialog about disabling autoclick.
