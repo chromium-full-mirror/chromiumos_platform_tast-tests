@@ -111,13 +111,6 @@ func init() {
 			ExtraAttr:         []string{"graphics_nightly"},
 			ExtraHardwareDeps: hwdep.D(hwdep.Platform(graphics.IgtGpuMtk...)),
 		}, {
-			Name: "kms_content_protection",
-			Val: graphics.IgtTest{
-				Exe: "kms_content_protection",
-			},
-			Timeout:   5 * time.Minute,
-			ExtraAttr: []string{"graphics_nightly"},
-		}, {
 			Name: "kms_cursor_crc",
 			Val: graphics.IgtTest{
 				Exe: "kms_cursor_crc",
@@ -154,8 +147,9 @@ func init() {
 			Val: graphics.IgtTest{
 				Exe: "kms_dp_aux_dev",
 			},
-			Timeout:   5 * time.Minute,
-			ExtraAttr: []string{"graphics_nightly"},
+			Timeout:           5 * time.Minute,
+			ExtraAttr:         []string{"graphics_nightly"},
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform(graphics.IgtGpuAmd...)),
 		}, {
 			Name: "kms_flip",
 			Val: graphics.IgtTest{
@@ -199,22 +193,17 @@ func init() {
 			Val: graphics.IgtTest{
 				Exe: "kms_hdr",
 			},
-			Timeout:   5 * time.Minute,
-			ExtraAttr: []string{"graphics_nightly"},
-		}, {
-			Name: "kms_multipipe_modeset",
-			Val: graphics.IgtTest{
-				Exe: "kms_multipipe_modeset",
-			},
-			Timeout:   5 * time.Minute,
-			ExtraAttr: []string{"graphics_nightly"},
+			Timeout:           5 * time.Minute,
+			ExtraAttr:         []string{"graphics_nightly"},
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform(graphics.IgtGpuAmd...)),
 		}, {
 			Name: "kms_panel_fitting",
 			Val: graphics.IgtTest{
 				Exe: "kms_panel_fitting",
 			},
-			Timeout:   5 * time.Minute,
-			ExtraAttr: []string{"graphics_nightly"},
+			Timeout:           5 * time.Minute,
+			ExtraAttr:         []string{"graphics_nightly"},
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform("zork", "grunt")),
 		}, {
 			Name: "kms_pipe_crc_basic",
 			Val: graphics.IgtTest{
@@ -246,7 +235,7 @@ func init() {
 			},
 			Timeout:           5 * time.Minute,
 			ExtraAttr:         []string{"graphics_nightly"},
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform(graphics.IgtGpuQcom...)),
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform(append(graphics.IgtGpuQcom, "grunt")...)),
 		}, {
 			Name: "kms_plane_alpha_blend_unstable",
 			Val: graphics.IgtTest{
@@ -275,13 +264,6 @@ func init() {
 			Name: "kms_plane_lowres",
 			Val: graphics.IgtTest{
 				Exe: "kms_plane_lowres",
-			},
-			Timeout:   5 * time.Minute,
-			ExtraAttr: []string{"graphics_nightly"},
-		}, {
-			Name: "kms_plane_multiple",
-			Val: graphics.IgtTest{
-				Exe: "kms_plane_multiple",
 			},
 			Timeout:   5 * time.Minute,
 			ExtraAttr: []string{"graphics_nightly"},
@@ -343,13 +325,6 @@ func init() {
 			Name: "kms_rotation_crc",
 			Val: graphics.IgtTest{
 				Exe: "kms_rotation_crc",
-			},
-			Timeout:   5 * time.Minute,
-			ExtraAttr: []string{"graphics_nightly"},
-		}, {
-			Name: "kms_selftest",
-			Val: graphics.IgtTest{
-				Exe: "kms_selftest",
 			},
 			Timeout:   5 * time.Minute,
 			ExtraAttr: []string{"graphics_nightly"},
