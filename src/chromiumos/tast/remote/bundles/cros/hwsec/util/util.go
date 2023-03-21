@@ -211,7 +211,7 @@ func FlashromWpStatus(ctx context.Context, s *testing.State, target string) (boo
 	}
 
 	// Check if WP is enabled
-	match, err = regexp.MatchString(`Raiden: Target SPI bridge is disabled \(is WP enabled\?\)`, output)
+	match, err = regexp.MatchString(`WP: write protect is enabled.|Raiden: Target SPI bridge is disabled \(is WP enabled\?\)`, output)
 	if err != nil {
 		return false, errors.New("failed to run regexp match to check for WP enabled")
 	}
