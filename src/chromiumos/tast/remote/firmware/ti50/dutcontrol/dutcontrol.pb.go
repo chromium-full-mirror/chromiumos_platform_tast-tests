@@ -84,6 +84,60 @@ func (CCDSerialEndPoint) EnumDescriptor() ([]byte, []int) {
 	return file_dutcontrol_proto_rawDescGZIP(), []int{0}
 }
 
+// A specific status register on the AP flash chip, used for write protection
+// configuration.
+type ApFlashStatusRegister int32
+
+const (
+	ApFlashStatusRegister_UNKNOWN_STATUS_REGISTER ApFlashStatusRegister = 0
+	ApFlashStatusRegister_REGISTER_1              ApFlashStatusRegister = 1
+	ApFlashStatusRegister_REGISTER_2              ApFlashStatusRegister = 2
+	ApFlashStatusRegister_REGISTER_3              ApFlashStatusRegister = 3
+)
+
+// Enum value maps for ApFlashStatusRegister.
+var (
+	ApFlashStatusRegister_name = map[int32]string{
+		0: "UNKNOWN_STATUS_REGISTER",
+		1: "REGISTER_1",
+		2: "REGISTER_2",
+		3: "REGISTER_3",
+	}
+	ApFlashStatusRegister_value = map[string]int32{
+		"UNKNOWN_STATUS_REGISTER": 0,
+		"REGISTER_1":              1,
+		"REGISTER_2":              2,
+		"REGISTER_3":              3,
+	}
+)
+
+func (x ApFlashStatusRegister) Enum() *ApFlashStatusRegister {
+	p := new(ApFlashStatusRegister)
+	*p = x
+	return p
+}
+
+func (x ApFlashStatusRegister) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (ApFlashStatusRegister) Descriptor() protoreflect.EnumDescriptor {
+	return file_dutcontrol_proto_enumTypes[1].Descriptor()
+}
+
+func (ApFlashStatusRegister) Type() protoreflect.EnumType {
+	return &file_dutcontrol_proto_enumTypes[1]
+}
+
+func (x ApFlashStatusRegister) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use ApFlashStatusRegister.Descriptor instead.
+func (ApFlashStatusRegister) EnumDescriptor() ([]byte, []int) {
+	return file_dutcontrol_proto_rawDescGZIP(), []int{1}
+}
+
 type ConsoleOpenCCDSerial struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -219,6 +273,7 @@ type ConsoleOpen struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Types that are assignable to Type:
+	//
 	//	*ConsoleOpen_CcdSerial
 	//	*ConsoleOpen_RawUart
 	Type isConsoleOpen_Type `protobuf_oneof:"type"`
@@ -346,6 +401,7 @@ type ConsoleRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Types that are assignable to Operation:
+	//
 	//	*ConsoleRequest_Open
 	//	*ConsoleRequest_SerialWrite
 	Operation isConsoleRequest_Operation `protobuf_oneof:"operation"`
@@ -589,6 +645,7 @@ type ConsoleResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Types that are assignable to Type:
+	//
 	//	*ConsoleResponse_Open
 	//	*ConsoleResponse_SerialWrite
 	//	*ConsoleResponse_SerialData
@@ -683,6 +740,7 @@ type CommandArg struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Types that are assignable to Type:
+	//
 	//	*CommandArg_Plain
 	//	*CommandArg_File
 	Type isCommandArg_Type `protobuf_oneof:"type"`
@@ -1221,6 +1279,648 @@ func (x *EndSessionResponse) GetErr() string {
 	return ""
 }
 
+// Request info about the AP flash.
+type GetApFlashInfoRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *GetApFlashInfoRequest) Reset() {
+	*x = GetApFlashInfoRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_dutcontrol_proto_msgTypes[19]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GetApFlashInfoRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetApFlashInfoRequest) ProtoMessage() {}
+
+func (x *GetApFlashInfoRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_dutcontrol_proto_msgTypes[19]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetApFlashInfoRequest.ProtoReflect.Descriptor instead.
+func (*GetApFlashInfoRequest) Descriptor() ([]byte, []int) {
+	return file_dutcontrol_proto_rawDescGZIP(), []int{19}
+}
+
+type GetApFlashInfoResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// The name of the flash chip, e.g. "GD25Q256D/GD25Q256E".
+	ChipName string `protobuf:"bytes,1,opt,name=chip_name,json=chipName,proto3" json:"chip_name,omitempty"`
+	// Empty indicates no error.
+	Err string `protobuf:"bytes,2,opt,name=err,proto3" json:"err,omitempty"`
+}
+
+func (x *GetApFlashInfoResponse) Reset() {
+	*x = GetApFlashInfoResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_dutcontrol_proto_msgTypes[20]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GetApFlashInfoResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetApFlashInfoResponse) ProtoMessage() {}
+
+func (x *GetApFlashInfoResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_dutcontrol_proto_msgTypes[20]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetApFlashInfoResponse.ProtoReflect.Descriptor instead.
+func (*GetApFlashInfoResponse) Descriptor() ([]byte, []int) {
+	return file_dutcontrol_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *GetApFlashInfoResponse) GetChipName() string {
+	if x != nil {
+		return x.ChipName
+	}
+	return ""
+}
+
+func (x *GetApFlashInfoResponse) GetErr() string {
+	if x != nil {
+		return x.Err
+	}
+	return ""
+}
+
+// An identifier for a region in AP flash.
+type ApFlashRegion struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// Identifies this string by the name of the firmware section.
+	// Known section names include "GBB", "FMAP", and "RO_GSCVD".
+	SectionName string `protobuf:"bytes,1,opt,name=section_name,json=sectionName,proto3" json:"section_name,omitempty"`
+}
+
+func (x *ApFlashRegion) Reset() {
+	*x = ApFlashRegion{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_dutcontrol_proto_msgTypes[21]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ApFlashRegion) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ApFlashRegion) ProtoMessage() {}
+
+func (x *ApFlashRegion) ProtoReflect() protoreflect.Message {
+	mi := &file_dutcontrol_proto_msgTypes[21]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ApFlashRegion.ProtoReflect.Descriptor instead.
+func (*ApFlashRegion) Descriptor() ([]byte, []int) {
+	return file_dutcontrol_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *ApFlashRegion) GetSectionName() string {
+	if x != nil {
+		return x.SectionName
+	}
+	return ""
+}
+
+// The contents of a given AP flash region.
+type ApFlashRegionContents struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// Which region is this for? If empty, this is for the entire flash image.
+	Region *ApFlashRegion `protobuf:"bytes,1,opt,name=region,proto3" json:"region,omitempty"`
+	// The contents for this region.
+	Contents []byte `protobuf:"bytes,2,opt,name=contents,proto3" json:"contents,omitempty"`
+}
+
+func (x *ApFlashRegionContents) Reset() {
+	*x = ApFlashRegionContents{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_dutcontrol_proto_msgTypes[22]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ApFlashRegionContents) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ApFlashRegionContents) ProtoMessage() {}
+
+func (x *ApFlashRegionContents) ProtoReflect() protoreflect.Message {
+	mi := &file_dutcontrol_proto_msgTypes[22]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ApFlashRegionContents.ProtoReflect.Descriptor instead.
+func (*ApFlashRegionContents) Descriptor() ([]byte, []int) {
+	return file_dutcontrol_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *ApFlashRegionContents) GetRegion() *ApFlashRegion {
+	if x != nil {
+		return x.Region
+	}
+	return nil
+}
+
+func (x *ApFlashRegionContents) GetContents() []byte {
+	if x != nil {
+		return x.Contents
+	}
+	return nil
+}
+
+// Request to read contents of AP flash.
+type ReadApFlashRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// Which regions of AP flash to read.
+	// If none are specified, the response contains a single section
+	// with no `region` containing the full image.
+	Regions []*ApFlashRegion `protobuf:"bytes,1,rep,name=regions,proto3" json:"regions,omitempty"`
+}
+
+func (x *ReadApFlashRequest) Reset() {
+	*x = ReadApFlashRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_dutcontrol_proto_msgTypes[23]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ReadApFlashRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReadApFlashRequest) ProtoMessage() {}
+
+func (x *ReadApFlashRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_dutcontrol_proto_msgTypes[23]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReadApFlashRequest.ProtoReflect.Descriptor instead.
+func (*ReadApFlashRequest) Descriptor() ([]byte, []int) {
+	return file_dutcontrol_proto_rawDescGZIP(), []int{23}
+}
+
+func (x *ReadApFlashRequest) GetRegions() []*ApFlashRegion {
+	if x != nil {
+		return x.Regions
+	}
+	return nil
+}
+
+// The contents of AP flash requested by `ReadApFlashRequest`.
+type ReadApFlashResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// The contents inside of the requested AP flash regions.
+	RegionContents []*ApFlashRegionContents `protobuf:"bytes,1,rep,name=region_contents,json=regionContents,proto3" json:"region_contents,omitempty"`
+	// Empty indicates no error.
+	Err string `protobuf:"bytes,2,opt,name=err,proto3" json:"err,omitempty"`
+}
+
+func (x *ReadApFlashResponse) Reset() {
+	*x = ReadApFlashResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_dutcontrol_proto_msgTypes[24]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ReadApFlashResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReadApFlashResponse) ProtoMessage() {}
+
+func (x *ReadApFlashResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_dutcontrol_proto_msgTypes[24]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReadApFlashResponse.ProtoReflect.Descriptor instead.
+func (*ReadApFlashResponse) Descriptor() ([]byte, []int) {
+	return file_dutcontrol_proto_rawDescGZIP(), []int{24}
+}
+
+func (x *ReadApFlashResponse) GetRegionContents() []*ApFlashRegionContents {
+	if x != nil {
+		return x.RegionContents
+	}
+	return nil
+}
+
+func (x *ReadApFlashResponse) GetErr() string {
+	if x != nil {
+		return x.Err
+	}
+	return ""
+}
+
+// Request to write the contents of AP flash.
+type WriteApFlashRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// The flash contents to write.
+	RegionContents []*ApFlashRegionContents `protobuf:"bytes,1,rep,name=region_contents,json=regionContents,proto3" json:"region_contents,omitempty"`
+}
+
+func (x *WriteApFlashRequest) Reset() {
+	*x = WriteApFlashRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_dutcontrol_proto_msgTypes[25]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *WriteApFlashRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WriteApFlashRequest) ProtoMessage() {}
+
+func (x *WriteApFlashRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_dutcontrol_proto_msgTypes[25]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WriteApFlashRequest.ProtoReflect.Descriptor instead.
+func (*WriteApFlashRequest) Descriptor() ([]byte, []int) {
+	return file_dutcontrol_proto_rawDescGZIP(), []int{25}
+}
+
+func (x *WriteApFlashRequest) GetRegionContents() []*ApFlashRegionContents {
+	if x != nil {
+		return x.RegionContents
+	}
+	return nil
+}
+
+type WriteApFlashResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// Empty indicates no error.
+	Err string `protobuf:"bytes,1,opt,name=err,proto3" json:"err,omitempty"`
+}
+
+func (x *WriteApFlashResponse) Reset() {
+	*x = WriteApFlashResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_dutcontrol_proto_msgTypes[26]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *WriteApFlashResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WriteApFlashResponse) ProtoMessage() {}
+
+func (x *WriteApFlashResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_dutcontrol_proto_msgTypes[26]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WriteApFlashResponse.ProtoReflect.Descriptor instead.
+func (*WriteApFlashResponse) Descriptor() ([]byte, []int) {
+	return file_dutcontrol_proto_rawDescGZIP(), []int{26}
+}
+
+func (x *WriteApFlashResponse) GetErr() string {
+	if x != nil {
+		return x.Err
+	}
+	return ""
+}
+
+// Request to read a specific AP flash status register.
+type ReadApFlashStatusRegisterRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// Which register to request the contents of.
+	Register ApFlashStatusRegister `protobuf:"varint,1,opt,name=register,proto3,enum=devboardservice.dutcontrol.ApFlashStatusRegister" json:"register,omitempty"`
+}
+
+func (x *ReadApFlashStatusRegisterRequest) Reset() {
+	*x = ReadApFlashStatusRegisterRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_dutcontrol_proto_msgTypes[27]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ReadApFlashStatusRegisterRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReadApFlashStatusRegisterRequest) ProtoMessage() {}
+
+func (x *ReadApFlashStatusRegisterRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_dutcontrol_proto_msgTypes[27]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReadApFlashStatusRegisterRequest.ProtoReflect.Descriptor instead.
+func (*ReadApFlashStatusRegisterRequest) Descriptor() ([]byte, []int) {
+	return file_dutcontrol_proto_rawDescGZIP(), []int{27}
+}
+
+func (x *ReadApFlashStatusRegisterRequest) GetRegister() ApFlashStatusRegister {
+	if x != nil {
+		return x.Register
+	}
+	return ApFlashStatusRegister_UNKNOWN_STATUS_REGISTER
+}
+
+// The contents of the requested AP flash status register.
+type ReadApFlashStatusRegisterResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// The register that was requested.
+	Register ApFlashStatusRegister `protobuf:"varint,1,opt,name=register,proto3,enum=devboardservice.dutcontrol.ApFlashStatusRegister" json:"register,omitempty"`
+	// The contents of the read register. This is a single octet 0-255.
+	Contents uint32 `protobuf:"varint,2,opt,name=contents,proto3" json:"contents,omitempty"`
+	// Empty indicates no error.
+	Err string `protobuf:"bytes,3,opt,name=err,proto3" json:"err,omitempty"`
+}
+
+func (x *ReadApFlashStatusRegisterResponse) Reset() {
+	*x = ReadApFlashStatusRegisterResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_dutcontrol_proto_msgTypes[28]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ReadApFlashStatusRegisterResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReadApFlashStatusRegisterResponse) ProtoMessage() {}
+
+func (x *ReadApFlashStatusRegisterResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_dutcontrol_proto_msgTypes[28]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReadApFlashStatusRegisterResponse.ProtoReflect.Descriptor instead.
+func (*ReadApFlashStatusRegisterResponse) Descriptor() ([]byte, []int) {
+	return file_dutcontrol_proto_rawDescGZIP(), []int{28}
+}
+
+func (x *ReadApFlashStatusRegisterResponse) GetRegister() ApFlashStatusRegister {
+	if x != nil {
+		return x.Register
+	}
+	return ApFlashStatusRegister_UNKNOWN_STATUS_REGISTER
+}
+
+func (x *ReadApFlashStatusRegisterResponse) GetContents() uint32 {
+	if x != nil {
+		return x.Contents
+	}
+	return 0
+}
+
+func (x *ReadApFlashStatusRegisterResponse) GetErr() string {
+	if x != nil {
+		return x.Err
+	}
+	return ""
+}
+
+// Request to write a specific AP flash status register.
+type WriteApFlashStatusRegisterRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// Which register to write to.
+	Register ApFlashStatusRegister `protobuf:"varint,1,opt,name=register,proto3,enum=devboardservice.dutcontrol.ApFlashStatusRegister" json:"register,omitempty"`
+	// The contents to write to the register. This is a single octet 0-255.
+	Contents uint32 `protobuf:"varint,2,opt,name=contents,proto3" json:"contents,omitempty"`
+}
+
+func (x *WriteApFlashStatusRegisterRequest) Reset() {
+	*x = WriteApFlashStatusRegisterRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_dutcontrol_proto_msgTypes[29]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *WriteApFlashStatusRegisterRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WriteApFlashStatusRegisterRequest) ProtoMessage() {}
+
+func (x *WriteApFlashStatusRegisterRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_dutcontrol_proto_msgTypes[29]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WriteApFlashStatusRegisterRequest.ProtoReflect.Descriptor instead.
+func (*WriteApFlashStatusRegisterRequest) Descriptor() ([]byte, []int) {
+	return file_dutcontrol_proto_rawDescGZIP(), []int{29}
+}
+
+func (x *WriteApFlashStatusRegisterRequest) GetRegister() ApFlashStatusRegister {
+	if x != nil {
+		return x.Register
+	}
+	return ApFlashStatusRegister_UNKNOWN_STATUS_REGISTER
+}
+
+func (x *WriteApFlashStatusRegisterRequest) GetContents() uint32 {
+	if x != nil {
+		return x.Contents
+	}
+	return 0
+}
+
+// The contents of the requested AP flash status register.
+type WriteApFlashStatusRegisterResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// The register that was requested.
+	Register ApFlashStatusRegister `protobuf:"varint,1,opt,name=register,proto3,enum=devboardservice.dutcontrol.ApFlashStatusRegister" json:"register,omitempty"`
+	// Empty indicates no error.
+	Err string `protobuf:"bytes,2,opt,name=err,proto3" json:"err,omitempty"`
+}
+
+func (x *WriteApFlashStatusRegisterResponse) Reset() {
+	*x = WriteApFlashStatusRegisterResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_dutcontrol_proto_msgTypes[30]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *WriteApFlashStatusRegisterResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WriteApFlashStatusRegisterResponse) ProtoMessage() {}
+
+func (x *WriteApFlashStatusRegisterResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_dutcontrol_proto_msgTypes[30]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WriteApFlashStatusRegisterResponse.ProtoReflect.Descriptor instead.
+func (*WriteApFlashStatusRegisterResponse) Descriptor() ([]byte, []int) {
+	return file_dutcontrol_proto_rawDescGZIP(), []int{30}
+}
+
+func (x *WriteApFlashStatusRegisterResponse) GetRegister() ApFlashStatusRegister {
+	if x != nil {
+		return x.Register
+	}
+	return ApFlashStatusRegister_UNKNOWN_STATUS_REGISTER
+}
+
+func (x *WriteApFlashStatusRegisterResponse) GetErr() string {
+	if x != nil {
+		return x.Err
+	}
+	return ""
+}
+
 var File_dutcontrol_proto protoreflect.FileDescriptor
 
 var file_dutcontrol_proto_rawDesc = []byte{
@@ -1332,55 +2032,178 @@ var file_dutcontrol_proto_rawDesc = []byte{
 	0x72, 0x72, 0x22, 0x13, 0x0a, 0x11, 0x45, 0x6e, 0x64, 0x53, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e,
 	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x26, 0x0a, 0x12, 0x45, 0x6e, 0x64, 0x53, 0x65,
 	0x73, 0x73, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x10, 0x0a,
-	0x03, 0x65, 0x72, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x65, 0x72, 0x72, 0x2a,
-	0x4b, 0x0a, 0x11, 0x43, 0x43, 0x44, 0x53, 0x65, 0x72, 0x69, 0x61, 0x6c, 0x45, 0x6e, 0x64, 0x50,
-	0x6f, 0x69, 0x6e, 0x74, 0x12, 0x12, 0x0a, 0x0e, 0x55, 0x4e, 0x4b, 0x4e, 0x4f, 0x57, 0x4e, 0x5f,
-	0x53, 0x45, 0x52, 0x49, 0x41, 0x4c, 0x10, 0x00, 0x12, 0x06, 0x0a, 0x02, 0x45, 0x43, 0x10, 0x01,
-	0x12, 0x06, 0x0a, 0x02, 0x41, 0x50, 0x10, 0x02, 0x12, 0x09, 0x0a, 0x05, 0x46, 0x50, 0x4d, 0x43,
-	0x55, 0x10, 0x03, 0x12, 0x07, 0x0a, 0x03, 0x47, 0x53, 0x43, 0x10, 0x04, 0x32, 0x81, 0x05, 0x0a,
-	0x0a, 0x44, 0x75, 0x74, 0x43, 0x6f, 0x6e, 0x74, 0x72, 0x6f, 0x6c, 0x12, 0x66, 0x0a, 0x07, 0x43,
-	0x6f, 0x6e, 0x73, 0x6f, 0x6c, 0x65, 0x12, 0x2a, 0x2e, 0x64, 0x65, 0x76, 0x62, 0x6f, 0x61, 0x72,
-	0x64, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x2e, 0x64, 0x75, 0x74, 0x63, 0x6f, 0x6e, 0x74,
-	0x72, 0x6f, 0x6c, 0x2e, 0x43, 0x6f, 0x6e, 0x73, 0x6f, 0x6c, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x1a, 0x2b, 0x2e, 0x64, 0x65, 0x76, 0x62, 0x6f, 0x61, 0x72, 0x64, 0x73, 0x65, 0x72,
-	0x76, 0x69, 0x63, 0x65, 0x2e, 0x64, 0x75, 0x74, 0x63, 0x6f, 0x6e, 0x74, 0x72, 0x6f, 0x6c, 0x2e,
-	0x43, 0x6f, 0x6e, 0x73, 0x6f, 0x6c, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x28,
-	0x01, 0x30, 0x01, 0x12, 0x62, 0x0a, 0x07, 0x43, 0x6f, 0x6d, 0x6d, 0x61, 0x6e, 0x64, 0x12, 0x2a,
+	0x03, 0x65, 0x72, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x65, 0x72, 0x72, 0x22,
+	0x17, 0x0a, 0x15, 0x47, 0x65, 0x74, 0x41, 0x70, 0x46, 0x6c, 0x61, 0x73, 0x68, 0x49, 0x6e, 0x66,
+	0x6f, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x47, 0x0a, 0x16, 0x47, 0x65, 0x74, 0x41,
+	0x70, 0x46, 0x6c, 0x61, 0x73, 0x68, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x12, 0x1b, 0x0a, 0x09, 0x63, 0x68, 0x69, 0x70, 0x5f, 0x6e, 0x61, 0x6d, 0x65, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x63, 0x68, 0x69, 0x70, 0x4e, 0x61, 0x6d, 0x65, 0x12,
+	0x10, 0x0a, 0x03, 0x65, 0x72, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x65, 0x72,
+	0x72, 0x22, 0x32, 0x0a, 0x0d, 0x41, 0x70, 0x46, 0x6c, 0x61, 0x73, 0x68, 0x52, 0x65, 0x67, 0x69,
+	0x6f, 0x6e, 0x12, 0x21, 0x0a, 0x0c, 0x73, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x5f, 0x6e, 0x61,
+	0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x73, 0x65, 0x63, 0x74, 0x69, 0x6f,
+	0x6e, 0x4e, 0x61, 0x6d, 0x65, 0x22, 0x76, 0x0a, 0x15, 0x41, 0x70, 0x46, 0x6c, 0x61, 0x73, 0x68,
+	0x52, 0x65, 0x67, 0x69, 0x6f, 0x6e, 0x43, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x73, 0x12, 0x41,
+	0x0a, 0x06, 0x72, 0x65, 0x67, 0x69, 0x6f, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x29,
 	0x2e, 0x64, 0x65, 0x76, 0x62, 0x6f, 0x61, 0x72, 0x64, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65,
-	0x2e, 0x64, 0x75, 0x74, 0x63, 0x6f, 0x6e, 0x74, 0x72, 0x6f, 0x6c, 0x2e, 0x43, 0x6f, 0x6d, 0x6d,
-	0x61, 0x6e, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2b, 0x2e, 0x64, 0x65, 0x76,
+	0x2e, 0x64, 0x75, 0x74, 0x63, 0x6f, 0x6e, 0x74, 0x72, 0x6f, 0x6c, 0x2e, 0x41, 0x70, 0x46, 0x6c,
+	0x61, 0x73, 0x68, 0x52, 0x65, 0x67, 0x69, 0x6f, 0x6e, 0x52, 0x06, 0x72, 0x65, 0x67, 0x69, 0x6f,
+	0x6e, 0x12, 0x1a, 0x0a, 0x08, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x73, 0x18, 0x02, 0x20,
+	0x01, 0x28, 0x0c, 0x52, 0x08, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x73, 0x22, 0x59, 0x0a,
+	0x12, 0x52, 0x65, 0x61, 0x64, 0x41, 0x70, 0x46, 0x6c, 0x61, 0x73, 0x68, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x12, 0x43, 0x0a, 0x07, 0x72, 0x65, 0x67, 0x69, 0x6f, 0x6e, 0x73, 0x18, 0x01,
+	0x20, 0x03, 0x28, 0x0b, 0x32, 0x29, 0x2e, 0x64, 0x65, 0x76, 0x62, 0x6f, 0x61, 0x72, 0x64, 0x73,
+	0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x2e, 0x64, 0x75, 0x74, 0x63, 0x6f, 0x6e, 0x74, 0x72, 0x6f,
+	0x6c, 0x2e, 0x41, 0x70, 0x46, 0x6c, 0x61, 0x73, 0x68, 0x52, 0x65, 0x67, 0x69, 0x6f, 0x6e, 0x52,
+	0x07, 0x72, 0x65, 0x67, 0x69, 0x6f, 0x6e, 0x73, 0x22, 0x83, 0x01, 0x0a, 0x13, 0x52, 0x65, 0x61,
+	0x64, 0x41, 0x70, 0x46, 0x6c, 0x61, 0x73, 0x68, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x12, 0x5a, 0x0a, 0x0f, 0x72, 0x65, 0x67, 0x69, 0x6f, 0x6e, 0x5f, 0x63, 0x6f, 0x6e, 0x74, 0x65,
+	0x6e, 0x74, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x31, 0x2e, 0x64, 0x65, 0x76, 0x62,
+	0x6f, 0x61, 0x72, 0x64, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x2e, 0x64, 0x75, 0x74, 0x63,
+	0x6f, 0x6e, 0x74, 0x72, 0x6f, 0x6c, 0x2e, 0x41, 0x70, 0x46, 0x6c, 0x61, 0x73, 0x68, 0x52, 0x65,
+	0x67, 0x69, 0x6f, 0x6e, 0x43, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x73, 0x52, 0x0e, 0x72, 0x65,
+	0x67, 0x69, 0x6f, 0x6e, 0x43, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x73, 0x12, 0x10, 0x0a, 0x03,
+	0x65, 0x72, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x65, 0x72, 0x72, 0x22, 0x71,
+	0x0a, 0x13, 0x57, 0x72, 0x69, 0x74, 0x65, 0x41, 0x70, 0x46, 0x6c, 0x61, 0x73, 0x68, 0x52, 0x65,
+	0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x5a, 0x0a, 0x0f, 0x72, 0x65, 0x67, 0x69, 0x6f, 0x6e, 0x5f,
+	0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x31,
+	0x2e, 0x64, 0x65, 0x76, 0x62, 0x6f, 0x61, 0x72, 0x64, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65,
+	0x2e, 0x64, 0x75, 0x74, 0x63, 0x6f, 0x6e, 0x74, 0x72, 0x6f, 0x6c, 0x2e, 0x41, 0x70, 0x46, 0x6c,
+	0x61, 0x73, 0x68, 0x52, 0x65, 0x67, 0x69, 0x6f, 0x6e, 0x43, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74,
+	0x73, 0x52, 0x0e, 0x72, 0x65, 0x67, 0x69, 0x6f, 0x6e, 0x43, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74,
+	0x73, 0x22, 0x28, 0x0a, 0x14, 0x57, 0x72, 0x69, 0x74, 0x65, 0x41, 0x70, 0x46, 0x6c, 0x61, 0x73,
+	0x68, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x10, 0x0a, 0x03, 0x65, 0x72, 0x72,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x65, 0x72, 0x72, 0x22, 0x71, 0x0a, 0x20, 0x52,
+	0x65, 0x61, 0x64, 0x41, 0x70, 0x46, 0x6c, 0x61, 0x73, 0x68, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73,
+	0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12,
+	0x4d, 0x0a, 0x08, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x0e, 0x32, 0x31, 0x2e, 0x64, 0x65, 0x76, 0x62, 0x6f, 0x61, 0x72, 0x64, 0x73, 0x65, 0x72, 0x76,
+	0x69, 0x63, 0x65, 0x2e, 0x64, 0x75, 0x74, 0x63, 0x6f, 0x6e, 0x74, 0x72, 0x6f, 0x6c, 0x2e, 0x41,
+	0x70, 0x46, 0x6c, 0x61, 0x73, 0x68, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x52, 0x65, 0x67, 0x69,
+	0x73, 0x74, 0x65, 0x72, 0x52, 0x08, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x22, 0xa0,
+	0x01, 0x0a, 0x21, 0x52, 0x65, 0x61, 0x64, 0x41, 0x70, 0x46, 0x6c, 0x61, 0x73, 0x68, 0x53, 0x74,
+	0x61, 0x74, 0x75, 0x73, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x4d, 0x0a, 0x08, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x31, 0x2e, 0x64, 0x65, 0x76, 0x62, 0x6f, 0x61, 0x72,
+	0x64, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x2e, 0x64, 0x75, 0x74, 0x63, 0x6f, 0x6e, 0x74,
+	0x72, 0x6f, 0x6c, 0x2e, 0x41, 0x70, 0x46, 0x6c, 0x61, 0x73, 0x68, 0x53, 0x74, 0x61, 0x74, 0x75,
+	0x73, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x52, 0x08, 0x72, 0x65, 0x67, 0x69, 0x73,
+	0x74, 0x65, 0x72, 0x12, 0x1a, 0x0a, 0x08, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x73, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x08, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e, 0x74, 0x73, 0x12,
+	0x10, 0x0a, 0x03, 0x65, 0x72, 0x72, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x65, 0x72,
+	0x72, 0x22, 0x8e, 0x01, 0x0a, 0x21, 0x57, 0x72, 0x69, 0x74, 0x65, 0x41, 0x70, 0x46, 0x6c, 0x61,
+	0x73, 0x68, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72,
+	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x4d, 0x0a, 0x08, 0x72, 0x65, 0x67, 0x69, 0x73,
+	0x74, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x31, 0x2e, 0x64, 0x65, 0x76, 0x62,
+	0x6f, 0x61, 0x72, 0x64, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x2e, 0x64, 0x75, 0x74, 0x63,
+	0x6f, 0x6e, 0x74, 0x72, 0x6f, 0x6c, 0x2e, 0x41, 0x70, 0x46, 0x6c, 0x61, 0x73, 0x68, 0x53, 0x74,
+	0x61, 0x74, 0x75, 0x73, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x52, 0x08, 0x72, 0x65,
+	0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x12, 0x1a, 0x0a, 0x08, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e,
+	0x74, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x08, 0x63, 0x6f, 0x6e, 0x74, 0x65, 0x6e,
+	0x74, 0x73, 0x22, 0x85, 0x01, 0x0a, 0x22, 0x57, 0x72, 0x69, 0x74, 0x65, 0x41, 0x70, 0x46, 0x6c,
+	0x61, 0x73, 0x68, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65,
+	0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x4d, 0x0a, 0x08, 0x72, 0x65, 0x67,
+	0x69, 0x73, 0x74, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x31, 0x2e, 0x64, 0x65,
+	0x76, 0x62, 0x6f, 0x61, 0x72, 0x64, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x2e, 0x64, 0x75,
+	0x74, 0x63, 0x6f, 0x6e, 0x74, 0x72, 0x6f, 0x6c, 0x2e, 0x41, 0x70, 0x46, 0x6c, 0x61, 0x73, 0x68,
+	0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x52, 0x08,
+	0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x12, 0x10, 0x0a, 0x03, 0x65, 0x72, 0x72, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x65, 0x72, 0x72, 0x2a, 0x4b, 0x0a, 0x11, 0x43, 0x43,
+	0x44, 0x53, 0x65, 0x72, 0x69, 0x61, 0x6c, 0x45, 0x6e, 0x64, 0x50, 0x6f, 0x69, 0x6e, 0x74, 0x12,
+	0x12, 0x0a, 0x0e, 0x55, 0x4e, 0x4b, 0x4e, 0x4f, 0x57, 0x4e, 0x5f, 0x53, 0x45, 0x52, 0x49, 0x41,
+	0x4c, 0x10, 0x00, 0x12, 0x06, 0x0a, 0x02, 0x45, 0x43, 0x10, 0x01, 0x12, 0x06, 0x0a, 0x02, 0x41,
+	0x50, 0x10, 0x02, 0x12, 0x09, 0x0a, 0x05, 0x46, 0x50, 0x4d, 0x43, 0x55, 0x10, 0x03, 0x12, 0x07,
+	0x0a, 0x03, 0x47, 0x53, 0x43, 0x10, 0x04, 0x2a, 0x64, 0x0a, 0x15, 0x41, 0x70, 0x46, 0x6c, 0x61,
+	0x73, 0x68, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72,
+	0x12, 0x1b, 0x0a, 0x17, 0x55, 0x4e, 0x4b, 0x4e, 0x4f, 0x57, 0x4e, 0x5f, 0x53, 0x54, 0x41, 0x54,
+	0x55, 0x53, 0x5f, 0x52, 0x45, 0x47, 0x49, 0x53, 0x54, 0x45, 0x52, 0x10, 0x00, 0x12, 0x0e, 0x0a,
+	0x0a, 0x52, 0x45, 0x47, 0x49, 0x53, 0x54, 0x45, 0x52, 0x5f, 0x31, 0x10, 0x01, 0x12, 0x0e, 0x0a,
+	0x0a, 0x52, 0x45, 0x47, 0x49, 0x53, 0x54, 0x45, 0x52, 0x5f, 0x32, 0x10, 0x02, 0x12, 0x0e, 0x0a,
+	0x0a, 0x52, 0x45, 0x47, 0x49, 0x53, 0x54, 0x45, 0x52, 0x5f, 0x33, 0x10, 0x03, 0x32, 0x96, 0x0a,
+	0x0a, 0x0a, 0x44, 0x75, 0x74, 0x43, 0x6f, 0x6e, 0x74, 0x72, 0x6f, 0x6c, 0x12, 0x66, 0x0a, 0x07,
+	0x43, 0x6f, 0x6e, 0x73, 0x6f, 0x6c, 0x65, 0x12, 0x2a, 0x2e, 0x64, 0x65, 0x76, 0x62, 0x6f, 0x61,
+	0x72, 0x64, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x2e, 0x64, 0x75, 0x74, 0x63, 0x6f, 0x6e,
+	0x74, 0x72, 0x6f, 0x6c, 0x2e, 0x43, 0x6f, 0x6e, 0x73, 0x6f, 0x6c, 0x65, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x1a, 0x2b, 0x2e, 0x64, 0x65, 0x76, 0x62, 0x6f, 0x61, 0x72, 0x64, 0x73, 0x65,
+	0x72, 0x76, 0x69, 0x63, 0x65, 0x2e, 0x64, 0x75, 0x74, 0x63, 0x6f, 0x6e, 0x74, 0x72, 0x6f, 0x6c,
+	0x2e, 0x43, 0x6f, 0x6e, 0x73, 0x6f, 0x6c, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x28, 0x01, 0x30, 0x01, 0x12, 0x62, 0x0a, 0x07, 0x43, 0x6f, 0x6d, 0x6d, 0x61, 0x6e, 0x64, 0x12,
+	0x2a, 0x2e, 0x64, 0x65, 0x76, 0x62, 0x6f, 0x61, 0x72, 0x64, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63,
+	0x65, 0x2e, 0x64, 0x75, 0x74, 0x63, 0x6f, 0x6e, 0x74, 0x72, 0x6f, 0x6c, 0x2e, 0x43, 0x6f, 0x6d,
+	0x6d, 0x61, 0x6e, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2b, 0x2e, 0x64, 0x65,
+	0x76, 0x62, 0x6f, 0x61, 0x72, 0x64, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x2e, 0x64, 0x75,
+	0x74, 0x63, 0x6f, 0x6e, 0x74, 0x72, 0x6f, 0x6c, 0x2e, 0x43, 0x6f, 0x6d, 0x6d, 0x61, 0x6e, 0x64,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x69, 0x0a, 0x0e, 0x47, 0x53, 0x43, 0x54,
+	0x6f, 0x6f, 0x6c, 0x43, 0x6f, 0x6d, 0x6d, 0x61, 0x6e, 0x64, 0x12, 0x2a, 0x2e, 0x64, 0x65, 0x76,
 	0x62, 0x6f, 0x61, 0x72, 0x64, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x2e, 0x64, 0x75, 0x74,
 	0x63, 0x6f, 0x6e, 0x74, 0x72, 0x6f, 0x6c, 0x2e, 0x43, 0x6f, 0x6d, 0x6d, 0x61, 0x6e, 0x64, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x69, 0x0a, 0x0e, 0x47, 0x53, 0x43, 0x54, 0x6f,
-	0x6f, 0x6c, 0x43, 0x6f, 0x6d, 0x6d, 0x61, 0x6e, 0x64, 0x12, 0x2a, 0x2e, 0x64, 0x65, 0x76, 0x62,
-	0x6f, 0x61, 0x72, 0x64, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x2e, 0x64, 0x75, 0x74, 0x63,
-	0x6f, 0x6e, 0x74, 0x72, 0x6f, 0x6c, 0x2e, 0x43, 0x6f, 0x6d, 0x6d, 0x61, 0x6e, 0x64, 0x52, 0x65,
-	0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2b, 0x2e, 0x64, 0x65, 0x76, 0x62, 0x6f, 0x61, 0x72, 0x64,
-	0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x2e, 0x64, 0x75, 0x74, 0x63, 0x6f, 0x6e, 0x74, 0x72,
-	0x6f, 0x6c, 0x2e, 0x43, 0x6f, 0x6d, 0x6d, 0x61, 0x6e, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x12, 0x5c, 0x0a, 0x05, 0x53, 0x65, 0x74, 0x75, 0x70, 0x12, 0x28, 0x2e, 0x64, 0x65,
-	0x76, 0x62, 0x6f, 0x61, 0x72, 0x64, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x2e, 0x64, 0x75,
-	0x74, 0x63, 0x6f, 0x6e, 0x74, 0x72, 0x6f, 0x6c, 0x2e, 0x53, 0x65, 0x74, 0x75, 0x70, 0x52, 0x65,
-	0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x29, 0x2e, 0x64, 0x65, 0x76, 0x62, 0x6f, 0x61, 0x72, 0x64,
-	0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x2e, 0x64, 0x75, 0x74, 0x63, 0x6f, 0x6e, 0x74, 0x72,
-	0x6f, 0x6c, 0x2e, 0x53, 0x65, 0x74, 0x75, 0x70, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x12, 0x71, 0x0a, 0x0c, 0x53, 0x74, 0x61, 0x72, 0x74, 0x53, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e,
-	0x12, 0x2f, 0x2e, 0x64, 0x65, 0x76, 0x62, 0x6f, 0x61, 0x72, 0x64, 0x73, 0x65, 0x72, 0x76, 0x69,
-	0x63, 0x65, 0x2e, 0x64, 0x75, 0x74, 0x63, 0x6f, 0x6e, 0x74, 0x72, 0x6f, 0x6c, 0x2e, 0x53, 0x74,
-	0x61, 0x72, 0x74, 0x53, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x1a, 0x30, 0x2e, 0x64, 0x65, 0x76, 0x62, 0x6f, 0x61, 0x72, 0x64, 0x73, 0x65, 0x72, 0x76,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2b, 0x2e, 0x64, 0x65, 0x76, 0x62, 0x6f, 0x61, 0x72,
+	0x64, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x2e, 0x64, 0x75, 0x74, 0x63, 0x6f, 0x6e, 0x74,
+	0x72, 0x6f, 0x6c, 0x2e, 0x43, 0x6f, 0x6d, 0x6d, 0x61, 0x6e, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x12, 0x5c, 0x0a, 0x05, 0x53, 0x65, 0x74, 0x75, 0x70, 0x12, 0x28, 0x2e, 0x64,
+	0x65, 0x76, 0x62, 0x6f, 0x61, 0x72, 0x64, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x2e, 0x64,
+	0x75, 0x74, 0x63, 0x6f, 0x6e, 0x74, 0x72, 0x6f, 0x6c, 0x2e, 0x53, 0x65, 0x74, 0x75, 0x70, 0x52,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x29, 0x2e, 0x64, 0x65, 0x76, 0x62, 0x6f, 0x61, 0x72,
+	0x64, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x2e, 0x64, 0x75, 0x74, 0x63, 0x6f, 0x6e, 0x74,
+	0x72, 0x6f, 0x6c, 0x2e, 0x53, 0x65, 0x74, 0x75, 0x70, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x12, 0x71, 0x0a, 0x0c, 0x53, 0x74, 0x61, 0x72, 0x74, 0x53, 0x65, 0x73, 0x73, 0x69, 0x6f,
+	0x6e, 0x12, 0x2f, 0x2e, 0x64, 0x65, 0x76, 0x62, 0x6f, 0x61, 0x72, 0x64, 0x73, 0x65, 0x72, 0x76,
 	0x69, 0x63, 0x65, 0x2e, 0x64, 0x75, 0x74, 0x63, 0x6f, 0x6e, 0x74, 0x72, 0x6f, 0x6c, 0x2e, 0x53,
-	0x74, 0x61, 0x72, 0x74, 0x53, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x12, 0x6b, 0x0a, 0x0a, 0x45, 0x6e, 0x64, 0x53, 0x65, 0x73, 0x73, 0x69, 0x6f,
-	0x6e, 0x12, 0x2d, 0x2e, 0x64, 0x65, 0x76, 0x62, 0x6f, 0x61, 0x72, 0x64, 0x73, 0x65, 0x72, 0x76,
+	0x74, 0x61, 0x72, 0x74, 0x53, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x1a, 0x30, 0x2e, 0x64, 0x65, 0x76, 0x62, 0x6f, 0x61, 0x72, 0x64, 0x73, 0x65, 0x72,
+	0x76, 0x69, 0x63, 0x65, 0x2e, 0x64, 0x75, 0x74, 0x63, 0x6f, 0x6e, 0x74, 0x72, 0x6f, 0x6c, 0x2e,
+	0x53, 0x74, 0x61, 0x72, 0x74, 0x53, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x6b, 0x0a, 0x0a, 0x45, 0x6e, 0x64, 0x53, 0x65, 0x73, 0x73, 0x69,
+	0x6f, 0x6e, 0x12, 0x2d, 0x2e, 0x64, 0x65, 0x76, 0x62, 0x6f, 0x61, 0x72, 0x64, 0x73, 0x65, 0x72,
+	0x76, 0x69, 0x63, 0x65, 0x2e, 0x64, 0x75, 0x74, 0x63, 0x6f, 0x6e, 0x74, 0x72, 0x6f, 0x6c, 0x2e,
+	0x45, 0x6e, 0x64, 0x53, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x1a, 0x2e, 0x2e, 0x64, 0x65, 0x76, 0x62, 0x6f, 0x61, 0x72, 0x64, 0x73, 0x65, 0x72, 0x76,
 	0x69, 0x63, 0x65, 0x2e, 0x64, 0x75, 0x74, 0x63, 0x6f, 0x6e, 0x74, 0x72, 0x6f, 0x6c, 0x2e, 0x45,
-	0x6e, 0x64, 0x53, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x1a, 0x2e, 0x2e, 0x64, 0x65, 0x76, 0x62, 0x6f, 0x61, 0x72, 0x64, 0x73, 0x65, 0x72, 0x76, 0x69,
-	0x63, 0x65, 0x2e, 0x64, 0x75, 0x74, 0x63, 0x6f, 0x6e, 0x74, 0x72, 0x6f, 0x6c, 0x2e, 0x45, 0x6e,
-	0x64, 0x53, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x42, 0x1c, 0x5a, 0x1a, 0x64, 0x65, 0x76, 0x62, 0x6f, 0x61, 0x72, 0x64, 0x73, 0x65, 0x72, 0x76,
-	0x69, 0x63, 0x65, 0x2f, 0x64, 0x75, 0x74, 0x63, 0x6f, 0x6e, 0x74, 0x72, 0x6f, 0x6c, 0x62, 0x06,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x6e, 0x64, 0x53, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x12, 0x77, 0x0a, 0x0e, 0x47, 0x65, 0x74, 0x41, 0x70, 0x46, 0x6c, 0x61, 0x73, 0x68, 0x49,
+	0x6e, 0x66, 0x6f, 0x12, 0x31, 0x2e, 0x64, 0x65, 0x76, 0x62, 0x6f, 0x61, 0x72, 0x64, 0x73, 0x65,
+	0x72, 0x76, 0x69, 0x63, 0x65, 0x2e, 0x64, 0x75, 0x74, 0x63, 0x6f, 0x6e, 0x74, 0x72, 0x6f, 0x6c,
+	0x2e, 0x47, 0x65, 0x74, 0x41, 0x70, 0x46, 0x6c, 0x61, 0x73, 0x68, 0x49, 0x6e, 0x66, 0x6f, 0x52,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x32, 0x2e, 0x64, 0x65, 0x76, 0x62, 0x6f, 0x61, 0x72,
+	0x64, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x2e, 0x64, 0x75, 0x74, 0x63, 0x6f, 0x6e, 0x74,
+	0x72, 0x6f, 0x6c, 0x2e, 0x47, 0x65, 0x74, 0x41, 0x70, 0x46, 0x6c, 0x61, 0x73, 0x68, 0x49, 0x6e,
+	0x66, 0x6f, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x6e, 0x0a, 0x0b, 0x52, 0x65,
+	0x61, 0x64, 0x41, 0x70, 0x46, 0x6c, 0x61, 0x73, 0x68, 0x12, 0x2e, 0x2e, 0x64, 0x65, 0x76, 0x62,
+	0x6f, 0x61, 0x72, 0x64, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x2e, 0x64, 0x75, 0x74, 0x63,
+	0x6f, 0x6e, 0x74, 0x72, 0x6f, 0x6c, 0x2e, 0x52, 0x65, 0x61, 0x64, 0x41, 0x70, 0x46, 0x6c, 0x61,
+	0x73, 0x68, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2f, 0x2e, 0x64, 0x65, 0x76, 0x62,
+	0x6f, 0x61, 0x72, 0x64, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x2e, 0x64, 0x75, 0x74, 0x63,
+	0x6f, 0x6e, 0x74, 0x72, 0x6f, 0x6c, 0x2e, 0x52, 0x65, 0x61, 0x64, 0x41, 0x70, 0x46, 0x6c, 0x61,
+	0x73, 0x68, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x71, 0x0a, 0x0c, 0x57, 0x72,
+	0x69, 0x74, 0x65, 0x41, 0x70, 0x46, 0x6c, 0x61, 0x73, 0x68, 0x12, 0x2f, 0x2e, 0x64, 0x65, 0x76,
+	0x62, 0x6f, 0x61, 0x72, 0x64, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x2e, 0x64, 0x75, 0x74,
+	0x63, 0x6f, 0x6e, 0x74, 0x72, 0x6f, 0x6c, 0x2e, 0x57, 0x72, 0x69, 0x74, 0x65, 0x41, 0x70, 0x46,
+	0x6c, 0x61, 0x73, 0x68, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x30, 0x2e, 0x64, 0x65,
+	0x76, 0x62, 0x6f, 0x61, 0x72, 0x64, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x2e, 0x64, 0x75,
+	0x74, 0x63, 0x6f, 0x6e, 0x74, 0x72, 0x6f, 0x6c, 0x2e, 0x57, 0x72, 0x69, 0x74, 0x65, 0x41, 0x70,
+	0x46, 0x6c, 0x61, 0x73, 0x68, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x98, 0x01,
+	0x0a, 0x19, 0x52, 0x65, 0x61, 0x64, 0x41, 0x70, 0x46, 0x6c, 0x61, 0x73, 0x68, 0x53, 0x74, 0x61,
+	0x74, 0x75, 0x73, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x12, 0x3c, 0x2e, 0x64, 0x65,
+	0x76, 0x62, 0x6f, 0x61, 0x72, 0x64, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x2e, 0x64, 0x75,
+	0x74, 0x63, 0x6f, 0x6e, 0x74, 0x72, 0x6f, 0x6c, 0x2e, 0x52, 0x65, 0x61, 0x64, 0x41, 0x70, 0x46,
+	0x6c, 0x61, 0x73, 0x68, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74,
+	0x65, 0x72, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x3d, 0x2e, 0x64, 0x65, 0x76, 0x62,
+	0x6f, 0x61, 0x72, 0x64, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x2e, 0x64, 0x75, 0x74, 0x63,
+	0x6f, 0x6e, 0x74, 0x72, 0x6f, 0x6c, 0x2e, 0x52, 0x65, 0x61, 0x64, 0x41, 0x70, 0x46, 0x6c, 0x61,
+	0x73, 0x68, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x9b, 0x01, 0x0a, 0x1a, 0x57, 0x72, 0x69,
+	0x74, 0x65, 0x41, 0x70, 0x46, 0x6c, 0x61, 0x73, 0x68, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x52,
+	0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x12, 0x3d, 0x2e, 0x64, 0x65, 0x76, 0x62, 0x6f, 0x61,
+	0x72, 0x64, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x2e, 0x64, 0x75, 0x74, 0x63, 0x6f, 0x6e,
+	0x74, 0x72, 0x6f, 0x6c, 0x2e, 0x57, 0x72, 0x69, 0x74, 0x65, 0x41, 0x70, 0x46, 0x6c, 0x61, 0x73,
+	0x68, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x52,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x3e, 0x2e, 0x64, 0x65, 0x76, 0x62, 0x6f, 0x61, 0x72,
+	0x64, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x2e, 0x64, 0x75, 0x74, 0x63, 0x6f, 0x6e, 0x74,
+	0x72, 0x6f, 0x6c, 0x2e, 0x57, 0x72, 0x69, 0x74, 0x65, 0x41, 0x70, 0x46, 0x6c, 0x61, 0x73, 0x68,
+	0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x52, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0x1c, 0x5a, 0x1a, 0x64, 0x65, 0x76, 0x62, 0x6f, 0x61,
+	0x72, 0x64, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x2f, 0x64, 0x75, 0x74, 0x63, 0x6f, 0x6e,
+	0x74, 0x72, 0x6f, 0x6c, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1395,59 +2218,90 @@ func file_dutcontrol_proto_rawDescGZIP() []byte {
 	return file_dutcontrol_proto_rawDescData
 }
 
-var file_dutcontrol_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_dutcontrol_proto_msgTypes = make([]protoimpl.MessageInfo, 19)
+var file_dutcontrol_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
+var file_dutcontrol_proto_msgTypes = make([]protoimpl.MessageInfo, 31)
 var file_dutcontrol_proto_goTypes = []interface{}{
-	(CCDSerialEndPoint)(0),           // 0: devboardservice.dutcontrol.CCDSerialEndPoint
-	(*ConsoleOpenCCDSerial)(nil),     // 1: devboardservice.dutcontrol.ConsoleOpenCCDSerial
-	(*ConsoleOpenRawUART)(nil),       // 2: devboardservice.dutcontrol.ConsoleOpenRawUART
-	(*ConsoleOpen)(nil),              // 3: devboardservice.dutcontrol.ConsoleOpen
-	(*ConsoleSerialWrite)(nil),       // 4: devboardservice.dutcontrol.ConsoleSerialWrite
-	(*ConsoleRequest)(nil),           // 5: devboardservice.dutcontrol.ConsoleRequest
-	(*ConsoleOpenResult)(nil),        // 6: devboardservice.dutcontrol.ConsoleOpenResult
-	(*ConsoleSerialWriteResult)(nil), // 7: devboardservice.dutcontrol.ConsoleSerialWriteResult
-	(*ConsoleSerialData)(nil),        // 8: devboardservice.dutcontrol.ConsoleSerialData
-	(*ConsoleResponse)(nil),          // 9: devboardservice.dutcontrol.ConsoleResponse
-	(*CommandArg)(nil),               // 10: devboardservice.dutcontrol.CommandArg
-	(*CommandRequest)(nil),           // 11: devboardservice.dutcontrol.CommandRequest
-	(*CommandResponse)(nil),          // 12: devboardservice.dutcontrol.CommandResponse
-	(*File)(nil),                     // 13: devboardservice.dutcontrol.File
-	(*SetupRequest)(nil),             // 14: devboardservice.dutcontrol.SetupRequest
-	(*SetupResponse)(nil),            // 15: devboardservice.dutcontrol.SetupResponse
-	(*StartSessionRequest)(nil),      // 16: devboardservice.dutcontrol.StartSessionRequest
-	(*StartSessionResponse)(nil),     // 17: devboardservice.dutcontrol.StartSessionResponse
-	(*EndSessionRequest)(nil),        // 18: devboardservice.dutcontrol.EndSessionRequest
-	(*EndSessionResponse)(nil),       // 19: devboardservice.dutcontrol.EndSessionResponse
+	(CCDSerialEndPoint)(0),                     // 0: devboardservice.dutcontrol.CCDSerialEndPoint
+	(ApFlashStatusRegister)(0),                 // 1: devboardservice.dutcontrol.ApFlashStatusRegister
+	(*ConsoleOpenCCDSerial)(nil),               // 2: devboardservice.dutcontrol.ConsoleOpenCCDSerial
+	(*ConsoleOpenRawUART)(nil),                 // 3: devboardservice.dutcontrol.ConsoleOpenRawUART
+	(*ConsoleOpen)(nil),                        // 4: devboardservice.dutcontrol.ConsoleOpen
+	(*ConsoleSerialWrite)(nil),                 // 5: devboardservice.dutcontrol.ConsoleSerialWrite
+	(*ConsoleRequest)(nil),                     // 6: devboardservice.dutcontrol.ConsoleRequest
+	(*ConsoleOpenResult)(nil),                  // 7: devboardservice.dutcontrol.ConsoleOpenResult
+	(*ConsoleSerialWriteResult)(nil),           // 8: devboardservice.dutcontrol.ConsoleSerialWriteResult
+	(*ConsoleSerialData)(nil),                  // 9: devboardservice.dutcontrol.ConsoleSerialData
+	(*ConsoleResponse)(nil),                    // 10: devboardservice.dutcontrol.ConsoleResponse
+	(*CommandArg)(nil),                         // 11: devboardservice.dutcontrol.CommandArg
+	(*CommandRequest)(nil),                     // 12: devboardservice.dutcontrol.CommandRequest
+	(*CommandResponse)(nil),                    // 13: devboardservice.dutcontrol.CommandResponse
+	(*File)(nil),                               // 14: devboardservice.dutcontrol.File
+	(*SetupRequest)(nil),                       // 15: devboardservice.dutcontrol.SetupRequest
+	(*SetupResponse)(nil),                      // 16: devboardservice.dutcontrol.SetupResponse
+	(*StartSessionRequest)(nil),                // 17: devboardservice.dutcontrol.StartSessionRequest
+	(*StartSessionResponse)(nil),               // 18: devboardservice.dutcontrol.StartSessionResponse
+	(*EndSessionRequest)(nil),                  // 19: devboardservice.dutcontrol.EndSessionRequest
+	(*EndSessionResponse)(nil),                 // 20: devboardservice.dutcontrol.EndSessionResponse
+	(*GetApFlashInfoRequest)(nil),              // 21: devboardservice.dutcontrol.GetApFlashInfoRequest
+	(*GetApFlashInfoResponse)(nil),             // 22: devboardservice.dutcontrol.GetApFlashInfoResponse
+	(*ApFlashRegion)(nil),                      // 23: devboardservice.dutcontrol.ApFlashRegion
+	(*ApFlashRegionContents)(nil),              // 24: devboardservice.dutcontrol.ApFlashRegionContents
+	(*ReadApFlashRequest)(nil),                 // 25: devboardservice.dutcontrol.ReadApFlashRequest
+	(*ReadApFlashResponse)(nil),                // 26: devboardservice.dutcontrol.ReadApFlashResponse
+	(*WriteApFlashRequest)(nil),                // 27: devboardservice.dutcontrol.WriteApFlashRequest
+	(*WriteApFlashResponse)(nil),               // 28: devboardservice.dutcontrol.WriteApFlashResponse
+	(*ReadApFlashStatusRegisterRequest)(nil),   // 29: devboardservice.dutcontrol.ReadApFlashStatusRegisterRequest
+	(*ReadApFlashStatusRegisterResponse)(nil),  // 30: devboardservice.dutcontrol.ReadApFlashStatusRegisterResponse
+	(*WriteApFlashStatusRegisterRequest)(nil),  // 31: devboardservice.dutcontrol.WriteApFlashStatusRegisterRequest
+	(*WriteApFlashStatusRegisterResponse)(nil), // 32: devboardservice.dutcontrol.WriteApFlashStatusRegisterResponse
 }
 var file_dutcontrol_proto_depIdxs = []int32{
 	0,  // 0: devboardservice.dutcontrol.ConsoleOpenCCDSerial.ep:type_name -> devboardservice.dutcontrol.CCDSerialEndPoint
-	1,  // 1: devboardservice.dutcontrol.ConsoleOpen.ccd_serial:type_name -> devboardservice.dutcontrol.ConsoleOpenCCDSerial
-	2,  // 2: devboardservice.dutcontrol.ConsoleOpen.raw_uart:type_name -> devboardservice.dutcontrol.ConsoleOpenRawUART
-	3,  // 3: devboardservice.dutcontrol.ConsoleRequest.open:type_name -> devboardservice.dutcontrol.ConsoleOpen
-	4,  // 4: devboardservice.dutcontrol.ConsoleRequest.serial_write:type_name -> devboardservice.dutcontrol.ConsoleSerialWrite
-	6,  // 5: devboardservice.dutcontrol.ConsoleResponse.open:type_name -> devboardservice.dutcontrol.ConsoleOpenResult
-	7,  // 6: devboardservice.dutcontrol.ConsoleResponse.serial_write:type_name -> devboardservice.dutcontrol.ConsoleSerialWriteResult
-	8,  // 7: devboardservice.dutcontrol.ConsoleResponse.serial_data:type_name -> devboardservice.dutcontrol.ConsoleSerialData
-	10, // 8: devboardservice.dutcontrol.CommandRequest.args:type_name -> devboardservice.dutcontrol.CommandArg
-	13, // 9: devboardservice.dutcontrol.SetupRequest.flash_image:type_name -> devboardservice.dutcontrol.File
-	13, // 10: devboardservice.dutcontrol.SetupRequest.conf_files:type_name -> devboardservice.dutcontrol.File
-	5,  // 11: devboardservice.dutcontrol.DutControl.Console:input_type -> devboardservice.dutcontrol.ConsoleRequest
-	11, // 12: devboardservice.dutcontrol.DutControl.Command:input_type -> devboardservice.dutcontrol.CommandRequest
-	11, // 13: devboardservice.dutcontrol.DutControl.GSCToolCommand:input_type -> devboardservice.dutcontrol.CommandRequest
-	14, // 14: devboardservice.dutcontrol.DutControl.Setup:input_type -> devboardservice.dutcontrol.SetupRequest
-	16, // 15: devboardservice.dutcontrol.DutControl.StartSession:input_type -> devboardservice.dutcontrol.StartSessionRequest
-	18, // 16: devboardservice.dutcontrol.DutControl.EndSession:input_type -> devboardservice.dutcontrol.EndSessionRequest
-	9,  // 17: devboardservice.dutcontrol.DutControl.Console:output_type -> devboardservice.dutcontrol.ConsoleResponse
-	12, // 18: devboardservice.dutcontrol.DutControl.Command:output_type -> devboardservice.dutcontrol.CommandResponse
-	12, // 19: devboardservice.dutcontrol.DutControl.GSCToolCommand:output_type -> devboardservice.dutcontrol.CommandResponse
-	15, // 20: devboardservice.dutcontrol.DutControl.Setup:output_type -> devboardservice.dutcontrol.SetupResponse
-	17, // 21: devboardservice.dutcontrol.DutControl.StartSession:output_type -> devboardservice.dutcontrol.StartSessionResponse
-	19, // 22: devboardservice.dutcontrol.DutControl.EndSession:output_type -> devboardservice.dutcontrol.EndSessionResponse
-	17, // [17:23] is the sub-list for method output_type
-	11, // [11:17] is the sub-list for method input_type
-	11, // [11:11] is the sub-list for extension type_name
-	11, // [11:11] is the sub-list for extension extendee
-	0,  // [0:11] is the sub-list for field type_name
+	2,  // 1: devboardservice.dutcontrol.ConsoleOpen.ccd_serial:type_name -> devboardservice.dutcontrol.ConsoleOpenCCDSerial
+	3,  // 2: devboardservice.dutcontrol.ConsoleOpen.raw_uart:type_name -> devboardservice.dutcontrol.ConsoleOpenRawUART
+	4,  // 3: devboardservice.dutcontrol.ConsoleRequest.open:type_name -> devboardservice.dutcontrol.ConsoleOpen
+	5,  // 4: devboardservice.dutcontrol.ConsoleRequest.serial_write:type_name -> devboardservice.dutcontrol.ConsoleSerialWrite
+	7,  // 5: devboardservice.dutcontrol.ConsoleResponse.open:type_name -> devboardservice.dutcontrol.ConsoleOpenResult
+	8,  // 6: devboardservice.dutcontrol.ConsoleResponse.serial_write:type_name -> devboardservice.dutcontrol.ConsoleSerialWriteResult
+	9,  // 7: devboardservice.dutcontrol.ConsoleResponse.serial_data:type_name -> devboardservice.dutcontrol.ConsoleSerialData
+	11, // 8: devboardservice.dutcontrol.CommandRequest.args:type_name -> devboardservice.dutcontrol.CommandArg
+	14, // 9: devboardservice.dutcontrol.SetupRequest.flash_image:type_name -> devboardservice.dutcontrol.File
+	14, // 10: devboardservice.dutcontrol.SetupRequest.conf_files:type_name -> devboardservice.dutcontrol.File
+	23, // 11: devboardservice.dutcontrol.ApFlashRegionContents.region:type_name -> devboardservice.dutcontrol.ApFlashRegion
+	23, // 12: devboardservice.dutcontrol.ReadApFlashRequest.regions:type_name -> devboardservice.dutcontrol.ApFlashRegion
+	24, // 13: devboardservice.dutcontrol.ReadApFlashResponse.region_contents:type_name -> devboardservice.dutcontrol.ApFlashRegionContents
+	24, // 14: devboardservice.dutcontrol.WriteApFlashRequest.region_contents:type_name -> devboardservice.dutcontrol.ApFlashRegionContents
+	1,  // 15: devboardservice.dutcontrol.ReadApFlashStatusRegisterRequest.register:type_name -> devboardservice.dutcontrol.ApFlashStatusRegister
+	1,  // 16: devboardservice.dutcontrol.ReadApFlashStatusRegisterResponse.register:type_name -> devboardservice.dutcontrol.ApFlashStatusRegister
+	1,  // 17: devboardservice.dutcontrol.WriteApFlashStatusRegisterRequest.register:type_name -> devboardservice.dutcontrol.ApFlashStatusRegister
+	1,  // 18: devboardservice.dutcontrol.WriteApFlashStatusRegisterResponse.register:type_name -> devboardservice.dutcontrol.ApFlashStatusRegister
+	6,  // 19: devboardservice.dutcontrol.DutControl.Console:input_type -> devboardservice.dutcontrol.ConsoleRequest
+	12, // 20: devboardservice.dutcontrol.DutControl.Command:input_type -> devboardservice.dutcontrol.CommandRequest
+	12, // 21: devboardservice.dutcontrol.DutControl.GSCToolCommand:input_type -> devboardservice.dutcontrol.CommandRequest
+	15, // 22: devboardservice.dutcontrol.DutControl.Setup:input_type -> devboardservice.dutcontrol.SetupRequest
+	17, // 23: devboardservice.dutcontrol.DutControl.StartSession:input_type -> devboardservice.dutcontrol.StartSessionRequest
+	19, // 24: devboardservice.dutcontrol.DutControl.EndSession:input_type -> devboardservice.dutcontrol.EndSessionRequest
+	21, // 25: devboardservice.dutcontrol.DutControl.GetApFlashInfo:input_type -> devboardservice.dutcontrol.GetApFlashInfoRequest
+	25, // 26: devboardservice.dutcontrol.DutControl.ReadApFlash:input_type -> devboardservice.dutcontrol.ReadApFlashRequest
+	27, // 27: devboardservice.dutcontrol.DutControl.WriteApFlash:input_type -> devboardservice.dutcontrol.WriteApFlashRequest
+	29, // 28: devboardservice.dutcontrol.DutControl.ReadApFlashStatusRegister:input_type -> devboardservice.dutcontrol.ReadApFlashStatusRegisterRequest
+	31, // 29: devboardservice.dutcontrol.DutControl.WriteApFlashStatusRegister:input_type -> devboardservice.dutcontrol.WriteApFlashStatusRegisterRequest
+	10, // 30: devboardservice.dutcontrol.DutControl.Console:output_type -> devboardservice.dutcontrol.ConsoleResponse
+	13, // 31: devboardservice.dutcontrol.DutControl.Command:output_type -> devboardservice.dutcontrol.CommandResponse
+	13, // 32: devboardservice.dutcontrol.DutControl.GSCToolCommand:output_type -> devboardservice.dutcontrol.CommandResponse
+	16, // 33: devboardservice.dutcontrol.DutControl.Setup:output_type -> devboardservice.dutcontrol.SetupResponse
+	18, // 34: devboardservice.dutcontrol.DutControl.StartSession:output_type -> devboardservice.dutcontrol.StartSessionResponse
+	20, // 35: devboardservice.dutcontrol.DutControl.EndSession:output_type -> devboardservice.dutcontrol.EndSessionResponse
+	22, // 36: devboardservice.dutcontrol.DutControl.GetApFlashInfo:output_type -> devboardservice.dutcontrol.GetApFlashInfoResponse
+	26, // 37: devboardservice.dutcontrol.DutControl.ReadApFlash:output_type -> devboardservice.dutcontrol.ReadApFlashResponse
+	28, // 38: devboardservice.dutcontrol.DutControl.WriteApFlash:output_type -> devboardservice.dutcontrol.WriteApFlashResponse
+	30, // 39: devboardservice.dutcontrol.DutControl.ReadApFlashStatusRegister:output_type -> devboardservice.dutcontrol.ReadApFlashStatusRegisterResponse
+	32, // 40: devboardservice.dutcontrol.DutControl.WriteApFlashStatusRegister:output_type -> devboardservice.dutcontrol.WriteApFlashStatusRegisterResponse
+	30, // [30:41] is the sub-list for method output_type
+	19, // [19:30] is the sub-list for method input_type
+	19, // [19:19] is the sub-list for extension type_name
+	19, // [19:19] is the sub-list for extension extendee
+	0,  // [0:19] is the sub-list for field type_name
 }
 
 func init() { file_dutcontrol_proto_init() }
@@ -1684,6 +2538,150 @@ func file_dutcontrol_proto_init() {
 				return nil
 			}
 		}
+		file_dutcontrol_proto_msgTypes[19].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GetApFlashInfoRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_dutcontrol_proto_msgTypes[20].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GetApFlashInfoResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_dutcontrol_proto_msgTypes[21].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ApFlashRegion); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_dutcontrol_proto_msgTypes[22].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ApFlashRegionContents); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_dutcontrol_proto_msgTypes[23].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ReadApFlashRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_dutcontrol_proto_msgTypes[24].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ReadApFlashResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_dutcontrol_proto_msgTypes[25].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*WriteApFlashRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_dutcontrol_proto_msgTypes[26].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*WriteApFlashResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_dutcontrol_proto_msgTypes[27].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ReadApFlashStatusRegisterRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_dutcontrol_proto_msgTypes[28].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ReadApFlashStatusRegisterResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_dutcontrol_proto_msgTypes[29].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*WriteApFlashStatusRegisterRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_dutcontrol_proto_msgTypes[30].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*WriteApFlashStatusRegisterResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	file_dutcontrol_proto_msgTypes[2].OneofWrappers = []interface{}{
 		(*ConsoleOpen_CcdSerial)(nil),
@@ -1707,8 +2705,8 @@ func file_dutcontrol_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_dutcontrol_proto_rawDesc,
-			NumEnums:      1,
-			NumMessages:   19,
+			NumEnums:      2,
+			NumMessages:   31,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
@@ -1742,11 +2740,26 @@ type DutControlClient interface {
 	// Run a generic gsctool command.
 	GSCToolCommand(ctx context.Context, in *CommandRequest, opts ...grpc.CallOption) (*CommandResponse, error)
 	// Transfers binary image and OTT configuration files to use going forward.
+	// For devboards, the image will be flashed immediately, for host emulation,
+	// it will be kept for when an emulation session starts.
 	Setup(ctx context.Context, in *SetupRequest, opts ...grpc.CallOption) (*SetupResponse, error)
-	// Start a debugging "session", that is, initialize debugger and reset devboard to known state.
+	// Start a debugging "session", that is, initialize debugger and reset
+	// devboard to known state.  For host emulation, an emulation process is
+	// started at this point.
 	StartSession(ctx context.Context, in *StartSessionRequest, opts ...grpc.CallOption) (*StartSessionResponse, error)
-	// End a debugging "session".
+	// End a debugging "session".  No-op for devboards, for host emulation, the
+	// emulation process is terminated.
 	EndSession(ctx context.Context, in *EndSessionRequest, opts ...grpc.CallOption) (*EndSessionResponse, error)
+	// Reads info about the AP flash.
+	GetApFlashInfo(ctx context.Context, in *GetApFlashInfoRequest, opts ...grpc.CallOption) (*GetApFlashInfoResponse, error)
+	// Reads the contents of AP flash.
+	ReadApFlash(ctx context.Context, in *ReadApFlashRequest, opts ...grpc.CallOption) (*ReadApFlashResponse, error)
+	// Writes to AP flash.
+	WriteApFlash(ctx context.Context, in *WriteApFlashRequest, opts ...grpc.CallOption) (*WriteApFlashResponse, error)
+	// Reads the contents of a specific AP flash status register.
+	ReadApFlashStatusRegister(ctx context.Context, in *ReadApFlashStatusRegisterRequest, opts ...grpc.CallOption) (*ReadApFlashStatusRegisterResponse, error)
+	// Writes a new value for a specific AP flash status register.
+	WriteApFlashStatusRegister(ctx context.Context, in *WriteApFlashStatusRegisterRequest, opts ...grpc.CallOption) (*WriteApFlashStatusRegisterResponse, error)
 }
 
 type dutControlClient struct {
@@ -1833,6 +2846,51 @@ func (c *dutControlClient) EndSession(ctx context.Context, in *EndSessionRequest
 	return out, nil
 }
 
+func (c *dutControlClient) GetApFlashInfo(ctx context.Context, in *GetApFlashInfoRequest, opts ...grpc.CallOption) (*GetApFlashInfoResponse, error) {
+	out := new(GetApFlashInfoResponse)
+	err := c.cc.Invoke(ctx, "/devboardservice.dutcontrol.DutControl/GetApFlashInfo", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dutControlClient) ReadApFlash(ctx context.Context, in *ReadApFlashRequest, opts ...grpc.CallOption) (*ReadApFlashResponse, error) {
+	out := new(ReadApFlashResponse)
+	err := c.cc.Invoke(ctx, "/devboardservice.dutcontrol.DutControl/ReadApFlash", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dutControlClient) WriteApFlash(ctx context.Context, in *WriteApFlashRequest, opts ...grpc.CallOption) (*WriteApFlashResponse, error) {
+	out := new(WriteApFlashResponse)
+	err := c.cc.Invoke(ctx, "/devboardservice.dutcontrol.DutControl/WriteApFlash", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dutControlClient) ReadApFlashStatusRegister(ctx context.Context, in *ReadApFlashStatusRegisterRequest, opts ...grpc.CallOption) (*ReadApFlashStatusRegisterResponse, error) {
+	out := new(ReadApFlashStatusRegisterResponse)
+	err := c.cc.Invoke(ctx, "/devboardservice.dutcontrol.DutControl/ReadApFlashStatusRegister", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dutControlClient) WriteApFlashStatusRegister(ctx context.Context, in *WriteApFlashStatusRegisterRequest, opts ...grpc.CallOption) (*WriteApFlashStatusRegisterResponse, error) {
+	out := new(WriteApFlashStatusRegisterResponse)
+	err := c.cc.Invoke(ctx, "/devboardservice.dutcontrol.DutControl/WriteApFlashStatusRegister", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // DutControlServer is the server API for DutControl service.
 type DutControlServer interface {
 	// Console allows stream access to a serial interface.
@@ -1842,11 +2900,26 @@ type DutControlServer interface {
 	// Run a generic gsctool command.
 	GSCToolCommand(context.Context, *CommandRequest) (*CommandResponse, error)
 	// Transfers binary image and OTT configuration files to use going forward.
+	// For devboards, the image will be flashed immediately, for host emulation,
+	// it will be kept for when an emulation session starts.
 	Setup(context.Context, *SetupRequest) (*SetupResponse, error)
-	// Start a debugging "session", that is, initialize debugger and reset devboard to known state.
+	// Start a debugging "session", that is, initialize debugger and reset
+	// devboard to known state.  For host emulation, an emulation process is
+	// started at this point.
 	StartSession(context.Context, *StartSessionRequest) (*StartSessionResponse, error)
-	// End a debugging "session".
+	// End a debugging "session".  No-op for devboards, for host emulation, the
+	// emulation process is terminated.
 	EndSession(context.Context, *EndSessionRequest) (*EndSessionResponse, error)
+	// Reads info about the AP flash.
+	GetApFlashInfo(context.Context, *GetApFlashInfoRequest) (*GetApFlashInfoResponse, error)
+	// Reads the contents of AP flash.
+	ReadApFlash(context.Context, *ReadApFlashRequest) (*ReadApFlashResponse, error)
+	// Writes to AP flash.
+	WriteApFlash(context.Context, *WriteApFlashRequest) (*WriteApFlashResponse, error)
+	// Reads the contents of a specific AP flash status register.
+	ReadApFlashStatusRegister(context.Context, *ReadApFlashStatusRegisterRequest) (*ReadApFlashStatusRegisterResponse, error)
+	// Writes a new value for a specific AP flash status register.
+	WriteApFlashStatusRegister(context.Context, *WriteApFlashStatusRegisterRequest) (*WriteApFlashStatusRegisterResponse, error)
 }
 
 // UnimplementedDutControlServer can be embedded to have forward compatible implementations.
@@ -1870,6 +2943,21 @@ func (*UnimplementedDutControlServer) StartSession(context.Context, *StartSessio
 }
 func (*UnimplementedDutControlServer) EndSession(context.Context, *EndSessionRequest) (*EndSessionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method EndSession not implemented")
+}
+func (*UnimplementedDutControlServer) GetApFlashInfo(context.Context, *GetApFlashInfoRequest) (*GetApFlashInfoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetApFlashInfo not implemented")
+}
+func (*UnimplementedDutControlServer) ReadApFlash(context.Context, *ReadApFlashRequest) (*ReadApFlashResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ReadApFlash not implemented")
+}
+func (*UnimplementedDutControlServer) WriteApFlash(context.Context, *WriteApFlashRequest) (*WriteApFlashResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method WriteApFlash not implemented")
+}
+func (*UnimplementedDutControlServer) ReadApFlashStatusRegister(context.Context, *ReadApFlashStatusRegisterRequest) (*ReadApFlashStatusRegisterResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ReadApFlashStatusRegister not implemented")
+}
+func (*UnimplementedDutControlServer) WriteApFlashStatusRegister(context.Context, *WriteApFlashStatusRegisterRequest) (*WriteApFlashStatusRegisterResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method WriteApFlashStatusRegister not implemented")
 }
 
 func RegisterDutControlServer(s *grpc.Server, srv DutControlServer) {
@@ -1992,6 +3080,96 @@ func _DutControl_EndSession_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DutControl_GetApFlashInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetApFlashInfoRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DutControlServer).GetApFlashInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/devboardservice.dutcontrol.DutControl/GetApFlashInfo",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DutControlServer).GetApFlashInfo(ctx, req.(*GetApFlashInfoRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DutControl_ReadApFlash_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReadApFlashRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DutControlServer).ReadApFlash(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/devboardservice.dutcontrol.DutControl/ReadApFlash",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DutControlServer).ReadApFlash(ctx, req.(*ReadApFlashRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DutControl_WriteApFlash_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(WriteApFlashRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DutControlServer).WriteApFlash(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/devboardservice.dutcontrol.DutControl/WriteApFlash",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DutControlServer).WriteApFlash(ctx, req.(*WriteApFlashRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DutControl_ReadApFlashStatusRegister_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReadApFlashStatusRegisterRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DutControlServer).ReadApFlashStatusRegister(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/devboardservice.dutcontrol.DutControl/ReadApFlashStatusRegister",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DutControlServer).ReadApFlashStatusRegister(ctx, req.(*ReadApFlashStatusRegisterRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DutControl_WriteApFlashStatusRegister_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(WriteApFlashStatusRegisterRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DutControlServer).WriteApFlashStatusRegister(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/devboardservice.dutcontrol.DutControl/WriteApFlashStatusRegister",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DutControlServer).WriteApFlashStatusRegister(ctx, req.(*WriteApFlashStatusRegisterRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _DutControl_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "devboardservice.dutcontrol.DutControl",
 	HandlerType: (*DutControlServer)(nil),
@@ -2015,6 +3193,26 @@ var _DutControl_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "EndSession",
 			Handler:    _DutControl_EndSession_Handler,
+		},
+		{
+			MethodName: "GetApFlashInfo",
+			Handler:    _DutControl_GetApFlashInfo_Handler,
+		},
+		{
+			MethodName: "ReadApFlash",
+			Handler:    _DutControl_ReadApFlash_Handler,
+		},
+		{
+			MethodName: "WriteApFlash",
+			Handler:    _DutControl_WriteApFlash_Handler,
+		},
+		{
+			MethodName: "ReadApFlashStatusRegister",
+			Handler:    _DutControl_ReadApFlashStatusRegister_Handler,
+		},
+		{
+			MethodName: "WriteApFlashStatusRegister",
+			Handler:    _DutControl_WriteApFlashStatusRegister_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
