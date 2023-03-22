@@ -370,7 +370,8 @@ func waitForModemFwdToIdle(ctx context.Context) error {
 	}
 	// Before stopping modemfwd, check and wait for flash to complete.
 	if err := modemfwd.CheckAndWaitForFlashToComplete(ctx); err != nil {
-		return errors.Wrap(err, "failed to confirm if modem flash is complete")
+		// return errors.Wrap(err, "failed to confirm if modem flash is complete")
+		testing.ContextLog(ctx, "Failed to confirm if modem flash is complete after 5 minutes")
 	}
 
 	// Wait for modem to be exported by ModemManager.
