@@ -56,6 +56,7 @@ func init() {
 			hwdep.SkipOnPlatform("veyron_fievel"),
 			hwdep.SkipOnPlatform("veyron_tiger"),
 		),
+		Requirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01"},
 		SoftwareDeps: []string{"crossystem", "flashrom"},
 		Vars:         []string{"firmware.skipFlashUSB"},
 		Params: []testing.Param{

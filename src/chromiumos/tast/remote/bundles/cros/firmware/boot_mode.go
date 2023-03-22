@@ -46,6 +46,7 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware"},
+		Requirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01"},
 		SoftwareDeps: []string{"crossystem", "flashrom"},
 		Vars:         []string{"firmware.skipFlashUSB"},
 		Params: []testing.Param{{
