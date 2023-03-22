@@ -48,7 +48,7 @@ var (
 
 	webArea = nodewith.NameRegex(regexp.MustCompile(`\@penguin\: `)).Role(role.RootWebArea)
 	// Prompt is the input prefix.
-	Prompt = nodewith.Name("$ ").Role(role.StaticText).Ancestor(webArea)
+	Prompt = AsRow(nodewith.NameRegex(regexp.MustCompile(`\$\s*$`)))
 
 	// CmdPrompt is the input prefix of tmux tabs.
 	CmdPrompt = Row("chronos@localhost ~ $")
