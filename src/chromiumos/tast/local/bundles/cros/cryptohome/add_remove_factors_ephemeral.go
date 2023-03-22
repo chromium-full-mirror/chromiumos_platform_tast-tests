@@ -26,7 +26,7 @@ func init() {
 			"jadmanski@chromium.org",
 		},
 		BugComponent: "b:1088399",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline"},
 		Data:         []string{"testcert.p12"},
 		// While the ephemeral user behavior shouldn't in theory be affected by
 		// whether the UserSecretStash is enabled in cryptohome, we have two

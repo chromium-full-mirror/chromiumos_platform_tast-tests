@@ -27,7 +27,7 @@ func init() {
 			"emaxx@chromium.org",
 		},
 		BugComponent: "b:1088399",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{
 			Name:    "with_vk",
 			Fixture: "vkAuthSessionFixture",
