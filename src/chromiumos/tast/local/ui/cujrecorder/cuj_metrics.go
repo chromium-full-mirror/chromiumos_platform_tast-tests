@@ -25,6 +25,9 @@ func CUJAshCommonMetricConfigs() []MetricConfig {
 		// Smoothness.
 		NewCustomMetricConfig("Ash.Smoothness.PercentDroppedFrames_1sWindow.InSession2", "percent", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Graphics.Smoothness.MaxPercentDroppedFrames_1sWindow", "percent", perf.SmallerIsBetter),
+		NewCustomMetricConfig("Graphics.Exo.Smoothness.DidNotProduceToFrameArrival", "microseconds", perf.SmallerIsBetter),
+		NewCustomMetricConfig("Graphics.Exo.Smoothness.PercentDidNotProduceFrame", "percent", perf.SmallerIsBetter),
+		NewCustomMetricConfig("Graphics.Exo.Smoothness.PercentFrameDiscarded", "percent", perf.SmallerIsBetter),
 		NewSmoothnessMetricConfig("Apps.HomeLauncherTransition.AnimationSmoothness.EnterFullscreenAllApps"),
 		NewSmoothnessMetricConfig("Apps.HomeLauncherTransition.AnimationSmoothness.EnterFullscreenSearch"),
 		NewSmoothnessMetricConfig("Apps.HomeLauncherTransition.AnimationSmoothness.FadeInOverview"),
