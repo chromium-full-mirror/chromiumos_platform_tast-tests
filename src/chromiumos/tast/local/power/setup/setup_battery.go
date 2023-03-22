@@ -10,22 +10,42 @@ import (
 
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/power"
+	"chromiumos/tast/local/power/util"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
-type chargeControlState struct {
+type chargeState struct {
+	command        string
 	state          string
 	expectedOutput string
 }
 
 var (
-	ccDontCharge = chargeControlState{"dontcharge", "Override port set to -2"}
-	ccOff        = chargeControlState{"off", "Override port set to -1"}
+	coDontCharge               = chargeState{"chargeoverride", "dontcharge", "Override port set to -2"}
+	coOff                      = chargeState{"chargeoverride", "off", "Override port set to -1"}
+	ccDischarge                = chargeState{"chargecontrol", "discharge", "Charge state machine force discharge."}
+	ccNormal                   = chargeState{"chargecontrol", "normal", "Charge state machine is in normal mode."}
+	boardsCannotChargeOverride = []string{"jacuzzi", "jacuzzi64"}
 )
 
-func setChargeControl(ctx context.Context, s chargeControlState) error {
-	stdout, stderr, err := testexec.CommandContext(ctx, "ectool", "chargeoverride", s.state).SeparatedOutput(testexec.DumpLogOnError)
+func contains(list []string, s string) bool {
+	for _, e := range list {
+		if e == s {
+			return true
+		}
+	}
+	return false
+}
+
+func supportChargeOverride() bool {
+	board := util.GetBoard()
+	return !contains(boardsCannotChargeOverride, board)
+}
+
+func setChargeState(ctx context.Context, s chargeState) error {
+	stdout, stderr, err := testexec.CommandContext(ctx, "ectool", s.command, s.state).SeparatedOutput(testexec.DumpLogOnError)
 	if err != nil {
 		return errors.Wrapf(err, "unable to set battery charge to %s, got error %s", s.state, string(stderr))
 	}
@@ -68,7 +88,12 @@ func SetBatteryDischarge(ctx context.Context, expectedMaxCapacityDischarge float
 		return nil, errors.Errorf("battery percent %.2f is too low to start discharging", capacity)
 	}
 
-	if err := setChargeControl(ctx, ccDontCharge); err != nil {
+	useChargeOverride := supportChargeOverride()
+	chargeState := coDontCharge
+	if !useChargeOverride {
+		chargeState = ccDischarge
+	}
+	if err := setChargeState(ctx, chargeState); err != nil {
 		return nil, err
 	}
 
@@ -87,11 +112,19 @@ func SetBatteryDischarge(ctx context.Context, expectedMaxCapacityDischarge float
 		// wasn't set before the test because leaving the device disharging
 		// could cause a device to shut down.
 		testing.ContextLog(ctx, "Resetting battery discharge to normal. Discharge during test: ", dischargePercent, "% (", dischargeWh, "Wh)")
-		return setChargeControl(ctx, ccOff)
+		chargeState := coOff
+		if !useChargeOverride {
+			chargeState = ccNormal
+		}
+		return setChargeState(ctx, chargeState)
 	}, nil
 }
 
 // AllowBatteryCharging will re-enable AC power and allow the battery to charge.
 func AllowBatteryCharging(ctx context.Context) error {
-	return setChargeControl(ctx, ccOff)
+	chargeState := coOff
+	if !supportChargeOverride() {
+		chargeState = ccNormal
+	}
+	return setChargeState(ctx, chargeState)
 }
