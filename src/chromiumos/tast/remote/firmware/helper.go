@@ -1281,7 +1281,7 @@ func (h *Helper) FormatUSB(ctx context.Context, usbdev string) error {
 		testing.ContextLog(ctx, "Failed to get info about usb: ", err)
 	}
 	testing.ContextLog(ctx, "Formatting the USB device")
-	if _, stderr, err := h.ServoProxy.SeparatedOutputCommand(ctx, true, "mkfs.vfat", "-I", usbdev); err != nil {
+	if _, stderr, err := h.ServoProxy.SeparatedOutputCommand(ctx, true, "mkfs.ext4", "-F", usbdev); err != nil {
 		if strings.Contains(string(stderr), "Read-only file system") {
 			return errors.Errorf("found usb device as read-only file system, got usb model: %s, serial number: %s", modelName, serialNumber)
 		}
