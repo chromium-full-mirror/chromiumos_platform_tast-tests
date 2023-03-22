@@ -72,7 +72,7 @@ func ExpectedElementsOnESimDetailPage(ctx context.Context, s *testing.State) {
 
 	ui := uiauto.New(tconn)
 
-	networkNameLabel := nodewith.Name(networkName).Role(role.StaticText)
+	networkNameLabel := nodewith.Name(networkName).Role(role.StaticText).First()
 
 	if err := ui.WithTimeout(30 * time.Second).WaitUntilExists(networkNameLabel)(ctx); err != nil {
 		s.Fatal("Failed to find network name label: ", err)

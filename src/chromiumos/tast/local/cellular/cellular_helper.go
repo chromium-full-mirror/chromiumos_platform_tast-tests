@@ -434,19 +434,25 @@ func (h *Helper) Connect(ctx context.Context) (*shill.Service, error) {
 	defer st.End()
 	service, err := h.FindServiceForDevice(ctx)
 	if err != nil {
-		return nil, errors.Wrap(err, "unable to find Cellular Service for Device")
+		return nil, errors.Wrap(err, "unable to determine the default cellular service")
+	}
+
+	name, err := service.GetName(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get the name of the default service")
 	}
 
 	if isConnected, err := service.IsConnected(ctx); err != nil {
-		return nil, errors.Wrap(err, "unable to get IsConnected for Service")
+		return nil, errors.Wrapf(err, "unable to get the connected state for %q", name)
 	} else if !isConnected {
-		if _, err := h.ConnectToDefault(ctx); err != nil {
-			return nil, errors.Wrap(err, "unable to Connect to default service")
+		if err := h.ConnectToServiceWithTimeout(ctx, service, 90*time.Second); err != nil {
+			return nil, errors.Wrapf(err, "unable to connect to the default service %q", name)
 		}
 	}
-	// Ensure service's state matches expectations.
-	if err := service.WaitForProperty(ctx, shillconst.ServicePropertyState, shillconst.ServiceStateOnline, 60*time.Second); err != nil {
-		return nil, errors.Wrap(err, "failed to get service state")
+
+	// Wait up to 1 minute for the service state to become connected.
+	if err := service.WaitForProperty(ctx, shillconst.ServicePropertyState, shillconst.ServiceStateOnline, time.Minute); err != nil {
+		return nil, errors.Wrapf(err, "default service %q failed to become connected", name)
 	}
 
 	return service, nil
