@@ -80,7 +80,7 @@ func selectCollectionNode(ui *uiauto.Context, collectionNode *nodewith.Finder) u
 
 // SelectGooglePhotosAlbum returns an action to select the Google Photos album with the given name.
 func SelectGooglePhotosAlbum(ui *uiauto.Context, name string) uiauto.Action {
-	albumNode := nodewith.HasClass("album").Name(name)
+	albumNode := nodewith.HasClass("album").NameStartingWith(name)
 	return uiauto.Combine(fmt.Sprintf("select Google Photos album %q", name),
 		ui.WaitUntilExists(albumNode),
 		ui.MakeVisible(albumNode),

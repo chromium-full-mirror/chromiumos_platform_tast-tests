@@ -21,6 +21,12 @@ var CenterButton = nodewith.Name("Center").Role(role.ToggleButton)
 // ChangeDailyButton is a finder for the "Change Daily" toggle button node.
 var ChangeDailyButton = nodewith.Name("Change wallpaper image daily").Role(role.ToggleButton)
 
+// DialogTitle is the title of the pop-up dialog when selecting shared album for daily refresh.
+var DialogTitle = nodewith.NameContaining("Shared albums can be updated by other people").First()
+
+// ProceedButton is the proceed button on the pop-up dialog.
+var ProceedButton = nodewith.NameContaining("Change Daily").Role(role.Button)
+
 // GooglePhotosWallpaperAlbumsButton is a finder for the Google Photos "Albums" toggle button node.
 var GooglePhotosWallpaperAlbumsButton = nodewith.Name("Albums").Role(role.ToggleButton)
 
@@ -40,7 +46,7 @@ const GooglePhotosWallpaperPhoto = "Photo 01"
 var GooglePhotosWallpaperColor = color.RGBA{0, 0, 255, 255}
 
 // RefreshButton is a finder for the "Refresh" button node.
-var RefreshButton = nodewith.Name("Refresh the current wallpaper image").Role(role.Button)
+var RefreshButton = nodewith.NameContaining("Refresh").Role(role.Button)
 
 // SolidColorsCollection is the name of a wallpaper collection of solid colors.
 const SolidColorsCollection = "Solid colors"

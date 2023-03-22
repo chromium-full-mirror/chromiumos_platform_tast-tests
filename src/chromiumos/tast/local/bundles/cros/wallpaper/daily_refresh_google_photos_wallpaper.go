@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -20,11 +21,16 @@ import (
 	"chromiumos/tast/testing"
 )
 
+type dailyRefreshGooglePhotosWallpaperParams struct {
+	album    string
+	isShared bool
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DailyRefreshGooglePhotosWallpaper,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test setting Google Photos wallpapers in the wallpaper app",
+		Desc:         "Test setting Google Photos wallpapers as daily refresh source",
 		Contacts: []string{
 			"assistive-eng@google.com",
 			"xiaohuic@google.com",
@@ -34,10 +40,21 @@ func init() {
 		BugComponent: "b:1006527",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		VarDeps: []string{
-			"wallpaper.googlePhotosAccountPool",
-		},
-		Timeout: 5 * time.Minute,
+		Timeout:      5 * time.Minute,
+		Fixture:      "personalizationWithGooglePhotosWallpaper",
+		Params: []testing.Param{{
+			Name: "from_album",
+			Val: dailyRefreshGooglePhotosWallpaperParams{
+				album:    constants.GooglePhotosWallpaperAlbum,
+				isShared: false,
+			},
+		}, {
+			Name: "from_shared_album",
+			Val: dailyRefreshGooglePhotosWallpaperParams{
+				album:    constants.GooglePhotosWallpaperSharedAlbum,
+				isShared: true,
+			},
+		}},
 	})
 }
 
@@ -46,13 +63,11 @@ func DailyRefreshGooglePhotosWallpaper(ctx context.Context, s *testing.State) {
 	// a user from an account pool which has been preconditioned to have a
 	// Google Photos library with specific photos/albums present. Note that sync
 	// is disabled to prevent flakiness caused by wallpaper cross device sync.
-	cr, err := chrome.New(ctx,
-		chrome.GAIALoginPool(s.RequiredVar("wallpaper.googlePhotosAccountPool")),
-		chrome.EnableFeatures("WallpaperGooglePhotosIntegration", "PersonalizationHub"),
-		chrome.ExtraArgs("--disable-sync"))
-	if err != nil {
-		s.Fatal("Failed to log in to Chrome: ", err)
-	}
+
+	cr := s.FixtValue().(*chrome.Chrome)
+
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -72,23 +87,28 @@ func DailyRefreshGooglePhotosWallpaper(ctx context.Context, s *testing.State) {
 	// ample time to wait for nodes to load.
 	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
 
+	album := s.Param().(dailyRefreshGooglePhotosWallpaperParams).album
+	isShared := s.Param().(dailyRefreshGooglePhotosWallpaperParams).isShared
+
 	// Take a screenshot of the current wallpaper.
 	screenshot1, err := screenshot.GrabScreenshot(ctx, cr)
 	if err != nil {
 		s.Fatal("Failed to grab screenshot: ", err)
 	}
 
-	if err := uiauto.Combine("Enable daily refresh and minimize wallpaper picker",
+	if err := uiauto.Combine("Open Google Photos album",
 		wallpaper.OpenWallpaperPicker(ui),
 		wallpaper.SelectCollection(ui, constants.GooglePhotosWallpaperCollection),
-		ui.LeftClick(constants.GooglePhotosWallpaperAlbumsButton),
-		wallpaper.SelectGooglePhotosAlbum(ui, constants.GooglePhotosWallpaperAlbum),
-		ui.LeftClick(constants.ChangeDailyButton),
-		ui.WaitUntilExists(constants.RefreshButton),
-		wallpaper.MinimizeWallpaperPicker(ui),
+		ui.DoDefault(constants.GooglePhotosWallpaperAlbumsButton),
+		wallpaper.SelectGooglePhotosAlbum(ui, album),
 	)(ctx); err != nil {
+		s.Fatal("Failed to open Google Photos album: ", err)
+	}
+
+	if err := enableGooglePhotosDailyRefresh(ctx, ui, isShared); err != nil {
 		s.Fatal("Failed to enable daily refresh: ", err)
 	}
+	wallpaper.MinimizeWallpaperPicker(ui)
 
 	// Take a screenshot of the current wallpaper.
 	screenshot2, err := screenshot.GrabScreenshot(ctx, cr)
@@ -113,9 +133,9 @@ func DailyRefreshGooglePhotosWallpaper(ctx context.Context, s *testing.State) {
 	if err := uiauto.Combine("Manually refresh and minimize wallpaper picker",
 		wallpaper.OpenWallpaperPicker(ui),
 		wallpaper.SelectCollection(ui, constants.GooglePhotosWallpaperCollection),
-		ui.LeftClick(constants.GooglePhotosWallpaperAlbumsButton),
-		wallpaper.SelectGooglePhotosAlbum(ui, constants.GooglePhotosWallpaperAlbum),
-		ui.LeftClick(constants.RefreshButton),
+		ui.DoDefault(constants.GooglePhotosWallpaperAlbumsButton),
+		wallpaper.SelectGooglePhotosAlbum(ui, album),
+		ui.DoDefault(constants.RefreshButton),
 
 		// NOTE: The refresh button will be hidden while updating the wallpaper so
 		// use its reappearance as a proxy to know when the wallpaper has finished
@@ -142,4 +162,21 @@ func DailyRefreshGooglePhotosWallpaper(ctx context.Context, s *testing.State) {
 		}
 		s.Fatal("Failed to validate wallpaper difference: ", err)
 	}
+}
+
+// enableGooglePhotosDailyRefresh enables daily refresh in a Google Photos album.
+func enableGooglePhotosDailyRefresh(ctx context.Context, ui *uiauto.Context, isShared bool) error {
+	if err := ui.DoDefault(constants.ChangeDailyButton)(ctx); err != nil {
+		return err
+	}
+	if isShared {
+		if err := uiauto.Combine("Close pop-up confirmation dialog to proceed",
+			ui.WaitUntilExists(constants.DialogTitle),
+			ui.WaitUntilExists(constants.ProceedButton),
+			ui.DoDefault(constants.ProceedButton),
+		)(ctx); err != nil {
+			return err
+		}
+	}
+	return ui.WaitUntilExists(constants.RefreshButton)(ctx)
 }
