@@ -36,6 +36,7 @@ func init() {
 			"group:mainline",
 			"group:paper-io",
 			"paper-io_printing",
+			"group:hw_agnostic",
 		},
 		// ChromeOS > Software > ARC++ > Printing
 		BugComponent: "b:613731",

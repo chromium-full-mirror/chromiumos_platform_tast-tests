@@ -29,7 +29,7 @@ func init() {
 		Contacts:     []string{"arc-storage@google.com", "youkichihosoi@chromium.org", "momohatt@google.com"},
 		// ChromeOS > Software > ARC++ > Storage
 		BugComponent: "b:516669",
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",
 		Data:         []string{"capybara.jpg"},

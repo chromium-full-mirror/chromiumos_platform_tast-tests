@@ -22,7 +22,7 @@ func init() {
 		BugComponent: "b:516669",
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_p"},
 		}, {

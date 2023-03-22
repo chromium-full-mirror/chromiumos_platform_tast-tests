@@ -29,7 +29,7 @@ func init() {
 		},
 		// ChromeOS > Software > ARC++ > Framework > Notifications
 		BugComponent: "b:537324",
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      4 * time.Minute,
 		Fixture:      "arcBooted",

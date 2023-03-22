@@ -23,7 +23,7 @@ func init() {
 		Contacts:     []string{"cros-arc-te@google.com", "arc-core@google.com", "cpiao@google.com"},
 		// ChromeOS > Software > ARC++ > EngProd
 		BugComponent: "b:1052117",
-		Attr:         []string{"group:mainline", "group:arc-functional"},
+		Attr:         []string{"group:mainline", "group:arc-functional", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedInGuest",
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,

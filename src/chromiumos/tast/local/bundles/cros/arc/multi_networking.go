@@ -28,7 +28,7 @@ func init() {
 		Contacts:     []string{"cros-networking@google.com", "taoyl@google.com"},
 		// ChromeOS > Platform > System > Networking
 		BugComponent: "b:156085",
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      4 * time.Minute,
 		Params: []testing.Param{{
