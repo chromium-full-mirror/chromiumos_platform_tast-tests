@@ -29,7 +29,7 @@ func init() {
 		Desc:         "Tests that a11y nodes on various browsers are accessible in Tast using the test extension from Ash",
 		Contacts:     []string{"chromeos-a11y-eng@google.com", "chromeos-sw-engprod@google.com", "hyungtaekim@chromium.org"},
 		BugComponent: "b:1272672",
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
 			Fixture: "chromeLoggedIn",

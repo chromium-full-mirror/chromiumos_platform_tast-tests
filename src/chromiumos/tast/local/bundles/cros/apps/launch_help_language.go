@@ -29,7 +29,7 @@ func init() {
 			"showoff-eng@google.com",
 		},
 		BugComponent: "b:690873",
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		HardwareDeps: hwdep.D(pre.AppsStableModels),
 		Fixture:      fixture.LoggedInJP,

@@ -27,7 +27,7 @@ func init() {
 		Contacts:     []string{"arc-storage@google.com", "youkichihosoi@chromium.org", "momohatt@google.com"},
 		// ChromeOS > Software > ARC++ > Storage
 		BugComponent: "b:516669",
-		Attr:         []string{"group:mainline", "group:arc-functional"},
+		Attr:         []string{"group:mainline", "group:arc-functional", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "chrome_internal", "drivefs"},
 		Timeout:      4 * time.Minute,
 		VarDeps:      []string{"arc.Drivefs.user1", "arc.Drivefs.password1"},

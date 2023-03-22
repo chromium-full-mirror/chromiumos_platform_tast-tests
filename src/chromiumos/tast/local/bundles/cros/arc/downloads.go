@@ -28,7 +28,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",
 		Data:         []string{"capybara.jpg"},
-		Attr:         []string{"group:mainline", "group:arc-functional"},
+		Attr:         []string{"group:mainline", "group:arc-functional", "group:hw_agnostic"},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_p"},
 		}, {

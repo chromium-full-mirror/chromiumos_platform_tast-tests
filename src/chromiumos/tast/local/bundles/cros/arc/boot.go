@@ -38,7 +38,7 @@ func init() {
 			Val: bootConfig{
 				numTrials: 1,
 			},
-			ExtraAttr:         []string{"group:mainline"},
+			ExtraAttr:         []string{"group:mainline", "group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"android_container"},
 			Timeout:           5 * time.Minute,
 		}, {
