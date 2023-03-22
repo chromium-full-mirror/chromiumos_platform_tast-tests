@@ -34,8 +34,9 @@ var starfishIndexVar = testing.RegisterVarString(
 // Various string used to parse responses
 const (
 	simStr     = "SIM "
-	ejectResp  = "Disabled SIM mux"
-	insertResp = "Enabled SIM mux:"
+	ejectResp  = "SIM Mux disabled"
+	insertResp = "SIM Mux set to "
+	fwVerResp  = "Firmware Version: "
 	devIDResp  = "Device ID: "
 	foundStr   = "Found"
 	noneStr    = "None"
@@ -52,8 +53,8 @@ const MaxSimSlots = 8
 // Starfish contains data pertaining to the current state, SIM selected, serial port, etc
 type Starfish struct {
 	sp       *shim
-	devid    string
-	ecid     string
+	devID    string
+	fwVer    string
 	index    int
 	simSlots map[int]struct{}
 }
@@ -99,21 +100,24 @@ func NewStarfish(ctx context.Context) (*Starfish, error) {
 
 // deviceID reads the DeviceID of the Starfish module.
 func (s *Starfish) deviceID(ctx context.Context) error {
-	responses, logs, err := s.sp.SendCommand(ctx, "id")
+	responses, logs, err := s.sp.SendCommand(ctx, "info")
 	s.printLogs(ctx, logs)
 	if err != nil {
 		return err
 	}
-	if len(responses) < 1 {
+	if len(responses) < 2 {
 		return errors.New("invalid response")
+	}
+	if !strings.HasPrefix(responses[0], fwVerResp) {
+		return errors.Errorf("invalid response: %s", responses)
 	}
 	if !strings.HasPrefix(responses[1], devIDResp) {
 		return errors.Errorf("invalid response: %s", responses)
 	}
-	s.ecid = responses[0]
-	s.devid = strings.TrimPrefix(responses[1], devIDResp)
-	testing.ContextLog(ctx, "ec id: ", s.ecid)
-	testing.ContextLog(ctx, "device id: ", s.devid)
+	s.fwVer = strings.TrimPrefix(responses[0], fwVerResp)
+	s.devID = strings.TrimPrefix(responses[1], devIDResp)
+	testing.ContextLog(ctx, "fw version: ", s.fwVer)
+	testing.ContextLog(ctx, "device id: ", s.devID)
 	return nil
 }
 
@@ -178,7 +182,7 @@ func (s *Starfish) SimInsert(ctx context.Context, n int) error {
 	if len(responses) < 1 {
 		return errors.New("invalid response")
 	}
-	if !strings.Contains(responses[1], fmt.Sprintf("%s%d", insertResp, n)) {
+	if !strings.Contains(responses[0], fmt.Sprintf("%s%d", insertResp, n)) {
 		return errors.Errorf("invalid response: %s", responses)
 	}
 	s.index = n
