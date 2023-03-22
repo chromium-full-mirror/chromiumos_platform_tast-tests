@@ -538,3 +538,20 @@ func (i *Instance) Verify(ctx context.Context, filePath string, regionNames ...s
 
 	return out, nil
 }
+
+// Erase erases the flash memory.
+//
+// If an error happened, a non-nil error is returned.
+// Returns the output from command line execution, so that the caller can handle it if needed.
+func (i *Instance) Erase(ctx context.Context, regionNames []string) ([]byte, error) {
+	cmdArgs := []string{dutFlashromPath, "-p", i.programmerWithParamsArg(), "-E"}
+	cmdArgs = appendFileAndRegionNamesArgs(cmdArgs, "", regionNames)
+
+	out, err := i.runCommandLine(ctx, cmdArgs)
+	if err != nil {
+		return out, errors.Wrapf(err, "error while erase flashrom with arguments %v", cmdArgs)
+	}
+
+	testing.ContextLog(ctx, "Flashrom erase successful: ", cmdArgs)
+	return out, nil
+}
