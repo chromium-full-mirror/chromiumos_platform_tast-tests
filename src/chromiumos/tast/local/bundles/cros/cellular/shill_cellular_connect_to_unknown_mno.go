@@ -28,7 +28,7 @@ type unknownMNOTestParam struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ShillCellularConnectToUnknownMno,
-		Desc:         "Verifies that traffic can be sent over the Cellular network",
+		Desc:         "Verifies that the cellular device can connect to a network with no information in the MODB",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "andrewlassalle@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_amari_callbox"},
@@ -110,7 +110,6 @@ func ShillCellularConnectToUnknownMno(ctx context.Context, s *testing.State) {
 	testing.ContextLog(ctx, "Connecting")
 	if _, err := modemmanager.Connect(ctx, simpleModem, apnToConnect); err != nil {
 		s.Fatal("Modem connect failed with error: ", err)
-
 	}
 
 	modemAttachApn, err := modem.GetInitialEpsBearerSettings(ctx, modem)

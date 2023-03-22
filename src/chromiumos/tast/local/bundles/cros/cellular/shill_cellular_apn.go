@@ -26,7 +26,7 @@ type apnTestParam struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ShillCellularApn,
-		Desc:         "Verifies that traffic can be sent over the Cellular network",
+		Desc:         "Verifies that the cellular device can connect with different APN configurations",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "andrewlassalle@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_amari_callbox"},
