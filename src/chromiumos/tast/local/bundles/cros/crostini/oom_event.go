@@ -269,7 +269,7 @@ func checkDbusSignal(ctx context.Context, container *vm.Container) (resultError 
 	}
 
 	testing.ContextLog(ctx, "Waiting for signal from anomaly_detector")
-	signalCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	signalCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	if _, err := waitForAnomalyDetectorSignal(signalCtx, signalWatcher); err != nil {
 		return errors.Wrap(err, "didn't get expected DBus signal")

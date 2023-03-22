@@ -14,6 +14,8 @@ import (
 
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/uiauto"
+	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/crostini"
 	"chromiumos/tast/local/crostini/faillog"
 	"chromiumos/tast/local/crostini/ui/settings"
@@ -150,6 +152,11 @@ func ResizeBackupRestore(ctx context.Context, s *testing.State) {
 	// Wait for backup complete.
 	uiauto.Sleep(time.Second)(ctx) // Pause needed so keyboard events are received.
 
+	ui := uiauto.New(tconn)
+	if err := ui.WithTimeout(5 * time.Second).WaitUntilExists(nodewith.Role(role.TextField).Ancestor(settings.BackupFileWindow).Focused().Editable())(ctx); err != nil {
+		s.Fatal("Failed to focus on file name text field")
+	}
+
 	if err = keyboard.TypeAction(backupFileBaseName)(ctx); err != nil {
 		s.Fatalf("Failed to enter backup name %s: %v", backupFileBaseName, err)
 	}
@@ -162,7 +169,6 @@ func ResizeBackupRestore(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get users MyFiles path: ", err)
 	}
 
-	ui := uiauto.New(tconn)
 	if err = ui.WithTimeout(10 * time.Minute).WaitUntilExists(settings.BackupNotification)(ctx); err != nil {
 		s.Fatal("Backup complete notification not found: ", err)
 	}

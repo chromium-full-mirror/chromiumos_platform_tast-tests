@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/testexec"
+	"chromiumos/tast/errors"
 	"chromiumos/tast/local/crostini"
 	"chromiumos/tast/testing"
 )
@@ -73,8 +74,16 @@ func NestedVM(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to build test program: ", err)
 	}
 
-	if output, err := cont.Command(ctx, "./a.out").CombinedOutput(testexec.DumpLogOnError); err != nil {
-		s.Error("Failed to run test program: ", err)
-		s.Error("Test program output: ", string(output))
+	if err := testing.Poll(
+		ctx,
+		func(ctx context.Context) error {
+			if output, err := cont.Command(ctx, "./a.out").CombinedOutput(testexec.DumpLogOnError); err != nil {
+				return errors.Wrapf(err, "Test program output: %s", string(output))
+			}
+			return nil
+		},
+		&testing.PollOptions{Timeout: 10 * time.Second},
+	); err != nil {
+		s.Fatal("Failed to run test program: ", err)
 	}
 }

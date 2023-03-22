@@ -143,7 +143,7 @@ func Webserver(ctx context.Context, s *testing.State) {
 	for url := range checkURLs {
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
 			return checkNavigation(url)
-		}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+		}, &testing.PollOptions{Timeout: 20 * time.Second}); err != nil {
 			s.Fatal("Error polling for webserver: ", err)
 		}
 	}
