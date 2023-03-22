@@ -601,10 +601,14 @@ func (f *fixture) stopApp(ctx context.Context, hasError bool) (retErr error) {
 	if f.app == nil {
 		return
 	}
-
 	defer func(ctx context.Context) {
-		if err := f.app.CloseWithDebugParams(ctx, f.debugParams); err != nil {
+		if err := f.app.Close(ctx); err != nil {
 			retErr = errors.Wrap(retErr, err.Error())
+		}
+		if (hasError || retErr != nil) && f.debugParams.SaveCameraFolderWhenFail {
+			if err := f.app.SaveCameraFolder(ctx); err != nil {
+				retErr = errors.Wrap(retErr, err.Error())
+			}
 		}
 		f.app = nil
 	}(ctx)

@@ -319,10 +319,8 @@ func (a *App) ClosingItself(ctx context.Context) (bool, error) {
 	return a.appWindow.ClosingItself(ctx)
 }
 
-// checkJSError checks javascript error emitted by CCA error callback. If
-// |saveCameraFolderWhenFail| is true, copies files in the camera folder to
-// output directory if there is any JS errors found.
-func (a *App) checkJSError(ctx context.Context, saveCameraFolderWhenFail bool) error {
+// checkJSError checks javascript error emitted by CCA error callback.
+func (a *App) checkJSError(ctx context.Context) error {
 	if a.appWindow == nil {
 		// It might be closed already. Do nothing.
 		return nil
@@ -367,9 +365,6 @@ func (a *App) checkJSError(ctx context.Context, saveCameraFolderWhenFail bool) e
 		return err
 	}
 	if len(jsErrors) > 0 {
-		if saveCameraFolderWhenFail {
-			a.SaveCameraFolder(ctx)
-		}
 		return &ErrJS{fmt.Sprintf("there are %d JS errors, first error: type=%v. name=%v",
 			len(jsErrors), jsErrors[0].ErrorType, jsErrors[0].ErrorName)}
 	}
@@ -377,12 +372,7 @@ func (a *App) checkJSError(ctx context.Context, saveCameraFolderWhenFail bool) e
 }
 
 // Close closes the App and the associated connection.
-func (a *App) Close(ctx context.Context) error {
-	return a.CloseWithDebugParams(ctx, DebugParams{})
-}
-
-// CloseWithDebugParams closes the App and the associated connection with the debug parameters.
-func (a *App) CloseWithDebugParams(ctx context.Context, params DebugParams) (retErr error) {
+func (a *App) Close(ctx context.Context) (retErr error) {
 	if a.conn == nil {
 		// It's already closed. Do nothing.
 		return nil
@@ -410,7 +400,7 @@ func (a *App) CloseWithDebugParams(ctx context.Context, params DebugParams) (ret
 		if err := a.appWindow.WaitUntilClosed(ctx); err != nil {
 			reportOrLogError(errors.Wrap(err, "failed to wait for appWindow close"))
 		}
-		if err := a.checkJSError(ctx, params.SaveCameraFolderWhenFail); err != nil {
+		if err := a.checkJSError(ctx); err != nil {
 			reportOrLogError(errors.Wrap(err, "There are JS errors when running CCA"))
 		}
 		if err := a.appWindow.Release(ctx); err != nil {

@@ -172,6 +172,7 @@ func (v *video) stop(ctx context.Context, app *cca.App) error {
 
 func CCAUIRecordVideo(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(cca.FixtureData).Chrome
+	s.FixtValue().(cca.FixtureData).SetDebugParams(cca.DebugParams{SaveCameraFolderWhenFail: true})
 	runTestWithApp := s.FixtValue().(cca.FixtureData).RunTestWithApp
 	enableMultiStream := s.Param().(bool)
 	subTestTimeout := 40 * time.Second
