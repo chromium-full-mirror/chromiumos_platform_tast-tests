@@ -31,7 +31,7 @@ func init() {
 		Desc:         "Checks that Cantonese physical keyboard works",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
-		Attr:         []string{"group:mainline", "group:input-tools", "group:input-tools-upstream"},
+		Attr:         []string{"group:mainline", "group:input-tools", "group:input-tools-upstream", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.Cantonese}),
 		HardwareDeps: hwdep.D(pre.InputsStableModels),

@@ -19,7 +19,7 @@ func init() {
 		Desc:         "Starts Google Assistant service in signed-out mode and checks the running status",
 		BugComponent: "b:905229", // ChromeOS > Software > Assistive
 		Contacts:     []string{"assistive-eng@google.com"},
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		Pre:          assistant.VerboseLoggingEnabled(),
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 	})

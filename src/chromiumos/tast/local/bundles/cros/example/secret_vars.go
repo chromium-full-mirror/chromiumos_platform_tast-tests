@@ -17,7 +17,7 @@ func init() {
 		Desc:         "Secret variables",
 		Contacts:     []string{"tast-core@google.com", "oka@chromium.org"},
 		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		// example.SecretVars.password is defined in tast-tests-private/vars/example.SecretVars.yaml
 		// example.commonVar is defined in tast-tests-private/vars/example.yaml
 		VarDeps: []string{"example.SecretVars.password", "example.commonVar"},

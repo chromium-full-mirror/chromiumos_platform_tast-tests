@@ -28,7 +28,7 @@ func init() {
 		Desc:         "Verifies that user can manage input methods in OS settings",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
-		Attr:         []string{"group:mainline", "group:input-tools"},
+		Attr:         []string{"group:mainline", "group:input-tools", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.DefaultInputMethod}),
 		Timeout:      3 * time.Minute,

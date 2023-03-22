@@ -30,7 +30,7 @@ func init() {
 		Desc:         "Checks that changing input method in different ways on physical keyboard",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
-		Attr:         []string{"group:mainline", "group:input-tools"},
+		Attr:         []string{"group:mainline", "group:input-tools", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.DefaultInputMethod, ime.EnglishUK, ime.ChinesePinyin}),
 		Timeout:      3 * time.Minute,

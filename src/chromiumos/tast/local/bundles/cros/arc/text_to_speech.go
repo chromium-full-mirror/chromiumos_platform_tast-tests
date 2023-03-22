@@ -25,7 +25,7 @@ func init() {
 		Contacts:     []string{"arc-framework+tast@google.com", "hirokisato@chromium.org", "sahok@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > Accessibility
 		BugComponent: "b:165222",
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",
 		Params: []testing.Param{{

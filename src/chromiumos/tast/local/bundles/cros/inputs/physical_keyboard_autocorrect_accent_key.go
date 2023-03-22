@@ -33,7 +33,7 @@ func init() {
 			"essential-inputs-team@google.com",
 		},
 		BugComponent: "b:95887",
-		Attr:         []string{"group:mainline", "group:input-tools"},
+		Attr:         []string{"group:mainline", "group:input-tools", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{

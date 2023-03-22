@@ -25,7 +25,7 @@ func init() {
 		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
 		Data:         []string{"chrome_extension_manifest.json"},
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 	})
 }
 

@@ -29,7 +29,7 @@ func init() {
 		Desc:         "Checks that physical keyboard can perform basic typing",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
-		Attr:         []string{"group:mainline", "group:input-tools", "group:input-tools-upstream", "group:intel-gating"},
+		Attr:         []string{"group:mainline", "group:input-tools", "group:input-tools-upstream", "group:intel-gating", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		HardwareDeps: hwdep.D(pre.InputsStableModels),
 		SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.EnglishUS}),
