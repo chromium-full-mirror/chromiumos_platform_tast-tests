@@ -30,7 +30,10 @@ func init() {
 			"dclasson@google.com",
 		},
 		BugComponent: "b:1133283",
-		Attr:         []string{"group:bluetooth", "bluetooth_cross_device_fastpair", "bluetooth_flaky"},
+		Attr: []string{
+			"group:bluetooth",
+			"bluetooth_cross_device_fastpair",
+		},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(bluetooth.FastPairHardwareDep),
 		ServiceDeps: []string{
@@ -38,9 +41,20 @@ func init() {
 			"tast.cros.bluetooth.BluetoothUIService",
 			"tast.cros.ui.ChromeUIService",
 		},
-		Fixture: "chromeLoggedInAsUserWithFastPairAnd1BTPeer",
 		Timeout: 3 * time.Minute,
 		Vars:    []string{bluetooth.TestVarFastPairAntispoofingKeyPem},
+		Params: []testing.Param{
+			{
+				Name:      "floss_disabled",
+				Fixture:   "chromeLoggedInAsUserWithFastPairAnd1BTPeerFlossDisabled",
+				ExtraAttr: []string{"bluetooth_flaky"},
+			},
+			{
+				Name:      "floss_enabled",
+				Fixture:   "chromeLoggedInAsUserWithFastPairAnd1BTPeerFlossEnabled",
+				ExtraAttr: []string{"bluetooth_flaky"},
+			},
+		},
 	})
 }
 

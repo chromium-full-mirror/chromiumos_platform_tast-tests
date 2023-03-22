@@ -37,10 +37,19 @@ func init() {
 			"tast.cros.bluetooth.BluetoothService",
 			"tast.cros.bluetooth.BluetoothUIService",
 		},
-		Fixture: "twoChromebooksLoggedInWithFastPairAnd1BTPeer",
 		Timeout: 3 * time.Minute,
 		Vars: []string{
 			bluetooth.TestVarFastPairAntispoofingKeyPem,
+		},
+		Params: []testing.Param{
+			{
+				Name:    "floss_disabled",
+				Fixture: "twoChromebooksLoggedInWithFastPairAnd1BTPeerFlossDisabled",
+			},
+			{
+				Name:    "floss_enabled",
+				Fixture: "twoChromebooksLoggedInWithFastPairAnd1BTPeerFlossEnabled",
+			},
 		},
 	})
 }

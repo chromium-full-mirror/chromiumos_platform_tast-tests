@@ -8,7 +8,6 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 
@@ -23,7 +22,7 @@ import (
 	"chromiumos/tast/remote/log"
 	"chromiumos/tast/rpc"
 	bts "chromiumos/tast/services/cros/bluetooth"
-	chromeService "chromiumos/tast/services/cros/ui"
+	"chromiumos/tast/services/cros/ui"
 	"chromiumos/tast/ssh"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/timing"
@@ -31,11 +30,6 @@ import (
 
 // Fixture variable keys.
 const (
-	// fixtureVarUseFloss is the name of the tast var that allows for switching
-	// the bluetooth stack on the DUT to use floss or bluez. To use floss, set
-	// this to "true", otherwise bluez will be used.
-	fixtureVarUseFloss = "bluetooth.UseFloss"
-
 	// fixtureVarBTPeers is the name of the tast var that specifies a
 	// comma-separated list of btpeer host addresses.
 	//
@@ -112,8 +106,8 @@ const (
 	chromeFeatureFastPair               = "FastPair"
 	chromeFeatureFastPairSavedDevices   = "FastPairSavedDevices"
 
-	// chromeFeatureFloss is enabled when fixtureVarUseFloss is true, and disabled
-	// when it is false.
+	// chromeFeatureFloss is enabled when FlossEnabled fixture feature is true,
+	// and disabled when it is false.
 	chromeFeatureFloss = "Floss"
 )
 
@@ -133,238 +127,6 @@ const (
 	btpeerResetBuffer = 15 * time.Second
 )
 
-func init() {
-	testing.AddFixture(&testing.Fixture{
-		Name: "chromeLoggedInWithBluetoothEnabled",
-		Desc: "Logs into a user session and enables Bluetooth during set up and disables it during tear down",
-		Contacts: []string{
-			"chadduffin@chromium.org",
-			"cros-connectivity@google.com",
-		},
-		Impl: newFixture(&fixtureFeatures{
-			EnableFeatures:  []string{},
-			DisableFeatures: []string{},
-			LoginMode:       chromeService.LoginMode_LOGIN_MODE_FAKE_LOGIN,
-		}),
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: tearDownTimeout,
-		PostTestTimeout: postTestTimeout,
-		ServiceDeps: []string{
-			serviceDepBluetoothUIService,
-			serviceDepBluetoothService,
-			serviceDepChromeService,
-		},
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: "chromeLoggedInWith1BTPeer",
-		Desc: "Logs into a user session, enables Bluetooth, and connects to 1 btpeer",
-		Contacts: []string{
-			"chadduffin@chromium.org",
-			"cros-connectivity@google.com",
-		},
-		Impl: newFixture(&fixtureFeatures{
-			BTPeerCount:     1,
-			EnableFeatures:  []string{},
-			DisableFeatures: []string{},
-			LoginMode:       chromeService.LoginMode_LOGIN_MODE_FAKE_LOGIN,
-		}),
-		Vars: []string{
-			fixtureVarBTPeers,
-			fixtureVarUseFloss,
-		},
-		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer,
-		ResetTimeout:    resetTimeout + btpeerResetBuffer,
-		TearDownTimeout: tearDownTimeout + btpeerResetBuffer,
-		PostTestTimeout: postTestTimeout,
-		ServiceDeps: []string{
-			serviceDepBluetoothUIService,
-			serviceDepBluetoothService,
-			serviceDepChromeService,
-		},
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: "chromeLoggedInWith2BTPeers",
-		Desc: "Logs into a user session, enables Bluetooth, and connects to 2 btpeers",
-		Contacts: []string{
-			"chadduffin@chromium.org",
-			"cros-connectivity@google.com",
-		},
-		Impl: newFixture(&fixtureFeatures{
-			BTPeerCount:     2,
-			EnableFeatures:  []string{},
-			DisableFeatures: []string{},
-			LoginMode:       chromeService.LoginMode_LOGIN_MODE_FAKE_LOGIN,
-		}),
-		Vars: []string{
-			fixtureVarBTPeers,
-			fixtureVarUseFloss,
-		},
-		SetUpTimeout:    setUpTimeout + 2*btpeerSetUpBuffer,
-		ResetTimeout:    resetTimeout + 2*btpeerResetBuffer,
-		TearDownTimeout: tearDownTimeout + 2*btpeerResetBuffer,
-		PostTestTimeout: postTestTimeout,
-		ServiceDeps: []string{
-			serviceDepBluetoothUIService,
-			serviceDepBluetoothService,
-			serviceDepChromeService,
-		},
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: "chromeLoggedInWith3BTPeers",
-		Desc: "Logs into a user session, enables Bluetooth, and connects to 3 btpeers",
-		Contacts: []string{
-			"chadduffin@chromium.org",
-			"cros-connectivity@google.com",
-		},
-		Impl: newFixture(&fixtureFeatures{
-			BTPeerCount:     3,
-			EnableFeatures:  []string{},
-			DisableFeatures: []string{},
-			LoginMode:       chromeService.LoginMode_LOGIN_MODE_FAKE_LOGIN,
-		}),
-		Vars: []string{
-			fixtureVarBTPeers,
-			fixtureVarUseFloss,
-		},
-		SetUpTimeout:    setUpTimeout + 3*btpeerSetUpBuffer,
-		ResetTimeout:    resetTimeout + 3*btpeerResetBuffer,
-		TearDownTimeout: tearDownTimeout + 3*btpeerResetBuffer,
-		PostTestTimeout: postTestTimeout,
-		ServiceDeps: []string{
-			serviceDepBluetoothUIService,
-			serviceDepBluetoothService,
-			serviceDepChromeService,
-		},
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: "chromeLoggedInWith4BTPeers",
-		Desc: "Logs into a user session, enables Bluetooth, and connects to 4 btpeers",
-		Contacts: []string{
-			"chadduffin@chromium.org",
-			"cros-connectivity@google.com",
-		},
-		Impl: newFixture(&fixtureFeatures{
-			BTPeerCount:     4,
-			EnableFeatures:  []string{},
-			DisableFeatures: []string{},
-			LoginMode:       chromeService.LoginMode_LOGIN_MODE_FAKE_LOGIN,
-		}),
-		Vars: []string{
-			fixtureVarBTPeers,
-			fixtureVarUseFloss,
-		},
-		SetUpTimeout:    setUpTimeout + 4*btpeerSetUpBuffer,
-		ResetTimeout:    resetTimeout + 4*btpeerResetBuffer,
-		TearDownTimeout: tearDownTimeout + 4*btpeerResetBuffer,
-		PostTestTimeout: postTestTimeout,
-		ServiceDeps: []string{
-			serviceDepBluetoothUIService,
-			serviceDepBluetoothService,
-			serviceDepChromeService,
-		},
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: "chromeOobeWith1BTPeer",
-		Desc: "Puts the DUT into OOBE, enables Bluetooth, and connects to 1 btpeer",
-		Contacts: []string{
-			"chadduffin@chromium.org",
-			"cros-connectivity@google.com",
-		},
-		Impl: newFixture(&fixtureFeatures{
-			BTPeerCount:           1,
-			EnableFeatures:        []string{chromeFeatureOobeHidDetectionRevamp},
-			DisableFeatures:       []string{},
-			LoginMode:             chromeService.LoginMode_LOGIN_MODE_NO_LOGIN,
-			EnableHidScreenOnOobe: true,
-		}),
-		Vars: []string{
-			fixtureVarBTPeers,
-			fixtureVarUseFloss,
-			fixtureVarSigninKey,
-		},
-		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer,
-		ResetTimeout:    resetTimeout + btpeerResetBuffer,
-		TearDownTimeout: tearDownTimeout + btpeerResetBuffer,
-		PostTestTimeout: postTestTimeout,
-		ServiceDeps: []string{
-			serviceDepBluetoothUIService,
-			serviceDepBluetoothService,
-			serviceDepChromeService,
-		},
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: "chromeLoggedInAsUserWithFastPairAnd1BTPeer",
-		Desc: "Logs into a chrome as a specific user and enables Bluetooth, FastPair, and connects to 1 btpeer",
-		Contacts: []string{
-			"jaredbennett@chromium.org",
-			"cros-connectivity@google.com",
-		},
-		Impl: newFixture(&fixtureFeatures{
-			BTPeerCount: 1,
-			EnableFeatures: []string{
-				chromeFeatureFastPair,
-				chromeFeatureFastPairSavedDevices,
-			},
-			DisableFeatures:        []string{},
-			LoginMode:              chromeService.LoginMode_LOGIN_MODE_GAIA_LOGIN,
-			UseFastPairTapeAccount: true,
-		}),
-		Vars: []string{
-			fixtureVarBTPeers,
-			fixtureVarUseFloss,
-			fixtureVarFastPairChromeUsername,
-			fixtureVarFastPairChromePassword,
-			tape.ServiceAccountVar,
-		},
-		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer,
-		ResetTimeout:    resetTimeout + btpeerResetBuffer,
-		TearDownTimeout: tearDownTimeout + btpeerResetBuffer,
-		PostTestTimeout: postTestTimeout,
-		ServiceDeps: []string{
-			serviceDepBluetoothUIService,
-			serviceDepBluetoothService,
-			serviceDepChromeService,
-		},
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: "twoChromebooksLoggedInWithFastPairAnd1BTPeer",
-		Desc: "Logs into two Chromebooks as the same user and enables Bluetooth, FastPair, and connects to 1 btpeer",
-		Contacts: []string{
-			"dclasson@google.com",
-			"chromeos-sw-engprod@google.com",
-			"chromeos-cross-device-eng@google.com",
-		},
-		Impl: newFixture(&fixtureFeatures{
-			BTPeerCount: 1,
-			EnableFeatures: []string{
-				chromeFeatureFastPair,
-				chromeFeatureFastPairSavedDevices,
-			},
-			DisableFeatures:        []string{},
-			LoginMode:              chromeService.LoginMode_LOGIN_MODE_GAIA_LOGIN,
-			UseFastPairTapeAccount: true,
-			RequireCompanionDUT:    true,
-		}),
-		Vars: []string{
-			fixtureVarBTPeers,
-			fixtureVarUseFloss,
-			fixtureVarFastPairChromeUsername,
-			fixtureVarFastPairChromePassword,
-			tape.ServiceAccountVar,
-		},
-		SetUpTimeout:    2*setUpTimeout + btpeerSetUpBuffer,
-		ResetTimeout:    2*resetTimeout + btpeerResetBuffer,
-		TearDownTimeout: 2*tearDownTimeout + btpeerResetBuffer,
-		PostTestTimeout: 2 * postTestTimeout,
-		ServiceDeps: []string{
-			serviceDepBluetoothUIService,
-			serviceDepBluetoothService,
-			serviceDepChromeService,
-		},
-	})
-}
-
 type fixtureFeatures struct {
 	// BTPeerCount requires the specified amount of btpeers to exist in the
 	// testbed and connects to them during setup. A testbed can have more btpeers
@@ -378,7 +140,7 @@ type fixtureFeatures struct {
 	DisableFeatures []string
 
 	// LoginMode is what the resulting login mode should be after starting Chrome.
-	LoginMode chromeService.LoginMode
+	LoginMode ui.LoginMode
 
 	// EnableHidScreenOnOobe enables HID detection screen when in OOBE.
 	EnableHidScreenOnOobe bool
@@ -396,6 +158,10 @@ type fixtureFeatures struct {
 	// user account, which is necessary for Fast Pair Multi-DUT tests. Enforces that
 	// a companion DUT is connected and passed in.
 	RequireCompanionDUT bool
+
+	// FlossEnabled allows for switching the bluetooth stack on the DUT to use floss
+	// or bluez. To use floss, set this to "true", otherwise bluez will be used.
+	FlossEnabled bool
 }
 
 // DUTConfig groups DUT-specific fixture configs and utils.
@@ -417,7 +183,7 @@ type DUTConfig struct {
 	BluetoothUIService bts.BluetoothUIServiceClient
 
 	// ChromeService is a client of the ChromeService that is used to start Chrome.
-	ChromeService chromeService.ChromeServiceClient
+	ChromeService ui.ChromeServiceClient
 }
 
 func newDUTConfig(ctx context.Context, dut *dut.DUT, RPCHint *testing.RPCHint) (*DUTConfig, error) {
@@ -430,7 +196,7 @@ func newDUTConfig(ctx context.Context, dut *dut.DUT, RPCHint *testing.RPCHint) (
 		DUTRPCClient:       rpcClient,
 		BluetoothService:   bts.NewBluetoothServiceClient(rpcClient.Conn),
 		BluetoothUIService: bts.NewBluetoothUIServiceClient(rpcClient.Conn),
-		ChromeService:      chromeService.NewChromeServiceClient(rpcClient.Conn),
+		ChromeService:      ui.NewChromeServiceClient(rpcClient.Conn),
 	}, nil
 }
 
@@ -475,7 +241,7 @@ type FixtValue struct {
 	BluetoothUIService bts.BluetoothUIServiceClient
 
 	// ChromeService is a client of the ChromeService that is used to start Chrome.
-	ChromeService chromeService.ChromeServiceClient
+	ChromeService ui.ChromeServiceClient
 
 	// DUTs stores the dut-specific configurations for each DUT in the fixture.
 	// The first item in this list refers to the primary DUT, and subsequent items
@@ -520,16 +286,11 @@ func newFixture(features *fixtureFeatures) *fixture {
 // This is necessary to implement testing.FixtureImpl.
 func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	// Determine desired bluetooth stack for DUTs.
-	btStack := bts.BluetoothStackType_BLUEZ
-	useFlossVar, ok := s.Var(fixtureVarUseFloss)
-	if ok {
-		useFloss, err := strconv.ParseBool(useFlossVar)
-		if err != nil {
-			s.Fatalf("Failed to parse bool from fixture var %q value %q: %v", fixtureVarUseFloss, useFlossVar, err)
-		}
-		if useFloss {
-			btStack = bts.BluetoothStackType_FLOSS
-		}
+	var btStack bts.BluetoothStackType
+	if tf.features.FlossEnabled {
+		btStack = bts.BluetoothStackType_FLOSS
+	} else {
+		btStack = bts.BluetoothStackType_BLUEZ
 	}
 
 	// Parse OOBE fixture var.
@@ -654,11 +415,11 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 		if tf.fastPairEnabled {
 			extraArgs = fixtureVarFastPairExtraArgs
 		}
-		if _, err := dutConfig.ChromeService.New(ctx, &chromeService.NewRequest{
+		if _, err := dutConfig.ChromeService.New(ctx, &ui.NewRequest{
 			LoginMode:       tf.features.LoginMode,
 			EnableFeatures:  tf.features.EnableFeatures,
 			DisableFeatures: tf.features.DisableFeatures,
-			Credentials: &chromeService.NewRequest_Credentials{
+			Credentials: &ui.NewRequest_Credentials{
 				Username: chromeUsername,
 				Password: chromePassword,
 			},

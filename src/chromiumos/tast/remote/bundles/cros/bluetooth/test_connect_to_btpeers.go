@@ -25,11 +25,21 @@ func init() {
 		Attr: []string{
 			"group:bluetooth",
 			"bluetooth_btpeers_2",
-			"bluetooth_flaky",
 		},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "chromeLoggedInWith2BTPeers",
 		Timeout:      time.Second * 15,
+		Params: []testing.Param{
+			{
+				Name:      "floss_disabled",
+				Fixture:   "chromeLoggedInWith2BTPeersFlossDisabled",
+				ExtraAttr: []string{"bluetooth_flaky"},
+			},
+			{
+				Name:      "floss_enabled",
+				Fixture:   "chromeLoggedInWith2BTPeersFlossEnabled",
+				ExtraAttr: []string{"bluetooth_flaky"},
+			},
+		},
 	})
 }
 

@@ -27,16 +27,24 @@ func init() {
 		Attr: []string{
 			"group:bluetooth",
 			"bluetooth_btpeers_1",
-			"bluetooth_flaky",
 		},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.bluetooth.BluetoothUIService"},
-		Fixture:      "chromeLoggedInWith1BTPeer",
 		Timeout:      90 * time.Second,
-		Params: []testing.Param{{
-			Name: "le_mouse",
-			Val:  cbt.DeviceTypeLEMouse,
-		}},
+		Params: []testing.Param{
+			{
+				Name:      "floss_disabled__le_mouse",
+				Fixture:   "chromeLoggedInWith1BTPeerFlossDisabled",
+				ExtraAttr: []string{"bluetooth_flaky"},
+				Val:       cbt.DeviceTypeLEMouse,
+			},
+			{
+				Name:      "floss_enabled__le_mouse",
+				Fixture:   "chromeLoggedInWith1BTPeerFlossEnabled",
+				ExtraAttr: []string{"bluetooth_flaky"},
+				Val:       cbt.DeviceTypeLEMouse,
+			},
+		},
 	})
 }
 

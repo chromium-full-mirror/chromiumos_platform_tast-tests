@@ -33,15 +33,25 @@ func init() {
 		Attr: []string{
 			"group:bluetooth",
 			"bluetooth_btpeers_1",
-			"bluetooth_flaky",
 		},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps: []string{
 			"tast.cros.ui.AutomationService",
 			"tast.cros.ui.ChromeUIService",
 		},
-		Fixture:      "chromeOobeWith1BTPeer",
 		HardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Chromebox, hwdep.Chromebit)),
+		Params: []testing.Param{
+			{
+				Name:      "floss_disabled",
+				Fixture:   "chromeOobeWith1BTPeerFlossDisabled",
+				ExtraAttr: []string{"bluetooth_flaky"},
+			},
+			{
+				Name:      "floss_enabled",
+				Fixture:   "chromeOobeWith1BTPeerFlossEnabled",
+				ExtraAttr: []string{"bluetooth_flaky"},
+			},
+		},
 	})
 }
 

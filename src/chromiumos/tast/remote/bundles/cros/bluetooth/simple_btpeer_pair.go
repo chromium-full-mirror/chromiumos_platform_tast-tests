@@ -33,39 +33,87 @@ func init() {
 			"group:bluetooth",
 			"bluetooth_core",
 			"bluetooth_btpeers_1",
-			"bluetooth_flaky",
 		},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.bluetooth.BluetoothService"},
-		Fixture:      "chromeLoggedInWith1BTPeer",
 		Timeout:      1 * time.Minute,
 		Params: []testing.Param{
 			{
-				Name: "le_keyboard",
+				Name:      "floss_disabled__le_keyboard",
+				Fixture:   "chromeLoggedInWith1BTPeerFlossDisabled",
+				ExtraAttr: []string{"bluetooth_flaky"},
 				Val: &simpleBTPeerTestCase{
 					DeviceType: cbt.DeviceTypeLEKeyboard,
 				},
 			},
 			{
-				Name: "le_mouse",
+				Name:      "floss_disabled__le_mouse",
+				Fixture:   "chromeLoggedInWith1BTPeerFlossDisabled",
+				ExtraAttr: []string{"bluetooth_flaky"},
 				Val: &simpleBTPeerTestCase{
 					DeviceType: cbt.DeviceTypeLEMouse,
 				},
 			},
 			{
-				Name: "le_phone",
+				Name:      "floss_disabled__le_phone",
+				Fixture:   "chromeLoggedInWith1BTPeerFlossDisabled",
+				ExtraAttr: []string{"bluetooth_flaky"},
 				Val: &simpleBTPeerTestCase{
 					DeviceType: cbt.DeviceTypeLEPhone,
 				},
 			},
 			{
-				Name: "keyboard",
+				Name:      "floss_disabled__keyboard",
+				Fixture:   "chromeLoggedInWith1BTPeerFlossDisabled",
+				ExtraAttr: []string{"bluetooth_flaky"},
 				Val: &simpleBTPeerTestCase{
 					DeviceType: cbt.DeviceTypeKeyboard,
 				},
 			},
 			{
-				Name: "mouse",
+				Name:      "floss_disabled__mouse",
+				Fixture:   "chromeLoggedInWith1BTPeerFlossDisabled",
+				ExtraAttr: []string{"bluetooth_flaky"},
+				Val: &simpleBTPeerTestCase{
+					DeviceType: cbt.DeviceTypeMouse,
+				},
+			},
+			{
+				Name:      "floss_enabled__le_keyboard",
+				Fixture:   "chromeLoggedInWith1BTPeerFlossEnabled",
+				ExtraAttr: []string{"bluetooth_flaky"},
+				Val: &simpleBTPeerTestCase{
+					DeviceType: cbt.DeviceTypeLEKeyboard,
+				},
+			},
+			{
+				Name:      "floss_enabled__le_mouse",
+				Fixture:   "chromeLoggedInWith1BTPeerFlossEnabled",
+				ExtraAttr: []string{"bluetooth_flaky"},
+				Val: &simpleBTPeerTestCase{
+					DeviceType: cbt.DeviceTypeLEMouse,
+				},
+			},
+			{
+				Name:      "floss_enabled__le_phone",
+				Fixture:   "chromeLoggedInWith1BTPeerFlossEnabled",
+				ExtraAttr: []string{"bluetooth_flaky"},
+				Val: &simpleBTPeerTestCase{
+					DeviceType: cbt.DeviceTypeLEPhone,
+				},
+			},
+			{
+				Name:      "floss_enabled__keyboard",
+				Fixture:   "chromeLoggedInWith1BTPeerFlossEnabled",
+				ExtraAttr: []string{"bluetooth_flaky"},
+				Val: &simpleBTPeerTestCase{
+					DeviceType: cbt.DeviceTypeKeyboard,
+				},
+			},
+			{
+				Name:      "floss_enabled__mouse",
+				Fixture:   "chromeLoggedInWith1BTPeerFlossEnabled",
+				ExtraAttr: []string{"bluetooth_flaky"},
 				Val: &simpleBTPeerTestCase{
 					DeviceType: cbt.DeviceTypeMouse,
 				},
