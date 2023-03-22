@@ -38,6 +38,7 @@ func init() {
 		Attr:         []string{"group:firmware", "firmware_ec"},
 		SoftwareDeps: []string{"crossystem", "flashrom"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Platform("fizz", "kalista")),
+		Requirements: []string{"sys-fw-0022-v01"},
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService", "tast.cros.firmware.UtilsService"},
 		Timeout:      15 * time.Minute,
 		Params: []testing.Param{

@@ -32,6 +32,7 @@ func init() {
 		Attr:         []string{"group:firmware", "firmware_ec"},
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
+		Requirements: []string{"sys-fw-0022-v01"},
 		Timeout:      15 * time.Minute,
 		Params: []testing.Param{
 			{Name: "normal",

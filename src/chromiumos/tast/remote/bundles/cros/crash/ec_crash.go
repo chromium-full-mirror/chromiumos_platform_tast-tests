@@ -35,6 +35,7 @@ func init() {
 		},
 		BugComponent: "b:1032705",
 		Attr:         []string{"group:mainline", "informational", "group:firmware", "firmware_ec"},
+		Requirements: []string{"sys-fw-0022-v01"},
 		Timeout:      10 * time.Minute,
 		Fixture:      fixture.NormalMode,
 		ServiceDeps:  []string{"tast.cros.crash.FixtureService"},

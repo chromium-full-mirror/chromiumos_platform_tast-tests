@@ -36,6 +36,7 @@ func init() {
 		Attr:         []string{"group:firmware", "firmware_ec", "firmware_smoke", "firmware_bringup"},
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
+		Requirements: []string{"sys-fw-0022-v01"},
 		Params: []testing.Param{
 			{
 				Name: "x86",

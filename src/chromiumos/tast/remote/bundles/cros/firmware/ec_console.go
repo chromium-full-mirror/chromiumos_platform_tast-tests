@@ -24,6 +24,7 @@ func init() {
 		Attr:         []string{"group:firmware", "firmware_ec", "firmware_bringup"},
 		Vars:         []string{"servo"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
+		Requirements: []string{"sys-fw-0022-v01"},
 	})
 }
 
