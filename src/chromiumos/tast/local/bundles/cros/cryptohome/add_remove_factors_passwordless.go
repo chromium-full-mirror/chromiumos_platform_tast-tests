@@ -47,16 +47,6 @@ func init() {
 	})
 }
 
-// containsType check if am array of auth factor types contains a specific type.
-func containsType(typeArray []uda.AuthFactorType, typeValue uda.AuthFactorType) bool {
-	for _, value := range typeArray {
-		if value == typeValue {
-			return true
-		}
-	}
-	return false
-}
-
 func AddRemoveFactorsPasswordless(ctx context.Context, s *testing.State) {
 	const (
 		userName      = "foo@bar.baz"
@@ -116,11 +106,11 @@ func AddRemoveFactorsPasswordless(ctx context.Context, s *testing.State) {
 		nil); err != nil {
 		s.Fatal("Mismatch in configured auth factors before adding factors (-got, +want): ", err)
 	}
-	if !containsType(listFactorsAtStartReply.SupportedAuthFactors, uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD) {
-		s.Fatal("Password not reported as a supported auth factor before adding any factors")
-	}
-	if !containsType(listFactorsAtStartReply.SupportedAuthFactors, uda.AuthFactorType_AUTH_FACTOR_TYPE_PIN) {
-		s.Fatal("PIN not reported as a supported auth factor before adding any factors")
+	if err := cryptohomecommon.ExpectContainsAuthFactorTypes(
+		listFactorsAtStartReply.SupportedAuthFactors,
+		[]uda.AuthFactorType{uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD, uda.AuthFactorType_AUTH_FACTOR_TYPE_PIN},
+	); err != nil {
+		s.Fatal("Mismatch in supported auth factors before adding factors: ", err)
 	}
 
 	if userParam.usePassword {
@@ -144,11 +134,11 @@ func AddRemoveFactorsPasswordless(ctx context.Context, s *testing.State) {
 			}); err != nil {
 			s.Fatal("Mismatch in configured auth factors after adding password (-got, +want): ", err)
 		}
-		if !containsType(listFactorsAfterAddPasswordReply.SupportedAuthFactors, uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD) {
-			s.Fatal("Password not reported as a supported auth factor after adding password")
-		}
-		if !containsType(listFactorsAfterAddPasswordReply.SupportedAuthFactors, uda.AuthFactorType_AUTH_FACTOR_TYPE_PIN) {
-			s.Fatal("PIN not reported as a supported auth factor after adding password")
+		if err := cryptohomecommon.ExpectContainsAuthFactorTypes(
+			listFactorsAfterAddPasswordReply.SupportedAuthFactors,
+			[]uda.AuthFactorType{uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD, uda.AuthFactorType_AUTH_FACTOR_TYPE_PIN},
+		); err != nil {
+			s.Fatal("Mismatch in supported auth factors after adding password: ", err)
 		}
 
 		// Add a PIN auth factor to the user.
@@ -175,11 +165,11 @@ func AddRemoveFactorsPasswordless(ctx context.Context, s *testing.State) {
 			}); err != nil {
 			s.Fatal("Mismatch in configured auth factors after adding PIN (-got, +want): ", err)
 		}
-		if !containsType(listFactorsAfterAddPinReply.SupportedAuthFactors, uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD) {
-			s.Fatal("Password not reported as a supported auth factor after adding PIN")
-		}
-		if !containsType(listFactorsAfterAddPinReply.SupportedAuthFactors, uda.AuthFactorType_AUTH_FACTOR_TYPE_PIN) {
-			s.Fatal("PIN not reported as a supported auth factor after adding PIN")
+		if err := cryptohomecommon.ExpectContainsAuthFactorTypes(
+			listFactorsAfterAddPinReply.SupportedAuthFactors,
+			[]uda.AuthFactorType{uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD, uda.AuthFactorType_AUTH_FACTOR_TYPE_PIN},
+		); err != nil {
+			s.Fatal("Mismatch in supported auth factors after adding PIN: ", err)
 		}
 
 		// Remove the password auth factor, leaving only PIN.
@@ -202,11 +192,11 @@ func AddRemoveFactorsPasswordless(ctx context.Context, s *testing.State) {
 			}}); err != nil {
 			s.Fatal("Mismatch in configured auth factors after removing password (-got, +want): ", err)
 		}
-		if !containsType(listFactorsAfterRemovePasswordReply.SupportedAuthFactors, uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD) {
-			s.Fatal("Password not reported as a supported auth factor after adding PIN")
-		}
-		if !containsType(listFactorsAfterRemovePasswordReply.SupportedAuthFactors, uda.AuthFactorType_AUTH_FACTOR_TYPE_PIN) {
-			s.Fatal("PIN not reported as a supported auth factor after adding PIN")
+		if err := cryptohomecommon.ExpectContainsAuthFactorTypes(
+			listFactorsAfterRemovePasswordReply.SupportedAuthFactors,
+			[]uda.AuthFactorType{uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD, uda.AuthFactorType_AUTH_FACTOR_TYPE_PIN},
+		); err != nil {
+			s.Fatal("Mismatch in supported auth factors after removing password: ", err)
 		}
 	} else {
 		// Add a PIN auth factor to the user.
@@ -229,11 +219,11 @@ func AddRemoveFactorsPasswordless(ctx context.Context, s *testing.State) {
 			}); err != nil {
 			s.Fatal("Mismatch in configured auth factors after adding PIN (-got, +want): ", err)
 		}
-		if !containsType(listFactorsAfterAddPinReply.SupportedAuthFactors, uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD) {
-			s.Fatal("Password not reported as a supported auth factor after adding PIN")
-		}
-		if !containsType(listFactorsAfterAddPinReply.SupportedAuthFactors, uda.AuthFactorType_AUTH_FACTOR_TYPE_PIN) {
-			s.Fatal("PIN not reported as a supported auth factor after adding PIN")
+		if err := cryptohomecommon.ExpectContainsAuthFactorTypes(
+			listFactorsAfterAddPinReply.SupportedAuthFactors,
+			[]uda.AuthFactorType{uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD, uda.AuthFactorType_AUTH_FACTOR_TYPE_PIN},
+		); err != nil {
+			s.Fatal("Mismatch in supported auth factors after adding PIN: ", err)
 		}
 	}
 

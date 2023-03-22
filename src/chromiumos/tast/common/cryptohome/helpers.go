@@ -5,6 +5,8 @@
 package cryptohome
 
 import (
+	"sort"
+
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 
@@ -47,6 +49,42 @@ func ExpectAuthFactorTypes(types, expectedTypes []uda.AuthFactorType) error {
 		return nil
 	}
 	return errors.New(diff)
+}
+
+// ExpectContainsAuthFactorType checks whether the types set contains the given type.
+func ExpectContainsAuthFactorType(types []uda.AuthFactorType, expectedType uda.AuthFactorType) error {
+	for _, t := range types {
+		if t == expectedType {
+			return nil
+		}
+	}
+	return errors.Errorf("expected to contain %v, got %v", expectedType, types)
+}
+
+// ExpectContainsAuthFactorTypes checks whether the first set of types contains
+// the second set of types (i.e. the second set is a subset of the first).
+func ExpectContainsAuthFactorTypes(types, containedTypes []uda.AuthFactorType) error {
+	// Sort the two arrays.
+	sort.Slice(types, func(i, j int) bool { return types[i] < types[j] })
+	sort.Slice(containedTypes, func(i, j int) bool { return containedTypes[i] < containedTypes[j] })
+	// Go through the two arrays in parallel.
+	var i, j int = 0, 0
+	for i < len(types) && j < len(containedTypes) {
+		if containedTypes[j] < types[i] {
+			// We found an element in containedTypes but not in types.
+			break
+		} else if types[i] == containedTypes[j] {
+			j++
+		}
+		i++
+	}
+	// If we haven't reached the end of containedTypes then this means that we
+	// found an element in it that's not in types.
+	if j < len(containedTypes) {
+		return errors.Errorf("list %v does not contain %v", types, containedTypes[j])
+	}
+	// Otherwise, every element in containedTypes is in types.
+	return nil
 }
 
 // ExpectAuthFactorsWithTypeAndLabel checks whether AuthFactorWithStatus proto

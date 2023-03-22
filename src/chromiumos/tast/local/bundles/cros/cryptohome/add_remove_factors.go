@@ -210,10 +210,10 @@ func AddRemoveFactors(ctx context.Context, s *testing.State) {
 	); err != nil {
 		s.Fatal("Mismatch in configured auth factors before adding factors (-got, +want): ", err)
 	}
-	if err := cryptohomecommon.ExpectAuthFactorTypes(
+	if err := cryptohomecommon.ExpectContainsAuthFactorTypes(
 		listFactorsAtStartReply.SupportedAuthFactors, expectedAllSupported,
 	); err != nil {
-		s.Fatal("Mismatch in supported auth factors before adding factors (-got, +want): ", err)
+		s.Fatal("Mismatch in supported auth factors before adding factors: ", err)
 	}
 
 	// Add a password auth factor to the user.
@@ -231,10 +231,15 @@ func AddRemoveFactors(ctx context.Context, s *testing.State) {
 	); err != nil {
 		s.Fatal("Mismatch in configured auth factors after adding password (-got, +want): ", err)
 	}
-	if err := cryptohomecommon.ExpectAuthFactorTypes(
+	if err := cryptohomecommon.ExpectContainsAuthFactorTypes(
 		listFactorsAfterAddPasswordReply.SupportedAuthFactors, expectedNoKioskSupported,
 	); err != nil {
-		s.Fatal("Mismatch in supported auth factors after adding password (-got, +want): ", err)
+		s.Fatal("Mismatch in supported auth factors after adding password: ", err)
+	}
+	if err := cryptohomecommon.ExpectContainsAuthFactorType(
+		listFactorsAfterAddPasswordReply.SupportedAuthFactors, uda.AuthFactorType_AUTH_FACTOR_TYPE_KIOSK,
+	); err == nil {
+		s.Fatal("Kiosk reported as supported after adding password")
 	}
 
 	// Add a second backup password auth factor to the user.
@@ -252,10 +257,15 @@ func AddRemoveFactors(ctx context.Context, s *testing.State) {
 	); err != nil {
 		s.Fatal("Mismatch in configured auth factors after adding backup password (-got, +want): ", err)
 	}
-	if err := cryptohomecommon.ExpectAuthFactorTypes(
+	if err := cryptohomecommon.ExpectContainsAuthFactorTypes(
 		listFactorsAfterAddBackupPasswordReply.SupportedAuthFactors, expectedNoKioskSupported,
 	); err != nil {
-		s.Fatal("Mismatch in supported auth factors after adding backup password (-got, +want): ", err)
+		s.Fatal("Mismatch in supported auth factors after adding backup password: ", err)
+	}
+	if err := cryptohomecommon.ExpectContainsAuthFactorType(
+		listFactorsAfterAddBackupPasswordReply.SupportedAuthFactors, uda.AuthFactorType_AUTH_FACTOR_TYPE_KIOSK,
+	); err == nil {
+		s.Fatal("Kiosk reported as supported after adding backup password")
 	}
 
 	if supportsPIN {
@@ -273,10 +283,15 @@ func AddRemoveFactors(ctx context.Context, s *testing.State) {
 		); err != nil {
 			s.Fatal("Mismatch in configured auth factors after adding PIN (-got, +want): ", err)
 		}
-		if err := cryptohomecommon.ExpectAuthFactorTypes(
+		if err := cryptohomecommon.ExpectContainsAuthFactorTypes(
 			listFactorsAfterAddPinReply.SupportedAuthFactors, expectedNoKioskSupported,
 		); err != nil {
-			s.Fatal("Mismatch in supported auth factors after adding PIN (-got, +want): ", err)
+			s.Fatal("Mismatch in supported auth factors after adding PIN: ", err)
+		}
+		if err := cryptohomecommon.ExpectContainsAuthFactorType(
+			listFactorsAfterAddPinReply.SupportedAuthFactors, uda.AuthFactorType_AUTH_FACTOR_TYPE_KIOSK,
+		); err == nil {
+			s.Fatal("Kiosk reported as supported after adding PIN")
 		}
 	}
 
@@ -296,10 +311,15 @@ func AddRemoveFactors(ctx context.Context, s *testing.State) {
 		); err != nil {
 			s.Fatal("Mismatch in configured auth factors after adding Smart Card (-got, +want): ", err)
 		}
-		if err := cryptohomecommon.ExpectAuthFactorTypes(
+		if err := cryptohomecommon.ExpectContainsAuthFactorTypes(
 			listFactorsAfterAddSmartCardReply.SupportedAuthFactors, expectedNoKioskSupported,
 		); err != nil {
-			s.Fatal("Mismatch in supported auth factors after adding Smart Card (-got, +want): ", err)
+			s.Fatal("Mismatch in supported auth factors after adding Smart Card: ", err)
+		}
+		if err := cryptohomecommon.ExpectContainsAuthFactorType(
+			listFactorsAfterAddSmartCardReply.SupportedAuthFactors, uda.AuthFactorType_AUTH_FACTOR_TYPE_KIOSK,
+		); err == nil {
+			s.Fatal("Kiosk reported as supported after adding Smart Card")
 		}
 	}
 
@@ -326,10 +346,15 @@ func AddRemoveFactors(ctx context.Context, s *testing.State) {
 	); err != nil {
 		s.Fatal("Mismatch in configured auth factors after removing most factors (-got, +want): ", err)
 	}
-	if err := cryptohomecommon.ExpectAuthFactorTypes(
+	if err := cryptohomecommon.ExpectContainsAuthFactorTypes(
 		listFactorsAfterRemoveReply.SupportedAuthFactors, expectedNoKioskSupported,
 	); err != nil {
-		s.Fatal("Mismatch in supported auth factors after removing most factors (-got, +want): ", err)
+		s.Fatal("Mismatch in supported auth factors after removing most factors: ", err)
+	}
+	if err := cryptohomecommon.ExpectContainsAuthFactorType(
+		listFactorsAfterRemoveReply.SupportedAuthFactors, uda.AuthFactorType_AUTH_FACTOR_TYPE_KIOSK,
+	); err == nil {
+		s.Fatal("Kiosk reported as supported after removing most factors")
 	}
 
 	// Removing the only password factor should fail
@@ -352,9 +377,14 @@ func AddRemoveFactors(ctx context.Context, s *testing.State) {
 	); err != nil {
 		s.Fatal("Mismatch in configured auth factors after unmount (-got, +want): ", err)
 	}
-	if err := cryptohomecommon.ExpectAuthFactorTypes(
+	if err := cryptohomecommon.ExpectContainsAuthFactorTypes(
 		listFactorsAfterUnmount.SupportedAuthFactors, expectedNoKioskSupported,
 	); err != nil {
-		s.Fatal("Mismatch in supported auth factors after unmount (-got, +want): ", err)
+		s.Fatal("Mismatch in supported auth factors after unmount: ", err)
+	}
+	if err := cryptohomecommon.ExpectContainsAuthFactorType(
+		listFactorsAfterUnmount.SupportedAuthFactors, uda.AuthFactorType_AUTH_FACTOR_TYPE_KIOSK,
+	); err == nil {
+		s.Fatal("Kiosk reported as supported after unmount")
 	}
 }
