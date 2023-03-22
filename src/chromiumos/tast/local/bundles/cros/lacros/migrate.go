@@ -37,6 +37,7 @@ func init() {
 		BugComponent: "crbug:OS>LaCrOS",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "lacros"},
+		Data:         []string{"migrate/indexeddb_check.js", "migrate/indexeddb_set.js"},
 	})
 }
 
@@ -69,62 +70,6 @@ const (
 	localStorageValue    = "Meow"                             // Arbitrary localStorage value.
 	indexedDBUserID      = 123                                // Arbitrary user id.
 	indexedDBUserEmail   = "test@gmail.com"                   // Arbitrary user email.
-	// Create an arbitrary indexedDB store and add a value.
-	insertIndexedDBDataJS = `
-    (userId, userEmail) => {
-        return new Promise((resolve, reject) => {
-            const req = window.indexedDB.open("someDataBase", 1);
-            req.onerror = () => {
-                console.error("Opening a database failed.");
-                reject();
-            }
-            req.onupgradeneeded = e => {
-                const db = e.target.result;
-                const objectStore = db.createObjectStore("users", { keyPath: "id" });
-                objectStore.transaction.onerror = () => {
-                    console.error("Creating an object store failed.");
-                    reject();
-                }
-                objectStore.transaction.oncomplete = () => {
-                    const userObjectStore = db.transaction("users", 'readwrite')
-                        .objectStore("users");
-                    const req = userObjectStore.add({ id: userId, email: userEmail });
-                    req.error = () => {
-                        console.error("Adding an entry to database failed.");
-                        reject();
-                    };
-                    req.onsuccess = () => resolve();
-                }
-            }
-        })
-    }`
-	// Check that the value stored with insertIndexedDBDataJS is present.
-	getIndexedDBDataJS = `
-    (userId, userEmail) => {
-        return new Promise((resolve, reject) => {
-            const req = window.indexedDB.open("someDataBase");
-            req.onerror = () => {
-                console.log("Opening database 'someDataBase' failed.");
-                reject();
-            }
-            req.onsuccess = e => {
-                const db = e.target.result;
-                const req = db.transaction("users").objectStore("users").get(userId);
-                req.onsuccess = () => {
-                    if (req.result.email == userEmail) {
-                        resolve();
-                    } else {
-                        console.error("userEmail != " + req.result.email);
-                        reject();
-                    }
-                }
-                req.onerror = () => {
-                    console.error("Failed to get user with id: " + userId);
-                    reject();
-                }
-            }
-        })
-    }`
 )
 
 func waitForHistoryEntry(ctx context.Context, ui *uiauto.Context, br *browser.Browser, allowReload bool) error {
@@ -215,8 +160,12 @@ func prepareAshProfile(ctx context.Context, s *testing.State, kb *input.Keyboard
 	if err := conn.Call(ctx, nil, `(key, value) => localStorage.setItem(key, value)`, localStorageKey, localStorageValue); err != nil {
 		s.Fatal("Failed to set localStorage value: ", err)
 	}
+	insertIndexedDBDataJS, err := os.ReadFile(s.DataPath("migrate/indexeddb_set.js"))
+	if err != nil {
+		s.Fatal("Failed to read IndexedDB setter script: ", err)
+	}
 	// Create an indexedDB store and add a user in.
-	if err := conn.Call(ctx, nil, insertIndexedDBDataJS, indexedDBUserID, indexedDBUserEmail); err != nil {
+	if err := conn.Call(ctx, nil, string(insertIndexedDBDataJS), indexedDBUserID, indexedDBUserEmail); err != nil {
 		s.Fatal("insertIndexedDBDataJS failed: ", err)
 	}
 
@@ -359,8 +308,12 @@ func verifyLacrosProfile(ctx context.Context, s *testing.State, kb *input.Keyboa
 		if !contained {
 			s.Fatal("localStorage value set in Ash could not be found in Lacros")
 		}
-		if err := conn.Call(ctx, nil, getIndexedDBDataJS, indexedDBUserID, indexedDBUserEmail); err != nil {
-			s.Fatal("getIndexedDBDataJS failed: ", err)
+		checkIndexedDBDataJS, err := os.ReadFile(s.DataPath("migrate/indexeddb_check.js"))
+		if err != nil {
+			s.Fatal("Failed to read IndexedDB checker script: ", err)
+		}
+		if err := conn.Call(ctx, nil, string(checkIndexedDBDataJS), indexedDBUserID, indexedDBUserEmail); err != nil {
+			s.Fatal("checkIndexedDBDataJS failed: ", err)
 		}
 	}()
 
