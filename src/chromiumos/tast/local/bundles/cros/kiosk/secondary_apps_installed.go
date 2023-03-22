@@ -39,12 +39,13 @@ func init() {
 			"yixie@google.com", // Test author
 		},
 		BugComponent: "b:892153", // ChromeOS > Software > Commercial (Enterprise) > Kiosk
-		Attr: []string{
-			"group:golden_tier",
-			"group:medium_low_tier",
-			"group:hardware",
-			"group:complementary",
-		},
+		// TODO(b/274734625): Fix and reenable test.
+		// Attr: []string{
+		// 	"group:golden_tier",
+		// 	"group:medium_low_tier",
+		// 	"group:hardware",
+		// 	"group:complementary",
+		// },
 		SoftwareDeps: []string{"reboot", "chrome"},
 		VarDeps: []string{
 			"ui.signinProfileTestExtensionManifestKey",
