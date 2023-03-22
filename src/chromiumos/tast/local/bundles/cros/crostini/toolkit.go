@@ -11,7 +11,8 @@ import (
 
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/local/apps"
+	"chromiumos/tast/local/chrome/uiauto"
+	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/colorcmp"
 	"chromiumos/tast/local/crostini"
 	"chromiumos/tast/testing"
@@ -45,7 +46,6 @@ func init() {
 				Val: toolkitConfig{
 					data:    "toolkit_gtk3_demo.py",
 					command: []string{"env", "GDK_BACKEND=wayland", "python3", "toolkit_gtk3_demo.py"},
-					appID:   "crostini:toolkit_gtk3_demo.py",
 				},
 			}, {
 				Name:              "gtk3_wayland_buster_unstable",
@@ -58,7 +58,6 @@ func init() {
 				Val: toolkitConfig{
 					data:    "toolkit_gtk3_demo.py",
 					command: []string{"env", "GDK_BACKEND=wayland", "python3", "toolkit_gtk3_demo.py"},
-					appID:   "crostini:toolkit_gtk3_demo.py",
 				},
 			}, {
 				Name:              "gtk3_wayland_bullseye_stable",
@@ -70,7 +69,6 @@ func init() {
 				Val: toolkitConfig{
 					data:    "toolkit_gtk3_demo.py",
 					command: []string{"env", "GDK_BACKEND=wayland", "python3", "toolkit_gtk3_demo.py"},
-					appID:   "crostini:toolkit_gtk3_demo.py",
 				},
 			}, {
 				Name:              "gtk3_wayland_bullseye_unstable",
@@ -83,7 +81,6 @@ func init() {
 				Val: toolkitConfig{
 					data:    "toolkit_gtk3_demo.py",
 					command: []string{"env", "GDK_BACKEND=wayland", "python3", "toolkit_gtk3_demo.py"},
-					appID:   "crostini:toolkit_gtk3_demo.py",
 				},
 			}, {
 				Name:              "gtk3_x11_buster_stable",
@@ -95,7 +92,6 @@ func init() {
 				Val: toolkitConfig{
 					data:    "toolkit_gtk3_demo.py",
 					command: []string{"env", "GDK_BACKEND=x11", "python3", "toolkit_gtk3_demo.py"},
-					appID:   "crostini:org.chromium.termina.wmclass.Toolkit_gtk3_demo.py",
 				},
 			}, {
 				Name:              "gtk3_x11_buster_unstable",
@@ -108,7 +104,6 @@ func init() {
 				Val: toolkitConfig{
 					data:    "toolkit_gtk3_demo.py",
 					command: []string{"env", "GDK_BACKEND=x11", "python3", "toolkit_gtk3_demo.py"},
-					appID:   "crostini:org.chromium.termina.wmclass.Toolkit_gtk3_demo.py",
 				},
 			}, {
 				Name:              "gtk3_x11_bullseye_stable",
@@ -120,7 +115,6 @@ func init() {
 				Val: toolkitConfig{
 					data:    "toolkit_gtk3_demo.py",
 					command: []string{"env", "GDK_BACKEND=x11", "python3", "toolkit_gtk3_demo.py"},
-					appID:   "crostini:org.chromium.termina.wmclass.Toolkit_gtk3_demo.py",
 				},
 			}, {
 				Name:              "gtk3_x11_bullseye_unstable",
@@ -133,7 +127,6 @@ func init() {
 				Val: toolkitConfig{
 					data:    "toolkit_gtk3_demo.py",
 					command: []string{"env", "GDK_BACKEND=x11", "python3", "toolkit_gtk3_demo.py"},
-					appID:   "crostini:org.chromium.termina.wmclass.Toolkit_gtk3_demo.py",
 				},
 			}, {
 				Name:              "qt5_buster_stable",
@@ -145,7 +138,6 @@ func init() {
 				Val: toolkitConfig{
 					data:    "toolkit_qt5_demo.py",
 					command: []string{"python3", "toolkit_qt5_demo.py"},
-					appID:   "crostini:org.chromium.termina.wmclass.toolkit_qt5_demo.py",
 				},
 			}, {
 				Name:              "qt5_buster_unstable",
@@ -158,7 +150,6 @@ func init() {
 				Val: toolkitConfig{
 					data:    "toolkit_qt5_demo.py",
 					command: []string{"python3", "toolkit_qt5_demo.py"},
-					appID:   "crostini:org.chromium.termina.wmclass.toolkit_qt5_demo.py",
 				},
 			}, {
 				Name:              "qt5_bullseye_stable",
@@ -170,7 +161,6 @@ func init() {
 				Val: toolkitConfig{
 					data:    "toolkit_qt5_demo.py",
 					command: []string{"python3", "toolkit_qt5_demo.py"},
-					appID:   "crostini:org.chromium.termina.wmclass.toolkit_qt5_demo.py",
 				},
 			}, {
 				Name:              "qt5_bullseye_unstable",
@@ -183,7 +173,6 @@ func init() {
 				Val: toolkitConfig{
 					data:    "toolkit_qt5_demo.py",
 					command: []string{"python3", "toolkit_qt5_demo.py"},
-					appID:   "crostini:org.chromium.termina.wmclass.toolkit_qt5_demo.py",
 				},
 			}, {
 				Name:              "tkinter_buster_stable",
@@ -195,7 +184,6 @@ func init() {
 				Val: toolkitConfig{
 					data:    "toolkit_tkinter_demo.py",
 					command: []string{"python3", "toolkit_tkinter_demo.py"},
-					appID:   "crostini:org.chromium.termina.wmclass.Tkinter_demo",
 				},
 			}, {
 				Name:              "tkinter_buster_unstable",
@@ -208,7 +196,6 @@ func init() {
 				Val: toolkitConfig{
 					data:    "toolkit_tkinter_demo.py",
 					command: []string{"python3", "toolkit_tkinter_demo.py"},
-					appID:   "crostini:org.chromium.termina.wmclass.Tkinter_demo",
 				},
 			}, {
 				Name:              "tkinter_bullseye_stable",
@@ -220,7 +207,6 @@ func init() {
 				Val: toolkitConfig{
 					data:    "toolkit_tkinter_demo.py",
 					command: []string{"python3", "toolkit_tkinter_demo.py"},
-					appID:   "crostini:org.chromium.termina.wmclass.Tkinter_demo",
 				},
 			}, {
 				Name:              "tkinter_bullseye_unstable",
@@ -233,7 +219,6 @@ func init() {
 				Val: toolkitConfig{
 					data:    "toolkit_tkinter_demo.py",
 					command: []string{"python3", "toolkit_tkinter_demo.py"},
-					appID:   "crostini:org.chromium.termina.wmclass.Tkinter_demo",
 				},
 			},
 		},
@@ -261,15 +246,21 @@ func Toolkit(ctx context.Context, s *testing.State) {
 	if err := cmd.Start(); err != nil {
 		s.Fatalf("Failed to start %q: %v", shutil.EscapeSlice(cmd.Args), err)
 	}
-	// We defer Wait() without Kill() as doing otherwise allows the kill
-	// signal to hide errors (such as that we couldnt close the app).
-	// Instead we time-out on the Wait(), so that an error is generated.
+
 	defer cmd.Wait(testexec.DumpLogOnError)
-	defer func() {
-		if err := apps.Close(cleanupCtx, tconn, conf.appID); err != nil {
-			s.Fatalf("Failed to close application %q: %v", conf.appID, err)
+	defer cmd.Kill()
+
+	defer func(ctx context.Context) {
+		ui := uiauto.New(tconn)
+		closeButton := nodewith.Name("Close").Onscreen()
+		appInShelf := nodewith.HasClass("ShelfAppButton::AppStatusIndicatorView").Ancestor(nodewith.HasClass("ShelfView"))
+		if err := uiauto.Combine("close app",
+			ui.RightClickUntil(appInShelf, ui.WithTimeout(time.Second).WaitUntilExists(closeButton)),
+			ui.LeftClickUntil(closeButton, ui.WithTimeout(time.Second).WaitUntilGone(closeButton)),
+		)(ctx); err != nil {
+			s.Log("Failed to close application: ", err)
 		}
-	}()
+	}(cleanupCtx)
 
 	// The toolkit applications will render a magenta window.
 	if err := crostini.MatchScreenshotDominantColor(ctx, cr, colorcmp.RGB(255, 0, 255), filepath.Join(s.OutDir(), "screenshot.png")); err != nil {
