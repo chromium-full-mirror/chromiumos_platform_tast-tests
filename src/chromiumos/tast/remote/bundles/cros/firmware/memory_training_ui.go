@@ -9,11 +9,11 @@ import (
 	"strings"
 	"time"
 
+	"chromiumos/tast/common/flashrom"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/fixture"
 	"chromiumos/tast/remote/firmware/reporters"
-	"chromiumos/tast/ssh"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
 )
@@ -53,7 +53,18 @@ func MemoryTrainingUI(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Clearing MRC cache")
-	if err := dut.Conn().CommandContext(ctx, "flashrom", "-p", "host", "-E", "-i", "RW_MRC_CACHE").Run(ssh.DumpLogOnError); err != nil {
+	var flashromConfig flashrom.Config
+	flashromInstance, ctx, cleanup, _, err := flashromConfig.
+		FlashromInit("").
+		ProgrammerInit(flashrom.ProgrammerHost, "").
+		SetDut(dut).
+		Probe(ctx)
+	defer cleanup()
+	if err != nil {
+		s.Fatal("Flashrom probe failed, unable to build flashrom instance: ", err)
+	}
+
+	if _, err := flashromInstance.Erase(ctx, []string{"RW_MRC_CACHE"}); err != nil {
 		s.Fatal("Failed to clear MRC cache: ", err)
 	}
 
