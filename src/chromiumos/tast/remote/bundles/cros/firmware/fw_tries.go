@@ -25,7 +25,7 @@ func init() {
 		SoftwareDeps: []string{"crossystem", "flashrom"},
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService", "tast.cros.firmware.UtilsService"},
 		Attr:         []string{"group:firmware", "firmware_bios"},
-		Requirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01"},
+		Requirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
 		Vars:         []string{"servo"},
 		Params: []testing.Param{
 			testing.Param{

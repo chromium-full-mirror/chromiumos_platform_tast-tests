@@ -27,7 +27,7 @@ func init() {
 			"kmshelton@chromium.org", // Test porter (from TAuto)
 		},
 		Attr:         []string{"group:firmware", "firmware_bios"},
-		Requirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01"},
+		Requirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
 		Fixture:      fixture.NormalMode,
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService"},
 	})
