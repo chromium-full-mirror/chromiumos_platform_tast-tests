@@ -104,8 +104,5 @@ func (i ObjectPath) GetPropertyHolder(ctx context.Context, service, iface string
 		return PropertyHolder{nil, i.err}
 	}
 	ph, err := dbusutil.NewPropertyHolder(ctx, service, iface, i.objectPath)
-	if err != nil {
-		return PropertyHolder{nil, err}
-	}
-	return PropertyHolder{ph, nil}
+	return PropertyHolder{ph, err}
 }
