@@ -37,7 +37,7 @@ func init() {
 			"chromeos-gfx@google.com",
 			"vsuley@chromium.org",
 		},
-		Attr:         []string{"group:cq-minimal", "group:mainline"},
+		Attr:         []string{"group:cq-minimal", "group:mainline", "informational"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		SoftwareDeps: []string{"no_qemu"},
 		Fixture:      "gpuWatchHangs",
