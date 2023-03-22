@@ -147,7 +147,7 @@ func EnsureChapsSlotsInitialized(ctx context.Context, chaps *pkcs11.Chaps) error
 func U2fDevicePath(ctx context.Context, cmd *hwsecremote.CmdRunnerRemote) (string, error) {
 	const (
 		VID = "18D1"
-		PID = "502C"
+		PID = "5212"
 	)
 
 	lsCmd := fmt.Sprintf("ls /sys/bus/hid/devices/*:%s:%s.*/hidraw", VID, PID)
