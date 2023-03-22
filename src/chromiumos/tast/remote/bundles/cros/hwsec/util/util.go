@@ -196,9 +196,11 @@ func FlashromWpStatus(ctx context.Context, s *testing.State, target string) (boo
 
 	// Wait for the DUT to become responsive again since checking the WP status
 	// via flashrom causes an AP reboot
-	if err := h.DUT.WaitConnect(ctx); err != nil {
-		return false, errors.Wrap(err, "failed to connect to DUT after running `flashrom` command")
+	testing.ContextLog(ctx, "Waiting to ensure DUT booted after `flashrom` wp status query")
+	if err := h.EnsureDUTBooted(ctx); err != nil {
+		return false, errors.Wrap(err, "failed to ensure DUT booted after running `flashrom` command")
 	}
+	testing.ContextLog(ctx, "DUT booted successfully")
 
 	// Check if WP is disabled. If the target is "EC", `flashrom` might report
 	// that no device is found.

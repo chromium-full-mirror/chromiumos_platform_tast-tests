@@ -126,10 +126,12 @@ func verifyGscEcrstCommand(ctx context.Context, s *testing.State, expectSuccess 
 		return errors.Wrap(err, "failed to run GSC ecrst pulse command")
 	}
 
-	// Wait for the DUT to become responsive again after reboot
-	if err := h.DUT.WaitConnect(ctx); err != nil {
-		return errors.Wrap(err, "failed to connect to DUT after running `ecrst pulse` GSC command")
+	// Make sure the DUT has booted before trying to connect again
+	testing.ContextLog(ctx, "Waiting to ensure DUT booted after `ecrst` pulse")
+	if err := h.EnsureDUTBooted(ctx); err != nil {
+		return errors.Wrap(err, "failed to ensure DUT booted after running `ecrst pulse` GSC command")
 	}
+	testing.ContextLog(ctx, "DUT booted successfully")
 
 	if expectSuccess {
 		// TODO(mvertescher): We need to make sure that the EC actually rebooted
@@ -160,10 +162,12 @@ func verifyGscSysrstCommand(ctx context.Context, s *testing.State, expectSuccess
 		return errors.Wrap(err, "failed to run GSC `sysrst pulse` command")
 	}
 
-	// Wait for the DUT to become responsive again after reboot
-	if err := h.DUT.WaitConnect(ctx); err != nil {
-		return errors.Wrap(err, "failed to connect to DUT after running `sysrst pulse` GSC command")
+	// Make sure the DUT has booted before trying to connect again
+	testing.ContextLog(ctx, "Waiting to ensure DUT booted after `sysrst` pulse")
+	if err := h.EnsureDUTBooted(ctx); err != nil {
+		return errors.Wrap(err, "failed to ensure DUT booted after running `sysrst pulse` GSC command")
 	}
+	testing.ContextLog(ctx, "DUT booted successfully")
 
 	if expectSuccess {
 		newID, err := readBootID(ctx, h.DUT.Conn())
