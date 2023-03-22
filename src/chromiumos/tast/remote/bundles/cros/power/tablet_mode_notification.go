@@ -12,6 +12,7 @@ import (
 	"chromiumos/tast/common/servo"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/dut"
+	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/firmware/fixture"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
@@ -52,7 +53,23 @@ func isDUTInTabletMode(ctx context.Context, s *testing.State, dut *dut.DUT) bool
 		s.Fatal("Received unexpected output from dbus-send: ", out)
 	}
 
+	testing.ContextLog(ctx, "powerd tabletmode: ", words[1])
 	return words[1] == "true"
+}
+
+// verifyPowerdTogglesTabletMode waits for powerd to toggle tabletmode and verifies it's the correct
+// value. Returns an error otherwise.
+func verifyPowerdTogglesTabletMode(ctx context.Context, s *testing.State, dut *dut.DUT, expectedMode bool) {
+	s.Log("Verify powerd received the tablet mode change notification to: ", expectedMode)
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		isTabletMode := isDUTInTabletMode(ctx, s, dut)
+		if isTabletMode != expectedMode {
+			return errors.Errorf("powerd failed to toggle tabletmode: isTabletMode=%t", isTabletMode)
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 5 * time.Second, Interval: 250 * time.Millisecond}); err != nil {
+		s.Fatal("Failed to get tablet mode status: ", err)
+	}
 }
 
 func TabletModeNotification(ctx context.Context, s *testing.State) {
@@ -87,28 +104,28 @@ func TabletModeNotification(ctx context.Context, s *testing.State) {
 	if err := pxy.Servo().RunECCommand(ctx, "tabletmode on"); err != nil {
 		s.Fatal("Failed to enable tablet mode: ", err)
 	}
-	isTabletMode := isDUTInTabletMode(ctx, s, dut)
-	if !isTabletMode {
-		s.Fatal("powerd failed to update tabletmode status: ", isTabletMode)
-	}
+	// Give powerd time to process the notification and switch the DUT to tablet mode.
+	verifyPowerdTogglesTabletMode(ctx, s, dut, true)
+
+	// We aren't attempting to stress test the tablet mode switching capabilities, so
+	// give powerd time to finish switching the DUT's state before toggling it again.
+	testing.Sleep(ctx, 1*time.Second)
 
 	testing.ContextLog(ctx, "Disable tablet mode")
 	if err := pxy.Servo().RunECCommand(ctx, "tabletmode off"); err != nil {
 		s.Fatal("Failed to disable tablet mode: ", err)
 	}
-	// Verify powerd received the tablet mode change notification.
-	isTabletMode = isDUTInTabletMode(ctx, s, dut)
-	if isTabletMode {
-		s.Fatal("powerd failed to update tabletmode status: ", isTabletMode)
-	}
+	// Give powerd time to process the notification and switch the DUT to tablet mode.
+	verifyPowerdTogglesTabletMode(ctx, s, dut, false)
+
+	// We aren't attempting to stress test the tablet mode switching capabilities, so
+	// give powerd time to finish switching the DUT's state before toggling it again.
+	testing.Sleep(ctx, 1*time.Second)
 
 	testing.ContextLog(ctx, "Enable tablet mode")
 	if err := pxy.Servo().RunECCommand(ctx, "tabletmode on"); err != nil {
 		s.Fatal("Failed to enable tablet mode: ", err)
 	}
-	// Verify powerd received the tablet mode change notification.
-	isTabletMode = isDUTInTabletMode(ctx, s, dut)
-	if !isTabletMode {
-		s.Fatal("powerd failed to update tabletmode status: ", isTabletMode)
-	}
+	// Give powerd time to process the notification and switch the DUT to tablet mode.
+	verifyPowerdTogglesTabletMode(ctx, s, dut, true)
 }
