@@ -89,6 +89,19 @@ func init() {
 				Val:       &pb.RunTestRequest{Test: pb.HAL3CameraTest_STILL_CAPTURE, Facing: pb.Facing_FACING_FRONT},
 				Timeout:   6 * time.Minute,
 			},
+
+			{
+				Name:      "still_capture_zsl_back",
+				ExtraAttr: []string{"camerabox_facing_back"},
+				Val:       &pb.RunTestRequest{Test: pb.HAL3CameraTest_STILL_CAPTURE_ZSL, Facing: pb.Facing_FACING_BACK},
+				Timeout:   6 * time.Minute,
+			},
+			{
+				Name:      "still_capture_zsl_front",
+				ExtraAttr: []string{"camerabox_facing_front"},
+				Val:       &pb.RunTestRequest{Test: pb.HAL3CameraTest_STILL_CAPTURE_ZSL, Facing: pb.Facing_FACING_FRONT},
+				Timeout:   6 * time.Minute,
+			},
 		},
 		BugComponent: "b:167281",
 	})

@@ -40,15 +40,16 @@ func (gen faceDetectionServiceCfgGenerator) TestConfig(req *cameraboxpb.RunTestR
 
 // ServiceTestConfigGenerators maps from test type to test config generator for HAL3Service.
 var ServiceTestConfigGenerators = map[cameraboxpb.HAL3CameraTest]ServiceTestConfigGenerator{
-	cameraboxpb.HAL3CameraTest_DEVICE:         defaultServiceCfgGenerator{DeviceTestConfig},
-	cameraboxpb.HAL3CameraTest_FRAME:          defaultServiceCfgGenerator{FrameTestConfig},
-	cameraboxpb.HAL3CameraTest_JDA:            defaultServiceCfgGenerator{JDATestConfig},
-	cameraboxpb.HAL3CameraTest_JEA:            defaultServiceCfgGenerator{JEATestConfig},
-	cameraboxpb.HAL3CameraTest_MODULE:         defaultServiceCfgGenerator{ModuleTestConfig},
-	cameraboxpb.HAL3CameraTest_PERF:           defaultServiceCfgGenerator{PerfTestConfig},
-	cameraboxpb.HAL3CameraTest_PREVIEW:        defaultServiceCfgGenerator{PreviewTestConfig},
-	cameraboxpb.HAL3CameraTest_RECORDING:      defaultServiceCfgGenerator{RecordingTestConfig},
-	cameraboxpb.HAL3CameraTest_STILL_CAPTURE:  defaultServiceCfgGenerator{StillCaptureTestConfig},
-	cameraboxpb.HAL3CameraTest_STREAM:         defaultServiceCfgGenerator{StreamTestConfig},
-	cameraboxpb.HAL3CameraTest_FACE_DETECTION: faceDetectionServiceCfgGenerator{},
+	cameraboxpb.HAL3CameraTest_DEVICE:            defaultServiceCfgGenerator{DeviceTestConfig},
+	cameraboxpb.HAL3CameraTest_FRAME:             defaultServiceCfgGenerator{FrameTestConfig},
+	cameraboxpb.HAL3CameraTest_JDA:               defaultServiceCfgGenerator{JDATestConfig},
+	cameraboxpb.HAL3CameraTest_JEA:               defaultServiceCfgGenerator{JEATestConfig},
+	cameraboxpb.HAL3CameraTest_MODULE:            defaultServiceCfgGenerator{ModuleTestConfig},
+	cameraboxpb.HAL3CameraTest_PERF:              defaultServiceCfgGenerator{PerfTestConfig},
+	cameraboxpb.HAL3CameraTest_PREVIEW:           defaultServiceCfgGenerator{PreviewTestConfig},
+	cameraboxpb.HAL3CameraTest_RECORDING:         defaultServiceCfgGenerator{RecordingTestConfig},
+	cameraboxpb.HAL3CameraTest_STILL_CAPTURE:     defaultServiceCfgGenerator{StillCaptureTestConfig},
+	cameraboxpb.HAL3CameraTest_STILL_CAPTURE_ZSL: defaultServiceCfgGenerator{StillCaptureZSLTestConfig},
+	cameraboxpb.HAL3CameraTest_STREAM:            defaultServiceCfgGenerator{StreamTestConfig},
+	cameraboxpb.HAL3CameraTest_FACE_DETECTION:    faceDetectionServiceCfgGenerator{},
 }

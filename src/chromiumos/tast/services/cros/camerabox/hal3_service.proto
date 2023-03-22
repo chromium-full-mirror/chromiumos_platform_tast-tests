@@ -26,8 +26,9 @@ enum HAL3CameraTest {
   PREVIEW = 6;
   RECORDING = 7;
   STILL_CAPTURE = 8;
-  STREAM = 9;
-  FACE_DETECTION = 10;
+  STILL_CAPTURE_ZSL = 9;
+  STREAM = 10;
+  FACE_DETECTION = 11;
 }
 
 message RunTestRequest {
