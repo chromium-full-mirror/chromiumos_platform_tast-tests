@@ -1,0 +1,33 @@
+{
+    "Name": "HP LaserJet MFP M234dw (D9D76E)",
+    "RegularSettings": {
+        "Dropdowns": {
+            "Layout": {
+                "Values": ["Portrait", "Landscape"]
+            },
+            "Paper size": {
+                "Values": ["3 x 5 in", "4 x 6 in", "5 x 7 in", "A4", "A6", "Envelope #10", "Envelope C5", "Envelope DL", "Envelope Monarch", "Hagaki Postcard", "JIS B5", "Legal", "Letter"]
+            },
+            "Pages per sheet": {
+                "Values": ["1", "2", "4", "6", "9", "16"]
+            },
+            "Margins": {
+                "Values": ["Default", "None", "Minimum", "Custom"],
+                "Dependencies": {
+                    "Pages per sheet": "1"
+                }
+            }
+        },
+        "Checkboxes": {
+            "Headers and footers": {},
+            "Background graphics": {}
+        }
+    },
+    "AdvancedSettings": {
+        "Input Tray": ["Manual Slot", "tray 1"],
+        "Job sheets": ["None", "classified", "confidential", "secret", "Standard", "topsecret", "unclassified"],
+        "Output bin": ["Face down"],
+        "Page delivery": ["reverse-order", "same-order"],
+        "Print quality": ["Normal"]
+    }
+}

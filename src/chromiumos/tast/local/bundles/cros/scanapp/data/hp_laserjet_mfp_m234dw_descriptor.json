@@ -1,0 +1,11 @@
+{
+        "Name" : "HP LaserJet MFP M234dw (D9D76E)",
+        "Sources": [
+                {
+                        "SourceType": "Flatbed",
+                        "ColorModes": ["Color", "Grayscale"],
+                        "PageSizes": ["A4", "Letter", "Fit to scan area"],
+                        "Resolutions": ["600 dpi", "300 dpi", "200 dpi"]
+                }
+        ]
+}

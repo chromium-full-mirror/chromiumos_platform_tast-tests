@@ -108,6 +108,46 @@ func init() {
 				ExtraData: []string{"brother_dcp_l2550dw_series_descriptor.json"},
 				ExtraAttr: []string{"paper-io_mfp_printscan"},
 				Fixture:   "lacros",
+			}, {
+				//MFP in test lab
+				Name: "brother_hl_l8360cdw_series",
+				Val: &testParam{
+					descriptorPath: "brother_hl_l8360cdw_series_descriptor.json",
+					browserType:    browser.TypeAsh,
+				},
+				ExtraData: []string{"brother_hl_l8360cdw_series_descriptor.json"},
+				ExtraAttr: []string{"paper-io_mfp_printscan"},
+				Fixture:   "chromeLoggedIn",
+			}, {
+				//MFP in test lab
+				Name: "lacros_brother_hl_l8360cdw_series",
+				Val: &testParam{
+					descriptorPath: "brother_hl_l8360cdw_series_descriptor.json",
+					browserType:    browser.TypeLacros,
+				},
+				ExtraData: []string{"brother_hl_l8360cdw_series_descriptor.json"},
+				ExtraAttr: []string{"paper-io_mfp_printscan"},
+				Fixture:   "lacros",
+			}, {
+				//MFP in test lab
+				Name: "hp_laserjet_mfp_m234dw",
+				Val: &testParam{
+					descriptorPath: "hp_laserjet_mfp_m234dw_descriptor.json",
+					browserType:    browser.TypeAsh,
+				},
+				ExtraData: []string{"hp_laserjet_mfp_m234dw_descriptor.json"},
+				ExtraAttr: []string{"paper-io_mfp_printscan"},
+				Fixture:   "chromeLoggedIn",
+			}, {
+				//MFP in test lab
+				Name: "lacros_hp_laserjet_mfp_m234dw",
+				Val: &testParam{
+					descriptorPath: "hp_laserjet_mfp_m234dw_descriptor.json",
+					browserType:    browser.TypeLacros,
+				},
+				ExtraData: []string{"hp_laserjet_mfp_m234dw_descriptor.json"},
+				ExtraAttr: []string{"paper-io_mfp_printscan"},
+				Fixture:   "lacros",
 			},
 			// printers in BLD lab: un-comment to test them
 			/*{

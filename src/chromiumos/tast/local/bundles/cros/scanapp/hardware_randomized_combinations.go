@@ -56,6 +56,12 @@ func init() {
 				Val:       "sharp_mx_b467f_descriptor.json",
 				ExtraData: []string{"sharp_mx_b467f_descriptor.json"},
 				ExtraAttr: []string{"paper-io_mfp_printscan"},
+			}, {
+				//MFP in lab
+				Name:      "hp_laserjet_mfp_m234dw",
+				Val:       "hp_laserjet_mfp_m234dw_descriptor.json",
+				ExtraData: []string{"hp_laserjet_mfp_m234dw_descriptor.json"},
+				ExtraAttr: []string{"paper-io_mfp_printscan"},
 			},
 		},
 	})
