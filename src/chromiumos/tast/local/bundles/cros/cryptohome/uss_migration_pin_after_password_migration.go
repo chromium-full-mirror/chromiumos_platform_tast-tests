@@ -26,7 +26,7 @@ func init() {
 			"hardikgoyal@chromium.org",
 		},
 		BugComponent: "b:1088399", // ChromeOS > Security > Cryptohome
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"pinweaver", "tpm", "chrome"},
 	})
 }
