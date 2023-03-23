@@ -78,12 +78,25 @@ func init() {
 		Name:     "driveFsStartedWithNativeMessaging",
 		Desc:     "Ensures DriveFS is mounted and the bidirectional messaging functionality is enabled",
 		Contacts: []string{"austinct@chromium.org", "chromeos-files-syd@chromium.org"},
-		Impl: &fixture{chromeOptions: []chrome.Option{
-			chrome.EnableFeatures("DriveFsBidirectionalNativeMessaging"),
-		}, drivefsOptions: map[string]string{
-			"switchblade":     "true",
+		Impl: &fixture{drivefsOptions: map[string]string{
 			"switchblade_dss": "true",
 		}, bt: browser.TypeAsh},
+		SetUpTimeout:    chrome.LoginTimeout + driveFsSetupAndTearDownTimeout,
+		ResetTimeout:    driveFsSetupAndTearDownTimeout,
+		TearDownTimeout: chrome.ResetTimeout + driveFsSetupAndTearDownTimeout,
+		Vars: []string{
+			"drivefs.accountPool",
+			"drivefs.extensionClientID",
+		},
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:     "driveFsStartedWithNativeMessagingLacros",
+		Desc:     "Lacros variant of driveFsStartedWithNativeMessagingLacros",
+		Contacts: []string{"austinct@chromium.org", "chromeos-files-syd@chromium.org"},
+		Impl: &fixture{drivefsOptions: map[string]string{
+			"switchblade_dss": "true",
+		}, bt: browser.TypeLacros},
 		SetUpTimeout:    chrome.LoginTimeout + driveFsSetupAndTearDownTimeout,
 		ResetTimeout:    driveFsSetupAndTearDownTimeout,
 		TearDownTimeout: chrome.ResetTimeout + driveFsSetupAndTearDownTimeout,

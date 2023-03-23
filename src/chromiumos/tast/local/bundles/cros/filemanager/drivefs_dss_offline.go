@@ -30,7 +30,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DrivefsDssOffline,
-		LacrosStatus: testing.LacrosVariantNeeded,
+		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verify that making a Docs/Sheets/Slides file available offline through Files App works",
 		BugComponent: "b:167289",
 		Contacts: []string{
@@ -52,6 +52,11 @@ func init() {
 		Params: []testing.Param{{
 			Val:     browser.TypeAsh,
 			Fixture: "driveFsStartedWithNativeMessaging",
+		}, {
+			Name:              "lacros",
+			Val:               browser.TypeLacros,
+			ExtraSoftwareDeps: []string{"lacros"},
+			Fixture:           "driveFsStartedWithNativeMessagingLacros",
 		}},
 		SearchFlags: []*testing.StringPair{
 			{
