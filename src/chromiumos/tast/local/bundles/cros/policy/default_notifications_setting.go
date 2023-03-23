@@ -31,12 +31,13 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Behavior of DefaultNotificationsSetting policy, checks the notification permission in JavaScript at different policy values",
 		Contacts: []string{
-			"cros-engprod-muc@google.com",
+			"permissions-core@google.com",
+			"engedy@google.com",     // TL permissions team
 			"gabormagda@google.com", // Test author
 		},
-		BugComponent: "b:1263917",
+		BugComponent: "crbug:Internals>Permissions",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:golden_tier"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		Params: []testing.Param{{
 			Fixture: fixture.ChromePolicyLoggedIn,
 			Val:     browser.TypeAsh,
