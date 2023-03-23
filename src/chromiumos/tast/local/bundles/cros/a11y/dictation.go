@@ -8,7 +8,6 @@ package a11y
 
 import (
 	"context"
-	"regexp"
 	"time"
 
 	"chromiumos/tast/ctxutil"
@@ -31,7 +30,7 @@ func init() {
 			"akihiroota@chromium.org",      // Test author
 		},
 		BugComponent: "b:1272896",
-		// TODO(https://crbug.com/1159107): Investigate failures and re-enable this test.
+		Attr:         []string{"group:mainline", "informational"},
 		// Load audio file used for Dictation.
 		Data:         []string{"voice_en_hello.wav"},
 		SoftwareDeps: []string{"chrome"},
@@ -88,21 +87,23 @@ func Dictation(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to toggle Dictation on: ", err)
 	}
 
-	// Play an audio file.
+	// Play audio file.
 	if err := uiauto.Combine("Play audio file",
 		func(ctx context.Context) error {
 			return voice.AudioFromFile(ctx, s.DataPath("voice_en_hello.wav"))
 		},
 		// Give Dictation time to process the audio input.
-		uiauto.Sleep(10*time.Second),
+		uiauto.Sleep(5*time.Second),
 	)(ctx); err != nil {
 		s.Fatal("Failed to play audio file: ", err)
 	}
 
+	if err := a11y.ToggleDictation(ctx); err != nil {
+		s.Fatal("Failed to toggle Dictation off: ", err)
+	}
+
 	// Ensure the spoken text was entered into the text field.
-	// The text area can have two possible values: `hello` and `Hello`. If neither
-	// value is present in the text field, then fail the test.
-	textAreaWithContent := nodewith.Attribute("value", regexp.MustCompile("(H|h)ello")).Role(role.TextField).HasClass("myTextArea").Onscreen()
+	textAreaWithContent := nodewith.Attribute("value", "Hello").Role(role.TextField).HasClass("myTextArea").Onscreen()
 	if err := ui.WaitUntilExists(textAreaWithContent)(ctx); err != nil {
 		s.Fatal("Failed to verify text input: ", err)
 	}
