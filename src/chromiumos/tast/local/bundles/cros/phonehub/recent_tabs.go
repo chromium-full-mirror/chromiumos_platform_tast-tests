@@ -49,7 +49,7 @@ func init() {
 			},
 			{
 				Name:      "floss",
-				Fixture:   "crossdeviceOnboardedAllFeaturesFloss",
+				Fixture:   "crossdeviceOnboardedAllFeaturesFlossRerun",
 				Val:       browser.TypeAsh,
 				ExtraAttr: []string{"cross-device_floss"},
 			},
