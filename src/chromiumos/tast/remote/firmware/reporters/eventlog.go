@@ -22,7 +22,7 @@ type Event struct {
 
 func parseEventTime(input string) (time.Time, error) {
 	var err error
-	for _, timeFmt := range []string{"2006-01-02 15:04:05", "2006-01-02 15:04:05+0000"} {
+	for _, timeFmt := range []string{"2006-01-02 15:04:05", "2006-01-02 15:04:05-0700"} {
 		var timestamp time.Time
 		timestamp, err = time.Parse(timeFmt, input)
 		if err == nil {
