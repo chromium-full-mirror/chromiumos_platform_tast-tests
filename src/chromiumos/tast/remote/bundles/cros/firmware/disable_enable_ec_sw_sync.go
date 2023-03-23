@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	fwCommon "chromiumos/tast/common/firmware"
+	"chromiumos/tast/common/flashrom"
 	"chromiumos/tast/dut"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/firmware"
@@ -204,11 +205,21 @@ func checkECVersion(ctx context.Context, dut *dut.DUT) (string, string, error) {
 // flashEC flashes DUT using flashrom.
 func flashEC(ctx context.Context, dut *dut.DUT, imagePath string) error {
 	testing.ContextLogf(ctx, "Writing image from file %s", imagePath)
-	args := []string{"-p", "ec", "-w", imagePath}
-	if out, err := dut.Conn().CommandContext(ctx, "flashrom", args...).Output(ssh.DumpLogOnError); err != nil {
-		return errors.Wrap(err, "failed to run flashrom cmd")
-	} else if match := regexp.MustCompile(`SUCCESS`).FindSubmatch(out); match == nil {
-		return errors.Errorf("flashrom did not produce success message: %s", string(out))
+
+	var flashromConfig flashrom.Config
+	flashromInstance, ctx, cleanup, _, err := flashromConfig.
+		FlashromInit(flashrom.VerbosityInfo).
+		ProgrammerInit(flashrom.ProgrammerEc, "").
+		SetDut(dut).
+		Probe(ctx)
+	defer cleanup()
+	if err != nil {
+		errors.Wrap(err, "flashrom probe failed, unable to build flashrom instance")
 	}
+
+	if out, err := flashromInstance.Write(ctx, imagePath, false, false, "", []string{}); err != nil {
+		return errors.Wrapf(err, "failed to run flashrom cmd: %s", string(out))
+	}
+
 	return nil
 }
