@@ -54,6 +54,15 @@ const (
 	fixtureVarFastPairChromePassword = "bluetooth.FastPairChromePassword"
 )
 
+// Non-const Fixture variable keys.
+var (
+	fixtureVarFastPairExtraArgs = []string{"--enable-logging", `--vmodule=*blue*=3,ble_*=3,fast_pair*=3,
+		quick_pair*=3,pairer_broker*=3,device_address_map*=3,retroactive_pairing*=3,device_image_store*=3,
+		companion_app*=3,saved_device*=3,device_metadata*=3,footprints_fetcher*=3,scanner_broker*=3,
+		oauth_http_fetcher*=3,message_stream*=3,unauthenticated_http_fetcher*=3,battery_update_message_handler*=3`,
+		"--log=level=1"}
+)
+
 // Public test variable keys that are used in multiple tests
 const (
 	// TestVarFastPairAntispoofingKeyPem is used for setting the antispoofing key, which is
@@ -544,6 +553,10 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 		tf.bluetoothServicesDBusMonitors = append(tf.bluetoothServicesDBusMonitors, bluetoothServicesDBusMonitor)
 
 		// Start Chrome with the features and login mode provided by the test fixture.
+		var extraArgs []string
+		if tf.fastPairEnabled {
+			extraArgs = fixtureVarFastPairExtraArgs
+		}
 		if _, err := dutConfig.ChromeService.New(ctx, &chromeService.NewRequest{
 			LoginMode:       tf.features.LoginMode,
 			EnableFeatures:  tf.features.EnableFeatures,
@@ -554,6 +567,7 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 			},
 			EnableHidScreenOnOobe:        tf.features.EnableHidScreenOnOobe,
 			SigninProfileTestExtensionId: signinProfileTestExtensionID,
+			ExtraArgs:                    extraArgs,
 		}); err != nil {
 			s.Fatalf("Failed to log into chrome on DUT %s: %v", dutName, err)
 		}
