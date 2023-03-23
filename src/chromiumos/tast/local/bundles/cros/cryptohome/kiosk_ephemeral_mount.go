@@ -26,7 +26,7 @@ func init() {
 			"hardikgoyal@chromium.org",
 		},
 		BugComponent: "b:1088399",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline"},
 		Data:         []string{"testcert.p12"},
 		Params: []testing.Param{{
 			Name:    "with_vk",
