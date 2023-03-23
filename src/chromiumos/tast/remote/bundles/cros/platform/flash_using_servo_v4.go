@@ -81,7 +81,7 @@ func FlashUsingServoV4(ctx context.Context, s *testing.State) {
 	if firmwareType == "ec" {
 		cmdFlash = testexec.CommandContext(ctx, "flash_ec", "--board="+board, fmt.Sprintf("--image=%s", pathtoFirmware))
 	} else {
-		cmdFlash = testexec.CommandContext(ctx, "sudo", "flashrom", "-p", "raiden_debug_spi:target=AP", "-w", pathtoFirmware)
+		s.Fatal("AP flash is not implemented yet. Please use flashrom_library.go instead of Flashrom subprocess")
 	}
 
 	// Flashing the chip may fail due to hardware reasons. Allow |maxFlashAttempts|.
