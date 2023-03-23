@@ -22,7 +22,8 @@ func init() {
 		Func:         ARCRotateCamera,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "ARC++ user-facing Camera record/Camera capture the video while rotating the DUT",
-		Contacts:     []string{"ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "ccaTestBridgeReadyWithArc",
 		Timeout:      arc.BootTimeout + 2*time.Minute,

@@ -22,7 +22,8 @@ func init() {
 		Func:         LidCloseOpenSuspendStress,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies lid close-open suspend stress test",
-		Contacts:     []string{"ambalavanan.m.m@intel.com", "intel-chrome-system-automation-team@intel.com"},
+		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
 		SoftwareDeps: []string{"chrome"},
 		VarDeps:      []string{"servo", "intel.LidCloseOpenSuspendStress.iterations"},
