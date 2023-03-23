@@ -7,6 +7,7 @@ package wifi
 import (
 	"context"
 	"fmt"
+	"sort"
 	"time"
 
 	"chromiumos/tast/common/wifi/security"
@@ -32,6 +33,8 @@ type sapPerfTestcase struct {
 	opts []iperf.ConfigOption
 	// Minimum throughput, set to track regressions: average - 3 * sigma.
 	minThroughput iperf.BitRate
+	// Maximum jitter.
+	maxJitter time.Duration
 }
 
 func init() {
@@ -134,11 +137,13 @@ func init() {
 					protocol:      iperf.ProtocolUDP,
 					opts:          []iperf.ConfigOption{},
 					minThroughput: 100 * iperf.Mbps,
+					maxJitter:     10 * time.Millisecond,
 				}, {
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band5g), tethering.NoUplink(true)},
 					protocol:      iperf.ProtocolUDP,
 					opts:          []iperf.ConfigOption{},
 					minThroughput: 125 * iperf.Mbps,
+					maxJitter:     10 * time.Millisecond,
 				}, {
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band2p4g), tethering.NoUplink(true),
 						tethering.SecMode(wpa.ModePureWPA2)},
@@ -148,6 +153,7 @@ func init() {
 					protocol:      iperf.ProtocolUDP,
 					opts:          []iperf.ConfigOption{},
 					minThroughput: 100 * iperf.Mbps,
+					maxJitter:     10 * time.Millisecond,
 				}, {
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band5g), tethering.NoUplink(true),
 						tethering.SecMode(wpa.ModePureWPA2)},
@@ -157,6 +163,7 @@ func init() {
 					protocol:      iperf.ProtocolUDP,
 					opts:          []iperf.ConfigOption{},
 					minThroughput: 125 * iperf.Mbps,
+					maxJitter:     10 * time.Millisecond,
 				}},
 			},
 			{
@@ -168,12 +175,14 @@ func init() {
 					reverse:       true,
 					opts:          []iperf.ConfigOption{},
 					minThroughput: 100 * iperf.Mbps,
+					maxJitter:     10 * time.Millisecond,
 				}, {
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band5g), tethering.NoUplink(true)},
 					protocol:      iperf.ProtocolUDP,
 					reverse:       true,
 					opts:          []iperf.ConfigOption{},
 					minThroughput: 125 * iperf.Mbps,
+					maxJitter:     10 * time.Millisecond,
 				}, {
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band2p4g), tethering.NoUplink(true),
 						tethering.SecMode(wpa.ModePureWPA2)},
@@ -184,6 +193,7 @@ func init() {
 					reverse:       true,
 					opts:          []iperf.ConfigOption{},
 					minThroughput: 100 * iperf.Mbps,
+					maxJitter:     10 * time.Millisecond,
 				}, {
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band5g), tethering.NoUplink(true),
 						tethering.SecMode(wpa.ModePureWPA2)},
@@ -194,6 +204,7 @@ func init() {
 					reverse:       true,
 					opts:          []iperf.ConfigOption{},
 					minThroughput: 125 * iperf.Mbps,
+					maxJitter:     10 * time.Millisecond,
 				}},
 			},
 			{
@@ -204,11 +215,13 @@ func init() {
 					protocol:      iperf.ProtocolUDP,
 					opts:          []iperf.ConfigOption{iperf.DatagramLengthOption(112 * iperf.B)},
 					minThroughput: 40 * iperf.Mbps,
+					maxJitter:     10 * time.Millisecond,
 				}, {
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band5g), tethering.NoUplink(true)},
 					protocol:      iperf.ProtocolUDP,
 					opts:          []iperf.ConfigOption{iperf.DatagramLengthOption(112 * iperf.B)},
 					minThroughput: 65 * iperf.Mbps,
+					maxJitter:     10 * time.Millisecond,
 				}, {
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band2p4g), tethering.NoUplink(true),
 						tethering.SecMode(wpa.ModePureWPA2)},
@@ -218,6 +231,7 @@ func init() {
 					protocol:      iperf.ProtocolUDP,
 					opts:          []iperf.ConfigOption{iperf.DatagramLengthOption(112 * iperf.B)},
 					minThroughput: 40 * iperf.Mbps,
+					maxJitter:     10 * time.Millisecond,
 				}, {
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band5g), tethering.NoUplink(true),
 						tethering.SecMode(wpa.ModePureWPA2)},
@@ -227,6 +241,7 @@ func init() {
 					protocol:      iperf.ProtocolUDP,
 					opts:          []iperf.ConfigOption{iperf.DatagramLengthOption(112 * iperf.B)},
 					minThroughput: 65 * iperf.Mbps,
+					maxJitter:     10 * time.Millisecond,
 				}},
 			},
 			{
@@ -238,12 +253,14 @@ func init() {
 					reverse:       true,
 					opts:          []iperf.ConfigOption{iperf.DatagramLengthOption(112 * iperf.B)},
 					minThroughput: 40 * iperf.Mbps,
+					maxJitter:     10 * time.Millisecond,
 				}, {
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band5g), tethering.NoUplink(true)},
 					protocol:      iperf.ProtocolUDP,
 					reverse:       true,
 					opts:          []iperf.ConfigOption{iperf.DatagramLengthOption(112 * iperf.B)},
 					minThroughput: 65 * iperf.Mbps,
+					maxJitter:     10 * time.Millisecond,
 				}, {
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band2p4g), tethering.NoUplink(true),
 						tethering.SecMode(wpa.ModePureWPA2)},
@@ -254,6 +271,7 @@ func init() {
 					reverse:       true,
 					opts:          []iperf.ConfigOption{iperf.DatagramLengthOption(112 * iperf.B)},
 					minThroughput: 40 * iperf.Mbps,
+					maxJitter:     10 * time.Millisecond,
 				}, {
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band5g), tethering.NoUplink(true),
 						tethering.SecMode(wpa.ModePureWPA2)},
@@ -264,6 +282,7 @@ func init() {
 					reverse:       true,
 					opts:          []iperf.ConfigOption{iperf.DatagramLengthOption(112 * iperf.B)},
 					minThroughput: 65 * iperf.Mbps,
+					maxJitter:     10 * time.Millisecond,
 				}},
 			},
 		},
@@ -334,6 +353,23 @@ func SAPPerf(ctx context.Context, s *testing.State) {
 		}
 		if pr.PercentLoss > 5.0 {
 			s.Fatalf("Unacceptable loss in performance test. Wanted <= 5%%, got %f", pr.PercentLoss)
+		}
+
+		// If maxJitter is set, it means that we need jitter results.
+		if tc.maxJitter > 0 {
+			if len(pr.Jitter) == 0 {
+				s.Fatal("No jitter results")
+			}
+			sort.Slice(pr.Jitter, func(i, j int) bool {
+				return pr.Jitter[i] < pr.Jitter[j]
+			})
+			// Pick 90th percentile value. We want to exclude top 10% of recorded jitters,
+			// so we can be pretty convinced that 90% of our traffic fits under the maximum acceptable jitter threshold.
+			jitter := pr.Jitter[(len(pr.Jitter)-1)*9/10]
+			s.Logf("90th percentile jitter: %vus", jitter.Microseconds())
+			if jitter >= tc.maxJitter {
+				s.Fatalf("Unacceptable jitter in performance test. Wanted < %dus, got %dus", tc.maxJitter.Microseconds(), jitter.Microseconds())
+			}
 		}
 	}
 

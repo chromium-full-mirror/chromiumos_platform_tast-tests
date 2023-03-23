@@ -18,6 +18,7 @@ const (
 	logIDIndex          = 5
 	intervalIndex       = 6
 	dataTransferedIndex = 7
+	jitterIndex         = 9
 	percentLossIndex    = 12
 
 	fieldCount    = 8
@@ -30,12 +31,14 @@ type Result struct {
 	Throughput   BitRate
 	PercentLoss  float64
 	StdDeviation BitRate
+	Jitter       []time.Duration
 }
 
 func newResultFromOutput(ctx context.Context, output string, config *Config) (*Result, error) {
 	var totalByteCount float64
 	var totalDuration float64
 	var totalLoss float64
+	var totalJitter []time.Duration
 
 	var allErrors error
 	count := 0
@@ -64,11 +67,18 @@ func newResultFromOutput(ctx context.Context, output string, config *Config) (*R
 			continue
 		}
 
-		var loss float64
+		var loss, jitter float64
 		if config.Protocol == ProtocolUDP {
+			// The extra counters are (starting from index 8): speed, jitter (ms), pkt lost, datagrams, % loss, Out of order.
+			// As taken from: https://sourceforge.net/p/iperf/code/HEAD/tree/tags/2.0.5/src/ReportCSV.c#l85
 			loss, err = strconv.ParseFloat(fields[percentLossIndex], 64)
 			if err != nil {
 				allErrors = errors.Wrapf(allErrors, "failed to parse loss from %q: %v ", fields[percentLossIndex], err) // NOLINT
+				continue
+			}
+			jitter, err = strconv.ParseFloat(fields[jitterIndex], 64)
+			if err != nil {
+				allErrors = errors.Wrapf(allErrors, "failed to parse jitter from %q: %v ", fields[jitterIndex], err) // NOLINT
 				continue
 			}
 		}
@@ -76,6 +86,7 @@ func newResultFromOutput(ctx context.Context, output string, config *Config) (*R
 		totalDuration += duration
 		totalByteCount += byteCount
 		totalLoss += loss
+		totalJitter = append(totalJitter, time.Duration(jitter*float64(time.Millisecond)))
 
 		count++
 	}
@@ -98,6 +109,7 @@ func newResultFromOutput(ctx context.Context, output string, config *Config) (*R
 		Duration:    time.Duration(totalDuration / float64(count)),
 		PercentLoss: totalLoss / float64(count),
 		Throughput:  8 * BitRate(totalByteCount/totalDuration),
+		Jitter:      totalJitter,
 	}, allErrors
 }
 
@@ -131,12 +143,14 @@ func NewResultFromHistory(samples []*Result) (*Result, error) {
 	var totalDuration time.Duration
 	var meanThroughput float64
 	var meanLoss float64
+	var jitter []time.Duration
 	var stdDev float64
 
 	for _, sample := range samples {
 		totalDuration += sample.Duration
 		meanThroughput += float64(sample.Throughput) / float64(count)
 		meanLoss += sample.PercentLoss / float64(count)
+		jitter = append(jitter, sample.Jitter...)
 	}
 
 	for _, sample := range samples {
@@ -149,6 +163,7 @@ func NewResultFromHistory(samples []*Result) (*Result, error) {
 		Duration:     totalDuration,
 		Throughput:   BitRate(meanThroughput),
 		PercentLoss:  meanLoss,
+		Jitter:       jitter,
 		StdDeviation: BitRate(stdDev),
 	}, nil
 }
