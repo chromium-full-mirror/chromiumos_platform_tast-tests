@@ -63,18 +63,6 @@ func init() {
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 			Fixture:           "chromeVideoNaClWithMojoVideoDecoder",
-		}, {
-			Name:              "h264_hw_nopepper3dimage",
-			Val:               pepperVideoDecodeTestParam{browserType: browser.TypeAsh, verifyHWMode: verifyLegacyVDAPathWasUsed},
-			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
-			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "video_decoder_legacy_supported", "proprietary_codecs"},
-			Fixture:           "chromeVideoNaClWithoutPepper3DImage",
-		}, {
-			Name:              "h264_hw_mojovd_nopepper3dimage",
-			Val:               pepperVideoDecodeTestParam{browserType: browser.TypeAsh, verifyHWMode: verifyMojoVDPathWasUsed},
-			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
-			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
-			Fixture:           "chromeVideoNaClWithMojoVideoDecoderWithoutPepper3DImage",
 		}},
 	})
 }

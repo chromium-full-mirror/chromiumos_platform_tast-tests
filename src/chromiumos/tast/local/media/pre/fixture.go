@@ -67,25 +67,6 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoNaClWithoutPepper3DImage",
-		Desc:     "Logged into a user session with logging and NaCl enabled and without support for the Pepper3DImageChromium feature",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ExtraArgs(chromeVideoArgs...),
-				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
-				chrome.ExtraArgs("--enable-nacl"),
-				chrome.DisableFeatures("UseMojoVideoDecoderForPepper"),
-				chrome.DisableFeatures("Pepper3DImageChromium"),
-			}, nil
-		}),
-		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
 		Name:     "chromeVideoNaClWithMojoVideoDecoder",
 		Desc:     "Logged into a user session with logging, NaCl and the MojoVideoDecoder-for-Pepper enabled",
 		Contacts: []string{"chromeos-gfx-video@google.com"},
@@ -95,25 +76,6 @@ func init() {
 				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
 				chrome.ExtraArgs("--enable-nacl"),
 				chrome.EnableFeatures("UseMojoVideoDecoderForPepper"),
-			}, nil
-		}),
-		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoNaClWithMojoVideoDecoderWithoutPepper3DImage",
-		Desc:     "Logged into a user session with logging, NaCl and the MojoVideoDecoder-for-Pepper enabled and without support for the Pepper3DImageChromium feature",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ExtraArgs(chromeVideoArgs...),
-				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
-				chrome.ExtraArgs("--enable-nacl"),
-				chrome.EnableFeatures("UseMojoVideoDecoderForPepper"),
-				chrome.DisableFeatures("Pepper3DImageChromium"),
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
