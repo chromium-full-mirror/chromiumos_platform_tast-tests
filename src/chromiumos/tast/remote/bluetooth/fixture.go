@@ -127,6 +127,8 @@ const (
 	btpeerResetBuffer = 15 * time.Second
 )
 
+const btpeerVersionLogFilePath = "/var/log/chameleon_commits"
+
 type fixtureFeatures struct {
 	// BTPeerCount requires the specified amount of btpeers to exist in the
 	// testbed and connects to them during setup. A testbed can have more btpeers
@@ -206,6 +208,8 @@ type bTPeerCompanion struct {
 	chameleondClient        chameleon.Chameleond
 	chameleondPortForwarder *ssh.Forwarder
 	logCollector            log.Collector
+	chameleondLastCommit    string
+	chameleondUpdatedAt     string
 }
 
 // FixtValue is the value of the test fixture accessible within a test. All
@@ -690,6 +694,25 @@ func (tf *fixture) setUpBTPeers(ctx context.Context, s *testing.FixtState, requi
 			}
 		}
 
+		// Attempt to fetch the chameleond version (not supported on old versions).
+		var chameleondLastCommit, chameleondUpdatedAt string
+		if err := sshConn.CommandContext(ctx, "test", "-f", btpeerVersionLogFilePath).Run(); err == nil {
+			lastLogLine, err := sshConn.CommandContext(ctx, "tail", "-1", btpeerVersionLogFilePath).Output()
+			if err == nil {
+				lastLogLineParts := strings.Split(strings.TrimSpace(string(lastLogLine)), " ")
+				if len(lastLogLineParts) == 2 {
+					chameleondLastCommit = lastLogLineParts[0]
+					chameleondUpdatedAt = lastLogLineParts[1]
+				}
+			}
+		}
+		if chameleondLastCommit == "" {
+			chameleondLastCommit = "unknown"
+		}
+		if chameleondUpdatedAt == "" {
+			chameleondUpdatedAt = "unknown"
+		}
+
 		// Save btpeer companion for later use.
 		btpeerCompanion := &bTPeerCompanion{
 			host:                    host,
@@ -697,12 +720,17 @@ func (tf *fixture) setUpBTPeers(ctx context.Context, s *testing.FixtState, requi
 			chameleondClient:        chameleondClient,
 			chameleondPortForwarder: chameleondPortForwarder,
 			logCollector:            logCollector,
+			chameleondLastCommit:    chameleondLastCommit,
+			chameleondUpdatedAt:     chameleondUpdatedAt,
 		}
 		tf.fv.bTPeerCompanions = append(tf.fv.bTPeerCompanions, btpeerCompanion)
 		tf.fv.BTPeers = append(tf.fv.BTPeers, btpeerCompanion.chameleondClient)
 	}
 
-	testing.ContextLogf(ctx, "Successfully connected to %d btpeers", len(tf.fv.BTPeers))
+	testing.ContextLogf(ctx, "Successfully connected to %d btpeers", len(tf.fv.bTPeerCompanions))
+	for i, btpeer := range tf.fv.bTPeerCompanions {
+		testing.ContextLogf(ctx, "Chameleond on btpeer%d was last updated at %q to commit %q", i+1, btpeer.chameleondUpdatedAt, btpeer.chameleondLastCommit)
+	}
 	return nil
 }
 
