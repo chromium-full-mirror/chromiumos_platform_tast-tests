@@ -9,8 +9,12 @@ import (
 	"time"
 
 	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/local/bundles/cros/printer/ppdindex"
 	"chromiumos/tast/local/bundles/cros/printer/uitools"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/chrome/browser/browserfixt"
+	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
@@ -40,12 +44,12 @@ func init() {
 		SoftwareDeps: []string{"chrome", "cros_internal", "cups"},
 		Params: []testing.Param{
 			{
-				Fixture: "chromeLoggedIn",
+				Val: browser.TypeAsh,
 			},
 			{
 				Name:              "lacros",
 				ExtraSoftwareDeps: []string{"lacros"},
-				Fixture:           "lacrosOnly",
+				Val:               browser.TypeLacros,
 			},
 		},
 	})
@@ -69,15 +73,22 @@ func createPrinter(ctx context.Context, s *testing.State, cr *chrome.Chrome, tco
 		s.Fatal("Failed to launch Settings page: ", err)
 	}
 
-	// Open add printer dialog
+	// Open add settings dialog
 	addPrinterButton := uitools.AddPrinterFinder.Ancestor(ossettings.WindowFinder)
 	if err := uiauto.Combine("click add printer button",
 		ui.WithTimeout(10*time.Second).WaitUntilExists(entryFinder),
 		ui.DoDefault(entryFinder),
 		ui.WithTimeout(10*time.Second).WaitUntilExists(addPrinterButton),
+	)(ctx); err != nil {
+		s.Fatal("Failed to open settings dialog: ", err)
+	}
+
+	// Click add printer button
+	if err := uiauto.Combine("click add printer button",
+		ui.WithTimeout(10*time.Second).WaitUntilEnabled(addPrinterButton),
 		ui.DoDefault(addPrinterButton),
 	)(ctx); err != nil {
-		s.Fatal("Failed to click add printer button: ", err)
+		s.Fatal("Failed to add printer - network offline: ", err)
 	}
 
 	// Input basic parameters
@@ -175,7 +186,26 @@ func ViewPPD(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	cr := s.FixtValue().(*chrome.Chrome)
+	server := ppdindex.New(s)
+	defer server.Stop()
+
+	// Populate our PPD Index with data.  We'll use this same data later to create
+	// our printers.  We don't care what the PPD contents are so just use the
+	// default.
+	manufacturer1 := "Brother"
+	model1 := "Brother DCP-1200"
+	manufacturer2 := "Xerox"
+	model2 := "Xerox B320"
+	license2 := "xerox-printing-license"
+	server.AddEntry(ppdindex.Entry{Manufacturer: manufacturer1, Model: model1})
+	server.AddEntry(ppdindex.Entry{Manufacturer: manufacturer2, Model: model2, License: license2})
+
+	bt := s.Param().(browser.Type)
+	cr, err := browserfixt.NewChrome(ctx, bt, lacrosfixt.NewConfig(), chrome.ExtraArgs("--printing-ppd-channel=localhost"))
+	if err != nil {
+		s.Fatal("Failed to create chrome instance: ", err)
+	}
+	defer cr.Close(cleanupCtx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -192,12 +222,12 @@ func ViewPPD(ctx context.Context, s *testing.State) {
 	// Test a printer that does not have the EULA
 	printerName := "test-printer"
 	eula := ""
-	createPrinter(ctx, s, cr, tconn, ui, printerName, "Brother", "Brother DCP-1200")
+	createPrinter(ctx, s, cr, tconn, ui, printerName, manufacturer1, model1)
 	checkPpd(ctx, s, ui, printerName, eula, cr)
 
 	// Test with a printer that has an EULA
 	printerName = "test-printer-with-eula"
-	eula = "chrome://os-credits/#xerox-printing-license"
-	createPrinter(ctx, s, cr, tconn, ui, printerName, "Xerox", "Xerox B230")
+	eula = "chrome://os-credits/#" + license2
+	createPrinter(ctx, s, cr, tconn, ui, printerName, manufacturer2, model2)
 	checkPpd(ctx, s, ui, printerName, eula, cr)
 }
