@@ -67,7 +67,7 @@ func init() {
 		Desc:         "Checks that cros_healthd can fetch Bluetooth info",
 		Contacts:     []string{"cros-tdm-tpe-eng@google.com"},
 		BugComponent: "b:982097",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		SoftwareDeps: []string{"chrome", "diagnostics"},
 		Fixture:      "crosHealthdRunning",
 		HardwareDeps: hwdep.D(hwdep.Bluetooth()),

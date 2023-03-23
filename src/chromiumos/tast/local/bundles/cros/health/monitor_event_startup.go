@@ -39,42 +39,42 @@ func init() {
 				category: "audio_jack",
 				duration: 3 * time.Second,
 			},
-			ExtraAttr: []string{"informational"},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			Name: "touchpad",
 			Val: eventStartupParams{
 				category: "touchpad",
 				duration: 3 * time.Second,
 			},
-			ExtraAttr: []string{"informational"},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			Name: "hdmi",
 			Val: eventStartupParams{
 				category: "hdmi",
 				duration: 3 * time.Second,
 			},
-			ExtraAttr: []string{"informational"},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			Name: "sd_card",
 			Val: eventStartupParams{
 				category: "sd_card",
 				duration: 3 * time.Second,
 			},
-			ExtraAttr: []string{"informational"},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			Name: "touchscreen",
 			Val: eventStartupParams{
 				category: "touchscreen",
 				duration: 3 * time.Second,
 			},
-			ExtraAttr: []string{"informational"},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			Name: "stylus_garage",
 			Val: eventStartupParams{
 				category: "stylus_garage",
 				duration: 3 * time.Second,
 			},
-			ExtraAttr: []string{"informational"},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}},
 	})
 }

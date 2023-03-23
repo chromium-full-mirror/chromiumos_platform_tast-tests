@@ -49,7 +49,7 @@ func init() {
 			"pathan.jilani@intel.com",
 		},
 		BugComponent: "b:982097",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		SoftwareDeps: []string{"chrome", "diagnostics"},
 		Fixture:      "crosHealthdRunning",
 	})
