@@ -454,7 +454,7 @@ func fixLogSymlink(ctx context.Context) {
 
 		// If the file is not a symlink, rename it so that a new symlink is created
 		// later when starting the ui job.
-		newName := fmt.Sprintf("%s_%s_b187795771", symlinkName, time.Now().Format(timestampLayout))
+		newName := fmt.Sprintf("%s_%s_b187795771", symlinkName, time.Now().UTC().Format(timestampLayout))
 		testing.ContextLogf(ctx, "Warning: %s is not a symlink; renaming it to %s to recover log rotation (b/187795771)", filepath.Join(logDir, symlinkName), newName)
 		if err := os.Rename(filepath.Join(logDir, symlinkName), filepath.Join(logDir, newName)); err != nil {
 			return err
