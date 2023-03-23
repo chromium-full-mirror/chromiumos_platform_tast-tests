@@ -48,6 +48,18 @@ func Adapters(ctx context.Context) ([]*Adapter, error) {
 	return adapters, nil
 }
 
+// DefaultAdapter returns a new Adapter for the default bluez adapter object.
+func DefaultAdapter(ctx context.Context) (*Adapter, error) {
+	adapters, err := Adapters(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if len(adapters) != 1 {
+		return nil, errors.Errorf("expected exactly 1 bluez adapter to exist, but found %d", len(adapters))
+	}
+	return adapters[0], nil
+}
+
 // DBusObject returns the D-Bus object wrapper for this object.
 func (a *Adapter) DBusObject() *dbusutil.DBusObject {
 	return a.dbus
@@ -78,6 +90,21 @@ func (a *Adapter) Discoverable(ctx context.Context) (bool, error) {
 	return a.dbus.PropertyBool(ctx, "Discoverable")
 }
 
+// SetDiscoverable sets the discoverable property of the adapter.
+func (a *Adapter) SetDiscoverable(ctx context.Context, discoverable bool) error {
+	return a.dbus.SetProperty(ctx, "Discoverable", discoverable)
+}
+
+// DiscoverableTimeout returns the discoverable timeout property of the adapter.
+func (a *Adapter) DiscoverableTimeout(ctx context.Context) (uint32, error) {
+	return a.dbus.PropertyUint32(ctx, "DiscoverableTimeout")
+}
+
+// SetDiscoverableTimeout sets the discoverable timeout property of the adapter.
+func (a *Adapter) SetDiscoverableTimeout(ctx context.Context, timeoutSeconds uint32) error {
+	return a.dbus.SetProperty(ctx, "DiscoverableTimeout", timeoutSeconds)
+}
+
 // Discovering returns the discovering of the adapter.
 func (a *Adapter) Discovering(ctx context.Context) (bool, error) {
 	return a.dbus.PropertyBool(ctx, "Discovering")
@@ -91,6 +118,16 @@ func (a *Adapter) UUIDs(ctx context.Context) ([]string, error) {
 // Modalias returns the modalias of the adapter.
 func (a *Adapter) Modalias(ctx context.Context) (string, error) {
 	return a.dbus.PropertyString(ctx, "Modalias")
+}
+
+// Pairable returns the pairable property of the adapter.
+func (a *Adapter) Pairable(ctx context.Context) (bool, error) {
+	return a.dbus.PropertyBool(ctx, "Pairable")
+}
+
+// SetPairable sets the pairable property of the adapter.
+func (a *Adapter) SetPairable(ctx context.Context, pairable bool) error {
+	return a.dbus.SetProperty(ctx, "Pairable", pairable)
 }
 
 // StartDiscovery starts a discovery on the adapter.
