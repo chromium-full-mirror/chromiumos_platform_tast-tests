@@ -393,9 +393,6 @@ func (h *CmdTPMClearHelper) saveTPMClearLogs(ctx context.Context) error {
 	if err := os.MkdirAll(logDir, 0755); err != nil {
 		return errors.Wrap(err, "failed to create directory for tpm clear faillog")
 	}
-	if _, err := h.cmdRunner.Run(ctx, "flashrom", "-r", "-i", "RW_NVRAM:/tmp/nvram.bin"); err != nil {
-		testing.ContextLog(ctx, "Failed to call flashrom command: ", err)
-	}
 
 	saveLogFile := func(from, to string) error {
 		rawOutput, err := h.ReadFile(ctx, from)
@@ -416,9 +413,6 @@ func (h *CmdTPMClearHelper) saveTPMClearLogs(ctx context.Context) error {
 		return nil
 	}
 
-	if err := saveLogFile("/tmp/nvram.bin", "nvram.bin"); err != nil {
-		testing.ContextLog(ctx, "Failed to save nvram.bin: ", err)
-	}
 	if err := saveLogFile("/sys/firmware/log", "firmware_log"); err != nil {
 		testing.ContextLog(ctx, "Failed to save firmware_log: ", err)
 	}
