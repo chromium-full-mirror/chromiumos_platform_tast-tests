@@ -50,7 +50,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.firmware.UtilsService"},
 		HardwareDeps: hwdep.D(
-			hwdep.Model("soraka", "krane", "kakadu", "katsu", "homestar", "mrbland", "wormdingler", "quackingstick"),
+			hwdep.Model("soraka", "krane", "kakadu", "katsu", "homestar", "wormdingler", "quackingstick"),
 			hwdep.ChromeEC(),
 		),
 		Fixture: fixture.DevModeGBB,

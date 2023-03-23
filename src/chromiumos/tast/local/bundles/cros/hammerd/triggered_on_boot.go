@@ -20,9 +20,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         TriggeredOnBoot,
-		Desc:         "Hammerd smoke test to check if Hammerd is triggered on boot",
-		Contacts:     []string{
+		Func: TriggeredOnBoot,
+		Desc: "Hammerd smoke test to check if Hammerd is triggered on boot",
+		Contacts: []string{
 			"cros-mtk-ec@google.com",
 			"fshao@chromium.org",
 			"phoenixshen@chromium.org",
@@ -31,8 +31,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"hammerd"},
 		// TODO(b/219382040): Remove "wormdingler" after the issue is fixed.
-		// TODO(b/218640176): Remove "mrbland" after the issue is fixed.
-		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.ECFeatureDetachableBase(), hwdep.SkipOnModel("wormdingler", "mrbland")),
+		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.ECFeatureDetachableBase(), hwdep.SkipOnModel("wormdingler")),
 		Timeout:      1 * time.Minute,
 	})
 }
