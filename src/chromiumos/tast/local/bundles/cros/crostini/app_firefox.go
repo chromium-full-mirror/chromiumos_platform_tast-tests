@@ -25,8 +25,8 @@ func init() {
 		Func:         AppFirefox,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         `Open Firefox, check rendering by looking for a rendered browser tab with the title "Welcome to Firefox" or "New Tab" via ACUITI`,
-		Contacts:     []string{"clumptini@google.com", "ashpakov@google.com"},
-		Attr:         []string{"group:mainline", "informational"},
+		Contacts:     []string{"clumptini+oncall@google.com", "ashpakov@google.com"},
+		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "vm_host"},
 		BugComponent: "b:1122570",
 		Params: []testing.Param{
