@@ -24,10 +24,6 @@ type UIComponent struct {
 }
 
 var (
-	// CancelResultButton is button for canceling intent review result.
-	CancelResultButton = UIComponent{"cancel result button", []string{"#cancel-result", "button[i18n-label=cancel_review_button]"}}
-	// ConfirmResultButton is button for confirming intent review result.
-	ConfirmResultButton = UIComponent{"confirm result button", []string{"#confirm-result", "button[i18n-label=confirm_review_button]"}}
 	// ModeSelector is selection bar for different capture modes.
 	ModeSelector = UIComponent{"mode selector", []string{"#modes-group"}}
 	// SettingsButton is button for opening primary setting menu.
@@ -196,6 +192,18 @@ var (
 	EnableMultistreamRecordingOption = newOption("enable-multistream-recording", "#expert-enable-multistream-recording")
 )
 
+// The following types are defined corresponding to definitions in
+// /js/test/cca_type.ts in CCA side.
+
+// UIComponentName represents a name of UI component.
+type UIComponentName string
+
+// List of UI components used in CCA for testing.
+const (
+	CancelResultButton  UIComponentName = "cancelResultButton"
+	ConfirmResultButton UIComponentName = "confirmResultButton"
+)
+
 type errorUINotExist struct {
 	ui *UIComponent
 }
@@ -256,8 +264,21 @@ func (a *App) Style(ctx context.Context, ui UIComponent, attribute string) (stri
 	return style, nil
 }
 
-// Visible returns whether a UI component is visible on the screen.
-func (a *App) Visible(ctx context.Context, ui UIComponent) (bool, error) {
+// Visible returns whether a UIComponent{Name} is visible on the screen.
+// TODO(b/242800694): Replace this function with |VisibleUIComponentName| once the refactor is completed.
+func (a *App) Visible(ctx context.Context, ui interface{}) (bool, error) {
+	switch t := ui.(type) {
+	case UIComponentName:
+		return a.VisibleUIComponentName(ctx, ui.(UIComponentName))
+	case UIComponent:
+		return a.VisibleLegacy(ctx, ui.(UIComponent))
+	default:
+		return false, errors.Errorf("failed to click: invalid type %v", t)
+	}
+}
+
+// VisibleLegacy returns whether a UI component is visible on the screen.
+func (a *App) VisibleLegacy(ctx context.Context, ui UIComponent) (bool, error) {
 	wrapError := func(err error) error {
 		return errors.Wrapf(err, "failed to check visibility state of %v", ui.Name)
 	}
@@ -272,30 +293,41 @@ func (a *App) Visible(ctx context.Context, ui UIComponent) (bool, error) {
 	return visible, nil
 }
 
+// VisibleUIComponentName returns whether a UI component is visible on the screen.
+func (a *App) VisibleUIComponentName(ctx context.Context, ui UIComponentName) (bool, error) {
+	var visible bool
+	if err := a.conn.Call(ctx, &visible, "CCATest.isVisible", ui); err != nil {
+		return false, errors.Wrapf(err, "failed to check the visibility of %v", ui)
+	}
+	return visible, nil
+}
+
 // CheckVisible returns an error if visibility state of ui is not expected.
-func (a *App) CheckVisible(ctx context.Context, ui UIComponent, expected bool) error {
+func (a *App) CheckVisible(ctx context.Context, ui interface{}, expected bool) error {
 	if visible, err := a.Visible(ctx, ui); err != nil {
 		return err
 	} else if visible != expected {
-		return errors.Errorf("unexpected %v visibility state: got %v, want %v", ui.Name, visible, expected)
+		// TODO(b/242800694): Fix the comment back once changing interface{} to |UIComponentName|
+		return errors.Errorf("unexpected visibility state: got %v, want %v", visible, expected)
 	}
 	return nil
 }
 
 // WaitForVisibleState calls WaitForVisibleStateFor with 5 second timeout.
-func (a *App) WaitForVisibleState(ctx context.Context, ui UIComponent, expected bool) error {
+func (a *App) WaitForVisibleState(ctx context.Context, ui interface{}, expected bool) error {
 	return a.WaitForVisibleStateFor(ctx, ui, expected, 5*time.Second)
 }
 
 // WaitForVisibleStateFor waits until the visibility of ui becomes expected for specified time.
-func (a *App) WaitForVisibleStateFor(ctx context.Context, ui UIComponent, expected bool, timeout time.Duration) error {
+func (a *App) WaitForVisibleStateFor(ctx context.Context, ui interface{}, expected bool, timeout time.Duration) error {
 	return testing.Poll(ctx, func(ctx context.Context) error {
 		visible, err := a.Visible(ctx, ui)
 		if err != nil {
 			return testing.PollBreak(err)
 		}
 		if visible != expected {
-			return errors.Errorf("failed to wait visibility state for %v: got %v, want %v", ui.Name, visible, expected)
+			// TODO(b/242800694): Fix the comment back once changing interface{} to |UIComponentName|
+			return errors.Errorf("failed to wait visibility state: got %v, want %v", visible, expected)
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: timeout})
@@ -398,8 +430,21 @@ func (a *App) Size(ctx context.Context, ui UIComponent) (*Resolution, error) {
 	return &size, nil
 }
 
-// Click clicks on ui.
-func (a *App) Click(ctx context.Context, ui UIComponent) error {
+// Click clicks on UIComponent{Name}.
+// TODO(b/242800694): Replace this function with |ClickUIComponentName| once the refactor is completed.
+func (a *App) Click(ctx context.Context, ui interface{}) error {
+	switch t := ui.(type) {
+	case UIComponentName:
+		return a.ClickUIComponentName(ctx, ui.(UIComponentName))
+	case UIComponent:
+		return a.ClickLegacy(ctx, ui.(UIComponent))
+	default:
+		return errors.Errorf("failed to click: invalid type %v", t)
+	}
+}
+
+// ClickLegacy clicks on ui.
+func (a *App) ClickLegacy(ctx context.Context, ui UIComponent) error {
 	wrapError := func(err error) error {
 		return errors.Wrapf(err, "failed to click on %v", ui.Name)
 	}
@@ -409,6 +454,14 @@ func (a *App) Click(ctx context.Context, ui UIComponent) error {
 	}
 	if err := a.ClickWithSelector(ctx, selector); err != nil {
 		return wrapError(err)
+	}
+	return nil
+}
+
+// ClickUIComponentName clicks on ui.
+func (a *App) ClickUIComponentName(ctx context.Context, ui UIComponentName) error {
+	if err := a.conn.Call(ctx, nil, "CCATest.click", ui); err != nil {
+		return errors.Wrapf(err, "failed to click on %v", ui)
 	}
 	return nil
 }
