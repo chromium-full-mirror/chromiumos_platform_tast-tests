@@ -137,7 +137,7 @@ func testSysbench(ctx context.Context, s *testing.State, errFile *os.File, cont 
 		args := []string{
 			"cpu",
 			"run",
-			fmt.Sprintf("--num-threads=%d", numThread),
+			fmt.Sprintf("--threads=%d", numThread),
 		}
 		hostCmd := testexec.CommandContext(ctx, "sysbench", args...)
 		out, err := perfutil.RunCmd(ctx, hostCmd, errFile)
