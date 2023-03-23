@@ -75,19 +75,23 @@ func ManagedPlayBlockedAppUninstall(ctx context.Context, s *testing.State) {
 		Fatalf:      s.Fatalf,
 		Logf:        s.Logf}
 
-	creds, err := chrome.PickRandomCreds(s.RequiredVar(arcent.LoginPoolVar))
-	if err != nil {
-		rl.Exit("get login creds", err)
-	}
-	login := chrome.GAIALogin(creds)
-
-	fdms, err := arcent.SetupPolicyServerWithArcApps(ctx, s.OutDir(), creds.User, packages, arcent.InstallTypeForceInstalled)
-	if err != nil {
-		rl.Exit("setup fake policy server", err)
-	}
-	defer fdms.Stop(ctx)
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
+	defer cancel()
 
 	if err := testing.Poll(ctx, func(ctx context.Context) (retErr error) {
+		creds, err := chrome.PickRandomCreds(s.RequiredVar(arcent.LoginPoolVar))
+		if err != nil {
+			rl.Exit("get login creds", err)
+		}
+		login := chrome.GAIALogin(creds)
+
+		fdms, err := arcent.SetupPolicyServerWithArcApps(ctx, s.OutDir(), creds.User, packages, arcent.InstallTypeForceInstalled)
+		if err != nil {
+			rl.Exit("setup fake policy server", err)
+		}
+		defer fdms.Stop(cleanupCtx)
+
 		cr, err := chrome.New(
 			ctx,
 			login,
@@ -98,13 +102,13 @@ func ManagedPlayBlockedAppUninstall(ctx context.Context, s *testing.State) {
 		if err != nil {
 			return rl.Retry("connect to Chrome", err)
 		}
-		defer cr.Close(ctx)
+		defer cr.Close(cleanupCtx)
 
 		a, err := arc.NewWithTimeout(ctx, s.OutDir(), bootTimeout)
 		if err != nil {
 			return rl.Retry("start ARC by policy", err)
 		}
-		defer a.Close(ctx)
+		defer a.Close(cleanupCtx)
 
 		if err := arcent.ConfigureProvisioningLogs(ctx, a); err != nil {
 			return rl.Exit("configure provisioning logs", err)
@@ -113,10 +117,6 @@ func ManagedPlayBlockedAppUninstall(ctx context.Context, s *testing.State) {
 		if err := arcent.WaitForProvisioning(ctx, a, rl.Attempts); err != nil {
 			return rl.Retry("wait for provisioning", err)
 		}
-
-		cleanupCtx := ctx
-		ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
-		defer cancel()
 
 		defer arcent.DumpBugReportOnError(cleanupCtx, func() bool {
 			return s.HasError() || retErr != nil

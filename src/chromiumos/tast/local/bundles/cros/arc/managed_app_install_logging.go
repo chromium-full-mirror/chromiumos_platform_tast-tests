@@ -16,6 +16,7 @@ import (
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/common/tape"
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/arc/arcent"
@@ -106,23 +107,27 @@ func ManagedAppInstallLogging(ctx context.Context, s *testing.State) {
 		Fatalf:      s.Fatalf,
 		Logf:        s.Logf}
 
-	creds, err := chrome.PickRandomCreds(s.RequiredVar(arcent.LoginPoolVar))
-	if err != nil {
-		rl.Exit("get login creds", err)
-	}
-	login := chrome.GAIALogin(creds)
-
-	packages := []string{testPackage}
-	fdms, err := setupPolicyServerWithArcAppsAndEnableLogging(ctx, s.OutDir(), creds.User, packages)
-	if err != nil {
-		rl.Exit("setup fake policy server", err)
-	}
-	defer fdms.Stop(ctx)
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
+	defer cancel()
 
 	// Login to Chrome and allow to launch ARC if allowed by user policy.
 	// Flag --arc-install-event-chrome-log-for-tests logs ARC install events to chrome log.
 	args := append(arc.DisableSyncFlags(), "--arc-install-event-chrome-log-for-tests")
 	if err := testing.Poll(ctx, func(ctx context.Context) (retErr error) {
+		creds, err := chrome.PickRandomCreds(s.RequiredVar(arcent.LoginPoolVar))
+		if err != nil {
+			rl.Exit("get login creds", err)
+		}
+		login := chrome.GAIALogin(creds)
+
+		packages := []string{testPackage}
+		fdms, err := setupPolicyServerWithArcAppsAndEnableLogging(ctx, s.OutDir(), creds.User, packages)
+		if err != nil {
+			rl.Exit("setup fake policy server", err)
+		}
+		defer fdms.Stop(cleanupCtx)
+
 		cr, err := chrome.New(
 			ctx,
 			login,
@@ -133,14 +138,14 @@ func ManagedAppInstallLogging(ctx context.Context, s *testing.State) {
 		if err != nil {
 			return rl.Retry("connect to Chrome", err)
 		}
-		defer cr.Close(ctx)
+		defer cr.Close(cleanupCtx)
 
 		// Ensure that ARC is launched.
 		a, err := arc.New(ctx, s.OutDir())
 		if err != nil {
 			return rl.Retry("start ARC by policy", err)
 		}
-		defer a.Close(ctx)
+		defer a.Close(cleanupCtx)
 
 		if err := a.WaitForProvisioning(ctx, provisioningTimeout); err != nil {
 			return rl.Retry("wait for ARC provisioning", err)

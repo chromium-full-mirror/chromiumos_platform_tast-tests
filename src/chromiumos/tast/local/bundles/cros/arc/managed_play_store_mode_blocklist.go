@@ -74,12 +74,6 @@ func ManagedPlayStoreModeBlocklist(ctx context.Context, s *testing.State) {
 		Fatalf:      s.Fatalf,
 		Logf:        s.Logf}
 
-	creds, err := chrome.PickRandomCreds(s.RequiredVar(arcent.LoginPoolVar))
-	if err != nil {
-		rl.Exit("get login creds", err)
-	}
-	login := chrome.GAIALogin(creds)
-
 	arcPolicy := arcent.CreateArcPolicyWithApps([]string{}, arcent.InstallTypeAvailable)
 	arcPolicy.Val.PlayStoreMode = arcent.PlayStoreModeBlockList
 	arcEnabledPolicy := &policy.ArcEnabled{Val: true}
@@ -89,13 +83,19 @@ func ManagedPlayStoreModeBlocklist(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
 	defer cancel()
 
-	fdms, err := policyutil.SetUpFakePolicyServer(ctx, s.OutDir(), creds.User, policies)
-	if err != nil {
-		rl.Exit("setup fake policy server", err)
-	}
-	defer fdms.Stop(cleanupCtx)
-
 	if err := testing.Poll(ctx, func(ctx context.Context) (retErr error) {
+		creds, err := chrome.PickRandomCreds(s.RequiredVar(arcent.LoginPoolVar))
+		if err != nil {
+			rl.Exit("get login creds", err)
+		}
+		login := chrome.GAIALogin(creds)
+
+		fdms, err := policyutil.SetUpFakePolicyServer(ctx, s.OutDir(), creds.User, policies)
+		if err != nil {
+			rl.Exit("setup fake policy server", err)
+		}
+		defer fdms.Stop(cleanupCtx)
+
 		cr, err := chrome.New(
 			ctx,
 			login,
