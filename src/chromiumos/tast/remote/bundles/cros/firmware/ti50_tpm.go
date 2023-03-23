@@ -29,8 +29,6 @@ func init() {
 	})
 }
 
-const ti50TpmDidVid = "66664a50"
-
 func Ti50Tpm(ctx context.Context, s *testing.State) {
 	f := s.FixtValue().(*fixture.Value)
 
@@ -48,9 +46,8 @@ func Ti50Tpm(ctx context.Context, s *testing.State) {
 	// TPM commands.
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
 
-	data := th.MustSucceedVal(b.OpenTitanToolCommand(ctx, "spi", "tpm", "read-register", ti50.TpmRegDidVid))
-
-	if data.(map[string]interface{})["hexdata"].(string) != ti50TpmDidVid {
-		s.Error("Unexpected TPM DID_VID: ", data.(map[string]interface{})["hexdata"].(string))
+	didVid := b.TpmReadRegister(ctx, ti50.TpmBusSpi, ti50.TpmRegDidVid)
+	if didVid != ti50.TpmDidVidHexValue {
+		s.Error("Unexpected TPM DID_VID: ", didVid)
 	}
 }

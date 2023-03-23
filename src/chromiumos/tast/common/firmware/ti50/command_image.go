@@ -19,8 +19,10 @@ const (
 )
 
 var (
-	deepSleep *regexp.Regexp = regexp.MustCompile(`Entering deep sleep zzz`)
-	roBoot    *regexp.Regexp = regexp.MustCompile(`Ravn4\|`)
+	normalSleep *regexp.Regexp = regexp.MustCompile(`Entering normal sleep`)
+	deepSleep   *regexp.Regexp = regexp.MustCompile(`Entering deep sleep zzz`)
+	anySleep    *regexp.Regexp = regexp.MustCompile(`Entering (deep|normal) sleep( zzz)?`)
+	roBoot      *regexp.Regexp = regexp.MustCompile(`Ravn4\|`)
 )
 
 // CommandImage displays a prompt and responds to cli commands.
@@ -95,25 +97,41 @@ func (i *CommandImage) WaitUntilBooted(ctx context.Context, interval time.Durati
 	}
 }
 
+// WaitUntilNormalSleep waits until gsc goes into deep sleep via monitoring print statement
+func (i *CommandImage) WaitUntilNormalSleep(ctx context.Context, interval time.Duration) error {
+	pOpts := testing.PollOptions{Timeout: interval}
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		_, err := i.board.ReadSerialSubmatch(ctx, normalSleep)
+		return err
+	}, &pOpts)
+}
+
 // WaitUntilDeepSleep waits until gsc goes into deep sleep via monitoring print statement
 func (i *CommandImage) WaitUntilDeepSleep(ctx context.Context, interval time.Duration) error {
-	ctx, cancel := context.WithTimeout(ctx, interval)
-	defer cancel()
+	pOpts := testing.PollOptions{Timeout: interval}
 	return testing.Poll(ctx, func(ctx context.Context) error {
 		_, err := i.board.ReadSerialSubmatch(ctx, deepSleep)
 		return err
-	}, nil)
+	}, &pOpts)
+}
+
+// WaitUntilAnySleep waits until gsc goes into deep or normal sleep via monitoring print statement
+func (i *CommandImage) WaitUntilAnySleep(ctx context.Context, interval time.Duration) error {
+	pOpts := testing.PollOptions{Timeout: interval}
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		_, err := i.board.ReadSerialSubmatch(ctx, anySleep)
+		return err
+	}, &pOpts)
 }
 
 // WaitUntilRoBoot waits until initial RO console messages are printed which happens right after
 // reboot or deep sleep resume.
 func (i *CommandImage) WaitUntilRoBoot(ctx context.Context, interval time.Duration) error {
-	ctx, cancel := context.WithTimeout(ctx, interval)
-	defer cancel()
+	pOpts := testing.PollOptions{Timeout: interval}
 	return testing.Poll(ctx, func(ctx context.Context) error {
 		_, err := i.board.ReadSerialSubmatch(ctx, roBoot)
 		return err
-	}, nil)
+	}, &pOpts)
 }
 
 // GetPrompt gets a fresh prompt from the image by  the prompt.

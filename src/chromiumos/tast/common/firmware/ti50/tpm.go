@@ -4,38 +4,55 @@
 
 package ti50
 
+// TpmRegister represents the name of a TPM register
+type TpmRegister string
+
 // Constants representing TPM registers, for use with `OpenTitanToolCommand()`.
 const (
 	// TpmRegAccess is a TPM register
-	TpmRegAccess = "ACCESS"
+	TpmRegAccess TpmRegister = "ACCESS"
 
 	// TpmRegIntEnable is a TPM register
-	TpmRegIntEnable = "INT_ENABLE"
+	TpmRegIntEnable TpmRegister = "INT_ENABLE"
 
 	// TpmRegIntVector is a TPM register
-	TpmRegIntVector = "INT_VECTOR"
+	TpmRegIntVector TpmRegister = "INT_VECTOR"
 
 	// TpmRegIntStatus is a TPM register
-	TpmRegIntStatus = "INT_STATUS"
+	TpmRegIntStatus TpmRegister = "INT_STATUS"
 
 	// TpmRegIntfCapability is a TPM register
-	TpmRegIntfCapability = "INTF_CAPABILITY"
+	TpmRegIntfCapability TpmRegister = "INTF_CAPABILITY"
 
 	// TpmRegSts is a TPM register
-	TpmRegSts = "STS"
+	TpmRegSts TpmRegister = "STS"
 
 	// TpmRegDataFifo is a TPM register
-	TpmRegDataFifo = "DATA_FIFO"
+	TpmRegDataFifo TpmRegister = "DATA_FIFO"
 
 	// TpmRegInterfaceID is a TPM register
-	TpmRegInterfaceID = "INTERFACE_ID"
+	TpmRegInterfaceID TpmRegister = "INTERFACE_ID"
 
 	// TpmRegXdataFifo is a TPM register
-	TpmRegXdataFifo = "XDATA_FIFO"
+	TpmRegXdataFifo TpmRegister = "XDATA_FIFO"
 
 	// TpmRegDidVid is a TPM register
-	TpmRegDidVid = "DID_VID"
+	TpmRegDidVid TpmRegister = "DID_VID"
 
 	// TpmRegRid is a TPM register
-	TpmRegRid = "RID"
+	TpmRegRid TpmRegister = "RID"
 )
+
+// TpmBus represents the physical means to communicate with the TPM, i.e. SPI or I2C.
+type TpmBus string
+
+const (
+	// TpmBusSpi means that the TPM is to be reached via SPI
+	TpmBusSpi TpmBus = "spi"
+
+	// TpmBusI2c means that the TPM is to be reached via I2C
+	TpmBusI2c TpmBus = "i2c"
+)
+
+// TpmDidVidHexValue is the value of the DID_VID register used by Ti50.
+const TpmDidVidHexValue = "66664a50"

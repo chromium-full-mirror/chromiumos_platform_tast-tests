@@ -226,3 +226,13 @@ func (h DevboardHelper) GpioMonitorFinish(ctx context.Context, session GpioMonit
 
 	return events
 }
+
+// TpmReadRegister retrieves the value of a TPM register by communicating via SPI or I2C.
+func (h DevboardHelper) TpmReadRegister(ctx context.Context, bus ti50.TpmBus, register ti50.TpmRegister) string {
+	data, err := h.OpenTitanToolCommand(ctx,
+		string(bus), "tpm", "read-register", string(register))
+	if err != nil {
+		h.Fatalf("failed to read TPM register %s: %s", register, err)
+	}
+	return data["hexdata"].(string)
+}
