@@ -256,6 +256,12 @@ func newSpeechMonitor(ctx context.Context, conn *chrome.Conn, engineData TTSEngi
 	return &SpeechMonitor{conn}, nil
 }
 
+// Eval evaluates JavaScript in the context of the background page represented
+// by sm.conn.
+func (sm *SpeechMonitor) Eval(ctx context.Context, expr string, out interface{}) error {
+	return sm.conn.Eval(ctx, expr, out)
+}
+
 // Close closes the connection to the TTS extension's background page.
 func (sm *SpeechMonitor) Close() {
 	sm.conn.Close()
@@ -473,6 +479,14 @@ func startAccumulatingUtterances(ctx context.Context, conn *chrome.Conn, engineD
     chrome.ttsEngine.onSpeak.addListener((utterance, options) => window.testUtterances.push({utterance: utterance, options: options}));
   }
 `, nil)
+}
+
+// SendSpeechRequest is a function that can be used to directly invoke speech
+// from a TTS engine. This is useful for testing and verifying speech output
+// without having to setup an accessibility feature e.g. ChromeVox or
+// Select-to-Speak.
+func (sm *SpeechMonitor) SendSpeechRequest(ctx context.Context, text string) error {
+	return sm.Eval(ctx, fmt.Sprintf("chrome.tts.speak('%s')", text), nil)
 }
 
 // NewTabWithHTML creates a new tab with the specified HTML, waits for it to
