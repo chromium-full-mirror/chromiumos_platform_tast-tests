@@ -37,7 +37,7 @@ type BluetoothCallbackObserver interface {
 	// status is the success (0) or failure reason for bonding.
 	// deviceAddress is device address (BDADDR notification).
 	// state is the new bonding state.
-	OnBondStateChanged(status int, deviceAddress string, state BtBondState) error
+	OnBondStateChanged(status BtStatus, deviceAddress string, state BtBondState) error
 }
 
 // exportedBluetoothCallback is meant to be used as the single export of the
@@ -171,7 +171,7 @@ func (e *exportedBluetoothCallback) onSspRequest(dbusRemoteDevice map[string]dbu
 
 // onBondStateChanged calls BluetoothCallbackObserver.OnBondStateChanged for
 // each observer.
-func (e *exportedBluetoothCallback) onBondStateChanged(status int, deviceAddress string, state BtBondState) *dbus.Error {
+func (e *exportedBluetoothCallback) onBondStateChanged(status BtStatus, deviceAddress string, state BtBondState) *dbus.Error {
 	var firstErr *error
 	for _, observer := range e.observers {
 		if err := observer.OnBondStateChanged(status, deviceAddress, state); err != nil && firstErr == nil {
