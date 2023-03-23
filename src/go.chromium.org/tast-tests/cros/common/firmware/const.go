@@ -107,3 +107,9 @@ const (
 	FwToNormScreen
 	FwInvalidScreen
 )
+
+// TPM NVRAM location indices.
+const (
+	TpmFirmwareNvIndex = 0x1007
+	TpmFirmwareNvSize  = 0xa
+)

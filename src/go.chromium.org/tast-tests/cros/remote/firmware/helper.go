@@ -20,8 +20,11 @@ import (
 	gossh "golang.org/x/crypto/ssh"
 
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
+	"go.chromium.org/tast-tests/cros/common/firmware/bios"
+	"go.chromium.org/tast-tests/cros/common/firmware/futility"
 	"go.chromium.org/tast-tests/cros/common/firmware/usb"
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
 	"go.chromium.org/tast-tests/cros/remote/firmware/rpm"
 	fwpb "go.chromium.org/tast-tests/cros/services/cros/firmware"
@@ -2242,4 +2245,52 @@ func (h *Helper) RebootWithVT2Command(ctx context.Context, fromMode fwCommon.Boo
 		return errors.Wrap(err, "failed to reconnect to the DUT")
 	}
 	return nil
+}
+
+// GetCurrentFwDataKeyVersion retrieves the RWA's or RWB's firmware data key version.
+func (h *Helper) GetCurrentFwDataKeyVersion(ctx context.Context, sec bios.ImageSection) (fwDataKeyVer uint16, err error) {
+	if err := h.RequireRPCClient(ctx); err != nil {
+		return 0, errors.Wrap(err, "failed to require RPC client")
+	}
+
+	fs := dutfs.NewClient(h.RPCClient.Conn)
+	tempDir, err := fs.TempDir(ctx, "", "")
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to create tempDir")
+	}
+	defer fs.RemoveAll(ctx, tempDir)
+
+	biosBin := filepath.Join(tempDir, "bios.bin")
+
+	futilityInstance, err := futility.NewLocalBuilder(h.DUT).Build()
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to create futility instance")
+	}
+
+	readOpts := futility.NewReadAPOptions(biosBin)
+	if log, err := futilityInstance.ReadAP(ctx, readOpts); err != nil {
+		return 0, errors.Errorf("failed to read AP firmware: %v, got futility log: %s", err, string(log))
+	}
+
+	opts := futility.NewShowOptions(biosBin)
+	out, err := futilityInstance.Show(ctx, opts)
+	if err != nil {
+		return 0, errors.Wrapf(err, "failed to use futility to show %v, got futility log: %s", biosBin, string(out))
+	}
+
+	secPattern := fmt.Sprintf("bios::%v::keyblock::data_key::version::", sec)
+	lines := strings.Split(string(out), "\n")
+	for _, line := range lines {
+		if strings.HasPrefix(line, secPattern) {
+			parts := strings.Split(line, "::")
+			fwDataKeyTmp, err := strconv.ParseUint(parts[len(parts)-1], 10, 16)
+			if err != nil {
+				return 0, errors.Wrapf(err, "failed to parse string %v to uint64", parts[len(parts)-1])
+			}
+			fwDataKeyVer = uint16(fwDataKeyTmp)
+			testing.ContextLogf(ctx, "The current firmware data key version of section %s is %d", sec, fwDataKeyVer)
+			return fwDataKeyVer, nil
+		}
+	}
+	return 0, errors.Errorf("failed to find the secPattern %q. The output of 'futility show': %s", secPattern, out)
 }
