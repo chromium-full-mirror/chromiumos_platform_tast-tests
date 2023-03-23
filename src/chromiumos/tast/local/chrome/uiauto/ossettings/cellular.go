@@ -30,6 +30,28 @@ func WaitUntilRefreshProfileCompletes(ctx context.Context, tconn *chrome.TestCon
 	return nil
 }
 
+// GoToCellularNetworkDetailPageWithNickName will go to the cellular details page with
+// network name of |name| by clicking its the subpage arrow.
+func GoToCellularNetworkDetailPageWithNickName(ctx context.Context, tconn *chrome.TestConn, name string) error {
+	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
+
+	if err := WaitUntilRefreshProfileCompletes(ctx, tconn); err != nil {
+		return errors.Wrap(err, "failed to wait until refresh profile complete")
+	}
+
+	var DetailButton = nodewith.NameContaining(name).ClassName("subpage-arrow").Role(role.Button)
+
+	if err := ui.WithTimeout(2 * time.Minute).WaitUntilExists(DetailButton)(ctx); err != nil {
+		return errors.Wrap(err, "failed to find cellular network with name: "+name)
+	}
+
+	if err := ui.LeftClick(DetailButton)(ctx); err != nil {
+		return errors.Wrap(err, "failed to click into cellular networks detail view with name: "+name)
+	}
+
+	return nil
+}
+
 // GoToNetworkWithNickName will go to the network details page of the cellular network with the name of |name|.
 func GoToNetworkWithNickName(ctx context.Context, tconn *chrome.TestConn, name string) error {
 	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
