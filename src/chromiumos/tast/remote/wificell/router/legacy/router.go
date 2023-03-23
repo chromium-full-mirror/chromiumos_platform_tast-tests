@@ -549,7 +549,7 @@ func (r *Router) StartHTTP(ctx context.Context, name, iface, redirectAddr string
 func (r *Router) StopHTTP(ctx context.Context, httpServer *http.Server) error {
 	var firstErr error
 	if err := httpServer.Close(ctx); err != nil {
-		utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to stop http server"))
+		utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to stop HTTP server"))
 	}
 	return firstErr
 }

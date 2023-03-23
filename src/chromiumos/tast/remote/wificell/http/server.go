@@ -130,12 +130,12 @@ func (d *Server) start(fullCtx context.Context) (err error) {
 	// Prepare stdout/stderr log files.
 	d.stdoutFile, err = fileutil.PrepareOutDirFile(ctx, d.stdoutFilename())
 	if err != nil {
-		return errors.Wrap(err, "failed to open stdout log of dnsmasq")
+		return errors.Wrap(err, "failed to open stdout log of httpserver")
 	}
 	cmd.Stdout = d.stdoutFile
 	d.stderrFile, err = fileutil.PrepareOutDirFile(ctx, d.stderrFilename())
 	if err != nil {
-		return errors.Wrap(err, "failed to open stdout log of dnsmasq")
+		return errors.Wrap(err, "failed to open stdout log of httpserver")
 	}
 	cmd.Stderr = d.stderrFile
 
