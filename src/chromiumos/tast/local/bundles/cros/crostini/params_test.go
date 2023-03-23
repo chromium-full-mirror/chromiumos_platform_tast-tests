@@ -305,12 +305,12 @@ func TestAppWithSnapshotTestParams(t *testing.T) {
 	}
 }
 
-var appIMETests = []string{
+var appIMELanguageTests = []string{
 	"app_gedit_ime.go",
 	"app_vscode_ime.go",
 }
 
-func TestAppIMETestParams(t *testing.T) {
+func TestAppIMELanguageTestParams(t *testing.T) {
 	var imeParams []crostini.Param
 
 	imeTestCases := make([]string, 0)
@@ -333,8 +333,31 @@ func TestAppIMETestParams(t *testing.T) {
 			Val:                 "\"" + imeName + "\"",
 		})
 	}
-	for _, filename := range appIMETests {
+	for _, filename := range appIMELanguageTests {
 		params := crostini.MakeTestParamsFromList(t, imeParams)
+		genparams.Ensure(t, filename, params)
+	}
+}
+
+// TODO(b/272366776) move to clamshell only when the flag is enabled by default.
+var appIMEFlagTests = []string{
+	"app_gedit_emoji.go",
+}
+
+func TestAppIMEFlagTestParams(t *testing.T) {
+	for _, filename := range appIMEFlagTests {
+		params := crostini.MakeTestParamsFromList(t, []crostini.Param{
+			{
+				Timeout:             15 * time.Minute,
+				StableHardwareDep:   "crostini.CrostiniAppStable",
+				UnstableHardwareDep: "crostini.CrostiniAppUnstable",
+				ExtraSoftwareDeps:   []string{"crostini_app"},
+				UseLargeContainer:   true,
+				UseFixture:          true,
+				DeviceMode:          devicemode.ClamshellMode,
+				TestIME:             true,
+				IMEName:             "",
+			}})
 		genparams.Ensure(t, filename, params)
 	}
 }

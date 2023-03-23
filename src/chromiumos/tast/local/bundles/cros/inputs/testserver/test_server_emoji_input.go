@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"time"
 
-	"chromiumos/tast/local/bundles/cros/inputs/emojipicker"
 	"chromiumos/tast/local/bundles/cros/inputs/util"
+	"chromiumos/tast/local/chrome/ime/emojipicker"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/useractions"

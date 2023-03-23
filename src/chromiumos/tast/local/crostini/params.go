@@ -186,12 +186,14 @@ type Param struct {
 
 	// TestIME controls whether the test case tests IME support.
 	// If yes, the crostiniBullseyeLargeContainerClamshellWithIME will be used.
+	// When setting this to True always set the IMEName field as well.
 	// TODO(b/272366776): Remove this field along with the above fixtures after the
 	// Crostini IME flag is enabled by default.
 	TestIME bool
 
 	// IMEName is used to specify the name of the input method being tested.
 	// This name will be used in naming the test and as a test Val.
+	// If no additional input_method is used, set as empty string.
 	IMEName string
 }
 
@@ -297,7 +299,7 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 				name = combineName(name, testCase.DeviceMode.String())
 			}
 
-			if isIME {
+			if isIME && IMEName != "" {
 				name = combineName(name, IMEName)
 			}
 
