@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	cryptossh "golang.org/x/crypto/ssh"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/protobuf/types/known/emptypb"
 
@@ -127,7 +128,10 @@ const (
 	btpeerResetBuffer = 15 * time.Second
 )
 
-const btpeerVersionLogFilePath = "/var/log/chameleon_commits"
+const (
+	btpeerVersionLogFilePath    = "/var/log/chameleon_commits"
+	btpeerChameleondLogFilePath = "/var/log/chameleond"
+)
 
 type fixtureFeatures struct {
 	// BTPeerCount requires the specified amount of btpeers to exist in the
@@ -207,7 +211,8 @@ type bTPeerCompanion struct {
 	sshConn                 *ssh.Conn
 	chameleondClient        chameleon.Chameleond
 	chameleondPortForwarder *ssh.Forwarder
-	logCollector            log.Collector
+	systemLogCollector      log.Collector
+	chameleondLogCollector  log.Collector
 	chameleondLastCommit    string
 	chameleondUpdatedAt     string
 }
@@ -540,13 +545,23 @@ func (tf *fixture) TearDown(ctx context.Context, s *testing.FixtState) {
 		s.Logf("TearDown for DUT %s completed", dutName)
 	}
 
-	// Stop dbus monitors.
+	// Dump and close log collectors.
 	if err := tf.dumpAllCollectedLogs(ctx, "TearDown"); err != nil {
 		s.Error("Failed to collect dbus-monitor bluez logs: ", err)
 	}
 	for _, dbusMonitor := range tf.bluetoothServicesDBusMonitors {
 		if err := dbusMonitor.Close(); err != nil {
 			s.Error("Failed to close dbus-monitor: ", err)
+		}
+	}
+	for i, bTPeerCompanion := range tf.fv.bTPeerCompanions {
+		if err := bTPeerCompanion.systemLogCollector.Close(); err != nil {
+			s.Errorf("Failed to close system log collector on btpeer%d: %v", i+1, err)
+		}
+		if bTPeerCompanion.chameleondLogCollector != nil {
+			if err := bTPeerCompanion.chameleondLogCollector.Close(); err != nil {
+				s.Errorf("Failed to close chameleond log collector on btpeer%d: %v", i+1, err)
+			}
 		}
 	}
 
@@ -623,15 +638,26 @@ func (tf *fixture) setUpBTPeers(ctx context.Context, s *testing.FixtState, requi
 			return errors.Wrapf(err, "failed to connect to btpeer host %q over ssh", host)
 		}
 
-		var logCollector *log.JournalctlCollector
+		var systemLogCollector *log.JournalctlCollector
+		var chameleondLogCollector *log.TailCollector
 		var chameleondPortForwarder *ssh.Forwarder
 		prepareBTPeerForChameleond := func() error {
 			var err error
 
-			// Start collecting chameleond logs on the btpeer from chameleond.
-			logCollector, err = log.StartJournalctlCollector(ctx, sshConn, "--output", "short-full")
+			// Start collecting system and chameleond logs on the btpeer.
+			systemLogCollector, err = log.StartJournalctlCollector(ctx, sshConn, "--output", "short-full")
 			if err != nil {
-				return errors.Wrapf(err, "failed to start collecting chameleond logs on btpeer host %q", host)
+				return errors.Wrapf(err, "failed to start collecting system logs on btpeer host %q", host)
+			}
+			hasChameleondLogFile, err := remoteFileExists(ctx, sshConn, btpeerChameleondLogFilePath)
+			if err != nil {
+				return errors.Wrapf(err, "failed to check for chameleond log file %q on btpeer host %q", btpeerChameleondLogFilePath, host)
+			}
+			if hasChameleondLogFile {
+				chameleondLogCollector, err = log.StartTailCollector(ctx, sshConn, btpeerChameleondLogFilePath, true)
+				if err != nil {
+					return errors.Wrapf(err, "failed to start collecting chameleond logs on btpeer host %q", host)
+				}
 			}
 
 			// Port forward chameleond port.
@@ -646,6 +672,15 @@ func (tf *fixture) setUpBTPeers(ctx context.Context, s *testing.FixtState, requi
 			return nil
 		}
 		if err := prepareBTPeerForChameleond(); err != nil {
+			if systemLogCollector != nil {
+				_ = systemLogCollector.Close()
+			}
+			if chameleondLogCollector != nil {
+				_ = chameleondLogCollector.Close()
+			}
+			if chameleondPortForwarder != nil {
+				_ = chameleondPortForwarder.Close()
+			}
 			return err
 		}
 
@@ -657,7 +692,8 @@ func (tf *fixture) setUpBTPeers(ctx context.Context, s *testing.FixtState, requi
 			testing.ContextLogf(ctx, "Initial chameleond connection attempt for btpeer host %q failed, rebooting btpeer and retrying", host)
 
 			// Reboot, ignoring the ssh error that occurs due to severed connection.
-			_ = logCollector.Close()
+			_ = systemLogCollector.Close()
+			_ = chameleondLogCollector.Close()
 			_ = sshConn.CommandContext(ctx, "reboot").Run()
 
 			// Try to reconnect via ssh until successful.
@@ -676,6 +712,15 @@ func (tf *fixture) setUpBTPeers(ctx context.Context, s *testing.FixtState, requi
 			}
 
 			if err := prepareBTPeerForChameleond(); err != nil {
+				if systemLogCollector != nil {
+					_ = systemLogCollector.Close()
+				}
+				if chameleondLogCollector != nil {
+					_ = chameleondLogCollector.Close()
+				}
+				if chameleondPortForwarder != nil {
+					_ = chameleondPortForwarder.Close()
+				}
 				return err
 			}
 
@@ -696,7 +741,11 @@ func (tf *fixture) setUpBTPeers(ctx context.Context, s *testing.FixtState, requi
 
 		// Attempt to fetch the chameleond version (not supported on old versions).
 		var chameleondLastCommit, chameleondUpdatedAt string
-		if err := sshConn.CommandContext(ctx, "test", "-f", btpeerVersionLogFilePath).Run(); err == nil {
+		btpeerVersionLogFileExists, err := remoteFileExists(ctx, sshConn, btpeerVersionLogFilePath)
+		if err != nil {
+			return errors.Wrapf(err, "failed to check for chameleond log file %q on btpeer host %q", btpeerChameleondLogFilePath, host)
+		}
+		if btpeerVersionLogFileExists {
 			lastLogLine, err := sshConn.CommandContext(ctx, "tail", "-1", btpeerVersionLogFilePath).Output()
 			if err == nil {
 				lastLogLineParts := strings.Split(strings.TrimSpace(string(lastLogLine)), " ")
@@ -719,7 +768,8 @@ func (tf *fixture) setUpBTPeers(ctx context.Context, s *testing.FixtState, requi
 			sshConn:                 sshConn,
 			chameleondClient:        chameleondClient,
 			chameleondPortForwarder: chameleondPortForwarder,
-			logCollector:            logCollector,
+			systemLogCollector:      systemLogCollector,
+			chameleondLogCollector:  chameleondLogCollector,
 			chameleondLastCommit:    chameleondLastCommit,
 			chameleondUpdatedAt:     chameleondUpdatedAt,
 		}
@@ -787,9 +837,16 @@ func (tf *fixture) dumpAllCollectedLogs(ctx context.Context, logName string) err
 	}
 	for i, btpeer := range tf.fv.bTPeerCompanions {
 		btpeerName := fmt.Sprintf("btpeer%d", i+1)
-		logDir := filepath.Join("btpeer_system_logs", btpeerName)
-		if err := log.DumpCollectedLogsToFile(ctx, btpeer.logCollector, logDir, logName); err != nil {
-			return errors.Wrapf(err, "failed to dump collected btpeer system logs from %s at %q", btpeerName, btpeerName)
+		baseLogDir := filepath.Join("btpeer_logs", btpeerName)
+		systemLogDir := filepath.Join(baseLogDir, "system")
+		chameleondLogDir := filepath.Join(baseLogDir, "chameleond")
+		if err := log.DumpCollectedLogsToFile(ctx, btpeer.systemLogCollector, systemLogDir, logName); err != nil {
+			return errors.Wrapf(err, "failed to dump collected btpeer system logs from btpeer %q", btpeerName)
+		}
+		if btpeer.chameleondLogCollector != nil {
+			if err := log.DumpCollectedLogsToFile(ctx, btpeer.chameleondLogCollector, chameleondLogDir, logName); err != nil {
+				return errors.Wrapf(err, "failed to dump collected btpeer chameleond logs from btpeer %q", btpeerName)
+			}
 		}
 	}
 	return nil
@@ -819,4 +876,19 @@ func (tf *fixture) resetDutBluetoothState(ctx context.Context, dutConfig *DUTCon
 		return errors.Wrapf(err, "failed to reset and set bluetooth enabled to %t on DUT %s", enableBluetooth, dutName)
 	}
 	return nil
+}
+
+// remoteFileExists runs the `test -f <path>` command using the provided ssh
+// connection to verify file existence. Returns true if the test passes and
+// false if the test fails. A non-nil error is returned if the command fails
+// to run as expected.
+func remoteFileExists(ctx context.Context, sshConn *ssh.Conn, path string) (bool, error) {
+	if err := sshConn.CommandContext(ctx, "test", "-f", path).Run(); err != nil {
+		exitErr, ok := err.(*cryptossh.ExitError)
+		if !ok || exitErr.ExitStatus() != 1 {
+			return false, errors.Wrapf(err, "failed to run 'test -f %q' on remote host", path)
+		}
+		return false, nil
+	}
+	return true, nil
 }
