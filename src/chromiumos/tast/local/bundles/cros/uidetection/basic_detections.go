@@ -6,6 +6,8 @@ package uidetection
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
 	"path/filepath"
 	"strings"
 	"time"
@@ -21,8 +23,6 @@ import (
 	"chromiumos/tast/local/coords"
 	"chromiumos/tast/local/personalization"
 	"chromiumos/tast/local/uidetection"
-	"chromiumos/tast/local/wallpaper"
-	"chromiumos/tast/local/wallpaper/constants"
 	"chromiumos/tast/testing"
 )
 
@@ -31,6 +31,8 @@ type serverType int
 const (
 	prodServer serverType = iota
 	stagingServer
+	whiteWallpaperFileName string = "basic_detections_white_wallpaper.jpg"
+	chromeIconFileName     string = "basic_detections_logo_chrome.png"
 )
 
 func init() {
@@ -43,7 +45,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Timeout:      12 * time.Minute,
-		Data:         []string{"logo_chrome.png"},
+		Data:         []string{chromeIconFileName, whiteWallpaperFileName},
 		VarDeps:      uidetection.UIDetectionVars,
 		Params: []testing.Param{
 			{
@@ -57,14 +59,20 @@ func init() {
 	})
 }
 
-func setSolidWhiteWallpaper(ui *uiauto.Context) uiauto.Action {
-	return uiauto.Combine("switch to a solid white wallpaper",
-		wallpaper.OpenWallpaperPicker(ui),
-		wallpaper.SelectCollection(ui, constants.SolidColorsCollection),
-		wallpaper.SelectImage(ui, constants.WhiteWallpaperName),
-		wallpaper.WaitForWallpaperWithName(ui, constants.WhiteWallpaperName),
-		wallpaper.CloseWallpaperPicker(),
-	)
+func setSolidWhiteWallpaper(ctx context.Context, tconn *chrome.TestConn, s *testing.State) error {
+	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
+	defer server.Close()
+
+	// Fetch the wallpaper from a Tast data file to minimise external
+	// dependencies.
+	if err := tconn.Call(ctx, nil, `(url) => tast.promisify(chrome.wallpaper.setWallpaper)({
+              url: url,
+              layout: 'STRETCH',
+              filename: 'test_wallpaper'
+            })`, server.URL+"/"+whiteWallpaperFileName); err != nil {
+		return err
+	}
+	return nil
 }
 
 func setLightMode(ui *uiauto.Context) uiauto.Action {
@@ -118,7 +126,7 @@ func BasicDetections(ctx context.Context, s *testing.State) {
 
 	ui := uiauto.New(tconn)
 
-	chromeIcon := uidetection.CustomIcon(s.DataPath("logo_chrome.png"))
+	chromeIcon := uidetection.CustomIcon(s.DataPath(chromeIconFileName))
 	addShortcut := uidetection.TextBlock([]string{"Add", "shortcut"})
 	bottomBar := nodewith.ClassName("ShelfView")
 	notificationArea := nodewith.ClassName("StatusAreaWidget")
@@ -158,7 +166,7 @@ func BasicDetections(ctx context.Context, s *testing.State) {
 
 	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "basic_detections")
 
-	if err := setSolidWhiteWallpaper(ui)(ctx); err != nil {
+	if err := setSolidWhiteWallpaper(ctx, tconn, s); err != nil {
 		s.Fatal("Failed to switch to the default wallpaper: ", err)
 	}
 
