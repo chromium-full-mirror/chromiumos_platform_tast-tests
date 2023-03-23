@@ -25,10 +25,11 @@ import (
 )
 
 const (
-	pythonCmd    = "/usr/local/bin/python3"
+	pythonCmd    = "python3"
 	serverScript = `
 import sys
 from http.server import BaseHTTPRequestHandler, HTTPServer
+import encodings.idna
 class RequestHandler(BaseHTTPRequestHandler):
 	def do_GET(self):
 		message = "HTTP server is running"

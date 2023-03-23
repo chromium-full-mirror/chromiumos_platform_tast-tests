@@ -578,14 +578,19 @@ func (r *Router) StopDHCP(ctx context.Context, ds *dhcp.Server) error {
 }
 
 // StartHTTP starts the HTTP server.
-// TODO(b/242864063): Test and implement the functionality of HTTP server in openwrt router.
 func (r *Router) StartHTTP(ctx context.Context, name, iface, redirectAddr string, port, statusCode int) (_ *http.Server, retErr error) {
-	return nil, nil
+	httpServer, err := http.StartServer(ctx, r.host, name, iface, r.workDir(), redirectAddr, port, statusCode)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to start HTTP server")
+	}
+	return httpServer, nil
 }
 
 // StopHTTP stops the HTTP server.
-// TODO(b/242864063): Test and implement the functionality of HTTP server in openwrt router.
 func (r *Router) StopHTTP(ctx context.Context, httpServer *http.Server) error {
+	if err := httpServer.Close(ctx); err != nil {
+		return errors.Wrap(err, "failed to stop HTTP server")
+	}
 	return nil
 }
 
