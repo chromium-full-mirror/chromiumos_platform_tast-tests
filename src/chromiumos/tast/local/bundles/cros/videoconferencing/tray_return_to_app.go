@@ -6,6 +6,7 @@ package videoconferencing
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"chromiumos/tast/ctxutil"
@@ -84,6 +85,10 @@ func TrayReturnToApp(ctx context.Context, s *testing.State) {
 	}
 	defer cleanup(cleanupCtx)
 
+	if err := googlemeet.GrantPermissions(ctx, br); err != nil {
+		s.Fatal("Failed to grant permissions to Meet: ", err)
+	}
+
 	gm, err := googlemeet.StartNewMeeting(ctx, cr, br, nil)
 	if err != nil {
 		s.Fatal("Failed to start meeting: ", err)
@@ -116,8 +121,10 @@ func TrayReturnToApp(ctx context.Context, s *testing.State) {
 
 	if err := uiauto.Combine("configure effects via mcpanel",
 		vcTray.ExpandPanel,
-		// TODO(b/267709155): Use window title once vc tray is finalized.
-		vcTray.ReturnToApp("meet.google.com"),
+		// vcTray only displays name `Meet - ~new`,
+		// while in Tast API the window title is `Chrome - Meet - ~new`.
+		// Removed the prefix to match the window.
+		vcTray.ReturnToApp(strings.TrimPrefix(meetWindow.Title, "Chrome - ")),
 		vcTray.CollapsePanel,
 	)(ctx); err != nil {
 		s.Fatal("Failed to configure effects: ", err)
