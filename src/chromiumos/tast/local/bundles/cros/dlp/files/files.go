@@ -54,12 +54,9 @@ func ClearDownloads(ctx context.Context, cr *chrome.Chrome) error {
 	return nil
 }
 
-// DownloadFile downloads a file from the local server and verifies it was saved in Downloads directory.
-func DownloadFile(ctx context.Context, tconn *chrome.TestConn, br *browser.Browser, dataFS http.FileSystem) error {
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 15*time.Second)
-	defer cancel()
-
+// InitiateDownload initiates the file download from a local server.
+// The caller should choose the save location and verify the download was successful, as needed.
+func InitiateDownload(ctx context.Context, br *browser.Browser, dataFS http.FileSystem) error {
 	// Setup test HTTP server.
 	server := httptest.NewServer(http.FileServer(dataFS))
 	defer server.Close()
@@ -76,6 +73,19 @@ func DownloadFile(ctx context.Context, tconn *chrome.TestConn, br *browser.Brows
 	// The file name is also the ID of the link element, download it.
 	if err := conn.Eval(ctx, `document.getElementById('data.txt').click()`, nil); err != nil {
 		return errors.Wrap(err, "failed to execute JS expression")
+	}
+
+	return nil
+}
+
+// DownloadFile downloads a file from the local server and verifies it was saved in Downloads directory.
+func DownloadFile(ctx context.Context, tconn *chrome.TestConn, br *browser.Browser, dataFS http.FileSystem) error {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 15*time.Second)
+	defer cancel()
+
+	if err := InitiateDownload(ctx, br, dataFS); err != nil {
+		return errors.Wrap(err, "failed to initiate download")
 	}
 
 	// Open the Files app.

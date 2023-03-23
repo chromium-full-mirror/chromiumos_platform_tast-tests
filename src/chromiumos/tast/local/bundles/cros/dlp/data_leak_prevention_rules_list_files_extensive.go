@@ -6,6 +6,7 @@ package dlp
 
 import (
 	"context"
+	"net/http"
 	"os"
 	"path/filepath"
 	"time"
@@ -20,9 +21,13 @@ import (
 	"chromiumos/tast/local/bundles/cros/dlp/files"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
+	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/filesapp"
+	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/restriction"
+	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/policyutil"
@@ -54,6 +59,7 @@ func init() {
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DataLeakPreventionRulesList{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.ArcEnabled{}, pci.Served),
+			pci.SearchFlag(&policy.PromptForDownloadLocation{}, pci.Served),
 		},
 		Params: []testing.Param{
 			{
@@ -121,6 +127,7 @@ func DataLeakPreventionRulesListFilesExtensive(ctx context.Context, s *testing.S
 		},
 	},
 		&policy.ArcEnabled{Val: true, Stat: policy.StatusSet},
+		&policy.PromptForDownloadLocation{Val: true},
 	}
 
 	if err := policyutil.ServeAndVerify(ctx, fakeDMS, cr, filesARCWarnPolicies); err != nil {
@@ -177,9 +184,11 @@ func DataLeakPreventionRulesListFilesExtensive(ctx context.Context, s *testing.S
 		s.Error("Failed to create a test file: ", err)
 	}
 
-	// Download the file.
-	if err := files.DownloadFile(ctx, tconn, cr.Browser(), s.DataFileSystem()); err != nil {
-		s.Fatal("Failed to download file: ", err)
+	// Start interacting with the UI.
+	ui := uiauto.New(tconn)
+
+	if err := testDownload(ctx, ui, tconn, cr.Browser(), s.DataFileSystem()); err != nil {
+		s.Fatal("Failed to testDownload: ", err)
 	}
 
 	// Open the Files app.
@@ -189,13 +198,10 @@ func DataLeakPreventionRulesListFilesExtensive(ctx context.Context, s *testing.S
 	}
 	defer filesApp.Close(cleanupCtx)
 
-	if err := filesApp.OpenDownloads()(ctx); err != nil {
-		s.Fatal("Failed to open Downloads: ", err)
-	}
-
 	// Move the file to another local location and check that it's still managed,
 	// and the created local file is not.
 	if err := uiauto.Combine("move the file into the test folder",
+		filesApp.OpenDownloads(),
 		filesApp.SelectFile(restrictedFile),
 		keyboard.AccelAction("Ctrl+X"),
 		filesApp.ClickContextMenuItem(folder, "Paste into folder"),
@@ -204,9 +210,6 @@ func DataLeakPreventionRulesListFilesExtensive(ctx context.Context, s *testing.S
 	)(ctx); err != nil {
 		s.Fatal("Failed to move the file into test folder: ", err)
 	}
-
-	// Start interacting with the UI.
-	ui := uiauto.New(tconn)
 
 	if err := files.IsFileManaged(ctx, ui, tconn, keyboard, restrictedFile, true); err != nil {
 		s.Fatal("Downloaded file isn't managed when it should be: ", err)
@@ -223,6 +226,77 @@ func DataLeakPreventionRulesListFilesExtensive(ctx context.Context, s *testing.S
 	if err := testTrashingAndRestoring(ctx, ui, tconn, filesApp, keyboard); err != nil {
 		s.Fatal("Failed to testTrashingAndRestoring: ", err)
 	}
+}
+
+func testDownload(ctx context.Context, ui *uiauto.Context, tconn *chrome.TestConn, br *browser.Browser, dataFS http.FileSystem) error {
+	if err := files.InitiateDownload(ctx, br, dataFS); err != nil {
+		return errors.Wrap(err, "failed to initiate download")
+	}
+
+	// Find the files app dialog.
+	saver, err := filesapp.App(ctx, tconn, filesapp.FileSaverPseudoAppID)
+	if err != nil {
+		return errors.Wrap(err, "failed to locate the Files App")
+	}
+
+	// Saving to Play files/Pictures shouldn't be allowed.
+	// This means that the "Open" button in the file saver is disabled.
+	openButton := nodewith.Role(role.Button).Name("Open")
+
+	if err := uiauto.Combine("select Play files",
+		saver.OpenDir("My files", "My files"),
+		saver.SelectFile("Play files"),
+		saver.WaitUntilExists(openButton),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to select Play files")
+	}
+
+	disabled, err := buttonDisabled(ctx, saver, openButton)
+	if err != nil {
+		return err
+	}
+
+	// It could happen that Play files aren't mounted yet, and won't be blocked by DLP yet.
+	// Opening the Play files directory will mount it and all the subdirectories should be disabled.
+	if !disabled {
+		if err := uiauto.Combine("select Play files/Pictures",
+			saver.OpenFile("Play files"),
+			saver.SelectFile("Pictures"),
+			saver.WaitUntilExists(openButton),
+		)(ctx); err != nil {
+			return errors.Wrap(err, "failed to open Play files")
+		}
+
+		disabled, err := buttonDisabled(ctx, saver, openButton)
+		if err != nil {
+			return err
+		}
+
+		if !disabled {
+			return errors.New("open button is not disabled and it should be")
+		}
+	}
+
+	saveButton := nodewith.Role(role.Button).Name("Save")
+	// Save the file to Downloads.
+	if err := uiauto.Combine("save the file",
+		saver.OpenDir("Downloads", "Downloads"),
+		saver.WaitUntilExists(saveButton),
+		saver.LeftClick(saveButton), // Should be enabled, otherwise this will fail.
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to save the file")
+	}
+
+	return nil
+}
+
+func buttonDisabled(ctx context.Context, f *filesapp.FilesApp, button *nodewith.Finder) (bool, error) {
+	info, err := f.Info(ctx, button)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to find the button info")
+	}
+
+	return info.Restriction == restriction.Disabled, nil
 }
 
 func testCopyingToPlayfiles(ctx context.Context, ui *uiauto.Context, tconn *chrome.TestConn, f *filesapp.FilesApp, kb *input.KeyboardEventWriter) error {

@@ -32,6 +32,9 @@ import (
 // FilesTitlePrefix is the prefix of the Ash window title.
 const FilesTitlePrefix = "Files - "
 
+// FileSaverPseudoAppID represents the file saver app ID.
+const FileSaverPseudoAppID = "SaverPseudoAppID"
+
 // Context menu items for a file, values are the a11y name.
 const (
 	Open         = "Open"
@@ -75,6 +78,9 @@ func WindowFinder(appID string) *nodewith.Finder {
 	}
 	if appID == vars.FilePickerPseudoAppID {
 		return nodewith.Name("Select a file to open").Role(role.Window).ClassName("WebDialogView")
+	}
+	if appID == FileSaverPseudoAppID {
+		return nodewith.Name("Save file as").Role(role.Window).ClassName("WebDialogView")
 	}
 	return nodewith.NameStartingWith("Files").Role(role.Window).ClassName("RootView")
 }
@@ -182,8 +188,8 @@ func (f *FilesApp) OpenDir(dirName, expectedTitle string) uiauto.Action {
 	if f.appID == apps.FilesSWA.ID {
 		roleType = role.Window
 	}
-	if f.appID == vars.FilePickerPseudoAppID {
-		// For the picker, we check that the button in the header exists.
+	if f.appID == vars.FilePickerPseudoAppID || f.appID == FileSaverPseudoAppID {
+		// For the picker and saver, we check that the button in the header exists.
 		roleType = role.Button
 	}
 	return uiauto.Combine("OpenDir",
