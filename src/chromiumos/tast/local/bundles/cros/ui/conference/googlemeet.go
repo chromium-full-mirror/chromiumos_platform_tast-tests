@@ -75,7 +75,10 @@ const (
 	retryTimes        = 3
 )
 
-var meetWebArea = nodewith.NameContaining(meetTitle).Role(role.RootWebArea)
+var (
+	meetWebArea = nodewith.NameContaining(meetTitle).Role(role.RootWebArea)
+	youText     = nodewith.Name("You").Role(role.StaticText).Ancestor(meetWebArea)
+)
 
 // Join joins a new conference room.
 func (conf *GoogleMeetConference) Join(ctx context.Context, room string, toBlur bool) error {
@@ -455,7 +458,7 @@ func (conf *GoogleMeetConference) TypingInChat(ctx context.Context) error {
 	messageText := nodewith.NameContaining(message).Role(role.StaticText).First()
 	messageInChatTextField := nodewith.NameContaining(message).Role(role.StaticText).Ancestor(chatTextField)
 	openChatBox := uiauto.NamedCombine("open chat box",
-		conf.ui.LeftClick(meetWebArea),
+		conf.ui.LeftClick(youText),
 		conf.ui.DoDefault(chatButton),
 		// Some low end DUTs need very long time to load chat window in 49 tiles.
 		conf.ui.WithTimeout(2*time.Minute).WaitUntilExists(chatTextField.Focusable()),
@@ -661,11 +664,11 @@ func (conf *GoogleMeetConference) BackgroundChange(ctx context.Context) error {
 		return uiauto.NamedCombine("change background and enter full screen",
 			conf.changeBackgroundOnMeetingPage(background),
 			// Double click to enter full screen.
-			doFullScreenAction(conf.tconn, conf.ui.DoubleClick(meetWebArea), meetTitle, true),
+			doFullScreenAction(conf.tconn, conf.ui.DoubleClick(youText), meetTitle, true),
 			// After applying new background, give it 5 seconds for viewing before applying next one.
 			uiauto.Sleep(viewingTime),
 			// Double click to exit full screen.
-			doFullScreenAction(conf.tconn, conf.ui.DoubleClick(meetWebArea), meetTitle, false),
+			doFullScreenAction(conf.tconn, conf.ui.DoubleClick(youText), meetTitle, false),
 		)
 	}
 
