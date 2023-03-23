@@ -39,31 +39,34 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware"},
-		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
-		Requirements: []string{"sys-fw-0022-v01"},
 		Params: []testing.Param{
 			{
-				Name:      "shutdown",
-				ExtraAttr: []string{"firmware_ec"},
+				Name:              "shutdown",
+				ExtraAttr:         []string{"firmware_ec"},
+				ExtraRequirements: []string{"sys-fw-0022-v01"},
 				Val: powerG3Params{
 					PowerOffMethod: shutdownCommand,
 				},
+				Fixture: fixture.NormalMode,
 			},
 			{
-				Name:      "power_button",
-				ExtraAttr: []string{"firmware_ec", "firmware_bringup"},
+				Name:              "power_button",
+				ExtraAttr:         []string{"firmware_ec", "firmware_bringup"},
+				ExtraRequirements: []string{"sys-fw-0022-v01"},
 				Val: powerG3Params{
 					PowerOffMethod: longPowerButtonPress,
 				},
+				Fixture: fixture.NormalMode,
 			},
 			{
-				Name: "power_state",
-				// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
-				ExtraAttr: []string{"firmware_unstable", "firmware_bringup"},
+				Name:              "power_state",
+				ExtraAttr:         []string{"firmware_bios", "firmware_level2", "firmware_bringup", "group:labqual"},
+				ExtraRequirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
 				Val: powerG3Params{
 					PowerOffMethod: powerStateOff,
 				},
+				Fixture: fixture.NormalMode,
 			},
 			{
 				Name: "power_state_snk",
@@ -74,6 +77,15 @@ func init() {
 					PowerOffMethod: powerStateOff,
 					RemovePower:    true,
 				},
+				Fixture: fixture.NormalMode,
+			},
+			{
+				Name:      "power_state_rec_off",
+				ExtraAttr: []string{"firmware_unstable"},
+				Val: powerG3Params{
+					PowerOffMethod: powerStateOff,
+				},
+				Fixture: fixture.RecModeNoServices,
 			},
 		},
 	})
