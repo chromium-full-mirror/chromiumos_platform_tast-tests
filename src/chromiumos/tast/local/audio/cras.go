@@ -379,3 +379,9 @@ func (c *Cras) SetInputMute(ctx context.Context, mute bool) error {
 func (c *Cras) SetSpeakOnMuteDetection(ctx context.Context, enabled bool) error {
 	return c.call(ctx, "SetSpeakOnMuteDetection", enabled).Err
 }
+
+// SetFlossEnabled sets whether the CRAS stack expects to use the floss
+// bluetooth stack. Will expect floss if enabled, otherwise bluez.
+func (c *Cras) SetFlossEnabled(ctx context.Context, enabled bool) error {
+	return c.call(ctx, "SetFlossEnabled", enabled).Err
+}
