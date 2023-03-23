@@ -9,14 +9,23 @@ package migrate
 import (
 	"context"
 	"os"
+	"time"
 
 	"chromiumos/tast/errors"
+	"chromiumos/tast/local/a11y"
+	"chromiumos/tast/local/apps"
+	"chromiumos/tast/local/audio/crastestclient"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/lacros"
 	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
 	"chromiumos/tast/local/chrome/localstate"
+	"chromiumos/tast/local/chrome/uiauto"
+	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/cryptohome"
+	"chromiumos/tast/local/input"
+	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/testing"
 )
 
@@ -121,6 +130,533 @@ func VerifyLacrosLaunch(ctx context.Context, s *testing.State, cr *chrome.Chrome
 	}
 
 	l.Close(ctx)
+
+	return nil
+}
+
+// SetupProfileData creates a bookmark, a shortcut, installs an extension,
+// downloads a file, modifies ChromeVox settings, and simulates page activity
+// by saving a cookie, an IndexedDB entry, a LocalStorage value
+// and creating browsing history.
+// Clients are expected to launch a browser before calling the function.
+// Clients are not expected to close tabs after the method call,
+// if the data is to be verified by VerifyProfileData.
+func SetupProfileData(ctx context.Context, cr *chrome.Chrome, s *testing.State, br *browser.Browser) error {
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to create Test API connection")
+	}
+	ui := uiauto.New(tconn)
+	kb, err := input.Keyboard(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get keyboard")
+	}
+	defer kb.Close()
+	if err := policyutil.EnsureGoogleCookiesAccepted(ctx, br); err != nil {
+		return errors.Wrap(err, "failed to accept cookies")
+	}
+	if err := setupBookmark(ctx, ui, br, kb); err != nil {
+		return err
+	}
+	if err := setupExtension(ctx, ui, br); err != nil {
+		return err
+	}
+	if err := setupShortcut(ctx, ui, br, kb); err != nil {
+		return err
+	}
+	if err := setupDownloads(ctx, ui, br, kb); err != nil {
+		return err
+	}
+	if err := setupChromeVox(ctx, ui, cr, tconn); err != nil {
+		return err
+	}
+	if err := setupExternalPageActivity(ctx, ui, br, s); err != nil {
+		return err
+	}
+	return nil
+}
+
+// VerifyProfileData verifies data previously set up by SetupProfileData.
+// Clients are expected to launch a browser before calling the function.
+func VerifyProfileData(ctx context.Context, cr *chrome.Chrome, s *testing.State, br *browser.Browser) error {
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to create Test API connection")
+	}
+	ui := uiauto.New(tconn)
+	kb, err := input.Keyboard(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get keyboard")
+	}
+	defer kb.Close()
+	if err := policyutil.EnsureGoogleCookiesAccepted(ctx, br); err != nil {
+		return errors.Wrap(err, "failed to accept cookies")
+	}
+	if err := verifyBookmark(ctx, ui, br); err != nil {
+		return err
+	}
+	if err := verifyExtension(ctx, ui, br); err != nil {
+		return err
+	}
+	if err := verifyShortcut(ctx, ui, br); err != nil {
+		return err
+	}
+	if err := verifyDownloads(ctx, ui, br); err != nil {
+		return err
+	}
+	if err := verifyChromeVox(ctx, ui, cr, tconn); err != nil {
+		return err
+	}
+	if err := verifyExternalPageActivity(ctx, ui, br, kb, s); err != nil {
+		return err
+	}
+	return nil
+}
+
+const (
+	// chrome://newtab page URL.
+	newTabURL = "chrome://newtab"
+	// History page URL.
+	historyURL = "chrome://history"
+	// Downloads page URL.
+	downloadsURL = "chrome://downloads"
+	// Arbitrary bookmark name.
+	bookmarkName = "MyBookmark12345"
+)
+
+// setupBookmark creates an arbitrary bookmark.
+func setupBookmark(ctx context.Context, ui *uiauto.Context, br *browser.Browser, kb *input.KeyboardEventWriter) error {
+	// Bookmark the downloads page.
+	conn, err := br.NewConn(ctx, downloadsURL)
+	if err != nil {
+		return errors.Wrap(err, "failed to open downloads page")
+	}
+	defer conn.Close()
+	if err := kb.Accel(ctx, "Ctrl+d"); err != nil {
+		return errors.Wrap(err, "failed to open bookmark creation popup")
+	}
+	if err := kb.Type(ctx, bookmarkName); err != nil {
+		return errors.Wrap(err, "failed to type bookmark name")
+	}
+	doneButton := nodewith.Name("Done").Role(role.Button)
+	if err := uiauto.Combine("Save bookmark",
+		ui.LeftClick(doneButton),
+		ui.WaitUntilGone(doneButton),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to save bookmark")
+	}
+	if err := conn.CloseTarget(ctx); err != nil {
+		return errors.Wrap(err, "failed to close downloads page")
+	}
+	return nil
+}
+
+// verifyBookmark verifies the existence of a bookmark set up by setupBookmark.
+func verifyBookmark(ctx context.Context, ui *uiauto.Context, br *browser.Browser) error {
+	// Check that the bookmark is present.
+	conn, err := br.NewConn(ctx, newTabURL)
+	defer conn.Close()
+	if err != nil {
+		return errors.Wrap(err, "failed to open new tab")
+	}
+	bookmark := nodewith.NameStartingWith(bookmarkName).First()
+	if err = ui.WaitUntilExists(bookmark)(ctx); err != nil {
+		return errors.Wrap(err, "failed to find bookmark")
+	}
+	if err := conn.CloseTarget(ctx); err != nil {
+		return errors.Wrap(err, "failed to close new tab")
+	}
+	return nil
+}
+
+const (
+	// Arbitrary extension from Chrome Store.
+	extensionName = "User-Agent Switcher for Chrome"
+	// ID of the above extension.
+	extensionID = "djflhoibgkdhkhhcedjiklpkjnoahfmg"
+	// Chrome Store URL of the above extension
+	extensionWebStoreURL = "https://chrome.google.com/webstore/detail/" + extensionID + "?hl=en"
+	// Arbitrary extension URL.
+	extensionURL = "chrome://extensions/?id=" + extensionID
+)
+
+// setupExtension installs an arbitrary extension.
+func setupExtension(ctx context.Context, ui *uiauto.Context, br *browser.Browser) error {
+	// Navigate to the extension web store page.
+	conn, err := br.NewConn(ctx, extensionWebStoreURL)
+	if err != nil {
+		return errors.Wrap(err, "failed to navigate to extension web store page")
+	}
+	defer conn.Close()
+	// Look for the "Add to Chrome" button on the page, which shows
+	// a popup for the final installation of the extension.
+	// On the popup find the "Add extension" button to install the extension.
+	// After the extension is installed, the "Add to Chrome" button on
+	// the extension page should change to the "Remove from Chrome" button.
+	addToChromeButton := nodewith.Name("Add to Chrome").Role(role.Button).First()
+	addExtensionButton := nodewith.Name("Add extension").Role(role.Button)
+	removeButton := nodewith.Name("Remove from Chrome").Role(role.Button).First()
+	if err := uiauto.Combine("Install extension",
+		ui.LeftClick(addToChromeButton),
+		// The "Add extension" button may not immediately be clickable.
+		ui.LeftClickUntil(addExtensionButton, ui.Gone(addExtensionButton)),
+		// TODO(crbug.com/1326398): Remove tab reload when this bug is fixed.
+		ui.RetryUntil(br.ReloadActiveTab, ui.WithTimeout(7*time.Second).WaitUntilExists(removeButton)),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to install")
+	}
+	if err := conn.CloseTarget(ctx); err != nil {
+		return errors.Wrap(err, "failed to close extension web store page")
+	}
+	return nil
+}
+
+// verifyExtension checks that the extension is installed and enabled.
+func verifyExtension(ctx context.Context, ui *uiauto.Context, br *browser.Browser) error {
+	conn, err := br.NewConn(ctx, extensionURL)
+	if err != nil {
+		return errors.Wrap(err, "failed to open extension page")
+	}
+	defer conn.Close()
+	extensionText := nodewith.Name(extensionName).Role(role.StaticText)
+	onText := nodewith.Name("On").Role(role.StaticText)
+	if err := uiauto.Combine("Verify the extension is installed and enabled",
+		ui.WaitUntilExists(extensionText),
+		ui.Exists(onText),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to verify extension status")
+	}
+	if err := conn.CloseTarget(ctx); err != nil {
+		return errors.Wrap(err, "failed to close extension page")
+	}
+	return nil
+}
+
+const (
+	// Arbitrary shortcut name.
+	shortcutName = "MyShortcut12345"
+	// Arbitrary shortcut URL.
+	shortcutURL = "foobar"
+)
+
+// setupShortcut creates an arbitrary shortcut.
+func setupShortcut(ctx context.Context, ui *uiauto.Context, br *browser.Browser, kb *input.KeyboardEventWriter) error {
+	conn, err := br.NewConn(ctx, newTabURL)
+	if err != nil {
+		return errors.Wrap(err, "failed to open new tab")
+	}
+	defer conn.Close()
+	addShortcutButton := nodewith.Name("Add shortcut").Role(role.Button)
+	if err := uiauto.Combine("Click 'Add shortcut' button",
+		ui.LeftClick(addShortcutButton),
+		ui.WaitUntilGone(addShortcutButton),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to open 'Add shortcut' popup")
+	}
+	if err := kb.Type(ctx, shortcutName+"\t"+shortcutURL); err != nil {
+		return errors.Wrap(err, "failed to type shortcut data")
+	}
+	doneButton := nodewith.Name("Done").Role(role.Button)
+	if err := uiauto.Combine("Click 'Done' button",
+		ui.LeftClick(doneButton),
+		ui.WaitUntilGone(doneButton),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to create shortcut")
+	}
+	if err := conn.CloseTarget(ctx); err != nil {
+		return errors.Wrap(err, "failed to close new tab")
+	}
+	return nil
+}
+
+// verifyShortcut verifies the existence of a shortcut created
+// by setupShortcut.
+func verifyShortcut(ctx context.Context, ui *uiauto.Context, br *browser.Browser) error {
+	conn, err := br.NewConn(ctx, newTabURL)
+	if err != nil {
+		return errors.Wrap(err, "failed to open new tab")
+	}
+	defer conn.Close()
+	// Check that the shortcut is present.
+	shortcutLink := nodewith.Name(shortcutName).Role(role.Link)
+	if err := ui.WaitUntilExists(shortcutLink)(ctx); err != nil {
+		return errors.Wrap(err, "failed to find shortcut")
+	}
+	if err := conn.CloseTarget(ctx); err != nil {
+		return errors.Wrap(err, "failed to close new tab")
+	}
+	return nil
+}
+
+// setupDownloads downloads an arbitrary file.
+func setupDownloads(ctx context.Context, ui *uiauto.Context, br *browser.Browser, kb *input.KeyboardEventWriter) error {
+	// Navigate to the downloads page.
+	conn, err := br.NewConn(ctx, downloadsURL)
+	if err != nil {
+		return errors.Wrap(err, "failed to open downloads page")
+	}
+	defer conn.Close()
+	if err := kb.Accel(ctx, "Ctrl+s"); err != nil {
+		return errors.Wrap(err, "failed to open download popup")
+	}
+	saveButton := nodewith.Name("Save").Role(role.Button).Focusable()
+	if err := uiauto.Combine("Click 'Save' button",
+		ui.WaitUntilExists(saveButton),
+		ui.WaitUntilEnabled(saveButton),
+		ui.LeftClick(saveButton),
+		ui.WaitUntilGone(saveButton),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to click download save button")
+	}
+	if err := conn.CloseTarget(ctx); err != nil {
+		return errors.Wrap(err, "failed to close downloads page")
+	}
+	return nil
+}
+
+// verifyDownloads verifies the existence of an entry of a file
+// downloaded by setupDownloads on the Downloads page.
+func verifyDownloads(ctx context.Context, ui *uiauto.Context, br *browser.Browser) error {
+	// Navigate to the downloads page.
+	conn, err := br.NewConn(ctx, downloadsURL)
+	if err != nil {
+		return errors.Wrap(err, "failed to open downloads page")
+	}
+	defer conn.Close()
+	// Check that the download page shows the previous download (of itself).
+	downloadedFile := nodewith.NameStartingWith(downloadsPageTitle).Role(role.Link)
+	if err := ui.WaitUntilExists(downloadedFile)(ctx); err != nil {
+		return errors.Wrap(err, "failed to find previously downloaded file")
+	}
+	if err := conn.CloseTarget(ctx); err != nil {
+		return errors.Wrap(err, "failed to close downloads page")
+	}
+	return nil
+}
+
+const (
+	// ChromeVox title.
+	chromeVoxTitle = "ChromeVox"
+	// ChromeVox settings URL.
+	chromeVoxSettingsURL = "chrome-extension://mndnfokpggljbaajbnioimlmbfngpief/chromevox/options/options.html"
+)
+
+// setupChromeVox modifie "Read numbers as" value in ChromeVox settings.
+func setupChromeVox(ctx context.Context, ui *uiauto.Context, cr *chrome.Chrome, tconn *browser.TestConn) error {
+	// Mute the device to avoid noise while the test is running.
+	if err := crastestclient.Mute(ctx); err != nil {
+		return errors.Wrap(err, "failed to mute")
+	}
+	defer crastestclient.Unmute(ctx)
+	// Enable ChromeVox.
+	if err := a11y.SetFeatureEnabled(ctx, tconn, a11y.SpokenFeedback, true); err != nil {
+		return errors.Wrap(err, "failed to enable ChromeVox")
+	}
+	defer a11y.SetFeatureEnabled(ctx, tconn, a11y.SpokenFeedback, false)
+	cvconn, err := a11y.NewChromeVoxConn(ctx, cr)
+	if err != nil {
+		return errors.Wrap(err, "failed to connect to the ChromeVox background page")
+	}
+	defer cvconn.Close()
+	// Modify "Read numbers as" setting.
+	osconn, err := apps.LaunchOSSettings(ctx, cr, chromeVoxSettingsURL)
+	if err != nil {
+		return errors.Wrap(err, "failed to open ChromeVox settings")
+	}
+	defer osconn.Close()
+	combobox := nodewith.Role(role.ComboBoxSelect).NameStartingWith("Read numbers").First()
+	digits := nodewith.Role(role.ListBoxOption).NameStartingWith("Digits").First()
+	if err := uiauto.Combine("Set 'Read numbers as' settings",
+		ui.WaitUntilExists(combobox),
+		ui.LeftClick(combobox),
+		ui.WaitUntilExists(digits),
+		ui.LeftClick(digits),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to modify ChromeVox settings")
+	}
+	// Check "Read numbers as" setting is changed.
+	if err := checkChromeVoxSetting(ctx, ui); err != nil {
+		return errors.Wrap(err, "failed to verify ChromeVox settings value")
+	}
+	return nil
+}
+
+// verifyChromeVox checks that ChromeVox settings are preserved.
+func verifyChromeVox(ctx context.Context, ui *uiauto.Context, cr *chrome.Chrome, tconn *browser.TestConn) error {
+	// Mute the device to avoid noise while the test is running.
+	if err := crastestclient.Mute(ctx); err != nil {
+		return errors.Wrap(err, "failed to mute")
+	}
+	defer crastestclient.Unmute(ctx)
+	// Enable ChromeVox.
+	if err := a11y.SetFeatureEnabled(ctx, tconn, a11y.SpokenFeedback, true); err != nil {
+		return errors.Wrap(err, "failed to enable ChromeVox")
+	}
+	defer a11y.SetFeatureEnabled(ctx, tconn, a11y.SpokenFeedback, false)
+	cvconn, err := a11y.NewChromeVoxConn(ctx, cr)
+	if err != nil {
+		return errors.Wrap(err, "failed to connect to the ChromeVox background page")
+	}
+	defer cvconn.Close()
+	// Check "Read numbers as" setting.
+	osconn, err := apps.LaunchOSSettings(ctx, cr, chromeVoxSettingsURL)
+	if err != nil {
+		return errors.Wrap(err, "failed to open ChromeVox settings")
+	}
+	defer osconn.Close()
+	// Check "Read numbers as" setting is changed.
+	if err := checkChromeVoxSetting(ctx, ui); err != nil {
+		return errors.Wrap(err, "failed to verify ChromeVox settings value")
+	}
+	return nil
+}
+
+// checkChromeVoxSetting is a helper to verify that 'Read numbers as' setting
+// has "Digits" value.
+func checkChromeVoxSetting(ctx context.Context, ui *uiauto.Context) error {
+	combobox := nodewith.Role(role.ComboBoxSelect).NameStartingWith("Read numbers").First()
+	if err := ui.WaitUntilExists(combobox)(ctx); err != nil {
+		return errors.Wrap(err, "failed to find 'Read numbers as' setting")
+	}
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		comboboxInfo, err := ui.Info(ctx, combobox)
+		if err != nil {
+			return errors.Wrap(err, "failed to get setting's value")
+		}
+		if comboboxInfo.Value != "Digits" {
+			return errors.Wrap(err, "failed to verify setting's value")
+		}
+		return nil
+	}, nil); err != nil {
+		return err
+	}
+	return nil
+}
+
+const (
+	// Arbitrary page title.
+	pageTitle = "Alphabet"
+	// Arbitrary page URL.
+	pageURL = "https://abc.xyz"
+	// chrome://downloads page title.
+	downloadsPageTitle = "Downloads"
+	// Arbitrary cookie.
+	cookie = "MyCookie1234=abcd"
+	// Arbitrary localStorage key.
+	localStorageKey = "myCat"
+	// Arbitrary localStorage value.
+	localStorageValue = "Meow"
+	// Arbitrary user id.
+	indexedDBUserID = 123
+	// Arbitrary user email.
+	indexedDBUserEmail = "test@gmail.com"
+	// JS script to create an arbitrary indexedDB value.
+)
+
+// setupExternalPageActivity sets up an arbitrary user activity.
+func setupExternalPageActivity(ctx context.Context, ui *uiauto.Context, br *browser.Browser, s *testing.State) error {
+	// Visit the page and create a history entry.
+	conn, err := br.NewConn(ctx, pageURL)
+	if err != nil {
+		return errors.Wrap(err, "failed to open page")
+	}
+	defer conn.Close()
+	if err := waitForHistoryEntry(ctx, ui, br, true); err != nil {
+		return errors.Wrap(err, "failed to find history entry")
+	}
+	// Set cookies on the page.
+	if err := conn.Call(ctx, nil, `(cookie) => document.cookie = cookie`, cookie); err != nil {
+		return errors.Wrap(err, "failed to set cookie")
+	}
+	// Set localStorage on the page.
+	if err := conn.Call(ctx, nil, `(key, value) => localStorage.setItem(key, value)`, localStorageKey, localStorageValue); err != nil {
+		return errors.Wrap(err, "failed to set localStorage value")
+	}
+	// Create indexedDB value on the page.
+	insertIndexedDBDataJS, err := os.ReadFile(s.DataPath("migrate/indexeddb_set.js"))
+	if err != nil {
+		return errors.Wrap(err, "failed to read IndexedDB setter script")
+	}
+	if err := conn.Call(ctx, nil, string(insertIndexedDBDataJS), indexedDBUserID, indexedDBUserEmail); err != nil {
+		return errors.Wrap(err, "insertIndexedDBDataJS failed")
+	}
+	// Navigate to the Downloads page to create a tab history.
+	if err := conn.Navigate(ctx, downloadsURL); err != nil {
+		return errors.Wrap(err, "failed to navigate to downloads page")
+	}
+	return nil
+}
+
+// verifyExternalPageActivity verifies previously set up user activity.
+func verifyExternalPageActivity(ctx context.Context, ui *uiauto.Context, br *browser.Browser, kb *input.KeyboardEventWriter, s *testing.State) error {
+	// Check that the browsing history contains the visited page.
+	if err := waitForHistoryEntry(ctx, ui, br, false); err != nil {
+		return errors.Wrap(err, "failed to find history entry")
+	}
+	// Check if the cookie, localStorage and indexedDB values are set.
+	conn, err := br.NewConn(ctx, pageURL)
+	if err != nil {
+		return errors.Wrap(err, "failed to open page")
+	}
+	defer conn.Close()
+	contained := false
+	if err := conn.Call(ctx,
+		&contained,
+		`(cookie) => { return document.cookie.split('; ').includes(cookie); }`, cookie); err != nil {
+		return errors.Wrap(err, "failed to get cookies")
+	}
+	if !contained {
+		return errors.New("Cookie set previously could not be found")
+	}
+	if err := conn.Call(ctx, &contained,
+		`(key, value) => { return localStorage.getItem(key) == value; }`, localStorageKey, localStorageValue); err != nil {
+		return errors.Wrap(err, "failed to get localStorage value")
+	}
+	if !contained {
+		return errors.Wrap(err, "localStorage value set previously could not be found")
+	}
+	checkIndexedDBDataJS, err := os.ReadFile(s.DataPath("migrate/indexeddb_check.js"))
+	if err != nil {
+		return errors.Wrap(err, "failed to read IndexedDB checker script")
+	}
+	if err := conn.Call(ctx, nil, string(checkIndexedDBDataJS), indexedDBUserID, indexedDBUserEmail); err != nil {
+		return errors.Wrap(err, "checkIndexedDBDataJS failed")
+	}
+	if err := conn.CloseTarget(ctx); err != nil {
+		return errors.Wrap(err, "failed to close page")
+	}
+	// Check that going back in history once brings us to the page.
+	if err := kb.Accel(ctx, "Alt+Left"); err != nil {
+		return errors.Wrap(err, "failed to press alt+left")
+	}
+	title := nodewith.Name(pageTitle).First()
+	if err = ui.WaitUntilExists(title)(ctx); err != nil {
+		return errors.Wrap(err, "failed to go to the previously visited page")
+	}
+	return nil
+}
+
+// waitForHistoryEntry verifies that the page is listed on the History page.
+func waitForHistoryEntry(ctx context.Context, ui *uiauto.Context, br *browser.Browser, allowReload bool) error {
+	conn, err := br.NewConn(ctx, historyURL)
+	if err != nil {
+		return errors.Wrap(err, "failed to open history page")
+	}
+	defer conn.Close()
+	link := nodewith.Name(pageTitle).Role(role.Link)
+	err = ui.WaitUntilExists(link)(ctx)
+	if err != nil && allowReload {
+		// If the page in question has just been visited, sometimes the
+		// history page needs to be reloaded before the entry shows up
+		// there. So reload and try again with a longer timeout.
+		err = uiauto.Combine("find history entry", br.ReloadActiveTab, ui.WithTimeout(30*time.Second).WaitUntilExists(link))(ctx)
+	}
+	if err != nil {
+		return err
+	}
+	if err := conn.CloseTarget(ctx); err != nil {
+		return errors.Wrap(err, "failed to close target")
+	}
 
 	return nil
 }
