@@ -161,6 +161,19 @@ func measurePerformance(ctx context.Context, s *testing.State, cs ash.ConnSource
 	if err != nil {
 		return errors.Wrap(err, "failed to get initial histogram")
 	}
+	const overlaysHistogram = "Viz.DisplayCompositor.OverlayStrategy"
+	initOverlaysHistogram, err := metrics.GetHistogram(ctx, tconn, overlaysHistogram)
+	if err != nil {
+		return errors.Wrap(err, "failed to get initial histogram")
+	}
+	// minPromotedOverlayValue and maxPromotedOverlayValue are 2 and 5 since the buckets representing
+	// samples promoted to overlays in this histogram are
+	// Fullscreen: 2
+	// SingleOnTop: 3
+	// Underlay: 4
+	// Underlay Cast: 5
+	minPromotedOverlayValue := 2
+	maxPromotedOverlayValue := 5
 
 	var roughness float64
 	var gpuCSStat, gpuMainCSStat contextSwitchStat
@@ -247,6 +260,9 @@ func measurePerformance(ctx context.Context, s *testing.State, cs ash.ConnSource
 	}
 	if err := graphics.UpdatePerfMetricFromHistogram(ctx, tconn, platformdecodeHistogram, initPlatformdecodeHistogram, p, "platform_video_decode_delay"); err != nil {
 		return errors.Wrap(err, "failed to calculate Platform Decode perf metric")
+	}
+	if err := graphics.UpdateOverlaysMetricFromHistogram(ctx, tconn, overlaysHistogram, initOverlaysHistogram, minPromotedOverlayValue, maxPromotedOverlayValue, p, "overlays"); err != nil {
+		return errors.Wrap(err, "failed to calculate overlays metric")
 	}
 
 	if err := sampleDroppedFrames(ctx, conn, p); err != nil {

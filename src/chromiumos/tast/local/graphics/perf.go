@@ -736,6 +736,42 @@ func UpdatePerfMetricFromHistogram(ctx context.Context, tconn *chrome.TestConn, 
 	return nil
 }
 
+// UpdateOverlaysMetricFromHistogram takes a snapshot of histogramName and
+// calculates the percentage of samples promoted to overlays via difference with initHistogram.
+// The buckets in the range [minPromotedOverlayValue, maxPromotedOverlayValue]  are considered to represent
+// samples promoted to overlays.
+// The result is then logged to perfValues with metricName.
+func UpdateOverlaysMetricFromHistogram(ctx context.Context, tconn *chrome.TestConn, histogramName string, initHistogram *metrics.Histogram, minPromotedOverlayValue, maxPromotedOverlayValue int, perfValues *perf.Values, metricName string) error {
+	laterHistogram, err := metrics.GetHistogram(ctx, tconn, histogramName)
+	if err != nil {
+		return errors.Wrap(err, "failed to get later histogram")
+	}
+	histogramDiff, err := laterHistogram.Diff(initHistogram)
+	if err != nil {
+		return errors.Wrap(err, "failed diffing histograms")
+	}
+
+	if len(histogramDiff.Buckets) > 0 {
+		numHistogramSamples := float64(histogramDiff.TotalCount())
+		var numPromotedSamples float64
+		for _, bucket := range histogramDiff.Buckets {
+			if bucket.Min >= int64(minPromotedOverlayValue) && bucket.Min <= int64(maxPromotedOverlayValue) {
+				numPromotedSamples += float64(bucket.Count)
+			}
+		}
+		promotedPercentage := (numPromotedSamples / numHistogramSamples) * 100.0
+
+		testing.ContextLog(ctx, histogramName, ": histogram:", histogramDiff.String(), "; percentage of promoted quads: ", promotedPercentage)
+
+		perfValues.Set(perf.Metric{
+			Name:      metricName,
+			Unit:      "percent",
+			Direction: perf.BiggerIsBetter,
+		}, promotedPercentage)
+	}
+	return nil
+}
+
 // MeasureCPUUsageAndPower measures CPU usage and power consumption (if
 // supported) for measurement time into p. If the optional stabilization
 // duration is specified, the test will sleep for such amount of time before
