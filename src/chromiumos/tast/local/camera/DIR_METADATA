@@ -1,0 +1,17 @@
+buganizer {
+  # ChromeOS > Platform > Technologies > Camera
+  component_id: 167281
+}
+team_email: "chromeos-camera-eng@google.com"
+
+chromeos {
+  cq {
+    source_test_plans {
+      test_plan_starlark_files {
+        host: "chrome-internal.googlesource.com"
+        project: "chromeos/config-internal"
+        path: "test/plans/v2/ctpv1_compatible/camera_cq.star"
+      }
+    }
+  }
+}
