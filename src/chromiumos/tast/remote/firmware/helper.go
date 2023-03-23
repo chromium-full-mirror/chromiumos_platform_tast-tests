@@ -565,6 +565,8 @@ func (h *Helper) SetupUSBKey(ctx context.Context, cloudStorage *testing.CloudSto
 	// Unmount whatever might be mounted.
 	h.ServoProxy.RunCommandQuiet(ctx, true, "umount", "-q", mountPath)
 
+	// ChromeOS kernel is at /dev/sdx2.
+	kernelPart := usbdev + "2"
 	// ChromeOS root fs is in /dev/sdx3.
 	mountSrc := usbdev + "3"
 	if err = h.ServoProxy.RunCommand(ctx, true, "mkdir", "-p", mountPath); err != nil {
@@ -573,17 +575,22 @@ func (h *Helper) SetupUSBKey(ctx context.Context, cloudStorage *testing.CloudSto
 	var lsb map[string]string
 	// Failures here are a bad USB image, so don't fail, just write the new image.
 	err = func() error {
+		if output, err := h.ServoProxy.OutputCommand(ctx, true, "dd", fmt.Sprintf("if=%s", kernelPart), "bs=8", "count=1"); err != nil {
+			return errors.Wrap(err, "failed to read kernel magic")
+		} else if bytes.Compare(output, []byte("CHROMEOS")) != 0 {
+			return errors.Errorf("incorrect kernel magic string got %v want %v", output, []byte("CHROMEOS"))
+		}
 		if err = h.ServoProxy.RunCommand(ctx, true, "mount", "-o", "ro", mountSrc, mountPath); err != nil {
-			return errors.Errorf("Mount of %q failed at %q", mountSrc, mountPath)
+			return errors.Wrapf(err, "failed to mount %q at %q", mountSrc, mountPath)
 		}
 		defer h.ServoProxy.RunCommand(ctx, true, "umount", mountPath)
 		output, err := h.ServoProxy.OutputCommand(ctx, true, "cat", fmt.Sprintf("%s/etc/lsb-release", mountPath))
 		if err != nil {
-			return errors.New("failed to read lsb-release")
+			return errors.Wrap(err, "failed to read lsb-release")
 		}
 		lsb, err = lsbrelease.Parse(bytes.NewReader(output))
 		if err != nil {
-			return errors.New("failed to parse lsb-release")
+			return errors.Wrap(err, "failed to parse lsb-release")
 		}
 		return nil
 	}()
