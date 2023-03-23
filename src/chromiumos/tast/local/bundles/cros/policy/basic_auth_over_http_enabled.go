@@ -32,13 +32,17 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that the BasicAuthOverHttpEnabled policy is properly applied",
 		Contacts: []string{
-			"cros-engprod-muc@google.com",
-			"jityao@google.com", // Test author
+			"imprivata-eng@google.com",
+			"mpetrisor@google.com",
 		},
-		BugComponent: "b:1263917",
+		// ChromeOS > Software > Commercial (Enterprise) > Identity > Imprivata
+		BugComponent: "b:1253162",
 		SoftwareDeps: []string{"chrome", "lacros"},
-		Attr:         []string{"group:golden_tier"},
-		Fixture:      fixture.LacrosPolicyLoggedIn,
+		Attr: []string{
+			"group:golden_tier",
+			"group:hw_agnostic",
+		},
+		Fixture: fixture.LacrosPolicyLoggedIn,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.BasicAuthOverHttpEnabled{}, pci.VerifiedFunctionalityUI),
 		},
