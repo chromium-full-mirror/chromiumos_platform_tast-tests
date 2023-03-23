@@ -41,13 +41,11 @@ func init() {
 			Name:              "dvfs",
 			Val:               dvfs,
 			ExtraHardwareDeps: hwdep.D(hwdep.SupportDVFS()),
-			ExtraAttr:         []string{"informational"},
 			Fixture:           "chromeGraphicsIdle",
 		}, {
 			Name:              "dvfs_arc",
 			Val:               dvfs,
 			ExtraHardwareDeps: hwdep.D(hwdep.SupportDVFS()),
-			ExtraAttr:         []string{"informational"},
 			Fixture:           "chromeGraphicsIdleArc",
 		}, {
 			// TODO(pwang): Not all platform has fbc enabled. Add SoftwareDeps/HardwareDeps once we got some results on stainless.
@@ -66,13 +64,11 @@ func init() {
 			Name:              "psr",
 			Val:               psr,
 			ExtraHardwareDeps: hwdep.D(hwdep.IntelSOC()),
-			ExtraAttr:         []string{"informational"},
 			Fixture:           "chromeGraphicsIdle",
 		}, {
 			Name:              "psr_arc",
 			Val:               psr,
 			ExtraHardwareDeps: hwdep.D(hwdep.IntelSOC()),
-			ExtraAttr:         []string{"informational"},
 			Fixture:           "chromeGraphicsIdleArc",
 		}, {
 			Name:              "gem_idle",
