@@ -23,10 +23,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify behavior of default PrintersBulkAccessMode policy on Managed Guest Session",
 		Contacts: []string{
-			"chromeos-kiosk-eng+TAST@google.com",
+			"chromeos-commercial-printing@google.com",
 			"mohamedaomar@google.com", // Test author
 		},
-		BugComponent: "b:892153", // ChromeOS > Software > Commercial (Enterprise) > Kiosk
+		BugComponent: "b:1111614", // ChromeOS > Software > Commercial (Enterprise) > Printing
 		SoftwareDeps: []string{"reboot", "chrome"},
 		Attr: []string{
 			"group:golden_tier",
