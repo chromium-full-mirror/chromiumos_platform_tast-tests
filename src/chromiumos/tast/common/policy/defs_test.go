@@ -7,6 +7,10 @@ package policy
 import (
 	"encoding/json"
 	"testing"
+
+	"github.com/gogo/protobuf/proto"
+
+	empb "chromiumos/policy/chromium/policy/enterprise_management_proto"
 )
 
 func TestMessageEqual(t *testing.T) {
@@ -83,5 +87,18 @@ func TestMessageEqual(t *testing.T) {
 		if cmp := tc.p.Equal(r); cmp != tc.result {
 			t.Errorf("unexpected comparison between %s and %v", tc.m, tc.p.UntypedV())
 		}
+	}
+}
+
+func TestSetSubMessage(t *testing.T) {
+	policy := &UseMojoVideoDecoderForPepperAllowed{Val: true}
+
+	var userProto empb.CloudPolicySettings
+	message := userProto.ProtoReflect()
+
+	policy.SetProto(&message)
+
+	if *userProto.GetSubProto1().UseMojoVideoDecoderForPepperAllowed.Value != true {
+		t.Errorf("UseMojoVideoDecoderForPepperAllowed not set in %s", proto.MarshalTextString(&userProto))
 	}
 }

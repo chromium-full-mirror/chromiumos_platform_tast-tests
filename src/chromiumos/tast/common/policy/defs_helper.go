@@ -46,6 +46,26 @@ func setProtobufMessageField(m *protoreflect.Message, policyName, fieldName stri
 		return
 	}
 	protoMessageDesc := (*m).Descriptor().Fields().ByName(protoreflect.Name(policyName))
+	if protoMessageDesc == nil {
+		// CloudPolicySettings now contains some policies in
+		// CloudPolicySubProto1 to limit the number of fields in the main
+		// proto message.
+		// If the policy is in CloudPolicySubProto1, set it there instead.
+
+		subProtoDesc := (*m).Descriptor().Fields().ByNumber(1043) // subProto1
+		subProtoMessage := (*m).Get(subProtoDesc).Message()
+		if !subProtoMessage.IsValid() {
+			subProtoMessage = subProtoMessage.New()
+			(*m).Set(subProtoDesc, protoreflect.ValueOfMessage(subProtoMessage))
+		}
+
+		protoMessageDesc = subProtoMessage.Descriptor().Fields().ByName(protoreflect.Name(policyName))
+		if protoMessageDesc == nil {
+			panic(fmt.Sprintf("Descriptor for %q is empty", policyName))
+		}
+
+		m = &subProtoMessage
+	}
 	fieldMessage := (*m).Get(protoMessageDesc).Message()
 	if !fieldMessage.IsValid() {
 		fieldMessage = fieldMessage.New()
