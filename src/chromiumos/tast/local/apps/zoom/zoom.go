@@ -78,6 +78,17 @@ type Zoom struct {
 	ui    *uiauto.Context
 }
 
+// PermissionOption represents the option of audio/video permission setup.
+type PermissionOption int
+
+const (
+	// WithDefaultPermissions uses existing permissions to start the Zoom meeting.
+	WithDefaultPermissions PermissionOption = iota
+
+	// WithAllPermissions option grants auido, video and notification permissions before start the Zoom meeting.
+	WithAllPermissions
+)
+
 // New creates a new Zoom meeting instance.
 func New(br *browser.Browser, conn *chrome.Conn, tconn *chrome.TestConn) *Zoom {
 	return &Zoom{br, conn, tconn, uiauto.New(tconn)}
@@ -103,12 +114,18 @@ func NewFromTarget(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, 
 // The caller should explicitly call Close function to release resources and close Chrome browser.
 // Example:
 //
-//	zm, err := zoom.StartNewMeeting(ctx, cr, br)
+//	zm, err := zoom.StartNewMeeting(ctx, cr, br, true)
 //	if err != nil {
 //	     s.Fatal("Failed to start meeting: ", err)
 //	}
 //	defer zm.Close(cleanupCtx)
-func StartNewMeeting(ctx context.Context, cr *chrome.Chrome, br *browser.Browser) (*Zoom, error) {
+func StartNewMeeting(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, permissionsOption PermissionOption) (*Zoom, error) {
+	if permissionsOption == WithAllPermissions {
+		if err := GrantPermissions(ctx, br); err != nil {
+			return nil, errors.Wrap(err, "failed to grant permissions")
+		}
+	}
+
 	conn, err := navigateToZoomAndSignIn(ctx, cr, br)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to navigate to Zoom or sign-in")
@@ -144,7 +161,13 @@ func StartNewMeeting(ctx context.Context, cr *chrome.Chrome, br *browser.Browser
 
 // JoinMeeting joins a Zoom meeting via invite link.
 // And make sure the camera and microphone are turned on before entering the meeting.
-func JoinMeeting(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, inviteLink string) (*Zoom, error) {
+func JoinMeeting(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, inviteLink string, permissionsOption PermissionOption) (*Zoom, error) {
+	if permissionsOption == WithAllPermissions {
+		if err := GrantPermissions(ctx, br); err != nil {
+			return nil, errors.Wrap(err, "failed to grant permissions")
+		}
+	}
+
 	conn, err := navigateToZoomAndSignIn(ctx, cr, br)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to navigate to Zoom or sign-in")
@@ -165,12 +188,18 @@ func JoinMeeting(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, in
 // The caller should explicitly call Close function to release resources and close the app.
 // Example:
 //
-//	zm, err := zoom.StartNewMeetingUsingPWA(ctx, cr, br)
+//	zm, err := zoom.StartNewMeetingUsingPWA(ctx, cr, br, true)
 //	if err != nil {
 //	     s.Fatal("Failed to start meeting: ", err)
 //	}
 //	defer zm.Close(cleanupCtx)
-func StartNewMeetingUsingPWA(ctx context.Context, cr *chrome.Chrome, br *browser.Browser) (*Zoom, error) {
+func StartNewMeetingUsingPWA(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, permissionsOption PermissionOption) (*Zoom, error) {
+	if permissionsOption == WithAllPermissions {
+		if err := GrantPermissions(ctx, br); err != nil {
+			return nil, errors.Wrap(err, "failed to grant permissions")
+		}
+	}
+
 	if err := InstallPWA(ctx, cr, br); err != nil {
 		return nil, err
 	}

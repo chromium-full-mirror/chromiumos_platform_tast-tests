@@ -45,7 +45,7 @@ const zoomTitle = "Zoom"
 func (conf *ZoomConference) Join(ctx context.Context, room string) (err error) {
 	ui := conf.ui
 
-	conf.zm, err = zoom.JoinMeeting(ctx, conf.cr, conf.br, room)
+	conf.zm, err = zoom.JoinMeeting(ctx, conf.cr, conf.br, room, zoom.WithAllPermissions)
 	if err != nil {
 		return errors.Wrap(err, "failed to join zoom meeting")
 	}

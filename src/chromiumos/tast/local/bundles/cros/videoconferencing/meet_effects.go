@@ -91,21 +91,17 @@ func MeetEffects(ctx context.Context, s *testing.State) {
 	}
 	defer cleanup(cleanupCtx)
 
-	if err := googlemeet.GrantPermissions(ctx, br); err != nil {
-		s.Fatal("Failed to grant permissions to Meet: ", err)
-	}
-
 	var gm *googlemeet.GoogleMeet
 
 	if s.Param().(commontype.LaunchAppType) == commontype.LaunchAppInPWA {
-		gm, err = googlemeet.StartNewMeetingUsingPWA(ctx, cr, br)
+		gm, err = googlemeet.StartNewMeetingUsingPWA(ctx, cr, br, googlemeet.WithAllPermissions)
 	} else {
 		// Meet can dynamically switch between different segmentation models.
 		// Force the same model the platform effects use with the experiment ?e=ForceSegmentationModelVariant::GpuMid.
 		gm, err = googlemeet.StartNewMeeting(ctx, cr, br,
 			map[string]string{
 				"e": "ForceSegmentationModelVariant::GpuMid",
-			})
+			}, googlemeet.WithAllPermissions)
 	}
 	if err != nil {
 		s.Fatal("Failed to start meeting: ", err)

@@ -84,16 +84,12 @@ func ZoomEffects(ctx context.Context, s *testing.State) {
 	}
 	defer cleanup(cleanupCtx)
 
-	if err := zoom.GrantPermissions(ctx, br); err != nil {
-		s.Fatal("Failed to grant permissions to Meet: ", err)
-	}
-
 	var zm *zoom.Zoom
 
 	if s.Param().(commontype.LaunchAppType) == commontype.LaunchAppInPWA {
-		zm, err = zoom.StartNewMeetingUsingPWA(ctx, cr, br)
+		zm, err = zoom.StartNewMeetingUsingPWA(ctx, cr, br, zoom.WithAllPermissions)
 	} else {
-		zm, err = zoom.StartNewMeeting(ctx, cr, br)
+		zm, err = zoom.StartNewMeeting(ctx, cr, br, zoom.WithAllPermissions)
 	}
 	if err != nil {
 		s.Fatal("Failed to start meeting: ", err)

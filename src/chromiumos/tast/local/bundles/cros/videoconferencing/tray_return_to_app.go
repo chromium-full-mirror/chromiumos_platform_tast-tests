@@ -85,11 +85,7 @@ func TrayReturnToApp(ctx context.Context, s *testing.State) {
 	}
 	defer cleanup(cleanupCtx)
 
-	if err := googlemeet.GrantPermissions(ctx, br); err != nil {
-		s.Fatal("Failed to grant permissions to Meet: ", err)
-	}
-
-	gm, err := googlemeet.StartNewMeeting(ctx, cr, br, nil)
+	gm, err := googlemeet.StartNewMeeting(ctx, cr, br, nil, googlemeet.WithAllPermissions)
 	if err != nil {
 		s.Fatal("Failed to start meeting: ", err)
 	}
