@@ -14,17 +14,13 @@ import (
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
-	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bundles/cros/dlp/files"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
-	"chromiumos/tast/local/chrome/browser"
-	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/filesapp"
-	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/testing"
@@ -124,16 +120,16 @@ func DataLeakPreventionRulesListFilesArc(ctx context.Context, s *testing.State) 
 		s.Error("Failed to clear Downloads directory: ", err)
 	}
 
-	tconnAsh, err := cr.TestAPIConn(ctx)
+	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to test API: ", err)
 	}
 	// Ensure that there are no windows open.
-	if err := ash.CloseAllWindows(ctx, tconnAsh); err != nil {
+	if err := ash.CloseAllWindows(ctx, tconn); err != nil {
 		s.Fatal("Failed to close all windows: ", err)
 	}
 	// Ensure that all windows are closed after test.
-	defer ash.CloseAllWindows(cleanupCtx, tconnAsh)
+	defer ash.CloseAllWindows(cleanupCtx, tconn)
 
 	// Setup Arc.
 	a, err := arc.NewWithTimeout(ctx, s.OutDir(), bootTimeout)
@@ -142,36 +138,18 @@ func DataLeakPreventionRulesListFilesArc(ctx context.Context, s *testing.State) 
 	}
 	defer a.Close(cleanupCtx)
 
-	// Create Browser.
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
-	if err != nil {
-		s.Fatal("Failed to open the browser: ", err)
-	}
-	defer closeBrowser(cleanupCtx)
-
-	tconnBrowser, err := br.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to connect to browser's test API: ", err)
-	}
-
-	// The browsers sometimes restore some tabs, so we manually close all unneeded tabs.
-	if err := browser.CloseAllTabs(ctx, tconnBrowser); err != nil {
-		s.Fatal("Failed to close all unneeded tabs: ", err)
-	}
-	defer browser.CloseAllTabs(cleanupCtx, tconnBrowser)
-
 	// Close all prior notifications.
-	if err := ash.CloseNotifications(ctx, tconnAsh); err != nil {
+	if err := ash.CloseNotifications(ctx, tconn); err != nil {
 		s.Fatal("Failed to close notifications: ", err)
 	}
 
 	// Download the file.
-	if err := files.DownloadFile(ctx, tconnAsh, br, s.DataFileSystem()); err != nil {
+	if err := files.DownloadFile(ctx, tconn, cr.Browser(), s.DataFileSystem()); err != nil {
 		s.Fatal("Failed to download file: ", err)
 	}
 
 	// Open the Files app.
-	filesApp, err := filesapp.Launch(ctx, tconnAsh)
+	filesApp, err := filesapp.Launch(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to launch the Files App: ", err)
 	}
@@ -182,46 +160,52 @@ func DataLeakPreventionRulesListFilesArc(ctx context.Context, s *testing.State) 
 	}
 
 	// Start interacting with the UI.
-	ui := uiauto.New(tconnAsh)
+	ui := uiauto.New(tconn)
 
-	if err := files.IsFileManaged(ctx, ui, tconnAsh, keyboard, files.DlFileName, true); err != nil {
+	if err := files.IsFileManaged(ctx, ui, tconn, keyboard, files.DlFileName, true); err != nil {
 		s.Error("File isn't managed when it should be: ", err)
 	}
 
-	if err := pasteFileToPlayfiles(ctx, ui, tconnAsh, keyboard, files.DlFileName); err != nil {
-		s.Fatal("Failed to paste the file to Play files: ", err)
+	if err := copyToPlayfilesAndVerifyWarning(ctx, ui, filesApp, keyboard, files.DlFileName); err != nil {
+		s.Fatal("Failed to copy the file and verify that warning appears: ", err)
 	}
 
-	if err := files.CancelWarningAndVerify(ctx, ui, tconnAsh, keyboard, files.DlFileName); err != nil {
+	if err := files.CancelWarningAndVerify(ctx, ui, tconn, keyboard, files.DlFileName); err != nil {
 		s.Fatal("Failed to cancel the paste: ", err)
 	}
 
-	if err := pasteFileToPlayfiles(ctx, ui, tconnAsh, keyboard, files.DlFileName); err != nil {
-		s.Fatal("Failed to paste the file to Play files: ", err)
+	if err := copyToPlayfilesAndVerifyWarning(ctx, ui, filesApp, keyboard, files.DlFileName); err != nil {
+		s.Fatal("Failed to copy the file and verify that warning appears: ", err)
 	}
 
-	if err := files.AcceptWarningAndVerify(ctx, ui, tconnAsh, keyboard, files.DlFileName); err != nil {
+	if err := files.AcceptWarningAndVerify(ctx, ui, tconn, keyboard, files.DlFileName); err != nil {
 		s.Fatal("Failed to proceed the paste: ", err)
 	}
 
-	if err := files.IsFileManaged(ctx, ui, tconnAsh, keyboard, files.DlFileName, false); err != nil {
+	if err := files.IsFileManaged(ctx, ui, tconn, keyboard, files.DlFileName, false); err != nil {
 		s.Error("File is managed when it shouldn't be: ", err)
+	}
+
+	if err := filesApp.DeleteFileOrFolder(keyboard, files.DlFileName)(ctx); err != nil {
+		s.Error("Failed to delete file: ", err)
 	}
 }
 
-// pasteFileToPlayfiles pastes a file to Play files/Pictures and checks that a DLP warning dialog appears.
-func pasteFileToPlayfiles(ctx context.Context, ui *uiauto.Context, tconn *chrome.TestConn, kb *input.KeyboardEventWriter, filename string) error {
-	filesApp, err := filesapp.App(ctx, tconn, apps.FilesSWA.ID)
-	if err != nil {
-		return errors.Wrap(err, "failed to connect to existing Files app")
+// copyToPlayfilesAndVerifyWarning tries to copy a file to Play files/Pictures and waits for a DLP warning dialog to appear.
+func copyToPlayfilesAndVerifyWarning(ctx context.Context, ui *uiauto.Context, f *filesapp.FilesApp, kb *input.KeyboardEventWriter, filename string) error {
+	if err := uiauto.Combine("copy the file to Play files/Pictures",
+		f.OpenDownloads(),
+		f.CopyFileToClipboard(filename),
+		f.OpenPlayfiles(),
+		f.OpenFile("Pictures"),
+		f.ClickDirectoryContextMenuItem("Pictures", "Paste into folder"),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to copy the file to Play files/Pictures")
 	}
 
-	return uiauto.Combine("Paste the file to Play files/Pictures",
-		filesApp.OpenDownloads(),
-		filesApp.CopyFileToClipboard(filename),
-		filesApp.OpenPlayfiles(),
-		filesApp.OpenFile("Pictures"),
-		filesApp.ClickDirectoryContextMenuItem("Pictures", "Paste into folder"),
-		ui.WaitUntilExists(nodewith.Name("Copy confidential file?")),
-	)(ctx)
+	if err := files.VerifyWarning(ctx, ui, true); err != nil {
+		return errors.Wrap(err, "failed to verify warning")
+	}
+
+	return nil
 }

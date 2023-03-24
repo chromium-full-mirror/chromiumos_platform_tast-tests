@@ -173,19 +173,13 @@ func copyToDriveAndVerifyWarning(ctx context.Context, ui *uiauto.Context, f *fil
 		f.OpenDrive(),
 		f.PasteFileFromClipboard(kb),
 	)(ctx); err != nil {
-		return errors.Wrap(err, "failed to copy file to Google Drive")
+		return errors.Wrap(err, "failed to copy the file to Google Drive")
 	}
 
-	dialogNode := nodewith.Name("Copy confidential file?")
-	if waitForWarning {
-		if err := ui.WaitUntilExists(dialogNode)(ctx); err != nil {
-			return errors.Wrap(err, "failed to wait for DLP warning")
-		}
-	} else {
-		if err := ui.EnsureGoneFor(dialogNode, 10*time.Second)(ctx); err != nil {
-			return errors.Wrap(err, "failed to ensure DLP warning gone")
-		}
+	if err := files.VerifyWarning(ctx, ui, waitForWarning); err != nil {
+		return errors.Wrap(err, "failed to verify warning")
 	}
+
 	return nil
 }
 
