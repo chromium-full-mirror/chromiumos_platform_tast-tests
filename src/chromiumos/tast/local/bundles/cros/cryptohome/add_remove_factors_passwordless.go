@@ -12,6 +12,7 @@ import (
 	cryptohomecommon "chromiumos/tast/common/cryptohome"
 	"chromiumos/tast/common/hwsec"
 	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/errors"
 	"chromiumos/tast/local/cryptohome"
 	hwseclocal "chromiumos/tast/local/hwsec"
 	"chromiumos/tast/testing"
@@ -96,21 +97,30 @@ func AddRemoveFactorsPasswordless(ctx context.Context, s *testing.State) {
 	}
 	defer client.UnmountAll(ctxForCleanUp)
 
+	// Helper function that will call ListAuthFactors and check that:
+	//   - the configured factors exactly match expectedConfigured
+	//   - the supported factors always contain password and PIN
+	checkListAuthFactors := func(expectedConfigured []*uda.AuthFactorWithStatus) error {
+		listFactorsReply, err := client.ListAuthFactors(ctx, userName)
+		if err != nil {
+			return errors.Wrap(err, "failed to list auth factors")
+		}
+		if err := cryptohomecommon.ExpectAuthFactorsWithTypeAndLabel(
+			listFactorsReply.ConfiguredAuthFactorsWithStatus, expectedConfigured); err != nil {
+			return errors.Wrap(err, "mismatch in configured auth factors (-got, +want)")
+		}
+		if err := cryptohomecommon.ExpectContainsAuthFactorTypes(
+			listFactorsReply.SupportedAuthFactors,
+			[]uda.AuthFactorType{uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD, uda.AuthFactorType_AUTH_FACTOR_TYPE_PIN},
+		); err != nil {
+			return errors.Wrap(err, "mismatch in supported auth factors")
+		}
+		return nil
+	}
+
 	// List the auth factors before we've added any factors.
-	listFactorsAtStartReply, err := client.ListAuthFactors(ctx, userName)
-	if err != nil {
-		s.Fatal("Failed to list auth factors before adding any factors: ", err)
-	}
-	if err := cryptohomecommon.ExpectAuthFactorsWithTypeAndLabel(
-		listFactorsAtStartReply.ConfiguredAuthFactorsWithStatus,
-		nil); err != nil {
-		s.Fatal("Mismatch in configured auth factors before adding factors (-got, +want): ", err)
-	}
-	if err := cryptohomecommon.ExpectContainsAuthFactorTypes(
-		listFactorsAtStartReply.SupportedAuthFactors,
-		[]uda.AuthFactorType{uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD, uda.AuthFactorType_AUTH_FACTOR_TYPE_PIN},
-	); err != nil {
-		s.Fatal("Mismatch in supported auth factors before adding factors: ", err)
+	if err := checkListAuthFactors(nil); err != nil {
+		s.Fatal("Failed list auth factor checks before adding any factors: ", err)
 	}
 
 	if userParam.usePassword {
@@ -118,112 +128,56 @@ func AddRemoveFactorsPasswordless(ctx context.Context, s *testing.State) {
 		if err := client.AddAuthFactor(ctx, authSessionID, passwordLabel, userPassword); err != nil {
 			s.Fatal("Failed to add password auth factor: ", err)
 		}
-
-		// List the auth factors for the user now that we've added a password factor.
-		listFactorsAfterAddPasswordReply, err := client.ListAuthFactors(ctx, userName)
-		if err != nil {
-			s.Fatal("Failed to list auth factors after adding password: ", err)
-		}
-		if err := cryptohomecommon.ExpectAuthFactorsWithTypeAndLabel(
-			listFactorsAfterAddPasswordReply.ConfiguredAuthFactorsWithStatus,
-			[]*uda.AuthFactorWithStatus{
-				{AuthFactor: &uda.AuthFactor{
-					Type:  uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD,
-					Label: passwordLabel,
-				}},
-			}); err != nil {
-			s.Fatal("Mismatch in configured auth factors after adding password (-got, +want): ", err)
-		}
-		if err := cryptohomecommon.ExpectContainsAuthFactorTypes(
-			listFactorsAfterAddPasswordReply.SupportedAuthFactors,
-			[]uda.AuthFactorType{uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD, uda.AuthFactorType_AUTH_FACTOR_TYPE_PIN},
-		); err != nil {
-			s.Fatal("Mismatch in supported auth factors after adding password: ", err)
+		if err := checkListAuthFactors([]*uda.AuthFactorWithStatus{
+			{AuthFactor: &uda.AuthFactor{
+				Type:  uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD,
+				Label: passwordLabel,
+			}},
+		}); err != nil {
+			s.Fatal("Failed list auth factor checks after adding password: ", err)
 		}
 
 		// Add a PIN auth factor to the user.
 		if err := client.AddPinAuthFactor(ctx, authSessionID, pinLabel, userPin); err != nil {
 			s.Fatal("Failed to add PIN auth factor: ", err)
 		}
-
-		// List the auth factors for the user now that we've added a PIN factor.
-		listFactorsAfterAddPinReply, err := client.ListAuthFactors(ctx, userName)
-		if err != nil {
-			s.Fatal("Failed to list auth factors after adding PIN: ", err)
-		}
-		if err := cryptohomecommon.ExpectAuthFactorsWithTypeAndLabel(
-			listFactorsAfterAddPinReply.ConfiguredAuthFactorsWithStatus,
-			[]*uda.AuthFactorWithStatus{
-				{AuthFactor: &uda.AuthFactor{
-					Type:  uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD,
-					Label: passwordLabel,
-				}},
-				{AuthFactor: &uda.AuthFactor{
-					Type:  uda.AuthFactorType_AUTH_FACTOR_TYPE_PIN,
-					Label: pinLabel,
-				}},
-			}); err != nil {
-			s.Fatal("Mismatch in configured auth factors after adding PIN (-got, +want): ", err)
-		}
-		if err := cryptohomecommon.ExpectContainsAuthFactorTypes(
-			listFactorsAfterAddPinReply.SupportedAuthFactors,
-			[]uda.AuthFactorType{uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD, uda.AuthFactorType_AUTH_FACTOR_TYPE_PIN},
-		); err != nil {
-			s.Fatal("Mismatch in supported auth factors after adding PIN: ", err)
+		if err := checkListAuthFactors([]*uda.AuthFactorWithStatus{
+			{AuthFactor: &uda.AuthFactor{
+				Type:  uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD,
+				Label: passwordLabel,
+			}},
+			{AuthFactor: &uda.AuthFactor{
+				Type:  uda.AuthFactorType_AUTH_FACTOR_TYPE_PIN,
+				Label: pinLabel,
+			}},
+		}); err != nil {
+			s.Fatal("Failed list auth factor checks after adding PIN: ", err)
 		}
 
 		// Remove the password auth factor, leaving only PIN.
 		if err := client.RemoveAuthFactor(ctx, authSessionID, passwordLabel); err != nil {
 			s.Fatal("Failed to remove password factor: ", err)
 		}
-
-		// List the auth factors for the user now that we've added a PIN factor.
-		listFactorsAfterRemovePasswordReply, err := client.ListAuthFactors(ctx, userName)
-		if err != nil {
-			s.Fatal("Failed to list auth factors after removing password: ", err)
-		}
-		if err := cryptohomecommon.ExpectAuthFactorsWithTypeAndLabel(
-			listFactorsAfterRemovePasswordReply.ConfiguredAuthFactorsWithStatus,
-			[]*uda.AuthFactorWithStatus{{
-				AuthFactor: &uda.AuthFactor{
-					Type:  uda.AuthFactorType_AUTH_FACTOR_TYPE_PIN,
-					Label: pinLabel,
-				},
-			}}); err != nil {
-			s.Fatal("Mismatch in configured auth factors after removing password (-got, +want): ", err)
-		}
-		if err := cryptohomecommon.ExpectContainsAuthFactorTypes(
-			listFactorsAfterRemovePasswordReply.SupportedAuthFactors,
-			[]uda.AuthFactorType{uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD, uda.AuthFactorType_AUTH_FACTOR_TYPE_PIN},
-		); err != nil {
-			s.Fatal("Mismatch in supported auth factors after removing password: ", err)
+		if err := checkListAuthFactors([]*uda.AuthFactorWithStatus{
+			{AuthFactor: &uda.AuthFactor{
+				Type:  uda.AuthFactorType_AUTH_FACTOR_TYPE_PIN,
+				Label: pinLabel,
+			}},
+		}); err != nil {
+			s.Fatal("Failed list auth factor checks after removing password: ", err)
 		}
 	} else {
 		// Add a PIN auth factor to the user.
 		if err := client.AddPinAuthFactor(ctx, authSessionID, pinLabel, userPin); err != nil {
 			s.Fatal("Failed to add PIN auth factor: ", err)
 		}
-
-		// List the auth factors for the user now that we've added a PIN factor.
-		listFactorsAfterAddPinReply, err := client.ListAuthFactors(ctx, userName)
-		if err != nil {
-			s.Fatal("Failed to list auth factors after adding PIN: ", err)
-		}
-		if err := cryptohomecommon.ExpectAuthFactorsWithTypeAndLabel(
-			listFactorsAfterAddPinReply.ConfiguredAuthFactorsWithStatus,
-			[]*uda.AuthFactorWithStatus{
-				{AuthFactor: &uda.AuthFactor{
-					Type:  uda.AuthFactorType_AUTH_FACTOR_TYPE_PIN,
-					Label: pinLabel,
-				}},
-			}); err != nil {
-			s.Fatal("Mismatch in configured auth factors after adding PIN (-got, +want): ", err)
-		}
-		if err := cryptohomecommon.ExpectContainsAuthFactorTypes(
-			listFactorsAfterAddPinReply.SupportedAuthFactors,
-			[]uda.AuthFactorType{uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD, uda.AuthFactorType_AUTH_FACTOR_TYPE_PIN},
-		); err != nil {
-			s.Fatal("Mismatch in supported auth factors after adding PIN: ", err)
+		if err := checkListAuthFactors([]*uda.AuthFactorWithStatus{
+			{AuthFactor: &uda.AuthFactor{
+				Type:  uda.AuthFactorType_AUTH_FACTOR_TYPE_PIN,
+				Label: pinLabel,
+			}},
+		}); err != nil {
+			s.Fatal("Failed list auth factor checks after adding PIN: ", err)
 		}
 	}
 
