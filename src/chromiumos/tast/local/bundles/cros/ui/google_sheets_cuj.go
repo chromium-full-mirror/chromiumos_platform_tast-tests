@@ -64,7 +64,14 @@ func init() {
 				ExtraAttr: []string{"cuj_experimental"},
 				Val:       browser.TypeAsh,
 				Fixture:   "loggedInToCUJUserWithBackupRefPtr",
-			}},
+			},
+			{
+				Name:      "field_trials",
+				ExtraAttr: []string{"cuj_experimental"},
+				Val:       browser.TypeAsh,
+				Fixture:   "loggedInToCUJUserWithFieldTrials",
+			},
+		},
 	})
 }
 

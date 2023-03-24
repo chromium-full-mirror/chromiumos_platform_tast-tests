@@ -445,6 +445,51 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		Vars:            []string{"ui.cujAccountPool"},
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithFieldTrials",
+		Desc: "CUJ fixture with all field trials enabled",
+		Contacts: []string{
+			"ramsaroop@google.com",
+			"chromeos-perfmetrics-eng@google.com",
+		},
+		Data: docsBlockerFiles,
+		Impl: &loggedInToCUJUserFixture{
+			chromeExtraOpts: []chrome.Option{
+				chrome.ExtraArgs("enable-field-trial-config"),
+			},
+			bt: browser.TypeAsh,
+		},
+		Parent:          "cpuIdleForCUJ",
+		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithFieldTrialsAndWebRTCEventLogging",
+		Desc: "Variant of loggedInToCUJUserWithFieldTrials with WebRTCEventLogging enabled",
+		Contacts: []string{
+			"ramsaroop@google.com",
+			"chromeos-perfmetrics-eng@google.com",
+		},
+		Data: docsBlockerFiles,
+		Impl: &loggedInToCUJUserFixture{
+			chromeExtraOpts: []chrome.Option{
+				chrome.ExtraArgs("enable-field-trial-config"),
+				chrome.ExtraArgs(webRTCEventLogCommandFlag),
+			},
+			bt: browser.TypeAsh,
+		},
+		Parent:          "cpuIdleForCUJ",
+		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
 }
 
 func prepareDocsBlockerExtension(s *testing.FixtState) (string, error) {

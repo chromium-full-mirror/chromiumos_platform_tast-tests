@@ -83,6 +83,14 @@ func init() {
 				},
 				Fixture: "loggedInToCUJUserWithBackupRefPtr",
 			},
+			{
+				Name:      "field_trials",
+				ExtraAttr: []string{"cuj_experimental"},
+				Val: taskswitchcuj.TaskSwitchTest{
+					BrowserType: browser.TypeAsh,
+				},
+				Fixture: "loggedInToCUJUserWithFieldTrials",
+			},
 		},
 	})
 }

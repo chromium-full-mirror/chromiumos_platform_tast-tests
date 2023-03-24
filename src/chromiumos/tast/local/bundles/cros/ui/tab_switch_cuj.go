@@ -59,7 +59,16 @@ func init() {
 					BrowserType: browser.TypeAsh,
 				},
 				Fixture: "tabSwitchCUJWPRAshWithBackupRefPtr",
-			}},
+			},
+			{
+				Name:      "field_trials",
+				ExtraAttr: []string{"cuj_experimental"},
+				Val: tabswitchcuj.TabSwitchParam{
+					BrowserType: browser.TypeAsh,
+				},
+				Fixture: "tabSwitchCUJWPRAshWithFieldTrials",
+			},
+		},
 	})
 }
 

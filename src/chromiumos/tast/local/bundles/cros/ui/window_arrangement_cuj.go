@@ -92,6 +92,14 @@ func init() {
 				},
 				Fixture: "loggedInToCUJUserWithBackupRefPtr",
 			},
+			{
+				Name:      "clamshell_mode_field_trials",
+				ExtraAttr: []string{"cuj_experimental"},
+				Val: windowarrangementcuj.TestParam{
+					BrowserType: browser.TypeAsh,
+				},
+				Fixture: "loggedInToCUJUserWithFieldTrials",
+			},
 		},
 	})
 }

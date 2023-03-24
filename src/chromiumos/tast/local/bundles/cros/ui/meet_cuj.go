@@ -341,6 +341,21 @@ func init() {
 				Fixture: "loggedInToCUJUserWithMainThreadCompositingPriority",
 				// Same target models as in the 49p variant.
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("gimble", "magpie", "lazor", "tomato", "volet")),
+			}, {
+				Name:      "16p_present_notes_split_field_trials",
+				Timeout:   defaultTestTimeout,
+				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
+				Val: meetTest{
+					num:         15,
+					layout:      meetLayoutTiled,
+					present:     true,
+					docs:        true,
+					split:       true,
+					cam:         true,
+					zoomOut:     true,
+					browserType: browser.TypeAsh,
+				},
+				Fixture: "loggedInToCUJUserWithFieldTrialsAndWebRTCEventLogging",
 			},
 
 			// Inactive variants. No group should be specified for these tests.
