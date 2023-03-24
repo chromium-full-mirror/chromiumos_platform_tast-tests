@@ -32,10 +32,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Behavior of AllowWakeLocks policy check whether it shows idle window or not for pages with wake locks requests",
 		Contacts: []string{
-			"cros-engprod-muc@google.com",
+			"cros-demo-mode-eng@google.com",
 			"mohamedaomar@google.com", // Test author
 		},
-		BugComponent: "b:1263917",
+		BugComponent: "b:812312", // Chrome OS Server Projects > Enterprise Management > Demo Mode
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier"},
 		Params: []testing.Param{{
