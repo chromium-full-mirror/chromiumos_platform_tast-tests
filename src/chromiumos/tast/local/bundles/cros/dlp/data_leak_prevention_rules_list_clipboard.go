@@ -223,6 +223,8 @@ func DataLeakPreventionRulesListClipboard(ctx context.Context, s *testing.State)
 		}
 	}(cleanupCtx)
 
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_"+params.name)
+
 	sourceURL := sourceServer.URL + path
 	sourceConn, err := br.NewConn(ctx, sourceURL)
 	if err != nil {
@@ -251,8 +253,6 @@ func DataLeakPreventionRulesListClipboard(ctx context.Context, s *testing.State)
 		s.Fatalf("Failed to open page %q: %v", destURL, err)
 	}
 	defer destConn.Close()
-
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_"+params.name)
 
 	if err := webutil.WaitForQuiescence(ctx, destConn, 10*time.Second); err != nil {
 		s.Fatalf("Failed to wait for %q to achieve quiescence: %v", destURL, err)

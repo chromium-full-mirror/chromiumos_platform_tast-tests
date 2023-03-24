@@ -14,11 +14,13 @@ import (
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/dlp/restrictionlevel"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
+	"chromiumos/tast/local/chrome/lacros"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/input"
@@ -50,54 +52,6 @@ const (
 	unrestrictedPath = "/text_1.html"
 	restrictedPath   = "/text_2.html"
 )
-
-// screenshotBlockPolicy returns a DLP policy that blocks screen sharing.
-func screenshotBlockPolicy(serverURL string) []policy.Policy {
-	return []policy.Policy{&policy.DataLeakPreventionRulesList{
-		Val: []*policy.DataLeakPreventionRulesListValue{
-			{
-				Name:        "Disable taking screenshots of confidential content",
-				Description: "User should not be able to take screenshots of confidential content",
-				Sources: &policy.DataLeakPreventionRulesListValueSources{
-					Urls: []string{
-						serverURL + restrictedPath,
-					},
-				},
-				Restrictions: []*policy.DataLeakPreventionRulesListValueRestrictions{
-					{
-						Class: "SCREENSHOT",
-						Level: "BLOCK",
-					},
-				},
-			},
-		},
-	},
-	}
-}
-
-// screenshotWarnPolicy returns a DLP policy that warns before taking a screenshot.
-func screenshotWarnPolicy(serverURL string) []policy.Policy {
-	return []policy.Policy{&policy.DataLeakPreventionRulesList{
-		Val: []*policy.DataLeakPreventionRulesListValue{
-			{
-				Name:        "Warn before taking a screenshot confidential content",
-				Description: "User should be warned before taking a screenshot of confidential content",
-				Sources: &policy.DataLeakPreventionRulesListValueSources{
-					Urls: []string{
-						serverURL + restrictedPath,
-					},
-				},
-				Restrictions: []*policy.DataLeakPreventionRulesListValueRestrictions{
-					{
-						Class: "SCREENSHOT",
-						Level: "WARN",
-					},
-				},
-			},
-		},
-	},
-	}
-}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -227,6 +181,54 @@ func init() {
 	})
 }
 
+// screenshotBlockPolicy returns a DLP policy that blocks screen sharing.
+func screenshotBlockPolicy(serverURL string) []policy.Policy {
+	return []policy.Policy{&policy.DataLeakPreventionRulesList{
+		Val: []*policy.DataLeakPreventionRulesListValue{
+			{
+				Name:        "Disable taking screenshots of confidential content",
+				Description: "User should not be able to take screenshots of confidential content",
+				Sources: &policy.DataLeakPreventionRulesListValueSources{
+					Urls: []string{
+						serverURL + restrictedPath,
+					},
+				},
+				Restrictions: []*policy.DataLeakPreventionRulesListValueRestrictions{
+					{
+						Class: "SCREENSHOT",
+						Level: "BLOCK",
+					},
+				},
+			},
+		},
+	},
+	}
+}
+
+// screenshotWarnPolicy returns a DLP policy that warns before taking a screenshot.
+func screenshotWarnPolicy(serverURL string) []policy.Policy {
+	return []policy.Policy{&policy.DataLeakPreventionRulesList{
+		Val: []*policy.DataLeakPreventionRulesListValue{
+			{
+				Name:        "Warn before taking a screenshot confidential content",
+				Description: "User should be warned before taking a screenshot of confidential content",
+				Sources: &policy.DataLeakPreventionRulesListValueSources{
+					Urls: []string{
+						serverURL + restrictedPath,
+					},
+				},
+				Restrictions: []*policy.DataLeakPreventionRulesListValueRestrictions{
+					{
+						Class: "SCREENSHOT",
+						Level: "WARN",
+					},
+				},
+			},
+		},
+	},
+	}
+}
+
 func DataLeakPreventionRulesListScreenshot(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	fakeDMS := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
@@ -281,7 +283,14 @@ func DataLeakPreventionRulesListScreenshot(ctx context.Context, s *testing.State
 	if err != nil {
 		s.Fatal("Failed to open the browser: ", err)
 	}
-	defer closeBrowser(cleanupCtx)
+	defer func(ctx context.Context) {
+		if err := closeBrowser(ctx); errors.Is(err, lacros.ErrAlreadyStoppedBeforeClose) {
+			// The Lacros browser is not closed in other places in the test.
+			s.Error("The Lacros browser probably crashed: ", err)
+		}
+	}(cleanupCtx)
+
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_"+s.Param().(screenshotTestParams).name)
 
 	url := server.URL + s.Param().(screenshotTestParams).path
 	conn, err := br.NewConn(ctx, url)
@@ -289,8 +298,6 @@ func DataLeakPreventionRulesListScreenshot(ctx context.Context, s *testing.State
 		s.Fatal("Failed to open page: ", err)
 	}
 	defer conn.Close()
-
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_"+s.Param().(screenshotTestParams).name)
 
 	testScreenshot(ctx, s, tconn, keyboard, downloadsPath, s.Param().(screenshotTestParams))
 }

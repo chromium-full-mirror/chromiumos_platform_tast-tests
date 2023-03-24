@@ -23,6 +23,7 @@ import (
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
+	"chromiumos/tast/local/chrome/lacros"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/filesapp"
 	"chromiumos/tast/local/input"
@@ -252,14 +253,19 @@ func DataLeakPreventionRulesListFilesUSB(ctx context.Context, s *testing.State) 
 	if err != nil {
 		s.Fatal("Failed to open the browser: ", err)
 	}
-	defer closeBrowser(cleanupCtx)
+	defer func(ctx context.Context) {
+		if err := closeBrowser(ctx); errors.Is(err, lacros.ErrAlreadyStoppedBeforeClose) {
+			// The Lacros browser is not closed in other places in the test.
+			s.Error("The Lacros browser probably crashed: ", err)
+		}
+	}(cleanupCtx)
+
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_error")
 
 	tconnBrowser, err := br.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to browser's test API: ", err)
 	}
-
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_error")
 
 	// The browsers sometimes restore some tabs, so we manually close all unneeded tabs.
 	closeTabsFunc := browser.CloseAllTabs

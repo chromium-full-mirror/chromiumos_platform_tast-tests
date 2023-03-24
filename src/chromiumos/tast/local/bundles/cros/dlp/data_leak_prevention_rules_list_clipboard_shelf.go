@@ -21,6 +21,7 @@ import (
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
+	"chromiumos/tast/local/chrome/lacros"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/launcher"
@@ -126,15 +127,20 @@ func DataLeakPreventionRulesListClipboardShelf(ctx context.Context, s *testing.S
 			if err != nil {
 				s.Fatal("Failed to open the browser: ", err)
 			}
-			defer closeBrowser(cleanupCtx)
+			defer func(ctx context.Context) {
+				if err := closeBrowser(ctx); errors.Is(err, lacros.ErrAlreadyStoppedBeforeClose) {
+					// The Lacros browser is not closed in other places in the test.
+					s.Error("The Lacros browser probably crashed: ", err)
+				}
+			}(cleanupCtx)
+
+			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.name)
 
 			conn, err := br.NewConn(ctx, param.sourceURL)
 			if err != nil {
 				s.Fatal("Failed to open page: ", err)
 			}
 			defer conn.Close()
-
-			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.name)
 
 			if err := webutil.WaitForQuiescence(ctx, conn, 10*time.Second); err != nil {
 				s.Fatalf("Failed to wait for %q to be loaded and achieve quiescence: %s", param.sourceURL, err)

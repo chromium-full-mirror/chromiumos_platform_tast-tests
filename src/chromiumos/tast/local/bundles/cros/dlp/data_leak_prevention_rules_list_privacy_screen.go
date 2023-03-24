@@ -21,6 +21,7 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
+	"chromiumos/tast/local/chrome/lacros"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
@@ -126,7 +127,14 @@ func DataLeakPreventionRulesListPrivacyScreen(ctx context.Context, s *testing.St
 			if err != nil {
 				s.Fatal("Failed to open the browser: ", err)
 			}
-			defer closeBrowser(cleanupCtx)
+			defer func(ctx context.Context) {
+				if err := closeBrowser(ctx); errors.Is(err, lacros.ErrAlreadyStoppedBeforeClose) {
+					// The Lacros browser is not closed in other places in the test.
+					s.Error("The Lacros browser probably crashed: ", err)
+				}
+			}(cleanupCtx)
+
+			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.name)
 
 			ui := uiauto.New(tconn)
 
@@ -135,8 +143,6 @@ func DataLeakPreventionRulesListPrivacyScreen(ctx context.Context, s *testing.St
 				s.Fatal("Failed to open page: ", err)
 			}
 			defer conn.Close()
-
-			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.name)
 
 			if err := checkPrivacyScreenOnBubble(ctx, ui, param.wantAllowed); err != nil {
 				s.Error("Couldn't check for notification: ", err)

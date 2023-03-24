@@ -24,6 +24,7 @@ import (
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
+	"chromiumos/tast/local/chrome/lacros"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/printpreview"
@@ -51,54 +52,6 @@ const (
 	waitTimeSecWarningAsh         = 4
 	waitTimeSecWarningLacros      = 5
 )
-
-// printingBlockPolicy returns policy that blocks printing based on given URL.
-func printingBlockPolicy(url string) []policy.Policy {
-	return []policy.Policy{&policy.DataLeakPreventionRulesList{
-		Val: []*policy.DataLeakPreventionRulesListValue{
-			{
-				Name:        "Disable printing of confidential content",
-				Description: "User should not be able to print confidential content",
-				Sources: &policy.DataLeakPreventionRulesListValueSources{
-					Urls: []string{
-						url,
-					},
-				},
-				Restrictions: []*policy.DataLeakPreventionRulesListValueRestrictions{
-					{
-						Class: "PRINTING",
-						Level: "BLOCK",
-					},
-				},
-			},
-		},
-	},
-	}
-}
-
-// printingWarnPolicy returns policy that warns in case of printing based on given URL.
-func printingWarnPolicy(url string) []policy.Policy {
-	return []policy.Policy{&policy.DataLeakPreventionRulesList{
-		Val: []*policy.DataLeakPreventionRulesListValue{
-			{
-				Name:        "Warn before printing confidential content",
-				Description: "User should be warned before printing confidential content",
-				Sources: &policy.DataLeakPreventionRulesListValueSources{
-					Urls: []string{
-						url,
-					},
-				},
-				Restrictions: []*policy.DataLeakPreventionRulesListValueRestrictions{
-					{
-						Class: "PRINTING",
-						Level: "WARN",
-					},
-				},
-			},
-		},
-	},
-	}
-}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -232,6 +185,54 @@ func init() {
 	})
 }
 
+// printingBlockPolicy returns policy that blocks printing based on given URL.
+func printingBlockPolicy(url string) []policy.Policy {
+	return []policy.Policy{&policy.DataLeakPreventionRulesList{
+		Val: []*policy.DataLeakPreventionRulesListValue{
+			{
+				Name:        "Disable printing of confidential content",
+				Description: "User should not be able to print confidential content",
+				Sources: &policy.DataLeakPreventionRulesListValueSources{
+					Urls: []string{
+						url,
+					},
+				},
+				Restrictions: []*policy.DataLeakPreventionRulesListValueRestrictions{
+					{
+						Class: "PRINTING",
+						Level: "BLOCK",
+					},
+				},
+			},
+		},
+	},
+	}
+}
+
+// printingWarnPolicy returns policy that warns in case of printing based on given URL.
+func printingWarnPolicy(url string) []policy.Policy {
+	return []policy.Policy{&policy.DataLeakPreventionRulesList{
+		Val: []*policy.DataLeakPreventionRulesListValue{
+			{
+				Name:        "Warn before printing confidential content",
+				Description: "User should be warned before printing confidential content",
+				Sources: &policy.DataLeakPreventionRulesListValueSources{
+					Urls: []string{
+						url,
+					},
+				},
+				Restrictions: []*policy.DataLeakPreventionRulesListValueRestrictions{
+					{
+						Class: "PRINTING",
+						Level: "WARN",
+					},
+				},
+			},
+		},
+	},
+	}
+}
+
 func DataLeakPreventionRulesListPrinting(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	fakeDMS := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
@@ -282,15 +283,20 @@ func DataLeakPreventionRulesListPrinting(ctx context.Context, s *testing.State) 
 	if err != nil {
 		s.Fatal("Failed to open the browser: ", err)
 	}
-	defer closeBrowser(cleanupCtx)
+	defer func(ctx context.Context) {
+		if err := closeBrowser(ctx); errors.Is(err, lacros.ErrAlreadyStoppedBeforeClose) {
+			// The Lacros browser is not closed in other places in the test.
+			s.Error("The Lacros browser probably crashed: ", err)
+		}
+	}(cleanupCtx)
+
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_"+s.Param().(printingTestParams).name)
 
 	conn, err := br.NewConn(ctx, testURL.String())
 	if err != nil {
 		s.Fatal("Failed to open page: ", err)
 	}
 	defer conn.Close()
-
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_"+s.Param().(printingTestParams).name)
 
 	// Type the shortcut.
 	if err := keyboard.Accel(ctx, "Ctrl+P"); err != nil {

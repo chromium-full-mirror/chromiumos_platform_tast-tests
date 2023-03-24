@@ -14,12 +14,15 @@ import (
 	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
+	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/dlp/restrictionlevel"
 	"chromiumos/tast/local/bundles/cros/dlp/screenshare"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
+	"chromiumos/tast/local/chrome/lacros"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/webutil"
@@ -103,6 +106,10 @@ func DataLeakPreventionRulesListScreenshareTab(ctx context.Context, s *testing.S
 	fakeDMS := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 	params := s.Param().(screenshare.TestParams)
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()
 
@@ -138,7 +145,14 @@ func DataLeakPreventionRulesListScreenshareTab(ctx context.Context, s *testing.S
 	if err != nil {
 		s.Fatal("Failed to open the browser: ", err)
 	}
-	defer closeBrowser(ctx)
+	defer func(ctx context.Context) {
+		if err := closeBrowser(ctx); errors.Is(err, lacros.ErrAlreadyStoppedBeforeClose) {
+			// The Lacros browser is not closed in other places in the test.
+			s.Error("The Lacros browser probably crashed: ", err)
+		}
+	}(cleanupCtx)
+
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_"+params.Name)
 
 	var conn *browser.Conn
 	if conn, err = br.NewConn(ctx, unrestrictedURL); err != nil {
@@ -148,8 +162,6 @@ func DataLeakPreventionRulesListScreenshareTab(ctx context.Context, s *testing.S
 	if err := webutil.WaitForQuiescence(ctx, conn, 10*time.Second); err != nil {
 		s.Fatalf("Failed to wait for %q to achieve quiescence: %v", unrestrictedURL, err)
 	}
-
-	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_"+params.Name)
 
 	var screenRecorder *uiauto.ScreenRecorder
 	screenRecorder, err = uiauto.NewTabRecorder(ctx, tconn /*tabIndex=*/, 0)

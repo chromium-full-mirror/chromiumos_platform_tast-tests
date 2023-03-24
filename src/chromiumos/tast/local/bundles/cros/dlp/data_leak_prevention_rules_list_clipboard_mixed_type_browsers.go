@@ -13,6 +13,7 @@ import (
 
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/dlp/clipboard"
 	"chromiumos/tast/local/bundles/cros/dlp/dragdrop"
 	"chromiumos/tast/local/bundles/cros/dlp/policy"
@@ -20,6 +21,7 @@ import (
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
+	"chromiumos/tast/local/chrome/lacros"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/filesapp"
@@ -210,7 +212,14 @@ func DataLeakPreventionRulesListClipboardMixedTypeBrowsers(ctx context.Context, 
 			if err != nil {
 				s.Fatal("Failed to open the browser: ", err)
 			}
-			defer closeBrowser(cleanupCtx)
+			defer func(ctx context.Context) {
+				if err := closeBrowser(ctx); errors.Is(err, lacros.ErrAlreadyStoppedBeforeClose) {
+					// The Lacros browser is not closed in other places in the test.
+					s.Error("The Lacros browser probably crashed: ", err)
+				}
+			}(cleanupCtx)
+
+			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_after_browser_open_"+param.name)
 
 			if param.src == dragdrop.Chrome {
 				srcWin, err = ash.GetActiveWindow(ctx, tconn)
