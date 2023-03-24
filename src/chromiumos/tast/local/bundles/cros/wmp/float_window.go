@@ -10,13 +10,14 @@ import (
 
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/apps"
+	"chromiumos/tast/local/arc"
+	"chromiumos/tast/local/arc/optin"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
-	"chromiumos/tast/local/chrome/uiauto/filesapp"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/testing"
 )
@@ -34,14 +35,16 @@ func init() {
 		// ChromeOS > Software > Window Management > FloatingWindow
 		BugComponent: "b:1252568",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "arc"},
 		Params: []testing.Param{{
 			Val: browser.TypeAsh,
 		}, {
 			Name:              "lacros",
-			Val:               browser.TypeLacros,
 			ExtraSoftwareDeps: []string{"lacros"},
+			Val:               browser.TypeLacros,
 		}},
+		Timeout: chrome.GAIALoginTimeout + arc.BootTimeout + 2*time.Minute,
+		VarDeps: []string{"ui.gaiaPoolDefault"},
 	})
 }
 
@@ -51,9 +54,13 @@ func FloatWindow(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
+	opts := []chrome.Option{chrome.EnableFeatures("WindowLayoutMenu"),
+		chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+		chrome.ARCSupported(),
+		chrome.ExtraArgs(arc.DisableSyncFlags()...)}
+
 	bt := s.Param().(browser.Type)
-	cr, _, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, bt, lacrosfixt.NewConfig(),
-		chrome.EnableFeatures("FloatWindow"))
+	cr, _, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, bt, lacrosfixt.NewConfig(), opts...)
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
@@ -76,23 +83,24 @@ func FloatWindow(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to close any existing windows: ", err)
 	}
 
-	filesApp, err := filesapp.Launch(ctx, tconn)
+	browserApp, err := apps.PrimaryBrowser(ctx, tconn)
 	if err != nil {
-		s.Fatal("Failed to launch the files app: ", err)
-	}
-	defer filesApp.Close(cleanupCtx)
-
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_dump")
-
-	window, err := ash.WaitForAnyWindow(ctx, tconn, func(w *ash.Window) bool { return w.AppID == apps.FilesSWA.ID && w.IsVisible && !w.IsAnimating })
-	if err != nil {
-		s.Fatal("Failed to wait for files app to be visible and stop animating: ", err)
+		s.Fatal("Failed to find browser app info: ", err)
 	}
 
-	// Set the app to normal state so we can check unfloating goes
-	// back to normal state.
-	if err := ash.SetWindowStateAndWait(ctx, tconn, window.ID, ash.WindowStateNormal); err != nil {
-		s.Fatal("Failed to set files app window state to \"Normal\": ", err)
+	// Set up ARC.
+	if err := optin.PerformAndClose(ctx, cr, tconn); err != nil {
+		s.Fatal("Failed to optin to Play Store and Close: ", err)
+	}
+
+	a, err := arc.New(ctx, s.OutDir())
+	if err != nil {
+		s.Fatal("Failed to start ARC: ", err)
+	}
+	defer a.Close(cleanupCtx)
+
+	if err := a.WaitIntentHelper(ctx); err != nil {
+		s.Fatal("Failed to wait for ARC Intent Helper: ", err)
 	}
 
 	kb, err := input.Keyboard(ctx)
@@ -101,23 +109,52 @@ func FloatWindow(ctx context.Context, s *testing.State) {
 	}
 	defer kb.Close()
 
-	if err := kb.Accel(ctx, "Search+Alt+F"); err != nil {
-		s.Fatal("Failed to input float accelerator: ", err)
-	}
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 
-	if err := ash.WaitForCondition(ctx, tconn, func(w *ash.Window) bool {
-		return w.ID == window.ID && w.State == ash.WindowStateFloated && !w.IsAnimating
-	}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
-		s.Fatalf("Unexpected files app window state: got %s, want %s", window.State, ash.WindowStateFloated)
-	}
+	appsList := []apps.App{browserApp, apps.FilesSWA, apps.PlayStore}
+	for _, app := range appsList {
+		if err := apps.Launch(ctx, tconn, app.ID); err != nil {
+			s.Fatalf("Failed to launch %s: %v", app.Name, err)
+		}
+		if err := ash.WaitForApp(ctx, tconn, app.ID, time.Minute); err != nil {
+			s.Fatalf("Failed to wait for app %s to appear in shelf after launch: %v", app.Name, err)
+		}
 
-	if err := kb.Accel(ctx, "Search+Alt+F"); err != nil {
-		s.Fatal("Failed to input unfloat accelerator: ", err)
-	}
+		window, err := ash.WaitForAnyWindow(ctx, tconn, func(w *ash.Window) bool {
+			return w.AppID == app.ID && w.IsVisible && !w.IsAnimating
+		})
+		if err != nil {
+			s.Fatalf("Failed to wait for %s to be visible and stop animating: %v", app.Name, err)
+		}
 
-	if err := ash.WaitForCondition(ctx, tconn, func(w *ash.Window) bool {
-		return w.ID == window.ID && w.State == ash.WindowStateNormal && !w.IsAnimating
-	}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
-		s.Fatalf("Unexpected files app window state: got %s, want %s", window.State, ash.WindowStateNormal)
+		if err := window.ActivateWindow(ctx, tconn); err != nil {
+			s.Fatalf("Failed to activate the %s window: %v", app.Name, err)
+		}
+
+		// Set the app to normal state so we can check unfloating goes
+		// back to normal state.
+		if err := ash.SetWindowStateAndWait(ctx, tconn, window.ID, ash.WindowStateNormal); err != nil {
+			s.Fatalf("Failed to set the %s window state to \"Normal\": %v", app.Name, err)
+		}
+
+		if err := kb.Accel(ctx, "Search+Alt+F"); err != nil {
+			s.Fatal("Failed to input float accelerator: ", err)
+		}
+
+		if err := ash.WaitForCondition(ctx, tconn, func(w *ash.Window) bool {
+			return w.ID == window.ID && w.State == ash.WindowStateFloated && !w.IsAnimating
+		}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
+			s.Fatalf("Failed to get the correct app window state: got %s, want %s", window.State, ash.WindowStateFloated)
+		}
+
+		if err := kb.Accel(ctx, "Search+Alt+F"); err != nil {
+			s.Fatal("Failed to input unfloat accelerator: ", err)
+		}
+
+		if err := ash.WaitForCondition(ctx, tconn, func(w *ash.Window) bool {
+			return w.ID == window.ID && w.State == ash.WindowStateNormal && !w.IsAnimating
+		}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
+			s.Fatalf("Failed to get the correct app window state: got %s, want %s", window.State, ash.WindowStateNormal)
+		}
 	}
 }
