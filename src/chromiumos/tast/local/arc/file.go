@@ -9,12 +9,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strconv"
-	"strings"
 
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/cryptohome"
+	"chromiumos/tast/local/vm"
 	"chromiumos/tast/testing"
 )
 
@@ -118,21 +117,15 @@ func (a *ARC) RemoveAll(ctx context.Context, path string) error {
 
 // getARCVMCID returns the CID of ARCVM.
 func getARCVMCID(ctx context.Context, user string) (int, error) {
-	hash, err := cryptohome.UserHash(ctx, user)
+	// Create a stub "ARCVM" object to get its metadata from Concierge.
+	arcVM, err := vm.GetRunningArcVM(ctx, user)
 	if err != nil {
 		return 0, err
 	}
-	out, err := testexec.CommandContext(
-		ctx, "concierge_client", "--get_vm_cid", "--name=arcvm",
-		fmt.Sprintf("--cryptohome_id=%s", hash)).Output(testexec.DumpLogOnError)
-	if err != nil {
-		return 0, err
-	}
-	cid, err := strconv.Atoi(strings.TrimSpace(string(out)))
-	if err != nil {
-		return 0, err
-	}
-	return cid, nil
+
+	// Safe to convert as for all intents and purposes the CID would fit within the minimum size of
+	// an int.
+	return int(arcVM.ContextID), nil
 }
 
 // MountSDCardPartitionOnHostWithSSHFS mounts Android's SDCard partition /storage/emulated/0
