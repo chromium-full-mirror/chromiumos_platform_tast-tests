@@ -46,7 +46,11 @@ func GetModemFirmwarePath() string {
 
 // GetModemFirmwareManifestPath Get the path of the modem firmware manifest.
 func GetModemFirmwareManifestPath() string {
-	return filepath.Join(GetModemFirmwarePath(), "firmware_manifest.prototxt")
+	path := filepath.Join(GetModemFirmwarePath(), "firmware_manifest.textproto")
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		path = filepath.Join(GetModemFirmwarePath(), "firmware_manifest.prototxt")
+	}
+	return path
 }
 
 // ParseModemHelperManifest Parses the modem helper manifest and returns the HelperManifest proto object.
@@ -77,7 +81,11 @@ func GetModemHelperPath() string {
 
 // GetModemHelperManifestPath Get the path of the modem helper manifest.
 func GetModemHelperManifestPath() string {
-	return filepath.Join(GetModemHelperPath(), "helper_manifest.prototxt")
+	path := filepath.Join(GetModemHelperPath(), "helper_manifest.textproto")
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		path = filepath.Join(GetModemHelperPath(), "helper_manifest.prototxt")
+	}
+	return path
 }
 
 // GetDlcIDForVariant gets the dlc id of the variant, otherwise return error.
