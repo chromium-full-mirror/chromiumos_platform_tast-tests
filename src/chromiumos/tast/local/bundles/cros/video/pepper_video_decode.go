@@ -28,6 +28,8 @@ const (
 	verifyLegacyVDAPathWasUsed verifyHWAcceleratorMode = iota
 	// verifyMojoVDPathWasUsed is a mode that verifies that a hardware decoder backed by the the newer MojoVideoDecoder path was used.
 	verifyMojoVDPathWasUsed
+	// verifySWPathWasUsed is a mode that verifies that fallback to the software decoding path happens after trying to use the MojoVideoDecoder path.
+	verifySWPathWasUsed
 )
 
 type pepperVideoDecodeTestParam struct {
@@ -63,6 +65,12 @@ func init() {
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 			Fixture:           "chromeVideoNaClWithMojoVideoDecoder",
+		}, {
+			Name:              "h264_sw",
+			Val:               pepperVideoDecodeTestParam{browserType: browser.TypeAsh, verifyHWMode: verifySWPathWasUsed},
+			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+			ExtraSoftwareDeps: []string{"proprietary_codecs"},
+			Fixture:           "chromeVideoNaClWithSWDecoding",
 		}},
 	})
 }
@@ -112,20 +120,31 @@ func PepperVideoDecode(ctx context.Context, s *testing.State) {
 	}
 
 	var hwBehaviourSucessValue int64
-	if params.verifyHWMode == verifyMojoVDPathWasUsed {
+	switch params.verifyHWMode {
+	case verifyMojoVDPathWasUsed:
 		hwBehaviourSucessValue = int64(constants.MediaPepperVideoDecoderHardwareAccelerationBehaviorWithMojoVD)
-	} else {
+	case verifyLegacyVDAPathWasUsed:
 		hwBehaviourSucessValue = int64(constants.MediaPepperVideoDecoderHardwareAccelerationBehaviorWithoutMojoVD)
+	case verifySWPathWasUsed:
+		hwBehaviourSucessValue = int64(constants.MediaPepperVideoDecoderHardwareAccelerationBehaviorWithSWVD)
+	default:
+		s.Fatal("Unrecognized value for params.verifyHWMode: ", params.verifyHWMode)
 	}
 
 	// We pass a successCount equal to 2 because the Pepper plugin used in this test has two video decoders.
-	if hwUsed, err := histogram.WasHWAccelUsed(ctx, ctconn, initHistogram, hwBehaviourHistogramName, hwBehaviourSucessValue, 2); err != nil {
+	expectedModeUsed, err := histogram.WasHWAccelUsed(ctx, ctconn, initHistogram, hwBehaviourHistogramName, hwBehaviourSucessValue, 2)
+	if err != nil {
 		s.Fatal("Failed to verify histogram: ", err)
-	} else if !hwUsed {
-		if params.verifyHWMode == verifyMojoVDPathWasUsed {
+	}
+
+	if !expectedModeUsed {
+		switch params.verifyHWMode {
+		case verifyMojoVDPathWasUsed:
 			s.Fatal("Hardware decoder backed by MojoVideoDecoder was not used")
-		} else {
+		case verifyLegacyVDAPathWasUsed:
 			s.Fatal("Hardware decoder backed by legacy VDA was not used")
+		case verifySWPathWasUsed:
+			s.Fatal("Software decoder was not used")
 		}
 	}
 

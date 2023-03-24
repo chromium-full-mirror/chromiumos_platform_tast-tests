@@ -21,6 +21,8 @@ const (
 	MediaPepperVideoDecoderHardwareAccelerationBehaviorWithoutMojoVD = 1
 	// MediaPepperVideoDecoderHardwareAccelerationBehaviorWithMojoVD is the bucket value in Media.PepperVideoDecoder.HardwareAccelerationBehavior to be incremented when a hardware decoder is backed by the MojoVideoDecoder.
 	MediaPepperVideoDecoderHardwareAccelerationBehaviorWithMojoVD = 3
+	// MediaPepperVideoDecoderHardwareAccelerationBehaviorWithSWVD is the bucket value in Media.PepperVideoDecoder.HardwareAccelerationBehavior to be incremented when fallback to software decoding happens after trying to use a hardware decoder backed by the MojoVideoDecoder.
+	MediaPepperVideoDecoderHardwareAccelerationBehaviorWithSWVD = 4
 
 	// MediaRecorderVEAUsed is the name of histogram used to report VEA usage when running MediaRecorder.
 	MediaRecorderVEAUsed = "Media.MediaRecorder.VEAUsed"
