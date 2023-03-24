@@ -27,7 +27,7 @@ func init() {
 		},
 		// ChromeOS > Platform > Services > Fingerprint
 		BugComponent: "b:782045",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		// Note that hwdep for fingerprint relies on cros-config.
 		// We omit any dependencies on hwdep fingerprint so that we can detect
 		// issues where cros-config fails to mention fingerprint support.
