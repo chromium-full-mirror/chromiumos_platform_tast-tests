@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"strconv"
 	"strings"
 	"time"
 
@@ -17,6 +18,7 @@ import (
 	"chromiumos/tast/remote/network/ip"
 	"chromiumos/tast/remote/network/iperf"
 	"chromiumos/tast/ssh"
+	"chromiumos/tast/testing"
 )
 
 // TestType is the type of cellular performance test to run.
@@ -39,6 +41,8 @@ const (
 	defaultTime          = 15 * time.Second
 	minThroughput        = 0.80
 	targetThroughput     = 0.90
+	maxRxSizeParam       = "net.core.rmem_max"
+	maxTxSizeParam       = "net.core.wmem_max"
 )
 
 var (
@@ -126,6 +130,7 @@ func (c *TestManager) RunOnce(ctx context.Context, testType TestType, interfaceN
 
 	var cfg *iperf.Config
 	var session *iperf.Session
+	var windowParam string
 	if testType == TestTypeUDPTx || testType == TestTypeTCPTx {
 		// Test is Tx/upload so DUT is client and callbox is server
 		cfg, err = iperf.NewConfig(protocolMap[testType], interfaceIP, ipResp.IP, options...)
@@ -141,6 +146,7 @@ func (c *TestManager) RunOnce(ctx context.Context, testType TestType, interfaceN
 		}
 		defer server.Close(cleanupCtx)
 		session = iperf.NewSession(client, server)
+		windowParam = maxTxSizeParam
 	} else {
 		cfg, err = iperf.NewConfig(protocolMap[testType], ipResp.IP, interfaceIP, options...)
 		client, err := NewCallboxIperfClient(c.callbox, c.client)
@@ -155,6 +161,21 @@ func (c *TestManager) RunOnce(ctx context.Context, testType TestType, interfaceN
 		}
 		defer server.Close(cleanupCtx)
 		session = iperf.NewSession(client, server)
+		windowParam = maxRxSizeParam
+	}
+
+	// attempt to increase system max window size if its less than requested
+	// don't adjust any other network configuration options
+	if windowSize, err := getSystemWindowSize(ctx, c.conn, windowParam); err != nil {
+		testing.ContextLog(ctx, "Unable to verify maximum system window size: ", err)
+	} else if windowSize < cfg.WindowSize {
+		testing.ContextLogf(ctx, "Requested window size: %v greater than system max: %v, setting system window size", cfg.WindowSize, windowSize)
+		if cleanup, err := setSystemWindowSize(ctx, c.conn, windowParam, cfg.WindowSize); err != nil {
+			// changing this parameter is optional so just log errors
+			testing.ContextLog(ctx, "Failed to set max system window size: ", err)
+		} else {
+			defer cleanup(cleanupCtx)
+		}
 	}
 
 	_, result, err := session.Run(ctx, cfg)
@@ -163,6 +184,43 @@ func (c *TestManager) RunOnce(ctx context.Context, testType TestType, interfaceN
 	}
 
 	return &result, nil
+}
+
+// getSystemWindowSize gets the current max window size set on the system.
+func getSystemWindowSize(ctx context.Context, conn *ssh.Conn, paramName string) (iperf.ByteSize, error) {
+	out, err := conn.CommandContext(ctx, "sysctl", "-n", paramName).Output()
+	if err != nil {
+		return 0, errors.Wrapf(err, "failed to get system variable: %s", paramName)
+	}
+
+	window, err := strconv.ParseInt(strings.TrimSpace(string(out)), 10, 64)
+	if err != nil {
+		return 0, errors.Wrapf(err, "failed to parse window size from: %s", out)
+	}
+	return iperf.ByteSize(window), nil
+}
+
+// setSystemWindowSize configures the kernel maximum window size to ensure that the requested window size will be respected by Iperf.
+func setSystemWindowSize(ctx context.Context, conn *ssh.Conn, paramName string, size iperf.ByteSize) (func(context.Context), error) {
+	out, err := conn.CommandContext(ctx, "sysctl", "-n", paramName).Output()
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to get system variable: %s", paramName)
+	}
+	originalValue := strings.TrimSpace(string(out))
+
+	cleanup := func(ctx context.Context) {
+		if err := conn.CommandContext(ctx, "sysctl", "-w", fmt.Sprintf("%s=%s", paramName, originalValue)).Run(); err != nil {
+			testing.ContextLogf(ctx, "Failed to configure system variable: %s=%s, %v", paramName, originalValue, err)
+		}
+	}
+
+	testing.ContextLogf(ctx, "%s=%v", paramName, size)
+	if err := conn.CommandContext(ctx, "sysctl", "-w", fmt.Sprintf("%s=%v", paramName, size)).Run(); err != nil {
+		cleanup(ctx)
+		return nil, errors.Wrapf(err, "failed to configure system variable: %s=%v", paramName, size)
+	}
+
+	return cleanup, nil
 }
 
 func getInterfaceIP(ctx context.Context, conn *ssh.Conn, interfaceName string) (string, error) {
