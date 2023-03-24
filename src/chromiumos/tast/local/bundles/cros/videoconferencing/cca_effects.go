@@ -14,6 +14,7 @@ import (
 	"chromiumos/tast/local/camera/cca"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
+	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/vctray"
 	"chromiumos/tast/local/screenshot"
@@ -66,6 +67,10 @@ func CCAEffects(ctx context.Context, s *testing.State) {
 	defer apps.Close(cleanupCtx, tconn, apps.Camera.ID)
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui")
+
+	if err := uiauto.New(tconn).WaitUntilExists(cca.A11yCanvasNode)(ctx); err != nil {
+		s.Fatal("Camera is not working appropriately: ", err)
+	}
 
 	vcTray := vctray.New(ctx, tconn)
 
