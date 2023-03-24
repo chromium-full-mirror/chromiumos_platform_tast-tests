@@ -34,12 +34,13 @@ import (
 
 type webauthnTestParam struct {
 	fingerprintSupported bool
+	browserType          browser.Type
 }
 
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         WebauthnFactors,
-		LacrosStatus: testing.LacrosVariantNeeded,
+		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that WebAuthn options are enabled or disabled based on the policy value",
 		Contacts: []string{
 			"cros-hwsec@google.com",
@@ -48,19 +49,43 @@ func init() {
 		BugComponent: "b:1188704",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "pinweaver"},
-		Fixture:      fixture.ChromePolicyLoggedIn,
 		Data: []string{
 			"webauthn/webauthn.html",
 			"webauthn/bundle.js",
 		},
 		Params: []testing.Param{
 			{
-				Val: webauthnTestParam{fingerprintSupported: false},
+				Val: webauthnTestParam{
+					fingerprintSupported: false,
+					browserType:          browser.TypeAsh,
+				},
+				Fixture: fixture.ChromePolicyLoggedIn,
 			},
 			{
-				Name:              "fingerprint_test",
+				Name:              "fingerprint",
 				ExtraHardwareDeps: hwdep.D(hwdep.Fingerprint()),
-				Val:               webauthnTestParam{fingerprintSupported: true},
+				Val: webauthnTestParam{
+					fingerprintSupported: true,
+					browserType:          browser.TypeAsh,
+				},
+				Fixture: fixture.ChromePolicyLoggedIn,
+			},
+			{
+				Name: "lacros",
+				Val: webauthnTestParam{
+					fingerprintSupported: false,
+					browserType:          browser.TypeLacros,
+				},
+				Fixture: fixture.LacrosPolicyLoggedIn,
+			},
+			{
+				Name:              "fingerprint_lacros",
+				ExtraHardwareDeps: hwdep.D(hwdep.Fingerprint()),
+				Val: webauthnTestParam{
+					fingerprintSupported: true,
+					browserType:          browser.TypeLacros,
+				},
+				Fixture: fixture.LacrosPolicyLoggedIn,
 			},
 		},
 		SearchFlags: []*testing.StringPair{
@@ -268,7 +293,7 @@ func WebauthnFactors(ctx context.Context, s *testing.State) {
 					s.Fatal("Failed to wait for PIN confirmation dialog to disappear: ", err)
 				}
 
-				conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, server.URL+"/webauthn/webauthn.html")
+				conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, s.Param().(webauthnTestParam).browserType, server.URL+"/webauthn/webauthn.html")
 				if err != nil {
 					s.Fatal("Failed to open the browser: ", err)
 				}
