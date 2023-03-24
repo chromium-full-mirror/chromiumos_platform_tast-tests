@@ -66,6 +66,11 @@ func waitForCryptohome(ctx context.Context, cfg *config.Config) error {
 	shortenCtx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
+	// TODO(b/257471572): remove the deadline log once the bug is resoloved.
+	if deadline, ok := ctx.Deadline(); ok {
+		testing.ContextLogf(ctx, "Deadline: %s", deadline)
+	}
+
 	if err := cryptohome.WaitForUserMountAndValidateType(shortenCtx, cfg.NormalizedUser(), mountType); err != nil {
 		if cfg.LoginMode() == config.GAIALogin || cfg.LoginMode() == config.SAMLLogin {
 			// Backup the original error.
