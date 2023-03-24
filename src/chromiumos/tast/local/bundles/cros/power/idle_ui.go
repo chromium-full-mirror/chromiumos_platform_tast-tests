@@ -29,7 +29,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Collect power metrics when device is in idle with UI",
 		BugComponent: "b:167191",
-		Contacts:     []string{"chromeos-power@google.com"},
+		Contacts:     []string{"chromeos-platform-power@google.com"},
 		// Disabled because this is an example test for other tests to follow.
 		// Attr:      []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
@@ -137,6 +137,7 @@ func IdleUI(ctx context.Context, s *testing.State) {
 	// every second. This both serves as an example for future power tests and
 	// as a light weight test to test the device setup. Replace this chunk of
 	// code with functionality code for future power tests.
+	// GoBigSleepLint: sleep to let the device idle.
 	if err := testing.Sleep(ctx, 10*time.Second); err != nil {
 		s.Fatal("Failed to sleep: ", err)
 	}
