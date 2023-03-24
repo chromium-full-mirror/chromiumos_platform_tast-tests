@@ -236,6 +236,7 @@ func (f *baseSetupFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) 
 	var opts = []chrome.Option{
 		chrome.EnableFeatures("SpeakOnMuteEnabled"),
 		chrome.EnableFeatures("VideoConference"),
+		chrome.EnableFeatures("CrOSLateBootAudioFlexibleLoopback"),
 	}
 
 	var err error
