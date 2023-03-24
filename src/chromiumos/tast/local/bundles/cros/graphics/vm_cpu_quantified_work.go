@@ -219,9 +219,22 @@ func insertIntervalsIntoPerf(pv *perf.Values, data *iterationData, intervals []i
 func VMCPUQuantifiedWork(ctx context.Context, s *testing.State) {
 	params := s.Param().(testOptions)
 
+	td, err := os.MkdirTemp(s.OutDir(), "")
+	if err != nil {
+		s.Fatal("Failed to create temporary directory: ", err)
+	}
+	defer os.RemoveAll(td)
+
 	numCPU, numCPUErr := cpu.GetNumberOfCPU(ctx)
 	if numCPUErr != nil {
 		s.Fatal("Could not get number of CPU(s) in DUT: ", numCPUErr)
+	}
+
+	// The socket path has to be less than 108 chars.
+	// This is why the file name is kept intentionally short.
+	vmSocketPath := filepath.Join(td, "vms")
+	if len(vmSocketPath) >= 108 {
+		s.Fatal("VM socket path length is above 108 characters")
 	}
 
 	s.Logf("Using %d CPU(s) in VM", numCPU)
@@ -229,7 +242,8 @@ func VMCPUQuantifiedWork(ctx context.Context, s *testing.State) {
 		s.DataPath("CROSVM.fd"),
 		vm.RWDisks(s.DataPath(params.imageFileName)),
 		vm.NumCpus(uint(numCPU)),
-		vm.SerialOutput(filepath.Join(s.OutDir(), "crosvm.log")))
+		vm.SerialOutput(filepath.Join(s.OutDir(), "crosvm.log")),
+		vm.Socket(vmSocketPath))
 
 	if _, err := cpu.WaitUntilCoolDown(ctx, cpu.DefaultCoolDownConfig(cpu.CoolDownPreserveUI)); err != nil {
 		testing.ContextLog(ctx, "Unable get cool machine using setting: ", err)
@@ -253,22 +267,29 @@ func VMCPUQuantifiedWork(ctx context.Context, s *testing.State) {
 	// Fire up the VM here, with our timeout for executing the VM code
 	cvm, err := vm.NewCrosvm(shortenCtx, ps)
 	if err != nil {
-		s.Fatal("Failed to start crosvm: ", err)
+		s.Fatal("Failed to launch crosvm: ", err)
 	}
+	defer func() {
+		// Only close when the socket is available
+		// If it completed successfully, we shouldn't
+		// make this attempt
+		if _, err := os.Stat(vmSocketPath); err == nil {
+			cvm.Close(ctx)
+		}
+	}()
 
 	// Sit here and wait for CrosVM to exit
 	// It is expected that the test will terminate the VM once it has
 	// completed. If this does not happen then the overall test timeout
 	// should catch this and cancel the test.
 	if err = cvm.WaitForCompletion(); err != nil {
-		cvm.Close(ctx)
-		s.Error("VM did not shutdown in time: ", err)
+		s.Fatal("crosvm did not complete successfully: ", err)
 	}
 
 	pv := perf.NewValues()
 	defer func() {
 		if err := pv.Save(s.OutDir()); err != nil {
-			s.Error("Failed to save perf data: ", err)
+			s.Fatal("Failed to save perf data: ", err)
 		}
 	}()
 
@@ -277,7 +298,7 @@ func VMCPUQuantifiedWork(ctx context.Context, s *testing.State) {
 	// framework
 	extractedValues, errConvert := extractIterations(s.OutDir())
 	if errConvert != nil {
-		s.Error("Failed to extract iteration data", errConvert)
+		s.Fatal("Failed to extract iteration data", errConvert)
 	}
 
 	if params.statsType == fullStatistics {
