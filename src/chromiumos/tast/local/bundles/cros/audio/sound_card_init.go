@@ -23,12 +23,11 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func: SoundCardInit,
 		Desc: "Verifies sound_card_init boot time calibration logic",
-		// b/178479311: Skip lindar and lillipup as they have un-calibrated smart amp so that we cannot run sound_card_init.
 		// b/221241958: Skip helios as it is an old project before sound_card_init.
-		HardwareDeps: hwdep.D(hwdep.SmartAmp(), hwdep.SkipOnModel("atlas", "nocturne", "volteer2", "lindar", "lillipup", "helios")),
+		HardwareDeps: hwdep.D(hwdep.SmartAmp(), hwdep.SkipOnModel("atlas", "nocturne", "volteer2", "helios")),
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "judyhsiao@chromium.org", "cychiang@chromium.org"},
 		BugComponent: "b:875484",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline"},
 		Timeout:      1 * time.Minute,
 		Params: []testing.Param{
 			{
