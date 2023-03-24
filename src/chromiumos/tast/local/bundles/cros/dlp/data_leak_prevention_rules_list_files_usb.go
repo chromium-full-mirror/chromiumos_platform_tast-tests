@@ -98,7 +98,6 @@ func init() {
 		Func:         DataLeakPreventionRulesListFilesUSB,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Test behavior of DataLeakPreventionRulesList policy with file copy to USB restriction",
-		Timeout:      20 * time.Minute,
 		Contacts: []string{
 			"chromeos-dlp@google.com",
 			"poromov@google.com",

@@ -35,7 +35,6 @@ func init() {
 		Func:         DataLeakPreventionRulesListFilesArc,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test behavior of DataLeakPreventionRulesList policy with file ARC restriction",
-		Timeout:      20 * time.Minute,
 		Contacts: []string{
 			"chromeos-dlp@google.com",
 			"aidazolic@google.com",
@@ -71,7 +70,7 @@ func init() {
 
 func DataLeakPreventionRulesListFilesArc(ctx context.Context, s *testing.State) {
 	const (
-		bootTimeout = 4 * time.Minute
+		bootTimeout = 2 * time.Minute
 	)
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
@@ -222,7 +221,7 @@ func pasteFileToPlayfiles(ctx context.Context, ui *uiauto.Context, tconn *chrome
 		filesApp.CopyFileToClipboard(filename),
 		filesApp.OpenPlayfiles(),
 		filesApp.OpenFile("Pictures"),
-		filesApp.PasteFileFromClipboard(kb),
+		filesApp.ClickDirectoryContextMenuItem("Pictures", "Paste into folder"),
 		ui.WaitUntilExists(nodewith.Name("Copy confidential file?")),
 	)(ctx)
 }

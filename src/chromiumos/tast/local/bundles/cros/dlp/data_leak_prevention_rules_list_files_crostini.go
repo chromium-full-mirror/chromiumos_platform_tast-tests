@@ -33,7 +33,6 @@ func init() {
 		Func:         DataLeakPreventionRulesListFilesCrostini,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test behavior of DataLeakPreventionRulesList policy with file Crostini restriction",
-		Timeout:      7 * time.Minute,
 		Contacts: []string{
 			"chromeos-dlp@google.com",
 			"aidazolic@google.com",

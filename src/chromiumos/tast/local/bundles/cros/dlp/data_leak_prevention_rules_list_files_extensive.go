@@ -262,7 +262,7 @@ func tryCopyAndVerify(f *filesapp.FilesApp, kb *input.KeyboardEventWriter, targe
 		kb.AccelAction("Ctrl+C"),
 		f.OpenPlayfiles(),
 		f.OpenFile("Pictures"),
-		f.PasteFileFromClipboard(kb))
+		f.ClickDirectoryContextMenuItem("Pictures", "Paste into folder"))
 
 	// Append checks that the files weren't copied.
 	for _, target := range targets {
