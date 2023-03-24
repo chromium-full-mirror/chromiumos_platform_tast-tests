@@ -7,18 +7,19 @@ package featured
 import (
 	"context"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/golang/protobuf/proto"
 
 	featuredpb "chromiumos/system_api/featured_proto"
 	"chromiumos/tast/errors"
-	"chromiumos/tast/local/upstart"
+	"chromiumos/tast/ssh/linuxssh"
 	"chromiumos/tast/testing"
 )
 
 const (
-	storePath = "/var/lib/featured/store"
+	dutStorePath = "/var/lib/featured/store"
 )
 
 func init() {
@@ -32,14 +33,23 @@ func init() {
 			"mutexlox@google.com",
 		},
 		BugComponent: "b:1096648", // ChromeOS > Data > Engineering > Featured
+		SoftwareDeps: []string{"reboot"},
 		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      60 * time.Second,
 	})
 }
 
 func StoreInterfaceEarlyBoot(ctx context.Context, s *testing.State) {
+	d := s.DUT()
+	hostStoreBeforeReboot := filepath.Join(s.OutDir(), "original-store")
+
+	// Copy store.
+	if err := linuxssh.GetFile(ctx, d.Conn(), dutStorePath, hostStoreBeforeReboot, linuxssh.PreserveSymlinks); err != nil {
+		s.Fatal("Failed to copy store file to Host: ", err)
+	}
+
 	// Read store.
-	data, err := os.ReadFile(storePath)
+	data, err := os.ReadFile(hostStoreBeforeReboot)
 	if err != nil {
 		s.Fatal("Failed to read store: ", err)
 	}
@@ -52,14 +62,22 @@ func StoreInterfaceEarlyBoot(ctx context.Context, s *testing.State) {
 	bootAttempts := store.GetBootAttemptsSinceLastSeedUpdate()
 
 	// Restart featured.
-	if err := upstart.RestartJob(ctx, "featured"); err != nil {
-		s.Fatal("Failed to restart featured: ", err)
+	s.Log("Rebooting DUT")
+	if err := d.Reboot(ctx); err != nil {
+		s.Fatal("Failed to reboot DUT: ", err)
 	}
 
 	// Wait until featured finishes restarting.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		hostStoreAfterReboot := filepath.Join(s.OutDir(), "updated-store")
+
+		// Copy store.
+		if err = linuxssh.GetFile(ctx, d.Conn(), dutStorePath, hostStoreAfterReboot, linuxssh.PreserveSymlinks); err != nil {
+			return errors.Wrap(err, "failed to copy store from DUT after restart")
+		}
+
 		// Read store.
-		data, err = os.ReadFile(storePath)
+		data, err = os.ReadFile(hostStoreAfterReboot)
 		if err != nil {
 			return errors.Wrap(err, "failed to read store after restart")
 		}
