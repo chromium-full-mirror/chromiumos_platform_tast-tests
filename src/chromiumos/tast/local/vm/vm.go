@@ -21,6 +21,8 @@ import (
 )
 
 const (
+	// DefaultArcVMName is the default VM name for ARCVM.
+	DefaultArcVMName = "arcvm"
 	// DefaultVMName is the default crostini VM name.
 	DefaultVMName = "termina"
 	// DefaultContainerName is the default crostini container name.
@@ -46,6 +48,11 @@ type VM struct {
 	targetDiskSize  uint64 // targeted disk size during creation time
 	kernel          string // Path of the VM's kernel. If empty, concierge chooses the path
 	rootfs          string // Path of the VM's rootfs. If empty, concierge chooses the path
+}
+
+// newArcVM gets a VM instance configured as a ARCVM.
+func newArcVM(c *Concierge, enableGPU bool, diskSize uint64) *VM {
+	return NewGenericVM(c, enableGPU, diskSize, "", "", DefaultArcVMName)
 }
 
 // NewTerminaVM gets a VM instance configured as a "Termina" VM.
@@ -75,6 +82,19 @@ func GetRunningTerminaVM(ctx context.Context, user string) (*VM, error) {
 		return nil, err
 	}
 	vm := NewTerminaVM(c, false, 0)
+	if err := c.GetVMInfo(ctx, vm); err != nil {
+		return nil, errors.Wrapf(err, "failed to get info for %q VM", vm.name)
+	}
+	return vm, nil
+}
+
+// GetRunningArcVM creates a VM struct for the Arc VM that is currently running.
+func GetRunningArcVM(ctx context.Context, user string) (*VM, error) {
+	c, err := GetRunningConcierge(ctx, user)
+	if err != nil {
+		return nil, err
+	}
+	vm := newArcVM(c, false, 0)
 	if err := c.GetVMInfo(ctx, vm); err != nil {
 		return nil, errors.Wrapf(err, "failed to get info for %q VM", vm.name)
 	}
