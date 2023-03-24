@@ -6,6 +6,8 @@ package ui
 
 import (
 	"context"
+	"io/ioutil"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -34,6 +36,12 @@ const (
 	chromeCrashBaseName = `chrome\.\d{8}\.\d{6}\.\d+\.\d+`
 	chromeCrashMetaName = chromeCrashBaseName + `\.meta`
 	chromeCrashDmpName  = chromeCrashBaseName + `\.dmp`
+
+	// chromeCrashEarlyLooseModeFile is a file used by the "loose" subtest to tell
+	// crash reporter that it should accept larger-than-normal core files during
+	// this test. Must match crash-reporter's kSystemRunStateDirectory +
+	// kRunningLooseChromeCrashEarlyTestFile.
+	chromeCrashEarlyLooseModeFile = "/run/crash_reporter/running-loose-chrome-crash-early-test"
 )
 
 func init() {
@@ -46,7 +54,14 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "crashpad"},
 		Timeout:      upstart.UIRestartTimeout + chromeCrashEarlyCleanupTimeout + chromeCrashEarlyCrashFileTimeout + time.Minute,
-	})
+		Params: []testing.Param{{
+			Name:              "strict",
+			Val:               false,
+			ExtraSoftwareDeps: []string{"chrome_internal"},
+		}, {
+			Name: "loose",
+			Val:  true,
+		}}})
 }
 
 // filterMetaFiles takes a list of filenames and returns all the files that end
@@ -68,6 +83,28 @@ func ChromeCrashEarly(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, chromeCrashEarlyCleanupTimeout)
 	defer cancel()
+
+	looseMode := s.Param().(bool)
+	if looseMode {
+		// The Chrome CQ runs tast tests against Chrome builds which are built with
+		// is_official_build = false. These builds generate much larger-than-normal
+		// core files, exceeding crash reporter's normal limits on the size of the
+		// core. Set the limit higher by touching
+		// /run/crash_reporter/running-loose-chrome-crash-early-test so that we can
+		// at least test other aspects of system.
+		if err := ioutil.WriteFile(chromeCrashEarlyLooseModeFile, nil, 0644); err != nil {
+			s.Fatal("Failed writing ChromeCrashEarly loose-mode file ", chromeCrashEarlyLooseModeFile, ": ", err)
+		}
+		defer func() {
+			if err := os.Remove(chromeCrashEarlyLooseModeFile); err != nil && !os.IsNotExist(err) {
+				s.Errorf("Failed to clean up %s: %s", chromeCrashEarlyLooseModeFile, err)
+			}
+		}()
+	} else {
+		if err := os.Remove(chromeCrashEarlyLooseModeFile); err != nil && !os.IsNotExist(err) {
+			s.Fatalf("Failed to remove %s: %s", chromeCrashEarlyLooseModeFile, err)
+		}
+	}
 
 	ct, err := chromecrash.NewCrashTester(ctx, chromecrash.Browser, chromecrash.MetaFile)
 	if err != nil {
