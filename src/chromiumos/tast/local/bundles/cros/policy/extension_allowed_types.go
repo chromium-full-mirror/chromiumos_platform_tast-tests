@@ -31,8 +31,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Behavior of ExtensionAllowedTypes policy, checking if a theme can be added to Chrome",
 		Contacts: []string{
-			"cros-engprod-muc@google.com",
-			"gabormagda@google.com", // Test author
+			"cros-commercial-chromeapps-eng@google.com",
+			"giovax@google.com", // Test owner
 		},
 		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
