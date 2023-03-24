@@ -14,9 +14,12 @@ import (
 	"strings"
 	"time"
 
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/local/audio/crastestclient"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/input"
@@ -263,8 +266,8 @@ func (sm *SpeechMonitor) Eval(ctx context.Context, expr string, out interface{})
 }
 
 // Close closes the connection to the TTS extension's background page.
-func (sm *SpeechMonitor) Close() {
-	sm.conn.Close()
+func (sm *SpeechMonitor) Close() error {
+	return sm.conn.Close()
 }
 
 // ensureTTSEngineLoaded is a helper function for RelevantSpeechMonitor. It
@@ -562,4 +565,154 @@ func VerifySodaInstalled(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+// TTSFeatureInputs represents data used for setting up an accessibility
+// feature that uses TTS e.g. ChromeVox or Select-to-Speak. HTML specifies the
+// web content to load and run a test on.
+type TTSFeatureInputs struct {
+	CTX     context.Context
+	CR      *chrome.Chrome
+	ED      TTSEngineData
+	BT      browser.Type
+	HTML    string
+	Feature Feature
+}
+
+// TTSFeatureData contains data and useful objects for an accessibility feature
+// that uses TTS. Tconn and SM live until TDown.TearDown() is called.
+type TTSFeatureData struct {
+	CTX   context.Context
+	TConn *chrome.TestConn
+	SM    *SpeechMonitor
+	TDown *TTSFeatureTearDown
+}
+
+func newNilTTSFeatureData(tftd *TTSFeatureTearDown) TTSFeatureData {
+	return TTSFeatureData{TDown: tftd}
+}
+
+// TTSFeatureTearDown represents cleanup functions that should be run in a
+// defer statement by the calling test.
+type TTSFeatureTearDown struct {
+	funcs []func() error
+}
+
+// TearDown iterates backwards through cleanUpFuncs, since cleanUpFuncs represents
+// deferred methods. It also removes functions once executed to ensure they
+// don't get run more than once.
+func (tftd *TTSFeatureTearDown) TearDown() error {
+	var errs []error
+	for index := len(tftd.funcs) - 1; index >= 0; index-- {
+		step := tftd.funcs[index]
+		if err := step(); err != nil {
+			errs = append(errs, err)
+		}
+		tftd.funcs = tftd.funcs[:index]
+	}
+
+	if len(errs) > 0 {
+		return errors.Errorf("failed tear down steps: %q", errs)
+	}
+
+	return nil
+}
+
+// Append pushes a function to be run at tear down.
+func (tftd *TTSFeatureTearDown) Append(f func() error) {
+	tftd.funcs = append(tftd.funcs, f)
+}
+
+// SetUpTTSFeature runs common setup code needed for features that require
+// text-to-speech. This includes ChromeVox and Select-to-Speak. This function
+// does several things including:
+// 1. Muting the device
+// 2. Setting up a browser and loading HTML
+// 3. Turning on the feature
+// 4. Connecting to a TTS engine
+// 5. Populating cleanup functions
+func SetUpTTSFeature(tfi TTSFeatureInputs) (tfd TTSFeatureData, e error) {
+	defer func() {
+		if e != nil {
+			tfd.TDown.TearDown()
+		}
+	}()
+
+	// Extract inputs.
+	ctx := tfi.CTX
+	cr := tfi.CR
+	ed := tfi.ED
+	bt := tfi.BT
+	html := tfi.HTML
+	feature := tfi.Feature
+
+	tdown := &TTSFeatureTearDown{}
+
+	// Shorten deadline to leave time for cleanup.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	tdown.Append(func() error {
+		cancel()
+		return nil
+	})
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return newNilTTSFeatureData(tdown), errors.Wrap(err, "failed to create Test API connection")
+	}
+
+	// Mute the device to avoid noisiness.
+	if err := crastestclient.Mute(ctx); err != nil {
+		return newNilTTSFeatureData(tdown), errors.Wrap(err, "failed to mute device")
+	}
+	tdown.Append(func() error {
+		return crastestclient.Unmute(cleanupCtx)
+	})
+
+	// Setup a browser.
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, bt)
+	if err != nil {
+		return newNilTTSFeatureData(tdown), errors.Wrap(err, "failed to setup browser")
+	}
+	tdown.Append(func() error {
+		return closeBrowser(cleanupCtx)
+	})
+
+	brConn, err := NewTabWithHTML(ctx, br, html)
+	if err != nil {
+		return newNilTTSFeatureData(tdown), errors.Wrap(err, "failed to open a new tab with HTML")
+	}
+	tdown.Append(func() error {
+		return brConn.Close()
+	})
+
+	// Close the extra new tab page.
+	if err := br.CloseWithURL(ctx, chrome.NewTabURL); err != nil {
+		return newNilTTSFeatureData(tdown), errors.Wrap(err, "failed to close new tab page")
+	}
+
+	if err := SetFeatureEnabled(ctx, tconn, feature, true); err != nil {
+		return newNilTTSFeatureData(tdown), errors.Wrapf(err, "failed to enable feature: %s", feature)
+	}
+	tdown.Append(func() error {
+		if err := ClearFeature(cleanupCtx, tconn, feature); err != nil {
+			return errors.Wrapf(err, "failed to disable feature: %s", feature)
+		}
+
+		return nil
+	})
+
+	sm, err := RelevantSpeechMonitor(ctx, cr, tconn, ed)
+	if err != nil {
+		return newNilTTSFeatureData(tdown), errors.Wrap(err, "failed to connect to the TTS background page")
+	}
+	tdown.Append(func() error {
+		return sm.Close()
+	})
+
+	if err := SetTTSRate(ctx, tconn, 1.0); err != nil {
+		return newNilTTSFeatureData(tdown), errors.Wrap(err, "failed to change TTS rate")
+	}
+
+	return TTSFeatureData{ctx, tconn, sm, tdown}, nil
 }

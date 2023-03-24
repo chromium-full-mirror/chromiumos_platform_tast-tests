@@ -47,7 +47,7 @@ func SelectToSpeak(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set up Select to Speak: ", err)
 	}
 	defer func() {
-		if err := stsData.TearDown(); err != nil {
+		if err := stsData.TDown.TearDown(); err != nil {
 			s.Fatal("Failed to tear down Select to Speak test: ", err)
 		}
 	}()
@@ -55,7 +55,7 @@ func SelectToSpeak(ctx context.Context, s *testing.State) {
 	rootWebArea := nodewith.Role(role.RootWebArea).First()
 	textNode := nodewith.Name(text).Role(role.InlineTextBox).Ancestor(rootWebArea)
 	expectations := []a11y.SpeechExpectation{a11y.NewStringExpectation(text)}
-	if err := sts.SetSelectionAndActivate(stsData.Ctx, cr, textNode, 0, len(text), stsData.SM, expectations); err != nil {
+	if err := sts.SetSelectionAndActivate(stsData.CTX, cr, textNode, 0, len(text), stsData.SM, expectations); err != nil {
 		s.Fatal("Failed to read node: ", err)
 	}
 }

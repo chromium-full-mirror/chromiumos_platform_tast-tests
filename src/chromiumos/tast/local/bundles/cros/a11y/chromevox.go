@@ -8,9 +8,7 @@ package a11y
 
 import (
 	"context"
-	"time"
 
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/a11y"
 	"chromiumos/tast/local/a11y/chromevox"
 	"chromiumos/tast/local/chrome"
@@ -82,16 +80,12 @@ func init() {
 }
 
 func Chromevox(ctx context.Context, s *testing.State) {
-	ctxCleanup := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, time.Second)
-	defer cancel()
-
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	td := s.Param().(testParam).testData
 	bt := s.Param().(testParam).browserType
 	const html = "<p>Start</p><p>This is a ChromeVox test</p><p>End</p>"
-	cvData, err := chromevox.SetUp(ctx, ctxCleanup, cr, td.VoiceData, td.EngineData, bt, html)
+	cvData, err := chromevox.SetUp(ctx, cr, td.VoiceData, td.EngineData, bt, html)
 	if err != nil {
 		s.Fatal("Failed to set up ChromeVox: ", err)
 	}
@@ -136,7 +130,7 @@ func Chromevox(ctx context.Context, s *testing.State) {
 	}
 
 	for _, step := range testSteps {
-		if err := a11y.PressKeysAndConsumeExpectations(ctx, cvData.SM, step.KeyCommands, step.Expectations); err != nil {
+		if err := a11y.PressKeysAndConsumeExpectations(cvData.Context(), cvData.SpeechMonitor(), step.KeyCommands, step.Expectations); err != nil {
 			s.Error("Error when pressing keys and expecting speech: ", err)
 		}
 	}
