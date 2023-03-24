@@ -6,6 +6,7 @@ package lacros
 
 import (
 	"context"
+	"time"
 
 	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/common/pci"
@@ -14,6 +15,7 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/lacros/migrate"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/lacros"
 	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/local/policyutil/fixtures"
@@ -38,6 +40,8 @@ func init() {
 			pci.SearchFlag(&policy.LacrosDataBackwardMigrationMode{}, pci.VerifiedFunctionalityJS),
 			pci.SearchFlag(&policy.LacrosAvailability{}, pci.VerifiedFunctionalityJS),
 		},
+		Data:    []string{"migrate/indexeddb_check.js", "migrate/indexeddb_set.js"},
+		Timeout: 3 * time.Minute,
 	})
 }
 
@@ -48,17 +52,52 @@ func BackwardMigratePolicy(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to run Chrome to clear migration state: ", err)
 	}
 
-	cr, err := forwardMigratePolicy(ctx, fdms, s)
+	crForward, err := forwardMigratePolicy(ctx, fdms, s)
 	if err != nil {
-		if cr != nil {
-			cr.Close(ctx)
-		}
 		s.Fatal("Failed to perform forward migration: ", err)
 	}
+	defer func() {
+		if err := crForward.Close(ctx); err != nil {
+			s.Error("Failed to close ash chrome: ", err)
+		}
+	}()
 
-	err = backwardMigratePolicy(ctx, fdms, cr)
+	// Setup profile data before the backward migration.
+	tconn, err := crForward.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to create Test API connection: ", err)
+	}
+	lacrosConn, err := lacros.Launch(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to launch lacros: ", err)
+	}
+	if err := migrate.SetupProfileData(ctx, crForward, s, lacrosConn.Browser()); err != nil {
+		s.Fatal("Failed to set up profile data: ", err)
+	}
+
+	// Chrome uses many profile data stores that we do not own and that
+	// are not flushed to disk immediately, but only periodically persisted.
+	// Since we cannot flush directly from the tast, sleep to wait for the data
+	// to be synced.
+	if err := testing.Sleep(ctx, 15*time.Second); err != nil {
+		s.Fatal("Failed to sleep: ", err)
+	}
+
+	lacrosConn.CloseResources(ctx)
+	lacrosConn = nil
+
+	crBackward, err := backwardMigratePolicy(ctx, fdms, crForward)
 	if err != nil {
 		s.Fatal("Failed to perform backward migration: ", err)
+	}
+	defer func() {
+		if err := crBackward.Close(ctx); err != nil {
+			s.Error("Failed to close ash chrome: ", err)
+		}
+	}()
+
+	if err := migrate.VerifyProfileData(ctx, crBackward, s, crBackward.Browser()); err != nil {
+		s.Fatal("Failed to verify: ", err)
 	}
 }
 
@@ -110,13 +149,7 @@ func forwardMigratePolicy(ctx context.Context, fdms *fakedms.FakeDMS, s *testing
 	return crForward, nil
 }
 
-func backwardMigratePolicy(ctx context.Context, fdms *fakedms.FakeDMS, cr *chrome.Chrome) error {
-	defer func() {
-		if cr != nil {
-			cr.Close(ctx)
-		}
-	}()
-
+func backwardMigratePolicy(ctx context.Context, fdms *fakedms.FakeDMS, cr *chrome.Chrome) (*chrome.Chrome, error) {
 	// Start backward migration with policies.
 	blob := policy.NewBlob()
 	blob.AddPolicies([]policy.Policy{
@@ -125,11 +158,8 @@ func backwardMigratePolicy(ctx context.Context, fdms *fakedms.FakeDMS, cr *chrom
 	})
 
 	if err := policyutil.ServeBlobAndRefresh(ctx, fdms, cr, blob); err != nil {
-		return errors.Wrap(err, "failed to update policies")
+		return nil, errors.Wrap(err, "failed to update policies")
 	}
-
-	cr.Close(ctx)
-	cr = nil
 
 	// Wait for backward migration to finish.
 	crBackward, err := migrate.BackwardRun(ctx, []chrome.Option{
@@ -138,10 +168,8 @@ func backwardMigratePolicy(ctx context.Context, fdms *fakedms.FakeDMS, cr *chrom
 		chrome.ExtraArgs("--vmodule=*=1"),
 	})
 	if err != nil {
-		return errors.Wrap(err, "failed to backward migrate profile")
+		return nil, errors.Wrap(err, "failed to backward migrate profile")
 	}
 
-	crBackward.Close(ctx)
-
-	return nil
+	return crBackward, nil
 }
