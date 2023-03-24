@@ -98,7 +98,7 @@ func CopyPaste(ctx context.Context, s *testing.State) {
 	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree")
 
 	var remoteTextAppName = "Notepad"
-	var remoteTextToLookForWhenLaunched = "File Edit Format View Help"
+	var remoteTextToLookForWhenLaunched = "Untitled - Notepad"
 
 	var nativeAppURL = "chrome-extension://" + apps.Text.ID + "/index.html"
 
@@ -153,6 +153,12 @@ func launchRemoteTextApp(ctx context.Context, tconn *chrome.TestConn, uidetector
 
 	if err := vdi.SearchAndOpenApplication(ctx, appName, isOpened)(ctx); err != nil {
 		return errors.Wrap(err, "failed to open remote app")
+	}
+
+	// The VDI app window can be in a weird focus state, where the window on ChromeOS has focus, but the window on Windows (inside the VDI session) does not. Clicking somewhere inside the window will properly set focus for both.
+	var textBlocks = strings.Split(textToLookForWhenLaunched, " ")
+	if err := uidetector.LeftClick(uidetection.TextBlock(textBlocks))(ctx); err != nil {
+		return errors.Wrap(err, "failed to click on launched window")
 	}
 
 	return nil
