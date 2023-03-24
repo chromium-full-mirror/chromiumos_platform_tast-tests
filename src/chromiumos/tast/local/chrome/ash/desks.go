@@ -370,7 +370,7 @@ func VerifySavedDesk(ctx context.Context, ac *uiauto.Context, savedDeskNames []s
 // This assumes library page is live now.
 func DeleteAllSavedDesks(ctx context.Context, ac *uiauto.Context, tconn *chrome.TestConn) error {
 	savedDesk := nodewith.ClassName("SavedDeskItemView")
-	closeButton := nodewith.ClassName("CloseButton").Name("Delete")
+	closeButton := nodewith.ClassName("IconButton").Name("Delete")
 	deleteDialog := nodewith.ClassName("SavedDeskDialog")
 
 	// Define keyboard.
@@ -409,7 +409,7 @@ func DeleteAllSavedDesks(ctx context.Context, ac *uiauto.Context, tconn *chrome.
 // DeleteDeskTemplateByName deletes desk template with savedDeskName.
 func DeleteDeskTemplateByName(ctx context.Context, ac *uiauto.Context, tconn *chrome.TestConn, savedDeskName string) error {
 	savedDesk := nodewith.ClassName("SavedDeskNameView").Name(savedDeskName)
-	closeButton := nodewith.ClassName("CloseButton").Name("Delete")
+	closeButton := nodewith.ClassName("IconButton").Name("Delete")
 	deleteDialog := nodewith.ClassName("SavedDeskDialog")
 
 	kb, err := input.Keyboard(ctx)
