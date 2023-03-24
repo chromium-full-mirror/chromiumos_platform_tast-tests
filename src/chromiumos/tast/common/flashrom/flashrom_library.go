@@ -83,7 +83,7 @@ func runCommandLineRemote(ctx context.Context, conn *ssh.Conn, args []string) ([
 	}
 
 	if err := cmd.Wait(); err != nil {
-		return nil, errors.Wrapf(err, "command %q failed", strings.Join(cmd.Args, " "))
+		return bytes.Join([][]byte{errbuf.Bytes(), outbuf.Bytes()}, []byte("\n")), errors.Wrapf(err, "command %q failed", strings.Join(cmd.Args, " "))
 	}
 
 	// TODO(b:247668196) implement full logging if test gives a file?
@@ -108,7 +108,7 @@ func runCommandLineLocal(ctx context.Context, args []string) ([]byte, error) {
 	}
 
 	if err := cmd.Wait(); err != nil {
-		return nil, errors.Wrapf(err, "command %q failed", strings.Join(cmd.Args, " "))
+		return bytes.Join([][]byte{errbuf.Bytes(), outbuf.Bytes()}, []byte("\n")), errors.Wrapf(err, "command %q failed", strings.Join(cmd.Args, " "))
 	}
 
 	return bytes.Join([][]byte{errbuf.Bytes(), outbuf.Bytes()}, []byte("\n")), nil
