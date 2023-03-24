@@ -21,7 +21,7 @@ func init() {
 		Func:         AllowDinosaurEasterEgg,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Behavior of AllowDinosaurEasterEgg policy",
-		BugComponent: "b:1111617",
+		BugComponent: "b:1111617", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Policy Stack
 		Contacts: []string{
 			"chromeos-commercial-remote-management@google.com",
 			"vsavu@google.com", // Test author

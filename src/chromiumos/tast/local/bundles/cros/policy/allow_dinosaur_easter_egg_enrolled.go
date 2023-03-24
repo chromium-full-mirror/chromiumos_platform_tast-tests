@@ -21,11 +21,11 @@ func init() {
 		Func:         AllowDinosaurEasterEggEnrolled,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Behavior of AllowDinosaurEasterEgg policy on an enrolled device",
+		BugComponent: "b:1111617", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Policy Stack
 		Contacts: []string{
-			"cros-engprod-muc@google.com",
+			"chromeos-commercial-remote-management@google.com",
 			"vsavu@google.com", // Test author
 		},
-		BugComponent: "b:1263917",
 		Attr:         []string{"group:golden_tier"},
 		SoftwareDeps: []string{"reboot", "chrome"},
 		Fixture:      fixture.ChromeEnrolledLoggedIn,
