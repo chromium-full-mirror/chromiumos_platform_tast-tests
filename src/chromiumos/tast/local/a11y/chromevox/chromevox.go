@@ -98,21 +98,21 @@ func NewConn(ctx context.Context, c *chrome.Chrome) (*Conn, error) {
 	return &Conn{extConn}, nil
 }
 
-// SetUpChromeVoxData contains useful objects for ChromeVox tests and is
-// returned by SetUpChromeVox. Most notably, TearDown is a function that should
+// SetUpData contains useful objects for ChromeVox tests and is
+// returned by SetUp. Most notably, TearDown is a function that should
 // be run in a defer statement by the caller to properly tear-down ChromeVox.
 // CVConn and SM will remain alive until TearDown is called.
-type SetUpChromeVoxData struct {
+type SetUpData struct {
 	CVConn   *Conn
 	SM       *a11y.SpeechMonitor
 	TearDown func() error
 }
 
-// SetUpChromeVox executes common ChromeVox setup code. Returns a
-// SetUpChromeVoxData. When the error is nil, SetUpChromeVoxData will contain a
+// SetUp executes common ChromeVox setup code. Returns a
+// SetUpData. When the error is nil, SetUpData will contain a
 // non-nil TearDown function. The caller should call it in a defer statement
 // for proper cleanup.
-func SetUpChromeVox(ctx, cleanupCtx context.Context, cr *chrome.Chrome, vd a11y.VoiceData, ed a11y.TTSEngineData, bt browser.Type, html string) (_ SetUpChromeVoxData, e error) {
+func SetUp(ctx, cleanupCtx context.Context, cr *chrome.Chrome, vd a11y.VoiceData, ed a11y.TTSEngineData, bt browser.Type, html string) (_ SetUpData, e error) {
 	var cleanUpFuncs []func() error
 	tearDown := func() error {
 		var errs []error
@@ -131,7 +131,7 @@ func SetUpChromeVox(ctx, cleanupCtx context.Context, cr *chrome.Chrome, vd a11y.
 		return nil
 	}
 
-	// Tears down ChromeVox if SetUpChromeVox encountered an error.
+	// Tears down ChromeVox if SetUp encountered an error.
 	defer func() {
 		if e != nil {
 			tearDown()
@@ -140,12 +140,12 @@ func SetUpChromeVox(ctx, cleanupCtx context.Context, cr *chrome.Chrome, vd a11y.
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
-		return SetUpChromeVoxData{}, errors.Wrap(err, "failed to create Test API connection")
+		return SetUpData{}, errors.Wrap(err, "failed to create Test API connection")
 	}
 
 	// Mute the device to avoid noisiness.
 	if err := crastestclient.Mute(ctx); err != nil {
-		return SetUpChromeVoxData{}, errors.Wrap(err, "failed to mute device")
+		return SetUpData{}, errors.Wrap(err, "failed to mute device")
 	}
 	cleanUpFuncs = append(cleanUpFuncs, func() error {
 		crastestclient.Unmute(cleanupCtx)
@@ -155,7 +155,7 @@ func SetUpChromeVox(ctx, cleanupCtx context.Context, cr *chrome.Chrome, vd a11y.
 	// Setup a browser.
 	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, bt)
 	if err != nil {
-		return SetUpChromeVoxData{}, errors.Wrap(err, "failed to open the browser")
+		return SetUpData{}, errors.Wrap(err, "failed to setup browser")
 	}
 	cleanUpFuncs = append(cleanUpFuncs, func() error {
 		closeBrowser(ctx)
@@ -164,7 +164,7 @@ func SetUpChromeVox(ctx, cleanupCtx context.Context, cr *chrome.Chrome, vd a11y.
 
 	brConn, err := a11y.NewTabWithHTML(ctx, br, html)
 	if err != nil {
-		return SetUpChromeVoxData{}, errors.Wrap(err, "failed to open a new tab with HTML")
+		return SetUpData{}, errors.Wrap(err, "failed to open a new tab with HTML")
 	}
 	cleanUpFuncs = append(cleanUpFuncs, func() error {
 		brConn.Close()
@@ -173,11 +173,11 @@ func SetUpChromeVox(ctx, cleanupCtx context.Context, cr *chrome.Chrome, vd a11y.
 
 	// Close the extra new tab page.
 	if err := br.CloseWithURL(ctx, chrome.NewTabURL); err != nil {
-		return SetUpChromeVoxData{}, errors.Wrap(err, "failed to close new tab page")
+		return SetUpData{}, errors.Wrap(err, "failed to close new tab page")
 	}
 
 	if err := a11y.SetFeatureEnabled(ctx, tconn, a11y.SpokenFeedback, true); err != nil {
-		return SetUpChromeVoxData{}, errors.Wrap(err, "failed to enable ChromeVox")
+		return SetUpData{}, errors.Wrap(err, "failed to enable ChromeVox")
 	}
 	cleanUpFuncs = append(cleanUpFuncs, func() error {
 		if err := a11y.ClearFeature(ctx, tconn, a11y.SpokenFeedback); err != nil {
@@ -189,7 +189,7 @@ func SetUpChromeVox(ctx, cleanupCtx context.Context, cr *chrome.Chrome, vd a11y.
 
 	cvconn, err := NewConn(ctx, cr)
 	if err != nil {
-		return SetUpChromeVoxData{}, errors.Wrap(err, "failed to connect to the ChromeVox background page")
+		return SetUpData{}, errors.Wrap(err, "failed to connect to the ChromeVox background page")
 	}
 	cleanUpFuncs = append(cleanUpFuncs, func() error {
 		cvconn.Close()
@@ -198,7 +198,7 @@ func SetUpChromeVox(ctx, cleanupCtx context.Context, cr *chrome.Chrome, vd a11y.
 
 	sm, err := a11y.RelevantSpeechMonitor(ctx, cr, tconn, ed)
 	if err != nil {
-		return SetUpChromeVoxData{}, errors.Wrap(err, "failed to connect to the TTS background page")
+		return SetUpData{}, errors.Wrap(err, "failed to connect to the TTS background page")
 	}
 	cleanUpFuncs = append(cleanUpFuncs, func() error {
 		sm.Close()
@@ -206,20 +206,20 @@ func SetUpChromeVox(ctx, cleanupCtx context.Context, cr *chrome.Chrome, vd a11y.
 	})
 
 	if err := cvconn.SetVoice(ctx, vd); err != nil {
-		return SetUpChromeVoxData{}, errors.Wrap(err, "failed to set the ChromeVox voice")
+		return SetUpData{}, errors.Wrap(err, "failed to set the ChromeVox voice")
 	}
 
 	if err := a11y.SetTTSRate(ctx, tconn, 1.0); err != nil {
-		return SetUpChromeVoxData{}, errors.Wrap(err, "failed to change TTS rate")
+		return SetUpData{}, errors.Wrap(err, "failed to change TTS rate")
 	}
 
 	// Wait for ChromeVox to focus the root web area.
 	rootWebArea := nodewith.Role(role.RootWebArea).First()
 	if err = cvconn.WaitForFocusedNode(ctx, tconn, rootWebArea); err != nil {
-		return SetUpChromeVoxData{}, errors.Wrap(err, "failed to wait for initial ChromeVox focus")
+		return SetUpData{}, errors.Wrap(err, "failed to wait for initial ChromeVox focus")
 	}
 
-	return SetUpChromeVoxData{cvconn, sm, tearDown}, nil
+	return SetUpData{cvconn, sm, tearDown}, nil
 }
 
 // focusedNode returns the currently focused node of ChromeVox.

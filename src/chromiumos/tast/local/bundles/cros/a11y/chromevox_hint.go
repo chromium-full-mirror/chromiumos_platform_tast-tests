@@ -80,11 +80,7 @@ func ChromevoxHint(ctx context.Context, s *testing.State) {
 	}
 
 	// Get a speech monitor for the Google TTS engine.
-	ed := a11y.TTSEngineData{
-		ExtID:                     a11y.GoogleTTSExtensionID,
-		UseOnSpeakWithAudioStream: false,
-	}
-
+	ed := a11y.GoogleTTSEngine()
 	sm, err := a11y.RelevantSpeechMonitor(ctx, cr, tconn, ed)
 	if err != nil {
 		s.Fatal("Failed to connect to the TTS background page: ", err)

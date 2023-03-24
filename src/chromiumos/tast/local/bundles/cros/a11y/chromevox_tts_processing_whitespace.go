@@ -49,15 +49,9 @@ func ChromevoxTTSProcessingWhitespace(ctx context.Context, s *testing.State) {
 
 	bt := s.Param().(browser.Type)
 	html := "<textarea></textarea>"
-	vd := a11y.VoiceData{
-		ExtID:  a11y.GoogleTTSExtensionID,
-		Locale: "en-US",
-	}
-	ed := a11y.TTSEngineData{
-		ExtID:                     a11y.GoogleTTSExtensionID,
-		UseOnSpeakWithAudioStream: false,
-	}
-	cvData, err := chromevox.SetUpChromeVox(ctx, cleanupCtx, cr, vd, ed, bt, html)
+	vd := a11y.GoogleTTSEnUsVoice()
+	ed := a11y.GoogleTTSEngine()
+	cvData, err := chromevox.SetUp(ctx, cleanupCtx, cr, vd, ed, bt, html)
 	if err != nil {
 		s.Fatal("Failed to set up ChromeVox: ", err)
 	}

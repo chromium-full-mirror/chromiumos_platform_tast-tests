@@ -47,14 +47,8 @@ func ChromevoxPlainTextEditing(ctx context.Context, s *testing.State) {
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
-	vd := a11y.VoiceData{
-		ExtID:  a11y.GoogleTTSExtensionID,
-		Locale: "en-US",
-	}
-	ed := a11y.TTSEngineData{
-		ExtID:                     a11y.GoogleTTSExtensionID,
-		UseOnSpeakWithAudioStream: false,
-	}
+	vd := a11y.GoogleTTSEnUsVoice()
+	ed := a11y.GoogleTTSEngine()
 	bt := s.Param().(browser.Type)
 	const html = `<label for='singleLine'>singleLine</label>
 <input type='text' id='singleLine' value='Single line field'><br>
@@ -62,7 +56,7 @@ func ChromevoxPlainTextEditing(ctx context.Context, s *testing.State) {
 <textarea id='textarea'>Line 1
 line 2
 line 3</textarea>`
-	cvData, err := chromevox.SetUpChromeVox(ctx, cleanupCtx, cr, vd, ed, bt, html)
+	cvData, err := chromevox.SetUp(ctx, cleanupCtx, cr, vd, ed, bt, html)
 	if err != nil {
 		s.Fatal("Failed to set up ChromeVox: ", err)
 	}

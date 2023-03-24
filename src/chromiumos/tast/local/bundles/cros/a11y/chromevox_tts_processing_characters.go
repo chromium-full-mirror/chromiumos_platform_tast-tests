@@ -58,15 +58,9 @@ func ChromevoxTTSProcessingCharacters(ctx context.Context, s *testing.State) {
 		<p>x, y.</p>
 		<p>"That's all, folks!"</p>
 		<p>"$1,234.56 (plus tax) for 78&percnt; of your %232 pencils?", they mused</p>`
-	vd := a11y.VoiceData{
-		ExtID:  a11y.GoogleTTSExtensionID,
-		Locale: "en-US",
-	}
-	ed := a11y.TTSEngineData{
-		ExtID:                     a11y.GoogleTTSExtensionID,
-		UseOnSpeakWithAudioStream: false,
-	}
-	cvData, err := chromevox.SetUpChromeVox(ctx, cleanupCtx, cr, vd, ed, bt, html)
+	vd := a11y.GoogleTTSEnUsVoice()
+	ed := a11y.GoogleTTSEngine()
+	cvData, err := chromevox.SetUp(ctx, cleanupCtx, cr, vd, ed, bt, html)
 	if err != nil {
 		s.Fatal("Failed to set up ChromeVox: ", err)
 	}

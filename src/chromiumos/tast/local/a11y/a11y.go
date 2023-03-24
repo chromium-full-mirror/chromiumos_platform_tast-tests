@@ -81,6 +81,26 @@ type VoiceData struct {
 	Name   string `json:"voiceName"`
 }
 
+// GoogleTTSEnUsVoice is a convenience method that returns VoiceData that
+// represents the en-US voice for the Google text to speech engine.
+func GoogleTTSEnUsVoice() VoiceData {
+	return VoiceData{
+		ExtID:  GoogleTTSExtensionID,
+		Locale: "en-US",
+	}
+}
+
+// EspeakElVoice is a convenience method that returns VoiceData that represents
+// the el (Greek) voice for the eSpeak text to speech engine. Note: eSpeak does
+// not come with an English voice built-in. We use Greek in many tests because
+// it's built-in and capable of speaking English words.
+func EspeakElVoice() VoiceData {
+	return VoiceData{
+		ExtID:  ESpeakExtensionID,
+		Locale: "el",
+	}
+}
+
 // Voices returns the current TTS voices which are available.
 func Voices(ctx context.Context, conn interface {
 	Eval(ctx context.Context, expr string, out interface{}) error
@@ -110,6 +130,24 @@ func voicesImpl(
 type TTSEngineData struct {
 	ExtID                     string
 	UseOnSpeakWithAudioStream bool
+}
+
+// GoogleTTSEngine is a convenience method that returns TTSEngineData that
+// represents the Google text to speech engine.
+func GoogleTTSEngine() TTSEngineData {
+	return TTSEngineData{
+		ExtID:                     GoogleTTSExtensionID,
+		UseOnSpeakWithAudioStream: false,
+	}
+}
+
+// EspeakEngine is a convenience method that returns TTSEngineData that
+// represents the eSpeak text to speech engine.
+func EspeakEngine() TTSEngineData {
+	return TTSEngineData{
+		ExtID:                     ESpeakExtensionID,
+		UseOnSpeakWithAudioStream: true,
+	}
 }
 
 // SpeechMonitor represents a connection to a TTS extension background

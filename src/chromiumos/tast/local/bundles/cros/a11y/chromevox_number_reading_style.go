@@ -41,17 +41,11 @@ func ChromevoxNumberReadingStyle(ctx context.Context, s *testing.State) {
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
-	vd := a11y.VoiceData{
-		ExtID:  a11y.GoogleTTSExtensionID,
-		Locale: "en-US",
-	}
-	ed := a11y.TTSEngineData{
-		ExtID:                     a11y.GoogleTTSExtensionID,
-		UseOnSpeakWithAudioStream: false,
-	}
+	vd := a11y.GoogleTTSEnUsVoice()
+	ed := a11y.GoogleTTSEngine()
 	bt := browser.TypeAsh
 	html := "<p>123</p>"
-	cvData, err := chromevox.SetUpChromeVox(ctx, ctxCleanup, cr, vd, ed, bt, html)
+	cvData, err := chromevox.SetUp(ctx, ctxCleanup, cr, vd, ed, bt, html)
 	if err != nil {
 		s.Fatal("Failed to set up ChromeVox: ", err)
 	}

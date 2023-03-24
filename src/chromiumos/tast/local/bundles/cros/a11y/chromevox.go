@@ -40,14 +40,8 @@ func init() {
 			Fixture: "chromeLoggedIn",
 			Val: testParam{
 				testData: chromevox.VoiceData{
-					VoiceData: a11y.VoiceData{
-						ExtID:  a11y.GoogleTTSExtensionID,
-						Locale: "en-US",
-					},
-					EngineData: a11y.TTSEngineData{
-						ExtID:                     a11y.GoogleTTSExtensionID,
-						UseOnSpeakWithAudioStream: false,
-					},
+					VoiceData:  a11y.GoogleTTSEnUsVoice(),
+					EngineData: a11y.GoogleTTSEngine(),
 				},
 				browserType: browser.TypeAsh,
 			},
@@ -56,17 +50,8 @@ func init() {
 			Fixture: "chromeLoggedIn",
 			Val: testParam{
 				testData: chromevox.VoiceData{
-					VoiceData: a11y.VoiceData{
-						// eSpeak does not come with an English voice built-in, so we need to
-						// use another language. We use Greek here since the voice is built-in
-						// and capable of speaking English words.
-						ExtID:  a11y.ESpeakExtensionID,
-						Locale: "el",
-					},
-					EngineData: a11y.TTSEngineData{
-						ExtID:                     a11y.ESpeakExtensionID,
-						UseOnSpeakWithAudioStream: true,
-					},
+					VoiceData:  a11y.EspeakElVoice(),
+					EngineData: a11y.EspeakEngine(),
 				},
 				browserType: browser.TypeAsh,
 			},
@@ -76,14 +61,8 @@ func init() {
 			ExtraSoftwareDeps: []string{"lacros"},
 			Val: testParam{
 				testData: chromevox.VoiceData{
-					VoiceData: a11y.VoiceData{
-						ExtID:  a11y.GoogleTTSExtensionID,
-						Locale: "en-US",
-					},
-					EngineData: a11y.TTSEngineData{
-						ExtID:                     a11y.GoogleTTSExtensionID,
-						UseOnSpeakWithAudioStream: false,
-					},
+					VoiceData:  a11y.GoogleTTSEnUsVoice(),
+					EngineData: a11y.GoogleTTSEngine(),
 				},
 				browserType: browser.TypeLacros,
 			},
@@ -93,17 +72,8 @@ func init() {
 			ExtraSoftwareDeps: []string{"lacros"},
 			Val: testParam{
 				testData: chromevox.VoiceData{
-					VoiceData: a11y.VoiceData{
-						// eSpeak does not come with an English voice built-in, so we need to
-						// use another language. We use Greek here since the voice is built-in
-						// and capable of speaking English words.
-						ExtID:  a11y.ESpeakExtensionID,
-						Locale: "el",
-					},
-					EngineData: a11y.TTSEngineData{
-						ExtID:                     a11y.ESpeakExtensionID,
-						UseOnSpeakWithAudioStream: true,
-					},
+					VoiceData:  a11y.EspeakElVoice(),
+					EngineData: a11y.EspeakEngine(),
 				},
 				browserType: browser.TypeLacros,
 			},
@@ -121,7 +91,7 @@ func Chromevox(ctx context.Context, s *testing.State) {
 	td := s.Param().(testParam).testData
 	bt := s.Param().(testParam).browserType
 	const html = "<p>Start</p><p>This is a ChromeVox test</p><p>End</p>"
-	cvData, err := chromevox.SetUpChromeVox(ctx, ctxCleanup, cr, td.VoiceData, td.EngineData, bt, html)
+	cvData, err := chromevox.SetUp(ctx, ctxCleanup, cr, td.VoiceData, td.EngineData, bt, html)
 	if err != nil {
 		s.Fatal("Failed to set up ChromeVox: ", err)
 	}
