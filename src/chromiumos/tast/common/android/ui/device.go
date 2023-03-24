@@ -16,6 +16,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"chromiumos/tast/common/action"
@@ -29,6 +30,7 @@ const (
 	// StartTimeout is the timeout of NewDevice.
 	StartTimeout = 120 * time.Second
 
+	appPackage     = "com.github.uiautomator"
 	serverPackage  = "com.github.uiautomator.test"
 	serverActivity = "androidx.test.runner.AndroidJUnitRunner"
 )
@@ -88,6 +90,15 @@ type DeviceInfo struct {
 func NewDevice(ctx context.Context, d *adb.Device) (*Device, error) {
 	ictx, cancel := context.WithTimeout(ctx, StartTimeout)
 	defer cancel()
+
+	// Check if there's already running UI Automator server.
+	out, err := d.ShellCommand(ictx, "ps").CombinedOutput(testexec.DumpLogOnError)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to run ps command")
+	}
+	if strings.Contains(string(out), appPackage) {
+		return nil, errors.New("UI Automator server is already running")
+	}
 
 	testing.ContextLog(ctx, "Starting UI Automator server")
 
