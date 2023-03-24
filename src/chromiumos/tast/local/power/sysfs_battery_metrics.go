@@ -91,12 +91,29 @@ func ReadBatteryCapacity(ctx context.Context, devPath string) (float64, error) {
 
 // ReadBatteryChargeNow returns the charge of a battery in Ah.
 // which comes from /sys/class/power_supply/<supply name>/charge_now.
+// If the battery reports energy type data, convert it to charge by energy/voltage.
 func ReadBatteryChargeNow(ctx context.Context, devPath string) (float64, error) {
-	charge, err := readInt64(ctx, path.Join(devPath, "charge_now"))
-	if err != nil {
-		return 0, errors.Wrapf(err, "failed to read charge from %v", devPath)
+	var result float64
+	if charge, err := ReadBatteryProperty(ctx, devPath, "charge_now"); err == nil {
+		// Battery reports charge type data.
+		result = charge * 1e-6
+	} else {
+		// Battery reports energy type data.
+		energy, err := ReadBatteryProperty(ctx, devPath, "energy_now")
+		if err != nil {
+			// Return an invalid value.
+			return 0, err
+		}
+		voltage, err := readFloat64(ctx, path.Join(devPath, "voltage_min_design"))
+		if err != nil {
+			voltage, err = readFloat64(ctx, path.Join(devPath, "voltage_now"))
+			if err != nil {
+				return 0., errors.Wrap(err, "failed to read both voltage_min_design and voltage_now")
+			}
+		}
+		result = energy / voltage
 	}
-	return float64(charge) / 1000000, nil
+	return result, nil
 }
 
 // WaitForCharge waits until the battery is charged.
@@ -146,6 +163,7 @@ func WaitForCharge(ctx context.Context, devPath string, charge float64, timeout 
 			}
 		}
 		testing.ContextLogf(ctx, "battery at %f%% < %f%%", 100.0*now/full, 100.0*charge)
+		// GoBigSleepLint: Wait for battery to charge.
 		if err := testing.Sleep(ctx, 30*time.Second); err != nil {
 			return errors.Wrap(err, "failed to wait for battery to charge")
 		}
@@ -154,19 +172,28 @@ func WaitForCharge(ctx context.Context, devPath string, charge float64, timeout 
 
 // ReadBatteryEnergy returns the remaining energy of a battery in Wh.
 func ReadBatteryEnergy(ctx context.Context, devPath string) (float64, error) {
-	charge, err := ReadBatteryChargeNow(ctx, devPath)
-	if err != nil {
-		return 0, errors.Wrapf(err, "failed to read energy from %v", devPath)
-	}
-
-	voltage, err := readFloat64(ctx, path.Join(devPath, "voltage_min_design"))
-	if err != nil {
-		voltage, err = readFloat64(ctx, path.Join(devPath, "voltage_now"))
-		if err != nil {
-			return 0., errors.Wrap(err, "failed to read both voltage_min_design and voltage_now")
+	var result float64
+	if _, err := os.Stat(path.Join(devPath, "energy_now")); err == nil {
+		// Battery reports energy type data.
+		if readBattery, err := ReadBatteryProperty(ctx, devPath, "energy_now"); err == nil {
+			result = readBattery * 1e-6
 		}
+	} else {
+		charge, err := ReadBatteryProperty(ctx, devPath, "charge_now")
+		if err != nil {
+			return 0, errors.Wrapf(err, "failed to read energy from %v", devPath)
+		}
+
+		voltage, err := readFloat64(ctx, path.Join(devPath, "voltage_min_design"))
+		if err != nil {
+			voltage, err = readFloat64(ctx, path.Join(devPath, "voltage_now"))
+			if err != nil {
+				return 0., errors.Wrap(err, "failed to read both voltage_min_design and voltage_now")
+			}
+		}
+		result = charge * float64(voltage) * 1e-12
 	}
-	return charge * float64(voltage) / 1000000, nil
+	return result, nil
 }
 
 // ReadSystemPower returns system power consumption in Watts.
@@ -197,9 +224,11 @@ func ReadSystemPower(ctx context.Context, devPath string) (float64, error) {
 // ReadBatterySize returns the size of battery in Wh.
 func ReadBatterySize(ctx context.Context, devPath string) (float64, error) {
 	var result float64
-	if readBattery, err := ReadBatteryProperty(ctx, devPath, "energy_full_design"); err == nil {
+	if _, err := os.Stat(path.Join(devPath, "energy_full_design")); err == nil {
 		// Battery reports energy type data.
-		result = readBattery
+		if readBattery, err := ReadBatteryProperty(ctx, devPath, "energy_full_design"); err == nil {
+			result = readBattery * 1e-6
+		}
 	} else {
 		// Battery reports charge type data.
 		chargeFullDesign, err := ReadBatteryProperty(ctx, devPath, "charge_full_design")
@@ -215,6 +244,29 @@ func ReadBatterySize(ctx context.Context, devPath string) (float64, error) {
 		result = chargeFullDesign * voltageNominal * 1e-12
 	}
 	return math.Round(result), nil
+}
+
+// ReadBatteryChargeSize returns the size of battery in Ah.
+func ReadBatteryChargeSize(ctx context.Context, devPath string) (float64, error) {
+	var result float64
+	if readBattery, err := ReadBatteryProperty(ctx, devPath, "charge_full_design"); err == nil {
+		// Battery reports energy type data.
+		result = readBattery * 1e-6
+	} else {
+		// Battery reports charge type data.
+		energyFullDesign, err := ReadBatteryProperty(ctx, devPath, "energy_full_design")
+		if err != nil {
+			// Return an invalid value.
+			return 0, err
+		}
+		voltageNominal, err := ReadBatteryProperty(ctx, devPath, "voltage_min_design")
+		if err != nil {
+			// Return an invalid value.
+			return 0, err
+		}
+		result = energyFullDesign / voltageNominal
+	}
+	return result, nil
 }
 
 // ReadBatteryProperty reads the battery property file content from the given
