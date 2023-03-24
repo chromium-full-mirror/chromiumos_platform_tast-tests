@@ -16,6 +16,7 @@ import (
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/arc/optin"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/vm"
 	"chromiumos/tast/testing"
 )
 
@@ -56,7 +57,7 @@ func MiniVM(ctx context.Context, s *testing.State) {
 	}
 
 	// Get mini-VM CID from Concierge.
-	cid, err := getMiniVMCID(ctx)
+	cid, err := getMiniVMCID(ctx, cr.Creds().User)
 	if err != nil {
 		s.Fatal("Failed to get mini-VM CID: ", err)
 	}
@@ -173,17 +174,14 @@ func waitForPropToExist(ctx context.Context, cid int, prop string) error {
 
 // getMiniVMCID returns the context identifier (CID) of the currently running
 // mini-ARCVM instance, if any.
-func getMiniVMCID(ctx context.Context) (int, error) {
-	out, err := testexec.CommandContext(
-		ctx, "concierge_client", "--get_vm_cid", "--name=arcvm",
-		"--cryptohome_id=ARCVM_DEFAULT_OWNER").Output(testexec.DumpLogOnError)
+func getMiniVMCID(ctx context.Context, user string) (int, error) {
+	// Create a stub "ARCVM" object to get its metadata from Concierge.
+	arcVM, err := vm.GetRunningArcVM(ctx, user)
 	if err != nil {
 		return 0, err
 	}
 
-	cid, err := strconv.Atoi(strings.TrimSpace(string(out)))
-	if err != nil {
-		return 0, err
-	}
-	return cid, nil
+	// Safe to convert as for all intents and purposes the CID would fit within the minimum size of
+	// an int.
+	return int(arcVM.ContextID), nil
 }
