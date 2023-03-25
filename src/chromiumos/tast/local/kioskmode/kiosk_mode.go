@@ -55,9 +55,6 @@ var (
 	// KioskAppBtnName is the name of the Printest app which shows up in the Apps
 	// menu on the sign-in screen.
 	KioskAppBtnName = "Simple Printest"
-	// KioskAppBtnNode node representing this application on the Apps menu on
-	// the Sign-in screen.
-	KioskAppBtnNode = nodewith.Name(KioskAppBtnName).ClassName("MenuItemView")
 	kioskAppPolicy  = policy.DeviceLocalAccountInfo{
 		AccountID:   &KioskAppAccountID,
 		AccountType: &kioskAppAccountType,
