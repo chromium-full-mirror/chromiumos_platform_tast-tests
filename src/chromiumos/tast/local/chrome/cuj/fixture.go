@@ -840,6 +840,8 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 			if f.docsBlocker {
 				opts = append(opts, chrome.LacrosUnpackedExtension(docsBlockerExtDir))
 			}
+
+			opts = append(opts, chrome.EnableFeatures("LacrosProfileMigrationForceOff"))
 		} else {
 			if f.docsBlocker {
 				opts = append(opts, chrome.UnpackedExtension(docsBlockerExtDir))
