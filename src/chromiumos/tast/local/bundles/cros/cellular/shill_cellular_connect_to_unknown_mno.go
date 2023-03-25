@@ -116,20 +116,23 @@ func ShillCellularConnectToUnknownMno(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Error getting Attach APN properties: ", err)
 	}
-	connectApn, err := modem.GetPropertiesOfFirstConnectedBearer(ctx)
+	bearer, err := modem.GetFirstConnectedDataBearer(ctx, mmconst.BearerAPNTypeDefault)
 	if err != nil {
-		s.Fatal("Error getting Connect APN properties: ", err)
+		s.Fatal("Error getting Default APN properties: ", err)
 	}
 
 	testing.ContextLog(ctx, "modemAttachApn:", modemAttachApn)
-	testing.ContextLog(ctx, "connectApn", connectApn)
+	testing.ContextLog(ctx, "connectApn", bearer)
 
 	apnName := modemAttachApn["apn"]
 	if apnName != expectedLastAttachAPN {
 		s.Fatalf("Last Attach APN doesn't match: got %q, want %q", apnName, expectedLastAttachAPN)
 	}
 
-	apnName = connectApn["apn"]
+	apnName, err = bearer.GetAPN()
+	if err != nil {
+		s.Fatal("Error getting APN name: ", err)
+	}
 	if apnName != expectedLastGoodAPN {
 		s.Fatalf("Last good APN doesn't match: got %q, want %q", apnName, expectedLastGoodAPN)
 	}

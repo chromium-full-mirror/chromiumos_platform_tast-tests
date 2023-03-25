@@ -78,6 +78,8 @@ const (
 	BearerPropertyIPAddress = "address"
 	BearerPropertyIPPrefix  = "prefix"
 	BearerPropertyIPDns1    = "dns1"
+	BearerPropertyIPDns2    = "dns2"
+	BearerPropertyIPDns3    = "dns3"
 	BearerPropertyIPGateway = "gateway"
 	BearerPropertyIPMtu     = "mtu"
 )
@@ -117,6 +119,18 @@ const (
 	BearerMultiplexSupportNone      BearerMultiplexSupport = 1
 	BearerMultiplexSupportRequested BearerMultiplexSupport = 2
 	BearerMultiplexSupportRequired  BearerMultiplexSupport = 3
+)
+
+// BearerAPNType APN types options from Modemmanager-enums.h
+type BearerAPNType uint32
+
+// Most common bearer apn types
+const (
+	BearerAPNTypeNone      BearerAPNType = 0
+	BearerAPNTypeInitial   BearerAPNType = 1 << 0
+	BearerAPNTypeDefault   BearerAPNType = 1 << 1
+	BearerAPNTypeIMS       BearerAPNType = 1 << 2
+	BearerAPNTypeTethering BearerAPNType = 1 << 13
 )
 
 // Wait times for modem at Modemmanager operations
