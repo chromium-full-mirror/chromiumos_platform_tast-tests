@@ -75,6 +75,13 @@ func init() {
 				duration: 3 * time.Second,
 			},
 			ExtraAttr: []string{"informational", "group:criticalstaging"},
+		}, {
+			Name: "stylus",
+			Val: eventStartupParams{
+				category: "stylus",
+				duration: 3 * time.Second,
+			},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}},
 	})
 }
