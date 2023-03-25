@@ -13,52 +13,68 @@ option go_package = "chromiumos/tast/services/cros/shimlessrma";
 // AppService provide operations to ShimlessRMA on the DUT.
 service AppService {
   // Creates ShimlessRMA.
-  rpc NewShimlessRMA (NewShimlessRMARequest) returns (google.protobuf.Empty) {}
+  rpc NewShimlessRMA(NewShimlessRMARequest) returns (google.protobuf.Empty) {}
 
   // Closes and releases the resources obtained by New.
-  rpc CloseShimlessRMA (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  rpc CloseShimlessRMA(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
   // Test welcome page and network connection page.
-  rpc TestWelcomeAndNetworkConnection (TestWelcomeAndNetworkConnectionRequest) returns (google.protobuf.Empty) {}
+  rpc TestWelcomeAndNetworkConnection(TestWelcomeAndNetworkConnectionRequest)
+      returns (google.protobuf.Empty) {}
 
   // Prepare DUT for offline test (temporary local test).
-  rpc PrepareOfflineTest (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  rpc PrepareOfflineTest(google.protobuf.Empty)
+      returns (google.protobuf.Empty) {}
 
   // Waits for page to load.
-  rpc WaitForPageToLoad (WaitForPageToLoadRequest) returns (google.protobuf.Empty) {}
+  rpc WaitForPageToLoad(WaitForPageToLoadRequest)
+      returns (google.protobuf.Empty) {}
 
   // Left clicks a button.
-  rpc LeftClickButton (LeftClickButtonRequest) returns (google.protobuf.Empty) {}
+  rpc LeftClickButton(LeftClickButtonRequest) returns (google.protobuf.Empty) {}
 
   // Left clicks a toggle button.
-  rpc LeftClickToggleButton (LeftClickToggleButtonRequest) returns (google.protobuf.Empty) {}
+  rpc LeftClickToggleButton(LeftClickToggleButtonRequest)
+      returns (google.protobuf.Empty) {}
 
   // Waits until a button enabled.
-  rpc WaitUntilButtonEnabled (WaitUntilButtonEnabledRequest) returns (google.protobuf.Empty) {}
+  rpc WaitUntilButtonEnabled(WaitUntilButtonEnabledRequest)
+      returns (google.protobuf.Empty) {}
 
   // Left clicks a Radio button.
-  rpc LeftClickRadioButton (LeftClickRadioButtonRequest) returns (google.protobuf.Empty) {}
+  rpc LeftClickRadioButton(LeftClickRadioButtonRequest)
+      returns (google.protobuf.Empty) {}
 
   // Left clicks a link.
-  rpc LeftClickLink (LeftClickLinkRequest) returns (google.protobuf.Empty) {}
+  rpc LeftClickLink(LeftClickLinkRequest) returns (google.protobuf.Empty) {}
 
   // Retrieve a text by prefix
-  rpc RetrieveTextByPrefix (RetrieveTextByPrefixRequest) returns (RetrieveTextByPrefixResponse) {}
+  rpc RetrieveTextByPrefix(RetrieveTextByPrefixRequest)
+      returns (RetrieveTextByPrefixResponse) {}
 
   // Enter the content into input box.
-  rpc EnterIntoTextInput(EnterIntoTextInputRequest) returns (google.protobuf.Empty) {}
+  rpc EnterIntoTextInput(EnterIntoTextInputRequest)
+      returns (google.protobuf.Empty) {}
 
   // Select a dropdown menu and changes its selected option to the desired value
   rpc SetDropdown(SetDropdownRequest) returns (google.protobuf.Empty) {}
 
   // Bypass firmware installation.
-  rpc BypassFirmwareInstallation(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  rpc BypassFirmwareInstallation(google.protobuf.Empty)
+      returns (google.protobuf.Empty) {}
+
+  // Bypass calibration.
+  rpc BypassCalibration(google.protobuf.Empty) returns (google.protobuf.Empty) {
+  }
 
   // VerifyNoWifiConnected verify that no wifi is connected.
-  rpc VerifyNoWifiConnected(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  rpc VerifyNoWifiConnected(google.protobuf.Empty)
+      returns (google.protobuf.Empty) {}
 
-  // VerifyTestWelcomeAndNetworkConnectionSuccess verify that TestWelcomeAndNetworkConnection runs successfully.
-  rpc VerifyTestWelcomeAndNetworkConnectionSuccess(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  // VerifyTestWelcomeAndNetworkConnectionSuccess verify that
+  // TestWelcomeAndNetworkConnection runs successfully.
+  rpc VerifyTestWelcomeAndNetworkConnectionSuccess(google.protobuf.Empty)
+      returns (google.protobuf.Empty) {}
 }
 
 message NewShimlessRMARequest {
@@ -127,6 +143,4 @@ message SetDropdownRequest {
   string option = 2;
 }
 
-message TestWelcomeAndNetworkConnectionRequest {
-  string wifiName = 1;
-}
+message TestWelcomeAndNetworkConnectionRequest { string wifiName = 1; }

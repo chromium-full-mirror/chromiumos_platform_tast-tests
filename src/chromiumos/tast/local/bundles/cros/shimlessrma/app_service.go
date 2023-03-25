@@ -30,6 +30,7 @@ import (
 
 const (
 	testFile              = "/var/lib/rmad/.test"
+	bypassCalibrationFile = "/var/lib/rmad/.disable_calibration"
 	offlineLogFile        = "/var/lib/rmad/offline.log"
 	offlineExecuteSuccess = "Success"
 	googleURL             = "google.com"
@@ -310,6 +311,14 @@ func (shimlessRMA *AppService) BypassFirmwareInstallation(ctx context.Context, r
 
 	if err := ioutil.WriteFile(stateFilePath, updatedByteValue, 0666); err != nil {
 		return nil, err
+	}
+	return &empty.Empty{}, nil
+}
+
+// BypassCalibration creates a file to bypass calibration steps.
+func (shimlessRMA *AppService) BypassCalibration(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+	if _, err := os.Create(bypassCalibrationFile); err != nil {
+		return nil, errors.Wrap(err, "failed to create .disable_calibration file")
 	}
 	return &empty.Empty{}, nil
 }

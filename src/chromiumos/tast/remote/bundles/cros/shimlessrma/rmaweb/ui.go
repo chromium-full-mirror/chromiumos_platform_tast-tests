@@ -405,6 +405,17 @@ func (uiHelper *UIHelper) BypassFirmwareInstallation(ctx context.Context) error 
 	return uiHelper.Dut.Reboot(ctx)
 }
 
+// BypassCalibration will skip calibration.
+func (uiHelper *UIHelper) BypassCalibration(ctx context.Context) error {
+	// This sleep is important since we need to wait for RMAD to update state file completed.
+	testing.Sleep(ctx, 3*time.Second)
+	if _, err := uiHelper.Client.BypassCalibration(ctx, &empty.Empty{}); err != nil {
+		return err
+	}
+
+	return uiHelper.Dut.Reboot(ctx)
+}
+
 // WaitForFirmwareInstallation will trigger and wait for firmware installation.
 func (uiHelper *UIHelper) WaitForFirmwareInstallation(ctx context.Context) error {
 	if err := uiHelper.FirmwareHelper.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {

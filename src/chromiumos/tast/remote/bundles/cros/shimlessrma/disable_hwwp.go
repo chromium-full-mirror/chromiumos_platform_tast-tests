@@ -184,8 +184,27 @@ func DisableHWWP(ctx context.Context, s *testing.State) {
 	}
 	// Restart will dispose resources, so don't dispose resources explicitly.
 
-	if err := action.Combine("navigate to Device Provision page",
+	// Always bypass calibration in this test.
+	// We have another test just for calibration.
+	if err := action.Combine("bypass calibration after firmware installation",
 		uiHelper.FirmwareInstallationPageOperation,
+		uiHelper.BypassCalibration,
+	)(ctx); err != nil {
+		s.Fatal("Fail to bypass calibration after firmware installation: ", err)
+	}
+
+	// Wait for reboot start.
+	if err := testing.Sleep(ctx, rmaweb.WaitForRebootStart); err != nil {
+		s.Error("Fail to sleep: ", err)
+	}
+
+	uiHelper, err = rmaweb.NewUIHelper(ctx, dut, firmwareHelper, s.RPCHint(), key, true)
+	if err != nil {
+		s.Fatal("Fail to initialize RMA Helper: ", err)
+	}
+	// Restart will dispose resources, so don't dispose resources explicitly.
+
+	if err := action.Combine("navigate to Device Provision page",
 		uiHelper.DeviceInformationPageOperation,
 		uiHelper.DeviceProvisionPageOperation,
 	)(ctx); err != nil {
