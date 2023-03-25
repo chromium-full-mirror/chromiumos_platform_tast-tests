@@ -215,6 +215,18 @@ func TestPlaybackPerfParams(t *testing.T) {
 		}
 	}
 
+	// Long Out-of-process video decoding (ash-chrome)
+	for _, codec := range []string{"h264", "vp9"} {
+		resolution, fps, dec := 1080, 30, "hw"
+		file := playbackPerfLongFile[codec]
+		param := genPlaybackParam(codec, file, resolution, fps, dec,
+			"long_oopvd", "chromeVideoOOPVD",
+			[]string{"drm_atomic"})
+		param.HardwareDeps = "hwdep.SkipOnModel(\"hana\", \"elm\"), hwdep.InternalDisplay()"
+		param.MeasureRoughness = true
+		params = append(params, param)
+	}
+
 	// Out-of-process video decoding (lacros-chrome).
 	for _, resolution := range []int{720, 1080, 2160} {
 		fpss := []int{30}
@@ -226,6 +238,18 @@ func TestPlaybackPerfParams(t *testing.T) {
 				genPlaybackParam("h264", genPlaybackPerfDataPath("h264", resolution, fps),
 					resolution, fps, "hw", "lacros_oopvd", "chromeVideoLacrosOOPVD", []string{"lacros"}))
 		}
+	}
+
+	// Long Out-of-process video decoding (lacros-chrome).
+	for _, codec := range []string{"h264", "vp9"} {
+		resolution, fps, dec := 1080, 30, "hw"
+		file := playbackPerfLongFile[codec]
+		param := genPlaybackParam(codec, file, resolution, fps, dec,
+			"long_lacros_oopvd", "chromeVideoLacrosOOPVD",
+			[]string{"drm_atomic", "lacros"})
+		param.HardwareDeps = "hwdep.SkipOnModel(\"hana\", \"elm\"), hwdep.InternalDisplay()"
+		param.MeasureRoughness = true
+		params = append(params, param)
 	}
 
 	// grid
@@ -246,6 +270,18 @@ func TestPlaybackPerfParams(t *testing.T) {
 			genPlaybackParam(codec, genPlaybackPerfDataPath(codec, resolution, fps),
 				resolution, fps, dec, "lacros", "chromeVideoLacros",
 				[]string{"lacros"}))
+	}
+
+	// Long lacros
+	for _, codec := range []string{"h264", "vp9"} {
+		resolution, fps, dec := 1080, 30, "hw"
+		file := playbackPerfLongFile[codec]
+		param := genPlaybackParam(codec, file, resolution, fps, dec,
+			"long_lacros", "chromeVideoLacros",
+			[]string{"drm_atomic", "lacros"})
+		param.HardwareDeps = "hwdep.SkipOnModel(\"hana\", \"elm\"), hwdep.InternalDisplay()"
+		param.MeasureRoughness = true
+		params = append(params, param)
 	}
 
 	// multi-playback

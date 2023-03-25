@@ -824,6 +824,32 @@ func init() {
 				Fixture:           "chromeVideoOOPVD",
 			},
 			{
+				Name: "h264_1080p_30fps_hw_long_oopvd",
+				Val: playbackPerfParams{
+					fileName:         "crosvideo/1080.mp4",
+					decoderType:      0,
+					browserType:      browser.TypeAsh,
+					measureRoughness: true,
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("hana", "elm"), hwdep.InternalDisplay()),
+				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_1080_30", "drm_atomic"},
+				ExtraData:         []string{"crosvideo/1080.mp4"},
+				Fixture:           "chromeVideoOOPVD",
+			},
+			{
+				Name: "vp9_1080p_30fps_hw_long_oopvd",
+				Val: playbackPerfParams{
+					fileName:         "crosvideo/1080.webm",
+					decoderType:      0,
+					browserType:      browser.TypeAsh,
+					measureRoughness: true,
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("hana", "elm"), hwdep.InternalDisplay()),
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_1080_30", "drm_atomic"},
+				ExtraData:         []string{"crosvideo/1080.webm"},
+				Fixture:           "chromeVideoOOPVD",
+			},
+			{
 				Name: "h264_720p_30fps_hw_lacros_oopvd",
 				Val: playbackPerfParams{
 					fileName:    "perf/h264/720p_30fps_300frames.h264.mp4",
@@ -876,6 +902,32 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_2160_60", "lacros"},
 				ExtraData:         []string{"perf/h264/2160p_60fps_600frames.h264.mp4"},
+				Fixture:           "chromeVideoLacrosOOPVD",
+			},
+			{
+				Name: "h264_1080p_30fps_hw_long_lacros_oopvd",
+				Val: playbackPerfParams{
+					fileName:         "crosvideo/1080.mp4",
+					decoderType:      0,
+					browserType:      browser.TypeLacros,
+					measureRoughness: true,
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("hana", "elm"), hwdep.InternalDisplay()),
+				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_1080_30", "drm_atomic", "lacros"},
+				ExtraData:         []string{"crosvideo/1080.mp4"},
+				Fixture:           "chromeVideoLacrosOOPVD",
+			},
+			{
+				Name: "vp9_1080p_30fps_hw_long_lacros_oopvd",
+				Val: playbackPerfParams{
+					fileName:         "crosvideo/1080.webm",
+					decoderType:      0,
+					browserType:      browser.TypeLacros,
+					measureRoughness: true,
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("hana", "elm"), hwdep.InternalDisplay()),
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_1080_30", "drm_atomic", "lacros"},
+				ExtraData:         []string{"crosvideo/1080.webm"},
 				Fixture:           "chromeVideoLacrosOOPVD",
 			},
 			{
@@ -950,6 +1002,32 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_1080_30", "lacros"},
 				ExtraData:         []string{"perf/vp9/720p_30fps_300frames.vp9.webm"},
+				Fixture:           "chromeVideoLacros",
+			},
+			{
+				Name: "h264_1080p_30fps_hw_long_lacros",
+				Val: playbackPerfParams{
+					fileName:         "crosvideo/1080.mp4",
+					decoderType:      0,
+					browserType:      browser.TypeLacros,
+					measureRoughness: true,
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("hana", "elm"), hwdep.InternalDisplay()),
+				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_1080_30", "drm_atomic", "lacros"},
+				ExtraData:         []string{"crosvideo/1080.mp4"},
+				Fixture:           "chromeVideoLacros",
+			},
+			{
+				Name: "vp9_1080p_30fps_hw_long_lacros",
+				Val: playbackPerfParams{
+					fileName:         "crosvideo/1080.webm",
+					decoderType:      0,
+					browserType:      browser.TypeLacros,
+					measureRoughness: true,
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("hana", "elm"), hwdep.InternalDisplay()),
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_1080_30", "drm_atomic", "lacros"},
+				ExtraData:         []string{"crosvideo/1080.webm"},
 				Fixture:           "chromeVideoLacros",
 			},
 			{
