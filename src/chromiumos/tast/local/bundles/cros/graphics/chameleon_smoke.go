@@ -100,6 +100,11 @@ func ChameleonSmoke(ctx context.Context, s *testing.State) {
 	if !isSupposedConnected && !shouldUsePort {
 		s.Logf("Port %d (%s) is not plugged in Chameleon as expected", port, portStr)
 	} else {
+
+		if err = graphics.ChameleonSetEdid(ctx, cham, port); err != nil {
+			s.Fatalf("Failed to set the EDID for a monitor on port %d: %s", port, err)
+		}
+
 		if err = graphics.ChameleonPlug(ctx, cham, port); err != nil {
 			s.Fatalf("Failed to get stable video input from a physically plugged port %d: %s", port, err)
 		}
