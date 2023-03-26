@@ -152,14 +152,6 @@ func (c *CryptohomeMountInfo) WaitForUserMountAndValidateType(ctx context.Contex
 	ctx, st := timing.Start(ctx, "wait_for_user_mount")
 	defer st.End()
 
-	mounter := cryptohomedExe
-	validatePartition := validatePermanentPartition
-
-	if mountType == Ephemeral {
-		mounter = mounterExe
-		validatePartition = validateGuestPartition
-	}
-
 	userpath, err := c.cryptohome.GetHomeUserPath(ctx, user)
 	if err != nil {
 		return errors.Wrap(err, "failed to get user home path")
@@ -170,30 +162,41 @@ func (c *CryptohomeMountInfo) WaitForUserMountAndValidateType(ctx context.Contex
 	}
 
 	testing.ContextLogf(ctx, "Waiting for cryptohome for user %q with timeout %v", user, WaitForUserTimeout)
-	err = testing.Poll(ctx, func(ctx context.Context) error {
-		partitions, err := c.findMounts(ctx, mounter)
-		if err != nil {
-			return err
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		for _, mounter := range []string{cryptohomedExe, mounterExe} {
+			partitions, err := c.findMounts(ctx, mounter)
+			if err != nil {
+				return err
+			}
+			found, missingPath := 0, ""
+			for _, path := range []string{userpath, systempath} {
+				partition := findPartition(partitions, path)
+				if partition == nil {
+					missingPath = path
+					continue
+				}
+				isPermanent := validatePermanentPartition(partition)
+				isEphemeral := validateGuestPartition(partition)
+				if !isPermanent && !isEphemeral {
+					return testing.PollBreak(errors.Errorf("%v not a valid partition", path))
+				} else if mountType == Ephemeral && !isEphemeral {
+					return testing.PollBreak(errors.Errorf("%v is permanent, expected ephemeral", path))
+				} else if mountType == Permanent && !isPermanent {
+					return testing.PollBreak(errors.Errorf("%v is ephemeral, expected permanent", path))
+				}
+				found++
+			}
+			if found > 0 {
+				if missingPath == "" {
+					return nil // found all partitions and passed all checks
+				}
+				// At least one partition is missing.
+				return errors.Errorf("%v not found", missingPath)
+			}
 		}
-		up := findPartition(partitions, userpath)
-		if up == nil {
-			return errors.Errorf("%v not found", userpath)
-		}
-		if !validatePartition(up) {
-			return errors.Errorf("%v not a valid partition", up)
-		}
-		sp := findPartition(partitions, systempath)
-		if sp == nil {
-			return errors.Errorf("%v not found", systempath)
-		}
-		if !validatePartition(sp) {
-			return errors.Errorf("%v not a valid partition", sp)
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: WaitForUserTimeout, Interval: mountPollInterval})
-
-	if err != nil {
-		return errors.Wrapf(err, "not mounted for %s", user)
+		return errors.New("no mount found")
+	}, &testing.PollOptions{Timeout: WaitForUserTimeout, Interval: mountPollInterval}); err != nil {
+		return errors.Wrapf(err, "missing or invalid mount for %s", user)
 	}
 	return nil
 }
