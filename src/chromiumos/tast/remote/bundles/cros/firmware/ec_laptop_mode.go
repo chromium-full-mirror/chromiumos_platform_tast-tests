@@ -48,7 +48,7 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
-		Attr:         []string{"group:firmware", "firmware_unstable", "firmware_detachable"},
+		Attr:         []string{"group:firmware", "firmware_unstable"},
 		SoftwareDeps: []string{"chrome"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		Fixture:      fixture.NormalMode,
@@ -73,6 +73,7 @@ func init() {
 				formFactor:    "detachable",
 				setLaptopMode: "basestate attach",
 			},
+			ExtraAttr: []string{"firmware_detachable"},
 		}},
 		Timeout: 10 * time.Minute,
 	})

@@ -119,7 +119,7 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
-		Attr:         []string{"group:firmware", "firmware_unstable", "firmware_detachable"},
+		Attr:         []string{"group:firmware", "firmware_unstable"},
 		Timeout:      10 * time.Minute,
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.firmware.UtilsService", "tast.cros.graphics.ScreenshotService", "tast.cros.inputs.TouchpadService", "tast.cros.inputs.TouchscreenService"},
@@ -174,6 +174,7 @@ func init() {
 				evTestdetectTouchpad:    false,
 				evTestdetectTouchscreen: true,
 			},
+			ExtraAttr: []string{"firmware_detachable"},
 		}, {
 			ExtraHardwareDeps: hwdep.D(
 				hwdep.FormFactor(hwdep.Convertible),

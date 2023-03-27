@@ -54,7 +54,7 @@ func init() {
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// TODO(b/200305355): Add back to firmware_unstable when this test passes.
 		// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
-		Attr:         []string{"group:firmware", "firmware_detachable"},
+		Attr:         []string{"group:firmware"},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.ui.ScreenRecorderService", "tast.cros.browser.ChromeService", "tast.cros.ui.CheckVirtualKeyboardService", "tast.cros.firmware.UtilsService"},
 		Fixture:      fixture.NormalMode,
@@ -77,6 +77,7 @@ func init() {
 				tabletModeOn:      "basestate detach",
 				tabletModeOff:     "basestate attach",
 			},
+			ExtraAttr: []string{"firmware_detachable"},
 		}, {
 			Name:              "chromeslate",
 			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Chromeslate)),
