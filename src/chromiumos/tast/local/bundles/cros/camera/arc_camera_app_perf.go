@@ -71,7 +71,9 @@ func ARCCameraAppPerf(ctx context.Context, s *testing.State) {
 
 	// Wait until CPU is cooled down.
 	if _, err := cpu.WaitUntilCoolDown(ctx, cpu.DefaultCoolDownConfig(cpu.CoolDownPreserveUI)); err != nil {
-		s.Error("CPU failed to cool down: ", err)
+		// If CPU fails to cool down, skip the performance test instead of failing it.
+		s.Log("[Skip] CPU failed to cool down: ", err)
+		return
 	}
 
 	// Start camera testing app.
@@ -205,6 +207,7 @@ func testPreview(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn,
 	}
 
 	testing.ContextLog(ctx, "Warmup: Waiting a bit before starting the measurement")
+	// GoBigSleepLint: It's used as a warm-up step which is part of the performance testing logic.
 	if err := testing.Sleep(ctx, cameraWarmupDuration); err != nil {
 		return errors.Wrap(err, "failed to sleep")
 	}
@@ -220,6 +223,7 @@ func testPreview(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn,
 	}
 
 	// Sleeps while measuring the power metrics.
+	// GoBigSleepLint: It's used as a measurement step which is part of the performance testing logic.
 	if err := testing.Sleep(ctx, iterationCount*iterationDuration); err != nil {
 		return errors.Wrap(err, "failed to sleep")
 	}
@@ -275,6 +279,7 @@ func testRecording(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestCon
 	}
 
 	testing.ContextLog(ctx, "Warmup: Waiting a bit before starting the measurement")
+	// GoBigSleepLint: It's used as a warm-up step which is part of the performance testing logic.
 	if err := testing.Sleep(ctx, cameraWarmupDuration); err != nil {
 		return errors.Wrap(err, "failed to sleep")
 	}
@@ -289,6 +294,7 @@ func testRecording(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestCon
 		return errors.Wrap(err, "failed to start recording")
 	}
 
+	// GoBigSleepLint: It's used as a measurement step which is part of the performance testing logic.
 	if err := testing.Sleep(ctx, iterationCount*iterationDuration); err != nil {
 		return errors.Wrap(err, "failed to sleep")
 	}
