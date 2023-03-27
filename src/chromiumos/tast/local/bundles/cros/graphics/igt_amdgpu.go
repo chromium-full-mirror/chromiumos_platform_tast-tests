@@ -12,7 +12,6 @@ import (
 
 	"chromiumos/tast/local/graphics"
 	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
 )
 
 func init() {
@@ -26,10 +25,9 @@ func init() {
 		},
 		// ChromeOS > Platform > Graphics > Display
 		BugComponent: "b:188154",
-		SoftwareDeps: []string{"drm_atomic", "igt", "no_qemu"},
+		SoftwareDeps: []string{"drm_atomic", "igt", "no_qemu", "amd_cpu"},
 		Attr:         []string{"group:graphics", "graphics_igt"},
 		Fixture:      "chromeGraphicsIgt",
-		HardwareDeps: hwdep.D(hwdep.Platform(graphics.IgtGpuAmd...)),
 		Params: []testing.Param{
 			{
 				Name: "amd_abm",

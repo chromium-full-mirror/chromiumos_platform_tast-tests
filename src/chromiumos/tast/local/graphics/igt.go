@@ -30,9 +30,6 @@ type igtResultSummary struct {
 	skipped int // number of skipped subtests
 }
 
-// IgtGpuAmd is a list of amdgpu boards.
-var IgtGpuAmd = []string{"zork", "grunt", "guybrush", "skyrim"}
-
 // IgtGpuQcom is a list of freedreno boards.
 var IgtGpuQcom = []string{"strongbad", "trogdor"}
 
