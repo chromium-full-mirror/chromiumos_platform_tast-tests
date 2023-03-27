@@ -103,6 +103,10 @@ func ChangePasswordFailure(ctx context.Context, s *testing.State) {
 		if err := oobeConn.Eval(ctx, "document.querySelector('#gaia-password-changed').$.proceedAnyway.click()", nil); err != nil {
 			s.Fatal("Failed to click proceed anyway button: ", err)
 		}
+		if err := oobeConn.Eval(ctx, "OobeAPI.skipPostLoginScreens()", nil); err != nil {
+			// This is not fatal because sometimes it fails because Oobe shutdowns too fast after the call - which produces error.
+			s.Log("Failed to call skip post login screens: ", err)
+		}
 		if err := cr.WaitForOOBEConnectionToBeDismissed(ctx); err != nil {
 			s.Fatal("Failed to wait for OOBE to be dismissed: ", err)
 		}
