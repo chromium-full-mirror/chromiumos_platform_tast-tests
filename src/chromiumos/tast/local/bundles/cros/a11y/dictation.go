@@ -62,7 +62,7 @@ func Dictation(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	ui := uiauto.New(tconn).WithTimeout(10 * time.Second)
+	ui := uiauto.New(tconn).WithTimeout(20 * time.Second)
 	if err := a11y.MaybeCloseDictationDialog(ctx, ui); err != nil {
 		s.Fatal("Failed to close the Dictation dialog: ", err)
 	}
@@ -93,16 +93,14 @@ func Dictation(ctx context.Context, s *testing.State) {
 			return voice.AudioFromFile(ctx, s.DataPath("voice_en_hello.wav"))
 		},
 		// Give Dictation time to process the audio input.
-		uiauto.Sleep(5*time.Second),
+		uiauto.Sleep(10*time.Second),
 	)(ctx); err != nil {
 		s.Fatal("Failed to play audio file: ", err)
 	}
 
-	if err := a11y.ToggleDictation(ctx); err != nil {
-		s.Fatal("Failed to toggle Dictation off: ", err)
-	}
-
 	// Ensure the spoken text was entered into the text field.
+	// Note: Dictation will automatically turn off and enter the recognized text
+	// after going 10 seconds with no recognized speech.
 	textAreaWithContent := nodewith.Attribute("value", "Hello").Role(role.TextField).HasClass("myTextArea").Onscreen()
 	if err := ui.WaitUntilExists(textAreaWithContent)(ctx); err != nil {
 		s.Fatal("Failed to verify text input: ", err)
