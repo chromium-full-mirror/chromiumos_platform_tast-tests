@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"chromiumos/tast/common/chrome/credconfig"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/errors"
@@ -126,7 +127,7 @@ func performRegularBoot(ctx context.Context, outDir string, creds chrome.Creds, 
 func OnDemand(ctx context.Context, s *testing.State) {
 	// Run this test as a managed user.
 	// ARC on Demand is enabled only for managed users. See go/arc-on-demand-v1.
-	creds, err := chrome.PickRandomCreds(s.RequiredVar("arc.managedAccountPool"))
+	creds, err := credconfig.PickRandomCreds(s.RequiredVar("arc.managedAccountPool"))
 	if err != nil {
 		s.Fatal("Failed to get credentials: ", err)
 	}

@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"chromiumos/tast/common/chrome/credconfig"
 	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
@@ -115,7 +116,7 @@ func ManagedAppInstallLogging(ctx context.Context, s *testing.State) {
 	// Flag --arc-install-event-chrome-log-for-tests logs ARC install events to chrome log.
 	args := append(arc.DisableSyncFlags(), "--arc-install-event-chrome-log-for-tests")
 	if err := testing.Poll(ctx, func(ctx context.Context) (retErr error) {
-		creds, err := chrome.PickRandomCreds(s.RequiredVar(arcent.LoginPoolVar))
+		creds, err := credconfig.PickRandomCreds(s.RequiredVar(arcent.LoginPoolVar))
 		if err != nil {
 			rl.Exit("get login creds", err)
 		}

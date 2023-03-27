@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"time"
 
+	"chromiumos/tast/common/chrome/credconfig"
 	"chromiumos/tast/common/hwsec"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto/lockscreen"
@@ -65,7 +66,7 @@ func ChangePassword(ctx context.Context, s *testing.State) {
 	// Isolate the step to leverage `defer` pattern.
 	func() {
 		var err error
-		gaiaCreds, err = chrome.PickRandomCreds(s.RequiredVar("ui.gaiaPoolDefault"))
+		gaiaCreds, err = credconfig.PickRandomCreds(s.RequiredVar("ui.gaiaPoolDefault"))
 		if err != nil {
 			s.Fatal("Failed to parse creds: ", err)
 		}

@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"chromiumos/tast/common/chrome/credconfig"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bundles/cros/arc/removablemedia"
@@ -41,7 +42,7 @@ func init() {
 
 func ExternalStorageDisabled(ctx context.Context, s *testing.State) {
 	// Actual username and password are read from vars/arc.yaml.
-	creds, err := chrome.PickRandomCreds(s.RequiredVar("arc.managedAccountPool"))
+	creds, err := credconfig.PickRandomCreds(s.RequiredVar("arc.managedAccountPool"))
 	if err != nil {
 		s.Fatal("Failed to get login creds: ", err)
 	}

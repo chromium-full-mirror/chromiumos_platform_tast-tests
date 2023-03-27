@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"chromiumos/tast/common/chrome/credconfig"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/arc/arcent"
@@ -75,7 +76,7 @@ func ManagedPlayAvailableAppInstall(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	if err := testing.Poll(ctx, func(ctx context.Context) (retErr error) {
-		creds, err := chrome.PickRandomCreds(s.RequiredVar(arcent.LoginPoolVar))
+		creds, err := credconfig.PickRandomCreds(s.RequiredVar(arcent.LoginPoolVar))
 		if err != nil {
 			rl.Exit("get login creds", err)
 		}

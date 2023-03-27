@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"chromiumos/tast/common/chrome/credconfig"
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
@@ -224,7 +225,7 @@ func parseVars(s *testing.State) spVars {
 		creds.User = usernamePassword[0]
 		creds.Pass = usernamePassword[1]
 	} else {
-		creds, err = chrome.PickRandomCreds(s.RequiredVar("ui.gaiaPoolDefault"))
+		creds, err = credconfig.PickRandomCreds(s.RequiredVar("ui.gaiaPoolDefault"))
 		if err != nil {
 			s.Fatal("Failed to get login creds: ", err)
 		}

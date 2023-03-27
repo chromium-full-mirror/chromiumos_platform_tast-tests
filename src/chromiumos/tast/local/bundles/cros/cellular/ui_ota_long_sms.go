@@ -8,9 +8,9 @@ import (
 	"context"
 	"time"
 
+	"chromiumos/tast/common/chrome/credconfig"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/cellular"
-	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
@@ -86,7 +86,7 @@ func UIOtaLongSms(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	gaiaCreds, err := chrome.PickRandomCreds(s.RequiredVar("cellular.gaiaAccountPool"))
+	gaiaCreds, err := credconfig.PickRandomCreds(s.RequiredVar("cellular.gaiaAccountPool"))
 	if err != nil {
 		s.Fatal("Failed to parse cellular user creds: ", err)
 	}

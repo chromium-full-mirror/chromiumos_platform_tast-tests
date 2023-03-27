@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"chromiumos/tast/common/chrome/credconfig"
 	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/ctxutil"
@@ -69,7 +70,7 @@ func init() {
 func ManagedBoot(ctx context.Context, s *testing.State) {
 	expectEnabled := s.Param().(bool)
 
-	creds, err := chrome.PickRandomCreds(s.RequiredVar(arcent.LoginPoolVar))
+	creds, err := credconfig.PickRandomCreds(s.RequiredVar(arcent.LoginPoolVar))
 	if err != nil {
 		s.Fatal("Failed to get login creds: ", err)
 	}

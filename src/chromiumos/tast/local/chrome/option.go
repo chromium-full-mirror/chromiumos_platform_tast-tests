@@ -9,6 +9,7 @@ import (
 	"math/rand"
 	"time"
 
+	"chromiumos/tast/common/chrome/credconfig"
 	"chromiumos/tast/local/chrome/internal/config"
 	"chromiumos/tast/local/cryptohome"
 )
@@ -22,7 +23,7 @@ const (
 )
 
 // Creds contains credentials to log into a Chrome user session.
-type Creds = config.Creds
+type Creds = credconfig.Creds
 
 // Option is a self-referential function can be used to configure Chrome.
 // See https://commandcenter.blogspot.com.au/2014/01/self-referential-functions-and-design.html
@@ -141,7 +142,7 @@ var random = rand.New(rand.NewSource(time.Now().UnixNano()))
 // logs in chrome.New, as well as available via Chrome.Creds.
 func GAIALoginPool(creds string) Option {
 	return func(cfg *config.MutableConfig) error {
-		creds, err := PickRandomCreds(creds)
+		creds, err := credconfig.PickRandomCreds(creds)
 		if err != nil {
 			return err
 		}
@@ -149,18 +150,6 @@ func GAIALoginPool(creds string) Option {
 		cfg.Creds = creds
 		return nil
 	}
-}
-
-// PickRandomCreds randomly picks one credentials from the passed string. For
-// the format details refer to the GAIALoginPool option documentation.
-func PickRandomCreds(creds string) (Creds, error) {
-	var result Creds
-	cs, err := config.ParseCreds(creds)
-	if err != nil {
-		return result, err
-	}
-	result = cs[random.Intn(len(cs))]
-	return result, nil
 }
 
 // FakeLogin returns an Option that can be passed to New to perform a fake
@@ -194,7 +183,7 @@ func MGSUser(accountID string) Option {
 	// (https://source.chromium.org/chromium/chromium/src/+/main:chrome/browser/ash/policy/core/device_local_account.cc).
 	generatedID := hex.EncodeToString([]byte(accountID)) + "@public-accounts.device-local.localhost"
 	return func(cfg *config.MutableConfig) error {
-		cfg.Creds = config.Creds{User: generatedID}
+		cfg.Creds = credconfig.Creds{User: generatedID}
 		return nil
 	}
 }
@@ -204,7 +193,7 @@ func MGSUser(accountID string) Option {
 func GuestLogin() Option {
 	return func(cfg *config.MutableConfig) error {
 		cfg.LoginMode = config.GuestLogin
-		cfg.Creds = config.Creds{User: cryptohome.GuestUser}
+		cfg.Creds = credconfig.Creds{User: cryptohome.GuestUser}
 		return nil
 	}
 }

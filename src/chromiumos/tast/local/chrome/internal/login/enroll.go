@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"chromiumos/tast/common/chrome/credconfig"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome/internal/cdputil"
 	"chromiumos/tast/local/chrome/internal/config"
@@ -453,7 +454,7 @@ func submitGAIAEnrollmentSignIn(ctx context.Context, oobeConn *driver.Conn, cfg 
 
 // authenticateWithGAIA authenticates by entering the password into the
 // corresponding GAIA field.
-func authenticateWithGAIA(ctx context.Context, oobeConn, gaiaConn *driver.Conn, creds config.Creds) error {
+func authenticateWithGAIA(ctx context.Context, oobeConn, gaiaConn *driver.Conn, creds credconfig.Creds) error {
 	if err := insertGAIAField(ctx, gaiaConn, "input[name=password]", creds.Pass); err != nil {
 		return errors.Wrap(err, "failed to fill in password field")
 	}
@@ -467,7 +468,7 @@ func authenticateWithGAIA(ctx context.Context, oobeConn, gaiaConn *driver.Conn, 
 
 // authenticateWithSAML authenticates by navigating through the test IdP, which
 // generates a SAML assertion using the passed username.
-func authenticateWithSAML(ctx context.Context, gaiaConn *driver.Conn, creds config.Creds) error {
+func authenticateWithSAML(ctx context.Context, gaiaConn *driver.Conn, creds credconfig.Creds) error {
 	if err := gaiaConn.WaitForExpr(ctx, `document.title === 'Test SAML IdP'`); err != nil {
 		return errors.Wrap(err, "failed to wait for test IdP")
 	}

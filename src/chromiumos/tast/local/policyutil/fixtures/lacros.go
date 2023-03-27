@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"chromiumos/tast/common/chrome/credconfig"
 	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
@@ -165,7 +166,7 @@ func (p *policyRealUserFixture) SetUp(ctx context.Context, s *testing.FixtState)
 	}
 	p.fdms = fdms
 
-	gaiaCreds, err := chrome.PickRandomCreds(s.RequiredVar("policy.ManagedUser.accountPool"))
+	gaiaCreds, err := credconfig.PickRandomCreds(s.RequiredVar("policy.ManagedUser.accountPool"))
 	if err != nil {
 		s.Fatal("Failed to parse managed user creds: ", err)
 	}

@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"chromiumos/tast/common/chrome/credconfig"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/bundles/cros/meta/tastrun"
 	"chromiumos/tast/rpc"
@@ -115,26 +116,12 @@ func execStartupPerf(ctx context.Context, s *testing.State, flags []string, resu
 	_ = tastrun.RunAndEvaluate(ctx, s, flags, []string{"lacros.StartupPerf." + variantName}, resultsDir, tastrun.SkipPolicyDisallowSkipping)
 }
 
-// pickRandomCreds picks a random user and password from a list of credentials. Inspired by
-// remote_tests/ui/chrome_service_grpc.go.
-//
-// creds is a string containing multiple credentials separated by newlines:
-//
-//	user1:pass1
-//	user2:pass2
-//	user3:pass3
-//	...
+// pickRandomCreds picks a random user and password from a list of credentials.
 func pickRandomCreds(creds string) (string, string, error) {
-	// Pick a random line
-	lines := strings.Split(creds, "\n")
-	randomIndex := random.Intn(len(lines))
-	line := lines[randomIndex]
-
-	// Extract user and password from the concatenated string
-	line = strings.TrimSpace(line)
-	userNamePassword := strings.SplitN(line, ":", 2)
-	if len(userNamePassword) != 2 {
-		return "", "", errors.Errorf("failed to parse credential list: line %d: does not contain a colon", randomIndex+1)
+	randomCreds, err := credconfig.PickRandomCreds(creds)
+	if err != nil {
+		return "", "", errors.Wrap(err, "failed to get login creds")
 	}
-	return userNamePassword[0], userNamePassword[1], nil
+
+	return randomCreds.User, randomCreds.Pass, nil
 }

@@ -6,13 +6,11 @@ package ui
 
 import (
 	"context"
-	"math/rand"
-	"strings"
-	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 
+	"chromiumos/tast/common/chrome/credconfig"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/crosserverutil"
 	pb "chromiumos/tast/services/cros/ui"
@@ -117,30 +115,15 @@ func ChromeServiceGRPC(ctx context.Context, s *testing.State) {
 	}
 }
 
-var random = rand.New(rand.NewSource(time.Now().UnixNano()))
-
 // pickRandomCreds picks a random user and password from a list of credentials.
-//
-// creds is a string containing multiple credentials separated by newlines:
-//
-//	user1:pass1
-//	user2:pass2
-//	user3:pass3
-//	..
 func pickRandomCreds(creds string) (*pb.NewRequest_Credentials, error) {
-	// Pick a random line
-	lines := strings.Split(creds, "\n")
-	randomIndex := random.Intn(len(lines))
-	line := lines[randomIndex]
-
-	// Extract user and password from the concatenated string
-	line = strings.TrimSpace(line)
-	userNamePassword := strings.SplitN(line, ":", -1)
-	if len(userNamePassword) < 2 {
-		return nil, errors.Errorf("failed to parse credential list from line %d", randomIndex+1)
+	randomCreds, err := credconfig.PickRandomCreds(creds)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get login creds")
 	}
+
 	return &pb.NewRequest_Credentials{
-		Username: userNamePassword[0],
-		Password: userNamePassword[1],
+		Username: randomCreds.User,
+		Password: randomCreds.Pass,
 	}, nil
 }

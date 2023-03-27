@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"chromiumos/tast/common/chrome/credconfig"
 	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/ctxutil"
@@ -86,7 +87,7 @@ func ManagedPlayAppAvailabilityChange(ctx context.Context, s *testing.State) {
 	policies := []policy.Policy{arcEnabledPolicy, arcPolicy}
 
 	if err := testing.Poll(ctx, func(ctx context.Context) (retErr error) {
-		creds, err := chrome.PickRandomCreds(s.RequiredVar(arcent.LoginPoolVar))
+		creds, err := credconfig.PickRandomCreds(s.RequiredVar(arcent.LoginPoolVar))
 		if err != nil {
 			rl.Exit("get login creds", err)
 		}

@@ -10,9 +10,9 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"reflect"
-	"strings"
 	"time"
 
+	"chromiumos/tast/common/chrome/credconfig"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/session"
 )
@@ -69,78 +69,10 @@ const (
 	ContactAuth  AuthType = "contact"  // contact email approval based authentication
 )
 
-// Creds contains credentials to log into a Chrome user session.
-type Creds struct {
-	// User is the user name of a user account. It is typically an email
-	// address (e.g. example@gmail.com).
-	User string
-	// Pass is the password of a user account.
-	Pass string
-
-	// GAIAID is a GAIA ID used on fake logins. If it is empty, an ID is
-	// generated from the user name. The field is ignored on other type of
-	// logins.
-	GAIAID string
-
-	// Contact is an email address of a user who owns a test account.
-	// When logging in with a test account, its contact user may be
-	// notified of a login attempt and asked for approval.
-	Contact string
-
-	// ParentUser is the user name of a parent account. It is used to
-	// approve a login attempt when a child account is supervised by a
-	// parent account.
-	ParentUser string
-	// ParentPass is the pass of a parent account. It is used to approve
-	// a login attempt when a child account is supervised by a parent
-	// account.
-	ParentPass string
-}
-
 // defaultCreds is the default credentials used for fake logins.
-var defaultCreds = Creds{
+var defaultCreds = credconfig.Creds{
 	User: DefaultUser,
 	Pass: DefaultPass,
-}
-
-// ParseCreds parses a string containing a list of credentials.
-//
-// creds is a string containing multiple credentials separated by newlines:
-//
-//	user1:pass1[:gaiaID1][:contact][:parentUser1][:parentPass1]
-//	user2:pass2[:gaiaID2][:contact][:parentUser2][:parentPass2]
-//	user3:pass3[:gaiaID3][:contact][:parentUser3][:parentPass3]
-//	...
-func ParseCreds(credsText string) ([]Creds, error) {
-	// Note: Do not include creds in error messages to avoid accidental
-	// credential leaks in logs.
-	var credsArray []Creds
-	for i, line := range strings.Split(credsText, "\n") {
-		line = strings.TrimSpace(line)
-		if len(line) == 0 || strings.HasPrefix(line, "#") {
-			continue
-		}
-		ps := strings.SplitN(line, ":", 6)
-		if len(ps) < 2 {
-			return nil, errors.Errorf("failed to parse credential list: line %d: does not contain a colon", i+1)
-		}
-		creds := Creds{
-			User: ps[0],
-			Pass: ps[1],
-		}
-		if len(ps) >= 3 && len(ps[2]) > 0 {
-			creds.GAIAID = ps[2]
-		}
-		if len(ps) >= 4 && len(ps[3]) > 0 {
-			creds.Contact = ps[3]
-		}
-		if len(ps) >= 6 && len(ps[4]) > 0 && len(ps[5]) > 0 {
-			creds.ParentUser = ps[4]
-			creds.ParentPass = ps[5]
-		}
-		credsArray = append(credsArray, creds)
-	}
-	return credsArray, nil
 }
 
 // Config contains configurations for chrome.Chrome instance as requested by
@@ -152,7 +84,7 @@ type Config struct {
 }
 
 // Creds returns login credentials.
-func (c *Config) Creds() Creds { return c.m.Creds }
+func (c *Config) Creds() credconfig.Creds { return c.m.Creds }
 
 // NormalizedUser returns a normalized user email.
 func (c *Config) NormalizedUser() string { return c.m.NormalizedUser }
@@ -217,7 +149,7 @@ func (c *Config) EncryptedReportingAddr() string { return c.m.EncryptedReporting
 func (c *Config) EnrollMode() EnrollMode { return c.m.EnrollMode }
 
 // EnrollmentCreds returns the credential used to enroll the device.
-func (c *Config) EnrollmentCreds() Creds { return c.m.EnrollmentCreds }
+func (c *Config) EnrollmentCreds() credconfig.Creds { return c.m.EnrollmentCreds }
 
 // DisablePolicyKeyVerification returns whether to disable policy key verification in Chrome.
 func (c *Config) DisablePolicyKeyVerification() bool { return c.m.DisablePolicyKeyVerification }
@@ -325,55 +257,55 @@ func (c *Config) SkipAutoEnrollmentCheck() bool { return c.m.SkipAutoEnrollmentC
 // - "customized": Reuse checking logic is expected to be customized in customizedReuseCheck() function.
 // This tag must be set for every field with one of the above values. Otherwise, unit test will fail.
 type MutableConfig struct {
-	Creds                           Creds      `reuse_match:"true"`
-	NormalizedUser                  string     `reuse_match:"true"`
-	KeepState                       bool       `reuse_match:"false"`
-	KeepOwnership                   bool       `reuse_match:"true"`
-	DeferLogin                      bool       `reuse_match:"customized"`
-	ReauthMode                      bool       `reuse_match:"customized"`
-	EnableRestoreTabs               bool       `reuse_match:"false"`
-	LoginMode                       LoginMode  `reuse_match:"customized"`
-	TryReuseSession                 bool       `reuse_match:"false"`
-	EnableLoginVerboseLogs          bool       `reuse_match:"true"`
-	VKEnabled                       bool       `reuse_match:"true"`
-	SkipOOBEAfterLogin              bool       `reuse_match:"false"`
-	WaitForCryptohome               bool       `reuse_match:"false"`
-	CustomLoginTimeout              int64      `reuse_match:"false"` // time.Duration can not be serialized to JSON. Store duration in nanoseconds.
-	InstallWebApp                   bool       `reuse_match:"true"`
-	Region                          string     `reuse_match:"true"`
-	PolicyEnabled                   bool       `reuse_match:"true"`
-	DMSAddr                         string     `reuse_match:"true"`
-	RealtimeReportingAddr           string     `reuse_match:"true"`
-	EncryptedReportingAddr          string     `reuse_match:"true"`
-	EnrollMode                      EnrollMode `reuse_match:"true"`
-	EnrollmentCreds                 Creds      `reuse_match:"true"`
-	DisablePolicyKeyVerification    bool       `reuse_match:"true"`
-	ARCMode                         ARCMode    `reuse_match:"true"`
-	ARCUseHugePages                 bool       `reuse_match:"true"`
-	UnRestrictARCCPU                bool       `reuse_match:"true"`
-	BreakpadTestMode                bool       `reuse_match:"true"`
-	ExtraArgs                       []string   `reuse_match:"true"`
-	LacrosExtraArgs                 []string   `reuse_match:"true"`
-	EnableFeatures                  []string   `reuse_match:"true"`
-	LacrosEnableFeatures            []string   `reuse_match:"true"`
-	DisableFeatures                 []string   `reuse_match:"true"`
-	LacrosDisableFeatures           []string   `reuse_match:"true"`
-	ExtraExtDirs                    []string   `reuse_match:"customized"`
-	LacrosExtraExtDirs              []string   `reuse_match:"customized"`
-	SigninExtKey                    string     `reuse_match:"customized"`
-	SkipForceOnlineSignInForTesting bool       `reuse_match:"true"`
-	RemoveNotification              bool       `reuse_match:"true"`
-	HideCrashRestoreBubble          bool       `reuse_match:"true"`
-	ForceLaunchBrowser              bool       `reuse_match:"true"`
-	EphemeralUser                   bool       `reuse_match:"true"`
-	EnablePersonalizationHub        bool       `reuse_match:"true"`
-	UseSandboxGaia                  bool       `reuse_match:"true"`
-	TestExtOAuthClientID            string     `reuse_match:"true"`
-	EnableHIDScreenOnOOBE           bool       `reuse_match:"true"`
-	EnableStackSampledMetrics       bool       `reuse_match:"true"`
-	FieldTrialConfig                string     `reuse_match:"true"`
-	EnableHDR                       bool       `reuse_match:"false"`
-	SkipAutoEnrollmentCheck         bool       `reuse_match:"true"`
+	Creds                           credconfig.Creds `reuse_match:"true"`
+	NormalizedUser                  string           `reuse_match:"true"`
+	KeepState                       bool             `reuse_match:"false"`
+	KeepOwnership                   bool             `reuse_match:"true"`
+	DeferLogin                      bool             `reuse_match:"customized"`
+	ReauthMode                      bool             `reuse_match:"customized"`
+	EnableRestoreTabs               bool             `reuse_match:"false"`
+	LoginMode                       LoginMode        `reuse_match:"customized"`
+	TryReuseSession                 bool             `reuse_match:"false"`
+	EnableLoginVerboseLogs          bool             `reuse_match:"true"`
+	VKEnabled                       bool             `reuse_match:"true"`
+	SkipOOBEAfterLogin              bool             `reuse_match:"false"`
+	WaitForCryptohome               bool             `reuse_match:"false"`
+	CustomLoginTimeout              int64            `reuse_match:"false"` // time.Duration can not be serialized to JSON. Store duration in nanoseconds.
+	InstallWebApp                   bool             `reuse_match:"true"`
+	Region                          string           `reuse_match:"true"`
+	PolicyEnabled                   bool             `reuse_match:"true"`
+	DMSAddr                         string           `reuse_match:"true"`
+	RealtimeReportingAddr           string           `reuse_match:"true"`
+	EncryptedReportingAddr          string           `reuse_match:"true"`
+	EnrollMode                      EnrollMode       `reuse_match:"true"`
+	EnrollmentCreds                 credconfig.Creds `reuse_match:"true"`
+	DisablePolicyKeyVerification    bool             `reuse_match:"true"`
+	ARCMode                         ARCMode          `reuse_match:"true"`
+	ARCUseHugePages                 bool             `reuse_match:"true"`
+	UnRestrictARCCPU                bool             `reuse_match:"true"`
+	BreakpadTestMode                bool             `reuse_match:"true"`
+	ExtraArgs                       []string         `reuse_match:"true"`
+	LacrosExtraArgs                 []string         `reuse_match:"true"`
+	EnableFeatures                  []string         `reuse_match:"true"`
+	LacrosEnableFeatures            []string         `reuse_match:"true"`
+	DisableFeatures                 []string         `reuse_match:"true"`
+	LacrosDisableFeatures           []string         `reuse_match:"true"`
+	ExtraExtDirs                    []string         `reuse_match:"customized"`
+	LacrosExtraExtDirs              []string         `reuse_match:"customized"`
+	SigninExtKey                    string           `reuse_match:"customized"`
+	SkipForceOnlineSignInForTesting bool             `reuse_match:"true"`
+	RemoveNotification              bool             `reuse_match:"true"`
+	HideCrashRestoreBubble          bool             `reuse_match:"true"`
+	ForceLaunchBrowser              bool             `reuse_match:"true"`
+	EphemeralUser                   bool             `reuse_match:"true"`
+	EnablePersonalizationHub        bool             `reuse_match:"true"`
+	UseSandboxGaia                  bool             `reuse_match:"true"`
+	TestExtOAuthClientID            string           `reuse_match:"true"`
+	EnableHIDScreenOnOOBE           bool             `reuse_match:"true"`
+	EnableStackSampledMetrics       bool             `reuse_match:"true"`
+	FieldTrialConfig                string           `reuse_match:"true"`
+	EnableHDR                       bool             `reuse_match:"false"`
+	SkipAutoEnrollmentCheck         bool             `reuse_match:"true"`
 }
 
 // Option is a self-referential function can be used to configure Chrome.
@@ -398,7 +330,7 @@ func NewConfig(opts []Option) (*Config, error) {
 			Region:                          "us",
 			PolicyEnabled:                   false,
 			EnrollMode:                      NoEnroll,
-			EnrollmentCreds:                 Creds{},
+			EnrollmentCreds:                 credconfig.Creds{},
 			DisablePolicyKeyVerification:    false,
 			BreakpadTestMode:                true,
 			EnableRestoreTabs:               false,
