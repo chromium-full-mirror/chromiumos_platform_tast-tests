@@ -352,10 +352,12 @@ func SysfsBatteryPath(ctx context.Context) (string, error) {
 
 // SysfsBatteryMetrics hold the metrics read from sysfs.
 type SysfsBatteryMetrics struct {
-	powerMetric     perf.Metric
-	batteryPath     string
-	dischargeMetric perf.Metric
-	initialEnergy   float64
+	batteryPath           string
+	initialEnergy         float64 // in Wh
+	batteryChargeSize     float64 // in Ah
+	chargeRemainingMetric perf.Metric
+	dischargeMetric       perf.Metric
+	powerMetric           perf.Metric
 }
 
 // Assert that SysfsBatteryMetrics can be used in perf.Timeline.
@@ -389,8 +391,13 @@ func (b *SysfsBatteryMetrics) Setup(ctx context.Context, prefix, intervalName st
 	if err != nil {
 		return err
 	}
+	b.batteryChargeSize, err = ReadBatteryChargeSize(ctx, b.batteryPath)
+	if err != nil {
+		return err
+	}
 	b.powerMetric = perf.Metric{Name: prefix + "system", Unit: "W", Direction: perf.SmallerIsBetter, Multiple: true, Interval: intervalName}
 	b.dischargeMetric = perf.Metric{Name: prefix + "discharge_mwh", Unit: "mWh", Direction: perf.SmallerIsBetter, Multiple: false}
+	b.chargeRemainingMetric = perf.Metric{Name: prefix + "battery_soc", Unit: "percent", Direction: perf.BiggerIsBetter, Multiple: true, Interval: intervalName}
 	return nil
 }
 
@@ -414,8 +421,13 @@ func (b *SysfsBatteryMetrics) Snapshot(ctx context.Context, values *perf.Values)
 		testing.ContextLog(ctx, "Failed to read system power: ", err)
 		return err
 	}
-
+	chargeRemaining, err := ReadBatteryChargeNow(ctx, b.batteryPath)
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to read system charge remaining: ", err)
+		return err
+	}
 	values.Append(b.powerMetric, power)
+	values.Append(b.chargeRemainingMetric, chargeRemaining/b.batteryChargeSize)
 	return nil
 }
 

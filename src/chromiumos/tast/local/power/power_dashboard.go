@@ -58,19 +58,90 @@ func ConvertPowerPerfValue(ctx context.Context, values *perf.Values) map[string]
 		innerAverageMap[metric.Name] = mean
 	}
 
-	powerDict["data"] = innerDataMap
-	powerDict["average"] = innerAverageMap
-
+	var totalDurationSec float64
 	if value, ok := innerDataMap["t"]; ok {
 		var sampleCount = len(value)
 		powerDict["sample_count"] = sampleCount
 		if sampleCount > 1 {
-			var totalDuration = value[sampleCount-1] - value[0]
-			powerDict["sample_duration"] = totalDuration / (float64(sampleCount) - 1)
+			totalDurationSec = value[sampleCount-1] - value[0]
+			powerDict["sample_duration"] = totalDurationSec / (float64(sampleCount) - 1)
 		}
 	}
 
+	MinutesBatteryLife := getMinutesBatteryLife(ctx, innerDataMap, innerAverageMap, totalDurationSec)
+	values.Set(perf.Metric{
+		Name:      "minutes_battery_life",
+		Unit:      "minute",
+		Direction: perf.BiggerIsBetter,
+	}, MinutesBatteryLife)
+	innerDataMap["minutes_battery_life"] = []float64{MinutesBatteryLife}
+	innerAverageMap["minutes_battery_life"] = MinutesBatteryLife
+
+	values.Set(perf.Metric{
+		Name:      "minutes_battery_life_tested",
+		Unit:      "minute",
+		Direction: perf.BiggerIsBetter,
+	}, totalDurationSec/60.0)
+	innerDataMap["minutes_battery_life_tested"] = []float64{totalDurationSec / 60.0}
+	innerAverageMap["minutes_battery_life_tested"] = totalDurationSec / 60.0
+
+	powerDict["data"] = innerDataMap
+	powerDict["average"] = innerAverageMap
 	return powerDict
+}
+
+// getMinutesBatteryLife calculates and returns the projected operating minutes.
+func getMinutesBatteryLife(ctx context.Context,
+	innerDataMap map[string][]float64,
+	innerAverageMap map[string]float64,
+	totalDurationSec float64) float64 {
+	// Power key value calculation.
+	var MinutesBatteryLife float64
+	var energyFull float64
+	batteryPath, err := SysfsBatteryPath(ctx)
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to calculate key value: ", err)
+		return MinutesBatteryLife
+	}
+
+	energyFull, err = ReadBatterySize(ctx, batteryPath)
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to get battery size: ", err)
+		return MinutesBatteryLife
+	}
+
+	if energyUsed, ok := innerAverageMap["discharge_mwh"]; ok && energyUsed > 0 && totalDurationSec > 0 {
+		lowBatteryShutdownPercent, err := LowBatteryShutdownPercent(ctx)
+		if err != nil {
+			testing.ContextLog(ctx, "Failed to read low battery shut down percent: Use 4% for approximation")
+			lowBatteryShutdownPercent = 4.0
+		}
+		batSizeScale := 1 - lowBatteryShutdownPercent/100.0
+
+		var chargeUsedInPercent float64
+		chargeValue, exist := innerDataMap["battery_soc"]
+		if exist && len(chargeValue) > 1 {
+			chargeUsedInPercent = chargeValue[len(chargeValue)-1] - chargeValue[0]
+		}
+		// For longer tests (> 1hr), charge (Ah) consumption is more accurate for calculating projected battery life.
+		// For shorter tests (< 1hr), energy (Wh) consumption is more accurate for calculating projected battery life.
+		const MinReasonableDuration = 3600
+		if totalDurationSec > MinReasonableDuration && chargeUsedInPercent > 0 {
+			// Use charge to project operation time when test run time > 1 hour.
+			chargeRate := chargeUsedInPercent / (totalDurationSec / 60.0)
+			MinutesBatteryLife = batSizeScale / chargeRate
+		} else {
+			// Use energy to project operation time when test run time < 1 hour.
+			// Notice energyUsed is in mWh and battery size is in Wh. energyRate is in Wh/min.
+			energyRate := energyUsed / (totalDurationSec / 60.0) / 1000.0
+			MinutesBatteryLife = energyFull * batSizeScale / energyRate
+		}
+	} else {
+		// If energy used is 0 (test too short to cover valid samplings, test did not run on battery, ...):
+		// Log that we will not calculate minutes_battery_life.
+		testing.ContextLog(ctx, "Failed to calculate minutes_battery_life: 0 energy usage")
+	}
+	return MinutesBatteryLife
 }
 
 // CreatePowerLogDict creates the power log dictionary from power dict.
