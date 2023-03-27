@@ -10,10 +10,12 @@ import (
 	"time"
 
 	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/errors"
 	"chromiumos/tast/local/apps/googlemeet"
-	"chromiumos/tast/local/bundles/cros/videoconferencing/commontype"
+	"chromiumos/tast/local/camera/arcapp"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
+	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
@@ -41,36 +43,28 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("betty")),
 		Params: []testing.Param{
 			{
-				Name:    "clamshell",
-				Fixture: fixture.GAIALoggedInClamshellWithFakeHALAndEffectsEnabled,
-				Val:     commontype.LaunchAppInWeb,
-			},
-			{
-				Name:    "tablet",
+				Name:    "ash",
+				Val:     ash.Web,
 				Fixture: fixture.GAIALoggedInTabletWithFakeHALAndEffectsEnabled,
-				Val:     commontype.LaunchAppInWeb,
 			},
 			{
-				Name:    "clamshell_lacros",
+				Name:    "lacros",
+				Val:     ash.Web,
 				Fixture: fixture.GAIALoggedInClamshellWithFakeHALAndEffectsEnabled,
-				Val:     commontype.LaunchAppInWeb,
 			},
 			{
-				Name:    "tablet_lacros",
-				Fixture: fixture.GAIALoggedInTabletWithFakeHALAndEffectsEnabled,
-				Val:     commontype.LaunchAppInWeb,
+				Name:      "arc",
+				Val:       ash.Arc,
+				ExtraData: []string{"ArcCameraTest.apk"},
+				Fixture:   fixture.GAIALoggedInARCWithInternalCameraAndEffectsEnabled,
 			},
 		},
 	})
 }
 
 func TrayReturnToApp(ctx context.Context, s *testing.State) {
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui")
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -78,6 +72,21 @@ func TrayReturnToApp(ctx context.Context, s *testing.State) {
 	}
 
 	browserType := s.FixtValue().(fixture.FixtData).BrowserType()
+
+	switch s.Param().(ash.AppType) {
+	case ash.Arc:
+		verifyReturnToARCApp(ctx, s, cr, tconn)
+	case ash.Web:
+		verifyReturnToGoogleMeet(ctx, s, cr, browserType, tconn)
+	default:
+		s.Fatalf("App type %q is not supported", s.Param().(ash.AppType))
+	}
+}
+
+func verifyReturnToGoogleMeet(ctx context.Context, s *testing.State, cr *chrome.Chrome, browserType browser.Type, tconn *chrome.TestConn) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
 
 	br, cleanup, err := browserfixt.SetUp(ctx, cr, browserType)
 	if err != nil {
@@ -93,6 +102,7 @@ func TrayReturnToApp(ctx context.Context, s *testing.State) {
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_with_meet")
 
+	// Turn on camera to trigger vcTray.
 	if err := uiauto.Combine("configure Meet",
 		gm.MuteIfMicAvailable,
 		gm.SwitchVideo(true),
@@ -100,38 +110,66 @@ func TrayReturnToApp(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to configure Meet: ", err)
 	}
 
-	// Assume the meeting window is currently active.
-	meetWindow, err := ash.GetActiveWindow(ctx, tconn)
-	if err != nil {
-		s.Fatal("Failed to get active window: ", err)
+	if err := verifyReturnToApp(ctx, tconn); err != nil {
+		s.Fatal("Failed to verify returnToApp: ", err)
+	}
+}
+
+func verifyReturnToARCApp(ctx context.Context, s *testing.State, cr *chrome.Chrome, tconn *chrome.TestConn) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	a := s.FixtValue().(fixture.FixtData).ARC()
+
+	if err := a.Install(ctx, s.DataPath(arcapp.CameraAppApk)); err != nil {
+		s.Fatal("Failed to install the APK: ", err)
 	}
 
-	// Save current meet window state and use it for return verification.
-	meetWindowState := meetWindow.State
+	cleanupFunc, err := arcapp.LaunchARCCameraApp(ctx, a, tconn)
+	if err != nil {
+		s.Fatal("Failed to launch ARC camera app: ", err)
+	}
+	defer cleanupFunc(cleanupCtx, tconn)
 
-	if err := ash.SetWindowStateAndWait(ctx, tconn, meetWindow.ID, ash.WindowStateMinimized); err != nil {
-		s.Fatal("Failed to minimize meet window: ", err)
+	if err := verifyReturnToApp(ctx, tconn); err != nil {
+		s.Fatal("Failed to verify returnToApp: ", err)
+	}
+}
+
+func verifyReturnToApp(ctx context.Context, tconn *chrome.TestConn) error {
+	appWindow, err := ash.GetActiveWindow(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get active window")
+	}
+
+	// Save current window state and use it for return verification.
+	appWindowState := appWindow.State
+
+	if err := ash.SetWindowStateAndWait(ctx, tconn, appWindow.ID, ash.WindowStateMinimized); err != nil {
+		return errors.Wrap(err, "failed to minimize window")
 	}
 
 	vcTray := vctray.New(ctx, tconn)
 
-	if err := uiauto.Combine("configure effects via mcpanel",
+	if err := uiauto.Combine("return to app via mcpanel",
 		vcTray.ExpandPanel,
+		// Remove the "Chrome" prefix to match the window.
 		// vcTray only displays name `Meet - ~new`,
 		// while in Tast API the window title is `Chrome - Meet - ~new`.
-		// Removed the prefix to match the window.
-		vcTray.ReturnToApp(strings.TrimPrefix(meetWindow.Title, "Chrome - ")),
+		vcTray.ReturnToApp(strings.TrimPrefix(appWindow.Title, "Chrome - ")),
 		vcTray.CollapsePanel,
 	)(ctx); err != nil {
-		s.Fatal("Failed to configure effects: ", err)
+		return errors.Wrap(err, "failed to return to app")
 	}
 
 	newActiveWindow, err := ash.GetActiveWindow(ctx, tconn)
 	if err != nil {
-		s.Fatal("Failed to get active window: ", err)
+		return errors.Wrap(err, "failed to get active window")
 	}
 
-	if newActiveWindow.ID != meetWindow.ID || newActiveWindow.State != meetWindowState {
-		s.Fatalf("Failed to restore Meet window(expected: %v, actual: %v)", meetWindow, newActiveWindow)
+	if newActiveWindow.ID != appWindow.ID || newActiveWindow.State != appWindowState {
+		return errors.Errorf("failed to restore window(expected: %v, actual: %v)", appWindow, newActiveWindow)
 	}
+	return nil
 }

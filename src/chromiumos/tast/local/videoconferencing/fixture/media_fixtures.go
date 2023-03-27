@@ -43,10 +43,11 @@ const (
 	LoggedInLacrosWithFakeHALAndEffectsEnabled = "loggedInLacrosWithFakeHALAndEffectsEnabled"
 
 	// Fixtures using GAIA login without specifying device mode.
-	GAIALoggedInWithFakeHALAndEffectsEnabled       = "gaiaLoggedInWithFakeHALAndEffectsEnabled"
-	GAIALoggedInWithFakeHALAndEffectsDisabled      = "gaiaLoggedInWithFakeHALAndEffectsDisabled"
-	GAIALoggedInLacrosWithFakeHALAndEffectsEnabled = "gaiaLoggedInLacrosWithFakeHALAndEffectsEnabled"
-	GAIALoggedInARCWithFakeHALAndEffectsEnabled    = "gaiaLoggedInARCWithFakeHALAndEffectsEnabled"
+	GAIALoggedInWithFakeHALAndEffectsEnabled           = "gaiaLoggedInWithFakeHALAndEffectsEnabled"
+	GAIALoggedInWithFakeHALAndEffectsDisabled          = "gaiaLoggedInWithFakeHALAndEffectsDisabled"
+	GAIALoggedInLacrosWithFakeHALAndEffectsEnabled     = "gaiaLoggedInLacrosWithFakeHALAndEffectsEnabled"
+	GAIALoggedInARCWithFakeHALAndEffectsEnabled        = "gaiaLoggedInARCWithFakeHALAndEffectsEnabled"
+	GAIALoggedInARCWithInternalCameraAndEffectsEnabled = "gaiaLoggedInARCWithInternalCameraAndEffectsEnabled"
 
 	// Fixtures using GAIA login and specifying device mode.
 	GAIALoggedInClamshellWithFakeHALAndEffectsEnabled       = "gaiaLoggedInClamshellWithFakeHALAndEffectsEnabled"
@@ -282,6 +283,22 @@ func init() {
 		},
 		Data:            []string{fakeHALImageInput},
 		Impl:            mediaSetupFixture(internalMic, halCameraWithPlatformEffectsEnabled),
+		Parent:          gaiaLoggedInARC,
+		SetUpTimeout:    chrome.LoginTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: GAIALoggedInARCWithInternalCameraAndEffectsEnabled,
+		Desc: "A fixture with GAIA user logged in and ARC booted using internal camera with platform effects enabled",
+		Contacts: []string{
+			"chrome-knowledge-eng@google.com",
+			"shengjun@google.com",
+		},
+		Impl:            mediaSetupFixture(internalMic, internalCameraWithPlatformEffectsEnabled),
 		Parent:          gaiaLoggedInARC,
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
