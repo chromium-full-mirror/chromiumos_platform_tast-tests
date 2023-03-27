@@ -7,23 +7,16 @@ package passpoint
 import (
 	"bytes"
 	"context"
-	"crypto/sha256"
 	"encoding/base64"
-	"encoding/hex"
-	"encoding/pem"
 	"fmt"
-	"io/ioutil"
-	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"text/template"
 
 	"chromiumos/tast/common/crypto/certificate"
 	"chromiumos/tast/common/shillconst"
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"chromiumos/tast/local/bundles/cros/wifi/certutil"
 )
 
 const (
@@ -125,7 +118,7 @@ func (pc *Credentials) ToAndroidConfig(ctx context.Context) (string, error) {
 	}
 
 	if pc.Auth == AuthTLS {
-		pkcs12Cert, err := preparePKCS12Cert(ctx)
+		pkcs12Cert, err := certutil.PreparePKCS12Cert(ctx, testCerts)
 		if err != nil {
 			return "", errors.Wrap(err, "failed to create PKCS#12 certificate")
 		}
@@ -302,7 +295,7 @@ func (pc *Credentials) preparePPSMOCred() (string, error) {
 	}
 	switch pc.Auth {
 	case AuthTLS:
-		fingerprint, err := prepareCertSHA256Fingerprint()
+		fingerprint, err := certutil.PrepareCertSHA256Fingerprint(testCerts)
 		if err != nil {
 			return "", errors.Wrap(err, "failed to get certificate's fingerprint")
 		}
@@ -372,50 +365,4 @@ func (pc *Credentials) preparePPSMOCred() (string, error) {
 		return "", errors.Wrap(err, "failed to execute credentials template")
 	}
 	return buf.String(), nil
-}
-
-// prepareCertSHA256Fingerprint gets the client certificate's SHA256 fingerprint.
-func prepareCertSHA256Fingerprint() (string, error) {
-	block, _ := pem.Decode([]byte(testCerts.ClientCred.Cert))
-	if block == nil {
-		return "", errors.New("failed to parse PEM file")
-	}
-	hash := sha256.New()
-	hash.Write(block.Bytes)
-	return hex.EncodeToString(hash.Sum(nil)), nil
-}
-
-// preparePKCS12Cert create a PKCS#12 format certificate from its client's certificate and private key.
-func preparePKCS12Cert(ctx context.Context) (cert string, retErr error) {
-	tmpDir, err := ioutil.TempDir("", "")
-	if err != nil {
-		return "", errors.Wrap(err, "failed to create a temporary directory")
-	}
-	defer func() {
-		if retErr != nil {
-			if err := os.RemoveAll(tmpDir); err != nil {
-				testing.ContextLogf(ctx, "Failed to clean up dir %s, %v", tmpDir, err)
-			}
-		}
-	}()
-
-	clientCertPath := filepath.Join(tmpDir, "cert")
-	privateKeyPath := filepath.Join(tmpDir, "private_key")
-
-	for _, p := range []struct {
-		path     string
-		contents string
-	}{
-		{clientCertPath, testCerts.ClientCred.Cert},
-		{privateKeyPath, testCerts.ClientCred.PrivateKey},
-	} {
-		if err := ioutil.WriteFile(p.path, []byte(p.contents), 0644); err != nil {
-			return "", errors.Wrapf(err, "failed to write file %q", p.path)
-		}
-	}
-	out, err := testexec.CommandContext(ctx, "openssl", "pkcs12", "-export", "-inkey", privateKeyPath, "-in", clientCertPath, "-password", "pass:").Output(testexec.DumpLogOnError)
-	if err != nil {
-		return "", errors.Wrap(err, "failed to create PKCS#12 certificate")
-	}
-	return string(out), nil
 }

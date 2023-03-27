@@ -6,6 +6,7 @@ package hostapd
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -215,6 +216,57 @@ func (m *Monitor) WaitForEvent(ctx context.Context) (Event, error) {
 					return event, nil
 				}
 			}
+		}
+	}
+}
+
+// STAAssociationTimeout is the reasonable delay to wait for station
+// association before making a decision.
+const STAAssociationTimeout = time.Minute
+
+// WaitForSTAAssociated polls an access point until a specific station is
+// associated or timeout is fired.
+func WaitForSTAAssociated(ctx context.Context, m *Monitor, client string, timeout time.Duration) error {
+	return waitForSTAAssociationEvent(ctx, m, client, timeout, true)
+}
+
+// WaitForSTADissociated polls an access point until a specific station is
+// dissociated or timeout is fired.
+func WaitForSTADissociated(ctx context.Context, m *Monitor, client string, timeout time.Duration) error {
+	return waitForSTAAssociationEvent(ctx, m, client, timeout, false)
+}
+
+// waitForSTAAssociationEvent polls an access point for until a specific station got an
+// association event (association or dissociation based on the parameter association) or until timeout is fired.
+func waitForSTAAssociationEvent(ctx context.Context, m *Monitor, client string, timeout time.Duration, association bool) error {
+	timeoutContext, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	iface, err := net.InterfaceByName(client)
+	if err != nil {
+		return errors.Wrapf(err, "failed to obtain %s interface information: ", client)
+	}
+	testing.ContextLogf(ctx, "Waiting %s (%s) association event", iface.HardwareAddr, client)
+
+	for {
+		event, err := m.WaitForEvent(timeoutContext)
+		if err != nil {
+			return errors.Wrap(err, "failed to wait for AP event")
+		}
+		if event == nil { // timeout
+			return errors.New("association event timeout")
+		}
+		if e, ok := event.(*ApStaConnectedEvent); ok && association {
+			if bytes.Compare(iface.HardwareAddr, e.Addr) != 0 {
+				return errors.Errorf("unexpected station association: got %v want %v", e.Addr, iface.HardwareAddr)
+			}
+			return nil
+		}
+		if e, ok := event.(*ApStaDisconnectedEvent); ok && !association {
+			if bytes.Compare(iface.HardwareAddr, e.Addr) != 0 {
+				return errors.Errorf("unexpected station disassociation: got %v want %v", e.Addr, iface.HardwareAddr)
+			}
+			return nil
 		}
 	}
 }

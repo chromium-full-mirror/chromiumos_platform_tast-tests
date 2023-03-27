@@ -127,7 +127,7 @@ func PasspointForgetNetwork(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to request an active scan: ", err)
 	}
 	// Wait for the station to associate with the access point.
-	if err := passpoint.WaitForSTAAssociated(ctx, h, ifaces.Client[0], passpoint.STAAssociationTimeout); err != nil {
+	if err := hostapd.WaitForSTAAssociated(ctx, h, ifaces.Client[0], hostapd.STAAssociationTimeout); err != nil {
 		s.Fatal("Failed to wait for STA association: ", err)
 	}
 
@@ -149,7 +149,7 @@ func PasspointForgetNetwork(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to request an active scan: ", err)
 	}
 	// Device should not reconnect to Passpoint networks.
-	if err := passpoint.WaitForSTAAssociated(ctx, h, ifaces.Client[0], passpoint.STAAssociationTimeout); err == nil {
+	if err := hostapd.WaitForSTAAssociated(ctx, h, ifaces.Client[0], hostapd.STAAssociationTimeout); err == nil {
 		s.Fatal("Unexpected STA association. Expected Passpoint credentials to be removed")
 	}
 }

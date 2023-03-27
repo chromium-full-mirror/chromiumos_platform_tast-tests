@@ -311,7 +311,7 @@ func runApTestCase(ctx context.Context, s *testing.State, tc *roamingTestContext
 	}
 
 	// Wait for the station to associate with the access point.
-	if err := passpoint.WaitForSTAAssociated(ctx, m, tc.clientIface, passpoint.STAAssociationTimeout); err != nil {
+	if err := hostapd.WaitForSTAAssociated(ctx, m, tc.clientIface, hostapd.STAAssociationTimeout); err != nil {
 		return errors.Wrap(err, "failed to check station association")
 	}
 

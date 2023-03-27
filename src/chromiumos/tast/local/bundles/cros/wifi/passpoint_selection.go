@@ -444,7 +444,7 @@ func PasspointSelection(ctx context.Context, s *testing.State) {
 	}
 
 	// Check the device connects to the access point.
-	if err := passpoint.WaitForSTAAssociated(ctx, m, tc.clientIface, passpoint.STAAssociationTimeout); err != nil {
+	if err := hostapd.WaitForSTAAssociated(ctx, m, tc.clientIface, hostapd.STAAssociationTimeout); err != nil {
 		s.Fatal("Passpoint client not connected to access point: ", err)
 	}
 }

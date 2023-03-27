@@ -200,7 +200,7 @@ func runARCProvisioningTestCase(ctx context.Context, s *testing.State, m *shill.
 	}
 
 	// Wait for the station to associate with the access point.
-	if err := passpoint.WaitForSTAAssociated(ctx, h, clientIface, passpoint.STAAssociationTimeout); err != nil {
+	if err := hostapd.WaitForSTAAssociated(ctx, h, clientIface, hostapd.STAAssociationTimeout); err != nil {
 		return errors.Wrap(err, "failed to check station association")
 	}
 
@@ -211,7 +211,7 @@ func runARCProvisioningTestCase(ctx context.Context, s *testing.State, m *shill.
 	}
 
 	// Wait for the station to dissociate with the access point.
-	if err := passpoint.WaitForSTADissociated(ctx, h, clientIface, passpoint.STAAssociationTimeout); err != nil {
+	if err := hostapd.WaitForSTADissociated(ctx, h, clientIface, hostapd.STAAssociationTimeout); err != nil {
 		return errors.Wrap(err, "failed to check station dissociation")
 	}
 
