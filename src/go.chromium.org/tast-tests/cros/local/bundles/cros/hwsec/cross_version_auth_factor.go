@@ -308,6 +308,22 @@ func authenticateAuthFactor(ctx context.Context, cryptohome *hwsec.CryptohomeCli
 	return true, nil
 }
 
+// testMount tests if cryptohome can mount the vault of |username|.
+func testMount(ctx context.Context, cryptohome *hwsec.CryptohomeClient, username string, keyInfo *util.VaultKeyInfo) error {
+	return cryptohome.WithAuthSession(ctx, username, false /* isEphemeral */, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authID string) error {
+		if _, err := cryptohome.AuthenticateAuthFactor(ctx, authID, keyInfo.KeyLabel, keyInfo.Password); err != nil {
+			return errors.Wrap(err, "failed to authenticate the user")
+		}
+		if _, err := cryptohome.PreparePersistentVault(ctx, authID, true /* ecryptFs */); err != nil {
+			return errors.Wrap(err, "failed to prepare a persistent vault")
+		}
+		if err := cryptohome.UnmountAll(ctx); err != nil {
+			return errors.Wrap(err, "failed to unmount all")
+		}
+		return nil
+	})
+}
+
 // testAuthFactor tests that the factor authenticates successfully and the invalidPassword doesn't.
 func testAuthFactor(ctx context.Context, cryptohome *hwsec.CryptohomeClient, username string, keyInfo *util.VaultKeyInfo, invalidPassword string) error {
 	if _, err := authenticateAuthFactor(ctx, cryptohome, username, keyInfo.KeyLabel, hwsec.NewPassAuthConfig(username, keyInfo.Password), keyInfo.LowEntropy); err != nil {
@@ -476,6 +492,12 @@ func testSmartCardAuth(ctx context.Context, lf hwsec.LogFunc, cryptohome *hwsec.
 		if _, err := cryptohome.AuthenticateSmartCardAuthFactor(ctx, authID, keyLabel, &authConfig); err != nil {
 			return errors.Wrap(err, "failed to authenticate smart card auth factor")
 		}
+		if _, err := cryptohome.PreparePersistentVault(ctx, authID, true /* ecryptFs */); err != nil {
+			return errors.Wrap(err, "failed to prepare persistent vault")
+		}
+		if err := cryptohome.UnmountAll(ctx); err != nil {
+			return errors.Wrap(err, "failed to unmount all")
+		}
 		return nil
 	}); err != nil {
 		return err
@@ -542,6 +564,9 @@ func testPassAuth(ctx context.Context, cryptohome *hwsec.CryptohomeClient, confi
 	}
 	if err := testAuthFactor(ctx, cryptohome, username, util.NewVaultKeyInfo(password, keyLabel, false), invalidPassword); err != nil {
 		return errors.Wrap(err, "failed to test preexisting AuthFactor")
+	}
+	if err := testMount(ctx, cryptohome, username, util.NewVaultKeyInfo(password, keyLabel, false)); err != nil {
+		return errors.Wrap(err, "failed to test mount")
 	}
 
 	for _, vaultKey := range config.ExtraVaultKeys {
