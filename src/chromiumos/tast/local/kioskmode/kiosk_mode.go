@@ -11,6 +11,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 	"image"
 	"image/color"
@@ -54,6 +55,8 @@ var (
 	kioskAppAccountType = policy.AccountTypeKioskApp
 	// KioskAppID pointing to the Printtest app - not listed in the WebStore.
 	KioskAppID = "aajgmlihcokkalfjbangebcffdoanjfo"
+	// KioskAppUserID is the generated DeviceLocalAccount.user_id for KioskAppAccountID
+	KioskAppUserID = hex.EncodeToString([]byte(KioskAppAccountID)) + "@kiosk-apps.device-local.localhost"
 	// KioskAppBtnName is the name of the Printest app which shows up in the Apps
 	// menu on the sign-in screen.
 	KioskAppBtnName = "Simple Printest"

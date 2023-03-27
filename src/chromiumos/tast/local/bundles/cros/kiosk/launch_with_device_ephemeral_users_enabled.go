@@ -12,14 +12,21 @@ import (
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/local/chrome/lacros/lacrosproc"
+	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/kioskmode"
 	"chromiumos/tast/testing"
 )
 
+type ephemeralModeTestData struct {
+	IsLacros    bool
+	IsEphemeral bool
+	Policies    []policy.Policy
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         LaunchWithDeviceEphemeralUsersEnabled,
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that Kiosk configuration starts correctly with DeviceEphemeralUsersEnabled policy set to true",
 		Contacts: []string{
 			"chromeos-kiosk-eng+TAST@google.com",
@@ -40,18 +47,51 @@ func init() {
 		BugComponent: "b:892153", // ChromeOS > Software > Commercial (Enterprise) > Kiosk
 		Params: []testing.Param{
 			{
-				Name: "ash",
-				Val: kioskmode.TestData{
-					IsLacros: false,
+				Name: "ash_unset",
+				Val: ephemeralModeTestData{
+					IsLacros:    false,
+					IsEphemeral: false,
+					Policies:    []policy.Policy{&policy.DeviceEphemeralUsersEnabled{Stat: policy.StatusUnset}},
 				},
 			},
 			{
-				Name: "lacros",
-				Val: kioskmode.TestData{
-					IsLacros: true,
-					Policies: []policy.Policy{
-						&policy.LacrosAvailability{Val: "lacros_only"},
-					},
+				Name: "ash_true",
+				Val: ephemeralModeTestData{
+					IsLacros:    false,
+					IsEphemeral: true,
+					Policies:    []policy.Policy{&policy.DeviceEphemeralUsersEnabled{Val: true}},
+				},
+			},
+			{
+				Name: "ash_false",
+				Val: ephemeralModeTestData{
+					IsLacros:    false,
+					IsEphemeral: false,
+					Policies:    []policy.Policy{&policy.DeviceEphemeralUsersEnabled{Val: false}},
+				},
+			},
+			{
+				Name: "lacros_unset",
+				Val: ephemeralModeTestData{
+					IsLacros:    true,
+					IsEphemeral: false,
+					Policies:    []policy.Policy{&policy.DeviceEphemeralUsersEnabled{Stat: policy.StatusUnset}},
+				},
+			},
+			{
+				Name: "lacros_true",
+				Val: ephemeralModeTestData{
+					IsLacros:    true,
+					IsEphemeral: true,
+					Policies:    []policy.Policy{&policy.DeviceEphemeralUsersEnabled{Val: true}},
+				},
+			},
+			{
+				Name: "lacros_false",
+				Val: ephemeralModeTestData{
+					IsLacros:    true,
+					IsEphemeral: false,
+					Policies:    []policy.Policy{&policy.DeviceEphemeralUsersEnabled{Val: false}},
 				},
 			},
 		},
@@ -60,28 +100,40 @@ func init() {
 
 func LaunchWithDeviceEphemeralUsersEnabled(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
-	param := s.Param().(kioskmode.TestData)
-	kiosk, cr, err := kioskmode.New(
-		ctx,
-		fdms,
+	param := s.Param().(ephemeralModeTestData)
+
+	opts := []kioskmode.Option{
 		kioskmode.DefaultLocalAccounts(),
-		// https://crbug.com/1202902 combining DeviceEphemeralUsersEnabled
-		// with Kiosk autolaunch caused Kiosk not starting successfully.
-		kioskmode.ExtraPolicies([]policy.Policy{&policy.DeviceEphemeralUsersEnabled{Val: true}}),
-		kioskmode.PublicAccountPolicies(kioskmode.KioskAppAccountID, param.Policies),
 		kioskmode.AutoLaunch(kioskmode.KioskAppAccountID),
-	)
+		kioskmode.ExtraPolicies(param.Policies),
+	}
+	if param.IsLacros {
+		opts = append(opts, kioskmode.PublicAccountPolicies(kioskmode.KioskAppAccountID,
+			[]policy.Policy{&policy.LacrosAvailability{Val: "lacros_only"}}))
+	}
+
+	kiosk, cr, err := kioskmode.New(ctx, fdms, opts...)
 	if err != nil {
 		s.Error("Failed to start Chrome in Kiosk mode: ", err)
 	}
-
 	defer kiosk.Close(ctx)
+
+	testing.ContextLog(ctx, "Checking the mount type of the Kiosk cryptohome (permanent or ephemeral)")
+	expectedMountType := cryptohome.Permanent
+	if param.IsEphemeral {
+		expectedMountType = cryptohome.Ephemeral
+	}
+	if err := cryptohome.WaitForUserMountAndValidateType(ctx, kioskmode.KioskAppUserID, expectedMountType); err != nil {
+		s.Fatal("Failed to wait for user mount and validate type: : ", err)
+	}
 
 	if param.IsLacros {
 		testing.ContextLog(ctx, "Checking if Kiosk started in Lacros mode")
-		testConn, err := cr.TestAPIConn(ctx)
-		_, err = lacrosproc.Root(ctx, testConn)
+		tconn, err := cr.TestAPIConn(ctx)
 		if err != nil {
+			s.Fatal("Failed to create Test API connection: ", err)
+		}
+		if _, err = lacrosproc.Root(ctx, tconn); err != nil {
 			s.Fatal("Failed to get lacros proc: ", err)
 		}
 	}
