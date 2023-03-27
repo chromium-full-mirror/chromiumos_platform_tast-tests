@@ -32,7 +32,7 @@ const (
 	JumpToStatusTray = "Alt+Shift+S"
 	NextObject       = "Search+Right"
 	PreviousObject   = "Search+Left"
-	PreviousTab      = "Ctrl+Shift+Tab"
+	CloseWindow      = "Ctrl+W"
 	Space            = "Space"
 )
 

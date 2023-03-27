@@ -21,7 +21,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ChromevoxNumberReadingStyle,
-		LacrosStatus: testing.LacrosVariantNeeded, // TODO(crbug.com/1358282): Migrate when Chromevox options page opens in Lacros.
+		LacrosStatus: testing.LacrosVariantExists, // TODO(b:268196299): The ChromeVox options page will migrate to ChromeOS settings, so this test will need to be updated when the above bug is closed.
 		Desc:         "Verifies ChromeVox honors its setting to read numbers as words or as digits",
 		Contacts: []string{
 			"chromeos-a11y-eng@google.com", // Mailing list
@@ -30,7 +30,15 @@ func init() {
 		BugComponent: "b:1272895",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "chromePolicyLoggedIn",
+		Params: []testing.Param{{
+			Fixture: "chromeLoggedIn",
+			Val:     browser.TypeAsh,
+		}, {
+			Name:              "lacros",
+			ExtraSoftwareDeps: []string{"lacros"},
+			Fixture:           "lacros",
+			Val:               browser.TypeLacros,
+		}},
 	})
 }
 
@@ -43,7 +51,7 @@ func ChromevoxNumberReadingStyle(ctx context.Context, s *testing.State) {
 
 	vd := a11y.GoogleTTSEnUsVoice()
 	ed := a11y.GoogleTTSEngine()
-	bt := browser.TypeAsh
+	bt := s.Param().(browser.Type)
 	html := "<p>123</p>"
 	cvData, err := chromevox.SetUp(ctx, ctxCleanup, cr, vd, ed, bt, html)
 	if err != nil {
@@ -88,7 +96,7 @@ func ChromevoxNumberReadingStyle(ctx context.Context, s *testing.State) {
 			[]a11y.SpeechExpectation{a11y.NewStringExpectation("Digits")},
 		},
 		{
-			[]string{chromevox.Activate, chromevox.PreviousTab, chromevox.NextObject, chromevox.NextObject},
+			[]string{chromevox.Activate, chromevox.CloseWindow},
 			[]a11y.SpeechExpectation{a11y.NewStringExpectation("1 2 3")},
 		},
 	}
