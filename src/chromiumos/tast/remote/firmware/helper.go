@@ -666,6 +666,13 @@ func (h *Helper) SetupUSBKey(ctx context.Context, cloudStorage *testing.CloudSto
 	h.dutUsbHasTastFiles = false
 
 	if err = h.Servo.SetStringTimeout(ctx, servo.DownloadImageToUSBDev, dataURL.String(), 2*time.Hour); err != nil {
+		if strings.Contains(string(err.Error()), "Read-only file system") {
+			modelName, serialNumber, err := h.getUSBModelAndSerial(ctx, usbdev)
+			if err != nil {
+				testing.ContextLog(ctx, "Failed to get info about usb: ", err)
+			}
+			return errors.Errorf("failed to flash os image and found usb device as read-only file system, got usb model: %s, serial number: %s", modelName, serialNumber)
+		}
 		return errors.Wrapf(err, "failed to flash os image %q to USB %q from url %q", testImageURL, usbdev, dataURL.String())
 	}
 	testing.ContextLogf(ctx, "Successfully flashed %q from %q", usbdev, testImageURL)
