@@ -45,7 +45,9 @@ var (
 	// WebKioskAccountID identifier of the web Kiosk application.
 	WebKioskAccountID   = "arbitrary_id_web_kiosk_1@managedchrome.com"
 	webKioskAccountType = policy.AccountTypeKioskWebApp
-	webKioskTitle       = "Web Kiosk Placeholder Title"
+	// WebKioskTitle is the name of the web Kiosk app which shows up in the Apps
+	// menu on the sign-in screen.
+	WebKioskTitle = "Web Kiosk Placeholder Title"
 
 	// KioskAppAccountID identifier of the Kiosk application.
 	KioskAppAccountID   = "arbitrary_id_store_app_2@managedchrome.com"
@@ -221,7 +223,7 @@ func New(ctx context.Context, fdms *fakedms.FakeDMS, opts ...Option) (k *Kiosk, 
 					AccountType: &webKioskAccountType,
 					WebKioskAppInfo: &policy.WebKioskAppInfo{
 						Url:     &httpServer.URL,
-						Title:   &webKioskTitle,
+						Title:   &WebKioskTitle,
 						IconUrl: &iconURL,
 					}},
 			},
