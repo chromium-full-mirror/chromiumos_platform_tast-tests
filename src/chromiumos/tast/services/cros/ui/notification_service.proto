@@ -59,8 +59,8 @@ message Notification {
   string type = 2;
   string title = 3;
   string message = 4;
-  int32 priority = 5;
-  int32 progress = 6;
+  uint32 priority = 5;
+  uint32 progress = 6;
 }
 
 // WaitPredicate contains a condition for querying notifications.
