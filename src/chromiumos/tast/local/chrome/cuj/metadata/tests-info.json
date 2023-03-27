@@ -1,0 +1,47 @@
+{
+  "DesksCUJ": {
+    "aliases": {},
+    "groups": [
+      {
+        "groupName": "default",
+        "variantNames": [
+          "",
+          "lacros"
+        ]
+      },
+      {
+        "groupName": "field_trials",
+        "variantNames": [
+          "",
+          "field_trials"
+        ]
+      },
+      {
+        "groupName": "backup_ref_ptr",
+        "variantNames": [
+          "",
+          "backup_ref_ptr"
+        ]
+      }
+    ],
+    "majorTestVersion": 1,
+    "variantsInfo": [
+      {
+        "id": "deskscuj.",
+        "variantName": ""
+      },
+      {
+        "id": "deskscuj.lacros",
+        "variantName": "lacros"
+      },
+      {
+        "id": "deskscuj.backup_ref_ptr",
+        "variantName": "backup_ref_ptr"
+      },
+      {
+        "id": "deskscuj.field_trials",
+        "variantName": "field_trials"
+      }
+    ]
+  }
+}

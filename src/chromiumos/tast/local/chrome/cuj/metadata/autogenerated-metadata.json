@@ -1,0 +1,70 @@
+{
+  "DesksCUJ": {
+    "aliases": {},
+    "description": "Measures the performance of critical user journey for virtual desks",
+    "groups": [
+      {
+        "groupName": "default",
+        "variantNames": [
+          "",
+          "lacros"
+        ]
+      },
+      {
+        "groupName": "field_trials",
+        "variantNames": [
+          "",
+          "field_trials"
+        ]
+      },
+      {
+        "groupName": "backup_ref_ptr",
+        "variantNames": [
+          "",
+          "backup_ref_ptr"
+        ]
+      }
+    ],
+    "majorTestVersion": 1,
+    "variantsInfo": [
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "ash",
+        "fixture": "loggedInToCUJUser",
+        "id": "deskscuj.",
+        "variantName": ""
+      },
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "lacros",
+        "fixture": "loggedInToCUJUserLacros",
+        "id": "deskscuj.lacros",
+        "variantName": "lacros"
+      },
+      {
+        "attributes": [
+          "cuj_experimental",
+          "group:cuj"
+        ],
+        "browserType": "ash",
+        "fixture": "loggedInToCUJUserWithBackupRefPtr",
+        "id": "deskscuj.backup_ref_ptr",
+        "variantName": "backup_ref_ptr"
+      },
+      {
+        "attributes": [
+          "cuj_experimental",
+          "group:cuj"
+        ],
+        "browserType": "ash",
+        "fixture": "loggedInToCUJUserWithFieldTrials",
+        "id": "deskscuj.field_trials",
+        "variantName": "field_trials"
+      }
+    ]
+  }
+}
