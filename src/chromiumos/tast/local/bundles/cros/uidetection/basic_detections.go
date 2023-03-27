@@ -126,7 +126,7 @@ func BasicDetections(ctx context.Context, s *testing.State) {
 
 	ui := uiauto.New(tconn)
 
-	chromeIcon := uidetection.CustomIcon(s.DataPath(chromeIconFileName))
+	chromeIcon := uidetection.CustomIcon(s.DataPath(chromeIconFileName), uidetection.MinConfidence(0.67))
 	addShortcut := uidetection.TextBlock([]string{"Add", "shortcut"})
 	bottomBar := nodewith.ClassName("ShelfView")
 	notificationArea := nodewith.ClassName("StatusAreaWidget")
