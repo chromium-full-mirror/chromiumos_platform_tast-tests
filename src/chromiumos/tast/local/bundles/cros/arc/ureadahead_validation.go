@@ -38,7 +38,7 @@ func init() {
 		// Skip userdebug boards which we don't generate ureadahead packs for.
 		SoftwareDeps: []string{"chrome", "no_arc_userdebug"},
 		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 		}, {
 			Name:              "vm_r",
 			ExtraSoftwareDeps: []string{"android_vm_r"},
