@@ -133,6 +133,40 @@ func init() {
 	})
 }
 
+// pressOkButton presses the "OK" on the dialog with the provided `parent`.
+func pressOkButton(ctx context.Context, s *testing.State, ui *uiauto.Context, parent *nodewith.Finder) {
+	okButton := nodewith.Name("OK").Role(role.Button).Ancestor(parent)
+
+	if err := uiauto.Combine("press OK",
+		ui.WaitUntilExists(okButton),
+		ui.DoDefault(okButton),
+	)(ctx); err != nil {
+		s.Fatal("Failed to press OK button: ", err)
+	}
+
+	// Most of the time the code above should be enough to successfully click
+	// the button.
+	if ui.WithTimeout(3*time.Second).WaitUntilGone(okButton)(ctx) == nil {
+		return
+	}
+
+	// On some dialogs the "OK" button is generally a bit flaky, and on devices
+	// in the tablet mode the DoDefault/LeftClick methods don't work at all
+	// (while a real touch works). Send "enter" as a workaround.
+	kb, err := input.Keyboard(ctx)
+	if err != nil {
+		s.Fatal("Failed to find keyboard: ", err)
+	}
+	if err := kb.Accel(ctx, "enter"); err != nil {
+		s.Fatal("Failed to use keyboard: ", err)
+	}
+
+	// If still didn't work, fail the test.
+	if err := ui.WithTimeout(3 * time.Second).WaitUntilGone(okButton)(ctx); err != nil {
+		s.Fatal("OK button didn't work: ", err)
+	}
+}
+
 // closeCurrentPage presses "ctrl+w" to close the current active window / tab.
 func closeCurrentPage(ctx context.Context, s *testing.State) {
 	kb, err := input.Keyboard(ctx)
@@ -184,11 +218,11 @@ func importCACert(ctx context.Context, s *testing.State, ui *uiauto.Context, dow
 		ui.DoDefault(nodewith.Name("Open").Role(role.Button)),
 		ui.WaitUntilExists(nodewith.Name(trustCheckboxText).Role(role.CheckBox)),
 		ui.DoDefault(nodewith.Name(trustCheckboxText).Role(role.CheckBox)),
-		ui.WaitUntilExists(nodewith.Name("OK").Role(role.Button)),
-		ui.DoDefault(nodewith.Name("OK").Role(role.Button)),
 	)(ctx); err != nil {
 		s.Fatal("Failed to import CA cert: ", err)
 	}
+
+	pressOkButton(ctx, s, ui, nodewith.Name("Settings - Manage certificates").Role("rootWebArea"))
 	s.Log("Imported CA cert: ", fileName)
 }
 
@@ -214,10 +248,11 @@ func importClientCert(ctx context.Context, s *testing.State, ui *uiauto.Context,
 		ui.WaitUntilExists(passwordTextBox.Ancestor(passwordDialog).State("focusable", true)),
 		ui.DoDefault(passwordTextBox.Ancestor(passwordDialog)),
 		kb.TypeAction(clientCertFilePassword),
-		ui.DoDefault(nodewith.Name("OK").Role(role.Button)),
 	)(ctx); err != nil {
 		s.Fatal("Failed to import client certificate: ", err)
 	}
+
+	pressOkButton(ctx, s, ui, nodewith.Name("Settings - Manage certificates").Role("rootWebArea"))
 	s.Log("Imported client cert: ", clientCertFileName)
 }
 
@@ -305,13 +340,9 @@ func useWebsite(ctx context.Context, s *testing.State, browser *browser.Browser,
 	websiteConn.Eval(ctx, "window.location.href = '"+website.URL+"';", nil)
 
 	if expectCertPopup {
-		if err := ui.WaitUntilExists(nodewith.Name("Select a certificate").Role(role.Window))(ctx); err != nil {
-			return err
-		}
-
-		if err := ui.LeftClick(nodewith.Name("OK").Role(role.Button))(ctx); err != nil {
-			return err
-		}
+		// "First()" is good enough because all such UI elements are in the same
+		// chain together with the OK button.
+		pressOkButton(ctx, s, ui, nodewith.Name("Select a certificate").First())
 	}
 
 	if err := ui.WaitUntilExists(nodewith.NameRegex(regexp.MustCompile(expectedText)).First())(ctx); err != nil {
@@ -365,10 +396,13 @@ func deleteClientCert(ctx context.Context, s *testing.State, ui *uiauto.Context)
 		ui.DoDefault(nodewith.Name("Show certificates for organization").Role(role.Button)),
 		ui.DoDefault(nodewith.Name("More actions").Role(role.Button)),
 		ui.DoDefault(nodewith.Name("Delete").Role(role.MenuItem)),
-		ui.WaitUntilExists(nodewith.Name("OK").Role(role.Button)),
-		ui.DoDefault(nodewith.Name("OK").Role(role.Button)),
-		ui.WaitUntilGone(nodewith.Name("org-TEST_CLIENT_ORG")),
 	)(ctx); err != nil {
+		s.Fatal("Failed to delete CA cert: ", err)
+	}
+
+	pressOkButton(ctx, s, ui, nodewith.Name("Settings - Manage certificates").Role("rootWebArea"))
+
+	if err := ui.WaitUntilGone(nodewith.Name("org-TEST_CLIENT_ORG"))(ctx); err != nil {
 		s.Fatal("Failed to delete CA cert: ", err)
 	}
 }
@@ -379,15 +413,17 @@ func deleteCACert(ctx context.Context, s *testing.State, ui *uiauto.Context) {
 	openActionMenuForCACertificate(ctx, s, ui)
 
 	deleteButton := nodewith.Name("Delete").Role(role.MenuItem)
-	okButton := nodewith.Name("OK").Role(role.Button)
 	if err := uiauto.Combine("delete CA cert",
 		ui.WaitUntilExists(deleteButton),
 		ui.DoDefault(deleteButton),
 		ui.WaitUntilExists(nodewith.NameContaining("Delete CA certificate").First()),
-		ui.WaitUntilExists(okButton),
-		ui.DoDefault(okButton),
-		ui.WaitUntilGone(nodewith.Name("TEST_CA_ORG")),
 	)(ctx); err != nil {
+		s.Fatal("Failed to delete CA cert: ", err)
+	}
+
+	pressOkButton(ctx, s, ui, nodewith.Name("Settings - Manage certificates").Role("rootWebArea"))
+
+	if err := ui.WaitUntilGone(nodewith.Name("TEST_CA_ORG"))(ctx); err != nil {
 		s.Fatal("Failed to delete CA cert: ", err)
 	}
 }
@@ -454,7 +490,6 @@ func openActionMenuForCACertificate(ctx context.Context, s *testing.State, ui *u
 // provided `targetState` parameter and saves result.
 func setTrustCheckboxAndSave(ctx context.Context, s *testing.State, ui *uiauto.Context, targetState checked.Checked) {
 	checkbox := nodewith.Name(trustCheckboxText).Role(role.CheckBox)
-	okButton := nodewith.Name("OK").Role(role.Button)
 	if err := uiauto.Combine("find CA trust checkbox",
 		ui.WaitUntilExists(checkbox),
 	)(ctx); err != nil {
@@ -473,12 +508,12 @@ func setTrustCheckboxAndSave(ctx context.Context, s *testing.State, ui *uiauto.C
 			ui.WaitUntilExists(checkbox.Focusable()),
 			ui.EnsureFocused(checkbox),
 			ui.WaitForEvent(checkbox, event.CheckedStateChanged, ui.DoDefault(checkbox)),
-			ui.WaitUntilExists(okButton),
-			ui.DoDefault(okButton),
 		)(ctx); err != nil {
 			s.Fatal("Failed to set CA trust checkbox: ", err)
 		}
 	}
+
+	pressOkButton(ctx, s, ui, nodewith.Name("Settings - Manage certificates").Role("rootWebArea"))
 }
 
 // setCACertTrust sets Web trust setting for CA certificate to true or false.
