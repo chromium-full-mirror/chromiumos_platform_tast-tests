@@ -6,7 +6,6 @@
 package bootperf
 
 import (
-	"bytes"
 	"context"
 	"io/ioutil"
 	"math"
@@ -39,6 +38,9 @@ const (
 
 	// disk usage bootstat numbers are sectors. Convert to bytes by multiplying |sectorSize|.
 	sectorSize = 512
+
+	// The path of boot ID on the proc filesystem.
+	currentBootIDPath = "/proc/sys/kernel/random/boot_id"
 )
 
 type metricRequirement int
@@ -527,6 +529,56 @@ func parseSyncRtc(rtcPath string) (float64, float64, int64, error) {
 	return uptime0, uptime1, rtcTime.Unix(), nil
 }
 
+// canonicalizeBootID removes the newline and "-" from the boot ID string and make the output contain only hex characters.
+func canonicalizeBootID(s string) string {
+	return strings.ReplaceAll(strings.TrimSpace(s), "-", "")
+}
+
+// getCurrentBootID returns canonicalized boot ID of the current boot.
+func getCurrentBootID() (string, error) {
+	b, err := ioutil.ReadFile(currentBootIDPath)
+	if err != nil {
+		return "", err
+	}
+	return canonicalizeBootID(string(b)), nil
+}
+
+// getPreviousBootIDFromLog returns the boot ID of previous boot from /var/log/boot_id.log.
+func getPreviousBootIDFromLog() (string, error) {
+	b, err := ioutil.ReadFile("/var/log/boot_id.log")
+	if err != nil {
+		return "", errors.New("failed to read boot_id.log")
+	}
+
+	bootIDLogLines := strings.Split(strings.TrimSpace(string(b)), "\n")
+	nlines := len(bootIDLogLines)
+	if nlines < 2 {
+		return "", errors.New("invalid boot_id.log. Expect at least two lines to get the previous boot ID")
+	}
+
+	// Sample boot_id.log: 2023-03-22T06:04:30.841000Z INFO boot_id: c1e96fd9fa5f4e46bb7fc56bc0a51b81
+	re := regexp.MustCompile(`^.*boot_id:\s([0-9a-f]+)$`)
+	// Correctness check: current boot ID should be the same in both boot_id.log and from proc filesystem.
+	m := re.FindStringSubmatch(bootIDLogLines[nlines-1])
+	if m == nil {
+		return "", errors.Errorf("unable to parse boot_id from the last line of boot_id.log: %s", bootIDLogLines[nlines-1])
+	}
+	bootID, err := getCurrentBootID()
+	if err != nil {
+		return "", errors.Wrap(err, "failed to read the current boot ID")
+	}
+	if m[1] != bootID {
+		return "", errors.Errorf("unexpected boot_id: want: %q, got: %q", bootID, m[1])
+	}
+
+	// The 2nd last line of boot_id.log contains the boot ID of previous boot. Match and return the ID part of the log entry.
+	m = re.FindStringSubmatch(bootIDLogLines[nlines-2])
+	if m == nil {
+		return "", errors.Errorf("unable to parse boot_id from the last-1 line of boot_id.log: %s", bootIDLogLines[nlines-2])
+	}
+	return m[1], nil
+}
+
 // findMostRecentBootstatArchivePath returns the path of the bootstat archive
 // generated from the most recent successful shutdown.
 func findMostRecentBootstatArchivePath() (string, error) {
@@ -535,18 +587,20 @@ func findMostRecentBootstatArchivePath() (string, error) {
 		return "", errors.New("failed to list bootstat archive directories")
 	}
 
-	// Sort |bootstatArchives| using string comparison. This works in finding the entry with the largest timestamp value because the timestamp is generated using the command `date '+%Y%m%d%H%M%S'` during shutdown.
+	previousBootID, err := getPreviousBootIDFromLog()
+	if err != nil {
+		return "", errors.Wrap(err, "failed to get previous boot ID from boot_id.log")
+	}
+	// Sort bootstatArchives to order the archive directories (almost) chronologically.
+	// It's likely but not guaranteed that the directory with the largest timestamp will be the one of previous boot: time adjustments may rewind the clock.
+	// We need to search for the directory with a matching boot_id.
 	sort.Strings(bootstatArchives)
 	for i := len(bootstatArchives) - 1; i >= 0; i-- {
 		bootstatDir := bootstatArchives[i]
-		// Check that this is a valid archive: in a successful shutdown, the timestamp file should contain 2 entries written by bootstat_archive.
-		timestampPath := filepath.Join(bootstatDir, "timestamp")
-		b, err := ioutil.ReadFile(timestampPath)
-		if err != nil && !os.IsNotExist(err) {
-			// Shouldn't have any error other than timestamp not existent.
-			return "", errors.Wrapf(err, "unexpected error in checking bootstat archive file: %s", timestampPath)
-		}
-		if err == nil && len(strings.Split(string(b), "\n")) > 1 {
+
+		bootIDPath := filepath.Join(bootstatDir, "boot_id")
+		b, err := ioutil.ReadFile(bootIDPath)
+		if err == nil && canonicalizeBootID(string(b)) == previousBootID {
 			return bootstatDir, nil
 		}
 	}
@@ -581,31 +635,6 @@ func GatherRebootMetrics(results *platform.GetRebootMetricsResponse) error {
 	bootstatDir, err := findMostRecentBootstatArchivePath()
 	if err != nil {
 		return err
-	}
-
-	bootID, err := ioutil.ReadFile("/proc/sys/kernel/random/boot_id")
-	if err != nil {
-		return errors.Wrap(err, "failed to read boot_id")
-	}
-
-	didrunPath := filepath.Join(bootstatDir, "bootperf_ran")
-	_, err = os.Stat(didrunPath)
-	if err == nil {
-		// File exists. Compare with the current boot ID. Proceed only if the boot ID matches.
-		b, err := ioutil.ReadFile(didrunPath)
-		if err != nil {
-			return errors.Wrap(err, "failed to read from bootperf_ran")
-		}
-		if !bytes.Equal(b, bootID) {
-			// Returns an error on boot id mismatch
-			return errors.Errorf("boot id mismatch: %s != %s", string(b), string(bootID))
-		}
-	} else if os.IsNotExist(err) {
-		if err := ioutil.WriteFile(didrunPath, bootID, 0644); err != nil {
-			return errors.Wrapf(err, "failed to write boot ID to %s", didrunPath)
-		}
-	} else {
-		return errors.Wrap(err, "failed in getting the information of bootperf_ran")
 	}
 
 	// Time values can come from 3 different sources. To reduce confusion, we suffix the variables as follows:
@@ -737,7 +766,7 @@ func GatherRebootRawDataFiles(raw map[string][]byte) error {
 // GatherMetricRawDataFiles gathers content of raw data files to be returned to
 // the client.
 func GatherMetricRawDataFiles(raw map[string][]byte) error {
-	var files []string
+	files := []string{currentBootIDPath}
 	for _, glob := range []string{uptimeFileGlob, diskFileGlob} {
 		list, _ := filepath.Glob(glob) // filepath.Glob() only returns error on malformed glob patterns.
 		files = append(files, list...)
