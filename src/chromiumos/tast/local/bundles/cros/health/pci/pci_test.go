@@ -41,6 +41,17 @@ Rev:    1a
 Driver: iwlwifi
 Module: iwlwifi
 
+Slot:   00:00.4
+Class:  1a2b
+Vendor: 13eh
+Device: 35cd
+SVendor:        12ab        
+SDevice:        0000 
+ProgIf: 02
+Rev:    1a
+Driver: iwlwifi
+Module: iwlwifi
+
 `,
 	"-d12ab:12ab": `Slot:   00:00.0                                           
 Class:  Host bridge                                       
@@ -67,6 +78,17 @@ Module: iwlwifi
 Class:  Network controller                                
 Vendor: Alice Bob Carol, Inc. [ABC]                       
 Device: Device 34cd                                                                    
+ProgIf: 02
+Rev:    1a
+Driver: iwlwifi
+Module: iwlwifi
+
+`,
+	"-d13eh:35cd": `Slot:   00:00.4                                           
+Class:  Network controller                                
+Vendor: Alice Bob Carol, Inc. [ABC]                       
+Device: Device 34cd                                                                    
+SVendor:        Alice Bob Carol, Inc. [ABC]               
 ProgIf: 02
 Rev:    1a
 Driver: iwlwifi
@@ -118,6 +140,17 @@ func TestExpectedDevices(t *testing.T) {
 			VendorID:    "12eh",
 			DeviceID:    "35cd",
 			SubVendorID: nil,
+			SubDeviceID: nil,
+			Vendor:      "Alice Bob Carol, Inc. [ABC]",
+			Device:      "Device 34cd",
+			Class:       "1a2b",
+			ProgIf:      "02",
+			Driver:      &dr,
+		},
+		Device{
+			VendorID:    "13eh",
+			DeviceID:    "35cd",
+			SubVendorID: &subVendorID,
 			SubDeviceID: nil,
 			Vendor:      "Alice Bob Carol, Inc. [ABC]",
 			Device:      "Device 34cd",

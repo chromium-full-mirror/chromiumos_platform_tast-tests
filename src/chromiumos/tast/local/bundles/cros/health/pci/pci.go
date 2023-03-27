@@ -88,10 +88,14 @@ func ExpectedDevices(ctx context.Context) ([]Device, error) {
 			r.ProgIf = v
 		}
 		if v, ok := d["SVendor"]; ok {
-			r.SubVendorID = &v
+			if v != "0000" {
+				r.SubVendorID = &v
+			}
 		}
 		if v, ok := d["SDevice"]; ok {
-			r.SubDeviceID = &v
+			if v != "0000" {
+				r.SubDeviceID = &v
+			}
 		}
 		if v, ok := d["Driver"]; ok {
 			r.Driver = &v
