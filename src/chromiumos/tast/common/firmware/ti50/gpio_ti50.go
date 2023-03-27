@@ -77,6 +77,8 @@ const (
 	GpioTi50RecoveryIn GpioName = "KSI_02"
 	// GpioTi50VolumeUpOut is volume up output from GSC while in Tablet Mode
 	GpioTi50VolUpOut GpioName = "EC_KSI_02"
+	// GpioTi50RecoveryOut is recovery mode switch output from GSC while in Box Mode
+	GpioTi50RecoveryOut GpioName = "EC_KSI_02"
 	// GpioTi50KsiBack is the KSI (row) from KB to GSC that is connected to ChromeOS Back key
 	GpioTi50KsiBack GpioName = "KSI_00"
 )
