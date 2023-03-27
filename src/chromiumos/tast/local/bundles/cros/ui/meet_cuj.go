@@ -33,6 +33,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/pointer"
 	"chromiumos/tast/local/chrome/uiauto/role"
+	"chromiumos/tast/local/chrome/webutil"
 	"chromiumos/tast/local/coords"
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/graphics"
@@ -947,7 +948,15 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 				return errors.Wrap(err, "failed to open the Google Docs website")
 			}
 			defer collaborationConn.Close()
-			s.Log("Creating a Google Docs window")
+
+			// Wait for tab quiescene to give any network requests time to
+			// complete before forcing Google Docs offline. Only log the error,
+			// because sometimes reaching quiescence can take a really long
+			// time, even when the doc is interactable.
+			if err := webutil.WaitForQuiescence(ctx, collaborationConn, 3*time.Minute); err != nil {
+				s.Log("Failed to wait for Google Docs to quiesce: ", err)
+			}
+
 			collaborationRE = regexp.MustCompile(`\bDocs\b`)
 		} else if meet.jamboard {
 			// Create another browser window and open a new Jamboard file.
