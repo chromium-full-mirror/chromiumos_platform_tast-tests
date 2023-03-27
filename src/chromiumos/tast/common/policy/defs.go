@@ -17731,57 +17731,6 @@ func (p *IntranetRedirectBehavior) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
-// 794. DeviceArcDataSnapshotHours
-// This policy can be modified without rebooting.
-// ****************************************************************************
-type DeviceArcDataSnapshotHours struct {
-	Stat Status
-	Val  *DeviceArcDataSnapshotHoursValue
-}
-
-type DeviceArcDataSnapshotHoursValue struct {
-	Intervals []*DeviceArcDataSnapshotHoursValueIntervals `json:"intervals,omitempty"`
-	Timezone  string                                      `json:"timezone"`
-}
-
-type DeviceArcDataSnapshotHoursValueIntervals struct {
-	End   *DeviceArcDataSnapshotHoursValueIntervalsEnd   `json:"end"`
-	Start *DeviceArcDataSnapshotHoursValueIntervalsStart `json:"start"`
-}
-
-type DeviceArcDataSnapshotHoursValueIntervalsEnd struct {
-	DayOfWeek string `json:"day_of_week"`
-	Time      int    `json:"time"`
-}
-
-type DeviceArcDataSnapshotHoursValueIntervalsStart struct {
-	DayOfWeek string `json:"day_of_week"`
-	Time      int    `json:"time"`
-}
-
-func (p *DeviceArcDataSnapshotHours) Name() string          { return "DeviceArcDataSnapshotHours" }
-func (p *DeviceArcDataSnapshotHours) Scope() Scope          { return ScopeDevice }
-func (p *DeviceArcDataSnapshotHours) Status() Status        { return p.Stat }
-func (p *DeviceArcDataSnapshotHours) UntypedV() interface{} { return p.Val }
-func (p *DeviceArcDataSnapshotHours) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v *DeviceArcDataSnapshotHoursValue
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as *DeviceArcDataSnapshotHoursValue", m)
-	}
-	return v, nil
-}
-func (p *DeviceArcDataSnapshotHours) SetProto(m *protoreflect.Message) {
-	SetDeviceProto(m, "arc_data_snapshot_hours", "arc_data_snapshot_hours", p.Val)
-}
-func (p *DeviceArcDataSnapshotHours) Equal(iface interface{}) bool {
-	v, ok := iface.(*DeviceArcDataSnapshotHoursValue)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
 // 795. PhoneHubAllowed
 // This policy has a default value of False.
 // This policy can be modified without rebooting.
@@ -23158,7 +23107,6 @@ func (p *RecoveryFactorBehavior) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1015. CalendarIntegrationEnabled
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type CalendarIntegrationEnabled struct {
 	Stat Status
@@ -24217,7 +24165,6 @@ func (p *DeviceLoginScreenExtensionManifestV2Availability) Equal(iface interface
 // ****************************************************************************
 // 1056. KioskTroubleshootingToolsEnabled
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type KioskTroubleshootingToolsEnabled struct {
 	Stat Status
@@ -24871,7 +24818,6 @@ func (p *WallpaperGooglePhotosIntegrationEnabled) Equal(iface interface{}) bool 
 // ****************************************************************************
 // 1078. WebRtcTextLogCollectionAllowed
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type WebRtcTextLogCollectionAllowed struct {
 	Stat Status
@@ -25256,6 +25202,160 @@ func (p *DefaultThirdPartyStoragePartitioningSetting) SetProto(m *protoreflect.M
 }
 func (p *DefaultThirdPartyStoragePartitioningSetting) Equal(iface interface{}) bool {
 	v, ok := iface.(int)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1091. ThirdPartyStoragePartitioningBlockedForOrigins
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type ThirdPartyStoragePartitioningBlockedForOrigins struct {
+	Stat Status
+	Val  []string
+}
+
+func (p *ThirdPartyStoragePartitioningBlockedForOrigins) Name() string {
+	return "ThirdPartyStoragePartitioningBlockedForOrigins"
+}
+func (p *ThirdPartyStoragePartitioningBlockedForOrigins) Scope() Scope          { return ScopeUser }
+func (p *ThirdPartyStoragePartitioningBlockedForOrigins) Status() Status        { return p.Stat }
+func (p *ThirdPartyStoragePartitioningBlockedForOrigins) UntypedV() interface{} { return p.Val }
+func (p *ThirdPartyStoragePartitioningBlockedForOrigins) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v []string
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as []string", m)
+	}
+	return v, nil
+}
+func (p *ThirdPartyStoragePartitioningBlockedForOrigins) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *ThirdPartyStoragePartitioningBlockedForOrigins) Equal(iface interface{}) bool {
+	v, ok := iface.([]string)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1092. ScreenCaptureWithoutGestureAllowedForOrigins
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type ScreenCaptureWithoutGestureAllowedForOrigins struct {
+	Stat Status
+	Val  []string
+}
+
+func (p *ScreenCaptureWithoutGestureAllowedForOrigins) Name() string {
+	return "ScreenCaptureWithoutGestureAllowedForOrigins"
+}
+func (p *ScreenCaptureWithoutGestureAllowedForOrigins) Scope() Scope          { return ScopeUser }
+func (p *ScreenCaptureWithoutGestureAllowedForOrigins) Status() Status        { return p.Stat }
+func (p *ScreenCaptureWithoutGestureAllowedForOrigins) UntypedV() interface{} { return p.Val }
+func (p *ScreenCaptureWithoutGestureAllowedForOrigins) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v []string
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as []string", m)
+	}
+	return v, nil
+}
+func (p *ScreenCaptureWithoutGestureAllowedForOrigins) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *ScreenCaptureWithoutGestureAllowedForOrigins) Equal(iface interface{}) bool {
+	v, ok := iface.([]string)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1093. FileOrDirectoryPickerWithoutGestureAllowedForOrigins
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type FileOrDirectoryPickerWithoutGestureAllowedForOrigins struct {
+	Stat Status
+	Val  []string
+}
+
+func (p *FileOrDirectoryPickerWithoutGestureAllowedForOrigins) Name() string {
+	return "FileOrDirectoryPickerWithoutGestureAllowedForOrigins"
+}
+func (p *FileOrDirectoryPickerWithoutGestureAllowedForOrigins) Scope() Scope          { return ScopeUser }
+func (p *FileOrDirectoryPickerWithoutGestureAllowedForOrigins) Status() Status        { return p.Stat }
+func (p *FileOrDirectoryPickerWithoutGestureAllowedForOrigins) UntypedV() interface{} { return p.Val }
+func (p *FileOrDirectoryPickerWithoutGestureAllowedForOrigins) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v []string
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as []string", m)
+	}
+	return v, nil
+}
+func (p *FileOrDirectoryPickerWithoutGestureAllowedForOrigins) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *FileOrDirectoryPickerWithoutGestureAllowedForOrigins) Equal(iface interface{}) bool {
+	v, ok := iface.([]string)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1094. AppLaunchAutomation
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type AppLaunchAutomation struct {
+	Stat Status
+	Val  []*AppLaunchAutomationValue
+}
+
+type AppLaunchAutomationValue struct {
+	AutoLaunchOnStartup bool                          `json:"auto_launch_on_startup"`
+	CreatedTimeUsec     string                        `json:"created_time_usec"`
+	Desk                *AppLaunchAutomationValueDesk `json:"desk"`
+	Name                string                        `json:"name"`
+	UpdatedTimeUsec     string                        `json:"updated_time_usec"`
+	Uuid                string                        `json:"uuid"`
+}
+
+type AppLaunchAutomationValueDesk struct {
+	Apps []*AppLaunchAutomationValueDeskApps `json:"apps,omitempty"`
+}
+
+type AppLaunchAutomationValueDeskApps struct {
+	AppType     string                                         `json:"app_type"`
+	BrowserTabs []*AppLaunchAutomationValueDeskAppsBrowserTabs `json:"browser_tabs,omitempty"`
+	WindowId    int                                            `json:"window_id"`
+}
+
+type AppLaunchAutomationValueDeskAppsBrowserTabs struct {
+	Url string `json:"url"`
+}
+
+func (p *AppLaunchAutomation) Name() string          { return "AppLaunchAutomation" }
+func (p *AppLaunchAutomation) Scope() Scope          { return ScopeUser }
+func (p *AppLaunchAutomation) Status() Status        { return p.Stat }
+func (p *AppLaunchAutomation) UntypedV() interface{} { return p.Val }
+func (p *AppLaunchAutomation) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v []*AppLaunchAutomationValue
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as []*AppLaunchAutomationValue", m)
+	}
+	return v, nil
+}
+func (p *AppLaunchAutomation) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *AppLaunchAutomation) Equal(iface interface{}) bool {
+	v, ok := iface.([]*AppLaunchAutomationValue)
 	if !ok {
 		return ok
 	}
@@ -26359,8 +26459,6 @@ func newByName(name string) (Policy, error) {
 		return &BrowsingDataLifetime{}, nil
 	case "IntranetRedirectBehavior":
 		return &IntranetRedirectBehavior{}, nil
-	case "DeviceArcDataSnapshotHours":
-		return &DeviceArcDataSnapshotHours{}, nil
 	case "PhoneHubAllowed":
 		return &PhoneHubAllowed{}, nil
 	case "PhoneHubNotificationsAllowed":
@@ -26821,6 +26919,14 @@ func newByName(name string) (Policy, error) {
 		return &UserAvatarCustomizationSelectorsEnabled{}, nil
 	case "DefaultThirdPartyStoragePartitioningSetting":
 		return &DefaultThirdPartyStoragePartitioningSetting{}, nil
+	case "ThirdPartyStoragePartitioningBlockedForOrigins":
+		return &ThirdPartyStoragePartitioningBlockedForOrigins{}, nil
+	case "ScreenCaptureWithoutGestureAllowedForOrigins":
+		return &ScreenCaptureWithoutGestureAllowedForOrigins{}, nil
+	case "FileOrDirectoryPickerWithoutGestureAllowedForOrigins":
+		return &FileOrDirectoryPickerWithoutGestureAllowedForOrigins{}, nil
+	case "AppLaunchAutomation":
+		return &AppLaunchAutomation{}, nil
 	default:
 		return nil, errors.New("Unknown policy " + name)
 	}
@@ -26830,31 +26936,9 @@ func newByName(name string) (Policy, error) {
 // Reference values (used via '$ref' in JSON Schema).
 // ****************************************************************************
 
-type RefTimeUsageLimitEntry struct {
-	LastUpdatedMillis string `json:"last_updated_millis"`
-	UsageQuotaMins    int    `json:"usage_quota_mins"`
-}
-
-type RefTime struct {
-	Hour   int `json:"hour"`
-	Minute int `json:"minute"`
-}
-
-type RefConfig struct {
-	AccessCodeTtl       int    `json:"access_code_ttl"`
-	ClockDriftTolerance int    `json:"clock_drift_tolerance"`
-	SharedSecret        string `json:"shared_secret"`
-}
-
-type RefDeviceLoginScreenPowerSettings struct {
-	Delays     *RefDeviceLoginScreenPowerSettingsDelays `json:"Delays"`
-	IdleAction string                                   `json:"IdleAction"`
-}
-
-type RefDeviceLoginScreenPowerSettingsDelays struct {
-	Idle      int `json:"Idle"`
-	ScreenDim int `json:"ScreenDim"`
-	ScreenOff int `json:"ScreenOff"`
+type RefUsbDeviceIdInclusive struct {
+	ProductId int `json:"product_id"`
+	VendorId  int `json:"vendor_id"`
 }
 
 type Reffile_transfer_enable_disable_schema struct {
@@ -26875,11 +26959,6 @@ type Reffile_transfer_source_destination_schema struct {
 	FileSystemType string `json:"file_system_type"`
 }
 
-type RefUsbDeviceIdInclusive struct {
-	ProductId int `json:"product_id"`
-	VendorId  int `json:"vendor_id"`
-}
-
 type RefBookmarkType struct {
 	Children     []*RefBookmarkType `json:"children,omitempty"`
 	Name         string             `json:"name"`
@@ -26887,9 +26966,9 @@ type RefBookmarkType struct {
 	Url          string             `json:"url"`
 }
 
-type RefDomainFiletypePair struct {
-	Domains       []string `json:"domains,omitempty"`
-	FileExtension string   `json:"file_extension"`
+type RefUsbDeviceId struct {
+	ProductId int `json:"product_id"`
+	VendorId  int `json:"vendor_id"`
 }
 
 type RefWeeklyTimeIntervals struct {
@@ -26907,9 +26986,47 @@ type RefWeeklyTime struct {
 	Time      int    `json:"time"`
 }
 
-type RefUsbDeviceId struct {
-	ProductId int `json:"product_id"`
-	VendorId  int `json:"vendor_id"`
+type RefDomainFiletypePair struct {
+	Domains       []string `json:"domains,omitempty"`
+	FileExtension string   `json:"file_extension"`
+}
+
+type RefDeviceLoginScreenPowerSettings struct {
+	Delays     *RefDeviceLoginScreenPowerSettingsDelays `json:"Delays"`
+	IdleAction string                                   `json:"IdleAction"`
+}
+
+type RefDeviceLoginScreenPowerSettingsDelays struct {
+	Idle      int `json:"Idle"`
+	ScreenDim int `json:"ScreenDim"`
+	ScreenOff int `json:"ScreenOff"`
+}
+
+type RefDisallowedTimeInterval struct {
+	DayOfWeek string `json:"day_of_week"`
+	Hours     int    `json:"hours"`
+	Minutes   int    `json:"minutes"`
+}
+
+type RefDayPercentagePair struct {
+	Days       int `json:"days"`
+	Percentage int `json:"percentage"`
+}
+
+type RefTimeUsageLimitEntry struct {
+	LastUpdatedMillis string `json:"last_updated_millis"`
+	UsageQuotaMins    int    `json:"usage_quota_mins"`
+}
+
+type RefTime struct {
+	Hour   int `json:"hour"`
+	Minute int `json:"minute"`
+}
+
+type RefConfig struct {
+	AccessCodeTtl       int    `json:"access_code_ttl"`
+	ClockDriftTolerance int    `json:"clock_drift_tolerance"`
+	SharedSecret        string `json:"shared_secret"`
 }
 
 type RefPowerManagementDelays struct {
@@ -26922,17 +27039,6 @@ type RefPowerManagementDelaysDelays struct {
 	IdleWarning int `json:"IdleWarning"`
 	ScreenDim   int `json:"ScreenDim"`
 	ScreenOff   int `json:"ScreenOff"`
-}
-
-type RefDisallowedTimeInterval struct {
-	DayOfWeek string `json:"day_of_week"`
-	Hours     int    `json:"hours"`
-	Minutes   int    `json:"minutes"`
-}
-
-type RefDayPercentagePair struct {
-	Days       int `json:"days"`
-	Percentage int `json:"percentage"`
 }
 
 // ****************************************************************************
