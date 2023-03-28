@@ -7,6 +7,7 @@ package health
 import (
 	"context"
 	"sort"
+	"time"
 
 	"github.com/godbus/dbus/v5"
 	"github.com/google/go-cmp/cmp"
@@ -329,7 +330,10 @@ func ProbeBluetoothInfo(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get Bluetooth adapter data: empty adapters slice")
 	}
 
-	if err := validateBluetoothAdapterData(ctx, &info); err != nil {
+	// TODO(b/270471793): Remove the polling of validation.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		return validateBluetoothAdapterData(ctx, &info)
+	}, &testing.PollOptions{Interval: 2 * time.Second, Timeout: 10 * time.Second}); err != nil {
 		s.Fatal("Failed to validate bluetooth adapter data: ", err)
 	}
 
