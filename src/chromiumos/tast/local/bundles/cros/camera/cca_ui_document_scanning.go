@@ -401,7 +401,7 @@ func testFixCropArea(ctx context.Context, app *cca.App, cr *chrome.Chrome) error
 }
 
 // clickShutterAndWaitFor clicks shutter button and waits specified UI for 10 seconds
-func clickShutterAndWaitFor(ctx context.Context, app *cca.App, ui cca.UIComponent) error {
+func clickShutterAndWaitFor(ctx context.Context, app *cca.App, ui cca.UIComponentName) error {
 	if err := app.ClickShutter(ctx); err != nil {
 		return errors.Wrap(err, "failed to click the shutter button")
 	}

@@ -139,42 +139,6 @@ window.Tast = class Tast {
   }
 
   /**
-   * Gets screen x, y of the center of |index|'th ui with |selector|.
-   * @param {string} selector
-   * @param {number} index 0-based target index.
-   * @return {{x: number, y: number}}
-   */
-  static async getScreenXY(selector, index) {
-    if (!Tast.isVisible(selector)) {
-      throw new Error('No visible element: ', selector);
-    }
-    const element = document.querySelectorAll(selector)[index];
-    if (element === undefined) {
-      return new Error(`No ${index}'th element from ${selector}`);
-    }
-    const rect = element.getBoundingClientRect();
-    const actionBarH = window.outerHeight - window.innerHeight;
-    return {
-      x: Math.round(rect.x + window.screenX),
-      y: Math.round(rect.y + actionBarH + window.screenY),
-    };
-  }
-
-  /**
-   * Gets size of ui with |selector|.
-   * @param {string} selector
-   * @return {{width: number, height: number}}
-   */
-  static getSize(selector) {
-    if (!Tast.isVisible(selector)) {
-      throw new Error('No visible element: ', selector);
-    }
-    const element = document.querySelector(selector);
-    const {width, height} = element.getBoundingClientRect();
-    return {width: Math.round(width), height: Math.round(height)};
-  }
-
-  /**
    * Switches to specific camera mode.
    * @param {string} mode The target mode which we expects to switch to.
    * @throws {Error} Throws error if there is no button found for given |mode|.
@@ -194,15 +158,6 @@ window.Tast = class Tast {
     }
     const track = Tast.previewVideo.srcObject.getVideoTracks()[0];
     return deviceOperator.isPortraitModeSupported(track.getSettings().deviceId);
-  }
-
-  /**
-   * Gets resolution of the preview view port.
-   * @throws {LegacyVCDError}
-   * @return {!Resolution}
-   */
-   static getPreviewViewportSize() {
-    return Tast.getSize('#preview-viewport');
   }
 
   /**

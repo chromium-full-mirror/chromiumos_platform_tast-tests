@@ -590,11 +590,11 @@ func (a *App) GetFacing(ctx context.Context) (Facing, error) {
 
 // GetPreviewViewportSize returns resolution of the preview view port.
 func (a *App) GetPreviewViewportSize(ctx context.Context) (Resolution, error) {
-	r := Resolution{-1, -1}
-	if err := a.conn.Eval(ctx, "Tast.getPreviewViewportSize()", &r); err != nil {
-		return r, errors.Wrap(err, "failed to get the size of preview viewport")
+	r, err := a.Size(ctx, PreviewViewport)
+	if err != nil {
+		return Resolution{-1, -1}, errors.Wrap(err, "failed to get the size of preview viewport")
 	}
-	return r, nil
+	return *r, nil
 }
 
 // GetScreenOrientation returns screen orientation.

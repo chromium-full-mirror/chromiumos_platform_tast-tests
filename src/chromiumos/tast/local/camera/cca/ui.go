@@ -82,28 +82,6 @@ var (
 	// DocumentCornerOverlay is the overlay that CCA used to draw document corners on.
 	DocumentCornerOverlay = UIComponent{"document corner overlay", []string{
 		"#preview-document-corner-overlay"}}
-	// DocumentReview is the review view for multi-page document mode.
-	DocumentReview = UIComponent{"document review view", []string{"#view-document-review"}}
-	// DocumentPreviewModeImage is the preview image of preview mode in multi-page document mode.
-	DocumentPreviewModeImage = UIComponent{"document preview mode image", []string{".document-preview-mode .image"}}
-	// DocumentFixModeImage is the preview image of fix mode in multi-page document mode.
-	DocumentFixModeImage = UIComponent{"document fix mode image", []string{".document-fix-mode .image"}}
-	// DocumentFixButton is the entry button of fix mode in multi-page document mode.
-	DocumentFixButton = UIComponent{"document enter fix mode button", []string{".document-preview-mode button[i18n-aria=fix_page_button]", ".document-preview-mode button[i18n-label=fix_page_button]"}}
-	// DocumentFixModeCorner is the crop area dragging point in fix mode in multi-page document mode.
-	DocumentFixModeCorner = UIComponent{"document corner dragging point", []string{".document-fix-mode .dot"}}
-	// DocumentDoneFixButton is the exit button of fix mode in multi-page document mode.
-	DocumentDoneFixButton = UIComponent{"document exit fix mode button", []string{".document-fix-mode button[i18n-text=label_crop_done]"}}
-	// DocumentCancelButton is the cancel button in multi-page document mode.
-	DocumentCancelButton = UIComponent{"document cancel button", []string{".document-preview-mode button[i18n-text=cancel_review_button]"}}
-	// DocumentBackButton is the resume button to show review UI of multi-page document mode when there're pending pages for reviewing.
-	DocumentBackButton = UIComponent{"document resume button", []string{"#back-to-review-document"}}
-	// DocumentAddPageButton is the button to close the review UI of multi-page document mode temporarily for adding new pages.
-	DocumentAddPageButton = UIComponent{"document add page button", []string{".document-preview-mode button[i18n-aria=add_new_page_button]", ".document-preview-mode button[i18n-label=add_new_page_button]"}}
-	// DocumentSaveAsPhotoButton is the button to save as a photo in multi-page document mode.
-	DocumentSaveAsPhotoButton = UIComponent{"document save as photo button", []string{".document-preview-mode button[i18n-text=label_save_photo_document]"}}
-	// DocumentSaveAsPdfButton is the button save as a PDF file in multi-page document mode.
-	DocumentSaveAsPdfButton = UIComponent{"document save as PDF button", []string{".document-preview-mode button[i18n-text=label_save_pdf_document]"}}
 
 	// GifRecordingOption is the radio button to toggle gif recording option.
 	GifRecordingOption = UIComponent{"gif recording button", []string{
@@ -185,6 +163,28 @@ const (
 	CancelResultButton UIComponentName = "cancelResultButton"
 	// ConfirmResultButton is button for confirming intent review result.
 	ConfirmResultButton UIComponentName = "confirmResultButton"
+	// DocumentAddPageButton is the button to close the review UI of multi-page document mode temporarily for adding new pages.
+	DocumentAddPageButton UIComponentName = "documentAddPageButton"
+	// DocumentBackButton is the resume button to show review UI of multi-page document mode when there're pending pages for reviewing.
+	DocumentBackButton UIComponentName = "documentBackButton"
+	// DocumentCancelButton is the cancel button in multi-page document mode.
+	DocumentCancelButton UIComponentName = "documentCancelButton"
+	// DocumentDoneFixButton is the exit button of fix mode in multi-page document mode.
+	DocumentDoneFixButton UIComponentName = "documentDoneFixButton"
+	// DocumentFixButton is the entry button of fix mode in multi-page document mode.
+	DocumentFixButton UIComponentName = "documentFixButton"
+	// DocumentFixModeCorner is the crop area dragging point in fix mode in multi-page document mode.
+	DocumentFixModeCorner UIComponentName = "documentFixModeCorner"
+	// DocumentFixModeImage is the preview image of fix mode in multi-page document mode.
+	DocumentFixModeImage UIComponentName = "documentFixModeImage"
+	// DocumentPreviewModeImage is the preview image of preview mode in multi-page document mode.
+	DocumentPreviewModeImage UIComponentName = "documentPreviewModeImage"
+	// DocumentReview is the review view for multi-page document mode.
+	DocumentReview UIComponentName = "documentReview"
+	// DocumentSaveAsPdfButton is the button save as a PDF file in multi-page document mode.
+	DocumentSaveAsPdfButton UIComponentName = "documentSaveAsPdfButton"
+	// DocumentSaveAsPhotoButton is the button to save as a photo in multi-page document mode.
+	DocumentSaveAsPhotoButton UIComponentName = "documentSaveAsPhotoButton"
 	// OpenPTZPanelButton is the button for opening PTZ panel.
 	OpenPTZPanelButton UIComponentName = "openPTZPanelButton"
 	// PanLeftButton is the button for panning left preview.
@@ -193,6 +193,8 @@ const (
 	PanRightButton UIComponentName = "panRightButton"
 	// PTZResetAllButton is the button for reset PTZ to default value.
 	PTZResetAllButton UIComponentName = "ptzResetAllButton"
+	// PreviewViewport is the container of the preview video.
+	PreviewViewport UIComponentName = "previewViewport"
 	// TiltDownButton is the button for tilting down preview.
 	TiltDownButton UIComponentName = "tiltDownButton"
 	// TiltUpButton is the button for tilting up preview.
@@ -396,33 +398,19 @@ func (a *App) AttributeWithIndex(ctx context.Context, ui UIComponent, index int,
 }
 
 // ScreenXYWithIndex returns the screen coordinates of the left-top corner of the |index|'th |ui|.
-func (a *App) ScreenXYWithIndex(ctx context.Context, ui UIComponent, index int) (*coords.Point, error) {
-	wrapError := func(err error) error {
-		return errors.Wrapf(err, "failed to get screen coordindates of %v th %v", index, ui.Name)
-	}
-	selector, err := a.resolveUISelector(ctx, ui)
-	if err != nil {
-		return nil, wrapError(err)
-	}
+func (a *App) ScreenXYWithIndex(ctx context.Context, ui UIComponentName, index int) (*coords.Point, error) {
 	var pt coords.Point
-	if err := a.conn.Call(ctx, &pt, `Tast.getScreenXY`, selector, index); err != nil {
-		return nil, wrapError(err)
+	if err := a.conn.Call(ctx, &pt, "CCATest.getScreenXY", ui, index); err != nil {
+		return nil, errors.Wrapf(err, "failed to get sceen coordinates of %v'th %v", index, ui)
 	}
 	return &pt, nil
 }
 
 // Size returns size of the |ui|.
-func (a *App) Size(ctx context.Context, ui UIComponent) (*Resolution, error) {
-	wrapError := func(err error) error {
-		return errors.Wrapf(err, "failed to get size of %v", ui.Name)
-	}
-	selector, err := a.resolveUISelector(ctx, ui)
-	if err != nil {
-		return nil, wrapError(err)
-	}
+func (a *App) Size(ctx context.Context, ui UIComponentName) (*Resolution, error) {
 	var size Resolution
-	if err := a.conn.Call(ctx, &size, `Tast.getSize`, selector); err != nil {
-		return nil, wrapError(err)
+	if err := a.conn.Call(ctx, &size, "CCATest.getSize", ui); err != nil {
+		return nil, errors.Wrapf(err, "failed to get size of %v", ui)
 	}
 	return &size, nil
 }
