@@ -29,6 +29,7 @@ func init() {
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
 		Fixture:      "ccaLaunched",
+		Attr:         []string{"group:camera_dependent"},
 		Params: []testing.Param{{
 			Name: "user_facing_image_quick",
 			Val:  cameraStressTestParams{cca.FacingFront, 2, true},

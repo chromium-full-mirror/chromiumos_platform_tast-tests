@@ -29,6 +29,7 @@ func init() {
 		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
 		Data:         []string{"video.html", "playback.js"},
 		Fixture:      "ccaLaunched",
+		Attr:         []string{"group:camera_dependent"},
 		Params: []testing.Param{{
 			Name: "external_facing",
 			Val:  cca.FacingExternal,

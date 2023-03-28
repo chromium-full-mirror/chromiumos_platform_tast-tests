@@ -47,6 +47,7 @@ func init() {
 			"ui.collectTrace",  // Optional. Expecting "enable" or "disable", default is "disable".
 		},
 		Data: []string{"cca_ui.js", cujrecorder.SystemTraceConfigFile},
+		Attr: []string{"group:camera_dependent"},
 		Params: []testing.Param{
 			{
 				Name:    "basic_ytmusic",

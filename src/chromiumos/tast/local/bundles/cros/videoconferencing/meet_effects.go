@@ -36,7 +36,11 @@ func init() {
 		BugComponent: "b:187682",
 		Timeout:      10 * time.Minute,
 		Attr: []string{
-			"group:video_conference", "video_conference_per_build", "group:ml_service", "group:external-dependency",
+			"group:camera_dependent",
+			"group:external-dependency",
+			"group:ml_service",
+			"group:video_conference",
+			"video_conference_per_build",
 		},
 		SoftwareDeps: []string{"chrome", "camera_feature_effects"},
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("betty")),

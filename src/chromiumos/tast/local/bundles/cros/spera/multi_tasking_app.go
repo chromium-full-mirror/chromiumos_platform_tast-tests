@@ -43,6 +43,7 @@ func init() {
 			"spera.MultiTaskingApp.web_source",    // Optional. Expecting "google" or "external", default is "google".
 		},
 		Data: []string{"cca_ui.js", cujrecorder.SystemTraceConfigFile},
+		Attr: []string{"group:camera_dependent"},
 		Params: []testing.Param{
 			{
 				Name:    "essential",

@@ -33,7 +33,10 @@ func init() {
 			"chrome-knowledge-eng@google.com",
 			"shengjun@chromium.org",
 		},
-		Attr:         []string{"group:external-dependency"},
+		Attr: []string{
+			"group:camera_dependent",
+			"group:external-dependency",
+		},
 		Data:         []string{audioInputFile},
 		BugComponent: "b:187682",
 		Timeout:      3 * time.Minute,

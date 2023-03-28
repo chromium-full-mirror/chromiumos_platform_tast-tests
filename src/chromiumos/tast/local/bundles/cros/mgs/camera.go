@@ -28,10 +28,11 @@ func init() {
 		BugComponent: "b:892153", // ChromeOS > Software > Commercial (Enterprise) > Kiosk
 		SoftwareDeps: []string{"reboot", "camera_app", "chrome", caps.BuiltinOrVividCamera},
 		Attr: []string{
-			"group:golden_tier",
-			"group:medium_low_tier",
-			"group:hardware",
+			"group:camera_dependent",
 			"group:complementary",
+			"group:golden_tier",
+			"group:hardware",
+			"group:medium_low_tier",
 		},
 		Data:    []string{"cca_ui.js"},
 		Fixture: fixture.FakeDMSEnrolled,

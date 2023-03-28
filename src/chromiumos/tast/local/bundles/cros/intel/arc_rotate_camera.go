@@ -27,6 +27,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "ccaTestBridgeReadyWithArc",
 		Timeout:      arc.BootTimeout + 2*time.Minute,
+		Attr:         []string{"group:camera_dependent"},
 		Params: []testing.Param{{
 			Name: "photo",
 			Val:  cca.Photo,

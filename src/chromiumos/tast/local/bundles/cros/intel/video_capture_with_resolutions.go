@@ -24,6 +24,7 @@ func init() {
 		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
 		Timeout:      60 * time.Minute,
 		Fixture:      "ccaLaunched",
+		Attr:         []string{"group:camera_dependent"},
 		Params: []testing.Param{{
 			Name: "front",
 			Val:  cca.FacingFront,

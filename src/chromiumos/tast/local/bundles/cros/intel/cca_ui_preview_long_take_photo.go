@@ -21,7 +21,8 @@ func init() {
 		SoftwareDeps: []string{"camera_app", "chrome"},
 		Fixture:      "ccaLaunched",
 		Timeout:      62 * time.Minute, // Timeout for long duration.
-		BugComponent: "b:157291",       // ChromeOS > External > Intel
+		Attr:         []string{"group:camera_dependent"},
+		BugComponent: "b:157291", // ChromeOS > External > Intel
 	})
 }
 
