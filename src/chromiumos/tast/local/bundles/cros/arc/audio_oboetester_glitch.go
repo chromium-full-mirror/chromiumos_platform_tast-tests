@@ -23,6 +23,9 @@ import (
 	"chromiumos/tast/local/audio/crastestclient"
 	"chromiumos/tast/local/bundles/cros/arc/audio"
 	"chromiumos/tast/local/chrome/ash"
+	"chromiumos/tast/local/chrome/uiauto"
+	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/testing"
 )
 
@@ -32,8 +35,8 @@ const (
 	// audioOboetesterGlitchStressLoadNone run the test without any stress test
 	audioOboetesterGlitchStressLoadNone audioOboetesterGlitchStressLoad = iota
 
-	// audioOboetesterGlitchStressLoadFull run the test with stressapptest to simulate full load
-	audioOboetesterGlitchStressLoadFull
+	// audioOboetesterGlitchStressLoadSpeedometer run the test with a single tab of speedometer in Chrome
+	audioOboetesterGlitchStressLoadSpeedometer
 )
 
 type audioOboetesterGlitchParam struct {
@@ -69,9 +72,9 @@ func init() {
 				},
 			},
 			{
-				Name: "aaudio_fullload",
+				Name: "aaudio_speedometer",
 				Val: audioOboetesterGlitchParam{
-					stressMode: audioOboetesterGlitchStressLoadFull,
+					stressMode: audioOboetesterGlitchStressLoadSpeedometer,
 					options: []arc.ActivityStartOption{
 						arc.WithExtraString("in_api", "aaudio"),
 						arc.WithExtraString("out_api", "aaudio"),
@@ -89,9 +92,9 @@ func init() {
 				},
 			},
 			{
-				Name: "opensles_fullload",
+				Name: "opensles_speedometer",
 				Val: audioOboetesterGlitchParam{
-					stressMode: audioOboetesterGlitchStressLoadFull,
+					stressMode: audioOboetesterGlitchStressLoadSpeedometer,
 					options: []arc.ActivityStartOption{
 						arc.WithExtraString("in_api", "opensles"),
 						arc.WithExtraString("out_api", "opensles"),
@@ -151,11 +154,6 @@ func AudioOboetesterGlitch(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(*arc.PreData).Chrome
 	d := s.FixtValue().(*arc.PreData).UIDevice
 
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to create Test API connection: ", err)
-	}
-
 	// Reserve time to remove input file and unload ALSA loopback at the end of the test.
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, cleanupTime)
@@ -186,13 +184,33 @@ func AudioOboetesterGlitch(ctx context.Context, s *testing.State) {
 	}
 	defer activity.Close()
 
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to create Test API connection: ", err)
+	}
+
 	// Start stress test
 	switch param.stressMode {
-	case audioOboetesterGlitchStressLoadFull:
-		// Run stressapptest for testDuration+3 seconds
-		stress := testexec.CommandContext(ctx, "stressapptest", "-s", strconv.Itoa(testDuration+3))
-		stress.Start()
-		defer stress.Wait()
+	case audioOboetesterGlitchStressLoadSpeedometer:
+		// Open and start Speedometer test. Note that we don't wait for it to finish.
+		// It will be closed once the glitch test is finished.
+		conn, err := cr.NewConn(ctx, "https://browserbench.org/Speedometer2.0/")
+		if err != nil {
+			s.Fatal("Failed to open Speedometer website: ", err)
+		}
+		defer func() {
+			conn.CloseTarget(cleanupCtx)
+			conn.Close()
+		}()
+
+		uia := uiauto.New(tconn)
+		startButton := nodewith.Name("Start Test").Role(role.Button).Onscreen()
+		if err := uiauto.Combine("Click Start Test",
+			uia.WaitUntilExists(startButton),
+			uia.LeftClick(startButton),
+		)(ctx); err != nil {
+			s.Fatal("Failed to start speedometer: ", err)
+		}
 	}
 
 	// Dump audio diagnostics once the test is finished.
