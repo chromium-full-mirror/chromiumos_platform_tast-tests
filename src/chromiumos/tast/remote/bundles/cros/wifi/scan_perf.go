@@ -100,7 +100,7 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 	/*
 		This test measures WiFi scan time with established network connection (background scan)
 		or without (foreground scan) and compares with thresholds to indicate pass or not.
-		Full (all channels) scan times are obtained as avg from tests with `scanTimes` times.
+		Full (wildcard scan on all channels) scan times are obtained as avg from tests with `scanTimes` times.
 		Thresholds are applied to each single full scan test.
 		Here are the steps:
 		1- Configures the AP (e.g. specifies DTIM value).
@@ -231,7 +231,7 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 		s.Logf("%s: %s", label, duration)
 	}
 
-	// pollTimedScan polls "iw scan" with specific SSID and returns scan duration.
+	// pollTimedScan polls "iw scan" and returns scan duration.
 	// Each scan takes at most scanTimeout, and the polling takes at most pollTimeout.
 	pollTimedScan := func(ctx context.Context, freqs []int, scanTimeout, pollTimeout time.Duration, ssid, iface string, iwr *iw.Runner) (time.Duration, error) {
 		var scanResult *iw.TimedScanData
@@ -245,7 +245,7 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 			// Declare err to avoid multivariable short redeclaration as we don't want scanResult being shadowed.
 			// We need to access scanResult after testing.Poll().
 			var err error
-			scanResult, err = iwr.TimedScan(ctx, iface, freqs, []string{ssid})
+			scanResult, err = iwr.TimedScan(ctx, iface, freqs, nil)
 			if err != nil {
 				return err
 			}
