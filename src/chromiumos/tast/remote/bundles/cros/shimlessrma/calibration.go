@@ -49,7 +49,7 @@ func init() {
 			"ui.signinProfileTestExtensionManifestKey",
 		},
 		SoftwareDeps: []string{"chrome"},
-		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
+		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.FormFactor(hwdep.Convertible)),
 		ServiceDeps: []string{
 			"tast.cros.browser.ChromeService",
 			"tast.cros.shimlessrma.AppService",
