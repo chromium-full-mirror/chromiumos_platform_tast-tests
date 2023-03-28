@@ -1178,3 +1178,10 @@ func (ac *Context) ResetScrollOffset(finder *nodewith.Finder) Action {
 		return nil
 	}
 }
+
+// LeftClickUntilFocused returns a function that repeatedly left clicks the
+// node until it is focused.
+// NOTE: the node needs to focusable.
+func (ac *Context) LeftClickUntilFocused(finder *nodewith.Finder) Action {
+	return ac.LeftClickUntil(finder, ac.WithTimeout(time.Second).WaitUntilExists(finder.Focused()))
+}

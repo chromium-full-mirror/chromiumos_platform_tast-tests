@@ -163,9 +163,9 @@ func (ta *TerminalApp) SetUpSSHConnection(sshArgs string) uiauto.Action {
 	relay := "--ssh-client-version=pnacl"
 	addSSH := uiauto.Combine("input ssh information",
 		ta.ui.LeftClick(nodewith.Name("Add SSH").Role(role.Button)),
-		ta.ui.LeftClick(nodewith.Name("Command").Role(role.TextField)),
+		ta.ui.LeftClickUntilFocused(nodewith.Name("Command").Role(role.TextField)),
 		ta.Kb.TypeAction(cmd),
-		ta.ui.LeftClick(nodewith.Name("SSH relay server options").Role(role.TextField)),
+		ta.ui.LeftClickUntilFocused(nodewith.Name("SSH relay server options").Role(role.TextField)),
 		ta.Kb.TypeAction(relay),
 		ta.ui.WithTimeout(2*time.Second).WaitUntilExists(nodewith.Role(role.StaticText).Name(cmd)),
 		ta.ui.WithTimeout(2*time.Second).WaitUntilExists(nodewith.Role(role.StaticText).Name(relay)))
@@ -176,7 +176,11 @@ func (ta *TerminalApp) SetUpSSHConnection(sshArgs string) uiauto.Action {
 	return uiauto.Combine("set up ssh connection",
 		ime.EnglishUS.InstallAndActivate(ta.tconn),
 		ta.DeleteSSHConnection("chronos@localhost"),
-		uiauto.Retry(3, uiauto.IfSucceedThenElse(addSSH, save, cancel)))
+		uiauto.Retry(3, uiauto.Combine("type ssh configs",
+			uiauto.IfSucceedThenElse(addSSH, save, cancel),
+			ta.ui.WithTimeout(2*time.Second).WaitUntilExists(nodewith.Name("chronos@localhost").Role(role.Link))),
+		),
+	)
 }
 
 // OpenSSHConnection opens the ssh connection set up by SetUpSSHConnection().
