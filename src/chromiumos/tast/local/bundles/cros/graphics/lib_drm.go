@@ -17,8 +17,7 @@ func init() {
 		Func:         LibDRM,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "A quick smoke check using the binaries shipping with libdrm",
-		// TODO(syedfaaiz): Add to CQ once it is green and stable.
-		Attr:         []string{"group:graphics", "group:mainline", "graphics_nightly", "informational"},
+		Attr:         []string{"group:graphics", "group:mainline", "graphics_nightly"},
 		BugComponent: "b:995569", // ChromeOS > Platform > Graphics > GPU
 		Contacts: []string{
 			"chromeos-gfx@google.com",
