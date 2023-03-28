@@ -5,7 +5,11 @@
 package arc
 
 import (
+	"compress/gzip"
 	"context"
+	"io"
+	"os"
+	"path"
 	"regexp"
 	"strconv"
 	"time"
@@ -16,6 +20,7 @@ import (
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
+	"chromiumos/tast/local/audio/crastestclient"
 	"chromiumos/tast/local/bundles/cros/arc/audio"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/testing"
@@ -97,7 +102,40 @@ func init() {
 	})
 }
 
-// AudioOboetesterGlitch runs Oboetester glitch test for 30 seconds and stores the result.
+// gzipAndDeleteFile gzip the source file to the destination and delete the source file if the gzip succeeded.
+func gzipAndDeleteFile(srcFilePath, destFilePath string) error {
+	deleteSrc := false
+	src, err := os.Open(srcFilePath)
+	if err != nil {
+		return errors.Wrapf(err, "failed to open %v", srcFilePath)
+	}
+	defer func() {
+		_ = src.Close()
+		if deleteSrc {
+			_ = os.Remove(srcFilePath)
+		}
+	}()
+
+	var dst io.WriteCloser
+	if dst, err = os.Create(destFilePath); err != nil {
+		return errors.Wrapf(err, "failed to create %v", destFilePath)
+	}
+	defer dst.Close()
+
+	dstGzip := gzip.NewWriter(dst)
+	if _, err := io.Copy(dstGzip, src); err != nil {
+		_ = dstGzip.Close()
+		return errors.Wrap(err, "failed to gzip")
+	}
+	if err := dstGzip.Close(); err != nil {
+		return errors.Wrap(err, "failed to close gzip")
+	}
+
+	deleteSrc = true
+	return nil
+}
+
+// AudioOboetesterGlitch runs Oboetester glitch test for 60 seconds and stores the result.
 func AudioOboetesterGlitch(ctx context.Context, s *testing.State) {
 	const (
 		cleanupTime  = 30 * time.Second
@@ -156,6 +194,35 @@ func AudioOboetesterGlitch(ctx context.Context, s *testing.State) {
 		stress.Start()
 		defer stress.Wait()
 	}
+
+	// Dump audio diagnostics once the test is finished.
+	defer func(ctx context.Context) {
+		crastestclient.DumpAudioDiagnostics(ctx, s.OutDir())
+	}(cleanupCtx)
+
+	// Capture audio with crastestclient and gzip the result.
+	rawCaptureFilePath := path.Join(s.OutDir(), "capture.raw")
+	gzipCaptureFilePath := path.Join(s.OutDir(), "capture.raw.gz")
+	cmd := crastestclient.CaptureFileCommand(
+		ctx, rawCaptureFilePath,
+		testDuration+5, // Add 5 seconds buffer for the audio starting delay.
+		8,
+		48000)
+	if err := cmd.Start(); err != nil {
+		s.Fatal("Start crastestclient capture error: ", err)
+	}
+	defer func(ctx context.Context) {
+		if err := cmd.Wait(testexec.DumpLogOnError); err != nil {
+			testing.ContextLog(ctx, "Wait for crastestclient capture error: ", err)
+			return
+		}
+
+		// Raw recording file greatly benefits from compression. (From 50MB to <1MB)
+		testing.ContextLog(ctx, "Gzipping capture.raw file")
+		if err := gzipAndDeleteFile(rawCaptureFilePath, gzipCaptureFilePath); err != nil {
+			testing.ContextLog(ctx, "Gzip capture.raw file error: ", err)
+		}
+	}(cleanupCtx)
 
 	// Launch app
 	launchParams := param.options
@@ -227,6 +294,30 @@ func AudioOboetesterGlitch(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to parse glitch frames %q to int: %v", match[1], err)
 	}
 
+	// Parse xrun# from the input and output stream configuration.
+	xrunRegex := regexp.MustCompile(`xRun# = (\d+)`)
+	getXrunOfStreamConfig := func(streamConfigID string) int {
+		statusView := d.Object(ui.TextContains("xRun# = "))
+		if err := d.Object(ui.ID(streamConfigID)).GetChild(ctx, statusView); err != nil {
+			s.Fatal("Failed to get statusView: ", err)
+		}
+		statusText, err := statusView.GetText(ctx)
+		if err != nil {
+			s.Fatal("Failed to get statusText: ", err)
+		}
+		match = xrunRegex.FindStringSubmatch(statusText)
+		if match == nil {
+			s.Fatalf("Failed to find xRun in text. statusText = %q", statusText)
+		}
+		xrun, err := strconv.Atoi(match[1])
+		if err != nil {
+			s.Fatalf("Failed to parse xrun %q to int: %v", match[1], err)
+		}
+		return xrun
+	}
+	inputXrun := getXrunOfStreamConfig("com.mobileer.oboetester:id/inputStreamConfiguration")
+	outputXrun := getXrunOfStreamConfig("com.mobileer.oboetester:id/outputStreamConfiguration")
+
 	// Stores test result
 	perfValues := perf.NewValues()
 	defer func() {
@@ -246,4 +337,16 @@ func AudioOboetesterGlitch(ctx context.Context, s *testing.State) {
 		Unit:      "frames",
 		Direction: perf.SmallerIsBetter,
 	}, float64(glitchFrames))
+
+	perfValues.Set(perf.Metric{
+		Name:      "input_xrun",
+		Unit:      "times",
+		Direction: perf.SmallerIsBetter,
+	}, float64(inputXrun))
+
+	perfValues.Set(perf.Metric{
+		Name:      "output_xrun",
+		Unit:      "times",
+		Direction: perf.SmallerIsBetter,
+	}, float64(outputXrun))
 }
