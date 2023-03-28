@@ -24,12 +24,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Behavior of the AlternateErrorPagesEnabled policy: check that an alternate set of error pages is shown based on the policy",
 		Contacts: []string{
-			"cros-engprod-muc@google.com",
-			"mpolzer@google.com", // Test author
+			"net-dev@chromium.org",
 		},
-		BugComponent: "b:1263917",
+		BugComponent: "crbug:Internals>Network",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:golden_tier"},
+		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
 		Fixture:      fixture.ChromePolicyLoggedIn,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.AlternateErrorPagesEnabled{}, pci.VerifiedFunctionalityJS),
