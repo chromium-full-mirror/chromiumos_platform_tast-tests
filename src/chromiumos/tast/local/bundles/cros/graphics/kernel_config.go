@@ -41,9 +41,9 @@ func init() {
 		Func:         KernelConfig,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that a kernel is correctly configured for graphics usage",
-		// TODO(syedfaaiz): Add to CQ once it is green and stable.
-		Attr:         []string{"group:graphics", "graphics_nightly"},
+		Attr:         []string{"group:mainline", "group:graphics", "graphics_nightly"},
 		BugComponent: "b:995569", // ChromeOS > Platform > Graphics > GPU
+		SoftwareDeps: []string{"no_qemu"},
 		Contacts: []string{
 			"chromeos-gfx@google.com",
 			"syedfaaiz@google.com",
