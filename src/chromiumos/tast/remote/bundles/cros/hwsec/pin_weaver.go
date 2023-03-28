@@ -49,11 +49,6 @@ func init() {
 			Val: pinWeaverParam{
 				useUserSecretStash: hwsec.Enabled,
 			},
-		}, {
-			Name: "with_auth_factor_after_uss_rollback",
-			Val: pinWeaverParam{
-				useUserSecretStash: hwsec.Rolledback,
-			},
 		}},
 	})
 }
@@ -150,15 +145,6 @@ func PINWeaver(ctx context.Context, s *testing.State) {
 	// Ensure we can authenticate with correct pin for testUser2.
 	if _, err = authenticateWithCorrectPIN(ctx, ctxForCleanUp, testUser2, cmdRunner, helper, userParam, true /*shouldAuthenticate*/); err != nil {
 		s.Fatal("Failed to run authenticateWithCorrectPIN with error: ", err)
-	}
-
-	if userParam.useUserSecretStash == hwsec.Rolledback {
-		// Disable the UserSecretStash experiment.
-		cleanupUSSDisableFlag, err := helper.DisableUserSecretStash(ctx)
-		if err != nil {
-			s.Fatal("Failed to diable the UserSecretStash experiment: ", err)
-		}
-		defer cleanupUSSDisableFlag(ctx)
 	}
 
 	// Ensure that testUser1 still works with pin.

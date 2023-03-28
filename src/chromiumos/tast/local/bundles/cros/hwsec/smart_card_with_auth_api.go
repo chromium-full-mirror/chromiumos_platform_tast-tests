@@ -71,12 +71,6 @@ func init() {
 				useUserSecretStash:  hwsec.Enabled,
 				smartCardAlgorithms: hwsec.SmartCardAlgorithms,
 			},
-		}, {
-			Name: "smart_card_with_auth_factor_with_uss_rollback",
-			Val: smartCardWithAuthAPIParam{
-				useUserSecretStash:  hwsec.Rolledback,
-				smartCardAlgorithms: hwsec.SmartCardAlgorithms,
-			},
 		}},
 	})
 }
@@ -170,16 +164,6 @@ func SmartCardWithAuthAPI(ctx context.Context, s *testing.State) {
 	// Unmount recently mounted vaults.
 	if err := client.UnmountAll(ctx); err != nil {
 		s.Fatal("Failed to unmount vaults for preparation: ", err)
-	}
-
-	// Rollback USS to VaultKeyset if flagged so and continue the test.
-	if userParam.useUserSecretStash == hwsec.Rolledback {
-		// Disable UserSecretStash.
-		cleanupUSSDisabled, err := helper.DisableUserSecretStash(ctx)
-		if err != nil {
-			s.Fatal("Failed to disable UserSecretStash: ", err)
-		}
-		defer cleanupUSSDisabled(ctx)
 	}
 
 	// Remount the specific vault, remount should succeed.

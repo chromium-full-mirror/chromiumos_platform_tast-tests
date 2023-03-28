@@ -61,8 +61,6 @@ const (
 	NotEnabled UserSecretStashStatus = iota
 	// Enabled makes UserSecretStash preferred key backing store for the user.
 	Enabled
-	// Rolledback rollbacks UserSecretStash after enabling it.
-	Rolledback
 )
 
 // UserDataAuthReplyWithError is an interface type that represent common UserDataAuth API protobuf reply that contains error in
