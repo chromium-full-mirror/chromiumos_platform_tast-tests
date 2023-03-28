@@ -1,0 +1,91 @@
+// Copyright 2023 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package camera
+
+import (
+	"context"
+	"os"
+	"path/filepath"
+	"time"
+
+	"chromiumos/tast/common/testexec"
+	"chromiumos/tast/errors"
+	"chromiumos/tast/fsutil"
+	"chromiumos/tast/testing"
+
+	"go.chromium.org/tast/core/shutil"
+)
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func:         CCACLI,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Verifies CCA command line tool works",
+		Contacts:     []string{"chromeos-camera-eng@google.com", "shik@chromium.org"},
+		Attr:         []string{"group:mainline", "group:camera-libcamera", "informational"},
+		SoftwareDeps: []string{"chrome"},
+		Fixture:      "ccaTestBridgeReadyWithFakeHALCamera",
+		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App
+	})
+}
+
+func ccaRun(ctx context.Context, args ...string) error {
+	cmd := testexec.CommandContext(ctx, "cca", args...)
+	testing.ContextLog(ctx, "Running command: ", shutil.EscapeSlice(cmd.Args))
+	return cmd.Run(testexec.DumpLogOnError)
+}
+
+func testOpenClose(ctx context.Context, dir string) error {
+	if err := ccaRun(ctx, "open"); err != nil {
+		return err
+	}
+
+	if err := ccaRun(ctx, "close"); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func testTakePhoto(ctx context.Context, dir string) error {
+	photo := filepath.Join(dir, "photo.jpg")
+
+	if err := ccaRun(ctx, "take-photo", "--output", photo); err != nil {
+		return errors.Wrap(err, "failed to take a photo")
+	}
+
+	return nil
+}
+
+func CCACLI(ctx context.Context, s *testing.State) {
+	subTestTimeout := 20 * time.Second
+
+	for _, tc := range []struct {
+		name     string
+		testFunc func(ctx context.Context, dir string) error
+	}{
+		{"testOpenClose", testOpenClose},
+		{"testTakePhoto", testTakePhoto},
+	} {
+		s.Run(ctx, tc.name, func(ctx context.Context, s *testing.State) {
+			subTestCtx, cancel := context.WithTimeout(ctx, subTestTimeout)
+			defer cancel()
+
+			dir, err := os.MkdirTemp("", "cca-cli-*")
+			if err != nil {
+				s.Fatal("Failed to create temporary directory for output: ", err)
+			}
+			defer os.RemoveAll(dir)
+
+			if err = tc.testFunc(subTestCtx, dir); err != nil {
+				// Preserve the output directory for investigation if it's failed.
+				fsutil.CopyDir(dir, filepath.Join(s.OutDir(), tc.name))
+
+				s.Error("Subtest failed: ", err)
+			}
+		})
+
+	}
+}

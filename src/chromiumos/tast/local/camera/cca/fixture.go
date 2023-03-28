@@ -199,6 +199,17 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name:            "ccaTestBridgeReadyWithFakeHALCamera",
+		Desc:            "Set up test bridge for CCA with fake camera HAL input",
+		Contacts:        []string{"chromeos-camera-eng@google.com", "pihsun@chromium.org"},
+		Data:            []string{"cca_ui.js"},
+		Impl:            &fixture{useCameraType: testutil.UseFakeHALCamera},
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    testBridgeSetUpTimeout,
+		TearDownTimeout: tearDownTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name:            "ccaTestBridgeReadyBypassPermissionClamshell",
 		Desc:            "Set up test bridge for CCA with bypassPermission on clamshell mode on",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
