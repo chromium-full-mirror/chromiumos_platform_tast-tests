@@ -1098,6 +1098,17 @@ func (h *Helper) OpenCCDNoTestlab(ctx context.Context) error {
 		return errors.Wrap(err, "failed to get OpenNoTPMWipe capability")
 	}
 
+	// Enable stream for cr50 log, so that if the process for opening ccd
+	// fails later, we could process the log for error messaging.
+	if err := h.Servo.SetOnOff(ctx, servo.CR50UARTCapture, servo.On); err != nil {
+		return errors.Wrap(err, "failed to enable GSC UART capture")
+	}
+	defer func() {
+		if err := h.Servo.SetOnOff(ctx, servo.CR50UARTCapture, servo.Off); err != nil {
+			testing.ContextLog(ctx, "Failed to disable GSC UART capture: ", err)
+		}
+	}()
+
 	// If OpenFromUSB is accessible (i.e. ="Y"), we can send the request through USB.
 	// Otherwise, we need to send the request through the AP.
 	if openFromUSB == "Y" {
@@ -1139,6 +1150,35 @@ func (h *Helper) OpenCCDNoTestlab(ctx context.Context) error {
 		defer cancelWaitConnect()
 
 		if err := h.WaitConnect(waitConnectCtx); err != nil {
+			checkTpmRequest := func() (int, error) {
+				out, err := h.Servo.GetQuotedString(ctx, servo.CR50UARTStream)
+				if err != nil {
+					return 0, errors.Wrap(err, "failed to read cr50")
+				}
+				// Deposit cr50 log in the remote context dir.
+				outDir, ok := testing.ContextOutDir(ctx)
+				if !ok {
+					return 0, errors.New("failed to get remote context dir")
+				}
+				destPath := filepath.Join(outDir, "open_ccd_cr50.log")
+				if err := ioutil.WriteFile(destPath, []byte(out), 0666); err != nil {
+					return 0, errors.Wrapf(err, "failed to write %s", destPath)
+				}
+				// Some DUTs were stuck in a loop with multiple requests for tpm reset
+				// when they failed to reconnect. Document this scene in the returned
+				// error message.
+				r := regexp.MustCompile(`tpm_reset_request: already scheduled`)
+				matches := r.FindAllStringSubmatch(out, -1)
+				if len(matches) == 0 {
+					return 0, errors.New("did not find any matches for tpm reset request")
+				}
+				return len(matches), nil
+			}
+			if tpmRequestCounts, err := checkTpmRequest(); err != nil {
+				testing.ContextLog(ctx, "Error in collecting cr50 info: ", err)
+			} else {
+				return errors.Wrapf(err, "failed to reconnect to DUT and found tpm reset request scheduled for %d times", tpmRequestCounts)
+			}
 			return errors.Wrap(err, "failed to reconnect to DUT")
 		}
 	} else {
