@@ -32,13 +32,7 @@ func init() {
 		BugComponent: "b:1188704",
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      4 * time.Minute,
-		Params: []testing.Param{{
-			Name:    "with_uss",
-			Fixture: "ussAuthSessionFixture",
-		}, {
-			Name:    "with_vk",
-			Fixture: "vkAuthSessionFixture",
-		}},
+		Fixture:      "ussAuthSessionFixture",
 	})
 }
 

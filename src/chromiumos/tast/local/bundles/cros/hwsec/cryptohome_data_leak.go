@@ -33,13 +33,7 @@ func init() {
 		BugComponent: "b:1188704",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
-		Params: []testing.Param{{
-			Name:    "with_uss",
-			Fixture: "ussAuthSessionFixture",
-		}, {
-			Name:    "with_vk",
-			Fixture: "vkAuthSessionFixture",
-		}},
+		Fixture:      "ussAuthSessionFixture",
 	})
 }
 

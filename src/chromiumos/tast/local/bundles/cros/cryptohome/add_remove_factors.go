@@ -30,15 +30,8 @@ func init() {
 			"jadmanski@chromium.org",
 		},
 		BugComponent: "b:1088399",
-		Attr:         []string{"group:mainline"},
-		Params: []testing.Param{{
-			Name:    "with_vk",
-			Fixture: "vkAuthSessionFixture",
-		}, {
-			Name:      "with_uss",
-			Fixture:   "ussAuthSessionFixture",
-			ExtraAttr: []string{"informational"},
-		}},
+		Attr:         []string{"group:mainline", "informational"},
+		Fixture:      "ussAuthSessionFixture",
 	})
 }
 

@@ -27,21 +27,11 @@ func init() {
 		SoftwareDeps: []string{"tpm"},
 		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{
-			Name:              "with_uss",
 			Fixture:           "ussAuthSessionFixture",
 			ExtraSoftwareDeps: []string{"no_tpm_dynamic"},
 		}, {
-			Name:              "with_vk",
-			Fixture:           "vkAuthSessionFixture",
-			ExtraSoftwareDeps: []string{"no_tpm_dynamic"},
-		}, {
-			Name:              "with_uss_tpm_dynamic",
+			Name:              "tpm_dynamic",
 			Fixture:           "ussAuthSessionFixture",
-			ExtraSoftwareDeps: []string{"tpm_dynamic"},
-			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
-		}, {
-			Name:              "with_vk_tpm_dynamic",
-			Fixture:           "vkAuthSessionFixture",
 			ExtraSoftwareDeps: []string{"tpm_dynamic"},
 			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
 		}},

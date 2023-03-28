@@ -28,14 +28,8 @@ func init() {
 		Contacts:     []string{"cros-hwsec@google.com", "cylai@chromium.org"},
 		BugComponent: "b:1188704",
 		SoftwareDeps: []string{"tpm"},
-		Params: []testing.Param{{
-			Name:    "with_uss",
-			Fixture: "ussAuthSessionFixture",
-		}, {
-			Name:    "with_vk",
-			Fixture: "vkAuthSessionFixture",
-		}},
-		Timeout: 4 * time.Minute,
+		Fixture:      "ussAuthSessionFixture",
+		Timeout:      4 * time.Minute,
 	})
 }
 

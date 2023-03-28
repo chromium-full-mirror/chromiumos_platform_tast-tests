@@ -32,13 +32,7 @@ func init() {
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome", "tpm2"},
 		Timeout:      4 * time.Minute,
-		Params: []testing.Param{{
-			Name:    "with_uss",
-			Fixture: "ussAuthSessionFixture",
-		}, {
-			Name:    "with_vk",
-			Fixture: "vkAuthSessionFixture",
-		}},
+		Fixture:      "ussAuthSessionFixture",
 	})
 }
 

@@ -32,13 +32,7 @@ func init() {
 		// TODO(b/195385797): Run on gooey when the bug is fixed.
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("gooey")),
 		SoftwareDeps: []string{"pinweaver"},
-		Params: []testing.Param{{
-			Name:    "with_vk",
-			Fixture: "vkAuthSessionFixture",
-		}, {
-			Name:    "with_uss",
-			Fixture: "ussAuthSessionFixture",
-		}},
+		Fixture:      "ussAuthSessionFixture",
 	})
 }
 

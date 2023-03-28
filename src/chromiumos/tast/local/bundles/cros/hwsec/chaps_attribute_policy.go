@@ -33,22 +33,12 @@ func init() {
 		SoftwareDeps: []string{"chrome", "tpm"},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"no_tpm_dynamic"},
-			Name:              "with_uss",
 			Fixture:           "ussAuthSessionFixture",
 		}, {
-			ExtraSoftwareDeps: []string{"no_tpm_dynamic"},
-			Name:              "with_vk",
-			Fixture:           "vkAuthSessionFixture",
-		}, {
-			Name:              "tpm_dynamic_with_uss",
+			Name:              "tpm_dynamic",
 			ExtraSoftwareDeps: []string{"tpm_dynamic"},
 			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
 			Fixture:           "ussAuthSessionFixture",
-		}, {
-			Name:              "tpm_dynamic_with_vk",
-			ExtraSoftwareDeps: []string{"tpm_dynamic"},
-			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
-			Fixture:           "vkAuthSessionFixture",
 		}},
 		Timeout: 3 * time.Minute,
 	})

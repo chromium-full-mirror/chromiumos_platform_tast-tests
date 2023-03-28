@@ -27,13 +27,7 @@ func init() {
 		SoftwareDeps: []string{"tpm"},
 		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      10 * time.Minute,
-		Params: []testing.Param{{
-			Name:    "with_uss",
-			Fixture: "ussAuthSessionFixture",
-		}, {
-			Name:    "with_vk",
-			Fixture: "vkAuthSessionFixture",
-		}},
+		Fixture:      "ussAuthSessionFixture",
 	})
 }
 

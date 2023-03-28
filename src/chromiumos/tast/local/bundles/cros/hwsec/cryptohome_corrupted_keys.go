@@ -51,17 +51,10 @@ func init() {
 		Params: []testing.Param{
 			{
 				// We only support the pin_weaver corrupted version now.
-				Name:              "pin_weaver_with_uss",
+				Name:              "pin_weaver",
 				ExtraSoftwareDeps: []string{"pinweaver"},
 				Val:               testParam{pinWeaverSupported: true},
 				Fixture:           "ussAuthSessionFixture",
-			},
-			{
-				// We only support the pin_weaver corrupted version now.
-				Name:              "pin_weaver_with_vk",
-				ExtraSoftwareDeps: []string{"pinweaver"},
-				Val:               testParam{pinWeaverSupported: true},
-				Fixture:           "vkAuthSessionFixture",
 			},
 		},
 	})

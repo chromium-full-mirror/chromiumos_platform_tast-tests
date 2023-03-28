@@ -28,13 +28,7 @@ func init() {
 		},
 		BugComponent: "b:1088399",
 		Attr:         []string{"group:mainline"},
-		Params: []testing.Param{{
-			Name:    "with_vk",
-			Fixture: "vkAuthSessionFixture",
-		}, {
-			Name:    "with_uss",
-			Fixture: "ussAuthSessionFixture",
-		}},
+		Fixture:      "ussAuthSessionFixture",
 	})
 }
 

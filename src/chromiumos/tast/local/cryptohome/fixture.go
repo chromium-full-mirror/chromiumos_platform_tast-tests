@@ -30,30 +30,13 @@ func init() {
 		SetUpTimeout:    fixtureSetUpTimeout,
 		ResetTimeout:    fixtureResetTimeout,
 		TearDownTimeout: fixtureTearDownTimeout,
-		Impl: &fixtureImpl{
-			ussFlag: true,
-		},
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: "vkAuthSessionFixture",
-		Desc: "Disable the USS flag experiement flag for Auth Session",
-		Contacts: []string{
-			"lziest@google.com",
-			"cryptohome-core@google.com",
-		},
-		SetUpTimeout:    fixtureSetUpTimeout,
-		ResetTimeout:    fixtureResetTimeout,
-		TearDownTimeout: fixtureTearDownTimeout,
-		Impl: &fixtureImpl{
-			ussFlag: false,
-		},
+		Impl:            &fixtureImpl{},
 	})
 }
 
 type cleanupFunc func(context.Context) error
 
 type fixtureImpl struct {
-	ussFlag               bool
 	ussFlagCleanup        cleanupFunc
 	ussDisableFlagCleanup cleanupFunc
 }
@@ -79,28 +62,16 @@ func (f *fixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interface
 		s.Fatal("Failed to unmount all: ", err)
 	}
 
-	if f.ussFlag {
-		// Enable the UserSecretStash experiment for the duration of the test by
-		// creating a flag file that's checked by cryptohomed.
-		// A cleanup routine is returned by the helper function. We will run it
-		// when tearing down the test environment.
-		var err error
-		f.ussFlagCleanup, err = helper.EnableUserSecretStash(ctx)
-		if err != nil {
-			s.Fatal("Failed to enable the UserSecretStash experiment: ", err)
-		}
-	} else {
-		// Disable the UserSecretStash experiment for the duration of the test
-		// ensuring that the flag file that enables it does not exist.
-		//
-		// This mode has no cleanup as this is the "default" state.
-		f.ussDisableFlagCleanup, err = helper.DisableUserSecretStash(ctx)
-		if err != nil {
-			s.Error("Failed to clean up the USS flag during setup: ", err)
-		}
+	// Enable the UserSecretStash experiment for the duration of the test by
+	// creating a flag file that's checked by cryptohomed.
+	// A cleanup routine is returned by the helper function. We will run it
+	// when tearing down the test environment.
+	f.ussFlagCleanup, err = helper.EnableUserSecretStash(ctx)
+	if err != nil {
+		s.Fatal("Failed to enable the UserSecretStash experiment: ", err)
 	}
 	return &AuthSessionFixture{
-		UssEnabled: f.ussFlag,
+		UssEnabled: true,
 	}
 }
 
@@ -108,16 +79,9 @@ func (f *fixtureImpl) TearDown(ctx context.Context, s *testing.FixtState) {
 	if err := UnmountAll(ctx); err != nil {
 		s.Error("Failed to unmount all: ", err)
 	}
-	if f.ussFlag {
-		err := f.ussFlagCleanup(ctx)
-		if err != nil {
-			s.Error("Failed to clean up the USS flag: ", err)
-		}
-	} else {
-		err := f.ussDisableFlagCleanup(ctx)
-		if err != nil {
-			s.Error("Failed to clean up the USS disable flag: ", err)
-		}
+	err := f.ussFlagCleanup(ctx)
+	if err != nil {
+		s.Error("Failed to clean up the USS flag: ", err)
 	}
 }
 

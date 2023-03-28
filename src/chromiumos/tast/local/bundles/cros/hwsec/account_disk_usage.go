@@ -16,6 +16,7 @@ import (
 	hwseclocal "chromiumos/tast/local/hwsec"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
+
 	"go.chromium.org/tast/core/shutil"
 )
 
@@ -33,13 +34,7 @@ func init() {
 		Timeout:      3 * time.Minute,
 		// TODO(b/244676664): Skip on amd64-generic due to CQ failures
 		HardwareDeps: hwdep.D(hwdep.SkipOnPlatform("amd64-generic")),
-		Params: []testing.Param{{
-			Name:    "with_uss",
-			Fixture: "ussAuthSessionFixture",
-		}, {
-			Name:    "with_vk",
-			Fixture: "vkAuthSessionFixture",
-		}},
+		Fixture:      "ussAuthSessionFixture",
 	})
 }
 

@@ -28,16 +28,7 @@ func init() {
 		BugComponent: "b:1088399",
 		Attr:         []string{"group:mainline"},
 		Data:         []string{"testcert.p12"},
-		// While the ephemeral user behavior shouldn't in theory be affected by
-		// whether the UserSecretStash is enabled in cryptohome, we have two
-		// separate sub-tests to actually verify this in both cases.
-		Params: []testing.Param{{
-			Name:    "with_vk",
-			Fixture: "vkAuthSessionFixture",
-		}, {
-			Name:    "with_uss",
-			Fixture: "ussAuthSessionFixture",
-		}},
+		Fixture:      "ussAuthSessionFixture",
 	})
 }
 
