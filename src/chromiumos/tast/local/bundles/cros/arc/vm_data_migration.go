@@ -348,14 +348,14 @@ func enterMigrationScreen(ctx context.Context, cr *chrome.Chrome, tconn *chrome.
 		return errors.Wrap(err, "failed to prepare for Chrome restart")
 	}
 
-	// Insert a short sleep so that the following DoDefault will not be ignored
+	// Insert a short sleep so that the following LeftClick will not be ignored
 	// by Chrome's unintended click protection.
 	// TODO(b/274892285): Disable the protection for Tast test or improve uiauto
 	// so that we don't need a sleep here.
 	testing.Sleep(ctx, time.Second)
 
 	// This might return ErrConnClosing as it restarts Chrome.
-	err := ui.DoDefault(enterMigrationScreenButton)(ctx)
+	err := ui.LeftClick(enterMigrationScreenButton)(ctx)
 	if err != nil && !errors.Is(err, rpcc.ErrConnClosing) {
 		return errors.Wrap(err, "failed to click migration confirmation button")
 	}
