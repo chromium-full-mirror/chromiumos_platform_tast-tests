@@ -24,10 +24,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test the behavior of ArcBackupRestoreServiceEnabled policy: check the Backup Manager state after setting the policy",
 		Contacts: []string{
-			"cros-engprod-muc@google.com",
-			"gabormagda@google.com", // Test author
+			"arc-commercial@google.com",
+			"mhasank@chromium.org",
 		},
-		BugComponent: "b:1263917",
+		// ChromeOS > Software > ARC++ > Commercial
+		BugComponent: "b:157100",
 		SoftwareDeps: []string{"chrome"},
 		// TODO(http://b/172073846): Test showed flakiness in the past. If
 		// keeps failing it should be fixed or removed.
