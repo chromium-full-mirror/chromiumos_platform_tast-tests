@@ -78,44 +78,44 @@ func calShift(r, r2 *image.Rectangle) (*image.Point, error) {
 
 type ptzControl struct {
 	// ui is the UI toggled for moving preview in one of PTZ direction.
-	ui *cca.UIComponent
+	ui cca.UIComponentName
 	// testFunc tests pattern before and after ptz control applied moving in the target direction.
 	testFunc func(r, r2 *image.Rectangle) (bool, error)
 }
 
 var (
-	panLeft = ptzControl{&cca.PanLeftButton, func(r, r2 *image.Rectangle) (bool, error) {
+	panLeft = ptzControl{cca.PanLeftButton, func(r, r2 *image.Rectangle) (bool, error) {
 		shift, err := calShift(r, r2)
 		if err != nil {
 			return false, err
 		}
 		return shift.X < 0 && shift.Y == 0, nil
 	}}
-	panRight = ptzControl{&cca.PanRightButton, func(r, r2 *image.Rectangle) (bool, error) {
+	panRight = ptzControl{cca.PanRightButton, func(r, r2 *image.Rectangle) (bool, error) {
 		shift, err := calShift(r, r2)
 		if err != nil {
 			return false, err
 		}
 		return shift.X > 0 && shift.Y == 0, nil
 	}}
-	tiltDown = ptzControl{&cca.TiltDownButton, func(r, r2 *image.Rectangle) (bool, error) {
+	tiltDown = ptzControl{cca.TiltDownButton, func(r, r2 *image.Rectangle) (bool, error) {
 		shift, err := calShift(r, r2)
 		if err != nil {
 			return false, err
 		}
 		return shift.X == 0 && shift.Y < 0, nil
 	}}
-	tiltUp = ptzControl{&cca.TiltUpButton, func(r, r2 *image.Rectangle) (bool, error) {
+	tiltUp = ptzControl{cca.TiltUpButton, func(r, r2 *image.Rectangle) (bool, error) {
 		shift, err := calShift(r, r2)
 		if err != nil {
 			return false, err
 		}
 		return shift.X == 0 && shift.Y > 0, nil
 	}}
-	zoomIn = ptzControl{&cca.ZoomInButton, func(r, r2 *image.Rectangle) (bool, error) {
+	zoomIn = ptzControl{cca.ZoomInButton, func(r, r2 *image.Rectangle) (bool, error) {
 		return r.Size().X < r2.Size().X && r.Size().Y < r2.Size().Y, nil
 	}}
-	zoomOut = ptzControl{&cca.ZoomOutButton, func(r, r2 *image.Rectangle) (bool, error) {
+	zoomOut = ptzControl{cca.ZoomOutButton, func(r, r2 *image.Rectangle) (bool, error) {
 		return r.Size().X > r2.Size().X && r.Size().Y > r2.Size().Y, nil
 	}}
 )
@@ -124,15 +124,15 @@ var (
 func (ctrl *ptzControl) testToggle(ctx context.Context, app *cca.App) error {
 	pRect, err := findPattern(ctx, app)
 	if err != nil {
-		return errors.Wrapf(err, "failed to find pattern before clicking %v", ctrl.ui.Name)
+		return errors.Wrapf(err, "failed to find pattern before clicking %v", ctrl.ui)
 	}
-	if err := app.ClickPTZButton(ctx, *ctrl.ui); err != nil {
+	if err := app.ClickPTZButton(ctx, ctrl.ui); err != nil {
 		return errors.Wrap(err, "failed to click")
 	}
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		rect, err := findPattern(ctx, app)
 		if err != nil {
-			return errors.Wrapf(err, "failed to find pattern after clicking %v", ctrl.ui.Name)
+			return errors.Wrapf(err, "failed to find pattern after clicking %v", ctrl.ui)
 		}
 		result, err := ctrl.testFunc(pRect, rect)
 		if err != nil {
@@ -143,7 +143,7 @@ func (ctrl *ptzControl) testToggle(ctx context.Context, app *cca.App) error {
 		}
 		return errors.Errorf("failed on testing UI with region before %v ; after %v", pRect, rect)
 	}, &testing.PollOptions{Interval: time.Second}); err != nil {
-		return errors.Wrapf(err, "failed to run %v test func", ctrl.ui.Name)
+		return errors.Wrapf(err, "failed to run %v test func", ctrl.ui)
 	}
 	return nil
 }
@@ -176,12 +176,12 @@ func runPTZTest(ctx context.Context, app *cca.App) error {
 		tiltUp,
 		tiltDown,
 	} {
-		disabled, err := app.Disabled(ctx, *control.ui)
+		disabled, err := app.Disabled(ctx, control.ui)
 		if err != nil {
-			return errors.Wrapf(err, "failed to get disabled state of %v", control.ui.Name)
+			return errors.Wrapf(err, "failed to get disabled state of %v", control.ui)
 		}
 		if !disabled {
-			return errors.Wrapf(err, "UI %v is not disabled at initial zoom level", control.ui.Name)
+			return errors.Wrapf(err, "UI %v is not disabled at initial zoom level", control.ui)
 		}
 	}
 
@@ -215,8 +215,8 @@ func runPTZTest(ctx context.Context, app *cca.App) error {
 		tiltUp,
 		tiltDown,
 	} {
-		if err := app.WaitForDisabled(ctx, *control.ui, true); err != nil {
-			return errors.Wrapf(err, "failed to wait for ui %v disabled", control.ui.Name)
+		if err := app.WaitForDisabled(ctx, control.ui, true); err != nil {
+			return errors.Wrapf(err, "failed to wait for ui %v disabled", control.ui)
 		}
 	}
 	return nil

@@ -77,22 +77,6 @@ var (
 	OpenGridPanelButton = UIComponent{"grid type option button", []string{"#open-grid-panel"}}
 	// OpenTimerPanelButton is the button which is used for opening the timer type settings panel.
 	OpenTimerPanelButton = UIComponent{"timer type option button", []string{"#open-timer-panel"}}
-	// OpenPTZPanelButton is the button for opening PTZ panel.
-	OpenPTZPanelButton = UIComponent{"open ptz panel button", []string{"#open-ptz-panel"}}
-	// PanLeftButton is the button for panning left preview.
-	PanLeftButton = UIComponent{"pan left button", []string{"#pan-left"}}
-	// PanRightButton is the button for panning right preview.
-	PanRightButton = UIComponent{"pan right button", []string{"#pan-right"}}
-	// TiltUpButton is the button for tilting up preview.
-	TiltUpButton = UIComponent{"tilt up button", []string{"#tilt-up"}}
-	// TiltDownButton is the button for tilting down preview.
-	TiltDownButton = UIComponent{"tilt down button", []string{"#tilt-down"}}
-	// ZoomInButton is the button for zoom in preview.
-	ZoomInButton = UIComponent{"zoom in button", []string{"#zoom-in"}}
-	// ZoomOutButton is the button for zoom out preview.
-	ZoomOutButton = UIComponent{"zoom out button", []string{"#zoom-out"}}
-	// PTZResetAllButton is the button for reset PTZ to default value.
-	PTZResetAllButton = UIComponent{"ptz reset all button", []string{"#ptz-reset-all"}}
 
 	// ScanBarcodeOption is the option button to switch to QR code detection mode in scan mode.
 	ScanBarcodeOption = UIComponent{"scan barcode option", []string{"#scan-barcode"}}
@@ -200,8 +184,26 @@ type UIComponentName string
 
 // List of UI components used in CCA for testing.
 const (
-	CancelResultButton  UIComponentName = "cancelResultButton"
+	// CancelResultButton is button for canceling intent review result.
+	CancelResultButton UIComponentName = "cancelResultButton"
+	// ConfirmResultButton is button for confirming intent review result.
 	ConfirmResultButton UIComponentName = "confirmResultButton"
+	// OpenPTZPanelButton is the button for opening PTZ panel.
+	OpenPTZPanelButton UIComponentName = "openPTZPanelButton"
+	// PanLeftButton is the button for panning left preview.
+	PanLeftButton UIComponentName = "panLeftButton"
+	// PanRightButton is the button for panning right preview.
+	PanRightButton UIComponentName = "panRightButton"
+	// PTZResetAllButton is the button for reset PTZ to default value.
+	PTZResetAllButton UIComponentName = "ptzResetAllButton"
+	// TiltDownButton is the button for tilting down preview.
+	TiltDownButton UIComponentName = "tiltDownButton"
+	// TiltUpButton is the button for tilting up preview.
+	TiltUpButton UIComponentName = "tiltUpButton"
+	// ZoomInButton is the button for zoom in preview.
+	ZoomInButton UIComponentName = "zoomInButton"
+	// ZoomOutButton is the button for zoom out preview.
+	ZoomOutButton UIComponentName = "zoomOutButton"
 )
 
 type errorUINotExist struct {
@@ -334,27 +336,23 @@ func (a *App) WaitForVisibleStateFor(ctx context.Context, ui interface{}, expect
 }
 
 // Disabled returns disabled attribute of HTMLElement of |ui|.
-func (a *App) Disabled(ctx context.Context, ui UIComponent) (bool, error) {
-	selector, err := a.resolveUISelector(ctx, ui)
-	if err != nil {
-		return false, errors.Wrapf(err, "failed to resolve ui %v to correct selector", ui.Name)
-	}
+func (a *App) Disabled(ctx context.Context, ui UIComponentName) (bool, error) {
 	var disabled bool
-	if err := a.conn.Call(ctx, &disabled, "(selector) => document.querySelector(selector).disabled", selector); err != nil {
-		return false, errors.Wrapf(err, "failed to get disabled state of %v", ui.Name)
+	if err := a.conn.Call(ctx, &disabled, "CCATest.isDisabled", ui); err != nil {
+		return false, errors.Wrapf(err, "failed to get disabled state of %v", ui)
 	}
 	return disabled, nil
 }
 
 // WaitForDisabled waits until the disabled state of ui becomes |expected|.
-func (a *App) WaitForDisabled(ctx context.Context, ui UIComponent, expected bool) error {
+func (a *App) WaitForDisabled(ctx context.Context, ui UIComponentName, expected bool) error {
 	return testing.Poll(ctx, func(ctx context.Context) error {
 		disabled, err := a.Disabled(ctx, ui)
 		if err != nil {
-			return testing.PollBreak(errors.Wrapf(err, "failed to wait disabled state of %v to be %v", ui.Name, expected))
+			return testing.PollBreak(errors.Wrapf(err, "failed to wait disabled state of %v to be %v", ui, expected))
 		}
 		if disabled != expected {
-			return errors.Errorf("failed to wait disabled state for %v: got %v, want %v", ui.Name, disabled, expected)
+			return errors.Errorf("failed to wait disabled state for %v: got %v, want %v", ui, disabled, expected)
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: 5 * time.Second})
@@ -498,19 +496,15 @@ func (a *App) ClickChildIfContain(ctx context.Context, ui UIComponent, text stri
 }
 
 // Hold holds on |ui| by sending pointerdown and pointerup for |d| duration.
-func (a *App) Hold(ctx context.Context, ui UIComponent, d time.Duration) error {
-	wrapError := func(err error) error {
-		return errors.Wrapf(err, "failed to hold on %v", ui.Name)
+func (a *App) Hold(ctx context.Context, ui UIComponentName, d time.Duration) error {
+	if err := a.conn.Call(ctx, nil, "CCATest.hold", ui, d.Milliseconds()); err != nil {
+		return errors.Wrapf(err, "failed to hold %v", ui)
 	}
-	selector, err := a.resolveUISelector(ctx, ui)
-	if err != nil {
-		return wrapError(err)
-	}
-	return a.conn.Call(ctx, nil, `Tast.hold`, selector, d.Milliseconds())
+	return nil
 }
 
 // ClickPTZButton clicks on PTZ Button.
-func (a *App) ClickPTZButton(ctx context.Context, ui UIComponent) error {
+func (a *App) ClickPTZButton(ctx context.Context, ui UIComponentName) error {
 	// Hold for 0ms to trigger PTZ minimal step movement.
 	return a.Hold(ctx, ui, 0)
 }

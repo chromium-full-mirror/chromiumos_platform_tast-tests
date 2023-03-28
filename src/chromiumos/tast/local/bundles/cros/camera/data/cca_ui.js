@@ -139,22 +139,6 @@ window.Tast = class Tast {
   }
 
   /**
-   * Holds element with |selector| by sending pointerdown and pointerup events
-   * for |ms| milliseconds.
-   * @param {string} selector
-   * @param {number} ms
-   */
-  static async hold(selector, ms) {
-    const element = document.querySelector(selector);
-    if (!Tast.isVisible(selector)) {
-      throw new Error('No visible element: ', selector);
-    }
-    element.dispatchEvent(new Event('pointerdown'));
-    await Tast.sleep(ms);
-    element.dispatchEvent(new Event('pointerup'));
-  }
-
-  /**
    * Gets screen x, y of the center of |index|'th ui with |selector|.
    * @param {string} selector
    * @param {number} index 0-based target index.
