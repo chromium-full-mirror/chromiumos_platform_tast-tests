@@ -49,6 +49,13 @@ var (
 		"9992",
 		"Port for chameleond on Chameleon (optional/used)")
 
+	// connectedPorts when passed as an argument in tast local run (ex. -var=graphics.connected_ports="Port0,Port1"),
+	// it doesn't require yaml config setup, when not passed, it checks yaml config
+	connectedPorts = testing.RegisterVarString(
+		"graphics.connected_ports",
+		"",
+		"Connected ports on Chameleon (optional/used)")
+
 	stableVideoTimeout      = 30.0
 	chameleonLogsCursorName = "TAST"
 )
@@ -267,8 +274,44 @@ func ChameleonGetPortMapping(connectedPorts []string) map[string]bool {
 	return connectedPortMap
 }
 
+func isValidPort(str string) bool {
+	for _, s := range supportedPorts {
+		if s == str {
+			return true
+		}
+	}
+	return false
+}
+
+// chameleonGetConnectedPortsVars will return connected portsmap retrieved from local command line
+func chameleonGetConnectedPortsVars(ctx context.Context) ([]string, error) {
+	connectedPortsLocal := connectedPorts.Value()
+
+	if connectedPortsLocal != "" {
+		connectedPortsVars := strings.Split(connectedPortsLocal, ",")
+
+		for _, port := range connectedPortsVars {
+			if !isValidPort(port) {
+				testing.ContextLogf(ctx, "port %s is unsupported, supported format are Port(0-3)", port)
+				return []string{}, errors.Errorf("invalid port format: %s, ", port)
+			}
+		}
+
+		return connectedPortsVars, nil
+	}
+
+	return []string{}, errors.New("reading local connected ports failed")
+}
+
 // ChameleonGetConnectedPortMap will return connectedportsmap retrieved from yaml file or supportedports if yaml read fails
 func ChameleonGetConnectedPortMap(ctx context.Context) map[string]bool {
+	connectedPortsLocal, err := chameleonGetConnectedPortsVars(ctx)
+
+	if err == nil {
+		testing.ContextLogf(ctx, "The following ports should be connected according to the local config: %s", connectedPortsLocal)
+		return ChameleonGetPortMapping(connectedPortsLocal)
+	}
+
 	chamHost, err := ChameleonGetHostname()
 	if err != nil {
 		testing.ContextLog(ctx, "Failed to get chameleon hostname")
@@ -276,14 +319,14 @@ func ChameleonGetConnectedPortMap(ctx context.Context) map[string]bool {
 
 	//TODO(kenil): use lab labels here
 	config, err := ReadChameleonConfig(chamHost)
-	connectedPorts := config.Ports
+	connectedPortsYaml := config.Ports
 	if err != nil {
-		connectedPorts = supportedPorts
+		connectedPortsYaml = supportedPorts
 		testing.ContextLog(ctx, "Reading yaml config failed, Now verifying all ports")
 	}
 
-	testing.ContextLogf(ctx, "The following ports should be connected according to the device config: %s", connectedPorts)
-	connectedPortMap := ChameleonGetPortMapping(connectedPorts)
+	testing.ContextLogf(ctx, "The following ports should be connected according to the device config: %s", connectedPortsYaml)
+	connectedPortMap := ChameleonGetPortMapping(connectedPortsYaml)
 	return connectedPortMap
 }
 
