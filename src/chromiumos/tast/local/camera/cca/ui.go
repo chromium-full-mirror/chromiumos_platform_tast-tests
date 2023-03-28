@@ -64,11 +64,6 @@ var (
 	BarcodeCopyTextButton = UIComponent{"barcode copy text button",
 		[]string{"#barcode-chip-text-container .barcode-copy-button"}}
 
-	// VideoProfileSelect is select-options for selecting video profile.
-	VideoProfileSelect = UIComponent{"video profile select", []string{"#video-profile"}}
-	// BitrateMultiplierRangeInput is range input for selecting bitrate multiplier.
-	BitrateMultiplierRangeInput = UIComponent{"bitrate multiplier range input", []string{"#bitrate-slider input[type=range]"}}
-
 	// OptionsContainer is the container for all options for opening option panel.
 	OptionsContainer = UIComponent{"container of options", []string{"#options-container"}}
 	// OpenMirrorPanelButton is the button which is used for opening the mirror state settings panel.
@@ -184,6 +179,8 @@ type UIComponentName string
 
 // List of UI components used in CCA for testing.
 const (
+	// BitrateMultiplierRangeInput is range input for selecting bitrate multiplier.
+	BitrateMultiplierRangeInput UIComponentName = "bitrateMultiplierRangeInput"
 	// CancelResultButton is button for canceling intent review result.
 	CancelResultButton UIComponentName = "cancelResultButton"
 	// ConfirmResultButton is button for confirming intent review result.
@@ -200,6 +197,8 @@ const (
 	TiltDownButton UIComponentName = "tiltDownButton"
 	// TiltUpButton is the button for tilting up preview.
 	TiltUpButton UIComponentName = "tiltUpButton"
+	// VideoProfileSelect is select-options for selecting video profile.
+	VideoProfileSelect UIComponentName = "videoProfileSelect"
 	// ZoomInButton is the button for zoom in preview.
 	ZoomInButton UIComponentName = "zoomInButton"
 	// ZoomOutButton is the button for zoom out preview.
@@ -523,44 +522,35 @@ func (a *App) IsCheckedWithIndex(ctx context.Context, ui UIComponent, index int)
 }
 
 // SelectOption selects the target option in HTMLSelectElement.
-func (a *App) SelectOption(ctx context.Context, ui UIComponent, value string) error {
+func (a *App) SelectOption(ctx context.Context, ui UIComponentName, value string) error {
 	if err := a.WaitForVisibleState(ctx, ui, true); err != nil {
 		return err
 	}
-	selector, err := a.resolveUISelector(ctx, ui)
-	if err != nil {
-		return err
+	if err := a.conn.Call(ctx, nil, "CCATest.selectOption", ui, value); err != nil {
+		return errors.Wrapf(err, "failed to select option of %v", ui)
 	}
-	return a.conn.Call(ctx, nil, "Tast.selectOption", selector, value)
+	return nil
 }
 
 // InputRange returns the range of valid value for range type input element.
-func (a *App) InputRange(ctx context.Context, ui UIComponent) (*Range, error) {
+func (a *App) InputRange(ctx context.Context, ui UIComponentName) (*Range, error) {
 	if err := a.WaitForVisibleState(ctx, ui, true); err != nil {
 		return nil, err
 	}
-	selector, err := a.resolveUISelector(ctx, ui)
-	if err != nil {
-		return nil, err
-	}
 	var r Range
-	if err := a.conn.Call(ctx, &r, "Tast.getInputRange", selector); err != nil {
-		return nil, errors.Wrapf(err, "failed to get input range of %v", ui.Name)
+	if err := a.conn.Call(ctx, &r, "CCATest.getInputRange", ui); err != nil {
+		return nil, errors.Wrapf(err, "failed to get input range of %v", ui)
 	}
 	return &r, nil
 }
 
-// SetRangeInput set value of range input.
-func (a *App) SetRangeInput(ctx context.Context, ui UIComponent, value int) error {
+// SetRangeInput sets value of range input.
+func (a *App) SetRangeInput(ctx context.Context, ui UIComponentName, value int) error {
 	if err := a.WaitForVisibleState(ctx, ui, true); err != nil {
 		return err
 	}
-	selector, err := a.resolveUISelector(ctx, ui)
-	if err != nil {
-		return err
-	}
-	if err := a.conn.Call(ctx, nil, "Tast.setInputValue", selector, value); err != nil {
-		return errors.Wrapf(err, "failed to set range input %v to %v", ui.Name, value)
+	if err := a.conn.Call(ctx, nil, "CCATest.setRangeInputValue", ui, value); err != nil {
+		return errors.Wrapf(err, "failed to set range input %v to %v", ui, value)
 	}
 	return nil
 }
