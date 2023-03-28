@@ -32,6 +32,7 @@ func init() {
 			"jadmanski@chromium.org",
 		},
 		BugComponent: "b:1088399",
+		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"pinweaver"},
 		Fixture:      "ussAuthSessionFixture",
 		Params: []testing.Param{{
