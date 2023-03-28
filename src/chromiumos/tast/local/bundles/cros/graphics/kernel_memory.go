@@ -22,7 +22,7 @@ func init() {
 		Desc:         "Verify that no errors occur while examining graphics memory usage",
 		// TODO(syedfaaiz): Add to CQ once it is green and stable.
 		Attr:         []string{"group:graphics", "graphics_nightly"},
-		HardwareDeps: hwdep.D(hwdep.IntelSOC()),
+		HardwareDeps: hwdep.D(hwdep.CPUSocFamily([]string{"intel"})),
 		BugComponent: "b:995569", // ChromeOS > Platform > Graphics > GPU
 		Contacts: []string{
 			"chromeos-gfx@google.com",
