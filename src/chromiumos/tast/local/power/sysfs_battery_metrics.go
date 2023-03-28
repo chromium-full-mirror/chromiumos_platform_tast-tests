@@ -395,9 +395,24 @@ func (b *SysfsBatteryMetrics) Setup(ctx context.Context, prefix, intervalName st
 	if err != nil {
 		return err
 	}
-	b.powerMetric = perf.Metric{Name: prefix + "system", Unit: "W", Direction: perf.SmallerIsBetter, Multiple: true, Interval: intervalName}
-	b.dischargeMetric = perf.Metric{Name: prefix + "discharge_mwh", Unit: "mWh", Direction: perf.SmallerIsBetter, Multiple: false}
-	b.chargeRemainingMetric = perf.Metric{Name: prefix + "battery_soc", Unit: "percent", Direction: perf.BiggerIsBetter, Multiple: true, Interval: intervalName}
+
+	b.chargeRemainingMetric = perf.Metric{
+		Name:      prefix + powerRelatedMetricType + "battery_soc",
+		Unit:      "percent",
+		Direction: perf.BiggerIsBetter,
+		Multiple:  true,
+		Interval:  intervalName}
+	b.powerMetric = perf.Metric{
+		Name:      prefix + "system",
+		Unit:      powerRelatedMetricTypeUnit,
+		Direction: perf.SmallerIsBetter,
+		Multiple:  true,
+		Interval:  intervalName}
+	b.dischargeMetric = perf.Metric{
+		Name:      prefix + generalPerfMetricType + "discharge_mwh",
+		Unit:      "mWh", // discharge_mwh is a scalar metric, not defining a specific a variable for its unit here.
+		Direction: perf.SmallerIsBetter,
+		Multiple:  false}
 	return nil
 }
 

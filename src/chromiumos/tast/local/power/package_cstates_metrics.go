@@ -235,6 +235,7 @@ func readPackageCStates(perPackageCPUs []int, pCStates map[string]int64) (map[st
 type PackageCStatesMetrics struct {
 	pCStates       map[string]int64
 	perPackageCPUs []int
+	prefix         string
 	lastStats      map[string]uint64
 	metrics        map[string]perf.Metric
 	intervalName   string
@@ -246,7 +247,7 @@ var _ perf.TimelineDatasource = &PackageCStatesMetrics{}
 // NewPackageCStatesMetrics creates a timeline metric to collect package
 // C-state numbers.
 func NewPackageCStatesMetrics() *PackageCStatesMetrics {
-	return &PackageCStatesMetrics{nil, nil, nil, make(map[string]perf.Metric), ""}
+	return &PackageCStatesMetrics{nil, nil, "", nil, make(map[string]perf.Metric), ""}
 }
 
 // Setup determines what C-states are supported and which CPUs should be queried.
@@ -270,6 +271,7 @@ func (cs *PackageCStatesMetrics) Setup(ctx context.Context, prefix, intervalName
 	}
 	cs.pCStates = pCStates
 	cs.perPackageCPUs = perPackageCPUs
+	cs.prefix = prefix
 	cs.intervalName = intervalName
 	return nil
 }
@@ -285,8 +287,12 @@ func (cs *PackageCStatesMetrics) Start(ctx context.Context) error {
 		return errors.Wrap(err, "failed to collect initial metrics")
 	}
 	for name := range stats {
-		cs.metrics[name] = perf.Metric{Name: "package-" + name, Unit: "percent",
-			Direction: perf.SmallerIsBetter, Multiple: true, Interval: cs.intervalName}
+		cs.metrics[name] = perf.Metric{
+			Name:      cs.prefix + packageCstatesMetricType + "package-" + name,
+			Unit:      packageCstatesMetricTypeUnit,
+			Direction: perf.SmallerIsBetter,
+			Multiple:  true,
+			Interval:  cs.intervalName}
 	}
 	cs.lastStats = stats
 	return nil

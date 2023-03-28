@@ -55,10 +55,19 @@ func (r *RAPLPowerMetrics) Start(_ context.Context) error {
 		return errors.Wrap(err, "failed to collect initial RAPL metrics")
 	}
 	for name := range r.snapshot.start.joules {
-		r.metrics[name] = perf.Metric{Name: r.prefix + name, Unit: "W",
-			Direction: perf.SmallerIsBetter, Multiple: true, Interval: r.intervalName}
+		r.metrics[name] = perf.Metric{
+			Name:      r.prefix + powerRelatedMetricType + name,
+			Unit:      powerRelatedMetricTypeUnit,
+			Direction: perf.SmallerIsBetter,
+			Multiple:  true,
+			Interval:  r.intervalName}
 	}
-	r.metrics[package0PowerConstraintName] = perf.Metric{Name: r.prefix + package0PowerConstraintName, Unit: "W", Direction: perf.SmallerIsBetter, Multiple: true, Interval: r.intervalName}
+	r.metrics[package0PowerConstraintName] = perf.Metric{
+		Name:      r.prefix + powerRelatedMetricType + package0PowerConstraintName,
+		Unit:      powerRelatedMetricTypeUnit,
+		Direction: perf.SmallerIsBetter,
+		Multiple:  true,
+		Interval:  r.intervalName}
 	return nil
 }
 

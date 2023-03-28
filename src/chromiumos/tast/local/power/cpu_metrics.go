@@ -39,7 +39,12 @@ func NewProcfsCPUMetrics() *ProcfsCPUMetrics {
 
 // Setup creates the metric.
 func (c *ProcfsCPUMetrics) Setup(ctx context.Context, prefix, intervalName string) error {
-	c.metric = perf.Metric{Name: "cpu_usage", Unit: "ratio", Direction: perf.SmallerIsBetter, Multiple: true, Interval: intervalName}
+	c.metric = perf.Metric{
+		Name:      prefix + cpuUsageMetricType + "cpu_usage",
+		Unit:      cpuUsageMetricTypeUnit,
+		Direction: perf.SmallerIsBetter,
+		Multiple:  true,
+		Interval:  intervalName}
 	return nil
 }
 

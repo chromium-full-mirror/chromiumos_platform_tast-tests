@@ -63,7 +63,11 @@ func NewGPUFreqMetrics() *GPUFreqMetrics {
 func (g *GPUFreqMetrics) Setup(ctx context.Context, prefix, intervalName string) error {
 	if _, err := readI915CurrentFreq(ctx); err == nil {
 		g.i915FreqEnabled = true
-		g.i915Freq = perf.Metric{Name: "gpu_freq", Unit: "MHz", Direction: perf.SmallerIsBetter, Multiple: true}
+		g.i915Freq = perf.Metric{
+			Name:      prefix + gpuFreqMetricType + "gpu_freq",
+			Unit:      gpuFreqMetricTypeUnit,
+			Direction: perf.SmallerIsBetter,
+			Multiple:  true}
 	}
 	return nil
 }

@@ -99,6 +99,7 @@ type CpuidleStateMetrics struct {
 	lastStats        map[string](map[string]int64)
 	metrics          map[string]perf.Metric
 	intervalName     string
+	prefix           string
 }
 
 // Assert that CpuidleStateMetrics can be used in perf.Timeline.
@@ -106,7 +107,7 @@ var _ perf.TimelineDatasource = &CpuidleStateMetrics{}
 
 // NewCpuidleStateMetrics creates a timeline metric to collect C-state numbers.
 func NewCpuidleStateMetrics() *CpuidleStateMetrics {
-	return &CpuidleStateMetrics{nil, 0, time.Time{}, nil, make(map[string]perf.Metric), ""}
+	return &CpuidleStateMetrics{nil, 0, time.Time{}, nil, make(map[string]perf.Metric), "", ""}
 }
 
 // Setup determines what C-states are supported and which CPUs should be queried.
@@ -118,6 +119,7 @@ func (cs *CpuidleStateMetrics) Setup(ctx context.Context, prefix, intervalName s
 	cs.cpuidleTimeFiles = cpuidleTimeFiles
 	cs.numCpus = numCpus
 	cs.intervalName = intervalName
+	cs.prefix = prefix
 	return nil
 }
 
@@ -152,25 +154,40 @@ func (cs *CpuidleStateMetrics) Start(ctx context.Context) error {
 		return errors.Wrap(err, "failed to collect initial metrics")
 	}
 
-	cs.metrics[c0State] = perf.Metric{Name: "cpu-" + c0State, Unit: "percent",
-		Direction: perf.SmallerIsBetter, Multiple: true, Interval: cs.intervalName}
+	cs.metrics[c0State] = perf.Metric{
+		Name:      cs.prefix + cpuIdleMetricType + "cpu-" + c0State,
+		Unit:      cpuIdleMetricTypeUnit,
+		Direction: perf.SmallerIsBetter,
+		Multiple:  true,
+		Interval:  cs.intervalName}
 
 	for cpuName, perCPUStats := range stats {
 
 		// Per-cpu stats
-		cs.metrics[cpuName+"-"+c0State] = perf.Metric{Name: cpuName + "-" + c0State, Unit: "percent",
-			Direction: perf.SmallerIsBetter, Multiple: true, Interval: cs.intervalName}
+		cs.metrics[cpuName+"-"+c0State] = perf.Metric{
+			Name:      cs.prefix + cpuIdleMetricType + cpuName + "-" + c0State,
+			Unit:      cpuIdleMetricTypeUnit,
+			Direction: perf.SmallerIsBetter,
+			Multiple:  true,
+			Interval:  cs.intervalName}
 
 		for stateName := range perCPUStats {
 			// Per-cpu stats
-			cs.metrics[cpuName+"-"+stateName] = perf.Metric{Name: cpuName + "-" + stateName, Unit: "percent",
-				Direction: perf.SmallerIsBetter, Multiple: true, Interval: cs.intervalName}
+			cs.metrics[cpuName+"-"+stateName] = perf.Metric{
+				Name:      cs.prefix + cpuIdleMetricType + cpuName + "-" + stateName,
+				Unit:      cpuIdleMetricTypeUnit,
+				Direction: perf.SmallerIsBetter,
+				Multiple:  true,
+				Interval:  cs.intervalName}
 
 			if _, isPresent := cs.metrics[stateName]; !isPresent {
 				// Aggregated metrics of all the cpus
-				cs.metrics[stateName] = perf.Metric{Name: "cpu-" + stateName, Unit: "percent",
-					Direction: perf.SmallerIsBetter, Multiple: true, Interval: cs.intervalName}
-
+				cs.metrics[stateName] = perf.Metric{
+					Name:      cs.prefix + cpuIdleMetricType + "cpu-" + stateName,
+					Unit:      cpuIdleMetricTypeUnit,
+					Direction: perf.SmallerIsBetter,
+					Multiple:  true,
+					Interval:  cs.intervalName}
 			}
 		}
 
