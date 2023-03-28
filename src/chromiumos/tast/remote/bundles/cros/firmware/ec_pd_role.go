@@ -12,6 +12,7 @@ import (
 
 	"chromiumos/tast/common/servo"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/remote/dutfs"
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/fixture"
 	"chromiumos/tast/testing"
@@ -143,9 +144,36 @@ func usbPdCloseLid(ctx context.Context, h *firmware.Helper) error {
 	if err := h.Servo.CloseLid(ctx); err != nil {
 		return errors.Wrap(err, "failed to close lid")
 	}
-	testing.ContextLog(ctx, "Checking for G3 or S5 powerstate")
-	if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "G3", "S5"); err != nil {
-		return errors.Wrap(err, "failed to get G3 or S5 powerstate")
+	// Similar to ticket b:268492022, setting lid open while DUT at S5 failed
+	// on some machines. But, waiting for G3 before opening lid worked.
+	testing.ContextLog(ctx, "Checking for G3 powerstate")
+	if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "G3"); err != nil {
+		// On some models, such as kracko, the sequence to G3 following a power-off request got blocked
+		// because modelfwd.lock files were never cleared from '/run/lock/power_override/'. Check for
+		// files that still exist under this directory.
+		var lockFiles []string
+		checkLockFiles := func() error {
+			lockFilesPath := "/run/lock/power_override/"
+			if err := h.RequireRPCClient(ctx); err != nil {
+				return errors.Wrap(err, "failed to open RPC client")
+			}
+			fs := dutfs.NewClient(h.RPCClient.Conn)
+			out, err := fs.ReadDir(ctx, lockFilesPath)
+			if err != nil {
+				return errors.Wrapf(err, "failed to read from %s", lockFilesPath)
+			}
+			if len(out) == 0 {
+				return errors.Errorf("found %s empty", lockFilesPath)
+			}
+			for _, file := range out {
+				lockFiles = append(lockFiles, file.Name())
+			}
+			return nil
+		}
+		if err := checkLockFiles(); err != nil {
+			testing.ContextLog(ctx, "Unexpected error in checking for lock files: ", err)
+		}
+		return errors.Wrapf(err, "failed to get G3 powerstate, found lock files: %s", lockFiles)
 	}
 	return nil
 }
