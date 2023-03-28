@@ -32,9 +32,9 @@ func init() {
 		},
 		// ChromeOS > Software > ARC++ > Performance
 		BugComponent: "b:168382",
-		// NOTE: This test should never be promoted to critical. It has build dependency and it will
-		//       always fail in PFQ since we don't have ureadahead caches generated at PFQ time.
-		Attr: []string{"group:mainline", "informational", "group:arc-functional"},
+		// NOTE: This test has build dependency and it will always fail in PFQ/Uprev
+		//       since we don't have ureadahead pack generated at PFQ test time.
+		Attr: []string{"group:arc", "arc_core", "group:arc-functional"},
 		// Skip userdebug boards which we don't generate ureadahead packs for.
 		SoftwareDeps: []string{"chrome", "no_arc_userdebug"},
 		Params: []testing.Param{{
