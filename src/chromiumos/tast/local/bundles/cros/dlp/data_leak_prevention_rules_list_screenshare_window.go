@@ -175,6 +175,8 @@ func DataLeakPreventionRulesListScreenshareWindow(ctx context.Context, s *testin
 		s.Fatal("Failed to connect to test API: ", err)
 	}
 
+	defer ash.CloseAllWindows(cleanupCtx, tconn)
+
 	keyboard, err := input.VirtualKeyboard(ctx)
 	if err != nil {
 		s.Fatal("Failed to get keyboard: ", err)
@@ -304,17 +306,6 @@ func DataLeakPreventionRulesListScreenshareWindow(ctx context.Context, s *testin
 
 		if err := screenshare.CheckFrameStatus(ctx, screenRecorder /*wantAllowed=*/, true); err != nil {
 			s.Fatal("Failed to check frame status: ", err)
-		}
-	}
-
-	// Closing all windows.
-	ws, err := ash.GetAllWindows(ctx, tconn)
-	if err != nil {
-		s.Fatal("Failed to get all open windows: ", err)
-	}
-	for _, w := range ws {
-		if err := w.CloseWindow(ctx, tconn); err != nil {
-			s.Errorf("Warning: Failed to close window (%+v): %v", w, err)
 		}
 	}
 }
