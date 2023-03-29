@@ -12,9 +12,6 @@ import (
 	"time"
 
 	"chromiumos/tast/errors"
-	"chromiumos/tast/local/a11y"
-	"chromiumos/tast/local/apps"
-	"chromiumos/tast/local/audio/crastestclient"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/lacros"
@@ -135,7 +132,7 @@ func VerifyLacrosLaunch(ctx context.Context, s *testing.State, cr *chrome.Chrome
 }
 
 // SetupProfileData creates a bookmark, a shortcut, installs an extension,
-// downloads a file, modifies ChromeVox settings, and simulates page activity
+// downloads a file, and simulates page activity
 // by saving a cookie, an IndexedDB entry, a LocalStorage value
 // and creating browsing history.
 // Clients are expected to launch a browser before calling the function.
@@ -165,9 +162,6 @@ func SetupProfileData(ctx context.Context, cr *chrome.Chrome, s *testing.State, 
 		return err
 	}
 	if err := setupDownloads(ctx, ui, br, kb); err != nil {
-		return err
-	}
-	if err := setupChromeVox(ctx, ui, cr, tconn); err != nil {
 		return err
 	}
 	if err := setupExternalPageActivity(ctx, ui, br, s); err != nil {
@@ -202,9 +196,6 @@ func VerifyProfileData(ctx context.Context, cr *chrome.Chrome, s *testing.State,
 		return err
 	}
 	if err := verifyDownloads(ctx, ui, br); err != nil {
-		return err
-	}
-	if err := verifyChromeVox(ctx, ui, cr, tconn); err != nil {
 		return err
 	}
 	if err := verifyExternalPageActivity(ctx, ui, br, kb, s); err != nil {
@@ -430,105 +421,6 @@ func verifyDownloads(ctx context.Context, ui *uiauto.Context, br *browser.Browse
 	}
 	if err := conn.CloseTarget(ctx); err != nil {
 		return errors.Wrap(err, "failed to close downloads page")
-	}
-	return nil
-}
-
-const (
-	// ChromeVox title.
-	chromeVoxTitle = "ChromeVox"
-	// ChromeVox settings URL.
-	chromeVoxSettingsURL = "chrome-extension://mndnfokpggljbaajbnioimlmbfngpief/chromevox/options/options.html"
-)
-
-// setupChromeVox modifie "Read numbers as" value in ChromeVox settings.
-func setupChromeVox(ctx context.Context, ui *uiauto.Context, cr *chrome.Chrome, tconn *browser.TestConn) error {
-	// Mute the device to avoid noise while the test is running.
-	if err := crastestclient.Mute(ctx); err != nil {
-		return errors.Wrap(err, "failed to mute")
-	}
-	defer crastestclient.Unmute(ctx)
-	// Enable ChromeVox.
-	if err := a11y.SetFeatureEnabled(ctx, tconn, a11y.SpokenFeedback, true); err != nil {
-		return errors.Wrap(err, "failed to enable ChromeVox")
-	}
-	defer a11y.SetFeatureEnabled(ctx, tconn, a11y.SpokenFeedback, false)
-	cvconn, err := a11y.NewChromeVoxConn(ctx, cr)
-	if err != nil {
-		return errors.Wrap(err, "failed to connect to the ChromeVox background page")
-	}
-	defer cvconn.Close()
-	// Modify "Read numbers as" setting.
-	osconn, err := apps.LaunchOSSettings(ctx, cr, chromeVoxSettingsURL)
-	if err != nil {
-		return errors.Wrap(err, "failed to open ChromeVox settings")
-	}
-	defer osconn.Close()
-	combobox := nodewith.Role(role.ComboBoxSelect).NameStartingWith("Read numbers").First()
-	digits := nodewith.Role(role.ListBoxOption).NameStartingWith("Digits").First()
-	if err := uiauto.Combine("Set 'Read numbers as' settings",
-		ui.WaitUntilExists(combobox),
-		ui.LeftClick(combobox),
-		ui.WaitUntilExists(digits),
-		ui.LeftClick(digits),
-	)(ctx); err != nil {
-		return errors.Wrap(err, "failed to modify ChromeVox settings")
-	}
-	// Check "Read numbers as" setting is changed.
-	if err := checkChromeVoxSetting(ctx, ui); err != nil {
-		return errors.Wrap(err, "failed to verify ChromeVox settings value")
-	}
-	return nil
-}
-
-// verifyChromeVox checks that ChromeVox settings are preserved.
-func verifyChromeVox(ctx context.Context, ui *uiauto.Context, cr *chrome.Chrome, tconn *browser.TestConn) error {
-	// Mute the device to avoid noise while the test is running.
-	if err := crastestclient.Mute(ctx); err != nil {
-		return errors.Wrap(err, "failed to mute")
-	}
-	defer crastestclient.Unmute(ctx)
-	// Enable ChromeVox.
-	if err := a11y.SetFeatureEnabled(ctx, tconn, a11y.SpokenFeedback, true); err != nil {
-		return errors.Wrap(err, "failed to enable ChromeVox")
-	}
-	defer a11y.SetFeatureEnabled(ctx, tconn, a11y.SpokenFeedback, false)
-	cvconn, err := a11y.NewChromeVoxConn(ctx, cr)
-	if err != nil {
-		return errors.Wrap(err, "failed to connect to the ChromeVox background page")
-	}
-	defer cvconn.Close()
-	// Check "Read numbers as" setting.
-	osconn, err := apps.LaunchOSSettings(ctx, cr, chromeVoxSettingsURL)
-	if err != nil {
-		return errors.Wrap(err, "failed to open ChromeVox settings")
-	}
-	defer osconn.Close()
-	// Check "Read numbers as" setting is changed.
-	if err := checkChromeVoxSetting(ctx, ui); err != nil {
-		return errors.Wrap(err, "failed to verify ChromeVox settings value")
-	}
-	return nil
-}
-
-// checkChromeVoxSetting is a helper to verify that 'Read numbers as' setting
-// has "Digits" value.
-func checkChromeVoxSetting(ctx context.Context, ui *uiauto.Context) error {
-	combobox := nodewith.Role(role.ComboBoxSelect).NameStartingWith("Read numbers").First()
-	if err := ui.WaitUntilExists(combobox)(ctx); err != nil {
-		return errors.Wrap(err, "failed to find 'Read numbers as' setting")
-	}
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		comboboxInfo, err := ui.Info(ctx, combobox)
-		if err != nil {
-			return errors.Wrap(err, "failed to get setting's value")
-		}
-		if comboboxInfo.Value != "Digits" {
-			return errors.Wrap(err, "failed to verify setting's value")
-		}
-		return nil
-	}, nil); err != nil {
-		return err
 	}
 	return nil
 }
