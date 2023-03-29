@@ -31,6 +31,7 @@ var milestoneConfigs = map[int]milestoneConfig{
 	// * Long-term Support (LTS) version - R102.
 	// * Long-term Support (LTS) version - R108.
 	// * the first version with USS enabled - R110.
+	// * latest version - R111.
 	88:  {critical: true},
 	91:  {critical: true},
 	93:  {critical: true},
@@ -38,6 +39,7 @@ var milestoneConfigs = map[int]milestoneConfig{
 	102: {critical: true},
 	108: {critical: true},
 	110: {critical: true},
+	111: {critical: false},
 	// Other versions that are not tested in CQ
 	89:  {critical: false},
 	90:  {critical: false},
@@ -76,12 +78,12 @@ var tpmVersions = []tpmVersion{
 		name:           "tpm2",
 		softwareDeps:   []string{"no_tpm_dynamic", "no_gsc"},
 		milestoneBegin: 88,
-		milestoneEnd:   110,
+		milestoneEnd:   111,
 	}, {
 		name:           "tpm_dynamic",
 		softwareDeps:   []string{"tpm_dynamic", "no_gsc"},
 		milestoneBegin: 96,
-		milestoneEnd:   110,
+		milestoneEnd:   111,
 	},
 }
 

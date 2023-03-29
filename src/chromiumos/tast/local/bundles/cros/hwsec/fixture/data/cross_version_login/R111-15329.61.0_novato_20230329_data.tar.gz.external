@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/hwsec/cross_version_login/R111-15329.61.0_novato_20230329_data.tar.gz",
+  "size": 7805922,
+  "sha256sum": "006475897fd0e874743cb47470ecc26998c2e2f0eaf633778b35e2534b95c3db"
+}

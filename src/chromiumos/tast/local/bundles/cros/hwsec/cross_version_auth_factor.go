@@ -155,6 +155,11 @@ func init() {
 				ExtraAttr:         []string{"group:mainline"},
 				ExtraSoftwareDeps: []string{"no_tpm_dynamic", "no_gsc"},
 			}, {
+				Name:              "tpm2_r111",
+				Fixture:           "crossVersionTpm2R111",
+				ExtraAttr:         []string{"group:mainline", "informational"},
+				ExtraSoftwareDeps: []string{"no_tpm_dynamic", "no_gsc"},
+			}, {
 				Name:              "tpm_dynamic_r96",
 				Fixture:           "crossVersionTpmDynamicR96",
 				ExtraAttr:         []string{"group:mainline"},
@@ -228,6 +233,11 @@ func init() {
 				Name:              "tpm_dynamic_r110",
 				Fixture:           "crossVersionTpmDynamicR110",
 				ExtraAttr:         []string{"group:mainline"},
+				ExtraSoftwareDeps: []string{"tpm_dynamic", "no_gsc"},
+			}, {
+				Name:              "tpm_dynamic_r111",
+				Fixture:           "crossVersionTpmDynamicR111",
+				ExtraAttr:         []string{"group:mainline", "informational"},
 				ExtraSoftwareDeps: []string{"tpm_dynamic", "no_gsc"},
 			},
 		},
