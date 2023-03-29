@@ -67,7 +67,9 @@ func init() {
 		SetUpTimeout:    hwsimTimeout,
 		TearDownTimeout: hwsimTimeout,
 		ResetTimeout:    hwsimTimeout,
-		Impl:            &fixture{},
+		Impl: NewShillSimulatedWiFiFixture(func(s *testing.FixtState) ShillSimulatedWiFi {
+			return ShillSimulatedWiFi{}
+		}),
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "shillSimulatedWiFiWithArcBooted",
