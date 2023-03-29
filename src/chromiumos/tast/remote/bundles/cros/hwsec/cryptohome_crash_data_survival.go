@@ -18,12 +18,6 @@ import (
 	"chromiumos/tast/testing"
 )
 
-// cryptohomeCrashDataSurvivalParams contains the test parameters that specifies the type of storage.
-type cryptohomeCrashDataSurvivalParams struct {
-	// Specifies whether to use secret stash.
-	useUserSecretStash bool
-}
-
 const (
 	// waitForCryptohomedTimeout is the timeout waiting for cryptohomed to respawn.
 	waitForCryptohomedTimeout = 30 * time.Second
@@ -40,17 +34,6 @@ func init() {
 		BugComponent: "b:1188704",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"tpm"},
-		Params: []testing.Param{{
-			Name: "uss",
-			Val: cryptohomeCrashDataSurvivalParams{
-				useUserSecretStash: true,
-			},
-		}, {
-			Name: "vk",
-			Val: cryptohomeCrashDataSurvivalParams{
-				useUserSecretStash: false,
-			},
-		}},
 	})
 }
 
@@ -69,29 +52,12 @@ func getCryptohomedPID(ctx context.Context, r hwsec.CmdRunner) (int, error) {
 }
 
 func CryptohomeCrashDataSurvival(ctx context.Context, s *testing.State) {
-	userParam := s.Param().(cryptohomeCrashDataSurvivalParams)
 	r := hwsecremote.NewCmdRunner(s.DUT())
 	helper, err := hwsecremote.NewHelper(r, s.DUT())
 	if err != nil {
 		s.Fatal("Helper creation error: ", err)
 	}
 	utility := helper.CryptohomeClient()
-	if userParam.useUserSecretStash {
-		// Enable UserSecretStash.
-		cleanupUSSExperiment, err := helper.EnableUserSecretStash(ctx)
-		if err != nil {
-			s.Fatal("Failed to enable the UserSecretStash experiment: ", err)
-		}
-		defer cleanupUSSExperiment(ctx)
-	} else {
-		// Disable UserSecretStash to use VaultKeyset.
-		cleanupUSSDisable, err := helper.DisableUserSecretStash(ctx)
-		if err != nil {
-			s.Fatal("Failed to disable the UserSecretStash experiment: ", err)
-		}
-		defer cleanupUSSDisable(ctx)
-	}
-
 	dc := hwsec.NewDaemonController(r)
 
 	// Clear any remnant data on the DUT.

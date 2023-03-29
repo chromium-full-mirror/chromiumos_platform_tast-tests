@@ -27,11 +27,9 @@ func init() {
 		SoftwareDeps: []string{"tpm"},
 		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{
-			Fixture:           "ussAuthSessionFixture",
 			ExtraSoftwareDeps: []string{"no_tpm_dynamic"},
 		}, {
-			Name:              "tpm_dynamic",
-			Fixture:           "ussAuthSessionFixture",
+			Name:              "with_tpm_dynamic",
 			ExtraSoftwareDeps: []string{"tpm_dynamic"},
 			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
 		}},
