@@ -11,8 +11,8 @@ import (
 
 	"chromiumos/tast/common/action"
 	"chromiumos/tast/errors"
-	"chromiumos/tast/local/apps/googlemeet"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/apps/thirdparty/googlemeet"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/cuj"
@@ -361,7 +361,7 @@ func (conf *GoogleMeetConference) BackgroundChange(ctx context.Context) error {
 		return uiauto.Combine("set effect and enter full screen",
 			gm.ApplyVideoEffects(
 				// Repeated clicking on the same background will turn off the effect.
-				// Turn off effect at the beggining to avoid this.
+				// Turn off effect at the beginning to avoid this.
 				gm.SetEffect(googlemeet.NoEffect),
 				gm.SetEffect(effectOption),
 			),

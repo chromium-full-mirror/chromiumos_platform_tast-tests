@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/local/apps/zoom"
 	"chromiumos/tast/local/bundles/cros/videoconferencing/commontype"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/apps/thirdparty/zoom"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"

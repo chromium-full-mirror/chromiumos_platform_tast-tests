@@ -100,7 +100,7 @@ func (hc *HelpContext) Close() uiauto.Action {
 	}
 }
 
-// Exists checks whether the help app exists in the accessiblity tree.
+// Exists checks whether the help app exists in the accessibility tree.
 func (hc *HelpContext) Exists(ctx context.Context) (bool, error) {
 	return hc.ui.IsNodeFound(ctx, RootFinder)
 }

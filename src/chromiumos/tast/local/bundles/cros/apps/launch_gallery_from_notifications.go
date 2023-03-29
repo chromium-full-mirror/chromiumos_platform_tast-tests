@@ -14,9 +14,9 @@ import (
 
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/apps"
-	"chromiumos/tast/local/apps/galleryapp"
 	"chromiumos/tast/local/bundles/cros/apps/fixture"
 	"chromiumos/tast/local/bundles/cros/apps/pre"
+	"chromiumos/tast/local/chrome/apps/galleryapp"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
@@ -54,7 +54,7 @@ func init() {
 			}, {
 				Name:              "lacros",
 				Fixture:           fixture.LacrosLoggedIn,
-				ExtraSoftwareDeps: []string{"lacros_stable"},
+				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
 				ExtraAttr:         []string{"group:mainline"},
 				ExtraHardwareDeps: hwdep.D(pre.AppsStableModels),
 			},

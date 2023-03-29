@@ -10,9 +10,9 @@ import (
 	"fmt"
 	"time"
 
-	"chromiumos/tast/local/apps/googledocs"
 	"chromiumos/tast/local/bundles/cros/inputs/fixture"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/apps/thirdparty/googledocs"
 	"chromiumos/tast/local/chrome/cuj"
 	"chromiumos/tast/local/chrome/useractions"
 	"chromiumos/tast/local/chrome/webutil"

@@ -11,8 +11,8 @@ import (
 
 	"chromiumos/tast/common/action"
 	"chromiumos/tast/errors"
-	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/apps"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"

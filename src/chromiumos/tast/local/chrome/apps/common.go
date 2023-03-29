@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Package apps provides general ChromeOS app utilities.
+// Package apps provides general Chrome app/website utilities.
 package apps
 
 import (

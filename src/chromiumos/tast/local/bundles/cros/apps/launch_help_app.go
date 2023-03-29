@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"chromiumos/tast/local/bundles/cros/apps/fixture"
-	"chromiumos/tast/local/bundles/cros/apps/helpapp"
 	"chromiumos/tast/local/bundles/cros/apps/pre"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/apps/helpapp"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/testing"
@@ -113,7 +113,7 @@ func init() {
 				Name:              "clamshell_logged_in_stable_lacros",
 				ExtraHardwareDeps: hwdep.D(pre.AppsStableModels),
 				Fixture:           fixture.LacrosLoggedIn,
-				ExtraSoftwareDeps: []string{"lacros_stable"},
+				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
 				ExtraAttr:         []string{"group:mainline"},
 				Val: testParameters{
 					tabletMode: false,
@@ -123,7 +123,7 @@ func init() {
 			{
 				Name:              "tablet_logged_in_stable_lacros",
 				Fixture:           fixture.LacrosLoggedIn,
-				ExtraSoftwareDeps: []string{"lacros_stable"},
+				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
 				ExtraAttr:         []string{"group:mainline"},
 				ExtraHardwareDeps: hwdep.D(pre.AppsStableModels, hwdep.TouchScreen()),
 				Val: testParameters{

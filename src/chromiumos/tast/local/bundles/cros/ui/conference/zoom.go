@@ -11,8 +11,8 @@ import (
 
 	"chromiumos/tast/common/action"
 	"chromiumos/tast/errors"
-	"chromiumos/tast/local/apps/zoom"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/apps/thirdparty/zoom"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/cuj"
 	"chromiumos/tast/local/chrome/uiauto"

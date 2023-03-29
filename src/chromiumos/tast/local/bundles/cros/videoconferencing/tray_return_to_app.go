@@ -11,9 +11,9 @@ import (
 
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
-	"chromiumos/tast/local/apps/googlemeet"
 	"chromiumos/tast/local/camera/arcapp"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/apps/thirdparty/googlemeet"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"

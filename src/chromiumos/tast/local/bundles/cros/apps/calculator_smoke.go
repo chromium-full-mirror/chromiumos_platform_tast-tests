@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"chromiumos/tast/local/apps"
-	calc "chromiumos/tast/local/bundles/cros/apps/calculator"
 	"chromiumos/tast/local/bundles/cros/apps/pre"
 	"chromiumos/tast/local/chrome"
+	calc "chromiumos/tast/local/chrome/apps/calculator"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"

@@ -10,8 +10,8 @@ import (
 
 	arcui "chromiumos/tast/common/android/ui"
 	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/arc"
+	"chromiumos/tast/local/chrome/apps"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/uiauto"

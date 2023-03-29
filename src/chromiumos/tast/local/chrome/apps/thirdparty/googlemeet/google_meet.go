@@ -17,6 +17,7 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/chrome"
+	chromeApps "chromiumos/tast/local/chrome/apps"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -176,7 +177,7 @@ func startMeeting(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, m
 
 	if err := uiauto.Combine("allow permissions",
 		uiauto.Retry(3, gm.ClearPromptsForNewMeeting),
-		apps.AllowPagePermissions(gm.tconn),
+		chromeApps.AllowPagePermissions(gm.tconn),
 	)(ctx); err != nil {
 		return nil, err
 	}

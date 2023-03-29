@@ -10,8 +10,8 @@ import (
 
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/bundles/cros/apps/fixture"
-	"chromiumos/tast/local/bundles/cros/apps/helpapp"
 	"chromiumos/tast/local/bundles/cros/apps/pre"
+	"chromiumos/tast/local/chrome/apps/helpapp"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/ossettings"
