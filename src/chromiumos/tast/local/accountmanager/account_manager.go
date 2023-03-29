@@ -238,6 +238,10 @@ func AddAccount(ctx context.Context, tconn *chrome.TestConn, email, password str
 		ui.FocusAndWait(iAgreeButton),
 		ui.LeftClick(iAgreeButton),
 	)(ctx); err != nil {
+		somethingWentWrong := nodewith.Name("Something went wrong").Role(role.Heading).Ancestor(root)
+		if existsErr := ui.Exists(somethingWentWrong); existsErr == nil {
+			return errors.Wrap(err, "failed to enter email and password: something went wrong")
+		}
 		return errors.Wrap(err, "failed to enter email and password")
 	}
 
