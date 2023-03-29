@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
@@ -17,6 +16,7 @@ import (
 	"chromiumos/tast/local/personalization"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/ctxutil"
 )
 
 func init() {
@@ -26,8 +26,8 @@ func init() {
 		Desc:         "Test selecting keyboard backlight color in personalization hub app",
 		Contacts: []string{
 			"assistive-eng@google.com",
-			"thuongphan@google.com",
 			"chromeos-sw-engprod@google.com",
+			"thuongphan@google.com",
 		},
 		// ChromeOS > Software > Personalization
 		BugComponent: "b:1006527",
@@ -57,9 +57,7 @@ func SelectKeyboardBacklight(ctx context.Context, s *testing.State) {
 	}
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
-	// The test has a dependency of network speed, so we give uiauto.Context ample
-	// time to wait for nodes to load.
-	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
+	ui := uiauto.New(tconn)
 
 	if err := uiauto.Combine("open Personalization Hub and verify Keyboard settings available",
 		personalization.OpenPersonalizationHub(ui),
@@ -67,25 +65,21 @@ func SelectKeyboardBacklight(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to show Keyboard settings: ", err)
 	}
 
-	if err := testKeyboardBacklight(ui, backlightColor1)(ctx); err != nil {
-		s.Fatalf("Failed to select backlight color %v: %v", backlightColor1, err)
+	// There should be 9 color options for keyboard backlight.
+	colorOptionsFinder := nodewith.HasClass("selectable")
+	colorOptions, err := ui.NodesInfo(ctx, colorOptionsFinder)
+	if err != nil {
+		s.Fatal("Failed to find color options: ", err)
+	}
+	if len(colorOptions) != 9 {
+		s.Fatal("Should be 9 color options available")
 	}
 
-	if err := testKeyboardBacklight(ui, backlightColor2)(ctx); err != nil {
-		s.Fatalf("Failed to select backlight color %v: %v", backlightColor2, err)
+	// Set the keyboard backlight to three different colors and verify whether the backlight color is updated for each change.
+	colorIndexOptions := []int{3, 8, 0}
+	for _, colorIndex := range colorIndexOptions {
+		if err := personalization.SetBacklightColor(ctx, ui, colorIndex); err != nil {
+			s.Fatalf("Failed to set backlight color to color at index %v: %v", colorIndex, err)
+		}
 	}
-
-	if err := testKeyboardBacklight(ui, backlightColor3)(ctx); err != nil {
-		s.Fatalf("Failed to select backlight color %v: %v", backlightColor3, err)
-	}
-}
-
-func testKeyboardBacklight(ui *uiauto.Context, backlightColor string) uiauto.Action {
-	colorOption := nodewith.HasClass("color-container").Name(backlightColor)
-	selectedColor := nodewith.HasClass("color-container tast-selected-color").Name(backlightColor)
-
-	return uiauto.Combine("validate the selected backlight color",
-		ui.MakeVisible(colorOption),
-		ui.LeftClick(colorOption),
-		ui.WaitUntilExists(selectedColor))
 }

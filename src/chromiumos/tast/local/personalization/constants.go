@@ -60,5 +60,5 @@ const (
 // RgbSupportedModels lists all device models with RGB keyboard.
 var RgbSupportedModels = []string{
 	// "brya" board
-	"vell",
+	"vell", "osiris", "taniks",
 }

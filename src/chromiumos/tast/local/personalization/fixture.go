@@ -85,6 +85,21 @@ func init() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
+		Name: "personalizationWithMultizoneRgbKeyboard",
+		Desc: "Login with Personalization Hub with Multi-zone RGB Keyboard enabled",
+		Contacts: []string{
+			"thuongphan@google.com",
+			"chromeos-sw-engprod@google.com",
+			"assistive-eng@google.com",
+		},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{chrome.EnableFeatures("RgbKeyboard", "MultiZoneRgbKeyboard")}, nil
+		}),
+		SetUpTimeout:    chrome.LoginTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
 		Name: "personalizationWithGooglePhotosWallpaper",
 		Desc: "Login with Gaia account with Google Photos Wallpaper enabled",
 		Contacts: []string{

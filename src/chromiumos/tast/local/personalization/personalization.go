@@ -6,15 +6,19 @@
 package personalization
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
+	"strings"
 	"time"
 
+	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/coords"
 	"chromiumos/tast/local/input"
+	"chromiumos/tast/testing"
 )
 
 // OpenPersonalizationHub returns an action to open the personalization app by right clicking on the desktop.
@@ -122,4 +126,30 @@ func SearchForAppInLauncher(query, result string, kb *input.KeyboardEventWriter,
 		kb.TypeAction(query),
 		ui.LeftClick(searchResult),
 	))
+}
+
+// SetBacklightColor selects a color based on its index in the color options of keyboard backlight and verifies the correct color is selected.
+func SetBacklightColor(ctx context.Context, ui *uiauto.Context, colorIndex int) error {
+	colorOptionFinder := nodewith.HasClass("selectable").Nth(colorIndex)
+
+	if err := ui.DoDefault(colorOptionFinder)(ctx); err != nil {
+		return errors.Wrapf(err, "failed to click on color option at index %v", colorIndex)
+	}
+
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		colorOptionInfo, err := ui.Info(ctx, colorOptionFinder)
+		if err != nil {
+			return errors.Wrap(err, "failed to get color option info")
+		}
+		if !strings.Contains(colorOptionInfo.ClassName, "tast-selected-color") {
+			return errors.Errorf("color at index %v should be selected", colorIndex)
+		}
+		return nil
+	}, &testing.PollOptions{
+		Timeout: time.Minute,
+	}); err != nil {
+		return errors.Wrapf(err, "failed to verify color option at index %v", colorIndex)
+	}
+
+	return nil
 }
