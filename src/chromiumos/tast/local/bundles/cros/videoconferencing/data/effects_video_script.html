@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<title>Simple Meeting</title>
+<style>
+  body {
+    background: black;
+  }
+
+  #video {
+    display: none;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100vw;
+    height: 100vh;
+  }
+</style>
+<video id="video" autoplay role="button" aria-label="video"></video>
+<script type="text/javascript">
+  const video = document.querySelector('#video');
+
+  const requestVideo = async (resolution) => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: { exact: Math.floor(resolution * 16 / 9) },
+          height: { exact: resolution }
+        }
+      });
+      video.srcObject = stream;
+      video.style.display = 'block';
+    } catch (error) {
+      setTimeout(requestVideo, 1000, resolution);
+    }
+  };
+
+  window.addEventListener('DOMContentLoaded', (event) => {
+    const params = new URLSearchParams(window.location.search);
+    const defaultResolution = 720
+    const resolution = params.has('resolution') ? params.get('resolution') : defaultResolution;
+    requestVideo(resolution);
+  });
+
+  window.addEventListener('dblclick', (event) => {
+    document.documentElement.requestFullscreen();
+  });
+</script>

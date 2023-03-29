@@ -1,0 +1,247 @@
+// Copyright 2023 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package videoconferencing
+
+import (
+	"chromiumos/tast/common/perf"
+	"chromiumos/tast/testing/hwdep"
+	"context"
+	"strconv"
+	"time"
+
+	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/local/bundles/cros/videoconferencing/effects"
+
+	"chromiumos/tast/local/chrome/apps/thirdparty/googlemeet"
+	"chromiumos/tast/local/power"
+
+	"chromiumos/tast/local/videoconferencing/fixture"
+
+	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/chrome/browser/browserfixt"
+	"chromiumos/tast/local/chrome/uiauto"
+	"chromiumos/tast/local/chrome/uiauto/faillog"
+	"chromiumos/tast/testing"
+)
+
+const meetHighResolution = "High definition (720p)"
+
+type meetParams struct {
+	appBlur         bool
+	appRelight      bool
+	platformBlur    bool
+	platformRelight bool
+}
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func:         BenchmarkingMeet,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Captures performance regression and power metrics for VC effects in Meet",
+		Contacts: []string{
+			"chromeos-platform-ml@google.com",
+			"zhaon@google.com",
+		},
+		BugComponent: "b:260653207",
+		SoftwareDeps: []string{"chrome", "camera_feature_effects"},
+		HardwareDeps: hwdep.D(hwdep.SkipOnModel("betty")),
+		Timeout:      35 * time.Minute,
+		Attr:         []string{"group:ml_benchmark", "ml_benchmark_nightly"},
+		Data: []string{
+			"effects_fps_metrics.js",
+		},
+		Fixture: fixture.GAIALoggedInAndBenchmarkSetupFixture,
+		Params: []testing.Param{
+			{
+				Name: "no_effects_720p",
+				Val:  meetParams{},
+			},
+			{
+				Name: "app_blur_720p",
+				Val: meetParams{
+					appBlur: true,
+				},
+			},
+			{
+				Name: "platform_blur_720p",
+				Val: meetParams{
+					platformBlur: true,
+				},
+			},
+			{
+				Name: "app_relight_720p",
+				Val: meetParams{
+					appRelight: true,
+				},
+			},
+			{
+				Name: "platform_relight_720p",
+				Val: meetParams{
+					platformRelight: true,
+				},
+			},
+			{
+				Name: "app_blur_relight_720p",
+				Val: meetParams{
+					appBlur:    true,
+					appRelight: true,
+				},
+			},
+			{
+				Name: "platform_blur_relight_720p",
+				Val: meetParams{
+					platformBlur:    true,
+					platformRelight: true,
+				},
+			},
+		},
+	})
+}
+
+func BenchmarkingMeet(ctx context.Context, s *testing.State) {
+	// Shorten context to allow for cleanup. Reserve one minute in case of power
+	// test.
+	closeCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
+	defer cancel()
+
+	param, ok := s.Param().(meetParams)
+	if !ok {
+		s.Fatal("Failed to convert test meetParams")
+	}
+
+	var err error
+	fixt := s.FixtValue().(fixture.BenchmarkSetUpFixtureData)
+	cr := fixt.Chrome
+	defer faillog.DumpUITreeWithScreenshotOnError(closeCtx, s.OutDir(), s.HasError, cr, "ui_tree")
+
+	// Record power before camera opened.
+	raplEnergyBefore, err := power.NewRAPLSnapshot()
+	if err != nil {
+		testing.ContextLog(ctx, "RAPL Energy status is not available for this board: ", err)
+	}
+
+	// Record Memory usage.
+	p := perf.NewValues()
+
+	initMemUsage, err := effects.GetSwapAndRSSBytes(ctx)
+	if err != nil {
+		s.Fatal("Failed to read memory usage: ", err)
+	}
+	p.Set(perf.Metric{
+		Name:      "InitialMemoryUsage",
+		Unit:      "Byte",
+		Direction: perf.SmallerIsBetter,
+		Multiple:  false},
+		float64(initMemUsage))
+	testing.ContextLog(ctx, "Initial Memory usage: ", initMemUsage)
+
+	testing.ContextLog(ctx, "Opening Meet")
+	br, cleanup, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
+	if err != nil {
+		s.Fatal("Failed to launch browser: ", err)
+	}
+	defer cleanup(closeCtx)
+
+	gm, err := googlemeet.StartNewMeeting(ctx, cr, br,
+		map[string]string{
+			"e": "ForceSegmentationModelVariant::GpuMid",
+		}, googlemeet.WithAllPermissions)
+	if err != nil {
+		s.Fatal("Failed to start meeting: ", err)
+	}
+	defer gm.Close(closeCtx)
+
+	// Configure Meeting.
+	if err := uiauto.Combine("Configure Google Meet",
+		gm.EnterFullScreen,
+		gm.MuteIfMicAvailable,
+		gm.ChangeSettings(
+			gm.SetLeaveEmptyCalls(false),
+			gm.SetAdjustVideoLighting(param.appRelight),
+			gm.SetSendResolution(meetHighResolution),
+		),
+		gm.ApplyVideoEffects(gm.SetEffectBlur(param.appBlur)),
+	)(ctx); err != nil {
+		s.Fatal("Failed to configure Meet: ", err)
+	}
+
+	cleanupApply, err := effects.ApplyPlatformEffects(ctx, param.platformBlur, param.platformRelight)
+	if err != nil {
+		s.Fatal("Failed to apply platform effects: ", err)
+	}
+	if cleanupApply != nil {
+		defer func() {
+			if err := cleanupApply(ctx); err != nil {
+				s.Error("Failed to clean up apply platform effects: ", err)
+			}
+		}()
+	}
+
+	testing.ContextLog(ctx, "Letting things settle for 5 seconds")
+	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+		s.Fatal("Failed to let things settle: ", err)
+	}
+
+	// Get Max memory usage.
+	memoryChannel := make(chan effects.PeakMemoryResult)
+	go effects.GetMaxMemoryUsage(ctx, memoryChannel)
+
+	// Capture FPS.
+	var fpsResult effects.DataResult
+	if fpsResult, err = effects.CaptureFPSData(ctx, gm.Conn(), s.DataPath("effects_fps_metrics.js"), effects.TestDurationInSeconds); err != nil {
+		s.Error("Failed to capture FPS data: ", err)
+	}
+	p.Set(perf.Metric{
+		Name:      "FPS_average",
+		Unit:      "fps",
+		Direction: perf.BiggerIsBetter,
+		Multiple:  false},
+		fpsResult.Average)
+
+	var percentileMap map[int]float64
+	if percentileMap, err = effects.GetPercentileData(ctx, fpsResult.Data); err != nil {
+		s.Fatal("Failed to calculate percentile for FPS data: ", err)
+	}
+	for percentile, value := range percentileMap {
+		p.Set(perf.Metric{
+			Name:      "FPS_p" + strconv.Itoa(percentile),
+			Unit:      "fps",
+			Direction: perf.BiggerIsBetter,
+			Multiple:  false,
+		}, value)
+	}
+
+	// Retrieve memory usage from goroutine.
+	peakMemoryUsage := <-memoryChannel
+	if peakMemoryUsage.Err != nil {
+		s.Fatal("Memory capture failed", peakMemoryUsage.Err)
+	}
+
+	p.Set(perf.Metric{
+		Name:      "PeakMemoryUsage",
+		Unit:      "Byte",
+		Direction: perf.SmallerIsBetter,
+		Multiple:  false},
+		float64(peakMemoryUsage.Value))
+	testing.ContextLog(ctx, "max Memory usage: ", peakMemoryUsage.Value)
+
+	// Power difference.
+	var energyDiff *power.RAPLValues
+	if raplEnergyBefore != nil {
+		energyDiff, err = raplEnergyBefore.DiffWithCurrentRAPL()
+		if err != nil {
+			s.Fatal("Failed to get RAPL power usage: ", err)
+		}
+	}
+
+	energyDiff.ReportPerfMetrics(p, "joules-")
+	energyDiff.ReportWattPerfMetrics(p, "watts-", effects.TestDuration)
+
+	if err := p.Save(s.OutDir()); err != nil {
+		s.Error("Cannot save perf data: ", err)
+	}
+
+}
