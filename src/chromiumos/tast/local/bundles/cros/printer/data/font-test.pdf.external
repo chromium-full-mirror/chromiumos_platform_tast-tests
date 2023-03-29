@@ -1,5 +1,5 @@
 {
-  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/font-test_20201023.pdf",
-  "size": 32019,
-  "sha256sum": "c658871b7121d079b1d6443ff964fa679fa3055206b912f353396b88b69d7920"
+  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/font-test_20230329.pdf",
+  "size": 78396,
+  "sha256sum": "5b346224b7a7da8731115a3c5a641da4ef7776162f44a86135fbc530aca4666f"
 }
