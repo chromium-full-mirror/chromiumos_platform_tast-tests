@@ -30,7 +30,7 @@ func init() {
 		SoftwareDeps: []string{"crossystem", "flashrom"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.FormFactor(hwdep.Detachable), hwdep.SkipOnModel("coachz", "homestar", "wormdingler", "quackingstick")),
 		Fixture:      fixture.DevMode,
-		Timeout:      30 * time.Minute,
+		Timeout:      80 * time.Minute,
 	})
 }
 
@@ -47,7 +47,9 @@ func ToNormConfirmed(ctx context.Context, s *testing.State) {
 	}
 
 	cs := s.CloudStorage()
-	if err := h.SetupUSBKey(ctx, cs); err != nil {
+	var opts []firmware.SetupUSBOption
+	opts = append(opts, firmware.DontFlashIfSameMilestone)
+	if err := h.SetupUSBKey(ctx, cs, opts...); err != nil {
 		s.Fatal("USBKey not working: ", err)
 	}
 

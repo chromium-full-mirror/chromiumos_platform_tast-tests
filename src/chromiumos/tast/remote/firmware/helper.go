@@ -139,6 +139,16 @@ const (
 	FromHibernation WaitConnectOption = "hibernation"
 )
 
+// SetupUSBOption includes options for setting up a USB device.
+type SetupUSBOption int
+
+const (
+	// DontFlashIfSameMilestone indicates that flashing the usb
+	// is not required if it contains the same ChromeOS milestone
+	// as that running currently on the DUT.
+	DontFlashIfSameMilestone SetupUSBOption = iota
+)
+
 /*
 FwScreenID contains the id for each individual fw screen.
 These ids were found from the depthcharge repo:
@@ -555,7 +565,7 @@ func (h *Helper) SyncTastFilesToDUT(ctx context.Context) error {
 // Will break the DUT if it is currently booted off the USB drive in recovery mode.
 //
 // CAUTION: You must set ephemeraldevserver='false' in your control file in order to flash usb drives.
-func (h *Helper) SetupUSBKey(ctx context.Context, cloudStorage *testing.CloudStorage) (retErr error) {
+func (h *Helper) SetupUSBKey(ctx context.Context, cloudStorage *testing.CloudStorage, opts ...SetupUSBOption) (retErr error) {
 	usbdev, err := h.CheckUSBOnServoHost(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to check the usb device on servo host")
@@ -619,6 +629,20 @@ func (h *Helper) SetupUSBKey(ctx context.Context, cloudStorage *testing.CloudSto
 		}
 		testing.ContextLog(ctx, "The image on usbkey is not a test image")
 		releaseBuilderPath = ""
+	}
+
+	for _, opt := range opts {
+		if opt == DontFlashIfSameMilestone {
+			releaseMilestone := lsb[lsbrelease.Milestone]
+			dutMilestone, err := h.Reporter.Milestone(ctx)
+			if err != nil {
+				return errors.Wrap(err, "failed to get DUT milestone")
+			}
+			if releaseMilestone == dutMilestone {
+				testing.ContextLog(ctx, "USB image contains the same milestone as the one running on the DUT")
+				return nil
+			}
+		}
 	}
 
 	if releaseBuilderPath == dutBuilderPath {

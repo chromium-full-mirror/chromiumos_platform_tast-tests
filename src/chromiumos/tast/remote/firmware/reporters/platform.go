@@ -58,6 +58,23 @@ func (r *Reporter) BuilderPath(ctx context.Context) (string, error) {
 	return path, nil
 }
 
+// Milestone reports the milestone of the build, such as R93.
+func (r *Reporter) Milestone(ctx context.Context) (string, error) {
+	lsbContents, err := r.CatFile(ctx, "/etc/lsb-release")
+	if err != nil {
+		return "", errors.Wrap(err, "loading lsbrelease contents")
+	}
+	lsbMap, err := lsbrelease.Parse(strings.NewReader(lsbContents))
+	if err != nil {
+		return "", errors.Wrap(err, "parsing lsbrelease contents")
+	}
+	milestone, ok := lsbMap[lsbrelease.Milestone]
+	if !ok {
+		return "", errors.Errorf("failed to find %s in lsbrelease contents", lsbrelease.Milestone)
+	}
+	return milestone, nil
+}
+
 // Model reports the name of the DUT model, such as robo360 or minnie.
 func (r *Reporter) Model(ctx context.Context) (string, error) {
 	return r.CommandOutput(ctx, "cros_config", "/", "name")

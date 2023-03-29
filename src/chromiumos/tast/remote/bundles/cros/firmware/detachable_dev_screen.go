@@ -39,13 +39,13 @@ func init() {
 		Fixture:      fixture.DevMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.FormFactor(hwdep.Detachable)),
 		Params: []testing.Param{{
-			Timeout: 60 * time.Minute,
+			Timeout: 80 * time.Minute,
 			Val: devFwParam{
 				devFwScreenName: "devWarningScreen",
 			},
 		}, {
 			Name:    "dev_options",
-			Timeout: 60 * time.Minute,
+			Timeout: 80 * time.Minute,
 			// The dev_options screen doesn't exist on the menu_switcher ui.
 			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("coachz", "homestar", "wormdingler", "quackingstick")),
 			Val: devFwParam{
@@ -67,7 +67,9 @@ func DetachableDevScreen(ctx context.Context, s *testing.State) {
 	}
 
 	cs := s.CloudStorage()
-	if err := h.SetupUSBKey(ctx, cs); err != nil {
+	var opts []firmware.SetupUSBOption
+	opts = append(opts, firmware.DontFlashIfSameMilestone)
+	if err := h.SetupUSBKey(ctx, cs, opts...); err != nil {
 		s.Fatal("USBKey not working: ", err)
 	}
 
