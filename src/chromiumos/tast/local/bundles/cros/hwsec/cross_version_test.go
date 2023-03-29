@@ -112,7 +112,8 @@ func TestCrossVersionParams(t *testing.T) {
 			if config.critical {
 				attr = []string{"group:mainline"}
 			} else {
-				attr = []string{"group:hwsec", "hwsec_nightly"}
+				// TODO(b/228279919): change this to custom test suite
+				attr = []string{"group:mainline", "informational"}
 			}
 
 			name := fmt.Sprintf("%s_r%d", tpmVer.name, milestone)
