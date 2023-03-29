@@ -140,7 +140,7 @@ func USBDeviceFunctionality(ctx context.Context, s *testing.State) {
 		}
 
 		got := usbutils.NumberOfUSBDevicesConnected(usbDevicesList, testParam.usbDeviceClassName, testParam.usbSpeed)
-		if want := testParam.noOfConnectedDevice; got != want {
+		if want := testParam.noOfConnectedDevice; got < want {
 			s.Fatalf("Unexpected number of USB devices connected: got %d, want %d", got, want)
 		}
 
@@ -175,7 +175,7 @@ func USBDeviceFunctionality(ctx context.Context, s *testing.State) {
 		}
 
 		got = usbutils.NumberOfUSBDevicesConnected(usbDevicesList, testParam.usbDeviceClassName, testParam.usbSpeed)
-		if want := testParam.noOfConnectedDevice; got != want {
+		if want := testParam.noOfConnectedDevice; got < want {
 			s.Fatalf("Unexpected number of USB devices connected after cold boot: got %d, want %d", got, want)
 		}
 

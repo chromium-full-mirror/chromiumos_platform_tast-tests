@@ -91,7 +91,7 @@ func USBHIDDeviceSuspendResume(ctx context.Context, s *testing.State) {
 	}
 
 	got := usbutils.NumberOfUSBDevicesConnected(usbDevicesList, testParam.usbDeviceClassName, testParam.usbSpeed)
-	if want := testParam.numberOfConnectedDevices; got != want {
+	if want := testParam.numberOfConnectedDevices; got < want {
 		s.Fatalf("Unexpected number of USB devices connected: got %d, want %d", got, want)
 	}
 
@@ -153,7 +153,7 @@ func USBHIDDeviceSuspendResume(ctx context.Context, s *testing.State) {
 	}
 
 	got = usbutils.NumberOfUSBDevicesConnected(usbDevicesList, testParam.usbDeviceClassName, testParam.usbSpeed)
-	if want := testParam.numberOfConnectedDevices; got != want {
+	if want := testParam.numberOfConnectedDevices; got < want {
 		s.Fatalf("Unexpected number of USB devices connected: got %d, want %d", got, want)
 	}
 

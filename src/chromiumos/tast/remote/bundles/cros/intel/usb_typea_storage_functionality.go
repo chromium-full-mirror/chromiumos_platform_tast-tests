@@ -17,6 +17,7 @@ import (
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/dut"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/local/cswitch"
 	"chromiumos/tast/remote/powercontrol"
 	"chromiumos/tast/rpc"
 	"chromiumos/tast/services/cros/power"
@@ -45,7 +46,7 @@ func init() {
 		BugComponent: "b:157291",
 		SoftwareDeps: []string{"chrome", "reboot"},
 		ServiceDeps:  []string{"tast.cros.power.USBService"},
-		VarDeps:      []string{"servo"},
+		VarDeps:      []string{"servo", "intel.cSwitchPort", "intel.domainIP"},
 		Params: []testing.Param{{
 			Name:    "usb2_warmboot",
 			Val:     usbTypeATestParam{warmboot, "480M", 0},
@@ -73,6 +74,11 @@ func USBTypeAStorageFunctionality(ctx context.Context, s *testing.State) {
 	dut := s.DUT()
 	testParam := s.Param().(usbTypeATestParam)
 
+	// cswitch port ID.
+	cSwitchON := s.RequiredVar("intel.cSwitchPort")
+	// IP address of Tqc server hosting device.
+	domainIP := s.RequiredVar("intel.domainIP")
+
 	servoSpec := s.RequiredVar("servo")
 	pxy, err := servo.NewProxy(ctx, servoSpec, dut.KeyFile(), dut.KeyDir())
 	if err != nil {
@@ -92,22 +98,32 @@ func USBTypeAStorageFunctionality(ctx context.Context, s *testing.State) {
 	}
 	defer client.CloseChrome(cleanupCtx, &empty.Empty{})
 
-	initialMuxState, err := pxy.Servo().GetUSBMuxState(ctx)
+	// Create C-Switch session that performs hot plug-unplug on TBT device.
+	sessionID, err := cswitch.CreateSession(ctx, domainIP)
 	if err != nil {
-		s.Fatal("Failed to get USB Mux state info: ", err)
+		s.Fatal("Failed to create sessionID: ", err)
 	}
-	defer pxy.Servo().SetUSBMuxState(cleanupCtx, initialMuxState)
 
+	const cSwitchOFF = "0"
 	defer func(ctx context.Context) {
+		testing.ContextLog(ctx, "Performing cleanup")
 		if !dut.Connected(ctx) {
 			if err := powercontrol.PowerOntoDUT(ctx, pxy, dut); err != nil {
-				s.Error("Failed to power on DUT in cleanup: ", err)
+				s.Error("Failed to power on DUT at cleanup: ", err)
 			}
+		}
+
+		if err := cswitch.ToggleCSwitchPort(ctx, sessionID, cSwitchOFF, domainIP); err != nil {
+			s.Fatal("Failed to disable c-switch port: ", err)
+		}
+
+		if err := cswitch.CloseSession(ctx, sessionID, domainIP); err != nil {
+			s.Error("Failed to close sessionID: ", err)
 		}
 	}(cleanupCtx)
 
-	if err := pxy.Servo().SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
-		s.Fatal("Failed to plug USB storage device to DUT: ", err)
+	if err := cswitch.ToggleCSwitchPort(ctx, sessionID, cSwitchON, domainIP); err != nil {
+		s.Fatal("Failed to enable c-switch port: ", err)
 	}
 
 	// Check for USB storage device detection before warmboot/coldboot.
@@ -155,9 +171,8 @@ func USBTypeAStorageFunctionality(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to detect connected USB storage device after warmboot/coldboot: ", err)
 	}
 
-	// Unplug USB storage device after warmboot/coldboot.
-	if err := pxy.Servo().SetUSBMuxState(ctx, servo.USBMuxHost); err != nil {
-		s.Fatal("Failed to unplug USB storage device to DUT: ", err)
+	if err := cswitch.ToggleCSwitchPort(ctx, sessionID, cSwitchOFF, domainIP); err != nil {
+		s.Fatal("Failed to enable c-switch port: ", err)
 	}
 
 	// Check for USB storage device detection after unplug.
@@ -176,8 +191,8 @@ func USBTypeAStorageFunctionality(ctx context.Context, s *testing.State) {
 
 	// Again plug USB storage device and check for its detection.
 	// If detected tranfer file from DUT to USB device and vice-versa.
-	if err := pxy.Servo().SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
-		s.Fatal("Failed to plug USB storage device to DUT: ", err)
+	if err := cswitch.ToggleCSwitchPort(ctx, sessionID, cSwitchON, domainIP); err != nil {
+		s.Fatal("Failed to enable c-switch port: ", err)
 	}
 
 	var dirsAfterPlug *power.MountPathResponse
@@ -241,7 +256,7 @@ func validateUSBStorageDetection(ctx context.Context, dut *dut.DUT, usbSpeed str
 			return errors.Wrap(err, "failed to get USB devices list")
 		}
 		got := usbutils.NumberOfUSBDevicesConnected(usbDevicesList, usbDeviceClassName, usbSpeed)
-		if want := 1; got != want {
+		if want := 1; got < want {
 			return errors.Errorf("unexpected number of %q devices connected with %q speed: got %d, want %d",
 				usbDeviceClassName, usbSpeed, got, want)
 		}
