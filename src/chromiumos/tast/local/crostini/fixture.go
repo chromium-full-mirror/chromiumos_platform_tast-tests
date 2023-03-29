@@ -229,34 +229,6 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:            "crostiniBusterLargeContainerSnapshot",
-		Desc:            "Install Crostini with Bullseye in large container with apps installed",
-		Contacts:        []string{"clumptini+oncall@google.com"},
-		Impl:            &crostiniFixture{preData: preTestDataBusterLC, snapshot: true},
-		SetUpTimeout:    installationTimeout + uninstallationTimeout + takeSnapshotTimeout,
-		ResetTimeout:    checkContainerTimeout + restoreSnapshotTimeout,
-		PostTestTimeout: postTestTimeout,
-		TearDownTimeout: uninstallationTimeout,
-		Parent:          "chromeLoggedInForCrostini",
-		Vars:            []string{"keepState"},
-		Data:            []string{GetContainerMetadataArtifact("buster", true), GetContainerRootfsArtifact("buster", true)},
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:            "crostiniBullseyeLargeContainerSnapshot",
-		Desc:            "Install Crostini with Bullseye in large container with apps installed",
-		Contacts:        []string{"clumptini+oncall@google.com"},
-		Impl:            &crostiniFixture{preData: preTestDataBullseyeLC, snapshot: true},
-		SetUpTimeout:    installationTimeout + uninstallationTimeout + takeSnapshotTimeout,
-		ResetTimeout:    checkContainerTimeout + restoreSnapshotTimeout,
-		PostTestTimeout: postTestTimeout,
-		TearDownTimeout: uninstallationTimeout,
-		Parent:          "chromeLoggedInForCrostini",
-		Vars:            []string{"keepState"},
-		Data:            []string{GetContainerMetadataArtifact("bullseye", true), GetContainerRootfsArtifact("bullseye", true)},
-	})
-
-	testing.AddFixture(&testing.Fixture{
 		Name:            "crostiniBullseyeWithLacros",
 		Desc:            "Install Crostini with Bullseye and enable Lacros",
 		Contacts:        []string{"clumptini+oncall@google.com"},
@@ -425,6 +397,7 @@ func (f *crostiniFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	f.postData = &PostTestData{}
 	f.cr = s.ParentValue().(chrome.HasChrome).Chrome()
 	f.logDir = s.OutDir()
+	f.snapshot = true
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, uninstallationTimeout)

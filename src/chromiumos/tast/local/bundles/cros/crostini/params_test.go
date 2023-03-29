@@ -175,7 +175,6 @@ func TestRestartParams(t *testing.T) {
 	for filename, duration := range restartTests {
 		params := crostini.MakeTestParamsFromList(t, []crostini.Param{{
 			Timeout:    duration,
-			Restart:    true,
 			UseFixture: true,
 		}})
 		genparams.Ensure(t, filename, params)
@@ -267,7 +266,6 @@ func TestAppClamshellOnlyTestParams(t *testing.T) {
 				UnstableHardwareDep: "crostini.CrostiniAppUnstable",
 				ExtraSoftwareDeps:   []string{"crostini_app"},
 				UseLargeContainer:   true,
-				TakeSnapshot:        true,
 				UseFixture:          true,
 				DeviceMode:          devicemode.ClamshellMode,
 			}})
@@ -288,7 +286,6 @@ func TestAppWithSnapshotTestParams(t *testing.T) {
 				UnstableHardwareDep: "crostini.CrostiniAppUnstable",
 				ExtraSoftwareDeps:   []string{"crostini_app"},
 				UseLargeContainer:   true,
-				TakeSnapshot:        true,
 				UseFixture:          true,
 				DeviceMode:          devicemode.TabletMode,
 			},
@@ -298,7 +295,6 @@ func TestAppWithSnapshotTestParams(t *testing.T) {
 				UnstableHardwareDep: "crostini.CrostiniAppUnstable",
 				ExtraSoftwareDeps:   []string{"crostini_app"},
 				UseLargeContainer:   true,
-				TakeSnapshot:        true,
 				UseFixture:          true,
 				DeviceMode:          devicemode.ClamshellMode,
 			}})
