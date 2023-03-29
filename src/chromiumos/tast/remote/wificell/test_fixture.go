@@ -880,11 +880,8 @@ func (tf *TestFixture) ReserveForDeconfigAP(ctx context.Context, ap *APIface) (c
 		// Also reserve time for stopping the capturer if it exists.
 		// Noted that CancelFunc returned here is dropped as we rely on its
 		// parent's cancel() being called.
-		if p, ok := tf.pcap.(support.Capture); !ok {
+		if p, ok := tf.pcap.(support.Capture); ok {
 			ctx, _ = p.ReserveForStopCapture(ctx, capturer)
-		} else {
-			// Stop the call if the router does not support.Capture.
-			return ctx, func() {}
 		}
 	}
 	return ctx, cancel
