@@ -23,6 +23,13 @@ func init() {
 		BugComponent: "b:995569", // ChromeOS > Platform > Graphics > GPU
 		Attr:         []string{"group:graphics", "graphics_perbuild", "group:mainline"},
 		Fixture:      "gpuWatchDog",
+		Params: []testing.Param{{
+			Val: false,
+		}, {
+			Name:      "informational",
+			Val:       true,
+			ExtraAttr: []string{"informational"},
+		}},
 	})
 }
 
@@ -37,6 +44,24 @@ func HardwareProbe(ctx context.Context, s *testing.State) {
 	s.Log("Successfully get the information: ", result)
 	for _, info := range result.GPUInfo {
 		s.Log("GPU_Family: ", info.Family)
+		s.Log("GPU_Vendor: ", info.Vendor)
 	}
 	s.Log("CPU_Family: ", result.CPUFamily)
+
+	check := s.Param().(bool)
+	if !check {
+		return
+	}
+	// Check if fields are valid.
+	for _, info := range result.GPUInfo {
+		if info.Family == "unknown" || info.Family == "" {
+			s.Error("Unrecognized gpu family: ", info.Family)
+		}
+		if info.Vendor == "unknown" || info.Vendor == "" {
+			s.Error("Unrecognized gpu Vendor: ", info.Vendor)
+		}
+	}
+	if result.CPUFamily == "unknown" || result.CPUFamily == "" {
+		s.Error("Unrecognized CPU family: ", result.CPUFamily)
+	}
 }
