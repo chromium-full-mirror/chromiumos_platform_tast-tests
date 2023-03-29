@@ -30,8 +30,7 @@ func init() {
 			"hsuregan@google.com",
 		},
 		BugComponent: "b:1131775", // ChromeOS > Software > System Services > Connectivity
-		// Disabling until b/265355832 is resolved
-		// Attr:         []string{"group:cellular", "cellular_sim_roaming", "cellular_unstable"},
+		Attr:         []string{"group:cellular", "cellular_sim_roaming", "cellular_unstable"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "cellular",
 		Timeout:      2 * time.Minute,
