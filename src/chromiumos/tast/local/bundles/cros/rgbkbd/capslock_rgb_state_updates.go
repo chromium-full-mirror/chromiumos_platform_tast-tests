@@ -101,8 +101,8 @@ func CapslockRgbStateUpdates(ctx context.Context, s *testing.State) {
 	}
 
 	expectedLogLines := []string{
-		"RGB::SetKeyColor - 44,25,55,210",
-		"RGB::SetKeyColor - 57,25,55,210",
+		"RGB::SetKeyColor - 44,255,77,0",
+		"RGB::SetKeyColor - 57,255,77,0",
 		"RGB::SetKeyColor - 44,255,255,210",
 		"RGB::SetKeyColor - 57,255,255,210"}
 
