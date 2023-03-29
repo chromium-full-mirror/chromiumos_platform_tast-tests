@@ -7,11 +7,14 @@ package wifi
 import (
 	"context"
 	"fmt"
+	"math"
 	"sort"
 	"time"
 
+	"chromiumos/tast/common/perf"
 	"chromiumos/tast/common/wifi/security"
 	"chromiumos/tast/common/wifi/security/wpa"
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/remote/network/iperf"
 	"chromiumos/tast/remote/wificell"
 	"chromiumos/tast/remote/wificell/dutcfg"
@@ -21,6 +24,8 @@ import (
 )
 
 type sapPerfTestcase struct {
+	// Testcase name to be used in perf.
+	printableName string
 	// Any extra options for tethering.
 	tetheringOpts []tethering.Option
 	// Security facility (nil for Open mode).
@@ -62,17 +67,20 @@ func init() {
 				// TCP performance. Download|Upload directions based on the STA perspective.
 				Name: "upload_tcp",
 				Val: []sapPerfTestcase{{
+					printableName: "open_2_4",
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band2p4g), tethering.NoUplink(true)},
 					protocol:      iperf.ProtocolTCP,
 					opts:          []iperf.ConfigOption{},
 					minThroughput: 95 * iperf.Mbps,
 				}, {
+					printableName: "open_5",
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band5g), tethering.NoUplink(true)},
 					protocol:      iperf.ProtocolTCP,
 					opts:          []iperf.ConfigOption{},
 					// TODO(b/269164431): adjust per channel BW and MCS.
 					minThroughput: 125 * iperf.Mbps,
 				}, {
+					printableName: "wpa2_2_4",
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band2p4g), tethering.NoUplink(true),
 						tethering.SecMode(wpa.ModePureWPA2)},
 					secConfFac: wpa.NewConfigFactory(
@@ -82,6 +90,7 @@ func init() {
 					opts:          []iperf.ConfigOption{},
 					minThroughput: 95 * iperf.Mbps,
 				}, {
+					printableName: "wpa2_5",
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band5g), tethering.NoUplink(true),
 						tethering.SecMode(wpa.ModePureWPA2)},
 					secConfFac: wpa.NewConfigFactory(
@@ -96,18 +105,21 @@ func init() {
 				// TCP performance, AP->STA direction.
 				Name: "download_tcp",
 				Val: []sapPerfTestcase{{
+					printableName: "open2_4",
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band2p4g), tethering.NoUplink(true)},
 					protocol:      iperf.ProtocolTCP,
 					reverse:       true,
 					opts:          []iperf.ConfigOption{},
 					minThroughput: 95 * iperf.Mbps,
 				}, {
+					printableName: "open_5",
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band5g), tethering.NoUplink(true)},
 					protocol:      iperf.ProtocolTCP,
 					reverse:       true,
 					opts:          []iperf.ConfigOption{},
 					minThroughput: 125 * iperf.Mbps,
 				}, {
+					printableName: "wpa2_2_4",
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band2p4g), tethering.NoUplink(true),
 						tethering.SecMode(wpa.ModePureWPA2)},
 					secConfFac: wpa.NewConfigFactory(
@@ -118,6 +130,7 @@ func init() {
 					opts:          []iperf.ConfigOption{},
 					minThroughput: 95 * iperf.Mbps,
 				}, {
+					printableName: "wpa2_5",
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band5g), tethering.NoUplink(true),
 						tethering.SecMode(wpa.ModePureWPA2)},
 					secConfFac: wpa.NewConfigFactory(
@@ -133,18 +146,21 @@ func init() {
 				// UDP performance, STA->AP direction.
 				Name: "upload_udp",
 				Val: []sapPerfTestcase{{
+					printableName: "open2_4",
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band2p4g), tethering.NoUplink(true)},
 					protocol:      iperf.ProtocolUDP,
 					opts:          []iperf.ConfigOption{},
 					minThroughput: 100 * iperf.Mbps,
 					maxJitter:     10 * time.Millisecond,
 				}, {
+					printableName: "open5",
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band5g), tethering.NoUplink(true)},
 					protocol:      iperf.ProtocolUDP,
 					opts:          []iperf.ConfigOption{},
 					minThroughput: 125 * iperf.Mbps,
 					maxJitter:     10 * time.Millisecond,
 				}, {
+					printableName: "wpa2_2_4",
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band2p4g), tethering.NoUplink(true),
 						tethering.SecMode(wpa.ModePureWPA2)},
 					secConfFac: wpa.NewConfigFactory(
@@ -155,6 +171,7 @@ func init() {
 					minThroughput: 100 * iperf.Mbps,
 					maxJitter:     10 * time.Millisecond,
 				}, {
+					printableName: "wpa2_5",
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band5g), tethering.NoUplink(true),
 						tethering.SecMode(wpa.ModePureWPA2)},
 					secConfFac: wpa.NewConfigFactory(
@@ -170,6 +187,7 @@ func init() {
 				// UDP performance, AP->STA direction.
 				Name: "download_udp",
 				Val: []sapPerfTestcase{{
+					printableName: "open2_4",
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band2p4g), tethering.NoUplink(true)},
 					protocol:      iperf.ProtocolUDP,
 					reverse:       true,
@@ -177,6 +195,7 @@ func init() {
 					minThroughput: 100 * iperf.Mbps,
 					maxJitter:     10 * time.Millisecond,
 				}, {
+					printableName: "open5",
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band5g), tethering.NoUplink(true)},
 					protocol:      iperf.ProtocolUDP,
 					reverse:       true,
@@ -184,6 +203,7 @@ func init() {
 					minThroughput: 125 * iperf.Mbps,
 					maxJitter:     10 * time.Millisecond,
 				}, {
+					printableName: "wpa2_2_4",
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band2p4g), tethering.NoUplink(true),
 						tethering.SecMode(wpa.ModePureWPA2)},
 					secConfFac: wpa.NewConfigFactory(
@@ -195,6 +215,7 @@ func init() {
 					minThroughput: 100 * iperf.Mbps,
 					maxJitter:     10 * time.Millisecond,
 				}, {
+					printableName: "wpa2_5",
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band5g), tethering.NoUplink(true),
 						tethering.SecMode(wpa.ModePureWPA2)},
 					secConfFac: wpa.NewConfigFactory(
@@ -211,18 +232,21 @@ func init() {
 				// Small packets UDP performance (e.g. for games), STA->AP direction.
 				Name: "upload_udp_small",
 				Val: []sapPerfTestcase{{
+					printableName: "open2_4",
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band2p4g), tethering.NoUplink(true)},
 					protocol:      iperf.ProtocolUDP,
 					opts:          []iperf.ConfigOption{iperf.DatagramLengthOption(112 * iperf.B)},
 					minThroughput: 40 * iperf.Mbps,
 					maxJitter:     10 * time.Millisecond,
 				}, {
+					printableName: "open5",
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band5g), tethering.NoUplink(true)},
 					protocol:      iperf.ProtocolUDP,
 					opts:          []iperf.ConfigOption{iperf.DatagramLengthOption(112 * iperf.B)},
 					minThroughput: 65 * iperf.Mbps,
 					maxJitter:     10 * time.Millisecond,
 				}, {
+					printableName: "wpa2_2_4",
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band2p4g), tethering.NoUplink(true),
 						tethering.SecMode(wpa.ModePureWPA2)},
 					secConfFac: wpa.NewConfigFactory(
@@ -233,6 +257,7 @@ func init() {
 					minThroughput: 40 * iperf.Mbps,
 					maxJitter:     10 * time.Millisecond,
 				}, {
+					printableName: "wpa2_5",
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band5g), tethering.NoUplink(true),
 						tethering.SecMode(wpa.ModePureWPA2)},
 					secConfFac: wpa.NewConfigFactory(
@@ -248,6 +273,7 @@ func init() {
 				// Small packets UDP performance, AP->STA direction.
 				Name: "download_udp_small",
 				Val: []sapPerfTestcase{{
+					printableName: "open2_4",
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band2p4g), tethering.NoUplink(true)},
 					protocol:      iperf.ProtocolUDP,
 					reverse:       true,
@@ -255,6 +281,7 @@ func init() {
 					minThroughput: 40 * iperf.Mbps,
 					maxJitter:     10 * time.Millisecond,
 				}, {
+					printableName: "open5",
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band5g), tethering.NoUplink(true)},
 					protocol:      iperf.ProtocolUDP,
 					reverse:       true,
@@ -262,6 +289,7 @@ func init() {
 					minThroughput: 65 * iperf.Mbps,
 					maxJitter:     10 * time.Millisecond,
 				}, {
+					printableName: "wpa2_2_4",
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band2p4g), tethering.NoUplink(true),
 						tethering.SecMode(wpa.ModePureWPA2)},
 					secConfFac: wpa.NewConfigFactory(
@@ -273,6 +301,7 @@ func init() {
 					minThroughput: 40 * iperf.Mbps,
 					maxJitter:     10 * time.Millisecond,
 				}, {
+					printableName: "wpa2_5",
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band5g), tethering.NoUplink(true),
 						tethering.SecMode(wpa.ModePureWPA2)},
 					secConfFac: wpa.NewConfigFactory(
@@ -315,6 +344,16 @@ func SAPPerf(ctx context.Context, s *testing.State) {
 	ctx, cancel := tf.ReserveForDeconfigAP(ctx, apIface)
 	defer cancel()
 
+	pv := perf.NewValues()
+	defer func() {
+		if err := pv.Save(s.OutDir()); err != nil {
+			s.Error("Failed to save perf data: ", err)
+		}
+	}()
+	// Add a cascading timeout to let test store perf report, but don't impact test teardown if it takes too long.
+	ctx, cancel = ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
 	testOnce := func(ctx context.Context, s *testing.State, tc sapPerfTestcase) {
 		tetheringConf, _, err := tf.StartTethering(ctx, wificell.DefaultDUT, tc.tetheringOpts, tc.secConfFac)
 		if err != nil {
@@ -355,6 +394,18 @@ func SAPPerf(ctx context.Context, s *testing.State) {
 			s.Fatalf("Unacceptable loss in performance test. Wanted <= 5%%, got %f", pr.PercentLoss)
 		}
 
+		// Store perf metrics. Using only tc.printableName is enough because results of each subtest are stored in a separate directory.
+		pv.Set(perf.Metric{
+			Name:      "throughput_" + tc.printableName,
+			Unit:      "bps",
+			Direction: perf.BiggerIsBetter,
+		}, math.Round(float64(pr.Throughput))) // Rounding to get rid of the excess of non-significant data, e.g. 184.026360 Mbit/s.
+		pv.Set(perf.Metric{
+			Name:      "loss_" + tc.printableName,
+			Unit:      "percent",
+			Direction: perf.SmallerIsBetter,
+		}, float64(pr.PercentLoss))
+
 		// If maxJitter is set, it means that we need jitter results.
 		if tc.maxJitter > 0 {
 			if len(pr.Jitter) == 0 {
@@ -370,6 +421,11 @@ func SAPPerf(ctx context.Context, s *testing.State) {
 			if jitter >= tc.maxJitter {
 				s.Fatalf("Unacceptable jitter in performance test. Wanted < %dus, got %dus", tc.maxJitter.Microseconds(), jitter.Microseconds())
 			}
+			pv.Set(perf.Metric{
+				Name:      "jitter_" + tc.printableName,
+				Unit:      "us",
+				Direction: perf.SmallerIsBetter,
+			}, float64(jitter.Microseconds()))
 		}
 	}
 
