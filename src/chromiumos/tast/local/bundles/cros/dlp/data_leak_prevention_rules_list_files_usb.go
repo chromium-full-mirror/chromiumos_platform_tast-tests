@@ -8,6 +8,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"time"
 
 	"chromiumos/tast/common/fixture"
@@ -356,6 +357,9 @@ const (
 
 // setupVirtualUSBDevice creates a virtual USB drive.
 func setupVirtualUSBDevice(ctx context.Context) error {
+	// The file could be absent, so ignoring the error.
+	os.Remove("/tmp/backing_file")
+
 	if err := testexec.CommandContext(ctx, "modprobe",
 		"dummy_hcd").Run(testexec.DumpLogOnError); err != nil {
 		return errors.Wrap(err, "fail to load dummy_hcd module")
@@ -376,7 +380,10 @@ func setupVirtualUSBDevice(ctx context.Context) error {
 	return nil
 }
 
-// cleanupVirtualUSBDevice removes previously create virtual USB drive.
+// cleanupVirtualUSBDevice removes previously created virtual USB drive and the backing file.
 func cleanupVirtualUSBDevice(ctx context.Context) {
 	testexec.CommandContext(ctx, "modprobe", "g_mass_storage", "-r").Run()
+
+	// The file could be absent, so ignoring the error.
+	os.Remove("/tmp/backing_file")
 }
