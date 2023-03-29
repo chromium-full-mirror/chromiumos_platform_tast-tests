@@ -24,6 +24,8 @@ var (
 	videoSettingsTabButton   = nodewith.Name("Video").Role(role.Tab).Ancestor(settingsDialog)
 	generalSettingsTabButton = nodewith.Name("General").Role(role.Tab).Ancestor(settingsDialog)
 	closeSettingsButton      = nodewith.Name("Close dialog").Role(role.Button).Ancestor(settingsDialog)
+	resolutionButtonReg      = regexp.MustCompile("Auto|High definition|Standard definition")
+	resolutionButton         = nodewith.NameRegex(resolutionButtonReg).Role(role.ComboBoxMenuButton).Ancestor(settingsDialog)
 )
 
 // OpenSettings opens settings page in GoogleMeet.
@@ -91,13 +93,24 @@ const (
 
 // SetSendResolution sets the option of "Send Resolution" in "Video" Tab.
 func (gm *GoogleMeet) SetSendResolution(value ResolutionOption) action.Action {
-	sendResolutionButton := nodewith.NameRegex(regexp.MustCompile("Auto|High definition|Standard definition|Low definition")).Role(role.ComboBoxMenuButton).Ancestor(settingsDialog).First()
+	sendResolutionButton := resolutionButton.First()
 	sendResolutionOption := nodewith.Name(string(value)).Role(role.ListBoxOption).Ancestor(settingsDialog)
 	actionDesc := fmt.Sprintf(`set "Send Resolution" to %q`, value)
 
 	return uiauto.Combine(actionDesc,
 		gm.ui.DoDefault(videoSettingsTabButton),
 		gm.setDropdownValue(sendResolutionButton, sendResolutionOption, string(value)),
+	)
+}
+
+// SetReceiveResolution sets the option of "Receive Resolution" in "Video" Tab.
+func (gm *GoogleMeet) SetReceiveResolution(value ResolutionOption) action.Action {
+	receiveResolutionButton := resolutionButton.Nth(1)
+	receiveResolutionOption := nodewith.Name(string(value)).Role(role.ListBoxOption).Ancestor(settingsDialog)
+
+	return uiauto.Combine(fmt.Sprintf(`set "Receive Resolution" to %q`, value),
+		gm.ui.DoDefault(videoSettingsTabButton),
+		gm.setDropdownValue(receiveResolutionButton, receiveResolutionOption, string(value)),
 	)
 }
 
