@@ -10,7 +10,6 @@ import (
 
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
-	"chromiumos/tast/local/bundles/cros/u2fd/util"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
@@ -80,7 +79,7 @@ func WebauthnUsingPassword(ctx context.Context, s *testing.State) {
 	bt := s.Param().(browser.Type)
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "error")
 
-	u2fDaemon, err := util.NewU2fDaemon(ctx)
+	u2fDaemon, err := u2fd.NewU2fDaemon(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to u2fd: ", err)
 	}
