@@ -10,6 +10,7 @@ import (
 
 	"chromiumos/tast/remote/cellular/callbox/manager"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 func init() {
@@ -71,6 +72,9 @@ func init() {
 			},
 			{
 				Name: "lte_cc3_x1x1x1_b3b7b20",
+				// 3CA not supported on FM101.
+				// TODO(b/275646150) group models by modem in cellular.knownVariants to make modem-bases restrictions more complete.
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("pujjo")),
 				Val: &manager.ConfigureCallboxRequestBody{
 					Hardware:     manager.CallboxHardwareCMW,
 					CellularType: manager.CellularTechnologyLTE,
