@@ -20,8 +20,14 @@ import (
 	"chromiumos/tast/common/hwsec"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/chrome/browser/browserfixt"
+	"chromiumos/tast/local/chrome/uiauto"
+	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/dbusutil"
 	hwseclocal "chromiumos/tast/local/hwsec"
+	"chromiumos/tast/local/input"
+	"chromiumos/tast/local/u2fd"
 	"chromiumos/tast/testing"
 )
 
@@ -59,6 +65,7 @@ type CrossVersionLoginConfig struct {
 	KeyLabel       string
 	ExtraVaultKeys []VaultKeyInfo
 	VaultFSType    VaultFSType
+	WebAuthnCred   *u2fd.WebAuthnCredential
 }
 
 // NewPassAuthCrossVersionLoginConfig creates cross version-login config from password auth config
@@ -193,7 +200,46 @@ func createChallengeResponseData(ctx context.Context, lf hwsec.LogFunc, cryptoho
 	return config, nil
 }
 
-func createPasswordData(ctx context.Context, cryptohome *hwsec.CryptohomeClient, supportsLE bool) (*CrossVersionLoginConfig, error) {
+func addWebAuthnData(ctx context.Context, cr *chrome.Chrome, webauthnURL, password string, config *CrossVersionLoginConfig) error {
+	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, webauthnURL)
+	if err != nil {
+		return errors.Wrap(err, "failed to open the browser")
+	}
+	defer closeBrowser(ctx)
+	defer conn.Close()
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get test API connection")
+	}
+
+	keyboard, err := input.VirtualKeyboard(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get keyboard")
+	}
+	defer keyboard.Close()
+
+	authCallback := func(ctx context.Context, ui *uiauto.Context) error {
+		// Check if the UI is correct.
+		if err := ui.Exists(nodewith.ClassName("LoginPasswordView"))(ctx); err != nil {
+			return errors.Wrap(err, "failed to find the password input field")
+		}
+		// Type password into ChromeOS WebAuthn dialog.
+		if err := keyboard.Type(ctx, password+"\n"); err != nil {
+			return errors.Wrap(err, "failed to type password into ChromeOS auth dialog")
+		}
+		return nil
+	}
+
+	webauthnCred, err := u2fd.MakeCredentialInLocalSite(ctx, conn, tconn, u2fd.WebAuthnRegistrationConfig{Uv: "preferred"}, authCallback)
+	if err != nil {
+		return errors.Wrap(err, "failed to perform WebAuthn MakeCredential")
+	}
+	config.WebAuthnCred = webauthnCred
+	return nil
+}
+
+func createPasswordData(ctx context.Context, cryptohome *hwsec.CryptohomeClient, supportsLE bool, webauthnURL string) (*CrossVersionLoginConfig, error) {
 	const (
 		extraPass  = "extraPass"
 		extraLabel = "extraLabel"
@@ -205,7 +251,7 @@ func createPasswordData(ctx context.Context, cryptohome *hwsec.CryptohomeClient,
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to log in by Chrome")
 	}
-	cr.Close(ctx)
+	defer cr.Close(ctx)
 	username := cr.Creds().User
 	password := cr.Creds().Pass
 
@@ -245,6 +291,11 @@ func createPasswordData(ctx context.Context, cryptohome *hwsec.CryptohomeClient,
 	}); err != nil {
 		return nil, err
 	}
+
+	if err := addWebAuthnData(ctx, cr, webauthnURL, password, config); err != nil {
+		return nil, errors.Wrap(err, "failed to add WebAuthn data to config")
+	}
+
 	return config, nil
 }
 
@@ -265,7 +316,7 @@ func ecryptfsVaultExists(ctx context.Context, cryptohome *hwsec.CryptohomeClient
 }
 
 // PrepareCrossVersionLoginData prepares the login data and config for CrossVersionLogin and saves them to dataPath and configPath respectively
-func PrepareCrossVersionLoginData(ctx context.Context, lf hwsec.LogFunc, cryptohome *hwsec.CryptohomeClient, daemonController *hwsec.DaemonController, dataPath, configPath string) (retErr error) {
+func PrepareCrossVersionLoginData(ctx context.Context, lf hwsec.LogFunc, cryptohome *hwsec.CryptohomeClient, daemonController *hwsec.DaemonController, dataPath, configPath, webauthnURL string) (retErr error) {
 	var configList []CrossVersionLoginConfig
 
 	defer func() {
@@ -291,7 +342,7 @@ func PrepareCrossVersionLoginData(ctx context.Context, lf hwsec.LogFunc, cryptoh
 	if err := daemonController.Restart(ctx, hwsec.UIDaemon); err != nil {
 		return errors.Wrap(err, "failed to restart UI")
 	}
-	config, err := createPasswordData(ctx, cryptohome, supportsLE)
+	config, err := createPasswordData(ctx, cryptohome, supportsLE, webauthnURL)
 	if err != nil {
 		return errors.Wrap(err, "failed to create password data")
 	}

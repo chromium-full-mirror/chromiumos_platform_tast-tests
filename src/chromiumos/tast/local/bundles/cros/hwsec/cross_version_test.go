@@ -87,6 +87,9 @@ var tpmVersions = []tpmVersion{
 	},
 }
 
+// We didn't prepare WebAuthn data until M113.
+const webauthnMinMilestone = 113
+
 func toCamelCase(s string) string {
 	var ret []string
 	for _, token := range strings.Split(s, "_") {
@@ -97,7 +100,13 @@ func toCamelCase(s string) string {
 
 func TestCrossVersionParams(t *testing.T) {
 	var params []crossVersionParam
+	var webauthnParams []crossVersionParam
 	params = append(params, crossVersionParam{
+		Name:      "current",
+		Fixture:   "crossVersionCurrent",
+		ExtraAttr: []string{"group:mainline", "informational"},
+	})
+	webauthnParams = append(webauthnParams, crossVersionParam{
 		Name:      "current",
 		Fixture:   "crossVersionCurrent",
 		ExtraAttr: []string{"group:mainline", "informational"},
@@ -128,9 +137,12 @@ func TestCrossVersionParams(t *testing.T) {
 				ExtraSoftwareDeps: tpmVer.softwareDeps,
 			}
 			params = append(params, param)
+			if milestone >= webauthnMinMilestone {
+				webauthnParams = append(params, param)
+			}
 		}
 	}
-	code := genparams.Template(t, ` {{ range .}} {
+	tmpl := ` {{ range .}} {
     Name: {{ .Name | fmt }},
     Fixture: {{ .Fixture | fmt }},
     {{ if .ExtraAttr }}
@@ -139,7 +151,10 @@ func TestCrossVersionParams(t *testing.T) {
 		{{ if .ExtraSoftwareDeps }}
     ExtraSoftwareDeps: {{ .ExtraSoftwareDeps | fmt }},
     {{ end }}
-  }, {{ end }}`, params)
+  }, {{ end }}`
+	code := genparams.Template(t, tmpl, params)
 	genparams.Ensure(t, "cross_version_auth_factor.go", code)
 	genparams.Ensure(t, "cross_version_chrome_login.go", code)
+	webauthnCode := genparams.Template(t, tmpl, webauthnParams)
+	genparams.Ensure(t, "cross_version_webauthn_login.go", webauthnCode)
 }

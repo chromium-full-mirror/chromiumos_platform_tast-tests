@@ -16,6 +16,7 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/hwsec/util"
 	hwseclocal "chromiumos/tast/local/hwsec"
+	"chromiumos/tast/local/u2fd"
 	"chromiumos/tast/testing"
 )
 
@@ -27,6 +28,11 @@ const (
 	crossVersionResetTimeout          = 30 * time.Second
 	crossVersionTearDownTimeout       = 30 * time.Second
 )
+
+var webauthnData = []string{
+	"webauthn.html",
+	"bundle.js",
+}
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
@@ -40,6 +46,7 @@ func init() {
 		ResetTimeout:    crossVersionBackupResetTimeout,
 		TearDownTimeout: crossVersionBackupTearDownTimeout,
 		Impl:            &backupFixtImpl{},
+		Data:            webauthnData,
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "crossVersionCurrent",
@@ -868,7 +875,12 @@ func init() {
 type cleanupFunc func(context.Context) error
 
 type backupFixtImpl struct {
-	cleanup cleanupFunc
+	cleanup        cleanupFunc
+	webauthnServer *u2fd.WebAuthnHTTPServer
+}
+
+type backupFixture struct {
+	WebAuthnURL string
 }
 
 // SetUp backs up the login data for TearDown
@@ -889,6 +901,7 @@ func (f *backupFixtImpl) SetUp(ctx context.Context, s *testing.FixtState) interf
 	if err := hwseclocal.SaveLoginData(ctx, daemonController, backupPath, true /*includeTpm*/); err != nil {
 		s.Fatal("Failed to backup login data: ", err)
 	}
+	f.webauthnServer = u2fd.NewWebAuthnHTTPServer(ctx, s.DataFileSystem())
 	f.cleanup = func(ctx context.Context) error {
 		// Load back the origin login data after the test.
 		if err := hwseclocal.LoadLoginData(ctx, daemonController, backupPath, true /*includeTpm*/); err != nil {
@@ -899,7 +912,9 @@ func (f *backupFixtImpl) SetUp(ctx context.Context, s *testing.FixtState) interf
 		}
 		return nil
 	}
-	return nil
+	return backupFixture{
+		WebAuthnURL: f.webauthnServer.URL + "/webauthn.html",
+	}
 }
 
 // TearDown restores the login data backed up by SetUp
@@ -907,6 +922,7 @@ func (f *backupFixtImpl) TearDown(ctx context.Context, s *testing.FixtState) {
 	if err := f.cleanup(ctx); err != nil {
 		s.Fatal("Failed to cleanup: ", err)
 	}
+	f.webauthnServer.Close(ctx)
 }
 
 func (f *backupFixtImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
@@ -920,18 +936,22 @@ func (f *backupFixtImpl) Reset(ctx context.Context) error {
 }
 
 type crossVersionFixtImpl struct {
-	dataPrefix string
-	useCurrent bool
-	dataPath   string
+	dataPrefix     string
+	useCurrent     bool
+	dataPath       string
+	webauthnServer *u2fd.WebAuthnHTTPServer
 }
 
 // CrossVersionLoginFixture contains the config list for the login data used in cross version testing.
 type CrossVersionLoginFixture struct {
-	ConfigList []util.CrossVersionLoginConfig
+	ConfigList  []util.CrossVersionLoginConfig
+	WebAuthnURL string
 }
 
 // SetUp loads the data of the milestone specified in the crossVersionFixtImpl.dataPrefix
 func (f *crossVersionFixtImpl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	parentData := s.ParentValue().(backupFixture)
+
 	cmdRunner := hwseclocal.NewCmdRunner()
 	helper, err := hwseclocal.NewHelper(cmdRunner)
 	if err != nil {
@@ -952,7 +972,7 @@ func (f *crossVersionFixtImpl) SetUp(ctx context.Context, s *testing.FixtState) 
 		dataPath = filepath.Join(tmpDir, "data.tar.gz")
 		configPath = filepath.Join(tmpDir, "config.json")
 		s.Log("Preparing login data of current version")
-		if err := util.PrepareCrossVersionLoginData(ctx, s.Logf, cryptohome, daemonController, dataPath, configPath); err != nil {
+		if err := util.PrepareCrossVersionLoginData(ctx, s.Logf, cryptohome, daemonController, dataPath, configPath, parentData.WebAuthnURL); err != nil {
 			s.Fatal("Failed to prepare login data for current version: ", err)
 		}
 	} else {
@@ -978,7 +998,8 @@ func (f *crossVersionFixtImpl) SetUp(ctx context.Context, s *testing.FixtState) 
 
 	f.dataPath = dataPath
 	return &CrossVersionLoginFixture{
-		ConfigList: configList,
+		ConfigList:  configList,
+		WebAuthnURL: parentData.WebAuthnURL,
 	}
 }
 

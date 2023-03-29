@@ -1,0 +1,1 @@
+../../u2fd/data/bundle.js
