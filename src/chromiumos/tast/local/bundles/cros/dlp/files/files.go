@@ -144,7 +144,7 @@ func IsFileManaged(ctx context.Context, ui *uiauto.Context, tconn *chrome.TestCo
 // VerifyWarning verifies expected status of a DLP warning dialog.
 // If shouldAppear is true, waits for the warning to appear, otherwise ensures it doesn't appear.
 func VerifyWarning(ctx context.Context, ui *uiauto.Context, shouldAppear bool) error {
-	dialogNode := nodewith.Name("Copy confidential file?")
+	dialogNode := nodewith.NameContaining("confidential file?")
 	if shouldAppear {
 		if err := ui.WaitUntilExists(dialogNode)(ctx); err != nil {
 			return errors.Wrap(err, "failed to wait for DLP warning")
