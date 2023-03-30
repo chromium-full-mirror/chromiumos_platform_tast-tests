@@ -126,20 +126,6 @@ func NewFirmwareTest(ctx context.Context, dut *rpcdut.RPCDUT, servoSpec, outDir 
 		return nil, err
 	}
 
-	// TODO(b/183123775): Remove when bug is fixed.
-	// Turning off a display can kill USB on some platforms (dragonair).
-	// Ask powerd to keep the display on and prevent it from screen dimming.
-	needDisableScreenDimming, err := DUTModelIsInList(ctx, t.dut, []string{"dragonair", "dratini"})
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to determine if disabling screen dimming is needed")
-	}
-	if needDisableScreenDimming {
-		testing.ContextLog(ctx, "Asking powerd to disable screen dimming and keep the display on")
-		if err := t.dut.Conn().CommandContext(ctx, "set_power_policy", "--dim_wake_lock=1", "--screen_wake_lock=1").Run(ssh.DumpLogOnError); err != nil {
-			return nil, errors.Wrap(err, "failed to disable screen dimming")
-		}
-	}
-
 	t.cleanupTime = timeForCleanup
 
 	if t.needsRebootAfterFlashing {
