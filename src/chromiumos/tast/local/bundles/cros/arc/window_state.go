@@ -16,7 +16,6 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
 )
 
 // windowStateTest is used to represent a single window state transition test.
@@ -84,20 +83,6 @@ func init() {
 				1,     // Num test iterations.
 				clamshellWindowStateTests,
 			},
-			ExtraHardwareDeps: hwdep.D(
-				// b/271155943: clamshell_vm is flaky on the eve board.
-				hwdep.SkipOnModel("eve"),
-			),
-			ExtraSoftwareDeps: []string{"android_vm"},
-			Timeout:           4 * time.Minute,
-		}, {
-			Name: "clamshell_vm_informational",
-			Val: windowStateParams{
-				false, // Clamshell mode.
-				1,     // Num test iterations.
-				clamshellWindowStateTests,
-			},
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("eve")),
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Timeout:           4 * time.Minute,
 		}, {
