@@ -71,6 +71,7 @@ var mergeThresholdSize480Models = []string{
 	"nereid",
 	"nirwen",
 	"nivviks",
+	"omnigul",
 	"osiris",
 	"primus",
 	"redrix",
