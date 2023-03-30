@@ -26,7 +26,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         HotseatDrag,
-		LacrosStatus: testing.LacrosVariantUnknown,
+		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures the presentation time of dragging the hotseat in tablet mode",
 		Contacts: []string{
 			"cros-system-ui-eng@google.com",
