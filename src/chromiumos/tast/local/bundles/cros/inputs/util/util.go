@@ -15,6 +15,7 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/inputs/data"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/ime"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
@@ -22,6 +23,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/chrome/useractions"
 	"chromiumos/tast/local/uidetection"
+	"chromiumos/tast/local/vdi/apps"
 	"chromiumos/tast/testing"
 )
 
@@ -307,4 +309,25 @@ func VerifyTextWithUIDetection(tconn *chrome.TestConn, finder *nodewith.Finder, 
 		return ud.WaitUntilExists(uidetection.Word(expectedText, uidetection.DisableApproxMatch(true)).WithinA11yNode(finder))
 	}
 	return ud.WaitUntilExists(uidetection.Word(expectedText, uidetection.DisableApproxMatch(true)).First())
+}
+
+// OpenRemoteApplicationInCitirx opens a remote application in citirx workspace.
+func OpenRemoteApplicationInCitirx(ctx context.Context, s *testing.FixtTestState, tconn *chrome.TestConn, vdi apps.VDIInt, uidetector *uidetection.Context, appName, textToLookForWhenLaunched string) {
+	isOpened := func(ctx context.Context) error {
+		// Wait for actual application window to open.
+		if _, err := ash.WaitForAnyWindowWithTitle(ctx, tconn, appName); err != nil {
+			return errors.Wrap(err, "failed to find remote app window")
+		}
+
+		return uidetector.WaitUntilExists(uidetection.TextBlock(strings.Split(textToLookForWhenLaunched, " ")))(ctx)
+	}
+
+	if err := vdi.SearchAndOpenApplication(ctx, appName, isOpened)(ctx); err != nil {
+		s.Fatal("Failed open remote app: ", err)
+	}
+
+	var textBlocks = strings.Split(textToLookForWhenLaunched, " ")
+	if err := uidetector.LeftClick(uidetection.TextBlock(textBlocks))(ctx); err != nil {
+		s.Fatal("Failed to click on launched window: ", err)
+	}
 }

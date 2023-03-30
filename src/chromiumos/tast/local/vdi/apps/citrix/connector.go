@@ -101,7 +101,7 @@ func (c *Connector) Logout(ctx context.Context) error {
 		c.detector.WithTimeout(uiDetectionTimeout).WaitUntilExists(uidetection.TextBlock([]string{"Citrix", "Workspace"})),
 		c.detector.LeftClick(uidetection.TextBlock([]string{"Citrix", "Workspace"})), // By clicking, focus on the first UI element.
 		c.detector.LeftClick(uidetection.Word("C").ExactMatch()),                     // Click on the user icon.
-		c.detector.LeftClick(uidetection.TextBlock([]string{"Log", "Out"})),
+		c.detector.WithScreenshotResizing().LeftClick(uidetection.TextBlock([]string{"Log", "Out"})),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to log out")
 	}
