@@ -43,6 +43,7 @@ enum Mode {
 
 message ActionRequest {
   BrowserType browser_type = 1;
+  string dataPath = 2;
 }
 
 message TestCopyFileToDriveRequest {
@@ -60,6 +61,7 @@ service DataLeakPreventionService {
   rpc Print(ActionRequest) returns (google.protobuf.Empty) {}
   rpc Screenshot(ActionRequest) returns (google.protobuf.Empty) {}
   rpc Screenshare(ActionRequest) returns (google.protobuf.Empty) {}
+  rpc FilesDriveCopyPaste(ActionRequest) returns (google.protobuf.Empty) {}
   rpc TestCopyFileToDrive(TestCopyFileToDriveRequest) returns (google.protobuf.Empty) {}
 }
 

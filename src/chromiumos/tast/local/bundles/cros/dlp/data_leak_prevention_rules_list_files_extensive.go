@@ -7,6 +7,7 @@ package dlp
 import (
 	"context"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"time"
@@ -229,7 +230,11 @@ func DataLeakPreventionRulesListFilesExtensive(ctx context.Context, s *testing.S
 }
 
 func testDownload(ctx context.Context, ui *uiauto.Context, tconn *chrome.TestConn, br *browser.Browser, dataFS http.FileSystem) error {
-	if err := files.InitiateDownload(ctx, br, dataFS); err != nil {
+	// Setup test HTTP server.
+	server := httptest.NewServer(http.FileServer(dataFS))
+	defer server.Close()
+
+	if err := files.InitiateDownload(ctx, br, server); err != nil {
 		return errors.Wrap(err, "failed to initiate download")
 	}
 

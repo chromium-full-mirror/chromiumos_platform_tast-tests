@@ -56,11 +56,7 @@ func ClearDownloads(ctx context.Context, cr *chrome.Chrome) error {
 
 // InitiateDownload initiates the file download from a local server.
 // The caller should choose the save location and verify the download was successful, as needed.
-func InitiateDownload(ctx context.Context, br *browser.Browser, dataFS http.FileSystem) error {
-	// Setup test HTTP server.
-	server := httptest.NewServer(http.FileServer(dataFS))
-	defer server.Close()
-
+func InitiateDownload(ctx context.Context, br *browser.Browser, server *httptest.Server) error {
 	// Open the local page with the file to download.
 	conn, err := br.NewConn(ctx, server.URL+DownloadPage)
 	if err != nil {
@@ -84,7 +80,11 @@ func DownloadFile(ctx context.Context, tconn *chrome.TestConn, br *browser.Brows
 	ctx, cancel := ctxutil.Shorten(ctx, 15*time.Second)
 	defer cancel()
 
-	if err := InitiateDownload(ctx, br, dataFS); err != nil {
+	// Setup test HTTP server.
+	server := httptest.NewServer(http.FileServer(dataFS))
+	defer server.Close()
+
+	if err := InitiateDownload(ctx, br, server); err != nil {
 		return errors.Wrap(err, "failed to initiate download")
 	}
 

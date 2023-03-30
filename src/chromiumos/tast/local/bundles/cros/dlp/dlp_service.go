@@ -426,6 +426,55 @@ func (service *DataLeakPreventionService) Screenshare(ctx context.Context, req *
 
 }
 
+// FilesDriveCopyPaste downloads a restricted file, and then copy-pastes it to Google Drive.
+func (service *DataLeakPreventionService) FilesDriveCopyPaste(ctx context.Context, req *pb.ActionRequest) (_ *empty.Empty, retErr error) {
+	_, err := drivefs.NewDriveFs(ctx, service.chrome.NormalizedUser())
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to start DriveFS")
+	}
+
+	br, closeBrowser, err := setupBrowser(ctx, service.chrome, req.BrowserType)
+	if err != nil {
+		return &empty.Empty{}, errors.Wrap(err, "error while setting up the browser")
+	}
+	defer closeBrowser(ctx)
+
+	tconn, err := service.chrome.TestAPIConn(ctx)
+	if err != nil {
+		return &empty.Empty{}, errors.Wrap(err, "failed to connect to test API")
+	}
+
+	// Download the file.
+	if err := files.DownloadFile(ctx, tconn, br, http.Dir(req.DataPath)); err != nil {
+		return &empty.Empty{}, errors.Wrap(err, "failed to download file")
+	}
+
+	// Open the Files app.
+	filesApp, err := filesapp.Launch(ctx, tconn)
+	if err != nil {
+		return &empty.Empty{}, errors.Wrap(err, "failed to launch the Files App")
+	}
+	defer filesApp.Close(ctx)
+
+	keyboard, err := input.VirtualKeyboard(ctx)
+	if err != nil {
+		return &empty.Empty{}, errors.Wrap(err, "failed to get keyboard")
+	}
+	defer keyboard.Close()
+
+	if err := uiauto.Combine("copy pasting managed file",
+		filesApp.OpenDownloads(),
+		filesApp.WaitForFile(files.DlFileName),
+		filesApp.CopyFileToClipboard(files.DlFileName),
+		filesApp.OpenDrive(),
+		filesApp.PasteFileFromClipboard(keyboard),
+	)(ctx); err != nil {
+		return &empty.Empty{}, errors.Wrap(err, "failed to copy and paste managed file")
+	}
+
+	return &empty.Empty{}, nil
+}
+
 // TestCopyFileToDrive tests copying a DLP restricted file to Google Drive.
 func (service *DataLeakPreventionService) TestCopyFileToDrive(ctx context.Context, req *pb.TestCopyFileToDriveRequest) (_ *empty.Empty, retErr error) {
 	_, err := drivefs.NewDriveFs(ctx, service.chrome.NormalizedUser())

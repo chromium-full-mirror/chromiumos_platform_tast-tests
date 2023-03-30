@@ -6,6 +6,7 @@ package policy
 
 import (
 	"context"
+	"path/filepath"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -16,6 +17,7 @@ import (
 	"chromiumos/tast/remote/reportingutil"
 	"chromiumos/tast/rpc"
 	dlp "chromiumos/tast/services/cros/dlp"
+	"chromiumos/tast/ssh/linuxssh"
 	"chromiumos/tast/testing"
 )
 
@@ -138,6 +140,28 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"lacros"},
 			},
+			{
+				Name: "ash_files",
+				Val: testParams{
+					Username:    restrictionReportReportingEnabledUsername,
+					Password:    restrictionReportReportingEnabledPassword,
+					BrowserType: dlp.BrowserType_ASH,
+					Action:      dlputil.Files,
+				},
+			},
+			{
+				Name: "lacros_files",
+				Val: testParams{
+					Username:    restrictionReportReportingEnabledUsername,
+					Password:    restrictionReportReportingEnabledPassword,
+					BrowserType: dlp.BrowserType_LACROS,
+					Action:      dlputil.Files,
+				},
+			},
+		},
+		Data: []string{
+			dlputil.DataFile,
+			dlputil.HTMLFile,
 		},
 	})
 }
@@ -213,6 +237,31 @@ func DlpReporting(ctx context.Context, s *testing.State) {
 		service.Screenshare(ctx, &dlp.ActionRequest{
 			BrowserType: params.BrowserType,
 		})
+	case dlputil.Files:
+		// Create a temporary directory on the DUT.
+		d, err := service.CreateTempDir(ctx, &empty.Empty{})
+		if err != nil {
+			s.Fatal("Failed to create a temporary directory: ", err)
+		}
+
+		// Push data files to the DUT and make sure they're deleted after the test.
+		dut := s.DUT()
+		defer service.RemoveTempDir(ctx, &dlp.RemoveTempDirRequest{
+			Path: d.Path,
+		})
+		if _, err := linuxssh.PutFiles(ctx, dut.Conn(), map[string]string{
+			s.DataPath(dlputil.HTMLFile): filepath.Join(d.Path, dlputil.RemoteHTMLFile),
+			s.DataPath(dlputil.DataFile): filepath.Join(d.Path, dlputil.RemoteDataFile),
+		}, linuxssh.DereferenceSymlinks); err != nil {
+			s.Fatal("Failed to send data to remote: ", err)
+		}
+
+		if _, err := service.FilesDriveCopyPaste(ctx, &dlp.ActionRequest{
+			BrowserType: params.BrowserType,
+			DataPath:    d.Path,
+		}); err != nil {
+			s.Fatal("Failed to test FilesCopyPaste: ", err)
+		}
 	}
 
 	s.Log("Waiting 60 seconds to make sure events reach the server and are processed")
