@@ -37,6 +37,15 @@ func ARCVPNDisabled(ctx context.Context, s *testing.State) {
 
 	a := s.FixtValue().(*arc.PreData).ARC
 
+	if err := arcvpn.SetARCVPNEnabled(ctx, a, false); err != nil {
+		s.Fatal("Failed to disable ARC VPN: ", err)
+	}
+	defer func() {
+		if err := arcvpn.SetARCVPNEnabled(ctx, a, true); err != nil {
+			s.Fatal("Failed to enable ARC VPN: ", err)
+		}
+	}()
+
 	conn, err := arcvpn.SetUpHostVPN(ctx, vpn.TypeL2TPIPsec)
 	if err != nil {
 		s.Fatal("Failed to setup host VPN: ", err)

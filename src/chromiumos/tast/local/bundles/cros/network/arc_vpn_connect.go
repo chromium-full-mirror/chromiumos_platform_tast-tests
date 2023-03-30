@@ -49,14 +49,6 @@ func ARCVPNConnect(ctx context.Context, s *testing.State) {
 
 	// Verify ArcHostVpnService can connect and disconnect properly following the host VPN
 	// lifecycle events.
-	if err := arcvpn.SetARCVPNEnabled(ctx, a, true); err != nil {
-		s.Fatal("Failed to enable ARC VPN: ", err)
-	}
-	defer func() {
-		if err := arcvpn.SetARCVPNEnabled(ctx, a, false); err != nil {
-			s.Fatal("Failed to disable ARC VPN: ", err)
-		}
-	}()
 	if err := conn.Connect(ctx); err != nil {
 		s.Fatal("Failed to connect to VPN server: ", err)
 	}

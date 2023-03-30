@@ -43,15 +43,6 @@ type arcVPNConfigsTestCase struct {
 func ARCVPNConfigs(ctx context.Context, s *testing.State) {
 	a := s.FixtValue().(*arc.PreData).ARC
 
-	if err := arcvpn.SetARCVPNEnabled(ctx, a, true); err != nil {
-		s.Fatal("Failed to enable ARC VPN: ", err)
-	}
-	defer func() {
-		if err := arcvpn.SetARCVPNEnabled(ctx, a, false); err != nil {
-			s.Fatal("Failed to disable ARC VPN: ", err)
-		}
-	}()
-
 	// Connect with our first config and verify values.
 	if err := verifyVPNWithTestCase(ctx, a, arcVPNConfigsTestCase{
 		metered:       false,

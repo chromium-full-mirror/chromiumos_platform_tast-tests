@@ -54,14 +54,6 @@ func ARCVPNCrash(ctx context.Context, s *testing.State) {
 
 	// Check that if ArcHostVpnService is stopped unexpectedly (simulating some sort
 	// of error), the host VPN is still reachable from within ARC.
-	if err := arcvpn.SetARCVPNEnabled(ctx, a, true); err != nil {
-		s.Fatal("Failed to enable ARC VPN: ", err)
-	}
-	defer func() {
-		if err := arcvpn.SetARCVPNEnabled(ctx, a, false); err != nil {
-			s.Fatal("Failed to disable ARC VPN: ", err)
-		}
-	}()
 	if err := conn.Connect(ctx); err != nil {
 		s.Fatal("Failed to connect to VPN server: ", err)
 	}

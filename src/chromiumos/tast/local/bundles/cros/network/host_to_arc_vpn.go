@@ -48,15 +48,6 @@ func HostToARCVPN(ctx context.Context, s *testing.State) {
 			s.Error("Failed to clean up host VPN: ", err)
 		}
 	}()
-
-	if err := arcvpn.SetARCVPNEnabled(ctx, a, true); err != nil {
-		s.Fatal("Failed to enable ARC VPN: ", err)
-	}
-	defer func() {
-		if err := arcvpn.SetARCVPNEnabled(cleanupCtx, a, false); err != nil {
-			s.Fatal("Failed to disable ARC VPN: ", err)
-		}
-	}()
 	if err := conn.Connect(ctx); err != nil {
 		s.Fatal("Failed to connect to VPN server: ", err)
 	}
