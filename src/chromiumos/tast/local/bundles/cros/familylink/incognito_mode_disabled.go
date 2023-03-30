@@ -37,8 +37,9 @@ func init() {
 		Params: []testing.Param{{
 			Fixture: "familyLinkUnicornLogin",
 		}, {
-			Name:    "lacros",
-			Fixture: "familyLinkUnicornLoginWithLacros",
+			Name:              "lacros",
+			ExtraSoftwareDeps: []string{"lacros"},
+			Fixture:           "familyLinkUnicornLoginWithLacros",
 		}},
 	})
 }

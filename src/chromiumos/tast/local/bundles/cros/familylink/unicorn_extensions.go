@@ -43,9 +43,10 @@ func init() {
 			Val:     browser.TypeAsh,
 			Fixture: "familyLinkUnicornLogin",
 		}, {
-			Name:    "lacros",
-			Val:     browser.TypeLacros,
-			Fixture: "familyLinkUnicornLoginWithLacros",
+			Name:              "lacros",
+			ExtraSoftwareDeps: []string{"lacros"},
+			Val:               browser.TypeLacros,
+			Fixture:           "familyLinkUnicornLoginWithLacros",
 		}},
 	})
 }
