@@ -123,7 +123,8 @@ func LaunchWithDeviceEphemeralUsersEnabled(ctx context.Context, s *testing.State
 	if param.IsEphemeral {
 		expectedMountType = cryptohome.Ephemeral
 	}
-	if err := cryptohome.WaitForUserMountAndValidateType(ctx, kioskmode.KioskAppUserID, expectedMountType); err != nil {
+	userID := kioskmode.DeviceLocalAccountUserID(&kioskmode.KioskAppAccountInfo)
+	if err := cryptohome.WaitForUserMountAndValidateType(ctx, userID, expectedMountType); err != nil {
 		s.Fatal("Failed to wait for user mount and validate type: : ", err)
 	}
 

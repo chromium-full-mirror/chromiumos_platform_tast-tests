@@ -227,7 +227,7 @@ def new_embedded(go_type):
   """
   return EMBEDDED_TEMPLATE.format(go_type=go_type)
 
-# Converstion of JSONSchema types to Go types.
+# Conversion of JSONSchema types to Go types.
 TYPES_JSON_TO_GO = {
     'string': 'string',
     'integer': 'int',
@@ -388,14 +388,14 @@ def parse_object(name, schema, refs, references_only):
     members.append(new_property(key, key_type))
     code += key_code
 
-  # If there are still addtionalProperties, add an embedded struct member.
+  # If there are still additionalProperties, add an embedded struct member.
   if 'additionalProperties' in schema:
     add_type, add_code = parse_schema(
         name+'Add', schema['additionalProperties'], refs, references_only)
     members.append(new_embedded(add_type))
     code += add_code
 
-  # paternProperties can contain reference values. If we're evaluating
+  # patternProperties can contain reference values. If we're evaluating
   # references, continue parsing this.
   if 'patternProperties' in schema and references_only:
     pattern_props = schema['patternProperties']
@@ -590,7 +590,16 @@ const (
 \tAccountTypeKioskApp // 1
 \tAccountTypeKioskAndroidApp // 2
 \tAccountTypeSAMLPublicSession // 3
-\tAccountTypeKioskWebApp // 4
+\tAccountTypeWebKioskApp // 4
+)
+
+type EphemeralMode int
+
+const (
+\tEphemeralModeUnset EphemeralMode = iota // 0
+\tEphemeralModeFollowDeviceWidePolicy // 1
+\tEphemeralModeDisable // 2
+\tEphemeralModeEnable // 3
 )
 
 type AndroidKioskAppInfo struct {
@@ -616,6 +625,7 @@ type DeviceLocalAccountInfo struct {
 \tAndroidKioskAppInfo *AndroidKioskAppInfo `json:"android_kiosk_app,omitempty"`
 \tKioskAppInfo\t*KioskAppInfo\t`json:"kiosk_app,omitempty"`
 \tWebKioskAppInfo\t*WebKioskAppInfo\t`json:"web_kiosk_app,omitempty"`
+\tEphemeralMode\t*EphemeralMode\t`json:"ephemeral_mode,omitempty"`
 }
 """
   return attr_type, attr_structs

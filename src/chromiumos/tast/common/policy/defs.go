@@ -3118,7 +3118,16 @@ const (
 	AccountTypeKioskApp                             // 1
 	AccountTypeKioskAndroidApp                      // 2
 	AccountTypeSAMLPublicSession                    // 3
-	AccountTypeKioskWebApp                          // 4
+	AccountTypeWebKioskApp                          // 4
+)
+
+type EphemeralMode int
+
+const (
+	EphemeralModeUnset                  EphemeralMode = iota // 0
+	EphemeralModeFollowDeviceWidePolicy                      // 1
+	EphemeralModeDisable                                     // 2
+	EphemeralModeEnable                                      // 3
 )
 
 type AndroidKioskAppInfo struct {
@@ -3144,6 +3153,7 @@ type DeviceLocalAccountInfo struct {
 	AndroidKioskAppInfo *AndroidKioskAppInfo `json:"android_kiosk_app,omitempty"`
 	KioskAppInfo        *KioskAppInfo        `json:"kiosk_app,omitempty"`
 	WebKioskAppInfo     *WebKioskAppInfo     `json:"web_kiosk_app,omitempty"`
+	EphemeralMode       *EphemeralMode       `json:"ephemeral_mode,omitempty"`
 }
 
 func (p *DeviceLocalAccounts) Name() string          { return "DeviceLocalAccounts" }
@@ -25144,7 +25154,6 @@ func (p *ClientSidePhishingProtectionAllowed) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1089. UserAvatarCustomizationSelectorsEnabled
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type UserAvatarCustomizationSelectorsEnabled struct {
 	Stat Status
@@ -26936,6 +26945,29 @@ func newByName(name string) (Policy, error) {
 // Reference values (used via '$ref' in JSON Schema).
 // ****************************************************************************
 
+type RefDayPercentagePair struct {
+	Days       int `json:"days"`
+	Percentage int `json:"percentage"`
+}
+
+type RefDisallowedTimeInterval struct {
+	DayOfWeek string `json:"day_of_week"`
+	Hours     int    `json:"hours"`
+	Minutes   int    `json:"minutes"`
+}
+
+type RefPowerManagementDelays struct {
+	Delays     *RefPowerManagementDelaysDelays `json:"Delays"`
+	IdleAction string                          `json:"IdleAction"`
+}
+
+type RefPowerManagementDelaysDelays struct {
+	Idle        int `json:"Idle"`
+	IdleWarning int `json:"IdleWarning"`
+	ScreenDim   int `json:"ScreenDim"`
+	ScreenOff   int `json:"ScreenOff"`
+}
+
 type RefUsbDeviceIdInclusive struct {
 	ProductId int `json:"product_id"`
 	VendorId  int `json:"vendor_id"`
@@ -26959,18 +26991,6 @@ type Reffile_transfer_source_destination_schema struct {
 	FileSystemType string `json:"file_system_type"`
 }
 
-type RefBookmarkType struct {
-	Children     []*RefBookmarkType `json:"children,omitempty"`
-	Name         string             `json:"name"`
-	ToplevelName string             `json:"toplevel_name"`
-	Url          string             `json:"url"`
-}
-
-type RefUsbDeviceId struct {
-	ProductId int `json:"product_id"`
-	VendorId  int `json:"vendor_id"`
-}
-
 type RefWeeklyTimeIntervals struct {
 	End   *RefWeeklyTime               `json:"end"`
 	Start *RefWeeklyTimeIntervalsStart `json:"start"`
@@ -26984,6 +27004,18 @@ type RefWeeklyTimeIntervalsStart struct {
 type RefWeeklyTime struct {
 	DayOfWeek string `json:"day_of_week"`
 	Time      int    `json:"time"`
+}
+
+type RefBookmarkType struct {
+	Children     []*RefBookmarkType `json:"children,omitempty"`
+	Name         string             `json:"name"`
+	ToplevelName string             `json:"toplevel_name"`
+	Url          string             `json:"url"`
+}
+
+type RefUsbDeviceId struct {
+	ProductId int `json:"product_id"`
+	VendorId  int `json:"vendor_id"`
 }
 
 type RefDomainFiletypePair struct {
@@ -27002,17 +27034,6 @@ type RefDeviceLoginScreenPowerSettingsDelays struct {
 	ScreenOff int `json:"ScreenOff"`
 }
 
-type RefDisallowedTimeInterval struct {
-	DayOfWeek string `json:"day_of_week"`
-	Hours     int    `json:"hours"`
-	Minutes   int    `json:"minutes"`
-}
-
-type RefDayPercentagePair struct {
-	Days       int `json:"days"`
-	Percentage int `json:"percentage"`
-}
-
 type RefTimeUsageLimitEntry struct {
 	LastUpdatedMillis string `json:"last_updated_millis"`
 	UsageQuotaMins    int    `json:"usage_quota_mins"`
@@ -27027,18 +27048,6 @@ type RefConfig struct {
 	AccessCodeTtl       int    `json:"access_code_ttl"`
 	ClockDriftTolerance int    `json:"clock_drift_tolerance"`
 	SharedSecret        string `json:"shared_secret"`
-}
-
-type RefPowerManagementDelays struct {
-	Delays     *RefPowerManagementDelaysDelays `json:"Delays"`
-	IdleAction string                          `json:"IdleAction"`
-}
-
-type RefPowerManagementDelaysDelays struct {
-	Idle        int `json:"Idle"`
-	IdleWarning int `json:"IdleWarning"`
-	ScreenDim   int `json:"ScreenDim"`
-	ScreenOff   int `json:"ScreenOff"`
 }
 
 // ****************************************************************************

@@ -163,6 +163,11 @@ func setDeviceLocalAccountsProto(m *protoreflect.Message, policyName, fieldName 
 			webKioskAppProto.IconUrl = v.WebKioskAppInfo.IconUrl
 			deviceLocalAccountProto.WebKioskApp = &webKioskAppProto
 		}
+
+		if v.EphemeralMode != nil {
+			deviceLocalAccountProto.EphemeralMode = &[]empb.DeviceLocalAccountInfoProto_EphemeralMode{empb.DeviceLocalAccountInfoProto_EphemeralMode(*v.EphemeralMode)}[0]
+		}
+
 		accounts.Append(protoreflect.ValueOfMessage(deviceLocalAccountProto.ProtoReflect()))
 	}
 

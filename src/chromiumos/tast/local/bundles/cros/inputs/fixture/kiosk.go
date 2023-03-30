@@ -141,7 +141,7 @@ func (k *inputsKioskFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 
 	// Creating a kiosk mode configuration that will launch an app that points to the e14s-test page.
 	webKioskAccountID := "arbitrary_id_web_kiosk_1@managedchrome.com"
-	webKioskAccountType := policy.AccountTypeKioskWebApp
+	webKioskAccountType := policy.AccountTypeWebKioskApp
 	webKioskTitle := "TastKioskModeSetByPolicyE14sPage"
 	webKioskURL := k.testserver.URL + "/e14s-test"
 	webKioskPolicy := policy.DeviceLocalAccountInfo{

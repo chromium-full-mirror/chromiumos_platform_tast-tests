@@ -7,22 +7,11 @@
 package kioskmode
 
 import (
-	"bufio"
-	"bytes"
 	"context"
-	"encoding/binary"
 	"encoding/hex"
-	"fmt"
-	"image"
-	"image/color"
-	"image/draw"
-	"image/png"
-	"io"
 	"io/ioutil"
-	"net/http"
 	"net/http/httptest"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
@@ -43,24 +32,16 @@ import (
 )
 
 var (
-	// WebKioskAccountID identifier of the web Kiosk application.
-	WebKioskAccountID   = "arbitrary_id_web_kiosk_1@managedchrome.com"
-	webKioskAccountType = policy.AccountTypeKioskWebApp
-	// WebKioskTitle is the name of the web Kiosk app which shows up in the Apps
-	// menu on the sign-in screen.
-	WebKioskTitle = "Web Kiosk Placeholder Title"
-
 	// KioskAppAccountID identifier of the Kiosk application.
 	KioskAppAccountID   = "arbitrary_id_store_app_2@managedchrome.com"
 	kioskAppAccountType = policy.AccountTypeKioskApp
 	// KioskAppID pointing to the Printtest app - not listed in the WebStore.
 	KioskAppID = "aajgmlihcokkalfjbangebcffdoanjfo"
-	// KioskAppUserID is the generated DeviceLocalAccount.user_id for KioskAppAccountID
-	KioskAppUserID = hex.EncodeToString([]byte(KioskAppAccountID)) + "@kiosk-apps.device-local.localhost"
 	// KioskAppBtnName is the name of the Printest app which shows up in the Apps
 	// menu on the sign-in screen.
 	KioskAppBtnName = "Simple Printest"
-	kioskAppPolicy  = policy.DeviceLocalAccountInfo{
+	// KioskAppAccountInfo can be included in DeviceLocalAccounts to enable KioskApp
+	KioskAppAccountInfo = policy.DeviceLocalAccountInfo{
 		AccountID:   &KioskAppAccountID,
 		AccountType: &kioskAppAccountType,
 		KioskAppInfo: &policy.KioskAppInfo{
@@ -208,41 +189,28 @@ func New(ctx context.Context, fdms *fakedms.FakeDMS, opts ...Option) (k *Kiosk, 
 
 	var deviceLocalAccounts *policy.DeviceLocalAccounts
 	var httpServer *httptest.Server
+
 	if cfg.m.UseDefaultLocalAccounts {
 		if cfg.m.DeviceLocalAccounts != nil {
 			return nil, nil, errors.New("invalid config: DeviceLocalAccounts and UseDefaultLocalAccounts should not be used at the same time")
 		}
 
-		// Start local http server for web Kiosk.
-		httpServer = httptest.NewServer(http.HandlerFunc(webKioskServerHandler))
-		testing.ContextLog(ctx, "Serving test PWA at "+httpServer.URL)
-		iconURL := httpServer.URL + "/icon.png"
-
+		httpServer = NewWebKioskAppServer(ctx)
+		webKioskAppAccountInfo := WebKioskAppAccountInfo(httpServer.URL, WebKioskAccountID)
 		deviceLocalAccounts = &policy.DeviceLocalAccounts{
-			Val: []policy.DeviceLocalAccountInfo{
-				kioskAppPolicy,
-				{
-					AccountID:   &WebKioskAccountID,
-					AccountType: &webKioskAccountType,
-					WebKioskAppInfo: &policy.WebKioskAppInfo{
-						Url:     &httpServer.URL,
-						Title:   &WebKioskTitle,
-						IconUrl: &iconURL,
-					}},
-			},
-		}
+			Val: []policy.DeviceLocalAccountInfo{KioskAppAccountInfo, webKioskAppAccountInfo}}
+
+		// Close local http server if Kiosk fails to start.
+		defer func() {
+			if httpServer != nil && k == nil {
+				httpServer.Close()
+			}
+		}()
 	} else if cfg.m.DeviceLocalAccounts != nil {
 		deviceLocalAccounts = cfg.m.DeviceLocalAccounts
 	} else {
 		return nil, nil, errors.Wrap(err, "local device accounts were not set")
 	}
-
-	// Close local http server if Kiosk fails to start.
-	defer func() {
-		if httpServer != nil && k == nil {
-			httpServer.Close()
-		}
-	}()
 
 	err = func(ctx context.Context) error {
 		testing.ContextLog(ctx, "Kiosk mode: Starting Chrome to set Kiosk policies")
@@ -519,79 +487,6 @@ func (k *Kiosk) CancelKioskLaunch(ctx context.Context, opts ...chrome.Option) (*
 	return cr, nil
 }
 
-// webKioskServerHandler handles http requests sent to test web Kiosk server.
-func webKioskServerHandler(w http.ResponseWriter, r *http.Request) {
-	const (
-		contentHTMLFormat = `
-<!DOCTYPE html>
-<html>
-    <head>
-      <title id="title">Kiosk Test PWA page</title>
-      <link rel="manifest" href="manifest.webmanifest">
-      <link rel="icon" type="image/png" href="icon.png">
-    </head>
-    <body>
-        <h1>Test PWA for Web Kiosk</h1>
-        <p>Path: %s</p>
-    </body>
-</html>
-`
-		manifestJs = `
-{
-  "description": "Kiosk Test PWA description",
-  "display": "standalone",
-  "icons":[{"sizes":"144x144","src":"/icon.png","type":"image/png"}],
-  "id":"/",
-  "name":"Web Kiosk Test PWA",
-  "scope":"/",
-  "short_name":"Kiosk Test",
-  "start_url":"/start",
-  "theme_color":"#000000"
-}
-`
-	)
-	if r.Method != http.MethodGet {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-
-	// Serve PWA manifest JSON.
-	if strings.Contains(r.URL.Path, "manifest.webmanifest") {
-		w.Header().Add("Content-Type", "application/manifest+json")
-		w.Header().Set("Content-Length", strconv.Itoa(binary.Size(manifestJs)))
-		w.WriteHeader(http.StatusOK)
-		io.WriteString(w, manifestJs)
-		return
-	}
-
-	// Serve a blank PNG image as app icon.
-	if strings.Contains(r.URL.Path, "icon.png") {
-		var pngData bytes.Buffer
-		pngWriter := bufio.NewWriter(&pngData)
-		icon := image.NewRGBA(image.Rectangle{Min: image.Point{}, Max: image.Point{X: 144, Y: 144}})
-		draw.Draw(icon, icon.Bounds(), &image.Uniform{C: color.Black}, image.Point{}, draw.Src)
-		if err := png.Encode(pngWriter, icon); err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Add("Content-Type", "image/png")
-		w.Header().Add("Content-Disposition", "attachment; filename=icon.png")
-		w.Header().Set("Content-Length", strconv.Itoa(pngData.Len()))
-		w.WriteHeader(http.StatusOK)
-		w.Write(pngData.Bytes())
-		return
-	}
-
-	// Serve a html with path in body for all other paths.
-	contentHTML := fmt.Sprintf(contentHTMLFormat, r.URL.Path)
-	w.Header().Add("Content-Type", "text/html")
-	w.Header().Set("Content-Length", strconv.Itoa(binary.Size(contentHTML)))
-	w.WriteHeader(http.StatusOK)
-	io.WriteString(w, contentHTML)
-	return
-}
-
 // WaitForSplashScreenShowing waits for the kiosk splash screen to show up as
 // identified by the cancelation message
 func (k *Kiosk) WaitForSplashScreenShowing() error {
@@ -610,4 +505,30 @@ func (k *Kiosk) WaitForSplashScreenShowing() error {
 // GetLocalAccounts fetches DeviceLocalAccounts policy
 func (k *Kiosk) GetLocalAccounts() *policy.DeviceLocalAccounts {
 	return k.localAccounts
+}
+
+// DeviceLocalAccountUserID calculates the user_id of a DeviceLocalAccount.
+// This code is replicated in several places; for example:
+// - chrome/browser/ash/policy/core/device_local_account.cc (GenerateDeviceLocalAccountUserId)
+// - src/platform2/libbrillo/policy/device_local_account_policy_util.cc
+func DeviceLocalAccountUserID(account *policy.DeviceLocalAccountInfo) string {
+	user, prefix := "", ""
+	if account.AccountID != nil {
+		user = hex.EncodeToString([]byte(*account.AccountID))
+	}
+	if account.AccountType != nil {
+		switch *account.AccountType {
+		case policy.AccountTypePublicSession:
+			prefix = "public-accounts"
+		case policy.AccountTypeKioskApp:
+			prefix = "kiosk-apps"
+		case policy.AccountTypeKioskAndroidApp:
+			prefix = "arc-kiosk-apps"
+		case policy.AccountTypeSAMLPublicSession:
+			prefix = "saml-public-accounts"
+		case policy.AccountTypeWebKioskApp:
+			prefix = "web-kiosk-apps"
+		}
+	}
+	return user + "@" + prefix + ".device-local.localhost"
 }
