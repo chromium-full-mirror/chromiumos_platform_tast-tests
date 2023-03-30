@@ -449,6 +449,11 @@ func (d *Device) ForceGMSCoreUpdate(ctx context.Context) error {
 	return d.SendIntentCommand(ctx, "android.intent.action.VIEW", "market://details?id=com.google.android.gms").Run(testexec.DumpLogOnError)
 }
 
+// ForceClosePlayStore closes the Play Store.
+func (d *Device) ForceClosePlayStore(ctx context.Context) error {
+	return d.ShellCommand(ctx, "am", "force-stop", "com.android.vending").Run(testexec.DumpLogOnError)
+}
+
 // GoogleAccount returns the first found Google account signed in to the Android device.
 func (d *Device) GoogleAccount(ctx context.Context) (string, error) {
 	accountInfo, err := d.ShellCommand(ctx, "sh", "-c", "dumpsys account all | grep Account").Output(testexec.DumpLogOnError)

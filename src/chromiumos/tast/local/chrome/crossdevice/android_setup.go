@@ -422,13 +422,10 @@ func ForceGMSCoreUpdate(ctx, cleanupCtx context.Context, device *adb.Device, out
 	if len(gmsVersions) < 2 {
 		testing.ContextLog(ctx, "Single GMSCore version detected, phone was recently factory restored. Attempting GMSCore update")
 		defer func() {
-			if err := device.DumpUIOnError(ctx, outDir, hasError); err != nil {
+			if err := device.DumpUIOnError(cleanupCtx, outDir, hasError); err != nil {
 				testing.ContextLog(cleanupCtx, "Failed to save UIAutomator dump: ", err)
 			}
 		}()
-		if err := device.ForceGMSCoreUpdate(ctx); err != nil {
-			return errors.Wrap(err, "failed to force a GMSCore update")
-		}
 		uiDevice, err := ui.NewDeviceWithRetry(ctx, device)
 		if err != nil {
 			return errors.Wrap(err, "failed to connect to the UI Automator server")
@@ -440,16 +437,36 @@ func ForceGMSCoreUpdate(ctx, cleanupCtx context.Context, device *adb.Device, out
 		// The UI locator for the "Update" button is sometimes different based on the device.
 		updateBtn1 := uiDevice.Object(ui.DescriptionContains("Update"))
 		updateBtn2 := uiDevice.Object(ui.TextContains("Update"), ui.ClassName("android.widget.Button"))
+
+		// Close and re-open the Play Store in the loop if we can't click the "Update" button.
+		// This is sometimes required due to dialogs that pop up and obscure the UI when an
+		// account has been recently added to the device.
+		reopen := true
 		if err := testing.Poll(ctx, func(context.Context) error {
-			if err := updateBtn1.Exists(ctx); err == nil { // button is present
+			if reopen {
+				if err := device.ForceGMSCoreUpdate(ctx); err != nil {
+					return errors.Wrap(err, "failed to force a GMSCore update")
+				}
+			}
+			defer func() {
+				if !reopen {
+					return
+				}
+				if err := device.ForceClosePlayStore(ctx); err != nil {
+					testing.ContextLog(ctx, "Failed to close Play Store")
+				}
+			}()
+			if err := updateBtn1.WaitForExists(ctx, 3*time.Second); err == nil { // button is present
 				if err := updateBtn1.Click(ctx); err != nil {
 					return errors.Wrap(err, "failed to click update button")
 				}
+				reopen = false
 			}
-			if err := updateBtn2.Exists(ctx); err == nil { // button is present
+			if err := updateBtn2.WaitForExists(ctx, 3*time.Second); err == nil { // button is present
 				if err := updateBtn2.Click(ctx); err != nil {
 					return errors.Wrap(err, "failed to click update button")
 				}
+				reopen = false
 			}
 			v, err := device.GMSCoreVersions(ctx)
 			if err != nil {
@@ -459,7 +476,7 @@ func ForceGMSCoreUpdate(ctx, cleanupCtx context.Context, device *adb.Device, out
 				return errors.New("GMSCore not yet updated")
 			}
 			return nil
-		}, nil); err != nil {
+		}, &testing.PollOptions{Interval: time.Second}); err != nil {
 			return errors.Wrap(err, "failed to update GMSCore away from the Android OS bundled version")
 		}
 	}
