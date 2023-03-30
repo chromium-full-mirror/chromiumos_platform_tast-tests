@@ -9,6 +9,7 @@ import (
 	"context"
 	"time"
 
+	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/accountmanager"
 	"chromiumos/tast/local/chrome"
@@ -38,7 +39,7 @@ func init() {
 		BugComponent: "b:1279804", // ChromeOS > Software > Commercial (Enterprise) > Identity > Account Manager
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
-		Pre:          chrome.LoggedIn(),
+		Fixture:      fixture.ChromeLoggedIn,
 		VarDeps: []string{
 			"accountmanager.username1",
 			"accountmanager.password1",
@@ -77,7 +78,7 @@ func SystemDialog(ctx context.Context, s *testing.State) {
 	username := s.RequiredVar(param.username)
 	password := s.RequiredVar(param.password)
 
-	cr := s.PreValue().(*chrome.Chrome)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	// Connect to Test API to use it with the UI library.
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
