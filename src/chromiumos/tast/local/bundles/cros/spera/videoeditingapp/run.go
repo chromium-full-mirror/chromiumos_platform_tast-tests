@@ -28,14 +28,16 @@ const (
 	weVideoTitle    = "WeVideo"
 	googleDocsTitle = "Google Docs"
 	clip1           = "Springtime Birds Migration Northern Parula Warbler 4K"
-	clip2           = "Hammock and Beach Chairs"
+	clip2           = "Hammock and Beach"
 	clipTime1       = "00:23:00"
-	clipTime2       = "00:04:00"
+	clipTime2       = "00:22:00"
 	videoTrack      = "Video 1"
 	textTrack       = "Text 1"
 	demoText        = "Springtime Birds"
 	docParagraph    = "The Little Prince's story follows a young prince who visits various planets in space, including Earth, and addresses themes of loneliness, friendship, love, and loss."
 )
+
+const clipsTotalDuration = 45 * time.Second
 
 // Run runs the VideoEditingApp test.
 func Run(ctx context.Context, outDir, traceConfigPath string, cr *chrome.Chrome, tabletMode bool, bt browser.Type) error {
@@ -168,7 +170,7 @@ func videoEditingScenario(ctx context.Context, tconn *chrome.TestConn, cr *chrom
 		googledocs.EditDoc(tconn, kb, docParagraph),
 		uiHdl.SwitchToAppWindowByName("Chrome", weVideoTitle),
 		w.AddTransition(clip2),
-		w.PlayVideo(clip1),
+		w.PlayVideo(clip1, clipsTotalDuration),
 	)(ctx); err != nil {
 		return err
 	}

@@ -144,7 +144,8 @@ func (w *WeVideo) Create() action.Action {
 	closeButton := nodewith.Name("CLOSE").Role(role.Button).Ancestor(promptWindow)
 	createNewRe := regexp.MustCompile("(?i)create new")
 	createNewButton := nodewith.NameRegex(createNewRe).Ancestor(weVideoWebArea).First()
-	videoText := nodewith.Name("Video").Role(role.StaticText).Ancestor(weVideoWebArea)
+	videoButton := nodewith.Name("videocam Video").Role(role.MenuItem).Ancestor(weVideoWebArea)
+	editorButton := nodewith.Name("Full-featured editor").Role(role.Button).Ancestor(weVideoWebArea)
 	titleRe := regexp.MustCompile("(?i)my video")
 	titleText := nodewith.NameRegex(titleRe).Role(role.StaticText).Ancestor(weVideoWebArea)
 	// The pop-up prompt window display time is not necessarily, so add retry to ensure that the window is closed.
@@ -152,7 +153,8 @@ func (w *WeVideo) Create() action.Action {
 		// Close the pop-up prompt window.
 		uiauto.IfSuccessThen(w.ui.WithTimeout(shortUITimeout).WaitUntilExists(closeButton), w.ui.LeftClick(closeButton)),
 		w.ui.DoDefault(createNewButton),
-		w.ui.DoDefault(videoText),
+		w.ui.DoDefault(videoButton),
+		w.ui.DoDefault(editorButton),
 		w.ui.WithTimeout(longUITimeout).WaitUntilExists(titleText),
 	))
 }
@@ -179,9 +181,10 @@ func (w *WeVideo) AddStockVideo(clipName, previousClipName, clipTime, expectedTr
 		w.kb.AccelAction("Enter"),
 	)
 	dragVideoToTrack := func(ctx context.Context) error {
-		clipButton := nodewith.NameContaining(clipTime).Role(role.StaticText)
+		// There might be multiple clips that share the same clip length, get the first one of them.
+		clipText := nodewith.NameContaining(clipTime).Role(role.StaticText).Ancestor(weVideoWebArea).First()
 		// Finding video from WeVideo videos may take a long time to load.
-		clipLocation, err := ui.WithTimeout(longUITimeout).Location(ctx, clipButton)
+		clipLocation, err := ui.WithTimeout(longUITimeout).Location(ctx, clipText)
 		if err != nil {
 			return err
 		}
@@ -315,12 +318,12 @@ func (w *WeVideo) AddTransition(clipName string) action.Action {
 }
 
 // PlayVideo plays the edited video from the beginning of expected clip.
-func (w *WeVideo) PlayVideo(clipName string) action.Action {
+func (w *WeVideo) PlayVideo(clipName string, videoDuration time.Duration) action.Action {
 	return uiauto.NamedCombine("play the edited video from the beginning to the end",
 		w.ui.MouseClickAtLocation(0, w.clips[clipName].startPoint),
 		w.kb.AccelAction("Space"), // Press space to play video.
 		w.waitUntilPlaying(shortUITimeout),
-		w.waitUntilPaused(longUITimeout),
+		w.waitUntilPaused(shortUITimeout+videoDuration),
 	)
 }
 
