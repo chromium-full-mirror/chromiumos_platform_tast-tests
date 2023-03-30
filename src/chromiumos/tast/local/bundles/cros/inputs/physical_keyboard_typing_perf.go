@@ -68,7 +68,7 @@ func init() {
 					inputMethod: ime.EnglishUS,
 					keys:        enUSTestData,
 				},
-				ExtraSoftwareDeps: []string{"lacros_stable"},
+				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
 			},
 			{
 				Name:    "pinyin",
@@ -85,7 +85,7 @@ func init() {
 					inputMethod: ime.ChinesePinyin,
 					keys:        pinyinTestData,
 				},
-				ExtraSoftwareDeps: []string{"lacros_stable"},
+				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
 			},
 			{
 				Name:    "ja",

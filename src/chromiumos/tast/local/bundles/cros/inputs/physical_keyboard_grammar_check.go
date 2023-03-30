@@ -35,22 +35,17 @@ func init() {
 		BugComponent: "b:95887",
 		Attr:         []string{"group:mainline", "group:input-tools", "group:ml_service", "ml_service_ondevice_grammar_check"},
 		SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.EnglishUS}),
+		HardwareDeps: hwdep.D(hwdep.Model(pre.GrammarEnabledModels...)),
 		SoftwareDeps: []string{"chrome", "chrome_internal", "ondevice_grammar"},
 		Params: []testing.Param{
 			{
-				Fixture:           fixture.ClamshellNonVK,
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(pre.GrammarEnabledModels...)),
-				ExtraAttr:         []string{"group:input-tools-upstream"},
-			},
-			{
-				Name:              "informational",
-				Fixture:           fixture.ClamshellNonVK,
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(pre.GrammarEnabledModels...)),
+				Fixture:   fixture.ClamshellNonVK,
+				ExtraAttr: []string{"group:input-tools-upstream"},
 			},
 			{
 				Name:              "lacros",
 				Fixture:           fixture.LacrosClamshellNonVK,
-				ExtraSoftwareDeps: []string{"lacros_stable"},
+				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
 				ExtraAttr:         []string{"group:input-tools-upstream"},
 			},
 		},

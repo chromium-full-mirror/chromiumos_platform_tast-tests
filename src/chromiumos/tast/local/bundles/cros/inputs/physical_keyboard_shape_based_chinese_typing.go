@@ -101,7 +101,7 @@ func init() {
 					typingKeys:     "aaa lbj mc gds exxw pf alpe ajr .aad ame ",
 					expectedResult: "三節外也關由面再行列",
 				},
-				ExtraSoftwareDeps: []string{"lacros_stable"},
+				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
 				ExtraSearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.ChineseArray}),
 			},
 			{
@@ -112,7 +112,7 @@ func init() {
 					typingKeys:     "a jwj yrhhi hui hxyc oiar grmbc ",
 					expectedResult: "日車謝鬼與倉頡",
 				},
-				ExtraSoftwareDeps: []string{"lacros_stable"},
+				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
 				ExtraSearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.ChineseCangjie}),
 			},
 			{
@@ -123,7 +123,7 @@ func init() {
 					typingKeys:     "1 j 123 asox db/ ",
 					expectedResult: "言月詐做易",
 				},
-				ExtraSoftwareDeps: []string{"lacros_stable"},
+				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
 				ExtraSearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.ChineseDayi}),
 			},
 			{
@@ -134,7 +134,7 @@ func init() {
 					typingKeys:     "a jw yr an is ",
 					expectedResult: "日富這門成",
 				},
-				ExtraSoftwareDeps: []string{"lacros_stable"},
+				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
 				ExtraSearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.ChineseQuick}),
 			},
 			{
@@ -145,7 +145,7 @@ func init() {
 					typingKeys:     "yge yygy ggll yygt gg tt ",
 					expectedResult: "请文一方五笔",
 				},
-				ExtraSoftwareDeps: []string{"lacros_stable"},
+				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
 				ExtraSearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.ChineseWubi}),
 			},
 		},

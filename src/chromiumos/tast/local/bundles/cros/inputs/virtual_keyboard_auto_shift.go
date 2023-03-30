@@ -49,7 +49,7 @@ func init() {
 				Name:              "lacros",
 				Fixture:           fixture.LacrosTabletVKRestart,
 				ExtraAttr:         []string{"informational"},
-				ExtraSoftwareDeps: []string{"lacros_stable"},
+				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
 			},
 		},
 	})

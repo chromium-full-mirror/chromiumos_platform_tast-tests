@@ -39,7 +39,7 @@ func init() {
 			{
 				Name:              "lacros",
 				Fixture:           fixture.LacrosClamshellNonVK,
-				ExtraSoftwareDeps: []string{"lacros_stable"},
+				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
 			},
 		},
 	})

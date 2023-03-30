@@ -74,7 +74,7 @@ func init() {
 				Fixture:           fixture.LacrosTabletVK,
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
 				Val:               []ime.InputMethod{ime.EnglishUS, ime.Japanese, ime.ChinesePinyin},
-				ExtraSoftwareDeps: []string{"lacros_stable"},
+				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
 				ExtraSearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.EnglishUS, ime.Japanese, ime.ChinesePinyin}),
 			},
 			{
@@ -82,7 +82,7 @@ func init() {
 				Fixture:           fixture.LacrosTabletVKInGuest,
 				Val:               []ime.InputMethod{ime.EnglishUSWithInternationalKeyboard, ime.JapaneseWithUSKeyboard, ime.Korean},
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
-				ExtraSoftwareDeps: []string{"lacros_stable"},
+				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
 				ExtraSearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.EnglishUSWithInternationalKeyboard, ime.JapaneseWithUSKeyboard, ime.Korean}),
 			},
 			{
@@ -90,7 +90,7 @@ func init() {
 				Fixture:           fixture.LacrosClamshellVK,
 				Val:               []ime.InputMethod{ime.EnglishUK, ime.AlphanumericWithJapaneseKeyboard, ime.Arabic},
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
-				ExtraSoftwareDeps: []string{"lacros_stable"},
+				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
 				ExtraSearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.EnglishUK, ime.AlphanumericWithJapaneseKeyboard, ime.Arabic}),
 			},
 		},
