@@ -45,9 +45,10 @@ func init() {
 			Fixture: "chromeLoggedInWithOsFeedback",
 			Val:     browser.TypeAsh,
 		}, {
-			Name:    "lacros",
-			Fixture: "lacrosOsFeedback",
-			Val:     browser.TypeLacros,
+			Name:              "lacros",
+			ExtraSoftwareDeps: []string{"lacros"},
+			Fixture:           "lacrosOsFeedback",
+			Val:               browser.TypeLacros,
 		}},
 	})
 }

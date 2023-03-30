@@ -33,9 +33,10 @@ func init() {
 				ExtraAttr: []string{"informational"},
 			},
 			{
-				Name:      "lacros",
-				Fixture:   fixture.TelemetryExtensionSkipOEMNameCheckLacros,
-				ExtraAttr: []string{"informational"},
+				Name:              "lacros",
+				ExtraSoftwareDeps: []string{"lacros"},
+				Fixture:           fixture.TelemetryExtensionSkipOEMNameCheckLacros,
+				ExtraAttr:         []string{"informational"},
 			},
 		},
 	})

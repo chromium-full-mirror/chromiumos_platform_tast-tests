@@ -49,14 +49,16 @@ func init() {
 				Val:     commontype.LaunchAppInWeb,
 			},
 			{
-				Name:    "pwa_lacros",
-				Fixture: fixture.GAIALoggedInLacrosWithFakeHALAndEffectsEnabled,
-				Val:     commontype.LaunchAppInPWA,
+				Name:              "pwa_lacros",
+				ExtraSoftwareDeps: []string{"lacros"},
+				Fixture:           fixture.GAIALoggedInLacrosWithFakeHALAndEffectsEnabled,
+				Val:               commontype.LaunchAppInPWA,
 			},
 			{
-				Name:    "web_lacros",
-				Fixture: fixture.GAIALoggedInLacrosWithFakeHALAndEffectsEnabled,
-				Val:     commontype.LaunchAppInWeb,
+				Name:              "web_lacros",
+				ExtraSoftwareDeps: []string{"lacros"},
+				Fixture:           fixture.GAIALoggedInLacrosWithFakeHALAndEffectsEnabled,
+				Val:               commontype.LaunchAppInWeb,
 			},
 		},
 	})

@@ -43,8 +43,9 @@ func init() {
 				Fixture: fixture.KioskNonVK,
 			},
 			{
-				Name:    "lacros",
-				Fixture: fixture.LacrosKioskNonVK,
+				Name:              "lacros",
+				ExtraSoftwareDeps: []string{"lacros"},
+				Fixture:           fixture.LacrosKioskNonVK,
 			},
 		},
 	})

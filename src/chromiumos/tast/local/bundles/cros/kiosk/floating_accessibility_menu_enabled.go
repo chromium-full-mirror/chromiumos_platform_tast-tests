@@ -46,7 +46,8 @@ func init() {
 				},
 			},
 			{
-				Name: "lacros",
+				Name:              "lacros",
+				ExtraSoftwareDeps: []string{"lacros"},
 				Val: kioskmode.TestData{
 					IsLacros: true,
 					Policies: []policy.Policy{

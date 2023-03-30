@@ -50,11 +50,13 @@ func init() {
 			Name: "rtl",
 			Val:  testParam{true, browser.TypeAsh},
 		}, {
-			Name: "lacros",
-			Val:  testParam{false, browser.TypeLacros},
+			Name:              "lacros",
+			ExtraSoftwareDeps: []string{"lacros"},
+			Val:               testParam{false, browser.TypeLacros},
 		}, {
-			Name: "rtl_lacros",
-			Val:  testParam{true, browser.TypeLacros},
+			Name:              "rtl_lacros",
+			ExtraSoftwareDeps: []string{"lacros"},
+			Val:               testParam{true, browser.TypeLacros},
 		}},
 	})
 }

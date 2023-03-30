@@ -48,9 +48,10 @@ func init() {
 				Fixture: fixture.GAIALoggedInTabletWithFakeHALAndEffectsEnabled,
 			},
 			{
-				Name:    "lacros",
-				Val:     ash.Web,
-				Fixture: fixture.GAIALoggedInClamshellWithFakeHALAndEffectsEnabled,
+				Name:              "lacros",
+				ExtraSoftwareDeps: []string{"lacros"},
+				Val:               ash.Web,
+				Fixture:           fixture.GAIALoggedInClamshellWithFakeHALAndEffectsEnabled,
 			},
 			{
 				Name:      "arc",

@@ -60,7 +60,8 @@ func init() {
 				Fixture:   "chromeLoggedIn",
 			}, {
 				//MFP in test lab
-				Name: "lacros_sharp_mx_b467f",
+				Name:              "lacros_sharp_mx_b467f",
+				ExtraSoftwareDeps: []string{"lacros"},
 				Val: &testParam{
 					descriptorPath: "sharp_mx_b467f_descriptor.json",
 					browserType:    browser.TypeLacros,
@@ -80,7 +81,8 @@ func init() {
 				Fixture:   "chromeLoggedIn",
 			}, {
 				//MFP in test lab
-				Name: "lacros_hp_laserjet_pro_m478f",
+				Name:              "lacros_hp_laserjet_pro_m478f",
+				ExtraSoftwareDeps: []string{"lacros"},
 				Val: &testParam{
 					descriptorPath: "hp_laserjet_pro_m478f_descriptor.json",
 					browserType:    browser.TypeLacros,
@@ -100,7 +102,8 @@ func init() {
 				Fixture:   "chromeLoggedIn",
 			}, {
 				//MFP in test lab
-				Name: "lacros_brother_dcp_l2550dw_series",
+				Name:              "lacros_brother_dcp_l2550dw_series",
+				ExtraSoftwareDeps: []string{"lacros"},
 				Val: &testParam{
 					descriptorPath: "brother_dcp_l2550dw_series_descriptor.json",
 					browserType:    browser.TypeLacros,
@@ -120,7 +123,8 @@ func init() {
 				Fixture:   "chromeLoggedIn",
 			}, {
 				//MFP in test lab
-				Name: "lacros_brother_hl_l8360cdw_series",
+				Name:              "lacros_brother_hl_l8360cdw_series",
+				ExtraSoftwareDeps: []string{"lacros"},
 				Val: &testParam{
 					descriptorPath: "brother_hl_l8360cdw_series_descriptor.json",
 					browserType:    browser.TypeLacros,
@@ -140,7 +144,8 @@ func init() {
 				Fixture:   "chromeLoggedIn",
 			}, {
 				//MFP in test lab
-				Name: "lacros_hp_laserjet_mfp_m234dw",
+				Name:              "lacros_hp_laserjet_mfp_m234dw",
+				ExtraSoftwareDeps: []string{"lacros"},
 				Val: &testParam{
 					descriptorPath: "hp_laserjet_mfp_m234dw_descriptor.json",
 					browserType:    browser.TypeLacros,
@@ -163,6 +168,7 @@ func init() {
 			}, {
 				//MFP in BLD lab
 				Name:      "lacros_brother_hl_l2395dw_series",
+				ExtraSoftwareDeps: []string{"lacros"},
 				Val:       &testParam{
 					descriptorPath: "brother_hl_l2395dw_series_descriptor.json",
 					browserType:    browser.TypeLacros,
@@ -183,6 +189,7 @@ func init() {
 			}, {
 				//MFP in BLD lab
 				Name:      "lacros_epson_xp_7100_series",
+				ExtraSoftwareDeps: []string{"lacros"},
 				Val:       &testParam{
 					descriptorPath: "epson_xp_7100_series_descriptor.json",
 					browserType:    browser.TypeLacros,
@@ -204,6 +211,7 @@ func init() {
 			}, {
 				//MFP in BLD lab
 				Name:      "lacros_epson_wf_2540_series",
+				ExtraSoftwareDeps: []string{"lacros"},
 				Val:       &testParam{
 					descriptorPath: "epson_wf_2540_series_descriptor.json",
 					browserType:    browser.TypeLacros,
@@ -224,6 +232,7 @@ func init() {
 			}, {
 				//MFP in BLD lab
 				Name:      "lacros_epson_artisan_837",
+				ExtraSoftwareDeps: []string{"lacros"},
 				Val:       &testParam{
 					descriptorPath: "epson_artisan_837_descriptor.json",
 					browserType:    browser.TypeLacros,
@@ -244,6 +253,7 @@ func init() {
 			}, {
 				//MFP in BLD lab
 				Name:      "lacros_hp_envy_photo_7100_series",
+				ExtraSoftwareDeps: []string{"lacros"},
 				Val:       &testParam{
 					descriptorPath: "hp_envy_photo_7100_series_descriptor.json",
 					browserType:    browser.TypeLacros,
@@ -264,6 +274,7 @@ func init() {
 			}, {
 				//MFP in BLD lab
 				Name:      "lacros_hp_envy_inspire_7900_series",
+				ExtraSoftwareDeps: []string{"lacros"},
 				Val:       &testParam{
 					descriptorPath: "hp_envy_inspire_7900_series_descriptor.json",
 					browserType:    browser.TypeLacros,
@@ -284,6 +295,7 @@ func init() {
 			}, {
 				//MFP in BLD lab
 				Name:      "lacros_lexmark_mb2236adwe",
+				ExtraSoftwareDeps: []string{"lacros"},
 				Val:       &testParam{
 					descriptorPath: "lexmark_mb2236adwe_descriptor.json",
 					browserType:    browser.TypeLacros,
@@ -304,6 +316,7 @@ func init() {
 			}, {
 				//MFP in BLD lab
 				Name:      "lacros_xerox_workcentre_6515",
+				ExtraSoftwareDeps: []string{"lacros"},
 				Val:       &testParam{
 					descriptorPath: "xerox_workcentre_6515_descriptor.json",
 					browserType:    browser.TypeLacros,
