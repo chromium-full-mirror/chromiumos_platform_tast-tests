@@ -299,6 +299,7 @@ var expectedFirstAPILevelMap = map[string]int{
 	// Boards initially shipped with ARC P (sorted alphabetically.)
 	"asurada":   arc.SDKP,
 	"atlas":     arc.SDKP,
+	"cherry":    arc.SDKP,
 	"dedede":    arc.SDKP,
 	"drallion":  arc.SDKP,
 	"grunt":     arc.SDKP,
@@ -317,10 +318,13 @@ var expectedFirstAPILevelMap = map[string]int{
 	"volteer":   arc.SDKP,
 	"zork":      arc.SDKP,
 	// Boards initially shipped with ARC R (sorted alphabetically.)
-	"brya":     arc.SDKR,
-	"corsola":  arc.SDKR,
-	"guybrush": arc.SDKR,
-	"nissa":    arc.SDKR,
+	"brask":     arc.SDKR,
+	"brya":      arc.SDKR,
+	"corsola":   arc.SDKR,
+	"guybrush":  arc.SDKR,
+	"herobrine": arc.SDKR,
+	"nissa":     arc.SDKR,
+	"skyrim":    arc.SDKR,
 	// Note: This test is public. Do not add new boards unless the board's
 	// overlay already exists in src/overlays/overlay-<board>/.
 }
