@@ -174,6 +174,9 @@ const (
 	FirmwareLog        FwScreenID = 0x150
 	DeveloperMode      FwScreenID = 0x300
 	ReturnToSecureMode FwScreenID = 0x310
+
+	InsertScreen FwScreenID = 0x202
+	OptionScreen FwScreenID = 0x20d
 )
 
 // NewHelper creates a new Helper object with info from testing.State.
