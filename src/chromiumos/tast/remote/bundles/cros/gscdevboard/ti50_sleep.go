@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package firmware
+package gscdevboard
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/firmware/ti50"
-	"chromiumos/tast/remote/bundles/cros/firmware/utils"
+	"chromiumos/tast/remote/bundles/cros/gscdevboard/utils"
 	"chromiumos/tast/remote/firmware/ti50/fixture"
 	"chromiumos/tast/testing"
 )
