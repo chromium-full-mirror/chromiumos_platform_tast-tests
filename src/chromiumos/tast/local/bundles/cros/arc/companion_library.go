@@ -88,6 +88,7 @@ var generalTests = []companionLibTestEntry{
 	{"Move and Resize Window", resizeActivity, testResizeWindow},
 }
 
+// These tests do not pass on R, regardless of if it is VM or Container.
 var arcPOnlyTests = []companionLibTestEntry{
 	{"Popup Window", mainActivity, testPopupWindow},
 	{"Window shadow", shadowActivity, testWindowShadow},
@@ -123,14 +124,17 @@ func init() {
 			ExtraSoftwareDeps: []string{"android_p"},
 			Val:               append(generalTests, arcPOnlyTests...),
 		}, {
-			// Use the android_vm dep for running on android P and R of the vm.
+			Name:              "container_r",
+			ExtraSoftwareDeps: []string{"android_container_r"},
+			Val:               generalTests,
+		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Val:               generalTests,
 		}, {
 			Name:              "vm_unstable",
 			ExtraSoftwareDeps: []string{"android_vm"},
-			Val:               append(generalTests, unstableTests...),
+			Val:               unstableTests,
 		}},
 	})
 }
