@@ -54,9 +54,10 @@ func init() {
 				Fixture: setup.BenchmarkChromeFixture,
 			},
 			{
-				Name:    "lacros",
-				Val:     browser.TypeLacros,
-				Fixture: setup.BenchmarkLacrosFixture,
+				Name:              "lacros",
+				ExtraSoftwareDeps: []string{"lacros"},
+				Val:               browser.TypeLacros,
+				Fixture:           setup.BenchmarkLacrosFixture,
 			},
 		},
 	})
