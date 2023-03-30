@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/mafredri/cdp/rpcc"
+	"golang.org/x/sys/unix"
 
 	"chromiumos/tast/common/tape"
 	"chromiumos/tast/ctxutil"
@@ -190,6 +191,13 @@ func signinAndMigrate(ctx context.Context, s *testing.State, creds chrome.Creds,
 		s.Fatal("Failed to verify the file to be migrated: ", err)
 	}
 
+	// Regression check for b/274833188. Create a file with KEEP_SIZE option of
+	// fallocate so that it will have EOFBLOCKS flag on host kernel version 5.4
+	// or older. The flag caused migration failure.
+	if err := createFileWithEOFBLOCKS(ctx, a, creds.User); err != nil {
+		s.Fatal("Failed to create file with EOFBLOCKS flag: ", err)
+	}
+
 	// Connect to Test API.
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -317,6 +325,43 @@ func reSignInAndVerifyMigration(ctx context.Context, s *testing.State, creds chr
 	}
 }
 
+// createFileWithEOFBLOCKS creates a file that will have EOFBLOCKS flag set on
+// boards with host kernel version 5.4 or older.
+func createFileWithEOFBLOCKS(ctx context.Context, a *arc.ARC, username string) error {
+	const (
+		filePathFromAndroidData = "data/media/0/Pictures/eofblockstest"
+		fileUID                 = 656383 // media_rw
+		fileGID                 = 656383 // media_rw
+		fileSize                = 4096
+	)
+
+	androidDataDir, err := arc.AndroidDataDir(ctx, username)
+	if err != nil {
+		return errors.Wrap(err, "failed to get android-data dir")
+	}
+	path := filepath.Join(androidDataDir, filePathFromAndroidData)
+
+	file, err := os.Create(path)
+	if err != nil {
+		return errors.Wrap(err, "failed to create file")
+	}
+	defer file.Close()
+
+	// Change UID and GID appropriately so that this file won't be skipped by
+	// the migrator.
+	if err := file.Chown(fileUID, fileGID); err != nil {
+		return errors.Wrap(err, "failed to chown file")
+	}
+
+	// On kernel version 5.4 or older, extending a file by calling fallocate()
+	// with KEEP_SIZE option attaches EOFBLOCKS flag to the file.
+	if err := unix.Fallocate(int(file.Fd()), unix.FALLOC_FL_KEEP_SIZE, 0, fileSize); err != nil {
+		return errors.Wrap(err, "failed to fallocate file")
+	}
+
+	return nil
+}
+
 func enterMigrationScreen(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn) error {
 	// UX strings for the pre-migration-screen phase.
 	const (
@@ -348,8 +393,8 @@ func enterMigrationScreen(ctx context.Context, cr *chrome.Chrome, tconn *chrome.
 		return errors.Wrap(err, "failed to prepare for Chrome restart")
 	}
 
-	// Insert a short sleep so that the following LeftClick will not be ignored
-	// by Chrome's unintended click protection.
+	// GoBigSleepLint: Insert a short sleep so that the following LeftClick will
+	// not be ignored by Chrome's unintended click protection.
 	// TODO(b/274892285): Disable the protection for Tast test or improve uiauto
 	// so that we don't need a sleep here.
 	testing.Sleep(ctx, time.Second)
@@ -406,9 +451,13 @@ func proceedMigrationScreens(ctx context.Context, cr *chrome.Chrome, tconn *chro
 		return nil
 	}
 
+	if err := ui.WaitUntilGone(progressBarNode)(ctx); err != nil {
+		return errors.Wrap(err, "migration timed out")
+	}
+
 	finishMessage := nodewith.Name(migrationFinishedScreenTitleText).Role(role.StaticText)
-	if err := ui.WaitUntilExists(finishMessage)(ctx); err != nil {
-		return err
+	if err := ui.Exists(finishMessage)(ctx); err != nil {
+		return errors.Wrap(err, "failed to check migration success screen")
 	}
 
 	testing.ContextLogf(ctx, "Completed migration in %f sec", time.Since(start).Seconds())
