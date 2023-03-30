@@ -906,12 +906,12 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 			uiLongWait.WaitUntilExists(effect),
 
 			// Toggle the effect.
-			ui.DoDefault(effect),
-			uiLongWait.WaitUntilExists(effect.Focused()),
+			uiLongWait.DoDefaultUntil(effect,
+				ui.WithTimeout(5*time.Second).WaitUntilCheckedState(effect, true)),
 
 			// Close the visual effects section.
 			ui.DoDefault(closeButton),
-			uiLongWait.WaitUntilGone(effect.Focused()),
+			uiLongWait.WaitUntilGone(effect),
 		)(ctx)
 	}
 	if meet.effects {
