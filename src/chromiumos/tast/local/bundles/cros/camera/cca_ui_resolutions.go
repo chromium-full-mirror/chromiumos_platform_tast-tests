@@ -193,9 +193,9 @@ func videoTrackResolution(path string) (*cca.Resolution, error) {
 	return nil, errors.Errorf("no video track found in the file %v", path)
 }
 
-func clickOptionAndWaitConfiguration(ctx context.Context, app *cca.App, optionUI cca.UIComponent, index int) error {
-	testing.ContextLogf(ctx, "Switch to #%v of %v", index, optionUI.Name)
-	checked, err := app.IsCheckedWithIndex(ctx, optionUI, index)
+func clickOptionAndWaitConfiguration(ctx context.Context, app *cca.App, optionUIName cca.UIComponentName, index int) error {
+	testing.ContextLogf(ctx, "Switch to #%v of %v", index, optionUIName)
+	checked, err := app.IsCheckedWithIndex(ctx, optionUIName, index)
 	if err != nil {
 		return err
 	}
@@ -204,7 +204,7 @@ func clickOptionAndWaitConfiguration(ctx context.Context, app *cca.App, optionUI
 	} else {
 		if err := app.TriggerConfiguration(ctx, func() error {
 			testing.ContextLogf(ctx, "Checking with #%d resolution option", index)
-			if err := app.ClickWithIndex(ctx, optionUI, index); err != nil {
+			if err := app.ClickWithIndex(ctx, optionUIName, index); err != nil {
 				return errors.Wrap(err, "failed to click on resolution item")
 			}
 			return nil
@@ -217,9 +217,9 @@ func clickOptionAndWaitConfiguration(ctx context.Context, app *cca.App, optionUI
 }
 
 // attributeValueOfOption returns the attribute value of |index| th of
-// |optionsUI| given by the name of the attribute. The value will be in integer.
-func attributeValueOfOption(ctx context.Context, app *cca.App, optionsUI cca.UIComponent, index int, attribute string) (int, error) {
-	stringValue, err := app.AttributeWithIndex(ctx, optionsUI, index, attribute)
+// |optionsUIName| given by the name of the attribute. The value will be in integer.
+func attributeValueOfOption(ctx context.Context, app *cca.App, optionsUIName cca.UIComponentName, index int, attribute string) (int, error) {
+	stringValue, err := app.AttributeWithIndex(ctx, optionsUIName, index, attribute)
 	if err != nil {
 		return -1, err
 	}

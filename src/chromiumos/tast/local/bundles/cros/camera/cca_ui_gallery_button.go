@@ -34,15 +34,10 @@ func init() {
 func CCAUIGalleryButton(ctx context.Context, s *testing.State) {
 	app := s.FixtValue().(cca.FixtureData).App()
 	cr := s.FixtValue().(cca.FixtureData).Chrome
-	backgroundImageAttr := "background-image"
 
 	// 1. Take a photo and the gallery button should be updated.
 	coverURL := func() (string, error) {
 		url, err := app.AttributeWithIndex(ctx, cca.GalleryButtonCover, 0, "src")
-		if cca.IsUINotExist(err) {
-			// Fallback to legacy UI before https://crrev.com/c/3340974.
-			url, err = app.Style(ctx, cca.GalleryButton, backgroundImageAttr)
-		}
 		if err != nil {
 			return "", err
 		}

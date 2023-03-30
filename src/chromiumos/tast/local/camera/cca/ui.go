@@ -34,10 +34,6 @@ var (
 	VideoSnapshotButton = UIComponent{"video snapshot button", []string{"#video-snapshot"}}
 	// VideoPauseResumeButton is button for pausing or resuming video recording.
 	VideoPauseResumeButton = UIComponent{"video pause/resume button", []string{"#pause-recordvideo"}}
-	// GalleryButton is button for entering the Backlight app as a gallery for captured files.
-	GalleryButton = UIComponent{"gallery button", []string{"#gallery-enter"}}
-	// GalleryButtonCover is cover photo of gallery button.
-	GalleryButtonCover = UIComponent{"gallery button cover", []string{"#gallery-enter>img"}}
 
 	// PhotoResolutionSettingButton is button for opening photo resolution setting menu.
 	PhotoResolutionSettingButton = UIComponent{"photo resolution setting button", []string{"#settings-photo-resolution"}}
@@ -75,8 +71,6 @@ var (
 
 	// ScanBarcodeOption is the option button to switch to QR code detection mode in scan mode.
 	ScanBarcodeOption = UIComponent{"scan barcode option", []string{"#scan-barcode"}}
-	// ScanDocumentModeOption is the document mode option of scan mode.
-	ScanDocumentModeOption = UIComponent{"document mode button", []string{"#scan-document"}}
 	// ReviewView is the review view after taking a photo under document mode.
 	ReviewView = UIComponent{"document review view", []string{"#view-review"}}
 	// DocumentCornerOverlay is the overlay that CCA used to draw document corners on.
@@ -91,19 +85,6 @@ var (
 		"#view-review button[i18n-text=label_save]"}}
 	// GifReviewRetakeButton is the retake button in gif review page.
 	GifReviewRetakeButton = UIComponent{"retake gif button", []string{"#review-retake"}}
-
-	// FrontAspectRatioOptions are the buttons of aspect ratio options for the front camera.
-	FrontAspectRatioOptions = UIComponent{"front aspect ratio options", []string{"#view-photo-aspect-ratio-settings .menu-item>input[data-facing=\"user\"]"}}
-	// BackAspectRatioOptions are the buttons of aspect ratio options for the back camera.
-	BackAspectRatioOptions = UIComponent{"back aspect ratio options", []string{"#view-photo-aspect-ratio-settings .menu-item>input[data-facing=\"environment\"]"}}
-	// FrontPhotoResolutionOptions are the buttons of photo resolution options for the front camera.
-	FrontPhotoResolutionOptions = UIComponent{"front photo resolution options", []string{"#view-photo-resolution-settings .menu-item>input[data-facing=\"user\"]"}}
-	// BackPhotoResolutionOptions are the buttons of photo resolution options for the back camera.
-	BackPhotoResolutionOptions = UIComponent{"back photo resolution options", []string{"#view-photo-resolution-settings .menu-item>input[data-facing=\"environment\"]"}}
-	// FrontVideoResolutionOptions are the buttons of video resolution options for the front camera.
-	FrontVideoResolutionOptions = UIComponent{"front video resolution options", []string{"#view-video-resolution-settings .menu-item>input[data-facing=\"user\"]"}}
-	// BackVideoResolutionOptions are the buttons of video resolution options for the back camera.
-	BackVideoResolutionOptions = UIComponent{"back video resolution options", []string{"#view-video-resolution-settings .menu-item>input[data-facing=\"environment\"]"}}
 
 	// LowStorageDialog is the dialog displayed when there's an unexpected behavior during recording due to low storage.
 	LowStorageDialog = UIComponent{"low storage dialog", []string{"#view-low-storage-dialog"}}
@@ -157,6 +138,12 @@ type UIComponentName string
 
 // List of UI components used in CCA for testing.
 const (
+	// BackAspectRatioOptions are the buttons of aspect ratio options for the back camera.
+	BackAspectRatioOptions UIComponentName = "backAspectRatioOptions"
+	// BackPhotoResolutionOptions are the buttons of photo resolution options for the back camera.
+	BackPhotoResolutionOptions UIComponentName = "backPhotoResolutionOptions"
+	// BackVideoResolutionOptions are the buttons of video resolution options for the back camera.
+	BackVideoResolutionOptions UIComponentName = "backVideoResolutionOptions"
 	// BitrateMultiplierRangeInput is range input for selecting bitrate multiplier.
 	BitrateMultiplierRangeInput UIComponentName = "bitrateMultiplierRangeInput"
 	// CancelResultButton is button for canceling intent review result.
@@ -185,6 +172,16 @@ const (
 	DocumentSaveAsPdfButton UIComponentName = "documentSaveAsPdfButton"
 	// DocumentSaveAsPhotoButton is the button to save as a photo in multi-page document mode.
 	DocumentSaveAsPhotoButton UIComponentName = "documentSaveAsPhotoButton"
+	// FrontAspectRatioOptions are the buttons of aspect ratio options for the front camera.
+	FrontAspectRatioOptions UIComponentName = "frontAspectRatioOptions"
+	// FrontPhotoResolutionOptions are the buttons of photo resolution options for the front camera.
+	FrontPhotoResolutionOptions UIComponentName = "frontPhotoResolutionOptions"
+	// FrontVideoResolutionOptions are the buttons of video resolution options for the front camera.
+	FrontVideoResolutionOptions UIComponentName = "frontVideoResolutionOptions"
+	// GalleryButton is button for entering the Backlight app as a gallery for captured files.
+	GalleryButton UIComponentName = "galleryButton"
+	// GalleryButtonCover is cover photo of gallery button.
+	GalleryButtonCover UIComponentName = "galleryButtonCover"
 	// OpenPTZPanelButton is the button for opening PTZ panel.
 	OpenPTZPanelButton UIComponentName = "openPTZPanelButton"
 	// PanLeftButton is the button for panning left preview.
@@ -195,6 +192,8 @@ const (
 	PTZResetAllButton UIComponentName = "ptzResetAllButton"
 	// PreviewViewport is the container of the preview video.
 	PreviewViewport UIComponentName = "previewViewport"
+	// ScanDocumentModeOption is the document mode option of scan mode.
+	ScanDocumentModeOption UIComponentName = "scanDocumentModeOption"
 	// TiltDownButton is the button for tilting down preview.
 	TiltDownButton UIComponentName = "tiltDownButton"
 	// TiltUpButton is the button for tilting up preview.
@@ -213,20 +212,6 @@ type errorUINotExist struct {
 
 func (err errorUINotExist) Error() string {
 	return fmt.Sprintf("failed to resolved ui %v to its correct selector", err.ui.Name)
-}
-
-// IsUINotExist returns true if the given error is from errorUINotExist error type.
-func IsUINotExist(err error) bool {
-	if err == nil {
-		return false
-	}
-	if _, ok := err.(errorUINotExist); ok {
-		return true
-	}
-	if wrappedErr, ok := err.(*errors.E); ok {
-		return IsUINotExist(wrappedErr.Unwrap())
-	}
-	return false
 }
 
 // HasClass returns true if the given HTML element has the given class name.
@@ -359,40 +344,20 @@ func (a *App) WaitForDisabled(ctx context.Context, ui UIComponentName, expected 
 	}, &testing.PollOptions{Timeout: 5 * time.Second})
 }
 
-// CountUI returns the number of ui element.
-func (a *App) CountUI(ctx context.Context, ui UIComponent) (int, error) {
-	wrapError := func(err error) error {
-		return errors.Wrapf(err, "failed to count number of %v", ui.Name)
-	}
-	selector, err := a.resolveUISelector(ctx, ui)
-	if err != nil {
-		if IsUINotExist(err) {
-			return 0, nil
-		}
-		return 0, wrapError(err)
-	}
+// CountUI returns number of ui elements.
+func (a *App) CountUI(ctx context.Context, ui UIComponentName) (int, error) {
 	var number int
-	if err := a.conn.Call(ctx, &number, `(selector) => document.querySelectorAll(selector).length`, selector); err != nil {
-		return 0, wrapError(err)
+	if err := a.conn.Call(ctx, &number, "CCATest.countUI", ui); err != nil {
+		return 0, errors.Wrapf(err, "failed to count number of %v", ui)
 	}
 	return number, nil
 }
 
 // AttributeWithIndex returns the attr attribute of the index th ui.
-func (a *App) AttributeWithIndex(ctx context.Context, ui UIComponent, index int, attr string) (string, error) {
-	wrapError := func(err error) error {
-		return errors.Wrapf(err, "failed to get %v attribute of %v th %v", attr, index, ui.Name)
-	}
-	selector, err := a.resolveUISelector(ctx, ui)
-	if err != nil {
-		return "", wrapError(err)
-	}
+func (a *App) AttributeWithIndex(ctx context.Context, ui UIComponentName, index int, attr string) (string, error) {
 	var value string
-	if err := a.conn.Call(
-		ctx, &value,
-		`(selector, index, attr) => document.querySelectorAll(selector)[index].getAttribute(attr)`,
-		selector, index, attr); err != nil {
-		return "", wrapError(err)
+	if err := a.conn.Call(ctx, &value, "CCATest.getAttribute", ui, attr, index); err != nil {
+		return "", errors.Wrapf(err, "failed to get %v attribute of %v th %v", attr, index, ui)
 	}
 	return value, nil
 }
@@ -452,13 +417,9 @@ func (a *App) ClickUIComponentName(ctx context.Context, ui UIComponentName) erro
 }
 
 // ClickWithIndex clicks nth ui.
-func (a *App) ClickWithIndex(ctx context.Context, ui UIComponent, index int) error {
-	selector, err := a.resolveUISelector(ctx, ui)
-	if err != nil {
-		return err
-	}
-	if err := a.conn.Call(ctx, nil, `(selector, index) => document.querySelectorAll(selector)[index].click()`, selector, index); err != nil {
-		return errors.Wrapf(err, "failed to click on %v(th) %v", index, ui.Name)
+func (a *App) ClickWithIndex(ctx context.Context, ui UIComponentName, index int) error {
+	if err := a.conn.Call(ctx, nil, "CCATest.click", ui, index); err != nil {
+		return errors.Wrapf(err, "failed to click on %v", ui)
 	}
 	return nil
 }
@@ -497,14 +458,10 @@ func (a *App) ClickPTZButton(ctx context.Context, ui UIComponentName) error {
 }
 
 // IsCheckedWithIndex gets checked state of nth ui.
-func (a *App) IsCheckedWithIndex(ctx context.Context, ui UIComponent, index int) (bool, error) {
-	selector, err := a.resolveUISelector(ctx, ui)
-	if err != nil {
-		return false, err
-	}
+func (a *App) IsCheckedWithIndex(ctx context.Context, ui UIComponentName, index int) (bool, error) {
 	var checked bool
-	if err := a.conn.Call(ctx, &checked, `(selector, index) => document.querySelectorAll(selector)[index].checked`, selector, index); err != nil {
-		return false, errors.Wrapf(err, "failed to get checked state on %v(th) %v", index, ui.Name)
+	if err := a.conn.Call(ctx, &checked, "CCATest.isChecked", ui, index); err != nil {
+		return false, errors.Wrapf(err, "failed to get checked state on %v(th) %v", index, ui)
 	}
 	return checked, nil
 }
