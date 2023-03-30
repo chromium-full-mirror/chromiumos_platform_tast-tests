@@ -174,6 +174,10 @@ func MeetEffects(ctx context.Context, s *testing.State) {
 					DefaultOptions: screenshot.Options{
 						WindowState: ash.WindowStateDefault,
 					},
+					// This is important to get consistent window size.
+					// When using DpiNormalization by default, it resizes the window differently on ash and lacros.
+					// Refer to b/275932928.
+					SkipDpiNormalization: true,
 				})
 			if err != nil {
 				s.Fatal("Failed to start screen differ: ", err)

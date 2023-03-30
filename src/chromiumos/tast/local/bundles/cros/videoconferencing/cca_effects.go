@@ -127,6 +127,7 @@ func CCAEffects(ctx context.Context, s *testing.State) {
 					DefaultOptions: screenshot.Options{
 						WindowState: ash.WindowStateDefault,
 					},
+					SkipDpiNormalization: true,
 				})
 			if err != nil {
 				s.Fatal("Failed to start screen differ: ", err)
