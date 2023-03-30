@@ -8,7 +8,6 @@ import (
 	"context"
 
 	"chromiumos/tast/common/fixture"
-	"chromiumos/tast/remote/policyutil"
 	"chromiumos/tast/testing"
 )
 
@@ -43,8 +42,13 @@ func init() {
 func EnrolledWarning(ctx context.Context, s *testing.State) {
 	// TODO(b/243629567): Remove this test when the workarounds from the enrolled fixture
 	// are removed.
-	errs := s.FixtValue().(*policyutil.FixtData).Errors()
-	for _, err := range errs {
+	var fixtErrs []string
+
+	if err := s.FixtFillValue(&fixtErrs); err != nil {
+		s.Fatal("Failed to deserialize fixture data with FixtFillValue: ", err)
+	}
+
+	for _, err := range fixtErrs {
 		s.Error("Failed enrollment attempt in the Enrolled fixture: ", err)
 	}
 }

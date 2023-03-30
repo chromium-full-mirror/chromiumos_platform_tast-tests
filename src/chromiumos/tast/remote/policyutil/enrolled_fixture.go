@@ -58,17 +58,6 @@ type enrolledFixt struct {
 	fdmsDir string
 }
 
-// FixtData holds information made available to tests that specify this Fixture.
-type FixtData struct {
-	// errors contains the errors of the enrollment attempts.
-	errors []error
-}
-
-// Errors implements the fixture.WithErrors interface.
-func (f FixtData) Errors() []error {
-	return f.errors
-}
-
 func dumpVPDContent(ctx context.Context, d *dut.DUT) ([]byte, error) {
 	out, err := d.Conn().CommandContext(ctx, "vpd", "-i", "RW_VPD", "-l").Output(ssh.DumpLogOnError)
 	if err != nil {
@@ -210,9 +199,12 @@ func (e *enrolledFixt) SetUp(ctx context.Context, s *testing.FixtState) interfac
 		}
 	}
 
-	return &FixtData{
-		errors: errs,
+	// Converting errors to strings as an error array cannot be Unmarshalled.
+	var errorStrings []string
+	for _, err := range errs {
+		errorStrings = append(errorStrings, err.Error())
 	}
+	return errorStrings
 }
 
 func (e *enrolledFixt) TearDown(ctx context.Context, s *testing.FixtState) {
