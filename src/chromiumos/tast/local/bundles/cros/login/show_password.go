@@ -108,10 +108,8 @@ func ShowPassword(ctx context.Context, s *testing.State) {
 	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
 
 	// Wait for the login screen to be ready for PIN / Password entry.
-	if st, err := lockscreen.WaitState(ctx, tconn, func(st lockscreen.State) bool {
-		return st.ReadyForPassword && st.AreAllUserImagesLoaded
-	}, 30*time.Second); err != nil {
-		s.Fatalf("Failed waiting for the login screen to be ready for PIN / Password entry: %v, last state: %+v", err, st)
+	if err := lockscreen.WaitForPasswordEntry(ctx, tconn, 30*time.Second); err != nil {
+		s.Fatal("Failed waiting for the login screen to be ready for PIN / Password entry: ", err)
 	}
 
 	// Clicking the "Switch to password" button to view the Password field when PIN autosubmit is enabled

@@ -102,6 +102,17 @@ func WaitForLoggedIn(ctx context.Context, tconn *chrome.TestConn, timeout time.D
 	return nil
 }
 
+// WaitForPasswordEntry is a wrapper around WaitState to wait for the screen to
+// be ready for password, and for the user images to be loaded.
+func WaitForPasswordEntry(ctx context.Context, tconn *chrome.TestConn, timeout time.Duration) error {
+	if st, err := WaitState(ctx, tconn, func(st State) bool {
+		return st.ReadyForPassword && st.AreAllUserImagesLoaded
+	}, timeout); err != nil {
+		return errors.Wrapf(err, "waiting to be ready for password entry failed: (last status %+v)", st)
+	}
+	return nil
+}
+
 // PasswordFieldFinder generates Finder for the password field.
 // The password field node can be uniquely identified by its name attribute, which includes the username,
 // such as "Password for username@gmail.com". The Finder will find the node whose name matches the regex

@@ -85,12 +85,9 @@ func ExistingUser(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed waiting for the login screen to be ready for password entry: %v, last state: %+v", err, st)
 	}
 
-	// TODO(crbug/1109381): the password field isn't actually ready just yet when WaitState returns.
-	// This causes it to miss some of the keyboard input, so the password will be wrong.
-	// We can check in the UI for the password field to exist, which seems to be a good enough indicator that
-	// the field is ready for keyboard input.
-	if err := lockscreen.WaitForPasswordField(ctx, tLoginConn, creds.User, 5*time.Second); err != nil {
-		s.Fatal("Password text field did not appear in the UI: ", err)
+	// Wait for the login screen to be ready for password entry.
+	if err := lockscreen.WaitForPasswordEntry(ctx, tLoginConn, 30*time.Second); err != nil {
+		s.Fatal("Failed waiting for the login screen to be ready for password entry: ", err)
 	}
 
 	kb, err := input.Keyboard(ctx)
@@ -100,8 +97,8 @@ func ExistingUser(ctx context.Context, s *testing.State) {
 	defer kb.Close()
 
 	s.Log("Entering password to log in")
-	if err := kb.Type(ctx, creds.Pass+"\n"); err != nil {
-		s.Fatal("Entering password failed: ", err)
+	if err := lockscreen.EnterPassword(ctx, tLoginConn, creds.User, creds.Pass, kb); err != nil {
+		s.Fatal("Failed to enter password: ", err)
 	}
 
 	// Check if the login was successful using the API and also by looking for the shelf in the UI.
