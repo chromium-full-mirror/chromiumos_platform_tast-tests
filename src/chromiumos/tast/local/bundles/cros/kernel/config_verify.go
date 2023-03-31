@@ -162,7 +162,6 @@ func newCommonKernelConfigCheck(ver *sysutil.KernelVersion, arch string) *kernel
 	}
 	enabled := []string{
 		// Either module or enabled, depending on platform.
-		"VIDEO_V4L2",
 		"CONFIGFS_FS",
 	}
 	value := map[string]string{
