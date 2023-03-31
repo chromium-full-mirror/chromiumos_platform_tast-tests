@@ -145,7 +145,7 @@ func enableExpertModeOnUI(ctx context.Context, app *cca.App) error {
 
 	// Clicking setting header 5 times should enable expert mode. (b/190696285)
 	for i := 0; i < 5; i++ {
-		if err := app.ClickWithSelector(ctx, "#settings-header"); err != nil {
+		if err := app.Click(ctx, cca.SettingsHeader); err != nil {
 			return err
 		}
 	}

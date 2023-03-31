@@ -7,7 +7,6 @@ package cca
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
@@ -17,12 +16,6 @@ import (
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
-
-// UIComponent represents a CCA UI component.
-type UIComponent struct {
-	Name      string
-	Selectors []string
-}
 
 var (
 	// A11yRootNode represents the root node of Camera app in A11y tree.
@@ -149,6 +142,10 @@ const (
 	ScanDocumentModeOption UIComponentName = "scanDocumentModeOption"
 	// SettingsButton is the button for opening primary setting menu.
 	SettingsButton UIComponentName = "settingsButton"
+	// SettingsHeader is the header on the settings view.
+	SettingsHeader UIComponentName = "settingsHeader"
+	// Shutter is a shutter button used to take a picture and start/stop a video.
+	Shutter UIComponentName = "shutter"
 	// SwitchDeviceButton is the button for switching camera device.
 	SwitchDeviceButton UIComponentName = "switchDeviceButton"
 	// TiltDownButton is the button for tilting down preview.
@@ -203,70 +200,8 @@ const (
 	ShowMetadataOption Option = "showMetadataOption"
 )
 
-type errorUINotExist struct {
-	ui *UIComponent
-}
-
-func (err errorUINotExist) Error() string {
-	return fmt.Sprintf("failed to resolved ui %v to its correct selector", err.ui.Name)
-}
-
-// resolveUISelector resolves ui to its correct selector.
-func (a *App) resolveUISelector(ctx context.Context, ui UIComponent) (string, error) {
-	for _, s := range ui.Selectors {
-		if exist, err := a.selectorExist(ctx, s); err != nil {
-			return "", err
-		} else if exist {
-			return s, nil
-		}
-	}
-	return "", errorUINotExist{ui: &ui}
-}
-
-// Style returns the value of an CSS attribute of an UI component.
-func (a *App) Style(ctx context.Context, ui UIComponent, attribute string) (string, error) {
-	selector, err := a.resolveUISelector(ctx, ui)
-	if err != nil {
-		return "", errors.Wrapf(err, "failed to get the selector of UI: %v", ui.Name)
-	}
-	var style string
-	if err := a.conn.Call(ctx, &style, "Tast.getStyle", selector, attribute); err != nil {
-		return "", errors.Wrapf(err, "failed to get the style of attribute: %v of UI: %v", attribute, ui.Name)
-	}
-	return style, nil
-}
-
 // Visible returns whether a UIComponent{Name} is visible on the screen.
-// TODO(b/242800694): Replace this function with |VisibleUIComponentName| once the refactor is completed.
-func (a *App) Visible(ctx context.Context, ui interface{}) (bool, error) {
-	switch t := ui.(type) {
-	case UIComponentName:
-		return a.VisibleUIComponentName(ctx, ui.(UIComponentName))
-	case UIComponent:
-		return a.VisibleLegacy(ctx, ui.(UIComponent))
-	default:
-		return false, errors.Errorf("failed to click: invalid type %v", t)
-	}
-}
-
-// VisibleLegacy returns whether a UI component is visible on the screen.
-func (a *App) VisibleLegacy(ctx context.Context, ui UIComponent) (bool, error) {
-	wrapError := func(err error) error {
-		return errors.Wrapf(err, "failed to check visibility state of %v", ui.Name)
-	}
-	selector, err := a.resolveUISelector(ctx, ui)
-	if err != nil {
-		return false, wrapError(err)
-	}
-	var visible bool
-	if err := a.conn.Call(ctx, &visible, "Tast.isVisible", selector); err != nil {
-		return false, wrapError(err)
-	}
-	return visible, nil
-}
-
-// VisibleUIComponentName returns whether a UI component is visible on the screen.
-func (a *App) VisibleUIComponentName(ctx context.Context, ui UIComponentName) (bool, error) {
+func (a *App) Visible(ctx context.Context, ui UIComponentName) (bool, error) {
 	var visible bool
 	if err := a.conn.Call(ctx, &visible, "CCATest.isVisible", ui); err != nil {
 		return false, errors.Wrapf(err, "failed to check the visibility of %v", ui)
@@ -275,31 +210,29 @@ func (a *App) VisibleUIComponentName(ctx context.Context, ui UIComponentName) (b
 }
 
 // CheckVisible returns an error if visibility state of ui is not expected.
-func (a *App) CheckVisible(ctx context.Context, ui interface{}, expected bool) error {
+func (a *App) CheckVisible(ctx context.Context, ui UIComponentName, expected bool) error {
 	if visible, err := a.Visible(ctx, ui); err != nil {
 		return err
 	} else if visible != expected {
-		// TODO(b/242800694): Fix the comment back once changing interface{} to |UIComponentName|
-		return errors.Errorf("unexpected visibility state: got %v, want %v", visible, expected)
+		return errors.Errorf("unexpected %v visibility state: got %v, want %v", ui, visible, expected)
 	}
 	return nil
 }
 
 // WaitForVisibleState calls WaitForVisibleStateFor with 5 second timeout.
-func (a *App) WaitForVisibleState(ctx context.Context, ui interface{}, expected bool) error {
+func (a *App) WaitForVisibleState(ctx context.Context, ui UIComponentName, expected bool) error {
 	return a.WaitForVisibleStateFor(ctx, ui, expected, 5*time.Second)
 }
 
 // WaitForVisibleStateFor waits until the visibility of ui becomes expected for specified time.
-func (a *App) WaitForVisibleStateFor(ctx context.Context, ui interface{}, expected bool, timeout time.Duration) error {
+func (a *App) WaitForVisibleStateFor(ctx context.Context, ui UIComponentName, expected bool, timeout time.Duration) error {
 	return testing.Poll(ctx, func(ctx context.Context) error {
 		visible, err := a.Visible(ctx, ui)
 		if err != nil {
 			return testing.PollBreak(err)
 		}
 		if visible != expected {
-			// TODO(b/242800694): Fix the comment back once changing interface{} to |UIComponentName|
-			return errors.Errorf("failed to wait visibility state: got %v, want %v", visible, expected)
+			return errors.Errorf("failed to wait visibility state for %v: got %v, want %v", ui, visible, expected)
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: timeout})
@@ -365,35 +298,7 @@ func (a *App) Size(ctx context.Context, ui UIComponentName) (*Resolution, error)
 }
 
 // Click clicks on UIComponent{Name}.
-// TODO(b/242800694): Replace this function with |ClickUIComponentName| once the refactor is completed.
-func (a *App) Click(ctx context.Context, ui interface{}) error {
-	switch t := ui.(type) {
-	case UIComponentName:
-		return a.ClickUIComponentName(ctx, ui.(UIComponentName))
-	case UIComponent:
-		return a.ClickLegacy(ctx, ui.(UIComponent))
-	default:
-		return errors.Errorf("failed to click: invalid type %v", t)
-	}
-}
-
-// ClickLegacy clicks on ui.
-func (a *App) ClickLegacy(ctx context.Context, ui UIComponent) error {
-	wrapError := func(err error) error {
-		return errors.Wrapf(err, "failed to click on %v", ui.Name)
-	}
-	selector, err := a.resolveUISelector(ctx, ui)
-	if err != nil {
-		return wrapError(err)
-	}
-	if err := a.ClickWithSelector(ctx, selector); err != nil {
-		return wrapError(err)
-	}
-	return nil
-}
-
-// ClickUIComponentName clicks on ui.
-func (a *App) ClickUIComponentName(ctx context.Context, ui UIComponentName) error {
+func (a *App) Click(ctx context.Context, ui UIComponentName) error {
 	if err := a.conn.Call(ctx, nil, "CCATest.click", ui); err != nil {
 		return errors.Wrapf(err, "failed to click on %v", ui)
 	}

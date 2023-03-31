@@ -103,15 +103,6 @@ window.Tast = class Tast {
   }
 
   /**
-   * Returns whether the target HTML element exists.
-   * @param {string} selector Selector for the target element.
-   * @return {boolean}
-   */
-  static exist(selector) {
-    return document.querySelector(selector) !== null;
-  }
-
-  /**
    * Triggers click event on the target HTML element that specified by
    * |selector|. If more than one element matched the selector, it will
    * trigger the first one whose display property is non-null.

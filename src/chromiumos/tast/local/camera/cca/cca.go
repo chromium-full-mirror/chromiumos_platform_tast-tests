@@ -991,14 +991,6 @@ func (a *App) Mirrored(ctx context.Context) (bool, error) {
 	return actual, err
 }
 
-func (a *App) selectorExist(ctx context.Context, selector string) (bool, error) {
-	var exist bool
-	if err := a.conn.Call(ctx, &exist, "Tast.exist", selector); err != nil {
-		return false, errors.Wrapf(err, "failed to check selector %v exist", selector)
-	}
-	return exist, nil
-}
-
 // CheckConfirmUIExists returns whether the confirm UI exists.
 func (a *App) CheckConfirmUIExists(ctx context.Context, mode Mode) error {
 	// Legacy UI use 'review-result' state to show the review page while new UI use review view.
@@ -1177,7 +1169,7 @@ func (a *App) SetEnableMultiStreamRecording(ctx context.Context, enabled bool) e
 
 // ClickShutter clicks the shutter button.
 func (a *App) ClickShutter(ctx context.Context) error {
-	if err := a.conn.Eval(ctx, "Tast.click('.shutter')", nil); err != nil {
+	if err := a.Click(ctx, Shutter); err != nil {
 		return errors.Wrap(err, "failed to click shutter button")
 	}
 	return nil
@@ -1254,11 +1246,6 @@ func (a *App) CheckGridOption(ctx context.Context, expected bool) error {
 		return errors.Errorf("unexpected grid option enablement: got %v, want %v", actual, expected)
 	}
 	return nil
-}
-
-// ClickWithSelector clicks an element with given selector.
-func (a *App) ClickWithSelector(ctx context.Context, selector string) error {
-	return a.conn.Call(ctx, nil, `Tast.click`, selector)
 }
 
 // RunThroughCameras runs function f in app after switching to each available camera.
