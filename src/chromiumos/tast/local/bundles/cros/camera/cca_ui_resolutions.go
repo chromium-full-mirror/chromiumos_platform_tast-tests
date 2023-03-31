@@ -17,6 +17,8 @@ import (
 
 	"chromiumos/tast/common/media/caps"
 	"chromiumos/tast/local/camera/cca"
+
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -254,15 +256,19 @@ func testPhotoResolutionAndAspectRatio(ctx context.Context, app *cca.App) error 
 			return errors.Wrap(err, "failed to switch to photo mode")
 		}
 
-		if err := cca.MainMenu.Open(ctx, app); err != nil {
-			return err
-		}
-		defer cca.MainMenu.Close(ctx, app)
+		cleanupCtx := ctx
+		ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+		defer cancel()
 
-		if err := cca.PhotoAspectRatioMenu.Open(ctx, app); err != nil {
+		if err := app.OpenSettingMenu(ctx, cca.MainMenu); err != nil {
 			return err
 		}
-		defer cca.PhotoAspectRatioMenu.Close(ctx, app)
+		defer app.CloseSettingMenu(cleanupCtx, cca.MainMenu)
+
+		if err := app.OpenSettingMenu(ctx, cca.PhotoAspectRatioMenu); err != nil {
+			return err
+		}
+		defer app.CloseSettingMenu(cleanupCtx, cca.PhotoAspectRatioMenu)
 
 		aspectRatioOptions := cca.FrontAspectRatioOptions
 		if facing == cca.FacingBack {
@@ -328,15 +334,19 @@ func checkResolutionAspectRatio(ctx context.Context, resolution *cca.Resolution,
 
 // clickThroughAllPhotoResolutionOptions tries out all the photo resolution options under current aspect ratio and ensures the configuration works successfully.
 func clickThroughAllPhotoResolutionOptions(ctx context.Context, app *cca.App, facing cca.Facing, checkAspectRatio bool, aspectRatio float64) error {
-	if err := cca.PhotoAspectRatioMenu.Close(ctx, app); err != nil {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
+	if err := app.CloseSettingMenu(ctx, cca.PhotoAspectRatioMenu); err != nil {
 		return errors.Wrap(err, "failed to close the aspect ratio settings page")
 	}
-	defer cca.PhotoAspectRatioMenu.Open(ctx, app)
+	defer app.OpenSettingMenu(cleanupCtx, cca.PhotoAspectRatioMenu)
 
-	if err := cca.PhotoResolutionMenu.Open(ctx, app); err != nil {
+	if err := app.OpenSettingMenu(ctx, cca.PhotoResolutionMenu); err != nil {
 		return err
 	}
-	defer cca.PhotoResolutionMenu.Close(ctx, app)
+	defer app.CloseSettingMenu(cleanupCtx, cca.PhotoResolutionMenu)
 
 	photoResolotionOptions := cca.FrontPhotoResolutionOptions
 	if facing == cca.FacingBack {
@@ -392,15 +402,19 @@ func testVideoResolutionAndFPS(ctx context.Context, app *cca.App) error {
 			return errors.Wrap(err, "failed to switch to video mode")
 		}
 
-		if err := cca.MainMenu.Open(ctx, app); err != nil {
-			return err
-		}
-		defer cca.MainMenu.Close(ctx, app)
+		cleanupCtx := ctx
+		ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+		defer cancel()
 
-		if err := cca.VideoResolutionMenu.Open(ctx, app); err != nil {
+		if err := app.OpenSettingMenu(ctx, cca.MainMenu); err != nil {
 			return err
 		}
-		defer cca.VideoResolutionMenu.Close(ctx, app)
+		defer app.CloseSettingMenu(cleanupCtx, cca.MainMenu)
+
+		if err := app.OpenSettingMenu(ctx, cca.VideoResolutionMenu); err != nil {
+			return err
+		}
+		defer app.CloseSettingMenu(cleanupCtx, cca.VideoResolutionMenu)
 
 		videoResolutionOptions := cca.FrontVideoResolutionOptions
 		if facing == cca.FacingBack {

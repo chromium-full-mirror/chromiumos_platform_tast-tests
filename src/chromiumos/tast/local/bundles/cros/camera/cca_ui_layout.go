@@ -13,6 +13,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/screenshot"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -149,20 +150,20 @@ func checkSettingsPage(ctx context.Context, app *cca.App, differ screenshot.Diff
 		return errors.Wrap(err, "failed to enable expert mode")
 	}
 
-	if err := cca.MainMenu.Open(ctx, app); err != nil {
+	if err := app.OpenSettingMenu(ctx, cca.MainMenu); err != nil {
 		return errors.Wrap(err, "failed to click settings button")
 	}
-	defer cca.MainMenu.Close(cleanupCtx, app)
+	defer app.CloseSettingMenu(cleanupCtx, cca.MainMenu)
 
 	if err := diffPage(ctx, app, differ, "settings"); err != nil {
 		return errors.Wrap(err, "failed to diff window for settings page")
 	}
 
 	// Verify expert mode content.
-	if err := cca.ExpertMenu.Open(ctx, app); err != nil {
+	if err := app.OpenSettingMenu(ctx, cca.ExpertMenu); err != nil {
 		return err
 	}
-	defer cca.ExpertMenu.Close(ctx, app)
+	defer app.CloseSettingMenu(cleanupCtx, cca.ExpertMenu)
 
 	if err := diffPage(ctx, app, differ, "expertMode"); err != nil {
 		return errors.Wrap(err, "failed to diff window for expert mode page")

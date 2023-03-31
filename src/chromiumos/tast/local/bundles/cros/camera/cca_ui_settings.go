@@ -63,10 +63,10 @@ func CCAUISettings(ctx context.Context, s *testing.State) {
 				ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
 				defer cancel()
 
-				if err := cca.MainMenu.Open(ctx, app); err != nil {
+				if err := app.OpenSettingMenu(ctx, cca.MainMenu); err != nil {
 					s.Fatal("Failed to click settings button: ", err)
 				}
-				defer cca.MainMenu.Close(cleanupCtx, app)
+				defer app.CloseSettingMenu(cleanupCtx, cca.MainMenu)
 
 				return tst.testFunc(ctx, cr, bt, app)
 			}, cca.TestWithAppParams{}); err != nil {

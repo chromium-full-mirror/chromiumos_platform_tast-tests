@@ -35,15 +35,6 @@ var (
 	// VideoPauseResumeButton is button for pausing or resuming video recording.
 	VideoPauseResumeButton = UIComponent{"video pause/resume button", []string{"#pause-recordvideo"}}
 
-	// PhotoResolutionSettingButton is button for opening photo resolution setting menu.
-	PhotoResolutionSettingButton = UIComponent{"photo resolution setting button", []string{"#settings-photo-resolution"}}
-	// PhotoAspectRatioSettingButton is button for opening photo aspect ratio setting menu.
-	PhotoAspectRatioSettingButton = UIComponent{"photo aspect ratio setting button", []string{"#settings-photo-aspect-ratio"}}
-	// VideoResolutionSettingButton is button for opening video resolution setting menu.
-	VideoResolutionSettingButton = UIComponent{"video resolution setting button", []string{"#settings-video-resolution"}}
-
-	// ExpertModeButton is button used for opening expert mode setting menu.
-	ExpertModeButton = UIComponent{"expert mode button", []string{"#settings-expert"}}
 	// FeedbackButton is the feedback button showing in the settings menu.
 	FeedbackButton = UIComponent{"feedback button", []string{"#settings-feedback"}}
 	// HelpButton is the help button showing in the settings menu.
@@ -131,6 +122,9 @@ var (
 // UIComponentName represents a name of UI component.
 type UIComponentName string
 
+// SettingMenu is the setting menu in CCA.
+type SettingMenu string
+
 // List of UI components used in CCA for testing.
 const (
 	// BackAspectRatioOptions are the buttons of aspect ratio options for the back camera.
@@ -213,6 +207,20 @@ const (
 	ZoomInButton UIComponentName = "zoomInButton"
 	// ZoomOutButton is the button for zoom out preview.
 	ZoomOutButton UIComponentName = "zoomOutButton"
+)
+
+// List of setting menus in CCA.
+const (
+	// ExpertMenu is the expert settings menu.
+	ExpertMenu SettingMenu = "expertMenu"
+	// MainMenu is the main setting menu.
+	MainMenu SettingMenu = "mainMenu"
+	// PhotoAspectRatioMenu is the photo aspect ratio settings menu.
+	PhotoAspectRatioMenu SettingMenu = "photoAspectRatioMenu"
+	// PhotoResolutionMenu is the photo resolution settings menu.
+	PhotoResolutionMenu SettingMenu = "photoResolutionMenu"
+	// VideoResolutionMenu is the video resolution settings menu.
+	VideoResolutionMenu SettingMenu = "videoResolutionMenu"
 )
 
 type errorUINotExist struct {
@@ -475,4 +483,34 @@ func (a *App) SetRangeInput(ctx context.Context, ui UIComponentName, value int) 
 		return errors.Wrapf(err, "failed to set range input %v to %v", ui, value)
 	}
 	return nil
+}
+
+// WaitForSettingMenuState waits until setting menu state become as expected.
+func (a *App) WaitForSettingMenuState(ctx context.Context, menu SettingMenu, expected bool) error {
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		var actual bool
+		if err := a.conn.Call(ctx, &actual, "CCATest.isSettingMenuOpened", menu); err != nil {
+			return testing.PollBreak(errors.Wrapf(err, "failed to get the state of setting menu %v", menu))
+		}
+		if actual != expected {
+			return errors.Errorf("failed to wait setting menu state for %v: got %v, want %v", menu, actual, expected)
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 5 * time.Second})
+}
+
+// OpenSettingMenu opens the setting menu and waits for it to be opened.
+func (a *App) OpenSettingMenu(ctx context.Context, menu SettingMenu) error {
+	if err := a.conn.Call(ctx, nil, "CCATest.openSettingMenu", menu); err != nil {
+		return errors.Wrapf(err, "failed to click to open the setting menu %v", menu)
+	}
+	return a.WaitForSettingMenuState(ctx, menu, true)
+}
+
+// CloseSettingMenu closes the setting menu.
+func (a *App) CloseSettingMenu(ctx context.Context, menu SettingMenu) error {
+	if err := a.conn.Call(ctx, nil, "CCATest.closeSettingMenu", menu); err != nil {
+		return errors.Wrapf(err, "failed to close the setting menu %v", menu)
+	}
+	return a.WaitForSettingMenuState(ctx, menu, false)
 }

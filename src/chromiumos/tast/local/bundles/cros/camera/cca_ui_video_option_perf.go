@@ -14,6 +14,7 @@ import (
 	"chromiumos/tast/local/camera/cca"
 	"chromiumos/tast/local/cpu"
 	mediacpu "chromiumos/tast/local/media/cpu"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -56,7 +57,7 @@ func CCAUIVideoOptionPerf(ctx context.Context, s *testing.State) {
 	}
 
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 15*time.Second)
 	defer cancel()
 
 	app, err := startApp(ctx)
@@ -76,15 +77,15 @@ func CCAUIVideoOptionPerf(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to toggle expert mode: ", err)
 	}
 
-	if err := cca.MainMenu.Open(ctx, app); err != nil {
+	if err := app.OpenSettingMenu(ctx, cca.MainMenu); err != nil {
 		s.Fatal("Failed to open setting menu: ", err)
 	}
-	defer cca.MainMenu.Close(ctx, app)
+	defer app.CloseSettingMenu(cleanupCtx, cca.MainMenu)
 
-	if err := cca.ExpertMenu.Open(ctx, app); err != nil {
+	if err := app.OpenSettingMenu(ctx, cca.ExpertMenu); err != nil {
 		s.Fatal("Failed to open expert setting menu: ", err)
 	}
-	defer cca.ExpertMenu.Close(ctx, app)
+	defer app.CloseSettingMenu(cleanupCtx, cca.ExpertMenu)
 
 	if toggled, err := app.ToggleOption(ctx, cca.CustomVideoParametersOption); err != nil {
 		s.Fatal("Failed to toggle custom video parameters: ", err)

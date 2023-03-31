@@ -16,6 +16,8 @@ import (
 
 	"chromiumos/tast/common/media/caps"
 	"chromiumos/tast/local/camera/cca"
+
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -140,15 +142,19 @@ func captureAndVerifyEXIF(ctx context.Context, app *cca.App) error {
 
 // setAspectRatio sets aspect ratios(1.333 (4:3), 1.7778 (16:9)) using cca app.
 func setAspectRatio(ctx context.Context, app *cca.App, aspectRatio float64) error {
-	if err := cca.MainMenu.Open(ctx, app); err != nil {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
+	if err := app.OpenSettingMenu(ctx, cca.MainMenu); err != nil {
 		return errors.Wrap(err, "failed to open main menu")
 	}
-	defer cca.MainMenu.Close(ctx, app)
+	defer app.CloseSettingMenu(cleanupCtx, cca.MainMenu)
 
-	if err := cca.PhotoAspectRatioMenu.Open(ctx, app); err != nil {
+	if err := app.OpenSettingMenu(ctx, cca.PhotoAspectRatioMenu); err != nil {
 		return errors.Wrap(err, "failed to open aspect ratio main menu")
 	}
-	defer cca.PhotoAspectRatioMenu.Close(ctx, app)
+	defer app.CloseSettingMenu(cleanupCtx, cca.PhotoAspectRatioMenu)
 
 	facing, err := app.GetFacing(ctx)
 	if err != nil {

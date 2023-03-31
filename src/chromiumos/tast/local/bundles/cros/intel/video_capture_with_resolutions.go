@@ -10,6 +10,8 @@ import (
 
 	"chromiumos/tast/common/media/caps"
 	"chromiumos/tast/local/camera/cca"
+
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -73,15 +75,19 @@ func iterateResolutionAndRecord(ctx context.Context, app *cca.App) error {
 		return errors.Wrap(err, "failed to switch to video mode")
 	}
 
-	if err := cca.MainMenu.Open(ctx, app); err != nil {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
+	if err := app.OpenSettingMenu(ctx, cca.MainMenu); err != nil {
 		return errors.Wrap(err, "failed to open main menu")
 	}
-	defer cca.MainMenu.Close(ctx, app)
+	defer app.CloseSettingMenu(cleanupCtx, cca.MainMenu)
 
-	if err := cca.VideoResolutionMenu.Open(ctx, app); err != nil {
+	if err := app.OpenSettingMenu(ctx, cca.VideoResolutionMenu); err != nil {
 		return errors.Wrap(err, "failed to open resolution main menu")
 	}
-	defer cca.VideoResolutionMenu.Close(ctx, app)
+	defer app.CloseSettingMenu(cleanupCtx, cca.VideoResolutionMenu)
 
 	facing, err := app.GetFacing(ctx)
 	if err != nil {

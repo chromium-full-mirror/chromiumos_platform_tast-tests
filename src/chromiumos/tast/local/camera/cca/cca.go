@@ -1186,15 +1186,15 @@ func (a *App) SetEnableMultiStreamRecording(ctx context.Context, enabled bool) e
 		return errors.Wrap(err, "failed to enable expert mode")
 	}
 
-	if err := MainMenu.Open(ctx, a); err != nil {
+	if err := a.OpenSettingMenu(ctx, MainMenu); err != nil {
 		return errors.Wrap(err, "failed to open main menu")
 	}
-	defer MainMenu.Close(ctx, a)
+	defer a.CloseSettingMenu(ctx, MainMenu)
 
-	if err := ExpertMenu.Open(ctx, a); err != nil {
+	if err := a.OpenSettingMenu(ctx, ExpertMenu); err != nil {
 		return errors.Wrap(err, "failed to open expert menu")
 	}
-	defer ExpertMenu.Close(ctx, a)
+	defer a.CloseSettingMenu(ctx, ExpertMenu)
 
 	if err := a.setEnableOption(ctx, EnableMultistreamRecordingOption, enabled); err != nil {
 		return errors.Wrap(err, "failed to enable multi-stream recording")

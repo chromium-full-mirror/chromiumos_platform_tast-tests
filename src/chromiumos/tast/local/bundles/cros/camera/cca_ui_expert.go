@@ -6,9 +6,12 @@ package camera
 
 import (
 	"context"
+	"time"
 
 	"chromiumos/tast/common/media/caps"
 	"chromiumos/tast/local/camera/cca"
+
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -68,15 +71,19 @@ func toggleExpertMode(ctx context.Context, app *cca.App) error {
 }
 
 func toggleExpertModeOptions(ctx context.Context, app *cca.App) error {
-	if err := cca.MainMenu.Open(ctx, app); err != nil {
-		return err
-	}
-	defer cca.MainMenu.Close(ctx, app)
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
 
-	if err := cca.ExpertMenu.Open(ctx, app); err != nil {
+	if err := app.OpenSettingMenu(ctx, cca.MainMenu); err != nil {
 		return err
 	}
-	defer cca.ExpertMenu.Close(ctx, app)
+	defer app.CloseSettingMenu(cleanupCtx, cca.MainMenu)
+
+	if err := app.OpenSettingMenu(ctx, cca.ExpertMenu); err != nil {
+		return err
+	}
+	defer app.CloseSettingMenu(cleanupCtx, cca.ExpertMenu)
 
 	if _, err := app.ToggleOption(ctx, cca.ShowMetadataOption); err != nil {
 		return err
@@ -98,15 +105,19 @@ func switchModeAndBack(ctx context.Context, app *cca.App) error {
 }
 
 func disableExpertModeOnUI(ctx context.Context, app *cca.App) error {
-	if err := cca.MainMenu.Open(ctx, app); err != nil {
-		return err
-	}
-	defer cca.MainMenu.Close(ctx, app)
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
 
-	if err := cca.ExpertMenu.Open(ctx, app); err != nil {
+	if err := app.OpenSettingMenu(ctx, cca.MainMenu); err != nil {
 		return err
 	}
-	defer cca.ExpertMenu.Close(ctx, app)
+	defer app.CloseSettingMenu(cleanupCtx, cca.MainMenu)
+
+	if err := app.OpenSettingMenu(ctx, cca.ExpertMenu); err != nil {
+		return err
+	}
+	defer app.CloseSettingMenu(cleanupCtx, cca.ExpertMenu)
 
 	if _, err := app.ToggleOption(ctx, cca.ExpertModeOption); err != nil {
 		return err
@@ -115,10 +126,14 @@ func disableExpertModeOnUI(ctx context.Context, app *cca.App) error {
 }
 
 func enableExpertModeOnUI(ctx context.Context, app *cca.App) error {
-	if err := cca.MainMenu.Open(ctx, app); err != nil {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
+	defer cancel()
+
+	if err := app.OpenSettingMenu(ctx, cca.MainMenu); err != nil {
 		return err
 	}
-	defer cca.MainMenu.Close(ctx, app)
+	defer app.CloseSettingMenu(cleanupCtx, cca.MainMenu)
 
 	// Clicking setting header 5 times should enable expert mode. (b/190696285)
 	for i := 0; i < 5; i++ {
