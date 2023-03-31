@@ -38,11 +38,11 @@ func CCAUIExpert(ctx context.Context, s *testing.State) {
 	}{
 		// Expert mode is not reset after each test for persistency
 		{"toggleExpertMode", toggleExpertMode, false},
-		{"toggleExpertModeOptions", toggleExpertModeOptions, true},
+		{"enableExpertModeOptions", enableExpertModeOptions, true},
 		{"switchModeAndBack", switchModeAndBack, true},
 		{"toggleExpertMode", toggleExpertMode, false},
 		{"toggleExpertMode", toggleExpertMode, true},
-		{"toggleExpertModeOptions", toggleExpertModeOptions, false},
+		{"disableExpertModeOptions", disableExpertModeOptions, false},
 		{"disableExpertModeOnUI", disableExpertModeOnUI, false},
 		{"enableExpertModeOnUI", enableExpertModeOnUI, false},
 	} {
@@ -70,7 +70,15 @@ func toggleExpertMode(ctx context.Context, app *cca.App) error {
 	return err
 }
 
-func toggleExpertModeOptions(ctx context.Context, app *cca.App) error {
+func enableExpertModeOptions(ctx context.Context, app *cca.App) error {
+	return toggleExpertModeOptions(ctx, app, true)
+}
+
+func disableExpertModeOptions(ctx context.Context, app *cca.App) error {
+	return toggleExpertModeOptions(ctx, app, false)
+}
+
+func toggleExpertModeOptions(ctx context.Context, app *cca.App, enabled bool) error {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
@@ -85,10 +93,10 @@ func toggleExpertModeOptions(ctx context.Context, app *cca.App) error {
 	}
 	defer app.CloseSettingMenu(cleanupCtx, cca.ExpertMenu)
 
-	if _, err := app.ToggleOption(ctx, cca.ShowMetadataOption); err != nil {
+	if err := app.SetOptionChecked(ctx, cca.ShowMetadataOption, enabled); err != nil {
 		return err
 	}
-	if _, err := app.ToggleOption(ctx, cca.SaveMetadataOption); err != nil {
+	if err := app.SetOptionChecked(ctx, cca.SaveMetadataOption, enabled); err != nil {
 		return err
 	}
 	return nil
@@ -119,7 +127,7 @@ func disableExpertModeOnUI(ctx context.Context, app *cca.App) error {
 	}
 	defer app.CloseSettingMenu(cleanupCtx, cca.ExpertMenu)
 
-	if _, err := app.ToggleOption(ctx, cca.ExpertModeOption); err != nil {
+	if err := app.SetOptionChecked(ctx, cca.ExpertModeOption, false); err != nil {
 		return err
 	}
 	return nil

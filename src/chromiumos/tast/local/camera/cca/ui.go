@@ -90,33 +90,6 @@ var (
 	A11yCanvasNode = nodewith.Role(role.Canvas).Ancestor(A11yRootNode)
 )
 
-// Option is the option for toggling state.
-type Option struct {
-	// ui is the |UIComponent| to toggle the option.
-	ui UIComponent
-	// state is state toggle by this option.
-	state string
-}
-
-func newOption(state, selector string) Option {
-	name := fmt.Sprintf("option to toggle %v state", state)
-	selectors := []string{selector}
-	return Option{ui: UIComponent{Name: name, Selectors: selectors}, state: state}
-}
-
-var (
-	// CustomVideoParametersOption is the option to enable custom video parameters.
-	CustomVideoParametersOption = newOption("custom-video-parameters", "#custom-video-parameters")
-	// ExpertModeOption is the option to enable expert mode.
-	ExpertModeOption = newOption("expert", "#expert-enable-expert-mode")
-	// SaveMetadataOption is the option to save metadata of capture result.
-	SaveMetadataOption = newOption("save-metadata", "#expert-save-metadata")
-	// ShowMetadataOption is the option to show preview metadata.
-	ShowMetadataOption = newOption("show-metadata", "#expert-show-metadata")
-	// EnableMultistreamRecordingOption is the option to enable document scanning on all cameras.
-	EnableMultistreamRecordingOption = newOption("enable-multistream-recording", "#expert-enable-multistream-recording")
-)
-
 // The following types are defined corresponding to definitions in
 // /js/test/cca_type.ts in CCA side.
 
@@ -125,6 +98,9 @@ type UIComponentName string
 
 // SettingMenu is the setting menu in CCA.
 type SettingMenu string
+
+// Option is the option for toggling state.
+type Option string
 
 // List of UI components used in CCA for testing.
 const (
@@ -224,6 +200,20 @@ const (
 	PhotoResolutionMenu SettingMenu = "photoResolutionMenu"
 	// VideoResolutionMenu is the video resolution settings menu.
 	VideoResolutionMenu SettingMenu = "videoResolutionMenu"
+)
+
+// List of options in CCA.
+const (
+	// CustomVideoParametersOption is the option to enable custom video parameters.
+	CustomVideoParametersOption Option = "customVideoParametersOption"
+	// ExpertModeOption is the option to enable expert mode.
+	ExpertModeOption Option = "expertModeOption"
+	// MultistreamRecordingOption is the option to enable multistream video recording.
+	MultistreamRecordingOption Option = "multiStreamRecordingOption"
+	// SaveMetadataOption is the option to save metadata of capture result.
+	SaveMetadataOption Option = "saveMetadataOption"
+	// ShowMetadataOption is the option to show preview metadata.
+	ShowMetadataOption Option = "showMetadataOption"
 )
 
 type errorUINotExist struct {
@@ -516,4 +506,39 @@ func (a *App) CloseSettingMenu(ctx context.Context, menu SettingMenu) error {
 		return errors.Wrapf(err, "failed to close the setting menu %v", menu)
 	}
 	return a.WaitForSettingMenuState(ctx, menu, false)
+}
+
+// OptionChecked returns the checked state of the state associated to |option|.
+func (a *App) OptionChecked(ctx context.Context, option Option) (bool, error) {
+	var result bool
+	if err := a.conn.Call(ctx, &result, "CCATest.getOptionState", option); err != nil {
+		return false, errors.Wrapf(err, "failed to get the state of %v", option)
+	}
+	return result, nil
+}
+
+// SetOptionChecked sets the checked state of |option| to |enabled|.
+func (a *App) SetOptionChecked(ctx context.Context, option Option, enabled bool) error {
+	prev, err := a.OptionChecked(ctx, option)
+	if err != nil {
+		return errors.Wrapf(err, "failed to get option state %v", option)
+	}
+	if prev == enabled {
+		return nil
+	}
+
+	if err := a.conn.Call(ctx, nil, "CCATest.toggleOption", option); err != nil {
+		return errors.Wrapf(err, "failed to toggle option %v", option)
+	}
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if state, err := a.OptionChecked(ctx, option); err != nil {
+			return testing.PollBreak(errors.Wrapf(err, "failed to get the state of option %v", option))
+		} else if state != enabled {
+			return errors.Errorf("failed to wait for state change of option %v", option)
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
+		return err
+	}
+	return nil
 }

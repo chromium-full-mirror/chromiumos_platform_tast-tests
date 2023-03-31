@@ -1063,41 +1063,6 @@ func (a *App) ConfirmResult(ctx context.Context, isConfirmed bool, mode Mode) er
 	return nil
 }
 
-// ToggleOption toggles on/off of the |option|.
-func (a *App) ToggleOption(ctx context.Context, option Option) (bool, error) {
-	prev, err := a.State(ctx, option.state)
-	if err != nil {
-		return false, err
-	}
-	if err := a.Click(ctx, option.ui); err != nil {
-		return false, err
-	}
-	code := fmt.Sprintf("Tast.getState(%q) !== %t", option.state, prev)
-	if err := a.conn.WaitForExpr(ctx, code); err != nil {
-		return false, errors.Wrapf(err, "failed to wait for toggling option %s", option.state)
-	}
-	return a.State(ctx, option.state)
-}
-
-func (a *App) setEnableOption(ctx context.Context, option Option, enabled bool) error {
-	prev, err := a.State(ctx, option.state)
-	if err != nil {
-		return errors.Wrapf(err, "failed to get option state %v", option)
-	}
-	if prev == enabled {
-		return nil
-	}
-
-	cur, err := a.ToggleOption(ctx, option)
-	if err != nil {
-		return errors.Wrapf(err, "failed to toggle option %v", option)
-	}
-	if cur != enabled {
-		return errors.Errorf("unexpected state after toggled option %v", option)
-	}
-	return nil
-}
-
 // OpenQRCodeScanMode switches to Scan mode and chooses QR Code option.
 func (a *App) OpenQRCodeScanMode(ctx context.Context) error {
 	if err := a.SwitchMode(ctx, Scan); err != nil {
@@ -1197,7 +1162,7 @@ func (a *App) SetEnableMultiStreamRecording(ctx context.Context, enabled bool) e
 	}
 	defer a.CloseSettingMenu(ctx, ExpertMenu)
 
-	if err := a.setEnableOption(ctx, EnableMultistreamRecordingOption, enabled); err != nil {
+	if err := a.SetOptionChecked(ctx, MultistreamRecordingOption, enabled); err != nil {
 		return errors.Wrap(err, "failed to enable multi-stream recording")
 	}
 

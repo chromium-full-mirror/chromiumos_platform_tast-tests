@@ -87,10 +87,8 @@ func CCAUIVideoOptionPerf(ctx context.Context, s *testing.State) {
 	}
 	defer app.CloseSettingMenu(cleanupCtx, cca.ExpertMenu)
 
-	if toggled, err := app.ToggleOption(ctx, cca.CustomVideoParametersOption); err != nil {
+	if err := app.SetOptionChecked(ctx, cca.CustomVideoParametersOption, true); err != nil {
 		s.Fatal("Failed to toggle custom video parameters: ", err)
-	} else if !toggled {
-		s.Fatal("Custom video parameters is not toggled")
 	}
 
 	perfValues := perf.NewValues()
