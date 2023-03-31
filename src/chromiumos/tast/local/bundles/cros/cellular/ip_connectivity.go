@@ -40,6 +40,14 @@ func init() {
 			Name:      "ipv4v6",
 			Val:       ipTestParams{"callbox_null_attach_ipv4v6.pbf", true, true},
 			ExtraData: []string{"callbox_null_attach_ipv4v6.pbf"},
+		}, {
+			Name:      "ipv4v6_fallback_ipv4",
+			Val:       ipTestParams{"callbox_null_attach_ipv4v6_fallback_ipv4.pbf", true, false},
+			ExtraData: []string{"callbox_null_attach_ipv4v6_fallback_ipv4.pbf"},
+		}, {
+			Name:      "ipv4v6_fallback_ipv6",
+			Val:       ipTestParams{"callbox_null_attach_ipv4v6_fallback_ipv6.pbf", false, true},
+			ExtraData: []string{"callbox_null_attach_ipv4v6_fallback_ipv6.pbf"},
 		}},
 		Fixture: "cellular",
 		Timeout: 2 * time.Minute,
