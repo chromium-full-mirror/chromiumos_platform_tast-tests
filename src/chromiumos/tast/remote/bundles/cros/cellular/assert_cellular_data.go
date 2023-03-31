@@ -28,7 +28,8 @@ func init() {
 		Params: []testing.Param{
 			{
 				// names are defined <tech>_<#CCs>_<MIMO>_<CA BANDS>
-				Name: "lte_cc1_x1_b3",
+				Name:      "lte_cc1_x1_b3",
+				ExtraAttr: []string{"cellular_cmw_callbox"},
 				Val: &manager.ConfigureCallboxRequestBody{
 					Hardware:     manager.CallboxHardwareCMW,
 					CellularType: manager.CellularTechnologyLTE,
@@ -41,7 +42,8 @@ func init() {
 				},
 			},
 			{
-				Name: "lte_cc1_x2_b3",
+				Name:      "lte_cc1_x2_b3",
+				ExtraAttr: []string{"cellular_cmw_callbox"},
 				Val: &manager.ConfigureCallboxRequestBody{
 					Hardware:     manager.CallboxHardwareCMW,
 					CellularType: manager.CellularTechnologyLTE,
@@ -54,7 +56,8 @@ func init() {
 				},
 			},
 			{
-				Name: "lte_cc2_x1x1_b3b7",
+				Name:      "lte_cc2_x1x1_b3b7",
+				ExtraAttr: []string{"cellular_cmw_callbox"},
 				Val: &manager.ConfigureCallboxRequestBody{
 					Hardware:     manager.CallboxHardwareCMW,
 					CellularType: manager.CellularTechnologyLTE,
@@ -75,6 +78,7 @@ func init() {
 				// 3CA not supported on FM101.
 				// TODO(b/275646150) group models by modem in cellular.knownVariants to make modem-bases restrictions more complete.
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("pujjo")),
+				ExtraAttr:         []string{"cellular_cmw_callbox"},
 				Val: &manager.ConfigureCallboxRequestBody{
 					Hardware:     manager.CallboxHardwareCMW,
 					CellularType: manager.CellularTechnologyLTE,

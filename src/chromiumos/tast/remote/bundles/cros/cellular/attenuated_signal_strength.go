@@ -44,7 +44,7 @@ func init() {
 		Desc:         "Progressively lowers the downlink power on the callbox and verifies that the signal strength calculated by shill decreases by a proportional amount",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "jstanko@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_callbox"},
+		Attr:         []string{"group:cellular", "cellular_callbox", "cellular_cmw_callbox"},
 		ServiceDeps:  []string{"tast.cros.cellular.RemoteCellularService"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "callboxManagedFixture",

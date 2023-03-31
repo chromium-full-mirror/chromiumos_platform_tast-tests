@@ -34,7 +34,7 @@ func init() {
 		Desc:         "Verifies that Tx power received at the callbox is within acceptable limits for a given SAR level/band combination",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "jstanko@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_callbox"},
+		Attr:         []string{"group:cellular", "cellular_callbox", "cellular_cmw_callbox"},
 		ServiceDeps:  []string{"tast.cros.cellular.RemoteCellularService"},
 		SoftwareDeps: []string{"chrome"},
 		// restrict tests to models that we have SAR tables for, TODO: revisit with (b/257515425)

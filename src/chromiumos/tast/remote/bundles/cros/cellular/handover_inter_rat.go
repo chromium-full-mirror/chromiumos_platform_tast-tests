@@ -31,7 +31,7 @@ func init() {
 			"jstanko@google.com",
 		},
 		BugComponent: "b:167157",
-		Attr:         []string{"group:cellular", "cellular_callbox"},
+		Attr:         []string{"group:cellular", "cellular_callbox", "cellular_cmw_callbox"},
 		ServiceDeps:  []string{"tast.cros.cellular.RemoteCellularService"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "callboxManagedFixture",
