@@ -17,17 +17,41 @@ func NewBand(band int) Band {
 	return Band(fmt.Sprintf("%d", band))
 }
 
+// NewNBand returns a NR Band given an integer band number.
+func NewNBand(band int) Band {
+	return Band(fmt.Sprintf("n%d", band))
+}
+
 // Bandwidth represents the carrier bandwidth to set on the callbox.
 type Bandwidth string
 
-// Supported bandwidths.
+// Supported LTE only bandwidths.
 const (
-	Bandwidth1MHz  = "1.4"
-	Bandwidth2MHz  = "2"
+	Bandwidth1MHz = "1.4"
+	Bandwidth2MHz = "2"
+)
+
+// Supported LTE & 5G bandwidths.
+const (
 	Bandwidth5Mhz  = "5"
 	Bandwidth10MHz = "10"
 	Bandwidth15MHz = "15"
 	Bandwidth20MHz = "20"
+)
+
+// 5G only bandwidths.
+const (
+	Bandwidth25MHz  = "25"
+	Bandwidth30MHz  = "30"
+	Bandwidth35MHz  = "35"
+	Bandwidth40MHz  = "40"
+	Bandwidth45MHz  = "45"
+	Bandwidth50MHz  = "50"
+	Bandwidth60MHz  = "60"
+	Bandwidth70MHz  = "70"
+	Bandwidth80MHz  = "80"
+	Bandwidth90MHz  = "90"
+	Bandwidth100MHz = "100"
 )
 
 // CallboxHardware represents the type of callbox that the DUT is connected to.
@@ -36,6 +60,7 @@ type CallboxHardware string
 // Supported callbox hardware types.
 const (
 	CallboxHardwareCMW = "CMW"
+	CallboxHardwareCMX = "CMX"
 )
 
 // CellularTechnology represents cellular network technology.
@@ -46,6 +71,8 @@ const (
 	CellularTechnologyLTE CellularTechnology = "LTE"
 	// CellularTechnologyWCDMA represents a WCDMA cellular network.
 	CellularTechnologyWCDMA CellularTechnology = "WCDMA"
+	// CellularTechnologyNR5GNSA represents a 5G NSA cellular network.
+	CellularTechnologyNR5GNSA CellularTechnology = "NR5G_NSA"
 )
 
 // MimoMode represents a cellular MIMO configuration.
@@ -137,17 +164,32 @@ func (d DRXConfiguration) MarshalJSON() ([]byte, error) {
 	)
 }
 
+// SchedulingMode represents the type of UE scheduling to use.
+type SchedulingMode string
+
+// Supported SchedulingModes.
+const (
+	SchedulingModeStatic  = "static"
+	SchedulingModeDynamic = "dynamic"
+)
+
 // CellConfiguration represents the configuration options for a cellular base station.
 // If multiple are provided, each configuration will be applied to the primary and secondary
 // carriers in a carrier aggregation scenario, respectively.
 type CellConfiguration struct {
-	Band             Band              `json:"band,omitempty"`
-	Bandwidth        Bandwidth         `json:"bw,omitempty"`
-	Mimo             MimoMode          `json:"mimo,omitempty"`
-	RxPower          RxPower           `json:"pdl,omitempty"`
-	TxPower          TxPower           `json:"pul,omitempty"`
-	TransmissionMode TransmissionMode  `json:"tm,omitempty"`
-	DRX              *DRXConfiguration `json:"drx,omitempty"`
+	Band                   Band              `json:"band,omitempty"`
+	Bandwidth              Bandwidth         `json:"bw,omitempty"`
+	Mimo                   MimoMode          `json:"mimo,omitempty"`
+	RxPower                RxPower           `json:"pdl,omitempty"`
+	TxPower                TxPower           `json:"pul,omitempty"`
+	TransmissionMode       TransmissionMode  `json:"tm,omitempty"`
+	DRX                    *DRXConfiguration `json:"drx,omitempty"`
+	Downlink256QAM         bool              `json:"dl_256_qam_enabled,omitempty"`
+	Scheduling             SchedulingMode    `json:"scheduling,omitempty"`
+	DownlinkResourceBlocks int               `json:"dl_rbs,omitempty"`
+	UplinkResourceBlocks   int               `json:"ul_rbs,omitempty"`
+	DownlinkMCS            int               `json:"dlmcs,omitempty"`
+	UplinkMCS              int               `json:"ulmcs,omitempty"`
 }
 
 // CellOption represents a configuration option for a base station cell/component carrier.
@@ -157,6 +199,13 @@ type CellOption func(opt *CellConfiguration)
 func BandOption(band int) CellOption {
 	return func(opt *CellConfiguration) {
 		opt.Band = NewBand(band)
+	}
+}
+
+// NBandOption configures the cell frequency band as a NR band.
+func NBandOption(band int) CellOption {
+	return func(opt *CellConfiguration) {
+		opt.Band = NewNBand(band)
 	}
 }
 
@@ -196,15 +245,54 @@ func DRXOption(DRX *DRXConfiguration) CellOption {
 	}
 }
 
+// SchedulingOption configures the cells scheduling settings.
+func SchedulingOption(dlRB, ulRB, dlMCS, ulMCS int) CellOption {
+	return func(opt *CellConfiguration) {
+		opt.Scheduling = SchedulingModeStatic
+		opt.DownlinkResourceBlocks = dlRB
+		opt.UplinkResourceBlocks = ulRB
+		opt.DownlinkMCS = dlMCS
+		opt.UplinkMCS = ulMCS
+	}
+}
+
 // NewLteCellConfiguration returns a default configuration for an LTE cell with the optional overrides.
 func NewLteCellConfiguration(options ...CellOption) CellConfiguration {
 	config := CellConfiguration{
-		Band:             NewBand(3),
-		Bandwidth:        Bandwidth20MHz,
-		Mimo:             MimoMode2x2,
-		TransmissionMode: TransmissionMode3,
-		RxPower:          LteRxPowerExcellent,
-		TxPower:          LteTxPowerMax,
+		Band:                   NewBand(3),
+		Bandwidth:              Bandwidth20MHz,
+		Mimo:                   MimoMode2x2,
+		TransmissionMode:       TransmissionMode3,
+		RxPower:                LteRxPowerExcellent,
+		TxPower:                LteTxPowerMax,
+		Scheduling:             SchedulingModeStatic,
+		DownlinkResourceBlocks: 100,
+		UplinkResourceBlocks:   100,
+		DownlinkMCS:            28,
+		UplinkMCS:              23,
+	}
+
+	for _, opt := range options {
+		opt(&config)
+	}
+
+	return config
+}
+
+// New5GNSACellConfiguration returns a default configuration for an LTE cell with the optional overrides.
+func New5GNSACellConfiguration(options ...CellOption) CellConfiguration {
+	config := CellConfiguration{
+		Band:                   NewNBand(78),
+		Bandwidth:              Bandwidth100MHz,
+		Mimo:                   MimoMode2x2,
+		TransmissionMode:       TransmissionMode3,
+		TxPower:                LteTxPowerMax,
+		RxPower:                LteRxPowerExcellent,
+		Scheduling:             SchedulingModeStatic,
+		DownlinkResourceBlocks: 273,
+		UplinkResourceBlocks:   273,
+		DownlinkMCS:            28,
+		UplinkMCS:              23,
 	}
 
 	for _, opt := range options {

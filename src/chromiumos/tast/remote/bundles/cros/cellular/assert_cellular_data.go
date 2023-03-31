@@ -98,6 +98,43 @@ func init() {
 					},
 				},
 			},
+			{
+				Name: "lte_cc1_x4_b3",
+				// 4x4 lte is only supported on CMX
+				ExtraAttr: []string{"cellular_cmx_callbox"},
+				// TODO(b/273954565): remove hwdep once drone push has landed so R&S carrier names can be used
+				ExtraHardwareDeps: hwdep.D(hwdep.Model("vell")),
+				Val: &manager.ConfigureCallboxRequestBody{
+					Hardware:     manager.CallboxHardwareCMX,
+					CellularType: manager.CellularTechnologyLTE,
+					Parameters: []manager.CellConfiguration{
+						manager.NewLteCellConfiguration(
+							manager.BandOption(1),
+							manager.AntennaOption(manager.MimoMode4x4, manager.TransmissionMode3),
+						),
+					},
+				},
+			},
+			{
+				Name:      "nr5g_cc1_x1_b1n78",
+				ExtraAttr: []string{"cellular_cmx_callbox"},
+				// TODO(b/273954565): remove hwdep once drone push has landed so R&S carrier names can be used
+				ExtraHardwareDeps: hwdep.D(hwdep.Model("vell")),
+				Val: &manager.ConfigureCallboxRequestBody{
+					Hardware:     manager.CallboxHardwareCMX,
+					CellularType: manager.CellularTechnologyNR5GNSA,
+					Parameters: []manager.CellConfiguration{
+						manager.NewLteCellConfiguration(
+							manager.BandOption(1),
+							manager.AntennaOption(manager.MimoMode4x4, manager.TransmissionMode3),
+						),
+						manager.New5GNSACellConfiguration(
+							manager.NBandOption(78),
+							manager.AntennaOption(manager.MimoMode4x4, manager.TransmissionMode3),
+						),
+					},
+				},
+			},
 		},
 	})
 }
