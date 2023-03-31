@@ -1,4 +1,221 @@
 {
+  "ArcYoutubeCUJ": {
+    "aliases": {},
+    "description": "Measures the performance of critical user journey for the YouTube ARC app",
+    "groups": [
+      {
+        "groupName": "ungrouped",
+        "variantNames": [
+          ""
+        ]
+      }
+    ],
+    "majorTestVersion": 1,
+    "variantsInfo": [
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "ash",
+        "fixture": "loggedInToCUJUser",
+        "id": "arcyoutubecuj.",
+        "variantName": ""
+      }
+    ]
+  },
+  "BenchmarkCUJ": {
+    "aliases": {},
+    "description": "CUJ running browser benchmarks",
+    "groups": [
+      {
+        "groupName": "speedometer",
+        "variantNames": [
+          "lacros_speedometer",
+          "speedometer"
+        ]
+      },
+      {
+        "groupName": "motionmark",
+        "variantNames": [
+          "lacros_motionmark",
+          "motionmark"
+        ]
+      },
+      {
+        "groupName": "jetstream",
+        "variantNames": [
+          "jetstream",
+          "lacros_jetstream"
+        ]
+      },
+      {
+        "groupName": "kraken",
+        "variantNames": [
+          "kraken",
+          "lacros_kraken"
+        ]
+      }
+    ],
+    "majorTestVersion": 1,
+    "variantsInfo": [
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "ash",
+        "fixture": "loggedInToCUJUser",
+        "id": "benchmarkcuj.speedometer",
+        "variantName": "speedometer"
+      },
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "lacros",
+        "fixture": "loggedInToCUJUserLacros",
+        "id": "benchmarkcuj.lacros_speedometer",
+        "variantName": "lacros_speedometer"
+      },
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "ash",
+        "fixture": "loggedInToCUJUser",
+        "id": "benchmarkcuj.motionmark",
+        "variantName": "motionmark"
+      },
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "lacros",
+        "fixture": "loggedInToCUJUserLacros",
+        "id": "benchmarkcuj.lacros_motionmark",
+        "variantName": "lacros_motionmark"
+      },
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "ash",
+        "fixture": "loggedInToCUJUser",
+        "id": "benchmarkcuj.jetstream",
+        "variantName": "jetstream"
+      },
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "lacros",
+        "fixture": "loggedInToCUJUserLacros",
+        "id": "benchmarkcuj.lacros_jetstream",
+        "variantName": "lacros_jetstream"
+      },
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "ash",
+        "fixture": "loggedInToCUJUser",
+        "id": "benchmarkcuj.kraken",
+        "variantName": "kraken"
+      },
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "lacros",
+        "fixture": "loggedInToCUJUserLacros",
+        "id": "benchmarkcuj.lacros_kraken",
+        "variantName": "lacros_kraken"
+      }
+    ]
+  },
+  "DebugLacrosPerf": {
+    "aliases": {},
+    "description": "Temporary tests to help debug lacros performance issues",
+    "groups": [
+      {
+        "groupName": "color_change",
+        "variantNames": [
+          "color_change_ash",
+          "color_change_lacros"
+        ]
+      },
+      {
+        "groupName": "text_scroll",
+        "variantNames": [
+          "text_scroll_ash",
+          "text_scroll_lacros"
+        ]
+      },
+      {
+        "groupName": "video_playback",
+        "variantNames": [
+          "video_playback_ash",
+          "video_playback_lacros"
+        ]
+      }
+    ],
+    "majorTestVersion": 1,
+    "variantsInfo": [
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "ash",
+        "fixture": "chromeLoggedInDisableFirmwareUpdaterApp",
+        "id": "debuglacrosperf.text_scroll_ash",
+        "variantName": "text_scroll_ash"
+      },
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "lacros",
+        "fixture": "lacrosPerf",
+        "id": "debuglacrosperf.text_scroll_lacros",
+        "variantName": "text_scroll_lacros"
+      },
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "ash",
+        "fixture": "chromeLoggedInDisableFirmwareUpdaterApp",
+        "id": "debuglacrosperf.color_change_ash",
+        "variantName": "color_change_ash"
+      },
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "lacros",
+        "fixture": "lacrosPerf",
+        "id": "debuglacrosperf.color_change_lacros",
+        "variantName": "color_change_lacros"
+      },
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "ash",
+        "fixture": "chromeLoggedInDisableFirmwareUpdaterApp",
+        "id": "debuglacrosperf.video_playback_ash",
+        "variantName": "video_playback_ash"
+      },
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "lacros",
+        "fixture": "lacrosPerf",
+        "id": "debuglacrosperf.video_playback_lacros",
+        "variantName": "video_playback_lacros"
+      }
+    ]
+  },
   "DesksCUJ": {
     "aliases": {},
     "description": "Measures the performance of critical user journey for virtual desks",
@@ -64,6 +281,1011 @@
         "fixture": "loggedInToCUJUserWithFieldTrials",
         "id": "deskscuj.field_trials",
         "variantName": "field_trials"
+      }
+    ]
+  },
+  "DocsCUJ": {
+    "aliases": {},
+    "description": "Measures the total performance of the critical user journey for Google Docs",
+    "groups": [
+      {
+        "groupName": "default",
+        "variantNames": [
+          "",
+          "lacros"
+        ]
+      },
+      {
+        "groupName": "backup_ref_ptr",
+        "variantNames": [
+          "",
+          "backup_ref_ptr"
+        ]
+      },
+      {
+        "groupName": "field_trials",
+        "variantNames": [
+          "",
+          "field_trials"
+        ]
+      }
+    ],
+    "majorTestVersion": 1,
+    "variantsInfo": [
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "ash",
+        "fixture": "loggedInToCUJUser",
+        "id": "docscuj.",
+        "variantName": ""
+      },
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "lacros",
+        "fixture": "loggedInToCUJUserLacros",
+        "id": "docscuj.lacros",
+        "variantName": "lacros"
+      },
+      {
+        "attributes": [
+          "cuj_experimental",
+          "group:cuj"
+        ],
+        "browserType": "ash",
+        "fixture": "loggedInToCUJUserWithBackupRefPtr",
+        "id": "docscuj.backup_ref_ptr",
+        "variantName": "backup_ref_ptr"
+      },
+      {
+        "attributes": [
+          "cuj_experimental",
+          "group:cuj"
+        ],
+        "browserType": "ash",
+        "fixture": "loggedInToCUJUserWithFieldTrials",
+        "id": "docscuj.field_trials",
+        "variantName": "field_trials"
+      }
+    ]
+  },
+  "ExampleCUJ": {
+    "aliases": {},
+    "description": "Example of using the CUJ Recorder",
+    "groups": [
+      {
+        "groupName": "default",
+        "variantNames": [
+          "",
+          "lacros"
+        ]
+      }
+    ],
+    "majorTestVersion": 1,
+    "variantsInfo": [
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "ash",
+        "fixture": "loggedInToCUJUser",
+        "id": "examplecuj.",
+        "variantName": ""
+      },
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "lacros",
+        "fixture": "loggedInToCUJUserLacros",
+        "id": "examplecuj.lacros",
+        "variantName": "lacros"
+      }
+    ]
+  },
+  "GoogleSheetsCUJ": {
+    "aliases": {},
+    "description": "Measures the total performance of critical user journey for Google Sheets",
+    "groups": [
+      {
+        "groupName": "default",
+        "variantNames": [
+          "",
+          "lacros"
+        ]
+      },
+      {
+        "groupName": "backup_ref_ptr",
+        "variantNames": [
+          "",
+          "backup_ref_ptr"
+        ]
+      },
+      {
+        "groupName": "field_trials",
+        "variantNames": [
+          "",
+          "field_trials"
+        ]
+      }
+    ],
+    "majorTestVersion": 1,
+    "variantsInfo": [
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "ash",
+        "fixture": "loggedInToCUJUser",
+        "id": "googlesheetscuj.",
+        "variantName": ""
+      },
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "lacros",
+        "fixture": "loggedInToCUJUserLacros",
+        "id": "googlesheetscuj.lacros",
+        "variantName": "lacros"
+      },
+      {
+        "attributes": [
+          "cuj_experimental",
+          "group:cuj"
+        ],
+        "browserType": "ash",
+        "fixture": "loggedInToCUJUserWithBackupRefPtr",
+        "id": "googlesheetscuj.backup_ref_ptr",
+        "variantName": "backup_ref_ptr"
+      },
+      {
+        "attributes": [
+          "cuj_experimental",
+          "group:cuj"
+        ],
+        "browserType": "ash",
+        "fixture": "loggedInToCUJUserWithFieldTrials",
+        "id": "googlesheetscuj.field_trials",
+        "variantName": "field_trials"
+      }
+    ]
+  },
+  "GoogleSlidesCUJ": {
+    "aliases": {},
+    "description": "Measures the total performance of critical user journey for Google Slides",
+    "groups": [
+      {
+        "groupName": "default",
+        "variantNames": [
+          "",
+          "lacros"
+        ]
+      }
+    ],
+    "majorTestVersion": 1,
+    "variantsInfo": [
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "ash",
+        "fixture": "loggedInToCUJUser",
+        "id": "googleslidescuj.",
+        "variantName": ""
+      },
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "lacros",
+        "fixture": "loggedInToCUJUserLacros",
+        "id": "googleslidescuj.lacros",
+        "variantName": "lacros"
+      }
+    ]
+  },
+  "LoginPerf": {
+    "aliases": {},
+    "description": "Measures performance and UI smoothness of ChromeOS login",
+    "groups": [
+      {
+        "groupName": "ungrouped",
+        "variantNames": [
+          "ash_chrome",
+          "ash_chrome_cold_boot",
+          "lacros_chrome_omaha_primary",
+          "lacros_chrome_root_fs_primary",
+          "lacros_chrome_root_fs_primary_cold_boot",
+          "lacros_chrome_root_fs_primary_enable_preload",
+          "lacros_chrome_root_fs_primary_enable_preload_cold_boot"
+        ]
+      }
+    ],
+    "majorTestVersion": 1,
+    "variantsInfo": [
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "ash",
+        "fixture": "",
+        "id": "loginperf.ash_chrome",
+        "variantName": "ash_chrome"
+      },
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "ash",
+        "fixture": "",
+        "id": "loginperf.ash_chrome_cold_boot",
+        "variantName": "ash_chrome_cold_boot"
+      },
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "lacros",
+        "fixture": "",
+        "id": "loginperf.lacros_chrome_root_fs_primary",
+        "variantName": "lacros_chrome_root_fs_primary"
+      },
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "lacros",
+        "fixture": "",
+        "id": "loginperf.lacros_chrome_root_fs_primary_cold_boot",
+        "variantName": "lacros_chrome_root_fs_primary_cold_boot"
+      },
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "lacros",
+        "fixture": "",
+        "id": "loginperf.lacros_chrome_root_fs_primary_enable_preload",
+        "variantName": "lacros_chrome_root_fs_primary_enable_preload"
+      },
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "lacros",
+        "fixture": "",
+        "id": "loginperf.lacros_chrome_root_fs_primary_enable_preload_cold_boot",
+        "variantName": "lacros_chrome_root_fs_primary_enable_preload_cold_boot"
+      },
+      {
+        "attributes": [],
+        "browserType": "lacros",
+        "fixture": "",
+        "id": "loginperf.lacros_chrome_omaha_primary",
+        "variantName": "lacros_chrome_omaha_primary"
+      }
+    ]
+  },
+  "MeetCUJ": {
+    "aliases": {},
+    "description": "Measures the performance of critical user journey for Google Meet",
+    "groups": [
+      {
+        "groupName": "ungrouped",
+        "variantNames": [
+          "16p",
+          "16p_jamboard",
+          "16p_notes",
+          "2p_30m",
+          "49p_vp8",
+          "lacros_16p"
+        ]
+      },
+      {
+        "groupName": "2p",
+        "variantNames": [
+          "2p",
+          "lacros_2p"
+        ]
+      },
+      {
+        "groupName": "4p",
+        "variantNames": [
+          "4p",
+          "lacros_4p"
+        ]
+      },
+      {
+        "groupName": "49p",
+        "variantNames": [
+          "49p",
+          "lacros_49p"
+        ]
+      },
+      {
+        "groupName": "4p_present_notes_split",
+        "variantNames": [
+          "4p_present_notes_split",
+          "lacros_4p_present_notes_split"
+        ]
+      },
+      {
+        "groupName": "16p_present_notes_split",
+        "variantNames": [
+          "16p_present_notes_split",
+          "16p_present_notes_split_cgroup",
+          "16p_present_notes_split_maincompositing"
+        ]
+      },
+      {
+        "groupName": "49p_experiment",
+        "variantNames": [
+          "49p",
+          "49p_maincompositing"
+        ]
+      },
+      {
+        "groupName": "4p_notes_effects",
+        "variantNames": [
+          "4p_notes_effects",
+          "lacros_4p_notes_effects"
+        ]
+      },
+      {
+        "groupName": "enterprise",
+        "variantNames": [
+          "16p_enterprise",
+          "2p_enterprise",
+          "4p_enterprise",
+          "4p_present_notes_split_enterprise"
+        ]
+      },
+      {
+        "groupName": "field_trials",
+        "variantNames": [
+          "16p_present_notes_split",
+          "16p_present_notes_split_field_trials"
+        ]
+      },
+      {
+        "groupName": "backup_ref_ptr",
+        "variantNames": [
+          "16p_present_notes_split",
+          "16p_present_notes_split_backup_ref_ptr"
+        ]
+      }
+    ],
+    "majorTestVersion": 1,
+    "variantsInfo": [
+      {
+        "attributes": [
+          "group:cuj",
+          "cuj_experimental"
+        ],
+        "browserType": "ash",
+        "fixture": "loggedInToCUJUserWithWebRTCEventLogging",
+        "id": "meetcuj.2p",
+        "variantName": "2p"
+      },
+      {
+        "attributes": [
+          "group:cuj",
+          "cuj_experimental"
+        ],
+        "browserType": "lacros",
+        "fixture": "loggedInToCUJUserWithWebRTCEventLoggingLacros",
+        "id": "meetcuj.lacros_2p",
+        "variantName": "lacros_2p"
+      },
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "ash",
+        "fixture": "loggedInToCUJUserWithWebRTCEventLogging",
+        "id": "meetcuj.4p",
+        "variantName": "4p"
+      },
+      {
+        "attributes": [
+          "group:cuj",
+          "cuj_experimental"
+        ],
+        "browserType": "ash",
+        "fixture": "loggedInToCUJUserEnterpriseWithWebRTCEventLogging",
+        "id": "meetcuj.4p_enterprise",
+        "variantName": "4p_enterprise"
+      },
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "lacros",
+        "fixture": "loggedInToCUJUserWithWebRTCEventLoggingLacros",
+        "id": "meetcuj.lacros_4p",
+        "variantName": "lacros_4p"
+      },
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "ash",
+        "fixture": "loggedInToCUJUserWithWebRTCEventLogging",
+        "id": "meetcuj.4p_present_notes_split",
+        "variantName": "4p_present_notes_split"
+      },
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "lacros",
+        "fixture": "loggedInToCUJUserWithWebRTCEventLoggingLacros",
+        "id": "meetcuj.lacros_4p_present_notes_split",
+        "variantName": "lacros_4p_present_notes_split"
+      },
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "ash",
+        "fixture": "loggedInToCUJUserWithWebRTCEventLogging",
+        "id": "meetcuj.16p",
+        "variantName": "16p"
+      },
+      {
+        "attributes": [
+          "group:cuj",
+          "cuj_experimental"
+        ],
+        "browserType": "ash",
+        "fixture": "loggedInToCUJUserEnterpriseWithWebRTCEventLogging",
+        "id": "meetcuj.16p_enterprise",
+        "variantName": "16p_enterprise"
+      },
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "lacros",
+        "fixture": "loggedInToCUJUserWithWebRTCEventLoggingLacros",
+        "id": "meetcuj.lacros_16p",
+        "variantName": "lacros_16p"
+      },
+      {
+        "attributes": [
+          "group:cuj",
+          "cuj_experimental"
+        ],
+        "browserType": "ash",
+        "fixture": "loggedInToCUJUserWithWebRTCEventLogging",
+        "id": "meetcuj.49p",
+        "variantName": "49p"
+      },
+      {
+        "attributes": [
+          "group:cuj",
+          "cuj_experimental"
+        ],
+        "browserType": "ash",
+        "fixture": "loggedInToCUJUserWithWebRTCEventLogging",
+        "id": "meetcuj.16p_present_notes_split",
+        "variantName": "16p_present_notes_split"
+      },
+      {
+        "attributes": [
+          "group:cuj",
+          "cuj_experimental"
+        ],
+        "browserType": "ash",
+        "fixture": "loggedInToCUJUserWithOneGroupPerRenderer",
+        "id": "meetcuj.16p_present_notes_split_cgroup",
+        "variantName": "16p_present_notes_split_cgroup"
+      },
+      {
+        "attributes": [
+          "group:cuj",
+          "cuj_experimental"
+        ],
+        "browserType": "ash",
+        "fixture": "loggedInToCUJUserWithMainThreadCompositingPriority",
+        "id": "meetcuj.16p_present_notes_split_maincompositing",
+        "variantName": "16p_present_notes_split_maincompositing"
+      },
+      {
+        "attributes": [
+          "group:cuj",
+          "cuj_experimental"
+        ],
+        "browserType": "ash",
+        "fixture": "loggedInToCUJUserWithBackupRefPtrAndWebRTCEventLogging",
+        "id": "meetcuj.16p_present_notes_split_backup_ref_ptr",
+        "variantName": "16p_present_notes_split_backup_ref_ptr"
+      },
+      {
+        "attributes": [
+          "group:cuj",
+          "cuj_experimental"
+        ],
+        "browserType": "ash",
+        "fixture": "loggedInToCUJUserWithMainThreadCompositingPriority",
+        "id": "meetcuj.49p_maincompositing",
+        "variantName": "49p_maincompositing"
+      },
+      {
+        "attributes": [
+          "group:cuj",
+          "cuj_experimental"
+        ],
+        "browserType": "ash",
+        "fixture": "loggedInToCUJUserWithFieldTrialsAndWebRTCEventLogging",
+        "id": "meetcuj.16p_present_notes_split_field_trials",
+        "variantName": "16p_present_notes_split_field_trials"
+      },
+      {
+        "attributes": [],
+        "browserType": "ash",
+        "fixture": "loggedInToCUJUserEnterpriseWithWebRTCEventLogging",
+        "id": "meetcuj.2p_enterprise",
+        "variantName": "2p_enterprise"
+      },
+      {
+        "attributes": [],
+        "browserType": "ash",
+        "fixture": "loggedInToCUJUserWithWebRTCEventLogging",
+        "id": "meetcuj.2p_30m",
+        "variantName": "2p_30m"
+      },
+      {
+        "attributes": [],
+        "browserType": "ash",
+        "fixture": "loggedInToCUJUserEnterpriseWithWebRTCEventLogging",
+        "id": "meetcuj.4p_present_notes_split_enterprise",
+        "variantName": "4p_present_notes_split_enterprise"
+      },
+      {
+        "attributes": [],
+        "browserType": "ash",
+        "fixture": "loggedInToCUJUserWithWebRTCEventLogging",
+        "id": "meetcuj.4p_notes_effects",
+        "variantName": "4p_notes_effects"
+      },
+      {
+        "attributes": [],
+        "browserType": "lacros",
+        "fixture": "loggedInToCUJUserWithWebRTCEventLoggingLacros",
+        "id": "meetcuj.lacros_4p_notes_effects",
+        "variantName": "lacros_4p_notes_effects"
+      },
+      {
+        "attributes": [],
+        "browserType": "ash",
+        "fixture": "loggedInToCUJUserWithWebRTCEventLogging",
+        "id": "meetcuj.16p_notes",
+        "variantName": "16p_notes"
+      },
+      {
+        "attributes": [],
+        "browserType": "ash",
+        "fixture": "loggedInToCUJUserWithWebRTCEventLogging",
+        "id": "meetcuj.16p_jamboard",
+        "variantName": "16p_jamboard"
+      },
+      {
+        "attributes": [],
+        "browserType": "ash",
+        "fixture": "loggedInToCUJUserWithWebRTCEventLogging",
+        "id": "meetcuj.49p_vp8",
+        "variantName": "49p_vp8"
+      },
+      {
+        "attributes": [],
+        "browserType": "lacros",
+        "fixture": "loggedInToCUJUserWithWebRTCEventLoggingLacros",
+        "id": "meetcuj.lacros_49p",
+        "variantName": "lacros_49p"
+      }
+    ]
+  },
+  "MeetMultiTaskingCUJ": {
+    "aliases": {},
+    "description": "Measures the total performance of multi-tasking with video conferencing CUJ",
+    "groups": [
+      {
+        "groupName": "default",
+        "variantNames": [
+          "",
+          "lacros"
+        ]
+      }
+    ],
+    "majorTestVersion": 1,
+    "variantsInfo": [
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "ash",
+        "fixture": "loggedInToCUJUser",
+        "id": "meetmultitaskingcuj.",
+        "variantName": ""
+      },
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "lacros",
+        "fixture": "loggedInToCUJUserLacros",
+        "id": "meetmultitaskingcuj.lacros",
+        "variantName": "lacros"
+      }
+    ]
+  },
+  "TabSwitchCUJ": {
+    "aliases": {},
+    "description": "Measures the performance of tab-switching CUJ",
+    "groups": [
+      {
+        "groupName": "default",
+        "variantNames": [
+          "",
+          "lacros"
+        ]
+      },
+      {
+        "groupName": "backup_ref_ptr",
+        "variantNames": [
+          "",
+          "backup_ref_ptr"
+        ]
+      },
+      {
+        "groupName": "field_trials",
+        "variantNames": [
+          "",
+          "field_trials"
+        ]
+      }
+    ],
+    "majorTestVersion": 1,
+    "variantsInfo": [
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "ash",
+        "fixture": "tabSwitchCUJWPRAsh",
+        "id": "tabswitchcuj.",
+        "variantName": ""
+      },
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "lacros",
+        "fixture": "tabSwitchCUJWPRLacros",
+        "id": "tabswitchcuj.lacros",
+        "variantName": "lacros"
+      },
+      {
+        "attributes": [
+          "cuj_experimental",
+          "group:cuj"
+        ],
+        "browserType": "ash",
+        "fixture": "tabSwitchCUJWPRAshWithBackupRefPtr",
+        "id": "tabswitchcuj.backup_ref_ptr",
+        "variantName": "backup_ref_ptr"
+      },
+      {
+        "attributes": [
+          "cuj_experimental",
+          "group:cuj"
+        ],
+        "browserType": "ash",
+        "fixture": "tabSwitchCUJWPRAshWithFieldTrials",
+        "id": "tabswitchcuj.field_trials",
+        "variantName": "field_trials"
+      }
+    ]
+  },
+  "TaskSwitchCUJ": {
+    "aliases": {},
+    "description": "Measures the performance of the critical user journey for task switching",
+    "groups": [
+      {
+        "groupName": "ungrouped",
+        "variantNames": [
+          "app_rescue",
+          "noibat"
+        ]
+      },
+      {
+        "groupName": "clamshell",
+        "variantNames": [
+          "",
+          "lacros"
+        ]
+      },
+      {
+        "groupName": "tablet",
+        "variantNames": [
+          "lacros_tablet",
+          "tablet"
+        ]
+      },
+      {
+        "groupName": "backup_ref_ptr",
+        "variantNames": [
+          "",
+          "backup_ref_ptr"
+        ]
+      },
+      {
+        "groupName": "field_trials",
+        "variantNames": [
+          "",
+          "field_trials"
+        ]
+      }
+    ],
+    "majorTestVersion": 1,
+    "variantsInfo": [
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "ash",
+        "fixture": "loggedInToCUJUser",
+        "id": "taskswitchcuj.",
+        "variantName": ""
+      },
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "lacros",
+        "fixture": "loggedInToCUJUserLacros",
+        "id": "taskswitchcuj.lacros",
+        "variantName": "lacros"
+      },
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "ash",
+        "fixture": "loggedInToCUJUser",
+        "id": "taskswitchcuj.tablet",
+        "variantName": "tablet"
+      },
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "lacros",
+        "fixture": "loggedInToCUJUserLacros",
+        "id": "taskswitchcuj.lacros_tablet",
+        "variantName": "lacros_tablet"
+      },
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "ash",
+        "fixture": "loggedInToCUJUser",
+        "id": "taskswitchcuj.noibat",
+        "variantName": "noibat"
+      },
+      {
+        "attributes": [
+          "cuj_experimental",
+          "group:cuj"
+        ],
+        "browserType": "ash",
+        "fixture": "loggedInToCUJUserWithBackupRefPtr",
+        "id": "taskswitchcuj.backup_ref_ptr",
+        "variantName": "backup_ref_ptr"
+      },
+      {
+        "attributes": [
+          "cuj_experimental",
+          "group:cuj"
+        ],
+        "browserType": "ash",
+        "fixture": "loggedInToCUJUserWithFieldTrials",
+        "id": "taskswitchcuj.field_trials",
+        "variantName": "field_trials"
+      },
+      {
+        "attributes": [
+          "cuj_experimental",
+          "group:cuj"
+        ],
+        "browserType": "ash",
+        "fixture": "loggedInToCUJUserWithAppRescue",
+        "id": "taskswitchcuj.app_rescue",
+        "variantName": "app_rescue"
+      }
+    ]
+  },
+  "VideoCUJ": {
+    "aliases": {},
+    "description": "Measures the performance of a critical user journey of watching a video",
+    "groups": [
+      {
+        "groupName": "arc_vs_no_arc",
+        "variantNames": [
+          "lacros",
+          "lacros_no_arc"
+        ]
+      },
+      {
+        "groupName": "default",
+        "variantNames": [
+          "",
+          "lacros"
+        ]
+      },
+      {
+        "groupName": "backup_ref_ptr",
+        "variantNames": [
+          "",
+          "backup_ref_ptr"
+        ]
+      },
+      {
+        "groupName": "field_trials",
+        "variantNames": [
+          "",
+          "field_trials"
+        ]
+      }
+    ],
+    "majorTestVersion": 1,
+    "variantsInfo": [
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "ash",
+        "fixture": "loggedInToCUJUser",
+        "id": "videocuj.",
+        "variantName": ""
+      },
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "lacros",
+        "fixture": "loggedInToCUJUserLacros",
+        "id": "videocuj.lacros",
+        "variantName": "lacros"
+      },
+      {
+        "attributes": [
+          "cuj_experimental",
+          "group:cuj"
+        ],
+        "browserType": "lacros",
+        "fixture": "loggedInToCUJUserLacrosWithoutARC",
+        "id": "videocuj.lacros_no_arc",
+        "variantName": "lacros_no_arc"
+      },
+      {
+        "attributes": [
+          "cuj_experimental",
+          "group:cuj"
+        ],
+        "browserType": "ash",
+        "fixture": "loggedInToCUJUserWithBackupRefPtr",
+        "id": "videocuj.backup_ref_ptr",
+        "variantName": "backup_ref_ptr"
+      },
+      {
+        "attributes": [
+          "cuj_experimental",
+          "group:cuj"
+        ],
+        "browserType": "ash",
+        "fixture": "loggedInToCUJUserWithFieldTrials",
+        "id": "videocuj.field_trials",
+        "variantName": "field_trials"
+      }
+    ]
+  },
+  "WindowArrangementCUJ": {
+    "aliases": {},
+    "description": "Measures the performance of critical user journey for window arrangements",
+    "groups": [
+      {
+        "groupName": "clamshell",
+        "variantNames": [
+          "clamshell_mode",
+          "lacros"
+        ]
+      },
+      {
+        "groupName": "tablet",
+        "variantNames": [
+          "tablet_mode",
+          "tablet_mode_lacros"
+        ]
+      },
+      {
+        "groupName": "field_trials",
+        "variantNames": [
+          "clamshell_mode",
+          "clamshell_mode_field_trials"
+        ]
+      },
+      {
+        "groupName": "backup_ref_ptr",
+        "variantNames": [
+          "clamshell_mode",
+          "clamshell_mode_backup_ref_ptr"
+        ]
+      }
+    ],
+    "majorTestVersion": 1,
+    "variantsInfo": [
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "ash",
+        "fixture": "loggedInToCUJUser",
+        "id": "windowarrangementcuj.clamshell_mode",
+        "variantName": "clamshell_mode"
+      },
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "ash",
+        "fixture": "loggedInToCUJUser",
+        "id": "windowarrangementcuj.tablet_mode",
+        "variantName": "tablet_mode"
+      },
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "lacros",
+        "fixture": "loggedInToCUJUserLacros",
+        "id": "windowarrangementcuj.lacros",
+        "variantName": "lacros"
+      },
+      {
+        "attributes": [
+          "group:cuj"
+        ],
+        "browserType": "lacros",
+        "fixture": "loggedInToCUJUserLacros",
+        "id": "windowarrangementcuj.tablet_mode_lacros",
+        "variantName": "tablet_mode_lacros"
+      },
+      {
+        "attributes": [
+          "cuj_experimental",
+          "group:cuj"
+        ],
+        "browserType": "ash",
+        "fixture": "loggedInToCUJUserWithBackupRefPtr",
+        "id": "windowarrangementcuj.clamshell_mode_backup_ref_ptr",
+        "variantName": "clamshell_mode_backup_ref_ptr"
+      },
+      {
+        "attributes": [
+          "cuj_experimental",
+          "group:cuj"
+        ],
+        "browserType": "ash",
+        "fixture": "loggedInToCUJUserWithFieldTrials",
+        "id": "windowarrangementcuj.clamshell_mode_field_trials",
+        "variantName": "clamshell_mode_field_trials"
       }
     ]
   }

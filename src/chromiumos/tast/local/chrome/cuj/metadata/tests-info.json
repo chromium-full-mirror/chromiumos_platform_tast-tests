@@ -1,4 +1,143 @@
 {
+  "ArcYoutubeCUJ": {
+    "aliases": {},
+    "groups": [
+      {
+        "groupName": "ungrouped",
+        "variantNames": [
+          ""
+        ]
+      }
+    ],
+    "majorTestVersion": 1,
+    "variantsInfo": [
+      {
+        "id": "arcyoutubecuj.",
+        "variantName": ""
+      }
+    ]
+  },
+  "BenchmarkCUJ": {
+    "aliases": {},
+    "groups": [
+      {
+        "groupName": "speedometer",
+        "variantNames": [
+          "lacros_speedometer",
+          "speedometer"
+        ]
+      },
+      {
+        "groupName": "motionmark",
+        "variantNames": [
+          "lacros_motionmark",
+          "motionmark"
+        ]
+      },
+      {
+        "groupName": "jetstream",
+        "variantNames": [
+          "jetstream",
+          "lacros_jetstream"
+        ]
+      },
+      {
+        "groupName": "kraken",
+        "variantNames": [
+          "kraken",
+          "lacros_kraken"
+        ]
+      }
+    ],
+    "majorTestVersion": 1,
+    "variantsInfo": [
+      {
+        "id": "benchmarkcuj.speedometer",
+        "variantName": "speedometer"
+      },
+      {
+        "id": "benchmarkcuj.lacros_speedometer",
+        "variantName": "lacros_speedometer"
+      },
+      {
+        "id": "benchmarkcuj.motionmark",
+        "variantName": "motionmark"
+      },
+      {
+        "id": "benchmarkcuj.lacros_motionmark",
+        "variantName": "lacros_motionmark"
+      },
+      {
+        "id": "benchmarkcuj.jetstream",
+        "variantName": "jetstream"
+      },
+      {
+        "id": "benchmarkcuj.lacros_jetstream",
+        "variantName": "lacros_jetstream"
+      },
+      {
+        "id": "benchmarkcuj.kraken",
+        "variantName": "kraken"
+      },
+      {
+        "id": "benchmarkcuj.lacros_kraken",
+        "variantName": "lacros_kraken"
+      }
+    ]
+  },
+  "DebugLacrosPerf": {
+    "aliases": {},
+    "groups": [
+      {
+        "groupName": "color_change",
+        "variantNames": [
+          "color_change_ash",
+          "color_change_lacros"
+        ]
+      },
+      {
+        "groupName": "text_scroll",
+        "variantNames": [
+          "text_scroll_ash",
+          "text_scroll_lacros"
+        ]
+      },
+      {
+        "groupName": "video_playback",
+        "variantNames": [
+          "video_playback_ash",
+          "video_playback_lacros"
+        ]
+      }
+    ],
+    "majorTestVersion": 1,
+    "variantsInfo": [
+      {
+        "id": "debuglacrosperf.text_scroll_ash",
+        "variantName": "text_scroll_ash"
+      },
+      {
+        "id": "debuglacrosperf.text_scroll_lacros",
+        "variantName": "text_scroll_lacros"
+      },
+      {
+        "id": "debuglacrosperf.color_change_ash",
+        "variantName": "color_change_ash"
+      },
+      {
+        "id": "debuglacrosperf.color_change_lacros",
+        "variantName": "color_change_lacros"
+      },
+      {
+        "id": "debuglacrosperf.video_playback_ash",
+        "variantName": "video_playback_ash"
+      },
+      {
+        "id": "debuglacrosperf.video_playback_lacros",
+        "variantName": "video_playback_lacros"
+      }
+    ]
+  },
   "DesksCUJ": {
     "aliases": {},
     "groups": [
@@ -41,6 +180,645 @@
       {
         "id": "deskscuj.field_trials",
         "variantName": "field_trials"
+      }
+    ]
+  },
+  "DocsCUJ": {
+    "aliases": {},
+    "groups": [
+      {
+        "groupName": "default",
+        "variantNames": [
+          "",
+          "lacros"
+        ]
+      },
+      {
+        "groupName": "backup_ref_ptr",
+        "variantNames": [
+          "",
+          "backup_ref_ptr"
+        ]
+      },
+      {
+        "groupName": "field_trials",
+        "variantNames": [
+          "",
+          "field_trials"
+        ]
+      }
+    ],
+    "majorTestVersion": 1,
+    "variantsInfo": [
+      {
+        "id": "docscuj.",
+        "variantName": ""
+      },
+      {
+        "id": "docscuj.lacros",
+        "variantName": "lacros"
+      },
+      {
+        "id": "docscuj.backup_ref_ptr",
+        "variantName": "backup_ref_ptr"
+      },
+      {
+        "id": "docscuj.field_trials",
+        "variantName": "field_trials"
+      }
+    ]
+  },
+  "ExampleCUJ": {
+    "aliases": {},
+    "groups": [
+      {
+        "groupName": "default",
+        "variantNames": [
+          "",
+          "lacros"
+        ]
+      }
+    ],
+    "majorTestVersion": 1,
+    "variantsInfo": [
+      {
+        "id": "examplecuj.",
+        "variantName": ""
+      },
+      {
+        "id": "examplecuj.lacros",
+        "variantName": "lacros"
+      }
+    ]
+  },
+  "GoogleSheetsCUJ": {
+    "aliases": {},
+    "groups": [
+      {
+        "groupName": "default",
+        "variantNames": [
+          "",
+          "lacros"
+        ]
+      },
+      {
+        "groupName": "backup_ref_ptr",
+        "variantNames": [
+          "",
+          "backup_ref_ptr"
+        ]
+      },
+      {
+        "groupName": "field_trials",
+        "variantNames": [
+          "",
+          "field_trials"
+        ]
+      }
+    ],
+    "majorTestVersion": 1,
+    "variantsInfo": [
+      {
+        "id": "googlesheetscuj.",
+        "variantName": ""
+      },
+      {
+        "id": "googlesheetscuj.lacros",
+        "variantName": "lacros"
+      },
+      {
+        "id": "googlesheetscuj.backup_ref_ptr",
+        "variantName": "backup_ref_ptr"
+      },
+      {
+        "id": "googlesheetscuj.field_trials",
+        "variantName": "field_trials"
+      }
+    ]
+  },
+  "GoogleSlidesCUJ": {
+    "aliases": {},
+    "groups": [
+      {
+        "groupName": "default",
+        "variantNames": [
+          "",
+          "lacros"
+        ]
+      }
+    ],
+    "majorTestVersion": 1,
+    "variantsInfo": [
+      {
+        "id": "googleslidescuj.",
+        "variantName": ""
+      },
+      {
+        "id": "googleslidescuj.lacros",
+        "variantName": "lacros"
+      }
+    ]
+  },
+  "LoginPerf": {
+    "aliases": {},
+    "groups": [
+      {
+        "groupName": "ungrouped",
+        "variantNames": [
+          "ash_chrome",
+          "ash_chrome_cold_boot",
+          "lacros_chrome_omaha_primary",
+          "lacros_chrome_root_fs_primary",
+          "lacros_chrome_root_fs_primary_cold_boot",
+          "lacros_chrome_root_fs_primary_enable_preload",
+          "lacros_chrome_root_fs_primary_enable_preload_cold_boot"
+        ]
+      }
+    ],
+    "majorTestVersion": 1,
+    "variantsInfo": [
+      {
+        "id": "loginperf.ash_chrome",
+        "variantName": "ash_chrome"
+      },
+      {
+        "id": "loginperf.ash_chrome_cold_boot",
+        "variantName": "ash_chrome_cold_boot"
+      },
+      {
+        "id": "loginperf.lacros_chrome_root_fs_primary",
+        "variantName": "lacros_chrome_root_fs_primary"
+      },
+      {
+        "id": "loginperf.lacros_chrome_root_fs_primary_cold_boot",
+        "variantName": "lacros_chrome_root_fs_primary_cold_boot"
+      },
+      {
+        "id": "loginperf.lacros_chrome_root_fs_primary_enable_preload",
+        "variantName": "lacros_chrome_root_fs_primary_enable_preload"
+      },
+      {
+        "id": "loginperf.lacros_chrome_root_fs_primary_enable_preload_cold_boot",
+        "variantName": "lacros_chrome_root_fs_primary_enable_preload_cold_boot"
+      },
+      {
+        "id": "loginperf.lacros_chrome_omaha_primary",
+        "variantName": "lacros_chrome_omaha_primary"
+      }
+    ]
+  },
+  "MeetCUJ": {
+    "aliases": {},
+    "groups": [
+      {
+        "groupName": "ungrouped",
+        "variantNames": [
+          "16p",
+          "16p_jamboard",
+          "16p_notes",
+          "2p_30m",
+          "49p_vp8",
+          "lacros_16p"
+        ]
+      },
+      {
+        "groupName": "2p",
+        "variantNames": [
+          "2p",
+          "lacros_2p"
+        ]
+      },
+      {
+        "groupName": "4p",
+        "variantNames": [
+          "4p",
+          "lacros_4p"
+        ]
+      },
+      {
+        "groupName": "49p",
+        "variantNames": [
+          "49p",
+          "lacros_49p"
+        ]
+      },
+      {
+        "groupName": "4p_present_notes_split",
+        "variantNames": [
+          "4p_present_notes_split",
+          "lacros_4p_present_notes_split"
+        ]
+      },
+      {
+        "groupName": "16p_present_notes_split",
+        "variantNames": [
+          "16p_present_notes_split",
+          "16p_present_notes_split_cgroup",
+          "16p_present_notes_split_maincompositing"
+        ]
+      },
+      {
+        "groupName": "49p_experiment",
+        "variantNames": [
+          "49p",
+          "49p_maincompositing"
+        ]
+      },
+      {
+        "groupName": "4p_notes_effects",
+        "variantNames": [
+          "4p_notes_effects",
+          "lacros_4p_notes_effects"
+        ]
+      },
+      {
+        "groupName": "enterprise",
+        "variantNames": [
+          "16p_enterprise",
+          "2p_enterprise",
+          "4p_enterprise",
+          "4p_present_notes_split_enterprise"
+        ]
+      },
+      {
+        "groupName": "field_trials",
+        "variantNames": [
+          "16p_present_notes_split",
+          "16p_present_notes_split_field_trials"
+        ]
+      },
+      {
+        "groupName": "backup_ref_ptr",
+        "variantNames": [
+          "16p_present_notes_split",
+          "16p_present_notes_split_backup_ref_ptr"
+        ]
+      }
+    ],
+    "majorTestVersion": 1,
+    "variantsInfo": [
+      {
+        "id": "meetcuj.2p",
+        "variantName": "2p"
+      },
+      {
+        "id": "meetcuj.lacros_2p",
+        "variantName": "lacros_2p"
+      },
+      {
+        "id": "meetcuj.4p",
+        "variantName": "4p"
+      },
+      {
+        "id": "meetcuj.4p_enterprise",
+        "variantName": "4p_enterprise"
+      },
+      {
+        "id": "meetcuj.lacros_4p",
+        "variantName": "lacros_4p"
+      },
+      {
+        "id": "meetcuj.4p_present_notes_split",
+        "variantName": "4p_present_notes_split"
+      },
+      {
+        "id": "meetcuj.lacros_4p_present_notes_split",
+        "variantName": "lacros_4p_present_notes_split"
+      },
+      {
+        "id": "meetcuj.16p",
+        "variantName": "16p"
+      },
+      {
+        "id": "meetcuj.16p_enterprise",
+        "variantName": "16p_enterprise"
+      },
+      {
+        "id": "meetcuj.lacros_16p",
+        "variantName": "lacros_16p"
+      },
+      {
+        "id": "meetcuj.49p",
+        "variantName": "49p"
+      },
+      {
+        "id": "meetcuj.16p_present_notes_split",
+        "variantName": "16p_present_notes_split"
+      },
+      {
+        "id": "meetcuj.16p_present_notes_split_cgroup",
+        "variantName": "16p_present_notes_split_cgroup"
+      },
+      {
+        "id": "meetcuj.16p_present_notes_split_maincompositing",
+        "variantName": "16p_present_notes_split_maincompositing"
+      },
+      {
+        "id": "meetcuj.16p_present_notes_split_backup_ref_ptr",
+        "variantName": "16p_present_notes_split_backup_ref_ptr"
+      },
+      {
+        "id": "meetcuj.49p_maincompositing",
+        "variantName": "49p_maincompositing"
+      },
+      {
+        "id": "meetcuj.16p_present_notes_split_field_trials",
+        "variantName": "16p_present_notes_split_field_trials"
+      },
+      {
+        "id": "meetcuj.2p_enterprise",
+        "variantName": "2p_enterprise"
+      },
+      {
+        "id": "meetcuj.2p_30m",
+        "variantName": "2p_30m"
+      },
+      {
+        "id": "meetcuj.4p_present_notes_split_enterprise",
+        "variantName": "4p_present_notes_split_enterprise"
+      },
+      {
+        "id": "meetcuj.4p_notes_effects",
+        "variantName": "4p_notes_effects"
+      },
+      {
+        "id": "meetcuj.lacros_4p_notes_effects",
+        "variantName": "lacros_4p_notes_effects"
+      },
+      {
+        "id": "meetcuj.16p_notes",
+        "variantName": "16p_notes"
+      },
+      {
+        "id": "meetcuj.16p_jamboard",
+        "variantName": "16p_jamboard"
+      },
+      {
+        "id": "meetcuj.49p_vp8",
+        "variantName": "49p_vp8"
+      },
+      {
+        "id": "meetcuj.lacros_49p",
+        "variantName": "lacros_49p"
+      }
+    ]
+  },
+  "MeetMultiTaskingCUJ": {
+    "aliases": {},
+    "groups": [
+      {
+        "groupName": "default",
+        "variantNames": [
+          "",
+          "lacros"
+        ]
+      }
+    ],
+    "majorTestVersion": 1,
+    "variantsInfo": [
+      {
+        "id": "meetmultitaskingcuj.",
+        "variantName": ""
+      },
+      {
+        "id": "meetmultitaskingcuj.lacros",
+        "variantName": "lacros"
+      }
+    ]
+  },
+  "TabSwitchCUJ": {
+    "aliases": {},
+    "groups": [
+      {
+        "groupName": "default",
+        "variantNames": [
+          "",
+          "lacros"
+        ]
+      },
+      {
+        "groupName": "backup_ref_ptr",
+        "variantNames": [
+          "",
+          "backup_ref_ptr"
+        ]
+      },
+      {
+        "groupName": "field_trials",
+        "variantNames": [
+          "",
+          "field_trials"
+        ]
+      }
+    ],
+    "majorTestVersion": 1,
+    "variantsInfo": [
+      {
+        "id": "tabswitchcuj.",
+        "variantName": ""
+      },
+      {
+        "id": "tabswitchcuj.lacros",
+        "variantName": "lacros"
+      },
+      {
+        "id": "tabswitchcuj.backup_ref_ptr",
+        "variantName": "backup_ref_ptr"
+      },
+      {
+        "id": "tabswitchcuj.field_trials",
+        "variantName": "field_trials"
+      }
+    ]
+  },
+  "TaskSwitchCUJ": {
+    "aliases": {},
+    "groups": [
+      {
+        "groupName": "ungrouped",
+        "variantNames": [
+          "app_rescue",
+          "noibat"
+        ]
+      },
+      {
+        "groupName": "clamshell",
+        "variantNames": [
+          "",
+          "lacros"
+        ]
+      },
+      {
+        "groupName": "tablet",
+        "variantNames": [
+          "lacros_tablet",
+          "tablet"
+        ]
+      },
+      {
+        "groupName": "backup_ref_ptr",
+        "variantNames": [
+          "",
+          "backup_ref_ptr"
+        ]
+      },
+      {
+        "groupName": "field_trials",
+        "variantNames": [
+          "",
+          "field_trials"
+        ]
+      }
+    ],
+    "majorTestVersion": 1,
+    "variantsInfo": [
+      {
+        "id": "taskswitchcuj.",
+        "variantName": ""
+      },
+      {
+        "id": "taskswitchcuj.lacros",
+        "variantName": "lacros"
+      },
+      {
+        "id": "taskswitchcuj.tablet",
+        "variantName": "tablet"
+      },
+      {
+        "id": "taskswitchcuj.lacros_tablet",
+        "variantName": "lacros_tablet"
+      },
+      {
+        "id": "taskswitchcuj.noibat",
+        "variantName": "noibat"
+      },
+      {
+        "id": "taskswitchcuj.backup_ref_ptr",
+        "variantName": "backup_ref_ptr"
+      },
+      {
+        "id": "taskswitchcuj.field_trials",
+        "variantName": "field_trials"
+      },
+      {
+        "id": "taskswitchcuj.app_rescue",
+        "variantName": "app_rescue"
+      }
+    ]
+  },
+  "VideoCUJ": {
+    "aliases": {},
+    "groups": [
+      {
+        "groupName": "arc_vs_no_arc",
+        "variantNames": [
+          "lacros",
+          "lacros_no_arc"
+        ]
+      },
+      {
+        "groupName": "default",
+        "variantNames": [
+          "",
+          "lacros"
+        ]
+      },
+      {
+        "groupName": "backup_ref_ptr",
+        "variantNames": [
+          "",
+          "backup_ref_ptr"
+        ]
+      },
+      {
+        "groupName": "field_trials",
+        "variantNames": [
+          "",
+          "field_trials"
+        ]
+      }
+    ],
+    "majorTestVersion": 1,
+    "variantsInfo": [
+      {
+        "id": "videocuj.",
+        "variantName": ""
+      },
+      {
+        "id": "videocuj.lacros",
+        "variantName": "lacros"
+      },
+      {
+        "id": "videocuj.lacros_no_arc",
+        "variantName": "lacros_no_arc"
+      },
+      {
+        "id": "videocuj.backup_ref_ptr",
+        "variantName": "backup_ref_ptr"
+      },
+      {
+        "id": "videocuj.field_trials",
+        "variantName": "field_trials"
+      }
+    ]
+  },
+  "WindowArrangementCUJ": {
+    "aliases": {},
+    "groups": [
+      {
+        "groupName": "clamshell",
+        "variantNames": [
+          "clamshell_mode",
+          "lacros"
+        ]
+      },
+      {
+        "groupName": "tablet",
+        "variantNames": [
+          "tablet_mode",
+          "tablet_mode_lacros"
+        ]
+      },
+      {
+        "groupName": "field_trials",
+        "variantNames": [
+          "clamshell_mode",
+          "clamshell_mode_field_trials"
+        ]
+      },
+      {
+        "groupName": "backup_ref_ptr",
+        "variantNames": [
+          "clamshell_mode",
+          "clamshell_mode_backup_ref_ptr"
+        ]
+      }
+    ],
+    "majorTestVersion": 1,
+    "variantsInfo": [
+      {
+        "id": "windowarrangementcuj.clamshell_mode",
+        "variantName": "clamshell_mode"
+      },
+      {
+        "id": "windowarrangementcuj.tablet_mode",
+        "variantName": "tablet_mode"
+      },
+      {
+        "id": "windowarrangementcuj.lacros",
+        "variantName": "lacros"
+      },
+      {
+        "id": "windowarrangementcuj.tablet_mode_lacros",
+        "variantName": "tablet_mode_lacros"
+      },
+      {
+        "id": "windowarrangementcuj.clamshell_mode_backup_ref_ptr",
+        "variantName": "clamshell_mode_backup_ref_ptr"
+      },
+      {
+        "id": "windowarrangementcuj.clamshell_mode_field_trials",
+        "variantName": "clamshell_mode_field_trials"
       }
     ]
   }
