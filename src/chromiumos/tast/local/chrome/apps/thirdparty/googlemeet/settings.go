@@ -8,12 +8,15 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"time"
 
 	"chromiumos/tast/common/action"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/checked"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
+	"chromiumos/tast/local/input"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -296,6 +299,43 @@ func (gm *GoogleMeet) SetLayout(layoutOption LayoutOption) action.Action {
 	return uiauto.NamedAction(fmt.Sprintf("set layout to %q", layoutOption),
 		ui.DoDefaultUntil(layoutRadioButton,
 			ui.WithTimeout(shortUITimeout).WaitUntilExists(layoutRadioButton.Focused())))
+}
+
+// SetToMaxTiles sets the tile number to max in the Tiled layout.
+// Return nil if it is not the Tiled layout.
+func (gm *GoogleMeet) SetToMaxTiles(kb *input.KeyboardEventWriter, layoutOption LayoutOption) action.Action {
+	return func(ctx context.Context) error {
+		if layoutOption != TiledLayout {
+			testing.ContextLogf(ctx, "Current layout %q is not the Tiled layout, cannot set tiles to the maximum", layoutOption)
+			return nil
+		}
+		slider := nodewith.Name("Tiles").Role(role.Slider).First()
+		raiseTiles := kb.AccelAction("Right")
+		lowerTiles := kb.AccelAction("Left")
+		isMaxTiles := func(ctx context.Context) error {
+			// "49 tiles" is the maximum number of layout tiles.
+			// It has nothing to do with the number of participants.
+			const expectedResult = "49 tiles"
+			sliderInfo, err := gm.ui.Info(ctx, slider)
+			if err != nil {
+				return errors.Wrap(err, "failed to get slider info")
+			}
+			value := sliderInfo.Value
+			if value == expectedResult {
+				return nil
+			}
+			return errors.Errorf("unexpected number of tiles: got %q, expected %q", value, expectedResult)
+		}
+
+		// Sometimes the DUT doesn't capture correct tile number.
+		// Turn down the tiles number and try again.
+		return gm.ui.Retry(3, uiauto.NamedCombine("set to max tiles",
+			gm.ui.LeftClick(slider),
+			uiauto.IfFailThen(
+				// Keep raising tiles number until the max tiles number is reached.
+				gm.ui.WithInterval(500*time.Millisecond).RetryUntil(raiseTiles, isMaxTiles),
+				lowerTiles)))(ctx)
+	}
 }
 
 // ShowInATile sets the layout shown in a tile when layout is "Tiled".
