@@ -153,7 +153,6 @@ func (bui *BtUIService) ConfirmSavedDevicesState(ctx context.Context, request *p
 		return nil, errors.Wrap(err, "failed to navigate to Bluetooth Saved Devices subpage")
 	}
 
-	defer app.Close(ctx)
 	testing.ContextLog(ctx, "Opened Bluetooth Saved Devices subpage")
 
 	ui := uiauto.New(tconn)
@@ -172,6 +171,9 @@ func (bui *BtUIService) ConfirmSavedDevicesState(ctx context.Context, request *p
 			}
 		}
 	}
+
+	// Only close Settings if there are no errors. This allows us to see Settings in the screenshot on failure.
+	app.Close(ctx)
 
 	testing.ContextLogf(ctx, "Confirmed the state of the Saved Devices subpage with %d devices", len(request.DeviceNames))
 	return &emptypb.Empty{}, nil
@@ -193,7 +195,6 @@ func (bui *BtUIService) RemoveAllSavedDevices(ctx context.Context, request *empt
 		return nil, errors.Wrap(err, "failed to navigate to Bluetooth Saved Devices subpage")
 	}
 
-	defer app.Close(ctx)
 	testing.ContextLog(ctx, "Opened Bluetooth Saved Devices subpage")
 
 	ui := uiauto.New(tconn)
@@ -202,6 +203,9 @@ func (bui *BtUIService) RemoveAllSavedDevices(ctx context.Context, request *empt
 	// UI, so we poll for devices. If there are no saved devices, return early.
 	opts := testing.PollOptions{Timeout: 5 * time.Second, Interval: 300 * time.Millisecond}
 	if err := ui.WithPollOpts(opts).WaitUntilExists(ossettings.SavedDeviceRows.First())(ctx); err != nil {
+		// Only close Settings if there are no errors. This allows us to see Settings in the screenshot on failure.
+		app.Close(ctx)
+
 		testing.ContextLog(ctx, "Saved Devices subpage contains no devices")
 		return &emptypb.Empty{}, nil
 	}
@@ -236,8 +240,10 @@ func (bui *BtUIService) RemoveAllSavedDevices(ctx context.Context, request *empt
 		count++
 	}
 
-	testing.ContextLogf(ctx, "Removed %d of %d saved devices from Saved Devices subpage", count, len(devices))
+	// Only close Settings if there are no errors. This allows us to see Settings in the screenshot on failure.
+	app.Close(ctx)
 
+	testing.ContextLogf(ctx, "Removed %d of %d saved devices from Saved Devices subpage", count, len(devices))
 	return &emptypb.Empty{}, nil
 }
 
@@ -326,7 +332,6 @@ func (bui *BtUIService) ForgetBluetoothDevice(ctx context.Context, request *pb.F
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to navigate to Bluetooth Device Details subpage for device %s", request.DeviceName)
 	}
-	defer app.Close(ctx)
 
 	testing.ContextLogf(ctx, "Opened Bluetooth Device Details subpage for device %s", request.DeviceName)
 
@@ -340,6 +345,9 @@ func (bui *BtUIService) ForgetBluetoothDevice(ctx context.Context, request *pb.F
 	)(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to forget device from Bluetooth Device Details subpage")
 	}
+
+	// Only close Settings if there are no errors. This allows us to see Settings in the screenshot on failure.
+	app.Close(ctx)
 
 	testing.ContextLogf(ctx, "Successfully forgot device %s", request.DeviceName)
 	return &emptypb.Empty{}, nil
