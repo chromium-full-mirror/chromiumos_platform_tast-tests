@@ -74,6 +74,8 @@ func CUJAshCommonMetricConfigs() []MetricConfig {
 		NewBootAndShutdownCustomMetricConfig("ShutdownTime.Logout", "ms", perf.SmallerIsBetter),
 		NewBootAndShutdownCustomMetricConfig("ShutdownTime.Restart", "ms", perf.SmallerIsBetter),
 		NewBootAndShutdownCustomMetricConfig("ShutdownTime.UIMessageLoopEnded", "ms", perf.SmallerIsBetter),
+		NewBootAndShutdownCustomMetricConfig("Ash.Tast.ArcUiAvailableAfterLogin.Duration", "ms", perf.SmallerIsBetter),
+		NewBootAndShutdownCustomMetricConfig("Arc.Tast.UiAvailable.TimeDelta", "ms", perf.SmallerIsBetter),
 
 		// Event Latency Metrics.
 		NewCustomMetricConfig("Ash.EventLatency.TotalLatency", "microseconds", perf.SmallerIsBetter),
