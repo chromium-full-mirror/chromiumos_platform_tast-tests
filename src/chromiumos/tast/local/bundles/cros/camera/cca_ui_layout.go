@@ -186,7 +186,7 @@ func checkPreviewOptions(ctx context.Context, app *cca.App, differ screenshot.Di
 	// Verify panels.
 	for _, panel := range []struct {
 		name   string
-		button cca.UIComponent
+		button cca.UIComponentName
 	}{{
 		"mirrorPanel",
 		cca.OpenMirrorPanelButton,

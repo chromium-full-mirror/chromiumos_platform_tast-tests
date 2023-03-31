@@ -392,7 +392,7 @@ func checkIntentBehavior(ctx context.Context, cr *chrome.Chrome, a *arc.ARC, uiD
 // checkUI checks states of UI components in CCA window handling intent with different options.
 func checkUI(ctx context.Context, app *cca.App, options intentOptions) error {
 	for _, tst := range []struct {
-		ui       cca.UIComponent
+		ui       cca.UIComponentName
 		expected bool
 	}{
 		{cca.ModeSelector, !options.TestBehavior.ShouldReview},

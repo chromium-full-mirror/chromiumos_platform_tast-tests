@@ -20,8 +20,8 @@ type qrcodeTestParams struct {
 	format     string
 	expected   string
 	scene      string
-	chip       cca.UIComponent
-	copyButton cca.UIComponent
+	chip       cca.UIComponentName
+	copyButton cca.UIComponentName
 	canOpen    bool
 }
 

@@ -25,65 +25,6 @@ type UIComponent struct {
 }
 
 var (
-	// ModeSelector is selection bar for different capture modes.
-	ModeSelector = UIComponent{"mode selector", []string{"#modes-group"}}
-	// SettingsButton is button for opening primary setting menu.
-	SettingsButton = UIComponent{"settings", []string{"#open-settings"}}
-	// SwitchDeviceButton is button for switching camera device.
-	SwitchDeviceButton = UIComponent{"switch device button", []string{"#switch-device"}}
-	// VideoSnapshotButton is button for taking video snapshot during recording.
-	VideoSnapshotButton = UIComponent{"video snapshot button", []string{"#video-snapshot"}}
-	// VideoPauseResumeButton is button for pausing or resuming video recording.
-	VideoPauseResumeButton = UIComponent{"video pause/resume button", []string{"#pause-recordvideo"}}
-
-	// FeedbackButton is the feedback button showing in the settings menu.
-	FeedbackButton = UIComponent{"feedback button", []string{"#settings-feedback"}}
-	// HelpButton is the help button showing in the settings menu.
-	HelpButton = UIComponent{"help button", []string{"#settings-help"}}
-
-	// BarcodeChipURL is chip for url detected from barcode.
-	BarcodeChipURL = UIComponent{"barcode chip url", []string{".barcode-chip-url a"}}
-	// BarcodeChipText is chip for text detected from barcode.
-	BarcodeChipText = UIComponent{"barcode chip text", []string{".barcode-chip-text"}}
-	// BarcodeCopyURLButton is button to copy url detected from barcode.
-	BarcodeCopyURLButton = UIComponent{"barcode copy url button",
-		[]string{"#barcode-chip-url-container .barcode-copy-button"}}
-	// BarcodeCopyTextButton is button to copy text detected from barcode.
-	BarcodeCopyTextButton = UIComponent{"barcode copy text button",
-		[]string{"#barcode-chip-text-container .barcode-copy-button"}}
-
-	// OpenMirrorPanelButton is the button which is used for opening the mirror state settings panel.
-	OpenMirrorPanelButton = UIComponent{"mirror state option button", []string{"#open-mirror-panel"}}
-	// OpenGridPanelButton is the button which is used for opening the grid type settings panel.
-	OpenGridPanelButton = UIComponent{"grid type option button", []string{"#open-grid-panel"}}
-	// OpenTimerPanelButton is the button which is used for opening the timer type settings panel.
-	OpenTimerPanelButton = UIComponent{"timer type option button", []string{"#open-timer-panel"}}
-
-	// ScanBarcodeOption is the option button to switch to QR code detection mode in scan mode.
-	ScanBarcodeOption = UIComponent{"scan barcode option", []string{"#scan-barcode"}}
-	// ReviewView is the review view after taking a photo under document mode.
-	ReviewView = UIComponent{"document review view", []string{"#view-review"}}
-
-	// GifRecordingOption is the radio button to toggle gif recording option.
-	GifRecordingOption = UIComponent{"gif recording button", []string{
-		"input[type=radio][data-state=record-type-gif]"}}
-	// GifReviewSaveButton is the save button in gif review page.
-	GifReviewSaveButton = UIComponent{"save gif button", []string{
-		"#view-review button[i18n-text=label_save]"}}
-	// GifReviewRetakeButton is the retake button in gif review page.
-	GifReviewRetakeButton = UIComponent{"retake gif button", []string{"#review-retake"}}
-
-	// LowStorageDialog is the dialog displayed when there's an unexpected behavior during recording due to low storage.
-	LowStorageDialog = UIComponent{"low storage dialog", []string{"#view-low-storage-dialog"}}
-	// LowStorageDialogOKButton is the button labeled "OK" in LowStorageDialog, used to acknowledge and close the dialog.
-	LowStorageDialogOKButton = UIComponent{"low storage dialog OK button", []string{"#view-low-storage-dialog button.dialog-positive-button"}}
-	// LowStorageDialogManageButton is the button in LowStorageDialog that navigates users to "Manage storage" page in system settings.
-	LowStorageDialogManageButton = UIComponent{"low storage manage storage button", []string{"#view-low-storage-dialog button.dialog-negative-button"}}
-	// LowStorageWarning is the warning nudge displayed while recording on device with low storage.
-	LowStorageWarning = UIComponent{"low storage warning nudge", []string{"#nudge"}}
-)
-
-var (
 	// A11yRootNode represents the root node of Camera app in A11y tree.
 	A11yRootNode = nodewith.Name("Camera").Role(role.RootWebArea)
 	// A11yCanvasNode represents the canvas node in A11y tree.
@@ -110,6 +51,14 @@ const (
 	BackPhotoResolutionOptions UIComponentName = "backPhotoResolutionOptions"
 	// BackVideoResolutionOptions are the buttons of video resolution options for the back camera.
 	BackVideoResolutionOptions UIComponentName = "backVideoResolutionOptions"
+	// BarcodeChipText is chip for text detected from barcode.
+	BarcodeChipText UIComponentName = "barcodeChipText"
+	// BarcodeChipURL is chip for url detected from barcode.
+	BarcodeChipURL UIComponentName = "barcodeChipURL"
+	// BarcodeCopyTextButton is button to copy text detected from barcode.
+	BarcodeCopyTextButton UIComponentName = "barcodeCopyTextButton"
+	// BarcodeCopyURLButton is button to copy url detected from barcode.
+	BarcodeCopyURLButton UIComponentName = "barcodeCopyURLButton"
 	// BitrateMultiplierRangeInput is range input for selecting bitrate multiplier.
 	BitrateMultiplierRangeInput UIComponentName = "bitrateMultiplierRangeInput"
 	// CancelResultButton is button for canceling intent review result.
@@ -140,6 +89,8 @@ const (
 	DocumentSaveAsPdfButton UIComponentName = "documentSaveAsPdfButton"
 	// DocumentSaveAsPhotoButton is the button to save as a photo in multi-page document mode.
 	DocumentSaveAsPhotoButton UIComponentName = "documentSaveAsPhotoButton"
+	// FeedbackButton is the feedback button showing in the settings menu.
+	FeedbackButton UIComponentName = "feedbackButton"
 	// FrontAspectRatioOptions are the buttons of aspect ratio options for the front camera.
 	FrontAspectRatioOptions UIComponentName = "frontAspectRatioOptions"
 	// FrontPhotoResolutionOptions are the buttons of photo resolution options for the front camera.
@@ -150,14 +101,38 @@ const (
 	GalleryButton UIComponentName = "galleryButton"
 	// GalleryButtonCover is cover photo of gallery button.
 	GalleryButtonCover UIComponentName = "galleryButtonCover"
+	// GifRecordingOption is the radio button to toggle gif recording option.
+	GifRecordingOption UIComponentName = "gifRecordingOption"
+	// GifReviewRetakeButton is the retake button in gif review page.
+	GifReviewRetakeButton UIComponentName = "gifReviewRetakeButton"
+	// GifReviewSaveButton is the save button in gif review page.
+	GifReviewSaveButton UIComponentName = "gifReviewSaveButton"
 	// GridOptionGoldenRatio is an option to enable grid of type golden ratio.
 	GridOptionGoldenRatio UIComponentName = "gridOptionGoldenRatio"
+	// HelpButton is the help button showing in the settings menu.
+	HelpButton UIComponentName = "helpButton"
+	// LowStorageDialog is the dialog displayed when there's an unexpected behavior during recording due to low storage.
+	LowStorageDialog UIComponentName = "lowStorageDialog"
+	// LowStorageDialogManageButton is the button in LowStorageDialog that navigates users to "Manage storage" page in system settings.
+	LowStorageDialogManageButton UIComponentName = "lowStorageDialogManageButton"
+	// LowStorageDialogOKButton is the button labeled "OK" in LowStorageDialog, used to acknowledge and close the dialog.
+	LowStorageDialogOKButton UIComponentName = "lowStorageDialogOKButton"
+	// LowStorageWarning is the warning nudge displayed while recording on device with low storage.
+	LowStorageWarning UIComponentName = "lowStorageWarning"
 	// MirrorOptionOff is an option to disable mirror preview.
 	MirrorOptionOff UIComponentName = "mirrorOptionOff"
 	// MirrorOptionOff is an option to enable mirror preview.
 	MirrorOptionOn UIComponentName = "mirrorOptionOn"
+	// ModeSelector is the selection bar for different capture modes.
+	ModeSelector UIComponentName = "modeSelector"
+	// OpenGridPanelButton is the button which is used for opening the grid type settings panel.
+	OpenGridPanelButton UIComponentName = "openGridPanelButton"
+	// OpenMirrorPanelButton is the button which is used for opening the mirror state settings panel.
+	OpenMirrorPanelButton UIComponentName = "openMirrorPanelButton"
 	// OpenPTZPanelButton is the button for opening PTZ panel.
 	OpenPTZPanelButton UIComponentName = "openPTZPanelButton"
+	// OpenTimerPanelButton is the button which is used for opening the timer type settings panel.
+	OpenTimerPanelButton UIComponentName = "openTimerPanelButton"
 	// PanLeftButton is the button for panning left preview.
 	PanLeftButton UIComponentName = "panLeftButton"
 	// PanRightButton is the button for panning right preview.
@@ -166,8 +141,16 @@ const (
 	PTZResetAllButton UIComponentName = "ptzResetAllButton"
 	// PreviewViewport is the container of the preview video.
 	PreviewViewport UIComponentName = "previewViewport"
+	// ReviewView is the review view after taking a photo under document mode.
+	ReviewView UIComponentName = "reviewView"
+	// ScanBarcodeOption is the option button to switch to QR code detection mode in scan mode.
+	ScanBarcodeOption UIComponentName = "scanBarcodeOption"
 	// ScanDocumentModeOption is the document mode option of scan mode.
 	ScanDocumentModeOption UIComponentName = "scanDocumentModeOption"
+	// SettingsButton is the button for opening primary setting menu.
+	SettingsButton UIComponentName = "settingsButton"
+	// SwitchDeviceButton is the button for switching camera device.
+	SwitchDeviceButton UIComponentName = "switchDeviceButton"
 	// TiltDownButton is the button for tilting down preview.
 	TiltDownButton UIComponentName = "tiltDownButton"
 	// TimerOption10Seconds is an option to turn on 10-seconds timer.
@@ -180,8 +163,12 @@ const (
 	TiltUpButton UIComponentName = "tiltUpButton"
 	// TimeLapseRecordingOption is the radio button to toggle time-lapse recording option.
 	TimeLapseRecordingOption UIComponentName = "timeLapseRecordingOption"
+	// VideoPauseResumeButton is the button for pausing or resuming video recording.
+	VideoPauseResumeButton UIComponentName = "videoPauseResumeButton"
 	// VideoProfileSelect is select-options for selecting video profile.
 	VideoProfileSelect UIComponentName = "videoProfileSelect"
+	// VideoSnapshotButton is the button for taking video snapshot during recording.
+	VideoSnapshotButton UIComponentName = "videoSnapshotButton"
 	// ZoomInButton is the button for zoom in preview.
 	ZoomInButton UIComponentName = "zoomInButton"
 	// ZoomOutButton is the button for zoom out preview.

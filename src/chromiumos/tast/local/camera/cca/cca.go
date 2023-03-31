@@ -1022,9 +1022,7 @@ func (a *App) CheckConfirmUIExists(ctx context.Context, mode Mode) error {
 		}
 	} else {
 		testing.ContextLog(ctx, "Using new review UI")
-		if visible, err := a.Visible(ctx, ReviewView); err != nil {
-			return err
-		} else if !visible {
+		if err := a.WaitForVisibleState(ctx, ReviewView, true); err != nil {
 			return errors.New("review result is not shown")
 		}
 	}
