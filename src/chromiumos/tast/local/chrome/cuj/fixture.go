@@ -164,7 +164,6 @@ func init() {
 			"xiyuan@chromium.org",
 			"chromeos-perfmetrics-eng@google.com",
 		},
-		Data:            docsBlockerFiles,
 		Impl:            &loggedInToCUJUserFixture{bt: browser.TypeAsh},
 		Parent:          "prepareForCUJ",
 		SetUpTimeout:    setUpTimeout,
@@ -186,6 +185,7 @@ func init() {
 			chromeExtraOpts:   []chrome.Option{chrome.ExtraArgs(webRTCEventLogCommandFlag)},
 			bt:                browser.TypeAsh,
 			useEnterprisePool: true,
+			docsBlocker:       true,
 		},
 		Parent:          "prepareForCUJ",
 		SetUpTimeout:    setUpTimeout,
@@ -202,7 +202,6 @@ func init() {
 			"xiyuan@chromium.org",
 			"chromeos-perfmetrics-eng@google.com",
 		},
-		Data: docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
 			keepState: true,
 			bt:        browser.TypeAsh,
@@ -224,7 +223,7 @@ func init() {
 			"jane.yang@cienet.com",
 			"chromeos-perfmetrics-eng@google.com",
 		},
-		Data: append(docsBlockerFiles, highResFakeCameraFileName),
+		Data: []string{highResFakeCameraFileName},
 		Impl: &loggedInToCUJUserFixture{
 			bt:                 browser.TypeAsh,
 			keepState:          true,
@@ -262,7 +261,6 @@ func init() {
 			"xiyuan@chromium.org",
 			"chromeos-perfmetrics-eng@google.com",
 		},
-		Data:            docsBlockerFiles,
 		Impl:            &loggedInToCUJUserFixture{bt: browser.TypeLacros},
 		Parent:          "cpuIdleForCUJ",
 		SetUpTimeout:    setUpTimeout,
@@ -279,7 +277,6 @@ func init() {
 			"xliu@cienet.com",
 			"chromeos-perfmetrics-eng@google.com",
 		},
-		Data: docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
 			keepState: true,
 			bt:        browser.TypeLacros,
@@ -301,7 +298,7 @@ func init() {
 			"jane.yang@cienet.com",
 			"chromeos-perfmetrics-eng@google.com",
 		},
-		Data: append(docsBlockerFiles, highResFakeCameraFileName),
+		Data: []string{highResFakeCameraFileName},
 		Impl: &loggedInToCUJUserFixture{
 			bt:                 browser.TypeLacros,
 			keepState:          true,
@@ -340,7 +337,6 @@ func init() {
 			"alston.huang@cienet.com",
 			"chromeos-perfmetrics-eng@google.com",
 		},
-		Data:            docsBlockerFiles,
 		Impl:            &loggedInToCUJUserFixture{},
 		Parent:          "cpuIdleForEnrolledCUJ",
 		SetUpTimeout:    chrome.EnrollmentAndLoginTimeout + chrome.GAIALoginTimeout + optin.OptinTimeout + 2*time.Minute,
@@ -359,7 +355,6 @@ func init() {
 			"jane.yang@cienet.com",
 			"chromeos-perfmetrics-eng@google.com",
 		},
-		Data:            docsBlockerFiles,
 		Impl:            &loggedInToCUJUserFixture{bt: browser.TypeLacros},
 		Parent:          "cpuIdleForEnrolledCUJ",
 		SetUpTimeout:    chrome.EnrollmentAndLoginTimeout + chrome.GAIALoginTimeout + optin.OptinTimeout + 2*time.Minute,
@@ -382,6 +377,7 @@ func init() {
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{chrome.ExtraArgs(webRTCEventLogCommandFlag)},
 			bt:              browser.TypeAsh,
+			docsBlocker:     true,
 		},
 		Parent:          "prepareForCUJ",
 		SetUpTimeout:    setUpTimeout,
@@ -402,6 +398,7 @@ func init() {
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{chrome.LacrosExtraArgs(webRTCEventLogCommandFlag)},
 			bt:              browser.TypeLacros,
+			docsBlocker:     true,
 		},
 		Parent:          "cpuIdleForCUJ",
 		SetUpTimeout:    setUpTimeout,
@@ -424,7 +421,8 @@ func init() {
 				chrome.EnableFeatures("OneGroupPerRenderer"),
 				chrome.ExtraArgs(webRTCEventLogCommandFlag),
 			},
-			bt: browser.TypeAsh,
+			bt:          browser.TypeAsh,
+			docsBlocker: true,
 		},
 		Parent:          "prepareForCUJ",
 		SetUpTimeout:    setUpTimeout,
@@ -448,7 +446,8 @@ func init() {
 				chrome.EnableFeatures("MainThreadCompositingPriority"),
 				chrome.ExtraArgs(webRTCEventLogCommandFlag),
 			},
-			bt: browser.TypeAsh,
+			bt:          browser.TypeAsh,
+			docsBlocker: true,
 		},
 		Parent:          "prepareForCUJ",
 		SetUpTimeout:    setUpTimeout,
@@ -465,7 +464,6 @@ func init() {
 			"ramsaroop@google.com",
 			"chromeos-perfmetrics-eng@google.com",
 		},
-		Data: docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
 				chrome.EnableFeatures("PartitionAllocBackupRefPtr:enabled-processes/browser-only"),
@@ -493,7 +491,8 @@ func init() {
 				chrome.EnableFeatures("PartitionAllocBackupRefPtr:enabled-processes/browser-only"),
 				chrome.ExtraArgs(webRTCEventLogCommandFlag),
 			},
-			bt: browser.TypeAsh,
+			bt:          browser.TypeAsh,
+			docsBlocker: true,
 		},
 		Parent:          "cpuIdleForCUJ",
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
@@ -510,7 +509,6 @@ func init() {
 			"ramsaroop@google.com",
 			"chromeos-perfmetrics-eng@google.com",
 		},
-		Data: docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
 				chrome.ExtraArgs("enable-field-trial-config"),
@@ -538,7 +536,8 @@ func init() {
 				chrome.ExtraArgs("enable-field-trial-config"),
 				chrome.ExtraArgs(webRTCEventLogCommandFlag),
 			},
-			bt: browser.TypeAsh,
+			bt:          browser.TypeAsh,
+			docsBlocker: true,
 		},
 		Parent:          "cpuIdleForCUJ",
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
@@ -770,6 +769,7 @@ type loggedInToCUJUserFixture struct {
 	useEnterprisePool  bool
 	fakeCamera         bool
 	fakeCameraFileName string
+	docsBlocker        bool
 }
 
 func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -779,9 +779,14 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 		ctx, cancel := context.WithTimeout(ctx, chrome.LoginTimeout)
 		defer cancel()
 
-		docsBlockerExtDir, err := prepareDocsBlockerExtension(s)
-		if err != nil {
-			s.Fatal("Failed to prepare DocsBlockerExtension: ", err)
+		var docsBlockerExtDir string
+		var err error
+
+		if f.docsBlocker {
+			docsBlockerExtDir, err = prepareDocsBlockerExtension(s)
+			if err != nil {
+				s.Fatal("Failed to prepare DocsBlockerExtension: ", err)
+			}
 		}
 
 		opts := []chrome.Option{
@@ -806,9 +811,13 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 				s.Fatal("Failed to get lacros options: ", err)
 			}
 
-			opts = append(opts, chrome.LacrosUnpackedExtension(docsBlockerExtDir))
+			if f.docsBlocker {
+				opts = append(opts, chrome.LacrosUnpackedExtension(docsBlockerExtDir))
+			}
 		} else {
-			opts = append(opts, chrome.UnpackedExtension(docsBlockerExtDir))
+			if f.docsBlocker {
+				opts = append(opts, chrome.UnpackedExtension(docsBlockerExtDir))
+			}
 		}
 		if f.fakeCamera && strings.ToLower(EnableRealCameraVar.Value()) != "true" {
 			fakeCameraOpts := []string{
