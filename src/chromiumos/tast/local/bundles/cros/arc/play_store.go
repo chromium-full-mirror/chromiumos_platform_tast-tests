@@ -25,12 +25,14 @@ func init() {
 		Contacts:     []string{"arc-core@google.com", "cros-arc-te@google.com", "mhasank@chromium.org"},
 		// ChromeOS > Software > ARC++ > Core > Play Store Setup
 		BugComponent: "b:1131344",
-		Attr:         []string{"group:arc-functional", "group:mainline", "informational"},
+		Attr:         []string{"group:arc-functional", "group:mainline"},
 		SoftwareDeps: []string{"play_store", "chrome"},
 		Params: []testing.Param{{
+			ExtraAttr:         []string{"informational"},
 			ExtraSoftwareDeps: []string{"android_container"},
 		}, {
 			Name:              "vm",
+			ExtraAttr:         []string{"informational"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}},
 		Timeout: 13 * time.Minute,
