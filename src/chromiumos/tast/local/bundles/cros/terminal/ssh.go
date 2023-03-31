@@ -32,6 +32,7 @@ func init() {
 		BugComponent: "b:1122570",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
+		Timeout:      3 * time.Minute,
 	})
 }
 
