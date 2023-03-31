@@ -9,6 +9,7 @@ import (
 	"context"
 	"time"
 
+	"chromiumos/tast/common/android/ui"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome"
@@ -34,8 +35,10 @@ type ShillSimulatedWiFi struct {
 	// interfaces.
 	AP []string
 	// ARC's handle. This is only added when using the fixture "arcBooted".
-	ARC    *arc.ARC
-	Chrome *chrome.Chrome
+	ARC *arc.ARC
+	// ARC's UI Automator. This is only added when using the fixture "arcBooted".
+	UIDevice *ui.Device
+	Chrome   *chrome.Chrome
 }
 
 type parentFixtDataCallback func(s *testing.FixtState) ShillSimulatedWiFi
@@ -85,8 +88,9 @@ func init() {
 		Impl: NewShillSimulatedWiFiFixture(func(s *testing.FixtState) ShillSimulatedWiFi {
 			preData := s.ParentValue().(*arc.PreData)
 			return ShillSimulatedWiFi{
-				Chrome: preData.Chrome,
-				ARC:    preData.ARC,
+				Chrome:   preData.Chrome,
+				ARC:      preData.ARC,
+				UIDevice: preData.UIDevice,
 			}
 		}),
 	})
@@ -104,8 +108,9 @@ func init() {
 		Impl: NewShillSimulatedWiFiFixture(func(s *testing.FixtState) ShillSimulatedWiFi {
 			preData := s.ParentValue().(*arc.PreData)
 			return ShillSimulatedWiFi{
-				Chrome: preData.Chrome,
-				ARC:    preData.ARC,
+				Chrome:   preData.Chrome,
+				ARC:      preData.ARC,
+				UIDevice: preData.UIDevice,
 			}
 		}),
 	})

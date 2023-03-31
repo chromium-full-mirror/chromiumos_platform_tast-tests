@@ -123,11 +123,7 @@ func PasspointARCDialog(ctx context.Context, s *testing.State) {
 
 	// ARC-related setup.
 	a := s.FixtValue().(*hwsim.ShillSimulatedWiFi).ARC
-	d, err := a.NewUIDevice(ctx)
-	if err != nil {
-		s.Fatal("Failed initializing UI Automator: ", err)
-	}
-	defer d.Close(ctx)
+	d := s.FixtValue().(*hwsim.ShillSimulatedWiFi).UIDevice
 
 	// Shill-related setup.
 	m, err := shill.NewManager(ctx)
