@@ -176,6 +176,9 @@ var expectedWLANDriver = map[wlan.DeviceID]map[string]string{
 		"5.10": "wireless/mediatek/mt76/mt7921/mt7921s.ko",
 		"5.15": "wireless/mediatek/mt76/mt7921/mt7921s.ko",
 	},
+	wlan.MediaTekMT7922PCIE: {
+		"5.15": "wireless/mediatek/mt76/mt7921/mt7921e.ko",
+	},
 }
 
 func Driver(ctx context.Context, s *testing.State) {
