@@ -15,6 +15,14 @@ import (
 	"chromiumos/tast/testing"
 )
 
+const (
+	setUpTimeout    = 1 * time.Minute
+	resetTimeout    = 1 * time.Minute
+	tearDownTimeout = 1 * time.Minute
+	preTestTimeout  = 1 * time.Minute
+	postTestTimeout = 1 * time.Minute
+)
+
 func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name: "powerSetUp",
@@ -29,18 +37,34 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name: "powerMetricsNoUI",
-		Desc: "Set up test environment, collect power metrics, visualization and upload data",
+		Name: "powerNoUI",
+		Desc: "Set up test environment for tests needing no UI or backlight",
 		Contacts: []string{
-			"chromeos-power@google.com",
+			"chromeos-platform-power@google.com",
+			"mqg@chromium.org",
+		},
+		Impl:            &powerNoUIFixture{},
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: tearDownTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: "powerMetricsNoUI",
+		Desc: "Set up test environment for tests needing no UI or backlight, collect power metrics, visualize and upload data",
+		Contacts: []string{
+			"chromeos-platform-power@google.com",
 			"mqg@chromium.org",
 		},
 		Impl:            &powerMetricsNoUIFixture{},
-		SetUpTimeout:    1 * time.Minute,
-		ResetTimeout:    1 * time.Minute,
-		TearDownTimeout: 1 * time.Minute,
-		PreTestTimeout:  1 * time.Minute,
-		PostTestTimeout: 1 * time.Minute,
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: tearDownTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		Parent:          "powerNoUI",
 	})
 }
 
@@ -85,14 +109,13 @@ func (f *powerSetUpFixture) Reset(ctx context.Context) error {
 	return nil
 }
 
-type powerMetricsNoUIFixture struct {
+type powerNoUIFixture struct {
 	cleanup func(context.Context) error
-	metrics *perf.Timeline
 }
 
-func (f *powerMetricsNoUIFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+func (f *powerNoUIFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	// Set up the testing environment.
-	su, cleanup := New("powerMetricsNoUIFixture")
+	su, cleanup := New("powerNoUIFixture")
 
 	dischargeMode := NoBatteryDischarge
 	if _, err := power.SysfsBatteryPath(ctx); err == nil {
@@ -120,10 +143,35 @@ func (f *powerMetricsNoUIFixture) SetUp(ctx context.Context, s *testing.FixtStat
 	return nil
 }
 
-func (f *powerMetricsNoUIFixture) TearDown(ctx context.Context, s *testing.FixtState) {
+func (f *powerNoUIFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 	if err := f.cleanup(ctx); err != nil {
 		s.Error("Power cleanup failed: ", err)
 	}
+}
+
+func (f *powerNoUIFixture) Reset(ctx context.Context) error {
+	return nil
+}
+
+func (f *powerNoUIFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
+}
+
+func (f *powerNoUIFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
+}
+
+type powerMetricsNoUIFixture struct {
+	metrics *perf.Timeline
+}
+
+func (f *powerMetricsNoUIFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	return nil
+}
+
+func (f *powerMetricsNoUIFixture) TearDown(ctx context.Context, s *testing.FixtState) {
+}
+
+func (f *powerMetricsNoUIFixture) Reset(ctx context.Context) error {
+	return nil
 }
 
 func (f *powerMetricsNoUIFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
@@ -140,8 +188,6 @@ func (f *powerMetricsNoUIFixture) PreTest(ctx context.Context, s *testing.FixtTe
 		s.Fatal("Failed to build metrics: ", err)
 	}
 
-	f.metrics = metrics
-
 	if err := metrics.Start(s.TestContext()); err != nil {
 		s.Fatal("Failed to start metrics: ", err)
 	}
@@ -149,6 +195,8 @@ func (f *powerMetricsNoUIFixture) PreTest(ctx context.Context, s *testing.FixtTe
 	if err := metrics.StartRecording(s.TestContext()); err != nil {
 		s.Fatal("Failed to start recording: ", err)
 	}
+
+	f.metrics = metrics
 }
 
 func (f *powerMetricsNoUIFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
@@ -160,8 +208,4 @@ func (f *powerMetricsNoUIFixture) PostTest(ctx context.Context, s *testing.FixtT
 	if err := power.GeneratePowerLogAndSaveToCrosbolt(ctx, s.OutDir(), s.TestName(), p); err != nil {
 		s.Error("Failed to generate power_log.json and/or save perf data for crosbolt: ", err)
 	}
-}
-
-func (f *powerMetricsNoUIFixture) Reset(ctx context.Context) error {
-	return nil
 }
