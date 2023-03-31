@@ -296,11 +296,13 @@ func WaitForDUTReboot(ctx context.Context, h *firmware.Helper, bootID string) er
 
 // GetCCDStatePasswd gets values of State and Password fields from ccd command.
 func GetCCDStatePasswd(ctx context.Context, h *firmware.Helper) (string, string, error) {
-	out, err := h.Servo.RunCR50CommandGetOutput(ctx, "ccd", []string{`State:\s*(\S+)\s*\n\s*Password:\s*(\S+)\s*\n`})
+	out, err := h.Servo.RunCR50CommandGetOutput(ctx, "ccd", []string{
+		`State:\s*(\S+)\s*\n`,
+		`Password:\s*(\S+)\s*\n`})
 	if err != nil {
 		return "", "", errors.Wrap(err, "function RunCR50CommandGetOutput() returned an error")
 	}
-	return out[0][1], out[0][2], nil
+	return out[0][1], out[1][1], nil
 }
 
 // CheckExpectedCCDState verifies if values of State and Password fields from ccd command are the expected ones.

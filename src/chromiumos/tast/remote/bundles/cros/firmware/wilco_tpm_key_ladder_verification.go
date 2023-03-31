@@ -83,8 +83,6 @@ func WilcoTPMKeyLadderVerification(ctx context.Context, s *testing.State) {
 		enabledKeyLadder  = "prod"
 		disabledKeyLadder = "disabled"
 	)
-	reTPM := regexp.MustCompile(`TPM\s+MODE:\s+(enabled \(\d\)|disabled \(\d\))`)
-	reKeyLadder := regexp.MustCompile(`Key\s+Ladder:\s+(prod|dev|disabled)`)
 
 	for _, step := range []struct {
 		powerCycleDUT        func(ctx context.Context, h *firmware.Helper) error
@@ -125,24 +123,20 @@ func WilcoTPMKeyLadderVerification(ctx context.Context, s *testing.State) {
 			}
 		}
 
-		output, err := h.Servo.RunCR50CommandGetOutput(ctx, "sysinfo", []string{`.*\nKey Ladder:.+\n`})
+		s.Log("Verifying TPM and Key Ladder states")
+		output, err := h.Servo.RunCR50CommandGetOutput(ctx, "sysinfo", []string{
+			`TPM\s+MODE:\s+(enabled \(\d\)|disabled \(\d\))\s*`,
+			`Key\s+Ladder:\s+(prod|dev|disabled)\s*`})
 		if err != nil {
 			s.Fatal("Failed to run cr50 console sysinfo command: ", err)
 		}
-
-		data := map[string]*regexp.Regexp{
-			step.tpmMode:   reTPM,
-			step.keyLadder: reKeyLadder,
+		if step.tpmMode != output[0][1] {
+			s.Fatalf("Incorrect value, got %s from %s, but wanted %s",
+				output[0][1], output[0][0], step.tpmMode)
 		}
-		s.Log("Verifying TPM and Key Ladder states")
-		for k, v := range data {
-			match := v.FindStringSubmatch(output[0][0])
-			if len(match) != 2 {
-				s.Fatalf("Unable to find match for %s from %q", v, match)
-			}
-			if match[1] != k {
-				s.Fatalf("Incorrect value, got %s from %s, but wanted %s", match[1], match[0], k)
-			}
+		if step.keyLadder != output[1][1] {
+			s.Fatalf("Incorrect value, got %s from %s, but wanted %s",
+				output[1][1], output[1][0], step.keyLadder)
 		}
 	}
 }
