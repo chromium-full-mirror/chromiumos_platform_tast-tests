@@ -12,10 +12,12 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
+	"chromiumos/tast/local/chrome/cuj"
 	"chromiumos/tast/local/chrome/cuj/inputsimulations"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/pointer"
+	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/coords"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/testing"
@@ -231,6 +233,19 @@ func initializeSwitchTaskByOverviewMode(ctx context.Context, tconn *chrome.TestC
 			if err := pc.ClickAt(targetWindow.OverviewInfo.Bounds.CenterPoint())(ctx); err != nil {
 				return errors.Wrap(err, "failed to click")
 			}
+
+			// A mobile prompt might pop up and inactivate the ARC window.
+			// Dismiss the prompt if it appears.
+			if targetWindow.WindowType == ash.WindowTypeArc {
+				if err := ash.WaitForOverviewState(ctx, tconn, ash.Hidden, 5*time.Second); err != nil {
+					return errors.Wrap(err, "failed to wait for overview to hide")
+				}
+
+				if err := dismissMobilePromptIfExists(ctx, tconn); err != nil {
+					return errors.Wrap(err, "failed to dismiss the mobile prompt if exists")
+				}
+			}
+
 			if err := ash.WaitForCondition(ctx, tconn, func(w *ash.Window) bool {
 				return w.ID == targetWindow.ID && w.OverviewInfo == nil && w.IsActive
 			}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
@@ -240,4 +255,15 @@ func initializeSwitchTaskByOverviewMode(ctx context.Context, tconn *chrome.TestC
 			return nil
 		},
 	}
+}
+
+// dismissMobilePromptIfExists immediately checks the existence of the mobile prompt
+// and dismiss the prompt if it exists.
+func dismissMobilePromptIfExists(ctx context.Context, tconn *chrome.TestConn) error {
+	ui := uiauto.New(tconn)
+	prompt := nodewith.Name("This app is designed for mobile").Role(role.Window)
+	if err := ui.Exists(prompt)(ctx); err != nil {
+		return nil
+	}
+	return cuj.DismissMobilePrompt(ctx, tconn)
 }

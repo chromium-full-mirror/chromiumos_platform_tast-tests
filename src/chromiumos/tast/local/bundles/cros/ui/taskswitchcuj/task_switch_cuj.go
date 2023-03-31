@@ -195,7 +195,14 @@ func Run(ctx context.Context, s *testing.State) {
 
 	defer ash.CloseAllWindows(closeCtx, tconn)
 
-	defer faillog.DumpUITreeWithScreenshotOnError(closeCtx, s.OutDir(), s.HasError, cr, "ui_dump")
+	pwaOpened := false
+	defer func(ctx context.Context) {
+		// The faillog captures the errors that occur before opening PWA.
+		// Errors occur after the opening PWA will be captured by the other faillog.
+		if !pwaOpened {
+			faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_dump_before_PWA_opened")
+		}
+	}(closeCtx)
 
 	s.Log("Installing packages")
 	packages := getPackages(ctx, tconn, d)
@@ -225,10 +232,15 @@ func Run(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open PWA: ", err)
 	}
 	defer cleanupPWA(closeCtx)
+	pwaOpened = true
 
 	// Increase the count of app windows, to include the PWA that
 	// was opened in openPWA.
 	numAppWindows++
+
+	// cleanupPWA opens the os settings and blocks the UI tree and screenshot of the error.
+	// Dump UI tree and screenshot before the cleanupPWA function.
+	defer faillog.DumpUITreeWithScreenshotOnError(closeCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
 		recorder.Annotate(ctx, "Open_Aquarium")
