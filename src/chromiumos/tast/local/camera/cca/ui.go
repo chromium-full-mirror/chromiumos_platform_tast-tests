@@ -60,8 +60,6 @@ var (
 	BarcodeCopyTextButton = UIComponent{"barcode copy text button",
 		[]string{"#barcode-chip-text-container .barcode-copy-button"}}
 
-	// OptionsContainer is the container for all options for opening option panel.
-	OptionsContainer = UIComponent{"container of options", []string{"#options-container"}}
 	// OpenMirrorPanelButton is the button which is used for opening the mirror state settings panel.
 	OpenMirrorPanelButton = UIComponent{"mirror state option button", []string{"#open-mirror-panel"}}
 	// OpenGridPanelButton is the button which is used for opening the grid type settings panel.
@@ -73,9 +71,6 @@ var (
 	ScanBarcodeOption = UIComponent{"scan barcode option", []string{"#scan-barcode"}}
 	// ReviewView is the review view after taking a photo under document mode.
 	ReviewView = UIComponent{"document review view", []string{"#view-review"}}
-	// DocumentCornerOverlay is the overlay that CCA used to draw document corners on.
-	DocumentCornerOverlay = UIComponent{"document corner overlay", []string{
-		"#preview-document-corner-overlay"}}
 
 	// GifRecordingOption is the radio button to toggle gif recording option.
 	GifRecordingOption = UIComponent{"gif recording button", []string{
@@ -156,6 +151,8 @@ const (
 	DocumentBackButton UIComponentName = "documentBackButton"
 	// DocumentCancelButton is the cancel button in multi-page document mode.
 	DocumentCancelButton UIComponentName = "documentCancelButton"
+	// DocumentCorner are corners drawn around the document boundary corner.
+	DocumentCorner UIComponentName = "documentCorner"
 	// DocumentDoneFixButton is the exit button of fix mode in multi-page document mode.
 	DocumentDoneFixButton UIComponentName = "documentDoneFixButton"
 	// DocumentFixButton is the entry button of fix mode in multi-page document mode.
@@ -182,6 +179,12 @@ const (
 	GalleryButton UIComponentName = "galleryButton"
 	// GalleryButtonCover is cover photo of gallery button.
 	GalleryButtonCover UIComponentName = "galleryButtonCover"
+	// GridOptionGoldenRatio is an option to enable grid of type golden ratio.
+	GridOptionGoldenRatio UIComponentName = "gridOptionGoldenRatio"
+	// MirrorOptionOff is an option to disable mirror preview.
+	MirrorOptionOff UIComponentName = "mirrorOptionOff"
+	// MirrorOptionOff is an option to enable mirror preview.
+	MirrorOptionOn UIComponentName = "mirrorOptionOn"
 	// OpenPTZPanelButton is the button for opening PTZ panel.
 	OpenPTZPanelButton UIComponentName = "openPTZPanelButton"
 	// PanLeftButton is the button for panning left preview.
@@ -196,6 +199,12 @@ const (
 	ScanDocumentModeOption UIComponentName = "scanDocumentModeOption"
 	// TiltDownButton is the button for tilting down preview.
 	TiltDownButton UIComponentName = "tiltDownButton"
+	// TimerOption10Seconds is an option to turn on 10-seconds timer.
+	TimerOption10Seconds UIComponentName = "timerOption10Seconds"
+	// TimerOption3Seconds is an option to turn on 3-seconds timer.
+	TimerOption3Seconds UIComponentName = "timerOption3Seconds"
+	// TimerOptionOff is an option to turn off the timer.
+	TimerOptionOff UIComponentName = "timerOptionOff"
 	// TiltUpButton is the button for tilting up preview.
 	TiltUpButton UIComponentName = "tiltUpButton"
 	// VideoProfileSelect is select-options for selecting video profile.
@@ -212,19 +221,6 @@ type errorUINotExist struct {
 
 func (err errorUINotExist) Error() string {
 	return fmt.Sprintf("failed to resolved ui %v to its correct selector", err.ui.Name)
-}
-
-// HasClass returns true if the given HTML element has the given class name.
-func (a *App) HasClass(ctx context.Context, ui UIComponent, className string) (bool, error) {
-	selector, err := a.resolveUISelector(ctx, ui)
-	if err != nil {
-		return false, errors.Wrapf(err, "failed to get the selector of UI: %v", ui.Name)
-	}
-	var result bool
-	if err := a.conn.Call(ctx, &result, "Tast.hasClass", selector, className); err != nil {
-		return false, errors.Wrapf(err, "failed to check class for UI: %v and class name: %v", ui.Name, className)
-	}
-	return result, nil
 }
 
 // resolveUISelector resolves ui to its correct selector.
@@ -420,25 +416,6 @@ func (a *App) ClickUIComponentName(ctx context.Context, ui UIComponentName) erro
 func (a *App) ClickWithIndex(ctx context.Context, ui UIComponentName, index int) error {
 	if err := a.conn.Call(ctx, nil, "CCATest.click", ui, index); err != nil {
 		return errors.Wrapf(err, "failed to click on %v", ui)
-	}
-	return nil
-}
-
-// ClickChildIfContain clicks the child which contains the given string in its text content.
-func (a *App) ClickChildIfContain(ctx context.Context, ui UIComponent, text string) error {
-	selector, err := a.resolveUISelector(ctx, ui)
-	if err != nil {
-		return err
-	}
-	if err := a.conn.Call(ctx, nil, `(selector, text) => {
-		const element = document.querySelector(selector);
-		const children = element.childNodes;
-		const matches = [...children].filter((node) => node.textContent.includes(text));
-		for (const match of matches) {
-			match.click();
-		}
-	}`, selector, text); err != nil {
-		return errors.Wrapf(err, "failed to click children of %v containing text: %v", ui.Name, text)
 	}
 	return nil
 }

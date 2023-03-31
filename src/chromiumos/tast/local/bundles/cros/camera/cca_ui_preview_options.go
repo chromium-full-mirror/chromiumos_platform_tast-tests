@@ -113,7 +113,7 @@ func testGridOption(ctx context.Context, app *cca.App) error {
 	if err := app.Click(ctx, cca.OpenGridPanelButton); err != nil {
 		return errors.Wrap(err, "failed to open grid option panel")
 	}
-	if err := app.ClickChildIfContain(ctx, cca.OptionsContainer, "Golden ratio"); err != nil {
+	if err := app.Click(ctx, cca.GridOptionGoldenRatio); err != nil {
 		return errors.Wrap(err, "failed to click the golden-grid button")
 	}
 	if err := app.WaitForState(ctx, "grid-golden", true); err != nil {
@@ -143,7 +143,7 @@ func testTimerOption(ctx context.Context, app *cca.App) error {
 	if err := app.Click(ctx, cca.OpenTimerPanelButton); err != nil {
 		return errors.Wrap(err, "failed to open timer option panel")
 	}
-	if err := app.ClickChildIfContain(ctx, cca.OptionsContainer, "10 seconds"); err != nil {
+	if err := app.Click(ctx, cca.TimerOption10Seconds); err != nil {
 		return errors.Wrap(err, "failed to click the 10s timer timer button")
 	}
 	if err := app.WaitForState(ctx, "timer-10s", true); err != nil {
@@ -189,13 +189,13 @@ func toggleMirrorState(ctx context.Context, app *cca.App) error {
 	if err := app.Click(ctx, cca.OpenMirrorPanelButton); err != nil {
 		return errors.Wrap(err, "failed to open mirror panel")
 	}
-	targetStateText := "On"
+	targetOption := cca.MirrorOptionOn
 	if mirrored, err := app.Mirrored(ctx); err != nil {
 		return errors.Wrap(err, "failed to get mirrored state")
 	} else if mirrored {
-		targetStateText = "Off"
+		targetOption = cca.MirrorOptionOff
 	}
-	if err := app.ClickChildIfContain(ctx, cca.OptionsContainer, targetStateText); err != nil {
+	if err := app.Click(ctx, targetOption); err != nil {
 		return errors.Wrap(err, "failed to toggle mirror state")
 	}
 	return nil

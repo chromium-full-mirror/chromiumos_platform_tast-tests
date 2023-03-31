@@ -71,7 +71,7 @@ func CCAUICameraBoxDocumentScanning(ctx context.Context, s *testing.State) {
 
 	// Verify that document corners are shown in the preview.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		result, err := app.HasClass(ctx, cca.DocumentCornerOverlay, "show-corner-indicator")
+		result, err := app.Visible(ctx, cca.DocumentCorner)
 		if err != nil {
 			return testing.PollBreak(errors.Wrap(err, "failed to check class of the document scan overlay"))
 		} else if !result {

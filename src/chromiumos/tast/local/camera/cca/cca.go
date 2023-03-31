@@ -1118,14 +1118,14 @@ func (a *App) SetTimerOption(ctx context.Context, state TimerState) error {
 			return errors.Wrap(err, "failed to open timer option panel")
 		}
 		if active {
-			if err := a.ClickChildIfContain(ctx, OptionsContainer, "3 seconds"); err != nil {
+			if err := a.Click(ctx, TimerOption3Seconds); err != nil {
 				return errors.Wrap(err, "failed to click the 3s timer button")
 			}
 			if err := a.WaitForState(ctx, "timer-3s", true); err != nil {
 				return errors.Wrap(err, "failed to wait for 3s-timer being active")
 			}
 		} else {
-			if err := a.ClickChildIfContain(ctx, OptionsContainer, "Off"); err != nil {
+			if err := a.Click(ctx, TimerOptionOff); err != nil {
 				return errors.Wrap(err, "failed to click the off timer button")
 			}
 			if err := a.WaitForState(ctx, "timer", false); err != nil {
