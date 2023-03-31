@@ -160,7 +160,7 @@ func testOneProcessEventsParams(ctx context.Context, s *testing.State, param pro
 	// "signal: Killed"
 	cmd.Wait()
 
-	// Wait for the current batch to be flushed.
+	// GoBigSleepLint: Wait for the current batch to be flushed.
 	if err := testing.Sleep(ctx, 2*batchIntervalS*time.Second); err != nil {
 		s.Fatal("Failed to sleep: ", err)
 	}
@@ -224,6 +224,12 @@ func testOneProcessEventsParams(ctx context.Context, s *testing.State, param pro
 					}
 					expExec.TerminateTimestampUs = proto.Int64(exec.GetTerminateTimestampUs())
 				}
+				// The spawned process is guaranteed to be seen for the first
+				// time. The rest of the hierarchy depends on tast
+				// implementation details so we skip checking those.
+				expExec.GetSpawnProcess().MetaFirstAppearance = proto.Bool(true)
+				expExec.GetProcess().MetaFirstAppearance = exec.GetProcess().MetaFirstAppearance
+				expExec.GetParentProcess().MetaFirstAppearance = exec.GetParentProcess().MetaFirstAppearance
 				if !proto.Equal(&expExec, exec) {
 					s.Log("Actual ProcessExec: ", exec.String())
 					s.Log("Expected ProcessExec: ", expExec.String())
@@ -236,6 +242,10 @@ func testOneProcessEventsParams(ctx context.Context, s *testing.State, param pro
 				terminateFound = true
 				copyUUID(terminate.GetProcess(), expTerm.Process)
 				copyUUID(terminate.GetParentProcess(), expTerm.ParentProcess)
+				// We definitely saw the exec events already so this isn't the
+				// first appearance of either process.
+				expTerm.GetProcess().MetaFirstAppearance = proto.Bool(false)
+				expTerm.GetParentProcess().MetaFirstAppearance = proto.Bool(false)
 				if !proto.Equal(&expTerm, terminate) {
 					s.Log("Actual ProcessTerminate: ", terminate.String())
 					s.Log("Expected ProcessTerminate: ", expTerm.String())
