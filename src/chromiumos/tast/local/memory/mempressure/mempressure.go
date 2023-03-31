@@ -443,6 +443,20 @@ func runAndLogSwapStats(ctx context.Context, f func() error, meter *kernelmeter.
 	return nil
 }
 
+func closeTabs(ctx context.Context, tabs []*tab) (errRet error) {
+	for _, t := range tabs {
+		if err := t.close(); err != nil {
+			testing.ContextLogf(ctx, "Failed to close a tab %d: %v", t.id, err)
+			// If we aren't already returning an error, return this error.
+			if errRet == nil {
+				errRet = errors.Wrapf(err, "failed to close a tab %d", t.id)
+			}
+		}
+	}
+
+	return errRet
+}
+
 // runPhase1 runs the first phase of the test, creating a memory pressure situation by loading multiple tabs
 // into Chrome until the first tab discard occurs. Various measurements are taken as the pressure increases.
 func runPhase1(ctx context.Context, outDir string, br *browser.Browser, p *RunParameters, initialTabSetSize, recentTabSetSize, tabSwitchRepeatCount int, fullMeter *kernelmeter.Meter, perfValues *perf.Values) (
@@ -469,14 +483,9 @@ func runPhase1(ctx context.Context, outDir string, br *browser.Browser, p *RunPa
 
 	var tabs []*tab
 	defer func() {
-		for _, t := range tabs {
-			if err := t.close(); err != nil {
-				testing.ContextLogf(ctx, "Failed to close a tab %d: %v", t.id, err)
-				// If we aren't already returning an error, return this error.
-				if errRet == nil {
-					errRet = errors.Wrapf(err, "failed to close a tab %d", t.id)
-				}
-			}
+		err = closeTabs(ctx, tabs)
+		if errRet == nil {
+			errRet = err
 		}
 	}()
 
@@ -744,14 +753,9 @@ func Run(ctx context.Context, outDir string, br *browser.Browser, arc *arc.ARC, 
 
 	defer func() {
 		tabs := append(pinnedTabs, workTabs...)
-		for _, t := range tabs {
-			if err := t.close(); err != nil {
-				testing.ContextLogf(ctx, "Failed to close a tab %d: %v", t.id, err)
-				// If we aren't already returning an error, return this error.
-				if errRet == nil {
-					errRet = errors.Wrapf(err, "failed to close a tab %d", t.id)
-				}
-			}
+		err = closeTabs(ctx, tabs)
+		if errRet == nil {
+			errRet = err
 		}
 	}()
 
