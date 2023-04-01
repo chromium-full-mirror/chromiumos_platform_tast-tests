@@ -43,14 +43,16 @@ import (
 )
 
 const (
-	ensureWorkVisibleHistogram       = "GPU.EnsureWorkVisibleDuration"
-	ensureWorkVisibleLowResHistogram = "GPU.EnsureWorkVisibleDurationLowRes"
-	allBrowserWindowsCreated         = "Ash.LoginSessionRestore.AllBrowserWindowsCreated"
-	allBrowserWindowsShown           = "Ash.LoginSessionRestore.AllBrowserWindowsShown"
-	allBrowserWindowsPresented       = "Ash.LoginSessionRestore.AllBrowserWindowsPresented"
-	allShelfIconsLoaded              = "Ash.LoginSessionRestore.AllShelfIconsLoaded"
-	shelfLoginAnimationEnd           = "Ash.LoginSessionRestore.ShelfLoginAnimationEnd"
-	ashTastBootTimeLogin2            = "Ash.Tast.BootTime.Login2"
+	ensureWorkVisibleHistogram              = "GPU.EnsureWorkVisibleDuration"
+	ensureWorkVisibleLowResHistogram        = "GPU.EnsureWorkVisibleDurationLowRes"
+	allBrowserWindowsCreated                = "Ash.LoginSessionRestore.AllBrowserWindowsCreated"
+	allBrowserWindowsShown                  = "Ash.LoginSessionRestore.AllBrowserWindowsShown"
+	allBrowserWindowsPresented              = "Ash.LoginSessionRestore.AllBrowserWindowsPresented"
+	allShelfIconsLoaded                     = "Ash.LoginSessionRestore.AllShelfIconsLoaded"
+	shelfLoginAnimationEnd                  = "Ash.LoginSessionRestore.ShelfLoginAnimationEnd"
+	ashTastBootTimeLogin2                   = "Ash.Tast.BootTime.Login2"
+	ashTastArcUIAvailableAfterLoginDuration = "Ash.Tast.ArcUiAvailableAfterLogin.Duration"
+	arcTastUIAvailableTimeDelta             = "Arc.Tast.UiAvailable.TimeDelta"
 )
 
 type loginPerfTestParam struct {
@@ -767,7 +769,9 @@ func storeHistograms(
 			allShelfIconsLoaded,
 			ashTastBootTimeLogin2,
 			ensureWorkVisibleLowResHistogram,
-			shelfLoginAnimationEnd:
+			shelfLoginAnimationEnd,
+			ashTastArcUIAvailableAfterLoginDuration,
+			arcTastUIAvailableTimeDelta:
 
 			reportMaxHistogramValue(ctx, pv, hist, "millisecond", valueName)
 		default:
@@ -921,6 +925,12 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 					allShelfIconsLoaded,
 					shelfLoginAnimationEnd,
 					ashTastBootTimeLogin2,
+				}
+				if arcMode != noarc {
+					allHistograms = append(allHistograms,
+						ashTastArcUIAvailableAfterLoginDuration,
+						arcTastUIAvailableTimeDelta,
+					)
 				}
 				allHistograms = append(allHistograms, heuristicsHistograms...)
 
