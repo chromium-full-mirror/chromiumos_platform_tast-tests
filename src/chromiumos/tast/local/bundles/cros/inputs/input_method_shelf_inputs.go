@@ -10,6 +10,7 @@ import (
 
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/local/audio"
 	"chromiumos/tast/local/bundles/cros/inputs/data"
 	"chromiumos/tast/local/bundles/cros/inputs/fixture"
 	"chromiumos/tast/local/bundles/cros/inputs/pre"
@@ -47,19 +48,19 @@ func init() {
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{
 			{
-				Fixture:           fixture.ClamshellNonVK,
+				Fixture:           fixture.ClamshellNonVKStereoAloopLoaded,
 				ExtraAttr:         []string{"group:input-tools-upstream"},
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
 			},
 			{
 				Name:              "informational",
-				Fixture:           fixture.ClamshellNonVK,
+				Fixture:           fixture.ClamshellNonVKStereoAloopLoaded,
 				ExtraHardwareDeps: hwdep.D(pre.InputsUnstableModels),
 				ExtraAttr:         []string{"informational"},
 			},
 			{
 				Name:              "lacros",
-				Fixture:           fixture.LacrosClamshellNonVK,
+				Fixture:           fixture.LacrosClamshellNonVKStereoAloopLoaded,
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
 				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
 				ExtraAttr:         []string{"group:input-tools-upstream"},
@@ -80,11 +81,10 @@ func InputMethodShelfInputs(ctx context.Context, s *testing.State) {
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
 	// Setup CRAS Aloop for audio test.
-	cleanup, err := voice.EnableAloop(ctx, tconn)
+	err := voice.ActivateAloopNodes(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to load Aloop: ", err)
 	}
-	defer cleanup(cleanupCtx)
 
 	if err := imesettings.EnableInputOptionsInShelf(uc, true)(ctx); err != nil {
 		s.Fatal("Failed to show input options in shelf: ", err)
@@ -128,7 +128,7 @@ func InputMethodShelfInputs(ctx context.Context, s *testing.State) {
 			ui.DoDefaultUntil(voicePrivacyConfirmButton, ui.WithTimeout(2*time.Second).WaitUntilGone(voicePrivacyConfirmButton)),
 			uiauto.Sleep(time.Second),
 			func(ctx context.Context) error {
-				return voice.AudioFromFile(ctx, s.DataPath(voiceInputData.VoiceFile))
+				return audio.PlayWavToPCM(ctx, s.DataPath(voiceInputData.VoiceFile), "hw:Loopback,0")
 			},
 			util.WaitForFieldTextToBeIgnoringCase(tconn, inputField.Finder(), voiceInputData.ExpectedText),
 		)

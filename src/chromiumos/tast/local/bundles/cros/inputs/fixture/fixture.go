@@ -52,6 +52,7 @@ const (
 	ClamshellVKRestart                        = "clamshellVKRestart"
 	ClamshellNonVKWithDiacriticsOnPKLongpress = "clamshellWithDiacriticsOnPKLongpress"
 	ClamshellNonVK                            = "clamshellNonVK"
+	ClamshellNonVKStereoAloopLoaded           = "clamshellNonVKStereoAloopLoaded"
 	ClamshellNonVKInGuest                     = "clamshellNonVKInGuest"
 	ClamshellNonVKRestart                     = "clamshellNonVKRestart"
 	ClamshellNonVKWithMultiwordSuggest        = "clamshellNonVKWithMultiwordSuggest"
@@ -67,6 +68,7 @@ const (
 	LacrosAnyVKInGAIA                               = "lacrosAnyVKInGaia"
 	LacrosClamshellVK                               = "lacrosClamshellVK"
 	LacrosClamshellNonVK                            = "lacrosClamshellNonVK"
+	LacrosClamshellNonVKStereoAloopLoaded           = "lacrosClamshellNonVKStereoAloopLoaded"
 	LacrosClamshellNonVKInGuest                     = "lacrosClamshellNonVKInGuest"
 	LacrosClamshellNonVKInGAIA                      = "lacrosClamshellNonVKInGaia"
 	LacrosClamshellNonVKRestart                     = "lacrosClamshellNonVKRestart"
@@ -179,6 +181,22 @@ func init() {
 			"essential-inputs-team@google.com",
 		},
 		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeAsh, autocorrectToggle),
+		SetUpTimeout:    chrome.LoginTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: ClamshellNonVKStereoAloopLoaded,
+		Desc: "Clamshell mode with VK disabled and stereo aloop loaded",
+		Contacts: []string{
+			"essential-inputs-team@google.com",
+			"alvinjia@google.com",
+		},
+		Impl: inputsFixture(clamshellMode, false, false, browser.TypeAsh, autocorrectToggle),
+		// Need aloop for route playback to capture.
+		Parent:          fixture.StereoAloopLoaded,
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -376,6 +394,22 @@ func init() {
 			"essential-inputs-team@google.com",
 		},
 		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeLacros, autocorrectToggle),
+		SetUpTimeout:    chrome.LoginTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: LacrosClamshellNonVKStereoAloopLoaded,
+		Desc: "Lacros variant: clamshell mode with VK disabled and stereo aloop loaded",
+		Contacts: []string{
+			"essential-inputs-team@google.com",
+			"alvinjia@google.com",
+		},
+		Impl: inputsFixture(clamshellMode, false, false, browser.TypeLacros, autocorrectToggle),
+		// Need aloop for route playback to capture.
+		Parent:          fixture.StereoAloopLoaded,
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
