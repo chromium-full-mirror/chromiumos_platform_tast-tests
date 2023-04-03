@@ -16,6 +16,7 @@ import (
 	"chromiumos/tast/local/arc/arcent"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/policyutil"
+	"chromiumos/tast/local/retry"
 	"chromiumos/tast/testing"
 )
 
@@ -70,53 +71,65 @@ func init() {
 func ManagedBoot(ctx context.Context, s *testing.State) {
 	expectEnabled := s.Param().(bool)
 
-	creds, err := credconfig.PickRandomCreds(s.RequiredVar(arcent.LoginPoolVar))
-	if err != nil {
-		s.Fatal("Failed to get login creds: ", err)
-	}
-	login := chrome.GAIALogin(creds)
+	rl := &retry.Loop{Attempts: 1,
+		MaxAttempts: 2,
+		DoRetries:   true,
+		Fatalf:      s.Fatalf,
+		Logf:        s.Logf}
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
 	defer cancel()
 
-	policies := []policy.Policy{&policy.ArcEnabled{Val: expectEnabled}}
-	fdms, err := policyutil.SetUpFakePolicyServer(ctx, s.OutDir(), creds.User, policies)
-	if err != nil {
-		s.Fatal("Failed to setup fake policy server: ", err)
-	}
-	defer fdms.Stop(cleanupCtx)
-
-	cr, err := chrome.New(
-		ctx,
-		login,
-		chrome.ARCSupported(),
-		chrome.UnRestrictARCCPU(),
-		chrome.DMSPolicy(fdms.URL),
-		chrome.ExtraArgs(arc.DisableSyncFlags()...))
-	if err != nil {
-		s.Fatal("Failed to connect to Chrome: ", err)
-	}
-	defer cr.Close(cleanupCtx)
-
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to create test API connection: ", err)
-	}
-
-	// Ensure chrome://policy shows correct ArcEnabled value.
-	if err := policyutil.Verify(ctx, tconn, []policy.Policy{&policy.ArcEnabled{Val: expectEnabled}}); err != nil {
-		s.Fatal("Failed to verify ArcEnabled: ", err)
-	}
-
-	// Wait for ARC to boot. It should succeed only if enabled by policy.
-	a, err := arc.New(ctx, s.OutDir())
-	if err == nil {
-		defer a.Close(ctx)
-		if !expectEnabled {
-			s.Fatal("Started ARC while blocked by user policy")
+	if err := testing.Poll(ctx, func(ctx context.Context) (retErr error) {
+		creds, err := credconfig.PickRandomCreds(s.RequiredVar(arcent.LoginPoolVar))
+		if err != nil {
+			rl.Exit("get login creds", err)
 		}
-	} else if expectEnabled {
-		s.Fatal("Failed to start ARC by user policy: ", err)
+		login := chrome.GAIALogin(creds)
+
+		policies := []policy.Policy{&policy.ArcEnabled{Val: expectEnabled}}
+		fdms, err := policyutil.SetUpFakePolicyServer(ctx, s.OutDir(), creds.User, policies)
+		if err != nil {
+			rl.Exit("setup fake policy server", err)
+		}
+		defer fdms.Stop(cleanupCtx)
+
+		cr, err := chrome.New(
+			ctx,
+			login,
+			chrome.ARCSupported(),
+			chrome.UnRestrictARCCPU(),
+			chrome.DMSPolicy(fdms.URL),
+			chrome.ExtraArgs(arc.DisableSyncFlags()...))
+		if err != nil {
+			return rl.Retry("connect to Chrome", err)
+		}
+		defer cr.Close(cleanupCtx)
+
+		tconn, err := cr.TestAPIConn(ctx)
+		if err != nil {
+			rl.Exit("create test API Connection", err)
+		}
+
+		// Ensure chrome://policy shows correct ArcEnabled value.
+		if err := policyutil.Verify(ctx, tconn, []policy.Policy{&policy.ArcEnabled{Val: expectEnabled}}); err != nil {
+			rl.Exit("verify ArcEnabled", err)
+		}
+
+		// Wait for ARC to boot. It should succeed only if enabled by policy.
+		a, err := arc.New(ctx, s.OutDir())
+		if err == nil {
+			defer a.Close(ctx)
+			if !expectEnabled {
+				s.Fatal("Started ARC while blocked by user policy")
+			}
+		} else if expectEnabled {
+			rl.Exit("start ARC by user policy", err)
+		}
+
+		return nil
+	}, nil); err != nil {
+		s.Fatal("Managed boot test failed: ", err)
 	}
 }
