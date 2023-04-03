@@ -5,6 +5,7 @@
 package syzkaller
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -62,23 +63,9 @@ type targetArch struct {
 	kernel string
 }
 
-var boardArchMapping = map[string]targetArch{
-	"octopus":  {amd64, amd64},
-	"dedede":   {amd64, amd64},
-	"nautilus": {amd64, amd64},
-	"guybrush": {amd64, amd64},
-	"brya":     {amd64, amd64},
-
-	"kukui": {arm, arm64},
-
-	"strongbad": {arm64, arm64},
-	"trogdor":   {arm64, arm64},
-	"herobrine": {arm64, arm64},
-
-	// b/242131739: Jacuzzi and Cherry are for local testing at the moment.
-	// The test is not enabled in the lab yet.
-	"jacuzzi": {arm, arm64},
-	"cherry":  {arm, arm64},
+var syzArchMapping = map[string]string{
+	"x86_64":  amd64,
+	"aarch64": arm64,
 }
 
 // dutConfig represents information related to the DUT configuration;
@@ -202,11 +189,17 @@ func Wrapper(ctx context.Context, s *testing.State) {
 	d := s.DUT()
 	runLocal := strings.ToLower(isLocal.Value()) == "true"
 
-	board, syzArch, err := findSyzkallerBoardAndArch(ctx, d)
+	board, err := findBoard(ctx, d)
+	if err != nil {
+		s.Fatal("Unable to find board: ", err)
+	}
+	s.Log("Board found to be: ", board)
+
+	syzArch, err := findSyzArch(ctx, d, board)
 	if err != nil {
 		s.Fatal("Unable to find syzkaller arch: ", err)
 	}
-	s.Log("syzArch found to be: ", syzArch)
+	s.Logf("syzArch found to be: (%v/%v)", syzArch.user, syzArch.kernel)
 
 	kernelCommit, err := findKernelCommit(ctx, d)
 	if err != nil {
@@ -518,18 +511,42 @@ func findKernelCommit(ctx context.Context, d *dut.DUT) (string, error) {
 	return commit[1:], nil
 }
 
-func findSyzkallerBoardAndArch(ctx context.Context, d *dut.DUT) (string, targetArch, error) {
+func findBoard(ctx context.Context, d *dut.DUT) (string, error) {
 	board, err := reporters.New(d).Board(ctx)
 	if err != nil {
-		return "", targetArch{}, errors.Wrap(err, "unable to find board")
+		return "", errors.Wrap(err, "unable to find board")
 	}
-	if _, ok := boardArchMapping[board]; !ok {
-		return "", targetArch{}, errors.Wrapf(err, "unexpected board: %v", board)
-	}
-	return board, boardArchMapping[board], nil
+	return board, nil
 }
 
-func fetchFuzzArtifacts(ctx context.Context, d *dut.DUT, artifactsDir string, syzArch targetArch) error {
+func findSyzArch(ctx context.Context, d *dut.DUT, board string) (*targetArch, error) {
+	output, err := d.Conn().CommandContext(ctx, "uname", "-m").Output()
+	if err != nil {
+		return nil, errors.Wrap(err, "uname -m failed")
+	}
+	unameArch := strings.TrimSuffix(string(output), "\n")
+	karch, ok := syzArchMapping[unameArch]
+	if !ok {
+		return nil, errors.Errorf("unexpected unameArch: %v", unameArch)
+	}
+	// On non-arm64 boards, user and kernel arch are the same.
+	if karch != arm64 {
+		return &targetArch{karch, karch}, nil
+	}
+	// On arm64 boards, check the file type of /usr/local/bin/wget to determine
+	// userspace arch.
+	uarch := arm
+	output, err = d.Conn().CommandContext(ctx, "file", "/usr/local/bin/wget").Output()
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to determine wget filetype")
+	}
+	if bytes.Contains(output, []byte("ARM aarch64")) {
+		uarch = arm64
+	}
+	return &targetArch{uarch, karch}, nil
+}
+
+func fetchFuzzArtifacts(ctx context.Context, d *dut.DUT, artifactsDir string, syzArch *targetArch) error {
 	binDirUser := fmt.Sprintf("bin/linux_%v", syzArch.user)
 	binDirKern := fmt.Sprintf("bin/linux_%v", syzArch.kernel)
 	for _, binDir := range []string{binDirUser, binDirKern} {
