@@ -136,7 +136,11 @@ func PowerIdlePerf(ctx context.Context, s *testing.State) {
 	}()
 
 	sup.Add(setup.PowerTest(ctx, tconn,
-		setup.PowerTestOptions{Wifi: setup.DisableWifiInterfaces, NightLight: setup.DisableNightLight},
+		setup.PowerTestOptions{
+			Wifi:       setup.DisableWifiInterfaces,
+			NightLight: setup.DisableNightLight,
+			DarkTheme:  setup.EnableLightTheme,
+		},
 		setup.NewBatteryDischargeFromMode(args.setupOption),
 	))
 	if err := sup.Check(ctx); err != nil {
@@ -239,7 +243,7 @@ func PowerIdlePerf(ctx context.Context, s *testing.State) {
 		testing.ContextLog(ctx, "ARC not running, skipping memory metrics")
 	}
 
-	if err := p.Save(s.OutDir()); err != nil {
-		s.Error("Failed saving perf data: ", err)
+	if err := power.GeneratePowerLogAndSaveToCrosbolt(ctx, s.OutDir(), s.TestName(), p); err != nil {
+		s.Error("Failed to save and upload power metrics: ", err)
 	}
 }
