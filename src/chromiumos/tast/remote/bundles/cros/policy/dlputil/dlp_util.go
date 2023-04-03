@@ -48,12 +48,35 @@ func (action Action) String() string {
 	}
 }
 
+const (
+	// RestrictionReportReportingEnabledUsername is the path to the secret username having report restriction level for all components and reporting enabled.
+	RestrictionReportReportingEnabledUsername = "dlp.restriction_level_report_reporting_enabled_username"
+	// RestrictionReportReportingEnabledPassword is the path to the secret password having report restriction level for all components and reporting enabled.
+	RestrictionReportReportingEnabledPassword = "dlp.restriction_level_report_reporting_enabled_password"
+	// RestrictionBlockReportingEnabledUsername is the path to the secret username having block restriction level for all components and reporting enabled.
+	RestrictionBlockReportingEnabledUsername = "dlp.restriction_level_block_reporting_enabled_username"
+	// RestrictionBlockReportingEnabledPassword is the path to the secret password having block restriction level for all components and reporting enabled.
+	RestrictionBlockReportingEnabledPassword = "dlp.restriction_level_block_reporting_enabled_password"
+	// RestrictionWarnReportingEnabledUsername is the path to the secret username having warn restriction level for all components and reporting enabled.
+	RestrictionWarnReportingEnabledUsername = "dlp.restriction_level_warn_reporting_enabled_username"
+	// RestrictionWarnReportingEnabledPassword is the path to the secret password having warn restriction level for all components and reporting enabled.
+	RestrictionWarnReportingEnabledPassword = "dlp.restriction_level_warn_reporting_enabled_password"
+)
+
 // EventsBundle contains an events vector per restriction level and it is populated by `retrieveEvents`.
 type EventsBundle struct {
 	block       []reportingutil.InputEvent
 	report      []reportingutil.InputEvent
 	warn        []reportingutil.InputEvent
 	warnProceed []reportingutil.InputEvent
+}
+
+// EventsCounts contains expected counts of report events per restriction level.
+type EventsCounts struct {
+	Block       int
+	Report      int
+	Warn        int
+	WarnProceed int
 }
 
 const (
@@ -110,42 +133,42 @@ func RetrieveEvents(ctx context.Context, customerID, APIKey, clientID string, te
 
 }
 
+// validateReportEvents is a helper function that checks whether events array contains the correct number of events for a given restriction and mode.
+func validateReportEvents(ctx context.Context, events []reportingutil.InputEvent, restriction, mode string, want int) error {
+	if len(events) != want {
+		testing.ContextLogf(ctx, "Unexpected %s events = got %d, want %d", mode, len(events), want)
+		return errors.Errorf("unexpected number of %s events = got %d, want %d", mode, len(events), want)
+	}
+
+	if len(events) > 0 {
+		if actualRestriction := events[0].WrappedEncryptedData.DlpPolicyEvent.Restriction; actualRestriction != restriction {
+			testing.ContextLogf(ctx, "Unexpected restriction = got %v, want %s", actualRestriction, restriction)
+			return errors.Errorf("unexpected restriction = got %v, want %s", actualRestriction, restriction)
+		}
+	}
+
+	return nil
+}
+
 // ValidateReportEvents checks whether events array contains the correct events.
-func ValidateReportEvents(ctx context.Context, action Action, events *EventsBundle) error {
+func ValidateReportEvents(ctx context.Context, action Action, events *EventsBundle, expectedCounts *EventsCounts) error {
 
 	var firstErr error
 
-	if want := 0; len(events.block) != want {
-		testing.ContextLogf(ctx, "Unexpected BLOCK events = got %d, want %d", len(events.block), want)
-		firstErr = errors.Errorf("unexpected number of BLOCK events = got %d, want %d", len(events.block), want)
+	if err := validateReportEvents(ctx, events.block, Action.String(action), "BLOCK", expectedCounts.Block); err != nil {
+		firstErr = err
 	}
 
-	if want := 1; len(events.report) != want {
-		testing.ContextLogf(ctx, "Unexpected REPORT events = got %d, want %d", len(events.report), want)
-		if firstErr == nil {
-			firstErr = errors.Errorf("unexpected number of REPORT events = got %d, want %d", len(events.report), want)
-		}
+	if err := validateReportEvents(ctx, events.report, Action.String(action), "REPORT", expectedCounts.Report); err != nil && firstErr == nil {
+		firstErr = err
 	}
 
-	if want := 0; len(events.warn) != want {
-		testing.ContextLogf(ctx, "Unexpected WARN events = got %d, want %d", len(events.warn), want)
-		if firstErr == nil {
-			firstErr = errors.Errorf("unexpected number of WARN events = got %d, want %d", len(events.warn), want)
-		}
+	if err := validateReportEvents(ctx, events.warn, Action.String(action), "WARN", expectedCounts.Warn); err != nil && firstErr == nil {
+		firstErr = err
 	}
 
-	if want := 0; len(events.warnProceed) != want {
-		testing.ContextLogf(ctx, "Unexpected WARN_PROCEED events = got %d, want %d", len(events.warnProceed), want)
-		if firstErr == nil {
-			firstErr = errors.Errorf("unexpected number of WARN_PROCEED events = got %d, want %d", len(events.warnProceed), want)
-		}
-	}
-
-	if len(events.report) > 0 && events.report[0].WrappedEncryptedData.DlpPolicyEvent.Restriction != Action.String(action) {
-		testing.ContextLogf(ctx, "Unexpected restriction = got %v, want %v", events.report[0].WrappedEncryptedData.DlpPolicyEvent.Restriction, Action.String(action))
-		if firstErr == nil {
-			firstErr = errors.Errorf("unexpected restriction = got %v, want %v", events.report[0].WrappedEncryptedData.DlpPolicyEvent.Restriction, Action.String(action))
-		}
+	if err := validateReportEvents(ctx, events.warnProceed, Action.String(action), "WARN_PROCEED", expectedCounts.WarnProceed); err != nil && firstErr == nil {
+		firstErr = err
 	}
 
 	return firstErr

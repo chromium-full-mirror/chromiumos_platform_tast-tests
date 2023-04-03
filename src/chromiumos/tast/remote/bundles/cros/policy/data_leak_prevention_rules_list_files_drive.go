@@ -20,15 +20,6 @@ import (
 	"chromiumos/tast/testing"
 )
 
-const (
-
-	// restrictionWarnReportingEnabledUsername is the path to the secret username having report restriction level for all components and reporting enabled.
-	restrictionWarnReportingEnabledUsername = "dlp.restriction_level_warn_reporting_enabled_username"
-
-	// restrictionWarnReportingEnabledPassword is the path to the secret password having report restriction level for all components and reporting enabled.
-	restrictionWarnReportingEnabledPassword = "dlp.restriction_level_warn_reporting_enabled_password"
-)
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DataLeakPreventionRulesListFilesDrive,
@@ -50,8 +41,8 @@ func init() {
 		},
 		Timeout: 7 * time.Minute,
 		VarDeps: []string{
-			restrictionWarnReportingEnabledUsername,
-			restrictionWarnReportingEnabledPassword,
+			dlputil.RestrictionWarnReportingEnabledUsername,
+			dlputil.RestrictionWarnReportingEnabledPassword,
 		},
 		Fixture: fixture.CleanOwnership,
 		Data: []string{
@@ -62,8 +53,8 @@ func init() {
 }
 
 func DataLeakPreventionRulesListFilesDrive(ctx context.Context, s *testing.State) {
-	username := s.RequiredVar(restrictionWarnReportingEnabledUsername)
-	password := s.RequiredVar(restrictionWarnReportingEnabledPassword)
+	username := s.RequiredVar(dlputil.RestrictionWarnReportingEnabledUsername)
+	password := s.RequiredVar(dlputil.RestrictionWarnReportingEnabledPassword)
 
 	// Establish RPC connection to the DUT.
 	cl, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())
