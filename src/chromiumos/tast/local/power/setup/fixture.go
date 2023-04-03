@@ -9,7 +9,12 @@ import (
 	"time"
 
 	"chromiumos/tast/common/perf"
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/chrome/browser/browserfixt"
+	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
 	"chromiumos/tast/local/cpu"
 	"chromiumos/tast/local/power"
 	"chromiumos/tast/testing"
@@ -65,6 +70,36 @@ func init() {
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
 		Parent:          "powerNoUI",
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: "powerAsh",
+		Desc: "Set up test environment for power qual",
+		Contacts: []string{
+			"chromeos-platform-power@google.com",
+			"mqg@chromium.org",
+		},
+		Impl:            &powerUIFixture{bt: browser.TypeAsh},
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: tearDownTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: "powerLacros",
+		Desc: "Set up test environment for power qual",
+		Contacts: []string{
+			"chromeos-platform-power@google.com",
+			"mqg@chromium.org",
+		},
+		Impl:            &powerUIFixture{bt: browser.TypeLacros},
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: tearDownTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
 	})
 }
 
@@ -208,4 +243,108 @@ func (f *powerMetricsNoUIFixture) PostTest(ctx context.Context, s *testing.FixtT
 	if err := power.GeneratePowerLogAndSaveToCrosbolt(ctx, s.OutDir(), s.TestName(), p); err != nil {
 		s.Error("Failed to generate power_log.json and/or save perf data for crosbolt: ", err)
 	}
+}
+
+type powerUIFixture struct {
+	bt      browser.Type
+	cr      *chrome.Chrome
+	cleanup func(context.Context) error
+}
+
+// PowerUIFixtureData is return back to tests.
+type PowerUIFixtureData struct {
+	Bt browser.Type
+	Cr *chrome.Chrome
+}
+
+func (f *powerUIFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
+	// Prepare Chrome browser.
+	opts := []chrome.Option{
+		// --disable-sync disables test account info sync, eg. Wi-Fi credentials,
+		// so that each test run does not remember info from last test run.
+		// TODO(b/264508768): Add gaia accounts for testing.
+		chrome.ExtraArgs("--disable-sync"),
+		// b/228256145 to avoid powerd restart.
+		chrome.DisableFeatures("FirmwareUpdaterApp"),
+	}
+	cr, err := browserfixt.NewChrome(ctx, f.bt, lacrosfixt.NewConfig(), opts...)
+	if err != nil {
+		s.Fatal("Failed to login session: ", err)
+	}
+	defer func() {
+		if s.HasError() {
+			cr.Close(cleanupCtx)
+		}
+	}()
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to get ash tconn: ", err)
+	}
+
+	// Set up the testing environment.
+	su, cleanup := New("powerUIFixture")
+	defer func() {
+		if s.HasError() {
+			cleanup(cleanupCtx)
+		}
+	}()
+
+	dischargeMode := NoBatteryDischarge
+	if _, err := power.SysfsBatteryPath(ctx); err == nil {
+		dischargeMode = ForceBatteryDischarge
+	} else if !errors.Is(err, power.ErrNoBattery) {
+		// If it's ErrNoBattery, leave dischargeMode at NoBatteryDischarge.
+		s.Log("Unable to determine if a battery exists, do not force discharge: ", err)
+	}
+
+	su.Add(PowerTest(ctx, tconn,
+		PowerTestOptions{
+			Wifi:       DisableWifiInterfaces,
+			NightLight: DisableNightLight,
+			DarkTheme:  EnableLightTheme,
+		},
+		NewBatteryDischargeFromMode(dischargeMode),
+	))
+	if err := su.Check(ctx); err != nil {
+		s.Fatal("Power test setup failed: ", err)
+	}
+
+	chrome.Lock()
+	f.cr = cr
+	f.cleanup = cleanup
+
+	return PowerUIFixtureData{Bt: f.bt, Cr: f.cr}
+}
+
+func (f *powerUIFixture) TearDown(ctx context.Context, s *testing.FixtState) {
+	if err := f.cleanup(ctx); err != nil {
+		s.Error("Power cleanup failed: ", err)
+	}
+
+	chrome.Unlock()
+	if err := f.cr.Close(ctx); err != nil {
+		s.Error("Failed to close Chrome connection: ", err)
+	}
+	f.cr = nil
+}
+
+func (f *powerUIFixture) Reset(ctx context.Context) error {
+	if err := f.cr.Responded(ctx); err != nil {
+		return errors.Wrap(err, "existing Chrome connection is unusable")
+	}
+	if err := f.cr.ResetState(ctx); err != nil {
+		return errors.Wrap(err, "failed resetting existing Chrome session")
+	}
+	return nil
+}
+
+func (f *powerUIFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
+}
+
+func (f *powerUIFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
 }

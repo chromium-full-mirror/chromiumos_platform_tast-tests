@@ -135,6 +135,7 @@ var prePackages = []string{
 	"chromiumos/tast/local/multivm",
 	"chromiumos/tast/local/policyutil/fixtures",
 	"chromiumos/tast/local/policyutil/pre",
+	"chromiumos/tast/local/power/setup",
 	"chromiumos/tast/local/vdi/fixtures",
 	"chromiumos/tast/local/wpr",
 	"chromiumos/tast/local/saveddesks",
