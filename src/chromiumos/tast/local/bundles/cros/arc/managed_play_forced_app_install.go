@@ -22,11 +22,6 @@ import (
 	"chromiumos/tast/testing"
 )
 
-const (
-	withRetries    = true
-	withoutRetries = false
-)
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ManagedPlayForcedAppInstall,
@@ -47,23 +42,19 @@ func init() {
 		Params: []testing.Param{
 			{
 				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
-				Val:               withoutRetries,
 			},
 			{
 				Name:              "vm",
 				ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
-				Val:               withoutRetries,
 			},
 			{
 				Name:              "betty",
 				ExtraSoftwareDeps: []string{"android_p", "qemu"},
-				Val:               withRetries,
 				ExtraAttr:         []string{"informational"},
 			},
 			{
 				Name:              "vm_betty",
 				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
-				Val:               withRetries,
 				ExtraAttr:         []string{"informational"},
 			}},
 	})
@@ -83,7 +74,7 @@ func ManagedPlayForcedAppInstall(ctx context.Context, s *testing.State) {
 
 	rl := &retry.Loop{Attempts: 1,
 		MaxAttempts: 2,
-		DoRetries:   s.Param().(bool),
+		DoRetries:   true,
 		Fatalf:      s.Fatalf,
 		Logf:        s.Logf}
 
