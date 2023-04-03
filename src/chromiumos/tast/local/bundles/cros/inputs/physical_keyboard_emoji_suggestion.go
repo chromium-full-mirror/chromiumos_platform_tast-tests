@@ -65,14 +65,14 @@ func init() {
 			},
 			{
 				Name:              "guest_lacros",
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"group:input-tools-upstream"},
 				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(pre.StableModels...)),
 				Fixture:           fixture.LacrosClamshellNonVKInGuest,
 			},
 			{
 				Name:              "incognito_lacros",
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"group:input-tools-upstream"},
 				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(pre.StableModels...)),
 				Fixture:           fixture.LacrosClamshellNonVK,

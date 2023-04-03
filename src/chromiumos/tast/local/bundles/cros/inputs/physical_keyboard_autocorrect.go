@@ -82,7 +82,7 @@ func init() {
 					CorrectWord:  "world",
 					UndoMethod:   autocorrect.ViaPopupUsingMouse,
 				},
-				ExtraAttr: []string{"informational"},
+				ExtraAttr: []string{"group:input-tools-upstream"},
 			},
 			// Test cases for other input methods can be added once the framework
 			// supports more than just US-Qwerty layout.
