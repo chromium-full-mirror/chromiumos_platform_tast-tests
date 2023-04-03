@@ -11,6 +11,7 @@ import (
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/local/bundles/cros/printer/pre"
 	"chromiumos/tast/local/bundles/cros/printer/uitools"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
@@ -24,6 +25,7 @@ import (
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/printing/usbprinter"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 func init() {
@@ -42,6 +44,7 @@ func init() {
 		BugComponent: "b:167231",
 		Timeout:      2 * time.Minute,
 		SoftwareDeps: []string{"chrome", "cups", "virtual_usb_printer"},
+		HardwareDeps: hwdep.D(pre.PrinterSkipUnstableModels),
 		Params: []testing.Param{
 			{
 				Val:     browser.TypeAsh,

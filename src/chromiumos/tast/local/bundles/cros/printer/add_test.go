@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Run "TAST_GENERATE_UPDATE=1 ~/chromium/src/platform/tast/tools/go.sh test add_test.go" inside the chroot
+// Run "TAST_GENERATE_UPDATE=1 ~/chromiumos/src/platform/tast/tools/go.sh test add_test.go" inside the chroot
 // from the directory containing this file to regenerate parameters for add.go, proxy_add.go.
 
 package printer

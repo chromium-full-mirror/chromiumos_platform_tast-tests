@@ -10,9 +10,11 @@ import (
 	"os"
 	"path/filepath"
 
+	"chromiumos/tast/local/bundles/cros/printer/pre"
 	"chromiumos/tast/local/bundles/cros/printer/usbprintertests"
 	"chromiumos/tast/local/printing/usbprinter"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 func init() {
@@ -29,6 +31,7 @@ func init() {
 			"paper-io_printing",
 		},
 		SoftwareDeps: []string{"chrome", "cups", "virtual_usb_printer"},
+		HardwareDeps: hwdep.D(pre.PrinterSkipUnstableModels),
 		Data:         []string{"print_ippusb_to_print.pdf", "print_ippusb_golden.pdf"},
 		Fixture:      "virtualUsbPrinterModulesLoadedWithChromeLoggedIn",
 	})

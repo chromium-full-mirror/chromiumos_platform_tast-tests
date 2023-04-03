@@ -7,8 +7,10 @@ package printer
 import (
 	"context"
 
+	"chromiumos/tast/local/bundles/cros/printer/pre"
 	"chromiumos/tast/local/bundles/cros/printer/usbprintertests"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 func init() {
@@ -25,6 +27,7 @@ func init() {
 			"paper-io_printing",
 		},
 		SoftwareDeps: []string{"chrome", "cups", "virtual_usb_printer"},
+		HardwareDeps: hwdep.D(pre.PrinterSkipUnstableModels),
 		Data:         []string{"ippusb_copies_supported.json"},
 		Fixture:      "virtualUsbPrinterModulesLoadedWithChromeLoggedIn",
 	})

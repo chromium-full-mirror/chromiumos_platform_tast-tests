@@ -12,12 +12,14 @@ import (
 	"time"
 
 	"chromiumos/tast/local/bundles/cros/printer/fake"
+	"chromiumos/tast/local/bundles/cros/printer/pre"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/printing/document"
 	"chromiumos/tast/local/printing/printer"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 type testParams struct {
@@ -41,6 +43,7 @@ func init() {
 		},
 		Data:         []string{ppdFile, goldenFile},
 		SoftwareDeps: []string{"cups", "ghostscript"},
+		HardwareDeps: hwdep.D(pre.PrinterSkipUnstableModels),
 		Params: []testing.Param{
 			{
 				Name:              "cancel",

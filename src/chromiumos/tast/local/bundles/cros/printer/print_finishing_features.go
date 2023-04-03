@@ -18,6 +18,7 @@ import (
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/local/bundles/cros/printer/pre"
 	"chromiumos/tast/local/bundles/cros/printer/uitools"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
@@ -32,6 +33,7 @@ import (
 	"chromiumos/tast/local/printing/lp"
 	"chromiumos/tast/local/printing/printer"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 func init() {
@@ -49,6 +51,7 @@ func init() {
 		// ChromeOS > Software > Commercial (Enterprise) > Printing
 		BugComponent: "b:1111614",
 		SoftwareDeps: []string{"chrome", "cups"},
+		HardwareDeps: hwdep.D(pre.PrinterSkipUnstableModels),
 		Data:         []string{"ipp_conf_finishings.txt", "get-jobs-finishings-info.test"},
 		Params: []testing.Param{
 			{

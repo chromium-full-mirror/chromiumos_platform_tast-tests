@@ -11,10 +11,12 @@ import (
 	"strings"
 	"time"
 
+	"chromiumos/tast/local/bundles/cros/printer/pre"
 	"chromiumos/tast/local/printing/lp"
 	"chromiumos/tast/local/printing/printer"
 	"chromiumos/tast/local/syslog"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 func init() {
@@ -30,6 +32,7 @@ func init() {
 			"paper-io_printing",
 		},
 		SoftwareDeps: []string{"cups"},
+		HardwareDeps: hwdep.D(pre.PrinterSkipUnstableModels),
 		Data:         []string{"print_usb_ps.ppd.gz", "print_usb_to_print.pdf"},
 	})
 }
