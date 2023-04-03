@@ -18,6 +18,7 @@ import (
 	fp "chromiumos/tast/common/fingerprint"
 	"chromiumos/tast/common/flashrom"
 	"chromiumos/tast/common/servo"
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/dutfs"
 	"chromiumos/tast/remote/firmware/fingerprint/rpcdut"
@@ -93,6 +94,7 @@ const (
 	WaitForBiodToStartTimeout = 30 * time.Second
 	// timeForCleanup is the amount of time to reserve for cleaning up firmware tests.
 	timeForCleanup       = 2 * time.Minute
+	flashFpMcuTimeout    = 75 * time.Second
 	biodUpstartJobName   = "biod"
 	powerdUpstartJobName = "powerd"
 	disableFpUpdaterPath = "/mnt/stateful_partition/.disable_fp_updater"
@@ -388,6 +390,8 @@ func FirmwarePath(ctx context.Context, d *rpcdut.RPCDUT, fpBoard fp.BoardName) (
 }
 
 // FlashFirmware flashes the original fingerprint firmware in rootfs.
+// It will fail if flashing takes more time than flashFpMcuTimeout or there is
+// no enough time.
 func FlashFirmware(ctx context.Context, d *rpcdut.RPCDUT, fpFirmwarePath string, needsRebootAfterFlashing bool) error {
 	fpBoard, err := Board(ctx, d)
 	if err != nil {
@@ -395,11 +399,24 @@ func FlashFirmware(ctx context.Context, d *rpcdut.RPCDUT, fpFirmwarePath string,
 	}
 	testing.ContextLogf(ctx, "fp board name: %q", fpBoard)
 
+	if ctxutil.DeadlineBefore(ctx, time.Now().Add(flashFpMcuTimeout)) {
+		d, _ := ctx.Deadline()
+		t := d.Sub(time.Now())
+		return errors.Errorf("insufficient time remaining before the context reaches its deadline. Need at least %v, only %v remain", flashFpMcuTimeout, t)
+	}
+
 	flashCmd := []string{"flash_fp_mcu", "--noservices", fpFirmwarePath}
-	testing.ContextLogf(ctx, "Running command: %s", shutil.EscapeSlice(flashCmd))
-	cmd := d.Conn().CommandContext(ctx, flashCmd[0], flashCmd[1:]...)
-	out, err := cmd.CombinedOutput()
-	testing.ContextLog(ctx, "flash_fp_mcu output:", "\n", string(out))
+	err = func(ctx context.Context) error {
+		ctx, cancel := context.WithTimeout(ctx, flashFpMcuTimeout)
+		defer cancel()
+
+		testing.ContextLogf(ctx, "Running command: %s", shutil.EscapeSlice(flashCmd))
+		cmd := d.Conn().CommandContext(ctx, flashCmd[0], flashCmd[1:]...)
+		out, err := cmd.CombinedOutput()
+		testing.ContextLog(ctx, "flash_fp_mcu output:", "\n", string(out))
+
+		return err
+	}(ctx)
 	if err != nil {
 		return errors.Wrap(err, "flash_fp_mcu failed")
 	}
