@@ -50,7 +50,7 @@ func init() {
 			"clumptini+oncall@google.com",
 			"ashpakov@google.com", // until Oct 2022
 		},
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:criticalstaging"},
 		SoftwareDeps: []string{"chrome", "vm_host"},
 		BugComponent: "b:1122570",
 		Params: []testing.Param{
