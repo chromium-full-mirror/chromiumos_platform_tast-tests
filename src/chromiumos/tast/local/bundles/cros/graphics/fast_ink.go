@@ -400,11 +400,7 @@ func FastInk(ctx context.Context, s *testing.State) {
 
 	if params.arc {
 		a := s.FixtValue().(*arc.PreData).ARC
-		d, err := a.NewUIDevice(ctx)
-		if err != nil {
-			s.Fatal("Failed to initialize UI Automator: ", err)
-		}
-		defer d.Close(cleanupCtx)
+		d := s.FixtValue().(*arc.PreData).UIDevice
 
 		if err := a.Install(ctx, s.DataPath(fastInkAPK)); err != nil {
 			s.Fatal("Failed installing app: ", err)
