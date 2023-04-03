@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"chromiumos/tast/common/android/ui"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/apps"
@@ -123,6 +124,7 @@ func UninstallApp(ctx context.Context, s *testing.State) {
 
 	var cr *chrome.Chrome
 	var a *arc.ARC
+	var device *ui.Device
 
 	switch app.source {
 	case fromCWS:
@@ -130,6 +132,7 @@ func UninstallApp(ctx context.Context, s *testing.State) {
 	case fromPlayStore:
 		cr = s.FixtValue().(*arc.PreData).Chrome
 		a = s.FixtValue().(*arc.PreData).ARC
+		device = s.FixtValue().(*arc.PreData).UIDevice
 	default:
 		s.Fatal("Unexpected app source: ", app.source)
 	}
@@ -143,7 +146,7 @@ func UninstallApp(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	if err := installApp(ctx, cr, tconn, a, app); err != nil {
+	if err := installApp(ctx, cr, tconn, a, device, app); err != nil {
 		s.Fatalf("Failed to install app %s: %v", app.name, err)
 	}
 	// Ensure cleanup the app if test case fail before uninstalling it.
@@ -173,11 +176,7 @@ func UninstallApp(ctx context.Context, s *testing.State) {
 }
 
 // installApp installs the app and returns an error indicating if the app has been successfully installed.
-func installApp(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, arcSession *arc.ARC, app *appInfo) error {
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
-	defer cancel()
-
+func installApp(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, arcSession *arc.ARC, arcDevice *ui.Device, app *appInfo) error {
 	testing.ContextLog(ctx, "Installing app")
 
 	switch app.source {
@@ -190,13 +189,10 @@ func installApp(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, 
 		if arcSession == nil {
 			return errors.New("arc session not provided")
 		}
-		device, err := arcSession.NewUIDevice(ctx)
-		if err != nil {
-			return errors.Wrap(err, "failed to create new ARC UI device")
+		if arcDevice == nil {
+			return errors.New("arc device not provided")
 		}
-		defer device.Close(cleanupCtx)
-
-		if err := playstore.InstallOrUpdateAppAndClose(ctx, tconn, arcSession, device, app.arcAppPkgName, &playstore.Options{TryLimit: -1, InstallationTimeout: installationTimeout}); err != nil {
+		if err := playstore.InstallOrUpdateAppAndClose(ctx, tconn, arcSession, arcDevice, app.arcAppPkgName, &playstore.Options{TryLimit: -1, InstallationTimeout: installationTimeout}); err != nil {
 			return errors.Wrapf(err, "failed to install %s", app.name)
 		}
 	default:
