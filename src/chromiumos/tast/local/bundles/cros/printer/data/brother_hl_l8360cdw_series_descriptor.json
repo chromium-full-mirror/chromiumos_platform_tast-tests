@@ -26,7 +26,7 @@
     },
     "AdvancedSettings": {
         "Input Tray": ["Top Tray", "Middle Tray", "Bottom", "Multifunction Tray", "Auto"],
-        "Job sheets": ["None", "classified", "confidential", "form", "secret", "Standard", "topsecret", "unclassified"],
+        "Job sheets": ["None", "classified", "confidential", "secret", "Standard", "topsecret", "unclassified"],
         "Output bin": ["Face down"],
         "Page delivery": ["reverse-order", "same-order"],
         "Print quality": ["Normal"]
