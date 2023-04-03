@@ -30,7 +30,7 @@ import (
 // EstablishARCPIPVideo installs the ArcPipVideoTest app, launches it, and
 // makes it play 180p_60fps_600frames.h264.mp4 in PIP. That video must be
 // listed in the Data field on test registration. Returns a cleanup action.
-func EstablishARCPIPVideo(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, dataFS http.FileSystem, bigPIP bool) (action.Action, error) {
+func EstablishARCPIPVideo(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Device, dataFS http.FileSystem, bigPIP bool) (action.Action, error) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
@@ -55,12 +55,6 @@ func EstablishARCPIPVideo(ctx context.Context, tconn *chrome.TestConn, a *arc.AR
 			testing.ContextLog(ctx, "Failed to clean up after detecting error condition: ", err)
 		}
 	}(cleanupCtx)
-
-	d, err := a.NewUIDevice(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to initialize UI Automator")
-	}
-	defer d.Close(cleanupCtx)
 
 	if err := a.Install(ctx, arc.APKPath("ArcPipVideoTest.apk")); err != nil {
 		return nil, errors.Wrap(err, "failed installing app")

@@ -64,7 +64,13 @@ func PIPRoundedCornersUnderlay(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to test API: ", err)
 	}
 
-	cleanUp, err := arcpipvideotest.EstablishARCPIPVideo(ctx, tconn, a, s.DataFileSystem(), false)
+	device, err := a.NewUIDevice(ctx)
+	if err != nil {
+		s.Fatal("Failed initializing UI Automator: ", err)
+	}
+	defer device.Close(cleanupCtx)
+
+	cleanUp, err := arcpipvideotest.EstablishARCPIPVideo(ctx, tconn, a, device, s.DataFileSystem(), false)
 	if err != nil {
 		s.Fatal("Failed to establish ARC PIP video: ", err)
 	}

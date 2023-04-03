@@ -139,7 +139,9 @@ func PIPEnergyAndPower(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for CPU to cool down: ", err)
 	}
 
-	cleanUp, err := arcpipvideotest.EstablishARCPIPVideo(ctx, tconn, s.FixtValue().(*arc.PreData).ARC, s.DataFileSystem(), params.bigPIP)
+	a := s.FixtValue().(*arc.PreData).ARC
+	d := s.FixtValue().(*arc.PreData).UIDevice
+	cleanUp, err := arcpipvideotest.EstablishARCPIPVideo(ctx, tconn, a, d, s.DataFileSystem(), params.bigPIP)
 	if err != nil {
 		s.Fatal("Failed to establish ARC PIP video: ", err)
 	}
