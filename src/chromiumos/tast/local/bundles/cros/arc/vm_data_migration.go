@@ -7,12 +7,15 @@ package arc
 import (
 	"bytes"
 	"context"
+	"io/fs"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"syscall"
 	"time"
 
 	"github.com/mafredri/cdp/rpcc"
+	goselinux "github.com/opencontainers/selinux/go-selinux"
 	"golang.org/x/sys/unix"
 
 	"chromiumos/tast/common/tape"
@@ -27,24 +30,39 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/lockscreen"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
+	"chromiumos/tast/local/drivefs"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/screenshot"
 	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/testing"
 )
 
-// These archived home data contains capybara.jpg in android-data/data/media/0/Pictures.
 const (
+	// These archived home data contains capybara.jpg in android-data/data/media/0/Pictures.
+	// The file also has xattr user.arc.test set to "xattr-test".
 	vmDataMigrationHomeDataPiArm  = "vm_data_migration_pi_arm64"
 	vmDataMigrationHomeDataRvcArm = "vm_data_migration_rvc_arm64"
-	vmDataMigrationFilename       = "capybara.jpg"
-	vmDataMigrationTestTimeout    = 10 * time.Minute
+
+	vmDataMigrationTestImageFilename = "capybara.jpg"
+	vmDataMigrationTestTimeout       = 10 * time.Minute
+
+	vmDataMigrationProjinheritTestFilePath = "data/media/0/Pictures/projinherittest"
+	inodeFlagPROJINHERIT                   = 0x20000000
+	inodeFlagCASEFOLD                      = 0x40000000
+	mediaRwIDOnHost                        = 656383
 )
 
 type vmDataMigrationTestParams struct {
 	poolID       string
 	dataFileName string
 	resume       bool
+}
+
+type vmDataMigrationFileAttributes struct {
+	uid          uint32
+	gid          uint32
+	permission   fs.FileMode
+	selinuxLabel string
 }
 
 func init() {
@@ -57,7 +75,7 @@ func init() {
 		BugComponent: "b:516669",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"android_vm", "chrome"},
-		Data:         []string{vmDataMigrationFilename},
+		Data:         []string{vmDataMigrationTestImageFilename},
 		Timeout:      vmDataMigrationTestTimeout,
 		VarDeps: []string{
 			tape.ServiceAccountVar,
@@ -150,12 +168,39 @@ func VMDataMigration(ctx context.Context, s *testing.State) {
 		chrome.ExtraArgs(args...),
 	}
 
-	signinAndMigrate(ctx, s, creds, chromeOpts, params.resume)
+	testImageAttrs := signinAndMigrate(ctx, s, creds, chromeOpts, params.resume)
+
+	// Check that the file attributes are correctly migrated by checking the
+	// following:
+	// * The file attributes of |vmDataMigrationTestImageFilename| (those
+	//   included in |vmDataMigrationFileAttributes|, quota project ID, and an
+	//   additional user xattr) are correctly set.
+	// * PROJINHERIT inode flag of |vmDataMigrationProjinheritTestFilePath| is
+	//   set.
+	// * CASEFOLD inode flag is set for directories under /data/media.
+	// Since some attributes could be modified by ARC, this should be done
+	// before restarting ARC.
+	verifyMigratedFileAttributes(ctx, s, creds.User, testImageAttrs)
+
+	// Users following the UX flow will reboot the device after the migration,
+	// but we only restart Chrome to simplify the test.
+	if err := upstart.RestartJob(ctx, "ui"); err != nil {
+		s.Fatal("Failed to sign out: ", err)
+	}
 
 	reSignInAndVerifyMigration(ctx, s, creds, chromeOpts)
 }
 
-func signinAndMigrate(ctx context.Context, s *testing.State, creds chrome.Creds, chromeOpts []chrome.Option, resume bool) {
+// signinAndMigrate signs in to the test account and performs the migration.
+// Also returns the file attributes of the |vmDataMigrationTestImageFilename| in
+// the pre-migration /data.
+func signinAndMigrate(ctx context.Context, s *testing.State, creds chrome.Creds, chromeOpts []chrome.Option, resume bool) vmDataMigrationFileAttributes {
+	// The offset for UID and GID shift in virtio-fs /data.
+	const (
+		androidUIDOffset = 655360
+		androidGIDOffset = 655360
+	)
+
 	// Use a shortened context for test operations to reserve time for cleanup.
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
@@ -186,16 +231,25 @@ func signinAndMigrate(ctx context.Context, s *testing.State, creds chrome.Creds,
 		s.Fatal("virtio-blk /data is not disabled")
 	}
 
-	// Check that the pre-migration Android data has the image file.
-	if err := verifyAndroidFile(ctx, a, s.DataPath(vmDataMigrationFilename)); err != nil {
-		s.Fatal("Failed to verify the file to be migrated: ", err)
+	// Check that the pre-migration Android data has the image file and some
+	// file attributes are correctly set.
+	if err := verifyPreMigrationAndroidData(ctx, a, creds.User, s.DataPath(vmDataMigrationTestImageFilename)); err != nil {
+		s.Fatal("Failed to verify the pre-migration Android /data: ", err)
 	}
 
-	// Regression check for b/274833188. Create a file with KEEP_SIZE option of
-	// fallocate so that it will have EOFBLOCKS flag on host kernel version 5.4
-	// or older. The flag caused migration failure.
-	if err := createFileWithEOFBLOCKS(ctx, a, creds.User); err != nil {
-		s.Fatal("Failed to create file with EOFBLOCKS flag: ", err)
+	// Set up some files in the migration source with some inode flags set, as
+	// inode flags are not preserved throughout vault archive and unarchive.
+	if err := createFilesWithInodeFlags(ctx, creds.User); err != nil {
+		s.Fatal("Failed to create file with inode flags: ", err)
+	}
+
+	// Quota project ID is not preserved throughout vault archive and unarchive,
+	// so it could be 0 for all files at this point unless Android has fixed
+	// them up. Set quota project ID of |vmDataMigrationTestImageFilename| to
+	// |androidQuotaProjectIdForImage| so that we can test the migration of a
+	// non-zero quota project ID.
+	if err := setQuotaProjectIDForTestImageFile(ctx, creds.User); err != nil {
+		s.Fatal("Failed to set quota project ID for the test image file: ", err)
 	}
 
 	// Connect to Test API.
@@ -220,6 +274,21 @@ func signinAndMigrate(ctx context.Context, s *testing.State, creds chrome.Creds,
 	if tconn, err = cr.TestAPIConn(ctx); err != nil {
 		s.Fatal("Failed to reconnect to test API: ", err)
 	}
+
+	// Preserve the file attributes of a file in the pre-migration data. This
+	// will be used to check the correctness of the file attributes in the
+	// migrated (virtio-blk) /data.
+	attrs, err := getAndroidFileAttributes(ctx, creds.User)
+	if err != nil {
+		s.Fatal("Failed to get file attributes of pre-migration file: ", err)
+	}
+	// Because UID and GID are shifted in virtio-fs /data but not in virtio-blk
+	// /data, we need to shift them back.
+	attrs.uid -= androidUIDOffset
+	attrs.gid -= androidGIDOffset
+	s.Logf("Pre-migration file attributes: UID=%d, GID=%d, permission=%o, SELinux=%s",
+		attrs.uid, attrs.gid, attrs.permission, attrs.selinuxLabel)
+
 	// Go through the migration UX flow. Abort the migration halfway for resume test cases.
 	if err := proceedMigrationScreens(ctx, cr, tconn, resume /* abort */); err != nil {
 		if err := screenshot.Capture(ctx, filepath.Join(s.OutDir(), "proceed-migration-screen-failed.png")); err != nil {
@@ -228,43 +297,41 @@ func signinAndMigrate(ctx context.Context, s *testing.State, creds chrome.Creds,
 		s.Fatal("Failed to go through migration screen for new migrations: ", err)
 	}
 
-	if resume {
-		cr.Close(ctx)
-
-		if cr, err = reSignInChrome(ctx, s, creds, chromeOpts); err != nil {
-			s.Fatal("Failed to re-sign in: ", err)
-		}
-
-		// When the migration ended halfway in the previous session, Chrome will
-		// be immediately restarted after the re-sign in to start the UX flow
-		// for resuming migration. Calling PrepareForRestart() here prevents
-		// connecting to the old Chrome process.
-		if err := chrome.PrepareForRestart(); err != nil {
-			s.Fatal("Failed to prepare for restart after re-sign in: ", err)
-		}
-
-		// Reconnect to Chrome and Test API.
-		if err := cr.Reconnect(ctx); err != nil {
-			s.Fatal("Failed to reconnect for resume: ", err)
-		}
-		if tconn, err = cr.TestAPIConn(ctx); err != nil {
-			s.Fatal("Failed to create Test API connection: ", err)
-		}
-
-		// Go through the migration UX flow for resumed migrations.
-		if err := proceedMigrationScreens(ctx, cr, tconn, false /* abort */); err != nil {
-			if err := screenshot.Capture(ctx, filepath.Join(s.OutDir(), "proceed-resume-migration-screen-failed.png")); err != nil {
-				testing.ContextLog(ctx, "Failed to take a screenshot: ", err)
-			}
-			s.Fatal("Failed to go through migration screen for resumed migrations: ", err)
-		}
+	if !resume {
+		return attrs
 	}
 
-	// Users following the UX flow will reboot the device here, but we only
-	// restart Chrome to simplify the test.
-	if err := upstart.RestartJob(ctx, "ui"); err != nil {
-		s.Fatal("Failed to sign out: ", err)
+	cr.Close(ctx)
+
+	if cr, err = reSignInChrome(ctx, s, creds, chromeOpts); err != nil {
+		s.Fatal("Failed to re-sign in: ", err)
 	}
+
+	// When the migration ended halfway in the previous session, Chrome will
+	// be immediately restarted after the re-sign in to start the UX flow
+	// for resuming migration. Calling PrepareForRestart() here prevents
+	// connecting to the old Chrome process.
+	if err := chrome.PrepareForRestart(); err != nil {
+		s.Fatal("Failed to prepare for restart after re-sign in: ", err)
+	}
+
+	// Reconnect to Chrome and Test API.
+	if err := cr.Reconnect(ctx); err != nil {
+		s.Fatal("Failed to reconnect for resume: ", err)
+	}
+	if tconn, err = cr.TestAPIConn(ctx); err != nil {
+		s.Fatal("Failed to create Test API connection: ", err)
+	}
+
+	// Go through the migration UX flow for resumed migrations.
+	if err := proceedMigrationScreens(ctx, cr, tconn, false /* abort */); err != nil {
+		if err := screenshot.Capture(ctx, filepath.Join(s.OutDir(), "proceed-resume-migration-screen-failed.png")); err != nil {
+			testing.ContextLog(ctx, "Failed to take a screenshot: ", err)
+		}
+		s.Fatal("Failed to go through migration screen for resumed migrations: ", err)
+	}
+
+	return attrs
 }
 
 func reSignInAndVerifyMigration(ctx context.Context, s *testing.State, creds chrome.Creds, chromeOpts []chrome.Option) {
@@ -311,9 +378,9 @@ func reSignInAndVerifyMigration(ctx context.Context, s *testing.State, creds chr
 		s.Error("Failed to verify that the host-side /data is removed: ", err)
 	}
 
-	// Check that the image file is correctly migrated.
-	if err := verifyAndroidFile(ctx, a, s.DataPath(vmDataMigrationFilename)); err != nil {
-		s.Error("Failed to verify the migrated file: ", err)
+	// Check that the content of the image file is correctly migrated.
+	if err := verifyAndroidImageFileContent(ctx, a, s.DataPath(vmDataMigrationTestImageFilename)); err != nil {
+		s.Error("Failed to verify the content of the image file: ", err)
 	}
 
 	// Check that Play Store can be launched successfully.
@@ -325,23 +392,35 @@ func reSignInAndVerifyMigration(ctx context.Context, s *testing.State, creds chr
 	}
 }
 
-// createFileWithEOFBLOCKS creates a file that will have EOFBLOCKS flag set on
-// boards with host kernel version 5.4 or older.
-func createFileWithEOFBLOCKS(ctx context.Context, a *arc.ARC, username string) error {
-	const (
-		filePathFromAndroidData = "data/media/0/Pictures/eofblockstest"
-		fileUID                 = 656383 // media_rw
-		fileGID                 = 656383 // media_rw
-		fileSize                = 4096
-	)
-
+func createFilesWithInodeFlags(ctx context.Context, username string) error {
 	androidDataDir, err := arc.AndroidDataDir(ctx, username)
 	if err != nil {
 		return errors.Wrap(err, "failed to get android-data dir")
 	}
-	path := filepath.Join(androidDataDir, filePathFromAndroidData)
 
-	file, err := os.Create(path)
+	// Regression check for b/274833188. Create a file with KEEP_SIZE option of
+	// fallocate so that it will have EOFBLOCKS flag on host kernel version 5.4
+	// or older. The flag caused migration failure.
+	if err := createFileWithEOFBLOCKS(ctx, androidDataDir); err != nil {
+		return errors.Wrap(err, "failed to create a file with EOFBLOCKS flag")
+	}
+
+	if err := createDirWithPROJINHERIT(ctx, androidDataDir); err != nil {
+		return errors.Wrap(err, "failed to create a dir with PROJINHERIT flag")
+	}
+
+	return nil
+}
+
+// createFileWithEOFBLOCKS creates a file that will have EOFBLOCKS flag set on
+// boards with host kernel version 5.4 or older.
+func createFileWithEOFBLOCKS(ctx context.Context, androidDataDir string) error {
+	const (
+		filePathFromAndroidData = "data/media/0/Pictures/eofblockstest"
+		fileSize                = 4096
+	)
+
+	file, err := os.Create(filepath.Join(androidDataDir, filePathFromAndroidData))
 	if err != nil {
 		return errors.Wrap(err, "failed to create file")
 	}
@@ -349,7 +428,7 @@ func createFileWithEOFBLOCKS(ctx context.Context, a *arc.ARC, username string) e
 
 	// Change UID and GID appropriately so that this file won't be skipped by
 	// the migrator.
-	if err := file.Chown(fileUID, fileGID); err != nil {
+	if err := file.Chown(mediaRwIDOnHost /* uid */, mediaRwIDOnHost /* gid */); err != nil {
 		return errors.Wrap(err, "failed to chown file")
 	}
 
@@ -360,6 +439,26 @@ func createFileWithEOFBLOCKS(ctx context.Context, a *arc.ARC, username string) e
 	}
 
 	return nil
+}
+
+func createDirWithPROJINHERIT(ctx context.Context, androidDataDir string) error {
+	path := filepath.Join(androidDataDir, vmDataMigrationProjinheritTestFilePath)
+	if err := os.Mkdir(path, 0755); err != nil {
+		return errors.Wrap(err, "failed to mkdir")
+	}
+	if err := os.Chown(path, mediaRwIDOnHost /* uid */, mediaRwIDOnHost /* gid */); err != nil {
+		return errors.Wrap(err, "failed to chown dir")
+	}
+	return addInodeFlags(path, inodeFlagPROJINHERIT)
+}
+
+func setQuotaProjectIDForTestImageFile(ctx context.Context, username string) error {
+	androidDataDir, err := arc.AndroidDataDir(ctx, username)
+	if err != nil {
+		return errors.Wrap(err, "failed to get android-data dir")
+	}
+	imageFilePath := filepath.Join(androidDataDir, "data/media/0/Pictures", vmDataMigrationTestImageFilename)
+	return arc.SetQuotaProjectID(ctx, arc.ProjectIDExtMediaImage, imageFilePath)
 }
 
 func enterMigrationScreen(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn) error {
@@ -486,6 +585,166 @@ func reSignInChrome(ctx context.Context, s *testing.State, creds chrome.Creds, c
 	return cr, nil
 }
 
+func verifyPreMigrationAndroidData(ctx context.Context, a *arc.ARC, username, expectedImageDataPath string) error {
+	if err := verifyAndroidImageFileContent(ctx, a, expectedImageDataPath); err != nil {
+		return errors.Wrap(err, "failed to verify the content of the image file")
+	}
+	if err := verifyAndroidFileXattr(ctx, username); err != nil {
+		return errors.Wrap(err, "failed to verify the xattr of the file")
+	}
+	return nil
+}
+
+func verifyMigratedFileAttributes(ctx context.Context, s *testing.State, username string, attrs vmDataMigrationFileAttributes) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	cleanupFunc, err := arc.MountVirtioBlkDataDiskImageReadOnlyWithoutSync(ctx, username)
+	if err != nil {
+		s.Fatal("Failed to make Android /data directory available on host: ", err)
+	}
+	defer cleanupFunc(cleanupCtx)
+
+	// Check that the xattr set to the image file is correctly migrated.
+	if err := verifyAndroidFileXattr(ctx, username); err != nil {
+		s.Error("Failed to verify the xattr of the file: ", err)
+	}
+
+	androidDataDir, err := arc.AndroidDataDir(ctx, username)
+	if err != nil {
+		s.Fatal("Failed to get path of Android /data directory: ", err)
+	}
+
+	// Check that PROJINHERIT flag is correctly migrated.
+	flags, err := getInodeFlags(filepath.Join(androidDataDir, vmDataMigrationProjinheritTestFilePath))
+	if err != nil {
+		s.Fatal("Failed to get inode flags: ", err)
+	}
+	if flags&inodeFlagPROJINHERIT == 0 {
+		s.Error("PROJINHERIT inode flag was not migrated")
+	}
+	// Any directories under /data/media should have CASEFOLD flag set.
+	if flags&inodeFlagCASEFOLD == 0 {
+		s.Error("CASEFOLD inode flag is not set in a directory under /data/media")
+	}
+
+	imageFilePath := filepath.Join(androidDataDir, "data/media/0/Pictures", vmDataMigrationTestImageFilename)
+	projectID, err := arc.GetQuotaProjectID(ctx, imageFilePath)
+	if err != nil {
+		s.Fatalf("Failed to get quota project ID of %s: %s", imageFilePath, err)
+	}
+	if projectID != arc.ProjectIDExtMediaImage {
+		s.Errorf("Unexpected quota project ID: got %d, expected %d", projectID, arc.ProjectIDExtMediaImage)
+	}
+
+	// Check the other file attributes are correctly migrated.
+	newAttrs, err := getAndroidFileAttributes(ctx, username)
+	if err != nil {
+		s.Fatal("Failed to get file attributes: ", err)
+	}
+	if newAttrs.uid != attrs.uid {
+		s.Errorf("Unexpected UID: got %d, expected %d", newAttrs.uid, attrs.uid)
+	}
+	if newAttrs.gid != attrs.gid {
+		s.Errorf("Unexpected GID: got %d, expected %d", newAttrs.gid, attrs.gid)
+	}
+	if newAttrs.permission != attrs.permission {
+		s.Errorf("Unexpected permission: got %o, expected %o", newAttrs.permission, attrs.permission)
+	}
+	if newAttrs.selinuxLabel != attrs.selinuxLabel {
+		s.Errorf("Unexpected SELinux label: got %s, expected %s", newAttrs.selinuxLabel, attrs.selinuxLabel)
+	}
+}
+
+func getInodeFlags(path string) (int, error) {
+	fd, err := unix.Open(path, unix.O_RDONLY, 0 /* perm */)
+	if err != nil {
+		return 0, errors.Wrapf(err, "failed to open an existing file %s", path)
+	}
+	defer unix.Close(fd)
+	return unix.IoctlGetInt(fd, unix.FS_IOC_GETFLAGS)
+}
+
+func addInodeFlags(path string, flags int) error {
+	fd, err := unix.Open(path, unix.O_RDONLY, 0 /* perm */)
+	if err != nil {
+		return errors.Wrapf(err, "failed to open an existing file %s", path)
+	}
+	defer unix.Close(fd)
+	oldFlags, err := unix.IoctlGetInt(fd, unix.FS_IOC_GETFLAGS)
+	if err != nil {
+		return errors.Wrapf(err, "failed to get inode flags for %s", path)
+	}
+	return unix.IoctlSetPointerInt(fd, unix.FS_IOC_SETFLAGS, oldFlags|flags)
+}
+
+func verifyAndroidImageFileContent(ctx context.Context, a *arc.ARC, expectedDataPath string) error {
+	expected, err := ioutil.ReadFile(expectedDataPath)
+	if err != nil {
+		return errors.Wrapf(err, "failed to read %s", expectedDataPath)
+	}
+
+	androidPath := filepath.Join("/storage/emulated/0/Pictures", vmDataMigrationTestImageFilename)
+	actual, err := a.ReadFile(ctx, androidPath)
+	if err != nil {
+		return errors.Wrapf(err, "failed to read %s", androidPath)
+	}
+	if !bytes.Equal(actual, expected) {
+		return errors.Errorf("content mismatch between %s and the original file", androidPath)
+	}
+	return nil
+}
+
+func verifyAndroidFileXattr(ctx context.Context, username string) error {
+	const (
+		expectedXattrKey   = "user.arc.test"
+		expectedXattrValue = "xattr-test"
+	)
+
+	androidDataDir, err := arc.AndroidDataDir(ctx, username)
+	if err != nil {
+		return errors.Wrap(err, "failed to get path of Android /data directory")
+	}
+	imageFilePath := filepath.Join(androidDataDir, "data/media/0/Pictures", vmDataMigrationTestImageFilename)
+
+	testXattrValue := ""
+	if err := drivefs.GetXattr(imageFilePath, expectedXattrKey, &testXattrValue); err != nil {
+		return errors.Wrap(err, "failed to get xattr of the test file")
+	}
+	if testXattrValue != expectedXattrValue {
+		return errors.Errorf("unexpected xattr: got %s, expected %s", testXattrValue, expectedXattrValue)
+	}
+	return nil
+}
+
+// getAndroidFileAttributes returns the file attributes of
+// android-data/data/media/0/Pictures/|vmDataMigrationTestImageFilename| under
+// the given user's root cryptohome directory.
+func getAndroidFileAttributes(ctx context.Context, username string) (vmDataMigrationFileAttributes, error) {
+	androidDataDir, err := arc.AndroidDataDir(ctx, username)
+	if err != nil {
+		return vmDataMigrationFileAttributes{}, errors.Wrap(err, "failed to get path of Android /data directory")
+	}
+	hostPath := filepath.Join(androidDataDir, "data/media/0/Pictures", vmDataMigrationTestImageFilename)
+
+	fileInfo, err := os.Stat(hostPath)
+	if err != nil {
+		return vmDataMigrationFileAttributes{}, errors.Wrap(err, "failed to stat the test file from the host")
+	}
+	stat, ok := fileInfo.Sys().(*syscall.Stat_t)
+	if !ok {
+		return vmDataMigrationFileAttributes{}, errors.New("failed to get the stat of the test file")
+	}
+
+	label, err := goselinux.FileLabel(hostPath)
+	if err != nil {
+		return vmDataMigrationFileAttributes{}, errors.Wrapf(err, "failed to get SELinux label of %s", hostPath)
+	}
+
+	return vmDataMigrationFileAttributes{stat.Uid, stat.Gid, fileInfo.Mode().Perm(), label}, nil
+}
+
 func verifyHostDataRemoved(ctx context.Context, cr *chrome.Chrome) error {
 	androidDataDir, err := arc.AndroidDataDir(ctx, cr.NormalizedUser())
 	if err != nil {
@@ -498,25 +757,4 @@ func verifyHostDataRemoved(ctx context.Context, cr *chrome.Chrome) error {
 		return errors.Wrap(err, "failed to check the non-existence of android-data/data/data")
 	}
 	return nil
-}
-
-func verifyAndroidFile(ctx context.Context, a *arc.ARC, expectedDataPath string) error {
-	expected, err := ioutil.ReadFile(expectedDataPath)
-	if err != nil {
-		return errors.Wrapf(err, "failed to read %s", expectedDataPath)
-	}
-
-	androidPath := filepath.Join("/storage/emulated/0/Pictures", vmDataMigrationFilename)
-
-	return testing.Poll(ctx, func(ctx context.Context) error {
-		actual, err := a.ReadFile(ctx, androidPath)
-		if err != nil {
-			return errors.Wrapf(err, "failed to read %s in Android", androidPath)
-		}
-		// TODO(b/268293237): Check that file attributes are migrated.
-		if !bytes.Equal(actual, expected) {
-			return errors.Errorf("content mismatch between %s in Android and the original file", androidPath)
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: 10 * time.Second})
 }

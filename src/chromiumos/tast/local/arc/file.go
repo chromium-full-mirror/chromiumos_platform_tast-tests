@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
@@ -17,8 +19,13 @@ import (
 	"chromiumos/tast/testing"
 )
 
-// TestBinaryDirPath is the directory to store test binaries which run inside ARC.
-const TestBinaryDirPath = "/usr/local/libexec/arc-binary-tests"
+const (
+	// TestBinaryDirPath is the directory to store test binaries which run inside ARC.
+	TestBinaryDirPath = "/usr/local/libexec/arc-binary-tests"
+	// ProjectIDExtMediaImage is the quota project ID for image files in the external storage.
+	// Taken from android_projectid_config.h.
+	ProjectIDExtMediaImage = 1003
+)
 
 // PullFile copies a file in Android to ChromeOS with adb pull.
 func (a *ARC) PullFile(ctx context.Context, src, dst string) error {
@@ -115,6 +122,23 @@ func (a *ARC) RemoveAll(ctx context.Context, path string) error {
 	return a.device.RemoveAll(ctx, path)
 }
 
+// GetQuotaProjectID returns the quota project ID of the specified file.
+// The file path needs to be a host-side path.
+func GetQuotaProjectID(ctx context.Context, path string) (int64, error) {
+	// Output looks like:
+	// " 1003 ---------E----e----- /home/root/<hash>/android-data/data/media/0/Pictures/test.png"
+	out, err := testexec.CommandContext(ctx, "lsattr", "-p", path).Output(testexec.DumpLogOnError)
+	if err != nil {
+		return 0, err
+	}
+	return strconv.ParseInt(strings.Split(strings.TrimSpace(string(out)), " ")[0], 10, 64)
+}
+
+// SetQuotaProjectID sets the quota project ID on the specified file.
+func SetQuotaProjectID(ctx context.Context, projectID int64, path string) error {
+	return testexec.CommandContext(ctx, "chattr", "-p", strconv.FormatInt(projectID, 10), path).Run(testexec.DumpLogOnError)
+}
+
 // getARCVMCID returns the CID of ARCVM.
 func getARCVMCID(ctx context.Context, user string) (int, error) {
 	// Create a stub "ARCVM" object to get its metadata from Concierge.
@@ -179,6 +203,12 @@ func MountVirtioBlkDataDiskImageReadOnlyIfUsed(ctx context.Context, a *ARC, user
 	if err := a.Command(ctx, "sync").Run(testexec.DumpLogOnError); err != nil {
 		return nil, errors.Wrap(err, "failed to call sync on guest")
 	}
+	return MountVirtioBlkDataDiskImageReadOnlyWithoutSync(ctx, user)
+}
+
+// MountVirtioBlkDataDiskImageReadOnlyWithoutSync finds the path to the virtio-blk disk image
+// and mounts the disk on the host's /home/root/<hash>/android-data/data as read-only.
+func MountVirtioBlkDataDiskImageReadOnlyWithoutSync(ctx context.Context, user string) (func(context.Context), error) {
 
 	rootCryptDir, err := cryptohome.SystemPath(ctx, user)
 	if err != nil {
