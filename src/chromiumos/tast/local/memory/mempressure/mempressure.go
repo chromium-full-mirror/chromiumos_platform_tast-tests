@@ -727,6 +727,11 @@ func Run(ctx context.Context, outDir string, br *browser.Browser, arc *arc.ARC, 
 	defer fullMeter.Close(ctx)
 
 	perfValues := perf.NewValues()
+	defer func() {
+		if err = perfValues.Save(outDir); err != nil && errRet == nil {
+			errRet = errors.Wrap(err, "cannot save perf data")
+		}
+	}()
 
 	// Log various system measurements, to help understand the memory
 	// manager behavior.
@@ -792,9 +797,7 @@ func Run(ctx context.Context, outDir string, br *browser.Browser, arc *arc.ARC, 
 	if err := metrics.LogMemoryStats(ctx, basemem, arc, perfValues, outDir, "_quiesce"); err != nil {
 		return errors.Wrap(err, "failed to collect quiesce memory metrics")
 	}
-	if err = perfValues.Save(outDir); err != nil {
-		return errors.Wrap(err, "cannot save perf data")
-	}
+
 	return nil
 }
 
