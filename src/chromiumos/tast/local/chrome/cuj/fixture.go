@@ -547,6 +547,25 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		Vars:            []string{"ui.cujAccountPool"},
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserLacrosWithoutARC",
+		Desc: "Variant of loggedInToCUJUser with ARC disabled",
+		Contacts: []string{
+			"ramsaroop@google.com",
+			"chromeos-perfmetrics-eng@google.com",
+		},
+		Impl: &loggedInToCUJUserFixture{
+			bt:         browser.TypeLacros,
+			disableARC: true,
+		},
+		Parent:          "cpuIdleForCUJ",
+		SetUpTimeout:    chrome.GAIALoginTimeout + 2*time.Minute,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
 }
 
 func prepareDocsBlockerExtension(s *testing.FixtState) (string, error) {
@@ -770,6 +789,7 @@ type loggedInToCUJUserFixture struct {
 	fakeCamera         bool
 	fakeCameraFileName string
 	docsBlocker        bool
+	disableARC         bool
 }
 
 func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -791,12 +811,15 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 
 		opts := []chrome.Option{
 			loginOption(s, f.useEnterprisePool),
-			chrome.ARCSupported(),
-			chrome.ExtraArgs(arc.DisableSyncFlags()...),
 			chrome.DisableFeatures("FirmwareUpdaterApp"),
 		}
 		if f.keepState {
 			opts = append(opts, chrome.KeepState())
+		}
+		if !f.disableARC {
+			opts = append(opts,
+				chrome.ARCSupported(),
+				chrome.ExtraArgs(arc.DisableSyncFlags()...))
 		}
 		opts = append(opts, f.chromeExtraOpts...)
 
@@ -871,7 +894,7 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 		enablePlayStore = !st.Provisioned
 	}
 
-	if enablePlayStore {
+	if enablePlayStore && !f.disableARC {
 		func() {
 			const playStorePackageName = "com.android.vending"
 			ctx, cancel := context.WithTimeout(ctx, optin.OptinTimeout+time.Minute)
@@ -913,22 +936,24 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 	}
 
 	var a *arc.ARC
-	func() {
-		ctx, cancel := context.WithTimeout(ctx, arc.BootTimeout)
-		defer cancel()
+	if !f.disableARC {
+		func() {
+			ctx, cancel := context.WithTimeout(ctx, arc.BootTimeout)
+			defer cancel()
 
-		var err error
-		if a, err = arc.New(ctx, s.OutDir()); err != nil {
-			s.Fatal("Failed to start ARC: ", err)
-		}
-
-		if f.origRunningPkgs, err = runningPackages(ctx, a); err != nil {
-			if err := a.Close(ctx); err != nil {
-				s.Error("Failed to close ARC connection: ", err)
+			var err error
+			if a, err = arc.New(ctx, s.OutDir()); err != nil {
+				s.Fatal("Failed to start ARC: ", err)
 			}
-			s.Fatal("Failed to list running packages: ", err)
-		}
-	}()
+
+			if f.origRunningPkgs, err = runningPackages(ctx, a); err != nil {
+				if err := a.Close(ctx); err != nil {
+					s.Error("Failed to close ARC connection: ", err)
+				}
+				s.Fatal("Failed to list running packages: ", err)
+			}
+		}()
+	}
 	f.cr = cr
 	f.arc = a
 	cr = nil
@@ -938,8 +963,10 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 func (f *loggedInToCUJUserFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 	chrome.Unlock()
 
-	if err := f.arc.Close(ctx); err != nil {
-		testing.ContextLog(ctx, "Failed to close ARC connection: ", err)
+	if f.arc != nil {
+		if err := f.arc.Close(ctx); err != nil {
+			testing.ContextLog(ctx, "Failed to close ARC connection: ", err)
+		}
 	}
 
 	if err := f.cr.Close(ctx); err != nil {
@@ -960,18 +987,20 @@ func (f *loggedInToCUJUserFixture) Reset(ctx context.Context) error {
 		return errors.New("invalid oauth2 token")
 	}
 
-	// Stopping the running apps.
-	running, err := runningPackages(ctx, f.arc)
-	if err != nil {
-		return errors.Wrap(err, "failed to get running packages")
-	}
-	for pkg := range running {
-		if _, ok := f.origRunningPkgs[pkg]; ok {
-			continue
+	if f.arc != nil {
+		// Stopping the running apps.
+		running, err := runningPackages(ctx, f.arc)
+		if err != nil {
+			return errors.Wrap(err, "failed to get running packages")
 		}
-		testing.ContextLogf(ctx, "Stopping package %q", pkg)
-		if err := f.arc.Command(ctx, "am", "force-stop", pkg).Run(testexec.DumpLogOnError); err != nil {
-			return errors.Wrapf(err, "failed to stop %q", pkg)
+		for pkg := range running {
+			if _, ok := f.origRunningPkgs[pkg]; ok {
+				continue
+			}
+			testing.ContextLogf(ctx, "Stopping package %q", pkg)
+			if err := f.arc.Command(ctx, "am", "force-stop", pkg).Run(testexec.DumpLogOnError); err != nil {
+				return errors.Wrapf(err, "failed to stop %q", pkg)
+			}
 		}
 	}
 
@@ -993,15 +1022,17 @@ func (f *loggedInToCUJUserFixture) Reset(ctx context.Context) error {
 }
 
 func (f *loggedInToCUJUserFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
-	arcLogOutDir := filepath.Join(s.OutDir(), "arc_logs")
-	if err := os.MkdirAll(arcLogOutDir, 0755); err != nil {
-		s.Log("Error creating arc_logs directory: ", err)
-		arcLogOutDir = s.OutDir()
-	} else {
-		s.Log("Created arc_logs directory successfully")
-	}
-	if err := f.arc.ResetOutDir(ctx, arcLogOutDir); err != nil {
-		s.Log("Failed to reset outDir field of ARC object: ", err)
+	if f.arc != nil {
+		arcLogOutDir := filepath.Join(s.OutDir(), "arc_logs")
+		if err := os.MkdirAll(arcLogOutDir, 0755); err != nil {
+			s.Log("Error creating arc_logs directory: ", err)
+			arcLogOutDir = s.OutDir()
+		} else {
+			s.Log("Created arc_logs directory successfully")
+		}
+		if err := f.arc.ResetOutDir(ctx, arcLogOutDir); err != nil {
+			s.Log("Failed to reset outDir field of ARC object: ", err)
+		}
 	}
 
 	if f.logMarker != nil {
