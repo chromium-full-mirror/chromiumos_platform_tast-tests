@@ -47,7 +47,6 @@ import (
 	_ "chromiumos/tast/remote/bundles/cros/syzkaller"
 	_ "chromiumos/tast/remote/bundles/cros/typec"
 	_ "chromiumos/tast/remote/bundles/cros/ui"
-	_ "chromiumos/tast/remote/bundles/cros/usbc"
 	_ "chromiumos/tast/remote/bundles/cros/wifi"
 	_ "chromiumos/tast/remote/bundles/cros/wilco"
 	_ "chromiumos/tast/remote/bundles/cros/wwcb"
