@@ -17,6 +17,7 @@ import (
 	"chromiumos/tast/local/arc/optin"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/policyutil"
+	"chromiumos/tast/local/retry"
 	"chromiumos/tast/testing"
 )
 
@@ -72,14 +73,15 @@ func ManagedProvisioning(ctx context.Context, s *testing.State) {
 		provisioningTimeout = 3 * time.Minute
 	)
 
-	creds, err := credconfig.PickRandomCreds(s.RequiredVar(arcent.LoginPoolVar))
-	if err != nil {
-		s.Fatal("Failed to get login creds: ", err)
-	}
-
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
 	defer cancel()
+
+	rl := &retry.Loop{Attempts: 1,
+		MaxAttempts: 2,
+		DoRetries:   true,
+		Fatalf:      s.Fatalf,
+		Logf:        s.Logf}
 
 	arcPolicy := &policy.ArcPolicy{
 		Val: &policy.ArcPolicyValue{
@@ -89,40 +91,50 @@ func ManagedProvisioning(ctx context.Context, s *testing.State) {
 			PlayEmmApiInstallDisabled: true,
 		},
 	}
-
 	arcEnabledPolicy := &policy.ArcEnabled{Val: true, Stat: policy.StatusSet}
-
 	policies := []policy.Policy{arcEnabledPolicy, arcPolicy}
-	fdms, err := policyutil.SetUpFakePolicyServer(ctx, s.OutDir(), creds.User, policies)
-	if err != nil {
-		s.Fatal("Failed to setup fake policy server: ", err)
-	}
-	defer fdms.Stop(cleanupCtx)
 
-	gaiaLogin := chrome.GAIALogin(creds)
-	cr, err := chrome.New(ctx,
-		gaiaLogin,
-		chrome.DMSPolicy(fdms.URL),
-		chrome.ARCSupported(),
-		chrome.UnRestrictARCCPU(),
-		chrome.ExtraArgs(arc.DisableSyncFlags()...))
-	if err != nil {
-		s.Fatal("Failed to setup chrome: ", err)
-	}
-	defer cr.Close(cleanupCtx)
-
-	s.Log("Waiting for managed provisioning")
-
-	a, err := arc.NewWithTimeout(ctx, s.OutDir(), bootTimeout)
-	if err != nil {
-		s.Fatal("Failed to start ARC by policy: ", err)
-	}
-	defer a.Close(cleanupCtx)
-
-	if err := a.WaitForProvisioning(ctx, provisioningTimeout); err != nil {
-		if err := optin.DumpLogCat(cleanupCtx, ""); err != nil {
-			s.Logf("WARNING: Failed to dump logcat: %s", err)
+	if err := testing.Poll(ctx, func(ctx context.Context) (retErr error) {
+		creds, err := credconfig.PickRandomCreds(s.RequiredVar(arcent.LoginPoolVar))
+		if err != nil {
+			rl.Exit("get login creds", err)
 		}
+
+		fdms, err := policyutil.SetUpFakePolicyServer(ctx, s.OutDir(), creds.User, policies)
+		if err != nil {
+			rl.Exit("setup fake policy server", err)
+		}
+		defer fdms.Stop(cleanupCtx)
+
+		gaiaLogin := chrome.GAIALogin(creds)
+		cr, err := chrome.New(ctx,
+			gaiaLogin,
+			chrome.DMSPolicy(fdms.URL),
+			chrome.ARCSupported(),
+			chrome.UnRestrictARCCPU(),
+			chrome.ExtraArgs(arc.DisableSyncFlags()...))
+		if err != nil {
+			return rl.Retry("connect to Chrome", err)
+		}
+		defer cr.Close(cleanupCtx)
+
+		s.Log("Waiting for managed provisioning")
+
+		a, err := arc.NewWithTimeout(ctx, s.OutDir(), bootTimeout)
+		if err != nil {
+			return rl.Retry("start ARC by policy", err)
+		}
+		defer a.Close(cleanupCtx)
+
+		if err := a.WaitForProvisioning(ctx, provisioningTimeout); err != nil {
+			if err := optin.DumpLogCat(cleanupCtx, ""); err != nil {
+				s.Logf("WARNING: Failed to dump logcat: %s", err)
+			}
+			rl.Exit("wait for provisioning", err)
+		}
+
+		return nil
+	}, nil); err != nil {
 		s.Fatal("Managed provisioning failed: ", err)
 	}
 }
