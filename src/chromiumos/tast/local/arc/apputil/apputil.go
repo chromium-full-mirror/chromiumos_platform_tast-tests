@@ -39,12 +39,7 @@ type App struct {
 }
 
 // NewApp creates and returns an instance of App which represents and ARC App.
-func NewApp(ctx context.Context, kb *input.KeyboardEventWriter, tconn *chrome.TestConn, a *arc.ARC, appName, pkgName string) (*App, error) {
-	d, err := a.NewUIDevice(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create new ARC UI device")
-	}
-
+func NewApp(ctx context.Context, kb *input.KeyboardEventWriter, tconn *chrome.TestConn, a *arc.ARC, d *ui.Device, appName, pkgName string) (*App, error) {
 	return &App{
 		KB:       kb,
 		Tconn:    tconn,
@@ -127,11 +122,6 @@ func (app *App) GetVersion(ctx context.Context) (version string, err error) {
 // it dumps the ARC UI if hasError returns true, and then closes ARC app.
 // If hasError returns true, screenshot will be taken and UI hierarchy will be dumped to the given dumpDir.
 func (app *App) Close(ctx context.Context, cr *chrome.Chrome, hasError func() bool, outDir string) error {
-	if err := app.Device.Close(ctx); err != nil {
-		// Just log the error.
-		testing.ContextLog(ctx, "Failed to close ARC UI device: ", err)
-	}
-
 	faillog.SaveScreenshotOnError(ctx, cr, outDir, hasError)
 	if err := app.ARC.DumpUIHierarchyOnError(ctx, outDir, hasError); err != nil {
 		// Just log the error.

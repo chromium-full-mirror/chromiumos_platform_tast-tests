@@ -122,7 +122,13 @@ func Run(ctx context.Context, cr *chrome.Chrome, bt browser.Type, a *arc.ARC, pa
 		}
 		defer appHelloWorld.Close()
 	case SpotifyAppName:
-		if appSpotify, err = spotify.New(ctx, kb, a, tconn, params.account); err != nil {
+		device, err := a.NewUIDevice(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed initializing UI Automator")
+		}
+		defer device.Close(cleanupCtx)
+
+		if appSpotify, err = spotify.New(ctx, kb, a, tconn, device, params.account); err != nil {
 			return errors.Wrap(err, "failed to create Spotify instance")
 		}
 		defer appSpotify.Close(cleanupCtx, cr, func() bool { return retErr != nil }, filepath.Join(params.outDir, "arc"))

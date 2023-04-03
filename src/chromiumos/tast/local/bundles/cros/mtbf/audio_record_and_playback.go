@@ -70,7 +70,13 @@ func AudioRecordAndPlayback(ctx context.Context, s *testing.State) {
 	}
 	defer kb.Close()
 
-	vr, err := voicerecorder.New(ctx, kb, tconn, a)
+	device, err := a.NewUIDevice(ctx)
+	if err != nil {
+		s.Fatal("Failed initializing UI Automator: ", err)
+	}
+	defer device.Close(cleanupCtx)
+
+	vr, err := voicerecorder.New(ctx, kb, tconn, a, device)
 	if err != nil {
 		s.Fatal("Failed to create arc resource: ", err)
 	}

@@ -216,7 +216,13 @@ func ResizeWindow(ctx context.Context, s *testing.State) {
 		}
 		defer a.Close(cleanupCtx)
 
-		nsApp, err := notificationshowcase.NewApp(ctx, a, tconn, kb, s.DataPath(resizeWindowArcAppApkFileName))
+		d, err := a.NewUIDevice(ctx)
+		if err != nil {
+			s.Fatal("Failed to create new ARC UI device: ", err)
+		}
+		defer d.Close(cleanupCtx)
+
+		nsApp, err := notificationshowcase.NewApp(ctx, a, tconn, kb, d, s.DataPath(resizeWindowArcAppApkFileName))
 		if err != nil {
 			s.Fatal("Failed to create Notification Showcase app: ", err)
 		}

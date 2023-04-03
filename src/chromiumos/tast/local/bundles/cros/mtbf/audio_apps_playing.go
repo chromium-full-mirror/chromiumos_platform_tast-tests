@@ -70,6 +70,11 @@ func AudioAppsPlaying(ctx context.Context, s *testing.State) {
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	a := s.FixtValue().(*mtbf.FixtValue).ARC
+	device, err := a.NewUIDevice(ctx)
+	if err != nil {
+		s.Fatal("Failed initializing UI Automator: ", err)
+	}
+	defer device.Close(cleanupCtx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -89,13 +94,13 @@ func AudioAppsPlaying(ctx context.Context, s *testing.State) {
 
 	switch s.Param().(audioAppType) {
 	case appYtMusic:
-		app, err = youtubemusic.New(ctx, kb, tconn, a)
+		app, err = youtubemusic.New(ctx, kb, tconn, a, device)
 		if err != nil {
 			s.Fatal("Failed to create YouTube Music app instance: ", err)
 		}
 		song = apputil.NewMedia("Blank Space", "Taylor Swift • 3:52")
 	case appSpotify:
-		app, err = spotify.New(ctx, kb, a, tconn, cr.Creds().User)
+		app, err = spotify.New(ctx, kb, a, tconn, device, cr.Creds().User)
 		if err != nil {
 			s.Fatal("Failed to create Spotify app instance: ", err)
 		}

@@ -113,7 +113,13 @@ func AudioFilesPlaying(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	vlcPlayer, err := vlc.NewVLCPlayer(ctx, cr, kb, tconn, a)
+	device, err := a.NewUIDevice(ctx)
+	if err != nil {
+		s.Fatal("Failed initializing UI Automator: ", err)
+	}
+	defer device.Close(cleanupCtx)
+
+	vlcPlayer, err := vlc.NewVLCPlayer(ctx, cr, kb, tconn, a, device)
 	if err != nil {
 		s.Fatal("Failed to create VLC instance: ", err)
 	}

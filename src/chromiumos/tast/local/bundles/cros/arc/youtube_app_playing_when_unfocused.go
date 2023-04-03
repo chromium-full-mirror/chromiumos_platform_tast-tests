@@ -42,6 +42,7 @@ func init() {
 func YoutubeAppPlayingWhenUnfocused(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(*arc.PreData).Chrome
 	a := s.FixtValue().(*arc.PreData).ARC
+	device := s.FixtValue().(*arc.PreData).UIDevice
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -58,7 +59,7 @@ func YoutubeAppPlayingWhenUnfocused(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	yt, err := youtube.NewApp(ctx, kb, tconn, a)
+	yt, err := youtube.NewApp(ctx, kb, tconn, a, device)
 	if err != nil {
 		s.Fatal("Failed to create arc resource: ", err)
 	}

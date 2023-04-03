@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/ctxutil"
@@ -51,6 +52,9 @@ func init() {
 			},
 		},
 		Timeout: 2*time.Minute + apputil.InstallationTimeout,
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.ArcEnabled{}, pci.Served),
+		},
 	})
 }
 
@@ -81,7 +85,13 @@ func ChildTeenApp(ctx context.Context, s *testing.State) {
 	}
 	defer kb.Close()
 
-	app, err := apputil.NewApp(ctx, kb, tconn, a, "Family Link child and teen", "com.google.android.apps.kids.familylinkhelper")
+	device, err := a.NewUIDevice(ctx)
+	if err != nil {
+		s.Fatal("Failed initializing UI Automator: ", err)
+	}
+	defer device.Close(cleanupCtx)
+
+	app, err := apputil.NewApp(ctx, kb, tconn, a, device, "Family Link child and teen", "com.google.android.apps.kids.familylinkhelper")
 	if err != nil {
 		s.Fatal("Failed to create the instance of App: ", err)
 	}

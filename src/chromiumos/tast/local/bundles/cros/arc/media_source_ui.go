@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"chromiumos/tast/common/android/ui"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/fsutil"
 	"chromiumos/tast/local/apps"
@@ -54,6 +55,7 @@ func init() {
 func MediaSourceUI(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(*arc.PreData).Chrome
 	a := s.FixtValue().(*arc.PreData).ARC
+	device := s.FixtValue().(*arc.PreData).UIDevice
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -100,11 +102,11 @@ func MediaSourceUI(ctx context.Context, s *testing.State) {
 			var app apputil.ARCMediaPlayer
 			switch appName {
 			case youtube.AppName:
-				app, err = youtube.NewApp(ctx, kb, tconn, a)
+				app, err = youtube.NewApp(ctx, kb, tconn, a, device)
 			case apps.Gallery.Name:
 				app = newGallery(ctx, tconn, cr, filepath.Join(s.OutDir(), appName))
 			case youtubemusic.AppName:
-				app, err = newYtMusic(ctx, kb, tconn, a)
+				app, err = newYtMusic(ctx, kb, tconn, a, device)
 			default:
 				s.Fatal("Failed to create media app instance: unexpected media source: ", appName)
 			}
@@ -161,8 +163,8 @@ type ytMusic struct {
 var _ apputil.ARCMediaPlayer = (*ytMusic)(nil)
 
 // newYtMusic returns ytMusic instance.
-func newYtMusic(ctx context.Context, kb *input.KeyboardEventWriter, tconn *chrome.TestConn, a *arc.ARC) (*ytMusic, error) {
-	ytm, err := youtubemusic.New(ctx, kb, tconn, a)
+func newYtMusic(ctx context.Context, kb *input.KeyboardEventWriter, tconn *chrome.TestConn, a *arc.ARC, d *ui.Device) (*ytMusic, error) {
+	ytm, err := youtubemusic.New(ctx, kb, tconn, a, d)
 	return &ytMusic{ytm}, err
 }
 

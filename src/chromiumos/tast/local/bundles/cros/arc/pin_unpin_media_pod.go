@@ -56,6 +56,7 @@ const (
 func PinUnpinMediaPod(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(*arc.PreData).Chrome
 	a := s.FixtValue().(*arc.PreData).ARC
+	device := s.FixtValue().(*arc.PreData).UIDevice
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -93,11 +94,11 @@ func PinUnpinMediaPod(ctx context.Context, s *testing.State) {
 		case youtube.AppName:
 			currentMediaName = media.Subtitle
 			appPkgName = youtube.PkgName
-			app, err = youtube.NewApp(ctx, kb, tconn, a)
+			app, err = youtube.NewApp(ctx, kb, tconn, a, device)
 		case youtubemusic.AppName:
 			currentMediaName = media.Query
 			appPkgName = youtubemusic.PkgName
-			app, err = youtubemusic.New(ctx, kb, tconn, a)
+			app, err = youtubemusic.New(ctx, kb, tconn, a, device)
 		default:
 			s.Fatal("Failed to create media app instance: unexpected media source: ", appName)
 		}

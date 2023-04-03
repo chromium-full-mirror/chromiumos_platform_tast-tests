@@ -60,8 +60,8 @@ const (
 )
 
 // New returns an instance of VoiceRecorder.
-func New(ctx context.Context, kb *input.KeyboardEventWriter, tconn *chrome.TestConn, a *arc.ARC) (*VoiceRecorder, error) {
-	app, err := apputil.NewApp(ctx, kb, tconn, a, "Voice Recorder", pkgName)
+func New(ctx context.Context, kb *input.KeyboardEventWriter, tconn *chrome.TestConn, a *arc.ARC, d *ui.Device) (*VoiceRecorder, error) {
+	app, err := apputil.NewApp(ctx, kb, tconn, a, d, "Voice Recorder", pkgName)
 	if err != nil {
 		return nil, err
 	}

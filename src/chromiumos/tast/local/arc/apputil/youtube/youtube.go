@@ -46,8 +46,8 @@ type Youtube struct {
 var _ apputil.ARCMediaPlayer = (*Youtube)(nil)
 
 // NewApp returns Youtube instance.
-func NewApp(ctx context.Context, kb *input.KeyboardEventWriter, tconn *chrome.TestConn, a *arc.ARC) (*Youtube, error) {
-	app, err := apputil.NewApp(ctx, kb, tconn, a, AppName, PkgName)
+func NewApp(ctx context.Context, kb *input.KeyboardEventWriter, tconn *chrome.TestConn, a *arc.ARC, d *ui.Device) (*Youtube, error) {
+	app, err := apputil.NewApp(ctx, kb, tconn, a, d, AppName, PkgName)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create arc resource")
 	}

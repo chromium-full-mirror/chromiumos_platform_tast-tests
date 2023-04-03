@@ -70,6 +70,7 @@ const (
 func BundlingNotifications(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(*arc.PreData).Chrome
 	a := s.FixtValue().(*arc.PreData).ARC
+	d := s.FixtValue().(*arc.PreData).UIDevice
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -86,7 +87,7 @@ func BundlingNotifications(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	app, err := notificationshowcase.NewApp(ctx, a, tconn, kb, s.DataPath(bundlingNotificationApkFileName))
+	app, err := notificationshowcase.NewApp(ctx, a, tconn, kb, d, s.DataPath(bundlingNotificationApkFileName))
 	if err != nil {
 		s.Fatal("Failed to create Notification Showcase app: ", err)
 	}

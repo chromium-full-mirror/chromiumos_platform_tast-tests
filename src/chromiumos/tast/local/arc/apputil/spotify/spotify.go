@@ -48,8 +48,8 @@ type Spotify struct {
 var _ apputil.ARCMediaPlayer = (*Spotify)(nil)
 
 // New returns the the manager of Spotify, caller will able to control Spotify app through this object.
-func New(ctx context.Context, kb *input.KeyboardEventWriter, a *arc.ARC, tconn *chrome.TestConn, account string) (*Spotify, error) {
-	app, err := apputil.NewApp(ctx, kb, tconn, a, AppName, PkgName)
+func New(ctx context.Context, kb *input.KeyboardEventWriter, a *arc.ARC, tconn *chrome.TestConn, d *ui.Device, account string) (*Spotify, error) {
+	app, err := apputil.NewApp(ctx, kb, tconn, a, d, AppName, PkgName)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create new ARC UI device")
 	}

@@ -53,8 +53,8 @@ type Vlc struct {
 }
 
 // NewVLCPlayer returns VLC instance.
-func NewVLCPlayer(ctx context.Context, cr *chrome.Chrome, kb *input.KeyboardEventWriter, tconn *chrome.TestConn, a *arc.ARC) (*Vlc, error) {
-	app, err := apputil.NewApp(ctx, kb, tconn, a, AppName, packageName)
+func NewVLCPlayer(ctx context.Context, cr *chrome.Chrome, kb *input.KeyboardEventWriter, tconn *chrome.TestConn, a *arc.ARC, d *ui.Device) (*Vlc, error) {
+	app, err := apputil.NewApp(ctx, kb, tconn, a, d, AppName, packageName)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create arc resource")
 	}

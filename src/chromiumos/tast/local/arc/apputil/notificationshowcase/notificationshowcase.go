@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/android/adb"
+	"chromiumos/tast/common/android/ui"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/arc/apputil"
@@ -44,8 +45,8 @@ type NotificationShowcase struct {
 // NewApp creates a new instance of the Android application version of gmail.
 // This app requires the actual apk file in order to install.
 // App installation and launch are needed after initialization.
-func NewApp(ctx context.Context, a *arc.ARC, tconn *chrome.TestConn, kb *input.KeyboardEventWriter, sdkPath string) (*NotificationShowcase, error) {
-	app, err := apputil.NewApp(ctx, kb, tconn, a, AppName, PkgName)
+func NewApp(ctx context.Context, a *arc.ARC, tconn *chrome.TestConn, kb *input.KeyboardEventWriter, d *ui.Device, sdkPath string) (*NotificationShowcase, error) {
+	app, err := apputil.NewApp(ctx, kb, tconn, a, d, AppName, PkgName)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create Notification Showcase app instance")
 	}
