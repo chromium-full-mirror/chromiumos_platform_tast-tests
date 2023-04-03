@@ -17,6 +17,7 @@ import (
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/display"
 	"chromiumos/tast/local/chrome/ime"
+	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/vkb"
 	"chromiumos/tast/local/chrome/useractions"
@@ -278,6 +279,8 @@ func chromeVirtualKeyboardEditingOnNullTypeTest(
 	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
 
+	uia := uiauto.New(tconn)
+
 	vkbCtx := vkb.NewContext(cr, tconn)
 	defer vkbCtx.HideVirtualKeyboard()(cleanupCtx)
 
@@ -313,21 +316,39 @@ func chromeVirtualKeyboardEditingOnNullTypeTest(
 		s.Fatal("Failed to wait for the virtual keyboard to be ready: ", err)
 	}
 
+	// If the given key doesn't exist on the current board, try to switch to another board.
+	switchLayout := func(key, sw string) uiauto.Action {
+		keyNode := vkb.KeyFinder.Name(key)
+		swNode := vkb.KeyFinder.Name(sw)
+		return uiauto.Combine(
+			"switch layout if needed",
+			uiauto.IfFailThen(
+				uia.Exists(keyNode),
+				uiauto.IfSuccessThen(
+					uia.WithTimeout(5*time.Second).WaitUntilExists(swNode),
+					uia.LeftClick(swNode))),
+			vkbCtx.WaitLocationStable(),
+		)
+	}
+
 	keyDownLabel := d.Object(ui.ID(lastKeyDownLabelID))
 	keyUpLabel := d.Object(ui.ID(lastKeyUpLabelID))
 	for _, key := range []struct {
-		Key      string
-		Expected int
+		Key        string
+		Expected   int
+		switchName string
 	}{
-		{"0", 7},          // AKEYCODE_0
-		{"7", 14},         // AKEYCODE_7
-		{"a", 29},         // AKEYCODE_A
-		{"b", 30},         // AKEYCODE_B
-		{"c", 31},         // AKEYCODE_C
-		{"backspace", 67}, // AKEYCODE_DEL
-		{"enter", 66},     // AKEYCODE_ENTER
+		{"0", 7, "switch to symbols"},          // AKEYCODE_0
+		{"7", 14, "switch to symbols"},         // AKEYCODE_7
+		{"a", 29, "switch to letters"},         // AKEYCODE_A
+		{"b", 30, "switch to letters"},         // AKEYCODE_B
+		{"c", 31, "switch to letters"},         // AKEYCODE_C
+		{"backspace", 67, "switch to letters"}, // AKEYCODE_DEL
+		{"enter", 66, "switch to letters"},     // AKEYCODE_ENTER
 	} {
-		if err := vkbCtx.TapKey(key.Key)(ctx); err != nil {
+		if err := uiauto.Combine("tap key",
+			switchLayout(key.Key, key.switchName),
+			vkbCtx.TapKey(key.Key))(ctx); err != nil {
 			s.Fatalf("Failed to tap %q: %v", key.Key, err)
 		}
 
