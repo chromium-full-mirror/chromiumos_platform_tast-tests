@@ -62,18 +62,19 @@ func RestartChromeForTesting(ctx context.Context, cfg *config.Config, extArgs, l
 
 	testing.ContextLog(ctx, "Asking session_manager to enable Chrome testing")
 	args := []string{
-		"--remote-debugging-port=0",            // Let Chrome choose its own debugging port.
-		"--disable-logging-redirect",           // Disable redirection of Chrome logging into cryptohome.
-		"--ash-disable-system-sounds",          // Disable system startup sound.
-		"--ash-no-nudges",                      // Disable first-login educational nudges.
-		"--enable-experimental-extension-apis", // Allow Chrome to use the Chrome Automation API.
-		"--redirect-libassistant-logging",      // Redirect libassistant logging to /var/log/chrome/.
-		"--no-first-run",                       // Prevent showing up offer pages, e.g. google.com/chromebooks.
-		"--cros-region=" + cfg.Region(),        // Force the region.
-		"--cros-regions-mode=hide",             // Ignore default values in VPD.
-		"--enable-oobe-test-api",               // Enable OOBE helper functions for authentication.
-		"--keep-login-events-for-testing",      // Keep LoginEventRecorder data for later retrieval by tests.
-		"--force-raster-color-profile=srgb",    // Force rendering to run in the sRGB color space. See b/221643955 for details.
+		"--remote-debugging-port=0",                   // Let Chrome choose its own debugging port.
+		"--disable-logging-redirect",                  // Disable redirection of Chrome logging into cryptohome.
+		"--ash-disable-system-sounds",                 // Disable system startup sound.
+		"--ash-no-nudges",                             // Disable first-login educational nudges.
+		"--enable-experimental-extension-apis",        // Allow Chrome to use the Chrome Automation API.
+		"--redirect-libassistant-logging",             // Redirect libassistant logging to /var/log/chrome/.
+		"--no-first-run",                              // Prevent showing up offer pages, e.g. google.com/chromebooks.
+		"--cros-region=" + cfg.Region(),               // Force the region.
+		"--cros-regions-mode=hide",                    // Ignore default values in VPD.
+		"--enable-oobe-test-api",                      // Enable OOBE helper functions for authentication.
+		"--keep-login-events-for-testing",             // Keep LoginEventRecorder data for later retrieval by tests.
+		"--disable-input-event-activation-protection", // Don't try to detect and ignore unintended clicks.
+		"--force-raster-color-profile=srgb",           // Force rendering to run in the sRGB color space. See b/221643955 for details.
 	}
 	if !cfg.EnableHDR() {
 		args = append(args, "--force-color-profile=srgb") // Force chrome to treat the display as sRGB. See b/221643955 for details.

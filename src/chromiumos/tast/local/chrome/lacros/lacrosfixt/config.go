@@ -117,8 +117,9 @@ func (cfg *Config) Opts() ([]chrome.Option, error) {
 
 	// Default args that are copied from ash-chrome to lacros-chrome. See chrome.RestartChromeForTesting for the args set to ash-chrome.
 	args := []string{
-		"--remote-debugging-port=0",            // Let Chrome choose its own debugging port.
-		"--enable-experimental-extension-apis", // Allow Chrome to use the Chrome Automation API.
+		"--remote-debugging-port=0",                   // Let Chrome choose its own debugging port.
+		"--enable-experimental-extension-apis",        // Allow Chrome to use the Chrome Automation API.
+		"--disable-input-event-activation-protection", // Don't try to detect and ignore unintended clicks.
 	}
 	opts = append(opts, chrome.LacrosExtraArgs(args...))
 
