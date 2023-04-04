@@ -24,6 +24,49 @@ import (
 	xdr "chromiumos/xdr/secagentd"
 )
 
+type processEventsParams struct {
+	name             string
+	expBatch         bool
+	expCoalescedTerm bool
+	enableFeatures   []string
+	disableFeatures  []string
+}
+
+var processEventsTestParams = []processEventsParams{
+	{
+		name:             "batching_disabled",
+		expBatch:         false,
+		expCoalescedTerm: false,
+		enableFeatures:   []string{},
+		disableFeatures: []string{
+			"CrOSLateBootSecagentdBatchEvents",
+			"CrOSLateBootSecagentdCoalesceTerminates"},
+	},
+	{
+		name:             "batching_enabled",
+		expBatch:         true,
+		expCoalescedTerm: false,
+		enableFeatures:   []string{"CrOSLateBootSecagentdBatchEvents"},
+		disableFeatures:  []string{"CrOSLateBootSecagentdCoalesceTerminates"},
+	},
+	{
+		name:             "batching_disabled_coalesce_terminate_enabled",
+		expBatch:         false,
+		expCoalescedTerm: false, // Batching is a prerequisite.
+		enableFeatures:   []string{"CrOSLateBootSecagentdCoalesceTerminates"},
+		disableFeatures:  []string{"CrOSLateBootSecagentdBatchEvents"},
+	},
+	{
+		name:             "batching_and_coalesce_terminate_enabled",
+		expBatch:         true,
+		expCoalescedTerm: true,
+		enableFeatures: []string{
+			"CrOSLateBootSecagentdBatchEvents",
+			"CrOSLateBootSecagentdCoalesceTerminates"},
+		disableFeatures: []string{},
+	},
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: ProcessEvents,
@@ -36,7 +79,7 @@ func init() {
 		// ChromeOS > Security > ChromeOS Enterprise Security
 		BugComponent: "b:1208373",
 		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
-		Timeout:      3 * time.Minute,
+		Timeout:      time.Duration(len(processEventsTestParams)) * 4 * time.Minute,
 		SoftwareDeps: []string{"bpf", "chrome"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
@@ -104,14 +147,6 @@ func copyUUID(from, to *xdr.Process) {
 	}
 }
 
-type processEventsParams struct {
-	name             string
-	expBatch         bool
-	expCoalescedTerm bool
-	enableFeatures   []string
-	disableFeatures  []string
-}
-
 func testOneProcessEventsParams(ctx context.Context, s *testing.State, param processEventsParams) {
 	// Restart chrome with the new set of features.
 	cr, err := chrome.New(ctx, chrome.EnableFeatures(param.enableFeatures...), chrome.DisableFeatures(param.disableFeatures...))
@@ -161,7 +196,10 @@ func testOneProcessEventsParams(ctx context.Context, s *testing.State, param pro
 	// "signal: Killed"
 	cmd.Wait()
 
-	// GoBigSleepLint: Wait for the current batch to be flushed.
+	// Wait for the current batch to be flushed.
+	// GoBigSleepLint: Using poll here doesn't make sense. There is no particular
+	// condition we can poll for. This is simply giving secagentd ample time to
+	// process and post events to dbus and is an educated guess.
 	if err := testing.Sleep(ctx, 2*batchIntervalS*time.Second); err != nil {
 		s.Fatal("Failed to sleep: ", err)
 	}
@@ -289,40 +327,7 @@ func ProcessEvents(ctx context.Context, s *testing.State) {
 		cancel()
 	}(cleanupCtx)
 
-	for _, param := range []processEventsParams{
-		{
-			name:             "batching_disabled",
-			expBatch:         false,
-			expCoalescedTerm: false,
-			enableFeatures:   []string{},
-			disableFeatures: []string{
-				"CrOSLateBootSecagentdBatchEvents",
-				"CrOSLateBootSecagentdCoalesceTerminates"},
-		},
-		{
-			name:             "batching_enabled",
-			expBatch:         true,
-			expCoalescedTerm: false,
-			enableFeatures:   []string{"CrOSLateBootSecagentdBatchEvents"},
-			disableFeatures:  []string{"CrOSLateBootSecagentdCoalesceTerminates"},
-		},
-		{
-			name:             "batching_disabled_coalesce_terminate_enabled",
-			expBatch:         false,
-			expCoalescedTerm: false, // Batching is a prerequisite.
-			enableFeatures:   []string{"CrOSLateBootSecagentdCoalesceTerminates"},
-			disableFeatures:  []string{"CrOSLateBootSecagentdBatchEvents"},
-		},
-		{
-			name:             "batching_and_coalesce_terminate_enabled",
-			expBatch:         true,
-			expCoalescedTerm: true,
-			enableFeatures: []string{
-				"CrOSLateBootSecagentdBatchEvents",
-				"CrOSLateBootSecagentdCoalesceTerminates"},
-			disableFeatures: []string{},
-		},
-	} {
+	for _, param := range processEventsTestParams {
 		s.Run(ctx, param.name, func(ctx context.Context, s *testing.State) {
 			testOneProcessEventsParams(ctx, s, param)
 		})
