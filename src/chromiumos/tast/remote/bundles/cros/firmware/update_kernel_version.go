@@ -6,105 +6,34 @@ package firmware
 
 import (
 	"context"
-	"strings"
+	"strconv"
+	"time"
 
-	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/fixture"
 	pb "chromiumos/tast/services/cros/firmware"
+	"chromiumos/tast/ssh"
 	"chromiumos/tast/testing"
+
+	"github.com/golang/protobuf/ptypes/empty"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: UpdateKernelVersion, LacrosStatus: testing.LacrosVariantUnneeded, Desc: "Update kernel version bits in CGPT and verify its consistency",
+		Func: UpdateKernelVersion,
+		Desc: "Update kernel version bits in CGPT and verify its consistency",
 		Contacts: []string{
 			"chromeos-faft@google.com",
-			"js@semihalf.com",
+			"tij@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
-		Attr:         []string{"group:firmware", "firmware_unstable"},
-		SoftwareDeps: []string{"chrome"},
-		ServiceDeps:  []string{"tast.cros.firmware.KernelService"},
-		Fixture:      fixture.DevMode,
+		Attr:        []string{"group:firmware", "firmware_unstable"},
+		ServiceDeps: []string{"tast.cros.firmware.KernelService"},
+		Fixture:     fixture.DevModeGBB,
+		Timeout:     10 * time.Minute,
 	})
-}
-
-func kernelImageVersion(ctx context.Context, h *firmware.Helper, imagePath string) (string, error) {
-	vbutilOutput, err := h.DUT.Conn().CommandContext(ctx, "vbutil_kernel", "--verify", imagePath).Output(testexec.DumpLogOnError)
-	if err != nil {
-		return "", errors.Wrap(err, "failed to call vbutil_kernel")
-	}
-
-	for _, line := range strings.Split(string(vbutilOutput), "\n") {
-		if strings.Contains(line, "Kernel version:") {
-			if len(strings.Fields(line)) > 2 {
-				return "", errors.Wrap(err, "failed to determine kernel version from vbutil_kernel output")
-			}
-			return strings.Fields(line)[2], nil
-
-		}
-	}
-	return "", nil
-}
-
-func rebootDUT(ctx context.Context, h *firmware.Helper, s *testing.State) error {
-	h.CloseRPCConnection(ctx)
-	if err := h.DUT.Reboot(ctx); err != nil {
-		return errors.Wrap(err, "failed to reboot DUT")
-	}
-
-	s.Log("Wait for DUT to reconnect")
-	if err := h.DUT.WaitConnect(ctx); err != nil {
-		return errors.Wrap(err, "failed to reconnect to DUT")
-	}
-
-	s.Log("Reconnecting to RPC services on DUT")
-	if err := h.RequireRPCClient(ctx); err != nil {
-		return errors.Wrap(err, "failed to reconnect to the RPC service on DUT")
-	}
-
-	s.Log("Reconnecting to KernelService on DUT")
-	if err := h.RequireKernelServiceClient(ctx); err != nil {
-		return errors.Wrap(err, "failed to reconnect to BiosServiceClient on DUT")
-	}
-
-	if err := h.EnsureDUTBooted(ctx); err != nil {
-		return errors.Wrap(err, "failed to ensure the DUT is booted")
-	}
-
-	return nil
-}
-
-func setKernelImageVersion(ctx context.Context, h *firmware.Helper, s *testing.State, imagePath, version string) error {
-	const (
-		kernelPrivateKeyPath = "/usr/share/vboot/devkeys/kernel_data_key.vbprivk"
-		kernelKeyblockPath   = "/usr/share/vboot/devkeys/kernel.keyblock"
-	)
-
-	s.Logf("Repacking kernel image %s with version %s to tmpfs", imagePath, version)
-	vbutilOutput, err := h.DUT.Conn().CommandContext(ctx,
-		"vbutil_kernel", "--repack",
-		"/tmp/kernel-repack.bin",
-		"--oldblob", imagePath,
-		"--signprivate", kernelPrivateKeyPath,
-		"--keyblock", kernelKeyblockPath,
-		"--version", version,
-	).Output(testexec.DumpLogOnError)
-	if err != nil {
-		return errors.Wrapf(err, "failed to load repack kernel from image %s with version %s: %s", imagePath, version, string(vbutilOutput))
-	}
-
-	s.Log("Writing kernel image back")
-	ddOutput, err := h.DUT.Conn().CommandContext(ctx,
-		"dd", "if=/tmp/kernel-repack.bin", "of="+imagePath, "conv=sync",
-	).Output(testexec.DumpLogOnError)
-	if err != nil {
-		return errors.Wrapf(err, "failed to write patched kernel image back to %s with version %s: %s", imagePath, version, string(ddOutput))
-	}
-	return nil
 }
 
 // UpdateKernelVersion reads CGPT headers of kernel partition and
@@ -113,96 +42,116 @@ func setKernelImageVersion(ctx context.Context, h *firmware.Helper, s *testing.S
 func UpdateKernelVersion(ctx context.Context, s *testing.State) {
 	h := s.FixtValue().(*fixture.Value).Helper
 
-	s.Log("Acquiring KernelService")
 	if err := h.RequireKernelServiceClient(ctx); err != nil {
 		s.Fatal("Requiring KernelServiceClient: ", err)
 	}
 
-	s.Log("Getting root device")
-	rootDev, err := h.DUT.Conn().CommandContext(ctx, "rootdev", "-s", "-d").Output(testexec.DumpLogOnError)
+	ms, err := firmware.NewModeSwitcher(ctx, h)
 	if err != nil {
-		s.Fatal("Failed to acquire current root device: ", err)
+		s.Fatal("Creating mode switcher: ", err)
 	}
-	rootDev = []byte(strings.TrimSuffix(string(rootDev), "\n"))
-	s.Logf("Root device is %s", rootDev)
 
-	s.Log("Reading CGPT table")
-	originalCgptTable, err := h.KernelServiceClient.GetCgptTable(ctx, &pb.GetCgptTableRequest{
-		BlockDevice: string(rootDev),
-	})
+	s.Log("Backing up current Kernel")
+	kernelBackup, err := h.KernelServiceClient.BackupKernel(ctx, &empty.Empty{})
 	if err != nil {
-		s.Fatalf("Failed to acquire CGPT table for root device %s: %s", rootDev, err)
+		s.Fatal("Failed to back up KERN-A and KERN-B: ", err)
 	}
 
-	kernAPart, ok := originalCgptTable.CgptTable["KERN-A"]
-	if !ok {
-		s.Fatal("Failed to find KERN-A partition, check your DUT integrity")
-	}
-	kernApath := kernAPart.PartitionPath
-	s.Log("KERN-A partition is: ", kernApath)
-
-	oldKernelVersion, err := kernelImageVersion(ctx, h, kernApath)
-	if err != nil {
-		s.Fatalf("Failed to determine kernel version for %s: %s", kernApath, err)
-	}
-
-	defer func() {
-		s.Log("Restoring original CGPT table")
-		if _, err := h.KernelServiceClient.RestoreCgptAttributes(ctx, &pb.RestoreCgptAttributesRequest{
-			CgptTable:   originalCgptTable.CgptTable,
-			BlockDevice: string(rootDev),
-		}); err != nil {
-			s.Fatal("Failed to restore CGPT table: ", err)
+	cleanupContext := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Minute)
+	defer cancel()
+	defer func(ctx context.Context) {
+		if err := h.RequireKernelServiceClient(ctx); err != nil {
+			s.Fatal("Failed to connect to kernel service: ", err)
 		}
 
-		s.Log("Restoring original kernel version")
-		if err := setKernelImageVersion(ctx, h, s, kernApath, oldKernelVersion); err != nil {
-			s.Fatalf("Failed to set kernel version for %s: %s", kernApath, err)
+		s.Log("Restoring kernel from backup")
+		if _, err := h.KernelServiceClient.RestoreKernel(ctx, kernelBackup); err != nil {
+			s.Fatal("Failed to restore kernel from backup: ", err)
 		}
-	}()
+		s.Log("Delete backup files from DUT")
+		rmargs := []string{
+			kernelBackup.KernA.BackupPath,
+			kernelBackup.KernB.BackupPath,
+		}
+		if _, err := h.DUT.Conn().CommandContext(ctx, "rm", rmargs...).Output(ssh.DumpLogOnError); err != nil {
+			s.Fatal("Failed to delete backup files: ", err)
+		}
 
-	if err := setKernelImageVersion(ctx, h, s, kernApath, "2"); err != nil {
-		s.Fatalf("Failed to set kernel version for %s: %s", kernApath, err)
+		s.Log("Performing mode aware reboot to ensure restored kernel takes effect")
+		if err := ms.ModeAwareReboot(ctx, firmware.WarmReset); err != nil {
+			s.Fatal("Failed to reboot: ", err)
+		}
+	}(cleanupContext)
+
+	// Make sure we start with a deterministic state so we don't have a
+	// situation where for example KERN-B is many version ahead of KERN-A.
+	if _, err := h.KernelServiceClient.PrioritizeKernelCopy(ctx, &pb.Partition{Label: pb.PartitionLabel_KERNEL_A}); err != nil {
+		s.Fatal("Failed to prioritize KERN-A: ", err)
 	}
 
-	s.Log("Rebooting DUT")
-	if err := rebootDUT(ctx, h, s); err != nil {
-		s.Fatal("Unable to return DUT: ", err)
+	s.Log("Performing mode aware reboot to ensure boot to copy A")
+	if err := ms.ModeAwareReboot(ctx, firmware.WarmReset); err != nil {
+		s.Fatal("Failed to reboot: ", err)
 	}
 
-	s.Log("Reading new CGPT table")
-	newCgptTable, err := h.KernelServiceClient.GetCgptTable(ctx, &pb.GetCgptTableRequest{
-		BlockDevice: string(rootDev),
-	})
+	if err := h.RequireKernelServiceClient(ctx); err != nil {
+		s.Fatal("Failed to connect to kernel service: ", err)
+	}
+
+	s.Log("Get initial kernel version for KERN-A")
+	initVersion, err := h.KernelServiceClient.GetKernelVersion(ctx, &pb.Partition{Label: pb.PartitionLabel_KERNEL_A})
 	if err != nil {
-		s.Fatalf("Failed to acquire CGPT table for root device %s: %s", rootDev, err)
+		s.Fatal("Failed to get kernel version: ", err)
+	}
+	s.Log("Initial kernel version is: ", initVersion.Version)
+
+	newVersion := initVersion
+	versionInt, err := strconv.Atoi(initVersion.Version)
+	if err != nil {
+		s.Fatal("Failed to parse kernel version as int")
+	}
+	newVersion.Version = strconv.Itoa(versionInt + 1)
+
+	s.Log("Setting KERN-A version to ", newVersion.Version)
+	if _, err := h.KernelServiceClient.SetKernelVersion(ctx, newVersion); err != nil {
+		s.Fatal("Failed to set kernel version: ", err)
 	}
 
-	kernAPart, ok = newCgptTable.CgptTable["KERN-A"]
-	if !ok {
-		s.Fatal("Failed to find KERN-A partition")
+	s.Log("Performing mode aware reboot")
+	if err := ms.ModeAwareReboot(ctx, firmware.WarmReset); err != nil {
+		s.Fatal("Failed to reboot: ", err)
 	}
 
+	if err := h.RequireKernelServiceClient(ctx); err != nil {
+		s.Fatal("Failed to connect to kernel service: ", err)
+	}
+
+	s.Log("Get current kernel version for KERN-A")
+	currVersion, err := h.KernelServiceClient.GetKernelVersion(ctx, &pb.Partition{Label: pb.PartitionLabel_KERNEL_A})
+	if err != nil {
+		s.Fatal("Failed to get kernel version: ", err)
+	}
+	s.Log("Current kernel version is: ", currVersion.Version)
+
+	if currVersion.Version != newVersion.Version {
+		s.Fatalf("Expected kernel version to be %s but was %s", newVersion.Version, currVersion.Version)
+	}
+
+	// Also verify that it did boot into the updated version and not into a different version.
 	successful := false
-	for _, attr := range kernAPart.Attrs {
+	for _, attr := range currVersion.Table.Attrs {
 		if attr.Name == "successful" && attr.Value == 1 {
 			successful = true
 			break
 		}
 	}
-
 	if !successful {
 		s.Fatal("KERN-A did not boot successfully")
 	}
 
-	s.Log("Reading new kernel version")
-	newKernelVersion, err := kernelImageVersion(ctx, h, kernApath)
-	if err != nil {
-		s.Fatalf("Failed to determine kernel version for %s: %s", kernApath, err)
+	s.Log("Verify DUT in KERN-A or ROOT-A")
+	if _, err := h.KernelServiceClient.VerifyKernelCopy(ctx, &pb.Partition{Label: pb.PartitionLabel_KERNEL_A}); err != nil {
+		s.Fatal("Failed to verify DUT currently is in copy A: ", err)
 	}
-
-	if oldKernelVersion == newKernelVersion {
-		s.Fatalf("New kernel version %s wasn't set successfully", newKernelVersion)
-	}
-
 }

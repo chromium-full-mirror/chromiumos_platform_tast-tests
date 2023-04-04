@@ -262,3 +262,36 @@ func (ks *KernelService) CorruptRootfsVerityHash(ctx context.Context, req *pb.Ro
 
 	return &empty.Empty{}, nil
 }
+
+// GetKernelVersion uses vbutil_kernel to get the kernel version for a given partition.
+func (ks *KernelService) GetKernelVersion(ctx context.Context, req *pb.Partition) (*pb.KernelVersion, error) {
+	var rootDev string
+	if req.RootDev != "" {
+		rootDev = req.RootDev
+	} else {
+		var err error
+		rootDev, err = kernel.GetCurrentRootDevice(ctx, false)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get root device")
+		}
+	}
+
+	version, table, err := kernel.GetKernelVersion(ctx, rootDev, req.Label)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get kernel version")
+	}
+
+	return &pb.KernelVersion{
+		RootDev: rootDev,
+		Version: version,
+		Table:   table,
+	}, nil
+}
+
+// SetKernelVersion uses vbutil_kernel to set the kernel version for a given partition.
+func (ks *KernelService) SetKernelVersion(ctx context.Context, req *pb.KernelVersion) (*empty.Empty, error) {
+	if err := kernel.SetKernelVersion(ctx, req.Table, req.Version); err != nil {
+		return nil, errors.Wrapf(err, "failed to set kernel version to %q", req.Version)
+	}
+	return &empty.Empty{}, nil
+}

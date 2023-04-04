@@ -52,6 +52,12 @@ service KernelService {
 
     // CorruptRootfsVerityHash corrupts verity hash for given kernel copy.
     rpc CorruptRootfsVerityHash (RootfsVerityHashBackup) returns (google.protobuf.Empty) {}
+
+    // GetKernelVersion uses vbutil_kernel to get the kernel version for a given partition.
+    rpc GetKernelVersion (Partition) returns (KernelVersion) {}
+
+    // SetKernelVersion uses vbutil_kernel to set the kernel version for a given partition.
+    rpc SetKernelVersion (KernelVersion) returns (google.protobuf.Empty) {}
 }
 
 // PartitionLabel enumerates the partition labels seen in cgpt table.
@@ -139,4 +145,11 @@ message RootfsVerityHashBackup {
     int64 Offset = 3;
     int64 HashSize = 4;
     string BackupPath = 5;
+}
+
+// KernelVersion holds the kernel version retrieved from the vbutil_kernel cmd.
+message KernelVersion {
+    string RootDev = 1;
+    int32 Version = 2;
+    CgptPartition Table = 3;
 }

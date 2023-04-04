@@ -24,6 +24,13 @@ import (
 	"chromiumos/tast/testing"
 )
 
+const (
+	// KernelPrivateKeyPath is the path to private key for kernel.
+	KernelPrivateKeyPath string = "/usr/share/vboot/devkeys/kernel_data_key.vbprivk"
+	// KernelKeyblockPath is the path to kernel keyblock.
+	KernelKeyblockPath string = "/usr/share/vboot/devkeys/kernel.keyblock"
+)
+
 // LabelEnumToLabel maps the PartitionLabel enum to the partition label name from cgpt table.
 var LabelEnumToLabel = map[pb.PartitionLabel]string{
 	pb.PartitionLabel_KERNEL_A: "KERN-A",
@@ -468,6 +475,71 @@ func CorruptRootfsVerityHash(ctx context.Context, offset, size int64, rootDev st
 	return nil
 }
 
+// GetCopyFromLabel returns the copy of the partition from the label, e.g. A from KERN-A or B from ROOT-B.
+func GetCopyFromLabel(label string) (string, error) {
+	// Example label: KERN-A -> A or ROOT-B -> B.
+	match := regexp.MustCompile(`(?:\S+)-(\S+)`).FindStringSubmatch(label)
+	if match == nil || len(match) < 2 {
+		return "", errors.Errorf("label %q doesn't inlcude a specific section", label)
+	}
+	return match[1], nil
+}
+
+// GetKernelVersion uses vbutil_kernel to get the kernel version for a given partition.
+func GetKernelVersion(ctx context.Context, rootDev string, label pb.PartitionLabel) (string, *pb.CgptPartition, error) {
+	partitionTables, err := GetCgptTable(ctx, rootDev)
+	if err != nil {
+		return "", nil, errors.Wrap(err, "failed to get cgpt table")
+	}
+
+	table := partitionTables[LabelEnumToLabel[label]]
+
+	out, err := testexec.CommandContext(ctx, "vbutil_kernel", "--verify", table.PartitionPath).Output(testexec.DumpLogOnError)
+	if err != nil {
+		return "", nil, errors.Wrap(err, "failed to get vbutil kernel")
+	}
+
+	match := regexp.MustCompile(`Kernel version:\s*(\S+)`).FindStringSubmatch(string(out))
+	if match == nil || len(match) < 2 {
+		return "", nil, errors.Errorf("failed to parse kernel version for label %q, got output: %v", table.Label, string(out))
+	}
+
+	return match[1], table, nil
+}
+
+// SetKernelVersion uses vbutil_kernel to set the kernel version for a given partition.
+func SetKernelVersion(ctx context.Context, table *pb.CgptPartition, version string) error {
+	tmpFile, err := ioutil.TempFile("/usr/local/share/tast", fmt.Sprintf("%s-repack_*.bin", table.Label))
+	if err != nil {
+		os.Remove(tmpFile.Name())
+		return errors.Wrap(err, "creating tmpfile for storing modified kernel with new version")
+	}
+	defer os.Remove(tmpFile.Name())
+
+	args := []string{
+		"--repack", tmpFile.Name(),
+		"--oldblob", table.PartitionPath,
+		"--signprivate", KernelPrivateKeyPath,
+		"--keyblock", KernelKeyblockPath,
+		"--version", version,
+	}
+	out, err := testexec.CommandContext(ctx, "vbutil_kernel", args...).Output(testexec.DumpLogOnError)
+	if err != nil {
+		return errors.Wrapf(err, "failed to load repack kernel from %s with version %s: %s", table.Label, version, string(out))
+	}
+
+	args = []string{
+		fmt.Sprintf("if=%s", tmpFile.Name()),
+		fmt.Sprintf("of=%s", table.PartitionPath),
+		"conv=sync",
+	}
+	if err := testexec.CommandContext(ctx, "dd", args...).Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "failed to write new kernel")
+	}
+
+	return nil
+}
+
 // comparePartitions compares two files at paths up to n bytes and returns true if they're identical.
 func comparePartitions(ctx context.Context, pathA, pathB string, n int) (bool, error) {
 	if err := testexec.CommandContext(ctx, "cmp", "-n", strconv.Itoa(n), pathA, pathB).Run(ssh.DumpLogOnError); err != nil {
@@ -495,16 +567,6 @@ func getSectorSize(ctx context.Context, rootDev string) (int, error) {
 	}
 
 	return strconv.Atoi(match[3])
-}
-
-// GetCopyFromLabel returns the copy of the partition from the label, e.g. A from KERN-A or B from ROOT-B.
-func GetCopyFromLabel(label string) (string, error) {
-	// Example label: KERN-A -> A or ROOT-B -> B.
-	match := regexp.MustCompile(`(?:\S+)-(\S+)`).FindStringSubmatch(label)
-	if match == nil || len(match) < 2 {
-		return "", errors.Errorf("label %q doesn't inlcude a specific section", label)
-	}
-	return match[1], nil
 }
 
 func rootDevPartitionPath(device string, partitionNum int) string {
