@@ -16,9 +16,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: ConfigureServiceForProfile,
-		Desc: "Test ConfigureServiceForProfile D-Bus method",
+		Func:         ConfigureServiceForProfile,
+		Desc:         "Test ConfigureServiceForProfile D-Bus method",
+		BugComponent: "b:156085",
 		Contacts: []string{
+			"cros-networking@google.com",
 			"matthewmwang@chromium.org",
 		},
 		// b:238260020 - disable aged (>1y) unpromoted informational tests

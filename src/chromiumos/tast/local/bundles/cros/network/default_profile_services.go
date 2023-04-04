@@ -19,12 +19,13 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: DefaultProfileServices,
-		Desc: "Checks configured services persist across shill reboot",
+		Func:         DefaultProfileServices,
+		Desc:         "Checks configured services persist across shill reboot",
+		BugComponent: "b:156085",
 		Contacts: []string{
-			"stevenjb@chromium.org", // Connectivity team
 			"cros-networking@google.com",
-			"oka@chromium.org", // Tast port author
+			"stevenjb@chromium.org", // Connectivity team
+			"oka@chromium.org",      // Tast port author
 		},
 		SoftwareDeps: []string{"shill-wifi"},
 		Attr:         []string{"group:mainline"},

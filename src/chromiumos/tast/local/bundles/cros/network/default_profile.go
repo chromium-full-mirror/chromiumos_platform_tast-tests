@@ -22,12 +22,13 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: DefaultProfile,
-		Desc: "Checks shill's default network profile",
+		Func:         DefaultProfile,
+		Desc:         "Checks shill's default network profile",
+		BugComponent: "b:156085",
 		Contacts: []string{
-			"stevenjb@chromium.org", // Connectivity team
 			"cros-networking@google.com",
-			"nya@chromium.org", // Tast port author
+			"stevenjb@chromium.org", // Connectivity team
+			"nya@chromium.org",      // Tast port author
 		},
 		Attr:         []string{"group:mainline"},
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("winky")), // b/182293895: winky DUTs are having USB Ethernet issues that surface during `restart shill`
