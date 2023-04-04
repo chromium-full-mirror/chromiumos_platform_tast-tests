@@ -8,6 +8,7 @@ import (
 	"context"
 
 	"chromiumos/tast/common/testexec"
+	"chromiumos/tast/local/sysutil"
 	"chromiumos/tast/testing"
 	"go.chromium.org/tast/core/shutil"
 )
@@ -31,17 +32,46 @@ func MinijailLandlock(ctx context.Context, s *testing.State) {
 	const (
 		minijailPath     = "/sbin/minijail0"
 		minijailTastFlag = "--fs-path-rx=/usr/local/libexec/tast"
+		renameatTestPath = "/usr/local/libexec/tast/helpers/local/cros/security.Minijail.landlock_refer"
 		exitSuccess      = 0
 	)
 	landlockArgs := []string{"--fs-default-paths", minijailTastFlag}
 	profileArgs := []string{"--profile=minimalistic-mountns", minijailTastFlag}
 
-	for _, tc := range []struct {
+	// landlockTestCase describes a Landlock-related minijail0 invocation.
+	type landlockTestCase struct {
 		name          string   // human-readable test case name
 		cmd           []string // cmd and arguments for minijail to run
 		args          []string // minijail0-specific args
 		expectSuccess bool     // true if the cmd should return 0
-	}{
+	}
+
+	runTestCase := func(tc *landlockTestCase) {
+		if ctx.Err() != nil {
+			s.Error("Aborting testing: ", ctx.Err())
+			return
+		}
+		var args []string
+		args = append(args, tc.args...)
+		args = append(args, tc.cmd...)
+		cmd := testexec.CommandContext(ctx, minijailPath, args...)
+		cmdStr := shutil.EscapeSlice(cmd.Args)
+		s.Logf("Running %q: %v", tc.name, cmdStr)
+		err := cmd.Run()
+
+		if st, ok := testexec.GetWaitStatus(err); !ok {
+			s.Errorf("Case %q (%v) failed (no exit status): %v", tc.name, cmdStr, err)
+			cmd.DumpLog(ctx)
+		} else if tc.expectSuccess && st.ExitStatus() != exitSuccess {
+			s.Errorf("Case %q (%v) exited with %d; want zero", tc.name, cmdStr, st.ExitStatus())
+			cmd.DumpLog(ctx)
+		} else if !tc.expectSuccess && st.ExitStatus() == exitSuccess {
+			s.Errorf("Case %q (%v) exited with %d; want nonzero", tc.name, cmdStr, st.ExitStatus())
+			cmd.DumpLog(ctx)
+		}
+	}
+
+	for _, tc := range []landlockTestCase{
 		{
 			"landlock-allow-nonzero-return",
 			[]string{"/bin/false"},
@@ -67,27 +97,27 @@ func MinijailLandlock(ctx context.Context, s *testing.State) {
 			false,
 		},
 	} {
-		if ctx.Err() != nil {
-			s.Error("Aborting testing: ", ctx.Err())
-			break
-		}
-		var args []string
-		args = append(args, tc.args...)
-		args = append(args, tc.cmd...)
-		cmd := testexec.CommandContext(ctx, minijailPath, args...)
-		cmdStr := shutil.EscapeSlice(cmd.Args)
-		s.Logf("Running %q: %v", tc.name, cmdStr)
-		err := cmd.Run()
+		runTestCase(&tc)
+	}
 
-		if st, ok := testexec.GetWaitStatus(err); !ok {
-			s.Errorf("Case %q (%v) failed (no exit status): %v", tc.name, cmdStr, err)
-			cmd.DumpLog(ctx)
-		} else if tc.expectSuccess && st.ExitStatus() != exitSuccess {
-			s.Errorf("Case %q (%v) exited with %d; want zero", tc.name, cmdStr, st.ExitStatus())
-			cmd.DumpLog(ctx)
-		} else if !tc.expectSuccess && st.ExitStatus() == exitSuccess {
-			s.Errorf("Case %q (%v) exited with %d; want nonzero", tc.name, cmdStr, st.ExitStatus())
-			cmd.DumpLog(ctx)
+	// Kernel 5.15 and later specific tests.
+	// TODO(b/271154170): run for all kernels that support Landlock
+	// once LANDLOCK_ACCESS_FS_REFER backport is complete.
+	ver, _, err := sysutil.KernelVersionAndArch()
+	if err != nil {
+		s.Fatal("Failed to get kernel version: ", err)
+	}
+	if ver.IsOrLater(5, 15) {
+		for _, tc := range []landlockTestCase{
+			// Test for LANDLOCK_FS_ACCESS_REFER support.
+			{
+				"landlock-refer-allowed",
+				[]string{renameatTestPath},
+				append(landlockArgs),
+				true,
+			},
+		} {
+			runTestCase(&tc)
 		}
 	}
 }

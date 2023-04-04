@@ -152,6 +152,12 @@ executable("security.Minijail.bpfdeny") {
   ]
 }
 
+executable("security.Minijail.landlock_refer") {
+  sources = [
+    "security.Minijail.landlock_refer.c",
+  ]
+}
+
 executable("security.MemoryFileExecTelemetry.memfd_fexecve") {
   sources = [
     "security.MemoryFileExecTelemetry.memfd_fexecve.c",
@@ -220,6 +226,7 @@ group("all") {
     ":security.MemoryFileExecTelemetry.test_bin",
     ":security.MemoryFileExecTelemetry.memfd_fexecve",
     ":security.Minijail.bpfdeny",
+    ":security.Minijail.landlock_refer",
     ":security.MinijailSeccomp.fail",
     ":security.MinijailSeccomp.ok",
     ":security.MinijailSeccomp.open",
