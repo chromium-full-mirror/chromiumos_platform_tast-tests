@@ -100,7 +100,6 @@ func VPNDNS(ctx context.Context, s *testing.State) {
 
 	conn, err := vpn.StartConnection(ctx, vpnServer,
 		s.Param().(vpn.Type),
-		vpn.WithPushDNS(),
 		vpn.WithCertVals(s.FixtValue().(vpn.FixtureEnv).CertVals),
 	)
 	if err != nil {

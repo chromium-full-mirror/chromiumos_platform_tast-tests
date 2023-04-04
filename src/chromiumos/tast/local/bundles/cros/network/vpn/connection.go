@@ -30,7 +30,6 @@ type Config struct {
 	Type          Type
 	MTU           int
 	Metered       bool
-	PushDNS       bool
 	SearchDomains []string
 
 	IPsecAuthType IPsecAuthType
@@ -126,15 +125,6 @@ func WithMTU(val int) Option {
 func WithMetered(val bool) Option {
 	return func(c *Config) {
 		c.Metered = val
-	}
-}
-
-// WithPushDNS configures the VPN server to push the DNS configuration.
-// TODO(b/257379393): This option is off by default now. Change this behavior
-// later.
-func WithPushDNS() Option {
-	return func(c *Config) {
-		c.PushDNS = true
 	}
 }
 
