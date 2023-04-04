@@ -324,3 +324,11 @@ func saveImage(img image.Image, path string) error {
 	}
 	return nil
 }
+
+func snakeToPascalCase(snakeCase string) string {
+	var s []string
+	for _, token := range strings.Split(snakeCase, "_") {
+		s = append(s, strings.ToUpper(token[0:1])+token[1:])
+	}
+	return strings.Join(s, "")
+}

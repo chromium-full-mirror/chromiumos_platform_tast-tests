@@ -51,6 +51,7 @@ type Context struct {
 	detector                     *uiDetector
 	pollOpts                     testing.PollOptions
 	options                      *Options
+	deviceInfo                   *DeviceInfo
 	screenshotStrategy           ScreenshotStrategy
 	resizingEnabled              bool
 	disableDynamicElementMasking bool
@@ -86,7 +87,9 @@ func (uda *Context) copy() *Context {
 		detector:           uda.detector,
 		pollOpts:           uda.pollOpts,
 		options:            uda.options,
+		deviceInfo:         uda.deviceInfo,
 		screenshotStrategy: uda.screenshotStrategy,
+		resizingEnabled:    uda.resizingEnabled,
 	}
 }
 

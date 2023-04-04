@@ -35,12 +35,13 @@ const retryPolicy = `{
 		}
 	}]}`
 
-func (d *uiDetector) sendDetectionRequest(ctx context.Context, imagePng []byte, request *pb.DetectionRequest, resizingEnabled bool) (*pb.UiDetectionResponse, error) {
+func (d *uiDetector) sendDetectionRequest(ctx context.Context, imagePng []byte, request *pb.DetectionRequest, resizingEnabled bool, testMetdata *pb.TestMetadata) (*pb.UiDetectionResponse, error) {
 	// Create the UI detection request.
 	uiDetectionRequest := &pb.UiDetectionRequest{
-		ImagePng:    imagePng,
-		Request:     request,
-		ResizeImage: &resizingEnabled,
+		ImagePng:     imagePng,
+		Request:      request,
+		ResizeImage:  &resizingEnabled,
+		TestMetadata: testMetdata,
 	}
 
 	ctx = metadata.NewOutgoingContext(ctx, metadata.Pairs(d.keyType, d.key))
