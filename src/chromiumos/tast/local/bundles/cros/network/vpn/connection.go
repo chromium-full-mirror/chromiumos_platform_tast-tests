@@ -707,6 +707,7 @@ func CreateWireGuardProperties(server, secondServer *Server, config *Config) map
 		return ""
 	}
 
+	var nameServers []string
 	if server != nil {
 		peer := map[string]string{
 			"PublicKey":  wgServerPublicKey,
@@ -721,6 +722,13 @@ func CreateWireGuardProperties(server, secondServer *Server, config *Config) map
 			peer["AllowedIPs"] = genAllowedIPs(wgServerAllowedIPsIPv4, wgServerAllowedIPsIPv6)
 		}
 		peers = append(peers, peer)
+
+		if config.IPType != IPTypeIPv6 {
+			nameServers = append(nameServers, server.OverlayIPv4)
+		}
+		if config.IPType != IPTypeIPv4 {
+			nameServers = append(nameServers, server.OverlayIPv6)
+		}
 	}
 
 	if secondServer != nil {
@@ -733,7 +741,7 @@ func CreateWireGuardProperties(server, secondServer *Server, config *Config) map
 	}
 
 	staticIPConfig := map[string]interface{}{
-		"Address": wgClientOverlayIPv4,
+		"NameServers": nameServers,
 	}
 	properties := map[string]interface{}{
 		"Name":            "test-vpn-wg",

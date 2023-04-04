@@ -45,6 +45,10 @@ func init() {
 		}, {
 			Name: "l2tp_ipsec",
 			Val:  vpn.TypeL2TPIPsec,
+		}, {
+			Name:              "wireguard",
+			Val:               vpn.TypeWireGuard,
+			ExtraSoftwareDeps: []string{"wireguard"},
 		},
 		},
 	})
