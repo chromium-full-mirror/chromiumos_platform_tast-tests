@@ -43,16 +43,23 @@ import (
 )
 
 const (
-	ensureWorkVisibleHistogram              = "GPU.EnsureWorkVisibleDuration"
-	ensureWorkVisibleLowResHistogram        = "GPU.EnsureWorkVisibleDurationLowRes"
-	allBrowserWindowsCreated                = "Ash.LoginSessionRestore.AllBrowserWindowsCreated"
-	allBrowserWindowsShown                  = "Ash.LoginSessionRestore.AllBrowserWindowsShown"
-	allBrowserWindowsPresented              = "Ash.LoginSessionRestore.AllBrowserWindowsPresented"
-	allShelfIconsLoaded                     = "Ash.LoginSessionRestore.AllShelfIconsLoaded"
-	shelfLoginAnimationEnd                  = "Ash.LoginSessionRestore.ShelfLoginAnimationEnd"
-	ashTastBootTimeLogin2                   = "Ash.Tast.BootTime.Login2"
-	ashTastArcUIAvailableAfterLoginDuration = "Ash.Tast.ArcUiAvailableAfterLogin.Duration"
-	arcTastUIAvailableTimeDelta             = "Arc.Tast.UiAvailable.TimeDelta"
+	ensureWorkVisibleHistogram                            = "GPU.EnsureWorkVisibleDuration"
+	ensureWorkVisibleLowResHistogram                      = "GPU.EnsureWorkVisibleDurationLowRes"
+	allBrowserWindowsCreated                              = "Ash.LoginSessionRestore.AllBrowserWindowsCreated"
+	allBrowserWindowsShown                                = "Ash.LoginSessionRestore.AllBrowserWindowsShown"
+	allBrowserWindowsPresented                            = "Ash.LoginSessionRestore.AllBrowserWindowsPresented"
+	allShelfIconsLoaded                                   = "Ash.LoginSessionRestore.AllShelfIconsLoaded"
+	shelfLoginAnimationEnd                                = "Ash.LoginSessionRestore.ShelfLoginAnimationEnd"
+	ashTastBootTimeLogin2                                 = "Ash.Tast.BootTime.Login2"
+	ashTastArcUIAvailableAfterLoginDuration               = "Ash.Tast.ArcUiAvailableAfterLogin.Duration"
+	arcTastUIAvailableTimeDelta                           = "Arc.Tast.UiAvailable.TimeDelta"
+	uptimeLogoutToUIStopAfterLogout                       = "Uptime.LogoutToUIStopAfterLogout"
+	uptimeUIStopToProcessesTerminatedAfterLogout          = "Uptime.UIStopToProcessesTerminatedAfterLogout"
+	uptimeOtherProcessesTerminatedToChromeExecAfterLogout = "Uptime.OtherProcessesTerminatedToChromeExecAfterLogout"
+	uptimeChromeExecToLoginPromptVisibleAfterLogout       = "Uptime.ChromeExecToLoginPromptVisibleAfterLogout"
+	uptimeLogout                                          = "Uptime.Logout"
+	uptimeLoginPromptSetupTimeAfterLogout                 = "Uptime.LoginPromptSetupTimeAfterLogout"
+	uptimeLogoutToLoginPromptVisible                      = "Uptime.LogoutToLoginPromptVisible"
 )
 
 type loginPerfTestParam struct {
@@ -771,7 +778,14 @@ func storeHistograms(
 			ensureWorkVisibleLowResHistogram,
 			shelfLoginAnimationEnd,
 			ashTastArcUIAvailableAfterLoginDuration,
-			arcTastUIAvailableTimeDelta:
+			arcTastUIAvailableTimeDelta,
+			uptimeLogoutToUIStopAfterLogout,
+			uptimeUIStopToProcessesTerminatedAfterLogout,
+			uptimeOtherProcessesTerminatedToChromeExecAfterLogout,
+			uptimeChromeExecToLoginPromptVisibleAfterLogout,
+			uptimeLogout,
+			uptimeLoginPromptSetupTimeAfterLogout,
+			uptimeLogoutToLoginPromptVisible:
 
 			reportMaxHistogramValue(ctx, pv, hist, "millisecond", valueName)
 		default:
@@ -925,6 +939,13 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 					allShelfIconsLoaded,
 					shelfLoginAnimationEnd,
 					ashTastBootTimeLogin2,
+					uptimeLogoutToUIStopAfterLogout,
+					uptimeUIStopToProcessesTerminatedAfterLogout,
+					uptimeOtherProcessesTerminatedToChromeExecAfterLogout,
+					uptimeChromeExecToLoginPromptVisibleAfterLogout,
+					uptimeLogout,
+					uptimeLoginPromptSetupTimeAfterLogout,
+					uptimeLogoutToLoginPromptVisible,
 				}
 				if arcMode != noarc {
 					allHistograms = append(allHistograms,
