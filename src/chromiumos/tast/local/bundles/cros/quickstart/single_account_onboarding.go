@@ -9,6 +9,9 @@ import (
 	"context"
 
 	"chromiumos/tast/local/chrome/crossdevice"
+	"chromiumos/tast/local/chrome/uiauto"
+	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/testing"
 )
 
@@ -19,13 +22,16 @@ func init() {
 		Desc:         "Test Quick Start onboarding flow with one user account on the phone",
 		Contacts: []string{
 			"chromeos-cross-device-eng@google.com",
-			"jasonrhee@chromium.org",
+			"hansenmichael@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1155263",
 		// Attr:         []string{"group:cross-device"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "crossdeviceNoSignIn",
+		VarDeps: []string{
+			"ui.signinProfileTestExtensionManifestKey",
+		},
 	})
 }
 
@@ -48,8 +54,14 @@ func SingleAccountOnboarding(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for the welcome screen to be visible: ", err)
 	}
 	s.Log("Navigating to the quickstart screen")
-	if err := oobeConn.Eval(ctx, "OobeAPI.advanceToScreen('quick-start')", nil); err != nil {
-		s.Fatal("Failed to activate Quick Start onboarding: ", err)
+	tconn, err := cr.SigninProfileTestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to create test API connection: ", err)
+	}
+	ui := uiauto.New(tconn)
+	setupButton := nodewith.Name("Set up with Android phone").Role(role.Button)
+	if err := ui.LeftClick(setupButton)(ctx); err != nil {
+		s.Fatal("Failed to click the Quick Start setup button: ", err)
 	}
 	s.Log("Calling accept fast pair half sheet")
 	if err := androidDevice.AcceptFastPairHalfsheet(ctx); err != nil {
