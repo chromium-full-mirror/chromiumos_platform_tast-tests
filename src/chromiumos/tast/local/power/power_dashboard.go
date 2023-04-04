@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"strconv"
 	"strings"
 	"time"
 
@@ -64,6 +65,66 @@ const (
 
 // Power log file name.
 const powerLogFileName = "power_log"
+
+const htmlChartStr = `
+<!DOCTYPE html>
+<html>
+<head>
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js">
+</script>
+<script type="text/javascript">
+    google.charts.load('current', {'packages':['corechart', 'table']});
+    google.charts.setOnLoadCallback(drawChart);
+    function drawChart() {
+        var dataArray = [
+{data}
+        ];
+        var data = google.visualization.arrayToDataTable(dataArray);
+        var numDataCols = data.getNumberOfColumns() - 1;
+        var unit = '{unit}';
+        var type = '{type}';
+        var options = {
+            width: 1600,
+            height: 1200,
+            lineWidth: 1,
+            legend: { position: 'top', maxLines: 3 },
+            vAxis: {viewWindow: {min: 0}, title: '{type} ({unit})'},
+            hAxis: {viewWindow: {min: 0}, title: 'time (second)'},
+        };
+        var element = document.getElementById('{type}');
+        var chart;
+        if (unit == 'percent') {
+            options['isStacked'] = true;
+            if (numDataCols == 2) {
+                options['colors'] = ['#d32f2f', '#43a047']
+            } else if (numDataCols <= 4) {
+                options['colors'] = ['#d32f2f', '#f4c7c3', '#cddc39','#43a047'];
+            } else if (numDataCols <= 9) {
+                options['colors'] = ['#d32f2f', '#e57373', '#f4c7c3', '#ffccbc',
+                        '#f0f4c3', '#c8e6c9', '#cddc39', '#81c784', '#43a047'];
+            }
+            chart = new google.visualization.SteppedAreaChart(element);
+        } else if (data.getNumberOfRows() == 1 && type == 'perf') {
+            var newArray = [['key', 'value']];
+            for (var i = 1; i < dataArray[0].length; i++) {
+                newArray.push([dataArray[0][i], dataArray[1][i]]);
+            }
+            data = google.visualization.arrayToDataTable(newArray);
+            delete options.width;
+            delete options.height;
+            chart = new google.visualization.Table(element);
+        } else {
+            chart = new google.visualization.LineChart(element);
+        }
+        chart.draw(data, options);
+    }
+</script>
+</head>
+<body>
+<div id="{type}"></div>
+</body>
+</html>
+`
 
 // ConvertPowerPerfValue converts raw performance metric values to power dictionary.
 func ConvertPowerPerfValue(ctx context.Context, values *perf.Values) (map[string]interface{}, error) {
@@ -295,6 +356,104 @@ func UploadToDashboard(ctx context.Context, powerLogDict map[string]interface{},
 	return nil
 }
 
+// SavePowerLogHTML saves the power log as a json file format.
+func SavePowerLogHTML(ctx context.Context, outDir string, powerLogDict map[string]interface{}) error {
+	sampleCount := powerLogDict["power"].(map[string]interface{})["sample_count"].(int)
+
+	if sampleCount <= 0 {
+		return errors.Errorf("sampleCount is %d and should be bigger than 0", sampleCount)
+	}
+
+	// Initialize htmlStr to be empty for now.
+	// Power dashboard link, etc. will be added later on.
+	htmlStr := ``
+
+	sampleDuration := powerLogDict["power"].(map[string]interface{})["sample_duration"]
+	powerLogDataMap := powerLogDict["power"].(map[string]interface{})["data"].(map[string][]float64)
+	powerLogUnitMap := powerLogDict["power"].(map[string]interface{})["metric_unit"].(map[string]string)
+	powerLogTypeMap := powerLogDict["power"].(map[string]interface{})["metric_type"]
+
+	// Generate a map from type to metric names.
+	typeToMetricsMap := make(map[string][]string)
+
+	for metric, metricType := range powerLogTypeMap.(map[string]string) {
+		if _, ok := typeToMetricsMap[metricType]; !ok {
+			typeToMetricsMap[metricType] = make([]string, 0)
+		}
+
+		// Exclude package-non-C0_C1 from typeToMetricMap and the cpupkg chart.
+		if strings.Contains(metric, "package-non-C0_C1") {
+			continue
+		}
+
+		// For now, just visualize the aggregated cpu stats, not per-cpu stats.
+		if metricType == "cpuidle" && !strings.Contains(metric, "cpu-") {
+			continue
+		}
+
+		typeToMetricsMap[metricType] = append(typeToMetricsMap[metricType], metric)
+	}
+
+	rowIndentation := strings.Repeat(" ", 12)
+
+	for metricType, metrics := range typeToMetricsMap {
+		// Generate metric name string.
+		// headerRowStr example:
+		// "            ['time', 'zram_read_IOs', 'zram_IOs_in_flight', 'zram_write_IOs']".
+		headerRow := append([]string{"time"}, typeToMetricsMap[metricType]...)
+		headerRowStr := rowIndentation + "['" + strings.Join(headerRow, "', '") + "']"
+		chartDataStrList := []string{headerRowStr}
+
+		// Generate metric data string.
+		for sampleIndex := 0; sampleIndex < sampleCount; sampleIndex++ {
+			time := float64(sampleIndex) * sampleDuration.(float64)
+			dataRow := []string{strconv.FormatFloat(time, 'g', -1, 64)}
+
+			for _, metric := range metrics {
+				// Most metrics are collected sample_count times, but there are exceptions,
+				// such as "discharge_mwh", which is only collected once.
+				if sampleIndex >= len(powerLogDataMap[metric]) {
+					break
+				}
+				value := powerLogDataMap[metric][sampleIndex]
+				dataRow = append(dataRow, strconv.FormatFloat(value, 'g', -1, 64))
+			}
+
+			// Scalar value.
+			if metricType == "perf" {
+				break
+			}
+
+			// headerRowStr example:
+			// "            ['time', 'zram_read_IOs', 'zram_IOs_in_flight', 'zram_write_IOs']".
+			// Corresponding dataRowStr example:
+			// "            [0, 296, 0, 1]".
+			dataStr := rowIndentation + "[" + strings.Join(dataRow, ", ") + "]"
+			chartDataStrList = append(chartDataStrList, dataStr)
+		}
+
+		chartDataStr := strings.Join(chartDataStrList, ",\n")
+
+		var unit string
+		if metricType == "perf" {
+			unit = "point"
+		} else {
+			unit = powerLogUnitMap[metrics[0]]
+		}
+
+		r := strings.NewReplacer("{data}", chartDataStr, "{unit}", unit, "{type}", metricType)
+		htmlStr += r.Replace(htmlChartStr)
+	}
+
+	filePath := path.Join(outDir, powerLogFileName+".html")
+
+	if err := ioutil.WriteFile(filePath, []byte(htmlStr), 0644); err != nil {
+		return errors.Wrapf(err, "failed to write %s html file", powerLogFileName)
+	}
+
+	return nil
+}
+
 // GeneratePowerLogAndSaveToCrosbolt generates power_log.json and upload results to crosbolt.
 func GeneratePowerLogAndSaveToCrosbolt(ctx context.Context, outDir, testName string, values *perf.Values) error {
 	powerDict, err := ConvertPowerPerfValue(ctx, values)
@@ -305,6 +464,10 @@ func GeneratePowerLogAndSaveToCrosbolt(ctx context.Context, outDir, testName str
 
 	if err := SavePowerLogJSON(ctx, outDir, powerLogDict); err != nil {
 		return errors.Wrap(err, "failed to generate power_log.json")
+	}
+
+	if err := SavePowerLogHTML(ctx, outDir, powerLogDict); err != nil {
+		return errors.Wrap(err, "failed to generate power_log.html")
 	}
 
 	if err := UploadToDashboard(ctx, powerLogDict, ""); err != nil {
