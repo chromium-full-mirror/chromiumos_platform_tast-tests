@@ -15,6 +15,8 @@ import (
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/filesapp"
+	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/crostini"
 	"chromiumos/tast/local/crostini/ui/settings"
 	"chromiumos/tast/local/crostini/ui/sharedfolders"
@@ -74,15 +76,25 @@ func ShareMovies(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	// Show Play files.
-	if err := optin.PerformAndClose(ctx, cr, tconn); err != nil {
-		s.Fatal("Failed to optin to Play Store: ", err)
+	// Open Files app.
+	filesApp, err := filesapp.Launch(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to open Files app: ", err)
 	}
-	defer func(ctx context.Context) {
-		if err := optin.SetPlayStoreEnabled(ctx, tconn, false); err != nil {
-			s.Error("Failed to opt out of Play Store: ", err)
+	defer filesApp.Close(cleanupCtx)
+
+	ui := uiauto.New(tconn)
+	if err := ui.WithTimeout(3 * time.Second).WaitUntilExists(nodewith.Name(filesapp.Playfiles).Role(role.TreeItem).First())(ctx); err != nil {
+		if nodewith.IsNodeNotFoundErr(err) {
+			s.Log("Play files doesn't exist, opt-in play store to show play files")
+			// Show Play files.
+			if err := optin.PerformAndClose(ctx, cr, tconn); err != nil {
+				s.Fatal("Failed to optin Play Store: ", err)
+			}
+		} else {
+			s.Fatal("Failed to check the existence of Play files: ", err)
 		}
-	}(cleanupCtx)
+	}
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
@@ -93,13 +105,6 @@ func ShareMovies(ctx context.Context, s *testing.State) {
 			s.Error("Failed to unshare all folders: ", err)
 		}
 	}(cleanupCtx)
-
-	// Open Files app.
-	filesApp, err := filesapp.Launch(ctx, tconn)
-	if err != nil {
-		s.Fatal("Failed to open Files app: ", err)
-	}
-	defer filesApp.Close(cleanupCtx)
 
 	const Movies = "Movies"
 	if err := uiauto.Combine("open Play files and click Manage with Linux on Movies",
