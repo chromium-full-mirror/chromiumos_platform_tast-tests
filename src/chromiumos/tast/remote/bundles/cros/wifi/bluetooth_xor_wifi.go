@@ -32,7 +32,7 @@ func init() {
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:         []string{"group:wificell", "wificell_func"},
 		SoftwareDeps: []string{"chrome"},
-		ServiceDeps:  []string{wificell.TFServiceName, "tast.cros.network.BluetoothNetworkService"},
+		ServiceDeps:  []string{wificell.ShillServiceName, "tast.cros.network.BluetoothNetworkService"},
 		Vars:         []string{"router"},
 		// List of requirements this test satisfies.
 		Requirements: []string{tdreq.WiFiCoexSupportBT, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},

@@ -33,7 +33,7 @@ func init() {
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		// Removed wificell_func_ax Attr due to router stability issues (b/235887204)
 		Attr:         []string{"group:wificell", "wificell_unstable"},
-		ServiceDeps:  []string{wificell.TFServiceName},
+		ServiceDeps:  []string{wificell.ShillServiceName},
 		Vars:         []string{"router", "pcap", "routertype"},
 		Requirements: []string{tdreq.WiFiGenSupport80211ax},
 		Params: []testing.Param{

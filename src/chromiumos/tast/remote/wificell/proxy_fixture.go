@@ -49,7 +49,7 @@ func init() {
 		ServiceDeps: []string{
 			ProxyFixtServiceDepsProxySetting,
 			ProxyFixtServiceDepsChromeBrowser,
-			TFServiceName,
+			ShillServiceName,
 		},
 		Vars:   []string{"ui.signinProfileTestExtensionManifestKey", "router", "pcap", "routertype", "pcaptype"},
 		Parent: "wificellFixt",
@@ -68,7 +68,7 @@ func init() {
 		ServiceDeps: []string{
 			ProxyFixtServiceDepsProxySetting,
 			ProxyFixtServiceDepsChromeBrowser,
-			TFServiceName,
+			ShillServiceName,
 		},
 		Vars:   []string{"ui.signinProfileTestExtensionManifestKey", "router", "pcap", "routertype", "pcaptype"},
 		Parent: "wificellFixt",

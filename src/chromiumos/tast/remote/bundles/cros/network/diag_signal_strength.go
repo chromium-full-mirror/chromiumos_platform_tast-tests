@@ -29,7 +29,7 @@ func init() {
 			"khegde@chromium.org",                 // test maintainer
 		},
 		BugComponent: "b:1166446",
-		ServiceDeps:  []string{wificell.TFServiceName, "tast.cros.network.NetDiagService"},
+		ServiceDeps:  []string{wificell.ShillServiceName, "tast.cros.network.NetDiagService"},
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:wificell_roam", "wificell_roam_perf"},
 		Fixture:      "wificellFixtRoaming",

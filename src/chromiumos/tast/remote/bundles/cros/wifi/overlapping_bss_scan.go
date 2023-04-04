@@ -35,7 +35,7 @@ func init() {
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:         []string{"group:wificell", "wificell_func"},
 		Timeout:      5 * time.Minute,
-		ServiceDeps:  []string{wificell.TFServiceName},
+		ServiceDeps:  []string{wificell.ShillServiceName},
 		Fixture:      "wificellFixtWithCapture",
 		// Skip on Marvell on 8997 platforms because of test failure post security fixes b/187853331
 		// Test failure is due to increased RTT time

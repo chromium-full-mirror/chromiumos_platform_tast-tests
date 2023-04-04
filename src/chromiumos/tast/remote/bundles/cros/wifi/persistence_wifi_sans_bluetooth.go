@@ -34,7 +34,7 @@ func init() {
 		// As a result, we have defined a softwaredep, no_eth_loss_on_reboot, to service as a skiplist for this test.
 		// TODO: remove this swdep when the jacuzzi issue is fixed (b:178449023)
 		SoftwareDeps: []string{"chrome", "reboot", "no_eth_loss_on_reboot"},
-		ServiceDeps:  []string{wificell.TFServiceName, "tast.cros.network.BluetoothNetworkService"},
+		ServiceDeps:  []string{wificell.ShillServiceName, "tast.cros.network.BluetoothNetworkService"},
 		Vars:         []string{"router"},
 		VarDeps:      []string{"wifi.signinProfileTestExtensionManifestKey"},
 		// As a workaround to b:239583375, we increase the test duration as this test reinitializes a new test fixture

@@ -46,7 +46,7 @@ func init() {
 			"tast.cros.ui.ChromeUIService",
 			"tast.cros.network.CertificateService",
 			"tast.cros.wifi.WifiService",
-			wificell.TFServiceName,
+			wificell.ShillServiceName,
 		},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "wificellFixt",

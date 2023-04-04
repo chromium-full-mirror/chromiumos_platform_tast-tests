@@ -49,7 +49,7 @@ func init() {
 		Attr:         []string{"group:wificell", "wificell_e2e_unstable"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		ServiceDeps: []string{
-			wificell.TFServiceName,
+			wificell.ShillServiceName,
 			"tast.cros.browser.ChromeService",
 			"tast.cros.wifi.WifiService",
 			"tast.cros.ui.ChromeUIService",

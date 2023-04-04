@@ -50,7 +50,7 @@ func init() {
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:         []string{"group:wificell", "wificell_func"},
 		SoftwareDeps: []string{"chrome"},
-		ServiceDeps:  []string{wificell.TFServiceName, "tast.cros.policy.PolicyService"},
+		ServiceDeps:  []string{wificell.ShillServiceName, "tast.cros.policy.PolicyService"},
 		Timeout:      10 * time.Minute,
 		Fixture:      "wificellFixtEnrolled",
 		Requirements: []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},

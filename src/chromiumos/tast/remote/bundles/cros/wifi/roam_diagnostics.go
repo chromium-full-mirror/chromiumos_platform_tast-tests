@@ -81,7 +81,7 @@ func init() {
 		},
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:         []string{"group:wificell_roam", "wificell_roam_perf"},
-		ServiceDeps:  []string{wificell.TFServiceName},
+		ServiceDeps:  []string{wificell.ShillServiceName},
 		Fixture:      "wificellFixtRoaming",
 		Timeout:      time.Minute * 90,
 		Params: []testing.Param{

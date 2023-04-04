@@ -36,7 +36,7 @@ func init() {
 		},
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:         []string{"group:wificell", "wificell_func"},
-		ServiceDeps:  []string{wificell.TFServiceName},
+		ServiceDeps:  []string{wificell.ShillServiceName},
 		// Marvell chips don't support all the attributes
 		HardwareDeps: hwdep.D(hwdep.WifiNotMarvell()),
 		Fixture:      "wificellFixt",

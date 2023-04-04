@@ -39,7 +39,7 @@ func init() {
 			"tast.cros.browser.ChromeService",
 			"tast.cros.network.ProxySettingService",
 			"tast.cros.ui.ChromeUIService",
-			wificell.TFServiceName,
+			wificell.ShillServiceName,
 		},
 		SoftwareDeps: []string{"chrome"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},

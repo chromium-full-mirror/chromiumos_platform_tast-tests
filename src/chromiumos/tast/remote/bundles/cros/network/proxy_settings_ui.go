@@ -37,7 +37,7 @@ func init() {
 		ServiceDeps: []string{
 			wificell.ProxyFixtServiceDepsProxySetting,
 			wificell.ProxyFixtServiceDepsChromeBrowser,
-			wificell.TFServiceName,
+			wificell.ShillServiceName,
 			"tast.cros.ui.ChromeUIService",
 		},
 		SoftwareDeps: []string{"chrome", "reboot"},

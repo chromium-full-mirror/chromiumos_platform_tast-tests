@@ -41,7 +41,7 @@ func init() {
 		},
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:         []string{"group:wificell", "wificell_func", "wificell_unstable"},
-		ServiceDeps:  []string{wificell.TFServiceName},
+		ServiceDeps:  []string{wificell.ShillServiceName},
 		Fixture:      "wificellFixtRouters",
 		SoftwareDeps: []string{"rrm_support"},
 		Requirements: []string{tdreq.WiFiGenSupportMBO},

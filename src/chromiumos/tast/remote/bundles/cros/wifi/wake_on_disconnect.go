@@ -27,7 +27,7 @@ func init() {
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		// TODO(b/187362093): Add a SoftwareDep for wake_on_wifi.
 		Attr:         []string{"group:wificell", "wificell_suspend", "wificell_unstable"},
-		ServiceDeps:  []string{wificell.TFServiceName},
+		ServiceDeps:  []string{wificell.ShillServiceName},
 		Fixture:      "wificellFixt",
 		Requirements: []string{tdreq.WiFiPwrTimingWoW},
 	})

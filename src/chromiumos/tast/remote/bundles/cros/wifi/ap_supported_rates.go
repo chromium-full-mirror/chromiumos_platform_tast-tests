@@ -34,7 +34,7 @@ func init() {
 		},
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:         []string{"group:wificell", "wificell_func"},
-		ServiceDeps:  []string{wificell.TFServiceName},
+		ServiceDeps:  []string{wificell.ShillServiceName},
 		Fixture:      "wificellFixt",
 		// See b/138406224. ath10k only supports this on CrOS kernels >=4.14
 		SoftwareDeps: []string{"no_ath10k_4_4"},

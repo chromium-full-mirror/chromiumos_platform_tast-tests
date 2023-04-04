@@ -38,7 +38,7 @@ func init() {
 		BugComponent: "b:1131912",
 		Attr:         []string{"group:wificell", "wificell_e2e_unstable"},
 		ServiceDeps: []string{
-			wificell.TFServiceName,
+			wificell.ShillServiceName,
 			"tast.cros.browser.ChromeService",
 			"tast.cros.wifi.WifiService",
 		},

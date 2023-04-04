@@ -61,7 +61,7 @@ func init() {
 			"tast.cros.chrome.uiauto.quicksettings.QuickSettingsService",
 			"tast.cros.inputs.KeyboardService",
 			"tast.cros.ui.AutomationService",
-			wificell.TFServiceName,
+			wificell.ShillServiceName,
 		},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "wificellFixtWithCapture",

@@ -48,7 +48,7 @@ func init() {
 		ResetTimeout:    resetTimeout,
 		PostTestTimeout: postTestTimeout,
 		TearDownTimeout: tearDownTimeout,
-		ServiceDeps:     []string{TFServiceName},
+		ServiceDeps:     []string{ShillServiceName},
 		Vars:            []string{"router", "pcap", "routertype", "pcaptype"},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -62,7 +62,7 @@ func init() {
 		ResetTimeout:    resetTimeout,
 		PostTestTimeout: postTestTimeout,
 		TearDownTimeout: tearDownTimeout,
-		ServiceDeps:     []string{TFServiceName},
+		ServiceDeps:     []string{ShillServiceName},
 		Vars:            []string{"router", "pcap", "routertype", "pcaptype"},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -76,7 +76,7 @@ func init() {
 		ResetTimeout:    resetTimeout,
 		PostTestTimeout: postTestTimeout,
 		TearDownTimeout: tearDownTimeout,
-		ServiceDeps:     []string{TFServiceName},
+		ServiceDeps:     []string{ShillServiceName},
 		Vars:            []string{"router", "pcap", "routertype", "pcaptype"},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -90,7 +90,7 @@ func init() {
 		ResetTimeout:    resetTimeout,
 		PostTestTimeout: postTestTimeout,
 		TearDownTimeout: tearDownTimeout,
-		ServiceDeps:     []string{TFServiceName},
+		ServiceDeps:     []string{ShillServiceName},
 		Vars:            []string{"routers", "pcap", "routertype", "pcaptype"},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -104,7 +104,7 @@ func init() {
 		ResetTimeout:    resetTimeout,
 		PostTestTimeout: postTestTimeout,
 		TearDownTimeout: tearDownTimeout,
-		ServiceDeps:     []string{TFServiceName},
+		ServiceDeps:     []string{ShillServiceName},
 		Vars:            []string{"routers", "pcap", "routertype", "pcaptype", "attenuator"},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -119,7 +119,7 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		TearDownTimeout: 8 * time.Minute,
 		ServiceDeps: []string{
-			TFServiceName,
+			ShillServiceName,
 			"tast.cros.hwsec.OwnershipService",
 			"tast.cros.policy.PolicyService",
 		},
@@ -136,7 +136,7 @@ func init() {
 		ResetTimeout:    resetTimeout,
 		PostTestTimeout: postTestTimeout,
 		TearDownTimeout: tearDownTimeout,
-		ServiceDeps:     []string{TFServiceName},
+		ServiceDeps:     []string{ShillServiceName},
 		Vars:            []string{"router", "pcap", "routertype", "pcaptype"},
 	})
 }

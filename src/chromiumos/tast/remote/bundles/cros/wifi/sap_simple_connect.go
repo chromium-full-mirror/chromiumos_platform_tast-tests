@@ -35,7 +35,7 @@ func init() {
 		},
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:         []string{"group:wificell_cross_device", "wificell_cross_device_sap", "wificell_cross_device_unstable"},
-		ServiceDeps:  []string{wificell.TFServiceName},
+		ServiceDeps:  []string{wificell.ShillServiceName},
 		Fixture:      "wificellFixtCompanionDut",
 		HardwareDeps: hwdep.D(hwdep.WifiSAP(),
 			// Skip test on devices that don't support AP/STA concurrency.

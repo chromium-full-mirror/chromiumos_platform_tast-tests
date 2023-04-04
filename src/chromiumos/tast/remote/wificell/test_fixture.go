@@ -187,8 +187,10 @@ func TFCompanionDUT(cd *dut.DUT, h *testing.RPCHint) TFOption {
 }
 
 const (
-	// TFServiceName is the service needed by TestFixture.
-	TFServiceName = "tast.cros.wifi.ShillService"
+	// ShillServiceName is the service needed by TestFixture and any test that
+	// uses the shill service directly.
+	ShillServiceName = "tast.cros.wifi.ShillService"
+
 	// DefaultDUT is the default DUT index (0).
 	DefaultDUT = 0
 	// PeerDUT is the peer DUT index (1).

@@ -67,7 +67,7 @@ func init() {
 		// ChromeOS > Platform > System > Networking
 		BugComponent: "b:156085",
 		Attr:         []string{"group:wificell", "wificell_func", "wificell_unstable"},
-		ServiceDeps:  []string{wificell.TFServiceName},
+		ServiceDeps:  []string{wificell.ShillServiceName},
 		Fixture:      "wificellFixt",
 		Timeout:      10 * time.Minute,
 		Requirements: []string{tdreq.WiFiGenSupportPasspoint},

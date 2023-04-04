@@ -37,7 +37,7 @@ func init() {
 		},
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:         []string{"group:wificell", "wificell_perf", "wificell_unstable"},
-		ServiceDeps:  []string{wificell.TFServiceName},
+		ServiceDeps:  []string{wificell.ShillServiceName},
 		Fixture:      "wificellFixtWithCapture",
 		Timeout:      time.Minute * 5, // The average test time doubled.
 		Vars:         []string{"wifi.RoamContPing.rounds"},

@@ -29,7 +29,7 @@ func init() {
 		// a pcap problem that frame checksum might not be trust-worthy.
 		// See previous investigation in b/185378075.
 		Attr:        []string{"group:wificell"},
-		ServiceDeps: []string{wificell.TFServiceName},
+		ServiceDeps: []string{wificell.ShillServiceName},
 		Fixture:     "wificellFixtWithCapture",
 	})
 }

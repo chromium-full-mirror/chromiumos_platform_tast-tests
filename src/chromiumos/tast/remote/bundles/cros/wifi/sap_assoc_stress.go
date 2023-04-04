@@ -40,7 +40,7 @@ func init() {
 		Attr:         []string{"group:wificell_cross_device", "wificell_cross_device_sap", "wificell_cross_device_unstable"},
 		Fixture:      "wificellFixtCompanionDut",
 		Timeout:      time.Minute + 8*sapAssocRounds*10*time.Second, // Default: 10 minutes, typically test runs in half that time.
-		ServiceDeps:  []string{wificell.TFServiceName},
+		ServiceDeps:  []string{wificell.ShillServiceName},
 		SoftwareDeps: []string{"wpa3_sae"},
 		HardwareDeps: hwdep.D(hwdep.WifiSAP(),
 			// Skip test on devices that don't support AP/STA concurrency.

@@ -39,7 +39,7 @@ func init() {
 		ServiceDeps: []string{
 			"tast.cros.browser.ChromeService",
 			"tast.cros.shimlessrma.AppService",
-			wificell.TFServiceName,
+			wificell.ShillServiceName,
 		},
 		Fixture: fixture.NormalMode,
 		Timeout: 10 * time.Minute,
