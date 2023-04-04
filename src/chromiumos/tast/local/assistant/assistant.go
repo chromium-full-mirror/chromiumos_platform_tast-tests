@@ -32,6 +32,8 @@ import (
 // when it received a query. This struct contains the only fields which are used in
 // the tests.
 type QueryResponse struct {
+	// Contains the text string of the response.
+	TEXT string `json:"text"`
 	// Contains the HTML string of the response.
 	HTML string `json:"htmlResponse"`
 }
