@@ -45,7 +45,8 @@ func init() {
 			{
 				Name:              "stable",
 				ExtraHardwareDeps: hwdep.D(pre.AppsStableModels),
-				ExtraAttr:         []string{"group:mainline"},
+				// crbug.com/1430473
+				ExtraAttr: []string{"group:mainline", "informational"},
 			}, {
 				Name:              "unstable",
 				ExtraHardwareDeps: hwdep.D(pre.AppsUnstableModels),
