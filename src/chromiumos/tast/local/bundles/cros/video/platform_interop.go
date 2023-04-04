@@ -34,7 +34,7 @@ type platformInteropParam struct {
 	encoderCommand        string                          // The encoder to be used. This should be relative to /usr/local/bin.
 	encoderCommandBuilder platform.CommandBuilderEncodeFn // Function to create the encoder command line.
 	decoderCommand        string                          // Command line decoder binary
-	decoderArgsBuilder    commandBuilderDecodeFn          // Function to create the decoder command line arguments.
+	decoderArgsBuilder    platform.CommandBuilderDecodeFn // Function to create the decoder command line arguments.
 	referenceSWDecoder    referenceSWDecoderFn            // When specified, function to calculate the reference per-frame MD5SUM values.
 }
 
@@ -64,7 +64,7 @@ func init() {
 					encoderCommand:        "vpxenc",
 					encoderCommandBuilder: platform.ArgsVpxenc,
 					decoderCommand:        "/usr/local/libexec/chrome-binary-tests/decode_test",
-					decoderArgsBuilder:    vp8decodeVAAPIargs,
+					decoderArgsBuilder:    platform.VP8DecodeVAAPIargs,
 					referenceSWDecoder:    genMD5VPX,
 				},
 				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
@@ -79,7 +79,7 @@ func init() {
 					encoderCommand:        "vpxenc",
 					encoderCommandBuilder: platform.ArgsVpxenc,
 					decoderCommand:        "v4l2_stateful_decoder",
-					decoderArgsBuilder:    v4l2StatefulDecodeArgs,
+					decoderArgsBuilder:    platform.V4L2StatefulDecodeArgs,
 					referenceSWDecoder:    genMD5VPX,
 				},
 				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
@@ -95,7 +95,7 @@ func init() {
 					encoderCommand:        "vpxenc",
 					encoderCommandBuilder: platform.ArgsVpxenc,
 					decoderCommand:        "/usr/local/libexec/chrome-binary-tests/v4l2_stateless_decoder",
-					decoderArgsBuilder:    v4l2StatelessDecodeArgs,
+					decoderArgsBuilder:    platform.V4L2StatelessDecodeArgs,
 					referenceSWDecoder:    genMD5VPX,
 				},
 				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
@@ -111,7 +111,7 @@ func init() {
 					encoderCommand:        "vp8enc",
 					encoderCommandBuilder: platform.VP8ArgsVAAPI,
 					decoderCommand:        "vpxdec",
-					decoderArgsBuilder:    vpxDecodeArgs,
+					decoderArgsBuilder:    platform.VPxDecodeArgs,
 					referenceSWDecoder:    nil,
 				},
 				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
@@ -126,7 +126,7 @@ func init() {
 					encoderCommand:        "vp8enc",
 					encoderCommandBuilder: platform.VP8ArgsVAAPI,
 					decoderCommand:        "/usr/local/libexec/chrome-binary-tests/decode_test",
-					decoderArgsBuilder:    vp8decodeVAAPIargs,
+					decoderArgsBuilder:    platform.VP8DecodeVAAPIargs,
 					referenceSWDecoder:    genMD5VPX,
 				},
 				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
@@ -141,7 +141,7 @@ func init() {
 					encoderCommand:        "v4l2_stateful_encoder",
 					encoderCommandBuilder: platform.ArgsV4L2,
 					decoderCommand:        "vpxdec",
-					decoderArgsBuilder:    vpxDecodeArgs,
+					decoderArgsBuilder:    platform.VPxDecodeArgs,
 					referenceSWDecoder:    nil,
 				},
 				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
@@ -156,7 +156,7 @@ func init() {
 					encoderCommand:        "v4l2_stateful_encoder",
 					encoderCommandBuilder: platform.ArgsV4L2,
 					decoderCommand:        "v4l2_stateful_decoder",
-					decoderArgsBuilder:    v4l2StatefulDecodeArgs,
+					decoderArgsBuilder:    platform.V4L2StatefulDecodeArgs,
 					referenceSWDecoder:    genMD5VPX,
 				},
 				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
@@ -172,7 +172,7 @@ func init() {
 					encoderCommand:        "vpxenc",
 					encoderCommandBuilder: platform.ArgsVpxenc,
 					decoderCommand:        "/usr/local/libexec/chrome-binary-tests/decode_test",
-					decoderArgsBuilder:    vp9decodeVAAPIargs,
+					decoderArgsBuilder:    platform.VP9DecodeVAAPIargs,
 					referenceSWDecoder:    genMD5VPX,
 				},
 				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
@@ -187,7 +187,7 @@ func init() {
 					encoderCommand:        "vpxenc",
 					encoderCommandBuilder: platform.ArgsVpxenc,
 					decoderCommand:        "v4l2_stateful_decoder",
-					decoderArgsBuilder:    v4l2StatefulDecodeArgs,
+					decoderArgsBuilder:    platform.V4L2StatefulDecodeArgs,
 					referenceSWDecoder:    genMD5VPX,
 				},
 				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
@@ -203,7 +203,7 @@ func init() {
 					encoderCommand:        "vpxenc",
 					encoderCommandBuilder: platform.ArgsVpxenc,
 					decoderCommand:        "/usr/local/libexec/chrome-binary-tests/v4l2_stateless_decoder",
-					decoderArgsBuilder:    v4l2StatelessDecodeArgs,
+					decoderArgsBuilder:    platform.V4L2StatelessDecodeArgs,
 					referenceSWDecoder:    genMD5VPX,
 				},
 				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
@@ -219,7 +219,7 @@ func init() {
 					encoderCommand:        "vp9enc",
 					encoderCommandBuilder: platform.VP9ArgsVAAPI,
 					decoderCommand:        "vpxdec",
-					decoderArgsBuilder:    vpxDecodeArgs,
+					decoderArgsBuilder:    platform.VPxDecodeArgs,
 					referenceSWDecoder:    nil,
 				},
 				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
@@ -234,7 +234,7 @@ func init() {
 					encoderCommand:        "vp9enc",
 					encoderCommandBuilder: platform.VP9ArgsVAAPI,
 					decoderCommand:        "/usr/local/libexec/chrome-binary-tests/decode_test",
-					decoderArgsBuilder:    vp9decodeVAAPIargs,
+					decoderArgsBuilder:    platform.VP9DecodeVAAPIargs,
 					referenceSWDecoder:    genMD5VPX,
 				},
 				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
@@ -249,7 +249,7 @@ func init() {
 					encoderCommand:        "v4l2_stateful_encoder",
 					encoderCommandBuilder: platform.ArgsV4L2,
 					decoderCommand:        "vpxdec",
-					decoderArgsBuilder:    vpxDecodeArgs,
+					decoderArgsBuilder:    platform.VPxDecodeArgs,
 					referenceSWDecoder:    nil,
 				},
 				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
@@ -264,7 +264,7 @@ func init() {
 					encoderCommand:        "v4l2_stateful_encoder",
 					encoderCommandBuilder: platform.ArgsV4L2,
 					decoderCommand:        "v4l2_stateful_decoder",
-					decoderArgsBuilder:    v4l2StatefulDecodeArgs,
+					decoderArgsBuilder:    platform.V4L2StatefulDecodeArgs,
 					referenceSWDecoder:    genMD5VPX,
 				},
 				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
@@ -280,7 +280,7 @@ func init() {
 					encoderCommand:        "openh264enc",
 					encoderCommandBuilder: platform.ArgsOpenh264enc,
 					decoderCommand:        "/usr/local/libexec/chrome-binary-tests/decode_test",
-					decoderArgsBuilder:    h264decodeVAAPIargs,
+					decoderArgsBuilder:    platform.H264DecodeVAAPIargs,
 					referenceSWDecoder:    genMD5FFMPEG,
 				},
 				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
@@ -295,7 +295,7 @@ func init() {
 					encoderCommand:        "openh264enc",
 					encoderCommandBuilder: platform.ArgsOpenh264enc,
 					decoderCommand:        "v4l2_stateful_decoder",
-					decoderArgsBuilder:    v4l2StatefulDecodeArgs,
+					decoderArgsBuilder:    platform.V4L2StatefulDecodeArgs,
 					referenceSWDecoder:    genMD5FFMPEG,
 				},
 				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
@@ -311,7 +311,7 @@ func init() {
 					encoderCommand:        "h264encode",
 					encoderCommandBuilder: platform.H264ArgsVAAPI,
 					decoderCommand:        "openh264dec",
-					decoderArgsBuilder:    openh264DecodeArgs,
+					decoderArgsBuilder:    platform.Openh264DecodeArgs,
 					referenceSWDecoder:    nil,
 				},
 				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
@@ -326,7 +326,7 @@ func init() {
 					encoderCommand:        "h264encode",
 					encoderCommandBuilder: platform.H264ArgsVAAPI,
 					decoderCommand:        "/usr/local/libexec/chrome-binary-tests/decode_test",
-					decoderArgsBuilder:    h264decodeVAAPIargs,
+					decoderArgsBuilder:    platform.H264DecodeVAAPIargs,
 					referenceSWDecoder:    genMD5FFMPEG,
 				},
 				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
@@ -341,7 +341,7 @@ func init() {
 					encoderCommand:        "v4l2_stateful_encoder",
 					encoderCommandBuilder: platform.ArgsV4L2,
 					decoderCommand:        "openh264dec",
-					decoderArgsBuilder:    openh264DecodeArgs,
+					decoderArgsBuilder:    platform.Openh264DecodeArgs,
 					referenceSWDecoder:    nil,
 				},
 				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
@@ -356,7 +356,7 @@ func init() {
 					encoderCommand:        "v4l2_stateful_encoder",
 					encoderCommandBuilder: platform.ArgsV4L2,
 					decoderCommand:        "v4l2_stateful_decoder",
-					decoderArgsBuilder:    v4l2StatefulDecodeArgs,
+					decoderArgsBuilder:    platform.V4L2StatefulDecodeArgs,
 					referenceSWDecoder:    genMD5FFMPEG,
 				},
 				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
@@ -453,18 +453,6 @@ func PlatformInterop(ctx context.Context, s *testing.State) {
 	if count > 0 {
 		s.Fatalf("%d mismatched hashes", count)
 	}
-}
-
-// vpxDecodeArgs provides the arguments to use with vpxdec decoding binary exe.
-func vpxDecodeArgs(ctx context.Context, filename, md5OutputPath string) []string {
-	// With --md5 and -o options the md5 of each frame is calculated but frame
-	// files are not created.
-	return []string{"-o", "output%w_%h_%4.yuv", "--i420", "--md5", filename}
-}
-
-// openh264DecodeArgs provides the arguments to use with openh264dec decoding binary exe.
-func openh264DecodeArgs(ctx context.Context, filename, md5OutputPath string) []string {
-	return []string{filename, filename + ".yuv"}
 }
 
 func genMD5VPX(file string) ([]string, error) {

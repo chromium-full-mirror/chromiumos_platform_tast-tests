@@ -67,22 +67,22 @@ func getDecoderBinaryAndParams(decoder codecAPI, codec string) (binary, paramGen
 	switch decoder {
 	case software:
 		if codec == "vp8" || codec == "vp9" {
-			return "vpxdec", "vpxDecodeArgs"
+			return "vpxdec", "platform.VPxDecodeArgs"
 		} else if codec == "h264" {
-			return "openh264dec", "openh264DecodeArgs"
+			return "openh264dec", "platform.Openh264DecodeArgs"
 		}
 	case vaapi:
 		if codec == "vp8" {
-			return decodeTestBinary, "vp8decodeVAAPIargs"
+			return decodeTestBinary, "platform.VP8DecodeVAAPIargs"
 		} else if codec == "vp9" {
-			return decodeTestBinary, "vp9decodeVAAPIargs"
+			return decodeTestBinary, "platform.VP9DecodeVAAPIargs"
 		} else if codec == "h264" {
-			return decodeTestBinary, "h264decodeVAAPIargs"
+			return decodeTestBinary, "platform.H264DecodeVAAPIargs"
 		}
 	case v4l2Stateful:
-		return "v4l2_stateful_decoder", "v4l2StatefulDecodeArgs"
+		return "v4l2_stateful_decoder", "platform.V4L2StatefulDecodeArgs"
 	case v4l2Stateless:
-		return "/usr/local/libexec/chrome-binary-tests/v4l2_stateless_decoder", "v4l2StatelessDecodeArgs"
+		return "/usr/local/libexec/chrome-binary-tests/v4l2_stateless_decoder", "platform.V4L2StatelessDecodeArgs"
 	}
 	return
 }

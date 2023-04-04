@@ -1196,7 +1196,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 				param := paramData{
 					Name:         fmt.Sprintf("vaapi_vp9_%d_%s_%s", i, levelGroup, cat),
 					Decoder:      filepath.Join(chrome.BinTestDir, "decode_test"),
-					CmdBuilder:   "vp9decodeVAAPIargs",
+					CmdBuilder:   "platform.VP9DecodeVAAPIargs",
 					Files:        files,
 					Timeout:      defaultTimeout,
 					SoftwareDeps: []string{"vaapi"},
@@ -1233,7 +1233,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 	params = append(params, paramData{
 		Name:         fmt.Sprintf("vaapi_vp9_0_svc"),
 		Decoder:      filepath.Join(chrome.BinTestDir, "decode_test"),
-		CmdBuilder:   "vp9decodeVAAPIargs",
+		CmdBuilder:   "platform.VP9DecodeVAAPIargs",
 		Files:        []string{vp9SVCFile},
 		Timeout:      defaultTimeout,
 		SoftwareDeps: []string{"vaapi", caps.HWDecodeVP9},
@@ -1245,7 +1245,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 	params = append(params, paramData{
 		Name:       "vaapi_av1",
 		Decoder:    filepath.Join(chrome.BinTestDir, "decode_test"),
-		CmdBuilder: "av1decodeVAAPIargs",
+		CmdBuilder: "platform.AV1DecodeVAAPIargs",
 		Files:      av1Files,
 		Timeout:    defaultTimeout,
 		// These SoftwareDeps do not include the 10 bit version of AV1.
@@ -1260,7 +1260,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 			param := paramData{
 				Name:       fmt.Sprintf("vaapi_av1_%s_%s", bit, cat),
 				Decoder:    filepath.Join(chrome.BinTestDir, "decode_test"),
-				CmdBuilder: "av1decodeVAAPIargs",
+				CmdBuilder: "platform.AV1DecodeVAAPIargs",
 				Files:      files,
 				Timeout:    defaultTimeout,
 				// These SoftwareDeps do not include the 10 bit version of AV1.
@@ -1320,7 +1320,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 		params = append(params, paramData{
 			Name:         fmt.Sprintf("vaapi_vp8_%s", testGroup),
 			Decoder:      filepath.Join(chrome.BinTestDir, "decode_test"),
-			CmdBuilder:   "vp8decodeVAAPIargs",
+			CmdBuilder:   "platform.VP8DecodeVAAPIargs",
 			Files:        files,
 			Timeout:      defaultTimeout,
 			SoftwareDeps: []string{"vaapi", caps.HWDecodeVP8},
@@ -1336,7 +1336,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 		param := paramData{
 			Name:         fmt.Sprintf("v4l2_h264_%s", group),
 			Decoder:      "v4l2_stateful_decoder",
-			CmdBuilder:   "v4l2StatefulDecodeArgs",
+			CmdBuilder:   "platform.V4L2StatefulDecodeArgs",
 			Files:        files,
 			Timeout:      defaultTimeout,
 			SoftwareDeps: []string{"v4l2_codec", caps.HWDecodeH264},
@@ -1354,7 +1354,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 		param := paramData{
 			Name:         fmt.Sprintf("v4l2_stateless_h264_%s", group),
 			Decoder:      filepath.Join(chrome.BinTestDir, "v4l2_stateless_decoder"),
-			CmdBuilder:   "v4l2StatelessDecodeArgs",
+			CmdBuilder:   "platform.V4L2StatelessDecodeArgs",
 			Files:        files,
 			Timeout:      defaultTimeout,
 			SoftwareDeps: []string{"v4l2_codec", caps.HWDecodeH264},
@@ -1372,7 +1372,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 		param := paramData{
 			Name:         fmt.Sprintf("vaapi_h264_%s", group),
 			Decoder:      filepath.Join(chrome.BinTestDir, "decode_test"),
-			CmdBuilder:   "h264decodeVAAPIargs",
+			CmdBuilder:   "platform.H264DecodeVAAPIargs",
 			Files:        files,
 			Timeout:      defaultTimeout,
 			SoftwareDeps: []string{"vaapi", caps.HWDecodeH264},
@@ -1392,7 +1392,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 		params = append(params, paramData{
 			Name:         fmt.Sprintf("v4l2_hevc_%s", testGroup),
 			Decoder:      "v4l2_stateful_decoder",
-			CmdBuilder:   "v4l2StatefulDecodeArgs",
+			CmdBuilder:   "platform.V4L2StatefulDecodeArgs",
 			Files:        files,
 			Timeout:      defaultTimeout,
 			HardwareDeps: strings.Join(hardwareDeps, ", "),
@@ -1413,7 +1413,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 				param := paramData{
 					Name:         fmt.Sprintf("v4l2_vp9_%s_%s_%s", profileNum, levelGroup, cat),
 					Decoder:      "v4l2_stateful_decoder",
-					CmdBuilder:   "v4l2StatefulDecodeArgs",
+					CmdBuilder:   "platform.V4L2StatefulDecodeArgs",
 					Files:        files,
 					Timeout:      defaultTimeout,
 					SoftwareDeps: []string{"v4l2_codec"},
@@ -1464,7 +1464,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 				param := paramData{
 					Name:         fmt.Sprintf("v4l2_stateless_vp9_%d_%s_%s", i, levelGroup, cat),
 					Decoder:      filepath.Join(chrome.BinTestDir, "v4l2_stateless_decoder"),
-					CmdBuilder:   "v4l2StatelessDecodeArgs",
+					CmdBuilder:   "platform.V4L2StatelessDecodeArgs",
 					Files:        files,
 					Timeout:      defaultTimeout,
 					SoftwareDeps: []string{"v4l2_codec"},
@@ -1499,7 +1499,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 	params = append(params, paramData{
 		Name:         fmt.Sprintf("v4l2_vp9_0_svc"),
 		Decoder:      "v4l2_stateful_decoder",
-		CmdBuilder:   "v4l2StatefulDecodeArgs",
+		CmdBuilder:   "platform.V4L2StatefulDecodeArgs",
 		Files:        []string{vp9SVCFile},
 		Timeout:      defaultTimeout,
 		SoftwareDeps: []string{"v4l2_codec", caps.HWDecodeVP9},
@@ -1517,7 +1517,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 		params = append(params, paramData{
 			Name:         fmt.Sprintf("v4l2_vp8_%s", testGroup),
 			Decoder:      "v4l2_stateful_decoder",
-			CmdBuilder:   "v4l2StatefulDecodeArgs",
+			CmdBuilder:   "platform.V4L2StatefulDecodeArgs",
 			Files:        files,
 			Timeout:      defaultTimeout,
 			HardwareDeps: strings.Join(hardwareDeps, ", "),
@@ -1570,7 +1570,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 	params = append(params, paramData{
 		Name:       "ffmpeg_vaapi_av1",
 		Decoder:    filepath.Join(chrome.BinTestDir, "decode_test"),
-		CmdBuilder: "av1decodeVAAPIargs",
+		CmdBuilder: "platform.AV1DecodeVAAPIargs",
 		Files:      av1Files,
 		Timeout:    defaultTimeout,
 		// These SoftwareDeps do not include the 10 bit version of AV1.
@@ -1585,7 +1585,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 			param := paramData{
 				Name:       fmt.Sprintf("ffmpeg_vaapi_av1_%s_%s", bit, cat),
 				Decoder:    filepath.Join(chrome.BinTestDir, "decode_test"),
-				CmdBuilder: "av1decodeVAAPIargs",
+				CmdBuilder: "platform.AV1DecodeVAAPIargs",
 				Files:      files,
 				Timeout:    defaultTimeout,
 				// These SoftwareDeps do not include the 10 bit version of AV1.
@@ -1676,7 +1676,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 	params = append(params, paramData{
 		Name:         "v4l2_stateless_av1",
 		Decoder:      filepath.Join(chrome.BinTestDir, "v4l2_stateless_decoder"),
-		CmdBuilder:   "v4l2StatelessDecodeArgs",
+		CmdBuilder:   "platform.V4L2StatelessDecodeArgs",
 		Files:        av1Files,
 		Timeout:      defaultTimeout,
 		SoftwareDeps: []string{"v4l2_codec"},
@@ -1692,7 +1692,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 			param := paramData{
 				Name:         fmt.Sprintf("v4l2_stateless_av1_%s_%s", bit, cat),
 				Decoder:      filepath.Join(chrome.BinTestDir, "v4l2_stateless_decoder"),
-				CmdBuilder:   "v4l2StatelessDecodeArgs",
+				CmdBuilder:   "platform.V4L2StatelessDecodeArgs",
 				Files:        files,
 				Timeout:      defaultTimeout,
 				SoftwareDeps: []string{"v4l2_codec"},
@@ -1713,7 +1713,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 		params = append(params, paramData{
 			Name:         fmt.Sprintf("v4l2_stateless_vp8_%s", testGroup),
 			Decoder:      filepath.Join(chrome.BinTestDir, "v4l2_stateless_decoder"),
-			CmdBuilder:   "v4l2StatelessDecodeArgs",
+			CmdBuilder:   "platform.V4L2StatelessDecodeArgs",
 			Files:        files,
 			Timeout:      defaultTimeout,
 			SoftwareDeps: []string{"v4l2_codec", caps.HWDecodeVP8},
