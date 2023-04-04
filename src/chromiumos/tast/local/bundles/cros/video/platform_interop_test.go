@@ -42,20 +42,20 @@ func getEncoderBinaryAndParams(encoder codecAPI, codec string) (binary, paramGen
 	switch encoder {
 	case software:
 		if codec == "vp8" || codec == "vp9" {
-			return "vpxenc", "argsVpxenc"
+			return "vpxenc", "platform.ArgsVpxenc"
 		} else if codec == "h264" {
-			return "openh264enc", "argsOpenh264enc"
+			return "openh264enc", "platform.ArgsOpenh264enc"
 		}
 	case vaapi:
 		if codec == "vp8" {
-			return "vp8enc", "vp8argsVAAPI"
+			return "vp8enc", "platform.VP8ArgsVAAPI"
 		} else if codec == "vp9" {
-			return "vp9enc", "vp9argsVAAPI"
+			return "vp9enc", "platform.VP9ArgsVAAPI"
 		} else if codec == "h264" {
-			return "h264encode", "h264argsVAAPI"
+			return "h264encode", "platform.H264ArgsVAAPI"
 		}
 	case v4l2Stateful:
-		return "v4l2_stateful_encoder", "argsV4L2"
+		return "v4l2_stateful_encoder", "platform.ArgsV4L2"
 	}
 	return
 }

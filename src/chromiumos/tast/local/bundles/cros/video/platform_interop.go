@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"chromiumos/tast/errors"
+	"chromiumos/tast/local/bundles/cros/video/platform"
 	"chromiumos/tast/local/bundles/cros/video/videovars"
 	"chromiumos/tast/local/coords"
 	"chromiumos/tast/local/media/encoding"
@@ -27,14 +28,14 @@ type referenceSWDecoderFn func(file string) ([]string, error)
 
 // platformInteropParam is used to describe the config used to run each test.
 type platformInteropParam struct {
-	filename              string                 // Input file name. This will be decoded to produce the uncompressed input to the encoder binary, so it can come in any format/container.
-	size                  coords.Size            // Width x Height in pixels of the input file.
-	fps                   int                    // FPS of the input file.
-	encoderCommand        string                 // The encoder to be used. This should be relative to /usr/local/bin.
-	encoderCommandBuilder commandBuilderFn       // Function to create the encoder command line.
-	decoderCommand        string                 // Command line decoder binary
-	decoderArgsBuilder    commandBuilderDecodeFn // Function to create the decoder command line arguments.
-	referenceSWDecoder    referenceSWDecoderFn   // When specified, function to calculate the reference per-frame MD5SUM values.
+	filename              string                          // Input file name. This will be decoded to produce the uncompressed input to the encoder binary, so it can come in any format/container.
+	size                  coords.Size                     // Width x Height in pixels of the input file.
+	fps                   int                             // FPS of the input file.
+	encoderCommand        string                          // The encoder to be used. This should be relative to /usr/local/bin.
+	encoderCommandBuilder platform.CommandBuilderEncodeFn // Function to create the encoder command line.
+	decoderCommand        string                          // Command line decoder binary
+	decoderArgsBuilder    commandBuilderDecodeFn          // Function to create the decoder command line arguments.
+	referenceSWDecoder    referenceSWDecoderFn            // When specified, function to calculate the reference per-frame MD5SUM values.
 }
 
 var regExpFFMPEGMD5 = regexp.MustCompile(`^\d+, *\d+, *\d+, *\d+, *\d+, *(\S+)$`)
@@ -61,7 +62,7 @@ func init() {
 					size:                  coords.NewSize(320, 180),
 					fps:                   50,
 					encoderCommand:        "vpxenc",
-					encoderCommandBuilder: argsVpxenc,
+					encoderCommandBuilder: platform.ArgsVpxenc,
 					decoderCommand:        "/usr/local/libexec/chrome-binary-tests/decode_test",
 					decoderArgsBuilder:    vp8decodeVAAPIargs,
 					referenceSWDecoder:    genMD5VPX,
@@ -76,7 +77,7 @@ func init() {
 					size:                  coords.NewSize(320, 180),
 					fps:                   50,
 					encoderCommand:        "vpxenc",
-					encoderCommandBuilder: argsVpxenc,
+					encoderCommandBuilder: platform.ArgsVpxenc,
 					decoderCommand:        "v4l2_stateful_decoder",
 					decoderArgsBuilder:    v4l2StatefulDecodeArgs,
 					referenceSWDecoder:    genMD5VPX,
@@ -92,7 +93,7 @@ func init() {
 					size:                  coords.NewSize(320, 180),
 					fps:                   50,
 					encoderCommand:        "vpxenc",
-					encoderCommandBuilder: argsVpxenc,
+					encoderCommandBuilder: platform.ArgsVpxenc,
 					decoderCommand:        "/usr/local/libexec/chrome-binary-tests/v4l2_stateless_decoder",
 					decoderArgsBuilder:    v4l2StatelessDecodeArgs,
 					referenceSWDecoder:    genMD5VPX,
@@ -108,7 +109,7 @@ func init() {
 					size:                  coords.NewSize(320, 180),
 					fps:                   50,
 					encoderCommand:        "vp8enc",
-					encoderCommandBuilder: vp8argsVAAPI,
+					encoderCommandBuilder: platform.VP8ArgsVAAPI,
 					decoderCommand:        "vpxdec",
 					decoderArgsBuilder:    vpxDecodeArgs,
 					referenceSWDecoder:    nil,
@@ -123,7 +124,7 @@ func init() {
 					size:                  coords.NewSize(320, 180),
 					fps:                   50,
 					encoderCommand:        "vp8enc",
-					encoderCommandBuilder: vp8argsVAAPI,
+					encoderCommandBuilder: platform.VP8ArgsVAAPI,
 					decoderCommand:        "/usr/local/libexec/chrome-binary-tests/decode_test",
 					decoderArgsBuilder:    vp8decodeVAAPIargs,
 					referenceSWDecoder:    genMD5VPX,
@@ -138,7 +139,7 @@ func init() {
 					size:                  coords.NewSize(320, 180),
 					fps:                   50,
 					encoderCommand:        "v4l2_stateful_encoder",
-					encoderCommandBuilder: argsV4L2,
+					encoderCommandBuilder: platform.ArgsV4L2,
 					decoderCommand:        "vpxdec",
 					decoderArgsBuilder:    vpxDecodeArgs,
 					referenceSWDecoder:    nil,
@@ -153,7 +154,7 @@ func init() {
 					size:                  coords.NewSize(320, 180),
 					fps:                   50,
 					encoderCommand:        "v4l2_stateful_encoder",
-					encoderCommandBuilder: argsV4L2,
+					encoderCommandBuilder: platform.ArgsV4L2,
 					decoderCommand:        "v4l2_stateful_decoder",
 					decoderArgsBuilder:    v4l2StatefulDecodeArgs,
 					referenceSWDecoder:    genMD5VPX,
@@ -169,7 +170,7 @@ func init() {
 					size:                  coords.NewSize(320, 180),
 					fps:                   50,
 					encoderCommand:        "vpxenc",
-					encoderCommandBuilder: argsVpxenc,
+					encoderCommandBuilder: platform.ArgsVpxenc,
 					decoderCommand:        "/usr/local/libexec/chrome-binary-tests/decode_test",
 					decoderArgsBuilder:    vp9decodeVAAPIargs,
 					referenceSWDecoder:    genMD5VPX,
@@ -184,7 +185,7 @@ func init() {
 					size:                  coords.NewSize(320, 180),
 					fps:                   50,
 					encoderCommand:        "vpxenc",
-					encoderCommandBuilder: argsVpxenc,
+					encoderCommandBuilder: platform.ArgsVpxenc,
 					decoderCommand:        "v4l2_stateful_decoder",
 					decoderArgsBuilder:    v4l2StatefulDecodeArgs,
 					referenceSWDecoder:    genMD5VPX,
@@ -200,7 +201,7 @@ func init() {
 					size:                  coords.NewSize(320, 180),
 					fps:                   50,
 					encoderCommand:        "vpxenc",
-					encoderCommandBuilder: argsVpxenc,
+					encoderCommandBuilder: platform.ArgsVpxenc,
 					decoderCommand:        "/usr/local/libexec/chrome-binary-tests/v4l2_stateless_decoder",
 					decoderArgsBuilder:    v4l2StatelessDecodeArgs,
 					referenceSWDecoder:    genMD5VPX,
@@ -216,7 +217,7 @@ func init() {
 					size:                  coords.NewSize(320, 180),
 					fps:                   50,
 					encoderCommand:        "vp9enc",
-					encoderCommandBuilder: vp9argsVAAPI,
+					encoderCommandBuilder: platform.VP9ArgsVAAPI,
 					decoderCommand:        "vpxdec",
 					decoderArgsBuilder:    vpxDecodeArgs,
 					referenceSWDecoder:    nil,
@@ -231,7 +232,7 @@ func init() {
 					size:                  coords.NewSize(320, 180),
 					fps:                   50,
 					encoderCommand:        "vp9enc",
-					encoderCommandBuilder: vp9argsVAAPI,
+					encoderCommandBuilder: platform.VP9ArgsVAAPI,
 					decoderCommand:        "/usr/local/libexec/chrome-binary-tests/decode_test",
 					decoderArgsBuilder:    vp9decodeVAAPIargs,
 					referenceSWDecoder:    genMD5VPX,
@@ -246,7 +247,7 @@ func init() {
 					size:                  coords.NewSize(320, 180),
 					fps:                   50,
 					encoderCommand:        "v4l2_stateful_encoder",
-					encoderCommandBuilder: argsV4L2,
+					encoderCommandBuilder: platform.ArgsV4L2,
 					decoderCommand:        "vpxdec",
 					decoderArgsBuilder:    vpxDecodeArgs,
 					referenceSWDecoder:    nil,
@@ -261,7 +262,7 @@ func init() {
 					size:                  coords.NewSize(320, 180),
 					fps:                   50,
 					encoderCommand:        "v4l2_stateful_encoder",
-					encoderCommandBuilder: argsV4L2,
+					encoderCommandBuilder: platform.ArgsV4L2,
 					decoderCommand:        "v4l2_stateful_decoder",
 					decoderArgsBuilder:    v4l2StatefulDecodeArgs,
 					referenceSWDecoder:    genMD5VPX,
@@ -277,7 +278,7 @@ func init() {
 					size:                  coords.NewSize(320, 180),
 					fps:                   50,
 					encoderCommand:        "openh264enc",
-					encoderCommandBuilder: argsOpenh264enc,
+					encoderCommandBuilder: platform.ArgsOpenh264enc,
 					decoderCommand:        "/usr/local/libexec/chrome-binary-tests/decode_test",
 					decoderArgsBuilder:    h264decodeVAAPIargs,
 					referenceSWDecoder:    genMD5FFMPEG,
@@ -292,7 +293,7 @@ func init() {
 					size:                  coords.NewSize(320, 180),
 					fps:                   50,
 					encoderCommand:        "openh264enc",
-					encoderCommandBuilder: argsOpenh264enc,
+					encoderCommandBuilder: platform.ArgsOpenh264enc,
 					decoderCommand:        "v4l2_stateful_decoder",
 					decoderArgsBuilder:    v4l2StatefulDecodeArgs,
 					referenceSWDecoder:    genMD5FFMPEG,
@@ -308,7 +309,7 @@ func init() {
 					size:                  coords.NewSize(320, 180),
 					fps:                   50,
 					encoderCommand:        "h264encode",
-					encoderCommandBuilder: h264argsVAAPI,
+					encoderCommandBuilder: platform.H264ArgsVAAPI,
 					decoderCommand:        "openh264dec",
 					decoderArgsBuilder:    openh264DecodeArgs,
 					referenceSWDecoder:    nil,
@@ -323,7 +324,7 @@ func init() {
 					size:                  coords.NewSize(320, 180),
 					fps:                   50,
 					encoderCommand:        "h264encode",
-					encoderCommandBuilder: h264argsVAAPI,
+					encoderCommandBuilder: platform.H264ArgsVAAPI,
 					decoderCommand:        "/usr/local/libexec/chrome-binary-tests/decode_test",
 					decoderArgsBuilder:    h264decodeVAAPIargs,
 					referenceSWDecoder:    genMD5FFMPEG,
@@ -338,7 +339,7 @@ func init() {
 					size:                  coords.NewSize(320, 180),
 					fps:                   50,
 					encoderCommand:        "v4l2_stateful_encoder",
-					encoderCommandBuilder: argsV4L2,
+					encoderCommandBuilder: platform.ArgsV4L2,
 					decoderCommand:        "openh264dec",
 					decoderArgsBuilder:    openh264DecodeArgs,
 					referenceSWDecoder:    nil,
@@ -353,7 +354,7 @@ func init() {
 					size:                  coords.NewSize(320, 180),
 					fps:                   50,
 					encoderCommand:        "v4l2_stateful_encoder",
-					encoderCommandBuilder: argsV4L2,
+					encoderCommandBuilder: platform.ArgsV4L2,
 					decoderCommand:        "v4l2_stateful_decoder",
 					decoderArgsBuilder:    v4l2StatefulDecodeArgs,
 					referenceSWDecoder:    genMD5FFMPEG,
@@ -388,7 +389,7 @@ func PlatformInterop(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Running: ", shutil.EscapeSlice(encoderCommand))
-	_, err = runBinary(ctx, s.OutDir(), encoderCommand[0], encoderCommand[1:]...)
+	_, err = platform.RunEncoderBinary(ctx, s.OutDir(), encoderCommand[0], encoderCommand[1:]...)
 	if err != nil {
 		s.Fatal("Failed to run binary: ", err)
 	} else if videovars.ShouldRemoveArtifacts(ctx) {
@@ -412,7 +413,7 @@ func PlatformInterop(ctx context.Context, s *testing.State) {
 	}
 
 	s.Logf("Running: %s %s ", testOpt.decoderCommand, shutil.EscapeSlice(decoderCommandArgs))
-	_, err = runBinary(ctx, s.OutDir(), testOpt.decoderCommand, decoderCommandArgs...)
+	_, err = platform.RunEncoderBinary(ctx, s.OutDir(), testOpt.decoderCommand, decoderCommandArgs...)
 	if err != nil {
 		s.Fatal("Failed to run binary: ", err)
 	}
