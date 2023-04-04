@@ -1,0 +1,5 @@
+{
+  "sha256sum": "4355da80753e29306ff0717f68158ba1bb842bedc3361fe7d0936b44687936a3",
+  "size": 628344,
+  "url": "gs://chromiumos-test-assets-public/tast/cros/video/test_vectors/h264/high/HVLCFI0_Sony_B.h264_20230404-170237"
+}

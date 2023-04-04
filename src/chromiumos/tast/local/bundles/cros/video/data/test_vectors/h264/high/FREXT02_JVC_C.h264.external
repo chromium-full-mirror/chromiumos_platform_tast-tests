@@ -1,0 +1,5 @@
+{
+  "sha256sum": "29328da062fda0c3d5dddb9343a7aa17a6372a28dcc7101588adf23684c553f1",
+  "size": 62669,
+  "url": "gs://chromiumos-test-assets-public/tast/cros/video/test_vectors/h264/high/FREXT02_JVC_C.h264_20230404-170147"
+}

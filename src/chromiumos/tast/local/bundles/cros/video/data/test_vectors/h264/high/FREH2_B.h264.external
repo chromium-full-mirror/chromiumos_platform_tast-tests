@@ -1,0 +1,5 @@
+{
+  "sha256sum": "6ea81f1bed5731ccf3d357d925405f968b53bd19854a9371e67c7a001c3c4dc3",
+  "size": 470681,
+  "url": "gs://chromiumos-test-assets-public/tast/cros/video/test_vectors/h264/high/Freh2_B.h264_20230404-170131"
+}

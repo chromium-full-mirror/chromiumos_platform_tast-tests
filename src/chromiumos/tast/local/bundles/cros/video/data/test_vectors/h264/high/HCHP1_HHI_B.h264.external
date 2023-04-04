@@ -1,0 +1,5 @@
+{
+  "sha256sum": "bbe885bde7e90b38afae94b90cdda2079e20ad1d8e3b42e82a6320df48af2ae9",
+  "size": 1362236,
+  "url": "gs://chromiumos-test-assets-public/tast/cros/video/test_vectors/h264/high/HCHP1_HHI_B.h264_20230404-170203"
+}
