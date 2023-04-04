@@ -6,20 +6,16 @@ package arc
 
 import (
 	"context"
-	"path/filepath"
 	"time"
 
-	"chromiumos/tast/common/testexec"
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/arc/optin"
 	"chromiumos/tast/local/arc/playstore"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/retry"
 	"chromiumos/tast/testing"
 )
-
-type playStoreTestParams struct {
-	MaxOptinAttempts int
-}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -32,18 +28,12 @@ func init() {
 		Attr:         []string{"group:arc-functional", "group:mainline", "informational", "group:criticalstaging"},
 		SoftwareDeps: []string{"play_store", "chrome"},
 		Params: []testing.Param{{
-			Val: playStoreTestParams{
-				MaxOptinAttempts: 2,
-			},
 			ExtraSoftwareDeps: []string{"android_container"},
 		}, {
-			Name: "vm",
-			Val: playStoreTestParams{
-				MaxOptinAttempts: 1,
-			},
+			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}},
-		Timeout: 10 * time.Minute,
+		Timeout: 13 * time.Minute,
 		VarDeps: []string{"ui.gaiaPoolDefault"},
 	})
 }
@@ -53,58 +43,61 @@ func PlayStore(ctx context.Context, s *testing.State) {
 		pkgName = "com.google.android.calculator"
 	)
 
-	// Setup Chrome.
-	cr, err := chrome.New(ctx,
-		chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
-		chrome.ARCSupported(),
-		chrome.ExtraArgs(arc.DisableSyncFlags()...))
-	if err != nil {
-		s.Fatal("Failed to start Chrome: ", err)
-	}
-	defer cr.Close(ctx)
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
+	defer cancel()
 
-	// Optin to Play Store.
-	s.Log("Opting into Play Store")
-	maxAttempts := s.Param().(playStoreTestParams).MaxOptinAttempts
+	rl := &retry.Loop{Attempts: 1,
+		MaxAttempts: 2,
+		DoRetries:   true,
+		Fatalf:      s.Fatalf,
+		Logf:        s.Logf}
 
-	if err := optin.PerformWithRetry(ctx, cr, maxAttempts); err != nil {
-		s.Fatal("Failed to optin to Play Store: ", err)
-	}
-
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to create test API connection: ", err)
-	}
-	if err := optin.WaitForPlayStoreShown(ctx, tconn, time.Minute); err != nil {
-		s.Fatal("Failed to wait for Play Store: ", err)
-	}
-
-	// Setup ARC.
-	a, err := arc.New(ctx, s.OutDir())
-	if err != nil {
-		s.Fatal("Failed to start ARC: ", err)
-	}
-	defer a.Close(ctx)
-	defer func() {
-		if s.HasError() {
-			if err := a.Command(ctx, "uiautomator", "dump").Run(testexec.DumpLogOnError); err != nil {
-				s.Error("Failed to dump UIAutomator: ", err)
-			}
-			if err := a.PullFile(ctx, "/sdcard/window_dump.xml", filepath.Join(s.OutDir(), "uiautomator_dump.xml")); err != nil {
-				s.Error("Failed to pull UIAutomator dump: ", err)
-			}
+	if err := testing.Poll(ctx, func(ctx context.Context) (retErr error) {
+		cr, err := chrome.New(ctx,
+			chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+			chrome.ARCSupported(),
+			chrome.ExtraArgs(arc.DisableSyncFlags()...))
+		if err != nil {
+			return rl.Retry("connect to Chrome", err)
 		}
-	}()
+		defer cr.Close(cleanupCtx)
 
-	d, err := a.NewUIDevice(ctx)
-	if err != nil {
-		s.Fatal("Failed initializing UI Automator: ", err)
-	}
-	defer d.Close(ctx)
+		tconn, err := cr.TestAPIConn(ctx)
+		if err != nil {
+			rl.Exit("create test API Connection", err)
+		}
 
-	// Install app.
-	s.Log("Installing app")
-	if err := playstore.InstallApp(ctx, a, d, pkgName, &playstore.Options{TryLimit: -1}); err != nil {
-		s.Fatal("Failed to install app: ", err)
+		if err := optin.Perform(ctx, cr, tconn); err != nil {
+			return rl.Retry("optin to Play Store", err)
+		}
+
+		a, err := arc.New(ctx, s.OutDir())
+		if err != nil {
+			return rl.Retry("start ARC", err)
+		}
+		defer a.Close(cleanupCtx)
+		defer a.DumpUIHierarchyOnError(cleanupCtx, s.OutDir(), func() bool {
+			return s.HasError() || retErr != nil
+		})
+
+		if err := optin.WaitForPlayStoreShown(ctx, tconn, time.Minute); err != nil {
+			rl.Exit("wait for Play Store to show", err)
+		}
+
+		d, err := a.NewUIDevice(ctx)
+		if err != nil {
+			rl.Exit("create UIAutomator", err)
+		}
+		defer d.Close(cleanupCtx)
+
+		s.Log("Installing app")
+		if err := playstore.InstallApp(ctx, a, d, pkgName, &playstore.Options{TryLimit: -1}); err != nil {
+			rl.Exit("install the app", err)
+		}
+
+		return nil
+	}, nil); err != nil {
+		s.Fatal("Play Store test failed: ", err)
 	}
 }
