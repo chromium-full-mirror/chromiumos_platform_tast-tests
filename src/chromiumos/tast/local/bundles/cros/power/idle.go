@@ -322,9 +322,7 @@ func Idle(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to stop recording: ", err)
 	}
-	if err := pv.Save(s.OutDir()); err != nil {
-		s.Fatal("Failed to store the metrics: ", err)
+	if err := power.GeneratePowerLogAndSaveToCrosbolt(ctx, s.OutDir(), s.TestName(), pv); err != nil {
+		s.Error("Failed to save and upload power metrics: ", err)
 	}
-
-	// TODO(hidehiko): Create a json data so that dashboard can consume it.
 }
