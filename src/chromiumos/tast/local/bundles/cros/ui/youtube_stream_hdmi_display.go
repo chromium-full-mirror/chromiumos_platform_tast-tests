@@ -7,6 +7,7 @@ package ui
 import (
 	"context"
 	"fmt"
+	"math"
 	"regexp"
 	"strconv"
 	"strings"
@@ -22,9 +23,7 @@ import (
 	"chromiumos/tast/local/chrome/cuj"
 	"chromiumos/tast/local/chrome/display"
 	"chromiumos/tast/local/chrome/uiauto"
-	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
-	"chromiumos/tast/local/chrome/uiauto/ossettings"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/cswitch"
 	"chromiumos/tast/local/input"
@@ -110,40 +109,18 @@ func YoutubeStreamHDMIDisplay(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to find the settings app in the available Chrome apps: ", err)
 	}
 
-	settings, err := ossettings.LaunchAtPage(ctx, tconn, nodewith.Name("Displays").Role(role.Link))
-	if err != nil {
-		s.Fatal("Failed to launch os-settings Device page: ", err)
-	}
-	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
-
 	cui := uiauto.New(tconn)
-	displayName, err := waitForExternalDisplayName(ctx, tconn)
+	info, err := display.GetInfo(ctx, tconn)
 	if err != nil {
-		s.Fatal("Failed to get connected external display name: ", err)
-	}
-
-	externalDisplayTab := nodewith.Name(displayName).Role(role.Tab)
-	if err := cui.DoDefault(externalDisplayTab)(ctx); err != nil {
-		s.Fatalf("Failed to click on 'External Display %v' option in Display page: %v", displayName, err)
-	}
-
-	// Check if the 4k resolution @3840 x 2160 is getting listed in the drop down menu.
-	resolutionMenuParams := nodewith.Name("Resolution").Role(role.PopUpButton)
-	if err := cui.LeftClick(resolutionMenuParams)(ctx); err != nil {
-		s.Fatal("Failed to find and click resolution menu: ", err)
-	}
-
-	resolution4kParams := nodewith.Name("3840 x 2160").Role(role.ListBoxOption).First()
-	if err := cui.LeftClick(resolution4kParams)(ctx); err != nil {
-		s.Fatal("Failed to find and click resolution '3840 x 2160': ", err)
-	}
-
-	if err := settings.Close(ctx); err != nil {
-		s.Fatal("Failed to close settings app: ", err)
+		s.Fatal("Failed to get display info: ", err)
 	}
 
 	if err := typecutils.CheckDisplayInfo(ctx, true, false); err != nil {
 		s.Fatal("Failed to check display info: ", err)
+	}
+
+	if err := typecutils.SetDisplayResolution(ctx, tconn, &info[1], 3840, 2160, cr); err != nil {
+		s.Fatal("Failed to change resolution: ", err)
 	}
 
 	uiHandler, err := cuj.NewClamshellActionHandler(ctx, tconn)
@@ -216,7 +193,8 @@ func waitForChangesInBrightness(ctx context.Context, doBrightnessChange func() e
 	}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
 		return 0.0, errors.Wrap(err, "failed to wait for brightness change")
 	}
-	return brightness, nil
+	//  returns change in brightness value.
+	return math.Round(brightness*100) / 100, nil
 }
 
 // systemBrightness gets the current brightness of the system.
@@ -229,7 +207,8 @@ func systemBrightness(ctx context.Context) (float64, error) {
 	if err != nil {
 		return 0.0, errors.Wrap(err, "failed to parse string into float64")
 	}
-	return b, nil
+	// returns system brightness value.
+	return math.Round(b*100) / 100, nil
 }
 
 // setSystemBrightness sets the brightness of the system.
@@ -253,10 +232,10 @@ func decreaseBrightness(ctx context.Context, topRow *input.TopRowLayout, kb *inp
 		if err != nil {
 			return errors.Wrap(err, "failed to change brightness after pressing 'BrightnessDown'")
 		}
-		if decBrightness >= preBrightness {
+		if decBrightness > preBrightness {
 			return errors.Wrap(err, "failed to decrease the brightness")
 		}
-		if decBrightness == 0.0 {
+		if decBrightness == 0.00 {
 			break
 		}
 	}
@@ -376,6 +355,10 @@ func waitForMirrorModeSwitch(ctx context.Context, tconn *chrome.TestConn) error 
 
 // youtubePlayerFunctionalities performs various youtube player functionalities.
 func youtubePlayerFunctionalities(ctx context.Context, kb *input.KeyboardEventWriter, cui *uiauto.Context, tconn *chrome.TestConn) error {
+	topRow, err := input.KeyboardTopRowLayout(ctx, kb)
+	if err != nil {
+		return errors.Wrap(err, "failed to obtain the top-row layout")
+	}
 	if err := kb.Accel(ctx, "f"); err != nil {
 		return errors.Wrap(err, "failed to press f key to enter fullscreen")
 	}
@@ -426,7 +409,7 @@ func youtubePlayerFunctionalities(ctx context.Context, kb *input.KeyboardEventWr
 		return errors.Wrap(err, "failed to check the existence of Maximize button after normalizing window")
 	}
 
-	if err := kb.Accel(ctx, "scale"); err != nil {
+	if err := kb.Accel(ctx, topRow.SelectTask); err != nil {
 		return errors.Wrap(err, "failed to press scale button")
 	}
 
@@ -435,7 +418,7 @@ func youtubePlayerFunctionalities(ctx context.Context, kb *input.KeyboardEventWr
 		return errors.Wrap(err, "failed to check the existence of Desk 1 element to validate window mode")
 	}
 
-	if err := kb.Accel(ctx, "scale"); err != nil {
+	if err := kb.Accel(ctx, topRow.SelectTask); err != nil {
 		return errors.Wrap(err, "failed to press scale button")
 	}
 
@@ -443,7 +426,7 @@ func youtubePlayerFunctionalities(ctx context.Context, kb *input.KeyboardEventWr
 		return errors.Wrap(err, "failed due to existence of Desk 1 element to validate normal mode")
 	}
 
-	if err := kb.Accel(ctx, "ctrl+fullscreen"); err != nil {
+	if err := typecutils.SetMirrorDisplay(ctx, tconn, true); err != nil {
 		return errors.Wrap(err, "failed to press ctrl+fullscreen")
 	}
 
