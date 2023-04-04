@@ -30,7 +30,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         TouchBasicsCheck,
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Touch screen check basic functionality of the browser",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291",
@@ -70,10 +70,20 @@ func TouchBasicsCheck(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	if err := apps.Launch(ctx, tconn, apps.Chrome.ID); err != nil {
-		s.Fatalf("Failed to open %s: %s", apps.Chrome.Name, err)
+	chromeApp, err := apps.ChromeOrChromium(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to find the chrome app: ", err)
 	}
-	defer apps.Close(cleanupCtx, tconn, apps.Chrome.ID)
+
+	if err := apps.Launch(ctx, tconn, chromeApp.ID); err != nil {
+		s.Fatalf("Failed to open %s: %s", chromeApp.Name, err)
+	}
+	defer apps.Close(cleanupCtx, tconn, chromeApp.ID)
+
+	// Chrome app name doesn't exactly match the chrome shelf name so modify it here for simpler code later.
+	if chromeApp.Name == apps.Chrome.Name {
+		chromeApp.Name = "Google Chrome"
+	}
 
 	cmd, stdout, err := deviceScanner(ctx)
 	if err != nil {
@@ -87,11 +97,11 @@ func TouchBasicsCheck(ctx context.Context, s *testing.State) {
 	nodes := []*nodewith.Finder{
 		nodewith.Name("New Tab").Role(role.Button),
 		nodewith.Name("Minimize").ClassName("FrameCaptionButton").Role(role.Button),
-		nodewith.Name("Google Chrome").Role(role.Button).ClassName("ash/ShelfAppButton").First(),
-		nodewith.Name("Maximize").ClassName("FrameCaptionButton").Role(role.Button),
+		nodewith.Name(chromeApp.Name).Role(role.Button).ClassName("ash/ShelfAppButton").First(),
+		nodewith.Name("Maximize").ClassName("FrameSizeButton").Role(role.Button),
 		nodewith.Name("Close").Role(role.Button).First(),
-		nodewith.Name("Google Chrome").Role(role.Button).ClassName("ash/ShelfAppButton").First(),
-		nodewith.Name("Restore").ClassName("FrameCaptionButton").Role(role.Button),
+		nodewith.Name(chromeApp.Name).Role(role.Button).ClassName("ash/ShelfAppButton").First(),
+		nodewith.Name("Restore").ClassName("FrameSizeButton").Role(role.Button),
 	}
 
 	for _, node := range nodes {
