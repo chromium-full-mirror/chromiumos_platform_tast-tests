@@ -125,7 +125,7 @@ func getKernelDriverDebugFile(ctx context.Context, relPath string) (string, erro
 		if _, err := os.ReadFile(path); err != nil {
 			return "", errors.Wrap(err, "file exist but not readable")
 		}
-		testing.ContextLogf(ctx, "File %v under driver (%v) found", relPath, string(name))
+		testing.ContextLogf(ctx, "File %v under driver (%v) found", relPath, strings.TrimSpace(string(name)))
 		return path, nil
 	}
 	return "", errors.Errorf("can't find any %v in kernel", relPath)

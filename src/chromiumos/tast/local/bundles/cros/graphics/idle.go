@@ -395,25 +395,20 @@ func i915MinClock(ctx context.Context) error {
 			return errors.Wrapf(err, "failed to open %v", clockPath)
 		}
 
-		// This file has a different format depending on the
-		// board, so we parse both. Also, it would be tedious
-		// to add the minimum clock for each board, so instead
-		// we use 650MHz which is the max of the minimum clocks.
-		re := regexp.MustCompile("CAGF: (.*)MHz")
-		matches := re.FindStringSubmatch(string(f))
-		if matches != nil {
-			hz, err := strconv.ParseInt(matches[1], 0, 64)
-			if err != nil {
-				return errors.Wrapf(err, "failed to parse %s to int", matches[1])
-			}
-			if hz <= 650 {
-				return nil
-			}
-		}
+		content := string(f)
 
-		re = regexp.MustCompile("current GPU freq: (.*) MHz")
-		matches = re.FindStringSubmatch(string(f))
-		if matches != nil {
+		// This file has a different format depending on the kernel/board, so we loop them.
+		// Also, it would be tedious to add the minimum clock for each board, so instead
+		// we use 650MHz which is the max of the minimum clocks.
+		for _, re := range []*regexp.Regexp{
+			regexp.MustCompile(`CAGF: (.*)MHz`),
+			regexp.MustCompile(`current GPU freq: (.*) MHz`),
+			regexp.MustCompile(`Actual freq: (\d*) MHz`), // slpc freq dumps
+		} {
+			matches := re.FindStringSubmatch(content)
+			if matches == nil {
+				continue
+			}
 			hz, err := strconv.ParseInt(matches[1], 0, 64)
 			if err != nil {
 				return errors.Wrapf(err, "failed to parse %s to int", matches[1])
