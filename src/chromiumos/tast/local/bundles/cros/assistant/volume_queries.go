@@ -21,13 +21,22 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VolumeQueries,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests setting and increasing volume actions via Assistant",
+		Desc:         "Tests setting, increasing and decreasing volume actions via Assistant",
 		BugComponent: "b:905229", // ChromeOS > Software > Assistive
 		Contacts:     []string{"assistive-eng@google.com"},
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		HardwareDeps: hwdep.D(hwdep.Speaker()),
-		Fixture:      "assistant",
+		Params: []testing.Param{
+			{
+				Name:              "libassistant_v2",
+				Fixture:           "assistantWithLibassistantV2",
+				ExtraSoftwareDeps: []string{"dlc"},
+			},
+			{
+				Fixture: "assistant",
+			},
+		},
 	})
 }
 
@@ -70,6 +79,7 @@ func VolumeQueries(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to increase volume via Assistant: ", err)
 	}
 
+	var previousVolume uint64 = testVolume
 	s.Log("Verifying increase volume query result")
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		v, err := getActiveNodeVolume(ctx)
@@ -79,9 +89,29 @@ func VolumeQueries(ctx context.Context, s *testing.State) {
 		if v <= testVolume {
 			return errors.Errorf("system volume doesn't increase: current - %d, base - %d", v, testVolume)
 		}
+		previousVolume = v
 		return nil
 	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
 		s.Fatal("Timed out waiting for volume increase: ", err)
+	}
+
+	s.Log("Sending decrease volume query to the Assistant")
+	if _, err := assistant.SendTextQuery(ctx, tconn, "turn down volume."); err != nil {
+		s.Fatal("Failed to decrease volume via Assistant: ", err)
+	}
+
+	s.Log("Verifying decrease volume query result")
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		v, err := getActiveNodeVolume(ctx)
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to get system volume"))
+		}
+		if v >= previousVolume {
+			return errors.Errorf("system volume doesn't decrease: current - %d, base - %d", v, previousVolume)
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+		s.Fatal("Timed out waiting for volume decrease: ", err)
 	}
 }
 
