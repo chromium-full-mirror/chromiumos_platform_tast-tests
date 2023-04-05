@@ -156,6 +156,11 @@ func (battery *BatteryDischarge) fulfill(ctx context.Context, s *Setup) {
 	} else {
 		s.Add(cleanup, battery.err)
 	}
+
+	// If force battery fails, change the flag to reflect this failure.
+	if battery.err != nil {
+		battery.discharge = false
+	}
 }
 
 // Err returns the battery discharge error.
@@ -366,7 +371,7 @@ func PowerTest(ctx context.Context, c *chrome.TestConn, options PowerTestOptions
 			s.Add(DisableServiceIfExists(ctx, "dptf"))
 		}
 		if options.Backlight == SetBacklight {
-			s.Add(SetBacklightLux(ctx, 150))
+			s.Add(SetBacklightLux(ctx, 150, batteryDischarge.discharge))
 		}
 		if options.Backlight == SetBacklightToZero {
 			s.Add(SetBacklightBrightnessLinearPercent(ctx, 0))

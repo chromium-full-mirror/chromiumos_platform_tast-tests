@@ -185,12 +185,14 @@ func Idle(ctx context.Context, s *testing.State) {
 	// Set up the testing environment.
 	su, cleanup := setup.New("power.idle")
 	defer cleanup(ctx)
-	su.Add(setup.SetBacklightLux(ctx, 150))
+
 	// Battery discharge setup is optional.
 	if callback, err := setup.SetBatteryDischarge(ctx, 2.0); err != nil {
 		s.Log("Battery discharge is not supported, so skipping: ", err)
+		su.Add(setup.SetBacklightLux(ctx, 150, false))
 	} else {
 		su.Add(callback, nil)
+		su.Add(setup.SetBacklightLux(ctx, 150, true))
 	}
 	if err := su.Check(ctx); err != nil {
 		s.Fatal("Test set up failed: ", err)

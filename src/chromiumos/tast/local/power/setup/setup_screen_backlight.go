@@ -31,11 +31,17 @@ func backlightBrightness(ctx context.Context) (uint, error) {
 }
 
 // defaultBacklightBrightness returns the backlight brightness at a given lux
-// level. We use backlight_tool instead of sysfs directly because the conversion
-// between lux and brightness is complicated and hard to extract.
-func defaultBacklightBrightness(ctx context.Context, lux uint) (uint, error) {
+// level and a given force battery condition. We use backlight_tool instead of
+// sysfs directly because the conversion between lux and brightness is complicated
+// and hard to extract.
+func defaultBacklightBrightness(ctx context.Context, lux uint, forceBattery bool) (uint, error) {
+	var batteryArg string
+	if forceBattery {
+		batteryArg = "--force_battery"
+	}
 	luxArg := "--lux=" + strconv.FormatUint(uint64(lux), 10)
-	output, err := testexec.CommandContext(ctx, "backlight_tool", "--get_initial_brightness", luxArg).Output(testexec.DumpLogOnError)
+
+	output, err := testexec.CommandContext(ctx, "backlight_tool", "--get_initial_brightness", luxArg, batteryArg).Output(testexec.DumpLogOnError)
 	if err != nil {
 		return 0, errors.Wrap(err, "unable to get default backlight brightness")
 	}
@@ -101,7 +107,7 @@ func checkBacklightExists(ctx context.Context) (bool, error) {
 
 // SetBacklightLux sets the screen backlight to a brightness in lux, and returns
 // a callback to restore backlight brightness after test finishes.
-func SetBacklightLux(ctx context.Context, lux uint) (CleanupCallback, error) {
+func SetBacklightLux(ctx context.Context, lux uint, forceBattery bool) (CleanupCallback, error) {
 	backlightExists, err := checkBacklightExists(ctx)
 	if err != nil {
 		return nil, err
@@ -115,7 +121,7 @@ func SetBacklightLux(ctx context.Context, lux uint) (CleanupCallback, error) {
 		return nil, err
 	}
 
-	brightness, err := defaultBacklightBrightness(ctx, lux)
+	brightness, err := defaultBacklightBrightness(ctx, lux, forceBattery)
 	if err != nil {
 		return nil, err
 	}
