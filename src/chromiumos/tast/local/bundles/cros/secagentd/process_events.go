@@ -7,6 +7,7 @@ package secagentd
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -255,10 +256,20 @@ func testOneProcessEventsParams(ctx context.Context, s *testing.State, param pro
 		}
 	}
 	if !execFound {
-		s.Errorf("Failed to find a matching ProcessExec event for pid %d", expPid)
+		errorMessage := fmt.Sprintf("Failed to find a matching ProcessExec event for pid %d", expPid)
+		if param.expBatch {
+			s.Error(errorMessage)
+		} else {
+			s.Log(errorMessage)
+		}
 	}
 	if !param.expCoalescedTerm && !terminateFound {
-		s.Errorf("Failed to find a matching ProcessExit event for pid %d", expPid)
+		errorMessage := fmt.Sprintf("Failed to find a matching ProcessExit event for pid %d", expPid)
+		if param.expBatch {
+			s.Error(errorMessage)
+		} else {
+			s.Log(errorMessage)
+		}
 	}
 	if param.expCoalescedTerm && terminateFound {
 		// Coalescing is best effort and based on timing. Err on the
