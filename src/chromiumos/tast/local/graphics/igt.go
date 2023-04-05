@@ -12,15 +12,16 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"strings"
 
 	"chromiumos/tast/common/testexec"
 )
 
 // IgtTest is used to describe the config used to run each test.
 type IgtTest struct {
-	Exe              string // The test executable name.
-	Subtest          string // The subtest to run.
-	DisableHangCheck bool   // If true, disable the gpu hang check as the test produces hangs intentionally.
+	Exe              string   // The test executable name.
+	Subtests         []string // The subtests to run.
+	DisableHangCheck bool     // If true, disable the gpu hang check as the test produces hangs intentionally.
 }
 
 // igtResultSummary is a summary of results from an igt test log.
@@ -41,8 +42,10 @@ func IgtExecuteTests(ctx context.Context, testOpt IgtTest, f *os.File) (bool, *e
 	exePath := filepath.Join("/usr/local/libexec/igt-gpu-tools", testOpt.Exe)
 
 	var cmd *testexec.Cmd
-	if testOpt.Subtest != "" {
-		cmd = testexec.CommandContext(ctx, exePath, "--run-subtest", testOpt.Subtest)
+	if len(testOpt.Subtests) > 0 {
+		// IGT accepts wildcards
+		subtests := strings.Join(testOpt.Subtests, ",")
+		cmd = testexec.CommandContext(ctx, exePath, "--run-subtest", subtests)
 	} else {
 		cmd = testexec.CommandContext(ctx, exePath)
 	}
