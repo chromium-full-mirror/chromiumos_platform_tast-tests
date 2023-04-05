@@ -28,10 +28,9 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Check that the DefaultJavaScript policy blocks or allows JavaScript",
 		Contacts: []string{
-			"cros-engprod-muc@google.com",
-			"mpolzer@google.com", // Test author
+			"chrome-permissions-team@google.com",
 		},
-		BugComponent: "b:1263917",
+		BugComponent: "crbug:Internals>Permissions>Model",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier"},
 		Params: []testing.Param{{
