@@ -97,13 +97,13 @@ func CrostiniConnectivity(ctx context.Context, s *testing.State) {
 	}
 	var pingAddrs []string
 	if !v6only {
-		pingAddrs = append(pingAddrs, routerAddrs.IPv4Addr.String())
 		pingAddrs = append(pingAddrs, serverAddrs.IPv4Addr.String())
-	}
-	for _, ip := range routerAddrs.IPv6Addrs {
-		pingAddrs = append(pingAddrs, ip.String())
+		pingAddrs = append(pingAddrs, routerAddrs.IPv4Addr.String())
 	}
 	for _, ip := range serverAddrs.IPv6Addrs {
+		pingAddrs = append(pingAddrs, ip.String())
+	}
+	for _, ip := range routerAddrs.IPv6Addrs {
 		pingAddrs = append(pingAddrs, ip.String())
 	}
 	if !v6only {
@@ -118,24 +118,44 @@ func CrostiniConnectivity(ctx context.Context, s *testing.State) {
 
 	// Check if testEnv prefix propagated into Crostini, and log it for debugging.
 	const addressPollTimeout = 5 * time.Second
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		out, err := cont.Command(ctx, "/usr/bin/ip", "addr", "show", "scope", "global").Output(testexec.DumpLogOnError)
-		if err != nil {
-			return err
+	if !v6only {
+		if err := checkCrostiniAddress(ctx, cont, false, addressPollTimeout); err != nil {
+			s.Error("Failed to get IPv4 address in Crostini: ", err)
 		}
-		testing.ContextLog(ctx, "Crostini address information: ", string(out))
-		return nil
-	}, &testing.PollOptions{Timeout: addressPollTimeout}); err != nil {
-		s.Fatal("Failed to get address information in Crostini: ", err)
+	}
+	if err := checkCrostiniAddress(ctx, cont, true, addressPollTimeout); err != nil {
+		s.Error("Failed to get IPv6 address in Crostini: ", err)
 	}
 
+	// Verify reachability to destinations in Crostini
+	const pingPollTimeout = 20 * time.Second
 	for _, ip := range pingAddrs {
-		if err := crostiniRetriedPingWithTimeout(ctx, cont, ip, 10*time.Second); err != nil {
+		if err := crostiniRetriedPingWithTimeout(ctx, cont, ip, pingPollTimeout); err != nil {
 			s.Errorf("Failed to ping %s from Crostini: %v", ip, err)
 		} else {
 			testing.ContextLogf(ctx, "Succeeded to ping %s from Crostini", ip)
 		}
 	}
+}
+
+func checkCrostiniAddress(ctx context.Context, cont *vm.Container, ipv6 bool, timeout time.Duration) error {
+	ipCmdOption := "-4"
+	versionForLog := "IPv4"
+	if ipv6 {
+		ipCmdOption = "-6"
+		versionForLog = "IPv6"
+	}
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		out, err := cont.Command(ctx, "/usr/bin/ip", ipCmdOption, "addr", "show", "scope", "global").Output(testexec.DumpLogOnError)
+		if err != nil {
+			return err
+		}
+		if len(out) == 0 {
+			return errors.Errorf("no global %s address is configured", versionForLog)
+		}
+		testing.ContextLog(ctx, "Crostini ", versionForLog, " address information: \n", string(out))
+		return nil
+	}, &testing.PollOptions{Timeout: timeout})
 }
 
 func crostiniRetriedPingWithTimeout(ctx context.Context, cont *vm.Container, addr string, timeout time.Duration) error {
