@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/firmware/ti50"
+	"chromiumos/tast/remote/bundles/cros/gscdevboard/utils"
 	"chromiumos/tast/remote/firmware/ti50/fixture"
 	"chromiumos/tast/testing"
 )
@@ -30,46 +31,42 @@ func init() {
 
 func Ti50EcReset(ctx context.Context, s *testing.State) {
 	f := s.FixtValue().(*fixture.Value)
+	b := utils.NewDevboardHelper(f.DevBoard(), s)
+	i := ti50.NewCrOSImage(b)
+	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 
-	board := f.DevBoard()
-	i := ti50.NewCrOSImage(board)
+	// Hold GSC in reset before start GPIO monitoring
+	b.GpioSet(ctx, ti50.GpioTi50ResetL, false)
 
-	_, err := board.OpenTitanToolCommand(ctx, "gpio", "monitoring", "start", string(ti50.GpioTi50ResetL), string(ti50.GpioTi50EcRstL), string(ti50.GpioTi50EcRstFet))
-	if err != nil {
-		s.Fatal("OpenTitanToolCommand: ", err)
+	s.Log("Start gpio monitoring")
+	gpioMonitor := b.GpioMonitorStart(ctx, ti50.GpioTi50ResetL, ti50.GpioTi50EcRstL, ti50.GpioTi50EcRstFet)
+
+	s.Log("Booting ti50")
+	b.GpioSet(ctx, ti50.GpioTi50ResetL, true)
+	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
+
+	// Give a little more time for gpio monitoring to catch EC_RST edges after GSC boots
+	testing.Sleep(ctx, time.Second)
+
+	events := b.GpioMonitorFinish(ctx, gpioMonitor)
+	s.Log("Stop gpio monitoring: ", events)
+
+	resetReleased := events.FindFirst(ti50.GpioTi50ResetL, utils.GpioEdgeRising)
+	if resetReleased == nil {
+		// Fatal since we need to deference gpio event later
+		s.Fatal("GSC did not come out of reset")
+	}
+	firstFetAfterRelease := events.FindFirstAfter(*resetReleased, ti50.GpioTi50EcRstFet)
+	if firstFetAfterRelease == nil {
+		// Fatal since we need to deference gpio event later
+		s.Fatalf("%s did have an edge after release GSC from reset", ti50.GpioTi50EcRstFet)
 	}
 
-	testing.ContextLog(ctx, "Restarting ti50")
-	if err = board.Reset(ctx); err != nil {
-		s.Fatal("Failed to reset: ", err)
-	}
-	if err = i.WaitUntilBooted(ctx); err != nil {
-		s.Fatal("Ti50 did revive after reboot: ", err)
+	firstEcAfterFet := events.FindFirstAfter(*firstFetAfterRelease, ti50.GpioTi50EcRstL)
+	if firstEcAfterFet == nil || firstEcAfterFet.Edge != utils.GpioEdgeRising {
+		// Fatal since we need to deference gpio event later
+		s.Fatalf("%s edge right after FET release is not rising edge", ti50.GpioTi50EcRstL)
 	}
 
-	eventData, err := board.OpenTitanToolCommand(ctx, "gpio", "monitoring", "read", string(ti50.GpioTi50ResetL), string(ti50.GpioTi50EcRstL), string(ti50.GpioTi50EcRstFet))
-	if err != nil {
-		s.Fatal("OpenTitanToolCommand: ", err)
-	}
-
-	events := eventData["events"].([]interface{})
-	if len(events) != 4 {
-		s.Fatal("Unexpected number of events")
-	}
-	event1 := events[0].(map[string]interface{})
-	if event1["signal_name"].(string) != string(ti50.GpioTi50ResetL) || event1["edge"] != "Falling" {
-		s.Error("Unexpected first event: ", event1)
-	}
-	event2 := events[1].(map[string]interface{})
-	if event2["signal_name"].(string) != string(ti50.GpioTi50EcRstFet) || event2["edge"] != "Rising" {
-		s.Error("Unexpected second event: ", event2)
-	}
-	event3 := events[2].(map[string]interface{})
-	if event3["signal_name"].(string) != string(ti50.GpioTi50ResetL) || event3["edge"] != "Rising" {
-		s.Error("Unexpected third event: ", event3)
-	}
-	event4 := events[3].(map[string]interface{})
-	if event4["signal_name"].(string) != string(ti50.GpioTi50EcRstFet) || event4["edge"] != "Falling" {
-		s.Error("Unexpected fourth event: ", event4)
-	}
+	s.Logf("EC released from Reset %dms after GSC released", (firstEcAfterFet.TimestampUS-resetReleased.TimestampUS)/1000)
 }
