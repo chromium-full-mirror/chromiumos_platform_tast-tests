@@ -38,7 +38,6 @@ func init() {
 		// ChromeOS > Platform > System > Networking
 		BugComponent: "b:156085",
 		Attr:         []string{"group:mainline"},
-		SoftwareDeps: []string{"wired_8021x"},
 		Fixture:      "ensureNoUI",
 
 		Params: []testing.Param{
