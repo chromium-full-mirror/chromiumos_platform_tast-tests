@@ -14,6 +14,7 @@ import (
 	"chromiumos/tast/local/cellular"
 	"chromiumos/tast/local/modemfwd"
 	"chromiumos/tast/local/modemmanager"
+	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
 )
@@ -69,6 +70,13 @@ func waitForFileState(ctx context.Context, path string, desiredExistenceState bo
 func ModemfwdRecovery(ctx context.Context, s *testing.State) {
 	const MaxRecoveryTime = 3 * time.Minute
 	params := s.Param().(recoveryTestParams)
+
+	defer func(ctx context.Context) {
+		if err := upstart.StopJob(ctx, modemfwd.JobName); err != nil {
+			s.Fatalf("Failed to stop %q: %s", modemfwd.JobName, err)
+		}
+		s.Log("modemfwd has stopped successfully")
+	}(ctx)
 
 	// modemfwd is initially stopped in the fixture SetUp
 	if err := modemfwd.StartAndWaitForQuiescence(ctx); err != nil {
