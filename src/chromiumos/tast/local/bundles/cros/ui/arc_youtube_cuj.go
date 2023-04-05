@@ -197,6 +197,43 @@ func ArcYoutubeCUJ(ctx context.Context, s *testing.State) {
 		// Log the position along the timeline of video playback.
 		s.Log("Initial video position (after waiting for everything to load): ", videoPosition)
 
+		// Make sure the video is 60fps.
+		optionsView := d.Object(
+			ui.ClassName("android.widget.ImageView"),
+			ui.Description("More options"),
+			ui.PackageName(ytAppPkgName),
+		)
+		if err := d.PressKeyCode(ctx, ui.KEYCODE_ESCAPE, 0); err != nil {
+			return errors.Wrap(err, "failed to press ESC")
+		}
+		if err := optionsView.Click(ctx); err != nil {
+			return errors.Wrap(err, "failed to click the options view")
+		}
+		// TODO(b/277108157): Assume the first button is `Quality` button because it can not
+		// find the `Quality` button with UI Automator selector.
+		if err := d.PressKeyCode(ctx, ui.KEYCODE_TAB, 0); err != nil {
+			return errors.Wrap(err, "failed to press TAB")
+		}
+		if err := d.PressKeyCode(ctx, ui.KEYCODE_ENTER, 0); err != nil {
+			return errors.Wrap(err, "failed to press ENTER")
+		}
+		advanceView := d.Object(
+			ui.ClassName("android.widget.TextView"),
+			ui.TextContains("Advance"),
+			ui.PackageName(ytAppPkgName),
+		)
+		if err := advanceView.Click(ctx); err != nil {
+			return errors.Wrap(err, "failed to click the advance view")
+		}
+		fps60Button := d.Object(
+			ui.ClassName("android.widget.TextView"),
+			ui.TextContains("1080p60"),
+			ui.PackageName(ytAppPkgName),
+		)
+		if err := fps60Button.Click(ctx); err != nil {
+			return errors.Wrap(err, "failed to click the 1080p60 view")
+		}
+
 		recorder.Annotate(ctx, "Start_watching_video")
 
 		var traceRecorded bool
@@ -235,6 +272,7 @@ func ArcYoutubeCUJ(ctx context.Context, s *testing.State) {
 				return errors.Wrap(err, "failed to verify that the recommended videos section is still loaded")
 			}
 		}
+		recorder.Annotate(ctx, "Stop_watching_video")
 
 		return nil
 	}); err != nil {
