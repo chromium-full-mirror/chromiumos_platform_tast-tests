@@ -32,6 +32,9 @@ func init() {
 				chrome.EnableFeatures("SpeakOnMuteEnabled"),
 				chrome.EnableFeatures("VideoConference"),
 				chrome.EnableFeatures("CrOSLateBootAudioFlexibleLoopback"),
+				// Disable WindowLayoutMenu to prevent `Keep hovering for more layout options` nudge.
+				// The nudge is overlap with app window and causes screen diff flakiness.
+				chrome.DisableFeatures("WindowLayoutMenu"),
 				chrome.ExtraArgs(arc.DisableSyncFlags()...),
 				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault"))}, nil
 		}),

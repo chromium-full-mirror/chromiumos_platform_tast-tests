@@ -652,6 +652,28 @@ func GetActiveWindow(ctx context.Context, tconn *chrome.TestConn) (*Window, erro
 	return activeWindow, nil
 }
 
+// MaximizeWindowTitleContains maximizes a window with title. It returns an action for restoring the original state.
+func MaximizeWindowTitleContains(ctx context.Context, tconn *chrome.TestConn, title string) (action.Action, error) {
+	window, err := FindOnlyWindow(ctx, tconn, func(w *Window) bool {
+		return strings.Contains(w.Title, title)
+	})
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to find the only window contains title %q", title)
+	}
+	originalState := window.State
+	if originalState == WindowStateMaximized {
+		return func(ctx context.Context) error { return nil }, nil
+	}
+
+	if err := SetWindowStateAndWait(ctx, tconn, window.ID, WindowStateMaximized); err != nil {
+		return nil, errors.Wrap(err, "failed to maximize the window")
+	}
+
+	return func(context.Context) error {
+		return SetWindowStateAndWait(ctx, tconn, window.ID, originalState)
+	}, nil
+}
+
 // FindAllWindows returns the Chrome windows with which the given predicate returns true.
 func FindAllWindows(ctx context.Context, tconn *chrome.TestConn, predicate func(*Window) bool) (matchingWindows []*Window, err error) {
 	windows, err := GetAllWindows(ctx, tconn)

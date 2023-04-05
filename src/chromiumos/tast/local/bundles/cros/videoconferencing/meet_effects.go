@@ -119,6 +119,16 @@ func MeetEffects(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to configure Meet: ", err)
 	}
 
+	// Maximize VC app window in clamshell mode to reduce resolution noises on different devices.
+	// Skip Tablet mode as app is full screen by default.
+	if inTabletMode, err := ash.TabletModeEnabled(ctx, tconn); err != nil {
+		s.Fatal("Failed to get tablet-mode status: ", err)
+	} else if !inTabletMode {
+		if _, err := ash.MaximizeWindowTitleContains(ctx, tconn, "Meet"); err != nil {
+			s.Fatal("Failed to maximize Camera window: ", err)
+		}
+	}
+
 	vcTray := vctray.New(ctx, tconn)
 
 	// Run subtests to verify video effects are correctly applied.
