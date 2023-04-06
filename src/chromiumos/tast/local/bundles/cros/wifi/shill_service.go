@@ -45,6 +45,7 @@ import (
 	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/local/wpasupplicant"
 	"chromiumos/tast/services/cros/wifi"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -3469,4 +3470,37 @@ func (s *ShillService) EnsureTestProfileAvailable(ctx context.Context, _ *empty.
 	}
 	_, err = m.PushProfile(ctx, wifiTestProfileName)
 	return &empty.Empty{}, err
+}
+
+// GetNetworksForGeolocation returns geolocation cache
+func (s *ShillService) GetNetworksForGeolocation(ctx context.Context, _ *empty.Empty) (*wifi.GetNetworksForGeolocationResponse, error) {
+	m, err := shill.NewManager(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create a manager object")
+	}
+	p, err := m.GetNetworksForGeolocation(ctx)
+	response := wifi.GetNetworksForGeolocationResponse{Networks: map[string]*wifi.NetworksForGeolocation{}}
+	for _, technology := range []string{shillconst.GeoCellTowersProperty, shillconst.GeoWifiAccessPointsProperty} {
+		pt, err := p.Get(technology)
+		if err != nil {
+			continue
+		}
+		geoInfos, ok := pt.([]map[string]string)
+		if !ok {
+			return nil, errors.Wrapf(err, "%T is not []map[string]string", pt)
+		}
+		var networks wifi.NetworksForGeolocation
+		for _, geoInfo := range geoInfos {
+			geolocationInfo := wifi.GeolocationInfo{Info: map[string]*wifi.ShillVal{}}
+			for prop, value := range geoInfo {
+				geolocationInfo.Info[prop], err = protoutil.ToShillVal(value)
+				if err != nil {
+					return nil, errors.Wrapf(err, "failed to convert %v to ShillVal", value)
+				}
+			}
+			networks.GeolocationInfoList = append(networks.GeolocationInfoList, &geolocationInfo)
+		}
+		response.Networks[technology] = &networks
+	}
+	return &response, nil
 }

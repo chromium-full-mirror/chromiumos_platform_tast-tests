@@ -144,6 +144,7 @@ type JoinWifiRequest struct {
 
 	Ssid string `protobuf:"bytes,1,opt,name=ssid,proto3" json:"ssid,omitempty"`
 	// Types that are assignable to Security:
+	//
 	//	*JoinWifiRequest_None
 	//	*JoinWifiRequest_Psk
 	//	*JoinWifiRequest_EapTls

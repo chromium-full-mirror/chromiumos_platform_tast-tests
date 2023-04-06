@@ -227,6 +227,9 @@ service ShillService {
   // The test profile will not be on stack once shill restarts and the DUT is not logged in,
   // it can be used to restore the wifi settings for a DUT that is rebooted from log in screen.
   rpc EnsureTestProfileAvailable(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  // GetNetworksForGeolocation returns the GetNetworksForGeolocation manager property value.
+  rpc GetNetworksForGeolocation(google.protobuf.Empty) returns (GetNetworksForGeolocationResponse) {}
 }
 
 message ConnectRequest {
@@ -634,4 +637,16 @@ message ServicePathRequest {
 
 message ServicePathResponse {
   string service_path = 1;
+}
+
+message GeolocationInfo {
+  map<string, ShillVal> info = 1;
+}
+
+message NetworksForGeolocation {
+  repeated GeolocationInfo geolocation_info_list = 1;
+}
+
+message GetNetworksForGeolocationResponse {
+  map<string, NetworksForGeolocation>  networks = 1;
 }

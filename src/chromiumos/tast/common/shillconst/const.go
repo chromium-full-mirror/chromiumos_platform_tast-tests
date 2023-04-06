@@ -473,3 +473,24 @@ const (
 	BandAll     = "all-bands"
 	BandUnknown = "unknown"
 )
+
+// Top level properties for a Geolocation request.
+const (
+	GeoHomeMobileCountryCodeProperty = "homeMobileCountryCode"
+	GeoHomeMobileNetworkCodeProperty = "homeMobileNetworkCode"
+	GeoRadioTypePropertyProperty     = "radioType"
+	GeoCellTowersProperty            = "cellTowers"
+	GeoWifiAccessPointsProperty      = "wifiAccessPoints"
+)
+
+// WiFi access point property names.
+const (
+	GeoInfoGeoMacAddressProperty         = "macAddress"
+	GeoInfoGeoChannelProperty            = "channel"
+	GeoInfoGeoSignalToNoiseRatioProperty = "signalToNoiseRatio"
+)
+
+// Common property names for geolocation objects.
+const (
+	GeoInfoGeoAgeProperty = "age"
+)

@@ -15,6 +15,7 @@ import (
 	"chromiumos/tast/common/network/protoutil"
 	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/services/cros/wifi"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -529,4 +530,17 @@ func (cli *WifiClient) WatchDarkResume(ctx context.Context) (func() (*wifi.Watch
 		}
 		return resp, nil
 	}, nil
+}
+
+// GetNetworksForGeolocation returns geolocation cache
+func (cli *WifiClient) GetNetworksForGeolocation(ctx context.Context) (*wifi.NetworksForGeolocation, error) {
+	res, err := cli.ShillServiceClient.GetNetworksForGeolocation(ctx, &empty.Empty{})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get geolocation information")
+	}
+	wifiNetworks, ok := res.Networks[shillconst.GeoWifiAccessPointsProperty]
+	if !ok {
+		return nil, errors.Errorf("GetNetworksForGeolocation has no %s", shillconst.GeoWifiAccessPointsProperty)
+	}
+	return wifiNetworks, err
 }

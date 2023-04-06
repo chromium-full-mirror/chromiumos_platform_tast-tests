@@ -17,6 +17,7 @@ import (
 	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/local/dbusutil"
 	"chromiumos/tast/local/sysutil"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -834,4 +835,13 @@ func (m *Manager) SetTetheringAllowed(ctx context.Context, allowed bool) error {
 		return errors.Wrapf(err, "failed to set tethering allowed to %t", allowed)
 	}
 	return nil
+}
+
+// GetNetworksForGeolocation returns geolocation cache
+func (m *Manager) GetNetworksForGeolocation(ctx context.Context) (*dbusutil.Properties, error) {
+	var geolocationInfoTechnology map[string]interface{}
+	if err := m.Call(ctx, "GetNetworksForGeolocation").Store(&geolocationInfoTechnology); err != nil {
+		return nil, err
+	}
+	return dbusutil.NewProperties(geolocationInfoTechnology), nil
 }
