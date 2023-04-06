@@ -187,6 +187,9 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	if err := waitForModemFwdToIdle(ctx); err != nil {
 		s.Fatal("Could not confirm if ModemFwd is idle: ", err)
 	}
+	if err := waitForModemToBeExported(ctx); err != nil {
+		s.Fatal("Could not confirm if modem was exported: ", err)
+	}
 	if f.sf == nil {
 		var err error
 		if f.modemfwdStopped, err = stopJob(ctx, modemfwd.JobName); err != nil {
@@ -392,7 +395,10 @@ func waitForModemFwdToIdle(ctx context.Context) error {
 		// return errors.Wrap(err, "failed to confirm if modem flash is complete")
 		testing.ContextLog(ctx, "Failed to confirm if modem flash is complete after 5 minutes")
 	}
+	return nil
+}
 
+func waitForModemToBeExported(ctx context.Context) error {
 	// Wait for modem to be exported by ModemManager.
 	if _, err := modemmanager.NewModem(ctx); err != nil && ModemHelperPathExists() {
 		testing.ContextLog(ctx, "No modem exported by ModemManager, attempting to restart the modem")
