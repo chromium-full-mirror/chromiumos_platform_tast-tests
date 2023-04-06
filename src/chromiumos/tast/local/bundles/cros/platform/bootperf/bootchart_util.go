@@ -10,7 +10,6 @@ import (
 	"os"
 	"regexp"
 	"strconv"
-	"strings"
 
 	"github.com/google/uuid"
 
@@ -18,8 +17,8 @@ import (
 	"chromiumos/tast/errors"
 )
 
-const (
-	bootchartKArg = "cros_bootchart"
+var (
+	bootchartKArgs = []string{"cros_bootchart", "initcall_debug"}
 )
 
 // getRootPartition returns root partition index by running `rootdev -s` and
@@ -87,18 +86,22 @@ func editKernelArgs(ctx context.Context, f func([]byte) []byte) error {
 	return nil
 }
 
-// EnableBootchart enables bootchart by adding "cros_bootchart" to kernel
-// arguments.
+// EnableBootchart adds args to kernel cmdline to enable bootchart and initcall_debug.
 func EnableBootchart(ctx context.Context) error {
 	if err := editKernelArgs(ctx, func(b []byte) []byte {
 		s := string(b)
-		if strings.Contains(s, bootchartKArg) {
-			// Bootchart already enabled: leave the kernel args as is.
-			return b
-		}
+		for _, arg := range bootchartKArgs {
+			re := regexp.MustCompile(`\b` + arg + `\b`)
 
-		// Append "cros_bootchart" to kernel args.
-		return []byte(s + " " + bootchartKArg)
+			if re.FindString(s) != "" {
+				// arg is already found in kernel args: don't add it again.
+				continue
+			}
+
+			// Append arg to kernel args.
+			s = s + " " + arg
+		}
+		return []byte(s)
 	}); err != nil {
 		return err
 	}
@@ -106,18 +109,20 @@ func EnableBootchart(ctx context.Context) error {
 	return nil
 }
 
-// DisableBootchart Disables bootchart by removing "cros_bootchart" from kernel
-// arguments.
+// DisableBootchart removes args from kernel cmdline to disable bootchart and initcall_debug.
 func DisableBootchart(ctx context.Context) error {
 	if err := editKernelArgs(ctx, func(b []byte) []byte {
 		s := string(b)
-		if !strings.Contains(s, bootchartKArg) {
-			// Bootchart already disabled: leave the kernel args as is.
-			return b
-		}
 
-		// Remove "cros_bootchart" from kernel args.
-		return []byte(strings.ReplaceAll(s, " "+bootchartKArg, ""))
+		for _, arg := range bootchartKArgs {
+			// Matches whole words with 0 or more spaces before and after arg.
+			re := regexp.MustCompile(`\s*\b` + arg + `\b\s*`)
+
+			// Remove arg from the kernel args list.
+			// re matches surrounding spaces so we must add one space back to not glue args together.
+			s = re.ReplaceAllString(s, " ")
+		}
+		return []byte(s)
 	}); err != nil {
 		return err
 	}
