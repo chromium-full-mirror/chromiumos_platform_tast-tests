@@ -32,7 +32,8 @@ func init() {
 		BugComponent: "b:875484",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"audio_stable"},
-		HardwareDeps: hwdep.D(hwdep.Microphone()),
+		// TODO(b:268542791): Skip hoglin until the issue is fixed.
+		HardwareDeps: hwdep.D(hwdep.Microphone(), hwdep.SkipOnModel("hoglin")),
 	})
 }
 
