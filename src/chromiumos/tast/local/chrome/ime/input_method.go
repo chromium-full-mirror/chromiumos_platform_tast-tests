@@ -597,21 +597,17 @@ var imesDetectedByAPI = []InputMethod{
 
 // WaitUntilActivated waits until the certain input method to be activated.
 func (im InputMethod) WaitUntilActivated(tconn *chrome.TestConn) action.Action {
-	// Use 10s as warming up time by default.
-	imWarmingUpTime := 10 * time.Second
+	// Use 12s as warming up time by default.
+	imWarmingUpTime := 12 * time.Second
 
 	// Some IMEs are known to take longer time on low-end VM/HW.
 	switch im {
 	case Swedish, FrenchFrance, SpanishSpain, Korean, Cantonese, ChinesePinyin:
-		imWarmingUpTime = 15 * time.Second
+		imWarmingUpTime = 17 * time.Second
 	}
 
 	f := func(ctx context.Context, fullyQualifiedIMEID string) error {
-		for _, detectedIME := range imesDetectedByAPI {
-			if im == detectedIME {
-				return WaitForInputMethodActivated(ctx, tconn, fullyQualifiedIMEID)
-			}
-		}
+		// TODO(b/195374149) re-enable using readiness API once it is available.
 		return WaitForInputMethodActivatedWithSleep(ctx, tconn, fullyQualifiedIMEID, imWarmingUpTime)
 	}
 	return im.actionWithFullyQualifiedID(tconn, f)
