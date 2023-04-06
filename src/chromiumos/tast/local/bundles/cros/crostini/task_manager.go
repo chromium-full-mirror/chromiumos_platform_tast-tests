@@ -62,7 +62,6 @@ func init() {
 func TaskManager(ctx context.Context, s *testing.State) {
 	tconn := s.FixtValue().(crostini.FixtureData).Tconn
 	keyboard := s.FixtValue().(crostini.FixtureData).KB
-	ui := uiauto.New(tconn)
 
 	// Use a shortened context for cleanup.
 	cleanupCtx := ctx
@@ -83,7 +82,12 @@ func TaskManager(ctx context.Context, s *testing.State) {
 
 	crostiniProcessName := "Linux Virtual Machine: termina"
 
-	if err := ui.WithTimeout(30 * time.Second).WaitUntilExists(taskmanager.FindProcess().Name(crostiniProcessName).First())(ctx); err != nil {
+	// TODO(b/270617100): We don't actually need to select the process, just
+	// check that it exists, but the AX tree is flakily missing elements so we do
+	// it this way. This is much slower, but scrolls through the tree looking
+	// for matches so the screen recording we take on failure will show the
+	// entire tree for us to compare with the AX tree.
+	if err := tm.SelectProcess(crostiniProcessName)(ctx); err != nil {
 		s.Fatalf("Failed to find process %q in task manager: %v", crostiniProcessName, err)
 	}
 }
