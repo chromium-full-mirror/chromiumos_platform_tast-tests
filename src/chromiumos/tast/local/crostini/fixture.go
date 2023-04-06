@@ -500,8 +500,14 @@ func (f *crostiniFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	// TODO(jinrongwu): revisit this when there are more test cases using this feature.
 	// Major concern: should it be fatal or not?
 	if f.snapshot {
-		if err := f.cont.CreateSnapshot(ctx, snapshotName); err != nil {
+		if err := f.cont.CreateSnapshot(ctx, snapshotName, s.OutDir()); err != nil {
 			s.Fatal("Failed to take snapshot before test: ", err)
+		}
+		// Launching Terminal after restart container by lxc is needed to
+		// ensure a bunch of things work, e.g., mouting files in FilesApp.
+		// See b/271947202.
+		if err := f.launchExitTerminal(ctx); err != nil {
+			s.Fatal("Failed to re-launch terminal and exit after creating snapshot: ", err)
 		}
 	}
 

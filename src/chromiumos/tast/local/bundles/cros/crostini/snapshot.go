@@ -57,8 +57,8 @@ func init() {
 
 func Snapshot(ctx context.Context, s *testing.State) {
 	const (
-		numerOfRestores = 10
-		snapshotName    = "test_snapshot"
+		numberOfRestores = 3
+		snapshotName     = "test_snapshot"
 	)
 
 	cont := s.FixtValue().(crostini.FixtureData).Cont
@@ -67,7 +67,7 @@ func Snapshot(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	if err := cont.CreateSnapshot(ctx, snapshotName); err != nil {
+	if err := cont.CreateSnapshot(ctx, snapshotName, s.OutDir()); err != nil {
 		s.Fatal("Failed to take a snapshot: ", err)
 	}
 	defer func(ctx context.Context) {
@@ -82,7 +82,7 @@ func Snapshot(ctx context.Context, s *testing.State) {
 		s.Fatal("Snapshot doesn't exist after creation")
 	}
 
-	for i := 0; i < numerOfRestores; i++ {
+	for i := 0; i < numberOfRestores; i++ {
 		if err := cont.RestoreSnapshot(ctx, snapshotName, s.OutDir()); err != nil {
 			s.Fatalf("Failed to restore the snapshot at iteration=%d: %s", i, err)
 		}

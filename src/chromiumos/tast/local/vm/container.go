@@ -688,7 +688,7 @@ func (c *Container) UninstallPackageOwningFile(ctx context.Context, desktopFileI
 }
 
 // CreateSnapshot creates a snapshot with the given name.
-func (c *Container) CreateSnapshot(ctx context.Context, snapshotName string) error {
+func (c *Container) CreateSnapshot(ctx context.Context, snapshotName, logDir string) error {
 	if exist, err := c.CheckSnapshot(ctx, snapshotName); err != nil {
 		return errors.Wrap(err, "failed to check the existence of the snapshot")
 	} else if exist {
@@ -698,8 +698,29 @@ func (c *Container) CreateSnapshot(ctx context.Context, snapshotName string) err
 		}
 	}
 
+	// Stop the container.
+	// It prevents race conditions when the container is using the filesystem.
+	if err := c.Stop(ctx); err != nil {
+		return errors.Wrap(err, "failed to stop the container before taking snapshot")
+	}
+
 	if _, err := c.VM.LXCCommand(ctx, "snapshot", "penguin", snapshotName); err != nil {
 		return errors.Wrap(err, "failed to take snapshot")
+	}
+
+	if err := c.StartAndWait(ctx, logDir); err != nil {
+		return errors.Wrap(err, "failed to start container after creating snapshot")
+	}
+
+	// Wait until a basic command works. Running commands immediately after
+	// container restart may result in racing issues.
+	if err := testing.Poll(
+		ctx,
+		func(ctx context.Context) error {
+			return c.Command(ctx, "pwd").Run(testexec.DumpLogOnError)
+		},
+		&testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+		return errors.Wrap(err, "failed to run basic commands after restore")
 	}
 	return nil
 }
