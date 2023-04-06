@@ -461,6 +461,14 @@ func (uiHelper *UIHelper) OverrideStateFile(ctx context.Context, content string)
 	return uiHelper.Dut.Reboot(ctx)
 }
 
+// CleanupStateFile removes the state file and exit Shimless RMA.
+func CleanupStateFile(cleanupCtx context.Context, dut *dut.DUT) error {
+	if err := dut.Conn().CommandContext(cleanupCtx, "sh", "-c", fmt.Sprintf("rm %s", stateFile)).Run(); err != nil {
+		testing.ContextLogf(cleanupCtx, "Failed to delete state file because %s", err)
+	}
+	return dut.Reboot(cleanupCtx)
+}
+
 func (uiHelper *UIHelper) deleteLogsIfExisting(ctx context.Context) error {
 	// Output is supposed to be something like /dev/sda1.
 	usb, err := uiHelper.findUSBName(ctx)
