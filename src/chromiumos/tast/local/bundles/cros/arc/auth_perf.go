@@ -42,6 +42,8 @@ type testParam struct {
 	chromeArgs        []string
 	// Whether to use io_uring async executor for block devices in crosvm.
 	useIoUringBlock bool
+	// Whether to enable multiple workers feature for block devices in crosvm.
+	useMultipleWorkersBlock bool
 }
 
 var resultPropRegexp = regexp.MustCompile(`OK,(\d+)`)
@@ -119,6 +121,15 @@ func init() {
 				useIoUringBlock:   true,
 			},
 		}, {
+			Name:              "unmanaged_multipleworkers_virtio_blk_vm",
+			ExtraSoftwareDeps: []string{"android_vm"},
+			Val: testParam{
+				browserType:             browser.TypeAsh,
+				maxErrorBootCount:       3,
+				chromeArgs:              []string{"--enable-features=ArcEnableVirtioBlkForData"},
+				useMultipleWorkersBlock: true,
+			},
+		}, {
 			Name:              "unmanaged_vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Val: testParam{
@@ -192,8 +203,17 @@ func AuthPerf(ctx context.Context, s *testing.State) {
 	param := s.Param().(testParam)
 	maxErrorBootCount := param.maxErrorBootCount
 
+	arcvmDevConf := ""
+
 	if param.useIoUringBlock {
-		if err := arc.WriteArcvmDevConf(ctx, "BLOCK_ASYNC_EXECUTOR=uring\n"); err != nil {
+		arcvmDevConf += "BLOCK_ASYNC_EXECUTOR=uring\n"
+	}
+	if param.useMultipleWorkersBlock {
+		arcvmDevConf += "BLOCK_MULTIPLE_WORKERS=true\n"
+	}
+
+	if arcvmDevConf != "" {
+		if err := arc.WriteArcvmDevConf(ctx, arcvmDevConf); err != nil {
 			s.Fatal("Failed to set arcvm_dev.conf: ", err)
 		}
 		defer arc.RestoreArcvmDevConf(ctx)
