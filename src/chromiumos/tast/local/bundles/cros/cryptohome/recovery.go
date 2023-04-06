@@ -171,17 +171,16 @@ func Recovery(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "failed to remove recovery auth factor")
 		}
 
-		// Unmount the user.
-		if err := client.UnmountAll(ctx); err != nil {
-			return errors.Wrap(err, "failed to unmount vaults for re-mounting")
-		}
-
 		// Re-authentication via recovery should fail now should fail now.
 		err = client.AuthenticateRecoveryAuthFactor(ctx, authSessionID, recoveryLabel, epoch, response)
 		if err := cryptohomecommon.ExpectCryptohomeErrorCode(err, uda.CryptohomeErrorCode_CRYPTOHOME_ERROR_KEY_NOT_FOUND); err != nil {
 			return errors.Wrap(err, "failed to get the correct error code after auth factor removal")
 		}
 
+		// Unmount the user.
+		if err := client.UnmountAll(ctx); err != nil {
+			return errors.Wrap(err, "failed to unmount vaults for re-mounting")
+		}
 		return nil
 	}); err != nil {
 		s.Fatal("Failed to recover the user: ", err)
