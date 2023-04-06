@@ -142,6 +142,22 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name:     fixture.ChromePolicyLoggedInBruschetta,
+		Desc:     "Logged into a user session with Bruschetta support",
+		Contacts: []string{"clumptini+oncall@google.com"},
+		Impl: &policyChromeFixture{
+			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+				return []chrome.Option{chrome.EnableFeatures("Bruschetta", "BruschettaAlphaMigrate")}, nil
+			},
+		},
+		SetUpTimeout:    chrome.ManagedUserLoginTimeout + cleanupTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+		PostTestTimeout: 15 * time.Second,
+		Parent:          fixture.FakeDMS,
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name:     fixture.ChromeEnrolledLoggedIn,
 		Desc:     "Logged into a user session with enrollment",
 		Contacts: []string{"vsavu@google.com", "chromeos-commercial-remote-management@google.com"},

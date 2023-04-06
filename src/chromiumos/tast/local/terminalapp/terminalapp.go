@@ -24,6 +24,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/vm"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -41,7 +42,9 @@ const LaunchTerminalTimeout = 2 * time.Minute
 
 var (
 	linuxLink           = nodewith.Name("penguin").Role(role.Link)
+	bruschettaLink      = nodewith.Name("Bruschetta").Role(role.Link)
 	linuxTab            = nodewith.NameContaining("@penguin: ").Role(role.Window).ClassName("BrowserFrame")
+	bruschettaTab       = nodewith.NameContaining("chronos@localhost: ").Role(role.Window).ClassName("BrowserFrame")
 	rootWindow          = nodewith.NameStartingWith("Terminal").Role(role.Window).ClassName("BrowserFrame")
 	homeTab             = nodewith.Name("Terminal").Role(role.Window).ClassName("BrowserFrame")
 	terminalLeaveButton = nodewith.Name("Leave").Role(role.Button).HasClass("MdTextButton")
@@ -63,14 +66,12 @@ type TerminalApp struct {
 	Kb    *input.KeyboardEventWriter
 }
 
-// Launch launches the Terminal App connected to default penguin container and returns it.
-// An error is returned if the app fails to launch.
-func Launch(ctx context.Context, tconn *chrome.TestConn) (*TerminalApp, error) {
+func launch(ctx context.Context, tconn *chrome.TestConn, link, tab *nodewith.Finder) (*TerminalApp, error) {
 	// Launch the Terminal App.
 	if err := apps.Launch(ctx, tconn, apps.Terminal.ID); err != nil {
 		return nil, errors.Wrap(err, "failed to launch the Terminal App through package apps")
 	}
-	ta, err := Find(ctx, tconn)
+	ta, err := find(ctx, tconn, link, tab)
 	if err != nil {
 		if closeErr := apps.Close(ctx, tconn, apps.Terminal.ID); closeErr != nil {
 			testing.ContextLog(ctx, "Error closing terminal app: ", closeErr)
@@ -80,21 +81,19 @@ func Launch(ctx context.Context, tconn *chrome.TestConn) (*TerminalApp, error) {
 	return ta, nil
 }
 
-// Find finds an open Terminal App and opens a Linux tab if not already open.
-// An error is returned if terminal cannot be found.
-func Find(ctx context.Context, tconn *chrome.TestConn) (*TerminalApp, error) {
+func find(ctx context.Context, tconn *chrome.TestConn, link, tab *nodewith.Finder) (*TerminalApp, error) {
 	ui := uiauto.New(tconn)
 
-	// Find Linux tab.
+	// Find VM tab.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		// If find Home tab with Linux link, click the Linux link to switch to
-		// the Linux tab.
-		if err := ui.Exists(linuxLink)(ctx); err == nil {
-			if err := ui.DoDefault(linuxLink)(ctx); err != nil {
+		// If found Home tab with VM link, click the link to switch to
+		// or create the VM tab.
+		if err := ui.Exists(link)(ctx); err == nil {
+			if err := ui.DoDefault(link)(ctx); err != nil {
 				return errors.Wrap(err, "failed to click Terminal Home Linux")
 			}
 		}
-		if err := ui.Exists(linuxTab)(ctx); err != nil {
+		if err := ui.Exists(tab)(ctx); err != nil {
 			return err
 		}
 		return nil
@@ -118,6 +117,24 @@ func Find(ctx context.Context, tconn *chrome.TestConn) (*TerminalApp, error) {
 	}
 
 	return terminalApp, nil
+}
+
+// Launch launches the Terminal App connected to default penguin container and returns it.
+// An error is returned if the app fails to launch.
+func Launch(ctx context.Context, tconn *chrome.TestConn) (*TerminalApp, error) {
+	return launch(ctx, tconn, linuxLink, linuxTab)
+}
+
+// Find finds an open Terminal App and opens a Linux tab if not already open.
+// An error is returned if terminal cannot be found.
+func Find(ctx context.Context, tconn *chrome.TestConn) (*TerminalApp, error) {
+	return find(ctx, tconn, linuxLink, linuxTab)
+}
+
+// LaunchBruschetta launches the Terminal App connected to the default bruschetta VM and returns it.
+// An error is returned if the app fails to launch.
+func LaunchBruschetta(ctx context.Context, tconn *chrome.TestConn) (*TerminalApp, error) {
+	return launch(ctx, tconn, bruschettaLink, bruschettaTab)
 }
 
 // LaunchSSH launches Terminal App and connects to chronos@localhost.

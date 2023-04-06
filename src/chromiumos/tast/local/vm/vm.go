@@ -18,6 +18,7 @@ import (
 	cpb "chromiumos/system_api/vm_cicerone_proto" // protobufs for container management
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/dbusutil"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -29,6 +30,8 @@ const (
 	DefaultBorealisVMName = "borealis"
 	// DefaultVMName is the default crostini VM name.
 	DefaultVMName = "termina"
+	// DefaultBruschettaVMName is the default bruschetta VM name.
+	DefaultBruschettaVMName = "bru"
 	// DefaultContainerName is the default crostini container name.
 	DefaultContainerName = "penguin"
 	// DefaultDiskSize is the default disk size for VM. 2.5 GB by default.
@@ -51,6 +54,9 @@ const (
 
 	// Borealis represents a Borealis VM.
 	Borealis
+
+	// Bruschetta represents a Bruschetta reference VM.
+	Bruschetta
 )
 
 // VM encapsulates a virtual machine managed by the concierge/cicerone daemons.
@@ -92,6 +98,8 @@ func NewSystemRecognizedVM(c *Concierge, enableGPU bool, diskSize uint64, vmType
 		return NewGenericVM(c, enableGPU, diskSize, "", "", DefaultArcVMName), nil
 	case Borealis:
 		return NewGenericVM(c, enableGPU, diskSize, "", "", DefaultBorealisVMName), nil
+	case Bruschetta:
+		return NewGenericVM(c, enableGPU, diskSize, "", "", DefaultBruschettaVMName), nil
 	default:
 		return nil, errors.Errorf("invalid system recognized VM type: %d", vmType)
 	}
@@ -156,6 +164,16 @@ func (vm *VM) Start(ctx context.Context) error {
 // Stop shuts down VM. It can be restarted again later.
 func (vm *VM) Stop(ctx context.Context) error {
 	return vm.Concierge.stopVM(ctx, vm)
+}
+
+// Delete deletes the VM.
+func (vm *VM) Delete(ctx context.Context) error {
+	return vm.Concierge.destroyDiskImage(ctx, vm)
+}
+
+// RetrieveLogs gets the VM logs.
+func (vm *VM) RetrieveLogs(ctx context.Context) (string, error) {
+	return vm.Concierge.getVMLogs(ctx, vm)
 }
 
 // StartLxd starts the LXD daemon inside the VM. This is a required

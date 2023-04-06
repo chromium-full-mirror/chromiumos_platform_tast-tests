@@ -20,6 +20,7 @@ import (
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/dbusutil"
 	"chromiumos/tast/local/upstart"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -341,6 +342,37 @@ func (c *Concierge) stopVM(ctx context.Context, vm *VM) error {
 
 	testing.ContextLogf(ctx, "Shut down VM %q", vm.name)
 	return nil
+}
+
+func (c *Concierge) destroyDiskImage(ctx context.Context, vm *VM) error {
+	testing.ContextLogf(ctx, "Deleting VM %q", vm.name)
+
+	resp := &vmpb.DestroyDiskImageResponse{}
+	if err := dbusutil.CallProtoMethod(ctx, vm.Concierge.conciergeObj, conciergeInterface+".DestroyDiskImage",
+		&vmpb.DestroyDiskImageRequest{
+			CryptohomeId: vm.Concierge.ownerID,
+			VmName:       vm.name,
+		}, resp); err != nil {
+		return errors.Wrapf(err, "failed to delete VM %q, got dbus error", vm.name)
+	}
+
+	if resp.Status != vmpb.DiskImageStatus_DISK_STATUS_DOES_NOT_EXIST && resp.Status != vmpb.DiskImageStatus_DISK_STATUS_DESTROYED {
+		return errors.Errorf("failed to delete VM %q, got status %v, failure reason %q", vm.name, resp.Status, resp.FailureReason)
+	}
+	return nil
+}
+
+func (c *Concierge) getVMLogs(ctx context.Context, vm *VM) (string, error) {
+	resp := &vmpb.GetVmLogsResponse{}
+	if err := dbusutil.CallProtoMethod(ctx, vm.Concierge.conciergeObj, conciergeInterface+".GetVmLogs",
+		&vmpb.GetVmLogsRequest{
+			Name:    vm.name,
+			OwnerId: vm.Concierge.ownerID,
+		}, resp); err != nil {
+		return "", errors.Wrapf(err, "failed to get logs for VM %q, got dbus error", vm.name)
+	}
+
+	return resp.Log, nil
 }
 
 // GetVMInfo populates the info of the VM corresponding to |vm.name| inside |vm|.
