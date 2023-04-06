@@ -20,6 +20,15 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/role"
 )
 
+// LoopbackDevice represents the loopback device type.
+type LoopbackDevice string
+
+// Available options of LoopbackDevice.
+const (
+	LoopbackPlayBack LoopbackDevice = "Loopback Playback"
+	LoopbackCapture  LoopbackDevice = "Loopback Capture"
+)
+
 // AudioFromFile inputs an audio file via active input node and waits for its completion.
 func AudioFromFile(ctx context.Context, audioFilePath string) error {
 	audioInput := audio.TestRawData{
@@ -51,7 +60,7 @@ func EnableAloop(ctx context.Context, tconn *chrome.TestConn) (func(ctx context.
 	}
 
 	// Activate the Aloop nodes.
-	if err := ActivateAloopNodes(ctx, tconn); err != nil {
+	if err := ActivateAloopNodes(ctx, tconn, LoopbackPlayBack, LoopbackCapture); err != nil {
 		// Unload ALSA loopback if any following setups failed.
 		unload(ctx)
 		return nil, err
@@ -65,7 +74,7 @@ func EnableAloop(ctx context.Context, tconn *chrome.TestConn) (func(ctx context.
 // cras.SetActiveNode() method, as UI will always send the preference input/output
 // devices to CRAS. Calling cras.SetActiveNode() changes the active devices for a
 // moment, but they soon are reverted by UI. See (b/191602192) for details.
-func ActivateAloopNodes(ctx context.Context, tconn *chrome.TestConn) error {
+func ActivateAloopNodes(ctx context.Context, tconn *chrome.TestConn, devices ...LoopbackDevice) error {
 	cleanupCtx := ctx
 	ctx, shortCancel := ctxutil.Shorten(ctx, 2*time.Second)
 	defer shortCancel()
@@ -74,14 +83,15 @@ func ActivateAloopNodes(ctx context.Context, tconn *chrome.TestConn) error {
 	}
 	defer quicksettings.Hide(cleanupCtx, tconn)
 
-	if err := selectAudioOption(ctx, tconn, "Loopback Playback"); err != nil {
-		return errors.Wrap(err, "failed to select ALSA loopback output")
+	if len(devices) == 0 {
+		return errors.New("no device to be activated")
 	}
 
-	if err := selectAudioOption(ctx, tconn, "Loopback Capture"); err != nil {
-		return errors.Wrap(err, "failed to select ALSA loopback input")
+	for _, device := range devices {
+		if err := selectAudioOption(ctx, tconn, string(device)); err != nil {
+			return errors.Wrapf(err, "failed to select ALSA %q", string(device))
+		}
 	}
-
 	return nil
 }
 

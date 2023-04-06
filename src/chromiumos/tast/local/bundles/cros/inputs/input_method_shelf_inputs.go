@@ -81,7 +81,7 @@ func InputMethodShelfInputs(ctx context.Context, s *testing.State) {
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
 	// Setup CRAS Aloop for audio test.
-	err := voice.ActivateAloopNodes(ctx, tconn)
+	err := voice.ActivateAloopNodes(ctx, tconn, voice.LoopbackPlayBack, voice.LoopbackCapture)
 	if err != nil {
 		s.Fatal("Failed to load Aloop: ", err)
 	}

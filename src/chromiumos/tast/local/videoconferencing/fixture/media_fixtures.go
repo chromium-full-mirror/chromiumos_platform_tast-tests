@@ -18,7 +18,6 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/uiauto"
-	"chromiumos/tast/local/input/voice"
 	"chromiumos/tast/local/loginstatus"
 	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/testing"
@@ -33,7 +32,7 @@ const (
 	fakeHALImageInput = "generic-person-office.jpg"
 )
 
-// List of fixture names for ML service testing.
+// List of fixture names for video conferencing testing.
 const (
 	NoLogInWithInternalCameraAndEffectsEnabled = "noLogInWithInternalCameraAndEffectsEnabled"
 
@@ -54,13 +53,6 @@ const (
 	GAIALoggedInTabletWithFakeHALAndEffectsEnabled          = "gaiaLoggedInTabletWithFakeHALAndEffectsEnabled"
 	GAIALoggedInLacrosClamshellWithFakeHALAndEffectsEnabled = "gaiaLoggedInLacrosClamshellWithFakeHALAndEffectsEnabled"
 	GAIALoggedInLacrosTabletWithFakeHALAndEffectsEnabled    = "gaiaLoggedInLacrosTabletWithFakeHALAndEffectsEnabled"
-)
-
-type micType int
-
-const (
-	internalMic micType = iota
-	aloop
 )
 
 type platformEffectLevel int
@@ -112,7 +104,7 @@ func init() {
 			"shengjun@google.com",
 		},
 		Data:            []string{fakeHALImageInput},
-		Impl:            mediaSetupFixture(internalMic, halCameraWithPlatformEffectsEnabled),
+		Impl:            mediaSetupFixture(halCameraWithPlatformEffectsEnabled),
 		Parent:          loggedIn,
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
@@ -129,7 +121,7 @@ func init() {
 			"shengjun@google.com",
 		},
 		Data:            []string{fakeHALImageInput},
-		Impl:            mediaSetupFixture(internalMic, halCameraWithPlatformEffectsDisabled),
+		Impl:            mediaSetupFixture(halCameraWithPlatformEffectsDisabled),
 		Parent:          loggedIn,
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
@@ -146,7 +138,7 @@ func init() {
 			"shengjun@google.com",
 		},
 		Data:            []string{fakeHALImageInput},
-		Impl:            mediaSetupFixture(internalMic, halCameraWithPlatformEffectsEnabled),
+		Impl:            mediaSetupFixture(halCameraWithPlatformEffectsEnabled),
 		Parent:          loggedInLacros,
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
@@ -163,7 +155,7 @@ func init() {
 			"shengjun@google.com",
 		},
 		Data:            []string{fakeHALImageInput},
-		Impl:            mediaSetupFixture(internalMic, halCameraWithPlatformEffectsEnabled),
+		Impl:            mediaSetupFixture(halCameraWithPlatformEffectsEnabled),
 		Parent:          gaiaLoggedIn,
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
@@ -180,7 +172,7 @@ func init() {
 			"shengjun@google.com",
 		},
 		Data:            []string{fakeHALImageInput},
-		Impl:            mediaSetupFixture(internalMic, halCameraWithPlatformEffectsDisabled),
+		Impl:            mediaSetupFixture(halCameraWithPlatformEffectsDisabled),
 		Parent:          gaiaLoggedIn,
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
@@ -197,7 +189,7 @@ func init() {
 			"shengjun@google.com",
 		},
 		Data:            []string{fakeHALImageInput},
-		Impl:            mediaSetupFixture(internalMic, halCameraWithPlatformEffectsEnabled),
+		Impl:            mediaSetupFixture(halCameraWithPlatformEffectsEnabled),
 		Parent:          gaiaLoggedInClamshell,
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
@@ -214,7 +206,7 @@ func init() {
 			"shengjun@google.com",
 		},
 		Data:            []string{fakeHALImageInput},
-		Impl:            mediaSetupFixture(internalMic, halCameraWithPlatformEffectsEnabled),
+		Impl:            mediaSetupFixture(halCameraWithPlatformEffectsEnabled),
 		Parent:          gaiaLoggedInTablet,
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
@@ -231,7 +223,7 @@ func init() {
 			"shengjun@google.com",
 		},
 		Data:            []string{fakeHALImageInput},
-		Impl:            mediaSetupFixture(internalMic, halCameraWithPlatformEffectsEnabled),
+		Impl:            mediaSetupFixture(halCameraWithPlatformEffectsEnabled),
 		Parent:          gaiaLoggedInLacros,
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
@@ -248,7 +240,7 @@ func init() {
 			"shengjun@google.com",
 		},
 		Data:            []string{fakeHALImageInput},
-		Impl:            mediaSetupFixture(internalMic, halCameraWithPlatformEffectsEnabled),
+		Impl:            mediaSetupFixture(halCameraWithPlatformEffectsEnabled),
 		Parent:          gaiaLoggedInLacrosClamshell,
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
@@ -265,7 +257,7 @@ func init() {
 			"shengjun@google.com",
 		},
 		Data:            []string{fakeHALImageInput},
-		Impl:            mediaSetupFixture(internalMic, halCameraWithPlatformEffectsEnabled),
+		Impl:            mediaSetupFixture(halCameraWithPlatformEffectsEnabled),
 		Parent:          gaiaLoggedInLacrosTablet,
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
@@ -282,7 +274,7 @@ func init() {
 			"shengjun@google.com",
 		},
 		Data:            []string{fakeHALImageInput},
-		Impl:            mediaSetupFixture(internalMic, halCameraWithPlatformEffectsEnabled),
+		Impl:            mediaSetupFixture(halCameraWithPlatformEffectsEnabled),
 		Parent:          gaiaLoggedInARC,
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
@@ -298,7 +290,7 @@ func init() {
 			"chrome-knowledge-eng@google.com",
 			"shengjun@google.com",
 		},
-		Impl:            mediaSetupFixture(internalMic, internalCameraWithPlatformEffectsEnabled),
+		Impl:            mediaSetupFixture(internalCameraWithPlatformEffectsEnabled),
 		Parent:          gaiaLoggedInARC,
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
@@ -314,7 +306,7 @@ func init() {
 			"chrome-knowledge-eng@google.com",
 			"shengjun@google.com",
 		},
-		Impl:            mediaSetupFixture(internalMic, internalCameraWithPlatformEffectsEnabled),
+		Impl:            mediaSetupFixture(internalCameraWithPlatformEffectsEnabled),
 		Parent:          noLoggedIn,
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
@@ -324,13 +316,12 @@ func init() {
 	})
 }
 
-func mediaSetupFixture(mic micType, camConfig cameraConfig) testing.FixtureImpl {
-	return &mediaFixtureImpl{micType: mic, camConfig: camConfig}
+func mediaSetupFixture(camConfig cameraConfig) testing.FixtureImpl {
+	return &mediaFixtureImpl{camConfig: camConfig}
 }
 
 // mediaFixtureImpl implements testing.FixtureImpl.
 type mediaFixtureImpl struct {
-	micType   micType
 	camConfig cameraConfig
 	cleanup   []action.Action // A list of cleanup actions to be executed in teardown.
 	cr        *chrome.Chrome
@@ -415,20 +406,6 @@ func (f *mediaFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) inte
 
 		f.cleanup = append(f.cleanup, func(ctx context.Context) error {
 			return os.Remove(fakeFilePath)
-		})
-	}
-
-	if f.micType == aloop {
-		testing.ContextLog(ctx, "Setting up Aloop for audio test")
-		// Setup CRAS Aloop for audio test.
-		cleanup, err := voice.EnableAloop(ctx, f.tconn)
-		if err != nil {
-			s.Fatal("Failed to enable Aloop: ", err)
-		}
-
-		f.cleanup = append(f.cleanup, func(ctx context.Context) error {
-			cleanup(ctx)
-			return nil
 		})
 	}
 
@@ -606,5 +583,5 @@ func FakeCameraHALFixture(enabledPlatformEffect bool, fakeInputFile string) test
 		camConfig.platformEffect = platformEffectDisabled
 	}
 
-	return mediaSetupFixture(internalMic, camConfig)
+	return mediaSetupFixture(camConfig)
 }

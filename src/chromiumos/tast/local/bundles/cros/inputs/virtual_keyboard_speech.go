@@ -101,7 +101,7 @@ func VirtualKeyboardSpeech(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	// Setup CRAS Aloop for audio test.
-	err := voice.ActivateAloopNodes(ctx, tconn)
+	err := voice.ActivateAloopNodes(ctx, tconn, voice.LoopbackPlayBack, voice.LoopbackCapture)
 	if err != nil {
 		s.Fatal("Failed to load Aloop: ", err)
 	}

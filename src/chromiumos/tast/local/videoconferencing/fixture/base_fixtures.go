@@ -9,6 +9,7 @@ import (
 	"context"
 	"time"
 
+	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
@@ -47,6 +48,7 @@ func init() {
 			"shengjun@google.com",
 		},
 		Impl:            baseSetupFixture(browser.TypeAsh, nil),
+		Parent:          fixture.StereoAloopLoaded,
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -65,6 +67,7 @@ func init() {
 		Impl: baseSetupFixture(browser.TypeAsh, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault"))}, nil
 		}),
+		Parent:          fixture.StereoAloopLoaded,
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -79,7 +82,8 @@ func init() {
 			"chrome-knowledge-eng@google.com",
 			"shengjun@google.com",
 		},
-		Vars: []string{"ui.gaiaPoolDefault"},
+		Parent: fixture.StereoAloopLoaded,
+		Vars:   []string{"ui.gaiaPoolDefault"},
 		Impl: baseSetupFixture(browser.TypeAsh, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
 				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
@@ -107,6 +111,7 @@ func init() {
 				chrome.ExtraArgs("--force-tablet-mode=touch_view"),
 			}, nil
 		}),
+		Parent:          fixture.StereoAloopLoaded,
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -122,6 +127,7 @@ func init() {
 			"shengjun@google.com",
 		},
 		Impl:            baseSetupFixture(browser.TypeLacros, nil),
+		Parent:          fixture.StereoAloopLoaded,
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -142,6 +148,7 @@ func init() {
 				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
 			}, nil
 		}),
+		Parent:          fixture.StereoAloopLoaded,
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -163,6 +170,7 @@ func init() {
 				chrome.ExtraArgs("--force-tablet-mode=clamshell"),
 			}, nil
 		}),
+		Parent:          fixture.StereoAloopLoaded,
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -184,6 +192,7 @@ func init() {
 				chrome.ExtraArgs("--force-tablet-mode=touch_view"),
 			}, nil
 		}),
+		Parent:          fixture.StereoAloopLoaded,
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -201,6 +210,7 @@ func init() {
 		Impl: baseSetupFixture(browser.TypeAsh, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{chrome.NoLogin()}, nil
 		}),
+		Parent:          fixture.StereoAloopLoaded,
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,

@@ -8,6 +8,7 @@ import (
 	"context"
 
 	"chromiumos/tast/common/android/ui"
+	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/testing"
@@ -38,6 +39,7 @@ func init() {
 				chrome.ExtraArgs(arc.DisableSyncFlags()...),
 				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault"))}, nil
 		}),
+		Parent:          fixture.StereoAloopLoaded,
 		SetUpTimeout:    chrome.LoginTimeout + arc.BootTimeout + ui.StartTimeout,
 		ResetTimeout:    arc.ResetTimeout,
 		PostTestTimeout: arc.PostTestTimeout,
