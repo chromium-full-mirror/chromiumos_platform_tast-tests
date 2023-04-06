@@ -6,6 +6,7 @@ package quicksettings
 
 import (
 	"context"
+	"regexp"
 	"time"
 
 	"chromiumos/tast/local/chrome"
@@ -17,7 +18,7 @@ import (
 
 // bluetoothDetailedView is the detailed Bluetooth view within the Quick
 // Settings.
-var bluetoothDetailedView = nodewith.ClassName("BluetoothDetailedViewLegacy")
+var bluetoothDetailedView = nodewith.ClassNameRegex(regexp.MustCompile(`^BluetoothDetailedView[A-Za-z]*$`))
 
 // bluetoothFeaturePodLabelButton is the label child of the Bluetooth feature pod button.
 var bluetoothFeaturePodLabelButton = nodewith.ClassName("FeaturePodLabelButton").NameContaining("Bluetooth")

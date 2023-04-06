@@ -61,7 +61,7 @@ func PairBluetoothDeviceWithUI(ctx context.Context, s *testing.State) {
 
 	if _, err := fv.BluetoothUIService.PairDeviceWithQuickSettings(
 		ctx, &bts.PairDeviceWithQuickSettingsRequest{
-			AdvertisedName: emulatedDevice.LocalBluetoothAddress(),
+			AdvertisedName: emulatedDevice.AdvertisedName(),
 		}); err != nil {
 		s.Fatal("Failed to pair device through the Quick Settings: ", err)
 	}
