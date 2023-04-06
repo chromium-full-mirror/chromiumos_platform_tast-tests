@@ -133,7 +133,8 @@ func ProcessesTestInternal(ctx context.Context, s *testing.State, testSelector [
 				{exe, "/usr/bin/cros_camera_service", matchRegexp, "cros_camera_service", zeroProcs, ""},
 				{exe, "/usr/bin/cups_proxy", matchRegexp, "cros_cups_proxy", zeroProcs, ""},
 				{exe, "/usr/bin/dbus-daemon", matchRegexp, "cros_dbus_daemon", oneProc, ""},
-				{exe, "/usr/bin/esif_ufd", matchRegexp, "cros_esif_ufd", zeroProcs, ""},
+				{exe, "/usr/bin/ipf_ufd", matchRegexp, "cros_ipf_ufd", zeroProcs, ""},
+				{exe, "/usr/bin/ipfhostd", matchRegexp, "cros_ipfhostd", zeroProcs, ""},
 				{exe, "/usr/bin/memd", matchRegexp, "cros_memd", zeroProcs, ""},
 				{exe, "/usr/bin/metrics_daemon", matchRegexp, "cros_metrics_daemon", zeroProcs, ""},
 				{exe, "/usr/bin/midis", matchRegexp, "cros_midis", zeroProcs, ""}, // Only after start-arc-instance

@@ -50,7 +50,7 @@ func GetProfileFromCrosConfig(ctx context.Context) (string, error) {
 
 // GetProfileFromPgrep uses pgrep to get DPTF profile currently in use.
 func GetProfileFromPgrep(ctx context.Context) (string, error) {
-	out, err := testexec.CommandContext(ctx, "pgrep", "-a", "esif_ufd").Output()
+	out, err := testexec.CommandContext(ctx, "pgrep", "-a", "ipf_ufd").Output()
 	if err != nil {
 		return "", errors.Wrap(err, "search for DPTF process failed")
 	}

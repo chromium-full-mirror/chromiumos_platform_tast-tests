@@ -152,6 +152,8 @@ func SELinuxFilesSystem(ctx context.Context, s *testing.State) {
 		{Path: "/usr/bin/ti50-emulator-u2f", Context: "cros_ti50-emulator-u2f_exec", IgnoreErrors: true},
 		{Path: "/usr/bin/tlsdated", Context: "cros_tlsdated_exec"},
 		{Path: "/usr/bin/tpm2-simulator", Context: "cros_tpm2_simulator_exec", IgnoreErrors: true},
+		{Path: "/usr/bin/ipf_ufd", Context: "cros_ipf_ufd_exec", IgnoreErrors: true},
+		{Path: "/usr/bin/ipfhostd", Context: "cros_ipfhostd_exec", IgnoreErrors: true},
 		{Path: "/usr/bin/traced", Context: "cros_traced_exec"},
 		{Path: "/usr/bin/traced_probes", Context: "cros_traced_probes_exec"},
 		{Path: "/usr/bin/virtual-file-provider", Context: "cros_virtual_file_provider_exec", IgnoreErrors: true},
