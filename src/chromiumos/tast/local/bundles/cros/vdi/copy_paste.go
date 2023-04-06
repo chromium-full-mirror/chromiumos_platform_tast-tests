@@ -26,7 +26,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CopyPaste,
-		LacrosStatus: testing.LacrosVariantNeeded,
+		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Copy and paste text between Notepad VDI application and native text editor application",
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
@@ -52,23 +52,24 @@ func init() {
 				Fixture:   fixture.CitrixLaunched,
 				ExtraAttr: []string{"group:vdi_limited"},
 			},
-			/* No Notepad app on VMware yet
 			{
-				Name:    "vmware",
-				Fixture: fixture.VmwareLaunched,
+				Name:              "lacros_citrix",
+				Fixture:           fixture.LacrosCitrixLaunched,
+				ExtraAttr:         []string{"group:vdi_limited"},
+				ExtraSoftwareDeps: []string{"lacros"},
 			},
-			*/
 			{
 				Name:      "mgs_citrix",
 				Fixture:   fixture.MgsCitrixLaunched,
 				ExtraAttr: []string{"group:vdi_limited"},
 			},
-			/* No Notepad app on Vmware yet
 			{
-				Name:    "mgs_vmware",
-				Fixture: fixture.MgsVmwareLaunched,
+				Name:              "mgs_lacros_citrix",
+				Fixture:           fixture.MgsLacrosCitrixLaunched,
+				ExtraAttr:         []string{"group:vdi_limited"},
+				ExtraSoftwareDeps: []string{"lacros"},
 			},
-			*/
+			// TODO(b/263381075): VMWare doesn't have as simple apps as notepad.
 		},
 	})
 }

@@ -29,7 +29,7 @@ type keyboardShortcutsParams struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         KeyboardShortcuts,
-		LacrosStatus: testing.LacrosVariantNeeded,
+		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Test checks that certain keystrokes used for e.g. copy-paste and printing are carried into VDI sessions",
 		Contacts: []string{
 			"pwa-commercial@google.com",
@@ -48,14 +48,25 @@ func init() {
 		Requirements: []string{"screenplay-608e694b-2cff-4d77-a96b-2c5afb1e9faf"},
 		Params: []testing.Param{
 			{
-				Name:    "citrix",
-				Fixture: fixture.CitrixLaunched,
+				Name:      "citrix",
+				Fixture:   fixture.CitrixLaunched,
+				ExtraAttr: []string{"group:vdi_limited"},
 				Val: keyboardShortcutsParams{
 					DesktopName:   "WindowsServer2019",
 					RunDialogKeys: "Search+R",
 					StartMenuText: []string{"Citrix", "Workspace"},
 				},
-				ExtraAttr: []string{"group:vdi_limited"},
+			},
+			{
+				Name:              "lacros_citrix",
+				ExtraAttr:         []string{"group:vdi_limited"},
+				ExtraSoftwareDeps: []string{"lacros"},
+				Fixture:           fixture.LacrosCitrixLaunched,
+				Val: keyboardShortcutsParams{
+					DesktopName:   "WindowsServer2019",
+					RunDialogKeys: "Search+R",
+					StartMenuText: []string{"Citrix", "Workspace"},
+				},
 			},
 			{
 				Name:    "vmware",
@@ -66,15 +77,27 @@ func init() {
 					StartMenuText: []string{"Most", "used"},
 				},
 			},
+			// TODO(b/269235077) add vmware lacros variant when fixture is available
 			{
-				Name:    "mgs_citrix",
-				Fixture: fixture.MgsCitrixLaunched,
+				Name:      "mgs_citrix",
+				Fixture:   fixture.MgsCitrixLaunched,
+				ExtraAttr: []string{"group:vdi_limited"},
 				Val: keyboardShortcutsParams{
 					DesktopName:   "WindowsServer2019",
 					RunDialogKeys: "Search+R",
 					StartMenuText: []string{"Citrix", "Workspace"},
 				},
-				ExtraAttr: []string{"group:vdi_limited"},
+			},
+			{
+				Name:              "mgs_lacros_citrix",
+				Fixture:           fixture.MgsLacrosCitrixLaunched,
+				ExtraAttr:         []string{"group:vdi_limited"},
+				ExtraSoftwareDeps: []string{"lacros"},
+				Val: keyboardShortcutsParams{
+					DesktopName:   "WindowsServer2019",
+					RunDialogKeys: "Search+R",
+					StartMenuText: []string{"Citrix", "Workspace"},
+				},
 			},
 			{
 				Name:    "mgs_vmware",
@@ -85,6 +108,7 @@ func init() {
 					StartMenuText: []string{"Most", "used"},
 				},
 			},
+			// TODO(b/269235077) add vmware lacros MGS  variant when fixture is available
 		},
 	})
 }

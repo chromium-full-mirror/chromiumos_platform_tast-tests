@@ -42,7 +42,7 @@ var citrixData = endVdiSessionData{
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         EndVdiSession,
-		LacrosStatus: testing.LacrosVariantNeeded,
+		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Test verifies the behaviour of ending a VDI session",
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
@@ -65,30 +65,39 @@ func init() {
 				ExtraAttr: []string{"group:vdi_limited"},
 			},
 			{
-				Name:      "citrix_kiosk",
+				Name:              "lacros_citrix",
+				Fixture:           fixture.LacrosCitrixLaunched,
+				Val:               citrixData,
+				ExtraAttr:         []string{"group:vdi_limited"},
+				ExtraSoftwareDeps: []string{"lacros"},
+			},
+			{
+				Name:      "kiosk_citrix",
 				Fixture:   fixture.KioskCitrixLaunched,
 				Val:       citrixData,
 				ExtraAttr: []string{"group:vdi_limited"},
 			},
 			{
-				Name:      "citrix_mgs",
+				Name:              "kiosk_lacros_citrix",
+				Fixture:           fixture.KioskLacrosCitrixLaunched,
+				Val:               citrixData,
+				ExtraAttr:         []string{"group:vdi_limited"},
+				ExtraSoftwareDeps: []string{"lacros"},
+			},
+			{
+				Name:      "mgs_citrix",
 				Fixture:   fixture.MgsCitrixLaunched,
 				Val:       citrixData,
 				ExtraAttr: []string{"group:vdi_limited"},
 			},
-			// TODO b/270322387: add the VmWare implementation details
-			// {
-			// 	Name:    "vmware",
-			// 	Fixture: fixture.VmwareLaunched,
-			// },
-			// {
-			// 	Name:    "vmware_kiosk",
-			// 	Fixture: fixture.KioskVmwareLaunched,
-			// },
-			// {
-			// 	Name:    "vmware_mgs",
-			// 	Fixture: fixture.MgsVmwareLaunched,
-			// },
+			{
+				Name:              "mgs_lacros_citrix",
+				Fixture:           fixture.MgsLacrosCitrixLaunched,
+				Val:               citrixData,
+				ExtraAttr:         []string{"group:vdi_limited"},
+				ExtraSoftwareDeps: []string{"lacros"},
+			},
+			// TODO(b/270322387) add VMware implementations
 		},
 		Data: []string{"toolbar_buttons_icon.png", "Start_btn.png", "Power_btn.png"},
 	})
