@@ -312,17 +312,12 @@ func ChameleonGetConnectedPortMap(ctx context.Context) map[string]bool {
 		return ChameleonGetPortMapping(connectedPortsLocal)
 	}
 
-	chamHost, err := ChameleonGetHostname()
-	if err != nil {
-		testing.ContextLog(ctx, "Failed to get chameleon hostname")
-	}
-
 	//TODO(kenil): use lab labels here
-	config, err := ReadChameleonConfig(chamHost)
+	config, err := ReadChameleonConfig(ctx)
 	connectedPortsYaml := config.Ports
 	if err != nil {
 		connectedPortsYaml = supportedPorts
-		testing.ContextLog(ctx, "Reading yaml config failed, Now verifying all ports")
+		testing.ContextLog(ctx, "Reading yaml config failed: ", err.Error())
 	}
 
 	testing.ContextLogf(ctx, "The following ports should be connected according to the device config: %s", connectedPortsYaml)
@@ -358,9 +353,14 @@ func ChameleonGetConnection(ctx context.Context) (chameleon.Chameleond, error) {
 }
 
 // ReadChameleonConfig retrieves hostname for yaml config files and return results
-func ReadChameleonConfig(filename string) (ChameleonConfigYaml, error) {
+func ReadChameleonConfig(ctx context.Context) (ChameleonConfigYaml, error) {
+	chamHost, err := ChameleonGetHostname()
+	if err != nil {
+		return ChameleonConfigYaml{}, errors.Wrap(err, "failed to get chameleon hostname")
+	}
+	testing.ContextLog(ctx, "Chameleon Hostname: ", chamHost)
 
-	chameleonConfigFilePath := fmt.Sprintf("%s/%s.%s", chameleonConfigDirectory, filename, chameleonConfigFilesExtension)
+	chameleonConfigFilePath := fmt.Sprintf("%s/%s.%s", chameleonConfigDirectory, chamHost, chameleonConfigFilesExtension)
 
 	contents, err := os.ReadFile(chameleonConfigFilePath)
 	if err != nil {
@@ -369,7 +369,7 @@ func ReadChameleonConfig(filename string) (ChameleonConfigYaml, error) {
 
 	var chameleonConfigYaml ChameleonConfigYaml
 	if err := yaml.Unmarshal(contents, &chameleonConfigYaml); err != nil {
-		return ChameleonConfigYaml{}, errors.Wrapf(err, "unable to parse %s.yaml file", filename)
+		return ChameleonConfigYaml{}, errors.Wrapf(err, "unable to parse %s.yaml file", chamHost)
 	}
 
 	return chameleonConfigYaml, nil
