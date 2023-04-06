@@ -11,7 +11,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/crostini"
 	"chromiumos/tast/local/crostini/ui/settings"
-	"chromiumos/tast/local/crostini/ui/terminalapp"
+	"chromiumos/tast/local/terminalapp"
 	"chromiumos/tast/testing"
 )
 

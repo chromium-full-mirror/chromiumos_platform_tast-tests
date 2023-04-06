@@ -12,8 +12,8 @@ import (
 
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/crostini"
-	"chromiumos/tast/local/crostini/ui/terminalapp"
 	"chromiumos/tast/local/cryptohome"
+	"chromiumos/tast/local/terminalapp"
 	"chromiumos/tast/local/vm"
 	"chromiumos/tast/testing"
 )

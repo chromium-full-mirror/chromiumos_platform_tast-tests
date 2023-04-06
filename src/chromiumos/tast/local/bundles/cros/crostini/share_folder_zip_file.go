@@ -20,8 +20,8 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/filesapp"
 	"chromiumos/tast/local/crostini"
 	"chromiumos/tast/local/crostini/ui/sharedfolders"
-	"chromiumos/tast/local/crostini/ui/terminalapp"
 	"chromiumos/tast/local/cryptohome"
+	"chromiumos/tast/local/terminalapp"
 	"chromiumos/tast/testing"
 )
 

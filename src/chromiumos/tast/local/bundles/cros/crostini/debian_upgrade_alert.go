@@ -18,7 +18,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/crostini"
 	"chromiumos/tast/local/crostini/ui/settings"
-	"chromiumos/tast/local/crostini/ui/terminalapp"
+	"chromiumos/tast/local/terminalapp"
 	"chromiumos/tast/testing"
 	"go.chromium.org/tast/core/shutil"
 )

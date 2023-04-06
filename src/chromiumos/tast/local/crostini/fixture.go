@@ -24,11 +24,11 @@ import (
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	cui "chromiumos/tast/local/crostini/ui"
-	"chromiumos/tast/local/crostini/ui/terminalapp"
 	"chromiumos/tast/local/cryptohome"
 	dlcutil "chromiumos/tast/local/dlc"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/screenshot"
+	"chromiumos/tast/local/terminalapp"
 	"chromiumos/tast/local/vm"
 	"chromiumos/tast/testing"
 )

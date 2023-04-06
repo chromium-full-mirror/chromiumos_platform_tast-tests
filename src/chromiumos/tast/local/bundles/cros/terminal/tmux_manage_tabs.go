@@ -17,7 +17,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
-	"chromiumos/tast/local/crostini/ui/terminalapp"
+	"chromiumos/tast/local/terminalapp"
 	"chromiumos/tast/testing"
 )
 

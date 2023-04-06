@@ -20,8 +20,8 @@ import (
 	"chromiumos/tast/local/crostini/faillog"
 	"chromiumos/tast/local/crostini/ui"
 	"chromiumos/tast/local/crostini/ui/settings"
-	"chromiumos/tast/local/crostini/ui/terminalapp"
 	"chromiumos/tast/local/input"
+	"chromiumos/tast/local/terminalapp"
 	"chromiumos/tast/local/vm"
 	"chromiumos/tast/testing"
 )

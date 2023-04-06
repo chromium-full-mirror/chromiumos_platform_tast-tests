@@ -12,7 +12,7 @@ import (
 
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/crostini"
-	"chromiumos/tast/local/crostini/ui/terminalapp"
+	"chromiumos/tast/local/terminalapp"
 	"chromiumos/tast/testing"
 )
 

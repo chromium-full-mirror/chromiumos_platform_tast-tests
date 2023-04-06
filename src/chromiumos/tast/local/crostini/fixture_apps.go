@@ -13,9 +13,9 @@ import (
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/devicemode"
 	"chromiumos/tast/local/chrome/uiauto"
-	"chromiumos/tast/local/crostini/ui/terminalapp"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/screenshot"
+	"chromiumos/tast/local/terminalapp"
 	"chromiumos/tast/local/vm"
 	"chromiumos/tast/testing"
 )
