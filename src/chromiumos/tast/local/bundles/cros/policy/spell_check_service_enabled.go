@@ -15,6 +15,7 @@ import (
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/local/annotations"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
@@ -75,6 +76,9 @@ func SpellCheckServiceEnabled(ctx context.Context, s *testing.State) {
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()
 
+	// Hash code for NetworkTrafficAnnotationTag with id spellcheck_lookup.
+	const spellcheckLookupHashCode = "132553989"
+
 	for _, param := range []struct {
 		// name is the subtest name.
 		name string
@@ -86,13 +90,16 @@ func SpellCheckServiceEnabled(ctx context.Context, s *testing.State) {
 		wantSettingsCheck checked.Checked
 		// wantContextCheck states whether the context menu checkmark should be there.
 		wantContextCheck checked.Checked
+		// shouldFindAnnotation states wherher spellcheck_lookup annotation should be found in the net-export log.
+		shouldFindAnnotation bool
 	}{
 		{
-			name:              "allow",
-			value:             &policy.SpellCheckServiceEnabled{Val: true},
-			wantRestriction:   restriction.Disabled,
-			wantSettingsCheck: checked.True,
-			wantContextCheck:  checked.True,
+			name:                 "allow",
+			value:                &policy.SpellCheckServiceEnabled{Val: true},
+			wantRestriction:      restriction.Disabled,
+			wantSettingsCheck:    checked.True,
+			wantContextCheck:     checked.True,
+			shouldFindAnnotation: true,
 		},
 		{
 			name:              "disallow",
@@ -100,7 +107,8 @@ func SpellCheckServiceEnabled(ctx context.Context, s *testing.State) {
 			wantRestriction:   restriction.Disabled,
 			wantSettingsCheck: checked.False,
 			// "" means that there is no checkmark.
-			wantContextCheck: "",
+			wantContextCheck:     "",
+			shouldFindAnnotation: false,
 		},
 		{
 			name:              "unset",
@@ -108,7 +116,8 @@ func SpellCheckServiceEnabled(ctx context.Context, s *testing.State) {
 			wantRestriction:   restriction.None,
 			wantSettingsCheck: checked.False,
 			// "" means that there is no checkmark.
-			wantContextCheck: "",
+			wantContextCheck:     "",
+			shouldFindAnnotation: false,
 		},
 	} {
 		s.Run(ctx, param.name, func(ctx context.Context, s *testing.State) {
@@ -130,6 +139,11 @@ func SpellCheckServiceEnabled(ctx context.Context, s *testing.State) {
 			defer closeBrowser(cleanupCtx)
 
 			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.name)
+
+			// Open the net-export page and start logging.
+			if err := annotations.StartLogging(ctx, cr, br); err != nil {
+				s.Fatal("Failed to start logging: ", err)
+			}
 
 			// Inside ChromeOS settings, check that the button is restricted and set to the correct value.
 			if err := policyutil.OSSettingsPage(ctx, cr, "osSyncSetup").
@@ -186,6 +200,20 @@ func SpellCheckServiceEnabled(ctx context.Context, s *testing.State) {
 			if param.wantContextCheck != menuItem.Checked {
 				s.Errorf("Menu item in wrong checking state: want=%s, actual=%s", param.
 					wantContextCheck, menuItem.Checked)
+			}
+
+			// Stop logging and check the logs for spellcheck_lookup NetworkTrafficAnnotationTag.
+			foundAnnotation, err := annotations.StopLoggingCheckLogs(ctx, cr, br, spellcheckLookupHashCode)
+			if err != nil {
+				s.Fatal("Failed to stop logging and check logs: ", err)
+			}
+
+			if foundAnnotation && !param.shouldFindAnnotation {
+				s.Fatal("Found unexpected NetworkTrafficAnnotationTag with id spellcheck_lookup")
+			}
+
+			if !foundAnnotation && param.shouldFindAnnotation {
+				s.Fatal("Did not find expected NetworkTrafficAnnotationTag with id spellcheck_lookup")
 			}
 		})
 	}
