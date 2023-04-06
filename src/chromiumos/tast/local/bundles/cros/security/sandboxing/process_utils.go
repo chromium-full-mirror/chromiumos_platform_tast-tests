@@ -73,6 +73,9 @@ var Exclusions = []string{
 	"(agetty)", // initial name when systemd starts serial-getty; changes to "agetty" later
 	"adb",      // sometimes appears on test images: https://crbug.com/792541
 	"postinst", // runs cros_installer
+	// TODO:b/277156105, put ml_service in exclusion to allow sandbox test goes back to critical.
+	// This is a temporary measure, will need to be reverted once there is a proper fix.
+	"ml_service",
 }
 
 // IgnoredAncestors contains names of processes whose children we should ignore in sandboxing-related tests.
