@@ -205,7 +205,9 @@ func NotificationScrollingPerf(ctx context.Context, s *testing.State) {
 	},
 		"Ash.MessageCenter.Scroll.PresentationTime",
 		"Ash.MessageCenter.Scroll.PresentationTime.MaxLatency")),
-		perfutil.StoreSmoothness); err != nil {
+		perfutil.StoreSmoothness,
+		perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true},
+	); err != nil {
 		s.Fatal("Failed to run or save: ", err)
 	}
 }

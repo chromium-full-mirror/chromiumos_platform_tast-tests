@@ -104,7 +104,7 @@ func WindowResizePerf(ctx context.Context, s *testing.State) {
 		metricsName = "Ash.InteractiveWindowResize.Lacros.TimeToPresent"
 	}
 
-	runner := perfutil.NewRunner(cr.Browser())
+	runner := perfutil.NewRunner(cr.Browser(), perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
 	for i, numWindows := range []int{1, 2} {
 		conn, err := cs.NewConn(ctx, ui.PerftestURL, browser.WithNewWindow())
 		if err != nil {

@@ -110,7 +110,9 @@ func TabletTransitionPerf(ctx context.Context, s *testing.State) {
 	},
 		"Ash.TabletMode.AnimationSmoothness.Enter",
 		"Ash.TabletMode.AnimationSmoothness.Exit")),
-		perfutil.StoreSmoothness); err != nil {
+		perfutil.StoreSmoothness,
+		perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true},
+	); err != nil {
 		s.Fatal("Failed to run or save: ", err)
 	}
 }

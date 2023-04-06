@@ -120,7 +120,9 @@ func DesksTrackpadSwipePerf(ctx context.Context, s *testing.State) {
 		"Ash.Desks.AnimationSmoothness.DeskEndGesture",
 		"Ash.Desks.PresentationTime.UpdateGesture",
 		"Ash.Desks.PresentationTime.UpdateGesture.MaxLatency")),
-		perfutil.StoreAllWithHeuristics("")); err != nil {
+		perfutil.StoreAllWithHeuristics(""),
+		perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true},
+	); err != nil {
 		s.Fatal("Failed to run or save: ", err)
 	}
 }

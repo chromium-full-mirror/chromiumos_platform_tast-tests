@@ -84,7 +84,7 @@ func TabHoverCardAnimationPerf(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to find tabs: ", err)
 	}
 
-	runner := perfutil.NewRunner(cr.Browser())
+	runner := perfutil.NewRunner(cr.Browser(), perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
 	for _, data := range []struct {
 		tab    uiauto.NodeInfo
 		suffix string

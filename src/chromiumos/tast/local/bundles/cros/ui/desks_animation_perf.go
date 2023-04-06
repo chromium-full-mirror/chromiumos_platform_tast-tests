@@ -73,7 +73,9 @@ func DesksAnimationPerf(ctx context.Context, s *testing.State) {
 	},
 		"Ash.Desks.AnimationSmoothness.DeskActivation",
 		"Ash.Desks.AnimationSmoothness.DeskRemoval")),
-		perfutil.StoreSmoothness); err != nil {
+		perfutil.StoreSmoothness,
+		perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true},
+	); err != nil {
 		s.Fatal("Failed to run or save: ", err)
 	}
 }

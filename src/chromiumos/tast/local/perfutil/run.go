@@ -105,17 +105,37 @@ func StoreLatency(ctx context.Context, pv *Values, hists []*metrics.Histogram) e
 	return StoreAll(perf.SmallerIsBetter, "ms", "")(ctx, pv, hists)
 }
 
+type RunnerOptions struct {
+	// In many tests the first run will actually initialize resources and
+	// thus will be very slow. If `IgnoreFirstRun` flag is true the metrics
+	// of the first run will be ignored.
+	IgnoreFirstRun bool
+
+	// We may want to drop minimum and maximum metric values to reduce
+	// flakiness. If `DropMinMaxValues` flag is true, the min and max
+	// metric values are dropped before reporting.
+	DropMinMaxValues bool
+}
+
 // Runner is an entity to manage multiple runs of the test scenario.
 type Runner struct {
 	br         *browser.Browser
 	pv         *Values
 	Runs       int
 	RunTracing bool
+
+	options RunnerOptions
 }
 
 // NewRunner creates a new instance of Runner.
-func NewRunner(br *browser.Browser) *Runner {
-	return &Runner{br: br, pv: NewValues(), Runs: DefaultRuns, RunTracing: (br != nil)}
+func NewRunner(br *browser.Browser, options RunnerOptions) *Runner {
+	return &Runner{
+		br:         br,
+		pv:         NewValues(options.DropMinMaxValues),
+		Runs:       DefaultRuns,
+		RunTracing: (br != nil),
+		options:    options,
+	}
 }
 
 // Values returns the values in the runner.
@@ -124,13 +144,14 @@ func (r *Runner) Values() *Values {
 }
 
 // RunMultiple runs scenario multiple times and store the data through store
-// function. It invokes scenario+store 10 times, and then invokes scenario only
-// with tracing enabled. If one of the runs fails, it quits immediately and
-// reports an error. The run function is executed within the scenario one and
-// has to be implemented by the caller. The name parameter is used for the
-// prefix of subtest names for calling scenario/store function and the prefix
-// for the trace data file. The name can be empty, in which case the runner
-// uses default prefix values. Returns false when it has an error.
+// function. It invokes scenario+store 10 times (actually r.Runs times), and
+// then invokes scenario only with tracing enabled.  If one of the runs fails,
+// it quits immediately and reports an error. The run function is executed
+// within the scenario one and has to be implemented by the caller. The name
+// parameter is used for the prefix of subtest names for calling scenario/store
+// function and the prefix for the trace data file. The name can be empty, in
+// which case the runner uses default prefix values.  Returns false when it has
+// an error.
 func (r *Runner) RunMultiple(ctx context.Context, name string, scenario ScenarioFunc, store StoreFunc) error {
 	runPrefix := name
 	if name == "" {
@@ -142,8 +163,13 @@ func (r *Runner) RunMultiple(ctx context.Context, name string, scenario Scenario
 		if err != nil {
 			return errors.Wrap(err, "failed to run the test scenario")
 		}
+		storage := r.pv
+		if r.options.IgnoreFirstRun && i == 0 {
+			// store() may have side-effects and must always be called.
+			storage = NewValues(false)
+		}
 
-		if err := store(ctx, r.pv, hists); err != nil {
+		if err := store(ctx, storage, hists); err != nil {
 			return errors.Wrap(err, "failed to store the histogram data")
 		}
 	}
@@ -199,8 +225,8 @@ func (r *Runner) RunMultiple(ctx context.Context, name string, scenario Scenario
 
 // RunMultipleAndSave is a utility to create a new runner, conduct runs multiple times,
 // and save the recorded values.
-func RunMultipleAndSave(ctx context.Context, outDir string, br *browser.Browser, scenario ScenarioFunc, store StoreFunc) error {
-	r := NewRunner(br)
+func RunMultipleAndSave(ctx context.Context, outDir string, br *browser.Browser, scenario ScenarioFunc, store StoreFunc, options RunnerOptions) error {
+	r := NewRunner(br, options)
 	if err := r.RunMultiple(ctx, "", scenario, store); err != nil {
 		return err
 	}

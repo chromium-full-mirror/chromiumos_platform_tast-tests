@@ -301,7 +301,9 @@ func NotificationClosePerf(ctx context.Context, s *testing.State) {
 		return nil
 	},
 		histogramName)),
-		perfutil.StoreAllWithHeuristics("")); err != nil {
+		perfutil.StoreAllWithHeuristics(""),
+		perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true},
+	); err != nil {
 		s.Fatal("Failed to run or save: ", err)
 	}
 }

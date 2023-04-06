@@ -103,7 +103,10 @@ func SnapPerf(ctx context.Context, s *testing.State) {
 
 		return nil
 	},
-		"Ash.Window.AnimationSmoothness.Snap")), perfutil.StoreSmoothness); err != nil {
+		"Ash.Window.AnimationSmoothness.Snap")),
+		perfutil.StoreSmoothness,
+		perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true},
+	); err != nil {
 		s.Fatal("Failed to run or save: ", err)
 	}
 }

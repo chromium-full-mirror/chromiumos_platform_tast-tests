@@ -95,7 +95,9 @@ func SystemTrayItemsPerf(ctx context.Context, s *testing.State) {
 		"Ash.StatusArea.TrayBackgroundView.Hide",
 		"Ash.StatusArea.TrayItemView.Show",
 		"Ash.StatusArea.TrayItemView.Hide")),
-		perfutil.StoreSmoothness); err != nil {
+		perfutil.StoreSmoothness,
+		perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true},
+	); err != nil {
 		s.Fatal("Failed to run or save: ", err)
 	}
 }

@@ -187,7 +187,7 @@ func PerformantSplitViewPerf(ctx context.Context, s *testing.State) {
 	}
 
 	defer ash.SetOverviewModeAndWait(cleanupCtx, tconn, false)
-	runner := perfutil.NewRunner(cr.Browser())
+	runner := perfutil.NewRunner(cr.Browser(), perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
 
 	// Open the first window using browserfixt to get a browser instance and control its lifecycle outside of the subtest loop.
 	// Then use the browser instance to open the others inside the loop.

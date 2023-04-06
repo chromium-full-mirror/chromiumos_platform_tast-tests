@@ -92,7 +92,9 @@ func NotificationPopupPerf(ctx context.Context, s *testing.State) {
 		return nil
 	},
 		"Ash.NotificationPopup.AnimationSmoothness")),
-		perfutil.StoreSmoothness); err != nil {
+		perfutil.StoreSmoothness,
+		perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true},
+	); err != nil {
 		s.Fatal("Failed to run or save: ", err)
 	}
 }

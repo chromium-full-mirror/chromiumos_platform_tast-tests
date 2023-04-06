@@ -313,7 +313,7 @@ func SplitViewResizePerf(ctx context.Context, s *testing.State) {
 	defer ash.SetOverviewModeAndWait(cleanupCtx, tconn, false)
 	defer ash.CleanUpDesks(cleanupCtx, tconn)
 	currentWindows := 0
-	runner := perfutil.NewRunner(cr.Browser())
+	runner := perfutil.NewRunner(cr.Browser(), perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
 	var id0 int
 	for i, testCase := range testCases {
 		s.Run(ctx, testCase.name, func(ctx context.Context, s *testing.State) {

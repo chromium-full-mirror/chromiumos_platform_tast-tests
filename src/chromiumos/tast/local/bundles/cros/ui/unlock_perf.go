@@ -97,7 +97,7 @@ func UnlockPerf(ctx context.Context, s *testing.State) {
 	defer server.Close()
 	url := server.URL + "/animation.html"
 
-	r := perfutil.NewRunner(cr.Browser())
+	r := perfutil.NewRunner(cr.Browser(), perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
 	currentWindows := 0
 	// Run the unlock flow for various situations.
 	// - change the number of browser windows, 2 or 8

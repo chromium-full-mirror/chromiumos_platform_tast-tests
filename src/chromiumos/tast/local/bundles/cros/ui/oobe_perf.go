@@ -42,7 +42,7 @@ func OobePerf(ctx context.Context, s *testing.State) {
 	const (
 		histogramName = "OOBE.WebUI.LoadTime.FirstRun"
 	)
-	r := perfutil.NewRunner(nil)
+	r := perfutil.NewRunner(nil, perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
 	r.RunMultiple(ctx, "OobePerf", uiperf.Run(s, func(ctx context.Context, name string) ([]*metrics.Histogram, error) {
 		// Load OOBE Welcome Screen (first OOBE screen). Test extension is required to fetch histograms.
 		cr, err := chrome.New(ctx, chrome.NoLogin(), chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")))

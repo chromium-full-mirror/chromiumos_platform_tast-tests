@@ -89,7 +89,7 @@ func ScreenRotationPerf(ctx context.Context, s *testing.State) {
 	url := ui.PerftestURL
 	currentWindows := 0
 	// Use `cr` from ash-chrome for the metrics that are recorded in ash-chrome.
-	runner := perfutil.NewRunner(cr.Browser())
+	runner := perfutil.NewRunner(cr.Browser(), perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
 	// Run the screen rotation in overview mode with 2 or 8 windows.
 	var br *browser.Browser
 	for _, windows := range []int{2, 8} {

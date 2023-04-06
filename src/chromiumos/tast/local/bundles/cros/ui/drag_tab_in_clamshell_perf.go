@@ -124,7 +124,9 @@ func DragTabInClamshellPerf(ctx context.Context, s *testing.State) {
 	},
 		"Ash.TabDrag.PresentationTime.ClamshellMode",
 		"Ash.TabDrag.PresentationTime.MaxLatency.ClamshellMode")),
-		perfutil.StoreLatency); err != nil {
+		perfutil.StoreLatency,
+		perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true},
+	); err != nil {
 		s.Fatal("Failed to run or save: ", err)
 	}
 }

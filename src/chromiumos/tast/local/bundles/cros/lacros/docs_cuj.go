@@ -87,7 +87,7 @@ func DocsCUJ(ctx context.Context, s *testing.State) {
 	}
 	defer cleanup(ctx)
 
-	vs := perfutil.NewValues()
+	vs := perfutil.NewValues(true /*dropMinMax*/)
 
 	iterationCount := defaultIterations
 	if iter, ok := s.Var("lacros.DocsCUJ.iterations"); ok {

@@ -170,7 +170,9 @@ func DragTabInTabletPerf(ctx context.Context, s *testing.State) {
 	},
 		"Ash.TabDrag.PresentationTime.TabletMode",
 		"Ash.TabDrag.PresentationTime.MaxLatency.TabletMode")),
-		perfutil.StoreLatency); err != nil {
+		perfutil.StoreLatency,
+		perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true},
+	); err != nil {
 		s.Fatal("Failed to run or save: ", err)
 	}
 }

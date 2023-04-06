@@ -132,7 +132,9 @@ func QuickSettingsPerf(ctx context.Context, s *testing.State) {
 		"ChromeOS.SystemTray.AnimationSmoothness.TransitionToCollapsed",
 		"ChromeOS.SystemTray.AnimationSmoothness.TransitionToExpanded",
 		"Ash.Window.AnimationSmoothness.Hide")),
-		perfutil.StoreAllWithHeuristics("")); err != nil {
+		perfutil.StoreAllWithHeuristics(""),
+		perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true},
+	); err != nil {
 		s.Fatal("Failed to run or save: ", err)
 	}
 }

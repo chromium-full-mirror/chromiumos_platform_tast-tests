@@ -842,7 +842,12 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to initialize test: ", err)
 	}
 
-	r := perfutil.NewRunner(nil)
+	r := perfutil.NewRunner(nil,
+		perfutil.RunnerOptions{
+			IgnoreFirstRun:   false,
+			DropMinMaxValues: false,
+		},
+	)
 	// Use 3 runs instead of 10, to reduce tests time.
 	r.Runs = 3
 	// Run an http server to serve the test contents for accessing from the chrome browsers.
@@ -1047,7 +1052,7 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 				// Values are not stored to the perf results, but only reported to the test log.
 				// Tracing run is different from performance run and we need metrics values from the
 				// tracing run to analyze the trace.
-				tracingValues := perfutil.NewValues()
+				tracingValues := perfutil.NewValues(false /*dropMinMax*/)
 
 				var tracingHistograms []*metrics.Histogram
 				var tpsValues map[perf.Metric][]float64

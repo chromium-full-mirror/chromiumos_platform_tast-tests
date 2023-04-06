@@ -132,7 +132,9 @@ func HotseatDrag(ctx context.Context, s *testing.State) {
 	},
 		"Ash.HotseatTransition.Drag.PresentationTime",
 		"Ash.HotseatTransition.Drag.PresentationTime.MaxLatency")),
-		perfutil.StoreLatency); err != nil {
+		perfutil.StoreLatency,
+		perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true},
+	); err != nil {
 		s.Fatal("Failed to run or save: ", err)
 	}
 }

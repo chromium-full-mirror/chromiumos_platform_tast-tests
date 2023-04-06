@@ -378,7 +378,7 @@ func OverviewDragWindowPerf(ctx context.Context, s *testing.State) {
 
 	// Note that the test needs to take traces in ash-chrome, and grab the metrics from ash-chrome.
 	// So, ash-chrome `cr` should be used for perfutil.NewRunner and ash test APIs `tconn` for RunAndWaitAll here in this test.
-	runner := perfutil.NewRunner(cr.Browser())
+	runner := perfutil.NewRunner(cr.Browser(), perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
 	drag := s.Param().(dragTest)
 
 	defer ash.SetOverviewModeAndWait(ctx, tconn, false)

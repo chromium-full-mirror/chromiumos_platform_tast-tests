@@ -117,7 +117,10 @@ func OverviewScrollPerf(ctx context.Context, s *testing.State) {
 		}
 
 		return nil
-	}, "Ash.Overview.Scroll.PresentationTime.TabletMode")), perfutil.StoreLatency); err != nil {
+	}, "Ash.Overview.Scroll.PresentationTime.TabletMode")),
+		perfutil.StoreLatency,
+		perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true},
+	); err != nil {
 		s.Fatal("Failed to run or save: ", err)
 	}
 }

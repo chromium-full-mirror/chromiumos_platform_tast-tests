@@ -16,15 +16,17 @@ import (
 
 // Values keeps the reporting values for multiple runs.
 type Values struct {
-	metrics map[string]perf.Metric
-	values  map[string][]float64
+	metrics    map[string]perf.Metric
+	values     map[string][]float64
+	dropMinMax bool
 }
 
 // NewValues creates a new Values instance.
-func NewValues() *Values {
+func NewValues(dropMinMax bool) *Values {
 	return &Values{
-		metrics: map[string]perf.Metric{},
-		values:  map[string][]float64{},
+		metrics:    map[string]perf.Metric{},
+		values:     map[string][]float64{},
+		dropMinMax: dropMinMax,
 	}
 }
 
@@ -85,27 +87,26 @@ func (v *Values) Values(ctx context.Context) *perf.Values {
 		if len(vs) == 0 {
 			continue
 		}
-		// Report the first value
-		firstMetric := metric
-		firstMetric.Variant = "first"
-		pv.Set(firstMetric, vs[0])
-		// Average metrics; just reporting individual values, as crosbolt makes
-		// the average calculation.
-		otherMetric := metric
-		otherMetric.Variant = "average"
-		otherMetric.Multiple = true
-
-		minIndex, maxIndex := minMaxIndices(vs)
-		var sum float64
-		var count int
-		for i, v := range vs {
-			if len(vs) < 3 || (i != maxIndex && i != minIndex) {
-				pv.Append(otherMetric, v)
-				sum += v
+		sum := 0.0
+		count := 0
+		if len(vs) != 1 {
+			otherMetric := metric
+			otherMetric.Multiple = true
+			minIndex, maxIndex := minMaxIndices(vs)
+			for i, val := range vs {
+				if v.dropMinMax && len(vs) >= 3 && (i == maxIndex || i == minIndex) {
+					continue
+				}
+				pv.Append(otherMetric, val)
+				sum += val
 				count++
 			}
+		} else {
+			pv.Set(metric, vs[0])
+			sum = vs[0]
+			count = 1
 		}
-		testing.ContextLogf(ctx, "Average %s = %v", name, sum/float64(count))
+		testing.ContextLogf(ctx, "Average %s = %f", name, sum/float64(count))
 	}
 	return pv
 }

@@ -61,7 +61,6 @@ func init() {
 	})
 }
 
-
 func RoundedDisplayPerf(ctx context.Context, s *testing.State) {
 	const mouseMoveDuration = 3 * time.Second
 

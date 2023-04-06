@@ -176,7 +176,9 @@ func DragMaximizedWindowPerf(ctx context.Context, s *testing.State) {
 	},
 		"Ash.Window.AnimationSmoothness.CrossFade.DragMaximize",
 		"Ash.Window.AnimationSmoothness.CrossFade.DragUnmaximize")),
-		perfutil.StoreSmoothness); err != nil {
+		perfutil.StoreSmoothness,
+		perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true},
+	); err != nil {
 		s.Fatal("Failed to run or save: ", err)
 	}
 }

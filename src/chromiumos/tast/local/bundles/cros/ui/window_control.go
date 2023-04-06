@@ -108,7 +108,7 @@ func WindowControl(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get the windows: ", err)
 	}
 
-	r := perfutil.NewRunner(br)
+	r := perfutil.NewRunner(br, perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
 	r.Runs = 5
 	r.RunTracing = false
 

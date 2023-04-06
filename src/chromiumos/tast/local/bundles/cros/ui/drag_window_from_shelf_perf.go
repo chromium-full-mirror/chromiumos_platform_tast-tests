@@ -124,7 +124,9 @@ func DragWindowFromShelfPerf(ctx context.Context, s *testing.State) {
 	},
 		"Ash.DragWindowFromShelf.PresentationTime",
 		"Ash.DragWindowFromShelf.PresentationTime.MaxLatency")),
-		perfutil.StoreLatency); err != nil {
+		perfutil.StoreLatency,
+		perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true},
+	); err != nil {
 		s.Fatal("Failed to run or save: ", err)
 	}
 }

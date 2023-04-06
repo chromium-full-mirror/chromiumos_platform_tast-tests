@@ -117,7 +117,7 @@ func LauncherPageSwitchPerf(ctx context.Context, s *testing.State) {
 		s.Fatalf("There are too few pages (%d), want more than 2 pages", len(buttonsInfo))
 	}
 
-	runner := perfutil.NewRunner(cr.Browser())
+	runner := perfutil.NewRunner(cr.Browser(), perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
 
 	const pageSwitchTimeout = 2 * time.Second
 	clickPageButtonAndWait := func(idx int) action.Action {

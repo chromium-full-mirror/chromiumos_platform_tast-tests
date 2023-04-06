@@ -89,7 +89,7 @@ func OverviewPerf(ctx context.Context, s *testing.State) {
 	url := server.URL + "/animation.html"
 
 	defer ash.SetOverviewModeAndWait(cleanupCtx, tconn, false)
-	runner := perfutil.NewRunner(cr.Browser())
+	runner := perfutil.NewRunner(cr.Browser(), perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
 	currentWindows := 0
 	// Run the overview mode enter/exit flow for various situations.
 	// - change the number of browser windows,
