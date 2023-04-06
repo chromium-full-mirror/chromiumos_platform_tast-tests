@@ -150,6 +150,6 @@ message RootfsVerityHashBackup {
 // KernelVersion holds the kernel version retrieved from the vbutil_kernel cmd.
 message KernelVersion {
     string RootDev = 1;
-    int32 Version = 2;
+    string Version = 2;
     CgptPartition Table = 3;
 }
