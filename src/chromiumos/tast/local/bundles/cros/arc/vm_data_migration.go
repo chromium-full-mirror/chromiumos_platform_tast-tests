@@ -30,7 +30,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/lockscreen"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
-	"chromiumos/tast/local/drivefs"
+	"chromiumos/tast/local/filesystem"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/screenshot"
 	"chromiumos/tast/local/upstart"
@@ -449,7 +449,11 @@ func createDirWithPROJINHERIT(ctx context.Context, androidDataDir string) error 
 	if err := os.Chown(path, mediaRwIDOnHost /* uid */, mediaRwIDOnHost /* gid */); err != nil {
 		return errors.Wrap(err, "failed to chown dir")
 	}
-	return addInodeFlags(path, inodeFlagPROJINHERIT)
+	flags, err := filesystem.InodeFlags(path)
+	if err != nil {
+		return errors.Wrap(err, "failed to get inode flags")
+	}
+	return filesystem.SetInodeFlags(path, inodeFlagPROJINHERIT|flags)
 }
 
 func setQuotaProjectIDForTestImageFile(ctx context.Context, username string) error {
@@ -458,7 +462,7 @@ func setQuotaProjectIDForTestImageFile(ctx context.Context, username string) err
 		return errors.Wrap(err, "failed to get android-data dir")
 	}
 	imageFilePath := filepath.Join(androidDataDir, "data/media/0/Pictures", vmDataMigrationTestImageFilename)
-	return arc.SetQuotaProjectID(ctx, arc.ProjectIDExtMediaImage, imageFilePath)
+	return filesystem.SetQuotaProjectID(ctx, imageFilePath, arc.ProjectIDExtMediaImage)
 }
 
 func enterMigrationScreen(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn) error {
@@ -617,7 +621,7 @@ func verifyMigratedFileAttributes(ctx context.Context, s *testing.State, usernam
 	}
 
 	// Check that PROJINHERIT flag is correctly migrated.
-	flags, err := getInodeFlags(filepath.Join(androidDataDir, vmDataMigrationProjinheritTestFilePath))
+	flags, err := filesystem.InodeFlags(filepath.Join(androidDataDir, vmDataMigrationProjinheritTestFilePath))
 	if err != nil {
 		s.Fatal("Failed to get inode flags: ", err)
 	}
@@ -630,7 +634,7 @@ func verifyMigratedFileAttributes(ctx context.Context, s *testing.State, usernam
 	}
 
 	imageFilePath := filepath.Join(androidDataDir, "data/media/0/Pictures", vmDataMigrationTestImageFilename)
-	projectID, err := arc.GetQuotaProjectID(ctx, imageFilePath)
+	projectID, err := filesystem.QuotaProjectID(ctx, imageFilePath)
 	if err != nil {
 		s.Fatalf("Failed to get quota project ID of %s: %s", imageFilePath, err)
 	}
@@ -655,28 +659,6 @@ func verifyMigratedFileAttributes(ctx context.Context, s *testing.State, usernam
 	if newAttrs.selinuxLabel != attrs.selinuxLabel {
 		s.Errorf("Unexpected SELinux label: got %s, expected %s", newAttrs.selinuxLabel, attrs.selinuxLabel)
 	}
-}
-
-func getInodeFlags(path string) (int, error) {
-	fd, err := unix.Open(path, unix.O_RDONLY, 0 /* perm */)
-	if err != nil {
-		return 0, errors.Wrapf(err, "failed to open an existing file %s", path)
-	}
-	defer unix.Close(fd)
-	return unix.IoctlGetInt(fd, unix.FS_IOC_GETFLAGS)
-}
-
-func addInodeFlags(path string, flags int) error {
-	fd, err := unix.Open(path, unix.O_RDONLY, 0 /* perm */)
-	if err != nil {
-		return errors.Wrapf(err, "failed to open an existing file %s", path)
-	}
-	defer unix.Close(fd)
-	oldFlags, err := unix.IoctlGetInt(fd, unix.FS_IOC_GETFLAGS)
-	if err != nil {
-		return errors.Wrapf(err, "failed to get inode flags for %s", path)
-	}
-	return unix.IoctlSetPointerInt(fd, unix.FS_IOC_SETFLAGS, oldFlags|flags)
 }
 
 func verifyAndroidImageFileContent(ctx context.Context, a *arc.ARC, expectedDataPath string) error {
@@ -709,7 +691,7 @@ func verifyAndroidFileXattr(ctx context.Context, username string) error {
 	imageFilePath := filepath.Join(androidDataDir, "data/media/0/Pictures", vmDataMigrationTestImageFilename)
 
 	testXattrValue := ""
-	if err := drivefs.GetXattr(imageFilePath, expectedXattrKey, &testXattrValue); err != nil {
+	if err := filesystem.GetXattr(imageFilePath, expectedXattrKey, &testXattrValue); err != nil {
 		return errors.Wrap(err, "failed to get xattr of the test file")
 	}
 	if testXattrValue != expectedXattrValue {

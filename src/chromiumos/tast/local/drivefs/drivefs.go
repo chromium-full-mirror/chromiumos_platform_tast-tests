@@ -14,6 +14,7 @@ import (
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/cryptohome"
+	"chromiumos/tast/local/filesystem"
 )
 
 const (
@@ -180,7 +181,7 @@ func (file *File) Name() string {
 // _should_ be downloaded.
 func (file *File) IsPinned() (bool, error) {
 	pinned := false
-	err := GetXattr(file.Name(), driveFsXattrPinned, &pinned)
+	err := filesystem.GetXattr(file.Name(), driveFsXattrPinned, &pinned)
 	return pinned, err
 }
 
@@ -189,13 +190,13 @@ func (file *File) IsPinned() (bool, error) {
 // Note: Pinning a file only marks it for download. Unpinning the file will
 // free it for eviction, but it won't be evicted until necessary.
 func (file *File) SetPinned(pinned bool) error {
-	return SetXattr(file.Name(), driveFsXattrPinned, pinned)
+	return filesystem.SetXattr(file.Name(), driveFsXattrPinned, pinned)
 }
 
 // IsUncommitted returns `true` if the file has uncommitted/unuploaded data.
 func (file *File) IsUncommitted() (bool, error) {
 	uncommitted := true
-	err := GetXattr(file.Name(), driveFsXattrUncommitted, &uncommitted)
+	err := filesystem.GetXattr(file.Name(), driveFsXattrUncommitted, &uncommitted)
 	return uncommitted, err
 }
 
@@ -205,7 +206,7 @@ func (file *File) IsUncommitted() (bool, error) {
 // replaced with a cloud ID once uploaded.
 func (file *File) ItemID() (string, error) {
 	itemID := ""
-	err := GetXattr(file.Name(), driveFsXattrID, &itemID)
+	err := filesystem.GetXattr(file.Name(), driveFsXattrID, &itemID)
 	return itemID, err
 }
 

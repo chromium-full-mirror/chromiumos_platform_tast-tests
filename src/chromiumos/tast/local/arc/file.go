@@ -9,8 +9,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strconv"
-	"strings"
 
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
@@ -120,23 +118,6 @@ func (a *ARC) TempDir(ctx context.Context) (string, error) {
 // The path must be abspath.
 func (a *ARC) RemoveAll(ctx context.Context, path string) error {
 	return a.device.RemoveAll(ctx, path)
-}
-
-// GetQuotaProjectID returns the quota project ID of the specified file.
-// The file path needs to be a host-side path.
-func GetQuotaProjectID(ctx context.Context, path string) (int64, error) {
-	// Output looks like:
-	// " 1003 ---------E----e----- /home/root/<hash>/android-data/data/media/0/Pictures/test.png"
-	out, err := testexec.CommandContext(ctx, "lsattr", "-p", path).Output(testexec.DumpLogOnError)
-	if err != nil {
-		return 0, err
-	}
-	return strconv.ParseInt(strings.Split(strings.TrimSpace(string(out)), " ")[0], 10, 64)
-}
-
-// SetQuotaProjectID sets the quota project ID on the specified file.
-func SetQuotaProjectID(ctx context.Context, projectID int64, path string) error {
-	return testexec.CommandContext(ctx, "chattr", "-p", strconv.FormatInt(projectID, 10), path).Run(testexec.DumpLogOnError)
 }
 
 // getARCVMCID returns the CID of ARCVM.
