@@ -43,6 +43,7 @@ func init() {
 			"ui.meet_retry_timeout",
 			"ui.meet_retry_interval",
 		},
+		Data: []string{cujrecorder.SystemTraceConfigFile},
 		Params: []testing.Param{
 			{
 				Name:    "basic_two",
