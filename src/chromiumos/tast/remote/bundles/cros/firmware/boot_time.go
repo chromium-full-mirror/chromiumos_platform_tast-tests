@@ -197,7 +197,11 @@ func BootTime(ctx context.Context, s *testing.State) {
 					priorMinute = minute
 					uartTime = time.Duration(minute)*time.Minute + time.Duration(secs)*time.Second + time.Duration(millis)*time.Millisecond + rolloverOffset
 				}
-				s.Logf("%s: %q", uartTime, l)
+				if uartTime >= 0 {
+					s.Logf("%s: %q", uartTime, l)
+				} else {
+					s.Logf("%q", l)
+				}
 				if match := rebootingStarted.FindString(l); match != "" {
 					isStarted = true
 					s.Logf("Reboot detected = %q", match)
@@ -207,7 +211,11 @@ func BootTime(ctx context.Context, s *testing.State) {
 				}
 				if coldBootTime < 0 {
 					if match := coldBootFinished.FindString(l); match != "" {
-						coldBootTime = uartTime - startTime
+						if startTime >= 0 {
+							coldBootTime = uartTime - startTime
+						} else {
+							s.Log("Could not determine coldBootTime")
+						}
 						s.Logf("Cold Boot = %q", match)
 					}
 				}
