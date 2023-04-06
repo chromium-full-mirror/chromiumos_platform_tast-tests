@@ -152,9 +152,12 @@ func loginOffline(ctx context.Context, s *testing.State, creds []chrome.Creds) {
 }
 
 func clickSignInAsExistingUserLink(ctx context.Context, oobeConn *chrome.Conn) error {
-
 	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.ErrorScreen.isReadyForTesting()"); err != nil {
 		return errors.Wrap(err, "failed to wait for the error screen to be visible")
+	}
+
+	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.ErrorScreen.isOfflineLinkVisible()"); err != nil {
+		return errors.Wrap(err, "failed to wait for the offline link to be visible")
 	}
 
 	if err := oobeConn.Eval(ctx, "OobeAPI.screens.ErrorScreen.clickSignInAsExistingUserLink()", nil); err != nil {
