@@ -61,6 +61,14 @@ func (di *devInfo) String() string {
 		di.path, di.name, di.bustype, di.vendor, di.product, di.version)
 }
 
+// isAudioJack returns true if this appears to be an audio jack device.
+func (di *devInfo) isAudioJack() bool {
+	// Check whether the device keys match headphone insert or microphone insert.
+	return di.path != "" && ((di.hasBit(evGroup, uint16(EV_SW)) &&
+		di.hasBit(switchGroup, uint16(SW_HEADPHONE_INSERT))) || (di.hasBit(evGroup, uint16(EV_SW)) &&
+		di.hasBit(switchGroup, uint16(SW_MICROPHONE_INSERT))))
+}
+
 // isKeyboard returns true if this appears to be a keyboard device.
 func (di *devInfo) isKeyboard() bool {
 	// Just check some arbitrary keys. The choice of Escape, Back, VolumeUP and
