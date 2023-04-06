@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/shillconst"
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/cellular"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/modemmanager"
@@ -85,6 +86,9 @@ func init() {
 // Autoconnect checks that shill autoconnects upon login. The test is usually scheduled after a reboot.
 func Autoconnect(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
+	defer cancel()
+
 	if _, err := modemmanager.NewModemWithSim(ctx); err != nil {
 		s.Fatal("Could not find MM dbus object with a valid sim (precondition): ", err)
 	}
