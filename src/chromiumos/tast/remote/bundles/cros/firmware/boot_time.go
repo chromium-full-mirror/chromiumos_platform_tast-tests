@@ -120,9 +120,26 @@ func BootTime(ctx context.Context, s *testing.State) {
 	if err := h.Servo.SetOnOff(ctx, servo.ECUARTCapture, servo.On); err != nil {
 		s.Fatal("Failed to capture EC UART: ", err)
 	}
+	timestampState, err := h.Servo.GetOnOff(ctx, servo.ECUARTTimestamp)
+	if err != nil {
+		s.Fatal("Failed to get EC UART timestamping: ", err)
+	}
+	if err := h.Servo.SetOnOff(ctx, servo.ECUARTTimestamp, servo.On); err != nil {
+		s.Fatal("Failed to enable EC UART timestamping: ", err)
+	}
 	defer func() {
+		var onoff servo.OnOffValue
+
 		if err := h.Servo.SetOnOff(ctx, servo.ECUARTCapture, servo.Off); err != nil {
 			s.Fatal("Failed to disable capture EC UART: ", err)
+		}
+		if timestampState {
+			onoff = servo.On
+		} else {
+			onoff = servo.Off
+		}
+		if err := h.Servo.SetOnOff(ctx, servo.ECUARTTimestamp, onoff); err != nil {
+			s.Fatal("Failed to restore EC UART timestamping: ", err)
 		}
 	}()
 	// Read the uart stream just to make sure there isn't buffered data.

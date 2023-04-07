@@ -30,7 +30,8 @@ const (
 
 // These controls accept only "on" and "off" as values.
 const (
-	ECUARTCapture OnOffControl = "ec_uart_capture"
+	ECUARTCapture   OnOffControl = "ec_uart_capture"
+	ECUARTTimestamp OnOffControl = "ec_uart_timestamp"
 )
 
 // Cmd constants for RunECCommand.
