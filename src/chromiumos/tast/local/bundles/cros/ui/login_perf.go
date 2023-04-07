@@ -60,6 +60,7 @@ const (
 	uptimeLogout                                          = "Uptime.Logout"
 	uptimeLoginPromptSetupTimeAfterLogout                 = "Uptime.LoginPromptSetupTimeAfterLogout"
 	uptimeLogoutToLoginPromptVisible                      = "Uptime.LogoutToLoginPromptVisible"
+	loginPerfTraceConfigFileName                          = "login_perf_trace_config.pbtxt"
 )
 
 type loginPerfTestParam struct {
@@ -91,7 +92,7 @@ func init() {
 		},
 		// Test runs login / chrome restart 120+ times.
 		Timeout: 120 * time.Minute,
-		Data:    []string{"animation.html", "animation.js", cujrecorder.SystemTraceConfigFile},
+		Data:    []string{"animation.html", "animation.js", loginPerfTraceConfigFileName},
 		Params: []testing.Param{{
 			Name:      "ash_chrome",
 			ExtraAttr: []string{"group:cuj"},
@@ -620,7 +621,7 @@ func testFunction(
 	var l *lacros.Lacros
 
 	// The actual test function
-	testFunc := func(ctx context.Context) error {
+	testFunc := func(ctx context.Context, stopTracing func(ctx context.Context) error) error {
 		out, err := exec.Command("ps", "aux").Output()
 		testing.ContextLog(ctx, "ps aux result:")
 		testing.ContextLog(ctx, string(out))
@@ -640,9 +641,23 @@ func testFunction(
 		}); err != nil {
 			return errors.Wrap(err, "failed to wait")
 		}
-		s.Log("Sleep for 10 seconds to let session settle and save restore data")
-		if err := testing.Sleep(ctx, 10*time.Second); err != nil {
-			return errors.Wrap(err, "failed to sleep for 10 seconds")
+		sleepSeconds := 10 * time.Second
+		if stopTracing != nil {
+			// Stopping tracing before the full 10 seconds have
+			// elapsed reduces the trace file size by approximately
+			// 20% (from ~10MB to ~8MB) per file.
+			s.Log("Sleep for 5 seconds to wait for last metrics before stopping tracing")
+			if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+				return errors.Wrap(err, "failed to sleep for 5 seconds")
+			}
+			if err := stopTracing(ctx); err != nil {
+				return errors.Wrap(err, "failed to stop tracing")
+			}
+			sleepSeconds = 5 * time.Second
+		}
+		s.Logf("Sleep for %f seconds to let session settle and save restore data", sleepSeconds.Seconds())
+		if err := testing.Sleep(ctx, sleepSeconds); err != nil {
+			return errors.Wrapf(err, "failed to sleep for %f seconds", sleepSeconds.Seconds())
 		}
 
 		// Ash.LoginAnimation.Duration.* are reported only a few frames
@@ -693,11 +708,13 @@ func testFunction(
 
 	// CUJ TPS metrics recording wrapper
 	cujFunc := func(ctx context.Context) error {
+		var stopTracingCallback func(ctx context.Context) error
 		if runTracing {
 			// See go/trace-in-cuj-tests about rules for tracing.
-			if err := cujRecorder.StartTracingWithName(ctx, s.OutDir(), name+"-trace.data.gz", s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
+			if err := cujRecorder.StartTracingWithName(ctx, s.OutDir(), name+"-trace.data.gz", s.DataPath(loginPerfTraceConfigFileName)); err != nil {
 				return errors.Wrap(err, "failed to start tracing")
 			}
+			stopTracingCallback = cujRecorder.StopTracing
 		}
 
 		var err error
@@ -705,17 +722,13 @@ func testFunction(
 			ctx,
 			tLoginConn,
 			4*time.Minute,
-			testFunc,
+			func(ctx context.Context) error {
+				return testFunc(ctx, stopTracingCallback)
+			},
 			testConfig.expectHistograms...,
 		)
 		if err != nil {
 			return err
-		}
-
-		if runTracing {
-			if err := cujRecorder.StopTracing(ctx); err != nil {
-				return errors.Wrap(err, "failed to stop tracing")
-			}
 		}
 
 		visible := 0
