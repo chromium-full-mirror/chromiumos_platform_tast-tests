@@ -25,6 +25,8 @@ import (
 const (
 	// DefaultArcVMName is the default VM name for ARCVM.
 	DefaultArcVMName = "arcvm"
+	// DefaultBorealisVMName is the default VM name for the Borealis VM.
+	DefaultBorealisVMName = "borealis"
 	// DefaultVMName is the default crostini VM name.
 	DefaultVMName = "termina"
 	// DefaultContainerName is the default crostini container name.
@@ -35,6 +37,20 @@ const (
 	seneschalName      = "org.chromium.Seneschal"
 	seneschalPath      = dbus.ObjectPath("/org/chromium/Seneschal")
 	seneschalInterface = "org.chromium.Seneschal"
+)
+
+// SystemRecognizedVMType type represents the type of VMs recognized by ChromeOS by default.
+type SystemRecognizedVMType int
+
+const (
+	// Termina represents a Crostini VM.
+	Termina SystemRecognizedVMType = iota // 0
+
+	// ARC represents an ARC VM.
+	ARC
+
+	// Borealis represents a Borealis VM.
+	Borealis
 )
 
 // VM encapsulates a virtual machine managed by the concierge/cicerone daemons.
@@ -52,16 +68,6 @@ type VM struct {
 	rootfs          string // Path of the VM's rootfs. If empty, concierge chooses the path
 }
 
-// newArcVM gets a VM instance configured as a ARCVM.
-func newArcVM(c *Concierge, enableGPU bool, diskSize uint64) *VM {
-	return NewGenericVM(c, enableGPU, diskSize, "", "", DefaultArcVMName)
-}
-
-// NewTerminaVM gets a VM instance configured as a "Termina" VM.
-func NewTerminaVM(c *Concierge, enableGPU bool, diskSize uint64) *VM {
-	return NewGenericVM(c, enableGPU, diskSize, "", "", DefaultVMName)
-}
-
 // NewGenericVM gets a default VM instance. enableGPU enabled the hardware gpu support for the VM. diskSize set the targeted disk size of the VM.
 func NewGenericVM(c *Concierge, enableGPU bool, diskSize uint64, kernel, rootfs, name string) *VM {
 	return &VM{
@@ -77,26 +83,32 @@ func NewGenericVM(c *Concierge, enableGPU bool, diskSize uint64, kernel, rootfs,
 	}
 }
 
-// GetRunningTerminaVM creates a VM struct for the Termina VM that is currently running.
-func GetRunningTerminaVM(ctx context.Context, user string) (*VM, error) {
-	c, err := GetRunningConcierge(ctx, user)
-	if err != nil {
-		return nil, err
+// NewSystemRecognizedVM gets a VM instance corresponding to |vmType|.
+func NewSystemRecognizedVM(c *Concierge, enableGPU bool, diskSize uint64, vmType SystemRecognizedVMType) (*VM, error) {
+	switch vmType {
+	case Termina:
+		return NewGenericVM(c, enableGPU, diskSize, "", "", DefaultVMName), nil
+	case ARC:
+		return NewGenericVM(c, enableGPU, diskSize, "", "", DefaultArcVMName), nil
+	case Borealis:
+		return NewGenericVM(c, enableGPU, diskSize, "", "", DefaultBorealisVMName), nil
+	default:
+		return nil, errors.Errorf("invalid system recognized VM type: %d", vmType)
 	}
-	vm := NewTerminaVM(c, false, 0)
-	if err := c.GetVMInfo(ctx, vm); err != nil {
-		return nil, errors.Wrapf(err, "failed to get info for %q VM", vm.name)
-	}
-	return vm, nil
 }
 
-// GetRunningArcVM creates a VM struct for the Arc VM that is currently running.
-func GetRunningArcVM(ctx context.Context, user string) (*VM, error) {
+// GetRunningVM creates a VM struct for the VM corresponding to |vmType| that is currently running.
+func GetRunningVM(ctx context.Context, user string, vmType SystemRecognizedVMType) (*VM, error) {
 	c, err := GetRunningConcierge(ctx, user)
 	if err != nil {
 		return nil, err
 	}
-	vm := newArcVM(c, false, 0)
+
+	vm, err := NewSystemRecognizedVM(c, false, 0, vmType)
+	if err != nil {
+		return nil, err
+	}
+
 	if err := c.GetVMInfo(ctx, vm); err != nil {
 		return nil, errors.Wrapf(err, "failed to get info for %q VM", vm.name)
 	}

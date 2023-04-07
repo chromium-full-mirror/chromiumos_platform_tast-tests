@@ -467,7 +467,7 @@ func (f *crostiniFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		if _, err := cui.InstallCrostini(ctx, f.tconn, f.cr, iOptions); err != nil {
 			// Try to retrieve crostini_journalctl if the container is starting
 			// but the installation fails.
-			if termina, err := vm.GetRunningTerminaVM(ctx, f.cr.NormalizedUser()); err != nil {
+			if termina, err := vm.GetRunningVM(ctx, f.cr.NormalizedUser(), vm.Termina); err != nil {
 				s.Log("Cannot get running VM: ", err)
 			} else if termina != nil {
 				termina.TrySaveContainerLogs(ctx, s.OutDir())

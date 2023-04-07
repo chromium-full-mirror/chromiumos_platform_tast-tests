@@ -57,7 +57,7 @@ func RunCrostiniPostTest(ctx context.Context, p PreData) {
 	if p.Container != nil {
 		machine = p.Container.VM
 	} else {
-		machine2, err := vm.GetRunningTerminaVM(ctx, p.Chrome.NormalizedUser())
+		machine2, err := vm.GetRunningVM(ctx, p.Chrome.NormalizedUser(), vm.Termina)
 		machine = machine2
 		if err != nil {
 			testing.ContextLog(ctx, "Failed to get running VM, won't get LXC logs: ", err)

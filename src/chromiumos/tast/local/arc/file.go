@@ -123,7 +123,7 @@ func (a *ARC) RemoveAll(ctx context.Context, path string) error {
 // getARCVMCID returns the CID of ARCVM.
 func getARCVMCID(ctx context.Context, user string) (int, error) {
 	// Create a stub "ARCVM" object to get its metadata from Concierge.
-	arcVM, err := vm.GetRunningArcVM(ctx, user)
+	arcVM, err := vm.GetRunningVM(ctx, user, vm.ARC)
 	if err != nil {
 		return 0, err
 	}

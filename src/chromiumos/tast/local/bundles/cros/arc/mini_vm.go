@@ -176,7 +176,7 @@ func waitForPropToExist(ctx context.Context, cid int, prop string) error {
 // mini-ARCVM instance, if any.
 func getMiniVMCID(ctx context.Context, user string) (int, error) {
 	// Create a stub "ARCVM" object to get its metadata from Concierge.
-	arcVM, err := vm.GetRunningArcVM(ctx, user)
+	arcVM, err := vm.GetRunningVM(ctx, user, vm.ARC)
 	if err != nil {
 		return 0, err
 	}
