@@ -25,8 +25,7 @@ var cqAllowlist = []string{
 }
 
 type chromeStackDecoderLegacyTestParam struct {
-	dataPath               string
-	disableGlobalVaapiLock bool
+	dataPath string
 }
 
 func init() {
@@ -39,14 +38,16 @@ func init() {
 			"mcasas@chromium.org",
 		},
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
-		SoftwareDeps: []string{"chrome"},
+		// Don't run these tests on "vaapi" since the legacy decoder is not used on
+		// those platforms and it's on its way to deprecation, see b/275623115.
+		SoftwareDeps: []string{"chrome", "video_decoder_legacy_supported", "v4l2_codec"},
 		Timeout:      4 * time.Minute,
 		Fixture:      "graphicsNoChrome",
 		Params: []testing.Param{{
 			Name:              "h264",
 			Val:               chromeStackDecoderLegacyTestParam{dataPath: "test-25fps.h264"},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_decodeaccel"},
-			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "video_decoder_legacy_supported", "proprietary_codecs"},
+			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 			ExtraData:         []string{"test-25fps.h264", "test-25fps.h264.json"},
 		}, {
 			// Run H264 video decode tests on CQ, limited to devices on the CQ allow list.
@@ -54,13 +55,7 @@ func init() {
 			Val:               chromeStackDecoderLegacyTestParam{dataPath: "test-25fps.h264"},
 			ExtraHardwareDeps: hwdep.D(hwdep.Model(cqAllowlist...)),
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_decodeaccel"},
-			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "video_decoder_legacy_supported", "proprietary_codecs"},
-			ExtraData:         []string{"test-25fps.h264", "test-25fps.h264.json"},
-		}, {
-			Name:              "h264_global_vaapi_lock_disabled",
-			Val:               chromeStackDecoderLegacyTestParam{dataPath: "test-25fps.h264", disableGlobalVaapiLock: true},
-			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_decodeaccel"},
-			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "video_decoder_legacy_supported", "proprietary_codecs", "thread_safe_libva_backend"},
+			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 			ExtraData:         []string{"test-25fps.h264", "test-25fps.h264.json"},
 		}, {
 			Name:              "vp8",
@@ -69,34 +64,16 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "video_decoder_legacy_supported"},
 			ExtraData:         []string{"test-25fps.vp8", "test-25fps.vp8.json"},
 		}, {
-			Name:              "vp8_global_vaapi_lock_disabled",
-			Val:               chromeStackDecoderLegacyTestParam{dataPath: "test-25fps.vp8", disableGlobalVaapiLock: true},
-			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_decodeaccel"},
-			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "video_decoder_legacy_supported", "thread_safe_libva_backend"},
-			ExtraData:         []string{"test-25fps.vp8", "test-25fps.vp8.json"},
-		}, {
 			Name:              "vp9",
 			Val:               chromeStackDecoderLegacyTestParam{dataPath: "test-25fps.vp9"},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_decodeaccel"},
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "video_decoder_legacy_supported"},
 			ExtraData:         []string{"test-25fps.vp9", "test-25fps.vp9.json"},
 		}, {
-			Name:              "vp9_global_vaapi_lock_disabled",
-			Val:               chromeStackDecoderLegacyTestParam{dataPath: "test-25fps.vp9", disableGlobalVaapiLock: true},
-			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_decodeaccel"},
-			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "video_decoder_legacy_supported", "thread_safe_libva_backend"},
-			ExtraData:         []string{"test-25fps.vp9", "test-25fps.vp9.json"},
-		}, {
 			Name:              "h264_resolution_switch",
 			Val:               chromeStackDecoderLegacyTestParam{dataPath: "switch_1080p_720p_240frames.h264"},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_decodeaccel"},
-			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "video_decoder_legacy_supported", "proprietary_codecs"},
-			ExtraData:         []string{"switch_1080p_720p_240frames.h264", "switch_1080p_720p_240frames.h264.json"},
-		}, {
-			Name:              "h264_resolution_switch_global_vaapi_lock_disabled",
-			Val:               chromeStackDecoderLegacyTestParam{dataPath: "switch_1080p_720p_240frames.h264", disableGlobalVaapiLock: true},
-			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_decodeaccel"},
-			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "video_decoder_legacy_supported", "proprietary_codecs", "thread_safe_libva_backend"},
+			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 			ExtraData:         []string{"switch_1080p_720p_240frames.h264", "switch_1080p_720p_240frames.h264.json"},
 		}, {
 			Name:              "vp8_resolution_switch",
@@ -105,22 +82,10 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "video_decoder_legacy_supported"},
 			ExtraData:         []string{"resolution_change_500frames.vp8.ivf", "resolution_change_500frames.vp8.ivf.json"},
 		}, {
-			Name:              "vp8_resolution_switch_global_vaapi_lock_disabled",
-			Val:               chromeStackDecoderLegacyTestParam{dataPath: "resolution_change_500frames.vp8.ivf", disableGlobalVaapiLock: true},
-			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_decodeaccel"},
-			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "video_decoder_legacy_supported", "thread_safe_libva_backend"},
-			ExtraData:         []string{"resolution_change_500frames.vp8.ivf", "resolution_change_500frames.vp8.ivf.json"},
-		}, {
 			Name:              "vp9_resolution_switch",
 			Val:               chromeStackDecoderLegacyTestParam{dataPath: "resolution_change_500frames.vp9.ivf"},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_decodeaccel"},
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "video_decoder_legacy_supported"},
-			ExtraData:         []string{"resolution_change_500frames.vp9.ivf", "resolution_change_500frames.vp9.ivf.json"},
-		}, {
-			Name:              "vp9_resolution_switch_global_vaapi_lock_disabled",
-			Val:               chromeStackDecoderLegacyTestParam{dataPath: "resolution_change_500frames.vp9.ivf", disableGlobalVaapiLock: true},
-			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_decodeaccel"},
-			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "video_decoder_legacy_supported", "thread_safe_libva_backend"},
 			ExtraData:         []string{"resolution_change_500frames.vp9.ivf", "resolution_change_500frames.vp9.ivf.json"},
 		}, {
 			Name: "vp8_odd_dimensions",
@@ -147,17 +112,8 @@ func init() {
 			Name:              "h264_profile_change",
 			Val:               chromeStackDecoderLegacyTestParam{dataPath: "test-25fps_basemain.h264"},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_decodeaccel"},
-			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "video_decoder_legacy_supported", "proprietary_codecs"},
+			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 			ExtraData:         []string{"test-25fps_basemain.h264", "test-25fps_basemain.h264.json"},
-		}, {
-			// Run with HW decoder using VA-API only because only the HW decoder can decode SVC stream correctly today.
-			// Decode VP9 spatial-SVC stream. Precisely the structure in the stream is called k-SVC, where spatial-layers are at key-frame only.
-			// The structure is used in Hangouts Meet. go/vp9-svc-hangouts for detail.
-			Name:              "vp9_keyframe_spatial_layers",
-			Val:               chromeStackDecoderLegacyTestParam{dataPath: "keyframe_spatial_layers_180p_360p.vp9.ivf"},
-			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_decodeaccel"},
-			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "vaapi", "video_decoder_legacy_supported"},
-			ExtraData:         []string{"keyframe_spatial_layers_180p_360p.vp9.ivf", "keyframe_spatial_layers_180p_360p.vp9.ivf.json"},
 		}},
 	})
 }
@@ -165,7 +121,7 @@ func init() {
 func ChromeStackDecoderLegacy(ctx context.Context, s *testing.State) {
 	param := s.Param().(chromeStackDecoderLegacyTestParam)
 
-	if err := decoding.RunAccelVideoTest(ctx, s.OutDir(), s.DataPath(param.dataPath), decoding.TestParams{DecoderType: decoding.VDA, DisableGlobalVaapiLock: param.disableGlobalVaapiLock}); err != nil {
+	if err := decoding.RunAccelVideoTest(ctx, s.OutDir(), s.DataPath(param.dataPath), decoding.TestParams{DecoderType: decoding.VDA, DisableGlobalVaapiLock: false}); err != nil {
 		s.Fatal("test failed: ", err)
 	}
 }
