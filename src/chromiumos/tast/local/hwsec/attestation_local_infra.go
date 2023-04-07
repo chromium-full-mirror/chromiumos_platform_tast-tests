@@ -6,17 +6,15 @@ package hwsec
 
 import (
 	"context"
-	"os"
 	"time"
 
 	"chromiumos/tast/common/hwsec"
-	"chromiumos/tast/common/testexec"
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/filesnapshot"
+	"chromiumos/tast/local/hwsec/enckey"
 	"chromiumos/tast/testing"
 )
-
-const googleKeysDataPath = "/run/attestation/google_keys.data"
 
 // AttestationLocalInfra enables/disables the local server implementation on DUT.
 type AttestationLocalInfra struct {
@@ -32,94 +30,23 @@ func NewAttestationLocalInfra(dc *hwsec.DaemonController) *AttestationLocalInfra
 }
 
 // Enable enables the local test infra for attestation flow testing.
-func (ali *AttestationLocalInfra) Enable(ctx, cleanupCtx context.Context, helper *FullHelperLocal) (lastErr error) {
-	// Stop the currently running a9n daemon.
-	if err := ali.dc.Stop(ctx, hwsec.AttestationDaemon); err != nil {
-		return errors.Wrap(err, "failed to stop attestation while enabling ali")
-	}
-
-	// Stash the existing a9n DB.
-	if _, err := os.Stat(hwsec.AttestationDBPath); err == nil {
-		if err := ali.snapshot.Stash(hwsec.AttestationDBPath); err != nil {
-			return errors.Wrap(err, "failed to stash attestation database")
-		}
-		ali.dbStashed = true
-	} else if !os.IsNotExist(err) {
-		return errors.Wrap(err, "failed to check stat of attestation database")
-	}
-
-	// Pop the stored snapshot of attestation database and restart attestationd if other parts of this function fails.
-	defer func(ctx context.Context) {
-		if lastErr != nil && ali.dbStashed {
-			if err := ali.snapshot.Pop(hwsec.AttestationDBPath); err != nil {
-				testing.ContextLog(ctx, "Failed to pop attestation database back: ", err)
-			}
-			if err := ali.dc.Restart(ctx, hwsec.AttestationDaemon); err != nil {
-				testing.ContextLog(ctx, "Failed to restart attestation service after popping attestation database: ", err)
-			}
-		}
-	}(cleanupCtx)
-
-	// Inject fake Google Keys.
-	if err := ali.injectWellKnownGoogleKeys(ctx); err != nil {
+func (ali *AttestationLocalInfra) Enable(ctx context.Context) (lastErr error) {
+	if err := enckey.InjectWellKnownGoogleKeysAndRestart(ctx, ali.dc); err != nil {
 		return errors.Wrap(err, "failed to inject well-known keys")
 	}
+
+	cleanupCtx := ctx
+	// We must not cancel the context here as it is being used by the caller.
+	ctx, _ = ctxutil.Shorten(ctx, 5*time.Second)
 
 	// Revert the key injection if other parts of this function fails.
 	defer func(ctx context.Context) {
 		if lastErr != nil {
-			if err := ali.injectNormalGoogleKeysAndRestart(ctx); err != nil {
-				testing.ContextLog(ctx, "Failed to inject the normal keys back: ", err)
+			if err := enckey.InjectNormalGoogleKeys(ctx); err != nil {
+				testing.ContextLog(ctx, "Failed to inject the normal key back: ", err)
 			}
 		}
 	}(cleanupCtx)
-
-	// Start a9n daemon again.
-	if err := ali.dc.Start(ctx, hwsec.AttestationDaemon); err != nil {
-		return errors.Wrap(err, "failed to start attestation while enabling ali")
-	}
-
-	// Ensure a9n is prepared for enrollment.
-	if err := helper.EnsureIsPreparedForEnrollment(ctx, hwsec.DefaultPreparationForEnrolmentTimeout); err != nil {
-		return errors.Wrap(err, "failed to prepare for enrollment")
-	}
-	testing.ContextLog(ctx, "Prepared for Enrollment")
-
-	// Stash the newly created a9n DB with fake google keys.
-	if _, err := os.Stat(hwsec.AttestationDBPath); err == nil {
-		if err := ali.snapshot.StashFrom(hwsec.AttestationDBPath, hwsec.AttestationFakeDBPath); err != nil {
-			return errors.Wrap(err, "failed to stash attestation database (with fake google keys)")
-		}
-		ali.dbStashed = true
-	} else if !os.IsNotExist(err) {
-		return errors.Wrap(err, "failed to check stat of attestation database (with fake google keys)")
-	}
-
-	if err := ali.dc.Stop(ctx, hwsec.AttestationDaemon); err != nil {
-		return errors.Wrap(err, "failed to stop attestation after backing up fake a9n db")
-	}
-
-	if err := ali.injectNormalGoogleKeys(ctx); err != nil {
-		return errors.Wrap(err, "failed to inject the normal keys back")
-	}
-
-	if err := ali.dc.Start(ctx, hwsec.AttestationDaemon); err != nil {
-		return errors.Wrap(err, "failed to start attestation after backing up a9n db")
-	}
-
-	testing.ContextLog(ctx, "Sleeping for 5s so that attestation daemon can start and create the database")
-
-	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
-		return errors.Wrap(err, "failed to sleep")
-	}
-
-	if err := ali.snapshot.PopTo(hwsec.AttestationFakeDBPath, hwsec.AttestationDBPath); err != nil {
-		return errors.Wrap(err, "failed to pop fake attestation database")
-	}
-
-	if err := ali.injectWellKnownGoogleKeysAndRestart(ctx); err != nil {
-		return errors.Wrap(err, "failed to inject well-known keys")
-	}
 
 	if err := ali.enableFakePCAAgent(ctx); err != nil {
 		return errors.Wrap(err, "failed to enable fake pca agent")
@@ -136,7 +63,7 @@ func (ali *AttestationLocalInfra) Disable(ctx context.Context) error {
 			lastErr = errors.Wrap(err, "failed to pop the snapshot of attestation database back")
 		}
 	}
-	if err := ali.injectNormalGoogleKeys(ctx); err != nil {
+	if err := enckey.InjectNormalGoogleKeys(ctx); err != nil {
 		testing.ContextLog(ctx, "Failed to inject the normal key back: ", err)
 		lastErr = errors.Wrap(err, "failed to inject the normal key back")
 	}
@@ -145,55 +72,6 @@ func (ali *AttestationLocalInfra) Disable(ctx context.Context) error {
 		lastErr = errors.Wrap(err, "failed to disable fake pca agent")
 	}
 	return lastErr
-}
-
-// injectWellKnownGoogleKeys creates the well-known Google keys file and restarts attestation service.
-func (ali *AttestationLocalInfra) injectWellKnownGoogleKeys(ctx context.Context) (lastErr error) {
-	if _, err := os.Stat(googleKeysDataPath); os.IsNotExist(err) {
-		if _, err := testexec.CommandContext(ctx, "attestation-injected-keys").Output(); err != nil {
-			testing.ContextLog(ctx, "Failed to create key file: ", err)
-		}
-	}
-	return nil
-}
-
-// injectWellKnownGoogleKeysAndRestart creates the well-known Google keys file and restarts attestation service.
-func (ali *AttestationLocalInfra) injectWellKnownGoogleKeysAndRestart(ctx context.Context) (lastErr error) {
-	if _, err := os.Stat(googleKeysDataPath); os.IsNotExist(err) {
-		if _, err := testexec.CommandContext(ctx, "attestation-injected-keys").Output(); err != nil {
-			return errors.Wrap(err, "failed to create key file")
-		}
-	}
-	defer func() {
-		if lastErr != nil {
-			if err := os.Remove(googleKeysDataPath); err != nil {
-				testing.ContextLog(ctx, "Failed to remove the injected key database: ", err)
-			}
-		}
-	}()
-	if err := ali.dc.Restart(ctx, hwsec.AttestationDaemon); err != nil {
-		return errors.Wrap(err, "failed to restart attestation")
-	}
-	return nil
-}
-
-// injectNormalGoogleKeys deletes the well-known Google keys file.
-func (ali *AttestationLocalInfra) injectNormalGoogleKeys(ctx context.Context) error {
-	if err := os.Remove(googleKeysDataPath); err != nil {
-		return errors.Wrap(err, "failed to remove injected key file")
-	}
-	return nil
-}
-
-// injectNormalGoogleKeysAndRestart deletes the well-known Google keys file and restarts attestation service.
-func (ali *AttestationLocalInfra) injectNormalGoogleKeysAndRestart(ctx context.Context) error {
-	if err := os.Remove(googleKeysDataPath); err != nil {
-		return errors.Wrap(err, "failed to remove injected key file")
-	}
-	if err := ali.dc.Restart(ctx, hwsec.AttestationDaemon); err != nil {
-		return errors.Wrap(err, "failed to restart attestation")
-	}
-	return nil
 }
 
 // enableFakePCAAgent stops the normal pca agent and starts the fake one.

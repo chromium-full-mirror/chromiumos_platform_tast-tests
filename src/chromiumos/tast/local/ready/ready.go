@@ -139,8 +139,8 @@ func Wait(ctx context.Context, systemServicesTimeout time.Duration) error {
 			}
 		}
 	}
-	if err := hwsec.BackupTPMManagerDataIfIntact(ctx); err != nil {
-		testing.ContextLog(ctx, "Failed to backup tpm manager local data: ", err)
+	if err := hwsec.BackupAttestationDbWithFakeGoogleKeys(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to backup attestation database: ", err)
 	}
 
 	return nil

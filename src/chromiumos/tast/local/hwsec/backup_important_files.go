@@ -6,15 +6,19 @@ package hwsec
 
 import (
 	"context"
+	"os"
 	"strings"
+	"time"
 
 	"chromiumos/tast/common/hwsec"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/fsutil"
+	"chromiumos/tast/local/hwsec/enckey"
 	"chromiumos/tast/testing"
 )
 
+const attestationDBBackupPath = "/mnt/stateful_partition/unencrypted/preserve/attestation.epb.tast-hwsec-backup"
 const tpmManagerLocalDataBackupPath = "/var/lib/tpm_manager/local_tpm_data.tast-hwsec-backup"
 
 // isTPMLocalDataIntact uses tpm_manager_client to check if local data still contains owner password,
@@ -75,6 +79,89 @@ func RestoreTPMOwnerPasswordIfNeeded(ctx context.Context, dc *hwsec.DaemonContro
 	}
 	if !hasOwnerPassword {
 		return errors.Wrap(err, "no owner password after restoration")
+	}
+	return nil
+}
+
+// BackupAttestationDbWithFakeGoogleKeys backs up the attestation database.
+func BackupAttestationDbWithFakeGoogleKeys(ctx context.Context) (lastErr error) {
+	if _, err := os.Stat(attestationDBBackupPath); !os.IsNotExist(err) {
+		testing.ContextLog(ctx, "Backup exists. Skipping")
+		return
+	}
+
+	// Initialize daemon controller.
+	r := NewCmdRunner()
+	helper, err := NewFullHelper(ctx, r)
+	if err != nil {
+		return errors.Wrap(err, "error while creating helper")
+	}
+	dc := helper.DaemonController()
+
+	// Stop the currently running a9n daemon.
+	if err := dc.Stop(ctx, hwsec.AttestationDaemon); err != nil {
+		return errors.Wrap(err, "failed to stop attestation service")
+	}
+
+	// Remove the existing a9n DB.
+	if err := os.Remove(hwsec.AttestationDBPath); err != nil {
+		return errors.Wrap(err, "failed to remove attestation database")
+	}
+
+	// Inject fake Google Keys.
+	if err := enckey.InjectWellKnownGoogleKeys(ctx); err != nil {
+		return errors.Wrap(err, "failed to inject well-known keys")
+	}
+
+	// Revert the key injection if other parts of this function fails.
+	defer func() {
+		if lastErr != nil {
+			if err := enckey.InjectNormalGoogleKeysAndRestart(ctx, dc); err != nil {
+				testing.ContextLog(ctx, "Failed to inject the normal keys back: ", err)
+			}
+		}
+	}()
+
+	// Start a9n daemon again.
+	if err := dc.Start(ctx, hwsec.AttestationDaemon); err != nil {
+		return errors.Wrap(err, "failed to start attestation while enabling ali")
+	}
+
+	// Ensure a9n is prepared for enrollment.
+	if err := helper.EnsureIsPreparedForEnrollment(ctx, hwsec.DefaultPreparationForEnrolmentTimeout); err != nil {
+		return errors.Wrap(err, "failed to prepare for enrollment")
+	}
+	testing.ContextLog(ctx, "Prepared for Enrollment")
+
+	// Backup the newly created a9n DB with fake google keys.
+	if err := fsutil.CopyFile(hwsec.AttestationDBPath, attestationDBBackupPath); err != nil {
+		return errors.Wrap(err, "failed to back up fake attestation database")
+	}
+
+	if err := dc.Stop(ctx, hwsec.AttestationDaemon); err != nil {
+		return errors.Wrap(err, "failed to stop attestation after backing up fake a9n db")
+	}
+
+	if err := os.Remove(hwsec.AttestationDBPath); err != nil {
+		return errors.Wrap(err, "failed to remove fake attestation database")
+	}
+
+	if err := enckey.InjectNormalGoogleKeys(ctx); err != nil {
+		return errors.Wrap(err, "failed to inject the normal keys back")
+	}
+
+	if err := dc.Start(ctx, hwsec.AttestationDaemon); err != nil {
+		return errors.Wrap(err, "failed to start attestation after backing up fake a9n db")
+	}
+
+	testing.ContextLog(ctx, "Sleeping for 5s so that attestation daemon can start and create the database")
+	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+		return errors.Wrap(err, "failed to sleep")
+	}
+
+	// Replace the a9n DB with the fake one.
+	if err := fsutil.CopyFile(attestationDBBackupPath, hwsec.AttestationDBPath); err != nil {
+		return errors.Wrap(err, "failed to replace with the fake attestation database")
 	}
 	return nil
 }
