@@ -78,12 +78,26 @@ func GetFirmwareVersion(ctx context.Context) string {
 
 // GetECVersion returns the EC version.
 func GetECVersion(ctx context.Context) string {
-	readResult, err := testexec.CommandContext(ctx, "mosys", "ec", "info", "-s", "fw_version").Output()
+	const path = "/dev/cros_ec"
+	f, err := os.ReadFile(path)
 	if err != nil {
-		testing.ContextLog(ctx, "Failed to get EC version")
+		testing.ContextLog(ctx, "Failed to read EC dev file: ", err)
 		return ""
 	}
-	return strings.TrimSpace(string(readResult))
+	ecInfo := strings.Split(strings.TrimSpace(string(f)), "\n")
+	if len(ecInfo) != 4 {
+		testing.ContextLogf(ctx, "Failed to parse EC dev file: %s has %d lines", path, len(ecInfo))
+		return ""
+	}
+	activeCopy := ecInfo[3]
+	if activeCopy == "read-only" {
+		return ecInfo[1]
+	} else if activeCopy == "read-write" {
+		return ecInfo[2]
+	} else {
+		testing.ContextLogf(ctx, "Failed to determine active EC copy: %s", activeCopy)
+		return ""
+	}
 }
 
 // GetKernelVersion returns the kernel version.
