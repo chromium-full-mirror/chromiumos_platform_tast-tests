@@ -797,7 +797,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp8"},
 			},
 			{
-				Name: "v4l2_h264_baseline",
+				Name: "v4l2_stateful_h264_baseline",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/h264/baseline/AUD_MW_E.h264", "test_vectors/h264/baseline/BA1_Sony_D.h264", "test_vectors/h264/baseline/BA2_Sony_F.h264", "test_vectors/h264/baseline/BAMQ1_JVC_C.h264", "test_vectors/h264/baseline/BAMQ2_JVC_C.h264", "test_vectors/h264/baseline/BANM_MW_D.h264", "test_vectors/h264/baseline/BA_MW_D.h264", "test_vectors/h264/baseline/CI_MW_D.h264", "test_vectors/h264/baseline/CVSE2_Sony_B.h264", "test_vectors/h264/baseline/HCBP1_HHI_A.h264", "test_vectors/h264/baseline/HCBP2_HHI_A.h264", "test_vectors/h264/baseline/LS_SVA_D.h264", "test_vectors/h264/baseline/MIDR_MW_D.h264", "test_vectors/h264/baseline/MPS_MW_A.h264", "test_vectors/h264/baseline/MR1_MW_A.h264", "test_vectors/h264/baseline/MR2_MW_A.h264", "test_vectors/h264/baseline/NL1_Sony_D.h264", "test_vectors/h264/baseline/NL2_Sony_H.h264", "test_vectors/h264/baseline/NLMQ1_JVC_C.h264", "test_vectors/h264/baseline/NLMQ2_JVC_C.h264", "test_vectors/h264/baseline/NRF_MW_E.h264", "test_vectors/h264/baseline/SVA_BA1_B.h264", "test_vectors/h264/baseline/SVA_BA2_D.h264", "test_vectors/h264/baseline/SVA_NL1_B.h264", "test_vectors/h264/baseline/SVA_NL2_E.h264"},
 					decoder:        "v4l2_stateful_decoder",
@@ -810,7 +810,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_h264"},
 			},
 			{
-				Name: "v4l2_h264_main",
+				Name: "v4l2_stateful_h264_main",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/h264/main/CABA1_SVA_B.h264", "test_vectors/h264/main/CABA1_Sony_D.h264", "test_vectors/h264/main/CABA2_SVA_B.h264", "test_vectors/h264/main/CABA2_Sony_E.h264", "test_vectors/h264/main/CABA3_SVA_B.h264", "test_vectors/h264/main/CABA3_Sony_C.h264", "test_vectors/h264/main/CABA3_TOSHIBA_E.h264", "test_vectors/h264/main/CACQP3_Sony_D.h264", "test_vectors/h264/main/CANL1_SVA_B.h264", "test_vectors/h264/main/CANL1_Sony_E.h264", "test_vectors/h264/main/CANL1_TOSHIBA_G.h264", "test_vectors/h264/main/CANL2_SVA_B.h264", "test_vectors/h264/main/CANL2_Sony_E.h264", "test_vectors/h264/main/CANL3_SVA_B.h264", "test_vectors/h264/main/CANL3_Sony_C.h264", "test_vectors/h264/main/CANL4_SVA_B.h264", "test_vectors/h264/main/CAPCM1_Sand_E.h264", "test_vectors/h264/main/CAPCMNL1_Sand_E.h264", "test_vectors/h264/main/CAPM3_Sony_D.h264", "test_vectors/h264/main/CAQP1_Sony_B.h264", "test_vectors/h264/main/CAWP1_TOSHIBA_E.h264", "test_vectors/h264/main/CAWP5_TOSHIBA_E.h264", "test_vectors/h264/main/CVBS3_Sony_C.h264", "test_vectors/h264/main/CVPCMNL1_SVA_C.h264", "test_vectors/h264/main/CVPCMNL2_SVA_C.h264", "test_vectors/h264/main/CVSE3_Sony_H.h264", "test_vectors/h264/main/CVSEFDFT3_Sony_E.h264", "test_vectors/h264/main/CVWP1_TOSHIBA_E.h264", "test_vectors/h264/main/CVWP2_TOSHIBA_E.h264", "test_vectors/h264/main/CVWP3_TOSHIBA_E.h264", "test_vectors/h264/main/CVWP5_TOSHIBA_E.h264", "test_vectors/h264/main/NL3_SVA_E.h264", "test_vectors/h264/main/camp_mot_frm0_full.h264", "test_vectors/h264/main/cvmp_mot_frm0_full_B.h264", "test_vectors/h264/main/src19td.IBP.h264", "test_vectors/h264/main/HCMP1_HHI_A.h264"},
 					decoder:        "v4l2_stateful_decoder",
@@ -823,7 +823,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_h264"},
 			},
 			{
-				Name: "v4l2_h264_first_mb_in_slice",
+				Name: "v4l2_stateful_h264_first_mb_in_slice",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/h264/baseline/BA1_FT_C.h264", "test_vectors/h264/baseline/BASQP1_Sony_C.h264", "test_vectors/h264/baseline/CI1_FT_B.h264", "test_vectors/h264/baseline/SVA_Base_B.h264", "test_vectors/h264/baseline/SVA_CL1_E.h264", "test_vectors/h264/baseline/SVA_FM1_E.h264", "test_vectors/h264/baseline/MR1_BT_A.h264", "test_vectors/h264/main/CABACI3_Sony_B.h264", "test_vectors/h264/main/CABAST3_Sony_E.h264", "test_vectors/h264/main/CABASTBR3_Sony_B.h264", "test_vectors/h264/main/SL1_SVA_B.h264"},
 					decoder:        "v4l2_stateful_decoder",
@@ -898,7 +898,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_h264"},
 			},
 			{
-				Name: "v4l2_hevc_main",
+				Name: "v4l2_stateful_hevc_main",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/hevc/main/AMP_A_Samsung_7.hevc", "test_vectors/hevc/main/AMP_B_Samsung_7.hevc", "test_vectors/hevc/main/AMP_D_Hisilicon.hevc", "test_vectors/hevc/main/AMP_E_Hisilicon.hevc", "test_vectors/hevc/main/AMP_F_Hisilicon_3.hevc", "test_vectors/hevc/main/AMVP_A_MTK_4.hevc", "test_vectors/hevc/main/AMVP_B_MTK_4.hevc", "test_vectors/hevc/main/AMVP_C_Samsung_7.hevc", "test_vectors/hevc/main/CAINIT_A_SHARP_4.hevc", "test_vectors/hevc/main/CAINIT_B_SHARP_4.hevc", "test_vectors/hevc/main/CAINIT_C_SHARP_3.hevc", "test_vectors/hevc/main/CAINIT_D_SHARP_3.hevc", "test_vectors/hevc/main/CAINIT_E_SHARP_3.hevc", "test_vectors/hevc/main/CAINIT_F_SHARP_3.hevc", "test_vectors/hevc/main/CAINIT_G_SHARP_3.hevc", "test_vectors/hevc/main/CAINIT_H_SHARP_3.hevc", "test_vectors/hevc/main/CIP_A_Panasonic_3.hevc", "test_vectors/hevc/main/cip_B_NEC_3.hevc", "test_vectors/hevc/main/CIP_C_Panasonic_2.hevc", "test_vectors/hevc/main/DBLK_A_SONY_3.hevc", "test_vectors/hevc/main/DBLK_B_SONY_3.hevc", "test_vectors/hevc/main/DBLK_C_SONY_3.hevc", "test_vectors/hevc/main/DBLK_D_VIXS_2.hevc", "test_vectors/hevc/main/DBLK_E_VIXS_2.hevc", "test_vectors/hevc/main/DBLK_F_VIXS_2.hevc", "test_vectors/hevc/main/DBLK_G_VIXS_2.hevc", "test_vectors/hevc/main/DELTAQP_A_BRCM_4.hevc", "test_vectors/hevc/main/DELTAQP_B_SONY_3.hevc", "test_vectors/hevc/main/DELTAQP_C_SONY_3.hevc", "test_vectors/hevc/main/DSLICE_A_HHI_5.hevc", "test_vectors/hevc/main/DSLICE_B_HHI_5.hevc", "test_vectors/hevc/main/DSLICE_C_HHI_5.hevc", "test_vectors/hevc/main/ENTP_A_Qualcomm_1.hevc", "test_vectors/hevc/main/ENTP_B_Qualcomm_1.hevc", "test_vectors/hevc/main/ENTP_C_Qualcomm_1.hevc", "test_vectors/hevc/main/EXT_A_ericsson_4.hevc", "test_vectors/hevc/main/FILLER_A_Sony_1.hevc", "test_vectors/hevc/main/HRD_A_Fujitsu_3.hevc", "test_vectors/hevc/main/INITQP_A_Sony_1.hevc", "test_vectors/hevc/main/ipcm_A_NEC_3.hevc", "test_vectors/hevc/main/ipcm_B_NEC_3.hevc", "test_vectors/hevc/main/ipcm_C_NEC_3.hevc", "test_vectors/hevc/main/ipcm_D_NEC_3.hevc", "test_vectors/hevc/main/ipcm_E_NEC_2.hevc", "test_vectors/hevc/main/IPRED_A_docomo_2.hevc", "test_vectors/hevc/main/IPRED_C_Mitsubishi_3.hevc", "test_vectors/hevc/main/LS_A_Orange_2.hevc", "test_vectors/hevc/main/LS_B_Orange_4.hevc", "test_vectors/hevc/main/LTRPSPS_A_Qualcomm_1.hevc", "test_vectors/hevc/main/MAXBINS_A_TI_5.hevc", "test_vectors/hevc/main/MAXBINS_B_TI_5.hevc", "test_vectors/hevc/main/MAXBINS_C_TI_5.hevc", "test_vectors/hevc/main/MERGE_A_TI_3.hevc", "test_vectors/hevc/main/MERGE_B_TI_3.hevc", "test_vectors/hevc/main/MERGE_C_TI_3.hevc", "test_vectors/hevc/main/MERGE_D_TI_3.hevc", "test_vectors/hevc/main/MERGE_E_TI_3.hevc", "test_vectors/hevc/main/MERGE_F_MTK_4.hevc", "test_vectors/hevc/main/MERGE_G_HHI_4.hevc", "test_vectors/hevc/main/MVCLIP_A_qualcomm_3.hevc", "test_vectors/hevc/main/MVDL1ZERO_A_docomo_4.hevc", "test_vectors/hevc/main/MVEDGE_A_qualcomm_3.hevc", "test_vectors/hevc/main/OPFLAG_A_Qualcomm_1.hevc", "test_vectors/hevc/main/OPFLAG_B_Qualcomm_1.hevc", "test_vectors/hevc/main/OPFLAG_C_Qualcomm_1.hevc", "test_vectors/hevc/main/PMERGE_A_TI_3.hevc", "test_vectors/hevc/main/PMERGE_B_TI_3.hevc", "test_vectors/hevc/main/PMERGE_C_TI_3.hevc", "test_vectors/hevc/main/PMERGE_D_TI_3.hevc", "test_vectors/hevc/main/PMERGE_E_TI_3.hevc", "test_vectors/hevc/main/PPS_A_qualcomm_7.hevc", "test_vectors/hevc/main/PS_B_VIDYO_3.hevc", "test_vectors/hevc/main/RPLM_A_qualcomm_4.hevc", "test_vectors/hevc/main/RPS_A_docomo_5.hevc", "test_vectors/hevc/main/RPS_B_qualcomm_5.hevc", "test_vectors/hevc/main/RPS_E_qualcomm_5.hevc", "test_vectors/hevc/main/RPS_F_docomo_2.hevc", "test_vectors/hevc/main/RQT_A_HHI_4.hevc", "test_vectors/hevc/main/RQT_B_HHI_4.hevc", "test_vectors/hevc/main/RQT_C_HHI_4.hevc", "test_vectors/hevc/main/RQT_D_HHI_4.hevc", "test_vectors/hevc/main/RQT_E_HHI_4.hevc", "test_vectors/hevc/main/RQT_F_HHI_4.hevc", "test_vectors/hevc/main/RQT_G_HHI_4.hevc", "test_vectors/hevc/main/SAO_A_MediaTek_4.hevc", "test_vectors/hevc/main/SAO_B_MediaTek_5.hevc", "test_vectors/hevc/main/SAO_C_Samsung_5.hevc", "test_vectors/hevc/main/SAODBLK_A_MainConcept_4.hevc", "test_vectors/hevc/main/SAODBLK_B_MainConcept_4.hevc", "test_vectors/hevc/main/SAO_D_Samsung_5.hevc", "test_vectors/hevc/main/SAO_E_Canon_4.hevc", "test_vectors/hevc/main/SAO_F_Canon_3.hevc", "test_vectors/hevc/main/SAO_G_Canon_3.hevc", "test_vectors/hevc/main/SAO_H_Parabola_1.hevc", "test_vectors/hevc/main/SDH_A_Orange_4.hevc", "test_vectors/hevc/main/SLICES_A_Rovi_3.hevc", "test_vectors/hevc/main/SLPPLP_A_VIDYO_2.hevc", "test_vectors/hevc/main/STRUCT_A_Samsung_7.hevc", "test_vectors/hevc/main/STRUCT_B_Samsung_7.hevc", "test_vectors/hevc/main/TILES_A_Cisco_2.hevc", "test_vectors/hevc/main/TILES_B_Cisco_1.hevc", "test_vectors/hevc/main/TMVP_A_MS_3.hevc", "test_vectors/hevc/main/TSCL_A_VIDYO_5.hevc", "test_vectors/hevc/main/TSCL_B_VIDYO_4.hevc", "test_vectors/hevc/main/TSKIP_A_MS_3.hevc", "test_vectors/hevc/main/TUSIZE_A_Samsung_1.hevc", "test_vectors/hevc/main/VPSID_A_VIDYO_2.hevc", "test_vectors/hevc/main/WP_A_Toshiba_3.hevc", "test_vectors/hevc/main/WP_B_Toshiba_3.hevc", "test_vectors/hevc/main/WPP_A_ericsson_MAIN_2.hevc", "test_vectors/hevc/main/WPP_B_ericsson_MAIN_2.hevc", "test_vectors/hevc/main/WPP_C_ericsson_MAIN_2.hevc", "test_vectors/hevc/main/WPP_D_ericsson_MAIN_2.hevc", "test_vectors/hevc/main/WPP_E_ericsson_MAIN_2.hevc", "test_vectors/hevc/main/WPP_F_ericsson_MAIN_2.hevc", "test_vectors/hevc/main_still_picture/IPRED_B_Nokia_3.hevc"},
 					decoder:        "v4l2_stateful_decoder",
@@ -911,7 +911,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_hevc"},
 			},
 			{
-				Name: "v4l2_vp9_0_group1_buf",
+				Name: "v4l2_stateful_vp9_0_group1_buf",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_0_8bit/buf/crowd_run_256X144_fr15_bd8_8buf_l1.ivf", "test_vectors/vp9/Profile_0_8bit/buf/grass_1_256X144_fr15_bd8_8buf_l1.ivf", "test_vectors/vp9/Profile_0_8bit/buf/street1_1_256X144_fr15_bd8_8buf_l1.ivf", "test_vectors/vp9/Profile_0_8bit/buf/crowd_run_384X192_fr30_bd8_8buf_l11.ivf", "test_vectors/vp9/Profile_0_8bit/buf/grass_1_384X192_fr30_bd8_8buf_l11.ivf", "test_vectors/vp9/Profile_0_8bit/buf/street1_1_384X192_fr30_bd8_8buf_l11.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -924,7 +924,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_0_group1_frm_resize",
+				Name: "v4l2_stateful_vp9_0_group1_frm_resize",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_0_8bit/frm_resize/crowd_run_256X144_fr15_bd8_frm_resize_l1.ivf", "test_vectors/vp9/Profile_0_8bit/frm_resize/grass_1_256X144_fr15_bd8_frm_resize_l1.ivf", "test_vectors/vp9/Profile_0_8bit/frm_resize/street1_1_256X144_fr15_bd8_frm_resize_l1.ivf", "test_vectors/vp9/Profile_0_8bit/frm_resize/crowd_run_384X192_fr30_bd8_frm_resize_l11.ivf", "test_vectors/vp9/Profile_0_8bit/frm_resize/grass_1_384X192_fr30_bd8_frm_resize_l11.ivf", "test_vectors/vp9/Profile_0_8bit/frm_resize/street1_1_384X192_fr30_bd8_frm_resize_l11.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -937,7 +937,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_0_group1_gf_dist",
+				Name: "v4l2_stateful_vp9_0_group1_gf_dist",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_0_8bit/gf_dist/crowd_run_256X144_fr15_bd8_gf_dist_4_l1.ivf", "test_vectors/vp9/Profile_0_8bit/gf_dist/grass_1_256X144_fr15_bd8_gf_dist_4_l1.ivf", "test_vectors/vp9/Profile_0_8bit/gf_dist/street1_1_256X144_fr15_bd8_gf_dist_4_l1.ivf", "test_vectors/vp9/Profile_0_8bit/gf_dist/crowd_run_384X192_fr30_bd8_gf_dist_4_l11.ivf", "test_vectors/vp9/Profile_0_8bit/gf_dist/grass_1_384X192_fr30_bd8_gf_dist_4_l11.ivf", "test_vectors/vp9/Profile_0_8bit/gf_dist/street1_1_384X192_fr30_bd8_gf_dist_4_l11.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -950,7 +950,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_0_group1_odd_size",
+				Name: "v4l2_stateful_vp9_0_group1_odd_size",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_0_8bit/odd_size/crowd_run_248X144_fr15_bd8_odd_size_l1.ivf", "test_vectors/vp9/Profile_0_8bit/odd_size/grass_1_248X144_fr15_bd8_odd_size_l1.ivf", "test_vectors/vp9/Profile_0_8bit/odd_size/street1_1_248X144_fr15_bd8_odd_size_l1.ivf", "test_vectors/vp9/Profile_0_8bit/odd_size/crowd_run_376X184_fr30_bd8_odd_size_l11.ivf", "test_vectors/vp9/Profile_0_8bit/odd_size/grass_1_376X184_fr30_bd8_odd_size_l11.ivf", "test_vectors/vp9/Profile_0_8bit/odd_size/street1_1_376X184_fr30_bd8_odd_size_l11.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -963,7 +963,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_0_group1_sub8x8",
+				Name: "v4l2_stateful_vp9_0_group1_sub8x8",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_0_8bit/sub8X8/crowd_run_256X144_fr15_bd8_sub8X8_l1.ivf", "test_vectors/vp9/Profile_0_8bit/sub8X8/grass_1_256X144_fr15_bd8_sub8X8_l1.ivf", "test_vectors/vp9/Profile_0_8bit/sub8X8/street1_1_256X144_fr15_bd8_sub8X8_l1.ivf", "test_vectors/vp9/Profile_0_8bit/sub8X8/crowd_run_384X192_fr30_bd8_sub8X8_l11.ivf", "test_vectors/vp9/Profile_0_8bit/sub8X8/grass_1_384X192_fr30_bd8_sub8X8_l11.ivf", "test_vectors/vp9/Profile_0_8bit/sub8X8/street1_1_384X192_fr30_bd8_sub8X8_l11.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -976,7 +976,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_0_group1_sub8x8_sf",
+				Name: "v4l2_stateful_vp9_0_group1_sub8x8_sf",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_0_8bit/sub8x8_sf/crowd_run_256X144_fr15_bd8_sub8x8_sf_l1.ivf", "test_vectors/vp9/Profile_0_8bit/sub8x8_sf/grass_1_256X144_fr15_bd8_sub8x8_sf_l1.ivf", "test_vectors/vp9/Profile_0_8bit/sub8x8_sf/street1_1_256X144_fr15_bd8_sub8x8_sf_l1.ivf", "test_vectors/vp9/Profile_0_8bit/sub8x8_sf/crowd_run_384X192_fr30_bd8_sub8x8_sf_l11.ivf", "test_vectors/vp9/Profile_0_8bit/sub8x8_sf/grass_1_384X192_fr30_bd8_sub8x8_sf_l11.ivf", "test_vectors/vp9/Profile_0_8bit/sub8x8_sf/street1_1_384X192_fr30_bd8_sub8x8_sf_l11.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -989,7 +989,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_0_group2_buf",
+				Name: "v4l2_stateful_vp9_0_group2_buf",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_0_8bit/buf/crowd_run_480X256_fr30_bd8_8buf_l2.ivf", "test_vectors/vp9/Profile_0_8bit/buf/grass_1_480X256_fr30_bd8_8buf_l2.ivf", "test_vectors/vp9/Profile_0_8bit/buf/street1_1_480X256_fr30_bd8_8buf_l2.ivf", "test_vectors/vp9/Profile_0_8bit/buf/crowd_run_640X384_fr30_bd8_8buf_l21.ivf", "test_vectors/vp9/Profile_0_8bit/buf/grass_1_640X384_fr30_bd8_8buf_l21.ivf", "test_vectors/vp9/Profile_0_8bit/buf/street1_1_640X384_fr30_bd8_8buf_l21.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1002,7 +1002,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_0_group2_frm_resize",
+				Name: "v4l2_stateful_vp9_0_group2_frm_resize",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_0_8bit/frm_resize/crowd_run_480X256_fr30_bd8_frm_resize_l2.ivf", "test_vectors/vp9/Profile_0_8bit/frm_resize/grass_1_480X256_fr30_bd8_frm_resize_l2.ivf", "test_vectors/vp9/Profile_0_8bit/frm_resize/street1_1_480X256_fr30_bd8_frm_resize_l2.ivf", "test_vectors/vp9/Profile_0_8bit/frm_resize/crowd_run_640X384_fr30_bd8_frm_resize_l21.ivf", "test_vectors/vp9/Profile_0_8bit/frm_resize/grass_1_640X384_fr30_bd8_frm_resize_l21.ivf", "test_vectors/vp9/Profile_0_8bit/frm_resize/street1_1_640X384_fr30_bd8_frm_resize_l21.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1015,7 +1015,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_0_group2_gf_dist",
+				Name: "v4l2_stateful_vp9_0_group2_gf_dist",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_0_8bit/gf_dist/crowd_run_480X256_fr30_bd8_gf_dist_4_l2.ivf", "test_vectors/vp9/Profile_0_8bit/gf_dist/grass_1_480X256_fr30_bd8_gf_dist_4_l2.ivf", "test_vectors/vp9/Profile_0_8bit/gf_dist/street1_1_480X256_fr30_bd8_gf_dist_4_l2.ivf", "test_vectors/vp9/Profile_0_8bit/gf_dist/crowd_run_640X384_fr30_bd8_gf_dist_4_l21.ivf", "test_vectors/vp9/Profile_0_8bit/gf_dist/grass_1_640X384_fr30_bd8_gf_dist_4_l21.ivf", "test_vectors/vp9/Profile_0_8bit/gf_dist/street1_1_640X384_fr30_bd8_gf_dist_4_l21.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1028,7 +1028,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_0_group2_odd_size",
+				Name: "v4l2_stateful_vp9_0_group2_odd_size",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_0_8bit/odd_size/crowd_run_472X248_fr30_bd8_odd_size_l2.ivf", "test_vectors/vp9/Profile_0_8bit/odd_size/grass_1_472X248_fr30_bd8_odd_size_l2.ivf", "test_vectors/vp9/Profile_0_8bit/odd_size/street1_1_472X248_fr30_bd8_odd_size_l2.ivf", "test_vectors/vp9/Profile_0_8bit/odd_size/crowd_run_632X376_fr30_bd8_odd_size_l21.ivf", "test_vectors/vp9/Profile_0_8bit/odd_size/grass_1_632X376_fr30_bd8_odd_size_l21.ivf", "test_vectors/vp9/Profile_0_8bit/odd_size/street1_1_632X376_fr30_bd8_odd_size_l21.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1041,7 +1041,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_0_group2_sub8x8",
+				Name: "v4l2_stateful_vp9_0_group2_sub8x8",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_0_8bit/sub8X8/crowd_run_480X256_fr30_bd8_sub8X8_l2.ivf", "test_vectors/vp9/Profile_0_8bit/sub8X8/grass_1_480X256_fr30_bd8_sub8X8_l2.ivf", "test_vectors/vp9/Profile_0_8bit/sub8X8/street1_1_480X256_fr30_bd8_sub8X8_l2.ivf", "test_vectors/vp9/Profile_0_8bit/sub8X8/crowd_run_640X384_fr30_bd8_sub8X8_l21.ivf", "test_vectors/vp9/Profile_0_8bit/sub8X8/grass_1_640X384_fr30_bd8_sub8X8_l21.ivf", "test_vectors/vp9/Profile_0_8bit/sub8X8/street1_1_640X384_fr30_bd8_sub8X8_l21.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1054,7 +1054,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_0_group2_sub8x8_sf",
+				Name: "v4l2_stateful_vp9_0_group2_sub8x8_sf",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_0_8bit/sub8x8_sf/crowd_run_480X256_fr30_bd8_sub8x8_sf_l2.ivf", "test_vectors/vp9/Profile_0_8bit/sub8x8_sf/grass_1_480X256_fr30_bd8_sub8x8_sf_l2.ivf", "test_vectors/vp9/Profile_0_8bit/sub8x8_sf/street1_1_480X256_fr30_bd8_sub8x8_sf_l2.ivf", "test_vectors/vp9/Profile_0_8bit/sub8x8_sf/crowd_run_640X384_fr30_bd8_sub8x8_sf_l21.ivf", "test_vectors/vp9/Profile_0_8bit/sub8x8_sf/grass_1_640X384_fr30_bd8_sub8x8_sf_l21.ivf", "test_vectors/vp9/Profile_0_8bit/sub8x8_sf/street1_1_640X384_fr30_bd8_sub8x8_sf_l21.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1067,7 +1067,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_0_group3_buf",
+				Name: "v4l2_stateful_vp9_0_group3_buf",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_0_8bit/buf/crowd_run_1080X512_fr30_bd8_8buf_l3.ivf", "test_vectors/vp9/Profile_0_8bit/buf/grass_1_1080X512_fr30_bd8_8buf_l3.ivf", "test_vectors/vp9/Profile_0_8bit/buf/street1_1_1080X512_fr30_bd8_8buf_l3.ivf", "test_vectors/vp9/Profile_0_8bit/buf/crowd_run_1280X768_fr30_bd8_8buf_l31.ivf", "test_vectors/vp9/Profile_0_8bit/buf/grass_1_1280X768_fr30_bd8_8buf_l31.ivf", "test_vectors/vp9/Profile_0_8bit/buf/street1_1_1280X768_fr30_bd8_8buf_l31.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1080,7 +1080,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_0_group3_frm_resize",
+				Name: "v4l2_stateful_vp9_0_group3_frm_resize",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_0_8bit/frm_resize/crowd_run_1080X512_fr30_bd8_frm_resize_l3.ivf", "test_vectors/vp9/Profile_0_8bit/frm_resize/grass_1_1080X512_fr30_bd8_frm_resize_l3.ivf", "test_vectors/vp9/Profile_0_8bit/frm_resize/street1_1_1080X512_fr30_bd8_frm_resize_l3.ivf", "test_vectors/vp9/Profile_0_8bit/frm_resize/crowd_run_1280X768_fr30_bd8_frm_resize_l31.ivf", "test_vectors/vp9/Profile_0_8bit/frm_resize/grass_1_1280X768_fr30_bd8_frm_resize_l31.ivf", "test_vectors/vp9/Profile_0_8bit/frm_resize/street1_1_1280X768_fr30_bd8_frm_resize_l31.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1093,7 +1093,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_0_group3_gf_dist",
+				Name: "v4l2_stateful_vp9_0_group3_gf_dist",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_0_8bit/gf_dist/crowd_run_1080X512_fr30_bd8_gf_dist_4_l3.ivf", "test_vectors/vp9/Profile_0_8bit/gf_dist/grass_1_1080X512_fr30_bd8_gf_dist_4_l3.ivf", "test_vectors/vp9/Profile_0_8bit/gf_dist/street1_1_1080X512_fr30_bd8_gf_dist_4_l3.ivf", "test_vectors/vp9/Profile_0_8bit/gf_dist/crowd_run_1280X768_fr30_bd8_gf_dist_4_l31.ivf", "test_vectors/vp9/Profile_0_8bit/gf_dist/grass_1_1280X768_fr30_bd8_gf_dist_4_l31.ivf", "test_vectors/vp9/Profile_0_8bit/gf_dist/street1_1_1280X768_fr30_bd8_gf_dist_4_l31.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1106,7 +1106,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_0_group3_odd_size",
+				Name: "v4l2_stateful_vp9_0_group3_odd_size",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_0_8bit/odd_size/crowd_run_1080X504_fr30_bd8_odd_size_l3.ivf", "test_vectors/vp9/Profile_0_8bit/odd_size/grass_1_1080X504_fr30_bd8_odd_size_l3.ivf", "test_vectors/vp9/Profile_0_8bit/odd_size/street1_1_1080X504_fr30_bd8_odd_size_l3.ivf", "test_vectors/vp9/Profile_0_8bit/odd_size/crowd_run_1280X768_fr30_bd8_odd_size_l31.ivf", "test_vectors/vp9/Profile_0_8bit/odd_size/grass_1_1280X768_fr30_bd8_odd_size_l31.ivf", "test_vectors/vp9/Profile_0_8bit/odd_size/street1_1_1280X768_fr30_bd8_odd_size_l31.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1119,7 +1119,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_0_group3_sub8x8",
+				Name: "v4l2_stateful_vp9_0_group3_sub8x8",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_0_8bit/sub8X8/crowd_run_1080X512_fr30_bd8_sub8X8_l3.ivf", "test_vectors/vp9/Profile_0_8bit/sub8X8/grass_1_1080X512_fr30_bd8_sub8X8_l3.ivf", "test_vectors/vp9/Profile_0_8bit/sub8X8/street1_1_1080X512_fr30_bd8_sub8X8_l3.ivf", "test_vectors/vp9/Profile_0_8bit/sub8X8/crowd_run_1280X768_fr30_bd8_sub8X8_l31.ivf", "test_vectors/vp9/Profile_0_8bit/sub8X8/grass_1_1280X768_fr30_bd8_sub8X8_l31.ivf", "test_vectors/vp9/Profile_0_8bit/sub8X8/street1_1_1280X768_fr30_bd8_sub8X8_l31.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1132,7 +1132,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_0_group3_sub8x8_sf",
+				Name: "v4l2_stateful_vp9_0_group3_sub8x8_sf",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_0_8bit/sub8x8_sf/crowd_run_1080X512_fr30_bd8_sub8x8_sf_l3.ivf", "test_vectors/vp9/Profile_0_8bit/sub8x8_sf/grass_1_1080X512_fr30_bd8_sub8x8_sf_l3.ivf", "test_vectors/vp9/Profile_0_8bit/sub8x8_sf/street1_1_1080X512_fr30_bd8_sub8x8_sf_l3.ivf", "test_vectors/vp9/Profile_0_8bit/sub8x8_sf/crowd_run_1280X768_fr30_bd8_sub8x8_sf_l31.ivf", "test_vectors/vp9/Profile_0_8bit/sub8x8_sf/grass_1_1280X768_fr30_bd8_sub8x8_sf_l31.ivf", "test_vectors/vp9/Profile_0_8bit/sub8x8_sf/street1_1_1280X768_fr30_bd8_sub8x8_sf_l31.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1145,7 +1145,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_0_group4_buf",
+				Name: "v4l2_stateful_vp9_0_group4_buf",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_0_8bit/buf/crowd_run_2048X1088_fr30_bd8_8buf_l4.ivf", "test_vectors/vp9/Profile_0_8bit/buf/grass_1_2048X1088_fr30_bd8_8buf_l4.ivf", "test_vectors/vp9/Profile_0_8bit/buf/street1_1_2048X1088_fr30_bd8_8buf_l4.ivf", "test_vectors/vp9/Profile_0_8bit/buf/crowd_run_2048X1088_fr60_bd8_6buf_l41.ivf", "test_vectors/vp9/Profile_0_8bit/buf/grass_1_2048X1088_fr60_bd8_6buf_l41.ivf", "test_vectors/vp9/Profile_0_8bit/buf/street1_1_2048X1088_fr60_bd8_6buf_l41.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1158,7 +1158,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_0_group4_frm_resize",
+				Name: "v4l2_stateful_vp9_0_group4_frm_resize",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_0_8bit/frm_resize/crowd_run_2048X1088_fr30_bd8_frm_resize_l4.ivf", "test_vectors/vp9/Profile_0_8bit/frm_resize/grass_1_2048X1088_fr30_bd8_frm_resize_l4.ivf", "test_vectors/vp9/Profile_0_8bit/frm_resize/street1_1_2048X1088_fr30_bd8_frm_resize_l4.ivf", "test_vectors/vp9/Profile_0_8bit/frm_resize/crowd_run_2048X1088_fr60_bd8_frm_resize_l41.ivf", "test_vectors/vp9/Profile_0_8bit/frm_resize/grass_1_2048X1088_fr60_bd8_frm_resize_l41.ivf", "test_vectors/vp9/Profile_0_8bit/frm_resize/street1_1_2048X1088_fr60_bd8_frm_resize_l41.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1171,7 +1171,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_0_group4_gf_dist",
+				Name: "v4l2_stateful_vp9_0_group4_gf_dist",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_0_8bit/gf_dist/crowd_run_2048X1088_fr30_bd8_gf_dist_4_l4.ivf", "test_vectors/vp9/Profile_0_8bit/gf_dist/grass_1_2048X1088_fr30_bd8_gf_dist_4_l4.ivf", "test_vectors/vp9/Profile_0_8bit/gf_dist/street1_1_2048X1088_fr30_bd8_gf_dist_4_l4.ivf", "test_vectors/vp9/Profile_0_8bit/gf_dist/crowd_run_2048X1088_fr60_bd8_gf_dist_5_l41.ivf", "test_vectors/vp9/Profile_0_8bit/gf_dist/grass_1_2048X1088_fr60_bd8_gf_dist_5_l41.ivf", "test_vectors/vp9/Profile_0_8bit/gf_dist/street1_1_2048X1088_fr60_bd8_gf_dist_5_l41.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1184,7 +1184,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_0_group4_odd_size",
+				Name: "v4l2_stateful_vp9_0_group4_odd_size",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_0_8bit/odd_size/crowd_run_2040X1080_fr30_bd8_odd_size_l4.ivf", "test_vectors/vp9/Profile_0_8bit/odd_size/grass_1_2040X1080_fr30_bd8_odd_size_l4.ivf", "test_vectors/vp9/Profile_0_8bit/odd_size/street1_1_2040X1080_fr30_bd8_odd_size_l4.ivf", "test_vectors/vp9/Profile_0_8bit/odd_size/crowd_run_2040X1080_fr60_bd8_odd_size_l41.ivf", "test_vectors/vp9/Profile_0_8bit/odd_size/grass_1_2040X1080_fr60_bd8_odd_size_l41.ivf", "test_vectors/vp9/Profile_0_8bit/odd_size/street1_1_2040X1080_fr60_bd8_odd_size_l41.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1197,7 +1197,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_0_group4_sub8x8",
+				Name: "v4l2_stateful_vp9_0_group4_sub8x8",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_0_8bit/sub8X8/crowd_run_2048X1088_fr30_bd8_sub8X8_l4.ivf", "test_vectors/vp9/Profile_0_8bit/sub8X8/grass_1_2048X1088_fr30_bd8_sub8X8_l4.ivf", "test_vectors/vp9/Profile_0_8bit/sub8X8/street1_1_2048X1088_fr30_bd8_sub8X8_l4.ivf", "test_vectors/vp9/Profile_0_8bit/sub8X8/crowd_run_2048X1088_fr60_bd8_sub8X8_l41.ivf", "test_vectors/vp9/Profile_0_8bit/sub8X8/grass_1_2048X1088_fr60_bd8_sub8X8_l41.ivf", "test_vectors/vp9/Profile_0_8bit/sub8X8/street1_1_2048X1088_fr60_bd8_sub8X8_l41.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1210,7 +1210,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_0_group4_sub8x8_sf",
+				Name: "v4l2_stateful_vp9_0_group4_sub8x8_sf",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_0_8bit/sub8x8_sf/crowd_run_2048X1088_fr30_bd8_sub8x8_sf_l4.ivf", "test_vectors/vp9/Profile_0_8bit/sub8x8_sf/grass_1_2048X1088_fr30_bd8_sub8x8_sf_l4.ivf", "test_vectors/vp9/Profile_0_8bit/sub8x8_sf/street1_1_2048X1088_fr30_bd8_sub8x8_sf_l4.ivf", "test_vectors/vp9/Profile_0_8bit/sub8x8_sf/crowd_run_2048X1088_fr60_bd8_sub8x8_sf_l41.ivf", "test_vectors/vp9/Profile_0_8bit/sub8x8_sf/grass_1_2048X1088_fr60_bd8_sub8x8_sf_l41.ivf", "test_vectors/vp9/Profile_0_8bit/sub8x8_sf/street1_1_2048X1088_fr60_bd8_sub8x8_sf_l41.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1223,7 +1223,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_0_level5_0_buf",
+				Name: "v4l2_stateful_vp9_0_level5_0_buf",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_0_8bit/buf/crowd_run_4096X2176_fr30_bd8_4buf_l5.ivf", "test_vectors/vp9/Profile_0_8bit/buf/grass_1_4096X2176_fr30_bd8_4buf_l5.ivf", "test_vectors/vp9/Profile_0_8bit/buf/street1_1_4096X2176_fr30_bd8_4buf_l5.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1236,7 +1236,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_0_level5_0_frm_resize",
+				Name: "v4l2_stateful_vp9_0_level5_0_frm_resize",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_0_8bit/frm_resize/crowd_run_4096X2176_fr30_bd8_frm_resize_l5.ivf", "test_vectors/vp9/Profile_0_8bit/frm_resize/grass_1_4096X2176_fr30_bd8_frm_resize_l5.ivf", "test_vectors/vp9/Profile_0_8bit/frm_resize/street1_1_4096X2176_fr30_bd8_frm_resize_l5.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1249,7 +1249,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_0_level5_0_gf_dist",
+				Name: "v4l2_stateful_vp9_0_level5_0_gf_dist",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_0_8bit/gf_dist/crowd_run_4096X2176_fr30_bd8_gf_dist_6_l5.ivf", "test_vectors/vp9/Profile_0_8bit/gf_dist/grass_1_4096X2176_fr30_bd8_gf_dist_6_l5.ivf", "test_vectors/vp9/Profile_0_8bit/gf_dist/street1_1_4096X2176_fr30_bd8_gf_dist_6_l5.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1262,7 +1262,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_0_level5_0_odd_size",
+				Name: "v4l2_stateful_vp9_0_level5_0_odd_size",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_0_8bit/odd_size/crowd_run_4088X2168_fr30_bd8_odd_size_l5.ivf", "test_vectors/vp9/Profile_0_8bit/odd_size/grass_1_4088X2168_fr30_bd8_odd_size_l5.ivf", "test_vectors/vp9/Profile_0_8bit/odd_size/street1_1_4088X2168_fr30_bd8_odd_size_l5.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1275,7 +1275,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_0_level5_0_sub8x8",
+				Name: "v4l2_stateful_vp9_0_level5_0_sub8x8",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_0_8bit/sub8X8/crowd_run_4096X2176_fr30_bd8_sub8X8_l5.ivf", "test_vectors/vp9/Profile_0_8bit/sub8X8/grass_1_4096X2176_fr30_bd8_sub8X8_l5.ivf", "test_vectors/vp9/Profile_0_8bit/sub8X8/street1_1_4096X2176_fr30_bd8_sub8X8_l5.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1288,7 +1288,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_0_level5_0_sub8x8_sf",
+				Name: "v4l2_stateful_vp9_0_level5_0_sub8x8_sf",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_0_8bit/sub8x8_sf/crowd_run_4096X2176_fr30_bd8_sub8x8_sf_l5.ivf", "test_vectors/vp9/Profile_0_8bit/sub8x8_sf/grass_1_4096X2176_fr30_bd8_sub8x8_sf_l5.ivf", "test_vectors/vp9/Profile_0_8bit/sub8x8_sf/street1_1_4096X2176_fr30_bd8_sub8x8_sf_l5.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1301,7 +1301,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_0_level5_1_buf",
+				Name: "v4l2_stateful_vp9_0_level5_1_buf",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_0_8bit/buf/crowd_run_4096X2176_fr60_bd8_4buf_l51.ivf", "test_vectors/vp9/Profile_0_8bit/buf/grass_1_4096X2176_fr60_bd8_4buf_l51.ivf", "test_vectors/vp9/Profile_0_8bit/buf/street1_1_4096X2176_fr60_bd8_4buf_l51.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1314,7 +1314,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_0_level5_1_frm_resize",
+				Name: "v4l2_stateful_vp9_0_level5_1_frm_resize",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_0_8bit/frm_resize/crowd_run_4096X2176_fr60_bd8_frm_resize_l51.ivf", "test_vectors/vp9/Profile_0_8bit/frm_resize/grass_1_4096X2176_fr60_bd8_frm_resize_l51.ivf", "test_vectors/vp9/Profile_0_8bit/frm_resize/street1_1_4096X2176_fr60_bd8_frm_resize_l51.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1327,7 +1327,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_0_level5_1_gf_dist",
+				Name: "v4l2_stateful_vp9_0_level5_1_gf_dist",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_0_8bit/gf_dist/crowd_run_4096X2176_fr60_bd8_gf_dist_10_l51.ivf", "test_vectors/vp9/Profile_0_8bit/gf_dist/grass_1_4096X2176_fr60_bd8_gf_dist_10_l51.ivf", "test_vectors/vp9/Profile_0_8bit/gf_dist/street1_1_4096X2176_fr60_bd8_gf_dist_10_l51.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1340,7 +1340,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_0_level5_1_odd_size",
+				Name: "v4l2_stateful_vp9_0_level5_1_odd_size",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_0_8bit/odd_size/crowd_run_4088X2168_fr60_bd8_odd_size_l51.ivf", "test_vectors/vp9/Profile_0_8bit/odd_size/grass_1_4088X2168_fr60_bd8_odd_size_l51.ivf", "test_vectors/vp9/Profile_0_8bit/odd_size/street1_1_4088X2168_fr60_bd8_odd_size_l51.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1353,7 +1353,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_0_level5_1_sub8x8",
+				Name: "v4l2_stateful_vp9_0_level5_1_sub8x8",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_0_8bit/sub8X8/crowd_run_4096X2176_fr60_bd8_sub8X8_l51.ivf", "test_vectors/vp9/Profile_0_8bit/sub8X8/grass_1_4096X2176_fr60_bd8_sub8X8_l51.ivf", "test_vectors/vp9/Profile_0_8bit/sub8X8/street1_1_4096X2176_fr60_bd8_sub8X8_l51.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1366,7 +1366,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_0_level5_1_sub8x8_sf",
+				Name: "v4l2_stateful_vp9_0_level5_1_sub8x8_sf",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_0_8bit/sub8x8_sf/crowd_run_4096X2176_fr60_bd8_sub8X8_l51.ivf", "test_vectors/vp9/Profile_0_8bit/sub8x8_sf/grass_1_4096X2176_fr60_bd8_sub8x8_sf_l51.ivf", "test_vectors/vp9/Profile_0_8bit/sub8x8_sf/street1_1_4096X2176_fr60_bd8_sub8x8_sf_l51.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1379,7 +1379,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_2_group1_buf",
+				Name: "v4l2_stateful_vp9_2_group1_buf",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_2_10bit/buf/crowd_run_384X192_fr30_bd10_8buf_l11.ivf", "test_vectors/vp9/Profile_2_10bit/buf/grass_1_256X144_fr15_bd10_8buf_l1.ivf", "test_vectors/vp9/Profile_2_10bit/buf/grass_1_384X192_fr30_bd10_8buf_l11.ivf", "test_vectors/vp9/Profile_2_10bit/buf/street1_1_256X144_fr15_bd10_8buf_l1.ivf", "test_vectors/vp9/Profile_2_10bit/buf/street1_1_384X192_fr30_bd10_8buf_l11.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1392,7 +1392,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_2_group1_frm_resize",
+				Name: "v4l2_stateful_vp9_2_group1_frm_resize",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_2_10bit/frm_resize/crowd_run_256X144_fr15_bd10_frm_resize_l1.ivf", "test_vectors/vp9/Profile_2_10bit/frm_resize/crowd_run_384X192_fr30_bd10_frm_resize_l11.ivf", "test_vectors/vp9/Profile_2_10bit/frm_resize/grass_1_256X144_fr15_bd10_frm_resize_l1.ivf", "test_vectors/vp9/Profile_2_10bit/frm_resize/grass_1_384X192_fr30_bd10_frm_resize_l11.ivf", "test_vectors/vp9/Profile_2_10bit/frm_resize/street1_1_256X144_fr15_bd10_frm_resize_l1.ivf", "test_vectors/vp9/Profile_2_10bit/frm_resize/street1_1_384X192_fr30_bd10_frm_resize_l11.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1405,7 +1405,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_2_group1_gf_dist",
+				Name: "v4l2_stateful_vp9_2_group1_gf_dist",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_2_10bit/gf_dist/crowd_run_256X144_fr15_bd10_gf_dist_4_l1.ivf", "test_vectors/vp9/Profile_2_10bit/gf_dist/crowd_run_384X192_fr30_bd10_gf_dist_4_l11.ivf", "test_vectors/vp9/Profile_2_10bit/gf_dist/grass_1_256X144_fr15_bd10_gf_dist_4_l1.ivf", "test_vectors/vp9/Profile_2_10bit/gf_dist/grass_1_384X192_fr30_bd10_gf_dist_4_l11.ivf", "test_vectors/vp9/Profile_2_10bit/gf_dist/street1_1_256X144_fr15_bd10_gf_dist_4_l1.ivf", "test_vectors/vp9/Profile_2_10bit/gf_dist/street1_1_384X192_fr30_bd10_gf_dist_4_l11.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1418,7 +1418,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_2_group1_odd_size",
+				Name: "v4l2_stateful_vp9_2_group1_odd_size",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_2_10bit/odd_size/crowd_run_248X144_fr15_bd10_odd_size_l1.ivf", "test_vectors/vp9/Profile_2_10bit/odd_size/crowd_run_376X184_fr30_bd10_odd_size_l11.ivf", "test_vectors/vp9/Profile_2_10bit/odd_size/grass_1_248X144_fr15_bd10_odd_size_l1.ivf", "test_vectors/vp9/Profile_2_10bit/odd_size/grass_1_376X184_fr30_bd10_odd_size_l11.ivf", "test_vectors/vp9/Profile_2_10bit/odd_size/street1_1_248X144_fr15_bd10_odd_size_l1.ivf", "test_vectors/vp9/Profile_2_10bit/odd_size/street1_1_376X184_fr30_bd10_odd_size_l11.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1431,7 +1431,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_2_group1_sub8x8",
+				Name: "v4l2_stateful_vp9_2_group1_sub8x8",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_2_10bit/sub8X8/crowd_run_256X144_fr15_bd10_sub8X8_l1.ivf", "test_vectors/vp9/Profile_2_10bit/sub8X8/crowd_run_384X192_fr30_bd10_sub8X8_l11.ivf", "test_vectors/vp9/Profile_2_10bit/sub8X8/grass_1_256X144_fr15_bd10_sub8X8_l1.ivf", "test_vectors/vp9/Profile_2_10bit/sub8X8/grass_1_384X192_fr30_bd10_sub8X8_l11.ivf", "test_vectors/vp9/Profile_2_10bit/sub8X8/street1_1_256X144_fr15_bd10_sub8X8_l1.ivf", "test_vectors/vp9/Profile_2_10bit/sub8X8/street1_1_384X192_fr30_bd10_sub8X8_l11.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1444,7 +1444,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_2_group1_sub8x8_sf",
+				Name: "v4l2_stateful_vp9_2_group1_sub8x8_sf",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_2_10bit/sub8x8_sf/crowd_run_256X144_fr15_bd10_sub8x8_sf_l1.ivf", "test_vectors/vp9/Profile_2_10bit/sub8x8_sf/crowd_run_384X192_fr30_bd10_sub8x8_sf_l11.ivf", "test_vectors/vp9/Profile_2_10bit/sub8x8_sf/grass_1_256X144_fr15_bd10_sub8x8_sf_l1.ivf", "test_vectors/vp9/Profile_2_10bit/sub8x8_sf/grass_1_384X192_fr30_bd10_sub8x8_sf_l11.ivf", "test_vectors/vp9/Profile_2_10bit/sub8x8_sf/street1_1_256X144_fr15_bd10_sub8x8_sf_l1.ivf", "test_vectors/vp9/Profile_2_10bit/sub8x8_sf/street1_1_384X192_fr30_bd10_sub8x8_sf_l11.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1457,7 +1457,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_2_group2_buf",
+				Name: "v4l2_stateful_vp9_2_group2_buf",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_2_10bit/buf/crowd_run_640X384_fr30_bd10_8buf_l21.ivf", "test_vectors/vp9/Profile_2_10bit/buf/grass_1_480X256_fr30_bd10_8buf_l2.ivf", "test_vectors/vp9/Profile_2_10bit/buf/grass_1_640X384_fr30_bd10_8buf_l21.ivf", "test_vectors/vp9/Profile_2_10bit/buf/street1_1_480X256_fr30_bd10_8buf_l2.ivf", "test_vectors/vp9/Profile_2_10bit/buf/street1_1_640X384_fr30_bd10_8buf_l21.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1470,7 +1470,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_2_group2_frm_resize",
+				Name: "v4l2_stateful_vp9_2_group2_frm_resize",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_2_10bit/frm_resize/crowd_run_480X256_fr30_bd10_frm_resize_l2.ivf", "test_vectors/vp9/Profile_2_10bit/frm_resize/crowd_run_640X384_fr30_bd10_frm_resize_l21.ivf", "test_vectors/vp9/Profile_2_10bit/frm_resize/grass_1_480X256_fr30_bd10_frm_resize_l2.ivf", "test_vectors/vp9/Profile_2_10bit/frm_resize/grass_1_640X384_fr30_bd10_frm_resize_l21.ivf", "test_vectors/vp9/Profile_2_10bit/frm_resize/street1_1_480X256_fr30_bd10_frm_resize_l2.ivf", "test_vectors/vp9/Profile_2_10bit/frm_resize/street1_1_640X384_fr30_bd10_frm_resize_l21.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1483,7 +1483,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_2_group2_gf_dist",
+				Name: "v4l2_stateful_vp9_2_group2_gf_dist",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_2_10bit/gf_dist/crowd_run_480X256_fr30_bd10_gf_dist_4_l2.ivf", "test_vectors/vp9/Profile_2_10bit/gf_dist/crowd_run_640X384_fr30_bd10_gf_dist_4_l21.ivf", "test_vectors/vp9/Profile_2_10bit/gf_dist/grass_1_480X256_fr30_bd10_gf_dist_4_l2.ivf", "test_vectors/vp9/Profile_2_10bit/gf_dist/grass_1_640X384_fr30_bd10_gf_dist_4_l21.ivf", "test_vectors/vp9/Profile_2_10bit/gf_dist/street1_1_480X256_fr30_bd10_gf_dist_4_l2.ivf", "test_vectors/vp9/Profile_2_10bit/gf_dist/street1_1_640X384_fr30_bd10_gf_dist_4_l21.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1496,7 +1496,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_2_group2_odd_size",
+				Name: "v4l2_stateful_vp9_2_group2_odd_size",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_2_10bit/odd_size/crowd_run_472X248_fr30_bd10_odd_size_l2.ivf", "test_vectors/vp9/Profile_2_10bit/odd_size/crowd_run_632X376_fr30_bd10_odd_size_l21.ivf", "test_vectors/vp9/Profile_2_10bit/odd_size/grass_1_472X248_fr30_bd10_odd_size_l2.ivf", "test_vectors/vp9/Profile_2_10bit/odd_size/grass_1_632X376_fr30_bd10_odd_size_l21.ivf", "test_vectors/vp9/Profile_2_10bit/odd_size/street1_1_472X248_fr30_bd10_odd_size_l2.ivf", "test_vectors/vp9/Profile_2_10bit/odd_size/street1_1_632X376_fr30_bd10_odd_size_l21.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1509,7 +1509,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_2_group2_sub8x8",
+				Name: "v4l2_stateful_vp9_2_group2_sub8x8",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_2_10bit/sub8X8/crowd_run_480X256_fr30_bd10_sub8X8_l2.ivf", "test_vectors/vp9/Profile_2_10bit/sub8X8/crowd_run_640X384_fr30_bd10_sub8X8_l21.ivf", "test_vectors/vp9/Profile_2_10bit/sub8X8/grass_1_480X256_fr30_bd10_sub8X8_l2.ivf", "test_vectors/vp9/Profile_2_10bit/sub8X8/grass_1_640X384_fr30_bd10_sub8X8_l21.ivf", "test_vectors/vp9/Profile_2_10bit/sub8X8/street1_1_480X256_fr30_bd10_sub8X8_l2.ivf", "test_vectors/vp9/Profile_2_10bit/sub8X8/street1_1_640X384_fr30_bd10_sub8X8_l21.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1522,7 +1522,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_2_group2_sub8x8_sf",
+				Name: "v4l2_stateful_vp9_2_group2_sub8x8_sf",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_2_10bit/sub8x8_sf/crowd_run_480X256_fr30_bd10_sub8x8_sf_l2.ivf", "test_vectors/vp9/Profile_2_10bit/sub8x8_sf/crowd_run_640X384_fr30_bd10_sub8x8_sf_l21.ivf", "test_vectors/vp9/Profile_2_10bit/sub8x8_sf/grass_1_480X256_fr30_bd10_sub8x8_sf_l2.ivf", "test_vectors/vp9/Profile_2_10bit/sub8x8_sf/grass_1_640X384_fr30_bd10_sub8x8_sf_l21.ivf", "test_vectors/vp9/Profile_2_10bit/sub8x8_sf/street1_1_480X256_fr30_bd10_sub8x8_sf_l2.ivf", "test_vectors/vp9/Profile_2_10bit/sub8x8_sf/street1_1_640X384_fr30_bd10_sub8x8_sf_l21.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1535,7 +1535,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_2_group3_buf",
+				Name: "v4l2_stateful_vp9_2_group3_buf",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_2_10bit/buf/crowd_run_1280X768_fr30_bd10_8buf_l31.ivf", "test_vectors/vp9/Profile_2_10bit/buf/grass_1_1080X512_fr30_bd10_8buf_l3.ivf", "test_vectors/vp9/Profile_2_10bit/buf/grass_1_1280X768_fr30_bd10_8buf_l31.ivf", "test_vectors/vp9/Profile_2_10bit/buf/street1_1_1080X512_fr30_bd10_8buf_l3.ivf", "test_vectors/vp9/Profile_2_10bit/buf/street1_1_1280X768_fr30_bd10_8buf_l31.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1548,7 +1548,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_2_group3_frm_resize",
+				Name: "v4l2_stateful_vp9_2_group3_frm_resize",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_2_10bit/frm_resize/crowd_run_1080X512_fr30_bd10_frm_resize_l3.ivf", "test_vectors/vp9/Profile_2_10bit/frm_resize/crowd_run_1280X768_fr30_bd10_frm_resize_l31.ivf", "test_vectors/vp9/Profile_2_10bit/frm_resize/grass_1_1080X512_fr30_bd10_frm_resize_l3.ivf", "test_vectors/vp9/Profile_2_10bit/frm_resize/grass_1_1280X768_fr30_bd10_frm_resize_l31.ivf", "test_vectors/vp9/Profile_2_10bit/frm_resize/street1_1_1080X512_fr30_bd10_frm_resize_l3.ivf", "test_vectors/vp9/Profile_2_10bit/frm_resize/street1_1_1280X768_fr30_bd10_frm_resize_l31.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1561,7 +1561,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_2_group3_gf_dist",
+				Name: "v4l2_stateful_vp9_2_group3_gf_dist",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_2_10bit/gf_dist/crowd_run_1080X512_fr30_bd10_gf_dist_4_l3.ivf", "test_vectors/vp9/Profile_2_10bit/gf_dist/crowd_run_1280X768_fr30_bd10_gf_dist_4_l31.ivf", "test_vectors/vp9/Profile_2_10bit/gf_dist/grass_1_1080X512_fr30_bd10_gf_dist_4_l3.ivf", "test_vectors/vp9/Profile_2_10bit/gf_dist/grass_1_1280X768_fr30_bd10_gf_dist_4_l31.ivf", "test_vectors/vp9/Profile_2_10bit/gf_dist/street1_1_1080X512_fr30_bd10_gf_dist_4_l3.ivf", "test_vectors/vp9/Profile_2_10bit/gf_dist/street1_1_1280X768_fr30_bd10_gf_dist_4_l31.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1574,7 +1574,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_2_group3_odd_size",
+				Name: "v4l2_stateful_vp9_2_group3_odd_size",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_2_10bit/odd_size/crowd_run_1080X504_fr30_bd10_odd_size_l3.ivf", "test_vectors/vp9/Profile_2_10bit/odd_size/crowd_run_1280X768_fr30_bd10_odd_size_l31.ivf", "test_vectors/vp9/Profile_2_10bit/odd_size/grass_1_1080X504_fr30_bd10_odd_size_l3.ivf", "test_vectors/vp9/Profile_2_10bit/odd_size/grass_1_1280X768_fr30_bd10_odd_size_l31.ivf", "test_vectors/vp9/Profile_2_10bit/odd_size/street1_1_1080X504_fr30_bd10_odd_size_l3.ivf", "test_vectors/vp9/Profile_2_10bit/odd_size/street1_1_1280X768_fr30_bd10_odd_size_l31.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1587,7 +1587,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_2_group3_sub8x8",
+				Name: "v4l2_stateful_vp9_2_group3_sub8x8",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_2_10bit/sub8X8/crowd_run_1080X512_fr30_bd10_sub8X8_l3.ivf", "test_vectors/vp9/Profile_2_10bit/sub8X8/crowd_run_1280X768_fr30_bd10_sub8X8_l31.ivf", "test_vectors/vp9/Profile_2_10bit/sub8X8/grass_1_1080X512_fr30_bd10_sub8X8_l3.ivf", "test_vectors/vp9/Profile_2_10bit/sub8X8/grass_1_1280X768_fr30_bd10_sub8X8_l31.ivf", "test_vectors/vp9/Profile_2_10bit/sub8X8/street1_1_1080X512_fr30_bd10_sub8X8_l3.ivf", "test_vectors/vp9/Profile_2_10bit/sub8X8/street1_1_1280X768_fr30_bd10_sub8X8_l31.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1600,7 +1600,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_2_group3_sub8x8_sf",
+				Name: "v4l2_stateful_vp9_2_group3_sub8x8_sf",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_2_10bit/sub8x8_sf/crowd_run_1080X512_fr30_bd10_sub8x8_sf_l3.ivf", "test_vectors/vp9/Profile_2_10bit/sub8x8_sf/crowd_run_1280X768_fr30_bd10_sub8x8_sf_l31.ivf", "test_vectors/vp9/Profile_2_10bit/sub8x8_sf/grass_1_1080X512_fr30_bd10_sub8x8_sf_l3.ivf", "test_vectors/vp9/Profile_2_10bit/sub8x8_sf/grass_1_1280X768_fr30_bd10_sub8x8_sf_l31.ivf", "test_vectors/vp9/Profile_2_10bit/sub8x8_sf/street1_1_1080X512_fr30_bd10_sub8x8_sf_l3.ivf", "test_vectors/vp9/Profile_2_10bit/sub8x8_sf/street1_1_1280X768_fr30_bd10_sub8x8_sf_l31.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1613,7 +1613,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_2_group4_buf",
+				Name: "v4l2_stateful_vp9_2_group4_buf",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_2_10bit/buf/crowd_run_2048X1088_fr60_bd10_6buf_l41.ivf", "test_vectors/vp9/Profile_2_10bit/buf/grass_1_2048X1088_fr30_bd10_8buf_l4.ivf", "test_vectors/vp9/Profile_2_10bit/buf/grass_1_2048X1088_fr60_bd10_6buf_l41.ivf", "test_vectors/vp9/Profile_2_10bit/buf/street1_1_2048X1088_fr30_bd10_8buf_l4.ivf", "test_vectors/vp9/Profile_2_10bit/buf/street1_1_2048X1088_fr60_bd10_6buf_l41.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1626,7 +1626,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_2_group4_frm_resize",
+				Name: "v4l2_stateful_vp9_2_group4_frm_resize",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_2_10bit/frm_resize/crowd_run_2048X1088_fr30_bd10_frm_resize_l4.ivf", "test_vectors/vp9/Profile_2_10bit/frm_resize/crowd_run_2048X1088_fr60_bd10_frm_resize_l41.ivf", "test_vectors/vp9/Profile_2_10bit/frm_resize/grass_1_2048X1088_fr30_bd10_frm_resize_l4.ivf", "test_vectors/vp9/Profile_2_10bit/frm_resize/grass_1_2048X1088_fr60_bd10_frm_resize_l41.ivf", "test_vectors/vp9/Profile_2_10bit/frm_resize/street1_1_2048X1088_fr30_bd10_frm_resize_l4.ivf", "test_vectors/vp9/Profile_2_10bit/frm_resize/street1_1_2048X1088_fr60_bd10_frm_resize_l41.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1639,7 +1639,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_2_group4_gf_dist",
+				Name: "v4l2_stateful_vp9_2_group4_gf_dist",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_2_10bit/gf_dist/crowd_run_2048X1088_fr30_bd10_gf_dist_4_l4.ivf", "test_vectors/vp9/Profile_2_10bit/gf_dist/crowd_run_2048X1088_fr60_bd10_gf_dist_5_l41.ivf", "test_vectors/vp9/Profile_2_10bit/gf_dist/grass_1_2048X1088_fr30_bd10_gf_dist_4_l4.ivf", "test_vectors/vp9/Profile_2_10bit/gf_dist/grass_1_2048X1088_fr60_bd10_gf_dist_5_l41.ivf", "test_vectors/vp9/Profile_2_10bit/gf_dist/street1_1_2048X1088_fr30_bd10_gf_dist_4_l4.ivf", "test_vectors/vp9/Profile_2_10bit/gf_dist/street1_1_2048X1088_fr60_bd10_gf_dist_5_l41.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1652,7 +1652,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_2_group4_odd_size",
+				Name: "v4l2_stateful_vp9_2_group4_odd_size",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_2_10bit/odd_size/crowd_run_2040X1080_fr30_bd10_odd_size_l4.ivf", "test_vectors/vp9/Profile_2_10bit/odd_size/crowd_run_2040X1080_fr60_bd10_odd_size_l41.ivf", "test_vectors/vp9/Profile_2_10bit/odd_size/grass_1_2040X1080_fr30_bd10_odd_size_l4.ivf", "test_vectors/vp9/Profile_2_10bit/odd_size/grass_1_2040X1080_fr60_bd10_odd_size_l41.ivf", "test_vectors/vp9/Profile_2_10bit/odd_size/street1_1_2040X1080_fr30_bd10_odd_size_l4.ivf", "test_vectors/vp9/Profile_2_10bit/odd_size/street1_1_2040X1080_fr60_bd10_odd_size_l41.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1665,7 +1665,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_2_group4_sub8x8",
+				Name: "v4l2_stateful_vp9_2_group4_sub8x8",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_2_10bit/sub8X8/crowd_run_2048X1088_fr30_bd10_sub8X8_l4.ivf", "test_vectors/vp9/Profile_2_10bit/sub8X8/crowd_run_2048X1088_fr60_bd10_sub8X8_l41.ivf", "test_vectors/vp9/Profile_2_10bit/sub8X8/grass_1_2048X1088_fr30_bd10_sub8X8_l4.ivf", "test_vectors/vp9/Profile_2_10bit/sub8X8/grass_1_2048X1088_fr60_bd10_sub8X8_l41.ivf", "test_vectors/vp9/Profile_2_10bit/sub8X8/street1_1_2048X1088_fr30_bd10_sub8X8_l4.ivf", "test_vectors/vp9/Profile_2_10bit/sub8X8/street1_1_2048X1088_fr60_bd10_sub8X8_l41.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1678,7 +1678,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_2_group4_sub8x8_sf",
+				Name: "v4l2_stateful_vp9_2_group4_sub8x8_sf",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_2_10bit/sub8x8_sf/crowd_run_2048X1088_fr30_bd10_sub8x8_sf_l4.ivf", "test_vectors/vp9/Profile_2_10bit/sub8x8_sf/crowd_run_2048X1088_fr60_bd10_sub8x8_sf_l41.ivf", "test_vectors/vp9/Profile_2_10bit/sub8x8_sf/grass_1_2048X1088_fr30_bd10_sub8x8_sf_l4.ivf", "test_vectors/vp9/Profile_2_10bit/sub8x8_sf/grass_1_2048X1088_fr60_bd10_sub8x8_sf_l41.ivf", "test_vectors/vp9/Profile_2_10bit/sub8x8_sf/street1_1_2048X1088_fr30_bd10_sub8x8_sf_l4.ivf", "test_vectors/vp9/Profile_2_10bit/sub8x8_sf/street1_1_2048X1088_fr60_bd10_sub8x8_sf_l41.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1691,7 +1691,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_2_level5_0_buf",
+				Name: "v4l2_stateful_vp9_2_level5_0_buf",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_2_10bit/buf/grass_1_4096X2176_fr30_bd10_4buf_l5.ivf", "test_vectors/vp9/Profile_2_10bit/buf/street1_1_4096X2176_fr30_bd10_4buf_l5.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1704,7 +1704,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_2_level5_0_frm_resize",
+				Name: "v4l2_stateful_vp9_2_level5_0_frm_resize",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_2_10bit/frm_resize/crowd_run_4096X2176_fr30_bd10_frm_resize_l5.ivf", "test_vectors/vp9/Profile_2_10bit/frm_resize/grass_1_4096X2176_fr30_bd10_frm_resize_l5.ivf", "test_vectors/vp9/Profile_2_10bit/frm_resize/street1_1_4096X2176_fr30_bd10_frm_resize_l5.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1717,7 +1717,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_2_level5_0_gf_dist",
+				Name: "v4l2_stateful_vp9_2_level5_0_gf_dist",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_2_10bit/gf_dist/crowd_run_4096X2176_fr30_bd10_gf_dist_6_l5.ivf", "test_vectors/vp9/Profile_2_10bit/gf_dist/grass_1_4096X2176_fr30_bd10_gf_dist_6_l5.ivf", "test_vectors/vp9/Profile_2_10bit/gf_dist/street1_1_4096X2176_fr30_bd10_gf_dist_6_l5.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1730,7 +1730,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_2_level5_0_odd_size",
+				Name: "v4l2_stateful_vp9_2_level5_0_odd_size",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_2_10bit/odd_size/crowd_run_4088X2168_fr30_bd10_odd_size_l5.ivf", "test_vectors/vp9/Profile_2_10bit/odd_size/grass_1_4088X2168_fr30_bd10_odd_size_l5.ivf", "test_vectors/vp9/Profile_2_10bit/odd_size/street1_1_4088X2168_fr30_bd10_odd_size_l5.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1743,7 +1743,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_2_level5_0_sub8x8",
+				Name: "v4l2_stateful_vp9_2_level5_0_sub8x8",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_2_10bit/sub8X8/crowd_run_4096X2176_fr30_bd10_sub8X8_l5.ivf", "test_vectors/vp9/Profile_2_10bit/sub8X8/grass_1_4096X2176_fr30_bd10_sub8X8_l5.ivf", "test_vectors/vp9/Profile_2_10bit/sub8X8/street1_1_4096X2176_fr30_bd10_sub8X8_l5.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1756,7 +1756,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_2_level5_0_sub8x8_sf",
+				Name: "v4l2_stateful_vp9_2_level5_0_sub8x8_sf",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_2_10bit/sub8x8_sf/crowd_run_4096X2176_fr30_bd10_sub8x8_sf_l5.ivf", "test_vectors/vp9/Profile_2_10bit/sub8x8_sf/grass_1_4096X2176_fr30_bd10_sub8x8_sf_l5.ivf", "test_vectors/vp9/Profile_2_10bit/sub8x8_sf/street1_1_4096X2176_fr30_bd10_sub8x8_sf_l5.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1769,7 +1769,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_2_level5_1_buf",
+				Name: "v4l2_stateful_vp9_2_level5_1_buf",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_2_10bit/buf/grass_1_4096X2176_fr60_bd10_4buf_l51.ivf", "test_vectors/vp9/Profile_2_10bit/buf/street1_1_4096X2176_fr60_bd10_4buf_l51.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1782,7 +1782,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_2_level5_1_frm_resize",
+				Name: "v4l2_stateful_vp9_2_level5_1_frm_resize",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_2_10bit/frm_resize/crowd_run_4096X2176_fr60_bd10_frm_resize_l51.ivf", "test_vectors/vp9/Profile_2_10bit/frm_resize/grass_1_4096X2176_fr60_bd10_frm_resize_l51.ivf", "test_vectors/vp9/Profile_2_10bit/frm_resize/street1_1_4096X2176_fr60_bd10_frm_resize_l51.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1795,7 +1795,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_2_level5_1_gf_dist",
+				Name: "v4l2_stateful_vp9_2_level5_1_gf_dist",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_2_10bit/gf_dist/crowd_run_4096X2176_fr60_bd10_gf_dist_10_l51.ivf", "test_vectors/vp9/Profile_2_10bit/gf_dist/grass_1_4096X2176_fr60_bd10_gf_dist_10_l51.ivf", "test_vectors/vp9/Profile_2_10bit/gf_dist/street1_1_4096X2176_fr60_bd10_gf_dist_10_l51.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1808,7 +1808,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_2_level5_1_odd_size",
+				Name: "v4l2_stateful_vp9_2_level5_1_odd_size",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_2_10bit/odd_size/crowd_run_4088X2168_fr60_bd10_odd_size_l51.ivf", "test_vectors/vp9/Profile_2_10bit/odd_size/grass_1_4088X2168_fr60_bd10_odd_size_l51.ivf", "test_vectors/vp9/Profile_2_10bit/odd_size/street1_1_4088X2168_fr60_bd10_odd_size_l51.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1821,7 +1821,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_2_level5_1_sub8x8",
+				Name: "v4l2_stateful_vp9_2_level5_1_sub8x8",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_2_10bit/sub8X8/crowd_run_4096X2176_fr60_bd10_sub8X8_l51.ivf", "test_vectors/vp9/Profile_2_10bit/sub8X8/grass_1_4096X2176_fr60_bd10_sub8X8_l51.ivf", "test_vectors/vp9/Profile_2_10bit/sub8X8/street1_1_4096X2176_fr60_bd10_sub8X8_l51.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -1834,7 +1834,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_2_level5_1_sub8x8_sf",
+				Name: "v4l2_stateful_vp9_2_level5_1_sub8x8_sf",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_2_10bit/sub8x8_sf/crowd_run_4096X2176_fr60_bd10_sub8x8_sf_l51.ivf", "test_vectors/vp9/Profile_2_10bit/sub8x8_sf/grass_1_4096X2176_fr60_bd10_sub8x8_sf_l51.ivf", "test_vectors/vp9/Profile_2_10bit/sub8x8_sf/street1_1_4096X2176_fr60_bd10_sub8x8_sf_l51.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -2159,7 +2159,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp9_0_svc",
+				Name: "v4l2_stateful_vp9_0_svc",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/kSVC/ksvc_3sl_3tl_key100.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -2172,7 +2172,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
-				Name: "v4l2_vp8_inter",
+				Name: "v4l2_stateful_vp8_inter",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp8/inter/vp80-02-inter-1402.ivf", "test_vectors/vp8/inter/vp80-02-inter-1412.ivf", "test_vectors/vp8/inter/vp80-02-inter-1418.ivf", "test_vectors/vp8/inter/vp80-02-inter-1424.ivf", "test_vectors/vp8/inter/vp80-03-segmentation-1403.ivf", "test_vectors/vp8/inter/vp80-03-segmentation-1425.ivf", "test_vectors/vp8/inter/vp80-03-segmentation-1426.ivf", "test_vectors/vp8/inter/vp80-03-segmentation-1427.ivf", "test_vectors/vp8/inter/vp80-03-segmentation-1432.ivf", "test_vectors/vp8/inter/vp80-03-segmentation-1435.ivf", "test_vectors/vp8/inter/vp80-03-segmentation-1436.ivf", "test_vectors/vp8/inter/vp80-03-segmentation-1437.ivf", "test_vectors/vp8/inter/vp80-03-segmentation-1441.ivf", "test_vectors/vp8/inter/vp80-03-segmentation-1442.ivf", "test_vectors/vp8/inter/vp80-05-sharpness-1428.ivf", "test_vectors/vp8/inter/vp80-05-sharpness-1429.ivf", "test_vectors/vp8/inter/vp80-05-sharpness-1430.ivf", "test_vectors/vp8/inter/vp80-05-sharpness-1431.ivf", "test_vectors/vp8/inter/vp80-05-sharpness-1433.ivf", "test_vectors/vp8/inter/vp80-05-sharpness-1434.ivf", "test_vectors/vp8/inter/vp80-05-sharpness-1438.ivf", "test_vectors/vp8/inter/vp80-05-sharpness-1439.ivf", "test_vectors/vp8/inter/vp80-05-sharpness-1440.ivf", "test_vectors/vp8/inter/vp80-05-sharpness-1443.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -2185,7 +2185,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp8"},
 			},
 			{
-				Name: "v4l2_vp8_inter_multi_coeff",
+				Name: "v4l2_stateful_vp8_inter_multi_coeff",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp8/inter_multi_coeff/vp80-03-segmentation-1408.ivf", "test_vectors/vp8/inter_multi_coeff/vp80-03-segmentation-1409.ivf", "test_vectors/vp8/inter_multi_coeff/vp80-03-segmentation-1410.ivf", "test_vectors/vp8/inter_multi_coeff/vp80-03-segmentation-1413.ivf", "test_vectors/vp8/inter_multi_coeff/vp80-04-partitions-1404.ivf", "test_vectors/vp8/inter_multi_coeff/vp80-04-partitions-1405.ivf", "test_vectors/vp8/inter_multi_coeff/vp80-04-partitions-1406.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -2198,7 +2198,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp8"},
 			},
 			{
-				Name: "v4l2_vp8_inter_segment",
+				Name: "v4l2_stateful_vp8_inter_segment",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp8/inter_segment/vp80-03-segmentation-1407.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -2211,7 +2211,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp8"},
 			},
 			{
-				Name: "v4l2_vp8_intra",
+				Name: "v4l2_stateful_vp8_intra",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp8/intra/vp80-01-intra-1400.ivf", "test_vectors/vp8/intra/vp80-01-intra-1411.ivf", "test_vectors/vp8/intra/vp80-01-intra-1416.ivf", "test_vectors/vp8/intra/vp80-01-intra-1417.ivf", "test_vectors/vp8/intra/vp80-03-segmentation-1401.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -2224,7 +2224,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp8"},
 			},
 			{
-				Name: "v4l2_vp8_intra_multi_coeff",
+				Name: "v4l2_stateful_vp8_intra_multi_coeff",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp8/intra_multi_coeff/vp80-03-segmentation-1414.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -2237,7 +2237,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp8"},
 			},
 			{
-				Name: "v4l2_vp8_intra_segment",
+				Name: "v4l2_stateful_vp8_intra_segment",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp8/intra_segment/vp80-03-segmentation-1415.ivf"},
 					decoder:        "v4l2_stateful_decoder",
@@ -2250,7 +2250,7 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp8"},
 			},
 			{
-				Name: "v4l2_vp8_comprehensive",
+				Name: "v4l2_stateful_vp8_comprehensive",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp8/vp80-00-comprehensive-001.ivf", "test_vectors/vp8/vp80-00-comprehensive-002.ivf", "test_vectors/vp8/vp80-00-comprehensive-003.ivf", "test_vectors/vp8/vp80-00-comprehensive-004.ivf", "test_vectors/vp8/vp80-00-comprehensive-005.ivf", "test_vectors/vp8/vp80-00-comprehensive-006.ivf", "test_vectors/vp8/vp80-00-comprehensive-007.ivf", "test_vectors/vp8/vp80-00-comprehensive-008.ivf", "test_vectors/vp8/vp80-00-comprehensive-009.ivf", "test_vectors/vp8/vp80-00-comprehensive-010.ivf", "test_vectors/vp8/vp80-00-comprehensive-011.ivf", "test_vectors/vp8/vp80-00-comprehensive-012.ivf", "test_vectors/vp8/vp80-00-comprehensive-013.ivf", "test_vectors/vp8/vp80-00-comprehensive-014.ivf", "test_vectors/vp8/vp80-00-comprehensive-015.ivf", "test_vectors/vp8/vp80-00-comprehensive-016.ivf", "test_vectors/vp8/vp80-00-comprehensive-017.ivf", "test_vectors/vp8/vp80-00-comprehensive-018.ivf"},
 					decoder:        "v4l2_stateful_decoder",

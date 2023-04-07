@@ -1334,7 +1334,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 		files := h264Files[group]
 
 		param := paramData{
-			Name:         fmt.Sprintf("v4l2_h264_%s", group),
+			Name:         fmt.Sprintf("v4l2_stateful_h264_%s", group),
 			Decoder:      "v4l2_stateful_decoder",
 			CmdBuilder:   "platform.V4L2StatefulDecodeArgs",
 			Files:        files,
@@ -1390,7 +1390,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 		hardwareDeps := []string{"hwdep.SupportsV4L2StatefulVideoDecoding()",
 			"hwdep.Model(\"coachz\", \"homestar\", \"quackingstick\", \"wormdingler\", \"kingoftown\", \"lazor\", \"limozeen\", \"pazquel\", \"pompom\")"}
 		params = append(params, paramData{
-			Name:         fmt.Sprintf("v4l2_hevc_%s", testGroup),
+			Name:         fmt.Sprintf("v4l2_stateful_hevc_%s", testGroup),
 			Decoder:      "v4l2_stateful_decoder",
 			CmdBuilder:   "platform.V4L2StatefulDecodeArgs",
 			Files:        files,
@@ -1411,7 +1411,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 				profileNum := string(profile[len(profile)-1])
 				files := vp9WebmFiles[profile][levelGroup][cat]
 				param := paramData{
-					Name:         fmt.Sprintf("v4l2_vp9_%s_%s_%s", profileNum, levelGroup, cat),
+					Name:         fmt.Sprintf("v4l2_stateful_vp9_%s_%s_%s", profileNum, levelGroup, cat),
 					Decoder:      "v4l2_stateful_decoder",
 					CmdBuilder:   "platform.V4L2StatefulDecodeArgs",
 					Files:        files,
@@ -1497,7 +1497,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 	}
 
 	params = append(params, paramData{
-		Name:         fmt.Sprintf("v4l2_vp9_0_svc"),
+		Name:         fmt.Sprintf("v4l2_stateful_vp9_0_svc"),
 		Decoder:      "v4l2_stateful_decoder",
 		CmdBuilder:   "platform.V4L2StatefulDecodeArgs",
 		Files:        []string{vp9SVCFile},
@@ -1515,7 +1515,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 		// TODO(nhebert) Use a to-be-created hardware dependency for V4L2 stateful decode
 		hardwareDeps := []string{"hwdep.SupportsV4L2StatefulVideoDecoding()"}
 		params = append(params, paramData{
-			Name:         fmt.Sprintf("v4l2_vp8_%s", testGroup),
+			Name:         fmt.Sprintf("v4l2_stateful_vp8_%s", testGroup),
 			Decoder:      "v4l2_stateful_decoder",
 			CmdBuilder:   "platform.V4L2StatefulDecodeArgs",
 			Files:        files,
