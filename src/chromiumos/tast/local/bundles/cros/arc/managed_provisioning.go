@@ -33,7 +33,7 @@ func init() {
 		},
 		// ChromeOS > Software > ARC++ > Commercial
 		BugComponent: "b:157100",
-		Attr:         []string{"group:mainline", "group:arc-functional", "group:hw_agnostic", "group:criticalstaging"},
+		Attr:         []string{"group:mainline", "group:arc-functional", "group:hw_agnostic"},
 		VarDeps: []string{
 			arcent.LoginPoolVar,
 		},

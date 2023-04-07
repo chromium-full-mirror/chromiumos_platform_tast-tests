@@ -31,7 +31,7 @@ func init() {
 		Contacts:     []string{"arc-commercial@google.com", "mhasank@chromium.org"},
 		// ChromeOS > Software > ARC++ > Commercial
 		BugComponent: "b:157100",
-		Attr:         []string{"group:mainline", "group:hw_agnostic", "group:criticalstaging"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "play_store"},
 		Timeout:      15 * time.Minute,
 		VarDeps: []string{
@@ -43,22 +43,22 @@ func init() {
 		Params: []testing.Param{
 			{
 				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			},
 			{
 				Name:              "vm",
 				ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			},
 			{
 				Name:              "betty",
 				ExtraSoftwareDeps: []string{"android_p", "qemu"},
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			},
 			{
 				Name:              "vm_betty",
 				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			}},
 	})
 }

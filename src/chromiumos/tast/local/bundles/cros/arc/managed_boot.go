@@ -33,7 +33,7 @@ func init() {
 		Contacts:     []string{"arc-commercial@google.com", "mhasank@chromium.org"},
 		// ChromeOS > Software > ARC++ > Commercial
 		BugComponent: "b:157100",
-		Attr:         []string{"group:mainline", "group:hw_agnostic", "group:criticalstaging"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "play_store"},
 		Timeout:      4 * time.Minute,
 		VarDeps: []string{
@@ -62,7 +62,7 @@ func init() {
 				Name:              "enabled_vm",
 				Val:               arcEnabled,
 				ExtraSoftwareDeps: []string{"android_vm"},
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			}},
 	})
 }
