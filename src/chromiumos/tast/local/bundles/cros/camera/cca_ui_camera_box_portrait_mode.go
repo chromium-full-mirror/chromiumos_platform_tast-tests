@@ -19,7 +19,7 @@ func init() {
 		Desc:         "Verifies that CCA can take portrait mode photo via CameraBox",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		Attr:         []string{"group:camerabox"},
-		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
+		SoftwareDeps: []string{"camera_app", "camera_feature_portrait_mode", "chrome", caps.BuiltinOrVividCamera},
 		Data:         []string{"human_face_scene.jpg"},
 		Vars:         []string{"chart"},
 		Fixture:      "ccaLaunchedInCameraBox",
@@ -62,14 +62,10 @@ func CCAUICameraBoxPortraitMode(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	if supported, err := app.PortraitModeSupported(ctx); err != nil {
-		s.Fatal("Failed to determine whether portrait mode is supported: ", err)
-	} else if supported {
-		if err := app.SwitchMode(ctx, cca.Portrait); err != nil {
-			s.Fatal("Failed to switch to portrait mode: ", err)
-		}
-		if _, err = app.TakeSinglePhoto(ctx, cca.TimerOff); err != nil {
-			s.Fatal("Failed to take portrait photo: ", err)
-		}
+	if err := app.SwitchMode(ctx, cca.Portrait); err != nil {
+		s.Fatal("Failed to switch to portrait mode: ", err)
+	}
+	if _, err := app.TakeSinglePhoto(ctx, cca.TimerOff); err != nil {
+		s.Fatal("Failed to take portrait photo: ", err)
 	}
 }
