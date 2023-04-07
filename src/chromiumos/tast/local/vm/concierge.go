@@ -143,7 +143,8 @@ func (c *Concierge) listVMDisksSize(ctx context.Context, vmName string) (size ui
 	return disk.Size, nil
 }
 
-func (c *Concierge) createDiskImage(ctx context.Context, diskSize uint64, vmName string) (diskPath string, err error) {
+// CreateDiskImage created a disk image of size |diskSize| for the VM of name |vmName|.
+func (c *Concierge) CreateDiskImage(ctx context.Context, diskSize uint64, vmName string) (diskPath string, err error) {
 	resp := &vmpb.CreateDiskImageResponse{}
 	if err = dbusutil.CallProtoMethod(ctx, c.conciergeObj, conciergeInterface+".CreateDiskImage",
 		&vmpb.CreateDiskImageRequest{
@@ -240,7 +241,7 @@ func (c *Concierge) sendStartVMRequest(ctx context.Context, vm *VM, diskPath str
 
 func (c *Concierge) startVM(ctx context.Context, vm *VM) (string, error) {
 	// Create the new disk first.
-	diskPath, err := c.createDiskImage(ctx, vm.targetDiskSize, vm.name)
+	diskPath, err := c.CreateDiskImage(ctx, vm.targetDiskSize, vm.name)
 	if err != nil {
 		return diskPath, err
 	}
