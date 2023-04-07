@@ -10,8 +10,10 @@ import (
 	"time"
 
 	"chromiumos/tast/common/android/ui"
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/testing"
 )
@@ -44,7 +46,7 @@ func init() {
 	})
 }
 
-func testPreIMEKeyEvent(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Device, kb *input.KeyboardEventWriter, s *testing.State, fieldID string, keystrokes []testKeyStroke) {
+func testPreIMEKeyEvent(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, a *arc.ARC, d *ui.Device, kb *input.KeyboardEventWriter, s *testing.State, testName, fieldID string, keystrokes []testKeyStroke) {
 	const (
 		apk          = "ArcPreImeKeyEventTest.apk"
 		pkg          = "org.chromium.arc.testapp.preime"
@@ -55,6 +57,10 @@ func testPreIMEKeyEvent(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC,
 		startConsumingButtonID = pkg + ":id/start_consuming_events"
 	)
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
 	act, err := arc.NewActivity(a, pkg, activityName)
 	if err != nil {
 		s.Fatalf("Failed to create a new activity %q", activityName)
@@ -64,10 +70,12 @@ func testPreIMEKeyEvent(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC,
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		s.Fatalf("Failed to start the activity %q", activityName)
 	}
-	defer act.Stop(ctx, tconn)
+	defer act.Stop(cleanupCtx, tconn)
+
+	defer faillog.SaveScreenshotToFileOnError(cleanupCtx, cr, s.OutDir(), s.HasError, testName+"-screenshot.png")
 
 	textField := d.Object(ui.ID(fieldID))
-	if err := textField.WaitForExists(ctx, 30*time.Second); err != nil {
+	if err := textField.WaitForExists(ctx, 5*time.Second); err != nil {
 		s.Fatal("Failed to find the text field: ", err)
 	}
 	if err := textField.Click(ctx); err != nil {
@@ -77,7 +85,7 @@ func testPreIMEKeyEvent(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC,
 		s.Fatal("Failed to empty the text field: ", err)
 	}
 
-	if err := d.Object(ui.ID(fieldID), ui.Focused(true)).WaitForExists(ctx, 30*time.Second); err != nil {
+	if err := d.Object(ui.ID(fieldID), ui.Focused(true)).WaitForExists(ctx, 5*time.Second); err != nil {
 		s.Fatal("Failed to focus a text field: ", err)
 	}
 
@@ -94,21 +102,21 @@ func testPreIMEKeyEvent(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC,
 		if err := kb.Type(ctx, key.Key); err != nil {
 			s.Fatalf("Failed to type %q", key.Key)
 		}
-		if err := preIMEKeyLabel.WaitForText(ctx, getExpectedKeyLabelText(key.ExpectedPreIMEKey), 30*time.Second); err != nil {
+		if err := preIMEKeyLabel.WaitForText(ctx, getExpectedKeyLabelText(key.ExpectedPreIMEKey), 5*time.Second); err != nil {
 			if actual, err := preIMEKeyLabel.GetText(ctx); err != nil {
 				s.Fatal("Failed to get text: ", err)
 			} else {
 				s.Fatalf("Got input %q from preIMEKeyLabel field; want %q", actual, getExpectedKeyLabelText(key.ExpectedPreIMEKey))
 			}
 		}
-		if err := keyDownLabel.WaitForText(ctx, getExpectedKeyLabelText(key.ExpectedPostIMEKey), 30*time.Second); err != nil {
+		if err := keyDownLabel.WaitForText(ctx, getExpectedKeyLabelText(key.ExpectedPostIMEKey), 5*time.Second); err != nil {
 			if actual, err := keyDownLabel.GetText(ctx); err != nil {
 				s.Fatal("Failed to get text: ", err)
 			} else {
 				s.Fatalf("Got input %q from keyDownLabel field; want %q", actual, getExpectedKeyLabelText(key.ExpectedPostIMEKey))
 			}
 		}
-		if err := textField.WaitForText(ctx, key.ExpectedTextOnField, 30*time.Second); err != nil {
+		if err := textField.WaitForText(ctx, key.ExpectedTextOnField, 5*time.Second); err != nil {
 			if actual, err := textField.GetText(ctx); err != nil {
 				s.Fatal("Failed to get text: ", err)
 			} else {
@@ -119,7 +127,7 @@ func testPreIMEKeyEvent(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC,
 
 	// Press the button to make the app consume every event in onKeyPreIme().
 	button := d.Object(ui.ID(startConsumingButtonID))
-	if err := button.WaitForExists(ctx, 30*time.Second); err != nil {
+	if err := button.WaitForExists(ctx, 5*time.Second); err != nil {
 		s.Fatal("Failed to find the button: ", err)
 	}
 	if err := button.Click(ctx); err != nil {
@@ -134,21 +142,21 @@ func testPreIMEKeyEvent(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC,
 		if err := kb.Type(ctx, key.Key); err != nil {
 			s.Fatalf("Failed to type %q", key.Key)
 		}
-		if err := preIMEKeyLabel.WaitForText(ctx, getExpectedKeyLabelText(key.ExpectedPreIMEKey), 30*time.Second); err != nil {
+		if err := preIMEKeyLabel.WaitForText(ctx, getExpectedKeyLabelText(key.ExpectedPreIMEKey), 5*time.Second); err != nil {
 			if actual, err := preIMEKeyLabel.GetText(ctx); err != nil {
 				s.Fatal("Failed to get text: ", err)
 			} else {
 				s.Fatalf("Got input %q from preIMEKeyLabel field; want %q", actual, getExpectedKeyLabelText(key.ExpectedPreIMEKey))
 			}
 		}
-		if err := keyDownLabel.WaitForText(ctx, initialLabelText, 30*time.Second); err != nil {
+		if err := keyDownLabel.WaitForText(ctx, initialLabelText, 5*time.Second); err != nil {
 			if actual, err := keyDownLabel.GetText(ctx); err != nil {
 				s.Fatal("Failed to get text: ", err)
 			} else {
 				s.Fatalf("Got input %q from keyDownlabel field; want %q", actual, initialLabelText)
 			}
 		}
-		if err := textField.WaitForText(ctx, initialFieldText, 30*time.Second); err != nil {
+		if err := textField.WaitForText(ctx, initialFieldText, 5*time.Second); err != nil {
 			if actual, err := textField.GetText(ctx); err != nil {
 				s.Fatal("Failed to get text: ", err)
 			} else {
@@ -219,7 +227,7 @@ func PreIMEKeyEvent(ctx context.Context, s *testing.State) {
 		},
 	} {
 		s.Run(ctx, tc.name, func(ctx context.Context, s *testing.State) {
-			testPreIMEKeyEvent(ctx, tconn, a, d, kb, s, tc.fieldID, tc.strokes)
+			testPreIMEKeyEvent(ctx, tconn, cr, a, d, kb, s, tc.name, tc.fieldID, tc.strokes)
 		})
 	}
 }
