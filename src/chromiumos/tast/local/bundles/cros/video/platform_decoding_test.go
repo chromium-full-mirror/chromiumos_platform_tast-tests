@@ -1329,42 +1329,6 @@ func TestPlatformDecodingParams(t *testing.T) {
 		})
 	}
 
-	// Generates V4L2 H264 tests.
-	for _, group := range []string{"baseline", "main", "first_mb_in_slice"} {
-		files := h264Files[group]
-
-		param := paramData{
-			Name:         fmt.Sprintf("v4l2_stateful_h264_%s", group),
-			Decoder:      "v4l2_stateful_decoder",
-			CmdBuilder:   "platform.V4L2StatefulDecodeArgs",
-			Files:        files,
-			Timeout:      defaultTimeout,
-			SoftwareDeps: []string{"v4l2_codec", caps.HWDecodeH264},
-			HardwareDeps: "hwdep.SupportsV4L2StatefulVideoDecoding(), ",
-			Metadata:     genExtraData(files),
-			Attr:         []string{"graphics_video_h264"},
-		}
-		params = append(params, param)
-	}
-
-	// Generates V4L2 Stateless H264 tests.
-	for _, group := range []string{"baseline", "main"} {
-		files := h264Files[group]
-
-		param := paramData{
-			Name:         fmt.Sprintf("v4l2_stateless_h264_%s", group),
-			Decoder:      filepath.Join(chrome.BinTestDir, "v4l2_stateless_decoder"),
-			CmdBuilder:   "platform.V4L2StatelessDecodeArgs",
-			Files:        files,
-			Timeout:      defaultTimeout,
-			SoftwareDeps: []string{"v4l2_codec", caps.HWDecodeH264},
-			HardwareDeps: "hwdep.SupportsV4L2StatelessVideoDecoding(), ",
-			Metadata:     genExtraData(files),
-			Attr:         []string{"graphics_video_h264"},
-		}
-		params = append(params, param)
-	}
-
 	// Generates VAAPI H264 tests.
 	for _, group := range []string{"baseline", "main", "first_mb_in_slice"} {
 		files := h264Files[group]
@@ -1382,149 +1346,198 @@ func TestPlatformDecodingParams(t *testing.T) {
 		params = append(params, param)
 	}
 
-	// Generate V4L2 HEVC tests.
-	for _, testGroup := range []string{"main"} {
-		files := hevcFiles[testGroup]
+	// Generate V4L2 tests.
+	for _, stateness := range []string{"Stateful", "Stateless"} {
+		decoderExecutable := "v4l2_stateful_decoder"
+		if stateness == "Stateless" {
+			decoderExecutable = filepath.Join(chrome.BinTestDir, "v4l2_stateless_decoder")
+		}
+		commandBuilder := fmt.Sprintf("platform.V4L2%sDecodeArgs", stateness)
+		commonHardwareDeps := []string{fmt.Sprintf("hwdep.SupportsV4L2%sVideoDecoding()", stateness)}
 
-		// TODO(b/232255167): Remove hwdep.Model in favor of SoftwareDeps: caps.HWDecodeHEVC
-		hardwareDeps := []string{"hwdep.SupportsV4L2StatefulVideoDecoding()",
-			"hwdep.Model(\"coachz\", \"homestar\", \"quackingstick\", \"wormdingler\", \"kingoftown\", \"lazor\", \"limozeen\", \"pazquel\", \"pompom\")"}
+		// Generates V4L2 VP9 tests.
+		for _, profile := range []string{"profile_0", "profile_2"} {
+			for _, levelGroup := range []string{"group1", "group2", "group3", "group4", "level5_0", "level5_1"} {
+				for _, cat := range []string{
+					"buf", "frm_resize", "gf_dist", "odd_size", "sub8x8", "sub8x8_sf",
+				} {
+
+					// TODO(b/250698011): Stateless decoder does not yet support VP9 profile 2.
+					if stateness == "Stateless" && profile == "profile_2" {
+						continue
+					}
+
+					// TODO(b/238211555) DRC is not supported with the current V4L2 stateless uAPI.
+					if stateness == "Stateless" && (cat == "frm_resize" || cat == "sub8x8_sf") {
+						continue
+					}
+
+					profileNum := string(profile[len(profile)-1])
+					files := vp9WebmFiles[profile][levelGroup][cat]
+					param := paramData{
+						Name:         fmt.Sprintf("v4l2_%s_vp9_%s_%s_%s", strings.ToLower(stateness), profileNum, levelGroup, cat),
+						Decoder:      decoderExecutable,
+						CmdBuilder:   commandBuilder,
+						Files:        files,
+						Timeout:      defaultTimeout,
+						SoftwareDeps: []string{"v4l2_codec"},
+						Metadata:     genExtraData(files),
+						Attr:         []string{"graphics_video_vp9"},
+					}
+					if extension, ok := vp9GroupExtensions[levelGroup]; ok {
+						param.Timeout = extension
+					}
+
+					hardwareDeps := commonHardwareDeps
+
+					if profile == "profile_2" {
+						switch levelGroup {
+						case "level5_0":
+							param.SoftwareDeps = append(param.SoftwareDeps, caps.HWDecodeVP9_2_4K)
+						case "level5_1":
+							param.SoftwareDeps = append(param.SoftwareDeps, caps.HWDecodeVP9_2_4K60)
+							hardwareDeps = append(hardwareDeps, "hwdep.MinMemory(7169)")
+						default:
+							param.SoftwareDeps = append(param.SoftwareDeps, caps.HWDecodeVP9_2)
+						}
+					} else {
+						switch levelGroup {
+						case "level5_0":
+							param.SoftwareDeps = append(param.SoftwareDeps, caps.HWDecodeVP9_4K)
+						case "level5_1":
+							param.SoftwareDeps = append(param.SoftwareDeps, caps.HWDecodeVP9_4K60)
+							hardwareDeps = append(hardwareDeps, "hwdep.MinMemory(7169)")
+						default:
+							param.SoftwareDeps = append(param.SoftwareDeps, caps.HWDecodeVP9)
+						}
+					}
+
+					if stateness == "Stateless" {
+						// TODO(b/227480076): re-enable on RockChip devices (bob, gru, kevin) if needed in the future.
+						hardwareDeps = append(hardwareDeps, "hwdep.SkipOnPlatform(\"bob\", \"gru\", \"kevin\")")
+					}
+
+					param.HardwareDeps = strings.Join(hardwareDeps, ", ")
+					params = append(params, param)
+				}
+			}
+		}
+
+		// Generate V4L2 VP8 tests.
+		for _, testGroup := range []string{"inter", "inter_multi_coeff", "inter_segment", "intra", "intra_multi_coeff", "intra_segment", "comprehensive"} {
+			files := vp8Files[testGroup]
+
+			// TODO(nhebert): Use a to-be-created hardware dependency for V4L2 stateful decode.
+			param := paramData{
+				Name:         fmt.Sprintf("v4l2_%s_vp8_%s", strings.ToLower(stateness), testGroup),
+				Decoder:      decoderExecutable,
+				CmdBuilder:   commandBuilder,
+				Files:        files,
+				Timeout:      defaultTimeout,
+				HardwareDeps: strings.Join(commonHardwareDeps, ", "),
+				SoftwareDeps: []string{"v4l2_codec", caps.HWDecodeVP8},
+				Metadata:     genExtraData(files),
+				Attr:         []string{"graphics_video_vp8"},
+			}
+			params = append(params, param)
+		}
+
+		// Generates V4L2 H264 tests.
+		for _, group := range []string{"baseline", "main", "first_mb_in_slice"} {
+			files := h264Files[group]
+
+			// TODO(b//234752983): support first_mb_in_slice for Stateless decoder.
+			if stateness == "Stateless" && group == "first_mb_in_slice" {
+				continue
+			}
+
+			param := paramData{
+				Name:         fmt.Sprintf("v4l2_%s_h264_%s", strings.ToLower(stateness), group),
+				Decoder:      decoderExecutable,
+				CmdBuilder:   commandBuilder,
+				Files:        files,
+				Timeout:      defaultTimeout,
+				SoftwareDeps: []string{"v4l2_codec", caps.HWDecodeH264},
+				HardwareDeps: strings.Join(commonHardwareDeps, ", "),
+				Metadata:     genExtraData(files),
+				Attr:         []string{"graphics_video_h264"},
+			}
+			params = append(params, param)
+		}
+
+		// V4L2 does not support some of the features (HEVC, VP9 svc) yet, so skip them until they are supported.
+		if stateness == "Stateless" {
+			continue
+		}
+
+		// Generate V4L2 HEVC tests.
+		for _, testGroup := range []string{"main"} {
+			files := hevcFiles[testGroup]
+
+			// TODO(b/232255167): Remove hwdep.Model in favor of SoftwareDeps: caps.HWDecodeHEVC
+			hardwareDeps := append(commonHardwareDeps,
+				"hwdep.Model(\"coachz\", \"homestar\", \"quackingstick\", \"wormdingler\", \"kingoftown\", \"lazor\", \"limozeen\", \"pazquel\", \"pompom\")")
+			param := paramData{
+				Name:         fmt.Sprintf("v4l2_%s_hevc_%s", strings.ToLower(stateness), testGroup),
+				Decoder:      decoderExecutable,
+				CmdBuilder:   commandBuilder,
+				Files:        files,
+				Timeout:      defaultTimeout,
+				HardwareDeps: strings.Join(hardwareDeps, ", "),
+				SoftwareDeps: []string{"v4l2_codec"},
+				Metadata:     genExtraData(files),
+				Attr:         []string{"graphics_video_hevc"},
+			}
+			params = append(params, param)
+		}
+
+		// VP9 svc.
 		params = append(params, paramData{
-			Name:         fmt.Sprintf("v4l2_stateful_hevc_%s", testGroup),
-			Decoder:      "v4l2_stateful_decoder",
-			CmdBuilder:   "platform.V4L2StatefulDecodeArgs",
-			Files:        files,
+			Name:         fmt.Sprintf("v4l2_%s_vp9_0_svc", strings.ToLower(stateness)),
+			Decoder:      decoderExecutable,
+			CmdBuilder:   commandBuilder,
+			Files:        []string{vp9SVCFile},
 			Timeout:      defaultTimeout,
-			HardwareDeps: strings.Join(hardwareDeps, ", "),
-			SoftwareDeps: []string{"v4l2_codec"},
-			Metadata:     genExtraData(files),
-			Attr:         []string{"graphics_video_hevc"},
+			SoftwareDeps: []string{"v4l2_codec", caps.HWDecodeVP9},
+			HardwareDeps: strings.Join(commonHardwareDeps, ", "),
+			Metadata:     genExtraData([]string{vp9SVCFile}),
+			Attr:         []string{"graphics_video_vp9"},
 		})
 	}
 
-	// Generates V4L2 VP9 tests.
-	for _, profile := range []string{"profile_0", "profile_2"} {
-		for _, levelGroup := range []string{"group1", "group2", "group3", "group4", "level5_0", "level5_1"} {
-			for _, cat := range []string{
-				"buf", "frm_resize", "gf_dist", "odd_size", "sub8x8", "sub8x8_sf",
-			} {
-				profileNum := string(profile[len(profile)-1])
-				files := vp9WebmFiles[profile][levelGroup][cat]
-				param := paramData{
-					Name:         fmt.Sprintf("v4l2_stateful_vp9_%s_%s_%s", profileNum, levelGroup, cat),
-					Decoder:      "v4l2_stateful_decoder",
-					CmdBuilder:   "platform.V4L2StatefulDecodeArgs",
-					Files:        files,
-					Timeout:      defaultTimeout,
-					SoftwareDeps: []string{"v4l2_codec"},
-					Metadata:     genExtraData(files),
-					Attr:         []string{"graphics_video_vp9"},
-				}
-				if extension, ok := vp9GroupExtensions[levelGroup]; ok {
-					param.Timeout = extension
-				}
-
-				hardwareDeps := []string{"hwdep.SupportsV4L2StatefulVideoDecoding()"}
-
-				if profile == "profile_2" {
-					switch levelGroup {
-					case "level5_0":
-						param.SoftwareDeps = append(param.SoftwareDeps, caps.HWDecodeVP9_2_4K)
-					case "level5_1":
-						param.SoftwareDeps = append(param.SoftwareDeps, caps.HWDecodeVP9_2_4K60)
-						hardwareDeps = append(hardwareDeps, "hwdep.MinMemory(7169)")
-					default:
-						param.SoftwareDeps = append(param.SoftwareDeps, caps.HWDecodeVP9_2)
-					}
-				} else {
-					switch levelGroup {
-					case "level5_0":
-						param.SoftwareDeps = append(param.SoftwareDeps, caps.HWDecodeVP9_4K)
-					case "level5_1":
-						param.SoftwareDeps = append(param.SoftwareDeps, caps.HWDecodeVP9_4K60)
-						hardwareDeps = append(hardwareDeps, "hwdep.MinMemory(7169)")
-					default:
-						param.SoftwareDeps = append(param.SoftwareDeps, caps.HWDecodeVP9)
-					}
-				}
-
-				param.HardwareDeps = strings.Join(hardwareDeps, ", ")
-				params = append(params, param)
-			}
-		}
-	}
-
-	// Generates V4L2 Stateless VP9 tests.
-	for i, profile := range []string{"profile_0"} {
-		for _, levelGroup := range []string{"group1", "group2", "group3", "group4", "level5_0", "level5_1"} {
-			for _, cat := range []string{
-				"buf", "gf_dist", "odd_size", "sub8x8",
-			} {
-				files := vp9WebmFiles[profile][levelGroup][cat]
-				param := paramData{
-					Name:         fmt.Sprintf("v4l2_stateless_vp9_%d_%s_%s", i, levelGroup, cat),
-					Decoder:      filepath.Join(chrome.BinTestDir, "v4l2_stateless_decoder"),
-					CmdBuilder:   "platform.V4L2StatelessDecodeArgs",
-					Files:        files,
-					Timeout:      defaultTimeout,
-					SoftwareDeps: []string{"v4l2_codec"},
-					Metadata:     genExtraData(files),
-					Attr:         []string{"graphics_video_vp9"},
-				}
-				if extension, ok := vp9GroupExtensions[levelGroup]; ok {
-					param.Timeout = extension
-				}
-
-				hardwareDeps := []string{"hwdep.SupportsV4L2StatelessVideoDecoding()"}
-
-				switch levelGroup {
-				case "level5_0":
-					param.SoftwareDeps = append(param.SoftwareDeps, caps.HWDecodeVP9_4K)
-				case "level5_1":
-					param.SoftwareDeps = append(param.SoftwareDeps, caps.HWDecodeVP9_4K60)
-					hardwareDeps = append(hardwareDeps, "hwdep.MinMemory(7169)")
-				default:
-					param.SoftwareDeps = append(param.SoftwareDeps, caps.HWDecodeVP9)
-				}
-
-				// TODO(b/227480076): re-enable on RockChip devices (bob, gru, kevin) if needed in the future.
-				hardwareDeps = append(hardwareDeps, "hwdep.SkipOnPlatform(\"bob\", \"gru\", \"kevin\")")
-
-				param.HardwareDeps = strings.Join(hardwareDeps, ", ")
-				params = append(params, param)
-			}
-		}
-	}
-
+	// Generate V4L2 Stateless AV1 tests.
+	// There are no V4L2 Stateful decoders that support AV1.  Once there are the AV1 tests can be moved into the general V4L2 generator loop.
 	params = append(params, paramData{
-		Name:         fmt.Sprintf("v4l2_stateful_vp9_0_svc"),
-		Decoder:      "v4l2_stateful_decoder",
-		CmdBuilder:   "platform.V4L2StatefulDecodeArgs",
-		Files:        []string{vp9SVCFile},
+		Name:         "v4l2_stateless_av1",
+		Decoder:      filepath.Join(chrome.BinTestDir, "v4l2_stateless_decoder"),
+		CmdBuilder:   "platform.V4L2StatelessDecodeArgs",
+		Files:        av1Files,
 		Timeout:      defaultTimeout,
-		SoftwareDeps: []string{"v4l2_codec", caps.HWDecodeVP9},
-		HardwareDeps: "hwdep.SupportsV4L2StatefulVideoDecoding()",
-		Metadata:     genExtraData([]string{vp9SVCFile}),
-		Attr:         []string{"graphics_video_vp9"},
+		SoftwareDeps: []string{"v4l2_codec"},
+		// TODO(b/242075797): use HW capabilities.
+		HardwareDeps: "hwdep.SupportsV4L2StatelessVideoDecoding(), hwdep.Model(\"tomato\", \"dojo\")",
+		Metadata:     genExtraData(av1Files),
+		Attr:         []string{"graphics_video_av1"},
 	})
 
-	// Generate V4L2 VP8 tests.
-	for _, testGroup := range []string{"inter", "inter_multi_coeff", "inter_segment", "intra", "intra_multi_coeff", "intra_segment", "comprehensive"} {
-		files := vp8Files[testGroup]
+	for _, bit := range []string{"8bit"} {
+		for _, cat := range []string{"quantizer", "size", "allintra", "cdfupdate", "motionvec", "svc"} {
+			files := av1AomFiles[bit][cat]
+			param := paramData{
+				Name:         fmt.Sprintf("v4l2_stateless_av1_%s_%s", bit, cat),
+				Decoder:      filepath.Join(chrome.BinTestDir, "v4l2_stateless_decoder"),
+				CmdBuilder:   "platform.V4L2StatelessDecodeArgs",
+				Files:        files,
+				Timeout:      defaultTimeout,
+				SoftwareDeps: []string{"v4l2_codec"},
+				// TODO(b/242075797): use HW capabilities.
+				HardwareDeps: "hwdep.SupportsV4L2StatelessVideoDecoding(), hwdep.Model(\"tomato\", \"dojo\")",
+				Metadata:     genExtraData(files),
+				Attr:         []string{"graphics_video_av1"},
+			}
 
-		// TODO(nhebert) Use a to-be-created hardware dependency for V4L2 stateful decode
-		hardwareDeps := []string{"hwdep.SupportsV4L2StatefulVideoDecoding()"}
-		params = append(params, paramData{
-			Name:         fmt.Sprintf("v4l2_stateful_vp8_%s", testGroup),
-			Decoder:      "v4l2_stateful_decoder",
-			CmdBuilder:   "platform.V4L2StatefulDecodeArgs",
-			Files:        files,
-			Timeout:      defaultTimeout,
-			HardwareDeps: strings.Join(hardwareDeps, ", "),
-			SoftwareDeps: []string{"v4l2_codec", caps.HWDecodeVP8},
-			Metadata:     genExtraData(files),
-			Attr:         []string{"graphics_video_vp8"},
-		})
+			params = append(params, param)
+		}
 	}
 
 	// Generate ffmpeg VAAPI VP9 tests.
@@ -1670,57 +1683,6 @@ func TestPlatformDecodingParams(t *testing.T) {
 				Attr:         []string{"graphics_video_hevc"},
 			})
 		}
-	}
-
-	// Generate V4L2 AV1 tests.
-	params = append(params, paramData{
-		Name:         "v4l2_stateless_av1",
-		Decoder:      filepath.Join(chrome.BinTestDir, "v4l2_stateless_decoder"),
-		CmdBuilder:   "platform.V4L2StatelessDecodeArgs",
-		Files:        av1Files,
-		Timeout:      defaultTimeout,
-		SoftwareDeps: []string{"v4l2_codec"},
-		// TODO(b/242075797): use HW capabilities
-		HardwareDeps: "hwdep.SupportsV4L2StatelessVideoDecoding(), hwdep.Model(\"tomato\", \"dojo\")",
-		Metadata:     genExtraData(av1Files),
-		Attr:         []string{"graphics_video_av1"},
-	})
-
-	for _, bit := range []string{"8bit"} {
-		for _, cat := range []string{"quantizer", "size", "allintra", "cdfupdate", "motionvec", "svc"} {
-			files := av1AomFiles[bit][cat]
-			param := paramData{
-				Name:         fmt.Sprintf("v4l2_stateless_av1_%s_%s", bit, cat),
-				Decoder:      filepath.Join(chrome.BinTestDir, "v4l2_stateless_decoder"),
-				CmdBuilder:   "platform.V4L2StatelessDecodeArgs",
-				Files:        files,
-				Timeout:      defaultTimeout,
-				SoftwareDeps: []string{"v4l2_codec"},
-				// TODO(b/242075797): use HW capabilities
-				HardwareDeps: "hwdep.SupportsV4L2StatelessVideoDecoding(), hwdep.Model(\"tomato\", \"dojo\")",
-				Metadata:     genExtraData(files),
-				Attr:         []string{"graphics_video_av1"},
-			}
-
-			params = append(params, param)
-		}
-	}
-
-	// Generate V4L2 stateless VP8 tests.
-	for _, testGroup := range []string{"inter", "inter_multi_coeff", "inter_segment", "intra", "intra_multi_coeff", "intra_segment", "comprehensive"} {
-		files := vp8Files[testGroup]
-
-		params = append(params, paramData{
-			Name:         fmt.Sprintf("v4l2_stateless_vp8_%s", testGroup),
-			Decoder:      filepath.Join(chrome.BinTestDir, "v4l2_stateless_decoder"),
-			CmdBuilder:   "platform.V4L2StatelessDecodeArgs",
-			Files:        files,
-			Timeout:      defaultTimeout,
-			SoftwareDeps: []string{"v4l2_codec", caps.HWDecodeVP8},
-			HardwareDeps: "hwdep.SupportsV4L2StatelessVideoDecoding()",
-			Metadata:     genExtraData(files),
-			Attr:         []string{"graphics_video_vp8"},
-		})
 	}
 
 	code := genparams.Template(t, `{{ range . }}{
