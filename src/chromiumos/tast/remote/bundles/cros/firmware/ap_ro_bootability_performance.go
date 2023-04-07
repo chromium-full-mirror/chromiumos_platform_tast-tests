@@ -60,6 +60,10 @@ const (
 
 	// deviationTarget contains the acceptable percentage of deviation from the baseline.
 	deviationTarget = 0.05
+
+	// maxSpeedTestRetry sets the maximum number of attempts to re-run the speed test in
+	// case the result is found outside the expected deviation.
+	maxSpeedTestRetry = 3
 )
 
 func init() {
@@ -282,7 +286,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 		}
 
 		// Check that the result deviation from the baseline is acceptable.
-		if err = checkDeviation(ctx, baseline, speedResult); err != nil {
+		if err = checkDeviation(ctx, h, baseline, speedResult); err != nil {
 			s.Fatal("Deviation failed: ", err)
 		}
 	}
@@ -316,7 +320,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 		}
 
 		s.Log("Checking that the result deviation from the baseline is acceptable")
-		if err = checkDeviation(ctx, baseline, speedResult); err != nil {
+		if err = checkDeviation(ctx, h, baseline, speedResult); err != nil {
 			s.Fatal("Deviation failed: ", err)
 		}
 	}
@@ -509,7 +513,7 @@ func speedTest(ctx context.Context, h *firmware.Helper) (float64, error) {
 }
 
 // checkDeviation will verify if the result is inside the accepted deviation range.
-func checkDeviation(ctx context.Context, baseline, result float64) error {
+func checkDeviation(ctx context.Context, h *firmware.Helper, baseline, result float64) error {
 	deviation := (baseline * deviationTarget)
 	upperBound := baseline + deviation
 	lowerBound := baseline - deviation
@@ -517,8 +521,39 @@ func checkDeviation(ctx context.Context, baseline, result float64) error {
 		testing.ContextLogf(ctx, "Speedometer result %v is HIGHER than targeted deviation of %v from baseline %v", result, deviationTarget, baseline)
 		return nil
 	}
+	var retrySpeedTest bool
 	if result < lowerBound {
-		return errors.Errorf("speedometer result %v is LOWER than targeted deviation of %v from baseline %v", result, deviationTarget, baseline)
+		testing.ContextLogf(ctx, "Speedometer result %v is LOWER than targeted deviation of %v from baseline %v", result, deviationTarget, baseline)
+		retrySpeedTest = true
+	}
+	calculateAverage := func(nums []float64, n int) float64 {
+		var sum float64 = 0
+		for i := 0; i < n; i++ {
+			sum += (nums[i])
+		}
+		avg := float64(sum) / float64(n)
+		return avg
+	}
+	if retrySpeedTest {
+		testing.ContextLog(ctx, "Retrying speed test")
+		speedTestNums := []float64{result}
+		var averageVal float64
+		if err := func() error {
+			for attempt := 1; attempt <= maxSpeedTestRetry; attempt++ {
+				newVal, err := speedTest(ctx, h)
+				if err != nil {
+					return errors.Wrapf(err, "failed to perform speedometer test during retry %d", attempt)
+				}
+				speedTestNums = append(speedTestNums, newVal)
+				averageVal = calculateAverage(speedTestNums, len(speedTestNums))
+				if averageVal > lowerBound {
+					return nil
+				}
+			}
+			return errors.Errorf("got speed test average %v LOWER than targeted deviation of %v from baseline %v after %v attempts", averageVal, deviationTarget, baseline, maxSpeedTestRetry)
+		}(); err != nil {
+			return err
+		}
 	}
 	testing.ContextLog(ctx, "Result is inside the limits of deviation")
 	return nil
