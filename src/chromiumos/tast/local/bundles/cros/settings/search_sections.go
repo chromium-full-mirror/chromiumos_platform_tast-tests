@@ -283,8 +283,6 @@ func SearchSections(ctx context.Context, s *testing.State) {
 		result, err := searchAndCheck(ctx, osSettings, kb, search)
 		if err != nil {
 			s.Fatal("Failed to search with keyword: ", err)
-		} else if result == nil {
-			s.Fatal("Invalid search result")
 		}
 
 		if search.expectedMismatch {
@@ -328,17 +326,21 @@ func searchAndCheck(ctx context.Context, osSettings *ossettings.OSSettings, kb *
 		return nil, err
 	}
 
-	// Verify search results count.
-	if len(infos) == 0 {
-		return nil, errors.New("no results found")
-	} else if len(infos) > 5 || len(infos) < 1 {
-		// The results should show a minimum of 1 or maximum of 5 results.
-		return nil, errors.Errorf("unexpected result count, want: [1,5], got: %d", len(infos))
-	}
-
 	// Verify mismatch.
 	if detail.expectedMismatch != mismatched {
 		return nil, errors.Errorf("unexpected search result, want: [mismatch: %t], got: [mismatch: %t]", detail.expectedMismatch, mismatched)
+	}
+
+	if len(infos) == 0 {
+		// The keyword did not return a search result (ie. there is a mismatch).
+		// We can return as we do not need to verify the resulting string any further.
+		// The check for whether the correct node with the name `No search results found` is
+		// returned is done in function osSettings.SearchWithKeyword(ctx, kb, detail.keyword),
+		// so there is no need for further verification.
+		return nil, nil
+	} else if len(infos) > 5 || len(infos) < 1 {
+		// The results should show a minimum of 1 or maximum of 5 results.
+		return nil, errors.Errorf("unexpected result count, want: [1,5], got: %d", len(infos))
 	}
 
 	// Verify result.

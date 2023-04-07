@@ -9,7 +9,6 @@ package ossettings
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 	"time"
 
@@ -416,22 +415,26 @@ func (s *OSSettings) SearchWithKeyword(ctx context.Context, kb *input.KeyboardEv
 	if err := uiauto.Combine(fmt.Sprintf("query with keywords %q", keyword),
 		kb.TypeAction(keyword),
 		s.WaitUntilExists(nodewith.HasClass("ContentsWebView").Focused()),
-		// WaitUntilExists returns once the node is found, while WaitForLocation waits
-		// until the node exists and the location is not changing for two iterations of polling.
-		// In this case, the node will show the previous result first, then hide and reappear with the new result,
-		// so use WaitForLocation to wait until it stabilizes.
-		s.WaitForLocation(searchResultFinder.First()),
 	)(ctx); err != nil {
 		return nil, false, err
 	}
 
-	results, err = s.NodesInfo(ctx, searchResultFinder)
-	if len(results) <= 0 {
-		return nil, false, errors.New("no search result found")
-	} else if regexp.MustCompile(searchMismatched).MatchString(results[0].Name) {
-		mismatched = true
+	// WaitUntilExists returns once the node is found, while WaitForLocation waits
+	// until the node exists and the location is not changing for two iterations of polling.
+	// In this case, the node will show the previous result first, then hide and reappear with the new result,
+	// so use WaitForLocation to wait until it stabilizes.
+	if errs := s.WaitForLocation(SearchResultFinder.First())(ctx); errs == nil {
+		results, err = s.NodesInfo(ctx, SearchResultFinder)
+		return results, mismatched, err
 	}
-	return results, mismatched, err
+
+	if errs := s.ui.WaitUntilExists(SearchNoResults)(ctx); errs == nil {
+		mismatched = true
+		return results, mismatched, err
+	}
+
+	// search did not return any results, nor did it return "No search results found".
+	return nil, false, errors.New("Settings Search error")
 }
 
 // ClearSearch clears text in `SearchBox` and waits for the search results to be gone.
@@ -440,7 +443,7 @@ func (s *OSSettings) ClearSearch() uiauto.Action {
 	return uiauto.Combine("clear text in search box",
 		uiauto.IfSuccessThen(s.ui.WaitUntilExists(clearSearchBtn), s.LeftClick(clearSearchBtn)),
 		s.WaitUntilGone(clearSearchBtn),
-		s.WaitUntilGone(searchResultFinder),
+		s.WaitUntilGone(SearchResultFinder),
 	)
 }
 

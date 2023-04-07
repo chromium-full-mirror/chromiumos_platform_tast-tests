@@ -111,12 +111,12 @@ var NextButton = nodewith.NameContaining("Next").Role(role.Button)
 // DoneButton is the finder for a button labelled as Done.
 var DoneButton = nodewith.NameContaining("Done").Role(role.Button)
 
-// searchMismatched is the pattern shown in search results
-// when the input keyword in `SearchBox` is mismatched with any existing option.
-var searchMismatched = `No search results found`
+// SearchNoResults is the finder when Search does not return a result.
+// The input keyword in `SearchBox` is mismatched with any existing option.
+var SearchNoResults = nodewith.Name("No search results found").Role(role.StaticText)
 
-// searchResultFinder is a finder of all possible search results.
-var searchResultFinder = nodewith.NameRegex(regexp.MustCompile(fmt.Sprintf(`(Search result \d+ of \d+: .*|%s)`, searchMismatched))).Onscreen()
+// SearchResultFinder is a finder of all possible search results if they exist.
+var SearchResultFinder = nodewith.NameRegex(regexp.MustCompile(fmt.Sprintf(`(Search result \d+ of \d+: .*)`))).Onscreen()
 
 // SearchFeedbackButton is a button for sending feedback when a search result doesn't exist.
 var SearchFeedbackButton = nodewith.Name("Report this search result").Role(role.Button)
