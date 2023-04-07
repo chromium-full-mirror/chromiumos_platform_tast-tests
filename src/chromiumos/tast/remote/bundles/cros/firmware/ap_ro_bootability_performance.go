@@ -12,6 +12,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -19,6 +20,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
+	"chromiumos/tast/common/firmware/bios"
 	"chromiumos/tast/common/servo"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
@@ -32,23 +34,32 @@ import (
 	"chromiumos/tast/testing/hwdep"
 )
 
-type fwinfo struct {
+type jsonFwInfo struct {
 	Board string `json:"board_name"`
 	Model string `json:"model_name"`
 	FwID  string `json:"firmware_build_cros_version"`
 }
 
-// rwInfo will contain the fmap information for a RW section.
-type rwInfo struct {
-	name   string
+// secInfo will contain the fmap information for a fw image section.
+type secInfo struct {
+	name   bios.ImageSection
 	offset int64
 	size   int64
+}
+
+type apROBootabilityPerformanceArgs struct {
+	targetProgrammer fwpb.Programmer
+	imageSectionRW   fwpb.ImageSection
+	imageSectionRO   fwpb.ImageSection
 }
 
 const (
 	// firmwareFileName contains the name of the file to be downloaded from chromeos-image-archive.
 	firmwareFileName = "firmware_from_source.tar.bz2"
 
+	// fileOnDUTToFlash contains the path on the DUT, under which the firmware file to be tested
+	// is copied from the host machine.
+	fileOnDUTToFlash = "/tmp/firmwareForTest.bin"
 	// flashingTime sets the timeout for the flashing process.
 	flashingTime = 20 * time.Minute
 
@@ -64,6 +75,21 @@ const (
 	// maxSpeedTestRetry sets the maximum number of attempts to re-run the speed test in
 	// case the result is found outside the expected deviation.
 	maxSpeedTestRetry = 3
+)
+
+var (
+	// restoreFW is a control flag to indicate that the DUT needs to be
+	// restored with RO_new/RW_new, which is the firmware that the device
+	// started with, before this test exits.
+	restoreFW bool
+
+	// rwNewID contains the RW firmware version ID available on the DUT.
+	// This version would be the to-be-qualified RW_new firmware.
+	rwNewID string
+
+	// roNewID contains the RO firmware version ID available on the DUT.
+	// This version would be the to-be-qualified RO_new firmware.
+	roNewID string
 )
 
 func init() {
@@ -84,6 +110,12 @@ func init() {
 		Data:         []string{"shipped-firmwares.json"},
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService", "tast.cros.firmware.UtilsService"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
+		Params: []testing.Param{{
+			Val: &apROBootabilityPerformanceArgs{
+				targetProgrammer: fwpb.Programmer_BIOSProgrammer,
+				imageSectionRO:   fwpb.ImageSection_APROImageSection,
+			},
+		}},
 	})
 }
 
@@ -96,7 +128,17 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 	.
 	.
 	RO_old-n + RW_new - compare it to baseline
+	RO_new   + RW_new - compare it to baseline
 	*/
+	testArgs := s.Param().(*apROBootabilityPerformanceArgs)
+
+	// sectionNames is a map that converts ImageSection names
+	// APRWA and APRWB to "A" and "B".
+	sectionNames := map[fwpb.ImageSection]string{
+		fwpb.ImageSection_APRWAImageSection: "A",
+		fwpb.ImageSection_APRWBImageSection: "B",
+	}
+
 	h := s.FixtValue().(*fixture.Value).Helper
 
 	if err := h.RequireServo(ctx); err != nil {
@@ -167,8 +209,8 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 	// The json file was manually deposited as internal data under 'firmware/data'.
 
 	// Read from the 'shipped-firmwares.json' file.
-	filepath := s.DataPath("shipped-firmwares.json")
-	shippedFwVersions, err := collectShippedFws(h, filepath)
+	jsonFilePath := s.DataPath("shipped-firmwares.json")
+	shippedFwVersions, err := collectShippedFws(h, jsonFilePath)
 	if err != nil {
 		s.Fatal("While collecting the shipped fw versions: ", err)
 	}
@@ -188,57 +230,81 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 	}
 
 	// Untar the binary file with respect to the model name found in 'crossystem fwid'.
-	filename, err := untarUnknownFileName(ctx, tmpDir, fwidModel)
+	binToFlash, err := untarUnknownFileName(ctx, tmpDir, fwidModel)
 	if err != nil {
 		s.Fatal("Failed to untar file: ", err)
 	}
 
-	// Create a copy of the RW_new firmware.
+	// Back up a copy of the current AP firmware running on the DUT.
 	s.Log("Backing up AP firmware")
-	newRWfwFile, err := bs.BackupImageSection(ctx, &fwpb.FWSectionInfo{Section: fwpb.ImageSection_EmptyImageSection, Programmer: fwpb.Programmer_BIOSProgrammer})
+	backupData, err := bs.BackupImageSection(ctx, &fwpb.FWSectionInfo{Section: fwpb.ImageSection_EmptyImageSection, Programmer: testArgs.targetProgrammer})
 	if err != nil {
 		s.Fatal("Failed to backup current AP firmware: ", err)
 	}
 
 	// Get the area_offset and area_size of the RWA and RWB section on the bin file.
-	rwA, err := getOffsetSizeName(ctx, s.DUT().Conn(), newRWfwFile.Path, "A")
+	rwA, err := getOffsetSizeName(ctx, s.DUT().Conn(), backupData.Path, bios.RWFWIDAImageSection)
 	if err != nil {
 		s.Fatal("Failed to get fmap info for section A: ", err)
 	}
-	rwB, err := getOffsetSizeName(ctx, s.DUT().Conn(), newRWfwFile.Path, "B")
+	rwB, err := getOffsetSizeName(ctx, s.DUT().Conn(), backupData.Path, bios.RWFWIDBImageSection)
 	if err != nil {
 		s.Fatal("Failed to get fmap info for section B: ", err)
 	}
 
-	// Store the backup file in a temporary directory with the name 'newRW'.
+	// Create initialFwFromDUT on the host machine, and copy the
+	// DUT's currently running firmware to this file. This firmware
+	// is also referred to as the to-be-qualified RO_new/RW_new firmware.
+	initialFwFromDUT, err := ioutil.TempFile(tmpDir, "")
+	if err != nil {
+		s.Fatal("Failed to create a file to store the backup on host: ", err)
+	}
+	defer initialFwFromDUT.Close()
+
+	// Store the backup file in a temporary directory with the name 'initialFWOnDUT'.
 	s.Log("Saving the AP firmware")
-	if err := linuxssh.GetFile(ctx, s.DUT().Conn(), newRWfwFile.Path, tmpDir+"/newRW", linuxssh.DereferenceSymlinks); err != nil {
-		s.Log("Failed to save the new RW firmware")
+	if err := linuxssh.GetFile(ctx, s.DUT().Conn(), backupData.Path, initialFwFromDUT.Name(), linuxssh.DereferenceSymlinks); err != nil {
+		s.Fatal("Failed to save the backup file on host: ", err)
 	}
 
 	// Get the newest RW firmware version ID available on the DUT.
 	// This version would be the to-be-qualified RW_new firmware.
-	rwNewID, section, imageSection, err := getNewestRWIDAvailable(ctx, tmpDir, rwA, rwB)
+	rwNewID, testArgs.imageSectionRW, err = getNewestRWIDAvailable(ctx, initialFwFromDUT, rwA, rwB)
 	if err != nil {
 		s.Fatal("Failed while dissecting the bin file: ", err)
 	}
-	s.Logf("Setting RW ID = %s, from section = %s as the to-be-qualified RW_new firmware", rwNewID, section)
+	s.Logf("Setting RW ID = %s, from section = %s as the to-be-qualified RW_new firmware", rwNewID, sectionNames[testArgs.imageSectionRW])
+
+	// Get the RO firmware version ID available on the DUT.
+	roNewID, err = getOnlyID(ctx, h, reporters.CrossystemParamRoFwid)
+	if err != nil {
+		s.Fatal("Failed to get AP RO ID: ", err)
+	}
+	s.Logf("Setting RO ID = %s, as the to-be-qualified RO_new firmware", roNewID)
 
 	// At the end of this test, restore AP firmware to the one found at the beginning.
 	defer func() {
+		if err := h.EnsureDUTBooted(ctx); err != nil {
+			s.Fatal("Failed to ensure DUT connected at the end of test before restoring firmware: ", err)
+		}
+
 		if err := h.RequireBiosServiceClient(ctx); err != nil {
 			s.Fatal("Failed to get bios service: ", err)
 		}
 
-		// Flashing RW_new firmware obtained from the DUT at the beginning of the test.
-		s.Log("Restoring AP firmware at the end of the test")
-		if err := flashDUTAndReboot(ctx, h, s.DUT().Conn(), "newRW", tmpDir, fwpb.ImageSection_EmptyImageSection); err != nil {
-			s.Fatal("Failed to flash DUT: ", err)
+		if restoreFW {
+			s.Log("Restoring firmware at the end of the test")
+			if err := flashDUTAndReboot(ctx, h, s.DUT().Conn(), initialFwFromDUT.Name(), fwpb.ImageSection_EmptyImageSection, testArgs.targetProgrammer); err != nil {
+				s.Fatal("Failed while flashing DUT to restore firmware at the end of test: ", err)
+			}
+			if err = verifyFwIDs(ctx, h, roNewID, rwNewID); err != nil {
+				s.Fatal("Failed while verifying firmware IDs after flashing at the end of test: ", err)
+			}
 		}
 	}()
 
 	// Flash the latest shipped RO and RW firmware.
-	if err := flashDUTAndReboot(ctx, h, s.DUT().Conn(), filename, tmpDir, fwpb.ImageSection_EmptyImageSection); err != nil {
+	if err := flashDUTAndReboot(ctx, h, s.DUT().Conn(), filepath.Join(tmpDir, binToFlash), fwpb.ImageSection_EmptyImageSection, testArgs.targetProgrammer); err != nil {
 		s.Fatal("Failed to flash DUT: ", err)
 	}
 
@@ -262,15 +328,15 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 	} else {
 		// Setting DUT to boot from the RW section that contains the newest firmware ID.
 		// This will assure that the DUT will try to boot from the flashed section.
-		if err := h.DUT.Conn().CommandContext(ctx, "crossystem", "fw_try_next="+section).Run(); err != nil {
-			s.Fatalf("Failed to set 'crossystem fw_try_next=%s': %s", section, err)
+		if err := h.DUT.Conn().CommandContext(ctx, "crossystem", "fw_try_next="+sectionNames[testArgs.imageSectionRW]).Run(ssh.DumpLogOnError); err != nil {
+			s.Fatal("Failed to set crossystem fw_try_next: ", err)
 		}
 
 		// Flashing RW_new firmware obtained from the DUT at the beginning of the test into RW section A.
 		// This will leave the DUT with the latest RO shipped fw and
 		// the to-be-qualified new RW firmware (i.e., RO_old + RW_new).
 		s.Log("Flashing the to-be-qualified new RW firmware")
-		if err := flashDUTAndReboot(ctx, h, s.DUT().Conn(), "newRW", tmpDir, imageSection); err != nil {
+		if err := flashDUTAndReboot(ctx, h, s.DUT().Conn(), initialFwFromDUT.Name(), testArgs.imageSectionRW, testArgs.targetProgrammer); err != nil {
 			s.Fatal("Failed to flash DUT: ", err)
 		}
 
@@ -299,12 +365,12 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 		}
 
 		s.Log("Untaring file")
-		if err := testexec.CommandContext(ctx, "tar", "-xvf", tmpDir+"/"+firmwareFileName, "-C", tmpDir, filename).Run(ssh.DumpLogOnError); err != nil {
+		if err := testexec.CommandContext(ctx, "tar", "-xvf", filepath.Join(tmpDir, firmwareFileName), "-C", tmpDir, binToFlash).Run(ssh.DumpLogOnError); err != nil {
 			s.Fatal("Failed to untar file: ", err)
 		}
 
 		s.Log("Flashing the older RO 'shipped' firmware")
-		if err := flashDUTAndReboot(ctx, h, s.DUT().Conn(), filename, tmpDir, fwpb.ImageSection_APROImageSection); err != nil {
+		if err := flashDUTAndReboot(ctx, h, s.DUT().Conn(), filepath.Join(tmpDir, binToFlash), testArgs.imageSectionRO, testArgs.targetProgrammer); err != nil {
 			s.Fatal("Failed to flash DUT: ", err)
 		}
 
@@ -325,6 +391,32 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 		}
 	}
 
+	if shippedFwVersions[len(shippedFwVersions)-1] == roNewID {
+		s.Log("WARNING! Speed test skipped because RO_new is the same as RO_old. Already verified")
+	} else {
+		// Testing scenario RO/RW with the to-be-qualified firmware (i.e., RO_new + RW_new).
+		s.Log("Flashing the to-be-qualified new RO/RW firmware")
+		if err = flashDUTAndReboot(ctx, h, s.DUT().Conn(), initialFwFromDUT.Name(), fwpb.ImageSection_EmptyImageSection, testArgs.targetProgrammer); err != nil {
+			s.Fatal("Failed to flash DUT: ", err)
+		}
+
+		s.Log("Verifying the firmware versions are the to-be-qualified new RO/RW after flash")
+		if err := verifyFwIDs(ctx, h, roNewID, rwNewID); err != nil {
+			s.Fatal("Failed while checking firmware versions: ", err)
+		}
+		restoreFW = false
+
+		s.Log("Performing the speed test")
+		speedResult, err := speedTest(ctx, h)
+		if err != nil {
+			s.Fatal("Failed to perform Speedometer test: ", err)
+		}
+
+		s.Log("Checking that the result deviation from the baseline is acceptable")
+		if err := checkDeviation(ctx, h, baseline, speedResult); err != nil {
+			s.Fatal("Deviation failed: ", err)
+		}
+	}
 }
 
 // downloadFirmwareFile will download a tar file from cloud and save to a temporary directory,
@@ -405,18 +497,21 @@ func downloadFirmwareFile(ctx context.Context, s *testing.State, board, fwid, tm
 
 // flashDUTAndReboot will send the bin files to a directory in the DUT, flash the files into the DUT with the bios service 'WriteImageFromMultiSectionFile'
 // and reboot the DUT so that the flash takes effect.
-func flashDUTAndReboot(ctx context.Context, h *firmware.Helper, conn *ssh.Conn, fwid, tmpDir string, section fwpb.ImageSection) error {
+func flashDUTAndReboot(ctx context.Context, h *firmware.Helper, conn *ssh.Conn, fileOnHostToFlash string, section fwpb.ImageSection, targetProgrammer fwpb.Programmer) error {
 	flashingCtx, cancelflashingCtx := context.WithTimeout(ctx, flashingTime)
 	defer cancelflashingCtx()
 
 	testing.ContextLog(flashingCtx, "Sending firmware bin file to DUT")
-	if _, err := linuxssh.PutFiles(flashingCtx, conn, map[string]string{tmpDir + "/" + fwid: "/tmp/" + fwid}, linuxssh.DereferenceSymlinks); err != nil {
+	if _, err := linuxssh.PutFiles(flashingCtx, conn, map[string]string{fileOnHostToFlash: fileOnDUTToFlash}, linuxssh.DereferenceSymlinks); err != nil {
 		return errors.Wrap(err, "failed to send bin file to DUT")
 	}
 
-	testing.ContextLogf(ctx, "Flashing DUT with file: %s using section: %v", fwid, section)
+	// Ensure DUT restored with the backup firmware in case
+	// something goes wrong during the flashing procedure.
+	restoreFW = true
+	testing.ContextLogf(ctx, "Flashing DUT with file: %s using section: %v", fileOnHostToFlash, section)
 	bs := fwpb.NewBiosServiceClient(h.RPCClient.Conn)
-	if _, err := bs.WriteImageFromMultiSectionFile(ctx, &fwpb.FWSectionInfo{Programmer: fwpb.Programmer_BIOSProgrammer, Path: "/tmp/" + fwid, Section: section}); err != nil {
+	if _, err := bs.WriteImageFromMultiSectionFile(ctx, &fwpb.FWSectionInfo{Programmer: targetProgrammer, Path: fileOnDUTToFlash, Section: section}); err != nil {
 		return errors.Wrap(err, "failed to flash DUT with the multi-section bin file")
 	}
 
@@ -481,6 +576,7 @@ func speedTest(ctx context.Context, h *firmware.Helper) (float64, error) {
 	defer cancelspeedometerCtx()
 
 	testing.ContextLog(ctx, "Sleeping for a few seconds before starting a new Chrome")
+	// GoBigSleepLint: Delay for the DUT to fully settle before starting a new chrome session.
 	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 		return 0.0, errors.Wrap(err, "failed to wait for a few seconds")
 	}
@@ -566,7 +662,7 @@ func collectShippedFws(h *firmware.Helper, filepath string) ([]string, error) {
 		return nil, errors.Wrap(err, "failed to read JSON file")
 	}
 
-	var data []fwinfo
+	var data []jsonFwInfo
 	if err := json.Unmarshal(out, &data); err != nil {
 		return nil, errors.Wrap(err, "failed to parse JSON file")
 	}
@@ -604,17 +700,17 @@ func untarUnknownFileName(ctx context.Context, tmpDir, fwidModel string) (string
 
 // getNewestRWIDAvailable identifies which is the newest firmware ID available
 // in the DUT by dissecting the AP bin file.
-func getNewestRWIDAvailable(ctx context.Context, tmpDir string, rwA, rwB rwInfo) (string, string, fwpb.ImageSection, error) {
+func getNewestRWIDAvailable(ctx context.Context, initialFwFromDUT *os.File, rwA, rwB secInfo) (string, fwpb.ImageSection, error) {
 	// Open and read the bin file.
-	binFile, err := os.Open(tmpDir + "/newRW")
+	binFile, err := os.Open(initialFwFromDUT.Name())
 	if err != nil {
-		return "", "", fwpb.ImageSection_EmptyImageSection, errors.Wrap(err, "failed to open AP bin file")
+		return "", fwpb.ImageSection_EmptyImageSection, errors.Wrap(err, "failed to open AP bin file")
 	}
 	defer binFile.Close()
 
 	fileInfo, err := binFile.Stat()
 	if err != nil {
-		return "", "", fwpb.ImageSection_EmptyImageSection, errors.Wrap(err, "failed to read AP bin file")
+		return "", fwpb.ImageSection_EmptyImageSection, errors.Wrap(err, "failed to read AP bin file")
 	}
 	reader := bufio.NewReader(binFile)
 	buf := make([]byte, fileInfo.Size())
@@ -622,7 +718,7 @@ func getNewestRWIDAvailable(ctx context.Context, tmpDir string, rwA, rwB rwInfo)
 		_, err := reader.Read(buf)
 		if err != nil {
 			if err != io.EOF {
-				return "", "", fwpb.ImageSection_EmptyImageSection, errors.Wrap(err, "unexpected error")
+				return "", fwpb.ImageSection_EmptyImageSection, errors.Wrap(err, "unexpected error")
 			}
 			break
 		}
@@ -640,33 +736,33 @@ func getNewestRWIDAvailable(ctx context.Context, tmpDir string, rwA, rwB rwInfo)
 	for i := 1; i < len(splitRWA); i++ {
 		var idA, idB int
 		if _, err := fmt.Sscanf(splitRWA[i], "%d", &idA); err != nil {
-			return "", "", fwpb.ImageSection_EmptyImageSection, errors.Wrapf(err, "failed to sscanf %s", splitRWA[i])
+			return "", fwpb.ImageSection_EmptyImageSection, errors.Wrapf(err, "failed to sscanf %s", splitRWA[i])
 		}
 		if _, err := fmt.Sscanf(splitRWB[i], "%d", &idB); err != nil {
-			return "", "", fwpb.ImageSection_EmptyImageSection, errors.Wrapf(err, "failed to sscanf %s", splitRWB[i])
+			return "", fwpb.ImageSection_EmptyImageSection, errors.Wrapf(err, "failed to sscanf %s", splitRWB[i])
 		}
 
 		if idB > idA {
 			rwBStr := splitRWB[1] + "." + splitRWB[2] + "." + splitRWB[3]
-			return rwBStr, rwB.name, fwpb.ImageSection_APRWBImageSection, nil
+			return rwBStr, fwpb.ImageSection_APRWBImageSection, nil
 		}
 		if idB < idA {
-			return rwDefaultStr, rwA.name, fwpb.ImageSection_APRWAImageSection, nil
+			return rwDefaultStr, fwpb.ImageSection_APRWAImageSection, nil
 		}
 	}
-	return rwDefaultStr, rwA.name, fwpb.ImageSection_APRWAImageSection, nil
+	return rwDefaultStr, fwpb.ImageSection_APRWAImageSection, nil
 }
 
 // getOffsetSizeName uses the dump_fmap command to get the area_offset, area_size and area_name of a bin file.
-func getOffsetSizeName(ctx context.Context, conn *ssh.Conn, path, section string) (rwInfo, error) {
-	var data rwInfo
+func getOffsetSizeName(ctx context.Context, conn *ssh.Conn, path string, section bios.ImageSection) (secInfo, error) {
+	var data secInfo
 
 	// Run dump_fmap command.
 	out, err := conn.CommandContext(ctx, "fmap_decode", path).Output(ssh.DumpLogOnError)
 	if err != nil {
 		return data, errors.Wrap(err, "failed to run dump_fmap command")
 	}
-	areaRange := regexp.MustCompile(`area_offset=\"(0[xX][0-9a-fA-F]+)\" area_size=\"(0[xX][0-9a-fA-F]+)\"\s*area_name=\"RW_FWID_` + section + `\"`)
+	areaRange := regexp.MustCompile(`area_offset=\"(0[xX][0-9a-fA-F]+)\" area_size=\"(0[xX][0-9a-fA-F]+)\"\s*area_name=\"` + string(section) + `\"`)
 	match := areaRange.FindStringSubmatch(string(out))
 	if len(match) != 3 {
 		return data, errors.Wrapf(err, "failed to match regex %q in output: %s", areaRange, out)
