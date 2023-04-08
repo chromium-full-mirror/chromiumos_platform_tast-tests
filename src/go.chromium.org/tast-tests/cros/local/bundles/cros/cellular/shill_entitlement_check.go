@@ -22,8 +22,6 @@ type shillCellularEntitlementCheckTestParam struct {
 	// When doing a static check, the result of the entitlement check only depends on the url used for testing, and requires no configuration on the server. This is needed when not using any |mhs_entitlement_param| params
 	// When doing a dynamic test, the test will communicate with the entitlement check server, and it will configure the server to return OK/NOK.
 	SendImsi bool
-	// We can skip setting the DNS of the CallboxServer to force an http failure
-	SkipDNSSetup bool
 }
 
 const (
@@ -39,36 +37,35 @@ func init() {
 		Desc:         "Verifies the entitlement check feature for tethering works. The test depends on an entitlement check server running on the callbox",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "andrewlassalle@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		// TODO(b/280312511): Reenable test when b/275440439 is fixed.
-		// Attr:         []string{"group:cellular", "cellular_unstable", "cellular_amari_callbox"},
+		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_amari_callbox"},
 		Params: []testing.Param{{
 			Name:      "static_check_ok_ipv4",
-			Val:       shillCellularEntitlementCheckTestParam{"callbox_attach_ip_default.pbf", shillconst.TetheringReadinessReady, false, false},
+			Val:       shillCellularEntitlementCheckTestParam{"callbox_attach_ip_default.pbf", shillconst.TetheringReadinessReady, false},
 			ExtraData: []string{"callbox_attach_ip_default.pbf"},
 		}, {
 			Name:      "static_check_ok_ipv4v6",
-			Val:       shillCellularEntitlementCheckTestParam{"callbox_attach_ipv4v6.pbf", shillconst.TetheringReadinessReady, false, false},
+			Val:       shillCellularEntitlementCheckTestParam{"callbox_attach_ipv4v6.pbf", shillconst.TetheringReadinessReady, false},
 			ExtraData: []string{"callbox_attach_ipv4v6.pbf"},
 		}, {
 			Name:      "static_check_ok_ipv6",
-			Val:       shillCellularEntitlementCheckTestParam{"callbox_attach_ipv6.pbf", shillconst.TetheringReadinessReady, false, false},
+			Val:       shillCellularEntitlementCheckTestParam{"callbox_attach_ipv6.pbf", shillconst.TetheringReadinessReady, false},
 			ExtraData: []string{"callbox_attach_ipv6.pbf"},
 		}, {
 			Name:      "static_check_nok",
-			Val:       shillCellularEntitlementCheckTestParam{"callbox_default_and_dun_with_entitlement_returns_NOK.pbf", shillconst.TetheringReadinessNotAllowed, false, false},
+			Val:       shillCellularEntitlementCheckTestParam{"callbox_default_and_dun_with_entitlement_returns_NOK.pbf", shillconst.TetheringReadinessNotAllowed, false},
 			ExtraData: []string{"callbox_default_and_dun_with_entitlement_returns_NOK.pbf"},
 		}, {
 			Name:      "dynamic_check_with_imsi_ok",
-			Val:       shillCellularEntitlementCheckTestParam{"callbox_default_and_dun_with_entitlement_imsi.pbf", shillconst.TetheringReadinessReady, true, false},
+			Val:       shillCellularEntitlementCheckTestParam{"callbox_default_and_dun_with_entitlement_imsi.pbf", shillconst.TetheringReadinessReady, true},
 			ExtraData: []string{"callbox_default_and_dun_with_entitlement_imsi.pbf"},
 		}, {
 			Name:      "dynamic_check_with_imsi_nok",
-			Val:       shillCellularEntitlementCheckTestParam{"callbox_default_and_dun_with_entitlement_imsi.pbf", shillconst.TetheringReadinessNotAllowed, true, false},
+			Val:       shillCellularEntitlementCheckTestParam{"callbox_default_and_dun_with_entitlement_imsi.pbf", shillconst.TetheringReadinessNotAllowed, true},
 			ExtraData: []string{"callbox_default_and_dun_with_entitlement_imsi.pbf"},
 		}, {
 			Name:      "url_not_reachable",
-			Val:       shillCellularEntitlementCheckTestParam{"callbox_attach_ip_default.pbf", shillconst.TetheringReadinessNotAllowed, false, true},
-			ExtraData: []string{"callbox_attach_ip_default.pbf"},
+			Val:       shillCellularEntitlementCheckTestParam{"callbox_default_unreachable_entitlement_server.pbf", shillconst.TetheringReadinessNotAllowed, false},
+			ExtraData: []string{"callbox_default_unreachable_entitlement_server.pbf"},
 		}},
 		Fixture: "cellular",
 		Timeout: 2 * time.Minute,
@@ -79,7 +76,6 @@ func ShillEntitlementCheck(ctx context.Context, s *testing.State) {
 	params := s.Param().(shillCellularEntitlementCheckTestParam)
 	modbOverrideProto := params.ModbOverrideProto
 	expectedEntitlementCheckResult := params.ExpectedEntitlementCheckResult
-	SkipDNSSetup := params.SkipDNSSetup
 	sendImsi := params.SendImsi
 
 	helper, _, err := cellular.NewHelperWithSim(ctx)
@@ -117,27 +113,23 @@ func ShillEntitlementCheck(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get IMSI: ", err)
 	}
 	var callbox *cellular.CallboxServer = nil
-	if !SkipDNSSetup {
-		callboxTemp, callboxCleanUp, err := cellular.NewCallboxServer(ctx)
-		if err != nil {
-			s.Fatal("Failed to create CallboxServer object: ", err)
+	callboxTemp, err := cellular.NewCallboxServer(ctx)
+	if err != nil {
+		s.Fatal("Failed to create CallboxServer object: ", err)
+	}
+	callbox = callboxTemp
+	if sendImsi {
+		if err = callbox.ResetEntitlementValueForThisDevice(ctx, imsi); err != nil {
+			s.Fatal("Failed reset the entitlement check value on server: ", err)
 		}
-		callbox = callboxTemp
-		defer callboxCleanUp()
-		if sendImsi {
-			if err = callbox.ResetEntitlementValueForThisDevice(ctx, imsi); err != nil {
-				s.Fatal("Failed reset the entitlement check value on server: ", err)
-			}
-			var expectedResult int32 = entitlementCheckStatusCodeUserNotAllowed
-			if expectedEntitlementCheckResult == shillconst.TetheringReadinessReady {
-				expectedResult = entitlementCheckStatusCodeAllowed
-			}
-
-			if err = callbox.SetupEntitlementReturnCodeForThisDevice(ctx, imsi, expectedResult); err != nil {
-				s.Fatal("Failed set the entitlement check value on server: ", err)
-			}
+		var expectedResult int32 = entitlementCheckStatusCodeUserNotAllowed
+		if expectedEntitlementCheckResult == shillconst.TetheringReadinessReady {
+			expectedResult = entitlementCheckStatusCodeAllowed
 		}
 
+		if err = callbox.SetupEntitlementReturnCodeForThisDevice(ctx, imsi, expectedResult); err != nil {
+			s.Fatal("Failed set the entitlement check value on server: ", err)
+		}
 	}
 
 	//TODO(b/267804414): Set tethering Allowed is only needed during fishfooding and can be removed later.
@@ -160,7 +152,7 @@ func ShillEntitlementCheck(ctx context.Context, s *testing.State) {
 		s.Fatalf("Got entitlement check %q, want %q", status, expectedEntitlementCheckResult)
 	}
 
-	if !SkipDNSSetup && expectedEntitlementCheckResult == shillconst.TetheringReadinessReady {
+	if expectedEntitlementCheckResult == shillconst.TetheringReadinessReady {
 		// The entitlement check should fail, but shill should use the previous cached value and return |TetheringReadinessReady|.
 		if err = callbox.SetupEntitlementReturnCodeForThisDevice(ctx, imsi, entitlementCheckStatusCodeServerError); err != nil {
 			s.Fatal("Failed set the entitlement check value on server: ", err)

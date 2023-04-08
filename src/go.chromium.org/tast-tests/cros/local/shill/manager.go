@@ -841,6 +841,11 @@ func (m *Manager) WaitForDefaultService(ctx context.Context, svc *Service) error
 	return nil
 }
 
+// SetServiceOrder sets the technology priority.
+func (m *Manager) SetServiceOrder(ctx context.Context, technologies []string) error {
+	return m.Call(ctx, "SetServiceOrder", strings.Join(technologies, ",")).Err
+}
+
 // CheckTetheringReadiness returns the tethering readiness status.
 func (m *Manager) CheckTetheringReadiness(ctx context.Context) (string, error) {
 	ctx, st := timing.Start(ctx, "m.CheckTetheringReadiness")
