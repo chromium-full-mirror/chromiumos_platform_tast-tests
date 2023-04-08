@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/action"
+	"chromiumos/tast/local/bundles/cros/inputs/data"
 	fixture "chromiumos/tast/local/bundles/cros/inputs/fixture/appcompat"
 	"chromiumos/tast/local/bundles/cros/inputs/pre"
 	"chromiumos/tast/local/bundles/cros/inputs/util"
@@ -29,7 +30,7 @@ type citrixTestCase struct {
 }
 
 // longest input length, use this var to clean the env between sub tests.
-const longestInputLength = 7
+const longestInputLength = 10
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -63,28 +64,6 @@ func PhysicalKeyboardCitrixTyping(ctx context.Context, s *testing.State) {
 	uc := s.FixtValue().(fixture.CitrixNotepadFixtData).UserContext
 	kb := s.FixtValue().(fixture.CitrixNotepadFixtData).Keyboard
 
-	languageTests := map[ime.InputMethod][]citrixTestCase{
-		ime.FrenchFrance: {
-			{
-				TestName:             "dead key",
-				typingKeys:           "t[est",
-				expectedTypingResult: "têst",
-			},
-			{
-				TestName:             "number key 0 to 2",
-				typingKeys:           "h0h1h2",
-				expectedTypingResult: "hàh&hé",
-			},
-		},
-		ime.EnglishUSWithInternationalKeyboard: {
-			{
-				TestName:             "dead key",
-				typingKeys:           "'abc",
-				expectedTypingResult: "ábc",
-			},
-		},
-	}
-
 	inputMethod := s.Param().(ime.InputMethod)
 
 	if err := inputMethod.InstallAndActivateUserAction(uc)(ctx); err != nil {
@@ -92,29 +71,28 @@ func PhysicalKeyboardCitrixTyping(ctx context.Context, s *testing.State) {
 	}
 	uc.SetAttribute(useractions.AttributeInputMethod, inputMethod.Name)
 
-	for _, subtest := range languageTests[inputMethod] {
+	for _, subtest := range data.AppCompatPhysicalKeyboardTestCases[inputMethod] {
 		validateAction := uiauto.Combine("validate dead keys typing",
 			clearText(kb, longestInputLength),
-			kb.TypeAction(subtest.typingKeys),
-			uidetector.WithScreenshotResizing().WaitUntilExists(uidetection.TextBlock(strings.Split(subtest.expectedTypingResult, " "))),
+			kb.TypeSequenceAction(subtest.LocationKeySeq),
+			uidetector.WithScreenshotResizing().WaitUntilExists(uidetection.TextBlock(strings.Split(subtest.ExpectedText, " "))),
 		)
 
-		s.Run(ctx, subtest.TestName, func(ctx context.Context, s *testing.State) {
+		s.Run(ctx, subtest.Description, func(ctx context.Context, s *testing.State) {
 			if err := uiauto.UserAction(
-				subtest.TestName,
+				subtest.Description,
 				validateAction,
 				uc, &useractions.UserActionCfg{
 					Attributes: map[string]string{
-						useractions.AttributeTestScenario: subtest.TestName,
+						useractions.AttributeTestScenario: subtest.Description,
 						useractions.AttributeFeature:      useractions.FeaturePKTyping,
 					},
 				},
 			)(ctx); err != nil {
-				s.Fatalf("Failed to validate %s typing in test %s: %v", inputMethod, subtest.TestName, err)
+				s.Fatalf("Failed to validate %s typing in test %s: %v", inputMethod, subtest.Description, err)
 			}
 		})
 	}
-
 }
 
 func clearText(kb *input.KeyboardEventWriter, times int) action.Action {

@@ -26,6 +26,8 @@ type InputData struct {
 	// Whether select candidate from suggestion bar. Some IMEs need to manually
 	// select from candidates to submit.
 	SubmitFromSuggestion bool
+	// Description of the test case.
+	Description string
 }
 
 // Message is a generic type that provides a function of retrieving input data

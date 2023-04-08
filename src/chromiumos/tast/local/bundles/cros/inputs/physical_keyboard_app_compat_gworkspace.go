@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/local/bundles/cros/inputs/data"
 	fixture "chromiumos/tast/local/bundles/cros/inputs/fixture/appcompat"
 	"chromiumos/tast/local/bundles/cros/inputs/pre"
 	"chromiumos/tast/local/bundles/cros/inputs/util"
@@ -94,80 +95,22 @@ func PhysicalKeyboardAppCompatGworkspace(ctx context.Context, s *testing.State) 
 
 		uc.SetAttribute(useractions.AttributeInputMethod, inputMethod.Name)
 
-		languageTests := map[ime.InputMethod][]util.AppCompatTestCase{
-			ime.FrenchFrance: {
-				{
-					TestName:    "number key 0 to 2",
-					Description: "test type number key from 0 to 2",
-					Steps: uiauto.Combine(`user type text hàh&hé`,
-						kb.TypeAction("h0h1h2"),
-						util.VerifyTextToBe(tconn, nil, `hàh&hé`, util.VerifyInScreenshot),
-					),
-				},
-				{
-					TestName:    "number key 3",
-					Description: "test type number key 3",
-					Steps: uiauto.Combine(`user type text "double"`,
-						kb.TypeAction("3double3"),
-						util.VerifyTextToBe(tconn, nil, `"double"`, util.VerifyInScreenshot),
-					),
-				},
-				{
-					TestName:    "number key 4",
-					Description: "test type number key 4",
-					Steps: uiauto.Combine(`user type text 'single'`,
-						kb.TypeAction("4single4"),
-						util.VerifyTextToBe(tconn, nil, "'single'", util.VerifyInScreenshot),
-					),
-				},
-				{
-					TestName:    "number key 5",
-					Description: "test type number key 5",
-					Steps: uiauto.Combine("user type text (hello)",
-						kb.TypeAction("5hello-"),
-						util.VerifyTextToBe(tconn, nil, `(hello)`, util.VerifyInScreenshot),
-					),
-				},
-				{
-					TestName:    "number key 6 and 7",
-					Description: "test type number key 6 and 7",
-					Steps: uiauto.Combine("user type text b-hè",
-						kb.TypeAction("b6h7"),
-						util.VerifyTextToBe(tconn, nil, `b-hè`, util.VerifyInScreenshot),
-					),
-				},
-				{
-					TestName:    "number key 8 and 9",
-					Description: "test type number key 8 and 9",
-					Steps: uiauto.Combine("user type text h_hçh",
-						kb.TypeAction("h8h9h"),
-						util.VerifyTextToBe(tconn, nil, `h_hçh`, util.VerifyInScreenshot),
-					),
-				},
-				{
-					TestName:    "test dead key [",
-					Description: "test type dead key [ on keyboard",
-					Steps: uiauto.Combine("user type text août",
-						kb.TypeAction("qo[ut"),
-						util.VerifyTextToBe(tconn, nil, "août", util.VerifyInScreenshot),
-					),
-				},
-			},
-		}
-
-		for _, subtest := range languageTests[inputMethod] {
-			s.Run(ctx, subtest.TestName, func(ctx context.Context, s *testing.State) {
+		for _, subtest := range data.AppCompatPhysicalKeyboardTestCases[inputMethod] {
+			s.Run(ctx, subtest.Description, func(ctx context.Context, s *testing.State) {
 				if err := uiauto.UserAction(
-					subtest.TestName,
-					subtest.Steps,
+					subtest.Description,
+					uiauto.Combine(subtest.Description,
+						kb.TypeSequenceAction(subtest.LocationKeySeq),
+						util.VerifyTextToBe(tconn, nil, subtest.ExpectedText, util.VerifyInScreenshot),
+					),
 					uc, &useractions.UserActionCfg{
 						Attributes: map[string]string{
-							useractions.AttributeTestScenario: subtest.TestName,
+							useractions.AttributeTestScenario: subtest.Description,
 							useractions.AttributeFeature:      useractions.FeatureVKTyping,
 						},
 					},
 				)(ctx); err != nil {
-					s.Fatalf("Failed to validate %s typing in test %s: %v", inputMethod, subtest.TestName, err)
+					s.Fatalf("Failed to validate %s typing in test %s: %v", inputMethod, subtest.Description, err)
 				}
 			})
 
