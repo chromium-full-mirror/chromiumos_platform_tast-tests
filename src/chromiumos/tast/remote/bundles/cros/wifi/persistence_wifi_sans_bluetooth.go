@@ -13,8 +13,9 @@ import (
 	"chromiumos/tast/remote/bundles/cros/wifi/wifiutil"
 	"chromiumos/tast/remote/wificell"
 	"chromiumos/tast/rpc"
-	"chromiumos/tast/services/cros/network"
+	"chromiumos/tast/services/cros/bluetooth"
 	"chromiumos/tast/testing"
+	"github.com/golang/protobuf/ptypes/empty"
 )
 
 func init() {
@@ -34,9 +35,13 @@ func init() {
 		// As a result, we have defined a softwaredep, no_eth_loss_on_reboot, to service as a skiplist for this test.
 		// TODO: remove this swdep when the jacuzzi issue is fixed (b:178449023)
 		SoftwareDeps: []string{"chrome", "reboot", "no_eth_loss_on_reboot"},
-		ServiceDeps:  []string{wificell.ShillServiceName, "tast.cros.network.BluetoothNetworkService"},
-		Vars:         []string{"router"},
-		VarDeps:      []string{"wifi.signinProfileTestExtensionManifestKey"},
+		ServiceDeps: []string{
+			wificell.ShillServiceName,
+			"tast.cros.browser.ChromeService",
+			"tast.cros.bluetooth.BluetoothService",
+		},
+		Vars:    []string{"router"},
+		VarDeps: []string{"wifi.signinProfileTestExtensionManifestKey"},
 		// As a workaround to b:239583375, we increase the test duration as this test reinitializes a new test fixture
 		// which causes a second router reboot on openwrt routers. We have not noticed timeout cases on gales.
 		Timeout: 10 * time.Minute,
@@ -55,10 +60,31 @@ func PersistenceWifiSansBluetooth(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to connect rpc: ", err)
 		}
 		defer r.Close(ctx)
-		// Enable Bluetooth device.
-		btClient := network.NewBluetoothNetworkServiceClient(r.Conn)
-		if _, err := btClient.SetBluetoothPowered(ctx, &network.SetBluetoothPoweredRequest{Powered: true, Credentials: credKey}); err != nil {
-			s.Error("Could not enable Bluetooth through bluetoothPrivate: ", err)
+
+		// Re-enable Bluetooth in cleanup.
+		chromeService, err := wifiutil.NewChromeServiceClient(ctx, r.Conn, credKey)
+		if err != nil {
+			s.Fatal("Failed to create new chrome service client: ", err)
+		}
+		defer func(ctx context.Context) {
+			_, err := chromeService.Close(ctx, &empty.Empty{})
+			if err != nil {
+				s.Error("Failed to close chrome service client: ", err)
+			}
+		}(ctx)
+		bluetoothService, err := wifiutil.NewBluetoothServiceClient(ctx, r.Conn)
+		if err != nil {
+			s.Fatal("Failed to create new bluetooth service client: ", err)
+		}
+		s.Logf("Setting bluetooth enabled on boot setting to %t", true)
+		if _, err := bluetoothService.SetEnabledOnBoot(ctx, &bluetooth.SetEnabledOnBootRequest{
+			AdapterEnabledOnBoot: true,
+		}); err != nil {
+			s.Fatal("Failed to set bluetooth enabled on boot: ", err)
+		}
+		s.Log("Re-enabling bluetooth on DUT")
+		if _, err := bluetoothService.Enable(ctx, &empty.Empty{}); err != nil {
+			s.Fatal("Failed to re-enable bluetooth: ", err)
 		}
 	}(ctx)
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
@@ -98,11 +124,33 @@ func PersistenceWifiSansBluetooth(ctx context.Context, s *testing.State) {
 		defer r.Close(ctx)
 
 		// Disable Bluetooth and assert Bluetooth is down.
-		btClient := network.NewBluetoothNetworkServiceClient(r.Conn)
-		if _, err := btClient.SetBluetoothPowered(ctx, &network.SetBluetoothPoweredRequest{Powered: false, Credentials: credKey}); err != nil {
-			s.Fatal("Could not disable Bluetooth: ", err)
+		chromeService, err := wifiutil.NewChromeServiceClient(ctx, r.Conn, credKey)
+		if err != nil {
+			s.Fatal("Failed to create new chrome service client: ", err)
 		}
-
+		defer func(ctx context.Context) {
+			_, err := chromeService.Close(ctx, &empty.Empty{})
+			if err != nil {
+				s.Error("Failed to close chrome service client: ", err)
+			}
+		}(ctx)
+		bluetoothService, err := wifiutil.NewBluetoothServiceClient(ctx, r.Conn)
+		if err != nil {
+			s.Fatal("Failed to create new bluetooth service client: ", err)
+		}
+		s.Logf("Setting bluetooth enabled on boot setting to %t", false)
+		if _, err := bluetoothService.SetEnabledOnBoot(ctx, &bluetooth.SetEnabledOnBootRequest{
+			AdapterEnabledOnBoot: false,
+		}); err != nil {
+			s.Fatal("Failed to set bluetooth disabled on boot: ", err)
+		}
+		s.Log("Disabling bluetooth")
+		if _, err := bluetoothService.Disable(ctx, &empty.Empty{}); err != nil {
+			s.Fatal("Failed to disable bluetooth: ", err)
+		}
+		if err := wifiutil.AssertBluetoothEnabledState(ctx, bluetoothService, false); err != nil {
+			s.Fatal("Failed verify bluetooth was disabled: ", err)
+		}
 	}(ctx)
 
 	// Reboot the DUT.
@@ -119,14 +167,22 @@ func PersistenceWifiSansBluetooth(ctx context.Context, s *testing.State) {
 	defer r.Close(ctx)
 
 	// Assert Bluetooth is down.
-	s.Log("Getting BT pref")
-	btClient := network.NewBluetoothNetworkServiceClient(r.Conn)
-	if err := wifiutil.PollBluetoothBootPref(ctx, btClient, wifiutil.BtOff, credKey); err != nil {
-		s.Fatal("Failed to wait for BT boot pref: ", err)
+	chromeService, err := wifiutil.NewChromeServiceClient(ctx, r.Conn, credKey)
+	if err != nil {
+		s.Fatal("Failed to create new chrome service client: ", err)
 	}
-	s.Log("Getting BT powered status")
-	if err := wifiutil.PollBluetoothPoweredStatus(ctx, btClient, wifiutil.BtOff); err != nil {
-		s.Fatal("Failed to wait for BT to be powered: ", err)
+	defer func(ctx context.Context) {
+		_, err := chromeService.Close(ctx, &empty.Empty{})
+		if err != nil {
+			s.Error("Failed to close chrome service client: ", err)
+		}
+	}(ctx)
+	bluetoothService, err := wifiutil.NewBluetoothServiceClient(ctx, r.Conn)
+	if err != nil {
+		s.Fatal("Failed to create new bluetooth service client")
+	}
+	if err := wifiutil.AssertBluetoothEnabledState(ctx, bluetoothService, false); err != nil {
+		s.Fatal("Failed to assert that bluetooth is disabled: ", err)
 	}
 
 	// Assert WiFi is up.

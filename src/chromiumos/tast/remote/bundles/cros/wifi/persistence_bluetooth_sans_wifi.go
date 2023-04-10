@@ -15,7 +15,6 @@ import (
 	"chromiumos/tast/remote/bundles/cros/wifi/wifiutil"
 	"chromiumos/tast/remote/wificell"
 	"chromiumos/tast/rpc"
-	"chromiumos/tast/services/cros/network"
 	"chromiumos/tast/services/cros/wifi"
 	"chromiumos/tast/testing"
 )
@@ -37,10 +36,13 @@ func init() {
 		// As a result, we have defined a softwaredep, no_eth_loss_on_reboot, to service as a skiplist for this test.
 		// TODO: remove this swdep when the jacuzzi issue is fixed (b:178449023)
 		SoftwareDeps: []string{"chrome", "reboot", "no_eth_loss_on_reboot"},
-
-		ServiceDeps: []string{wificell.ShillServiceName, "tast.cros.network.BluetoothNetworkService"},
-		Vars:        []string{"router"},
-		VarDeps:     []string{"wifi.signinProfileTestExtensionManifestKey"},
+		ServiceDeps: []string{
+			wificell.ShillServiceName,
+			"tast.cros.browser.ChromeService",
+			"tast.cros.bluetooth.BluetoothService",
+		},
+		Vars:    []string{"router"},
+		VarDeps: []string{"wifi.signinProfileTestExtensionManifestKey"},
 		// List of requirements this test satisfies.
 		Requirements: []string{tdreq.WiFiCoexSupportBT, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 	})
@@ -94,20 +96,25 @@ func PersistenceBluetoothSansWifi(ctx context.Context, s *testing.State) {
 			s.Fatal("Wifi not functioning: ", err)
 		}
 
-		// Assert Bluetooth is up. We need to poll a little bit here as it might
-		// not yet get initialized after reboot.
-		btClient := network.NewBluetoothNetworkServiceClient(r.Conn)
-		s.Log("Getting BT pref")
-		if err := wifiutil.PollBluetoothBootPref(ctx, btClient, wifiutil.BtOn, credKey); err != nil {
-			s.Fatal("Failed to wait for BT boot pref: ", err)
+		// Assert Bluetooth up.
+		chromeService, err := wifiutil.NewChromeServiceClient(ctx, r.Conn, credKey)
+		if err != nil {
+			s.Fatal("Failed to create new chrome service client: ", err)
 		}
-		s.Log("Getting BT powered status")
-		if err := wifiutil.PollBluetoothPoweredStatus(ctx, btClient, wifiutil.BtOn); err != nil {
-			s.Fatal("Failed to wait for BT to be powered: ", err)
+		defer func(ctx context.Context) {
+			_, err := chromeService.Close(ctx, &empty.Empty{})
+			if err != nil {
+				s.Error("Failed to close chrome service client: ", err)
+			}
+		}(ctx)
+		bluetoothService, err := wifiutil.NewBluetoothServiceClient(ctx, r.Conn)
+		if err != nil {
+			s.Fatal("Failed to create new bluetooth service client: ", err)
 		}
-		if _, err := btClient.ValidateBluetoothFunctional(ctx, &empty.Empty{}); err != nil {
-			s.Fatal("Could not get validate Bluetooth status: ", err)
+		if err := wifiutil.AssertBluetoothEnabledState(ctx, bluetoothService, true); err != nil {
+			s.Fatal("Bluetooth not functioning: ", err)
 		}
+
 		// Disable WiFi.
 		wifiClient := wifi.NewShillServiceClient(r.Conn)
 		if _, err := wifiClient.SetWifiEnabled(ctx, &wifi.SetWifiEnabledRequest{Enabled: false}); err != nil {
@@ -144,18 +151,22 @@ func PersistenceBluetoothSansWifi(ctx context.Context, s *testing.State) {
 		s.Fatal("Wifi is on, expected to be off ")
 	}
 
-	// Assert Bluetooth is up. We need to poll a little bit here as it might
-	// not yet get initialized after reboot.
-	btClient := network.NewBluetoothNetworkServiceClient(r.Conn)
-	s.Log("Getting BT pref")
-	if err := wifiutil.PollBluetoothBootPref(ctx, btClient, wifiutil.BtOn, credKey); err != nil {
-		s.Fatal("Failed to wait for BT boot pref: ", err)
+	// Assert Bluetooth is up.
+	chromeService, err := wifiutil.NewChromeServiceClient(ctx, r.Conn, credKey)
+	if err != nil {
+		s.Fatal("Failed to create new chrome service client: ", err)
 	}
-	s.Log("Getting BT powered status")
-	if err := wifiutil.PollBluetoothPoweredStatus(ctx, btClient, wifiutil.BtOn); err != nil {
-		s.Fatal("Failed to wait for BT to be powered: ", err)
+	defer func(ctx context.Context) {
+		_, err := chromeService.Close(ctx, &empty.Empty{})
+		if err != nil {
+			s.Error("Failed to close chrome service client: ", err)
+		}
+	}(ctx)
+	bluetoothService, err := wifiutil.NewBluetoothServiceClient(ctx, r.Conn)
+	if err != nil {
+		s.Fatal("Failed to create new bluetooth service client: ", err)
 	}
-	if _, err := btClient.ValidateBluetoothFunctional(ctx, &empty.Empty{}); err != nil {
-		s.Fatal("Could not get validate Bluetooth status: ", err)
+	if err := wifiutil.AssertBluetoothEnabledState(ctx, bluetoothService, true); err != nil {
+		s.Fatal("Bluetooth not functioning: ", err)
 	}
 }

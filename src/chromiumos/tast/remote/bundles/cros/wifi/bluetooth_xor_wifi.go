@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"chromiumos/tast/services/cros/bluetooth"
 	"github.com/golang/protobuf/ptypes/empty"
 
 	tdreq "chromiumos/tast/common/testdevicerequirements"
@@ -16,7 +17,6 @@ import (
 	"chromiumos/tast/remote/bundles/cros/wifi/wifiutil"
 	"chromiumos/tast/remote/wificell"
 	"chromiumos/tast/rpc"
-	"chromiumos/tast/services/cros/network"
 	"chromiumos/tast/services/cros/wifi"
 	"chromiumos/tast/testing"
 )
@@ -32,8 +32,11 @@ func init() {
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:         []string{"group:wificell", "wificell_func"},
 		SoftwareDeps: []string{"chrome"},
-		ServiceDeps:  []string{wificell.ShillServiceName, "tast.cros.network.BluetoothNetworkService"},
-		Vars:         []string{"router"},
+		ServiceDeps: []string{
+			wificell.ShillServiceName,
+			"tast.cros.bluetooth.BluetoothService",
+		},
+		Vars: []string{"router"},
 		// List of requirements this test satisfies.
 		Requirements: []string{tdreq.WiFiCoexSupportBT, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 	})
@@ -51,9 +54,13 @@ func BluetoothXorWifi(ctx context.Context, s *testing.State) {
 		ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 		defer cancel()
 		// Enable Bluetooth device.
-		btClient := network.NewBluetoothNetworkServiceClient(r.Conn)
-		if _, err := btClient.SetBluetoothPoweredFast(ctx, &network.SetBluetoothPoweredFastRequest{Powered: true}); err != nil {
-			s.Error("Could not enable Bluetooth: ", err)
+		bluetoothService, err := wifiutil.NewBluetoothServiceClient(ctx, r.Conn)
+		if err != nil {
+			s.Error("Failed to create new bluetooth service client: ", err)
+		} else {
+			if _, err := bluetoothService.Enable(ctx, &empty.Empty{}); err != nil {
+				s.Error("Failed to re-enable bluetooth: ", err)
+			}
 		}
 		wifiClient := wifi.NewShillServiceClient(r.Conn)
 		// Enable WiFi.
@@ -99,24 +106,27 @@ func BluetoothXorWifi(ctx context.Context, s *testing.State) {
 	// Validate phys can function without the other on multiple channels
 	channels := [4]int{36, 149, 1, 11}
 	wifiClient := wifi.NewShillServiceClient(r.Conn)
-	btClient := network.NewBluetoothNetworkServiceClient(r.Conn)
+	bluetoothService, err := wifiutil.NewBluetoothServiceClient(ctx, r.Conn)
+	if err != nil {
+		s.Fatal("Failed to create new bluetooth service client: ", err)
+	}
 	for _, ch := range channels {
-		if err := togglePhys(ctx, ch, btClient, tf, wifiClient, true); err != nil {
+		if err := togglePhys(ctx, ch, bluetoothService, tf, wifiClient, true); err != nil {
 			s.Fatalf("Failed to run WiFi without Bluetooth path on channel %d: %v", ch, err)
 		}
-		if err := togglePhys(ctx, ch, btClient, tf, wifiClient, false); err != nil {
+		if err := togglePhys(ctx, ch, bluetoothService, tf, wifiClient, false); err != nil {
 			s.Fatalf("Failed to run Bluetooth without WiFi path on channel %d: %v", ch, err)
 		}
 	}
 }
 
-func togglePhys(ctx context.Context, channel int, btClient network.BluetoothNetworkServiceClient, tf *wificell.TestFixture, wifiClient wifi.ShillServiceClient, enableWifiFirst bool) error {
+func togglePhys(ctx context.Context, channel int, bluetoothService bluetooth.BluetoothServiceClient, tf *wificell.TestFixture, wifiClient wifi.ShillServiceClient, enableWifiFirst bool) error {
 	// Disable and Assert Wifi is down
 	if err := setAssertWifi(ctx, tf, wifiClient, []int{}, false); err != nil {
 		return err
 	}
 	// Disable Bluetooth and assert Bluetooth is down.
-	if err := setAssertBluetooth(ctx, btClient, false); err != nil {
+	if err := setAssertBluetooth(ctx, bluetoothService, false); err != nil {
 		return err
 	}
 
@@ -126,12 +136,12 @@ func togglePhys(ctx context.Context, channel int, btClient network.BluetoothNetw
 			return err
 		}
 		// Enable and Assert Bluetooth is up.
-		if err := setAssertBluetooth(ctx, btClient, true); err != nil {
+		if err := setAssertBluetooth(ctx, bluetoothService, true); err != nil {
 			return err
 		}
 	} else {
 		// Enable and Assert Bluetooth is up.
-		if err := setAssertBluetooth(ctx, btClient, true); err != nil {
+		if err := setAssertBluetooth(ctx, bluetoothService, true); err != nil {
 			return err
 		}
 		// Enable and Assert WiFi is up
@@ -142,20 +152,29 @@ func togglePhys(ctx context.Context, channel int, btClient network.BluetoothNetw
 	return nil
 }
 
-func setAssertBluetooth(ctx context.Context, btClient network.BluetoothNetworkServiceClient, enabled bool) error {
+func setAssertBluetooth(ctx context.Context, bluetoothService bluetooth.BluetoothServiceClient, enabled bool) error {
 	if enabled {
 		// Enable Bluetooth and assert Bluetooth is up.
-		if _, err := btClient.SetBluetoothPoweredFast(ctx, &network.SetBluetoothPoweredFastRequest{Powered: true}); err != nil {
-			return errors.Wrap(err, "could not enable Bluetooth")
+		testing.ContextLog(ctx, "Enabling bluetooth")
+		if _, err := bluetoothService.Enable(ctx, &empty.Empty{}); err != nil {
+			return errors.Wrap(err, "failed to enable bluetooth")
 		}
-		// Validate Bluetooth adapter functionality by executing a discovery scan.
-		if _, err := btClient.ValidateBluetoothFunctional(ctx, &empty.Empty{}); err != nil {
-			return errors.Wrap(err, "could not validate Bluetooth status")
+		testing.ContextLog(ctx, "Verifying that bluetooth has been enabled")
+		if err := wifiutil.PollBluetoothPoweredStatus(ctx, bluetoothService, true); err != nil {
+			return errors.Wrap(err, "failed to verify bluetooth adapter was powered on")
+		}
+		if err := wifiutil.ValidateBluetoothFunctional(ctx, bluetoothService); err != nil {
+			return errors.Wrap(err, "failed to validate Bluetooth status")
 		}
 	} else {
 		// Disable Bluetooth and assert Bluetooth is down.
-		if _, err := btClient.SetBluetoothPoweredFast(ctx, &network.SetBluetoothPoweredFastRequest{Powered: false}); err != nil {
-			return errors.Wrap(err, "could not disable Bluetooth")
+		testing.ContextLog(ctx, "Disabling bluetooth")
+		if _, err := bluetoothService.Disable(ctx, &empty.Empty{}); err != nil {
+			return errors.Wrap(err, "failed to disable bluetooth")
+		}
+		testing.ContextLog(ctx, "Verifying that bluetooth has been disabled")
+		if err := wifiutil.PollBluetoothPoweredStatus(ctx, bluetoothService, false); err != nil {
+			return errors.Wrap(err, "failed to verify bluetooth adapter was powered off")
 		}
 	}
 	return nil
