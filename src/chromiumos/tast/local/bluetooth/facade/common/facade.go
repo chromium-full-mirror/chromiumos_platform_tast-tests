@@ -11,8 +11,14 @@ import (
 
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/chrome/localstate"
+	localCommon "chromiumos/tast/local/common"
 	"chromiumos/tast/testing"
 )
+
+const ashSystemBluetoothAdapterEnabled = "ash.system.bluetooth.adapter_enabled"
 
 // BluetoothAdapterProperties is a collection of properties of a bluetooth
 // adapter.
@@ -197,6 +203,18 @@ type BluetoothFacade interface {
 	// DiscoverDevice should be called prior to PairDevice to ensure that the
 	// adapter knows of the device for pairing.
 	PairDevice(ctx context.Context, address, pin string) error
+
+	// EnabledOnBoot returns the value of the system setting that determines if
+	// the bluetooth adapter is enabled on boot.
+	// Note: This requires the chrome ui to have been loaded with the signin
+	// profile test extension key.
+	EnabledOnBoot(ctx context.Context) (bool, error)
+
+	// SetEnabledOnBoot sets the value of the system setting that determines if
+	// the bluetooth adapter is enabled on boot.
+	// Note: This requires the chrome ui to have been loaded with the signin
+	// profile test extension key.
+	SetEnabledOnBoot(ctx context.Context, adapterEnabledOnBoot bool) error
 }
 
 // DiscoverDevice will start discovery, wait until a device is found, and then
@@ -245,5 +263,88 @@ func DiscoverDevice(ctx context.Context, facade BluetoothFacade, address string,
 		return errors.Wrapf(err, "failed to wait until bluetooth adapter discovered device with address %q", address)
 	}
 	testing.ContextLogf(ctx, "Successfully discovered bluetooth device with address %q", address)
+	return nil
+}
+
+// EnabledOnBoot returns the value of the system setting that determines if
+// the bluetooth adapter is enabled on boot.
+// Note: This requires the chrome ui to have been loaded with the signin
+// profile test extension key.
+func EnabledOnBoot(ctx context.Context) (bool, error) {
+	signinProfileConn, err := signinProfileTestAPIConn(ctx)
+	if err != nil {
+		return false, err
+	}
+	return chromeSettingsPrivateGetPref(ctx, signinProfileConn, ashSystemBluetoothAdapterEnabled)
+}
+
+// SetEnabledOnBoot sets the value of the system setting that determines if
+// the bluetooth adapter is enabled on boot.
+// Note: This requires the chrome ui to have been loaded with the signin
+// profile test extension key.
+func SetEnabledOnBoot(ctx context.Context, adapterEnabled bool) error {
+	signinProfileConn, err := signinProfileTestAPIConn(ctx)
+	if err != nil {
+		return err
+	}
+
+	// Set preference.
+	if err := chromeSettingsPrivateSetPref(ctx, signinProfileConn, ashSystemBluetoothAdapterEnabled, adapterEnabled); err != nil {
+		return err
+	}
+
+	// Verify that the boot setting is set properly.
+	enabledSettingValue, err := chromeSettingsPrivateGetPref(ctx, signinProfileConn, ashSystemBluetoothAdapterEnabled)
+	if err != nil {
+		return err
+	}
+	if enabledSettingValue != adapterEnabled {
+		return errors.Errorf("failed to set boot preference (%s) to %t", ashSystemBluetoothAdapterEnabled, adapterEnabled)
+	}
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		enabledSettingValue, err := localstate.UnmarshalPref(browser.TypeAsh, "ash.system.bluetooth.adapter_enabled")
+		if err != nil {
+			return errors.Wrap(err, "failed to extract bluetooth status from Local State")
+		}
+		enabled, ok := enabledSettingValue.(bool)
+		if !ok || (enabled != adapterEnabled) {
+			return errors.Errorf("ash Bluetooth preference not updated properly: wanted %v, got %v", adapterEnabled, enabledSettingValue)
+		}
+		return nil
+	}, &testing.PollOptions{
+		Timeout:  40 * time.Second,
+		Interval: time.Second,
+	}); err != nil {
+		return err
+	}
+	return nil
+}
+
+func signinProfileTestAPIConn(ctx context.Context) (*chrome.TestConn, error) {
+	lc := localCommon.SharedObjectsForServiceSingleton
+	if lc == nil || lc.Chrome == nil {
+		return nil, errors.New("DUT not logged into chrome")
+	}
+	testConn, err := lc.Chrome.SigninProfileTestAPIConn(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create signin profile test API connection")
+	}
+	return testConn, nil
+}
+
+func chromeSettingsPrivateGetPref(ctx context.Context, signinProfileConn *chrome.TestConn, key string) (bool, error) {
+	var out struct {
+		Value bool `json:"value"`
+	}
+	if err := signinProfileConn.Call(ctx, &out, "tast.promisify(chrome.settingsPrivate.getPref)", key); err != nil {
+		return false, errors.Wrapf(err, "failed to call chrome.settingsPrivate.getPref(%s)", key)
+	}
+	return out.Value, nil
+}
+
+func chromeSettingsPrivateSetPref(ctx context.Context, signinProfileConn *chrome.TestConn, key string, value bool) error {
+	if err := signinProfileConn.Call(ctx, nil, "tast.promisify(chrome.settingsPrivate.setPref)", key, value); err != nil {
+		return errors.Wrapf(err, "failed to call chrome.settingsPrivate.setPref(%s)", key)
+	}
 	return nil
 }

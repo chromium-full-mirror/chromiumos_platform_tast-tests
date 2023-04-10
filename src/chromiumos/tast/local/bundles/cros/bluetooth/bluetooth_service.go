@@ -481,3 +481,32 @@ func (b *BtService) PairDevice(ctx context.Context, request *pb.PairDeviceReques
 	}
 	return &emptypb.Empty{}, nil
 }
+
+// EnabledOnBoot returns the value of the system setting that determines if
+// the bluetooth adapter is enabled on boot.
+// Note: This requires a chrome user to be currently logged in.
+func (b *BtService) EnabledOnBoot(ctx context.Context, empty *emptypb.Empty) (*pb.EnabledOnBootResponse, error) {
+	if err := b.assertHasFacade(); err != nil {
+		return nil, err
+	}
+	enabledOnBoot, err := b.facade.EnabledOnBoot(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.EnabledOnBootResponse{
+		AdapterEnabledOnBoot: enabledOnBoot,
+	}, nil
+}
+
+// SetEnabledOnBoot sets the value of the system setting that determines if
+// the bluetooth adapter is enabled on boot.
+// Note: This requires a chrome user to be currently logged in.
+func (b *BtService) SetEnabledOnBoot(ctx context.Context, request *pb.SetEnabledOnBootRequest) (*emptypb.Empty, error) {
+	if err := b.assertHasFacade(); err != nil {
+		return nil, err
+	}
+	if err := b.facade.SetEnabledOnBoot(ctx, request.AdapterEnabledOnBoot); err != nil {
+		return nil, err
+	}
+	return &emptypb.Empty{}, nil
+}

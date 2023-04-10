@@ -680,3 +680,19 @@ func (b *BluetoothFlossFacade) AdapterClient() (*floss.AdapterClient, error) {
 	}
 	return b.adapterClient, nil
 }
+
+// EnabledOnBoot returns the value of the system setting that determines if
+// the bluetooth adapter is enabled on boot.
+// Note: This requires the chrome ui to have been loaded with the signin
+// profile test extension key.
+func (b *BluetoothFlossFacade) EnabledOnBoot(ctx context.Context) (bool, error) {
+	return common.EnabledOnBoot(ctx)
+}
+
+// SetEnabledOnBoot sets the value of the system setting that determines if
+// the bluetooth adapter is enabled on boot.
+// Note: This requires the chrome ui to have been loaded with the signin
+// profile test extension key.
+func (b *BluetoothFlossFacade) SetEnabledOnBoot(ctx context.Context, adapterEnabledOnBoot bool) error {
+	return common.SetEnabledOnBoot(ctx, adapterEnabledOnBoot)
+}

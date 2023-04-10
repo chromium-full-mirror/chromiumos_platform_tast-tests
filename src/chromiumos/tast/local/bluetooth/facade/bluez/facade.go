@@ -567,3 +567,19 @@ func (b *BluetoothBluezFacade) PairDevice(ctx context.Context, address, pin stri
 	testing.ContextLogf(ctx, "Successfully paired and connected bluetooth device with address %q with the bluez bluetooth adapter", address)
 	return nil
 }
+
+// EnabledOnBoot returns the value of the system setting that determines if
+// the bluetooth adapter is enabled on boot.
+// Note: This requires the chrome ui to have been loaded with the signin
+// profile test extension key.
+func (b *BluetoothBluezFacade) EnabledOnBoot(ctx context.Context) (bool, error) {
+	return common.EnabledOnBoot(ctx)
+}
+
+// SetEnabledOnBoot sets the value of the system setting that determines if
+// the bluetooth adapter is enabled on boot.
+// Note: This requires the chrome ui to have been loaded with the signin
+// profile test extension key.
+func (b *BluetoothBluezFacade) SetEnabledOnBoot(ctx context.Context, adapterEnabledOnBoot bool) error {
+	return common.SetEnabledOnBoot(ctx, adapterEnabledOnBoot)
+}

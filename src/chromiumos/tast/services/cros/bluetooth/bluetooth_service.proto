@@ -134,6 +134,18 @@ service BluetoothService {
   // DiscoverDevice should be called prior to PairDevice to ensure that the
   // adapter knows of the device for pairing.
   rpc PairDevice(PairDeviceRequest) returns (google.protobuf.Empty) {}
+
+  // EnabledOnBoot returns the value of the system setting that determines if
+  // the bluetooth adapter is enabled on boot.
+  // Note: This requires the chrome ui to have been loaded with the signin
+  // profile test extension key.
+  rpc EnabledOnBoot(google.protobuf.Empty) returns (EnabledOnBootResponse) {}
+
+  // SetEnabledOnBoot sets the value of the system setting that determines if
+  // the bluetooth adapter is enabled on boot.
+  // Note: This requires the chrome ui to have been loaded with the signin
+  // profile test extension key.
+  rpc SetEnabledOnBoot(SetEnabledOnBootRequest) returns (google.protobuf.Empty) {}
 }
 
 enum BluetoothStackType {
@@ -320,4 +332,12 @@ message DiscoverDeviceRequest {
 message PairDeviceRequest {
   string deviceAddress = 1;
   string pin = 2;
+}
+
+message EnabledOnBootResponse {
+  bool adapter_enabled_on_boot = 1;
+}
+
+message SetEnabledOnBootRequest {
+  bool adapter_enabled_on_boot = 1;
 }
