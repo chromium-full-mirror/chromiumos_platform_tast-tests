@@ -7,6 +7,7 @@ package dropdown
 
 import (
 	"context"
+	"fmt"
 
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -45,4 +46,16 @@ func Values(ctx context.Context, tconn *chrome.TestConn, dropdown *nodewith.Find
 	}
 
 	return availableValues, nil
+}
+
+// SelectDropDownOption returns a function that selects dropdown option with the given option name.
+func SelectDropDownOption(tconn *chrome.TestConn, dropdown *nodewith.Finder, optionName string) uiauto.Action {
+	ui := uiauto.New(tconn)
+	option := nodewith.Name(optionName).Role(role.ListBoxOption).Ancestor(dropdown)
+	return uiauto.Combine(fmt.Sprintf("select option %q", optionName),
+		ui.WaitUntilExists(dropdown),
+		ui.MakeVisible(dropdown),
+		ui.LeftClickUntil(dropdown, ui.Exists(option)),
+		ui.LeftClickUntil(option, ui.Gone(option)),
+	)
 }

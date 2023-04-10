@@ -6,9 +6,16 @@ package network
 
 import (
 	"context"
+	"fmt"
 	"path/filepath"
 	"time"
 
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/ssh"
+	"go.chromium.org/tast/core/ssh/linuxssh"
+	"go.chromium.org/tast/core/testing"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"chromiumos/tast/common/crypto/certificate"
@@ -19,12 +26,6 @@ import (
 	"chromiumos/tast/services/cros/network"
 	"chromiumos/tast/services/cros/ui"
 	"chromiumos/tast/services/cros/wifi"
-	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/rpc"
-	"go.chromium.org/tast/core/ssh"
-	"go.chromium.org/tast/core/ssh/linuxssh"
-	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
@@ -191,8 +192,12 @@ func CertsUsableAfterResume(ctx context.Context, s *testing.State) {
 				Ssid: ap.Config().SSID,
 				Security: &wifi.JoinWifiRequest_EapTls{
 					EapTls: &wifi.JoinWifiRequest_SecurityEapTls{
-						ClientCert: test.certDetails[network.Certificate_CLIENT].Organization,
-						CaCert:     test.certDetails[network.Certificate_CA].Organization,
+						ClientCert: fmt.Sprintf("%s [%s]",
+							test.certDetails[network.Certificate_CA].Organization,
+							test.certDetails[network.Certificate_CLIENT].Organization),
+						CaCert: fmt.Sprintf("%s [%s]",
+							test.certDetails[network.Certificate_CA].Organization,
+							test.certDetails[network.Certificate_CA].Organization),
 					},
 				},
 			}); err != nil {

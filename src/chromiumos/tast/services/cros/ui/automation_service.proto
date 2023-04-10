@@ -75,6 +75,9 @@ service AutomationService {
 
   // GetUITree returns the assessibility tree in string representation.
   rpc GetUITree(GetUITreeRequest) returns (GetUITreeResponse) {}
+
+  // SelectDropDownOption selects dropdown option with the option name.
+  rpc SelectDropDownOption(SelectDropDownOptionRequest) returns (google.protobuf.Empty) {}
 }
 
 message LeftClickRequest {
@@ -158,6 +161,11 @@ message GetUITreeRequest {}
 
 message GetUITreeResponse {
   string ui_tree = 1;
+}
+
+message SelectDropDownOptionRequest {
+  Finder finder = 1;
+  string option_name = 2;
 }
 
 // NodeInfo is a wrapper around chrome.automation API AutomationNode.

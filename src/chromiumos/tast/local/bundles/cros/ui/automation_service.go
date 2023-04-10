@@ -14,12 +14,14 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 	"google.golang.org/grpc"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/checked"
+	"chromiumos/tast/local/chrome/uiauto/dropdown"
 	"chromiumos/tast/local/chrome/uiauto/mouse"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/restriction"
@@ -29,7 +31,6 @@ import (
 	"chromiumos/tast/local/coords"
 	"chromiumos/tast/local/screenshot"
 	pb "chromiumos/tast/services/cros/ui"
-	"chromiumos/tast/testing"
 )
 
 func init() {
@@ -480,6 +481,41 @@ func (svc *AutomationService) GetUITree(ctx context.Context, req *pb.GetUITreeRe
 	}
 
 	return &pb.GetUITreeResponse{UiTree: uiTreeStr}, nil
+}
+
+// SelectDropDownOption selects the dropdown option with the option name.
+func (svc *AutomationService) SelectDropDownOption(ctx context.Context, req *pb.SelectDropDownOptionRequest) (*empty.Empty, error) {
+	svc.sharedObject.ChromeMutex.Lock()
+	defer svc.sharedObject.ChromeMutex.Unlock()
+
+	cr := svc.sharedObject.Chrome
+	if cr == nil {
+		return nil, errors.New("Chrome is not instantiated")
+	}
+
+	// When in OOBE, use SigninProfileTestAPIConn to create the test connection.
+	var tconn *chrome.TestConn
+	var err error
+	if cr.LoginMode() == "NoLogin" {
+		tconn, err = cr.SigninProfileTestAPIConn(ctx)
+	} else {
+		tconn, err = cr.TestAPIConn(ctx)
+	}
+
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create test API connection")
+	}
+
+	finder, err := toFinder(req.Finder)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := dropdown.SelectDropDownOption(tconn, finder, req.OptionName)(ctx); err != nil {
+		return nil, errors.Wrapf(err, "failed calling SelectDropDownOption with finder %v and option name %q", finder.Pretty(), req.OptionName)
+	}
+
+	return &empty.Empty{}, nil
 }
 
 func getUIAutoContext(ctx context.Context, svc *AutomationService) (*uiauto.Context, error) {

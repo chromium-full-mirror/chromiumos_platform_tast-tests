@@ -11,14 +11,16 @@ import (
 	"regexp"
 	"time"
 
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"chromiumos/tast/common/shillconst"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
+	"chromiumos/tast/local/chrome/uiauto/dropdown"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/ossettings"
@@ -28,7 +30,6 @@ import (
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/shill"
 	"chromiumos/tast/services/cros/wifi"
-	"chromiumos/tast/testing"
 )
 
 func init() {
@@ -113,14 +114,14 @@ func (s *Service) JoinWifiFromQuickSettings(ctx context.Context, req *wifi.JoinW
 		return &emptypb.Empty{}, errors.Wrap(err, "failed to fill the SSID")
 	}
 
-	if err := joinWifiSetSecurity(res.ui, kb, req, joinWiFiNetworkDialog)(ctx); err != nil {
+	if err := joinWifiSetSecurity(res.tconn, res.ui, kb, req, joinWiFiNetworkDialog)(ctx); err != nil {
 		return &emptypb.Empty{}, errors.Wrap(err, "failed to set security")
 	}
 
 	return &emptypb.Empty{}, verifyConnectedStatus(ctx, req.Ssid, true)
 }
 
-func joinWifiSetSecurity(ui *uiauto.Context, kb *input.KeyboardEventWriter, req *wifi.JoinWifiRequest, joinWiFiNetworkDialogRoot *nodewith.Finder) uiauto.Action {
+func joinWifiSetSecurity(tconn *chrome.TestConn, ui *uiauto.Context, kb *input.KeyboardEventWriter, req *wifi.JoinWifiRequest, joinWiFiNetworkDialogRoot *nodewith.Finder) uiauto.Action {
 	var securityOptionName string
 	var authenticateAction uiauto.Action
 	switch req.Security.(type) {
@@ -138,9 +139,9 @@ func joinWifiSetSecurity(ui *uiauto.Context, kb *input.KeyboardEventWriter, req 
 		userComboBox := nodewith.Name("User certificate").Role(role.ComboBoxSelect).Ancestor(joinWiFiNetworkDialogRoot)
 		identityTextField := nodewith.Name("Identity").Role(role.TextField).Ancestor(joinWiFiNetworkDialogRoot)
 		authenticateAction = uiauto.Combine("set EAP certificates",
-			selectComboBoxOption(ui, eapMethodComboBox, "EAP-TLS"),
-			selectComboBoxOption(ui, caComboBox, req.GetEapTls().GetCaCert()),
-			selectComboBoxOption(ui, userComboBox, req.GetEapTls().GetClientCert()),
+			dropdown.SelectDropDownOption(tconn, eapMethodComboBox, "EAP-TLS"),
+			dropdown.SelectDropDownOption(tconn, caComboBox, req.GetEapTls().GetCaCert()),
+			dropdown.SelectDropDownOption(tconn, userComboBox, req.GetEapTls().GetClientCert()),
 			// Any non-empty string would work for EAP-TLS.
 			setTextField(ui, kb, identityTextField, "test"),
 		)
@@ -149,7 +150,7 @@ func joinWifiSetSecurity(ui *uiauto.Context, kb *input.KeyboardEventWriter, req 
 	securityComboBox := nodewith.Name("Security").Role(role.ComboBoxSelect).Ancestor(joinWiFiNetworkDialogRoot)
 	connectButton := nodewith.NameContaining("Connect").Role(role.Button).Ancestor(joinWiFiNetworkDialogRoot)
 	return uiauto.Combine("set security and connect to wifi "+req.Ssid,
-		selectComboBoxOption(ui, securityComboBox, securityOptionName),
+		dropdown.SelectDropDownOption(tconn, securityComboBox, securityOptionName),
 		authenticateAction,
 		ui.LeftClick(connectButton),
 	)
@@ -332,16 +333,5 @@ func setTextField(ui *uiauto.Context, kb *input.KeyboardEventWriter, textField *
 		kb.AccelAction("ctrl+A"),
 		kb.AccelAction("backspace"),
 		kb.TypeAction(text),
-	)
-}
-
-func selectComboBoxOption(ui *uiauto.Context, comboBox *nodewith.Finder, optionName string) uiauto.Action {
-	option := nodewith.NameContaining(optionName).Role(role.ListBoxOption).Ancestor(comboBox)
-	return uiauto.Combine(fmt.Sprintf("select combo box option %q", optionName),
-		ui.WaitUntilExists(comboBox),
-		ui.MakeVisible(comboBox),
-		ui.LeftClickUntil(comboBox, ui.WithTimeout(3*time.Second).WaitUntilExists(option)),
-		ui.LeftClick(option),
-		ui.WaitUntilGone(option),
 	)
 }
