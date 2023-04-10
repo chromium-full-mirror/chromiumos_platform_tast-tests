@@ -30,7 +30,7 @@ func init() {
 		Desc:         "Check that we can probe cros_healthd for boot performance info",
 		Contacts:     []string{"cros-tdm-tpe-eng@google.com"},
 		BugComponent: "b:982097",
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline"},
 		// Skip on reven board (ChromeOS Flex) because the boot
 		// performance metrics are not supported on it.
 		SoftwareDeps: []string{"chrome", "diagnostics", "boot_perf_info"},
