@@ -21,6 +21,7 @@ import (
 	mediacpu "chromiumos/tast/local/media/cpu"
 	"chromiumos/tast/local/sysutil"
 	"chromiumos/tast/local/upstart"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -33,23 +34,63 @@ func init() {
 		Contacts:     []string{"chromeos-camera-eng@google.com", "kamesan@chromium.org"},
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome", caps.HWDecodeJPEG},
-		Data:         []string{decodeAccelJpegPerfTestFile},
-		// The default timeout is not long enough for the unittest to finish. Set the
-		// timeout to 8m so the decode latency could be up to 20ms:
-		//   20 ms * 10000 times * 2 runs (SW,HW) + 1 min (CPU idle time) < 8 min.
-		Timeout:      8 * time.Minute,
+		Data: []string{"peach_pi-1280x720.jpg", "pink-nature-1920x1080.jpg",
+			"red-squirrel-2560x1920.jpg", "bonsai-tree-3840x2160.jpg"},
+		// The default timeout is not long enough for the unittest to finish.
+		// The decode latency for 1280x720 resolution can take up to 20 ms, time
+		// needed : 20 ms * 10000 times * 2 runs (SW,HW) + 1 min (CPU idle time) ~ 7 min.
+		// Similarly,
+		// 1920x1080 up to 25 ms, ~ 10 min
+		// 2560x1920 up to 30 ms, ~ 11 min
+		// 3840x2160 up to 40 ms, ~ 15 min
+		// Total time < 44 min.
+		// Set the timeout to 44m.
+		Timeout:      44 * time.Minute,
 		BugComponent: "b:167281",
 	})
 }
 
-const decodeAccelJpegPerfTestFile = "peach_pi-1280x720.jpg"
+type decodeAccelJpegPerfResolution struct {
+	TestFile       string
+	JPEGResolution string
+}
 
-// DecodeAccelJPEGPerf measures SW/HW jpeg decode performance by running the
-// PerfSW and PerfJDA tests in the jpeg_decode_accelerator_unittest.
+var decodeAccelJpegPerfResolutions = []decodeAccelJpegPerfResolution{
+	{
+		TestFile:       "peach_pi-1280x720.jpg",
+		JPEGResolution: "1280x720",
+	},
+	{
+		TestFile:       "pink-nature-1920x1080.jpg",
+		JPEGResolution: "1920x1080",
+	},
+	{
+		TestFile:       "red-squirrel-2560x1920.jpg",
+		JPEGResolution: "2560x1920",
+	},
+	{
+		TestFile:       "bonsai-tree-3840x2160.jpg",
+		JPEGResolution: "3840x2160",
+	},
+}
+
+// DecodeAccelJPEGPerf runs for specific resolutions to measure the performance
+// of SW/HW JPEG decoders and generates performance metrics for each resolution.
+func DecodeAccelJPEGPerf(ctx context.Context, s *testing.State) {
+	p := perf.NewValues()
+	for _, item := range decodeAccelJpegPerfResolutions {
+		decodeAccelJPEGPerfForResolution(ctx, s, item, p)
+	}
+	p.Save(s.OutDir())
+}
+
+// decodeAccelJPEGPerfForResolution measures SW/HW jpeg decode performance of a resolution
+// by running the PerfSW and PerfJDA tests in the jpeg_decode_accelerator_unittest.
 // TODO(dstaessens@) Currently the performance tests decode JPEGs as fast as
 // possible. But this means a performant HW decoder might actually increase
 // CPU usage, as the CPU becomes the bottleneck.
-func DecodeAccelJPEGPerf(ctx context.Context, s *testing.State) {
+func decodeAccelJPEGPerfForResolution(ctx context.Context, s *testing.State,
+	item decodeAccelJpegPerfResolution, p *perf.Values) {
 	const (
 		// Duration of the interval during which CPU usage will be measured.
 		measureDuration = 10 * time.Second
@@ -63,7 +104,7 @@ func DecodeAccelJPEGPerf(ctx context.Context, s *testing.State) {
 		cleanupTime = 5 * time.Second
 	)
 
-	testDir := filepath.Dir(s.DataPath(decodeAccelJpegPerfTestFile))
+	testDir := filepath.Dir(s.DataPath(item.TestFile))
 
 	// Stop the UI job. While this isn't required to run the test binary, it's
 	// possible a previous tests left tabs open or an animation is playing,
@@ -89,48 +130,47 @@ func DecodeAccelJPEGPerf(ctx context.Context, s *testing.State) {
 
 	s.Log("Measuring SW JPEG decode performance")
 	cpuUsageSW, metricsSW := runJPEGPerfBenchmark(ctx, s, testDir,
-		measureDuration, perfJPEGDecodeTimes, swFilter, "sw")
+		measureDuration, perfJPEGDecodeTimes, swFilter, "sw", item)
 	s.Log("Measuring HW JPEG decode performance")
 	cpuUsageHW, metricsHW := runJPEGPerfBenchmark(ctx, s, testDir,
-		measureDuration, perfJPEGDecodeTimes, hwFilter, "hw")
+		measureDuration, perfJPEGDecodeTimes, hwFilter, "hw", item)
 
-	p := perf.NewValues()
 	p.Set(perf.Metric{
-		Name:      "sw_jpeg_decode_cpu",
+		Name:      "sw_jpeg_decode_cpu_" + item.JPEGResolution,
 		Unit:      "percent",
 		Direction: perf.SmallerIsBetter,
 	}, cpuUsageSW)
 	p.Set(perf.Metric{
-		Name:      "hw_jpeg_decode_cpu",
+		Name:      "hw_jpeg_decode_cpu_" + item.JPEGResolution,
 		Unit:      "percent",
 		Direction: perf.SmallerIsBetter,
 	}, cpuUsageHW)
 	for name, value := range metricsSW {
 		p.Set(perf.Metric{
-			Name:      name,
+			Name:      name + "_" + item.JPEGResolution,
 			Unit:      "milliseconds",
 			Direction: perf.SmallerIsBetter,
 		}, value)
 	}
 	for name, value := range metricsHW {
 		p.Set(perf.Metric{
-			Name:      name,
+			Name:      name + "_" + item.JPEGResolution,
 			Unit:      "milliseconds",
 			Direction: perf.SmallerIsBetter,
 		}, value)
 	}
-	p.Save(s.OutDir())
 }
 
 // runJPEGPerfBenchmark runs the JPEG decode accelerator unittest binary, and
 // returns the measured CPU usage percentage and decode latency.
 func runJPEGPerfBenchmark(ctx context.Context, s *testing.State, testDir string,
-	measureDuration time.Duration, perfJPEGDecodeTimes int, filter, id string) (float64, map[string]float64) {
+	measureDuration time.Duration, perfJPEGDecodeTimes int, filter, id string,
+	item decodeAccelJpegPerfResolution) (float64, map[string]float64) {
 	// Measures CPU usage while running the unittest, and waits for the unittest
 	// process to finish for the complete logs.
 	const exec = "jpeg_decode_accelerator_unittest"
-	logPath := fmt.Sprintf("%s/%s.%s.log", s.OutDir(), exec, id)
-	outPath := fmt.Sprintf("%s/perf_output.%s.json", s.OutDir(), id)
+	logPath := fmt.Sprintf("%s/%s.%s.%s.log", s.OutDir(), exec, item.JPEGResolution, id)
+	outPath := fmt.Sprintf("%s/perf_output.%s.%s.json", s.OutDir(), item.JPEGResolution, id)
 	startTime := time.Now()
 	measurements, err := mediacpu.MeasureProcessUsage(ctx, measureDuration, mediacpu.WaitProcess,
 		gtest.New(
@@ -141,7 +181,7 @@ func runJPEGPerfBenchmark(ctx context.Context, s *testing.State, testDir string,
 				"--perf_decode_times="+strconv.Itoa(perfJPEGDecodeTimes),
 				"--perf_output_path="+outPath,
 				"--test_data_path="+testDir+"/",
-				"--jpeg_filenames="+decodeAccelJpegPerfTestFile),
+				"--jpeg_filenames="+item.TestFile),
 			gtest.UID(int(sysutil.ChronosUID)),
 		))
 	if err != nil {
