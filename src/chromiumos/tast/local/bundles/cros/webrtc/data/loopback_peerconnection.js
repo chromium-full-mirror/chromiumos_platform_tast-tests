@@ -5,12 +5,45 @@
 let localPeerConnection = new RTCPeerConnection();
 let remotePeerConnection = new RTCPeerConnection();
 
+function nextFrame(t) {
+  return new Promise(resolve => {
+    // We could use here requestAnimationFrame(resolve) but since the workload
+    // is relatively light, we'll get such frames quite fast (~60Hz).
+    setTimeout(resolve, t)
+  })
+}
+
+async function drawAlternatingColours(canvasId, framerate) {
+  const GREEN = [0, 1, 0, 1];
+  const BLUE = [0, 0, 1, 1];
+
+  var context = canvasId.getContext('webgl', {alpha : true});
+  context.clearColor(GREEN[0], GREEN[1], GREEN[2], GREEN[3]);
+  context.clear(context.COLOR_BUFFER_BIT);
+  await nextFrame(1000 / framerate);
+  context.clearColor(BLUE[0], BLUE[1], BLUE[2], BLUE[3]);
+  context.clear(context.COLOR_BUFFER_BIT);
+  await nextFrame(1000 / framerate);
+
+  drawAlternatingColours(canvasId, framerate);
+}
+
 async function start(
   profile, width, height, simulcasts, svcScalabilityMode, displayMediaType) {
-  let constraints = {audio : false, video : {width : width, height : height}};
+  let constraints = {audio : false,
+                     video : {
+                       width : width,
+                       height : height,
+                     }
+                    };
   if (displayMediaType !== '') {
     constraints.video.displaySurface = displayMediaType;
+    constraints.video.framerate = {min: 0, max:30}
     constraints.selfBrowserSurface = "include";
+
+    const canvas = document.getElementById('canvas');
+    const FRAMERATE = 30;
+    drawAlternatingColours(canvas, FRAMERATE);
   }
 
   localPeerConnection.onicecandidate = e =>
