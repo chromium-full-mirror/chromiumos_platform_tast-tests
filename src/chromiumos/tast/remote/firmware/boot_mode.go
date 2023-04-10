@@ -1039,8 +1039,14 @@ func (ms *ModeSwitcher) EnableRecMode(ctx context.Context, usbMux servo.USBMuxSt
 		}
 		ecStream = out
 
-		var regexpThermalShutdown = `(?i)thermal shutdown`
-		thermalShutdown := regexp.MustCompile(regexpThermalShutdown).FindStringSubmatch(ecStream)
+		// Based on chipset_shutdown_reason defined in ec_command.h found under the
+		// ec repo, 32776 would refer to thermal shutdown.
+		var (
+			regexpThermalShutdown      = `(?i)thermal shutdown`
+			regexpShutdownReason       = `chipset_force_shutdown\(\)\s+32776`
+			regexpMatchThermalShutdown = `(` + regexpThermalShutdown + `|` + regexpShutdownReason + `)`
+		)
+		thermalShutdown := regexp.MustCompile(regexpMatchThermalShutdown).FindStringSubmatch(ecStream)
 		if len(thermalShutdown) != 0 {
 			testing.ContextLog(ctx, "Warning!!! Captured thermal shutdown")
 			currPowerState, err := h.Servo.GetECSystemPowerState(ctx)
