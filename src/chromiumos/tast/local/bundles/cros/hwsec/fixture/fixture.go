@@ -79,12 +79,12 @@ func init() {
 		TearDownTimeout: crossVersionTearDownTimeout,
 		Parent:          "crossVersionBackup",
 		Impl: &crossVersionFixtImpl{
-			dataPrefix: "R112-15359.7.0_betty_20230302",
+			dataPrefix: "R112-15359.49.0_betty_20230410",
 			useCurrent: false,
 		},
 		Data: []string{
-			"cross_version_login/R112-15359.7.0_betty_20230302_config.json",
-			"cross_version_login/R112-15359.7.0_betty_20230302_data.tar.gz",
+			"cross_version_login/R112-15359.49.0_betty_20230410_config.json",
+			"cross_version_login/R112-15359.49.0_betty_20230410_data.tar.gz",
 		},
 	})
 
@@ -549,6 +549,26 @@ func init() {
 			"cross_version_login/R111-15329.61.0_novato_20230329_data.tar.gz",
 		},
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "crossVersionTpm2R112",
+		Desc: "Loads the data of milestone R112 from the tpm2 device",
+		Contacts: []string{
+			"cros-hwsec@google.com",
+			"chingkang@google.com",
+		},
+		SetUpTimeout:    crossVersionSetUpTimeout,
+		ResetTimeout:    crossVersionResetTimeout,
+		TearDownTimeout: crossVersionTearDownTimeout,
+		Parent:          "crossVersionBackup",
+		Impl: &crossVersionFixtImpl{
+			dataPrefix: "R112-15359.49.0_novato_20230410",
+			useCurrent: false,
+		},
+		Data: []string{
+			"cross_version_login/R112-15359.49.0_novato_20230410_config.json",
+			"cross_version_login/R112-15359.49.0_novato_20230410_data.tar.gz",
+		},
+	})
 
 	// Fixtures of cross version with TPM dynamic
 	testing.AddFixture(&testing.Fixture{
@@ -869,6 +889,26 @@ func init() {
 		Data: []string{
 			"cross_version_login/R111-15329.61.0_reven-vmtest_20230329_config.json",
 			"cross_version_login/R111-15329.61.0_reven-vmtest_20230329_data.tar.gz",
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "crossVersionTpmDynamicR112",
+		Desc: "Loads the data of milestone R112 from the tpm dynamic device",
+		Contacts: []string{
+			"cros-hwsec@google.com",
+			"chingkang@google.com",
+		},
+		SetUpTimeout:    crossVersionSetUpTimeout,
+		ResetTimeout:    crossVersionResetTimeout,
+		TearDownTimeout: crossVersionTearDownTimeout,
+		Parent:          "crossVersionBackup",
+		Impl: &crossVersionFixtImpl{
+			dataPrefix: "R112-15359.49.0_reven-vmtest_20230410",
+			useCurrent: false,
+		},
+		Data: []string{
+			"cross_version_login/R112-15359.49.0_reven-vmtest_20230410_config.json",
+			"cross_version_login/R112-15359.49.0_reven-vmtest_20230410_data.tar.gz",
 		},
 	})
 }

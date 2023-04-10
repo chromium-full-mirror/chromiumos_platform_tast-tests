@@ -31,7 +31,7 @@ var milestoneConfigs = map[int]milestoneConfig{
 	// * Long-term Support (LTS) version - R102.
 	// * Long-term Support (LTS) version - R108.
 	// * the first version with USS enabled - R110.
-	// * latest version - R111.
+	// * the latest version and the first version with USS migration - R112.
 	88:  {critical: true},
 	91:  {critical: true},
 	93:  {critical: true},
@@ -39,7 +39,7 @@ var milestoneConfigs = map[int]milestoneConfig{
 	102: {critical: true},
 	108: {critical: true},
 	110: {critical: true},
-	111: {critical: false},
+	112: {critical: true},
 	// Other versions that are not tested in CQ
 	89:  {critical: false},
 	90:  {critical: false},
@@ -56,7 +56,7 @@ var milestoneConfigs = map[int]milestoneConfig{
 	106: {critical: false},
 	107: {critical: false},
 	109: {critical: false},
-	112: {critical: false},
+	111: {critical: false},
 	// There is no R95 for ChromeOS
 	95: {ignore: true},
 }
@@ -78,17 +78,17 @@ var tpmVersions = []tpmVersion{
 		name:           "tpm2",
 		softwareDeps:   []string{"no_tpm_dynamic", "no_gsc"},
 		milestoneBegin: 88,
-		milestoneEnd:   111,
+		milestoneEnd:   112,
 	}, {
 		name:           "tpm_dynamic",
 		softwareDeps:   []string{"tpm_dynamic", "no_gsc"},
 		milestoneBegin: 96,
-		milestoneEnd:   111,
+		milestoneEnd:   112,
 	},
 }
 
-// We didn't prepare WebAuthn data until M113.
-const webauthnMinMilestone = 113
+// We didn't prepare WebAuthn data until M112.
+const webauthnMinMilestone = 112
 const defaultMinMilestone = 88
 
 func toCamelCase(s string) string {
