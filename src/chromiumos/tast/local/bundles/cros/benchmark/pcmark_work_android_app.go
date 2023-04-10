@@ -63,10 +63,7 @@ func PCMarkWorkAndroidApp(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create test API connection: ", err)
 	}
 
-	uiDevice, err := a.NewUIDevice(ctx)
-	if err != nil {
-		s.Fatal("Failed to setup ARC and Play Store: ", err)
-	}
+	uiDevice := s.FixtValue().(*arc.PreData).UIDevice
 
 	s.Log("Installing with InstallOptionGrantPermissions: ", apkName)
 	if err := a.Install(ctx, s.DataPath(apkName), adb.InstallOptionGrantPermissions); err != nil {
