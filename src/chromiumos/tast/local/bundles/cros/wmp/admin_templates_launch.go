@@ -51,8 +51,7 @@ func init() {
 			pci.SearchFlag(&policy.DeskTemplatesEnabled{}, pci.VerifiedFunctionalityUI),
 		},
 		Params: []testing.Param{{
-			Fixture:   fixture.ChromeAdminDeskTemplatesLoggedIn,
-			ExtraAttr: []string{"group:criticalstaging"},
+			Fixture: fixture.ChromeAdminDeskTemplatesLoggedIn,
 		}, {
 			Name:              "lacros",
 			ExtraSoftwareDeps: []string{"lacros"},

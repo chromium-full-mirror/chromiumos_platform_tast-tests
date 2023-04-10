@@ -46,9 +46,8 @@ func init() {
 		}},
 		VarDeps: []string{"ui.gaiaPoolDefault"},
 		Params: []testing.Param{{
-			Fixture:   "savedDesksEnableWithoutArc",
-			Val:       []apps.App{apps.FilesSWA},
-			ExtraAttr: []string{"group:criticalstaging"},
+			Fixture: "savedDesksEnableWithoutArc",
+			Val:     []apps.App{apps.FilesSWA},
 		}, {
 			Name:              "lacros",
 			Fixture:           "savedDesksEnabledLacrosWithArcBooted",
