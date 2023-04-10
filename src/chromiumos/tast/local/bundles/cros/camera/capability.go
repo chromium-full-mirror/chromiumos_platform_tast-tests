@@ -32,10 +32,10 @@ func Capability(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to read statically-set capabilities: ", err)
 	}
 
-	// Detect USB cameras.
-	usbCams, err := testutil.USBCamerasFromV4L2Test(ctx)
+	// Detect builtin USB cameras.
+	usbCams, err := testutil.BuiltinUsbCamerasFromV4L2Test(ctx)
 	if err != nil {
-		s.Fatal("Failed to get USB cameras: ", err)
+		s.Fatal("Failed to get Built-in USB cameras: ", err)
 	}
 
 	// Detect MIPI cameras.

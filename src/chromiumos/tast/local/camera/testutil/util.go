@@ -172,6 +172,16 @@ func CaptureDevicesFromV4L2Test(ctx context.Context) ([]string, error) {
 	return strings.Fields(string(out)), nil
 }
 
+// BuiltinUsbCamerasFromV4L2Test returns a list of builtin usb camera paths.
+func BuiltinUsbCamerasFromV4L2Test(ctx context.Context) ([]string, error) {
+	cmd := testexec.CommandContext(ctx, "media_v4l2_test", "--list_builtin_usbcam")
+	out, err := cmd.Output(testexec.DumpLogOnError)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to run media_v4l2_test")
+	}
+	return strings.Fields(string(out)), nil
+}
+
 // MIPICamerasFromCrOSCameraTool returns a list of MIPI camera information outputted from cros-camera-tool.
 func MIPICamerasFromCrOSCameraTool(ctx context.Context) ([]map[string]string, error) {
 	cmd := testexec.CommandContext(ctx, "cros-camera-tool", "modules", "list")
