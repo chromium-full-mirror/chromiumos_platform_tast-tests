@@ -46,7 +46,6 @@ func init() {
 				category: "touchpad",
 				duration: 3 * time.Second,
 			},
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			Name: "hdmi",
 			Val: eventStartupParams{
