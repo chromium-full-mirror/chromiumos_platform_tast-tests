@@ -36,6 +36,13 @@ const (
 	defaultCredPath = "/creds/service_accounts/bond_service_account.json"
 )
 
+const (
+	// Most of the Bond API requests will be completed within the defaultSendTimeout.
+	// longerSendTimeout is used when the Bond API needs a longer time to complete the request.
+	defaultSendTimeout = 8 * time.Second
+	longerSendTimeout  = 30 * time.Second
+)
+
 type newClientOption struct {
 	credsJSON []byte
 	endpoint  string
@@ -142,14 +149,24 @@ func (c *Client) send(ctx context.Context, method, url string, reqObj, respObj i
 	return nil
 }
 
-func (c *Client) sendWithRetry(ctx context.Context, method, url string, reqObj, respObj interface{}) error {
+// sendWithRetry sends request with retries.
+// ctx should have a timeout value allowing all the retries to complete.
+// sendTimeout indicates the timeout value of a single request.
+func (c *Client) sendWithRetry(ctx context.Context, method, url string, reqObj, respObj interface{}, sendTimeout time.Duration) error {
 	const (
 		retry           = 3
 		retryInterval   = 500 * time.Millisecond
 		exponentialBase = 10
 	)
 	return action.RetryWithExponentialBackoff(retry, func(ctx context.Context) error {
-		return c.send(ctx, method, url, reqObj, respObj)
+		sendCtx := ctx
+		if sendTimeout != 0 {
+			var cancel context.CancelFunc
+			sendCtx, cancel = context.WithTimeout(ctx, sendTimeout)
+			defer cancel()
+		}
+
+		return c.send(sendCtx, method, url, reqObj, respObj)
 	}, retryInterval, exponentialBase)(ctx)
 }
 
@@ -159,7 +176,7 @@ func (c *Client) AvailableWorkers(ctx context.Context) (int, error) {
 		NumOfAvailableWorkers int `json:"numOfAvailableWorkers"`
 	}
 	resp := availableWorkersResponse{}
-	if err := c.sendWithRetry(ctx, http.MethodGet, c.endpoint+"/v1/workers:count", nil, &resp); err != nil {
+	if err := c.sendWithRetry(ctx, http.MethodGet, c.endpoint+"/v1/workers:count", nil, &resp, defaultSendTimeout); err != nil {
 		return 0, err
 	}
 	return resp.NumOfAvailableWorkers, nil
@@ -183,7 +200,7 @@ func (c *Client) CreateConference(ctx context.Context) (string, error) {
 		},
 	}
 	resp := conferenceResponse{}
-	if err := c.sendWithRetry(ctx, http.MethodPost, c.endpoint+"/v1/conferences:create", req, &resp); err != nil {
+	if err := c.sendWithRetry(ctx, http.MethodPost, c.endpoint+"/v1/conferences:create", req, &resp, defaultSendTimeout); err != nil {
 		return "", err
 	}
 	return resp.Conference.ConferenceCode, nil
@@ -198,7 +215,7 @@ func (c *Client) ExecuteScript(ctx context.Context, script, meetingCode string) 
 		},
 	}
 	resp := map[string]interface{}{}
-	if err := c.sendWithRetry(ctx, http.MethodPost, c.endpoint+"/v1/conference/"+meetingCode+"/script", req, &resp); err != nil {
+	if err := c.sendWithRetry(ctx, http.MethodPost, c.endpoint+"/v1/conference/"+meetingCode+"/script", req, &resp, defaultSendTimeout); err != nil {
 		return err
 	}
 	if success, ok := resp["success"]; ok && success.(bool) {
@@ -309,7 +326,7 @@ func (c *Client) AddBots(ctx context.Context, meetingCode string, numBots int, t
 		"use_random_video_file_for_playback": true,
 	}
 	resp := addBotsResponse{}
-	if err := c.sendWithRetry(ctx, http.MethodPost, c.endpoint+"/v1/conference/"+meetingCode+"/bots:add", req, &resp); err != nil {
+	if err := c.sendWithRetry(ctx, http.MethodPost, c.endpoint+"/v1/conference/"+meetingCode+"/bots:add", req, &resp, longerSendTimeout); err != nil {
 		return nil, 0, err
 	}
 	return resp.BotIDs, resp.NumberOfFailures, nil
@@ -334,7 +351,7 @@ func (c *Client) RemoveAllBots(ctx context.Context, meetingCode string) (failedI
 		"remove_all": true,
 	}
 	resp := removeAllBotsResponse{}
-	if err := c.sendWithRetry(ctx, http.MethodPost, c.endpoint+"/v1/conference/"+meetingCode+"/bots:remove", req, &resp); err != nil {
+	if err := c.sendWithRetry(ctx, http.MethodPost, c.endpoint+"/v1/conference/"+meetingCode+"/bots:remove", req, &resp, defaultSendTimeout); err != nil {
 		return nil, nil, err
 	}
 
@@ -365,7 +382,7 @@ func (c *Client) CreateConferenceWithBots(ctx context.Context, numBots int, ttl 
 	}
 	resp := response{}
 
-	err := c.sendWithRetry(ctx, http.MethodPost, c.endpoint+"/v1/createConferenceWithBots", req, &resp)
+	err := c.sendWithRetry(ctx, http.MethodPost, c.endpoint+"/v1/createConferenceWithBots", req, &resp, longerSendTimeout)
 
 	var nFailures int
 	if resp.ErrorMessages != nil {
@@ -385,7 +402,7 @@ func (c *Client) RemoveAllBotsFromConference(ctx context.Context, conferenceCode
 	}
 	resp := response{}
 
-	err := c.sendWithRetry(ctx, http.MethodPost, c.endpoint+"/v1/removeAllBotsFromConference/"+conferenceCode, nil, &resp)
+	err := c.sendWithRetry(ctx, http.MethodPost, c.endpoint+"/v1/removeAllBotsFromConference/"+conferenceCode, nil, &resp, defaultSendTimeout)
 
 	var nFailures int
 	if resp.ErrorMessages != nil {

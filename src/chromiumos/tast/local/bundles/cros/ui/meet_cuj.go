@@ -504,11 +504,12 @@ func init() {
 //   - Record and save metrics.
 func MeetCUJ(ctx context.Context, s *testing.State) {
 	const (
-		timeout        = 10 * time.Second
-		defaultDocsURL = "https://docs.new/"
-		jamboardURL    = "https://jamboard.google.com"
-		notes          = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
-		newTabTitle    = "New Tab"
+		createConfTimeout = 30 * time.Second
+		addBotTimeout     = 100 * time.Second
+		defaultDocsURL    = "https://docs.new/"
+		jamboardURL       = "https://jamboard.google.com"
+		notes             = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+		newTabTitle       = "New Tab"
 	)
 
 	meet := s.Param().(meetTest)
@@ -587,7 +588,9 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 
 	var meetingCode string
 	func() {
-		sctx, cancel := context.WithTimeout(ctx, timeout)
+		// createConfTimeout(30s) would allow 3 bond.defaultSendTimeout(8s)
+		// attempts to request the bond server to create conference.
+		sctx, cancel := context.WithTimeout(ctx, createConfTimeout)
 		defer cancel()
 		meetingCode, err = bc.CreateConference(sctx)
 		if err != nil {
@@ -596,7 +599,9 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 	}()
 	s.Log("Created a room with the code ", meetingCode)
 
-	sctx, cancel := context.WithTimeout(ctx, 90*time.Second)
+	// addBotTimeout(100s) would allow 3 bond.longerSendTimeout(30s) attempts
+	// to request the bond server to add bots.
+	sctx, cancel := context.WithTimeout(ctx, addBotTimeout)
 	defer cancel()
 	defer func(ctx context.Context) {
 		s.Log("Removing all bots from the call")

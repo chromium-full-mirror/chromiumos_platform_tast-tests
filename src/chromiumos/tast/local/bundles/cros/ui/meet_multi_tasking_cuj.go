@@ -78,7 +78,8 @@ func init() {
 //   - Record and save metrics.
 func MeetMultiTaskingCUJ(ctx context.Context, s *testing.State) {
 	const (
-		timeout             = 10 * time.Second
+		createConfTimeout   = 30 * time.Second
+		addBotTimeout       = 100 * time.Second
 		docsURL             = "https://docs.google.com/document/d/1NvbdoWF6OrZxenReot5HptK0xvmzK1WKY5TgifoQtko/edit?usp=sharing"
 		docsScrollTimeout   = 30 * time.Second
 		slidesURL           = "https://docs.google.com/presentation/d/1lItrhkgBqXF_bsP-tOqbjcbBFa86--m3DT5cLxegR2k/edit?usp=sharing&resourcekey=0-FmuN4N-UehRS2q4CdQzRXA"
@@ -170,7 +171,9 @@ func MeetMultiTaskingCUJ(ctx context.Context, s *testing.State) {
 
 	var meetingCode string
 	func() {
-		sctx, cancel := context.WithTimeout(ctx, timeout)
+		// createConfTimeout(30s) would allow 3 bond.defaultSendTimeout(8s)
+		// attempts to request the bond server to create conference.
+		sctx, cancel := context.WithTimeout(ctx, createConfTimeout)
 		defer cancel()
 		meetingCode, err = bc.CreateConference(sctx)
 		if err != nil {
@@ -179,7 +182,9 @@ func MeetMultiTaskingCUJ(ctx context.Context, s *testing.State) {
 	}()
 	s.Log("Created a room with the code ", meetingCode)
 
-	sctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	// addBotTimeout(100s) would allow 3 bond.longerSendTimeout(30s) attempts
+	// to request the bond server to add bots.
+	sctx, cancel := context.WithTimeout(ctx, addBotTimeout)
 	defer cancel()
 	// Add 30 seconds to the bot duration to make sure that bots do not leave
 	// slightly earlier than the test scenario.

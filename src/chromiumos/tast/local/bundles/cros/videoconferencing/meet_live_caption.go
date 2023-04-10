@@ -76,6 +76,10 @@ func init() {
 }
 
 func MeetLiveCaption(ctx context.Context, s *testing.State) {
+	const (
+		createConfTimeout = 30 * time.Second
+		addBotTimeout     = 100 * time.Second
+	)
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
@@ -113,7 +117,9 @@ func MeetLiveCaption(ctx context.Context, s *testing.State) {
 	// Create a meeting via bond API.
 	var meetingCode string
 	func(ctx context.Context) {
-		sctx, cancel := context.WithTimeout(ctx, 60*time.Second)
+		// createConfTimeout(30s) would allow 3 bond.defaultSendTimeout(8s)
+		// attempts to request the bond server to create conference.
+		sctx, cancel := context.WithTimeout(ctx, createConfTimeout)
 		defer cancel()
 		meetingCode, err = bondClient.CreateConference(sctx)
 		if err != nil {
@@ -133,7 +139,11 @@ func MeetLiveCaption(ctx context.Context, s *testing.State) {
 	// Add bots to meeting.
 	numBots := 1                    // The amount of bots to add.
 	botsDuration := 5 * time.Minute // 5 mins long by default.
-	_, nFailures, err := bondClient.AddBots(ctx, meetingCode, numBots, botsDuration, bond.WithAudio("what_color_is_cheese_32bit_48k_stereo.raw"))
+	// addBotTimeout(100s) would allow 3 bond.longerSendTimeout(30s) attempts
+	// to request the bond server to add bots.
+	sctx, cancel := context.WithTimeout(ctx, addBotTimeout)
+	defer cancel()
+	_, nFailures, err := bondClient.AddBots(sctx, meetingCode, numBots, botsDuration, bond.WithAudio("what_color_is_cheese_32bit_48k_stereo.raw"))
 	if err != nil || nFailures > 0 {
 		s.Fatalf("Failed to add bots: %d bots are not added: %v", nFailures, err)
 	}
