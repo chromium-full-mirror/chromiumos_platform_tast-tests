@@ -113,6 +113,7 @@ func StatefulFiles(ctx context.Context, s *testing.State) {
 		chk.NewPattern(chk.Tree("encrypted/var/log/lacros/Crash Reports/uploads.log"), chk.Users("root"), chk.Groups("root"), chk.Mode(0644)),
 		chk.NewPattern(chk.Tree("encrypted/var/log/lacros/Crash Reports"), chk.Users("chronos"), chk.Groups("chronos"), chk.NotMode(077)),
 		chk.NewPattern(chk.Tree("encrypted/var/log/lacros"), chk.Users("chronos"), chk.Groups("chronos"), chk.NotMode(022)),
+		chk.NewPattern(chk.Tree("encrypted/var/log/lorgnette"), chk.Users("saned"), chk.Groups("scanner"), chk.NotMode(022)),
 		chk.NewPattern(chk.Tree("encrypted/var/log/metrics"), chk.Users("root", "chronos", "metrics", "shill"), chk.NotMode(022)),
 		chk.NewPattern(chk.Tree("encrypted/var/log/modemfwd"), chk.Users("modem"), chk.Groups("modem"), chk.NotMode(022)),
 		chk.NewPattern(chk.Tree("encrypted/var/log/power_manager"), chk.Users("power"), chk.Groups("power"), chk.NotMode(022)),
