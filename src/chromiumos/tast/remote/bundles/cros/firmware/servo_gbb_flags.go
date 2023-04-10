@@ -35,7 +35,8 @@ func init() {
 			"jbettis@chromium.org",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:firmware", "firmware_cr50", "firmware_ccd"},
+		Attr:         []string{"group:firmware", "firmware_cr50", "firmware_ccd", "firmware_bios"},
+		Requirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
 		SoftwareDeps: []string{"flashrom"},
 		Fixture:      fixture.NormalMode,
 		Data:         []string{"fw-config.json"},
@@ -44,18 +45,29 @@ func init() {
 	})
 }
 
-func dutControl(ctx context.Context, s *testing.State, svo *servo.Servo, commands [][]string) {
+func dutControl(ctx context.Context, s *testing.State, svo *servo.Servo, commands [][]string, prefix string) {
 	for _, section := range commands {
 		for _, cmd := range section {
-			s.Logf("dut-control %q", cmd)
 			parts := strings.SplitN(cmd, ":", 2)
+			control := parts[0]
+			if prefix != "" {
+				if ok, err := svo.HasControl(ctx, prefix+control); err != nil {
+					s.Errorf("Failed to check control %q: %v", prefix+control, err)
+				} else if ok {
+					control = prefix + control
+				} else {
+					s.Logf("No such control %s%s", prefix, control)
+				}
+			}
 			if len(parts) == 1 {
-				if _, err := svo.GetString(ctx, servo.StringControl(cmd)); err != nil {
-					s.Errorf("Could not read servo string %s: %v", cmd, err)
+				s.Logf("dut-control %q", control)
+				if _, err := svo.GetString(ctx, servo.StringControl(control)); err != nil {
+					s.Errorf("Could not read servo string %s: %v", control, err)
 				}
 			} else {
-				if err := svo.SetString(ctx, servo.StringControl(parts[0]), parts[1]); err != nil {
-					s.Errorf("Could not set servo string %s: %v", cmd, err)
+				s.Logf("dut-control \"%s:%s\"", control, parts[1])
+				if err := svo.SetString(ctx, servo.StringControl(control), parts[1]); err != nil {
+					s.Errorf("Could not set servo string %s:%s: %v", control, parts[1], err)
 				}
 			}
 		}
@@ -120,10 +132,12 @@ func ServoGBBFlags(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get servo type: ", err)
 	}
 
-	dualModePattern := regexp.MustCompile(`^(.*_with)_.*_and(_ccd.*)$`)
+	prefix := ""
+	dualModePattern := regexp.MustCompile(`^(.*_with_).*_and_(ccd.*)$`)
 	if parts := dualModePattern.FindStringSubmatch(servoType); parts != nil {
 		// This is a dual mode servo, but we want the ccd flash config
 		servoType = parts[1] + parts[2]
+		prefix = fmt.Sprintf("%s.", parts[2])
 	}
 
 	servoFlashCmds, ok := boardFlashCmds[servoType]
@@ -157,12 +171,12 @@ func ServoGBBFlags(ctx context.Context, s *testing.State) {
 
 	s.Log("Reading fw image over CCD")
 	h.DisconnectDUT(ctx) // Some of the dutControl commands will reboot
-	dutControl(ctx, s, h.Servo, servoFlashCmds.DUTControlOn)
+	dutControl(ctx, s, h.Servo, servoFlashCmds.DUTControlOn, prefix)
 	img, err := bios.NewRemoteImage(ctx, h.ServoProxy, programmer, commonbios.GBBImageSection, servoFlashCmds.FlashExtraFlagsFlashrom)
 	if err != nil {
 		s.Error("Could not read firmware: ", err)
 	}
-	dutControl(ctx, s, h.Servo, servoFlashCmds.DUTControlOff)
+	dutControl(ctx, s, h.Servo, servoFlashCmds.DUTControlOff, prefix)
 	if s.HasError() {
 		return
 	}
@@ -198,11 +212,11 @@ func ServoGBBFlags(ctx context.Context, s *testing.State) {
 
 	s.Log("Writing fw image over CCD")
 	h.DisconnectDUT(ctx) // Some of the dutControl commands will reboot
-	dutControl(ctx, s, h.Servo, servoFlashCmds.DUTControlOn)
+	dutControl(ctx, s, h.Servo, servoFlashCmds.DUTControlOn, prefix)
 	if err = bios.WriteRemoteFlashrom(ctx, h.ServoProxy, programmer, img, commonbios.GBBImageSection, servoFlashCmds.FlashExtraFlagsFlashrom); err != nil {
 		s.Error("Failed to write flashrom: ", err)
 	}
-	dutControl(ctx, s, h.Servo, servoFlashCmds.DUTControlOff)
+	dutControl(ctx, s, h.Servo, servoFlashCmds.DUTControlOff, prefix)
 	if s.HasError() {
 		return
 	}
