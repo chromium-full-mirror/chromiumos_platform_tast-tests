@@ -71,7 +71,7 @@ const (
 
 // identifyOutputRegex parses out the width, height and colorspace from the
 // output of `identify someImage`.
-var identifyOutputRegex = regexp.MustCompile(`^.+ PNG (?P<width>[0-9]+)x(?P<height>[0-9]+).+ 8-bit (?P<colorspace>sRGB|Gray 256c|Gray 2c)`)
+var identifyOutputRegex = regexp.MustCompile(`^.+ PNG (?P<width>[0-9]+)x(?P<height>[0-9]+).+ 8-bit (?P<colorspace>sRGB|Grayscale Gray 256c|Grayscale Gray 2c)`)
 
 // generateSettingsLists adjusts the input color modes, page sizes and
 // resolutions depending on the given `mode`. More specifically:
@@ -152,9 +152,9 @@ func getNextScanCombination(mode HardwareTestMode, numScan int, colorModes []sca
 func toIdentifyColorspace(colorMode scanapp.ColorMode) (string, error) {
 	switch colorMode {
 	case scanapp.ColorModeBlackAndWhite:
-		return "Gray 2c", nil
+		return "Grayscale Gray 2c", nil
 	case scanapp.ColorModeGrayscale:
-		return "Gray 256c", nil
+		return "Grayscale Gray 256c", nil
 	case scanapp.ColorModeColor:
 		return "sRGB", nil
 	default:
