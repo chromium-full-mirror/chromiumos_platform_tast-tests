@@ -8,7 +8,6 @@ import (
 	"context"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/local/sysutil"
 	"chromiumos/tast/testing"
 	"go.chromium.org/tast/core/shutil"
 )
@@ -96,28 +95,14 @@ func MinijailLandlock(ctx context.Context, s *testing.State) {
 			profileArgs,
 			false,
 		},
+		// Test for LANDLOCK_FS_ACCESS_REFER support.
+		{
+			"landlock-refer-allowed",
+			[]string{renameatTestPath},
+			append(landlockArgs),
+			true,
+		},
 	} {
 		runTestCase(&tc)
-	}
-
-	// Kernel 5.15 and later specific tests.
-	// TODO(b/271154170): run for all kernels that support Landlock
-	// once LANDLOCK_ACCESS_FS_REFER backport is complete.
-	ver, _, err := sysutil.KernelVersionAndArch()
-	if err != nil {
-		s.Fatal("Failed to get kernel version: ", err)
-	}
-	if ver.IsOrLater(5, 15) {
-		for _, tc := range []landlockTestCase{
-			// Test for LANDLOCK_FS_ACCESS_REFER support.
-			{
-				"landlock-refer-allowed",
-				[]string{renameatTestPath},
-				append(landlockArgs),
-				true,
-			},
-		} {
-			runTestCase(&tc)
-		}
 	}
 }
