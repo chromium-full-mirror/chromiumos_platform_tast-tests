@@ -76,6 +76,16 @@ func init() {
 			Val:               mediaRecorderTest{codec: videotype.VP8, browserType: browser.TypeAsh},
 			ExtraSoftwareDeps: []string{caps.BuiltinCamera, caps.HWEncodeVP8},
 			Fixture:           "chromeCameraPerf",
+		}, {
+			Name:              "av1",
+			Val:               mediaRecorderTest{codec: videotype.AV1, browserType: browser.TypeAsh},
+			ExtraSoftwareDeps: []string{caps.HWEncodeAV1},
+			Fixture:           "chromeVideoWithFakeWebcam",
+		}, {
+			Name:              "av1_lacros",
+			Val:               mediaRecorderTest{codec: videotype.AV1, browserType: browser.TypeLacros},
+			ExtraSoftwareDeps: []string{caps.HWEncodeAV1, "lacros"},
+			Fixture:           "chromeVideoLacrosWithFakeWebcam",
 		}},
 	})
 }

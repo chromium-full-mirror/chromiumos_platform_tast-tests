@@ -81,6 +81,17 @@ func init() {
 			},
 			Fixture: "chromeVideoWithFakeWebcam",
 		}, {
+			Name: "av1",
+			Val: peerconnection.RTCTestParams{
+				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
+				VerifyEncoderMode: peerconnection.NoVerifyEncoderMode,
+				Profile:           "AV1",
+				StreamWidth:       defaultRTCStreamWidth,
+				StreamHeight:      defaultRTCStreamHeight,
+				BrowserType:       browser.TypeAsh,
+			},
+			Fixture: "chromeVideoWithFakeWebcam",
+		}, {
 			Name: "h264_dec",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
@@ -226,6 +237,18 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
 			ExtraHardwareDeps: hwdep.D(hwdep.SupportsVP9KSVCHWDecoding()),
 			Fixture:           "chromeVideoOOPVDWithFakeWebcamAndSVCEnabled",
+		}, {
+			Name: "av1_dec",
+			Val: peerconnection.RTCTestParams{
+				VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
+				VerifyEncoderMode: peerconnection.NoVerifyEncoderMode,
+				Profile:           "AV1",
+				StreamWidth:       defaultRTCStreamWidth,
+				StreamHeight:      defaultRTCStreamHeight,
+				BrowserType:       browser.TypeAsh,
+			},
+			ExtraSoftwareDeps: []string{caps.HWDecodeAV1},
+			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
 			Name: "h264_enc",
 			Val: peerconnection.RTCTestParams{
@@ -513,6 +536,18 @@ func init() {
 			},
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP9},
 			Fixture:           "chromeVideoWithFakeWebcamAndSVCEnabled",
+		}, {
+			Name: "av1_enc",
+			Val: peerconnection.RTCTestParams{
+				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
+				VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
+				Profile:           "AV1",
+				StreamWidth:       defaultRTCStreamWidth,
+				StreamHeight:      defaultRTCStreamHeight,
+				BrowserType:       browser.TypeAsh,
+			},
+			ExtraSoftwareDeps: []string{caps.HWEncodeAV1},
+			Fixture:           "chromeVideoWithFakeWebcam",
 		}},
 	})
 }

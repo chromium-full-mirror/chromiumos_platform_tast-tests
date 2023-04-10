@@ -90,6 +90,16 @@ func init() {
 			Val:               mediaRecorderPerfTest{enableHWAccel: true, profile: "VP9", browserType: browser.TypeLacros},
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP9, "lacros"},
 			Fixture:           "chromeVideoLacrosWithFakeWebcam",
+		}, {
+			Name:              "av1_hw",
+			Val:               mediaRecorderPerfTest{enableHWAccel: true, profile: "AV1", browserType: browser.TypeAsh},
+			ExtraSoftwareDeps: []string{caps.HWEncodeAV1},
+			Fixture:           "chromeVideoWithFakeWebcam",
+		}, {
+			Name:              "av1_hw_lacros",
+			Val:               mediaRecorderPerfTest{enableHWAccel: true, profile: "AV1", browserType: browser.TypeLacros},
+			ExtraSoftwareDeps: []string{caps.HWEncodeAV1, "lacros"},
+			Fixture:           "chromeVideoLacrosWithFakeWebcam",
 		}},
 	})
 }

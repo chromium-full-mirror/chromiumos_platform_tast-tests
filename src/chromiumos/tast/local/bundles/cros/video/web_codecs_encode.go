@@ -186,6 +186,10 @@ func init() {
 			Val:     webcodecs.TestEncodeArgs{Codec: videotype.AV1, Acceleration: webcodecs.PreferSoftware, BitrateMode: "constant", BrowserType: browser.TypeAsh, NumOfEncoders: 1},
 			Fixture: "chromeVideo",
 		}, {
+			Name:    "av1_hw",
+			Val:     webcodecs.TestEncodeArgs{Codec: videotype.AV1, Acceleration: webcodecs.PreferHardware, BitrateMode: "constant", BrowserType: browser.TypeAsh, NumOfEncoders: 1},
+			Fixture: "chromeVideo",
+		}, {
 			Name:    "av1_sw_l1t2",
 			Val:     webcodecs.TestEncodeArgs{Codec: videotype.AV1, Acceleration: webcodecs.PreferSoftware, ScalabilityMode: "L1T2", BitrateMode: "constant", BrowserType: browser.TypeAsh, NumOfEncoders: 1},
 			Fixture: "chromeVideo",
