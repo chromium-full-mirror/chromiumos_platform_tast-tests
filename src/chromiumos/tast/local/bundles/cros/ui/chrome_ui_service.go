@@ -8,6 +8,8 @@ import (
 	"context"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 	"google.golang.org/grpc"
 
 	"chromiumos/tast/local/chrome"
@@ -15,8 +17,6 @@ import (
 	"chromiumos/tast/local/common"
 	"chromiumos/tast/local/upstart"
 	pb "chromiumos/tast/services/cros/ui"
-	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
@@ -54,20 +54,10 @@ func (c *ChromeUIService) DumpUITree(ctx context.Context, req *empty.Empty) (*em
 		return nil, errors.New("failed to get the context output directory")
 	}
 
-	// When in OOBE, use SigninProfileTestAPIConn to create the test connection.
-	var tconn *chrome.TestConn
-	var err error
-	if cr.LoginMode() == "NoLogin" {
-		tconn, err = cr.SigninProfileTestAPIConn(ctx)
-	} else {
-		tconn, err = cr.TestAPIConn(ctx)
-	}
-
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create test API connection")
-	}
-	faillog.DumpUITree(ctx, contextOutDir, tconn)
-	return &empty.Empty{}, nil
+	return common.UseTconn(ctx, c.sharedObject, func(tconn *chrome.TestConn) (*empty.Empty, error) {
+		faillog.DumpUITree(ctx, contextOutDir, tconn)
+		return &empty.Empty{}, nil
+	})
 }
 
 // DumpUITreeWithScreenshotToFile dumps the UI tree with screenshot to the file.
@@ -82,9 +72,10 @@ func (c *ChromeUIService) DumpUITreeWithScreenshotToFile(ctx context.Context, re
 		return nil, errors.New("failed to get the context output directory")
 	}
 
-	faillog.DumpUITreeWithScreenshotOnError(ctx, contextOutDir, func() bool { return true }, cr, req.FilePrefix)
-
-	return &empty.Empty{}, nil
+	return common.UseTconn(ctx, c.sharedObject, func(tconn *chrome.TestConn) (*empty.Empty, error) {
+		faillog.DumpUITreeWithScreenshotWithTestAPIOnError(ctx, contextOutDir, func() bool { return true }, tconn, req.FilePrefix)
+		return &empty.Empty{}, nil
+	})
 }
 
 // WaitForWelcomeScreen waits for welcome screen to be shown in OOBE.

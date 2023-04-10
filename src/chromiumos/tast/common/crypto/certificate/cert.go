@@ -19,6 +19,13 @@ type CertStore struct {
 type Credential struct {
 	Cert       string
 	PrivateKey string
+	Info       Info
+}
+
+// Info holds the information contained in the certificate.
+type Info struct {
+	CommonName   string
+	Organization string
 }
 
 // Test certificate borrowed from Autotest (client/common_lib/cros/site_eap_certs.py). These are only for test usage.
@@ -59,6 +66,10 @@ HrcWprQDPiFyKJZB/DcCQQDGZ8NMosiPkVPATqS4WFdfLA3wFtkSY4H5PdfqyKGE
 RwvPkfZxiONcYmBPxC2ui8SBMzryrmDHn2ZoXUH4PpfI
 -----END RSA PRIVATE KEY-----
 `,
+		Info: Info{
+			Organization: "", // This certificate doesn't have the organization information.
+			CommonName:   "chromelab-wifi-testbed-root.mtv.google.com",
+		},
 	},
 	ServerCred: Credential{
 		Cert: `-----BEGIN CERTIFICATE-----
@@ -131,6 +142,10 @@ OG8TOQnZrLoIx/C3UMECQESsnQqmS+COk4u84c3Lvusq9V6KqlXb3fdbwhB2Qk5P
 3RQyAQfcwv73fjUwEKUcEJDeUGZYYUObuvTuxwVIITs=
 -----END RSA PRIVATE KEY-----
 `,
+		Info: Info{
+			Organization: "", // This certificate doesn't have the organization information.
+			CommonName:   "chromelab-wifi-testbed-client.mtv.google.com",
+		},
 	},
 	ExpiredServerCred: Credential{
 		Cert: `-----BEGIN CERTIFICATE-----
@@ -205,6 +220,10 @@ d0uwleaZ4+18+x68CQJAUiAUaKRxrvCDjg6aA5jfG9+0FJ837Q6TqjDxUjf5EVGQ
 4fxOsT3zGQRzasM+Hg8EVcsvZkQN6MhHoJjvc39qFA==
 -----END RSA PRIVATE KEY-----
 `,
+		Info: Info{
+			Organization: "", // This certificate doesn't have the organization information.
+			CommonName:   "chromelab-wifi-testbed-root2.mtv.google.com",
+		},
 	},
 	ServerCred: Credential{
 		Cert: `-----BEGIN CERTIFICATE-----
@@ -277,6 +296,10 @@ TcLkt2+Lc8ZLyni3mQJBAKUW/EXWqnnXr1jt3Zb2c5rvLANtWPGv/ZVJ/PvQIrrz
 zxVQ5yZxFEmubpeAo10GoPHCilShV0kRLFXMF+77nT8=
 -----END RSA PRIVATE KEY-----
 `,
+		Info: Info{
+			Organization: "", // This certificate doesn't have the organization information.
+			CommonName:   "chromelab-wifi-testbed-client2.mtv.google.com",
+		},
 	},
 	ExpiredServerCred: Credential{
 		Cert: `-----BEGIN CERTIFICATE-----

@@ -13,6 +13,9 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 
@@ -30,10 +33,6 @@ import (
 	ps "chromiumos/tast/services/cros/policy"
 	"chromiumos/tast/services/cros/ui"
 	"chromiumos/tast/services/cros/wifi"
-	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/testing"
-
-	"go.chromium.org/tast/core/ctxutil"
 )
 
 // QuickSettings indicates that quick setting needs to be used.
@@ -67,16 +66,16 @@ var (
 )
 
 type policyBlockedWifiTestcase struct {
-	devicePolicy   *policy.DeviceOpenNetworkConfiguration
-	apConfig       security.ConfigFactory
-	securityOption wifiutil.WifiSecurityOption
+	devicePolicy *policy.DeviceOpenNetworkConfiguration
+	apConfig     security.ConfigFactory
+	wifiCred     wifiutil.Credential
 }
 
 type localContext struct {
-	ctx            context.Context
-	rpcClient      *grpc.ClientConn
-	wifiSvc        *wificell.WifiClient
-	securityOption wifiutil.WifiSecurityOption
+	ctx       context.Context
+	rpcClient *grpc.ClientConn
+	wifiSvc   *wificell.WifiClient
+	wifiCred  wifiutil.Credential
 }
 
 func init() {
@@ -120,8 +119,8 @@ func init() {
 				// Verify that DUT can connect to an open AP.
 				Name: "open",
 				Val: policyBlockedWifiTestcase{
-					apConfig:       nil,
-					securityOption: wifiutil.SecurityOptionNone,
+					apConfig: nil,
+					wifiCred: &wifiutil.None{},
 					devicePolicy: &policy.DeviceOpenNetworkConfiguration{
 						Val: &policy.ONC{
 							GlobalNetworkConfiguration: globalNetworkConfig,
@@ -150,7 +149,7 @@ func init() {
 						wpa.Mode(wpa.ModePureWPA2),
 						wpa.Ciphers2(wpa.CipherCCMP),
 					),
-					securityOption: wifiutil.SecurityOptionWpa,
+					wifiCred: &wifiutil.Psk{Password: testPass},
 					devicePolicy: &policy.DeviceOpenNetworkConfiguration{
 						Val: &policy.ONC{
 							GlobalNetworkConfiguration: globalNetworkConfig,
@@ -199,7 +198,7 @@ func PolicyBlockedWifi(ctx context.Context, s *testing.State) {
 	rpcClient := testFixture.DUTRPC(wificell.DefaultDUT)
 	policyClient := ps.NewPolicyServiceClient(rpcClient.Conn)
 	wifiSvc := testFixture.DUTWifiClient(wificell.DefaultDUT)
-	localCtx := localContext{ctx, rpcClient.Conn, wifiSvc, params.securityOption}
+	localCtx := localContext{ctx, rpcClient.Conn, wifiSvc, params.wifiCred}
 
 	// Configure 3 access points for blocked, non blocked, blocked+preferred SSIDs.
 	nonBlockedApOptions := []ap.Option{ap.Mode(ap.Mode80211nMixed), ap.Channel(108), ap.HTCaps(ap.HTCapHT20), ap.SSID(notBlockedSSID)}
@@ -486,8 +485,7 @@ func expectSuccAddAndJoinWiFiQuickSettings(accessPoint *wificell.APIface, localC
 
 	cleanupCtx := ctx
 	ssid := accessPoint.Config().SSID
-	cleanup, err := wifiutil.JoinWifiFromQuickSettings(
-		ctx, localCtx.rpcClient, localCtx.securityOption, ssid, testPass)
+	cleanup, err := wifiutil.JoinWifiFromQuickSettings(ctx, localCtx.rpcClient, ssid, localCtx.wifiCred)
 	defer cleanup(cleanupCtx)
 	if err != nil {
 		return errors.Wrap(err, "failed open and fill WiFi data from quick settings")
@@ -511,8 +509,7 @@ func expectFailAddAndJoinWiFiQuickSettings(accessPoint *wificell.APIface, localC
 
 	cleanupCtx := ctx
 	ssid := accessPoint.Config().SSID
-	cleanup, err := wifiutil.JoinWifiFromQuickSettings(
-		ctx, localCtx.rpcClient, localCtx.securityOption, ssid, testPass)
+	cleanup, err := wifiutil.JoinWifiFromQuickSettings(ctx, localCtx.rpcClient, ssid, localCtx.wifiCred)
 	defer cleanup(cleanupCtx)
 	if err != nil {
 		return errors.Wrap(err, "failed open and fill WiFi data from quick settings")
@@ -628,7 +625,7 @@ func joinWiFiWithOneClick(localCtx localContext, ssid, password string, settingT
 		return cleanup, errors.Wrap(err, `failed to open "Join Wi-Fi network" dialog"`)
 	}
 
-	if !isCredentialsRequired || localCtx.securityOption == wifiutil.SecurityOptionNone {
+	if _, ok := localCtx.wifiCred.(*wifiutil.None); ok || !isCredentialsRequired {
 		return cleanup, nil
 	}
 	uiauto := ui.NewAutomationServiceClient(rpcClient)
@@ -636,7 +633,7 @@ func joinWiFiWithOneClick(localCtx localContext, ssid, password string, settingT
 		return cleanup, errors.Wrap(err, "failed to click the join button")
 	}
 
-	if err := wifiutil.CompleteJoinWiFiDialog(ctx, rpcClient, localCtx.securityOption, ssid, password, true /*skipSecurityComboBox*/); err != nil {
+	if err := wifiutil.CompleteJoinWiFiDialog(ctx, rpcClient, ssid, localCtx.wifiCred, true /*skipSecurityComboBox*/); err != nil {
 		return cleanup, errors.Wrap(err, "failed to join Wi-Fi")
 	}
 

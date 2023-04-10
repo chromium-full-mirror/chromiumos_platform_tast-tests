@@ -7,19 +7,16 @@ package network
 import (
 	"context"
 	"fmt"
-	"path/filepath"
 	"time"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/ssh"
-	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"chromiumos/tast/common/crypto/certificate"
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/common/wifi/security/wpaeap"
 	"chromiumos/tast/remote/wificell"
 	"chromiumos/tast/remote/wificell/hostapd"
@@ -63,12 +60,12 @@ func init() {
 
 // CertsUsableAfterResume verifies that installed certificates are usable after suspend and resume.
 func CertsUsableAfterResume(ctx context.Context, s *testing.State) {
-	const (
-		clientOrgName = "chromelab-wifi-testbed-client.mtv.google.com"
-		caOrgName     = "chromelab-wifi-testbed-root.mtv.google.com"
-
-		clientCertPassword = "12345"
+	var (
+		// Organization info isn't available in this certs, ChromeOS will use its common name instead.
+		clientOrgName = certificate.TestCert1().ClientCred.Info.CommonName
+		caOrgName     = certificate.TestCert1().CACred.Info.CommonName
 	)
+	const clientCertPassword = "12345"
 
 	tf := s.FixtValue().(*wificell.TestFixture)
 
@@ -262,42 +259,19 @@ type certificateDetail struct {
 }
 
 func importCert(ctx context.Context, dutConn *ssh.Conn, certSvc network.CertificateServiceClient, certDetail *certificateDetail) (retErr error) {
-	// These are the names of the temporary certificate files, which would be generated in runtime
-	// and imported through the Certificates Manager.
-	const (
-		clientCertFileName = "test_cert_client.p12"
-		caCertFileName     = "test_cert_root.crt"
-	)
-
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
 	defer cancel()
 
-	const tempDir = "/tmp"
-	var dest string
 	req := &network.ImportRequest{Certificate: certDetail.Certificate}
 	switch certDetail.Type {
 	case network.Certificate_CLIENT:
-		pemPath := filepath.Join(tempDir, "test_client_cert.pem")
-		if err := linuxssh.WriteFile(ctx, dutConn, pemPath, []byte(certDetail.ClientCred.Cert), 0644); err != nil {
-			return errors.Wrap(err, "failed to create pem file")
+		dest, cleanUp, err := certificate.WriteClientCertToFile(ctx, certDetail.CertStore, certDetail.Password, "test_cert_client", dutConn)
+		if err != nil {
+			return errors.Wrap(err, "failed to create the client certificate file")
 		}
-		defer dutConn.CommandContext(cleanupCtx, "rm", pemPath).Run(testexec.DumpLogOnError)
-
-		keyPath := filepath.Join(tempDir, "test_client_cert.key")
-		if err := linuxssh.WriteFile(ctx, dutConn, keyPath, []byte(certDetail.ClientCred.PrivateKey), 0644); err != nil {
-			return errors.Wrap(err, "failed to create key file")
-		}
-		defer dutConn.CommandContext(cleanupCtx, "rm", keyPath).Run(testexec.DumpLogOnError)
-
-		dest = filepath.Join(tempDir, clientCertFileName)
-		if err := dutConn.CommandContext(ctx, "openssl", "pkcs12", "-export", "-out", dest, "-inkey", keyPath, "-in", pemPath, "-passout", "pass:"+certDetail.Password).Run(testexec.DumpLogOnError); err != nil {
-			return errors.Wrap(err, "failed to create client certificate file")
-		}
-		if err := dutConn.CommandContext(ctx, "chmod", "0644", dest).Run(testexec.DumpLogOnError); err != nil {
-			return errors.Wrap(err, "failed to change permission of the client certificate file")
-		}
-		defer dutConn.CommandContext(cleanupCtx, "rm", dest).Run(testexec.DumpLogOnError)
+		defer cleanUp(cleanupCtx)
+		req.FilePath = dest
 
 		req.ImportDetail = &network.ImportRequest_Client{
 			Client: &network.ImportRequest_ClientImportDetail{
@@ -305,17 +279,17 @@ func importCert(ctx context.Context, dutConn *ssh.Conn, certSvc network.Certific
 			},
 		}
 	case network.Certificate_CA:
-		dest = filepath.Join(tempDir, caCertFileName)
-		if err := linuxssh.WriteFile(ctx, dutConn, dest, []byte(certDetail.CACred.Cert), 0644); err != nil {
-			return errors.Wrap(err, "failed to create CA certificate file")
+		dest, cleanUp, err := certificate.WriteCACertToFile(ctx, certDetail.CertStore, "test_cert_root", dutConn)
+		if err != nil {
+			return errors.Wrap(err, "failed to create the CA certificate file")
 		}
-		defer dutConn.CommandContext(cleanupCtx, "rm", dest).Run(testexec.DumpLogOnError)
+		defer cleanUp(cleanupCtx)
+		req.FilePath = dest
 
 		req.ImportDetail = &network.ImportRequest_Ca{
 			Ca: &network.ImportRequest_CaImportDetail{},
 		}
 	}
-	req.FilePath = dest
 
 	if _, err := certSvc.ImportCert(ctx, req); err != nil {
 		return errors.Wrapf(err, "failed to import the certificate %+v", certDetail.Certificate)

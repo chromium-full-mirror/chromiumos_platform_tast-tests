@@ -11,6 +11,9 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -25,9 +28,6 @@ import (
 	"chromiumos/tast/services/cros/chrome/uiauto/quicksettings"
 	"chromiumos/tast/services/cros/ui"
 	"chromiumos/tast/services/cros/wifi"
-	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/testing"
 )
 
 // handlePassphrasesParam is the parameter for the test.
@@ -260,7 +260,7 @@ func HandlePassphrases(ctx context.Context, s *testing.State) {
 
 			s.Logf("Passphrase to be tested: %q", testPassphrase)
 
-			cleanup, err := wifiutil.JoinWifiFromQuickSettings(ctx, rpcClient.Conn, wifiutil.SecurityOptionWpa, ap.Config().SSID, testPassphrase)
+			cleanup, err := wifiutil.JoinWifiFromQuickSettings(ctx, rpcClient.Conn, ap.Config().SSID, &wifiutil.Psk{Password: testPassphrase})
 			defer cleanup(cleanupCtx)
 			defer wifiutil.DumpUITreeWithScreenshotToFile(cleanupCtx, rpcClient.Conn, s.HasError, test.name)
 			if err != nil {

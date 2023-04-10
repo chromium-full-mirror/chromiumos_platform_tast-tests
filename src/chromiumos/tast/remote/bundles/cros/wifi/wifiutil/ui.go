@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast/core/errors"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -17,7 +18,6 @@ import (
 	"chromiumos/tast/services/cros/inputs"
 	"chromiumos/tast/services/cros/ui"
 	"chromiumos/tast/services/cros/wifi"
-	"go.chromium.org/tast/core/errors"
 )
 
 // JoinWifiServiceNames is the services needed for joining WiFi, through UI operations.
@@ -42,30 +42,104 @@ var (
 	ConnectButtonFinder = ui.Node().NameContaining("Connect").Role(ui.Role_ROLE_BUTTON).Ancestor(JoinWiFiNetworkDialogFinder).Finder()
 )
 
-// WifiSecurityOption defines the security option of a WiFi network in the "Join Wi-Fi" dialog.
-type WifiSecurityOption string
-
+// Definitions of the common options in the certificate option combo-box.
 const (
-	// SecurityOptionNone is the security option of a None protected network in the "Join Wi-Fi" dialog.
-	SecurityOptionNone WifiSecurityOption = "None"
-	// SecurityOptionWpa is the security option of a WPA protected network in the "Join Wi-Fi" dialog.
-	SecurityOptionWpa WifiSecurityOption = "PSK (WPA or RSN)"
+	CertificateComboBoxOptionDoNotCheck    = "Do not check"
+	CertificateComboBoxOptionDefault       = "Default"
+	CertificateComboBoxOptionNoneInstalled = "None installed"
 )
+
+// Credential defines the general configuration of a WiFi network in the "Join Wi-Fi" dialog.
+type Credential interface {
+	// security returns the name of security.
+	security() string
+}
+
+// None holds the configuration details of the not protected network,
+// used for configure the not protected network via "Join Wi-Fi" dialog.
+type None struct {
+}
+
+func (*None) security() string { return "None" }
+
+// Psk holds the configuration details of the pre-shared key protected network,
+// used for configure the WPA/RSN network via "Join Wi-Fi" dialog.
+type Psk struct {
+	Password string
+}
+
+func (*Psk) security() string { return "PSK (WPA or RSN)" }
+
+// EAP defines the authentication information of Extensible Authentication Protocol.
+type EAP interface {
+	method() string
+	caCert() string
+	identity() string
+	password() string
+}
+
+// TLS holds the configuration details of EAP-TLS method,
+// used for configure the EAP network via "Join Wi-Fi" dialog.
+type TLS struct {
+	Identity   string
+	CaCert     string
+	ClientCert string
+}
+
+func (*TLS) security() string   { return "EAP" }
+func (*TLS) method() string     { return "EAP-TLS" }
+func (e *TLS) identity() string { return e.Identity }
+func (*TLS) password() string   { return "" }
+func (e *TLS) caCert() string   { return e.CaCert }
+
+// TTLS holds the configuration details of the EAP-TTLS method,
+// used for configure the EAP network via "Join Wi-Fi" dialog.
+type TTLS struct {
+	Password string
+	Identity string
+	CaCert   string
+}
+
+func (*TTLS) security() string   { return "EAP" }
+func (*TTLS) method() string     { return "EAP-TTLS" }
+func (e *TTLS) identity() string { return e.Identity }
+func (e *TTLS) password() string { return e.Password }
+func (e *TTLS) caCert() string   { return e.CaCert }
+
+// PEAP holds the configuration details of the EAP-PEAP method,
+// used for configure the EAP network via "Join Wi-Fi" dialog.
+type PEAP struct {
+	Password string
+	Identity string
+	CaCert   string
+}
+
+func (*PEAP) security() string   { return "EAP" }
+func (*PEAP) method() string     { return "PEAP" }
+func (e *PEAP) identity() string { return e.Identity }
+func (e *PEAP) password() string { return e.Password }
+func (e *PEAP) caCert() string   { return e.CaCert }
 
 // JoinWifiFromQuickSettings joins to a specified network by opening the "Join Wi-Fi network" dialog
 // from the QuickSettings and interacting with it.
 //
-// securityOption aims to the security option in the "Join Wi-Fi" dialog.
+// Types that are assignable to |cred|
+//
+//	*None
+//	*Psk
+//	*TLS
+//	*TTLS
+//	*PEAP
 //
 // This method will not leave a clean state, instead, a closure will be returned for cleanup,
 // separated cleanup closure allows tests to capture UI tree and screenshot on error.
-func JoinWifiFromQuickSettings(ctx context.Context, conn *grpc.ClientConn, securityOption WifiSecurityOption, ssid, password string) (func(context.Context), error) {
+func JoinWifiFromQuickSettings(ctx context.Context, conn *grpc.ClientConn, ssid string, cred Credential) (func(context.Context), error) {
 	cleanup, err := OpenJoinWiFiDialogFromQuickSettings(ctx, conn)
 	if err != nil {
 		return cleanup, errors.Wrap(err, `failed to open "Join Wi-Fi network" dialog`)
 	}
 
-	if err := CompleteJoinWiFiDialog(ctx, conn, securityOption, ssid, password, false /*skipSecurityComboBox*/); err != nil {
+	if err := CompleteJoinWiFiDialog(ctx, conn, ssid, cred, false /*skipSecurityComboBox*/); err != nil {
 		return cleanup, errors.Wrap(err, `failed to join Wi-Fi`)
 	}
 
@@ -75,17 +149,23 @@ func JoinWifiFromQuickSettings(ctx context.Context, conn *grpc.ClientConn, secur
 // JoinWifiFromOSSettings joins to a specified network by opening the "Join Wi-Fi network" dialog
 // from the OS-Settings and interacting with it.
 //
-// securityOption aims to the security option in the "Join Wi-Fi" dialog.
+// Types that are assignable to |cred|
+//
+//	*None
+//	*Psk
+//	*TLS
+//	*TTLS
+//	*PEAP
 //
 // This method will not leave a clean state, instead, a closure will be returned for cleanup,
 // separated cleanup closure allows tests to capture UI tree and screenshot on error.
-func JoinWifiFromOSSettings(ctx context.Context, conn *grpc.ClientConn, securityOption WifiSecurityOption, ssid, password string) (func(context.Context), error) {
+func JoinWifiFromOSSettings(ctx context.Context, conn *grpc.ClientConn, ssid string, cred Credential) (func(context.Context), error) {
 	cleanup, err := OpenJoinWiFiDialogFromOSSettings(ctx, conn)
 	if err != nil {
 		return cleanup, errors.Wrap(err, `failed to open "Join Wi-Fi network" dialog`)
 	}
 
-	if err := CompleteJoinWiFiDialog(ctx, conn, securityOption, ssid, password, false /*skipSecurityComboBox*/); err != nil {
+	if err := CompleteJoinWiFiDialog(ctx, conn, ssid, cred, false /*skipSecurityComboBox*/); err != nil {
 		return cleanup, errors.Wrap(err, `failed to join Wi-Fi`)
 	}
 
@@ -169,7 +249,7 @@ func OpenJoinWiFiDialogFromOSSettings(ctx context.Context, conn *grpc.ClientConn
 }
 
 // CompleteJoinWiFiDialog completes the setups in "Join Wi-Fi network" dialog.
-func CompleteJoinWiFiDialog(ctx context.Context, conn *grpc.ClientConn, securityOption WifiSecurityOption, ssid, password string, skipSecurityComboBox bool) (retErr error) {
+func CompleteJoinWiFiDialog(ctx context.Context, conn *grpc.ClientConn, ssid string, cred Credential, skipSecurityComboBox bool) (retErr error) {
 	uiauto := ui.NewAutomationServiceClient(conn)
 	if _, err := uiauto.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: JoinWiFiNetworkDialogFinder}); err != nil {
 		return errors.Wrap(err, `failed to find the "Join Wi-Fi network" dialog`)
@@ -181,27 +261,81 @@ func CompleteJoinWiFiDialog(ctx context.Context, conn *grpc.ClientConn, security
 		return errors.Wrap(err, "failed to set the SSID")
 	}
 
-	if securityOption != SecurityOptionNone {
-		if !skipSecurityComboBox {
-			securityComboBoxSelect := ui.Node().Name("Security").Role(ui.Role_ROLE_COMBO_BOX_SELECT).Ancestor(JoinWiFiNetworkDialogFinder).Finder()
-			if _, err := uiauto.LeftClick(ctx, &ui.LeftClickRequest{Finder: securityComboBoxSelect}); err != nil {
-				return errors.Wrap(err, "failed to click the security combo-box")
-			}
-
-			wifiTypeListOption := ui.Node().Name(string(securityOption)).Role(ui.Role_ROLE_LIST_BOX_OPTION).Ancestor(JoinWiFiNetworkDialogFinder).Finder()
-			if _, err := uiauto.LeftClick(ctx, &ui.LeftClickRequest{Finder: wifiTypeListOption}); err != nil {
-				return errors.Wrap(err, "failed to click list option")
-			}
-		}
-
-		passwordField := ui.Node().Name("Password").Role(ui.Role_ROLE_TEXT_FIELD).Ancestor(JoinWiFiNetworkDialogFinder).Finder()
-		if err := setTextField(ctx, uiauto, keyboard, passwordField, password); err != nil {
-			return errors.Wrap(err, "failed to fill the password")
-		}
+	if err := setCredential(ctx, uiauto, keyboard, cred, skipSecurityComboBox); err != nil {
+		return errors.Wrap(err, "failed to set security configuration details")
 	}
 
 	if _, err := uiauto.LeftClick(ctx, &ui.LeftClickRequest{Finder: ConnectButtonFinder}); err != nil {
 		return errors.Wrap(err, "failed to click connect button")
+	}
+
+	return nil
+}
+
+func setCredential(ctx context.Context, uiauto ui.AutomationServiceClient, keyboard inputs.KeyboardServiceClient, cred Credential, skipSecurityComboBox bool) error {
+	// Early return for an unsecured network.
+	if _, ok := cred.(*None); ok {
+		return nil
+	}
+
+	dialogNodes := ui.Node().Ancestor(JoinWiFiNetworkDialogFinder)
+	comboBoxItems := dialogNodes.Role(ui.Role_ROLE_COMBO_BOX_SELECT)
+
+	setEapOptions := func(ctx context.Context, eap EAP) error {
+		if _, err := uiauto.SelectDropDownOption(ctx,
+			&ui.SelectDropDownOptionRequest{Finder: comboBoxItems.Name("EAP method").Finder(), OptionName: eap.method()}); err != nil {
+			return errors.Wrap(err, "failed to click the EAP method combo-box")
+		}
+
+		if _, err := uiauto.SelectDropDownOption(ctx,
+			&ui.SelectDropDownOptionRequest{Finder: comboBoxItems.Name("Server CA certificate").Finder(), OptionName: eap.caCert()}); err != nil {
+			return errors.Wrap(err, "failed to click the CA certificate combo-box")
+		}
+
+		identityField := dialogNodes.Name("Identity").Role(ui.Role_ROLE_TEXT_FIELD).Finder()
+		if err := setTextField(ctx, uiauto, keyboard, identityField, eap.identity()); err != nil {
+			return errors.Wrap(err, "failed to fill the identity")
+		}
+
+		return nil
+	}
+
+	if !skipSecurityComboBox {
+		if _, err := uiauto.SelectDropDownOption(ctx, &ui.SelectDropDownOptionRequest{
+			Finder:     comboBoxItems.Name("Security").Finder(),
+			OptionName: cred.security(),
+		}); err != nil {
+			return errors.Wrap(err, "failed to click the security combo-box")
+		}
+	}
+
+	switch c := cred.(type) {
+	case *Psk:
+		if err := setTextField(ctx, uiauto, keyboard, PasswordFieldFinder, c.Password); err != nil {
+			return errors.Wrap(err, "failed to fill the password")
+		}
+	case *TLS:
+		if err := setEapOptions(ctx, c); err != nil {
+			return err
+		}
+		if _, err := uiauto.SelectDropDownOption(ctx,
+			&ui.SelectDropDownOptionRequest{Finder: comboBoxItems.Name("User certificate").Finder(), OptionName: c.ClientCert}); err != nil {
+			return errors.Wrap(err, "failed to click the client certificate combo-box")
+		}
+	case *TTLS:
+		if err := setEapOptions(ctx, c); err != nil {
+			return err
+		}
+		if err := setTextField(ctx, uiauto, keyboard, PasswordFieldFinder, c.Password); err != nil {
+			return errors.Wrap(err, "failed to fill the password")
+		}
+	case *PEAP:
+		if err := setEapOptions(ctx, c); err != nil {
+			return err
+		}
+		if err := setTextField(ctx, uiauto, keyboard, PasswordFieldFinder, c.Password); err != nil {
+			return errors.Wrap(err, "failed to fill the password")
+		}
 	}
 
 	return nil
