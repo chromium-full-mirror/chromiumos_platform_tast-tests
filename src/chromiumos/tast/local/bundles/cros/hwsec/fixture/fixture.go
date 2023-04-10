@@ -25,6 +25,7 @@ const (
 	crossVersionBackupResetTimeout    = 30 * time.Second
 	crossVersionBackupTearDownTimeout = 1 * time.Minute
 	crossVersionSetUpTimeout          = 1 * time.Minute
+	crossVersionCurrentSetUpTimeout   = crossVersionSetUpTimeout + 1*time.Minute // X-ver setup + extra preparation time for `useCurrent`.
 	crossVersionResetTimeout          = 30 * time.Second
 	crossVersionTearDownTimeout       = 30 * time.Second
 )
@@ -55,7 +56,7 @@ func init() {
 			"cros-hwsec@google.com",
 			"chingkang@google.com",
 		},
-		SetUpTimeout:    crossVersionSetUpTimeout,
+		SetUpTimeout:    crossVersionCurrentSetUpTimeout,
 		ResetTimeout:    crossVersionResetTimeout,
 		TearDownTimeout: crossVersionTearDownTimeout,
 		Parent:          "crossVersionBackup",
@@ -980,7 +981,6 @@ func (f *crossVersionFixtImpl) SetUp(ctx context.Context, s *testing.FixtState) 
 		configName := fmt.Sprintf("cross_version_login/%s_config.json", f.dataPrefix)
 		dataPath = s.DataPath(dataName)
 		configPath = s.DataPath(configName)
-
 	}
 
 	configJSON, err := ioutil.ReadFile(configPath)
