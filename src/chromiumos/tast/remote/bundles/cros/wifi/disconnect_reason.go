@@ -159,13 +159,9 @@ func DisconnectReason(ctx context.Context, s *testing.State) {
 	if _, err := tf.ConnectWifiAPFromDUT(ctx, wificell.DefaultDUT, ap1); err != nil {
 		s.Fatal("DUT: failed to connect to WiFi: ", err)
 	}
-	expectDisconnectErr := false
+	disconnectAP1 := true
 	defer func(ctx context.Context) {
-		if expectDisconnectErr {
-			if err := tf.CleanDisconnectWifi(ctx); err != nil {
-				s.Error("Failed to disconnect WiFi: ", err)
-			}
-		} else {
+		if disconnectAP1 {
 			if err := tf.DisconnectWifi(ctx); err != nil {
 				// Do not fail on this error as we're triggering some
 				// disconnection in this test and the service can be
@@ -244,7 +240,12 @@ func DisconnectReason(ctx context.Context, s *testing.State) {
 		if err := tf.DUTWifiClient(wificell.DefaultDUT).WaitForConnected(ctx, ap2.Config().SSID, true); err != nil {
 			s.Fatal("DUT: failed to wait for WiFi connection: ", err)
 		}
-		expectDisconnectErr = true
+		defer func(ctx context.Context) {
+			if err := tf.CleanDisconnectWifi(ctx); err != nil {
+				s.Error("Failed to disconnect WiFi: ", err)
+			}
+			disconnectAP1 = false
+		}(ctxForDisconnect)
 	}
 
 	// Wait for a disconnect reason code from wpa_supplicant.
