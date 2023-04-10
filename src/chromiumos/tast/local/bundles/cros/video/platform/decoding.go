@@ -89,6 +89,11 @@ func H264DecodeVAAPIargs(ctx context.Context, filename, md5OutputPath string) []
 	return append(getVAAPIArgs(ctx, filename, md5OutputPath), "--codec=H264")
 }
 
+// HEVCDecodeVAAPIargs provides the arguments to use with the HEVC decoding binary exe for vaapi.
+func HEVCDecodeVAAPIargs(ctx context.Context, filename, md5OutputPath string) []string {
+	return append(getVAAPIArgs(ctx, filename, md5OutputPath), "--codec=H265")
+}
+
 // VPxDecodeArgs provides the arguments to use with vpxdec decoding binary exe.
 func VPxDecodeArgs(ctx context.Context, filename, md5OutputPath string) []string {
 	// With --md5 and -o options the md5 of each frame is calculated but frame

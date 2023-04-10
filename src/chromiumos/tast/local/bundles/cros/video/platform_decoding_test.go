@@ -1280,7 +1280,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 		params = append(params, paramData{
 			Name:         fmt.Sprintf("vaapi_hevc_%s", testGroup),
 			Decoder:      filepath.Join(chrome.BinTestDir, "decode_test"),
-			CmdBuilder:   "hevcdecodeVAAPIargs",
+			CmdBuilder:   "platform.HEVCDecodeVAAPIargs",
 			Files:        files,
 			Timeout:      defaultTimeout,
 			SoftwareDeps: []string{"vaapi", caps.HWDecodeHEVC},
@@ -1303,7 +1303,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 			params = append(params, paramData{
 				Name:         fmt.Sprintf("vaapi_hevc_%s_bug_%s", testGroup, bugID),
 				Decoder:      filepath.Join(chrome.BinTestDir, "decode_test"),
-				CmdBuilder:   "hevcdecodeVAAPIargs",
+				CmdBuilder:   "platform.HEVCDecodeVAAPIargs",
 				Files:        files,
 				Timeout:      time.Minute,
 				SoftwareDeps: []string{"vaapi", caps.HWDecodeHEVC},
