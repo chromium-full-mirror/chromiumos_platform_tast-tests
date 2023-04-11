@@ -7,9 +7,11 @@ package futility
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"strings"
 
 	"chromiumos/tast/common/testexec"
+
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -102,6 +104,14 @@ func (i *Instance) futilityCmdArgs() []string {
 		cmdArgs = append(cmdArgs, "--debug")
 	}
 
+	return cmdArgs
+}
+
+// appendFlashArgs appends flash arguments based on instance parameters.
+func (i *Instance) appendFlashArgs(cmdArgs []string) []string {
+	if i.params.servoPort > 0 {
+		return append(cmdArgs, "--servo", "--servo_port", fmt.Sprintf("%d", i.params.servoPort))
+	}
 	return cmdArgs
 }
 
