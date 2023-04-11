@@ -26,6 +26,9 @@ option go_package = "chromiumos/tast/services/cros/bluetooth";
 service BluetoothService {
   // SetBluetoothStack configures the DUT to use the specified bluetooth stack
   // and initializes the BluetoothFacade as needed.
+  //
+  // Enable should be called after this if to ensure the adapter is powered on
+  // if it is to be used beyond calling IsPoweredOn.
   rpc SetBluetoothStack(SetBluetoothStackRequest) returns (google.protobuf.Empty) {}
 
   // StackType returns the BluetoothStackType the facade uses.

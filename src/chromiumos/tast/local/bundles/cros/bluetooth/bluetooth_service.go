@@ -36,6 +36,9 @@ type BtService struct {
 
 // SetBluetoothStack configures the DUT to use the specified bluetooth stack
 // and initializes the BluetoothFacade as needed.
+//
+// Enable should be called after this if to ensure the adapter is powered on
+// if it is to be used beyond calling IsPoweredOn.
 func (b *BtService) SetBluetoothStack(ctx context.Context, request *pb.SetBluetoothStackRequest) (*emptypb.Empty, error) {
 	var stackType common.BluetoothStackType
 	switch request.StackType {

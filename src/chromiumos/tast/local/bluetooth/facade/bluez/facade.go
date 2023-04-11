@@ -28,12 +28,12 @@ type BluetoothBluezFacade struct {
 	cachedDefaultAdapter *bluez.Adapter
 }
 
-// NewBluetoothBluezFacade initializes, enables, and returns a new
-// BluetoothBluezFacade.
+// NewBluetoothBluezFacade initializes the bluez adapter and returns a
+// new BluetoothBluezFacade.
 func NewBluetoothBluezFacade(ctx context.Context) (*BluetoothBluezFacade, error) {
 	b := &BluetoothBluezFacade{}
-	if err := b.Enable(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed to enable bluetooth using bluez stack")
+	if err := b.initializeAdapter(ctx); err != nil {
+		return nil, err
 	}
 	return b, nil
 }
@@ -45,37 +45,47 @@ func (b *BluetoothBluezFacade) StackType() common.BluetoothStackType {
 
 // Enable will turn on the bluetooth daemons and power on adapter.
 func (b *BluetoothBluezFacade) Enable(ctx context.Context) error {
+	if b.cachedDefaultAdapter == nil {
+		if err := b.initializeAdapter(ctx); err != nil {
+			return err
+		}
+	}
+
+	// Power on the adapter.
+	if err := b.SetPowered(ctx, true); err != nil {
+		return errors.Wrap(err, "failed to power on adapter")
+	}
+	return nil
+}
+
+func (b *BluetoothBluezFacade) initializeAdapter(ctx context.Context) error {
 	// Ensure daemon is running.
 	if err := upstart.CheckJob(ctx, bluezDaemonJob); err != nil {
 		if err := upstart.RestartJobAndWaitForDbusService(ctx, bluezDaemonJob, bluez.DBusBluezService); err != nil {
 			return errors.Wrap(err, "failed to start bluez")
 		}
 	}
-
 	// Get and store the default adapter.
 	defaultAdapter, err := bluez.DefaultAdapter(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to get default bluez bluetooth adapter")
 	}
 	b.cachedDefaultAdapter = defaultAdapter
-
-	// Power on the adapter.
-	if err := b.SetPowered(ctx, true); err != nil {
-		return errors.Wrap(err, "failed to power on adapter")
-	}
-
 	return nil
 }
 
 // Disable will turn off the bluetooth daemons and power off adapter.
 func (b *BluetoothBluezFacade) Disable(ctx context.Context) error {
+	if err := b.SetPowered(ctx, false); err != nil {
+		return errors.Wrap(err, "failed to disable bluez adapter")
+	}
 	b.cachedDefaultAdapter = nil
 	return upstart.StopJob(ctx, bluezDaemonJob)
 }
 
 func (b *BluetoothBluezFacade) defaultAdapter() (*bluez.Adapter, error) {
 	if b.cachedDefaultAdapter == nil {
-		return nil, errors.New("Enable must be called prior to using adapter")
+		return nil, errors.New("Enable must be called again prior to using adapter")
 	}
 	return b.cachedDefaultAdapter, nil
 }
@@ -154,11 +164,12 @@ func (b *BluetoothBluezFacade) AdapterProperties(ctx context.Context) (*common.B
 
 // IsPoweredOn returns true if the default adapter is enabled.
 func (b *BluetoothBluezFacade) IsPoweredOn(ctx context.Context) (bool, error) {
-	adapter, err := b.defaultAdapter()
-	if err != nil {
-		return false, err
+	if b.cachedDefaultAdapter == nil {
+		if err := b.initializeAdapter(ctx); err != nil {
+			return false, err
+		}
 	}
-	return adapter.Powered(ctx)
+	return b.cachedDefaultAdapter.Powered(ctx)
 }
 
 // SetPowered sets the default adapter's enabled state.

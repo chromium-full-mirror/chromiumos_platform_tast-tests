@@ -2899,6 +2899,9 @@ const _ = grpc.SupportPackageIsVersion6
 type BluetoothServiceClient interface {
 	// SetBluetoothStack configures the DUT to use the specified bluetooth stack
 	// and initializes the BluetoothFacade as needed.
+	//
+	// Enable should be called after this if to ensure the adapter is powered on
+	// if it is to be used beyond calling IsPoweredOn.
 	SetBluetoothStack(ctx context.Context, in *SetBluetoothStackRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// StackType returns the BluetoothStackType the facade uses.
 	StackType(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*StackTypeResponse, error)
@@ -3275,6 +3278,9 @@ func (c *bluetoothServiceClient) PairDevice(ctx context.Context, in *PairDeviceR
 type BluetoothServiceServer interface {
 	// SetBluetoothStack configures the DUT to use the specified bluetooth stack
 	// and initializes the BluetoothFacade as needed.
+	//
+	// Enable should be called after this if to ensure the adapter is powered on
+	// if it is to be used beyond calling IsPoweredOn.
 	SetBluetoothStack(context.Context, *SetBluetoothStackRequest) (*emptypb.Empty, error)
 	// StackType returns the BluetoothStackType the facade uses.
 	StackType(context.Context, *emptypb.Empty) (*StackTypeResponse, error)
