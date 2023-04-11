@@ -20,11 +20,11 @@ func init() {
 		Desc: "Check firmware and kernel version stored in TPM",
 		Contacts: []string{
 			"chromeos-faft@google.com",
-			"js@semihalf.com",
+			"tij@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
-		Attr:         []string{"group:firmware", "firmware_unstable"},
+		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level3"},
+		Requirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Params: []testing.Param{
 			{
@@ -38,9 +38,10 @@ func init() {
 				Fixture: fixture.DevModeGBB,
 			},
 			{
-				Name:    "dev_usb",
-				Val:     fixture.USBDevModeGBBNoServices,
-				Fixture: fixture.USBDevModeGBBNoServices,
+				Name:      "dev_usb",
+				Val:       fixture.USBDevModeGBBNoServices,
+				Fixture:   fixture.USBDevModeGBBNoServices,
+				ExtraAttr: []string{"firmware_usb"},
 			},
 		},
 	})
