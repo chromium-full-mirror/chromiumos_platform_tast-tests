@@ -29,7 +29,7 @@ func init() {
 		},
 		BugComponent: "b:1088399", // ChromeOS > Security > Cryptohome
 		SoftwareDeps: []string{"chrome", "pinweaver"},
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:cryptohome"},
 	})
 }
 

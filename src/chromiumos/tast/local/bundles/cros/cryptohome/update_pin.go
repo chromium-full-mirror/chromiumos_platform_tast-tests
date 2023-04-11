@@ -28,7 +28,7 @@ func init() {
 			"anastasiian@chromium.org",
 		},
 		BugComponent: "b:1088399", // ChromeOS > Security > Cryptohome
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:cryptohome"},
 		// TODO(b/195385797): Run on gooey when the bug is fixed.
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("gooey")),
 		SoftwareDeps: []string{"pinweaver"},

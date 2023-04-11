@@ -37,7 +37,7 @@ func init() {
 		},
 		BugComponent: "b:1088399", // ChromeOS > Security > Cryptohome
 		SoftwareDeps: []string{"chrome", "tpm"},
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:cryptohome"},
 		Params: []testing.Param{{
 			Name: "rsassa_sha1",
 			Val: []cpb.ChallengeSignatureAlgorithm{

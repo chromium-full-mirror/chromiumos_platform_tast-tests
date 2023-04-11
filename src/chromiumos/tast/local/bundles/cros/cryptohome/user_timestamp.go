@@ -28,8 +28,13 @@ func init() {
 			"asavery@chromium.org",
 			"gwendal@chromium.org",
 		},
-		BugComponent: "b:974567",
-		Attr:         []string{"group:mainline", "group:hw_agnostic", "informational"},
+		BugComponent: "b:974567", // ChromeOS > Platform> Technologies > Storage
+		Attr: []string{
+			"group:mainline",
+			"group:cryptohome",
+			"group:hw_agnostic",
+			"informational",
+		},
 	})
 }
 

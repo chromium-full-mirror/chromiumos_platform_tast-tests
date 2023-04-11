@@ -25,8 +25,8 @@ func init() {
 			"cryptohome-core@google.com",
 			"anastasiian@chromium.org",
 		},
-		BugComponent: "b:1088399",
-		Attr:         []string{"group:mainline", "informational"},
+		BugComponent: "b:1088399", // ChromeOS > Security > Cryptohome
+		Attr:         []string{"group:mainline", "group:cryptohome", "informational"},
 		SoftwareDeps: []string{"pinweaver", "reboot"},
 		Fixture:      "ussAuthSessionFixture",
 		Timeout:      2 * time.Minute,

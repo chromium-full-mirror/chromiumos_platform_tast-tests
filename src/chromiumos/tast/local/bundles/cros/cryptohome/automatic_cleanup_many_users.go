@@ -28,7 +28,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AutomaticCleanupManyUsers,
 		Desc:         "Test automatic disk cleanup",
-		BugComponent: "b:1264602",
+		BugComponent: "b:1264602", // ChromeOS > Software > Commercial (Enterprise) > DiskCleanup
 		Contacts: []string{
 			"chromeos-disk-cleanup@google.com",
 			"vsavu@google.com",     // Test author
@@ -42,6 +42,7 @@ func init() {
 				"group:medium_low_tier",
 				"group:hardware",
 				"group:complementary",
+				"group:cryptohome",
 			},
 			Timeout: 3 * time.Minute,
 		}, {

@@ -27,9 +27,9 @@ func init() {
 			"cryptohome-core@google.com",
 			"betuls@google.com",
 		},
-		BugComponent: "b:1088399",
+		BugComponent: "b:1088399", // ChromeOS > Security > Cryptohome
 		SoftwareDeps: []string{"chrome", "pinweaver"},
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:cryptohome"},
 	})
 }
 

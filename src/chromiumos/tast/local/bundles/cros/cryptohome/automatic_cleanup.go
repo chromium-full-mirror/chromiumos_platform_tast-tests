@@ -22,7 +22,7 @@ func init() {
 		Func: AutomaticCleanup,
 		Desc: "Test automatic disk cleanup",
 
-		BugComponent: "b:1264602",
+		BugComponent: "b:1264602", // ChromeOS > Software > Commercial (Enterprise) > DiskCleanup
 		Contacts: []string{
 			"chromeos-disk-cleanup@google.com",
 			"vsavu@google.com",     // Test author

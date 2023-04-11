@@ -29,7 +29,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that the cryptohome is stable after login",
 		Contacts:     []string{"chromeos-security@google.com", "iby@chromium.org"},
-		BugComponent: "b:1088399",
+		BugComponent: "b:1088399", // ChromeOS > Security > Cryptohome
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline"},
 		Pre:          chrome.LoggedIn(),
@@ -39,7 +39,8 @@ func init() {
 				subdirectory: false,
 			},
 		}, {
-			Name: "subdirectory",
+			Name:      "subdirectory",
+			ExtraAttr: []string{"group:cryptohome"},
 			Val: fileStabilityParams{
 				subdirectory: true,
 			},

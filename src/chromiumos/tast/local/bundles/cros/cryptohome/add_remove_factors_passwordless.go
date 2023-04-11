@@ -31,8 +31,8 @@ func init() {
 			"cryptohome-core@google.com",
 			"jadmanski@chromium.org",
 		},
-		BugComponent: "b:1088399",
-		Attr:         []string{"group:mainline", "informational"},
+		BugComponent: "b:1088399", // ChromeOS > Security > Cryptohome
+		Attr:         []string{"group:mainline", "group:cryptohome", "informational"},
 		SoftwareDeps: []string{"pinweaver"},
 		Fixture:      "ussAuthSessionFixture",
 		Params: []testing.Param{{

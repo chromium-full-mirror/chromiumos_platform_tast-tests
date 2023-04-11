@@ -25,8 +25,8 @@ func init() {
 			"dlunev@chromium.org",
 			"hardikgoyal@chromium.org",
 		},
-		BugComponent: "b:1088399",
-		Attr:         []string{"group:mainline"},
+		BugComponent: "b:1088399", // ChromeOS > Security > Cryptohome
+		Attr:         []string{"group:mainline", "group:cryptohome"},
 	})
 }
 

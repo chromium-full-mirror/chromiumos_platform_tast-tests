@@ -30,7 +30,7 @@ func init() {
 			"sarthakkukreti@google.com",
 		},
 		BugComponent: "b:974567",
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:cryptohome"},
 		Params: []testing.Param{{
 			Name:              "v1",
 			Val:               fscryptVersionParam{version: 1},

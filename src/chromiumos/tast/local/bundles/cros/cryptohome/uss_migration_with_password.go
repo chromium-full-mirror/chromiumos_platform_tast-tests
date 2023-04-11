@@ -21,15 +21,15 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         USSMigrationWithPassword,
+		Func:         UssMigrationWithPassword,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test migration of a vault keyset user with only password to USS",
 		Contacts: []string{
 			"cryptohome-core@google.com",
 			"hardikgoyal@chromium.org",
 		},
-		BugComponent: "b:1088399",
-		Attr:         []string{"group:mainline"},
+		BugComponent: "b:1088399", // ChromeOS > Security > Cryptohome
+		Attr:         []string{"group:mainline", "group:cryptohome"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      4 * time.Minute,
 	})
@@ -58,7 +58,7 @@ func checkMetricPresence(ctx context.Context, cr *chrome.Chrome, backingStoreCon
 	return nil
 }
 
-func USSMigrationWithPassword(ctx context.Context, s *testing.State) {
+func UssMigrationWithPassword(ctx context.Context, s *testing.State) {
 	const (
 		userName              = "foo@bar.baz"
 		userPassword          = "secret"
