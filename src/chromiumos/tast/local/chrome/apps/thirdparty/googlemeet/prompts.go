@@ -42,12 +42,19 @@ var (
 		PromptFinder:      micMutedAlertFinder,
 		ClearButtonFinder: prompts.CloseButtonFinder.Ancestor(micMutedAlertFinder),
 	}
+
+	captionDialogFinder = nodewith.Name("Caption languages & translation").Role(role.Dialog).Ancestor(meetRootWebArea)
+	captionPrompt       = prompts.Prompt{
+		Name:              "Caption languages & translation",
+		PromptFinder:      captionDialogFinder,
+		ClearButtonFinder: prompts.GotItButtonFinder.Ancestor(captionDialogFinder),
+	}
 )
 
 // ClearPromptsForNewMeeting clears potential prompts on launching new meeting.
 func (gm *GoogleMeet) ClearPromptsForNewMeeting(ctx context.Context) error {
 	promptsToBeManaged := []prompts.Prompt{
-		meetingReadyPrompt, meetKeepsYouSafePrompt, whiteboardPrompt, micMutedPrompt,
+		meetingReadyPrompt, meetKeepsYouSafePrompt, whiteboardPrompt, micMutedPrompt, captionPrompt,
 	}
 
 	// ChromePermissionPrompts will merge camera and microphone permissions to one prompt.
