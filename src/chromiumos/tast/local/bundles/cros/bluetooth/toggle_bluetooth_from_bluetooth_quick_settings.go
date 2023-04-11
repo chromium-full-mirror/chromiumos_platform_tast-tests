@@ -38,9 +38,10 @@ func init() {
 			Fixture:   "bluetoothEnabledInOobeWithBlueZ",
 			ExtraAttr: []string{"bluetooth_sa"},
 		}, {
-			Name:      "floss_enabled_oobe",
-			Fixture:   "bluetoothEnabledInOobeWithFloss",
-			ExtraAttr: []string{"bluetooth_floss"},
+			Name:              "floss_enabled_oobe",
+			Fixture:           "bluetoothEnabledInOobeWithFloss",
+			ExtraAttr:         []string{"bluetooth_floss"},
+			ExtraSoftwareDeps: []string{"bluetooth_floss"},
 		}},
 	})
 }
