@@ -32,8 +32,10 @@ func init() {
 		},
 		BugComponent: "b:1279804", // ChromeOS > Software > Commercial (Enterprise) > Identity > Account Manager
 		Attr: []string{
-			"group:mainline",
-			"informational",
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
 			"group:crosbolt",
 			"crosbolt_nightly",
 			"group:hw_agnostic",
