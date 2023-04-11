@@ -25,7 +25,12 @@ func init() {
 			"acostinas@google.com",                      // Test author
 		},
 		BugComponent: "b:1000044",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+		},
 		SoftwareDeps: []string{"chrome"},
 	})
 }

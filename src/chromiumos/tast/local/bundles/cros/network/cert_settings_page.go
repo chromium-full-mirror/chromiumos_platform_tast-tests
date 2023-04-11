@@ -79,17 +79,17 @@ func init() {
 			"miersh@google.com",                         // Test author
 		},
 		BugComponent: "b:1000044",
-		Attr:         []string{"group:mainline"},
-		SoftwareDeps: []string{"chrome", "lacros"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+		},
+		SoftwareDeps: []string{"chrome", "lacros", "lacros_stable"},
 		Fixture:      "lacros",
 		Timeout:      5 * time.Minute,
 		Data: []string{clientCertFileName, rootCertFileName,
 			websiteCertFileName, websiteKeyFileName},
-		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"lacros_stable"},
-			ExtraAttr:         []string{"informational"},
-			Val:               browser.TypeLacros,
-		}},
 		SearchFlags: []*testing.StringPair{
 			{
 				Key: "feature_id",
@@ -534,7 +534,7 @@ func setCACertTrust(ctx context.Context, s *testing.State, ui *uiauto.Context, t
 // the CA certificate and it can be added back to it.
 func CertSettingsPage(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-	browserType := s.Param().(browser.Type)
+	browserType := browser.TypeLacros
 
 	// Reserve ten seconds for cleanup.
 	cleanupCtx := ctx
