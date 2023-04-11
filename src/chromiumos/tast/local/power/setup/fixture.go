@@ -8,14 +8,12 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/common/perf"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
-	"chromiumos/tast/local/cpu"
 	"chromiumos/tast/local/power"
 	"chromiumos/tast/testing"
 )
@@ -170,7 +168,7 @@ func (f *powerNoUIFixture) SetUp(ctx context.Context, s *testing.FixtState) inte
 		NewBatteryDischargeFromMode(dischargeMode),
 	))
 	if err := su.Check(ctx); err != nil {
-		s.Error("Power test setup failed: ", err)
+		s.Fatal("Power test setup failed: ", err)
 	}
 
 	f.cleanup = cleanup
@@ -195,7 +193,7 @@ func (f *powerNoUIFixture) PostTest(ctx context.Context, s *testing.FixtTestStat
 }
 
 type powerMetricsNoUIFixture struct {
-	metrics *perf.Timeline
+	recorder *power.Recorder
 }
 
 func (f *powerMetricsNoUIFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -210,38 +208,22 @@ func (f *powerMetricsNoUIFixture) Reset(ctx context.Context) error {
 }
 
 func (f *powerMetricsNoUIFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
-	// Wait until CPU is cooled down and idle.
-	if _, err := cpu.WaitUntilCoolDown(ctx, cpu.IdleCoolDownConfig()); err != nil {
-		s.Error("CPU failed to cool down: ", err)
-	}
-	if err := cpu.WaitUntilIdle(ctx); err != nil {
-		s.Error("CPU failed to idle: ", err)
-	}
-
-	metrics, err := perf.NewTimeline(ctx, power.TestMetrics(), perf.Interval(1*time.Second))
+	recorder, err := power.NewRecorder(ctx, 1*time.Second, s.OutDir(), s.TestName())
 	if err != nil {
-		s.Fatal("Failed to build metrics: ", err)
+		s.Fatal("Cannot create a new Recorder to collect power metrics: ", err)
 	}
-
-	if err := metrics.Start(s.TestContext()); err != nil {
-		s.Fatal("Failed to start metrics: ", err)
+	if err := recorder.Cooldown(ctx); err != nil {
+		s.Error("Cooldown failed: ", err)
 	}
-
-	if err := metrics.StartRecording(s.TestContext()); err != nil {
-		s.Fatal("Failed to start recording: ", err)
+	if err := recorder.Start(s.TestContext()); err != nil {
+		s.Fatal("Cannot start collecting power metrics: ", err)
 	}
-
-	f.metrics = metrics
+	f.recorder = recorder
 }
 
 func (f *powerMetricsNoUIFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
-	p, err := f.metrics.StopRecording(s.TestContext())
-	if err != nil {
-		s.Fatal("Error while recording power metrics: ", err)
-	}
-
-	if err := power.GeneratePowerLogAndSaveToCrosbolt(ctx, s.OutDir(), s.TestName(), p); err != nil {
-		s.Error("Failed to generate power_log.json and/or save perf data for crosbolt: ", err)
+	if err := f.recorder.Finish(s.TestContext()); err != nil {
+		s.Error("Cannot finish collecting power metrics: ", err)
 	}
 }
 
