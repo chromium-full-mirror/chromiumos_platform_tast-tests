@@ -26,11 +26,8 @@ const (
 	fieldFilter      = `:\s+(\d+) kB`
 	crosCameraFilter = `root(\s+)(\d+)(.+)cros_camera_service`
 
-	// TestDuration defines how long the App is going to open for.
-	TestDuration = time.Minute * 30
-
-	// TestDurationInSeconds defines how long the fps is measured for.
-	TestDurationInSeconds = 60 * 30
+	// DefaultTestDuration defines the default test duration of 30 minutes in seconds.
+	DefaultTestDuration = 60 * 30
 )
 
 // PeakMemoryResult returns the peak memory or an error.
@@ -109,12 +106,12 @@ func GetSwapAndRSSBytes(ctx context.Context) (int, error) {
 }
 
 // GetMaxMemoryUsage gets the memory peak usage during the run time.
-func GetMaxMemoryUsage(ctx context.Context, result chan PeakMemoryResult) {
-	testing.ContextLog(ctx, "Start recording memory usage for ", TestDuration)
+func GetMaxMemoryUsage(ctx context.Context, result chan PeakMemoryResult, seconds int) {
+	testing.ContextLog(ctx, "Start recording memory usage for ", seconds, " seconds")
 	var maxMemUsage = 0
-	// Get memory usage every 5 seconds for 1 min.
-	for start := time.Now(); time.Since(start) < TestDuration; {
-		testing.Sleep(ctx, time.Second)
+	for start := time.Now(); time.Since(start) < time.Duration(seconds)*time.Second; {
+		// GoBigSleepLint: Get memory usage every 5 seconds for 1 min.
+		testing.Sleep(ctx, 5*time.Second)
 		currentMemUsage, err := GetSwapAndRSSBytes(ctx)
 		if err != nil {
 			result <- PeakMemoryResult{Value: -1, Err: err}

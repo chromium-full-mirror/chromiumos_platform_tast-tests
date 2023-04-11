@@ -54,6 +54,10 @@ func init() {
 		SoftwareDeps: []string{"chrome", "camera_feature_effects"},
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("betty")),
 		Timeout:      35 * time.Minute,
+		Vars: []string{
+			// How many seconds to capture metrics.
+			"videoconferencing.test_duration",
+		},
 		Data: []string{
 			"effects_fps_metrics.js",
 			"effects_video_script.html",
@@ -100,6 +104,16 @@ func BenchmarkingHTML(ctx context.Context, s *testing.State) {
 	}
 
 	var err error
+	testDuration := effects.DefaultTestDuration
+
+	if varValue, ok := s.Var("videoconferencing.test_duration"); ok {
+		testDuration, err = strconv.Atoi(varValue)
+		if err != nil || testDuration <= 0 {
+			s.Fatal("Failed to parse videoconferencing.test_duration: ", err)
+		}
+
+	}
+
 	cleanupApply, err := effects.ApplyPlatformEffects(ctx, param.platformBlur, param.platformRelight)
 	if err != nil {
 		s.Fatal("Failed to apply platform effects: ", err)
@@ -134,7 +148,7 @@ func BenchmarkingHTML(ctx context.Context, s *testing.State) {
 		float64(initMemUsage))
 	testing.ContextLog(ctx, "Initial Memory usage: ", initMemUsage)
 
-	//  Open video on simple javascript browser
+	//  Open video on simple javascript browser.
 	testing.ContextLog(ctx, "Opening Simple Meeting")
 	srv := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	// TODO: Enable param resolution when available
@@ -148,7 +162,7 @@ func BenchmarkingHTML(ctx context.Context, s *testing.State) {
 
 	defer faillog.DumpUITreeWithScreenshotOnError(closeCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
-	// Find camera permissions prompt
+	// Find camera permissions prompt.
 	bubble := nodewith.ClassName("PermissionPromptBubbleView").First()
 	allow := nodewith.Name("Allow").Role(role.Button).Ancestor(bubble)
 
@@ -158,6 +172,7 @@ func BenchmarkingHTML(ctx context.Context, s *testing.State) {
 	webArea := nodewith.Role(role.RootWebArea).Ancestor(webview)
 
 	testing.ContextLog(ctx, "Letting things settle for 5 seconds before UI interactions")
+	// GoBigSleepLint: Allow UI transitions to complete before interacting.
 	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 		s.Fatal("Failed to let things settle: ", err)
 	}
@@ -173,16 +188,17 @@ func BenchmarkingHTML(ctx context.Context, s *testing.State) {
 	defer faillog.DumpUITreeWithScreenshotOnError(closeCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
 	testing.ContextLog(ctx, "Letting things settle for 5 seconds before taking metrics")
+	// GoBigSleepLint: Allow power and effects to stabilize before taking metrics.
 	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 		s.Fatal("Failed to let things settle: ", err)
 	}
 
 	// Get Max memory usage.
 	memoryChannel := make(chan effects.PeakMemoryResult)
-	go effects.GetMaxMemoryUsage(ctx, memoryChannel)
+	go effects.GetMaxMemoryUsage(ctx, memoryChannel, testDuration)
 
 	var fpsResult effects.DataResult
-	if fpsResult, err = effects.CaptureFPSData(ctx, conn, s.DataPath("effects_fps_metrics.js"), effects.TestDurationInSeconds); err != nil {
+	if fpsResult, err = effects.CaptureFPSData(ctx, conn, s.DataPath("effects_fps_metrics.js"), testDuration); err != nil {
 		s.Error("Failed to capture FPS data: ", err)
 	}
 	p.Set(perf.Metric{
@@ -229,7 +245,7 @@ func BenchmarkingHTML(ctx context.Context, s *testing.State) {
 	}
 
 	energyDiff.ReportPerfMetrics(p, "joules-")
-	energyDiff.ReportWattPerfMetrics(p, "watts-", effects.TestDuration)
+	energyDiff.ReportWattPerfMetrics(p, "watts-", time.Duration(testDuration)*time.Second)
 
 	if err := p.Save(s.OutDir()); err != nil {
 		s.Error("Cannot save perf data: ", err)

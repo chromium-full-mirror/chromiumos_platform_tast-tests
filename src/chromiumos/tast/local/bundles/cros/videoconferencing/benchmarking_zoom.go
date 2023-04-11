@@ -96,11 +96,14 @@ func BenchmarkingZoom(ctx context.Context, s *testing.State) {
 	}
 
 	var err error
-	testDuration := effects.TestDurationInSeconds
+	testDuration := effects.DefaultTestDuration
+
 	if varValue, ok := s.Var("videoconferencing.test_duration"); ok {
-		if testDuration, err = strconv.Atoi(varValue); err != nil || testDuration <= 0 {
+		testDuration, err = strconv.Atoi(varValue)
+		if err != nil || testDuration <= 0 {
 			s.Fatal("Failed to parse videoconferencing.test_duration: ", err)
 		}
+
 	}
 
 	fixt := s.FixtValue().(fixture.BenchmarkSetUpFixtureData)
@@ -150,6 +153,7 @@ func BenchmarkingZoom(ctx context.Context, s *testing.State) {
 	}
 
 	testing.ContextLog(ctx, "Letting things settle for 5 seconds")
+	// GoBigSleepLint: Allow power and effects to stabilize before taking metrics.
 	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 		s.Fatal("Failed to let things settle: ", err)
 	}

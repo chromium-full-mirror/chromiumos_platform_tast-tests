@@ -21,11 +21,6 @@ const (
 	platformEffectsOverrideDir  = "/run/camera/effects"
 )
 
-// FakeCameraImageConfig represents the config of the path to a real image.
-type FakeCameraImageConfig struct {
-	Path string `json:"path"`
-}
-
 // DataResult returns the result of FPS value measured.
 type DataResult struct {
 	Average float64   `json:"average"`
