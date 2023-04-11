@@ -76,7 +76,18 @@ func init() {
 				},
 				ExtraAttr: []string{"group:mainline", "informational"},
 			},
-
+			// Remove informational after succeeding for 10 days.
+			{
+				Name: "feature_v1_mic_cam_loc_golden",
+				Val: testSettingsParam{
+					chromeFeature:          "CrosPrivacyHub",
+					checkCameraControl:     true,
+					checkMicrophoneControl: true,
+					checkLocationControl:   true,
+				},
+				ExtraAttr: []string{"group:mainline", "informational"},
+			},
+			// Legacy to be removed before V0 is removed from chromium.
 			{
 				Name: "feature_v0_mic_cam",
 				Val: testSettingsParam{
@@ -86,7 +97,9 @@ func init() {
 					checkLocationControl:   false,
 				},
 				ExtraAttr: []string{"group:mainline", "informational"},
-			}, {
+			},
+			// Legacy to be removed before V0 is removed from chromium.
+			{
 				Name: "feature_v0_mic_cam_golden",
 				Val: testSettingsParam{
 					chromeFeature:          "CrosPrivacyHubV0",
@@ -97,7 +110,6 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(goldenModels...)),
 				ExtraAttr:         []string{"group:mainline"},
 			},
-
 			{
 				Name: "feature_off",
 				Val: testSettingsParam{
@@ -107,7 +119,8 @@ func init() {
 					checkLocationControl:   false,
 				},
 				ExtraAttr: []string{"group:mainline", "informational"},
-			}, {
+			},
+			{
 				Name: "feature_off_golden",
 				Val: testSettingsParam{
 					chromeFeature:          "",
