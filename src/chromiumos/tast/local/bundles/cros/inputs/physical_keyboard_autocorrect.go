@@ -34,7 +34,7 @@ func init() {
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
 		Attr:         []string{"group:mainline", "group:input-tools"},
-		SoftwareDeps: []string{"chrome", "chrome_internal"},
+		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal"},
 		SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.EnglishUS}),
 		Timeout:      5 * time.Minute,
 		HardwareDeps: hwdep.D(hwdep.Model(pre.StableModels...)),

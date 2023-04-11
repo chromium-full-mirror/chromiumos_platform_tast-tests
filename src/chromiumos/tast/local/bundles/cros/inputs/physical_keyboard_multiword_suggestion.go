@@ -33,7 +33,7 @@ func init() {
 		BugComponent: "b:95887",
 		Attr:         []string{"group:mainline", "group:input-tools", "group:ml_service", "ml_service_ondevice_text_suggestions", "group:hw_agnostic"},
 		SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.EnglishUS}),
-		SoftwareDeps: []string{"chrome", "chrome_internal", "ondevice_text_suggestions"},
+		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal", "ondevice_text_suggestions"},
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{
 			{

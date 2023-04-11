@@ -29,7 +29,7 @@ func init() {
 			"giovax@google.com",
 		},
 		BugComponent: "b:95887",
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"inputs_deps", "chrome"},
 		Attr:         []string{},
 		Timeout:      45 * time.Second,
 		Params: []testing.Param{

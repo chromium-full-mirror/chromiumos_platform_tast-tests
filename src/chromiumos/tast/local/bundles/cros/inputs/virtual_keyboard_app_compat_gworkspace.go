@@ -34,7 +34,7 @@ func init() {
 		BugComponent: "b:95887",
 		Attr:         []string{"group:mainline", "group:input-tools", "informational"},
 		LacrosStatus: testing.LacrosVariantExists,
-		SoftwareDeps: []string{"chrome", "google_virtual_keyboard"},
+		SoftwareDeps: []string{"inputs_deps", "chrome", "google_virtual_keyboard"},
 		SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.FrenchFrance, ime.EnglishUS}),
 		Timeout:      5 * time.Minute,
 		HardwareDeps: hwdep.D(pre.InputsStableModels),

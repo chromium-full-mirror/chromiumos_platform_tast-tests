@@ -55,7 +55,7 @@ func init() {
 		BugComponent: "b:95887",
 		Attr:         []string{"group:mainline", "group:input-tools"},
 		SearchFlags:  util.IMESearchFlags(typingTestIMEs),
-		SoftwareDeps: []string{"chrome", "google_virtual_keyboard"},
+		SoftwareDeps: []string{"inputs_deps", "chrome", "google_virtual_keyboard"},
 		Timeout:      time.Duration(len(typingTestIMEs)+len(typingTestIMEsUpstream)) * time.Duration(len(typingTestMessages)) * time.Minute,
 		Params: []testing.Param{
 			{

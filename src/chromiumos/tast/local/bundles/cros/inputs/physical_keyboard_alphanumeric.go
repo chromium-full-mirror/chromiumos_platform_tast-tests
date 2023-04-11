@@ -31,7 +31,7 @@ func init() {
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		Timeout:      5 * time.Minute,
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"inputs_deps", "chrome"},
 		Fixture:      fixture.ClamshellNonVK,
 	})
 }

@@ -48,7 +48,7 @@ func init() {
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
-		SoftwareDeps: []string{"chrome", "chrome_internal"},
+		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal"},
 		HardwareDeps: hwdep.D(pre.PhysicalKeyboardPerfModels),
 		SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.EnglishUS, ime.ChinesePinyin}),
 		Timeout:      5 * time.Minute,

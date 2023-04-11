@@ -48,7 +48,7 @@ func init() {
 		Desc:         "Test voice input functionality on virtual keyboard",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
-		SoftwareDeps: []string{"chrome", "google_virtual_keyboard"},
+		SoftwareDeps: []string{"inputs_deps", "chrome", "google_virtual_keyboard"},
 		Attr:         []string{"group:mainline", "group:input-tools", "group:input-tools-upstream"},
 		SearchFlags:  util.IMESearchFlags(voiceTestIMEs),
 		Data:         data.ExtractExternalFiles(voiceTestMessages, append(voiceTestIMEs, voiceTestIMEsNewData...)),

@@ -33,7 +33,7 @@ func init() {
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
 		Attr:         []string{"group:mainline", "group:input-tools"},
-		SoftwareDeps: []string{"chrome", "google_virtual_keyboard"},
+		SoftwareDeps: []string{"inputs_deps", "chrome", "google_virtual_keyboard"},
 		Fixture:      fixture.TabletVK,
 		SearchFlags: []*testing.StringPair{
 			{

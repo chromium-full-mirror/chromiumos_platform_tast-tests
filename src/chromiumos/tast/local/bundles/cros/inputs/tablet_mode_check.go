@@ -27,7 +27,7 @@ func init() {
 		Desc:         "Verifies tablet mode functionality with checking input devices behavior",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"inputs_deps", "chrome"},
 		Attr:         []string{},
 		Fixture:      "chromeLoggedIn",
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Touchpad(), hwdep.Keyboard(), hwdep.FormFactor(hwdep.Convertible)),

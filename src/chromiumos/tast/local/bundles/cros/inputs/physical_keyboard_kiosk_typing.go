@@ -35,7 +35,7 @@ func init() {
 			"group:hardware",
 			"group:complementary",
 		},
-		SoftwareDeps: []string{"reboot", "chrome", "chrome_internal"},
+		SoftwareDeps: []string{"reboot", "inputs_deps", "chrome", "chrome_internal"},
 		SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.DefaultInputMethod}),
 		Timeout:      2 * time.Minute,
 		Params: []testing.Param{

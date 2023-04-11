@@ -40,7 +40,7 @@ func init() {
 		BugComponent: "b:244259740",
 		Attr:         []string{"group:mainline", "group:input-tools", "informational"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		SoftwareDeps: []string{"chrome", "chrome_internal"},
+		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal"},
 		Timeout:      5 * time.Minute,
 		Fixture:      fixture.CitrixNotepad,
 		HardwareDeps: hwdep.D(pre.InputsStableModels),

@@ -41,7 +41,7 @@ func init() {
 		Desc:         "Test input functions triggered from IME tray",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
-		SoftwareDeps: []string{"chrome", "chrome_internal", "google_virtual_keyboard"},
+		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal", "google_virtual_keyboard"},
 		Attr:         []string{"group:mainline", "group:input-tools", "group:hw_agnostic"},
 		SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.DefaultInputMethod}),
 		Data:         data.ExtractExternalFiles(testMessages, []ime.InputMethod{ime.DefaultInputMethod}),

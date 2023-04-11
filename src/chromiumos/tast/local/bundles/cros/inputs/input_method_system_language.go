@@ -38,7 +38,7 @@ func init() {
 		},
 		BugComponent: "b:95887",
 		Attr:         []string{"group:mainline", "group:input-tools"},
-		SoftwareDeps: []string{"chrome", "chrome_internal"},
+		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal"},
 		Params: []testing.Param{
 			{
 				Name:              "es",

@@ -45,7 +45,7 @@ func init() {
 					Value: "screenplay-a9a646d9-a149-464f-a7de-4d51f47527c4",
 				}},
 			util.IMESearchFlags([]ime.InputMethod{ime.DefaultInputMethod})...),
-		SoftwareDeps: []string{"reboot", "chrome", "chrome_internal"},
+		SoftwareDeps: []string{"reboot", "inputs_deps", "chrome", "chrome_internal"},
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{
 			{

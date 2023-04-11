@@ -32,7 +32,7 @@ func init() {
 		},
 		BugComponent: "b:95887",
 		Attr:         []string{"group:mainline", "informational", "group:input-tools"},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"inputs_deps", "chrome"},
 		Params: []testing.Param{{
 			Fixture: fixture.ClamshellNonVK,
 		}, {

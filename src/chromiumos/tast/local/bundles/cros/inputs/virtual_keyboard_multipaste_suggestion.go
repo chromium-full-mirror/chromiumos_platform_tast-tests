@@ -31,7 +31,7 @@ func init() {
 		Desc:         "Test multipaste suggestion functionality",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
-		SoftwareDeps: []string{"chrome", "google_virtual_keyboard"},
+		SoftwareDeps: []string{"inputs_deps", "chrome", "google_virtual_keyboard"},
 		Attr:         []string{"group:mainline", "group:input-tools"},
 		SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.EnglishUS}),
 		Params: []testing.Param{

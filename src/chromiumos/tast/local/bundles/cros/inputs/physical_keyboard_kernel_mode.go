@@ -20,7 +20,7 @@ func init() {
 		Desc:         "Internal keyboard should not be in AT Raw mode",
 		Contacts:     []string{"chromeos-tango@google.com", "kenalba@google.com", "dtor@google.com", "dnojiri@google.com"},
 		BugComponent: "b:167212", // ChromeOS > Platform > Services > Input
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"inputs_deps", "chrome"},
 		Timeout:      3 * time.Minute,
 		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      "chromeLoggedIn",
