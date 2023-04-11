@@ -109,7 +109,7 @@ func ZoomEffects(ctx context.Context, s *testing.State) {
 	if err := uiauto.Combine("configure effects via mcpanel",
 		vcTray.ExpandPanel,
 		vcTray.SetBackgroundBlur(vctray.BackgroundBlurFull),
-		vcTray.SwitchPortraitRelighting(),
+		// TODO(b/266476993): Add relighting switch.
 		vcTray.CollapsePanel,
 	)(ctx); err != nil {
 		s.Fatal("Failed to configure effects: ", err)
