@@ -7,6 +7,7 @@ package terminal
 
 import (
 	"context"
+	"path/filepath"
 	"time"
 
 	"chromiumos/tast/ctxutil"
@@ -72,6 +73,8 @@ func Crosh(ctx context.Context, s *testing.State) {
 	}
 	defer kb.Close()
 
+	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
+	defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "screen_recording.webm"), s.HasError)
 	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree")
 	// Run shell, verify prompt, exit.
 	ui := uiauto.New(tconn)
