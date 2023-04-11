@@ -28,6 +28,7 @@ import (
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/metrics"
 	"chromiumos/tast/local/chrome/uiauto"
+	"chromiumos/tast/local/cpu"
 	perfSrc "chromiumos/tast/local/perf"
 	"chromiumos/tast/local/power"
 	"chromiumos/tast/local/power/setup"
@@ -52,6 +53,10 @@ const checkInterval = 5 * time.Second
 
 // SystemTraceConfigFile is a perfetto tracing config.
 const SystemTraceConfigFile = "perfetto/system_trace_config.pbtxt"
+
+// CooldownTimeout is the time to wait for the CPU to idle if
+// CooldownBeforeRun is set.
+const CooldownTimeout = 10 * time.Minute
 
 // Annotation regex must follow the same formatting rules as perf.Metric.Name.
 // However, the length of the annotation must be less, to accommodate for the
@@ -265,6 +270,10 @@ type Recorder struct {
 // RecorderOptions contains options to control the recorder setup.
 // The options are determined based on the test needs.
 type RecorderOptions struct {
+	// CooldownBeforeRun, if set, will wait for the CPU to idle and cooldown
+	// before running the function in recorder.Run.
+	CooldownBeforeRun bool
+
 	// DischargeThreshold is the battery discharge threshold.
 	// If not set, defaultDischargeThreshold will be used.
 	DischargeThreshold *float64
@@ -732,6 +741,21 @@ func (r *Recorder) startRecording(ctx context.Context) (runCtx context.Context, 
 		r.startedAtTm = time.Time{} // Reset to zero.
 		r.mr = nil
 	}(ctx)
+
+	if r.options.CooldownBeforeRun {
+		cdConfig := cpu.DefaultCoolDownConfig(cpu.CoolDownPreserveUI)
+		cdConfig.PollTimeout = CooldownTimeout
+		if err := cpu.WaitUntilStabilized(ctx, cdConfig); err != nil {
+			testing.ContextLog(ctx, "Failed to wait for CPU to become idle: ", err)
+		}
+
+		if err := testing.Poll(ctx, power.TurnOnDisplay, &testing.PollOptions{
+			Interval: 10 * time.Second,
+			Timeout:  2 * time.Minute,
+		}); err != nil {
+			return nil, errors.Wrap(err, "failed to turn on display")
+		}
+	}
 
 	if r.screenRecorderStart != nil {
 		if err := r.screenRecorderStart(ctx); err != nil {

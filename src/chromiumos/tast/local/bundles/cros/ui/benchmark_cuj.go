@@ -10,10 +10,11 @@ import (
 
 	"chromiumos/tast/local/bundles/cros/ui/benchmarkcuj"
 	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/ui/cujrecorder"
 	"chromiumos/tast/testing"
 )
 
-const defaultTimeout = 15 * time.Minute
+const defaultTimeout = 15*time.Minute + cujrecorder.CooldownTimeout
 
 func init() {
 	testing.AddTest(&testing.Test{
