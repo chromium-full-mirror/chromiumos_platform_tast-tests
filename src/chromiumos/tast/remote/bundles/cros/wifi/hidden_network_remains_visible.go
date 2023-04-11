@@ -243,8 +243,15 @@ func toggleHiddenNetworkOn(ctx context.Context, conn *grpc.ClientConn, ssid stri
 		return errors.Wrap(err, `failed to expand the "Network" section`)
 	}
 
-	// Ensure the "Hidden network" toggle button is visible by focusing on it.
-	if _, err := uiSvc.EnsureFocused(ctx, &ui.EnsureFocusedRequest{
+	// The location of the node could not be stabilized immediately after expanding the network section.
+	if _, err := uiSvc.WaitForLocation(ctx, &ui.WaitForLocationRequest{
+		Finder: ui.Node().Name("Hidden network").Role(ui.Role_ROLE_TOGGLE_BUTTON).Finder(),
+	}); err != nil {
+		return errors.Wrap(err, "failed to wait until the node is stabilized")
+	}
+
+	// Ensure the "Hidden network" toggle button is visible before interacting with it.
+	if _, err := uiSvc.MakeVisible(ctx, &ui.MakeVisibleRequest{
 		Finder: ui.Node().Name("Hidden network").Role(ui.Role_ROLE_TOGGLE_BUTTON).Finder(),
 	}); err != nil {
 		return errors.Wrap(err, "failed to make node visible")

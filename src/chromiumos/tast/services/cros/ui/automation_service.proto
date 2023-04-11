@@ -68,6 +68,9 @@ service AutomationService {
   // MakeVisible makes node visible.
   rpc MakeVisible(MakeVisibleRequest) returns (google.protobuf.Empty) {}
 
+  // WaitForLocation waits until the node location is stabilized.
+  rpc WaitForLocation(WaitForLocationRequest) returns (google.protobuf.Empty) {}
+
   // CaptureScreenshot captures the screenshot of the whole screen or a stable
   // UI node.
   rpc CaptureScreenshot(CaptureScreenshotRequest)
@@ -146,6 +149,10 @@ message InfoResponse {
 }
 
 message MakeVisibleRequest {
+  Finder finder = 1;
+}
+
+message WaitForLocationRequest {
   Finder finder = 1;
 }
 

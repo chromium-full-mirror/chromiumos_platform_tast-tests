@@ -409,6 +409,26 @@ func (svc *AutomationService) MakeVisible(ctx context.Context, req *pb.MakeVisib
 	return &empty.Empty{}, nil
 }
 
+// WaitForLocation waits until the node location is stabilized.
+func (svc *AutomationService) WaitForLocation(ctx context.Context, req *pb.WaitForLocationRequest) (*empty.Empty, error) {
+	svc.sharedObject.ChromeMutex.Lock()
+	defer svc.sharedObject.ChromeMutex.Unlock()
+
+	ui, err := getUIAutoContext(ctx, svc)
+	if err != nil {
+		return nil, err
+	}
+	finder, err := toFinder(req.Finder)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := ui.WaitForLocation(finder)(ctx); err != nil {
+		return nil, errors.Wrapf(err, "failed calling WaitForLocation with finder: %v", finder.Pretty())
+	}
+	return &empty.Empty{}, nil
+}
+
 // CaptureScreenshot captures the screenshot of the whole screen or a stable UI node.
 func (svc *AutomationService) CaptureScreenshot(ctx context.Context, req *pb.CaptureScreenshotRequest) (*pb.CaptureScreenshotResponse, error) {
 	svc.sharedObject.ChromeMutex.Lock()
