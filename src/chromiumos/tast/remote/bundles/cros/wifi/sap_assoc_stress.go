@@ -156,7 +156,7 @@ func SAPAssocStress(ctx context.Context, s *testing.State) {
 		}
 
 		defer func(ctx context.Context) {
-			if _, err := tf.StopTethering(ctx, wificell.DefaultDUT); err != nil {
+			if err := tf.StopTethering(ctx, wificell.DefaultDUT); err != nil {
 				s.Error("Failed to stop tethering session on DUT, err: ", err)
 			}
 		}(ctx)

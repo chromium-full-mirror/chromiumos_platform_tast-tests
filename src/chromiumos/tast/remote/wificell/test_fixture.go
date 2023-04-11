@@ -2190,16 +2190,16 @@ func (tf *TestFixture) StartTethering(ctx context.Context, dutIdx DutIdx, ops []
 }
 
 // StopTethering attempts to stop the tethering session for the specified DUT.
-func (tf *TestFixture) StopTethering(ctx context.Context, dutIdx DutIdx) (*wifi.TetheringResponse, error) {
+func (tf *TestFixture) StopTethering(ctx context.Context, dutIdx DutIdx) error {
 	ctx, st := timing.Start(ctx, "tf.StopTethering")
 	defer st.End()
 
-	resp, err := tf.duts[dutIdx].wifiClient.StopTethering(ctx, &empty.Empty{})
+	_, err := tf.duts[dutIdx].wifiClient.StopTethering(ctx, &empty.Empty{})
 	if err != nil {
-		return nil, errors.Wrap(err, "client failed to stop tethering session")
+		return errors.Wrap(err, "client failed to stop tethering session")
 	}
 
-	return resp, nil
+	return nil
 }
 
 // ReserveForStopTethering returns a shorter ctx and cancel function for tf.StopTethering().
