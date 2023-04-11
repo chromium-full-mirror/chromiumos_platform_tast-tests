@@ -1015,11 +1015,14 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 			if err := docsBlockerConn.Eval(ctx, "ForceDocsOffline(true)", nil); err != nil {
 				return errors.Wrap(err, "failed to call docs blocker to block Docs")
 			}
+			docsBlockerCleanupCtx := ctx
+			ctx, cancel = ctxutil.Shorten(ctx, 15*time.Second)
+			defer cancel()
 			defer func(ctx context.Context) {
 				if err := docsBlockerConn.Eval(ctx, "ForceDocsOffline(false)", nil); err != nil {
 					s.Log("Failed to call docs blocker to restore: ", err)
 				}
-			}(ctx)
+			}(docsBlockerCleanupCtx)
 		}
 
 		var collaborationWindow *ash.Window
