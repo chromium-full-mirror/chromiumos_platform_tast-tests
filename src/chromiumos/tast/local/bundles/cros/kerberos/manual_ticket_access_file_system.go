@@ -40,9 +40,13 @@ func init() {
 		// TODO(b/260522053): Remove when this bug is fixed.
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel(kerberos.ModelsToSkipOnSmb...)),
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "informational"},
-		VarDeps:      []string{"kerberos.username", "kerberos.password", "kerberos.domain"},
-		Fixture:      fixture.FakeDMS,
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary"},
+		VarDeps: []string{"kerberos.username", "kerberos.password", "kerberos.domain"},
+		Fixture: fixture.FakeDMS,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.KerberosEnabled{}, pci.VerifiedFunctionalityUI),
 		},

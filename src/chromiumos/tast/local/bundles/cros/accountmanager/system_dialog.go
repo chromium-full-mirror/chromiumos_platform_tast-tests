@@ -37,7 +37,14 @@ func init() {
 			"cros-3pidp@google.com",    // Domain owners for SAML test.
 		},
 		BugComponent: "b:1279804", // ChromeOS > Software > Commercial (Enterprise) > Identity > Account Manager
-		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+			"group:hw_agnostic",
+		},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.ChromeLoggedIn,
 		VarDeps: []string{

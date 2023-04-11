@@ -41,9 +41,13 @@ func init() {
 		// ChromeOS > Software > Commercial (Enterprise) > Identity > Active Directory
 		BugComponent: "b:1253670",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "informational"},
-		VarDeps:      []string{"kerberos.username", "kerberos.password", "kerberos.domain"},
-		Fixture:      fixture.FakeDMS,
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary"},
+		VarDeps: []string{"kerberos.username", "kerberos.password", "kerberos.domain"},
+		Fixture: fixture.FakeDMS,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.AuthServerAllowlist{}, pci.VerifiedFunctionalityJS),
 			pci.SearchFlag(&policy.KerberosEnabled{}, pci.VerifiedFunctionalityUI),

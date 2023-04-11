@@ -28,7 +28,10 @@ func init() {
 			"chrome_internal",
 		},
 		Attr: []string{
-			"group:mainline", "informational",
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
 		},
 		VarDeps: []string{
 			"saml.testidp_username",
