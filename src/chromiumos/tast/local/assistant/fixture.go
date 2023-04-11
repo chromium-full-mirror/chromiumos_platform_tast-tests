@@ -53,8 +53,8 @@ func init() {
 		Name: "assistantBase",
 		Desc: "Chrome session for assistant testing",
 		Contacts: []string{
-			"yawano@google.com",
 			"assitive-eng@google.com",
+			"yawano@google.com",
 		},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
@@ -72,8 +72,8 @@ func init() {
 		Name: "assistantBaseWithStartAudioDecoderOnDemand",
 		Desc: "Chrome session for assistant testing with StartAssistantAudioDecoderOnDemand flag",
 		Contacts: []string{
-			"yawano@google.com",
 			"assitive-eng@google.com",
+			"yawano@google.com",
 		},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
@@ -98,8 +98,8 @@ func init() {
 		Name: "assistantBaseWithPlayStore",
 		Desc: "Assistant test GAIA chrome session with Play Store",
 		Contacts: []string{
+			"assitive-eng@google.com",
 			"yawano@google.com",
-			"assistive-eng@google.com",
 		},
 		Vars: []string{"assistant.username", "assistant.password"},
 		Impl: arc.NewArcBootedWithPlayStoreFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
@@ -123,8 +123,8 @@ func init() {
 		Name: "assistantOOBEUsedVMReady",
 		Desc: "Assistant OOBE screen with a GAIA which has used Assistant before and whose Voice Match is ready",
 		Contacts: []string{
+			"assitive-eng@google.com",
 			"yawano@google.com",
-			"assistive-eng@google.com",
 		},
 		Vars:            []string{"assistant.username", "assistant.password", "ui.signinProfileTestExtensionManifestKey"},
 		Impl:            NewOOBEFixture(),
@@ -137,8 +137,8 @@ func init() {
 		Name: "assistantBaseWithHotword",
 		Desc: "Chrome session for assistant testing with Hotword enabled",
 		Contacts: []string{
-			"yawano@google.com",
 			"assitive-eng@google.com",
+			"yawano@google.com",
 		},
 		Vars: []string{"assistant.username", "assistant.password"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
@@ -178,8 +178,8 @@ func init() {
 		Name: "assistantWithStartAudioDecoderOnDemand",
 		Desc: "Assistant is enabled",
 		Contacts: []string{
+			"assitive-eng@google.com",
 			"yawano@google.com",
-			"assistive-eng@google.com",
 		},
 		Parent: "assistantBaseWithStartAudioDecoderOnDemand",
 		Impl: NewAssistantFixture(func(s *testing.FixtState) FixtData {
@@ -195,8 +195,8 @@ func init() {
 		Name: "assistantClamshell",
 		Desc: "Assistant is enabled in Clamshell mode",
 		Contacts: []string{
+			"assitive-eng@google.com",
 			"yawano@google.com",
-			"assistive-eng@google.com",
 		},
 		Parent:          "assistant",
 		Impl:            newTabletFixture(false),
@@ -208,8 +208,8 @@ func init() {
 		Name: "assistantWithArc",
 		Desc: "Assistant is enabled with Arc",
 		Contacts: []string{
+			"assitive-eng@google.com",
 			"yawano@google.com",
-			"assistive-eng@google.com",
 		},
 		Parent: "assistantBaseWithPlayStore",
 		Impl: NewAssistantFixture(func(s *testing.FixtState) FixtData {
@@ -227,8 +227,8 @@ func init() {
 		Name: "assistantClamshellPerf",
 		Desc: "Assistant clamshell fixture for running performance test",
 		Contacts: []string{
+			"assitive-eng@google.com",
 			"yawano@google.com",
-			"assistive-eng@google.com",
 		},
 		Parent:         "assistantClamshell",
 		Impl:           newPerfFixture(),
@@ -239,8 +239,8 @@ func init() {
 		Name: "assistantPerf",
 		Desc: "Assistant fixture for running performance test",
 		Contacts: []string{
+			"assitive-eng@google.com",
 			"yawano@google.com",
-			"assistive-eng@google.com",
 		},
 		Parent:         "assistant",
 		Impl:           newPerfFixture(),
@@ -251,8 +251,8 @@ func init() {
 		Name: "assistantWithHotword",
 		Desc: "Assistant is enabled with Hotword support",
 		Contacts: []string{
+			"assitive-eng@google.com",
 			"yawano@google.com",
-			"assistive-eng@google.com",
 		},
 		Parent: "assistantBaseWithHotword",
 		Impl: NewAssistantFixture(func(s *testing.FixtState) FixtData {
@@ -268,8 +268,8 @@ func init() {
 		Name: "assistantWithAudioBox",
 		Desc: "Assistant is enabled with Hotword support and Chameleon access",
 		Contacts: []string{
+			"assitive-eng@google.com",
 			"yawano@google.com",
-			"assistive-eng@google.com",
 		},
 		Parent: "assistantWithHotword",
 		Impl: NewAudioBoxFixture(func(s *testing.FixtState) AudioBoxFixtData {
@@ -290,8 +290,8 @@ func init() {
 		Name: "assistantBaseWithLibassistantV2",
 		Desc: "Chrome session for assistant testing with LibAssistantV2 flag",
 		Contacts: []string{
-			"wutao@google.com",
 			"assitive-eng@google.com",
+			"wutao@google.com",
 		},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
@@ -309,10 +309,85 @@ func init() {
 		Name: "assistantWithLibassistantV2",
 		Desc: "Assistant is enabled with Libassistant V2 feature",
 		Contacts: []string{
+			"assitive-eng@google.com",
 			"wutao@google.com",
-			"assistive-eng@google.com",
 		},
 		Parent: "assistantBaseWithLibassistantV2",
+		Impl: NewAssistantFixture(func(s *testing.FixtState) FixtData {
+			return FixtData{
+				Chrome: s.ParentValue().(*chrome.Chrome),
+			}
+		}),
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: "assistantBaseWithGaia",
+		Desc: "Chrome session for assistant testing with gaia",
+		Contacts: []string{
+			"assitive-eng@google.com",
+			"wutao@google.com",
+		},
+		Vars: []string{"ui.gaiaPoolDefault"},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{
+				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+				VerboseLogging(),
+				ashNoNudgesExtraArg(),
+			}, nil
+		}),
+		SetUpTimeout:    chrome.LoginTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: "assistantWithGaia",
+		Desc: "Assistant is enabled with gaia",
+		Contacts: []string{
+			"assistive-eng@google.com",
+			"wutao@google.com",
+		},
+		Parent: "assistantBaseWithGaia",
+		Impl: NewAssistantFixture(func(s *testing.FixtState) FixtData {
+			return FixtData{
+				Chrome: s.ParentValue().(*chrome.Chrome),
+			}
+		}),
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: "assistantBaseWithLibAssistantV2WithGaia",
+		Desc: "Chrome session for assistant testing with Libassistant V2 feature and gaia",
+		Contacts: []string{
+			"assitive-eng@google.com",
+			"wutao@google.com",
+		},
+		Vars: []string{"ui.gaiaPoolDefault"},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{
+				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+				VerboseLogging(),
+				ashNoNudgesExtraArg(),
+				chrome.EnableFeatures("LibAssistantV2"),
+			}, nil
+		}),
+		SetUpTimeout:    chrome.LoginTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: "assistantWithLibassistantV2WithGaia",
+		Desc: "Assistant is enabled with Libassistant V2 feature and gaia",
+		Contacts: []string{
+			"assistive-eng@google.com",
+			"wutao@google.com",
+		},
+		Parent: "assistantBaseWithLibAssistantV2WithGaia",
 		Impl: NewAssistantFixture(func(s *testing.FixtState) FixtData {
 			return FixtData{
 				Chrome: s.ParentValue().(*chrome.Chrome),
