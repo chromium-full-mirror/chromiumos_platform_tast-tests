@@ -31,14 +31,32 @@ const (
 	KernelKeyblockPath string = "/usr/share/vboot/devkeys/kernel.keyblock"
 )
 
-// LabelEnumToLabel maps the PartitionLabel enum to the partition label name from cgpt table.
-var LabelEnumToLabel = map[pb.PartitionLabel]string{
-	pb.PartitionLabel_KERNEL_A: "KERN-A",
-	pb.PartitionLabel_KERNEL_B: "KERN-B",
-	pb.PartitionLabel_MINIOS_A: "MINIOS-A",
-	pb.PartitionLabel_MINIOS_B: "MINIOS-B",
-	pb.PartitionLabel_ROOTFS_A: "ROOT-A",
-	pb.PartitionLabel_ROOTFS_B: "ROOT-B",
+// PartNameEnumToName maps the PartitionName enum to the name from cgpt table.
+var PartNameEnumToName = map[pb.PartitionName]string{
+	pb.PartitionName_KERNEL: "KERN",
+	pb.PartitionName_MINIOS: "MINIOS",
+	pb.PartitionName_ROOTFS: "ROOT",
+}
+
+// CopyEnumToCopy maps the PartitionCopy enum to the copy from cgpt table.
+var CopyEnumToCopy = map[pb.PartitionCopy]string{
+	pb.PartitionCopy_A: "A",
+	pb.PartitionCopy_B: "B",
+	pb.PartitionCopy_C: "C",
+}
+
+// PartNameToNameEnum maps the partition label name from cgpt table to the PartitionName enum.
+var PartNameToNameEnum = map[string]pb.PartitionName{
+	"KERN":   pb.PartitionName_KERNEL,
+	"MINIOS": pb.PartitionName_MINIOS,
+	"ROOT":   pb.PartitionName_ROOTFS,
+}
+
+// CopyToCopyEnum maps the partition label name from cgpt table to the PartitionName enum.
+var CopyToCopyEnum = map[string]pb.PartitionCopy{
+	"A": pb.PartitionCopy_A,
+	"B": pb.PartitionCopy_B,
+	"C": pb.PartitionCopy_C,
 }
 
 // ReadKernelConfig reads the kernel config key value pairs trimming CONFIG_ prefix from the keys.
@@ -210,23 +228,26 @@ func GetCurrentRootDevice(ctx context.Context, includePart bool) (string, error)
 	return string(rootDev), nil
 }
 
-// BackupPartition backs up partition and saves to a file.
-func BackupPartition(ctx context.Context, rootDev string, partLabel pb.PartitionLabel) (*pb.CgptPartition, string, error) {
-	partition := LabelEnumToLabel[partLabel]
+// PartitionNameCopyToLabel combines the partition name and copy to a label found in cgpt table.
+func PartitionNameCopyToLabel(part pb.PartitionName, copy pb.PartitionCopy) string {
+	return fmt.Sprintf("%s-%s", PartNameEnumToName[part], CopyEnumToCopy[copy])
+}
 
+// BackupPartition backs up partition and saves to a file.
+func BackupPartition(ctx context.Context, rootDev, label string) (*pb.CgptPartition, string, error) {
 	partitionTables, err := GetCgptTable(ctx, rootDev)
 	if err != nil {
 		return nil, "", errors.Wrap(err, "failed to get cgpt table")
 	}
 
 	// Look for table with expected label (eg. KERN-A, MINIOS-B, ROOT-A).
-	table := partitionTables[partition]
-	testing.ContextLogf(ctx, "Partition %s saved at path: %v has size %v", partition, table.PartitionPath, table.Size)
+	table := partitionTables[label]
+	testing.ContextLogf(ctx, "Partition %s saved at path: %v has size %v", label, table.PartitionPath, table.Size)
 
-	backupPath, err := ioutil.TempFile("/usr/local/share/tast", fmt.Sprintf("%s_", partition))
+	backupPath, err := ioutil.TempFile("/usr/local/share/tast", fmt.Sprintf("%s_", label))
 	if err != nil {
 		os.Remove(backupPath.Name())
-		return nil, "", errors.Wrapf(err, "creating tmpfile for backing up partition %s", partition)
+		return nil, "", errors.Wrapf(err, "creating tmpfile for backing up partition %s", label)
 	}
 
 	cmd := fmt.Sprintf("cat %s > %s", table.PartitionPath, backupPath.Name())
@@ -249,7 +270,7 @@ func RestorePartition(ctx context.Context, backupPath, partitionPath string) err
 }
 
 // PrioritizeKernelCopy makes both kernel copies (KERN-A and KERN-B) identical and ensures DUT boots to expected kernel copy on next reboot.
-func PrioritizeKernelCopy(ctx context.Context, targetKernelLabel pb.PartitionLabel) error {
+func PrioritizeKernelCopy(ctx context.Context, label string) error {
 	currKernel, err := GetCurrentKernel(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to get current cgpt table for current kernel copy")
@@ -316,11 +337,11 @@ func PrioritizeKernelCopy(ctx context.Context, targetKernelLabel pb.PartitionLab
 		return errors.Wrap(err, "failed to make KERN-B bootable")
 	}
 
-	testing.ContextLog(ctx, "Prioritizing partition ", LabelEnumToLabel[targetKernelLabel])
-	targetTable := partitionTable[LabelEnumToLabel[targetKernelLabel]]
+	testing.ContextLog(ctx, "Prioritizing partition ", label)
+	targetTable := partitionTable[label]
 	cmd = testexec.CommandContext(ctx, "cgpt", "prioritize", fmt.Sprintf("-i%d", targetTable.PartitionNumber), rootDev)
 	if err := cmd.Run(testexec.DumpLogOnError); err != nil {
-		return errors.Wrapf(err, "failed to make prioritize kernel copy %q", LabelEnumToLabel[targetKernelLabel])
+		return errors.Wrapf(err, "failed to make prioritize kernel copy %q", label)
 	}
 
 	return nil
@@ -420,13 +441,13 @@ func BackupRootfsVerityHash(ctx context.Context, rootDev string, table *pb.CgptP
 }
 
 // RestoreRootfsVerityHash restores saved verity hash for given kernel copy to rootfs partition from backup file.
-func RestoreRootfsVerityHash(ctx context.Context, offset int64, backupPath, rootDev string, label pb.PartitionLabel) error {
+func RestoreRootfsVerityHash(ctx context.Context, offset int64, backupPath, rootDev, label string) error {
 	partitionTables, err := GetCgptTable(ctx, rootDev)
 	if err != nil {
 		return errors.Wrap(err, "failed to get cgpt table")
 	}
 
-	section, err := GetCopyFromLabel(LabelEnumToLabel[label])
+	section, err := GetCopyFromLabel(label)
 	if err != nil {
 		return errors.Wrap(err, "failed to get partition label copy")
 	}
@@ -448,17 +469,17 @@ func RestoreRootfsVerityHash(ctx context.Context, offset int64, backupPath, root
 }
 
 // CorruptRootfsVerityHash corrupts verity hash for given kernel copy.
-func CorruptRootfsVerityHash(ctx context.Context, offset, size int64, rootDev string, label pb.PartitionLabel) error {
+func CorruptRootfsVerityHash(ctx context.Context, offset, size int64, rootDev, label string) error {
 	partitionTables, err := GetCgptTable(ctx, rootDev)
 	if err != nil {
 		return errors.Wrap(err, "failed to get cgpt table")
 	}
 
-	section, err := GetCopyFromLabel(LabelEnumToLabel[label])
+	copy, err := GetCopyFromLabel(label)
 	if err != nil {
 		return errors.Wrap(err, "failed to get partition label copy")
 	}
-	rootfsLabel := fmt.Sprintf("ROOT-%s", section)
+	rootfsLabel := PartitionNameCopyToLabel(pb.PartitionName_ROOTFS, CopyToCopyEnum[copy])
 	rootfsTable := partitionTables[rootfsLabel]
 
 	args := []string{
@@ -485,14 +506,24 @@ func GetCopyFromLabel(label string) (string, error) {
 	return match[1], nil
 }
 
+// GetNameFromLabel returns the name of the partition from the label, e.g. KERN from KERN-A or ROOT from ROOT-B.
+func GetNameFromLabel(label string) (string, error) {
+	// Example label: KERN-A -> KERN or ROOT-B -> ROOT.
+	match := regexp.MustCompile(`(\S+)-(?:\S+)`).FindStringSubmatch(label)
+	if match == nil || len(match) < 2 {
+		return "", errors.Errorf("label %q isn't in expected format", label)
+	}
+	return match[1], nil
+}
+
 // GetKernelVersion uses vbutil_kernel to get the kernel version for a given partition.
-func GetKernelVersion(ctx context.Context, rootDev string, label pb.PartitionLabel) (string, *pb.CgptPartition, error) {
+func GetKernelVersion(ctx context.Context, rootDev, label string) (string, *pb.CgptPartition, error) {
 	partitionTables, err := GetCgptTable(ctx, rootDev)
 	if err != nil {
 		return "", nil, errors.Wrap(err, "failed to get cgpt table")
 	}
 
-	table := partitionTables[LabelEnumToLabel[label]]
+	table := partitionTables[label]
 
 	out, err := testexec.CommandContext(ctx, "vbutil_kernel", "--verify", table.PartitionPath).Output(testexec.DumpLogOnError)
 	if err != nil {
@@ -537,6 +568,22 @@ func SetKernelVersion(ctx context.Context, table *pb.CgptPartition, version stri
 		return errors.Wrap(err, "failed to write new kernel")
 	}
 
+	return nil
+}
+
+// CorruptKernel corrupts the kernel copy and writes it to disk.
+func CorruptKernel(ctx context.Context, table *pb.CgptPartition) error {
+	// Writes 0 to first 100 bytes which should be sufficient to corrupt it. The original autotest just shifted the first byte.
+	args := []string{
+		"if=/dev/zero",
+		fmt.Sprintf("of=%s", table.PartitionPath),
+		fmt.Sprintf("count=%d", 100),
+		"conv=notrunc",
+		"iflag=count_bytes",
+	}
+	if err := testexec.CommandContext(ctx, "dd", args...).Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "failed to corrupt kernel partition")
+	}
 	return nil
 }
 

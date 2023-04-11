@@ -34,16 +34,6 @@ type KernelService struct {
 	s *testing.ServiceState
 }
 
-// labelToLabelEnum maps the partition label name from cgpt table to the PartitionLabel enum.
-var labelToLabelEnum = map[string]pb.PartitionLabel{
-	"KERN-A":   pb.PartitionLabel_KERNEL_A,
-	"KERN-B":   pb.PartitionLabel_KERNEL_B,
-	"MINIOS-A": pb.PartitionLabel_MINIOS_A,
-	"MINIOS-B": pb.PartitionLabel_MINIOS_B,
-	"ROOT-A":   pb.PartitionLabel_ROOTFS_A,
-	"ROOT-B":   pb.PartitionLabel_ROOTFS_B,
-}
-
 // GetCgptTable returns structure containing metadata with CGPT partitions
 func (ks *KernelService) GetCgptTable(ctx context.Context, req *pb.GetCgptTableRequest) (resp *pb.GetCgptTableResponse, err error) {
 	testing.ContextLog(ctx, "Reading CGPT table for device ", req.BlockDevice)
@@ -127,13 +117,14 @@ func (ks *KernelService) BackupPartition(ctx context.Context, req *pb.Partition)
 		}
 	}
 
-	table, path, err := kernel.BackupPartition(ctx, rootDev, req.Label)
+	table, path, err := kernel.BackupPartition(ctx, rootDev, kernel.PartitionNameCopyToLabel(req.Name, req.Copy))
 	if err != nil {
 		return nil, errors.Wrap(err, "could not back up partition")
 	}
 
 	return &pb.PartitionInfo{
-		Label:      req.Label,
+		Name:       req.Name,
+		Copy:       req.Copy,
 		BackupPath: path,
 		RootDev:    rootDev,
 		Table:      table,
@@ -146,7 +137,7 @@ func (ks *KernelService) RestorePartition(ctx context.Context, req *pb.Partition
 		return nil, errors.Wrap(err, "could not restore partition from backup")
 	}
 
-	label := kernel.LabelEnumToLabel[req.Label]
+	label := kernel.PartitionNameCopyToLabel(req.Name, req.Copy)
 	if _, err := ks.RestoreCgptAttributes(ctx, &pb.RestoreCgptAttributesRequest{
 		BlockDevice: req.RootDev,
 		CgptTable:   map[string]*pb.CgptPartition{label: req.Table},
@@ -159,13 +150,13 @@ func (ks *KernelService) RestorePartition(ctx context.Context, req *pb.Partition
 
 // BackupKernel backs up both kernel A and B copies, and corresponding ROOTFS verity hashes and saves them to a file.
 func (ks *KernelService) BackupKernel(ctx context.Context, req *empty.Empty) (*pb.KernelBackup, error) {
-	kernA, err := ks.BackupPartition(ctx, &pb.Partition{Label: pb.PartitionLabel_KERNEL_A})
+	kernA, err := ks.BackupPartition(ctx, &pb.Partition{Name: pb.PartitionName_KERNEL, Copy: pb.PartitionCopy_A})
 	if err != nil {
 		// If backing up partition fails, unfinished backup file is already deleted.
 		return nil, errors.Wrap(err, "failed to back up KERN-A")
 	}
 
-	kernB, err := ks.BackupPartition(ctx, &pb.Partition{Label: pb.PartitionLabel_KERNEL_B})
+	kernB, err := ks.BackupPartition(ctx, &pb.Partition{Name: pb.PartitionName_KERNEL, Copy: pb.PartitionCopy_B})
 	if err != nil {
 		// If backing up KERN-B fails, make sure KERN-A back up is cleaned up, KERN-B tmpfile will already be cleaned up.
 		os.Remove(kernA.BackupPath)
@@ -193,7 +184,7 @@ func (ks *KernelService) RestoreKernel(ctx context.Context, req *pb.KernelBackup
 
 // PrioritizeKernelCopy ensures DUT boots to expected kernel copy on next reboot (eg. KERN-A or KERN-B) and makes both kernel copies identical.
 func (ks *KernelService) PrioritizeKernelCopy(ctx context.Context, req *pb.Partition) (*empty.Empty, error) {
-	if err := kernel.PrioritizeKernelCopy(ctx, req.Label); err != nil {
+	if err := kernel.PrioritizeKernelCopy(ctx, kernel.PartitionNameCopyToLabel(req.Name, req.Copy)); err != nil {
 		return nil, err
 	}
 	return &empty.Empty{}, nil
@@ -201,17 +192,35 @@ func (ks *KernelService) PrioritizeKernelCopy(ctx context.Context, req *pb.Parti
 
 // GetCurrentCopy returns the current label DUT is using.
 func (ks *KernelService) GetCurrentCopy(ctx context.Context, req *empty.Empty) (*pb.Partition, error) {
+	rootDev, err := kernel.GetCurrentRootDevice(ctx, false)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get current rootdevice")
+	}
+
 	currPart, err := kernel.GetCurrentKernel(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to query current kernel copy")
 	}
 	testing.ContextLog(ctx, "DUT is currently booted to ", currPart.Label)
-	return &pb.Partition{Label: labelToLabelEnum[currPart.Label]}, nil
+
+	name, err := kernel.GetNameFromLabel(currPart.Label)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get name from label")
+	}
+	copy, err := kernel.GetCopyFromLabel(currPart.Label)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get copy from label")
+	}
+
+	return &pb.Partition{
+		Name:    kernel.PartNameToNameEnum[name],
+		Copy:    kernel.CopyToCopyEnum[copy],
+		RootDev: rootDev,
+	}, nil
 }
 
 // VerifyKernelCopy checks that DUT is currently booted to expected kernel copy.
 func (ks *KernelService) VerifyKernelCopy(ctx context.Context, req *pb.Partition) (*empty.Empty, error) {
-	expLabel := kernel.LabelEnumToLabel[req.Label]
 	currPart, err := kernel.GetCurrentKernel(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to query current kernel copy")
@@ -219,7 +228,7 @@ func (ks *KernelService) VerifyKernelCopy(ctx context.Context, req *pb.Partition
 	testing.ContextLog(ctx, "DUT is currently booted to ", currPart.Label)
 
 	currCopy, _ := kernel.GetCopyFromLabel(currPart.Label)
-	expCopy, _ := kernel.GetCopyFromLabel(expLabel)
+	expCopy := kernel.CopyEnumToCopy[req.Copy]
 	if currCopy != expCopy {
 		return nil, errors.Errorf("expected kernel copy to be %q but was booted to %q", expCopy, currPart.Label)
 	}
@@ -234,7 +243,8 @@ func (ks *KernelService) BackupRootfsVerityHash(ctx context.Context, req *pb.Par
 	}
 
 	return &pb.RootfsVerityHashBackup{
-		Label:      req.Label,
+		Name:       req.Name,
+		Copy:       req.Copy,
 		RootDev:    req.RootDev,
 		Offset:     int64(offset),
 		HashSize:   int64(size),
@@ -244,7 +254,7 @@ func (ks *KernelService) BackupRootfsVerityHash(ctx context.Context, req *pb.Par
 
 // RestoreRootfsVerityHash saves the verity hash for given kernel from the corresponding rootfs partition.
 func (ks *KernelService) RestoreRootfsVerityHash(ctx context.Context, req *pb.RootfsVerityHashBackup) (*empty.Empty, error) {
-	if err := kernel.RestoreRootfsVerityHash(ctx, req.Offset, req.BackupPath, req.RootDev, req.Label); err != nil {
+	if err := kernel.RestoreRootfsVerityHash(ctx, req.Offset, req.BackupPath, req.RootDev, kernel.PartitionNameCopyToLabel(req.Name, req.Copy)); err != nil {
 		return nil, errors.Wrap(err, "could not restore rootfs verity hash")
 	}
 
@@ -253,8 +263,8 @@ func (ks *KernelService) RestoreRootfsVerityHash(ctx context.Context, req *pb.Ro
 
 // CorruptRootfsVerityHash corrupts verity hash for given kernel copy.
 func (ks *KernelService) CorruptRootfsVerityHash(ctx context.Context, req *pb.RootfsVerityHashBackup) (*empty.Empty, error) {
-	if corruptErr := kernel.CorruptRootfsVerityHash(ctx, req.Offset, req.HashSize, req.RootDev, req.Label); corruptErr != nil {
-		if restoreErr := kernel.RestoreRootfsVerityHash(ctx, req.Offset, req.BackupPath, req.RootDev, req.Label); restoreErr != nil {
+	if corruptErr := kernel.CorruptRootfsVerityHash(ctx, req.Offset, req.HashSize, req.RootDev, kernel.PartitionNameCopyToLabel(req.Name, req.Copy)); corruptErr != nil {
+		if restoreErr := kernel.RestoreRootfsVerityHash(ctx, req.Offset, req.BackupPath, req.RootDev, kernel.PartitionNameCopyToLabel(req.Name, req.Copy)); restoreErr != nil {
 			return nil, errors.Wrapf(restoreErr, "could not corrupt rootfs verity hash and failed to restore it back to original hash: %v", corruptErr)
 		}
 		return nil, errors.Wrap(corruptErr, "could not corrupt rootfs verity hash")
@@ -276,7 +286,7 @@ func (ks *KernelService) GetKernelVersion(ctx context.Context, req *pb.Partition
 		}
 	}
 
-	version, table, err := kernel.GetKernelVersion(ctx, rootDev, req.Label)
+	version, table, err := kernel.GetKernelVersion(ctx, rootDev, kernel.PartitionNameCopyToLabel(req.Name, req.Copy))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get kernel version")
 	}
@@ -292,6 +302,14 @@ func (ks *KernelService) GetKernelVersion(ctx context.Context, req *pb.Partition
 func (ks *KernelService) SetKernelVersion(ctx context.Context, req *pb.KernelVersion) (*empty.Empty, error) {
 	if err := kernel.SetKernelVersion(ctx, req.Table, req.Version); err != nil {
 		return nil, errors.Wrapf(err, "failed to set kernel version to %q", req.Version)
+	}
+	return &empty.Empty{}, nil
+}
+
+// CorruptKernel corrupts a copy of the kernel and writes it.
+func (ks *KernelService) CorruptKernel(ctx context.Context, req *pb.PartitionInfo) (*empty.Empty, error) {
+	if err := kernel.CorruptKernel(ctx, req.Table); err != nil {
+		return nil, errors.Wrap(err, "failed to corrupt kernel")
 	}
 	return &empty.Empty{}, nil
 }
