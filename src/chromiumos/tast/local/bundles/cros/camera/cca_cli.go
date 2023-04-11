@@ -37,7 +37,7 @@ func ccaRun(ctx context.Context, args ...string) error {
 	return cmd.Run(testexec.DumpLogOnError)
 }
 
-func testOpenClose(ctx context.Context, dir string) error {
+func ccaTestOpenClose(ctx context.Context, dir string) error {
 	if err := ccaRun(ctx, "open"); err != nil {
 		return err
 	}
@@ -49,11 +49,31 @@ func testOpenClose(ctx context.Context, dir string) error {
 	return nil
 }
 
-func testTakePhoto(ctx context.Context, dir string) error {
-	photo := filepath.Join(dir, "photo.jpg")
+func ccaTestTakePhoto(ctx context.Context, dir string) error {
+	output := filepath.Join(dir, "photo.jpg")
 
-	if err := ccaRun(ctx, "take-photo", "--output", photo); err != nil {
+	if err := ccaRun(ctx, "take-photo", "--output", output); err != nil {
 		return errors.Wrap(err, "failed to take a photo")
+	}
+
+	return nil
+}
+
+func ccaTestRecordVideo(ctx context.Context, dir string) error {
+	output := filepath.Join(dir, "video.mp4")
+
+	if err := ccaRun(ctx, "record-video", "--duration=3", "--output", output); err != nil {
+		return errors.Wrap(err, "failed to record a video")
+	}
+
+	return nil
+}
+
+func ccaTestScreenshot(ctx context.Context, dir string) error {
+	output := filepath.Join(dir, "screenshot.png")
+
+	if err := ccaRun(ctx, "screenshot", "--output", output); err != nil {
+		return errors.Wrap(err, "failed to capture a screenshot")
 	}
 
 	return nil
@@ -66,8 +86,10 @@ func CCACLI(ctx context.Context, s *testing.State) {
 		name     string
 		testFunc func(ctx context.Context, dir string) error
 	}{
-		{"testOpenClose", testOpenClose},
-		{"testTakePhoto", testTakePhoto},
+		{"testOpenClose", ccaTestOpenClose},
+		{"testTakePhoto", ccaTestTakePhoto},
+		{"testRecordVideo", ccaTestRecordVideo},
+		{"testScreenshot", ccaTestScreenshot},
 	} {
 		s.Run(ctx, tc.name, func(ctx context.Context, s *testing.State) {
 			subTestCtx, cancel := context.WithTimeout(ctx, subTestTimeout)
