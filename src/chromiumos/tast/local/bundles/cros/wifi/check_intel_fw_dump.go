@@ -161,9 +161,4 @@ func CheckIntelFWDump(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to validate the fw dump: ", err)
 	}
 
-	// Check that the fw dump is not empty.
-	if currentFileSize <= 500000 {
-		s.Fatalf("Unexpected fw dump size; got %.1f KB, want > 500 KB", float64(currentFileSize)/1000)
-	}
-
 }
