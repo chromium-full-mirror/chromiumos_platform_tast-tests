@@ -551,6 +551,7 @@ func (ms *ModeSwitcher) ModeAwareReboot(ctx context.Context, resetType ResetType
 
 	// Reset DUT
 	if resetType == APOff {
+		testing.ContextLog(ctx, "Reboot EC ap-off")
 		if err := h.Servo.RunECCommand(ctx, "reboot ap-off"); err != nil {
 			return errors.Wrap(err, "failed to reboot EC")
 		}
@@ -1027,7 +1028,7 @@ func (ms *ModeSwitcher) EnableRecMode(ctx context.Context, usbMux servo.USBMuxSt
 	}
 	// Powering off the USB mux has some side effects that take some time. Specifically, you can't turn
 	// it back on again too quickly or the USB stick fails.
-	if err := testing.Sleep(ctx, 2*time.Second); err != nil {
+	if err := testing.Sleep(ctx, usbDisableTime); err != nil {
 		return errors.Wrapf(err, "sleeping before setting usb mux state to %s", usbMux)
 	}
 	if usbMux != servo.USBMuxDUT {
@@ -1105,12 +1106,9 @@ func (ms *ModeSwitcher) EnableRecMode(ctx context.Context, usbMux servo.USBMuxSt
 	}
 
 	if usbMux == servo.USBMuxDUT {
-		if err := testing.Sleep(ctx, 2*time.Second); err != nil {
-			return errors.Wrapf(err, "sleeping before setting usb mux state to %s", usbMux)
-		}
 		testing.ContextLog(ctx, "Enabling USB")
 		if err := h.Servo.SetUSBMuxState(ctx, usbMux); err != nil {
-			return errors.Wrapf(err, "setting usb mux state to %s while DUT is off", usbMux)
+			return errors.Wrapf(err, "setting usb mux state to %s at rec screen", usbMux)
 		}
 	}
 	return nil
