@@ -35,9 +35,14 @@ func init() {
 		},
 		Timeout:      2 * time.Minute,
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "informational"},
-		Fixture:      fixture.FakeDMS,
-		Data:         []string{"extension_policy/policy.json", "extension_policy/background.js", "extension_policy/manifest.json", "extension_policy/schema.json"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+		},
+		Fixture: fixture.FakeDMS,
+		Data:    []string{"extension_policy/policy.json", "extension_policy/background.js", "extension_policy/manifest.json", "extension_policy/schema.json"},
 	})
 }
 

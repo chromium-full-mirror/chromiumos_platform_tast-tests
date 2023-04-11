@@ -31,7 +31,7 @@ func init() {
 			"chromeos-commercial-remote-management@google.com",
 			"rbock@google.com", // Test author
 		},
-		Attr:         []string{"group:commercial_limited"},
+		Attr:         []string{"group:golden_tier"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.FakeDMSEnrolled,
 		SearchFlags: []*testing.StringPair{

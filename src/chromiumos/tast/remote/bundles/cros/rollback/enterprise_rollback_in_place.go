@@ -27,7 +27,12 @@ func init() {
 			"crisguerrero@chromium.org",
 		},
 		BugComponent: "b:1031231",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+		},
 		SoftwareDeps: []string{"reboot", "chrome"},
 		ServiceDeps: []string{
 			"tast.cros.hwsec.OwnershipService",

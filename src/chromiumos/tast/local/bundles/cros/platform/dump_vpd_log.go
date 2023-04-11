@@ -28,7 +28,12 @@ func init() {
 			"chromeos-commercial-remote-management@google.com",
 			"vsavu@google.com",
 		},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+		},
 		SoftwareDeps: []string{"vpd"},
 	})
 }
