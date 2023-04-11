@@ -423,6 +423,25 @@ func WaitForHidden(ctx context.Context, tconn *chrome.TestConn, pkgName string) 
 	}, defaultPollOptions)
 }
 
+// WaitForARCAppClosed waits for the ARC app window and ARC package window to be closed on the Chrome side.
+func WaitForARCAppClosed(ctx context.Context, tconn *chrome.TestConn, pkgName, appName string) error {
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		ws, err := GetAllWindows(ctx, tconn)
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to get the window list"))
+		}
+		for _, window := range ws {
+			if window.ARCPackageName == pkgName {
+				return errors.New("ARC package is still opened")
+			}
+			if window.WindowType == WindowTypeArc && window.Title == appName {
+				return errors.New("ARC app is still opened")
+			}
+		}
+		return nil
+	}, defaultPollOptions)
+}
+
 // WaitWindowFinishAnimating waits for a window with a given ID to finish animating on the Chrome side.
 func WaitWindowFinishAnimating(ctx context.Context, tconn *chrome.TestConn, windowID int) error {
 	return WaitForCondition(ctx, tconn, func(window *Window) bool {
@@ -865,8 +884,8 @@ func DragToShowOverview(ctx context.Context, tsw *input.TouchscreenEventWriter, 
 		return errors.Wrap(err, "failed to swipe")
 	}
 
-	// Wait with the swipe paused so the overview mode gesture is recognized. Use 1 second because this is roughly the amount of time it takes for the 'swipe up and hold' overview gesture to trigger.
 	const pauseDuration = time.Second
+	// GoBigSleepLint: Wait with the swipe paused so the overview mode gesture is recognized. Use 1 second because this is roughly the amount of time it takes for the 'swipe up and hold' overview gesture to trigger.
 	if err := testing.Sleep(ctx, pauseDuration); err != nil {
 		return errors.Wrap(err, "failed to sleep while waiting for overview to trigger")
 	}

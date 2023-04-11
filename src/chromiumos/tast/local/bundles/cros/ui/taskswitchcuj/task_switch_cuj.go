@@ -96,12 +96,6 @@ func Run(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get the primary display info: ", err)
 	}
 
-	d, err := a.NewUIDevice(ctx)
-	if err != nil {
-		s.Fatal("Failed to set up ARC and Play Store: ", err)
-	}
-	defer d.Close(closeCtx)
-
 	ac := uiauto.New(tconn)
 
 	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, a, cujrecorder.RecorderOptions{})
@@ -194,6 +188,17 @@ func Run(ctx context.Context, s *testing.State) {
 	}
 
 	defer ash.CloseAllWindows(closeCtx, tconn)
+
+	d, err := a.NewUIDevice(ctx)
+	if err != nil {
+		s.Fatal("Failed to set up ARC and Play Store: ", err)
+	}
+	defer func(ctx context.Context) {
+		if err := d.Close(ctx); err != nil {
+			s.Log("Failed closing UI Automator: ", err)
+		}
+		a.DumpUIHierarchyOnError(ctx, s.OutDir(), s.HasError)
+	}(closeCtx)
 
 	pwaOpened := false
 	defer func(ctx context.Context) {
@@ -302,9 +307,9 @@ func Run(ctx context.Context, s *testing.State) {
 					return errors.Wrap(err, "failed to wait for window to finish animating")
 				}
 
-				// Wait a few seconds to let the page load. Wait a fixed amount
-				// of time to keep consistency in task switches among different
-				// devices.
+				// GoBigSleepLint: Wait a few seconds to let the page load.
+				// Wait a fixed amount of time to keep consistency in task
+				// switches among different devices.
 				if err := testing.Sleep(ctx, 3*time.Second); err != nil {
 					return errors.Wrap(err, "failed to sleep")
 				}
@@ -342,7 +347,7 @@ func Run(ctx context.Context, s *testing.State) {
 					}
 				}
 
-				// Give a fixed delay between scrolling and dragging,
+				// GoBigSleepLint: Give a fixed delay between scrolling and dragging,
 				// to limit action overlap.
 				if err := testing.Sleep(ctx, time.Second); err != nil {
 					return errors.Wrap(err, "failed to sleep")

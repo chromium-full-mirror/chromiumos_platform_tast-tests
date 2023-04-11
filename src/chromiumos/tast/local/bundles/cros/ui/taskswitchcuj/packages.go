@@ -11,6 +11,7 @@ import (
 	"chromiumos/tast/common/action"
 	"chromiumos/tast/common/android/ui"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/arc/optin"
 	"chromiumos/tast/local/arc/playstore"
@@ -80,8 +81,8 @@ func installPackages(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d 
 		return errors.Wrap(err, "failed to close Play Store")
 	}
 
-	if err := ash.WaitForHidden(ctx, tconn, playStorePackageName); err != nil {
-		return errors.Wrap(err, "failed to wait for Play Store to disappear")
+	if err := ash.WaitForARCAppClosed(ctx, tconn, playStorePackageName, apps.PlayStore.Name); err != nil {
+		return errors.Wrap(err, "failed to wait for Play Store to close")
 	}
 	return nil
 }
