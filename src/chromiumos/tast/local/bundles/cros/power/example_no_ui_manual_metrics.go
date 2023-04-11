@@ -29,18 +29,26 @@ func init() {
 		// Disabled because this is an example test for other tests to follow.
 		// Attr:      []string{"group:mainline", "informational"},
 		Timeout: 3 * time.Minute,
-		Fixture: "powerNoUI",
 		Params: []testing.Param{{
-			Name: "fastest",
+			Name:    "fastest",
+			Fixture: "powerNoUINoWiFi",
 			Val: timeParams{
 				Interval: 1 * time.Second,
 				Total:    10 * time.Second,
 			},
 		}, {
-			Name: "fast",
+			Name:    "fast",
+			Fixture: "powerNoUINoWiFi",
 			Val: timeParams{
 				Interval: 5 * time.Second,
 				Total:    20 * time.Second,
+			},
+		}, {
+			Name:    "wifi",
+			Fixture: "powerNoUIWiFi",
+			Val: timeParams{
+				Interval: 1 * time.Second,
+				Total:    10 * time.Second,
 			},
 		}},
 	})

@@ -40,13 +40,37 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name: "powerNoUI",
-		Desc: "Set up test environment for tests needing no UI or backlight",
+		Name: "powerNoUINoWiFi",
+		Desc: "Set up test environment for tests with no UI, no backlight, no WiFi",
 		Contacts: []string{
 			"chromeos-platform-power@google.com",
 			"mqg@chromium.org",
 		},
-		Impl:            &powerNoUIFixture{},
+		Impl: NewPowerNoUIFixture(PowerTestOptions{
+			Wifi:               DisableWifiInterfaces,
+			UI:                 DisableUI,
+			Backlight:          SetBacklightToZero,
+			KeyboardBrightness: SetKbBrightnessToZero,
+		}),
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: tearDownTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: "powerNoUIWiFi",
+		Desc: "Set up test environment for tests with no UI, no backlight, WiFi set to default",
+		Contacts: []string{
+			"chromeos-platform-power@google.com",
+			"mqg@chromium.org",
+		},
+		Impl: NewPowerNoUIFixture(PowerTestOptions{
+			UI:                 DisableUI,
+			Backlight:          SetBacklightToZero,
+			KeyboardBrightness: SetKbBrightnessToZero,
+		}),
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: tearDownTimeout,
@@ -67,7 +91,7 @@ func init() {
 		TearDownTimeout: tearDownTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
-		Parent:          "powerNoUI",
+		Parent:          "powerNoUIWiFi",
 	})
 
 	testing.AddFixture(&testing.Fixture{
@@ -143,7 +167,14 @@ func (f *powerSetUpFixture) Reset(ctx context.Context) error {
 }
 
 type powerNoUIFixture struct {
-	cleanup func(context.Context) error
+	powerTestOptions *PowerTestOptions
+	cleanup          func(context.Context) error
+}
+
+// NewPowerNoUIFixture returns a FixtureImpl to set device to various power test
+// options.
+func NewPowerNoUIFixture(pto PowerTestOptions) testing.FixtureImpl {
+	return &powerNoUIFixture{powerTestOptions: &pto}
 }
 
 func (f *powerNoUIFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -158,15 +189,7 @@ func (f *powerNoUIFixture) SetUp(ctx context.Context, s *testing.FixtState) inte
 		s.Log("Unable to determine if a battery exists, do not force discharge: ", err)
 	}
 
-	su.Add(PowerTest(ctx, nil,
-		PowerTestOptions{
-			Wifi:               DisableWifiInterfaces,
-			UI:                 DisableUI,
-			Backlight:          SetBacklightToZero,
-			KeyboardBrightness: SetKbBrightnessToZero,
-		},
-		NewBatteryDischargeFromMode(dischargeMode),
-	))
+	su.Add(PowerTest(ctx, nil, *f.powerTestOptions, NewBatteryDischargeFromMode(dischargeMode)))
 	if err := su.Check(ctx); err != nil {
 		s.Fatal("Power test setup failed: ", err)
 	}
