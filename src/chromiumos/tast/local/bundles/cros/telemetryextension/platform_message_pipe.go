@@ -24,19 +24,22 @@ func init() {
 		},
 		// ChromeOS > Software > Commercial (Enterprise) > OEM Services.
 		BugComponent: "b:1256717",
-		Attr:         []string{"group:mainline"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+		},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{
 			{
-				Name:      "ash",
-				Fixture:   fixture.TelemetryExtensionSkipOEMNameCheck,
-				ExtraAttr: []string{"informational"},
+				Name:    "ash",
+				Fixture: fixture.TelemetryExtensionSkipOEMNameCheck,
 			},
 			{
 				Name:              "lacros",
 				ExtraSoftwareDeps: []string{"lacros"},
 				Fixture:           fixture.TelemetryExtensionSkipOEMNameCheckLacros,
-				ExtraAttr:         []string{"informational"},
 			},
 		},
 	})

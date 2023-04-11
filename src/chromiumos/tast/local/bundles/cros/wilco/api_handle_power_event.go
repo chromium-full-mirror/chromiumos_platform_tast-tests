@@ -28,7 +28,12 @@ func init() {
 		},
 		// ChromeOS > Software > Commercial (Enterprise) > OEM Services.
 		BugComponent: "b:1256717",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+		},
 		SoftwareDeps: []string{"vm_host", "wilco"},
 		Pre:          pre.WilcoDtcSupportdAPI,
 	})
