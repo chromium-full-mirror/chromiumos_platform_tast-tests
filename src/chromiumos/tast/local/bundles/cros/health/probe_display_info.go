@@ -286,6 +286,16 @@ func modetestCrtcInfo(ctx context.Context, crtcID string, column modetestModeInf
 	return strings.TrimRight(string(b), "\n"), nil
 }
 
+func modetestModeInfoFallbackVersion(ctx context.Context, column modetestModeInfoColumn) (string, error) {
+	cmd := "modetest -c | grep -E 'DSI|eDP' -A 10 | grep preferred | gawk -e '{print $" + strconv.Itoa(int(column)) + "}'"
+	b, err := testexec.CommandContext(ctx, "sh", "-c", cmd).Output(testexec.DumpLogOnError)
+	if err != nil {
+		return "", err
+	}
+
+	return strings.TrimRight(string(b), "\n"), nil
+}
+
 func modetestModeInfo(ctx context.Context, column modetestModeInfoColumn) (string, error) {
 	// Example output of mode info:
 	// #0 1920x1280 60.00 1920 1944 1992 2080 1280 1286 1303 1320 164740 flags: nhsync, nvsync; type: preferred, driver
@@ -296,18 +306,11 @@ func modetestModeInfo(ctx context.Context, column modetestModeInfoColumn) (strin
 	if encoderID, err := modetestConnectorInfo(ctx, connectorEncoder); err != nil {
 		return "", err
 	} else if encoderID == "0" {
-		// It means that we can't find the crtc info. So fall back to method 2.
-		cmd := "modetest -c | grep -E 'DSI|eDP' -A 10 | grep preferred | gawk -e '{print $" + strconv.Itoa(int(column)) + "}'"
-		b, err := testexec.CommandContext(ctx, "sh", "-c", cmd).Output(testexec.DumpLogOnError)
-		if err != nil {
-			return "", err
-		}
-
-		return strings.TrimRight(string(b), "\n"), nil
-	} else if crtcID, err := modetestEncoderInfo(ctx, encoderID, encoderCrtc); err != nil {
-		return "", err
+		return modetestModeInfoFallbackVersion(ctx, column)
+	} else if crtcID, err := modetestEncoderInfo(ctx, encoderID, encoderCrtc); err != nil || crtcID == "0" {
+		return modetestModeInfoFallbackVersion(ctx, column)
 	} else if info, err := modetestCrtcInfo(ctx, crtcID, column); err != nil {
-		return "", err
+		return modetestModeInfoFallbackVersion(ctx, column)
 	} else {
 		return info, nil
 	}
@@ -445,32 +448,17 @@ func verifyEmbeddedDisplayRefreshRate(ctx context.Context, edp *embeddedDisplayI
 		return nil
 	}
 
-	var wantRefreshRate float64
-	if htotalRaw, err := modetestModeInfo(ctx, modeInfoHtotal); err != nil {
+	if refreshRateRaw, err := modetestModeInfo(ctx, modeInfoVrefresh); err != nil {
 		return err
-	} else if vtotalRaw, err := modetestModeInfo(ctx, modeInfoVtotal); err != nil {
-		return err
-	} else if clockRaw, err := modetestModeInfo(ctx, modeInfoClock); err != nil {
-		return err
-	} else if htotalRaw == "" && vtotalRaw == "" && clockRaw == "" {
-		// It means that we can't get the info in use, or default preferred info.
-		// Then we need to check if cros_healthd reports nothing.
-		if edp.RefreshRate != nil {
-			return errors.New("there is no refresh rate info, but cros_healthd report it")
-		}
-		return nil
-	} else if htotal, err := strconv.ParseUint(htotalRaw, 10, 32); err != nil {
-		return err
-	} else if vtotal, err := strconv.ParseUint(vtotalRaw, 10, 32); err != nil {
-		return err
-	} else if clock, err := strconv.ParseUint(clockRaw, 10, 32); err != nil {
+	} else if wantRefreshRate, err := strconv.ParseFloat(refreshRateRaw, 64); err != nil {
 		return err
 	} else {
-		wantRefreshRate = float64(clock) * 1000.0 / float64(htotal*vtotal)
-	}
-
-	if math.Abs(wantRefreshRate-*edp.RefreshRate) > 0.01 {
-		return errors.Errorf("failed. RefreshRate doesn't match: got %v; want %v", *edp.RefreshRate, wantRefreshRate)
+		// |modeInfoVrefresh| is stored as an uint32 value which could
+		// lose the accuracy. But in Tast, we only need to make sure the
+		// value is close.
+		if math.Abs(wantRefreshRate-*edp.RefreshRate) > 1 {
+			return errors.Errorf("failed. RefreshRate doesn't match: got %v; want %v", *edp.RefreshRate, wantRefreshRate)
+		}
 	}
 
 	return nil
