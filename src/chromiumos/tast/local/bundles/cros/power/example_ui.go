@@ -35,10 +35,17 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      3 * time.Minute,
 		Params: []testing.Param{{
+			Name:    "ash_kbbl",
+			Fixture: "powerAshKbbl",
+		}, {
 			Name:    "ash",
 			Fixture: "powerAsh",
 		}, {
-			Name:              "lacros",
+			Name:              "lacros_kbbl",
+			Fixture:           "powerLacrosKbbl",
+			ExtraSoftwareDeps: []string{"lacros"},
+		}, {
+			Name:              "lacros_nokbbl",
 			Fixture:           "powerLacros",
 			ExtraSoftwareDeps: []string{"lacros"},
 		}},

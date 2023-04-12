@@ -95,13 +95,55 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name: "powerAsh",
-		Desc: "Set up test environment for power qual",
+		Name: "powerAshKbbl",
+		Desc: "Keyboard backlight default level, recommended for simulating user behavior",
 		Contacts: []string{
 			"chromeos-platform-power@google.com",
 			"mqg@chromium.org",
 		},
-		Impl:            &powerUIFixture{bt: browser.TypeAsh},
+		Impl: NewPowerUIFixture(browser.TypeAsh, PowerTestOptions{
+			NightLight:         DisableNightLight,
+			DarkTheme:          EnableLightTheme,
+			KeyboardBrightness: SetKbBrightness,
+		}),
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: tearDownTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: "powerAsh",
+		Desc: "Keyboard backlight off, recommended for testing feature power",
+		Contacts: []string{
+			"chromeos-platform-power@google.com",
+			"mqg@chromium.org",
+		},
+		Impl: NewPowerUIFixture(browser.TypeAsh, PowerTestOptions{
+			NightLight:         DisableNightLight,
+			DarkTheme:          EnableLightTheme,
+			KeyboardBrightness: SetKbBrightnessToZero,
+		}),
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: tearDownTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: "powerLacrosKbbl",
+		Desc: "Keyboard backlight default level, recommended for simulating user behavior",
+		Contacts: []string{
+			"chromeos-platform-power@google.com",
+			"mqg@chromium.org",
+		},
+		Impl: NewPowerUIFixture(browser.TypeLacros, PowerTestOptions{
+			NightLight:         DisableNightLight,
+			DarkTheme:          EnableLightTheme,
+			KeyboardBrightness: SetKbBrightness,
+		}),
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: tearDownTimeout,
@@ -111,12 +153,16 @@ func init() {
 
 	testing.AddFixture(&testing.Fixture{
 		Name: "powerLacros",
-		Desc: "Set up test environment for power qual",
+		Desc: "Keyboard backlight off, recommended for testing feature power",
 		Contacts: []string{
 			"chromeos-platform-power@google.com",
 			"mqg@chromium.org",
 		},
-		Impl:            &powerUIFixture{bt: browser.TypeLacros},
+		Impl: NewPowerUIFixture(browser.TypeLacros, PowerTestOptions{
+			NightLight:         DisableNightLight,
+			DarkTheme:          EnableLightTheme,
+			KeyboardBrightness: SetKbBrightnessToZero,
+		}),
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: tearDownTimeout,
@@ -251,15 +297,22 @@ func (f *powerMetricsNoUIFixture) PostTest(ctx context.Context, s *testing.FixtT
 }
 
 type powerUIFixture struct {
-	bt      browser.Type
-	cr      *chrome.Chrome
-	cleanup func(context.Context) error
+	bt               browser.Type
+	powerTestOptions *PowerTestOptions
+	cr               *chrome.Chrome
+	cleanup          func(context.Context) error
 }
 
 // PowerUIFixtureData is return back to tests.
 type PowerUIFixtureData struct {
 	Bt browser.Type
 	Cr *chrome.Chrome
+}
+
+// NewPowerUIFixture returns a FixtureImpl to set device to use the specified
+// browser and various power test options.
+func NewPowerUIFixture(bt browser.Type, pto PowerTestOptions) testing.FixtureImpl {
+	return &powerUIFixture{bt: bt, powerTestOptions: &pto}
 }
 
 func (f *powerUIFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -307,14 +360,7 @@ func (f *powerUIFixture) SetUp(ctx context.Context, s *testing.FixtState) interf
 		s.Log("Unable to determine if a battery exists, do not force discharge: ", err)
 	}
 
-	su.Add(PowerTest(ctx, tconn,
-		PowerTestOptions{
-			Wifi:       DisableWifiInterfaces,
-			NightLight: DisableNightLight,
-			DarkTheme:  EnableLightTheme,
-		},
-		NewBatteryDischargeFromMode(dischargeMode),
-	))
+	su.Add(PowerTest(ctx, tconn, *f.powerTestOptions, NewBatteryDischargeFromMode(dischargeMode)))
 	if err := su.Check(ctx); err != nil {
 		s.Fatal("Power test setup failed: ", err)
 	}
