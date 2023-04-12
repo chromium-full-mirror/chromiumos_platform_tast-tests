@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"chromiumos/tast/errors"
-	"chromiumos/tast/local/a11y"
 	"chromiumos/tast/local/a11y/chromevox"
+	"chromiumos/tast/local/a11y/tts"
 	"chromiumos/tast/local/arc"
 	arca11y "chromiumos/tast/local/bundles/cros/arc/a11y"
 	"chromiumos/tast/local/chrome"
@@ -18,10 +18,10 @@ import (
 )
 
 type expectedSpeechLog struct {
-	CheckBox                     []a11y.SpeechExpectation
-	CheckBoxWithStateDescription []a11y.SpeechExpectation
-	SeekBar                      []a11y.SpeechExpectation
-	Slider                       []a11y.SpeechExpectation
+	CheckBox                     []tts.SpeechExpectation
+	CheckBoxWithStateDescription []tts.SpeechExpectation
+	SeekBar                      []tts.SpeechExpectation
+	Slider                       []tts.SpeechExpectation
 }
 
 func init() {
@@ -38,60 +38,60 @@ func init() {
 		Timeout:      4 * time.Minute,
 		Params: []testing.Param{{
 			Val: expectedSpeechLog{
-				CheckBox: []a11y.SpeechExpectation{
-					a11y.NewStringExpectation("CheckBox"),
-					a11y.NewStringExpectation("Check box"),
-					a11y.NewStringExpectation("Not checked"),
-					a11y.NewStringExpectation("Press Search plus Space to toggle"),
+				CheckBox: []tts.SpeechExpectation{
+					tts.NewStringExpectation("CheckBox"),
+					tts.NewStringExpectation("Check box"),
+					tts.NewStringExpectation("Not checked"),
+					tts.NewStringExpectation("Press Search plus Space to toggle"),
 				},
-				CheckBoxWithStateDescription: []a11y.SpeechExpectation{
-					a11y.NewStringExpectation("CheckBoxWithStateDescription"),
-					a11y.NewStringExpectation("Check box"),
-					a11y.NewStringExpectation("Not checked"),
-					a11y.NewStringExpectation("Press Search plus Space to toggle"),
+				CheckBoxWithStateDescription: []tts.SpeechExpectation{
+					tts.NewStringExpectation("CheckBoxWithStateDescription"),
+					tts.NewStringExpectation("Check box"),
+					tts.NewStringExpectation("Not checked"),
+					tts.NewStringExpectation("Press Search plus Space to toggle"),
 				},
-				SeekBar: []a11y.SpeechExpectation{
-					a11y.NewStringExpectation("seekBar"),
-					a11y.NewStringExpectation("Slider"),
-					a11y.NewStringExpectation("25"),
-					a11y.NewStringExpectation("Min 0"),
-					a11y.NewStringExpectation("Max 100"),
+				SeekBar: []tts.SpeechExpectation{
+					tts.NewStringExpectation("seekBar"),
+					tts.NewStringExpectation("Slider"),
+					tts.NewStringExpectation("25"),
+					tts.NewStringExpectation("Min 0"),
+					tts.NewStringExpectation("Max 100"),
 				},
-				Slider: []a11y.SpeechExpectation{
-					a11y.NewStringExpectation("Slider"),
-					a11y.NewStringExpectation("3"),
-					a11y.NewStringExpectation("Min 0"),
-					a11y.NewStringExpectation("Max 10"),
+				Slider: []tts.SpeechExpectation{
+					tts.NewStringExpectation("Slider"),
+					tts.NewStringExpectation("3"),
+					tts.NewStringExpectation("Min 0"),
+					tts.NewStringExpectation("Max 10"),
 				},
 			},
 			ExtraSoftwareDeps: []string{"android_p"},
 		}, {
 			Name: "vm",
 			Val: expectedSpeechLog{
-				CheckBox: []a11y.SpeechExpectation{
-					a11y.NewStringExpectation("CheckBox"),
-					a11y.NewStringExpectation("Check box"),
-					a11y.NewStringExpectation("not checked"),
-					a11y.NewStringExpectation("Press Search plus Space to toggle"),
+				CheckBox: []tts.SpeechExpectation{
+					tts.NewStringExpectation("CheckBox"),
+					tts.NewStringExpectation("Check box"),
+					tts.NewStringExpectation("not checked"),
+					tts.NewStringExpectation("Press Search plus Space to toggle"),
 				},
-				CheckBoxWithStateDescription: []a11y.SpeechExpectation{
-					a11y.NewStringExpectation("CheckBoxWithStateDescription"),
-					a11y.NewStringExpectation("Check box"),
-					a11y.NewStringExpectation("state description not checked"),
-					a11y.NewStringExpectation("Press Search plus Space to toggle"),
+				CheckBoxWithStateDescription: []tts.SpeechExpectation{
+					tts.NewStringExpectation("CheckBoxWithStateDescription"),
+					tts.NewStringExpectation("Check box"),
+					tts.NewStringExpectation("state description not checked"),
+					tts.NewStringExpectation("Press Search plus Space to toggle"),
 				},
-				SeekBar: []a11y.SpeechExpectation{
-					a11y.NewStringExpectation("seekBar"),
-					a11y.NewStringExpectation("Slider"),
-					a11y.NewStringExpectation("state description 25"),
-					a11y.NewStringExpectation("Min 0"),
-					a11y.NewStringExpectation("Max 100"),
+				SeekBar: []tts.SpeechExpectation{
+					tts.NewStringExpectation("seekBar"),
+					tts.NewStringExpectation("Slider"),
+					tts.NewStringExpectation("state description 25"),
+					tts.NewStringExpectation("Min 0"),
+					tts.NewStringExpectation("Max 100"),
 				},
-				Slider: []a11y.SpeechExpectation{
-					a11y.NewStringExpectation("Slider"),
-					a11y.NewStringExpectation("30 percent"),
-					a11y.NewStringExpectation("Min 0"),
-					a11y.NewStringExpectation("Max 10"),
+				Slider: []tts.SpeechExpectation{
+					tts.NewStringExpectation("Slider"),
+					tts.NewStringExpectation("30 percent"),
+					tts.NewStringExpectation("Min 0"),
+					tts.NewStringExpectation("Max 10"),
 				},
 			},
 			ExtraSoftwareDeps: []string{"android_vm"},
@@ -101,7 +101,7 @@ func init() {
 
 type axSpeechTestStep struct {
 	keys         string
-	expectations []a11y.SpeechExpectation
+	expectations []tts.SpeechExpectation
 }
 
 func AccessibilitySpeech(ctx context.Context, s *testing.State) {
@@ -109,14 +109,14 @@ func AccessibilitySpeech(ctx context.Context, s *testing.State) {
 	MainActivityTestSteps := []axSpeechTestStep{
 		{
 			"Search+Right",
-			[]a11y.SpeechExpectation{a11y.NewStringExpectation("Main Activity")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("Main Activity")},
 		}, {
 			"Search+Right",
-			[]a11y.SpeechExpectation{
-				a11y.NewStringExpectation("OFF"),
-				a11y.NewStringExpectation("Toggle Button"),
-				a11y.NewStringExpectation("Not pressed"),
-				a11y.NewStringExpectation("Press Search plus Space to toggle"),
+			[]tts.SpeechExpectation{
+				tts.NewStringExpectation("OFF"),
+				tts.NewStringExpectation("Toggle Button"),
+				tts.NewStringExpectation("Not pressed"),
+				tts.NewStringExpectation("Press Search plus Space to toggle"),
 			},
 		}, {
 			"Search+Right",
@@ -132,54 +132,54 @@ func AccessibilitySpeech(ctx context.Context, s *testing.State) {
 			s.Param().(expectedSpeechLog).Slider,
 		}, {
 			"Search+Right",
-			[]a11y.SpeechExpectation{
-				a11y.NewRegexExpectation("(?i)ANNOUNCE"),
-				a11y.NewStringExpectation("Button"),
-				a11y.NewStringExpectation("Press Search plus Space to activate"),
+			[]tts.SpeechExpectation{
+				tts.NewRegexExpectation("(?i)ANNOUNCE"),
+				tts.NewStringExpectation("Button"),
+				tts.NewStringExpectation("Press Search plus Space to activate"),
 			},
 		}, {
 			"Search+Space",
-			[]a11y.SpeechExpectation{a11y.NewStringExpectation("test announcement")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("test announcement")},
 		}, {
 			"Search+Right",
-			[]a11y.SpeechExpectation{
-				a11y.NewRegexExpectation("(?i)CLICK TO SHOW TOAST"),
-				a11y.NewStringExpectation("Button"),
-				a11y.NewStringExpectation("Press Search plus Space to activate"),
+			[]tts.SpeechExpectation{
+				tts.NewRegexExpectation("(?i)CLICK TO SHOW TOAST"),
+				tts.NewStringExpectation("Button"),
+				tts.NewStringExpectation("Press Search plus Space to activate"),
 			},
 		}, {
 			"Search+Space",
-			[]a11y.SpeechExpectation{a11y.NewStringExpectation("test toast")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("test toast")},
 		},
 	}
 
 	LiveRegionActivityTestSteps := []axSpeechTestStep{
 		{
 			"Search+Right",
-			[]a11y.SpeechExpectation{a11y.NewStringExpectation("Live Region Activity")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("Live Region Activity")},
 		}, {
 			"Search+Right",
-			[]a11y.SpeechExpectation{
-				a11y.NewRegexExpectation("(?i)CHANGE POLITE LIVE REGION"),
-				a11y.NewStringExpectation("Button"),
-				a11y.NewStringExpectation("Press Search plus Space to activate"),
+			[]tts.SpeechExpectation{
+				tts.NewRegexExpectation("(?i)CHANGE POLITE LIVE REGION"),
+				tts.NewStringExpectation("Button"),
+				tts.NewStringExpectation("Press Search plus Space to activate"),
 			},
 		}, {
 			"Search+Space",
-			[]a11y.SpeechExpectation{
-				a11y.NewStringExpectation("Updated polite text"),
+			[]tts.SpeechExpectation{
+				tts.NewStringExpectation("Updated polite text"),
 			},
 		}, {
 			"Search+Right",
-			[]a11y.SpeechExpectation{
-				a11y.NewRegexExpectation("(?i)CHANGE ASSERTIVE LIVE REGION"),
-				a11y.NewStringExpectation("Button"),
-				a11y.NewStringExpectation("Press Search plus Space to activate"),
+			[]tts.SpeechExpectation{
+				tts.NewRegexExpectation("(?i)CHANGE ASSERTIVE LIVE REGION"),
+				tts.NewStringExpectation("Button"),
+				tts.NewStringExpectation("Press Search plus Space to activate"),
 			},
 		}, {
 			"Search+Space",
-			[]a11y.SpeechExpectation{
-				a11y.NewStringExpectation("Updated assertive text"),
+			[]tts.SpeechExpectation{
+				tts.NewStringExpectation("Updated assertive text"),
 			},
 		},
 	}
@@ -187,29 +187,29 @@ func AccessibilitySpeech(ctx context.Context, s *testing.State) {
 	ActionActivityTestSteps := []axSpeechTestStep{
 		{
 			"Search+Right",
-			[]a11y.SpeechExpectation{a11y.NewStringExpectation("Action Activity")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("Action Activity")},
 		}, {
 			"Search+Right",
-			[]a11y.SpeechExpectation{
-				a11y.NewRegexExpectation("(?i)LONG CLICK"),
-				a11y.NewStringExpectation("Button"),
-				a11y.NewStringExpectation("Press Search plus Shift plus Space to long click"),
+			[]tts.SpeechExpectation{
+				tts.NewRegexExpectation("(?i)LONG CLICK"),
+				tts.NewStringExpectation("Button"),
+				tts.NewStringExpectation("Press Search plus Shift plus Space to long click"),
 			},
 		}, {
 			"Search+Shift+Space",
-			[]a11y.SpeechExpectation{a11y.NewStringExpectation("long clicked")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("long clicked")},
 		}, {
 			"Search+Right",
-			[]a11y.SpeechExpectation{
-				a11y.NewRegexExpectation("(?i)LABEL"), a11y.NewStringExpectation("Button"),
-				a11y.NewStringExpectation("Press Search plus Space to perform click"),
-				a11y.NewStringExpectation("Press Search plus Shift plus Space to perform long click"),
+			[]tts.SpeechExpectation{
+				tts.NewRegexExpectation("(?i)LABEL"), tts.NewStringExpectation("Button"),
+				tts.NewStringExpectation("Press Search plus Space to perform click"),
+				tts.NewStringExpectation("Press Search plus Shift plus Space to perform long click"),
 			},
 		}, {
 			"Search+Right",
-			[]a11y.SpeechExpectation{
-				a11y.NewRegexExpectation("(?i)CUSTOM ACTION"), a11y.NewStringExpectation("Button"),
-				a11y.NewStringExpectation("Actions available. Press Search plus Ctrl plus A to view"),
+			[]tts.SpeechExpectation{
+				tts.NewRegexExpectation("(?i)CUSTOM ACTION"), tts.NewStringExpectation("Button"),
+				tts.NewStringExpectation("Actions available. Press Search plus Ctrl plus A to view"),
 			},
 		},
 	}
@@ -223,19 +223,19 @@ func AccessibilitySpeech(ctx context.Context, s *testing.State) {
 	}
 
 	testFunc := func(ctx context.Context, cvconn *chromevox.Conn, tconn *chrome.TestConn, currentActivity arca11y.TestActivity) error {
-		if err := a11y.SetTTSRate(ctx, tconn, 5.0); err != nil {
+		if err := tts.SetRate(ctx, tconn, 5.0); err != nil {
 			s.Fatal("Failed to change TTS rate: ", err)
 		}
-		defer a11y.SetTTSRate(ctx, tconn, 1.0)
+		defer tts.SetRate(ctx, tconn, 1.0)
 
-		if err := cvconn.SetVoice(ctx, a11y.VoiceData{
-			ExtID:  a11y.GoogleTTSExtensionID,
+		if err := cvconn.SetVoice(ctx, tts.VoiceData{
+			ExtID:  tts.GoogleTTSExtensionID,
 			Locale: "en-US",
 		}); err != nil {
 			return errors.Wrap(err, "failed to set the ChromeVox voice")
 		}
 
-		sm, err := a11y.RelevantSpeechMonitor(ctx, s.FixtValue().(*arc.PreData).Chrome, tconn, a11y.TTSEngineData{ExtID: a11y.GoogleTTSExtensionID, UseOnSpeakWithAudioStream: false})
+		sm, err := tts.RelevantSpeechMonitor(ctx, s.FixtValue().(*arc.PreData).Chrome, tconn, tts.EngineData{ExtID: tts.GoogleTTSExtensionID, UseOnSpeakWithAudioStream: false})
 		if err != nil {
 			return errors.Wrap(err, "failed to connect to the TTS background page")
 		}
@@ -243,7 +243,7 @@ func AccessibilitySpeech(ctx context.Context, s *testing.State) {
 
 		testSteps := speechTestSteps[currentActivity]
 		for _, testStep := range testSteps {
-			if err := a11y.PressKeysAndConsumeExpectations(ctx, sm, []string{testStep.keys}, testStep.expectations); err != nil {
+			if err := tts.PressKeysAndConsumeExpectations(ctx, sm, []string{testStep.keys}, testStep.expectations); err != nil {
 				return errors.Wrapf(err, "failure on the step %+v", testStep)
 			}
 		}

@@ -10,6 +10,7 @@ import (
 
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/a11y"
+	"chromiumos/tast/local/a11y/tts"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -18,7 +19,7 @@ import (
 
 // SetUp executes common Select to Speak setup code. Returns a TTSFeatureData -
 // see the documentation for TTSFeatureData for information on proper cleanup.
-func SetUp(ctx context.Context, cr *chrome.Chrome, ed a11y.TTSEngineData, bt browser.Type, html string) (tfd a11y.TTSFeatureData, e error) {
+func SetUp(ctx context.Context, cr *chrome.Chrome, ed tts.EngineData, bt browser.Type, html string) (tfd a11y.TTSFeatureData, e error) {
 	// Tears down Select to Speak if SetUp encountered an error.
 	defer func() {
 		if e != nil {
@@ -45,7 +46,7 @@ func SetUp(ctx context.Context, cr *chrome.Chrome, ed a11y.TTSEngineData, bt bro
 // SetSelectionAndActivate sets selection within a node and invokes
 // Select-to-Speak to produce speech output. It also verifies speech output
 // using the speech monitor.
-func SetSelectionAndActivate(ctx context.Context, cr *chrome.Chrome, finder *nodewith.Finder, selStart, selEnd int, sm *a11y.SpeechMonitor, expectations []a11y.SpeechExpectation) error {
+func SetSelectionAndActivate(ctx context.Context, cr *chrome.Chrome, finder *nodewith.Finder, selStart, selEnd int, sm *tts.SpeechMonitor, expectations []tts.SpeechExpectation) error {
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to create Test API connection")
@@ -60,7 +61,7 @@ func SetSelectionAndActivate(ctx context.Context, cr *chrome.Chrome, finder *nod
 	}
 
 	// Invoke Select-to-Speak.
-	if err := a11y.PressKeysAndConsumeExpectations(ctx, sm, []string{"Search+S"}, expectations); err != nil {
+	if err := tts.PressKeysAndConsumeExpectations(ctx, sm, []string{"Search+S"}, expectations); err != nil {
 		return errors.Wrap(err, "error when invoking Select-to-Speak")
 	}
 

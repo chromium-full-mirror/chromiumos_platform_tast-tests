@@ -12,7 +12,7 @@ import (
 	"chromiumos/tast/common/android/adb"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
-	"chromiumos/tast/local/a11y"
+	"chromiumos/tast/local/a11y/tts"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/testing"
 )
@@ -67,7 +67,7 @@ func TextToSpeech(ctx context.Context, s *testing.State) {
 	}
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		voices, err := a11y.Voices(ctx, tconn)
+		voices, err := tts.Voices(ctx, tconn)
 		if err != nil {
 			return errors.Wrap(err, "failed to get voices")
 		}

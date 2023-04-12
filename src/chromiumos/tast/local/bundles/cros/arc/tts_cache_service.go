@@ -15,7 +15,7 @@ import (
 	"google.golang.org/grpc"
 
 	"chromiumos/tast/errors"
-	"chromiumos/tast/local/a11y"
+	"chromiumos/tast/local/a11y/tts"
 	"chromiumos/tast/local/bundles/cros/arc/cache"
 	arcpb "chromiumos/tast/services/cros/arc"
 	"chromiumos/tast/testing"
@@ -85,7 +85,7 @@ func (c *TTSCacheService) Generate(ctx context.Context, request *arcpb.TTSCacheR
 		return nil, errors.Wrap(err, "failed creating test API connection")
 	}
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		voices, err := a11y.Voices(ctx, tconn)
+		voices, err := tts.Voices(ctx, tconn)
 		if err != nil {
 			return errors.Wrap(err, "failed to get voices")
 		}

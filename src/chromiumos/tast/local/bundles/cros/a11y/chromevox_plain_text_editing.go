@@ -7,8 +7,8 @@ package a11y
 import (
 	"context"
 
-	"chromiumos/tast/local/a11y"
 	"chromiumos/tast/local/a11y/chromevox"
+	"chromiumos/tast/local/a11y/tts"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/testing"
@@ -41,8 +41,8 @@ func init() {
 func ChromevoxPlainTextEditing(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
-	vd := a11y.GoogleTTSEnUsVoice()
-	ed := a11y.GoogleTTSEngine()
+	vd := tts.GoogleTTSEnUsVoice()
+	ed := tts.GoogleTTSEngine()
 	bt := s.Param().(browser.Type)
 	const html = `<label for='singleLine'>singleLine</label>
 <input type='text' id='singleLine' value='Single line field'><br>
@@ -65,56 +65,56 @@ line 3</textarea>`
 
 	testSteps := []struct {
 		keyCommands  []string
-		expectations []a11y.SpeechExpectation
+		expectations []tts.SpeechExpectation
 	}{
 		{
 			[]string{nextObject},
-			[]a11y.SpeechExpectation{
-				a11y.NewOptionsExpectation("singleLine", lang, 1.0, 1.0),
-				a11y.NewOptionsExpectation("Single line field", lang, 1.0, 1.0),
-				a11y.NewOptionsExpectation("Edit text", lang, 1.0, 1.0)},
+			[]tts.SpeechExpectation{
+				tts.NewOptionsExpectation("singleLine", lang, 1.0, 1.0),
+				tts.NewOptionsExpectation("Single line field", lang, 1.0, 1.0),
+				tts.NewOptionsExpectation("Edit text", lang, 1.0, 1.0)},
 		},
 		{
 			[]string{nextObject},
-			[]a11y.SpeechExpectation{
-				a11y.NewOptionsExpectation("textArea", lang, 1.0, 1.0),
-				a11y.NewOptionsExpectation("Line 1 line 2 line 3", lang, 1.0, 1.0),
-				a11y.NewOptionsExpectation("Text area", lang, 0.8, 1.0)},
+			[]tts.SpeechExpectation{
+				tts.NewOptionsExpectation("textArea", lang, 1.0, 1.0),
+				tts.NewOptionsExpectation("Line 1 line 2 line 3", lang, 1.0, 1.0),
+				tts.NewOptionsExpectation("Text area", lang, 0.8, 1.0)},
 		},
 		{
 			[]string{"Right"},
-			[]a11y.SpeechExpectation{a11y.NewStringExpectation("I")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("I")},
 		},
 		{
 			[]string{"Shift+Right"},
-			[]a11y.SpeechExpectation{
-				a11y.NewOptionsExpectation("I", lang, 1.0, 1.0),
-				a11y.NewOptionsExpectation("selected", lang, 1.0, 1.0)},
+			[]tts.SpeechExpectation{
+				tts.NewOptionsExpectation("I", lang, 1.0, 1.0),
+				tts.NewOptionsExpectation("selected", lang, 1.0, 1.0)},
 		},
 		{
 			[]string{"Down"},
-			[]a11y.SpeechExpectation{a11y.NewStringExpectation("line 2")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("line 2")},
 		},
 		{
 			[]string{"Left"},
-			[]a11y.SpeechExpectation{a11y.NewStringExpectation("L")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("L")},
 		},
 		{
 			[]string{"Shift+Ctrl+Right"},
-			[]a11y.SpeechExpectation{
-				a11y.NewOptionsExpectation("line", lang, 1.0, 1.0),
-				a11y.NewOptionsExpectation("selected", lang, 1.0, 1.0)},
+			[]tts.SpeechExpectation{
+				tts.NewOptionsExpectation("line", lang, 1.0, 1.0),
+				tts.NewOptionsExpectation("selected", lang, 1.0, 1.0)},
 		},
 		{
 			[]string{"Shift+Ctrl+Right"},
-			[]a11y.SpeechExpectation{
-				a11y.NewOptionsExpectation("2", lang, 1.0, 1.0),
-				a11y.NewOptionsExpectation("added to selection", lang, 1.0, 1.0)},
+			[]tts.SpeechExpectation{
+				tts.NewOptionsExpectation("2", lang, 1.0, 1.0),
+				tts.NewOptionsExpectation("added to selection", lang, 1.0, 1.0)},
 		},
 	}
 
 	for _, step := range testSteps {
-		if err := a11y.PressKeysAndConsumeExpectations(cvData.Context(), cvData.SpeechMonitor(), step.keyCommands, step.expectations); err != nil {
+		if err := tts.PressKeysAndConsumeExpectations(cvData.Context(), cvData.SpeechMonitor(), step.keyCommands, step.expectations); err != nil {
 			s.Error("Error when pressing keys and expecting speech: ", err)
 		}
 	}

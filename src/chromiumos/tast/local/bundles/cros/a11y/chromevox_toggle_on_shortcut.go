@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/local/a11y"
+	"chromiumos/tast/local/a11y/tts"
 	"chromiumos/tast/local/audio/crastestclient"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/testing"
@@ -47,22 +47,22 @@ func ChromevoxToggleOnShortcut(ctx context.Context, s *testing.State) {
 	defer crastestclient.Unmute(ctxCleanup)
 
 	// Get a speech monitor for the Google TTS engine.
-	ed := a11y.TTSEngineData{
-		ExtID:                     a11y.GoogleTTSExtensionID,
+	ed := tts.EngineData{
+		ExtID:                     tts.GoogleTTSExtensionID,
 		UseOnSpeakWithAudioStream: false,
 	}
 
-	sm, err := a11y.RelevantSpeechMonitor(ctx, cr, tconn, ed)
+	sm, err := tts.RelevantSpeechMonitor(ctx, cr, tconn, ed)
 	if err != nil {
 		s.Fatal("Failed to connect to the TTS background page: ", err)
 	}
 	defer sm.Close()
 
 	ctrlAltZ := []string{"Ctrl+Alt+z"}
-	expectedSpeech := []a11y.SpeechExpectation{a11y.NewRegexExpectation("ChromeVox spoken feedback is ready")}
+	expectedSpeech := []tts.SpeechExpectation{tts.NewRegexExpectation("ChromeVox spoken feedback is ready")}
 
 	// Use the speech monitor to ensure that the spoken announcement was given.
-	if err := a11y.PressKeysAndConsumeExpectations(ctx, sm, ctrlAltZ, expectedSpeech); err != nil {
+	if err := tts.PressKeysAndConsumeExpectations(ctx, sm, ctrlAltZ, expectedSpeech); err != nil {
 		s.Fatal("Failed to verify Chromevox toggled on: ", err)
 	}
 }

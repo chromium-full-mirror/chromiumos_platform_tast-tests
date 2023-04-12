@@ -10,8 +10,8 @@ import (
 	"context"
 	"fmt"
 
-	"chromiumos/tast/local/a11y"
 	"chromiumos/tast/local/a11y/sts"
+	"chromiumos/tast/local/a11y/tts"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
@@ -38,7 +38,7 @@ func init() {
 func SelectToSpeak(ctx context.Context, s *testing.State) {
 	cr := s.PreValue().(*chrome.Chrome)
 
-	ed := a11y.GoogleTTSEngine()
+	ed := tts.GoogleTTSEngine()
 	text := "This is a select-to-speak test"
 	html := fmt.Sprintf("<p>%s</p>", text)
 	bt := browser.TypeAsh
@@ -54,7 +54,7 @@ func SelectToSpeak(ctx context.Context, s *testing.State) {
 
 	rootWebArea := nodewith.Role(role.RootWebArea).First()
 	textNode := nodewith.Name(text).Role(role.InlineTextBox).Ancestor(rootWebArea)
-	expectations := []a11y.SpeechExpectation{a11y.NewStringExpectation(text)}
+	expectations := []tts.SpeechExpectation{tts.NewStringExpectation(text)}
 	if err := sts.SetSelectionAndActivate(stsData.CTX, cr, textNode, 0, len(text), stsData.SM, expectations); err != nil {
 		s.Fatal("Failed to read node: ", err)
 	}

@@ -7,8 +7,8 @@ package a11y
 import (
 	"context"
 
-	"chromiumos/tast/local/a11y"
 	"chromiumos/tast/local/a11y/chromevox"
+	"chromiumos/tast/local/a11y/tts"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/testing"
@@ -50,8 +50,8 @@ func ChromevoxRichTextEditing(ctx context.Context, s *testing.State) {
 <span role="insertion">was</span>
 <span role="deletion">am</span></span><span> typing</span>
 <p>End</p></div>`
-	vd := a11y.GoogleTTSEnUsVoice()
-	ed := a11y.GoogleTTSEngine()
+	vd := tts.GoogleTTSEnUsVoice()
+	ed := tts.GoogleTTSEngine()
 	cvData, err := chromevox.SetUp(ctx, cr, vd, ed, bt, html)
 	if err != nil {
 		s.Fatal("Failed to set up ChromeVox: ", err)
@@ -70,202 +70,202 @@ func ChromevoxRichTextEditing(ctx context.Context, s *testing.State) {
 
 	testSteps := []struct {
 		keyCommands  []string
-		expectations []a11y.SpeechExpectation
+		expectations []tts.SpeechExpectation
 	}{
 		{
 			[]string{nextObject},
-			[]a11y.SpeechExpectation{a11y.NewOptionsExpectation("hello", lang, 1.0, 1.0)},
+			[]tts.SpeechExpectation{tts.NewOptionsExpectation("hello", lang, 1.0, 1.0)},
 		},
 		{
 			[]string{"Down", "Down"},
-			[]a11y.SpeechExpectation{
-				a11y.NewStringExpectation("new line"),
-				a11y.NewOptionsExpectation("This is a", lang, 1.0, 1.0),
-				a11y.NewOptionsExpectation("test", lang, 1.0, 1.0),
-				a11y.NewOptionsExpectation("Link", lang, rolePitch, 1.0),
-				a11y.NewOptionsExpectation("of rich text", lang, 1.0, 1.0)},
+			[]tts.SpeechExpectation{
+				tts.NewStringExpectation("new line"),
+				tts.NewOptionsExpectation("This is a", lang, 1.0, 1.0),
+				tts.NewOptionsExpectation("test", lang, 1.0, 1.0),
+				tts.NewOptionsExpectation("Link", lang, rolePitch, 1.0),
+				tts.NewOptionsExpectation("of rich text", lang, 1.0, 1.0)},
 		},
 		{
 			[]string{"Up", "Up"},
-			[]a11y.SpeechExpectation{
-				a11y.NewStringExpectation("new line"),
-				a11y.NewStringExpectation("hello"),
-				a11y.NewOptionsExpectation("Heading 2", lang, classPitch, 1.0)},
+			[]tts.SpeechExpectation{
+				tts.NewStringExpectation("new line"),
+				tts.NewStringExpectation("hello"),
+				tts.NewOptionsExpectation("Heading 2", lang, classPitch, 1.0)},
 		},
 		{
 			[]string{"Tab"},
-			[]a11y.SpeechExpectation{
-				a11y.NewStringExpectation("Move through text by character test!"),
-				a11y.NewOptionsExpectation("Text area", lang, classPitch, 1.0)},
+			[]tts.SpeechExpectation{
+				tts.NewStringExpectation("Move through text by character test!"),
+				tts.NewOptionsExpectation("Text area", lang, classPitch, 1.0)},
 		},
 		{
 			[]string{"Right"},
-			[]a11y.SpeechExpectation{
-				a11y.NewStringExpectation("O"),
-				a11y.NewOptionsExpectation("Red, 100% opacity.", lang, formatPitch, 1.0),
-				a11y.NewOptionsExpectation("Bold", lang, formatPitch, 1.0),
-				a11y.NewOptionsExpectation("Font Tinos", lang, formatPitch, 1.0)},
+			[]tts.SpeechExpectation{
+				tts.NewStringExpectation("O"),
+				tts.NewOptionsExpectation("Red, 100% opacity.", lang, formatPitch, 1.0),
+				tts.NewOptionsExpectation("Bold", lang, formatPitch, 1.0),
+				tts.NewOptionsExpectation("Font Tinos", lang, formatPitch, 1.0)},
 		},
 		{
 			[]string{"Right", "Right"},
-			[]a11y.SpeechExpectation{
-				a11y.NewStringExpectation("V"),
-				a11y.NewStringExpectation("E")},
+			[]tts.SpeechExpectation{
+				tts.NewStringExpectation("V"),
+				tts.NewStringExpectation("E")},
 		},
 		{
 			[]string{"Right"},
-			[]a11y.SpeechExpectation{
-				a11y.NewStringExpectation("space"),
-				a11y.NewOptionsExpectation("Black, 100% opacity.", lang, formatPitch, 1.0),
-				a11y.NewOptionsExpectation("Not bold", lang, formatPitch, 1.0)},
+			[]tts.SpeechExpectation{
+				tts.NewStringExpectation("space"),
+				tts.NewOptionsExpectation("Black, 100% opacity.", lang, formatPitch, 1.0),
+				tts.NewOptionsExpectation("Not bold", lang, formatPitch, 1.0)},
 		},
 		{
 			[]string{"Right"},
-			[]a11y.SpeechExpectation{
-				a11y.NewStringExpectation("T"),
-				a11y.NewOptionsExpectation("Italic", lang, formatPitch, 1.0)},
+			[]tts.SpeechExpectation{
+				tts.NewStringExpectation("T"),
+				tts.NewOptionsExpectation("Italic", lang, formatPitch, 1.0)},
 		},
 		{
 			[]string{"Right", "Right", "Right", "Right", "Right", "Right"},
-			[]a11y.SpeechExpectation{
-				a11y.NewStringExpectation("H"),
-				a11y.NewStringExpectation("R"),
-				a11y.NewStringExpectation("O"),
-				a11y.NewStringExpectation("U"),
-				a11y.NewStringExpectation("G"),
-				a11y.NewStringExpectation("H")},
+			[]tts.SpeechExpectation{
+				tts.NewStringExpectation("H"),
+				tts.NewStringExpectation("R"),
+				tts.NewStringExpectation("O"),
+				tts.NewStringExpectation("U"),
+				tts.NewStringExpectation("G"),
+				tts.NewStringExpectation("H")},
 		},
 		{
 			[]string{"Right"},
-			[]a11y.SpeechExpectation{
-				a11y.NewStringExpectation("space"),
-				a11y.NewOptionsExpectation("Not italic", lang, formatPitch, 1.0)},
+			[]tts.SpeechExpectation{
+				tts.NewStringExpectation("space"),
+				tts.NewOptionsExpectation("Not italic", lang, formatPitch, 1.0)},
 		},
 		{
 			[]string{"Right"},
-			[]a11y.SpeechExpectation{
-				a11y.NewStringExpectation("T"),
-				a11y.NewOptionsExpectation("Underline", lang, formatPitch, 1.0),
-				a11y.NewOptionsExpectation("Font Georgia", lang, formatPitch, 1.0)},
+			[]tts.SpeechExpectation{
+				tts.NewStringExpectation("T"),
+				tts.NewOptionsExpectation("Underline", lang, formatPitch, 1.0),
+				tts.NewOptionsExpectation("Font Georgia", lang, formatPitch, 1.0)},
 		},
 		{
 			[]string{"Right", "Right", "Right"},
-			[]a11y.SpeechExpectation{
-				a11y.NewStringExpectation("E"),
-				a11y.NewStringExpectation("X"),
-				a11y.NewStringExpectation("T")},
+			[]tts.SpeechExpectation{
+				tts.NewStringExpectation("E"),
+				tts.NewStringExpectation("X"),
+				tts.NewStringExpectation("T")},
 		},
 		{
 			[]string{"Right"},
-			[]a11y.SpeechExpectation{
-				a11y.NewStringExpectation("space"),
-				a11y.NewOptionsExpectation("Not underline", lang, formatPitch, 1.0),
-				a11y.NewOptionsExpectation("Font Tinos", lang, formatPitch, 1.0)},
+			[]tts.SpeechExpectation{
+				tts.NewStringExpectation("space"),
+				tts.NewOptionsExpectation("Not underline", lang, formatPitch, 1.0),
+				tts.NewOptionsExpectation("Font Tinos", lang, formatPitch, 1.0)},
 		},
 		{
 			[]string{"Right", "Right", "Right"},
-			[]a11y.SpeechExpectation{
-				a11y.NewStringExpectation("B"),
-				a11y.NewStringExpectation("Y"),
-				a11y.NewStringExpectation("space")},
+			[]tts.SpeechExpectation{
+				tts.NewStringExpectation("B"),
+				tts.NewStringExpectation("Y"),
+				tts.NewStringExpectation("space")},
 		},
 		{
 			[]string{"Right"},
-			[]a11y.SpeechExpectation{
-				a11y.NewStringExpectation("C"),
-				a11y.NewOptionsExpectation("Blue, 100% opacity.", lang, formatPitch, 1.0),
-				a11y.NewOptionsExpectation("Line through", lang, formatPitch, 1.0)},
+			[]tts.SpeechExpectation{
+				tts.NewStringExpectation("C"),
+				tts.NewOptionsExpectation("Blue, 100% opacity.", lang, formatPitch, 1.0),
+				tts.NewOptionsExpectation("Line through", lang, formatPitch, 1.0)},
 		},
 		{
 			[]string{"Right", "Right", "Right", "Right", "Right", "Right", "Right", "Right"},
-			[]a11y.SpeechExpectation{
-				a11y.NewStringExpectation("H"),
-				a11y.NewStringExpectation("A"),
-				a11y.NewStringExpectation("R"),
-				a11y.NewStringExpectation("A"),
-				a11y.NewStringExpectation("C"),
-				a11y.NewStringExpectation("T"),
-				a11y.NewStringExpectation("E"),
-				a11y.NewStringExpectation("R")},
+			[]tts.SpeechExpectation{
+				tts.NewStringExpectation("H"),
+				tts.NewStringExpectation("A"),
+				tts.NewStringExpectation("R"),
+				tts.NewStringExpectation("A"),
+				tts.NewStringExpectation("C"),
+				tts.NewStringExpectation("T"),
+				tts.NewStringExpectation("E"),
+				tts.NewStringExpectation("R")},
 		},
 		{
 			[]string{"Right"},
-			[]a11y.SpeechExpectation{
-				a11y.NewStringExpectation("space"),
-				a11y.NewOptionsExpectation("Not line through", lang, formatPitch, 1.0)},
+			[]tts.SpeechExpectation{
+				tts.NewStringExpectation("space"),
+				tts.NewOptionsExpectation("Not line through", lang, formatPitch, 1.0)},
 		},
 		{
 			[]string{"Right"},
-			[]a11y.SpeechExpectation{
-				a11y.NewOptionsExpectation("Link", lang, rolePitch, 1.0),
-				a11y.NewStringExpectation("T"),
-				a11y.NewOptionsExpectation("Blue, 100% opacity.", lang, formatPitch, 1.0),
-				a11y.NewOptionsExpectation("Link", lang, formatPitch, 1.0),
-				a11y.NewOptionsExpectation("Underline", lang, formatPitch, 1.0)},
+			[]tts.SpeechExpectation{
+				tts.NewOptionsExpectation("Link", lang, rolePitch, 1.0),
+				tts.NewStringExpectation("T"),
+				tts.NewOptionsExpectation("Blue, 100% opacity.", lang, formatPitch, 1.0),
+				tts.NewOptionsExpectation("Link", lang, formatPitch, 1.0),
+				tts.NewOptionsExpectation("Underline", lang, formatPitch, 1.0)},
 		},
 		{
 			[]string{"Right", "Right", "Right"},
-			[]a11y.SpeechExpectation{
-				a11y.NewStringExpectation("E"),
-				a11y.NewStringExpectation("S"),
-				a11y.NewStringExpectation("T")},
+			[]tts.SpeechExpectation{
+				tts.NewStringExpectation("E"),
+				tts.NewStringExpectation("S"),
+				tts.NewStringExpectation("T")},
 		},
 		{
 			[]string{"Right"},
-			[]a11y.SpeechExpectation{
-				a11y.NewOptionsExpectation("exclamation", lang, 1.0, 1.0),
-				a11y.NewOptionsExpectation("Black, 100% opacity.", lang, formatPitch, 1.0),
-				a11y.NewOptionsExpectation("Not link", lang, formatPitch, 1.0),
-				a11y.NewOptionsExpectation("Not underline", lang, formatPitch, 1.0)},
+			[]tts.SpeechExpectation{
+				tts.NewOptionsExpectation("exclamation", lang, 1.0, 1.0),
+				tts.NewOptionsExpectation("Black, 100% opacity.", lang, formatPitch, 1.0),
+				tts.NewOptionsExpectation("Not link", lang, formatPitch, 1.0),
+				tts.NewOptionsExpectation("Not underline", lang, formatPitch, 1.0)},
 		},
 		{
 			[]string{"Right"},
-			[]a11y.SpeechExpectation{a11y.NewOptionsExpectation("End of text", lang, 1.0, 1.0)},
+			[]tts.SpeechExpectation{tts.NewOptionsExpectation("End of text", lang, 1.0, 1.0)},
 		},
 		{
 			[]string{"Tab", "Down"},
-			[]a11y.SpeechExpectation{a11y.NewStringExpectation("Start")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("Start")},
 		},
 		{
 			[]string{"Right"},
-			[]a11y.SpeechExpectation{a11y.NewOptionsExpectation("space", lang, 1.0, 1.0)},
+			[]tts.SpeechExpectation{tts.NewOptionsExpectation("space", lang, 1.0, 1.0)},
 		},
 		{
 			[]string{"Right"},
-			[]a11y.SpeechExpectation{
-				a11y.NewOptionsExpectation("Suggest", lang, rolePitch, 1.0),
-				a11y.NewOptionsExpectation("Username", lang, 1.0, 1.0),
-				a11y.NewOptionsExpectation("Insert", lang, rolePitch, 1.0),
-				a11y.NewOptionsExpectation("W", lang, 1.0, 1.0)},
+			[]tts.SpeechExpectation{
+				tts.NewOptionsExpectation("Suggest", lang, rolePitch, 1.0),
+				tts.NewOptionsExpectation("Username", lang, 1.0, 1.0),
+				tts.NewOptionsExpectation("Insert", lang, rolePitch, 1.0),
+				tts.NewOptionsExpectation("W", lang, 1.0, 1.0)},
 		},
 		{
 			[]string{"Right", "Right"},
-			[]a11y.SpeechExpectation{a11y.NewStringExpectation("A"), a11y.NewStringExpectation("S")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("A"), tts.NewStringExpectation("S")},
 		},
 		{
 			[]string{"Right"},
-			[]a11y.SpeechExpectation{a11y.NewOptionsExpectation("Exited Insert.", lang, classPitch, 1.0)},
+			[]tts.SpeechExpectation{tts.NewOptionsExpectation("Exited Insert.", lang, classPitch, 1.0)},
 		},
 		{
 			[]string{"Right"},
-			[]a11y.SpeechExpectation{
-				a11y.NewOptionsExpectation("Delete", lang, rolePitch, 1.0),
-				a11y.NewOptionsExpectation("A", lang, 1.0, 1.0)},
+			[]tts.SpeechExpectation{
+				tts.NewOptionsExpectation("Delete", lang, rolePitch, 1.0),
+				tts.NewOptionsExpectation("A", lang, 1.0, 1.0)},
 		},
 		{
 			[]string{"Right"},
-			[]a11y.SpeechExpectation{a11y.NewStringExpectation("M")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("M")},
 		},
 		{
 			[]string{"Right"},
-			[]a11y.SpeechExpectation{
-				a11y.NewOptionsExpectation("Exited Delete.", lang, classPitch, 1.0),
-				a11y.NewOptionsExpectation("Exited Suggest.", lang, classPitch, 1.0)},
+			[]tts.SpeechExpectation{
+				tts.NewOptionsExpectation("Exited Delete.", lang, classPitch, 1.0),
+				tts.NewOptionsExpectation("Exited Suggest.", lang, classPitch, 1.0)},
 		},
 	}
 
 	for _, step := range testSteps {
-		if err := a11y.PressKeysAndConsumeExpectations(cvData.Context(), cvData.SpeechMonitor(), step.keyCommands, step.expectations); err != nil {
+		if err := tts.PressKeysAndConsumeExpectations(cvData.Context(), cvData.SpeechMonitor(), step.keyCommands, step.expectations); err != nil {
 			s.Error("Error when pressing keys and expecting speech: ", err)
 		}
 	}

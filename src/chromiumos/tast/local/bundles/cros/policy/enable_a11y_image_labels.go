@@ -18,6 +18,7 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/a11y"
 	"chromiumos/tast/local/a11y/chromevox"
+	"chromiumos/tast/local/a11y/tts"
 	"chromiumos/tast/local/audio/crastestclient"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
@@ -155,9 +156,9 @@ func EnableA11yImageLabels(ctx context.Context, s *testing.State) {
 			}
 
 			// Test that we get the expected spoken feedback.
-			if err := a11y.PressKeysAndConsumeExpectations(ctx, sm,
+			if err := tts.PressKeysAndConsumeExpectations(ctx, sm,
 				[]string{"Search+Right"},
-				[]a11y.SpeechExpectation{a11y.NewRegexExpectation(param.expectationRegex)},
+				[]tts.SpeechExpectation{tts.NewRegexExpectation(param.expectationRegex)},
 			); err != nil {
 				s.Fatal("Got unexpected description message: ", err)
 			}
@@ -166,7 +167,7 @@ func EnableA11yImageLabels(ctx context.Context, s *testing.State) {
 
 }
 
-func setUpChromeVox(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome) (*a11y.SpeechMonitor, func(context.Context) error, error) {
+func setUpChromeVox(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome) (*tts.SpeechMonitor, func(context.Context) error, error) {
 	// Set up a data structure to hold all cleanup actions that we will merge
 	// into a cleanup function returned to the caller.
 	var cleanups []func(context.Context) error
@@ -190,23 +191,23 @@ func setUpChromeVox(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chro
 		return nil
 	})
 
-	if err := cvConn.SetVoice(ctx, a11y.VoiceData{ExtID: a11y.GoogleTTSExtensionID, Locale: "en-US"}); err != nil {
+	if err := cvConn.SetVoice(ctx, tts.VoiceData{ExtID: tts.GoogleTTSExtensionID, Locale: "en-US"}); err != nil {
 		return nil, mergeCleanups(cleanups), errors.Errorf("failed to set the ChromeVox voice: %s", err)
 	}
 
-	if err := a11y.SetTTSRate(ctx, tconn, 5.0); err != nil {
+	if err := tts.SetRate(ctx, tconn, 5.0); err != nil {
 		return nil, mergeCleanups(cleanups), errors.Errorf("failed to change TTS rate: %s", err)
 	}
 	cleanups = append(cleanups, func(cleanupCtx context.Context) error {
-		a11y.SetTTSRate(cleanupCtx, tconn, 1.0)
+		tts.SetRate(cleanupCtx, tconn, 1.0)
 		return nil
 	})
 
-	ed := a11y.TTSEngineData{
-		ExtID:                     a11y.GoogleTTSExtensionID,
+	ed := tts.EngineData{
+		ExtID:                     tts.GoogleTTSExtensionID,
 		UseOnSpeakWithAudioStream: false,
 	}
-	sm, err := a11y.RelevantSpeechMonitor(ctx, cr, tconn, ed)
+	sm, err := tts.RelevantSpeechMonitor(ctx, cr, tconn, ed)
 	if err != nil {
 		return nil, mergeCleanups(cleanups), errors.Errorf("failed to connect to the TTS background page %s", err)
 	}

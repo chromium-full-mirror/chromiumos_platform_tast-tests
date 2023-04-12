@@ -9,8 +9,8 @@ package a11y
 import (
 	"context"
 
-	"chromiumos/tast/local/a11y"
 	"chromiumos/tast/local/a11y/chromevox"
+	"chromiumos/tast/local/a11y/tts"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/testing"
@@ -43,8 +43,8 @@ func init() {
 func ChromevoxNumberReadingStyle(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
-	vd := a11y.GoogleTTSEnUsVoice()
-	ed := a11y.GoogleTTSEngine()
+	vd := tts.GoogleTTSEnUsVoice()
+	ed := tts.GoogleTTSEngine()
 	bt := s.Param().(browser.Type)
 	html := "<p>123</p>"
 	cvData, err := chromevox.SetUp(ctx, cr, vd, ed, bt, html)
@@ -59,44 +59,44 @@ func ChromevoxNumberReadingStyle(ctx context.Context, s *testing.State) {
 
 	testSteps := []struct {
 		KeyCommands  []string
-		Expectations []a11y.SpeechExpectation
+		Expectations []tts.SpeechExpectation
 	}{
 		{
 			[]string{chromevox.NextObject},
-			[]a11y.SpeechExpectation{a11y.NewStringExpectation("123")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("123")},
 		},
 		{
 			chromevox.OpenOptionsPage,
-			[]a11y.SpeechExpectation{a11y.NewStringExpectation("ChromeVox Options")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("ChromeVox Options")},
 		},
 		{
 			[]string{chromevox.Find},
-			[]a11y.SpeechExpectation{a11y.NewStringExpectation("Find")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("Find")},
 		},
 		{
 			[]string{"R", "E", "A", "D", chromevox.Space, "N", "U", "M", "B", "E", "R", "S", chromevox.Escape},
-			[]a11y.SpeechExpectation{a11y.NewStringExpectation("Read numbers as:")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("Read numbers as:")},
 		},
 		{
 			[]string{chromevox.NextObject},
-			[]a11y.SpeechExpectation{a11y.NewStringExpectation("Words")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("Words")},
 		},
 		{
 			[]string{chromevox.Activate},
-			[]a11y.SpeechExpectation{a11y.NewStringExpectation("has pop up")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("has pop up")},
 		},
 		{
 			[]string{chromevox.ArrowDown},
-			[]a11y.SpeechExpectation{a11y.NewStringExpectation("Digits")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("Digits")},
 		},
 		{
 			[]string{chromevox.Activate, chromevox.CloseWindow},
-			[]a11y.SpeechExpectation{a11y.NewStringExpectation("1 2 3")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("1 2 3")},
 		},
 	}
 
 	for _, step := range testSteps {
-		if err := a11y.PressKeysAndConsumeExpectations(cvData.Context(), cvData.SpeechMonitor(), step.KeyCommands, step.Expectations); err != nil {
+		if err := tts.PressKeysAndConsumeExpectations(cvData.Context(), cvData.SpeechMonitor(), step.KeyCommands, step.Expectations); err != nil {
 			s.Error("Error when pressing keys and expecting speech: ", err)
 		}
 	}

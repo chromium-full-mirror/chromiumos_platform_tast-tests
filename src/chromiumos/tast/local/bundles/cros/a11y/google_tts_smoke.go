@@ -12,7 +12,7 @@ import (
 
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
-	"chromiumos/tast/local/a11y"
+	"chromiumos/tast/local/a11y/tts"
 	"chromiumos/tast/local/audio"
 	"chromiumos/tast/local/audio/audionode"
 	"chromiumos/tast/local/audio/crastestclient"
@@ -62,8 +62,8 @@ func GoogleTtsSmoke(ctx context.Context, s *testing.State) {
 	}
 	defer crastestclient.Unmute(ctxCleanup)
 
-	ed := a11y.GoogleTTSEngine()
-	sm, err := a11y.RelevantSpeechMonitor(ctx, cr, tconn, ed)
+	ed := tts.GoogleTTSEngine()
+	sm, err := tts.RelevantSpeechMonitor(ctx, cr, tconn, ed)
 	if err != nil {
 		s.Fatal("Failed to connect to the TTS background page: ", err)
 	}
@@ -78,7 +78,7 @@ func GoogleTtsSmoke(ctx context.Context, s *testing.State) {
 		}
 
 		// Verify that Google TTS spoke "Hello world".
-		if err := sm.Consume(ctx, []a11y.SpeechExpectation{a11y.NewStringExpectation(text)}); err != nil {
+		if err := sm.Consume(ctx, []tts.SpeechExpectation{tts.NewStringExpectation(text)}); err != nil {
 			s.Fatal("Failed to consume speech: ", err)
 		}
 
@@ -120,7 +120,7 @@ func GoogleTtsSmoke(ctx context.Context, s *testing.State) {
 	}
 
 	// Verify that Google TTS spoke "Hello world".
-	if err := sm.Consume(ctx, []a11y.SpeechExpectation{a11y.NewStringExpectation(text)}); err != nil {
+	if err := sm.Consume(ctx, []tts.SpeechExpectation{tts.NewStringExpectation(text)}); err != nil {
 		s.Fatal("Failed to consume speech: ", err)
 	}
 }

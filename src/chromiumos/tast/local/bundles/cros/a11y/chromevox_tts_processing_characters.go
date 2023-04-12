@@ -7,8 +7,8 @@ package a11y
 import (
 	"context"
 
-	"chromiumos/tast/local/a11y"
 	"chromiumos/tast/local/a11y/chromevox"
+	"chromiumos/tast/local/a11y/tts"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/testing"
@@ -52,8 +52,8 @@ func ChromevoxTTSProcessingCharacters(ctx context.Context, s *testing.State) {
 		<p>x, y.</p>
 		<p>"That's all, folks!"</p>
 		<p>"$1,234.56 (plus tax) for 78&percnt; of your %232 pencils?", they mused</p>`
-	vd := a11y.GoogleTTSEnUsVoice()
-	ed := a11y.GoogleTTSEngine()
+	vd := tts.GoogleTTSEnUsVoice()
+	ed := tts.GoogleTTSEngine()
 	cvData, err := chromevox.SetUp(ctx, cr, vd, ed, bt, html)
 	if err != nil {
 		s.Fatal("Failed to set up ChromeVox: ", err)
@@ -69,99 +69,99 @@ func ChromevoxTTSProcessingCharacters(ctx context.Context, s *testing.State) {
 
 	testSteps := []struct {
 		keyCommands  []string
-		expectations []a11y.SpeechExpectation
+		expectations []tts.SpeechExpectation
 	}{
 		{
 			nextObject,
-			[]a11y.SpeechExpectation{a11y.NewStringExpectation("dot")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("dot")},
 		},
 		{
 			nextObject,
-			[]a11y.SpeechExpectation{a11y.NewStringExpectation("x.")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("x.")},
 		},
 		{
 			nextObject,
-			[]a11y.SpeechExpectation{a11y.NewStringExpectation("9 equal signs")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("9 equal signs")},
 		},
 		{
 			nextObject,
-			[]a11y.SpeechExpectation{a11y.NewStringExpectation("bullet bullet bullet")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("bullet bullet bullet")},
 		},
 		{
 			nextObject,
-			[]a11y.SpeechExpectation{a11y.NewStringExpectation("3 bullets")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("3 bullets")},
 		},
 		{
 			nextObject,
-			[]a11y.SpeechExpectation{a11y.NewStringExpectation("C plus plus")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("C plus plus")},
 		},
 		{
 			nextObject,
-			[]a11y.SpeechExpectation{a11y.NewStringExpectation("C 3 plus signs")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("C 3 plus signs")},
 		},
 		{
 			nextObject,
-			[]a11y.SpeechExpectation{a11y.NewStringExpectation("pound sterling and pound symbol")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("pound sterling and pound symbol")},
 		},
 		{
 			nextObject,
-			[]a11y.SpeechExpectation{a11y.NewStringExpectation("pound sterling pound sterling pound sterling")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("pound sterling pound sterling pound sterling")},
 		},
 		{
 			nextObject,
-			[]a11y.SpeechExpectation{a11y.NewStringExpectation("C--")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("C--")},
 		},
 		{
 			nextObject,
-			[]a11y.SpeechExpectation{a11y.NewStringExpectation("x, y.")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("x, y.")},
 		},
 		{
 			nextObject,
-			[]a11y.SpeechExpectation{a11y.NewStringExpectation("quote That's all, folks! quote")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("quote That's all, folks! quote")},
 		},
 		{
 			nextObject,
-			[]a11y.SpeechExpectation{a11y.NewStringExpectation("quote dollar 1,234.56 (plus tax) for 78 percent of your pound 2 pencils? quote , they mused")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("quote dollar 1,234.56 (plus tax) for 78 percent of your pound 2 pencils? quote , they mused")},
 		},
 		{
 			cyclePunctuationMode,
-			[]a11y.SpeechExpectation{a11y.NewStringExpectation("All punctuation")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("All punctuation")},
 		},
 		{
 			nextObject,
-			[]a11y.SpeechExpectation{a11y.NewStringExpectation("x comma y dot")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("x comma y dot")},
 		},
 		{
 			nextObject,
-			[]a11y.SpeechExpectation{a11y.NewStringExpectation("quote That apostrophe' s all comma folks exclamation! quote")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("quote That apostrophe' s all comma folks exclamation! quote")},
 		},
 		{
 			nextObject,
-			[]a11y.SpeechExpectation{a11y.NewStringExpectation("quote dollar 1 comma 234 dot 56 open paren plus tax close paren for 78 percent of your pound 2 pencils question mark? quote comma they mused")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("quote dollar 1 comma 234 dot 56 open paren plus tax close paren for 78 percent of your pound 2 pencils question mark? quote comma they mused")},
 		},
 		{
 			cyclePunctuationMode,
-			[]a11y.SpeechExpectation{a11y.NewStringExpectation("No punctuation")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("No punctuation")},
 		},
 		{
 			nextObject,
-			[]a11y.SpeechExpectation{a11y.NewStringExpectation("x, y.")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("x, y.")},
 		},
 		{
 			nextObject,
-			[]a11y.SpeechExpectation{a11y.NewStringExpectation("That's all, folks!")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("That's all, folks!")},
 		},
 		{
 			nextObject,
-			[]a11y.SpeechExpectation{a11y.NewStringExpectation("1,234.56 plus tax for 78% of your 2 pencils? , they mused")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("1,234.56 plus tax for 78% of your 2 pencils? , they mused")},
 		},
 		{
 			cyclePunctuationMode,
-			[]a11y.SpeechExpectation{a11y.NewStringExpectation("Some punctuation")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("Some punctuation")},
 		},
 	}
 	for _, step := range testSteps {
-		if err := a11y.PressKeysAndConsumeExpectations(cvData.Context(), cvData.SpeechMonitor(), step.keyCommands, step.expectations); err != nil {
+		if err := tts.PressKeysAndConsumeExpectations(cvData.Context(), cvData.SpeechMonitor(), step.keyCommands, step.expectations); err != nil {
 			s.Error("Error when pressing keys and expecting speech: ", err)
 		}
 	}

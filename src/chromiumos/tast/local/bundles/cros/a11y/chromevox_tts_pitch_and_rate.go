@@ -7,8 +7,8 @@ package a11y
 import (
 	"context"
 
-	"chromiumos/tast/local/a11y"
 	"chromiumos/tast/local/a11y/chromevox"
+	"chromiumos/tast/local/a11y/tts"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/testing"
@@ -44,8 +44,8 @@ func ChromevoxTTSPitchAndRate(ctx context.Context, s *testing.State) {
 		<textarea value="text"></textarea>
 		<p>goodbye</p>`
 
-	vd := a11y.GoogleTTSEnUsVoice()
-	ed := a11y.GoogleTTSEngine()
+	vd := tts.GoogleTTSEnUsVoice()
+	ed := tts.GoogleTTSEngine()
 	cvData, err := chromevox.SetUp(ctx, cr, vd, ed, bt, html)
 	if err != nil {
 		s.Fatal("Failed to set up ChromeVox: ", err)
@@ -66,95 +66,95 @@ func ChromevoxTTSPitchAndRate(ctx context.Context, s *testing.State) {
 
 	testSteps := []struct {
 		keyCommands  []string
-		expectations []a11y.SpeechExpectation
+		expectations []tts.SpeechExpectation
 	}{
 		{
 			[]string{nextObject},
-			[]a11y.SpeechExpectation{a11y.NewOptionsExpectation("hi", lang, 1.0, 1.0)},
+			[]tts.SpeechExpectation{tts.NewOptionsExpectation("hi", lang, 1.0, 1.0)},
 		},
 		// Pitch is lowered for announcements.
 		{
 			[]string{increasePitch, increasePitch},
-			[]a11y.SpeechExpectation{a11y.NewOptionsExpectation("Pitch 50 percent", lang, .85, 1.0),
-				a11y.NewOptionsExpectation("Pitch 56 percent", lang, .95, 1.0)},
+			[]tts.SpeechExpectation{tts.NewOptionsExpectation("Pitch 50 percent", lang, .85, 1.0),
+				tts.NewOptionsExpectation("Pitch 56 percent", lang, .95, 1.0)},
 		},
 		{
 			[]string{nextObject},
-			[]a11y.SpeechExpectation{a11y.NewOptionsExpectation("high", lang, 1.2, 1.0)},
+			[]tts.SpeechExpectation{tts.NewOptionsExpectation("high", lang, 1.2, 1.0)},
 		},
 		{
 			[]string{decreasePitch, decreasePitch},
-			[]a11y.SpeechExpectation{a11y.NewOptionsExpectation("Pitch 50 percent", lang, .85, 1.0),
-				a11y.NewOptionsExpectation("Pitch 44 percent", lang, .75, 1.0)},
+			[]tts.SpeechExpectation{tts.NewOptionsExpectation("Pitch 50 percent", lang, .85, 1.0),
+				tts.NewOptionsExpectation("Pitch 44 percent", lang, .75, 1.0)},
 		},
 		{
 			[]string{nextObject},
-			[]a11y.SpeechExpectation{a11y.NewOptionsExpectation("normal", lang, 1, 1.0)},
+			[]tts.SpeechExpectation{tts.NewOptionsExpectation("normal", lang, 1, 1.0)},
 		},
 		{
 			[]string{decreasePitch},
-			[]a11y.SpeechExpectation{a11y.NewOptionsExpectation("Pitch 39 percent", lang, .65, 1.0)},
+			[]tts.SpeechExpectation{tts.NewOptionsExpectation("Pitch 39 percent", lang, .65, 1.0)},
 		},
 		{
 			[]string{nextObject},
-			[]a11y.SpeechExpectation{a11y.NewOptionsExpectation("low", lang, .9, 1.0)},
+			[]tts.SpeechExpectation{tts.NewOptionsExpectation("low", lang, .9, 1.0)},
 		},
 		{
 			[]string{increaseRate, increaseRate},
-			[]a11y.SpeechExpectation{a11y.NewOptionsExpectation("Rate 19 percent", lang, .65, 1.1),
-				a11y.NewOptionsExpectation("Rate 21 percent", lang, .65, 1.2)},
+			[]tts.SpeechExpectation{tts.NewOptionsExpectation("Rate 19 percent", lang, .65, 1.1),
+				tts.NewOptionsExpectation("Rate 21 percent", lang, .65, 1.2)},
 		},
 		{
 			[]string{nextObject},
-			[]a11y.SpeechExpectation{a11y.NewOptionsExpectation("fast", lang, .9, 1.2)},
+			[]tts.SpeechExpectation{tts.NewOptionsExpectation("fast", lang, .9, 1.2)},
 		},
 		{
 			[]string{decreaseRate, decreaseRate},
-			[]a11y.SpeechExpectation{a11y.NewOptionsExpectation("Rate 19 percent", lang, .65, 1.1),
-				a11y.NewOptionsExpectation("Rate 17 percent", lang, .65, 1)},
+			[]tts.SpeechExpectation{tts.NewOptionsExpectation("Rate 19 percent", lang, .65, 1.1),
+				tts.NewOptionsExpectation("Rate 17 percent", lang, .65, 1)},
 		},
 		{
 			[]string{nextObject},
-			[]a11y.SpeechExpectation{a11y.NewOptionsExpectation("normal", lang, .9, 1)},
+			[]tts.SpeechExpectation{tts.NewOptionsExpectation("normal", lang, .9, 1)},
 		},
 		{
 			[]string{decreaseRate},
-			[]a11y.SpeechExpectation{a11y.NewOptionsExpectation("Rate 15 percent", lang, .65, .9)},
+			[]tts.SpeechExpectation{tts.NewOptionsExpectation("Rate 15 percent", lang, .65, .9)},
 		},
 		{
 			[]string{nextObject},
-			[]a11y.SpeechExpectation{a11y.NewOptionsExpectation("slow", lang, .9, .9)},
+			[]tts.SpeechExpectation{tts.NewOptionsExpectation("slow", lang, .9, .9)},
 		},
 		{
 			[]string{nextObject},
-			[]a11y.SpeechExpectation{a11y.NewOptionsExpectation("Text area", lang, .7, .9)},
+			[]tts.SpeechExpectation{tts.NewOptionsExpectation("Text area", lang, .7, .9)},
 		},
 		{
 			[]string{"c", "a", "t"},
-			[]a11y.SpeechExpectation{a11y.NewOptionsExpectation("C", lang, .9, .9),
-				a11y.NewOptionsExpectation("A", lang, .9, .9),
-				a11y.NewOptionsExpectation("T", lang, .9, .9)},
+			[]tts.SpeechExpectation{tts.NewOptionsExpectation("C", lang, .9, .9),
+				tts.NewOptionsExpectation("A", lang, .9, .9),
+				tts.NewOptionsExpectation("T", lang, .9, .9)},
 		},
 		// Pitch is lowered to delete characters.
 		{
 			[]string{"Backspace"},
-			[]a11y.SpeechExpectation{a11y.NewOptionsExpectation("T", lang, .3, .9)},
+			[]tts.SpeechExpectation{tts.NewOptionsExpectation("T", lang, .3, .9)},
 		},
 		{
 			[]string{"Backspace"},
-			[]a11y.SpeechExpectation{a11y.NewOptionsExpectation("A", lang, .3, .9)},
+			[]tts.SpeechExpectation{tts.NewOptionsExpectation("A", lang, .3, .9)},
 		},
 		{
 			[]string{resetTtsSettings},
-			[]a11y.SpeechExpectation{a11y.NewRegexExpectation("Reset text to speech settings*")},
+			[]tts.SpeechExpectation{tts.NewRegexExpectation("Reset text to speech settings*")},
 		},
 		{
 			[]string{nextObject},
-			[]a11y.SpeechExpectation{a11y.NewOptionsExpectation("goodbye", lang, 1, 1)},
+			[]tts.SpeechExpectation{tts.NewOptionsExpectation("goodbye", lang, 1, 1)},
 		},
 	}
 	for _, step := range testSteps {
-		if err := a11y.PressKeysAndConsumeExpectations(cvData.Context(), cvData.SpeechMonitor(), step.keyCommands, step.expectations); err != nil {
+		if err := tts.PressKeysAndConsumeExpectations(cvData.Context(), cvData.SpeechMonitor(), step.keyCommands, step.expectations); err != nil {
 			s.Error("Error when pressing keys and expecting speech: ", err)
 		}
 	}

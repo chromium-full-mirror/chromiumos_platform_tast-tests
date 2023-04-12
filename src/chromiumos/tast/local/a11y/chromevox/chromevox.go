@@ -12,6 +12,7 @@ import (
 
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/a11y"
+	"chromiumos/tast/local/a11y/tts"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -42,8 +43,8 @@ var OpenOptionsPage = []string{
 
 // VoiceData contains context about voice, language, and TTS engine data to use for a given ChromeVox instance.
 type VoiceData struct {
-	VoiceData  a11y.VoiceData
-	EngineData a11y.TTSEngineData
+	VoiceData  tts.VoiceData
+	EngineData tts.EngineData
 }
 
 // Conn represents a connection to the ChromeVox background page.
@@ -111,7 +112,7 @@ func (data SetUpData) Context() context.Context {
 }
 
 // SpeechMonitor is a convenience method for accessing a SpeechMonitor.
-func (data SetUpData) SpeechMonitor() *a11y.SpeechMonitor {
+func (data SetUpData) SpeechMonitor() *tts.SpeechMonitor {
 	return data.TTSData.SM
 }
 
@@ -122,7 +123,7 @@ func (data SetUpData) TearDown() error {
 
 // SetUp executes common ChromeVox setup code. Returns a SetUpData - see the
 // documentation for SetUpData for information on proper cleanup.
-func SetUp(ctx context.Context, cr *chrome.Chrome, vd a11y.VoiceData, ed a11y.TTSEngineData, bt browser.Type, html string) (setUpData SetUpData, e error) {
+func SetUp(ctx context.Context, cr *chrome.Chrome, vd tts.VoiceData, ed tts.EngineData, bt browser.Type, html string) (setUpData SetUpData, e error) {
 	// Tears down ChromeVox if SetUp encountered an error.
 	defer func() {
 		if e != nil {
@@ -210,8 +211,8 @@ func (cv *Conn) WaitForFocusedNode(ctx context.Context, tconn *chrome.TestConn, 
 
 // SetVoice sets the ChromeVox's voice, which is specified by using an extension
 // ID and a locale.
-func (cv *Conn) SetVoice(ctx context.Context, vd a11y.VoiceData) error {
-	voices, err := a11y.Voices(ctx, cv.Conn)
+func (cv *Conn) SetVoice(ctx context.Context, vd tts.VoiceData) error {
+	voices, err := tts.Voices(ctx, cv.Conn)
 	if err != nil {
 		return errors.Wrap(err, "failed to getVoices")
 	}

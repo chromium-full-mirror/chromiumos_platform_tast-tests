@@ -7,8 +7,8 @@ package a11y
 import (
 	"context"
 
-	"chromiumos/tast/local/a11y"
 	"chromiumos/tast/local/a11y/chromevox"
+	"chromiumos/tast/local/a11y/tts"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/testing"
@@ -43,8 +43,8 @@ func ChromevoxTTSProcessingWhitespace(ctx context.Context, s *testing.State) {
 
 	bt := s.Param().(browser.Type)
 	html := "<textarea></textarea>"
-	vd := a11y.GoogleTTSEnUsVoice()
-	ed := a11y.GoogleTTSEngine()
+	vd := tts.GoogleTTSEnUsVoice()
+	ed := tts.GoogleTTSEngine()
 	cvData, err := chromevox.SetUp(ctx, cr, vd, ed, bt, html)
 	if err != nil {
 		s.Fatal("Failed to set up ChromeVox: ", err)
@@ -57,28 +57,28 @@ func ChromevoxTTSProcessingWhitespace(ctx context.Context, s *testing.State) {
 
 	testSteps := []struct {
 		keyCommands  []string
-		expectations []a11y.SpeechExpectation
+		expectations []tts.SpeechExpectation
 	}{
 		{
 			[]string{"Search+Right"},
-			[]a11y.SpeechExpectation{a11y.NewStringExpectation("Text area")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("Text area")},
 		},
 		{
 			[]string{"Space"},
-			[]a11y.SpeechExpectation{a11y.NewStringExpectation("space")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("space")},
 		},
 		{
 			[]string{"Enter"},
-			[]a11y.SpeechExpectation{a11y.NewStringExpectation("new line")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("new line")},
 		},
 		{
 			[]string{"Backspace", "Backspace"},
-			[]a11y.SpeechExpectation{a11y.NewOptionsExpectation(", deleted", "en-US", .4, 1.0)},
+			[]tts.SpeechExpectation{tts.NewOptionsExpectation(", deleted", "en-US", .4, 1.0)},
 		},
 	}
 
 	for _, step := range testSteps {
-		if err := a11y.PressKeysAndConsumeExpectations(cvData.Context(), cvData.SpeechMonitor(), step.keyCommands, step.expectations); err != nil {
+		if err := tts.PressKeysAndConsumeExpectations(cvData.Context(), cvData.SpeechMonitor(), step.keyCommands, step.expectations); err != nil {
 			s.Error("Error when pressing keys and expecting speech: ", err)
 		}
 	}

@@ -9,8 +9,8 @@ package a11y
 import (
 	"context"
 
-	"chromiumos/tast/local/a11y"
 	"chromiumos/tast/local/a11y/chromevox"
+	"chromiumos/tast/local/a11y/tts"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/testing"
@@ -38,8 +38,8 @@ func init() {
 			Fixture: "chromeLoggedIn",
 			Val: testParam{
 				testData: chromevox.VoiceData{
-					VoiceData:  a11y.GoogleTTSEnUsVoice(),
-					EngineData: a11y.GoogleTTSEngine(),
+					VoiceData:  tts.GoogleTTSEnUsVoice(),
+					EngineData: tts.GoogleTTSEngine(),
 				},
 				browserType: browser.TypeAsh,
 			},
@@ -48,8 +48,8 @@ func init() {
 			Fixture: "chromeLoggedIn",
 			Val: testParam{
 				testData: chromevox.VoiceData{
-					VoiceData:  a11y.EspeakElVoice(),
-					EngineData: a11y.EspeakEngine(),
+					VoiceData:  tts.EspeakElVoice(),
+					EngineData: tts.EspeakEngine(),
 				},
 				browserType: browser.TypeAsh,
 			},
@@ -59,8 +59,8 @@ func init() {
 			ExtraSoftwareDeps: []string{"lacros"},
 			Val: testParam{
 				testData: chromevox.VoiceData{
-					VoiceData:  a11y.GoogleTTSEnUsVoice(),
-					EngineData: a11y.GoogleTTSEngine(),
+					VoiceData:  tts.GoogleTTSEnUsVoice(),
+					EngineData: tts.GoogleTTSEngine(),
 				},
 				browserType: browser.TypeLacros,
 			},
@@ -70,8 +70,8 @@ func init() {
 			ExtraSoftwareDeps: []string{"lacros"},
 			Val: testParam{
 				testData: chromevox.VoiceData{
-					VoiceData:  a11y.EspeakElVoice(),
-					EngineData: a11y.EspeakEngine(),
+					VoiceData:  tts.EspeakElVoice(),
+					EngineData: tts.EspeakEngine(),
 				},
 				browserType: browser.TypeLacros,
 			},
@@ -97,40 +97,40 @@ func Chromevox(ctx context.Context, s *testing.State) {
 
 	testSteps := []struct {
 		KeyCommands  []string
-		Expectations []a11y.SpeechExpectation
+		Expectations []tts.SpeechExpectation
 	}{
 		{
 			[]string{chromevox.NextObject},
-			[]a11y.SpeechExpectation{a11y.NewStringExpectation("Start")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("Start")},
 		},
 		{
 			[]string{chromevox.NextObject},
-			[]a11y.SpeechExpectation{a11y.NewStringExpectation("This is a ChromeVox test")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("This is a ChromeVox test")},
 		},
 		{
 			[]string{chromevox.NextObject},
-			[]a11y.SpeechExpectation{a11y.NewStringExpectation("End")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("End")},
 		},
 		{
 			[]string{chromevox.PreviousObject},
-			[]a11y.SpeechExpectation{a11y.NewStringExpectation("This is a ChromeVox test")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("This is a ChromeVox test")},
 		},
 		{
 			[]string{chromevox.PreviousObject},
-			[]a11y.SpeechExpectation{a11y.NewStringExpectation("Start")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("Start")},
 		},
 		{
 			[]string{chromevox.JumpToLauncher},
-			[]a11y.SpeechExpectation{a11y.NewRegexExpectation("(Launcher|Back)")},
+			[]tts.SpeechExpectation{tts.NewRegexExpectation("(Launcher|Back)")},
 		},
 		{
 			[]string{chromevox.JumpToStatusTray},
-			[]a11y.SpeechExpectation{a11y.NewRegexExpectation("Quick Settings*")},
+			[]tts.SpeechExpectation{tts.NewRegexExpectation("Quick Settings*")},
 		},
 	}
 
 	for _, step := range testSteps {
-		if err := a11y.PressKeysAndConsumeExpectations(cvData.Context(), cvData.SpeechMonitor(), step.KeyCommands, step.Expectations); err != nil {
+		if err := tts.PressKeysAndConsumeExpectations(cvData.Context(), cvData.SpeechMonitor(), step.KeyCommands, step.Expectations); err != nil {
 			s.Error("Error when pressing keys and expecting speech: ", err)
 		}
 	}
