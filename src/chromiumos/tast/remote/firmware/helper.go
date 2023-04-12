@@ -1256,6 +1256,11 @@ func (h *Helper) pressPowerSequenceToOpenCCD(ctx context.Context, openNoTPMWipe 
 
 // CheckUSBOnServoHost checks if there is any usb device connected to the host and gets its path.
 func (h *Helper) CheckUSBOnServoHost(ctx context.Context) (string, error) {
+	if ok, err := h.Servo.HasControl(ctx, string(servo.ImageUSBKeyDirection)); err != nil {
+		return "", errors.Wrap(err, "failed to talk to servod")
+	} else if !ok {
+		return "", errors.New("Servo with USB stick required")
+	}
 	testing.ContextLog(ctx, "Validating image usbkey on servo")
 	// Power cycling the USB key helps to make it visible to the host.
 	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
