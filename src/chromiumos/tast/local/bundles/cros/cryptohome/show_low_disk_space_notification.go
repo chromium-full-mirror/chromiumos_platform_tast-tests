@@ -27,7 +27,12 @@ func init() {
 			"vsavu@google.com",     // Test author
 			"gwendal@chromium.com", // Lead for ChromeOS Storage
 		},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+		},
 		SoftwareDeps: []string{"chrome"},
 		Pre:          chrome.LoggedIn(),
 	})

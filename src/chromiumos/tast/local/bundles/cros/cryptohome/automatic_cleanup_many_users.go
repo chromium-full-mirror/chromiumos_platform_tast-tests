@@ -35,10 +35,15 @@ func init() {
 			"gwendal@chromium.com", // Lead for ChromeOS Storage
 		},
 		Params: []testing.Param{{
-			Name:      "5_users",
-			Val:       5,
-			ExtraAttr: []string{"group:mainline", "informational"},
-			Timeout:   3 * time.Minute,
+			Name: "5_users",
+			Val:  5,
+			ExtraAttr: []string{
+				"group:golden_tier",
+				"group:medium_low_tier",
+				"group:hardware",
+				"group:complementary",
+			},
+			Timeout: 3 * time.Minute,
 		}, {
 			Name:      "20_users",
 			Val:       20,
