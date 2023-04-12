@@ -35,7 +35,7 @@ func init() {
 		BugComponent: "b:187682",
 		Timeout:      10 * time.Minute,
 		Attr: []string{
-			"group:mainline", "informational",
+			"group:video_conference", "video_conference_per_build",
 		},
 		Fixture:      fixture.LoggedInWithFakeHALAndEffectsEnabled,
 		SoftwareDeps: []string{"chrome", "camera_feature_effects"},

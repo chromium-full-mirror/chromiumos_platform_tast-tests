@@ -33,7 +33,7 @@ func init() {
 				// This binary is installed from cros-camera-effects-sm-tests
 				// into /usr/local/bin/.
 				ExtraAttr: []string{
-					"group:mainline", "informational",
+					"group:video_conference", "video_conference_per_build",
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("betty")),
 				Val:               []string{"cros_effects_sm_tests"},

@@ -40,7 +40,7 @@ func init() {
 		BugComponent: "b:187682",
 		Timeout:      5 * time.Minute,
 		Attr: []string{
-			"group:mainline", "informational", "group:ml_service",
+			"group:video_conference", "video_conference_per_build", "group:ml_service",
 		},
 		SoftwareDeps: []string{"chrome", "camera_feature_effects"},
 		VarDeps: []string{
