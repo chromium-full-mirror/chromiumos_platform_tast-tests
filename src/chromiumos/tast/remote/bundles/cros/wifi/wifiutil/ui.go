@@ -65,7 +65,7 @@ func JoinWifiFromQuickSettings(ctx context.Context, conn *grpc.ClientConn, secur
 		return cleanup, errors.Wrap(err, `failed to open "Join Wi-Fi network" dialog`)
 	}
 
-	if err := CompleteJoinWiFiDialog(ctx, conn, securityOption, ssid, password); err != nil {
+	if err := CompleteJoinWiFiDialog(ctx, conn, securityOption, ssid, password, false /*skipSecurityComboBox*/); err != nil {
 		return cleanup, errors.Wrap(err, `failed to join Wi-Fi`)
 	}
 
@@ -85,7 +85,7 @@ func JoinWifiFromOSSettings(ctx context.Context, conn *grpc.ClientConn, security
 		return cleanup, errors.Wrap(err, `failed to open "Join Wi-Fi network" dialog`)
 	}
 
-	if err := CompleteJoinWiFiDialog(ctx, conn, securityOption, ssid, password); err != nil {
+	if err := CompleteJoinWiFiDialog(ctx, conn, securityOption, ssid, password, false /*skipSecurityComboBox*/); err != nil {
 		return cleanup, errors.Wrap(err, `failed to join Wi-Fi`)
 	}
 
@@ -169,7 +169,7 @@ func OpenJoinWiFiDialogFromOSSettings(ctx context.Context, conn *grpc.ClientConn
 }
 
 // CompleteJoinWiFiDialog completes the setups in "Join Wi-Fi network" dialog.
-func CompleteJoinWiFiDialog(ctx context.Context, conn *grpc.ClientConn, securityOption WifiSecurityOption, ssid, password string) (retErr error) {
+func CompleteJoinWiFiDialog(ctx context.Context, conn *grpc.ClientConn, securityOption WifiSecurityOption, ssid, password string, skipSecurityComboBox bool) (retErr error) {
 	uiauto := ui.NewAutomationServiceClient(conn)
 	if _, err := uiauto.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: JoinWiFiNetworkDialogFinder}); err != nil {
 		return errors.Wrap(err, `failed to find the "Join Wi-Fi network" dialog`)
@@ -182,14 +182,16 @@ func CompleteJoinWiFiDialog(ctx context.Context, conn *grpc.ClientConn, security
 	}
 
 	if securityOption != SecurityOptionNone {
-		securityComboBoxSelect := ui.Node().Name("Security").Role(ui.Role_ROLE_COMBO_BOX_SELECT).Ancestor(JoinWiFiNetworkDialogFinder).Finder()
-		if _, err := uiauto.LeftClick(ctx, &ui.LeftClickRequest{Finder: securityComboBoxSelect}); err != nil {
-			return errors.Wrap(err, "failed to click the security combo-box")
-		}
+		if !skipSecurityComboBox {
+			securityComboBoxSelect := ui.Node().Name("Security").Role(ui.Role_ROLE_COMBO_BOX_SELECT).Ancestor(JoinWiFiNetworkDialogFinder).Finder()
+			if _, err := uiauto.LeftClick(ctx, &ui.LeftClickRequest{Finder: securityComboBoxSelect}); err != nil {
+				return errors.Wrap(err, "failed to click the security combo-box")
+			}
 
-		wifiTypeListOption := ui.Node().Name(string(securityOption)).Role(ui.Role_ROLE_LIST_BOX_OPTION).Ancestor(JoinWiFiNetworkDialogFinder).Finder()
-		if _, err := uiauto.LeftClick(ctx, &ui.LeftClickRequest{Finder: wifiTypeListOption}); err != nil {
-			return errors.Wrap(err, "failed to click list option")
+			wifiTypeListOption := ui.Node().Name(string(securityOption)).Role(ui.Role_ROLE_LIST_BOX_OPTION).Ancestor(JoinWiFiNetworkDialogFinder).Finder()
+			if _, err := uiauto.LeftClick(ctx, &ui.LeftClickRequest{Finder: wifiTypeListOption}); err != nil {
+				return errors.Wrap(err, "failed to click list option")
+			}
 		}
 
 		passwordField := ui.Node().Name("Password").Role(ui.Role_ROLE_TEXT_FIELD).Ancestor(JoinWiFiNetworkDialogFinder).Finder()

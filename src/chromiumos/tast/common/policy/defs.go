@@ -18748,37 +18748,6 @@ func (p *ForcedLanguages) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
-// 841. CECPQ2Enabled
-// This policy can be modified without rebooting.
-// ****************************************************************************
-type CECPQ2Enabled struct {
-	Stat Status
-	Val  bool
-}
-
-func (p *CECPQ2Enabled) Name() string          { return "CECPQ2Enabled" }
-func (p *CECPQ2Enabled) Scope() Scope          { return ScopeUser }
-func (p *CECPQ2Enabled) Status() Status        { return p.Stat }
-func (p *CECPQ2Enabled) UntypedV() interface{} { return p.Val }
-func (p *CECPQ2Enabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v bool
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as bool", m)
-	}
-	return v, nil
-}
-func (p *CECPQ2Enabled) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *CECPQ2Enabled) Equal(iface interface{}) bool {
-	v, ok := iface.(bool)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
 // 842. HeadlessMode
 // This is a future policy, it is not present in stable builds.
 // ****************************************************************************
@@ -22642,6 +22611,7 @@ func (p *OnFileTransferEnterpriseConnector) Equal(iface interface{}) bool {
 
 // ****************************************************************************
 // 992. ChromeRootStoreEnabled
+// This policy can be modified without rebooting.
 // This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type ChromeRootStoreEnabled struct {
@@ -25051,7 +25021,6 @@ func (p *RealTimeDownloadProtectionRequestAllowed) Equal(iface interface{}) bool
 // ****************************************************************************
 // 1085. MandatoryExtensionsForIncognitoNavigation
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type MandatoryExtensionsForIncognitoNavigation struct {
 	Stat Status
@@ -25365,6 +25334,72 @@ func (p *AppLaunchAutomation) SetProto(m *protoreflect.Message) {
 }
 func (p *AppLaunchAutomation) Equal(iface interface{}) bool {
 	v, ok := iface.([]*AppLaunchAutomationValue)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1095. InsecureHashesInTLSHandshakesEnabled
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type InsecureHashesInTLSHandshakesEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *InsecureHashesInTLSHandshakesEnabled) Name() string {
+	return "InsecureHashesInTLSHandshakesEnabled"
+}
+func (p *InsecureHashesInTLSHandshakesEnabled) Scope() Scope          { return ScopeUser }
+func (p *InsecureHashesInTLSHandshakesEnabled) Status() Status        { return p.Stat }
+func (p *InsecureHashesInTLSHandshakesEnabled) UntypedV() interface{} { return p.Val }
+func (p *InsecureHashesInTLSHandshakesEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *InsecureHashesInTLSHandshakesEnabled) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *InsecureHashesInTLSHandshakesEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1096. DeviceLoginScreenGeolocationAccessLevel
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type DeviceLoginScreenGeolocationAccessLevel struct {
+	Stat Status
+	Val  int
+}
+
+func (p *DeviceLoginScreenGeolocationAccessLevel) Name() string {
+	return "DeviceLoginScreenGeolocationAccessLevel"
+}
+func (p *DeviceLoginScreenGeolocationAccessLevel) Scope() Scope          { return ScopeDevice }
+func (p *DeviceLoginScreenGeolocationAccessLevel) Status() Status        { return p.Stat }
+func (p *DeviceLoginScreenGeolocationAccessLevel) UntypedV() interface{} { return p.Val }
+func (p *DeviceLoginScreenGeolocationAccessLevel) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v int
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as int", m)
+	}
+	return v, nil
+}
+func (p *DeviceLoginScreenGeolocationAccessLevel) SetProto(m *protoreflect.Message) {
+	SetDeviceProto(m, "device_login_screen_geolocation_access_level", "geolocation_access_level", p.Val)
+}
+func (p *DeviceLoginScreenGeolocationAccessLevel) Equal(iface interface{}) bool {
+	v, ok := iface.(int)
 	if !ok {
 		return ok
 	}
@@ -26530,8 +26565,6 @@ func newByName(name string) (Policy, error) {
 		return &SerialAllowUsbDevicesForUrls{}, nil
 	case "ForcedLanguages":
 		return &ForcedLanguages{}, nil
-	case "CECPQ2Enabled":
-		return &CECPQ2Enabled{}, nil
 	case "HeadlessMode":
 		return &HeadlessMode{}, nil
 	case "WebRtcIPHandling":
@@ -26936,6 +26969,10 @@ func newByName(name string) (Policy, error) {
 		return &FileOrDirectoryPickerWithoutGestureAllowedForOrigins{}, nil
 	case "AppLaunchAutomation":
 		return &AppLaunchAutomation{}, nil
+	case "InsecureHashesInTLSHandshakesEnabled":
+		return &InsecureHashesInTLSHandshakesEnabled{}, nil
+	case "DeviceLoginScreenGeolocationAccessLevel":
+		return &DeviceLoginScreenGeolocationAccessLevel{}, nil
 	default:
 		return nil, errors.New("Unknown policy " + name)
 	}
@@ -26945,15 +26982,20 @@ func newByName(name string) (Policy, error) {
 // Reference values (used via '$ref' in JSON Schema).
 // ****************************************************************************
 
-type RefDayPercentagePair struct {
-	Days       int `json:"days"`
-	Percentage int `json:"percentage"`
+type RefTimeUsageLimitEntry struct {
+	LastUpdatedMillis string `json:"last_updated_millis"`
+	UsageQuotaMins    int    `json:"usage_quota_mins"`
 }
 
-type RefDisallowedTimeInterval struct {
-	DayOfWeek string `json:"day_of_week"`
-	Hours     int    `json:"hours"`
-	Minutes   int    `json:"minutes"`
+type RefTime struct {
+	Hour   int `json:"hour"`
+	Minute int `json:"minute"`
+}
+
+type RefConfig struct {
+	AccessCodeTtl       int    `json:"access_code_ttl"`
+	ClockDriftTolerance int    `json:"clock_drift_tolerance"`
+	SharedSecret        string `json:"shared_secret"`
 }
 
 type RefPowerManagementDelays struct {
@@ -26968,9 +27010,35 @@ type RefPowerManagementDelaysDelays struct {
 	ScreenOff   int `json:"ScreenOff"`
 }
 
-type RefUsbDeviceIdInclusive struct {
+type RefDeviceLoginScreenPowerSettings struct {
+	Delays     *RefDeviceLoginScreenPowerSettingsDelays `json:"Delays"`
+	IdleAction string                                   `json:"IdleAction"`
+}
+
+type RefDeviceLoginScreenPowerSettingsDelays struct {
+	Idle      int `json:"Idle"`
+	ScreenDim int `json:"ScreenDim"`
+	ScreenOff int `json:"ScreenOff"`
+}
+
+type RefUsbDeviceId struct {
 	ProductId int `json:"product_id"`
 	VendorId  int `json:"vendor_id"`
+}
+
+type RefWeeklyTimeIntervals struct {
+	End   *RefWeeklyTime               `json:"end"`
+	Start *RefWeeklyTimeIntervalsStart `json:"start"`
+}
+
+type RefWeeklyTimeIntervalsStart struct {
+	DayOfWeek string `json:"day_of_week"`
+	Time      int    `json:"time"`
+}
+
+type RefWeeklyTime struct {
+	DayOfWeek string `json:"day_of_week"`
+	Time      int    `json:"time"`
 }
 
 type Reffile_transfer_enable_disable_schema struct {
@@ -26991,19 +27059,9 @@ type Reffile_transfer_source_destination_schema struct {
 	FileSystemType string `json:"file_system_type"`
 }
 
-type RefWeeklyTimeIntervals struct {
-	End   *RefWeeklyTime               `json:"end"`
-	Start *RefWeeklyTimeIntervalsStart `json:"start"`
-}
-
-type RefWeeklyTimeIntervalsStart struct {
-	DayOfWeek string `json:"day_of_week"`
-	Time      int    `json:"time"`
-}
-
-type RefWeeklyTime struct {
-	DayOfWeek string `json:"day_of_week"`
-	Time      int    `json:"time"`
+type RefDomainFiletypePair struct {
+	Domains       []string `json:"domains,omitempty"`
+	FileExtension string   `json:"file_extension"`
 }
 
 type RefBookmarkType struct {
@@ -27013,41 +27071,20 @@ type RefBookmarkType struct {
 	Url          string             `json:"url"`
 }
 
-type RefUsbDeviceId struct {
+type RefUsbDeviceIdInclusive struct {
 	ProductId int `json:"product_id"`
 	VendorId  int `json:"vendor_id"`
 }
 
-type RefDomainFiletypePair struct {
-	Domains       []string `json:"domains,omitempty"`
-	FileExtension string   `json:"file_extension"`
+type RefDayPercentagePair struct {
+	Days       int `json:"days"`
+	Percentage int `json:"percentage"`
 }
 
-type RefDeviceLoginScreenPowerSettings struct {
-	Delays     *RefDeviceLoginScreenPowerSettingsDelays `json:"Delays"`
-	IdleAction string                                   `json:"IdleAction"`
-}
-
-type RefDeviceLoginScreenPowerSettingsDelays struct {
-	Idle      int `json:"Idle"`
-	ScreenDim int `json:"ScreenDim"`
-	ScreenOff int `json:"ScreenOff"`
-}
-
-type RefTimeUsageLimitEntry struct {
-	LastUpdatedMillis string `json:"last_updated_millis"`
-	UsageQuotaMins    int    `json:"usage_quota_mins"`
-}
-
-type RefTime struct {
-	Hour   int `json:"hour"`
-	Minute int `json:"minute"`
-}
-
-type RefConfig struct {
-	AccessCodeTtl       int    `json:"access_code_ttl"`
-	ClockDriftTolerance int    `json:"clock_drift_tolerance"`
-	SharedSecret        string `json:"shared_secret"`
+type RefDisallowedTimeInterval struct {
+	DayOfWeek string `json:"day_of_week"`
+	Hours     int    `json:"hours"`
+	Minutes   int    `json:"minutes"`
 }
 
 // ****************************************************************************
@@ -27107,10 +27144,11 @@ type ONCNetworkConfiguration struct {
 }
 
 type ONCGlobalNetworkConfiguration struct {
-	AllowOnlyPolicyNetworksToAutoconnect bool `json:"AllowOnlyPolicyNetworksToAutoconnect"`
-	AllowOnlyPolicyNetworksToConnect     bool `json:"AllowOnlyPolicyNetworksToConnect"`
-	AllowOnlyPolicyCellularNetworks      bool `json:"AllowOnlyPolicyCellularNetworks"`
-	AllowCellularSimLock                 bool `json:"AllowCellularSimLock"`
+	AllowOnlyPolicyNetworksToAutoconnect bool     `json:"AllowOnlyPolicyNetworksToAutoconnect"`
+	AllowOnlyPolicyNetworksToConnect     bool     `json:"AllowOnlyPolicyNetworksToConnect"`
+	AllowOnlyPolicyCellularNetworks      bool     `json:"AllowOnlyPolicyCellularNetworks"`
+	AllowCellularSimLock                 bool     `json:"AllowCellularSimLock"`
+	BlockedHexSSIDs                      []string `json:"BlockedHexSSIDs,omitempty"`
 }
 
 type ONC struct {
