@@ -73,8 +73,8 @@ func DeviceOpenTouchpadSubpage(ctx context.Context, s *testing.State) {
 	}
 
 	// Find Touchpad row and click it.
-	touchpadRow := nodewith.Name("Touchpad").Role(role.Link)
-	if err := ui.DoDefault(touchpadRow)(ctx); err != nil {
+	touchpadRow := nodewith.Name("Touchpad").Role(role.GenericContainer)
+	if err := ui.LeftClick(touchpadRow)(ctx); err != nil {
 		s.Fatal("Failed to click touchpad row: ", err)
 	}
 

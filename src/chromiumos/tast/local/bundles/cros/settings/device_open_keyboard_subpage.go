@@ -73,8 +73,8 @@ func DeviceOpenKeyboardSubpage(ctx context.Context, s *testing.State) {
 	}
 
 	// Find Keyboard row and click it.
-	keyboardRow := nodewith.Name("Keyboard").Role(role.Link)
-	if err := ui.DoDefault(keyboardRow)(ctx); err != nil {
+	keyboardRow := nodewith.Name("Keyboard").Role(role.GenericContainer)
+	if err := ui.LeftClick(keyboardRow)(ctx); err != nil {
 		s.Fatal("Failed to click keyboard row: ", err)
 	}
 
