@@ -231,13 +231,23 @@ func RunTablet(ctx, closeCtx context.Context, br *browser.Browser, tconn *chrome
 			return kw.Close(ctx)
 		},
 	), &retErr)
-	topRow, err := input.KeyboardTopRowLayout(ctx, kw)
-	if err != nil {
-		return errors.Wrap(err, "failed to obtain the top-row layout")
+
+	enterOverviewAndVerify := func(ctx context.Context) error {
+		topRow, err := input.KeyboardTopRowLayout(ctx, kw)
+		if err != nil {
+			return errors.Wrap(err, "failed to obtain the top-row layout")
+		}
+		waitForOverviewState := func(ctx context.Context) error {
+			return ash.WaitForOverviewState(ctx, tconn, ash.Shown, 30*time.Second)
+		}
+		return uiauto.NamedCombine("enter overview mode and verify",
+			kw.AccelAction(topRow.SelectTask),
+			waitForOverviewState,
+		)(ctx)
 	}
-	enterOverview := kw.AccelAction(topRow.SelectTask)
+
 	// Exercise split view resize functionality.
-	if err := exerciseSplitViewResize(ctx, tconn, ui, pc, enterOverview, splitViewDragPoints...); err != nil {
+	if err := exerciseSplitViewResize(ctx, tconn, ui, pc, enterOverviewAndVerify, splitViewDragPoints...); err != nil {
 		return errors.Wrap(err, "failed to exercise split view resize functionality with two browser windows")
 	}
 

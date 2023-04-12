@@ -153,7 +153,10 @@ func dragAndRestore(ctx context.Context, tconn *chrome.TestConn, pc pointer.Cont
 			if err != nil {
 				return errors.Wrapf(err, "failed to look up %q window by ID %d (the app probably crashed)", wInitial.Title, wInitial.ID)
 			}
-			if !wNow.BoundsInRoot.Equals(wInitial.BoundsInRoot) {
+			// Window widths may be adjusted by up to this amount when in split screen mode.
+			// The right and left side can vary up to half the divider thickness.
+			const splitScreenDividerHalfThickness int = 4
+			if !coords.CompareBoundsWithMargins(wInitial.BoundsInRoot, wNow.BoundsInRoot, splitScreenDividerHalfThickness, 0, splitScreenDividerHalfThickness, 0) {
 				return errors.Errorf("%q window bounds not restored; changed from %v to %v", wNow.Title, wInitial.BoundsInRoot, wNow.BoundsInRoot)
 			}
 		}
