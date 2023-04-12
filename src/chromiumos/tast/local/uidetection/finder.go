@@ -324,7 +324,7 @@ func (f *Finder) locationPx(ctx context.Context, uda *Context, scaleFactor float
 		return nil, err
 	}
 
-	response, err := uda.detector.sendDetectionRequest(ctx, imagePng, f.request, uda.resizingEnabled, TestMetadata(ctx, uda))
+	response, err := uda.detector.sendDetectionRequest(ctx, imagePng, f.request, uda.resizingEnabled, testMetadata(ctx, uda))
 	if err != nil {
 		return failure(errors.Wrap(err, "failed to resolve the UI detection request"))
 	}

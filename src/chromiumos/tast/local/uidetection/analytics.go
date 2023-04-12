@@ -20,29 +20,28 @@ import (
 
 // DeviceInfo describes the device under test.
 type DeviceInfo struct {
-	Board     string
-	Model     string
-	CrosBuild string
+	board     string
+	model     string
+	crosBuild string
 }
 
-// TestMetadata returns metadata about the current test and test device.
-func TestMetadata(ctx context.Context, uda *Context) *pb.TestMetadata {
-	// Initialise DUT info.
+// testMetadata returns metadata about the current test and test device.
+func testMetadata(ctx context.Context, uda *Context) *pb.TestMetadata {
+	// Initialize DUT info.
 	if uda.deviceInfo == nil {
 		uda.deviceInfo = fetchDeviceInfo(ctx)
 	}
 
 	baseTestName, err := baseTestName()
 	if err != nil {
-		testing.ContextLog(ctx, "INFO: couldn't find the test name for uidetection analytics: ", err)
 		baseTestName = ""
 	}
 
 	return &pb.TestMetadata{
 		TestId:    baseTestName,
-		Board:     uda.deviceInfo.Board,
-		Model:     uda.deviceInfo.Model,
-		CrosBuild: uda.deviceInfo.CrosBuild,
+		Board:     uda.deviceInfo.board,
+		Model:     uda.deviceInfo.model,
+		CrosBuild: uda.deviceInfo.crosBuild,
 	}
 }
 
@@ -59,9 +58,9 @@ func fetchDeviceInfo(ctx context.Context) *DeviceInfo {
 	}
 
 	return &DeviceInfo{
-		Board:     lsb[lsbrelease.Board],
-		Model:     modelName,
-		CrosBuild: lsb[lsbrelease.BuilderPath],
+		board:     lsb[lsbrelease.Board],
+		model:     modelName,
+		crosBuild: lsb[lsbrelease.BuilderPath],
 	}
 }
 
