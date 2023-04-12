@@ -8,6 +8,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/pci"
@@ -50,14 +51,11 @@ func init() {
 				Name: "ash",
 				Val:  kioskmode.TestData{IsLacros: false},
 			},
-			// Disable Lacros variant until b/277055167 is fixed. When the Lacros variant is enabled,
-			// consider removing the test launch_with_device_ephemeral_users_enabled.go, since all
-			// important cases will be covered by this test.
-			// {
-			// 	Name:              "lacros",
-			// 	Val:               kioskmode.TestData{IsLacros: true},
-			// 	ExtraSoftwareDeps: []string{"lacros"},
-			// },
+			{
+				Name:              "lacros",
+				Val:               kioskmode.TestData{IsLacros: true},
+				ExtraSoftwareDeps: []string{"lacros"},
+			},
 		},
 		// Timeout is (num test cases) * (num stages) * (test time)
 		Timeout: 3 * 2 * testCaseTimeout,
@@ -140,9 +138,13 @@ func EphemeralPolicies(ctx context.Context, s *testing.State) {
 					opts = append(opts, kioskmode.ExtraChromeOptions(chrome.KeepState()))
 				}
 				if isLacros {
-					opts = append(opts, kioskmode.PublicAccountPolicies(tc.AccountID, []policy.Policy{
-						&policy.LacrosAvailability{Val: "lacros_only"},
-					}))
+					// Here we have to pass lacros availabiilty for all kiosk accounts to
+					// prevent issues with data migrations.
+					for _, testCase := range testCases {
+						opts = append(opts, kioskmode.PublicAccountPolicies(testCase.AccountID, []policy.Policy{
+							&policy.LacrosAvailability{Val: "lacros_only"},
+						}))
+					}
 				}
 
 				cleanupCtx := ctx
@@ -200,6 +202,9 @@ func EphemeralPolicies(ctx context.Context, s *testing.State) {
 				}
 
 				if isLacros {
+					ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
+					defer cancel()
+
 					testing.ContextLog(ctx, "Checking if kiosk is running in Lacros")
 					tconn, err := cr.TestAPIConn(ctx)
 					if err != nil {
