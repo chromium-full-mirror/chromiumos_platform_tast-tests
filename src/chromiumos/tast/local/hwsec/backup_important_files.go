@@ -7,6 +7,7 @@ package hwsec
 import (
 	"context"
 	"os"
+	"path"
 	"strings"
 	"time"
 
@@ -18,11 +19,11 @@ import (
 	"chromiumos/tast/testing"
 )
 
-const attestationDBBackupPath = "/mnt/stateful_partition/unencrypted/preserve/attestation.epb.tast-hwsec-backup"
+const attestationDBBackupPath = "/var/lib/attestation/attestation.epb.tast-hwsec-backup"
 const tpmManagerLocalDataBackupPath = "/var/lib/tpm_manager/local_tpm_data.tast-hwsec-backup"
 
 // isTPMLocalDataIntact uses tpm_manager_client to check if local data still contains owner password,
-// which means the set of imporant secrets are still intact.
+// which means the set of important secrets are still intact.
 func isTPMLocalDataIntact(ctx context.Context) (bool, error) {
 	out, err := testexec.CommandContext(ctx, "tpm_manager_client", "status").Output()
 	if err != nil {
@@ -86,8 +87,13 @@ func RestoreTPMOwnerPasswordIfNeeded(ctx context.Context, dc *hwsec.DaemonContro
 // BackupAttestationDbWithFakeGoogleKeys backs up the attestation database.
 func BackupAttestationDbWithFakeGoogleKeys(ctx context.Context) (lastErr error) {
 	if _, err := os.Stat(attestationDBBackupPath); !os.IsNotExist(err) {
-		testing.ContextLog(ctx, "Backup exists. Skipping")
+		testing.ContextLog(ctx, "Backup db exists. Skipping")
 		return
+	}
+
+	// Create dir to backup a9n db.
+	if err := os.MkdirAll(path.Dir(attestationDBBackupPath), 0644); err != nil {
+		return errors.Wrap(err, "failed to create dir to back up attestation db")
 	}
 
 	// Initialize daemon controller.

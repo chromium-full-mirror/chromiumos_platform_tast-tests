@@ -172,6 +172,11 @@ func CheckStatefulFiles(ctx context.Context, outDir string) []error {
 			NewPattern(Tree("unencrypted/tpm_manager"), Users("tpm_manager"), Groups("tpm_manager"), NotMode(022)))
 	}
 
+	if _, err := user.Lookup("attestation"); err == nil {
+		prependPatterns(
+			NewPattern(Path("encrypted/var/lib/attestation/attestation.epb.tast-hwsec-backup"), Users("attestation"), Groups("attestation"), NotMode(077)))
+	}
+
 	if _, err := user.Lookup("tpm2-simulator"); err == nil {
 		prependPatterns(
 			NewPattern(Path("unencrypted/tpm2-simulator"), Users("tpm2-simulator"), Groups("tpm2-simulator"), NotMode(022)),
