@@ -30,7 +30,7 @@ func init() {
 		Desc:         "Verifies that the cellular device can connect with different APN configurations",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "andrewlassalle@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_amari_callbox"},
+		Attr:         []string{"group:cellular", "cellular_amari_callbox"},
 		Params: []testing.Param{{
 			Name:      "round_robin_attach_apn",
 			Val:       apnTestParam{"callbox_round_robin_attach.pbf", "callbox-ipv4", "callbox-ipv4"},
@@ -39,10 +39,12 @@ func init() {
 			Name:      "round_robin_connect_ipv4_default_attach",
 			Val:       apnTestParam{"callbox_round_robin_connect_ipv4_default_attach.pbf", "callbox-default-attach", "callbox-ipv4"},
 			ExtraData: []string{"callbox_round_robin_connect_ipv4_default_attach.pbf"},
+			ExtraAttr: []string{"cellular_unstable"},
 		}, {
 			Name:      "round_robin_connect_all_invalid_apn_errors",
 			Val:       apnTestParam{"callbox_round_robin_connect_all_invalid_apn_errors.pbf", "", "callbox-default-attach"},
 			ExtraData: []string{"callbox_round_robin_connect_all_invalid_apn_errors.pbf"},
+			ExtraAttr: []string{"cellular_unstable"},
 		}, {
 			Name:      "null_attach_ipv4v6",
 			Val:       apnTestParam{"callbox_null_attach_ipv4v6.pbf", "", "callbox-ipv4v6"},
