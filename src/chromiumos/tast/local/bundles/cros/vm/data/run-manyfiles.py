@@ -85,8 +85,10 @@ def test_create():
         os.mkdir(d)
     f_gen = file_path_generator()
     for f in f_gen:
-        with open(f, 'w+'):
-            pass
+        # Use os.open() instead of the builtin 'open()' to avoid extra syscalls.
+        fd = os.open(f, os.O_CREAT | os.O_WRONLY)
+        os.close(fd)
+
     command(['sync'])
 
 
