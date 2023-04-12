@@ -156,20 +156,24 @@ func ConvertPowerPerfValue(ctx context.Context, values *perf.Values) (map[string
 
 	MinutesBatteryLife := getMinutesBatteryLife(ctx, innerDataMap, innerAverageMap, totalDurationSec)
 	values.Set(perf.Metric{
-		Name:      "minutes_battery_life",
+		Name:      generalPerfMetricType + "minutes_battery_life",
 		Unit:      "minute",
 		Direction: perf.BiggerIsBetter,
 	}, MinutesBatteryLife)
 	innerDataMap["minutes_battery_life"] = []float64{MinutesBatteryLife}
 	innerAverageMap["minutes_battery_life"] = MinutesBatteryLife
+	typeMap["minutes_battery_life"] = "perf"
+	unitMap["minutes_battery_life"] = "minute"
 
 	values.Set(perf.Metric{
-		Name:      "minutes_battery_life_tested",
+		Name:      generalPerfMetricType + "minutes_battery_life_tested",
 		Unit:      "minute",
 		Direction: perf.BiggerIsBetter,
 	}, totalDurationSec/60.0)
 	innerDataMap["minutes_battery_life_tested"] = []float64{totalDurationSec / 60.0}
 	innerAverageMap["minutes_battery_life_tested"] = totalDurationSec / 60.0
+	typeMap["minutes_battery_life_tested"] = "perf"
+	unitMap["minutes_battery_life_tested"] = "minute"
 
 	powerDict["data"] = innerDataMap
 	powerDict["average"] = innerAverageMap
