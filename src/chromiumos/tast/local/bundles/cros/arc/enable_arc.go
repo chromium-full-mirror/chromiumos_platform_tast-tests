@@ -82,13 +82,15 @@ func turnOnPlayStore(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestC
 	if _, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, "apps", ui.Exists(playStoreButton)); err != nil {
 		return errors.Wrap(err, "failed to launch apps settings page")
 	}
-	if err := uiauto.Combine("enable Play Store",
-		ui.FocusAndWait(playStoreButton),
-		ui.LeftClick(playStoreButton),
-		ui.LeftClick(nodewith.Name("More").Role(role.Button)),
-		ui.LeftClick(nodewith.Name("Accept").Role(role.Button)),
-	)(ctx); err != nil {
-		return err
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		return uiauto.Combine("enable Play Store",
+			ui.FocusAndWait(playStoreButton),
+			ui.LeftClick(playStoreButton),
+			ui.LeftClick(nodewith.Name("More").Role(role.Button)),
+			ui.LeftClick(nodewith.Name("Accept").Role(role.Button)),
+		)(ctx)
+	}, &testing.PollOptions{Timeout: 90 * time.Second}); err != nil {
+		return errors.Wrap(err, "failed to enable Play Store")
 	}
 
 	if err := optin.WaitForPlayStoreReady(ctx, tconn); err != nil {
