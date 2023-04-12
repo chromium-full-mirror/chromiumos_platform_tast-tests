@@ -109,15 +109,11 @@ func fillTpmInformation(ctx context.Context, tcb *xdr.TcbAttributes) error {
 		return err
 	}
 
-	tcb.SecurityChip = &xdr.TcbAttributes_SecurityChip{}
-	chip := tcb.SecurityChip
-
 	status := string(out)
 	if !strings.Contains(status, "status: STATUS_SUCCESS") {
 		return errors.New("TPM status request FAILED")
 	}
 	if !strings.Contains(status, "enabled: true") {
-		chip.Kind = xdr.TcbAttributes_SecurityChip_NONE.Enum()
 		return nil
 	}
 
@@ -129,6 +125,9 @@ func fillTpmInformation(ctx context.Context, tcb *xdr.TcbAttributes) error {
 	if !strings.Contains(tpmInfo, "status: STATUS_SUCCESS") {
 		return errors.New("TPM info request FAILED")
 	}
+
+	tcb.SecurityChip = &xdr.TcbAttributes_SecurityChip{}
+	chip := tcb.SecurityChip
 
 	tpmRegexMap, err := fillTpmRegexMap()
 	if err != nil {
@@ -183,17 +182,22 @@ func fillTpmInformation(ctx context.Context, tcb *xdr.TcbAttributes) error {
 
 // getTpmValue finds the corresponding value for different tpm fields
 func getTpmValue(key, tpmInfo string, hexString bool, tpmRegexMap map[string]*regexp.Regexp) (string, error) {
-	var value string
 	re := tpmRegexMap[key]
+	matches := re.FindStringSubmatch(tpmInfo)
+	// Check that field exists.
+	if len(matches) < 2 {
+		return "", nil
+	}
 
+	var value string
 	if hexString {
-		out, err := hex.DecodeString(re.FindStringSubmatch(tpmInfo)[1])
+		out, err := hex.DecodeString(matches[1])
 		if err != nil {
 			return "", err
 		}
 		value = string(out)
 	} else {
-		value = re.FindStringSubmatch(tpmInfo)[1]
+		value = matches[1]
 	}
 
 	return value, nil
@@ -224,8 +228,8 @@ func AgentEvents(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to make expected AgentEvent proto: ", err)
 	}
 
-	// Small grace period for the events to be processed and emitted by
-	// secagentd.
+	// GoBigSleepLint: Small grace period for the events to be processed and
+	// emitted by secagentd.
 	if err := testing.Sleep(ctx, 3*time.Second); err != nil {
 		s.Fatal("Failed to sleep: ", err)
 	}
@@ -258,7 +262,9 @@ func AgentEvents(ctx context.Context, s *testing.State) {
 		}
 		agent := pe.GetAgentStart()
 		//TODO(b/254534567) Source secureboot for expected AgentStart. Copy for now.
-		expAgent.Tcb.FirmwareSecureBoot = agent.Tcb.GetFirmwareSecureBoot().Enum()
+		if agent.Tcb.FirmwareSecureBoot != nil {
+			expAgent.Tcb.FirmwareSecureBoot = agent.Tcb.GetFirmwareSecureBoot().Enum()
+		}
 		if !proto.Equal(&expAgent, agent) {
 			s.Log("Actual AgentStart: ", agent.String())
 			s.Log("Expected AgentStart: ", expAgent.String())
