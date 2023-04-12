@@ -98,9 +98,20 @@ func VPNDNS(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start dnsmasq on vpn server: ", err)
 	}
 
-	// Wait for veth to be online then start connecting to VPN
+	// Wait for veth to be online and server is reachable by IPv4 before
+	// connecting to VPN. Since in WireGuard we don't really verify the VPN
+	// connection before updating the service state to online in shill, it's
+	// possible that IPv4 underlay network is ready after that, which causes test
+	// flaky.
 	if err := testEnv.ShillService.WaitForProperty(ctx, shillconst.ServicePropertyState, shillconst.ServiceStateOnline, 10*time.Second); err != nil {
-		s.Error("Failed to wait for service online: ", err)
+		s.Fatal("Failed to wait for service online: ", err)
+	}
+	addrs, err := vpnServer.GetVethInAddrs(ctx)
+	if err != nil {
+		s.Fatal("Failed to get physical addrs from vpn env: ", err)
+	}
+	if err := ping.ExpectPingSuccessWithTimeout(ctx, addrs.IPv4Addr.String(), "root", 10*time.Second); err != nil {
+		s.Fatal("Failed to verify physical connectivity to vpn env: ", err)
 	}
 
 	conn, err := vpn.StartConnection(ctx, vpnServer,
