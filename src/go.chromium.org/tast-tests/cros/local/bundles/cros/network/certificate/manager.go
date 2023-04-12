@@ -141,7 +141,9 @@ func (m *Manager) ImportClientCert(fileName, password string, org Organization, 
 			uploadFile(m.tconn, fileName),
 			m.ui.LeftClick(certFinder.Name("Password").Role(role.TextField).Editable()),
 			kb.TypeAction(password),
-			m.ui.LeftClick(certFinder.Name("OK").Role(role.Button)),
+			// The OK button might be covered by the virtual keyboard on tablet devices.
+			// Interact with the button through DoDefault to ensure the button is clicked.
+			m.ui.DoDefault(certFinder.Name("OK").Role(role.Button)),
 			m.ui.WaitUntilExists(certFinder.Name(org.displayName()).Role(role.StaticText)),
 		)(ctx)
 	}
@@ -191,7 +193,7 @@ func (m *Manager) DeleteCert(name string, org Organization, certType CertType) u
 		m.ui.WaitUntilExists(certificateText),
 		m.clickMoreActionsButton(name),
 		m.ui.LeftClick(nodewith.Name("Delete").Role(role.MenuItem)),
-		m.ui.LeftClick(nodewith.Name("OK").Role(role.Button)),
+		m.ui.LeftClick(certFinder.Name("OK").Role(role.Button)),
 		m.ui.WaitUntilGone(certificateText),
 	)
 }
