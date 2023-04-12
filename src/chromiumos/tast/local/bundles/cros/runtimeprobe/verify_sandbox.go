@@ -100,7 +100,7 @@ func init() {
 				probeConfig: probeConfig{[]probeStatement{
 					probeStatement{"gpu"},
 				}}},
-			ExtraAttr: []string{"informational"},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}},
 	})
 }
