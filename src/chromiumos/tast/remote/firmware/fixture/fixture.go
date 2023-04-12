@@ -359,6 +359,7 @@ func (i *impl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 	}
 
 	rebootRequired := false
+	var opts []firmware.ModeSwitchOption
 	if common.GBBFlagsStatesEqual(i.value.GBBFlags, curr) {
 		s.Log("GBBFlags are already proper")
 	} else {
@@ -405,7 +406,7 @@ func (i *impl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 			}
 		}
 		if common.GBBFlagsChanged(curr, i.value.GBBFlags, common.RebootRequiredGBBFlags()) {
-			s.Log("Resetting DUT due to GBB flag change")
+			opts = append(opts, firmware.RebootForGBBFlagsChanged)
 			rebootRequired = true
 		}
 	}
@@ -416,7 +417,7 @@ func (i *impl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 	}
 
 	if rebootRequired {
-		opts := []firmware.ModeSwitchOption{firmware.AssumeGBBFlagsCorrect}
+		opts = append(opts, firmware.AssumeGBBFlagsCorrect)
 		if i.value.ForcesDevMode {
 			opts = append(opts, firmware.AllowGBBForce)
 		}
@@ -609,28 +610,7 @@ func rebootToMode(ctx context.Context, h *firmware.Helper, mode common.BootMode,
 	}
 	if err := ms.RebootToMode(ctx, mode, opts...); err != nil {
 		powerState := checkPowerState()
-		if powerState == "S0" {
-			// If the device was already in developer mode, it might be stuck at the
-			// "developer mode is already enabled" message. Rebooting with a warm reset helps.
-			testing.ContextLog(ctx, "Power-cycling DUT with a warm reset")
-			if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
-				return errors.Wrap(err, "failed to warm reset dut at S0")
-			}
-			waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
-			defer cancelWaitConnect()
-			if err := h.WaitConnect(waitConnectCtx); err != nil {
-				return errors.Wrap(err, "failed to reconnect to dut")
-			}
-			currentMode, err := h.Reporter.CurrentBootMode(ctx)
-			if err != nil {
-				return errors.Wrap(err, "failed to check for the boot mode")
-			}
-			if currentMode != mode {
-				return errors.Wrapf(err, "failed to reboot to mode %q after warm reset", mode)
-			}
-		} else {
-			return errors.Wrapf(err, "failed to reboot to mode %q, got power state %s", mode, powerState)
-		}
+		return errors.Wrapf(err, "failed to reboot to mode %q, got power state %s", mode, powerState)
 	}
 
 	return nil

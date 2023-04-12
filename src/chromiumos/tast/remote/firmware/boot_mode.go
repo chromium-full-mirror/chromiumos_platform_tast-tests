@@ -117,6 +117,11 @@ const (
 	// stuck at a firmware screen. This would happen if dev mode is disabled,
 	// for example, by the FWMP.
 	UseFwScreenToDevMode ModeSwitchOption = iota
+
+	// RebootForGBBFlagsChanged indicates that a reboot is required
+	// if gbb flags were changed. This would be helpful in mode transition by
+	// canceling gbb flag restriction first.
+	RebootForGBBFlagsChanged ModeSwitchOption = iota
 )
 
 // msOptsContain determines whether a slice of ModeSwitchOptions contains a specific Option.
@@ -132,7 +137,7 @@ func msOptsContain(opts []ModeSwitchOption, want ModeSwitchOption) bool {
 // RebootToMode reboots the DUT into the specified boot mode.
 // This has the side-effect of disconnecting the RPC client.
 // Requires `SoftwareDeps: []string{"crossystem", "flashrom"},`.
-func (ms ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMode, opts ...ModeSwitchOption) error {
+func (ms ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMode, opts ...ModeSwitchOption) (errReturn error) {
 	h := ms.Helper
 	if err := h.RequireServo(ctx); err != nil {
 		return errors.Wrap(err, "requiring servo")
@@ -162,6 +167,7 @@ func (ms ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMod
 		if err := fwCommon.ClearAndSetGBBFlags(ctx, h.DUT, &flags); err != nil {
 			return errors.Wrap(err, "setting GBB flags")
 		}
+		opts = append(opts, RebootForGBBFlagsChanged)
 	}
 
 	// When booting to a different image, such as normal vs. recovery, the new image might
@@ -185,6 +191,60 @@ func (ms ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMod
 		} else {
 			h.dutInternalStorageHasTastFiles = true
 		}
+	}
+
+	defer func() {
+		// Send Tast files back to DUT.
+		if errReturn == nil {
+			needSync := (toModeUsb != fromModeUsb) && msOptsContain(opts, CopyTastFiles)
+			if toModeUsb {
+				needSync = needSync && !h.dutUsbHasTastFiles
+			} else {
+				needSync = needSync && !h.dutInternalStorageHasTastFiles
+			}
+			if needSync {
+				if err := h.SyncTastFilesToDUT(ctx); err != nil {
+					errReturn = errors.Wrapf(err, "syncing Tast files to DUT after booting to %s", toMode)
+					return
+				}
+				if toModeUsb {
+					h.dutUsbHasTastFiles = true
+				} else {
+					h.dutInternalStorageHasTastFiles = true
+				}
+			}
+		}
+	}()
+
+	if msOptsContain(opts, RebootForGBBFlagsChanged) {
+		// If the dut was in dev mode with gbb as 0x108, and fixture.Dev wants to
+		// transition the dut from rec to dev, for gbb flag change to 0x100, some
+		// devices would get stuck at the "developer mode is already enabled" screen.
+		// Applying a warm reset would generally help, putting the dut eventually
+		// in dev mode with gbb flag set as 0x100, and satisfying the fixture.
+		// However, if the boot mode that the dut had even earlier before 0x108
+		// wasn't developer mode, but normal mode, then a warm reset would put the
+		// dut in normal mode instead with gbb flag 0x100, failing the fixture.
+		// Reboot here first for gbb flag change, check for the dut's current mode,
+		// and then decide if mode transition is required.
+		testing.ContextLog(ctx, "Resetting DUT due to GBB flag change")
+		if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
+			return errors.Wrap(err, "failed to cold reset dut")
+		}
+		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
+		defer cancelWaitConnect()
+		if err := h.WaitConnect(waitConnectCtx); err != nil {
+			return errors.Wrap(err, "failed to reconnect to DUT")
+		}
+	}
+
+	fromMode, err = h.Reporter.CurrentBootMode(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get current boot mode")
+	}
+	if fromMode == toMode {
+		testing.ContextLogf(ctx, "DUT is now in %s mode", toMode)
+		return nil
 	}
 
 	// Booting from rec to anything else will cause EC to restart, potentally breaking the servo watchdog.
@@ -395,24 +455,6 @@ func (ms ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMod
 		}
 	default:
 		return errors.Errorf("unsupported firmware boot mode: %s", toMode)
-	}
-
-	// Send Tast files back to DUT.
-	needSync := (toModeUsb != fromModeUsb) && msOptsContain(opts, CopyTastFiles)
-	if toModeUsb {
-		needSync = needSync && !h.dutUsbHasTastFiles
-	} else {
-		needSync = needSync && !h.dutInternalStorageHasTastFiles
-	}
-	if needSync {
-		if err := h.SyncTastFilesToDUT(ctx); err != nil {
-			return errors.Wrapf(err, "syncing Tast files to DUT after booting to %s", toMode)
-		}
-		if toModeUsb {
-			h.dutUsbHasTastFiles = true
-		} else {
-			h.dutInternalStorageHasTastFiles = true
-		}
 	}
 
 	// Verify successful reboot.
