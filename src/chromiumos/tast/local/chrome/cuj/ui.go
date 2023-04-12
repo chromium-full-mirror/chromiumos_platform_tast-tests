@@ -468,3 +468,53 @@ func DismissCriticalSecurityAlert(ctx context.Context, tconn *chrome.TestConn) e
 		uiauto.Combine("close security alert", ui.DoDefault(close), ui.WaitUntilGone(close)),
 	)(ctx)
 }
+
+// LogWindowMismatch prints out mismatched window details.
+// It returns a string wrapping the details of the mismatched window
+// so that it can be appended to the error message.
+func LogWindowMismatch(ctx context.Context, initialWindows, finalWindows []*ash.Window) string {
+	var missingWindowTitles, extraWindowTitles []string
+	var logs []string
+
+	for _, iw := range initialWindows {
+		found := false
+		for _, fw := range finalWindows {
+			if iw.ID == fw.ID {
+				found = true
+				break
+			}
+		}
+		if !found {
+			missingWindowTitles = append(missingWindowTitles, iw.Title)
+		}
+	}
+	missingNumWindows := len(missingWindowTitles)
+	if missingNumWindows > 0 {
+		logs = append(logs, "missing window(s): "+strings.Join(missingWindowTitles, ", "))
+	}
+
+	for _, fw := range finalWindows {
+		found := false
+		for _, iw := range initialWindows {
+			if fw.ID == iw.ID {
+				found = true
+				break
+			}
+		}
+		if !found {
+			extraWindowTitles = append(extraWindowTitles, fw.Title)
+		}
+	}
+	extraNumWindows := len(extraWindowTitles)
+	if extraNumWindows > 0 {
+		logs = append(logs, "extra window(s): "+strings.Join(extraWindowTitles, ", "))
+	}
+
+	if len(logs) == 0 {
+		testing.ContextLog(ctx, "No window mismatch found")
+		return ""
+	}
+	completeLog := strings.Join(logs, "; ")
+	testing.ContextLog(ctx, "Found window mismatch: ", completeLog)
+	return completeLog
+}

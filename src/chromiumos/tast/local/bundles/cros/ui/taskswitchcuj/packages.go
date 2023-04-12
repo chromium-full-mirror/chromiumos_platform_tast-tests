@@ -92,11 +92,11 @@ func installPackages(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d 
 func launchPackages(ctx context.Context, tconn *chrome.TestConn, kw *input.KeyboardEventWriter, ac *uiauto.Context, packages []packageInfo) (int, error) {
 	// Keep track of the initial number of windows, to ensure
 	// we open the right number of windows.
-	ws, err := ash.GetAllWindows(ctx, tconn)
+	initialWindows, err := ash.GetAllWindows(ctx, tconn)
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to get window list")
 	}
-	initialNumWindows := len(ws)
+	initialNumWindows := len(initialWindows)
 
 	launchCtx, cancel := context.WithTimeout(ctx, 4*time.Minute)
 	defer cancel()
@@ -123,7 +123,9 @@ func launchPackages(ctx context.Context, tconn *chrome.TestConn, kw *input.Keybo
 	if ws, err := ash.GetAllWindows(ctx, tconn); err != nil {
 		return 0, errors.Wrap(err, "failed to get window list after opening ARC apps")
 	} else if expectedNumWindows := initialNumWindows + len(packages); len(ws) != expectedNumWindows {
-		return 0, errors.Wrapf(err, "unexpected number of windows open after launching ARC applications, got: %d, expected: %d", len(ws), expectedNumWindows)
+		// Print out two window list details when window counts are misaligned.
+		windowMismatchMsg := cuj.LogWindowMismatch(ctx, initialWindows, ws)
+		return 0, errors.Wrapf(err, "unexpected number of windows open after launching ARC applications, got: %d, expected: %d; %s", len(ws), expectedNumWindows, windowMismatchMsg)
 	}
 
 	return len(packages), nil

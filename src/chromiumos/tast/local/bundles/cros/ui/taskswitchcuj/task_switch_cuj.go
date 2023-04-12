@@ -278,6 +278,12 @@ func Run(ctx context.Context, s *testing.State) {
 			taskSwitchers = append(taskSwitchers, initializeSwitchTaskByAltTab(ctx, kw, numWindows))
 		}
 
+		ws, err := ash.GetAllWindows(ctx, tconn)
+		if err != nil {
+			return errors.Wrap(err, "failed to get window list")
+		}
+		initialWindows := ws
+
 		for _, taskSwitcher := range taskSwitchers {
 			recorder.Annotate(ctx, "Switch_windows_by_"+taskSwitcher.name)
 			s.Log(taskSwitcher.description)
@@ -368,7 +374,9 @@ func Run(ctx context.Context, s *testing.State) {
 
 			// Ensure the right number of windows are still opened.
 			if ws, err := ash.GetAllWindows(ctx, tconn); len(ws) != numWindows {
-				return errors.Wrapf(err, "unexpected number of open windows, got: %d, expected: %d", len(ws), numWindows)
+				// Print out two window list details when window counts are misaligned.
+				windowMismatchMsg := cuj.LogWindowMismatch(ctx, initialWindows, ws)
+				return errors.Wrapf(err, "unexpected number of windows open after launching ARC applications, got: %d, expected: %d; %s", len(ws), numWindows, windowMismatchMsg)
 			}
 
 			// Wait for any animations from the previous workflow to
