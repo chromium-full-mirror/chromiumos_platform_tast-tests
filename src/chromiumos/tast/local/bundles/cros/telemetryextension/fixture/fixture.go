@@ -290,7 +290,9 @@ func (f *telemetryExtensionFixture) setupChromeForConsumers(ctx context.Context,
 		}
 	}
 
-	var opts []chrome.Option
+	opts := []chrome.Option{
+		chrome.EnableFeatures("TelemetryExtensionPendingApprovalApi"),
+	}
 	f.addSkipOEMNameCheckChromeArg(ctx, &opts)
 
 	if f.bt == browser.TypeAsh {

@@ -21,10 +21,8 @@ type AudioJackEventWriter struct {
 }
 
 // AudioJack returns an EventWriter to inject events into an arbitrary audio
-// jack device.
-//
-// Currently this only supports hooking into an existing device and does not
-// create a virtual one.
+// jack device. To release the resources of this event writer, the `Close`
+// function can be called.
 func AudioJack(ctx context.Context) (*AudioJackEventWriter, error) {
 	infos, err := readDevices("")
 	if err != nil {
@@ -49,6 +47,20 @@ func AudioJack(ctx context.Context) (*AudioJackEventWriter, error) {
 	// If there is no real audio jack device to inject into, create a virtual device.
 	testing.ContextLog(ctx, "Creating virtual audio jack device")
 	return virtualAudioJackDevice(ctx)
+}
+
+// Close closes the audio jack device.
+func (aw *AudioJackEventWriter) Close() error {
+	var firstErr error
+	if aw.eventWriter != nil {
+		firstErr = aw.eventWriter.Close()
+	}
+	if aw.virtualFile != nil {
+		if err := aw.virtualFile.Close(); firstErr == nil {
+			firstErr = err
+		}
+	}
+	return firstErr
 }
 
 // PlugInHeadphone emits an headphone "add" event.
