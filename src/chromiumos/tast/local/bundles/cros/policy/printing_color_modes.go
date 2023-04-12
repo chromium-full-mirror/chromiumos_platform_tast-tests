@@ -35,8 +35,10 @@ func init() {
 		BugComponent: "b:1111614",
 		SoftwareDeps: []string{"chrome"},
 		Attr: []string{
-			"group:mainline",
-			"informational",
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
 		},
 		Params: []testing.Param{{
 			Fixture: "virtualUsbPrinterModulesLoadedWithChromePolicyLoggedIn",

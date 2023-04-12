@@ -48,10 +48,12 @@ func init() {
 		BugComponent: "b:1111614",
 		SoftwareDeps: []string{"chrome"},
 		Attr: []string{
-			"group:mainline",
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
 			"group:paper-io",
 			"paper-io_printing",
-			"informational",
 		},
 		Params: []testing.Param{
 			{
@@ -59,11 +61,10 @@ func init() {
 				Fixture: fixture.ChromePolicyLoggedIn,
 				Val:     testData{testPrintingFromThreeDotMenu, browser.TypeAsh},
 			}, {
-				Name:      "print_with_hotkey",
-				Fixture:   fixture.ChromePolicyLoggedIn,
-				Val:       testData{testPrintingWithHotkey, browser.TypeAsh},
-				ExtraAttr: []string{"informational"},
-				Timeout:   3 * time.Minute,
+				Name:    "print_with_hotkey",
+				Fixture: fixture.ChromePolicyLoggedIn,
+				Val:     testData{testPrintingWithHotkey, browser.TypeAsh},
+				Timeout: 3 * time.Minute,
 			}, {
 				Name:    "print_from_context_menu",
 				Fixture: fixture.ChromePolicyLoggedIn,
@@ -73,20 +74,17 @@ func init() {
 				ExtraSoftwareDeps: []string{"lacros"},
 				Fixture:           fixture.LacrosPolicyLoggedIn,
 				Val:               testData{testPrintingFromThreeDotMenu, browser.TypeLacros},
-				ExtraAttr:         []string{"informational"},
 			}, {
 				Name:              "lacros_print_with_hotkey",
 				ExtraSoftwareDeps: []string{"lacros"},
 				Val:               testData{testPrintingWithHotkey, browser.TypeLacros},
 				Fixture:           fixture.LacrosPolicyLoggedIn,
-				ExtraAttr:         []string{"informational"},
 				Timeout:           3 * time.Minute,
 			}, {
 				Name:              "lacros_print_from_context_menu",
 				ExtraSoftwareDeps: []string{"lacros"},
 				Fixture:           fixture.LacrosPolicyLoggedIn,
 				Val:               testData{testPrintingFromContextMenu, browser.TypeLacros},
-				ExtraAttr:         []string{"informational"},
 			}},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.PrintingEnabled{}, pci.VerifiedFunctionalityUI),

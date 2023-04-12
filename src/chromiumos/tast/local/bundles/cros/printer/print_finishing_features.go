@@ -43,8 +43,10 @@ func init() {
 		Desc:         "Tests that finishing features are available in the UI and are correctly reeceived by a printer",
 		Contacts:     []string{"chromeos-commercial-printing@google.com", "project-bolton@google.com", "nedol@google.com"},
 		Attr: []string{
-			"group:mainline",
-			"informational",
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
 			"group:paper-io",
 			"paper-io_printing",
 		},

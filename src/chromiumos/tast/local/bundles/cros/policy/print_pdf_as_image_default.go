@@ -42,10 +42,12 @@ func init() {
 		BugComponent: "b:1111614",
 		SoftwareDeps: []string{"chrome"},
 		Attr: []string{
-			"group:mainline",
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
 			"group:paper-io",
 			"paper-io_printing",
-			"informational",
 			"group:hw_agnostic",
 		},
 		Params: []testing.Param{{
