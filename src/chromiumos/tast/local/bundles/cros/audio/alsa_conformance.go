@@ -55,6 +55,7 @@ var mergeThresholdSize480Models = []string{
 	"craask",
 	"craaskbowl",
 	"craaskvin",
+	"craasneto",
 	"crota",
 	"crota360",
 	"delbin",
