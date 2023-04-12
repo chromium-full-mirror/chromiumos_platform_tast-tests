@@ -28,7 +28,7 @@ func init() {
 			"phoenixshen@chromium.org",
 		},
 		BugComponent: "b:167114",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		SoftwareDeps: []string{"hammerd"},
 		// TODO(b/219382040): Remove "wormdingler" after the issue is fixed.
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.ECFeatureDetachableBase(), hwdep.SkipOnModel("wormdingler")),
