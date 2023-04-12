@@ -25,14 +25,17 @@ func init() {
 		},
 		BugComponent: "b:1093480",
 		Attr:         []string{"group:mainline", "group:camera-usb-qual", "group:criticalstaging", "informational"},
-		// TODO(b/258798506) Re-enable on ampton when the focus issue is fixed.
 		// TODO(b/173778998) Jinlon privacy switch is not compliance: EBUSY during streamoff.
-		HardwareDeps: hwdep.D(hwdep.SkipOnModel("ampton", "jinlon")),
+		HardwareDeps: hwdep.D(hwdep.SkipOnModel("jinlon")),
 		SoftwareDeps: []string{"uvc_compliant"},
 	})
 }
 
 func V4L2Compliance(ctx context.Context, s *testing.State) {
+	badCameras := map[string]string{
+		"13d3:5519": "b/258798506",
+		"04f2:b719": "b/272738845",
+	}
 
 	captureDevices, err := testutil.CaptureDevicesFromV4L2Test(ctx)
 	if err != nil {
@@ -40,6 +43,17 @@ func V4L2Compliance(ctx context.Context, s *testing.State) {
 	}
 
 	for _, videodev := range captureDevices {
+
+		usbCameraVersion, err := testutil.GetUsbCameraVersion(ctx, videodev)
+		if err == nil {
+			vidPid := usbCameraVersion.IDVendor + ":" + usbCameraVersion.IDProduct
+			bugNumber, found := badCameras[vidPid]
+			if found {
+				testing.ContextLog(ctx, "Device "+vidPid+" ignored due to: "+bugNumber)
+				continue
+			}
+		}
+
 		cmd := testexec.CommandContext(ctx, "v4l2-compliance", "-v", "-d", videodev)
 		out, err := cmd.Output(testexec.DumpLogOnError)
 

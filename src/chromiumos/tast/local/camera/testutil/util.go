@@ -10,6 +10,7 @@ import (
 	"context"
 	"encoding/json"
 	"os"
+	"path/filepath"
 	"strings"
 	"syscall"
 	"time"
@@ -240,4 +241,39 @@ func WaitForCameraSocket(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+// UsbCameraVersion contains the id:pid:bcdDevice triple from a video device.
+type UsbCameraVersion struct {
+	IDVendor  string
+	IDProduct string
+	BcdDevice string
+}
+
+// GetUsbCameraVersion returns the vid:pid:bcdDevice triple from a video device.
+func GetUsbCameraVersion(ctx context.Context, device string) (UsbCameraVersion, error) {
+	var fw UsbCameraVersion
+
+	path := "/sys/class/video4linux/" + filepath.Base(device) + "/device"
+	path, err := filepath.EvalSymlinks(path)
+	if err != nil {
+		return fw, err
+	}
+	path = filepath.Dir(string(path))
+	out, err := os.ReadFile(path + "/idVendor")
+	if err != nil {
+		return fw, err
+	}
+	fw.IDVendor = strings.TrimSuffix(string(out), "\n")
+	out, err = os.ReadFile(path + "/idProduct")
+	if err != nil {
+		return fw, err
+	}
+	fw.IDProduct = strings.TrimSuffix(string(out), "\n")
+	out, err = os.ReadFile(path + "/bcdDevice")
+	if err != nil {
+		return fw, err
+	}
+	fw.BcdDevice = strings.TrimSuffix(string(out), "\n")
+	return fw, nil
 }
