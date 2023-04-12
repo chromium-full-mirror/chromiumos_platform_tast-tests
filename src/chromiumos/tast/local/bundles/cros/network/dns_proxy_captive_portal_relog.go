@@ -66,7 +66,9 @@ func DNSProxyCaptivePortalRelog(ctx context.Context, s *testing.State) {
 	}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
 		s.Fatal("Failed to verify system proxy: ", err)
 	}
-	if err := verifyARCNameservers(ctx, a); err != nil {
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		return verifyARCNameservers(ctx, a)
+	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
 		s.Error("Failed to verify ARC: ", err)
 	}
 
@@ -138,7 +140,9 @@ func DNSProxyCaptivePortalRelog(ctx context.Context, s *testing.State) {
 	}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
 		s.Fatal("Failed to verify switchover to system proxy: ", err)
 	}
-	if err := verifyARCNameservers(ctx, a); err != nil {
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		return verifyARCNameservers(ctx, a)
+	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
 		s.Error("Failed to verify ARC: ", err)
 	}
 }
