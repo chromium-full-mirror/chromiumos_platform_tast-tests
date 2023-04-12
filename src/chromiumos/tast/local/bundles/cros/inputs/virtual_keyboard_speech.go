@@ -65,7 +65,7 @@ func init() {
 				Fixture:           fixture.TabletVKStereoAloopLoaded,
 				Val:               voiceTestIMEsNewData,
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
-				ExtraAttr:         []string{"group:input-tools-upstream"},
+				ExtraAttr:         []string{"informational", "group:input-tools-upstream"},
 				ExtraSearchFlags:  util.IMESearchFlags(voiceTestIMEsNewData),
 			},
 			{
