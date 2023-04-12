@@ -107,7 +107,8 @@ func StatefulFiles(ctx context.Context, s *testing.State) {
 
 		chk.NewPattern(chk.Tree("encrypted/var/log/asan"), chk.Users("root"), chk.Groups("root"), chk.Mode(0777|os.ModeSticky)),
 		chk.NewPattern(chk.Tree("encrypted/var/log/chrome/Crash Reports/uploads.log"), chk.Users("root"), chk.Groups("root"), chk.Mode(0644)),
-		chk.NewPattern(chk.Tree("encrypted/var/log/chrome/Crash Reports"), chk.Users("chronos"), chk.Groups("chronos"), chk.NotMode(077)),
+		// Allow group read so the Chrome browser can send feedback reports.
+		chk.NewPattern(chk.Tree("encrypted/var/log/chrome/Crash Reports"), chk.Users("chronos"), chk.Groups("chronos"), chk.NotMode(037)),
 		chk.NewPattern(chk.Tree("encrypted/var/log/chrome"), chk.Users("chronos"), chk.Groups("chronos"), chk.NotMode(022)),
 		chk.NewPattern(chk.Path("encrypted/var/log/emerge.log"), chk.Users("portage"), chk.Groups("portage"), chk.Mode(0660)),
 		chk.NewPattern(chk.Tree("encrypted/var/log/lacros/Crash Reports/uploads.log"), chk.Users("root"), chk.Groups("root"), chk.Mode(0644)),
