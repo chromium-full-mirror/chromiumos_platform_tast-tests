@@ -43,8 +43,10 @@ func init() {
 		},
 		Attr: []string{
 			"group:hw_agnostic",
-			"group:mainline",
-			"informational",
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
 		},
 		Params: []testing.Param{
 			{
