@@ -34,6 +34,8 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		// TODO(b/195385797): Run on gooey when the bug is fixed.
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("gooey")),
+		// For "no_tpm_dynamic" - see http://b/251789202.
+		SoftwareDeps: []string{"tpm", "no_tpm_dynamic"},
 		Fixture:      "ussAuthSessionFixture",
 	})
 }
