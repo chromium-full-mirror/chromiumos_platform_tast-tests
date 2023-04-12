@@ -18,6 +18,7 @@ import (
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/bundles/cros/secagentd/secagentddbusmonitor"
 	"chromiumos/tast/local/bundles/cros/secagentd/secagentdprocfsscraper"
+	"chromiumos/tast/local/bundles/cros/secagentd/secagentdupstart"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/testing"
@@ -163,17 +164,22 @@ func testOneProcessEventsParams(ctx context.Context, s *testing.State, param pro
 	const batchIntervalS = 5
 	// Restart secagentd and have it ignore policy and not wait for the first
 	// agent event to be enqueued successfully.
-	if err := upstart.RestartJob(ctx, "secagentd",
+	agentPid, err := secagentdupstart.RestartSecagentd(ctx,
 		upstart.WithArg("SECAGENTD_LOG_LEVEL", "-1"),
 		upstart.WithArg("BYPASS_POLICY_FOR_TESTING", "true"),
 		upstart.WithArg("BYPASS_ENQ_OK_WAIT_FOR_TESTING", "true"),
-		upstart.WithArg("PLUGIN_BATCH_INTERVAL_S_FOR_TESTING", strconv.Itoa(batchIntervalS))); err != nil {
+		upstart.WithArg("PLUGIN_BATCH_INTERVAL_S_FOR_TESTING", strconv.Itoa(batchIntervalS)))
+	if err != nil {
 		s.Fatal("Failed to restart secagentd: ", err)
 	}
 
-	stop, err := secagentddbusmonitor.SetupDbusMonitor(ctx)
+	stop, err := secagentddbusmonitor.SetupDbusMonitor(ctx, agentPid)
 	if err != nil {
 		s.Fatal("Failed to setup dbus monitoring: ", err)
+	}
+
+	if err := secagentdprocfsscraper.WaitForBpfMaps(ctx, agentPid); err != nil {
+		s.Fatal("Failed to verify secagentd is ready to test")
 	}
 
 	// Launch a long running process and scrape procfs.
@@ -200,6 +206,8 @@ func testOneProcessEventsParams(ctx context.Context, s *testing.State, param pro
 	// GoBigSleepLint: Using poll here doesn't make sense. There is no particular
 	// condition we can poll for. This is simply giving secagentd ample time to
 	// process and post events to dbus and is an educated guess.
+	// TODO(b/278252387): Convert this to poll when tast's
+	// dbusutil.DbusEventMonitor supports it.
 	if err := testing.Sleep(ctx, 2*batchIntervalS*time.Second); err != nil {
 		s.Fatal("Failed to sleep: ", err)
 	}
@@ -323,7 +331,7 @@ func ProcessEvents(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, 10*time.Second)
 	defer func(ctx context.Context) {
-		upstart.RestartJob(ctx, "secagentd")
+		secagentdupstart.RestartSecagentd(ctx)
 		cancel()
 	}(cleanupCtx)
 

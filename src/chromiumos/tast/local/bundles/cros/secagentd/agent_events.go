@@ -21,6 +21,7 @@ import (
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/secagentd/secagentddbusmonitor"
+	"chromiumos/tast/local/bundles/cros/secagentd/secagentdupstart"
 	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/testing"
 	xdr "chromiumos/xdr/secagentd"
@@ -208,17 +209,18 @@ func AgentEvents(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, 10*time.Second)
 	defer func(ctx context.Context) {
-		upstart.RestartJob(ctx, "secagentd")
+		secagentdupstart.RestartSecagentd(ctx)
 		cancel()
 	}(cleanupCtx)
 
 	// Restart secagentd, have it ignore policy.
-	if err := upstart.RestartJob(ctx, "secagentd",
-		upstart.WithArg("BYPASS_POLICY_FOR_TESTING", "true")); err != nil {
+	agentPid, err := secagentdupstart.RestartSecagentd(ctx,
+		upstart.WithArg("BYPASS_POLICY_FOR_TESTING", "true"))
+	if err != nil {
 		s.Fatal("Failed to restart secagentd: ", err)
 	}
 
-	stop, err := secagentddbusmonitor.SetupDbusMonitor(ctx)
+	stop, err := secagentddbusmonitor.SetupDbusMonitor(ctx, agentPid)
 	if err != nil {
 		s.Fatal("Failed to setup dbus monitoring: ", err)
 	}
@@ -230,6 +232,8 @@ func AgentEvents(ctx context.Context, s *testing.State) {
 
 	// GoBigSleepLint: Small grace period for the events to be processed and
 	// emitted by secagentd.
+	// TODO(b/278252387): Convert this to poll when tast's
+	// dbusutil.DbusEventMonitor supports it.
 	if err := testing.Sleep(ctx, 3*time.Second); err != nil {
 		s.Fatal("Failed to sleep: ", err)
 	}

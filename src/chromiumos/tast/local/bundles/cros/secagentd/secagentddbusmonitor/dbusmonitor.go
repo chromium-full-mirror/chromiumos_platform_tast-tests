@@ -8,34 +8,28 @@ package secagentddbusmonitor
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"github.com/godbus/dbus/v5"
 
 	"chromiumos/tast/errors"
-	"chromiumos/tast/local/bundles/cros/secagentd/secagentdprocfsscraper"
 	"chromiumos/tast/local/dbusutil"
 	"chromiumos/tast/testing"
 )
 
-func getSecagentdDbusConn(ctx context.Context, dbo *dbusutil.DBusObject, dbusConn *string) error {
+func getSecagentdDbusConn(ctx context.Context, dbo *dbusutil.DBusObject, agentPid uint64, dbusConn *string) error {
 	var names []string
 	if err := dbo.Call(ctx, "ListNames").Store(&names); err != nil {
 		return errors.Wrap(err, "Unable to retrieve a list of dbus connection names")
 	}
 	for _, name := range names {
-		var pid uint64
+		var namePid uint64
 		// GetConnectionUnixProcessId to fetch the PID associated with each
 		// connection and then find the one that matches secagentd.
-		if err := dbo.Call(ctx, "GetConnectionUnixProcessID", name).Store(&pid); err != nil {
+		if err := dbo.Call(ctx, "GetConnectionUnixProcessID", name).Store(&namePid); err != nil {
 			continue
 		}
-		cmd, err := secagentdprocfsscraper.GetCmdLineParts(ctx, pid)
-		if err != nil {
-			continue
-		}
-		if strings.Trim(cmd[0], " ") == "/usr/sbin/secagentd" {
+		if namePid == agentPid {
 			*dbusConn = name
 			return nil
 		}
@@ -45,7 +39,7 @@ func getSecagentdDbusConn(ctx context.Context, dbo *dbusutil.DBusObject, dbusCon
 
 // SetupDbusMonitor sets up dbus monitoring between secagentd and missive and
 // returns the resulting DbusEventMonitor.
-func SetupDbusMonitor(ctx context.Context) (func() ([]dbusutil.CalledMethod, error), error) {
+func SetupDbusMonitor(ctx context.Context, agentPid uint64) (func() ([]dbusutil.CalledMethod, error), error) {
 	dbo, err := dbusutil.NewDBusObject(ctx, "org.freedesktop.DBus", "org.freedesktop.DBus",
 		"/org/freedesktop/DBus")
 	if err != nil {
@@ -55,7 +49,7 @@ func SetupDbusMonitor(ctx context.Context) (func() ([]dbusutil.CalledMethod, err
 	// secagentd may have just been restarted so Poll for a bit until it
 	// establishes a dbus connection.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		return getSecagentdDbusConn(ctx, dbo, &dbusConn)
+		return getSecagentdDbusConn(ctx, dbo, agentPid, &dbusConn)
 	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
 		return nil, errors.Wrap(err, "Timed out waiting for secagentd to be available")
 	}

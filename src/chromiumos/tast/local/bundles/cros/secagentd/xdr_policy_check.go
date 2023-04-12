@@ -18,6 +18,7 @@ import (
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/bundles/cros/secagentd/secagentddbusmonitor"
+	"chromiumos/tast/local/bundles/cros/secagentd/secagentdupstart"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/local/upstart"
@@ -52,7 +53,7 @@ func init() {
 	})
 }
 
-func setXdrPolicy(ctx context.Context, s *testing.State, v bool, t string) {
+func setXdrPolicy(ctx context.Context, s *testing.State, v bool, t string) uint64 {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 
@@ -69,12 +70,14 @@ func setXdrPolicy(ctx context.Context, s *testing.State, v bool, t string) {
 	// an event. Bypassing this wait will make secagentd emit more than one
 	// event and will greatly reduce the chance of a flake. Similarly, reduce
 	// some internal poll delays to emit more events sooner.
-	if err := upstart.RestartJob(ctx, "secagentd",
+	agentPid, err := secagentdupstart.RestartSecagentd(ctx,
 		upstart.WithArg("BYPASS_ENQ_OK_WAIT_FOR_TESTING", "true"),
 		upstart.WithArg("SET_HEARTBEAT_PERIOD_S_FOR_TESTING", t),
-		upstart.WithArg("PLUGIN_BATCH_INTERVAL_S_FOR_TESTING", t)); err != nil {
+		upstart.WithArg("PLUGIN_BATCH_INTERVAL_S_FOR_TESTING", t))
+	if err != nil {
 		s.Fatal("Failed to restart secagentd: ", err)
 	}
+	return agentPid
 }
 
 func XdrPolicyCheck(ctx context.Context, s *testing.State) {
@@ -106,8 +109,8 @@ func XdrPolicyCheck(ctx context.Context, s *testing.State) {
 	} {
 		s.Run(ctx, param.name, func(ctx context.Context, s *testing.State) {
 			const batchIntervalS = 1
-			setXdrPolicy(ctx, s, param.policy, strconv.Itoa(batchIntervalS))
-			stop, err := secagentddbusmonitor.SetupDbusMonitor(ctx)
+			agentPid := setXdrPolicy(ctx, s, param.policy, strconv.Itoa(batchIntervalS))
+			stop, err := secagentddbusmonitor.SetupDbusMonitor(ctx, agentPid)
 			if err != nil {
 				s.Fatal("Failed to setup dbus monitoring: ", err)
 			}
@@ -116,6 +119,10 @@ func XdrPolicyCheck(ctx context.Context, s *testing.State) {
 			// cause Process events to be emitted if permitted by policy.
 			cmd := testexec.CommandContext(ctx, "/bin/echo")
 			cmd.Wait()
+			// GoBigSleepLint: Small grace period for the events to be
+			// processed and emitted by secagentd.
+			// TODO(b/278252387): Convert this to poll when tast's
+			// dbusutil.DbusEventMonitor supports it.
 			testing.Sleep(ctx, 2*batchIntervalS*time.Second)
 
 			calledMethods, err := stop()

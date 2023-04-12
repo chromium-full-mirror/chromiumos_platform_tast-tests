@@ -25,13 +25,18 @@ import (
 
 	"chromiumos/tast/common/action"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/testing"
 	xdr "chromiumos/xdr/secagentd"
 )
 
-const cmdLineRetryTimes = 5
-
-// https://man7.org/linux/man-pages/man5/proc.5.html
-const statSize = 52
+const (
+	cmdLineRetryTimes = 5
+	// https://man7.org/linux/man-pages/man5/proc.5.html
+	statSize = 52
+	// This corresponds to the number of distinct BPFs in use by secagentd and
+	// needs to be kept in sync manually.
+	expSecagentdBpfMaps = 2
+)
 
 var (
 	procNsRe     = regexp.MustCompile("(?m)^[a-z]+:\\[(?P<nsId>[[:digit:]]+)\\]")
@@ -212,4 +217,36 @@ func FillProc(pid uint64, p *xdr.Process) (uint64, error) {
 	startTimeSeconds := startTimeTicks / ticksPerSecond
 	p.RelStartTimeS = proto.Int64(startTimeSeconds)
 	return ppid, nil
+}
+
+// WaitForBpfMaps polls until secagentd reports to be using the expected number
+// of BPF maps (corresponding to the number of BPFs initialized so far).
+func WaitForBpfMaps(ctx context.Context, pid uint64) error {
+	mapsFilename := fmt.Sprintf("/proc/%d/maps", pid)
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		buff, err := ioutil.ReadFile(mapsFilename)
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to read proc map"))
+		}
+		if strings.Count(string(buff), "bpf-map") != expSecagentdBpfMaps {
+			return errors.New("Did not find the expected number of BPF maps")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second})
+}
+
+// GetOnlyChildPid returns the pid of the first child of the first task of the
+// given pid. Returns an error if the first task has more than one child. Main
+// application is to get secagentd pid given its minijail0 pid.
+func GetOnlyChildPid(pid uint64) (uint64, error) {
+	childrenFilename := fmt.Sprintf("/proc/%d/task/%d/children", pid, pid)
+	buff, err := ioutil.ReadFile(childrenFilename)
+	if err != nil {
+		return 0, err
+	}
+	childPid, err := strconv.ParseUint(strings.TrimSpace(string(buff)), 10, 64)
+	if err != nil {
+		return 0, errors.Wrapf(err, "task %d does not have exactly one child", pid)
+	}
+	return childPid, nil
 }
