@@ -118,8 +118,11 @@ func EphemeralPolicies(ctx context.Context, s *testing.State) {
 
 	for _, stage := range []string{"init", "verify"} {
 		for i, tc := range testCases {
-			subCtx, cancel := context.WithTimeout(ctx, 120*time.Second)
-			s.Run(subCtx, stage+"_"+tc.AccountID, func(ctx context.Context, s *testing.State) {
+
+			if success := s.Run(ctx, stage+"_"+tc.AccountID, func(ctx context.Context, s *testing.State) {
+				ctx, cancel := context.WithTimeout(ctx, 120*time.Second)
+				defer cancel()
+
 				opts := []kioskmode.Option{
 					kioskmode.AutoLaunch(tc.AccountID),
 					kioskmode.CustomLocalAccounts(&localAccounts),
@@ -187,8 +190,9 @@ func EphemeralPolicies(ctx context.Context, s *testing.State) {
 						s.Fatal("Failed to get lacros proc: ", err)
 					}
 				}
-			})
-			cancel()
+			}); !success {
+				s.Fatalf("Failed to run %q subtest, no need to execute follow-up subtests", stage+"_"+tc.AccountID)
+			}
 		}
 	}
 }
