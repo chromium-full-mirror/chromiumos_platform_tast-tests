@@ -17,9 +17,11 @@ import (
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/mouse"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/prompts"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/chrome/webutil"
 	"chromiumos/tast/local/input"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -173,16 +175,14 @@ func DeleteSlide(tconn *chrome.TestConn) action.Action {
 	menu := nodewith.Role(role.Menu).Ancestor(application)
 	moveToTrash := nodewith.NameContaining("Move to trash t").Role(role.MenuItem)
 	goToSlidesHome := nodewith.Name("Go to Slides home screen").Role(role.Button)
-	leaveButton := nodewith.Name("Leave").Role(role.Button)
 	return uiauto.NamedCombine("delete slide",
 		maybeShowTheSlideMenu(tconn),
 		cuj.ExpandMenu(tconn, fileButton, menu, 470),
 		ui.DoDefault(moveToTrash),
 		ui.DoDefault(goToSlidesHome),
-		// When leaving the edit slide, sometimes the "Leave Site?" dialog box will pop up.
-		// If it appears, click the leave button.
-		uiauto.IfSuccessThen(ui.WithTimeout(10*time.Second).WaitUntilExists(leaveButton),
-			ui.DoDefaultUntil(leaveButton, ui.WithTimeout(shortUITimeout).WaitUntilGone(leaveButton))),
+		// When leaving the edit slide, the popup "Leave site?" might appear.
+		// Click the leave button if it exists.
+		prompts.ClearPotentialPrompts(tconn, 5*time.Second, prompts.LeaveSitePrompt),
 		ui.WithTimeout(longUITimeout).WaitUntilExists(slideHomeWebArea),
 	)
 }

@@ -21,10 +21,12 @@ import (
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/prompts"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/chrome/webutil"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/ui/cujrecorder"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -206,13 +208,9 @@ func Run(ctx context.Context, cr *chrome.Chrome, params *TestParams) error {
 				if err := cuj.CloseAllTabs(shortCtx, bTconn, bt); err != nil {
 					testing.ContextLog(ctx, "Failed to close all tabs: ", err)
 					// When closing the "Youtube Music" website, the popup "Leave site?" might appear.
-					leaveWindow := nodewith.Name("Leave site?").Role(role.Window).First()
-					leaveButton := nodewith.Name("Leave").Role(role.Button).Ancestor(leaveWindow)
-					if err := uiauto.IfSuccessThen(
-						ui.WithTimeout(time.Second).WaitUntilExists(leaveWindow),
-						ui.RetryUntil(ui.LeftClick(leaveButton), ui.WithTimeout(time.Second).WaitUntilGone(leaveWindow)),
-					)(ctx); err != nil {
-						testing.ContextLog(ctx, "Failed to click leave site button: ", err)
+					// Click the leave button if it exists.
+					if err := prompts.ClearPotentialPrompts(tconn, time.Second, prompts.LeaveSitePrompt)(ctx); err != nil {
+						testing.ContextLog(ctx, "Failed to clear leave site prompt: ", err)
 					}
 				}
 				return nil
@@ -363,7 +361,7 @@ func openAndSwitchTabs(ctx context.Context, br *browser.Browser, tconn *chrome.T
 				return errors.Wrap(err, `volume not changed after press "VolumeUp"`)
 			}
 
-			// After applying new volume, stay on the tab with the volume for 2 seconds before applying next one.
+			// GoBigSleepLint - After applying new volume, stay on the tab with the volume for 2 seconds before applying next one.
 			if err := testing.Sleep(ctx, 2*time.Second); err != nil {
 				return errors.Wrap(err, "failed to sleep")
 			}

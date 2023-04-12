@@ -15,9 +15,11 @@ import (
 	"chromiumos/tast/local/chrome/cuj"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/prompts"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/chrome/webutil"
 	"chromiumos/tast/local/input"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -133,15 +135,13 @@ func DeleteDoc(tconn *chrome.TestConn) action.Action {
 	menu := nodewith.Role(role.Menu).Ancestor(application)
 	moveToTrash := nodewith.NameContaining("Move to trash t").Role(role.MenuItem)
 	goToDocsHome := nodewith.Name("Go to Docs home screen").Role(role.Button)
-	leaveButton := nodewith.Name("Leave").Role(role.Button)
 	return uiauto.NamedCombine("delete document",
 		cuj.ExpandMenu(tconn, fileButton, menu, 392),
 		ui.DoDefault(moveToTrash),
 		ui.DoDefault(goToDocsHome),
-		// When leaving the edit document, sometimes the "Leave Site?" dialog box will pop up.
-		// If it appears, click the leave button.
-		uiauto.IfSuccessThen(ui.WithTimeout(10*time.Second).WaitUntilExists(leaveButton),
-			ui.DoDefaultUntil(leaveButton, ui.WithTimeout(shortUITimeout).WaitUntilGone(leaveButton))),
+		// When leaving the edit document, the popup "Leave site?" might appear.
+		// Click the leave button if it exists.
+		prompts.ClearPotentialPrompts(tconn, 5*time.Second, prompts.LeaveSitePrompt),
 		ui.WithTimeout(longUITimeout).WaitUntilExists(docHomeWebArea),
 	)
 }

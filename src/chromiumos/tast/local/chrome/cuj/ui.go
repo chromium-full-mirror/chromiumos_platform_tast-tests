@@ -24,9 +24,11 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/launcher"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/pointer"
+	"chromiumos/tast/local/chrome/uiauto/prompts"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/chrome/uiauto/touch"
 	"chromiumos/tast/local/input"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -179,14 +181,7 @@ func CloseChrome(ctx context.Context, tconn *chrome.TestConn) error {
 		return errors.Wrap(err, "failed to close Chrome")
 	}
 
-	ui := uiauto.New(tconn)
-	leaveWin := nodewith.Name("Leave site?").Role(role.Window).First()
-	leaveBtn := nodewith.Name("Leave").Role(role.Button).Ancestor(leaveWin)
-	if err := ui.WithTimeout(time.Second).WaitUntilExists(leaveWin)(ctx); err != nil {
-		return nil
-	}
-
-	return ui.RetryUntil(ui.LeftClick(leaveBtn), ui.WithTimeout(time.Second).WaitUntilGone(leaveWin))(ctx)
+	return prompts.ClearPotentialPrompts(tconn, time.Second, prompts.LeaveSitePrompt)(ctx)
 }
 
 // LaunchAppFromShelf opens an app by name which is currently pinned to the shelf.
