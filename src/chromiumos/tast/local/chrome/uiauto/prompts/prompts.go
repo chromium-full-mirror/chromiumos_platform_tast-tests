@@ -16,6 +16,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/chrome/webutil"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -30,6 +31,7 @@ type Prompt struct {
 var (
 	showNotificationsPromptFinder = nodewith.NameContaining("Show notifications").HasClass("RootView").Role(role.AlertDialog)
 	avPermPromptFinder            = nodewith.NameRegex(regexp.MustCompile(".*Use your (microphone|camera).*")).HasClass("RootView").Role(role.AlertDialog).First()
+	leaveSitePromptFinder         = nodewith.Name("Leave site?").ClassName("RootView").Role(role.Dialog).First()
 )
 
 // General dismiss button finders for prompts.
@@ -38,6 +40,7 @@ var (
 	DismissButtonFinder = nodewith.Name("Dismiss").Role(role.Button)
 	CloseButtonFinder   = nodewith.Name("Close").Role(role.Button)
 	GotItButtonFinder   = nodewith.Name("Got it").Role(role.Button)
+	LeaveButtonFinder   = nodewith.Name("Leave").Role(role.Button)
 )
 
 // ShowNotificationsPrompt represents the browser prompt to request permission for allowing notification.
@@ -52,6 +55,13 @@ var AllowAVPermissionPrompt = Prompt{
 	Name:              "allow microphone and camera",
 	PromptFinder:      avPermPromptFinder,
 	ClearButtonFinder: AllowButtonFinder.Ancestor(avPermPromptFinder),
+}
+
+// LeaveSitePrompt represents the browser prompt to request permission for leaving site.
+var LeaveSitePrompt = Prompt{
+	Name:              "leave site",
+	PromptFinder:      leaveSitePromptFinder,
+	ClearButtonFinder: LeaveButtonFinder.Ancestor(leaveSitePromptFinder),
 }
 
 // ClearPotentialPrompts clears one or more potential prompts disorderly.
