@@ -18,9 +18,13 @@ func init() {
 		Func:         AndroidAndWeb,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test assistant to open Android app over web app",
-		Attr:         []string{"group:mainline", "informational"},
-		BugComponent: "b:905229", // ChromeOS > Software > Assistive
 		Contacts:     []string{"assistive-eng@google.com"},
+		BugComponent: "b:905229", // ChromeOS > Software > Assistive
+		Attr: []string{
+			"group:mainline",
+			"informational",
+			"group:hw_agnostic",
+		},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Fixture:      "assistantWithArc",
 		Timeout:      3 * time.Minute,

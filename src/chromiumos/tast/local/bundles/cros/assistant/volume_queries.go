@@ -21,10 +21,13 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VolumeQueries,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests setting, increasing and decreasing volume actions via Assistant",
-		BugComponent: "b:905229", // ChromeOS > Software > Assistive
+		Desc:         "Tests setting, increasing, and decreasing volume actions via Assistant",
 		Contacts:     []string{"assistive-eng@google.com"},
-		Attr:         []string{"group:mainline"},
+		BugComponent: "b:905229", // ChromeOS > Software > Assistive
+		Attr: []string{
+			"group:mainline",
+			"group:hw_agnostic",
+		},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		HardwareDeps: hwdep.D(hwdep.Speaker()),
 		Fixture:      "assistant",

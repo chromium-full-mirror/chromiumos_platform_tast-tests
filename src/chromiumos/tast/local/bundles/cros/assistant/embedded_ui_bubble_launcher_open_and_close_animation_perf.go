@@ -23,9 +23,13 @@ func init() {
 		Func:         EmbeddedUIBubbleLauncherOpenAndCloseAnimationPerf,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures the smoothness of the bubble launcher embedded UI open and close animation",
-		BugComponent: "b:905229", // ChromeOS > Software > Assistive
 		Contacts:     []string{"assistive-eng@google.com"},
-		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
+		BugComponent: "b:905229", // ChromeOS > Software > Assistive
+		Attr: []string{
+			"group:crosbolt",
+			"crosbolt_perbuild",
+			"group:hw_agnostic",
+		},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Fixture:      "assistantClamshellPerf",
 		// Due to b/238758287, first close animation can always take 2 mins.

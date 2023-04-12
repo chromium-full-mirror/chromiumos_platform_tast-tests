@@ -25,9 +25,13 @@ func init() {
 		Func:         BetterOnboardingBubbleLauncherAnimationPerf,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures animation smoothness of opening assistant in bubble launcher with Better Onboarding enabled",
-		BugComponent: "b:905229", // ChromeOS > Software > Assistive
 		Contacts:     []string{"assistive-eng@google.com"},
-		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
+		BugComponent: "b:905229", // ChromeOS > Software > Assistive
+		Attr: []string{
+			"group:crosbolt",
+			"crosbolt_perbuild",
+			"group:hw_agnostic",
+		},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Fixture:      "assistantClamshellPerf",
 	})

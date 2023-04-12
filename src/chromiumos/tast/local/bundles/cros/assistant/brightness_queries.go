@@ -23,9 +23,13 @@ func init() {
 		Func:         BrightnessQueries,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests changing the screen brightness using Assistant queries",
-		BugComponent: "b:905229", // ChromeOS > Software > Assistive
 		Contacts:     []string{"assistive-eng@google.com"},
-		Attr:         []string{"group:mainline", "informational"},
+		BugComponent: "b:905229", // ChromeOS > Software > Assistive
+		Attr: []string{
+			"group:mainline",
+			"informational",
+			"group:hw_agnostic",
+		},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{
@@ -101,7 +105,7 @@ func BrightnessQueries(ctx context.Context, s *testing.State) {
 // To check that the brightness increased from 50.0, an appropriate predicate would be:
 //
 //	func(actual float64) bool {
-//		return actual > 50.0
+//	    return actual > 50.0
 //	}
 func brightnessCheck(ctx context.Context, tconn *chrome.TestConn, query string, predicate func(actual float64) bool) (float64, error) {
 	if _, err := assistant.SendTextQuery(ctx, tconn, query); err != nil {

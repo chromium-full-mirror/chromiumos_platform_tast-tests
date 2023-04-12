@@ -22,9 +22,13 @@ func init() {
 		Func:         OpenAndroidApp,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests Assistant open Android app feature",
-		BugComponent: "b:905229", // ChromeOS > Software > Assistive
 		Contacts:     []string{"assistive-eng@google.com"},
-		Attr:         []string{"group:mainline", "informational"},
+		BugComponent: "b:905229", // ChromeOS > Software > Assistive
+		Attr: []string{
+			"group:mainline",
+			"informational",
+			"group:hw_agnostic",
+		},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Fixture:      "assistantWithArc",
 		Timeout:      3 * time.Minute,

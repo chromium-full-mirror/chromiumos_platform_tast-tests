@@ -23,9 +23,13 @@ func init() {
 		Func:         TimeQuery,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests Assistant time query response",
-		BugComponent: "b:905229", // ChromeOS > Software > Assistive
 		Contacts:     []string{"assistive-eng@google.com"},
-		Attr:         []string{"group:mainline", "informational"},
+		BugComponent: "b:905229", // ChromeOS > Software > Assistive
+		Attr: []string{
+			"group:mainline",
+			"informational",
+			"group:hw_agnostic",
+		},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Params: []testing.Param{
 			{

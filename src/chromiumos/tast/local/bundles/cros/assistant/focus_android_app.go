@@ -19,9 +19,13 @@ func init() {
 		Func:         FocusAndroidApp,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test that assistant focuses Android app if both web and Android versions are open",
-		Attr:         []string{"group:mainline", "informational"},
-		BugComponent: "b:905229", // ChromeOS > Software > Assistive
 		Contacts:     []string{"assistive-eng@google.com"},
+		BugComponent: "b:905229", // ChromeOS > Software > Assistive
+		Attr: []string{
+			"group:mainline",
+			"informational",
+			"group:hw_agnostic",
+		},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Fixture:      "assistantWithArc",
 		Timeout:      3 * time.Minute,
@@ -60,8 +64,9 @@ func FocusAndroidApp(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait Google News Android gets active: ", err)
 	}
 
-	// TODO(b/245349115): Remove this work around once the bug gets fixed.
+	// TODO (b/245349115): Remove this work around once the bug gets fixed.
 	s.Log("Wait 3 seconds for Ash and Arc WM state sync")
+	// GoBigSleepLint: See TODO for work-around justification.
 	if testing.Sleep(ctx, 3*time.Second); err != nil {
 		s.Fatal("Failed to wait 3 seconds for Ash and Arc WM state sync: ", err)
 	}

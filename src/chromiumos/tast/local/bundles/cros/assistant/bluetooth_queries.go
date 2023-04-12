@@ -26,9 +26,13 @@ func init() {
 		Func:         BluetoothQueries,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests toggling Bluetooth using Assistant queries",
-		BugComponent: "b:905229", // ChromeOS > Software > Assistive
 		Contacts:     []string{"assistive-eng@google.com"},
-		Attr:         []string{"group:mainline", "informational"},
+		BugComponent: "b:905229", // ChromeOS > Software > Assistive
+		Attr: []string{
+			"group:mainline",
+			"informational",
+			"group:hw_agnostic",
+		},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{
 			{

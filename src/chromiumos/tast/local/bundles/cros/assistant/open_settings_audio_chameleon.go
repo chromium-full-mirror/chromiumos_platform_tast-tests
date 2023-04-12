@@ -29,10 +29,13 @@ func init() {
 		Func:         OpenSettingsAudioChameleon,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests opening the Settings app using an Assistant query with the hotword played from the Chameleon audio board",
-		BugComponent: "b:905229", // ChromeOS > Software > Assistive
 		Contacts:     []string{"assistive-eng@google.com"},
+		BugComponent: "b:905229", // ChromeOS > Software > Assistive
+		Attr: []string{
+			"group:assistant_audiobox",
+			"group:hw_agnostic",
+		},
 		Data:         []string{soundFile},
-		Attr:         []string{"group:assistant_audiobox"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Fixture:      "assistantWithAudioBox",
 	})
