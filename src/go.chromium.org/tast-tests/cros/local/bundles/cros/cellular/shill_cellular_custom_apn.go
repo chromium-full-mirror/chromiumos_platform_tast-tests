@@ -120,6 +120,11 @@ func ShillCellularCustomApn(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to enable cellular: ", err)
 	}
 
+	service, err := helper.FindServiceForDevice(ctx)
+	if err != nil {
+		s.Fatal("Unable to find Cellular Service for Device: ", err)
+	}
+
 	// Check that shill recognizes the MCCMNC in |modbOverrideProto|.
 	if _, _, err = helper.GetHomeProviderFromShill(ctx); err != nil {
 		s.Fatal("Failed to get HomeProvider from shill: ", err)
@@ -137,6 +142,19 @@ func ShillCellularCustomApn(ctx context.Context, s *testing.State) {
 	optionalAPNExist := false
 	optionalAPNSucceeded := false
 	for _, knownAPN := range knownAPNs {
+
+		isConnected, err := service.IsConnected(ctx)
+		if err != nil {
+			s.Fatal("Error getting IsConnected for service: ", err)
+		}
+		// Ensure the service is disconnected to avoid a race condition that happens after setting a new APN.
+		// If the new APN causes a de-attach, shill might report Connected while MM is performing the reattach.
+		if isConnected {
+			if _, err := helper.Disconnect(ctx); err != nil {
+				s.Fatal("Failed to disconnect: ", err)
+			}
+		}
+
 		if testNewAPNUIRevamp {
 			// Append all other APNs after the one we are testing if the current APN is an attach APN. It should work either way.
 			apn := knownAPN.GetAPNForShill()
@@ -179,30 +197,16 @@ func ShillCellularCustomApn(ctx context.Context, s *testing.State) {
 			}
 
 		}
-		// GoBigSleepLint: b/249592531: Reattach gets triggered every time on this test because |ResetShill| clears the default profile,
-		// deleting the previous value of UseAttachApn. If the new APN is an attach APN, the Reattach is triggered a second time.
-		// A 5 second delay is enough to ensure that the service is destroyed when a Reattach is triggered.
-		testing.Sleep(ctx, 5*time.Second)
-		// Because of Reattach, the service changes when an attach APN is changed.
-		service, err := helper.FindServiceForDevice(ctx)
-		if err != nil {
-			s.Fatal("Unable to find Cellular Service for Device: ", err)
-		}
 
 		if knownAPN.Optional {
 			optionalAPNExist = true
 		}
 
-		testing.ContextLog(ctx, "Connecting with ", knownAPN.APNInfo)
-		if isConnected, err := service.IsConnected(ctx); err != nil {
-			s.Fatal("Unable to get IsConnected for Service: ", err)
-		} else if !isConnected {
-			if err := helper.ConnectToServiceWithTimeout(ctx, service, 60*time.Second); err != nil {
-				if knownAPN.Optional {
-					continue
-				}
-				s.Fatal("Unable to Connect to Service: ", err)
+		if err := helper.ConnectToServiceWithTimeout(ctx, service, 60*time.Second); err != nil {
+			if knownAPN.Optional {
+				continue
 			}
+			s.Fatal("Unable to Connect to Service: ", err)
 		}
 
 		serviceLastAttachAPN, err := helper.GetCellularLastAttachAPN(ctx)
