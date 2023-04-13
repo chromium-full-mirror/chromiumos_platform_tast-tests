@@ -377,7 +377,7 @@ func (its *InputsTestServer) WaitForFieldToBeActive(inputField InputField) uiaut
 		// OnFocus event. The sleep has been added to this method as
 		// input actions are likely to follow an invocation of this
 		// method. See b/235417796 for more.
-		uiauto.Sleep(50*time.Millisecond),
+		uiauto.Sleep(500*time.Millisecond),
 	)
 }
 
