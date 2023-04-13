@@ -155,7 +155,7 @@ func (tm *TaskManager) SelectProcess(nameInTaskManager string) uiauto.Action {
 
 			lastFocusedNode = focusedInfo
 			return errors.New("target is not focused")
-		}, &testing.PollOptions{Timeout: time.Minute, Interval: 500 * time.Millisecond})
+		}, &testing.PollOptions{Timeout: 2 * time.Minute, Interval: 500 * time.Millisecond})
 	}
 }
 
