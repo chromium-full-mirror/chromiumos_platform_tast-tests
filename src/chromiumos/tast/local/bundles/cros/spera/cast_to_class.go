@@ -38,6 +38,7 @@ func init() {
 		Contacts:     []string{"chromeos-perf-reliability-eng@google.com", "cienet-development@googlegroups.com", "alstonhuang@google.com"},
 		BugComponent: "b:1025042", // ChromeOS > EngProd > Platform > SPERA > Automation
 		SoftwareDeps: []string{"chrome", "arc"},
+		Attr:         []string{"group:external-dependency"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Vars: []string{
 			"spera.cuj_mode",     // Optional. Expecting "tablet" or "clamshell". Other values will be be taken as "clamshell".

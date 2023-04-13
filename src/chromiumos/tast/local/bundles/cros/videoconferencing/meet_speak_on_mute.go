@@ -33,6 +33,7 @@ func init() {
 			"chrome-knowledge-eng@google.com",
 			"shengjun@chromium.org",
 		},
+		Attr:         []string{"group:external-dependency"},
 		Data:         []string{audioInputFile},
 		BugComponent: "b:187682",
 		Timeout:      3 * time.Minute,
@@ -114,12 +115,12 @@ func MeetSpeakOnMute(ctx context.Context, s *testing.State) {
 	// TODO(b/276998230): Use vcTray to mute and unmute
 	// Note: This test is only semi-automated due to the blocking bug.
 	s.Log("Please mute via vctray on DUT manually within 20s")
-	testing.Sleep(ctx, 20*time.Second)
+	testing.Sleep(ctx, 20*time.Second) // GoBigSleepLint
 	s.Log("Finished waiting")
 
 	defer func(ctx context.Context) {
 		s.Log("Please unmute via vctray on DUT manually within 20s")
-		testing.Sleep(ctx, 20*time.Second)
+		testing.Sleep(ctx, 20*time.Second) // GoBigSleepLint
 		s.Log("Finished waiting")
 	}(cleanupCtx)
 
