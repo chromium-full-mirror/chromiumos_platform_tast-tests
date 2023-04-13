@@ -1371,7 +1371,7 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 			if err := os.WriteFile(filepath.Join(s.OutDir(), "webrtc-internals.json"), dump, 0644); err != nil {
 				s.Error("Failed to write WebRTC internals dump to test results folder: ", err)
 			}
-			webRTCInternalsPV, err := reportWebRTCInternals(dump, meetingCode, meet.num, meet.present)
+			webRTCInternalsPV, err := reportWebRTCInternals(ctx, dump, meetingCode, meet.num, meet.present)
 			if err != nil {
 				s.Error("Failed to report info from WebRTC internals dump to performance metrics: ", err)
 			} else {
@@ -1502,7 +1502,7 @@ func dumpWebRTCInternals(ctx context.Context, tconn *chrome.TestConn, ui *uiauto
 }
 
 // reportWebRTCInternals reports info from a WebRTC internals dump to performance metrics.
-func reportWebRTCInternals(dump []byte, meetingCode string, numBots int, present bool) (*perf.Values, error) {
+func reportWebRTCInternals(ctx context.Context, dump []byte, meetingCode string, numBots int, present bool) (*perf.Values, error) {
 	var webRTC webrtcinternals.Dump
 	if err := json.Unmarshal(dump, &webRTC); err != nil {
 		return nil, errors.Wrap(err, "failed to unmarshal WebRTC internals dump")
@@ -1514,7 +1514,8 @@ func reportWebRTCInternals(dump []byte, meetingCode string, numBots int, present
 		expectedConns = 2
 		expectedScreenshareConns = 1
 	}
-
+	var unexpectedError error
+	var hasExpectedInboundData bool
 	numPeerConns := 0
 	numScreenshareConns := 0
 	pv := perf.NewValues()
@@ -1546,24 +1547,37 @@ func reportWebRTCInternals(dump []byte, meetingCode string, numBots int, present
 		}
 		expectedInTotalCount := 0
 		switch outScreenshareCount {
-		case 0:
+		case 0: // This is the video chat connection.
+			// Sometimes when the connection is unstable, there may be multiple peer connections.
+			// Return failure only if none of the connections have correct inbound video data.
 			expectedInTotalCount = numBots
-		case outTotalCount:
+			if inTotalCount != expectedInTotalCount {
+				unexpectedError = errors.Errorf("unexpected number of inbound-rtp video streams in peer connection %v; got %d, want %d", connID, inTotalCount, expectedInTotalCount)
+			} else {
+				hasExpectedInboundData = true
+			}
+		case outTotalCount: // This is the screen share connection.
 			numScreenshareConns++
+			if inTotalCount != expectedInTotalCount {
+				return nil, errors.Errorf("unexpected number of inbound-rtp video streams in screenshare peer connection %v; got %d, want %d", connID, inTotalCount, expectedInTotalCount)
+			}
 		default:
 			return nil, errors.Errorf("found %d screenshare(s) among %d outbound-rtp video streams in peer connection %v, expected all or none", outScreenshareCount, outTotalCount, connID)
 		}
-		if inTotalCount != expectedInTotalCount {
-			return nil, errors.Errorf("unexpected number of inbound-rtp video streams in peer connection %v; got %d, want %d", connID, inTotalCount, expectedInTotalCount)
-		}
 	}
-
-	if numPeerConns != expectedConns {
+	if !hasExpectedInboundData {
+		return nil, unexpectedError
+	}
+	if numPeerConns < expectedConns {
 		return nil, errors.Errorf("unexpected number of peer connections; got %d, want %d", numPeerConns, expectedConns)
+	} else if numPeerConns > expectedConns {
+		testing.ContextLogf(ctx, "Got more peer connections; got %d, want %d", numPeerConns, expectedConns)
 	}
 
-	if numScreenshareConns != expectedScreenshareConns {
+	if numScreenshareConns < expectedScreenshareConns {
 		return nil, errors.Errorf("unexpected number of screenshare peer connections; got %d, want %d", numScreenshareConns, expectedScreenshareConns)
+	} else if numScreenshareConns > expectedScreenshareConns {
+		testing.ContextLogf(ctx, "Got more screenshare peer connections; got %d, want %d", numScreenshareConns, expectedScreenshareConns)
 	}
 
 	return pv, nil
