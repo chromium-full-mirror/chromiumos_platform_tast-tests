@@ -46,21 +46,24 @@ func init() {
 				mode:   dns.DoHOff,
 				chrome: true,
 			},
-			Fixture: "chromeLoggedIn",
+			ExtraAttr: []string{"group:criticalstaging"},
+			Fixture:   "chromeLoggedIn",
 		}, {
 			Name: "chrome_doh_automatic",
 			Val: dnsProxyTestParams{
 				mode:   dns.DoHAutomatic,
 				chrome: true,
 			},
-			Fixture: "chromeLoggedIn",
+			ExtraAttr: []string{"group:criticalstaging"},
+			Fixture:   "chromeLoggedIn",
 		}, {
 			Name: "chrome_doh_always_on",
 			Val: dnsProxyTestParams{
 				mode:   dns.DoHAlwaysOn,
 				chrome: true,
 			},
-			Fixture: "chromeLoggedIn",
+			ExtraAttr: []string{"group:criticalstaging"},
+			Fixture:   "chromeLoggedIn",
 		}, {
 			Name: "arc_doh_off",
 			Val: dnsProxyTestParams{
