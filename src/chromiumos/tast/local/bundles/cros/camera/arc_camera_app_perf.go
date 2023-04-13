@@ -6,6 +6,7 @@ package camera
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"chromiumos/tast/common/media/caps"
@@ -244,6 +245,16 @@ func testPreview(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn,
 }
 
 func testRecording(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, a *arc.ARC, p *perf.Values) error {
+	// TODO(b/277865895): Remove skip logic once the grunt issue has been resolved.
+	boardName, err := a.GetProp(ctx, "ro.product.name")
+	if err != nil {
+		return errors.Wrap(err, "failed to get the board name")
+	}
+	if strings.Contains(boardName, "grunt") {
+		testing.ContextLog(ctx, "Skip recording test for grunt due to b/277865895")
+		return nil
+	}
+
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
