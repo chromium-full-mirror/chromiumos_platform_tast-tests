@@ -29,6 +29,7 @@ import (
 	"chromiumos/tast/local/chrome/metrics"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/cpu"
+	"chromiumos/tast/local/crosconfig"
 	perfSrc "chromiumos/tast/local/perf"
 	"chromiumos/tast/local/power"
 	"chromiumos/tast/local/power/setup"
@@ -63,6 +64,9 @@ const CooldownTimeout = 10 * time.Minute
 // Annotation.<annotation count> prefix. Additionally, periods are not allowed
 // to avoid confusion between the three sections of this metric name.
 var annotationRe = regexp.MustCompile("^[a-zA-Z0-9_-]{1,240}$")
+
+// powertopModels defines the models that auto run `powertopRecorder`.
+var powertopModels = []string{"redrix"}
 
 // keepWifi forces the Wifi to remain in its initial state,
 // regardless of the options passed to the Recorder. Useful for
@@ -289,6 +293,23 @@ type RecorderOptions struct {
 
 var performanceCUJDischargeThreshold = 25.0
 
+func contains(list []string, s string) bool {
+	for _, line := range list {
+		if line == s {
+			return true
+		}
+	}
+	return false
+}
+
+func getModelName(ctx context.Context) string {
+	model, err := crosconfig.Get(ctx, "/", "name")
+	if err != nil {
+		return ""
+	}
+	return model
+}
+
 // NewPerformanceCUJOptions indicates the power test settings for performance CUJs run by partners.
 func NewPerformanceCUJOptions() RecorderOptions {
 	return RecorderOptions{
@@ -498,8 +519,15 @@ func NewRecorderWithTestConn(ctx context.Context, tconn *chrome.TestConn, cr *ch
 		return nil, errors.New("failed to get the out directory")
 	}
 
-	if strings.ToLower(runPowertop.Value()) == "true" {
-		r.powertopRecorder, err = perfSrc.NewPowertopRecorder(ctx, 5*time.Second, filepath.Join(outDir, "powertop"))
+	forcePowertopOn := strings.ToLower(runPowertop.Value()) == "true"
+	forcePowertopOff := strings.ToLower(runPowertop.Value()) == "false"
+	if !forcePowertopOff && (forcePowertopOn || contains(powertopModels, getModelName(ctx))) {
+		r.powertopRecorder, err = perfSrc.NewPowertopRecorder(ctx,
+			&perfSrc.PowertopRecorderOptions{
+				Interval:       5 * time.Second,
+				OutDir:         filepath.Join(outDir, "powertop"),
+				IgnoreCPUScale: forcePowertopOn,
+			})
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create PowertopRecorder")
 		}
