@@ -106,9 +106,13 @@ func testOpenCCAFirstAndCloseWebPageFirst(cleanupCtx, ctx context.Context, cr *c
 	if err != nil {
 		return errors.Wrap(err, "failed to open CCA")
 	}
-	defer func(cleanupCtx context.Context) {
-		if err := closeCCA(cleanupCtx, retErr != nil); err != nil {
-			retErr = errors.Wrap(retErr, err.Error())
+	defer func(ctx context.Context) {
+		if err := closeCCA(ctx, retErr != nil); err != nil {
+			if retErr == nil {
+				retErr = errors.Wrap(err, "failed to close CCA")
+			} else {
+				testing.ContextLog(ctx, "Failed to close CCA: ", err)
+			}
 		}
 	}(cleanupCtx)
 
@@ -140,9 +144,13 @@ func testOpenWebPageFirstAndCloseCCAFirst(cleanupCtx, ctx context.Context, cr *c
 	if err != nil {
 		return errors.Wrap(err, "failed to open CCA")
 	}
-	defer func(cleanupCtx context.Context) {
-		if err := closeCCA(cleanupCtx, retErr != nil); err != nil {
-			retErr = errors.Wrap(retErr, err.Error())
+	defer func(ctx context.Context) {
+		if err := closeCCA(ctx, retErr != nil); err != nil {
+			if retErr == nil {
+				retErr = errors.Wrap(err, "failed to close CCA")
+			} else {
+				testing.ContextLog(ctx, "Failed to close CCA: ", err)
+			}
 		}
 	}(cleanupCtx)
 

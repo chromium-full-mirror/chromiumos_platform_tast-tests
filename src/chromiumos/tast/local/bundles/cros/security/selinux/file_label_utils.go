@@ -215,7 +215,7 @@ func GpuDevices() ([]string, error) {
 	for _, entryTree := range renderDs {
 		deviceReal, err := filepath.EvalSymlinks(filepath.Join(entryTree, "device"))
 		if err != nil {
-			if firstErr != nil {
+			if firstErr == nil {
 				firstErr = errors.Wrap(err, "unable to resolve absolute deviceReal")
 			}
 			errCnt++
@@ -246,7 +246,7 @@ func IIOSensorDevices() ([]string, error) {
 	for _, entry := range trees {
 		name, err := ioutil.ReadFile(filepath.Join(entry, "name"))
 		if err != nil {
-			if firstErr != nil {
+			if firstErr == nil {
 				firstErr = errors.Wrap(err, "unable to determine device name")
 			}
 			errCnt++
@@ -254,7 +254,7 @@ func IIOSensorDevices() ([]string, error) {
 		}
 		deviceReal, err := filepath.EvalSymlinks(entry)
 		if err != nil {
-			if firstErr != nil {
+			if firstErr == nil {
 				firstErr = errors.Wrap(err, "failed to evaluate symlink for iio device")
 			}
 			errCnt++

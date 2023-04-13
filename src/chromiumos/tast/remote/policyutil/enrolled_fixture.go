@@ -257,7 +257,7 @@ func enroll(ctx context.Context, attemptDir string, dut *dut.DUT, rpcHint *testi
 			if _, err := policyClient.RemoveFakeDMSDir(ctx, &pspb.RemoveFakeDMSDirRequest{
 				Path: fdmsDir,
 			}); err != nil {
-				if retErr != nil {
+				if retErr == nil {
 					retErr = errors.Wrap(err, "failed to remove FakeDMS directory")
 				} else {
 					testing.ContextLog(ctx, "Failed to remove FakeDMS directory: ", err)

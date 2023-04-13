@@ -121,8 +121,8 @@ func (w *CameraWebPage) Close(ctx context.Context) (retErr error) {
 		}
 		if err := w.trackState.Release(ctx); err != nil {
 			testing.ContextLog(ctx, "Failed to release track state: ", err)
-			if retErr != nil {
-				retErr = errors.Wrapf(retErr, "failed to release track state: %v", err.Error())
+			if retErr == nil {
+				retErr = errors.Wrap(err, "failed to release track state")
 			}
 		}
 		w.trackState = nil
@@ -130,14 +130,14 @@ func (w *CameraWebPage) Close(ctx context.Context) (retErr error) {
 	if w.pageConn != nil {
 		if err := w.pageConn.CloseTarget(ctx); err != nil {
 			testing.ContextLog(ctx, "Failed to close web page target: ", err)
-			if retErr != nil {
-				retErr = errors.Wrapf(retErr, "failed to close web page target: %v", err.Error())
+			if retErr == nil {
+				retErr = errors.Wrap(err, "failed to close web page target")
 			}
 		}
 		if err := w.pageConn.Close(); err != nil {
 			testing.ContextLog(ctx, "Failed to close web page connection: ", err)
-			if retErr != nil {
-				retErr = errors.Wrapf(retErr, "failed to close web page connection: %v", err.Error())
+			if retErr == nil {
+				retErr = errors.Wrap(err, "failed to close web page connection")
 			}
 		}
 		w.pageConn = nil

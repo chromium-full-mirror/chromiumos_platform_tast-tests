@@ -187,7 +187,7 @@ func DisconnectAllDevices(ctx context.Context) error {
 	var firstErr error
 	recordErr := func(d *Device, err error) {
 		testing.ContextLogf(ctx, "Failure during disconnecting %q: %v", d.Path(), err)
-		if firstErr != nil {
+		if firstErr == nil {
 			firstErr = err
 		}
 	}

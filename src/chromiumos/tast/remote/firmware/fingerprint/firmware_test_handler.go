@@ -390,7 +390,7 @@ func restoreDaemons(ctx context.Context, upstartService platform.UpstartServiceC
 		status, err := upstartService.JobStatus(ctx, &platform.JobStatusRequest{JobName: daemon.name})
 		if err != nil {
 			testing.ContextLog(ctx, "Failed to get state for "+daemon.name+": ", err)
-			if firstErr != nil {
+			if firstErr == nil {
 				firstErr = err
 			}
 			continue
@@ -406,7 +406,7 @@ func restoreDaemons(ctx context.Context, upstartService platform.UpstartServiceC
 				})
 				if err != nil {
 					testing.ContextLog(ctx, "Failed to stop "+daemon.name+": ", err)
-					if firstErr != nil {
+					if firstErr == nil {
 						firstErr = err
 					}
 				}
@@ -417,7 +417,7 @@ func restoreDaemons(ctx context.Context, upstartService platform.UpstartServiceC
 				})
 				if err != nil {
 					testing.ContextLog(ctx, "Failed to start "+daemon.name+": ", err)
-					if firstErr != nil {
+					if firstErr == nil {
 						firstErr = err
 					}
 				}
