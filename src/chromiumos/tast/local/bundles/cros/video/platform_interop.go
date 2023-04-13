@@ -408,6 +408,7 @@ func PlatformInterop(ctx context.Context, s *testing.State) {
 	defer os.Remove(md5LogPath)
 
 	decoderCommandArgs := testOpt.decoderArgsBuilder(ctx, encodedFile, md5LogPath)
+	decoderCommandArgs = append(decoderCommandArgs, platform.MD5Arg(testOpt.decoderCommand, md5LogPath))
 	if err != nil {
 		s.Fatal("Failed to construct the decoder command line: ", err)
 	}

@@ -6,7 +6,9 @@ package platform
 
 import (
 	"context"
+	"fmt"
 	"regexp"
+	"strings"
 
 	"chromiumos/tast/common/testexec"
 )
@@ -16,7 +18,7 @@ type CommandBuilderDecodeFn func(ctx context.Context, filename, md5OutputPath st
 
 // V4L2StatefulDecodeArgs provides the arguments to use with the stateful decoding binary exe for v4l2.
 func V4L2StatefulDecodeArgs(ctx context.Context, filename, md5OutputPath string) (command []string) {
-	command = append(command, "--file="+filename, "--md5="+md5OutputPath, "--log_level=1")
+	command = append(command, "--file="+filename, "--log_level=1")
 
 	// Query the driver info. If we are on a MediaTek platform, add --mmap to the
 	// command line.
@@ -38,7 +40,6 @@ func V4L2StatelessDecodeArgs(ctx context.Context, filename, md5OutputPath string
 	// TODO(stevecho): md5 support has to be added
 	command = append(command,
 		"--video="+filename,
-		"--md5="+md5OutputPath,
 		// vpxdec is used to compute reference hashes, and outputs only those for
 		// visible frames
 		"--visible")
@@ -59,10 +60,9 @@ func V4L2StatelessDecodeArgs(ctx context.Context, filename, md5OutputPath string
 }
 
 // getVAAPIArgs provides the arguments to use with different decoding binary exes for vaapi.
-func getVAAPIArgs(ctx context.Context, filename, md5OutputPath string) []string {
+func getVAAPIArgs(ctx context.Context, filename string) []string {
 	return []string{
 		"--video=" + filename,
-		"--md5=" + md5OutputPath,
 		// aomdec is used to compute reference hashes, and outputs only those for
 		// visible frames
 		"--visible",
@@ -71,27 +71,48 @@ func getVAAPIArgs(ctx context.Context, filename, md5OutputPath string) []string 
 
 // AV1DecodeVAAPIargs provides the arguments to use with the AV1 decoding binary exe for vaapi.
 func AV1DecodeVAAPIargs(ctx context.Context, filename, md5OutputPath string) []string {
-	return append(getVAAPIArgs(ctx, filename, md5OutputPath), "--codec=AV1")
+	return append(getVAAPIArgs(ctx, filename), "--codec=AV1")
 }
 
 // VP9DecodeVAAPIargs provides the arguments to use with the VP9 decoding binary exe for vaapi.
 func VP9DecodeVAAPIargs(ctx context.Context, filename, md5OutputPath string) []string {
-	return append(getVAAPIArgs(ctx, filename, md5OutputPath), "--codec=VP9")
+	return append(getVAAPIArgs(ctx, filename), "--codec=VP9")
 }
 
 // VP8DecodeVAAPIargs provides the arguments to use with the VP8 decoding binary exe for vaapi.
 func VP8DecodeVAAPIargs(ctx context.Context, filename, md5OutputPath string) []string {
-	return append(getVAAPIArgs(ctx, filename, md5OutputPath), "--codec=VP8")
+	return append(getVAAPIArgs(ctx, filename), "--codec=VP8")
 }
 
 // H264DecodeVAAPIargs provides the arguments to use with the H264 decoding binary exe for vaapi.
 func H264DecodeVAAPIargs(ctx context.Context, filename, md5OutputPath string) []string {
-	return append(getVAAPIArgs(ctx, filename, md5OutputPath), "--codec=H264")
+	return append(getVAAPIArgs(ctx, filename), "--codec=H264")
 }
 
 // HEVCDecodeVAAPIargs provides the arguments to use with the HEVC decoding binary exe for vaapi.
 func HEVCDecodeVAAPIargs(ctx context.Context, filename, md5OutputPath string) []string {
-	return append(getVAAPIArgs(ctx, filename, md5OutputPath), "--codec=H265")
+	return append(getVAAPIArgs(ctx, filename), "--codec=H265")
+}
+
+// MD5Arg returns the argument to specify MD5 hash output for each platform decoder supporting it.
+func MD5Arg(decoder, md5OutputPath string) string {
+	switch {
+	case strings.Contains(decoder, "v4l2"):
+	case strings.Contains(decoder, "decode_test"):
+		return fmt.Sprintf("--md5=%s", md5OutputPath)
+	}
+	return ""
+}
+
+// LoopArg returns the argument to specify looping decode for each platform decoder supporting it.
+func LoopArg(decoder string, numLoops int) string {
+	if strings.Contains(decoder, "decode_test") {
+		if numLoops > 0 {
+			return fmt.Sprintf("--loop=%d", numLoops)
+		}
+		return "--loop"
+	}
+	return ""
 }
 
 // VPxDecodeArgs provides the arguments to use with vpxdec decoding binary exe.
