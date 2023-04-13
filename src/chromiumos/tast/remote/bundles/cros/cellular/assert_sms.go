@@ -11,8 +11,10 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 
 	"chromiumos/tast/remote/cellular/callbox/manager"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -22,24 +24,51 @@ func init() {
 		Desc:         "Verifies that an SMS message sent from the callbox is received",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "jstanko@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_callbox", "cellular_cmw_callbox"},
+		Attr:         []string{"group:cellular", "cellular_callbox"},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.cellular.RemoteCellularService"},
 		Fixture:      "callboxManagedFixture",
 		Timeout:      5 * time.Minute,
+		Params: []testing.Param{
+			{
+				Name:      "lte",
+				ExtraAttr: []string{"cellular_cmw_callbox", "cellular_cmx_callbox"},
+				Val: &manager.ConfigureCallboxRequestBody{
+					CellularType: manager.CellularTechnologyLTE,
+					Parameters: []manager.CellConfiguration{
+						manager.NewLteCellConfiguration(),
+					},
+				},
+			},
+			{
+				Name:      "nr5g_nsa",
+				ExtraAttr: []string{"cellular_cmx_callbox"},
+				// TODO(b/273954565): remove hwdep once drone push has landed so R&S carrier names can be used
+				ExtraHardwareDeps: hwdep.D(hwdep.Model("vell")),
+				Val: &manager.ConfigureCallboxRequestBody{
+					Hardware:     manager.CallboxHardwareCMX,
+					CellularType: manager.CellularTechnologyNR5GNSA,
+					Parameters: []manager.CellConfiguration{
+						manager.NewLteCellConfiguration(
+							manager.BandOption(1),
+							manager.AntennaOption(manager.MimoMode4x4, manager.TransmissionMode3),
+						),
+						manager.New5GNSACellConfiguration(
+							manager.NBandOption(78),
+							manager.AntennaOption(manager.MimoMode4x4, manager.TransmissionMode3),
+						),
+					},
+				},
+			},
+		},
 	})
 }
 
 func AssertSMS(ctx context.Context, s *testing.State) {
 	dutConn := s.DUT().Conn()
 	tf := s.FixtValue().(*manager.TestFixture)
-	if err := tf.ConnectToCallbox(ctx, dutConn, &manager.ConfigureCallboxRequestBody{
-		Hardware:     manager.CallboxHardwareCMW,
-		CellularType: manager.CellularTechnologyLTE,
-		Parameters: []manager.CellConfiguration{
-			manager.NewLteCellConfiguration(),
-		},
-	}); err != nil {
+	tc := s.Param().(*manager.ConfigureCallboxRequestBody)
+	if err := tf.ConnectToCallbox(ctx, dutConn, tc); err != nil {
 		s.Fatal("Failed to initialize cellular connection: ", err)
 	}
 
