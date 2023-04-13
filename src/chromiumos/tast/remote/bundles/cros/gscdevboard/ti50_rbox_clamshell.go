@@ -150,7 +150,7 @@ func verifyEcResetWithKeysInOrder(ctx context.Context, s *testing.State, b utils
 
 	s.Logf("Tapping %s for 500ms", second)
 	b.GpioSet(ctx, second, false)
-	testing.Sleep(ctx, time.Millisecond*500)
+	testing.Sleep(ctx, time.Millisecond*500) // GoBigSleepLint: Simulating button press
 	b.GpioSet(ctx, second, true)
 
 	s.Log("Releasing ", first)

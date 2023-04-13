@@ -76,7 +76,7 @@ func Ti50RboxTablet(ctx context.Context, s *testing.State) {
 	s.Log("Pushing Power and VolDown then wait for reset to occur")
 	b.GpioSet(ctx, ti50.GpioTi50PowerBtnL, false)
 	b.GpioSet(ctx, ti50.GpioTi50VolDownIn, true)
-	testing.Sleep(ctx, time.Second*11)
+	testing.Sleep(ctx, time.Second*11) // GoBigSleepLint: Simulating button press
 	b.GpioSet(ctx, ti50.GpioTi50PowerBtnL, true)
 	b.GpioSet(ctx, ti50.GpioTi50VolUpIn, false)
 

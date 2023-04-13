@@ -114,7 +114,7 @@ func Ti50CCDUpdate(ctx context.Context, s *testing.State) {
 
 	// Ti50 will reject updates for 60 seconds after an update attempt.
 	s.Log("Sleep for 30 seconds to ensure rate limited")
-	testing.Sleep(ctx, 30*time.Second)
+	testing.Sleep(ctx, 30*time.Second) // GoBigSleepLint: Needed for rate limit testing
 
 	out, _ = b.GSCToolCommand(ctx, ccdImage)
 	if !gsctoolUpdateTooSoonRegexp.Match(out) {
@@ -127,7 +127,7 @@ func Ti50CCDUpdate(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Sleep for 30 seconds to ensure no longer rate limited")
-	testing.Sleep(ctx, 30*time.Second)
+	testing.Sleep(ctx, 30*time.Second) // GoBigSleepLint: Needed for rate limit testing
 
 	// Ti50 should accept updates 60 seconds after the last update.
 	out, _ = b.GSCToolCommand(ctx, ccdImage)
