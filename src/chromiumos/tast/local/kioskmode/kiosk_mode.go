@@ -104,10 +104,45 @@ func (k *Kiosk) Close(ctx context.Context) (retErr error) {
 	if k.autostart {
 		policies = append(policies, k.localAccounts)
 	}
-	if err := policyutil.ServeAndRefresh(ctx, k.fdms, k.cr, policies); err != nil {
-		testing.ContextLog(ctx, "Could not serve and refresh policies. If kioskmode.AutoLaunch() option was used it may impact next test : ", err)
-		return errors.Wrap(err, "could not clear policies")
-	}
+
+	var serveAndRefreshErr error
+
+	defer func(ctx context.Context) {
+		if serveAndRefreshErr == nil {
+			return
+		}
+
+		// If `policyutil.ServeAndRefresh` is failed, we might be on the login screen
+		// if test interrupted kiosk autolaunch or manual kiosk launch failed.
+		//
+		// So we try to refresh policies from login screen using signin profile test extension.
+		//
+		// Test has to use next kiosk option to load signin profile test extension:
+		//
+		//   kioskmode.ExtraChromeOptions(
+		//	   chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")))
+
+		// TODO(b/278071203): Figure out more robust way to cleanup autolaunch kiosk.
+
+		ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
+		defer cancel()
+
+		if err := policyutil.ServeAndRefreshOnLoginScreen(ctx, k.fdms, k.cr, policies); err != nil {
+			testing.ContextLog(ctx, "Could not serve and refresh policies on login screen. If kioskmode.AutoLaunch() option was used it may impact next test : ", err)
+			retErr = serveAndRefreshErr
+		}
+	}(ctx)
+
+	defer func(ctx context.Context) {
+		ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
+		defer cancel()
+
+		if err := policyutil.ServeAndRefresh(ctx, k.fdms, k.cr, policies); err != nil {
+			testing.ContextLog(ctx, "Could not serve and refresh policies. If kioskmode.AutoLaunch() option was used it may impact next test : ", err)
+			serveAndRefreshErr = errors.Wrap(err, "could not clear policies")
+		}
+	}(ctx)
+
 	return nil
 }
 

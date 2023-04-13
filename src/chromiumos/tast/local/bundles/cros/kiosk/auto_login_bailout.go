@@ -57,11 +57,15 @@ func AutoLoginBailout(ctx context.Context, s *testing.State) {
 			chromeOptions,
 		),
 	)
-
 	if err != nil {
-		s.Error("Failed to start Chrome in Kiosk mode: ", err)
+		s.Fatal("Failed to start Chrome in Kiosk mode: ", err)
 	}
-	defer kiosk.Close(ctx)
+
+	defer func(ctx context.Context) {
+		if err := kiosk.Close(ctx); err != nil {
+			s.Error("Failed to close kiosk: ", err)
+		}
+	}(ctx)
 
 	if err := kiosk.WaitForSplashScreenShowing(); err != nil {
 		s.Error("Failed to wait for kiosk splash screen: ", err)

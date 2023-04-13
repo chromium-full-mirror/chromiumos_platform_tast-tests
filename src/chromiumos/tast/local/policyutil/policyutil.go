@@ -123,6 +123,15 @@ func ServeAndRefresh(ctx context.Context, fdms *fakedms.FakeDMS, cr *chrome.Chro
 	return serveAndRefresh(ctx, fdms, cr, tconn, ps)
 }
 
+// ServeAndRefreshOnLoginScreen same as ServeAndRefresh but in the login context. It uses the Signin Profile Test API connection.
+func ServeAndRefreshOnLoginScreen(ctx context.Context, fdms *fakedms.FakeDMS, cr *chrome.Chrome, ps []policy.Policy) error {
+	tconn, err := cr.SigninProfileTestAPIConn(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to create Signin Profile Test API connection")
+	}
+	return serveAndRefresh(ctx, fdms, cr, tconn, ps)
+}
+
 // serveAndRefresh is a helper function. Similar to ServeAndRefresh but also accepts the test connection.
 func serveAndRefresh(ctx context.Context, fdms *fakedms.FakeDMS, cr *chrome.Chrome, tconn *chrome.TestConn, ps []policy.Policy) error {
 	pb := policy.NewBlob()
