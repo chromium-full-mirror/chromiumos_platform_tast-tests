@@ -464,6 +464,13 @@ func (f *crostiniFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		// Install Crostini.
 		iOptions := GetInstallerOptions(s, f.preData.debianVersion, f.preData.container == largeContainer, f.cr.NormalizedUser())
 		if _, err := cui.InstallCrostini(ctx, f.tconn, f.cr, iOptions); err != nil {
+			// Try to retrieve crostini_journalctl if the container is starting
+			// but the installation fails.
+			if termina, err := vm.GetRunningTerminaVM(ctx, f.cr.NormalizedUser()); err != nil {
+				s.Log("Cannot get running VM: ", err)
+			} else if termina != nil {
+				termina.TrySaveContainerLogs(ctx, s.OutDir())
+			}
 			s.Fatal("Failed to install Crostini: ", err)
 		}
 	}

@@ -7,6 +7,8 @@ package vm
 import (
 	"bytes"
 	"context"
+	"io/ioutil"
+	"path/filepath"
 	"strings"
 
 	"github.com/godbus/dbus/v5"
@@ -288,4 +290,19 @@ func (vm *VM) UnshareDownloadsPath(ctx context.Context, path string) error {
 	}
 
 	return nil
+}
+
+// TrySaveContainerLogs tries to save container logs via lxc.
+func (vm *VM) TrySaveContainerLogs(ctx context.Context, outDir string) {
+	args := []string{"exec", "penguin", "--", "journalctl", "--no-pager"}
+	output, err := vm.LXCCommand(ctx, args...)
+	if err != nil {
+		testing.ContextLog(ctx, "Error running journalctl: ", err)
+	}
+
+	path := filepath.Join(outDir, "crostini_journalctl.txt")
+	err = ioutil.WriteFile(path, []byte(output), 0644)
+	if err != nil {
+		testing.ContextLog(ctx, "Error writing journalctl to log: ", err)
+	}
 }
