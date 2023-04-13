@@ -133,16 +133,6 @@ func SAPSimpleConnect(ctx context.Context, s *testing.State) {
 		s.Fatal("Test requires at least 2 DUTs to be declared. Only have ", tf.NumberOfDUTs())
 	}
 
-	// Setup AP to provide reference regulatory domain for all testcases.
-	apIface, cancelF, err := tf.SeedRegdomain(ctx, wificell.DefaultDUT)
-	if err != nil {
-		s.Fatal("Failed to configure ap, err: ", err)
-	}
-	defer cancelF(ctx)
-
-	ctx, cancel := tf.ReserveForDeconfigAP(ctx, apIface)
-	defer cancel()
-
 	testOnce := func(ctx context.Context, s *testing.State, tc sapSimpleConnectTestcase) {
 		tf.UseWpaCliAPI(tc.useWpaCliAPI)
 		tetheringConf, _, err := tf.StartTethering(ctx, wificell.DefaultDUT, tc.tetheringOpts, tc.secConfFac)

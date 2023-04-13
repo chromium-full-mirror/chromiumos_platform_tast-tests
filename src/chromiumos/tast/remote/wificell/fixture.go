@@ -430,10 +430,23 @@ func (f *tastFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) inter
 		}
 	}
 
+	if f.features&TFFeaturesCompanionDUT != 0 {
+		// Setup AP to provide reference regulatory domain for all testcases.
+		if err := tf.SeedRegdomain(ctx, DefaultDUT); err != nil {
+			s.Fatal("Failed to configure Regdomain seeding AP: ", err)
+		}
+	}
+
 	return f.tf
 }
 
 func (f *tastFixtureImpl) TearDown(ctx context.Context, s *testing.FixtState) {
+	if f.features&TFFeaturesCompanionDUT != 0 {
+		if err := f.tf.DeconfigSeedingAP(ctx); err != nil {
+			testing.ContextLog(ctx, "Failed to deconfig seeding AP: ", err) // Do nothing else, the primary error is more important.
+		}
+	}
+
 	duts := f.tf.duts // Make a copy of the slice to iterate over.
 	for _, d := range duts {
 		if f.features&TFFeaturesEnroll != 0 {

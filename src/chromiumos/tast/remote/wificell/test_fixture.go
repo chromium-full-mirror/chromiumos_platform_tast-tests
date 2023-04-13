@@ -279,6 +279,7 @@ type TestFixture struct {
 	}
 
 	apID              int
+	seederIface       *APIface
 	capturers         map[*APIface]*pcap.Capturer
 	tetheringCapturer *pcap.Capturer
 
@@ -2105,7 +2106,7 @@ func (tf *TestFixture) UseWpaCliAPI(enable bool) {
 }
 
 // SeedRegdomain sets up AP which broadcasts country information, so that all self-managed devices in the wificell get their regdomain seeded.
-func (tf *TestFixture) SeedRegdomain(ctx context.Context, dutIdx DutIdx) (*APIface, func(context.Context), error) {
+func (tf *TestFixture) SeedRegdomain(ctx context.Context, dutIdx DutIdx) error {
 	// One AP is enough for all testcases.
 	ssid := hostapd.RandomSSID("SUPPORT_SSID")
 	apIface, err := tf.ConfigureAPOnRouterID(ctx, 0, []hostapd.Option{
@@ -2114,21 +2115,19 @@ func (tf *TestFixture) SeedRegdomain(ctx context.Context, dutIdx DutIdx) (*APIfa
 		hostapd.SSID(ssid),
 		hostapd.SpectrumManagement()}, nil, false, false)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to configure AP")
+		return errors.Wrap(err, "failed to configure AP")
 	}
-
-	cancel := func(ctx context.Context) {
-		if err := tf.DeconfigAP(ctx, apIface); err != nil {
-			testing.ContextLog(ctx, "Failed to deconfig AP, err: ", err)
-		}
-	}
+	tf.seederIface = apIface
 
 	testing.ContextLog(ctx, "Supporting AP setup done. Waiting for the regdomain information to be propagated")
 
 	// Make sure we have the regdomain set.
 	ifName, err := tf.DUTWifiClient(DefaultDUT).Interface(ctx)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to read WiFi Interface name")
+		if err := tf.DeconfigSeedingAP(ctx); err != nil {
+			testing.ContextLog(ctx, "Failed to deconfig seeding AP: ", err) // Do nothing else, the primary error is more important.
+		}
+		return errors.Wrap(err, "failed to read WiFi Interface name")
 	}
 	iwr := iw.NewRemoteRunner(tf.DUTConn(dutIdx))
 
@@ -2163,11 +2162,25 @@ func (tf *TestFixture) SeedRegdomain(ctx context.Context, dutIdx DutIdx) (*APIfa
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: time.Second}); err != nil {
-		cancel(ctx)
-		return nil, nil, errors.Wrap(err, "failed to get a correct regdomain")
+		if err := tf.DeconfigSeedingAP(ctx); err != nil {
+			testing.ContextLog(ctx, "Failed to deconfig seeding AP: ", err) // Do nothing else, the primary error is more important.
+		}
+		return errors.Wrap(err, "failed to get a correct regdomain")
 	}
 
-	return apIface, cancel, nil
+	return nil
+}
+
+// DeconfigSeedingAP deconfigures AP broadcasting the regulatory domain.
+func (tf *TestFixture) DeconfigSeedingAP(ctx context.Context) error {
+	if tf.seederIface == nil {
+		return nil
+	}
+	if err := tf.DeconfigAP(ctx, tf.seederIface); err != nil {
+		return errors.Wrap(err, "failed to deconfig AP")
+	}
+	tf.seederIface = nil
+	return nil
 }
 
 // StartTethering configures the specific DUT to provide a tethering session with the options specified.

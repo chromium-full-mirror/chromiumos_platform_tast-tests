@@ -334,16 +334,6 @@ func SAPPerf(ctx context.Context, s *testing.State) {
 		s.Fatal("Test requires at least 2 DUTs to be declared. Only have ", tf.NumberOfDUTs())
 	}
 
-	// Setup AP to provide reference regulatory domain for all testcases.
-	apIface, cancelF, err := tf.SeedRegdomain(ctx, wificell.DefaultDUT)
-	if err != nil {
-		s.Fatal("Failed to configure ap, err: ", err)
-	}
-	defer cancelF(ctx)
-
-	ctx, cancel := tf.ReserveForDeconfigAP(ctx, apIface)
-	defer cancel()
-
 	pv := perf.NewValues()
 	defer func() {
 		if err := pv.Save(s.OutDir()); err != nil {
@@ -351,7 +341,7 @@ func SAPPerf(ctx context.Context, s *testing.State) {
 		}
 	}()
 	// Add a cascading timeout to let test store perf report, but don't impact test teardown if it takes too long.
-	ctx, cancel = ctxutil.Shorten(ctx, 10*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
 	testOnce := func(ctx context.Context, s *testing.State, tc sapPerfTestcase) {
