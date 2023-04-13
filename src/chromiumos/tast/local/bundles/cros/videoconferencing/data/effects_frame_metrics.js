@@ -15,9 +15,20 @@ async (seconds) => {
 
   let frames = 0;
   let abort = false;
+  let currentTime = null
+  const durationData = [];
+
 
   // Count frames in parallel.
   const countFrames = () => {
+    const now = Date.now()
+    // skip the first value
+    if (currentTime != null) {
+      const duration = now - currentTime
+      durationData.push(duration)
+    }
+    currentTime = now
+
     frames += 1;
     if (!abort) {
       video.requestVideoFrameCallback(countFrames);
@@ -25,7 +36,7 @@ async (seconds) => {
   }
   video.requestVideoFrameCallback(countFrames);
 
-  const data = [];
+  const fpsData = [];
   const beginFrames = frames;
   const beginTime = Date.now();
   for (let i = 0; i < seconds; i += 1) {
@@ -33,16 +44,17 @@ async (seconds) => {
     const oldTime = Date.now();
     await sleep(1000);
     const fps = (frames - oldFrames) / (Date.now() - oldTime) * 1000;
-    data.push(fps);
+    fpsData.push(fps);
   }
-  const average = ((frames - beginFrames) / (Date.now() - beginTime) *
+  const fpsAverage = ((frames - beginFrames) / (Date.now() - beginTime) *
       1000);
 
   // Stop counting frames in parallel.
   abort = true;
 
   return {
-    average,
-    data
+    fpsAverage,
+    durationData,
+    fpsData
   };
 }

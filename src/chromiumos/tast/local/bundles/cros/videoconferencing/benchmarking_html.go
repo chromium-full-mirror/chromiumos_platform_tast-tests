@@ -59,7 +59,7 @@ func init() {
 			"videoconferencing.test_duration",
 		},
 		Data: []string{
-			"effects_fps_metrics.js",
+			"effects_frame_metrics.js",
 			"effects_video_script.html",
 		},
 		Fixture: fixture.LoggedInAndBenchmarkSetupFixture,
@@ -153,6 +153,7 @@ func BenchmarkingHTML(ctx context.Context, s *testing.State) {
 	srv := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	// TODO: Enable param resolution when available
 	url := srv.URL + simpleURL + strconv.Itoa(defaultResolution)
+
 	defer srv.Close()
 	conn, err := cr.NewConn(ctx, url, browser.WithNewWindow())
 
@@ -167,7 +168,7 @@ func BenchmarkingHTML(ctx context.Context, s *testing.State) {
 	allow := nodewith.Name("Allow").Role(role.Button).Ancestor(bubble)
 
 	// Find the web view of Simple Meeting window.
-	// doubleclick event on javascript window will prompt fullscreen
+	// doubleclick event on javascript window will prompt fullscreen.
 	webview := nodewith.ClassName("ContentsWebView").Role(role.WebView)
 	webArea := nodewith.Role(role.RootWebArea).Ancestor(webview)
 
@@ -193,60 +194,18 @@ func BenchmarkingHTML(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to let things settle: ", err)
 	}
 
-	// Get Max memory usage.
-	memoryChannel := make(chan effects.PeakMemoryResult)
-	go effects.GetMaxMemoryUsage(ctx, memoryChannel, testDuration)
-
-	var fpsResult effects.DataResult
-	if fpsResult, err = effects.CaptureFPSData(ctx, conn, s.DataPath("effects_fps_metrics.js"), testDuration); err != nil {
-		s.Error("Failed to capture FPS data: ", err)
+	// Capture metrics.
+	if err = effects.ReportFramePerfMetrics(ctx, p, conn, s.DataPath("effects_frame_metrics.js"), testDuration); err != nil {
+		s.Fatal("Failed to report fps and frame duration metrics: ", err)
 	}
-	p.Set(perf.Metric{
-		Name:      "FPS_average",
-		Unit:      "fps",
-		Direction: perf.BiggerIsBetter,
-		Multiple:  false},
-		fpsResult.Average)
-
-	var percentileMap map[int]float64
-	if percentileMap, err = effects.GetPercentileData(ctx, fpsResult.Data); err != nil {
-		s.Fatal("Failed to calculate percentile for FPS data: ", err)
+	if err = effects.ReportMemoryMetrics(ctx, p, testDuration); err != nil {
+		s.Error("Failed to report memory metrics: ", err)
 	}
-	for percentile, value := range percentileMap {
-		p.Set(perf.Metric{
-			Name:      "FPS_p" + strconv.Itoa(percentile),
-			Unit:      "fps",
-			Direction: perf.BiggerIsBetter,
-			Multiple:  false,
-		}, value)
-	}
-
-	// Retrieve memory usage from goroutine.
-	peakMemoryUsage := <-memoryChannel
-	if peakMemoryUsage.Err != nil {
-		s.Fatal("Memory capture failed", peakMemoryUsage.Err)
-	}
-
-	p.Set(perf.Metric{
-		Name:      "PeakMemoryUsage",
-		Unit:      "Byte",
-		Direction: perf.SmallerIsBetter,
-		Multiple:  false},
-		float64(peakMemoryUsage.Value))
-	testing.ContextLog(ctx, "max Memory usage: ", peakMemoryUsage.Value)
-
-	// Power difference.
-	var energyDiff *power.RAPLValues
 	if raplEnergyBefore != nil {
-		energyDiff, err = raplEnergyBefore.DiffWithCurrentRAPL()
-		if err != nil {
-			s.Fatal("Failed to get RAPL power usage: ", err)
+		if effects.ReportPowerDiffMetrics(ctx, p, raplEnergyBefore, testDuration) != nil {
+			s.Fatal("Failed to report power metrics: ", err)
 		}
 	}
-
-	energyDiff.ReportPerfMetrics(p, "joules-")
-	energyDiff.ReportWattPerfMetrics(p, "watts-", time.Duration(testDuration)*time.Second)
-
 	if err := p.Save(s.OutDir()); err != nil {
 		s.Error("Cannot save perf data: ", err)
 	}

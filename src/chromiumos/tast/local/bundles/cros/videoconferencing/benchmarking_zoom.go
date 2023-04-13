@@ -161,17 +161,9 @@ func BenchmarkingZoom(ctx context.Context, s *testing.State) {
 	p := perf.NewValues()
 
 	// Capture FPS.
-	var fpsResult effects.DataResult
-	if fpsResult, err = effects.CaptureFPSData(ctx, zm.Conn(), s.DataPath("effects_zoom_fps.js"), testDuration); err != nil {
-		s.Error("Failed to capture FPS data: ", err)
+	if err = effects.ReportFramePerfMetrics(ctx, p, zm.Conn(), s.DataPath("effects_zoom_fps.js"), testDuration); err != nil {
+		s.Fatal("Failed to report fps and frame duration metrics: ", err)
 	}
-	p.Set(perf.Metric{
-		Name:      "FPS_average",
-		Unit:      "fps",
-		Direction: perf.BiggerIsBetter,
-		Multiple:  false},
-		fpsResult.Average)
-
 	if err := p.Save(s.OutDir()); err != nil {
 		s.Error("Cannot save perf data: ", err)
 	}

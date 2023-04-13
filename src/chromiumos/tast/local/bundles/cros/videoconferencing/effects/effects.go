@@ -6,13 +6,17 @@
 package effects
 
 import (
+	"chromiumos/tast/common/perf"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/power"
 	"chromiumos/tast/testing"
 	"context"
 	"encoding/json"
 	"io/ioutil"
 	"os"
+	"strconv"
+	"time"
 )
 
 const (
@@ -21,10 +25,11 @@ const (
 	platformEffectsOverrideDir  = "/run/camera/effects"
 )
 
-// DataResult returns the result of FPS value measured.
+// DataResult returns the result of frame metrics measured.
 type DataResult struct {
-	Average float64   `json:"average"`
-	Data    []float64 `json:"data"`
+	FpsAverage   float64   `json:"fpsAverage"`
+	DurationData []float64 `json:"durationData"`
+	FpsData      []float64 `json:"fpsData"`
 }
 
 // ApplyPlatformEffects applies the configured platform effects.
@@ -74,6 +79,86 @@ func CaptureFPSData(ctx context.Context, conn *browser.Conn, file string, second
 	if err := conn.Call(ctx, &result, string(script), seconds); err != nil {
 		return result, errors.Wrap(err, "failed to call FPS script")
 	}
-	testing.ContextLog(ctx, "FPS: ", result.Average)
+	testing.ContextLog(ctx, "FPS Average: ", result.FpsAverage)
 	return result, nil
+}
+
+// ReportFramePerfMetrics reports FPS and Frame duration metrics.
+func ReportFramePerfMetrics(ctx context.Context, p *perf.Values, conn *browser.Conn, file string, testDuration int) error {
+	var err error
+	var results DataResult
+	if results, err = CaptureFPSData(ctx, conn, file, testDuration); err != nil {
+		return errors.Wrap(err, "failed to read FPS script")
+	}
+
+	p.Set(perf.Metric{
+		Name:      "FPS_average",
+		Unit:      "fps",
+		Direction: perf.BiggerIsBetter,
+		Multiple:  false},
+		results.FpsAverage)
+
+	var percentileMap map[int]float64
+	if percentileMap, err = GetPercentileData(ctx, results.FpsData); err != nil {
+		return errors.Wrap(err, "failed to capture fps data")
+
+	}
+	for percentile, value := range percentileMap {
+		p.Set(perf.Metric{
+			Name:      "FPS_p" + strconv.Itoa(percentile),
+			Unit:      "fps",
+			Direction: perf.BiggerIsBetter,
+			Multiple:  false,
+		}, value)
+	}
+
+	if percentileMap, err = GetPercentileData(ctx, results.DurationData); err != nil {
+		return errors.Wrap(err, "failed to capture frame duration data")
+
+	}
+	for percentile, value := range percentileMap {
+		p.Set(perf.Metric{
+			Name:      "Duration_p" + strconv.Itoa(percentile),
+			Unit:      "ms",
+			Direction: perf.SmallerIsBetter,
+			Multiple:  false,
+		}, value)
+	}
+
+	return nil
+}
+
+// ReportMemoryMetrics reports peak memory usage.
+func ReportMemoryMetrics(ctx context.Context, p *perf.Values, testDuration int) error {
+	var err error
+	memoryChannel := make(chan PeakMemoryResult)
+
+	go GetMaxMemoryUsage(ctx, memoryChannel, testDuration)
+
+	peakMemoryUsage := <-memoryChannel
+	if peakMemoryUsage.Err != nil {
+		return errors.Wrap(err, "memory capture failed")
+	}
+
+	p.Set(perf.Metric{
+		Name:      "PeakMemoryUsage",
+		Unit:      "Byte",
+		Direction: perf.SmallerIsBetter,
+		Multiple:  false},
+		float64(peakMemoryUsage.Value))
+	testing.ContextLog(ctx, "max Memory usage: ", peakMemoryUsage.Value)
+
+	return nil
+}
+
+// ReportPowerDiffMetrics reports changes since initial rapl snapshot.
+func ReportPowerDiffMetrics(ctx context.Context, p *perf.Values, raplEnergyBefore *power.RAPLSnapshot, testDuration int) error {
+	energyDiff, err := raplEnergyBefore.DiffWithCurrentRAPL()
+	if err != nil {
+		return errors.Wrap(err, "failed to get RAPL power usage difference")
+	}
+	energyDiff.ReportPerfMetrics(p, "joules-")
+	energyDiff.ReportWattPerfMetrics(p, "watts-", time.Duration(testDuration)*time.Second)
+
+	return nil
 }
