@@ -109,6 +109,7 @@ import (
 	_ "chromiumos/tast/local/bundles/cros/settings"
 	_ "chromiumos/tast/local/bundles/cros/shelf"
 	_ "chromiumos/tast/local/bundles/cros/shimlessrma"
+	_ "chromiumos/tast/local/bundles/cros/shortcutcustomization"
 	_ "chromiumos/tast/local/bundles/cros/smartlock"
 	_ "chromiumos/tast/local/bundles/cros/spera"
 	_ "chromiumos/tast/local/bundles/cros/starfish"

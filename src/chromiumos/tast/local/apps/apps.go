@@ -265,6 +265,12 @@ var ShimlessRMA = App{
 	Name: "Shimless RMA",
 }
 
+// ShortcutCustomization has details about the Shortcut Customization app.
+var ShortcutCustomization = App{
+	ID:   "ihgeegogifolehadhdgelgcnbnmemikp",
+	Name: "Keyboard shortcuts",
+}
+
 // TaskManager has details about the Task Manager app.
 var TaskManager = App{
 	ID:   "ijaigheoohcacdnplfbdimmcfldnnhdi",

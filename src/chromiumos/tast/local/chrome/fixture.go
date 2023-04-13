@@ -313,6 +313,18 @@ func init() {
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:     "chromeLoggedInWithShortcutCustomizationApp",
+		Desc:     "Logged into a user session with ShortcutCustomizationApp, OnlyShowNewShortcutsApp and SearchInShortcutsApp enabled",
+		Contacts: []string{"jimmyxgong@google.com", "cros-peripherals@google.com"},
+		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
+			return []Option{EnableFeatures("ShortcutCustomizationApp", "SearchInShortcutsApp", "OnlyShowNewShortcutsApp")}, nil
+		}),
+		SetUpTimeout:    LoginTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: ResetTimeout,
+	})
 }
 
 // OptionsCallback is the function used to set up the fixture by returning Chrome options.
