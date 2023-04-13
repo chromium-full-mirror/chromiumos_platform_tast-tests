@@ -164,7 +164,7 @@ func GenerateTestRawData(ctx context.Context, testData TestRawData) error {
 }
 
 // ReadS16LEPCM reads S16LE PCM data from file, and returns the data in arr[channel][x].
-func ReadS16LEPCM(path string, channels int) ([][]int64, error) {
+func ReadS16LEPCM(path string, channels int) ([][]int16, error) {
 	// Read file
 	f, err := os.Open(path)
 	if err != nil {
@@ -174,7 +174,7 @@ func ReadS16LEPCM(path string, channels int) ([][]int64, error) {
 
 	// Each sample is 16-bit signed integer.
 	// Data order: <ch 1 sample 1> <ch 2 sample 1> ... <ch 1 sample 2> ...
-	arr := make([][]int64, channels)
+	arr := make([][]int16, channels)
 	channel := 0
 	var samp int16
 	for {
@@ -184,8 +184,90 @@ func ReadS16LEPCM(path string, channels int) ([][]int64, error) {
 			}
 			return nil, errors.Wrap(err, "error while reading file")
 		}
-		arr[channel] = append(arr[channel], int64(samp))
+		arr[channel] = append(arr[channel], samp)
 		channel = (channel + 1) % channels
 	}
 	return arr, nil
+}
+
+// CalculateFrequency calculates the frequency of a recorded raw audio.
+// The method used here is the same as `sox stat` rough frequency.
+func CalculateFrequency(data []float64, sampleRate float64) float64 {
+	var dsum2, sum2, last float64
+	for i := range data {
+		samp := data[i] / math.MaxInt32 // Downsampling to 32-bit.
+		if i == 0 {
+			last = samp
+		}
+		sum2 += samp * samp
+		delta := samp - last
+		dsum2 += delta * delta
+		last = samp
+	}
+	if sum2 == 0 {
+		// Return -1 if all data are zeros, because we could not calculate frequency.
+		return -1
+	}
+	return math.Sqrt(dsum2/sum2) * sampleRate / (math.Pi * 2)
+}
+
+// CheckFrequency checks if the audio's frequency is expected.
+// It slices the input and calculates the frequency for each slices.
+// If the number of slices with unexpected frequency exceeds incorrectLimit, returns error.
+// It ignores slices in the beginning that contain only zeros and the first slice with non-zero data.
+// The number of all-zero slices must be less than `startingSlicesLimit`, or it returns error.
+func CheckFrequency(ctx context.Context, data []int16, sampleRate, expectedFreq float64, incorrectLimit int) error {
+	const (
+		samplesPerSlice     = 1000 // Number of samples per slice. 1000 on 48kHz = 21ms
+		startingSlicesLimit = 24   // Max starting slices allowed. 24 on 48kHz = 500ms
+		freqTolerance       = 10   // Use absolute value here as the noise does not depends on the original frequency.
+	)
+
+	hasNonZeroData := func(data []int16) bool {
+		for _, d := range data {
+			if d != 0 {
+				return true
+			}
+		}
+		return false
+	}
+
+	isStarting := true
+	startingSlices := 0
+	incorrectSlices := 0
+
+	// Loop through each slice of data. Ignore the last slice if there is not enough data.
+	for i := 0; i+samplesPerSlice <= len(data); i += samplesPerSlice {
+		dataSlice := data[i : i+samplesPerSlice]
+		if isStarting {
+			if hasNonZeroData(dataSlice) {
+				// First slice with non-zero data, still ignore this slice and start checking at the next slice.
+				isStarting = false
+			} else {
+				startingSlices++
+				if startingSlices > startingSlicesLimit {
+					return errors.New("reached starting slices limit")
+				}
+			}
+		} else {
+			dataFloat := make([]float64, samplesPerSlice)
+			for j := range dataSlice {
+				dataFloat[j] = float64(dataSlice[j])
+			}
+
+			freq := CalculateFrequency(dataFloat, sampleRate)
+			if math.Abs(freq-expectedFreq) > freqTolerance {
+				testing.ContextLogf(ctx, "Slice %d frequency incorrect. expect:%.2f got:%.2f", i/samplesPerSlice, expectedFreq, freq)
+				incorrectSlices++
+			}
+		}
+	}
+
+	if isStarting {
+		return errors.New("not enough data to get out of starting phase")
+	}
+	if incorrectSlices > incorrectLimit {
+		return errors.Errorf("incorrect slices count over limit, incorrect slices: %v, limit: %v", incorrectSlices, incorrectLimit)
+	}
+	return nil
 }

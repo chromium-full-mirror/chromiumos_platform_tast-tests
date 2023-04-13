@@ -8,10 +8,14 @@ import (
 	"context"
 	"encoding/binary"
 	"io"
-	"math"
 	"os"
 	"path/filepath"
 	"time"
+
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/arc"
@@ -21,10 +25,6 @@ import (
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/quicksettings"
-	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 var stableModel = []string{
@@ -522,7 +522,7 @@ func init() {
 
 // captureOutputAndReadData captures audio data and reads the data.
 // The return data is a 2-d array, where arr[i] is the audio data of i-th channel.
-func captureOutputAndReadData(ctx context.Context, output audio.TestRawData) ([][]int64, error) {
+func captureOutputAndReadData(ctx context.Context, output audio.TestRawData) ([][]int16, error) {
 	if _, err := crastestclient.WaitForStreams(ctx, 15*time.Second); err != nil {
 		return nil, errors.Wrap(err, "failed to wait for streams")
 	}
@@ -545,7 +545,7 @@ func captureOutputAndReadData(ctx context.Context, output audio.TestRawData) ([]
 
 	// Each sample is 16-bit signed integer.
 	// Data order: <ch 1 sample 1> <ch 2 sample 1> ... <ch 8 sample 1> <ch 1 sample 2> ...
-	arr := make([][]int64, output.Channels)
+	arr := make([][]int16, output.Channels)
 	channel := 0
 	var samp int16
 	for {
@@ -555,73 +555,11 @@ func captureOutputAndReadData(ctx context.Context, output audio.TestRawData) ([]
 			}
 			return nil, errors.Wrap(err, "error while reading file")
 		}
-		arr[channel] = append(arr[channel], int64(samp))
+		arr[channel] = append(arr[channel], samp)
 		channel = (channel + 1) % output.Channels
 	}
 
 	return arr, nil
-}
-
-// analyzeData analyzes single channel audio data by slicing it into smaller slices, then check the
-// frequency of each slice. There must be no more than `incorrectLimit` slices that have incorrect
-// frequency to pass.
-//
-// Ignore slices in the beginning that contain only zeros and the first slice with non-zero data.
-// The number of these slices must be less than `startingSlicesLimit`, or the test will fail.
-func analyzeData(ctx context.Context, data []int64, sampleRate, expectedFreq float64, incorrectLimit int) error {
-	const (
-		samplesPerSlice     = 1000 // Number of samples per slice. 1000 on 48kHz = 21ms
-		startingSlicesLimit = 24   // Max starting slices allowed. 24 on 48kHz = 500ms
-		freqTolerance       = 10
-	)
-
-	isAnyNonZeroData := func(data []int64) bool {
-		for _, d := range data {
-			if d != 0 {
-				return true
-			}
-		}
-		return false
-	}
-
-	isStarting := true
-	startingSlices := 0
-	incorrectSlices := 0
-
-	// Loop through each slice of data. Ignore the last slice if there is not enough data.
-	for i := 0; i+samplesPerSlice <= len(data); i += samplesPerSlice {
-		dataSlice := data[i : i+samplesPerSlice]
-		if isStarting {
-			if isAnyNonZeroData(dataSlice) {
-				// First slice with non-zero data, still ignore this slice and start checking at the next slice.
-				isStarting = false
-			} else {
-				startingSlices++
-				if startingSlices > startingSlicesLimit {
-					return errors.New("reached starting slices limit")
-				}
-			}
-		} else {
-			dataFloat := make([]float64, samplesPerSlice)
-			for j := range dataSlice {
-				dataFloat[j] = float64(dataSlice[j])
-			}
-
-			freq := arcaudio.GetFrequencyFromData(dataFloat, sampleRate)
-			if math.Abs(freq-expectedFreq) > freqTolerance {
-				testing.ContextLogf(ctx, "Slice %d frequency incorrect. expect:%.2f got:%.2f", i/samplesPerSlice, expectedFreq, freq)
-				incorrectSlices++
-			}
-		}
-	}
-
-	if isStarting {
-		return errors.New("not enough data to get out of starting phase")
-	}
-	if incorrectSlices > incorrectLimit {
-		return errors.Errorf("incorrect slices count over limit, incorrect slices: %v, limit: %v", incorrectSlices, incorrectLimit)
-	}
-	return nil
 }
 
 // AudioLoopbackCorrectness plays sine wave with different config in ARC.
@@ -761,7 +699,7 @@ func AudioLoopbackCorrectness(ctx context.Context, s *testing.State) {
 
 	for channel := 0; channel < len(expectedFreqs); channel++ {
 		expectedFreq := expectedFreqs[channel]
-		if err := analyzeData(ctx, capturedData[channel], float64(captureRate), float64(expectedFreq), param.incorrectSlicesLimit); err != nil {
+		if err := audio.CheckFrequency(ctx, capturedData[channel], float64(captureRate), float64(expectedFreq), param.incorrectSlicesLimit); err != nil {
 			s.Errorf("channel %d failed: %v", channel+1, err)
 		}
 	}
