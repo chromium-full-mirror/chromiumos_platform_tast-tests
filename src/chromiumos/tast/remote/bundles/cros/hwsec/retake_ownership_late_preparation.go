@@ -29,7 +29,7 @@ func init() {
 		Contacts:     []string{"cros-hwsec@google.com", "cylai@chromium.org"},
 		BugComponent: "b:1188704",
 		SoftwareDeps: []string{"reboot", "tpm"},
-		Attr:         []string{"group:hwsec_destructive_func"},
+		Attr:         []string{"group:hwsec_destructive_func", "group:tpm_manager"},
 		ServiceDeps:  []string{"tast.cros.hwsec.AttestationDBusService"},
 		Params: []testing.Param{{
 			Name: "uss",

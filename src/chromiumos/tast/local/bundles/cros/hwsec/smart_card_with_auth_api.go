@@ -41,7 +41,7 @@ func init() {
 			"thomascedeno@google.com", // Test author
 		},
 		BugComponent: "b:1088399",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:cryptohome"},
 		SoftwareDeps: []string{"tpm"},
 		Params: []testing.Param{{
 			Name: "smart_card_with_auth_factor_with_no_uss_rsassa_sha1",

@@ -16,7 +16,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AttestationEID,
 		Desc:         "Verifies that enrollment ID is available",
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:attestation"},
 		Contacts:     []string{"cros-hwsec@google.com", "cylai@chromium.org"},
 		BugComponent: "b:1188704",
 		SoftwareDeps: []string{"tpm", "endorsement", "no_tpm_dynamic"},

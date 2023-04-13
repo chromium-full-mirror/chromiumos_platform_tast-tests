@@ -37,7 +37,7 @@ func init() {
 			"zuan@chromium.org", // Test author
 		},
 		BugComponent: "b:1188704",
-		Attr:         []string{"informational", "group:mainline"},
+		Attr:         []string{"informational", "group:mainline", "group:cryptohome"},
 		SoftwareDeps: []string{"tpm"},
 		Params: []testing.Param{
 			{

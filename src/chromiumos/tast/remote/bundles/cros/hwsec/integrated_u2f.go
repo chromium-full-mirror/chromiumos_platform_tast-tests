@@ -53,7 +53,7 @@ func init() {
 			Val:               integratedU2fParam{isSimulator: false},
 		}, {
 			Name:              "vm",
-			ExtraAttr:         []string{"group:mainline", "informational"},
+			ExtraAttr:         []string{"group:mainline", "informational", "group:u2fd"},
 			ExtraSoftwareDeps: []string{"tpm2_simulator"},
 			Val:               integratedU2fParam{isSimulator: true},
 		}},

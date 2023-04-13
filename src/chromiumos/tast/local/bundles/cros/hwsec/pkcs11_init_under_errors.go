@@ -30,7 +30,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func: Pkcs11InitUnderErrors,
 		Desc: "Tests pkcs11 initialization under various system states",
-		Attr: []string{"group:mainline", "informational"},
+		Attr: []string{"group:mainline", "informational", "group:chaps"},
 		Params: []testing.Param{{
 			Name: "uss",
 			Val: pkcs11InitUnderErrorsWithAuthAPIParam{

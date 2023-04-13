@@ -65,7 +65,7 @@ func init() {
 			},
 		}, {
 			Name:              "vm",
-			ExtraAttr:         []string{"group:mainline", "informational"},
+			ExtraAttr:         []string{"group:mainline", "informational", "group:u2fd"},
 			ExtraSoftwareDeps: []string{"tpm2_simulator"},
 			Val: webauthnU2fModeParam{
 				browserType: webauthnpb.BrowserType_ASH,
@@ -73,7 +73,7 @@ func init() {
 			},
 		}, {
 			Name:              "vm_lacros",
-			ExtraAttr:         []string{"group:mainline", "informational"},
+			ExtraAttr:         []string{"group:mainline", "informational", "group:u2fd"},
 			ExtraSoftwareDeps: []string{"tpm2_simulator", "lacros"},
 			Val: webauthnU2fModeParam{
 				browserType: webauthnpb.BrowserType_LACROS,

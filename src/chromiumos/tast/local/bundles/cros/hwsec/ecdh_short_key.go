@@ -22,7 +22,7 @@ func init() {
 			"cylai@google.com", // Test author.
 		},
 		BugComponent: "b:1188704",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hwsec_infra"},
 		SoftwareDeps: []string{"tpm2"},
 	})
 }

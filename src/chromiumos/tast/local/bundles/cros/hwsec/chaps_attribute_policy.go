@@ -24,7 +24,7 @@ func init() {
 		Func:         ChapsAttributePolicy,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies Chaps Attribute policy works as intended",
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:chaps"},
 		Contacts: []string{
 			"cros-hwsec@google.com",
 			"zuan@chromium.org",

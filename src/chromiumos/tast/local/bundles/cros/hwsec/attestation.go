@@ -21,7 +21,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Attestation,
 		Desc:         "Verifies attestation-related functionality",
-		Attr:         []string{"group:mainline", "informational", "firmware_cr50", "group:firmware"},
+		Attr:         []string{"group:mainline", "informational", "firmware_cr50", "group:firmware", "group:attestation"},
 		Contacts:     []string{"cros-hwsec@google.com", "cylai@chromium.org"},
 		BugComponent: "b:1188704",
 		SoftwareDeps: []string{"tpm", "endorsement"},

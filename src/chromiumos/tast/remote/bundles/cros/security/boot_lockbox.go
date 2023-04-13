@@ -31,7 +31,7 @@ func init() {
 		Contacts:     []string{"cros-hwsec@google.com"},
 		// ChromeOS > Platform > System > Hardware Security > HwSec AP
 		BugComponent: "b:1188704",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:bootlockbox"},
 		SoftwareDeps: []string{"tpm", "reboot", "chrome"},
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
 	})

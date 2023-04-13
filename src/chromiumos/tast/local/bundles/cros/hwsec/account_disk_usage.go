@@ -29,7 +29,7 @@ func init() {
 			"zuan@chromium.org",
 		},
 		BugComponent: "b:1188704",
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:cryptohome"},
 		Data:         []string{"testcert.p12"},
 		Timeout:      3 * time.Minute,
 		// TODO(b/244676664): Skip on amd64-generic due to CQ failures

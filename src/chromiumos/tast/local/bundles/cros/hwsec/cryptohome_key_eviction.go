@@ -25,7 +25,7 @@ func init() {
 		},
 		BugComponent: "b:1188704",
 		SoftwareDeps: []string{"tpm"},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:cryptohome"},
 		Timeout:      10 * time.Minute,
 		Fixture:      "ussAuthSessionFixture",
 	})

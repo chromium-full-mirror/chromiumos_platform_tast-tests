@@ -24,7 +24,7 @@ func init() {
 			"zuan@chromium.org",
 		},
 		BugComponent: "b:1188704",
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:chaps"},
 		Timeout:      1 * time.Minute,
 	})
 }

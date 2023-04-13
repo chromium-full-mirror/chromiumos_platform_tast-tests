@@ -25,7 +25,7 @@ func init() {
 		},
 		BugComponent: "b:1188704",
 		SoftwareDeps: []string{"tpm"},
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:attestation", "group:bootlockbox", "group:chaps", "group:cryptohome", "group:hwsec_infra", "group:tpm_manager", "group:u2fd", "group:vtpm"},
 		Params: []testing.Param{{
 			Name:              "tpm1",
 			ExtraSoftwareDeps: []string{"tpm1", "no_tpm_dynamic"},
