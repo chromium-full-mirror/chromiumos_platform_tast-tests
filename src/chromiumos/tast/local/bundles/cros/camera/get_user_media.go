@@ -15,6 +15,7 @@ import (
 	"chromiumos/tast/local/chrome/lacros"
 	"chromiumos/tast/local/media/pre"
 	"chromiumos/tast/local/media/vm"
+	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/testing"
 )
 
@@ -68,6 +69,11 @@ func init() {
 // (It's 10 seconds in case it runs under QEMU.) This a short version of
 // camera.GetUserMediaPerf.
 func GetUserMedia(ctx context.Context, s *testing.State) {
+	// Ensure camera service running to avoid bad state from previous tests.
+	if err := upstart.EnsureJobRunning(ctx, "cros-camera"); err != nil {
+		s.Fatal("Failed to start cros-camera: ", err)
+	}
+
 	duration := 3 * time.Second
 	// Since we use vivid on VM and it's slower than real cameras,
 	// we use a longer time limit: https://crbug.com/929537

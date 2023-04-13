@@ -14,6 +14,7 @@ import (
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/lacros"
 	"chromiumos/tast/local/media/pre"
+	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/testing"
 )
 
@@ -52,6 +53,11 @@ func init() {
 // And then it calls four functions of ImageCapture APIs.
 // This test will fail when an error occurs among ImageCapture API functions.
 func ImageCapture(ctx context.Context, s *testing.State) {
+	// Ensure camera service running to avoid bad state from previous tests.
+	if err := upstart.EnsureJobRunning(ctx, "cros-camera"); err != nil {
+		s.Fatal("Failed to start cros-camera: ", err)
+	}
+
 	var ci getusermedia.ChromeInterface
 	if s.Param().(browser.Type) == browser.TypeLacros {
 		tconn, err := s.FixtValue().(chrome.HasChrome).Chrome().TestAPIConn(ctx)
