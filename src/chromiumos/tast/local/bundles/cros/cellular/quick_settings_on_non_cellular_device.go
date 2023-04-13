@@ -26,7 +26,7 @@ func init() {
 		BugComponent: "b:1226026",
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.NoCellular()),
-		Attr:         []string{"group:wificell", "wificell_unstable"},
+		Attr:         []string{"group:wificell", "wificell_e2e_unstable"},
 	})
 }
 
