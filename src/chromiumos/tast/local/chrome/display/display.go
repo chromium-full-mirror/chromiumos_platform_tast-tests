@@ -15,8 +15,14 @@ import (
 	"chromiumos/tast/common/action"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/uiauto"
+	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/coords"
 	"chromiumos/tast/testing"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
 // Insets holds onscreen insets.
@@ -138,6 +144,13 @@ func GetPrimaryInfo(ctx context.Context, tconn *chrome.TestConn) (*Info, error) 
 	})
 }
 
+// GetInfoForID returns information about the display with a specific ID.
+func GetInfoForID(ctx context.Context, tconn *chrome.TestConn, id string) (*Info, error) {
+	return FindInfo(ctx, tconn, func(info *Info) bool {
+		return info.ID == id
+	})
+}
+
 // GetDeviceScaleFactor returns information about the Device scale factor
 // of the first display that satisfy the function match.
 // If there no matching function, an error will be returned.
@@ -174,6 +187,41 @@ type DisplayProperties struct { // NOLINT
 // you should call display.WaitForDisplayRotation() to know when the rotation animation finishes.
 func SetDisplayProperties(ctx context.Context, tconn *chrome.TestConn, id string, dp DisplayProperties) error {
 	return tconn.Call(ctx, nil, "tast.promisify(chrome.system.display.setDisplayProperties)", id, dp)
+}
+
+// SetDisplayMode sets the display to a specific mode. The mode must be a
+// supported one from GetModes(). Only works on external displays or VM with
+// vkms enabled.
+func SetDisplayMode(ctx context.Context, tconn *chrome.TestConn, id string, mode *DisplayMode) error {
+	ui := uiauto.New(tconn)
+
+	if err := SetDisplayProperties(ctx, tconn, id, DisplayProperties{DisplayMode: mode}); err != nil {
+		return errors.Wrap(err, "failed to set display properties")
+	}
+
+	// Dismiss confirm dialog
+	confirmButton := nodewith.Name("Confirm").Role(role.Button)
+	if err := uiauto.Combine("Click confirm button",
+		ui.DoDefault(confirmButton),
+		ui.WaitUntilGone(confirmButton))(ctx); err != nil {
+		return errors.Wrap(err, "failed to click 'Confirm' button")
+	}
+
+	newDispInfo, err := GetInfoForID(ctx, tconn, id)
+	if err != nil {
+		return errors.Wrap(err, "failed to get updated display info")
+	}
+
+	newMode, err := newDispInfo.GetSelectedMode()
+	if err != nil {
+		return errors.Wrap(err, "failed to get updated mode")
+	}
+
+	if diff := cmp.Diff(mode, newMode, cmpopts.IgnoreFields(DisplayMode{}, "IsSelected")); diff != "" {
+		return errors.Wrapf(err, "new mode does not match requested (-want +got): %s", diff)
+	}
+
+	return nil
 }
 
 // RotationAngle represents the supported rotation angles by SetDisplayRotationSync.

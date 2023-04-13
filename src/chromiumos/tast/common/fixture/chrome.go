@@ -56,4 +56,6 @@ const (
 	ChromeLoggedInWithPasspoint = "chromeLoggedInWithPasspoint"
 	// Logged into a user session with InputDeviceSettingsSplit enabled.
 	ChromeLoggedInWithInputDeviceSettingsSplit = "chromeLoggedInWithInputDeviceSettingsSplit"
+	// Logged into a user session with VM display marked as external, allowing display mode change.
+	ChromeLoggedInWithForceVMDisplayExternal = "chromeLoggedInWithForceVMDisplayExternal"
 )
