@@ -1,0 +1,107 @@
+// Copyright 2023 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package videoconferencing
+
+import (
+	"context"
+	"time"
+
+	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/local/apps"
+	"chromiumos/tast/local/camera/cca"
+	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/ash"
+	"chromiumos/tast/local/chrome/uiauto"
+	"chromiumos/tast/local/chrome/uiauto/faillog"
+	"chromiumos/tast/local/chrome/uiauto/vctray"
+	"chromiumos/tast/local/videoconferencing/fixture"
+	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
+)
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func:         TrayReturnToAppVirtualDesktop,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Checks VC tray returns to app in a virtual desktop",
+		Contacts: []string{
+			"chrome-knowledge-eng@google.com",
+			"shengjun@chromium.org",
+		},
+		BugComponent: "b:187682",
+		Timeout:      3 * time.Minute,
+		Attr: []string{
+			"group:video_conference", "video_conference_per_build",
+		},
+		SoftwareDeps: []string{"chrome", "camera_feature_effects"},
+		HardwareDeps: hwdep.D(hwdep.SkipOnModel("betty")),
+		Fixture:      fixture.LoggedInWithFakeHALAndEffectsEnabled,
+	})
+}
+
+func TrayReturnToAppVirtualDesktop(ctx context.Context, s *testing.State) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to connect Test API: ", err)
+	}
+
+	if err := ash.CreateNewDesk(ctx, tconn); err != nil {
+		s.Fatal("Failed to create new desk: ", err)
+	}
+	defer ash.CleanUpDesks(cleanupCtx, tconn)
+
+	if err := ash.ActivateDeskAtIndex(ctx, tconn, 1); err != nil {
+		s.Fatal("Failed to activate new desk: ", err)
+	}
+
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_dump")
+
+	if err := apps.Launch(ctx, tconn, apps.Camera.ID); err != nil {
+		s.Fatal("Failed to launch Camera app: ", err)
+	}
+	defer apps.Close(cleanupCtx, tconn, apps.Camera.ID)
+
+	// Wait for Camera activated, otherwise vcTray is not triggered.
+	if err := uiauto.New(tconn).WaitUntilExists(cca.A11yCanvasNode)(ctx); err != nil {
+		s.Fatal("Camera is not working appropriately: ", err)
+	}
+
+	appWindow, err := ash.GetActiveWindow(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to get active window: ", err)
+	}
+
+	// Save current window state and use it for return verification.
+	appWindowState := appWindow.State
+
+	// Return to original desk.
+	if err := ash.ActivateDeskAtIndex(ctx, tconn, 0); err != nil {
+		s.Fatal("Failed to activate new desk: ", err)
+	}
+
+	vcTray := vctray.New(ctx, tconn)
+
+	if err := uiauto.Combine("return to app via mcpanel",
+		vcTray.ExpandPanel,
+		vcTray.ReturnToApp(appWindow.Title),
+	)(ctx); err != nil {
+		s.Fatal("Failed to return to app: ", err)
+	}
+
+	newActiveWindow, err := ash.GetActiveWindow(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to get active window: ", err)
+	}
+
+	if newActiveWindow.ID != appWindow.ID || newActiveWindow.State != appWindowState {
+		s.Fatalf("Failed to restore window(expected: %v, actual: %v)", appWindow, newActiveWindow)
+	}
+}

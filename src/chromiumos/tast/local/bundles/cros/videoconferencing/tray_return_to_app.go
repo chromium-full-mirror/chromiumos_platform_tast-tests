@@ -37,7 +37,7 @@ func init() {
 		BugComponent: "b:187682",
 		Timeout:      3 * time.Minute,
 		Attr: []string{
-			"group:video_conference", "video_conference_per_build", "group:ml_service", "group:external-dependency",
+			"group:video_conference", "video_conference_per_build", "group:external-dependency",
 		},
 		SoftwareDeps: []string{"chrome", "camera_feature_effects"},
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("betty")),
@@ -159,7 +159,6 @@ func verifyReturnToApp(ctx context.Context, tconn *chrome.TestConn) error {
 		// vcTray only displays name `Meet - ~new`,
 		// while in Tast API the window title is `Chrome - Meet - ~new`.
 		vcTray.ReturnToApp(strings.TrimPrefix(appWindow.Title, "Chrome - ")),
-		vcTray.CollapsePanel,
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to return to app")
 	}
