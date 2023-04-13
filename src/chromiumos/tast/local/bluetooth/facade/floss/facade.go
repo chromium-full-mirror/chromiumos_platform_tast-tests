@@ -389,7 +389,13 @@ func (b *BluetoothFlossFacade) SetDiscoverableWithTimeout(ctx context.Context, d
 	if err := b.assertEnabled(); err != nil {
 		return err
 	}
-	return b.adapterClient.SetDiscoverable(ctx, discoverable, timeoutSeconds)
+	var mode floss.BtDiscoverableMode
+	if discoverable {
+		mode = floss.BtDiscoverableModeGeneral
+	} else {
+		mode = floss.BtDiscoverableModeNon
+	}
+	return b.adapterClient.SetDiscoverable(ctx, mode, timeoutSeconds)
 }
 
 // IsPairable returns true if the default adapter is pairable.

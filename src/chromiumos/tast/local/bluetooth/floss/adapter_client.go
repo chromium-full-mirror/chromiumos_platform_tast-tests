@@ -175,8 +175,8 @@ func (c *AdapterClient) GetDiscoverableTimeout(ctx context.Context) (uint32, err
 
 // SetDiscoverable calls the floss D-Bus method with the same name for this
 // object.
-func (c *AdapterClient) SetDiscoverable(ctx context.Context, discoverable bool, durationInSeconds uint32) error {
-	return c.dbus.CallForSuccess(ctx, "SetDiscoverable", discoverable, durationInSeconds)
+func (c *AdapterClient) SetDiscoverable(ctx context.Context, mode BtDiscoverableMode, durationInSeconds uint32) error {
+	return c.dbus.CallForSuccess(ctx, "SetDiscoverable", mode, durationInSeconds)
 }
 
 // IsMultiAdvertisementSupported calls the floss D-Bus method with the same name

@@ -184,3 +184,22 @@ const (
 	// connection direction.
 	BtConnectionDirectionIncoming BtConnectionDirection = 2
 )
+
+// BtDiscoverableMode enumerates the different discoverable modes, as specified
+// by the floss D-Bus API.
+// ref: system/gd/rust/topshim/src/btif.rs
+type BtDiscoverableMode uint32
+
+const (
+	// BtDiscoverableModeNon is the BtDiscoverableMode for disabling
+	// discoverability.
+	BtDiscoverableModeNon BtDiscoverableMode = 0
+
+	// BtDiscoverableModeLimit is the BtDiscoverableMode for limited
+	// discoverability (60s maximum timeout).
+	BtDiscoverableModeLimit BtDiscoverableMode = 1
+
+	// BtDiscoverableModeGeneral is the BtDiscoverableMode for general
+	// discoverability.
+	BtDiscoverableModeGeneral BtDiscoverableMode = 2
+)
