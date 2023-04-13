@@ -632,7 +632,7 @@ func (f *inputsFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) int
 		case assistMultiWord:
 			opts = append(opts, chrome.ExtraArgs("--enable-features=AssistMultiWord"))
 		case diacriticsOnPhysicalKeyboardLongpress:
-			opts = append(opts, chrome.ExtraArgs("--enable-features=DiacriticsOnPhysicalKeyboardLongpress"))
+			opts = append(opts, chrome.ExtraArgs("--enable-features=DiacriticsOnPhysicalKeyboardLongpress,DiacriticsOnPhysicalKeyboardLongpressDefaultOn"))
 		case virtualKeyboardMultitouch:
 			opts = append(opts, chrome.ExtraArgs("--enable-features=VirtualKeyboardMultitouch"))
 		}
