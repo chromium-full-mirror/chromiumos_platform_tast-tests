@@ -149,12 +149,14 @@ func launchKioskAndVerify(ctx context.Context, s *testing.State, ignoreCrxURL bo
 			chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
 		),
 	)
-
 	if err != nil {
-		s.Error("Failed to start Chrome in Kiosk mode: ", err)
+		s.Fatal("Failed to start Chrome in Kiosk mode: ", err)
 	}
-
-	defer kiosk.Close(ctx)
+	defer func(ctx context.Context) {
+		if err := kiosk.Close(ctx); err != nil {
+			s.Error("Failed to close kiosk: ", err)
+		}
+	}(ctx)
 
 	if !openExtensionAndCheckTitleChange(ctx, s, cr, originalAppTitle, updatedAppTitle) {
 		s.Fatal("Missmatch in Version")

@@ -83,7 +83,11 @@ func TTSExtensionSettings(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to start Chrome in Kiosk mode: ", err)
 	}
-	defer kiosk.Close(ctx)
+	defer func(ctx context.Context) {
+		if err := kiosk.Close(ctx); err != nil {
+			s.Error("Failed to close kiosk: ", err)
+		}
+	}(ctx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {

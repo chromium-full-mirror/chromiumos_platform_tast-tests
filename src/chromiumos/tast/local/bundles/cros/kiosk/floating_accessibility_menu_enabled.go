@@ -77,10 +77,13 @@ func FloatingAccessibilityMenuEnabled(ctx context.Context, s *testing.State) {
 		kioskmode.AutoLaunch(kioskmode.WebKioskAccountID),
 	)
 	if err != nil {
-		s.Error("Failed to start Chrome in Kiosk mode: ", err)
+		s.Fatal("Failed to start Chrome in Kiosk mode: ", err)
 	}
-
-	defer kiosk.Close(ctx)
+	defer func(ctx context.Context) {
+		if err := kiosk.Close(ctx); err != nil {
+			s.Error("Failed to close kiosk: ", err)
+		}
+	}(ctx)
 
 	testConn, err := cr.TestAPIConn(ctx)
 	if err != nil {

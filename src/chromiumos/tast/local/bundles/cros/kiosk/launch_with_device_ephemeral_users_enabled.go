@@ -114,9 +114,13 @@ func LaunchWithDeviceEphemeralUsersEnabled(ctx context.Context, s *testing.State
 
 	kiosk, cr, err := kioskmode.New(ctx, fdms, opts...)
 	if err != nil {
-		s.Error("Failed to start Chrome in Kiosk mode: ", err)
+		s.Fatal("Failed to start Chrome in Kiosk mode: ", err)
 	}
-	defer kiosk.Close(ctx)
+	defer func(ctx context.Context) {
+		if err := kiosk.Close(ctx); err != nil {
+			s.Error("Failed to close kiosk: ", err)
+		}
+	}(ctx)
 
 	testing.ContextLog(ctx, "Checking the mount type of the Kiosk cryptohome (permanent or ephemeral)")
 	expectedMountType := cryptohome.Permanent

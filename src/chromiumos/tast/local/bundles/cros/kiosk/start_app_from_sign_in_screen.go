@@ -122,10 +122,13 @@ func StartAppFromSignInScreen(ctx context.Context, s *testing.State) {
 		kioskmode.PublicAccountPolicies(kioskmode.KioskAppAccountID, policies),
 	)
 	if err != nil {
-		s.Error("Failed to start Chrome on Signin screen with set Kiosk apps: ", err)
+		s.Fatal("Failed to start Chrome on Signin screen with set Kiosk apps: ", err)
 	}
-
-	defer kiosk.Close(ctx)
+	defer func(ctx context.Context) {
+		if err := kiosk.Close(ctx); err != nil {
+			s.Error("Failed to close kiosk: ", err)
+		}
+	}(ctx)
 
 	testConn, err := cr.SigninProfileTestAPIConn(ctx)
 	if err != nil {
