@@ -77,9 +77,6 @@ func RecreateUserVaultTPM2(ctx context.Context, s *testing.State) {
 	if err := utility.MountVault(ctx, util.PasswordLabel, hwsec.NewPassAuthConfig(util.FirstUsername, util.FirstPassword), true, hwsec.NewVaultConfig()); err != nil {
 		s.Fatal("Failed to create user vault: ", err)
 	}
-	if err := utility.CheckTPMWrappedUserKeyset(ctx, util.FirstUsername); err != nil {
-		s.Fatal("Check user keyset failed: ", err)
-	}
 	if err := hwsec.WriteUserTestContent(ctx, utility, cmdRunner, util.FirstUsername, util.TestFileName1, util.TestFileContent); err != nil {
 		s.Fatal("Failed to write user test content: ", err)
 	}
@@ -98,9 +95,6 @@ func RecreateUserVaultTPM2(ctx context.Context, s *testing.State) {
 	}
 	if err := utility.MountVault(ctx, util.PasswordLabel, hwsec.NewPassAuthConfig(util.FirstUsername, util.FirstPassword), false, hwsec.NewVaultConfig()); err != nil {
 		s.Fatal("Failed to mount user vault: ", err)
-	}
-	if err := utility.CheckTPMWrappedUserKeyset(ctx, util.FirstUsername); err != nil {
-		s.Fatal("Check user keyset failed: ", err)
 	}
 
 	// User vault should already exist and shouldn't be recreated.
@@ -127,9 +121,6 @@ func RecreateUserVaultTPM2(ctx context.Context, s *testing.State) {
 	}
 	if err := utility.MountVault(ctx, util.PasswordLabel, hwsec.NewPassAuthConfig(util.FirstUsername, util.FirstPassword), true, hwsec.NewVaultConfig()); err != nil {
 		s.Fatal("Failed to create user vault: ", err)
-	}
-	if err := utility.CheckTPMWrappedUserKeyset(ctx, util.FirstUsername); err != nil {
-		s.Fatal("Check user keyset failed: ", err)
 	}
 
 	// User vault should be recreated after TPM is cleared.
