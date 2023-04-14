@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/chrome"
@@ -32,22 +31,12 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      3 * time.Minute,
+		Fixture:      "chromeLoggedIn",
 	})
 }
 
 func NotificationExpandCollapse(ctx context.Context, s *testing.State) {
-	// Use cleanupCtx for any deferred cleanups in case of timeouts or
-	// cancellations on the shortened context.
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
-	defer cancel()
-
-	// Start a Chrome instance with the notification refresh feature.
-	cr, err := chrome.New(ctx, chrome.EnableFeatures("NotificationsRefresh"))
-	if err != nil {
-		s.Fatal("Chrome login failed: ", err)
-	}
-	defer cr.Close(cleanupCtx)
+	cr := s.FixtValue().(*chrome.Chrome)
 
 	// Connect to Test API to use it with the UI library.
 	tconn, err := cr.TestAPIConn(ctx)
