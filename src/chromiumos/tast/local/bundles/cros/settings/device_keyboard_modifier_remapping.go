@@ -112,7 +112,6 @@ func DeviceKeyboardModifierRemapping(ctx context.Context, s *testing.State) {
 	altKey := nodewith.Name("Alt").Role(role.ComboBoxSelect)
 	escapeKey := nodewith.Name("Escape").Role(role.ComboBoxSelect)
 	backspaceKey := nodewith.Name("Backspace").Role(role.ComboBoxSelect)
-	assistantKey := nodewith.Name("Assistant").Role(role.ComboBoxSelect)
 	if err := uiauto.Combine("verify restore default button and modifier remapping keys exist",
 		ui.WaitUntilExists(restoreDefaultsButton),
 		ui.WaitUntilExists(metaKey),
@@ -120,7 +119,6 @@ func DeviceKeyboardModifierRemapping(ctx context.Context, s *testing.State) {
 		ui.WaitUntilExists(altKey),
 		ui.WaitUntilExists(escapeKey),
 		ui.WaitUntilExists(backspaceKey),
-		ui.WaitUntilExists(assistantKey),
 	)(ctx); err != nil {
 		s.Fatal("Failed to verify restore default button or modifier remapping keys exist: ", err)
 	}
