@@ -231,8 +231,11 @@ func (h *Helper) Close(ctx context.Context) error {
 
 // EnsureDUTBooted checks the power state, and attempts to boot the DUT if it is off.
 func (h *Helper) EnsureDUTBooted(ctx context.Context) error {
-	if h.DUT != nil && h.DUT.Connected(ctx) {
-		return nil
+	if h.DUT != nil {
+		testing.ContextLog(ctx, "Connecting to DUT")
+		if err := h.DUT.Connect(ctx); err == nil {
+			return nil
+		}
 	}
 	if err := h.RequireServo(ctx); err != nil {
 		return errors.Wrap(err, "could not connect to servo")
