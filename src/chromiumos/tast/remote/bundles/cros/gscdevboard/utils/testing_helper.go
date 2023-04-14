@@ -36,3 +36,18 @@ func (fs *FirmwareTestingHelper) MustSucceedBool(val bool, err error) bool {
 	}
 	return val
 }
+
+// Crc8 performs crc8 on data in the same way that ti50 fw performs crc8
+func Crc8(data []byte) byte {
+	crc := uint(0)
+	for _, v := range data {
+		crc ^= uint(v) << 8
+		for i := 0; i < 8; i++ {
+			if crc&0x8000 != 0 {
+				crc ^= 0x1070 << 3
+			}
+			crc <<= 1
+		}
+	}
+	return byte(crc >> 8)
+}

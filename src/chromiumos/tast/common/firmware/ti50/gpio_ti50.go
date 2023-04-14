@@ -81,4 +81,6 @@ const (
 	GpioTi50RecoveryOut GpioName = "EC_KSI_02"
 	// GpioTi50KsiBack is the KSI (row) from KB to GSC that is connected to ChromeOS Back key
 	GpioTi50KsiBack GpioName = "KSI_00"
+	// GpioTi50EcPacketMode is the pin that EC drives high when it is sending packet information
+	GpioTi50EcPacketMode GpioName = "EC_GSC_PACKET_MODE"
 )
