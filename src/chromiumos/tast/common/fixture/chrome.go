@@ -52,4 +52,6 @@ const (
 	ChromeLoggedInVerboseConsentLogs = "chromeLoggedInVerboseConsentLogs"
 	// Logged into a user session with PasspointARCSupport flag enabled.
 	ChromeLoggedInWithPasspoint = "chromeLoggedInWithPasspoint"
+	// Logged into a user session with InputDeviceSettingsSplit enabled.
+	ChromeLoggedInWithInputDeviceSettingsSplit = "chromeLoggedInWithInputDeviceSettingsSplit"
 )
