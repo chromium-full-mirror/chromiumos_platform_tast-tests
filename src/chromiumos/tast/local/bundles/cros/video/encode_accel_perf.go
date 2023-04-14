@@ -329,6 +329,42 @@ func init() {
 			ExtraAttr:         []string{"graphics_perbuild"},
 			ExtraData:         encode.TestData(crowd2160p),
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP9_4K},
+		}, {
+			Name:              "av1_180p",
+			Val:               encode.MakeTestOptions(crowd180p, videotype.AV1MainProf),
+			ExtraAttr:         []string{"graphics_perbuild"},
+			ExtraData:         encode.TestData(crowd180p),
+			ExtraSoftwareDeps: []string{caps.HWEncodeAV1},
+		}, {
+			Name:              "av1_270p",
+			Val:               encode.MakeTestOptions(crowd270p, videotype.AV1MainProf),
+			ExtraAttr:         []string{"graphics_perbuild"},
+			ExtraData:         encode.TestData(crowd270p),
+			ExtraSoftwareDeps: []string{caps.HWEncodeAV1},
+		}, {
+			Name:              "av1_360p",
+			Val:               encode.MakeTestOptions(crowd360p, videotype.AV1MainProf),
+			ExtraAttr:         []string{"graphics_perbuild"},
+			ExtraData:         encode.TestData(crowd360p),
+			ExtraSoftwareDeps: []string{caps.HWEncodeAV1},
+		}, {
+			Name:              "av1_720p",
+			Val:               encode.MakeTestOptions(crowd720p, videotype.AV1MainProf),
+			ExtraAttr:         []string{"graphics_perbuild"},
+			ExtraData:         encode.TestData(crowd720p),
+			ExtraSoftwareDeps: []string{caps.HWEncodeAV1},
+		}, {
+			Name:              "av1_1080p",
+			Val:               encode.MakeTestOptions(crowd1080p, videotype.AV1MainProf),
+			ExtraAttr:         []string{"graphics_perbuild"},
+			ExtraData:         encode.TestData(crowd1080p),
+			ExtraSoftwareDeps: []string{caps.HWEncodeAV1},
+		}, {
+			Name:              "av1_2160p",
+			Val:               encode.MakeTestOptions(crowd2160p, videotype.AV1MainProf),
+			ExtraAttr:         []string{"graphics_perbuild"},
+			ExtraData:         encode.TestData(crowd2160p),
+			ExtraSoftwareDeps: []string{caps.HWEncodeAV1_4K},
 		}},
 	})
 }

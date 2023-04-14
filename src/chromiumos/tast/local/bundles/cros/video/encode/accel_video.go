@@ -159,6 +159,8 @@ func codecProfileToEncodeCodecOption(profile videotype.CodecProfile) (string, er
 		return "vp8", nil
 	case videotype.VP9Prof:
 		return "vp9", nil
+	case videotype.AV1MainProf:
+		return "av1", nil
 	default:
 		return "", errors.Errorf("unknown codec profile: %v", profile)
 	}

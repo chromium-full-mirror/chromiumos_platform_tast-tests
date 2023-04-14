@@ -50,4 +50,6 @@ const (
 	VP9Prof CodecProfile = 12
 	// VP9_2Prof represents the value for VP9 profile 2 (= VP9PROFILE_PROFILE2).
 	VP9_2Prof CodecProfile = 14
+	// AV1MainProf represents the value for AV1 Main profile (= AV1PROFILE_PROFILE_MAIN).
+	AV1MainProf CodecProfile = 24
 )

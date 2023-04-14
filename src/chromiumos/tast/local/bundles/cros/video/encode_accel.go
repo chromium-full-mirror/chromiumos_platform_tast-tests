@@ -235,6 +235,42 @@ func init() {
 			Val:               encode.MakeTestOptionsWithSVCLayers(tulip720P, videotype.VP9Prof, "L3T3"),
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP9},
 			ExtraData:         encode.TestData(tulip720P),
+		}, {
+			Name:              "av1_180p",
+			Val:               encode.MakeTestOptions(tulip180P, videotype.AV1MainProf),
+			ExtraAttr:         []string{"graphics_perbuild"},
+			ExtraData:         encode.TestData(tulip180P),
+			ExtraSoftwareDeps: []string{caps.HWEncodeAV1},
+		}, {
+			Name:              "av1_270p",
+			Val:               encode.MakeTestOptions(tulip270P, videotype.AV1MainProf),
+			ExtraAttr:         []string{"graphics_perbuild"},
+			ExtraData:         encode.TestData(tulip270P),
+			ExtraSoftwareDeps: []string{caps.HWEncodeAV1},
+		}, {
+			Name:              "av1_360p",
+			Val:               encode.MakeTestOptions(tulip360P, videotype.AV1MainProf),
+			ExtraAttr:         []string{"graphics_perbuild"},
+			ExtraData:         encode.TestData(tulip360P),
+			ExtraSoftwareDeps: []string{caps.HWEncodeAV1},
+		}, {
+			Name:              "av1_720p",
+			Val:               encode.MakeTestOptions(tulip720P, videotype.AV1MainProf),
+			ExtraAttr:         []string{"graphics_perbuild"},
+			ExtraData:         encode.TestData(tulip720P),
+			ExtraSoftwareDeps: []string{caps.HWEncodeAV1},
+		}, {
+			Name:              "av1_1080p",
+			Val:               encode.MakeTestOptions(crowd1080P, videotype.AV1MainProf),
+			ExtraAttr:         []string{"graphics_perbuild"},
+			ExtraData:         encode.TestData(crowd1080P),
+			ExtraSoftwareDeps: []string{caps.HWEncodeAV1},
+		}, {
+			Name:              "av1_2160p",
+			Val:               encode.MakeTestOptions(crowd2160P, videotype.AV1MainProf),
+			ExtraAttr:         []string{"graphics_perbuild"},
+			ExtraData:         encode.TestData(crowd2160P),
+			ExtraSoftwareDeps: []string{caps.HWEncodeAV1_4K},
 		}},
 	})
 }
