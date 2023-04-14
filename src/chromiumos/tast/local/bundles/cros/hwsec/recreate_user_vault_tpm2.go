@@ -33,7 +33,7 @@ func init() {
 		},
 		BugComponent: "b:1188704",
 		SoftwareDeps: []string{"tpm2"},
-		Attr:         []string{},
+		Attr:         []string{"group:hwsec_destructive_func"},
 		Timeout:      3 * time.Minute,
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"no_tpm_dynamic"},
