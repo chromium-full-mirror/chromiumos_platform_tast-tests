@@ -569,6 +569,27 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		Vars:            []string{"ui.cujAccountPool"},
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithAppRescue",
+		Desc: "CUJ fixture with AppRescue enabled",
+		Contacts: []string{
+			"ramsaroop@google.com",
+			"chromeos-perfmetrics-eng@google.com",
+		},
+		Impl: &loggedInToCUJUserFixture{
+			chromeExtraOpts: []chrome.Option{
+				chrome.EnableFeatures("ArcMglruReclaim:interval/30000/swappiness/60"),
+			},
+			bt: browser.TypeAsh,
+		},
+		Parent:          "cpuIdleForCUJ",
+		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
 }
 
 func prepareDocsBlockerExtension(s *testing.FixtState) (string, error) {
