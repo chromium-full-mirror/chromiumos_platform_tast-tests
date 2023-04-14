@@ -38,7 +38,7 @@ func init() {
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Attr:         []string{"group:cuj"},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "no_android_vm_t"},
 		Timeout:      3 * time.Minute,
 		Params: []testing.Param{{
 			Val:               browser.TypeAsh,

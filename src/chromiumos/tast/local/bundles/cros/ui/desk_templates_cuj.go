@@ -41,7 +41,7 @@ func init() {
 		// Chrome OS Server Projects > Enterprise Management > Commercial Productivity
 		BugComponent: "b:1020793",
 		Attr:         []string{"group:cuj"},
-		SoftwareDeps: []string{"chrome", "no_kernel_upstream"},
+		SoftwareDeps: []string{"chrome", "no_kernel_upstream", "no_android_vm_t"},
 		Data:         []string{cujrecorder.SystemTraceConfigFile},
 		Timeout:      chrome.GAIALoginTimeout + arc.BootTimeout + 3*time.Minute,
 		VarDeps:      []string{"ui.gaiaPoolDefault"},

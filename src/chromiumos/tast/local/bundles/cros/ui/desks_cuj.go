@@ -22,7 +22,7 @@ func init() {
 		Contacts:     []string{"chromeos-perfmetrics-eng@google.com", "ramsaroop@chromium.org"},
 		BugComponent: "b:1045832",
 		Attr:         []string{"group:cuj"},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "no_android_vm_t"},
 		Data:         []string{cujrecorder.SystemTraceConfigFile},
 		Timeout:      30 * time.Minute,
 		Params: []testing.Param{

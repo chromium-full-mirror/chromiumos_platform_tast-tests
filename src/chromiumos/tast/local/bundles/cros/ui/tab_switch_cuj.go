@@ -29,7 +29,7 @@ func init() {
 			"yichenz@chromium.org",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "no_android_vm_t"},
 		Data:         []string{cujrecorder.SystemTraceConfigFile},
 		Timeout:      22*time.Minute + cuj.CPUStablizationTimeout,
 		Vars: []string{
