@@ -42,8 +42,9 @@ var (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: WebGLAquarium,
-		Desc: "Runs WebGL aquarium demo from a local build and reports metrics",
+		Func:         WebGLAquarium,
+		LacrosStatus: testing.LacrosVariantExists,
+		Desc:         "Runs WebGL aquarium demo from a local build and reports metrics",
 		Contacts: []string{
 			"chromeos-gfx@google.com",
 			"syedfaaiz@google.com",
@@ -52,6 +53,7 @@ func init() {
 		BugComponent: "b:995569",
 		Attr:         []string{"graphics_perbuild", "group:graphics", "group:mainline", "informational"},
 		Timeout:      2 * time.Minute,
+		Data:         []string{webGlAquarium},
 		Params: []testing.Param{{
 			Name:      "50_fishes",
 			Fixture:   "chromeGraphics",
@@ -126,6 +128,7 @@ func WebGLAquarium(ctx context.Context, s *testing.State) {
 	if err = conn.Call(ctx, nil, "g_crosFpsCounter.reset"); err != nil {
 		s.Fatal("Could not reset the FPS counter: ", err)
 	}
+	// GoBigSleepLint: This is the measurement time.
 	testing.Sleep(ctx, runFishesFor)
 
 	pv := perf.NewValues()

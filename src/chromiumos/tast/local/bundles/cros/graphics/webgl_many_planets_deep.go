@@ -29,8 +29,9 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: WebGLManyPlanetsDeep,
-		Desc: "Runs WebGL many planets deep demo from a local build and reports metrics",
+		Func:         WebGLManyPlanetsDeep,
+		LacrosStatus: testing.LacrosVariantExists,
+		Desc:         "Runs WebGL many planets deep demo from a local build and reports metrics",
 		Contacts: []string{
 			"chromeos-gfx@google.com",
 			"syedfaaiz@google.com",
@@ -39,8 +40,14 @@ func init() {
 		BugComponent: "b:995569",
 		Attr:         []string{"graphics_nightly", "group:graphics", "group:mainline", "informational"},
 		Data:         []string{webGLManyPlanetsDeep},
-		Fixture:      "chromeGraphics",
 		Timeout:      2 * time.Minute,
+		Params: []testing.Param{{
+			Name:    "",
+			Fixture: "chromeGraphics",
+		}, {
+			Name:    "lacros",
+			Fixture: "chromeGraphicsLacros",
+		}},
 	})
 }
 
@@ -103,6 +110,7 @@ func WebGLManyPlanetsDeep(ctx context.Context, s *testing.State) {
 		s.Fatal("Could not reset fps counter: ", err)
 	}
 
+	// GoBigSleepLint: This is the sample wait time for the measurement.
 	if err = testing.Sleep(ctx, sampleWaitTime); err != nil {
 		s.Fatalf("Failed to sleep while running planets: %s", err)
 	}
