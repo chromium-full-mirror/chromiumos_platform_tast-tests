@@ -7,7 +7,6 @@ package secagentd
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 	"time"
 
@@ -27,7 +26,6 @@ import (
 
 type processEventsParams struct {
 	name             string
-	expBatch         bool
 	expCoalescedTerm bool
 	enableFeatures   []string
 	disableFeatures  []string
@@ -35,36 +33,15 @@ type processEventsParams struct {
 
 var processEventsTestParams = []processEventsParams{
 	{
-		name:             "batching_disabled",
-		expBatch:         false,
+		name:             "coalesce_terminate_disabled",
 		expCoalescedTerm: false,
-		enableFeatures:   []string{},
-		disableFeatures: []string{
-			"CrOSLateBootSecagentdBatchEvents",
-			"CrOSLateBootSecagentdCoalesceTerminates"},
-	},
-	{
-		name:             "batching_enabled",
-		expBatch:         true,
-		expCoalescedTerm: false,
-		enableFeatures:   []string{"CrOSLateBootSecagentdBatchEvents"},
 		disableFeatures:  []string{"CrOSLateBootSecagentdCoalesceTerminates"},
 	},
 	{
-		name:             "batching_disabled_coalesce_terminate_enabled",
-		expBatch:         false,
-		expCoalescedTerm: false, // Batching is a prerequisite.
-		enableFeatures:   []string{"CrOSLateBootSecagentdCoalesceTerminates"},
-		disableFeatures:  []string{"CrOSLateBootSecagentdBatchEvents"},
-	},
-	{
-		name:             "batching_and_coalesce_terminate_enabled",
-		expBatch:         true,
+		name:             "coalesce_terminate_enabled",
 		expCoalescedTerm: true,
 		enableFeatures: []string{
-			"CrOSLateBootSecagentdBatchEvents",
 			"CrOSLateBootSecagentdCoalesceTerminates"},
-		disableFeatures: []string{},
 	},
 }
 
@@ -243,18 +220,13 @@ func testOneProcessEventsParams(ctx context.Context, s *testing.State, param pro
 
 		var bExecs []*xdr.ProcessExecEvent
 		var bTerminates []*xdr.ProcessTerminateEvent
-		if param.expBatch {
-			for _, v := range pe.GetBatchedEvents() {
-				if v.GetProcessExec() != nil {
-					bExecs = append(bExecs, v.GetProcessExec())
-				}
-				if v.GetProcessTerminate() != nil {
-					bTerminates = append(bTerminates, v.GetProcessTerminate())
-				}
+		for _, v := range pe.GetBatchedEvents() {
+			if v.GetProcessExec() != nil {
+				bExecs = append(bExecs, v.GetProcessExec())
 			}
-		} else {
-			bExecs = append(bExecs, pe.GetProcessExec())
-			bTerminates = append(bTerminates, pe.GetProcessTerminate())
+			if v.GetProcessTerminate() != nil {
+				bTerminates = append(bTerminates, v.GetProcessTerminate())
+			}
 		}
 
 		for _, exec := range bExecs {
@@ -302,20 +274,10 @@ func testOneProcessEventsParams(ctx context.Context, s *testing.State, param pro
 		}
 	}
 	if !execFound {
-		errorMessage := fmt.Sprintf("Failed to find a matching ProcessExec event for pid %d", expPid)
-		if param.expBatch {
-			s.Error(errorMessage)
-		} else {
-			s.Log(errorMessage)
-		}
+		s.Errorf("Failed to find a matching ProcessExec event for pid %d", expPid)
 	}
 	if !param.expCoalescedTerm && !terminateFound {
-		errorMessage := fmt.Sprintf("Failed to find a matching ProcessExit event for pid %d", expPid)
-		if param.expBatch {
-			s.Error(errorMessage)
-		} else {
-			s.Log(errorMessage)
-		}
+		s.Errorf("Failed to find a matching ProcessExit event for pid %d", expPid)
 	}
 	if param.expCoalescedTerm && terminateFound {
 		// Coalescing is best effort and based on timing. Err on the
