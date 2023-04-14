@@ -56,6 +56,10 @@ func init() {
 // assumes that there is more than one desk since it's done by using the window
 // frame context menu and it will only show when there are multiple desks.
 func assignWindowToAllDesks(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.Context, window *ash.Window) error {
+	if err := window.ActivateWindow(ctx, tconn); err != nil {
+		return errors.Wrap(err, "failed to activate window")
+	}
+
 	rightClickPoint := coords.NewPoint(window.BoundsInRoot.CenterPoint().X, window.BoundsInRoot.Top+10)
 
 	moveMenu := nodewith.ClassName("MenuItemView").Name("Move window to desk")
@@ -65,6 +69,8 @@ func assignWindowToAllDesks(ctx context.Context, tconn *chrome.TestConn, ac *uia
 		"assign window to all desks",
 		mouse.Click(tconn, rightClickPoint, mouse.RightButton),
 		ac.MouseMoveTo(moveMenu, 0),
+		ac.DoDefault(moveMenu),
+		ac.WaitUntilExists(moveTarget),
 		ac.DoDefault(moveTarget),
 	)(ctx); err != nil {
 		return err
@@ -83,7 +89,7 @@ func launchAndWaitForApps(ctx context.Context, tconn *chrome.TestConn, appList [
 		if err := apps.Launch(ctx, tconn, app.ID); err != nil {
 			return errors.Wrap(err, "failed to launch")
 		}
-		if err := ash.WaitForApp(ctx, tconn, app.ID, time.Minute); err != nil {
+		if err := ash.WaitForApp(ctx, tconn, app.ID, 15*time.Second); err != nil {
 			return errors.Wrap(err, "app did not appear in shelf after launch")
 		}
 	}
@@ -172,11 +178,6 @@ func PerDeskWindowStacking(ctx context.Context, s *testing.State) {
 	defer ash.CleanUpDesks(cleanupCtx, tconn)
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 
-	// Ensure there is no window open before test starts.
-	if err := ash.CloseAllWindows(ctx, tconn); err != nil {
-		s.Fatal("Failed to ensure no window is open: ", err)
-	}
-
 	ac := uiauto.New(tconn)
 
 	chromeApp, err := apps.PrimaryBrowser(ctx, tconn)
@@ -184,8 +185,18 @@ func PerDeskWindowStacking(ctx context.Context, s *testing.State) {
 		s.Fatal("Could not find the Chrome app: ", err)
 	}
 
+	// Ensure there is no window open besides the browser window.
+	if err := ash.CloseAllWindowsMatching(ctx, tconn, func(window *ash.Window) bool {
+		return window.AppID != chromeApp.ID
+	}); err != nil {
+		s.Fatal("Failed to close non-browser windows: ", err)
+	}
+
 	// The apps that we will launch and then make all-desk windows.
-	appsList := []apps.App{chromeApp, apps.Terminal}
+	appsList := []apps.App{apps.Terminal}
+	if bt == browser.TypeAsh {
+		appsList = append(appsList, chromeApp)
+	}
 	if err := launchAndWaitForApps(ctx, tconn, appsList); err != nil {
 		s.Fatal("Failed to launch apps: ", err)
 	}
@@ -199,8 +210,8 @@ func PerDeskWindowStacking(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("GetAllWindows failed: ", err)
 	}
-	if len(allWindows) != len(appsList) {
-		s.Fatalf("Expected %d windows, got %d", len(appsList), len(allWindows))
+	if len(allWindows) != 2 {
+		s.Fatalf("Expected 2 windows, got %d", len(allWindows))
 	}
 
 	// Assign windows to all desks.
