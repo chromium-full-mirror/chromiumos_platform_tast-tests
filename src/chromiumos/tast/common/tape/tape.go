@@ -25,6 +25,7 @@ import (
 
 const tapeURL = "https://tape-307412.ey.r.appspot.com/"
 const tapeAudience = "770216225211-ihjn20dlehf94m9l4l5h0b0iilvd1vhc.apps.googleusercontent.com"
+const callTimeout = 30 * time.Second
 
 // client is created with NewClient and holds a *http.Client struct with an oauth token
 // for authentication against the TAPE GCP.
@@ -146,7 +147,7 @@ func (c *client) requestAccount(ctx context.Context, endpoint string, params int
 		return nil, errors.Wrap(err, "failed to marshal data")
 	}
 
-	response, err := c.sendRequestWithTimeout(ctx, "POST", endpoint, 30*time.Second, payloadBytes)
+	response, err := c.sendRequestWithTimeout(ctx, "POST", endpoint, callTimeout, payloadBytes)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to make request")
 	}
@@ -166,7 +167,7 @@ func (c *client) releaseAccount(ctx context.Context, account interface{}, endpoi
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal data")
 	}
-	response, err := c.sendRequestWithTimeout(ctx, "POST", endpoint, 30*time.Second, payloadBytes)
+	response, err := c.sendRequestWithTimeout(ctx, "POST", endpoint, callTimeout, payloadBytes)
 	if err != nil {
 		return errors.Wrap(err, "failed to make request")
 	}
@@ -361,7 +362,7 @@ func (c *client) SetPolicy(ctx context.Context, policySchema PolicySchema, updat
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal data")
 	}
-	response, err := c.sendRequestWithTimeout(ctx, "POST", "Policies/setPolicy", 30*time.Second, payloadBytes)
+	response, err := c.sendRequestWithTimeout(ctx, "POST", "Policies/setPolicy", callTimeout, payloadBytes)
 	if err != nil {
 		return errors.Wrap(err, "failed to make REST call")
 	}
@@ -413,7 +414,7 @@ func (c *client) ListDevices(ctx context.Context, orgUnitPath, customerID string
 	if err != nil {
 		return "", errors.Wrap(err, "failed to marshal data")
 	}
-	response, err := c.sendRequestWithTimeout(ctx, "POST", "Devices/listDevices", 30*time.Second, payloadBytes)
+	response, err := c.sendRequestWithTimeout(ctx, "POST", "Devices/listDevices", callTimeout, payloadBytes)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to make REST call")
 	}
@@ -447,7 +448,7 @@ func (c *client) Deprovisioned(ctx context.Context, deviceID, orgUnitPath, custo
 	if err != nil {
 		return false, errors.Wrap(err, "failed to marshal data")
 	}
-	response, err := c.sendRequestWithTimeout(ctx, "POST", "Devices/isDeprovisioned", 30*time.Second, payloadBytes)
+	response, err := c.sendRequestWithTimeout(ctx, "POST", "Devices/isDeprovisioned", callTimeout, payloadBytes)
 	if err != nil {
 		return false, errors.Wrap(err, "failed to make REST call")
 	}
@@ -458,4 +459,38 @@ func (c *client) Deprovisioned(ctx context.Context, deviceID, orgUnitPath, custo
 		return false, errors.Wrap(err, "failed to read response")
 	}
 	return string(respBody) == "Deprovisioned", nil
+}
+
+// MoveDevicesToOURequest is a struct containing the necessary data to move a
+// device to an an organizational unit.
+type MoveDevicesToOURequest struct {
+	DeviceIDs   []string `json:"deviceids"`
+	CustomerID  string   `json:"customerid"`
+	OrgUnitPath string   `json:"orgunitpath"`
+}
+
+// MoveDevicesToOU calls TAPE to move devices, identified by their deviceIDs to an
+// organizational unit with the path orgUnitPath (e.g. "myOU/mySubOU").
+func (c *client) MoveDevicesToOU(ctx context.Context, deviceIDs []string, orgUnitPath, customerID string) (string, error) {
+	request := &MoveDevicesToOURequest{
+		DeviceIDs:   deviceIDs,
+		CustomerID:  customerID,
+		OrgUnitPath: orgUnitPath,
+	}
+
+	payloadBytes, err := json.Marshal(request)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to marshal data")
+	}
+	response, err := c.sendRequestWithTimeout(ctx, "POST", "Devices/moveDevicesToOU", callTimeout, payloadBytes)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to make REST call")
+	}
+
+	// Read the response.
+	respBody, err := io.ReadAll(response.Body)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to read response")
+	}
+	return string(respBody), nil
 }

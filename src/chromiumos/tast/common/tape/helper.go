@@ -213,6 +213,37 @@ func (c *client) DeprovisionHelper(ctx context.Context, rpcClient *rpc.Client, c
 	return nil
 }
 
+// MoveDeviceToOU is a helper function to move a device to an OU.
+func (c *client) MoveDeviceToOU(ctx context.Context, rpcClient *rpc.Client, customerID, orgUnitPath string) error {
+	tapeService := ts.NewServiceClient(rpcClient.Conn)
+	// Get the device ID of the DUT.
+	res, err := tapeService.GetDeviceID(ctx, &ts.GetDeviceIDRequest{CustomerID: customerID})
+	if err != nil {
+		return errors.Wrap(err, "failed to get the deviceID")
+	}
+	_, err = c.MoveDevicesToOU(ctx, []string{res.DeviceID}, orgUnitPath, customerID)
+	if err != nil {
+		return errors.Wrapf(err, "failed to move device %s to %s", res.DeviceID, orgUnitPath)
+	}
+
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		isDeprovisioned, err := c.Deprovisioned(ctx, res.DeviceID, orgUnitPath, customerID)
+		if err != nil {
+			return err
+		}
+		if isDeprovisioned {
+			return errors.New("device not found in OU")
+		}
+		return nil
+	}, &testing.PollOptions{
+		Interval: 5 * time.Second,
+	}); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // Additional target keys for policies.
 
 // NetworkKey is an additionalTargetKey for network related policies. It takes
