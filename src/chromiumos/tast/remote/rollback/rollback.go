@@ -7,7 +7,10 @@ package rollback
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strconv"
+	"time"
 
 	"chromiumos/tast/common/hwsec"
 	"chromiumos/tast/remote/policyutil"
@@ -17,6 +20,7 @@ import (
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/lsbrelease"
 	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -27,8 +31,55 @@ type DeviceInfo struct {
 	Milestone int
 }
 
+// dumpRollbackFiles retrieves Rollback relevant files and logs. Ensures
+// they are available for debugging in case of failure.
+func dumpRollbackFiles(ctx context.Context, dut *dut.DUT, outDirName string) error {
+	outDir, ok := testing.ContextOutDir(ctx)
+	if !ok {
+		return errors.New("output directory unavailable in context")
+	}
+
+	// Use a timestamp to avoid overwriting any existing directories.
+	timeStr := time.Now().UTC().Format(time.RFC3339Nano)
+	dir := filepath.Join(outDir, outDirName, timeStr)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return errors.Wrapf(err, "failed to create directory %q to store rollback data", dir)
+	}
+	testing.ContextLogf(ctx, "Saving relevant data for Rollback in %q", dir)
+
+	// fileInfo contains the information of the data to be retrieved.
+	type fileInfo struct {
+		SaveName string
+		Path     string
+	}
+
+	// List of files or directories relevant for Rollback.
+	// Depending on the progression of the Rollback process, some of these files
+	// may not exist and it will be expected to see a failure message.
+	var rollbackFiles = []fileInfo{
+		{SaveName: "messages", Path: "/var/log/messages"},
+		{SaveName: "oobe_config_save", Path: "/var/lib/oobe_config_save/"},
+		{SaveName: "oobe_config_restore", Path: "/var/lib/oobe_config_restore/"},
+		{SaveName: "pstore", Path: "/sys/fs/pstore/"},
+		{SaveName: "rollback_data", Path: "/mnt/stateful_partition/unencrypted/preserve/rollback_data"},
+		{SaveName: "rollback_data_tpm", Path: "/mnt/stateful_partition/unencrypted/preserve/rollback_data_tpm"},
+	}
+
+	for _, fileInfo := range rollbackFiles {
+		pathDst := filepath.Join(dir, fileInfo.SaveName)
+		if err := linuxssh.GetFile(ctx, dut.Conn(), fileInfo.Path, pathDst, linuxssh.DereferenceSymlinks); err != nil {
+			testing.ContextLogf(ctx, "Failed to download %v from DUT (%v) to %v at local host: %v", fileInfo.Path, dut.HostName(), pathDst, err)
+		}
+	}
+
+	return nil
+}
+
 // SimulatePowerwash resets the TPM and system state.
 func SimulatePowerwash(ctx context.Context, dut *dut.DUT, rpcHint *testing.RPCHint) error {
+	if err := dumpRollbackFiles(ctx, dut, "rollback_before_powerwash"); err != nil {
+		testing.ContextLog(ctx, "Failed to dump Rollback files before powerwash: ", err)
+	}
 	return policyutil.EnsureTPMAndSystemStateAreReset(ctx, dut, rpcHint)
 }
 
@@ -38,6 +89,9 @@ func SimulatePowerwash(ctx context.Context, dut *dut.DUT, rpcHint *testing.RPCHi
 // reboot the device, we will need to add reboot logic here for rollback to
 // happen. See b/240541326.
 func SimulatePowerwashAndReboot(ctx context.Context, dut *dut.DUT) error {
+	if err := dumpRollbackFiles(ctx, dut, "rollback_before_powerwash"); err != nil {
+		testing.ContextLog(ctx, "Failed to dump Rollback files before powerwash and reboot: ", err)
+	}
 	return policyutil.EnsureTPMAndSystemStateAreResetRemote(ctx, dut)
 }
 
