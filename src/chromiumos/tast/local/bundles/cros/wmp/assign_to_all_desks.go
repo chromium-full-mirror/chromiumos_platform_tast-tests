@@ -17,7 +17,7 @@ import (
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/cuj"
 	"chromiumos/tast/local/chrome/uiauto"
-	"chromiumos/tast/local/chrome/uiauto/event"
+	"chromiumos/tast/local/chrome/uiauto/checked"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/mouse"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
@@ -86,7 +86,7 @@ func AssignToAllDesks(ctx context.Context, s *testing.State) {
 
 	ac := uiauto.New(tconn)
 
-	chromeApp, err := apps.ChromeOrChromium(ctx, tconn)
+	chromeApp, err := apps.PrimaryBrowser(ctx, tconn)
 	if err != nil {
 		s.Fatal("Could not find the Chrome app: ", err)
 	}
@@ -223,6 +223,19 @@ func AssignToAllDesks(ctx context.Context, s *testing.State) {
 	}
 }
 
+// isMenuItemChecked returns true if `menuItem` is checked.
+func isMenuItemChecked(ctx context.Context, ac *uiauto.Context, menuItem *nodewith.Finder) (bool, error) {
+	nodeInfo, err := ac.NodesInfo(ctx, menuItem)
+	if err != nil {
+		return false, err
+	}
+	if len(nodeInfo) != 1 {
+		return false, errors.Errorf("expected exactly one entry from NodesInfo, got %d", len(nodeInfo))
+	}
+
+	return nodeInfo[0].Checked == checked.True, nil
+}
+
 // assignWindowsToDesks assigns windows to all desks or Desk 2 based on `onAllDesks`.
 func assignWindowsToDesks(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.Context, onAllDesks bool) error {
 	ws, err := ash.GetAllWindows(ctx, tconn)
@@ -243,6 +256,11 @@ func assignWindowsToDesks(ctx context.Context, tconn *chrome.TestConn, ac *uiaut
 	}
 
 	for i := 0; i < numWindows; i++ {
+		// Bring the window to the front.
+		if err := ws[i].ActivateWindow(ctx, tconn); err != nil {
+			return errors.Wrap(err, "failed to activate window")
+		}
+
 		// Right click on the top of the window.
 		rightClickPoint := coords.NewPoint(ws[i].BoundsInRoot.CenterPoint().X, ws[i].BoundsInRoot.Top+10)
 		if err := mouse.Click(tconn, rightClickPoint, mouse.RightButton)(ctx); err != nil {
@@ -251,14 +269,26 @@ func assignWindowsToDesks(ctx context.Context, tconn *chrome.TestConn, ac *uiaut
 
 		// Move mouse to the move window to desk menu item.
 		moveWindowToDeskMenuItem := nodewith.ClassName("MenuItemView").Name("Move window to desk")
-		if err := ac.MouseMoveTo(moveWindowToDeskMenuItem, 0)(ctx); err != nil {
-			return errors.Wrap(err, "failed to move mouse to the move window to desk menu item")
+		if err := uiauto.Combine(
+			"move cursor to menu and wait for submenu",
+			ac.MouseMoveTo(moveWindowToDeskMenuItem, 0),
+			ac.WaitUntilExists(moveTarget),
+		)(ctx); err != nil {
+			return errors.Wrap(err, "failed to get window menu")
+		}
+
+		// If the menu item is already checked, the we must not check it again, since this toggles the item. See b/276296010 for more info.
+		checked, err := isMenuItemChecked(ctx, ac, moveTarget)
+		if err != nil {
+			return errors.Wrap(err, "failed to determine if the menu item is checked")
+		}
+		if checked {
+			continue
 		}
 
 		if err := ac.DoDefault(moveTarget)(ctx); err != nil {
 			return errors.Wrap(err, "failed to move the window to Desk 2")
 		}
-
 		if err := ash.WaitWindowFinishAnimating(ctx, tconn, ws[i].ID); err != nil {
 			return errors.Wrap(err, "failed to wait window finish animating")
 		}
@@ -284,10 +314,8 @@ func verifyWindowsOnDesks(ctx context.Context, tconn *chrome.TestConn, ac *uiaut
 			}
 		}
 
-		// TODO(b/246782864): Use a proper wait for the desk animation.
-		// Make sure the desk animiation is finished.
-		if err := ac.WithInterval(2*time.Second).WithTimeout(10*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
-			return errors.Wrap(err, "failed to wait for desk animation finished")
+		if err := ash.WaitUntilDesksFinishAnimating(ctx, tconn); err != nil {
+			return errors.Wrap(err, "failed to wait for desks to finish animating")
 		}
 
 		count, err := ash.CountVisibleWindows(ctx, tconn)
