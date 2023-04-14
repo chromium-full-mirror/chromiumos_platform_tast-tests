@@ -10,6 +10,9 @@ import (
 	"regexp"
 	"time"
 
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
+
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
@@ -20,8 +23,6 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/chrome/webutil"
 	"chromiumos/tast/local/input"
-	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
@@ -82,7 +83,20 @@ func InlineReply(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect Test API: ", err)
 	}
 
-	// Clear notification prompt dialog if it exists.
+	ui := uiauto.New(tconn)
+
+	// The notification permission prompt will not appear automatically,
+	// actively grant the notification permission for upcoming tests.
+	permissionBtn := nodewith.Name("Request permission").Role(role.Button)
+	if err := uiauto.Combine("request permission",
+		ui.WaitUntilExists(permissionBtn),
+		ui.MakeVisible(permissionBtn),
+		// TODO(b/236799853): Use ui.LeftClick after this issue on lacros is resolved.
+		ui.DoDefault(permissionBtn),
+	)(ctx); err != nil {
+		s.Fatal("Failed to grant the notification permission: ", err)
+	}
+
 	if err := prompts.ClearPotentialPrompts(tconn, 5*time.Second, prompts.ShowNotificationsPrompt)(ctx); err != nil {
 		s.Fatal("Failed to clear notification prompt dialog: ", err)
 	}
@@ -111,8 +125,6 @@ func InlineReply(ctx context.Context, s *testing.State) {
 	if err := conn.Eval(ctx, fmt.Sprintf(selectSettingExpr, "action", "Display an alert()."), nil); err != nil {
 		s.Fatal("Failed to select reaction setting: ", err)
 	}
-
-	ui := uiauto.New(tconn)
 
 	sendBtn := nodewith.Name("Display the notification").Role(role.Button)
 	if err := uiauto.Combine("send notification",
