@@ -509,8 +509,10 @@ func RunAppSettingsTests(ctx context.Context, s *testing.State, cr *chrome.Chrom
 
 			diffPath := filepath.Join(s.OutDir(), test.Name+"_diff.txt")
 			if err := document.CompareFiles(ctx, scan, s.DataPath(test.GoldenFile), diffPath); err != nil {
+				saveFilename := test.Name + filepath.Ext(scan)
+				s.Log("Saving scanned file to: ", saveFilename)
 				s.Error("Scan differs from golden file: ", err)
-				saveScanPath := filepath.Join(s.OutDir(), test.Name+filepath.Ext(scan))
+				saveScanPath := filepath.Join(s.OutDir(), saveFilename)
 				if err := fsutil.MoveFile(scan, saveScanPath); err != nil {
 					s.Error("Unable to preserve scanned file output: ", err)
 				}
