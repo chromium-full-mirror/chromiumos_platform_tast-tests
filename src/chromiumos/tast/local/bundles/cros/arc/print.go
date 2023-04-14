@@ -14,6 +14,7 @@ import (
 	"chromiumos/tast/common/android/ui"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/fsutil"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
@@ -207,5 +208,12 @@ func Print(ctx context.Context, s *testing.State) {
 	diffPath := filepath.Join(s.OutDir(), "diff.txt")
 	if err := document.CompareFiles(ctx, recordPath, golden, diffPath); err != nil {
 		s.Error("Printed file differs from golden file: ", err)
+		// If we get an error comparing files, save the results we got.
+		actualFilename := "actual.pdf"
+		s.Log("Saving printed file to: ", actualFilename)
+		savedPath := filepath.Join(s.OutDir(), actualFilename)
+		if err := fsutil.MoveFile(recordPath, savedPath); err != nil {
+			s.Error("Failed to save printed file: ", err)
+		}
 	}
 }
