@@ -51,14 +51,25 @@ func init() {
 		// ChromeOS > Platform > Graphics > GPU
 		BugComponent: "b:995569",
 		Attr:         []string{"graphics_perbuild", "group:graphics", "group:mainline", "informational"},
-		Fixture:      "chromeGraphics",
 		Timeout:      2 * time.Minute,
 		Params: []testing.Param{{
 			Name:      "50_fishes",
+			Fixture:   "chromeGraphics",
 			ExtraData: []string{webGlAquarium},
 			Val:       50,
 		}, {
 			Name:      "1000_fishes",
+			Fixture:   "chromeGraphics",
+			ExtraData: []string{webGlAquarium},
+			Val:       1000,
+		}, {
+			Name:      "50_fishes_lacros",
+			Fixture:   "chromeGraphicsLacros",
+			ExtraData: []string{webGlAquarium},
+			Val:       50,
+		}, {
+			Name:      "1000_fishes_lacros",
+			Fixture:   "chromeGraphicsLacros",
 			ExtraData: []string{webGlAquarium},
 			Val:       1000,
 		}},
