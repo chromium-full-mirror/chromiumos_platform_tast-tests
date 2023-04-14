@@ -45,6 +45,8 @@ type testParam struct {
 	requiredCPUAbisForBranchUprev []string
 	// if set, keep local data in this directory.
 	dataDir string
+	// if set, generates dex opt cache
+	dexOptCacheGen bool
 }
 
 const (
@@ -154,6 +156,7 @@ func init() {
 				upload:                  true,
 				uploadPackagesReference: false,
 				uprevBranch:             false,
+				dexOptCacheGen:          false,
 				dataDir:                 "",
 			},
 		}, {
@@ -166,6 +169,7 @@ func init() {
 				upload:                  true,
 				uploadPackagesReference: false,
 				uprevBranch:             false,
+				dexOptCacheGen:          false,
 				dataDir:                 "",
 			},
 		}, {
@@ -178,6 +182,7 @@ func init() {
 				upload:                  true,
 				uploadPackagesReference: false,
 				uprevBranch:             false,
+				dexOptCacheGen:          false,
 				dataDir:                 "",
 			},
 		}, {
@@ -190,6 +195,7 @@ func init() {
 				upload:                  true,
 				uploadPackagesReference: true,
 				uprevBranch:             false,
+				dexOptCacheGen:          true,
 				dataDir:                 "",
 			},
 		}, {
@@ -201,6 +207,7 @@ func init() {
 				upload:                  false,
 				uploadPackagesReference: false,
 				uprevBranch:             false,
+				dexOptCacheGen:          false,
 				dataDir:                 "/tmp/data_collector",
 			},
 		}, {
@@ -212,6 +219,7 @@ func init() {
 				upload:                  false,
 				uploadPackagesReference: false,
 				uprevBranch:             false,
+				dexOptCacheGen:          false,
 				dataDir:                 "/tmp/data_collector",
 			},
 		}, {
@@ -223,6 +231,7 @@ func init() {
 				upload:                  false,
 				uploadPackagesReference: false,
 				uprevBranch:             false,
+				dexOptCacheGen:          false,
 				dataDir:                 "/tmp/data_collector",
 			},
 		}, {
@@ -234,6 +243,7 @@ func init() {
 				upload:                  false,
 				uploadPackagesReference: true,
 				uprevBranch:             false,
+				dexOptCacheGen:          true,
 				dataDir:                 "/tmp/data_collector",
 			},
 		}, {
@@ -266,6 +276,7 @@ func init() {
 				upload:                        true,
 				uploadPackagesReference:       false,
 				uprevBranch:                   true,
+				dexOptCacheGen:                false,
 				requiredCPUAbisForBranchUprev: []string{"x86_64", "arm64"},
 				dataDir:                       "/tmp/data_collector",
 			},
@@ -280,6 +291,7 @@ func init() {
 				upload:                        true,
 				uploadPackagesReference:       false,
 				uprevBranch:                   true,
+				dexOptCacheGen:                false,
 				requiredCPUAbisForBranchUprev: []string{"x86_64"},
 				dataDir:                       "/tmp/data_collector",
 			},
@@ -298,6 +310,7 @@ func init() {
 				upload:                        true,
 				uploadPackagesReference:       false,
 				uprevBranch:                   true,
+				dexOptCacheGen:                false,
 				requiredCPUAbisForBranchUprev: []string{"x86_64", "arm64"},
 				dataDir:                       "/tmp/data_collector",
 			},
@@ -615,19 +628,21 @@ func DataCollector(ctx context.Context, s *testing.State) {
 		s.Log("Retrying generating TTS cache, previous attempt failed: ", err)
 	}
 
-	attempts = 0
-	for {
-		err = genDexOptCache(ctx, s, cl, filepath.Join(dataDir, dexOptCache), v, &du)
-		if err == nil {
-			break
-		}
+	if param.dexOptCacheGen {
+		attempts = 0
+		for {
+			err = genDexOptCache(ctx, s, cl, filepath.Join(dataDir, dexOptCache), v, &du)
+			if err == nil {
+				break
+			}
 
-		attempts = attempts + 1
-		dumpLogcat("dex_opt", attempts)
-		if attempts > retryCount {
-			s.Fatal("Failed to generate DexOpt cache. No more retries left: ", err)
+			attempts = attempts + 1
+			dumpLogcat("dex_opt", attempts)
+			if attempts > retryCount {
+				s.Fatal("Failed to generate DexOpt cache. No more retries left: ", err)
+			}
+			s.Log("Retrying generating DexOpt cache, previous attempt failed: ", err)
 		}
-		s.Log("Retrying generating DexOpt cache, previous attempt failed: ", err)
 	}
 
 	if param.uprevBranch {
