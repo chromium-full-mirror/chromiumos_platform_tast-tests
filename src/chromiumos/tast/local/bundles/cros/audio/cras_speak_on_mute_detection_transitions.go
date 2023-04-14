@@ -25,7 +25,7 @@ func init() {
 		Desc:         "Test CRAS detection of speaking while on mute with system state changes",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
 		BugComponent: "b:875484", // ChromeOS > Platform > Technologies > Audio > Test > Tast
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline"},
 		Fixture:      fixture.StereoAloopLoadedWithoutUI,
 		Data:         []string{data.TheQuickBrownFoxWav},
 		Timeout:      3 * time.Minute,
@@ -180,6 +180,7 @@ func CrasSpeakOnMuteDetectionTransitions(ctx context.Context, s *testing.State) 
 
 	// Transition state at T/2.
 	go func() {
+		// GoBigSleepLint: Transition state at the exact time.
 		if err := testing.Sleep(ctx, speechWavDuration/2); err != nil {
 			s.Error("Cannot sleep: ", err)
 			return

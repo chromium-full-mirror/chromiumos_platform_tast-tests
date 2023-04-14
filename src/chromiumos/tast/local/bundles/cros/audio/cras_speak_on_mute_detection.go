@@ -27,7 +27,7 @@ func init() {
 		Desc:         "Test CRAS detection of speaking while on mute",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
 		BugComponent: "b:875484", // ChromeOS > Platform > Technologies > Audio > Test > Tast
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline"},
 		Fixture:      fixture.StereoAloopLoadedWithoutUI,
 		Data:         []string{data.TheQuickBrownFoxWav},
 		Timeout:      3 * time.Minute,
@@ -96,6 +96,7 @@ func init() {
 					speechSource:      speaker,
 					expectedDetection: false,
 				},
+				ExtraAttr: []string{"informational"},
 			},
 			{
 				Name: "rtc_stream_without_apm_at_speaker", // testplan#8
@@ -109,6 +110,7 @@ func init() {
 					speechSource:      speaker,
 					expectedDetection: false,
 				},
+				ExtraAttr: []string{"informational"},
 			},
 			{
 				Name: "rtc_stream_with_apm_unmuted", // testplan#9
@@ -122,6 +124,7 @@ func init() {
 					speechSource:      mouth,
 					expectedDetection: false,
 				},
+				ExtraAttr: []string{"informational"},
 			},
 			{
 				Name: "rtc_stream_with_apm_feature_disabled", // testplan#10
@@ -264,6 +267,7 @@ func CrasSpeakOnMuteDetection(ctx context.Context, s *testing.State) {
 
 	delayCapture := 2 * time.Second
 	s.Logf("Delay capture for %v to let playback start first", delayCapture)
+	// GoBigSleepLint: Sleep works the same as having a longer capture + crop.
 	if err := testing.Sleep(ctx, delayCapture); err != nil {
 		s.Fatal("Cannot sleep: ", err)
 	}
