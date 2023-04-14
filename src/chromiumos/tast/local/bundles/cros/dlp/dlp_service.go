@@ -535,7 +535,7 @@ func (service *DataLeakPreventionService) TestCopyFileToDrive(ctx context.Contex
 		return &empty.Empty{}, errors.Wrap(err, "failed to cancel the paste")
 	}
 
-	// Copy again and accept the warning.
+	// Copy again and accept the warning. Copies shouldn't be managed.
 	if err := copyToDriveAndVerifyWarning(ctx, ui, filesApp, keyboard, dlFileName, true); err != nil {
 		return &empty.Empty{}, errors.Wrap(err, "failed to copy the file")
 	}
@@ -548,6 +548,11 @@ func (service *DataLeakPreventionService) TestCopyFileToDrive(ctx context.Contex
 		return &empty.Empty{}, errors.Wrap(err, "file is managed after copying")
 	}
 
+	// GoBigSleepLint - Add some delay to allow for Drive sync to finish.
+	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+		return &empty.Empty{}, errors.Wrap(err, "failed to sleep")
+	}
+
 	// Delete the file and copy again.
 	if err := filesApp.DeleteFileOrFolder(keyboard, dlFileName)(ctx); err != nil {
 		return &empty.Empty{}, errors.Wrap(err, "failed to delete the file")
@@ -558,9 +563,18 @@ func (service *DataLeakPreventionService) TestCopyFileToDrive(ctx context.Contex
 		return &empty.Empty{}, errors.Wrap(err, "failed to copy the file")
 	}
 
+	if err := files.IsFileManaged(ctx, ui, tconn, keyboard, dlFileName, false); err != nil {
+		return &empty.Empty{}, errors.Wrap(err, "file is managed after copying")
+	}
+
 	// Delete the file so we don't unnecessarily take space in Drive.
 	if err := filesApp.DeleteFileOrFolder(keyboard, dlFileName)(ctx); err != nil {
 		return &empty.Empty{}, errors.Wrap(err, "failed to delete the file")
+	}
+
+	// GoBigSleepLint - Add some delay to allow for Drive sync to finish.
+	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+		return &empty.Empty{}, errors.Wrap(err, "failed to sleep")
 	}
 
 	return &empty.Empty{}, nil

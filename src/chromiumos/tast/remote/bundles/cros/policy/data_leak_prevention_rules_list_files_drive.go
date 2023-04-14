@@ -39,7 +39,7 @@ func init() {
 			"tast.cros.policy.PolicyService",
 			"tast.cros.tape.Service",
 		},
-		Timeout: 8 * time.Minute,
+		Timeout: 7 * time.Minute,
 		VarDeps: []string{
 			dlputil.RestrictionWarnReportingEnabledUsername,
 			dlputil.RestrictionWarnReportingEnabledPassword,
