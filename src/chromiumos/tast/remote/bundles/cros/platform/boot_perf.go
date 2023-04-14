@@ -19,6 +19,7 @@ import (
 	"chromiumos/tast/common/perf"
 	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/dut"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/rpc"
 	"chromiumos/tast/services/cros/arc"
@@ -64,18 +65,36 @@ func init() {
 }
 
 // assertRootfsVerification asserts rootfs verification is enabled by
-// "checking dm_verity.dev_wait=1" is in /proc/cmdline. Fail the test if rootfs
-// verification is disabled.
-func assertRootfsVerification(ctx context.Context, s *testing.State) {
-	d := s.DUT()
+// "checking dm_verity.dev_wait=1" is in /proc/cmdline. Return an error if
+// rootfs verification is disabled.
+func assertRootfsVerification(ctx context.Context, d *dut.DUT) error {
 	cmdline, err := d.Conn().CommandContext(ctx, "cat", "/proc/cmdline").Output()
 	if err != nil {
-		s.Fatal("Failed to read kernel cmdline")
+		return errors.Wrap(err, "failed to read kernel cmdline")
 	}
 
 	if !strings.Contains(string(cmdline), "dm_verity.dev_wait=1") {
-		s.Fatal("Rootfs verification is off")
+		return errors.New("rootfs verification is off")
 	}
+
+	return nil
+}
+
+// assertNoActiveConsoles ensures there are no unexpectedly active kernel consoles. This can often
+// be serial consoles, which can significantly slow down boot.
+func assertNoActiveConsoles(ctx context.Context, d *dut.DUT) error {
+	b, err := d.Conn().CommandContext(ctx, "cat", "/sys/class/tty/console/active").Output()
+	if err != nil {
+		return errors.Wrap(err, "failed to read active TTY consoles")
+	}
+
+	activeConsoles := strings.TrimSpace(string(b))
+
+	if activeConsoles != "" {
+		return errors.Errorf("unexpected console(s) enabled: %s", activeConsoles)
+	}
+
+	return nil
 }
 
 // preReboot performs actions before rebooting the DUT:
@@ -117,7 +136,7 @@ func bootPerfOnce(ctx context.Context, s *testing.State, i, iterations int, pv *
 			s.Fatal("Failed to reboot DUT: ", err)
 		}
 
-		// Wait for |reconnectDelay| duration before reconnecting to the DUT to avoid interfere with early boot stages.
+		// GoBigSleepLint: Wait for |reconnectDelay| duration before reconnecting to the DUT to avoid interfere with early boot stages.
 		if err := testing.Sleep(ctx, reconnectDelay); err != nil {
 			s.Log("Warning: failed in sleep before redialing RPC: ", err)
 		}
@@ -279,7 +298,13 @@ func BootPerf(ctx context.Context, s *testing.State) {
 	if !skipRootfsCheck {
 		// Disabling rootfs verification makes metric "seconds_kernel_to_startup" incorrectly better than normal.
 		// This will fail the test if rootfs verification is disabled.
-		assertRootfsVerification(ctx, s)
+		if err := assertRootfsVerification(ctx, s.DUT()); err != nil {
+			s.Fatal(err) // NOLINT: assertRootfsVerification() returns loggable errors
+		}
+	}
+
+	if err := assertNoActiveConsoles(ctx, s.DUT()); err != nil {
+		s.Fatal(err) // NOLINT: assertNoActiveConsoles() returns loggable errors
 	}
 
 	func(ctx context.Context) {
