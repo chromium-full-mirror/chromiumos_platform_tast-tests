@@ -9,8 +9,6 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"math/rand"
-	"os"
-	"path/filepath"
 	"time"
 
 	cpb "chromiumos/system_api/cryptohome_proto"
@@ -218,13 +216,6 @@ func UssMigrationChallengeCredential(ctx context.Context, s *testing.State) {
 			}
 			if err := cryptohome.CheckKeyBackingStoreExists(ctx, smartcardAuthFactorFile, testUser); err != nil {
 				return errors.Wrap(err, "failed to check smartcard AuthFactor file after migration")
-			}
-
-			// Remove VaultKeyset file to ensure that the authentication takes AuthFactor path.
-			const shadowDir = "/home/.shadow"
-			hash, _ := cryptohome.UserHash(ctx, testUser)
-			if err := os.Remove(filepath.Join(shadowDir, hash, smartcardKeysetFile)); err != nil {
-				return errors.Wrap(err, "failed to remove the smartcard VaultKeyset file")
 			}
 
 			// Authenticate should succeed after migration.

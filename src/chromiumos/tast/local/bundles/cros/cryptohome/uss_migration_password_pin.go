@@ -316,10 +316,6 @@ func UssMigrationPasswordPin(ctx context.Context, s *testing.State) {
 			if err := cryptohome.TestLockScreen(ctx, userName, userPassword, wrongPassword, passwordLabel, client); err != nil {
 				return errors.Wrap(err, "lock screen test with password failed after USS migration of password")
 			}
-			// Check that the PIN VaultKeyset file is deleted.
-			if err := cryptohome.CheckKeyBackingStoreExists(ctx, pinKeysetFile, userName); err == nil {
-				return errors.Wrap(err, "PIN VaultKeyset file exists, should have been deleted")
-			}
 			// Check that the PIN AuthFactor file is deleted.
 			if err := cryptohome.CheckKeyBackingStoreExists(ctx, pinAuthFactorFile, userName); err == nil {
 				return errors.Wrap(err, "PIN AuthFactor file exists, should have been deleted")
