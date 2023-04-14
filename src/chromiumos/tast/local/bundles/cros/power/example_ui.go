@@ -30,13 +30,12 @@ func init() {
 		Desc:         "Collect power metrics when device is in idle with UI",
 		BugComponent: "b:167191",
 		Contacts:     []string{"chromeos-platform-power@google.com"},
-		// Disabled because this is an example test for other tests to follow.
-		// Attr:      []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      3 * time.Minute,
 		Params: []testing.Param{{
-			Name:    "ash_kbbl",
-			Fixture: "powerAshKbbl",
+			Name:      "ash_kbbl",
+			Fixture:   "powerAshKbbl",
+			ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 		}, {
 			Name:    "ash",
 			Fixture: "powerAsh",
@@ -48,6 +47,7 @@ func init() {
 			Name:              "lacros_nokbbl",
 			Fixture:           "powerLacros",
 			ExtraSoftwareDeps: []string{"lacros"},
+			ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		}},
 	})
 }

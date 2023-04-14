@@ -26,8 +26,6 @@ func init() {
 			"chromeos-platform-power@google.com",
 			"mqg@chromium.org",
 		},
-		// Disabled because this is an example test for other tests to follow.
-		// Attr:      []string{"group:mainline", "informational"},
 		Timeout: 3 * time.Minute,
 		Params: []testing.Param{{
 			Name:    "fastest",
@@ -50,6 +48,7 @@ func init() {
 				Interval: 1 * time.Second,
 				Total:    10 * time.Second,
 			},
+			ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 		}},
 	})
 }
