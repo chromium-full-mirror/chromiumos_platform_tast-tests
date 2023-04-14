@@ -33,7 +33,10 @@ func init() {
 			"chromeos-faft@google.com",
 		},
 		SoftwareDeps: []string{"wifi", "shill-wifi"},
-		Attr:         []string{"group:mainline", "group:wificell", "wificell_func", "wificell_dut_validation", "group:firmware", "firmware_ec", "group:labqual"},
+		Attr: []string{"group:mainline", "group:wificell", "wificell_func", "wificell_dut_validation", "group:labqual",
+			// Updating the SAR tables in CBFS can break this test.
+			"group:firmware", "firmware_bios",
+		},
 		// NB: The WifiIntel dependency tracks a manually maintained list of devices.
 		// If the test is skipping when it should run or vice versa, check the hwdep
 		// to see if your board is incorrectly included/excluded.
@@ -42,7 +45,7 @@ func init() {
 			// verify with this test, so we skip all versions of this test on eve.
 			// See b/181055964 for more details.
 			hwdep.SkipOnModel("eve")),
-		Requirements: []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates, "sys-fw-0022-v01"},
+		Requirements: []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates, "sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
 	})
 }
 

@@ -25,8 +25,11 @@ func init() {
 			"chromeos-faft@google.com",
 		},
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
-		Attr:         []string{"group:mainline", "group:wificell", "wificell_func", "wificell_dut_validation", "group:firmware", "firmware_ec", "group:labqual"},
-		Requirements: []string{tdreq.WiFiRegSupportDynamicPowerTable, tdreq.WiFiRegSupportStaticSAR, tdreq.WiFiRegSupportDynamicSAR, tdreq.WiFiRegSupportGeoSAR, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates, "sys-fw-0022-v01"},
+		Attr: []string{"group:mainline", "group:wificell", "wificell_func", "wificell_dut_validation", "group:labqual",
+			// Updating the SAR tables in CBFS can break this test.
+			"group:firmware", "firmware_bios",
+		},
+		Requirements: []string{tdreq.WiFiRegSupportDynamicPowerTable, tdreq.WiFiRegSupportStaticSAR, tdreq.WiFiRegSupportDynamicSAR, tdreq.WiFiRegSupportGeoSAR, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates, "sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
 		Params: []testing.Param{
 			{
 				// This test only runs on devices which do not use VPD SAR tables.
