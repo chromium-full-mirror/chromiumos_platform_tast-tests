@@ -78,7 +78,9 @@ func (f *FanMetrics) Setup(ctx context.Context, prefix, intervalName string) err
 			Name:      prefix + fanMetricType + "fan_" + strconv.Itoa(i),
 			Unit:      fanMetricTypeUnit,
 			Direction: perf.SmallerIsBetter,
-			Multiple:  true}
+			Multiple:  true,
+			Interval:  intervalName,
+		}
 		f.rpmmetric = append(f.rpmmetric, newFanMetric)
 	}
 	return nil

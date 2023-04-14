@@ -106,19 +106,25 @@ func (z *ZramIOMetrics) Setup(ctx context.Context, prefix, intervalName string) 
 			Name:      prefix + zramMetricType + "zram_read_IOs",
 			Unit:      zramMetricTypeUnit,
 			Direction: perf.SmallerIsBetter,
-			Multiple:  true}
+			Multiple:  true,
+			Interval:  intervalName,
+		}
 		// Number of write I/Os processed.
 		z.metrics["write"] = perf.Metric{
 			Name:      prefix + zramMetricType + "zram_write_IOs",
 			Unit:      zramMetricTypeUnit,
 			Direction: perf.SmallerIsBetter,
-			Multiple:  true}
+			Multiple:  true,
+			Interval:  intervalName,
+		}
 		// Number of I/Os in flight.
 		z.metrics["flight"] = perf.Metric{
 			Name:      prefix + zramMetricType + "zram_IOs_in_flight",
 			Unit:      zramMetricTypeUnit,
 			Direction: perf.SmallerIsBetter,
-			Multiple:  true}
+			Multiple:  true,
+			Interval:  intervalName,
+		}
 	}
 	return nil
 }

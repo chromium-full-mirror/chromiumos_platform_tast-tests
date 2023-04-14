@@ -67,7 +67,9 @@ func (g *GPUFreqMetrics) Setup(ctx context.Context, prefix, intervalName string)
 			Name:      prefix + gpuFreqMetricType + "gpu_freq",
 			Unit:      gpuFreqMetricTypeUnit,
 			Direction: perf.SmallerIsBetter,
-			Multiple:  true}
+			Multiple:  true,
+			Interval:  intervalName,
+		}
 	}
 	return nil
 }

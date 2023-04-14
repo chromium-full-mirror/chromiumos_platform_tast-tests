@@ -86,12 +86,16 @@ func (g *GPUStateMetrics) Setup(ctx context.Context, prefix, intervalName string
 			Name:      prefix + gpuStateMetricType + "gpu_rc6",
 			Unit:      gpuStateMetricTypeUnit,
 			Direction: perf.BiggerIsBetter,
-			Multiple:  true}
+			Multiple:  true,
+			Interval:  intervalName,
+		}
 		g.metrics["rc0"] = perf.Metric{
 			Name:      prefix + gpuStateMetricType + "gpu_rc0",
 			Unit:      gpuStateMetricTypeUnit,
 			Direction: perf.SmallerIsBetter,
-			Multiple:  true}
+			Multiple:  true,
+			Interval:  intervalName,
+		}
 		readCPUUarch, err := fetchIntelCPUUarch()
 		if err != nil {
 			return errors.Wrap(err, "unknown architecture: update power.fetchPackageStates()")
