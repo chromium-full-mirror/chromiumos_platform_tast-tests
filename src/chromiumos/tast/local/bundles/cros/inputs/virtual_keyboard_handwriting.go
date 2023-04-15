@@ -90,8 +90,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
 				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
 				ExtraAttr:         []string{"group:input-tools-upstream"},
-				Val:               append(hwTestIMEs, hwTestIMEsUpstream...),
-				ExtraSearchFlags:  util.IMESearchFlags(hwTestIMEsUpstream),
+				Val:               append(hwTestIMEs),
 			},
 			{
 				Name:              "floating_lacros",
@@ -99,8 +98,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
 				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
 				ExtraAttr:         []string{"group:input-tools-upstream"},
-				Val:               append(hwTestIMEs, hwTestIMEsUpstream...),
-				ExtraSearchFlags:  util.IMESearchFlags(hwTestIMEsUpstream),
+				Val:               append(hwTestIMEs),
 			},
 		},
 	})
