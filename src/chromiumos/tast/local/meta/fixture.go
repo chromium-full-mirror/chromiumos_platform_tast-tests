@@ -14,9 +14,10 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 
 	"chromiumos/tast/common/meta"
-	"chromiumos/tast/framework/protocol"
 	"chromiumos/tast/fsutil"
 	"chromiumos/tast/testing"
+
+	"go.chromium.org/tast/core/framework/protocol"
 )
 
 func init() {

@@ -14,7 +14,6 @@ import (
 
 	"chromiumos/tast/common/hwsec"
 	"chromiumos/tast/errors"
-	"chromiumos/tast/framework/protocol"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
@@ -26,6 +25,8 @@ import (
 	"chromiumos/tast/local/screenshot"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
+
+	"go.chromium.org/tast/core/framework/protocol"
 )
 
 // QueryResponse contains a subset of the results returned from the Assistant server

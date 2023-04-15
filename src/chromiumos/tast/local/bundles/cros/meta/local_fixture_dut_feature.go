@@ -11,8 +11,9 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 
-	"chromiumos/tast/framework/protocol"
 	"chromiumos/tast/testing"
+
+	"go.chromium.org/tast/core/framework/protocol"
 )
 
 func init() {
