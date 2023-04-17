@@ -343,7 +343,7 @@ func loginPerfDoLogin(
 				return retL, lacrosConnectTime, err
 			}
 			testing.ContextLog(ctx, "loginPerfDoLogin: Connect to lacros failed. Sleeping for 10 milliseconds before retry")
-			if err := testing.Sleep(ctx, 10*time.Millisecond); err != nil {
+			if err := testing.Sleep(ctx, 10*time.Millisecond); err != nil { // GoBigSleepLint: This is sleep between retries.
 				return nil, nil, errors.Wrap(err, "failed to wait for lacros-chrome test connection")
 			}
 		}
@@ -482,10 +482,18 @@ func setAlwaysRestoreSettings(ctx context.Context, tconn *chrome.TestConn) error
 	if err != nil {
 		return errors.Wrap(err, "failed to launch apps settings page")
 	}
+	ui := uiauto.New(tconn)
+	restoreButtonNode := nodewith.Name("Restore apps on startup").Role(role.ComboBoxSelect)
+	if err := uiauto.IfSuccessThen(
+		ui.WaitUntilExists(restoreButtonNode),
+		ui.DoDefault(restoreButtonNode))(ctx); err != nil {
+		return err
+	}
 
-	if err := uiauto.Combine(`set "Always restore" Settings`,
-		uiauto.New(tconn).LeftClick(nodewith.Name("Restore apps on startup").Role(role.ComboBoxSelect)),
-		uiauto.New(tconn).LeftClick(nodewith.Name("Always restore").Role(role.ListBoxOption)))(ctx); err != nil {
+	alwaysRestoreOptionNode := nodewith.Name("Always restore").Role(role.ListBoxOption)
+	if err := uiauto.IfSuccessThen(
+		ui.WaitUntilExists(alwaysRestoreOptionNode),
+		ui.DoDefault(alwaysRestoreOptionNode))(ctx); err != nil {
 		return err
 	}
 	if err := settings.Close(ctx); err != nil {
@@ -496,19 +504,20 @@ func setAlwaysRestoreSettings(ctx context.Context, tconn *chrome.TestConn) error
 	// According to the PRD of Full Restore go/chrome-os-full-restore-dd,
 	// it uses a throttle of 2.5s to save the app launching and window
 	// state information to the backend. Therefore, sleep 3 seconds here.
-	return testing.Sleep(ctx, 3*time.Second)
+	return testing.Sleep(ctx, 3*time.Second) // GoBigSleepLint: crbug.com/1314785
 }
 
 // initializeLoginPerfTest initializes user session state that will be restored
 // in subsequent test runs.
 func initializeLoginPerfTest(ctx context.Context,
+	sOutDir string,
 	browserType browser.Type,
 	lacrosConfig *lacrosfixt.Config,
 	loginPool string,
 	preloadLacros bool,
 ) (
-	chrome.Creds,
-	error,
+	retCreds chrome.Creds,
+	retErr error,
 ) {
 	options := []chrome.Option{
 		chrome.GAIALoginPool(loginPool),
@@ -583,15 +592,16 @@ func initializeLoginPerfTest(ctx context.Context,
 			histogram)
 
 		testing.ContextLog(ctx, "Initialize: Waiting 30 seconds to allow time for session to fully initialize")
-		if err := testing.Sleep(ctx, 30*time.Second); err != nil {
+		if err := testing.Sleep(ctx, 30*time.Second); err != nil { // GoBigSleepLint: give session time to settle.
 			return chrome.Creds{}, errors.Wrap(err, "failed to run initial wait time")
 		}
 	} else {
 		testing.ContextLog(ctx, "Initialize: Waiting 1 minute to allow time for session to fully initialize")
-		if err := testing.Sleep(ctx, time.Minute); err != nil {
+		if err := testing.Sleep(ctx, time.Minute); err != nil { // GoBigSleepLint: give session time to settle.
 			return chrome.Creds{}, errors.Wrap(err, "failed to run initial wait time")
 		}
 	}
+	defer faillog.DumpUITreeOnError(ctx, sOutDir, func() bool { return retErr != nil }, tconn)
 	if err := setAlwaysRestoreSettings(ctx, tconn); err != nil {
 		return chrome.Creds{}, errors.Wrap(err, "failed to adjust always restore settings")
 	}
@@ -647,7 +657,7 @@ func testFunction(
 			// elapsed reduces the trace file size by approximately
 			// 20% (from ~10MB to ~8MB) per file.
 			s.Log("Sleep for 5 seconds to wait for last metrics before stopping tracing")
-			if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+			if err := testing.Sleep(ctx, 5*time.Second); err != nil { // GoBigSleepLint: Controls the tracing time.
 				return errors.Wrap(err, "failed to sleep for 5 seconds")
 			}
 			if err := stopTracing(ctx); err != nil {
@@ -656,7 +666,7 @@ func testFunction(
 			sleepSeconds = 5 * time.Second
 		}
 		s.Logf("Sleep for %f seconds to let session settle and save restore data", sleepSeconds.Seconds())
-		if err := testing.Sleep(ctx, sleepSeconds); err != nil {
+		if err := testing.Sleep(ctx, sleepSeconds); err != nil { // GoBigSleepLint: give session time to settle and save restore data.
 			return errors.Wrapf(err, "failed to sleep for %f seconds", sleepSeconds.Seconds())
 		}
 
@@ -820,7 +830,14 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 		lacrosfixt.Mode(param.lacrosMode))
 
 	// Log in and log out to create a user pod on the login screen.
-	creds, err := initializeLoginPerfTest(ctx, param.bt, lacrosCfg, s.RequiredVar("ui.gaiaPoolDefault"), param.preloadLacros)
+	creds, err := initializeLoginPerfTest(
+		ctx,
+		s.OutDir(),
+		param.bt,
+		lacrosCfg,
+		s.RequiredVar("ui.gaiaPoolDefault"),
+		param.preloadLacros,
+	)
 	if err != nil {
 		s.Fatal("Failed to initialize test: ", err)
 	}
@@ -910,7 +927,7 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 						return err
 					}
 					s.Log("Sign out: sleep for 20 seconds to let session settle")
-					testing.Sleep(ctx, 20*time.Second)
+					testing.Sleep(ctx, 20*time.Second) // GoBigSleepLint: give session time to settle.
 					return logout(ctx, cr, l)
 				}()
 				if err != nil {
