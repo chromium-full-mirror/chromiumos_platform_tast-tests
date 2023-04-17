@@ -78,6 +78,11 @@ func WithNewWindow() CreateTargetOption {
 	return cdputil.WithNewWindow()
 }
 
+// WithBackground behaves like cpdutil.WithBackground.
+func WithBackground() CreateTargetOption {
+	return cdputil.WithBackground()
+}
+
 // Conn is chrome.Conn
 type Conn = driver.Conn
 

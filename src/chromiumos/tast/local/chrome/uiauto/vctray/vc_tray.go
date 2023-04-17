@@ -51,6 +51,22 @@ func New(ctx context.Context, tconn *chrome.TestConn) *VCTray {
 	return &VCTray{tconn, uiauto.New(tconn)}
 }
 
+// Exists returns true if vcTray is shown.
+// It throws out error if failed to check existence of the vcTray.
+func (vcTray VCTray) Exists(ctx context.Context) (bool, error) {
+	return vcTray.ui.IsNodeFound(ctx, vcTraySection)
+}
+
+// WaitUntilExists waits until the vcTray appears.
+func (vcTray VCTray) WaitUntilExists(ctx context.Context) error {
+	return vcTray.ui.WaitUntilExists(vcTraySection)(ctx)
+}
+
+// WaitUntilGone waits until the vcTray disappears.
+func (vcTray VCTray) WaitUntilGone(ctx context.Context) error {
+	return vcTray.ui.WaitUntilGone(vcTraySection)(ctx)
+}
+
 // ExpandPanel clicks the up-arrow button in VC tray section to expand the panel.
 // It skips action if the panel is already expanded.
 func (vcTray VCTray) ExpandPanel(ctx context.Context) error {

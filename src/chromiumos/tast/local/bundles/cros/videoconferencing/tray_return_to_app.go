@@ -136,6 +136,10 @@ func verifyReturnToARCApp(ctx context.Context, s *testing.State, cr *chrome.Chro
 	}
 	defer cleanupFunc(cleanupCtx, tconn)
 
+	if err := vctray.New(ctx, tconn).WaitUntilExists(ctx); err != nil {
+		s.Fatal("Failed to wait for vcTray appears: ", err)
+	}
+
 	if err := verifyReturnToApp(ctx, tconn); err != nil {
 		s.Fatal("Failed to verify returnToApp: ", err)
 	}

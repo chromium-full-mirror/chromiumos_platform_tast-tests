@@ -16,7 +16,9 @@ import (
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/camera/testutil"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/chrome/display"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/loginstatus"
 	"chromiumos/tast/local/upstart"
@@ -392,6 +394,16 @@ func (f *mediaFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) inte
 			s.Fatal("Failed to get test API connection: ", err)
 		}
 		f.tconn = tconn
+
+		// Set shelf to never hide to force show shelf.
+		dispInfo, err := display.GetPrimaryInfo(ctx, f.tconn)
+		if err != nil {
+			s.Fatal("Failed to get primary display info: ", err)
+		}
+
+		if err := ash.SetShelfBehavior(ctx, f.tconn, dispInfo.ID, ash.ShelfBehaviorNeverAutoHide); err != nil {
+			s.Fatal(`Failed to set shelf behavior to "never hidden": `, err)
+		}
 	}
 
 	f.cleanup = []action.Action{}
