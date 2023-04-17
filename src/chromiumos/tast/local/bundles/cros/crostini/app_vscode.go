@@ -164,7 +164,7 @@ func testCreateFileWithVSCode(ctx context.Context, terminalApp *terminalapp.Term
 		// Launch Visual Studio Code.
 		terminalApp.RunCommand(keyboard, fmt.Sprintf("code --disable-extensions %s", testNewFile)),
 		// Wait until the window is stable.
-		uda.WaitUntilExists(uidetection.Word("File").WithinA11yNode(appWindow)),
+		uda.WaitUntilExists(uidetection.Word("File").WithinA11yNode(appWindow).First()),
 		// Left click the app window header to focus.
 		// Do not click the center of the app window, which may unexpectedly
 		// set the theme, see http://b/264336806.

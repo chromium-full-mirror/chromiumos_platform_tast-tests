@@ -131,7 +131,7 @@ func AppVscodeFromFileManager(ctx context.Context, s *testing.State) {
 		filesApp.OpenLinuxFiles(),
 		filesApp.ClickContextMenuItemRegex(tmpFilename, filesapp.OpenWith, vscodeAppName),
 		// Wait until the window is stable.
-		uda.WaitUntilExists(uidetection.Word("File")),
+		uda.WaitUntilExists(uidetection.Word("File").WithinA11yNode(vscodeWindow).First()),
 		// Left click the app window to focus.
 		ui.LeftClick(vscodeWindow),
 		// Press ctrl+Q to exit window.
