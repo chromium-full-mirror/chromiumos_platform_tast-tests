@@ -40,6 +40,7 @@ group("all") {
     "ArcLifecycleTest:ArcLifecycleTest",
     "ArcLinkCapturingTest:ArcLinkCapturingTest",
     "ArcLongPressTest:ArcLongPressTest",
+    "ArcManyFilesTest:ArcManyFilesTest",
     "ArcMidiClientTest:ArcMidiClientTest",
     "ArcMediaScanPerfTest:ArcMediaScanPerfTest",
     "ArcMotionInputTest:ArcMotionInputTest",
