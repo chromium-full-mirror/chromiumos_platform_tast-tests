@@ -59,7 +59,7 @@ func init() {
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         append(play.DRMDataFiles(), "tulip_480p_h264_cencv1_ctr.mp4", "tulip_audio_aac_cencv1_ctr.mp4", "tulip_480p_h264_cencv1_ctr.mpd"),
 			ExtraSoftwareDeps: []string{caps.HWDecodeCTRV1H264, "proprietary_codecs"},
-			Fixture:           "chromeVideoOOPVDWithDistinctiveIdentifier",
+			Fixture:           "chromeVideoLacrosWithDistinctiveIdentifier",
 		}, {
 			Name: "cencv1_h264_multislice_ctr",
 			Val: playDrmParams{
@@ -99,7 +99,7 @@ func init() {
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         append(play.DRMDataFiles(), "tulip_480p_h264_cencv3_cbc.mp4", "tulip_audio_aac_cencv3_cbc.mp4", "tulip_480p_h264_cencv3_cbc.mpd"),
 			ExtraSoftwareDeps: []string{caps.HWDecodeCBCV3H264, "proprietary_codecs"},
-			Fixture:           "chromeVideoOOPVDWithDistinctiveIdentifier",
+			Fixture:           "chromeVideoLacrosWithDistinctiveIdentifier",
 		}, {
 			Name: "cencv3_h264_ctr",
 			Val: playDrmParams{
@@ -129,7 +129,7 @@ func init() {
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         append(play.DRMDataFiles(), "tulip_480p_h264_cencv3_ctr.mp4", "tulip_audio_aac_cencv3_ctr.mp4", "tulip_480p_h264_cencv3_ctr.mpd"),
 			ExtraSoftwareDeps: []string{caps.HWDecodeCTRV3H264, "proprietary_codecs"},
-			Fixture:           "chromeVideoOOPVDWithDistinctiveIdentifier",
+			Fixture:           "chromeVideoLacrosWithDistinctiveIdentifier",
 		}, {
 			Name: "cencv3_h264_cbc_then_ctr",
 			Val: playDrmParams{
@@ -179,7 +179,7 @@ func init() {
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         append(play.DRMDataFiles(), "tulip_480p_hevc_cencv3_cbc.mp4", "tulip_audio_aac_cencv3_cbc.mp4", "tulip_480p_hevc_cencv3_cbc.mpd"),
 			ExtraSoftwareDeps: []string{caps.HWDecodeCBCV3HEVC, "proprietary_codecs"},
-			Fixture:           "chromeVideoOOPVDWithDistinctiveIdentifier",
+			Fixture:           "chromeVideoLacrosWithDistinctiveIdentifier",
 		}, {
 			Name: "cencv3_hevc_ctr",
 			Val: playDrmParams{
@@ -209,7 +209,7 @@ func init() {
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         append(play.DRMDataFiles(), "tulip_480p_hevc_cencv3_ctr.mp4", "tulip_audio_aac_cencv3_ctr.mp4", "tulip_480p_hevc_cencv3_ctr.mpd"),
 			ExtraSoftwareDeps: []string{caps.HWDecodeCTRV3HEVC, "proprietary_codecs"},
-			Fixture:           "chromeVideoOOPVDWithDistinctiveIdentifier",
+			Fixture:           "chromeVideoLacrosWithDistinctiveIdentifier",
 		}, {
 			Name: "cencv3_vp9_cbc",
 			Val: playDrmParams{
@@ -229,7 +229,7 @@ func init() {
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         append(play.DRMDataFiles(), "tulip_480p_vp9_cencv3_cbc.mp4", "tulip_audio_aac_cencv3_cbc.mp4", "tulip_480p_vp9_cencv3_cbc.mpd"),
 			ExtraSoftwareDeps: []string{caps.HWDecodeCBCV3VP9, "proprietary_codecs"},
-			Fixture:           "chromeVideoOOPVDWithDistinctiveIdentifier",
+			Fixture:           "chromeVideoLacrosWithDistinctiveIdentifier",
 		}, {
 			Name: "cencv3_vp9_ctr",
 			Val: playDrmParams{
@@ -269,7 +269,7 @@ func init() {
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         append(play.DRMDataFiles(), "tulip_480p_av1_cencv3_ctr.webm", "tulip_audio_aac_cencv3_ctr.mp4", "tulip_480p_av1_cencv3_ctr.mpd"),
 			ExtraSoftwareDeps: []string{caps.HWDecodeCTRV3AV1, "proprietary_codecs"},
-			Fixture:           "chromeVideoOOPVDWithDistinctiveIdentifier",
+			Fixture:           "chromeVideoLacrosWithDistinctiveIdentifier",
 		}},
 	})
 }

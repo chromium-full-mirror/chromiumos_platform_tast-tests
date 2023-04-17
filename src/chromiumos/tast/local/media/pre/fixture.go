@@ -819,6 +819,25 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name:     "chromeVideoLacrosWithDistinctiveIdentifier",
+		Desc:     "Like chromeVideoWithDistinctiveIdentifier, but with lacros",
+		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
+				chrome.ExtraArgs(chromeVideoArgs...),
+				chrome.LacrosExtraArgs(chromeVideoArgs...),
+				chrome.ExtraArgs(chromeAllowDistinctiveIdentifierArgs...),
+				chrome.LacrosExtraArgs(chromeAllowDistinctiveIdentifierArgs...),
+				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
+				chrome.LacrosExtraArgs(chromeBypassPermissionsArgs...))).Opts()
+		}),
+		Parent:          "gpuWatchDog",
+		SetUpTimeout:    chrome.LoginTimeout + 7*time.Minute,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name:     "chromeVideoWithGlobalVaapiLockDisabledAndOneDedicatedThreadSharedByAllDecoders",
 		Desc:     "Similar to chromeVideoWithGlobalVaapiLockDisabled but use a single decoder specific thread for all hardware decoders",
 		Contacts: []string{"chromeos-gfx-video@google.com"},
