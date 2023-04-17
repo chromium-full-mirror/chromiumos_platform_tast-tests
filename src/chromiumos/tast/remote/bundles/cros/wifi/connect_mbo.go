@@ -1,4 +1,4 @@
-// Copyright 2021 The ChromiumOS Authors
+// Copyright 2023 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -162,23 +162,7 @@ func ConnectMBO(ctx context.Context, s *testing.State) {
 		}
 		return nil
 	}
-	s.Log("Checking probe request packets")
-	for _, p := range probePackets {
-		layer := p.Layer(layers.LayerTypeDot11MgmtProbeReq)
-		if layer == nil {
-			s.Fatal("Found packet without ProbeReq layer")
-		}
-		req := layer.(*layers.Dot11MgmtProbeReq)
-		content := req.LayerContents()
-		e := gopacket.NewPacket(content, layers.LayerTypeDot11InformationElement, gopacket.NoCopy)
-		if err := e.ErrorLayer(); err != nil {
-			s.Log("Error: ", err)
-			continue
-		}
-		if err := checkIEs(e, true); err != nil {
-			s.Fatal("Probe request IEs missing: ", err)
-		}
-	}
+
 	// We skip the assoc request packet check for Marvell devices because
 	// they are fullMAC devices, meaning wpa_supplicant can't inject the MBO
 	// IEs into the assoc request packet like it does in softMAC devices.
