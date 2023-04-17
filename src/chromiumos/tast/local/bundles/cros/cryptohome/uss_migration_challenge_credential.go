@@ -24,6 +24,7 @@ import (
 	"chromiumos/tast/local/dbusutil"
 	hwseclocal "chromiumos/tast/local/hwsec"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 func init() {
@@ -39,13 +40,27 @@ func init() {
 		SoftwareDeps: []string{"chrome", "tpm"},
 		Attr:         []string{"group:mainline", "group:cryptohome"},
 		Params: []testing.Param{{
-			Name: "rsassa_sha1",
+			Name:              "rsassa_sha1",
+			ExtraSoftwareDeps: []string{"no_tpm_dynamic"},
 			Val: []cpb.ChallengeSignatureAlgorithm{
 				cpb.ChallengeSignatureAlgorithm_CHALLENGE_RSASSA_PKCS1_V1_5_SHA1,
 			},
 		}, {
-			Name: "rsassa_all",
-			Val:  hwsec.SmartCardAlgorithms,
+			Name:              "rsassa_all",
+			ExtraSoftwareDeps: []string{"no_tpm_dynamic"},
+			Val:               hwsec.SmartCardAlgorithms,
+		}, {
+			Name:              "rsassa_sha1_tpm_dynamic",
+			ExtraSoftwareDeps: []string{"tpm_dynamic"},
+			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
+			Val: []cpb.ChallengeSignatureAlgorithm{
+				cpb.ChallengeSignatureAlgorithm_CHALLENGE_RSASSA_PKCS1_V1_5_SHA1,
+			},
+		}, {
+			Name:              "rsassa_all_tpm_dynamic",
+			ExtraSoftwareDeps: []string{"tpm_dynamic"},
+			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
+			Val:               hwsec.SmartCardAlgorithms,
 		}},
 	})
 }
