@@ -7,6 +7,7 @@ package uidetection
 import (
 	"context"
 	"image"
+	"math"
 	"strings"
 
 	pb "google.golang.org/genproto/googleapis/chromeos/uidetection/v1"
@@ -40,6 +41,18 @@ type Location struct {
 	coords.Rect
 	// Text associated with the element, if any.
 	Text string
+}
+
+// withScale returns a new location with both the coordinate position
+// and area scaled by the given amount.
+func (l Location) withScale(scale float64) Location {
+	scaledRec := coords.NewRect(
+		int(math.Round(float64(l.Left)*scale)),
+		int(math.Round(float64(l.Top)*scale)),
+		int(math.Round(float64(l.Width)*scale)),
+		int(math.Round(float64(l.Height)*scale)),
+	)
+	return Location{scaledRec, l.Text}
 }
 
 // Finder represents a data structure that consists of arguments to find
@@ -284,7 +297,7 @@ func (f *Finder) RightOfA11yNode(other *nodewith.Finder) *Finder {
 // locationPx resolves the UI detection request and stores the bounding boxes of the matching element in pixels.
 func (f *Finder) locationPx(ctx context.Context, uda *Context, scaleFactor float64) (*Location, error) {
 	// Take the screenshot depending on the provided strategy.
-	var image image.Image
+	var screenshot image.Image
 	var err error
 	boundingBox := coords.Rect{Left: 0, Top: 0, Width: maxScreenSizePx, Height: maxScreenSizePx}
 
@@ -298,12 +311,12 @@ func (f *Finder) locationPx(ctx context.Context, uda *Context, scaleFactor float
 
 	switch uda.screenshotStrategy {
 	case StableScreenshot:
-		image, err = takeStableScreenshot(ctx, uda.tconn, uda.pollOpts, boundingBox, scaleFactor, uda.disableDynamicElementMasking)
+		screenshot, err = takeStableScreenshot(ctx, uda.tconn, uda.pollOpts, boundingBox, scaleFactor, uda.disableDynamicElementMasking)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to take stable screenshot")
 		}
 	case ImmediateScreenshot:
-		image, err = takeScreenshot(ctx, uda.tconn, boundingBox, scaleFactor, uda.disableDynamicElementMasking)
+		screenshot, err = takeScreenshot(ctx, uda.tconn, boundingBox, scaleFactor, uda.disableDynamicElementMasking)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to take screenshot")
 		}
@@ -311,20 +324,20 @@ func (f *Finder) locationPx(ctx context.Context, uda *Context, scaleFactor float
 		return nil, errors.New("invalid screenshot strategy")
 	}
 
-	imagePng, err := encodePNG(image)
+	screenshotPng, err := encodePNG(screenshot)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to encode screenshot as a png")
 	}
 
 	failure := func(err error) (*Location, error) {
 		// Save the screenshot if the test fails to find an element.
-		if err := saveBytesImageToOutput(ctx, imagePng, screenshotFile); err != nil {
+		if err := saveBytesImageToOutput(ctx, screenshotPng, screenshotFile); err != nil {
 			testing.ContextLogf(ctx, "INFO: couldn't save the screenshot to %s for the failed UI detection: %s", screenshotFile, err)
 		}
 		return nil, err
 	}
 
-	response, err := uda.detector.sendDetectionRequest(ctx, imagePng, f.request, uda.resizingEnabled, testMetadata(ctx, uda))
+	response, err := uda.detector.sendDetectionRequest(ctx, screenshotPng, f.request, uda.resizingEnabled, testMetadata(ctx, uda))
 	if err != nil {
 		return failure(errors.Wrap(err, "failed to resolve the UI detection request"))
 	}
@@ -346,7 +359,7 @@ func (f *Finder) locationPx(ctx context.Context, uda *Context, scaleFactor float
 			})
 	}
 
-	saveDebugImages(ctx, imagePng, image, locations, f.desc)
+	saveDebugImages(ctx, screenshot, response.TransformedImagePng, locations, f.desc)
 
 	numMatches := len(locations)
 	switch {

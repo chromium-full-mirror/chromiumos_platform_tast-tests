@@ -31,6 +31,8 @@ const (
 	outputDir         = "uidetection"
 	screenshotFile    = "uidetection_screenshot.png"
 	oldScreenshotFile = "old_uidetection_screenshot.png"
+	// Scale factor for resized images. Must be the same as the backend value.
+	resizingScale = 1.5
 )
 
 // readImage reads a PNG image and returns it in []byte.
@@ -65,21 +67,44 @@ func crop(img image.Image, boundingBox coords.Rect) (image.Image, error) {
 	return cropped, nil
 }
 
+// debugScreenshotPrefix returns the filename prefix a debug screenshot.
+func debugScreenshotPrefix(desc string) string {
+	desc = strings.TrimSuffix(desc, ".png")
+	desc = strings.ReplaceAll(desc, "/", "")
+	return time.Now().UTC().Format("2006-01-02T15:04:05.000000Z") + "-" + desc
+}
+
 // saveDebugImages saves two images for debugging:
 //
 // 1. The screenshot that was sent to ACUITI.
 //
 // 2. The screenshot with detection outlines drawn over the image.
-func saveDebugImages(ctx context.Context, imagePng []byte, image image.Image, locations []Location, desc string) {
-	desc = strings.TrimSuffix(desc, ".png")
-	desc = strings.ReplaceAll(desc, "/", "")
-	filename := time.Now().UTC().Format("2006-01-02T15:04:05.000000Z") + "-" + desc
-	debugFilename := filename + ".png"
-	if err := saveBytesImageToOutput(ctx, imagePng, debugFilename); err != nil {
+func saveDebugImages(ctx context.Context, image image.Image, transformedImage []byte, locations []Location, desc string) {
+	// Use the transformed image instead of the raw screenshot if available,
+	// because this is the one that was sent to ACUITI.
+	if len(transformedImage) != 0 {
+		var err error
+		image, err = decodePNG(transformedImage)
+		if err != nil {
+			testing.ContextLogf(ctx, "INFO: couldn't save debug screenshots. Failed to decode transformed image: %s", err)
+			return
+		}
+
+		// Scale the bounding boxes to the resized image.
+		var scaledLocations []Location
+		for _, loc := range locations {
+			scaledLocations = append(scaledLocations, loc.withScale(resizingScale))
+		}
+		locations = scaledLocations
+	}
+
+	filenamePrefix := debugScreenshotPrefix(desc)
+	debugFilename := filenamePrefix + ".png"
+	if err := saveImageToOutput(ctx, image, debugFilename); err != nil {
 		testing.ContextLogf(ctx, "INFO: couldn't save debug screenshot to %s: %s", debugFilename, err)
 	}
 
-	outlinesFilename := filename + "-" + strconv.Itoa(len(locations)) + "_detection_outlines.png"
+	outlinesFilename := filenamePrefix + "-" + strconv.Itoa(len(locations)) + "_detection_outlines.png"
 	if err := saveDetectionOutlineImage(ctx, image, locations, outlinesFilename); err != nil {
 		testing.ContextLogf(ctx, "INFO: couldn't save debug screenshot with detection outlines to %s: %s", outlinesFilename, err)
 	}
@@ -235,6 +260,16 @@ func encodePNG(img image.Image) ([]byte, error) {
 		return nil, errors.Wrap(err, "failed to write the PNG image into byte buffer")
 	}
 	return imgBuf.Bytes(), nil
+}
+
+// decodePNG converts raw PNG bytes into an image.Image.
+func decodePNG(imgBytes []byte) (image.Image, error) {
+	reader := bytes.NewReader(imgBytes)
+	img, _, err := image.Decode(reader)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed decode the PNG image as an image.Image")
+	}
+	return img, nil
 }
 
 // equal returns error if two images are not the same.
