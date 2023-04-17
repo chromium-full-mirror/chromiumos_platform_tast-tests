@@ -41,12 +41,14 @@ func init() {
 		Attr:         []string{"graphics_nightly", "group:graphics", "group:mainline", "informational"},
 		Data:         []string{webGLManyPlanetsDeep},
 		Timeout:      2 * time.Minute,
+		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
 			Name:    "",
 			Fixture: "chromeGraphics",
 		}, {
-			Name:    "lacros",
-			Fixture: "chromeGraphicsLacros",
+			Name:              "lacros",
+			Fixture:           "chromeGraphicsLacros",
+			ExtraSoftwareDeps: []string{"lacros"},
 		}},
 	})
 }

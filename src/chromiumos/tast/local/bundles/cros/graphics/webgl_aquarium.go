@@ -58,6 +58,7 @@ func init() {
 		Attr:         []string{"graphics_perbuild", "group:graphics", "group:mainline", "informational"},
 		Timeout:      2 * time.Minute,
 		Data:         []string{webGlAquarium},
+		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
 			Name:      "50_fishes",
 			Fixture:   "chromeGraphics",
@@ -69,15 +70,17 @@ func init() {
 			ExtraData: []string{webGlAquarium},
 			Val:       1000,
 		}, {
-			Name:      "50_fishes_lacros",
-			Fixture:   "chromeGraphicsLacros",
-			ExtraData: []string{webGlAquarium},
-			Val:       50,
+			Name:              "50_fishes_lacros",
+			Fixture:           "chromeGraphicsLacros",
+			ExtraData:         []string{webGlAquarium},
+			ExtraSoftwareDeps: []string{"lacros"},
+			Val:               50,
 		}, {
-			Name:      "1000_fishes_lacros",
-			Fixture:   "chromeGraphicsLacros",
-			ExtraData: []string{webGlAquarium},
-			Val:       1000,
+			Name:              "1000_fishes_lacros",
+			Fixture:           "chromeGraphicsLacros",
+			ExtraData:         []string{webGlAquarium},
+			ExtraSoftwareDeps: []string{"lacros"},
+			Val:               1000,
 		}},
 	})
 }
