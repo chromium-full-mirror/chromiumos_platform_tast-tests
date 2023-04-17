@@ -11,6 +11,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"sync"
 	"time"
 
 	"chromiumos/tast/common/perf"
@@ -128,8 +129,15 @@ func WebGLAquarium(ctx context.Context, s *testing.State) {
 	if err = conn.Call(ctx, nil, "g_crosFpsCounter.reset"); err != nil {
 		s.Fatal("Could not reset the FPS counter: ", err)
 	}
-	// GoBigSleepLint: This is the measurement time.
-	testing.Sleep(ctx, runFishesFor)
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		// GoBigSleepLint: This is the measurement time.
+		testing.Sleep(ctx, runFishesFor)
+	}()
+	wg.Wait()
 
 	pv := perf.NewValues()
 	defer func() {
