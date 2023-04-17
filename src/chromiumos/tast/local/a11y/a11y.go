@@ -26,7 +26,8 @@ import (
 
 // List of extension IDs and URLs.
 const (
-	ChromeVoxExtensionURL = "chrome-extension://mndnfokpggljbaajbnioimlmbfngpief/chromevox/background/background.html"
+	ChromeVoxExtensionURL     = "chrome-extension://mndnfokpggljbaajbnioimlmbfngpief/chromevox/background/background.html"
+	SelectToSpeakExtensionURL = "chrome-extension://klbcgckkldhdhonijdbnhhaiedfkllef/select_to_speak/background.html"
 )
 
 // Feature represents an accessibility feature in ChromeOS.

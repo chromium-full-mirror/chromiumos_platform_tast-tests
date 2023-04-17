@@ -14,8 +14,66 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/uiauto"
+	"chromiumos/tast/local/chrome/uiauto/event"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 )
+
+// Conn represents a connection to the Select-to-Speak background page.
+type Conn struct {
+	*chrome.Conn
+}
+
+// NewConn returns a connection to the Select-to-Speak extension's background page.
+// If the extension fails to load, the connection will be closed before returning.
+// Otherwise the calling function will close the connection.
+// Note: this connection will not be allowed to use the enhanced network voices
+// TTS engine, as we explicitly disallow it below.
+func NewConn(ctx context.Context, c *chrome.Chrome) (_ *Conn, e error) {
+	extConn, err := c.NewConnForTarget(ctx, chrome.MatchTargetURL(a11y.SelectToSpeakExtensionURL))
+	if err != nil {
+		return nil, err
+	}
+
+	defer func() {
+		if e != nil {
+			extConn.Close()
+		}
+	}()
+
+	// Poll until Select-to-Speak connection finishes loading.
+	if err := extConn.WaitForExpr(ctx, `document.readyState === "complete"`); err != nil {
+		return nil, errors.Wrap(err, "timed out waiting for Select-to-Speak connection to be ready")
+	}
+
+	// Make sure required modules exist and are accessible.
+	if err := extConn.Eval(ctx, `(async () => {
+		if (!window.selectToSpeak) {
+			window.selectToSpeak = (await import('/select_to_speak/select_to_speak_main.js')).selectToSpeak;
+		}
+	  })()`, nil); err != nil {
+		return nil, errors.Wrap(err, "failed to export modules from Select-to-Speak")
+	}
+
+	if err := chrome.AddTastLibrary(ctx, extConn); err != nil {
+		return nil, errors.Wrap(err, "failed to introduce tast library")
+	}
+
+	// Ensure that the enhanced network voices dialog is never shown.
+	if err := extConn.Call(ctx, nil, "tast.promisify(chrome.settingsPrivate.setPref)", "settings.a11y.select_to_speak_enhanced_voices_dialog_shown", true); err != nil {
+		return nil, errors.Wrap(err, "failed to set the enhanced voices dialog shown preference to true")
+	}
+
+	if err := extConn.Eval(ctx, "selectToSpeak.prefsManager_.enhancedVoicesDialogShown_ = true", nil); err != nil {
+		return nil, errors.Wrap(err, "failed to set the enhanced network voices dialog local variable to true")
+	}
+
+	// Ensure that the enhanced network voices are not enabled.
+	if err := extConn.Eval(ctx, "selectToSpeak.prefsManager_.enhancedNetworkVoicesAllowed_ = false", nil); err != nil {
+		return nil, errors.Wrap(err, "failed to set the enhanced network voices allowed local variable to false")
+	}
+
+	return &Conn{extConn}, nil
+}
 
 // SetUp executes common Select to Speak setup code. Returns a TTSFeatureData -
 // see the documentation for TTSFeatureData for information on proper cleanup.
@@ -33,12 +91,15 @@ func SetUp(ctx context.Context, cr *chrome.Chrome, ed tts.EngineData, bt browser
 		return ttsData, errors.Wrap(err, "failed to setup common TTS feature state")
 	}
 
-	// Note: browser tests have encountered flakes due to this pref not
-	// propagating to STS before speech is requested. If this test flakes,
-	// it could be caused by the above reason.
-	if err := ttsData.TConn.Call(ctx, nil, "tast.promisify(chrome.settingsPrivate.setPref)", "settings.a11y.select_to_speak_enhanced_voices_dialog_shown", true); err != nil {
-		return ttsData, errors.Wrap(err, "failed to set the enhanced voices dialog shown preference to true")
+	stsConn, err := NewConn(ttsData.CTX, cr)
+	if err != nil {
+		return ttsData, errors.Wrap(err, "failed to connect to the Select-to-Speak background page")
 	}
+
+	ttsData.TDown.Append(func() error {
+		stsConn.Close()
+		return nil
+	})
 
 	return ttsData, nil
 }
@@ -53,9 +114,9 @@ func SetSelectionAndActivate(ctx context.Context, cr *chrome.Chrome, finder *nod
 	}
 
 	ui := uiauto.New(tconn)
-	if err := uiauto.Combine("Set selection",
+	if err := uiauto.Combine("Set selection and wait for event to propagate",
 		ui.WaitUntilExists(finder),
-		ui.Select(finder, selStart, finder, selEnd),
+		ui.WaitForEvent(nodewith.Root(), event.DocumentSelectionChanged, ui.Select(finder, selStart, finder, selEnd)),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to set selection")
 	}
