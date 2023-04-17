@@ -207,7 +207,6 @@ func init() {
 				},
 				Fixture:           fixture.LacrosClamshellNonVK,
 				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraAttr:         []string{"informational"},
 				ExtraSearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.GreekTransliteration}),
 			},
 			{
@@ -219,7 +218,6 @@ func init() {
 				},
 				Fixture:           fixture.LacrosClamshellNonVK,
 				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraAttr:         []string{"informational"},
 				ExtraSearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.Gujarati}),
 			},
 			{
@@ -231,7 +229,6 @@ func init() {
 				},
 				Fixture:           fixture.LacrosClamshellNonVK,
 				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraAttr:         []string{"informational"},
 				ExtraSearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.Hindi}),
 			},
 			{
@@ -255,7 +252,6 @@ func init() {
 				},
 				Fixture:           fixture.LacrosClamshellNonVK,
 				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraAttr:         []string{"informational"},
 				ExtraSearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.Malayalam}),
 			},
 			{
@@ -279,7 +275,6 @@ func init() {
 				},
 				Fixture:           fixture.LacrosClamshellNonVK,
 				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraAttr:         []string{"informational"},
 				ExtraSearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.NepaliTransliteration}),
 			},
 			{
@@ -291,7 +286,6 @@ func init() {
 				},
 				Fixture:           fixture.LacrosClamshellNonVK,
 				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraAttr:         []string{"informational"},
 				ExtraSearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.Odia}),
 			},
 			{
@@ -303,7 +297,6 @@ func init() {
 				},
 				Fixture:           fixture.LacrosClamshellNonVK,
 				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraAttr:         []string{"informational"},
 				ExtraSearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.PersianTransliteration}),
 			},
 			{
@@ -327,7 +320,6 @@ func init() {
 				},
 				Fixture:           fixture.LacrosClamshellNonVK,
 				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraAttr:         []string{"informational"},
 				ExtraSearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.Sanskrit}),
 			},
 			{
@@ -339,7 +331,6 @@ func init() {
 				},
 				Fixture:           fixture.LacrosClamshellNonVK,
 				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraAttr:         []string{"informational"},
 				ExtraSearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.Tamil}),
 			},
 			{
@@ -351,7 +342,6 @@ func init() {
 				},
 				Fixture:           fixture.LacrosClamshellNonVK,
 				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraAttr:         []string{"informational"},
 				ExtraSearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.Telugu}),
 			},
 			{
@@ -363,7 +353,6 @@ func init() {
 				},
 				Fixture:           fixture.LacrosClamshellNonVK,
 				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraAttr:         []string{"informational"},
 				ExtraSearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.Urdu}),
 			},
 		},
