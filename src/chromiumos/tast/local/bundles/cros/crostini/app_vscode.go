@@ -130,6 +130,12 @@ func AppVscode(ctx context.Context, s *testing.State) {
 	// Cursor blinking and vscode updates break screenshots.
 	cont.WriteFile(ctx, ".config/Code/User/settings.json", `{"editor.cursorBlinking": "solid","workbench.startupEditor": "None", "update.mode": "none"}`)
 
+	version, err := cont.Command(ctx, "code", "--version").Output()
+	if err != nil {
+		s.Log("Failed to check VS Code version: ", err)
+	}
+	s.Log("VS Code version: ", string(version))
+
 	// Since defers are executed in a stack, this needs to be the last defer so it doesn't close the window before dumping the tree.
 	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree")
 	if err := testCreateFileWithVSCode(ctx, terminalApp, keyboard, tconn, cont, d); err != nil {
