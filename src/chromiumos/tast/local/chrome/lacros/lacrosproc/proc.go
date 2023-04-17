@@ -17,7 +17,6 @@ import (
 	"chromiumos/tast/local/chrome/internal/chromeproc"
 	"chromiumos/tast/local/chrome/lacros/lacrosinfo"
 	"chromiumos/tast/local/procutil"
-	"chromiumos/tast/testing"
 )
 
 // Root returns the Process instance of the root lacros-chrome process.
@@ -49,8 +48,6 @@ func ProcsFromPath(ctx context.Context, path string) ([]*process.Process, error)
 	if err != nil && !errors.Is(err, procutil.ErrNotFound) {
 		return nil, err
 	}
-
-	testing.ContextLog(ctx, procs)
 
 	return procs, nil
 }
