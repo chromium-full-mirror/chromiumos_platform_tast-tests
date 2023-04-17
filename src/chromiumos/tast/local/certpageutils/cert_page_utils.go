@@ -1,0 +1,364 @@
+// Copyright 2023 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+/*
+Package certpageutils implements miscellaneous and unsorted helpers used on
+certificate's settings page (not certificate manager) for testing
+policies/operations on users certificates and CA certificates.
+*/
+package certpageutils
+
+import (
+	"context"
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
+
+	"chromiumos/tast/common/testexec"
+	"chromiumos/tast/errors"
+	"chromiumos/tast/fsutil"
+	"chromiumos/tast/local/chrome/uiauto"
+	"chromiumos/tast/local/chrome/uiauto/checked"
+	"chromiumos/tast/local/chrome/uiauto/event"
+	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/role"
+	"chromiumos/tast/local/input"
+	"chromiumos/tast/local/sysutil"
+	"chromiumos/tast/testing"
+)
+
+// TrustCheckboxText is a text on CA ssl trust checkbox.
+const TrustCheckboxText = "Trust this certificate for identifying websites"
+
+// failedToSetupKeyboardErr is error message for not successful keyboard initialization.
+const failedToSetupKeyboardErr = "failed to setup keyboard"
+
+// failedToUseKeyboardErr is error message for failed keyboard usage.
+const failedToUseKeyboardErr = "failed to use keyboard"
+
+// failedToDeleteCACertErr is error message for CA certificate deletion failed.
+const failedToDeleteCACertErr = "failed to delete CA cert"
+
+// failedToPressOkErr is error message for failed interaction with "OK" button in UI.
+const failedToPressOkErr = "failed to press OK button"
+
+// failedToSelectNextUIElementErr is error message for failed interaction next UI element.
+const failedToSelectNextUIElementErr = "failed to select next UI element"
+
+// ManageCertSettingsWebArea is UI element finder for "Settings - Manage certificates" root web area.
+var ManageCertSettingsWebArea = nodewith.Name("Settings - Manage certificates").Role("rootWebArea")
+
+// PressOkButton presses the "OK" on the dialog with the provided `parent`.
+// On some dialogs the "OK" button is generally a bit flaky, and on devices
+// in the tablet mode the DoDefault/LeftClick methods don't work at all
+// (while a real touch works). Send "enter" as a workaround.
+func PressOkButton(ctx context.Context, ui *uiauto.Context, parent *nodewith.Finder) (retErr error) {
+	okButton := nodewith.Name("OK").Role(role.Button).Ancestor(parent)
+	if err := uiauto.Combine("press OK",
+		ui.WaitUntilExists(okButton),
+		ui.DoDefault(okButton),
+		ui.WithTimeout(1*time.Second).WaitUntilGone(okButton),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to focus on OK button")
+	}
+	return nil
+}
+
+// CloseCurrentPage presses "ctrl+w" to close the current active window / tab.
+func CloseCurrentPage(ctx context.Context) (retErr error) {
+	kb, err := input.Keyboard(ctx)
+	defer kb.Close(ctx)
+	if err != nil {
+		return errors.Wrap(err, failedToSetupKeyboardErr)
+	}
+
+	if err := kb.Accel(ctx, "ctrl+w"); err != nil {
+		return errors.Wrap(err, "failed to close the page")
+	}
+	return nil
+}
+
+// CopyToDownloads copies the test data file with `fileName` into the Downloads
+// directory, so it can be picked from the ChromeOS file picker.
+func CopyToDownloads(downloadsPath, fileDataPath, fileName string) (retErr error) {
+	newPath := filepath.Join(downloadsPath, fileName)
+	if err := fsutil.CopyFile(fileDataPath, newPath); err != nil {
+		return errors.Wrapf(err, "failed to move file %s ", fileName)
+	}
+	// Without this the test data files don't have enough permissions and Chrome
+	// fails to open them.
+	if err := os.Chown(newPath, int(sysutil.ChronosUID), int(sysutil.ChronosGID)); err != nil {
+		return errors.Wrapf(err, "failed to chown file %s ", fileName)
+	}
+	return nil
+}
+
+// ImportCACert uses the Import button on the chrome://settings/certificates
+// page to manually import `caCertFileName` file to CA certificates.
+func ImportCACert(ctx context.Context, ui *uiauto.Context, caCertFileName string) (retErr error) {
+	if err := uiauto.Combine("import CA cert",
+		ui.DoDefault(nodewith.Name("Authorities").Role(role.Tab)),
+		ui.WaitUntilExists(nodewith.Name("Authorities").ClassName("tab selected")),
+		ui.DoDefault(nodewith.Name("Import").Role(role.Button)),
+		ui.DoDefault(nodewith.Name(caCertFileName).Role(role.StaticText)),
+		ui.WaitUntilExists(nodewith.Name("Open").Role(role.Button).State("focusable", true)),
+		ui.DoDefault(nodewith.Name("Open").Role(role.Button)),
+		ui.WaitUntilExists(nodewith.Name(TrustCheckboxText).Role(role.CheckBox)),
+		ui.DoDefault(nodewith.Name(TrustCheckboxText).Role(role.CheckBox)),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to import CA cert")
+	}
+	if err := PressOkButton(ctx, ui, ManageCertSettingsWebArea); err != nil {
+		return errors.Wrap(err, failedToPressOkErr)
+	}
+
+	return nil
+}
+
+// ImportClientCert uses the Import and Bind button on the
+// chrome://settings/certificates page to manually import
+// the client certificate from file.
+func ImportClientCert(ctx context.Context, ui *uiauto.Context, clientCertFileName, certFilePassword string) (retErr error) {
+	kb, err := input.Keyboard(ctx)
+	defer kb.Close(ctx)
+	if err != nil {
+		return errors.Wrap(err, failedToSetupKeyboardErr)
+	}
+
+	passwordDialog := nodewith.Name("Enter your certificate password").Role(role.Dialog)
+	passwordTextBox := nodewith.Role(role.TextField).Editable()
+
+	if err := uiauto.Combine("import client cert",
+		ui.DoDefault(nodewith.Name("Your certificates").Role(role.Tab)),
+		ui.WaitUntilExists(nodewith.Name("Your certificates").ClassName("tab selected")),
+		ui.DoDefault(nodewith.Name("Import and Bind").Role(role.Button)),
+		ui.DoDefault(nodewith.Name(clientCertFileName).Role(role.StaticText)),
+		ui.WaitUntilExists(nodewith.Name("Open").Role(role.Button).State("focusable", true)),
+		ui.DoDefault(nodewith.Name("Open").Role(role.Button)),
+		ui.WaitUntilExists(passwordTextBox.Ancestor(passwordDialog).State("focusable", true)),
+		ui.DoDefault(passwordTextBox.Ancestor(passwordDialog)),
+		kb.TypeAction(certFilePassword),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to import client certificate")
+	}
+
+	if err := PressOkButton(ctx, ui, ManageCertSettingsWebArea); err != nil {
+		return errors.Wrap(err, failedToPressOkErr)
+	}
+	return nil
+}
+
+// WaitForClientCert calls pkcs11-tool in a loop to determine when the client
+// certificate gets propagated into chaps (and can be actually used by ChromeOS).
+// This test assumes that the client certificate was imported last, so when it
+// is ready, all the certificates should be usable.
+func WaitForClientCert(ctx context.Context, clientOrgName string) (retErr error) {
+	// Wait until the certificate is installed.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		// The argument "--slot 1" means "use user slot only". That's where Import
+		// and Bind is supposed to place the cert.
+		out, err := testexec.CommandContext(ctx,
+			"pkcs11-tool", "--module", "libchaps.so", "--slot", "1", "--list-objects").Output()
+		if err != nil {
+			return errors.Wrap(err, "failed to get certificate list")
+		}
+		outStr := string(out)
+
+		// Look for the org name of the client's certificate.
+		if !strings.Contains(outStr, clientOrgName) {
+			return errors.New("certificate not installed")
+		}
+
+		return nil
+
+	}, nil); err != nil {
+		return errors.Wrap(err, "could not verify that client certificate was installed")
+	}
+	return nil
+}
+
+// OpenActionMenuForClientCertificate opens action menu for the clients certificate.
+func OpenActionMenuForClientCertificate(ctx context.Context, ui *uiauto.Context, clientOrg string) (retErr error) {
+	if err := uiauto.Combine("open client cert actions menu",
+		ui.DoDefault(nodewith.Name("Your certificates").Role(role.Tab)),
+		ui.WaitUntilExists(nodewith.Name("Your certificates").ClassName("tab selected")),
+		ui.WaitUntilExists(nodewith.Name(clientOrg).First()),
+		ui.DoDefault(nodewith.Name("Show certificates for organization").Role(role.Button)),
+		ui.DoDefault(nodewith.Name("More actions").Role(role.Button)),
+	)(ctx); err != nil {
+		return errors.Wrap(err, failedToDeleteCACertErr)
+	}
+	return nil
+}
+
+// DeleteClientCert uses the Chrome's cert settings page to delete the client cert.
+func DeleteClientCert(ctx context.Context, ui *uiauto.Context, clientOrg string) (retErr error) {
+	if err := OpenActionMenuForClientCertificate(ctx, ui, clientOrg); err != nil {
+		return errors.Wrap(err, "failed to open action menu for client certificate")
+	}
+
+	if err := ui.DoDefault(nodewith.Name("Delete").Role(role.MenuItem))(ctx); err != nil {
+		return errors.Wrap(err, failedToDeleteCACertErr)
+	}
+
+	if err := PressOkButton(ctx, ui, ManageCertSettingsWebArea); err != nil {
+		return errors.Wrap(err, failedToPressOkErr)
+	}
+
+	if err := ui.WaitUntilGone(nodewith.Name(clientOrg))(ctx); err != nil {
+		errors.Wrap(err, failedToDeleteCACertErr)
+	}
+	return nil
+}
+
+// DeleteCACert selects and deletes specific CA certificate on CA tab.
+func DeleteCACert(ctx context.Context, ui *uiauto.Context, caOrgName, caOrg string) (retErr error) {
+	if err := SelectCACertificate(ctx, ui, caOrg); err != nil {
+		return errors.Wrap(err, "failed to select CA certificate")
+	}
+	if err := OpenActionMenuForCACertificate(ctx, ui, caOrgName); err != nil {
+		return errors.Wrap(err, "failed to open action menu for CA certificate")
+	}
+
+	deleteButton := nodewith.Name("Delete").Role(role.MenuItem)
+	if err := uiauto.Combine("delete CA cert",
+		ui.WaitUntilExists(deleteButton),
+		ui.DoDefault(deleteButton),
+		ui.WaitUntilExists(nodewith.NameContaining("Delete CA certificate").First()),
+	)(ctx); err != nil {
+		return errors.Wrap(err, failedToDeleteCACertErr)
+	}
+
+	if err := PressOkButton(ctx, ui, ManageCertSettingsWebArea); err != nil {
+		return errors.Wrap(err, failedToPressOkErr)
+	}
+
+	if err := ui.WaitUntilGone(nodewith.Name(caOrgName))(ctx); err != nil {
+		return errors.Wrap(err, failedToDeleteCACertErr)
+	}
+	return nil
+}
+
+// MoveToNextUIElement selects next UI element on page with keyboard.
+func MoveToNextUIElement(ctx context.Context) (retErr error) {
+	kb, err := input.Keyboard(ctx)
+	defer kb.Close(ctx)
+	if err != nil {
+		return errors.Wrap(err, failedToSetupKeyboardErr)
+	}
+	if err := kb.Accel(ctx, "tab"); err != nil {
+		return errors.Wrap(err, failedToUseKeyboardErr)
+	}
+	if err := kb.Accel(ctx, "enter"); err != nil {
+		return errors.Wrap(err, failedToUseKeyboardErr)
+	}
+	return nil
+}
+
+// SelectCACertificate selects CA on CA tab and open/close list of certificates
+// for an organization.
+func SelectCACertificate(ctx context.Context, ui *uiauto.Context, caOrg string) (retErr error) {
+	caCertOrg := nodewith.Name(caOrg).Role(role.StaticText)
+	if err := uiauto.Combine("select CA from list",
+		ui.DoDefault(nodewith.Name("Authorities").Role(role.Tab)),
+		ui.WaitUntilExists(nodewith.Name("Authorities").ClassName("tab selected")),
+		ui.MakeVisible(caCertOrg),
+		ui.LeftClick(caCertOrg),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to select CA from list")
+	}
+	// Open/close drop down list of certificates under selected CA.
+	// The UI tree for these elements is not very convenient.
+	// Use keyboard to navigate.
+	if err := MoveToNextUIElement(ctx); err != nil {
+		return errors.Wrap(err, failedToSelectNextUIElementErr)
+	}
+	return nil
+}
+
+// SelectEditCACertificate finds "Edit" button from certificate action menu and click on it.
+func SelectEditCACertificate(ctx context.Context, ui *uiauto.Context) (retErr error) {
+	editButton := nodewith.Name("Edit").Role(role.MenuItem)
+	if err := uiauto.Combine("press Edit button for certificate",
+		ui.WaitUntilExists(editButton),
+		ui.DoDefault(editButton),
+		ui.WaitUntilExists(nodewith.NameContaining("Certificate authority").First()),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to press Edit button for CA certificate")
+	}
+	return nil
+}
+
+// setTrustCheckboxAndSave sets CA certificate's trust checkbox to desired state based on
+// provided `targetState` parameter and saves result.
+func setTrustCheckboxAndSave(ctx context.Context, ui *uiauto.Context, targetState checked.Checked) (retErr error) {
+	checkbox := nodewith.Name(TrustCheckboxText).Role(role.CheckBox)
+	if err := uiauto.Combine("find CA trust checkbox",
+		ui.WaitUntilExists(checkbox),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to find CA trust checkbox")
+	}
+
+	for {
+		info, err := ui.Info(ctx, checkbox)
+		if err != nil {
+			return errors.Wrap(err, "failed to find CA trust checkbox status")
+		}
+		if info.Checked == targetState {
+			break
+		}
+		if err := uiauto.Combine(("toggle checkbox value"),
+			ui.WaitUntilExists(checkbox.Focusable()),
+			ui.EnsureFocused(checkbox),
+			ui.WaitForEvent(checkbox, event.CheckedStateChanged, ui.DoDefault(checkbox)),
+		)(ctx); err != nil {
+			return errors.Wrap(err, "failed to set CA trust checkbox")
+		}
+	}
+
+	if err := PressOkButton(ctx, ui, ManageCertSettingsWebArea); err != nil {
+		return errors.Wrap(err, "failed to press OK after CA certificates trust settings")
+	}
+	return nil
+}
+
+// SetCACertTrust sets Web trust setting for CA certificate to true or false.
+func SetCACertTrust(ctx context.Context, ui *uiauto.Context, targetState checked.Checked, caOrgName, caOrg string) (retErr error) {
+	if err := SelectCACertificate(ctx, ui, caOrg); err != nil {
+		return errors.Wrap(err, "failed to select CA certificate")
+	}
+	if err := OpenActionMenuForCACertificate(ctx, ui, caOrgName); err != nil {
+		return errors.Wrap(err, "failed to open action menu for the certificate")
+	}
+	if err := SelectEditCACertificate(ctx, ui); err != nil {
+		return errors.Wrap(err, "failed to select edit CA certificate")
+	}
+	if err := setTrustCheckboxAndSave(ctx, ui, targetState); err != nil {
+		return errors.Wrap(err, "failed to set CA trust")
+	}
+
+	// Hide a list of CA certificates by selecting CA again.
+	if err := SelectCACertificate(ctx, ui, caOrg); err != nil {
+		return errors.Wrap(err, "failed to select CA certificate")
+	}
+	return nil
+}
+
+// OpenActionMenuForCACertificate selects specific CA certificate on CA tab and open actions menu for it.
+func OpenActionMenuForCACertificate(ctx context.Context, ui *uiauto.Context, caOrgName string) (retErr error) {
+	caCertificateNode := nodewith.Name(caOrgName).Role(role.StaticText)
+	if err := uiauto.Combine("select CA cert from list",
+		ui.WaitUntilExists(caCertificateNode),
+		ui.DoDefault(caCertificateNode),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to select CA cert from list")
+	}
+
+	// Open menu for the selected certificate from 3 dots using keyboard.
+	if err := MoveToNextUIElement(ctx); err != nil {
+		return errors.Wrap(err, failedToSelectNextUIElementErr)
+	}
+	return nil
+}

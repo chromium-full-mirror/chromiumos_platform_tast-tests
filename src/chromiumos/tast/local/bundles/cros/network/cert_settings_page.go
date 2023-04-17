@@ -12,48 +12,57 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"os"
-	"path/filepath"
 	"regexp"
-	"strings"
 	"time"
 
-	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/fsutil"
+	utils "chromiumos/tast/local/certpageutils"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/checked"
-	"chromiumos/tast/local/chrome/uiauto/event"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/policyutil"
-	"chromiumos/tast/local/sysutil"
 	"chromiumos/tast/testing"
+
+	"go.chromium.org/tast/core/ctxutil"
 )
-
-// The root certificate for the test CA that was used to create client and website certificates below.
-// Chrome will need to import it to trust that the website certificate is valid.
-// Website server will need to use it to trust that the client certificate is valid.
-const rootCertFileName = "cert_settings_page_root_cert.crt"
-
-// Client certificate and key that will be used by Chrome to authenticate on the website.
-// It is in a PKCS#12 format because that's what chrome supports for importing client certificates.
-const clientCertFileName = "cert_settings_page_client_cert.p12"
-
-// The password for the client cert PCKS#12 archive.
-const clientCertFilePassword = "12345"
 
 // Certificate and key pair (both in PEM format) for the test website.
 const websiteCertFileName = "cert_settings_page_website_cert.crt"
 const websiteKeyFileName = "cert_settings_page_website_key.key"
 
+// rootCertFileName is a file's name for the root certificate that
+// is used to create a client and website certificates.
+// Chrome will need to import it to trust that the website certificate is valid.
+// Website server will need to use it to trust that the client certificate is valid.
+const rootCertFileName = "cert_settings_page_root_cert.crt"
+
+// clientCertFileName is name of file for the client certificate and key that will
+// be used by Chrome to authenticate on the website.
+// It is in a PKCS#12 format because that's what chrome supports for importing client certificates.
+const clientCertFileName = "cert_settings_page_client_cert.p12"
+
+// clientCertPassword is a password for the client cert PCKS#12 archive.
+const clientCertPassword = "12345"
+
+// caCertName is a name for the CA certificate, usually it is CN or OU in certificate.
+const caCertName = "TEST_CA_ORG"
+
+// caOrg is a name for the org which has issued CA certificate, it is visible in the list of Authorities.
+const caOrg = "org-TEST_CA_ORG"
+
+// clientCertName is a cert name in list of certificates which is also equal to the org name of client.
+const clientCertName = "TEST_CLIENT_ORG"
+
+// clientOrg is name for client's organization used in the list of client's certificates.
+const clientOrg = "org-TEST_CLIENT_ORG"
+
+// pageLoadedRegex is a regex which expected to be found on loaded webpage.
 const pageLoadedRegex = ".*WEBSITE_LOADED.*"
 
 // The ERR_BAD_SSL_CLIENT_AUTH_CERT is the actual correct error. For some reason Chrome
@@ -65,9 +74,6 @@ const caInvalidErrorRegex = ".*ERR_CERT_AUTHORITY_INVALID.*"
 
 // The message on the website that indicates that it successfully loaded.
 const websiteGreeting = "WEBSITE_LOADED"
-
-// Text on CA ssl trust checkbox.
-const trustCheckboxText = "Trust this certificate for identifying websites"
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -133,127 +139,28 @@ func init() {
 	})
 }
 
-// pressOkButton presses the "OK" on the dialog with the provided `parent`.
-func pressOkButton(ctx context.Context, s *testing.State, ui *uiauto.Context, parent *nodewith.Finder) {
-	okButton := nodewith.Name("OK").Role(role.Button).Ancestor(parent)
-
-	if err := uiauto.Combine("press OK",
-		ui.WaitUntilExists(okButton),
-		ui.DoDefault(okButton),
-	)(ctx); err != nil {
-		s.Fatal("Failed to press OK button: ", err)
-	}
-
-	// Most of the time the code above should be enough to successfully click
-	// the button.
-	if ui.WithTimeout(3*time.Second).WaitUntilGone(okButton)(ctx) == nil {
-		return
-	}
-
-	// On some dialogs the "OK" button is generally a bit flaky, and on devices
-	// in the tablet mode the DoDefault/LeftClick methods don't work at all
-	// (while a real touch works). Send "enter" as a workaround.
-	kb, err := input.Keyboard(ctx)
-	if err != nil {
-		s.Fatal("Failed to find keyboard: ", err)
-	}
-	if err := kb.Accel(ctx, "enter"); err != nil {
-		s.Fatal("Failed to use keyboard: ", err)
-	}
-
-	// If still didn't work, fail the test.
-	if err := ui.WithTimeout(3 * time.Second).WaitUntilGone(okButton)(ctx); err != nil {
-		s.Fatal("OK button didn't work: ", err)
-	}
-}
-
-// closeCurrentPage presses "ctrl+w" to close the current active window / tab.
-func closeCurrentPage(ctx context.Context, s *testing.State) {
-	kb, err := input.Keyboard(ctx)
-	if err != nil {
-		s.Fatal("Failed to find keyboard: ", err)
-	}
-	defer kb.Close(ctx)
-
-	if err := kb.Accel(ctx, "ctrl+w"); err != nil {
-		s.Fatal("Failed to close the page: ", err)
-	}
-}
-
-// copyToDownloads copies the test data file with `fileName` into the Downloads
-// directory, so it can be picked from the ChromeOS file picker.
-func copyToDownloads(s *testing.State, downloadsPath, fileName string) {
-	newPath := filepath.Join(downloadsPath, fileName)
-	err := fsutil.CopyFile(s.DataPath(fileName), newPath)
-	if err != nil {
-		s.Fatalf("Failed to move file %s: %v", fileName, err)
-	}
-	// Without this the test data files don't have enough permissions and Chrome
-	// fails to open them.
-	err = os.Chown(newPath, int(sysutil.ChronosUID), int(sysutil.ChronosGID))
-	if err != nil {
-		s.Fatalf("Failed to chown file %s: %v", fileName, err)
-	}
-}
-
-// prepareCertificates moves certificates which are required for tests to Downloads.
+// prepareCertificates copy certificates which are required for tests to the Downloads.
 func prepareCertificates(s *testing.State, downloadsPath string) {
-	const caCert = rootCertFileName
-	copyToDownloads(s, downloadsPath, caCert)
-	const clientCert = clientCertFileName
-	copyToDownloads(s, downloadsPath, clientCert)
+	if err := utils.CopyToDownloads(downloadsPath, s.DataPath(rootCertFileName), rootCertFileName); err != nil {
+		s.Fatal("Failed to copy CA certificate file to Download: ", err)
+	}
+	if err := utils.CopyToDownloads(downloadsPath, s.DataPath(clientCertFileName), clientCertFileName); err != nil {
+		s.Fatal("Failed to copy Client certificate file to Download: ", err)
+	}
 }
 
-// importCACert copies the `fileName` test data file into the Downloads
-// directory and uses the Import button on the chrome://settings/certificates
-// page to manually import it.
-func importCACert(ctx context.Context, s *testing.State, ui *uiauto.Context, downloadsPath string) {
-	const fileName = rootCertFileName
-	if err := uiauto.Combine("import CA cert",
-		ui.DoDefault(nodewith.Name("Authorities").Role(role.Tab)),
-		ui.WaitUntilExists(nodewith.Name("Authorities").ClassName("tab selected")),
-		ui.DoDefault(nodewith.Name("Import").Role(role.Button)),
-		ui.DoDefault(nodewith.Name(fileName).Role(role.StaticText)),
-		ui.WaitUntilExists(nodewith.Name("Open").Role(role.Button).State("focusable", true)),
-		ui.DoDefault(nodewith.Name("Open").Role(role.Button)),
-		ui.WaitUntilExists(nodewith.Name(trustCheckboxText).Role(role.CheckBox)),
-		ui.DoDefault(nodewith.Name(trustCheckboxText).Role(role.CheckBox)),
-	)(ctx); err != nil {
-		s.Fatal("Failed to import CA cert: ", err)
+// importCACert imports CA certificate.
+func importCACert(ctx context.Context, s *testing.State, ui *uiauto.Context) {
+	if err := utils.ImportCACert(ctx, ui, rootCertFileName); err != nil {
+		s.Fatal("Failed to import CA certificate: ", err)
 	}
-
-	pressOkButton(ctx, s, ui, nodewith.Name("Settings - Manage certificates").Role("rootWebArea"))
-	s.Log("Imported CA cert: ", fileName)
 }
 
-// importClientCert copies the client cert data file into the Downloads
-// directory and uses the Import and Bind button on the
-// chrome://settings/certificates page to manually import it.
-func importClientCert(ctx context.Context, s *testing.State, ui *uiauto.Context, downloadsPath string) {
-	kb, err := input.Keyboard(ctx)
-	if err != nil {
-		s.Fatal("Failed to find keyboard: ", err)
+// importClientCert imports client certificate.
+func importClientCert(ctx context.Context, s *testing.State, ui *uiauto.Context) {
+	if err := utils.ImportClientCert(ctx, ui, clientCertFileName, clientCertPassword); err != nil {
+		s.Fatal("Can not import client certificate: ", err)
 	}
-	defer kb.Close(ctx)
-
-	passwordDialog := nodewith.Name("Enter your certificate password").Role(role.Dialog)
-	passwordTextBox := nodewith.Role(role.TextField).Editable()
-	if err := uiauto.Combine("import client cert",
-		ui.DoDefault(nodewith.Name("Your certificates").Role(role.Tab)),
-		ui.WaitUntilExists(nodewith.Name("Your certificates").ClassName("tab selected")),
-		ui.DoDefault(nodewith.Name("Import and Bind").Role(role.Button)),
-		ui.DoDefault(nodewith.Name(clientCertFileName).Role(role.StaticText)),
-		ui.WaitUntilExists(nodewith.Name("Open").Role(role.Button).State("focusable", true)),
-		ui.DoDefault(nodewith.Name("Open").Role(role.Button)),
-		ui.WaitUntilExists(passwordTextBox.Ancestor(passwordDialog).State("focusable", true)),
-		ui.DoDefault(passwordTextBox.Ancestor(passwordDialog)),
-		kb.TypeAction(clientCertFilePassword),
-	)(ctx); err != nil {
-		s.Fatal("Failed to import client certificate: ", err)
-	}
-
-	pressOkButton(ctx, s, ui, nodewith.Name("Settings - Manage certificates").Role("rootWebArea"))
-	s.Log("Imported client cert: ", clientCertFileName)
 }
 
 // waitForClientCert calls pkcs11-tool in a loop to determine when the client
@@ -261,26 +168,8 @@ func importClientCert(ctx context.Context, s *testing.State, ui *uiauto.Context,
 // This test assumes that the client certificate was imported last, so when it
 // is ready, all the certificates should be usable.
 func waitForClientCert(ctx context.Context, s *testing.State) {
-	// Wait until the certificate is installed.
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		// The argument "--slot 1" means "use user slot only". That's where Import
-		// and Bind is supposed to place the cert.
-		out, err := testexec.CommandContext(ctx,
-			"pkcs11-tool", "--module", "libchaps.so", "--slot", "1", "--list-objects").Output()
-		if err != nil {
-			return errors.Wrap(err, "failed to get certificate list")
-		}
-		outStr := string(out)
-
-		// Look for the org name of the `clientCertFileName`.
-		if !strings.Contains(outStr, "TEST_CLIENT_ORG") {
-			return errors.New("certificate not installed")
-		}
-
-		return nil
-
-	}, nil); err != nil {
-		s.Fatal("Could not verify that client certificate was installed: ", err)
+	if err := utils.WaitForClientCert(ctx, clientCertName); err != nil {
+		s.Fatal("Failed to wait for client certificate: ", err)
 	}
 }
 
@@ -326,7 +215,7 @@ func createWebsite(s *testing.State) *httptest.Server {
 // specifies what text should be seen on the page (for both successful and
 // failed page loads).
 func useWebsite(ctx context.Context, s *testing.State, browser *browser.Browser,
-	ui *uiauto.Context, website *httptest.Server, expectCertPopup bool,
+	ui *uiauto.Context, kb *input.KeyboardEventWriter, website *httptest.Server, expectCertPopup bool,
 	expectedText string) error {
 
 	websiteConn, err := browser.NewConn(ctx, "")
@@ -342,7 +231,17 @@ func useWebsite(ctx context.Context, s *testing.State, browser *browser.Browser,
 	if expectCertPopup {
 		// "First()" is good enough because all such UI elements are in the same
 		// chain together with the OK button.
-		pressOkButton(ctx, s, ui, nodewith.Name("Select a certificate").First())
+		certPopup := nodewith.Name("Select a certificate").First()
+		okButton := nodewith.Name("OK").Role(role.Button).Ancestor(certPopup)
+		if err := ui.EnsureFocused(okButton)(ctx); err != nil {
+			return err
+		}
+		if err := kb.Accel(ctx, "enter"); err != nil {
+			return err
+		}
+		if err := ui.WithTimeout(1 * time.Second).WaitUntilGone(okButton)(ctx); err != nil {
+			return err
+		}
 	}
 
 	if err := ui.WaitUntilExists(nodewith.NameRegex(regexp.MustCompile(expectedText)).First())(ctx); err != nil {
@@ -351,10 +250,11 @@ func useWebsite(ctx context.Context, s *testing.State, browser *browser.Browser,
 	return nil
 }
 
-// createAndUseWebsite creates a new website that requires the client and the CA
-// certs and
+// createAndUseWebsite creates a new website that requires the client's and the CA's
+// certificates, then opens this new website in the browser and checks if any error
+// messages is shown.
 func createAndUseWebsite(ctx context.Context, s *testing.State,
-	browser *browser.Browser, ui *uiauto.Context, expectCertPopup bool, expectedText string) {
+	browser *browser.Browser, ui *uiauto.Context, kb *input.KeyboardEventWriter, expectCertPopup bool, expectedText string) {
 
 	var loopErr error
 
@@ -364,8 +264,10 @@ func createAndUseWebsite(ctx context.Context, s *testing.State,
 		website := createWebsite(s)
 		defer website.Close()
 
-		loopErr = useWebsite(ctx, s, browser, ui, website, expectCertPopup, expectedText)
-		closeCurrentPage(ctx, s)
+		loopErr = useWebsite(ctx, s, browser, ui, kb, website, expectCertPopup, expectedText)
+		if err := utils.CloseCurrentPage(ctx); err != nil {
+			s.Fatal("Failed to close page: ", err)
+		}
 		if loopErr == nil {
 			break
 		}
@@ -376,155 +278,38 @@ func createAndUseWebsite(ctx context.Context, s *testing.State,
 	}
 }
 
-// useSystemSettings opens a system settings window and checks that the client cert
+// checkCertInSystemSettings opens a system settings window and checks that the client cert
 // is selectable there.
-func useSystemSettings(ctx context.Context, s *testing.State,
+func checkCertInSystemSettings(ctx context.Context, s *testing.State,
 	chrome *chrome.Chrome, tconn *chrome.TestConn) {
 	if err := policyutil.CheckCertificateVisibleInSystemSettings(ctx, tconn, chrome, "TEST_CA_ORG"); err != nil {
 		s.Fatal("Failed to select client certificate in system settings: ", err)
 	}
-	closeCurrentPage(ctx, s)
+	if err := utils.CloseCurrentPage(ctx); err != nil {
+		s.Fatal("Failed to close page: ", err)
+	}
 	s.Log("Client cert is usable in system settings")
 }
 
 // deleteClientCert uses the Chrome's cert settings page to delete the client cert.
 func deleteClientCert(ctx context.Context, s *testing.State, ui *uiauto.Context) {
-	if err := uiauto.Combine("delete client cert",
-		ui.DoDefault(nodewith.Name("Your certificates").Role(role.Tab)),
-		ui.WaitUntilExists(nodewith.Name("Your certificates").ClassName("tab selected")),
-		ui.WaitUntilExists(nodewith.Name("org-TEST_CLIENT_ORG").First()),
-		ui.DoDefault(nodewith.Name("Show certificates for organization").Role(role.Button)),
-		ui.DoDefault(nodewith.Name("More actions").Role(role.Button)),
-		ui.DoDefault(nodewith.Name("Delete").Role(role.MenuItem)),
-	)(ctx); err != nil {
-		s.Fatal("Failed to delete CA cert: ", err)
-	}
-
-	pressOkButton(ctx, s, ui, nodewith.Name("Settings - Manage certificates").Role("rootWebArea"))
-
-	if err := ui.WaitUntilGone(nodewith.Name("org-TEST_CLIENT_ORG"))(ctx); err != nil {
-		s.Fatal("Failed to delete CA cert: ", err)
+	if err := utils.DeleteClientCert(ctx, ui, clientOrg); err != nil {
+		s.Fatal("Failed to delete client certificate: ", err)
 	}
 }
 
 // deleteCACert selects and deletes specific CA certificate on CA tab.
 func deleteCACert(ctx context.Context, s *testing.State, ui *uiauto.Context) {
-	selectCACertificate(ctx, s, ui)
-	openActionMenuForCACertificate(ctx, s, ui)
-
-	deleteButton := nodewith.Name("Delete").Role(role.MenuItem)
-	if err := uiauto.Combine("delete CA cert",
-		ui.WaitUntilExists(deleteButton),
-		ui.DoDefault(deleteButton),
-		ui.WaitUntilExists(nodewith.NameContaining("Delete CA certificate").First()),
-	)(ctx); err != nil {
-		s.Fatal("Failed to delete CA cert: ", err)
+	if err := utils.DeleteCACert(ctx, ui, caCertName, caOrg); err != nil {
+		s.Fatal("Failed to delete CA certificate: ", err)
 	}
-
-	pressOkButton(ctx, s, ui, nodewith.Name("Settings - Manage certificates").Role("rootWebArea"))
-
-	if err := ui.WaitUntilGone(nodewith.Name("TEST_CA_ORG"))(ctx); err != nil {
-		s.Fatal("Failed to delete CA cert: ", err)
-	}
-}
-
-// moveToNextUIElement selects next UI element on page with keyboard.
-func moveToNextUIElement(ctx context.Context, s *testing.State) {
-	kb, err := input.Keyboard(ctx)
-	if err != nil {
-		s.Fatal("Failed to find keyboard: ", err)
-	}
-	if err := kb.Accel(ctx, "tab"); err != nil {
-		s.Fatal("Failed to use keyboard: ", err)
-	}
-	if err := kb.Accel(ctx, "enter"); err != nil {
-		s.Fatal("Failed to use keyboard: ", err)
-	}
-}
-
-// selectCACertificate selects CA on CA tab and open/close list of certificates
-// for an organization.
-func selectCACertificate(ctx context.Context, s *testing.State, ui *uiauto.Context) {
-	caCertOrg := nodewith.Name("org-TEST_CA_ORG").Role(role.StaticText)
-	if err := uiauto.Combine("select CA from list",
-		ui.DoDefault(nodewith.Name("Authorities").Role(role.Tab)),
-		ui.WaitUntilExists(nodewith.Name("Authorities").ClassName("tab selected")),
-		ui.MakeVisible(caCertOrg),
-		ui.LeftClick(caCertOrg),
-	)(ctx); err != nil {
-		s.Fatal("Failed to select CA from list: ", err)
-	}
-	// Open/close drop down list of certificates under selected CA.
-	// The UI tree for these elements is not very convenient.
-	// Use keyboard to navigate.
-	moveToNextUIElement(ctx, s)
-}
-
-// selectEditCACertificate finds "Edit" button from certificate action menu and click on it.
-func selectEditCACertificate(ctx context.Context, s *testing.State, ui *uiauto.Context) {
-	editButton := nodewith.Name("Edit").Role(role.MenuItem)
-	if err := uiauto.Combine("press Edit button for certificate",
-		ui.WaitUntilExists(editButton),
-		ui.DoDefault(editButton),
-		ui.WaitUntilExists(nodewith.NameContaining("Certificate authority").First()),
-	)(ctx); err != nil {
-		s.Fatal("Press Edit button for CA certificate: ", err)
-	}
-}
-
-// openActionMenuForCACertificate selects specific CA certificate on CA tab and open actions menu for it.
-func openActionMenuForCACertificate(ctx context.Context, s *testing.State, ui *uiauto.Context) {
-	caCertificateNode := nodewith.Name("TEST_CA_ORG").Role(role.StaticText)
-	if err := uiauto.Combine("select CA cert from list",
-		ui.WaitUntilExists(caCertificateNode),
-		ui.LeftClick(caCertificateNode),
-	)(ctx); err != nil {
-		s.Fatal("Failed to select CA cert from list: ", err)
-	}
-
-	// Open menu for the selected certificate from 3 dots using keyboard.
-	moveToNextUIElement(ctx, s)
-}
-
-// setTrustCheckboxAndSave sets CA certificate's trust checkbox to desired state based on
-// provided `targetState` parameter and saves result.
-func setTrustCheckboxAndSave(ctx context.Context, s *testing.State, ui *uiauto.Context, targetState checked.Checked) {
-	checkbox := nodewith.Name(trustCheckboxText).Role(role.CheckBox)
-	if err := uiauto.Combine("find CA trust checkbox",
-		ui.WaitUntilExists(checkbox),
-	)(ctx); err != nil {
-		s.Fatal("Failed to find CA trust checkbox: ", err)
-	}
-
-	for {
-		info, err := ui.Info(ctx, checkbox)
-		if err != nil {
-			s.Fatal("Failed to find CA trust checkbox status: ", err)
-		}
-		if info.Checked == targetState {
-			break
-		}
-		if err := uiauto.Combine(("toggle checkbox value"),
-			ui.WaitUntilExists(checkbox.Focusable()),
-			ui.EnsureFocused(checkbox),
-			ui.WaitForEvent(checkbox, event.CheckedStateChanged, ui.DoDefault(checkbox)),
-		)(ctx); err != nil {
-			s.Fatal("Failed to set CA trust checkbox: ", err)
-		}
-	}
-
-	pressOkButton(ctx, s, ui, nodewith.Name("Settings - Manage certificates").Role("rootWebArea"))
 }
 
 // setCACertTrust sets Web trust setting for CA certificate to true or false.
 func setCACertTrust(ctx context.Context, s *testing.State, ui *uiauto.Context, targetState checked.Checked) {
-	selectCACertificate(ctx, s, ui)
-	openActionMenuForCACertificate(ctx, s, ui)
-	selectEditCACertificate(ctx, s, ui)
-	setTrustCheckboxAndSave(ctx, s, ui, targetState)
-
-	// Hide list of CA certificates by selecting CA again.
-	selectCACertificate(ctx, s, ui)
+	if err := utils.SetCACertTrust(ctx, ui, targetState, caCertName, caOrg); err != nil {
+		s.Fatal("Failed to set CA trust: ", err)
+	}
 }
 
 // CertSettingsPage tests successful connection to the website using the client's
@@ -552,6 +337,14 @@ func CertSettingsPage(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
+	// Virtual kb initiation in tablet mode takes 1 sec, so initiating it once
+	// and passing it from here.
+	kb, err := input.Keyboard(ctx)
+	defer kb.Close(ctx)
+	if err != nil {
+		s.Fatal("Failed to setup keyboard: ", err)
+	}
+
 	s.Logf("Opening a new tab in %v browser", browserType)
 	conn, err := browser.NewConn(ctx, "chrome://settings/certificates")
 	if err != nil {
@@ -571,19 +364,19 @@ func CertSettingsPage(ctx context.Context, s *testing.State) {
 	prepareCertificates(s, downloadsPath)
 
 	// Try opening a website without any certs, that should fail with a CA error.
-	createAndUseWebsite(ctx, s, browser, ui, false /*expectCertPopup*/, caInvalidErrorRegex)
+	createAndUseWebsite(ctx, s, browser, ui, kb, false /*expectCertPopup*/, caInvalidErrorRegex)
 
 	// Normal case - all certs are present and the website can be connected.
 	{
 		// Import CA and client certs.
-		importCACert(ctx, s, ui, downloadsPath)
-		importClientCert(ctx, s, ui, downloadsPath)
+		importCACert(ctx, s, ui)
+		importClientCert(ctx, s, ui)
 		waitForClientCert(ctx, s)
 
 		// Try to open the website again, this time it should succeed.
-		createAndUseWebsite(ctx, s, browser, ui, true /*expectCertPopup*/, pageLoadedRegex)
+		createAndUseWebsite(ctx, s, browser, ui, kb, true /*expectCertPopup*/, pageLoadedRegex)
 		// Also check that client cert is usable in system settings.
-		useSystemSettings(ctx, s, cr, tconn)
+		checkCertInSystemSettings(ctx, s, cr, tconn)
 	}
 
 	// Test that certificates for not trusted CA will be not valid.
@@ -591,51 +384,51 @@ func CertSettingsPage(ctx context.Context, s *testing.State) {
 		// Mark CA as not trusted for ssl and try connection to the website, it should fail.
 		setCACertTrust(ctx, s, ui, checked.False)
 		waitForClientCert(ctx, s)
-		createAndUseWebsite(ctx, s, browser, ui, false /*expectCertPopup*/, caInvalidErrorRegex)
+		createAndUseWebsite(ctx, s, browser, ui, kb, false /*expectCertPopup*/, caInvalidErrorRegex)
 
 		// Mark CA as trusted for ssl and try connection to the website, it should succeed.
 		setCACertTrust(ctx, s, ui, checked.True)
 		waitForClientCert(ctx, s)
-		createAndUseWebsite(ctx, s, browser, ui, true /*expectCertPopup*/, pageLoadedRegex)
+		createAndUseWebsite(ctx, s, browser, ui, kb, true /*expectCertPopup*/, pageLoadedRegex)
 	}
 
 	// Delete and add certificates back, there should be no errors.
 	{
 		// Delete the client cert and check that now the website rejects the connection.
 		deleteClientCert(ctx, s, ui)
-		createAndUseWebsite(ctx, s, browser, ui, false /*expectCertPopup*/, connectionErrorRegex)
+		createAndUseWebsite(ctx, s, browser, ui, kb, false /*expectCertPopup*/, connectionErrorRegex)
 
 		// Import a client certs again and open the website, it should succeed.
-		importClientCert(ctx, s, ui, downloadsPath)
+		importClientCert(ctx, s, ui)
 		waitForClientCert(ctx, s)
-		createAndUseWebsite(ctx, s, browser, ui, true /*expectCertPopup*/, pageLoadedRegex)
+		createAndUseWebsite(ctx, s, browser, ui, kb, true /*expectCertPopup*/, pageLoadedRegex)
 
 		// Delete the CA cert and check that Chrome gets the CA error again.
 		deleteCACert(ctx, s, ui)
 		waitForClientCert(ctx, s)
-		createAndUseWebsite(ctx, s, browser, ui, false /*expectCertPopup*/, caInvalidErrorRegex)
+		createAndUseWebsite(ctx, s, browser, ui, kb, false /*expectCertPopup*/, caInvalidErrorRegex)
 
 		// Import the CA cert and try connection to the website, it should succeed.
-		importCACert(ctx, s, ui, downloadsPath)
+		importCACert(ctx, s, ui)
 		// When the CA certificate was deleted, CA was selected and the certificate's list
 		// was shown. After the CA certificate is imported again, the list will be opened
 		// again automatically and it will break the next test. Page reload here will put
 		// all elements to the default state.
 		if reloadErr := browser.ReloadActiveTab(ctx); reloadErr != nil {
-			s.Fatal("Failed to reload page after CA import", reloadErr)
+			s.Fatal("Failed to reload page after CA import: ", reloadErr)
 		}
 		waitForClientCert(ctx, s)
-		createAndUseWebsite(ctx, s, browser, ui, true /*expectCertPopup*/, pageLoadedRegex)
+		createAndUseWebsite(ctx, s, browser, ui, kb, true /*expectCertPopup*/, pageLoadedRegex)
 	}
 
 	// Clean certificates should have no errors.
 	{
 		// Delete the client cert and check that now the website rejects the connection.
 		deleteClientCert(ctx, s, ui)
-		createAndUseWebsite(ctx, s, browser, ui, false /*expectCertPopup*/, connectionErrorRegex)
+		createAndUseWebsite(ctx, s, browser, ui, kb, false /*expectCertPopup*/, connectionErrorRegex)
 
 		// Delete the CA cert and check that Chrome gets the CA error again.
 		deleteCACert(ctx, s, ui)
-		createAndUseWebsite(ctx, s, browser, ui, false /*expectCertPopup*/, caInvalidErrorRegex)
+		createAndUseWebsite(ctx, s, browser, ui, kb, false /*expectCertPopup*/, caInvalidErrorRegex)
 	}
 }
