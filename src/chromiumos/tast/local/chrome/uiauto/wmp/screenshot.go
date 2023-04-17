@@ -101,7 +101,7 @@ func StartFullScreenRecording(tconn *chrome.TestConn) action.Action {
 		ui.LeftClick(nodewith.Role(role.ToggleButton).Name("Record full screen")),
 		ui.WaitUntilExists(nodewith.NameRegex(regexp.MustCompile("(Click|Tap) anywhere to record full screen"))), // Different names for clamshell/tablet mode.
 		ui.LeftClick(nodewith.Role(role.Window).First()),                                                         // Click on the center of root window to take the screenshot.
-		ui.WaitUntilExists(nodewith.ClassName("TrayBackgroundView").Name("Stop screen recording")),
+		ui.WaitUntilExists(nodewith.HasClass("TrayBackgroundView").Name("Stop screen recording")),
 	)
 }
 
@@ -110,8 +110,8 @@ func EndScreenRecording(tconn *chrome.TestConn) action.Action {
 	ui := uiauto.New(tconn)
 
 	return uiauto.Combine("end screen recording",
-		ui.LeftClick(nodewith.ClassName("TrayBackgroundView").Name("Stop screen recording")),
-		ui.WaitUntilExists(nodewith.ClassName("Label").Name("Screen recording taken")),
+		ui.LeftClick(nodewith.HasClass("TrayBackgroundView").Name("Stop screen recording")),
+		ui.WaitUntilExists(nodewith.HasClass("Label").Name("Screen recording taken")),
 	)
 }
 

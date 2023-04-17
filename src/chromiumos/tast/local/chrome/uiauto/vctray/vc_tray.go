@@ -22,7 +22,7 @@ import (
 
 // Node finders in the tray bar.
 var (
-	vcTraySection = nodewith.ClassName("VideoConferenceTray")
+	vcTraySection = nodewith.HasClass("VideoConferenceTray")
 	expandButton  = nodewith.Name("Camera and audio controls").Role(role.ToggleButton).Ancestor(vcTraySection)
 )
 

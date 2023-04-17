@@ -26,45 +26,45 @@ const screenCapturesSectionClassName = "ScreenCapturesSection"
 
 // FindChip returns a finder which locates a holding space chip node.
 func FindChip() *nodewith.Finder {
-	return nodewith.ClassName(holdingSpaceItemChipViewClassName)
+	return nodewith.HasClass(holdingSpaceItemChipViewClassName)
 }
 
 // FindContextMenuItem returns a finder which locates a holding space context
 // menu item node.
 func FindContextMenuItem() *nodewith.Finder {
-	return nodewith.ClassName(menuItemViewClassName)
+	return nodewith.HasClass(menuItemViewClassName)
 }
 
 // FindDownloadChip returns a finder which locates a holding space download chip
 // node.
 func FindDownloadChip() *nodewith.Finder {
-	return nodewith.Ancestor(nodewith.ClassName(downloadsSectionClassName)).
+	return nodewith.Ancestor(nodewith.HasClass(downloadsSectionClassName)).
 		ClassName(holdingSpaceItemChipViewClassName)
 }
 
 // FindPinnedFileChip returns a finder which locates a holding space pinned file
 // chip node.
 func FindPinnedFileChip() *nodewith.Finder {
-	return nodewith.Ancestor(nodewith.ClassName(pinnedFilesSectionClassName)).
+	return nodewith.Ancestor(nodewith.HasClass(pinnedFilesSectionClassName)).
 		ClassName(holdingSpaceItemChipViewClassName)
 }
 
 // FindPinnedFilesBubble returns a finder which locates the pinned files bubble node.
 func FindPinnedFilesBubble() *nodewith.Finder {
-	return nodewith.ClassName(pinnedFilesBubbleClassName)
+	return nodewith.HasClass(pinnedFilesBubbleClassName)
 }
 
 // FindPinnedFilesSectionFilesAppChip returns a finder which locates the holding
 // space pinned files section Files app chip node.
 func FindPinnedFilesSectionFilesAppChip() *nodewith.Finder {
-	return nodewith.Ancestor(nodewith.ClassName(buttonClassName).Ancestor(
-		nodewith.ClassName(pinnedFilesSectionClassName))).Name("Open Files")
+	return nodewith.Ancestor(nodewith.HasClass(buttonClassName).Ancestor(
+		nodewith.HasClass(pinnedFilesSectionClassName))).Name("Open Files")
 }
 
 // FindPinnedFilesSectionFilesAppPrompt returns a finder which locates the
 // holding space pinned files section Files app prompt node.
 func FindPinnedFilesSectionFilesAppPrompt() *nodewith.Finder {
-	return nodewith.Ancestor(nodewith.ClassName(pinnedFilesSectionClassName)).
+	return nodewith.Ancestor(nodewith.HasClass(pinnedFilesSectionClassName)).
 		Name("You can pin your important files here. Open Files app to get started.")
 }
 
@@ -77,13 +77,13 @@ func FindRecentFilesBubble() *nodewith.Finder {
 // FindScreenCaptureView returns a finder which locates a holding space screen
 // capture view node.
 func FindScreenCaptureView() *nodewith.Finder {
-	return nodewith.Ancestor(nodewith.ClassName(screenCapturesSectionClassName)).
+	return nodewith.Ancestor(nodewith.HasClass(screenCapturesSectionClassName)).
 		ClassName(holdingSpaceItemScreenCaptureViewClassName)
 }
 
 // FindTray returns a finder which locates the holding space tray node.
 func FindTray() *nodewith.Finder {
-	return nodewith.ClassName(holdingSpaceTrayClassName)
+	return nodewith.HasClass(holdingSpaceTrayClassName)
 }
 
 // ResetHoldingSpaceOptions is defined in autotest_private.idl.

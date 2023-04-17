@@ -77,12 +77,12 @@ func WindowFinder(appID string) *nodewith.Finder {
 		return nodewith.NameStartingWith("Files").Role(role.Window).HasClass("BrowserFrame").First()
 	}
 	if appID == vars.FilePickerPseudoAppID {
-		return nodewith.Name("Select a file to open").Role(role.Window).ClassName("WebDialogView")
+		return nodewith.Name("Select a file to open").Role(role.Window).HasClass("WebDialogView")
 	}
 	if appID == FileSaverPseudoAppID {
-		return nodewith.Name("Save file as").Role(role.Window).ClassName("WebDialogView")
+		return nodewith.Name("Save file as").Role(role.Window).HasClass("WebDialogView")
 	}
-	return nodewith.NameStartingWith("Files").Role(role.Window).ClassName("RootView")
+	return nodewith.NameStartingWith("Files").Role(role.Window).HasClass("RootView")
 }
 
 // LaunchChromeApp launches the Files Chrome app and returns it.
@@ -422,7 +422,7 @@ func (f *FilesApp) DeleteFileOrFolder(kb *input.KeyboardEventWriter, fileName st
 	return uiauto.Combine(fmt.Sprintf("DeleteFileOrFolder(%s)", fileName),
 		f.SelectFile(fileName),
 		kb.AccelAction("Alt+Shift+Backspace"),
-		f.LeftClick(nodewith.NameRegex(regexp.MustCompile("^Delete( forever)?$")).ClassName("cr-dialog-ok").Role(role.Button)),
+		f.LeftClick(nodewith.NameRegex(regexp.MustCompile("^Delete( forever)?$")).HasClass("cr-dialog-ok").Role(role.Button)),
 		f.WaitUntilFileGone(fileName),
 	)
 }
@@ -440,7 +440,7 @@ func (f *FilesApp) DeleteMultipleFilesOrFolders(kb *input.KeyboardEventWriter, t
 	return uiauto.Combine(fmt.Sprintf("DeleteMultipleFilesOrFolders(%s)", targets),
 		f.SelectMultipleFiles(kb, targets...),
 		kb.AccelAction("Alt+Shift+Backspace"),
-		f.LeftClick(nodewith.NameRegex(regexp.MustCompile("^Delete( forever)?$")).ClassName("cr-dialog-ok").Role(role.Button)),
+		f.LeftClick(nodewith.NameRegex(regexp.MustCompile("^Delete( forever)?$")).HasClass("cr-dialog-ok").Role(role.Button)),
 		waitUnitAllTargetsGone,
 	)
 }
@@ -486,7 +486,7 @@ func (f *FilesApp) Search(kb *input.KeyboardEventWriter, searchTerms string) uia
 
 // ClearSearch clicks the clear button to clear the search results and leave search mode.
 func (f *FilesApp) ClearSearch() uiauto.Action {
-	clear := nodewith.Role(role.Button).ClassName("clear").Name("Clear")
+	clear := nodewith.Role(role.Button).HasClass("clear").Name("Clear")
 	return uiauto.Combine("clear search box",
 		uiauto.IfSuccessThen(
 			f.WithTimeout(5*time.Second).WaitUntilExists(clear),

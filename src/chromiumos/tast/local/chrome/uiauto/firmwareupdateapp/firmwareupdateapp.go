@@ -22,7 +22,7 @@ import (
 var appRootNodeParams = nodewith.Name(apps.FirmwareUpdate.Name).Role(role.Window)
 
 // AppHeader exported to find application header.
-var AppHeader = nodewith.ClassName("firmware-header-font").Role(role.Heading).Ancestor(appRootNodeParams).First()
+var AppHeader = nodewith.HasClass("firmware-header-font").Role(role.Heading).Ancestor(appRootNodeParams).First()
 
 // FirmwareUpdateRootNode returns the root ui node of Firmware Update
 // application.

@@ -29,7 +29,7 @@ func ResizableArea(ctx context.Context, tconn *chrome.TestConn) (*coords.Rect, e
 		return nil, errors.Wrap(err, "failed to get root window info")
 	}
 
-	shelfInfo, err := ui.Info(ctx, nodewith.Role(role.Toolbar).ClassName("ShelfView"))
+	shelfInfo, err := ui.Info(ctx, nodewith.Role(role.Toolbar).HasClass("ShelfView"))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get shelf info")
 	}

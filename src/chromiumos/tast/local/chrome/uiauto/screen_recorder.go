@@ -136,7 +136,7 @@ func NewScreenRecorder(ctx context.Context, tconn *chrome.TestConn) (*ScreenReco
 
 	// Choose to record the entire desktop/screen with no audio.
 	ui := New(tconn)
-	shareScreenDialog := nodewith.Name("Choose what to share").ClassName("DesktopMediaPickerDialogView")
+	shareScreenDialog := nodewith.Name("Choose what to share").HasClass("DesktopMediaPickerDialogView")
 	entireScreenTab := nodewith.Name("Entire Screen").Role(role.Tab).Ancestor(shareScreenDialog)
 	firstDisplay := nodewith.Role(role.Button).Focusable().Ancestor(shareScreenDialog).First()
 	// The share button becomes focusable after the entire desktop button is clicked.
@@ -164,7 +164,7 @@ func NewWindowRecorder(ctx context.Context, tconn *chrome.TestConn, windowIndex 
 	}
 
 	ui := New(tconn)
-	shareScreenDialog := nodewith.Name("Choose what to share").ClassName("DesktopMediaPickerDialogView")
+	shareScreenDialog := nodewith.Name("Choose what to share").HasClass("DesktopMediaPickerDialogView")
 	windowTab := nodewith.Name("Window").Role(role.Tab).Ancestor(shareScreenDialog)
 	windowButton := nodewith.Role(role.Button).Ancestor(shareScreenDialog).Nth(windowIndex)
 	shareButton := nodewith.Name("Share").Role(role.Button).Ancestor(shareScreenDialog).Focusable()
@@ -191,7 +191,7 @@ func NewTabRecorder(ctx context.Context, tconn *chrome.TestConn, tabIndex int) (
 	}
 
 	ui := New(tconn)
-	shareScreenDialog := nodewith.Name("Choose what to share").ClassName("DesktopMediaPickerDialogView")
+	shareScreenDialog := nodewith.Name("Choose what to share").HasClass("DesktopMediaPickerDialogView")
 	shareChromeTabOption := nodewith.NameRegex(regexp.MustCompile("(Chromium|Chrome) Tab")).Role(role.Tab).Ancestor(shareScreenDialog)
 	tabButton := nodewith.Role(role.Row).Ancestor(shareScreenDialog).Nth(tabIndex)
 	shareButton := nodewith.Name("Share").Role(role.Button).Ancestor(shareScreenDialog).Focusable()
@@ -222,7 +222,7 @@ func (r *ScreenRecorder) Start(ctx context.Context, tconn *chrome.TestConn) erro
 
 	ui := New(tconn)
 	closeNotificationButton := nodewith.Name("Notification close").Role(role.Button)
-	messagePopupAlert := nodewith.ClassName("MessagePopupView").Role(role.AlertDialog)
+	messagePopupAlert := nodewith.HasClass("MessagePopupView").Role(role.AlertDialog)
 	if err := ui.LeftClickUntil(closeNotificationButton, ui.WithInterval(time.Second).WaitUntilGone(messagePopupAlert))(ctx); err != nil {
 		testing.ContextLog(ctx, "Failed to dismiss screenshare notification popup, it likely didn't appear: ", err)
 	}
@@ -299,10 +299,10 @@ func (r *ScreenRecorder) StopAndSaveOnError(ctx context.Context, filepath string
 	if err := r.Stop(ctx); err != nil {
 		testing.ContextLogf(ctx, "Failed to stop recording: %s", err)
 	} else if hasError() {
-		// If there's an error, we want to wait long enough to see what happens
-		// after the error. This allows you to see subtitles when the error has
-		// occurred, and also happens to help in case something happens after
-		// timing out.
+		// GoBigSleepLint: If there's an error, we want to wait long enough to see
+		// what happens after the error. This allows you to see subtitles when the
+		// error has occurred, and also happens to help in case something happens
+		// after timing out.
 		testing.Sleep(ctx, 2*time.Second)
 
 		testing.ContextLogf(ctx, "Saving screen record to %s", filepath)
@@ -352,6 +352,7 @@ func RecordScreen(ctx context.Context, s testingState, tconn *chrome.TestConn, f
 			// occurred, and also happens to help in case something happens after
 			// timing out.
 			if s.HasError() {
+				//  GoBigSleepLint: Allow time to observe artifacts of error
 				testing.Sleep(ctx, time.Second*2)
 			}
 			ScreenRecorderStopSaveRelease(ctx, recorder, filepath.Join(s.OutDir(), "recording.webm"))

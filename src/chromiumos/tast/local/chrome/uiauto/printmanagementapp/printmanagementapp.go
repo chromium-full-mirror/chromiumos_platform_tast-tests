@@ -29,14 +29,14 @@ type PrintManagementApp struct {
 var printManagementHistoryLabel = nodewith.Name("History").Role(role.StaticText)
 
 // printManagementPrintJobEntry is used to find all print job entries.
-var printManagementPrintJobEntry = nodewith.ClassName("list-item flex-center")
+var printManagementPrintJobEntry = nodewith.HasClass("list-item flex-center")
 
 // PrintManagementDeleteHistoryButton is used to delete printing history.
 var PrintManagementDeleteHistoryButton = nodewith.Name("Clear all history").Role(role.Button)
 
 // printManagementDeleteConfirmButton is used to confirm deleting printing
 // history.
-var printManagementDeleteConfirmButton = nodewith.Name("Clear").ClassName("action-button").Role(role.Button)
+var printManagementDeleteConfirmButton = nodewith.Name("Clear").HasClass("action-button").Role(role.Button)
 
 // printManagementWindow is the main window for the print management dialog.
 var printManagementWindow = nodewith.Name("Print jobs").Role(role.Window).First()

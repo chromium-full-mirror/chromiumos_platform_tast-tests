@@ -375,7 +375,7 @@ func OpenNetworkDetailPage(ctx context.Context, tconn *chrome.TestConn, cr *chro
 		return nil, errors.Wrap(err, "failed to launch settings page")
 	}
 
-	subpageArrowFinder := nodewith.Role(role.Button).ClassName("subpage-arrow")
+	subpageArrowFinder := nodewith.Role(role.Button).HasClass("subpage-arrow")
 	subpageArrowFinderWithName, err := func() (*nodewith.Finder, error) {
 		var technology string
 		if networkType == netconfig.Cellular {
@@ -453,7 +453,7 @@ func (s *OSSettings) ClearSearch() uiauto.Action {
 // Then it clicks the Uninstall button to uninstall.
 func UninstallApp(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, appName, appID string) error {
 	ui := uiauto.New(tconn)
-	appNode := nodewith.Name(appName).ClassName("cr-title-text")
+	appNode := nodewith.Name(appName).HasClass("cr-title-text")
 	if _, err := LaunchAtPageURL(ctx, tconn, cr, "app-management/detail?id="+appID, ui.WaitUntilExists(appNode)); err != nil {
 		testing.ContextLogf(ctx, "Failed to open Settings app at the app %s, it may not exist: %s", appName, err)
 		return nil

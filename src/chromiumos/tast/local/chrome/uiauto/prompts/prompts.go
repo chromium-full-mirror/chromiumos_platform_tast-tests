@@ -28,8 +28,8 @@ type Prompt struct {
 }
 
 var (
-	showNotificationsPromptFinder = nodewith.NameContaining("Show notifications").ClassName("RootView").Role(role.AlertDialog)
-	avPermPromptFinder            = nodewith.NameRegex(regexp.MustCompile(".*Use your (microphone|camera).*")).ClassName("RootView").Role(role.AlertDialog).First()
+	showNotificationsPromptFinder = nodewith.NameContaining("Show notifications").HasClass("RootView").Role(role.AlertDialog)
+	avPermPromptFinder            = nodewith.NameRegex(regexp.MustCompile(".*Use your (microphone|camera).*")).HasClass("RootView").Role(role.AlertDialog).First()
 )
 
 // General dismiss button finders for prompts.

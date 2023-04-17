@@ -51,7 +51,7 @@ func LaunchOsSettingsAudioPageFromQuickSettings(ctx context.Context, tconn *chro
 		return errors.Wrap(err, "failed to open Quick Settings audio detail view")
 	}
 	settingsGearIcon := nodewith.HasClass("IconButton").Name("Audio settings")
-	qsAudioDetailedView := nodewith.ClassName("AudioDetailedView")
+	qsAudioDetailedView := nodewith.HasClass("AudioDetailedView")
 	// Click on settings gear to open OS Settings at audio settings subpage.
 	ui := uiauto.New(tconn).WithTimeout(2 * time.Second)
 	if err := uiauto.Combine("click the Audio settings",

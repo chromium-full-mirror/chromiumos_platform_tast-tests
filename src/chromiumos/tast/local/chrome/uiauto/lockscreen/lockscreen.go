@@ -28,15 +28,15 @@ const authIconViewClassName = "AuthIconView"
 var authErrorRegex = regexp.MustCompile(`Your.* password couldn't be verified. Try again.*`)
 
 // AuthErrorFinder is the finder for the authentication error shown on the first failure.
-var AuthErrorFinder = nodewith.Role(role.AlertDialog).NameRegex(authErrorRegex).ClassName("LoginErrorBubble")
+var AuthErrorFinder = nodewith.Role(role.AlertDialog).NameRegex(authErrorRegex).HasClass("LoginErrorBubble")
 
 var consecutiveAuthErrorRegex = regexp.MustCompile(`Your.* password still couldn't be verified.*`)
 
 // ConsecutiveAuthErrorFinder is the finder for the authentication error shown on the consecutive failures.
-var ConsecutiveAuthErrorFinder = nodewith.Role(role.AlertDialog).NameRegex(consecutiveAuthErrorRegex).ClassName("LoginErrorBubble")
+var ConsecutiveAuthErrorFinder = nodewith.Role(role.AlertDialog).NameRegex(consecutiveAuthErrorRegex).HasClass("LoginErrorBubble")
 
 // SmartLockArrowButtonFinder is the finder for the button that needs to be clicked to complete authentication with Smart Lock.
-var SmartLockArrowButtonFinder = nodewith.NameContaining("Unlocked by your phone. Tap or click to enter.").ClassName("ArrowButtonView")
+var SmartLockArrowButtonFinder = nodewith.NameContaining("Unlocked by your phone. Tap or click to enter.").HasClass("ArrowButtonView")
 
 // SimplePinOrPasswordFieldFinder is like PINFieldFinder, but doesn't check the name attribute so that username doesn't
 // need to be passed in and it's more convenient to use.
@@ -44,7 +44,7 @@ var SimplePinOrPasswordFieldFinder = nodewith.Role(role.TextField).Attribute("pl
 
 // PinInputFieldFinder finds the node that displays the entered PIN when autosubmit is
 // enabled.
-var PinInputFieldFinder = nodewith.ClassName("LoginPinInputView")
+var PinInputFieldFinder = nodewith.HasClass("LoginPinInputView")
 
 // recoverUserFinder is the finder for the user recovery button.
 var recoverUserFinder = nodewith.Role(role.Button).Name("Recover user")
@@ -208,7 +208,7 @@ func EnterPIN(ctx context.Context, tconn *chrome.TestConn, kb *input.KeyboardEve
 
 	// If we can't find the PIN pad, we click the input field and enter the PIN via the keyboard. If
 	// we do find the PIN pad, we use the PIN pad to enter the PIN.
-	if err := ui.WithTimeout(uiTimeout).WaitUntilExists(nodewith.ClassName("LoginPinView"))(ctx); err != nil {
+	if err := ui.WithTimeout(uiTimeout).WaitUntilExists(nodewith.HasClass("LoginPinView"))(ctx); err != nil {
 		if err := ui.WithTimeout(uiTimeout).WaitUntilExists(SimplePinOrPasswordFieldFinder)(ctx); err != nil {
 			return errors.Wrap(err, "failed to find PIN or password box")
 		}
@@ -237,13 +237,13 @@ func EnterPIN(ctx context.Context, tconn *chrome.TestConn, kb *input.KeyboardEve
 // WaitUntilPinPadExists waits until the PIN pad is present.
 func WaitUntilPinPadExists(ctx context.Context, tconn *chrome.TestConn) error {
 	ui := uiauto.New(tconn)
-	return ui.WaitUntilExists(nodewith.ClassName("LoginPinView"))(ctx)
+	return ui.WaitUntilExists(nodewith.HasClass("LoginPinView"))(ctx)
 }
 
 // WaitUntilPinPadGone waits until the PIN pad is gone.
 func WaitUntilPinPadGone(ctx context.Context, tconn *chrome.TestConn) error {
 	ui := uiauto.New(tconn)
-	return ui.WaitUntilGone(nodewith.ClassName("LoginPinView"))(ctx)
+	return ui.WaitUntilGone(nodewith.HasClass("LoginPinView"))(ctx)
 }
 
 // SubmitPINOrPassword submits the entered PIN.
@@ -268,7 +268,7 @@ func WaitForSmartLockReady(ctx context.Context, tconn *chrome.TestConn) error {
 
 // WaitForSmartLockVisible waits for UI signal that Smart Lock is an available auth factor.
 func WaitForSmartLockVisible(ctx context.Context, expectVisible bool, tconn *chrome.TestConn) error {
-	finder := nodewith.ClassName(authIconViewClassName)
+	finder := nodewith.HasClass(authIconViewClassName)
 	ui := uiauto.New(tconn)
 	if expectVisible {
 		if err := ui.WaitUntilExists(finder)(ctx); err != nil {

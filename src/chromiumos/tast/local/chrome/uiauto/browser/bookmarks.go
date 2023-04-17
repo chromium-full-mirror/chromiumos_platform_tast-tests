@@ -15,7 +15,7 @@ import (
 	"chromiumos/tast/testing"
 )
 
-var bookmarksNode = nodewith.Name("Bookmarks").ClassName("BookmarkBarView")
+var bookmarksNode = nodewith.Name("Bookmarks").HasClass("BookmarkBarView")
 
 // ShowBookmarksBar makes bookmarks bar UI element visible.
 func (b *Browser) ShowBookmarksBar(ctx context.Context, keyboard *input.KeyboardEventWriter) error {
@@ -71,7 +71,7 @@ func (b *Browser) ToggleBookmarksBar(ctx context.Context, keyboard *input.Keyboa
 
 // VisibleBookmarksCount returns count of visible bookmarks on bookmarks bar.
 func (b *Browser) VisibleBookmarksCount(ctx context.Context) (int, error) {
-	bookmarks, err := b.ui.NodesInfo(ctx, nodewith.ClassName("BookmarkButton"))
+	bookmarks, err := b.ui.NodesInfo(ctx, nodewith.HasClass("BookmarkButton"))
 	if err != nil {
 		return -1, errors.Wrap(err, "failed to find bookmark's buttons on the bookmark bar")
 	}
@@ -83,7 +83,7 @@ func (b *Browser) OpenBookmark(ctx context.Context, bookmarkName string) error {
 	if err := b.ui.WithPollOpts(testing.PollOptions{
 		Interval: time.Second,
 		Timeout:  shortTimeout,
-	}).LeftClick(nodewith.ClassName("BookmarkButton").Name(bookmarkName))(ctx); err != nil {
+	}).LeftClick(nodewith.HasClass("BookmarkButton").Name(bookmarkName))(ctx); err != nil {
 		return errors.Wrapf(err, "failed to click %s bookmark", bookmarkName)
 	}
 	return nil
@@ -91,6 +91,6 @@ func (b *Browser) OpenBookmark(ctx context.Context, bookmarkName string) error {
 
 // IsBookmarkVisible checks if bookmark with a given name is visible on the bookmark bar.
 func (b *Browser) IsBookmarkVisible(ctx context.Context, bookmarkName string) (bool, error) {
-	visible, err := b.ui.IsNodeFound(ctx, nodewith.Name(bookmarkName).ClassName("BookmarkButton"))
+	visible, err := b.ui.IsNodeFound(ctx, nodewith.Name(bookmarkName).HasClass("BookmarkButton"))
 	return visible, err
 }

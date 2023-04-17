@@ -28,7 +28,7 @@ import (
 )
 
 // WindowFinder is the finder for the ScanApp window.
-var WindowFinder *nodewith.Finder = nodewith.Name(apps.Scan.Name).ClassName("BrowserFrame").Role(role.Window)
+var WindowFinder *nodewith.Finder = nodewith.Name(apps.Scan.Name).HasClass("BrowserFrame").Role(role.Window)
 
 var scanButtonFinder *nodewith.Finder = nodewith.Name("Scan").Role(role.Button)
 
@@ -187,7 +187,7 @@ func (s *ScanApp) ClickMoreSettings() uiauto.Action {
 // selectScanSetting is a helper function for the various SelectXXX functions
 // which follow.
 func (s *ScanApp) selectScanSetting(name DropdownName, value string) uiauto.Action {
-	dropdownFinder := nodewith.Name(string(name)).ClassName("md-select")
+	dropdownFinder := nodewith.Name(string(name)).HasClass("md-select")
 	dropdownOptionFinder := nodewith.Name(value).Role(role.ListBoxOption)
 	steps := []uiauto.Action{s.WaitUntilExists(dropdownFinder), s.MakeVisible(dropdownFinder), s.LeftClickUntil(dropdownFinder, s.Exists(dropdownOptionFinder)), s.MakeVisible(dropdownOptionFinder), s.LeftClick(dropdownOptionFinder)}
 

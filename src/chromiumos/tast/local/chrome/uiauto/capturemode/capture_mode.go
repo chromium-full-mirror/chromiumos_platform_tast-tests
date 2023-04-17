@@ -36,7 +36,7 @@ func enterCaptureMode(ctx context.Context, tconn *chrome.TestConn) error {
 	}
 
 	ui := uiauto.New(tconn)
-	if err := ui.WithTimeout(10 * time.Second).LeftClick(nodewith.Name("Screen capture").ClassName("FeaturePodIconButton"))(ctx); err != nil {
+	if err := ui.WithTimeout(10 * time.Second).LeftClick(nodewith.Name("Screen capture").HasClass("FeaturePodIconButton"))(ctx); err != nil {
 		return errors.Wrap(err, "failed to find and click capture mode button")
 	}
 

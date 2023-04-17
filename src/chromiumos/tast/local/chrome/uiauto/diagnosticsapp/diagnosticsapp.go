@@ -44,7 +44,7 @@ var (
 	DxRootNode = nodewith.Name(apps.Diagnostics.Name).Role(role.Window)
 
 	// DxLogButton export is used to find session log button.
-	DxLogButton = nodewith.ClassName("session-log-button").Role(role.Button)
+	DxLogButton = nodewith.HasClass("session-log-button").Role(role.Button)
 
 	// DxMemoryTestButton export is used to find routine test button.
 	DxMemoryTestButton = nodewith.Name("Run Memory test").Role(role.Button)
@@ -59,7 +59,7 @@ var (
 	DxCancelTestButton = nodewith.Name("Stop test").Role(role.Button)
 
 	// DxCPUChart export is used to find the realtime cpu chart.
-	DxCPUChart = nodewith.ClassName("legend-group").Role(role.GenericContainer)
+	DxCPUChart = nodewith.HasClass("legend-group").Role(role.GenericContainer)
 
 	// DxPassedBadge export is used to find success badge notification.
 	DxPassedBadge = nodewith.Name("PASSED").Role(role.StaticText)
@@ -77,7 +77,7 @@ var (
 	DxConnectivity = nodewith.Name("Connectivity").Role(role.Button)
 
 	// DxNetworkList export is used to find the network list.
-	DxNetworkList = nodewith.ClassName("diagnostics-network-list-container").Role(role.GenericContainer)
+	DxNetworkList = nodewith.HasClass("diagnostics-network-list-container").Role(role.GenericContainer)
 
 	// DxKeyboardTab export is used to find the Input navigation item.
 	DxKeyboardTab = nodewith.NameContaining("Keyboard").Role(role.Button)

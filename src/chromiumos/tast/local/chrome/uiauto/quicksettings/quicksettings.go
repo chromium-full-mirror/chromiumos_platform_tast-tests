@@ -33,7 +33,7 @@ const uiTimeout = 10 * time.Second
 // findStatusArea finds the status area UI node.
 func findStatusArea(ctx context.Context, tconn *chrome.TestConn) (*nodewith.Finder, error) {
 	ui := uiauto.New(tconn)
-	statusArea := nodewith.ClassName("UnifiedSystemTray").First()
+	statusArea := nodewith.HasClass("UnifiedSystemTray").First()
 	return statusArea, ui.WithTimeout(uiTimeout).WaitUntilExists(statusArea)(ctx)
 }
 
@@ -76,7 +76,7 @@ func clickAndWaitForAnimation(ctx context.Context, tconn *chrome.TestConn, node 
 // UnifiedSystemTrayView as a child.
 func Rect(ctx context.Context, tconn *chrome.TestConn) (coords.Rect, error) {
 	ui := uiauto.New(tconn)
-	bubbleFrameView := nodewith.ClassName("BubbleFrameView")
+	bubbleFrameView := nodewith.HasClass("BubbleFrameView")
 	results, err := ui.NodesInfo(ctx, bubbleFrameView)
 	if err != nil {
 		return coords.Rect{}, errors.Wrap(err, "failed to find quick settings")
@@ -390,12 +390,12 @@ func NotificationsHidden(ctx context.Context, tconn *chrome.TestConn) (bool, err
 
 	// Wait for the 'Notifications are hidden' label at the top of Quick Settings.
 	ui := uiauto.New(tconn)
-	if err := ui.WithTimeout(uiTimeout).WaitUntilExists(nodewith.ClassName("NotificationHiddenView"))(ctx); err != nil {
+	if err := ui.WithTimeout(uiTimeout).WaitUntilExists(nodewith.HasClass("NotificationHiddenView"))(ctx); err != nil {
 		return false, errors.Wrap(err, "failed to find notifications hidden view")
 	}
 
 	// Also check that no notifications are shown in the UI.
-	exists, err := ui.IsNodeFound(ctx, nodewith.ClassName("AshNotificationView"))
+	exists, err := ui.IsNodeFound(ctx, nodewith.HasClass("AshNotificationView"))
 	if err != nil {
 		return false, errors.Wrap(err, "failed checking if notification node exists")
 	}
@@ -427,7 +427,7 @@ func OpenAudioSettings(ctx context.Context, tconn *chrome.TestConn) error {
 	defer cleanup(ctx)
 
 	audioSettingsBtn := nodewith.Role(role.Button).Name("Audio settings")
-	audioDetailedView := nodewith.ClassName("AudioDetailedView")
+	audioDetailedView := nodewith.HasClass("AudioDetailedView")
 
 	// If audio settings view is open, just return.
 	ui := uiauto.New(tconn)
@@ -536,7 +536,7 @@ func changeSlider(ctx context.Context, tconn *chrome.TestConn, kb *input.Keyboar
 		return nil
 	}
 
-	// testing.Poll() is flaky for quicksettings.Brightness/VolumeSlider that sometimes it cannot get the correct value.
+	// GoBigSleepLint: testing.Poll() is flaky for quicksettings.Brightness/VolumeSlider that sometimes it cannot get the correct value.
 	// Sleeps for 10 seconds before entering the polling to ensure SliderValue() returns the updated value.
 	testing.Sleep(ctx, time.Second*10)
 

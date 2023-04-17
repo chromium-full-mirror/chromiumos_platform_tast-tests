@@ -33,7 +33,7 @@ const (
 )
 
 // PrintPreviewNode is the node for the top-level dialog.
-var PrintPreviewNode *nodewith.Finder = nodewith.Name("Print").Role(role.Window).ClassName("RootView")
+var PrintPreviewNode *nodewith.Finder = nodewith.Name("Print").Role(role.Window).HasClass("RootView")
 
 // Print sets focus on the print button in Chrome print preview and injects the
 // ENTER key to start printing. This is more reliable than clicking the print

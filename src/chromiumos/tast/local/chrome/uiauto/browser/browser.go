@@ -102,7 +102,7 @@ func (b *Browser) BookmarkCurrentTab(ctx context.Context, keyboard *input.Keyboa
 
 // IsBookmarkStarIconVisible checks if the bookmark icon is visible.
 func (b *Browser) IsBookmarkStarIconVisible(ctx context.Context) (bool, error) {
-	visible, err := b.ui.IsNodeFound(ctx, nodewith.ClassName("StarView").Role(role.Button))
+	visible, err := b.ui.IsNodeFound(ctx, nodewith.HasClass("StarView").Role(role.Button))
 	if err != nil {
 		return false, errors.Wrap(err, "failed to check existence of bookmark dialog")
 	}

@@ -39,7 +39,7 @@ func GoToCellularNetworkDetailPageWithNickName(ctx context.Context, tconn *chrom
 		return errors.Wrap(err, "failed to wait until refresh profile complete")
 	}
 
-	var DetailButton = nodewith.NameContaining(name).ClassName("subpage-arrow").Role(role.Button)
+	var DetailButton = nodewith.NameContaining(name).HasClass("subpage-arrow").Role(role.Button)
 
 	if err := ui.WithTimeout(2 * time.Minute).WaitUntilExists(DetailButton)(ctx); err != nil {
 		return errors.Wrap(err, "failed to find cellular network with name: "+name)
@@ -197,7 +197,7 @@ func VerifyTestESimProfile(ctx context.Context, tconn *chrome.TestConn) error {
 
 	managedTestProfile := nodewith.NameRegex(regexp.MustCompile("^Network [0-9] of [0-9],.*"))
 	// testProfileDetailButton is the finder for the "Test Profile" detail subpage arrow button in the mobile data page UI.
-	var testProfileDetailButton = nodewith.ClassName("subpage-arrow").Role(role.Button).Ancestor(managedTestProfile.First())
+	var testProfileDetailButton = nodewith.HasClass("subpage-arrow").Role(role.Button).Ancestor(managedTestProfile.First())
 	if err := ui.WithTimeout(time.Minute).WaitUntilExists(testProfileDetailButton)(ctx); err != nil {
 		return errors.Wrap(err, "failed to find the newly installed test profile")
 	}

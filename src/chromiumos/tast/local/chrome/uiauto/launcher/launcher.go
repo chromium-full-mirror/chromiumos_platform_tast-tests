@@ -60,19 +60,19 @@ const SearchResultPageView = "SearchResultPageView"
 const SearchBoxView = "SearchBoxView"
 
 // UnnamedFolderFinder is the finder of a newly created folder with the default name.
-var UnnamedFolderFinder = nodewith.Name("Folder Unnamed").ClassName(ExpandedItemsClass)
+var UnnamedFolderFinder = nodewith.Name("Folder Unnamed").HasClass(ExpandedItemsClass)
 
 // SearchResultListItemFinder is the finder of the list items in launcher search result.
-var SearchResultListItemFinder = nodewith.ClassName("ui/app_list/SearchResultView")
+var SearchResultListItemFinder = nodewith.HasClass("ui/app_list/SearchResultView")
 
 // SearchResultListViewFinder is the finder of the list views in launcher search result.
-var SearchResultListViewFinder = nodewith.ClassName("SearchResultListView")
+var SearchResultListViewFinder = nodewith.HasClass("SearchResultListView")
 
 // SearchResultListLabelFinder is the finder of the list label in launcher search result.
-var SearchResultListLabelFinder = nodewith.ClassName("Label")
+var SearchResultListLabelFinder = nodewith.HasClass("Label")
 
 // ReorderEducationNudgeFinder is the finder of the reorder education nudge.
-var ReorderEducationNudgeFinder = nodewith.ClassName("Label").Name("Sort your apps by name or color")
+var ReorderEducationNudgeFinder = nodewith.HasClass("Label").Name("Sort your apps by name or color")
 
 // TestCase describes modes in which the launcher UI can be shown, and by which launcher test should generally be parameterized.
 // Use a struct because it makes the individual test cases more readable.
@@ -215,7 +215,7 @@ func SetUpLauncherTest(ctx context.Context, tconn *chrome.TestConn, tabletMode, 
 
 		if !tabletMode {
 			ui := uiauto.New(tconn)
-			if err := ui.WaitUntilGone(nodewith.ClassName(BubbleAppsGridViewClass))(ctx); err != nil {
+			if err := ui.WaitUntilGone(nodewith.HasClass(BubbleAppsGridViewClass))(ctx); err != nil {
 				return errors.Wrap(err, "Bubble launcher faild to close")
 			}
 		}
@@ -331,7 +331,7 @@ func SetupContinueSectionFiles(ctx context.Context, tconn *chrome.TestConn,
 // CreateAppSearchFinder creates a finder for an app search result in the current launcher search UI.
 // It expects the launcher search page to be open.
 func CreateAppSearchFinder(ctx context.Context, tconn *chrome.TestConn, appName string) *nodewith.Finder {
-	searchContainerClassName := nodewith.ClassName("AppListSearchView")
+	searchContainerClassName := nodewith.HasClass("AppListSearchView")
 	re := regexp.MustCompile(regexp.QuoteMeta(appName) + ", [Ii]nstalled [Aa]pp")
 	return nodewith.NameRegex(re).Ancestor(searchContainerClassName)
 }
@@ -395,7 +395,7 @@ func OpenExpandedView(tconn *chrome.TestConn) uiauto.Action {
 		ui := uiauto.New(tconn)
 		// The app list widget may exist and be hidden (cached), so explicitly
 		// check for a visible app list item.
-		appListItem := nodewith.ClassName(ExpandedItemsClass).Visible().First()
+		appListItem := nodewith.HasClass(ExpandedItemsClass).Visible().First()
 		if err := ui.Exists(appListItem)(ctx); err == nil {
 			// Even if it exist, active window may cover it in tablet mode. Check for active windows.
 			windows, err := ash.FindAllWindows(ctx, tconn, func(window *ash.Window) bool {
@@ -418,7 +418,7 @@ func OpenExpandedView(tconn *chrome.TestConn) uiauto.Action {
 			// WaitForLauncherState is expected to fail for bubble launcher - use uiauto
 			// API to wait for the bubble launcher location to stabilize.
 			if strings.Contains(err.Error(), "Not supported for bubble launcher") {
-				bubbleLauncher := nodewith.ClassName("AppListBubbleView")
+				bubbleLauncher := nodewith.HasClass("AppListBubbleView")
 				if err := ui.WaitUntilExists(bubbleLauncher)(ctx); err != nil {
 					return errors.Wrap(err, "failed waiting for bubble launcher")
 				}
@@ -457,7 +457,7 @@ func HideTabletModeLauncher(tconn *chrome.TestConn) uiauto.Action {
 
 // OpenBubbleLauncher opens launcher using search accelerator and  waits until the bubble launcher UI becomes visible.
 func OpenBubbleLauncher(tconn *chrome.TestConn) uiauto.Action {
-	bubbleLauncher := nodewith.ClassName("AppListBubbleView")
+	bubbleLauncher := nodewith.HasClass("AppListBubbleView")
 	ui := uiauto.New(tconn)
 	return uiauto.Combine("Wait for bubble launcher visibility",
 		func(ctx context.Context) error {
@@ -473,10 +473,10 @@ func OpenBubbleLauncher(tconn *chrome.TestConn) uiauto.Action {
 
 // CloseBubbleLauncher closes launcher by mouse clicking at the home button.
 func CloseBubbleLauncher(tconn *chrome.TestConn) uiauto.Action {
-	bubbleLauncher := nodewith.ClassName(BubbleAppsGridViewClass)
+	bubbleLauncher := nodewith.HasClass(BubbleAppsGridViewClass)
 	ui := uiauto.New(tconn)
 	return uiauto.Combine("Wait for bubble launcher to be closed",
-		ui.LeftClick(nodewith.ClassName("ash/HomeButton")),
+		ui.LeftClick(nodewith.HasClass("ash/HomeButton")),
 		ui.WaitUntilGone(bubbleLauncher),
 	)
 }
@@ -493,7 +493,7 @@ func WaitForLauncherSearchExit(tconn *chrome.TestConn, tabletMode bool) uiauto.A
 func WaitForTabletLauncherSearchExit(tconn *chrome.TestConn) uiauto.Action {
 	ui := uiauto.New(tconn)
 	return uiauto.Combine("Wait for bubble launcher search to be closed and apps page to be shown",
-		ui.WaitUntilGone(nodewith.ClassName(SearchResultPageView)),
+		ui.WaitUntilGone(nodewith.HasClass(SearchResultPageView)),
 	)
 }
 
@@ -502,14 +502,14 @@ func WaitForTabletLauncherSearchExit(tconn *chrome.TestConn) uiauto.Action {
 func WaitForClamshellLauncherSearchExit(tconn *chrome.TestConn) uiauto.Action {
 	ui := uiauto.New(tconn)
 	return uiauto.Combine("Wait for bubble launcher search to be closed and apps page to be shown",
-		ui.WaitUntilGone(nodewith.ClassName(BubbleSearchPage)),
-		ui.WaitUntilExists(nodewith.ClassName(BubbleAppsPage)),
+		ui.WaitUntilGone(nodewith.HasClass(BubbleSearchPage)),
+		ui.WaitUntilExists(nodewith.HasClass(BubbleAppsPage)),
 	)
 }
 
 // AppItemViewFinder returns a Finder to find the specified app in an open launcher's item view.
 func AppItemViewFinder(appName string) *nodewith.Finder {
-	return nodewith.Name(appName).ClassName(ExpandedItemsClass)
+	return nodewith.Name(appName).HasClass(ExpandedItemsClass)
 }
 
 // Search return a function that executes a search query.
@@ -518,7 +518,7 @@ func Search(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, query string)
 	return func(ctx context.Context) error {
 		// Click the search box.
 		ui := uiauto.New(tconn)
-		if err := ui.LeftClick(nodewith.ClassName("SearchBoxView").Visible().First())(ctx); err != nil {
+		if err := ui.LeftClick(nodewith.HasClass("SearchBoxView").Visible().First())(ctx); err != nil {
 			return errors.Wrap(err, "failed to click launcher searchbox")
 		}
 
@@ -554,9 +554,9 @@ func TriggerAppListSortAndWaitForUndoButtonExist(ctx context.Context, ui *uiauto
 		sortMenuName = "Color"
 	}
 
-	sortContextMenuItem := nodewith.Name(sortMenuName).ClassName("MenuItemView")
-	reorderContextMenuItem := nodewith.Name("Sort by").ClassName("MenuItemView")
-	undoButton := nodewith.Name(GetUndoButtonNameForSortType(sortType)).ClassName("PillButton")
+	sortContextMenuItem := nodewith.Name(sortMenuName).HasClass("MenuItemView")
+	reorderContextMenuItem := nodewith.Name("Sort by").HasClass("MenuItemView")
+	undoButton := nodewith.Name(GetUndoButtonNameForSortType(sortType)).HasClass("PillButton")
 
 	if err := uiauto.Combine("sort app list items through the context menu",
 		ui.RightClick(item),
@@ -599,7 +599,7 @@ func PinAppToShelf(tconn *chrome.TestConn, app apps.App, container *nodewith.Fin
 	return uiauto.Combine(fmt.Sprintf("PinAppToShelf(%+q)", app),
 		ui.FocusAndWait(AppItemViewFinder(app.Name).Ancestor(container)),
 		ui.RightClick(AppItemViewFinder(app.Name).Ancestor(container)),
-		ui.LeftClick(nodewith.Name("Pin to shelf").ClassName("MenuItemView")),
+		ui.LeftClick(nodewith.Name("Pin to shelf").HasClass("MenuItemView")),
 	)
 }
 
@@ -610,7 +610,7 @@ func UnpinAppFromShelf(tconn *chrome.TestConn, app apps.App, container *nodewith
 		OpenExpandedView(tconn),
 		ui.FocusAndWait(AppItemViewFinder(app.Name).Ancestor(container)),
 		ui.RightClick(AppItemViewFinder(app.Name).Ancestor(container)),
-		ui.LeftClick(nodewith.Name("Unpin from shelf").ClassName("MenuItemView")),
+		ui.LeftClick(nodewith.Name("Unpin from shelf").HasClass("MenuItemView")),
 	)
 }
 
@@ -624,7 +624,7 @@ func WaitForStableNumberOfApps(ctx context.Context, tconn *chrome.TestConn) erro
 	ui := uiauto.New(tconn)
 	latestCount := -1
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		items, err := ui.NodesInfo(ctx, nodewith.ClassName("AppListItemView"))
+		items, err := ui.NodesInfo(ctx, nodewith.HasClass("AppListItemView"))
 		if err != nil {
 			return testing.PollBreak(errors.Wrap(err, "failed to collect app list items"))
 		}
@@ -647,14 +647,14 @@ func WaitForStableNumberOfApps(ctx context.Context, tconn *chrome.TestConn) erro
 // from is the node finder for the folder to be renamed - RenameFolder will fail if the target node is not a folder item.
 func RenameFolder(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, from *nodewith.Finder, to string) uiauto.Action {
 	// Chrome add prefix "Folder " to all folder names in AppListItemView.
-	toFolder := nodewith.Name("Folder " + to).ClassName(ExpandedItemsClass)
-	folderView := nodewith.ClassName("AppListFolderView")
+	toFolder := nodewith.Name("Folder " + to).HasClass(ExpandedItemsClass)
+	folderView := nodewith.HasClass("AppListFolderView")
 	ui := uiauto.New(tconn)
 	return uiauto.Combine(fmt.Sprintf("RenameFolder to %s", to),
 		OpenExpandedView(tconn),
 		ui.LeftClick(from),
 		ui.WaitUntilExists(folderView),
-		ui.FocusAndWait(nodewith.ClassName("Textfield").Ancestor(folderView)),
+		ui.FocusAndWait(nodewith.HasClass("Textfield").Ancestor(folderView)),
 		func(ctx context.Context) error {
 			return kb.Type(ctx, to+"\n")
 		},
@@ -670,7 +670,7 @@ func RenameFolder(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, from *n
 // and whose index among app list item views is at least minIndex.
 func IndexOfFirstVisibleItem(ctx context.Context, tconn *chrome.TestConn, minIndex int) (int, error) {
 	for itemIndex := minIndex; ; itemIndex++ {
-		item := nodewith.ClassName(ExpandedItemsClass).Nth(itemIndex)
+		item := nodewith.HasClass(ExpandedItemsClass).Nth(itemIndex)
 		onPage, err := IsItemOnCurrentPage(ctx, tconn, item)
 		if err != nil {
 			return -1, errors.Wrapf(err, "failed to query whether item is on page %d", itemIndex)
@@ -687,7 +687,7 @@ func IndexOfFirstVisibleItem(ctx context.Context, tconn *chrome.TestConn, minInd
 // The return value will be -1 on error.
 func FirstNonRecentAppItem(ctx context.Context, tconn *chrome.TestConn) (int, error) {
 	ui := uiauto.New(tconn)
-	recentAppsContainer := nodewith.ClassName("RecentAppsView")
+	recentAppsContainer := nodewith.HasClass("RecentAppsView")
 	// If the recent apps container is not present (which will be the case if productivity launcher is disabled),
 	// all app list items are non-recent app items, so return the index of the first one.
 	if err := ui.Exists(recentAppsContainer)(ctx); err != nil {
@@ -701,7 +701,7 @@ func FirstNonRecentAppItem(ctx context.Context, tconn *chrome.TestConn) (int, er
 
 	// Get the index of the first non-folder item.
 	for itemIndex := 0; ; itemIndex++ {
-		itemLocation, err := ui.Location(ctx, nodewith.ClassName(ExpandedItemsClass).Nth(itemIndex))
+		itemLocation, err := ui.Location(ctx, nodewith.HasClass(ExpandedItemsClass).Nth(itemIndex))
 		if err != nil {
 			return -1, errors.Wrap(err, "failed to get item locatoin")
 		}
@@ -714,7 +714,7 @@ func FirstNonRecentAppItem(ctx context.Context, tconn *chrome.TestConn) (int, er
 // CloseFolderView closes app list folder view - expects that the app list UI is currently showing a folder content.
 func CloseFolderView(ctx context.Context, tconn *chrome.TestConn) error {
 	ui := uiauto.New(tconn)
-	folderView := nodewith.ClassName("AppListFolderView")
+	folderView := nodewith.HasClass("AppListFolderView")
 	if err := ui.WaitUntilExists(folderView)(ctx); err != nil {
 		return errors.Wrap(err, "failed to find an open folder")
 	}
@@ -748,7 +748,7 @@ func CreateFolder(ctx context.Context, tconn *chrome.TestConn) error {
 	// Get the index of the first non-folder item.
 	for {
 		firstItem++
-		item := nodewith.ClassName(ExpandedItemsClass).Nth(firstItem)
+		item := nodewith.HasClass(ExpandedItemsClass).Nth(firstItem)
 
 		isFolder, err := IsFolderItem(ctx, tconn, item)
 		if err != nil {
@@ -763,7 +763,7 @@ func CreateFolder(ctx context.Context, tconn *chrome.TestConn) error {
 	secondItem := firstItem
 	for {
 		secondItem++
-		item := nodewith.ClassName(ExpandedItemsClass).Nth(secondItem)
+		item := nodewith.HasClass(ExpandedItemsClass).Nth(secondItem)
 
 		isFolder, err := IsFolderItem(ctx, tconn, item)
 		if err != nil {
@@ -802,7 +802,7 @@ func DragIconAfterIcon(ctx context.Context, tconn *chrome.TestConn, srcIndex, de
 		}
 
 		ui := uiauto.New(tconn)
-		itemListFinder := nodewith.ClassName(ExpandedItemsClass).Ancestor(appsGrid)
+		itemListFinder := nodewith.HasClass(ExpandedItemsClass).Ancestor(appsGrid)
 		srcBounds, err := ui.Location(ctx, itemListFinder.Nth(srcIndex))
 		if err != nil {
 			return errors.Wrap(err, "failed to get the source item bounds")
@@ -891,8 +891,8 @@ func DragItemAfterItem(tconn *chrome.TestConn, src, dest *nodewith.Finder) uiaut
 
 // DragIconToIcon drags from one icon to another icon.
 func DragIconToIcon(tconn *chrome.TestConn, srcIndex, destIndex int) uiauto.Action {
-	src := nodewith.ClassName(ExpandedItemsClass).Nth(srcIndex)
-	dest := nodewith.ClassName(ExpandedItemsClass).Nth(destIndex)
+	src := nodewith.HasClass(ExpandedItemsClass).Nth(srcIndex)
+	dest := nodewith.HasClass(ExpandedItemsClass).Nth(destIndex)
 	return DragItemToItem(tconn, src, dest)
 }
 
@@ -944,7 +944,7 @@ func FetchItemIndicesByName(ctx context.Context, ui *uiauto.Context, appNames []
 	}
 
 	// Get the node information of all app list items.
-	appListItems, err := ui.NodesInfo(ctx, nodewith.ClassName(ExpandedItemsClass).Ancestor(appsContainer))
+	appListItems, err := ui.NodesInfo(ctx, nodewith.HasClass(ExpandedItemsClass).Ancestor(appsContainer))
 	if err != nil {
 		return viewIndices, errors.Wrap(err, "failed to get the node information of all app list items")
 	}
@@ -985,14 +985,14 @@ func RemoveIconFromFolder(tconn *chrome.TestConn, folderFinder *nodewith.Finder)
 		}
 
 		// Get the location for the first item in the folder.
-		folderItems := nodewith.ClassName(ExpandedItemsClass).Ancestor(nodewith.ClassName("AppListFolderView"))
+		folderItems := nodewith.HasClass(ExpandedItemsClass).Ancestor(nodewith.HasClass("AppListFolderView"))
 		start, err := ui.Location(ctx, folderItems.Nth(0))
 		if err != nil {
 			return errors.Wrap(err, "failed to get the location of the first folder item")
 		}
 
 		// Get a point outside of the folder view.
-		folderView := nodewith.ClassName("AppListFolderView")
+		folderView := nodewith.HasClass("AppListFolderView")
 		folderViewLocation, err := ui.Location(ctx, folderView)
 		if err != nil {
 			return errors.Wrap(err, "failed to get folderViewLocation")
@@ -1045,7 +1045,7 @@ func AddItemsToFolder(ctx context.Context, tconn *chrome.TestConn, folder *nodew
 	targetTotalItems := numItemsInFolder + numItemsToAdd
 
 	for numItemsInFolder < targetTotalItems {
-		item := nodewith.ClassName(ExpandedItemsClass).Nth(itemToAddIndex)
+		item := nodewith.HasClass(ExpandedItemsClass).Nth(itemToAddIndex)
 
 		// If the apps grid is paginated, try moving the folder to the next page if the next item is not on the current page.
 		if paginatedAppList {
@@ -1081,7 +1081,7 @@ func AddItemsToFolder(ctx context.Context, tconn *chrome.TestConn, folder *nodew
 
 // DragIconAtIndexToNextPage drags an icon which has itemIndex in the app list to the next page of the app list.
 func DragIconAtIndexToNextPage(tconn *chrome.TestConn, itemIndex int) uiauto.Action {
-	return DragIconToNextPage(tconn, nodewith.ClassName(ExpandedItemsClass).Nth(itemIndex))
+	return DragIconToNextPage(tconn, nodewith.HasClass(ExpandedItemsClass).Nth(itemIndex))
 }
 
 // DragIconToNextPage drags an icon to the next page of the app list.
@@ -1112,7 +1112,7 @@ func DragIconToNeighbourPage(tconn *chrome.TestConn, item *nodewith.Finder, next
 		}
 
 		// Get destination location during drag.
-		end, err := ui.Location(ctx, nodewith.ClassName("AppsGridView"))
+		end, err := ui.Location(ctx, nodewith.HasClass("AppsGridView"))
 		if err != nil {
 			return errors.Wrap(err, "failed to get location for AppsGridView")
 		}
@@ -1130,7 +1130,7 @@ func DragIconToNeighbourPage(tconn *chrome.TestConn, item *nodewith.Finder, next
 		}
 
 		// Move a little bit and wait for page change.
-		pageSwitcher := nodewith.ClassName("PageSwitcher")
+		pageSwitcher := nodewith.HasClass("PageSwitcher")
 		if err := ui.WaitForEvent(pageSwitcher, event.Alert, mouse.Move(tconn, endPoint.Add(coords.Point{X: 1, Y: 0}), time.Second))(ctx); err != nil {
 			return errors.Wrap(err, "failed to wait for page change event")
 		}
@@ -1156,8 +1156,8 @@ func GetFolderSize(ctx context.Context, tconn *chrome.TestConn, folder *nodewith
 	}
 
 	// Get |folderItemsInfo| which is used to get the size of the folder.
-	folderView := nodewith.ClassName("AppListFolderView")
-	folderItems := nodewith.ClassName("AppListItemView").Ancestor(folderView)
+	folderView := nodewith.HasClass("AppListFolderView")
+	folderItems := nodewith.HasClass("AppListItemView").Ancestor(folderView)
 	folderItemsInfo, err := ui.NodesInfo(ctx, folderItems)
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to find folderItemsInfo")
@@ -1190,7 +1190,7 @@ func IsItemOnCurrentPage(ctx context.Context, tconn *chrome.TestConn, item *node
 // This may be flaky if targetItem is not visible in fully scrolled state - in that case polling interval may miss the period when the view is visible.
 func ScrollBubbleLauncherDuringItemDragUntilItemVisible(ctx context.Context, tconn *chrome.TestConn, ui *uiauto.Context, targetItem *nodewith.Finder, up bool) error {
 	// Move the icon to the bottom of the bubble launcher - this should trigger scroll within the app list bubble.
-	bubbleView := nodewith.ClassName("AppListBubbleView")
+	bubbleView := nodewith.HasClass("AppListBubbleView")
 	bubbleViewLocation, err := ui.Location(ctx, bubbleView)
 	if err != nil {
 		return errors.Wrap(err, "failed to get bubble view bounds")
@@ -1307,7 +1307,7 @@ func (data byViewIndex) NameList() []string {
 func VerifyFakeAppsOrdered(ctx context.Context, ui *uiauto.Context, appsGrid *nodewith.Finder, namesInOrder []string, wait bool) error {
 	if wait {
 		for _, name := range namesInOrder {
-			if err := ui.WaitUntilExists(nodewith.ClassName(ExpandedItemsClass).Name(name).Ancestor(appsGrid))(ctx); err != nil {
+			if err := ui.WaitUntilExists(nodewith.HasClass(ExpandedItemsClass).Name(name).Ancestor(appsGrid))(ctx); err != nil {
 				return errors.Wrapf(err, "failed to find app %q after sort", name)
 			}
 		}
@@ -1402,7 +1402,7 @@ func DismissSortNudgeIfExists(ctx context.Context, tconn *chrome.TestConn) error
 	}
 
 	if sortNudgeFound {
-		dismissButton := nodewith.Name("OK").ClassName("PillButton")
+		dismissButton := nodewith.Name("OK").HasClass("PillButton")
 		if err := uiauto.Combine("Click on the dismiss button",
 			ui.WaitUntilExists(dismissButton),
 			ui.WaitForLocation(dismissButton),
@@ -1419,8 +1419,8 @@ func DismissSortNudgeIfExists(ctx context.Context, tconn *chrome.TestConn) error
 // then dismisses it by clicking the "OK" button.
 func DismissPrivacyNotice(ctx context.Context, tconn *chrome.TestConn) error {
 	ui := uiauto.New(tconn)
-	continueSection := nodewith.ClassName("ContinueSectionView")
-	privacyNoticeButton := nodewith.Ancestor(continueSection).ClassName("PillButton").Name("OK")
+	continueSection := nodewith.HasClass("ContinueSectionView")
+	privacyNoticeButton := nodewith.Ancestor(continueSection).HasClass("PillButton").Name("OK")
 	if err := uiauto.Combine("Click on privacy notice OK button",
 		ui.WaitUntilExists(privacyNoticeButton),
 		ui.WaitForLocation(privacyNoticeButton),
@@ -1436,7 +1436,7 @@ func DismissPrivacyNotice(ctx context.Context, tconn *chrome.TestConn) error {
 func UninstallsAppUsingContextMenu(ctx context.Context, tconn *chrome.TestConn, app *nodewith.Finder) error {
 	ui := uiauto.New(tconn)
 	confirmUninstall := nodewith.Name("Uninstall").Role(role.Button)
-	uninstallOption := nodewith.Name("Uninstall").ClassName("MenuItemView")
+	uninstallOption := nodewith.Name("Uninstall").HasClass("MenuItemView")
 	if err := uiauto.Combine("Uninstall app",
 		ui.Exists(app),
 		ui.RightClick(app),
