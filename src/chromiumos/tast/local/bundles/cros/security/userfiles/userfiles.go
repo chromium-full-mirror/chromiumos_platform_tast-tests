@@ -9,8 +9,8 @@ import (
 	"context"
 	"strings"
 
-	chk "chromiumos/tast/local/bundles/cros/security/filecheck"
 	"chromiumos/tast/local/cryptohome"
+	chk "chromiumos/tast/local/security/filecheck"
 	"chromiumos/tast/local/sysutil"
 	"chromiumos/tast/testing"
 )
