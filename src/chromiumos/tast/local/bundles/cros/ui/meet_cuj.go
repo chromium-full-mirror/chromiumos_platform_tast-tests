@@ -622,6 +622,7 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 	if addBotsCount > 0 {
 		wait := 100 * time.Millisecond
 		for i := 0; i < 3; i++ {
+			// GoBigSleepLint: A short sleep before next call to Bond API.
 			if err := testing.Sleep(ctx, wait); err != nil {
 				s.Errorf("Failed to sleep for %v: %v", wait, err)
 			}
@@ -755,7 +756,8 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 	// until after the meeting, but we can expand the section much faster now while
 	// chrome://webrtc-internals does not have much data to show.
 	ui := uiauto.New(tconn)
-	createDumpSection := nodewith.Name("Create Dump").Role(role.DisclosureTriangle)
+	createDumpSectionReg := regexp.MustCompile("(Create Dump)|(Create a WebRTC-Internals dump)")
+	createDumpSection := nodewith.NameRegex(createDumpSectionReg).Role(role.DisclosureTriangle)
 	if err := uiauto.Combine("expand",
 		ui.DoDefault(createDumpSection.Collapsed()),
 		ui.WaitUntilExists(createDumpSection.Expanded()),
@@ -1173,6 +1175,7 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 		if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
 			return errors.Wrap(err, "failed to start tracing")
 		}
+		// GoBigSleepLint: Wait for the tracing to collect data.
 		if err := testing.Sleep(ctx, traceDuration); err != nil {
 			return errors.Wrap(err, "failed to sleep")
 		}
@@ -1475,10 +1478,10 @@ func dumpWebRTCInternals(ctx context.Context, tconn *chrome.TestConn, ui *uiauto
 		return "", errors.Wrap(err, "failed to get Downloads path")
 	}
 
-	button := nodewith.Name("Download the PeerConnection updates and stats data").Role(role.Button)
+	downloadButton := nodewith.NameContaining("Download").Role(role.Button)
 	if err := uiauto.Combine("invoke the button for the dump download",
-		ui.WaitUntilExists(button),
-		ui.DoDefault(button),
+		ui.WaitUntilExists(downloadButton),
+		ui.DoDefault(downloadButton),
 	)(ctx); err != nil {
 		return "", err
 	}
