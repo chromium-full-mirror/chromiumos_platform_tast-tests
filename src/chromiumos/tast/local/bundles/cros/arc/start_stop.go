@@ -69,6 +69,8 @@ func init() {
 func StartStop(ctx context.Context, s *testing.State) {
 	args := s.Param().(testArgs)
 
+	s.Log("Restarting Chrome")
+
 	// Restart ui job to ensure starting from logout state.
 	if err := upstart.RestartJob(ctx, "ui"); err != nil {
 		s.Fatal("Failed to log out: ", err)
@@ -76,6 +78,8 @@ func StartStop(ctx context.Context, s *testing.State) {
 	for _, t := range args.subtests {
 		s.Run(ctx, t.Name()+".PreStart", t.PreStart)
 	}
+
+	s.Log("Starting ARC")
 
 	// Launch Chrome with enabling ARC.
 	func() {
@@ -96,11 +100,19 @@ func StartStop(ctx context.Context, s *testing.State) {
 		}
 	}()
 
+	s.Log("Stopping ARC and Chrome")
+
 	// Log out from Chrome, which shuts down ARC.
-	if err := upstart.RestartJob(ctx, "ui"); err != nil {
+	if err := upstart.StopJob(ctx, "ui"); err != nil {
 		s.Fatal("Failed to log out: ", err)
 	}
 	for _, t := range args.subtests {
 		s.Run(ctx, t.Name()+".PostStop", t.PostStop)
+	}
+
+	s.Log("Restoring Chrome")
+
+	if err := upstart.StartJob(ctx, "ui"); err != nil {
+		s.Fatal("Failed to restart: ", err)
 	}
 }

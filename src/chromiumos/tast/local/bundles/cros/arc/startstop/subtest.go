@@ -24,13 +24,15 @@ type Subtest interface {
 	// Name returns the name of this subtest.
 	Name() string
 
-	// PreStart is called before starting Chrome.
+	// PreStart is called before starting ARC.
+	// At this time Chrome is running and shows the login screen.
 	PreStart(ctx context.Context, s *testing.State)
 
 	// PostStart is called after starting ARC, i.e. called during the
 	// ARC session.
 	PostStart(ctx context.Context, s *testing.State)
 
-	// PostStop is called after logout from Chrome.
+	// PostStop is called after logout from Chrome and before
+	// starting the new instance of Chrome for login screen.
 	PostStop(ctx context.Context, s *testing.State)
 }

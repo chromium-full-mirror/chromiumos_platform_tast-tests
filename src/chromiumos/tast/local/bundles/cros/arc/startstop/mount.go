@@ -12,6 +12,12 @@ import (
 	"chromiumos/tast/testing"
 )
 
+func isARCMount(path string) bool {
+	return strings.HasPrefix(path, "/opt/google/containers/android/") ||
+		strings.HasPrefix(path, "/opt/google/containers/arc-") ||
+		strings.HasPrefix(path, "/run/arc/")
+}
+
 // TestMount runs inside arc.StartStop.
 type TestMount struct{}
 
@@ -19,27 +25,12 @@ type TestMount struct{}
 func (*TestMount) Name() string { return "Mount" }
 
 // PreStart implements Subtest.PreStart().
+// It makes sure that ARC related mount points do not exist, except ones
+// for Mini container.
 func (*TestMount) PreStart(ctx context.Context, s *testing.State) {
-	// Do nothing.
-}
-
-// PostStart implements Subtest.PostStart().
-func (*TestMount) PostStart(ctx context.Context, s *testing.State) {
-	// Do nothing.
-}
-
-// PostStop implements Subtest.PostStop(). It makes sure that ARC related
-// mount points are released, except ones for Mini container.
-func (*TestMount) PostStop(ctx context.Context, s *testing.State) {
 	ms, err := sysutil.MountInfoForPID(sysutil.SelfPID)
 	if err != nil {
 		s.Fatal("Failed to get mount info: ", err)
-	}
-
-	isARCMount := func(path string) bool {
-		return strings.HasPrefix(path, "/opt/google/containers/android/") ||
-			strings.HasPrefix(path, "/opt/google/containers/arc-") ||
-			strings.HasPrefix(path, "/run/arc/")
 	}
 
 	miniContainerMounts := map[string]struct{}{
@@ -48,6 +39,7 @@ func (*TestMount) PostStop(ctx context.Context, s *testing.State) {
 		"/opt/google/containers/arc-sdcard/mountpoints/container-root":      {},
 		"/run/arc/adb":             {},
 		"/run/arc/adbd":            {},
+		"/run/arc/debugfs/sync":    {},
 		"/run/arc/debugfs/tracing": {},
 		"/run/arc/media":           {},
 		"/run/arc/obb":             {},
@@ -61,7 +53,19 @@ func (*TestMount) PostStop(ctx context.Context, s *testing.State) {
 			continue
 		}
 		if _, ok := miniContainerMounts[m.MountPath]; !ok {
-			s.Error("Mountpoint leaked after logout: ", m.MountPath)
+			s.Error("Mountpoint leaked on login screen: ", m.MountPath)
 		}
 	}
+}
+
+// PostStart implements Subtest.PostStart().
+func (*TestMount) PostStart(ctx context.Context, s *testing.State) {
+	// Do nothing.
+}
+
+// PostStop implements Subtest.PostStop().
+func (*TestMount) PostStop(ctx context.Context, s *testing.State) {
+	// TODO(b:278547598): It is expected no ARC mount point,
+	// however it is flaky so far and there is a random list of
+	// mounts exists regardless of Chrome is completely shutdown.
 }
