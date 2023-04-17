@@ -124,7 +124,7 @@ func StreamTestConfig() TestConfig {
 // PortraitModeTestConfig returns test config for running HAL3PortraitMode test.
 func PortraitModeTestConfig(generatePerfLog bool, portraitModeTestFile string) TestConfig {
 	return TestConfig{
-		GtestFilter:            "Camera3FrameTest/Camera3PortraitModeTest.*",
+		GtestFilter:            "Camera3PortraitModeTest/*",
 		ConnectToCameraService: true,
 		GeneratePerfLog:        generatePerfLog,
 		PortraitModeTestData:   portraitModeTestFile,
