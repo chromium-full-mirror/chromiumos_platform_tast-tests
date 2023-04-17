@@ -17,7 +17,13 @@ import (
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/rialto"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
+
+type partitionTestParams struct {
+	// Expected rootfs partition size in mebibytes.
+	expectedRootfsSizes []int
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -26,6 +32,20 @@ func init() {
 		Contacts:     []string{"chromeos-storage@google.com"},
 		BugComponent: "b:974567",
 		Attr:         []string{"group:mainline"},
+		Params: []testing.Param{{
+			Val: partitionTestParams{
+				expectedRootfsSizes: []int{2048, 4096},
+			},
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("reven")),
+		}, {
+			// Reven devices may have 4032 MB rootfs partitions.
+			// See go/reven-embiggen-kernel-partitions-dd-v2.
+			Name: "reven",
+			Val: partitionTestParams{
+				expectedRootfsSizes: []int{4032, 4096},
+			},
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("reven")),
+		}},
 	})
 }
 
@@ -55,6 +75,7 @@ func devIsPresent(devname string) bool {
 }
 
 func PartitionSizes(ctx context.Context, s *testing.State) {
+	testParam := s.Param().(partitionTestParams)
 	// Try getting the internal disk device name using write_gpt.sh.
 	//
 	// Note that this will return an empty string in the case where
@@ -82,19 +103,19 @@ func PartitionSizes(ctx context.Context, s *testing.State) {
 	if unicode.IsDigit(rune(baseDev[len(baseDev)-1])) {
 		partPrefix += "p"
 	}
-
-	const gb = 1024 * 1024 * 1024
-	validSizes := []int64{
-		2 * gb,
-		4 * gb,
+	// Convert mebibytes to bytes.
+	var mib int
+	var validSizes []int64
+	for i := 0; i < len(testParam.expectedRootfsSizes); i++ {
+		mib = testParam.expectedRootfsSizes[i]
+		validSizes = append(validSizes, int64(mib*1024*1024))
 	}
 	// Rialto devices may use 1 GB partitions.
 	if isRialto, err := rialto.IsRialto(); err != nil {
 		s.Error("Failed to check if device is rialto: ", err)
 	} else if isRialto {
-		validSizes = append(validSizes, 1*gb)
+		validSizes = append(validSizes, int64(1024*1024*1024))
 	}
-
 	for _, partNum := range []int{3, 5} {
 		partDev := partPrefix + strconv.Itoa(partNum)
 
