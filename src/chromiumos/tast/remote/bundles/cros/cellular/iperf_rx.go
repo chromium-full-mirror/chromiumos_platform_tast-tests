@@ -34,7 +34,7 @@ func init() {
 		Desc:         "Conducts cellular performance tests between DUT and callbox using Iperf to compare actual throughput results with expected for a given network configuration",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "srikanthkumar@google.com"},
 		BugComponent: "b:1108821",
-		Attr:         []string{"group:cellular", "cellular_callbox", "cellular_cmw_callbox", "cellular_unstable", "group:cellular_crosbolt", "cellular_crosbolt_perf_nightly", "cellular_crosbolt_unstable"},
+		Attr:         []string{"group:cellular", "cellular_callbox", "cellular_cmw_callbox"},
 		ServiceDeps:  []string{"tast.cros.cellular.RemoteCellularService"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "callboxManagedFixture",
