@@ -90,13 +90,11 @@ func (f *benchmarkSetUpFixture) SetUp(ctx context.Context, s *testing.FixtState)
 	options := setup.PowerTestOptions{
 		NightLight: setup.DisableNightLight,
 	}
-
 	keepState := keepWifiVar.Value()
 	if keepState == "false" {
 		options.Wifi = setup.DisableWifiInterfaces
 	}
-
-	sup.Add(setup.PowerTest(ctx, f.tconn, options, nil))
+	sup.Add(setup.PowerTest(ctx, f.tconn, options, setup.NewBatteryDischargeFromMode(setup.NoBatteryDischarge)))
 	if err := sup.Check(ctx); err != nil {
 		s.Fatal("Power setup failed: ", err)
 	}
