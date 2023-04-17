@@ -111,7 +111,7 @@ func ManualTicketRememberPassword(ctx context.Context, s *testing.State) {
 	ui := uiauto.New(tconn)
 
 	if _, err := apps.LaunchOSSettings(ctx, cr, "chrome://os-settings/kerberos"); err != nil {
-		s.Fatal(err, "could not open kerberos section in OS settings")
+		s.Fatal("Could not open Kerberos section in OS settings: ", err)
 	}
 
 	// Add a Kerberos ticket.
@@ -129,12 +129,12 @@ func ManualTicketRememberPassword(ctx context.Context, s *testing.State) {
 		ui.LeftClick(nodewith.Name("Save").Role(role.Button)),
 		ui.LeftClick(nodewith.Name("Add").HasClass("action-button")),
 	)(ctx); err != nil {
-		s.Fatal(err, "failed to add Kerberos ticket")
+		s.Fatal("Failed to add Kerberos ticket: ", err)
 	}
 
 	// Trying to find an active ticket.
 	if err := kerberos.CheckForTicket(ctx, ui, config); err != nil {
-		s.Fatal(err, "failed to find active ticket")
+		s.Fatal("Failed to find active ticket: ", err)
 	}
 
 	// Refresh the Kerberos ticket using "remember password" feature.
@@ -144,12 +144,12 @@ func ManualTicketRememberPassword(ctx context.Context, s *testing.State) {
 		ui.WaitUntilExists(nodewith.Name("Remember password").Role(role.CheckBox).Attribute("checked", "true")),
 		ui.LeftClick(nodewith.Name("Refresh").HasClass("action-button")),
 	)(ctx); err != nil {
-		s.Fatal(err, "failed to refresh ticket")
+		s.Fatal("Failed to refresh ticket: ", err)
 	}
 
 	// Trying to find an active ticket.
 	if err := kerberos.CheckForTicket(ctx, ui, config); err != nil {
-		s.Fatal(err, "failed to find active ticket")
+		s.Fatal("Failed to find active ticket: ", err)
 	}
 
 }

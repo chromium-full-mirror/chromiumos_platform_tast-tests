@@ -114,7 +114,7 @@ func ManualTicketEditConfiguration(ctx context.Context, s *testing.State) {
 	ui := uiauto.New(tconn)
 
 	if _, err := apps.LaunchOSSettings(ctx, cr, "chrome://os-settings/kerberos"); err != nil {
-		s.Fatal(err, "could not open kerberos section in OS settings")
+		s.Fatal("Could not open Kerberos section in OS settings: ", err)
 	}
 
 	// Enter Kerberos credentials + open the config.
@@ -127,7 +127,7 @@ func ManualTicketEditConfiguration(ctx context.Context, s *testing.State) {
 		keyboard.TypeAction(password),
 		ui.LeftClick(nodewith.Name("Advanced").Role(role.Link)),
 	)(ctx); err != nil {
-		s.Fatal(err, "failed to open configuration menu")
+		s.Fatal("Failed to open configuration menu: ", err)
 	}
 
 	configFinder := nodewith.Role(role.TextField).State(state.Editable, true).State(state.Multiline, true)
@@ -145,12 +145,12 @@ func ManualTicketEditConfiguration(ctx context.Context, s *testing.State) {
 		ui.LeftClick(nodewith.Name("Cancel").Role(role.Button)),
 		ui.LeftClick(nodewith.Name("Advanced").Role(role.Link)),
 	)(ctx); err != nil {
-		s.Fatal(err, "failed to open configuration menu")
+		s.Fatal("Failed to open configuration menu: ", err)
 	}
 
 	node, err = ui.Info(ctx, configFinder)
 	if err != nil {
-		s.Fatal(err, "Not able to read the configuration")
+		s.Fatal("Not able to read the configuration: ", err)
 	}
 
 	// Check that the configuration has not changed, since Cancel was pressed.
@@ -166,7 +166,7 @@ func ManualTicketEditConfiguration(ctx context.Context, s *testing.State) {
 		ui.LeftClick(nodewith.Name("Add").HasClass("action-button")),
 		ui.WaitUntilExists(nodewith.NameContaining("Valid for 3 hours").Role(role.StaticText)),
 	)(ctx); err != nil {
-		s.Fatal(err, "failed to create a ticket with custom lifetime")
+		s.Fatal("Failed to create a ticket with custom lifetime: ", err)
 	}
 
 	// Check that configuration can not be saved if the syntax is wrong.
@@ -180,7 +180,7 @@ func ManualTicketEditConfiguration(ctx context.Context, s *testing.State) {
 		ui.WaitUntilExists(nodewith.NameContaining("syntax error").Role(role.StaticText)),
 		ui.LeftClick(nodewith.Name("Cancel").Role(role.Button)),
 	)(ctx); err != nil {
-		s.Fatal(err, "failed to find syntax error")
+		s.Fatal("Failed to find syntax error: ", err)
 	}
 
 	if err := uiauto.Combine("adding invalid configuration",
@@ -191,7 +191,7 @@ func ManualTicketEditConfiguration(ctx context.Context, s *testing.State) {
 		ui.WaitUntilExists(nodewith.NameContaining("syntax error").Role(role.StaticText)),
 		ui.LeftClick(nodewith.Name("Cancel").Role(role.Button)),
 	)(ctx); err != nil {
-		s.Fatal(err, "failed to find syntax error")
+		s.Fatal("Failed to find syntax error: ", err)
 	}
 
 	// Check that configuration can not be saved if some options are blocklisted.
@@ -202,6 +202,6 @@ func ManualTicketEditConfiguration(ctx context.Context, s *testing.State) {
 		ui.LeftClick(nodewith.Name("Save").Role(role.Button)),
 		ui.WaitUntilExists(nodewith.NameContaining("option not supported").Role(role.StaticText)),
 	)(ctx); err != nil {
-		s.Fatal(err, "failed to find blocklist error")
+		s.Fatal("Failed to find blocklist error: ", err)
 	}
 }
