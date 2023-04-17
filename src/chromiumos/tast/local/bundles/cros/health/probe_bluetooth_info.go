@@ -322,18 +322,19 @@ func ProbeBluetoothInfo(ctx context.Context, s *testing.State) {
 
 	params := croshealthd.TelemParams{Category: croshealthd.TelemCategoryBluetooth}
 	var info bluetoothInfo
-	if err := croshealthd.RunAndParseJSONTelem(ctx, params, s.OutDir(), &info); err != nil {
-		s.Fatal("Failed to get Bluetooth telemetry info: ", err)
-	}
-
-	if len(info.Adapters) == 0 {
-		s.Fatal("Failed to get Bluetooth adapter data: empty adapters slice")
-	}
 
 	// TODO(b/270471793): Remove the polling of validation.
+	// The tast will fail due to missing supported capabilities if the Bluez proxy
+	// is not ready.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if err := croshealthd.RunAndParseJSONTelem(ctx, params, s.OutDir(), &info); err != nil {
+			return errors.Wrap(err, "failed to get Bluetooth telemetry info")
+		}
+		if len(info.Adapters) == 0 {
+			return errors.New("failed to get Bluetooth adapter data: empty adapters slice")
+		}
 		return validateBluetoothAdapterData(ctx, &info)
-	}, &testing.PollOptions{Interval: 2 * time.Second, Timeout: 10 * time.Second}); err != nil {
+	}, &testing.PollOptions{Interval: 3 * time.Second, Timeout: 15 * time.Second}); err != nil {
 		s.Fatal("Failed to validate bluetooth adapter data: ", err)
 	}
 
