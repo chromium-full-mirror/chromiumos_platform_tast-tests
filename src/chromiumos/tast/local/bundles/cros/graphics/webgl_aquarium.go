@@ -18,14 +18,17 @@ import (
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
+	"chromiumos/tast/local/graphics"
 	"chromiumos/tast/testing"
 )
 
 const (
 	waitTimeForBrowser = 5 * time.Second
 	// Time to allow fishes to run before recording metrics.
-	runFishesFor  = 30 * time.Second
-	webGlAquarium = "webgl_aquarium_static_20221212.tar.zst"
+	runFishesFor = 30 * time.Second
+	// The time to wait just after stating to play the aquarium so that CPU usage gets stable.
+	stabilizationDuration = 5 * time.Second
+	webGlAquarium         = "webgl_aquarium_static_20221212.tar.zst"
 )
 
 var (
@@ -130,16 +133,39 @@ func WebGLAquarium(ctx context.Context, s *testing.State) {
 		s.Fatal("Could not reset the FPS counter: ", err)
 	}
 
+	pv := perf.NewValues()
+	var gpuErr, cStateErr, cpuErr error
 	var wg sync.WaitGroup
-	wg.Add(1)
+	wg.Add(4)
 	go func() {
 		defer wg.Done()
 		// GoBigSleepLint: This is the measurement time.
 		testing.Sleep(ctx, runFishesFor)
 	}()
+	go func() {
+		defer wg.Done()
+		gpuErr = graphics.MeasureGPUCounters(ctx, runFishesFor, pv)
+	}()
+	go func() {
+		defer wg.Done()
+		cStateErr = graphics.MeasurePackageCStateCounters(ctx, runFishesFor, pv)
+	}()
+	go func() {
+		defer wg.Done()
+		cpuErr = graphics.MeasureCPUUsageAndPower(ctx, stabilizationDuration, runFishesFor, pv)
+	}()
 	wg.Wait()
 
-	pv := perf.NewValues()
+	if gpuErr != nil {
+		s.Fatal("Failed to measure GPU counters", gpuErr)
+	}
+	if cStateErr != nil {
+		s.Fatal("Failed to measure Package C-State residency", cStateErr)
+	}
+	if cpuErr != nil {
+		s.Fatal("Failed to measure CPU/Package power", cpuErr)
+	}
+
 	defer func() {
 		if err := pv.Save(s.OutDir()); err != nil {
 			s.Error("Failed to save perf data: ", err)
