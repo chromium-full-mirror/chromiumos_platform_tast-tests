@@ -227,31 +227,6 @@ func TestPlaybackPerfParams(t *testing.T) {
 		params = append(params, param)
 	}
 
-	// Out-of-process video decoding (lacros-chrome).
-	for _, resolution := range []int{720, 1080, 2160} {
-		fpss := []int{30}
-		if resolution >= 1080 {
-			fpss = append(fpss, 60)
-		}
-		for _, fps := range fpss {
-			params = append(params,
-				genPlaybackParam("h264", genPlaybackPerfDataPath("h264", resolution, fps),
-					resolution, fps, "hw", "lacros_oopvd", "chromeVideoLacrosOOPVD", []string{"lacros"}))
-		}
-	}
-
-	// Long Out-of-process video decoding (lacros-chrome).
-	for _, codec := range []string{"h264", "vp9"} {
-		resolution, fps, dec := 1080, 30, "hw"
-		file := playbackPerfLongFile[codec]
-		param := genPlaybackParam(codec, file, resolution, fps, dec,
-			"long_lacros_oopvd", "chromeVideoLacrosOOPVD",
-			[]string{"drm_atomic", "lacros"})
-		param.HardwareDeps = "hwdep.SkipOnModel(\"hana\", \"elm\"), hwdep.InternalDisplay()"
-		param.MeasureRoughness = true
-		params = append(params, param)
-	}
-
 	// grid
 	// TODO(b/234643665): Reduce these to 2x2 1080p (as many pixels as 4K).
 	for _, codec := range []string{"h264", "vp8", "vp9", "av1"} {

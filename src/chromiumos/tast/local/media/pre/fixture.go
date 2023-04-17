@@ -139,25 +139,6 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoLacrosOOPVD",
-		Desc:     "Logged into a user session with logging and out-of-process video decoding enabled (lacros)",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
-				chrome.ExtraArgs(chromeVideoArgs...),
-				chrome.LacrosExtraArgs(chromeVideoArgs...),
-				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
-				chrome.LacrosExtraArgs(chromeBypassPermissionsArgs...),
-				chrome.EnableFeatures("UseOutOfProcessVideoDecoding"),
-				chrome.LacrosEnableFeatures("UseOutOfProcessVideoDecoding"))).Opts()
-		}),
-		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout + 7*time.Minute,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
 		Name:     "chromeCameraPerfLacros",
 		Desc:     "Logged into a user session on Lacros without verbose logging that can affect the performance",
 		Contacts: []string{"chromeos-camera-eng@google.com"},
