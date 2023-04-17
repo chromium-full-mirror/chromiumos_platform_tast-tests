@@ -184,6 +184,18 @@ func (b *CallBuilder) CallForInt(ctx context.Context) (int, error) {
 	return result, nil
 }
 
+// CallForFloat64 is a convenience method for calling an RPC method that returns
+// a single float64. The result of the RPC method call and Call is returned.
+// Note: Python double and float XMLRPC values are both read as float64.
+func (b *CallBuilder) CallForFloat64(ctx context.Context) (float64, error) {
+	var result float64
+	err := b.Returns(&result).Call(ctx)
+	if err != nil {
+		return 0, err
+	}
+	return result, nil
+}
+
 // CallForInts is a convenience method for calling an RPC method that returns
 // a single int array. The result of the RPC method call and Call is returned.
 func (b *CallBuilder) CallForInts(ctx context.Context) ([]int, error) {

@@ -460,3 +460,19 @@ var SupportedAudioDataFormat = &AudioDataFormat{
 	Channel:      8,
 	Rate:         48000,
 }
+
+// Platform is the name of a platform running chameleond.
+type Platform string
+
+const (
+	// PlatformChrome is the Platform for Chrome devices running chameleond.
+	PlatformChrome Platform = "CHROME"
+
+	// PlatformRaspberryPi is the Platform for Raspberry Pi devices running chameleond.
+	PlatformRaspberryPi Platform = "RASPI"
+)
+
+// String returns this Platform as a string.
+func (p Platform) String() string {
+	return string(p)
+}
