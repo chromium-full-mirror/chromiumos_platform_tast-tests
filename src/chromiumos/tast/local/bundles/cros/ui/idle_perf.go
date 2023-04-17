@@ -128,7 +128,7 @@ func IdlePerf(ctx context.Context, s *testing.State) {
 
 	// Recorder with no additional config; it records and reports memory usage and
 	// CPU percents of browser/GPU processes.
-	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, a, cujrecorder.RecorderOptions{})
+	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, a, cujrecorder.RecorderOptions{Mode: cujrecorder.Perf})
 	if err != nil {
 		s.Fatal("Failed to create a recorder: ", err)
 	}
@@ -140,6 +140,7 @@ func IdlePerf(ctx context.Context, s *testing.State) {
 
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
 		s.Log("Just wait for ", idleDuration, " to check the load of idle status")
+		// GoBigSleepLint sleep to check the load for the device's idle state.
 		return testing.Sleep(ctx, idleDuration)
 	}); err != nil {
 		s.Fatal("Failed to run the test scenario: ", err)

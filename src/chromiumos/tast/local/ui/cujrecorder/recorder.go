@@ -68,45 +68,6 @@ var annotationRe = regexp.MustCompile("^[a-zA-Z0-9_-]{1,240}$")
 // powertopModels defines the models that auto run `powertopRecorder`.
 var powertopModels = []string{"redrix"}
 
-// keepWifi forces the Wifi to remain in its initial state,
-// regardless of the options passed to the Recorder. Useful for
-// local testing if Wifi is used for the SSH connection to the DUT.
-var keepWifi = testing.RegisterVarString(
-	"cujrecorder.keepWifi",
-	"",
-	"A boolean string (true/false) signifying whether to force skipping disabling Wifi for the Recorder",
-)
-
-// skipPowerTest skips the power test, which allows for the device to
-// charge and keeps Wifi in its initial state, regardless of the
-// options passed to the Recorder.
-var skipPowerTest = testing.RegisterVarString(
-	"cujrecorder.skipPowerTest",
-	"",
-	"A boolean string (true/false) signifying whether to skip the power test for the Recorder",
-)
-
-// screenRecord enables the screen recorder for the Recorder.
-var screenRecord = testing.RegisterVarString(
-	"cujrecorder.record",
-	"",
-	"A boolean string (true/false) signifying whether to record the screen during the test",
-)
-
-// ignoreFrameDataError decides whether to ignoring the errors caused by collecting Frame Data.
-var ignoreFrameDataError = testing.RegisterVarString(
-	"cujrecorder.ignoreFrameDataError",
-	"false",
-	"A boolean string (true/false) signifying whether to skipping the frame data collecting error",
-)
-
-// runPowertop controls whether to run `powertop` during tests.
-var runPowertop = testing.RegisterVarString(
-	"cujrecorder.runPowertop",
-	"",
-	"A boolean string (true/false) signifying whether to run powertop for the Recorder",
-)
-
 // MetricConfig is the configuration for the recorder.
 type MetricConfig struct {
 	// The name of the histogram to be recorded.
@@ -271,12 +232,36 @@ type Recorder struct {
 	takingSnapshot bool
 }
 
+// RecorderMode specifies which mode to run the recorder in. Each mode
+// activates different timelines and collection utilities, which in turn
+// changes the amount of overhead the recorder will have during recorder.Run.
+type RecorderMode int
+
+const (
+	// Benchmark runs the recorder with no timelines enabled. There should be
+	// negligble overhead associated with this recorder mode.
+	Benchmark RecorderMode = iota
+
+	// Perf runs the recorder with only the TPS timeline enabled. The
+	// overhead for this mode should be only around 1% for low-end devices,
+	// and negligble overhead for higher end devices.
+	Perf
+
+	// CUJ runs the recorder with all of the collection utilities enabled.
+	// This gives the device about 5% CPU overhead on low-end, few cored
+	// devices, and a 1% overhead on medium to higher-end devices.
+	CUJ
+)
+
 // RecorderOptions contains options to control the recorder setup.
 // The options are determined based on the test needs.
 type RecorderOptions struct {
 	// CooldownBeforeRun, if set, will wait for the CPU to idle and cooldown
 	// before running the function in recorder.Run.
 	CooldownBeforeRun bool
+
+	// Mode specifies which mode to run the recorder in.
+	Mode RecorderMode
 
 	// DischargeThreshold is the battery discharge threshold.
 	// If not set, defaultDischargeThreshold will be used.
@@ -313,6 +298,7 @@ func getModelName(ctx context.Context) string {
 // NewPerformanceCUJOptions indicates the power test settings for performance CUJs run by partners.
 func NewPerformanceCUJOptions() RecorderOptions {
 	return RecorderOptions{
+		Mode:               CUJ,
 		DischargeThreshold: &performanceCUJDischargeThreshold,
 		FailOnDischargeErr: true,
 		DoNotChangeWifi:    true,
@@ -397,10 +383,10 @@ func (r *Recorder) addScreenRecorder(ctx context.Context, tconn *chrome.TestConn
 		return screenRecorder.Start(ctx, tconn)
 	}
 	r.screenRecorderCleanup = func(ctx context.Context) {
-		// Sleep before stopping the screen recorder, to ensure any last
-		// actions that are performed right as the recorder stops are
-		// captured properly. In an abrupt crash, the recording can cut
-		// out important context for what caused the crash.
+		// GoBigSleepLint Sleep before stopping the screen recorder, to ensure
+		// any last actions that are performed right as the recorder stops are
+		// captured properly. In an abrupt crash, the recording can cut out
+		// important context for what caused the crash.
 		if err := testing.Sleep(ctx, 2*time.Second); err != nil {
 			testing.ContextLog(ctx, "Failed to sleep")
 		}
@@ -492,36 +478,56 @@ func NewRecorderWithTestConn(ctx context.Context, tconn *chrome.TestConn, cr *ch
 		sessions: make(map[string]*tracing.Session),
 	}
 
-	r.gpuDataSource = perfSrc.NewGPUDataSource(r.tconns)
-
-	var err error
-	r.frameDataTracker, err = perfSrc.NewFrameDataTracker(tpsMetricPrefix)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create FrameDataTracker")
-	}
-
-	r.zramInfoTracker, err = perfSrc.NewZramInfoTracker(tpsMetricPrefix)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create ZramInfoTracker")
-	}
-
-	r.batteryInfoTracker, err = perfSrc.NewBatteryInfoTracker(ctx, tpsMetricPrefix)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create BatteryInfoTracker")
-	}
-
-	r.memInfoTracker = perfSrc.NewMemoryTracker(a)
-
-	r.loginEventRecorder = perfSrc.NewLoginEventRecorder(tpsMetricPrefix)
-
 	outDir, ok := testing.ContextOutDir(ctx)
 	if !ok || outDir == "" {
 		return nil, errors.New("failed to get the out directory")
 	}
 
+	// Perf and CUJ tests both include the TPS timeline, which requires the
+	// GPU data source.
+	if r.options.Mode == Perf || r.options.Mode == CUJ {
+		r.gpuDataSource = perfSrc.NewGPUDataSource(r.tconns)
+	}
+
+	var err error
+	if r.options.Mode == CUJ {
+		r.frameDataTracker, err = perfSrc.NewFrameDataTracker(tpsMetricPrefix)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to create FrameDataTracker")
+		}
+
+		r.zramInfoTracker, err = perfSrc.NewZramInfoTracker(tpsMetricPrefix)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to create ZramInfoTracker")
+		}
+
+		r.batteryInfoTracker, err = perfSrc.NewBatteryInfoTracker(ctx, tpsMetricPrefix)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to create BatteryInfoTracker")
+		}
+
+		r.memInfoTracker = perfSrc.NewMemoryTracker(a)
+
+		r.loginEventRecorder = perfSrc.NewLoginEventRecorder(tpsMetricPrefix)
+
+		r.profilerRecorder, err = perfSrc.NewProfilerRecorder(ctx, tpsMetricPrefix, 5*time.Second, outDir)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to create ProfilerRecorder")
+		}
+
+		// loginEventRecorder.Prepare() may not be needed because we usually start
+		// Chrome with --keep-login-events-for-testing flag that will start
+		// LoginEventRecorder data collection automatically. But we do it here
+		// just in case Chrome was started with different parameters.
+		if err := r.loginEventRecorder.Prepare(ctx, r.tconn); err != nil {
+			return nil, errors.Wrap(err, "failed to start recording login event data")
+		}
+	}
+
+	// Only run powertop on models in |powertopModels|, and only on CUJ tests.
 	forcePowertopOn := strings.ToLower(runPowertop.Value()) == "true"
 	forcePowertopOff := strings.ToLower(runPowertop.Value()) == "false"
-	if !forcePowertopOff && (forcePowertopOn || contains(powertopModels, getModelName(ctx))) {
+	if r.options.Mode == CUJ && !forcePowertopOff && (forcePowertopOn || contains(powertopModels, getModelName(ctx))) {
 		r.powertopRecorder, err = perfSrc.NewPowertopRecorder(ctx,
 			&perfSrc.PowertopRecorderOptions{
 				Interval:       5 * time.Second,
@@ -533,27 +539,14 @@ func NewRecorderWithTestConn(ctx context.Context, tconn *chrome.TestConn, cr *ch
 		}
 	}
 
-	r.profilerRecorder, err = perfSrc.NewProfilerRecorder(ctx, tpsMetricPrefix, 5*time.Second, outDir)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create ProfilerRecorder")
-	}
-
-	r.names = make(map[browser.Type][]string)
-	r.records = make(map[browser.Type]map[string]*record)
-
-	// loginEventRecorder.Prepare() may not be needed because we usually start
-	// Chrome with --keep-login-events-for-testing flag that will start
-	// LoginEventRecorder data collection automatically. But we do it here
-	// just in case Chrome was started with different parameters.
-	if err := r.loginEventRecorder.Prepare(ctx, r.tconn); err != nil {
-		return nil, errors.Wrap(err, "failed to start recording login event data")
-	}
-
 	if strings.ToLower(screenRecord.Value()) == "true" {
 		if err := r.addScreenRecorder(ctx, r.tconn); err != nil {
 			return nil, errors.Wrap(err, "failed to add the screen recorder")
 		}
 	}
+
+	r.names = make(map[browser.Type][]string)
+	r.records = make(map[browser.Type]map[string]*record)
 
 	r.pv = perf.NewValues()
 	return r, nil
@@ -702,9 +695,15 @@ func (r *Recorder) Close(ctx context.Context) error {
 			firstErr = errors.Wrap(err, "failed to clean up power setup")
 		}
 	}
-	r.gpuDataSource.Close()
-	if err := r.frameDataTracker.Close(ctx, r.tconn); firstErr == nil && err != nil {
-		firstErr = errors.Wrap(err, "failed to close frame data tracker")
+
+	if r.gpuDataSource != nil {
+		r.gpuDataSource.Close()
+	}
+
+	if r.frameDataTracker != nil {
+		if err := r.frameDataTracker.Close(ctx, r.tconn); firstErr == nil && err != nil {
+			firstErr = errors.Wrap(err, "failed to close frame data tracker")
+		}
 	}
 	return firstErr
 }
@@ -770,7 +769,12 @@ func (r *Recorder) startRecording(ctx context.Context) (runCtx context.Context, 
 		r.mr = nil
 	}(ctx)
 
-	if r.options.CooldownBeforeRun {
+	skipCooldown := strings.ToLower(isLocalVar.Value()) == "true"
+	if skipCooldown {
+		testing.ContextLog(ctx, "Skipping cooldown because cujrecorder.isLocalVar is set")
+	}
+
+	if !skipCooldown && (r.options.CooldownBeforeRun || r.options.Mode == Benchmark) {
 		cdConfig := cpu.DefaultCoolDownConfig(cpu.CoolDownPreserveUI)
 		cdConfig.PollTimeout = CooldownTimeout
 		if err := cpu.WaitUntilStabilized(ctx, cdConfig); err != nil {
@@ -802,152 +806,13 @@ func (r *Recorder) startRecording(ctx context.Context) (runCtx context.Context, 
 	// timelines to a base "zero" time.
 	r.startedAtTm = time.Now()
 
-	powerTestOptions := setup.PowerTestOptions{
-		// The default for the following options is to disable these settings.
-		Wifi:       setup.DisableWifiInterfaces,
-		NightLight: setup.DisableNightLight,
-		Powerd:     setup.DisablePowerd,
-		DPTF:       setup.DisableDPTF,
-		Audio:      setup.Mute,
-		Bluetooth:  setup.DisableBluetoothInterfaces,
-	}
-	// Check recorder options and don't change them when required.
-	if r.options.DoNotChangeWifi || strings.ToLower(keepWifi.Value()) == "true" {
-		powerTestOptions.Wifi = setup.DoNotChangeWifiInterfaces
-	}
-	if r.options.DoNotChangePowerd {
-		powerTestOptions.Powerd = setup.DoNotChangePowerd
-	}
-	if r.options.DoNotChangeDPTF {
-		powerTestOptions.DPTF = setup.DoNotChangeDPTF
-	}
-	if r.options.DoNotChangeAudio {
-		powerTestOptions.Audio = setup.DoNotChangeAudio
-	}
-	if r.options.DoNotChangeBluetooth {
-		powerTestOptions.Bluetooth = setup.DoNotChangeBluetooth
-	}
-	dischargeThreshold := setup.DefaultDischargeThreshold
-	if r.options.DischargeThreshold != nil {
-		dischargeThreshold = *r.options.DischargeThreshold
-	}
-
-	var err error
 	var success bool
-	if strings.ToLower(skipPowerTest.Value()) == "true" {
-		testing.ContextLog(ctx, "Skipping power test because cujrecorder.skipPowerTest is set")
-	} else {
-		// Create batteryDischarge with both discharge and ignoreErr set to true.
-		batteryDischarge := setup.NewBatteryDischarge(true, true, dischargeThreshold)
-
-		var err error
-		r.powerSetupCleanup, err = setup.PowerTest(ctx, r.tconn, powerTestOptions, batteryDischarge)
-		batteryDischargeErr := batteryDischarge.Err()
-		if batteryDischargeErr != nil {
-			testing.ContextLog(ctx, "Failed to induce battery discharge: ", batteryDischargeErr)
-		} else {
-			r.batteryDischarge = true
-		}
-		if err != nil {
-			return nil, errors.Wrap(err, "power setup failed")
-		}
-		defer func(ctx context.Context) {
-			if success {
-				return
-			}
-			if err := r.powerSetupCleanup(ctx); err != nil {
-				testing.ContextLog(ctx, "Failed to clean up power setup: ", err)
-			}
-		}(ctx)
-		// Check options.FailOnDischargeErr after the deferred function is set.
-		if batteryDischargeErr != nil && r.options.FailOnDischargeErr &&
-			!errors.Is(batteryDischargeErr, power.ErrNoBattery) {
-			return nil, errors.Wrap(batteryDischargeErr, "battery discharge failed")
-		}
-	}
-
-	if err := r.frameDataTracker.Start(ctx, r.tconn, r.startedAtTm); err != nil {
-		return nil, errors.Wrap(err, "failed to start FrameDataTracker")
-	}
-
+	powerTestCleanup, err := r.setUpPowerTest(ctx)
 	defer func(ctx context.Context) {
-		if success {
-			return
-		}
-		if err := r.frameDataTracker.Stop(ctx, r.tconn); err != nil {
-			testing.ContextLog(ctx, "Failed to stop frame data tracker: ", err)
+		if !success && powerTestCleanup != nil {
+			powerTestCleanup(ctx)
 		}
 	}(ctx)
-
-	if err := r.zramInfoTracker.Start(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed to start ZramInfoTracker")
-	}
-
-	if err := r.batteryInfoTracker.Start(ctx, r.startedAtTm); err != nil {
-		return nil, errors.Wrap(err, "failed to start BatteryInfoTracker")
-	}
-
-	// Create a TPS timeline aligned with r.startedAtTm.
-	r.tpsTimeline, err = perf.NewTimeline(ctx, []perf.TimelineDatasource{
-		perfSrc.NewCPUUsageSource("CPU"),
-		perfSrc.NewThermalDataSource(),
-		r.gpuDataSource,
-		perfSrc.NewMemoryDataSource("RAM.Absolute", "RAM.Diff.Absolute", "RAM"),
-	}, perf.Interval(checkInterval), perf.Prefix(tpsMetricPrefix), perf.EnableGracePeriod(), perf.WithCustomStartTime(r.startedAtTm))
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create TPS timeline")
-	}
-	if err := r.tpsTimeline.Start(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed to start TPS timeline")
-	}
-	if err := r.tpsTimeline.StartRecording(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed to start recording TPS timeline data")
-	}
-
-	// Create a power timeline aligned with r.startedAtTm.
-	r.powerTimeline, err = perf.NewTimeline(ctx,
-		power.TestMetrics(),
-		perf.Interval(checkInterval), perf.Prefix(powerMetricPrefix), perf.EnableGracePeriod(), perf.WithCustomStartTime(r.startedAtTm))
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create power timeline")
-	}
-	if err := r.powerTimeline.Start(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed to start power timeline")
-	}
-	if err := r.powerTimeline.StartRecording(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed to start recording power timeline data")
-	}
-
-	// Create a memory timeline aligned with r.startedAtTm. This memory
-	// timeline tracks relatively inexpensive memory metrics, like PSI.
-	r.memoryTimeline, err = perf.NewTimeline(ctx, []perf.TimelineDatasource{
-		perfSrc.NewPSIDataSource(r.arc),
-	}, perf.Interval(checkInterval), perf.Prefix(memoryMetricPrefix), perf.EnableGracePeriod(), perf.WithCustomStartTime(r.startedAtTm))
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create memory timeline")
-	}
-	if err := r.memoryTimeline.Start(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed to start memory timeline")
-	}
-	if err := r.memoryTimeline.StartRecording(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed to start recording memory timeline data")
-	}
-
-	// memInfoTracker tracks more expensive memory metrics, and thus is
-	// polled significantly less frequently.
-	if err := r.memInfoTracker.Start(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed to start recording memory data")
-	}
-
-	if r.powertopRecorder != nil {
-		if err := r.powertopRecorder.Start(ctx); err != nil {
-			return nil, errors.Wrap(err, "failed to start powertop recorder")
-		}
-	}
-
-	if err := r.profilerRecorder.Start(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed to start ProfilerRecorder")
-	}
 
 	// Start metrics recording per browser.
 	r.mr = make(map[browser.Type]*metrics.Recorder)
@@ -962,10 +827,172 @@ func (r *Recorder) startRecording(ctx context.Context) (runCtx context.Context, 
 			return nil, errors.Wrapf(err, "failed to start metrics recorder for browser %v", bt)
 		}
 	}
-	r.cleanup = cancel
 
+	if r.options.Mode == Perf || r.options.Mode == CUJ {
+		// Create a TPS timeline aligned with r.startedAtTm.
+		r.tpsTimeline, err = perf.NewTimeline(ctx, []perf.TimelineDatasource{
+			perfSrc.NewCPUUsageSource("CPU"),
+			perfSrc.NewThermalDataSource(),
+			r.gpuDataSource,
+			perfSrc.NewMemoryDataSource("RAM.Absolute", "RAM.Diff.Absolute", "RAM"),
+		}, perf.Interval(checkInterval), perf.Prefix(tpsMetricPrefix), perf.EnableGracePeriod(), perf.WithCustomStartTime(r.startedAtTm))
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to create TPS timeline")
+		}
+		if err := r.tpsTimeline.Start(ctx); err != nil {
+			return nil, errors.Wrap(err, "failed to start TPS timeline")
+		}
+		if err := r.tpsTimeline.StartRecording(ctx); err != nil {
+			return nil, errors.Wrap(err, "failed to start recording TPS timeline data")
+		}
+	}
+
+	if r.options.Mode == CUJ {
+		if err := r.frameDataTracker.Start(ctx, r.tconn, r.startedAtTm); err != nil {
+			return nil, errors.Wrap(err, "failed to start FrameDataTracker")
+		}
+
+		defer func(ctx context.Context) {
+			if success {
+				return
+			}
+			if err := r.frameDataTracker.Stop(ctx, r.tconn); err != nil {
+				testing.ContextLog(ctx, "Failed to stop frame data tracker: ", err)
+			}
+		}(ctx)
+
+		if err := r.zramInfoTracker.Start(ctx); err != nil {
+			return nil, errors.Wrap(err, "failed to start ZramInfoTracker")
+		}
+
+		if err := r.batteryInfoTracker.Start(ctx, r.startedAtTm); err != nil {
+			return nil, errors.Wrap(err, "failed to start BatteryInfoTracker")
+		}
+
+		// Create a power timeline aligned with r.startedAtTm.
+		r.powerTimeline, err = perf.NewTimeline(ctx,
+			power.TestMetrics(),
+			perf.Interval(checkInterval), perf.Prefix(powerMetricPrefix), perf.EnableGracePeriod(), perf.WithCustomStartTime(r.startedAtTm))
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to create power timeline")
+		}
+		if err := r.powerTimeline.Start(ctx); err != nil {
+			return nil, errors.Wrap(err, "failed to start power timeline")
+		}
+		if err := r.powerTimeline.StartRecording(ctx); err != nil {
+			return nil, errors.Wrap(err, "failed to start recording power timeline data")
+		}
+
+		// Create a memory timeline aligned with r.startedAtTm. This memory
+		// timeline tracks relatively inexpensive memory metrics, like PSI.
+		r.memoryTimeline, err = perf.NewTimeline(ctx, []perf.TimelineDatasource{
+			perfSrc.NewPSIDataSource(r.arc),
+		}, perf.Interval(checkInterval), perf.Prefix(memoryMetricPrefix), perf.EnableGracePeriod(), perf.WithCustomStartTime(r.startedAtTm))
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to create memory timeline")
+		}
+		if err := r.memoryTimeline.Start(ctx); err != nil {
+			return nil, errors.Wrap(err, "failed to start memory timeline")
+		}
+		if err := r.memoryTimeline.StartRecording(ctx); err != nil {
+			return nil, errors.Wrap(err, "failed to start recording memory timeline data")
+		}
+
+		// memInfoTracker tracks more expensive memory metrics, and thus is
+		// polled significantly less frequently.
+		if err := r.memInfoTracker.Start(ctx); err != nil {
+			return nil, errors.Wrap(err, "failed to start recording memory data")
+		}
+
+		if r.powertopRecorder != nil {
+			if err := r.powertopRecorder.Start(ctx); err != nil {
+				return nil, errors.Wrap(err, "failed to start powertop recorder")
+			}
+		}
+
+		if err := r.profilerRecorder.Start(ctx); err != nil {
+			return nil, errors.Wrap(err, "failed to start ProfilerRecorder")
+		}
+	}
+
+	r.cleanup = cancel
 	success = true
 	return runCtx, nil
+}
+
+func (r *Recorder) setUpPowerTest(ctx context.Context) (func(ctx context.Context), error) {
+	if strings.ToLower(skipPowerTest.Value()) == "true" {
+		testing.ContextLog(ctx, "Skipping power test because cujrecorder.skipPowerTest is set")
+		return nil, nil
+	}
+
+	powerTestOptions := setup.PowerTestOptions{
+		// The default for the following options is to disable these settings.
+		Wifi:       setup.DisableWifiInterfaces,
+		NightLight: setup.DisableNightLight,
+		Audio:      setup.Mute,
+		Bluetooth:  setup.DisableBluetoothInterfaces,
+		Powerd:     setup.DisablePowerd,
+		DPTF:       setup.DisableDPTF,
+	}
+	// Check recorder options and don't change them when required.
+	if r.options.DoNotChangeWifi || strings.ToLower(keepWifi.Value()) == "true" {
+		powerTestOptions.Wifi = setup.DoNotChangeWifiInterfaces
+	}
+	if r.options.DoNotChangeAudio {
+		powerTestOptions.Audio = setup.DoNotChangeAudio
+	}
+	if r.options.DoNotChangeBluetooth {
+		powerTestOptions.Bluetooth = setup.DoNotChangeBluetooth
+	}
+	dischargeThreshold := setup.DefaultDischargeThreshold
+	if r.options.DischargeThreshold != nil {
+		dischargeThreshold = *r.options.DischargeThreshold
+	}
+
+	// Don't change Powerd or DPTF for Benchmark tests, because in order to get
+	// as high a score as possible, we want to make sure we are properly
+	// cooling the CPU.
+	if r.options.DoNotChangePowerd || r.options.Mode == Benchmark {
+		testing.ContextLog(ctx, "Not changing Powerd")
+		powerTestOptions.Powerd = setup.DoNotChangePowerd
+	}
+	if r.options.DoNotChangeDPTF || r.options.Mode == Benchmark {
+		testing.ContextLog(ctx, "Not changing DPTF")
+		powerTestOptions.DPTF = setup.DoNotChangeDPTF
+	}
+
+	// Create batteryDischarge with both discharge and ignoreErr set to true.
+	// Only discharge for CUJ tests, since they are the only test that run for
+	// long enough for the power test to give meaningful values.
+	batteryDischarge := setup.NewBatteryDischarge(r.options.Mode == CUJ, true, dischargeThreshold)
+
+	var err error
+	r.powerSetupCleanup, err = setup.PowerTest(ctx, r.tconn, powerTestOptions, batteryDischarge)
+
+	batteryDischargeErr := batteryDischarge.Err()
+
+	if batteryDischargeErr != nil {
+		testing.ContextLog(ctx, "Failed to induce battery discharge: ", batteryDischargeErr)
+	} else if r.options.Mode == CUJ {
+		r.batteryDischarge = true
+	}
+	if err != nil {
+		return nil, errors.Wrap(err, "power setup failed")
+	}
+
+	cleanup := func(ctx context.Context) {
+		if err := r.powerSetupCleanup(ctx); err != nil {
+			testing.ContextLog(ctx, "Failed to clean up power setup: ", err)
+		}
+	}
+	// Check options.FailOnDischargeErr after the deferred function is set.
+	if batteryDischargeErr != nil && r.options.FailOnDischargeErr &&
+		!errors.Is(batteryDischargeErr, power.ErrNoBattery) {
+		return cleanup, errors.Wrap(batteryDischargeErr, "battery discharge failed")
+	}
+
+	return cleanup, nil
 }
 
 // stopRecording stops CUJ data recording.
@@ -1046,64 +1073,105 @@ func (r *Recorder) stopRecording(ctx, runCtx context.Context) (e error) {
 // stopMetrics stops the performance metrics timelines and sets the values into r.pv.
 // When this function fails, it may have already set some useful values into r.pv.
 func (r *Recorder) stopMetrics(ctx context.Context) error {
-	// We want to conduct all of Stop tasks even when some of them fails.  Return
-	// an error when one of them has failed.
+	// We want to conduct all of Stop tasks even when some of them fails.
+	// Return an error when one of them has failed.
 	var stopErr error
-	if err := r.frameDataTracker.Stop(ctx, r.tconn); err != nil {
-		testing.ContextLog(ctx, "Failed to stop FrameDataTracker: ", err)
-		if strings.ToLower(ignoreFrameDataError.Value()) != "true" {
-			stopErr = errors.Wrap(err, "failed to stop FrameDataTracker")
+	if r.tpsTimeline != nil {
+		if tpsData, err := r.tpsTimeline.StopRecording(ctx); err != nil {
+			testing.ContextLog(ctx, "Failed to stop TPS timeline: ", err)
+			if stopErr == nil {
+				stopErr = errors.Wrap(err, "failed to stop TPS timeline")
+			}
+		} else {
+			r.pv.Merge(tpsData)
 		}
 	}
 
-	if err := r.zramInfoTracker.Stop(ctx); err != nil {
-		testing.ContextLog(ctx, "Failed to stop ZramInfoTracker: ", err)
-		if stopErr == nil {
-			stopErr = errors.Wrap(err, "failed to stop ZramInfoTracker")
+	if r.frameDataTracker != nil {
+		if err := r.frameDataTracker.Stop(ctx, r.tconn); err != nil {
+			testing.ContextLog(ctx, "Failed to stop FrameDataTracker: ", err)
+			if strings.ToLower(ignoreFrameDataError.Value()) != "true" {
+				stopErr = errors.Wrap(err, "failed to stop FrameDataTracker")
+			}
+		} else {
+			r.frameDataTracker.Record(r.pv)
 		}
 	}
 
-	if err := r.batteryInfoTracker.Stop(ctx); err != nil {
-		testing.ContextLog(ctx, "Failed to stop BatteryInfoTracker: ", err)
-		if stopErr == nil {
-			stopErr = errors.Wrap(err, "failed to stop BatteryInfoTracker")
+	if r.zramInfoTracker != nil {
+		if err := r.zramInfoTracker.Stop(ctx); err != nil {
+			testing.ContextLog(ctx, "Failed to stop ZramInfoTracker: ", err)
+			if stopErr == nil {
+				stopErr = errors.Wrap(err, "failed to stop ZramInfoTracker")
+			}
+		} else {
+			r.zramInfoTracker.Record(r.pv)
 		}
 	}
 
-	tpsData, err := r.tpsTimeline.StopRecording(ctx)
-	if err != nil {
-		testing.ContextLog(ctx, "Failed to stop TPS timeline: ", err)
-		if stopErr == nil {
-			stopErr = errors.Wrap(err, "failed to stop TPS timeline")
+	if r.batteryInfoTracker != nil {
+		if err := r.batteryInfoTracker.Stop(ctx); err != nil {
+			testing.ContextLog(ctx, "Failed to stop BatteryInfoTracker: ", err)
+			if stopErr == nil {
+				stopErr = errors.Wrap(err, "failed to stop BatteryInfoTracker")
+			}
+		} else {
+			r.batteryInfoTracker.Record(r.pv)
 		}
 	}
 
-	powerData, err := r.powerTimeline.StopRecording(ctx)
-	if err != nil {
-		testing.ContextLog(ctx, "Failed to stop power timeline: ", err)
-		if stopErr == nil {
-			stopErr = errors.Wrap(err, "failed to stop power timeline")
+	if r.powerTimeline != nil {
+		if powerData, err := r.powerTimeline.StopRecording(ctx); err != nil {
+			testing.ContextLog(ctx, "Failed to stop power timeline: ", err)
+			if stopErr == nil {
+				stopErr = errors.Wrap(err, "failed to stop power timeline")
+			}
+		} else {
+			r.pv.Merge(powerData)
 		}
 	}
 
-	memoryData, err := r.memoryTimeline.StopRecording(ctx)
-	if err != nil {
-		testing.ContextLog(ctx, "Failed to stop memory timeline: ", err)
-		if stopErr == nil {
-			stopErr = errors.Wrap(err, "failed to stop memory timeline")
+	if r.memoryTimeline != nil {
+		if memoryData, err := r.memoryTimeline.StopRecording(ctx); err != nil {
+			testing.ContextLog(ctx, "Failed to stop memory timeline: ", err)
+			if stopErr == nil {
+				stopErr = errors.Wrap(err, "failed to stop memory timeline")
+			}
+		} else {
+			r.pv.Merge(memoryData)
 		}
 	}
 
-	if err := r.memInfoTracker.Stop(ctx); err != nil {
-		testing.ContextLog(ctx, "Failed to stop MemInfoTracker: ", err)
-		if stopErr == nil {
-			stopErr = errors.Wrap(err, "failed to stop MemInfoTracker")
+	if r.memInfoTracker != nil {
+		if err := r.memInfoTracker.Stop(ctx); err != nil {
+			testing.ContextLog(ctx, "Failed to stop MemInfoTracker: ", err)
+			if stopErr == nil {
+				stopErr = errors.Wrap(err, "failed to stop MemInfoTracker")
+			}
+		} else {
+			r.memInfoTracker.Record(r.pv)
 		}
 	}
-	if err := r.loginEventRecorder.FetchLoginEvents(ctx, r.tconn); err != nil {
-		testing.ContextLog(ctx, "Failed to fetch login events date: ", err)
-		if stopErr == nil {
-			stopErr = errors.Wrap(err, "failed to fetch login events")
+
+	if r.loginEventRecorder != nil {
+		if err := r.loginEventRecorder.FetchLoginEvents(ctx, r.tconn); err != nil {
+			testing.ContextLog(ctx, "Failed to fetch login events date: ", err)
+			if stopErr == nil {
+				stopErr = errors.Wrap(err, "failed to fetch login events")
+			}
+		} else {
+			r.loginEventRecorder.Record(ctx, r.pv)
+		}
+	}
+
+	if r.profilerRecorder != nil {
+		if err := r.profilerRecorder.Stop(ctx); err != nil {
+			testing.ContextLog(ctx, "Failed to stop ProfilerRecorder: ", err)
+			if stopErr == nil {
+				stopErr = errors.Wrap(err, "failed to stop ProfilerRecorder")
+			}
+		} else {
+			r.profilerRecorder.Record(r.pv)
 		}
 	}
 
@@ -1116,25 +1184,15 @@ func (r *Recorder) stopMetrics(ctx context.Context) error {
 		}
 	}
 
-	if err := r.profilerRecorder.Stop(ctx); err != nil {
-		testing.ContextLog(ctx, "Failed to stop ProfilerRecorder: ", err)
-		if stopErr == nil {
-			stopErr = errors.Wrap(err, "failed to stop ProfilerRecorder")
-		}
-	}
-
 	if stopErr != nil {
 		return stopErr
 	}
-
-	r.pv.Merge(tpsData)
-	r.pv.Merge(powerData)
-	r.pv.Merge(memoryData)
 
 	displayInfo, err := perfSrc.NewDisplayInfo(ctx, r.tconn)
 	if err != nil {
 		return errors.Wrap(err, "failed to get display info")
 	}
+	displayInfo.Record(r.pv)
 
 	allRecords := make(map[string]*record) // Combined records from all browsers.
 
@@ -1202,14 +1260,6 @@ func (r *Recorder) stopMetrics(ctx context.Context) error {
 		// Longer runtime correlates to better performance data, so bigger is better
 		Direction: perf.BiggerIsBetter,
 	}, r.duration.Seconds())
-
-	displayInfo.Record(r.pv)
-	r.frameDataTracker.Record(r.pv)
-	r.zramInfoTracker.Record(r.pv)
-	r.batteryInfoTracker.Record(r.pv)
-	r.memInfoTracker.Record(r.pv)
-	r.loginEventRecorder.Record(ctx, r.pv)
-	r.profilerRecorder.Record(r.pv)
 
 	collectCLCP(ctx, r.pv)
 	collectMSPH(ctx, r.pv)
