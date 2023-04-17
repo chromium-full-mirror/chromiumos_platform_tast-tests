@@ -290,11 +290,12 @@ func checkDaemonsRunning(ctx context.Context) error {
 
 // stopAptDaily stops apt-daily systemd.
 func stopAptDaily(ctx context.Context, cont *vm.Container) error {
-	// Stop the apt-daily systemd timers since they may end up running while we
-	// are executing the tests and cause failures due to resource contention.
+	// Stop and disable the apt-daily systemd timers since they may end up
+	// running while we are executing the tests and cause failures due to
+	// resource contention or violation of test hermeticity.
 	for _, t := range []string{"apt-daily", "apt-daily-upgrade"} {
 		testing.ContextLogf(ctx, "Disabling service: %s", t)
-		cmd := cont.Command(ctx, "sudo", "systemctl", "stop", t+".timer")
+		cmd := cont.Command(ctx, "sudo", "systemctl", "disable", "--now", t+".timer")
 		if err := cmd.Run(); err != nil {
 			cmd.DumpLog(ctx)
 			return errors.Wrapf(err, "failed to stop %s timer", t)
