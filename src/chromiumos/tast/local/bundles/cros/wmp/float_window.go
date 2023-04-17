@@ -88,19 +88,25 @@ func FloatWindow(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to find browser app info: ", err)
 	}
 
+	appsList := []apps.App{browserApp, apps.FilesSWA}
+
 	// Set up ARC.
-	if err := optin.PerformAndClose(ctx, cr, tconn); err != nil {
-		s.Fatal("Failed to optin to Play Store and Close: ", err)
-	}
+	if arcType, ok := arc.Type(); ok && arcType == arc.VM {
+		if err := optin.PerformAndClose(ctx, cr, tconn); err != nil {
+			s.Fatal("Failed to optin to Play Store and Close: ", err)
+		}
 
-	a, err := arc.New(ctx, s.OutDir())
-	if err != nil {
-		s.Fatal("Failed to start ARC: ", err)
-	}
-	defer a.Close(cleanupCtx)
+		a, err := arc.New(ctx, s.OutDir())
+		if err != nil {
+			s.Fatal("Failed to start ARC: ", err)
+		}
+		defer a.Close(cleanupCtx)
 
-	if err := a.WaitIntentHelper(ctx); err != nil {
-		s.Fatal("Failed to wait for ARC Intent Helper: ", err)
+		if err := a.WaitIntentHelper(ctx); err != nil {
+			s.Fatal("Failed to wait for ARC Intent Helper: ", err)
+		}
+
+		appsList = append(appsList, apps.PlayStore)
 	}
 
 	kb, err := input.Keyboard(ctx)
@@ -111,8 +117,9 @@ func FloatWindow(ctx context.Context, s *testing.State) {
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 
-	appsList := []apps.App{browserApp, apps.FilesSWA, apps.PlayStore}
 	for _, app := range appsList {
+		s.Logf("Running %v through the test", app.Name)
+
 		if err := apps.Launch(ctx, tconn, app.ID); err != nil {
 			s.Fatalf("Failed to launch %s: %v", app.Name, err)
 		}

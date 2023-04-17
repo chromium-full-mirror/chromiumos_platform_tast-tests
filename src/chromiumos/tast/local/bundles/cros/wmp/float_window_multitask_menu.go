@@ -33,6 +33,7 @@ func init() {
 		Contacts: []string{
 			"chromeos-wm-corexp@google.com",
 			"chromeos-sw-engprod@google.com",
+			"sophiewen@chromium.org",
 		},
 		// ChromeOS > Software > Window Management > FloatingWindow
 		BugComponent: "b:1252568",
