@@ -42,12 +42,15 @@ func init() {
 var expectedFlexWLANDriver = map[wlan.DeviceID]map[string]string{
 	wlan.Intel8265: {
 		"5.10": "wireless/intel/iwlwifi/iwlwifi.ko",
+		"5.15": "wireless/intel/iwlwifi/iwlwifi.ko",
 	},
 	wlan.Intel9000: {
 		"5.10": "wireless/intel/iwlwifi/iwlwifi.ko",
+		"5.15": "wireless/intel/iwlwifi/iwlwifi.ko",
 	},
 	wlan.IntelAX201: {
 		"5.10": "wireless/intel/iwlwifi/iwlwifi.ko",
+		"5.15": "wireless/intel/iwlwifi/iwlwifi.ko",
 	},
 }
 
@@ -239,7 +242,7 @@ func Driver(ctx context.Context, s *testing.State) {
 
 	if board, ok := lsb[lsbrelease.Board]; !ok {
 		s.Errorf("Failed to find %s in /etc/lsb-release", lsbrelease.Board)
-	} else if board == flexBoard {
+	} else if strings.HasPrefix(board, flexBoard) {
 		wlanDriverList = expectedFlexWLANDriver
 	} else {
 		wlanDriverList = expectedWLANDriver
