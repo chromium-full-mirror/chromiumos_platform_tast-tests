@@ -87,7 +87,7 @@ func SenderDryRun(ctx context.Context, s *testing.State) {
 	s.Logf("entry of uploads.log: %+v", uploadsLogEntry)
 	uploadsLogEntryWant := crash.UploadsLogEntry{
 		FatalCrashType: "",
-		LocalID:        "ChromiumOS",
+		LocalID:        "ChromeOS",
 		Source:         "some_exec",
 		// md5sum of "/var/spool/crash/some_program.6.7.8.meta"
 		PathHash: "09219fc3eb027acf7e76f039407ba3c4",
