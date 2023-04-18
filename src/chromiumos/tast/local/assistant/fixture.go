@@ -282,6 +282,10 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 	})
 
+	// This fixture does not work for Android related queries.
+	// See the comment of `assistantBaseWithPlayStore` for details.
+	//
+	// TODO(b/277769538): Add v2 variant for Android related queries.
 	testing.AddFixture(&testing.Fixture{
 		Name: "assistantBaseWithLibassistantV2",
 		Desc: "Chrome session for assistant testing with LibAssistantV2 flag",
@@ -289,13 +293,8 @@ func init() {
 			"wutao@google.com",
 			"assitive-eng@google.com",
 		},
-		Vars: []string{"assistant.username", "assistant.password"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
-				chrome.GAIALogin(chrome.Creds{
-					User: s.RequiredVar("assistant.username"),
-					Pass: s.RequiredVar("assistant.password"),
-				}),
 				VerboseLogging(),
 				ashNoNudgesExtraArg(),
 				chrome.EnableFeatures("LibAssistantV2"),

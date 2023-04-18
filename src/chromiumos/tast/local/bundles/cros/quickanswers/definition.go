@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
@@ -26,7 +27,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Test Quick Answers definition feature",
 		Contacts: []string{
-			"croissant-eng@google.com",
+			"assistive-eng@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:905229", // ChromeOS > Software > Assistive
@@ -37,11 +38,11 @@ func init() {
 		},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
-			Fixture: "quickAnswersLoggedInFixture",
+			Fixture: fixture.ChromeLoggedInWithGaia,
 			Val:     browser.TypeAsh,
 		}, {
 			Name:              "lacros",
-			Fixture:           "quickAnswersLoggedInFixtureLacros",
+			Fixture:           quickanswers.LacrosFixture,
 			ExtraSoftwareDeps: []string{"lacros"},
 			Val:               browser.TypeLacros,
 		}},

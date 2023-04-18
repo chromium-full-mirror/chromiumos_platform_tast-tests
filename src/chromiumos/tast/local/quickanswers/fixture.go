@@ -12,41 +12,22 @@ import (
 	"chromiumos/tast/testing"
 )
 
+const (
+	// LacrosFixture is a fixture of a Lacros Chrome session with a GAIA.
+	LacrosFixture = "quickAnswersLoggedInFixtureLacros"
+)
+
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name: "quickAnswersLoggedInFixture",
-		Desc: "Chrome session logged in with OTA for Quick answres testing",
-		Contacts: []string{
-			"updowndota@google.com",
-			"assitive-eng@google.com",
-		},
-		Vars: []string{"quickanswers.username", "quickanswers.password"},
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.GAIALogin(chrome.Creds{
-					User: s.RequiredVar("quickanswers.username"),
-					Pass: s.RequiredVar("quickanswers.password"),
-				}),
-			}, nil
-		}),
-		SetUpTimeout:    chrome.LoginTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name: "quickAnswersLoggedInFixtureLacros",
+		Name: LacrosFixture,
 		Desc: "Lacros Chrome session logged in with OTA for Quick answers testing",
 		Contacts: []string{
 			"assistive-eng@google.com",
 		},
-		Vars: []string{"quickanswers.username", "quickanswers.password"},
+		Vars: []string{"ui.gaiaPoolDefault"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			opts := []chrome.Option{
-				chrome.GAIALogin(chrome.Creds{
-					User: s.RequiredVar("quickanswers.username"),
-					Pass: s.RequiredVar("quickanswers.password"),
-				}),
+				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
 			}
 			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(opts...)).Opts()
 		}),
