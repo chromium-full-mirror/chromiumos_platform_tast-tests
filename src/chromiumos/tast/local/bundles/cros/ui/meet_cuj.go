@@ -932,6 +932,21 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait to enter the meeting: ", checkError(ctx, tconn, err))
 	}
 
+	expectedParticipantCount := meet.num + 1
+	checkParticipantCount := func(ctx context.Context, expectedCount int) error {
+		var participantCount int
+		if err := meetConn.Eval(ctx, "hrTelemetryApi.getParticipantCount()", &participantCount); err != nil {
+			return errors.Wrap(err, "failed to get participant count")
+		}
+		if participantCount != expectedCount {
+			return errors.Errorf("got %d participants, expected %d", participantCount, expectedCount)
+		}
+		return nil
+	}
+	if err := checkParticipantCount(ctx, expectedParticipantCount); err != nil {
+		s.Fatal("The number of bots is unexpected: ", err)
+	}
+
 	moreOptions := nodewith.Name("More options").Role(role.PopUpButton)
 	applyEffects := nodewith.Name("Apply visual effects").Role(role.MenuItem)
 	blur := nodewith.Name("Blur your background").Role(role.ToggleButton).Focusable()
@@ -1118,14 +1133,6 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 			return errors.Wrapf(err, "failed to set camera off-status to %t", !meet.cam)
 		}
 
-		var participantCount int
-		if err := meetConn.Eval(ctx, "hrTelemetryApi.getParticipantCount()", &participantCount); err != nil {
-			return errors.Wrap(err, "failed to get participant count")
-		}
-		if expectedParticipantCount := meet.num + 1; participantCount != expectedParticipantCount {
-			return errors.Errorf("got %d participants, expected %d", participantCount, expectedParticipantCount)
-		}
-
 		// Hide notifications so that they won't overlap with other UI components.
 		if err := ash.CloseNotifications(ctx, tconn); err != nil {
 			return errors.Wrap(err, "failed to close all notifications")
@@ -1155,6 +1162,8 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 		}
 
 		if meet.present {
+			// Presenting increases the number of participants by one.
+			expectedParticipantCount++
 			if !meet.docs && !meet.jamboard {
 				return errors.New("need a Google Docs or Jamboard tab to present")
 			}
@@ -1383,6 +1392,9 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 			if err := collaborationConn.Navigate(ctx, chrome.VersionURL); err != nil {
 				return errors.Wrapf(err, "failed to navigate to %s", chrome.VersionURL)
 			}
+		}
+		if err := checkParticipantCount(ctx, expectedParticipantCount); err != nil {
+			return errors.Wrap(err, "the number of bots is unexpected, the bond server may have lost bots")
 		}
 
 		return nil
