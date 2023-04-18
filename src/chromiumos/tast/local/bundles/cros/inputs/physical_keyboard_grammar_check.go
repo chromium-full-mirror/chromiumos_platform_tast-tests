@@ -33,7 +33,7 @@ func init() {
 		Desc:         "Checks on device grammar check with physical keyboard typing",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
-		Attr:         []string{"group:mainline", "group:input-tools", "group:ml_service", "ml_service_ondevice_grammar_check"},
+		Attr:         []string{"group:mainline", "group:input-tools"},
 		SearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.EnglishUS}),
 		HardwareDeps: hwdep.D(hwdep.Model(pre.GrammarEnabledModels...)),
 		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal", "ondevice_grammar"},

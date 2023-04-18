@@ -26,7 +26,6 @@ func init() {
 		BugComponent: "b:1140118",
 		Attr: []string{
 			"group:camera_dependent",
-			"group:ml_service",
 		},
 		Fixture:      fixture.NoLogInWithInternalCameraAndEffectsEnabled,
 		SoftwareDeps: []string{"camera_feature_effects"},

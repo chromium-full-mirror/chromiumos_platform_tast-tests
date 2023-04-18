@@ -29,7 +29,7 @@ func init() {
 		BugComponent: "b:187682",
 		Timeout:      3 * time.Minute,
 		SoftwareDeps: []string{"chrome", "no_ondevice_handwriting"},
-		Attr:         []string{"group:mainline", "group:ml_service"},
+		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{
 			Val:     browser.TypeAsh,
 			Fixture: "chromeLoggedIn",

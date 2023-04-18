@@ -35,7 +35,6 @@ func init() {
 		Attr: []string{
 			"group:camera_dependent",
 			"group:external-dependency",
-			"group:ml_service",
 			"group:video_conference",
 			"video_conference_per_build",
 		},
