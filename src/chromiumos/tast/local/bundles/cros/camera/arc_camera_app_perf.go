@@ -184,7 +184,7 @@ func testPreview(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn,
 		}
 	}()
 
-	powerSetupObj.Add(powersetup.PowerTest(ctx, tconn, powersetup.PowerTestOptions{Wifi: powersetup.DisableWifiInterfaces, NightLight: powersetup.DisableNightLight}, nil))
+	powerSetupObj.Add(powersetup.PowerTest(ctx, tconn, powersetup.PowerTestOptions{Wifi: powersetup.DisableWifiInterfaces, NightLight: powersetup.DisableNightLight}, powersetup.NewBatteryDischargeFromMode(powersetup.NoBatteryDischarge)))
 	if err := powerSetupObj.Check(ctx); err != nil {
 		return errors.Wrap(err, "power setup check failed")
 	}
@@ -266,7 +266,7 @@ func testRecording(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestCon
 		}
 	}()
 
-	powerSetupObj.Add(powersetup.PowerTest(ctx, tconn, powersetup.PowerTestOptions{Wifi: powersetup.DisableWifiInterfaces, NightLight: powersetup.DisableNightLight}, nil))
+	powerSetupObj.Add(powersetup.PowerTest(ctx, tconn, powersetup.PowerTestOptions{Wifi: powersetup.DisableWifiInterfaces, NightLight: powersetup.DisableNightLight}, powersetup.NewBatteryDischargeFromMode(powersetup.NoBatteryDischarge)))
 	if err := powerSetupObj.Check(ctx); err != nil {
 		return errors.Wrap(err, "power setup check failed")
 	}
