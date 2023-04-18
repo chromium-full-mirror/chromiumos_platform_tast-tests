@@ -25,7 +25,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SavedDeskDelete,
 		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Checks desk templates can be delete",
+		Desc:         "Checks saved desk can be deleted",
 		Contacts: []string{
 			"chromeos-wmp@google.com",
 			"cros-commercial-productivity-eng@google.com",
@@ -41,8 +41,8 @@ func init() {
 		Timeout:      chrome.GAIALoginTimeout + arc.BootTimeout + 180*time.Second,
 		SearchFlags: []*testing.StringPair{{
 			Key: "feature_id",
-			// Delete workspace template.
-			Value: "screenplay-02ff6408-5cb0-481c-bd6b-c170831d45ca",
+			// Delete saved desk
+			Value: "screenplay-7f6d909c-3450-4ec0-ab4d-a3f704ec3e7f",
 		}},
 		VarDeps: []string{"ui.gaiaPoolDefault"},
 		Params: []testing.Param{{
