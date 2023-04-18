@@ -129,6 +129,7 @@ func LocalAudioPlayback(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to show Quick Settings")
 	}
 	defer quicksettings.Hide(ctx, tconn)
+
 	if err := quicksettings.SelectAudioOption(ctx, tconn, expectedOutputDevice); err != nil {
 		s.Fatal("Failed to select audio option: ", err)
 	}

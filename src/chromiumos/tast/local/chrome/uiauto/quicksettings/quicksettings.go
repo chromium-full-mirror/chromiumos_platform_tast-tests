@@ -659,7 +659,7 @@ func SelectAudioOption(ctx context.Context, tconn *chrome.TestConn, device strin
 		return err
 	}
 	ui := uiauto.New(tconn)
-	option := nodewith.Role(role.CheckBox).Name(device)
+	option := nodewith.Role(role.CheckBox).NameStartingWith(device)
 
 	// If there are several audio options available, the target option may be out of view.
 	// Furthermore, chrome.automation occasionally reports the wrong location of the audio option after focusing it into view.
