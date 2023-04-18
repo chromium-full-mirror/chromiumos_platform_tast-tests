@@ -10,14 +10,11 @@ import (
 	"time"
 
 	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/launcher"
-	"chromiumos/tast/local/chrome/uiauto/nodewith"
-	"chromiumos/tast/local/chrome/uiauto/role"
+	"chromiumos/tast/local/chrome/uiauto/shortcutcustomization"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
@@ -36,6 +33,12 @@ func init() {
 		// ChromeOS > Software > System Services > Peripherals > Shortcuts
 		BugComponent: "b:1131848",
 		Fixture:      "chromeLoggedInWithShortcutCustomizationApp",
+		SearchFlags: []*testing.StringPair{
+			{
+				Key:   "feature_id",
+				Value: "screenplay-e65827ce-fa73-4956-94b8-cac706f0eb15",
+			},
+		},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalKeyboard()),
@@ -80,29 +83,8 @@ func LaunchFromLauncher(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to search query (%q) and click result (%p)", query, shortcutsSearchItem)
 	}
 
-	// TODO(b/278574672): Add more tests that verify opening the app and refactor
-	// code into a shared function located in a common place.
-	// Verify shortcut app appears in shelf.
-	if err := ash.WaitForApp(ctx, tconn, apps.ShortcutCustomization.ID, time.Minute); err != nil {
-		s.Fatal("Shortcut Customization app did not appear in shelf after launch: ", err)
-	}
-
-	// Verify categories exist.
-	for _, name := range []string{"General", "Device", "Browser", "Text", "Windows and Desks", "Accessibility"} {
-		if err := uiauto.Combine(fmt.Sprintf("Verify %q category exists", name),
-			ui.WaitUntilExists(nodewith.Name(name).Role(role.Button)),
-		)(ctx); err != nil {
-			s.Fatalf("Failed to find %q category: ", name)
-		}
-	}
-
-	// Veirfy essential elements exist.
-	keyboardsettinglink := nodewith.Name("Keyboard settings").Role(role.Link)
-	searchBar := nodewith.Name("Search shortcuts").Role(role.SearchBox)
-	if err := uiauto.Combine("Verify essential elements exist",
-		ui.WaitUntilExists(keyboardsettinglink),
-		ui.WaitUntilExists(searchBar),
-	)(ctx); err != nil {
-		s.Fatal("Failed to find element: ", err)
+	// Verify shortcut customization app is launched.
+	if err := shortcutcustomization.VerifyShortcutCustomizationIsLaunched(ctx, tconn, ui); err != nil {
+		s.Fatal("Failed to verify that the Shortcut Customization app is launched: ", err)
 	}
 }
