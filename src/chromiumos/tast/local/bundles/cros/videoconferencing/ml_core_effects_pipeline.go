@@ -45,7 +45,7 @@ func init() {
 				// this binary is installed from ml-core-tests
 				// into /usr/bin/
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("betty")),
-				Val:               []string{"ml_core_effects_pipeline_test"},
+				Val:               []string{"ml_core_effects_pipeline_test", "--use_opengl"},
 			},
 		},
 	})
