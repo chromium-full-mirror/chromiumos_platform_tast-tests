@@ -93,6 +93,13 @@ func init() {
 				probeConfig: probeConfig{[]probeStatement{
 					probeStatement{"gpu"},
 				}}},
+		}, {
+			Name: "audio_codec",
+			Val: verifySandboxTestParams{
+				probeConfig: probeConfig{[]probeStatement{
+					probeStatement{"audio_codec"},
+				}}},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}},
 	})
 }
