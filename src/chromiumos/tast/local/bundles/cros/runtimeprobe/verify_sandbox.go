@@ -37,21 +37,18 @@ func init() {
 		Params: []testing.Param{{
 			Val: verifySandboxTestParams{
 				probeConfig: probeConfig{[]probeStatement{}}},
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			Name: "edid",
 			Val: verifySandboxTestParams{
 				probeConfig: probeConfig{[]probeStatement{
 					probeStatement{"edid"},
 				}}},
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			Name: "input_device",
 			Val: verifySandboxTestParams{
 				probeConfig: probeConfig{[]probeStatement{
 					probeStatement{"input_device"},
 				}}},
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			Name: "memory_amd64",
 			Val: verifySandboxTestParams{
@@ -66,28 +63,24 @@ func init() {
 				probeConfig: probeConfig{[]probeStatement{
 					probeStatement{"tcpc"},
 				}}},
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			Name: "battery",
 			Val: verifySandboxTestParams{
 				probeConfig: probeConfig{[]probeStatement{
 					probeStatement{"generic_battery"},
 				}}},
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			Name: "camera",
 			Val: verifySandboxTestParams{
 				probeConfig: probeConfig{[]probeStatement{
 					probeStatement{"generic_camera"},
 				}}},
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			Name: "network",
 			Val: verifySandboxTestParams{
 				probeConfig: probeConfig{[]probeStatement{
 					probeStatement{"network"},
 				}}},
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			Name: "storage",
 			Val: verifySandboxTestParams{
@@ -100,7 +93,6 @@ func init() {
 				probeConfig: probeConfig{[]probeStatement{
 					probeStatement{"gpu"},
 				}}},
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}},
 	})
 }
