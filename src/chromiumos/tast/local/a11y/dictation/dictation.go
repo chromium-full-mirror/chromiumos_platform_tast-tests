@@ -13,6 +13,8 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/a11y"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
@@ -85,7 +87,7 @@ func (d driver) waitForEditableValue(expectedValue string) error {
 
 // SetUp executes common Dictation setup code and returns a driver that can be
 // used to easily drive Dictation tests.
-func SetUp(ctx context.Context, cr *chrome.Chrome, html, className string) (d driver, e error) {
+func SetUp(ctx context.Context, cr *chrome.Chrome, html, className string, bt browser.Type) (d driver, e error) {
 	// Tears down Dictation if SetUp encountered an error.
 	defer func() {
 		if e != nil {
@@ -108,6 +110,26 @@ func SetUp(ctx context.Context, cr *chrome.Chrome, html, className string) (d dr
 		return newNoOpDriver(tdh), errors.Wrap(err, "failed to create Test API connection")
 	}
 
+	// Setup a browser.
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, bt)
+	if err != nil {
+		return newNoOpDriver(tdh), errors.Wrap(err, "failed to setup browser")
+	}
+	tdh.Append(func() error {
+		return closeBrowser(cleanUpCtx)
+	})
+
+	brConn, err := a11y.NewTabWithHTML(ctx, br, html)
+	if err != nil {
+		return newNoOpDriver(tdh), errors.Wrapf(err, "failed to open a new tab with HTML: %q", html)
+	}
+	tdh.Append(brConn.Close)
+
+	// Close the extra new tab page.
+	if err := br.CloseWithURL(ctx, chrome.NewTabURL); err != nil {
+		return newNoOpDriver(tdh), errors.Wrap(err, "failed to close new tab page")
+	}
+
 	// Enable Dictation.
 	if err := a11y.SetFeatureEnabled(ctx, tconn, a11y.Dictation, true); err != nil {
 		return newNoOpDriver(tdh), errors.Wrap(err, "failed to enable Dictation")
@@ -126,12 +148,6 @@ func SetUp(ctx context.Context, cr *chrome.Chrome, html, className string) (d dr
 	if err := maybeClosePrivacyDialog(ctx, ui); err != nil {
 		return newNoOpDriver(tdh), errors.Wrap(err, "failed to close the Dictation privacy dialog")
 	}
-
-	c, err := a11y.NewTabWithHTML(ctx, cr.Browser(), html)
-	if err != nil {
-		return newNoOpDriver(tdh), errors.Wrapf(err, "failed to open a new tab with HTML: %q", html)
-	}
-	tdh.Append(c.Close)
 
 	// Focus the editable field.
 	editable := nodewith.Editable().HasClass(className).Onscreen()
