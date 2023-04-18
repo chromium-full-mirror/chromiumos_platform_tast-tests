@@ -34,7 +34,7 @@ type TxResult struct {
 type TxMeasurementConfiguration struct {
 	TestPower        float64
 	CalibrationPower float64
-	SarLevel         int32
+	SARLevel         int32
 	SampleCount      int32
 }
 
@@ -67,7 +67,7 @@ func (t *TxMeasurementSession) Run(ctx context.Context, config *TxMeasurementCon
 	if _, err := t.dutClient.EnableSar(ctx, &empty.Empty{}); err != nil {
 		return nil, errors.Wrap(err, "failed to enable SAR on DUT")
 	}
-	if _, err := t.dutClient.ConfigureSar(ctx, &cellular.ConfigureSarRequest{PowerLevel: config.SarLevel}); err != nil {
+	if _, err := t.dutClient.ConfigureSar(ctx, &cellular.ConfigureSarRequest{PowerLevel: config.SARLevel}); err != nil {
 		return nil, errors.Wrap(err, "failed to configure SAR on DUT")
 	}
 
