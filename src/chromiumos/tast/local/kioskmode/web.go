@@ -29,6 +29,8 @@ const (
 	WebKioskAccountID = "arbitrary_id_web_kiosk_1@managedchrome.com"
 	// WebKioskTitle title shown on the splash screen of the kiosk app.
 	WebKioskTitle = "Web Kiosk Placeholder Title"
+	// WebKioskHeading heading shown on the main page of the kiosk web app.
+	WebKioskHeading = "Test PWA for Web Kiosk"
 )
 
 // WebKioskAppAccountInfo creates a DeviceLocalAccountInfo for a mock WebKioskApp.
@@ -65,7 +67,7 @@ func webKioskServerHandler(w http.ResponseWriter, r *http.Request) {
       <link rel="icon" type="image/png" href="icon.png">
     </head>
     <body>
-        <h1>Test PWA for Web Kiosk</h1>
+        <h1>%s</h1>
         <p>Path: %s</p>
     </body>
 </html>
@@ -118,7 +120,7 @@ func webKioskServerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Serve a html with path in body for all other paths.
-	contentHTML := fmt.Sprintf(contentHTMLFormat, r.URL.Path)
+	contentHTML := fmt.Sprintf(contentHTMLFormat, WebKioskHeading, r.URL.Path)
 	w.Header().Add("Content-Type", "text/html")
 	w.Header().Set("Content-Length", strconv.Itoa(binary.Size(contentHTML)))
 	w.WriteHeader(http.StatusOK)
