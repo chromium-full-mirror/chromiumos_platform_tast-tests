@@ -365,7 +365,10 @@ func (f *FilesApp) ClickDirectoryContextMenuItem(dirName string, menuItems ...st
 // SelectMultipleFiles returns a function that selects multiple items in the Files app listBox while pressing 'Ctrl'.
 func (f *FilesApp) SelectMultipleFiles(kb *input.KeyboardEventWriter, fileList ...string) uiauto.Action {
 	return func(ctx context.Context) error {
-		// First press Esc to clear any selection.
+		// Focus the list and press Esc to clear any selection.
+		if err := f.LeftClick(nodewith.Role(role.ListBox))(ctx); err != nil {
+			return errors.Wrap(err, "failed to select file list")
+		}
 		if err := kb.Accel(ctx, "Esc"); err != nil {
 			return errors.Wrap(err, "failed to clear selection")
 		}
