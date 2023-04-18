@@ -13,6 +13,7 @@ import (
 	upstartcommon "chromiumos/tast/common/upstart"
 	"chromiumos/tast/local/bundles/cros/secagentd/secagentdprocfsscraper"
 	"chromiumos/tast/local/upstart"
+	"chromiumos/tast/testing"
 )
 
 // RestartSecagentd restarts the daemon with the given upstart args, verifies
@@ -23,13 +24,21 @@ func RestartSecagentd(ctx context.Context, args ...upstart.Arg) (uint64, error) 
 	if err := upstart.RestartJob(ctx, name, args...); err != nil {
 		return 0, err
 	}
-	if err := upstart.WaitForJobStatus(ctx, name, upstartcommon.StartGoal, upstartcommon.RunningState, upstart.RejectWrongGoal, 1*time.Second); err != nil {
+	if err := upstart.WaitForJobStatus(ctx, name, upstartcommon.StartGoal, upstartcommon.RunningState, upstart.RejectWrongGoal, 5*time.Second); err != nil {
 		return 0, err
 	}
 	_, _, mjPid, err := upstart.JobStatus(ctx, name)
 	if err != nil {
 		return 0, err
 	}
-	// Upstart returns the minijail0 pid. secagentd is its child.
-	return secagentdprocfsscraper.GetOnlyChildPid(uint64(mjPid))
+	// Upstart returns the minijail0 pid. secagentd is its child. Poll briefly
+	// to let minijail do its thing and start secagentd.
+	pid := uint64(0)
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		pid, err = secagentdprocfsscraper.GetOnlyChildPid(uint64(mjPid))
+		return err
+	}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
+		return 0, err
+	}
+	return pid, nil
 }
