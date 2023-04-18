@@ -222,6 +222,12 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 			ExtraSoftwareDeps: []string{"vulkan", "no_qemu"},
 			ExtraAttr:         []string{"graphics_nightly"},
+		}, {
+			Name:              "yuv_to_rgb_test",
+			Val:               []string{"yuv_to_rgb_test"},
+			Timeout:           30 * time.Second,
+			ExtraSoftwareDeps: []string{"no_qemu"},
+			ExtraAttr:         []string{"group:mainline", "informational"},
 		}},
 		Attr:    []string{"group:graphics", "graphics_drm"},
 		Fixture: "graphicsNoChrome",
