@@ -18,12 +18,6 @@ import (
 	"chromiumos/tast/testing"
 )
 
-// authSessionLightweightAuthPerfParams contains the test parameters that specifies the type of storage.
-type authSessionLightweightAuthPerfParams struct {
-	// Specifies whether to use user secret stash.
-	useUserSecretStash bool
-}
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: AuthSessionLightweightAuthPerf,
@@ -36,23 +30,10 @@ func init() {
 		Attr:         []string{"hwsec_destructive_crosbolt_perbuild", "group:hwsec_destructive_crosbolt"},
 		SoftwareDeps: []string{"tpm", "reboot"},
 		Vars:         []string{"hwsec.AuthSessionLightweightAuthPerf.iterations"},
-		Params: []testing.Param{{
-			Name: "uss",
-			Val: authSessionLightweightAuthPerfParams{
-				useUserSecretStash: true,
-			},
-		}, {
-			Name: "vk",
-			Val: authSessionLightweightAuthPerfParams{
-				useUserSecretStash: false,
-			},
-		}},
 	})
 }
 
 func AuthSessionLightweightAuthPerf(ctx context.Context, s *testing.State) {
-	userParam := s.Param().(authSessionLightweightAuthPerfParams)
-
 	// Setup helper functions.
 	r := hwsecremote.NewCmdRunner(s.DUT())
 	helper, err := hwsecremote.NewHelper(r, s.DUT())
@@ -63,22 +44,6 @@ func AuthSessionLightweightAuthPerf(ctx context.Context, s *testing.State) {
 	// Reset TPM
 	if err := helper.EnsureTPMAndSystemStateAreReset(ctx); err != nil {
 		s.Fatal("Failed to ensure resetting TPM: ", err)
-	}
-
-	if userParam.useUserSecretStash {
-		// Enable UserSecretStash.
-		cleanupUSSExperiment, err := helper.EnableUserSecretStash(ctx)
-		if err != nil {
-			s.Fatal("Failed to enable the UserSecretStash experiment: ", err)
-		}
-		defer cleanupUSSExperiment(ctx)
-	} else {
-		// Disable UserSecretStash to use VaultKeyset.
-		cleanupUSSDisable, err := helper.DisableUserSecretStash(ctx)
-		if err != nil {
-			s.Fatal("Failed to disable the UserSecretStash experiment: ", err)
-		}
-		defer cleanupUSSDisable(ctx)
 	}
 
 	if err := utility.MountVault(ctx, util.Password1Label, hwsec.NewPassAuthConfig(util.FirstUsername, util.FirstPassword1), true /* createVault */, hwsec.NewVaultConfig()); err != nil {

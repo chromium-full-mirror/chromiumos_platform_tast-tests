@@ -17,13 +17,6 @@ import (
 	"chromiumos/tast/testing"
 )
 
-// chapsRemountWithAuthAPIParam contains the test parameters which are different
-// between the types of backing store.
-type chapsRemountWithAuthAPIParam struct {
-	// Specifies whether to use user secret stash.
-	useUserSecretStash bool
-}
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: ChapsRemount,
@@ -35,24 +28,10 @@ func init() {
 		},
 		BugComponent: "b:1188704",
 		Timeout:      4 * time.Minute,
-
-		Params: []testing.Param{{
-			Name: "uss",
-			Val: chapsRemountWithAuthAPIParam{
-				useUserSecretStash: true,
-			},
-		}, {
-			Name: "vk",
-			Val: chapsRemountWithAuthAPIParam{
-				useUserSecretStash: false,
-			},
-		}},
 	})
 }
 
 func ChapsRemount(ctx context.Context, s *testing.State) {
-	userParam := s.Param().(chapsRemountWithAuthAPIParam)
-
 	r := libhwseclocal.NewCmdRunner()
 
 	helper, err := libhwseclocal.NewHelper(r)
@@ -60,16 +39,6 @@ func ChapsRemount(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create hwsec helper: ", err)
 	}
 	cryptohome := helper.CryptohomeClient()
-
-	if userParam.useUserSecretStash {
-		// Enable the UserSecretStash experiment for the duration of the test by
-		// creating a flag file that's checked by cryptohomed.
-		cleanupUSSExperiment, err := helper.EnableUserSecretStash(ctx)
-		if err != nil {
-			s.Fatal("Failed to enable the UserSecretStash experiment: ", err)
-		}
-		defer cleanupUSSExperiment(ctx)
-	}
 
 	pkcs11Util, err := pkcs11.NewChaps(ctx, r, cryptohome)
 	if err != nil {

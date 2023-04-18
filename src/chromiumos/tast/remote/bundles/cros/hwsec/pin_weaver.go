@@ -21,13 +21,6 @@ import (
 	"chromiumos/tast/testing"
 )
 
-// pinWeaverParam contains the test parameters which are different
-// between the types of backing store.
-type pinWeaverParam struct {
-	// Specifies whether to use user secret stash.
-	useUserSecretStash hwsec.UserSecretStashStatus
-}
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: PINWeaver,
@@ -39,17 +32,6 @@ func init() {
 		BugComponent: "b:1188704",
 		Attr:         []string{"informational", "group:mainline"},
 		SoftwareDeps: []string{"pinweaver", "reboot"},
-		Params: []testing.Param{{
-			Name: "with_auth_factor_with_no_uss",
-			Val: pinWeaverParam{
-				useUserSecretStash: hwsec.NotEnabled,
-			},
-		}, {
-			Name: "with_auth_factor_with_uss",
-			Val: pinWeaverParam{
-				useUserSecretStash: hwsec.Enabled,
-			},
-		}},
 	})
 }
 
@@ -65,7 +47,6 @@ const (
 )
 
 func PINWeaver(ctx context.Context, s *testing.State) {
-	userParam := s.Param().(pinWeaverParam)
 	ctxForCleanUp := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
@@ -105,71 +86,62 @@ func PINWeaver(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to remove old vault for preparation: ", err)
 	}
 
-	if userParam.useUserSecretStash != hwsec.NotEnabled {
-		// Enable the UserSecretStash experiment.
-		cleanupUSSExperiment, err := helper.EnableUserSecretStash(ctx)
-		if err != nil {
-			s.Fatal("Failed to enable the UserSecretStash experiment: ", err)
-		}
-		defer cleanupUSSExperiment(ctx)
-	}
-
 	/**Initial User Setup. Test both user 1 and user 2 can login successfully.**/
 	// Setup a user 1 for testing. This user will be locked out and re-authed to ensure the PIN is unlocked.
-	if err = setupUserWithPIN(ctx, ctxForCleanUp, testUser1, cmdRunner, helper, userParam); err != nil {
+	if err = setupUserWithPIN(ctx, ctxForCleanUp, testUser1, cmdRunner, helper); err != nil {
 		s.Fatal("Failed to run setupUserWithPIN with error: ", err)
 	}
-	defer removeLeCredential(ctx, ctxForCleanUp, testUser1, authFactorLabelPIN, cmdRunner, helper, userParam)
+	defer removeLeCredential(ctx, ctxForCleanUp, testUser1, authFactorLabelPIN, cmdRunner, helper)
 
 	// Ensure we can authenticate with correct pin.
-	if _, err = authenticateWithCorrectPIN(ctx, ctxForCleanUp, testUser1, cmdRunner, helper, userParam, true /*shouldAuthenticate*/); err != nil {
+	if _, err = authenticateWithCorrectPIN(ctx, ctxForCleanUp, testUser1, cmdRunner, helper, true /*shouldAuthenticate*/); err != nil {
 		s.Fatal("Failed to run authenticateWithCorrectPIN with error: ", err)
 	}
 
 	// Ensure we can authenticate with correct password.
-	if err = authenticateWithCorrectPassword(ctx, ctxForCleanUp, testUser1, cmdRunner, helper, userParam); err != nil {
+	if err = authenticateWithCorrectPassword(ctx, ctxForCleanUp, testUser1, cmdRunner, helper); err != nil {
 		s.Fatal("Failed to run authenticateWithCorrectPassword with error: ", err)
 	}
 
 	// Setup a user 2 for testing. This user will be removed and the le_credential file will be checked.
-	if err = setupUserWithPIN(ctx, ctxForCleanUp, testUser2, cmdRunner, helper, userParam); err != nil {
+	if err = setupUserWithPIN(ctx, ctxForCleanUp, testUser2, cmdRunner, helper); err != nil {
 		s.Fatal("Failed to run setupUserWithPIN with error: ", err)
 	}
-	defer removeLeCredential(ctx, ctxForCleanUp, testUser2, authFactorLabelPIN, cmdRunner, helper, userParam)
+	defer removeLeCredential(ctx, ctxForCleanUp, testUser2, authFactorLabelPIN, cmdRunner, helper)
 
 	// Ensure we can authenticate with correct password for testUser2.
-	if err = authenticateWithCorrectPassword(ctx, ctxForCleanUp, testUser2, cmdRunner, helper, userParam); err != nil {
+	if err = authenticateWithCorrectPassword(ctx, ctxForCleanUp, testUser2, cmdRunner, helper); err != nil {
 		s.Fatal("Failed to run authenticateWithCorrectPassword with error: ", err)
 	}
 
 	// Ensure we can authenticate with correct pin for testUser2.
-	if _, err = authenticateWithCorrectPIN(ctx, ctxForCleanUp, testUser2, cmdRunner, helper, userParam, true /*shouldAuthenticate*/); err != nil {
+	if _, err = authenticateWithCorrectPIN(ctx, ctxForCleanUp, testUser2, cmdRunner, helper, true /*shouldAuthenticate*/); err != nil {
 		s.Fatal("Failed to run authenticateWithCorrectPIN with error: ", err)
 	}
 
 	// Ensure that testUser1 still works with pin.
-	if _, err = authenticateWithCorrectPIN(ctx, ctxForCleanUp, testUser1, cmdRunner, helper, userParam, true /*shouldAuthenticate*/); err != nil {
+	if _, err = authenticateWithCorrectPIN(ctx, ctxForCleanUp, testUser1, cmdRunner, helper, true /*shouldAuthenticate*/); err != nil {
 		s.Fatal("Failed to run authenticateWithCorrectPIN with error: ", err)
 	}
 
 	// Ensure that testUser1 still works with password.
-	if err = authenticateWithCorrectPassword(ctx, ctxForCleanUp, testUser1, cmdRunner, helper, userParam); err != nil {
+	if err = authenticateWithCorrectPassword(ctx, ctxForCleanUp, testUser1, cmdRunner, helper); err != nil {
 		s.Fatal("Failed to run authenticateWithCorrectPassword with error: ", err)
 	}
 
 	/** Running test where we try to almost lock out PIN with 4 attempts twice, but the user is able to log back in **/
 	// Attempt four wrong PIN.
-	if _, err = attemptWrongPIN(ctx, ctxForCleanUp, testUser1, cmdRunner, helper, userParam, 4 /*attempts*/); err != nil {
+	if _, err = attemptWrongPIN(ctx, ctxForCleanUp, testUser1, cmdRunner, helper, 4 /*attempts*/); err != nil {
 		s.Fatal("Failed to run attemptWrongPIN with error: ", err)
 	}
 
 	// Since the pin is not locked out yet, we should be able to log back in again.
-	if _, err = authenticateWithCorrectPIN(ctx, ctxForCleanUp, testUser1, cmdRunner, helper, userParam, true /*shouldAuthenticate*/); err != nil {
+	if _, err = authenticateWithCorrectPIN(ctx, ctxForCleanUp, testUser1, cmdRunner, helper, true /*shouldAuthenticate*/); err != nil {
 		s.Fatal("Failed to run authenticateWithCorrectPIN with error: ", err)
 	}
 
 	// Attempt four wrong PIN again.
-	replyWithError, err := attemptWrongPIN(ctx, ctxForCleanUp, testUser1, cmdRunner, helper, userParam, 4 /*attempts*/)
+	replyWithError, err := attemptWrongPIN(ctx, ctxForCleanUp, testUser1, cmdRunner, helper, 4 /*attempts*/)
 	if err != nil {
 		s.Fatal("Failed to run attemptWrongPIN with error: ", err)
 	}
@@ -183,13 +155,13 @@ func PINWeaver(ctx context.Context, s *testing.State) {
 	}
 
 	// Since the pin is not locked out yet, we should be able to log back in again.
-	if _, err = authenticateWithCorrectPIN(ctx, ctxForCleanUp, testUser1, cmdRunner, helper, userParam, true /*shouldAuthenticate*/); err != nil {
+	if _, err = authenticateWithCorrectPIN(ctx, ctxForCleanUp, testUser1, cmdRunner, helper, true /*shouldAuthenticate*/); err != nil {
 		s.Fatal("Failed to run authenticateWithCorrectPIN with error: ", err)
 	}
 
 	/** Test whether the attempt counter persists after reboot **/
 	// Attempt four wrong PIN.
-	if _, err = attemptWrongPIN(ctx, ctxForCleanUp, testUser1, cmdRunner, helper, userParam, 4 /*attempts*/); err != nil {
+	if _, err = attemptWrongPIN(ctx, ctxForCleanUp, testUser1, cmdRunner, helper, 4 /*attempts*/); err != nil {
 		s.Fatal("Failed to run attemptWrongPIN with error: ", err)
 	}
 
@@ -217,7 +189,7 @@ func PINWeaver(ctx context.Context, s *testing.State) {
 	}
 
 	// Lockout the PIN this time.
-	_, err = attemptWrongPIN(ctx, ctxForCleanUp, testUser1, cmdRunner, helper, userParam, 1 /*attempts*/)
+	_, err = attemptWrongPIN(ctx, ctxForCleanUp, testUser1, cmdRunner, helper, 1 /*attempts*/)
 	if err != nil {
 		s.Fatal("Failed to run attemptWrongPIN with error: ", err)
 	}
@@ -226,7 +198,7 @@ func PINWeaver(ctx context.Context, s *testing.State) {
 	}
 
 	// After the PIN lock out we should not be able to authenticate with correct PIN.
-	if replyWithError, err = authenticateWithCorrectPIN(ctx, ctxForCleanUp, testUser1, cmdRunner, helper, userParam, false /*shouldAuthenticate*/); err != nil {
+	if replyWithError, err = authenticateWithCorrectPIN(ctx, ctxForCleanUp, testUser1, cmdRunner, helper, false /*shouldAuthenticate*/); err != nil {
 		s.Fatal("Failed to run authenticateWithCorrectPIN with error: ", err)
 	}
 	// Ensure AutheneticateAuthFactor error code relays TPM is locked out.
@@ -251,27 +223,27 @@ func PINWeaver(ctx context.Context, s *testing.State) {
 	}
 
 	/** Ensure that testUser2 can still use PIN **/
-	if _, err = authenticateWithCorrectPIN(ctx, ctxForCleanUp, testUser2, cmdRunner, helper, userParam, true /*shouldAuthenticate*/); err != nil {
+	if _, err = authenticateWithCorrectPIN(ctx, ctxForCleanUp, testUser2, cmdRunner, helper, true /*shouldAuthenticate*/); err != nil {
 		s.Fatal("Failed to run authenticateWithCorrectPIN with error: ", err)
 	}
 
 	/** Unlock PIN **/
-	if err = authenticateWithCorrectPassword(ctx, ctxForCleanUp, testUser1, cmdRunner, helper, userParam); err != nil {
+	if err = authenticateWithCorrectPassword(ctx, ctxForCleanUp, testUser1, cmdRunner, helper); err != nil {
 		s.Fatal("Failed to run authenticateWithCorrectPassword with error: ", err)
 	}
 
 	// Ensure pin login now works again for testUser1.
-	if _, err = authenticateWithCorrectPIN(ctx, ctxForCleanUp, testUser1, cmdRunner, helper, userParam, true /*shouldAuthenticate*/); err != nil {
+	if _, err = authenticateWithCorrectPIN(ctx, ctxForCleanUp, testUser1, cmdRunner, helper, true /*shouldAuthenticate*/); err != nil {
 		s.Fatal("Failed to run authenticateWithCorrectPIN with error: ", err)
 	}
 
 	// Remove the added PIN and check to see if le_credential file was updated.
-	if err = removeLeCredential(ctx, ctxForCleanUp, testUser2, authFactorLabelPIN, cmdRunner, helper, userParam); err != nil {
+	if err = removeLeCredential(ctx, ctxForCleanUp, testUser2, authFactorLabelPIN, cmdRunner, helper); err != nil {
 		s.Fatal("Failed to run removeLeCredential with error: ", err)
 	}
 
 	/** Ensure test user 1 can still login with PIN**/
-	if _, err = authenticateWithCorrectPIN(ctx, ctxForCleanUp, testUser1, cmdRunner, helper, userParam, true /*shouldAuthenticate*/); err != nil {
+	if _, err = authenticateWithCorrectPIN(ctx, ctxForCleanUp, testUser1, cmdRunner, helper, true /*shouldAuthenticate*/); err != nil {
 		s.Fatal("Failed to run authenticateWithCorrectPIN with error: ", err)
 	}
 }
@@ -289,7 +261,7 @@ func getLeCredsFromDisk(ctx context.Context, r *hwsecremote.CmdRunnerRemote) ([]
 }
 
 // setupUserWithPIN sets up a user with a password and a PIN auth factor.
-func setupUserWithPIN(ctx, ctxForCleanUp context.Context, userName string, cmdRunner *hwsecremote.CmdRunnerRemote, helper *hwsecremote.CmdHelperRemote, userParam pinWeaverParam) error {
+func setupUserWithPIN(ctx, ctxForCleanUp context.Context, userName string, cmdRunner *hwsecremote.CmdRunnerRemote, helper *hwsecremote.CmdHelperRemote) error {
 	cryptohomeHelper := helper.CryptohomeClient()
 
 	// Start an Auth session and get an authSessionID.
@@ -337,7 +309,7 @@ func setupUserWithPIN(ctx, ctxForCleanUp context.Context, userName string, cmdRu
 }
 
 // attemptWrongPIN attempts to try wrong PIN for authentication for given number of attempts.
-func attemptWrongPIN(ctx, ctxForCleanUp context.Context, testUser string, r *hwsecremote.CmdRunnerRemote, helper *hwsecremote.CmdHelperRemote, userParam pinWeaverParam, numberOfWrongAttempts int) (hwsec.UserDataAuthReplyWithError, error) {
+func attemptWrongPIN(ctx, ctxForCleanUp context.Context, testUser string, r *hwsecremote.CmdRunnerRemote, helper *hwsecremote.CmdHelperRemote, numberOfWrongAttempts int) (hwsec.UserDataAuthReplyWithError, error) {
 	cryptohomeHelper := helper.CryptohomeClient()
 
 	// Authenticate a new auth session via the new added PIN auth factor.
@@ -361,7 +333,7 @@ func attemptWrongPIN(ctx, ctxForCleanUp context.Context, testUser string, r *hws
 }
 
 // authenticateWithCorrectPIN authenticates a given user with the correct PIN.
-func authenticateWithCorrectPIN(ctx, ctxForCleanUp context.Context, testUser string, r *hwsecremote.CmdRunnerRemote, helper *hwsecremote.CmdHelperRemote, userParam pinWeaverParam, shouldAuthenticate bool) (hwsec.UserDataAuthReplyWithError, error) {
+func authenticateWithCorrectPIN(ctx, ctxForCleanUp context.Context, testUser string, r *hwsecremote.CmdRunnerRemote, helper *hwsecremote.CmdHelperRemote, shouldAuthenticate bool) (hwsec.UserDataAuthReplyWithError, error) {
 	cryptohomeHelper := helper.CryptohomeClient()
 
 	// Authenticate a new auth session via the new added PIN auth factor.
@@ -380,7 +352,7 @@ func authenticateWithCorrectPIN(ctx, ctxForCleanUp context.Context, testUser str
 }
 
 // authenticateWithCorrectPassword authenticates a given user with the correct password.
-func authenticateWithCorrectPassword(ctx, ctxForCleanUp context.Context, testUser string, r *hwsecremote.CmdRunnerRemote, helper *hwsecremote.CmdHelperRemote, userParam pinWeaverParam) error {
+func authenticateWithCorrectPassword(ctx, ctxForCleanUp context.Context, testUser string, r *hwsecremote.CmdRunnerRemote, helper *hwsecremote.CmdHelperRemote) error {
 	cryptohomeHelper := helper.CryptohomeClient()
 
 	// Authenticate a new auth session via the new password auth factor and mount the user.
@@ -406,7 +378,7 @@ func authenticateWithCorrectPassword(ctx, ctxForCleanUp context.Context, testUse
 }
 
 // removeLeCredential removes testUser and checks to see if the leCreds on disk was updated.
-func removeLeCredential(ctx, ctxForCleanUp context.Context, testUser, label string, r *hwsecremote.CmdRunnerRemote, helper *hwsecremote.CmdHelperRemote, userParam pinWeaverParam) error {
+func removeLeCredential(ctx, ctxForCleanUp context.Context, testUser, label string, r *hwsecremote.CmdRunnerRemote, helper *hwsecremote.CmdHelperRemote) error {
 	cryptohomeHelper := helper.CryptohomeClient()
 
 	_, authSessionID, err := cryptohomeHelper.StartAuthSession(ctx, testUser, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT)

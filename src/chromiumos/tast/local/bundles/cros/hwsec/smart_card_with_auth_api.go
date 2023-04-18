@@ -26,8 +26,6 @@ import (
 // smartCardWithAuthAPIParam contains the test parameters which are different
 // between the types of backing store.
 type smartCardWithAuthAPIParam struct {
-	// Specifies whether to use user secret stash.
-	useUserSecretStash hwsec.UserSecretStashStatus
 	// Specifies which group of encryption the smart card supports.
 	smartCardAlgorithms []cpb.ChallengeSignatureAlgorithm
 }
@@ -44,31 +42,15 @@ func init() {
 		Attr:         []string{"group:mainline", "informational", "group:cryptohome"},
 		SoftwareDeps: []string{"tpm"},
 		Params: []testing.Param{{
-			Name: "smart_card_with_auth_factor_with_no_uss_rsassa_sha1",
+			Name: "smart_card_with_auth_factor_rsassa_sha1",
 			Val: smartCardWithAuthAPIParam{
-				useUserSecretStash: hwsec.NotEnabled,
 				smartCardAlgorithms: []cpb.ChallengeSignatureAlgorithm{
 					cpb.ChallengeSignatureAlgorithm_CHALLENGE_RSASSA_PKCS1_V1_5_SHA1,
 				},
 			},
 		}, {
-			Name: "smart_card_with_auth_factor_with_no_uss_rsassa_all",
+			Name: "smart_card_with_auth_factor_rsassa_all",
 			Val: smartCardWithAuthAPIParam{
-				useUserSecretStash:  hwsec.NotEnabled,
-				smartCardAlgorithms: hwsec.SmartCardAlgorithms,
-			},
-		}, {
-			Name: "smart_card_with_auth_factor_with_uss_rsassa_sha1",
-			Val: smartCardWithAuthAPIParam{
-				useUserSecretStash: hwsec.Enabled,
-				smartCardAlgorithms: []cpb.ChallengeSignatureAlgorithm{
-					cpb.ChallengeSignatureAlgorithm_CHALLENGE_RSASSA_PKCS1_V1_5_SHA1,
-				},
-			},
-		}, {
-			Name: "smart_card_with_auth_factor_with_uss_rsassa_all",
-			Val: smartCardWithAuthAPIParam{
-				useUserSecretStash:  hwsec.Enabled,
 				smartCardAlgorithms: hwsec.SmartCardAlgorithms,
 			},
 		}},
@@ -110,16 +92,6 @@ func SmartCardWithAuthAPI(ctx context.Context, s *testing.State) {
 	}
 	if _, err := client.RemoveVault(ctx, testUser); err != nil {
 		s.Fatal("Failed to remove old vault for preparation: ", err)
-	}
-
-	if userParam.useUserSecretStash != hwsec.NotEnabled {
-		// Enable the UserSecretStash experiment for the duration of the test by
-		// creating a flag file that's checked by cryptohomed.
-		cleanupUSSExperiment, err := helper.EnableUserSecretStash(ctx)
-		if err != nil {
-			s.Fatal("Failed to enable the UserSecretStash experiment: ", err)
-		}
-		defer cleanupUSSExperiment(ctx)
 	}
 
 	// Use a pseudorandom generator with a fixed seed, to make the values used by

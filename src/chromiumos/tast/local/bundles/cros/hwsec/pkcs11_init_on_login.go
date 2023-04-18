@@ -22,28 +22,11 @@ import (
 	"chromiumos/tast/testing"
 )
 
-// Contains the test parameters that specifies the type of storage.
-type pkcs11InitOnLoginWithAuthAPIParam struct {
-	// Specifies whether to use secret stash
-	useUserSecretStash bool
-}
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: Pkcs11InitOnLogin,
 		Desc: "Tests if initialization of a user PKCS #11 token succeeds during login and if objects stored in the token persist through to a subsequent login",
 		Attr: []string{"group:crosbolt", "crosbolt_perbuild"},
-		Params: []testing.Param{{
-			Name: "uss",
-			Val: pkcs11InitOnLoginWithAuthAPIParam{
-				useUserSecretStash: true,
-			},
-		}, {
-			Name: "vk",
-			Val: pkcs11InitOnLoginWithAuthAPIParam{
-				useUserSecretStash: false,
-			},
-		}},
 		Contacts: []string{
 			"cros-hwsec@google.com",
 			"chenyian@google.com",
@@ -55,7 +38,6 @@ func init() {
 
 // Pkcs11InitOnLogin test the PKCS#11 behavior of initialization on login.
 func Pkcs11InitOnLogin(ctx context.Context, s *testing.State) {
-	userParam := s.Param().(pkcs11InitOnLoginWithAuthAPIParam)
 	r := libhwseclocal.NewCmdRunner()
 
 	helper, err := libhwseclocal.NewHelper(r)
@@ -63,16 +45,6 @@ func Pkcs11InitOnLogin(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create hwsec helper: ", err)
 	}
 	cryptohome := helper.CryptohomeClient()
-
-	if userParam.useUserSecretStash {
-		// Enable the UserSecretStash experiment for the duration of the test by
-		// creating a flag file that's checked by cryptohome.
-		cleanupUSSExperiment, err := helper.EnableUserSecretStash(ctx)
-		if err != nil {
-			s.Fatal("Failed to enable the UserSecretStash experiment: ", err)
-		}
-		defer cleanupUSSExperiment(ctx)
-	}
 
 	// Ensure that the user directory is unmounted and does not exist.
 	if err := util.CleanupUserMount(ctx, cryptohome); err != nil {

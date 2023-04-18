@@ -53,16 +53,6 @@ func getLastLine(s string) string {
 	return lines[len(lines)-1]
 }
 
-// UserSecretStashStatus identifies the status of UserSecretStash usage.
-type UserSecretStashStatus int64
-
-const (
-	// NotEnabled force using legacy VaultKeysets are used for key backing store for the user.
-	NotEnabled UserSecretStashStatus = iota
-	// Enabled makes UserSecretStash preferred key backing store for the user.
-	Enabled
-)
-
 // UserDataAuthReplyWithError is an interface type that represent common UserDataAuth API protobuf reply that contains error in
 // the form of CryptohomeErrorCode and CryptohomeErrorInfo.
 type UserDataAuthReplyWithError interface {

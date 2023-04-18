@@ -19,12 +19,6 @@ import (
 	"chromiumos/tast/testing"
 )
 
-// cryptohomeMountPerfParams contains the test parameters that specifies the type of storage.
-type cryptohomeMountPerfParams struct {
-	// Specifies whether to use user secret stash.
-	useUserSecretStash bool
-}
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: CryptohomeMountPerf,
@@ -44,24 +38,11 @@ func init() {
 			"tast.cros.hwsec.AttestationDBusService",
 		},
 		Timeout: 12 * time.Minute,
-		Params: []testing.Param{{
-			Name: "uss",
-			Val: cryptohomeMountPerfParams{
-				useUserSecretStash: true,
-			},
-		}, {
-			Name: "vk",
-			Val: cryptohomeMountPerfParams{
-				useUserSecretStash: false,
-			},
-		}},
 	})
 }
 
 // CryptohomeMountPerf collects the performance for cryptohome mount operation.
 func CryptohomeMountPerf(ctx context.Context, s *testing.State) {
-	userParam := s.Param().(cryptohomeMountPerfParams)
-
 	// Setup helper functions
 	cmdRunner := hwsecremote.NewCmdRunner(s.DUT())
 	helper, err := hwsecremote.NewFullHelper(cmdRunner, s.DUT(), s.RPCHint())
@@ -69,21 +50,6 @@ func CryptohomeMountPerf(ctx context.Context, s *testing.State) {
 		s.Fatal("Helper creation error: ", err)
 	}
 	cryptohome := helper.CryptohomeClient()
-	if userParam.useUserSecretStash {
-		// Enable UserSecretStash.
-		cleanupUSSExperiment, err := helper.EnableUserSecretStash(ctx)
-		if err != nil {
-			s.Fatal("Failed to enable the UserSecretStash experiment: ", err)
-		}
-		defer cleanupUSSExperiment(ctx)
-	} else {
-		// Disable UserSecretStash to use VaultKeyset.
-		cleanupUSSDisable, err := helper.DisableUserSecretStash(ctx)
-		if err != nil {
-			s.Fatal("Failed to disable the UserSecretStash experiment: ", err)
-		}
-		defer cleanupUSSDisable(ctx)
-	}
 	daemonController := helper.DaemonController()
 
 	chaps, err := pkcs11.NewChaps(ctx, cmdRunner, helper.CryptohomeClient())
