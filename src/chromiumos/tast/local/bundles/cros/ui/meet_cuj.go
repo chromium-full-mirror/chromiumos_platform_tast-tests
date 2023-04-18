@@ -888,11 +888,48 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to grant permissions: ", err)
 	}
 
+	// checkError checks the actual error message when hrTelemetryApi is not defined.
+	// If the acount is signed out, wraps the given error with signed out error.
+	// If there is connection message, wraps the given error with connection error.
+	// If any other error occurs, the original error will be returned.
+	checkError := func(ctx context.Context, tconn *chrome.TestConn, err error) error {
+		if err == nil {
+			return nil
+		}
+
+		const (
+			errAPINotDefined    = "hrTelemetryApi is not defined"
+			errSignedOut        = "the account has been signed out"
+			errConnectionFailed = "failed to connect to meeting room"
+		)
+
+		// Use string comparison because error loses its type after wrapping.
+		// If the error doesn't contain "hrTelemetryApi is not defined", the original error is returned.
+		if !strings.Contains(err.Error(), errAPINotDefined) {
+			return err
+		}
+
+		// There may be multiple connection messages with same ancestor, so add First() here.
+		connectionMessage := nodewith.Name("Still trying to get in...").Role(role.StaticText).First()
+		signInLink := nodewith.Name("Sign in").Role(role.Link)
+		signInButton := nodewith.Name("Sign in").Role(role.Button)
+		signedOutMessages := nodewith.NameRegex(regexp.MustCompile("(Sign in to add a Google account|You have been signed out).*")).First()
+		errorNode, existsErr := ui.FindAnyExists(ctx, connectionMessage, signInLink, signInButton, signedOutMessages)
+		// If there are no signout and connection errors, the original error will be returned.
+		if existsErr != nil {
+			return err
+		}
+		if errorNode == connectionMessage {
+			return errors.Wrap(err, errConnectionFailed)
+		}
+		return errors.Wrap(err, errSignedOut)
+	}
+
 	// hrTelemetryApi is defined only after granting video permissions.
 	// Ensure to check that we are properly in the meeting before trying
 	// to apply visual effects.
 	if err := meetConn.WaitForExprWithTimeout(ctx, "hrTelemetryApi.isInMeeting()", time.Minute); err != nil {
-		s.Fatal("Failed to wait to enter the meeting: ", err)
+		s.Fatal("Failed to wait to enter the meeting: ", checkError(ctx, tconn, err))
 	}
 
 	moreOptions := nodewith.Name("More options").Role(role.PopUpButton)
