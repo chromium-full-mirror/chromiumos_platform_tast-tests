@@ -86,7 +86,7 @@ func PSimNetworkName(ctx context.Context, s *testing.State) {
 	}
 
 	expr := `var optionNode = shadowPiercingQuery(
-                 'settings-internet-detail-page div#networkState');
+                 'settings-internet-detail-subpage div#networkState');
 	         if (optionNode == undefined) {
 		       throw new Error("Title node not found.");
 	         }
