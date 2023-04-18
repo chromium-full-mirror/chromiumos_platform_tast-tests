@@ -100,6 +100,13 @@ func init() {
 					probeStatement{"audio_codec"},
 				}}},
 			ExtraAttr: []string{"informational", "group:criticalstaging"},
+		}, {
+			Name: "mmc_host",
+			Val: verifySandboxTestParams{
+				probeConfig: probeConfig{[]probeStatement{
+					probeStatement{"mmc_host"},
+				}}},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}},
 	})
 }
