@@ -10,10 +10,12 @@ import (
 	"regexp"
 	"time"
 
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/uiauto"
+	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/testing"
@@ -33,13 +35,25 @@ var pollOpts = &testing.PollOptions{Interval: time.Second, Timeout: Installation
 
 // InstallApp installs the specified Chrome app from the Chrome Web Store. This works for both ash-chrome and lacros-chrome browsers.
 // tconn is a connection to ash-chrome.
-func InstallApp(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn, app App) error {
+func InstallApp(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn, app App) (retErr error) {
 	cws, err := br.NewConn(ctx, app.URL)
 	if err != nil {
 		return err
 	}
 	defer cws.Close()
 	defer cws.CloseTarget(ctx)
+
+	outDir, ok := testing.ContextOutDir(ctx)
+	if !ok || outDir == "" {
+		return errors.New("failed to get the out directory to dump UI tree on failures")
+	}
+
+	// Shorten context to allow for dumping UI tree in case of failure.
+	closeCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 2*time.Second)
+	defer cancel()
+
+	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnError(closeCtx, outDir, func() bool { return retErr != nil }, tconn, "install_app_dump")
 
 	var (
 		installed = nodewith.Role(role.Button).NameRegex(regexp.MustCompile(`(Remove from Chrome|Launch app)`)).First()

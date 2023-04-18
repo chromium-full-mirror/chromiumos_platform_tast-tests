@@ -8,11 +8,13 @@ import (
 	"context"
 	"time"
 
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/uiauto/cws"
+	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/webutil"
 	"chromiumos/tast/testing"
 )
@@ -46,7 +48,7 @@ func EnsureDocsOfflineInstalled(ctx context.Context, br *browser.Browser, tconn 
 // the browser and the current active user has it enabled in Drive's settings.
 // This function should be called before opening any docs if offline capability
 // is desired.
-func EnsureDocsOfflineEnabled(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn) error {
+func EnsureDocsOfflineEnabled(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn) (retErr error) {
 	if err := EnsureDocsOfflineInstalled(ctx, br, tconn); err != nil {
 		return errors.Wrap(err, "failed to install Docs offline extension")
 	}
@@ -58,6 +60,18 @@ func EnsureDocsOfflineEnabled(ctx context.Context, br *browser.Browser, tconn *c
 	}
 	defer conn.Close()
 	defer conn.CloseTarget(ctx)
+
+	outDir, ok := testing.ContextOutDir(ctx)
+	if !ok || outDir == "" {
+		return errors.New("failed to get the out directory to dump UI tree on failures")
+	}
+
+	// Shorten context to allow for dumping UI tree in case of failure.
+	closeCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 2*time.Second)
+	defer cancel()
+
+	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnError(closeCtx, outDir, func() bool { return retErr != nil }, tconn, "docs_offline_dump")
 
 	// Wait for settings page to load and sync the account settings.
 	if err := webutil.WaitForQuiescence(ctx, conn, time.Minute); err != nil {
