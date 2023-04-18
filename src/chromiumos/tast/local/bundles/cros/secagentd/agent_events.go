@@ -30,7 +30,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: AgentEvents,
-		Desc: "Checks that Agent Start and Heartbeat events are correctly being reported",
+		Desc: "Checks that Agent Start Event is correctly being reported",
 		Contacts: []string{
 			"cros-enterprise-security@google.com",
 			"aashay@google.com",
@@ -264,7 +264,11 @@ func AgentEvents(ctx context.Context, s *testing.State) {
 		if err := proto.Unmarshal(enq.GetRecord().GetData(), pe); err != nil {
 			s.Fatal("Failed to unmarshal data for a CROS_SECURITY_AGENT record")
 		}
-		agent := pe.GetAgentStart()
+		if len(pe.GetBatchedEvents()) != 1 {
+			s.Fatalf("Incorrect number of events. Expected: 1, Actual: %d", len(pe.GetBatchedEvents()))
+		}
+
+		agent := pe.GetBatchedEvents()[0].GetAgentStart()
 		//TODO(b/254534567) Source secureboot for expected AgentStart. Copy for now.
 		if agent.Tcb.FirmwareSecureBoot != nil {
 			expAgent.Tcb.FirmwareSecureBoot = agent.Tcb.GetFirmwareSecureBoot().Enum()
