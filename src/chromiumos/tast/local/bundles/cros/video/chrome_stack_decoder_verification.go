@@ -935,6 +935,39 @@ func init() {
 				},
 			},
 			{
+				Name:              "h264_files_from_bugs_277849540_1",
+				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
+				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
+				ExtraData:         appendJSONFiles([]string{"test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_16x16.h264"}),
+				Val: chromeStackDecoderVerificationTestParam{
+					videoFiles:    []string{"test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_16x16.h264"},
+					validatorType: decoding.MD5,
+					mustFail:      false,
+				},
+			},
+			{
+				Name:              "h264_files_from_bugs_277849540_2",
+				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
+				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
+				ExtraData:         appendJSONFiles([]string{"test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_4x4.h264"}),
+				Val: chromeStackDecoderVerificationTestParam{
+					videoFiles:    []string{"test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_4x4.h264"},
+					validatorType: decoding.MD5,
+					mustFail:      false,
+				},
+			},
+			{
+				Name:              "h264_files_from_bugs_277849540_3",
+				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
+				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
+				ExtraData:         appendJSONFiles([]string{"test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_8x8.h264"}),
+				Val: chromeStackDecoderVerificationTestParam{
+					videoFiles:    []string{"test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_8x8.h264"},
+					validatorType: decoding.MD5,
+					mustFail:      false,
+				},
+			},
+			{
 				Name:              "h264_4k_files_from_bugs_22704778",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
 				ExtraSoftwareDeps: []string{caps.HWDecodeH264_4K, "proprietary_codecs"},

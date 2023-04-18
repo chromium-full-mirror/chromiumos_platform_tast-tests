@@ -14,10 +14,13 @@ import (
 // To regenerate the test parameters by running the following in a chroot:
 // TAST_GENERATE_UPDATE=1 ~/trunk/src/platform/tast/tools/go.sh test -count=1 chromiumos/tast/local/bundles/cros/video
 var h264FilesFromBugs = map[string]string{
-	"149068426": "test_vectors/h264/files_from_bugs/b_149068426_invalid_video_layout_mtk_8183_with_direct_videodecoder.h264",
-	"172838252": "test_vectors/h264/files_from_bugs/b_172838252_pixelated_video_on_rk3399.h264",
-	"174733646": "test_vectors/h264/files_from_bugs/b_174733646_video_with_out_of_order_frames_mtk_8173.h264",
-	"210895987": "test_vectors/h264/files_from_bugs/b_210895987_still-colors-360p.h264",
+	"149068426":   "test_vectors/h264/files_from_bugs/b_149068426_invalid_video_layout_mtk_8183_with_direct_videodecoder.h264",
+	"172838252":   "test_vectors/h264/files_from_bugs/b_172838252_pixelated_video_on_rk3399.h264",
+	"174733646":   "test_vectors/h264/files_from_bugs/b_174733646_video_with_out_of_order_frames_mtk_8173.h264",
+	"210895987":   "test_vectors/h264/files_from_bugs/b_210895987_still-colors-360p.h264",
+	"277849540_1": "test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_16x16.h264",
+	"277849540_2": "test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_4x4.h264",
+	"277849540_3": "test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_8x8.h264",
 }
 
 var h2644kFilesFromBugs = map[string]string{

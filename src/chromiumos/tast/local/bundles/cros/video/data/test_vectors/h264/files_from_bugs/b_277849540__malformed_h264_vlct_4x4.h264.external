@@ -1,0 +1,5 @@
+{
+  "sha256sum": "4e1278f2f34e3f5be0449f13ea871c8d43641d5e902c76d45be65a6ab78db956",
+  "size": 108,
+  "url": "gs://chromiumos-test-assets-public/tast/cros/video/test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_4x4_20230418.h264"
+}
