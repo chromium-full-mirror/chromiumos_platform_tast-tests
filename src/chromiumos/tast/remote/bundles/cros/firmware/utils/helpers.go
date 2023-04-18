@@ -104,46 +104,46 @@ func ChangeFWVariant(ctx context.Context, h *firmware.Helper, ms *firmware.ModeS
 // CheckRecReason checks if recovery reason occures in the expReason slice
 func CheckRecReason(ctx context.Context, h *firmware.Helper, ms *firmware.ModeSwitcher, expReasons []reporters.RecoveryReason) error {
 	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxHost); err != nil {
-		errors.Wrap(err, "failed to set the USB Mux direction to the Host")
+		return errors.Wrap(err, "failed to set the USB Mux direction to the Host")
 	}
 
 	// Test element required if rebooting from recovery to anything
 	if err := h.Servo.WatchdogRemove(ctx, servo.WatchdogCCD); err != nil {
-		errors.Wrap(err, "failed to remove watchdog for ccd")
+		return errors.Wrap(err, "failed to remove watchdog for ccd")
 	}
 
 	if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
-		errors.Wrap(err, "failed to warm reset DUT")
+		return errors.Wrap(err, "failed to warm reset DUT")
 	}
 
 	if err := h.RequireServo(ctx); err != nil {
-		errors.Wrap(err, "failed to init servo")
+		return errors.Wrap(err, "failed to init servo")
 	}
 
 	if err := h.CloseRPCConnection(ctx); err != nil {
-		errors.Wrap(err, "failed to close RPC connection")
+		return errors.Wrap(err, "failed to close RPC connection")
 	}
 
 	// Recovery mode requires the DUT to boot the image on the USB.
 	// Thus, the servo must show the USB to the DUT.
 	if err := ms.EnableRecMode(ctx, servo.USBMuxDUT); err != nil {
-		errors.Wrap(err, "failed to enable recovery mode")
+		return errors.Wrap(err, "failed to enable recovery mode")
 	}
 
 	connectCtx, cancel := context.WithTimeout(ctx, 10*time.Minute)
 	defer cancel()
 	if err := h.WaitConnect(connectCtx); err != nil {
-		errors.Wrap(err, "failed to reconnect to DUT after booting to recovery mode")
+		return errors.Wrap(err, "failed to reconnect to DUT after booting to recovery mode")
 	}
 
 	if isRecovery, err := h.Reporter.CheckBootMode(ctx, fwCommon.BootModeRecovery); err != nil {
-		errors.Wrap(err, "failed to check a boot mode")
+		return errors.Wrap(err, "failed to check a boot mode")
 	} else if !isRecovery {
-		errors.New("failed to boot into the recovery mode")
+		return errors.New("failed to boot into the recovery mode")
 	}
 
 	if containsRecReason, err := h.Reporter.ContainsRecoveryReason(ctx, expReasons); err != nil || !containsRecReason {
-		errors.Wrap(err, "failed to get expected recovery reason")
+		return errors.Wrap(err, "failed to get expected recovery reason")
 	}
 
 	return nil
@@ -189,7 +189,10 @@ func VerifyCr50Command(ctx context.Context, h *firmware.Helper, cmd, expectCCDSt
 			}
 			return errors.New("DUT rebooted unexpectedly")
 		}
-		testing.Sleep(ctx, WaitAfterCCDSettingChange)
+		// GoBigSleepLint: This sleep is needed to allow ccd settings to get set.
+		if err := testing.Sleep(ctx, WaitAfterCCDSettingChange); err != nil {
+			return errors.Wrap(err, "failed to wait for ccd setting to change")
+		}
 	}
 	if err = CheckExpectedCCDState(ctx, h, expectCCDState, expectCCDPasswdState); err != nil {
 		return errors.Wrap(err, "checkExpectedCCDState() failed")
@@ -266,7 +269,10 @@ func VerifyGsctoolCommand(ctx context.Context, h *firmware.Helper, behavior GSCB
 			}
 			return errors.New("DUT rebooted unexpectedly")
 		}
-		testing.Sleep(ctx, WaitAfterCCDSettingChange)
+		// GoBigSleepLint: This sleep is needed to allow ccd settings to get set.
+		if err := testing.Sleep(ctx, WaitAfterCCDSettingChange); err != nil {
+			return errors.Wrap(err, "failed to wait for ccd setting to change")
+		}
 	}
 
 	if err = CheckExpectedCCDState(ctx, h, expectCCDState, expectCCDPasswdState); err != nil {
@@ -339,7 +345,10 @@ func Cr50Cleanup(ctx context.Context, h *firmware.Helper) error {
 		if err := h.Servo.RunCR50Command(ctx, "ccd testlab open"); err != nil {
 			return errors.Wrap(err, `failed to execute "ccd testlab open"`)
 		}
-		testing.Sleep(ctx, WaitAfterCCDSettingChange)
+		// GoBigSleepLint: This sleep is needed to allow ccd settings to get set.
+		if err := testing.Sleep(ctx, WaitAfterCCDSettingChange); err != nil {
+			return errors.Wrap(err, "failed to wait for ccd setting to change")
+		}
 	}
 	testing.ContextLog(ctx, "Reset CCD")
 	if _, err = h.Servo.RunCR50CommandGetOutput(ctx, "ccd reset", []string{`Resetting\s+all\s+settings`}); err != nil {
