@@ -129,7 +129,7 @@ func IMESwitchShortcut(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to find keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	// Press Ctrl-Space
 	if err := kb.Accel(ctx, "Ctrl+Space"); err != nil {

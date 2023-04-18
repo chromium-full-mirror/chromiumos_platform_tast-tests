@@ -107,7 +107,7 @@ func SystemIndependentNotifications(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create clamshell action handler: ", err)
 	}
-	defer uiHandler.Close()
+	defer uiHandler.Close(ctx)
 
 	kb, err := input.Keyboard(ctx)
 	if err != nil {

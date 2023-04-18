@@ -77,7 +77,7 @@ func TaskManager(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to find keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	taskManager := nodewith.Name("Task Manager").ClassName("TaskManagerView").First()
 	arcEntry := nodewith.Name("App: " + pkg).Ancestor(taskManager)

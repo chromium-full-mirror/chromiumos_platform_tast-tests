@@ -185,7 +185,7 @@ func playDRMVideo(ctx context.Context, s *testing.State, cs ash.ConnSource, cr *
 	if err != nil {
 		return false, errors.Wrap(err, "failed to initialize the keyboard writer")
 	}
-	defer ew.Close()
+	defer ew.Close(ctx)
 	if err := ew.Type(ctx, "f"); err != nil {
 		return false, errors.Wrap(err, "failed to inject the 'f' key")
 	}

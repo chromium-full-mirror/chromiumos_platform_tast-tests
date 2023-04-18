@@ -372,7 +372,7 @@ func HardwarePrintCombinations(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get the keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	if err := uiauto.Combine("open Print Preview with shortcut Ctrl+P",
 		kb.AccelAction("Ctrl+P"),

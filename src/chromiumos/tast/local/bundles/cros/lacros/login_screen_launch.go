@@ -132,7 +132,7 @@ func inputPassword(ctx context.Context, tConn *chrome.TestConn, creds chrome.Cre
 	if err != nil {
 		return errors.Wrap(err, "failed to get keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	// Simulate entering the password.
 	if err := lockscreen.EnterPassword(ctx, tConn, creds.User, creds.Pass, kb); err != nil {

@@ -66,7 +66,7 @@ func ImagePasteFromDownloads(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get keyboard")
 	}
-	defer keyboard.Close()
+	defer keyboard.Close(ctx)
 
 	files, err := filesapp.Launch(ctx, tconn)
 	if err != nil {

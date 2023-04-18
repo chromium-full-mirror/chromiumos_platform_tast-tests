@@ -103,7 +103,7 @@ func WebauthnUsingPassword(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get keyboard: ", err)
 	}
-	defer keyboard.Close()
+	defer keyboard.Close(ctx)
 
 	authCallback := func(ctx context.Context, ui *uiauto.Context) error {
 		// Check if the UI is correct.

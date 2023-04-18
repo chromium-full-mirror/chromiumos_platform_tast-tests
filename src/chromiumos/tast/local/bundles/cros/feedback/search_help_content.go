@@ -79,7 +79,7 @@ func SearchHelpContent(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to find keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	// Launch feedback app.
 	feedbackRootNode, err := feedbackapp.Launch(ctx, tconn)

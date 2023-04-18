@@ -49,7 +49,7 @@ func FeaturePodRestrictedAtLockScreen(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create a keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)

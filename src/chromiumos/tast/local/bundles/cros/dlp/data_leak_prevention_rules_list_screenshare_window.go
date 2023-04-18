@@ -186,7 +186,7 @@ func DataLeakPreventionRulesListScreenshareWindow(ctx context.Context, s *testin
 	if err != nil {
 		s.Fatal("Failed to get keyboard: ", err)
 	}
-	defer keyboard.Close()
+	defer keyboard.Close(ctx)
 
 	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, params.BrowserType)
 	if err != nil {

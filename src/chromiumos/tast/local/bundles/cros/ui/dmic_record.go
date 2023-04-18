@@ -48,7 +48,7 @@ func DMICRecord(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to open the keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	const (
 		recordTime        = 30
@@ -64,7 +64,7 @@ func DMICRecord(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create clamshell action handler: ", err)
 	}
-	defer uiHandler.Close()
+	defer uiHandler.Close(ctx)
 
 	// Shorten deadline to leave time for cleanup.
 	cleanupCtx := ctx

@@ -95,7 +95,7 @@ func SimLockSettingOnOff(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to open the keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
 	if err := uiauto.Combine("Toggle on the SIM Lock setting",

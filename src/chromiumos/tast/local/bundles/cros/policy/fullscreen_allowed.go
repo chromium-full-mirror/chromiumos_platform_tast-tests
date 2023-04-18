@@ -117,7 +117,7 @@ func FullscreenAllowed(ctx context.Context, s *testing.State) {
 			if err != nil {
 				s.Fatal("Failed to get the keyboard: ", err)
 			}
-			defer kb.Close()
+			defer kb.Close(ctx)
 
 			// Press the fullscreen hotkey to enter full screen mode.
 			if err := kb.Accel(ctx, "f11"); err != nil {

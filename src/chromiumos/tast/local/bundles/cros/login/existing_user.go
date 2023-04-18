@@ -94,7 +94,7 @@ func ExistingUser(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	s.Log("Entering password to log in")
 	if err := lockscreen.EnterPassword(ctx, tLoginConn, creds.User, creds.Pass, kb); err != nil {

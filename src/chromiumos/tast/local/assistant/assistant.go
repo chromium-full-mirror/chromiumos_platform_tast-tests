@@ -162,7 +162,7 @@ func SendTextQueryViaUI(ctx context.Context, tconn *chrome.TestConn, query strin
 	if err != nil {
 		return errors.Wrap(err, "failed to create a KeyboardEventWriter")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	if err := kb.Type(ctx, query); err != nil {
 		return errors.Wrapf(err, "failed to type query: %s", query)

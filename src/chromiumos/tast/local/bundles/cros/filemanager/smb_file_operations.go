@@ -81,7 +81,7 @@ func SMBFileOperations(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get keyboard handle: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	ui := uiauto.New(tconn)
 	if err := uiauto.Combine("add the SMB file share via Files context menu",

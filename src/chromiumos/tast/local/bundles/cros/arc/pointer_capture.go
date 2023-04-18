@@ -263,7 +263,7 @@ func verifyPointerCaptureDisabledWhenChromeFocused(ctx context.Context, s *testi
 	if err != nil {
 		s.Fatal("Failed to find keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 	if err := t.tester.WaitForTestAppFocused(ctx, true); err != nil {
 		s.Fatal("Failed to ensure the test app was initially focused: ", err)
 	}
@@ -337,7 +337,7 @@ func verifyPointerCaptureWithKeyboardFocusChange(ctx context.Context, s *testing
 	if err != nil {
 		s.Fatal("Failed to find keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	if err := kb.Accel(ctx, "Alt+Tab"); err != nil {
 		s.Fatal("Failed to press Alt+Tab to switch windows: ", err)

@@ -106,7 +106,7 @@ func runStandardizedKeyboardKeysTest(ctx context.Context, testParameters standar
 	if err != nil {
 		return errors.Wrap(err, "failed to create virtual keyboard")
 	}
-	defer kbd.Close()
+	defer kbd.Close(ctx)
 
 	topRow, err := input.KeyboardTopRowLayout(ctx, kbd)
 	if err != nil {

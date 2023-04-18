@@ -142,7 +142,7 @@ func virtualKeyboard(ctx context.Context, busType uint16) (*KeyboardEventWriter,
 	testing.ContextLog(ctx, "Using virtual keyboard device ", kw.dev)
 
 	if kw.rw, err = Device(ctx, kw.dev); err != nil {
-		kw.Close()
+		kw.Close(ctx)
 		return nil, err
 	}
 
@@ -162,14 +162,19 @@ func VirtualKeyboardWithBusType(ctx context.Context, busType uint16) (*KeyboardE
 }
 
 // Close closes the keyboard device.
-func (kw *KeyboardEventWriter) Close() error {
+func (kw *KeyboardEventWriter) Close(ctx context.Context) error {
 	var firstErr error
 	if kw.rw != nil {
-		firstErr = kw.rw.Close()
+		if firstErr = kw.rw.Close(); firstErr != nil {
+			testing.ContextLog(ctx, "Failed to close raw event writer: ", firstErr)
+		}
 	}
 	if kw.virt != nil {
-		if err := kw.virt.Close(); firstErr == nil {
-			firstErr = err
+		if err := kw.virt.Close(); err != nil {
+			testing.ContextLog(ctx, "Failed to close virtual file: ", err)
+			if firstErr == nil {
+				firstErr = err
+			}
 		}
 	}
 	return firstErr

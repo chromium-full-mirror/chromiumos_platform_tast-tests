@@ -45,7 +45,7 @@ func InputCheckKeyState(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to find keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	// Open keyboard tester.
 	if err := da.OpenKeyboardTester(ctx, tconn); err != nil {

@@ -227,7 +227,7 @@ func enterInvalidPassword(ctx context.Context, tconn *chrome.TestConn, creds chr
 	if err != nil {
 		return errors.Wrap(err, "failed to get virtual keyboard")
 	}
-	defer keyboard.Close()
+	defer keyboard.Close(ctx)
 
 	// Enter wrong password.
 	if err = lockscreen.EnterPassword(ctx, tconn, creds.User, creds.Pass+"invalid", keyboard); err != nil {

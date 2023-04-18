@@ -68,7 +68,7 @@ func HidScreenUsbKeyboardOnly(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to create a virtual keyboard: ", err)
 		}
 
-		defer keyboard.Close()
+		defer keyboard.Close(ctx)
 
 		// Check that a keyboard is detected.
 		if err := oobeHelper.IsHidDetectionSearchingForKeyboard(ctx, oobeConn, tconn); err == nil {
@@ -95,7 +95,7 @@ func HidScreenUsbKeyboardOnly(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create a virtual keyboard: ", err)
 	}
 
-	defer keyboard.Close()
+	defer keyboard.Close(ctx)
 
 	// Check that a keyboard is detected.
 	if err := oobeHelper.IsHidDetectionSearchingForKeyboard(ctx, oobeConn, tconn); err == nil {

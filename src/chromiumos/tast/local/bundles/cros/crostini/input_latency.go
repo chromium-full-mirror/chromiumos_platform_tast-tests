@@ -198,7 +198,7 @@ func InputLatency(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Error("Failed to get keyboard event writer: ", err)
 	}
-	defer keyWriter.Close()
+	defer keyWriter.Close(ctx)
 
 	// Listen to evtest before sending keys.
 	// keyEventChan returns the timestamp of a key press event.

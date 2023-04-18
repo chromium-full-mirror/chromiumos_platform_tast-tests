@@ -68,7 +68,7 @@ func SearchInstalledApps(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get keyboard: ", err)
 	}
-	defer kw.Close()
+	defer kw.Close(ctx)
 
 	testCase := s.Param().(launcher.TestCase)
 	cleanup, err := launcher.SetUpLauncherTest(ctx, tconn, testCase.TabletMode, false /*stabilizeAppCount*/)

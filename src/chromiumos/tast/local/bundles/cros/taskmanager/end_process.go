@@ -80,7 +80,7 @@ func EndProcess(ctx context.Context, s *testing.State) {
 	if err != nil {
 		errors.Wrap(err, "failed to get keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	resources := &endProcessTestResources{
 		cr:          cr,

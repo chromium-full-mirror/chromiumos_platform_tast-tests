@@ -93,7 +93,7 @@ func CheckValidUsers(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	// Use a shortened context for test operations to reserve time for cleanup.
 	cleanupCtx := ctx

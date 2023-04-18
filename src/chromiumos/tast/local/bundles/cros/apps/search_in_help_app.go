@@ -134,7 +134,7 @@ func SearchInHelpApp(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get a keyboard")
 	}
-	defer keyboard.Close()
+	defer keyboard.Close(ctx)
 
 	firstSearchResultContainer := nodewith.ClassName("search-result selected").Role(role.ListItem).Ancestor(helpapp.RootFinder)
 	// The name matches the category of the search result, which should be "Help".

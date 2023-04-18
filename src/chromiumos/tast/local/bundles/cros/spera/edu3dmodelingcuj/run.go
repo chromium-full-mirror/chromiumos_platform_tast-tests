@@ -63,7 +63,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, isTablet bool, bt browser.Type,
 			return errors.Wrap(err, "failed to create clamshell action handler")
 		}
 	}
-	defer uiHandler.Close()
+	defer uiHandler.Close(ctx)
 
 	testing.ContextLog(ctx, "Start to get browser start time")
 	l, browserStartTime, err := cuj.GetBrowserStartTime(ctx, tconn, true, isTablet, bt)
@@ -99,7 +99,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, isTablet bool, bt browser.Type,
 	if err != nil {
 		return errors.Wrap(err, "failed to find keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
 	if err != nil {

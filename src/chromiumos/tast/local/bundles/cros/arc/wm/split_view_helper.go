@@ -128,7 +128,7 @@ func ToggleSnapViaKeyboardShortcut(ctx context.Context, tconn *chrome.TestConn, 
 	if err != nil {
 		return errors.Wrap(err, "failed to open keyboard device")
 	}
-	defer ew.Close()
+	defer ew.Close(ctx)
 
 	shortcutCommand := "Alt+]"
 	if primary {

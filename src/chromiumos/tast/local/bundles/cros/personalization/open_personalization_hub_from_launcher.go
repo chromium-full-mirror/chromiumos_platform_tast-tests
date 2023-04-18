@@ -55,7 +55,7 @@ func OpenPersonalizationHubFromLauncher(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	if err := uiauto.Combine("open wallpaper app by searching in launcher",
 		personalization.SearchForAppInLauncher(personalization.WallpaperSearchTerm, personalization.ChangeWallpaper, kb, ui),

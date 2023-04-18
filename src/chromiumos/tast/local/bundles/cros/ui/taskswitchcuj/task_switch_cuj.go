@@ -79,7 +79,7 @@ func Run(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to open the keyboard: ", err)
 	}
-	defer kw.Close()
+	defer kw.Close(ctx)
 
 	// Create a virtual mouse for clamshell tests.
 	var mw *input.MouseEventWriter

@@ -87,7 +87,7 @@ func VolumeSlider(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	if err := quicksettings.Show(ctx, tconn); err != nil {
 		s.Fatal("Failed to show Quick Settings: ", err)

@@ -72,7 +72,7 @@ func PrintingBackgroundGraphicsDefault(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get the keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	for _, param := range []struct {
 		name        string

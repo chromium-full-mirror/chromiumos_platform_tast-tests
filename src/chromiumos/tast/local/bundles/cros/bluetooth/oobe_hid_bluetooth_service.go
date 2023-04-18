@@ -119,7 +119,7 @@ func (svc *OobeHidBluetoothService) ProgressToWelcomeScreen(ctx context.Context,
 		return nil, errors.Wrap(err, "failed to create a virtual keyboard")
 	}
 
-	defer keyboard.Close()
+	defer keyboard.Close(ctx)
 
 	// Check that a keyboard is detected.
 	if err := oobeHelper.IsHidDetectionSearchingForKeyboard(ctx, oobeConn, tconn); err == nil {

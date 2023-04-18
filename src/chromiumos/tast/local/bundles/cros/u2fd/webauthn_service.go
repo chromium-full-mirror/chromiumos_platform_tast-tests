@@ -95,7 +95,7 @@ func (c *WebauthnService) New(ctx context.Context, req *hwsec.NewRequest) (*empt
 	}
 	defer func(ctx context.Context) {
 		if !ok {
-			if err := keyboard.Close(); err != nil {
+			if err := keyboard.Close(ctx); err != nil {
 				testing.ContextLog(ctx, "Failed to close keyboard")
 			}
 		}
@@ -207,7 +207,7 @@ func (c *WebauthnService) Close(ctx context.Context, req *empty.Empty) (*empty.E
 		c.cr = nil
 	}
 	if c.keyboard != nil {
-		if err := c.keyboard.Close(); err != nil {
+		if err := c.keyboard.Close(ctx); err != nil {
 			testing.ContextLog(ctx, "Failed to close keyboard: ", err)
 			lastErr = err
 		}

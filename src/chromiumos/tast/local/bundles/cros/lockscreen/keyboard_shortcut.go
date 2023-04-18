@@ -49,7 +49,7 @@ func KeyboardShortcut(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed creating virtual keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	cr, err := chrome.New(ctx, chrome.FakeLogin(chrome.Creds{User: username, Pass: password}))
 	if err != nil {

@@ -145,7 +145,7 @@ func OpenDesktop(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get a keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	// Move focus on Windows desktop.
 	if err := kb.Accel(ctx, "Tab"); err != nil {

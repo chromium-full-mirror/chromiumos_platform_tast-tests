@@ -203,7 +203,7 @@ func playAudio(ctx context.Context, tconn *chrome.TestConn, downloadsPath string
 	if err != nil {
 		return errors.Wrap(err, "failed to find keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	defer func() {
 		// Closing the audio player.

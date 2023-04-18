@@ -47,7 +47,7 @@ func InputKeyboardConnectAndDisconnect(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create a virtual keyboard: ", err)
 	}
-	defer vkb.Close()
+	defer vkb.Close(ctx)
 
 	if err := da.OpenInputPage(ctx, tconn); err != nil {
 		s.Fatal("Could open the input page: ", err)
@@ -62,7 +62,7 @@ func InputKeyboardConnectAndDisconnect(ctx context.Context, s *testing.State) {
 
 	disconnectKeyboard := func() action.Action {
 		return func(ctx context.Context) error {
-			return vkb.Close()
+			return vkb.Close(ctx)
 		}
 	}
 

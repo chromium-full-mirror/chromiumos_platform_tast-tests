@@ -190,7 +190,7 @@ func PhysicalKeyboard(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to find keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	s.Log("Installing app")
 	if err := a.Install(ctx, arc.APKPath(apk)); err != nil {

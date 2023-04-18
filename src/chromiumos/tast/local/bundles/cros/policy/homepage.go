@@ -172,7 +172,7 @@ func Homepage(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get the keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	// If the HomepageLocation policy is set and HomepageIsNewTabPage is set to false,
 	// when the current page is navigated to the home page, the configured page in the

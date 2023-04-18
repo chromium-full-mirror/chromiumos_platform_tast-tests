@@ -88,13 +88,13 @@ func EDUImageEditingCUJ(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to create clamshell action handler: ", err)
 		}
 	}
-	defer uiHdl.Close()
+	defer uiHdl.Close(ctx)
 
 	kb, err := input.Keyboard(ctx)
 	if err != nil {
 		s.Fatal("Failed to initialize keyboard input: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	testImageLocation := s.DataPath(testImage)
 	bt := s.Param().(browser.Type)

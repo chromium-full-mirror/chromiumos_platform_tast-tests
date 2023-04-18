@@ -128,7 +128,7 @@ func BedTimeLimit(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to find keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 	if err := lockscreen.EnterPassword(ctx, tconn, childUser,
 		s.RequiredVar("family.unicornPassword"), kb); err != nil {
 		s.Fatal("Entering password failed: ", err)

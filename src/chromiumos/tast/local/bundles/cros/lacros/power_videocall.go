@@ -180,7 +180,7 @@ func PowerVideocall(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create a keyboard: ", err)
 	}
-	defer kw.Close()
+	defer kw.Close(ctx)
 
 	// Select text input field
 	if err := pc.Click(nodewith.Name("Edit here").Role(role.TextField))(ctx); err != nil {

@@ -92,7 +92,7 @@ func ManualTicketAccessFileSystem(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get keyboard handle: ", err)
 	}
-	defer keyboard.Close()
+	defer keyboard.Close(ctx)
 
 	// Change the keyboard layout to English(US). See crbug.com/1351417.
 	// If layout is already English(US), which is true for most of the cases,

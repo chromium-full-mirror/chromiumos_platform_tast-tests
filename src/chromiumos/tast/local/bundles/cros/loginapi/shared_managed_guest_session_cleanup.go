@@ -306,7 +306,7 @@ func SharedManagedGuestSessionCleanup(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get keyboard: ", err)
 	}
-	defer keyboard.Close()
+	defer keyboard.Close(ctx)
 	if err := keyboard.Accel(ctx, "Ctrl+Shift+t"); err != nil {
 		s.Fatal("Failed to run keyboard command for restoring tabs: ", err)
 	}

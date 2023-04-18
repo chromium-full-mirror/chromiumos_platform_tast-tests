@@ -82,7 +82,7 @@ func (s *ProxySettingsService) Close(ctx context.Context, _ *emptypb.Empty) (*em
 	}
 
 	if s.kb != nil {
-		if err := s.kb.Close(); err != nil {
+		if err := s.kb.Close(ctx); err != nil {
 			return &emptypb.Empty{}, errors.Wrap(err, "failed to close keyboard")
 		}
 		s.kb = nil

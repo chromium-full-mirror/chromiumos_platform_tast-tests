@@ -90,7 +90,7 @@ func CopyPaste(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to find keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	if err := tconn.WaitForExpr(ctx, "chrome.clipboard"); err != nil {
 		s.Fatal("Failed to wait for chrome.clipboard API to become available: ", err)

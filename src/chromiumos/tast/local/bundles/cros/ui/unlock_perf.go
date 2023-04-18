@@ -73,7 +73,7 @@ func UnlockPerf(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed creating virtual keyboard: ", err)
 	}
 
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	cr, l, cs, err := lacros.Setup(ctx, s.FixtValue(), s.Param().(browser.Type))
 	if err != nil {

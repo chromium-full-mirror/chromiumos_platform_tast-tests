@@ -227,7 +227,7 @@ func ZoomConfCUJ(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to initialize keyboard input: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	var traceConfigPath string
 	if collect, ok := s.Var("ui.collectTrace"); ok && collect == "enable" {

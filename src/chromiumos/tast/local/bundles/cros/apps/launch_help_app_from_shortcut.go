@@ -78,7 +78,7 @@ func LaunchHelpAppFromShortcut(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get keyboard handle: ", err)
 	}
-	defer kw.Close()
+	defer kw.Close(ctx)
 
 	// On some low-end devices and guest mode sometimes Chrome is still
 	// initializing when the shortcut keys are emitted. Check that the

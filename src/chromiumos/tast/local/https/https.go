@@ -211,7 +211,7 @@ func CertificateExists(ctx context.Context, cr *chrome.Chrome, br *browser.Brows
 	if err != nil {
 		return false, errors.Wrap(err, "failed to use keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	policyutil.SettingsPage(ctx, cr, br, "certificates")
 	authorities := nodewith.Name("Authorities").Role(role.Tab)

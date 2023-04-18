@@ -78,7 +78,7 @@ func PinUnlockFail(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get keyboard: ", err)
 	}
-	defer keyboard.Close()
+	defer keyboard.Close(ctx)
 
 	// Enter the wrong PIN to trigger password field. Here we would
 	// try multiple times of the wrong password until pin pad

@@ -183,7 +183,7 @@ func AutofillAddressEnabled(ctx context.Context, s *testing.State) {
 				if err != nil {
 					s.Fatal(errors.Wrap(err, "failed to get the keyboard"))
 				}
-				defer kb.Close()
+				defer kb.Close(ctx)
 
 				// Fill in the address input fields and click on the save button.
 				for _, address := range addressValues {

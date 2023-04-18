@@ -261,7 +261,7 @@ func UnlockScreen(ctx context.Context, tconn *chrome.TestConn, username, passwor
 	if err != nil {
 		return errors.Wrap(err, "failed to open keyboard device")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	if err := lockscreen.EnterPassword(ctx, tconn, username, password, kb); err != nil {
 		return errors.Wrap(err, "failed to unlock the screen")
@@ -377,7 +377,7 @@ func keyboardClick(ctx context.Context, ui *uiauto.Context) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to get keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	if err := kb.TypeAction("a")(ctx); err != nil {
 		return err

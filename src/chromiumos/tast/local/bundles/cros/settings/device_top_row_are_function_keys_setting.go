@@ -68,7 +68,7 @@ func DeviceTopRowAreFunctionKeysSetting(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to find keyboard: ", err)
 	}
 	topRow, err := input.KeyboardTopRowLayout(ctx, kb)
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	// Open OS Settings app.
 	if err := apps.Launch(ctx, tconn, apps.Settings.ID); err != nil {

@@ -83,7 +83,7 @@ func DataLeakPreventionRulesListClipboardMixedTypeBrowsers(ctx context.Context, 
 	if err != nil {
 		s.Fatal("Failed to get keyboard: ", err)
 	}
-	defer keyboard.Close()
+	defer keyboard.Close(ctx)
 
 	for _, param := range []struct {
 		name              string

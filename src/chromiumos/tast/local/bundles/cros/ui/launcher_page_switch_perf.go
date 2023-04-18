@@ -91,7 +91,7 @@ func LauncherPageSwitchPerf(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to obtain the keyboard")
 	}
-	defer kw.Close()
+	defer kw.Close(ctx)
 
 	accel := "Search"
 	if err := kw.Accel(ctx, accel); err != nil {

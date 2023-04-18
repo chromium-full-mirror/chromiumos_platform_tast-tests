@@ -127,7 +127,7 @@ func WindowCyclePerDesk(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get keyboard: ", err)
 	}
-	defer keyboard.Close()
+	defer keyboard.Close(ctx)
 
 	if err := clickCurrentDeskButton(ctx, ac); err != nil {
 		s.Fatal("Failed to open Alt+Tab window to click Current desk button: ", err)
@@ -186,7 +186,7 @@ func clickCurrentDeskButton(ctx context.Context, ac *uiauto.Context) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to get keyboard")
 	}
-	defer keyboard.Close()
+	defer keyboard.Close(ctx)
 
 	// Make sure the cycle menu isn't open already before we try to alt+tab.
 	if err := ac.WithTimeout(5 * time.Second).WaitUntilGone(cycleMenu)(ctx); err != nil {

@@ -55,7 +55,7 @@ func presentApps(ctx context.Context, tconn *chrome.TestConn, uiHandler cuj.UIAc
 	if err != nil {
 		return errors.Wrap(err, "failed to initialize keyboard input")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	ui := uiauto.New(tconn)
 	var presentApplication action.Action

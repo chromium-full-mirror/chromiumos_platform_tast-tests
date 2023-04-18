@@ -219,7 +219,7 @@ func cancelMultiplePasswordDialogs(ctx context.Context, s *testing.State, files 
 	if err != nil {
 		s.Fatal("Cannot create keyboard: ", err)
 	}
-	defer ew.Close()
+	defer ew.Close(ctx)
 
 	expectedDialogFileNames = make(map[string]bool)
 	for _, zipFile := range zipFiles {
@@ -257,7 +257,7 @@ func mountMultipleZipFiles(ctx context.Context, s *testing.State, files *filesap
 	if err != nil {
 		s.Fatal("Cannot create keyboard: ", err)
 	}
-	defer ew.Close()
+	defer ew.Close(ctx)
 
 	expectedDialogFileNames = make(map[string]bool)
 	for _, zipFile := range zipFiles {

@@ -249,7 +249,7 @@ func RunClamShell(ctx, closeCtx context.Context, tconn *chrome.TestConn, ui *uia
 	defer cleanUp(closeCtx, action.Named(
 		"close the keyboard",
 		func(ctx context.Context) error {
-			return kw.Close()
+			return kw.Close(ctx)
 		},
 	), &retErr)
 	// Enter the overview mode.

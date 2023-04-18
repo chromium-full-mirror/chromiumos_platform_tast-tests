@@ -70,7 +70,7 @@ func ScreenCaptureNotification(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get virtual keyboard: ", err)
 	}
-	defer vkb.Close()
+	defer vkb.Close(ctx)
 
 	if err := vkb.Accel(ctx, "Ctrl+F5"); err != nil {
 		s.Fatal("Failed to take a screenshot: ", err)

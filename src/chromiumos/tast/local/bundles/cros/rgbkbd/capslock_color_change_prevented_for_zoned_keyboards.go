@@ -81,7 +81,7 @@ func CapslockColorChangePreventedForZonedKeyboards(ctx context.Context, s *testi
 	if err != nil {
 		s.Fatal("Failed to find keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	initialContent, err := ioutil.ReadFile("/run/rgbkbd/log")
 	if err != nil {

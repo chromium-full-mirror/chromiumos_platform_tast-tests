@@ -143,7 +143,7 @@ func testRenameProfile(ctx context.Context, tconn *chrome.TestConn, profileNickN
 	if err != nil {
 		return errors.Wrap(err, "failed to open the keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	if err := ossettings.GoToNetworkWithNickName(ctx, tconn, profileNickName); err != nil {
 		return errors.Wrap(err, "failed to go to network with nickname")

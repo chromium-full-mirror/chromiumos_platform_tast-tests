@@ -55,7 +55,7 @@ func PhysicalKeyboardAlphanumeric(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to open Keyboard device: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	devPath, err := deviceCheck(ctx)
 	if err != nil {

@@ -120,13 +120,13 @@ func CastToClass(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to create clamshell action handler: ", err)
 		}
 	}
-	defer uiHandler.Close()
+	defer uiHandler.Close(ctx)
 
 	kb, err := input.Keyboard(ctx)
 	if err != nil {
 		s.Fatal("Failed to initialize keyboard input: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	// Give 10 seconds to set initial settings. It is critical to ensure
 	// cleanupSetting can be executed with a valid context so it has its

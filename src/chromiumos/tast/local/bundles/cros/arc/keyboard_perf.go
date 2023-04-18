@@ -62,7 +62,7 @@ func KeyboardPerf(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Unable to create virtual keyboard: ", err)
 	}
-	defer kbd.Close()
+	defer kbd.Close(ctx)
 
 	if err := inputlatency.InstallArcHostClockClient(ctx, a, s); err != nil {
 		s.Fatal("Could not install arc-host-clock-client: ", err)

@@ -121,7 +121,7 @@ func unlockScreen(ctx context.Context, tconn *chrome.TestConn, password string) 
 	if err != nil {
 		return errors.Wrap(err, "failed to create keyboard event writer")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	testing.ContextLog(ctx, "Unlocking screen by typing password")
 	if err := kb.Type(ctx, password+"\n"); err != nil {
@@ -147,7 +147,7 @@ func HeadphoneVolumeSlider(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to open the keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	vh, err := audio.NewVolumeHelper(ctx)
 	if err != nil {

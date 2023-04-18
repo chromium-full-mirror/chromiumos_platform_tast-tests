@@ -132,7 +132,7 @@ func showAndHidePassword(ctx context.Context, tconn *chrome.TestConn, username, 
 	if err != nil {
 		return errors.Wrap(err, "failed to get keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	if pin {
 		// Enter the PIN on lockscreen when PIN is enabled.

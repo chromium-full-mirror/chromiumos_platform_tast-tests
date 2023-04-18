@@ -217,7 +217,7 @@ func addWebAuthnData(ctx context.Context, cr *chrome.Chrome, webauthnURL, passwo
 	if err != nil {
 		return errors.Wrap(err, "failed to get keyboard")
 	}
-	defer keyboard.Close()
+	defer keyboard.Close(ctx)
 
 	authCallback := func(ctx context.Context, ui *uiauto.Context) error {
 		// Check if the UI is correct.

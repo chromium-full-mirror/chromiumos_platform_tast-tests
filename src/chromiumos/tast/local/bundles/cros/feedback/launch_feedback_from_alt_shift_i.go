@@ -66,7 +66,7 @@ func LaunchFeedbackFromAltShiftI(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to find keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		// Launch Feedback app with alt+shift+i.

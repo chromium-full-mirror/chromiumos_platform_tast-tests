@@ -156,7 +156,7 @@ func AddESimWithActivationCode(ctx context.Context, tconn *chrome.TestConn, acti
 	if err != nil {
 		return errors.Wrap(err, "failed to open the keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	var setupNewProfile = nodewith.NameContaining("Set up new profile").Role(role.Button).Focusable()
 	// 2 minute is the timeout that we used in production code for loading pending profiles.

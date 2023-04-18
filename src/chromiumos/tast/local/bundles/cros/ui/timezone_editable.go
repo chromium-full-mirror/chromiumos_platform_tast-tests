@@ -270,7 +270,7 @@ func signOutAndWait(ctx context.Context) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to get the keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	if err := uiauto.Combine("sign out by shortcut",
 		kb.AccelAction("Shift+Ctrl+Q"),

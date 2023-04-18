@@ -155,7 +155,7 @@ func Run(ctx context.Context, s *testing.State, cr *chrome.Chrome, pauseMode Pau
 			s.Fatal("Failed to create clamshell action handler: ", err)
 		}
 	}
-	defer uiActionHandler.Close()
+	defer uiActionHandler.Close(ctx)
 
 	// Launch browser and track the elapsed time.
 	// Browser is launched out side of recorder to get test API conns to set up metrics.
@@ -486,7 +486,7 @@ func LockScreen(ctx context.Context, tconn *chrome.TestConn) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to create keyboard event writer")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	const accel = "Search+L"
 	testing.ContextLogf(ctx, "Locking screen via %q", accel)
@@ -509,7 +509,7 @@ func UnlockScreen(ctx context.Context, tconn *chrome.TestConn, password string) 
 	if err != nil {
 		return errors.Wrap(err, "failed to create keyboard event writer")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	testing.ContextLog(ctx, "Unlocking screen by typing password")
 	if err := kb.Type(ctx, password+"\n"); err != nil {

@@ -131,7 +131,7 @@ func PrintPdfAsImageDefault(ctx context.Context, s *testing.State) {
 			if err != nil {
 				s.Fatal("Failed to get the keyboard: ", err)
 			}
-			defer kb.Close()
+			defer kb.Close(ctx)
 
 			// Connect to Test API to use it with the UI library.
 			tconn, err := cr.TestAPIConn(ctx)

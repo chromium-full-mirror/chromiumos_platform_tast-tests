@@ -474,7 +474,7 @@ func (k *Kiosk) CancelKioskLaunch(ctx context.Context, opts ...chrome.Option) (*
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create a keyboard")
 	}
-	defer kw.Close()
+	defer kw.Close(ctx)
 
 	if err := chrome.PrepareForRestart(); err != nil {
 		return nil, errors.Wrap(err, "failed to remove old dev tools port file")

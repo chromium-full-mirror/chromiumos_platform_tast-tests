@@ -135,7 +135,7 @@ func (as *AudioService) KeyboardAccel(ctx context.Context, req *ui.AudioServiceR
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to find keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	if err := kb.Accel(ctx, req.Expr); err != nil {
 		return nil, errors.Wrapf(err, "failed to press %q using keyboard", req.Expr)

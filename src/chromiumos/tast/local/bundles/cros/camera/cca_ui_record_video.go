@@ -455,7 +455,7 @@ func testConfirmDialog(ctx context.Context, app *cca.App, cr *chrome.Chrome) err
 	if err != nil {
 		return err
 	}
-	defer keyboard.Close()
+	defer keyboard.Close(ctx)
 
 	// Try to close the camera app.
 	if err := keyboard.Accel(ctx, "ctrl+W"); err != nil {

@@ -69,7 +69,7 @@ func CaptureModeEntryPoints(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create a keyboard: ", err)
 	}
-	defer kw.Close()
+	defer kw.Close(ctx)
 
 	// Ensure that capture mode is not left active after the test completes.
 	defer wmputils.EnsureCaptureModeActivated(tconn, false)(cleanupCtx)

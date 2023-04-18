@@ -118,7 +118,7 @@ func PlayAndRecordAudio(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to open the keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	if err := files.OpenFile(recWavFileName)(ctx); err != nil {
 		s.Fatalf("Failed to open the audio file %q: %v", recWavFileName, err)

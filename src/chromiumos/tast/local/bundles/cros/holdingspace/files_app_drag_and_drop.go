@@ -117,7 +117,7 @@ func FilesAppDragAndDrop(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	if err := uiauto.Combine(fmt.Sprintf("Pin %d file(s) from Files App to Holding Space by drag and drop", fileNum),
 		fsapp.DragAndDropFiles(listFiles, trayLocation.CenterPoint(), kb),

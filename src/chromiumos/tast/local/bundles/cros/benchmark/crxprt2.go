@@ -158,7 +158,7 @@ func CRXPRT2(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to create the keyboard: ", err)
 		}
-		defer kb.Close()
+		defer kb.Close(ctx)
 
 		// Set the device name.
 		s.Log("Typing device name")

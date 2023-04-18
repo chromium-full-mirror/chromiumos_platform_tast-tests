@@ -273,7 +273,7 @@ func UIInput(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	// Load ALSA loopback module.
 	unload, err := audio.LoadAloop(ctx)

@@ -121,13 +121,13 @@ func MicrosoftOfficeWebCUJ(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to create clamshell action handler: ", err)
 		}
 	}
-	defer uiHdl.Close()
+	defer uiHdl.Close(ctx)
 
 	kb, err := input.Keyboard(ctx)
 	if err != nil {
 		s.Fatal("Failed to initialize keyboard input: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	username := s.RequiredVar("ui.ms_username")
 	password := s.RequiredVar("ui.ms_password")

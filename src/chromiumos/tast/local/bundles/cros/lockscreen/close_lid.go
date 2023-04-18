@@ -61,7 +61,7 @@ func CloseLid(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed creating keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	cr, err := chrome.New(ctx,
 		// b/228256145 to avoid powerd restart.

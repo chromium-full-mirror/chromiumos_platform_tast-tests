@@ -281,7 +281,7 @@ func AccessibilityEvent(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Error with creating EventWriter from keyboard: ", err)
 	}
-	defer ew.Close()
+	defer ew.Close(ctx)
 
 	testFunc := func(ctx context.Context, cvconn *chromevox.Conn, tconn *chrome.TestConn, currentActivity arca11y.TestActivity) error {
 		for i, test := range testSteps[currentActivity] {

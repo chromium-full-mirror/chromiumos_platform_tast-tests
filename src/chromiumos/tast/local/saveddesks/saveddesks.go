@@ -47,7 +47,7 @@ func VerifyWindowCount(ctx context.Context, tconn *chrome.TestConn, windowCount 
 			if err != nil {
 				return errors.Wrap(err, "cannot create keyboard")
 			}
-			defer kb.Close()
+			defer kb.Close(ctx)
 			if err := kb.Accel(ctx, "Enter"); err != nil {
 				return errors.Wrap(err, "cannot press 'Enter'")
 			}

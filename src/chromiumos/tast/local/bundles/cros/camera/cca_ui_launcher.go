@@ -41,7 +41,7 @@ func CCAUILauncher(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to find keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 	if err := launcher.SearchAndWaitForAppOpen(tconn, kb, apps.Camera)(ctx); err != nil {
 		s.Fatal("Failed to launch camera app: ", err)
 	}

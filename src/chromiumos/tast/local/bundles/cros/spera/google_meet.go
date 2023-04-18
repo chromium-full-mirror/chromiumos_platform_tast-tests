@@ -216,7 +216,7 @@ func runWithGoogleConfig(ctx context.Context, tconn *chrome.TestConn, meetConfig
 	if err != nil {
 		return errors.Wrap(err, "failed to initialize keyboard input")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	run := func(ctx context.Context, meetLink string) error {
 		cleanupGoogleMeetCtx := ctx

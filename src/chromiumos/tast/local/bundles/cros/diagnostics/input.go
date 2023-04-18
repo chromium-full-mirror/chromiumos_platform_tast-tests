@@ -43,7 +43,7 @@ func Input(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create a virtual keyboard: ", err)
 	}
-	defer vkb.Close()
+	defer vkb.Close(ctx)
 
 	if err := da.OpenInputPage(ctx, tconn); err != nil {
 		s.Fatal("Could not click the menu button: ", err)

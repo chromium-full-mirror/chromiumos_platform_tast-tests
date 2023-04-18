@@ -107,7 +107,7 @@ func VideoStreamingApp(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to open the keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	app := videoStreamingAppParams.app
 	youtubeApkURL := ""
@@ -157,7 +157,7 @@ func VideoStreamingApp(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to create clamshell action handler: ", err)
 		}
 	}
-	defer uiHandler.Close()
+	defer uiHandler.Close(ctx)
 
 	traceConfigPath := ""
 	if collect, ok := s.Var("spera.collectTrace"); ok && collect == "enable" {

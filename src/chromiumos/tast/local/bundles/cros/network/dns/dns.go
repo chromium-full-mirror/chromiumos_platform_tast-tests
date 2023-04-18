@@ -222,7 +222,7 @@ func setDoHMode(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, 
 		if err != nil {
 			return errors.Wrap(err, "failed to get keyboard")
 		}
-		defer kb.Close()
+		defer kb.Close(ctx)
 
 		m, err := input.Mouse(ctx)
 		if err != nil {

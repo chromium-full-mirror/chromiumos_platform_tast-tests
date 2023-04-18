@@ -580,7 +580,7 @@ func reSignInChrome(ctx context.Context, s *testing.State, creds chrome.Creds, c
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get keyboard")
 	}
-	defer keyboard.Close()
+	defer keyboard.Close(ctx)
 
 	if err = lockscreen.UnlockWithPassword(ctx, tconn, creds.User, creds.Pass, keyboard, 10*time.Second, chrome.LoginTimeout); err != nil {
 		return nil, errors.Wrap(err, "failed to unlock user")

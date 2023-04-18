@@ -64,7 +64,7 @@ func InputOverlayReposition(ctx context.Context, s *testing.State) {
 		if err != nil {
 			return errors.Wrap(err, "failed to open keyboard")
 		}
-		defer kb.Close()
+		defer kb.Close(ctx)
 		defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, params.TestConn)
 
 		menuEntry := nodewith.Name("Game controls").HasClass("ImageButton")
@@ -209,7 +209,7 @@ func testKeyDrag(finder *nodewith.Finder, tconn *chrome.TestConn) action.Action 
 		if err != nil {
 			return errors.Wrap(err, "failed to open keyboard")
 		}
-		defer kb.Close()
+		defer kb.Close(ctx)
 
 		for _, tc := range tests {
 			// Get initial location of node.

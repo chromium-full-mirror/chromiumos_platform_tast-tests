@@ -123,7 +123,7 @@ func Paste(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to open keyboard device: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	defer faillog.DumpUITreeWithScreenshotOnError(
 		ctx, s.OutDir(), s.HasError, cr, fmt.Sprintf("%s_dump", s.TestName()))

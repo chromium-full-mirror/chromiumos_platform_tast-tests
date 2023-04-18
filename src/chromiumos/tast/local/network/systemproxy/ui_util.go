@@ -52,7 +52,7 @@ func DoSystemProxyAuthentication(ctx context.Context, tconn *chrome.TestConn, us
 	if err != nil {
 		return errors.Wrap(err, "failed to get keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	if err := kb.Type(ctx, username); err != nil {
 		return errors.Wrap(err, "failed to type username")

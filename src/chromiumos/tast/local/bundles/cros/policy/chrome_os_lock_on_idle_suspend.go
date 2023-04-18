@@ -77,7 +77,7 @@ func ChromeOsLockOnIdleSuspend(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed creating keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	const lockTimeout = 5 * time.Second
 

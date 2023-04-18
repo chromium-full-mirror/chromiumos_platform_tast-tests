@@ -82,7 +82,7 @@ func Offline(ctx context.Context, s *testing.State) {
 		if err != nil {
 			return errors.Wrap(err, "failed to get virtual keyboard")
 		}
-		defer keyboard.Close()
+		defer keyboard.Close(ctx)
 
 		// Enter wrong password
 		if err = lockscreen.EnterPassword(ctx, tconn, creds.User, creds.Pass+"fake", keyboard); err != nil {

@@ -156,7 +156,7 @@ func NavigateEduCoexistenceFlow(ctx context.Context, cr *chrome.Chrome, tconn *c
 	if err != nil {
 		return errors.Wrap(err, "failed to get keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	// TODO(crbug/1222744): Reduce typing flakiness and replace \n with a more
 	// consistent way to navigate to the next screen, here and other places.
@@ -455,7 +455,7 @@ func NavigateExtensionApprovalFlow(ctx context.Context, cr *chrome.Chrome, tconn
 	if err != nil {
 		return errors.Wrap(err, "failed to get keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	testing.ContextLog(ctx, "Typing the parent password")
 	if err := kb.Type(ctx, parentPassword); err != nil {
@@ -500,7 +500,7 @@ func NavigateParentAccessDialog(ctx context.Context, tconn *chrome.TestConn, par
 	if err != nil {
 		return errors.Wrap(err, "failed to get keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	// TODO(crbug/1222744): Reduce typing flakiness and replace \n with a more
 	// consistent way to navigate to the next screen, here and other places.

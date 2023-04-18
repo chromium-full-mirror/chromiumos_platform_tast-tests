@@ -106,7 +106,7 @@ func (h *UIHelper) SendMessage(ctx context.Context, number, message string) erro
 	if err != nil {
 		return errors.Wrap(err, "failed to get keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	// Click on + Send new message.
 	sendButton := nodewith.NameContaining("Send new message").Role(role.Button)

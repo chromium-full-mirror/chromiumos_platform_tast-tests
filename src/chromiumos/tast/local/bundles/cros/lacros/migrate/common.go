@@ -148,7 +148,7 @@ func SetupProfileData(ctx context.Context, cr *chrome.Chrome, s *testing.State, 
 	if err != nil {
 		return errors.Wrap(err, "failed to get keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 	if err := policyutil.EnsureGoogleCookiesAccepted(ctx, br); err != nil {
 		return errors.Wrap(err, "failed to accept cookies")
 	}
@@ -182,7 +182,7 @@ func VerifyProfileData(ctx context.Context, cr *chrome.Chrome, s *testing.State,
 	if err != nil {
 		return errors.Wrap(err, "failed to get keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 	if err := policyutil.EnsureGoogleCookiesAccepted(ctx, br); err != nil {
 		return errors.Wrap(err, "failed to accept cookies")
 	}

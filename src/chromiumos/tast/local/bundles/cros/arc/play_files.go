@@ -219,7 +219,7 @@ func testDeleteFromPlayfiles(ctx context.Context, tconn *chrome.TestConn, a *arc
 	if err != nil {
 		return errors.Wrap(err, "failed to find keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	filesApp, err := filesapp.Launch(ctx, tconn)
 	if err != nil {

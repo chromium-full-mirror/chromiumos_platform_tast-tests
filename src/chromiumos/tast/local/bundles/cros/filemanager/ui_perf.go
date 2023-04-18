@@ -108,7 +108,7 @@ func UIPerf(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Error creating keyboard: ", err)
 	}
-	defer ew.Close()
+	defer ew.Close(ctx)
 
 	pv := perf.NewValues()
 

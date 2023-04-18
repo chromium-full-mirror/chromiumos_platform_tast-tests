@@ -78,7 +78,7 @@ func switchToGUI(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 	return kb.Accel(ctx, "Ctrl+Alt+F1")
 }
 

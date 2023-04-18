@@ -118,7 +118,7 @@ func YoutubeAudioStress(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to open the keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	ui := uiauto.New(tconn)
 
@@ -126,7 +126,7 @@ func YoutubeAudioStress(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create clamshell action handler: ", err)
 	}
-	defer uiHandler.Close()
+	defer uiHandler.Close(ctx)
 
 	var videoSource = youtube.VideoSrc{
 		URL:     "https://www.youtube.com/watch?v=g3PWYH1P7Oo",

@@ -222,7 +222,7 @@ func testCopyImageFromChromeToAndroid(ctx context.Context, p *arc.PreData, tconn
 	if err != nil {
 		return errors.Wrap(err, "failed to get keyboard")
 	}
-	defer keyboard.Close()
+	defer keyboard.Close(ctx)
 
 	server := httptest.NewServer(http.FileServer(fs))
 	defer server.Close()
@@ -312,7 +312,7 @@ func Clipboard(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get keyboard: ", err)
 	}
-	defer keyboard.Close()
+	defer keyboard.Close(ctx)
 
 	// TODO(b/246024883): Add TypeLacros case.
 	browser, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)

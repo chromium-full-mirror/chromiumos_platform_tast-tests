@@ -103,7 +103,7 @@ func DataLeakPreventionRulesListDragdrop(ctx context.Context, s *testing.State) 
 	if err != nil {
 		s.Fatal("Failed to get keyboard: ", err)
 	}
-	defer keyboard.Close()
+	defer keyboard.Close(ctx)
 
 	defer ash.SetOverviewModeAndWait(cleanupCtx, tconn, false)
 	for _, param := range []struct {

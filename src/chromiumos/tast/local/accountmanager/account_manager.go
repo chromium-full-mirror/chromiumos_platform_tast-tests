@@ -210,7 +210,7 @@ func AddAccount(ctx context.Context, tconn *chrome.TestConn, email, password str
 	if err != nil {
 		return errors.Wrap(err, "failed to get keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	ui := uiauto.New(tconn).WithTimeout(DefaultUITimeout)
 
@@ -256,7 +256,7 @@ func AddAccountSAML(ctx context.Context, tconn *chrome.TestConn, email, password
 	if err != nil {
 		return errors.Wrap(err, "failed to get keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	ui := uiauto.New(tconn).WithTimeout(DefaultUITimeout)
 
@@ -514,7 +514,7 @@ func TestCleanup(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome)
 		if err != nil {
 			return errors.Wrap(err, "failed to get keyboard")
 		}
-		defer kb.Close()
+		defer kb.Close(ctx)
 		// Press "Esc" to close the dialog.
 		if err := kb.Accel(ctx, "Esc"); err != nil {
 			return errors.Wrapf(err, "failed to write events %s", "Esc")

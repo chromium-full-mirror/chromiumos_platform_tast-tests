@@ -198,7 +198,7 @@ func WindowControl(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get the keyboard: ", err)
 	}
-	defer kw.Close()
+	defer kw.Close(ctx)
 	r.RunMultiple(ctx, "alt-tab", uiperf.Run(s, perfutil.RunAndWaitAll(tconn, func(ctx context.Context) (err error) {
 		pressed := false
 		defer func() {

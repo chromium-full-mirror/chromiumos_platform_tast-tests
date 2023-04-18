@@ -116,7 +116,7 @@ func ImagePaste(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to find keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	// We put this "defer" statement after the defer calls for cleaning up the state
 	// so that we can capture the state *before* cleaning up the state.

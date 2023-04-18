@@ -55,7 +55,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, outDir, traceConfigPath string,
 	if err != nil {
 		return errors.Wrap(err, "failed to open the keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	// Give 10 seconds to set initial settings. It is critical to ensure
 	// cleanupSetting can be executed with a valid context so it has its
@@ -96,7 +96,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, outDir, traceConfigPath string,
 			return errors.Wrap(err, "failed to create clamshell action handler")
 		}
 	}
-	defer uiHandler.Close()
+	defer uiHandler.Close(ctx)
 
 	// Shorten the context to cleanup recorder.
 	cleanUpRecorderCtx := ctx

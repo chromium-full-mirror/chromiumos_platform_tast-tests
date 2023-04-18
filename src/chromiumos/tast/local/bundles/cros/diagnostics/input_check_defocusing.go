@@ -47,7 +47,7 @@ func InputCheckDefocusing(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to find keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	// Wait until diagnostics window is open and lock to left side of the screen.
 	diagnosticsWindow, err := ash.WaitForAnyWindowWithTitle(ctx, tconn, apps.Diagnostics.Name)

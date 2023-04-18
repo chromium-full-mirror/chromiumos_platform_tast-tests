@@ -73,7 +73,7 @@ func runStandardizedKeyboardCopyPasteTest(ctx context.Context, testParameters st
 	if err != nil {
 		return errors.Wrap(err, "unable to create virtual keyboard")
 	}
-	defer kbd.Close()
+	defer kbd.Close(ctx)
 
 	// Setup the selector ids
 	textSourceID := testParameters.AppPkgName + ":id/textCopySource"

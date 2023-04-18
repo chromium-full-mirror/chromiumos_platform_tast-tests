@@ -44,7 +44,7 @@ func Launch(ctx context.Context, tconn *chrome.TestConn) (*nodewith.Finder, erro
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to find keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		// Launch Feedback app with alt+shift+i.
@@ -95,7 +95,7 @@ func LaunchAndGoToShareDataPage(ctx context.Context, tconn *chrome.TestConn) (
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to find keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	// Enter issue description.
 	if err := kb.Type(ctx, IssueText); err != nil {

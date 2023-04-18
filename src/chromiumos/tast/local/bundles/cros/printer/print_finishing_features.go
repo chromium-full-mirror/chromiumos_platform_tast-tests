@@ -171,7 +171,7 @@ func PrintFinishingFeatures(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get the keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 	// Hide all notifications to prevent them from covering the printer entry.
 	if err := ash.CloseNotifications(ctx, tconn); err != nil {
 		s.Fatal("Failed to close all notifications: ", err)

@@ -190,7 +190,7 @@ func BubbleScroll(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to find keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	// Highlight an item in the last row by pressing the up key.
 	if err := kb.TypeKey(ctx, input.KEY_UP); err != nil {

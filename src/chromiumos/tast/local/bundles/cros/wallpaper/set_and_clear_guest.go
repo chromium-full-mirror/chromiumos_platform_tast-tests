@@ -139,7 +139,7 @@ func logOutWithKeyboardShortcut() uiauto.Action {
 		}
 
 		kb, err := input.Keyboard(ctx)
-		defer kb.Close()
+		defer kb.Close(ctx)
 		if err != nil {
 			return errors.Wrap(err, "failed to get keyboard")
 		}

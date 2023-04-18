@@ -184,7 +184,7 @@ func ResizeLock(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create a keyboard: ", err)
 	}
-	defer keyboard.Close()
+	defer keyboard.Close(ctx)
 
 	for _, app := range []struct {
 		apkName string

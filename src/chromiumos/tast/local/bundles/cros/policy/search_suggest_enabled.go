@@ -73,7 +73,7 @@ func SearchSuggestEnabled(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to open keyboard device: ", err)
 	}
-	defer keyboard.Close()
+	defer keyboard.Close(ctx)
 
 	for _, param := range []struct {
 		name    string

@@ -118,7 +118,7 @@ func ChromePIPEnergyAndPower(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get keyboard event writer: ", err)
 	}
-	defer kw.Close()
+	defer kw.Close(ctx)
 
 	pc := pointer.NewMouse(tconn)
 	defer pc.Close()

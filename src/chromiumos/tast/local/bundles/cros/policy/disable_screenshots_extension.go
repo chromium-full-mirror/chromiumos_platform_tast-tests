@@ -62,7 +62,7 @@ func DisableScreenshotsExtension(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get keyboard: ", err)
 	}
-	defer keyboard.Close()
+	defer keyboard.Close(ctx)
 
 	extDir, err := ioutil.TempDir("", "screen_shooter_extension")
 	if err != nil {

@@ -78,7 +78,7 @@ func RenameDesk(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create a keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	// Test 1: Change the first desk'name by clicking the default desk button.
 	zeroStateDefaultDeskButton := nodewith.ClassName("ZeroStateDefaultDeskButton")
@@ -266,7 +266,7 @@ func changeDeskNameByClickingNameView(ctx context.Context, tconn *chrome.TestCon
 	if err != nil {
 		return errors.Wrap(err, "failed to create a keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	if err := uiauto.Combine(
 		"change a desk name by clicking its desk name view",

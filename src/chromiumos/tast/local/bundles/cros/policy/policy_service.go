@@ -735,7 +735,7 @@ func (c *PolicyService) UnlockDeviceWithPassword(ctx context.Context, req *ppb.U
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get virtual keyboard")
 	}
-	defer keyboard.Close()
+	defer keyboard.Close(ctx)
 
 	if err := lockscreen.EnterPassword(ctx, tconn, req.Username, req.Password, keyboard); err != nil {
 		return nil, errors.Wrap(err, "failed to enter password")

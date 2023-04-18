@@ -144,7 +144,7 @@ func (f *fixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interface
 	if err != nil {
 		s.Fatal("Failed to get keyboard handle: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	if err := kb.Accel(ctx, "Ctrl+Alt+D"); err != nil {
 		s.Fatal("Failed to enter Demo Setup dialogue with ctrl + alt + D: ", err)

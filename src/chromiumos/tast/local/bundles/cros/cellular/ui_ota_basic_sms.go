@@ -104,7 +104,7 @@ func UIOtaBasicSms(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	// Create gv MO sms using google voice configured with owned test accounts.
 	gConn, err := uiHelper.GoogleVoiceLogin(ctx)

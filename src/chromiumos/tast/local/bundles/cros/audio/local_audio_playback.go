@@ -93,7 +93,7 @@ func LocalAudioPlayback(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to find keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	// Open the test API.
 	tconn, err := cr.TestAPIConn(ctx)

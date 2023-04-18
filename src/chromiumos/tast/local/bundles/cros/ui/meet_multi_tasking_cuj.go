@@ -230,7 +230,7 @@ func MeetMultiTaskingCUJ(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create a keyboard: ", err)
 	}
-	defer kw.Close()
+	defer kw.Close(ctx)
 
 	ui := uiauto.New(tconn)
 

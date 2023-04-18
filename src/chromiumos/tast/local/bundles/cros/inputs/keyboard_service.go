@@ -121,16 +121,16 @@ func (svc *KeyboardService) initKeyboard(ctx context.Context) error {
 		go func(ctx context.Context) {
 			select {
 			case <-ctx.Done():
-				svc.closeKeyboard()
+				svc.closeKeyboard(ctx)
 			}
 		}(svc.s.ServiceContext())
 	}
 	return nil
 }
 
-func (svc *KeyboardService) closeKeyboard() error {
+func (svc *KeyboardService) closeKeyboard(ctx context.Context) error {
 	if svc.kb != nil {
-		if err := svc.kb.Close(); err != nil {
+		if err := svc.kb.Close(ctx); err != nil {
 			return errors.Wrap(err, "failed to close keyboard handle")
 		}
 		svc.kb = nil

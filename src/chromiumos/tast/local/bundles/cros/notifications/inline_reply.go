@@ -128,7 +128,7 @@ func InlineReply(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get the keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	const replyMsg = "Test reply message"
 	ashNotificationWindow := nodewith.HasClass("ash/message_center/MessagePopup").Role(role.Window)

@@ -49,7 +49,7 @@ func BrowserEndProcessDisabled(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to take keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	s.Log("Open Task Manager")
 	tm := taskmanager.New(tconn, kb)

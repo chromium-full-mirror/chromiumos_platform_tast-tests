@@ -140,7 +140,7 @@ func ExampleCUJ(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create a keyboard: ", err)
 	}
-	defer kw.Close()
+	defer kw.Close(ctx)
 
 	// Get the primary display info. In this particular test, this is
 	// used to find the display bounds, for dragging the mouse to the

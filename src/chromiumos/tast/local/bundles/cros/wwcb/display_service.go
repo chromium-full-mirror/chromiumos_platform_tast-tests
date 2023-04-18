@@ -158,7 +158,7 @@ func (ds *DisplayService) SwitchWindowToDisplay(ctx context.Context, req *wwcb.Q
 	if err != nil {
 		return nil, err
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	w, err := ash.FindWindow(ctx, tconn, func(w *ash.Window) bool {
 		return w.Title == string(req.WindowTitle)
@@ -381,7 +381,7 @@ func (ds *DisplayService) ChangeRelativePosition(ctx context.Context, req *empty
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create a keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)

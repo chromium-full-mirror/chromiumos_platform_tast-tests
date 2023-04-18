@@ -393,7 +393,7 @@ func Run(ctx context.Context, s *testing.State, cr *chrome.Chrome, tier cuj.Tier
 			s.Fatal("Failed to create clamshell action handler: ", err)
 		}
 	}
-	defer tsAction.Close()
+	defer tsAction.Close(ctx)
 
 	timeTabsOpenStart := time.Now()
 	// Launch browser and track the elapsed time.

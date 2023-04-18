@@ -68,7 +68,7 @@ func fetchMaxSheetsAllowedFromPrintPreview(ctx context.Context, s *testing.State
 	if err != nil {
 		s.Fatal("Failed to get the keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	// Print only the first page so that the number of copies is equal to the total number of pages to be printed.
 	if err = printpreview.SetPages(ctx, tconn, "1"); err != nil {

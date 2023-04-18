@@ -82,7 +82,7 @@ func AudioFilesPlaying(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create the keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
 	if err != nil {

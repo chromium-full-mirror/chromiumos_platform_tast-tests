@@ -50,7 +50,7 @@ func NotificationExpandCollapse(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get virtual keyboard: ", err)
 	}
-	defer vkb.Close()
+	defer vkb.Close(ctx)
 
 	ui := uiauto.New(tconn)
 	popup := nodewith.Role(role.Window).HasClass("ash/message_center/MessagePopup")

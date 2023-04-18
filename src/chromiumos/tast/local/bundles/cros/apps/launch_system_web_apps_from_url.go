@@ -62,7 +62,7 @@ func LaunchSystemWebAppsFromURL(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get keyboard handle: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
 	defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "screen_recording.webm"), s.HasError)

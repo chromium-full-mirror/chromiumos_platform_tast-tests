@@ -73,7 +73,7 @@ func CloseTab(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create keyboard input: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)

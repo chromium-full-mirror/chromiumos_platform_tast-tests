@@ -95,7 +95,7 @@ func PhysicalKeyboardLayoutChanged(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get keyboard: ", err)
 	}
-	defer keyboard.Close()
+	defer keyboard.Close(ctx)
 
 	if err := uiauto.UserAction("Change keyboard layout",
 		uiauto.Combine("Change keyboard layout",

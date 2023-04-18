@@ -151,7 +151,7 @@ func checkLoggedError(ctx, cleanupCtx context.Context, crashDirs []string, outDi
 	if err != nil {
 		return errors.Wrap(err, "failed to get keyboard handle")
 	}
-	defer kw.Close()
+	defer kw.Close(ctx)
 	if err := kw.Accel(ctx, "Alt+l"); err != nil {
 		return errors.Wrap(err, "failed to press keys")
 	}
@@ -177,7 +177,7 @@ func checkUncaughtExceptionError(ctx, cleanupCtx context.Context, crashDirs []st
 	if err != nil {
 		return errors.Wrap(err, "failed to get keyboard handle")
 	}
-	defer kw.Close()
+	defer kw.Close(ctx)
 	if err := kw.Accel(ctx, "Alt+t"); err != nil {
 		return errors.Wrap(err, "failed to press keys")
 	}
@@ -203,7 +203,7 @@ func checkUnhandledPromiseRejectionError(ctx, cleanupCtx context.Context, crashD
 	if err != nil {
 		return errors.Wrap(err, "failed to get keyboard handle")
 	}
-	defer kw.Close()
+	defer kw.Close(ctx)
 	if err := kw.Accel(ctx, "Alt+p"); err != nil {
 		return errors.Wrap(err, "failed to press keys")
 	}

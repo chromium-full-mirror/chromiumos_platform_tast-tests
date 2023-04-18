@@ -454,7 +454,7 @@ func loginChrome(ctx context.Context, s *testing.State, creds *chrome.Creds) (*c
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to get keyboard")
 		}
-		defer keyboard.Close()
+		defer keyboard.Close(ctx)
 
 		if err = lockscreen.EnterPassword(ctx, tconn, creds.User, creds.Pass, keyboard); err != nil {
 			return nil, errors.Wrap(err, "failed to enter password")

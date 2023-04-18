@@ -110,7 +110,7 @@ func toggleThreeDotMenu(ctx context.Context, tconn *chrome.TestConn) error {
 	if err != nil {
 		return err
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	// Press Alt+F to open three-dot menu.
 	if err := kb.Accel(ctx, "Alt+F"); err != nil {

@@ -65,7 +65,7 @@ func createPrinter(ctx context.Context, s *testing.State, cr *chrome.Chrome, tco
 	if err != nil {
 		s.Fatal("Failed to get the keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	// Open OS Settings and navigate to the Printing page.
 	entryFinder := uitools.PrintersFinder.Ancestor(ossettings.WindowFinder)

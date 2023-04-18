@@ -185,7 +185,7 @@ func MoveActiveWindowToAdjacentDesk(ctx context.Context, tconn *chrome.TestConn,
 	if err != nil {
 		return errors.Wrap(err, "failed to create keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	if err := kb.Accel(ctx, "Search+Shift+"+bracket); err != nil {
 		return errors.Wrapf(err, "failed to move active window to %s desk", direction)
@@ -227,7 +227,7 @@ func SaveCurrentDesk(ctx context.Context, ac *uiauto.Context, savedDeskType Save
 	if err != nil {
 		return errors.Wrap(err, "cannot create keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 	if err := kb.Type(ctx, savedDeskName); err != nil {
 		return errors.Wrapf(err, "cannot type %q: ", savedDeskName)
 	}
@@ -328,7 +328,7 @@ func LaunchSavedDesk(ctx context.Context, ac *uiauto.Context, savedDeskName stri
 	if err != nil {
 		return errors.Wrap(err, "cannot create keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 	if err := kb.Accel(ctx, "Enter"); err != nil {
 		return errors.Wrap(err, "cannot press 'Enter'")
 	}
@@ -378,7 +378,7 @@ func DeleteAllSavedDesks(ctx context.Context, ac *uiauto.Context, tconn *chrome.
 	if err != nil {
 		return errors.Wrap(err, "failed create keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	// Find all saved desks.
 	savedDeskInfo, err := FindSavedDesks(ctx, ac)
@@ -416,7 +416,7 @@ func DeleteDeskTemplateByName(ctx context.Context, ac *uiauto.Context, tconn *ch
 	if err != nil {
 		return errors.Wrap(err, "failed create keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	// Delete the save and recall desk template.
 	if err := ac.MouseMoveTo(savedDesk, 0)(ctx); err != nil {

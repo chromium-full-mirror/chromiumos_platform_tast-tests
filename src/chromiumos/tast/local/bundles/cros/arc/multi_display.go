@@ -885,7 +885,7 @@ func snappingOnDisplay(ctx context.Context, s *testing.State, cr *chrome.Chrome,
 	if err != nil {
 		return err
 	}
-	defer keyboard.Close()
+	defer keyboard.Close(ctx)
 
 	for _, dispType := range []arc.DisplayType{arc.InternalDisplay, arc.ExternalDisplay} {
 		d := disp.displayInfo(dispType)

@@ -51,7 +51,7 @@ func Print(ctx context.Context, tconn *chrome.TestConn) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to get the keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 	if err := kb.Accel(ctx, "enter"); err != nil {
 		return errors.Wrap(err, "failed to type enter")
 	}
@@ -117,7 +117,7 @@ func SetLayout(ctx context.Context, tconn *chrome.TestConn, layout Layout) error
 	if err != nil {
 		return errors.Wrap(err, "failed to get the keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 	var accelerator string
 	switch layout {
 	case Portrait:
@@ -157,7 +157,7 @@ func SetPages(ctx context.Context, tconn *chrome.TestConn, pages string) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to get the keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 	if err := kb.Accel(ctx, "search+right"); err != nil {
 		return errors.Wrap(err, "failed to type end")
 	}

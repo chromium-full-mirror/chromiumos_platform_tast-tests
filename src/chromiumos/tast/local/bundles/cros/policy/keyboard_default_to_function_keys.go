@@ -50,7 +50,7 @@ func KeyboardDefaultToFunctionKeys(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	// Old ChromeOS keyboards send F1 and software maps it to "back".
 	// Wilco devices and newer ChromeOS keyboards directly send "back".

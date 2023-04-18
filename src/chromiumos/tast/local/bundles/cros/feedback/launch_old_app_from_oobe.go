@@ -80,7 +80,7 @@ func LaunchOldAppFromOOBE(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to find keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	ui := uiauto.New(tconn).WithTimeout(20 * time.Second)
 

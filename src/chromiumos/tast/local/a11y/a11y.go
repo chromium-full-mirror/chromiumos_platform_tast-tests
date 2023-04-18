@@ -118,7 +118,7 @@ func ToggleDictation(ctx context.Context) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to create EventWriter")
 	}
-	defer ew.Close()
+	defer ew.Close(ctx)
 
 	if err := ew.Accel(ctx, "Search+D"); err != nil {
 		return errors.Wrap(err, "failed to press Search + D to toggle Dictation")

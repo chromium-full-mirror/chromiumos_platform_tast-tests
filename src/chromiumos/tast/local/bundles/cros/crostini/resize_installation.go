@@ -103,7 +103,7 @@ func ResizeInstallation(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to get keyboard: ", err)
 		}
-		defer kb.Close()
+		defer kb.Close(ctx)
 
 		crostini.RunCrostiniPostTest(cleanupCtx, crostini.PreData{Chrome: cr, TestAPIConn: tconn, Container: cont, Keyboard: kb, Post: &crostini.PostTestData{}})
 
@@ -137,7 +137,7 @@ func verifyDiskSize(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chro
 	if err != nil {
 		return errors.Wrap(err, "failed to get keyboard")
 	}
-	defer keyboard.Close()
+	defer keyboard.Close(ctx)
 
 	// Run commands in terminal, which should be visible and functional.
 	runInTerminal := func(cmd, outputFile string) error {

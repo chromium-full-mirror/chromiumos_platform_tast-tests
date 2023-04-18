@@ -176,7 +176,7 @@ func ExtendedDisplayCUJ(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to open the keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	tabletMode, resetTabletMode, err := cuj.EnableTabletMode(ctx, tconn, s.Var, "ui.cuj_mode")
 	if err != nil {
@@ -198,7 +198,7 @@ func ExtendedDisplayCUJ(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create clamshell action handler: ", err)
 	}
-	defer uiHandler.Close()
+	defer uiHandler.Close(ctx)
 
 	traceConfigPath := ""
 	if collect, ok := s.Var("ui.collectTrace"); ok && collect == "enable" {

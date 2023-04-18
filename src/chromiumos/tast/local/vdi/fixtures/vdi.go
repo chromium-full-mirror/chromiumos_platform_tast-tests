@@ -315,7 +315,7 @@ func (v *fixtureState) TearDown(ctx context.Context, s *testing.FixtState) {
 		s.Error("Couldn't logout from the VDI application: ", err)
 	}
 
-	v.keyboard.Close()
+	v.keyboard.Close(ctx)
 
 	chrome.Unlock()
 

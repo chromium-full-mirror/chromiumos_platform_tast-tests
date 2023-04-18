@@ -73,7 +73,7 @@ func UserFeedbackAllowed(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get keyboard: ", err)
 	}
-	defer keyboard.Close()
+	defer keyboard.Close(ctx)
 
 	for _, param := range []struct {
 		name             string                      // subtest name.

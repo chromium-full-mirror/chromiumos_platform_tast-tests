@@ -165,7 +165,7 @@ func USBVolumeGranularity(ctx context.Context, s *testing.State) {
 	}
 
 	defer func() {
-		if err := kb.Close(); err != nil {
+		if err := kb.Close(ctx); err != nil {
 			testing.ContextLog(ctxForCleanUp, "Failed close virtual keyboard: ", err)
 		}
 		if err := kb.Accel(ctxForCleanUp, "Ctrl+W"); err != nil {

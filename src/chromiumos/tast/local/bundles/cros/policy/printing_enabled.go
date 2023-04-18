@@ -197,7 +197,7 @@ func testPrintingWithHotkey(ctx context.Context, tconn *chrome.TestConn) (bool, 
 	if err != nil {
 		return false, errors.Wrap(err, "failed to get the keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	// Type the shortcut.
 	if err := kb.Accel(ctx, "Ctrl+P"); err != nil {

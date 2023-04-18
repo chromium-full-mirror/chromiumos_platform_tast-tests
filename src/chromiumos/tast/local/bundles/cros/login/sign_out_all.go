@@ -125,7 +125,7 @@ func signInAll(ctx context.Context, tconn *chrome.TestConn, aboutToSignIn []chro
 	if err != nil {
 		return errors.Wrap(err, "failed to create the keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	// Proceed to do sign-in only on the users who haven't signed-in.
 	for _, cred := range aboutToSignIn {

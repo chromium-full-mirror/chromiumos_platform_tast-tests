@@ -72,7 +72,7 @@ func runStandardizedKeyboardTypingTest(ctx context.Context, testParameters stand
 	if err != nil {
 		return errors.Wrap(err, "unable to create virtual keyboard")
 	}
-	defer kbd.Close()
+	defer kbd.Close(ctx)
 
 	textKeyboardInputID := testParameters.AppPkgName + ":id/textKeyboardInput"
 	const textForTest = "abcdEFGH0123!@#$"

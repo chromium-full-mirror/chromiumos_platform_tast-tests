@@ -40,7 +40,7 @@ func Close(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create a keyboard: ", err)
 	}
-	defer kw.Close()
+	defer kw.Close(ctx)
 
 	testing.ContextLog(ctx, "Waiting for splash screen is gone")
 	if err := testing.Poll(ctx, func(ctx context.Context) error {

@@ -615,7 +615,7 @@ func (f *crostiniFixture) close(ctx context.Context, s *testing.FixtState) {
 // fields and resetting the struct's fields.
 func (f *crostiniFixture) cleanUp(ctx context.Context, s *testing.FixtState) {
 	if f.kb != nil {
-		if err := f.kb.Close(); err != nil {
+		if err := f.kb.Close(ctx); err != nil {
 			s.Log("Failure closing keyboard: ", err)
 		}
 		f.kb = nil

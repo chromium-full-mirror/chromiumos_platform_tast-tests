@@ -70,7 +70,7 @@ func EditBookmarksEnabled(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to open keyboard device: ", err)
 	}
-	defer keyboard.Close()
+	defer keyboard.Close(ctx)
 
 	// Add initial bookmark.
 	if err := addInitialBookmark(ctx, tconn, cr, keyboard); err != nil {

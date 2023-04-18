@@ -133,7 +133,7 @@ func verifyGainVolumeChanged(ctx context.Context, tconn *chrome.TestConn) error 
 	if err != nil {
 		return errors.Wrap(err, "failed to setup keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	// Change gain to min value.
 	if err := moveSlider(ctx, tconn, kb, decrease); err != nil {

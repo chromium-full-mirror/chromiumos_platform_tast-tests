@@ -78,7 +78,7 @@ func PhysicalKeyboardLongpressDiacritics(ctx context.Context, s *testing.State) 
 	if err != nil {
 		s.Fatal("Failed to get keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	const inputField = testserver.TextInputField
 

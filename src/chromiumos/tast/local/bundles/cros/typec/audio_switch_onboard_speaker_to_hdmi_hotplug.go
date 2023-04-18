@@ -122,7 +122,7 @@ func AudioSwitchOnboardSpeakerToHDMIHotplug(ctx context.Context, s *testing.Stat
 	if err != nil {
 		s.Fatal("Failed to find keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	files, err := filesapp.Launch(ctx, tconn)
 	if err != nil {

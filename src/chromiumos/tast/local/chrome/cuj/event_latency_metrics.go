@@ -108,7 +108,7 @@ func GenerateEventLatency(ctx context.Context, tconn *chrome.TestConn, webName s
 	if err != nil {
 		return errors.Wrap(err, "failed to open keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	var clickButtonsOnWebsite uiauto.Action
 	switch webName {

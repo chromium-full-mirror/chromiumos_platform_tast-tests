@@ -101,7 +101,7 @@ func AudioSwitchOnboardSpeakerToBTSpeakerManual(ctx context.Context, s *testing.
 		if err != nil {
 			s.Fatal("Failed to find keyboard: ", err)
 		}
-		defer kb.Close()
+		defer kb.Close(ctx)
 		if kb.Accel(ctx, "Ctrl+W"); err != nil {
 			testing.ContextLog(ctx, "Failed to close Audio player: ", err)
 		}

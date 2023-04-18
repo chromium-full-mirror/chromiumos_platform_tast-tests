@@ -97,7 +97,7 @@ func YoutubeMultiTab(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to open the keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	ui := uiauto.New(tconn)
 
@@ -105,7 +105,7 @@ func YoutubeMultiTab(ctx context.Context, s *testing.State) {
 	if uiHandler, err = cuj.NewClamshellActionHandler(ctx, tconn); err != nil {
 		s.Fatal("Failed to create clamshell action handler: ", err)
 	}
-	defer uiHandler.Close()
+	defer uiHandler.Close(ctx)
 
 	extendedDisplay := false
 	var videoApps []*youtube.YtWeb

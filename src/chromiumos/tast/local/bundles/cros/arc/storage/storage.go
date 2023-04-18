@@ -187,7 +187,7 @@ func waitForFileType(ctx context.Context, files *filesapp.FilesApp) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to get keyboard")
 	}
-	defer keyboard.Close()
+	defer keyboard.Close(ctx)
 
 	// Press 'Space' to open/close the QuickView and check the file type. Repeat this
 	// until 'text/plain' is shown. Retries up to 6 times (~ 30 seconds).

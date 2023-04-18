@@ -92,7 +92,7 @@ func runActionUnlockScreen(ctx context.Context, s *testing.State,
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to find keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	password := s.RequiredVar("ui.cuj_password")
 	if err := kb.Type(ctx, password+"\n"); err != nil {

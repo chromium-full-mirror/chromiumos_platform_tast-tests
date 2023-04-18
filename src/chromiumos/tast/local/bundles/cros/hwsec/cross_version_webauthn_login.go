@@ -112,7 +112,7 @@ func testWebauthnLogin(ctx context.Context, config *util.CrossVersionLoginConfig
 	if err != nil {
 		return errors.Wrap(err, "failed to get keyboard")
 	}
-	defer keyboard.Close()
+	defer keyboard.Close(ctx)
 
 	authCallback := func(ctx context.Context, ui *uiauto.Context) error {
 		// Check if the UI is correct.

@@ -49,7 +49,7 @@ func InputOverlayEditor(ctx context.Context, s *testing.State) {
 		if err != nil {
 			return errors.Wrap(err, "failed to open keyboard")
 		}
-		defer kb.Close()
+		defer kb.Close(ctx)
 		defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, params.TestConn)
 		// Start up UIAutomator.
 		ui := uiauto.New(params.TestConn).WithTimeout(time.Minute)

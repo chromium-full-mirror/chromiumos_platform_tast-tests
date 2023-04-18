@@ -67,7 +67,7 @@ func openCycleWindowAndPressTabNTimes(ctx context.Context, ac *uiauto.Context, d
 	if err != nil {
 		return errors.Wrap(err, "failed to get keyboard")
 	}
-	defer keyboard.Close()
+	defer keyboard.Close(ctx)
 
 	// Make sure the cycle menu isn't open already before we try to alt+tab.
 	if err := ac.WithTimeout(5 * time.Second).WaitUntilGone(cycleMenu)(ctx); err != nil {

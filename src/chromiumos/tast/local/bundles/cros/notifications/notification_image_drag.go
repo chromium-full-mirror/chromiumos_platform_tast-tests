@@ -92,7 +92,7 @@ func NotificationImageDrag(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get virtual keyboard: ", err)
 	}
-	defer vkb.Close()
+	defer vkb.Close(ctx)
 
 	ui := uiauto.New(tconn)
 	notificationImage := nodewith.ClassName("LargeImageView")

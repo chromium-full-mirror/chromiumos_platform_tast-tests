@@ -147,7 +147,7 @@ func KeyboardShortcuts(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get a keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	// Move focus on Windows desktop.
 	if err := uidetector.LeftClick(recycleBin)(ctx); err != nil {

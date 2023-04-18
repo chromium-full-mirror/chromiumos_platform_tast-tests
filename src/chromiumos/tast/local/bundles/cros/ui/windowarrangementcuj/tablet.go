@@ -228,7 +228,7 @@ func RunTablet(ctx, closeCtx context.Context, br *browser.Browser, tconn *chrome
 	defer cleanUp(closeCtx, action.Named(
 		"close the keyboard",
 		func(ctx context.Context) error {
-			return kw.Close()
+			return kw.Close(ctx)
 		},
 	), &retErr)
 	topRow, err := input.KeyboardTopRowLayout(ctx, kw)

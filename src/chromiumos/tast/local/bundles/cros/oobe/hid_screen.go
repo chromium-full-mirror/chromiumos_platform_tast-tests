@@ -137,7 +137,7 @@ func HidScreen(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to create a virtual keyboard: ", err)
 		}
-		defer keyboard.Close()
+		defer keyboard.Close(ctx)
 
 		// Check that a keyboard is detected.
 		var keyboardDetectedText string

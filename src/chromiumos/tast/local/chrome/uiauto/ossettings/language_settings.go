@@ -30,7 +30,7 @@ func (s *OSSettings) ChangeDeviceLanguageAndRestart(ctx context.Context, tconn *
 	if err != nil {
 		return errors.Wrap(err, "failed to create virtual keyboard device")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	// Button to trigger changing device language.
 	changeButton := nodewith.NameContaining("Change device language").Role(role.Button)

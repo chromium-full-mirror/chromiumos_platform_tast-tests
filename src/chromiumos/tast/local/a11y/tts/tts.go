@@ -395,7 +395,7 @@ func PressKeysAndConsumeExpectations(ctx context.Context, sm *SpeechMonitor, key
 	if err != nil {
 		return errors.Wrap(err, "error with creating EventWriter from keyboard")
 	}
-	defer ew.Close()
+	defer ew.Close(ctx)
 
 	for _, keys := range keySequence {
 		if err := ew.Accel(ctx, keys); err != nil {

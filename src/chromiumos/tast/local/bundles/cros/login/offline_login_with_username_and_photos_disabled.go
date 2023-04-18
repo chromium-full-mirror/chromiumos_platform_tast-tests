@@ -138,7 +138,7 @@ func loginOffline(ctx context.Context, s *testing.State, creds []chrome.Creds) {
 	if err != nil {
 		s.Fatal("Failed to get virtual keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	ui := uiauto.New(tconn)
 	fillTextField(ctx, s, ui, kb, emailFieldName, creds[1].User)

@@ -124,7 +124,7 @@ func CheckSmartLockVisibilityOnSigninScreen(ctx context.Context, expectVisible b
 	if err != nil {
 		errors.Wrap(err, "failed to get keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	// Sign out
 	if cr, tconn, err = goToLoginScreen(ctx, cr, tconn, kb, loginOpts, noLoginOpts); err != nil {
@@ -150,7 +150,7 @@ func CheckSmartLockVisibilityOnLockScreen(ctx context.Context, expectVisible boo
 	if err != nil {
 		errors.Wrap(err, "failed to get keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	if err := lockscreen.Lock(ctx, tconn); err != nil {
 		return errors.Wrap(err, "failed to lock the screen on ChromeOS")

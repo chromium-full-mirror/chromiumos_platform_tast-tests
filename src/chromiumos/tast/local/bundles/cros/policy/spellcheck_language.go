@@ -136,7 +136,7 @@ func verifySpellcheckForLanguage(ctx context.Context, s *testing.State, cr *chro
 	if err != nil {
 		return errors.Wrap(err, "could not create input keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	// Check for the spelling marker after the misspelled word is typed.
 	jsGlobalVar := "spellCheckEnabled_" + language.correct

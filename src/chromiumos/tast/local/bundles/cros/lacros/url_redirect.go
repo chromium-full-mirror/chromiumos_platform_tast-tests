@@ -200,7 +200,7 @@ func testURLRedirect(ctx context.Context, s *testing.State, params urlRedirectPa
 	if err != nil {
 		s.Fatal("Failed to get keyboard handle: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, test)
 
 	s.Log("Navigating in Lacros to the test URL: ", params.url)

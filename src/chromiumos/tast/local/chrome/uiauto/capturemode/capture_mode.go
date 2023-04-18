@@ -109,7 +109,7 @@ func TakeScreenshot(ctx context.Context, downloadsPath string) (string, error) {
 	if err != nil {
 		return result, err
 	}
-	defer keyboard.Close()
+	defer keyboard.Close(ctx)
 
 	// Take a screenshot.
 	if err := keyboard.Accel(ctx, "Ctrl+F5"); err != nil {

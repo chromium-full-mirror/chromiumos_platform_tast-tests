@@ -132,7 +132,7 @@ func CompositorTransferFromImageBitmapOrientation(ctx context.Context, s *testin
 	if err != nil {
 		s.Fatal("Failed to initialize the keyboard writer: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	// screenshotCanvas requests a fullscreen view of the specified element, takes a screenshot,
 	// and returns the resulting image.

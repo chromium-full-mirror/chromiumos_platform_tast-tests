@@ -185,7 +185,7 @@ func SimLockPolicyLockSettingOn(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get the keyboard: ", err)
 	}
-	defer keyboard.Close()
+	defer keyboard.Close(ctx)
 
 	if err := keyboard.Type(ctx, currentPin); err != nil {
 		s.Fatal("Could not type PIN: ", err)

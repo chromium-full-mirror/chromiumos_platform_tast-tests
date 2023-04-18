@@ -122,7 +122,7 @@ func VPNUI(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get keyboard: ", err)
 	}
-	defer ew.Close()
+	defer ew.Close(ctx)
 
 	// Prepares virtualnet environment for the VPN server.
 	networkEnv, err := vpn.CreateNetworkTopology(ctx)

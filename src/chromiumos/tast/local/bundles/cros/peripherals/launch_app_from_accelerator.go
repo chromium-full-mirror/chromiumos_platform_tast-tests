@@ -76,7 +76,7 @@ func LaunchAppFromAccelerator(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Error creating keyboard instance: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	// Briefly sleep so that the device will be ready to process the input.
 	// TODO(joonbug): Find a suitable polling target for this instead of sleep.

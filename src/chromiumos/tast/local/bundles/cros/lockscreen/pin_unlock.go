@@ -87,7 +87,7 @@ func PINUnlock(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get keyboard: ", err)
 	}
-	defer keyboard.Close()
+	defer keyboard.Close(ctx)
 
 	// Enter and submit the PIN to unlock the DUT.
 	if err := lockscreen.EnterPIN(ctx, tconn, keyboard, PIN); err != nil {

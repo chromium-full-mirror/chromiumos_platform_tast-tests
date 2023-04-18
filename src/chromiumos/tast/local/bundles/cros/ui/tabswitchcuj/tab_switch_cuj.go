@@ -158,7 +158,7 @@ func muteDevice(ctx context.Context, s *testing.State) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to open the keyboard")
 	}
-	defer kw.Close()
+	defer kw.Close(ctx)
 
 	topRow, err := input.KeyboardTopRowLayout(ctx, kw)
 	if err != nil {
@@ -258,7 +258,7 @@ func testBody(ctx context.Context, test *tabSwitchVariables) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to open the keyboard")
 	}
-	defer kw.Close()
+	defer kw.Close(ctx)
 
 	// Create a virtual mouse.
 	mw, err := input.Mouse(ctx)

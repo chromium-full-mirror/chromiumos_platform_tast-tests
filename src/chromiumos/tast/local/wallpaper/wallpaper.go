@@ -125,7 +125,7 @@ func CloseWallpaperPicker() uiauto.Action {
 		if err != nil {
 			return errors.Wrap(err, "failed to get virtual keyboard")
 		}
-		defer kb.Close()
+		defer kb.Close(ctx)
 		return kb.Accel(ctx, "Ctrl+W")
 	}
 }

@@ -149,7 +149,7 @@ func fetchTwoSidedDuplexModesDropdown(ctx context.Context, tconn *chrome.TestCon
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get the keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	// Click on the previous dropdown and then focus on the dropdown we need.
 	scaleDropdownNode := nodewith.Role(role.ComboBoxSelect).Name("Scale")

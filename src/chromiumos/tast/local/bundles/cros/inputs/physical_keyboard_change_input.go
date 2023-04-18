@@ -115,7 +115,7 @@ func PhysicalKeyboardChangeInput(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get keyboard: ", err)
 	}
-	defer keyboard.Close()
+	defer keyboard.Close(ctx)
 
 	// TODO(b/196771467) Replace this function with im.WaitUntilActivated() once adding typing validation.
 	waitUntilCurrentInputMethod := func(im ime.InputMethod) uiauto.Action {

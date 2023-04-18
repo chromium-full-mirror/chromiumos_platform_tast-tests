@@ -100,7 +100,7 @@ func CellularESimInstallWithConfirmationCode(ctx context.Context, s *testing.Sta
 	if err != nil {
 		s.Fatal("Failed to open the keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	if err := ossettings.AddESimWithActivationCode(ctx, tconn, string(activationCode)); err != nil {
 		s.Fatal("Failed to add esim profile with correct activation code: ", err)

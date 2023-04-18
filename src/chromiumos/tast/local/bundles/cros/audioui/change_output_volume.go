@@ -90,7 +90,7 @@ func verifyVolumeChanged(ctx context.Context, tconn *chrome.TestConn) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to get keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	vh, err := audio.NewVolumeHelper(ctx)
 	if err != nil {

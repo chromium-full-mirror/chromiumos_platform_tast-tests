@@ -89,7 +89,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, params *TestParams) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to open the keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	topRow, err := input.KeyboardTopRowLayout(ctx, kb)
 	if err != nil {
@@ -126,7 +126,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, params *TestParams) error {
 			return errors.Wrap(err, "failed to create clamshell action handler")
 		}
 	}
-	defer uiHandler.Close()
+	defer uiHandler.Close(ctx)
 
 	testing.ContextLog(ctx, "Start to get browser start time")
 	l, browserStartTime, err := cuj.GetBrowserStartTime(ctx, tconn, true, tabletMode, bt)

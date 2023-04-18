@@ -41,7 +41,7 @@ func CCAUIA11y(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create EventWriter from keyboard")
 	}
-	defer ew.Close()
+	defer ew.Close(ctx)
 
 	visited := make(map[string]bool)
 	tab := "Tab"

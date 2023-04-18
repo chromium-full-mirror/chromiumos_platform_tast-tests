@@ -102,7 +102,7 @@ func ImmersiveMode(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create a keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	// Not all Chromebooks have the same layout for the function keys.
 	layout, err := input.KeyboardTopRowLayout(ctx, kb)

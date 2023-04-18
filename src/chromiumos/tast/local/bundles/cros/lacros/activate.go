@@ -221,7 +221,7 @@ func activateBrowserViaNewTabShortcut(ctx context.Context, _ *chrome.TestConn) e
 	if err != nil {
 		return errors.Wrap(err, "failed to get keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 	if err := kb.Accel(ctx, "Ctrl+t"); err != nil {
 		return errors.Wrap(err, "failed to send Ctrl+t")
 	}
@@ -233,7 +233,7 @@ func activateBrowserViaNewWindowShortcut(ctx context.Context, _ *chrome.TestConn
 	if err != nil {
 		return errors.Wrap(err, "failed to get keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 	if err := kb.Accel(ctx, "Ctrl+n"); err != nil {
 		return errors.Wrap(err, "failed to send Ctrl+n")
 	}

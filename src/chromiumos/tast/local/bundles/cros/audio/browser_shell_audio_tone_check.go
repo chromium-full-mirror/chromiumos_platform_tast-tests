@@ -59,7 +59,7 @@ func BrowserShellAudioToneCheck(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to find keyboard: ", err)
 	}
-	defer vk.Close()
+	defer vk.Close(ctx)
 
 	const expectedAudioNode = "INTERNAL_SPEAKER"
 	audioDeviceName, err := audionode.SetAudioNode(ctx, expectedAudioNode)

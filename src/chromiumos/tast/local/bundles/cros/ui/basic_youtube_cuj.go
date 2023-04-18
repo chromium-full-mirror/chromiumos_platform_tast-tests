@@ -92,7 +92,7 @@ func BasicYoutubeCUJ(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to open the keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	ui := uiauto.New(tconn)
 
@@ -100,7 +100,7 @@ func BasicYoutubeCUJ(ctx context.Context, s *testing.State) {
 	if uiHandler, err = cuj.NewClamshellActionHandler(ctx, tconn); err != nil {
 		s.Fatal("Failed to create clamshell action handler: ", err)
 	}
-	defer uiHandler.Close()
+	defer uiHandler.Close(ctx)
 
 	recorder, err := cujrecorder.NewRecorder(ctx, cr, tconn, nil, cujrecorder.RecorderOptions{})
 	if err != nil {

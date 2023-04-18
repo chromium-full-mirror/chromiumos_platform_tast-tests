@@ -306,7 +306,7 @@ func loginPerfDoLogin(
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to get keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	if err := kb.Type(ctx, credentials.Pass+"\n"); err != nil {
 		return nil, nil, errors.Wrap(err, "entering password failed")

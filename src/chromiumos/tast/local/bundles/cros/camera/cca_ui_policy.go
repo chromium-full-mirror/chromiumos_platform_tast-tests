@@ -120,7 +120,7 @@ func testBlockCameraFeature(ctx context.Context, cr *chrome.Chrome, scripts []st
 	if err != nil {
 		return errors.Wrap(err, "failed to find keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 	if err := launcher.SearchAndLaunch(tconn, kb, apps.Camera.Name)(ctx); err != nil {
 		return errors.Wrap(err, "failed to find camera app in the launcher")
 	}

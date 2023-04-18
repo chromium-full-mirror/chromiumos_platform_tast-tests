@@ -63,7 +63,7 @@ func DefaultAppLaunchWhenArcIsOff(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to find keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	// Launch Play Books App.
 	if err := launcher.SearchAndWaitForAppOpen(tconn, kb, apps.PlayBooks)(ctx); err != nil {

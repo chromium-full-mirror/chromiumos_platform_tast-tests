@@ -90,7 +90,7 @@ func Logout(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to initialize keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	defer func() {
 		faillog.DumpUITreeWithScreenshotWithTestAPIOnError(cleanupCtx, s.OutDir(), s.HasError, tconn, "logout")
@@ -163,7 +163,7 @@ func logoutByShortcut(ctx context.Context, tconn *chrome.TestConn) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to create the keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	return uiauto.Combine("press the keyboard to logout",
 		kb.AccelAction("Shift+Ctrl+Q"),

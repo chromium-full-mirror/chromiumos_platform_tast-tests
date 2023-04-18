@@ -194,7 +194,7 @@ func switchTabs(ctx context.Context, br *browser.Browser, switchCount int, local
 	if err != nil {
 		return 0, errors.Wrap(err, "cannot initialize keyboard")
 	}
-	defer keyboard.Close()
+	defer keyboard.Close(ctx)
 
 	waitTime := 3 * time.Second
 	var reloadCount uint64

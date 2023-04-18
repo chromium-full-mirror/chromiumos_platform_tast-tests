@@ -64,7 +64,7 @@ func USBGuard(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "failed to open keyboard device")
 		}
 		defer func() {
-			if err := ew.Close(); err != nil {
+			if err := ew.Close(ctx); err != nil {
 				rerr = errors.Wrap(err, "failed to close keyboard device")
 			}
 		}()

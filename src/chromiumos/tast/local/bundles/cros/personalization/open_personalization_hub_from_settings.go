@@ -57,7 +57,7 @@ func OpenPersonalizationHubFromSettings(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	if err := uiauto.Combine("open personalization hub from settings",
 		personalization.SearchForAppInLauncher(personalization.SettingsSearchTerm, personalization.SettingsAppName, kb, ui),

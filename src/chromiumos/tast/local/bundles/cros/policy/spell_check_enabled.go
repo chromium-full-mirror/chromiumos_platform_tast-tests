@@ -172,7 +172,7 @@ func spellCheckEnabled(ctx context.Context, name string, tconn *browser.TestConn
 	if err != nil {
 		return false, errors.Wrap(err, "could not create input keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	// Type misspelled word into keyboard to generate a spelling marker.
 	if err := kb.Type(ctx, "aaaaa "); err != nil {

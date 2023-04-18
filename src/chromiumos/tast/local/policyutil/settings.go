@@ -101,7 +101,7 @@ func OSSettingsPageWithPassword(ctx context.Context, cr *chrome.Chrome, shortLin
 		page.err = errors.Wrap(err, "failed to open keyboard device")
 		return page
 	}
-	defer keyboard.Close()
+	defer keyboard.Close(ctx)
 
 	if err := keyboard.Type(ctx, password+"\n"); err != nil {
 		page.err = errors.Wrap(err, "failed to type password")

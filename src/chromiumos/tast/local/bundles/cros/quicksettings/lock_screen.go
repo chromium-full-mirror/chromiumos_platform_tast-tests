@@ -72,7 +72,7 @@ func LockScreen(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get virtual keyboard: ", err)
 	}
-	defer keyboard.Close()
+	defer keyboard.Close(ctx)
 
 	if err := keyboard.Accel(ctx, "Ctrl+F5"); err != nil {
 		s.Fatal("Failed to take a screenshot: ", err)

@@ -78,7 +78,7 @@ func DeveloperToolsAvailability(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get keyboard: ", err)
 	}
-	defer keyboard.Close()
+	defer keyboard.Close(ctx)
 
 	for _, tc := range []struct {
 		name        string

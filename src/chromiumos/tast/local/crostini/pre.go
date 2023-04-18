@@ -29,6 +29,7 @@ import (
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
 	"chromiumos/tast/timing"
+
 	"go.chromium.org/tast/core/shutil"
 )
 
@@ -451,7 +452,7 @@ func (p *preImpl) Close(ctx context.Context, s *testing.PreState) {
 // fields and resetting the struct's fields.
 func (p *preImpl) cleanUp(ctx context.Context, s *testing.PreState) {
 	if p.keyboard != nil {
-		if err := p.keyboard.Close(); err != nil {
+		if err := p.keyboard.Close(ctx); err != nil {
 			s.Log("Failure closing keyboard: ", err)
 		}
 		p.keyboard = nil

@@ -229,7 +229,7 @@ func (service *DataLeakPreventionService) ClipboardCopyPaste(ctx context.Context
 	if err != nil {
 		return &empty.Empty{}, errors.Wrap(err, "failed to get keyboard")
 	}
-	defer keyboard.Close()
+	defer keyboard.Close(ctx)
 
 	if err := tconn.WaitForExpr(ctx, "chrome.clipboard"); err != nil {
 		return &empty.Empty{}, errors.Wrap(err, "failed to wait for chrome.clipboard API to become available")
@@ -312,7 +312,7 @@ func (service *DataLeakPreventionService) Print(ctx context.Context, req *pb.Act
 	if err != nil {
 		return &empty.Empty{}, errors.Wrap(err, "failed to get keyboard")
 	}
-	defer keyboard.Close()
+	defer keyboard.Close(ctx)
 
 	// Test printing using hotkey (Ctrl + P).
 	if err := keyboard.Accel(ctx, "Ctrl+P"); err != nil {
@@ -356,7 +356,7 @@ func (service *DataLeakPreventionService) Screenshot(ctx context.Context, req *p
 	if err != nil {
 		return &empty.Empty{}, errors.Wrap(err, "failed to get keyboard")
 	}
-	defer keyboard.Close()
+	defer keyboard.Close(ctx)
 
 	// Take a screenshot using hotkey (Ctrl+F5)
 	if err := keyboard.Accel(ctx, "Ctrl+F5"); err != nil {
@@ -460,7 +460,7 @@ func (service *DataLeakPreventionService) FilesDriveCopyPaste(ctx context.Contex
 	if err != nil {
 		return &empty.Empty{}, errors.Wrap(err, "failed to get keyboard")
 	}
-	defer keyboard.Close()
+	defer keyboard.Close(ctx)
 
 	if err := uiauto.Combine("copy pasting managed file",
 		filesApp.OpenDownloads(),
@@ -496,7 +496,7 @@ func (service *DataLeakPreventionService) TestCopyFileToDrive(ctx context.Contex
 	if err != nil {
 		return &empty.Empty{}, errors.Wrap(err, "failed to get keyboard")
 	}
-	defer keyboard.Close()
+	defer keyboard.Close(ctx)
 
 	ui := uiauto.New(tconn)
 

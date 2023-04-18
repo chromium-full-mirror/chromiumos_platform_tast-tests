@@ -115,7 +115,7 @@ func DataLeakPreventionRulesListArcClipboard(ctx context.Context, s *testing.Sta
 	if err != nil {
 		s.Fatal("Failed to find keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	const (
 		// Simple app with text field.

@@ -74,7 +74,7 @@ func ContextMenuClipboard(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	res := &clipboardResource{
 		ui:    uiauto.New(tconn),

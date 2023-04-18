@@ -109,7 +109,7 @@ func ReorderDesk(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create a keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	// When there is only one desk (no desk mini view), change the first desk's name
 	// to prevent the name from being changed by reordering and create another desk
@@ -257,7 +257,7 @@ func reorderDeskByKeyboard(ctx context.Context, tconn *chrome.TestConn, shortcut
 	if err != nil {
 		return errors.Wrap(err, "failed to create a keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	// Reorders desks by keyboard.
 	targetDeskMiniViewLoc, err := ui.Location(ctx, targetDeskMiniView)

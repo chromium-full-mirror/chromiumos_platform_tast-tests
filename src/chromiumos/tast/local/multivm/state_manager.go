@@ -279,7 +279,7 @@ func (s *StateManager) Deactivate(ctx context.Context) (errRet error) {
 
 	if s.keyboard != nil {
 		defer func() {
-			if err := s.keyboard.Close(); err != nil {
+			if err := s.keyboard.Close(ctx); err != nil {
 				if errRet == nil {
 					errRet = errors.Wrap(err, "failed to deactivate keyboard")
 				} else {

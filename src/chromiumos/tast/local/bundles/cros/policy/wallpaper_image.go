@@ -76,7 +76,7 @@ func WallpaperImage(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to open keyboard device: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	eds, err := externaldata.NewServer(ctx)
 	if err != nil {

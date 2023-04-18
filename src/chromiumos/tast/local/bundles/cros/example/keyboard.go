@@ -103,7 +103,7 @@ func Keyboard(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to open keyboard device: ", err)
 	}
-	defer ew.Close()
+	defer ew.Close(ctx)
 
 	s.Logf("Injecting keyboard events for %q", inputText)
 	if err = ew.Type(ctx, inputText); err != nil {

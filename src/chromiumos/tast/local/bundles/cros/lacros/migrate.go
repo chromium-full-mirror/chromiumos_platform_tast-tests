@@ -40,7 +40,7 @@ func Migrate(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	prepareAshProfile(ctx, s, kb)
 	cr, err := migrate.Run(ctx, []chrome.Option{}, []lacrosfixt.Option{})

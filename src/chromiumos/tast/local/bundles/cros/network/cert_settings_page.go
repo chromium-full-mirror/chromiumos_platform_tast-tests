@@ -173,7 +173,7 @@ func closeCurrentPage(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to find keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	if err := kb.Accel(ctx, "ctrl+w"); err != nil {
 		s.Fatal("Failed to close the page: ", err)
@@ -234,7 +234,7 @@ func importClientCert(ctx context.Context, s *testing.State, ui *uiauto.Context,
 	if err != nil {
 		s.Fatal("Failed to find keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	passwordDialog := nodewith.Name("Enter your certificate password").Role(role.Dialog)
 	passwordTextBox := nodewith.Role(role.TextField).Editable()

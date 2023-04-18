@@ -26,7 +26,7 @@ func RunTest(ctx context.Context, s *testing.State, cr *chrome.Chrome, cont *vm.
 	if err != nil {
 		s.Fatal("Failed to find keyboard device: ", err)
 	}
-	defer keyboard.Close()
+	defer keyboard.Close(ctx)
 
 	// Launch the test app which will maximize itself and then use the
 	// argument as a solid color to fill as its background.

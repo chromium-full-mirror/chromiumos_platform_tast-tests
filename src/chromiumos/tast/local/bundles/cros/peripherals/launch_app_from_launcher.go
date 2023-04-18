@@ -97,7 +97,7 @@ func LaunchAppFromLauncher(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to find keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	if err := launcher.SearchAndLaunchWithQuery(tconn, kb, s.Param().(testParams).query, s.Param().(testParams).app.Name)(ctx); err != nil {
 		s.Fatal("Failed to search and launch app: ", err)

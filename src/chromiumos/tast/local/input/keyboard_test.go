@@ -20,6 +20,7 @@ import (
 	"golang.org/x/sys/unix"
 
 	"chromiumos/tast/errors"
+
 	"go.chromium.org/tast/core/testutil"
 )
 
@@ -101,7 +102,8 @@ func TestEventWriterSuccess(t *testing.T) {
 	if err := kw.rw.Sync(); err != nil {
 		t.Error("Writing first sync failed: ", err)
 	}
-	if err := kw.Close(); err != nil {
+	testContext := context.Background()
+	if err := kw.Close(testContext); err != nil {
 		t.Error("Close failed: ", err)
 	}
 
@@ -127,7 +129,8 @@ func TestEventWriterWriteError(t *testing.T) {
 	b := testBuffer{}
 	b.err = errors.New("intentional error")
 	kw := KeyboardEventWriter{rw: &RawEventWriter{&b, time.Now}, fast: true}
-	defer kw.Close()
+	testContext := context.Background()
+	defer kw.Close(testContext)
 
 	if err := kw.rw.Event(EV_KEY, KEY_A, 1); err == nil {
 		t.Error("Event didn't report expected error")

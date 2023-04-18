@@ -60,7 +60,7 @@ const pageScrollingInterval = 1500 * time.Millisecond
 type UIActionHandler interface {
 	// Close releases the underlying resouses.
 	// Tests should always defer calls to this once the UIActionHandler instance been created.
-	Close()
+	Close(ctx context.Context)
 
 	// Click returns a function that clicks or taps the node found by input finder.
 	Click(finder *nodewith.Finder) action.Action
@@ -155,7 +155,7 @@ func NewTabletActionHandler(ctx context.Context, tconn *chrome.TestConn) (*Table
 			}
 		}
 		if kb != nil {
-			if err := kb.Close(); err != nil {
+			if err := kb.Close(ctx); err != nil {
 				testing.ContextLog(ctx, "Failed to close keyboard event writer")
 			}
 		}
@@ -197,8 +197,8 @@ func NewTabletActionHandler(ctx context.Context, tconn *chrome.TestConn) (*Table
 
 // Close releases the underlying resouses.
 // Tests should always defer calls to this once the UIActionHandler instance been created.
-func (t *TabletActionHandler) Close() {
-	t.kb.Close()
+func (t *TabletActionHandler) Close(ctx context.Context) {
+	t.kb.Close(ctx)
 	t.stew.Close()
 	t.tc.Close()
 }
@@ -687,7 +687,7 @@ func NewClamshellActionHandler(ctx context.Context, tconn *chrome.TestConn) (*Cl
 			touchPad.Close()
 		}
 		if kb != nil {
-			if err := kb.Close(); err != nil {
+			if err := kb.Close(ctx); err != nil {
 				testing.ContextLog(ctx, "Failed to close keyboard event writer")
 			}
 		}
@@ -715,8 +715,8 @@ func NewClamshellActionHandler(ctx context.Context, tconn *chrome.TestConn) (*Cl
 
 // Close releases the underlying resouses.
 // Tests should always defer calls to this once the UIActionHandler instance been created.
-func (cl *ClamshellActionHandler) Close() {
-	cl.kb.Close()
+func (cl *ClamshellActionHandler) Close(ctx context.Context) {
+	cl.kb.Close(ctx)
 	cl.pad.Close()
 	cl.touchPad.Close()
 }

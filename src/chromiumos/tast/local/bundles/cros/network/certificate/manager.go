@@ -133,7 +133,7 @@ func (m *Manager) ImportClientCert(fileName, password string, org Organization, 
 		if err != nil {
 			return errors.Wrap(err, "failed to create keyboard")
 		}
-		defer kb.Close()
+		defer kb.Close(ctx)
 
 		return uiauto.Combine(fmt.Sprintf("import client certificate %q", org.Name),
 			m.switchToCertTab(TypeClient),

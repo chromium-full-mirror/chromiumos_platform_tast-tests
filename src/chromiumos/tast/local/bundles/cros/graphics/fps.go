@@ -93,7 +93,7 @@ func FPS(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to initialize the keyboard writer: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	// Iterate over each display.
 	for _, info := range infos {

@@ -86,7 +86,7 @@ func (s *Service) JoinWifiFromQuickSettings(ctx context.Context, req *wifi.JoinW
 	if err != nil {
 		return &emptypb.Empty{}, errors.Wrap(err, "failed to find keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)

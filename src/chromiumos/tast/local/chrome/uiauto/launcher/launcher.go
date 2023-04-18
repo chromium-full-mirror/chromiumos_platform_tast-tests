@@ -204,7 +204,7 @@ func SetUpLauncherTest(ctx context.Context, tconn *chrome.TestConn, tabletMode, 
 		if err != nil {
 			return errors.Wrap(err, "failed to find keyboard")
 		}
-		defer kb.Close()
+		defer kb.Close(ctx)
 
 		if err := kb.TypeKey(ctx, input.KEY_ESC); err != nil {
 			return errors.Wrapf(err, "failed to send %d", input.KEY_ESC)

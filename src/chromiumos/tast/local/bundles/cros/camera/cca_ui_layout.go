@@ -180,7 +180,7 @@ func checkPreviewOptions(ctx context.Context, app *cca.App, differ screenshot.Di
 	if err != nil {
 		return errors.Wrap(err, "failed to create a keyboard")
 	}
-	defer keyboard.Close()
+	defer keyboard.Close(ctx)
 
 	// Verify panels.
 	for _, panel := range []struct {

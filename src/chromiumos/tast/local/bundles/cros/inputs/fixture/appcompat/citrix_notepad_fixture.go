@@ -143,5 +143,5 @@ func (f *citrixNotepadFixtureImpl) Reset(ctx context.Context) error {
 }
 
 func (f *citrixNotepadFixtureImpl) TearDown(ctx context.Context, s *testing.FixtState) {
-	f.kb.Close()
+	f.kb.Close(ctx)
 }

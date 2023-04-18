@@ -149,7 +149,7 @@ func loginWithCreds(ctx context.Context, s *testing.State, creds chrome.Creds, s
 	if err != nil {
 		s.Fatal("Failed to get virtual keyboard: ", err)
 	}
-	defer keyboard.Close()
+	defer keyboard.Close(ctx)
 	if err = lockscreen.EnterPassword(ctx, tconn, creds.User, creds.Pass, keyboard); err != nil {
 		s.Fatal("Failed to enter password: ", err)
 	}

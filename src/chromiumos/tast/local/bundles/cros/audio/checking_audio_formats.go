@@ -117,7 +117,7 @@ func CheckingAudioFormats(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create keyboard eventwriter: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	files, err := filesapp.Launch(ctx, tconn)
 	if err != nil {

@@ -155,7 +155,7 @@ func DragDrop(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	// The Files App may show a welcome banner on launch to introduce the user to new features.
 	// Increase polling options to give UI more time to stabilize in the event that a banner is shown.

@@ -64,7 +64,7 @@ func VerifyStreamingUsingAudio(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create clamshell action handler: ", err)
 	}
-	defer uiHandler.Close()
+	defer uiHandler.Close(ctx)
 
 	videoApp := youtube.NewYtWeb(cr.Browser(), tconn, kb, false, cui, uiHandler)
 	if err := videoApp.OpenAndPlayVideo(videoSource)(ctx); err != nil {

@@ -203,7 +203,7 @@ func setUpIncognito(ctx context.Context, cr *chrome.Chrome, bt browser.Type) (*b
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to connect to a keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	if err := kb.Accel(ctx, "Ctrl+Shift+N"); err != nil {
 		return nil, nil, errors.Wrap(err, "failed to launch incognito Chrome browser")
@@ -452,7 +452,7 @@ func (its *InputsTestServer) validatePKTypingInField(uc *useractions.UserContext
 		if err != nil {
 			return err
 		}
-		defer keyboard.Close()
+		defer keyboard.Close(ctx)
 
 		return uiauto.Combine("validate pk input function on field "+string(inputField),
 			its.Clear(inputField),

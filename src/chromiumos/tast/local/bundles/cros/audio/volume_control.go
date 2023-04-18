@@ -91,7 +91,7 @@ func VolumeControl(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to open the keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	if param.tier == withAudio {
 		s.Log("Generate sine raw input file that lasts 30 seconds")

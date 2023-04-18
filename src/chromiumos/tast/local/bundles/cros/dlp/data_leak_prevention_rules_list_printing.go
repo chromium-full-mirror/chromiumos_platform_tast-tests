@@ -288,7 +288,7 @@ func DataLeakPreventionRulesListPrinting(ctx context.Context, s *testing.State) 
 	if err != nil {
 		s.Fatal("Failed to get keyboard: ", err)
 	}
-	defer keyboard.Close()
+	defer keyboard.Close(ctx)
 
 	// Construct URL to pass to test and policy.
 	testURL, err := url.Parse(server.URL)

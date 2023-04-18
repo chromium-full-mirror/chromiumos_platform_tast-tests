@@ -34,7 +34,7 @@ func HandleMicrosoftLogin(username, password string) LoginFunc {
 		if err != nil {
 			return errors.New("failed to get keyboard")
 		}
-		defer kb.Close()
+		defer kb.Close(ctx)
 
 		ui := uiauto.New(tconn).WithTimeout(samlDefaultUITimeout)
 
@@ -77,7 +77,7 @@ func HandleTestIdPLogin(username, password string) LoginFunc {
 		if err != nil {
 			return errors.New("failed to get keyboard")
 		}
-		defer kb.Close()
+		defer kb.Close(ctx)
 
 		ui := uiauto.New(tconn).WithTimeout(samlDefaultUITimeout)
 

@@ -139,13 +139,13 @@ func SetScreensaver(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to open the keyboard: ", err)
 		}
-		defer kb.Close()
+		defer kb.Close(ctx)
 
 		var uiHandler cuj.UIActionHandler
 		if uiHandler, err = cuj.NewClamshellActionHandler(ctx, tconn); err != nil {
 			s.Fatal("Failed to create clamshell action handler: ", err)
 		}
-		defer uiHandler.Close()
+		defer uiHandler.Close(ctx)
 
 		// Open up an arbitrary Youtube video to test "media string". The name of
 		// the media playing should be displayed in the screensaver.

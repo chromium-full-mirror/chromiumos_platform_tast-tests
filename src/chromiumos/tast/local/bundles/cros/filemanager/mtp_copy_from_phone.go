@@ -59,7 +59,7 @@ func MTPCopyFromPhone(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get keyboard: ", err)
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	const testFile = "MTPCopyFromPhone.txt"
 	myFilesPath, err := cryptohome.MyFilesPath(ctx, cr.NormalizedUser())

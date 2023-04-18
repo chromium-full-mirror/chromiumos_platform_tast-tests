@@ -328,7 +328,7 @@ func Launcher(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to find keyboard device: ", err)
 	}
-	defer keyboard.Close()
+	defer keyboard.Close(ctx)
 
 	sizeHighDensity, err := launchAppAndMeasureWindowSize(ctx, tconn, keyboard, ownerID, conf.launcherID, conf.windowName, false)
 	if err != nil {

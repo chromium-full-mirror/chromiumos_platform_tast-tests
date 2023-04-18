@@ -225,7 +225,7 @@ func AutofillCreditCardEnabled(ctx context.Context, s *testing.State) {
 					if err != nil {
 						s.Fatal("Failed to use keyboard: ", err)
 					}
-					defer kb.Close()
+					defer kb.Close(ctx)
 
 					// Fill in the credit card details and click on the save button.
 					jsScript := "(htmlFieldID, fieldValue) => { document.getElementById(htmlFieldID).value = fieldValue; }"
