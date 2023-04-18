@@ -1,0 +1,40 @@
+// Copyright 2023 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+syntax = "proto3";
+
+package tast.cros.power;
+
+import "google/protobuf/empty.proto";
+
+import "values.proto";
+
+option go_package = "go.chromium.org/tast-tests/cros/services/cros/power";
+
+// MetricsService.
+service MetricsService {
+
+  rpc Setup (SetupRequest) returns (google.protobuf.Empty) {}
+
+  // Start collecting metrics.
+  rpc Start (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  // Finish collecting Metrics.
+  rpc Finish (google.protobuf.Empty) returns (tast.common.perf.perfpb.Values) {}
+
+  rpc Cleanup (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+}
+
+message SetupRequest {
+  PowerFixture fixture = 1;
+  string test_name = 2;
+  uint32 interval_second = 3;
+
+  enum PowerFixture {
+    UNSPECIFIED = 0;
+    NO_UI_NO_WIFI = 1;
+    NO_UI_WIFI = 2;
+    NO_UI_NO_WIFI_BT = 3;
+  }
+}
