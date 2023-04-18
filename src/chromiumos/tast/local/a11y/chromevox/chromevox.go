@@ -55,43 +55,41 @@ type Conn struct {
 // NewConn returns a connection to the ChromeVox extension's background page.
 // If the extension is not ready, the connection will be closed before returning.
 // Otherwise the calling function will close the connection.
-func NewConn(ctx context.Context, c *chrome.Chrome) (*Conn, error) {
+func NewConn(ctx context.Context, c *chrome.Chrome) (_ *Conn, e error) {
 	extConn, err := c.NewConnForTarget(ctx, chrome.MatchTargetURL(a11y.ChromeVoxExtensionURL))
 	if err != nil {
 		return nil, err
 	}
 
-	if err := func() error {
-		// Poll until ChromeVox connection finishes loading.
-		if err := extConn.WaitForExpr(ctx, `document.readyState === "complete"`); err != nil {
-			return errors.Wrap(err, "timed out waiting for ChromeVox connection to be ready")
+	defer func() {
+		if e != nil {
+			extConn.Close()
 		}
+	}()
 
-		// Make sure required modules exist and are accessible.
-		if err := extConn.Eval(ctx, `(async () => {
-			if (!window.ChromeVoxState) {
-			  window.ChromeVoxState = (await import('/chromevox/background/chromevox_state.js')).ChromeVoxState;
-			}
-			if (!window.TtsBackground) {
-			  window.TtsBackground = (await import('/chromevox/background/tts_background.js')).TtsBackground;
-			}
-			if (!window.ChromeVoxRange) {
-			  window.ChromeVoxRange = (await import('/chromevox/background/chromevox_range.js')).ChromeVoxRange;
-			}
-		  })()`, nil); err != nil {
-			return errors.Wrap(err, "failed to export modules from ChromeVox")
-		}
-		if err := extConn.WaitForExpr(ctx, "ChromeVoxState.instance && ChromeVoxRange.instance"); err != nil {
-			return errors.Wrap(err, "ChromeVoxState or ChromeVoxRange is unavailable")
-		}
+	// Poll until ChromeVox connection finishes loading.
+	if err := extConn.WaitForExpr(ctx, `document.readyState === "complete"`); err != nil {
+		return nil, errors.Wrap(err, "timed out waiting for ChromeVox connection to be ready")
+	}
 
-		if err := chrome.AddTastLibrary(ctx, extConn); err != nil {
-			return errors.Wrap(err, "failed to introduce tast library")
+	// Make sure required modules exist and are accessible.
+	if err := extConn.Eval(ctx, `(async () => {
+		if (!window.TtsBackground) {
+		  window.TtsBackground = (await import('/chromevox/background/tts_background.js')).TtsBackground;
 		}
-		return nil
-	}(); err != nil {
-		extConn.Close()
-		return nil, err
+		if (!window.ChromeVoxRange) {
+		  window.ChromeVoxRange = (await import('/chromevox/background/chromevox_range.js')).ChromeVoxRange;
+		}
+	  })()`, nil); err != nil {
+		return nil, errors.Wrap(err, "failed to export modules from ChromeVox")
+	}
+
+	if err := extConn.WaitForExpr(ctx, "ChromeVoxRange.instance"); err != nil {
+		return nil, errors.Wrap(err, "ChromeVoxRange is unavailable")
+	}
+
+	if err := chrome.AddTastLibrary(ctx, extConn); err != nil {
+		return nil, errors.Wrap(err, "failed to introduce tast library")
 	}
 
 	return &Conn{extConn}, nil
