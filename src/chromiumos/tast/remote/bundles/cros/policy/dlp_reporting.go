@@ -16,6 +16,7 @@ import (
 	"chromiumos/tast/remote/policyutil"
 	"chromiumos/tast/remote/reportingutil"
 	dlp "chromiumos/tast/services/cros/dlp"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
@@ -47,7 +48,7 @@ func init() {
 			"tast.cros.policy.PolicyService",
 			"tast.cros.tape.Service",
 		},
-		Timeout: 7 * time.Minute,
+		Timeout: 10 * time.Minute,
 		VarDeps: []string{
 			dlputil.RestrictionReportReportingEnabledUsername,
 			dlputil.RestrictionReportReportingEnabledPassword,
@@ -194,6 +195,10 @@ func init() {
 
 func DlpReporting(ctx context.Context, s *testing.State) {
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
 	params := s.Param().(testParams)
 
 	username := s.RequiredVar(params.Username)
@@ -207,7 +212,7 @@ func DlpReporting(ctx context.Context, s *testing.State) {
 		if err := policyutil.EnsureTPMAndSystemStateAreReset(ctx, s.DUT(), s.RPCHint()); err != nil {
 			s.Error("Failed to reset TPM after test: ", err)
 		}
-	}(ctx)
+	}(cleanupCtx)
 	// Reset the device enrollment state making sure the DUT is rebooted so that the reporting daemon works properly.
 	// Local reset is not enough since it may not reboot the device.
 	if err := policyutil.EnsureTPMAndSystemStateAreResetRemote(ctx, s.DUT()); err != nil {
@@ -219,8 +224,8 @@ func DlpReporting(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
 	}
-	defer cl.Close(ctx)
-	defer reportingutil.Deprovision(ctx, cl.Conn, sa, customerID)
+	defer cl.Close(cleanupCtx)
+	defer reportingutil.Deprovision(cleanupCtx, cl.Conn, sa, customerID)
 
 	// Create client instance of the DataLeakPrevention service.
 	service := dlp.NewDataLeakPreventionServiceClient(cl.Conn)
@@ -236,7 +241,7 @@ func DlpReporting(ctx context.Context, s *testing.State) {
 	}); err != nil {
 		s.Fatal("Remote call EnrollAndLogin() failed: ", err)
 	}
-	defer service.StopChrome(ctx, &empty.Empty{})
+	defer service.StopChrome(cleanupCtx, &empty.Empty{})
 
 	c, err := service.ClientID(ctx, &empty.Empty{})
 	if err != nil {
@@ -269,7 +274,7 @@ func DlpReporting(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to create a temporary directory: ", err)
 		}
-		defer service.RemoveTempDir(ctx, &dlp.RemoveTempDirRequest{
+		defer service.RemoveTempDir(cleanupCtx, &dlp.RemoveTempDirRequest{
 			Path: d.Path,
 		})
 
@@ -291,6 +296,7 @@ func DlpReporting(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Waiting 60 seconds to make sure events reach the server and are processed")
+	// TODO(b/278667990): Replace sleep with poll.
 	// GoBigSleepLint: wait 60 seconds to make sure events reach the server and are processed.
 	if err := testing.Sleep(ctx, 60*time.Second); err != nil {
 		s.Fatal("Failed to sleep: ", err)
