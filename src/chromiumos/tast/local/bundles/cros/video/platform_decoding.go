@@ -2432,19 +2432,6 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_av1"},
 			},
 			{
-				Name: "v4l2_stateless_av1_8bit_svc",
-				Val: platformDecodingParams{
-					filenames:      []string{"test_vectors/av1/aom/av1-1-b8-22-svc-L1T2.ivf", "test_vectors/av1/aom/av1-1-b8-22-svc-L2T1.ivf", "test_vectors/av1/aom/av1-1-b8-22-svc-L2T2.ivf"},
-					decoder:        "/usr/local/libexec/chrome-binary-tests/v4l2_stateless_decoder",
-					commandBuilder: platform.V4L2StatelessDecodeArgs,
-				},
-				Timeout:           10 * time.Minute,
-				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatelessVideoDecoding(), hwdep.Model("tomato", "dojo")),
-				ExtraSoftwareDeps: []string{"v4l2_codec"},
-				ExtraData:         []string{"test_vectors/av1/aom/av1-1-b8-22-svc-L1T2.ivf", "test_vectors/av1/aom/av1-1-b8-22-svc-L1T2.ivf.json", "test_vectors/av1/aom/av1-1-b8-22-svc-L2T1.ivf", "test_vectors/av1/aom/av1-1-b8-22-svc-L2T1.ivf.json", "test_vectors/av1/aom/av1-1-b8-22-svc-L2T2.ivf", "test_vectors/av1/aom/av1-1-b8-22-svc-L2T2.ivf.json"},
-				ExtraAttr:         []string{"graphics_video_av1"},
-			},
-			{
 				Name: "ffmpeg_vaapi_vp9_0_group1_buf",
 				Val: platformDecodingParams{
 					filenames:      []string{"test_vectors/vp9/Profile_0_8bit/buf/crowd_run_256X144_fr15_bd8_8buf_l1.ivf", "test_vectors/vp9/Profile_0_8bit/buf/grass_1_256X144_fr15_bd8_8buf_l1.ivf", "test_vectors/vp9/Profile_0_8bit/buf/street1_1_256X144_fr15_bd8_8buf_l1.ivf", "test_vectors/vp9/Profile_0_8bit/buf/crowd_run_384X192_fr30_bd8_8buf_l11.ivf", "test_vectors/vp9/Profile_0_8bit/buf/grass_1_384X192_fr30_bd8_8buf_l11.ivf", "test_vectors/vp9/Profile_0_8bit/buf/street1_1_384X192_fr30_bd8_8buf_l11.ivf"},

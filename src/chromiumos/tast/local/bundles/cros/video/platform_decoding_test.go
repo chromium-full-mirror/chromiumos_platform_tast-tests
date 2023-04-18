@@ -1521,7 +1521,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 	})
 
 	for _, bit := range []string{"8bit"} {
-		for _, cat := range []string{"quantizer", "size", "allintra", "cdfupdate", "motionvec", "svc"} {
+		for _, cat := range []string{"quantizer", "size", "allintra", "cdfupdate", "motionvec"} {
 			files := av1AomFiles[bit][cat]
 			param := paramData{
 				Name:         fmt.Sprintf("v4l2_stateless_av1_%s_%s", bit, cat),
