@@ -10,12 +10,14 @@ import (
 	"net/http/httptest"
 	"os"
 	"path"
+	"sync"
 	"time"
 
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/graphics"
 	"chromiumos/tast/testing"
 )
 
@@ -23,7 +25,10 @@ const (
 	cleanupTime = 10 * time.Second
 	msPerFrame  = 1000.00
 	// Time to wait for planets to run before taking metrics.
-	sampleWaitTime       = 30 * time.Second
+	sampleWaitTime = 30 * time.Second
+	// The time to wait just after starting to play the workload so that CPU usage gets stable.
+	measurementStabilizationDuration = 5 * time.Second
+
 	webGLManyPlanetsDeep = "webgl_many_planets_deep_static.tar.zst"
 )
 
@@ -112,9 +117,39 @@ func WebGLManyPlanetsDeep(ctx context.Context, s *testing.State) {
 		s.Fatal("Could not reset fps counter: ", err)
 	}
 
-	// GoBigSleepLint: This is the sample wait time for the measurement.
-	if err = testing.Sleep(ctx, sampleWaitTime); err != nil {
-		s.Fatalf("Failed to sleep while running planets: %s", err)
+	pv := perf.NewValues()
+	var gpuErr, cStateErr, cpuErr error
+	var wg sync.WaitGroup
+	wg.Add(4)
+	go func() {
+		defer wg.Done()
+		// GoBigSleepLint: This is the sample wait time for the measurement.
+		if err = testing.Sleep(ctx, sampleWaitTime); err != nil {
+			s.Fatalf("Failed to sleep while running planets: %s", err)
+		}
+	}()
+	go func() {
+		defer wg.Done()
+		gpuErr = graphics.MeasureGPUCounters(ctx, sampleWaitTime, pv)
+	}()
+	go func() {
+		defer wg.Done()
+		cStateErr = graphics.MeasurePackageCStateCounters(ctx, sampleWaitTime, pv)
+	}()
+	go func() {
+		defer wg.Done()
+		cpuErr = graphics.MeasureCPUUsageAndPower(ctx, measurementStabilizationDuration, sampleWaitTime, pv)
+	}()
+	wg.Wait()
+
+	if gpuErr != nil {
+		s.Fatal("Failed to measure GPU counters", gpuErr)
+	}
+	if cStateErr != nil {
+		s.Fatal("Failed to measure Package C-State residency", cStateErr)
+	}
+	if cpuErr != nil {
+		s.Fatal("Failed to measure CPU/Package power", cpuErr)
 	}
 
 	if err = conn.Eval(ctx, "g_crosFpsCounter.getFrameData()", &frameData); err != nil {
@@ -127,7 +162,6 @@ func WebGLManyPlanetsDeep(ctx context.Context, s *testing.State) {
 	}
 	meanFT := findMean(frameTimeData)
 	meanJT := findMean(jsDataTime)
-	pv := perf.NewValues()
 
 	defer func() {
 		if err := pv.Save(s.OutDir()); err != nil {
