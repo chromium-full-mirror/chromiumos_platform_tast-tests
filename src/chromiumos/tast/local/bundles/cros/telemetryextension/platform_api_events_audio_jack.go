@@ -73,15 +73,15 @@ func PlatformAPIEventsAudioJack(ctx context.Context, s *testing.State) {
 			firstError = err
 			return
 		}
-		defer func() {
-			if err := aw.Close(); err != nil {
+		defer func(ctx context.Context) {
+			if err := aw.Close(ctx); err != nil {
 				if firstError != nil {
 					testing.ContextLog(ctx, "Failed to close audio jack: ", err)
 				} else {
 					firstError = errors.Wrap(err, "failed to close audio jack")
 				}
 			}
-		}()
+		}(ctx)
 
 		for {
 			select {

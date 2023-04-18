@@ -50,14 +50,19 @@ func AudioJack(ctx context.Context) (*AudioJackEventWriter, error) {
 }
 
 // Close closes the audio jack device.
-func (aw *AudioJackEventWriter) Close() error {
+func (aw *AudioJackEventWriter) Close(ctx context.Context) error {
 	var firstErr error
 	if aw.eventWriter != nil {
-		firstErr = aw.eventWriter.Close()
+		if firstErr = aw.eventWriter.Close(); firstErr != nil {
+			testing.ContextLog(ctx, "Failed to close raw event writer: ", firstErr)
+		}
 	}
 	if aw.virtualFile != nil {
-		if err := aw.virtualFile.Close(); firstErr == nil {
-			firstErr = err
+		if err := aw.virtualFile.Close(); err != nil {
+			testing.ContextLog(ctx, "Failed to close virtual file: ", err)
+			if firstErr == nil {
+				firstErr = err
+			}
 		}
 	}
 	return firstErr
