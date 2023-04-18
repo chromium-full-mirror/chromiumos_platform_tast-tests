@@ -1,5 +1,5 @@
 {
-  "url": "gs://chromiumos-test-assets-public/tast/cros/scanapp/multi_page_flatbed_single_page_20230207.pdf",
-  "size": 65975,
-  "sha256sum": "e99fd8fcccb4564bee3f3fedac5db966958d895345b90ac3aff46773ffd25eff"
+  "url": "gs://chromiumos-test-assets-public/tast/cros/scanapp/multi_page_flatbed_single_page_20230417.pdf",
+  "size": 65976,
+  "sha256sum": "2e87ae8c02461458f75965ff4518c93bc1d2889a9dde9256fed74c98c9670b71"
 }
