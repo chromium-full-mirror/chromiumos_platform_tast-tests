@@ -96,7 +96,7 @@ func FloatWindowMultitaskMenu(ctx context.Context, s *testing.State) {
 	defer pc.Close()
 
 	ui := uiauto.New(tconn)
-	const timeout = 30 * time.Second
+	pollOpts := testing.PollOptions{Timeout: 30 * time.Second}
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 
 	// Test that the "Float" button changes the window state to be floated.
@@ -104,24 +104,52 @@ func FloatWindowMultitaskMenu(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open Multitask Menu: ", err)
 	}
 	floatButton := nodewith.Name("Float").HasClass("MultitaskButton")
-	if err := pc.Click(floatButton)(ctx); err != nil {
+	if err := ui.DoDefault(floatButton)(ctx); err != nil {
 		s.Fatal("Failed to click the Float button: ", err)
 	}
 	if err := ash.WaitForCondition(ctx, tconn, func(w *ash.Window) bool {
 		return w.ID == bw.ID && w.State == ash.WindowStateFloated && !w.IsAnimating
-	}, &testing.PollOptions{Timeout: timeout, Interval: time.Second}); err != nil {
-		s.Fatalf("Unexpected Chrome window state: got %s, want %s", bw.State, ash.WindowStateFloated)
+	}, &pollOpts); err != nil {
+		s.Fatalf("Unexpected Chrome window state: got %s, want %s: %v", bw.State, ash.WindowStateFloated, err)
 	}
 
 	// Test that the "Exit float" button restores the window state.
 	unfloatButton := nodewith.Name("Exit float")
-	if err := pc.Click(unfloatButton)(ctx); err != nil {
+	if err := ui.DoDefault(unfloatButton)(ctx); err != nil {
 		s.Fatal("Failed to click the Unfloat button: ", err)
 	}
 	if err := ash.WaitForCondition(ctx, tconn, func(w *ash.Window) bool {
 		return w.ID == bw.ID && w.State == ash.WindowStateNormal && !w.IsAnimating
-	}, &testing.PollOptions{Timeout: timeout, Interval: time.Second}); err != nil {
-		s.Fatalf("Unexpected Chrome window state: got %s, want %s", bw.State, ash.WindowStateNormal)
+	}, &pollOpts); err != nil {
+		s.Fatalf("Unexpected Chrome window state: got %s, want %s: %v", bw.State, ash.WindowStateNormal, err)
+	}
+
+	// Test that the left "Half" button snaps the window to the left.
+	if err := showMultitaskMenu(ctx, tconn, ui); err != nil {
+		s.Fatal("Failed to open Multitask Menu: ", err)
+	}
+	leftHalfButton := nodewith.NameContaining("left half")
+	if err := ui.DoDefault(leftHalfButton)(ctx); err != nil {
+		s.Fatal("Failed to click the Left Half button: ", err)
+	}
+	if err := ash.WaitForCondition(ctx, tconn, func(w *ash.Window) bool {
+		return w.ID == bw.ID && w.State == ash.WindowStateLeftSnapped && !w.IsAnimating
+	}, &pollOpts); err != nil {
+		s.Fatalf("Unexpected Chrome window state: got %s, want %s: %v", bw.State, ash.WindowStateLeftSnapped, err)
+	}
+
+	// Test that the right "Half" button snaps the window to the right.
+	if err := showMultitaskMenu(ctx, tconn, ui); err != nil {
+		s.Fatal("Failed to open Multitask Menu: ", err)
+	}
+	rightHalfButton := nodewith.NameContaining("right half")
+	if err := ui.DoDefault(rightHalfButton)(ctx); err != nil {
+		s.Fatal("Failed to click the Right Half button: ", err)
+	}
+	if err := ash.WaitForCondition(ctx, tconn, func(w *ash.Window) bool {
+		return w.ID == bw.ID && w.State == ash.WindowStateRightSnapped && !w.IsAnimating
+	}, &pollOpts); err != nil {
+		s.Fatalf("Unexpected Chrome window state: got %s, want %s: %v", bw.State, ash.WindowStateRightSnapped, err)
 	}
 }
 
@@ -133,7 +161,8 @@ func showMultitaskMenu(ctx context.Context, tconn *chrome.TestConn, ui *uiauto.C
 		return errors.Wrap(err, "failed to find maximize button bounds")
 	}
 
-	if err := mouse.Move(tconn, maximizeButtonLoc.CenterPoint(), 0)(ctx); err != nil {
+	// Move the mouse into the maximize button with non-zero duration to hover.
+	if err := mouse.Move(tconn, maximizeButtonLoc.CenterPoint(), 500*time.Millisecond)(ctx); err != nil {
 		return errors.Wrap(err, "failed to move mouse onto the maximize button")
 	}
 
