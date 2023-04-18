@@ -10,6 +10,7 @@ import (
 	"os"
 
 	"chromiumos/tast/errors"
+	"chromiumos/tast/testing"
 )
 
 // Axis contains information about a gamepad axis.
@@ -53,7 +54,7 @@ func Gamepad(ctx context.Context) (*GamepadEventWriter, error) {
 	}
 
 	if gw.rw, err = Device(ctx, gw.dev); err != nil {
-		gw.Close()
+		gw.Close(ctx)
 		return nil, err
 	}
 
@@ -61,14 +62,19 @@ func Gamepad(ctx context.Context) (*GamepadEventWriter, error) {
 }
 
 // Close closes the gamepad device.
-func (gw *GamepadEventWriter) Close() error {
+func (gw *GamepadEventWriter) Close(ctx context.Context) error {
 	var firstErr error
 	if gw.rw != nil {
-		firstErr = gw.rw.Close()
+		if firstErr = gw.rw.Close(); firstErr != nil {
+			testing.ContextLog(ctx, "Failed to close raw event writer: ", firstErr)
+		}
 	}
 	if gw.virt != nil {
-		if err := gw.virt.Close(); firstErr == nil {
-			firstErr = err
+		if err := gw.virt.Close(); err != nil {
+			testing.ContextLog(ctx, "Failed to close virtual file: ", err)
+			if firstErr == nil {
+				firstErr = err
+			}
 		}
 	}
 	return firstErr

@@ -62,11 +62,11 @@ func GamepadPerf(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create a gamepad: ", err)
 	}
-	defer func() {
+	defer func(ctx context.Context) {
 		if gp != nil {
-			gp.Close()
+			gp.Close(ctx)
 		}
-	}()
+	}(ctx)
 
 	s.Log("Created a virtual gamepad device ", gp.Device())
 
