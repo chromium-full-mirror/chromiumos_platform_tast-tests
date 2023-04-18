@@ -9,13 +9,16 @@ import (
 	"strconv"
 	"time"
 
+	"chromiumos/tast/common/chrome/credconfig"
 	"chromiumos/tast/common/fixture"
+	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/local/annotations"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
+	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/mouse"
@@ -37,21 +40,55 @@ func init() {
 		},
 		Attr:         []string{"group:commercial_limited"},
 		SoftwareDeps: []string{"chrome"},
+		Vars:         []string{"policy.managedUserAccountPool"},
+		Timeout:      3 * time.Minute,
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.CalendarIntegrationEnabled{}, pci.VerifiedFunctionalityUI),
+			pci.SearchFlag(&policy.CalendarIntegrationEnabled{}, pci.VerifiedFunctionalityOS),
+		},
 		Params: []testing.Param{{
-			Fixture: fixture.ChromePolicyLoggedIn,
 			Val:     browser.TypeAsh,
+			Fixture: fixture.FakeDMS,
 		}, {
 			Name:              "lacros",
 			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
+			Fixture:           fixture.PersistentLacros, // FakeDMS with lacros policy
 			Val:               browser.TypeLacros,
 		}},
 	})
 }
 
 func CalendarIntegrationEnabled(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
+
+	gaiaCreds, err := credconfig.PickRandomCreds(
+		s.RequiredVar("policy.managedUserAccountPool"))
+	if err != nil {
+		s.Fatal("Failed to parse managed user creds: ", err)
+	}
+
+	policyBlob := policy.NewBlob()
+	policyBlob.PolicyUser = gaiaCreds.User
+	if err := fdms.WritePolicyBlob(policyBlob); err != nil {
+		s.Fatal("Failed to write policies to FakeDMS: ", err)
+	}
+
+	opts := []chrome.Option{
+		chrome.DMSPolicy(fdms.URL),  // FakeDMS for setting policies
+		chrome.GAIALogin(gaiaCreds), // Real GAIA to enable calendar_get_events call
+	}
+	if isLacros(s) {
+		opts, err = lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(opts...)).Opts()
+		if err != nil {
+			s.Fatal("Failed to compute lacros chrome options: ", err)
+		}
+	}
+
+	cr, err := chrome.New(ctx, opts...)
+	if err != nil {
+		s.Fatal("Failed to start Chrome: ", err)
+	}
+	defer cr.Close(ctx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -70,14 +107,14 @@ func CalendarIntegrationEnabled(ctx context.Context, s *testing.State) {
 			name:                    "unset",
 			shouldFindEventListView: true,
 			shouldFindManagedIcon:   false,
-			shouldFindAnnotation:    false, /* TODO(b/262281684): investigate why this is not found with unset policy */
+			shouldFindAnnotation:    true,
 			policy:                  &policy.CalendarIntegrationEnabled{Stat: policy.StatusUnset},
 		},
 		{
 			name:                    "enabled",
 			shouldFindEventListView: true,
 			shouldFindManagedIcon:   false,
-			shouldFindAnnotation:    false, /* TODO(b/262281684): investigate why this is not found with enabled policy */
+			shouldFindAnnotation:    true,
 			policy:                  &policy.CalendarIntegrationEnabled{Val: true},
 		},
 		{
@@ -96,8 +133,15 @@ func CalendarIntegrationEnabled(ctx context.Context, s *testing.State) {
 			}
 
 			// Update policies.
-			if err := policyutil.ServeAndVerify(ctx, fdms, cr, []policy.Policy{param.policy}); err != nil {
+			policies := []policy.Policy{param.policy}
+			policyBlob := policy.NewBlob()
+			policyBlob.PolicyUser = gaiaCreds.User
+			policyBlob.AddPolicies(policies)
+			if err := policyutil.ServeBlobAndRefresh(ctx, fdms, cr, policyBlob); err != nil {
 				s.Fatal("Failed to update policies: ", err)
+			}
+			if err := policyutil.Verify(ctx, tconn, policies); err != nil {
+				s.Fatal("Failed to verify updated policies: ", err)
 			}
 
 			// Setup browser based on the chrome type.
@@ -222,13 +266,15 @@ func CalendarIntegrationEnabled(ctx context.Context, s *testing.State) {
 				s.Fatal("Found unexpected event list view")
 			}
 
-			// Check for annotation
-			if param.shouldFindAnnotation && didFindAnnotation == false {
-				s.Fatal("Did not find expected NetworkTrafficAnnotationTag with id calendar_get_events")
-			}
+			// Check for annotation. Skip for lacros until we fix b/278750986
+			if !isLacros(s) {
+				if param.shouldFindAnnotation && didFindAnnotation == false {
+					s.Fatal("Did not find expected NetworkTrafficAnnotationTag with id calendar_get_events")
+				}
 
-			if !param.shouldFindAnnotation && didFindAnnotation == true {
-				s.Fatal("Found unexpected NetworkTrafficAnnotationTag with id calendar_get_events")
+				if !param.shouldFindAnnotation && didFindAnnotation == true {
+					s.Fatal("Found unexpected NetworkTrafficAnnotationTag with id calendar_get_events")
+				}
 			}
 
 			// Click it again to close the calendar view
@@ -238,4 +284,8 @@ func CalendarIntegrationEnabled(ctx context.Context, s *testing.State) {
 
 		})
 	}
+}
+
+func isLacros(s *testing.State) bool {
+	return s.Param().(browser.Type) == browser.TypeLacros
 }
