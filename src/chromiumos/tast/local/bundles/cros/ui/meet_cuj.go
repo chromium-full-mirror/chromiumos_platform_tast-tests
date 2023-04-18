@@ -18,8 +18,8 @@ import (
 	"chromiumos/tast/common/async"
 	"chromiumos/tast/common/bond"
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/apps/thirdparty/googlemeet"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/cuj"
@@ -42,19 +42,11 @@ import (
 	"chromiumos/tast/local/loginstatus"
 	"chromiumos/tast/local/ui/cujrecorder"
 	"chromiumos/tast/local/webrtcinternals"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
 
 	"go.chromium.org/tast/core/ctxutil"
-)
-
-type meetLayoutType string
-
-const (
-	meetLayoutSpotlight meetLayoutType = "Spotlight"
-	meetLayoutTiled     meetLayoutType = "Tiled"
-	meetLayoutSidebar   meetLayoutType = "Sidebar"
-	meetLayoutAuto      meetLayoutType = "Auto"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 // meetTest specifies the setting of a Google Meet journey. More info at go/cros-meet-tests.
@@ -65,18 +57,18 @@ type meetTest struct {
 	// spotlight bot that is in every test.
 	bots []int
 
-	layout        meetLayoutType       // Type of the layout in the meeting.
-	present       bool                 // Whether it is presenting the Google Docs/Jamboard window.
-	docs          bool                 // Whether it is running with a Google Docs window.
-	jamboard      bool                 // Whether it is running with a Jamboard window.
-	split         bool                 // Whether it is in split screen mode. It can not be true if docs is false.
-	cam           bool                 // Whether the camera is on or not.
-	effects       bool                 // Whether to turn on visual effects.
-	zoomOut       bool                 // Whether to zoom out on both the browser and display.
-	tabSwitchDocs bool                 // Whether to switch between Docs and Meet. It cannot be true if docs is false.
-	duration      time.Duration        // Duration of the meet call. Must be less than test timeout.
-	browserType   browser.Type         // Ash Chrome browser or Lacros.
-	botsOptions   []bond.AddBotsOption // Customizes the meeting participant bots.
+	layout        googlemeet.LayoutOption // Type of the layout in the meeting.
+	present       bool                    // Whether it is presenting the Google Docs/Jamboard window.
+	docs          bool                    // Whether it is running with a Google Docs window.
+	jamboard      bool                    // Whether it is running with a Jamboard window.
+	split         bool                    // Whether it is in split screen mode. It can not be true if docs is false.
+	cam           bool                    // Whether the camera is on or not.
+	effects       bool                    // Whether to turn on visual effects.
+	zoomOut       bool                    // Whether to zoom out on both the browser and display.
+	tabSwitchDocs bool                    // Whether to switch between Docs and Meet. It cannot be true if docs is false.
+	duration      time.Duration           // Duration of the meet call. Must be less than test timeout.
+	browserType   browser.Type            // Ash Chrome browser or Lacros.
+	botsOptions   []bond.AddBotsOption    // Customizes the meeting participant bots.
 }
 
 // videoCodecReport is used to report a video codec to a performance metric so that it is easy to find in places like TPS Dashboard.
@@ -119,7 +111,7 @@ func init() {
 				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
 				Val: meetTest{
 					bots:        []int{1, 3, 15},
-					layout:      meetLayoutTiled,
+					layout:      googlemeet.TiledLayout,
 					cam:         true,
 					zoomOut:     true,
 					browserType: browser.TypeAsh,
@@ -131,7 +123,7 @@ func init() {
 				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
 				Val: meetTest{
 					bots:        []int{1, 3, 15},
-					layout:      meetLayoutTiled,
+					layout:      googlemeet.TiledLayout,
 					present:     true,
 					docs:        true,
 					split:       true,
@@ -148,7 +140,7 @@ func init() {
 				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
 				Val: meetTest{
 					bots:        []int{1, 3, 15},
-					layout:      meetLayoutTiled,
+					layout:      googlemeet.TiledLayout,
 					present:     true,
 					docs:        true,
 					split:       true,
@@ -168,7 +160,7 @@ func init() {
 				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
 				Val: meetTest{
 					bots:        []int{1},
-					layout:      meetLayoutTiled,
+					layout:      googlemeet.TiledLayout,
 					cam:         true,
 					browserType: browser.TypeAsh,
 				},
@@ -180,7 +172,7 @@ func init() {
 				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
 				Val: meetTest{
 					bots:        []int{1},
-					layout:      meetLayoutTiled,
+					layout:      googlemeet.TiledLayout,
 					cam:         true,
 					browserType: browser.TypeLacros,
 				},
@@ -195,7 +187,7 @@ func init() {
 				ExtraAttr: []string{"group:cuj"},
 				Val: meetTest{
 					bots:        []int{3},
-					layout:      meetLayoutTiled,
+					layout:      googlemeet.TiledLayout,
 					cam:         true,
 					browserType: browser.TypeAsh,
 				},
@@ -207,7 +199,7 @@ func init() {
 				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
 				Val: meetTest{
 					bots:        []int{3},
-					layout:      meetLayoutTiled,
+					layout:      googlemeet.TiledLayout,
 					cam:         true,
 					browserType: browser.TypeAsh,
 				},
@@ -218,7 +210,7 @@ func init() {
 				ExtraAttr: []string{"group:cuj"},
 				Val: meetTest{
 					bots:        []int{3},
-					layout:      meetLayoutTiled,
+					layout:      googlemeet.TiledLayout,
 					cam:         true,
 					browserType: browser.TypeLacros,
 				},
@@ -230,7 +222,7 @@ func init() {
 				ExtraAttr: []string{"group:cuj"},
 				Val: meetTest{
 					bots:        []int{3},
-					layout:      meetLayoutTiled,
+					layout:      googlemeet.TiledLayout,
 					present:     true,
 					docs:        true,
 					split:       true,
@@ -244,7 +236,7 @@ func init() {
 				ExtraAttr: []string{"group:cuj"},
 				Val: meetTest{
 					bots:        []int{3},
-					layout:      meetLayoutTiled,
+					layout:      googlemeet.TiledLayout,
 					present:     true,
 					docs:        true,
 					split:       true,
@@ -262,7 +254,7 @@ func init() {
 				ExtraAttr: []string{"group:cuj"},
 				Val: meetTest{
 					bots:        []int{15},
-					layout:      meetLayoutTiled,
+					layout:      googlemeet.TiledLayout,
 					cam:         true,
 					browserType: browser.TypeAsh,
 				},
@@ -273,7 +265,7 @@ func init() {
 				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
 				Val: meetTest{
 					bots:        []int{15},
-					layout:      meetLayoutTiled,
+					layout:      googlemeet.TiledLayout,
 					cam:         true,
 					browserType: browser.TypeAsh,
 				},
@@ -284,7 +276,7 @@ func init() {
 				ExtraAttr: []string{"group:cuj"},
 				Val: meetTest{
 					bots:        []int{15},
-					layout:      meetLayoutTiled,
+					layout:      googlemeet.TiledLayout,
 					cam:         true,
 					browserType: browser.TypeLacros,
 				},
@@ -299,7 +291,7 @@ func init() {
 				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
 				Val: meetTest{
 					bots:        []int{48},
-					layout:      meetLayoutTiled,
+					layout:      googlemeet.TiledLayout,
 					cam:         true,
 					zoomOut:     true,
 					browserType: browser.TypeAsh,
@@ -320,7 +312,7 @@ func init() {
 				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
 				Val: meetTest{
 					bots:        []int{15},
-					layout:      meetLayoutTiled,
+					layout:      googlemeet.TiledLayout,
 					present:     true,
 					docs:        true,
 					split:       true,
@@ -337,7 +329,7 @@ func init() {
 				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
 				Val: meetTest{
 					bots:        []int{15},
-					layout:      meetLayoutTiled,
+					layout:      googlemeet.TiledLayout,
 					present:     true,
 					docs:        true,
 					split:       true,
@@ -355,7 +347,7 @@ func init() {
 				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
 				Val: meetTest{
 					bots:        []int{15},
-					layout:      meetLayoutTiled,
+					layout:      googlemeet.TiledLayout,
 					present:     true,
 					docs:        true,
 					split:       true,
@@ -370,7 +362,7 @@ func init() {
 				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
 				Val: meetTest{
 					bots:        []int{15},
-					layout:      meetLayoutTiled,
+					layout:      googlemeet.TiledLayout,
 					present:     true,
 					docs:        true,
 					split:       true,
@@ -387,7 +379,7 @@ func init() {
 				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
 				Val: meetTest{
 					bots:        []int{48},
-					layout:      meetLayoutTiled,
+					layout:      googlemeet.TiledLayout,
 					cam:         true,
 					zoomOut:     true,
 					browserType: browser.TypeAsh,
@@ -401,7 +393,7 @@ func init() {
 				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
 				Val: meetTest{
 					bots:        []int{15},
-					layout:      meetLayoutTiled,
+					layout:      googlemeet.TiledLayout,
 					present:     true,
 					docs:        true,
 					split:       true,
@@ -418,7 +410,7 @@ func init() {
 				Timeout: defaultTestTimeout,
 				Val: meetTest{
 					bots:        []int{1},
-					layout:      meetLayoutTiled,
+					layout:      googlemeet.TiledLayout,
 					cam:         true,
 					browserType: browser.TypeAsh,
 				},
@@ -429,7 +421,7 @@ func init() {
 				Timeout: defaultTestTimeout + 30*time.Minute,
 				Val: meetTest{
 					bots:        []int{1},
-					layout:      meetLayoutTiled,
+					layout:      googlemeet.TiledLayout,
 					cam:         true,
 					duration:    30 * time.Minute,
 					browserType: browser.TypeAsh,
@@ -440,7 +432,7 @@ func init() {
 				Timeout: defaultTestTimeout,
 				Val: meetTest{
 					bots:        []int{3},
-					layout:      meetLayoutTiled,
+					layout:      googlemeet.TiledLayout,
 					present:     true,
 					docs:        true,
 					split:       true,
@@ -456,7 +448,7 @@ func init() {
 				Timeout: defaultTestTimeout,
 				Val: meetTest{
 					bots:          []int{3},
-					layout:        meetLayoutTiled,
+					layout:        googlemeet.TiledLayout,
 					docs:          true,
 					cam:           true,
 					effects:       true,
@@ -470,7 +462,7 @@ func init() {
 				Timeout: defaultTestTimeout,
 				Val: meetTest{
 					bots:          []int{3},
-					layout:        meetLayoutTiled,
+					layout:        googlemeet.TiledLayout,
 					docs:          true,
 					cam:           true,
 					effects:       true,
@@ -485,7 +477,7 @@ func init() {
 				Timeout: defaultTestTimeout,
 				Val: meetTest{
 					bots:        []int{15},
-					layout:      meetLayoutTiled,
+					layout:      googlemeet.TiledLayout,
 					docs:        true,
 					split:       true,
 					cam:         true,
@@ -498,7 +490,7 @@ func init() {
 				Timeout: defaultTestTimeout + 15*time.Minute,
 				Val: meetTest{
 					bots:        []int{15},
-					layout:      meetLayoutTiled,
+					layout:      googlemeet.TiledLayout,
 					jamboard:    true,
 					split:       true,
 					cam:         true,
@@ -511,7 +503,7 @@ func init() {
 				Timeout: defaultTestTimeout,
 				Val: meetTest{
 					bots:        []int{48},
-					layout:      meetLayoutTiled,
+					layout:      googlemeet.TiledLayout,
 					cam:         true,
 					zoomOut:     true,
 					browserType: browser.TypeAsh,
@@ -523,7 +515,7 @@ func init() {
 				Timeout: defaultTestTimeout,
 				Val: meetTest{
 					bots:        []int{48},
-					layout:      meetLayoutTiled,
+					layout:      googlemeet.TiledLayout,
 					cam:         true,
 					zoomOut:     true,
 					browserType: browser.TypeLacros,
@@ -749,6 +741,7 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 		}
 	}
 
+	meetHelper := googlemeet.NewHRTelemetryHelper(cs, tconn)
 	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, nil, cujrecorder.RecorderOptions{})
 	if err != nil {
 		s.Fatal("Failed to create the recorder: ", err)
@@ -886,11 +879,10 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start recording WebRTC metrics: ", err)
 	}
 
-	meetConn, err := cs.NewConn(ctx, "https://meet.google.com/"+meetingCode, browser.WithNewWindow())
-	if err != nil {
+	if err := meetHelper.JoinMeeting(ctx, meetingCode, browser.WithNewWindow()); err != nil {
 		s.Fatal("Failed to open the hangout meet website: ", err)
 	}
-	defer meetConn.Close()
+	defer meetHelper.Close(closeCtx)
 
 	// Match window titles `Google Meet` and `meet.google.com`.
 	meetRE := regexp.MustCompile(`\bMeet\b|\bmeet\.\b`)
@@ -949,7 +941,7 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create a keyboard: ", err)
 	}
-	defer kw.Close(ctx)
+	defer kw.Close(closeCtx)
 
 	// Find the web view of Meet window.
 	webview := nodewith.ClassName("ContentsWebView").Role(role.WebView)
@@ -971,54 +963,16 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to grant permissions: ", err)
 	}
 
-	// checkError checks the actual error message when hrTelemetryApi is not defined.
-	// If the acount is signed out, wraps the given error with signed out error.
-	// If there is connection message, wraps the given error with connection error.
-	// If any other error occurs, the original error will be returned.
-	checkError := func(ctx context.Context, tconn *chrome.TestConn, err error) error {
-		if err == nil {
-			return nil
-		}
-
-		const (
-			errAPINotDefined    = "hrTelemetryApi is not defined"
-			errSignedOut        = "the account has been signed out"
-			errConnectionFailed = "failed to connect to meeting room"
-		)
-
-		// Use string comparison because error loses its type after wrapping.
-		// If the error doesn't contain "hrTelemetryApi is not defined", the original error is returned.
-		if !strings.Contains(err.Error(), errAPINotDefined) {
-			return err
-		}
-
-		// There may be multiple connection messages with same ancestor, so add First() here.
-		connectionMessage := nodewith.Name("Still trying to get in...").Role(role.StaticText).First()
-		signInLink := nodewith.Name("Sign in").Role(role.Link)
-		signInButton := nodewith.Name("Sign in").Role(role.Button)
-		signedOutMessages := nodewith.NameRegex(regexp.MustCompile("(Sign in to add a Google account|You have been signed out).*")).First()
-		errorNode, existsErr := ui.FindAnyExists(ctx, connectionMessage, signInLink, signInButton, signedOutMessages)
-		// If there are no signout and connection errors, the original error will be returned.
-		if existsErr != nil {
-			return err
-		}
-		if errorNode == connectionMessage {
-			return errors.Wrap(err, errConnectionFailed)
-		}
-		return errors.Wrap(err, errSignedOut)
-	}
-
-	// hrTelemetryApi is defined only after granting video permissions.
 	// Ensure to check that we are properly in the meeting before trying
 	// to apply visual effects.
-	if err := meetConn.WaitForExprWithTimeout(ctx, "hrTelemetryApi.isInMeeting()", time.Minute); err != nil {
-		s.Fatal("Failed to wait to enter the meeting: ", checkError(ctx, tconn, err))
+	if err := meetHelper.IsInMeeting(ctx, time.Minute); err != nil {
+		s.Fatal("Failed to wait to enter the meeting: ", err)
 	}
 
 	expectedParticipantCount := botsInCall + 1
 	checkParticipantCount := func(ctx context.Context, expectedCount int) error {
-		var participantCount int
-		if err := meetConn.Eval(ctx, "hrTelemetryApi.getParticipantCount()", &participantCount); err != nil {
+		participantCount, err := meetHelper.GetParticipantCount(ctx)
+		if err != nil {
 			return errors.Wrap(err, "failed to get participant count")
 		}
 		if participantCount != expectedCount {
@@ -1211,11 +1165,11 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 			}
 		}
 
-		if err := meetConn.Eval(ctx, "hrTelemetryApi.setMicMuted(false)", nil); err != nil {
-			return errors.Wrap(err, "failed to turn on mic")
+		if err := meetHelper.SetMicrophone(ctx, true); err != nil {
+			return errors.Wrap(err, "failed to turn on microphone")
 		}
 
-		if err := meetConn.Eval(ctx, fmt.Sprintf("hrTelemetryApi.setCameraMuted(%t)", !meet.cam), nil); err != nil {
+		if err := meetHelper.SetCamera(ctx, meet.cam); err != nil {
 			return errors.Wrapf(err, "failed to set camera off-status to %t", !meet.cam)
 		}
 
@@ -1223,14 +1177,16 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 		if err := ash.CloseNotifications(ctx, tconn); err != nil {
 			return errors.Wrap(err, "failed to close all notifications")
 		}
-		if err := meetConn.Eval(ctx, fmt.Sprintf("hrTelemetryApi.set%sLayout()", string(meet.layout)), nil); err != nil {
-			return errors.Wrapf(err, "failed to set %s layout", string(meet.layout))
+
+		if err := meetHelper.ChangeLayoutOption(ctx, meet.layout); err != nil {
+			return errors.Wrapf(err, "failed to set %s layout", meet.layout)
 		}
 
-		if err := meetConn.Eval(ctx, "hrTelemetryApi.streamQuality.send720p()", nil); err != nil {
+		if err := meetHelper.SetSendResolution720p(ctx); err != nil {
 			return errors.Wrap(err, "failed to request sending 720p")
 		}
-		if err := meetConn.Eval(ctx, "hrTelemetryApi.streamQuality.receive720p()", nil); err != nil {
+
+		if err := meetHelper.SetReceiveResolution720p(ctx); err != nil {
 			return errors.Wrap(err, "failed to request receiving 720p")
 		}
 		// Direct the spotlight bot to pin the test user so
@@ -1254,7 +1210,7 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 			}
 
 			recorder.Annotate(ctx, "Start_presenting_tab")
-			if err := meetConn.Eval(ctx, "hrTelemetryApi.presentation.presentTab()", nil); err != nil {
+			if err := meetHelper.OpenPresentDialog(ctx); err != nil {
 				return errors.Wrap(err, "failed to start to present a tab")
 			}
 
