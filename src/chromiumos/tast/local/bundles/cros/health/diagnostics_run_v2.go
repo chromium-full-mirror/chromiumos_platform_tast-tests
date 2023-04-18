@@ -8,6 +8,7 @@ package health
 
 import (
 	"context"
+	"time"
 
 	"chromiumos/tast/local/croshealthd"
 	"chromiumos/tast/testing"
@@ -26,6 +27,11 @@ func init() {
 		Params: []testing.Param{{
 			Name:      "memory_v2",
 			Val:       croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineMemoryV2},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
+		}, {
+			Name:      "cpu_stress_v2",
+			Val:       croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineCPUStressV2},
+			Timeout:   5 * time.Minute,
 			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}}})
 }
