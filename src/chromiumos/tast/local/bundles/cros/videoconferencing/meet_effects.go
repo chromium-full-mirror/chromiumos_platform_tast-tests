@@ -117,6 +117,9 @@ func MeetEffects(ctx context.Context, s *testing.State) {
 
 	if err := uiauto.Combine("configure Meet",
 		gm.MuteIfMicAvailable,
+		gm.ChangeSettings(
+			gm.SetSendResolution(googlemeet.ResolutionHD720P),
+		),
 		gm.SwitchVideo(true),
 	)(ctx); err != nil {
 		s.Fatal("Failed to configure Meet: ", err)

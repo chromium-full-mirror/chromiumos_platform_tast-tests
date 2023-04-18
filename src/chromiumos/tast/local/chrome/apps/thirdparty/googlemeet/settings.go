@@ -77,15 +77,27 @@ func (gm *GoogleMeet) SetAdjustVideoLighting(value bool) action.Action {
 	)
 }
 
+// ResolutionOption represents the resolution options can be set in Google Meet.
+type ResolutionOption string
+
+// Available options of resolutions in Google Meet.
+const (
+	ResolutionAuto        ResolutionOption = "Auto"
+	ResolutionFullHD1080P                  = "Full high definition (1080p)"
+	ResolutionHD720P                       = "High definition (720p)"
+	ResolutionSD360P                       = "Standard definition (360p)"
+	ResolutionLD180P                       = "Low definition (180p)"
+)
+
 // SetSendResolution sets the option of "Send Resolution" in "Video" Tab.
-func (gm *GoogleMeet) SetSendResolution(value string) action.Action {
-	sendResolutionButton := nodewith.NameRegex(regexp.MustCompile("Auto|High definition|Standard definition")).Role(role.ComboBoxMenuButton).Ancestor(settingsDialog).First()
-	sendResolutionOption := nodewith.Name(value).Role(role.ListBoxOption).Ancestor(settingsDialog)
+func (gm *GoogleMeet) SetSendResolution(value ResolutionOption) action.Action {
+	sendResolutionButton := nodewith.NameRegex(regexp.MustCompile("Auto|High definition|Standard definition|Low definition")).Role(role.ComboBoxMenuButton).Ancestor(settingsDialog).First()
+	sendResolutionOption := nodewith.Name(string(value)).Role(role.ListBoxOption).Ancestor(settingsDialog)
 	actionDesc := fmt.Sprintf(`set "Send Resolution" to %q`, value)
 
 	return uiauto.Combine(actionDesc,
 		gm.ui.DoDefault(videoSettingsTabButton),
-		gm.setDropdownValue(sendResolutionButton, sendResolutionOption, value),
+		gm.setDropdownValue(sendResolutionButton, sendResolutionOption, string(value)),
 	)
 }
 

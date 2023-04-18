@@ -26,8 +26,6 @@ import (
 	"chromiumos/tast/testing"
 )
 
-const meetHighResolution = "High definition (720p)"
-
 type meetParams struct {
 	appBlur         bool
 	appRelight      bool
@@ -175,7 +173,7 @@ func BenchmarkingMeet(ctx context.Context, s *testing.State) {
 		gm.ChangeSettings(
 			gm.SetLeaveEmptyCalls(false),
 			gm.SetAdjustVideoLighting(param.appRelight),
-			gm.SetSendResolution(meetHighResolution),
+			gm.SetSendResolution(googlemeet.ResolutionHD720P),
 		),
 		gm.ApplyVideoEffects(gm.SetEffectBlur(param.appBlur)),
 	)(ctx); err != nil {
