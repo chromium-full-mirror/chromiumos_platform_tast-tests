@@ -64,7 +64,7 @@ type contextSwitchStat struct {
 
 // RunTest measures a number of performance metrics while playing a video with
 // or without hardware acceleration as per decoderType.
-func RunTest(ctx context.Context, s *testing.State, cs ash.ConnSource, cr *chrome.Chrome, videoName string, decoderType DecoderType, gridWidth, gridHeight int, perfTracing, measureRoughness bool) {
+func RunTest(ctx context.Context, s *testing.State, cs ash.ConnSource, tconn, bTconn *chrome.TestConn, videoName string, decoderType DecoderType, gridWidth, gridHeight int, perfTracing, measureRoughness bool) {
 	vl, err := logging.NewVideoLogger()
 	if err != nil {
 		s.Fatal("Failed to set values for verbose logging")
@@ -77,14 +77,14 @@ func RunTest(ctx context.Context, s *testing.State, cs ash.ConnSource, cr *chrom
 	defer crastestclient.Unmute(ctx)
 
 	s.Log("Starting playback")
-	if err = measurePerformance(ctx, s, cs, cr, s.DataFileSystem(), videoName, decoderType, gridWidth, gridHeight, perfTracing, measureRoughness, s.OutDir()); err != nil {
+	if err = measurePerformance(ctx, s, cs, tconn, bTconn, s.DataFileSystem(), videoName, decoderType, gridWidth, gridHeight, perfTracing, measureRoughness, s.OutDir()); err != nil {
 		s.Fatal("Playback test failed: ", err)
 	}
 }
 
 // measurePerformance collects video playback performance playing a video with
 // either SW or HW decoder.
-func measurePerformance(ctx context.Context, s *testing.State, cs ash.ConnSource, cr *chrome.Chrome, fileSystem http.FileSystem, videoName string,
+func measurePerformance(ctx context.Context, s *testing.State, cs ash.ConnSource, tconn, bTconn *chrome.TestConn, fileSystem http.FileSystem, videoName string,
 	decoderType DecoderType, gridWidth, gridHeight int, perfTracing, measureRoughness bool, outDir string) error {
 	// Wait until CPU is idle enough. CPU usage can be high immediately after login for various reasons (e.g. animated images on the lock screen).
 	if err := cpu.WaitUntilIdle(ctx); err != nil {
@@ -147,12 +147,8 @@ func measurePerformance(ctx context.Context, s *testing.State, cs ash.ConnSource
 
 	p := perf.NewValues()
 
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to connect to test API")
-	}
 	const decodeHistogram = "Media.MojoVideoDecoder.Decode"
-	initDecodeHistogram, err := metrics.GetHistogram(ctx, tconn, decodeHistogram)
+	initDecodeHistogram, err := metrics.GetHistogram(ctx, bTconn, decodeHistogram)
 	if err != nil {
 		return errors.Wrap(err, "failed to get initial histogram")
 	}
@@ -198,7 +194,7 @@ func measurePerformance(ctx context.Context, s *testing.State, cs ash.ConnSource
 	}()
 	go func() {
 		defer wg.Done()
-		wakeupErr = graphics.MeasureThreadPoolUnnecessaryWakeups(ctx, tconn, measurementDuration, p)
+		wakeupErr = graphics.MeasureThreadPoolUnnecessaryWakeups(ctx, bTconn, measurementDuration, p)
 	}()
 	go func() {
 		defer wg.Done()
@@ -255,7 +251,7 @@ func measurePerformance(ctx context.Context, s *testing.State, cs ash.ConnSource
 		return errors.Wrap(traceErr, "failed to measure CPU sched events")
 	}
 
-	if err := graphics.UpdatePerfMetricFromHistogram(ctx, tconn, decodeHistogram, initDecodeHistogram, p, "video_decode_delay"); err != nil {
+	if err := graphics.UpdatePerfMetricFromHistogram(ctx, bTconn, decodeHistogram, initDecodeHistogram, p, "video_decode_delay"); err != nil {
 		return errors.Wrap(err, "failed to calculate Decode perf metric")
 	}
 	if err := graphics.UpdatePerfMetricFromHistogram(ctx, tconn, platformdecodeHistogram, initPlatformdecodeHistogram, p, "platform_video_decode_delay"); err != nil {

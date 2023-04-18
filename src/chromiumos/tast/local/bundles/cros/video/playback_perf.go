@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"chromiumos/tast/local/bundles/cros/video/playback"
-	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/display"
@@ -1678,18 +1677,29 @@ func init() {
 func PlaybackPerf(ctx context.Context, s *testing.State) {
 	testOpt := s.Param().(playbackPerfParams)
 
-	_, l, cs, err := lacros.Setup(ctx, s.FixtValue(), testOpt.browserType)
+	cr, l, cs, err := lacros.Setup(ctx, s.FixtValue(), testOpt.browserType)
 	if err != nil {
 		s.Fatal("Failed to initialize test: ", err)
 	}
 	defer lacros.CloseLacros(ctx, l)
 
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
+
+	var br *browser.Browser
+	switch testOpt.browserType {
+	case browser.TypeAsh:
+		br = cr.Browser()
+	case browser.TypeLacros:
+		br = l.Browser()
+	}
+	bTconn, err := br.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to connect to browser test API: ", err)
+	}
+
 	dispInfo, err := display.GetPrimaryInfo(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to get primary display info: ", err)
@@ -1703,6 +1713,6 @@ func PlaybackPerf(ctx context.Context, s *testing.State) {
 	}
 	defer ash.SetShelfBehavior(ctx, tconn, dispInfo.ID, origShelfBehavior)
 
-	playback.RunTest(ctx, s, cs, cr, testOpt.fileName, testOpt.decoderType,
+	playback.RunTest(ctx, s, cs, tconn, bTconn, testOpt.fileName, testOpt.decoderType,
 		testOpt.gridWidth, testOpt.gridHeight, testOpt.perfTracing, testOpt.measureRoughness)
 }
