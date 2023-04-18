@@ -15,7 +15,6 @@ import (
 	"unicode"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/local/rialto"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
 )
@@ -109,12 +108,6 @@ func PartitionSizes(ctx context.Context, s *testing.State) {
 	for i := 0; i < len(testParam.expectedRootfsSizes); i++ {
 		mib = testParam.expectedRootfsSizes[i]
 		validSizes = append(validSizes, int64(mib)*1024*1024)
-	}
-	// Rialto devices may use 1 GB partitions.
-	if isRialto, err := rialto.IsRialto(); err != nil {
-		s.Error("Failed to check if device is rialto: ", err)
-	} else if isRialto {
-		validSizes = append(validSizes, int64(1024*1024*1024))
 	}
 	for _, partNum := range []int{3, 5} {
 		partDev := partPrefix + strconv.Itoa(partNum)
