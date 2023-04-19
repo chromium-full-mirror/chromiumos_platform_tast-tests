@@ -35,7 +35,7 @@ func init() {
 		},
 		SoftwareDeps: []string{"chrome", "no_qemu"},
 		BugComponent: "b:1166446",
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      "networkDiagnostics",
 		Params: []testing.Param{{
 			Name: "lan_connectivity",
