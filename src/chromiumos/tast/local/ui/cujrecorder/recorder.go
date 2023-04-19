@@ -808,6 +808,9 @@ func (r *Recorder) startRecording(ctx context.Context) (runCtx context.Context, 
 
 	var success bool
 	powerTestCleanup, err := r.setUpPowerTest(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to set up the power test")
+	}
 	defer func(ctx context.Context) {
 		if !success && powerTestCleanup != nil {
 			powerTestCleanup(ctx)
@@ -920,6 +923,9 @@ func (r *Recorder) startRecording(ctx context.Context) (runCtx context.Context, 
 	return runCtx, nil
 }
 
+// setUpPowerTest sets up the power test based on the options provided to the
+// recorder. This function returns a cleanup function that is only non-nil
+// when there is no error.
 func (r *Recorder) setUpPowerTest(ctx context.Context) (func(ctx context.Context), error) {
 	if strings.ToLower(skipPowerTest.Value()) == "true" {
 		testing.ContextLog(ctx, "Skipping power test because cujrecorder.skipPowerTest is set")
@@ -986,10 +992,12 @@ func (r *Recorder) setUpPowerTest(ctx context.Context) (func(ctx context.Context
 			testing.ContextLog(ctx, "Failed to clean up power setup: ", err)
 		}
 	}
+
 	// Check options.FailOnDischargeErr after the deferred function is set.
 	if batteryDischargeErr != nil && r.options.FailOnDischargeErr &&
 		!errors.Is(batteryDischargeErr, power.ErrNoBattery) {
-		return cleanup, errors.Wrap(batteryDischargeErr, "battery discharge failed")
+		cleanup(ctx)
+		return nil, errors.Wrap(batteryDischargeErr, "battery discharge failed")
 	}
 
 	return cleanup, nil
