@@ -105,6 +105,28 @@ func CUJAshCommonMetricConfigs() []MetricConfig {
 		NewCustomMetricConfig("Ash.EventLatency.TouchMoved.TotalLatency", "microseconds", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Ash.EventLatency.TouchPressed.TotalLatency", "microseconds", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Ash.EventLatency.TouchReleased.TotalLatency", "microseconds", perf.SmallerIsBetter),
+
+		// GPU metrics.
+		NewCustomMetricConfig("Compositing.Display.PendingSwaps", "swaps", perf.SmallerIsBetter),
+		NewCustomMetricConfig("Compositing.Display.OverlayProcessorUsingStrategy.NumOverlaysPromoted", "overlay_candidates", perf.BiggerIsBetter),
+		NewCustomMetricConfig("Compositing.Display.OverlayProcessorUsingStrategy.NumOverlaysFailed", "overlay_candidates", perf.SmallerIsBetter),
+		NewCustomMetricConfig("Compositing.Display.OverlayProcessorUsingStrategy.NumOverlaysAttempted", "overlay_candidates", perf.BiggerIsBetter),
+		NewCustomMetricConfig("Viz.FrameSink.GpuBusyDuration", "microseconds", perf.SmallerIsBetter),
+		NewEnumCustomMetricConfig("Compositing.Display.HardwareDisplayController.SchedulePageFlipResult",
+			map[int64]string{
+				0: "Success",
+				1: "FailedPlaneAssignment",
+				2: "FailedCommit"}),
+		NewEnumCustomMetricConfig("Viz.DisplayCompositor.OverlayStrategy",
+			map[int64]string{
+				0: "Unknown",
+				1: "NoStrategyUsed",
+				2: "Fullscreen",
+				3: "SingleOnTop",
+				4: "Underlay",
+				5: "UnderlayCast",
+				6: "NoStrategyAllFail",
+				7: "NoStrategyFailMin"}),
 	)
 }
 

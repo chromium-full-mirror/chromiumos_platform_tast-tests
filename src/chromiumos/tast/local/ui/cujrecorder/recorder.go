@@ -15,6 +15,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"reflect"
 	"regexp"
 	"strings"
 	"time"
@@ -42,6 +43,13 @@ type metricGroup string
 const (
 	deprecatedGroupSmoothness metricGroup = "AnimationSmoothness"
 	deprecatedGroupLatency    metricGroup = "InputLatency"
+)
+
+type histogramType int
+
+const (
+	countHistogram histogramType = iota
+	enumHistogram
 )
 
 const (
@@ -85,6 +93,13 @@ type MetricConfig struct {
 	// usually Chrome will load these before a test is started.
 	// To collect these metrics we need to fetch absolute metrics values.
 	bootAndShutdown bool
+
+	// The type of the histogram. Currently supports count histograms
+	// and enum histograms.
+	histogramType histogramType
+
+	// The map between enum values and names.
+	enumValues map[int64]string
 }
 
 // NewSmoothnessMetricConfig creates a new MetricConfig instance for collecting
@@ -92,28 +107,34 @@ type MetricConfig struct {
 // smoothness metrics will be aggregated into the "AnimationSmoothness" entry at
 // the end.
 func NewSmoothnessMetricConfig(histogramName string) MetricConfig {
-	return MetricConfig{histogramName: histogramName, unit: "percent", direction: perf.BiggerIsBetter, bootAndShutdown: false}
+	return MetricConfig{histogramName: histogramName, unit: "percent", direction: perf.BiggerIsBetter, bootAndShutdown: false, histogramType: countHistogram}
 }
 
 // NewLatencyMetricConfig creates a new MetricConfig instance for collecting
 // input latency data for the given histogram name. The whole data of all input
 // latency metrics will be aggregated into the "InputLatency" entry at the end.
 func NewLatencyMetricConfig(histogramName string) MetricConfig {
-	return MetricConfig{histogramName: histogramName, unit: "ms", direction: perf.SmallerIsBetter, bootAndShutdown: false}
+	return MetricConfig{histogramName: histogramName, unit: "ms", direction: perf.SmallerIsBetter, bootAndShutdown: false, histogramType: countHistogram}
 }
 
 // NewCustomMetricConfig creates a new MetricConfig for the given histogram
 // name, unit, and direction. The data are reported as-is but
 // not aggregated with other histograms.
 func NewCustomMetricConfig(histogramName, unit string, direction perf.Direction) MetricConfig {
-	return MetricConfig{histogramName: histogramName, unit: unit, direction: direction, bootAndShutdown: false}
+	return MetricConfig{histogramName: histogramName, unit: unit, direction: direction, bootAndShutdown: false, histogramType: countHistogram}
 }
 
 // NewBootAndShutdownCustomMetricConfig creates a new MetricConfig with
 // bootAndShutdown flag set, for the given histogram name, unit, and direction.
 // The data are reported as-is but not aggregated with other histograms.
 func NewBootAndShutdownCustomMetricConfig(histogramName, unit string, direction perf.Direction) MetricConfig {
-	return MetricConfig{histogramName: histogramName, unit: unit, direction: direction, bootAndShutdown: true}
+	return MetricConfig{histogramName: histogramName, unit: unit, direction: direction, bootAndShutdown: true, histogramType: countHistogram}
+}
+
+// NewEnumCustomMetricConfig creates a new MetricConfig for the enum histogram type
+// and the given histogram name and enum values map as defined in tools/metrics/histograms/enums.xml.
+func NewEnumCustomMetricConfig(histogramName string, enumValues map[int64]string) MetricConfig {
+	return MetricConfig{histogramName: histogramName, bootAndShutdown: false, histogramType: enumHistogram, enumValues: enumValues}
 }
 
 type record struct {
@@ -129,7 +150,7 @@ type record struct {
 
 // combine combines another record into an existing one.
 func (rec *record) combine(newRec *record) error {
-	if rec.config != newRec.config {
+	if !reflect.DeepEqual(rec.config, newRec.config) {
 		return errors.New("records with different config cannot be combined")
 	}
 	rec.totalCount += newRec.totalCount
@@ -143,12 +164,40 @@ func (rec *record) saveMetric(pv *perf.Values, name string) {
 	if rec.totalCount == 0 {
 		return
 	}
-	pv.Set(perf.Metric{
-		Name:      name,
-		Unit:      rec.config.unit,
-		Variant:   "average",
-		Direction: rec.config.direction,
-	}, float64(rec.Sum)/float64(rec.totalCount))
+	switch rec.config.histogramType {
+	case enumHistogram:
+		for _, bucket := range rec.Buckets {
+			// For each enum value (which equals to `bucket.Min`), create a metric
+			// with the metric name as "<name>.<enum value or enum name>"
+			var metricName string
+			enumName, ok := rec.config.enumValues[bucket.Min]
+			if ok {
+				metricName = fmt.Sprintf("%s.%s", name, enumName)
+			} else {
+				metricName = fmt.Sprintf("%s.%v", name, bucket.Min)
+			}
+			pv.Set(perf.Metric{
+				Name: metricName,
+				Unit: "count",
+			}, float64(bucket.Count))
+		}
+	case countHistogram:
+		pv.Set(perf.Metric{
+			Name:      name,
+			Unit:      rec.config.unit,
+			Variant:   "average",
+			Direction: rec.config.direction,
+		}, float64(rec.Sum)/float64(rec.totalCount))
+	default:
+		// If rec.config.histogramType is not set,
+		// treat it as count histograms by default.
+		pv.Set(perf.Metric{
+			Name:      name,
+			Unit:      rec.config.unit,
+			Variant:   "average",
+			Direction: rec.config.direction,
+		}, float64(rec.Sum)/float64(rec.totalCount))
+	}
 }
 
 // Recorder is a utility to measure various metrics for CUJ-style tests.
