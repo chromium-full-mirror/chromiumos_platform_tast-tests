@@ -90,11 +90,19 @@
         android:text="@string/unspecified" />
 
     <Button
-        android:id="@+id/button_refresh"
+        android:id="@+id/button_pin"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignStart="@+id/text_view_system_bar"
         android:layout_below="@+id/button_portrait"
+        android:text="@string/pin_activity" />
+
+    <Button
+        android:id="@+id/button_refresh"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignStart="@+id/text_view_system_bar"
+        android:layout_below="@+id/button_pin"
         android:text="@string/refresh_status" />
 
 </RelativeLayout>

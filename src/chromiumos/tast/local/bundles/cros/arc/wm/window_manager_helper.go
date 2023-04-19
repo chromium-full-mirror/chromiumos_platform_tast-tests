@@ -22,6 +22,7 @@ import (
 	"chromiumos/tast/local/coords"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/screenshot"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -54,6 +55,8 @@ const (
 	// APKNameArcWMTestApp24Maximized APK name for ArcWMTestApp_24_InMaximizedList.apk.
 	APKNameArcWMTestApp24Maximized = "ArcWMTestApp_24_InMaximizedList.apk"
 
+	// MainActivity used by the subtests.
+	MainActivity = "org.chromium.arc.testapp.windowmanager.MainActivity"
 	// ResizableLandscapeActivity used by the subtests.
 	ResizableLandscapeActivity = "org.chromium.arc.testapp.windowmanager.ResizeableLandscapeActivity"
 	// NonResizableLandscapeActivity used by the subtests.
@@ -89,6 +92,9 @@ const (
 	// http://cs/eureka_internal/chromium/src/ash/wm/splitview/split_view_constants.h;l=32;rcl=62c9f9769fdd621050662f3cde82d5672e75271f
 	// Window widths may be adjusted by up to this amount when in split screen mode.
 	SplitScreenDividerThickness = 8
+
+	// PinButton is the id of the button to enter screen lock/pinned state.
+	PinButton = "org.chromium.arc.testapp.windowmanager:id/button_pin"
 )
 
 // CheckFunc represents a function that checks certain criteria for tests.
@@ -807,6 +813,42 @@ func RestoreARCWindowIfMaximized(ctx context.Context, tconn *chrome.TestConn, pa
 		if _, err := ash.SetARCAppWindowStateAndWait(ctx, tconn, packageName, ash.WindowStateNormal); err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+// WaitForLockControllerState waits for the android system LockTaskController to have a specified state.
+func WaitForLockControllerState(ctx context.Context, a *arc.ARC, waitState arc.LockTaskModeState) error {
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		lci, err := a.LockTaskControllerInfo(ctx)
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to get LockTaskControllerInfo"))
+		}
+		if lci.LockTaskMode != waitState {
+			return errors.Errorf("unexpected lock task mode: want %q, got %q", waitState, lci.LockTaskMode)
+		}
+
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second})
+}
+
+// WaitForChromeWindowState waits for a chrome window with the specified state to become available.
+// Useful for detecting pinned mode or PIP, etc.
+func WaitForChromeWindowState(ctx context.Context, tconn *chrome.TestConn, waitState ash.WindowStateType) error {
+	return ash.WaitForCondition(ctx, tconn, func(window *ash.Window) bool { return window.State == waitState }, &testing.PollOptions{Timeout: 10 * time.Second})
+}
+
+// ActivatePinModeInWmTestApp In the ArcWmTestApp, activate pinned mode via button press.
+func ActivatePinModeInWmTestApp(ctx context.Context, d *ui.Device) error {
+	// Click once to activate pinning mode.
+	if err := d.Object(ui.ID(PinButton)).Click(ctx); err != nil {
+		return errors.Wrap(err, "Button click failed")
+	}
+
+	// Click anywhere again to confirm/dismiss the dialog
+	if err := d.Object(ui.ID(PinButton)).Click(ctx); err != nil {
+		return errors.Wrap(err, "Button click failed")
 	}
 
 	return nil

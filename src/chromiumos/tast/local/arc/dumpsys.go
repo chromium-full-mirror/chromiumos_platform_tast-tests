@@ -17,6 +17,7 @@ import (
 
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/coords"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -54,6 +55,33 @@ type ActivityInfo struct {
 	PackageName string
 	// ActivityName is the name of the activity.
 	ActivityName string
+}
+
+// LockTaskModeState is an enum of possible states returned by
+// GetLockTaskControllerInfo.
+type LockTaskModeState string
+
+// Possible states of LockTaskModeState.
+const (
+	TaskModeNone   LockTaskModeState = "NONE"
+	TaskModePinned LockTaskModeState = "PINNED"
+	TaskModeLocked LockTaskModeState = "LOCKED"
+)
+
+// IsValid determines if the string is a valid value for task mode state.
+func (ltms LockTaskModeState) IsValid() error {
+	switch ltms {
+	case TaskModeNone, TaskModePinned, TaskModeLocked:
+		return nil
+	}
+	return errors.New("invalid LockTaskModeState")
+}
+
+// LockTaskControllerInfo is a structure containing the lockstate, extracted
+// from `dumpsys activity activities`.
+type LockTaskControllerInfo struct {
+	LockTaskMode LockTaskModeState
+	// TODO(b/278951154) Parse the remaining information from the dumpsys output
 }
 
 const (
@@ -107,11 +135,17 @@ const (
 		`.*\s+idle=(\S+)` // Idle state (group 13).
 
 	regStrForActivitiesP = `ActivityRecord{[0-9a-fA-F]* u[0-9]* ([^,]*)\/([^,]*) t[0-9]*(?: f)?}`
+
+	regStrForLockTaskControllerP = `(?m)` + // Enable multiline.
+		`^\s*LockTaskController:` +
+		`\s*mLockTaskModeState=(LOCKED|PINNED|NONE)` // Group 1, LOCKED, PINNED, or NONE
+		// TODO(b/278951154) Parse the remaining information from the dumpsys output
 )
 
 var (
-	regExpP              = regexp.MustCompile(regStrP)
-	regExpForActivitiesP = regexp.MustCompile(regStrForActivitiesP)
+	regExpP                      = regexp.MustCompile(regStrP)
+	regExpForActivitiesP         = regexp.MustCompile(regStrForActivitiesP)
+	regExpForLockTaskControllerP = regexp.MustCompile(regStrForLockTaskControllerP)
 )
 
 // TaskInfosFromDumpsys returns a list of all available TaskInfo from the "dumpsys activity activities" and "dumpsys Wayland" if needed.
@@ -139,6 +173,39 @@ func (a *ARC) TaskInfosFromDumpsys(ctx context.Context) ([]TaskInfo, error) {
 	default:
 		return nil, errors.Errorf("unsupported Android version %d", n)
 	}
+}
+
+// LockTaskControllerInfo returns information about the android lock task
+// controller, such as if the system is in pinned mode.
+//
+// This is needed because the difference between Fullscreen and Pinned is
+// not as clear in the chrome world as it is in android (which has further
+// restrictions such as blocking other activities from being launched).
+//
+// With this state we can inspect that the system truly entered a Pinned state.
+func (a *ARC) LockTaskControllerInfo(ctx context.Context) (ltc *LockTaskControllerInfo, err error) {
+	out, err := a.Command(ctx, "dumpsys", "activity", "activities").Output(testexec.DumpLogOnError)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not get 'dumpsys activity activities' output")
+	}
+	output := string(out)
+	matches := regExpForLockTaskControllerP.FindAllStringSubmatch(output, -1)
+	if len(matches) != 1 {
+		testing.ContextLog(ctx, "Using regexp: ", regExpForLockTaskControllerP)
+		testing.ContextLog(ctx, "Matches are: ", matches)
+		testing.ContextLog(ctx, "Output for regexp: ", output)
+		return nil, errors.Errorf("unexpected number of dumpsys matches for LockTaskController expected 1, got %d; regexp outdated perhaps?", len(matches))
+	}
+
+	// Submatch 0 is the entire expression, submatch 1 is the mode.
+	lockTaskModeState := LockTaskModeState(matches[0][1])
+	if err := lockTaskModeState.IsValid(); err != nil {
+		return nil, err
+	}
+
+	return &LockTaskControllerInfo{
+		LockTaskMode: lockTaskModeState,
+	}, nil
 }
 
 // dumpsysActivityActivitiesP returns the "dumpsys activity activities" output as a list of TaskInfo.

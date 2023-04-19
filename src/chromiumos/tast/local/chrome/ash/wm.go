@@ -39,6 +39,8 @@ const (
 	WindowStatePrimarySnapped   WindowStateType = "PrimarySnapped"
 	WindowStateSecondarySnapped WindowStateType = "SecondarySnapped"
 	WindowStatePIP              WindowStateType = "PIP"
+	WindowStatePinned           WindowStateType = "Pinned"
+	WindowStateTrustedPinned    WindowStateType = "TrustedPinned"
 	WindowStateFloated          WindowStateType = "Floated"
 )
 

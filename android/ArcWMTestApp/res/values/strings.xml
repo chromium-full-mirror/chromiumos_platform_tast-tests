@@ -1,3 +1,7 @@
+<!-- Copyright 2023 The ChromiumOS Authors
+     Use of this source code is governed by a BSD-style license that can be
+     found in the LICENSE file.
+-->
 <!-- Don't translate clickable strings. Needed in their original language by autotests -->
 <resources>
     <!-- TODO(tetsui): Show different strings depending on target SDK versions -->
@@ -17,6 +21,7 @@
     <string name="orientation">Orientation</string>
     <string name="real_size">Real Size</string>
     <string name="refresh_status">Refresh Status</string>
+    <string name="pin_activity">Pin Activity</string>
     <string name="size">Size</string>
     <string name="system_bar">System Bar</string>
     <string name="test_keyboard">Test Keyboard:</string>

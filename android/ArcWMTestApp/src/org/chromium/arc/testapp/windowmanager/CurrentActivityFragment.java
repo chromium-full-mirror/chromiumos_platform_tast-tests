@@ -6,6 +6,7 @@
 
 package org.chromium.arc.testapp.windowmanager;
 
+import android.app.ActivityManager;
 import android.app.Fragment;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -37,60 +38,46 @@ public class CurrentActivityFragment extends Fragment {
         final View rootView =
                 inflater.inflate(R.layout.fragment_current_activity, container, false);
 
-        final Button buttonShow = (Button) rootView.findViewById(R.id.button_show);
-        buttonShow.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                showSystemUI();
-                ((BaseActivity) getActivity()).updateCaptionStatusView();
-            }
+        final Button buttonShow = rootView.findViewById(R.id.button_show);
+        buttonShow.setOnClickListener(v -> {
+            showSystemUI();
+            ((BaseActivity) getActivity()).updateCaptionStatusView();
         });
 
-        final Button buttonHide = (Button) rootView.findViewById(R.id.button_hide);
-        buttonHide.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                final boolean enableSticky =
-                        ((CheckBox) (rootView.findViewById(R.id.check_box_immersive_sticky)))
-                                .isChecked();
+        final Button buttonHide = rootView.findViewById(R.id.button_hide);
+        buttonHide.setOnClickListener(v -> {
+            final boolean enableSticky =
+                    ((CheckBox) (rootView.findViewById(R.id.check_box_immersive_sticky)))
+                            .isChecked();
 
-                if (enableSticky) {
-                    hideSystemUISticky();
-                } else {
-                    hideSystemUI();
-                }
-                ((BaseActivity) getActivity()).updateCaptionStatusView();
+            if (enableSticky) {
+                hideSystemUISticky();
+            } else {
+                hideSystemUI();
             }
+            ((BaseActivity) getActivity()).updateCaptionStatusView();
         });
 
-        final Button buttonPortrait = (Button) rootView.findViewById(R.id.button_portrait);
-        buttonPortrait.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                getActivity().setRequestedOrientation(
-                        ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
-            }
-        });
+        final Button buttonPortrait = rootView.findViewById(R.id.button_portrait);
+        buttonPortrait.setOnClickListener(v -> getActivity().setRequestedOrientation(
+                ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT));
 
-        final Button buttonLandscape = (Button) rootView.findViewById(R.id.button_landscape);
-        buttonLandscape.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                getActivity().setRequestedOrientation(
-                        ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
-            }
-        });
+        final Button buttonLandscape = rootView.findViewById(R.id.button_landscape);
+        buttonLandscape.setOnClickListener(v -> getActivity().setRequestedOrientation(
+                ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE));
 
-        final Button buttonSensor = (Button) rootView.findViewById(R.id.button_sensor);
-        buttonSensor.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
-            }
-        });
+        final Button buttonSensor = rootView.findViewById(R.id.button_sensor);
+        buttonSensor.setOnClickListener(
+                v -> getActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR));
 
-        final Button buttonRefresh = (Button) rootView.findViewById(R.id.button_refresh);
-        buttonRefresh.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                ((BaseActivity) getActivity()).updateCaptionStatusView();
-            }
-        });
+        final Button buttonPin = rootView.findViewById(R.id.button_pin);
+        buttonPin.setOnClickListener(
+                view -> CurrentActivityFragment.this.getActivity().startLockTask());
+
+        final Button buttonRefresh = rootView.findViewById(R.id.button_refresh);
+        buttonRefresh.setOnClickListener(
+                view -> ((BaseActivity)
+                        CurrentActivityFragment.this.getActivity()).updateCaptionStatusView());
 
         return rootView;
     }
