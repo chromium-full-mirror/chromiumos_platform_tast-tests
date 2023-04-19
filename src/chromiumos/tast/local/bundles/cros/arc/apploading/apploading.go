@@ -23,6 +23,7 @@ import (
 	"chromiumos/tast/local/disk"
 	"chromiumos/tast/local/power"
 	"chromiumos/tast/local/power/setup"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -124,7 +125,7 @@ func RunTest(ctx context.Context, config TestConfig, a *arc.ARC, cr *chrome.Chro
 	// Add the default power test configuration.
 	sup.Add(setup.PowerTest(ctx, tconn,
 		setup.PowerTestOptions{Wifi: config.WifiInterfacesMode, NightLight: setup.DisableNightLight},
-		setup.NewBatteryDischargeFromMode(setup.NoBatteryDischarge),
+		setup.NewBatteryDischarge(false /*discharge*/, true /*ignoreErr*/, setup.DefaultDischargeThreshold),
 	))
 	if err := sup.Check(ctx); err != nil {
 		return 0, errors.Wrap(err, "failed to setup power test")

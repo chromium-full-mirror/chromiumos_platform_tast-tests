@@ -27,6 +27,7 @@ import (
 	"chromiumos/tast/local/media/cpu"
 	"chromiumos/tast/local/power"
 	"chromiumos/tast/local/power/setup"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -580,7 +581,7 @@ func MeasurePackageCStateCounters(ctx context.Context, t time.Duration, p *perf.
 func MeasureSystemPowerConsumption(ctx context.Context, c *chrome.TestConn, t time.Duration, p *perf.Values) error {
 	cleanup, err := setup.PowerTest(ctx, c, setup.PowerTestOptions{
 		NightLight: setup.DisableNightLight,
-	}, setup.NewBatteryDischargeFromMode(setup.ForceBatteryDischarge))
+	}, setup.NewBatteryDischarge(true /*discharge*/, true /*ignoreErr*/, setup.DefaultDischargeThreshold))
 	if err != nil {
 		// This is not really an error: sometimes powerd is down or lost and setting
 		// up the power test fails. Just don't provide any metric.

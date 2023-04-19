@@ -21,6 +21,7 @@ import (
 	"chromiumos/tast/local/power"
 	"chromiumos/tast/local/power/setup"
 	arcpb "chromiumos/tast/services/cros/arc"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -116,18 +117,20 @@ func (c *PowerPerfService) Setup(ctx context.Context, _ *emptypb.Empty) (*emptyp
 	sup, cleanupPower := setup.New("power perf")
 	c.appendCleanup(cleanupPower)
 
-	dischargeMode := setup.NoBatteryDischarge
+	discharge := false
 	if batteryPath, err := power.SysfsBatteryPath(ctx); err == nil {
-		dischargeMode = setup.ForceBatteryDischarge
+		discharge = true
 		// There is a battery, make sure it's charged before starting the test.
 		testing.ContextLog(ctx, "Waiting for battery to charge")
 		if err := power.WaitForCharge(ctx, batteryPath, 0.95, 30*time.Minute); err != nil {
 			return nil, err
 		}
 		testing.ContextLog(ctx, "Battery now charged")
-	} else if !errors.Is(err, power.ErrNoBattery) {
+	} else if errors.Is(err, power.ErrNoBattery) {
 		// If it's ErrNoBattery, leave dischargeMode at NoBatteryDischarge.
-		return nil, errors.Wrap(err, "failed to determine if there is a battery")
+		testing.ContextLog(ctx, "Unable to find battery, do not force discharge: ", err)
+	} else {
+		return nil, errors.Wrap(err, "failed to get battery path")
 	}
 
 	// Wait until CPU is cooled down and idle.
@@ -144,12 +147,13 @@ func (c *PowerPerfService) Setup(ctx context.Context, _ *emptypb.Empty) (*emptyp
 
 	sup.Add(setup.PowerTest(ctx, tconn,
 		setup.PowerTestOptions{Wifi: setup.DisableWifiInterfaces, NightLight: setup.DisableNightLight},
-		setup.NewBatteryDischargeFromMode(dischargeMode),
+		setup.NewBatteryDischarge(discharge, true /*ignoreErr*/, setup.DefaultDischargeThreshold),
 	))
 	if err := sup.Check(ctx); err != nil {
 		return nil, errors.Wrap(err, "power perf setup failed")
 	}
 
+	// GoBigSleepLint: Waiting a bit to settle before measurement.
 	if err := testing.Sleep(ctx, 90*time.Second); err != nil {
 		return nil, errors.Wrap(err, "failed to sleep to settle before measurement")
 	}

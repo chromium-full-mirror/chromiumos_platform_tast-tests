@@ -13,6 +13,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/quicksettings"
 	"chromiumos/tast/local/cpu"
 	"chromiumos/tast/local/power/setup"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -48,7 +49,7 @@ func SetupPerfTest(ctx context.Context, tconn *chrome.TestConn, name string) (re
 
 	sup.Add(setup.PowerTest(ctx, tconn,
 		setup.PowerTestOptions{Wifi: setup.DoNotChangeWifiInterfaces, NightLight: setup.DisableNightLight},
-		setup.NewBatteryDischargeFromMode(setup.NoBatteryDischarge),
+		setup.NewBatteryDischarge(false /*discharge*/, true /*ignoreErr*/, setup.DefaultDischargeThreshold),
 	))
 
 	if err := sup.Check(ctx); err != nil {

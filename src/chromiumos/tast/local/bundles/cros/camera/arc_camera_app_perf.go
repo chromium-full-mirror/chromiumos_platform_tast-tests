@@ -17,6 +17,7 @@ import (
 	"chromiumos/tast/local/cpu"
 	"chromiumos/tast/local/power"
 	powersetup "chromiumos/tast/local/power/setup"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -184,7 +185,10 @@ func testPreview(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn,
 		}
 	}()
 
-	powerSetupObj.Add(powersetup.PowerTest(ctx, tconn, powersetup.PowerTestOptions{Wifi: powersetup.DisableWifiInterfaces, NightLight: powersetup.DisableNightLight}, powersetup.NewBatteryDischargeFromMode(powersetup.NoBatteryDischarge)))
+	powerSetupObj.Add(powersetup.PowerTest(ctx, tconn,
+		powersetup.PowerTestOptions{Wifi: powersetup.DisableWifiInterfaces, NightLight: powersetup.DisableNightLight},
+		powersetup.NewBatteryDischarge(false /*discharge*/, true /*ignoreErr*/, powersetup.DefaultDischargeThreshold),
+	))
 	if err := powerSetupObj.Check(ctx); err != nil {
 		return errors.Wrap(err, "power setup check failed")
 	}
@@ -266,7 +270,10 @@ func testRecording(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestCon
 		}
 	}()
 
-	powerSetupObj.Add(powersetup.PowerTest(ctx, tconn, powersetup.PowerTestOptions{Wifi: powersetup.DisableWifiInterfaces, NightLight: powersetup.DisableNightLight}, powersetup.NewBatteryDischargeFromMode(powersetup.NoBatteryDischarge)))
+	powerSetupObj.Add(powersetup.PowerTest(ctx, tconn,
+		powersetup.PowerTestOptions{Wifi: powersetup.DisableWifiInterfaces, NightLight: powersetup.DisableNightLight},
+		powersetup.NewBatteryDischarge(false /*discharge*/, true /*ignoreErr*/, powersetup.DefaultDischargeThreshold),
+	))
 	if err := powerSetupObj.Check(ctx); err != nil {
 		return errors.Wrap(err, "power setup check failed")
 	}

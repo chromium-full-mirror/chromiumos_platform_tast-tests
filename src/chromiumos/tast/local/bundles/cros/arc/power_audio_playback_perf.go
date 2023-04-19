@@ -15,6 +15,7 @@ import (
 	"chromiumos/tast/local/cpu"
 	"chromiumos/tast/local/power"
 	"chromiumos/tast/local/power/setup"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -183,9 +184,10 @@ func PowerAudioPlaybackPerf(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
+	discharge := param.BatteryDischargeMode == setup.ForceBatteryDischarge
 	sup.Add(setup.PowerTest(ctx, tconn,
 		setup.PowerTestOptions{Wifi: setup.DisableWifiInterfaces, NightLight: setup.DisableNightLight},
-		setup.NewBatteryDischargeFromMode(param.BatteryDischargeMode),
+		setup.NewBatteryDischarge(discharge, true /*ignoreErr*/, setup.DefaultDischargeThreshold),
 	))
 
 	// Install testing app.

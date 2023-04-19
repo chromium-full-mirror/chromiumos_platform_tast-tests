@@ -9,6 +9,7 @@ import (
 	"context"
 
 	"chromiumos/tast/local/chrome"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -151,6 +152,9 @@ func (battery *BatteryDischarge) fulfill(ctx context.Context, s *Setup) {
 	var cleanup CleanupCallback
 	cleanup, battery.err = SetBatteryDischarge(ctx, battery.threshold)
 	if battery.ignoreErr {
+		if battery.err != nil {
+			testing.ContextLog(ctx, "Failed to set battery discharge: ", battery.err)
+		}
 		// Don't add err into Setup procedure.
 		s.Add(cleanup, nil)
 	} else {
@@ -171,21 +175,6 @@ func (battery *BatteryDischarge) Err() error {
 // NewBatteryDischarge returns a new *BatteryDischarge based on the parameters.
 func NewBatteryDischarge(discharge, ignoreErr bool, threshold float64) *BatteryDischarge {
 	return &BatteryDischarge{discharge: discharge, ignoreErr: ignoreErr, threshold: threshold}
-}
-
-// NewBatteryDischargeFromMode returns a new *BatteryDischarge based on the discharge mode.
-func NewBatteryDischargeFromMode(mode BatteryDischargeMode) *BatteryDischarge {
-	switch mode {
-	case ForceBatteryDischarge:
-		// ignoreErr is set to false so setup will return error if discharge fails.
-		return NewBatteryDischarge(true, false, DefaultDischargeThreshold)
-	case NoBatteryDischarge:
-		fallthrough // Same as default - not discharge.
-	default:
-		// discharge is set to false so discharge will not be performed.
-		return NewBatteryDischarge(false, false, DefaultDischargeThreshold)
-	}
-
 }
 
 // UpdateEngineMode indicates what update engine setup is needed for a test.

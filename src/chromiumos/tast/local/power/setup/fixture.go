@@ -269,15 +269,17 @@ func (f *powerNoUIFixture) SetUp(ctx context.Context, s *testing.FixtState) inte
 	// Set up the testing environment.
 	su, cleanup := New("powerNoUIFixture")
 
-	dischargeMode := NoBatteryDischarge
+	discharge := false
 	if _, err := power.SysfsBatteryPath(ctx); err == nil {
-		dischargeMode = ForceBatteryDischarge
-	} else if !errors.Is(err, power.ErrNoBattery) {
+		discharge = true
+	} else if errors.Is(err, power.ErrNoBattery) {
 		// If it's ErrNoBattery, leave dischargeMode at NoBatteryDischarge.
+		s.Log("Unable to find battery, do not force discharge: ", err)
+	} else {
 		s.Log("Unable to determine if a battery exists, do not force discharge: ", err)
 	}
 
-	su.Add(PowerTest(ctx, nil, *f.powerTestOptions, NewBatteryDischargeFromMode(dischargeMode)))
+	su.Add(PowerTest(ctx, nil, *f.powerTestOptions, NewBatteryDischarge(discharge, true /*ignoreErr*/, DefaultDischargeThreshold)))
 	if err := su.Check(ctx); err != nil {
 		s.Fatal("Power test setup failed: ", err)
 	}
@@ -438,15 +440,17 @@ func (f *powerUIFixture) SetUp(ctx context.Context, s *testing.FixtState) interf
 		}
 	}()
 
-	dischargeMode := NoBatteryDischarge
+	discharge := false
 	if _, err := power.SysfsBatteryPath(ctx); err == nil {
-		dischargeMode = ForceBatteryDischarge
-	} else if !errors.Is(err, power.ErrNoBattery) {
+		discharge = true
+	} else if errors.Is(err, power.ErrNoBattery) {
 		// If it's ErrNoBattery, leave dischargeMode at NoBatteryDischarge.
+		s.Log("Unable to find battery, do not force discharge: ", err)
+	} else {
 		s.Log("Unable to determine if a battery exists, do not force discharge: ", err)
 	}
 
-	su.Add(PowerTest(ctx, tconn, *f.powerTestOptions, NewBatteryDischargeFromMode(dischargeMode)))
+	su.Add(PowerTest(ctx, tconn, *f.powerTestOptions, NewBatteryDischarge(discharge, true /*ignoreErr*/, DefaultDischargeThreshold)))
 	if err := su.Check(ctx); err != nil {
 		s.Fatal("Power test setup failed: ", err)
 	}

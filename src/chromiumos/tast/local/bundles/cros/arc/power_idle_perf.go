@@ -18,10 +18,10 @@ import (
 	"chromiumos/tast/local/cpu"
 	"chromiumos/tast/local/power"
 	"chromiumos/tast/local/power/setup"
-	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type testArgsForPowerIdlePerf struct {
@@ -138,13 +138,14 @@ func PowerIdlePerf(ctx context.Context, s *testing.State) {
 		}
 	}()
 
+	discharge := args.setupOption == setup.ForceBatteryDischarge
 	sup.Add(setup.PowerTest(ctx, tconn,
 		setup.PowerTestOptions{
 			Wifi:       setup.DisableWifiInterfaces,
 			NightLight: setup.DisableNightLight,
 			DarkTheme:  setup.EnableLightTheme,
 		},
-		setup.NewBatteryDischargeFromMode(args.setupOption),
+		setup.NewBatteryDischarge(discharge, true /*ignoreErr*/, setup.DefaultDischargeThreshold),
 	))
 	if err := sup.Check(ctx); err != nil {
 		s.Fatal("Setup failed: ", err)

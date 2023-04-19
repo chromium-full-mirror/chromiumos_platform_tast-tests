@@ -17,6 +17,7 @@ import (
 	"chromiumos/tast/local/cpu"
 	"chromiumos/tast/local/power"
 	"chromiumos/tast/local/power/setup"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -416,9 +417,10 @@ func PowerVideoDecodePerf(ctx context.Context, s *testing.State) {
 		}
 	}()
 
+	discharge := opts.BatteryDischargeMode == setup.ForceBatteryDischarge
 	sup.Add(setup.PowerTest(ctx, tconn,
 		setup.PowerTestOptions{Wifi: setup.DisableWifiInterfaces, NightLight: setup.DisableNightLight},
-		setup.NewBatteryDischargeFromMode(opts.BatteryDischargeMode),
+		setup.NewBatteryDischarge(discharge, true /*ignoreErr*/, setup.DefaultDischargeThreshold),
 	))
 	sup.Add(setup.InstallApp(ctx, a, s.DataPath(apkName), c2e2etest.Pkg))
 	for _, p := range c2e2etest.RequiredPermissions() {

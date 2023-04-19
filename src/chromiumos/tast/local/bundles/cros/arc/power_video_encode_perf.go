@@ -21,6 +21,7 @@ import (
 	"chromiumos/tast/local/media/videotype"
 	"chromiumos/tast/local/power"
 	"chromiumos/tast/local/power/setup"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -145,9 +146,11 @@ func PowerVideoEncodePerf(ctx context.Context, s *testing.State) {
 			s.Error("Cleanup failed: ", err)
 		}
 	}()
+
+	discharge := opts.BatteryDischargeMode == setup.ForceBatteryDischarge
 	sup.Add(setup.PowerTest(ctx, tconn,
 		setup.PowerTestOptions{Wifi: setup.DisableWifiInterfaces, NightLight: setup.DisableNightLight},
-		setup.NewBatteryDischargeFromMode(opts.BatteryDischargeMode),
+		setup.NewBatteryDischarge(discharge, true /*ignoreErr*/, setup.DefaultDischargeThreshold),
 	))
 
 	// Push raw video file to ARC.

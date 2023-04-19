@@ -11,6 +11,7 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/power"
 	"chromiumos/tast/local/power/setup"
+
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -94,7 +95,7 @@ func (f *benchmarkSetUpFixture) SetUp(ctx context.Context, s *testing.FixtState)
 	if keepState == "false" {
 		options.Wifi = setup.DisableWifiInterfaces
 	}
-	sup.Add(setup.PowerTest(ctx, f.tconn, options, setup.NewBatteryDischargeFromMode(setup.NoBatteryDischarge)))
+	sup.Add(setup.PowerTest(ctx, f.tconn, options, setup.NewBatteryDischarge(false /*discharge*/, true /*ignoreErr*/, setup.DefaultDischargeThreshold)))
 	if err := sup.Check(ctx); err != nil {
 		s.Fatal("Power setup failed: ", err)
 	}
