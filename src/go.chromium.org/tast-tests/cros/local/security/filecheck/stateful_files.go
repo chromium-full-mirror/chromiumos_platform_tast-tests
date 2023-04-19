@@ -9,23 +9,18 @@ import (
 	"fmt"
 	"os"
 	"os/user"
-	"path/filepath"
+	"sort"
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/local/moblab"
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/testing"
 )
+
+const root = "/mnt/stateful_partition"
 
 // CheckStatefulFiles verifies file permissions on the stateful partition.
 // When it returns an error, it's likely because some other test broke the stateful partition isolation.
-func CheckStatefulFiles(ctx context.Context, outDir string) []error {
-	const (
-		root      = "/mnt/stateful_partition"
-		errorFile = "stateful_errors.txt"
-		maxErrors = 5 // max to print
-	)
-
+func CheckStatefulFiles(ctx context.Context) ([]string, int, error) {
 	// The basic approach here is to specify patterns for paths within a top-level directory, and then add a catch-all
 	// Tree pattern that checks anything in the directory that wasn't already explicitly checked or skipped.
 	// Any top-level directories not explicitly handled are matched by the final AllPaths pattern.
@@ -66,6 +61,7 @@ func CheckStatefulFiles(ctx context.Context, outDir string) []error {
 		// TODO(b/205582301) - Some Bluetooth config files are initialized with group write permission. Temporarily don't check the group settings.
 		NewPattern(Tree("encrypted/var/lib/bluetooth"), Users("bluetooth"), NotMode(007)),
 		NewPattern(Tree("encrypted/var/lib/bootlockbox"), Users("bootlockboxd"), Groups("bootlockboxd"), NotMode(022)),
+		NewPattern(Tree("encrypted/var/lib/brltty"), SkipChildren()), // b/289850159: tast.arc.SettingsBridge.vm fails
 		NewPattern(Tree("encrypted/var/lib/chaps"), Users("chaps"), Groups("chronos-access"), NotMode(022)),
 		NewPattern(Path("encrypted/var/lib/cras"), Users("cras"), Groups("cras"), Mode(0755)),                 // directory itself
 		NewPattern(Tree("encrypted/var/lib/cras"), Users("cras"), Groups("cras"), Mode(0644), SkipChildren()), // children
@@ -148,6 +144,8 @@ func CheckStatefulFiles(ctx context.Context, outDir string) []error {
 		NewPattern(Tree("unencrypted"), Users("root"), NotMode(022)),
 
 		NewPattern(Path("var_overlay"), SkipChildren()), // only exists for dev images
+
+		NewPattern(Path("reboot_vault/crash"), SkipChildren()), // b/274625847: tast.crash.Ephemeral.post_oobe_no_consent fails
 
 		// This file can be created by
 		// https://source.corp.google.com/chromeos_public/src/platform/factory/py/gooftool/wipe.py.
@@ -274,31 +272,16 @@ func CheckStatefulFiles(ctx context.Context, outDir string) []error {
 			NewPattern(Tree("var"), SkipChildren()))
 	}
 
-	testing.ContextLog(ctx, "Checking ", root)
+	var problemStrings []string
 	problems, numPaths, err := Check(ctx, root, patterns)
-	testing.ContextLogf(ctx, "Scanned %d path(s)", numPaths)
 	if err != nil {
-		return []error{errors.Wrapf(err, "failed to check %v", root)}
+		return problemStrings, numPaths, errors.Wrapf(err, "failed to check %v", root)
 	}
 
-	f, err := os.Create(filepath.Join(outDir, errorFile))
-	if err != nil {
-		return []error{errors.Wrap(err, "failed to create error file")}
-	}
-	defer f.Close()
 	for path, msgs := range problems {
-		if _, err := fmt.Fprintf(f, "%v: %v\n", path, strings.Join(msgs, ", ")); err != nil {
-			return []error{errors.Wrap(err, "failed to write error file")}
-		}
+		problemStrings = append(problemStrings, fmt.Sprintf("%v: %v", path, strings.Join(msgs, ", ")))
 	}
 
-	var result []error
-	for path, msgs := range problems {
-		if len(result) > maxErrors {
-			testing.ContextLogf(ctx, "Too many errors; aborting (see %v)", errorFile)
-			break
-		}
-		result = append(result, errors.Errorf("%v: %v", path, strings.Join(msgs, ", ")))
-	}
-	return result
+	sort.Strings(problemStrings)
+	return problemStrings, numPaths, nil
 }
