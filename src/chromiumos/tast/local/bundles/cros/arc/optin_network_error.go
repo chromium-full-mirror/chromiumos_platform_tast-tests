@@ -120,6 +120,7 @@ func setupChromeForOptinNetworkError(ctx context.Context, s *testing.State) (*ch
 	cr, err := chrome.New(ctx,
 		chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
 		chrome.ARCSupported(),
+		chrome.UnRestrictARCCPU(),
 		chrome.EnableFeatures("ButtonARCNetworkDiagnostics", "DiagnosticsAppNavigation", "EnableNetworkingInDiagnosticsApp"))
 	return cr, err
 }

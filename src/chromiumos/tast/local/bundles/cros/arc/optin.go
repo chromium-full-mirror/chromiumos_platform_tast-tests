@@ -76,6 +76,7 @@ func setupChrome(ctx context.Context, gaiaLogin chrome.Option) (*chrome.Chrome, 
 	cr, err := chrome.New(ctx,
 		gaiaLogin,
 		chrome.ARCSupported(),
+		chrome.UnRestrictARCCPU(),
 		chrome.ExtraArgs(arc.DisableSyncFlags()...))
 	if err != nil {
 		return nil, err
