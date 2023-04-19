@@ -460,7 +460,7 @@ func startInputLatencyServer(ctx context.Context, cont *vm.Container, socketServ
 	// Expect an uint16, but the return value of ParseUInt is always an uint64.
 	port64, err := strconv.ParseUint(portString, 10, 16)
 	if err != nil {
-		return cleanup, 0, errors.Wrapf(err, "failed to parse port nunmber %q", portString)
+		return cleanup, 0, errors.Wrapf(err, "failed to parse port number %q", portString)
 	}
 	return cleanup, uint16(port64), nil
 }
