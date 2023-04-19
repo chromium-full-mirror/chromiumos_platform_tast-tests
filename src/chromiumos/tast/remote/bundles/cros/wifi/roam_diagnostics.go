@@ -227,15 +227,25 @@ func executeRoamDiagnosticsTest(ctx context.Context, s *testing.State, ap0Params
 	}
 	defer roamLog.Close()
 
-	for atten0 := roamDiagnosticsMinAttenuation; atten0 <= roamDiagnosticsMaxAttenuation; atten0 += roamDiagnosticsAttenuationStep {
+	startAttenuation := roamDiagnosticsMinAttenuation
+	// Ensure that starting attenuation is not less than the minimum possible for any of the 4 attenuator ports.
+	for i := 0; i < 4; i++ {
+		minAtten, err := attenuator.MinTotalAttenuation(i)
+		if err != nil {
+			s.Fatalf("Failed to get min attenuation on port: %d: %v", i, err)
+		}
+		startAttenuation = math.Max(startAttenuation, minAtten)
+	}
+
+	// Snap the attenuation back to the original spacing so we don't clip at max.
+	// Ignore possible issues from roundoff since the result would just be that we skip an increment.
+	startAttenuation = math.Ceil(startAttenuation/roamDiagnosticsAttenuationStep) * roamDiagnosticsAttenuationStep
+
+	for atten0 := startAttenuation; atten0 <= roamDiagnosticsMaxAttenuation; atten0 += roamDiagnosticsAttenuationStep {
 		setTotalAttenuation(ctx, s, attenuator, 0, atten0, freq0)
 
 		// Vary the RSSI of the second AP around that of the first AP.
-		minAtten1, err := attenuator.MinTotalAttenuation(0)
-		if err != nil {
-			s.Fatal("Failed to get minimal attenuation")
-		}
-		minAtten1 = math.Max(atten0-roamDiagnosticsAttenuationRange, minAtten1)
+		minAtten1 := math.Max(atten0-roamDiagnosticsAttenuationRange, startAttenuation)
 		maxAtten1 := atten0 + roamDiagnosticsAttenuationRange
 
 		for roundPass := 0; roundPass < roamDiagnosticsRoundPassCount; roundPass++ {
