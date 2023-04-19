@@ -312,6 +312,10 @@ type RecorderOptions struct {
 	// Mode specifies which mode to run the recorder in.
 	Mode RecorderMode
 
+	// TurnOffDisplay, if set, will turn the display off before running the
+	// function in recorder.Run and turn it back on in recorder.StopRecording
+	TurnOffDisplay bool
+
 	// DischargeThreshold is the battery discharge threshold.
 	// If not set, defaultDischargeThreshold will be used.
 	DischargeThreshold *float64
@@ -739,9 +743,18 @@ func (r *Recorder) SaveTraceFiles(ctx context.Context) error {
 // Close clears states for all trackers.
 func (r *Recorder) Close(ctx context.Context) error {
 	var firstErr error
+	if r.options.TurnOffDisplay {
+		if err := power.SetDisplayPower(ctx, power.DisplayPowerAllOn); err != nil {
+			testing.ContextLog(ctx, "Failed to turn on display: ", err)
+			firstErr = errors.Wrap(err, "failed to turn on display")
+		}
+	}
 	if r.powerSetupCleanup != nil {
 		if err := r.powerSetupCleanup(ctx); err != nil {
-			firstErr = errors.Wrap(err, "failed to clean up power setup")
+			testing.ContextLog(ctx, "Failed to clean up power setup: ", err)
+			if firstErr == nil {
+				firstErr = errors.Wrap(err, "failed to clean up power setup")
+			}
 		}
 	}
 
@@ -750,8 +763,12 @@ func (r *Recorder) Close(ctx context.Context) error {
 	}
 
 	if r.frameDataTracker != nil {
-		if err := r.frameDataTracker.Close(ctx, r.tconn); firstErr == nil && err != nil {
-			firstErr = errors.Wrap(err, "failed to close frame data tracker")
+		if err := r.frameDataTracker.Close(ctx, r.tconn); err != nil {
+			testing.ContextLog(ctx, "Failed to close frame data tracker: ", err)
+			if firstErr == nil {
+				firstErr = errors.Wrap(err, "failed to close frame data tracker")
+			}
+
 		}
 	}
 	return firstErr
@@ -829,13 +846,6 @@ func (r *Recorder) startRecording(ctx context.Context) (runCtx context.Context, 
 		if err := cpu.WaitUntilStabilized(ctx, cdConfig); err != nil {
 			testing.ContextLog(ctx, "Failed to wait for CPU to become idle: ", err)
 		}
-
-		if err := testing.Poll(ctx, power.TurnOnDisplay, &testing.PollOptions{
-			Interval: 10 * time.Second,
-			Timeout:  2 * time.Minute,
-		}); err != nil {
-			return nil, errors.Wrap(err, "failed to turn on display")
-		}
 	}
 
 	if r.screenRecorderStart != nil {
@@ -863,6 +873,30 @@ func (r *Recorder) startRecording(ctx context.Context) (runCtx context.Context, 
 	defer func(ctx context.Context) {
 		if !success && powerTestCleanup != nil {
 			powerTestCleanup(ctx)
+		}
+	}(ctx)
+
+	if r.options.TurnOffDisplay {
+		testing.ContextLog(ctx, "Turning off display")
+		if err := power.SetDisplayPower(ctx, power.DisplayPowerAllOff); err != nil {
+			return nil, errors.Wrap(err, "failed to turn off display")
+		}
+	} else {
+		testing.ContextLog(ctx, "Turning on display")
+		if err := testing.Poll(ctx, power.TurnOnDisplay, &testing.PollOptions{
+			Interval: 10 * time.Second,
+			Timeout:  2 * time.Minute,
+		}); err != nil {
+			return nil, errors.Wrap(err, "failed to turn on display")
+		}
+	}
+	defer func(ctx context.Context) {
+		if success || !r.options.TurnOffDisplay {
+			return
+		}
+		testing.ContextLog(ctx, "Turning on display")
+		if err := power.SetDisplayPower(ctx, power.DisplayPowerAllOn); err != nil {
+			testing.ContextLog(ctx, "Failed to turn on display: ", err)
 		}
 	}(ctx)
 
