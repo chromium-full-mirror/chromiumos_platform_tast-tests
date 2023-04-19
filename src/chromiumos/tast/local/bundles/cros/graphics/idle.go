@@ -413,12 +413,13 @@ func i915MinClock(ctx context.Context) error {
 			if err != nil {
 				return errors.Wrapf(err, "failed to parse %s to int", matches[1])
 			}
+			// Print the line for debugging.
+			testing.ContextLog(ctx, "Successfully parsed: ", matches[0])
 			if hz <= 650 {
 				return nil
 			}
 		}
 		return errors.New("did not see the min i915 clock")
-
 	}, &testing.PollOptions{
 		Timeout: 1 * time.Minute,
 	}); err != nil {
