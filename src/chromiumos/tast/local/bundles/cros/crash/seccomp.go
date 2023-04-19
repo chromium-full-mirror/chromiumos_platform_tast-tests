@@ -121,7 +121,9 @@ func Seccomp(ctx context.Context, s *testing.State) {
 			found = true
 			if err = mustContain(match, "SECCOMP_POLICY_PATH=/dev/null"); err != nil {
 				s.Error("Failed to find expected string: ", err)
-				crash.MoveFilesToOut(ctx, s.OutDir(), match)
+				if err := crash.MoveFilesToOut(ctx, s.OutDir(), match); err != nil {
+					s.Error("Failed to save the proclog file: ", err)
+				}
 			}
 		} else if strings.HasSuffix(match, ".meta") {
 			contents, err := ioutil.ReadFile(match)
@@ -129,13 +131,21 @@ func Seccomp(ctx context.Context, s *testing.State) {
 				s.Errorf("Couldn't read meta file %s contents: %v", match, err)
 				continue
 			}
-			if !strings.Contains(string(contents), "upload_var_seccomp_blocked_syscall_nr=") {
-				s.Error("Failed to find expected seccomp_blocked_syscall_nr")
-				crash.MoveFilesToOut(ctx, s.OutDir(), match)
+			keepMatch := false
+			for _, updateVar := range []string{
+				"seccomp_blocked_syscall_name=brk",
+				"seccomp_blocked_syscall_nr=",
+				"seccomp_proc_pid_syscall=",
+			} {
+				if !strings.Contains(string(contents), "upload_var_"+updateVar) {
+					s.Error("Failed to find expected ", updateVar)
+					keepMatch = true
+				}
 			}
-			if !strings.Contains(string(contents), "upload_var_seccomp_proc_pid_syscall=") {
-				s.Error("Failed to find expected seccomp_proc_pid_syscall")
-				crash.MoveFilesToOut(ctx, s.OutDir(), match)
+			if keepMatch {
+				if err := crash.MoveFilesToOut(ctx, s.OutDir(), match); err != nil {
+					s.Error("Failed to save the meta file: ", err)
+				}
 			}
 		}
 	}
