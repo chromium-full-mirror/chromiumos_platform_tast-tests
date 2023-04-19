@@ -230,7 +230,7 @@ func (ta *TerminalApp) ExitSSH() uiauto.Action {
 // prompt. Useful for either waiting for the startup process to finish
 // or for a terminal application to exit.
 func (ta *TerminalApp) WaitForPrompt() uiauto.Action {
-	return ta.ui.WithTimeout(3 * time.Minute).WaitUntilExists(Prompt)
+	return ta.ui.WithTimeout(3 * time.Minute).WaitUntilExists(Prompt.Onscreen().First())
 }
 
 // ClickShelfMenuItem right clicks the terminal app icon on the shelf and left click the specified menu item.

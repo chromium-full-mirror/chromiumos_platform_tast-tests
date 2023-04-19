@@ -17,6 +17,7 @@ import (
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
+	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
@@ -480,6 +481,12 @@ func (f *crostiniFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		f.values.Save(s.OutDir())
 	}
 
+	// TerminalApp always automatically launches after the installation.
+	// Close it before proceeding to ensure a clean env.
+	if err = apps.Close(ctx, f.tconn, apps.Terminal.ID); err != nil {
+		s.Log("Failed to close Terminal app after installing Linux: ", err)
+	}
+
 	f.cont, err = vm.DefaultContainer(ctx, f.cr.NormalizedUser())
 	if err != nil {
 		s.Fatal("Failed to connect to running container: ", err)
@@ -488,14 +495,6 @@ func (f *crostiniFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	// Report disk size again after successful install.
 	if err := reportDiskUsage(ctx); err != nil {
 		s.Log("Failed to gather disk usage: ", err)
-	}
-
-	f.preData.startedOK = true
-
-	vm.Lock()
-	shouldClose = false
-	if err := f.cr.ResetState(ctx); err != nil {
-		s.Fatal("Failed to reset chrome's state: ", err)
 	}
 
 	downloadsPath, err := cryptohome.DownloadsPath(ctx, f.cr.NormalizedUser())
@@ -517,6 +516,14 @@ func (f *crostiniFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 			s.Fatal("Failed to re-launch terminal and exit after creating snapshot: ", err)
 		}
 	}
+
+	if err := f.cr.ResetState(ctx); err != nil {
+		s.Fatal("Failed to reset chrome's state: ", err)
+	}
+
+	f.preData.startedOK = true
+	vm.Lock()
+	shouldClose = false
 
 	var fakeDMS *fakedms.FakeDMS
 	hasFakeDMS, ok := s.ParentValue().(fakedms.HasFakeDMS)
@@ -652,11 +659,11 @@ func (f *crostiniFixture) cleanUp(ctx context.Context, s *testing.FixtState) {
 }
 
 func (f *crostiniFixture) launchExitTerminal(ctx context.Context) error {
-	terminalApp, err := terminalapp.Launch(ctx, f.tconn)
+	_, err := terminalapp.Launch(ctx, f.tconn)
 	if err != nil {
 		return errors.Wrap(err, "failed to launch Terminal")
 	}
-	if err = terminalApp.Exit(f.kb)(ctx); err != nil {
+	if err = apps.Close(ctx, f.tconn, apps.Terminal.ID); err != nil {
 		return errors.Wrap(err, "failed to exit Terminal window")
 	}
 	return nil
