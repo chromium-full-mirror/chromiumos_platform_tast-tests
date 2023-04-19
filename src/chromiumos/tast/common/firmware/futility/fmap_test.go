@@ -70,12 +70,12 @@ func Test_DumpFmap_NoFutilityOutput(t *testing.T) {
 
 func Test_DumpFmap_ParseDataOK(t *testing.T) {
 	testData := []byte("area1\t1\t0x123123\n" +
-		"area2 2 9988776655\n" +
+		"area2 2 88776655\n" +
 		"\tarea3\t 0x3 \t 774466\t\n")
 
 	expectedFields := []FMapSection{
 		{Name: "area1", Offset: 1, Size: 0x123123},
-		{Name: "area2", Offset: 2, Size: 9988776655},
+		{Name: "area2", Offset: 2, Size: 88776655},
 		{Name: "area3", Offset: 0x3, Size: 774466},
 	}
 

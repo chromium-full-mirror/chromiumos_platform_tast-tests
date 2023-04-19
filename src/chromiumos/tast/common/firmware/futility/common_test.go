@@ -16,8 +16,8 @@ const (
 	testFutilityPath = "test_futility" // Mock path to futility. Won't actually be called.
 )
 
-// testCommandRunner is simple configurable runner used tests
-// the futility module implementation tests.
+// testCommandRunner is simple configurable runner used to test
+// the futility module implementation.
 type testCommandRunner struct {
 	stdout, stderr []byte
 	err            error
@@ -25,8 +25,8 @@ type testCommandRunner struct {
 	args []string // List of arguments from runCommandLine().
 }
 
-// newTestInstance returns new futility.Instance with empty params,
-// "test_futility" as futility path, and testCommandRunner configured with
+// newTestInstance returns new futility Instance with empty params,
+// testFutilityPath as futility path, and testCommandRunner configured with
 // input parameters.
 func newTestInstance(stdout, stderr []byte, err error) *Instance {
 	return &Instance{
@@ -68,7 +68,7 @@ func optionalArgsMatch(inputArgs, optionalArgs []string) bool {
 func (r *testCommandRunner) assertCalledWith(requiredArgs []string, optionalArgs [][]string) error {
 	allArgs := r.args
 
-	// Remove all optional aruments.
+	// Remove all optional arguments.
 	for _, opt := range optionalArgs {
 		for i := 0; i < len(allArgs); i++ {
 			if optionalArgsMatch(allArgs[i:], opt) {

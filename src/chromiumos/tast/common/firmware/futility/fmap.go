@@ -16,8 +16,8 @@ import (
 // FMapSection describes FlashMap.
 type FMapSection struct {
 	Name   string
-	Offset int
-	Size   int
+	Offset uint32
+	Size   uint32
 }
 
 // DumpFmap gets FlashMap sections from infile.
@@ -25,7 +25,7 @@ type FMapSection struct {
 // If optional parameter regionNames is provided, only given regions are
 // returned if present. For nil whole FlashMap will be returned.
 //
-// On success returns.
+// On success returns a list of FMAP sections and the futility output.
 func (i *Instance) DumpFmap(ctx context.Context, inFile string, regionNames []string) ([]FMapSection, []byte, error) {
 	if inFile == "" {
 		return nil, nil, errors.New("futility cannot dump FlashMap: inFile is empty")
@@ -52,20 +52,20 @@ func (i *Instance) DumpFmap(ctx context.Context, inFile string, regionNames []st
 		}
 
 		name := fields[0]
-		offset, err := strconv.ParseInt(fields[1], 0, 0)
+		offset, err := strconv.ParseInt(fields[1], 0, 32)
 		if err != nil {
 			return nil, fullOut, errors.Errorf("incorrect offset field value for line %q", line)
 		}
 
-		size, err := strconv.ParseInt(fields[2], 0, 0)
+		size, err := strconv.ParseInt(fields[2], 0, 32)
 		if err != nil {
 			return nil, fullOut, errors.Errorf("incorrect size field value for line %q", line)
 		}
 
 		fmapSections = append(fmapSections, FMapSection{
 			Name:   name,
-			Offset: int(offset),
-			Size:   int(size),
+			Offset: uint32(offset),
+			Size:   uint32(size),
 		})
 	}
 
