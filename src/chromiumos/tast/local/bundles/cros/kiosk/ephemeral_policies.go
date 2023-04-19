@@ -127,6 +127,9 @@ func EphemeralPolicies(ctx context.Context, s *testing.State) {
 					kioskmode.AutoLaunch(tc.AccountID),
 					kioskmode.CustomLocalAccounts(&localAccounts),
 					kioskmode.ExtraPolicies([]policy.Policy{tc.DevicePolicy}),
+					kioskmode.ExtraChromeOptions(
+						chrome.ExtraArgs("--kiosk-splash-screen-min-time-seconds=0"),
+					),
 				}
 				if stage == "verify" {
 					// KeepState prevents the homedir from being wiped on login
