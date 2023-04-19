@@ -335,3 +335,57 @@ func CheckFrameDrops(ctx context.Context, conn *chrome.Conn, videoElement, saveP
 	}
 	return nil
 }
+
+// SetDisplayResolution function set provided display resolution(width x height).
+func SetDisplayResolution(ctx context.Context, tconn *chrome.TestConn, disp *display.Info, width, height int, cr *chrome.Chrome) error {
+	ui := uiauto.New(tconn)
+	dMode, err := disp.GetSelectedMode()
+	if err != nil {
+		return errors.Wrap(err, "failed to get selected display mode")
+	}
+	if dMode.Width == width && dMode.Height == height {
+		return nil
+	}
+	isFound := false
+	for _, mode := range disp.Modes {
+		if mode.Width == width && mode.Height == height {
+			isFound = true
+			testing.ContextLogf(ctx, "Setting display resolution to %d x %d", width, height)
+			if err := display.SetDisplayProperties(ctx, tconn, disp.ID, display.DisplayProperties{DisplayMode: mode}); err != nil {
+				return errors.Wrap(err, "failed to set the display resolution")
+			}
+			if err := testing.Poll(ctx, func(ctx context.Context) error {
+				if err := ui.Exists(nodewith.NameRegex(regexp.MustCompile("Click confirm to keep changes")).Role(role.StaticText))(ctx); err != nil {
+					return errors.Wrap(err, "failed to find confirm popup window")
+				}
+				cnfmButton := nodewith.Name("Confirm").Role(role.Button)
+				if err := ui.LeftClickUntil(cnfmButton, ui.Gone(cnfmButton))(ctx); err != nil {
+					return errors.Wrap(err, "failed to click on confirm")
+				}
+				info, err := display.GetInfo(ctx, tconn)
+				if err != nil {
+					return errors.Wrap(err, "failed to get display info")
+				}
+				if len(info) < 2 {
+					return errors.New("failed to find external display")
+				}
+
+				dispMode, err := info[1].GetSelectedMode()
+				if err != nil {
+					return errors.Wrap(err, "failed to get selected display resolution")
+				}
+				if dispMode.Width != width && dispMode.Height != height {
+					return errors.Errorf("failed to set provided display resolution: got %d x %d; want %d x %d", dispMode.Width, dispMode.Height, width, height)
+				}
+				return nil
+			}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: 1 * time.Second}); err != nil {
+				return errors.Wrap(err, "failed to confirm display resolution")
+			}
+			break
+		}
+	}
+	if !isFound {
+		return errors.Errorf("display resolution %d x %d is not found", width, height)
+	}
+	return nil
+}

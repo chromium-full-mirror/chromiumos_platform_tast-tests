@@ -20,6 +20,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/input"
+	"chromiumos/tast/local/typecutils"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
 )
@@ -101,9 +102,8 @@ func ExtendedDisplayCompositionCheck(ctx context.Context, s *testing.State) {
 	)
 
 	var (
-		resolutionMenuParams  = nodewith.Name("Resolution").Role(role.PopUpButton)
-		refreshRateMenuParams = nodewith.Name("Refresh Rate Menu").Role(role.PopUpButton)
-		resolution4kParams    = nodewith.Name("3840 x 2160").Role(role.ListBoxOption).First()
+		resolutionMenuParams  = nodewith.Name("Resolution").Role(role.ComboBoxSelect)
+		refreshRateMenuParams = nodewith.Name("Refresh Rate Menu").Role(role.ComboBoxSelect)
 		refreshRate60HzParam  = nodewith.Name("60 Hz").Role(role.ListBoxOption).First()
 		builtinDisplayParams  = nodewith.Name("Mirror Built-in display").Role(role.CheckBox)
 	)
@@ -133,6 +133,9 @@ func ExtendedDisplayCompositionCheck(ctx context.Context, s *testing.State) {
 
 	cui := uiauto.New(tconn)
 	leftClickUIElement := func(elementFinder *nodewith.Finder) error {
+		if err := cui.WaitUntilExists(elementFinder)(ctx); err != nil {
+			return errors.Wrap(err, "failed to find elementFinder")
+		}
 		if err := cui.LeftClick(elementFinder)(ctx); err != nil {
 			return errors.Wrap(err, "failed to left click element")
 		}
@@ -215,8 +218,13 @@ func ExtendedDisplayCompositionCheck(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to find and click resolution menu with error: ", err)
 	}
 
-	if err := leftClickUIElement(resolution4kParams); err != nil {
-		s.Fatal("Failed to find and click resolution '3840 x 2160' with error: ", err)
+	info, err := display.GetInfo(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to get display info: ", err)
+	}
+
+	if err := typecutils.SetDisplayResolution(ctx, tconn, &info[1], 3840, 2160, cr); err != nil {
+		s.Fatal("Failed to change resolution: ", err)
 	}
 
 	if err := leftClickUIElement(refreshRateMenuParams); err != nil {
