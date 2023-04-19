@@ -287,13 +287,39 @@ func modetestCrtcInfo(ctx context.Context, crtcID string, column modetestModeInf
 }
 
 func modetestModeInfoFallbackVersion(ctx context.Context, column modetestModeInfoColumn) (string, error) {
-	cmd := "modetest -c | grep -E 'DSI|eDP' -A 10 | grep preferred | gawk -e '{print $" + strconv.Itoa(int(column)) + "}'"
-	b, err := testexec.CommandContext(ctx, "sh", "-c", cmd).Output(testexec.DumpLogOnError)
+	b, err := testexec.CommandContext(ctx, "modetest", "-c").Output(testexec.DumpLogOnError)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "failed to run 'modetest -c'")
 	}
 
-	return strings.TrimRight(string(b), "\n"), nil
+	edpLineIndex := -1
+	for idx, line := range strings.Split(strings.TrimSpace(string(b)), "\n") {
+		if strings.Contains(line, "eDP") || strings.Contains(line, "DSI") {
+			edpLineIndex = idx
+			continue
+		}
+
+		if edpLineIndex == -1 {
+			continue
+		}
+
+		// After locating the eDP/DSI connector, we should find the preferred mode in no more than 10 lines.
+		if idx > edpLineIndex+10 {
+			return "", errors.New("can't find the preferred mode after finding the connector")
+		}
+
+		if strings.Contains(line, "preferred") {
+			// Example output of mode info:
+			// #0 1920x1280 60.00 1920 1944 1992 2080 1280 1286 1303 1320 164740 flags: nhsync, nvsync; type: preferred, driver
+			s := strings.Fields(line)
+			if int(column) > len(s) {
+				return "", errors.Errorf("Connector mode format is unexpected: %s", line)
+			}
+			return s[int(column)-1], nil
+		}
+	}
+
+	return "", errors.New("can't find the preferred mode")
 }
 
 func modetestModeInfo(ctx context.Context, column modetestModeInfoColumn) (string, error) {
