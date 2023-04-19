@@ -36,8 +36,7 @@ func init() {
 		Contacts: []string{
 			"chromeos-sw-engprod@google.com",
 			"cros-status-area-eng@google.com",
-			"cienet-development@googlegroups.com",
-			"cj.tsai@cienet.com",
+			"awendy@google.com",
 		},
 		BugComponent: "b:1246148", // ChromeOS > Software > System UI Surfaces
 		Attr:         []string{"group:mainline", "informational"},
