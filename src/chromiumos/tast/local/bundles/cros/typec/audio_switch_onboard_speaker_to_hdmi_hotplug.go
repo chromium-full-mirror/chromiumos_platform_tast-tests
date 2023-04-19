@@ -163,7 +163,7 @@ func AudioSwitchOnboardSpeakerToHDMIHotplug(ctx context.Context, s *testing.Stat
 		s.Fatal("Failed to create Cras object: ", err)
 	}
 
-	playPauseButton := nodewith.Name("Toggle play pause").Role(role.Button)
+	playPauseButton := nodewith.Name("Toggle play pause").Role(role.ToggleButton)
 	ui := uiauto.New(tconn)
 	infoBeforePause, err := ui.Info(ctx, playPauseButton)
 	if err != nil {
