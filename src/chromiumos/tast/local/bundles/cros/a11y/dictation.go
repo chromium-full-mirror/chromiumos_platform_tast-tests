@@ -8,16 +8,11 @@ package a11y
 
 import (
 	"context"
-	"time"
 
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/local/a11y"
-	"chromiumos/tast/local/chrome/uiauto"
-	"chromiumos/tast/local/chrome/uiauto/nodewith"
-	"chromiumos/tast/local/chrome/uiauto/role"
-	"chromiumos/tast/local/input/voice"
+	"chromiumos/tast/local/a11y/dictation"
 	"chromiumos/tast/local/policyutil/fixtures"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 func init() {
@@ -33,6 +28,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		// Load audio file used for Dictation.
 		Data:         []string{"voice_en_hello.wav"},
+		HardwareDeps: hwdep.D(hwdep.Speaker()),
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromePolicyLoggedIn",
 	})
@@ -40,69 +36,29 @@ func init() {
 
 func Dictation(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(*fixtures.FixtData).Chrome()
-	tconn, err := cr.TestAPIConn(ctx)
+	const html = "<textarea class='myTextArea'></textarea>"
+	const className = "myTextArea"
+	driver, err := dictation.SetUp(ctx, cr, html, className)
 	if err != nil {
-		s.Fatal("Failed to create Test API connection: ", err)
+		s.Fatal("Failed to set up Dictation: ", err)
 	}
 
-	// Shorten deadline to leave time for cleanup.
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
-
-	// Enable Dictation.
-	if err := a11y.SetFeatureEnabled(ctx, tconn, a11y.Dictation, true); err != nil {
-		s.Fatal("Failed to enable Dictation: ", err)
-	}
-
-	// Ensure Dictation is off at the end of this test.
-	defer func(ctx context.Context) {
-		if err := a11y.ClearFeature(ctx, tconn, a11y.Dictation); err != nil {
-			s.Fatal("Failed to disable Dictation: ", err)
+	defer func() {
+		if err := driver.TearDown(); err != nil {
+			s.Fatal("Failed to tear down Dictation test: ", err)
 		}
-	}(cleanupCtx)
+	}()
 
-	ui := uiauto.New(tconn).WithTimeout(20 * time.Second)
-	if err := a11y.MaybeCloseDictationDialog(ctx, ui); err != nil {
-		s.Fatal("Failed to close the Dictation dialog: ", err)
-	}
-
-	// Open a new tab with a text area.
-	c, err := a11y.NewTabWithHTML(ctx, cr.Browser(), "<textarea class='myTextArea'></textarea>")
-	if err != nil {
-		s.Fatal("Failed to open a new tab with HTML: ", err)
-	}
-	defer c.Close()
-
-	// Focus the <textarea>.
-	textArea := nodewith.Role(role.TextField).HasClass("myTextArea").Onscreen()
-	if err := uiauto.Combine("Focus text field",
-		ui.WaitUntilExists(textArea),
-		ui.FocusAndWait(textArea),
-	)(ctx); err != nil {
-		s.Fatal("Failed to focus the text area: ", err)
-	}
-
-	if err := a11y.ToggleDictation(ctx); err != nil {
+	if err := driver.ToggleOn(); err != nil {
 		s.Fatal("Failed to toggle Dictation on: ", err)
 	}
 
-	// Play audio file.
-	if err := uiauto.Combine("Play audio file",
-		func(ctx context.Context) error {
-			return voice.AudioFromFile(ctx, s.DataPath("voice_en_hello.wav"))
-		},
-		// Give Dictation time to process the audio input.
-		uiauto.Sleep(10*time.Second),
-	)(ctx); err != nil {
-		s.Fatal("Failed to play audio file: ", err)
+	audioFile := s.DataPath("voice_en_hello.wav")
+	if err := driver.DictateAndWaitForEditableValue(audioFile, "Hello"); err != nil {
+		s.Fatal("Failed to dictate and verify editable value: ", err)
 	}
 
-	// Ensure the spoken text was entered into the text field.
-	// Note: Dictation will automatically turn off and enter the recognized text
-	// after going 10 seconds with no recognized speech.
-	textAreaWithContent := nodewith.Attribute("value", "Hello").Role(role.TextField).HasClass("myTextArea").Onscreen()
-	if err := ui.WaitUntilExists(textAreaWithContent)(ctx); err != nil {
-		s.Fatal("Failed to verify text input: ", err)
+	if err := driver.ToggleOff(); err != nil {
+		s.Fatal("Failed to toggle Dictation off: ", err)
 	}
 }

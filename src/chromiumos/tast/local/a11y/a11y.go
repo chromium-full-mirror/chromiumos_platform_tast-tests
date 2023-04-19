@@ -19,15 +19,13 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
-	"chromiumos/tast/local/chrome/uiauto"
-	"chromiumos/tast/local/chrome/uiauto/nodewith"
-	"chromiumos/tast/local/input"
 )
 
 // List of extension IDs and URLs.
 const (
-	ChromeVoxExtensionURL     = "chrome-extension://mndnfokpggljbaajbnioimlmbfngpief/chromevox/background/background.html"
-	SelectToSpeakExtensionURL = "chrome-extension://klbcgckkldhdhonijdbnhhaiedfkllef/select_to_speak/background.html"
+	AccessibilityCommonExtensionURL = "chrome-extension://egfdjlfmgnehecnclamagfafdccgfndp/accessibility_common/background.html"
+	ChromeVoxExtensionURL           = "chrome-extension://mndnfokpggljbaajbnioimlmbfngpief/chromevox/background/background.html"
+	SelectToSpeakExtensionURL       = "chrome-extension://klbcgckkldhdhonijdbnhhaiedfkllef/select_to_speak/background.html"
 )
 
 // Feature represents an accessibility feature in ChromeOS.
@@ -87,47 +85,6 @@ func NewTabWithHTML(ctx context.Context, br *browser.Browser, html string) (*bro
 	return c, nil
 }
 
-// MaybeCloseDictationDialog closes the dialog that is shown when Dictation is first
-// enabled, if it appears on the screen. The dialog warns the user that their voice
-// is sent to Google. This function accepts the dialog so we can use the feature.
-func MaybeCloseDictationDialog(ctx context.Context, ui *uiauto.Context) error {
-	dialogText := nodewith.NameContaining("Dictation sends your voice to Google").Onscreen()
-	continueButton := nodewith.Name("Continue").ClassName("MdTextButton").Onscreen()
-
-	// Check if the dialog pops up.
-	if err := uiauto.Combine("Find Dictation dialog",
-		ui.WaitUntilExists(dialogText),
-	)(ctx); err != nil {
-		// If the Dictation dialog can't be found, then we don't need to do anything.
-		return nil
-	}
-
-	if err := uiauto.Combine("Close Dictation dialog",
-		ui.LeftClick(continueButton),
-		ui.WaitUntilGone(dialogText),
-	)(ctx); err != nil {
-		return errors.Wrap(err, "failed to close the Dictation dialog")
-	}
-
-	return nil
-}
-
-// ToggleDictation presses Search + D on the keyboard to either turn Dictation
-// on or off, depending on the current state.
-func ToggleDictation(ctx context.Context) error {
-	ew, err := input.Keyboard(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to create EventWriter")
-	}
-	defer ew.Close(ctx)
-
-	if err := ew.Accel(ctx, "Search+D"); err != nil {
-		return errors.Wrap(err, "failed to press Search + D to toggle Dictation")
-	}
-
-	return nil
-}
-
 // VerifySodaInstalled checks if dlc libsoda and libsoda-model-en-us are installed.
 func VerifySodaInstalled(ctx context.Context) error {
 	const templateMnt = "/run/imageloader/%s/package/root"
@@ -162,30 +119,30 @@ type TTSFeatureData struct {
 	CTX   context.Context
 	TConn *chrome.TestConn
 	SM    *tts.SpeechMonitor
-	TDown *TTSFeatureTearDown
+	TDown *TearDownHelper
 }
 
-func newNilTTSFeatureData(tftd *TTSFeatureTearDown) TTSFeatureData {
-	return TTSFeatureData{TDown: tftd}
+func newNoOpTTSFeatureData(tdh *TearDownHelper) TTSFeatureData {
+	return TTSFeatureData{TDown: tdh}
 }
 
-// TTSFeatureTearDown represents cleanup functions that should be run in a
+// TearDownHelper represents cleanup functions that should be run in a
 // defer statement by the calling test.
-type TTSFeatureTearDown struct {
+type TearDownHelper struct {
 	funcs []func() error
 }
 
 // TearDown iterates backwards through cleanUpFuncs, since cleanUpFuncs represents
 // deferred methods. It also removes functions once executed to ensure they
 // don't get run more than once.
-func (tftd *TTSFeatureTearDown) TearDown() error {
+func (tdh *TearDownHelper) TearDown() error {
 	var errs []error
-	for index := len(tftd.funcs) - 1; index >= 0; index-- {
-		step := tftd.funcs[index]
+	for index := len(tdh.funcs) - 1; index >= 0; index-- {
+		step := tdh.funcs[index]
 		if err := step(); err != nil {
 			errs = append(errs, err)
 		}
-		tftd.funcs = tftd.funcs[:index]
+		tdh.funcs = tdh.funcs[:index]
 	}
 
 	if len(errs) > 0 {
@@ -196,8 +153,8 @@ func (tftd *TTSFeatureTearDown) TearDown() error {
 }
 
 // Append pushes a function to be run at tear down.
-func (tftd *TTSFeatureTearDown) Append(f func() error) {
-	tftd.funcs = append(tftd.funcs, f)
+func (tdh *TearDownHelper) Append(f func() error) {
+	tdh.funcs = append(tdh.funcs, f)
 }
 
 // SetUpTTSFeature runs common setup code needed for features that require
@@ -223,7 +180,7 @@ func SetUpTTSFeature(tfi TTSFeatureInputs) (tfd TTSFeatureData, e error) {
 	html := tfi.HTML
 	feature := tfi.Feature
 
-	tdown := &TTSFeatureTearDown{}
+	tdown := &TearDownHelper{}
 
 	// Shorten deadline to leave time for cleanup.
 	cleanupCtx := ctx
@@ -235,12 +192,12 @@ func SetUpTTSFeature(tfi TTSFeatureInputs) (tfd TTSFeatureData, e error) {
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
-		return newNilTTSFeatureData(tdown), errors.Wrap(err, "failed to create Test API connection")
+		return newNoOpTTSFeatureData(tdown), errors.Wrap(err, "failed to create Test API connection")
 	}
 
 	// Mute the device to avoid noisiness.
 	if err := crastestclient.Mute(ctx); err != nil {
-		return newNilTTSFeatureData(tdown), errors.Wrap(err, "failed to mute device")
+		return newNoOpTTSFeatureData(tdown), errors.Wrap(err, "failed to mute device")
 	}
 	tdown.Append(func() error {
 		return crastestclient.Unmute(cleanupCtx)
@@ -249,7 +206,7 @@ func SetUpTTSFeature(tfi TTSFeatureInputs) (tfd TTSFeatureData, e error) {
 	// Setup a browser.
 	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, bt)
 	if err != nil {
-		return newNilTTSFeatureData(tdown), errors.Wrap(err, "failed to setup browser")
+		return newNoOpTTSFeatureData(tdown), errors.Wrap(err, "failed to setup browser")
 	}
 	tdown.Append(func() error {
 		return closeBrowser(cleanupCtx)
@@ -257,7 +214,7 @@ func SetUpTTSFeature(tfi TTSFeatureInputs) (tfd TTSFeatureData, e error) {
 
 	brConn, err := NewTabWithHTML(ctx, br, html)
 	if err != nil {
-		return newNilTTSFeatureData(tdown), errors.Wrap(err, "failed to open a new tab with HTML")
+		return newNoOpTTSFeatureData(tdown), errors.Wrap(err, "failed to open a new tab with HTML")
 	}
 	tdown.Append(func() error {
 		return brConn.Close()
@@ -265,11 +222,11 @@ func SetUpTTSFeature(tfi TTSFeatureInputs) (tfd TTSFeatureData, e error) {
 
 	// Close the extra new tab page.
 	if err := br.CloseWithURL(ctx, chrome.NewTabURL); err != nil {
-		return newNilTTSFeatureData(tdown), errors.Wrap(err, "failed to close new tab page")
+		return newNoOpTTSFeatureData(tdown), errors.Wrap(err, "failed to close new tab page")
 	}
 
 	if err := SetFeatureEnabled(ctx, tconn, feature, true); err != nil {
-		return newNilTTSFeatureData(tdown), errors.Wrapf(err, "failed to enable feature: %s", feature)
+		return newNoOpTTSFeatureData(tdown), errors.Wrapf(err, "failed to enable feature: %s", feature)
 	}
 	tdown.Append(func() error {
 		if err := ClearFeature(cleanupCtx, tconn, feature); err != nil {
@@ -281,14 +238,14 @@ func SetUpTTSFeature(tfi TTSFeatureInputs) (tfd TTSFeatureData, e error) {
 
 	sm, err := tts.RelevantSpeechMonitor(ctx, cr, tconn, ed)
 	if err != nil {
-		return newNilTTSFeatureData(tdown), errors.Wrap(err, "failed to connect to the TTS background page")
+		return newNoOpTTSFeatureData(tdown), errors.Wrap(err, "failed to connect to the TTS background page")
 	}
 	tdown.Append(func() error {
 		return sm.Close()
 	})
 
 	if err := tts.SetRate(ctx, tconn, 1.0); err != nil {
-		return newNilTTSFeatureData(tdown), errors.Wrap(err, "failed to change TTS rate")
+		return newNoOpTTSFeatureData(tdown), errors.Wrap(err, "failed to change TTS rate")
 	}
 
 	return TTSFeatureData{ctx, tconn, sm, tdown}, nil
