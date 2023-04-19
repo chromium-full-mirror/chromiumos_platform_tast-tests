@@ -80,7 +80,7 @@ func PointerCapture(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to create mouse device: ", err)
 		}
-		defer test.mew.Close()
+		defer test.mew.Close(ctx)
 
 		s.Log("Enabling pointer capture")
 		if err := enablePointerCapture(ctx, tconn); err != nil {

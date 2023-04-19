@@ -120,7 +120,7 @@ func HidScreen(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to create a virtual mouse: ", err)
 		}
-		defer mouse.Close()
+		defer mouse.Close(ctx)
 
 		// Check that a mouse is detected.
 		var mousedDetectedText string

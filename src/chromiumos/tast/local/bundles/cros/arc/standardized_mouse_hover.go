@@ -61,7 +61,7 @@ func runStandardizedMouseHoverTest(ctx context.Context, testParameters standardi
 	if err != nil {
 		return errors.Wrap(err, "failed to setup the mouse")
 	}
-	defer mouse.Close()
+	defer mouse.Close(ctx)
 
 	// Setup selectors.
 	txtHoverEnterID := testParameters.AppPkgName + ":id/txtHoverEnterState"

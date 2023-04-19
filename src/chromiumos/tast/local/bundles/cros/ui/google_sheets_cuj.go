@@ -169,7 +169,7 @@ func GoogleSheetsCUJ(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create a mouse: ", err)
 	}
-	defer mw.Close()
+	defer mw.Close(ctx)
 
 	info, err := display.GetPrimaryInfo(ctx, tconn)
 	if err != nil {

@@ -118,7 +118,7 @@ func runMouseScroll(ctx context.Context, testParameters standardizedtestutil.Tes
 	if err != nil {
 		return errors.Wrap(err, "unable to setup the mouse")
 	}
-	defer mouse.Close()
+	defer mouse.Close(ctx)
 
 	if err := txtScrollableContentSelector.WaitForExists(ctx, standardizedtestutil.ShortUITimeout); err != nil {
 		return errors.Wrap(err, "failed to find the scrollable content")

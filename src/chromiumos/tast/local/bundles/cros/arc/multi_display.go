@@ -624,7 +624,7 @@ func dragWindowBetweenDisplays(ctx context.Context, s *testing.State, cr *chrome
 	if err != nil {
 		return err
 	}
-	defer m.Close()
+	defer m.Close(ctx)
 
 	version, err := arc.SDKVersion()
 	if err != nil {

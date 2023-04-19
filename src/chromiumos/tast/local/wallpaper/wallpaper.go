@@ -54,7 +54,7 @@ func SelectCollectionWithScrolling(ctx context.Context, ui *uiauto.Context, coll
 	if err != nil {
 		return errors.Wrap(err, "failed to setup the mouse")
 	}
-	defer mew.Close()
+	defer mew.Close(ctx)
 
 	loadedCollections := nodewith.NameRegex(regexp.MustCompile(`.*\d+\s[iI]mages`)).First()
 	desiredCollection := loadedCollections.NameStartingWith(collection)

@@ -84,7 +84,7 @@ func Run(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get the mouse: ", err)
 	}
-	defer mw.Close()
+	defer mw.Close(ctx)
 
 	tpw, err := input.Trackpad(ctx)
 	if err != nil {

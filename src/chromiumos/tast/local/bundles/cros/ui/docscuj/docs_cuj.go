@@ -100,7 +100,7 @@ func Run(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create a mouse: ", err)
 	}
-	defer mw.Close()
+	defer mw.Close(ctx)
 
 	kw, err := input.Keyboard(ctx)
 	if err != nil {

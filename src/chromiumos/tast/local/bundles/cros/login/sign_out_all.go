@@ -197,7 +197,7 @@ func signOutAllAndWait(ctx context.Context, tconn *chrome.TestConn) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to create mouse")
 	}
-	defer mouse.Close()
+	defer mouse.Close(ctx)
 
 	if err := mouse.Click(); err != nil {
 		return errors.Wrap(err, "failed to click sign out button")

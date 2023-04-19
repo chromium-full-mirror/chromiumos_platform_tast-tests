@@ -265,7 +265,7 @@ func testBody(ctx context.Context, test *tabSwitchVariables) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to create a mouse")
 	}
-	defer mw.Close()
+	defer mw.Close(ctx)
 
 	ac := uiauto.New(test.tconn)
 

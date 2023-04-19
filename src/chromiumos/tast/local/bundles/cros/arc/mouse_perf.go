@@ -62,7 +62,7 @@ func MousePerf(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Unable to create virtual mouse: ", err)
 	}
-	defer m.Close()
+	defer m.Close(ctx)
 
 	if err := inputlatency.InstallArcHostClockClient(ctx, a, s); err != nil {
 		s.Fatal("Could not install arc-host-clock-client: ", err)

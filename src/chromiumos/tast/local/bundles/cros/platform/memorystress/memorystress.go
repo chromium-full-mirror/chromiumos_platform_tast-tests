@@ -188,7 +188,7 @@ func switchTabs(ctx context.Context, br *browser.Browser, switchCount int, local
 	if err != nil {
 		return 0, errors.Wrap(err, "cannot initialize mouse")
 	}
-	defer mouse.Close()
+	defer mouse.Close(ctx)
 
 	keyboard, err := input.Keyboard(ctx)
 	if err != nil {

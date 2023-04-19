@@ -60,7 +60,7 @@ func MousePerf(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get the mouse: ", err)
 	}
-	defer mouse.Close()
+	defer mouse.Close(ctx)
 	// TODO(hollingum): put some absolute positioning in the API.
 	mouse.Move(-1000, -1000)
 

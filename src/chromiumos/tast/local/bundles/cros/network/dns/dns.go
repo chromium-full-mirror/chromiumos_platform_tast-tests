@@ -228,7 +228,7 @@ func setDoHMode(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, 
 		if err != nil {
 			return errors.Wrap(err, "failed to get mouse")
 		}
-		defer m.Close()
+		defer m.Close(ctx)
 
 		// On some devices, the text field for the provider might be hidden by the bottom bar.
 		// Scroll down then focus on the text field.

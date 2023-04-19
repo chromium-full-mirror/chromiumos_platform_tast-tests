@@ -165,7 +165,7 @@ func AutoHideSmoke(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get the mouse: ", err)
 	}
-	defer mouse.Close()
+	defer mouse.Close(ctx)
 
 	// Begin test in clamshell mode.
 

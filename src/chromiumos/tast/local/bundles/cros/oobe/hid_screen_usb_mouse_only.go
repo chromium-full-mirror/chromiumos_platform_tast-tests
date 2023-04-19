@@ -68,7 +68,7 @@ func HidScreenUsbMouseOnly(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to create a virtual mouse: ", err)
 		}
 
-		defer mouse.Close()
+		defer mouse.Close(ctx)
 
 		// Check that a mouse is detected.
 		if err := oobeHelper.IsHidDetectionSearchingForMouse(ctx, oobeConn, tconn); err == nil {
@@ -95,7 +95,7 @@ func HidScreenUsbMouseOnly(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create a virtual mouse: ", err)
 	}
 
-	defer mouse.Close()
+	defer mouse.Close(ctx)
 
 	// Check that a mouse is detected.
 	if err := oobeHelper.IsHidDetectionSearchingForMouse(ctx, oobeConn, tconn); err == nil {

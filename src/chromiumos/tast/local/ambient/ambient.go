@@ -350,7 +350,7 @@ func mouseMove(ctx context.Context, ui *uiauto.Context) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to get mouse")
 	}
-	defer mouse.Close()
+	defer mouse.Close(ctx)
 
 	if err := mouse.Move(10, 10); err != nil {
 		return errors.Wrap(err, "failed to move mouse")

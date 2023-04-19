@@ -50,7 +50,7 @@ func Mouse(ctx context.Context) (*MouseEventWriter, error) {
 	testing.ContextLog(ctx, "Using virtual mouse device ", mw.dev)
 
 	if mw.rw, err = Device(ctx, mw.dev); err != nil {
-		mw.Close()
+		mw.Close(ctx)
 		return nil, err
 	}
 
@@ -58,14 +58,19 @@ func Mouse(ctx context.Context) (*MouseEventWriter, error) {
 }
 
 // Close closes the mouse device.
-func (mw *MouseEventWriter) Close() error {
+func (mw *MouseEventWriter) Close(ctx context.Context) error {
 	var firstErr error
 	if mw.rw != nil {
-		firstErr = mw.rw.Close()
+		if firstErr = mw.rw.Close(); firstErr != nil {
+			testing.ContextLog(ctx, "Failed to close raw event writer: ", firstErr)
+		}
 	}
 	if mw.virt != nil {
-		if err := mw.virt.Close(); firstErr == nil {
-			firstErr = err
+		if err := mw.virt.Close(); err != nil {
+			testing.ContextLog(ctx, "Failed to close virtual file: ", err)
+			if firstErr == nil {
+				firstErr = err
+			}
 		}
 	}
 	return firstErr

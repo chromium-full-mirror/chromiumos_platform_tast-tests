@@ -858,7 +858,7 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to create a mouse: ", err)
 		}
-		defer mw.Close()
+		defer mw.Close(ctx)
 	}
 	defer pc.Close()
 

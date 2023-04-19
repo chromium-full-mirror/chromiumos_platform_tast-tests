@@ -63,7 +63,7 @@ func runStandardizedMouseLeftClickTest(ctx context.Context, testParameters stand
 	if err != nil {
 		return errors.Wrap(err, "unable to setup the mouse")
 	}
-	defer mouse.Close()
+	defer mouse.Close(ctx)
 
 	if err := btnLeftClickSelector.WaitForExists(ctx, standardizedtestutil.ShortUITimeout); err != nil {
 		return errors.Wrap(err, "unable to find the button to click")

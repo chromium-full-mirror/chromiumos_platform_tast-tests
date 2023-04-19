@@ -132,7 +132,7 @@ func ExampleCUJ(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get the mouse: ", err)
 	}
-	defer mw.Close()
+	defer mw.Close(ctx)
 
 	// Create a virtual keyboard. This keyboard lets our test send key
 	// presses during the test.
