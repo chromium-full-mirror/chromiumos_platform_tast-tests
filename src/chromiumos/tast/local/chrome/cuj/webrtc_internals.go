@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -31,8 +32,12 @@ func OpenWebRTCInternals(ctx context.Context, tconn *chrome.TestConn, br *browse
 		return nil, errors.Wrapf(err, "failed to open %s", WebRTCInternalsURL)
 	}
 
+	// Expand the Create Dump section of chrome://webrtc-internals. We will not need it
+	// until after the meeting, but we can expand the section much faster now while
+	// chrome://webrtc-internals does not have much data to show.
 	ui := uiauto.New(tconn)
-	createDumpSection := nodewith.Name("Create Dump").Role(role.DisclosureTriangle)
+	createDumpSectionReg := regexp.MustCompile("(Create Dump)|(Create a WebRTC-Internals dump)")
+	createDumpSection := nodewith.NameRegex(createDumpSectionReg).Role(role.DisclosureTriangle)
 	if err := uiauto.NamedCombine("expand \"Create Dump\" section",
 		ui.WaitUntilExists(createDumpSection.Collapsed()),
 		ui.DoDefaultUntil(createDumpSection, ui.WithTimeout(5*time.Second).WaitUntilExists(createDumpSection.Expanded())),
@@ -49,8 +54,7 @@ func DumpWebRTCInternals(ctx context.Context, tconn *chrome.TestConn, ui *uiauto
 	if err != nil {
 		return "", errors.Wrap(err, "failed to get Downloads path")
 	}
-
-	downloadButton := nodewith.Name("Download the PeerConnection updates and stats data").Role(role.Button)
+	downloadButton := nodewith.NameContaining("Download").Role(role.Button)
 	// Invoke the button for the dump download.
 	if err := ui.DoDefault(downloadButton)(ctx); err != nil {
 		return "", err
