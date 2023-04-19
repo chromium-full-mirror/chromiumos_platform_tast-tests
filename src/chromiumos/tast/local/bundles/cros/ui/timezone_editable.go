@@ -33,8 +33,7 @@ func init() {
 		Desc:         "Test that settings about time zone can only be changed by users and not guest",
 		Contacts: []string{
 			"chromeos-sw-engprod@google.com",
-			"cienet-development@googlegroups.com",
-			"bossan.fang@cienet.com",
+			"awendy@google.com",
 		},
 		// OS > Systems > Settings
 		BugComponent: "b:1246072",
