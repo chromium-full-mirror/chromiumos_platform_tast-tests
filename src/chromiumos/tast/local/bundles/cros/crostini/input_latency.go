@@ -16,8 +16,9 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"syscall"
 	"time"
+
+	"golang.org/x/sys/unix"
 
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/common/testexec"
@@ -371,11 +372,11 @@ func startEvtest(ctx context.Context, dev string, eventChan chan<- timeOrErr) (c
 			testing.ContextLog(ctx, "Error killing evtest: ", err)
 		}
 		if err := evtestCmd.Wait(); err != nil {
-			status := evtestCmd.ProcessState.Sys().(syscall.WaitStatus)
+			status := evtestCmd.ProcessState.Sys().(unix.WaitStatus)
 			signaled := status.Signaled()
 			signal := status.Signal()
 			// Expect it to be killed.
-			if !signaled || signal != syscall.SIGKILL {
+			if !signaled || signal != unix.SIGKILL {
 				return errors.Wrap(err, "evtest not finished by expected SIGKILL")
 			}
 		}
