@@ -593,8 +593,8 @@ func (gm *GoogleMeet) closeShareScreenAlertDialog() action.Action {
 func (gm *GoogleMeet) TypingInChat(kb *input.KeyboardEventWriter, message string) action.Action {
 	const retryTimes = 3
 	ui := gm.ui
-	chatText := nodewith.NameContaining("Send a message to everyone")
-	// There may be multiple "Send a message to everyone" fields, so add First() here.
+	chatText := nodewith.NameContaining("Send a message")
+	// There may be multiple "Send a message" fields, so add First() here.
 	chatTextField := chatText.Role(role.TextField).First()
 	openChatPanel := uiauto.NamedCombine("open chat panel",
 		ui.LeftClick(youText),
@@ -603,7 +603,7 @@ func (gm *GoogleMeet) TypingInChat(kb *input.KeyboardEventWriter, message string
 		ui.WithTimeout(2*time.Minute).WaitUntilExists(chatTextField.Focusable()),
 	)
 
-	// There may be multiple "Send a message to everyone" buttons, so add First() here.
+	// There may be multiple "Send a message" buttons, so add First() here.
 	chatTextButton := chatText.Role(role.Button).First()
 	// There may be multiple message texts, so add First() here.
 	messageText := nodewith.NameContaining(message).Role(role.StaticText).First()
