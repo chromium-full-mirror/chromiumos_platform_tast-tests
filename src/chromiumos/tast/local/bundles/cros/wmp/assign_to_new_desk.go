@@ -218,6 +218,7 @@ func clickToMoveWindow(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.C
 	if err := uiauto.Combine(
 		"move mouse to and click Desk 2",
 		ac.MouseMoveTo(moveWindowToDeskMenuItem, 0),
+		ac.DoDefault(moveWindowToDeskMenuItem),
 		ac.WaitUntilExists(moveToDesk2),
 		ac.DoDefault(moveToDesk2),
 	)(ctx); err != nil {
