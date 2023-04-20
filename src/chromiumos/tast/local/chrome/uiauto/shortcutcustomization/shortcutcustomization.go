@@ -28,7 +28,7 @@ func Launch(ctx context.Context, tconn *chrome.TestConn) (*nodewith.Finder, erro
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to find keyboard")
 	}
-	defer kb.Close()
+	defer kb.Close(ctx)
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		// Launch Shortcut customization app with ctrl+alt+/.
