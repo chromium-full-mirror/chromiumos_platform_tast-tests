@@ -28,28 +28,23 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Dock1PersistentGRPC,
+		Func:         WindowsPersistenceWithSingleDisplay,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Windows persistent settings for single display through a Dock",
+		Desc:         "Test windows persistent settings with the single external display",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
 		Attr:         []string{"group:wwcb"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"DockingID", "ExtDispID1", "wwcbIPPowerIp"},
-		ServiceDeps: []string{
-			"tast.cros.wwcb.DisplayService",
-			"tast.cros.apps.AppsService",
-			"tast.cros.browser.ChromeService",
-		},
+		ServiceDeps:  []string{"tast.cros.wwcb.DisplayService", "tast.cros.apps.AppsService", "tast.cros.browser.ChromeService"},
 	})
 }
 
-func Dock1PersistentGRPC(ctx context.Context, s *testing.State) {
+func WindowsPersistenceWithSingleDisplay(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	dockingID := s.RequiredVar("DockingID")
 	extDispID := s.RequiredVar("ExtDispID1")
 
 	// Connect to the gRPC server on the DUT.
@@ -70,21 +65,31 @@ func Dock1PersistentGRPC(ctx context.Context, s *testing.State) {
 	displaySvc := wwcb.NewDisplayServiceClient(cl.Conn)
 	appsSvc := pb.NewAppsServiceClient(cl.Conn)
 
-	// Open IP power to supply docking power.
-	if err := utils.OpenIppower(ctx, []int{1}); err != nil {
-		s.Fatal("Failed to open IP power: ", err)
-	}
-	defer utils.CloseIppower(cleanupCtx, []int{1})
-
 	// Initialize fixtures to find the connected devices.
 	if err := utils.InitFixture(ctx); err != nil {
 		s.Fatal("Failed to initialize fixtures: ", err)
 	}
 	defer utils.CloseAllFixture(cleanupCtx)
 
-	// Connect external display via docking station.
-	if err := connectExternalDisplayViaDock(ctx, displaySvc, extDispID, dockingID); err != nil {
-		s.Fatal("Failed to connect external display via Dock: ", err)
+	if err := utils.ControlFixture(ctx, extDispID, "on"); err != nil {
+		s.Fatal("Failed to connect external display: ", err)
+	}
+
+	if dockingID, ok := s.Var("DockingID"); ok {
+		// Open IP power to supply docking power.
+		ipPowerPorts := []int{1}
+		if err := utils.OpenIppower(ctx, ipPowerPorts); err != nil {
+			s.Fatal("Failed to open IP power: ", err)
+		}
+		defer utils.CloseIppower(cleanupCtx, ipPowerPorts)
+
+		if err := utils.ControlFixture(ctx, dockingID, "on"); err != nil {
+			s.Fatal("Failed to connect docking station: ", err)
+		}
+	}
+
+	if _, err := displaySvc.VerifyDisplayCount(ctx, &wwcb.QueryRequest{DisplayCount: 2}); err != nil {
+		s.Fatal("Failed to verify display count: ", err)
 	}
 
 	// Open two apps on external display.
@@ -111,23 +116,6 @@ func Dock1PersistentGRPC(ctx context.Context, s *testing.State) {
 	if err := testMirrorMode(ctx, displaySvc); err != nil {
 		s.Fatal("Failed to test mirror mode: ", err)
 	}
-}
-
-func connectExternalDisplayViaDock(ctx context.Context, displaySvc wwcb.DisplayServiceClient, extDispID, dockingID string) error {
-	testing.ContextLog(ctx, "Connect external display via docking station")
-
-	if err := utils.ControlFixture(ctx, extDispID, "on"); err != nil {
-		return errors.Wrap(err, "failed to connect external display")
-	}
-
-	if err := utils.ControlFixture(ctx, dockingID, "on"); err != nil {
-		return errors.Wrap(err, "failed to connect docking station")
-	}
-
-	if _, err := displaySvc.VerifyDisplayCount(ctx, &wwcb.QueryRequest{DisplayCount: 2}); err != nil {
-		return errors.Wrap(err, "failed to verify display count")
-	}
-	return nil
 }
 
 func openAppsOnExternalDisplay(ctx context.Context, appsSvc pb.AppsServiceClient, displaySvc wwcb.DisplayServiceClient) error {
