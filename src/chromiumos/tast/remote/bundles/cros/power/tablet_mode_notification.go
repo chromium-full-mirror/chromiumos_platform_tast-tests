@@ -33,7 +33,8 @@ func init() {
 		// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
 		Attr:         []string{"group:mainline", "informational", "group:firmware", "firmware_unstable"},
 		Timeout:      5 * time.Minute,
-		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
+		// Restrict boards that don't support any method in the tabletmode package for forcing tabletmode.
+		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.SkipOnModel("nautilus", "nautiluslte", "soraka", "pantheon", "nocturne")),
 		Params: []testing.Param{{
 			Name:              "convertible",
 			Val:               tabletModeConfig{control: &tabletmode.ConvertibleModeControl{}},
