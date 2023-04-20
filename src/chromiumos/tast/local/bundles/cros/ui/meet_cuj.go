@@ -1523,6 +1523,8 @@ func dumpWebRTCInternals(ctx context.Context, tconn *chrome.TestConn, ui *uiauto
 		return "", err
 	}
 
+	downloadStartTime := time.Now()
+
 	notificationPredicate := ash.WaitTitle("Download complete")
 	notificationIDs := make(map[string]struct{})
 	notification, err := ash.WaitForNotification(ctx, tconn, 10*time.Minute, func(notification *ash.Notification) bool {
@@ -1542,6 +1544,7 @@ func dumpWebRTCInternals(ctx context.Context, tconn *chrome.TestConn, ui *uiauto
 	if err != nil {
 		return "", errors.Wrap(err, "failed to wait for download notification")
 	}
+	testing.ContextLog(ctx, "Downloaded WebRTC dump file in ", time.Since(downloadStartTime))
 
 	return filepath.Join(downloadsPath, notification.Message), nil
 }
