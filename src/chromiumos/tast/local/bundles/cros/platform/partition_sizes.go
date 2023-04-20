@@ -108,7 +108,7 @@ func PartitionSizes(ctx context.Context, s *testing.State) {
 	var validSizes []int64
 	for i := 0; i < len(testParam.expectedRootfsSizes); i++ {
 		mib = testParam.expectedRootfsSizes[i]
-		validSizes = append(validSizes, int64(mib*1024*1024))
+		validSizes = append(validSizes, int64(mib)*1024*1024)
 	}
 	// Rialto devices may use 1 GB partitions.
 	if isRialto, err := rialto.IsRialto(); err != nil {
