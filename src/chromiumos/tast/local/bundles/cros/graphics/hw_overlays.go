@@ -17,6 +17,8 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
+	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/graphics"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
@@ -43,15 +45,16 @@ var (
 )
 
 type pageTestParams struct {
-	file  string
-	media string
-	title string
+	browserType browser.Type
+	file        string
+	media       string
+	title       string
 }
 
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         HwOverlays,
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "This test runs HTML files and monitors the behavior of hardware overlays",
 		Contacts: []string{
 			"chromeos-gfx@chromium.org",
@@ -63,30 +66,68 @@ func init() {
 		SoftwareDeps: []string{"drm_atomic", "chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Timeout:      2 * time.Minute,
-		Fixture:      "chromeGraphicsHwOverlays",
 		Params: []testing.Param{{
 			Name:      "canvas_2d",
+			Fixture:   "chromeGraphicsHwOverlays",
 			ExtraData: []string{canvas2DFile},
 			Val: pageTestParams{
-				file:  canvas2DFile,
-				title: "Canvas 2D Low Latency",
+				browserType: browser.TypeAsh,
+				file:        canvas2DFile,
+				title:       "Canvas 2D Low Latency",
 			},
 		}, {
 			Name:      "canvas_3d",
+			Fixture:   "chromeGraphicsHwOverlays",
 			ExtraData: []string{canvas3DFile},
 			Val: pageTestParams{
-				file:  canvas3DFile,
-				title: "Canvas 3D",
+				browserType: browser.TypeAsh,
+				file:        canvas3DFile,
+				title:       "Canvas 3D",
 			},
 		}, {
 			Name:      "video",
+			Fixture:   "chromeGraphicsHwOverlays",
 			ExtraData: []string{videoFile, videoMedia},
 			// Video test requires NV12 overlay support.
 			ExtraHardwareDeps: hwdep.D(hwdep.SupportsNV12Overlays()),
 			Val: pageTestParams{
-				file:  videoFile,
-				media: videoMedia,
-				title: "Video playback",
+				browserType: browser.TypeAsh,
+				file:        videoFile,
+				media:       videoMedia,
+				title:       "Video playback",
+			},
+		}, {
+			Name:              "canvas_2d_lacros",
+			Fixture:           "chromeGraphicsHwOverlaysLacros",
+			ExtraSoftwareDeps: []string{"lacros"},
+			ExtraData:         []string{canvas2DFile},
+			Val: pageTestParams{
+				browserType: browser.TypeLacros,
+				file:        canvas2DFile,
+				title:       "Canvas 2D Low Latency",
+			},
+		}, {
+			Name:              "canvas_3d_lacros",
+			Fixture:           "chromeGraphicsHwOverlaysLacros",
+			ExtraSoftwareDeps: []string{"lacros"},
+			ExtraData:         []string{canvas3DFile},
+			Val: pageTestParams{
+				browserType: browser.TypeLacros,
+				file:        canvas3DFile,
+				title:       "Canvas 3D",
+			},
+		}, {
+			Name:              "video_lacros",
+			Fixture:           "chromeGraphicsHwOverlaysLacros",
+			ExtraSoftwareDeps: []string{"lacros"},
+			ExtraData:         []string{videoFile, videoMedia},
+			// Video test requires NV12 overlay support.
+			ExtraHardwareDeps: hwdep.D(hwdep.SupportsNV12Overlays()),
+			Val: pageTestParams{
+				browserType: browser.TypeLacros,
+				file:        videoFile,
+				media:       videoMedia,
+				title:       "Video playback",
 			},
 		}},
 	})
@@ -155,17 +196,19 @@ func HwOverlays(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to get number of modetest planes: %s", err)
 	}
 	if ans := checkIfNumPlanesGreaterThan(ctx, out, minNumOfPlanes); ans == false {
-		s.Fatalf("Need atleast %v planes to run the test on this device", minNumOfPlanes)
+		s.Fatalf("Need at least %v planes to run the test on this device", minNumOfPlanes)
 	}
 	params := s.Param().(pageTestParams)
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()
 	cr := s.FixtValue().(*chrome.Chrome)
 	url := path.Join(server.URL, params.file)
-	conn, err := cr.NewConn(ctx, url)
+	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(
+		ctx, s.FixtValue().(chrome.HasChrome).Chrome(), s.Param().(pageTestParams).browserType, url)
 	if err != nil {
 		s.Fatalf("Failed to open %v: %v", url, err)
 	}
+	defer closeBrowser(ctx)
 	defer conn.Close()
 	ctconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -185,6 +228,7 @@ func HwOverlays(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get the page ready: ", err)
 	}
 	defer ash.CloseAllWindows(ctx, ctconn)
+	// GoBigSleepLint: Sleep is required to allow the webpage time to accumulate draw calls.
 	testing.Sleep(ctx, webpageRunTime)
 	var drawCounts int
 	if err = conn.Eval(ctx, "parseInt(get_draw_passes_count())", &drawCounts); err != nil {

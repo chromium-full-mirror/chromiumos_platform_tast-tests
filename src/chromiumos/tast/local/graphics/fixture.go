@@ -117,7 +117,21 @@ func init() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 
-	// TOOD(b/233238923): Remove when passthrough is enabled by default.
+	testing.AddFixture(&testing.Fixture{
+		Name:     "chromeGraphicsHwOverlaysLacros",
+		Desc:     "Logged into a user session for graphics testing for HwOverlays (lacros)",
+		Contacts: []string{"chromeos-gfx@chromium.org"},
+		Parent:   "gpuWatchDog",
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			opt, err := lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(chrome.ExtraArgs("--ash-no-nudges"))).Opts()
+			return append(opt, disableFirmwareUpdater), err
+		}),
+		SetUpTimeout:    chrome.LoginTimeout + 7*time.Minute,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	// TODO(b/233238923): Remove when passthrough is enabled by default.
 	testing.AddFixture(&testing.Fixture{
 		Name:     "chromeGraphicsPassthrough",
 		Desc:     "Logged into a user session for graphics testing with the passthrough command decoder feature enabled",
@@ -164,7 +178,7 @@ func init() {
 
 	testing.AddFixture(&testing.Fixture{
 		Name:            "chromeGraphicsIdleArc",
-		Desc:            "Logged into a user session for graphics Idle testiang. This fixture starts an arc enabled chrome dedicated for graphics.Idle.*arc tests",
+		Desc:            "Logged into a user session for graphics Idle testing. This fixture starts an arc enabled chrome dedicated for graphics.Idle.*arc tests",
 		Contacts:        []string{"ddmail@google.com", "chromeos-gfx@google.com"},
 		Parent:          "gpuWatchDog",
 		Impl:            &graphicsIdleFixture{fOpt: []chrome.Option{chrome.ARCEnabled(), disableFirmwareUpdater}},
