@@ -422,7 +422,7 @@ func SavePowerLogHTML(ctx context.Context, outDir string, powerLogDict map[strin
 			}
 
 			// Scalar value.
-			if metricType == "perf" {
+			if sampleIndex == 1 && metricType == "perf" {
 				break
 			}
 
