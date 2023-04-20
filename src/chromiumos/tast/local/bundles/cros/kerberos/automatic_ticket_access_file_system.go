@@ -157,7 +157,7 @@ func AutomaticTicketAccessFileSystem(ctx context.Context, s *testing.State) {
 
 	s.Log("Mounting SMB share")
 	fileShareURLTextBox := nodewith.Name("File share URL").Role(role.TextField)
-	if err := uiauto.Combine("Add SMB file share",
+	if err := uiauto.Combine("add SMB file share",
 		files.ClickMoreMenuItem("Services", "SMB file share"),
 		ui.WaitForLocation(fileShareURLTextBox),
 		keyboard.TypeAction(config.RemoteFileSystemURI),
@@ -167,7 +167,7 @@ func AutomaticTicketAccessFileSystem(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to add SMB share: ", err)
 	}
 
-	if err := uiauto.Combine("Wait for SMB to mount and open file",
+	if err := uiauto.Combine("wait for SMB to mount and open file",
 		files.OpenPath("Files - "+config.Folder, config.Folder),
 		files.WaitForFile(config.File),
 		files.SelectFile(config.File),

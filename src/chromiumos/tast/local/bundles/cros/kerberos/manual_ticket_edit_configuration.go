@@ -118,7 +118,7 @@ func ManualTicketEditConfiguration(ctx context.Context, s *testing.State) {
 	}
 
 	// Enter Kerberos credentials + open the config.
-	if err := uiauto.Combine("opening Kerberos configuration",
+	if err := uiauto.Combine("open Kerberos configuration",
 		ui.LeftClick(nodewith.Name("Kerberos tickets").Role(role.Link)),
 		ui.LeftClick(nodewith.Name("Add a ticket").Role(role.Button)),
 		ui.LeftClick(nodewith.Name("Kerberos username").Role(role.TextField)),
@@ -159,7 +159,7 @@ func ManualTicketEditConfiguration(ctx context.Context, s *testing.State) {
 	}
 
 	// Create a ticket with custom lifetime and check if it was actually added.
-	if err := uiauto.Combine("changing lifetime of Kerberos ticket",
+	if err := uiauto.Combine("change lifetime of Kerberos ticket",
 		ui.LeftClick(configFinder),
 		keyboard.TypeAction(ticketLifetimeConfig),
 		ui.LeftClick(nodewith.Name("Save").Role(role.Button)),
@@ -170,7 +170,7 @@ func ManualTicketEditConfiguration(ctx context.Context, s *testing.State) {
 	}
 
 	// Check that configuration can not be saved if the syntax is wrong.
-	if err := uiauto.Combine("opening configuration menu and adding invalid configuration",
+	if err := uiauto.Combine("open configuration menu and add invalid configuration",
 		ui.LeftClick(nodewith.HasClass("icon-more-vert more-actions").Role(role.Button)),
 		ui.LeftClick(nodewith.Name("Refresh now").Role(role.MenuItem)),
 		ui.LeftClick(nodewith.Name("Advanced").Role(role.Link)),
@@ -183,7 +183,7 @@ func ManualTicketEditConfiguration(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to find syntax error: ", err)
 	}
 
-	if err := uiauto.Combine("adding invalid configuration",
+	if err := uiauto.Combine("add invalid configuration",
 		ui.LeftClick(nodewith.Name("Advanced").Role(role.Link)),
 		ui.LeftClick(configFinder),
 		keyboard.TypeAction("\nticket_lifetime: 1337h"), // syntax error, should be "=" instead of ":"
@@ -195,7 +195,7 @@ func ManualTicketEditConfiguration(ctx context.Context, s *testing.State) {
 	}
 
 	// Check that configuration can not be saved if some options are blocklisted.
-	if err := uiauto.Combine("adding invalid configuration",
+	if err := uiauto.Combine("add invalid configuration",
 		ui.LeftClick(nodewith.Name("Advanced").Role(role.Link)),
 		ui.LeftClick(configFinder),
 		keyboard.TypeAction("\nallow_weak_crypto = true"), // "allow_weak_crypto = true" is blocklisted
