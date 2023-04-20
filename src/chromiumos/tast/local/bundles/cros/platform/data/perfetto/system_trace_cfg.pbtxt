@@ -2,9 +2,15 @@ buffers: {
     size_kb: 8192
     fill_policy: DISCARD
 }
+buffers: {
+    # Smaller buffer for polling-based data sources.
+    size_kb: 1024
+    fill_policy: DISCARD
+}
 data_sources: {
     config {
         name: "linux.process_stats"
+        target_buffer: 1
         process_stats_config {
             scan_all_processes_on_start: true
         }
@@ -13,6 +19,7 @@ data_sources: {
 data_sources: {
     config {
         name: "linux.sys_stats"
+        target_buffer: 1
         sys_stats_config {
             stat_period_ms: 1000
             stat_counters: STAT_CPU_TIMES
