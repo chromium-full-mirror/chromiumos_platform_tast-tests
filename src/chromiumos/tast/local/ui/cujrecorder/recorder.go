@@ -287,19 +287,19 @@ type Recorder struct {
 type RecorderMode int
 
 const (
-	// Benchmark runs the recorder with no timelines enabled. There should be
-	// negligble overhead associated with this recorder mode.
-	Benchmark RecorderMode = iota
-
-	// Perf runs the recorder with only the TPS timeline enabled. The
-	// overhead for this mode should be only around 1% for low-end devices,
-	// and negligble overhead for higher end devices.
-	Perf
-
 	// CUJ runs the recorder with all of the collection utilities enabled.
 	// This gives the device about 5% CPU overhead on low-end, few cored
 	// devices, and a 1% overhead on medium to higher-end devices.
-	CUJ
+	CUJ RecorderMode = iota
+
+	// Perf runs the recorder with only the TPS timeline enabled. The
+	// overhead for this mode should be only around 1% for low-end devices,
+	// and negligible overhead for higher end devices.
+	Perf
+
+	// Benchmark runs the recorder with no timelines enabled. There should be
+	// negligible overhead associated with this recorder mode.
+	Benchmark
 )
 
 // RecorderOptions contains options to control the recorder setup.
