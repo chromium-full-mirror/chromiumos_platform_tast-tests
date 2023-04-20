@@ -39,7 +39,6 @@ func init() {
 				category: "audio_jack",
 				duration: 3 * time.Second,
 			},
-			ExtraAttr: []string{"informational"},
 		}, {
 			Name: "touchpad",
 			Val: eventStartupParams{
