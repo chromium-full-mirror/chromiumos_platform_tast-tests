@@ -9,14 +9,17 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/common/servo"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/dut"
 	"chromiumos/tast/errors"
-	"chromiumos/tast/remote/firmware/fixture"
+	"chromiumos/tast/remote/tabletmode"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
 )
+
+type tabletModeConfig struct {
+	control tabletmode.Control
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -29,10 +32,17 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
 		Attr:         []string{"group:mainline", "informational", "group:firmware", "firmware_unstable"},
-		Fixture:      fixture.NormalMode,
-		Vars:         []string{"servo"},
 		Timeout:      5 * time.Minute,
-		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.FormFactor(hwdep.Convertible, hwdep.Detachable)),
+		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
+		Params: []testing.Param{{
+			Name:              "convertible",
+			Val:               tabletModeConfig{control: &tabletmode.ConvertibleModeControl{}},
+			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Convertible)),
+		}, {
+			Name:              "detachable",
+			Val:               tabletModeConfig{control: &tabletmode.DetachableModeControl{}},
+			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Detachable)),
+		}},
 	})
 }
 
@@ -74,34 +84,23 @@ func verifyPowerdTogglesTabletMode(ctx context.Context, s *testing.State, dut *d
 
 func TabletModeNotification(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 2*time.Minute)
+	ctx, cancel := ctxutil.Shorten(ctx, 1*time.Minute)
 	defer cancel()
 
 	dut := s.DUT()
-	servoSpec, _ := s.Var("servo")
-	pxy, err := servo.NewProxy(ctx, servoSpec, dut.KeyFile(), dut.KeyDir())
-	if err != nil {
-		s.Fatal("Failed to connect to servo: ", err)
+	tmc := s.Param().(tabletModeConfig).control
+	if err := tmc.InitControl(ctx, dut.Conn()); err != nil {
+		s.Fatal("Failed to init TabletModeControl: ", err)
 	}
-	defer pxy.Close(cleanupCtx)
-
-	h := s.FixtValue().(*fixture.Value).Helper
-	if err := h.RequireServo(ctx); err != nil {
-		s.Fatal("Failed to init servo: ", err)
-	}
-	if err := h.RequireConfig(ctx); err != nil {
-		s.Fatal("Failed to get config: ", err)
-	}
-
 	defer func(ctx context.Context) {
 		testing.ContextLog(ctx, "Performing cleanup")
-		if err := pxy.Servo().RunECCommand(ctx, "tabletmode reset"); err != nil {
+		if err := tmc.Reset(ctx); err != nil {
 			s.Fatal("Failed to restore tabletmode to the original settings: ", err)
 		}
 	}(cleanupCtx)
 
 	testing.ContextLog(ctx, "Enable tablet mode")
-	if err := pxy.Servo().RunECCommand(ctx, "tabletmode on"); err != nil {
+	if err := tmc.ForceTabletMode(ctx); err != nil {
 		s.Fatal("Failed to enable tablet mode: ", err)
 	}
 	// Give powerd time to process the notification and switch the DUT to tablet mode.
@@ -112,7 +111,7 @@ func TabletModeNotification(ctx context.Context, s *testing.State) {
 	testing.Sleep(ctx, 1*time.Second)
 
 	testing.ContextLog(ctx, "Disable tablet mode")
-	if err := pxy.Servo().RunECCommand(ctx, "tabletmode off"); err != nil {
+	if err := tmc.ForceLaptopMode(ctx); err != nil {
 		s.Fatal("Failed to disable tablet mode: ", err)
 	}
 	// Give powerd time to process the notification and switch the DUT to tablet mode.
@@ -123,7 +122,7 @@ func TabletModeNotification(ctx context.Context, s *testing.State) {
 	testing.Sleep(ctx, 1*time.Second)
 
 	testing.ContextLog(ctx, "Enable tablet mode")
-	if err := pxy.Servo().RunECCommand(ctx, "tabletmode on"); err != nil {
+	if err := tmc.ForceTabletMode(ctx); err != nil {
 		s.Fatal("Failed to enable tablet mode: ", err)
 	}
 	// Give powerd time to process the notification and switch the DUT to tablet mode.
