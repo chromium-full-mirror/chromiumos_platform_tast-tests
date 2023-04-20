@@ -16,59 +16,93 @@ import (
 	"chromiumos/tast/testing"
 )
 
+// gpuFreqCollector contains all necessary information for reading GPU
+// frequency on any given board.
+type gpuFreqCollector struct {
+	// description is a short explanation of what file we are reading from.
+	description string
+
+	// path is the location of the file that contains the GPU frequency info.
+	path string
+
+	// freqCapturePattern is regexp that can be used to splice the frequency
+	// information out of the file at |path|. This pattern should parse out a
+	// single group that is the GPU frequency value.
+	freqCapturePattern string
+
+	// freqModifier is how much the value read from the frequency file should
+	// be divided by to get to MHz. For example, if the file is in Hz,
+	// freqModifier would be 1000000.
+	freqModifier int
+}
+
 // GPUFreqMetrics records the frequency of GPU.
 type GPUFreqMetrics struct {
-	i915FreqEnabled bool
-	i915Freq        perf.Metric
-	intervalName    string
+	freqEnabled bool
+	freqMetric  perf.Metric
+	collector   gpuFreqCollector
 }
 
 // Assert that GPUFreqMetrics can be used in perf.Timeline.
 var _ perf.TimelineDatasource = &GPUFreqMetrics{}
 
-// GPU actual frequency may be listed as "Actual freq" or "CAGF".
-const i915FreqPattern = `(?m)^(?:Actual\sfreq|CAGF): ([0-9]+)`
-
-var i915FreqRe = regexp.MustCompile(i915FreqPattern)
-
-// readI915CurrentFreq reads the frequency of i915 GPU and returns the frequency
-// in MHz as an int64.
-func readI915CurrentFreq(ctx context.Context) (int64, error) {
-	const i915FreqPath = "/sys/kernel/debug/dri/0/i915_frequency_info"
-	f, err := os.ReadFile(i915FreqPath)
+// readGPUFrequency reads the GPU frequency using the gpuFreqCollector info.
+func readGPUFrequency(ctx context.Context, collector gpuFreqCollector) (int64, error) {
+	f, err := os.ReadFile(collector.path)
 	if err != nil {
-		return 0, errors.Wrap(err, "failed to read i915 frequency info")
+		return 0, errors.Wrapf(err, "failed to read %q", collector.path)
 	}
 
-	submatchGroup := i915FreqRe.FindStringSubmatch(string(f))
-	// A legitimate submatchGroup should look like:
-	// ["Actual freq: 200", "200"] or ["CAGF: 500", "500"].
-	if len(submatchGroup) < 2 {
-		return 0, errors.New("failed to find actual frequency in i915 frequency info file")
+	var freqRe = regexp.MustCompile(collector.freqCapturePattern)
+	submatchGroup := freqRe.FindStringSubmatch(string(f))
+	if len(submatchGroup) != 2 {
+		return 0, errors.Errorf("failed to find GPU frequency info in file: %v", submatchGroup)
 	}
-	return strconv.ParseInt(strings.TrimSpace(submatchGroup[1]), 10, 64)
+
+	val, err := strconv.ParseInt(strings.TrimSpace(submatchGroup[1]), 10, 64)
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to parse int from substring match")
+	}
+	return val / int64(collector.freqModifier), nil
 }
 
 // NewGPUFreqMetrics creates the struct to store GPU frequency metrics.
 func NewGPUFreqMetrics() *GPUFreqMetrics {
-	newMetrics := &GPUFreqMetrics{
-		i915FreqEnabled: false,
-		i915Freq:        perf.Metric{},
-		intervalName:    "",
-	}
+	newMetrics := &GPUFreqMetrics{}
 	return newMetrics
 }
 
 // Setup creates the metric depending on devices' support on GPU frequency info.
 func (g *GPUFreqMetrics) Setup(ctx context.Context, prefix, intervalName string) error {
-	if _, err := readI915CurrentFreq(ctx); err == nil {
-		g.i915FreqEnabled = true
-		g.i915Freq = perf.Metric{
-			Name:      prefix + gpuFreqMetricType + "gpu_freq",
-			Unit:      gpuFreqMetricTypeUnit,
-			Direction: perf.SmallerIsBetter,
-			Multiple:  true,
-			Interval:  intervalName,
+	for _, c := range []gpuFreqCollector{{
+		description: "Collect i915 GPU Frequency",
+		path:        "/sys/kernel/debug/dri/0/i915_frequency_info",
+		// GPU actual frequency may be listed as "Actual freq" or "CAGF".
+		freqCapturePattern: `(?m)^(?:Actual\sfreq|CAGF): ([0-9]+)`,
+		freqModifier:       1,
+	}, {
+		description:        "Collect AMD GPU Frequency",
+		path:               "/sys/kernel/debug/dri/0/amdgpu_pm_info",
+		freqCapturePattern: `([0-9]*)\sMHz\s\(SCLK\)`,
+		freqModifier:       1,
+	}, {
+		description:        "Collect QC GPU Frequency",
+		path:               `/sys/devices/platform/soc@0/5000000.gpu/devfreq/5000000.gpu/cur_freq`,
+		freqCapturePattern: "([0-9]+)",
+		freqModifier:       1000000,
+	}} {
+		if _, err := readGPUFrequency(ctx, c); err == nil {
+			testing.ContextLog(ctx, c.description)
+			g.collector = c
+			g.freqEnabled = true
+			g.freqMetric = perf.Metric{
+				Name:      prefix + gpuFreqMetricType + "gpu_freq",
+				Unit:      gpuFreqMetricTypeUnit,
+				Direction: perf.SmallerIsBetter,
+				Multiple:  true,
+				Interval:  intervalName,
+			}
+			return nil
 		}
 	}
 	return nil
@@ -77,31 +111,32 @@ func (g *GPUFreqMetrics) Setup(ctx context.Context, prefix, intervalName string)
 // Start logs the start of GPU frequency metrics tracker.
 // This function is required by perf.Timeline.
 func (g *GPUFreqMetrics) Start(ctx context.Context) error {
-	if g.i915FreqEnabled {
+	if g.freqEnabled {
 		testing.ContextLog(ctx, "Start tracking GPU frequency metrics")
 	} else {
-		testing.ContextLog(ctx, "Device does not support i915 frequency info")
+		testing.ContextLog(ctx, "Device does not support tracking GPU frequency")
 	}
 	return nil
 }
 
 // Snapshot logs one snapshot of GPU frequency stat.
 func (g *GPUFreqMetrics) Snapshot(ctx context.Context, values *perf.Values) error {
-	if !g.i915FreqEnabled {
+	if !g.freqEnabled {
 		return nil
 	}
-	v, err := readI915CurrentFreq(ctx)
+
+	v, err := readGPUFrequency(ctx, g.collector)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "failed to %s", g.collector.description)
 	}
-	values.Append(g.i915Freq, float64(v))
+	values.Append(g.freqMetric, float64(v))
 	return nil
 }
 
 // Stop logs the stop of GPU frequency metrics tracker.
 // This function is required by perf.Timeline. It does not need to make another snapshot.
 func (g *GPUFreqMetrics) Stop(ctx context.Context, values *perf.Values) error {
-	if g.i915FreqEnabled {
+	if g.freqEnabled {
 		testing.ContextLog(ctx, "Stop tracking GPU frequency metrics")
 	}
 	return nil
