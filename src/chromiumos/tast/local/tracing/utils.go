@@ -12,28 +12,59 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 
 	"android.googlesource.com/platform/external/perfetto/protos/perfetto/metrics/github.com/google/perfetto/perfetto_proto"
 	"github.com/golang/protobuf/proto"
 	"golang.org/x/sys/unix"
 
 	"chromiumos/tast/common/testexec"
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/upstart"
+	"chromiumos/tast/testing"
 )
 
 const traceProcessorPath = "/usr/local/bin/trace_processor_shell"
 
 // Session stores the cmd and the result file of the trace.
-// Remember to call Session.RemoveTraceResultFile to clean up the
-// temporary file.
+// Remember to call Session.Finalize to finalize the tracing session.
 type Session struct {
-	cmd             *testexec.Cmd
-	TraceResultFile *os.File
+	cmd               *testexec.Cmd
+	useTempFile       bool
+	compressTraceData bool
+	traceDataPath     string
+	TraceResultFile   *os.File // DEPRECATED: Use TraceDataPath() to get the trace data file path and open the file for reading. This public field will be removed soon.
 }
 
 func createTempFileForTrace() (*os.File, error) {
 	return ioutil.TempFile("", "perfetto-trace-*.pb")
+}
+
+type option struct {
+	TraceDataPath string
+	Compression   bool
+}
+
+type traceSessionOption func(*option)
+
+// WithTraceDataPath configures the session with trace data written to the given path.
+func WithTraceDataPath(path string) traceSessionOption {
+	return func(opt *option) {
+		opt.TraceDataPath = path
+	}
+}
+
+// WithCompression configures the session with compressing the trace data after the session is finalized.
+func WithCompression() traceSessionOption {
+	return func(opt *option) {
+		opt.Compression = true
+	}
+}
+
+// TraceDataPath returns the path of the trace data file.
+func (sess *Session) TraceDataPath() string {
+	return sess.traceDataPath
 }
 
 // Stop stops the system-wide trace, which should be created by StartSession.
@@ -57,7 +88,7 @@ func (sess *Session) Wait() error {
 // RunMetrics collects the result with trace_processor_shell.
 func (sess *Session) RunMetrics(ctx context.Context, metrics []string) (*perfetto_proto.TraceMetrics, error) {
 	metric := strings.Join(metrics, ",")
-	cmd := testexec.CommandContext(ctx, traceProcessorPath, sess.TraceResultFile.Name(), "--run-metrics", metric)
+	cmd := testexec.CommandContext(ctx, traceProcessorPath, sess.traceDataPath, "--run-metrics", metric)
 	out, err := cmd.Output(testexec.DumpLogOnError)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to run metrics with trace_processor_shell")
@@ -73,19 +104,24 @@ func (sess *Session) RunMetrics(ctx context.Context, metrics []string) (*perfett
 
 // RunQueryString processes the trace data with a SQL query string and returns the query csv result as [][]string.
 func (sess *Session) RunQueryString(ctx context.Context, query string) ([][]string, error) {
+	// Save some time for cleaning up the temp file created for the query string.
+	ctxForCleanup := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
 	// trace_processor_shell accepts the SQL query as a file. Create a temp query file.
 	queryFile, err := ioutil.TempFile("", "trace_processor_query_*.sql")
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to create the temp SQL query file")
+		return nil, errors.Wrap(err, "failed to create a temp file for SQL query")
 	}
-	defer func() {
+	defer func(ctx context.Context) {
 		if err := os.Remove(queryFile.Name()); err != nil {
-			log.Printf("failed to remove the temporary trace result file: %v", err)
+			testing.ContextLog(ctx, "Failed to remove the temp file for SQL query: ", err)
 		}
-	}()
+		queryFile.Close()
+	}(ctxForCleanup)
 
 	if _, err := queryFile.WriteString(query); err != nil {
-		return nil, errors.Wrap(err, "failed to create the temp SQL query file")
+		return nil, errors.Wrap(err, "failed to populate the temp file for SQL query")
 	}
 
 	return sess.RunQuery(ctx, queryFile.Name())
@@ -93,7 +129,7 @@ func (sess *Session) RunQueryString(ctx context.Context, query string) ([][]stri
 
 // RunQuery processes the trace data with a SQL query and returns the query csv result as [][]string.
 func (sess *Session) RunQuery(ctx context.Context, queryPath string) ([][]string, error) {
-	cmd := testexec.CommandContext(ctx, traceProcessorPath, sess.TraceResultFile.Name(), "-q", queryPath)
+	cmd := testexec.CommandContext(ctx, traceProcessorPath, sess.traceDataPath, "-q", queryPath)
 	out, err := cmd.Output(testexec.DumpLogOnError)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to run metrics with trace_processor_shell")
@@ -105,11 +141,65 @@ func (sess *Session) RunQuery(ctx context.Context, queryPath string) ([][]string
 	return csv.ReadAll()
 }
 
-// RemoveTraceResultFile removes the temp file of trace result.
+// RemoveTraceResultFile removes the trace data file. DEPRECATED: use Finalize() to auto remove the temp file created by this session.
+// The trace data file is automatically removed in finalizing the trace session if the session uses a temp file for trace data.
+// This function can be called explicitly for a session configure using WithTraceDataPath() if the trace data is no longer necessary.
 func (sess *Session) RemoveTraceResultFile() {
-	if err := os.Remove(sess.TraceResultFile.Name()); err != nil {
+	// Don't remove the trace data file again.
+	if !sess.traceDataFileExists() {
+		return
+	}
+
+	if err := os.Remove(sess.traceDataPath); err != nil {
 		log.Printf("failed to remove the temporary trace result file: %v", err)
 	}
+}
+
+// traceDataFileExists checks if the trace data file exists.
+func (sess *Session) traceDataFileExists() bool {
+	if _, err := os.Stat(sess.traceDataPath); err != nil {
+		return false
+	}
+	return true
+}
+
+// removeTempTraceDataFile removes the temp trace data file owned by this session.
+func (sess *Session) removeTempTraceDataFile() error {
+	// Remove the trace data file only if the file is owned by the session (useTempFile == true).
+	if !sess.useTempFile || !sess.traceDataFileExists() {
+		return nil
+	}
+
+	if err := os.Remove(sess.traceDataPath); err != nil {
+		return errors.Wrap(err, "failed to remove the temp file for trace data")
+	}
+
+	return nil
+}
+
+// Finalize performs the final actions for the tracing session:
+// Remove the trace data file if the session uses a temporary file for trace data.
+// Compress the trace data if the session is started with the compression option.
+func (sess *Session) Finalize(ctx context.Context) error {
+	if !sess.traceDataFileExists() {
+		return nil
+	}
+
+	// Auto remove the trace data file if the session outputs to a temp file.
+	if sess.useTempFile {
+		return sess.removeTempTraceDataFile()
+	}
+
+	// Compress the trace data if the session is configured with the compression option.
+	if sess.compressTraceData {
+		cmd := testexec.CommandContext(ctx, "/bin/gzip", sess.traceDataPath)
+		err := cmd.Run(testexec.DumpLogOnError)
+		if err != nil {
+			return errors.Wrap(err, "failed to compress the trace data file")
+		}
+	}
+
+	return nil
 }
 
 // CheckTracingServices checks the status of job traced and traced_probes.
@@ -137,45 +227,67 @@ func CheckTracingServices(ctx context.Context) (tracedPID, tracedProbesPID int, 
 	return tracedPID, tracedProbesPID, nil
 }
 
-// StartSession starts a system-wide trace using the perfetto command
-// line tool in the background, and return the PID in string, which
-// the caller should use to call StopTraceDataWithPID.
-// On success, returns the temporary file of the trace data. It's the
-// caller's responsibility for removing it if it's no longer needed.
-func StartSession(ctx context.Context, configFile string) (*Session, error) {
-	tempFile, err := createTempFileForTrace()
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create temp file")
+// StartSession starts a system-wide trace using the perfetto command line tool in the background.
+// Returns a Session instance on success or error on failure.
+// The caller is *not* blocked when the tracing session is running. It's the caller's responsibility to call
+// Wait() to ensure that the session is done before.
+// The caller may optionally call Stop() to interrupt and terminate the tracing session before the session terminates automatically
+// after the duration_ms in the trace config elapses.
+// The caller should call Finalize() to perform the final actions with the tracing session whether the test is successful or not.
+// The trace session can be configured using WithTraceDataPath(path) or WithCompression() options.
+func StartSession(ctx context.Context, configFile string, opts ...traceSessionOption) (*Session, error) {
+	option := &option{}
+	for _, opt := range opts {
+		opt(option)
+	}
+
+	useTempFile := true
+	var traceDataFile *os.File = nil
+	var err error = nil
+
+	if option.TraceDataPath != "" {
+		useTempFile = false
+		traceDataFile, err = os.OpenFile(option.TraceDataPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to create the trace data file")
+		}
+	} else {
+		traceDataFile, err = createTempFileForTrace()
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to create a temp file for trace data")
+		}
 	}
 
 	// This runs a perfetto trace session with the options:
 	//   -c traceConfigPath --txt: configure the trace session as defined in the text proto |traceConfigPath|
 	//   -o traceOutputPath      : save the trace data (binary proto) to |traceOutputPath|
-	cmd := testexec.CommandContext(ctx, "perfetto", "-c", configFile, "--txt", "-o", tempFile.Name())
+	cmd := testexec.CommandContext(ctx, "perfetto", "-c", configFile, "--txt", "-o", traceDataFile.Name())
 	if err := cmd.Start(); err != nil {
-		if e := os.Remove(tempFile.Name()); e != nil {
+		if e := os.Remove(traceDataFile.Name()); e != nil {
 			// Cleanup the temp file is non-fatal. Just log the error.
-			log.Printf("failed to remove the temporary trace result file: %v", e)
+			testing.ContextLog(ctx, "Failed to remove the trace data file: ", e)
 		}
 		return nil, errors.Wrap(err, "failed to start the tracing session")
 	}
 
-	return &Session{cmd: cmd, TraceResultFile: tempFile}, nil
+	return &Session{cmd: cmd, useTempFile: useTempFile, compressTraceData: option.Compression, TraceResultFile: traceDataFile, traceDataPath: traceDataFile.Name()}, nil
 }
 
-// StartSessionAndWaitUntilDone collects a system-wide trace using the
-// perfetto command line tool.
-// On success, returns the temporary file of the trace data. It's the
-// caller's responsibility for removing it if it's no longer needed.
-func StartSessionAndWaitUntilDone(ctx context.Context, configFile string) (*Session, error) {
-	sess, err := StartSession(ctx, configFile)
+// StartSessionAndWaitUntilDone collects a system-wide trace using the perfetto command line tool.
+// Returns a Session instance on success or error on failure.
+// The caller should call Finalize() to perform the final actions with the tracing session whether the test is successful or not.
+// The trace session can be configured using WithTraceDataPath(path) or WithCompression() options.
+func StartSessionAndWaitUntilDone(ctx context.Context, configFile string, opts ...traceSessionOption) (*Session, error) {
+	sess, err := StartSession(ctx, configFile, opts...)
 	if err != nil {
 		return nil, err
 	}
 
 	if err := sess.Wait(); err != nil {
 		// Session is already started. We need to remove the temp file.
-		sess.RemoveTraceResultFile()
+		if errRemove := sess.removeTempTraceDataFile(); err != nil {
+			testing.ContextLog(ctx, "Failed to remove the temp trace data file", errRemove)
+		}
 		return nil, errors.Wrap(err, "failed to stop the tracing session")
 	}
 

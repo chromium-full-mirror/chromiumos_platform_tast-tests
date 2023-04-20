@@ -6,8 +6,12 @@ package example
 
 import (
 	"context"
+	"os"
+	"path/filepath"
 	"reflect"
+	"time"
 
+	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/tracing"
 	"chromiumos/tast/testing"
 )
@@ -35,14 +39,25 @@ func init() {
 // tracing.Session.RunQueryString() functions to show how to post-process a
 // collected trace using a SQL query.
 func PerfettoTraceProcessing(ctx context.Context, s *testing.State) {
+	// This test requires compressing the trace data on finalizing the trace session.
+	// Reserve some time for Finalize() to do it.
+	ctxForCleanup := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
 	// We don't need to run any test action during the tracing session.
 	// Just use the blocking version of StartSession() for simplicity.
-	sess, err := tracing.StartSessionAndWaitUntilDone(ctx, s.DataPath(traceConfig))
+	traceDataPath := filepath.Join(s.OutDir(), "perfetto-trace.pb")
+	sess, err := tracing.StartSessionAndWaitUntilDone(ctx, s.DataPath(traceConfig),
+		tracing.WithTraceDataPath(traceDataPath), // Save trace data to traceDataPath.
+		tracing.WithCompression())                // Also compress the trace data.
+
 	if err != nil {
 		s.Fatal("Failed to start tracing: ", err)
 	}
-	// The temporary file of trace data is no longer needed when returned.
-	defer sess.RemoveTraceResultFile()
+
+	// Perform final actions of the trace session.
+	defer sess.Finalize(ctxForCleanup)
 
 	// Process the trace data using inline string query for simple queries.
 	res1, err := sess.RunQueryString(ctx, "select cmdline from process where pid=1")
@@ -61,5 +76,10 @@ func PerfettoTraceProcessing(ctx context.Context, s *testing.State) {
 	// We should get identical results using the same query.
 	if !reflect.DeepEqual(res1, res2) {
 		s.Fatalf("Unexpected query result: %q", res2)
+	}
+
+	// We don't need the trace data for debugging on test success.
+	if err := os.Remove(traceDataPath); err != nil {
+		s.Error("Failed to remove the trace data file: ", err)
 	}
 }
