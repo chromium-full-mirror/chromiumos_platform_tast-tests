@@ -170,7 +170,7 @@ func ConvertPowerPerfValue(ctx context.Context, values *perf.Values) (map[string
 		// for "system" because metric.Name doesn't include a metric type.
 		// 2. "t": not a power metric, therefore a metric type isn't assigned and
 		// it will not be included in the typeMap.
-		// 3. size == 1: indicating no metricType assigned, throw an error.
+		// 3. size == 1: skip for non power.TestMetrics()
 		// 4. Retrieve metricType from metricNameSlice.
 		if metricName == "system" {
 			metricType = "power"
@@ -178,7 +178,7 @@ func ConvertPowerPerfValue(ctx context.Context, values *perf.Values) (map[string
 			innerDataMap[metricName] = value
 			continue
 		} else if size == 1 {
-			return nil, errors.Errorf("failed to parse metric %q, could not find the metric type", metricName)
+			continue
 		} else {
 			metricType = metricNameSlice[size-2]
 		}
@@ -188,8 +188,10 @@ func ConvertPowerPerfValue(ctx context.Context, values *perf.Values) (map[string
 			return nil, errors.Errorf("unexpected metric type %q for %q", metricType, metricName)
 		}
 
-		typeMap[metricName] = metricType
-		unitMap[metricName] = metric.Unit
+		if len(metricType) != 0 {
+			typeMap[metricName] = metricType
+			unitMap[metricName] = metric.Unit
+		}
 		innerDataMap[metricName] = value
 
 		sum := 0.0
