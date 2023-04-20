@@ -20,7 +20,7 @@ func init() {
 		Desc:         "Verifies that cellular device SIM PIN lock",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "srikanthkumar@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_pinlock"},
+		Attr:         []string{"group:cellular", "cellular_sim_pinlock"},
 		Fixture:      "cellular",
 		Timeout:      5 * time.Minute,
 		Vars:         []string{"autotest_host_info_labels"},
