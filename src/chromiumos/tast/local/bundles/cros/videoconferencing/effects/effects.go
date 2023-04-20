@@ -7,7 +7,6 @@ package effects
 
 import (
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/power"
 	"chromiumos/tast/testing"
@@ -17,12 +16,16 @@ import (
 	"os"
 	"strconv"
 	"time"
+
+	"go.chromium.org/tast/core/errors"
 )
 
 const (
 	// File watched by EffectsStreamManipulator to configure platform effects.
 	platformEffectsOverridePath = "/run/camera/effects/effects_config_override.json"
 	platformEffectsOverrideDir  = "/run/camera/effects"
+	// OpenCLCacheDir is the path to the opencl_cache directory.
+	OpenCLCacheDir = "/var/lib/ml_core/opencl_cache"
 )
 
 // DataResult returns the result of frame metrics measured.
@@ -160,5 +163,20 @@ func ReportPowerDiffMetrics(ctx context.Context, p *perf.Values, raplEnergyBefor
 	energyDiff.ReportPerfMetrics(p, "joules-")
 	energyDiff.ReportWattPerfMetrics(p, "watts-", time.Duration(testDuration)*time.Second)
 
+	return nil
+}
+
+// ClearOpenCLCache clears only the files in the opencl_cache directory.
+func ClearOpenCLCache() error {
+	files, err := os.ReadDir(OpenCLCacheDir)
+	if err != nil {
+		return errors.Wrap(err, "failed to read opencl_cache directory")
+	}
+
+	for _, file := range files {
+		if err := os.Remove(OpenCLCacheDir + "/" + file.Name()); err != nil {
+			return errors.Wrap(err, "failed to remove file "+file.Name())
+		}
+	}
 	return nil
 }
