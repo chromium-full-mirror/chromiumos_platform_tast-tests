@@ -53,6 +53,7 @@ yichenz@chromium.org
 
 # Tast team for bulk/emergencies
 jessemcguire@google.com #{LAST_RESORT_SUGGESTION}
+rohitbm@chromium.org #{LAST_RESORT_SUGGESTION}
 
 # Green Stainless team
 # They frequently send changes to demote/disable flaky tests. Those changes are
