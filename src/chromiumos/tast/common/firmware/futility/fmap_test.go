@@ -11,7 +11,8 @@ import (
 	"testing"
 )
 
-var dumpFmapOptionalArgsAll = [][]string{
+var dumpFmapPositionalArgs = []string{testFutilityPath, "dump_fmap"}
+var dumpFmapExtraArgs = [][]string{
 	{"-p"},
 	{"-h"},
 	{"-H"},
@@ -63,7 +64,7 @@ func Test_DumpFmap_NoFutilityOutput(t *testing.T) {
 	}
 
 	ti := i.commandRunner.(*testCommandRunner)
-	if err = ti.assertCalledWith([]string{testFutilityPath, "dump_fmap", "input.bin"}, dumpFmapOptionalArgsAll); err != nil {
+	if err = ti.assertCalledWith(append(dumpFmapPositionalArgs, "input.bin"), nil, dumpFmapExtraArgs); err != nil {
 		t.Error(err)
 	}
 }
@@ -93,7 +94,7 @@ func Test_DumpFmap_ParseDataOK(t *testing.T) {
 	}
 
 	ti := i.commandRunner.(*testCommandRunner)
-	if err = ti.assertCalledWith([]string{testFutilityPath, "dump_fmap", "input.bin"}, dumpFmapOptionalArgsAll); err != nil {
+	if err = ti.assertCalledWith(append(dumpFmapPositionalArgs, "input.bin"), nil, dumpFmapExtraArgs); err != nil {
 		t.Error(err)
 	}
 }
@@ -121,7 +122,7 @@ func Test_DumpFmap_ParseDataInvalid(t *testing.T) {
 		}
 
 		ti := i.commandRunner.(*testCommandRunner)
-		if err = ti.assertCalledWith([]string{testFutilityPath, "dump_fmap", "input.bin"}, dumpFmapOptionalArgsAll); err != nil {
+		if err = ti.assertCalledWith(append(dumpFmapPositionalArgs, "input.bin"), nil, dumpFmapExtraArgs); err != nil {
 			t.Error(err)
 		}
 	}
@@ -152,7 +153,7 @@ func Test_DumpFmap_ParseDataSelective(t *testing.T) {
 	}
 
 	ti := i.commandRunner.(*testCommandRunner)
-	if err = ti.assertCalledWith([]string{testFutilityPath, "dump_fmap", "input.bin", "area1", "area3"}, dumpFmapOptionalArgsAll); err != nil {
+	if err = ti.assertCalledWith(append(dumpFmapPositionalArgs, "input.bin", "area1", "area3"), nil, dumpFmapExtraArgs); err != nil {
 		t.Error(err)
 	}
 }

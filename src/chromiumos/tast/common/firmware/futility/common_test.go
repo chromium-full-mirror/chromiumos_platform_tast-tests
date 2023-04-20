@@ -7,9 +7,10 @@ package futility
 // This file contains common codebase used by futility module unit-tests.
 
 import (
-	"chromiumos/tast/errors"
 	"context"
 	"reflect"
+
+	"chromiumos/tast/errors"
 )
 
 const (
@@ -47,39 +48,86 @@ func (r *testCommandRunner) runCommandLine(ctx context.Context, cmdArgs []string
 	return r.stdout, r.stderr, r.err
 }
 
-// optionalArgsMatch checks whether optional args match.
-func optionalArgsMatch(inputArgs, optionalArgs []string) bool {
-	if len(inputArgs) < len(optionalArgs) {
+// argsSubsliceMatch checks whether patternArgs are sub-slice of inputArgs.
+func argsSubsliceMatch(inputArgs, patternArgs []string) bool {
+	if len(inputArgs) < len(patternArgs) {
 		return false
 	}
 
-	for i := range optionalArgs {
-		if inputArgs[i] != optionalArgs[i] {
+	for i := range patternArgs {
+		if inputArgs[i] != patternArgs[i] {
 			return false
 		}
 	}
 	return true
 }
 
-// assertCalledWith checks arguments stored by runCommandLine by removing
-// optionalArgs, and then checking if the rest is equal to requiredArgs.
+// assertCalledWith checks arguments stored by runCommandLine.
 //
-// Returns error on failure and nil on success.
-func (r *testCommandRunner) assertCalledWith(requiredArgs []string, optionalArgs [][]string) error {
+//  1. Remove all extraArgs arguments list, as they are not mandatory.
+//  2. Try to match and remove all optionArgs arguments from arguments list.
+//  3. Match the rest in order with positionalArgs.
+//
+// Example usage in test:
+//
+//	// Execute futility (in command).
+//	r.runCommandLine(context.Background(),
+//		[]string{"futility", "gbb",
+//			"--get", "--flags",
+//			"--servo_port", "9999", "output.bin"})
+//
+//	// Create list of positional, option (NOT OPTIONAL)
+//	// and extra (optional, not mandatory).
+//	positionalArgs := []string{"futility", "gbb"}
+//	optionArgs := [][]string{{"--get"}, {"--flags"},
+//		                     {"--hwid"}, {"--servo_port", "9999"}}
+//	extraArgs := [][]string{{"--servo"}}
+//	err := r.assertCalledWith(positionalArgs, optionArgs, extraArgs)
+//
+//	// err will contain:
+//	//   option argument not matched: ["--hwid"]
+//	//     required arguments do not match with stored,
+//	//     expected: ["futility" "gbb"],
+//	//     got ["futility" "gbb" "output.bin"]
+//
+// Returns nil on success and with error on failure.
+func (r *testCommandRunner) assertCalledWith(positionalArgs []string, optionArgs, extraArgs [][]string) error {
 	allArgs := r.args
+	var argsErrors []error
 
-	// Remove all optional arguments.
-	for _, opt := range optionalArgs {
+	// Remove all extra arguments.
+	for _, opt := range extraArgs {
 		for i := 0; i < len(allArgs); i++ {
-			if optionalArgsMatch(allArgs[i:], opt) {
+			if argsSubsliceMatch(allArgs[i:], opt) {
 				allArgs = append(allArgs[:i], allArgs[(i+len(opt)):]...)
 				break
 			}
 		}
 	}
 
-	if !reflect.DeepEqual(requiredArgs, allArgs) {
-		return errors.Errorf("required arguments do not match with stored, expected: %q, got %q", requiredArgs, allArgs)
+	optionArgsFound := make([]bool, len(optionArgs))
+	for k, opt := range optionArgs {
+		for i := 0; i < len(allArgs); i++ {
+			if argsSubsliceMatch(allArgs[i:], opt) {
+				allArgs = append(allArgs[:i], allArgs[(i+len(opt)):]...)
+				optionArgsFound[k] = true // Mark as found.
+				break
+			}
+		}
+	}
+	// Check if all optionArgs matched.
+	for i, v := range optionArgsFound {
+		if v == false {
+			argsErrors = append(argsErrors, errors.Errorf("option argument not matched: %q", optionArgs[i]))
+		}
+	}
+
+	if !reflect.DeepEqual(positionalArgs, allArgs) {
+		argsErrors = append(argsErrors, errors.Errorf("required arguments do not match with stored, expected: %q, got %q", positionalArgs, allArgs))
+	}
+
+	if len(argsErrors) > 0 {
+		return errors.Join(argsErrors...)
 	}
 
 	return nil
