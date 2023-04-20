@@ -11,11 +11,13 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/emptypb"
 
 	"chromiumos/tast/remote/bundles/cros/wwcb/utils"
 	pb "chromiumos/tast/services/cros/apps"
 	"chromiumos/tast/services/cros/ui"
 	"chromiumos/tast/services/cros/wwcb"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
@@ -29,23 +31,19 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Dock2PersistentGRPC,
+		Func:         WindowsPersistenceWithDualDisplay,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Windows persistent settings for dual display through a Dock",
+		Desc:         "Test Windows persistent settings with dual external display",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
 		Attr:         []string{"group:wwcb"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"DockingID", "ExtDispID1", "ExtDispID2", "wwcbIPPowerIp"},
-		ServiceDeps: []string{
-			"tast.cros.wwcb.DisplayService",
-			"tast.cros.apps.AppsService",
-			"tast.cros.browser.ChromeService",
-		},
+		ServiceDeps:  []string{"tast.cros.wwcb.DisplayService", "tast.cros.apps.AppsService", "tast.cros.browser.ChromeService"},
 	})
 }
 
-func Dock2PersistentGRPC(ctx context.Context, s *testing.State) {
+func WindowsPersistenceWithDualDisplay(ctx context.Context, s *testing.State) {
 	// Reboot the DUT, in case of DUT unable to work properly consistently.
 	if err := s.DUT().Reboot(ctx); err != nil {
 		s.Fatal("Failed to reboot the DUT: ", err)
@@ -55,7 +53,6 @@ func Dock2PersistentGRPC(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	dockingID := s.RequiredVar("DockingID")
 	extDispID1 := s.RequiredVar("ExtDispID1")
 	extDispID2 := s.RequiredVar("ExtDispID2")
 
@@ -77,20 +74,57 @@ func Dock2PersistentGRPC(ctx context.Context, s *testing.State) {
 	displaySvc := wwcb.NewDisplayServiceClient(cl.Conn)
 	appsSvc := pb.NewAppsServiceClient(cl.Conn)
 
-	// Open IP power to supply docking power.
-	if err := utils.OpenIppower(ctx, []int{1}); err != nil {
-		s.Fatal("Failed to open IP power: ", err)
-	}
-	defer utils.CloseIppower(cleanupCtx, []int{1})
-
 	// Initialize fixtures to find the connected devices.
 	if err := utils.InitFixture(ctx); err != nil {
 		s.Fatal("Failed to initialize fixtures: ", err)
 	}
 	defer utils.CloseAllFixture(cleanupCtx)
 
-	if err := connectDisplaysViaDock(ctx, displaySvc, dockingID, extDispID1, extDispID2); err != nil {
-		s.Fatal("Failed to connect to the two external displays via docking station: ", err)
+	if dockingID, ok := s.Var("DockingID"); ok {
+		ipPowerPorts := []int{1}
+		if err := utils.OpenIppower(ctx, ipPowerPorts); err != nil {
+			s.Fatal("Failed to power on the docking station: ", err)
+		}
+		defer utils.CloseIppower(cleanupCtx, ipPowerPorts)
+
+		if err := utils.ControlFixture(ctx, dockingID, "on"); err != nil {
+			s.Fatal("Failed to connect to the docking station: ", err)
+		}
+	}
+
+	if err := utils.ControlFixture(ctx, extDispID1, "on"); err != nil {
+		s.Fatal("Failed to connect to the first external display: ", err)
+	}
+
+	if _, err := displaySvc.VerifyDisplayCount(ctx, &wwcb.QueryRequest{DisplayCount: 2}); err != nil {
+		s.Fatal("Failed to verify display count: ", err)
+	}
+
+	twoDisplays, err := displaySvc.GetDisplayIDs(ctx, &emptypb.Empty{})
+	if err != nil {
+		s.Fatal("Failed to get display ID: ", err)
+	}
+
+	if err := utils.ControlFixture(ctx, extDispID2, "on"); err != nil {
+		s.Fatal("Failed to connect to the second external display: ", err)
+	}
+
+	if _, err := displaySvc.VerifyDisplayCount(ctx, &wwcb.QueryRequest{DisplayCount: 3}); err != nil {
+		s.Fatal("Failed to verify display count: ", err)
+	}
+
+	threeDisplays, err := displaySvc.GetDisplayIDs(ctx, &emptypb.Empty{})
+	if err != nil {
+		s.Fatal("Failed to get display ID: ", err)
+	}
+
+	// Get the display info about connecting to the external display each time.
+	// Use index [1] as comparision. When the external display is plugged in twice, index [1] can be obtained.
+	// If index [1] of two lists are the same, means the sequence of external display detected by system is as same as input parameter.
+	// If not, means that sequence of both external display are different.
+	if twoDisplays.DisplayIds[1] != threeDisplays.DisplayIds[1] {
+		testing.ContextLog(ctx, "Switch the sequence of external display 1 & 2")
+		extDispID1, extDispID2 = extDispID2, extDispID1
 	}
 
 	if err := openAppsOnDualDisplay(ctx, appsSvc, displaySvc, extDispID1, extDispID2); err != nil {
@@ -112,27 +146,6 @@ func Dock2PersistentGRPC(ctx context.Context, s *testing.State) {
 	if err := testMirrorModeWithDualDisplay(ctx, displaySvc); err != nil {
 		s.Fatal("Failed to test mirror mode with two external displays: ", err)
 	}
-}
-
-func connectDisplaysViaDock(ctx context.Context, displaySvc wwcb.DisplayServiceClient, dockingID, extDispID1, extDispID2 string) error {
-	testing.ContextLog(ctx, "Connect to the two external displays via docking station")
-
-	if err := utils.ControlFixture(ctx, extDispID1, "on"); err != nil {
-		return errors.Wrap(err, "failed to connect to the first external display")
-	}
-
-	if err := utils.ControlFixture(ctx, extDispID2, "on"); err != nil {
-		return errors.Wrap(err, "failed to connect to the second external display")
-	}
-
-	if err := utils.ControlFixture(ctx, dockingID, "on"); err != nil {
-		return errors.Wrap(err, "failed to connect to the docking station")
-	}
-
-	if _, err := displaySvc.VerifyDisplayCount(ctx, &wwcb.QueryRequest{DisplayCount: 3}); err != nil {
-		return errors.Wrap(err, "failed to verify display count")
-	}
-	return nil
 }
 
 func openAppsOnDualDisplay(ctx context.Context, appsSvc pb.AppsServiceClient, displaySvc wwcb.DisplayServiceClient, extDispID1, extDispID2 string) error {
@@ -261,16 +274,16 @@ func replugExternalDisplayInPrimary(ctx context.Context, displaySvc wwcb.Display
 		return errors.Wrap(err, "failed to verify the Gallery App's window is on internal display")
 	}
 
-	if err := utils.ControlFixture(ctx, extDispID1, "on"); err != nil {
-		return errors.Wrap(err, "failed to connect to the first external display")
+	if err := utils.ControlFixture(ctx, extDispID2, "on"); err != nil {
+		return errors.Wrap(err, "failed to connect to the second external display")
 	}
 
 	if _, err := displaySvc.VerifyDisplayCount(ctx, &wwcb.QueryRequest{DisplayCount: 2}); err != nil {
 		return errors.Wrap(err, "failed to verify display count")
 	}
 
-	if err := utils.ControlFixture(ctx, extDispID2, "on"); err != nil {
-		return errors.Wrap(err, "failed to connect to the second external display")
+	if err := utils.ControlFixture(ctx, extDispID1, "on"); err != nil {
+		return errors.Wrap(err, "failed to connect to the first external display")
 	}
 
 	if _, err := displaySvc.VerifyDisplayCount(ctx, &wwcb.QueryRequest{DisplayCount: 3}); err != nil {
