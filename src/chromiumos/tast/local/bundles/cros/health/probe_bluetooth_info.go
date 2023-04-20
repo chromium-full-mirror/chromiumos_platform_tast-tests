@@ -223,19 +223,19 @@ func validateConnectedDevices(ctx context.Context, got []deviceInfo) error {
 	// Get Bluetooth device values to compare to the output of cros_healthd.
 	devices, err := bluez.Devices(ctx)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to get bluez devices info")
 	}
 
 	// Get battery percentage for each D-Bus object.
 	batteryPercentages := make(map[dbus.ObjectPath]uint8)
 	batteries, err := bluez.Batteries(ctx)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to get bluez batteries info")
 	}
 	for _, battery := range batteries {
 		percentage, err := battery.Percentage(ctx)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "failed to get battery percentage")
 		}
 		batteryPercentages[battery.Path()] = percentage
 	}
@@ -243,7 +243,7 @@ func validateConnectedDevices(ctx context.Context, got []deviceInfo) error {
 	expected := make([]deviceInfo, 0)
 	for _, device := range devices {
 		if connected, err := device.Connected(ctx); err != nil {
-			return err
+			return errors.Wrap(err, "failed to get device connected status")
 		} else if !connected {
 			continue
 		}
@@ -251,7 +251,7 @@ func validateConnectedDevices(ctx context.Context, got []deviceInfo) error {
 		// The following are required properties.
 		address, err := device.Address(ctx)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "failed to get device address")
 		}
 		info := deviceInfo{Address: address}
 
@@ -259,43 +259,43 @@ func validateConnectedDevices(ctx context.Context, got []deviceInfo) error {
 		if name, err := device.Name(ctx); err == nil {
 			info.Name = &name
 		} else if !dbusutil.IsDBusError(err, dbusutil.DBusErrorInvalidArgs) {
-			return err
+			return errors.Wrap(err, "failed to get device name")
 		}
 		if deviceType, err := device.Type(ctx); err == nil {
 			info.Type = &deviceType
 		} else if !dbusutil.IsDBusError(err, dbusutil.DBusErrorInvalidArgs) {
-			return err
+			return errors.Wrap(err, "failed to get device type")
 		}
 		if appearance, err := device.Appearance(ctx); err == nil {
 			info.Appearance = &appearance
 		} else if !dbusutil.IsDBusError(err, dbusutil.DBusErrorInvalidArgs) {
-			return err
+			return errors.Wrap(err, "failed to get device appearance")
 		}
 		if modalias, err := device.Modalias(ctx); err == nil {
 			info.Modalias = &modalias
 		} else if !dbusutil.IsDBusError(err, dbusutil.DBusErrorInvalidArgs) {
-			return err
+			return errors.Wrap(err, "failed to get device modalias")
 		}
 		if mtu, err := device.MTU(ctx); err == nil {
 			info.MTU = &mtu
 		} else if !dbusutil.IsDBusError(err, dbusutil.DBusErrorInvalidArgs) {
-			return err
+			return errors.Wrap(err, "failed to get device MTU")
 		}
 		if rssi, err := device.RSSI(ctx); err == nil {
 			info.RSSI = &rssi
 		} else if !dbusutil.IsDBusError(err, dbusutil.DBusErrorInvalidArgs) {
-			return err
+			return errors.Wrap(err, "failed to get device RSSI")
 		}
 		if uuids, err := device.UUIDs(ctx); err == nil {
 			info.UUIDs = &uuids
 		} else if !dbusutil.IsDBusError(err, dbusutil.DBusErrorInvalidArgs) {
-			return err
+			return errors.Wrap(err, "failed to get device UUIDs")
 		}
 		if class, err := device.Class(ctx); err == nil {
 			bluetoothClass := jsontypes.Uint32(class)
 			info.Class = &bluetoothClass
 		} else if !dbusutil.IsDBusError(err, dbusutil.DBusErrorInvalidArgs) {
-			return err
+			return errors.Wrap(err, "failed to get device class")
 		}
 
 		// Checks if the battery percentage exists for the D-Bus object path.
