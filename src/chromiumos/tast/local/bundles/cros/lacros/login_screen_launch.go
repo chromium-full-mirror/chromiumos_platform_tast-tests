@@ -12,6 +12,8 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
+	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/lacros"
 	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
 	"chromiumos/tast/local/chrome/lacros/lacrosinfo"
@@ -25,8 +27,9 @@ import (
 )
 
 type loginScreenLaunchTestParam struct {
+	browserType     browser.Type
 	lacrosSelection lacros.Selection
-	lacrosMode      lacros.Mode
+	lacrosMode      lacros.Mode // Ignored when browserType == TypeAsh.
 }
 
 func init() {
@@ -40,7 +43,7 @@ func init() {
 			"hidehiko@chromium.org",
 		},
 		BugComponent: "crbug:OS>LaCrOS",
-		SoftwareDeps: []string{"chrome", "lacros"},
+		SoftwareDeps: []string{"chrome", "chrome_internal", "lacros"},
 		VarDeps: []string{
 			"ui.signinProfileTestExtensionManifestKey",
 			"ui.gaiaPoolDefault",
@@ -49,22 +52,25 @@ func init() {
 		// Login time + User ownership + Wait for password entry + Wait for Lacros processes:
 		Timeout: 2*chrome.GAIALoginTimeout + userutil.TakingOwnershipTimeout + time.Minute + 20*time.Second,
 
-		Params: []testing.Param{{
-			Name:      "rootfs",
-			ExtraAttr: []string{"group:mainline", "informational"},
-			Val: loginScreenLaunchTestParam{
-				lacros.Rootfs,
-				lacros.LacrosOnly,
+		Params: []testing.Param{
+			{
+				Name:      "rootfs",
+				ExtraAttr: []string{"group:mainline", "informational"},
+				Val: loginScreenLaunchTestParam{
+					browser.TypeLacros,
+					lacros.Rootfs,
+					lacros.LacrosOnly,
+				},
 			},
-		},
-		// Disabled, per b/246818834.
-		// {
-		//	Name: "omaha",
-		//	Val: loginScreenLaunchTestParam{
-		//		lacros.Omaha,
-		//		lacros.LacrosOnly,
-		//	},
-		// }
+			{
+				Name:      "rootfs_disabled",
+				ExtraAttr: []string{"group:mainline", "informational"},
+				Val: loginScreenLaunchTestParam{
+					browser.TypeAsh,
+					lacros.Rootfs,
+					lacros.NotSpecified,
+				},
+			},
 		},
 	})
 }
@@ -88,30 +94,6 @@ func initUserPod(ctx context.Context, gaiaPoolDefault string) (chrome.Creds, err
 	}
 
 	return creds, err
-}
-
-func setupChromeOpts(signinProfileTestExtensionManifestKey string,
-	lacrosSelection lacros.Selection, lacrosMode lacros.Mode) ([]chrome.Option, error) {
-	// chrome.NoLogin() and chrome.KeepState() are needed to show the login
-	// screen with a user pod (instead of the OOBE login screen).
-	// |signinProfileTestExtensionManifestKey| is needed to launch Chrome at OOBE.
-	// We disable profile migration to prevent Ash from restarting and breaking the test connection.
-	options := []chrome.Option{
-		chrome.NoLogin(),
-		chrome.KeepState(),
-		chrome.LoadSigninProfileExtension(signinProfileTestExtensionManifestKey),
-		chrome.EnableFeatures("LacrosLaunchAtLoginScreen"),
-		chrome.EnableFeatures("LacrosProfileMigrationForceOff"),
-	}
-
-	// Add Lacros options.
-	lacrosCfg := lacrosfixt.NewConfig(lacrosfixt.Selection(lacrosSelection), lacrosfixt.Mode(lacrosMode))
-	lacrosOpts, err := lacrosCfg.Opts()
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get Lacros options")
-	}
-
-	return append(options, lacrosOpts...), nil
 }
 
 // waitForPasswordEntry waits for the login screen to be ready for password entry.
@@ -193,6 +175,21 @@ func waitForLacrosProcs(ctx context.Context, lacrosPath string) (lacrosProcs map
 	return lacrosProcs, nil
 }
 
+// waitForLacrosProcsTermination waits until Lacros processes are terminated.
+func waitForLacrosProcsTermination(ctx context.Context, lacrosPath string) (lacrosProcs map[int32]string, err error) {
+	err = testing.Poll(ctx, func(ctx context.Context) error {
+		lacrosProcs, err = runningLacrosProcs(ctx, lacrosPath)
+		if err != nil {
+			return err
+		}
+		if len(lacrosProcs) != 0 {
+			return errors.New("lacros is still running (some processes did not terminate)")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: time.Second})
+	return lacrosProcs, err
+}
+
 // isSubset checks if |subset| is a subset of |superset|.
 func isSubset(subset, superset map[int32]string) bool {
 	for key, value := range subset {
@@ -210,21 +207,32 @@ func LoginScreenLaunch(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create user pod on login screen: ", err)
 	}
 
-	// Setup Chrome options.
-	params := s.Param().(loginScreenLaunchTestParam)
-	options, err := setupChromeOpts(s.RequiredVar("ui.signinProfileTestExtensionManifestKey"),
-		params.lacrosSelection, params.lacrosMode)
-	if err != nil {
-		s.Fatal("Failed to setup Chrome options: ", err)
-	}
-
 	// Shorten context a bit to allow for cleanup.
 	closeCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
+	// Setup Chrome options.
+	// chrome.NoLogin() and chrome.KeepState() are needed to show the login
+	// screen with a user pod (instead of the OOBE login screen).
+	// |signinProfileTestExtensionManifestKey| is needed to launch Chrome at OOBE.
+	// We disable profile migration to prevent Ash from restarting and breaking the test connection.
+	options := []chrome.Option{
+		chrome.NoLogin(),
+		chrome.KeepState(),
+		chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
+		chrome.EnableFeatures("LacrosLaunchAtLoginScreen"),
+		chrome.EnableFeatures("LacrosProfileMigrationForceOff"),
+	}
+
+	// Setup Lacros configuration.
+	params := s.Param().(loginScreenLaunchTestParam)
+	lacrosCfg := lacrosfixt.NewConfig(
+		lacrosfixt.Selection(params.lacrosSelection),
+		lacrosfixt.Mode(params.lacrosMode))
+
 	// Launch Chrome.
-	cr, err := chrome.New(ctx, options...)
+	cr, err := browserfixt.NewChrome(ctx, params.browserType, lacrosCfg, options...)
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
@@ -244,16 +252,20 @@ func LoginScreenLaunch(ctx context.Context, s *testing.State) {
 
 	// Gather the Lacros processes that are running at login screen.
 	info, err := lacrosinfo.Snapshot(ctx, tLoginConn)
-	if err != nil || len(info.LacrosPath) == 0 {
-		s.Fatal("Failed to get Lacros path: ", err)
+	if err != nil {
+		s.Fatal("Failed to get lacrosinfo.Snapshot: ", err)
+	}
+	if len(info.LacrosPath) == 0 {
+		s.Fatal("Failed to get Lacros path")
 	}
 	lacrosProcsAtLoginScreen, err := waitForLacrosProcs(ctx, info.LacrosPath)
 	if err != nil {
 		s.Fatal("Failed to get Lacros processes at login screen: ", err)
 	}
-	testing.ContextLog(ctx, "Lacros processes at login screen:")
+	// Log the running Lacros processes.
+	s.Log("Lacros processes at login screen:")
 	for pid, exe := range lacrosProcsAtLoginScreen {
-		testing.ContextLogf(ctx, "  %d: %s", pid, exe)
+		s.Logf("  %d: %s", pid, exe)
 	}
 
 	// Input the password and login.
@@ -271,21 +283,37 @@ func LoginScreenLaunch(ctx context.Context, s *testing.State) {
 	}
 
 	// Gather the Lacros processes running after login has been completed.
-	lacrosProcsAfterLogin, err := runningLacrosProcs(ctx, info.LacrosPath)
-	if err != nil {
-		s.Fatal("Failed to get Lacros processes after login: ", err)
-	}
-	testing.ContextLog(ctx, "Lacros processes after login:")
-	for pid, exe := range lacrosProcsAfterLogin {
-		testing.ContextLogf(ctx, "  %d: %s", pid, exe)
-	}
-	// Check that they are a superset of the ones that were running at login screen.
-	if !isSubset(lacrosProcsAtLoginScreen, lacrosProcsAfterLogin) {
-		s.Fatal("Processes running after login are not the ones that were running at login screen")
-	}
-
-	// Check that Lacros's connection works.
-	if _, err = lacros.Connect(ctx, tConn); err != nil {
-		s.Fatal("Could not connect to Lacros after login: ", err)
+	if params.browserType == browser.TypeLacros {
+		// If Lacros is enabled for the user, Lacros should be running in the session.
+		lacrosProcsAfterLogin, err := waitForLacrosProcs(ctx, info.LacrosPath)
+		// Couldn't get the processes, or there are no Lacros processes.
+		if err != nil {
+			s.Fatal("Failed to get Lacros processes after login: ", err)
+		}
+		// Log the running Lacros processes.
+		s.Log("Lacros processes after login:")
+		for pid, exe := range lacrosProcsAfterLogin {
+			s.Logf("  %d: %s", pid, exe)
+		}
+		// Check that the processes are a superset of the ones that were running at login screen.
+		if !isSubset(lacrosProcsAtLoginScreen, lacrosProcsAfterLogin) {
+			s.Fatal("Processes running after login are not the ones that were running at login screen")
+		}
+		// Check that Lacros's connection works.
+		if _, err = lacros.Connect(ctx, tConn); err != nil {
+			s.Fatal("Could not connect to Lacros after login: ", err)
+		}
+	} else {
+		// If Lacros is disabled for the user, Lacros should have been terminated.
+		lacrosProcsAfterLogin, err := waitForLacrosProcsTermination(ctx, info.LacrosPath)
+		// Couldn't get the processes, or there are still Lacros processes running.
+		if err != nil {
+			// Log the running Lacros processes.
+			s.Log("Lacros processes after login:")
+			for pid, exe := range lacrosProcsAfterLogin {
+				s.Logf("  %d: %s", pid, exe)
+			}
+			s.Fatal("Failed to detect Lacros processes termination after login: ", err)
+		}
 	}
 }
