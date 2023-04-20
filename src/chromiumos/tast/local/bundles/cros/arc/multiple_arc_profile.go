@@ -124,9 +124,10 @@ func MultipleArcProfile(ctx context.Context, s *testing.State) {
 		return
 	}
 	// TODO(b/210702593): Replace with LaunchAndWaitForAppOpen once fixed.
-	if err := launcher.LaunchApp(tconn, apps.Chat.Name)(ctx); err != nil {
-		s.Fatal("Failed to launch Chat app: ", err)
+	if err := uiauto.Retry(3, launcher.LaunchApp(tconn, apps.Chat.Name))(ctx); err != nil {
+		s.Fatal("Failed to launch Chat app after 3 retries: ", err)
 	}
+
 	ui := uiauto.New(tconn)
 	chatButton := nodewith.Name(apps.Chat.Name).ClassName("ash/ShelfAppButton")
 	if err := ui.WaitUntilExists(chatButton)(ctx); err != nil {
