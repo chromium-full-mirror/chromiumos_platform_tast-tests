@@ -7,11 +7,16 @@ package power
 import (
 	"context"
 	"io/ioutil"
+	"os"
 	"path"
 	"regexp"
+	"strconv"
+	"strings"
+	"sync"
 	"time"
 
 	"chromiumos/tast/common/perf"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -127,19 +132,81 @@ func (cs *CpuidleStateMetrics) Setup(ctx context.Context, prefix, intervalName s
 // to the time spent in the state & cpu pairs so far.
 func readCpuidleStateTimes(ctx context.Context, cpuidleTimeFiles map[string][]cpuidleTimeFile) (map[string](map[string]int64), time.Time, error) {
 	ret := make(map[string](map[string]int64))
+
+	// Open all CPU files in advance so reading from the files can be as fast as possbile.
+	openFiles := make(map[string]*os.File)
+	fileNum := 0
 	for cpuName, files := range cpuidleTimeFiles {
+		ret[cpuName] = make(map[string]int64)
+		fileNum += len(files)
 		for _, file := range files {
-			t, err := readInt64(ctx, file.path)
+			f, err := os.Open(file.path)
 			if err != nil {
-				return nil, time.Time{}, errors.Wrap(err, "failed to read cpuidle timing")
+				return nil, time.Time{}, errors.Wrapf(err, "failed to open CPU file %s", file.path)
 			}
-			if _, isPresent := ret[cpuName]; !isPresent {
-				ret[cpuName] = make(map[string]int64)
-			}
-			ret[cpuName][file.stateName] = t
+			defer f.Close()
+			openFiles[file.path] = f
 		}
 	}
-	return ret, time.Now(), nil
+
+	type readResult struct {
+		cpuName   string
+		stateName string
+		t         int64
+		endTime   time.Time
+	}
+	readResults := make(chan *readResult, fileNum)
+	readErrs := make(chan error, fileNum)
+
+	var wg sync.WaitGroup
+	wg.Add(fileNum)
+
+	readCPUFile := func(ctx context.Context, cpuName string, file cpuidleTimeFile) {
+		defer wg.Done()
+		data := make([]byte, 30) // Make a big enough buffer to read int64 data.
+		l, err := openFiles[file.path].Read(data)
+		if err != nil {
+			readErrs <- err
+			return
+		}
+		fileReadingEnd := time.Now()
+		if l == 0 {
+			readErrs <- errors.Errorf("found no content in %q", file.path)
+			return
+		}
+		t, err := strconv.ParseInt(strings.TrimSpace(string(data[0:l])), 10, 64)
+		if err != nil {
+			readErrs <- err
+			return
+		}
+		readResults <- &readResult{cpuName, file.stateName, t, fileReadingEnd}
+	}
+	for cpuName, files := range cpuidleTimeFiles {
+		for _, file := range files {
+			// Read files with go routines in the effort to get a more accurate snapshot.
+			go readCPUFile(ctx, cpuName, file)
+		}
+	}
+
+	wg.Wait()
+	close(readResults)
+	close(readErrs)
+
+	if len(readErrs) > 0 {
+		// Return with the first error.
+		return nil, time.Time{}, errors.Wrap(<-readErrs, "failed to read cpuidle timing")
+	}
+
+	// Find the latest reading end time as the snapshot end time.
+	var endTime time.Time
+
+	for r := range readResults {
+		ret[r.cpuName][r.stateName] = r.t
+		if endTime.Before(r.endTime) {
+			endTime = r.endTime
+		}
+	}
+	return ret, endTime, nil
 }
 
 // Start collects initial cpuidle numbers which we can use to
