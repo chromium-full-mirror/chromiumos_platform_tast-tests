@@ -17,7 +17,8 @@ import (
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/local/chrome/ash"
+	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/graphics"
 	"chromiumos/tast/testing"
 )
@@ -44,6 +45,11 @@ var (
 	}
 )
 
+type aquariumParamData struct {
+	fishCount   int
+	browserType browser.Type
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         WebGLAquarium,
@@ -63,24 +69,36 @@ func init() {
 			Name:      "50_fishes",
 			Fixture:   "chromeGraphics",
 			ExtraData: []string{webGlAquarium},
-			Val:       50,
+			Val: aquariumParamData{
+				fishCount:   50,
+				browserType: browser.TypeAsh,
+			},
 		}, {
 			Name:      "1000_fishes",
 			Fixture:   "chromeGraphics",
 			ExtraData: []string{webGlAquarium},
-			Val:       1000,
+			Val: aquariumParamData{
+				fishCount:   1000,
+				browserType: browser.TypeAsh,
+			},
 		}, {
 			Name:              "50_fishes_lacros",
 			Fixture:           "chromeGraphicsLacros",
 			ExtraData:         []string{webGlAquarium},
 			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               50,
+			Val: aquariumParamData{
+				fishCount:   50,
+				browserType: browser.TypeLacros,
+			},
 		}, {
 			Name:              "1000_fishes_lacros",
 			Fixture:           "chromeGraphicsLacros",
 			ExtraData:         []string{webGlAquarium},
 			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               1000,
+			Val: aquariumParamData{
+				fishCount:   1000,
+				browserType: browser.TypeLacros,
+			},
 		}},
 	})
 }
@@ -99,7 +117,7 @@ func savePerfVal(number float64, name, unit string, pv *perf.Values) {
 }
 
 func WebGLAquarium(ctx context.Context, s *testing.State) {
-	numFish := s.Param().(int)
+	numFish := s.Param().(aquariumParamData).fishCount
 	webGlAquariumSrc := s.DataPath(webGlAquarium)
 	webglLocalDir, err := os.MkdirTemp("", "")
 	if err != nil {
@@ -112,18 +130,16 @@ func WebGLAquarium(ctx context.Context, s *testing.State) {
 	server := httptest.NewServer(http.FileServer(http.Dir(webglLocalDir + "/webgl_aquarium_static")))
 	defer server.Close()
 	s.Logf("Extracted %s", webGlAquarium)
-	cr := s.FixtValue().(*chrome.Chrome)
 
 	url := path.Join(server.URL, "aquarium.html")
-	conn, err := cr.NewConn(ctx, url)
+	browserType := s.Param().(aquariumParamData).browserType
+	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, s.FixtValue().(chrome.HasChrome).Chrome(), browserType, url)
 	if err != nil {
-		s.Fatalf("Failed to open %v: %v", url, err)
+		s.Fatal("Failed to set up browser: ", err)
 	}
+	defer closeBrowser(ctx)
 	defer conn.Close()
-	ctconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to connect to test API: ", err)
-	}
+
 	if err = conn.WaitForExpr(ctx, "document.readyState === 'complete'"); err != nil {
 		s.Fatal("Page failed to load: ", err)
 	}
@@ -131,7 +147,6 @@ func WebGLAquarium(ctx context.Context, s *testing.State) {
 	if err = conn.Call(ctx, nil, "setSetting", elemID, fishSettings[numFish][1]); err != nil {
 		s.Fatal("Could not get the intrinsic fish set id: ", err)
 	}
-	defer ash.CloseAllWindows(ctx, ctconn)
 	if err = conn.Call(ctx, nil, "g_crosFpsCounter.reset"); err != nil {
 		s.Fatal("Could not reset the FPS counter: ", err)
 	}

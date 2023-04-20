@@ -15,10 +15,12 @@ import (
 
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/graphics"
 	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
 )
 
 const (
@@ -50,10 +52,12 @@ func init() {
 		Params: []testing.Param{{
 			Name:    "",
 			Fixture: "chromeGraphics",
+			Val:     browser.TypeAsh,
 		}, {
 			Name:              "lacros",
 			Fixture:           "chromeGraphicsLacros",
 			ExtraSoftwareDeps: []string{"lacros"},
+			Val:               browser.TypeLacros,
 		}},
 	})
 }
@@ -93,14 +97,13 @@ func WebGLManyPlanetsDeep(ctx context.Context, s *testing.State) {
 	server := httptest.NewServer(http.FileServer(http.Dir(os.TempDir() + "/src")))
 	defer server.Close()
 
-	cr := s.FixtValue().(*chrome.Chrome)
 	url := path.Join(server.URL, "ManyPlanetsDeep.html")
-	conn, err := cr.NewConn(ctx, url)
+	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, s.FixtValue().(chrome.HasChrome).Chrome(), s.Param().(browser.Type), url)
 	if err != nil {
-		s.Fatalf("Failed to open %v: %v", url, err)
+		s.Fatal("Failed to set up browser: ", err)
 	}
+	defer closeBrowser(cleanupCtx)
 	defer conn.Close()
-	defer conn.CloseTarget(cleanupCtx)
 
 	if err = conn.WaitForExpr(ctx, "document.readyState === 'complete'"); err != nil {
 		s.Fatal("Page failed to load: ", err)
