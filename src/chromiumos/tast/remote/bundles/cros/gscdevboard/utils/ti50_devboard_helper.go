@@ -6,7 +6,6 @@ package utils
 
 import (
 	"context"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"regexp"
@@ -226,38 +225,9 @@ func (h DevboardHelper) GpioMonitorFinish(ctx context.Context, session GpioMonit
 	return events
 }
 
-// TpmReadRegister retrieves the value of a TPM register by communicating via SPI or I2C.
-func (h DevboardHelper) TpmReadRegister(ctx context.Context, bus ti50.TpmBus, register ti50.TpmRegister) string {
-	data, err := h.OpenTitanToolCommand(ctx,
-		string(bus), "tpm", "read-register", string(register))
-	if err != nil {
-		h.Fatalf("failed to read TPM register %s: %s", register, err)
-	}
-	return data["hexdata"].(string)
-}
-
-// TpmExecuteHex sends a TPM request using possibly multiple writes to the FIFO and status
-// registers, and waits for the execution to complete before retrieving the reply.
-func (h DevboardHelper) TpmExecuteHex(ctx context.Context, bus ti50.TpmBus, request string) string {
-	response, err := h.OpenTitanToolCommand(ctx,
-		string(bus), "tpm", "execute-command", "--hexdata", request)
-	if err != nil {
-		h.Fatalf("failed to execute TPM command: %s", err)
-	}
-	return response["hexdata"].(string)
-}
-
-// TpmExecute sends a TPM request using possibly multiple writes to the FIFO and status
-// registers, and waits for the execution to complete before retrieving the reply.
-func (h DevboardHelper) TpmExecute(ctx context.Context, bus ti50.TpmBus, request []byte) []byte {
-	response, err := h.OpenTitanToolCommand(ctx,
-		string(bus), "tpm", "execute-command", "--hexdata", hex.EncodeToString(request))
-	if err != nil {
-		h.Fatalf("failed to execute TPM command: %s", err)
-	}
-	binary, err := hex.DecodeString(response["hexdata"].(string))
-	if err != nil {
-		h.Fatalf("malformed hexdata \"%s\": %s", response["hexdata"].(string), err)
-	}
-	return binary
+// Tpm returns an object that can be used with the go-tpm library to execute TPM commands via SPI
+// or I2C.  See firmware.Ti50Tpm for an example.
+// go-tpm documentation: https://pkg.go.dev/github.com/google/go-tpm@v0.3.3/tpm2
+func (h DevboardHelper) Tpm(ctx context.Context, bus ti50.TpmBus) *tpmHandle {
+	return &tpmHandle{h: h, ctx: ctx, bus: bus}
 }

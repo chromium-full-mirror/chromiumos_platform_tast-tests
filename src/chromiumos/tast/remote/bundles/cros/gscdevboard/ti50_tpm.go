@@ -12,6 +12,8 @@ import (
 	"chromiumos/tast/remote/bundles/cros/gscdevboard/utils"
 	"chromiumos/tast/remote/firmware/ti50/fixture"
 	"chromiumos/tast/testing"
+
+	"github.com/google/go-tpm/tpm2"
 )
 
 func init() {
@@ -28,12 +30,6 @@ func init() {
 		Fixture:      fixture.Ti50,
 	})
 }
-
-const (
-	// First request grabbed from TCQ test suite
-	someTpmRequest      = "80010000000c000001440000"
-	expectedTpmResponse = "80010000000a00000000"
-)
 
 func Ti50Tpm(ctx context.Context, s *testing.State) {
 	f := s.FixtValue().(*fixture.Value)
@@ -52,13 +48,13 @@ func Ti50Tpm(ctx context.Context, s *testing.State) {
 	// TPM commands.
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
 
-	didVid := b.TpmReadRegister(ctx, ti50.TpmBusSpi, ti50.TpmRegDidVid)
+	tpmHandle := b.Tpm(ctx, ti50.TpmBusSpi)
+	didVid := tpmHandle.ReadRegister(ti50.TpmRegDidVid)
 	if didVid != ti50.TpmDidVidHexValue {
 		s.Error("Unexpected TPM DID_VID: ", didVid)
 	}
 
-	response := b.TpmExecuteHex(ctx, ti50.TpmBusSpi, someTpmRequest)
-	if response != expectedTpmResponse {
-		s.Error("Unexpected TPM response: ", response)
+	if err := tpm2.Startup(tpmHandle, tpm2.StartupClear); err != nil {
+		s.Error("TPM error: ", err)
 	}
 }

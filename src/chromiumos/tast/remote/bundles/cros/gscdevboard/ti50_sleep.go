@@ -111,7 +111,8 @@ func Ti50Sleep(ctx context.Context, s *testing.State) {
 	th.MustSucceed(i.WaitUntilNormalSleep(ctx, 30*time.Second), "Sleep when AP on")
 
 	s.Log("Simulating AP SPI request")
-	didVid := b.TpmReadRegister(ctx, ti50.TpmBusSpi, ti50.TpmRegDidVid)
+	tpmHandle := b.Tpm(ctx, ti50.TpmBusSpi)
+	didVid := tpmHandle.ReadRegister(ti50.TpmRegDidVid)
 	if didVid != ti50.TpmDidVidHexValue {
 		s.Error("Unexpected TPM DID_VID immediately after wakeup: ", didVid)
 	}
