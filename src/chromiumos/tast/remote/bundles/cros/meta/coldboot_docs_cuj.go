@@ -23,7 +23,6 @@ func init() {
 		Desc:         "Capture Google Docs CUJ metrics after cold booting the system",
 		Contacts:     []string{"lacros-team@google.com", "hidehiko@chromium.org"},
 		BugComponent: "TBA",
-		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome", "lacros"},
 		VarDeps:      []string{"ui.gaiaPoolDefault"},
 		Vars:         []string{"meta.ColdbootDocsCUJ.iterations"},
