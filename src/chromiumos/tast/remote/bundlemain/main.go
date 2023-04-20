@@ -4,7 +4,7 @@
 
 // Package bundlemain provides a main function implementation for a bundle
 // to share it from various remote bundle executables.
-// The most of the frame implementation is in chromiumos/tast/bundle package,
+// The most of the frame implementation is in go.chromium.org/tast/core/bundle package,
 // but some utilities, which lives in support libraries for maintenance,
 // need to be injected.
 package bundlemain
@@ -18,7 +18,6 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
-	"chromiumos/tast/bundle"
 	"chromiumos/tast/common/hwsec"
 	"chromiumos/tast/dut"
 	"chromiumos/tast/errors"
@@ -28,6 +27,7 @@ import (
 	"chromiumos/tast/services/cros/baserpc"
 	"chromiumos/tast/ssh/linuxssh"
 	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/bundle"
 )
 
 const varLogMsgPath = "/var/log/messages"
