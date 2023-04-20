@@ -193,7 +193,7 @@ func RunTest(ctx context.Context, s *testing.State, a *arc.ARC, cr *chrome.Chrom
 		s.Fatal("Failed to write a data file: ", err)
 	}
 
-	config := storage.TestConfig{DirName: diskName, DirTitle: "Files - " + diskName, SubDirectories: []string{}, FileName: testFile, CreateTestFile: false}
+	config := storage.TestConfig{DirName: diskName, SubDirectories: []string{}, FileName: testFile}
 	expectations := []storage.Expectation{
 		{LabelID: storage.ActionID, Value: storage.ExpectedAction},
 		{LabelID: storage.URIID, Predicate: arc.VerifyContentURIForArcVolumeProviderPath(filepath.Join(arc.RemovableMediaUUID, testFile))},

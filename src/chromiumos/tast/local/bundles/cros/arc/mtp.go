@@ -17,7 +17,6 @@ import (
 	"chromiumos/tast/local/bundles/cros/arc/storage"
 	"chromiumos/tast/local/chrome/mtp"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
-	"chromiumos/tast/local/chrome/uiauto/filesapp"
 	"chromiumos/tast/local/cryptohome"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -100,8 +99,8 @@ func MTP(ctx context.Context, s *testing.State) {
 
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
-	config := storage.TestConfig{DirName: mtp.DeviceName, DirTitle: filesapp.FilesTitlePrefix + mtp.DeviceName,
-		SubDirectories: []string{"Download"}, FileName: textFile}
+	config := storage.TestConfig{DirName: mtp.DeviceName, SubDirectories: []string{"Download"},
+		FileName: textFile}
 	expectations := []storage.Expectation{
 		{LabelID: storage.ActionID, Value: storage.ExpectedAction},
 		{LabelID: storage.URIID, Predicate: func(actual string) bool {

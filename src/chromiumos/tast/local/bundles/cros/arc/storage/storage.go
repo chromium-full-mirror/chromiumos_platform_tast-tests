@@ -6,9 +6,6 @@ package storage
 
 import (
 	"context"
-	"io/ioutil"
-	"os"
-	"path/filepath"
 	"time"
 
 	androidui "chromiumos/tast/common/android/ui"
@@ -62,25 +59,19 @@ type Expectation struct {
 
 // TestConfig stores the details of the directory under test and misc test configurations.
 type TestConfig struct {
-	// Name of the directory.
+	// Name of the directory. This should be present on the sidebar of the Files app when it is
+	// launched.
 	DirName string
-	// Title of the directory.
-	DirTitle string
 	// If specified, open the sub-directories under "DirName".
 	SubDirectories []string
-	// Actual path of the directory on the file system.
-	DirPath string
-	// If set to true, create the test file at "DirPath". For directory where there is no actual
-	// file path, set this to false and create the file before running the test (e.g. MTP).
-	CreateTestFile bool
+	// Name of the test file to be used in the test.
+	FileName string
+	// Optional: Expected title of the Ash window of the Files app when opened |DirName| on the
+	// navigation tree. When unspecified, |filesapp.FilesTitlePrefix + DirName| will be used.
+	DirTitle string
 	// Optional: If set to true, wait for file type to appear before opening the file.
 	// Currently used by DriveFS to ensure metadata has arrived.
 	CheckFileType bool
-	// Name of the test file to be used in the test.
-	FileName string
-	// If set to true, retain the test file created early in "DirPath".
-	// Currently used by DriveFS to avoid creating and deleting files.
-	KeepFile bool
 }
 
 // TestOpenWithAndroidApp opens a test file in the specified directory, e.g. Google Drive,
@@ -97,22 +88,6 @@ func TestOpenWithAndroidApp(ctx context.Context, a *arc.ARC, cr *chrome.Chrome, 
 	testing.ContextLog(ctx, "Installing ArcFileReaderTest app")
 	if err := a.Install(ctx, arc.APKPath(testAppPath)); err != nil {
 		return errors.Wrap(err, "failed to install ArcFileReaderTest app")
-	}
-
-	if config.CreateTestFile {
-		testFileLocation := filepath.Join(config.DirPath, config.FileName)
-		_, err := os.Stat(testFileLocation)
-		fileNotExist := errors.Is(err, os.ErrNotExist)
-
-		if fileNotExist {
-			testing.ContextLog(ctx, "Setting up a test file")
-			if err := ioutil.WriteFile(testFileLocation, []byte(ExpectedFileContent), 0666); err != nil {
-				return errors.Wrapf(err, "failed to create test file %s", testFileLocation)
-			}
-		}
-		if !config.KeepFile {
-			defer os.Remove(testFileLocation)
-		}
 	}
 
 	if err := a.WaitIntentHelper(ctx); err != nil {
@@ -159,8 +134,13 @@ func openFilesApp(ctx context.Context, cr *chrome.Chrome) (*filesapp.FilesApp, e
 func openWithReaderApp(ctx context.Context, files *filesapp.FilesApp, config TestConfig) error {
 	testing.ContextLog(ctx, "Opening the test file with ArcFileReaderTest")
 
+	dirTitle := config.DirTitle
+	if dirTitle == "" {
+		dirTitle = filesapp.FilesTitlePrefix + config.DirName
+	}
+
 	return uiauto.Combine("open the test file with ArcFileReaderTest",
-		files.OpenPath(config.DirTitle, config.DirName, config.SubDirectories...),
+		files.OpenPath(dirTitle, config.DirName, config.SubDirectories...),
 		// Note: due to the banner loading, this may still be flaky.
 		// If that is the case, we may want to increase the interval and timeout for this next call.
 		files.SelectFile(config.FileName),

@@ -6,12 +6,15 @@ package arc
 
 import (
 	"context"
+	"io/ioutil"
 	"net/url"
+	"os"
 	"path"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bundles/cros/arc/storage"
 	"chromiumos/tast/local/chrome"
@@ -43,6 +46,8 @@ func init() {
 }
 
 func Drivefs(ctx context.Context, s *testing.State) {
+	const filename = "storage_drivefs.txt"
+
 	cr, err := chrome.New(
 		ctx,
 		chrome.ARCEnabled(),
@@ -80,8 +85,18 @@ func Drivefs(ctx context.Context, s *testing.State) {
 	}
 	drivefsRoot := path.Join(mountPath, "root")
 
-	config := storage.TestConfig{DirPath: drivefsRoot, DirName: "Google Drive", DirTitle: "Files - My Drive",
-		CreateTestFile: true, CheckFileType: true, FileName: "storage_drivefs.txt", KeepFile: true}
+	// Since the test account can be shared with other concurrently running
+	// tests, create the test file only when it's missing, and do not remove it
+	// after the test (b/179876719).
+	testFilePath := filepath.Join(drivefsRoot, filename)
+	if _, err := os.Stat(testFilePath); errors.Is(err, os.ErrNotExist) {
+		if err := ioutil.WriteFile(testFilePath, []byte(storage.ExpectedFileContent), 0666); err != nil {
+			s.Fatalf("Failed to create test file %s: %v", testFilePath, err)
+		}
+	}
+
+	config := storage.TestConfig{DirName: "Google Drive", FileName: filename,
+		DirTitle: "Files - My Drive", CheckFileType: true}
 
 	var verifyContentURI (func(string) bool)
 	if vmEnabled {

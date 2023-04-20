@@ -122,8 +122,7 @@ func Fsp(ctx context.Context, s *testing.State) {
 		s.Fatal("Unzip test zip file failed: ", err)
 	}
 
-	config := storage.TestConfig{DirName: fspZipFile, DirTitle: "Files - " + fspZipFile,
-		FileName: "storage.txt"}
+	config := storage.TestConfig{DirName: fspZipFile, FileName: "storage.txt"}
 	expect := []storage.Expectation{
 		{LabelID: storage.ActionID, Value: storage.ExpectedAction},
 		{LabelID: storage.URIID, Value: constructFSPURI(userPath, config.FileName)},

@@ -199,7 +199,7 @@ func testOpenInPlayfiles(ctx context.Context, cr *chrome.Chrome, a *arc.ARC, fil
 		return errors.Wrap(err, "failed to initialize UI Automator")
 	}
 
-	config := storage.TestConfig{DirName: "Play files", DirTitle: "Files - Play files", SubDirectories: []string{"Pictures"}, FileName: filename, CreateTestFile: false}
+	config := storage.TestConfig{DirName: "Play files", SubDirectories: []string{"Pictures"}, FileName: filename}
 	expectations := []storage.Expectation{
 		{LabelID: storage.ActionID, Value: storage.ExpectedAction},
 		{LabelID: storage.URIID, Predicate: arc.VerifyContentURIForArcVolumeProviderPath(filepath.Join("external_files", "Pictures", filename))},

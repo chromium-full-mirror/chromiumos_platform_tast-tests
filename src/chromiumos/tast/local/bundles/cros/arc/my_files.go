@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"context"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -123,11 +124,17 @@ func testPushToARCAndReadFromCros(ctx context.Context, a *arc.ARC, sourcePath, a
 // testCrosToARC checks whether a file put in the ChromeOS MyFiles directory
 // can be read by Android apps.
 func testCrosToARC(ctx context.Context, a *arc.ARC, cr *chrome.Chrome, d *ui.Device, myFilesPath string) error {
-	config := storage.TestConfig{DirPath: myFilesPath, DirName: "My files", DirTitle: "Files - My files",
-		CreateTestFile: true, FileName: "storage.txt"}
+	const filename = "storage.txt"
 
 	testing.ContextLog(ctx, "Testing CrOS -> Android")
 
+	testFilePath := filepath.Join(myFilesPath, filename)
+	if err := ioutil.WriteFile(testFilePath, []byte(storage.ExpectedFileContent), 0666); err != nil {
+		return errors.Wrapf(err, "failed to create test file %s", testFilePath)
+	}
+	defer os.Remove(testFilePath)
+
+	config := storage.TestConfig{DirName: "My files", FileName: filename}
 	expectations := []storage.Expectation{
 		{LabelID: storage.ActionID, Value: storage.ExpectedAction},
 		{LabelID: storage.URIID, Predicate: arc.VerifyContentURIForArcVolumeProviderPath(filepath.Join(arc.MyFilesUUID, config.FileName))},
