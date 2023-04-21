@@ -9,9 +9,9 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"chromiumos/tast/autocaps"
 	"chromiumos/tast/local/gtest"
 	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/autocaps"
 	"go.chromium.org/tast/core/shutil"
 )
 

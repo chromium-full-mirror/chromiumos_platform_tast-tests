@@ -11,10 +11,10 @@ import (
 	"regexp"
 	"strings"
 
-	"chromiumos/tast/autocaps"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/autocaps"
 )
 
 // These are constant strings for capabilities in autotest-capability.

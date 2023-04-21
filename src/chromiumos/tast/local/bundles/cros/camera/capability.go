@@ -8,10 +8,10 @@ import (
 	"context"
 	"fmt"
 
-	"chromiumos/tast/autocaps"
 	"chromiumos/tast/local/camera/testutil"
 	"chromiumos/tast/local/crosconfig"
 	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/autocaps"
 )
 
 func init() {

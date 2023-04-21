@@ -9,11 +9,11 @@ import (
 	"fmt"
 	"strconv"
 
-	"chromiumos/tast/autocaps"
 	"chromiumos/tast/common/media/caps"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/crosconfig"
 	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/autocaps"
 )
 
 func init() {
