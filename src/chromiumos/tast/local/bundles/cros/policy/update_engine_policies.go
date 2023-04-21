@@ -6,7 +6,6 @@ package policy
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -17,10 +16,11 @@ import (
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/local/bundles/cros/policy/nebraska"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/nebraska"
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/local/upstart"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -28,7 +28,7 @@ import (
 type updateEngineTestParam struct {
 	// policyValues are the policies that need to be set.
 	policyValues []policy.Policy
-	// policyParam os the xml attribute that needs to be set by update_engine.
+	// policyParam is the xml attribute that needs to be set by update_engine.
 	policyParam string
 	// testValue is the value for the policyParam attribute.
 	testValue string
@@ -254,15 +254,11 @@ func UpdateEnginePolicies(ctx context.Context, s *testing.State) {
 	defer policyutil.ServeAndVerify(ctx, fdms, cr, []policy.Policy{})
 
 	s.Run(ctx, "set", func(ctx context.Context, s *testing.State) {
-		updateServer, err := nebraska.Start(ctx)
+		updateServer, err := nebraska.New(ctx, nebraska.ConfigureUpdateEngine())
 		if err != nil {
 			s.Fatal("Failed to start nebraska: ", err)
 		}
-		defer updateServer.Stop(ctx)
-
-		if err := updateServer.ConfigureStatefulLSBRelease(); err != nil {
-			s.Fatal("Failed to configure lsb-release: ", err)
-		}
+		defer updateServer.Close(ctx)
 
 		// Set the policy and check that the attribute is set.
 		if err := policyutil.ServeAndVerify(ctx, fdms, cr, param.policyValues); err != nil {
@@ -275,10 +271,9 @@ func UpdateEnginePolicies(ctx context.Context, s *testing.State) {
 
 		attributeEntry := param.policyParam + "=\"" + param.testValue + "\""
 		s.Log("Waiting for the log entry to show up")
-		var updateServerLog []byte
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
 			var err error
-			updateServerLog, err := updateServer.ReadLog(ctx)
+			updateServerLog, err := os.ReadFile(updateServer.LogFile)
 			if err != nil {
 				return testing.PollBreak(errors.Wrap(err, "failed to read nebraska logs"))
 			}
@@ -294,30 +289,22 @@ func UpdateEnginePolicies(ctx context.Context, s *testing.State) {
 			s.Error("Could not find expected values: ", err)
 		}
 
-		updateEngineLog, err := ioutil.ReadFile("/var/log/update_engine.log")
+		updateEngineLog, err := os.ReadFile("/var/log/update_engine.log")
 		if err != nil {
 			s.Fatal("Failed to read update_engine logs: ", err)
 		}
 
-		if err := ioutil.WriteFile(filepath.Join(s.OutDir(), "set_log.txt"), updateEngineLog, 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(s.OutDir(), "set_log.txt"), updateEngineLog, 0644); err != nil {
 			s.Error("Failed to dump update_engine logs: ", err)
-		}
-
-		if err := ioutil.WriteFile(filepath.Join(s.OutDir(), "set_nebraska_log.txt"), updateServerLog, 0644); err != nil {
-			s.Error("Failed to dump nebraska logs: ", err)
 		}
 	})
 
 	s.Run(ctx, "unset", func(ctx context.Context, s *testing.State) {
-		updateServer, err := nebraska.Start(ctx)
+		updateServer, err := nebraska.New(ctx, nebraska.ConfigureUpdateEngine())
 		if err != nil {
 			s.Fatal("Failed to start nebraska: ", err)
 		}
-		defer updateServer.Stop(ctx)
-
-		if err := updateServer.ConfigureStatefulLSBRelease(); err != nil {
-			s.Fatal("Failed to configure lsb-release: ", err)
-		}
+		defer updateServer.Close(ctx)
 
 		// Clear policies to make sure attribute is not always sent.
 		if err := policyutil.ServeAndVerify(ctx, fdms, cr, []policy.Policy{}); err != nil {
@@ -329,26 +316,23 @@ func UpdateEnginePolicies(ctx context.Context, s *testing.State) {
 		}
 
 		s.Log("Waiting for update_engine to have a chance to log")
+		// GoBigSleepLint we are waiting for "nothing" to happen in the logs. Polling is not possible.
 		if err := testing.Sleep(ctx, waitTime); err != nil {
 			s.Fatal("Failed to wait for messages: ", err)
 		}
 
-		updateEngineLog, err := ioutil.ReadFile("/var/log/update_engine.log")
+		updateEngineLog, err := os.ReadFile("/var/log/update_engine.log")
 		if err != nil {
 			s.Fatal("Failed to read update_engine logs: ", err)
 		}
 
-		if err := ioutil.WriteFile(filepath.Join(s.OutDir(), "unset_log.txt"), updateEngineLog, 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(s.OutDir(), "unset_log.txt"), updateEngineLog, 0644); err != nil {
 			s.Error("Failed to dump update_engine logs: ", err)
 		}
 
-		updateServerLog, err := updateServer.ReadLog(ctx)
+		updateServerLog, err := os.ReadFile(updateServer.LogFile)
 		if err != nil {
 			s.Fatal("Failed to read nebraska logs: ", err)
-		}
-
-		if err := ioutil.WriteFile(filepath.Join(s.OutDir(), "unset_nebraska_log.txt"), updateServerLog, 0644); err != nil {
-			s.Error("Failed to dump nebraska logs: ", err)
 		}
 
 		if param.checkParam && strings.Contains(string(updateServerLog), param.policyParam) {

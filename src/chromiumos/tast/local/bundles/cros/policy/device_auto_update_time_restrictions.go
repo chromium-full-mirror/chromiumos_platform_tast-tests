@@ -8,7 +8,6 @@ import (
 	"context"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -16,12 +15,12 @@ import (
 	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
-	"chromiumos/tast/local/bundles/cros/policy/nebraska"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/nebraska"
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/local/upstart"
+
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/lsbrelease"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -116,35 +115,15 @@ func DeviceAutoUpdateTimeRestrictions(ctx context.Context, s *testing.State) {
 	defer upstart.RestartJob(ctx, "update-engine")
 
 	s.Run(ctx, "checkRestrictions", func(ctx context.Context, s *testing.State) {
-		lsb, err := lsbrelease.Load()
-		if err != nil {
-			s.Fatal("Failed to load lsbrelease: ", err)
-		}
-
-		// Generate contents of update_payload.json based on appID from the device.
-		appID := lsb[lsbrelease.ReleaseAppID]
-
-		// The data have been generated using documentation from
-		// go/remote-management/docs/version-management/development
-		payloadJSONContents := nebraska.UpdatePayload{
-			Appid:             appID,
-			IsDelta:           false,
-			MetadataSignature: nil,
-			MetadataSize:      74204,
-			Sha256Hex:         "/gu3P+FBIioa5ILaBNKysJ/uWQiIId/mNEn9qCT/0/k=",
-			Size:              1401355452,
-			TargetVersion:     "99999.0.0",
-			Version:           2,
-		}
-
 		// Start nebraska with the generated JSON contents.
-		updateServer, err := nebraska.StartWithMetadata(ctx, &payloadJSONContents)
+		updateServer, err := nebraska.New(ctx, nebraska.ConfigureUpdateEngine())
 		if err != nil {
 			s.Fatal("Failed to start nebraska: ", err)
 		}
-		defer updateServer.Stop(ctx)
-		if err := updateServer.ConfigureStatefulLSBRelease(); err != nil {
-			s.Fatal("Failed to configure lsb-release: ", err)
+		defer updateServer.Close(ctx)
+
+		if err := updateServer.SetFakedMetadata(ctx); err != nil {
+			s.Fatal("Failed to configure Nebraska with faked update metadata: ", err)
 		}
 
 		// Set the pref test-update-check-interval-timeout
@@ -183,16 +162,6 @@ func DeviceAutoUpdateTimeRestrictions(ctx context.Context, s *testing.State) {
 					return errors.New("failed to find proper logs in update_engine.log. Should block: false")
 				}
 			}
-
-			updateServerLog, err := updateServer.ReadLog(ctx)
-			if err != nil {
-				s.Fatal("Failed to read nebraska logs: ", err)
-			}
-
-			if err := ioutil.WriteFile(filepath.Join(s.OutDir(), "unset_nebraska_log.txt"), updateServerLog, 0644); err != nil {
-				s.Error("Failed to dump nebraska logs: ", err)
-			}
-
 			return nil
 		}, &testing.PollOptions{
 			Timeout: 59 * time.Second,
