@@ -195,8 +195,8 @@ func TestPlaybackPerfParams(t *testing.T) {
 			file := playbackPerfLongFile[codec]
 			param := genPlaybackParam(codec, file, resolution, fps, dec,
 				"long", "", []string{"drm_atomic"})
-
-			param.HardwareDeps = "hwdep.SkipOnModel(\"hana\", \"elm\"), hwdep.InternalDisplay()"
+			// "rogue" is for MT8173 hana.
+			param.HardwareDeps = "hwdep.SkipGPUFamily([]string{\"rogue\"}), hwdep.InternalDisplay()"
 			param.MeasureRoughness = true
 			params = append(params, param)
 		}
@@ -222,7 +222,8 @@ func TestPlaybackPerfParams(t *testing.T) {
 		param := genPlaybackParam(codec, file, resolution, fps, dec,
 			"long_oopvd", "chromeVideoOOPVD",
 			[]string{"drm_atomic"})
-		param.HardwareDeps = "hwdep.SkipOnModel(\"hana\", \"elm\"), hwdep.InternalDisplay()"
+		// "rogue" is for MT8173 hana.
+		param.HardwareDeps = "hwdep.SkipGPUFamily([]string{\"rogue\"}), hwdep.InternalDisplay()"
 		param.MeasureRoughness = true
 		params = append(params, param)
 	}
@@ -254,7 +255,8 @@ func TestPlaybackPerfParams(t *testing.T) {
 		param := genPlaybackParam(codec, file, resolution, fps, dec,
 			"long_lacros", "chromeVideoLacros",
 			[]string{"drm_atomic", "lacros"})
-		param.HardwareDeps = "hwdep.SkipOnModel(\"hana\", \"elm\"), hwdep.InternalDisplay()"
+		// "rogue" is for MT8173 hana.
+		param.HardwareDeps = "hwdep.SkipGPUFamily([]string{\"rogue\"}), hwdep.InternalDisplay()"
 		param.MeasureRoughness = true
 		params = append(params, param)
 	}

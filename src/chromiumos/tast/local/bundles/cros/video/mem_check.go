@@ -34,7 +34,7 @@ func init() {
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		// Skip this test on Rockchip devices: they don't provide DRM.
 		// "gru" is the platform name for e.g. scarlet.
-		HardwareDeps: hwdep.D(hwdep.SupportsNV12Overlays(), hwdep.SkipOnPlatform("bob", "gru", "kevin", "fievel", "tiger")),
+		HardwareDeps: hwdep.D(hwdep.SupportsNV12Overlays(), hwdep.SkipCPUSocFamily([]string{"rockchip"})),
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"video.html", "playback.js"},
 		Params: []testing.Param{{

@@ -715,8 +715,6 @@ func init() {
 			},
 			ExtraData:         []string{"tulip2-320x180.vp9.webm"},
 			ExtraSoftwareDeps: []string{"v4l2_codec", caps.HWEncodeH264},
-			// TODO(b/174103282): Enable on Rockchip RK3288 devices (veyron_*).
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform("fievel", "tiger")),
 		}, {
 			Name: "v4l2_h264_360",
 			Val: testParam{
@@ -731,8 +729,6 @@ func init() {
 			},
 			ExtraData:         []string{"tulip2-640x360.vp9.webm"},
 			ExtraSoftwareDeps: []string{"v4l2_codec", caps.HWEncodeH264},
-			// TODO(b/174103282): Enable on Rockchip RK3288 devices (veyron_*).
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform("fievel", "tiger")),
 		}, {
 			Name: "v4l2_h264_720",
 			Val: testParam{
@@ -747,8 +743,6 @@ func init() {
 			},
 			ExtraData:         []string{"tulip2-1280x720.vp9.webm"},
 			ExtraSoftwareDeps: []string{"v4l2_codec", caps.HWEncodeH264},
-			// TODO(b/174103282): Enable on Rockchip RK3288 devices (veyron_*).
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform("fievel", "tiger")),
 		}, {
 			Name: "v4l2_h264_180_meet",
 			Val: testParam{
@@ -763,8 +757,6 @@ func init() {
 			},
 			ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
 			ExtraSoftwareDeps: []string{"v4l2_codec", caps.HWEncodeH264},
-			// TODO(b/174103282): Enable on Rockchip RK3288 devices (veyron_*).
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform("fievel", "tiger")),
 		}, {
 			Name: "v4l2_h264_360_meet",
 			Val: testParam{
@@ -779,8 +771,6 @@ func init() {
 			},
 			ExtraData:         []string{"gipsrestat-640x360.vp9.webm"},
 			ExtraSoftwareDeps: []string{"v4l2_codec", caps.HWEncodeH264},
-			// TODO(b/174103282): Enable on Rockchip RK3288 devices (veyron_*).
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform("fievel", "tiger")),
 		}, {
 			Name: "v4l2_h264_720_meet",
 			Val: testParam{
@@ -795,8 +785,6 @@ func init() {
 			},
 			ExtraData:         []string{"gipsrestat-1280x720.vp9.webm"},
 			ExtraSoftwareDeps: []string{"v4l2_codec", caps.HWEncodeH264},
-			// TODO(b/174103282): Enable on Rockchip RK3288 devices (veyron_*).
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform("fievel", "tiger")),
 		}, {
 			Name: "v4l2_vp8_180",
 			Val: testParam{
@@ -811,8 +799,6 @@ func init() {
 			},
 			ExtraData:         []string{"tulip2-320x180.vp9.webm"},
 			ExtraSoftwareDeps: []string{"v4l2_codec", caps.HWEncodeVP8},
-			// TODO(b/174103282): Enable on Rockchip RK3288 devices (veyron_*).
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform("fievel", "tiger")),
 		}, {
 			Name: "v4l2_vp8_360",
 			Val: testParam{
@@ -827,8 +813,6 @@ func init() {
 			},
 			ExtraData:         []string{"tulip2-640x360.vp9.webm"},
 			ExtraSoftwareDeps: []string{"v4l2_codec", caps.HWEncodeVP8},
-			// TODO(b/174103282): Enable on Rockchip RK3288 devices (veyron_*).
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform("fievel", "tiger")),
 		}, {
 			Name: "v4l2_vp8_720",
 			Val: testParam{
@@ -843,8 +827,6 @@ func init() {
 			},
 			ExtraData:         []string{"tulip2-1280x720.vp9.webm"},
 			ExtraSoftwareDeps: []string{"v4l2_codec", caps.HWEncodeVP8},
-			// TODO(b/174103282): Enable on Rockchip RK3288 devices (veyron_*).
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform("fievel", "tiger")),
 		}, {
 			Name: "v4l2_vp8_180_meet",
 			Val: testParam{
@@ -859,8 +841,6 @@ func init() {
 			},
 			ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
 			ExtraSoftwareDeps: []string{"v4l2_codec", caps.HWEncodeVP8},
-			// TODO(b/174103282): Enable on Rockchip RK3288 devices (veyron_*).
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform("fievel", "tiger")),
 		}, {
 			Name: "v4l2_vp8_360_meet",
 			Val: testParam{
@@ -875,8 +855,6 @@ func init() {
 			},
 			ExtraData:         []string{"gipsrestat-640x360.vp9.webm"},
 			ExtraSoftwareDeps: []string{"v4l2_codec", caps.HWEncodeVP8},
-			// TODO(b/174103282): Enable on Rockchip RK3288 devices (veyron_*).
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform("fievel", "tiger")),
 		}, {
 			Name: "v4l2_vp8_720_meet",
 			Val: testParam{
@@ -891,8 +869,6 @@ func init() {
 			},
 			ExtraData:         []string{"gipsrestat-1280x720.vp9.webm"},
 			ExtraSoftwareDeps: []string{"v4l2_codec", caps.HWEncodeVP8},
-			// TODO(b/174103282): Enable on Rockchip RK3288 devices (veyron_*).
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform("fievel", "tiger")),
 		}},
 		Timeout: 30 * time.Minute,
 	})

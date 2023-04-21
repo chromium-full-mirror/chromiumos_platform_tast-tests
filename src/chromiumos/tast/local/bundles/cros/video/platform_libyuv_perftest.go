@@ -65,7 +65,7 @@ func init() {
 				width:  1280,
 				height: 720,
 			},
-			ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatelessVideoDecoding(), hwdep.SkipOnPlatform("bob", "gru", "kevin")),
+			ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatelessVideoDecoding(), hwdep.SkipCPUSocFamily([]string{"rockchip"})),
 		}, {
 			Name: "mm21toi420",
 			Val: libYUVPerfTestParams{testName: "LibYUVConvertTest.MM21ToI420_Opt",
@@ -74,7 +74,7 @@ func init() {
 				width:  1280,
 				height: 720,
 			},
-			ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatelessVideoDecoding(), hwdep.SkipOnPlatform("bob", "gru", "kevin")),
+			ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatelessVideoDecoding(), hwdep.SkipCPUSocFamily([]string{"rockchip"})),
 		}},
 	})
 }
