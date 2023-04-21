@@ -121,19 +121,19 @@ func init() {
 		}, {
 			Name: "fingerprint",
 			Val:  newRoutineParams(croshealthd.RoutineFingerprint),
-			// Jinlon is the first model to enable this feature for
-			// verifying the function and make it stable.
-			// No special reasons.
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("jinlon")),
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
+			// Enabling this routine needs to configure the
+			// cros_config. At this moment, only jinlon and drobit
+			// are enabled.
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("jinlon", "drobit")),
+			ExtraAttr:         []string{"informational"},
 		}, {
 			Name: "fingerprint_alive",
 			Val:  newRoutineParams(croshealthd.RoutineFingerprintAlive),
-			// Jinlon is the first model to enable this feature for
-			// verifying the function and make it stable.
-			// No special reasons.
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("jinlon")),
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
+			// Enabling this routine needs to configure the
+			// cros_config. At this moment, only jinlon and drobit
+			// are enabled.
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("jinlon", "drobit")),
+			ExtraAttr:         []string{"informational"},
 		}, {
 			Name:              "emmc_lifetime",
 			Val:               newRoutineParams(croshealthd.RoutineEMMCLifetime),
