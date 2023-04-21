@@ -62,7 +62,7 @@ func Ti50Demo(ctx context.Context, s *testing.State) {
 		s.Log("Skipping CCD output collection via servo")
 	}
 
-	if err = ti50.Demo(ctx, board, ""); err != nil {
+	if err = ti50.Demo(ctx, board); err != nil {
 		s.Fatal("Ti50Demo Failed: ", err)
 	}
 

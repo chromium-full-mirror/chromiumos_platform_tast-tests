@@ -35,8 +35,6 @@ type DevBoard interface {
 	WriteSerial(ctx context.Context, bytes []byte) error
 	// FlushSerial flushes un-read/written chars on gsc console.
 	FlushSerial(ctx context.Context) error
-	// FlashImage flashes image on DevBoard.
-	FlashImage(ctx context.Context, imagePath string) error
 	// OpenTitanToolCommand runs an arbitrary OpenTitan tool command (without up-/downloading any files).
 	OpenTitanToolCommand(ctx context.Context, cmd string, args ...string) (output map[string]interface{}, err error)
 	// PlainCommand executes a opentitantool subcommand that uses no file arguments.

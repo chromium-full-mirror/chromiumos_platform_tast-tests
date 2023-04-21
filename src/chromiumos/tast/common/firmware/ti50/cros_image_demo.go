@@ -17,19 +17,8 @@ const (
 	bootTimeout = 90 * time.Second
 )
 
-// Demo uses some of the CrOSImage to control the board.  Image is optional,
-// will demo on existing image if set to "".
-func Demo(ctx context.Context, board DevBoard, image string) error {
-	if image != "" {
-		testing.ContextLog(ctx, "Flashing ", image)
-		if err := board.FlashImage(ctx, image); err != nil {
-			return errors.Wrap(err, "failed to flash image")
-		}
-		testing.ContextLog(ctx, "Flashing finished")
-	} else {
-		testing.ContextLog(ctx, "Running demo without flashing")
-	}
-
+// Demo uses some of the CrOSImage to control the board.
+func Demo(ctx context.Context, board DevBoard) error {
 	i := NewCrOSImage(board)
 
 	ctxBoot, cancel := context.WithTimeout(ctx, bootTimeout)

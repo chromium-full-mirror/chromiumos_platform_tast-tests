@@ -141,43 +141,6 @@ func (a *DUTControlAndreiboard) EndSession(ctx context.Context) (err error) {
 	return nil
 }
 
-// FlashImage flashes image at the specified path on localhost to the board.
-func (a *DUTControlAndreiboard) FlashImage(ctx context.Context, image string) (err error) {
-	imageBytes, err := ioutil.ReadFile(image)
-	if err != nil {
-		return errors.Wrapf(err, "reading image file %q", image)
-	}
-
-	// Close and Re-open the port because opentitantool console occupies the UART that rescue uses.
-	wasOpen := a.gscConsole.IsOpen()
-	err = a.gscConsole.Close(ctx)
-	if err != nil {
-		return errors.Wrap(err, "close console before rescue")
-	}
-	defer func() {
-		if wasOpen {
-			if e := a.gscConsole.Open(ctx); e != nil && err == nil {
-				err = e
-			}
-		}
-	}()
-
-	var args []*dutcontrol.CommandArg
-	args = append(args, &dutcontrol.CommandArg{Type: &dutcontrol.CommandArg_Plain{Plain: "-p"}})
-	args = append(args, &dutcontrol.CommandArg{Type: &dutcontrol.CommandArg_Plain{Plain: "Rescue"}})
-	args = append(args, &dutcontrol.CommandArg{Type: &dutcontrol.CommandArg_File{File: imageBytes}})
-	req := &dutcontrol.CommandRequest{Command: "bootstrap", Args: args}
-
-	resp, err := a.client.Command(ctx, req)
-	if err != nil {
-		return errors.Wrap(err, "bootstrap request")
-	}
-	if resp.Err != "" {
-		return errors.Errorf("bootstrap operation failed: %s, stdout: %s, stderr: %s", resp.Err, resp.Output, resp.ErrOutput)
-	}
-	return nil
-}
-
 // Open opens the ti50 console and EC consoles.
 func (a *DUTControlAndreiboard) Open(ctx context.Context) error {
 	err1 := a.gscConsole.Open(ctx)
