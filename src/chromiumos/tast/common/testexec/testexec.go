@@ -43,8 +43,8 @@ import (
 	"golang.org/x/sys/unix"
 
 	"chromiumos/tast/errors"
-	tastexec "chromiumos/tast/exec"
 	"chromiumos/tast/testing"
+	tastexec "go.chromium.org/tast/core/exec"
 	"go.chromium.org/tast/core/shutil"
 )
 

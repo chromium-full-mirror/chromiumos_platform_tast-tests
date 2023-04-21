@@ -14,12 +14,12 @@ import (
 	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/exec"
 	"chromiumos/tast/local/bundles/cros/network/vpn"
 	"chromiumos/tast/local/network/routing"
 	"chromiumos/tast/local/network/virtualnet"
 	"chromiumos/tast/local/shill"
 	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/exec"
 )
 
 func init() {

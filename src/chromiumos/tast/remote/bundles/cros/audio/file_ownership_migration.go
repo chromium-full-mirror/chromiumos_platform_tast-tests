@@ -10,10 +10,10 @@ import (
 	"time"
 
 	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/exec"
 	"chromiumos/tast/remote/bundles/cros/audio/internal"
 	"chromiumos/tast/remote/firmware/fingerprint/rpcdut"
 	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/exec"
 )
 
 func init() {

@@ -14,9 +14,9 @@ import (
 
 	"chromiumos/tast/dut"
 	"chromiumos/tast/errors"
-	"chromiumos/tast/exec"
 	pb "chromiumos/tast/services/cros/firmware"
 	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/exec"
 )
 
 // allGBBFlags has all the GBB Flags in sorted order.

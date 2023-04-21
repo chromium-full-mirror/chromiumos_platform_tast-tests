@@ -14,8 +14,8 @@ import (
 	"github.com/shirou/gopsutil/v3/process"
 
 	"chromiumos/tast/errors"
-	tastexec "chromiumos/tast/exec"
 	"chromiumos/tast/testing"
+	tastexec "go.chromium.org/tast/core/exec"
 )
 
 func TestKillAll(t *gotesting.T) {
