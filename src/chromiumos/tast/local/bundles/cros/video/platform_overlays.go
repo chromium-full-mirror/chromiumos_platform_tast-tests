@@ -29,6 +29,10 @@ type overlaysTestParam struct {
 	overlay        overlay
 }
 
+// Only Intel SoCs with GPU Gen 11 (JSL), Gen 12 (TGL, RLK) or later support
+// P010 overlays - this list is SoCs with previous GPUs.
+var preIntelGen11GPUSoCs = []string{"pinetrail", "broadwell", "skylake", "kabylake", "cometlake", "geminilake", "whiskeylake"}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PlatformOverlays,
@@ -79,14 +83,18 @@ func init() {
 				primaryFormats: []string{"XR24", "XB24", "AR24", "AB24"},
 				overlay:        overlay{"P010", "640x360"},
 			},
-			ExtraHardwareDeps: hwdep.D(hwdep.Supports30bppFramebuffer(), hwdep.SupportsP010Overlays()),
+			ExtraHardwareDeps: hwdep.D(
+				hwdep.SkipCPUSocFamily([]string{"mediatek", "rockchip", "qualcomm", "amd"}),
+				hwdep.SkipGPUFamily(preIntelGen11GPUSoCs)),
 		}, {
 			Name: "30bpp_p010_overlay",
 			Val: overlaysTestParam{
 				primaryFormats: []string{"AR30", "AB30", "XR30", "XB30"},
 				overlay:        overlay{"P010", "640x360"},
 			},
-			ExtraHardwareDeps: hwdep.D(hwdep.Supports30bppFramebuffer(), hwdep.SupportsP010Overlays()),
+			ExtraHardwareDeps: hwdep.D(hwdep.Supports30bppFramebuffer(),
+				hwdep.SkipCPUSocFamily([]string{"mediatek", "rockchip", "qualcomm", "amd"}),
+				hwdep.SkipGPUFamily(preIntelGen11GPUSoCs)),
 		}},
 		Fixture: "gpuWatchHangs",
 	})
