@@ -66,7 +66,6 @@ func init() {
 				category: "touchscreen",
 				duration: 3 * time.Second,
 			},
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			Name: "stylus_garage",
 			Val: eventStartupParams{
