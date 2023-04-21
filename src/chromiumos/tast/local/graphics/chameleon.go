@@ -358,9 +358,12 @@ func ReadChameleonConfig(ctx context.Context) (ChameleonConfigYaml, error) {
 	if err != nil {
 		return ChameleonConfigYaml{}, errors.Wrap(err, "failed to get chameleon hostname")
 	}
-	testing.ContextLog(ctx, "Chameleon Hostname: ", chamHost)
 
-	chameleonConfigFilePath := fmt.Sprintf("%s/%s.%s", chameleonConfigDirectory, chamHost, chameleonConfigFilesExtension)
+	// TODO(markyacoub): This is a workaround. Use the control files to pass the hostname properly.
+	hostName := strings.TrimSuffix(chamHost, "-chameleon")
+	testing.ContextLog(ctx, "Hostname attached to Cv3: ", hostName)
+
+	chameleonConfigFilePath := fmt.Sprintf("%s/%s.%s", chameleonConfigDirectory, hostName, chameleonConfigFilesExtension)
 
 	contents, err := os.ReadFile(chameleonConfigFilePath)
 	if err != nil {
