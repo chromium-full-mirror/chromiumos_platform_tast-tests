@@ -9,17 +9,18 @@ import (
 	"context"
 	"encoding/csv"
 	"io/ioutil"
-	"log"
 	"os"
 	"strings"
 	"time"
 
 	"android.googlesource.com/platform/external/perfetto/protos/perfetto/metrics/github.com/google/perfetto/perfetto_proto"
 	"github.com/golang/protobuf/proto"
+
 	"golang.org/x/sys/unix"
 
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/upstart"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -34,7 +35,6 @@ type Session struct {
 	useTempFile       bool
 	compressTraceData bool
 	traceDataPath     string
-	TraceResultFile   *os.File // DEPRECATED: Use TraceDataPath() to get the trace data file path and open the file for reading. This public field will be removed soon.
 }
 
 func createTempFileForTrace() (*os.File, error) {
@@ -141,20 +141,6 @@ func (sess *Session) RunQuery(ctx context.Context, queryPath string) ([][]string
 	return csv.ReadAll()
 }
 
-// RemoveTraceResultFile removes the trace data file. DEPRECATED: use Finalize() to auto remove the temp file created by this session.
-// The trace data file is automatically removed in finalizing the trace session if the session uses a temp file for trace data.
-// This function can be called explicitly for a session configure using WithTraceDataPath() if the trace data is no longer necessary.
-func (sess *Session) RemoveTraceResultFile() {
-	// Don't remove the trace data file again.
-	if !sess.traceDataFileExists() {
-		return
-	}
-
-	if err := os.Remove(sess.traceDataPath); err != nil {
-		log.Printf("failed to remove the temporary trace result file: %v", err)
-	}
-}
-
 // traceDataFileExists checks if the trace data file exists.
 func (sess *Session) traceDataFileExists() bool {
 	if _, err := os.Stat(sess.traceDataPath); err != nil {
@@ -257,11 +243,13 @@ func StartSession(ctx context.Context, configFile string, opts ...traceSessionOp
 			return nil, errors.Wrap(err, "failed to create a temp file for trace data")
 		}
 	}
+	defer traceDataFile.Close()
+	traceDataPath := traceDataFile.Name()
 
 	// This runs a perfetto trace session with the options:
 	//   -c traceConfigPath --txt: configure the trace session as defined in the text proto |traceConfigPath|
 	//   -o traceOutputPath      : save the trace data (binary proto) to |traceOutputPath|
-	cmd := testexec.CommandContext(ctx, "perfetto", "-c", configFile, "--txt", "-o", traceDataFile.Name())
+	cmd := testexec.CommandContext(ctx, "perfetto", "-c", configFile, "--txt", "-o", traceDataPath)
 	if err := cmd.Start(); err != nil {
 		if e := os.Remove(traceDataFile.Name()); e != nil {
 			// Cleanup the temp file is non-fatal. Just log the error.
@@ -270,7 +258,7 @@ func StartSession(ctx context.Context, configFile string, opts ...traceSessionOp
 		return nil, errors.Wrap(err, "failed to start the tracing session")
 	}
 
-	return &Session{cmd: cmd, useTempFile: useTempFile, compressTraceData: option.Compression, TraceResultFile: traceDataFile, traceDataPath: traceDataFile.Name()}, nil
+	return &Session{cmd: cmd, useTempFile: useTempFile, compressTraceData: option.Compression, traceDataPath: traceDataPath}, nil
 }
 
 // StartSessionAndWaitUntilDone collects a system-wide trace using the perfetto command line tool.
