@@ -29,16 +29,18 @@ func init() {
 			"jbettis@chromium.org",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:firmware", "firmware_ec"},
+		Attr:         []string{"group:firmware", "firmware_ec", "firmware_cr50"},
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Requirements: []string{"sys-fw-0022-v01"},
 		Timeout:      15 * time.Minute,
 		Params: []testing.Param{
-			{Name: "normal",
+			{
+				Name:    "normal",
 				Fixture: fixture.NormalMode,
 			},
-			{Name: "dev",
+			{
+				Name:    "dev",
 				Fixture: fixture.DevModeGBB,
 			},
 		},
