@@ -162,6 +162,15 @@ func (m *Modem) IsSAREnabled(ctx context.Context) (bool, error) {
 	return sarState, nil
 }
 
+// ApplyCarrierLockConfig - apply specified signed carrier lock config to the modem
+func (m *Modem) ApplyCarrierLockConfig(ctx context.Context, config []byte) error {
+	err := m.Call(ctx, mmconst.ModemSetCarrierLock, config).Err
+	if err != nil {
+		return errors.Wrap(err, "failed to set carrier lock config")
+	}
+	return nil
+}
+
 // GetEquipmentIdentifier - get the identity of the device. This will be the IMEI number.
 func (m *Modem) GetEquipmentIdentifier(ctx context.Context) (string, error) {
 	modemProps, err := m.GetProperties(ctx)

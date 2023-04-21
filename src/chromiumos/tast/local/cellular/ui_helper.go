@@ -14,6 +14,7 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/cuj"
 	"chromiumos/tast/local/chrome/uiauto"
+	"chromiumos/tast/local/chrome/uiauto/filepicker"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/chrome/uiauto/state"
@@ -35,6 +36,7 @@ type UIHelper struct {
 const (
 	gvoiceMessagesURL = "https://voice.google.com/u/0/messages"
 	// testIPv6DotCom    = "https://test-ipv6.com"
+	simLockPortalURL = "https://partnerdash.google.com/apps/nexussimunlockportal/imeiupload?a=1054655288&t=1772550927529650125"
 )
 
 // NewUIHelper creates a Helper object and ensures that a UI is loaded.
@@ -65,6 +67,20 @@ func NewUIHelper(ctx context.Context, username, password string) (*UIHelper, err
 
 	helper := UIHelper{UIHandler: uiHandler, UI: ui, Cr: cr, Tconn: tconn}
 	return &helper, nil
+}
+
+// LaunchChromeWithCarrierLock launches chrome with carrier lock service enabled.
+func (h *UIHelper) LaunchChromeWithCarrierLock(ctx context.Context, username, password string) error {
+	_, err := chrome.New(ctx,
+		chrome.GAIALogin(chrome.Creds{User: username, Pass: password}),
+		chrome.EnableFeatures("CellularCarrierLock:LastConfigDateDelta/-1"),
+		chrome.ProdPolicy(),
+	)
+	if err != nil {
+		return errors.Wrap(err, "failed to launch chrome with carrier lock enabled")
+	}
+
+	return nil
 }
 
 // GoogleVoiceLogin attempts to login on google voice message page.
@@ -205,4 +221,45 @@ func (h *UIHelper) ValidateMessage(ctx context.Context, messageSent string) erro
 	}
 
 	return errors.Wrap(err, "notification does not contain sent sms")
+}
+
+// UploadCsvSimLockPortal logs in to the prod SimLock portal and uploads the CSV file to lock/unlock
+// device.
+func (h *UIHelper) UploadCsvSimLockPortal(ctx context.Context, simlockConfigCsvFilePath string) error {
+	testing.ContextLog(ctx, "open SimLockPortal web url: ", simLockPortalURL)
+	// Open sim lock portal, set new window to true to be first tab
+	driverconn, err := h.UIHandler.NewChromeTab(ctx, h.Cr.Browser(), simLockPortalURL, true)
+	if err != nil {
+		return errors.Wrap(err, "failed to open simLockPortal web page")
+	}
+
+	defer driverconn.Close()
+	defer driverconn.CloseTarget(ctx)
+
+	if err := webutil.WaitForRender(ctx, driverconn, 2*time.Minute); err != nil {
+		return errors.Wrap(err, "failed to wait for render to finish")
+	}
+
+	if err := webutil.WaitForQuiescence(ctx, driverconn, 2*time.Minute); err != nil {
+		return errors.Wrap(err, "failed to wait for simLockPortal to finish loading")
+	}
+
+	testing.ContextLog(ctx, "click on uplaod button")
+	uploadButton := nodewith.Name(" UPLOAD").Role(role.Button)
+	if err := uiauto.Combine("Click on upload button",
+		h.UI.WithTimeout(30*time.Second).WaitUntilExists(uploadButton),
+		h.UI.LeftClick(uploadButton),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to click on upload button")
+	}
+
+	fp, err := filepicker.Find(ctx, h.Tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to find file picker")
+	}
+	fp.OpenFile(simlockConfigCsvFilePath)(ctx)
+	// GoBigSleepLint: wait for processing to complete
+	testing.Sleep(ctx, 30*time.Second)
+
+	return nil
 }

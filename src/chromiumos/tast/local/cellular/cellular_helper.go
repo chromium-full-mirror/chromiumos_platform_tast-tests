@@ -7,10 +7,12 @@ package cellular
 
 import (
 	"context"
+	"encoding/hex"
 	"io/ioutil"
 	"math/rand"
 	"net"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -22,6 +24,7 @@ import (
 	"chromiumos/tast/common/mmconst"
 	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/common/testexec"
+	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/dbusutil"
 	"chromiumos/tast/local/hermes"
 	"chromiumos/tast/local/modemmanager"
@@ -78,6 +81,28 @@ type Helper struct {
 	carrierName        string
 	devicePools        []string
 }
+
+const (
+	simLockCsvHeader       = "serial,modemtype,modemid,profiletype,profileid,expiration,partnumber,model,manufacturer\n"
+	simLockUnLockCsvHeader = "serial,modemtype,modemid,profiletype,profileid,expiration,owner,model\n"
+)
+
+const (
+	userMyFilesPath = "/home/chronos/user/MyFiles/"
+)
+
+const (
+	// SimLockUnlockProfileID Profile ID used in the production sim lock portal for unlocking the device
+	SimLockUnlockProfileID = "0"
+	// SimLockWildcardProfileID Profile ID used in the production sim lock portal for vacation/wildcard
+	SimLockWildcardProfileID = "50046"
+	// SimLockNetworkSelectionImsiPrefixProfileID Profile ID used in the production sim lock portal to test IMSI prefix
+	SimLockNetworkSelectionImsiPrefixProfileID = "50047"
+	// SimLockVzwProfileID Verizon profile id in the production sim lock portal
+	SimLockVzwProfileID = "50045"
+	// SimLockExcludeVzwProfileID Test profile to exclude Verizon MCC/MNCs in production sim lock portal
+	SimLockExcludeVzwProfileID = "50048"
+)
 
 // NewHelper creates a Helper object and ensures that a Cellular Device is present.
 func NewHelper(ctx context.Context) (*Helper, error) {
@@ -714,6 +739,27 @@ func (h *Helper) IsSimPinLocked(ctx context.Context) bool {
 	return lock == shillconst.DevicePropertyValueSIMLockTypePIN
 }
 
+// IsSimNetPinLocked returns true if locktype value is 'network-pin'
+func (h *Helper) IsSimNetPinLocked(ctx context.Context) bool {
+	lockStatus, err := h.GetCellularSIMLockStatus(ctx)
+	if err != nil {
+		testing.ContextLog(ctx, "getcellularsimlockstatus -pin: ", err.Error())
+		return false
+	}
+
+	lockType := lockStatus[shillconst.DevicePropertyCellularSIMLockStatusLockType]
+	if lockType == nil {
+		return false
+	}
+
+	lock, ok := lockType.(string)
+	if !ok {
+		return false
+	}
+	testing.ContextLog(ctx, "pin lock type value: ", lock)
+	return lock == shillconst.DevicePropertyValueSIMLockTypeNetPIN
+}
+
 // IsSimPukLocked returns true if locktype value is 'sim-puk'
 // locktype value is 'sim-pin2' for QC and value 'none' when not locked.
 func (h *Helper) IsSimPukLocked(ctx context.Context) bool {
@@ -1343,6 +1389,18 @@ func (h *Helper) GetPINAndPUKForICCID(ctx context.Context, iccid string) (string
 	return "", "", nil
 }
 
+// GetCarrierNameForICCID returns carrier name for the given iccid from host_info_label
+func (h *Helper) GetCarrierNameForICCID(ctx context.Context, iccid string) (string, error) {
+	for _, s := range h.simInfo {
+		for _, p := range s.ProfileInfo {
+			if p.ICCID == iccid {
+				return p.CarrierName, nil
+			}
+		}
+	}
+	return "", nil
+}
+
 // GetLabelCarrierName return the current carrier name
 func (h *Helper) GetLabelCarrierName(ctx context.Context) string {
 	return h.carrierName
@@ -1418,4 +1476,88 @@ func GetProfileNickNameForIccid(ctx context.Context, iccid string) (string, erro
 		}
 	}
 	return "", errors.Wrapf(err, "no matched eSIM profile for iccid: %s", iccid)
+}
+
+// CreateCarrierLockCsvFile is a helper function to build CSV files to lock and unlock device in SimLock portal.
+// Returns CSV file name
+func (h *Helper) CreateCarrierLockCsvFile(ctx context.Context, profile string) (string, error) {
+	imei, err := h.GetIMEIFromShill(ctx)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to read EquipmentIdentifier")
+	}
+	bserial, err := exec.Command("vpd_get_value", "serial_number").Output()
+	if err != nil {
+		return "", errors.Wrap(err, "failed to read serial number")
+	}
+	serial := string(bserial)
+	conf := []byte("")
+	csvFileName := "carrier_lock_" + imei + ".csv"
+
+	if profile == "0" {
+		// Build the unlock csv file
+		// TODO: b/279223032 Replace with actual model when simLock server supports signed configuration for models other than Pixel 20
+		conf = []byte(simLockUnLockCsvHeader + serial + ",IMEI," + imei + ",SIM_LOCK," + profile + ",0,0,Pixel 20\n")
+	} else {
+		// Build the lock csv file
+		// TODO: b/279223032 Replace with actual model when simLock server supports signed configuration for models other than Pixel 20
+		conf = []byte(simLockCsvHeader + serial + ",IMEI," + imei + ",SIM_LOCK," + profile + ",0,GL1EA810001,Pixel 20,Google\n")
+	}
+
+	err = os.WriteFile(userMyFilesPath+csvFileName, conf, 0644)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to create carrier lock CSV file")
+	}
+
+	return csvFileName, nil
+}
+
+// CreateAndUploadCarrierLockCsv is a helper API to build and upload the CSV file to the
+// simlock portal.
+func (h *Helper) CreateAndUploadCarrierLockCsv(ctx context.Context, gaiaCreds chrome.Creds, profile string) error {
+	uiHelper, err := NewUIHelper(ctx, gaiaCreds.User, gaiaCreds.Pass)
+	if err != nil {
+		return errors.Wrap(err, "failed to create cellular.NewUiHelper")
+	}
+
+	// Create the csv file
+	csvfile, err := h.CreateCarrierLockCsvFile(ctx, profile)
+	if err != nil {
+		return errors.Wrap(err, "failed to create CSV file")
+	}
+
+	defer os.Remove(userMyFilesPath + csvfile)
+
+	// Login to SimLock portal using owned test accounts and upload the CSV file
+	err = uiHelper.UploadCsvSimLockPortal(ctx, csvfile)
+	if err != nil {
+		return errors.Wrap(err, "failed to upload unlock csv file")
+	}
+	return nil
+}
+
+// CarrierUnlockDevice is a helper API to unlock the device in SimLock portal
+func (h *Helper) CarrierUnlockDevice(ctx context.Context, gaiaCreds chrome.Creds) error {
+	testing.ContextLog(ctx, "Unlocking device in SimLock portal")
+	err := h.CreateAndUploadCarrierLockCsv(ctx, gaiaCreds, SimLockUnlockProfileID)
+	if err != nil {
+		return errors.Wrap(err, "failed to create and upload unlock csv")
+	}
+	return nil
+}
+
+// ApplyCarrierLockConfig is a helper API to read signed carrier lock configuration
+// from specified file and inject it to the modem manager. This is used for testing
+// using pre-generated signed carrier lock configs, primarily negative configs.
+func (h *Helper) ApplyCarrierLockConfig(ctx context.Context,
+	modem *modemmanager.Modem, filepath string) error {
+	b, err := os.ReadFile(filepath)
+	if err != nil {
+		return errors.Wrap(err, "failed to read carrier lock config file "+filepath)
+	}
+	config := string(b)
+	decoded, _ := hex.DecodeString(config)
+	if err := modem.ApplyCarrierLockConfig(ctx, decoded); err != nil {
+		return errors.Wrap(err, "failed to apply carrier lock config "+filepath)
+	}
+	return nil
 }

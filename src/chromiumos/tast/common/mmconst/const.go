@@ -211,6 +211,11 @@ const (
 	MessagesDelete = "Delete"
 )
 
+// Modem Carrier Lock DBus method
+const (
+	ModemSetCarrierLock = "SetCarrierLock"
+)
+
 // Default SIM pin
 const (
 	DefaultSimPin = "1111"

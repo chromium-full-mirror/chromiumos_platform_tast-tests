@@ -62,8 +62,9 @@ const (
 	DevicePropertyCellularSIMLockStatusRetriesLeft = "RetriesLeft"
 
 	// Valid values taken by properties exposed by shill.
-	DevicePropertyValueSIMLockTypePIN = "sim-pin"
-	DevicePropertyValueSIMLockTypePUK = "sim-puk"
+	DevicePropertyValueSIMLockTypePIN    = "sim-pin"
+	DevicePropertyValueSIMLockTypePUK    = "sim-puk"
+	DevicePropertyValueSIMLockTypeNetPIN = "network-pin"
 
 	// Ethernet device property names.
 	DevicePropertyEthernetBusType   = "Ethernet.DeviceBusType"
