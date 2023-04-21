@@ -8,7 +8,7 @@ import (
 	"strconv"
 
 	"chromiumos/tast/errors"
-	"chromiumos/tast/lsbrelease"
+	"go.chromium.org/tast/core/lsbrelease"
 )
 
 const (

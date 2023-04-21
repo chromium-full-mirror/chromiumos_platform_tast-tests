@@ -32,8 +32,8 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/coords"
-	"chromiumos/tast/lsbrelease"
 	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/lsbrelease"
 )
 
 const screendiffDebugVar = "screendiff.debug"

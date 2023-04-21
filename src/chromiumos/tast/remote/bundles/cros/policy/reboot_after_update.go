@@ -15,12 +15,12 @@ import (
 	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/errors"
-	"chromiumos/tast/lsbrelease"
 	"chromiumos/tast/remote/policyutil"
 	"chromiumos/tast/remote/updateutil"
 	"chromiumos/tast/rpc"
 	pspb "chromiumos/tast/services/cros/policy"
 	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/lsbrelease"
 )
 
 const (

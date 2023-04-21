@@ -11,8 +11,8 @@ import (
 
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/local/chrome/chromeproc"
-	"chromiumos/tast/lsbrelease"
 	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/lsbrelease"
 )
 
 func init() {

@@ -23,8 +23,8 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/crosconfig"
 	"chromiumos/tast/local/graphics"
-	"chromiumos/tast/lsbrelease"
 	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/lsbrelease"
 )
 
 const expectationsDirectory = "/usr/local/graphics/expectations"

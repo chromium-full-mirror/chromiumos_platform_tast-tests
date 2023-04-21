@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	"chromiumos/tast/errors"
-	"chromiumos/tast/lsbrelease"
 	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/lsbrelease"
 )
 
 // Board reports the name of the DUT board, such as coral or veyron_minnie.

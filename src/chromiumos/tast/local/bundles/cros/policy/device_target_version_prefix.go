@@ -26,8 +26,8 @@ import (
 	"chromiumos/tast/local/dbusutil"
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/lsbrelease"
 	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/lsbrelease"
 )
 
 // deviceTargetVersionPrefix contains the test parameters which are different

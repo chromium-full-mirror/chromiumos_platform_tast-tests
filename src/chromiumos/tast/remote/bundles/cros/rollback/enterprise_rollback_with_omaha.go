@@ -15,13 +15,13 @@ import (
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
-	"chromiumos/tast/lsbrelease"
 	"chromiumos/tast/remote/policyutil"
 	"chromiumos/tast/rpc"
 	aupb "chromiumos/tast/services/cros/autoupdate"
 	pspb "chromiumos/tast/services/cros/policy"
 	"chromiumos/tast/ssh/linuxssh"
 	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/lsbrelease"
 )
 
 func init() {

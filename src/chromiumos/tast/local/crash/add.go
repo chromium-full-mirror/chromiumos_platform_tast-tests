@@ -15,7 +15,7 @@ import (
 
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
-	"chromiumos/tast/lsbrelease"
+	"go.chromium.org/tast/core/lsbrelease"
 )
 
 // AddFakeMinidumpCrash adds a fake minidump crash entry to crash.SystemCrashDir and returns a

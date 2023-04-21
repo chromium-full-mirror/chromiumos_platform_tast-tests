@@ -29,8 +29,8 @@ import (
 	"chromiumos/tast/local/cpu"
 	"chromiumos/tast/local/disk"
 	"chromiumos/tast/local/power"
-	"chromiumos/tast/lsbrelease"
 	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/lsbrelease"
 )
 
 type testParam struct {

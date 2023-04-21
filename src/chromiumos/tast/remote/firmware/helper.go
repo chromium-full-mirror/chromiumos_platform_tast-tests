@@ -23,7 +23,6 @@ import (
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/dut"
 	"chromiumos/tast/errors"
-	"chromiumos/tast/lsbrelease"
 	"chromiumos/tast/remote/firmware/reporters"
 	"chromiumos/tast/remote/firmware/rpm"
 	"chromiumos/tast/rpc"
@@ -31,6 +30,7 @@ import (
 	"chromiumos/tast/ssh"
 	"chromiumos/tast/ssh/linuxssh"
 	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/lsbrelease"
 )
 
 // Helper tracks several firmware-related objects. The recommended way to initialize the helper is to use firmware.fixture:

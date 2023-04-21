@@ -27,11 +27,11 @@ import (
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/dut"
 	"chromiumos/tast/errors"
-	"chromiumos/tast/lsbrelease"
 	"chromiumos/tast/rpc"
 	aupb "chromiumos/tast/services/cros/autoupdate"
 	"chromiumos/tast/ssh/linuxssh"
 	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/lsbrelease"
 )
 
 // tlwAddress is used to connect to the Test Lab Wiring,

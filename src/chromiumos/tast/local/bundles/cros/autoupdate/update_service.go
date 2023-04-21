@@ -20,9 +20,9 @@ import (
 	ue "chromiumos/tast/common/updateengine"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/updateengine"
-	"chromiumos/tast/lsbrelease"
 	aupb "chromiumos/tast/services/cros/autoupdate"
 	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/lsbrelease"
 )
 
 func init() {

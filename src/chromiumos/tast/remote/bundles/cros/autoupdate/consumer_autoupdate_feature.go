@@ -9,9 +9,9 @@ import (
 	"time"
 
 	ue "chromiumos/tast/common/updateengine"
-	"chromiumos/tast/lsbrelease"
 	"chromiumos/tast/remote/updateutil"
 	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/lsbrelease"
 )
 
 const (

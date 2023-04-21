@@ -17,8 +17,8 @@ import (
 	"chromiumos/tast/local/bundles/cros/health/utils"
 	"chromiumos/tast/local/croshealthd"
 	"chromiumos/tast/local/jsontypes"
-	"chromiumos/tast/lsbrelease"
 	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/lsbrelease"
 )
 
 type psrInfoTestParams struct {
