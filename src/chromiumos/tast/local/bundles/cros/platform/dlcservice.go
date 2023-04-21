@@ -11,9 +11,10 @@ import (
 	"time"
 
 	dlctest "chromiumos/tast/local/bundles/cros/platform/dlc"
-	"chromiumos/tast/local/bundles/cros/platform/nebraska"
 	"chromiumos/tast/local/dlc"
+	"chromiumos/tast/local/nebraska"
 	"chromiumos/tast/local/upstart"
+
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -95,15 +96,18 @@ func DLCService(ctx context.Context, s *testing.State) {
 
 	s.Run(ctx, "DLC combination tests", func(ctx context.Context, s *testing.State) {
 		func() {
-			n, err := nebraska.Start(ctx)
+			n, err := nebraska.New(ctx,
+				nebraska.LogName("nebraska-single-dlc.log"),
+				nebraska.InstallMetadata("/usr/local/dlc"),
+				nebraska.InstallPayloads("file:///usr/local/dlc"))
 			if err != nil {
 				s.Fatal("Nebraska failed to start: ", err)
 			}
 			s.Log("Started Nebraska")
-			defer n.Stop(ctx, s, "single-dlc")
+			defer n.Close(ctx)
 
 			// Install single DLC.
-			install(ctx, s, dlctest.TestID1, n.URL)
+			install(ctx, s, dlctest.TestID1, nebraska.UpdateURL(n.Port, nebraska.CriticalUpdate))
 			dump(ctx, s, "install_single", dlctest.TestID1)
 
 		}()
@@ -126,15 +130,18 @@ func DLCService(ctx context.Context, s *testing.State) {
 		// install after the dlcservice restart will perform a quick install from
 		// DLC cache.
 		func() {
-			n, err := nebraska.Start(ctx)
+			n, err := nebraska.New(ctx,
+				nebraska.LogName("nebraska-reboot-mimic-dlc.log"),
+				nebraska.InstallMetadata("/usr/local/dlc"),
+				nebraska.InstallPayloads("file:///usr/local/dlc"))
 			if err != nil {
 				s.Fatal("Nebraska failed to start: ", err)
 			}
 			s.Log("Started Nebraska")
-			defer n.Stop(ctx, s, "reboot-mimic-dlc")
+			defer n.Close(ctx)
 
 			// Install DLC.
-			install(ctx, s, dlctest.TestID1, n.URL)
+			install(ctx, s, dlctest.TestID1, nebraska.UpdateURL(n.Port, nebraska.CriticalUpdate))
 			dump(ctx, s, "reboot_install_before_reboot", dlctest.TestID1)
 		}()
 

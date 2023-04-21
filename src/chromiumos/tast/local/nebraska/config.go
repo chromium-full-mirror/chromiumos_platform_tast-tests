@@ -22,8 +22,8 @@ type MutableConfig struct {
 	Args []string
 	// RuntimeRoot is Nebraska's runtime root.
 	RuntimeRoot string
-	// LogFile is Nebraska's log file location.
-	LogFile string
+	// LogFileName is Nebraska's log file name. It is always logged under runtime root.
+	LogFileName string
 	// ConfigureUpdateEngine is called once the port of Nebraska is known.
 	// If configured to do so by the corresponding Options,
 	// it will point update-engine towards the nebraska instance.
@@ -38,7 +38,7 @@ func NewConfig(options []Option) (*Config, error) {
 		m: MutableConfig{
 			Args:                  []string{},
 			RuntimeRoot:           "/run/nebraska",
-			LogFile:               "/tmp/nebraska.log",
+			LogFileName:           "nebraska.log",
 			Cleanup:               []func(ctx context.Context) error{},
 			ConfigureUpdateEngine: func(port int) error { return nil },
 		},

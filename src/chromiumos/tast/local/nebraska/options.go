@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 	"strconv"
 
 	"go.chromium.org/tast/core/errors"
@@ -50,10 +49,6 @@ func runInTmpDir() Option {
 			return errors.Wrap(err, "failed to place logs the temporary directory")
 		}
 
-		if err := logTo(filepath.Join(root, logFileName))(config); err != nil {
-			return errors.Wrap(err, "failed to place logs the temporary directory")
-		}
-
 		return nil
 	}
 
@@ -68,11 +63,10 @@ func runtimeRoot(path string) Option {
 	}
 }
 
-// logTo sets the folder Nebraska puts its logs in. Always log to the temporary runtime root.
-func logTo(file string) Option {
+// LogName renames Nebraska's log file. This can be helpful when you run Nebraska multiple times.
+func LogName(name string) Option {
 	return func(config *MutableConfig) error {
-		config.Args = append(config.Args, argsLogFile, file)
-		config.LogFile = file
+		config.LogFileName = name
 		return nil
 	}
 }

@@ -13,6 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"golang.org/x/sys/unix"
@@ -31,7 +32,8 @@ type Nebraska struct {
 	cleanup []func(ctx context.Context) error
 	cmd     *testexec.Cmd
 
-	Port    int
+	Port int
+	// Log file during runtime of Nebraska.
 	LogFile string
 	Root    string
 }
@@ -42,7 +44,7 @@ func New(ctx context.Context, options ...Option) (instance *Nebraska, err error)
 	config, err := NewConfig(options)
 	instance = &Nebraska{
 		cleanup: config.m.Cleanup,
-		LogFile: config.m.LogFile,
+		LogFile: filepath.Join(config.m.RuntimeRoot, config.m.LogFileName),
 		Root:    config.m.RuntimeRoot,
 	}
 
@@ -58,7 +60,7 @@ func New(ctx context.Context, options ...Option) (instance *Nebraska, err error)
 		return nil, errors.Wrap(err, "failed to process options")
 	}
 
-	if err := startNebraska(ctx, instance, config.m.Args); err != nil {
+	if err := startNebraska(ctx, instance, append(config.m.Args, argsLogFile, instance.LogFile)); err != nil {
 		return nil, errors.Wrap(err, "failed to start Nebraska")
 	}
 
@@ -165,7 +167,9 @@ func (n *Nebraska) dumpLog(ctx context.Context) error {
 	}
 
 	time := time.Now().UTC().Format(time.RFC3339Nano)
-	dumpedLog := fmt.Sprintf("nebraska-%v", time)
+	fileExt := filepath.Ext(n.LogFile)
+	fileName := strings.TrimSuffix(filepath.Base(n.LogFile), fileExt)
+	dumpedLog := fmt.Sprintf("%s-%s%s", fileName, time, fileExt)
 	if err := os.WriteFile(filepath.Join(dir, dumpedLog), logs, 0644); err != nil {
 		return errors.Wrap(err, "failed to write Nebraska log")
 	}
