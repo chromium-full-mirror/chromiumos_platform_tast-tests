@@ -18,12 +18,12 @@ import (
 	"github.com/godbus/dbus/v5"
 
 	cpb "chromiumos/system_api/vm_cicerone_proto" // protobufs for container management
-	"chromiumos/tast/caller"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/dbusutil"
 	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/caller"
 
 	"go.chromium.org/tast/core/shutil"
 )

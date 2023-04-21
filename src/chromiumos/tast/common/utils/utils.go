@@ -12,9 +12,9 @@ import (
 	"strings"
 	"unicode"
 
-	"chromiumos/tast/caller"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/caller"
 )
 
 // Suffix names for forward compatibility.

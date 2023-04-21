@@ -18,7 +18,7 @@ import (
 	"github.com/dave/dst/decorator"
 	"github.com/dave/dst/dstutil"
 
-	"chromiumos/tast/caller"
+	"go.chromium.org/tast/core/caller"
 )
 
 // envName is the name of the environment variable that instructs Ensure to

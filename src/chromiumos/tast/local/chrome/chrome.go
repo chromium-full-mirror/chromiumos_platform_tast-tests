@@ -17,7 +17,6 @@ import (
 	"android.googlesource.com/platform/external/perfetto/protos/perfetto/trace/github.com/google/perfetto/perfetto_proto"
 	"github.com/golang/protobuf/proto"
 
-	"chromiumos/tast/caller"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome/ash/ashproc"
 	"chromiumos/tast/local/chrome/browser"
@@ -34,6 +33,7 @@ import (
 	"chromiumos/tast/local/minidump"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/timing"
+	"go.chromium.org/tast/core/caller"
 )
 
 var chromeKeepStateVar = testing.RegisterVarString(

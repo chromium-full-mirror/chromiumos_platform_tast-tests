@@ -18,7 +18,6 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/caller"
 	"chromiumos/tast/common/android/adb"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
@@ -30,6 +29,7 @@ import (
 	"chromiumos/tast/local/syslog"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/timing"
+	"go.chromium.org/tast/core/caller"
 )
 
 const (

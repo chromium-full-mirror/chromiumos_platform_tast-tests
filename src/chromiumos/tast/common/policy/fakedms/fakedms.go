@@ -17,11 +17,11 @@ import (
 	"regexp"
 	"time"
 
-	"chromiumos/tast/caller"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/caller"
 )
 
 // LogFile is the name of the log file for FakeDMS.
