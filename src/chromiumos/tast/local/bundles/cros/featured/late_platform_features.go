@@ -31,7 +31,7 @@ func init() {
 			"kendraketsui@google.com",
 		},
 		BugComponent: "b:1096648",
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
 			Name: "file_exists_enabled",
