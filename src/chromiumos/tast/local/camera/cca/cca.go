@@ -453,9 +453,10 @@ func (a *App) checkVideoState(ctx context.Context, active bool, duration time.Du
 		return err
 	}
 
-	// Due to the pipeline delay in camera stack, animation delay, and other
-	// reasons, sometimes a bug would be triggered after several frames. Wait
-	// duration here and check that the state does not change afterwards.
+	// GoBigSleepLint: Due to the pipeline delay in camera stack, animation
+	// delay, and other reasons, sometimes a bug would be triggered after
+	// several frames. Wait duration here and check that the state does not
+	// change afterwards.
 	if err := testing.Sleep(ctx, duration); err != nil {
 		return err
 	}
@@ -808,6 +809,7 @@ func (a *App) RecordVideo(ctx context.Context, timerState TimerState, duration t
 		return nil, err
 	}
 
+	// GoBigSleepLint: Records the video for |duration| seconds.
 	if err := testing.Sleep(ctx, duration); err != nil {
 		return nil, err
 	}

@@ -417,6 +417,7 @@ func capture(ctx context.Context, app *cca.App, mode cca.Mode) (time.Time, error
 		if err := app.ClickShutter(ctx); err != nil {
 			return startTime, errors.Wrap(err, "failed to click shutter button")
 		}
+		// GoBigSleepLint: Records the video for 3 seconds.
 		if err := testing.Sleep(ctx, 3*time.Second); err != nil {
 			return startTime, err
 		}
@@ -472,7 +473,6 @@ func checkCaptureResult(ctx context.Context, app *cca.App, mode cca.Mode, startT
 func checkAutoCloseBehavior(ctx context.Context, cr *chrome.Chrome, app *cca.App, shouldClose bool) error {
 	// Sleeps for a while after capturing and then ensure CCA instance is
 	// automatically closed or not.
-	testing.ContextLog(ctx, "Checking auto close behavior")
 	if shouldClose {
 		const timeout = 3 * time.Second
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
@@ -486,6 +486,7 @@ func checkAutoCloseBehavior(ctx context.Context, cr *chrome.Chrome, app *cca.App
 			return err
 		}
 	} else {
+		// GoBigSleepLint: Ensure that CCA is not trying to close itself within the given duration.
 		if err := testing.Sleep(ctx, 3*time.Second); err != nil {
 			return err
 		}
