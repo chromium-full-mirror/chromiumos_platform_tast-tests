@@ -7,6 +7,9 @@
 package org.chromium.arc.testapp.multicast_forwarder;
 
 import android.app.Activity;
+import android.content.Context;
+import android.net.wifi.WifiManager;
+import android.net.wifi.WifiManager.MulticastLock;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.CheckBox;
@@ -24,14 +27,19 @@ import java.util.Enumeration;
 /**
  * Test Activity for the arcapp.MulticastForwarder Tast test.
  *
- * <p>This has a two buttons that sends mDNS and SSDP packet respectively. The parameter for the
+ * <p>This has two buttons that sends mDNS and SSDP packet respectively. The parameter for the
  * packet is configured by two EditText (hostname and port).
+ *
+ * <p>This also has two buttons that acquire and release multicast lock respectively.
  *
  * <p>There is also a CheckBox to toggle between IPv4 and IPv6.
  */
 public class MulticastForwarderActivity extends Activity {
     private final int MdnsPort = 5353;
     private final int SsdpPort = 1900;
+    private final String mTag = "MulticastForwarderActivity";
+    private WifiManager mWifiManager;
+    private MulticastLock mMulticastLock;
     private EditText mData;
     private EditText mPort;
     private CheckBox mIPv6;
@@ -40,6 +48,8 @@ public class MulticastForwarderActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity);
+        mWifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+        mMulticastLock = mWifiManager.createMulticastLock(mTag);
 
         mData = findViewById(R.id.data);
         mPort = findViewById(R.id.port);
@@ -166,4 +176,27 @@ public class MulticastForwarderActivity extends Activity {
                         });
         thread.start();
     }
+
+    /**
+     * Acquire a multicast lock.
+     *
+     * <p>This is called as an onClick handler.
+     *
+     * @param view {@link View} that was clicked.
+     */
+    public void acquireMulticastLock(View view) {
+        mMulticastLock.acquire();
+    }
+
+    /**
+     * Release a multicast lock.
+     *
+     * <p>This is called as an onClick handler.
+     *
+     * @param view {@link View} that was clicked.
+     */
+    public void releaseMulticastLock(View view) {
+        mMulticastLock.release();
+    }
+
 }
