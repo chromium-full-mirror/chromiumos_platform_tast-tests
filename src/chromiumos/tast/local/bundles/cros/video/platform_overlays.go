@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package graphics
+package video
 
 import (
 	"context"
@@ -36,7 +36,7 @@ func init() {
 		Desc:         "Checks that certain configurations of primary and overlay planes are indeed supported",
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		Contacts: []string{
-			"chromeos-gfx-compositor@google.com",
+			"chromeos-gfx-video@google.com",
 			"mcasas@chromium.org",
 		},
 		Attr:         []string{"group:graphics", "graphics_perbuild"},

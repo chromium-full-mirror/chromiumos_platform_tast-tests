@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package graphics
+package video
 
 import (
 	"context"
@@ -29,7 +29,7 @@ func init() {
 		Desc:         "Verifies VA-API utility and image decode acceleration functionality",
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		Contacts: []string{
-			"chromeos-gfx@google.com",
+			"chromeos-gfx-video@google.com",
 			"andrescj@chromium.org", // JPEG decoder test maintainer
 			"gildekel@chromium.org", // WebP decoder test author
 		},
