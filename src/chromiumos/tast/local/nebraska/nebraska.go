@@ -257,7 +257,7 @@ func (n *Nebraska) SetIsRollback(ctx context.Context, isRollback bool) error {
 
 // SetRollbackPreventionImage configures Nebraska to send firmware and kernel version of the served image.
 // Pass a two-value array of the form [kernel, firmware], e.g. ["1.2", "3.1"].
-func (n *Nebraska) SetRollbackPreventionImage(ctx context.Context, firmwareAndKernelVersion []string) error {
+func (n *Nebraska) SetRollbackPreventionImage(ctx context.Context, firmwareAndKernelVersion [2]string) error {
 	return configureNebraska(ctx, n.Port, "rollback_prevention_image",
 		fmt.Sprintf("[%q, %q]", firmwareAndKernelVersion[0], firmwareAndKernelVersion[1]))
 }

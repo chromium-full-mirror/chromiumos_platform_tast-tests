@@ -1,0 +1,148 @@
+// Copyright 2023 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package rollback
+
+import (
+	"context"
+	"fmt"
+	"strings"
+	"time"
+
+	"chromiumos/tast/common/fixture"
+	"chromiumos/tast/common/pci"
+	"chromiumos/tast/common/policy"
+	"chromiumos/tast/common/policy/fakedms"
+	"chromiumos/tast/common/testexec"
+	updateenginecommon "chromiumos/tast/common/updateengine"
+	"chromiumos/tast/local/chrome"
+	nebraskapkg "chromiumos/tast/local/nebraska"
+	"chromiumos/tast/local/policyutil"
+	updateenginelocal "chromiumos/tast/local/updateengine"
+
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
+)
+
+type rollbackBlockerTestParam struct {
+	imageKernelAndFirmwareVersion [2]string
+}
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func:         BlockedByRollbackProtection,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Tests that no rollback happens if firmware or kernel version of the rollback image are too low",
+		Contacts: []string{
+			"chromeos-commercial-remote-management@google.com",
+			"mpolzer@google.com", // Test author
+			"crisguerrero@chromium.org",
+		},
+		BugComponent: "b:1031231",
+		Attr:         []string{"group:hw_agnostic", "group:mainline", "informational"},
+		Timeout:      4 * time.Minute,
+		Fixture:      fixture.ChromeEnrolledLoggedIn,
+		Params: []testing.Param{{
+			Name: "kernel_rollback_protection",
+			Val: &rollbackBlockerTestParam{
+				imageKernelAndFirmwareVersion: [2]string{"0.0", "1.1"},
+			},
+		}, {
+			Name: "firmware_rollback_protection",
+			Val: &rollbackBlockerTestParam{
+				imageKernelAndFirmwareVersion: [2]string{"1.1", "0.0"},
+			},
+		}},
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.DeviceRollbackToTargetVersion{}, pci.VerifiedFunctionalityOS),
+			{
+				Key: "feature_id",
+				// Configure "Roll back to target version" in Admin Console
+				// policy and ensure that unsupported devices do not roll back.
+				// COM_FOUND_CUJ13_TASK5_WF1
+				// {"blocker_type":"firmware-rollback-protection"}
+				Value: "screenplay-ea371b35-e41e-4415-93d6-967fd63a461b",
+			},
+			{
+				Key: "feature_id",
+				// Configure "Roll back to target version" in Admin Console
+				// policy and ensure that unsupported devices do not roll back.
+				// COM_FOUND_CUJ13_TASK5_WF1
+				// {"blocker_type":"kernel-rollback-protection"}
+				Value: "screenplay-71dddef4-cc54-4690-9d3a-320e6627874f",
+			},
+		},
+	})
+}
+
+// BlockedByRollbackProtection tests that no rollback happens if firmware or kernel (rollback protection) version of the rollback image are too low.
+func BlockedByRollbackProtection(ctx context.Context, s *testing.State) {
+	// Reserve one minute for cleanup.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
+	defer cancel()
+
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	fakeDMS := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
+
+	const rollBackAndPreserveData = 3
+	if err := policyutil.ServeAndVerify(ctx, fakeDMS, cr, []policy.Policy{&policy.DeviceRollbackToTargetVersion{Val: rollBackAndPreserveData}}); err != nil {
+		s.Fatal("Failed to set Rollback policy: ", err)
+	}
+
+	nebraska, err := nebraskapkg.New(ctx)
+	if err != nil {
+		s.Fatal("Failed to start Nebraska: ", err)
+	}
+	defer nebraska.Close(cleanupCtx)
+
+	if err := nebraska.SetFakedMetadata(ctx); err != nil {
+		s.Fatal("Failed to fake metadata for Nebraska: ", err)
+	}
+
+	if err := nebraska.SetIsRollback(ctx, true); err != nil {
+		s.Fatal("Failed to configure Nebraska to server rollback: ", err)
+	}
+
+	param := s.Param().(*rollbackBlockerTestParam)
+	if err := nebraska.SetRollbackPreventionImage(ctx, param.imageKernelAndFirmwareVersion); err != nil {
+		s.Fatal("Failed to configure nebraska to send kernel and fw versions: ", err)
+	}
+
+	// We expect update engine to be running and idle. Fail if its not.
+	// If the test fails here that's a sign that a previous test has not cleaned up update_engine properly.
+	status, err := updateenginelocal.Status(ctx)
+	if err != nil {
+		s.Fatal("Failed to request update engine status: ", err)
+	}
+	if status.CurrentOperation != string(updateenginecommon.UpdateStatusIdle) {
+		s.Fatalf("Update engine is not idle but %s, did a previous test not clean up properly?", status.CurrentOperation)
+	}
+
+	// Clean up update engine after the test.
+	defer func(ctx context.Context) {
+		if err := updateenginelocal.ClearPrefs(ctx); err != nil {
+			s.Error("Failed to clear and restart update engine after test: ", err)
+		}
+	}(cleanupCtx)
+
+	// No need to worry about the update not being blocked. We are not offering any payload. All update attempts will fail.
+	if err := testexec.CommandContext(ctx,
+		"update_engine_client",
+		fmt.Sprintf("--omaha_url=http://localhost:%d/update", nebraska.Port),
+		"--update",
+	).Run(testexec.DumpLogOnError); err == nil {
+		s.Fatal("Update succeeded but it should have failed with error kRollbackNotPossible")
+	}
+
+	out, err := testexec.CommandContext(ctx, "update_engine_client",
+		"--last_attempt_error").Output(testexec.DumpLogOnError)
+	if err != nil {
+		s.Fatal("Failed check update check status: ", err)
+	}
+
+	if !strings.Contains(string(out), "kRollbackNotPossible") {
+		s.Fatalf("Update was not blocked because of rollback protection, update engine output: %s", out)
+	}
+}
