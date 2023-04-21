@@ -60,12 +60,14 @@ func init() {
 		Vars:         []string{varLPMDuration, varServoHostPort}, // Duration is in seconds, servoHostPort defaults 9999
 		Params: []testing.Param{
 			{
-				Name: "suspend",
-				Val:  "suspend",
+				Name:              "suspend",
+				Val:               "suspend",
+				ExtraRequirements: []string{"pwr-batLife-0007-v01"},
 			},
 			{
-				Name: "shutdown",
-				Val:  "shutdown",
+				Name:              "shutdown",
+				Val:               "shutdown",
+				ExtraRequirements: []string{"pwr-batLife-0004-v01", "pwr-batLife-0005-v01"},
 			},
 		},
 	})
