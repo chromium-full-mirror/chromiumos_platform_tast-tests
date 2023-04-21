@@ -23,6 +23,7 @@ type BufferedConsole struct {
 	targetBufferUnreadLen int
 	portOpener            serial.PortOpener
 	port                  serial.Port
+	logfile               *os.File
 }
 
 // NewBufferedConsole returns a new buffered console.
@@ -43,7 +44,18 @@ func (c *BufferedConsole) Open(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	dir, ok := testing.ContextOutDir(ctx)
+	if !ok {
+		c.port.Close(ctx)
+		return errors.New("failed to get directory for saving files")
+	}
+	f, err := os.OpenFile(filepath.Join(dir, "andreiboard.log"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		c.port.Close(ctx)
+		return err
+	}
 	c.port = p
+	c.logfile = f
 	return nil
 }
 
@@ -54,6 +66,10 @@ func (c *BufferedConsole) IsOpen() bool {
 
 // Close closes the console port.
 func (c *BufferedConsole) Close(ctx context.Context) error {
+	if c.logfile != nil {
+		c.logfile.Close()
+		c.logfile = nil
+	}
 	if c.port != nil {
 		err := c.port.Close(ctx)
 		c.port = nil
@@ -65,22 +81,11 @@ func (c *BufferedConsole) Close(ctx context.Context) error {
 }
 
 func (c *BufferedConsole) appendToLogFile(ctx context.Context, buf []byte) error {
-	dir, ok := testing.ContextOutDir(ctx)
-	if !ok {
-		return errors.New("failed to get directory for saving files")
+	if c.logfile == nil {
+		return errors.New("Logfile not opened")
 	}
-	f, err := os.OpenFile(filepath.Join(dir, c.filename), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		return err
-	}
-	if _, err := f.Write(buf); err != nil {
-		f.Close()
-		return err
-	}
-	if err := f.Close(); err != nil {
-		return err
-	}
-	return nil
+	_, err := c.logfile.Write(buf)
+	return err
 }
 
 // ReadSerialSubmatch reads from the serial port until regex is matched.
