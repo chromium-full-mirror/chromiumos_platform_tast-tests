@@ -31,7 +31,7 @@ func init() {
 			"essential-inputs-team@google.com",
 		},
 		BugComponent: "b:95887",
-		Attr:         []string{"group:mainline", "informational", "group:input-tools"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging", "group:input-tools"},
 		SoftwareDeps: []string{"inputs_deps", "chrome"},
 		Params: []testing.Param{{
 			Fixture: fixture.ClamshellNonVK,

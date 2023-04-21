@@ -47,7 +47,7 @@ func init() {
 				Name:              "lacros",
 				Fixture:           fixture.LacrosTabletVKWithMultitouch,
 				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			},
 		},
 	})
@@ -103,6 +103,7 @@ func VirtualKeyboardMultitouch(ctx context.Context, s *testing.State) {
 			if err := stw.Move(x, y); err != nil {
 				return errors.Wrap(err, "failed to move the touch")
 			}
+			// GoBigSleepLint: Sleep is needed to mimic real user scenario.
 			testing.Sleep(ctx, 50*time.Millisecond)
 			return nil
 		}
