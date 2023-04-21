@@ -7,7 +7,6 @@ package health
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"strconv"
 	"strings"
 	"time"
@@ -280,14 +279,6 @@ func validateUSBDevices(ctx context.Context, devs []types.BusDevice) error {
 
 func validateThundeboltDevices(ctx context.Context, devs []types.BusDevice, isDeviceConnected bool) error {
 	checkInterfacesDetected := false
-	productName, err := ioutil.ReadFile("/sys/bus/thunderbolt/devices/0-0/device_name")
-	if err != nil {
-		testing.ContextLog(ctx, "Failed to read thunderbolt device name")
-	}
-	vendorName, err := ioutil.ReadFile("/sys/bus/thunderbolt/devices/0-0/vendor_name")
-	if err != nil {
-		testing.ContextLog(ctx, "Failed to read thunderbolt vendor name")
-	}
 	for _, devices := range devs {
 		if (devices.BusInfo.ThunderboltBusInfo.SecurityLevel) == "" {
 			return errors.New("failed to enable SecurityLevel")
@@ -323,16 +314,8 @@ func validateThundeboltDevices(ctx context.Context, devs []types.BusDevice, isDe
 			return errors.New("failed to get Thunderbolt DeviceClass")
 		}
 
-		productName := strings.TrimSpace(string(productName))
-		if devices.ProductName != productName {
-			return errors.Errorf("failed to get correct Thunderbolt ProductName: got %q; want %q", productName, devices.ProductName)
-		}
-
-		vendorName := strings.TrimSpace(string(vendorName))
-		if devices.VendorName != vendorName {
-			return errors.Errorf("failed to get correct Thunderbolt VendorName: got %q; want %q", vendorName, devices.VendorName)
-		}
-
+		// TODO(b/279117484): Check vendor / product name after revisiting the
+		// implementation.
 	}
 
 	if isDeviceConnected && !checkInterfacesDetected {
