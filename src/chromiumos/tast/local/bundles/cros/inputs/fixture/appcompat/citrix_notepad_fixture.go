@@ -7,6 +7,7 @@ package appcompat
 
 import (
 	"context"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -45,6 +46,7 @@ type citrixNotepadFixtureImpl struct {
 	uidetector *uidetection.Context
 	vdi        apps.VDIInt
 	imeID      string
+	recorder   *uiauto.ScreenRecorder
 }
 
 // CitrixNotepadFixtData is the data returned by SetUp and passed to tests.
@@ -110,6 +112,7 @@ func (f *citrixNotepadFixtureImpl) SetUp(ctx context.Context, s *testing.FixtSta
 }
 
 func (f *citrixNotepadFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
+	f.recorder = uiauto.CreateAndStartScreenRecorder(ctx, f.tconn)
 	util.OpenRemoteApplicationInCitirx(ctx, s, f.tconn, f.vdi, f.uidetector, appName, textToLookForWhenLaunched)
 }
 
@@ -135,6 +138,11 @@ func (f *citrixNotepadFixtureImpl) PostTest(ctx context.Context, s *testing.Fixt
 	//Reset to default ime, otherwise the search application text may not right.
 	if err := ime.SetCurrentInputMethod(ctx, f.tconn, f.imeID); err != nil {
 		s.Error("Failed to set the default input method: ", err)
+	}
+
+	// Do nothing if the recorder is not initialized.
+	if f.recorder != nil {
+		f.recorder.StopAndSaveOnError(ctx, filepath.Join(s.OutDir(), "record.webm"), s.HasError)
 	}
 }
 
