@@ -12,7 +12,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/lockscreen"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/testing"
-	"chromiumos/tast/timing"
+	"go.chromium.org/tast/core/timing"
 )
 
 func init() {

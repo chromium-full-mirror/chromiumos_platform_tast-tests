@@ -14,7 +14,7 @@ import (
 	"chromiumos/tast/local/chrome/internal/config"
 	"chromiumos/tast/local/chrome/internal/driver"
 	"chromiumos/tast/testing"
-	"chromiumos/tast/timing"
+	"go.chromium.org/tast/core/timing"
 )
 
 const oobePrefix = "chrome://oobe"

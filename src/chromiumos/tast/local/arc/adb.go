@@ -14,7 +14,7 @@ import (
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/testing"
-	"chromiumos/tast/timing"
+	"go.chromium.org/tast/core/timing"
 )
 
 // adbPort is the Hard-coded port of ADB in ARC.

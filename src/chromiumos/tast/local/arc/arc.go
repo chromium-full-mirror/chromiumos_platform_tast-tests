@@ -28,8 +28,9 @@ import (
 	"chromiumos/tast/local/procutil"
 	"chromiumos/tast/local/syslog"
 	"chromiumos/tast/testing"
-	"chromiumos/tast/timing"
+
 	"go.chromium.org/tast/core/caller"
+	"go.chromium.org/tast/core/timing"
 )
 
 const (

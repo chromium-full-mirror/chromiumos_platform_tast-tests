@@ -10,7 +10,7 @@ import (
 
 	"chromiumos/tast/errors"
 	"chromiumos/tast/testing"
-	"chromiumos/tast/timing"
+	"go.chromium.org/tast/core/timing"
 )
 
 // ResetTimeout is the timeout durection to trying reset of the current precondition.

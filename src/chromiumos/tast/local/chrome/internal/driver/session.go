@@ -20,7 +20,7 @@ import (
 	"chromiumos/tast/local/chrome/internal/extension"
 	"chromiumos/tast/local/chrome/jslog"
 	"chromiumos/tast/testing"
-	"chromiumos/tast/timing"
+	"go.chromium.org/tast/core/timing"
 )
 
 // Session allows interacting with a locally running Chrome.

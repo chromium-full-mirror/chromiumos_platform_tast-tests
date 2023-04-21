@@ -22,8 +22,8 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/fsutil"
 	"chromiumos/tast/testing"
-	"chromiumos/tast/timing"
 	"go.chromium.org/tast/core/shutil"
+	"go.chromium.org/tast/core/timing"
 )
 
 const (

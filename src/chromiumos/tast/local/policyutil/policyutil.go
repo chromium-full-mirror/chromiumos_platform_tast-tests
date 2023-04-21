@@ -16,7 +16,7 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/testing"
-	"chromiumos/tast/timing"
+	"go.chromium.org/tast/core/timing"
 )
 
 // InstallPwaAppByPolicy installs a pre-defined Progressive Web App (PWA). Returns the app's id,

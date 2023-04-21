@@ -19,7 +19,7 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/dbusutil"
-	"chromiumos/tast/timing"
+	"go.chromium.org/tast/core/timing"
 )
 
 const (

@@ -26,7 +26,7 @@ import (
 	"chromiumos/tast/local/retry"
 	"chromiumos/tast/local/syslog"
 	"chromiumos/tast/testing"
-	"chromiumos/tast/timing"
+	"go.chromium.org/tast/core/timing"
 )
 
 const arcInstallLoggingTestTimeout = 13 * time.Minute

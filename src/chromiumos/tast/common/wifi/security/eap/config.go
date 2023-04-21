@@ -22,7 +22,7 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/ssh"
 	"chromiumos/tast/testing"
-	"chromiumos/tast/timing"
+	"go.chromium.org/tast/core/timing"
 )
 
 // Config implements security.Config interface for EAP protected network.

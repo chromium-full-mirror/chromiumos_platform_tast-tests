@@ -12,7 +12,7 @@ import (
 
 	"chromiumos/tast/local/shill"
 	"chromiumos/tast/testing"
-	"chromiumos/tast/timing"
+	"go.chromium.org/tast/core/timing"
 )
 
 const (

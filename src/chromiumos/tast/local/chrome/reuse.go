@@ -19,7 +19,7 @@ import (
 	"chromiumos/tast/local/chrome/jslog"
 	"chromiumos/tast/local/logsaver"
 	"chromiumos/tast/testing"
-	"chromiumos/tast/timing"
+	"go.chromium.org/tast/core/timing"
 )
 
 // tryReuseSession checks if the exiting chrome session can be reuse, and returns a

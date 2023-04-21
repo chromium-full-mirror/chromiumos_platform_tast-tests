@@ -28,7 +28,7 @@ import (
 	"chromiumos/tast/local/vm"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
-	"chromiumos/tast/timing"
+	"go.chromium.org/tast/core/timing"
 
 	"go.chromium.org/tast/core/shutil"
 )

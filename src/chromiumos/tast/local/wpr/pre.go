@@ -13,8 +13,9 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/testing"
-	"chromiumos/tast/timing"
+
 	"go.chromium.org/tast/core/caller"
+	"go.chromium.org/tast/core/timing"
 )
 
 // wprTimeout is the time to wait for WPR sockets.

@@ -10,7 +10,7 @@ import (
 
 	"chromiumos/tast/local/wilco"
 	"chromiumos/tast/testing"
-	"chromiumos/tast/timing"
+	"go.chromium.org/tast/core/timing"
 )
 
 // SystemState describes the desired system state.

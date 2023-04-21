@@ -57,7 +57,7 @@ import (
 	"chromiumos/tast/services/cros/wifi"
 	"chromiumos/tast/ssh"
 	"chromiumos/tast/testing"
-	"chromiumos/tast/timing"
+	"go.chromium.org/tast/core/timing"
 )
 
 // The allowed packets loss percentage for the ping command.

@@ -18,8 +18,8 @@ import (
 	"chromiumos/tast/local/wilco"
 	wpb "chromiumos/tast/services/cros/wilco"
 	"chromiumos/tast/testing"
-	"chromiumos/tast/timing"
 	dtcpb "chromiumos/wilco_dtc"
+	"go.chromium.org/tast/core/timing"
 )
 
 func init() {

@@ -19,7 +19,7 @@ import (
 	"chromiumos/tast/local/modemfwd"
 	"chromiumos/tast/local/modemmanager"
 	"chromiumos/tast/testing"
-	"chromiumos/tast/timing"
+	"go.chromium.org/tast/core/timing"
 )
 
 // ParseModemFirmwareManifest Parses the modem firmware manifest and returns the FirmwareManifestV2 proto object.

@@ -32,8 +32,9 @@ import (
 	"chromiumos/tast/local/logsaver"
 	"chromiumos/tast/local/minidump"
 	"chromiumos/tast/testing"
-	"chromiumos/tast/timing"
+
 	"go.chromium.org/tast/core/caller"
+	"go.chromium.org/tast/core/timing"
 )
 
 var chromeKeepStateVar = testing.RegisterVarString(

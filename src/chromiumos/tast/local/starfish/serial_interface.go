@@ -10,7 +10,7 @@ import (
 
 	fserial "chromiumos/tast/common/firmware/serial"
 	"chromiumos/tast/errors"
-	"chromiumos/tast/timing"
+	"go.chromium.org/tast/core/timing"
 )
 
 // SerialInterface holds data pertaining to the serial interface exposed on Starfish module

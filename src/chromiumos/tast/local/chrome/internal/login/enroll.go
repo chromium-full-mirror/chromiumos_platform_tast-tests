@@ -19,7 +19,7 @@ import (
 	"chromiumos/tast/local/chrome/internal/driver"
 	"chromiumos/tast/local/shill"
 	"chromiumos/tast/testing"
-	"chromiumos/tast/timing"
+	"go.chromium.org/tast/core/timing"
 )
 
 // maxGAIAEnterpriseEnrollmentRetries is the maximum number of times to retry

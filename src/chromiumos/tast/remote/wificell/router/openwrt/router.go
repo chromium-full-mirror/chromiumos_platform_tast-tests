@@ -29,7 +29,7 @@ import (
 	"chromiumos/tast/remote/wificell/router/common/support"
 	"chromiumos/tast/ssh"
 	"chromiumos/tast/testing"
-	"chromiumos/tast/timing"
+	"go.chromium.org/tast/core/timing"
 )
 
 const readyStatusFile = "/tmp/cros/status/ready"

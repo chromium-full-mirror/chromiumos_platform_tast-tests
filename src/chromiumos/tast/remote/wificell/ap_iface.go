@@ -17,7 +17,7 @@ import (
 	"chromiumos/tast/remote/wificell/router"
 	"chromiumos/tast/remote/wificell/router/common/support"
 	"chromiumos/tast/testing"
-	"chromiumos/tast/timing"
+	"go.chromium.org/tast/core/timing"
 )
 
 // busySubnet records the used subnet indexes.

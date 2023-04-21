@@ -18,7 +18,7 @@ import (
 	"chromiumos/tast/errors"
 	"chromiumos/tast/services/cros/wifi"
 	"chromiumos/tast/testing"
-	"chromiumos/tast/timing"
+	"go.chromium.org/tast/core/timing"
 )
 
 // WifiClient is a wrapper of ShillServiceClient to simplify gRPC calls

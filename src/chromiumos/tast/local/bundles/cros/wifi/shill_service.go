@@ -49,7 +49,7 @@ import (
 	"chromiumos/tast/services/cros/wifi"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/wlan"
-	"chromiumos/tast/timing"
+	"go.chromium.org/tast/core/timing"
 )
 
 // reserveForReturn reserves a second in order to let the gRPC to be able to return the details of the errors (mainly for timeout errors).

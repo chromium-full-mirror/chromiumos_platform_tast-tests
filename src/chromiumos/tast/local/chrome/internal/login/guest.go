@@ -11,7 +11,7 @@ import (
 	"chromiumos/tast/local/chrome/internal/driver"
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/testing"
-	"chromiumos/tast/timing"
+	"go.chromium.org/tast/core/timing"
 )
 
 // logInAsGuest logs in to a freshly-restarted Chrome instance as a guest user.

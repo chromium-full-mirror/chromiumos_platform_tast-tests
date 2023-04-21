@@ -26,7 +26,7 @@ import (
 	"chromiumos/tast/services/cros/ui"
 	"chromiumos/tast/ssh"
 	"chromiumos/tast/testing"
-	"chromiumos/tast/timing"
+	"go.chromium.org/tast/core/timing"
 )
 
 // Fixture variable keys.

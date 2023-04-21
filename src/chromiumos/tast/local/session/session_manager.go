@@ -18,7 +18,7 @@ import (
 	"chromiumos/tast/local/chrome/ash/ashproc"
 	"chromiumos/tast/local/dbusutil"
 	"chromiumos/tast/local/procutil"
-	"chromiumos/tast/timing"
+	"go.chromium.org/tast/core/timing"
 )
 
 const (

@@ -21,7 +21,7 @@ import (
 	hwseclocal "chromiumos/tast/local/hwsec"
 	"chromiumos/tast/local/syslog"
 	"chromiumos/tast/testing"
-	"chromiumos/tast/timing"
+	"go.chromium.org/tast/core/timing"
 )
 
 func init() {

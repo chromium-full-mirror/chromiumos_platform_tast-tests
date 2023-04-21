@@ -23,7 +23,7 @@ import (
 
 	"chromiumos/tast/errors"
 	"chromiumos/tast/testing"
-	"chromiumos/tast/timing"
+	"go.chromium.org/tast/core/timing"
 )
 
 const (

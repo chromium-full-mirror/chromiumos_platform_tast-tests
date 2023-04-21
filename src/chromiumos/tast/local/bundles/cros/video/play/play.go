@@ -30,7 +30,7 @@ import (
 	"chromiumos/tast/local/media/logging"
 	"chromiumos/tast/local/screenshot"
 	"chromiumos/tast/testing"
-	"chromiumos/tast/timing"
+	"go.chromium.org/tast/core/timing"
 )
 
 // VideoType represents a type of video played in TestPlay.

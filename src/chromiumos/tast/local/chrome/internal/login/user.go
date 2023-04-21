@@ -18,7 +18,7 @@ import (
 	"chromiumos/tast/local/shill"
 	"chromiumos/tast/local/syslog"
 	"chromiumos/tast/testing"
-	"chromiumos/tast/timing"
+	"go.chromium.org/tast/core/timing"
 )
 
 // loginUser logs in to a freshly-restarted Chrome instance.
