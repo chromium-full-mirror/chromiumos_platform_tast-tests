@@ -51,13 +51,13 @@ type DeviceTrustService struct {
 
 // Enroll the device with the provided account credentials.
 func (service *DeviceTrustService) Enroll(ctx context.Context, req *pb.EnrollRequest) (_ *empty.Empty, retErr error) {
-	var opts []chrome.Option
-
-	opts = append(opts, chrome.GAIAEnterpriseEnroll(chrome.Creds{User: req.User, Pass: req.Pass}))
-	opts = append(opts, chrome.DMSPolicy(sandboxDMServer))
-	opts = append(opts, chrome.NoLogin())
-	opts = append(opts, chrome.LoadSigninProfileExtension(req.SigninProfileTestExtensionManifestKey))
-	cr, err := chrome.New(ctx, opts...)
+	cr, err := chrome.New(
+		ctx,
+		chrome.GAIAEnterpriseEnroll(chrome.Creds{User: req.User, Pass: req.Pass}),
+		chrome.DMSPolicy(sandboxDMServer),
+		chrome.NoLogin(),
+		chrome.LoadSigninProfileExtension(req.SigninProfileTestExtensionManifestKey),
+	)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to connect to Chrome")
 	}
