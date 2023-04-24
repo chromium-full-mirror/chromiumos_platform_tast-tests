@@ -244,6 +244,9 @@ func AgentEvents(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to capture EnqueueRecord dbus calls to missived: ", err)
 	}
 	s.Logf("secagentd enqueued %d events", len(calledMethods))
+	if len(calledMethods) == 0 {
+		s.Fatal("No EnqueueRecords found")
+	}
 
 	for _, method := range calledMethods {
 		if len(method.Arguments) == 0 {
