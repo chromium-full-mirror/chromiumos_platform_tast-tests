@@ -3233,12 +3233,6 @@ func (s *ShillService) startShillTethering(ctx context.Context, request *wifi.Te
 		return errors.Wrapf(err, "failed to reach a correct tethering state %s", shillconst.TetheringStateActive)
 	}
 
-	// TODO(b/275644434): Remove when patchpanel changes take care of DHCP.
-	if err := s.startDHCPServer(ctx); err != nil {
-		s.stopDHCPServer(ctx)
-		return errors.Wrap(err, "failed to start DHCP server")
-	}
-
 	return nil
 }
 
@@ -3283,10 +3277,6 @@ func (s *ShillService) stopShillTethering(ctx context.Context, _ *empty.Empty) e
 	ctx, cancel := reserveForReturn(ctx)
 	defer cancel()
 
-	// TODO(b/275644434): Remove when patchpanel changes take care of DHCP.
-	if err := s.stopDHCPServer(ctx); err != nil {
-		utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to stop DHCP server"))
-	}
 	ctx, st := timing.Start(ctx, "wifi_service.StopTethering")
 	defer st.End()
 	testing.ContextLog(ctx, "Attempting to stop the tethering session using Shill")

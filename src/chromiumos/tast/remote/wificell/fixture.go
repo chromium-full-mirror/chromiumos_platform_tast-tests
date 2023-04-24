@@ -151,7 +151,7 @@ func init() {
 		ResetTimeout:    resetTimeout,
 		PostTestTimeout: postTestTimeout,
 		TearDownTimeout: tearDownTimeout,
-		ServiceDeps:     []string{ShillServiceName},
+		ServiceDeps:     []string{ShillServiceName, BluetoothServiceName},
 		Vars:            []string{"router", "pcap", "routertype", "pcaptype"},
 	})
 }
