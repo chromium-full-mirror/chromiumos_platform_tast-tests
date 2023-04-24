@@ -8,8 +8,6 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/crostini/crostiniapps"
 	"chromiumos/tast/local/bundles/cros/crostini/imetestutil"
 	"chromiumos/tast/local/chrome"
@@ -23,6 +21,9 @@ import (
 	"chromiumos/tast/local/uidetection"
 	"chromiumos/tast/local/vm"
 	"chromiumos/tast/testing"
+
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 )
 
 func init() {
@@ -104,11 +105,11 @@ func AppVscodeIME(ctx context.Context, s *testing.State) {
 	}
 	defer terminalApp.Exit(keyboard)(cleanupCtx)
 
-	// Since defers are executed in a stack, this needs to be the last defer so it doesn't close the window before dumping the tree.
-	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree")
-
 	// Switch back to default IME
 	defer ime.DefaultInputMethod.InstallAndActivate(tconn)(cleanupCtx)
+
+	// Since defers are executed in a stack, this needs to be the last defer so it doesn't close the window before dumping the tree.
+	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree")
 
 	imeName := s.Param().(string)
 	imeData := imetestutil.IMETestCases[imeName]
@@ -132,8 +133,9 @@ func testUseIMEInVSCode(ctx context.Context, terminalApp *terminalapp.TerminalAp
 		inputMethod.InstallAndActivate(tconn),
 		inputMethod.WaitUntilActivated(tconn),
 		// VSCode will read the first keypress as English input, even when the input method is set otherwise.
-		// Enter a backspace first so that the testing string is entered correctly.
-		// TODO(b/274709150): Remove the following line after this bug is fixed.
+		// Enter two backspaces first so that the testing string is entered correctly.
+		// TODO(b/274709150): Remove the following 2 lines after this bug is fixed.
+		keyboard.AccelAction("Backspace"),
 		keyboard.AccelAction("Backspace"),
 		imeData.EnterTestStringActionPK(keyboard),
 		crostiniapps.SaveFileAndCloseVscode(ui, keyboard, crostiniapps.VscodeTestFile))(ctx); err != nil {
