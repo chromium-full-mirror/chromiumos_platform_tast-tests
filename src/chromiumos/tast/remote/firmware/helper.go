@@ -1501,7 +1501,7 @@ func (h *Helper) validateUSBConn(ctx context.Context) error {
 // Reference for NOGOOD Screen and Broken Screen:
 // https://chromium.googlesource.com/chromiumos/docs/+/HEAD/firmware_test_manual.md#firmware-screen-names
 func (h *Helper) WaitDUTConnectDuringBootFromUSB(ctx context.Context, expBoot bool) error {
-	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, reconnectTimeout)
+	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
 	defer cancelWaitConnect()
 
 	err := h.WaitConnect(waitConnectCtx)
@@ -1519,8 +1519,7 @@ func (h *Helper) WaitDUTConnectDuringBootFromUSB(ctx context.Context, expBoot bo
 		case false:
 			return errors.Wrap(err, "expected DUT at the firmware screen. But, DUT advanced to the welcome page")
 		}
-	}
-	if err != nil && !strings.Contains(err.Error(), context.DeadlineExceeded.Error()) {
+	} else if !strings.Contains(err.Error(), context.DeadlineExceeded.Error()) {
 		return errors.Wrap(err, "unexpected error")
 	}
 	return nil
