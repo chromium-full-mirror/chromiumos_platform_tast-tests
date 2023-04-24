@@ -24,6 +24,60 @@ func TestParseStringList(t *testing.T) {
 		{`["\x00\u0001\U00000002"]`, false, []interface{}{"\000\001\002"}},
 		{`["\x4a\u1E0A\U0001F6B4"]`, false, []interface{}{"JḊ🚴"}},
 		{`[('chg.*:\r\n\tvoltage = 8200mV', '8200')]`, false, []interface{}{[]interface{}{"chg.*:\r\n\tvoltage = 8200mV", "8200"}}},
+		{`[19, 28, 37]`, false, []interface{}{19, 28, 37}},
+		{`[
+			{
+			    "prefix": [
+				"main",
+				"",
+				"ccd_ti50",
+				"ccd_gsc"
+			    ],
+			    "type": "ccd_ti50",
+			    "vendor_id": 6353,
+			    "product_id": 20554,
+			    "serial": "01818054-54283135",
+			    "sysfs_path": "/sys/bus/usb/devices/1-1.3",
+			    "root_hub_device": "servo_v4p1 (18d1:520d) SERVOV4P1-S-2107250640",
+			    "child_devices": []
+			},
+			{
+			    "prefix": [
+				"root",
+				"servo_v4p1"
+			    ],
+			    "type": "servo_v4p1",
+			    "vendor_id": 6353,
+			    "product_id": 21005,
+			    "serial": "SERVOV4P1-S-2107250640",
+			    "sysfs_path": "/sys/bus/usb/devices/1-1.5",
+			    "root_hub_device": "servo_v4p1 (18d1:520d) SERVOV4P1-S-2107250640",
+			    "child_devices": [
+				"ccd_ti50 (18d1:504a) 01818054-54283135"
+			    ]
+			}
+		    ]`, false, []interface{}{
+			map[string]interface{}{
+				"prefix":          []interface{}{string("main"), string(""), string("ccd_ti50"), string("ccd_gsc")},
+				"type":            string("ccd_ti50"),
+				"vendor_id":       int(6353),
+				"product_id":      int(20554),
+				"serial":          string("01818054-54283135"),
+				"sysfs_path":      string("/sys/bus/usb/devices/1-1.3"),
+				"root_hub_device": string("servo_v4p1 (18d1:520d) SERVOV4P1-S-2107250640"),
+				"child_devices":   []interface{}(nil),
+			},
+			map[string]interface{}{
+				"prefix":          []interface{}{string("root"), string("servo_v4p1")},
+				"type":            string("servo_v4p1"),
+				"vendor_id":       int(6353),
+				"product_id":      int(21005),
+				"serial":          string("SERVOV4P1-S-2107250640"),
+				"root_hub_device": string("servo_v4p1 (18d1:520d) SERVOV4P1-S-2107250640"),
+				"sysfs_path":      string("/sys/bus/usb/devices/1-1.5"),
+				"child_devices":   []interface{}{string("ccd_ti50 (18d1:504a) 01818054-54283135")},
+			},
+		}},
 	} {
 		res, err := ParseStringList(tc.pslParam)
 		if tc.expectErr {

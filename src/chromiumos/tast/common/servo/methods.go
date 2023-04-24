@@ -411,6 +411,23 @@ func parseUint(value []rune, index *int, bits int) (rune, error) {
 	return rune(char), nil
 }
 
+// parseInt extracts a decimal number from `value` at `*index`.
+// `*index` will be moved to the end of the extracted runes.
+func parseInt(value []rune, index *int) (int, error) {
+	intVal := 0
+	for ; *index < len(value); (*index)++ {
+		c := value[*index]
+		if c >= '0' && c <= '9' {
+			intVal *= 10
+			intVal += int(c - '0')
+		} else {
+			(*index)--
+			break
+		}
+	}
+	return intVal, nil
+}
+
 // parseQuotedStringInternal returns a new string with the quotes and escaped chars from `value` removed, moves `*index` to the index of the closing quote rune.
 func parseQuotedStringInternal(value []rune, index *int) (string, error) {
 	if *index >= len(value) {
@@ -469,17 +486,11 @@ func parseQuotedStringInternal(value []rune, index *int) (string, error) {
 	return current.String(), nil
 }
 
-// parseStringListInternal parses `value` as a possibly nested list of strings, each quoted and separated by commas. Moves `*index` to the index of the closing ] rune.
-func parseStringListInternal(value []rune, index *int) ([]interface{}, error) {
-	var result []interface{}
+// parseValueInternal parses `value` as a string, list, map, or integer. Moves `*index` to the end of the value.
+func parseValueInternal(value []rune, index *int) (interface{}, error) {
 	if *index >= len(value) {
 		return nil, errors.Errorf("unexpected end of string at %d in %s", *index, string(value))
 	}
-	// The first char should always be a [ or (, as it might be a list or a tuple.
-	if value[*index] != '[' && value[*index] != '(' {
-		return nil, errors.Errorf("unexpected list char %c at index %d in %s", value[*index], *index, string(value))
-	}
-	(*index)++
 	for ; *index < len(value); (*index)++ {
 		c := value[*index]
 		switch c {
@@ -488,20 +499,143 @@ func parseStringListInternal(value []rune, index *int) ([]interface{}, error) {
 			if err != nil {
 				return nil, err
 			}
-			result = append(result, sublist)
+			return sublist, nil
+		case '{':
+			submap, err := parseStringMapInternal(value, index)
+			if err != nil {
+				return nil, err
+			}
+			return submap, nil
 		case '\'', '"':
 			substr, err := parseQuotedStringInternal(value, index)
 			if err != nil {
 				return nil, err
 			}
-			result = append(result, substr)
-		case ',', ' ':
+			return substr, nil
+		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+			substr, err := parseInt(value, index)
+			if err != nil {
+				return nil, err
+			}
+			return substr, nil
+		default:
+			return nil, errors.Errorf("unexpected value char %q at index %d in %s", c, *index, string(value))
+		}
+	}
+	return nil, errors.Errorf("unexpected end of string at %d in %s", *index, string(value))
+}
+
+// parseStringListInternal parses `value` as a possibly nested list of strings, each quoted and separated by commas. Moves `*index` to the index of the closing ] rune.
+func parseStringListInternal(value []rune, index *int) ([]interface{}, error) {
+	var result []interface{}
+	if *index >= len(value) {
+		return nil, errors.Errorf("unexpected end of string at %d in %s", *index, string(value))
+	}
+	// The first char should always be a [ or (, as it might be a list or a tuple.
+	if value[*index] != '[' && value[*index] != '(' {
+		return nil, errors.Errorf("unexpected list char %q at index %d in %s", value[*index], *index, string(value))
+	}
+	(*index)++
+	for ; *index < len(value); (*index)++ {
+		c := value[*index]
+		switch c {
+		case '[', '(', '{', '\'', '"', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+			subval, err := parseValueInternal(value, index)
+			if err != nil {
+				return nil, err
+			}
+			result = append(result, subval)
+		case ',', ' ', '\n', '\t':
 			// Ignore this char
 		case ']', ')':
 			return result, nil
 		default:
-			return nil, errors.Errorf("unexpected list char %c at index %d in %s", c, *index, string(value))
+			return nil, errors.Errorf("unexpected list member char %q at index %d in %s", c, *index, string(value))
 		}
+	}
+	return nil, errors.Errorf("unexpected end of string at %d in %s", *index, string(value))
+}
+
+// parseStringMapInternal parses `value` as a map of string:value, each quoted and separated by commas. Moves `*index` to the index of the closing } rune.
+func parseStringMapInternal(value []rune, index *int) (map[string]interface{}, error) {
+	result := make(map[string]interface{})
+	if *index >= len(value) {
+		return nil, errors.Errorf("unexpected end of string at %d in %s", *index, string(value))
+	}
+	// The first char should always be a {
+	if value[*index] != '{' {
+		return nil, errors.Errorf("unexpected map char %q at index %d in %s", value[*index], *index, string(value))
+	}
+	(*index)++
+	for *index < len(value) {
+		// Parse key
+		key := ""
+	keyLoop:
+		for ; *index < len(value); (*index)++ {
+			c := value[*index]
+			switch c {
+			case '\'', '"':
+				var err error
+				key, err = parseQuotedStringInternal(value, index)
+				if err != nil {
+					return nil, err
+				}
+				break keyLoop
+			case ' ', '\n', '\t':
+				// Ignore this char
+			default:
+				return nil, errors.Errorf("unexpected map key char %q at index %d in %s", c, *index, string(value))
+			}
+		}
+		(*index)++
+		// Parse colon
+	colonLoop:
+		for ; *index < len(value); (*index)++ {
+			c := value[*index]
+			switch c {
+			case ':':
+				break colonLoop
+			case ' ', '\n':
+				// Ignore this char
+			default:
+				return nil, errors.Errorf("unexpected map key colon char %q at index %d in %s", c, *index, string(value))
+			}
+		}
+		(*index)++
+		// Parse value
+	valueLoop:
+		for ; *index < len(value); (*index)++ {
+			c := value[*index]
+			switch c {
+			case ' ', '\n', '\t':
+				// Ignore this char
+			default:
+				break valueLoop
+			}
+		}
+		var subVal interface{}
+		subVal, err := parseValueInternal(value, index)
+		if err != nil {
+			return nil, err
+		}
+		(*index)++
+		result[key] = subVal
+		// Parse comma
+	commaLoop:
+		for ; *index < len(value); (*index)++ {
+			c := value[*index]
+			switch c {
+			case ',':
+				break commaLoop
+			case ' ', '\n', '\t':
+				// Ignore this char
+			case '}':
+				return result, nil
+			default:
+				return nil, errors.Errorf("unexpected map key comma char %q at index %d in %s", c, *index, string(value))
+			}
+		}
+		(*index)++
 	}
 	return nil, errors.Errorf("unexpected end of string at %d in %s", *index, string(value))
 }
@@ -509,6 +643,9 @@ func parseStringListInternal(value []rune, index *int) ([]interface{}, error) {
 // ParseStringList parses `value` as a possibly nested list of strings, each quoted and separated by commas.
 func ParseStringList(value string) ([]interface{}, error) {
 	index := 0
+	// Skip over newlines
+	for ; index < len(value) && value[index] == '\n'; index++ {
+	}
 	return parseStringListInternal([]rune(value), &index)
 }
 
