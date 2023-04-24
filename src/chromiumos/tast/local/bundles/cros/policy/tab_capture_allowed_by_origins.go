@@ -8,7 +8,6 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
-	"regexp"
 	"time"
 
 	"chromiumos/tast/common/fixture"
@@ -80,24 +79,25 @@ func TabCaptureAllowedByOrigins(ctx context.Context, s *testing.State) {
 	defer server.Close()
 
 	for _, tc := range []struct {
-		name               string
-		wantCaptureBlocked bool
-		policies           []policy.Policy // list of policies to be set.
+		name     string
+		policies []policy.Policy // list of policies to be set.
 	}{
 		{
-			name:               "not_set_block",
-			wantCaptureBlocked: true,
+			name: "not_set_block",
 			policies: []policy.Policy{
 				&policy.ScreenCaptureAllowed{Val: false},
 			},
 		},
 		{
-			name:               "set_allow",
-			wantCaptureBlocked: false,
+			name: "set_allow",
 			policies: []policy.Policy{
 				&policy.ScreenCaptureAllowed{Val: false},
 				&policy.TabCaptureAllowedByOrigins{Val: []string{server.URL}},
 			},
+		},
+		{
+			name:     "no_policy_allow_all",
+			policies: []policy.Policy{},
 		},
 	} {
 		s.Run(ctx, tc.name, func(ctx context.Context, s *testing.State) {
@@ -128,18 +128,35 @@ func TabCaptureAllowedByOrigins(ctx context.Context, s *testing.State) {
 			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_"+tc.name)
 
 			ui := uiauto.New(tconn)
+			mediaPicker := nodewith.Role(role.Window).ClassName("DesktopMediaPickerDialogView")
+			// When there are no restrictions imposed by the presence of the policy, the
+			// media picker will have a tab strip to display "Chrome Tab", "Window" and
+			// "Entire Screen" tabs.
+			tabbedPane := nodewith.ClassName("TabbedPane").Ancestor(mediaPicker)
 
-			if tc.wantCaptureBlocked {
-				// No media picker should come up
-				if err := ui.EnsureGoneFor(nodewith.Role(role.Window).ClassName("DesktopMediaPickerDialogView"), 10*time.Second)(ctx); err != nil {
+			switch tc.name {
+			case "not_set_block":
+				// No media picker should come up.
+				if err := ui.EnsureGoneFor(mediaPicker, 10*time.Second)(ctx); err != nil {
 					s.Fatal("A media picker dialog appeared even though screen capture was disallowed: ", err)
 				}
-			} else {
-				// We expect the media picker dialog to allow *only* tabs to be selected (and not also windows and the entire desktop).
-				// A tabs-only media picker has a particular title, whereas the general one is "Choose what to share".
-				tabOnlyPicker := nodewith.NameRegex(regexp.MustCompile("Share a (Chromium|Chrome) tab")).Role(role.Window).ClassName("DesktopMediaPickerDialogView")
-				if err := ui.WaitUntilExists(tabOnlyPicker)(ctx); err != nil {
-					s.Fatal("Failed to find a tabs-only media picker: ", err)
+			case "set_allow":
+				if err := ui.WaitUntilExists(mediaPicker)(ctx); err != nil {
+					s.Fatal("Failed to find a media picker: ", err)
+				}
+				// Since the policy is present and the page is in its allow list, only
+				// chrome tabs can be selected. Therefore a tabbed pane is not needed
+				// because neither "Window" nor "Entire Screen" options will be available.
+				if err := ui.EnsureGoneFor(tabbedPane, 10*time.Second)(ctx); err != nil {
+					s.Fatal("An unrestricted media picker (ie, with a tab strip) was displayed: ", err)
+				}
+			default: // "no_policy_allow_all"
+				if err := ui.WaitUntilExists(mediaPicker)(ctx); err != nil {
+					s.Fatal("Failed to find a media picker: ", err)
+				}
+				// Checking for just for the existence of this tabbed pane is enough.
+				if err := ui.WaitUntilExists(tabbedPane)(ctx); err != nil {
+					s.Fatal("Failed to find a tabbed pane in media picker: ", err)
 				}
 			}
 		})
