@@ -37,13 +37,8 @@ type TestOptions struct {
 	webMName string
 	profile  videotype.CodecProfile
 
-	// The number of spatial layers of the produced bitstream.
-	// See https://www.w3.org/TR/webrtc-svc/#scalabilitymodes* about spatial layers.
-	spatialLayers int
-
-	// The number of temporal layers of the produced bitstream.
-	// See https://www.w3.org/TR/webrtc-svc/#scalabilitymodes* about temporal layers.
-	temporalLayers int
+	// The SVC scalability mode See https://www.w3.org/TR/webrtc-svc/#scalabilitymodes*.
+	svcMode string
 
 	// Used bitrate mode. Either cbr or vbr.
 	bitrateMode string
@@ -56,77 +51,60 @@ type TestOptions struct {
 }
 
 // MakeTestOptions creates TestOptions from webMName and profile.
-// spatialLayers and temporalLayers are set to 1.
 func MakeTestOptions(webMName string, profile videotype.CodecProfile) TestOptions {
 	return TestOptions{
-		webMName:       webMName,
-		profile:        profile,
-		spatialLayers:  1,
-		temporalLayers: 1,
-		bitrateMode:    "cbr",
+		webMName:    webMName,
+		profile:     profile,
+		bitrateMode: "cbr",
 	}
 }
 
 // MakeVBRTestOptions creates TestOptions from webMName and profile and bitrate mode is VBR.
 func MakeVBRTestOptions(webMName string, profile videotype.CodecProfile) TestOptions {
 	return TestOptions{
-		webMName:       webMName,
-		profile:        profile,
-		spatialLayers:  1,
-		temporalLayers: 1,
-		bitrateMode:    "vbr",
+		webMName:    webMName,
+		profile:     profile,
+		bitrateMode: "vbr",
 	}
 }
 
 // MakeBitrateTestOptions creates TestOptions from webMName, codec, bitrate and bitrateMode.
-// spatialLayers and temporalLayers are set to 1.
 // Sets bitrate for testing quality changes.
 func MakeBitrateTestOptions(webMName string, profile videotype.CodecProfile, bitrate int, bitrateMode string) TestOptions {
 	return TestOptions{
-		webMName:       webMName,
-		profile:        profile,
-		spatialLayers:  1,
-		temporalLayers: 1,
-		bitrateMode:    bitrateMode,
-		bitrate:        bitrate,
+		webMName:    webMName,
+		profile:     profile,
+		bitrateMode: bitrateMode,
+		bitrate:     bitrate,
 	}
 }
 
 // MakeTestOptionsWithNoGlobalVaapiLock creates TestOptions from webMName and profile.
-// spatialLayers and temporalLayers are set to 1.
 // Always disables the global VAAPI lock.
 func MakeTestOptionsWithNoGlobalVaapiLock(webMName string, profile videotype.CodecProfile) TestOptions {
 	return TestOptions{
 		webMName:               webMName,
 		profile:                profile,
-		spatialLayers:          1,
-		temporalLayers:         1,
 		bitrateMode:            "cbr",
 		disableGlobalVaapiLock: true,
 	}
 }
 
-// MakeTestOptionsWithSVCLayers creates TestOptions from webMName, profile, svc.
-// svc is the string defined in https://w3c.github.io/webrtc-svc/#scalabilitymodes.
-func MakeTestOptionsWithSVCLayers(webMName string, profile videotype.CodecProfile, svc string) TestOptions {
-	spatialLayers := 1
-	temporalLayers := 1
-	if _, err := fmt.Sscanf(svc, "L%dT%d", &spatialLayers, &temporalLayers); err != nil {
-		panic(fmt.Sprintf("Unknown svc format : %v", err))
-	}
+// MakeTestOptionsWithSVCMode creates TestOptions from webMName, profile, svcMode.
+// svcMode is the string defined in https://w3c.github.io/webrtc-svc/#scalabilitymodes.
+func MakeTestOptionsWithSVCMode(webMName string, profile videotype.CodecProfile, svcMode string) TestOptions {
 	return TestOptions{
-		webMName:       webMName,
-		profile:        profile,
-		spatialLayers:  spatialLayers,
-		temporalLayers: temporalLayers,
-		bitrateMode:    "cbr",
+		webMName:    webMName,
+		profile:     profile,
+		svcMode:     svcMode,
+		bitrateMode: "cbr",
 	}
 }
 
-// MakeVBRTestOptionsWithSVCLayers creates TestOptions from webMName, profile and svc, and bitrate mode is VBR.
-// svc is the string defined in https://w3c.github.io/webrtc-svc/#scalabilitymodes.
-func MakeVBRTestOptionsWithSVCLayers(webMName string, profile videotype.CodecProfile, svc string) TestOptions {
-	testOpts := MakeTestOptionsWithSVCLayers(webMName, profile, svc)
+// MakeVBRTestOptionsWithSVCMode creates TestOptions from webMName, profile and svcMode, and bitrate mode is VBR.
+// svcMode is the string defined in https://w3c.github.io/webrtc-svc/#scalabilitymodes.
+func MakeVBRTestOptionsWithSVCMode(webMName string, profile videotype.CodecProfile, svcMode string) TestOptions {
+	testOpts := MakeTestOptionsWithSVCMode(webMName, profile, svcMode)
 	testOpts.bitrateMode = "vbr"
 	return testOpts
 }
@@ -145,6 +123,25 @@ func YUVJSONFileNameFor(webMFileName string) string {
 	}
 	yuvName := strings.TrimSuffix(webMFileName, webMSuffix) + ".yuv"
 	return yuvName + ".json"
+}
+
+func layersOfSVCMode(svcMode string) (int, int, error) {
+	spatialLayers := 0
+	temporalLayers := 0
+	if strings.HasSuffix(svcMode, "_KEY") {
+		if _, err := fmt.Sscanf(svcMode, "L%dT%d_KEY", &spatialLayers, &temporalLayers); err != nil {
+			return -1, -1, errors.Wrap(err, "unknown svc mode")
+		}
+	} else {
+		if _, err := fmt.Sscanf(svcMode, "L%dT%d", &spatialLayers, &temporalLayers); err != nil {
+			return -1, -1, errors.Wrap(err, "unknown svc mode")
+		}
+	}
+
+	if spatialLayers <= 0 || temporalLayers <= 0 {
+		return -1, -1, errors.Errorf("failed to parse svc mode: spatialLayers=%d, temporalLayers=%d", spatialLayers, temporalLayers)
+	}
+	return spatialLayers, temporalLayers, nil
 }
 
 func codecProfileToEncodeCodecOption(profile videotype.CodecProfile) (string, error) {
@@ -201,11 +198,8 @@ func RunAccelVideoTest(ctx context.Context, s *testing.State, opts TestOptions) 
 		yuvJSONPath,
 	}
 
-	if opts.spatialLayers > 1 {
-		testArgs = append(testArgs, fmt.Sprintf("--num_spatial_layers=%d", opts.spatialLayers))
-	}
-	if opts.temporalLayers > 1 {
-		testArgs = append(testArgs, fmt.Sprintf("--num_temporal_layers=%d", opts.temporalLayers))
+	if opts.svcMode != "" {
+		testArgs = append(testArgs, fmt.Sprintf("--svc_mode=%s", opts.svcMode))
 	}
 	if opts.bitrateMode != "" {
 		testArgs = append(testArgs, fmt.Sprintf("--bitrate_mode=%s", opts.bitrateMode))
@@ -298,11 +292,14 @@ func RunAccelVideoPerfTest(ctx context.Context, s *testing.State, opts TestOptio
 		yuvJSONPath,
 	}
 
-	if opts.spatialLayers > 1 {
-		testArgs = append(testArgs, fmt.Sprintf("--num_spatial_layers=%d", opts.spatialLayers))
-	}
-	if opts.temporalLayers > 1 {
-		testArgs = append(testArgs, fmt.Sprintf("--num_temporal_layers=%d", opts.temporalLayers))
+	spatialLayers := 1
+	temporalLayers := 1
+	if opts.svcMode != "" {
+		spatialLayers, temporalLayers, err = layersOfSVCMode(opts.svcMode)
+		if err != nil {
+			return errors.Wrap(err, "failed to get the number of layers from svc mode")
+		}
+		testArgs = append(testArgs, fmt.Sprintf("--svc_mode=%s", opts.svcMode))
 	}
 	if opts.bitrateMode != "" {
 		testArgs = append(testArgs, fmt.Sprintf("--bitrate_mode=%s", opts.bitrateMode))
@@ -339,9 +336,9 @@ func RunAccelVideoPerfTest(ctx context.Context, s *testing.State, opts TestOptio
 	}
 
 	qualityJSONPath := filepath.Join(s.OutDir(), "VideoEncoderTest", qualityTestname)
-	if opts.spatialLayers > 1 || opts.temporalLayers > 1 {
-		for sID := 1; sID <= opts.spatialLayers; sID++ {
-			for tID := 1; tID <= opts.temporalLayers; tID++ {
+	if opts.svcMode != "" {
+		for sID := 1; sID <= spatialLayers; sID++ {
+			for tID := 1; tID <= temporalLayers; tID++ {
 				scalabilityMode := fmt.Sprintf("L%dT%d", sID, tID)
 				if err := addQualityMetrics(qualityJSONPath, scalabilityMode, p); err != nil {
 					return errors.Wrapf(err, "failed to parse quality performance metrics for %v", scalabilityMode)

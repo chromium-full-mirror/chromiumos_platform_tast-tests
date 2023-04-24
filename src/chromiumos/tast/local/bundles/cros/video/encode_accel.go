@@ -67,12 +67,12 @@ func init() {
 			ExtraData:         encode.TestData(tulip720P),
 		}, {
 			Name:              "h264_720p_l1t2",
-			Val:               encode.MakeTestOptionsWithSVCLayers(tulip720P, videotype.H264BaselineProf, "L1T2"),
+			Val:               encode.MakeTestOptionsWithSVCMode(tulip720P, videotype.H264BaselineProf, "L1T2"),
 			ExtraSoftwareDeps: []string{caps.HWEncodeH264, "vaapi"},
 			ExtraData:         encode.TestData(tulip720P),
 		}, {
 			Name:              "h264_720p_l1t3",
-			Val:               encode.MakeTestOptionsWithSVCLayers(tulip720P, videotype.H264BaselineProf, "L1T3"),
+			Val:               encode.MakeTestOptionsWithSVCMode(tulip720P, videotype.H264BaselineProf, "L1T3"),
 			ExtraSoftwareDeps: []string{caps.HWEncodeH264, "vaapi"},
 			ExtraData:         encode.TestData(tulip720P),
 		}, {
@@ -82,12 +82,12 @@ func init() {
 			ExtraData:         encode.TestData(tulip720P),
 		}, {
 			Name:              "h264_720p_l1t2_vbr",
-			Val:               encode.MakeVBRTestOptionsWithSVCLayers(tulip720P, videotype.H264BaselineProf, "L1T2"),
+			Val:               encode.MakeVBRTestOptionsWithSVCMode(tulip720P, videotype.H264BaselineProf, "L1T2"),
 			ExtraSoftwareDeps: []string{caps.HWEncodeH264VBR, "vaapi"},
 			ExtraData:         encode.TestData(tulip720P),
 		}, {
 			Name:              "h264_720p_l1t3_vbr",
-			Val:               encode.MakeVBRTestOptionsWithSVCLayers(tulip720P, videotype.H264BaselineProf, "L1T3"),
+			Val:               encode.MakeVBRTestOptionsWithSVCMode(tulip720P, videotype.H264BaselineProf, "L1T3"),
 			ExtraSoftwareDeps: []string{caps.HWEncodeH264VBR, "vaapi"},
 			ExtraData:         encode.TestData(tulip720P),
 		}, {
@@ -147,22 +147,22 @@ func init() {
 			ExtraData:         encode.TestData(crowd2160P),
 		}, {
 			Name:              "vp8_540p_l1t2",
-			Val:               encode.MakeTestOptionsWithSVCLayers(tulip540P, videotype.VP8Prof, "L1T2"),
+			Val:               encode.MakeTestOptionsWithSVCMode(tulip540P, videotype.VP8Prof, "L1T2"),
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP8, "vaapi"},
 			ExtraData:         encode.TestData(tulip540P),
 		}, {
 			Name:              "vp8_540p_l1t3",
-			Val:               encode.MakeTestOptionsWithSVCLayers(tulip540P, videotype.VP8Prof, "L1T3"),
+			Val:               encode.MakeTestOptionsWithSVCMode(tulip540P, videotype.VP8Prof, "L1T3"),
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP8, "vaapi"},
 			ExtraData:         encode.TestData(tulip540P),
 		}, {
 			Name:              "vp8_720p_l1t2",
-			Val:               encode.MakeTestOptionsWithSVCLayers(tulip720P, videotype.VP8Prof, "L1T2"),
+			Val:               encode.MakeTestOptionsWithSVCMode(tulip720P, videotype.VP8Prof, "L1T2"),
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP8, "vaapi"},
 			ExtraData:         encode.TestData(tulip720P),
 		}, {
 			Name:              "vp8_720p_l1t3",
-			Val:               encode.MakeTestOptionsWithSVCLayers(tulip720P, videotype.VP8Prof, "L1T3"),
+			Val:               encode.MakeTestOptionsWithSVCMode(tulip720P, videotype.VP8Prof, "L1T3"),
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP8, "vaapi"},
 			ExtraData:         encode.TestData(tulip720P),
 		}, {
@@ -207,32 +207,32 @@ func init() {
 			ExtraData:         encode.TestData(crowd2160P),
 		}, {
 			Name:              "vp9_720p_l1t2",
-			Val:               encode.MakeTestOptionsWithSVCLayers(tulip720P, videotype.VP9Prof, "L1T2"),
+			Val:               encode.MakeTestOptionsWithSVCMode(tulip720P, videotype.VP9Prof, "L1T2"),
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP9, "vaapi"},
 			ExtraData:         encode.TestData(tulip720P),
 		}, {
 			Name:              "vp9_720p_l1t3",
-			Val:               encode.MakeTestOptionsWithSVCLayers(tulip720P, videotype.VP9Prof, "L1T3"),
+			Val:               encode.MakeTestOptionsWithSVCMode(tulip720P, videotype.VP9Prof, "L1T3"),
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP9, "vaapi"},
 			ExtraData:         encode.TestData(tulip720P),
 		}, {
-			Name:              "vp9_540p_l2t3",
-			Val:               encode.MakeTestOptionsWithSVCLayers(tulip540P, videotype.VP9Prof, "L2T3"),
+			Name:              "vp9_540p_l2t3_key",
+			Val:               encode.MakeTestOptionsWithSVCMode(tulip540P, videotype.VP9Prof, "L2T3_KEY"),
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP9},
 			ExtraData:         encode.TestData(tulip540P),
 		}, {
-			Name:              "vp9_540p_l3t3",
-			Val:               encode.MakeTestOptionsWithSVCLayers(tulip540P, videotype.VP9Prof, "L3T3"),
+			Name:              "vp9_540p_l3t3_key",
+			Val:               encode.MakeTestOptionsWithSVCMode(tulip540P, videotype.VP9Prof, "L3T3_KEY"),
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP9},
 			ExtraData:         encode.TestData(tulip540P),
 		}, {
-			Name:              "vp9_720p_l2t3",
-			Val:               encode.MakeTestOptionsWithSVCLayers(tulip720P, videotype.VP9Prof, "L2T3"),
+			Name:              "vp9_720p_l2t3_key",
+			Val:               encode.MakeTestOptionsWithSVCMode(tulip720P, videotype.VP9Prof, "L2T3_KEY"),
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP9},
 			ExtraData:         encode.TestData(tulip720P),
 		}, {
-			Name:              "vp9_720p_l3t3",
-			Val:               encode.MakeTestOptionsWithSVCLayers(tulip720P, videotype.VP9Prof, "L3T3"),
+			Name:              "vp9_720p_l3t3_key",
+			Val:               encode.MakeTestOptionsWithSVCMode(tulip720P, videotype.VP9Prof, "L3T3_KEY"),
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP9},
 			ExtraData:         encode.TestData(tulip720P),
 		}, {
