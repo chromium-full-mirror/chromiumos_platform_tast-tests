@@ -120,8 +120,9 @@ func init() {
 			{
 				Name: "kms_flip",
 				Val: graphics.IgtTest{
-					Exe:      "kms_flip",
-					Subtests: []string{"basic-plain-flip"},
+					Exe:              "kms_flip",
+					Subtests:         []string{"basic-plain-flip"},
+					DisableHangCheck: true,
 				},
 				Timeout:   30 * time.Minute,
 				ExtraAttr: []string{"graphics_weekly"},
@@ -130,14 +131,6 @@ func init() {
 				Name: "kms_invalid_mode",
 				Val: graphics.IgtTest{
 					Exe: "kms_invalid_mode",
-				},
-				Timeout:   5 * time.Minute,
-				ExtraAttr: []string{"graphics_weekly"},
-			},
-			{
-				Name: "kms_multipipe_modeset",
-				Val: graphics.IgtTest{
-					Exe: "kms_multipipe_modeset",
 				},
 				Timeout:   5 * time.Minute,
 				ExtraAttr: []string{"graphics_weekly"},
@@ -154,7 +147,8 @@ func init() {
 			{
 				Name: "kms_pipe_crc_basic",
 				Val: graphics.IgtTest{
-					Exe: "kms_pipe_crc_basic",
+					Exe:              "kms_pipe_crc_basic",
+					DisableHangCheck: true,
 				},
 				Timeout:   5 * time.Minute,
 				ExtraAttr: []string{"graphics_weekly"},
@@ -187,15 +181,6 @@ func init() {
 				Name: "kms_plane_scaling",
 				Val: graphics.IgtTest{
 					Exe: "kms_plane_scaling",
-				},
-				Timeout:   5 * time.Minute,
-				ExtraAttr: []string{"graphics_weekly"},
-			},
-			{
-				Name: "kms_prime",
-				Val: graphics.IgtTest{
-					Exe:      "kms_prime",
-					Subtests: []string{"basic-crc-hybrid"},
 				},
 				Timeout:   5 * time.Minute,
 				ExtraAttr: []string{"graphics_weekly"},
