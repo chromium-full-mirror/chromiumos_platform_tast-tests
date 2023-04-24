@@ -6,21 +6,20 @@ package crostini
 
 import (
 	"context"
-	"regexp"
 	"time"
 
+	"chromiumos/tast/local/bundles/cros/crostini/crostiniapps"
 	"chromiumos/tast/local/bundles/cros/crostini/imetestutil"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ime"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
-	"chromiumos/tast/local/chrome/uiauto/nodewith"
-	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/crostini"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/terminalapp"
 	"chromiumos/tast/local/uidetection"
 	"chromiumos/tast/local/vm"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -133,17 +132,9 @@ func AppFirefoxIME(ctx context.Context, s *testing.State) {
 func testUseIMEInFirefox(ctx context.Context, terminalApp *terminalapp.TerminalApp, keyboard *input.KeyboardEventWriter, tconn *chrome.TestConn, cont *vm.Container, imeData imetestutil.IMETestData) error {
 	ui := uiauto.New(tconn)
 	uda := uidetection.NewDefault(tconn)
-	firefoxWindow := nodewith.NameRegex(regexp.MustCompile(`.*Mozilla Firefox`)).Role(role.Window).First()
 
-	// Slower devices could take up to a minute to start Firefox.
-	const firefoxStartupTimeout = time.Minute
-	if err := uiauto.Combine("create test page in terminal and open in firefox",
-		terminalApp.RunCommand(keyboard, "firefox-esr "+testPageName),
-		ui.WithTimeout(firefoxStartupTimeout).WaitUntilExists(firefoxWindow),
-		// Wait until the page is loaded.
-		uda.WaitUntilExists(uidetection.TextBlock([]string{"Crostini", "Firefox", "Input", "Test", "Page"}).WithinA11yNode(firefoxWindow).First()),
-	)(ctx); err != nil {
-		return errors.Wrap(err, "failed to create and open test webpage")
+	if err := crostiniapps.LaunchFirefoxWithTestPage(ctx, uda, ui, cont, terminalApp, keyboard); err != nil {
+		return errors.Wrap(err, "failed to create Firefox test page")
 	}
 
 	if err := uiauto.Combine("enter text in Firefox",
@@ -155,37 +146,12 @@ func testUseIMEInFirefox(ctx context.Context, terminalApp *terminalapp.TerminalA
 		return errors.Wrap(err, "failed to enter test string Firefox")
 	}
 
-	if err := checkInputViaClipboard(ctx, keyboard, tconn, imeData.ExpectedText); err != nil {
+	if err := crostiniapps.CheckFirefoxInputViaClipboard(ctx, keyboard, tconn, imeData.ExpectedText); err != nil {
 		return err
 	}
 
-	if err := uiauto.Combine("close webpage",
-		keyboard.AccelAction("ctrl+W"),
-		keyboard.AccelAction("ctrl+W"),
-		ui.WithTimeout(3*time.Second).WaitUntilGone(firefoxWindow),
-	)(ctx); err != nil {
+	if err := crostiniapps.CloseFirefoxTestPage(ctx, ui, cont, keyboard); err != nil {
 		return errors.Wrap(err, "failed to close firefox")
-	}
-
-	return nil
-}
-
-func checkInputViaClipboard(ctx context.Context, keyboard *input.KeyboardEventWriter, tconn *chrome.TestConn, expectedText string) error {
-	if err := uiauto.Combine("get text entered via the clipboard",
-		// Select all the text in the input box.
-		keyboard.AccelAction("ctrl+A"),
-		// Copy selected content.
-		keyboard.AccelAction("ctrl+C"),
-	)(ctx); err != nil {
-		return errors.Wrap(err, "failed to copy input to clipboard")
-	}
-
-	var clipData string
-	if err := tconn.Eval(ctx, `tast.promisify(chrome.autotestPrivate.getClipboardTextData)()`, &clipData); err != nil {
-		return errors.Wrap(err, "failed to get clipboard content")
-	}
-	if clipData != expectedText {
-		return errors.Errorf("clipboard data mismatch: got %q, want %q", clipData, expectedText)
 	}
 
 	return nil

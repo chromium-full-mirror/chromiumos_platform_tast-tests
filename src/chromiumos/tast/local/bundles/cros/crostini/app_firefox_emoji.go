@@ -8,24 +8,22 @@ import (
 	"context"
 	"time"
 
+	"chromiumos/tast/local/bundles/cros/crostini/crostiniapps"
 	"chromiumos/tast/local/bundles/cros/crostini/imetestutil"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
-	"chromiumos/tast/local/chrome/uiauto/nodewith"
-	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/crostini"
 	"chromiumos/tast/local/terminalapp"
 	"chromiumos/tast/local/uidetection"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AppGeditEmoji,
+		Func:         AppFirefoxEmoji,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test emoji keyboard input in gedit windows",
+		Desc:         "Open a test webpage with an input box in Firefox and test input with emoji keyboard",
 		Contacts:     []string{"clumptini@google.com", "sophialin@google.com"},
 		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		SoftwareDeps: []string{"chrome", "vm_host"},
@@ -50,15 +48,15 @@ func init() {
 	})
 }
 
-func AppGeditEmoji(ctx context.Context, s *testing.State) {
+func AppFirefoxEmoji(ctx context.Context, s *testing.State) {
 	tconn := s.FixtValue().(crostini.FixtureData).Tconn
 	cont := s.FixtValue().(crostini.FixtureData).Cont
 	keyboard := s.FixtValue().(crostini.FixtureData).KB
 	cr := s.FixtValue().(crostini.FixtureData).Chrome
 
-	// Reserve time for clean-up tasks.
+	// Use a shortened context for test operations to reserve time for cleanup.
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 15*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
 
 	// Open Terminal app.
@@ -68,40 +66,29 @@ func AppGeditEmoji(ctx context.Context, s *testing.State) {
 	}
 	defer terminalApp.Exit(keyboard)(cleanupCtx)
 
-	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
+	// Since defers are executed in a stack, this needs to be the last defer so it doesn't close the window before dumping the tree.
+	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree")
 
-	// Open app and enter emoji.
-	const (
-		testFile   = "test.txt"
-		inputEmoji = "😂"
-	)
-
+	const inputEmoji = "😂"
 	ui := uiauto.New(tconn)
 	uda := uidetection.NewDefault(tconn)
-	appWindow := nodewith.NameStartingWith(testFile).Role(role.Window).First()
-	if err := uiauto.Combine("Create file with Gedit",
-		// Launch Gedit.
-		terminalApp.RunCommand(keyboard, "gedit "+testFile),
-		// Sometimes the first character got lost if input immediately.
-		// Wait until the menu exists, indicating the window is launched.
-		uda.WaitUntilExists(uidetection.Word("Open").WithinA11yNode(appWindow)),
-		ui.LeftClick(appWindow),
-		imetestutil.OpenEmojiPickerAndInputEmoji(ctx, cr, keyboard, tconn, inputEmoji),
-		// Press ctrl+S to save the file.
-		keyboard.AccelAction("ctrl+S"),
-		// Take screenshot.
-		crostini.TakeAppScreenshot("gedit"),
-		// Press ctrl+W twice to exit window.
-		keyboard.AccelAction("ctrl+W"),
-		keyboard.AccelAction("ctrl+W"),
-		// Check window close.
-		ui.WaitUntilGone(appWindow),
-	)(ctx); err != nil {
-		s.Fatal("Failed to open Gedit and enter emoji: ", err)
+
+	if err := crostiniapps.LaunchFirefoxWithTestPage(ctx, uda, ui, cont, terminalApp, keyboard); err != nil {
+		s.Fatal("Failed to create Firefox test page: ", err)
 	}
 
-	// Check the content of the test file.
-	if err := cont.CheckFileContent(ctx, testFile, inputEmoji+"\n"); err != nil {
-		s.Fatal("Failed to verify the content of the test file: ", err)
+	if err := uiauto.Combine("enter emoji in Firefox",
+		imetestutil.OpenEmojiPickerAndInputEmoji(ctx, cr, keyboard, tconn, inputEmoji),
+		crostini.TakeAppScreenshot("firefox"),
+	)(ctx); err != nil {
+		s.Fatal("Failed to enter test string Firefox: ", err)
+	}
+
+	if err := crostiniapps.CheckFirefoxInputViaClipboard(ctx, keyboard, tconn, inputEmoji); err != nil {
+		s.Fatal("Failed to verify emoji input via clipboard: ", err)
+	}
+
+	if err := crostiniapps.CloseFirefoxTestPage(ctx, ui, cont, keyboard); err != nil {
+		s.Fatal("Failed to close firefox: ", err)
 	}
 }
