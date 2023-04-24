@@ -39,7 +39,6 @@ func init() {
 		},
 		BugComponent: "b:87200",
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "chromeLoggedIn",
 		Params: []testing.Param{{
 			Name: "cycles",
 			Val: testCase{
@@ -47,6 +46,7 @@ func init() {
 				repetition:  1,
 			},
 			ExtraAttr: []string{"group:mainline", "informational"},
+			Fixture:   "chromeLoggedIn",
 		}, {
 			Name: "etm",
 			Val: testCase{
@@ -58,8 +58,9 @@ func init() {
 			ExtraAttr:         []string{"group:mainline", "informational"},
 			ExtraSoftwareDeps: []string{"arm"},
 			ExtraHardwareDeps: hwdep.D(hwdep.Platform("trogdor", "herobrine")),
+			Fixture:           "chromeLoggedIn",
 		}, {
-			Name: "etm_stress",
+			Name: "etm_stress_chrome",
 			Val: testCase{
 				quipperArgs: []string{"--run_inject", "--inject_args", "inject;--itrace=i512il;--strip",
 					"--", "record", "-e", "cs_etm/autofdo/", "-a", "-N"},
@@ -70,6 +71,21 @@ func init() {
 			ExtraAttr:         []string{"group:stress"},
 			ExtraSoftwareDeps: []string{"arm"},
 			ExtraHardwareDeps: hwdep.D(hwdep.Platform("trogdor", "herobrine")),
+			Fixture:           "chromeLoggedIn",
+		}, {
+			Name: "etm_stress_crosvm",
+			Val: testCase{
+				// TODO(b/277060471): record both userspace and kernel.
+				quipperArgs: []string{"--run_inject", "--inject_args", "inject;--itrace=i512il;--strip",
+					"--", "record", "-e", "cs_etm/autofdo/u", "-a", "-N"},
+				disableCPUIdle: true,
+				repetition:     100,
+			},
+			Timeout:           30 * time.Minute,
+			ExtraAttr:         []string{"group:stress"},
+			ExtraSoftwareDeps: []string{"arm", "vm_host", "dlc"},
+			ExtraHardwareDeps: hwdep.D(hwdep.Platform("trogdor", "herobrine")),
+			Fixture:           "crostiniBullseye",
 		}},
 	})
 }
