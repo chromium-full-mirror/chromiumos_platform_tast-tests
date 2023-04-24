@@ -305,6 +305,7 @@ func (f *telemetryExtensionFixture) setupChromeForConsumers(ctx context.Context,
 		}
 		opts = append(opts, extraOpts...)
 		opts = append(opts, chrome.LacrosUnpackedExtension(dir))
+		opts = append(opts, chrome.LacrosEnableFeatures("TelemetryExtensionPendingApprovalApi"))
 	}
 
 	cr, err := chrome.New(ctx, opts...)

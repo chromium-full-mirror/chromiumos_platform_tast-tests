@@ -51,6 +51,12 @@ func init() {
 func PlatformAPIEventsAudioJack(ctx context.Context, s *testing.State) {
 	v := s.FixtValue().(*fixture.Value)
 
+	// Fail fast in case the API is not defined.
+	if err := v.ExtConn.Call(ctx, nil,
+		"tast.promisify(chrome.os.events.stopCapturingEvents)", "audio_jack"); err != nil {
+		s.Fatal("Failed to get response from Telemetry extension service worker: ", err)
+	}
+
 	errorCh := make(chan error)
 	defer func() {
 		if err := <-errorCh; err != nil {
