@@ -45,7 +45,7 @@ var (
 // InitialiseVscode configures VS Code for testing by disabling cursor blinking, notifications, updates, and removing the "Getting Started" page.
 func InitialiseVscode(ctx context.Context, cont *vm.Container, uda *uidetection.Context, ui *uiauto.Context, terminalApp *terminalapp.TerminalApp, keyboard *input.KeyboardEventWriter) error {
 	// Cursor blinking and vscode updates break screenshots.
-	cont.WriteFile(ctx, ".config/Code/User/settings.json", `{"editor.cursorBlinking": "solid","workbench.startupEditor": "None", "update.mode": "none"}`)
+	cont.WriteFile(ctx, ".config/Code/User/settings.json", `{"editor.cursorBlinking": "solid", "editor.unicodeHighlight.nonBasicASCII": "false", "workbench.startupEditor": "None", "update.mode": "none", "workbench.editor.untitled.hint": "hidden"}`)
 
 	version, err := cont.Command(ctx, "code", "--version").Output()
 	if err != nil {
