@@ -744,6 +744,7 @@ func (r *Recorder) SaveTraceFiles(ctx context.Context) error {
 func (r *Recorder) Close(ctx context.Context) error {
 	var firstErr error
 	if r.options.TurnOffDisplay {
+		testing.ContextLog(ctx, "Turning on display")
 		if err := power.SetDisplayPower(ctx, power.DisplayPowerAllOn); err != nil {
 			testing.ContextLog(ctx, "Failed to turn on display: ", err)
 			firstErr = errors.Wrap(err, "failed to turn on display")
@@ -883,10 +884,7 @@ func (r *Recorder) startRecording(ctx context.Context) (runCtx context.Context, 
 		}
 	} else {
 		testing.ContextLog(ctx, "Turning on display")
-		if err := testing.Poll(ctx, power.TurnOnDisplay, &testing.PollOptions{
-			Interval: 10 * time.Second,
-			Timeout:  2 * time.Minute,
-		}); err != nil {
+		if err := power.SetDisplayPower(ctx, power.DisplayPowerAllOn); err != nil {
 			return nil, errors.Wrap(err, "failed to turn on display")
 		}
 	}
