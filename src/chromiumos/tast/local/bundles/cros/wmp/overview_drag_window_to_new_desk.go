@@ -24,8 +24,10 @@ import (
 )
 
 const (
-	// zeroStateDesksBarHeight is the height of desks bar when it's at zero state.
-	zeroStateDesksBarHeight = 40
+	// deskBarZeroStateHeight is the height of desk bar when it's at zero state.
+	deskBarZeroStateHeight  = 40
+	zeroStateIconButtonName = "ZeroStateIconButton"
+	deskBarViewName         = "LegacyDeskBarView"
 )
 
 func init() {
@@ -114,11 +116,11 @@ func OverviewDragWindowToNewDesk(ctx context.Context, s *testing.State) {
 	}
 	defer ash.SetOverviewModeAndWait(cleanupCtx, tconn, false)
 
-	// 1. Tests that desks bar will be transformed to expanded state when dragging a window
+	// 1. Tests that desk bar will be transformed to expanded state when dragging a window
 	// towards and close enough to the new desk button. And then dropping the window outside
 	// of the new desk button will let desk bar go back to zero state.
 
-	newDeskButtonView := nodewith.ClassName("ZeroStateIconButton")
+	newDeskButtonView := nodewith.ClassName(zeroStateIconButtonName)
 	newDeskButtonViewLoc, err := ac.Location(ctx, newDeskButtonView)
 	if err != nil {
 		s.Fatal(err, "failed to get the location of new desk button view")
@@ -131,7 +133,7 @@ func OverviewDragWindowToNewDesk(ctx context.Context, s *testing.State) {
 	bw = ws[0]
 
 	// Drag the window towoard to the new desk button without dropping it. Since it's close
-	// enough to the new desk button, the desks bar view should be transformed to its expanded
+	// enough to the new desk button, the desk bar view should be transformed to its expanded
 	// state.
 	if err := uiauto.Combine("move mouse on the chrome window and then drag the window to the new desk button",
 		mouse.Move(tconn, bw.BoundsInRoot.CenterPoint(), 0),
@@ -141,19 +143,19 @@ func OverviewDragWindowToNewDesk(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to drag browser to the new desk button")
 	}
 
-	// Desks bar should be at expanded state now.
-	desksBarView := nodewith.ClassName("DesksBarView")
-	desksBarViewLoc, err := ac.Location(ctx, desksBarView)
+	// Desk bar should be at expanded state now.
+	deskBarView := nodewith.ClassName(deskBarViewName)
+	deskBarViewLoc, err := ac.Location(ctx, deskBarView)
 	if err != nil {
-		s.Fatal("Failed to get the location of the desks bar view: ", err)
+		s.Fatal("Failed to get the location of the desk bar view: ", err)
 	}
-	if desksBarViewLoc.Height == zeroStateDesksBarHeight {
-		s.Fatal("Failed to go to desks bar's expanded state")
+	if deskBarViewLoc.Height == deskBarZeroStateHeight {
+		s.Fatalf("Failed to go to desk bar's expanded state, got: %v, expected: >%v", deskBarViewLoc.Height, deskBarZeroStateHeight)
 	}
 
 	// Continue dragging the window to the outside of the new desk button and then release mouse
 	// which will drop the window. Since the window is dropped outside of the new desk button,
-	// it will fall back to the current desk and the desks bar should be back to zero state.
+	// it will fall back to the current desk and the desk bar should be back to zero state.
 	if err := uiauto.Combine("drag the window to the outside of the new desk button and then release mouse",
 		mouse.Move(tconn, newDeskButtonViewLoc.CenterPoint().Add(coords.NewPoint(100, 100)), time.Second),
 		mouse.Release(tconn, mouse.LeftButton),
@@ -161,21 +163,21 @@ func OverviewDragWindowToNewDesk(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to drag browser to the new desk button")
 	}
 
-	// Desks bar should be transformed back to the zero state.
-	desksBarView = nodewith.ClassName("DesksBarView")
-	desksBarViewLoc, err = ac.Location(ctx, desksBarView)
+	// Desk bar should be transformed back to the zero state.
+	deskBarView = nodewith.ClassName(deskBarViewName)
+	deskBarViewLoc, err = ac.Location(ctx, deskBarView)
 	if err != nil {
-		s.Fatal("Failed to get the location of the desks bar view: ", err)
+		s.Fatal("Failed to get the location of the desk bar view: ", err)
 	}
-	if desksBarViewLoc.Height != zeroStateDesksBarHeight {
-		s.Fatal("Failed to go back to desks bar's zero state")
+	if deskBarViewLoc.Height != deskBarZeroStateHeight {
+		s.Fatal("Failed to go back to desk bar's zero state")
 	}
 
 	// 2. Tests that dragging and dropping a window to the new desk button will create a new
 	// desk and the window being dragged is moved to the new desk at the same time.
 
 	// Drag browser window to the new desk button.
-	newDeskButtonView = nodewith.ClassName("ZeroStateIconButton")
+	newDeskButtonView = nodewith.ClassName(zeroStateIconButtonName)
 	newDeskButtonViewLoc, err = ac.Location(ctx, newDeskButtonView)
 	if err != nil {
 		s.Fatal(err, "Failed to get the location of the new desk button view")
