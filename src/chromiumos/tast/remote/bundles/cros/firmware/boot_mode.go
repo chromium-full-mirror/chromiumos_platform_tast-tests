@@ -226,7 +226,7 @@ func BootMode(ctx context.Context, s *testing.State) {
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Error opening servo: ", err)
 	}
-	if tc.bootToMode == fwCommon.BootModeRecovery || tc.checkBootFromMain {
+	if tc.bootToMode == fwCommon.BootModeRecovery || tc.checkBootFromMain || tc.checkToBrokenScreen {
 		skipFlashUSB := false
 		if skipFlashUSBStr, ok := s.Var("firmware.skipFlashUSB"); ok {
 			skipFlashUSB, err = strconv.ParseBool(skipFlashUSBStr)
@@ -242,6 +242,12 @@ func BootMode(ctx context.Context, s *testing.State) {
 			s.Fatal("USBKey not working: ", err)
 		}
 	}
+	if tc.checkToNoGoodScreen {
+		_, err := h.CheckUSBOnServoHost(ctx)
+		if err != nil {
+			s.Fatal("Failed to check the usb device on servo host: ", err)
+		}
+	}
 
 	// Double-check that DUT starts in the right mode.
 	if curr, err := h.Reporter.CurrentBootMode(ctx); err != nil {
@@ -252,7 +258,6 @@ func BootMode(ctx context.Context, s *testing.State) {
 			s.Fatalf("Failed to set up %s mode: %s", pv.BootMode, err)
 		}
 	}
-	var usbdev string
 	if tc.bootToMode != "" {
 		// Switch to tc.bootToMode.
 		// RebootToMode ensures that the DUT winds up in the expected boot mode afterward.
@@ -265,11 +270,13 @@ func BootMode(ctx context.Context, s *testing.State) {
 		}
 
 		if tc.checkToBrokenScreen || tc.checkToNoGoodScreen {
-			// Call h.CheckUSBOnServoHost before booting from usb device again
-			// in order to get the usbdev and pass it to CheckBrokenScreen.
-			usbdev, err = h.CheckUSBOnServoHost(ctx)
+			var err error
+			usbdev, err := h.Servo.GetStringTimeout(ctx, servo.ImageUSBKeyDev, time.Second*90)
 			if err != nil {
-				s.Fatal("Failed to check the usb key: ", err)
+				s.Fatal("Servo call image_usbkey_dev failed: ", err)
+			}
+			if usbdev == "" {
+				s.Fatal("No USB key detected")
 			}
 			s.Log("USB path: ", usbdev)
 			if tc.checkToNoGoodScreen {
@@ -294,7 +301,7 @@ func BootMode(ctx context.Context, s *testing.State) {
 
 	if tc.checkToBrokenScreen {
 		// Verify DUT reaches 'Broken Screen' with broken_screen test.
-		if err := h.CheckBrokenScreen(ctx, usbdev); err != nil {
+		if err := h.CheckBrokenScreen(ctx); err != nil {
 			s.Fatal("Failed to check Broken Screen: ", err)
 		}
 		s.Log("Disabling USB connection to DUT")

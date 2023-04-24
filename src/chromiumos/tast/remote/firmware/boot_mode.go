@@ -829,28 +829,25 @@ func (ms *ModeSwitcher) FwScreenToDevMode(ctx context.Context, reconnTimeout tim
 	}
 
 	testing.ContextLogf(ctx, "Sleeping %s (FirmwareScreen)", h.Config.FirmwareScreen)
+	// GoBigSleepLint: Sleeping for model specific time.
 	if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
 		return errors.Wrapf(err, "sleeping for %s (FirmwareScreen) to wait for INSERT screen", h.Config.FirmwareScreen)
 	}
 
 	if msOptsContain(opts, CheckToNoGoodScreen) {
-		// Check the usb on the servo host.
-		usbdev, err := h.CheckUSBOnServoHost(ctx)
-		if err != nil {
-			return errors.Wrap(err, "failed to check the USB on servo host")
-		}
 		// Enable USB connection to DUT.
 		if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
 			return errors.Wrap(err, "failed to set 'usb3_mux_sel:dut_sees_usbkey'")
 		}
 		testing.ContextLog(ctx, "Checking if DUT reaches the NOGOOD screen")
-		if err := h.WaitDUTConnectDuringBootFromUSB(ctx, usbdev, false); err != nil {
+		if err := h.WaitDUTConnectDuringBootFromUSB(ctx, false); err != nil {
 			return errors.Wrap(err, "failed to check NOGOOD screen")
 		}
 		// Remove USB from DUT.
 		if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxOff); err != nil {
 			return errors.Wrap(err, "failed to power off usbkey")
 		}
+		// GoBigSleepLint: It takes some time for usb mux state to take effect.
 		if err := testing.Sleep(ctx, usbDisableTime); err != nil {
 			return errors.Wrap(err, "failed to sleep after setting usb mux state disable")
 		}

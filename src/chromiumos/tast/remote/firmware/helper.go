@@ -1494,16 +1494,13 @@ func (h *Helper) validateUSBConn(ctx context.Context) error {
 }
 
 // WaitDUTConnectDuringBootFromUSB will check if the DUT boots from USB or not.
-// If expBoot is true, DUT is expected to boot from USB succcessfully.
+// If expBoot is true, DUT is expected to boot from USB successfully.
 // If expBoot is false, DUT is expected to reach a specific firmware screen, e.g. NOGOOD Screen or Broken Screen.
 // Firmware screen string for NOGOOD Screen: The device you inserted does not contain ChromeOS.
 // Firmware screen string for Broken Screen: ChromeOS is missing or damaged. Please remove all connected devices and start recovery.
 // Reference for NOGOOD Screen and Broken Screen:
 // https://chromium.googlesource.com/chromiumos/docs/+/HEAD/firmware_test_manual.md#firmware-screen-names
-func (h *Helper) WaitDUTConnectDuringBootFromUSB(ctx context.Context, usbdev string, expBoot bool) error {
-	if usbdev == "" {
-		return errors.New("no USB key detected. Please run CheckUSBOnServoHost")
-	}
+func (h *Helper) WaitDUTConnectDuringBootFromUSB(ctx context.Context, expBoot bool) error {
 	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, reconnectTimeout)
 	defer cancelWaitConnect()
 
@@ -1530,7 +1527,7 @@ func (h *Helper) WaitDUTConnectDuringBootFromUSB(ctx context.Context, usbdev str
 }
 
 // CheckBrokenScreen checks if the DUT reaches Broken Screen.
-func (h *Helper) CheckBrokenScreen(ctx context.Context, usbdev string) error {
+func (h *Helper) CheckBrokenScreen(ctx context.Context) error {
 	testing.ContextLog(ctx, "Setting crossystem recovery_request to 1")
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		if err := h.DUT.Conn().CommandContext(ctx, "crossystem", "recovery_request=1").Run(); err != nil {
@@ -1561,12 +1558,13 @@ func (h *Helper) CheckBrokenScreen(ctx context.Context, usbdev string) error {
 		}
 	}
 	testing.ContextLogf(ctx, "Sleeping %s (FirmwareScreen)", h.Config.FirmwareScreen)
+	// GoBigSleepLint: Sleeping for model specific time.
 	if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
 		return errors.Wrapf(err, "sleeping for %s (FirmwareScreen) to wait for firmware screen", h.Config.FirmwareScreen)
 	}
 
 	testing.ContextLog(ctx, "Checking if it reaches Broken Screen")
-	if err := h.WaitDUTConnectDuringBootFromUSB(ctx, usbdev, false); err != nil {
+	if err := h.WaitDUTConnectDuringBootFromUSB(ctx, false); err != nil {
 		return errors.Wrap(err, "failed to reach Broken Screen")
 	}
 	return nil
