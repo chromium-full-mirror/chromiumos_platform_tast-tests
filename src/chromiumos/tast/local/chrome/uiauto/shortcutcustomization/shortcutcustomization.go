@@ -92,3 +92,18 @@ func VerifySubcategory(ctx context.Context, ui *uiauto.Context, subcategories []
 
 	return nil
 }
+
+// VerifyShortcuts checks that the shortcut descriptions and the shortcut keys exists.
+func VerifyShortcuts(ctx context.Context, ui *uiauto.Context, description, shortcutKeys string) error {
+	descriptionNode := nodewith.Name(description).Role(role.RowHeader)
+	shortcutKeysNode := nodewith.Name(shortcutKeys).Role(role.Cell)
+
+	if err := uiauto.Combine("Verify shortcut description and shortcut keys exist",
+		ui.WaitUntilExists(descriptionNode),
+		ui.WaitUntilExists(shortcutKeysNode),
+	)(ctx); err != nil {
+		return errors.Wrapf(err, "failed to verify shortcut description %s and shortcut keys %s exist", description, shortcutKeys)
+	}
+
+	return nil
+}
