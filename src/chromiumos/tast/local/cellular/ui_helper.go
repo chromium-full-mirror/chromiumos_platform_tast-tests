@@ -19,6 +19,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/state"
 	"chromiumos/tast/local/chrome/webutil"
 	"chromiumos/tast/local/input"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -33,6 +34,7 @@ type UIHelper struct {
 
 const (
 	gvoiceMessagesURL = "https://voice.google.com/u/0/messages"
+	// testIPv6DotCom    = "https://test-ipv6.com"
 )
 
 // NewUIHelper creates a Helper object and ensures that a UI is loaded.

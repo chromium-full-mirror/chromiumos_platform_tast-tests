@@ -12,6 +12,7 @@ import (
 
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/arc"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -23,6 +24,7 @@ const (
 	speedtestTimeout = 2 * time.Minute
 	googleDotComIPv6 = "ipv6.google.com"
 	googleDotComIPv4 = "ipv4.google.com"
+	testIPv6DotCom   = "test-ipv6.com"
 )
 
 func verifyCrostiniConnectivityUsingPing(ctx context.Context, binCmd, addr string, cmd func(context.Context, ...string) *testexec.Cmd) error {
@@ -61,7 +63,7 @@ func VerifyCrostiniIPConnectivity(ctx context.Context, cmd func(context.Context,
 }
 
 func verifyIPConnectivityUsingCurl(ctx context.Context, cmd func(context.Context, string, ...string) *testexec.Cmd, ipType, addr string) error {
-	testing.ContextLog(ctx, "Verify IP connectivity using curl to: ", addr)
+	testing.ContextLogf(ctx, "Verify IP%s connectivity using curl to: %s", ipType, addr)
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		if err := cmd(ctx, "curl", ipType, addr).Run(); err != nil {
 			return errors.Wrap(err, "failed curl test")
@@ -82,12 +84,12 @@ func VerifyIPConnectivityUsingCurl(ctx context.Context, cmd func(context.Context
 		return errors.New("no ip network found")
 	}
 	if ipv4 {
-		if err := verifyIPConnectivityUsingCurl(ctx, cmd, "-4", googleDotComIPv4); err != nil {
+		if err := verifyIPConnectivityUsingCurl(ctx, cmd, "-4", testIPv6DotCom); err != nil {
 			return err
 		}
 	}
 	if ipv6 {
-		if err := verifyIPConnectivityUsingCurl(ctx, cmd, "-6", googleDotComIPv6); err != nil {
+		if err := verifyIPConnectivityUsingCurl(ctx, cmd, "-6", testIPv6DotCom); err != nil {
 			return err
 		}
 	}
