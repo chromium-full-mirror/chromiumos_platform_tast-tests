@@ -122,6 +122,7 @@ func CCAUIVideoOptionPerf(ctx context.Context, s *testing.State) {
 					return err
 				}
 				testing.ContextLog(ctx, "Sleeping to wait for CPU usage to stabilize for ", stabilizationDuration)
+				// GoBigSleepLint: Sleep to stabilize CPU before measuring the CPU usage.
 				if err := testing.Sleep(ctx, stabilizationDuration); err != nil {
 					return errors.Wrap(err, "failed to sleep for CPU usage to stabilize")
 				}

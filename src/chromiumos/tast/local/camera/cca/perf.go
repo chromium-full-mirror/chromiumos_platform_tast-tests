@@ -92,6 +92,7 @@ func (p *PerfData) Save(outDir string) error {
 // measureStablizedUsage measures the CPU and power usage after it's cooled down for stabilizationDuration.
 func measureStablizedUsage(ctx context.Context) (map[string]float64, error) {
 	testing.ContextLog(ctx, "Sleeping to wait for CPU usage to stabilize for ", stabilizationDuration)
+	// GoBigSleepLint: Sleep to stabilize CPU before measuring the CPU usage.
 	if err := testing.Sleep(ctx, stabilizationDuration); err != nil {
 		return nil, errors.Wrap(err, "failed to wait for CPU usage to stabilize")
 	}
