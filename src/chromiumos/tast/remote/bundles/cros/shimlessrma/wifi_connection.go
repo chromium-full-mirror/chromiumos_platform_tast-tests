@@ -40,6 +40,7 @@ func init() {
 			"tast.cros.browser.ChromeService",
 			"tast.cros.shimlessrma.AppService",
 			wificell.ShillServiceName,
+			wificell.BluetoothServiceName,
 		},
 		Fixture: fixture.NormalMode,
 		Timeout: 10 * time.Minute,
@@ -59,6 +60,7 @@ func WifiConnection(ctx context.Context, s *testing.State) {
 	if router, ok := s.Var("router"); ok && router != "" {
 		tfOpts = append(tfOpts, wificell.TFRouter(router))
 	}
+	// TODO(b/279663413): Tests should not manually initialize the wifi test fixture class.
 	tf, err := wificell.NewTestFixture(ctx, ctx, dut, s.RPCHint(), tfOpts...)
 	if err != nil {
 		s.Fatal("Failed to set up test fixture: ", err)

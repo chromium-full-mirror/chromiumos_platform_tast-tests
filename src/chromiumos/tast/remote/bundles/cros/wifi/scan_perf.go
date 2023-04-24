@@ -54,7 +54,10 @@ func init() {
 		},
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:         []string{"group:wificell", "wificell_perf"},
-		ServiceDeps:  []string{wificell.ShillServiceName},
+		ServiceDeps: []string{
+			wificell.ShillServiceName,
+			wificell.BluetoothServiceName,
+		},
 		Vars:         []string{"router"},
 		Fixture:      "wificellFixt",
 		Requirements: []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassPerf, tdreq.WiFiProcPassPerfBeforeUpdates},
@@ -160,6 +163,7 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 	if router, ok := s.Var("router"); ok && router != "" {
 		tfOps = append(tfOps, wificell.TFRouter(router))
 	}
+	// TODO(b/279663413): Tests should not manually initialize the wifi test fixture class.
 	tf, err := wificell.NewTestFixture(ctx, ctx, s.DUT(), s.RPCHint(), tfOps...)
 	if err != nil {
 		s.Fatal("Failed to set up test fixture: ", err)

@@ -99,6 +99,7 @@ func PersistenceWifiSansBluetooth(ctx context.Context, s *testing.State) {
 
 	func(ctx context.Context) {
 		// Assert WiFi is up.
+		// TODO(b/279663413): Tests should not manually initialize the wifi test fixture class.
 		tf, err := wificell.NewTestFixture(ctx, ctx, s.DUT(), s.RPCHint(), tfOps...)
 		if err != nil {
 			s.Fatal("Failed to set up test fixture: ", err)
@@ -186,6 +187,7 @@ func PersistenceWifiSansBluetooth(ctx context.Context, s *testing.State) {
 	}
 
 	// Assert WiFi is up.
+	// TODO(b/279663413): Tests should not manually initialize the wifi test fixture class.
 	tf, err := wificell.NewTestFixture(ctx, ctx, d, s.RPCHint(), tfOps...)
 	if err != nil {
 		s.Fatal("Failed to set up test fixture: ", err)

@@ -34,7 +34,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps: []string{
 			wificell.ShillServiceName,
-			"tast.cros.bluetooth.BluetoothService",
+			wificell.BluetoothServiceName,
 		},
 		Vars: []string{"router"},
 		// List of requirements this test satisfies.
@@ -79,6 +79,7 @@ func BluetoothXorWifi(ctx context.Context, s *testing.State) {
 	tfOps = append(tfOps, wificell.TFWithUI())
 
 	// Assert WiFi is up.
+	// TODO(b/279663413): Tests should not manually initialize the wifi test fixture class.
 	tf, err := wificell.NewTestFixture(ctx, ctx, s.DUT(), s.RPCHint(), tfOps...)
 	if err != nil {
 		s.Fatal("Failed to set up test fixture: ", err)
