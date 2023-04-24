@@ -14,12 +14,16 @@ import (
 	"path/filepath"
 	"time"
 
+	"chromiumos/tast/common/pci"
 	policyBlob "chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/local/bundles/cros/dlp/clipboard"
 	"chromiumos/tast/local/bundles/cros/dlp/policy"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/display"
+	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/webutil"
@@ -36,7 +40,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DataLeakPreventionRulesListClipboardExt,
-		LacrosStatus: testing.LacrosVariantNeeded,
+		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Test behavior of DataLeakPreventionRulesList policy with clipboard blocked restriction when accessed by extension",
 		Contacts: []string{
 			"chromeos-dlp@google.com",
@@ -52,14 +56,29 @@ func init() {
 			"group:complementary",
 			"group:hw_agnostic"},
 		Fixture: "fakeDMS",
-		Data:    []string{"manifest.json", "background.js", "content.js", "text_1.html", "text_2.html", "editable_text_box.html"},
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policyBlob.LacrosAvailability{}, pci.Served),
+		},
+		Data: []string{"manifest.json", "background.js", "content.js", "text_1.html", "text_2.html", "editable_text_box.html"},
+		Params: []testing.Param{{
+			Name: "ash",
+			Val:  browser.TypeAsh,
+		}, {
+			Name:              "lacros",
+			ExtraSoftwareDeps: []string{"lacros"},
+			Val:               browser.TypeLacros,
+		}},
 	})
 }
 func DataLeakPreventionRulesListClipboardExt(ctx context.Context, s *testing.State) {
 	fakeDMS := s.FixtValue().(*fakedms.FakeDMS)
+	bt := s.Param().(browser.Type)
 
 	// DLP policy with all clipboard blocked restriction.
 	policyDLP := policy.RestrictiveDLPPolicyForClipboard("example.com")
+	if bt == browser.TypeLacros {
+		policyDLP = append(policyDLP, &policyBlob.LacrosAvailability{Val: "lacros_only"})
+	}
 
 	// Update the policy blob.
 	pb := policyBlob.NewBlob()
@@ -79,19 +98,24 @@ func DataLeakPreventionRulesListClipboardExt(ctx context.Context, s *testing.Sta
 		s.Fatal("Failed setup of DLP Clipboard extension: ", err)
 	}
 
+	chromeOpts := []chrome.Option{chrome.DMSPolicy(fakeDMS.URL), chrome.FakeLogin(chrome.Creds{User: fixtures.Username, Pass: fixtures.Password})}
+	if bt == browser.TypeLacros {
+		chromeOpts = append(chromeOpts, chrome.LacrosUnpackedExtension(extDir))
+	} else {
+		chromeOpts = append(chromeOpts, chrome.UnpackedExtension(extDir))
+	}
 	// Start a Chrome instance that will fetch policies from the FakeDMS.
 	// Policies are only updated after Chrome startup.
-	cr, err := chrome.New(ctx,
-		chrome.UnpackedExtension(extDir),
-		chrome.FakeLogin(chrome.Creds{User: fixtures.Username, Pass: fixtures.Password}),
-		chrome.DMSPolicy(fakeDMS.URL))
+	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, bt, lacrosfixt.NewConfig(),
+		chromeOpts...)
 	if err != nil {
 		s.Fatal("Chrome login failed: ", err)
 	}
 	defer cr.Close(ctx)
+	defer closeBrowser(ctx)
 
 	bgURL := chrome.ExtensionBackgroundPageURL(extID)
-	conn, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURL(bgURL))
+	conn, err := br.NewConnForTarget(ctx, chrome.MatchTargetURL(bgURL))
 	if err != nil {
 		s.Fatalf("Failed to connect to background page at %v: %v", bgURL, err)
 	}
@@ -144,18 +168,18 @@ func DataLeakPreventionRulesListClipboardExt(ctx context.Context, s *testing.Sta
 		accessAllowed bool
 	}{
 		{
-			name:          "accessDenied",
-			sourceURL:     blockedServer.URL + "/text_1.html",
-			accessAllowed: false,
-		},
-		{
 			name:          "accessAllowed",
 			sourceURL:     allowedServer.URL + "/text_2.html",
 			accessAllowed: true,
 		},
+		{
+			name:          "accessDenied",
+			sourceURL:     blockedServer.URL + "/text_1.html",
+			accessAllowed: false,
+		},
 	} {
 		s.Run(ctx, param.name, func(ctx context.Context, s *testing.State) {
-			conn, err := cr.NewConn(ctx, param.sourceURL)
+			conn, err := br.NewConn(ctx, param.sourceURL)
 			if err != nil {
 				s.Fatalf("Failed to open page %q: %v", param.sourceURL, err)
 			}
@@ -173,7 +197,7 @@ func DataLeakPreventionRulesListClipboardExt(ctx context.Context, s *testing.Sta
 			}
 
 			destURL := destServer.URL + "/editable_text_box.html"
-			destConn, err := cr.NewConn(ctx, destURL)
+			destConn, err := br.NewConn(ctx, destURL)
 			if err != nil {
 				s.Fatal("Failed to open page: ", err)
 			}
