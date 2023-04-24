@@ -32,8 +32,11 @@ func init() {
 		},
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		// Removed wificell_func_ax Attr due to router stability issues (b/235887204)
-		Attr:         []string{"group:wificell", "wificell_unstable"},
-		ServiceDeps:  []string{wificell.ShillServiceName},
+		Attr: []string{"group:wificell", "wificell_unstable"},
+		ServiceDeps: []string{
+			wificell.ShillServiceName,
+			wificell.BluetoothServiceName,
+		},
 		Vars:         []string{"router", "pcap", "routertype"},
 		Requirements: []string{tdreq.WiFiGenSupport80211ax},
 		Params: []testing.Param{
@@ -268,6 +271,7 @@ func AxSimpleConnect(ctx context.Context, s *testing.State) {
 	tfOps = append(tfOps, wificell.TFRouterType(tfRouterType))
 
 	// Assert WiFi is up.
+	// TODO(b/279663413): Tests should not manually initialize the wifi test fixture class.
 	tf, err := wificell.NewTestFixture(ctx, ctx, s.DUT(), s.RPCHint(), tfOps...)
 	if err != nil {
 		s.Fatal("Failed to set up test fixture: ", err)
