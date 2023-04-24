@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"time"
 
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
@@ -17,8 +16,12 @@ import (
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/coords"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/testing"
+
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 )
 
 func init() {
@@ -73,6 +76,22 @@ func findBrowserWindow(ctx context.Context, s *testing.State, tconn *chrome.Test
 		s.Fatal("Failed to find browser window: ", err)
 	}
 	return window
+}
+
+// findDeskMiniViewLocations finds the locations of a list of mini views.
+func findDeskMiniViewLocations(ctx context.Context, tconn *chrome.TestConn, miniViewFinders []*nodewith.Finder) ([]*coords.Rect, error) {
+	ac := uiauto.New(tconn)
+
+	locations := make([]*coords.Rect, len(miniViewFinders))
+	for i, finder := range miniViewFinders {
+		location, err := ac.Location(ctx, finder)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get location of desk mini view")
+		}
+		locations[i] = location
+	}
+
+	return locations, nil
 }
 
 func VirtualDesksShortcuts(ctx context.Context, s *testing.State) {
@@ -207,45 +226,76 @@ func VirtualDesksShortcuts(ctx context.Context, s *testing.State) {
 		s.Fatal("Browser window is not on the currently active desk (desk 2)")
 	}
 
+	// Rename the desks so that we have stable desk identifiers to work with.
+	// Desks with default names are otherwise renamed when reordered.
+	if err := ash.SetOverviewModeAndWait(ctx, tconn, true); err != nil {
+		s.Fatal("Failed to enter overview mode: ", err)
+	}
+	if err := uiauto.Combine(
+		"rename desks",
+		ac.DoDefault(nodewith.ClassName("DeskNameView").Name("Desk 1")),
+		kb.TypeAction("desk one"),
+		kb.AccelAction("Enter"),
+		ac.DoDefault(nodewith.ClassName("DeskNameView").Name("Desk 2")),
+		kb.TypeAction("desk two"),
+		kb.AccelAction("Enter"),
+	)(ctx); err != nil {
+		s.Fatal("Failed to rename desks: ", err)
+	}
+	if err := ash.SetOverviewModeAndWait(ctx, tconn, false); err != nil {
+		s.Fatal("Failed to exit overview mode: ", err)
+	}
+
 	// We are now going to reorder desks in overview mode.
 	if err := ash.SetOverviewModeAndWait(ctx, tconn, true); err != nil {
 		s.Fatal("Failed to enter overview mode: ", err)
 	}
 	defer ash.SetOverviewModeAndWait(cleanupCtx, tconn, false)
 
+	// Get the locations of the mini view, prior to reordering.
+	deskMiniViewFinders := []*nodewith.Finder{
+		deskMiniViewFinder("desk one"),
+		deskMiniViewFinder("desk two")}
+	locationsPreReorder, err := findDeskMiniViewLocations(ctx, tconn, deskMiniViewFinders)
+	if err != nil {
+		s.Fatal("Failed to get locations prior to reordering: ", err)
+	}
+
 	if err := uiauto.Combine(
 		"reorder desk mini views",
 		kb.AccelAction("Tab"),
 		kb.AccelAction("Tab"),
 		kb.AccelAction("Ctrl+Right"),
-		ac.WaitForLocation(deskMiniViewFinder("Desk 1")),
-		ac.WaitForLocation(deskMiniViewFinder("Desk 2")),
+		ac.WaitForLocation(deskMiniViewFinders[0]),
+		ac.WaitForLocation(deskMiniViewFinders[1]),
 	)(ctx); err != nil {
 		s.Fatal("Failed to reorder desks")
 	}
 
-	deskMiniViews, err := ash.FindDeskMiniViews(ctx, ac)
+	// Verify that the mini views for the desks have swapped positions.
+	locationsPostReorder, err := findDeskMiniViewLocations(ctx, tconn, deskMiniViewFinders)
 	if err != nil {
-		s.Fatal("Failed to find desk mini views: ", err)
+		s.Fatal("Failed to get locations after reordering: ", err)
 	}
-	if deskMiniViews[0].Location.Left < deskMiniViews[1].Location.Left {
+	if locationsPostReorder[0].Left != locationsPreReorder[1].Left || locationsPostReorder[1].Left != locationsPreReorder[0].Left {
 		s.Fatal("Failed to reorder desks")
 	}
 
 	if err := uiauto.Combine(
 		"reorder desk mini views",
 		kb.AccelAction("Ctrl+Left"),
-		ac.WaitForLocation(deskMiniViewFinder("Desk 1")),
-		ac.WaitForLocation(deskMiniViewFinder("Desk 2")),
+		ac.WaitForLocation(deskMiniViewFinders[0]),
+		ac.WaitForLocation(deskMiniViewFinders[1]),
 	)(ctx); err != nil {
 		s.Fatal("Failed to reorder desks")
 	}
 
-	deskMiniViews, err = ash.FindDeskMiniViews(ctx, ac)
+	// Verify that the mini views are now back to their positions prior to reordering.
+	locationsPostRestore, err := findDeskMiniViewLocations(ctx, tconn, deskMiniViewFinders)
 	if err != nil {
-		s.Fatal("Failed to find desk mini views: ", err)
+		s.Fatal("Failed to get locations after restoring desks: ", err)
 	}
-	if deskMiniViews[0].Location.Left > deskMiniViews[1].Location.Left {
+	if locationsPostRestore[0].Left != locationsPreReorder[0].Left || locationsPostRestore[1].Left != locationsPreReorder[1].Left {
 		s.Fatal("Failed to reorder desks")
 	}
 
