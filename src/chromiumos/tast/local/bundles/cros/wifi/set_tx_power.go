@@ -113,7 +113,7 @@ func SetTXPower(ctx context.Context, s *testing.State) {
 				} else {
 					err = testexec.CommandContext(ctx, setTxPowerExe, args...).Run()
 				}
-				// Sleep between toggling states.  The mt76 driver queues messages which can be subject to
+				// GoBigSleepLint: Sleep between toggling states.  The mt76 driver queues messages which can be subject to
 				// resource exhaustion if the command is sent too rapidly.
 				// TODO(b/266084566): Find a better way to fix the root cause.
 				testing.Sleep(ctx, 7*time.Millisecond)

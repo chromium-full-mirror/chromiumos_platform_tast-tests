@@ -829,6 +829,7 @@ func (s *Servo) ToggleOffOn(ctx context.Context, ctrl OnOffControl) error {
 	if err := s.SetString(ctx, StringControl(ctrl), string(Off)); err != nil {
 		return err
 	}
+	// GoBigSleepLint: Simulating a specific speed of keypress
 	if err := testing.Sleep(ctx, ServoKeypressDelay); err != nil {
 		return err
 	}
@@ -843,6 +844,7 @@ func (s *Servo) ToggleOnOff(ctx context.Context, ctrl OnOffControl) error {
 	if err := s.SetString(ctx, StringControl(ctrl), string(On)); err != nil {
 		return err
 	}
+	// GoBigSleepLint: Simulating a specific speed of keypress
 	if err := testing.Sleep(ctx, ServoKeypressDelay); err != nil {
 		return err
 	}
@@ -893,7 +895,7 @@ func (s *Servo) WatchdogRemove(ctx context.Context, val WatchdogValue) error {
 	if err := s.SetString(ctx, WatchdogRemove, string(val)); err != nil {
 		return err
 	}
-	// Removing the watchdog seems to take some time before it works.
+	// GoBigSleepLint: Removing the watchdog seems to take some time before it works.
 	if err := testing.Sleep(ctx, 4*time.Second); err != nil {
 		return err
 	}
