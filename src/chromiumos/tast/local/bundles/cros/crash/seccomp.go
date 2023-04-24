@@ -16,6 +16,7 @@ import (
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/crash"
+	"chromiumos/tast/local/sysutil"
 	"chromiumos/tast/testing"
 )
 
@@ -132,11 +133,20 @@ func Seccomp(ctx context.Context, s *testing.State) {
 				continue
 			}
 			keepMatch := false
-			for _, updateVar := range []string{
-				"seccomp_blocked_syscall_name=brk",
+			cases := []string{
 				"seccomp_blocked_syscall_nr=",
 				"seccomp_proc_pid_syscall=",
-			} {
+			}
+
+			// (b/265374900) /proc/<pid>/syscall isn't populated for aarch64 for
+			// kernel 5.15 and later so exclude dependent test cases for now
+			if ver, arch, err := sysutil.KernelVersionAndArch(); err != nil {
+				s.Fatal("Failed to get kernel version: ", err)
+			} else if strings.HasPrefix(arch, "x86") || !ver.IsOrLater(5, 15) {
+				cases = append(cases, "seccomp_blocked_syscall_name=brk")
+			}
+
+			for _, updateVar := range cases {
 				if !strings.Contains(string(contents), "upload_var_"+updateVar) {
 					s.Error("Failed to find expected ", updateVar)
 					keepMatch = true
