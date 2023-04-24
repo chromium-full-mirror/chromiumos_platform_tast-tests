@@ -43,6 +43,7 @@ func CheckStatefulFiles(ctx context.Context, outDir string) []error {
 		NewPattern(Path("encrypted/var/cache/device_local_account_extensions"), Users("chronos"), Groups("chronos"), Mode(0700), SkipChildren()),
 		NewPattern(Path("encrypted/var/cache/device_local_account_external_policy_data"), Users("chronos"), Groups("chronos"), Mode(0700), SkipChildren()),
 		NewPattern(Path("encrypted/var/cache/device_policy_external_data"), Users("chronos"), Groups("chronos"), Mode(0700), SkipChildren()),
+		NewPattern(Path("encrypted/var/cache/managed_screensaver"), Users("chronos"), Groups("chronos"), Mode(0700), SkipChildren()),
 		NewPattern(Path("encrypted/var/cache/display_profiles"), Users("chronos"), Groups("chronos"), Mode(0700), SkipChildren()),
 		NewPattern(Path("encrypted/var/cache/edb"), Users("root"), Groups("portage"), Mode(0755), SkipChildren()),
 		NewPattern(Tree("encrypted/var/cache/echo"), Users("root"), NotMode(022)),
