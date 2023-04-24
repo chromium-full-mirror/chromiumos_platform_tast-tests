@@ -45,7 +45,7 @@ const (
 // RoutineSection verifies routine section functionality.
 func RoutineSection(ctx context.Context, s *testing.State) {
 	tconn := s.FixtValue().(*utils.FixtureData).Tconn
-	ui := uiauto.New(tconn)
+	ui := uiauto.New(tconn).WithTimeout(5 * time.Second)
 
 	// Wait for CPU idle to reduce likelihood of stressapptest becoming a zombie.
 	if err := cpu.WaitUntilIdle(ctx); err != nil {
@@ -60,7 +60,7 @@ func RoutineSection(ctx context.Context, s *testing.State) {
 	}
 
 	// If needed, scroll down to make the cpu button visible.
-	if err := ui.MakeVisible(cpuButton)(ctx); err != nil {
+	if err := ui.FocusAndWait(cpuButton)(ctx); err != nil {
 		s.Fatal("Failed to locate cpu button within the screen bounds: ", err)
 	}
 
@@ -81,7 +81,7 @@ func RoutineSection(ctx context.Context, s *testing.State) {
 	s.Log("Starting CPU test routine")
 
 	// Wait for UI to swap to "in progress" state to give time for diagnostics service to start routine.
-	if err := ui.WithTimeout(5 * time.Second).WaitUntilExists(
+	if err := ui.WithPollOpts(pollOpts).WaitUntilExists(
 		diagnosticsapp.DxProgressBadge.Ancestor(diagnosticsapp.DxRootNode).First())(
 		ctx); err != nil {
 		s.Fatal("Could not verify test routine has started: ", err)
@@ -100,8 +100,8 @@ func RoutineSection(ctx context.Context, s *testing.State) {
 	}
 	s.Log("Stress test process no longer running")
 
-	if err := uiauto.IfFailThen(ui.WithTimeout(5*time.Second).WaitUntilExists(
-		diagnosticsapp.DxPassedBadge.Ancestor(diagnosticsapp.DxRootNode).First()), ui.WithTimeout(5*time.Second).WaitUntilExists(
+	if err := uiauto.IfFailThen(ui.WaitUntilExists(
+		diagnosticsapp.DxPassedBadge.Ancestor(diagnosticsapp.DxRootNode).First()), ui.WaitUntilExists(
 		diagnosticsapp.DxFailedBadge.Ancestor(diagnosticsapp.DxRootNode).First()))(ctx); err != nil {
 		s.Fatal("Could not verify successful run of at least one CPU routine: ", err)
 	}
