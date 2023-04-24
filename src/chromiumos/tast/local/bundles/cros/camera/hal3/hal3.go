@@ -25,6 +25,7 @@ import (
 	"chromiumos/tast/local/gtest"
 	"chromiumos/tast/local/sysutil"
 	"chromiumos/tast/local/upstart"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/shutil"
@@ -180,13 +181,14 @@ func readOrGenerateMediaProfilePath(ctx context.Context) (string, error) {
 // GetCmdLineTestCameraFacing() and InitializeTest() in [1] for more details.
 // [1] https://chromium.git.corp.google.com/chromiumos/platform2/+/363b9b16d6d16937743e619526d51ab59970caf6/camera/camera3_test/camera3_module_test.cc?pli=1#1239
 type crosCameraTestConfig struct {
-	cameraHALPath        string // path to the camera HAL to test
-	cameraFacing         string // facing of the camera to test, such as "front" or "back".
-	gtestFilter          string // filter for Google Test
-	recordingParams      string // resolutions and fps to test in recording
-	perfLog              string // path to the performance log
-	portraitModeTestData string // test data for portrait mode test.
-	expectedNumFaces     string // number of faces for face detection test.
+	cameraHALPath          string // path to the camera HAL to test
+	cameraFacing           string // facing of the camera to test, such as "front" or "back".
+	gtestFilter            string // filter for Google Test
+	recordingParams        string // resolutions and fps to test in recording
+	perfLog                string // path to the performance log
+	portraitModeTestData   string // test data for portrait mode test.
+	expectedNumFaces       string // number of faces for face detection test.
+	connectToCameraService string // state for camera_service, true -> camera_service is running, false -> camera_service is waiting
 }
 
 // toArgs converts crosCameraTestConfig to a list of argument strings.
@@ -211,6 +213,9 @@ func (t *crosCameraTestConfig) toArgs() []string {
 	}
 	if t.expectedNumFaces != "" {
 		args = append(args, "--expected_num_faces="+t.expectedNumFaces)
+	}
+	if t.connectToCameraService != "" {
+		args = append(args, "--connect_to_camera_service="+t.connectToCameraService)
 	}
 	return args
 }
@@ -448,9 +453,15 @@ func RunTest(ctx context.Context, cfg TestConfig) (retErr error) {
 	}
 	defer os.Remove(jsonConfigPath)
 
+	connectToCameraService := "false"
+	if cfg.ConnectToCameraService {
+		connectToCameraService = "true"
+	}
+
 	cameraCfg := crosCameraTestConfig{
-		gtestFilter:  cfg.GtestFilter,
-		cameraFacing: cfg.CameraFacing,
+		gtestFilter:            cfg.GtestFilter,
+		cameraFacing:           cfg.CameraFacing,
+		connectToCameraService: connectToCameraService,
 	}
 
 	if cfg.RequireRecordingParams {

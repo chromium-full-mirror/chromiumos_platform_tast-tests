@@ -57,6 +57,7 @@ func LogTestScene(ctx context.Context, d *dut.DUT, facing pb.Facing, outdir stri
 		"--gtest_filter=Camera3StillCaptureTest/Camera3DumpSimpleStillCaptureTest.DumpCaptureResult/0",
 		"--camera_facing="+facingArg,
 		"--dump_still_capture_path="+sceneLog,
+		"--connect_to_camera_service=false",
 	).Run(); err != nil {
 		return errors.Wrap(err, "failed to run cros_camera_test to take a scene photo")
 	}
