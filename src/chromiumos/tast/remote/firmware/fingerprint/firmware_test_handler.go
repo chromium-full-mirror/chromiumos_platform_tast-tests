@@ -8,6 +8,8 @@ import (
 	"context"
 	"time"
 
+	"google.golang.org/protobuf/types/known/durationpb"
+
 	fp "chromiumos/tast/common/fingerprint"
 	"chromiumos/tast/common/servo"
 	"chromiumos/tast/common/upstart"
@@ -347,7 +349,7 @@ func (t *FirmwareTest) FPBoard() fp.BoardName {
 
 type daemonState struct {
 	name       string
-	wasRunning bool // True if daemon was originally running.
+	wasStarted bool // True if daemon was originally started.
 }
 
 // stopDaemons stops the specified daemons and returns their original state.
@@ -359,9 +361,9 @@ func stopDaemons(ctx context.Context, upstartService platform.UpstartServiceClie
 			return ret, errors.Wrap(err, "failed to get status for "+name)
 		}
 
-		daemonWasRunning := upstart.State(status.GetState()) == upstart.RunningState
+		daemonWasStarted := upstart.Goal(status.GetGoal()) == upstart.StartGoal
 
-		if daemonWasRunning {
+		if daemonWasStarted {
 			testing.ContextLog(ctx, "Stopping ", name)
 			if _, err := upstartService.StopJob(ctx, &platform.StopJobRequest{
 				JobName: name,
@@ -372,7 +374,7 @@ func stopDaemons(ctx context.Context, upstartService platform.UpstartServiceClie
 
 		ret = append(ret, daemonState{
 			name:       name,
-			wasRunning: daemonWasRunning,
+			wasStarted: daemonWasStarted,
 		})
 	}
 
@@ -396,27 +398,48 @@ func restoreDaemons(ctx context.Context, upstartService platform.UpstartServiceC
 			continue
 		}
 
+		testing.ContextLog(ctx, "Job "+daemon.name+" is "+status.GetGoal()+"/"+status.GetState())
+
+		started := upstart.Goal(status.GetGoal()) == upstart.StartGoal
 		running := upstart.State(status.GetState()) == upstart.RunningState
 
-		if running != daemon.wasRunning {
-			if running {
+		if daemon.wasStarted {
+			if !started {
+				testing.ContextLog(ctx, "Starting ", daemon.name)
+				// StartJob blocks until job enters 'running'
+				// state.
+				_, err := upstartService.StartJob(ctx, &platform.StartJobRequest{
+					JobName: daemon.name,
+				})
+				if err != nil {
+					testing.ContextLog(ctx, "Failed to start "+daemon.name+": ", err)
+					if firstErr == nil {
+						firstErr = err
+					}
+				}
+			} else if !running {
+				testing.ContextLog(ctx, "Job "+daemon.name+" already started. Waiting for running state")
+				_, err := upstartService.WaitForJobStatus(ctx, &platform.WaitForJobStatusRequest{
+					JobName: daemon.name,
+					Goal:    string(upstart.StartGoal),
+					State:   string(upstart.RunningState),
+					Timeout: durationpb.New(10 * time.Second),
+				})
+				if err != nil {
+					testing.ContextLog(ctx, "Failed to wait for "+daemon.name+": ", err)
+					if firstErr == nil {
+						firstErr = err
+					}
+				}
+			}
+		} else {
+			if started {
 				testing.ContextLog(ctx, "Stopping ", daemon.name)
 				_, err := upstartService.StopJob(ctx, &platform.StopJobRequest{
 					JobName: daemon.name,
 				})
 				if err != nil {
 					testing.ContextLog(ctx, "Failed to stop "+daemon.name+": ", err)
-					if firstErr == nil {
-						firstErr = err
-					}
-				}
-			} else {
-				testing.ContextLog(ctx, "Starting ", daemon.name)
-				_, err := upstartService.StartJob(ctx, &platform.StartJobRequest{
-					JobName: daemon.name,
-				})
-				if err != nil {
-					testing.ContextLog(ctx, "Failed to start "+daemon.name+": ", err)
 					if firstErr == nil {
 						firstErr = err
 					}
