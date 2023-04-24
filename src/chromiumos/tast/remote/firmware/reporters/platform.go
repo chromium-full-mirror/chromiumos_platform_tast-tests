@@ -10,7 +10,6 @@ import (
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/lsbrelease"
-	"go.chromium.org/tast/core/testing"
 )
 
 // Board reports the name of the DUT board, such as coral or veyron_minnie.
@@ -27,17 +26,6 @@ func (r *Reporter) Board(ctx context.Context) (string, error) {
 	if !ok {
 		return "", errors.Errorf("failed to find %s in lsbrelease contents", lsbrelease.Board)
 	}
-
-	// TODO(jbettis): This should replace the code above, cros_config is more trustworthy than /etc/lsb-release
-	if out, err := r.d.Conn().CommandContext(ctx, "cros_config", "/identity", "platform-name").Output(); err != nil {
-		testing.ContextLogf(ctx, "cros_config failed: %s", err)
-	} else {
-		crosConfigBoard := strings.ToLower(string(out))
-		if crosConfigBoard != board {
-			testing.ContextLogf(ctx, "Board from lsb-release %q doesn't match cros_config %q", board, crosConfigBoard)
-		}
-	}
-
 	return board, nil
 }
 
