@@ -30,6 +30,7 @@ import (
 	"chromiumos/tast/ssh"
 	"chromiumos/tast/ssh/linuxssh"
 	"chromiumos/tast/testing"
+
 	"go.chromium.org/tast/core/lsbrelease"
 )
 
@@ -793,7 +794,11 @@ func (h *Helper) WaitConnect(ctx context.Context, opts ...WaitConnectOption) err
 				testing.ContextLogf(ctx, "Failed to set pd data role to DFP: %s", err)
 			}
 		}
-		err := h.DUT.Connect(ctx)
+		err := func(ctx context.Context) error {
+			waitCtx, cancelConnect := context.WithTimeout(ctx, 10*time.Second)
+			defer cancelConnect()
+			return h.DUT.Connect(waitCtx)
+		}(ctx)
 		if err == nil {
 			return nil
 		}

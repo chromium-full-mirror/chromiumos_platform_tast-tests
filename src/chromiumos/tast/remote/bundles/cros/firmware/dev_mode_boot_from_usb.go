@@ -233,7 +233,7 @@ func DevModeBootFromUSB(ctx context.Context, s *testing.State) {
 			if err := h.Servo.KeypressWithDuration(ctx, servo.CtrlD, servo.DurTab); err != nil {
 				return errors.Wrapf(err, "failed to press %s", servo.CtrlD)
 			}
-			ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+			ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 			defer cancel()
 			return h.DUT.WaitConnect(ctx)
 		}, &testing.PollOptions{Timeout: testOpt.reconnectTimeout, Interval: 2 * time.Second}); err != nil {
