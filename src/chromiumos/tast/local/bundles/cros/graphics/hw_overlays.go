@@ -14,14 +14,15 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/graphics"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 const (
@@ -64,7 +65,7 @@ func init() {
 		Attr:         []string{"graphics_perbuild", "group:graphics"},
 		// Atomic, Chrome and Internal displays are essentials for this test.
 		SoftwareDeps: []string{"drm_atomic", "chrome"},
-		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
+		HardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.SupportsHardwareOverlays()),
 		Timeout:      2 * time.Minute,
 		Params: []testing.Param{{
 			Name:      "canvas_2d",
