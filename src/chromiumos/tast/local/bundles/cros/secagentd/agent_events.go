@@ -18,13 +18,15 @@ import (
 
 	rep "chromiumos/reporting"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
+	"chromiumos/tast/local/bundles/cros/secagentd/secagentdcommon"
 	"chromiumos/tast/local/bundles/cros/secagentd/secagentddbusmonitor"
 	"chromiumos/tast/local/bundles/cros/secagentd/secagentdupstart"
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/testing"
 	xdr "chromiumos/xdr/secagentd"
+
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
@@ -271,7 +273,12 @@ func AgentEvents(ctx context.Context, s *testing.State) {
 			s.Fatalf("Incorrect number of events. Expected: 1, Actual: %d", len(pe.GetBatchedEvents()))
 		}
 
-		agent := pe.GetBatchedEvents()[0].GetAgentStart()
+		batched := pe.GetBatchedEvents()[0]
+		if err := secagentdcommon.CheckCommon(batched.GetCommon()); err != nil {
+			s.Error("Invalid common field: ", err)
+		}
+
+		agent := batched.GetAgentStart()
 		//TODO(b/254534567) Source secureboot for expected AgentStart. Copy for now.
 		if agent.Tcb.FirmwareSecureBoot != nil {
 			expAgent.Tcb.FirmwareSecureBoot = agent.Tcb.GetFirmwareSecureBoot().Enum()

@@ -12,15 +12,16 @@ import (
 
 	rep "chromiumos/reporting"
 	"chromiumos/tast/common/testexec"
+	"chromiumos/tast/local/bundles/cros/secagentd/secagentdcommon"
 	"chromiumos/tast/local/bundles/cros/secagentd/secagentddbusmonitor"
 	"chromiumos/tast/local/bundles/cros/secagentd/secagentdprocfsscraper"
 	"chromiumos/tast/local/bundles/cros/secagentd/secagentdupstart"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/testing"
 	xdr "chromiumos/xdr/secagentd"
 
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -226,6 +227,10 @@ func testOneProcessEventsParams(ctx context.Context, s *testing.State, param pro
 			}
 			if v.GetProcessTerminate() != nil {
 				bTerminates = append(bTerminates, v.GetProcessTerminate())
+			}
+
+			if err := secagentdcommon.CheckCommon(v.GetCommon()); err != nil {
+				s.Error("Invalid common field: ", err)
 			}
 		}
 
