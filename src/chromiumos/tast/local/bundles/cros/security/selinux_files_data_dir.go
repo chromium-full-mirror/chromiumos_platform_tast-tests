@@ -102,7 +102,7 @@ func verifyDirSELinuxContext(ctx context.Context, directoryPath, outDir string) 
 	verifiedCount := strings.Count(matchPathConStr, "verified.\n")
 	// Counts any files or dirs which are not found during the race between
 	// find and matchpathcon command.
-	filesAndDirMissingCount := strings.Count(matchPathConStr, "error: No such file or directory\n")
+	filesAndDirMissingCount := strings.Count(matchPathConStr, "No such file or directory\n")
 
 	// Ruling out False-negative SELinux mismatches due to multicategory part.
 	scanner := bufio.NewScanner(strings.NewReader(matchPathConStr))
