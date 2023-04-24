@@ -7,6 +7,7 @@ package vctray
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"chromiumos/tast/common/action"
@@ -28,9 +29,11 @@ var (
 
 // Node finders in the expanded panel which is implemented in TrayBubbleView.
 var (
-	panelSection             = nodewith.HasClass("TrayBubbleView").Role(role.Window)
-	portraitRelightingButton = nodewith.Name("Adjust Lighting").Role(role.Button).Ancestor(panelSection)
-	liveCaptionButton        = nodewith.Name("Live Caption").Role(role.Button).Ancestor(panelSection)
+	panelSection = nodewith.HasClass("RootView").Role(role.Dialog).First().Ancestor(
+		nodewith.HasClass("SettingBubbleContainer").Role(role.Window).First(),
+	)
+	adjustLightingButton = nodewith.NameStartingWith("Toggle Adjust Lighting").Role(role.ToggleButton).Ancestor(panelSection)
+	liveCaptionButton    = nodewith.NameStartingWith("Toggle Live Caption").Role(role.ToggleButton).Ancestor(panelSection)
 
 	bgBlurOffButton   = nodewith.Name("Off").Role(role.Button).Ancestor(panelSection)
 	bgBlurLightButton = nodewith.Name("Light").Role(role.Button).Ancestor(panelSection)
@@ -145,14 +148,86 @@ func (vcTray VCTray) SetBackgroundBlur(blurLevel BackgroundBlurLevel) action.Act
 	}
 }
 
-// SwitchPortraitRelighting switches on/off the Portrait Relighting option.
-func (vcTray VCTray) SwitchPortraitRelighting() action.Action {
-	return vcTray.ui.DoDefault(portraitRelightingButton)
+// adjustLightingEnabled returns whether adjustLighting is enabled.
+// It assumes the vcTray panel is expanded already.
+func (vcTray VCTray) adjustLightingEnabled(ctx context.Context) (bool, error) {
+	nodeInfo, err := vcTray.ui.Info(ctx, adjustLightingButton)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to get node info")
+	}
+	// Current status can be identified by the node name.
+	// Off: "Adjust Lighting is off"; On: "Adjust Lighting is on".
+	return strings.HasSuffix(nodeInfo.Name, "on"), nil
 }
 
-// SwitchLiveCaption switches on/off the Live Caption option.
-func (vcTray VCTray) SwitchLiveCaption() action.Action {
-	return vcTray.ui.DoDefault(liveCaptionButton)
+// SetAdjustLighting toggles on/off the "Adjust Lighting" option.
+func (vcTray VCTray) SetAdjustLighting(expectedOn bool) action.Action {
+	return func(ctx context.Context) error {
+		currentlyOn, err := vcTray.adjustLightingEnabled(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to get current status")
+		}
+		if (currentlyOn && expectedOn) || (!currentlyOn && !expectedOn) {
+			return nil
+		}
+
+		return vcTray.ui.DoDefaultUntil(
+			adjustLightingButton,
+			func(ctx context.Context) error {
+				return testing.Poll(ctx, func(ctx context.Context) error {
+					currentlyOn, err := vcTray.adjustLightingEnabled(ctx)
+					if err != nil {
+						return errors.Wrap(err, "failed to get current status")
+					}
+					if (currentlyOn && !expectedOn) || (!currentlyOn && expectedOn) {
+						return errors.New("failed to change adjustlighting")
+					}
+					return nil
+				}, &testing.PollOptions{Timeout: 3 * time.Second})
+			},
+		)(ctx)
+	}
+}
+
+// liveCaptionEnabled returns whether live caption is enabled.
+// It assumes the vcTray panel is expanded already.
+func (vcTray VCTray) liveCaptionEnabled(ctx context.Context) (bool, error) {
+	nodeInfo, err := vcTray.ui.Info(ctx, liveCaptionButton)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to get node info")
+	}
+	// Current status can be identified by the node name.
+	// Off: "Live Caption is off"; On: "Live Caption is on".
+	return strings.HasSuffix(nodeInfo.Name, "on"), nil
+}
+
+// SetLiveCaption toggles on/off the "Live Caption" option.
+func (vcTray VCTray) SetLiveCaption(expectedOn bool) action.Action {
+	return func(ctx context.Context) error {
+		currentlyOn, err := vcTray.liveCaptionEnabled(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to get current status")
+		}
+		if (currentlyOn && expectedOn) || (!currentlyOn && !expectedOn) {
+			return nil
+		}
+
+		return vcTray.ui.DoDefaultUntil(
+			liveCaptionButton,
+			func(ctx context.Context) error {
+				return testing.Poll(ctx, func(ctx context.Context) error {
+					currentlyOn, err := vcTray.liveCaptionEnabled(ctx)
+					if err != nil {
+						return errors.Wrap(err, "failed to get current status")
+					}
+					if (currentlyOn && !expectedOn) || (!currentlyOn && expectedOn) {
+						return errors.New("failed to change live caption")
+					}
+					return nil
+				}, &testing.PollOptions{Timeout: 3 * time.Second})
+			},
+		)(ctx)
+	}
 }
 
 // ReturnToApp returns an action returning to the VC app.
@@ -181,14 +256,25 @@ func (vcTray VCTray) ReturnToApp(appName string) action.Action {
 }
 
 // SetCameraEffects is a high level wrapper to setup camera effects from main screen.
-// It expands vcTray and set both background blur and portrait relighting then collapse the vcTray.
-func (vcTray VCTray) SetCameraEffects(backgroundBlur BackgroundBlurLevel, portraitRelighting bool) action.Action {
-	return uiauto.Combine("configure camera effects via mcpanel",
-		vcTray.ExpandPanel,
+// It expands vcTray and set both background blur and relighting then collapse the vcTray.
+func (vcTray VCTray) SetCameraEffects(backgroundBlur BackgroundBlurLevel, adjustRelighting bool) action.Action {
+	return vcTray.ChangeSettingsInPanel(
 		vcTray.SetBackgroundBlur(backgroundBlur),
-		// TODO(b/267709319): Add on/off params to switch functions
-		// once the status can be checked in accessibility. It is currently blocked by b/266476993.
-		// vcTray.SwitchPortraitRelighting(),
-		vcTray.CollapsePanel,
+		vcTray.SetAdjustLighting(adjustRelighting),
+	)
+}
+
+// ChangeSettingsInPanel changes one or more settings in vcTray panel.
+// It automatically expand the panel and close it in the end.
+// e.g. vcTray.ChangeSettingsInPanel(vcTray.SetbackgroundBlur(backgroundBlur)) literally does something like below:
+// vcTray.ExpandPanel,
+// vcTray.SetBackgroundBlur(backgroundBlur),
+// vcTray.CollaposePanel,
+func (vcTray VCTray) ChangeSettingsInPanel(actions ...action.Action) action.Action {
+	actionsToPerform := []action.Action{vcTray.ExpandPanel}
+	actionsToPerform = append(actionsToPerform, actions...)
+	actionsToPerform = append(actionsToPerform, vcTray.CollapsePanel)
+	return uiauto.NamedCombine("change settings in panel",
+		actionsToPerform...,
 	)
 }

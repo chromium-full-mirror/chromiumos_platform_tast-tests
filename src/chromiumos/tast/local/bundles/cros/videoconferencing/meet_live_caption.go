@@ -20,8 +20,8 @@ import (
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
-	"chromiumos/tast/local/chrome/uiauto/ossettings"
 	"chromiumos/tast/local/chrome/uiauto/role"
+	"chromiumos/tast/local/chrome/uiauto/vctray"
 	"chromiumos/tast/local/videoconferencing/fixture"
 	"chromiumos/tast/testing"
 )
@@ -38,7 +38,7 @@ func init() {
 			"shengjun@chromium.org",
 		},
 		BugComponent: "b:187682",
-		Timeout:      5 * time.Minute,
+		Timeout:      10 * time.Minute,
 		Attr: []string{
 			"group:camera_dependent",
 			"group:external-dependency",
@@ -91,17 +91,6 @@ func MeetLiveCaption(ctx context.Context, s *testing.State) {
 	}
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui")
-
-	// Turn on live caption in OS settings.
-	if err := ossettings.ToggleLiveCaption(cr, tconn, true)(ctx); err != nil {
-		s.Fatal("Failed to toggle on live caption: ", err)
-	}
-	defer ossettings.ToggleLiveCaption(cr, tconn, false)(cleanupCtx)
-
-	// Wait until dlc libsoda and libsoda-model-en-us are installed.
-	if err := testing.Poll(ctx, a11y.VerifySodaInstalled, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
-		s.Fatal("Failed to wait for libsoda dlc to be installed: ", err)
-	}
 
 	browserType := s.FixtValue().(fixture.FixtData).BrowserType()
 
@@ -169,6 +158,17 @@ func MeetLiveCaption(ctx context.Context, s *testing.State) {
 	}
 	defer gm.Close(cleanupCtx)
 
+	vcTray := vctray.New(ctx, tconn)
+
+	if err := vcTray.ChangeSettingsInPanel(vcTray.SetLiveCaption(true))(ctx); err != nil {
+		s.Fatal("Failed to turn on live caption: ", err)
+	}
+
+	// Wait until dlc libsoda and libsoda-model-en-us are installed.
+	if err := testing.Poll(ctx, a11y.VerifySodaInstalled, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
+		s.Fatal("Failed to wait for libsoda dlc to be installed: ", err)
+	}
+
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "caption")
 
 	liveCaptionBubble := nodewith.ClassName("CaptionBubbleFrameView")
@@ -190,16 +190,16 @@ func MeetLiveCaption(ctx context.Context, s *testing.State) {
 			return errors.Errorf("failed to validate caption content: expected contain %q, got %q", expectedCaptionContain, nodeInfo.Name)
 		}
 		return nil
-	}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
+	}, &testing.PollOptions{Timeout: 60 * time.Second}); err != nil {
 		s.Fatal("Failed to validate live caption: ", err)
 	}
 
-	if _, _, err := bondClient.RemoveAllBots(ctx, meetingCode); err != nil {
-		s.Fatal("Failed to remove bots: ", err)
+	if err := vcTray.ChangeSettingsInPanel(vcTray.SetLiveCaption(false))(ctx); err != nil {
+		s.Fatal("Failed to turn off live caption: ", err)
 	}
 
-	// Live caption bubble should disappear if no more talking.
-	if err := ui.WaitUntilGone(liveCaptionBubble)(ctx); err != nil {
+	// Live caption bubble should disappear after switching off.
+	if err := ui.WithTimeout(10 * time.Second).WaitUntilGone(liveCaptionBubble)(ctx); err != nil {
 		s.Fatal("Failed to wait for live caption disappear: ", err)
 	}
 }

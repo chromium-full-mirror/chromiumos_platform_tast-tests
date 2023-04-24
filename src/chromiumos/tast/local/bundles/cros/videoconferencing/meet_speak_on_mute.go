@@ -17,6 +17,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/vctray"
 	"chromiumos/tast/local/input/voice"
 	"chromiumos/tast/local/videoconferencing/fixture"
 	"chromiumos/tast/testing"
@@ -36,11 +37,12 @@ func init() {
 		Attr: []string{
 			"group:camera_dependent",
 			"group:external-dependency",
+			"group:video_conference",
+			"video_conference_per_build",
 		},
 		Data:         []string{audioInputFile},
 		BugComponent: "b:187682",
 		Timeout:      3 * time.Minute,
-		// TODO(b/276998230): Add attributes to enable this test in CI.
 		SoftwareDeps: []string{"chrome", "camera_feature_effects"},
 		Params: []testing.Param{
 			{
@@ -115,16 +117,16 @@ func MeetSpeakOnMute(ctx context.Context, s *testing.State) {
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_with_meet")
 
-	// TODO(b/276998230): Use vcTray to mute and unmute
-	// Note: This test is only semi-automated due to the blocking bug.
-	s.Log("Please mute via vctray on DUT manually within 20s")
-	testing.Sleep(ctx, 20*time.Second) // GoBigSleepLint
-	s.Log("Finished waiting")
+	vcTray := vctray.New(ctx, tconn)
 
-	defer func(ctx context.Context) {
-		s.Log("Please unmute via vctray on DUT manually within 20s")
-		testing.Sleep(ctx, 20*time.Second) // GoBigSleepLint
-		s.Log("Finished waiting")
+	if err := vcTray.ToggleAVDevice(vctray.DevMicrophone, false)(ctx); err != nil {
+		s.Fatal("Failed to toggle off microphone in vcTray: ", err)
+	}
+	defer func(ctx context.Context) error {
+		if err := vcTray.ToggleAVDevice(vctray.DevMicrophone, true)(ctx); err != nil {
+			testing.ContextLog(ctx, "Failed to toggle on microphone in cleanup: ", err)
+		}
+		return nil
 	}(cleanupCtx)
 
 	if err := audio.PlayWavToPCM(ctx, s.DataPath(audioInputFile), "hw:Loopback,0"); err != nil {

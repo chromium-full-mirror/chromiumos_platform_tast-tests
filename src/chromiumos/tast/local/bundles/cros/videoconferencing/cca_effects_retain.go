@@ -75,23 +75,11 @@ func CCAEffectsRetain(ctx context.Context, s *testing.State) {
 		s.Fatal("Camera is not working appropriately: ", err)
 	}
 
-	// Maximize VC app window in clamshell mode to reduce resolution noises on different devices.
-	// Skip Tablet mode as app is full screen by default.
-	if inTabletMode, err := ash.TabletModeEnabled(ctx, tconn); err != nil {
-		s.Fatal("Failed to get tablet-mode status: ", err)
-	} else if !inTabletMode {
-		if _, err := ash.MaximizeWindowTitleContains(ctx, tconn, "Camera"); err != nil {
-			s.Fatal("Failed to maximize Camera window: ", err)
-		}
-	}
-
 	vcTray := vctray.New(ctx, tconn)
 
 	if err := vcTray.SetCameraEffects(vctray.BackgroundBlurFull, true)(ctx); err != nil {
 		s.Fatal("Failed to set camera effects: ", err)
 	}
-
-	verifyScreen(ctx, s, cr)
 
 	// Re-launch Camera app and verify screen again to check effects retain.
 	if err := apps.Close(ctx, tconn, apps.Camera.ID); err != nil {
@@ -102,10 +90,16 @@ func CCAEffectsRetain(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to re-launch Camera: ", err)
 	}
 
-	verifyScreen(ctx, s, cr)
-}
+	// Maximize VC app window in clamshell mode to reduce resolution noises on different devices.
+	// Skip Tablet mode as app is full screen by default.
+	if inTabletMode, err := ash.TabletModeEnabled(ctx, tconn); err != nil {
+		s.Fatal("Failed to get tablet-mode status: ", err)
+	} else if !inTabletMode {
+		if _, err := ash.MaximizeWindowTitleContains(ctx, tconn, "Camera"); err != nil {
+			s.Fatal("Failed to maximize Camera window: ", err)
+		}
+	}
 
-func verifyScreen(ctx context.Context, s *testing.State, cr *chrome.Chrome) {
 	d, err := screenshot.NewDifferFromChrome(ctx, s, cr,
 		screenshot.Config{
 			DefaultOptions: screenshot.Options{

@@ -159,7 +159,21 @@ func MeetEffects(ctx context.Context, s *testing.State) {
 			backgroundBlur:     vctray.BackgroundBlurFull,
 			portraitRelighting: false,
 		},
-		// TODO(b/267709319): Add screen tests with portrait relighting on.
+		{
+			name:               "backgroundblur_off_portraitrelighting_on",
+			backgroundBlur:     vctray.BackgroundBlurOff,
+			portraitRelighting: true,
+		},
+		{
+			name:               "backgroundblur_light_portraitrelighting_on",
+			backgroundBlur:     vctray.BackgroundBlurLight,
+			portraitRelighting: true,
+		},
+		{
+			name:               "backgroundblur_full_portraitrelighting_on",
+			backgroundBlur:     vctray.BackgroundBlurFull,
+			portraitRelighting: true,
+		},
 	}
 
 	enabledSubtests := make(map[string]struct{})

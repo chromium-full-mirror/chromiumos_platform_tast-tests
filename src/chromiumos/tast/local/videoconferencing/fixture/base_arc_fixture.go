@@ -33,6 +33,7 @@ func init() {
 				chrome.EnableFeatures("SpeakOnMuteEnabled"),
 				chrome.EnableFeatures("VideoConference"),
 				chrome.EnableFeatures("CrOSLateBootAudioFlexibleLoopback"),
+				chrome.EnableFeatures("SystemLiveCaption"),
 				// Disable WindowLayoutMenu to prevent `Keep hovering for more layout options` nudge.
 				// The nudge is overlap with app window and causes screen diff flakiness.
 				chrome.DisableFeatures("WindowLayoutMenu"),
