@@ -26,6 +26,7 @@ const (
 	ActiveDUTController   StringControl = "active_dut_controller"
 	ArbKey                StringControl = "arb_key"
 	ArbKeyConfig          StringControl = "arb_key_config"
+	Devices               StringControl = "devices"
 	DUTVoltageMV          StringControl = "dut_voltage_mv"
 	DownloadImageToUSBDev StringControl = "download_image_to_usb_dev"
 	ECActiveCopy          StringControl = "ec_active_copy"
@@ -373,6 +374,43 @@ func (s *Servo) GetCCDSerial(ctx context.Context) (string, error) {
 		}
 	}
 	return "", errors.Errorf("no ccd serial in %q", value)
+}
+
+// RemoveCCDWatchdogs enumerates over all servo devices, and removes the watchdogs for any CCD devices.
+func (s *Servo) RemoveCCDWatchdogs(ctx context.Context) error {
+	devices, err := s.GetStringList(ctx, Devices)
+	if err != nil {
+		return err
+	}
+	didRemove := false
+	for _, device := range devices {
+		deviceMap, ok := device.(map[string]interface{})
+		if !ok {
+			return errors.Errorf("failed to cast %+v to map", device)
+		}
+		deviceType, ok := deviceMap["type"]
+		if !ok {
+			return errors.Errorf("device has no type: %+v", device)
+		}
+		stringType, ok := deviceType.(string)
+		if !ok {
+			return errors.Errorf("failed to cast %+v to string", stringType)
+		}
+		if strings.HasPrefix(stringType, "ccd") {
+			testing.ContextLog(ctx, "Removing watchdog: ", stringType)
+			if err := s.SetString(ctx, WatchdogRemove, stringType); err != nil {
+				return err
+			}
+			didRemove = true
+		}
+	}
+	if didRemove {
+		// GoBigSleepLint: Removing the watchdog seems to take some time before it works.
+		if err := testing.Sleep(ctx, 4*time.Second); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // GetBool returns the boolean value of a specified control.
