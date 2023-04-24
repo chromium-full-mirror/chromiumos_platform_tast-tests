@@ -137,7 +137,7 @@ func wmRC01(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Devic
 			if err != nil {
 				return err
 			}
-			defer act.Close()
+			defer act.Close(ctx)
 
 			if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 				return err
@@ -225,7 +225,7 @@ func wmRC06(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Devic
 	if err != nil {
 		return err
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		return err
@@ -291,7 +291,7 @@ func wmRC09(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Devic
 	if err != nil {
 		return err
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		return err
@@ -344,7 +344,7 @@ func wmRC10(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Devic
 	if err != nil {
 		return errors.Wrap(err, "unable to create new activity")
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		return errors.Wrap(err, "unable to start new activity")
@@ -422,7 +422,7 @@ func wmRC12(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Devic
 	if err != nil {
 		return err
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		return err
@@ -508,7 +508,7 @@ func wmRC13(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Devic
 	if err != nil {
 		return errors.Wrap(err, "failed to create new activity")
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		return errors.Wrap(err, "failed to start new activity")
@@ -624,7 +624,7 @@ func wmRC17(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Devic
 	if err != nil {
 		return errors.Wrap(err, "unable to create new activity")
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		return errors.Wrap(err, "unable to start new activity")
@@ -685,7 +685,7 @@ func wmRC22(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Devic
 	if err != nil {
 		return errors.Wrap(err, "failed to create left activity")
 	}
-	defer leftAct.Close()
+	defer leftAct.Close(ctx)
 
 	if err := leftAct.Start(ctx, tconn); err != nil {
 		return errors.Wrap(err, "failed to start left activity")
@@ -738,7 +738,7 @@ func wmRC22(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Devic
 	if err != nil {
 		return err
 	}
-	defer rightAct.Close()
+	defer rightAct.Close(ctx)
 
 	if err := rightAct.Start(ctx, tconn); err != nil {
 		return errors.Wrap(err, "failed to start right activity")
@@ -836,7 +836,7 @@ func snapToHalfHelper(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d
 	if err != nil {
 		return errors.Wrap(err, "failed to create new activity")
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		return errors.Wrap(err, "failed to start new activity")
@@ -908,7 +908,7 @@ func rcDisplaySizeChangeTestsHelper(ctx context.Context, tconn *chrome.TestConn,
 	if err != nil {
 		return err
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		return err
@@ -1010,7 +1010,7 @@ func immerseViaAPIHelper(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC
 	if err != nil {
 		return err
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		return err
@@ -1102,7 +1102,7 @@ func checkRestoreActivityToFullscreen(ctx context.Context, tconn *chrome.TestCon
 	if err != nil {
 		return err
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		return err
@@ -1184,7 +1184,7 @@ func rcMaxRestoreTestHelper(ctx context.Context, tconn *chrome.TestConn, a *arc.
 	if err != nil {
 		return err
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		return err

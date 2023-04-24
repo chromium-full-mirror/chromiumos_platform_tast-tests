@@ -147,7 +147,7 @@ func ChromePIPRoundedCornersUnderlay(ctx context.Context, s *testing.State) {
 	} else {
 		pc = pointer.NewMouse(tconn)
 	}
-	defer pc.Close()
+	defer pc.Close(ctx)
 
 	ac := uiauto.New(tconn)
 	pipButton := nodewith.Name("PIP").Role(role.Button)

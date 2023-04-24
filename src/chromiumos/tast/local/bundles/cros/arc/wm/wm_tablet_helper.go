@@ -54,7 +54,7 @@ func TabletDefaultLaunchHelper(ctx context.Context, tconn *chrome.TestConn, a *a
 			if newActivityErr != nil {
 				return newActivityErr
 			}
-			defer act.Close()
+			defer act.Close(ctx)
 
 			if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 				return err
@@ -197,7 +197,7 @@ func tabletFontScaleChangeHelper(ctx context.Context, tconn *chrome.TestConn, a 
 	if err != nil {
 		return errors.Wrap(err, "unable to create new activity")
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		return errors.Wrap(err, "unable to start new activity")
@@ -255,7 +255,7 @@ func tabletImmerseViaAPIHelper(ctx context.Context, tconn *chrome.TestConn, a *a
 	if err != nil {
 		return err
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		return err
@@ -334,7 +334,7 @@ func displaySizeChangeHelper(ctx context.Context, tconn *chrome.TestConn, a *arc
 	if newActivityErr != nil {
 		return newActivityErr
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		return err
@@ -453,7 +453,7 @@ func showHideShelfHelper(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC
 	if newActivityErr != nil {
 		return newActivityErr
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		return err
@@ -592,7 +592,7 @@ func checkUnspecifiedActivityInTabletMode(ctx context.Context, tconn *chrome.Tes
 	if err != nil {
 		return err
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		return err

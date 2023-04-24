@@ -206,7 +206,7 @@ func runARCVideoTest(ctx context.Context, s *testing.State, cfg arcTestConfig) {
 	if err != nil {
 		s.Fatal("Failed to create new activity: ", err)
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	if err := act.Start(
 		ctx, tconn, arc.WithWaitForLaunch(),
@@ -265,7 +265,7 @@ func runARCVideoPerfTest(ctx context.Context, s *testing.State, cfg arcTestConfi
 	if err != nil {
 		s.Fatal("Failed to create new activity: ", err)
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	if err := act.Start(ctx, tconn,
 		arc.WithWaitForLaunch(),

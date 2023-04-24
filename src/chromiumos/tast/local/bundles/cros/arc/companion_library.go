@@ -179,7 +179,7 @@ func CompanionLibrary(ctx context.Context, s *testing.State) {
 			if err != nil {
 				s.Fatal("Failed to create new activity: ", err)
 			}
-			defer act.Close()
+			defer act.Close(ctx)
 
 			if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 				s.Fatal("Failed to start activity: ", err)
@@ -391,7 +391,7 @@ func testResizeWindow(ctx context.Context, _ *arc.ARC, _ *chrome.Chrome, tconn *
 	if err != nil {
 		return errors.Wrap(err, "failed to open touchscreen device")
 	}
-	defer tsw.Close()
+	defer tsw.Close(ctx)
 
 	orientation, err := display.GetOrientation(ctx, tconn)
 	if err != nil {
@@ -925,7 +925,7 @@ func testAlwaysOnTop(ctx context.Context, a *arc.ARC, cr *chrome.Chrome, tconn *
 	if err != nil {
 		return errors.Wrap(err, "could not create Settings Activity")
 	}
-	defer settingAct.Close()
+	defer settingAct.Close(ctx)
 
 	if err := settingAct.StartWithDefaultOptions(ctx, tconn); err != nil {
 		return errors.Wrap(err, "could not start Settings Activity")

@@ -116,7 +116,7 @@ func wmSystemDefaultHandling(ctx context.Context, tconn *chrome.TestConn, a *arc
 			if err != nil {
 				return err
 			}
-			defer act.Close()
+			defer act.Close(ctx)
 
 			if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 				return err
@@ -232,7 +232,7 @@ func wmSpecifiedSizeHandling(ctx context.Context, tconn *chrome.TestConn, a *arc
 	if err != nil {
 		return err
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		return err

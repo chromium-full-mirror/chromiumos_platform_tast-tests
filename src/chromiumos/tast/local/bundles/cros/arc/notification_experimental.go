@@ -241,13 +241,13 @@ func NotificationExperimental(ctx context.Context, s *testing.State) {
 	uia := uiauto.New(tconn).WithTimeout(5 * time.Second)
 
 	mousePC := pointer.NewMouse(tconn)
-	defer mousePC.Close()
+	defer mousePC.Close(ctx)
 
 	touchPC, err := pointer.NewTouch(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to set up the touch context: ", err)
 	}
-	defer touchPC.Close()
+	defer touchPC.Close(ctx)
 
 	// Install the test app.
 	if err := a.Install(ctx, s.DataPath(arcNotificationTest2ApkFilename)); err != nil {

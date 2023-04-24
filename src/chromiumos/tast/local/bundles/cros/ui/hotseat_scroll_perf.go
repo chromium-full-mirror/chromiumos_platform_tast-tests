@@ -230,7 +230,7 @@ func prepareFetchShelfScrollSmoothness(ctx context.Context, tconn *chrome.TestCo
 			return cleanupAll, errors.Wrap(err, "failed to create the touch controller")
 		}
 		cleanupFuncs = append(cleanupFuncs, func(context.Context) error {
-			return tsw.Close()
+			return tsw.Close(ctx)
 		})
 		stw, err := tsw.NewSingleTouchWriter()
 		if err != nil {

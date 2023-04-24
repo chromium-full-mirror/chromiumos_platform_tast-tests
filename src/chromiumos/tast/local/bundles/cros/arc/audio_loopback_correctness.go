@@ -718,7 +718,7 @@ func AudioLoopbackCorrectness(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatalf("Failed to create activity %q in package %q: %v", activityName, pkg, err)
 	}
-	defer activity.Close()
+	defer activity.Close(ctx)
 
 	if err := activity.Start(ctx, tconn,
 		arc.WithExtraIntUint64(keyPerformanceMode, uint64(arcaudioTestParam.PerformanceMode)),

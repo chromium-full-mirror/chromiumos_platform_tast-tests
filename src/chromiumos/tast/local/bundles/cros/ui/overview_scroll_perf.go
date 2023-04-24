@@ -68,7 +68,7 @@ func OverviewScrollPerf(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create touch screen event writer: ", err)
 	}
-	defer tsew.Close()
+	defer tsew.Close(ctx)
 	if err = tsew.SetRotation(-orientation.Angle); err != nil {
 		s.Fatal("Failed to set rotation: ", err)
 	}

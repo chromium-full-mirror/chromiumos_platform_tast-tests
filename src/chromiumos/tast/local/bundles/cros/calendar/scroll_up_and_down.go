@@ -56,7 +56,7 @@ func ScrollUpAndDown(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to set up the touch context: ", err)
 	}
-	defer tc.Close()
+	defer tc.Close(ctx)
 
 	s.Log("Start testing calendar view from date tray")
 	ui := uiauto.New(tconn)

@@ -218,7 +218,7 @@ func wmRT22(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Devic
 	if err != nil {
 		return errors.Wrap(err, "failed to create under activity")
 	}
-	defer underActivity.Close()
+	defer underActivity.Close(ctx)
 
 	// Start the first activity - Under activity.
 	if err := underActivity.Start(ctx, tconn); err != nil {
@@ -244,7 +244,7 @@ func wmRT22(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Devic
 	if err != nil {
 		return err
 	}
-	defer overActivity.Close()
+	defer overActivity.Close(ctx)
 
 	// Start the second activity - over activity.
 	if err := overActivity.Start(ctx, tconn); err != nil {

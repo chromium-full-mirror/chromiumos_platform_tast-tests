@@ -110,7 +110,7 @@ func RunTrace(ctx context.Context, preData arc.PreData, apkFile, traceFile, outD
 	if err != nil {
 		return errors.Wrap(err, "failed to create new activity")
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	d, err := a.NewUIDevice(ctx)
 	if err != nil {

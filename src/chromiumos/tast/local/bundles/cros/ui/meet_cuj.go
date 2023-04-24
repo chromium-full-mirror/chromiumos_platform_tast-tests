@@ -860,7 +860,7 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 		}
 		defer mw.Close(ctx)
 	}
-	defer pc.Close()
+	defer pc.Close(ctx)
 
 	kw, err := input.Keyboard(ctx)
 	if err != nil {

@@ -225,7 +225,7 @@ func drawOnCanvas(ctx context.Context, info *display.Info) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to open trackpad device")
 	}
-	defer tsw.Close()
+	defer tsw.Close(ctx)
 
 	touchWidth := tsw.Width()
 	touchHeight := tsw.Height()

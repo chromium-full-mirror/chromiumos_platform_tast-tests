@@ -159,7 +159,7 @@ func CompatSnap(ctx context.Context, s *testing.State) {
 	defer cleanup(cleanupCtx)
 
 	pc := pointer.NewMouse(tconn)
-	defer pc.Close()
+	defer pc.Close(ctx)
 
 	displayInfo, err := display.GetPrimaryInfo(ctx, tconn)
 	if err != nil {

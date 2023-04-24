@@ -76,7 +76,7 @@ func SwipeToggleLauncher(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to access to the touchscreen: ", err)
 	}
-	defer tsew.Close()
+	defer tsew.Close(ctx)
 
 	stw, err = tsew.NewSingleTouchWriter()
 	if err != nil {

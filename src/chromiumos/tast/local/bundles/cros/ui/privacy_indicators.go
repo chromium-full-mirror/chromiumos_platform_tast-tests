@@ -83,7 +83,7 @@ func PrivacyIndicators(ctx context.Context, s *testing.State) {
 	} else {
 		pc = pointer.NewMouse(tconn)
 	}
-	defer pc.Close()
+	defer pc.Close(ctx)
 
 	uiWait := ui.WithTimeout(10 * time.Second)
 	bubble := nodewith.ClassName("PermissionPromptBubbleView").First()

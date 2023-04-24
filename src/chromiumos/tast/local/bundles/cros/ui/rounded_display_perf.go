@@ -107,7 +107,7 @@ func RoundedDisplayPerf(ctx context.Context, s *testing.State) {
 	}
 
 	pc := pointer.NewMouse(tconn)
-	defer pc.Close()
+	defer pc.Close(ctx)
 
 	displayInfo, err := display.GetInternalInfo(ctx, tconn)
 	if err != nil {

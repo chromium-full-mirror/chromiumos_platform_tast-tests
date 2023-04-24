@@ -46,7 +46,7 @@ func InputCompat(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create a trackpad device: ", err)
 	}
-	defer tpw.Close()
+	defer tpw.Close(ctx)
 
 	tw, err := tpw.NewMultiTouchWriter(2)
 	if err != nil {
@@ -147,7 +147,7 @@ func InputCompat(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to create an activity: ", err)
 		}
-		defer act.Close()
+		defer act.Close(ctx)
 
 		if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 			s.Fatal("Failed to start an activity: ", err)

@@ -196,7 +196,7 @@ func launchActivityOnExternalDisplay(ctx context.Context, s *testing.State, cr *
 			if err != nil {
 				return err
 			}
-			defer act.Close()
+			defer act.Close(ctx)
 			if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 				return err
 			}
@@ -226,7 +226,7 @@ func maximizeVisibility(ctx context.Context, s *testing.State, cr *chrome.Chrome
 	if err != nil {
 		return err
 	}
-	defer settingsAct.Close()
+	defer settingsAct.Close(ctx)
 
 	if err := settingsAct.Start(ctx, tconn); err != nil {
 		return err
@@ -242,7 +242,7 @@ func maximizeVisibility(ctx context.Context, s *testing.State, cr *chrome.Chrome
 	if err != nil {
 		return err
 	}
-	defer wmAct.Close()
+	defer wmAct.Close(ctx)
 
 	if err := wmAct.Start(ctx, tconn); err != nil {
 		return err
@@ -343,7 +343,7 @@ func relayoutDisplays(ctx context.Context, s *testing.State, cr *chrome.Chrome, 
 	if err != nil {
 		return err
 	}
-	defer settingsAct.Close()
+	defer settingsAct.Close(ctx)
 
 	if err := settingsAct.Start(ctx, tconn); err != nil {
 		return err
@@ -358,7 +358,7 @@ func relayoutDisplays(ctx context.Context, s *testing.State, cr *chrome.Chrome, 
 	if err != nil {
 		return err
 	}
-	defer wmAct.Close()
+	defer wmAct.Close(ctx)
 
 	if err := wmAct.Start(ctx, tconn); err != nil {
 		return err
@@ -446,7 +446,7 @@ func removeAddDisplay(ctx context.Context, s *testing.State, cr *chrome.Chrome, 
 	if err != nil {
 		return err
 	}
-	defer settingsAct.Close()
+	defer settingsAct.Close(ctx)
 
 	if err := settingsAct.Start(ctx, tconn); err != nil {
 		return err
@@ -461,7 +461,7 @@ func removeAddDisplay(ctx context.Context, s *testing.State, cr *chrome.Chrome, 
 	if err != nil {
 		return err
 	}
-	defer wmAct.Close()
+	defer wmAct.Close(ctx)
 
 	if err := wmAct.Start(ctx, tconn); err != nil {
 		return err
@@ -692,9 +692,9 @@ func dragWindowBetweenDisplays(ctx context.Context, s *testing.State, cr *chrome
 				param.winState, testActivitySimpleName(param.resizeability, param.configChangeHandling), dir.srcDispType, dir.dstDispType)
 			runOrFatal(ctx, s, name, func(ctx context.Context, s *testing.State) error {
 				act := testappActivity{ctx, tconn, a, param.resizeability, param.configChangeHandling, nil}
-				defer act.close()
+				defer act.close(ctx)
 
-				if err := act.launch(dir.srcDisp); err != nil {
+				if err := act.launch(ctx, dir.srcDisp); err != nil {
 					return err
 				}
 
@@ -828,13 +828,13 @@ func rotateDisplay(ctx context.Context, s *testing.State, cr *chrome.Chrome, a *
 			fmt.Sprintf("%s on %s display", param.windowState, param.displayType),
 			func(ctx context.Context, s *testing.State) error {
 				act := testappActivity{ctx, tconn, a, resizeable, handling, nil}
-				if err := act.launch(param.displayID); err != nil {
+				if err := act.launch(ctx, param.displayID); err != nil {
 					return err
 				}
 				if err != nil {
 					return err
 				}
-				defer act.close()
+				defer act.close(ctx)
 
 				if err := act.setWindowState(param.windowState); err != nil {
 					return err
@@ -903,12 +903,12 @@ func snappingOnDisplay(ctx context.Context, s *testing.State, cr *chrome.Chrome,
 					ctx, s, fmt.Sprintf("%s window to %s on %s display", state, param.name, dispType),
 					func(ctx context.Context, s *testing.State) error {
 						act := testappActivity{ctx, tconn, a, resizeable, handling, nil}
-						defer act.close()
+						defer act.close(ctx)
 						dispID, err := arc.FirstDisplayIDByType(ctx, a, dispType)
 						if err != nil {
 							return err
 						}
-						if err := act.launch(dispID); err != nil {
+						if err := act.launch(ctx, dispID); err != nil {
 							return err
 						}
 
@@ -1363,7 +1363,7 @@ func testActivitySimpleName(res resizeability, cc configChangeHandling) string {
 }
 
 // launch issues commands to launch an activity, then wait until launch completes.
-func (act *testappActivity) launch(displayID int) error {
+func (act *testappActivity) launch(ctx context.Context, displayID int) error {
 	innerAct, err := arc.NewActivityOnDisplay(act.a, dispPkg, act.activityName(), displayID)
 	if err != nil {
 		return err
@@ -1371,7 +1371,7 @@ func (act *testappActivity) launch(displayID int) error {
 
 	err = innerAct.Start(act.ctx, act.tconn)
 	if err != nil {
-		innerAct.Close()
+		innerAct.Close(ctx)
 		return err
 	}
 	act.activity = innerAct
@@ -1380,11 +1380,11 @@ func (act *testappActivity) launch(displayID int) error {
 }
 
 // close cleans up internal resources of activity including stopping the activity.
-func (act *testappActivity) close() error {
+func (act *testappActivity) close(ctx context.Context) error {
 	if act.activity == nil {
 		return nil
 	}
-	act.activity.Close()
+	act.activity.Close(ctx)
 	if err := act.activity.Stop(act.ctx, act.tconn); err != nil {
 		return err
 	}

@@ -24,7 +24,7 @@ import (
 // Context provides the interface to control a pointing device.
 type Context interface {
 	// Close cleans up its internal resource.
-	Close() error
+	Close(ctx context.Context) error
 
 	// Click returns a function to cause a click or a tap on the node.
 	Click(finder *nodewith.Finder) uiauto.Action
@@ -64,7 +64,7 @@ func NewMouse(tconn *chrome.TestConn) *MouseContext {
 }
 
 // Close implements Context.Close.
-func (mc *MouseContext) Close() error {
+func (mc *MouseContext) Close(ctx context.Context) error {
 	return nil
 }
 
@@ -145,8 +145,8 @@ func NewTouch(ctx context.Context, tconn *chrome.TestConn) (*TouchContext, error
 }
 
 // Close implements Context.Close.
-func (tc *TouchContext) Close() error {
-	return tc.tc.Close()
+func (tc *TouchContext) Close(ctx context.Context) error {
+	return tc.tc.Close(ctx)
 }
 
 // Click implements Context.Click.

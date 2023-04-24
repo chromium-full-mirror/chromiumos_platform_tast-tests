@@ -101,7 +101,7 @@ func AudioOboetesterLatency(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatalf("Failed to create activity %q in package %q: %v", activityName, pkg, err)
 	}
-	defer activity.Close()
+	defer activity.Close(ctx)
 
 	// Launch app
 	param = append(param, arc.WithExtraString("test", "latency"))

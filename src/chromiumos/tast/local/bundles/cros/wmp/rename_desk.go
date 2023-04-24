@@ -184,7 +184,7 @@ func RenameDesk(ctx context.Context, s *testing.State) {
 
 	// Swap the position of desk 4 and desk 5.
 	pc := pointer.NewMouse(tconn)
-	defer pc.Close()
+	defer pc.Close(ctx)
 
 	if err := pc.Drag(
 		desk4Loc.CenterPoint(),

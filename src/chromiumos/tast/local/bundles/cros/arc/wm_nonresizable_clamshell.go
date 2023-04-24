@@ -134,7 +134,7 @@ func wmNC01Inner(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.
 			if err != nil {
 				return err
 			}
-			defer act.Close()
+			defer act.Close(ctx)
 
 			if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 				return err
@@ -188,7 +188,7 @@ func wmNC07(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Devic
 	if err != nil {
 		return err
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		return err
@@ -254,7 +254,7 @@ func wmNC09(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Devic
 	if err != nil {
 		return err
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		return err
@@ -304,7 +304,7 @@ func wmNC10(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Devic
 	if err != nil {
 		return err
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		return err
@@ -356,7 +356,7 @@ func wmNC12(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Devic
 	if err != nil {
 		return err
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	// Get primary display info to set shelf behavior.
 	primaryDisplayInfo, err := display.GetPrimaryInfo(ctx, tconn)
@@ -476,7 +476,7 @@ func wmNC17(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Devic
 	if err != nil {
 		return errors.Wrap(err, "unable to create new activity")
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		return errors.Wrap(err, "unable to start new activity")
@@ -545,7 +545,7 @@ func ncDisplaySizeChangeTestsHelper(ctx context.Context, tconn *chrome.TestConn,
 	if err != nil {
 		return err
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	// Start the activity.
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
@@ -664,7 +664,7 @@ func checkMaxActivityToFullscreen(ctx context.Context, tconn *chrome.TestConn, a
 	if err != nil {
 		return err
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		return err

@@ -132,7 +132,7 @@ func PerformantSplitViewPerf(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to set up the touch context: ", err)
 	}
-	defer pc.Close()
+	defer pc.Close(ctx)
 
 	info, err := display.GetPrimaryInfo(ctx, tconn)
 	if err != nil {

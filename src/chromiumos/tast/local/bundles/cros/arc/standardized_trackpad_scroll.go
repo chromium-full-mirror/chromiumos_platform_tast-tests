@@ -61,7 +61,7 @@ func runStandardizedTrackpadScrollTest(ctx context.Context, testParameters stand
 	if err != nil {
 		return errors.Wrap(err, "failed to initialize the trackpad")
 	}
-	defer trackpad.Close()
+	defer trackpad.Close(ctx)
 
 	// Perform the down test first as the up test depends on it to be complete.
 	txtScrollDownTestStateID := testParameters.AppPkgName + ":id/txtScrollDownTestState"

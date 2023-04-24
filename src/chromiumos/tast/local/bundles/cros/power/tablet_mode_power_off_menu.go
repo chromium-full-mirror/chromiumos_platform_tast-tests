@@ -91,7 +91,7 @@ func TabletModePowerOffMenu(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to set up the touch context: ", err)
 	}
-	defer pc.Close()
+	defer pc.Close(ctx)
 
 	ui := uiauto.New(tconn)
 

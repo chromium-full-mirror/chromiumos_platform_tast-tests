@@ -182,7 +182,7 @@ func AudioOboetesterGlitch(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatalf("Failed to create activity %q in package %q: %v", activityName, pkg, err)
 	}
-	defer activity.Close()
+	defer activity.Close(ctx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {

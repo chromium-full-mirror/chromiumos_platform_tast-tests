@@ -104,7 +104,7 @@ func SurfaceOrientation(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create new activity: ", err)
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	red := color.RGBA{255, 0, 0, 255}
 	green := color.RGBA{0, 255, 0, 255}

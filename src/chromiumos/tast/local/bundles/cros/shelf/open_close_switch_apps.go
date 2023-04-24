@@ -82,12 +82,12 @@ func OpenCloseSwitchApps(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to create the touch controller: ", err)
 		}
-		defer tc.Close()
+		defer tc.Close(ctx)
 		tsew, tcc, err = touch.NewTouchscreenAndConverter(ctx, tconn)
 		if err != nil {
 			s.Fatal("Failed to access to the touchscreen: ", err)
 		}
-		defer tsew.Close()
+		defer tsew.Close(ctx)
 		stw, err = tsew.NewSingleTouchWriter()
 		if err != nil {
 			s.Fatal("Failed to create the single touch writer: ", err)

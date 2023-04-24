@@ -266,7 +266,7 @@ func clickAndroidLinkAndVerify(ctx context.Context, tconn *chrome.TestConn, arcD
 	if err != nil {
 		return errors.Wrap(err, "failed to create a new activity")
 	}
-	defer activity.Close()
+	defer activity.Close(ctx)
 	if err := activity.Start(ctx, tconn); err != nil {
 		return errors.Wrap(err, "failed to start the test activity")
 	}

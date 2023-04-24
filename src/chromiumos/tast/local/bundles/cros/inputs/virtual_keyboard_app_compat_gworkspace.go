@@ -123,7 +123,7 @@ func VirtualKeyboardAppCompatGworkspace(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Fail to get touch screen: ", err)
 	}
-	defer touchCtx.Close()
+	defer touchCtx.Close(ctx)
 
 	for inputMethod, subtests := range languageTests {
 		if err := inputMethod.InstallAndActivateUserAction(uc)(ctx); err != nil {

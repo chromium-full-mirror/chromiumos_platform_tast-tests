@@ -318,7 +318,7 @@ func WindowArrangementCUJ(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to create a touch controller: ", err)
 		}
 	}
-	defer pc.Close()
+	defer pc.Close(ctx)
 
 	var f func(ctx context.Context) error
 	traceRecorded := false

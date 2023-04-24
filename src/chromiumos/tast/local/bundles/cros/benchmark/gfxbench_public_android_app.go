@@ -141,7 +141,7 @@ func openGfxbench(ctx context.Context, tconn *chrome.TestConn, device *ui.Device
 	testing.ContextLog(ctx, "Opening GFXBench APP")
 
 	act, err := arc.NewActivity(ar, gfxbenchPkgName, gfxActivityName)
-	defer act.Close()
+	defer act.Close(ctx)
 	if err != nil {
 		return coords.Rect{}, errors.Wrap(err, "failed to create new activity")
 	}

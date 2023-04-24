@@ -191,7 +191,7 @@ func ExtendedDisplayCompositionCheck(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to create a trackpad device: ", err)
 		}
-		defer tpw.Close()
+		defer tpw.Close(ctx)
 
 		tw, err := tpw.NewMultiTouchWriter(2)
 		if err != nil {

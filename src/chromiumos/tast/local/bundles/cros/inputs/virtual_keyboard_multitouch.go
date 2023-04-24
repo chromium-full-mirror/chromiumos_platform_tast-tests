@@ -77,7 +77,7 @@ func VirtualKeyboardMultitouch(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Fail to get touch screen: ", err)
 	}
-	defer tsw.Close()
+	defer tsw.Close(ctx)
 
 	inputMethod := ime.EnglishUSWithInternationalKeyboard
 	if err := inputMethod.InstallAndActivateUserAction(uc)(ctx); err != nil {

@@ -77,7 +77,7 @@ func TrackpadReverseScroll(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to initialize the trackpad: ", err)
 	}
-	defer tpw.Close()
+	defer tpw.Close(cleanupCtx)
 
 	reverseOn := s.Param().(bool)
 

@@ -71,7 +71,7 @@ func LauncherPageSwitchPerf(ctx context.Context, s *testing.State) {
 	if pc, err = pointer.NewTouch(ctx, tconn); err != nil {
 		s.Fatal("Failed to create a touch controller")
 	}
-	defer pc.Close()
+	defer pc.Close(ctx)
 
 	if err := ash.CreateWindows(ctx, tconn, cr, ui.PerftestURL, 2); err != nil {
 		s.Fatal("Failed to create windows: ", err)

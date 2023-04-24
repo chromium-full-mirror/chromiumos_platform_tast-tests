@@ -122,7 +122,7 @@ func wmAllowlistResizableUnspecified(ctx context.Context, tconn *chrome.TestConn
 
 	for _, pkgName := range []string{wm.Pkg24InPhoneSizeList, wm.Pkg24InTabletSizeList, wm.Pkg24InMaximizedList} {
 		verifyFunc := verifyFuncMap[pkgName]
-		if err := func() error {
+		if err := func(ctx context.Context) error {
 			if err := a.Install(ctx, arc.APKPath(apkPath[pkgName])); err != nil {
 				return err
 			}
@@ -132,7 +132,7 @@ func wmAllowlistResizableUnspecified(ctx context.Context, tconn *chrome.TestConn
 			if err != nil {
 				return err
 			}
-			defer act.Close()
+			defer act.Close(ctx)
 
 			if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 				return err
@@ -160,7 +160,7 @@ func wmAllowlistResizableUnspecified(ctx context.Context, tconn *chrome.TestConn
 				return err
 			}
 			return nil
-		}(); err != nil {
+		}(cleanupCtx); err != nil {
 			return err
 		}
 	}

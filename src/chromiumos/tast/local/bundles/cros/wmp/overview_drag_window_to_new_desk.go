@@ -90,7 +90,7 @@ func OverviewDragWindowToNewDesk(ctx context.Context, s *testing.State) {
 	ac := uiauto.New(tconn)
 
 	pc := pointer.NewMouse(tconn)
-	defer pc.Close()
+	defer pc.Close(ctx)
 
 	// Open a browser window.
 	browserApp, err := apps.PrimaryBrowser(ctx, tconn)

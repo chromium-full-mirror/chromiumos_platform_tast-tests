@@ -121,12 +121,12 @@ type StandardizedTouchscreen struct {
 }
 
 // Close closes the touchscreen device.
-func (ts *StandardizedTouchscreen) Close() error {
+func (ts *StandardizedTouchscreen) Close(ctx context.Context) error {
 	if ts.ts == nil {
 		return errors.New("invalid touchscreen instance")
 	}
 
-	return ts.ts.Close()
+	return ts.ts.Close(ctx)
 }
 
 // GetClamshellTest returns the test cases required for clamshell devices.
@@ -211,7 +211,7 @@ func runTest(ctx context.Context, s *testing.State, apkName, appPkgName, appActi
 			}
 
 			defer func(ctx context.Context) {
-				act.Close()
+				act.Close(ctx)
 			}(cleanupCtx)
 
 			if err := act.StartWithDefaultOptions(workCtx, tconn); err != nil {
@@ -331,7 +331,7 @@ func TouchscreenTap(ctx context.Context, testParameters TestFuncParams, selector
 	if err != nil {
 		return errors.Wrap(err, "Unable to initialize touchscreen")
 	}
-	defer touchScreen.ts.Close()
+	defer touchScreen.ts.Close(ctx)
 
 	touchScreenSingleEventWriter, err := touchScreen.ts.NewSingleTouchWriter()
 	if err != nil {
@@ -429,7 +429,7 @@ func TouchscreenZoom(ctx context.Context, testParameters TestFuncParams, selecto
 	if err != nil {
 		return errors.Wrap(err, "unable to initialize the touchscreen")
 	}
-	defer touchScreen.ts.Close()
+	defer touchScreen.ts.Close(ctx)
 
 	// Zoom is implemented as a two finger pinch so it requires two touches.
 	mtw, err := touchScreen.ts.NewMultiTouchWriter(2)
@@ -507,7 +507,7 @@ func TouchscreenSwipe(ctx context.Context, testParameters TestFuncParams, select
 	if err != nil {
 		return errors.Wrap(err, "unable to initialize touchscreen")
 	}
-	defer touchScreen.ts.Close()
+	defer touchScreen.ts.Close(ctx)
 
 	tsw, err := touchScreen.ts.NewMultiTouchWriter(numTouches)
 	if err != nil {

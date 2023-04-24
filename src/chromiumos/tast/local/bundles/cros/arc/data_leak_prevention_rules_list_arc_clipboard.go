@@ -134,7 +134,7 @@ func DataLeakPreventionRulesListArcClipboard(ctx context.Context, s *testing.Sta
 	if err != nil {
 		s.Fatalf("Failed to create a new activity %q", activityName)
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	for _, param := range []struct {
 		name        string

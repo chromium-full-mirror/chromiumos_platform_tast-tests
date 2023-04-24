@@ -93,7 +93,7 @@ func ResizeActivity(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create new activity: ", err)
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		s.Fatal("Failed start Settings activity: ", err)

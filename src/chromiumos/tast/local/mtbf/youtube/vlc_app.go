@@ -241,7 +241,7 @@ func (y *VlcApp) Close(ctx context.Context) {
 		if err := y.act.Stop(ctx, y.tconn); err != nil {
 			testing.ContextLogf(ctx, "Failed to stop activity: %s", err)
 		}
-		y.act.Close()
+		y.act.Close(ctx)
 		y.act = nil
 	}
 }

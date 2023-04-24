@@ -73,7 +73,7 @@ func wmNV21(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Devic
 	if err != nil {
 		return err
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		return err
@@ -218,7 +218,7 @@ func runNVConversionByOrientation(ctx context.Context, tconn *chrome.TestConn, a
 	if err != nil {
 		return err
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		return err

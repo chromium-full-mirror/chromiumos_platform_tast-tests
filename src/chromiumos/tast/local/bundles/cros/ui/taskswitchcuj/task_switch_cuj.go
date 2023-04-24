@@ -146,13 +146,13 @@ func Run(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to create a touch controller: ", err)
 		}
-		defer pc.Close()
+		defer pc.Close(ctx)
 
 		var tsew *input.TouchscreenEventWriter
 		if tsew, tcc, err = touch.NewTouchscreenAndConverter(ctx, tconn); err != nil {
 			s.Fatal("Failed to access the touchscreen: ", err)
 		}
-		defer tsew.Close()
+		defer tsew.Close(ctx)
 
 		if stw, err = tsew.NewSingleTouchWriter(); err != nil {
 			s.Fatal("Failed to create a single touch writer: ", err)
@@ -184,7 +184,7 @@ func Run(ctx context.Context, s *testing.State) {
 		}
 	} else {
 		pc = pointer.NewMouse(tconn)
-		defer pc.Close()
+		defer pc.Close(ctx)
 	}
 
 	defer ash.CloseAllWindows(closeCtx, tconn)

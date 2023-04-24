@@ -70,7 +70,7 @@ func (tp *TouchpadService) TouchpadSwipe(ctx context.Context, req *empty.Empty) 
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create a trackpad device")
 	}
-	defer tpd.Close()
+	defer tpd.Close(ctx)
 
 	tpw, err := tpd.NewMultiTouchWriter(4)
 	if err != nil {

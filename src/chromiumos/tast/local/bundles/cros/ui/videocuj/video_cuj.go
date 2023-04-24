@@ -105,7 +105,7 @@ func Run(ctx context.Context, s *testing.State) {
 	} else {
 		pc = pointer.NewMouse(tconn)
 	}
-	defer pc.Close()
+	defer pc.Close(ctx)
 
 	kw, err := input.Keyboard(ctx)
 	if err != nil {

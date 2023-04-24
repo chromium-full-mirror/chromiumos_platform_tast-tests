@@ -1368,7 +1368,7 @@ func OpenProductivityLauncher(ctx context.Context, tconn *chrome.TestConn, table
 		if err != nil {
 			return errors.Wrap(err, "failed to get the touch screen")
 		}
-		defer touchScreen.Close()
+		defer touchScreen.Close(ctx)
 
 		stw, err := touchScreen.NewSingleTouchWriter()
 		if err != nil {

@@ -214,7 +214,7 @@ func elapsedTimeData(ctx context.Context, d *ui.Device) (float64, error) {
 
 // startMeasureMediaScanPerfWithApp installs ArcMediaScanPerfTest.apk, which measures
 // the elapsed time during a full-volume media scan, and starts the app in DUT.
-func startMeasureMediaScanPerfWithApp(ctx context.Context, a *arc.ARC, tconn *chrome.TestConn, volumeURI string) (func(), error) {
+func startMeasureMediaScanPerfWithApp(ctx context.Context, a *arc.ARC, tconn *chrome.TestConn, volumeURI string) (func(ctx context.Context), error) {
 	const (
 		apk = "ArcMediaScanPerfTest.apk"
 		cls = "org.chromium.arc.testapp.mediascanperf.MainActivity"
@@ -234,7 +234,7 @@ func startMeasureMediaScanPerfWithApp(ctx context.Context, a *arc.ARC, tconn *ch
 		arc.WithForceStop(),
 		arc.WithDataURI(volumeURI),
 	); err != nil {
-		act.Close()
+		act.Close(ctx)
 		return nil, err
 	}
 	return act.Close, nil
@@ -335,7 +335,7 @@ func MediaScanPerf(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to start app: ", err)
 	}
-	defer closeApp()
+	defer closeApp(ctx)
 
 	// Mount the target directory volume. Media scan will be triggered and measurement will be started
 	// just after mounting.

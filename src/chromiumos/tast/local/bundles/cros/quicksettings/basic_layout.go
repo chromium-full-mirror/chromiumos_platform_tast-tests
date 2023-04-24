@@ -119,13 +119,13 @@ func BasicLayout(ctx context.Context, s *testing.State) {
 	} else {
 		pc = pointer.NewMouse(tconn)
 	}
-	defer func() {
+	defer func(ctx context.Context) {
 		if pc != nil {
-			if err := pc.Close(); err != nil {
+			if err := pc.Close(ctx); err != nil {
 				testing.ContextLog(ctx, "Failed to close pointer context")
 			}
 		}
-	}()
+	}(ctx)
 
 	resources := &basicLayoutTestResources{
 		cr:     cr,

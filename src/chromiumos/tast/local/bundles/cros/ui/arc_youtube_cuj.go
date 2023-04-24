@@ -74,7 +74,7 @@ func ArcYoutubeCUJ(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create ARC++ YouTube app activity: ", err)
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	recorder, err := cujrecorder.NewRecorder(ctx, cr, tconn, a, cujrecorder.RecorderOptions{})
 	if err != nil {

@@ -66,7 +66,7 @@ func EstablishARCPIPVideo(ctx context.Context, tconn *chrome.TestConn, a *arc.AR
 		return nil, errors.Wrap(err, "failed to create activity")
 	}
 	cleanupActionsInReverseOrder = append(cleanupActionsInReverseOrder, func(ctx context.Context) error {
-		act.Close()
+		act.Close(ctx)
 		return nil
 	})
 
@@ -162,7 +162,7 @@ func EstablishARCPIPVideo(ctx context.Context, tconn *chrome.TestConn, a *arc.AR
 		// from the corner (not the ARC++ PIP resize handle).
 
 		pc := pointer.NewMouse(tconn)
-		defer pc.Close()
+		defer pc.Close(ctx)
 
 		// The resizing drag begins this far from the corner
 		// outward along each dimension. This offset ensures

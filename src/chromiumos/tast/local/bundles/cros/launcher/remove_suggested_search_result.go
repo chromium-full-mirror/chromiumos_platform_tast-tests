@@ -202,7 +202,7 @@ func triggerSuggestionRemovalAction(tconn *chrome.TestConn, resultFinder, remove
 				if err != nil {
 					return errors.Wrap(err, "Fail to get touch screen")
 				}
-				defer touchCtx.Close()
+				defer touchCtx.Close(ctx)
 
 				return touchCtx.LongPress(resultFinder)(ctx)
 			},

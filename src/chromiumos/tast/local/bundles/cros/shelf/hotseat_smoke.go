@@ -67,7 +67,7 @@ func HotseatSmoke(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to create the touch controller: ", err)
 		}
-		defer tc.Close()
+		defer tc.Close(ctx)
 
 		if err := ash.SwipeUpHotseatAndWaitForCompletion(ctx, tconn, tc.EventWriter(), tc.TouchCoordConverter()); err != nil {
 			s.Fatal("Failed to swipe up the hotseat: ", err)

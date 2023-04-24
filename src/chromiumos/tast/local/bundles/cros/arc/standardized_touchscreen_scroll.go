@@ -72,7 +72,7 @@ func runStandardizedTouchScreenScrollTest(ctx context.Context, testParameters st
 	if err != nil {
 		return errors.Wrap(err, "unable to initialize the touchscreen")
 	}
-	defer touchScreen.Close()
+	defer touchScreen.Close(ctx)
 
 	// Perform the down test first as the up test depends on it to be complete.
 	txtScrollDownTestStateID := testParameters.AppPkgName + ":id/txtScrollDownTestState"

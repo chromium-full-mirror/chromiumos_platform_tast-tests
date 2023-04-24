@@ -60,7 +60,7 @@ func TouchPerf(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Unable to create virtual touchscreen: ", err)
 	}
-	defer ts.Close()
+	defer ts.Close(ctx)
 	stw, err := ts.NewSingleTouchWriter()
 	if err != nil {
 		s.Fatal("Unable to create SingleTouchWriter: ", err)
@@ -86,7 +86,7 @@ func TouchPerf(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatalf("Unable to create new activity %s/%s: %v", appName, activityName, err)
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		s.Fatalf("Unable to launch %s/%s: %v", appName, activityName, err)

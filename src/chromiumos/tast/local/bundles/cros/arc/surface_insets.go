@@ -69,7 +69,7 @@ func SurfaceInsets(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to open touchscreen device: ", err)
 	}
-	defer tsw.Close()
+	defer tsw.Close(ctx)
 
 	stw, err := tsw.NewSingleTouchWriter()
 	if err != nil {
@@ -85,7 +85,7 @@ func SurfaceInsets(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create new activity: ", err)
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		s.Fatal("Failed start Settings activity: ", err)

@@ -83,7 +83,7 @@ func KeyboardPerf(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatalf("Unable to create new activity %s/%s: %v", appName, activityName, err)
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		s.Fatalf("Unable to launch %s/%s: %v", appName, activityName, err)

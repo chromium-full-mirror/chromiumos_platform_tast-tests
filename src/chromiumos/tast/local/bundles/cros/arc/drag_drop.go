@@ -243,19 +243,19 @@ func DragDrop(ctx context.Context, s *testing.State) {
 		}
 
 		if err = act.StartWithDefaultOptions(ctx, tconn); err != nil {
-			act.Close()
+			act.Close(ctx)
 			act = nil
 			err = errors.Wrap(err, "failed to start the activity")
 			return
 		}
 
-		defer func() {
+		defer func(ctx context.Context) {
 			if err != nil {
 				act.Stop(cleanupCtx, tconn)
-				act.Close()
+				act.Close(ctx)
 				act = nil
 			}
-		}()
+		}(cleanupCtx)
 
 		var window *ash.Window
 		if window, err = ash.FindWindow(ctx, tconn, func(window *ash.Window) bool {
@@ -316,7 +316,7 @@ func DragDrop(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to start an activity with bounds: ", err)
 		}
-		defer sourceAct.Close()
+		defer sourceAct.Close(cleanupCtx)
 		defer sourceAct.Stop(cleanupCtx, tconn)
 	}
 
@@ -326,7 +326,7 @@ func DragDrop(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to start an activity with bounds: ", err)
 		}
-		defer targetAct.Close()
+		defer targetAct.Close(cleanupCtx)
 		defer targetAct.Stop(cleanupCtx, tconn)
 	}
 

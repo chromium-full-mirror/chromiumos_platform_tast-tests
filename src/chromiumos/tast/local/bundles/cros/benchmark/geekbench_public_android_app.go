@@ -130,7 +130,7 @@ func openGeekbench(ctx context.Context, tconn *chrome.TestConn, device *androidu
 	if err != nil {
 		return errors.Wrap(err, "failed to create new activity")
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	if err = act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		return errors.Wrap(err, "failed to start Geekbench")

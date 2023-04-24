@@ -79,7 +79,7 @@ func HotseatDrag(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create touch screen event writer: ", err)
 	}
-	defer tsw.Close()
+	defer tsw.Close(ctx)
 
 	if err = tsw.SetRotation(-orientation.Angle); err != nil {
 		s.Fatal("Failed to set rotation: ", err)

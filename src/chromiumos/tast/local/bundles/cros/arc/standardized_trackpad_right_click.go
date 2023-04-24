@@ -62,7 +62,7 @@ func runStandardizedTrackpadRightClickTest(ctx context.Context, testParameters s
 	if err != nil {
 		return errors.Wrap(err, "failed to setup the trackpad")
 	}
-	defer trackpad.Close()
+	defer trackpad.Close(ctx)
 
 	if err := btnRightClickSelector.WaitForExists(ctx, standardizedtestutil.ShortUITimeout); err != nil {
 		return errors.Wrap(err, "failed to find the button to click")

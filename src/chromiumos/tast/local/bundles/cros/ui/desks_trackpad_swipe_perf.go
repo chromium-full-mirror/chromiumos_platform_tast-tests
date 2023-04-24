@@ -73,7 +73,7 @@ func DesksTrackpadSwipePerf(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create a trackpad device: ", err)
 	}
-	defer tpw.Close()
+	defer tpw.Close(ctx)
 
 	tw, err := tpw.NewMultiTouchWriter(4)
 	if err != nil {

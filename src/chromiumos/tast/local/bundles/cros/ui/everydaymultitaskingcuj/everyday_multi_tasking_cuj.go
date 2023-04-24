@@ -120,7 +120,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, bt browser.Type, a *arc.ARC, pa
 		if appHelloWorld, err = arc.NewActivity(a, helloworldPackageName, helloworldActivityName); err != nil {
 			return errors.Wrap(err, "failed to create activity for \"Hello world\" ARC app")
 		}
-		defer appHelloWorld.Close()
+		defer appHelloWorld.Close(ctx)
 	case SpotifyAppName:
 		device, err := a.NewUIDevice(ctx)
 		if err != nil {

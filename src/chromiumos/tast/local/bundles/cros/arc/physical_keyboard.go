@@ -94,7 +94,7 @@ func testTextField(ctx context.Context, st pkTestState, s *testing.State, activi
 	if err != nil {
 		return errors.Wrapf(err, "failed to create a new activity %q", activity)
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		return errors.Wrapf(err, "failed to start the activity %q", activity)

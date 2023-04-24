@@ -105,7 +105,7 @@ func launchApp(ctx context.Context, a *arc.ARC, tconn *chrome.TestConn, act stri
 	}
 	defer func(cleanupCtx context.Context, activity *arc.Activity) {
 		if retErr != nil {
-			activity.Close()
+			activity.Close(cleanupCtx)
 		}
 	}(cleanupCtx, activity)
 
@@ -124,7 +124,7 @@ func launchApp(ctx context.Context, a *arc.ARC, tconn *chrome.TestConn, act stri
 		return nil, errors.Wrap(err, "failed to start app")
 	}
 	cleanupFunc = func(cleanupCtx context.Context, tconn *chrome.TestConn) {
-		defer activity.Close()
+		defer activity.Close(cleanupCtx)
 		defer activity.Stop(cleanupCtx, tconn)
 	}
 	return cleanupFunc, nil

@@ -95,7 +95,7 @@ func VirtualKeyboardMultipaste(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Fail to get touch screen: ", err)
 	}
-	defer touchCtx.Close()
+	defer touchCtx.Close(ctx)
 
 	if err := ash.SetClipboard(ctx, tconn, text1); err != nil {
 		s.Fatal("Failed to set text1 to clipboard: ", err)

@@ -243,7 +243,7 @@ func (ta *TerminalApp) ClickShelfMenuItem(itemNameRegexp string) uiauto.Action {
 			if err != nil {
 				return errors.Wrap(err, "failed to create the touch controller")
 			}
-			defer tc.Close()
+			defer tc.Close(ctx)
 			if err := ash.SwipeUpHotseatAndWaitForCompletion(ctx, ta.tconn, tc.EventWriter(), tc.TouchCoordConverter()); err != nil {
 				return errors.Wrap(err, "failed to swipe up the hotseat")
 			}

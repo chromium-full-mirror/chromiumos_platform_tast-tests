@@ -208,7 +208,7 @@ func reorderDeskByDragAndDrop(ctx context.Context, tconn *chrome.TestConn, ime i
 	case mouseInput:
 		// Reorders desks by mouse.
 		pc := pointer.NewMouse(tconn)
-		defer pc.Close()
+		defer pc.Close(ctx)
 
 		if err := pc.Drag(
 			sourceDeskMiniViewLoc.CenterPoint(),
@@ -221,7 +221,7 @@ func reorderDeskByDragAndDrop(ctx context.Context, tconn *chrome.TestConn, ime i
 		if err != nil {
 			return errors.Wrap(err, "failed to get touch screen")
 		}
-		defer tc.Close()
+		defer tc.Close(ctx)
 
 		if err := tc.Swipe(
 			sourceDeskMiniViewLoc.CenterPoint(),

@@ -95,7 +95,7 @@ func SplitChromeTabsTabletMode(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create a touch controller: ", err)
 	}
-	defer pc.Close()
+	defer pc.Close(ctx)
 
 	// Open the Chrome browser tab strip.
 	tabStripButton := nodewith.Role(role.Button).HasClass("WebUITabCounterButton").First()

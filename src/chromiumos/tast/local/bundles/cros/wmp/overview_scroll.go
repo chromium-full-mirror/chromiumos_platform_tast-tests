@@ -180,7 +180,7 @@ func OverviewScroll(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to set up the touch context: ", err)
 	}
-	defer tc.Close()
+	defer tc.Close(ctx)
 
 	info, err := display.GetPrimaryInfo(ctx, tconn)
 	if err != nil {

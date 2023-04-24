@@ -674,7 +674,7 @@ func (vkbCtx *VirtualKeyboardContext) GlideTyping(keys []string, validateResultF
 		if err != nil {
 			return errors.Wrap(err, "fail to get touch screen")
 		}
-		defer touchCtx.Close()
+		defer touchCtx.Close(ctx)
 
 		ui := uiauto.New(vkbCtx.tconn)
 

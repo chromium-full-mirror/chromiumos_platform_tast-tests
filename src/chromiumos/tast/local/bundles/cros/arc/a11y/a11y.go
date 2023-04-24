@@ -171,7 +171,7 @@ func RunTest(ctx context.Context, s *testing.State, activities []TestActivity, f
 			if err != nil {
 				s.Fatal("Failed to create new activity: ", err)
 			}
-			defer act.Close()
+			defer act.Close(ctx)
 
 			if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 				s.Fatal("Failed to start activity: ", err)

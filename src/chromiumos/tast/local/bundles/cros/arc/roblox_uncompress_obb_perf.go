@@ -95,7 +95,7 @@ func RobloxUncompressOBBPerf(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create new activity: ", err)
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	cr := s.FixtValue().(*arc.PreData).Chrome
 	tconn, err := cr.TestAPIConn(ctx)

@@ -76,7 +76,7 @@ func DockedMagnifier(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create a touch controller: ", err)
 	}
-	defer pc.Close()
+	defer pc.Close(ctx)
 
 	if err := testMaximizedWindow(ctx, tconn, cr, activity, pc); err != nil {
 		s.Error("Failed to run test for maximized window: ", err)

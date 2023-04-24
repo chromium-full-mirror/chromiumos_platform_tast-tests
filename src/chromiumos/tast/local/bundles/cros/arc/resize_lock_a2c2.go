@@ -70,7 +70,7 @@ func testResizeLockState(ctx, cleanupCtx context.Context, tconn *chrome.TestConn
 	if err != nil {
 		return errors.Wrapf(err, "failed to create %s", activityName)
 	}
-	defer activity.Close()
+	defer activity.Close(ctx)
 	if err := activity.Start(ctx, tconn); err != nil {
 		return errors.Wrapf(err, "failed to start %s", activityName)
 	}

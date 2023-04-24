@@ -170,13 +170,13 @@ func PIP(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create PIP activity: ", err)
 	}
-	defer pipAct.Close()
+	defer pipAct.Close(ctx)
 
 	maPIPBaseAct, err := arc.NewActivity(a, pipTestPkgName, ".MaPipBaseActivity")
 	if err != nil {
 		s.Fatal("Failed to create multi activity PIP base activity: ", err)
 	}
-	defer maPIPBaseAct.Close()
+	defer maPIPBaseAct.Close(ctx)
 
 	dispInfo, err := display.GetPrimaryInfo(ctx, tconn)
 	if err != nil {
@@ -645,7 +645,7 @@ func testPIPAutoPIPNewAndroidWindow(ctx context.Context, cr *chrome.Chrome, tcon
 	if err != nil {
 		return errors.Wrap(err, "could not create maximized activity")
 	}
-	defer maxAct.Close()
+	defer maxAct.Close(ctx)
 
 	// Start maximized activity again, this time with the guaranteed correct window state.
 	if err := maxAct.Start(ctx, tconn); err != nil {
@@ -710,7 +710,7 @@ func expandPIPViaMenuTouchP(ctx context.Context, tconn *chrome.TestConn, act *ar
 	if err != nil {
 		return errors.Wrap(err, "failed to open touchscreen device")
 	}
-	defer tsw.Close()
+	defer tsw.Close(ctx)
 
 	stw, err := tsw.NewSingleTouchWriter()
 	if err != nil {

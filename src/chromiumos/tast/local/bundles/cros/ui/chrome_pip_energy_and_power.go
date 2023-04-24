@@ -121,7 +121,7 @@ func ChromePIPEnergyAndPower(ctx context.Context, s *testing.State) {
 	defer kw.Close(ctx)
 
 	pc := pointer.NewMouse(tconn)
-	defer pc.Close()
+	defer pc.Close(ctx)
 
 	timeline, err := perf.NewTimeline(ctx, power.TestMetrics())
 	if err != nil {

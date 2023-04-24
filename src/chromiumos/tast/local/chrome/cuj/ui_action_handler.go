@@ -150,7 +150,7 @@ func NewTabletActionHandler(ctx context.Context, tconn *chrome.TestConn) (*Table
 			return
 		}
 		if tc != nil {
-			if err := tc.Close(); err != nil {
+			if err := tc.Close(ctx); err != nil {
 				testing.ContextLog(ctx, "Failed to close touch context")
 			}
 		}
@@ -160,7 +160,7 @@ func NewTabletActionHandler(ctx context.Context, tconn *chrome.TestConn) (*Table
 			}
 		}
 		if tew != nil {
-			if err := tew.Close(); err != nil {
+			if err := tew.Close(ctx); err != nil {
 				testing.ContextLog(ctx, "Failed to close touchscreen event writer")
 			}
 		}
@@ -200,7 +200,7 @@ func NewTabletActionHandler(ctx context.Context, tconn *chrome.TestConn) (*Table
 func (t *TabletActionHandler) Close(ctx context.Context) {
 	t.kb.Close(ctx)
 	t.stew.Close()
-	t.tc.Close()
+	t.tc.Close(ctx)
 }
 
 // Click returns a function that taps the node found by input finder on tablet.
@@ -679,7 +679,7 @@ func NewClamshellActionHandler(ctx context.Context, tconn *chrome.TestConn) (*Cl
 			return
 		}
 		if pad != nil {
-			if err := pad.Close(); err != nil {
+			if err := pad.Close(ctx); err != nil {
 				testing.ContextLog(ctx, "Failed to close trackpad event writer")
 			}
 		}
@@ -717,7 +717,7 @@ func NewClamshellActionHandler(ctx context.Context, tconn *chrome.TestConn) (*Cl
 // Tests should always defer calls to this once the UIActionHandler instance been created.
 func (cl *ClamshellActionHandler) Close(ctx context.Context) {
 	cl.kb.Close(ctx)
-	cl.pad.Close()
+	cl.pad.Close(ctx)
 	cl.touchPad.Close()
 }
 

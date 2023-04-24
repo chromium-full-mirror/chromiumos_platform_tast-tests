@@ -119,7 +119,7 @@ func SoftInputMode(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to create a new activity: ", err)
 		}
-		defer firstAct.Close()
+		defer firstAct.Close(ctx)
 
 		if err := firstAct.Start(ctx, tconn); err != nil {
 			s.Fatal("Failed to start the activity: ", err)
@@ -131,7 +131,7 @@ func SoftInputMode(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to create a new activity: ", err)
 		}
-		defer secondAct.Close()
+		defer secondAct.Close(ctx)
 
 		if err := secondAct.Start(ctx, tconn); err != nil {
 			s.Fatal("Failed to start the activity: ", err)

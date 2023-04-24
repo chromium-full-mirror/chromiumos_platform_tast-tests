@@ -130,7 +130,7 @@ func GoogleSlidesCUJ(ctx context.Context, s *testing.State) {
 	} else {
 		pc = pointer.NewMouse(tconn)
 	}
-	defer pc.Close()
+	defer pc.Close(ctx)
 
 	defer faillog.DumpUITreeOnError(closeCtx, s.OutDir(), s.HasError, tconn)
 

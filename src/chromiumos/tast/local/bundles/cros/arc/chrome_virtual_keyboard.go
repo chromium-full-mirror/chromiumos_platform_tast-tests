@@ -102,7 +102,7 @@ func chromeVirtualKeyboardBasicEditingTest(
 	if err != nil {
 		s.Fatalf("Failed to create a new activity %q", activityName)
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		s.Fatalf("Failed to start the activity %q", activityName)
@@ -180,7 +180,7 @@ func chromeVirtualKeyboardFocusChangeTest(
 	if err != nil {
 		s.Fatalf("Failed to create a new activity %q", activityName)
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		s.Fatalf("Failed to start the activity %q", activityName)
@@ -288,7 +288,7 @@ func chromeVirtualKeyboardEditingOnNullTypeTest(
 	if err != nil {
 		s.Fatalf("Failed to create a new activity %q", activityName)
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		s.Fatalf("Failed to start the activity %q", activityName)
@@ -395,7 +395,7 @@ func chromeVirtualKeyboardFloatingTest(
 	if err != nil {
 		s.Fatalf("Failed to create a new activity %q", activityName)
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		s.Fatalf("Failed to start the activity %q", activityName)
@@ -490,7 +490,7 @@ func chromeVirtualKeyboardRotationTest(
 	if err != nil {
 		s.Fatalf("Failed to create a new activity %q", activityName)
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		s.Fatalf("Failed to start the activity %q", activityName)
@@ -591,7 +591,7 @@ func chromeVirtualKeyboardPasswordEditingTest(
 	if err != nil {
 		s.Fatalf("Failed to create a new activity %q", activityName)
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		s.Fatalf("Failed to start the activity %q", activityName)
@@ -665,7 +665,7 @@ func chromeVirtualKeyboardNumberInputTest(
 	if err != nil {
 		s.Fatalf("Failed to create a new activity %q", activityName)
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		s.Fatalf("Failed to start the activity %q", activityName)
@@ -775,7 +775,7 @@ func chromeVirtualKeyboardHankakuZenkakuTest(
 	if err != nil {
 		s.Fatalf("Faled to create a new activity %q: %v", activityName, err)
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		s.Fatalf("Failed to start the activity %q: %v", activityName, err)

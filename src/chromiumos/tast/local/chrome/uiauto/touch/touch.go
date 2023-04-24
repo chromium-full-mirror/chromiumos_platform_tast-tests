@@ -35,7 +35,7 @@ func NewTouchscreen(ctx context.Context, tconn *chrome.TestConn) (*input.Touchsc
 	success := false
 	defer func() {
 		if !success {
-			if err := tsw.Close(); err != nil {
+			if err := tsw.Close(ctx); err != nil {
 				testing.ContextLog(ctx, "Failed to close the touchscreen: ", err)
 			}
 		}
@@ -66,7 +66,7 @@ func NewTouchscreenAndConverter(ctx context.Context, tconn *chrome.TestConn) (*i
 	success := false
 	defer func() {
 		if !success {
-			if err := tsw.Close(); err != nil {
+			if err := tsw.Close(ctx); err != nil {
 				testing.ContextLog(ctx, "Failed to close the touchscreen: ", err)
 			}
 		}
@@ -94,8 +94,8 @@ func New(ctx context.Context, tconn *chrome.TestConn) (*Context, error) {
 }
 
 // Close closes the access to the touch screen.
-func (tc *Context) Close() error {
-	return tc.tsw.Close()
+func (tc *Context) Close(ctx context.Context) error {
+	return tc.tsw.Close(ctx)
 }
 
 // WithTimeout returns a new Context with the specified timeout.

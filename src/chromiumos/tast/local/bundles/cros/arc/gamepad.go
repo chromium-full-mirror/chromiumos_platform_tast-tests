@@ -277,12 +277,12 @@ func Gamepad(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create a new activity: ", err)
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		s.Fatal("Failed to start the activity: ", err)
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	s.Log("Checking the device connection")
 	var device inputDevice

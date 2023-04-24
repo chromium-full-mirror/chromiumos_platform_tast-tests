@@ -108,7 +108,7 @@ func OverviewCloseAll(ctx context.Context, s *testing.State) {
 	defer kb.Close(ctx)
 
 	pc := pointer.NewMouse(tconn)
-	defer pc.Close()
+	defer pc.Close(ctx)
 
 	// Sets up for launching ARC apps.
 	if err := optin.PerformAndClose(ctx, cr, tconn); err != nil {

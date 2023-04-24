@@ -218,12 +218,12 @@ func LaunchAppFromHotseat(ctx context.Context, tconn *chrome.TestConn, appName s
 	if err != nil {
 		return startTime, errors.Wrap(err, "failed to create the touch controller")
 	}
-	defer tc.Close()
+	defer tc.Close(ctx)
 	tsew, tcc, err := touch.NewTouchscreenAndConverter(ctx, tconn)
 	if err != nil {
 		return startTime, errors.Wrap(err, "failed to access to the touch screen")
 	}
-	defer tsew.Close()
+	defer tsew.Close(ctx)
 	stw, err := tsew.NewSingleTouchWriter()
 	if err != nil {
 		return startTime, errors.Wrap(err, "failed to create a new single touch writer")
@@ -398,7 +398,7 @@ func GenerateADF(ctx context.Context, tconn *chrome.TestConn, isTablet bool) err
 	} else {
 		pc = pointer.NewMouse(tconn)
 	}
-	defer pc.Close()
+	defer pc.Close(ctx)
 	if err = inputsimulations.DoAshWorkflows(ctx, tconn, pc); err != nil {
 		return errors.Wrap(err, "failed to do Ash workflows")
 	}

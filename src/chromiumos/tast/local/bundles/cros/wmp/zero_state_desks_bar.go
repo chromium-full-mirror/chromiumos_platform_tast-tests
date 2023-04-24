@@ -65,7 +65,7 @@ func ZeroStateDesksBar(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create a keyboard: ", err)
 	}
 	pc := pointer.NewMouse(tconn)
-	defer pc.Close()
+	defer pc.Close(cleanupCtx)
 
 	// Enters overview mode.
 	if err := ash.SetOverviewModeAndWait(ctx, tconn, true); err != nil {

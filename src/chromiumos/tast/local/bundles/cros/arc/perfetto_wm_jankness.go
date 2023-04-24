@@ -65,7 +65,7 @@ func PerfettoWMJankness(ctx context.Context, s *testing.State) {
 		if err != nil {
 			return errors.Wrap(err, "failed to launch Android Settings")
 		}
-		defer act.Close()
+		defer act.Close(ctx)
 
 		if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 			return errors.Wrap(err, "failed to start activity")

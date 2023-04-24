@@ -90,7 +90,7 @@ func (t *ARCAudioTast) RunAppTest(ctx context.Context, apkPath string, param Tes
 	if err != nil {
 		return errors.Wrap(err, "failed to start activity")
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 	testing.ContextLog(ctx, "Verifying App UI result")
 	return t.verifyAppResult(ctx)
 }
@@ -116,7 +116,7 @@ func (t *ARCAudioTast) RunAppAndPollStream(ctx context.Context, apkPath string, 
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to start activity")
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	// verifying poll stream result.
 	res := <-resCh

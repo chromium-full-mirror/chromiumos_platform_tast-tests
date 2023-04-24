@@ -59,7 +59,7 @@ func StartActivity(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, pkg,
 	}
 
 	return func(ctx context.Context) error {
-		defer activity.Close()
+		defer activity.Close(ctx)
 
 		// Check if the app is still running.
 		_, err := ash.GetARCAppWindowInfo(ctx, tconn, activity.PackageName())

@@ -238,7 +238,7 @@ func testChangeWindowState(ctx context.Context, tconn *chrome.TestConn, keyboard
 	if err != nil {
 		return errors.Wrapf(err, "failed to create %s", activityName)
 	}
-	defer activity.Close()
+	defer activity.Close(ctx)
 	if err := activity.Start(ctx, tconn); err != nil {
 		return errors.Wrapf(err, "failed to start %s", activityName)
 	}
@@ -284,7 +284,7 @@ func testPIP(ctx context.Context, tconn *chrome.TestConn, keyboard *input.Keyboa
 	if err != nil {
 		return errors.Wrapf(err, "failed to create %s", activityName)
 	}
-	defer activity.Close()
+	defer activity.Close(ctx)
 	if err := activity.Start(ctx, tconn); err != nil {
 		return errors.Wrapf(err, "failed to start %s", activityName)
 	}
@@ -364,7 +364,7 @@ func testTablet(ctx context.Context, tconn *chrome.TestConn, keyboard *input.Key
 	if err != nil {
 		return errors.Wrapf(err, "failed to create %s", activityName)
 	}
-	defer activity.Close()
+	defer activity.Close(ctx)
 
 	if err := activity.Start(ctx, tconn); err != nil {
 		return errors.Wrapf(err, "failed to start %s", activityName)
@@ -408,7 +408,7 @@ func testNonResizeLocked(ctx context.Context, tconn *chrome.TestConn, keyboard *
 	if err != nil {
 		return errors.Wrapf(err, "failed to create %s", activityName)
 	}
-	defer activity.Close()
+	defer activity.Close(ctx)
 
 	if err := activity.Start(ctx, tconn); err != nil {
 		return errors.Wrapf(err, "failed to start %s", activityName)
@@ -477,7 +477,7 @@ func testFullyLockedApp(ctx context.Context, tconn *chrome.TestConn, keyboard *i
 	if err != nil {
 		return errors.Wrapf(err, "failed to create %s", wm.ResizeLockUnresizablePortraitActivityName)
 	}
-	defer activity.Close()
+	defer activity.Close(ctx)
 
 	if err := activity.Start(ctx, tconn); err != nil {
 		return errors.Wrapf(err, "failed to start %s", wm.ResizeLockUnresizablePortraitActivityName)
@@ -546,7 +546,7 @@ func testSplash(ctx context.Context, tconn *chrome.TestConn, keyboard *input.Key
 		if err != nil {
 			return errors.Wrapf(err, "failed to create %s", test.activityName)
 		}
-		defer activity.Close()
+		defer activity.Close(ctx)
 
 		if err := activity.Start(ctx, tconn); err != nil {
 			return errors.Wrapf(err, "failed to start %s", test.activityName)
@@ -617,7 +617,7 @@ func testResizeLockedAppCUJInternal(ctx context.Context, tconn *chrome.TestConn,
 	if err != nil {
 		return errors.Wrapf(err, "failed to create %s", wm.ResizeLockMainActivityName)
 	}
-	defer activity.Close()
+	defer activity.Close(ctx)
 
 	if err := activity.Start(ctx, tconn); err != nil {
 		return errors.Wrapf(err, "failed to start %s", wm.ResizeLockMainActivityName)

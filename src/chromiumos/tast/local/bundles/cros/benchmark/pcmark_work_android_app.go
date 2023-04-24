@@ -113,7 +113,7 @@ func launchPCMark(ctx context.Context, tconn *chrome.TestConn, device *ui.Device
 	if err != nil {
 		return errors.Wrap(err, "failed to create new activity")
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	if err = act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		return errors.Wrap(err, "failed to start app")

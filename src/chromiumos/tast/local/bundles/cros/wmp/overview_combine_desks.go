@@ -102,7 +102,7 @@ func OverviewCombineDesks(ctx context.Context, s *testing.State) {
 	defer kb.Close(ctx)
 
 	pc := pointer.NewMouse(tconn)
-	defer pc.Close()
+	defer pc.Close(ctx)
 
 	// Enters overview mode.
 	if err := ash.SetOverviewModeAndWait(ctx, tconn, true); err != nil {

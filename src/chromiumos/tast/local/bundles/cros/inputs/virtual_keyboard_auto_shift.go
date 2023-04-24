@@ -78,7 +78,7 @@ func VirtualKeyboardAutoShift(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Fail to get touch screen: ", err)
 	}
-	defer touchCtx.Close()
+	defer touchCtx.Close(ctx)
 
 	leftShiftKey := nodewith.Name("shift").Ancestor(vkb.NodeFinder.HasClass("key_pos_shift_left"))
 	manualShift := vkbCtx.TapNode(leftShiftKey)

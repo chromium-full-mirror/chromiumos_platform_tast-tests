@@ -141,7 +141,7 @@ func SplitViewTabletMode(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to access to the touch screen: ", err)
 	}
-	defer tew.Close()
+	defer tew.Close(cleanupCtx)
 
 	if err := tew.SetRotation(rotIndex * 90); err != nil {
 		s.Fatal("Failed to set display rotation: ", err)
@@ -261,7 +261,7 @@ func SplitViewTabletMode(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to set up the touch context: ", err)
 	}
-	defer pc.Close()
+	defer pc.Close(cleanupCtx)
 
 	if err := pc.ClickAt(window2.OverviewInfo.Bounds.CenterPoint())(ctx); err != nil {
 		s.Fatalf("Failed to press a window(id=%d) view to snap: %s", window2.ID, err)

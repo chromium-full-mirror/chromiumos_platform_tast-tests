@@ -148,7 +148,7 @@ func NotificationScrollingPerf(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create trackpad event writer: ", err)
 	}
-	defer pad.Close()
+	defer pad.Close(ctx)
 	touchPad, err := pad.NewMultiTouchWriter(2)
 	if err != nil {
 		s.Fatal("Failed to create trackpad singletouch writer: ", err)

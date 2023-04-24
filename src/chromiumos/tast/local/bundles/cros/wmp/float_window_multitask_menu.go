@@ -93,7 +93,7 @@ func FloatWindowMultitaskMenu(ctx context.Context, s *testing.State) {
 	}
 
 	pc := pointer.NewMouse(tconn)
-	defer pc.Close()
+	defer pc.Close(cleanupCtx)
 
 	ui := uiauto.New(tconn)
 	pollOpts := testing.PollOptions{Timeout: 30 * time.Second}

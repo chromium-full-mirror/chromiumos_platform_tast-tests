@@ -124,7 +124,7 @@ func ExampleCUJ(ctx context.Context, s *testing.State) {
 	// no corresponding touch input. To move the mouse, we need
 	// input.Mouse.
 	pc := pointer.NewMouse(tconn)
-	defer pc.Close()
+	defer pc.Close(ctx)
 
 	// Create a virtual mouse. This mouse lets our test perform mouse
 	// actions, such as moving, scrolling, pressing, and releasing.

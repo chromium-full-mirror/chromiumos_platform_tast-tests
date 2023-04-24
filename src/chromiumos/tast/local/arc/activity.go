@@ -515,10 +515,10 @@ func (ac *Activity) SurfaceBounds(ctx context.Context) (coords.Rect, error) {
 
 // Close closes the resources associated with the Activity instance.
 // Calling Close() does not stop the activity.
-func (ac *Activity) Close() {
+func (ac *Activity) Close(ctx context.Context) {
 	ac.disp.Close()
 	if ac.tew != nil {
-		ac.tew.Close()
+		ac.tew.Close(ctx)
 	}
 }
 

@@ -189,8 +189,8 @@ func testRestorePreDragSnapBoundsAfterClosingWindow(ctx, cleanupCtx context.Cont
 	if err := leftAct.Stop(cleanupCtx, tconn); err != nil {
 		return errors.Wrap(err, "error stopping left activity")
 	}
-	rightAct.Close()
-	leftAct.Close()
+	rightAct.Close(ctx)
+	leftAct.Close(ctx)
 
 	// Re-open both windows
 	for _, app := range []struct {
@@ -442,7 +442,7 @@ func SplitView(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatalf("Failed to create a new activity (%s): %v", app.pkgName, err)
 		}
-		defer act.Close()
+		defer act.Close(ctx)
 		if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 			s.Fatalf("Failed to start the activity (%s): %v", app.pkgName, err)
 		}
@@ -470,14 +470,14 @@ func SplitView(ctx context.Context, s *testing.State) {
 	} else {
 		pc = pointer.NewMouse(tconn)
 	}
-	defer pc.Close()
+	defer pc.Close(ctx)
 
 	if params.startFromHome { // arc.SplitView.tablet_home_launcher or arc.SplitView.tablet_home_launcher_vm
 		tew, err := touch.NewTouchscreen(ctx, tconn)
 		if err != nil {
 			s.Fatal("Failed to access to the touchscreen: ", err)
 		}
-		defer tew.Close()
+		defer tew.Close(ctx)
 
 		stw, err := tew.NewSingleTouchWriter()
 		if err != nil {

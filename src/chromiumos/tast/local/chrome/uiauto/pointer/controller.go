@@ -32,7 +32,7 @@ type Controller interface {
 	Move(ctx context.Context, start, end coords.Point, duration time.Duration) error
 
 	// Close closes the access to the underlying system and releases resources.
-	Close()
+	Close(ctx context.Context)
 }
 
 // Click provides an action of press and release at the location, i.e. a mouse
@@ -96,7 +96,7 @@ func (mc *MouseController) Move(ctx context.Context, start, end coords.Point, du
 }
 
 // Close implements Controller.Close.
-func (mc *MouseController) Close() {
+func (mc *MouseController) Close(ctx context.Context) {
 }
 
 // TouchController implements Controller, conducted by a touch screen.
@@ -114,7 +114,7 @@ func NewTouchController(ctx context.Context, tconn *chrome.TestConn) (*TouchCont
 	}
 	stw, err := tsew.NewSingleTouchWriter()
 	if err != nil {
-		tsew.Close()
+		tsew.Close(ctx)
 		return nil, errors.Wrap(err, "failed to create the single touch writer")
 	}
 	return &TouchController{tsew: tsew, stw: stw, tcc: tcc}, nil
@@ -154,7 +154,7 @@ func (tc *TouchController) Move(ctx context.Context, start, end coords.Point, du
 }
 
 // Close implements Controller.Close.
-func (tc *TouchController) Close() {
+func (tc *TouchController) Close(ctx context.Context) {
 	tc.stw.Close()
-	tc.tsew.Close()
+	tc.tsew.Close(ctx)
 }

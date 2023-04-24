@@ -136,7 +136,7 @@ func SetupTestApp(ctx context.Context, s *testing.State, testFunc PerformTestFun
 	if err != nil {
 		s.Fatal("Failed to create a new ArcInputOverlayTest activity: ", err)
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	// Start timing and launch the activity.
 	startTime := time.Now()

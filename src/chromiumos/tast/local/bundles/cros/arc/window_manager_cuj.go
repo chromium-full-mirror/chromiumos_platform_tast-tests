@@ -185,7 +185,7 @@ func wmDefaultLaunchClamshell24(ctx context.Context, tconn *chrome.TestConn, a *
 			if err != nil {
 				return err
 			}
-			defer act.Close()
+			defer act.Close(ctx)
 
 			if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 				return err
@@ -227,7 +227,7 @@ func wmDefaultLaunchClamshell23(ctx context.Context, tconn *chrome.TestConn, a *
 			if err != nil {
 				return err
 			}
-			defer act.Close()
+			defer act.Close(ctx)
 
 			if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 				return err
@@ -285,7 +285,7 @@ func wmMaximizeRestoreClamshell24(ctx context.Context, tconn *chrome.TestConn, a
 			if err != nil {
 				return err
 			}
-			defer act.Close()
+			defer act.Close(ctx)
 
 			if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 				return err
@@ -339,7 +339,7 @@ func wmMaximizeRestoreClamshell23(ctx context.Context, tconn *chrome.TestConn, a
 			if err != nil {
 				return err
 			}
-			defer act.Close()
+			defer act.Close(ctx)
 
 			if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 				return err
@@ -436,7 +436,7 @@ func wmFollowRoot(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui
 				if err != nil {
 					return err
 				}
-				defer act.Close()
+				defer act.Close(ctx)
 
 				if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 					return err
@@ -526,7 +526,7 @@ func wmSpringboardP(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *
 				if err != nil {
 					return err
 				}
-				defer act.Close()
+				defer act.Close(ctx)
 
 				if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 					return err
@@ -594,7 +594,7 @@ func wmLightsOutIn(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *u
 	if err != nil {
 		return err
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	for _, test := range []struct {
 		name        string
@@ -687,7 +687,7 @@ func wmLightsOutIgnored(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC,
 			if err != nil {
 				return err
 			}
-			defer act.Close()
+			defer act.Close(ctx)
 
 			if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 				return err
@@ -732,7 +732,7 @@ func wmPIP(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Device
 	if err != nil {
 		return err
 	}
-	defer actPIP.Close()
+	defer actPIP.Close(ctx)
 	if err := actPIP.Start(ctx, tconn); err != nil {
 		return err
 	}
@@ -759,7 +759,7 @@ func wmPIP(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Device
 	if err != nil {
 		return err
 	}
-	defer actOther.Close()
+	defer actOther.Close(ctx)
 	if err := actOther.Start(ctx, tconn); err != nil {
 		return err
 	}
@@ -776,7 +776,7 @@ func wmFreeformResize(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d
 	if err != nil {
 		return err
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		return err
 	}
@@ -854,7 +854,7 @@ func wmSnapping(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.D
 	if err != nil {
 		return err
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		return err
 	}
@@ -900,7 +900,7 @@ func wmDisplayResolutionP(ctx context.Context, tconn *chrome.TestConn, a *arc.AR
 	if err != nil {
 		return err
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		return err
 	}
@@ -1000,7 +1000,7 @@ func wmPageZoom(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.D
 	if err != nil {
 		return err
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		return err
 	}

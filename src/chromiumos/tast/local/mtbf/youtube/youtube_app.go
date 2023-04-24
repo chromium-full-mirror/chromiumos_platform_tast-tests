@@ -668,7 +668,7 @@ func (y *YtApp) skipAds(ctx context.Context) error {
 func (y *YtApp) Close(ctx context.Context) {
 	if y.act != nil {
 		y.act.Stop(ctx, y.tconn)
-		y.act.Close()
+		y.act.Close(ctx)
 		y.act = nil
 	}
 }

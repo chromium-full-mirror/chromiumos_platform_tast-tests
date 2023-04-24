@@ -67,7 +67,7 @@ func runStandardizedTrackpadZoomTest(ctx context.Context, testParameters standar
 	if err != nil {
 		return errors.Wrap(err, "failed to initialize the trackpad")
 	}
-	defer trackpad.Close()
+	defer trackpad.Close(ctx)
 
 	if err := txtZoomSelector.WaitForExists(ctx, standardizedtestutil.ShortUITimeout); err != nil {
 		return errors.Wrap(err, "failed to find the element to zoom in on")

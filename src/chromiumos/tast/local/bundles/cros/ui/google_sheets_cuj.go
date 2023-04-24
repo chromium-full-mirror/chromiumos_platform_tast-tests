@@ -125,7 +125,7 @@ func GoogleSheetsCUJ(ctx context.Context, s *testing.State) {
 	} else {
 		pc = pointer.NewMouse(tconn)
 	}
-	defer pc.Close()
+	defer pc.Close(ctx)
 	s.Logf("Is in tablet-mode: %t", inTabletMode)
 
 	ui := uiauto.New(tconn)
@@ -150,7 +150,7 @@ func GoogleSheetsCUJ(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create a trackpad device: ", err)
 	}
-	defer tpw.Close()
+	defer tpw.Close(ctx)
 	tw, err := tpw.NewMultiTouchWriter(2)
 	if err != nil {
 		s.Fatal("Failed to create a multi touch writer: ", err)

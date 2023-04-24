@@ -208,7 +208,7 @@ func (w *WeVideo) AddStockVideo(clipName, previousClipName, clipTime, expectedTr
 		}
 		insertAndPush := nodewith.NameContaining("Insert and push").Role(role.StaticText)
 		pc := pointer.NewMouse(w.tconn)
-		defer pc.Close()
+		defer pc.Close(ctx)
 		testing.ContextLogf(ctx, "Drag video to track from %v to %v", dragUpStart, dragUpEnd)
 		// Sometimes it fails to drag the video, so add a retry here.
 		return uiauto.Retry(retryTimes, uiauto.Combine("drag video to track",
@@ -262,7 +262,7 @@ func (w *WeVideo) AddText(clipName, expectedTrack, text string) action.Action {
 		dragUpStart := textLocation.CenterPoint()
 		dragUpEnd := coords.NewPoint(w.clips[clipName].startPoint.X, trackLocation.CenterY())
 		pc := pointer.NewMouse(w.tconn)
-		defer pc.Close()
+		defer pc.Close(ctx)
 		testing.ContextLogf(ctx, "Drag text to track from %v to %v", dragUpStart, dragUpEnd)
 		return uiauto.Retry(retryTimes, uiauto.Combine("drag text to track",
 			pc.Drag(dragUpStart, pc.DragTo(dragUpEnd, dragTime)),
@@ -301,7 +301,7 @@ func (w *WeVideo) AddTransition(clipName string) action.Action {
 		dragUpStart := crossFadeLocation.CenterPoint()
 		dragUpEnd := w.clips[clipName].startPoint
 		pc := pointer.NewMouse(w.tconn)
-		defer pc.Close()
+		defer pc.Close(ctx)
 		testing.ContextLogf(ctx, "Drag transition to clip from %v to %v", dragUpStart, dragUpEnd)
 		return uiauto.Retry(retryTimes, uiauto.Combine("drag transition to clip",
 			pc.Drag(dragUpStart, pc.DragTo(dragUpEnd, dragTime)),

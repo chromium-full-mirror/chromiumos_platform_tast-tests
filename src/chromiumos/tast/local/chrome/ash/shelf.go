@@ -1092,7 +1092,7 @@ func ShowHotseat(ctx context.Context, tconn *chrome.TestConn) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to access the touchscreen")
 	}
-	defer tsew.Close()
+	defer tsew.Close(ctx)
 	stw, err := tsew.NewSingleTouchWriter()
 	if err != nil {
 		return errors.Wrap(err, "failed to create the single touch writer")
@@ -1136,7 +1136,7 @@ func UpdateAppPinFromHotseat(ctx context.Context, tconn *chrome.TestConn, appNam
 	if err != nil {
 		return errors.Wrap(err, "failed to access the touchscreen")
 	}
-	defer tsew.Close()
+	defer tsew.Close(ctx)
 	stw, err := tsew.NewSingleTouchWriter()
 	if err != nil {
 		return errors.Wrap(err, "failed to create the single touch writer")

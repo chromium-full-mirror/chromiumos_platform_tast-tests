@@ -79,7 +79,7 @@ func QuotaProjectID(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create new activity: ", err)
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	s.Log("Starting MainActivity")
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {

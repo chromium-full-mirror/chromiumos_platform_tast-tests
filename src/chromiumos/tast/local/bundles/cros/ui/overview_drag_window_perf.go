@@ -359,7 +359,7 @@ func OverviewDragWindowPerf(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to open touchscreen device: ", err)
 	}
-	defer tsw.Close()
+	defer tsw.Close(ctx)
 	orientation, err := display.GetOrientation(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to get the display orientation: ", err)

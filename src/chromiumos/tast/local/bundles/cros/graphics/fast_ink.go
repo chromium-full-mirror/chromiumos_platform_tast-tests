@@ -410,7 +410,7 @@ func FastInk(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to create new activity: ", err)
 		}
-		defer act.Close()
+		defer act.Close(ctx)
 
 		if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 			s.Fatal("Failed to start activity: ", err)
@@ -477,7 +477,7 @@ func FastInk(ctx context.Context, s *testing.State) {
 			if err != nil {
 				return errors.Wrap(err, "failed to create a touch controller")
 			}
-			defer pc.Close()
+			defer pc.Close(ctx)
 
 			w, err := ash.GetWindow(ctx, tconn, wID)
 			if err != nil {

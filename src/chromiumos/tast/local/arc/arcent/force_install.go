@@ -178,7 +178,7 @@ func EnsurePlayStoreState(ctx context.Context, tconn *chrome.TestConn, cr *chrom
 		if err != nil {
 			return err
 		}
-		defer act.Close()
+		defer act.Close(ctx)
 
 		err = testing.Poll(ctx, func(ctx context.Context) error {
 			if running, err := act.IsRunning(ctx); err != nil {

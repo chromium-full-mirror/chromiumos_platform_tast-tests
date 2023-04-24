@@ -93,7 +93,7 @@ func WindowStateTransitionsCUJ(ctx context.Context, s *testing.State) {
 	}
 
 	pc := pointer.NewMouse(tconn)
-	defer pc.Close()
+	defer pc.Close(ctx)
 
 	srv := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer srv.Close()

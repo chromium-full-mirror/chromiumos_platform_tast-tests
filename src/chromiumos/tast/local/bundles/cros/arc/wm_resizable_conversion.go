@@ -68,7 +68,7 @@ func wmRV19(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Devic
 	if err != nil {
 		return err
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		return err
@@ -167,7 +167,7 @@ func wmRV20(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Devic
 	if err != nil {
 		return err
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		return err
@@ -277,7 +277,7 @@ func wmRV21(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Devic
 	if err != nil {
 		return errors.Wrap(err, "failed to create new activity")
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		return errors.Wrap(err, "failed to start new activity")
@@ -470,7 +470,7 @@ func wmRV22(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Devic
 	if err != nil {
 		return errors.Wrap(err, "failed to create under activity")
 	}
-	defer underActivity.Close()
+	defer underActivity.Close(ctx)
 
 	// Start the first activity - Under activity.
 	if err := underActivity.Start(ctx, tconn); err != nil {
@@ -497,7 +497,7 @@ func wmRV22(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Devic
 	if err != nil {
 		return err
 	}
-	defer overActivity.Close()
+	defer overActivity.Close(ctx)
 
 	if err := overActivity.Start(ctx, tconn); err != nil {
 		return errors.Wrap(err, "failed to start over activity")

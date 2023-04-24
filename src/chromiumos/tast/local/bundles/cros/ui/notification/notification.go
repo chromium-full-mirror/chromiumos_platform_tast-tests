@@ -63,11 +63,11 @@ func NewARCClient(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create a new activity")
 	}
-	defer func() {
+	defer func(ctx context.Context) {
 		if retErr != nil {
-			act.Close()
+			act.Close(ctx)
 		}
-	}()
+	}(ctx)
 
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		return nil, errors.Wrap(err, "failed to start the activity")
@@ -168,7 +168,7 @@ func (t *ARCClient) RemoveNotification(ctx context.Context, tconn *chrome.TestCo
 func (t *ARCClient) Close(ctx context.Context, tconn *chrome.TestConn) error {
 	err1 := t.d.Close(ctx)
 	err2 := t.act.Stop(ctx, tconn)
-	t.act.Close()
+	t.act.Close(ctx)
 	err3 := t.arc.Close(ctx)
 	if err1 != nil {
 		return err1

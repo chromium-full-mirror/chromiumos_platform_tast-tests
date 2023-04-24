@@ -185,7 +185,7 @@ func WindowState(ctx context.Context, s *testing.State) {
 				return errors.Wrap(err, "failed to create new activity")
 			}
 			// Close the resources associated with the Activity instance.
-			defer act.Close()
+			defer act.Close(ctx)
 
 			if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 

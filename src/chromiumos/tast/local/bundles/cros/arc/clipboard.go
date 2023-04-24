@@ -253,7 +253,7 @@ func testCopyImageFromChromeToAndroid(ctx context.Context, p *arc.PreData, tconn
 	if err != nil {
 		return errors.Wrap(err, "failed to create a new activity")
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		return errors.Wrap(err, "failed to start the activity")
 	}
@@ -339,7 +339,7 @@ func Clipboard(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create a new activity: ", err)
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		s.Fatal("Failed to start the activity: ", err)
 	}

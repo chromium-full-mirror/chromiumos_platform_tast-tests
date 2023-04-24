@@ -106,7 +106,7 @@ func VirtualDesksBasic(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create a keyboard: ", err)
 	}
 	pc := pointer.NewMouse(tconn)
-	defer pc.Close()
+	defer pc.Close(cleanupCtx)
 
 	// Opens Files and Chrome. (In lacros we should already have an open browser window)
 	if bt != browser.TypeLacros {

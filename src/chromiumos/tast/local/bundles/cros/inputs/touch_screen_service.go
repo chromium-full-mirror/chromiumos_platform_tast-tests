@@ -75,7 +75,7 @@ func (ts *TouchscreenService) TouchscreenTap(ctx context.Context, req *empty.Emp
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to access the touchscreen")
 	}
-	defer tsn.Close()
+	defer tsn.Close(ctx)
 
 	info, err := display.GetInternalInfo(ctx, tconn)
 	if err != nil {

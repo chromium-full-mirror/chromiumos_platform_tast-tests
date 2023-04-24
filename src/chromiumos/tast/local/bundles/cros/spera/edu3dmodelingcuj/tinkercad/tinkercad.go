@@ -358,7 +358,7 @@ func (tc *TinkerCad) ExportAndVerify(ctx context.Context, downloadsPath, sampleD
 
 // Close closes the TinkerCAD website.
 func (tc *TinkerCad) Close(ctx context.Context) {
-	tc.pc.Close()
+	tc.pc.Close(ctx)
 	if tc.conn == nil {
 		return
 	}

@@ -38,7 +38,7 @@ func BreakSWAAttractLoop(ctx context.Context, tconn *chrome.TestConn) error {
 	}
 
 	pc := pointer.NewMouse(tconn)
-	defer pc.Close()
+	defer pc.Close(ctx)
 
 	demoAppLocation, err := ui.Location(ctx, demoApp)
 	if err != nil {
@@ -86,7 +86,7 @@ func VerifySWAFunctionality(ctx context.Context, tconn *chrome.TestConn, highlig
 	}
 
 	pc := pointer.NewMouse(tconn)
-	defer pc.Close()
+	defer pc.Close(ctx)
 
 	demoAppLocation, _ := ui.Location(ctx, demoApp)
 

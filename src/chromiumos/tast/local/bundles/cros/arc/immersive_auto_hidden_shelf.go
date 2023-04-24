@@ -95,7 +95,7 @@ func ImmersiveAutoHiddenShelf(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create new activity: ", err)
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	s.Logf("Starting activity: %s/%s", wm.Pkg24, ResizeableLandscapeActivity)
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {

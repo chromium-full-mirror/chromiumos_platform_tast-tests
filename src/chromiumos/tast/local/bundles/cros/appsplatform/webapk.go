@@ -167,7 +167,7 @@ func WebAPK(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create a new activity: ", err)
 	}
-	defer activity.Close()
+	defer activity.Close(ctx)
 	if err := activity.Start(ctx, tconn); err != nil {
 		s.Fatal("Failed to start the test activity: ", err)
 	}

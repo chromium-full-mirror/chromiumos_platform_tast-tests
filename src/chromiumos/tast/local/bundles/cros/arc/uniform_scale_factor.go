@@ -103,7 +103,7 @@ func UniformScaleFactor(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to start activity after enabling uniform scale factor: ", err)
 	}
-	defer viewAct.Close()
+	defer viewAct.Close(ctx)
 
 	squarePixelCount := (int)((dd * squareSidePx) * (dd * squareSidePx))
 	if err := perappdensity.ConfirmPixelCountInActivitySurface(ctx, cr, a, color.Black, squarePixelCount, viewAct); err != nil {
@@ -134,7 +134,7 @@ func UniformScaleFactor(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get secondActivity: ", err)
 	}
-	defer secondAct.Close()
+	defer secondAct.Close(ctx)
 
 	if err := d.WaitForIdle(ctx, 10*time.Second); err != nil {
 		s.Fatal("Failed to wait for idle: ", err)

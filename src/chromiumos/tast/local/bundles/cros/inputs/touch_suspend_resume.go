@@ -248,7 +248,7 @@ func drawOnCanvas(ctx context.Context, info *display.Info) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to open touchscreen device")
 	}
-	defer tsw.Close()
+	defer tsw.Close(ctx)
 
 	// Touchscreen bounds: The size of the touchscreen might not be the same
 	// as the display size. In fact, might be even up to 4x bigger.

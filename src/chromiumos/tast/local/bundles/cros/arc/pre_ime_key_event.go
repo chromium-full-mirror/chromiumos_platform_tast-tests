@@ -65,7 +65,7 @@ func testPreIMEKeyEvent(ctx context.Context, tconn *chrome.TestConn, cr *chrome.
 	if err != nil {
 		s.Fatalf("Failed to create a new activity %q", activityName)
 	}
-	defer act.Close()
+	defer act.Close(ctx)
 
 	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 		s.Fatalf("Failed to start the activity %q", activityName)

@@ -59,7 +59,7 @@ func (svc *TouchService) Swipe(ctx context.Context, req *pb.SwipeRequest) (*empt
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create a touchscreen device")
 	}
-	defer tsw.Close()
+	defer tsw.Close(ctx)
 	tw, err := tsw.NewMultiTouchWriter(int(req.Touches))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create a touch writer")

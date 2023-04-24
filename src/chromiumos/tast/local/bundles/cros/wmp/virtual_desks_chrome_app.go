@@ -79,7 +79,7 @@ func VirtualDesksChromeApp(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create a keyboard: ", err)
 	}
 	pc := pointer.NewMouse(tconn)
-	defer pc.Close()
+	defer pc.Close(cleanupCtx)
 
 	// Wait until the PWA is installed.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {

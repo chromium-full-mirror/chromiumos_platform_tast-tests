@@ -88,7 +88,7 @@ func Touch(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to open touchscreen device: ", err)
 	}
-	defer tsw.Close()
+	defer tsw.Close(ctx)
 
 	// Touchscreen bounds: The size of the touchscreen might not be the same
 	// as the display size. In fact, might be even up to 4x bigger.

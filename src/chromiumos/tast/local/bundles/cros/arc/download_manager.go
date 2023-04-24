@@ -254,7 +254,7 @@ func startDownloadFileWithApp(ctx context.Context, a *arc.ARC, tconn *chrome.Tes
 		arc.WithExtraString(sourceURLKey, sourceURL),
 		arc.WithExtraString(targetPathKey, targetPath),
 	); err != nil {
-		act.Close()
+		act.Close(ctx)
 		return nil, errors.Wrapf(err, "failed to start the main activity for %s", packageName)
 	}
 
@@ -262,7 +262,7 @@ func startDownloadFileWithApp(ctx context.Context, a *arc.ARC, tconn *chrome.Tes
 		if err := act.Stop(ctx, tconn); err != nil {
 			testing.ContextLogf(ctx, "Failed to stop the main activity for %s: %v", packageName, err)
 		}
-		act.Close()
+		act.Close(ctx)
 	}
 
 	return cleanupFunc, nil

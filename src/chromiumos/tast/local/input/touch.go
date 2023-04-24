@@ -228,13 +228,19 @@ func VirtualTouchscreen(ctx context.Context) (*TouchscreenEventWriter, error) {
 }
 
 // Close closes the touchscreen device.
-func (tsw *TouchscreenEventWriter) Close() error {
-	firstErr := tsw.rw.Close()
-
-	// Let go the virtual device if any.
+func (tsw *TouchscreenEventWriter) Close(ctx context.Context) error {
+	var firstErr error
+	if tsw.rw != nil {
+		if firstErr = tsw.rw.Close(); firstErr != nil {
+			testing.ContextLog(ctx, "Failed to close raw event writer: ", firstErr)
+		}
+	}
 	if tsw.virt != nil {
-		if err := tsw.virt.Close(); firstErr == nil {
-			firstErr = err
+		if err := tsw.virt.Close(); err != nil {
+			testing.ContextLog(ctx, "Failed to close virtual file: ", err)
+			if firstErr == nil {
+				firstErr = err
+			}
 		}
 	}
 	return firstErr

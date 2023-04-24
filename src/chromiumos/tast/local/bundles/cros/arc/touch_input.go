@@ -90,7 +90,7 @@ func verifyTouchscreen(ctx context.Context, s *testing.State, tconn *chrome.Test
 	if err != nil {
 		s.Fatal("Failed to create touchscreen: ", err)
 	}
-	defer tew.Close()
+	defer tew.Close(ctx)
 
 	stw, err := tew.NewSingleTouchWriter()
 	if err != nil {

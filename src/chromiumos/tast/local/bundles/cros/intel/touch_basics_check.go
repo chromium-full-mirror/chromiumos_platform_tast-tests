@@ -57,7 +57,7 @@ func TouchBasicsCheck(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to open touchscreen device: ", err)
 	}
-	defer tsw.Close()
+	defer tsw.Close(ctx)
 
 	tcc := tsw.NewTouchCoordConverter(info.Bounds.Size())
 	stw, err := tsw.NewSingleTouchWriter()

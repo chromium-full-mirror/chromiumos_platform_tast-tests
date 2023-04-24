@@ -204,7 +204,7 @@ func PasspointARCDialog(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed creating app activity: ", err)
 	}
-	defer activity.Close()
+	defer activity.Close(ctx)
 	if err := activity.Start(ctx, tconn); err != nil {
 		s.Fatal("Failed to start test activity: ", err)
 	}
