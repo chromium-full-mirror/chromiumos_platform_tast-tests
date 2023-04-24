@@ -23,6 +23,7 @@ import (
 	"chromiumos/tast/remote/firmware/reporters"
 	"chromiumos/tast/remote/firmware/rpm"
 	fwpb "chromiumos/tast/services/cros/firmware"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
@@ -710,6 +711,41 @@ func (h *Helper) SetupUSBKey(ctx context.Context, cloudStorage *testing.CloudSto
 	return nil
 }
 
+// CorruptUSBKey makes a minimal change to the USB key to prevent it from booting. Use RestoreUSBKey to repair it afterwards.
+func (h *Helper) CorruptUSBKey(ctx context.Context, usbdev string) (retErr error) {
+	testing.ContextLog(ctx, "Corrupting ChromeOS image name on usbkey")
+	// ChromeOS kernel is at /dev/sdx2.
+	kernelPart := usbdev + "2"
+	stdin := strings.NewReader("CORRUPTD")
+
+	if err := h.ServoProxy.InputCommand(ctx, true, stdin, "dd", fmt.Sprintf("of=%s", kernelPart), "oflag=sync", "conv=notrunc"); err != nil {
+		return errors.Wrap(err, "failed to corrupt kernel magic")
+	}
+	return nil
+}
+
+// RestoreUSBKey corrects the minimal change to the usb key made by CorruptUSBKey.
+func (h *Helper) RestoreUSBKey(ctx context.Context) (retErr error) {
+	// This call is super slow.
+	var err error
+	usbdev, err := h.Servo.GetStringTimeout(ctx, servo.ImageUSBKeyDev, time.Second*90)
+	if err != nil {
+		return errors.Wrap(err, "servo call image_usbkey_dev failed")
+	}
+	if usbdev == "" {
+		return errors.New("no USB key detected")
+	}
+	testing.ContextLog(ctx, "Uncorrupting ChromeOS image name on usbkey")
+	// ChromeOS kernel is at /dev/sdx2.
+	kernelPart := usbdev + "2"
+	stdin := strings.NewReader("CHROMEOS")
+
+	if err := h.ServoProxy.InputCommand(ctx, true, stdin, "dd", fmt.Sprintf("of=%s", kernelPart), "oflag=sync", "conv=notrunc"); err != nil {
+		return errors.Wrap(err, "failed to corrupt kernel magic")
+	}
+	return nil
+}
+
 func checkUSBStorage(ctx context.Context, usbInfo string, minimalSize float64) error {
 	regexpUSBInfo := regexp.MustCompile(`\w+\D+(\w+\D\w+) GiB`)
 	match := regexpUSBInfo.FindStringSubmatch(string(usbInfo))
@@ -763,6 +799,7 @@ func (h *Helper) waitDutS0(ctx context.Context) error {
 		return errors.Wrap(err, "wait for S0")
 	}
 	testing.ContextLog(ctx, "Sleeping 20s for boot to finish")
+	// GoBigSleepLint: Sleep time determined empirically through trial and error.
 	if err := testing.Sleep(ctx, 20*time.Second); err != nil {
 		return errors.Wrap(err, "sleep 20s")
 	}
@@ -1369,6 +1406,7 @@ func (h *Helper) getUSBModelAndSerial(ctx context.Context, usbdev string) (strin
 }
 
 // FormatUSB will format the usb device to create an invalid usb device.
+// WARNING: Do not use this for tests that verify non-boot on USB, use CorruptUSBKey instead.
 func (h *Helper) FormatUSB(ctx context.Context, usbdev string) error {
 	if usbdev == "" {
 		return errors.New("no USB key detected. Please run CheckUSBOnServoHost")

@@ -17,6 +17,8 @@ import (
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/fixture"
 	"chromiumos/tast/remote/firmware/reporters"
+
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -198,6 +200,10 @@ func init() {
 }
 
 func BootMode(ctx context.Context, s *testing.State) {
+	ctxCleanUp := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
+	defer cancel()
+
 	tc := s.Param().(bootModeTestParams)
 	pv := s.FixtValue().(*fixture.Value)
 	h := pv.Helper
@@ -269,9 +275,14 @@ func BootMode(ctx context.Context, s *testing.State) {
 			if tc.checkToNoGoodScreen {
 				opts = append(opts, firmware.CheckToNoGoodScreen)
 				// An invalid USB is required to check for the NOGOOD screen.
-				if err := h.FormatUSB(ctx, usbdev); err != nil {
-					s.Fatal("Failed to format the USB: ", err)
+				if err := h.CorruptUSBKey(ctx, usbdev); err != nil {
+					s.Fatal("Failed to corrupt the USB: ", err)
 				}
+				defer func(ctx context.Context) {
+					if err := h.RestoreUSBKey(ctx); err != nil {
+						s.Fatal("Failed to restore the USB: ", err)
+					}
+				}(ctxCleanUp)
 			}
 		}
 		s.Logf("Transitioning to %s mode with options %+v", tc.bootToMode, opts)
