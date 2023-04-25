@@ -208,5 +208,45 @@ tast.promisify = function(f) {
 tast.bind = function(obj, name) {
   return obj[name].bind(obj);
 };
+tast.automation = (() => {
+  let desktop;
+  let timerId;
+
+  let doNothing = () => {};
+  let automation = {
+    "getDesktop" : async () => {
+      if (timerId) {
+        clearTimeout(timerId);
+        timerId = undefined;
+      }
+
+      if (desktop)
+        return desktop;
+
+      desktop = await tast.promisify(chrome.automation.getDesktop)();
+
+      // Serves as an addRef to keep the automation tree. It is balanced in
+      // the timer callback in scheduleRelease.
+      desktop.addEventListener("focus", doNothing);
+      return desktop;
+     },
+
+     "scheduleRelease": () => {
+       if (timerId)
+         return;
+
+       timerId = setTimeout(() => {
+         // Serves as a release to balance the addEventListener call in
+         // getDesktop. This should be the last listener on the tree so that it
+         // triggers automation tree tearing down.
+         desktop.removeEventListener("focus", doNothing);
+
+         desktop = undefined;
+         timerId = undefined;
+       }, 10000);
+     },
+  };
+  return automation;
+})();
 `
 )

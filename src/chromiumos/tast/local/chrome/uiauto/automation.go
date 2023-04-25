@@ -156,6 +156,63 @@ func Repeat(n int, fn Action) Action {
 	}
 }
 
+// `query` holds context of a finder query and provides a "release" method to
+// clean up when query results are no longer needed.
+type query struct {
+	*chrome.JSObject
+}
+
+// createQueryFromString creates a `query` JS object from the provided query
+// string.
+func (ac *Context) createQueryFromString(ctx context.Context, q string) (*query, error) {
+	expr := fmt.Sprintf(`async function() {
+		let query  = {
+			"execute": async () => {
+				%s
+				query.node = node;
+				query.nodes = nodes;
+			},
+			"release": () => {
+				tast.automation.scheduleRelease();
+			}
+		};
+		return query;
+	}`, q)
+
+	obj := &chrome.JSObject{}
+	if err := ac.tconn.Call(ctx, obj, expr); err != nil {
+		return nil, errors.Wrap(err, "failed to execute the query")
+	}
+	return &query{obj}, nil
+}
+
+func (ac *Context) createQuery(ctx context.Context, finder *nodewith.Finder) (*query, error) {
+	q, err := finder.GenerateQuery()
+	if err != nil {
+		return nil, err
+	}
+	return ac.createQueryFromString(ctx, q)
+}
+
+func (ac *Context) createQueryForMultipleNodes(ctx context.Context, finder *nodewith.Finder) (*query, error) {
+	q, err := finder.GenerateQueryForMultipleNodes()
+	if err != nil {
+		return nil, err
+	}
+	return ac.createQueryFromString(ctx, q)
+}
+
+// release cleans up the allocated resources for the query and triggers
+// AutomationEventRouter::RemoveAutomationListener since query results are no
+// longer needed and there is no need to send accessibility events indefinitely.
+// See b/278649596.
+func (q *query) release(ctx context.Context) {
+	if err := q.Call(ctx, nil, `function() { this.release(); }`); err != nil {
+		testing.ContextLog(ctx, "query.release error: ", err)
+	}
+	q.Release(ctx)
+}
+
 // NodeInfo is a mapping of chrome.automation API AutomationNode.
 // It is used to get information about a specific node from JS to Go.
 // NodeInfo intentionally leaves out many properties. If they become needed, add them to the Node struct.
@@ -177,19 +234,21 @@ type NodeInfo struct {
 
 // Info returns the information for the node found by the input finder.
 func (ac *Context) Info(ctx context.Context, finder *nodewith.Finder) (*NodeInfo, error) {
-	q, err := finder.GenerateQuery()
+	q, err := ac.createQuery(ctx, finder)
 	if err != nil {
 		return nil, err
 	}
-	query := fmt.Sprintf(`
-		(async () => {
-			%s
+	defer q.release(ctx)
+	expr := fmt.Sprintf(`
+		async function() {
+			await this.execute();
+			let node = this.node;
 			return %s;
-		})()
-	`, q, NodeInfoJS)
+		}
+	`, NodeInfoJS)
 	var out NodeInfo
 	err = testing.Poll(ctx, func(ctx context.Context) error {
-		return ac.tconn.Eval(ctx, query, &out)
+		return q.Call(ctx, &out, expr)
 	}, &ac.pollOpts)
 	return &out, err
 }
@@ -197,23 +256,24 @@ func (ac *Context) Info(ctx context.Context, finder *nodewith.Finder) (*NodeInfo
 // NodesInfo returns an array of the information for the nodes found by the input finder.
 // Note that the returning array might not contain any node.
 func (ac *Context) NodesInfo(ctx context.Context, finder *nodewith.Finder) ([]NodeInfo, error) {
-	q, err := finder.GenerateQueryForMultipleNodes()
+	q, err := ac.createQueryForMultipleNodes(ctx, finder)
 	if err != nil {
 		return nil, err
 	}
-	query := fmt.Sprintf(`
-		(async () => {
-			%s
+	defer q.release(ctx)
+	expr := fmt.Sprintf(`
+		async function() {
+			await this.execute();
 			var result = [];
-			nodes.forEach(function(node) {
+			this.nodes.forEach(function(node) {
 				result.push(%s);
 			});
 			return result
-		})()
-	`, q, NodeInfoJS)
+		}
+	`, NodeInfoJS)
 	var out []NodeInfo
 	err = testing.Poll(ctx, func(ctx context.Context) error {
-		return ac.tconn.Eval(ctx, query, &out)
+		return q.Call(ctx, &out, expr)
 	}, &ac.pollOpts)
 	return out, err
 }
@@ -233,21 +293,22 @@ func (ac *Context) Matches(ctx context.Context, finder *nodewith.Finder, actual 
 // Location returns the location of the node found by the input finder.
 // It will wait until the location is the same for a two iterations of polling.
 func (ac *Context) Location(ctx context.Context, finder *nodewith.Finder) (*coords.Rect, error) {
-	q, err := finder.GenerateQuery()
+	q, err := ac.createQuery(ctx, finder)
 	if err != nil {
 		return nil, err
 	}
-	query := fmt.Sprintf(`
-		(async () => {
-			%s
-			return node.location;
-		})()
-	`, q)
+	defer q.release(ctx)
+	expr := `
+		async function() {
+			await this.execute();
+			return this.node.location;
+		}
+	`
 	var lastLocation coords.Rect
 	var currentLocation coords.Rect
 	start := time.Now()
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if err := ac.tconn.Eval(ctx, query, &currentLocation); err != nil {
+		if err := q.Call(ctx, &currentLocation, expr); err != nil {
 			// Reset lastLocation on error.
 			lastLocation = coords.Rect{}
 			return err
@@ -267,18 +328,19 @@ func (ac *Context) Location(ctx context.Context, finder *nodewith.Finder) (*coor
 // ImmediateLocation returns the location of the node found by the input finder.
 // It will not wait for the location to be stable.
 func (ac *Context) ImmediateLocation(ctx context.Context, finder *nodewith.Finder) (*coords.Rect, error) {
-	q, err := finder.GenerateQuery()
+	q, err := ac.createQuery(ctx, finder)
 	if err != nil {
 		return nil, err
 	}
-	query := fmt.Sprintf(`
-		(async () => {
-			%s
-			return node.location;
-		})()
-	`, q)
+	defer q.release(ctx)
+	expr := `
+		async function() {
+			await this.execute();
+			return this.node.location;
+		}
+	`
 	var loc coords.Rect
-	if err := ac.tconn.Eval(ctx, query, &loc); err != nil {
+	if err := q.Call(ctx, &loc, expr); err != nil {
 		return nil, err
 	}
 	return &loc, nil
@@ -376,6 +438,7 @@ func (ac *Context) setupWatcher(ctx context.Context, finder *nodewith.Finder, ev
 			},
 			"release": () => {
 				node.removeEventListener(eventType, watcher.callback);
+				tast.automation.scheduleRelease();
 			}
 		};
 		node.addEventListener(eventType, watcher.callback);
@@ -391,8 +454,10 @@ func (ac *Context) setupWatcher(ctx context.Context, finder *nodewith.Finder, ev
 
 // release cleans up the allocated resources for the watcher.
 func (w *watcher) release(ctx context.Context) {
+	if err := w.Call(ctx, nil, `function() { this.release(); }`); err != nil {
+		testing.ContextLog(ctx, "watcher.release error: ", err)
+	}
 	w.Release(ctx)
-	w.Call(ctx, nil, `function() { this.release(); }`)
 }
 
 // Select sets the document selection to include everything between the two nodes at the offsets.
@@ -431,7 +496,13 @@ func (ac *Context) Select(startNodeFinder *nodewith.Finder, startOffset int, end
 		})()
 		`, qStart, qEnd, startOffset, endOffset)
 
-		return ac.tconn.Eval(ctx, query, nil)
+		q, err := ac.createQueryFromString(ctx, query)
+		if err != nil {
+			return err
+		}
+		defer q.release(ctx)
+
+		return q.Call(ctx, nil, `function() { this.execute(); }`)
 	}
 }
 
@@ -439,17 +510,17 @@ func (ac *Context) Select(startNodeFinder *nodewith.Finder, startOffset int, end
 // If any node in the chain is not found, it will return an error.
 func (ac *Context) Exists(finder *nodewith.Finder) Action {
 	return func(ctx context.Context) error {
-		q, err := finder.GenerateQuery()
+		q, err := ac.createQuery(ctx, finder)
 		if err != nil {
 			return err
 		}
+		defer q.release(ctx)
 
-		query := fmt.Sprintf(`
-		(async () => {
-			%s
-		})()
-	`, q)
-		return ac.tconn.Eval(ctx, query, nil)
+		expr := `
+		async function() {
+			await this.execute();
+		}`
+		return q.Call(ctx, nil, expr)
 	}
 }
 
@@ -475,25 +546,27 @@ func (ac *Context) BoundsForRange(ctx context.Context, finder *nodewith.Finder, 
 		return nil, err
 	}
 
-	q, err := finder.GenerateQuery()
+	q, err := ac.createQuery(ctx, finder)
 	if err != nil {
 		return nil, err
 	}
-	query := fmt.Sprintf(`
-		(async () => {
-			%s
+	defer q.release(ctx)
+	expr := fmt.Sprintf(`
+		async function() {
+			await this.execute();
+			let node = this.node;
 			if(node.role !== "inlineTextBox"){
 				throw new Error("BoundsForRange only works on node with Role inlineTextBox.");
 			}
 			let bounds;
 			node.boundsForRange(%d, %d, (res) => {bounds = res;});
 			return bounds;
-		})()
-	`, q, startIndex, endIndex)
+		}
+	`, startIndex, endIndex)
 
 	var out coords.Rect
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		return ac.tconn.Eval(ctx, query, &out)
+		return q.Call(ctx, &out, expr)
 	}, &ac.pollOpts); err != nil {
 		return nil, err
 	}
@@ -711,18 +784,19 @@ func (ac *Context) EnsureGoneFor(finder *nodewith.Finder, duration time.Duration
 // If any node in the chain is not found, it will return nil.
 func (ac *Context) Gone(finder *nodewith.Finder) Action {
 	return func(ctx context.Context) error {
-		q, err := finder.GenerateQuery()
+		q, err := ac.createQuery(ctx, finder)
 		if err != nil {
 			return err
 		}
-		query := fmt.Sprintf(`
-		(async () => {
-			%s
-			return !!node;
-		})()
-	`, q)
+		defer q.release(ctx)
+
+		expr := `
+		async function() {
+			await this.execute();
+			return !!this.node;
+		}`
 		var exists bool
-		if err := ac.tconn.Eval(ctx, query, &exists); err != nil {
+		if err := q.Call(ctx, &exists, expr); err != nil {
 			// Only consider the node gone if we get a not found error.
 			if nodewith.IsNodeNotFoundErr(err) {
 				return nil
@@ -884,6 +958,7 @@ func (ac *Context) LeftClickUntil(finder *nodewith.Finder, condition func(contex
 		if err := ac.LeftClick(finder)(ctx); err != nil {
 			return errors.Wrap(err, "failed to initially click the node")
 		}
+		// GoBigSleepLint: Wait a little bit before polling `condition`.
 		if err := testing.Sleep(ctx, ac.pollOpts.Interval); err != nil {
 			return err
 		}
@@ -908,6 +983,7 @@ func (ac *Context) RightClickUntil(finder *nodewith.Finder, condition func(conte
 		if err := ac.RightClick(finder)(ctx); err != nil {
 			return errors.Wrap(err, "failed to initially click the node")
 		}
+		// GoBigSleepLint: Wait a little bit before polling `condition`.
 		if err := testing.Sleep(ctx, ac.pollOpts.Interval); err != nil {
 			return err
 		}
@@ -931,6 +1007,7 @@ func (ac *Context) RetryUntil(action, condition Action) Action {
 		if err := action(ctx); err != nil {
 			return errors.Wrap(err, "failed to initially do action")
 		}
+		// GoBigSleepLint: Wait a little bit before polling `condition`.
 		if err := testing.Sleep(ctx, ac.pollOpts.Interval); err != nil {
 			return err
 		}
@@ -955,6 +1032,7 @@ func (ac *Context) DoDefaultUntil(finder *nodewith.Finder, condition func(contex
 		if err := ac.DoDefault(finder)(ctx); err != nil {
 			return errors.Wrap(err, "failed to initially click the node")
 		}
+		// GoBigSleepLint: Wait a little bit before polling `condition`.
 		if err := testing.Sleep(ctx, ac.pollOpts.Interval); err != nil {
 			return err
 		}
@@ -976,18 +1054,19 @@ func (ac *Context) DoDefaultUntil(finder *nodewith.Finder, condition func(contex
 // The EventWatcher waits the duration of timeout for the event to occur.
 func (ac *Context) FocusAndWait(finder *nodewith.Finder) Action {
 	return ac.WaitForEvent(nodewith.Root(), event.Focus, func(ctx context.Context) error {
-		q, err := finder.GenerateQuery()
+		q, err := ac.createQuery(ctx, finder)
 		if err != nil {
 			return err
 		}
-		query := fmt.Sprintf(`
-			(async () => {
-				%s
-				node.focus();
-			})()
-		`, q)
+		defer q.release(ctx)
+		expr := `
+			async function() {
+				await this.execute();
+				this.node.focus();
+			}
+		`
 		return testing.Poll(ctx, func(ctx context.Context) error {
-			return ac.tconn.Eval(ctx, query, nil)
+			return q.Call(ctx, nil, expr)
 		}, &ac.pollOpts)
 	})
 }
@@ -1034,6 +1113,7 @@ func (ac *Context) MouseMoveTo(finder *nodewith.Finder, duration time.Duration) 
 // Sleep returns a function sleeping given time duration.
 func Sleep(d time.Duration) Action {
 	return func(ctx context.Context) error {
+		// GoBigSleepLint: Wraps `testing.Sleep` as an Action.
 		return testing.Sleep(ctx, d)
 	}
 }
@@ -1041,18 +1121,18 @@ func Sleep(d time.Duration) Action {
 // MakeVisible returns a function that calls makeVisible() JS method to make found node visible.
 func (ac *Context) MakeVisible(finder *nodewith.Finder) Action {
 	return func(ctx context.Context) error {
-		q, err := finder.GenerateQuery()
+		q, err := ac.createQuery(ctx, finder)
 		if err != nil {
 			return err
 		}
-		query := fmt.Sprintf(`
-		(async () => {
-			%s
-			node.makeVisible();
-		})()
-	`, q)
+		defer q.release(ctx)
+		expr := `
+		async function() {
+			await this.execute();
+			this.node.makeVisible();
+		}`
 
-		if err := ac.tconn.Eval(ctx, query, nil); err != nil {
+		if err := q.Call(ctx, nil, expr); err != nil {
 			return errors.Wrap(err, "failed to call makeVisible() on the node")
 		}
 		return nil
@@ -1133,19 +1213,19 @@ func (ac *Context) CheckRestriction(finder *nodewith.Finder, restriction restric
 // of a node thus mouse.LeftClick() fails consequently.
 func (ac *Context) DoDefault(finder *nodewith.Finder) Action {
 	return func(ctx context.Context) error {
-		q, err := finder.GenerateQuery()
+		q, err := ac.createQuery(ctx, finder)
 		if err != nil {
 			return err
 		}
-		query := fmt.Sprintf(`
-		(async () => {
-			%s
-			node.doDefault();
-		})()
-	`, q)
+		defer q.release(ctx)
+		expr := `
+		async function() {
+			await this.execute();
+			this.node.doDefault();
+		}`
 
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			return ac.tconn.Eval(ctx, query, nil)
+			return q.Call(ctx, nil, expr)
 		}, &ac.pollOpts); err != nil {
 			return errors.Wrap(err, "failed to call doDefault() on the node")
 		}
@@ -1158,19 +1238,19 @@ func (ac *Context) DoDefault(finder *nodewith.Finder) Action {
 // scroll offset on a node to scroll it to its default scroll position.
 func (ac *Context) ResetScrollOffset(finder *nodewith.Finder) Action {
 	return func(ctx context.Context) error {
-		q, err := finder.GenerateQuery()
+		q, err := ac.createQuery(ctx, finder)
 		if err != nil {
 			return err
 		}
-		query := fmt.Sprintf(`
-		(async () => {
-			%s
-			node.setScrollOffset(0, 0);
-		})()
-	`, q)
+		defer q.release(ctx)
+		expr := `
+		async function() {
+			await this.execute();
+			this.node.setScrollOffset(0, 0);
+		}`
 
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			return ac.tconn.Eval(ctx, query, nil)
+			return q.Call(ctx, nil, expr)
 		}, &ac.pollOpts); err != nil {
 			return errors.Wrap(err, "failed to call setScrollOffset() on the node")
 		}

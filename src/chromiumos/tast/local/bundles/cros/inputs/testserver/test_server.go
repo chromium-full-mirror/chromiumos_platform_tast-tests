@@ -413,6 +413,7 @@ func (its *InputsTestServer) ClickField(inputField InputField) uiauto.Action {
 	fieldFinder := inputField.Finder()
 	return uiauto.Combine(
 		"make input field visible on the screen and click it",
+		its.ui.WaitUntilExists(fieldFinder),
 		its.ui.MakeVisible(fieldFinder),
 		its.ui.LeftClick(fieldFinder),
 	)
@@ -423,6 +424,7 @@ func (its *InputsTestServer) RightClickFieldAndWaitForActive(inputField InputFie
 	fieldFinder := inputField.Finder()
 	return uiauto.RetrySilently(3, uiauto.Combine(
 		"right click input field and wait for it to be active",
+		its.ui.WaitUntilExists(fieldFinder),
 		its.ui.MakeVisible(fieldFinder),
 		its.ui.RightClick(fieldFinder),
 		its.WaitForFieldToBeActive(inputField),
@@ -434,6 +436,7 @@ func (its *InputsTestServer) ClickFieldUntilVKShown(inputField InputField) uiaut
 	fieldFinder := inputField.Finder()
 	return uiauto.Combine(
 		"make input field visible on the screen and click it until virtual keyboard is shown",
+		its.ui.WaitUntilExists(fieldFinder),
 		its.ui.MakeVisible(fieldFinder),
 		// Use vkb.ClickUntilVKShown because it has retry internally.
 		vkb.NewContext(its.cr, its.tconn).ClickUntilVKShown(fieldFinder),
