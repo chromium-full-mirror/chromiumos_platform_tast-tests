@@ -20,6 +20,7 @@ import (
 	"chromiumos/tast/local/power/setup"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
+
 	"go.chromium.org/tast/core/ctxutil"
 )
 
@@ -55,6 +56,7 @@ func init() {
 				Fixture: "chromeLoggedInDisableSyncNoFwUpdate",
 			},
 			{
+				ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
 				ExtraSoftwareDeps: []string{"android_container"},
 				ExtraHardwareDeps: hwdep.D(hwdep.ForceDischarge()),
 				Val: testArgsForPowerIdlePerf{
@@ -64,6 +66,7 @@ func init() {
 			},
 			{
 				Name:              "vm",
+				ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
 				ExtraSoftwareDeps: []string{"android_vm"},
 				ExtraHardwareDeps: hwdep.D(hwdep.ForceDischarge()),
 				Val: testArgsForPowerIdlePerf{

@@ -19,7 +19,6 @@ import (
 
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/arc/optin"
 	"chromiumos/tast/local/chrome"
@@ -30,6 +29,8 @@ import (
 	"chromiumos/tast/local/disk"
 	"chromiumos/tast/local/power"
 	"chromiumos/tast/testing"
+
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/lsbrelease"
 )
 
@@ -59,7 +60,7 @@ func init() {
 		},
 		// ChromeOS > Software > ARC++ > Performance
 		BugComponent: "b:168382",
-		Attr:         []string{"group:crosbolt", "crosbolt_perbuild", "crosbolt_arc_perf_qual"},
+		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		// This test steps through opt-in flow 10 times and each iteration takes 20~40 seconds.
 		Timeout: 30 * time.Minute,
@@ -83,6 +84,7 @@ func init() {
 			},
 		}, {
 			Name:              "unmanaged",
+			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
 			ExtraSoftwareDeps: []string{"android_container"},
 			Val: testParam{
 				browserType:       browser.TypeAsh,
@@ -131,6 +133,7 @@ func init() {
 			},
 		}, {
 			Name:              "unmanaged_vm",
+			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Val: testParam{
 				browserType:       browser.TypeAsh,

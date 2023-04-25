@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bundles/cros/arc/apploading"
 	"chromiumos/tast/local/bundles/cros/arc/nethelper"
@@ -21,6 +20,8 @@ import (
 	"chromiumos/tast/local/sysutil"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
+
+	"go.chromium.org/tast/core/errors"
 )
 
 // testParameters contains all the data needed to run a single test iteration.
@@ -48,11 +49,12 @@ func init() {
 		},
 		// ChromeOS > Software > ARC++ > Performance
 		BugComponent: "b:168382",
-		Attr:         []string{"group:crosbolt", "crosbolt_perbuild", "crosbolt_arc_perf_qual"},
+		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{apploading.X86ApkName, apploading.ArmApkName},
 		Timeout:      40 * time.Minute,
 		Params: []testing.Param{{
+			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
 			ExtraSoftwareDeps: []string{"android_container"},
 			Val: testParameters{
 				binaryTranslation: false,
@@ -67,6 +69,7 @@ func init() {
 			Pre: arcAppLoadingBootedLacros,
 		}, {
 			Name:              "vm",
+			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Val: testParameters{
 				binaryTranslation: false,

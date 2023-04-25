@@ -32,6 +32,7 @@ func TestPowerIdlePerfParamsAreGenerated(t *testing.T) {
 	}
 	type paramData struct {
 		Name         string
+		Attr         []string
 		SoftwareDeps []string
 		HardwareDeps []string
 		Fixture      string
@@ -56,21 +57,25 @@ func TestPowerIdlePerfParamsAreGenerated(t *testing.T) {
 	} {
 		for _, arcType := range []struct {
 			name    string
+			attr    string
 			swdep   string
 			fixture string
 		}{
 			{
 				"noarc",
+				"",
 				"arc", // to prevent _noarc tests from running on non-ARC boards
 				"chromeLoggedInDisableSyncNoFwUpdate",
 			},
 			{
 				"",
+				"crosbolt_arc_perf_qual",
 				"android_container",
 				"arcBootedRestricted",
 			},
 			{
 				"vm",
+				"crosbolt_arc_perf_qual",
 				"android_vm",
 				"arcBootedRestricted",
 			},
@@ -83,6 +88,9 @@ func TestPowerIdlePerfParamsAreGenerated(t *testing.T) {
 				Fixture:      arcType.fixture,
 				Val:          batteryMode.val,
 			}
+			if arcType.attr != "" && batteryMode.name == "" {
+				p.Attr = []string{arcType.attr}
+			}
 			params = append(params, p)
 		}
 	}
@@ -90,6 +98,9 @@ func TestPowerIdlePerfParamsAreGenerated(t *testing.T) {
 	code := genparams.Template(t, `{{ range . }}{
 		{{ if .Name }}
 		Name: {{ .Name | fmt }},
+		{{ end }}
+		{{ if .Attr }}
+		ExtraAttr: {{ .Attr | fmt }},
 		{{ end }}
 		ExtraSoftwareDeps: {{ .SoftwareDeps | fmt }},
 		ExtraHardwareDeps: hwdep.D({{ range .HardwareDeps }}{{ . }},{{ end }}),

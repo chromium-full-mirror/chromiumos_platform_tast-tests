@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/arc/optin"
@@ -19,6 +18,8 @@ import (
 	"chromiumos/tast/local/cpu"
 	"chromiumos/tast/local/disk"
 	"chromiumos/tast/testing"
+
+	"go.chromium.org/tast/core/errors"
 )
 
 type testParams struct {
@@ -37,6 +38,7 @@ func init() {
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Timeout:      25 * time.Minute,
 		Params: []testing.Param{{
+			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
 			ExtraSoftwareDeps: []string{"android_container"},
 			Val:               testParams{},
 		}, {
@@ -45,6 +47,7 @@ func init() {
 			Val:               testParams{},
 		}, {
 			Name:              "no_guest_ureadahead_vm",
+			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Val: testParams{
 				chromeArgs: []string{"--arcvm-ureadahead-mode=disabled"},
