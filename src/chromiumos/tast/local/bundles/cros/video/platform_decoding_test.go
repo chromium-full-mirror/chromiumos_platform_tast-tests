@@ -1441,7 +1441,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 		for _, group := range []string{"baseline", "main", "first_mb_in_slice"} {
 			files := h264Files[group]
 
-			// TODO(b//234752983): support first_mb_in_slice for Stateless decoder.
+			// TODO(b/234752983): support first_mb_in_slice for Stateless decoder.
 			if stateness == "Stateless" && group == "first_mb_in_slice" {
 				continue
 			}
@@ -1460,30 +1460,27 @@ func TestPlatformDecodingParams(t *testing.T) {
 			params = append(params, param)
 		}
 
-		// V4L2 does not support some of the features (HEVC, VP9 svc) yet, so skip them until they are supported.
-		if stateness == "Stateless" {
-			continue
-		}
-
 		// Generate V4L2 HEVC tests.
 		for _, testGroup := range []string{"main"} {
 			files := hevcFiles[testGroup]
 
-			// TODO(b/232255167): Remove hwdep.Model in favor of SoftwareDeps: caps.HWDecodeHEVC
-			hardwareDeps := append(commonHardwareDeps,
-				"hwdep.Model(\"coachz\", \"homestar\", \"quackingstick\", \"wormdingler\", \"kingoftown\", \"lazor\", \"limozeen\", \"pazquel\", \"pompom\")")
 			param := paramData{
 				Name:         fmt.Sprintf("v4l2_%s_hevc_%s", strings.ToLower(stateness), testGroup),
 				Decoder:      decoderExecutable,
 				CmdBuilder:   commandBuilder,
 				Files:        files,
 				Timeout:      defaultTimeout,
-				HardwareDeps: strings.Join(hardwareDeps, ", "),
-				SoftwareDeps: []string{"v4l2_codec"},
+				HardwareDeps: strings.Join(commonHardwareDeps, ", "),
+				SoftwareDeps: []string{"v4l2_codec", caps.HWDecodeHEVC},
 				Metadata:     genExtraData(files),
 				Attr:         []string{"graphics_video_hevc"},
 			}
 			params = append(params, param)
+		}
+
+		// TODO(b/238211555) : V4L2 API does not support VP9 svc (i.e. DRC) yet.
+		if stateness == "Stateless" {
+			continue
 		}
 
 		// VP9 svc.
