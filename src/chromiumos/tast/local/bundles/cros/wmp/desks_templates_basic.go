@@ -47,7 +47,7 @@ func init() {
 		Params: []testing.Param{{
 			Fixture:   "savedDesksEnableWithoutArc",
 			Val:       []apps.App{apps.FilesSWA},
-			ExtraAttr: []string{"group:criticalstaging"},
+			ExtraAttr: []string{},
 		}, {
 			Name:              "lacros",
 			Fixture:           "savedDesksEnabledLacrosWithArcBooted",
