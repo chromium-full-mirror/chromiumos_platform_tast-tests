@@ -6,13 +6,14 @@ package camera
 
 import (
 	"context"
-	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 
+	"go.chromium.org/tast/core/ctxutil"
+
 	"chromiumos/tast/common/media/caps"
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/camera/getusermedia"
 	"chromiumos/tast/local/chrome"
@@ -61,9 +62,6 @@ func init() {
 }
 
 func collectMetrics(ctx context.Context, pv *perf.Values, sess *tracing.Session, paths metricsPath) error {
-	// Transfer trace file to output directory.
-	defer os.Rename(sess.TraceResultFile.Name(), paths.trace)
-
 	if err := sess.Stop(); err != nil {
 		return errors.Wrap(err, "failed to stop session")
 	}
@@ -113,14 +111,16 @@ func GetUserMediaPerf(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	traceConfigPath := s.DataPath("perfetto/camera_config.pbtxt")
-	sess, err := tracing.StartSession(ctx, traceConfigPath)
+	traceDataPath := filepath.Join(s.OutDir(), "trace.pb")
+	sess, err := tracing.StartSession(ctx, traceConfigPath, tracing.WithTraceDataPath(traceDataPath))
 	if err != nil {
 		s.Fatal("Failed to start tracing: ", err)
 	}
+	defer sess.Finalize(cleanupCtx)
 
 	p := perf.NewValues()
 	paths := metricsPath{
-		trace:     s.OutDir() + "/trace.pb",
+		trace:     traceDataPath,
 		query:     s.DataPath("perfetto/camera_query.sql"),
 		outputDir: s.OutDir()}
 	defer func(cleanupCtx context.Context) {
@@ -132,7 +132,7 @@ func GetUserMediaPerf(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	s.Log("Collecting Perfetto trace File at: ", sess.TraceResultFile.Name())
+	s.Log("Collecting Perfetto trace File at: ", traceDataPath)
 
 	var ci getusermedia.ChromeInterface
 	runLacros := s.Param().(browser.Type) == browser.TypeLacros
