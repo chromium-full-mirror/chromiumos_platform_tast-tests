@@ -157,11 +157,11 @@ func FpUpdater(ctx context.Context, s *testing.State) {
 	}
 
 	testing.ContextLog(ctx, "Invoking fp updater")
-	// The updater issues a reboot after update so don't expect response.
 	if err := d.Conn().CommandContext(ctx, "bio_fw_updater").Start(); err != nil {
 		s.Fatal("Failed to execute bio_fw_updater: ", err)
 	}
 	s.Log("Waiting for update and reboot")
+	// GoBigSleepLint: Updater issues reboot so no response is expected.
 	testing.Sleep(ctx, 60*time.Second)
 
 	s.Log("Reconnecting to DUT")
