@@ -6,13 +6,10 @@
 package cujrecorder
 
 import (
-	"compress/gzip"
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
-	"os"
 	"path"
 	"path/filepath"
 	"reflect"
@@ -668,7 +665,7 @@ func (r *Recorder) StartTracingWithName(ctx context.Context, outDir, traceName, 
 		return errors.New("there is a tracing session currently running")
 	}
 	testing.ContextLog(ctx, "Starting system tracing session; Make sure to explicitly call StopTracing afterwards")
-	sess, err := tracing.StartSession(ctx, perfettoCfgPath)
+	sess, err := tracing.StartSession(ctx, perfettoCfgPath, tracing.WithTraceDataPath(tracePath), tracing.WithCompression())
 	if err != nil {
 		return errors.Wrap(err, "failed to start tracing")
 	}
@@ -699,42 +696,8 @@ func (r *Recorder) StopTracing(ctx context.Context) error {
 func (r *Recorder) SaveTraceFiles(ctx context.Context) error {
 	// Save trace files from all tracing sessions.
 	for tracePath, sess := range r.sessions {
-		testing.ContextLog(ctx, "Reading trace result file")
-		// TODO(b/266868018): Avoid reading it all into memory.
-		data, err := io.ReadAll(sess.TraceResultFile)
-		if err != nil {
-			return errors.Wrap(err, "failed to read from the temp file of trace result")
-		}
-
-		file, err := os.OpenFile(tracePath, os.O_CREATE|os.O_RDWR, 0644)
-		if err != nil {
-			return errors.Wrapf(err, "failed to open file %s", tracePath)
-		}
-		defer func() {
-			if err := file.Close(); err != nil {
-				testing.ContextLog(ctx, "Failed to close file: ", err)
-			}
-		}()
-
-		writer := gzip.NewWriter(file)
-		defer func() {
-			if err := writer.Close(); err != nil {
-				testing.ContextLog(ctx, "Failed to close gzip writer: ", err)
-			}
-		}()
-
-		testing.ContextLog(ctx, "Writing trace data")
-		if _, err := writer.Write(data); err != nil {
-			return errors.Wrap(err, "failed to write the data")
-		}
-		testing.ContextLog(ctx, "Trace data saved to: ", tracePath)
-
-		if err := writer.Flush(); err != nil {
-			return errors.Wrap(err, "failed to flush the gzip writer")
-		}
-
-		// The temporary file of trace data is no longer needed when returned.
-		sess.RemoveTraceResultFile()
+		testing.ContextLog(ctx, "Finalizing (and compressing) the trace data: ", tracePath)
+		sess.Finalize(ctx)
 	}
 
 	return nil
