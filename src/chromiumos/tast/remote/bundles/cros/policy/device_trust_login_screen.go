@@ -10,9 +10,9 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
+	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/common/tape"
 	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/remote/policyutil"
 	"chromiumos/tast/rpc"
 	"chromiumos/tast/services/cros/enterpriseconnectors"
 	"chromiumos/tast/services/cros/graphics"
@@ -70,7 +70,8 @@ func init() {
 				loginPossible:  false,
 			},
 		}},
-		Timeout:      7 * time.Minute,
+		Fixture:      fixture.CleanOwnership,
+		Timeout:      4 * time.Minute,
 		BugComponent: "b:1163683",
 	})
 }
@@ -83,18 +84,8 @@ func DeviceTrustLoginScreen(ctx context.Context, s *testing.State) {
 
 	// Shorten deadline to leave time for cleanup.
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Minute)
+	ctx, cancel := ctxutil.Shorten(ctx, 20*time.Second)
 	defer cancel()
-
-	defer func(ctx context.Context) {
-		if err := policyutil.EnsureTPMAndSystemStateAreReset(ctx, s.DUT(), s.RPCHint()); err != nil {
-			s.Error("Failed to reset TPM after test: ", err)
-		}
-	}(cleanupCtx)
-
-	if err := policyutil.EnsureTPMAndSystemStateAreReset(ctx, s.DUT(), s.RPCHint()); err != nil {
-		s.Fatal("Failed to reset TPM: ", err)
-	}
 
 	cl, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())
 	if err != nil {
@@ -131,7 +122,7 @@ func DeviceTrustLoginScreen(ctx context.Context, s *testing.State) {
 	// provisioned even when the enrollment fails we need to defer the
 	// deprovisioning before enrolling.
 	defer func(ctx context.Context) {
-		if err := tapeClient.DeprovisionHelper(cleanupCtx, cl, acc.CustomerID, acc.OrgUnitPath); err != nil {
+		if err := tapeClient.DeprovisionHelper(ctx, cl, acc.CustomerID, acc.OrgUnitPath); err != nil {
 			s.Fatal("Failed to deprovision device: ", err)
 		}
 	}(cleanupCtx)
