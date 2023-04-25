@@ -7,7 +7,7 @@ package lacros
 import (
 	"context"
 	"math"
-	"os"
+	"path/filepath"
 	"time"
 
 	"chromiumos/tast/common/action"
@@ -190,11 +190,14 @@ func PowerVideocall(ctx context.Context, s *testing.State) {
 	var sess *tracing.Session
 	if params.collectTrace {
 		traceConfigPath := s.DataPath(tracing.TBMTracedProbesConfigFile)
-		sess, err = tracing.StartSession(ctx, traceConfigPath)
+		traceDataPath := filepath.Join(s.OutDir(), "trace.pb")
+		sess, err = tracing.StartSession(ctx, traceConfigPath, tracing.WithTraceDataPath(traceDataPath))
 		if err != nil {
 			s.Fatal("Failed to start tracing: ", err)
 		}
-		s.Log("Collecting Perfetto trace File at: ", sess.TraceResultFile.Name())
+		s.Log("Collecting Perfetto trace File at: ", sess.TraceDataPath())
+
+		defer sess.Finalize(ctx)
 	}
 
 	histograms, err := metrics.RunAndWaitAll(
@@ -227,11 +230,6 @@ func PowerVideocall(ctx context.Context, s *testing.State) {
 	if params.collectTrace {
 		if err := sess.Stop(); err != nil {
 			s.Fatal("Failed to stop the tracing session: ", err)
-		}
-
-		// Transfer trace file to output directory.
-		if err := os.Rename(sess.TraceResultFile.Name(), s.OutDir()+"/trace.pb"); err != nil {
-			s.Fatal("Failed to transfer trace file: ", err)
 		}
 	}
 
