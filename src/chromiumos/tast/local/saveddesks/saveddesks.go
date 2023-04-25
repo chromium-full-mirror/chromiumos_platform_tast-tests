@@ -7,7 +7,6 @@ package saveddesks
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"chromiumos/tast/local/apps"
@@ -91,15 +90,11 @@ func WaitforAppsToLaunch(ctx context.Context, tconn *chrome.TestConn, ac *uiauto
 func WaitforAppsToBeVisible(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.Context, appsList []apps.App) error {
 	for _, app := range appsList {
 		// Wait for the launched app window to become visible.
+		if _, err := ash.WaitForAppWindow(ctx, tconn, app.ID); err != nil {
+			return errors.Wrapf(err, "failed to wait for the %s app launch event to finish", app.Name)
+		}
 		if err := ash.WaitForCondition(ctx, tconn, func(w *ash.Window) bool {
-			if !w.IsVisible {
-				return false
-			}
-			// The window title of Lacros is suffixed with "Chrome", not "Lacros".
-			if w.WindowType == ash.WindowTypeLacros {
-				return strings.Contains(w.Title, "Chrome")
-			}
-			return strings.Contains(w.Title, app.Name)
+			return w.IsVisible
 		}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
 			return errors.Wrapf(err, "%s app window not visible after launching", app.Name)
 		}
