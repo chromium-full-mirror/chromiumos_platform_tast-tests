@@ -1422,7 +1422,6 @@ func TestPlatformDecodingParams(t *testing.T) {
 		for _, testGroup := range []string{"inter", "inter_multi_coeff", "inter_segment", "intra", "intra_multi_coeff", "intra_segment", "comprehensive"} {
 			files := vp8Files[testGroup]
 
-			// TODO(nhebert): Use a to-be-created hardware dependency for V4L2 stateful decode.
 			param := paramData{
 				Name:         fmt.Sprintf("v4l2_%s_vp8_%s", strings.ToLower(stateness), testGroup),
 				Decoder:      decoderExecutable,
