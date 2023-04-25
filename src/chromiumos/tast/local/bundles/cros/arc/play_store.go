@@ -25,7 +25,7 @@ func init() {
 		Contacts:     []string{"arc-core@google.com", "cros-arc-te@google.com", "mhasank@chromium.org"},
 		// ChromeOS > Software > ARC++ > Core > Play Store Setup
 		BugComponent: "b:1131344",
-		Attr:         []string{"group:arc-functional", "group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:arc-functional", "group:mainline", "informational"},
 		SoftwareDeps: []string{"play_store", "chrome"},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_container"},
