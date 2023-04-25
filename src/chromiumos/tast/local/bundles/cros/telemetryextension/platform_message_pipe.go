@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/telemetryextension/fixture"
 	"chromiumos/tast/testing"
 )
@@ -61,6 +62,21 @@ func PlatformMessagePipe(ctx context.Context, s *testing.State) {
 	type response struct {
 		Success   bool        `json:"success"`
 		Telemetry interface{} `json:"telemetry"`
+	}
+
+	// chrome.runtime might not be available until a companion Chrome Extension is
+	// completely installed, so wait until chrome.runtime.sendMessage is not null.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		available := false
+		if err := v.PwaConn.Eval(ctx, "chrome.runtime !== null && chrome.runtime.sendMessage !== null", &available); err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to verify whether chrome.runtime.sendMessage is null"))
+		}
+		if !available {
+			return errors.New("chrome.runtime.sendMessage is null")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+		s.Fatal("Failed to wait for response from Telemetry extension service worker: ", err)
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
