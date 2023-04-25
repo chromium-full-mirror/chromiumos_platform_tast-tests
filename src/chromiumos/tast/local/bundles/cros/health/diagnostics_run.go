@@ -113,11 +113,11 @@ func init() {
 		}, {
 			Name:      "memory",
 			Val:       newRoutineParams(croshealthd.RoutineMemory),
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			ExtraAttr: []string{"informational"},
 		}, {
 			Name:      "sensitive_sensor",
 			Val:       newRoutineParams(croshealthd.RoutineSensitiveSensor),
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			ExtraAttr: []string{"informational"},
 		}, {
 			Name: "fingerprint",
 			Val:  newRoutineParams(croshealthd.RoutineFingerprint),
@@ -138,7 +138,7 @@ func init() {
 			Name:              "emmc_lifetime",
 			Val:               newRoutineParams(croshealthd.RoutineEMMCLifetime),
 			ExtraHardwareDeps: hwdep.D(hwdep.Emmc()),
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
+			ExtraAttr:         []string{"informational"},
 		}, {
 			Name:              "led_lit_up",
 			Val:               newRoutineParams(croshealthd.RoutineLedLitUp),
@@ -146,25 +146,25 @@ func init() {
 		}, {
 			Name:      "audio_set_volume",
 			Val:       newRoutineParams(croshealthd.RoutineAudioSetVolume),
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			ExtraAttr: []string{"informational"},
 		}, {
 			Name:      "audio_set_gain",
 			Val:       newRoutineParams(croshealthd.RoutineAudioSetGain),
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			ExtraAttr: []string{"informational"},
 		}, {
 			Name:              "bluetooth_power",
 			Val:               newRoutineParams(croshealthd.RoutineBluetoothPower),
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
+			ExtraAttr:         []string{"informational"},
 			ExtraHardwareDeps: hwdep.D(hwdep.Bluetooth()),
 		}, {
 			Name:              "bluetooth_discovery",
 			Val:               newRoutineParams(croshealthd.RoutineBluetoothDiscovery),
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
+			ExtraAttr:         []string{"informational"},
 			ExtraHardwareDeps: hwdep.D(hwdep.Bluetooth()),
 		}, {
 			Name:              "bluetooth_scanning",
 			Val:               newRoutineParams(croshealthd.RoutineBluetoothScanning),
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
+			ExtraAttr:         []string{"informational"},
 			ExtraHardwareDeps: hwdep.D(hwdep.Bluetooth()),
 		}},
 	})
