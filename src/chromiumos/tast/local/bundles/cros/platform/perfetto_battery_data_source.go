@@ -6,11 +6,15 @@ package platform
 
 import (
 	"context"
+	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"chromiumos/tast/local/power"
 	"chromiumos/tast/local/tracing"
+
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -38,14 +42,18 @@ func init() {
 // PerfettoBatteryDataSource checks that the "linux.sysfs_power" data source
 // collects battery counters on the device.
 func PerfettoBatteryDataSource(ctx context.Context, s *testing.State) {
+	ctxForCleanup := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
+	defer cancel()
+
 	// Start a trace session using the perfetto command line tool.
 	traceConfigPath := s.DataPath(batteryTraceConfigFile)
-	sess, err := tracing.StartSessionAndWaitUntilDone(ctx, traceConfigPath)
+	traceDataPath := filepath.Join(s.OutDir(), "perfetto-trace.pb")
+	sess, err := tracing.StartSessionAndWaitUntilDone(ctx, traceConfigPath, tracing.WithTraceDataPath(traceDataPath), tracing.WithCompression())
 	if err != nil {
 		s.Fatal("Failed to start tracing: ", err)
 	}
-	// The temporary file of trace data is no longer needed when returned.
-	defer sess.RemoveTraceResultFile()
+	defer sess.Finalize(ctxForCleanup)
 
 	// Process the trace data with the SQL query and get [][]string as the result.
 	// See the content of batteryTraceQueryFile for details.

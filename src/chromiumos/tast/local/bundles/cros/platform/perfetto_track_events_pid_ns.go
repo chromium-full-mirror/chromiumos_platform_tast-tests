@@ -13,6 +13,8 @@ import (
 
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/tracing"
+
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -40,19 +42,6 @@ func init() {
 }
 
 func verifyTrackEventPid(ctx context.Context, s *testing.State, sess *tracing.Session) {
-	ok := false
-	defer func() {
-		// Remove the trace data on test successful, or save to test output dir for inspection on test failure.
-		if ok {
-			sess.RemoveTraceResultFile()
-		} else {
-			err := os.Rename(sess.TraceResultFile.Name(), filepath.Join(s.OutDir(), "perfetto-trace.pb"))
-			if err != nil {
-				s.Log("Failed to save the trace result: ", err)
-			}
-		}
-	}()
-
 	if err := sess.Stop(); err != nil {
 		s.Fatal("Failed to stop tracing: ", err)
 	}
@@ -76,24 +65,36 @@ func verifyTrackEventPid(ctx context.Context, s *testing.State, sess *tracing.Se
 	if pid, err := strconv.Atoi(res[1][1]); err != nil || pid <= 0 {
 		s.Fatalf("Failed to verify PID of track events: malformed query result: %q", res)
 	}
-	ok = true
+
+	// On test success, remove the trace data file.
+	if err := os.Remove(sess.TraceDataPath()); err != nil {
+		s.Fatal("Failed to remove the trace data: ", err)
+	}
 }
 
 // PerfettoTrackEventsPidNS tests tracing PID-namespaced processes.
 // The test runs the perfetto_simple_producer binary within a PID namespace (starting with minijail -p)
 // and checks whether the track events are associated with the root-level PID.
 func PerfettoTrackEventsPidNS(ctx context.Context, s *testing.State) {
+	ctxForCleanup := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
+	defer cancel()
+
 	// Start a trace session using the perfetto command line tool.
 	traceConfigPath := s.DataPath(trackEventsPidNSConfigFile)
-	s.Log(traceConfigPath)
-	sess, err := tracing.StartSession(ctx, traceConfigPath)
+	sess, err := tracing.StartSession(ctx, traceConfigPath,
+		tracing.WithTraceDataPath(filepath.Join(s.OutDir(), "perfetto-trace.pb")),
+		tracing.WithCompression())
 	if err != nil {
 		s.Fatal("Failed to start tracing: ", err)
 	}
+	defer sess.Finalize(ctxForCleanup)
 
 	// Wait until tracing is done and verify the collected trace data using the trace processor.
+	// This doesn't perform cleanup so it runs with ctx.
 	defer verifyTrackEventPid(ctx, s, sess)
 
+	// GoBigSleepLint: sleep to ensure that the minijailed process sends trace data to a running tracing session.
 	if err := testing.Sleep(ctx, 2*time.Second); err != nil {
 		s.Fatal("Failed to sleep to wait for the tracing session: ", err)
 	}

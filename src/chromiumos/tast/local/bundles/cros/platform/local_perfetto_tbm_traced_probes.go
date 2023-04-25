@@ -9,8 +9,10 @@ import (
 	"time"
 
 	"android.googlesource.com/platform/external/perfetto/protos/perfetto/metrics/github.com/google/perfetto/perfetto_proto"
+	"go.chromium.org/tast/core/ctxutil"
 
 	"chromiumos/tast/local/tracing"
+
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -88,21 +90,26 @@ func processMemMetric(memMetric *perfetto_proto.AndroidMemoryMetric, s *testing.
 // LocalPerfettoTBMTracedProbes tests perfetto trace collection on
 // traced_probes and process the trace result with trace_processor_shell.
 func LocalPerfettoTBMTracedProbes(ctx context.Context, s *testing.State) {
+	ctxForCleanup := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
+	defer cancel()
+
 	// Start a trace session using the perfetto command line tool.
 	traceConfigPath := s.DataPath(tracing.TBMTracedProbesConfigFile)
 	sess, err := tracing.StartSession(ctx, traceConfigPath)
 	if err != nil {
 		s.Fatal("Failed to start tracing: ", err)
 	}
-	// The temporary file of trace data is no longer needed when returned.
-	defer sess.RemoveTraceResultFile()
+	defer sess.Finalize(ctxForCleanup)
 
 	// Developers can run other tests to trigger more trace data.
 	const pauseDuration = time.Second * 10
+	// GoBigSleepLint: sleep to let the tracing session have time collecting trace events.
 	if err := testing.Sleep(ctx, pauseDuration); err != nil {
 		s.Fatal("Failed to sleep while waiting for overview to trigger: ", err)
 	}
 
+	// The trace config uses a long duration. Terminate the session with sess.Stop() before the full trace duration elapses to avoid context timeout in trace processing.
 	if err := sess.Stop(); err != nil {
 		s.Fatal("Failed to stop the tracing session: ", err)
 	}
