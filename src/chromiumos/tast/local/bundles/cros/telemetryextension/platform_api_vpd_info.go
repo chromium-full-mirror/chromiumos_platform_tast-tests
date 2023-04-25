@@ -10,8 +10,10 @@ import (
 	"os"
 	"reflect"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
+
 	"chromiumos/tast/local/bundles/cros/telemetryextension/fixture"
+	"chromiumos/tast/local/crosconfig"
 	"chromiumos/tast/testing"
 )
 
@@ -92,7 +94,7 @@ func fetchVPDInfo(ctx context.Context) (vpdInfoResponse, error) {
 		return vpdInfoResponse{}, errors.Wrap(err, "failed to fetch serial_number VPD field")
 	}
 
-	skuNumber, err := fetchOptionalVpdField("/sys/firmware/vpd/ro/sku_number")
+	skuNumber, err := skuNumber(ctx)
 	if err != nil {
 		return vpdInfoResponse{}, errors.Wrap(err, "failed to fetch sku_number VPD field")
 	}
@@ -103,6 +105,31 @@ func fetchVPDInfo(ctx context.Context) (vpdInfoResponse, error) {
 		SerialNumber: serialNumber,
 		SkuNumber:    skuNumber,
 	}, nil
+}
+
+// skuNumber returns expected sku_number that chrome.os.telemetry.getVpdInfo API
+// should return.
+//
+// cros_healthd does not read the sku_number VPD field if cros-config does not
+// have proper configuration even if the VPD field is actually present on the
+// device. For reference b/210439856.
+func skuNumber(ctx context.Context) (string, error) {
+	got, err := crosconfig.Get(ctx, "/cros-healthd/cached-vpd", "has-sku-number")
+	if err != nil && !crosconfig.IsNotFound(err) {
+		return "", errors.Wrap(err, "failed to get has-sku-number value from cros config")
+	}
+
+	// has-sku-number is missing in cros-config, so API should return empty
+	// `sku_number`.
+	if got == "false" {
+		return "", nil
+	}
+
+	if got != "true" {
+		return "", errors.Errorf(`unexpected has-sku-number value = got %q, want "true" or "false"`, got)
+	}
+
+	return fetchOptionalVpdField("/sys/firmware/vpd/ro/sku_number")
 }
 
 // fetchOptionalVpdField returns the value of an optional VPD field or the empty
