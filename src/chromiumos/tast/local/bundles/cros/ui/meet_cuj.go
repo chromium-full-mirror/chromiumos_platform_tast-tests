@@ -15,14 +15,15 @@ import (
 	"time"
 
 	"chromiumos/tast/common/action"
+	"chromiumos/tast/common/async"
 	"chromiumos/tast/common/bond"
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/cuj"
+	"chromiumos/tast/local/chrome/cuj/googledocs"
 	"chromiumos/tast/local/chrome/cuj/inputsimulations"
 	"chromiumos/tast/local/chrome/display"
 	"chromiumos/tast/local/chrome/lacros"
@@ -43,6 +44,8 @@ import (
 	"chromiumos/tast/local/webrtcinternals"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
+
+	"go.chromium.org/tast/core/ctxutil"
 )
 
 type meetLayoutType string
@@ -54,9 +57,14 @@ const (
 	meetLayoutAuto      meetLayoutType = "Auto"
 )
 
-// meetTest specifies the setting of a Hangouts Meet journey. More info at go/cros-meet-tests.
+// meetTest specifies the setting of a Google Meet journey. More info at go/cros-meet-tests.
 type meetTest struct {
-	num           int                  // Number of bots in the meeting.
+	// bots is an increasing list of bot counts that should be in the call
+	// during the test. There should be at least one value in this list, and
+	// the first bot count value has to be greater than 0, to account for the
+	// spotlight bot that is in every test.
+	bots []int
+
 	layout        meetLayoutType       // Type of the layout in the meeting.
 	present       bool                 // Whether it is presenting the Google Docs/Jamboard window.
 	docs          bool                 // Whether it is running with a Google Docs window.
@@ -106,25 +114,72 @@ func init() {
 			"ui.MeetCUJ.bond_credentials",
 		},
 		Params: []testing.Param{
-			// 2p Meet variants. Each of these varaints are of lower priority,
+			{
+				Timeout:   defaultTestTimeout,
+				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
+				Val: meetTest{
+					bots:        []int{1, 3, 15},
+					layout:      meetLayoutTiled,
+					cam:         true,
+					zoomOut:     true,
+					browserType: browser.TypeAsh,
+				},
+				Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
+			}, {
+				Name:      "docs",
+				Timeout:   defaultTestTimeout,
+				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
+				Val: meetTest{
+					bots:        []int{1, 3, 15},
+					layout:      meetLayoutTiled,
+					present:     true,
+					docs:        true,
+					split:       true,
+					cam:         true,
+					zoomOut:     true,
+					effects:     true,
+					browserType: browser.TypeAsh,
+				},
+				Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
+			},
+			{
+				Name:      "docs_lacros",
+				Timeout:   defaultTestTimeout,
+				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
+				Val: meetTest{
+					bots:        []int{1, 3, 15},
+					layout:      meetLayoutTiled,
+					present:     true,
+					docs:        true,
+					split:       true,
+					cam:         true,
+					zoomOut:     true,
+					effects:     true,
+					browserType: browser.TypeLacros,
+				},
+				Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingLacros",
+				ExtraSoftwareDeps: []string{"lacros"},
+			},
+			// 2p Meet variants. Each of these variants are of lower priority,
 			// so run them on fewer devices.
 			{
 				Name:      "2p",
 				Timeout:   defaultTestTimeout,
 				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
 				Val: meetTest{
-					num:         1,
+					bots:        []int{1},
 					layout:      meetLayoutTiled,
 					cam:         true,
 					browserType: browser.TypeAsh,
 				},
 				Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
-			}, {
+			},
+			{
 				Name:      "lacros_2p",
 				Timeout:   defaultTestTimeout,
 				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
 				Val: meetTest{
-					num:         1,
+					bots:        []int{1},
 					layout:      meetLayoutTiled,
 					cam:         true,
 					browserType: browser.TypeLacros,
@@ -139,7 +194,7 @@ func init() {
 				Timeout:   defaultTestTimeout,
 				ExtraAttr: []string{"group:cuj"},
 				Val: meetTest{
-					num:         3,
+					bots:        []int{3},
 					layout:      meetLayoutTiled,
 					cam:         true,
 					browserType: browser.TypeAsh,
@@ -151,7 +206,7 @@ func init() {
 				// Lower priority test, so run on fewer devices.
 				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
 				Val: meetTest{
-					num:         3,
+					bots:        []int{3},
 					layout:      meetLayoutTiled,
 					cam:         true,
 					browserType: browser.TypeAsh,
@@ -162,7 +217,7 @@ func init() {
 				Timeout:   defaultTestTimeout,
 				ExtraAttr: []string{"group:cuj"},
 				Val: meetTest{
-					num:         3,
+					bots:        []int{3},
 					layout:      meetLayoutTiled,
 					cam:         true,
 					browserType: browser.TypeLacros,
@@ -174,7 +229,7 @@ func init() {
 				Timeout:   defaultTestTimeout,
 				ExtraAttr: []string{"group:cuj"},
 				Val: meetTest{
-					num:         3,
+					bots:        []int{3},
 					layout:      meetLayoutTiled,
 					present:     true,
 					docs:        true,
@@ -188,7 +243,7 @@ func init() {
 				Timeout:   defaultTestTimeout,
 				ExtraAttr: []string{"group:cuj"},
 				Val: meetTest{
-					num:         3,
+					bots:        []int{3},
 					layout:      meetLayoutTiled,
 					present:     true,
 					docs:        true,
@@ -206,19 +261,18 @@ func init() {
 				Timeout:   defaultTestTimeout,
 				ExtraAttr: []string{"group:cuj"},
 				Val: meetTest{
-					num:         15,
+					bots:        []int{15},
 					layout:      meetLayoutTiled,
 					cam:         true,
 					browserType: browser.TypeAsh,
 				},
 				Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
 			}, {
-				Name:    "16p_enterprise",
-				Timeout: defaultTestTimeout,
-				// Lower priority test, so run on fewer devices.
+				Name:      "16p_enterprise",
+				Timeout:   defaultTestTimeout,
 				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
 				Val: meetTest{
-					num:         15,
+					bots:        []int{15},
 					layout:      meetLayoutTiled,
 					cam:         true,
 					browserType: browser.TypeAsh,
@@ -229,7 +283,7 @@ func init() {
 				Timeout:   defaultTestTimeout,
 				ExtraAttr: []string{"group:cuj"},
 				Val: meetTest{
-					num:         15,
+					bots:        []int{15},
 					layout:      meetLayoutTiled,
 					cam:         true,
 					browserType: browser.TypeLacros,
@@ -244,7 +298,7 @@ func init() {
 				Timeout:   defaultTestTimeout,
 				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
 				Val: meetTest{
-					num:         48,
+					bots:        []int{48},
 					layout:      meetLayoutTiled,
 					cam:         true,
 					zoomOut:     true,
@@ -265,7 +319,7 @@ func init() {
 				Timeout:   defaultTestTimeout,
 				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
 				Val: meetTest{
-					num:         15,
+					bots:        []int{15},
 					layout:      meetLayoutTiled,
 					present:     true,
 					docs:        true,
@@ -282,7 +336,7 @@ func init() {
 				Timeout:   defaultTestTimeout,
 				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
 				Val: meetTest{
-					num:         15,
+					bots:        []int{15},
 					layout:      meetLayoutTiled,
 					present:     true,
 					docs:        true,
@@ -300,7 +354,7 @@ func init() {
 				Timeout:   defaultTestTimeout,
 				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
 				Val: meetTest{
-					num:         15,
+					bots:        []int{15},
 					layout:      meetLayoutTiled,
 					present:     true,
 					docs:        true,
@@ -315,7 +369,7 @@ func init() {
 				Timeout:   defaultTestTimeout,
 				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
 				Val: meetTest{
-					num:         15,
+					bots:        []int{15},
 					layout:      meetLayoutTiled,
 					present:     true,
 					docs:        true,
@@ -332,7 +386,7 @@ func init() {
 				Timeout:   defaultTestTimeout,
 				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
 				Val: meetTest{
-					num:         48,
+					bots:        []int{48},
 					layout:      meetLayoutTiled,
 					cam:         true,
 					zoomOut:     true,
@@ -346,7 +400,7 @@ func init() {
 				Timeout:   defaultTestTimeout,
 				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
 				Val: meetTest{
-					num:         15,
+					bots:        []int{15},
 					layout:      meetLayoutTiled,
 					present:     true,
 					docs:        true,
@@ -363,7 +417,7 @@ func init() {
 				Name:    "2p_enterprise",
 				Timeout: defaultTestTimeout,
 				Val: meetTest{
-					num:         1,
+					bots:        []int{1},
 					layout:      meetLayoutTiled,
 					cam:         true,
 					browserType: browser.TypeAsh,
@@ -374,7 +428,7 @@ func init() {
 				Name:    "2p_30m",
 				Timeout: defaultTestTimeout + 30*time.Minute,
 				Val: meetTest{
-					num:         1,
+					bots:        []int{1},
 					layout:      meetLayoutTiled,
 					cam:         true,
 					duration:    30 * time.Minute,
@@ -385,7 +439,7 @@ func init() {
 				Name:    "4p_present_notes_split_enterprise",
 				Timeout: defaultTestTimeout,
 				Val: meetTest{
-					num:         3,
+					bots:        []int{3},
 					layout:      meetLayoutTiled,
 					present:     true,
 					docs:        true,
@@ -401,7 +455,7 @@ func init() {
 				Name:    "4p_notes_effects",
 				Timeout: defaultTestTimeout,
 				Val: meetTest{
-					num:           3,
+					bots:          []int{3},
 					layout:        meetLayoutTiled,
 					docs:          true,
 					cam:           true,
@@ -415,7 +469,7 @@ func init() {
 				Name:    "lacros_4p_notes_effects",
 				Timeout: defaultTestTimeout,
 				Val: meetTest{
-					num:           3,
+					bots:          []int{3},
 					layout:        meetLayoutTiled,
 					docs:          true,
 					cam:           true,
@@ -430,7 +484,7 @@ func init() {
 				Name:    "16p_notes",
 				Timeout: defaultTestTimeout,
 				Val: meetTest{
-					num:         15,
+					bots:        []int{15},
 					layout:      meetLayoutTiled,
 					docs:        true,
 					split:       true,
@@ -443,7 +497,7 @@ func init() {
 				Name:    "16p_jamboard",
 				Timeout: defaultTestTimeout + 15*time.Minute,
 				Val: meetTest{
-					num:         15,
+					bots:        []int{15},
 					layout:      meetLayoutTiled,
 					jamboard:    true,
 					split:       true,
@@ -456,7 +510,7 @@ func init() {
 				Name:    "49p_vp8",
 				Timeout: defaultTestTimeout,
 				Val: meetTest{
-					num:         48,
+					bots:        []int{48},
 					layout:      meetLayoutTiled,
 					cam:         true,
 					zoomOut:     true,
@@ -468,7 +522,7 @@ func init() {
 				Name:    "lacros_49p",
 				Timeout: defaultTestTimeout,
 				Val: meetTest{
-					num:         48,
+					bots:        []int{48},
 					layout:      meetLayoutTiled,
 					cam:         true,
 					zoomOut:     true,
@@ -508,10 +562,12 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 		addBotTimeout     = 100 * time.Second
 		defaultDocsURL    = "https://docs.new/"
 		jamboardURL       = "https://jamboard.google.com"
-		notes             = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
 		newTabTitle       = "New Tab"
 	)
 
+	notes := strings.Split("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.", "")
+
+	// Ensure that the Meet test parameters are properly formed.
 	meet := s.Param().(meetTest)
 	if meet.docs && meet.jamboard {
 		s.Fatal("Tried to open both Google Docs and Jamboard at the same time")
@@ -519,8 +575,14 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 	if meet.tabSwitchDocs && !meet.docs {
 		s.Fatal("Cannot tab switch docs without opening a Google Doc")
 	}
+	if len(meet.bots) == 0 {
+		s.Fatal("Must have at least 1 bot count")
+	}
+	if meet.bots[0] == 0 {
+		s.Fatal("First bot count must have at least 1 bot, to add the spotlight bot")
+	}
 
-	// Determines the meet call duration. Use the meet duration specified in
+	// Determines the Meet call duration. Use the Meet duration specified in
 	// test param if there is one. Otherwise, default to 10 minutes.
 	meetTimeout := 10 * time.Minute
 	if meet.duration != 0 {
@@ -609,6 +671,7 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 			s.Log("Failed to remove all bots: ", err)
 		}
 	}(closeCtx)
+
 	// Create a bot with spotlight layout to request HD video.
 	spotlightBotList, _, err := bc.AddBots(sctx, meetingCode, 1, meetTimeout+30*time.Minute, append(meet.botsOptions, bond.WithLayout("SPOTLIGHT"))...)
 	if err != nil {
@@ -617,9 +680,21 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 	if len(spotlightBotList) != 1 {
 		s.Fatalf("Unexpected number of bots with spotlight layout successfully started; got %d, expected 1", len(spotlightBotList))
 	}
-	// After the spotlight bot, attempt to add meet.num - 1 more bots, for a total of meet.num.
-	addBotsCount := meet.num - 1
-	if addBotsCount > 0 {
+
+	// Keep track of how many bots are already in the call, so we can add the
+	// right number of bots later in the test.
+	botsInCall := 1
+
+	addBots := func(ctx context.Context, numBots int) error {
+		sctx, cancel := context.WithTimeout(ctx, addBotTimeout)
+		defer cancel()
+
+		testing.ContextLogf(ctx, "Adding %d bots to the call", numBots)
+
+		if numBots == 0 {
+			return nil
+		}
+
 		wait := 100 * time.Millisecond
 		for i := 0; i < 3; i++ {
 			// GoBigSleepLint: A short sleep before next call to Bond API.
@@ -630,17 +705,25 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 			wait *= 10
 			// Add 30 minutes to the bot duration, to ensure that the bots stay long
 			// enough for the test to get info from chrome://webrtc-internals.
-			botList, numFailures, err := bc.AddBots(sctx, meetingCode, addBotsCount, meetTimeout+30*time.Minute, meet.botsOptions...)
+			botList, numFailures, err := bc.AddBots(sctx, meetingCode, numBots, meetTimeout+30*time.Minute, meet.botsOptions...)
 			if err != nil {
-				s.Fatalf("Failed to create %d bots: %v", addBotsCount, err)
+				s.Fatalf("Failed to create %d bots: %v", numBots, err)
 			}
 			s.Logf("%d bots started, %d bots failed", len(botList), numFailures)
 			if numFailures == 0 {
 				break
 			}
-			addBotsCount -= len(botList)
+			numBots -= len(botList)
 		}
+
+		return nil
 	}
+
+	numBotsToAdd := meet.bots[0] - botsInCall
+	if err := addBots(ctx, numBotsToAdd); err != nil {
+		s.Fatalf("Failed to initially add %d bots: %v", numBotsToAdd, err)
+	}
+	botsInCall += numBotsToAdd
 
 	tabChecker, err := cuj.NewTabCrashChecker(ctx, bTconn)
 	if err != nil {
@@ -932,7 +1015,7 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait to enter the meeting: ", checkError(ctx, tconn, err))
 	}
 
-	expectedParticipantCount := meet.num + 1
+	expectedParticipantCount := botsInCall + 1
 	checkParticipantCount := func(ctx context.Context, expectedCount int) error {
 		var participantCount int
 		if err := meetConn.Eval(ctx, "hrTelemetryApi.getParticipantCount()", &participantCount); err != nil {
@@ -1019,7 +1102,7 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 	assertTabActive(ctx)
 
 	pv := perf.NewValues()
-	if err := recorder.Run(ctx, func(ctx context.Context) error {
+	if err := recorder.Run(ctx, func(ctx context.Context) (retErr error) {
 		// Open up the collab window inside the recorder to collect
 		// PageLoad.PaintTiming.NavigationToFirstContentfulPaint.
 		var collaborationRE *regexp.Regexp
@@ -1042,27 +1125,12 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 			// complete before forcing Google Docs offline. Only log the error,
 			// because sometimes reaching quiescence can take a really long
 			// time, even when the doc is interactable.
-			if err := webutil.WaitForQuiescence(ctx, collaborationConn, 3*time.Minute); err != nil {
+			if err := webutil.WaitForQuiescence(ctx, collaborationConn, 15*time.Second); err != nil {
 				s.Log("Failed to wait for Google Docs to quiesce: ", err)
 			}
 
 			collaborationRE = regexp.MustCompile(`\bDocs\b`)
-		} else if meet.jamboard {
-			// Create another browser window and open a new Jamboard file.
-			recorder.Annotate(ctx, "Open_Jamboard_window")
-			collaborationConn, err = cs.NewConn(ctx, jamboardURL, browser.WithNewWindow())
-			if err != nil {
-				return errors.Wrap(err, "failed to open the Jamboard website")
-			}
-			defer collaborationConn.Close()
-			s.Log("Creating a Jamboard window")
-			if err := ui.LeftClick(nodewith.Name("New Jam").Role(role.Button))(ctx); err != nil {
-				return errors.Wrap(err, "failed to click the new jam button")
-			}
-			collaborationRE = regexp.MustCompile(`\bJamboard\b`)
-		}
 
-		if meet.docs {
 			// Enable docs blocker extension to force Docs in offline mode after docs
 			// is loaded.
 			docsBlockerConn, err := cuj.GetDocsBlockerConn(ctx, br)
@@ -1082,6 +1150,24 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 					s.Log("Failed to call docs blocker to restore: ", err)
 				}
 			}(docsBlockerCleanupCtx)
+
+			// Ensure no security alert popup obscures the Google Doc.
+			if err := cuj.DismissCriticalSecurityAlert(ctx, tconn); err != nil {
+				return errors.Wrap(err, "failed to dismiss critical security alert")
+			}
+		} else if meet.jamboard {
+			// Create another browser window and open a new Jamboard file.
+			recorder.Annotate(ctx, "Open_Jamboard_window")
+			collaborationConn, err = cs.NewConn(ctx, jamboardURL, browser.WithNewWindow())
+			if err != nil {
+				return errors.Wrap(err, "failed to open the Jamboard website")
+			}
+			defer collaborationConn.Close()
+			s.Log("Creating a Jamboard window")
+			if err := ui.LeftClick(nodewith.Name("New Jam").Role(role.Button))(ctx); err != nil {
+				return errors.Wrap(err, "failed to click the new jam button")
+			}
+			collaborationRE = regexp.MustCompile(`\bJamboard\b`)
 		}
 
 		var collaborationWindow *ash.Window
@@ -1147,7 +1233,6 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 		if err := meetConn.Eval(ctx, "hrTelemetryApi.streamQuality.receive720p()", nil); err != nil {
 			return errors.Wrap(err, "failed to request receiving 720p")
 		}
-
 		// Direct the spotlight bot to pin the test user so
 		// that the test user will have to provide HD video.
 		login, err := loginstatus.GetLoginStatus(ctx, tconn)
@@ -1207,13 +1292,111 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 
 		errc := make(chan error)
 		s.Log("Keeping the meet session for ", meetTimeout)
-		go func() {
+		async.Run(ctx, func(ctx context.Context) {
 			// Using goroutine to measure GPU counters asynchronously because:
 			// - we will add some other test scenarios (controlling windows / meet sessions).
 			// - graphics.MeasureGPUCounters may quit immediately when the hardware or
 			//   kernel does not support the reporting mechanism.
 			errc <- graphics.MeasureGPUCounters(ctx, meetTimeout, pv)
-		}()
+		}, "measure GPU counters")
+
+		var addBotsErr error
+		stopc := make(chan struct{})
+		defer func(ctx context.Context) {
+			close(stopc)
+			if addBotsErr != nil {
+				retErr = errors.Wrapf(retErr, "failed to run bot phases during the Meet call: %v", addBotsErr)
+			}
+		}(ctx)
+
+		var stopSnapshot func(ctx context.Context) error
+		numPhases := len(meet.bots)
+		async.Run(ctx, func(ctx context.Context) {
+			if numPhases == 1 {
+				return
+			}
+
+			// The call will be split into len(meet.bots) phases.
+			// Each phase i will have meet.bots[i] number of bots in the call.
+			// At this point in the test, the first set of bots have already
+			// been added.
+			currentPhase := 0
+			startBotAddTime := time.Now()
+
+			// The test is broken up into equal length phases with different
+			// bot counts.
+			phaseDuration := meetTimeout / time.Duration(numPhases)
+
+			// If there are multiple phases, collect a shortened list of UMA
+			// metrics for each phase.
+			ashMetrics, browserMetrics := cujrecorder.GetShortenedPerformanceMetrics()
+
+			addingMoreBots := true
+			for addingMoreBots {
+				// Prefix the metric with the number of people in the call.
+				// This is the number of bots in the call + the user themselves.
+				stopSnapshot, err = recorder.StartSnapshot(ctx, fmt.Sprintf("%dp.", botsInCall+1), ashMetrics, browserMetrics)
+				if err != nil {
+					addBotsErr = errors.Wrapf(err, "failed to start snapshot for phase %d", currentPhase)
+					break
+				}
+
+				// End the goroutine early if we added the bots for the
+				// last phase.
+				if currentPhase == numPhases-1 {
+					addingMoreBots = false
+					break
+				}
+
+				select {
+				// Subtract the time it took to add the bots from the phase
+				// duration. For the first bot phase, the bots are added before
+				// recorder.Run, so we subtract a negligible amount of time
+				// from the phase duration.
+				case <-time.After(phaseDuration - time.Since(startBotAddTime)):
+					// Complete the snapshot of the last phase.
+					if err := stopSnapshot(ctx); err != nil {
+						addBotsErr = errors.Wrapf(err, "failed to stop snapshot for phase %d", currentPhase)
+					}
+					stopSnapshot = nil
+
+					// Take a screenshot of the previous phase.
+					recorder.CustomScreenshot(ctx)
+
+					startBotAddTime = time.Now()
+
+					currentPhase++
+					numBotsToAdd = meet.bots[currentPhase] - botsInCall
+
+					if err := addBots(ctx, numBotsToAdd); err != nil {
+						addBotsErr = errors.Wrapf(err, "failed to add %d bots", numBotsToAdd)
+						addingMoreBots = false
+						break
+					}
+					botsInCall += numBotsToAdd
+					recorder.Annotate(ctx, fmt.Sprintf("Added_%d_bots", numBotsToAdd))
+
+					// Ensure to properly keep track of how many participants
+					// are in the call, which would include the current user
+					// and the optional screensharing connection.
+					expectedParticipantCount += numBotsToAdd
+
+				case <-stopc:
+					testing.ContextLog(ctx, "add_bots: Background signaled to stop")
+					addBotsErr = errors.Errorf("failed to complete phase %d, background signaled to stop", currentPhase)
+					addingMoreBots = false
+					break
+				}
+			}
+		}, "increasing bot count during test")
+		defer func(ctx context.Context) {
+			if stopSnapshot == nil {
+				return
+			}
+			if err := stopSnapshot(ctx); err != nil {
+				s.Log("Failed to stop final snapshot: ", err)
+			}
+		}(ctx)
 
 		// Record trace for 30 seconds.
 		// See go/trace-in-cuj-tests about rules for tracing.
@@ -1231,9 +1414,11 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 		meetTimeout = time.Duration(meetTimeout - traceDuration)
 
 		if meet.docs {
-			if err := action.Combine(
-				"select Google Docs",
-				kw.AccelAction("Alt+Tab"),
+			if err := collaborationWindow.ActivateWindow(ctx, tconn); err != nil {
+				return errors.Wrap(err, "failed to activate the collaboration window")
+			}
+
+			if err := action.Combine("select and zoom document",
 				pc.Click(nodewith.Name("Document content").Role(role.TextField)),
 				kw.AccelAction("Ctrl+Alt+["),
 				kw.AccelAction("Ctrl+A"),
@@ -1241,16 +1426,32 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 				return errors.Wrap(err, "failed to select Google Docs")
 			}
 			end := time.Now().Add(meetTimeout)
-			// Wait for 5 seconds, type notes for 12.4 seconds then until the time is
-			// elapsed (3 times by default). Wait before the first typing to reduce
-			// the overlap between typing and joining the meeting. If tabSwitchDocs is
-			// true, Alt+Tab twice to switch to another window and come back to the
-			// current window.
-			cycleDescription := "sleep and type"
+
+			// By default, type a bolded header and paragraph, then sleep
+			// for 5 seconds.
+			cycleDescription := "type and sleep"
 			cycleActions := []action.Action{
+				// Ctrl+Alt+1 is the shortcut for activating Heading 1.
+				kw.AccelAction("Ctrl+Alt+1"),
+
+				// Generate mouse/touch events by updating the text style to
+				// be bold.
+				googledocs.UpdateTextStyleAction(ctx, pc, ui, googledocs.Bold),
+				inputsimulations.TypeSequenceWPMAction(ctx, kw, 120, strings.Split("my bolded header", "")),
+
+				// Press enter to go to the next line and undo the bold lettering.
+				kw.AccelAction("Enter"),
+
+				// Type a paragraph in normal text.
+				inputsimulations.TypeSequenceWPMAction(ctx, kw, 120, notes),
+				kw.AccelAction("Enter"),
+
+				// Add a small delay before typing again.
 				action.Sleep(5 * time.Second),
-				kw.TypeAction(notes),
 			}
+
+			// If tabSwitchDocs is true, Alt+Tab twice to switch to another window
+			// and come back to the current window.
 			if meet.tabSwitchDocs {
 				cycleDescription = "sleep, type, and task switch"
 				taskSwitch := kw.AccelAction("Alt+Tab")
@@ -1262,7 +1463,7 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 			}
 
 			recorder.Annotate(ctx, "Start_typing_on_Docs")
-			for time.Until(end) > 36*time.Second {
+			for time.Until(end) > 0 {
 				if err := action.Combine(cycleDescription, cycleActions...)(ctx); err != nil {
 					return err
 				}
@@ -1428,7 +1629,7 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 			if err := os.WriteFile(filepath.Join(s.OutDir(), "webrtc-internals.json"), dump, 0644); err != nil {
 				s.Error("Failed to write WebRTC internals dump to test results folder: ", err)
 			}
-			webRTCInternalsPV, err := reportWebRTCInternals(ctx, dump, meetingCode, meet.num, meet.present)
+			webRTCInternalsPV, err := reportWebRTCInternals(ctx, dump, meetingCode, meet.bots[len(meet.bots)-1], meet.present)
 			if err != nil {
 				s.Error("Failed to report info from WebRTC internals dump to performance metrics: ", err)
 			} else {
