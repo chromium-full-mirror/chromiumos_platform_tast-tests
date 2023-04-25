@@ -43,6 +43,7 @@ func init() {
 			Val: browser.TypeAsh,
 		}, {
 			Name:              "lacros",
+			ExtraAttr:         []string{"informational"},
 			ExtraSoftwareDeps: []string{"lacros"},
 			Val:               browser.TypeLacros,
 		}},
