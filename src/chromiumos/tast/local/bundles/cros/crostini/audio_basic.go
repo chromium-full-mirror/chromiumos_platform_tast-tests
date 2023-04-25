@@ -20,8 +20,8 @@ func init() {
 		Func:         AudioBasic,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Runs a basic test on the container's audio using a pre-built crostini image",
-		Contacts:     []string{"chromeos-audio-bugs@google.com", "clumptini@google.com", "paulhsia@chromium.org"},
-		Attr:         []string{"group:mainline", "informational", "group:audio", "group:criticalstaging"},
+		Contacts:     []string{"chromeos-audio-bugs@google.com", "clumptini+oncall@google.com", "paulhsia@chromium.org"},
+		Attr:         []string{"group:mainline", "group:audio"},
 		SoftwareDeps: []string{"chrome"},
 		BugComponent: "b:875484",
 		Params: []testing.Param{
