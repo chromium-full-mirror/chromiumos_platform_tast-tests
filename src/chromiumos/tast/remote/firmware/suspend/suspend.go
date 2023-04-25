@@ -107,9 +107,23 @@ func (s *Context) SuspendDUT(state State, args SuspendArgs) error {
 		return errors.Errorf("failed to invoke powerd_dbus_suspend: %s", err)
 	}
 
-	testing.Sleep(s.ctx, time.Second)
 	if err := s.h.WaitForPowerStates(s.ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, string(state)); err != nil {
 		return errors.Errorf("failed to get power state %s: %s", state, err)
+	}
+
+	return nil
+}
+
+// SuspendDUTAllTypes attempts to suspend a DUT to it's default suspend state.
+// It will verify for suspend to either S3 or S0ix
+func (s *Context) SuspendDUTAllTypes(args SuspendArgs) error {
+	cmd := s.h.DUT.Conn().CommandContext(s.ctx, "powerd_dbus_suspend", fmt.Sprintf("--delay=%d", args.Delay))
+	if err := cmd.Start(); err != nil {
+		return errors.Errorf("failed to invoke powerd_dbus_suspend: %s", err)
+	}
+
+	if err := s.h.WaitForPowerStates(s.ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "S3", "S0ix"); err != nil {
+		return errors.Errorf("failed to suspend: %s", err)
 	}
 
 	return nil

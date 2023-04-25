@@ -44,13 +44,6 @@ func init() {
 		Fixture:      fixture.NormalMode,
 		Timeout:      3 * time.Hour, // Allow time for the battery to potentially charge up
 		Vars:         []string{varCycles},
-		Params: []testing.Param{{
-			Name: "s0ix",
-			Val:  suspend.StateS0ix,
-		}, {
-			Name: "s3",
-			Val:  suspend.StateS3,
-		}},
 	})
 }
 
@@ -85,21 +78,16 @@ func SuspendBattery(ctx context.Context, s *testing.State) {
 	}
 	defer suspendContext.Close()
 
-	targetState := s.Param().(suspend.State)
-	if err := suspendContext.VerifySupendWake(targetState); err != nil {
-		s.Fatalf("Failed to determine support for %s: %s", targetState, err)
-	}
-
 	// Run our cycles
 	for i := 0; i < suspendCycles; i++ {
-		s.Logf("Suspend cycling %s: %d/%d", targetState, i+1, suspendCycles)
+		s.Logf("Suspend cycling: %d/%d", i+1, suspendCycles)
 		previousCount, err := suspendContext.GetKernelSuspendCount()
 		if err != nil {
 			s.Fatal("Failed to get kernel suspend count: ", err)
 		}
 
 		s.Log("Suspending DUT")
-		if err := suspendContext.SuspendDUT(targetState, suspend.DefaultSuspendArgs()); err != nil {
+		if err := suspendContext.SuspendDUTAllTypes(suspend.DefaultSuspendArgs()); err != nil {
 			s.Fatal("Failed to suspend cycle DUT: ", err)
 		}
 
