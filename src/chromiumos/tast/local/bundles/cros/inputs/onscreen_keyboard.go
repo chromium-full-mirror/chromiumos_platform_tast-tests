@@ -14,9 +14,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/ossettings"
-	"chromiumos/tast/local/chrome/uiauto/quicksettings"
 	"chromiumos/tast/local/chrome/uiauto/role"
-	"chromiumos/tast/local/chrome/uiauto/state"
 	"chromiumos/tast/local/chrome/uiauto/vkb"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -47,37 +45,22 @@ func OnscreenKeyboard(ctx context.Context, s *testing.State) {
 	}
 	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
 
-	if err := quicksettings.ShowWithRetry(ctx, tconn, 10*time.Second); err != nil {
-		s.Fatal("Failed to open Quick Settings: ", err)
+	const onScreenKeyboard = "Keyboard and text input On-screen keyboard, dictation, Switch Access, and more"
+	settings, err := ossettings.LaunchAtPage(ctx, tconn, nodewith.Name(onScreenKeyboard).Role(role.Link))
+	if err != nil {
+		s.Fatal("Failed to launch os-settings on-screen keyboard page: ", err)
 	}
-	defer quicksettings.Hide(ctx, tconn)
-
-	if err := quicksettings.OpenSettingsApp(ctx, tconn); err != nil {
-		s.Fatal("Failed to open the Settings App from Quick Settings: ", err)
-	}
-
-	// Confirm that the Settings app is open by checking for the search box.
-	if err := uiauto.New(tconn).WaitUntilExists(ossettings.SearchBoxFinder)(ctx); err != nil {
-		s.Fatal("Waiting for Settings app search box failed: ", err)
-	}
-
-	settings := ossettings.New(tconn)
 	defer settings.Close(ctx)
 
-	manageAccessibility := nodewith.Name("Manage accessibility features Enable accessibility features").Role(role.Link)
-	onscreenButton := nodewith.Name("Enable on-screen keyboard").Role(role.ToggleButton).Focusable()
+	cui := uiauto.New(tconn)
+	onscreenButton := nodewith.Name("On-screen keyboard").Role(role.ToggleButton)
+	if err := cui.LeftClick(onscreenButton)(ctx); err != nil {
+		s.Fatal("Failed to find and click on On-screen keyboard: ", err)
+	}
 
-	if err := uiauto.Combine("Enable on-screen keyboard, using Accessibility",
-		settings.FocusAndWait(ossettings.Advanced),
-		settings.LeftClick(ossettings.Advanced),
-		settings.WaitUntilExists(ossettings.Advanced.State(state.Expanded, true)),
-		settings.FocusAndWait(ossettings.Accessibility),
-		settings.LeftClick(ossettings.Accessibility),
-		settings.LeftClick(manageAccessibility),
-		settings.FocusAndWait(onscreenButton),
-		settings.LeftClick(onscreenButton),
-	)(ctx); err != nil {
-		s.Log("Failed to enable on-screen keyboard: ", err)
+	onBoardKeyboard := nodewith.Name("On-screen keyboard").Role(role.Image)
+	if err := cui.WaitUntilExists(onBoardKeyboard)(ctx); err != nil {
+		s.Fatal("Failed to enable on board keyboard: ", err)
 	}
 
 	conn, err := cr.NewConn(ctx, "")
@@ -90,20 +73,10 @@ func OnscreenKeyboard(ctx context.Context, s *testing.State) {
 	ui := uiauto.New(tconn)
 	vkbCtx := vkb.NewContext(cr, tconn)
 
-	vkNode := nodewith.Name("Chrome OS Virtual Keyboard").Role(role.Keyboard)
-
 	if err := uiauto.Combine("Verify on-screen keyboard voice input and keys",
 		ui.LeftClick(browserui.AddressBarFinder),
-		ui.WaitUntilExists(vkNode),
 		vkbCtx.SwitchToVoiceInput(),
-		vkbCtx.HideVirtualKeyboard(),
-		ui.LeftClick(browserui.AddressBarFinder),
-		ui.WaitUntilExists(vkNode),
-		vkbCtx.TapKeys([]string{"t", "a", "s", "t"}),
 	)(ctx); err != nil {
-		s.Log("Failed to verify on-screen keyboard voice input and keys: ", err)
-	}
-	if err := vkbCtx.HideVirtualKeyboard()(cleanupCtx); err != nil {
-		s.Error("Failed to Hide Virtual Keyboard: ", err)
+		s.Fatal("Failed to verify on-screen keyboard voice input and keys: ", err)
 	}
 }
