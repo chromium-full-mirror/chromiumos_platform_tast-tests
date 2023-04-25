@@ -6,6 +6,7 @@ package platform
 
 import (
 	"context"
+	"os"
 	"time"
 
 	"chromiumos/tast/local/tracing"
@@ -29,28 +30,24 @@ func init() {
 
 // collectTraceData collect a system-wide trace using the perfetto command line
 // too.
-func collectTraceData(ctx context.Context, s *testing.State) error {
+func collectTraceData(ctx context.Context, traceConfigPath string) error {
 	// Trace config specifies a 5 sec duration. Use 20 sec to avoid premature timeout on slow devices.
 	wctx, wcancel := context.WithTimeout(ctx, 20*time.Second)
 	defer wcancel()
-
-	// Start a trace session using the perfetto command line tool.
-	traceConfigPath := s.DataPath(tracing.TraceConfigFile)
 
 	sess, err := tracing.StartSessionAndWaitUntilDone(wctx, traceConfigPath)
 	if err != nil {
 		return err
 	}
-	// The temporary file of trace data is no longer needed when returned.
-	defer sess.RemoveTraceResultFile()
+	defer sess.Finalize(ctx)
 
 	// Validate the trace data.
-	stat, err := sess.TraceResultFile.Stat()
+	stat, err := os.Stat(sess.TraceDataPath())
 	if err != nil {
-		return errors.Wrapf(err, "unexpected error stating %s", sess.TraceResultFile.Name())
+		return errors.Wrapf(err, "unexpected error stating %s", sess.TraceDataPath())
 	}
-	s.Logf("Collected %d bytes of trace data", stat.Size())
 
+	testing.ContextLogf(ctx, "Collected %d bytes of trace data", stat.Size())
 	return nil
 }
 
@@ -63,7 +60,8 @@ func PerfettoSystemTracing(ctx context.Context, s *testing.State) {
 		s.Fatal("Tracing services not running: ", err)
 	}
 
-	if err := collectTraceData(ctx, s); err != nil {
+	traceConfigPath := s.DataPath(tracing.TraceConfigFile)
+	if err := collectTraceData(ctx, traceConfigPath); err != nil {
 		s.Fatal("Failed to collect trace data: ", err)
 	}
 
