@@ -1362,11 +1362,6 @@ func TestPlatformDecodingParams(t *testing.T) {
 					"buf", "frm_resize", "gf_dist", "odd_size", "sub8x8", "sub8x8_sf",
 				} {
 
-					// TODO(b/250698011): Stateless decoder does not yet support VP9 profile 2.
-					if stateness == "Stateless" && profile == "profile_2" {
-						continue
-					}
-
 					// TODO(b/238211555) DRC is not supported with the current V4L2 stateless uAPI.
 					if stateness == "Stateless" && (cat == "frm_resize" || cat == "sub8x8_sf") {
 						continue
