@@ -28,7 +28,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test restarting Crostini by launching a linux app",
 		Contacts:     []string{"clumptini+oncall@google.com"},
-		Attr:         []string{"group:mainline", "group:criticalstaging"},
+		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "vm_host"},
 		BugComponent: "b:1122570",
 		Params: []testing.Param{
