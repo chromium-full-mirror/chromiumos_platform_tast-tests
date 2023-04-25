@@ -26,6 +26,8 @@ import (
 	"chromiumos/tast/local/media/devtools"
 	"chromiumos/tast/local/media/logging"
 	"chromiumos/tast/local/tracing"
+
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -341,6 +343,11 @@ func sampleDroppedFrames(ctx context.Context, conn *chrome.Conn, p *perf.Values)
 // gpu represents the values of all the threads in GPU process.
 // gpuMain represents the values of the GPU main thread.
 func measureContextSwitch(ctx context.Context, s *testing.State) (gpu, gpuMain contextSwitchStat, err error) {
+	ctxForCleanup := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, time.Second)
+	defer cancel()
+
+	// GoBigSleepLint: sleep to stabilize CPU usage.
 	if err := testing.Sleep(ctx, stabilizationDuration); err != nil {
 		return gpu, gpuMain, err
 	}
@@ -351,6 +358,7 @@ func measureContextSwitch(ctx context.Context, s *testing.State) (gpu, gpuMain c
 	if err != nil {
 		return gpu, gpuMain, errors.Wrap(err, "failed to start tracing")
 	}
+	defer sess.Finalize(ctxForCleanup)
 	// Stop tracing even if context deadline exceeds during sleep.
 	stopped := false
 	defer func() {
@@ -359,6 +367,7 @@ func measureContextSwitch(ctx context.Context, s *testing.State) (gpu, gpuMain c
 		}
 	}()
 
+	// GoBigSleepLint: sleep to stabilize CPU usage.
 	if err := testing.Sleep(ctx, measurementDuration); err != nil {
 		return gpu, gpuMain, errors.Wrap(err, "failed to sleep to wait for the tracing session")
 	}
@@ -366,7 +375,6 @@ func measureContextSwitch(ctx context.Context, s *testing.State) (gpu, gpuMain c
 	if err := sess.Stop(); err != nil {
 		return gpu, gpuMain, errors.Wrap(err, "failed to stop tracing")
 	}
-	defer sess.RemoveTraceResultFile()
 	testing.ContextLog(ctx, "Completed tracing events")
 
 	results, err := sess.RunQuery(ctx, s.DataPath(GPUThreadSchedSQLFile))
