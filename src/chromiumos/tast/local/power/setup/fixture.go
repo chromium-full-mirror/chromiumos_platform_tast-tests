@@ -6,6 +6,10 @@ package setup
 
 import (
 	"context"
+	"fmt"
+	"io"
+	"net/http"
+	"strings"
 	"time"
 
 	"chromiumos/tast/local/chrome"
@@ -13,6 +17,7 @@ import (
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
 	"chromiumos/tast/local/power"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -105,7 +110,7 @@ func init() {
 			NightLight:         DisableNightLight,
 			DarkTheme:          EnableLightTheme,
 			KeyboardBrightness: SetKbBrightness,
-		}),
+		}, false /*enableGAIALogin*/),
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: tearDownTimeout,
@@ -124,7 +129,7 @@ func init() {
 			NightLight:         DisableNightLight,
 			DarkTheme:          EnableLightTheme,
 			KeyboardBrightness: SetKbBrightnessToZero,
-		}),
+		}, false /*enableGAIALogin*/),
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: tearDownTimeout,
@@ -143,7 +148,7 @@ func init() {
 			NightLight:         DisableNightLight,
 			DarkTheme:          EnableLightTheme,
 			KeyboardBrightness: SetKbBrightness,
-		}),
+		}, false /*enableGAIALogin*/),
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: tearDownTimeout,
@@ -162,8 +167,46 @@ func init() {
 			NightLight:         DisableNightLight,
 			DarkTheme:          EnableLightTheme,
 			KeyboardBrightness: SetKbBrightnessToZero,
-		}),
+		}, false /*enableGAIALogin*/),
 		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: tearDownTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: "powerAshGAIA",
+		Desc: "Keyboard backlight off with GAIA login, recommended for testing feature power",
+		Contacts: []string{
+			"chromeos-platform-power@google.com",
+			"mqg@chromium.org",
+		},
+		Impl: NewPowerUIFixture(browser.TypeAsh, PowerTestOptions{
+			NightLight:         DisableNightLight,
+			DarkTheme:          EnableLightTheme,
+			KeyboardBrightness: SetKbBrightnessToZero,
+		}, true /*enableGAIALogin*/),
+		SetUpTimeout:    chrome.GAIALoginTimeout + setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: tearDownTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: "powerLacrosGAIA",
+		Desc: "Keyboard backlight off with GAIA login, recommended for testing feature power",
+		Contacts: []string{
+			"chromeos-platform-power@google.com",
+			"mqg@chromium.org",
+		},
+		Impl: NewPowerUIFixture(browser.TypeLacros, PowerTestOptions{
+			NightLight:         DisableNightLight,
+			DarkTheme:          EnableLightTheme,
+			KeyboardBrightness: SetKbBrightnessToZero,
+		}, true /*enableGAIALogin*/),
+		SetUpTimeout:    chrome.GAIALoginTimeout + setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: tearDownTimeout,
 		PreTestTimeout:  preTestTimeout,
@@ -296,11 +339,65 @@ func (f *powerMetricsNoUIFixture) PostTest(ctx context.Context, s *testing.FixtT
 	}
 }
 
+// gaiaLoginOption fetches the power test accounts and password then combine them with credential format.
+// Test accounts reuse accounts from autotest.
+func gaiaLoginOption(ctx context.Context) (chrome.Option, error) {
+	const (
+		pltpBaseURL = "https://sites.google.com/a/chromium.org/dev/chromium-os/testing/power-testing/pltp"
+		pltuURL     = pltpBaseURL + "/pltu_rand"
+		pltpURL     = pltpBaseURL + "/pltp_rand"
+	)
+
+	usernames, err := fetchFromURL(ctx, pltuURL)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to fetch usernames")
+	}
+	password, err := fetchFromURL(ctx, pltpURL)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to fetch password")
+	}
+
+	names := strings.Split(usernames, "\n")
+	password = strings.TrimSuffix(password, "\n")
+	var loginPool string
+	// loginPool is a string containing multiple credentials separated by newlines:
+	//
+	// user1:pass1
+	// user2:pass2
+	// user3:pass3
+	for _, n := range names {
+		loginPool += fmt.Sprintf("%s:%s", n, password) + "\n"
+	}
+
+	return chrome.GAIALoginPool(loginPool), nil
+}
+
+// fetchFromURL fetches content from a specific URL.
+func fetchFromURL(ctx context.Context, url string) (string, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to send request %q", url)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", errors.Errorf("failed with status %v", resp.Status)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to read response body")
+	}
+	return string(body), nil
+}
+
 type powerUIFixture struct {
 	bt               browser.Type
 	powerTestOptions *PowerTestOptions
 	cr               *chrome.Chrome
 	cleanup          func(context.Context) error
+
+	enableGAIALogin bool
 }
 
 // PowerUIFixtureData is return back to tests.
@@ -310,9 +407,9 @@ type PowerUIFixtureData struct {
 }
 
 // NewPowerUIFixture returns a FixtureImpl to set device to use the specified
-// browser and various power test options.
-func NewPowerUIFixture(bt browser.Type, pto PowerTestOptions) testing.FixtureImpl {
-	return &powerUIFixture{bt: bt, powerTestOptions: &pto}
+// browser, various power test options and other settings.
+func NewPowerUIFixture(bt browser.Type, pto PowerTestOptions, enableGAIALogin bool) testing.FixtureImpl {
+	return &powerUIFixture{bt: bt, powerTestOptions: &pto, enableGAIALogin: enableGAIALogin}
 }
 
 func (f *powerUIFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -329,6 +426,15 @@ func (f *powerUIFixture) SetUp(ctx context.Context, s *testing.FixtState) interf
 		// b/228256145 to avoid powerd restart.
 		chrome.DisableFeatures("FirmwareUpdaterApp"),
 	}
+
+	if f.enableGAIALogin {
+		gaiaLoginOpt, err := gaiaLoginOption(ctx)
+		if err != nil {
+			s.Fatal("Failed to get GAIA login chrome option: ", err)
+		}
+		opts = append(opts, gaiaLoginOpt)
+	}
+
 	cr, err := browserfixt.NewChrome(ctx, f.bt, lacrosfixt.NewConfig(), opts...)
 	if err != nil {
 		s.Fatal("Failed to login session: ", err)

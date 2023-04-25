@@ -8,12 +8,13 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/ctxutil"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
+
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/power"
 	"chromiumos/tast/local/power/setup"
-	"chromiumos/tast/testing"
 )
 
 const (
@@ -40,6 +41,9 @@ func init() {
 			Name:    "ash",
 			Fixture: "powerAsh",
 		}, {
+			Name:    "ash_gaia",
+			Fixture: "powerAshGAIA",
+		}, {
 			Name:              "lacros_kbbl",
 			Fixture:           "powerLacrosKbbl",
 			ExtraSoftwareDeps: []string{"lacros"},
@@ -48,6 +52,10 @@ func init() {
 			Fixture:           "powerLacros",
 			ExtraSoftwareDeps: []string{"lacros"},
 			ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
+		}, {
+			Name:              "lacros_gaia",
+			Fixture:           "powerLacrosGAIA",
+			ExtraSoftwareDeps: []string{"lacros"},
 		}},
 	})
 }
