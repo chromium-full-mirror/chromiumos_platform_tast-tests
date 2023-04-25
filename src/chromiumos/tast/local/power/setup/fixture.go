@@ -11,6 +11,8 @@ import (
 	"time"
 
 	"chromiumos/tast/common/utils"
+	"chromiumos/tast/local/arc"
+	"chromiumos/tast/local/arc/optin"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
@@ -29,6 +31,13 @@ const (
 	preTestTimeout  = 1 * time.Minute
 	postTestTimeout = 1 * time.Minute
 )
+
+// PowerFixtureOptions describes options used by the fixture only.
+type PowerFixtureOptions struct {
+	BrowserType     browser.Type
+	EnableGAIALogin bool
+	EnableARC       bool
+}
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
@@ -105,11 +114,11 @@ func init() {
 			"chromeos-platform-power@google.com",
 			"mqg@chromium.org",
 		},
-		Impl: NewPowerUIFixture(browser.TypeAsh, PowerTestOptions{
+		Impl: NewPowerUIFixture(PowerTestOptions{
 			NightLight:         DisableNightLight,
 			DarkTheme:          EnableLightTheme,
 			KeyboardBrightness: SetKbBrightness,
-		}, false /*enableGAIALogin*/),
+		}, PowerFixtureOptions{BrowserType: browser.TypeAsh}),
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: tearDownTimeout,
@@ -124,11 +133,11 @@ func init() {
 			"chromeos-platform-power@google.com",
 			"mqg@chromium.org",
 		},
-		Impl: NewPowerUIFixture(browser.TypeAsh, PowerTestOptions{
+		Impl: NewPowerUIFixture(PowerTestOptions{
 			NightLight:         DisableNightLight,
 			DarkTheme:          EnableLightTheme,
 			KeyboardBrightness: SetKbBrightnessToZero,
-		}, false /*enableGAIALogin*/),
+		}, PowerFixtureOptions{BrowserType: browser.TypeAsh}),
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: tearDownTimeout,
@@ -143,11 +152,11 @@ func init() {
 			"chromeos-platform-power@google.com",
 			"mqg@chromium.org",
 		},
-		Impl: NewPowerUIFixture(browser.TypeLacros, PowerTestOptions{
+		Impl: NewPowerUIFixture(PowerTestOptions{
 			NightLight:         DisableNightLight,
 			DarkTheme:          EnableLightTheme,
 			KeyboardBrightness: SetKbBrightness,
-		}, false /*enableGAIALogin*/),
+		}, PowerFixtureOptions{BrowserType: browser.TypeLacros}),
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: tearDownTimeout,
@@ -162,11 +171,11 @@ func init() {
 			"chromeos-platform-power@google.com",
 			"mqg@chromium.org",
 		},
-		Impl: NewPowerUIFixture(browser.TypeLacros, PowerTestOptions{
+		Impl: NewPowerUIFixture(PowerTestOptions{
 			NightLight:         DisableNightLight,
 			DarkTheme:          EnableLightTheme,
 			KeyboardBrightness: SetKbBrightnessToZero,
-		}, false /*enableGAIALogin*/),
+		}, PowerFixtureOptions{BrowserType: browser.TypeLacros}),
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: tearDownTimeout,
@@ -181,11 +190,14 @@ func init() {
 			"chromeos-platform-power@google.com",
 			"mqg@chromium.org",
 		},
-		Impl: NewPowerUIFixture(browser.TypeAsh, PowerTestOptions{
+		Impl: NewPowerUIFixture(PowerTestOptions{
 			NightLight:         DisableNightLight,
 			DarkTheme:          EnableLightTheme,
 			KeyboardBrightness: SetKbBrightnessToZero,
-		}, true /*enableGAIALogin*/),
+		}, PowerFixtureOptions{
+			BrowserType:     browser.TypeAsh,
+			EnableGAIALogin: true,
+		}),
 		SetUpTimeout:    chrome.GAIALoginTimeout + setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: tearDownTimeout,
@@ -200,12 +212,38 @@ func init() {
 			"chromeos-platform-power@google.com",
 			"mqg@chromium.org",
 		},
-		Impl: NewPowerUIFixture(browser.TypeLacros, PowerTestOptions{
+		Impl: NewPowerUIFixture(PowerTestOptions{
 			NightLight:         DisableNightLight,
 			DarkTheme:          EnableLightTheme,
 			KeyboardBrightness: SetKbBrightnessToZero,
-		}, true /*enableGAIALogin*/),
+		}, PowerFixtureOptions{
+			BrowserType:     browser.TypeLacros,
+			EnableGAIALogin: true,
+		}),
 		SetUpTimeout:    chrome.GAIALoginTimeout + setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: tearDownTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: "powerAshARC",
+		Desc: "Keyboard backlight off with ARC enabled, recommended for testing feature power",
+		Contacts: []string{
+			"chromeos-platform-power@google.com",
+			"mqg@chromium.org",
+		},
+		Impl: NewPowerUIFixture(PowerTestOptions{
+			NightLight:         DisableNightLight,
+			DarkTheme:          EnableLightTheme,
+			KeyboardBrightness: SetKbBrightnessToZero,
+		}, PowerFixtureOptions{
+			BrowserType:     browser.TypeAsh,
+			EnableGAIALogin: true,
+			EnableARC:       true,
+		}),
+		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: tearDownTimeout,
 		PreTestTimeout:  preTestTimeout,
@@ -374,24 +412,26 @@ func gaiaLoginOption(ctx context.Context) (chrome.Option, error) {
 }
 
 type powerUIFixture struct {
-	bt               browser.Type
-	powerTestOptions *PowerTestOptions
-	cr               *chrome.Chrome
-	cleanup          func(context.Context) error
+	powerTestOptions   *PowerTestOptions
+	powerFixtureOption *PowerFixtureOptions
 
-	enableGAIALogin bool
+	cr          *chrome.Chrome
+	arc         *arc.ARC
+	arcSnapshot *arc.Snapshot
+	cleanup     func(context.Context) error
 }
 
 // PowerUIFixtureData is return back to tests.
 type PowerUIFixtureData struct {
-	Bt browser.Type
-	Cr *chrome.Chrome
+	Bt  browser.Type
+	Cr  *chrome.Chrome
+	ARC *arc.ARC
 }
 
 // NewPowerUIFixture returns a FixtureImpl to set device to use the specified
-// browser, various power test options and other settings.
-func NewPowerUIFixture(bt browser.Type, pto PowerTestOptions, enableGAIALogin bool) testing.FixtureImpl {
-	return &powerUIFixture{bt: bt, powerTestOptions: &pto, enableGAIALogin: enableGAIALogin}
+// browser, various power test options and power fixture options.
+func NewPowerUIFixture(pto PowerTestOptions, pfo PowerFixtureOptions) testing.FixtureImpl {
+	return &powerUIFixture{powerTestOptions: &pto, powerFixtureOption: &pfo}
 }
 
 func (f *powerUIFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -409,7 +449,7 @@ func (f *powerUIFixture) SetUp(ctx context.Context, s *testing.FixtState) interf
 		chrome.DisableFeatures("FirmwareUpdaterApp"),
 	}
 
-	if f.enableGAIALogin {
+	if f.powerFixtureOption.EnableGAIALogin {
 		gaiaLoginOpt, err := gaiaLoginOption(ctx)
 		if err != nil {
 			s.Fatal("Failed to get GAIA login chrome option: ", err)
@@ -417,7 +457,14 @@ func (f *powerUIFixture) SetUp(ctx context.Context, s *testing.FixtState) interf
 		opts = append(opts, gaiaLoginOpt)
 	}
 
-	cr, err := browserfixt.NewChrome(ctx, f.bt, lacrosfixt.NewConfig(), opts...)
+	if f.powerFixtureOption.EnableARC {
+		opts = append(opts,
+			chrome.ARCSupported(),
+			chrome.ExtraArgs(arc.DisableSyncFlags()...))
+	}
+
+	bt := f.powerFixtureOption.BrowserType
+	cr, err := browserfixt.NewChrome(ctx, bt, lacrosfixt.NewConfig(), opts...)
 	if err != nil {
 		s.Fatal("Failed to login session: ", err)
 	}
@@ -430,6 +477,23 @@ func (f *powerUIFixture) SetUp(ctx context.Context, s *testing.FixtState) interf
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to get ash tconn: ", err)
+	}
+
+	var a *arc.ARC
+	if f.powerFixtureOption.EnableARC {
+		s.Log("Opting into Play Store")
+		if err := optin.PerformAndClose(ctx, cr, tconn); err != nil {
+			s.Fatal("Failed to optin to Play Store: ", err)
+		}
+		a, err = arc.New(ctx, s.OutDir())
+		if err != nil {
+			s.Fatal("Failed to start ARC: ", err)
+		}
+		arcSnapshot, err := arc.NewSnapshot(ctx, a)
+		if err != nil {
+			s.Fatal("Failed to take ARC state snapshot: ", err)
+		}
+		f.arcSnapshot = arcSnapshot
 	}
 
 	// Set up the testing environment.
@@ -457,9 +521,10 @@ func (f *powerUIFixture) SetUp(ctx context.Context, s *testing.FixtState) interf
 
 	chrome.Lock()
 	f.cr = cr
+	f.arc = a
 	f.cleanup = cleanup
 
-	return PowerUIFixtureData{Bt: f.bt, Cr: f.cr}
+	return PowerUIFixtureData{Bt: bt, Cr: f.cr, ARC: f.arc}
 }
 
 func (f *powerUIFixture) TearDown(ctx context.Context, s *testing.FixtState) {
@@ -468,6 +533,14 @@ func (f *powerUIFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 	}
 
 	chrome.Unlock()
+
+	if f.arc != nil {
+		if err := f.arc.Close(ctx); err != nil {
+			s.Log("Failed to close ARC: ", err)
+		}
+	}
+	f.arc = nil
+
 	if err := f.cr.Close(ctx); err != nil {
 		s.Error("Failed to close Chrome connection: ", err)
 	}
@@ -475,6 +548,9 @@ func (f *powerUIFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 }
 
 func (f *powerUIFixture) Reset(ctx context.Context) error {
+	if f.arc != nil {
+		return f.arcSnapshot.Restore(ctx, f.arc)
+	}
 	if err := f.cr.Responded(ctx); err != nil {
 		return errors.Wrap(err, "existing Chrome connection is unusable")
 	}
@@ -488,4 +564,11 @@ func (f *powerUIFixture) PreTest(ctx context.Context, s *testing.FixtTestState) 
 }
 
 func (f *powerUIFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
+	if f.arc != nil {
+		if err := f.arc.SaveLogFiles(ctx); err != nil {
+			s.Log("Failed to save ARC-related log files: ", err)
+		} else {
+			s.Log("ARC-related log files saved successfully")
+		}
+	}
 }

@@ -42,6 +42,10 @@ func init() {
 			Fixture: "powerAshGAIA",
 			Val:     exampleUITimeParams,
 		}, {
+			Name:    "ash_arc",
+			Fixture: "powerAshARC",
+			Val:     exampleUITimeParams,
+		}, {
 			Name:              "lacros_kbbl",
 			Fixture:           "powerLacrosKbbl",
 			ExtraSoftwareDeps: []string{"lacros"},
