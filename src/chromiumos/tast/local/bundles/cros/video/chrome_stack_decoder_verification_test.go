@@ -116,10 +116,8 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 			VideoFiles:    "h264Files[\"main\"]",
 			ValidatorType: "decoding.MD5",
 		}, {
-			Name: "h264_high",
-			// TODO(b/277105329) Reenable when decoder properly decodes
-			// test vectors.
-			// Attr:          perBuildAttrs,
+			Name:          "h264_high",
+			Attr:          perBuildAttrs,
 			SoftwareDeps:  `[]string{caps.HWDecodeH264, "proprietary_codecs"}`,
 			VideoFiles:    "h264Files[\"high\"]",
 			ValidatorType: "decoding.MD5",
