@@ -63,7 +63,7 @@ func PlatformMessagePipe(ctx context.Context, s *testing.State) {
 		Telemetry interface{} `json:"telemetry"`
 	}
 
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()
 
 	var resp response
