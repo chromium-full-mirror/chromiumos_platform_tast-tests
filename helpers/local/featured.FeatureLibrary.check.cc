@@ -120,15 +120,15 @@ int main(int argc, char* argv[]) {
   options.bus_type = dbus::Bus::SYSTEM;
   scoped_refptr<dbus::Bus> bus(new dbus::Bus(options));
 
-  std::unique_ptr<feature::PlatformFeatures> feature_lib =
-      feature::PlatformFeatures::New(bus);
+  CHECK(feature::PlatformFeatures::Initialize(bus));
+  feature::PlatformFeatures* feature_lib = feature::PlatformFeatures::Get();
 
   TestFeatureState enabled_feature = GetTestFeatureStateAndParams(
-      kCrOSLateBootDefaultEnabled, feature_lib.get());
+      kCrOSLateBootDefaultEnabled, feature_lib);
   LOG(INFO) << "Finished getting state and params for Default Enabled Feature";
 
   TestFeatureState disabled_feature = GetTestFeatureStateAndParams(
-      kCrOSLateBootDefaultDisabled, feature_lib.get());
+      kCrOSLateBootDefaultDisabled, feature_lib);
   LOG(INFO) << "Finished getting state and params for Default Disabled Feature";
 
   LogTestFeatureState(enabled_feature);
