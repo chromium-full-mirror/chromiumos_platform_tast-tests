@@ -35,7 +35,7 @@ func init() {
 		Fixture:      "arcBooted",
 		Data:         []string{"com.roblox.client-886.zip"},
 		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},

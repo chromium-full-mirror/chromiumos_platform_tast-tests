@@ -32,7 +32,7 @@ func init() {
 			Fixture:           "arcBooted",
 		}, {
 			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"android_p", "lacros"},
+			ExtraSoftwareDeps: []string{"android_container", "lacros"},
 			Fixture:           "lacrosWithArcBooted",
 		}, {
 			Name:              "vm",

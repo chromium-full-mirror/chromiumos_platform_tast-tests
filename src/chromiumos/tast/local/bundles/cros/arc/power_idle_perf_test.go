@@ -66,7 +66,7 @@ func TestPowerIdlePerfParamsAreGenerated(t *testing.T) {
 			},
 			{
 				"",
-				"android_p",
+				"android_container",
 				"arcBootedRestricted",
 			},
 			{

@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bundles/cros/arc/audio"
 	"chromiumos/tast/local/cpu"
@@ -18,6 +17,7 @@ import (
 	"chromiumos/tast/local/power/setup"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/ctxutil"
 )
 
 func init() {
@@ -43,7 +43,7 @@ func init() {
 					PerformanceMode:      audio.PerformanceModeNone,
 					BatteryDischargeMode: setup.ForceBatteryDischarge,
 				},
-				ExtraSoftwareDeps: []string{"android_p"},
+				ExtraSoftwareDeps: []string{"android_container"},
 				ExtraHardwareDeps: hwdep.D(hwdep.ForceDischarge()),
 			},
 			{
@@ -61,7 +61,7 @@ func init() {
 					PerformanceMode:      audio.PerformanceModeLowLatency,
 					BatteryDischargeMode: setup.ForceBatteryDischarge,
 				},
-				ExtraSoftwareDeps: []string{"android_p"},
+				ExtraSoftwareDeps: []string{"android_container"},
 				ExtraHardwareDeps: hwdep.D(hwdep.ForceDischarge()),
 			},
 			{
@@ -79,7 +79,7 @@ func init() {
 					PerformanceMode:      audio.PerformanceModePowerSaving,
 					BatteryDischargeMode: setup.ForceBatteryDischarge,
 				},
-				ExtraSoftwareDeps: []string{"android_p"},
+				ExtraSoftwareDeps: []string{"android_container"},
 				ExtraHardwareDeps: hwdep.D(hwdep.ForceDischarge()),
 			},
 			{
@@ -97,7 +97,7 @@ func init() {
 					PerformanceMode:      audio.PerformanceModeNone,
 					BatteryDischargeMode: setup.NoBatteryDischarge,
 				},
-				ExtraSoftwareDeps: []string{"android_p"},
+				ExtraSoftwareDeps: []string{"android_container"},
 				ExtraHardwareDeps: hwdep.D(hwdep.NoForceDischarge()),
 			},
 			{
@@ -115,7 +115,7 @@ func init() {
 					PerformanceMode:      audio.PerformanceModeLowLatency,
 					BatteryDischargeMode: setup.NoBatteryDischarge,
 				},
-				ExtraSoftwareDeps: []string{"android_p"},
+				ExtraSoftwareDeps: []string{"android_container"},
 				ExtraHardwareDeps: hwdep.D(hwdep.NoForceDischarge()),
 			},
 			{
@@ -133,7 +133,7 @@ func init() {
 					PerformanceMode:      audio.PerformanceModePowerSaving,
 					BatteryDischargeMode: setup.NoBatteryDischarge,
 				},
-				ExtraSoftwareDeps: []string{"android_p"},
+				ExtraSoftwareDeps: []string{"android_container"},
 				ExtraHardwareDeps: hwdep.D(hwdep.NoForceDischarge()),
 			},
 			{
@@ -218,6 +218,7 @@ func PowerAudioPlaybackPerf(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Warmup: Waiting a bit before starting the measurement")
+	// GoBigSleepLint: It's used as a measurement step which is part of the performance testing logic.
 	if err := testing.Sleep(ctx, audioWarmupDuration); err != nil {
 		s.Fatal("Failed to sleep: ", err)
 	}
@@ -228,6 +229,7 @@ func PowerAudioPlaybackPerf(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start recording: ", err)
 	}
 
+	// GoBigSleepLint: It's used as a measurement step which is part of the performance testing logic.
 	if err := testing.Sleep(ctx, measureDuration); err != nil {
 		s.Fatal("Failed to sleep: ", err)
 	}

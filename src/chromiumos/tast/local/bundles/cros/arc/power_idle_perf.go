@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/cpu"
@@ -21,6 +20,7 @@ import (
 	"chromiumos/tast/local/power/setup"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/ctxutil"
 )
 
 type testArgsForPowerIdlePerf struct {
@@ -55,7 +55,7 @@ func init() {
 				Fixture: "chromeLoggedInDisableSyncNoFwUpdate",
 			},
 			{
-				ExtraSoftwareDeps: []string{"android_p"},
+				ExtraSoftwareDeps: []string{"android_container"},
 				ExtraHardwareDeps: hwdep.D(hwdep.ForceDischarge()),
 				Val: testArgsForPowerIdlePerf{
 					setupOption: setup.ForceBatteryDischarge,
@@ -82,7 +82,7 @@ func init() {
 			},
 			{
 				Name:              "nobatterymetrics",
-				ExtraSoftwareDeps: []string{"android_p"},
+				ExtraSoftwareDeps: []string{"android_container"},
 				ExtraHardwareDeps: hwdep.D(hwdep.NoForceDischarge()),
 				Val: testArgsForPowerIdlePerf{
 					setupOption: setup.NoBatteryDischarge,
@@ -176,6 +176,7 @@ func PowerIdlePerf(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start recording: ", err)
 	}
 
+	// GoBigSleepLint: It's used as a measurement step which is part of the performance testing logic.
 	if err := testing.Sleep(ctx, iterationCount*iterationDuration); err != nil {
 		s.Fatal("Failed to sleep: ", err)
 	}

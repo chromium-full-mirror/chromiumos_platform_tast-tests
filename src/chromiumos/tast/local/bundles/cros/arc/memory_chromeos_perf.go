@@ -34,7 +34,7 @@ func init() {
 			ExtraSoftwareDeps: []string{"arc"}, // to prevent this from running on non-ARC boards
 			Fixture:           "chromeLoggedIn",
 		}, {
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 			Fixture:           "arcBooted",
 		}, {
 			Name:              "vm",

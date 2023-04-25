@@ -13,7 +13,6 @@ import (
 
 	"chromiumos/tast/common/media/caps"
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bundles/cros/arc/c2e2etest"
 	"chromiumos/tast/local/bundles/cros/arc/video"
@@ -24,6 +23,7 @@ import (
 	"chromiumos/tast/local/power/setup"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/ctxutil"
 )
 
 const (
@@ -209,6 +209,7 @@ func PowerVideoEncodePerf(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Warmup: waiting a bit before starting the measurement")
+	// GoBigSleepLint: It's used as a measurement step which is part of the performance testing logic.
 	if err := testing.Sleep(ctx, pvepWarmupDuration); err != nil {
 		s.Fatal("Failed to sleep: ", err)
 	}
@@ -221,6 +222,7 @@ func PowerVideoEncodePerf(ctx context.Context, s *testing.State) {
 
 	sleepDuration := pvepIterationCount * pvepIterationDuration
 	s.Logf("Sleeping for %v while measuring power drain", sleepDuration)
+	// GoBigSleepLint: It's used as a measurement step which is part of the performance testing logic.
 	if err := testing.Sleep(ctx, sleepDuration); err != nil {
 		s.Fatal("Failed to sleep: ", err)
 	}

@@ -41,7 +41,7 @@ func init() {
 			},
 			ExtraAttr:         []string{"group:arc-video", "group:crosbolt", "crosbolt_perbuild"},
 			ExtraData:         []string{video.Crowd1080P.Name},
-			ExtraSoftwareDeps: []string{"android_p", caps.HWEncodeH264},
+			ExtraSoftwareDeps: []string{"android_container", caps.HWEncodeH264},
 		}, {
 			Name: "h264_1080p_i420_sw",
 			Val: video.EncodeTestOptions{
@@ -51,7 +51,7 @@ func init() {
 				EncoderType: video.SoftwareEncoder,
 			},
 			ExtraData:         []string{video.Crowd1080P.Name},
-			ExtraSoftwareDeps: []string{"android_p", caps.HWEncodeH264},
+			ExtraSoftwareDeps: []string{"android_container", caps.HWEncodeH264},
 		}, {
 			Name: "h264_1080p_i420_vm",
 			Val: video.EncodeTestOptions{
