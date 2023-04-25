@@ -201,8 +201,12 @@ func ClearRollbackAndSystemData(ctx context.Context, dut *dut.DUT, rpcHint *test
 		return errors.Wrap(err, "failed to remove data save flag")
 	}
 
-	if err := dut.Conn().CommandContext(ctx, "rm", "-f", "/mnt/stateful_partition/rollback_data").Run(); err != nil {
-		return errors.Wrap(err, "failed to remove rollback data")
+	if err := dut.Conn().CommandContext(ctx, "rm", "-f", "/mnt/stateful_partition/unencrypted/preserve/rollback_data").Run(); err != nil {
+		return errors.Wrap(err, "failed to remove OpenSSL encrypted rollback data")
+	}
+
+	if err := dut.Conn().CommandContext(ctx, "rm", "-f", "/mnt/stateful_partition/unencrypted/preserve/rollback_data_tpm").Run(); err != nil {
+		return errors.Wrap(err, "failed to remove TPM encrypted rollback data")
 	}
 
 	if err := SimulatePowerwash(ctx, dut, rpcHint); err != nil {
