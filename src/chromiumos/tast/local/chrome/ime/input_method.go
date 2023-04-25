@@ -417,6 +417,8 @@ var Urdu = InputMethod{
 // inputMethods represents in-use (available) IMEs in ChromeOS.
 // Any IMEs displayed in OS settings can be added to this list.
 var inputMethods = []InputMethod{
+	EnglishIndia,
+	EnglishPakistan,
 	EnglishUS,
 	EnglishUSWithInternationalKeyboard,
 	EnglishUSWithExtendedKeyboard,
