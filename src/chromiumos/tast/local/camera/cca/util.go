@@ -15,7 +15,11 @@ import (
 
 // DeviceWithLayoutMonitored lists the devices we want to monitor the layout correctness.
 var DeviceWithLayoutMonitored = hwdep.D(hwdep.Model(
+	"atlas",
+	"betty",
 	"eve",
+	"nocturne",
+	"soraka",
 ))
 
 // CheckVideoProfile checks profile of video file recorded by CCA.
