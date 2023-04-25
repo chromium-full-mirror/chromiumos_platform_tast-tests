@@ -112,6 +112,9 @@ func CUJAshCommonMetricConfigs() []MetricConfig {
 		NewCustomMetricConfig("Compositing.Display.OverlayProcessorUsingStrategy.NumOverlaysFailed", "overlay_candidates", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Compositing.Display.OverlayProcessorUsingStrategy.NumOverlaysAttempted", "overlay_candidates", perf.BiggerIsBetter),
 		NewCustomMetricConfig("Viz.FrameSink.GpuBusyDuration", "microseconds", perf.SmallerIsBetter),
+		NewCustomMetricConfig("Memory.Gpu.PrivateMemoryFootprint", "MB", perf.SmallerIsBetter),
+		NewCustomMetricConfig("Memory.Total.TileMemory", "MB", perf.SmallerIsBetter),
+		NewCustomMetricConfig("Memory.Experimental.Gpu2.SharedImages", "MB", perf.SmallerIsBetter),
 		NewEnumCustomMetricConfig("Compositing.Display.HardwareDisplayController.SchedulePageFlipResult",
 			map[int64]string{
 				0: "Success",
