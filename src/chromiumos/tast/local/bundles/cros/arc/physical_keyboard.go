@@ -53,7 +53,7 @@ func init() {
 		BugComponent: "b:536706",
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",
-		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic", "group:input-tools"},
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{{
 			Val:               stablePkTests,

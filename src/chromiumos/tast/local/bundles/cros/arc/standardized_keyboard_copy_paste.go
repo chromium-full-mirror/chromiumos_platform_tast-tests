@@ -24,7 +24,7 @@ func init() {
 		Contacts:     []string{"cros-arc-apps-te@google.com", "davidwelling@google.com"},
 		// ChromeOS > Software > ARC++ > Framework > Input
 		BugComponent: "b:536706",
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:input-tools"},
 		SoftwareDeps: []string{"chrome", "no_chrome_dcheck"},
 		Timeout:      10 * time.Minute,
 		Fixture:      "arcBooted",
