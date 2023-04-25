@@ -21,7 +21,7 @@ func init() {
 		Contacts:     []string{"crosvm-core@google.com", "abhishekbh@google.com"},
 		BugComponent: "b:1248538", // ChromeOS > Platform > Virtualization > Device and Guests
 		SoftwareDeps: []string{"chrome", "vm_host"},
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline", "informational"},
 		Data:         slimrootfsutils.GetDataBasedOnBoards(vm.TargetArch()),
 		Fixture:      "chromeLoggedIn",
 	})
