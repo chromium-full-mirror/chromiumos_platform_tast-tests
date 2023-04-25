@@ -88,7 +88,7 @@ func PlatformMessagePipe(ctx context.Context, s *testing.State) {
 		v.ExtID,
 		request{Type: "telemetry", Telemetry: telemetryRequest{InfoType: "vpd"}},
 	); err != nil {
-		s.Fatal("Failed to get response from Telemetry extenion service worker: ", err)
+		s.Fatal("Failed to get response from Telemetry extension service worker: ", err)
 	}
 
 	if want := true; resp.Success != want {

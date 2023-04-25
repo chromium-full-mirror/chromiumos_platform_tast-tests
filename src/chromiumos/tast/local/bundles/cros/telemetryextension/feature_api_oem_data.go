@@ -48,7 +48,7 @@ func FeatureAPIOEMData(ctx context.Context, s *testing.State) {
 	if err := v.ExtConn.Call(ctx, &resp,
 		"tast.promisify(chrome.os.telemetry.getOemData)",
 	); err != nil {
-		s.Fatal("Failed to get response from Telemetry extenion service worker: ", err)
+		s.Fatal("Failed to get response from Telemetry extension service worker: ", err)
 	}
 
 	if got := resp.OemData; got != want {

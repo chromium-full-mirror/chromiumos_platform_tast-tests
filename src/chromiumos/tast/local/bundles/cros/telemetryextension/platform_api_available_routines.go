@@ -56,7 +56,7 @@ func PlatformAPIAvailableRoutines(ctx context.Context, s *testing.State) {
 	if err := v.ExtConn.Call(ctx, &resp,
 		"tast.promisify(chrome.os.diagnostics.getAvailableRoutines)",
 	); err != nil {
-		s.Fatal("Failed to get response from Telemetry extenion service worker: ", err)
+		s.Fatal("Failed to get response from Telemetry extension service worker: ", err)
 	}
 
 	gotRoutines := make(map[string]struct{})
