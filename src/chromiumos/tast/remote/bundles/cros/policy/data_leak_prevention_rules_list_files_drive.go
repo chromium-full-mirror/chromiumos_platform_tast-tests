@@ -78,17 +78,17 @@ func DataLeakPreventionRulesListFilesDrive(ctx context.Context, s *testing.State
 	}
 	defer service.StopChrome(ctx, &empty.Empty{})
 
-	// Create a temporary directory on the DUT.
+	// Create a temporary directory on the DUT and make sure it's deleted after test.
 	d, err := service.CreateTempDir(ctx, &empty.Empty{})
 	if err != nil {
 		s.Fatal("Failed to create a temporary directory: ", err)
 	}
-
-	// Push data files to the DUT and make sure they're deleted after the test.
-	dut := s.DUT()
 	defer service.RemoveTempDir(ctx, &dlp.RemoveTempDirRequest{
 		Path: d.Path,
 	})
+
+	// Push data files to the DUT.
+	dut := s.DUT()
 	if _, err := linuxssh.PutFiles(ctx, dut.Conn(), map[string]string{
 		s.DataPath(dlputil.HTMLFile): filepath.Join(d.Path, dlputil.RemoteHTMLFile),
 		s.DataPath(dlputil.DataFile): filepath.Join(d.Path, dlputil.RemoteDataFile),
@@ -100,12 +100,5 @@ func DataLeakPreventionRulesListFilesDrive(ctx context.Context, s *testing.State
 		DataPath: d.Path,
 	}); err != nil {
 		s.Fatal("Failed to TestCopyFileToDrive: ", err)
-	}
-
-	// Clean up the temporary directory.
-	if _, err := service.RemoveTempDir(ctx, &dlp.RemoveTempDirRequest{
-		Path: d.Path,
-	}); err != nil {
-		s.Fatal("Failed to remove temporary directory: ", err)
 	}
 }

@@ -264,17 +264,17 @@ func DlpReporting(ctx context.Context, s *testing.State) {
 			BrowserType: params.BrowserType,
 		})
 	case dlputil.Files:
-		// Create a temporary directory on the DUT.
+		// Create a temporary directory on the DUT and make sure it's deleted after test.
 		d, err := service.CreateTempDir(ctx, &empty.Empty{})
 		if err != nil {
 			s.Fatal("Failed to create a temporary directory: ", err)
 		}
-
-		// Push data files to the DUT and make sure they're deleted after the test.
-		dut := s.DUT()
 		defer service.RemoveTempDir(ctx, &dlp.RemoveTempDirRequest{
 			Path: d.Path,
 		})
+
+		// Push data files to the DUT.
+		dut := s.DUT()
 		if _, err := linuxssh.PutFiles(ctx, dut.Conn(), map[string]string{
 			s.DataPath(dlputil.HTMLFile): filepath.Join(d.Path, dlputil.RemoteHTMLFile),
 			s.DataPath(dlputil.DataFile): filepath.Join(d.Path, dlputil.RemoteDataFile),
@@ -291,6 +291,7 @@ func DlpReporting(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Waiting 60 seconds to make sure events reach the server and are processed")
+	// GoBigSleepLint: wait 60 seconds to make sure events reach the server and are processed.
 	if err := testing.Sleep(ctx, 60*time.Second); err != nil {
 		s.Fatal("Failed to sleep: ", err)
 	}
