@@ -21,7 +21,6 @@ import (
 	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/common/wifi/security"
 	"chromiumos/tast/common/wifi/security/wpa"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/bundles/cros/wifi/wifiutil"
 	"chromiumos/tast/remote/wificell"
@@ -33,6 +32,8 @@ import (
 	"chromiumos/tast/services/cros/ui"
 	"chromiumos/tast/services/cros/wifi"
 	"chromiumos/tast/testing"
+
+	"go.chromium.org/tast/core/ctxutil"
 )
 
 // QuickSettings indicates that quick setting needs to be used.
@@ -84,9 +85,9 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that DUT respects rules for SSIDs blocked by device policy",
 		Contacts: []string{
-			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
+			"chromeos-commercial-networking@google.com",
 		},
-		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
+		BugComponent: "b:1000044", // ChromeOS > Software > Commercial (Enterprise) > Commercial Networking
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DeviceOpenNetworkConfiguration{}, pci.VerifiedFunctionalityUI),
 			{
@@ -96,7 +97,7 @@ func init() {
 				Value: "screenplay-55005668-0de3-4314-accc-baef199664ed",
 			},
 		},
-		Attr:         []string{"group:wificell", "wificell_func"},
+		Attr:         []string{"group:wificell", "wificell_func", "wificell_unstable", "group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		// SigninProfileTestExtensionID is an id of the test extension which is
 		// allowed for signin profile (see http://crrev.com/772709 for details).
