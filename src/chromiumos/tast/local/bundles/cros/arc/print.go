@@ -13,15 +13,16 @@ import (
 
 	"chromiumos/tast/common/android/ui"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/fsutil"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/printpreview"
 	"chromiumos/tast/local/printing/document"
 	"chromiumos/tast/local/printing/usbprinter"
-	"chromiumos/tast/testing"
+
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/fsutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
@@ -45,15 +46,15 @@ func init() {
 		Fixture:      "virtualUsbPrinterModulesLoadedWithArcBooted",
 		Timeout:      4 * time.Minute,
 		Params: []testing.Param{{
-			Val:               "arc_print_ippusb_golden.pdf",
+			Val:               "arc_print_ippusb_golden.pwg",
 			ExtraSoftwareDeps: []string{"android_p"},
-			ExtraData:         []string{"arc_print_ippusb_golden.pdf"},
+			ExtraData:         []string{"arc_print_ippusb_golden.pwg"},
 		}, {
 			Name:              "vm",
-			Val:               "arc_print_vm_ippusb_golden.pdf",
+			Val:               "arc_print_vm_ippusb_golden.pwg",
 			ExtraAttr:         []string{"informational"},
 			ExtraSoftwareDeps: []string{"android_vm"},
-			ExtraData:         []string{"arc_print_vm_ippusb_golden.pdf"},
+			ExtraData:         []string{"arc_print_vm_ippusb_golden.pwg"},
 		}},
 	})
 }
@@ -84,11 +85,11 @@ func Print(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create temporary directory: ", err)
 	}
 	defer os.RemoveAll(tmpDir)
-	recordPath := filepath.Join(tmpDir, "record.pdf")
+	recordPath := filepath.Join(tmpDir, "record.pwg")
 
 	printer, err := usbprinter.Start(ctx,
 		usbprinter.WithIPPUSBDescriptors(),
-		usbprinter.WithGenericIPPAttributes(),
+		usbprinter.WithAttributes("ipp_attributes_pwgraster.json"),
 		usbprinter.WithRecordPath(recordPath),
 		usbprinter.WaitUntilConfigured())
 	if err != nil {
@@ -209,9 +210,9 @@ func Print(ctx context.Context, s *testing.State) {
 	if err := document.CompareFiles(ctx, recordPath, golden, diffPath); err != nil {
 		s.Error("Printed file differs from golden file: ", err)
 		// If we get an error comparing files, save the results we got.
-		actualFilename := "actual.pdf"
-		s.Log("Saving printed file to: ", actualFilename)
-		savedPath := filepath.Join(s.OutDir(), actualFilename)
+		outFile := filepath.Base(golden)
+		s.Log("Saving printed file to: ", outFile)
+		savedPath := filepath.Join(s.OutDir(), outFile)
 		if err := fsutil.MoveFile(recordPath, savedPath); err != nil {
 			s.Error("Failed to save printed file: ", err)
 		}
