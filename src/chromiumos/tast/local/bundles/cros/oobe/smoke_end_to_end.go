@@ -84,6 +84,8 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 		options = append(options, chrome.KeepState())
 	}
 
+	options = append(options, chrome.ExtraArgs("--enable-features=OobeGaiaInfoScreen"))
+
 	cr, err := chrome.New(ctx, options...)
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
@@ -161,6 +163,18 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 			ui.LeftClick(focusedButton),
 		)(ctx); err != nil {
 			s.Fatal("Failed to click user creation screen next button: ", err)
+		}
+
+		s.Log("Waiting for the Gaia Info screen")
+		if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.GaiaInfoScreen.isVisible()"); err != nil {
+			s.Fatal("Failed to wait for the Gaia Info screen to be visible: ", err)
+		}
+
+		if err := uiauto.Combine("click next on the Gaia Info screen",
+			ui.WaitUntilExists(focusedButton),
+			ui.LeftClick(focusedButton),
+		)(ctx); err != nil {
+			s.Fatal("Failed to click Gaia Info screen next button: ", err)
 		}
 
 		s.Log("Waiting for the Gaia screen")

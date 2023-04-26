@@ -50,7 +50,8 @@ func Smoke(ctx context.Context, s *testing.State) {
 
 	cr, err := chrome.New(ctx,
 		chrome.FieldTrialConfig(s.Param().(string)),
-		chrome.NoLogin())
+		chrome.NoLogin(),
+		chrome.ExtraArgs("--enable-features=OobeGaiaInfoScreen"))
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
@@ -91,6 +92,13 @@ func Smoke(ctx context.Context, s *testing.State) {
 	}
 	if err := oobeConn.Eval(ctx, "OobeAPI.screens.UserCreationScreen.clickNext()", nil); err != nil {
 		s.Fatal("Failed to click user creation screen next button: ", err)
+	}
+
+	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.GaiaInfoScreen.isVisible()"); err != nil {
+		s.Fatal("Failed to wait for the gaia info screen to be visible: ", err)
+	}
+	if err := oobeConn.Eval(ctx, "OobeAPI.screens.GaiaInfoScreen.clickNext()", nil); err != nil {
+		s.Fatal("Failed to click gaia info screen next button: ", err)
 	}
 
 	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.GaiaScreen.isVisible()"); err != nil {
