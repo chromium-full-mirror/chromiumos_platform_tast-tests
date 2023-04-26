@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"chromiumos/tast/common/hwsec"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
@@ -19,6 +18,8 @@ import (
 	hwseclocal "chromiumos/tast/local/hwsec"
 	"chromiumos/tast/local/oobe"
 	"chromiumos/tast/testing"
+
+	"go.chromium.org/tast/core/ctxutil"
 )
 
 func init() {
@@ -241,6 +242,7 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to evaluate whether to skip assistant screen: ", err)
 	}
 
+	// TODO(b/279775853): Remove assistant handling logic after we remove it from OOBE.
 	if shouldSkipAssistant {
 		s.Log("Skipping the assistant screen")
 	} else {
@@ -274,6 +276,19 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 				ui.LeftClick(skipButton),
 			)(ctx); err != nil {
 				s.Fatal("Failed to click assistant skip button: ", err)
+			}
+		} else {
+			var newUserSecondScreenShown bool
+			if err := oobeConn.Eval(ctx, "OobeAPI.screens.AssistantScreen.isVisible()", &newUserSecondScreenShown); err != nil {
+				s.Fatal("Failed to get whether assistant screen is still shown: ", err)
+			}
+			if newUserSecondScreenShown {
+				if err := uiauto.Combine("click skip on the second assistant screen for a new assistant user",
+					ui.WaitUntilExists(skipButton),
+					ui.LeftClick(skipButton),
+				)(ctx); err != nil {
+					s.Fatal("Failed to click assistant skip button: ", err)
+				}
 			}
 		}
 	}
