@@ -16,7 +16,6 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
@@ -27,6 +26,8 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/testing"
+
+	"go.chromium.org/tast/core/ctxutil"
 )
 
 type openLocation int
@@ -77,22 +78,22 @@ func URLRedirect(ctx context.Context, s *testing.State) {
 			subtest: "browser_components",
 			params: urlRedirectParams{mode: openInLacros,
 				url:              "chrome://components/",
-				tabTitleInLacros: "Components - Google Chrome"},
+				tabTitleInLacros: "Components"},
 		}, {
 			subtest: "browser_credits",
 			params: urlRedirectParams{mode: openInLacros,
 				url:              "chrome://credits/",
-				tabTitleInLacros: "Credits - Google Chrome"},
+				tabTitleInLacros: "Credits"},
 		}, {
 			subtest: "browser_flags",
 			params: urlRedirectParams{mode: openInLacros,
 				url:              "chrome://flags/",
-				tabTitleInLacros: "Experiments - Google Chrome"},
+				tabTitleInLacros: "Experiments"},
 		}, {
 			subtest: "browser_version",
 			params: urlRedirectParams{mode: openInLacros,
 				url:              "chrome://version/",
-				tabTitleInLacros: "About Version - Google Chrome"},
+				tabTitleInLacros: "About Version"},
 		}, {
 			// chrome:// URL's not opening in Lacros or Ash
 			subtest: "no_lacros_sys_internals",
@@ -430,13 +431,11 @@ func determineNumberOfLacrosWindowsAndTitle(ctx context.Context, tconn *chrome.T
 }
 
 func unreachableNavigation(title, url string) bool {
-	// In case of an unsuccessful navigation the title will start with the URL
-	// and may end with something like " - Google Chrome".
+	// In case of an unsuccessful navigation the title will start with the URL.
 	return strings.HasPrefix(title, url)
 }
 
 func blockedNavigation(title string) bool {
-	// In case of a blocked navigation the title will be fixed to the blocked URL
-	// and end with something like " - Google Chrome".
+	// In case of a blocked navigation the title will be fixed to the blocked URL.
 	return strings.HasPrefix(title, "about:blank#blocked")
 }
