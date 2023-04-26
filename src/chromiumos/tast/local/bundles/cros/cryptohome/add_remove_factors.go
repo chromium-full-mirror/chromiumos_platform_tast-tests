@@ -86,9 +86,11 @@ func AddRemoveFactors(ctx context.Context, s *testing.State) {
 	// assmued that device does not support TPM operations. An error here should not
 	// cause the test to fail.
 	supportsSmartCard := false
+	supportsRecovery := false
 	authConfig := (*hwsec.AuthConfig)(nil)
 	if err := helper.EnsureTPMIsReady(ctx, hwsec.DefaultTakingOwnershipTimeout); err == nil {
 		supportsSmartCard = true
+		supportsRecovery = true
 
 		// Set up KeyDelegate for the Smart Card.
 		// Use a pseudorandom generator with a fixed seed, to make the values used by
@@ -188,7 +190,7 @@ func AddRemoveFactors(ctx context.Context, s *testing.State) {
 		expectedAllSupported = append(expectedAllSupported, uda.AuthFactorType_AUTH_FACTOR_TYPE_SMART_CARD)
 		expectedNoKioskSupported = append(expectedNoKioskSupported, uda.AuthFactorType_AUTH_FACTOR_TYPE_SMART_CARD)
 	}
-	if fixture.UssEnabled {
+	if fixture.UssEnabled && supportsRecovery {
 		expectedAllSupported = append(expectedAllSupported, uda.AuthFactorType_AUTH_FACTOR_TYPE_CRYPTOHOME_RECOVERY)
 		expectedNoKioskSupported = append(expectedNoKioskSupported, uda.AuthFactorType_AUTH_FACTOR_TYPE_CRYPTOHOME_RECOVERY)
 	}
