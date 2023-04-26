@@ -40,8 +40,8 @@ func init() {
 			{
 				Name: "cut_the_rope",
 				Val: appsParams{appName: "Cut The Rope",
-					urlAppName: "cut-the-rope",
-					urlAppID:   "dbcfgdjlnoeniakcjlefekcainimpida",
+					urlAppName: "cut-the-rope-original",
+					urlAppID:   "fjiiikojnkdhmnbhcdkieejjjohfpcoo",
 				},
 				Fixture: "chromeLoggedIn",
 			},
