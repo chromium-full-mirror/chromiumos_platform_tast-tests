@@ -120,7 +120,7 @@ func DeviceTopRowAreFunctionKeysSetting(ctx context.Context, s *testing.State) {
 	}
 
 	// Turn on the toggle.
-	topRowKeyButton := nodewith.Name("Treat top-row keys as function keys")
+	topRowKeyButton := nodewith.Name("Built-in Keyboard Treat top-row keys as function keys")
 	if err := uiauto.Combine("Verify if the toggle is turned on",
 		ui.WaitUntilExists(topRowKeyButton),
 		ui.DoDefault(topRowKeyButton),
