@@ -12,6 +12,7 @@ import (
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/croshealthd"
 	"chromiumos/tast/testing"
+	"chromiumos/tast/testing/hwdep"
 )
 
 type wirelessLinkInfo struct {
@@ -49,9 +50,17 @@ func init() {
 			"pathan.jilani@intel.com",
 		},
 		BugComponent: "b:982097",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "diagnostics"},
 		Fixture:      "crosHealthdRunning",
+		Params: []testing.Param{{
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform("brya-kernelnext")),
+		}, {
+			// TODO(b/277564353): Remove this after the brya-kernelnext issue is fixed.
+			Name:              "brya_kernelnext",
+			ExtraAttr:         []string{"informational"},
+			ExtraHardwareDeps: hwdep.D(hwdep.Platform("brya-kernelnext")),
+		}},
 	})
 }
 
