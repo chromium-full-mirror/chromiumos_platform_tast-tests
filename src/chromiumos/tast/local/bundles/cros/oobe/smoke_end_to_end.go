@@ -17,9 +17,9 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/state"
 	hwseclocal "chromiumos/tast/local/hwsec"
 	"chromiumos/tast/local/oobe"
-	"chromiumos/tast/testing"
 
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
@@ -315,6 +315,24 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 			ui.LeftClick(noThanks),
 		)(ctx); err != nil {
 			s.Fatal("Failed to click smart privacy protection no thanks button: ", err)
+		}
+	}
+
+	if isInTabletMode {
+		s.Log("Waiting for the gesture navigation screen")
+		if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.GestureNavigation.isVisible()"); err != nil {
+			s.Fatal("Failed to wait for the gesture navigation screen to be visible: ", err)
+		}
+		var gestureNavigationSkipButtonName string
+		if err := oobeConn.Eval(ctx, "OobeAPI.screens.GestureNavigation.getSkipButtonName()", &gestureNavigationSkipButtonName); err != nil {
+			s.Fatal("Failed to get gesture navigation skip button name: ", err)
+		}
+		gestureNavigationSkipButton := nodewith.Role(role.Button).Name(gestureNavigationSkipButtonName)
+		if err := uiauto.Combine("click skip on the gesture navigation screen",
+			ui.WaitUntilExists(gestureNavigationSkipButton),
+			ui.LeftClick(gestureNavigationSkipButton),
+		)(ctx); err != nil {
+			s.Fatal("Failed to skip on the gesture navigation screen: ", err)
 		}
 	}
 
