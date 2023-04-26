@@ -55,7 +55,11 @@ func init() {
 		Func:         StandardizedKeyboardKeys,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Functional test that installs an app and tests standard keyboard keys like arrows, esc, enter, etc. Test are performed in clamshell and touchview mode. This does not test the virtual, on-screen keyboard",
-		Contacts:     []string{"cros-arc-apps-te@google.com", "davidwelling@google.com"},
+		Contacts: []string{
+			"arc-framework+tast@google.com",
+			"arc-engprod@google.com",
+			"yhanada@chromium.org",
+		},
 		// ChromeOS > Software > ARC++ > Framework > Input
 		BugComponent: "b:536706",
 		Attr:         []string{"group:mainline", "group:input-tools"},

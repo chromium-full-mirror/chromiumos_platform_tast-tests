@@ -29,4 +29,4 @@ curl --verbose \
 1. Add `--var tape.local_refresh_token=<VALUE>` when running a test that uses TAPE.
 
 ## Notes
-1. If you are unable to access TAPE, ask davidwelling@ or alexanderhartl@ to have your email address added to the list of authenticated users in IAP.
+1. If you are unable to access TAPE, ask alexanderhartl@ to have your email address added to the list of authenticated users in IAP.

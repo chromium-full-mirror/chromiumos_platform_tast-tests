@@ -27,7 +27,11 @@ func init() {
 		Func:         StandardizedMouseScroll,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Functional test that installs an app and tests that a standard mouse scroll up, an down works",
-		Contacts:     []string{"cros-arc-apps-te@google.com", "davidwelling@google.com"},
+		Contacts: []string{
+			"arc-framework+tast@google.com",
+			"arc-engprod@google.com",
+			"yhanada@chromium.org",
+		},
 		// ChromeOS > Software > ARC++ > Framework > Input
 		BugComponent: "b:536706",
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},

@@ -16,7 +16,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "tapeRemoteBase",
 		Desc:            "Writes a TAPE access token to the DUT in a shared location for accessing the TAPE API from the DUT",
-		Contacts:        []string{"davidwelling@google.com", "arc-engprod@google.com"},
+		Contacts:        []string{"arc-engprod@google.com"},
 		Impl:            tape.NewBaseTapeFixture(),
 		Vars:            []string{tape.AuthenticationConfigJSONVar, tape.LocalRefreshTokenVar},
 		SetUpTimeout:    10 * time.Second,

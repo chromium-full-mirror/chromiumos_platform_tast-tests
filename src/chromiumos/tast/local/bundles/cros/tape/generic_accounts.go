@@ -18,7 +18,7 @@ func init() {
 		Func:         GenericAccounts,
 		Desc:         "Confirm that the generic account leasing for TAPE works as intended",
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Contacts:     []string{"arc-engprod@google.com", "davidwelling@google.com", "alexanderhartl@google.com"},
+		Contacts:     []string{"arc-engprod@google.com", "alexanderhartl@google.com"},
 		// ChromeOS > Software > ARC++ > EngProd
 		BugComponent: "b:1052117",
 		Attr:         []string{"group:mainline", "informational"},

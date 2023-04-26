@@ -20,7 +20,11 @@ func init() {
 		Func:         StandardizedTouchscreenLongTap,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Functional test that installs an app and tests that a standard touchscreen long tap works",
-		Contacts:     []string{"cros-arc-apps-te@google.com", "davidwelling@google.com"},
+		Contacts: []string{
+			"arc-framework+tast@google.com",
+			"arc-engprod@google.com",
+			"yhanada@chromium.org",
+		},
 		// ChromeOS > Software > ARC++ > Framework > Input
 		BugComponent: "b:536706",
 		Attr:         []string{"group:mainline", "informational"},
