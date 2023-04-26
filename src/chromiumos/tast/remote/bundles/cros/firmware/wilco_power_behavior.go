@@ -113,10 +113,6 @@ func WilcoPowerBehavior(ctx context.Context, s *testing.State) {
 	// from 0 to 1.
 	checkTPMRSTLState := false
 	if tc.checkCharger {
-		s.Log("Sleeping for 10 seconds")
-		if err := testing.Sleep(ctx, 10*time.Second); err != nil {
-			s.Fatal("Failed to sleep for 10 seconds: ", err)
-		}
 		// Increase timeout in getting response from cr50 uart.
 		if err := h.Servo.SetString(ctx, "cr50_uart_timeout", "10"); err != nil {
 			s.Fatal("Failed to set cr50 uart timeout: ", err)
@@ -182,12 +178,15 @@ func WilcoPowerBehavior(ctx context.Context, s *testing.State) {
 						if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.Dur(h.Config.HoldPwrButtonPowerOn)); err != nil {
 							s.Fatal("Failed to press power button: ", err)
 						}
-						s.Log("Sleeping for 90 seconds")
-						if err := testing.Sleep(ctx, 90*time.Second); err != nil {
-							s.Fatal("Failed to sleep: ", err)
-						}
+						waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 3*time.Minute)
+						defer cancelWaitConnect()
+
 						s.Log("Checking if DUT woke up from a press on power button")
-						if err := h.DUT.Connect(ctx); err != nil && strings.Contains(err.Error(), "no route to host") {
+						err := d.WaitConnect(waitConnectCtx)
+						if err == nil {
+							s.Fatal("DUT woke up unexpectedly")
+						}
+						if strings.Contains(err.Error(), context.DeadlineExceeded.Error()) {
 							s.Log("Found DUT disconnected, continuing the test")
 							continue
 						}
