@@ -77,7 +77,6 @@ func init() {
 				category: "stylus",
 				duration: 3 * time.Second,
 			},
-			ExtraAttr: []string{"informational"},
 		}},
 	})
 }
