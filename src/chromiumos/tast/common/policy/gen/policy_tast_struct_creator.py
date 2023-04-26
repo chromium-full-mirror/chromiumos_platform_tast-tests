@@ -51,6 +51,7 @@ import (
 
 \t"github.com/google/go-cmp/cmp"
 \t"github.com/google/go-cmp/cmp/cmpopts"
+\t"github.com/leighmcculloch/go-optional"
 \t"google.golang.org/protobuf/reflect/protoreflect"
 
 \t"go.chromium.org/tast/core/errors"
@@ -692,6 +693,40 @@ type WebAppInstallForceListValueCustomIcon struct {
 """
   return attr_type, attr_structs
 
+def parse_override_required_client_certificate_for_device(p, refs):
+  value_name = 'RequiredClientCertificateForDeviceValue'
+  attr_type = '[]*' + value_name
+  attr_structs = """
+type RequiredClientCertificateForDeviceValue struct {
+\tCertProfileId\tstring\t`json:"cert_profile_id"`
+\tEnableRemoteAttestationCheck\tbool\t`json:"enable_remote_attestation_check"`
+\tKeyAlgorithm\tstring\t`json:"key_algorithm"`
+\tName\tstring\t`json:"name"`
+\tPolicyVersion\tstring\t`json:"policy_version"`
+\tProtocolVersion\toptional.Optional[int]\t`json:"protocol_version,omitempty"`
+\tRenewalPeriodSeconds\tint\t`json:"renewal_period_seconds"`
+}
+
+"""
+  return attr_type, attr_structs
+
+def parse_override_required_client_certificate_for_user(p, refs):
+  value_name = 'RequiredClientCertificateForUserValue'
+  attr_type = '[]*' + value_name
+  attr_structs = """
+type RequiredClientCertificateForUserValue struct {
+\tCertProfileId\tstring\t`json:"cert_profile_id"`
+\tEnableRemoteAttestationCheck\tbool\t`json:"enable_remote_attestation_check"`
+\tKeyAlgorithm\tstring\t`json:"key_algorithm"`
+\tName\tstring\t`json:"name"`
+\tPolicyVersion\tstring\t`json:"policy_version"`
+\tProtocolVersion\toptional.Optional[int]\t`json:"protocol_version,omitempty"`
+\tRenewalPeriodSeconds\tint\t`json:"renewal_period_seconds"`
+}
+
+"""
+  return attr_type, attr_structs
+
 def ref_parse_override_managed_bookmarks(schema, refs):
   name = 'Ref' + schema['items']['id']
   refs[schema['items']['id']] = Reference(name, '*'+name, '')
@@ -712,6 +747,8 @@ PARSE_OVERRIDES = {
     'ArcPolicy': parse_override_arc_policy,
     'DeviceLocalAccounts': parse_override_device_local_accounts,
     'OpenNetworkConfiguration': parse_override_onc,
+    'RequiredClientCertificateForDevice': parse_override_required_client_certificate_for_device,
+    'RequiredClientCertificateForUser': parse_override_required_client_certificate_for_user,
     'DeviceOpenNetworkConfiguration': parse_override_onc,
     'KerberosAccounts': parse_override_kerberos_accounts,
     'WebAppInstallForceList': parse_override_web_app_install_force_list,

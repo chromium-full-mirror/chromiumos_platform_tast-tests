@@ -12,6 +12,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/leighmcculloch/go-optional"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"go.chromium.org/tast/core/errors"
@@ -6027,6 +6028,37 @@ func (p *ExtensionSettings) SetProto(m *protoreflect.Message) {
 }
 func (p *ExtensionSettings) Equal(iface interface{}) bool {
 	v, ok := iface.(map[string]*ExtensionSettingsValue)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 279. SSLVersionMin
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type SSLVersionMin struct {
+	Stat Status
+	Val  string
+}
+
+func (p *SSLVersionMin) Name() string          { return "SSLVersionMin" }
+func (p *SSLVersionMin) Scope() Scope          { return ScopeUser }
+func (p *SSLVersionMin) Status() Status        { return p.Stat }
+func (p *SSLVersionMin) UntypedV() interface{} { return p.Val }
+func (p *SSLVersionMin) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v string
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as string", m)
+	}
+	return v, nil
+}
+func (p *SSLVersionMin) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *SSLVersionMin) Equal(iface interface{}) bool {
+	v, ok := iface.(string)
 	if !ok {
 		return ok
 	}
@@ -14393,13 +14425,13 @@ type RequiredClientCertificateForUser struct {
 }
 
 type RequiredClientCertificateForUserValue struct {
-	CertProfileId                string `json:"cert_profile_id"`
-	EnableRemoteAttestationCheck bool   `json:"enable_remote_attestation_check"`
-	KeyAlgorithm                 string `json:"key_algorithm"`
-	Name                         string `json:"name"`
-	PolicyVersion                string `json:"policy_version"`
-	ProtocolVersion              int    `json:"protocol_version"`
-	RenewalPeriodSeconds         int    `json:"renewal_period_seconds"`
+	CertProfileId                string                 `json:"cert_profile_id"`
+	EnableRemoteAttestationCheck bool                   `json:"enable_remote_attestation_check"`
+	KeyAlgorithm                 string                 `json:"key_algorithm"`
+	Name                         string                 `json:"name"`
+	PolicyVersion                string                 `json:"policy_version"`
+	ProtocolVersion              optional.Optional[int] `json:"protocol_version,omitempty"`
+	RenewalPeriodSeconds         int                    `json:"renewal_period_seconds"`
 }
 
 func (p *RequiredClientCertificateForUser) Name() string          { return "RequiredClientCertificateForUser" }
@@ -14434,13 +14466,13 @@ type RequiredClientCertificateForDevice struct {
 }
 
 type RequiredClientCertificateForDeviceValue struct {
-	CertProfileId                string `json:"cert_profile_id"`
-	EnableRemoteAttestationCheck bool   `json:"enable_remote_attestation_check"`
-	KeyAlgorithm                 string `json:"key_algorithm"`
-	Name                         string `json:"name"`
-	PolicyVersion                string `json:"policy_version"`
-	ProtocolVersion              int    `json:"protocol_version"`
-	RenewalPeriodSeconds         int    `json:"renewal_period_seconds"`
+	CertProfileId                string                 `json:"cert_profile_id"`
+	EnableRemoteAttestationCheck bool                   `json:"enable_remote_attestation_check"`
+	KeyAlgorithm                 string                 `json:"key_algorithm"`
+	Name                         string                 `json:"name"`
+	PolicyVersion                string                 `json:"policy_version"`
+	ProtocolVersion              optional.Optional[int] `json:"protocol_version,omitempty"`
+	RenewalPeriodSeconds         int                    `json:"renewal_period_seconds"`
 }
 
 func (p *RequiredClientCertificateForDevice) Name() string {
@@ -23316,6 +23348,37 @@ func (p *DeskAPIThirdPartyAllowlist) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
+// 1025. HindiInscriptLayoutEnabled
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type HindiInscriptLayoutEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *HindiInscriptLayoutEnabled) Name() string          { return "HindiInscriptLayoutEnabled" }
+func (p *HindiInscriptLayoutEnabled) Scope() Scope          { return ScopeUser }
+func (p *HindiInscriptLayoutEnabled) Status() Status        { return p.Stat }
+func (p *HindiInscriptLayoutEnabled) UntypedV() interface{} { return p.Val }
+func (p *HindiInscriptLayoutEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *HindiInscriptLayoutEnabled) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *HindiInscriptLayoutEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
 // 1026. DeviceKeyboardBacklightColor
 // This policy can be modified without rebooting.
 // ****************************************************************************
@@ -25407,70 +25470,6 @@ func (p *SafeBrowsingExtensionProtectionAllowed) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
-// 1099. ShowDisplaySizeScreenEnabled
-// This policy has a default value of False.
-// This is a future policy, it is not present in stable builds.
-// ****************************************************************************
-type ShowDisplaySizeScreenEnabled struct {
-	Stat Status
-	Val  bool
-}
-
-func (p *ShowDisplaySizeScreenEnabled) Name() string          { return "ShowDisplaySizeScreenEnabled" }
-func (p *ShowDisplaySizeScreenEnabled) Scope() Scope          { return ScopeUser }
-func (p *ShowDisplaySizeScreenEnabled) Status() Status        { return p.Stat }
-func (p *ShowDisplaySizeScreenEnabled) UntypedV() interface{} { return p.Val }
-func (p *ShowDisplaySizeScreenEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v bool
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as bool", m)
-	}
-	return v, nil
-}
-func (p *ShowDisplaySizeScreenEnabled) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *ShowDisplaySizeScreenEnabled) Equal(iface interface{}) bool {
-	v, ok := iface.(bool)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
-// 1100. AnonymousSearchEnabled
-// This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
-// ****************************************************************************
-type AnonymousSearchEnabled struct {
-	Stat Status
-	Val  bool
-}
-
-func (p *AnonymousSearchEnabled) Name() string          { return "AnonymousSearchEnabled" }
-func (p *AnonymousSearchEnabled) Scope() Scope          { return ScopeUser }
-func (p *AnonymousSearchEnabled) Status() Status        { return p.Stat }
-func (p *AnonymousSearchEnabled) UntypedV() interface{} { return p.Val }
-func (p *AnonymousSearchEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v bool
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as bool", m)
-	}
-	return v, nil
-}
-func (p *AnonymousSearchEnabled) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *AnonymousSearchEnabled) Equal(iface interface{}) bool {
-	v, ok := iface.(bool)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
 // JSON deserialization logic (used by policy.Unmarshal).
 // ****************************************************************************
 
@@ -25855,6 +25854,8 @@ func newByName(name string) (Policy, error) {
 		return &BrowserAddPersonEnabled{}, nil
 	case "ExtensionSettings":
 		return &ExtensionSettings{}, nil
+	case "SSLVersionMin":
+		return &SSLVersionMin{}, nil
 	case "ForceGoogleSafeSearch":
 		return &ForceGoogleSafeSearch{}, nil
 	case "ForceYouTubeSafetyMode":
@@ -26909,6 +26910,8 @@ func newByName(name string) (Policy, error) {
 		return &IsolatedWebAppInstallForceList{}, nil
 	case "DeskAPIThirdPartyAllowlist":
 		return &DeskAPIThirdPartyAllowlist{}, nil
+	case "HindiInscriptLayoutEnabled":
+		return &HindiInscriptLayoutEnabled{}, nil
 	case "DeviceKeyboardBacklightColor":
 		return &DeviceKeyboardBacklightColor{}, nil
 	case "LensDesktopNTPSearchEnabled":
@@ -27037,10 +27040,6 @@ func newByName(name string) (Policy, error) {
 		return &DeviceReportNetworkEvents{}, nil
 	case "SafeBrowsingExtensionProtectionAllowed":
 		return &SafeBrowsingExtensionProtectionAllowed{}, nil
-	case "ShowDisplaySizeScreenEnabled":
-		return &ShowDisplaySizeScreenEnabled{}, nil
-	case "AnonymousSearchEnabled":
-		return &AnonymousSearchEnabled{}, nil
 	default:
 		return nil, errors.New("Unknown policy " + name)
 	}
@@ -27049,17 +27048,6 @@ func newByName(name string) (Policy, error) {
 // ****************************************************************************
 // Reference values (used via '$ref' in JSON Schema).
 // ****************************************************************************
-
-type RefDayPercentagePair struct {
-	Days       int `json:"days"`
-	Percentage int `json:"percentage"`
-}
-
-type RefDisallowedTimeInterval struct {
-	DayOfWeek string `json:"day_of_week"`
-	Hours     int    `json:"hours"`
-	Minutes   int    `json:"minutes"`
-}
 
 type RefDeviceLoginScreenPowerSettings struct {
 	Delays     *RefDeviceLoginScreenPowerSettingsDelays `json:"Delays"`
@@ -27072,21 +27060,31 @@ type RefDeviceLoginScreenPowerSettingsDelays struct {
 	ScreenOff int `json:"ScreenOff"`
 }
 
-type RefBookmarkType struct {
-	Children     []*RefBookmarkType `json:"children,omitempty"`
-	Name         string             `json:"name"`
-	ToplevelName string             `json:"toplevel_name"`
-	Url          string             `json:"url"`
+type RefTimeUsageLimitEntry struct {
+	LastUpdatedMillis string `json:"last_updated_millis"`
+	UsageQuotaMins    int    `json:"usage_quota_mins"`
 }
 
-type RefUsbDeviceIdInclusive struct {
-	ProductId int `json:"product_id"`
-	VendorId  int `json:"vendor_id"`
+type RefTime struct {
+	Hour   int `json:"hour"`
+	Minute int `json:"minute"`
 }
 
-type RefUsbDeviceId struct {
-	ProductId int `json:"product_id"`
-	VendorId  int `json:"vendor_id"`
+type RefConfig struct {
+	AccessCodeTtl       int    `json:"access_code_ttl"`
+	ClockDriftTolerance int    `json:"clock_drift_tolerance"`
+	SharedSecret        string `json:"shared_secret"`
+}
+
+type RefDisallowedTimeInterval struct {
+	DayOfWeek string `json:"day_of_week"`
+	Hours     int    `json:"hours"`
+	Minutes   int    `json:"minutes"`
+}
+
+type RefDayPercentagePair struct {
+	Days       int `json:"days"`
+	Percentage int `json:"percentage"`
 }
 
 type Reffile_transfer_enable_disable_schema struct {
@@ -27105,6 +27103,23 @@ type Reffile_transfer_enable_disable_schemaSourceDestinationListSources struct {
 
 type Reffile_transfer_source_destination_schema struct {
 	FileSystemType string `json:"file_system_type"`
+}
+
+type RefUsbDeviceId struct {
+	ProductId int `json:"product_id"`
+	VendorId  int `json:"vendor_id"`
+}
+
+type RefUsbDeviceIdInclusive struct {
+	ProductId int `json:"product_id"`
+	VendorId  int `json:"vendor_id"`
+}
+
+type RefBookmarkType struct {
+	Children     []*RefBookmarkType `json:"children,omitempty"`
+	Name         string             `json:"name"`
+	ToplevelName string             `json:"toplevel_name"`
+	Url          string             `json:"url"`
 }
 
 type RefWeeklyTimeIntervals struct {
@@ -27137,22 +27152,6 @@ type RefPowerManagementDelaysDelays struct {
 	IdleWarning int `json:"IdleWarning"`
 	ScreenDim   int `json:"ScreenDim"`
 	ScreenOff   int `json:"ScreenOff"`
-}
-
-type RefTimeUsageLimitEntry struct {
-	LastUpdatedMillis string `json:"last_updated_millis"`
-	UsageQuotaMins    int    `json:"usage_quota_mins"`
-}
-
-type RefTime struct {
-	Hour   int `json:"hour"`
-	Minute int `json:"minute"`
-}
-
-type RefConfig struct {
-	AccessCodeTtl       int    `json:"access_code_ttl"`
-	ClockDriftTolerance int    `json:"clock_drift_tolerance"`
-	SharedSecret        string `json:"shared_secret"`
 }
 
 // ****************************************************************************
