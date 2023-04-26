@@ -15,9 +15,9 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
-	"chromiumos/tast/common/servo"
 	"chromiumos/tast/remote/firmware/fixture"
 	crash_service "chromiumos/tast/services/cros/crash"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/ssh/linuxssh"
@@ -113,7 +113,7 @@ func ECCrash(ctx context.Context, s *testing.State) {
 	fs = nil
 
 	// Rebooting the EC can make servod fail if the CCD watchdog is not removed.
-	if err := h.Servo.WatchdogRemove(ctx, servo.WatchdogCCD); err != nil {
+	if err := h.Servo.RemoveCCDWatchdogs(ctx); err != nil {
 		s.Fatal("Failed to remove CCD watchdog: ", err)
 	}
 

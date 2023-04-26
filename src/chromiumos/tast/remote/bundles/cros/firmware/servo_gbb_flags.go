@@ -158,7 +158,7 @@ func ServoGBBFlags(ctx context.Context, s *testing.State) {
 	programmer = fmt.Sprintf(programmer, ccdSerial)
 	s.Logf("Programmer is %s", programmer)
 
-	if err = h.Servo.WatchdogRemove(ctx, servo.WatchdogCCD); err != nil {
+	if err = h.Servo.RemoveCCDWatchdogs(ctx); err != nil {
 		s.Fatal("Failed to remove ccd watchdog: ", err)
 	}
 

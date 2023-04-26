@@ -14,6 +14,7 @@ import (
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/fixture"
 	pb "chromiumos/tast/services/cros/firmware"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
@@ -120,7 +121,7 @@ func BootBatteryCutoff(ctx context.Context, s *testing.State) {
 
 		// Remove CCD watchdog for servod not to close when power supply is stopped after sending batterycutoff command.
 		s.Log("Disabling CCD watchdog")
-		if err := h.Servo.WatchdogRemove(ctx, servo.WatchdogCCD); err != nil {
+		if err := h.Servo.RemoveCCDWatchdogs(ctx); err != nil {
 			s.Fatal("Failed to remove CCD watchdog: ", err)
 		}
 

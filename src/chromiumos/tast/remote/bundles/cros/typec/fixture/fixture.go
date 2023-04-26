@@ -98,7 +98,7 @@ func (i *impl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 		s.Fatal("Failed to sleep after CCD keepalive disable: ", err)
 	}
 
-	if err := svo.WatchdogRemove(ctx, servo.WatchdogCCD); err != nil {
+	if err := svo.RemoveCCDWatchdogs(ctx); err != nil {
 		s.Fatal("Failed to switch CCD watchdog off: ", err)
 	}
 

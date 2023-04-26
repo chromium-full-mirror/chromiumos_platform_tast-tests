@@ -12,6 +12,7 @@ import (
 
 	"chromiumos/tast/common/servo"
 	"chromiumos/tast/remote/firmware/fixture"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -79,7 +80,7 @@ func WilcoPowerBehavior(ctx context.Context, s *testing.State) {
 		if err := h.SetDUTPower(ctx, false); err != nil {
 			s.Fatal("Unable to remove charger: ", err)
 		}
-		if err := h.Servo.WatchdogRemove(ctx, servo.WatchdogMain); err != nil {
+		if err := h.Servo.RemoveCCDWatchdogs(ctx); err != nil {
 			s.Fatal("Failed to remove watchdog main: ", err)
 		}
 	}

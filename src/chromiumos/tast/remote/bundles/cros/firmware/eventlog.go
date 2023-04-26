@@ -17,6 +17,7 @@ import (
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/fixture"
 	"chromiumos/tast/remote/firmware/reporters"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
@@ -234,7 +235,7 @@ func Eventlog(ctx context.Context, s *testing.State) {
 			s.Fatalf("Error during transition to %s: %+v", param.bootToMode, err)
 		}
 	} else if param.suspendResume {
-		if err := h.Servo.WatchdogRemove(ctx, servo.WatchdogCCD); err != nil {
+		if err := h.Servo.RemoveCCDWatchdogs(ctx); err != nil {
 			s.Error("Failed to remove watchdog for ccd: ", err)
 		}
 		h.CloseRPCConnection(ctx)
@@ -271,7 +272,7 @@ func Eventlog(ctx context.Context, s *testing.State) {
 		}
 		s.Log("Reconnected to DUT")
 	} else if param.hardwareWatchdog {
-		if err := h.Servo.WatchdogRemove(ctx, servo.WatchdogCCD); err != nil {
+		if err := h.Servo.RemoveCCDWatchdogs(ctx); err != nil {
 			s.Error("Failed to remove watchdog for ccd: ", err)
 		}
 		// Daisydog is the watchdog service.

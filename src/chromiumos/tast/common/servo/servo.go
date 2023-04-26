@@ -7,7 +7,7 @@
 // More details on servo: https://www.chromium.org/chromium-os/servo
 //
 // Caution: If you reboot the ChromeOS EC:
-// - If using a CCD servo, you should call WatchdogRemove(ctx, CCD) or servod will fail.
+// - If using a CCD servo, you should call RemoveCCDWatchdogs(ctx) or servod will fail.
 // - Use Helper.WaitConnect instead of DUT.WaitConnect.
 package servo
 

@@ -11,6 +11,7 @@ import (
 	"chromiumos/tast/common/servo"
 	FwUtils "chromiumos/tast/remote/bundles/cros/firmware/utils"
 	"chromiumos/tast/remote/firmware/fixture"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -134,7 +135,7 @@ func Cr50Open(ctx context.Context, s *testing.State) {
 		s.Fatal("FwUtils.VerifyCr50Command failed: ", err)
 	}
 	// Rebooting GSC will cause EC to restart, potentially breaking the servo watchdog.
-	if err := h.Servo.WatchdogRemove(ctx, servo.WatchdogCCD); err != nil {
+	if err := h.Servo.RemoveCCDWatchdogs(ctx); err != nil {
 		s.Fatal("Remove ccd watchdog: ", err)
 	}
 	s.Log("Reboot GSC and expect that it is locked afterwards")

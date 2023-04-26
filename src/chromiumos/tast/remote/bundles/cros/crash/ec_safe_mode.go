@@ -12,6 +12,7 @@ import (
 
 	"chromiumos/tast/common/servo"
 	"chromiumos/tast/remote/firmware/fixture"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
@@ -95,7 +96,7 @@ func ECSafeMode(ctx context.Context, s *testing.State) {
 	cl = nil
 
 	// Rebooting the EC can make servod fail if the CCD watchdog is not removed.
-	if err := h.Servo.WatchdogRemove(ctx, servo.WatchdogCCD); err != nil {
+	if err := h.Servo.RemoveCCDWatchdogs(ctx); err != nil {
 		s.Fatal("Failed to remove CCD watchdog: ", err)
 	}
 

@@ -18,6 +18,7 @@ import (
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/fixture"
 	"chromiumos/tast/remote/firmware/reporters"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
@@ -269,7 +270,7 @@ func FlagsPreservation(ctx context.Context, s *testing.State) {
 			}
 
 			s.Log("Removing CCD watchdog")
-			if err := h.Servo.WatchdogRemove(ctx, servo.WatchdogCCD); err != nil {
+			if err := h.Servo.RemoveCCDWatchdogs(ctx); err != nil {
 				s.Fatal("Failed to remove watchdog for ccd: ", err)
 			}
 
@@ -281,7 +282,7 @@ func FlagsPreservation(ctx context.Context, s *testing.State) {
 				if !s.DUT().Connected(ctx) {
 					if err := checkDUTAsleepAndPressPwr(ctx, h); err != nil {
 						s.Logf("DUT completely offline: %v Attempting to restore connection", err)
-						if err := h.Servo.WatchdogRemove(ctx, servo.WatchdogCCD); err != nil {
+						if err := h.Servo.RemoveCCDWatchdogs(ctx); err != nil {
 							s.Fatal("Failed to remove watchdog for ccd: ", err)
 						}
 						// To-do: depending on how the results turn out, we could

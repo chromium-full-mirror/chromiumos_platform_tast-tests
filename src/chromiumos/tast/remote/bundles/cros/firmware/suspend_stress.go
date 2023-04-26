@@ -19,6 +19,7 @@ import (
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/fixture"
 	pb "chromiumos/tast/services/cros/firmware"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -58,7 +59,7 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to servo: ", err)
 	}
 
-	if err := h.Servo.WatchdogRemove(ctx, servo.WatchdogCCD); err != nil {
+	if err := h.Servo.RemoveCCDWatchdogs(ctx); err != nil {
 		s.Fatal("Failed to remove ccd watchdog: ", err)
 	}
 

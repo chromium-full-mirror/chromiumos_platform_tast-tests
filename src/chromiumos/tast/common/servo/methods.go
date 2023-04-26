@@ -931,7 +931,7 @@ func (s *Servo) SetPowerState(ctx context.Context, value PowerStateValue) error 
 	// Power states that reboot the EC can make servod exit or fail if the CCD watchdog is enabled.
 	switch value {
 	case PowerStateReset, PowerStateRec, PowerStateRecForceMRC, PowerStateCR50Reset, PowerStateWarmReset:
-		if err := s.WatchdogRemove(ctx, WatchdogCCD); err != nil {
+		if err := s.RemoveCCDWatchdogs(ctx); err != nil {
 			return errors.Wrap(err, "remove ccd watchdog")
 		}
 	default:

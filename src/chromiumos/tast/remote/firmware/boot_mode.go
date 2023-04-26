@@ -19,6 +19,7 @@ import (
 	fwCommon "chromiumos/tast/common/firmware"
 	"chromiumos/tast/common/servo"
 	fwpb "chromiumos/tast/services/cros/firmware"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
@@ -249,7 +250,7 @@ func (ms ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMod
 
 	// Booting from rec to anything else will cause EC to restart, potentally breaking the servo watchdog.
 	if fromMode == fwCommon.BootModeRecovery {
-		if err := h.Servo.WatchdogRemove(ctx, servo.WatchdogCCD); err != nil {
+		if err := h.Servo.RemoveCCDWatchdogs(ctx); err != nil {
 			return errors.Wrap(err, "failed to remove watchdog for ccd")
 		}
 	}

@@ -16,6 +16,7 @@ import (
 	"chromiumos/tast/common/servo"
 	"chromiumos/tast/remote/bundles/cros/firmware/utils"
 	"chromiumos/tast/remote/firmware"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
@@ -61,7 +62,7 @@ func WriteProtectProtectsFlash(ctx context.Context, s *testing.State) {
 	}
 
 	// Might potentially fix issues with servod stopping during execution.
-	if err := h.Servo.WatchdogRemove(ctx, servo.WatchdogMain); err != nil {
+	if err := h.Servo.RemoveCCDWatchdogs(ctx); err != nil {
 		s.Fatal("Failed to remove main watchdog: ", err)
 	}
 

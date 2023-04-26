@@ -663,11 +663,8 @@ func (h *Helper) SetupUSBKey(ctx context.Context, cloudStorage *testing.CloudSto
 	}
 	testing.ContextLogf(ctx, "Current build on USB (%s) differs from DUT (%s), proceed with download", releaseBuilderPath, dutBuilderPath)
 	// Sometimes servod loses the CCD connection while we are flashing the USB drive.
-	if err := h.Servo.WatchdogRemove(ctx, servo.WatchdogCCD); err != nil {
+	if err := h.Servo.RemoveCCDWatchdogs(ctx); err != nil {
 		return errors.Wrap(err, "failed to remove ccd watchdog")
-	}
-	if err := h.Servo.WatchdogRemove(ctx, servo.WatchdogMain); err != nil {
-		return errors.Wrap(err, "failed to remove main watchdog")
 	}
 
 	// TODO if needed, recovery images are at .../recovery_image.tar.xz.

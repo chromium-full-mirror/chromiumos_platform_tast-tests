@@ -20,6 +20,7 @@ import (
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/reporters"
 	pb "chromiumos/tast/services/cros/firmware"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
@@ -108,7 +109,7 @@ func CheckRecReason(ctx context.Context, h *firmware.Helper, ms *firmware.ModeSw
 	}
 
 	// Test element required if rebooting from recovery to anything
-	if err := h.Servo.WatchdogRemove(ctx, servo.WatchdogCCD); err != nil {
+	if err := h.Servo.RemoveCCDWatchdogs(ctx); err != nil {
 		return errors.Wrap(err, "failed to remove watchdog for ccd")
 	}
 

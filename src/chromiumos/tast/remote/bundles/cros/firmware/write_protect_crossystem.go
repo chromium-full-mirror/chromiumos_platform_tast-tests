@@ -33,7 +33,7 @@ func WriteProtectCrossystem(ctx context.Context, s *testing.State) {
 	h := s.FixtValue().(*fixture.Value).Helper
 
 	// Might potentially fix issues with servod stopping during execution.
-	if err := h.Servo.WatchdogRemove(ctx, servo.WatchdogMain); err != nil {
+	if err := h.Servo.RemoveCCDWatchdogs(ctx); err != nil {
 		s.Fatal("Failed to remove main watchdog: ", err)
 	}
 

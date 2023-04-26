@@ -15,6 +15,7 @@ import (
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/fixture"
 	pb "chromiumos/tast/services/cros/firmware"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -151,7 +152,7 @@ func Cr50OpenOnBattery(ctx context.Context, s *testing.State) {
 	if err := fwCommon.ClearAndSetGBBFlags(ctx, s.DUT(), &pb.GBBFlagsState{Set: []pb.GBBFlag{pb.GBBFlag_DEV_SCREEN_SHORT_DELAY}}); err != nil {
 		s.Fatal("Error setting gbb flags: ", err)
 	}
-	if err := h.Servo.WatchdogRemove(ctx, servo.WatchdogCCD); err != nil {
+	if err := h.Servo.RemoveCCDWatchdogs(ctx); err != nil {
 		s.Fatal("Remove ccd watchdog: ", err)
 	}
 	startDsCount, err := getDeepSleepCount(ctx, h)

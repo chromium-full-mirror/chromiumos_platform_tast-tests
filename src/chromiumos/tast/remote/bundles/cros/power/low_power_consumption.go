@@ -103,7 +103,7 @@ func LowPowerConsumption(ctx context.Context, s *testing.State) {
 	s.Logf("Charged Ah capacity of battery is  %f", capacity)
 
 	// Make sure that the watchdog on ccd is disconnected
-	if err := h.Servo.WatchdogRemove(ctx, servo.WatchdogCCD); err != nil {
+	if err := h.Servo.RemoveCCDWatchdogs(ctx); err != nil {
 		s.Fatal("Failed to switch CCD watchdog off: ", err)
 	}
 

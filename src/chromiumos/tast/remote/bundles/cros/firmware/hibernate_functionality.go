@@ -14,6 +14,7 @@ import (
 	"chromiumos/tast/common/xmlrpc"
 	"chromiumos/tast/remote/firmware/fixture"
 	"chromiumos/tast/services/cros/security"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
@@ -118,7 +119,7 @@ func HibernateFunctionality(ctx context.Context, s *testing.State) {
 	if _, err := client.NewChromeLogin(ctx, &empty.Empty{}); err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
-	if err := h.Servo.WatchdogRemove(ctx, servo.WatchdogCCD); err != nil {
+	if err := h.Servo.RemoveCCDWatchdogs(ctx); err != nil {
 		s.Fatal("Failed to remove CCD watchdog: ", err)
 	}
 	cl.Close(ctx)
