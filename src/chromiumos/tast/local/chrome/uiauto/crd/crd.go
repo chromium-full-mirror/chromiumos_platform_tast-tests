@@ -7,6 +7,7 @@ package crd
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"chromiumos/tast/local/chrome"
@@ -53,6 +54,12 @@ func getAccessCode(ctx context.Context, crd *chrome.Conn) (string, error) {
 	const clickBtn = genCodeBtn + ".click()"
 	if err := crd.Eval(ctx, clickBtn, nil); err != nil {
 		return "", err
+	}
+
+	// Check for error message due to RemoteAccessHostAllowRemoteSupportConnections disabled.
+	const blockedDiv = `document.evaluate('//div[text()="Remote connections have been blocked by the network administrator."]', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE).singleNodeValue`
+	if err := crd.WaitForExprWithTimeout(ctx, fmt.Sprintf("%s != null", blockedDiv), 3*time.Second); err == nil {
+		return "", errors.New("Remote support connections blocked")
 	}
 
 	const codeSpan = `document.querySelector('[aria-label^="Your access code is:"]')`
