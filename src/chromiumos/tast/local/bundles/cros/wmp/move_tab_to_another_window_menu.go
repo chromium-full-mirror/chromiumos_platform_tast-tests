@@ -9,8 +9,6 @@ import (
 	"fmt"
 	"time"
 
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome"
@@ -19,6 +17,9 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/testing"
+
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 )
 
 func init() {
@@ -129,8 +130,14 @@ func verifyTabGroupMenu(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.
 	}
 
 	moveTabToAnotherWindowItem := nodewith.ClassName("MenuItemView").Name("Move tab to another window")
-	if err := ac.MouseMoveTo(moveTabToAnotherWindowItem, 0)(ctx); err != nil {
-		return errors.Wrap(err, "failed to move mouse to the move tab to another window item")
+	newWindowItem := nodewith.ClassName("MenuItemView").Name("New window")
+	if err := uiauto.Combine(
+		"move mouse to and click new window item",
+		ac.MouseMoveTo(moveTabToAnotherWindowItem, 0),
+		ac.DoDefault(moveTabToAnotherWindowItem),
+		ac.WaitUntilExists(newWindowItem),
+	)(ctx); err != nil {
+		return err
 	}
 
 	// Verify the tab group menu.
