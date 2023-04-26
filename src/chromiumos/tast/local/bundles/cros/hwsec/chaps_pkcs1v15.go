@@ -14,7 +14,6 @@ import (
 	libhwseclocal "chromiumos/tast/local/hwsec"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -28,16 +27,20 @@ func init() {
 			"zuan@chromium.org",
 		},
 		BugComponent: "b:1188704",
-		SoftwareDeps: []string{"chrome", "tpm"},
+		SoftwareDeps: []string{"chrome"},
 		Timeout:      4 * time.Minute,
 		Params: []testing.Param{{
 			Fixture:           "ussAuthSessionFixture",
-			ExtraSoftwareDeps: []string{"no_tpm_dynamic"},
+			ExtraSoftwareDeps: []string{"tpm", "no_tpm_dynamic"},
+			// checkSoftwareBacked: For devices with official TPM, we do not allow fallback
+			// to software backed keys so we need to check if the keys are not software backed
+			// when they're not supposed to be.
+			Val: true,
 		}, {
 			Name:              "tpm_dynamic",
 			Fixture:           "ussAuthSessionFixture",
 			ExtraSoftwareDeps: []string{"tpm_dynamic"},
-			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
+			Val:               false,
 		}},
 	})
 }
@@ -73,7 +76,7 @@ func ChapsPKCS1V15(ctx context.Context, s *testing.State) {
 	defer pkcs11test.CleanupScratchpad(ctx, r, scratchpadPath)
 
 	// Create the various keys.
-	keys, err := util.CreateKeysForTesting(ctx, r, pkcs11Util, utility, scratchpadPath, util.RSAKey)
+	keys, err := util.CreateKeysForTesting(ctx, r, pkcs11Util, utility, scratchpadPath, util.RSAKey, s.Param().(bool))
 	if err != nil {
 		s.Fatal("Failed to create keys for testing: ", err)
 	}

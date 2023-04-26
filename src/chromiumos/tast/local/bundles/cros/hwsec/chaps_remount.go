@@ -27,7 +27,18 @@ func init() {
 			"yich@google.com",
 		},
 		BugComponent: "b:1188704",
-		Timeout:      4 * time.Minute,
+		Params: []testing.Param{{
+			ExtraSoftwareDeps: []string{"tpm", "no_tpm_dynamic"},
+			// checkSoftwareBacked: For devices with official TPM, we do not allow fallback
+			// to software backed keys so we need to check if the keys are not software backed
+			// when they're not supposed to be.
+			Val: true,
+		}, {
+			Name:              "tpm_dynamic",
+			ExtraSoftwareDeps: []string{"tpm_dynamic"},
+			Val:               false,
+		}},
+		Timeout: 4 * time.Minute,
 	})
 }
 
@@ -62,7 +73,7 @@ func ChapsRemount(ctx context.Context, s *testing.State) {
 	defer pkcs11test.CleanupScratchpad(ctx, r, scratchpadPath)
 
 	// Create the various keys.
-	keys, err := util.CreateKeysForTesting(ctx, r, pkcs11Util, cryptohome, scratchpadPath, util.RSAKey)
+	keys, err := util.CreateKeysForTesting(ctx, r, pkcs11Util, cryptohome, scratchpadPath, util.RSAKey, s.Param().(bool))
 	if err != nil {
 		s.Fatal("Failed to create keys for testing: ", err)
 	}

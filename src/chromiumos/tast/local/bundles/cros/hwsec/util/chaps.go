@@ -46,7 +46,7 @@ func allKeyIDs() (noncopiedKeyIDs, copiedKeyIDs []string) {
 
 // createKeysForTestingForUser creases all the possible keys that we should test that belong to the given username (reside in the slot that is associated with the user).
 // Specify empty string for username to specify system token slot. Pass in RSAKey or ECKey for keyType.
-func createKeysForTestingForUser(ctx context.Context, username string, pkcs11Util *pkcs11.Chaps, scratchpadPath string, keyType KeyType) (keys []*pkcs11.KeyInfo, retErr error) {
+func createKeysForTestingForUser(ctx context.Context, username string, pkcs11Util *pkcs11.Chaps, scratchpadPath string, keyType KeyType, checkSoftwareBacked bool) (keys []*pkcs11.KeyInfo, retErr error) {
 	defer func() {
 		if retErr != nil {
 			// Function failed, we need to cleanup all created keys.
@@ -64,9 +64,9 @@ func createKeysForTestingForUser(ctx context.Context, username string, pkcs11Uti
 
 	// Create the software-generated, then imported key.
 	if keyType == RSAKey {
-		importedKey, err = pkcs11Util.CreateRSASoftwareKey(ctx, scratchpadPath, username, "testkey1", importedKeyID, false, true)
+		importedKey, err = pkcs11Util.CreateRSASoftwareKey(ctx, scratchpadPath, username, "testkey1", importedKeyID, false, checkSoftwareBacked)
 	} else if keyType == ECKey {
-		importedKey, err = pkcs11Util.CreateECSoftwareKey(ctx, scratchpadPath, username, "testkey1", importedKeyID, false, true)
+		importedKey, err = pkcs11Util.CreateECSoftwareKey(ctx, scratchpadPath, username, "testkey1", importedKeyID, false, checkSoftwareBacked)
 	} else {
 		return keys, errors.Wrapf(err, "invalid keyType %d", keyType)
 	}
@@ -77,9 +77,9 @@ func createKeysForTestingForUser(ctx context.Context, username string, pkcs11Uti
 
 	// Create the software-generated, then imported as software-backed key.
 	if keyType == RSAKey {
-		softwareKey, err = pkcs11Util.CreateRSASoftwareKey(ctx, scratchpadPath, username, "testkey2", softwareKeyID, true, true)
+		softwareKey, err = pkcs11Util.CreateRSASoftwareKey(ctx, scratchpadPath, username, "testkey2", softwareKeyID, true, checkSoftwareBacked)
 	} else if keyType == ECKey {
-		softwareKey, err = pkcs11Util.CreateECSoftwareKey(ctx, scratchpadPath, username, "testkey2", softwareKeyID, true, true)
+		softwareKey, err = pkcs11Util.CreateECSoftwareKey(ctx, scratchpadPath, username, "testkey2", softwareKeyID, true, checkSoftwareBacked)
 	}
 	if err != nil {
 		return keys, errors.Wrap(err, "failed to create software key")
@@ -118,7 +118,7 @@ func createKeysForTestingForUser(ctx context.Context, username string, pkcs11Uti
 // CreateKeysForTesting creates the set of keys that we want to cover in our tests.
 // scratchpadPath is a temporary location allocated by the test to place materials related to the keys.
 // Note that a user may be created and its vault mounted in this method. Pass in RSAKey or ECKey for keyType.
-func CreateKeysForTesting(ctx context.Context, r hwsec.CmdRunner, pkcs11Util *pkcs11.Chaps, cryptohome *hwsec.CryptohomeClient, scratchpadPath string, keyType KeyType) (keys []*pkcs11.KeyInfo, retErr error) {
+func CreateKeysForTesting(ctx context.Context, r hwsec.CmdRunner, pkcs11Util *pkcs11.Chaps, cryptohome *hwsec.CryptohomeClient, scratchpadPath string, keyType KeyType, checkSoftwareBacked bool) (keys []*pkcs11.KeyInfo, retErr error) {
 	// Mount the vault of the user, so that we can test user keys as well.
 	if err := cryptohome.MountVault(ctx, PasswordLabel, hwsec.NewPassAuthConfig(FirstUsername, FirstPassword), true, hwsec.NewVaultConfig()); err != nil {
 		return keys, errors.Wrap(err, "failed to mount vault")
@@ -156,7 +156,7 @@ func CreateKeysForTesting(ctx context.Context, r hwsec.CmdRunner, pkcs11Util *pk
 	if err := os.MkdirAll(userScratchpadPath, 0755); err != nil {
 		return keys, errors.Wrap(err, "failed to create scratchpad for user keys")
 	}
-	retKeys, err := createKeysForTestingForUser(ctx, FirstUsername, pkcs11Util, userScratchpadPath, keyType)
+	retKeys, err := createKeysForTestingForUser(ctx, FirstUsername, pkcs11Util, userScratchpadPath, keyType, checkSoftwareBacked)
 	if err != nil {
 		return keys, errors.Wrap(err, "failed to create user key")
 	}
@@ -167,7 +167,7 @@ func CreateKeysForTesting(ctx context.Context, r hwsec.CmdRunner, pkcs11Util *pk
 	if err := os.MkdirAll(systemScratchpadPath, 0755); err != nil {
 		return keys, errors.Wrap(err, "failed to create scratchpad for system keys")
 	}
-	retKeys, err = createKeysForTestingForUser(ctx, "", pkcs11Util, scratchpadPath, keyType)
+	retKeys, err = createKeysForTestingForUser(ctx, "", pkcs11Util, scratchpadPath, keyType, checkSoftwareBacked)
 	if err != nil {
 		return keys, errors.Wrap(err, "failed to create system key")
 	}

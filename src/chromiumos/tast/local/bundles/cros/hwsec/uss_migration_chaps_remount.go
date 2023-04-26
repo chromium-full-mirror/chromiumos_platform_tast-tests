@@ -34,6 +34,17 @@ func init() {
 		Timeout:      4 * time.Minute,
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
+		Params: []testing.Param{{
+			ExtraSoftwareDeps: []string{"tpm", "no_tpm_dynamic"},
+			// checkSoftwareBacked: For devices with official TPM, we do not allow fallback
+			// to software backed keys so we need to check if the keys are not software backed
+			// when they're not supposed to be.
+			Val: true,
+		}, {
+			Name:              "tpm_dynamic",
+			ExtraSoftwareDeps: []string{"tpm_dynamic"},
+			Val:               false,
+		}},
 	})
 }
 
@@ -102,7 +113,7 @@ func UssMigrationChapsRemount(ctx context.Context, s *testing.State) {
 	defer pkcs11test.CleanupScratchpad(ctx, cmdRunner, scratchpadPath)
 
 	// Create the various keys.
-	keys, err := util.CreateKeysForTesting(ctx, cmdRunner, pkcs11Util, client, scratchpadPath, util.RSAKey)
+	keys, err := util.CreateKeysForTesting(ctx, cmdRunner, pkcs11Util, client, scratchpadPath, util.RSAKey, s.Param().(bool))
 	if err != nil {
 		s.Fatal("Failed to create keys for testing: ", err)
 	}

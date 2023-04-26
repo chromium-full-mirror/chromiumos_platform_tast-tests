@@ -33,7 +33,18 @@ func init() {
 		// Note: This is not in mainline because it takes too long to run.
 		Attr:         []string{"group:hwsec", "hwsec_weekly"},
 		SoftwareDeps: []string{"chrome", "tpm"},
-		Timeout:      20 * time.Minute,
+		Params: []testing.Param{{
+			ExtraSoftwareDeps: []string{"tpm", "no_tpm_dynamic"},
+			// checkSoftwareBacked: For devices with official TPM, we do not allow fallback
+			// to software backed keys so we need to check if the keys are not software backed
+			// when they're not supposed to be.
+			Val: true,
+		}, {
+			Name:              "tpm_dynamic",
+			ExtraSoftwareDeps: []string{"tpm_dynamic"},
+			Val:               false,
+		}},
+		Timeout: 20 * time.Minute,
 	})
 }
 
@@ -61,6 +72,8 @@ func ChapsStress(ctx context.Context, s *testing.State) {
 		// rebootCount is the times that we reboot.
 		rebootCount = 15
 	)
+
+	checkSoftwareBacked := s.Param().(bool)
 
 	r := hwsecremote.NewCmdRunner(s.DUT())
 
@@ -140,7 +153,7 @@ func ChapsStress(ctx context.Context, s *testing.State) {
 	})
 
 	for i := 0; i < len(rounds); i++ {
-		if err := runOneTurn(ctx, state, cryptohome, rounds[i], helper, pkcs11Util, scratchpadPath, f1, f2); err != nil {
+		if err := runOneTurn(ctx, state, cryptohome, rounds[i], helper, pkcs11Util, scratchpadPath, f1, f2, checkSoftwareBacked); err != nil {
 			s.Fatal("Turn failed: ", err)
 		}
 	}
@@ -279,7 +292,7 @@ func unmountAll(ctx context.Context, state *chapsStressState, cryptohome *hwsec.
 }
 
 // doCreateKeyTurn randomly create a key for a random user.
-func doCreateKeyTurn(ctx context.Context, state *chapsStressState, pkcs11Util *pkcs11.Chaps, scratchpadPath string, round roundType) error {
+func doCreateKeyTurn(ctx context.Context, state *chapsStressState, pkcs11Util *pkcs11.Chaps, scratchpadPath string, round roundType, checkSoftwareBacked bool) error {
 	// Select a key that's not created.
 	var viableKeys []int
 	for i := 0; i < state.userCount*state.keysPerUser; i++ {
@@ -302,11 +315,11 @@ func doCreateKeyTurn(ctx context.Context, state *chapsStressState, pkcs11Util *p
 	}
 	if round == createImportedKeyRound {
 		createKeyFunc = func(label, keyID string) (*pkcs11.KeyInfo, error) {
-			return pkcs11Util.CreateRSASoftwareKey(ctx, scratchpadPath, username, label, keyID, false, true)
+			return pkcs11Util.CreateRSASoftwareKey(ctx, scratchpadPath, username, label, keyID, false, checkSoftwareBacked)
 		}
 	} else if round == createSoftwareKeyRound {
 		createKeyFunc = func(label, keyID string) (*pkcs11.KeyInfo, error) {
-			return pkcs11Util.CreateRSASoftwareKey(ctx, scratchpadPath, username, label, keyID, true, true)
+			return pkcs11Util.CreateRSASoftwareKey(ctx, scratchpadPath, username, label, keyID, true, checkSoftwareBacked)
 		}
 	} else if round == createGeneratedKeyRound {
 		createKeyFunc = func(label, keyID string) (*pkcs11.KeyInfo, error) {
@@ -425,7 +438,7 @@ func doRebootTurn(ctx context.Context, state *chapsStressState, helper *hwsecrem
 // - Remove a key
 // - Sign with a key
 // - Reboot
-func runOneTurn(ctx context.Context, state *chapsStressState, cryptohome *hwsec.CryptohomeClient, round roundType, helper *hwsecremote.CmdHelperRemote, pkcs11Util *pkcs11.Chaps, scratchpadPath, f1, f2 string) error {
+func runOneTurn(ctx context.Context, state *chapsStressState, cryptohome *hwsec.CryptohomeClient, round roundType, helper *hwsecremote.CmdHelperRemote, pkcs11Util *pkcs11.Chaps, scratchpadPath, f1, f2 string, checkSoftwareBacked bool) error {
 	if round == mountRound {
 		return doMountUserTurn(ctx, state, cryptohome)
 	}
@@ -435,7 +448,7 @@ func runOneTurn(ctx context.Context, state *chapsStressState, cryptohome *hwsec.
 	}
 
 	if round == createSoftwareKeyRound || round == createImportedKeyRound || round == createGeneratedKeyRound {
-		return doCreateKeyTurn(ctx, state, pkcs11Util, scratchpadPath, round)
+		return doCreateKeyTurn(ctx, state, pkcs11Util, scratchpadPath, round, checkSoftwareBacked)
 	}
 
 	if round == removeKeyRound {

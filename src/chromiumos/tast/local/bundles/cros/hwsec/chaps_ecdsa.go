@@ -73,7 +73,7 @@ func ChapsECDSA(ctx context.Context, s *testing.State) {
 	defer pkcs11test.CleanupScratchpad(ctx, r, scratchpadPath)
 
 	// Create the various keys.
-	keys, err := util.CreateKeysForTesting(ctx, r, pkcs11Util, utility, scratchpadPath, util.ECKey)
+	keys, err := util.CreateKeysForTesting(ctx, r, pkcs11Util, utility, scratchpadPath, util.ECKey, true)
 	if err != nil {
 		s.Fatal("Failed to create keys for testing: ", err)
 	}
