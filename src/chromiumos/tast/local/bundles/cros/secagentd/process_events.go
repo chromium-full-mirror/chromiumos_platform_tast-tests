@@ -10,11 +10,8 @@ import (
 	"strconv"
 	"time"
 
-	"google.golang.org/protobuf/proto"
-
 	rep "chromiumos/reporting"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/bundles/cros/secagentd/secagentddbusmonitor"
 	"chromiumos/tast/local/bundles/cros/secagentd/secagentdprocfsscraper"
 	"chromiumos/tast/local/bundles/cros/secagentd/secagentdupstart"
@@ -22,6 +19,9 @@ import (
 	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/testing"
 	xdr "chromiumos/xdr/secagentd"
+
+	"go.chromium.org/tast/core/ctxutil"
+	"google.golang.org/protobuf/proto"
 )
 
 type processEventsParams struct {
@@ -56,7 +56,7 @@ func init() {
 		},
 		// ChromeOS > Security > ChromeOS Enterprise Security
 		BugComponent: "b:1208373",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		Timeout:      time.Duration(len(processEventsTestParams)) * 4 * time.Minute,
 		SoftwareDeps: []string{"bpf", "chrome"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
