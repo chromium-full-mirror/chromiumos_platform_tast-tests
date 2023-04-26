@@ -23,7 +23,7 @@ func init() {
 			"lacros-team@google.com",
 			"vsavu@google.com", // Test author
 		},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		SoftwareDeps: []string{"chrome", "lacros"},
 	})
 }
