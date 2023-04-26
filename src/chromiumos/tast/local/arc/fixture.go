@@ -128,6 +128,56 @@ func init() {
 		TearDownTimeout: ResetTimeout,
 	})
 
+	// arcBootedWithPlayStoreAndBluetoothBlueZ is a fixture similar to arcBootedWithPlayStore along with Bluetooth-BlueZ is enabled.
+	testing.AddFixture(&testing.Fixture{
+		Name: "arcBootedWithPlayStoreAndBluetoothBlueZ",
+		Desc: "ARC is booted with disabling sync flags and Bluetooth-BlueZ is enabled",
+		Vars: []string{"ui.gaiaPoolDefault"},
+		Contacts: []string{
+			"chadduffin@chromium.org",
+			"cros-connectivity@google.com",
+			"kinwang.lao@cienet.com",
+			"cienet-development@googlegroups.com",
+		},
+		Impl: NewArcBootedWithPlayStoreFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{
+				chrome.DisableFeatures("Floss"),
+				chrome.ExtraArgs(DisableSyncFlags()...),
+				chrome.UnRestrictARCCPU(),
+				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+			}, nil
+		}),
+		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + BootTimeout + 2*time.Minute,
+		ResetTimeout:    ResetTimeout,
+		PostTestTimeout: PostTestTimeout,
+		TearDownTimeout: ResetTimeout,
+	})
+
+	// arcBootedWithPlayStoreAndBluetoothFloss is a fixture similar to arcBootedWithPlayStore along with Bluetooth-Floss is enabled.
+	testing.AddFixture(&testing.Fixture{
+		Name: "arcBootedWithPlayStoreAndBluetoothFloss",
+		Desc: "ARC is booted with disabling sync flags and Bluetooth-Floss is enabled",
+		Vars: []string{"ui.gaiaPoolDefault"},
+		Contacts: []string{
+			"chadduffin@chromium.org",
+			"cros-connectivity@google.com",
+			"kinwang.lao@cienet.com",
+			"cienet-development@googlegroups.com",
+		},
+		Impl: NewArcBootedWithPlayStoreFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{
+				chrome.EnableFeatures("Floss"),
+				chrome.ExtraArgs(DisableSyncFlags()...),
+				chrome.UnRestrictARCCPU(),
+				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+			}, nil
+		}),
+		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + BootTimeout + 2*time.Minute,
+		ResetTimeout:    ResetTimeout,
+		PostTestTimeout: PostTestTimeout,
+		TearDownTimeout: ResetTimeout,
+	})
+
 	// arcBootedInTabletMode is a fixture similar to arcBooted. The only difference from arcBooted is that Chrome is launched in tablet mode in this fixture.
 	testing.AddFixture(&testing.Fixture{
 		Name: "arcBootedInTabletMode",
