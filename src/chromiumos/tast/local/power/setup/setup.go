@@ -319,6 +319,16 @@ const (
 	DisableUI
 )
 
+// RamfsMode indicates whether to setup ramfs for local data.
+type RamfsMode int
+
+const (
+	// DoNotSetupRamfs indicates that test should not setup ramfs.
+	DoNotSetupRamfs RamfsMode = iota
+	// SetupRamfs indicates that test should setup ramfs for local data.
+	SetupRamfs
+)
+
 // PowerTestOptions describes how to set up a power test.
 type PowerTestOptions struct {
 	// The default value of the following options is not to perform any changes.
@@ -326,6 +336,7 @@ type PowerTestOptions struct {
 	NightLight NightLightMode
 	DarkTheme  DarkThemeMode
 	UI         UIMode
+	Ramfs      RamfsMode
 
 	// The default value of the following options is to perform the actions.
 	Powerd             PowerdMode
@@ -398,6 +409,9 @@ func PowerTest(ctx context.Context, c *chrome.TestConn, options PowerTestOptions
 		}
 		if options.UI == DisableUI {
 			s.Add(DisableServiceIfExists(ctx, "ui"))
+		}
+		if options.Ramfs == SetupRamfs {
+			s.Add(setUpRamfs(ctx))
 		}
 		return nil
 	})
