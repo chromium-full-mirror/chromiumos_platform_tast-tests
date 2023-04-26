@@ -19,7 +19,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational", "group:attestation"},
 		Contacts:     []string{"cros-hwsec@google.com", "cylai@chromium.org"},
 		BugComponent: "b:1188704",
-		SoftwareDeps: []string{"tpm", "endorsement"},
+		SoftwareDeps: []string{"tpm", "endorsement", "no_tpm_dynamic"},
 	})
 }
 

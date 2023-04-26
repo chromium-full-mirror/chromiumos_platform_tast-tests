@@ -27,7 +27,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational", "group:attestation"},
 		Contacts:     []string{"cros-hwsec@google.com", "cylai@chromium.org"},
 		BugComponent: "b:1188704",
-		SoftwareDeps: []string{"tpm"},
+		SoftwareDeps: []string{"tpm", "no_tpm_dynamic"},
 		Fixture:      "ussAuthSessionFixture",
 		Timeout:      4 * time.Minute,
 	})

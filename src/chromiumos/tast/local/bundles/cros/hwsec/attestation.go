@@ -24,7 +24,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational", "firmware_cr50", "group:firmware", "group:attestation"},
 		Contacts:     []string{"cros-hwsec@google.com", "cylai@chromium.org"},
 		BugComponent: "b:1188704",
-		SoftwareDeps: []string{"tpm", "endorsement"},
+		SoftwareDeps: []string{"tpm", "endorsement", "no_tpm_dynamic"},
 		Timeout:      4 * time.Minute,
 	})
 }
