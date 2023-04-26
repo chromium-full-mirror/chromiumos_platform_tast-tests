@@ -44,7 +44,7 @@ type Service struct {
 // NewChromeLoginWithPeripheralDataAccess logs in to Chrome as a fake user, but before that, enables the DevicePciPeripheralDataAccess setting.
 func (c *Service) NewChromeLoginWithPeripheralDataAccess(ctx context.Context, req *typec.KeyPath) (_ *empty.Empty, errRet error) {
 	// Get to the Chrome login screen.
-	cr, err := chrome.New(ctx, chrome.DeferLogin())
+	cr, err := chrome.New(ctx, chrome.DeferLogin(), chrome.ExtraArgs("--autoplay-policy=no-user-gesture-required"))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to start Chrome at login screen")
 	}
@@ -288,7 +288,7 @@ func (c *Service) VerifyFirstRunningDevice(ctx context.Context, req *typec.KeyPa
 // NewChromeLogin is default chrome login.
 func (c *Service) NewChromeLogin(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
 	// Get to the Chrome login screen with proxy.
-	cr, err := chrome.New(ctx)
+	cr, err := chrome.New(ctx, chrome.ExtraArgs("--autoplay-policy=no-user-gesture-required"))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to start Chrome at login screen")
 	}
