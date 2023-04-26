@@ -151,8 +151,8 @@ func (g *GPUStateMetrics) Snapshot(ctx context.Context, values *perf.Values) err
 	// what it is meant to reflect.
 	rc6Ratio = math.Min(1, rc6Ratio)
 	rc6Ratio = math.Max(0, rc6Ratio)
-	values.Append(g.metrics["rc6"], rc6Ratio)
-	values.Append(g.metrics["rc0"], 1-rc6Ratio)
+	values.Append(g.metrics["rc6"], rc6Ratio*100)
+	values.Append(g.metrics["rc0"], (1-rc6Ratio)*100)
 	g.lastTime = currentTime
 	g.lastRC6 = currentRC6
 	return nil

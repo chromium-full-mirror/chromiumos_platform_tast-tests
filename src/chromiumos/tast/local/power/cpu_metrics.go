@@ -102,7 +102,7 @@ func (c *ProcfsCPUMetrics) Snapshot(ctx context.Context, values *perf.Values) er
 
 	used := float64(c.lastJiffies.load - jiffies.load)
 	total := float64(c.lastJiffies.total - jiffies.total)
-	values.Append(c.metric, used/total)
+	values.Append(c.metric, (used/total)*100)
 
 	c.lastJiffies = jiffies
 	return nil

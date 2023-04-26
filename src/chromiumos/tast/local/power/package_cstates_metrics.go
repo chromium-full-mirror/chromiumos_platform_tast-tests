@@ -317,7 +317,7 @@ func (cs *PackageCStatesMetrics) Snapshot(ctx context.Context, values *perf.Valu
 
 	total := diffs[c0C1Key] + diffs[aggregateNonC0C1Key]
 	for name, diff := range diffs {
-		values.Append(cs.metrics[name], float64(diff)/float64(total))
+		values.Append(cs.metrics[name], (float64(diff)/float64(total))*100)
 	}
 	cs.lastStats = stats
 	return nil

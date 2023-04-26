@@ -227,19 +227,19 @@ func (cs *CpuidleStateMetrics) Snapshot(ctx context.Context, values *perf.Values
 	for cpuName, perCPUDiffs := range diffs {
 		perCPUC0Residency := timeSlice
 		for stateName, diff := range perCPUDiffs {
-			values.Append(cs.metrics[cpuName+"-"+stateName], float64(diff)/float64(timeSlice))
+			values.Append(cs.metrics[cpuName+"-"+stateName], (float64(diff)/float64(timeSlice))*100)
 			c0Residency -= diff
 			perCPUC0Residency -= diff
 
 			totalResidency[stateName] += diff
 		}
-		values.Append(cs.metrics[cpuName+"-"+c0State], float64(perCPUC0Residency)/float64(timeSlice))
+		values.Append(cs.metrics[cpuName+"-"+c0State], (float64(perCPUC0Residency)/float64(timeSlice))*100)
 	}
 
 	for stateName, diff := range totalResidency {
-		values.Append(cs.metrics[stateName], float64(diff)/float64(total))
+		values.Append(cs.metrics[stateName], (float64(diff)/float64(total))*100)
 	}
-	values.Append(cs.metrics[c0State], float64(c0Residency)/float64(total))
+	values.Append(cs.metrics[c0State], (float64(c0Residency)/float64(total))*100)
 
 	cs.lastStats = stats
 	cs.lastTime = statTime

@@ -55,13 +55,13 @@ var validMetricTypeMap = map[string]bool{
 // Units for each metric type.
 const (
 	cpuIdleMetricTypeUnit        = "percent"
-	cpuUsageMetricTypeUnit       = "ratio"
+	cpuUsageMetricTypeUnit       = "percent"
 	fanMetricTypeUnit            = "rpm"
-	gpuFreqMetricTypeUnit        = "MHz"
+	gpuFreqMetricTypeUnit        = "megahertz"
 	gpuStateMetricTypeUnit       = "percent"
 	packageCstatesMetricTypeUnit = "percent"
 	powerRelatedMetricTypeUnit   = "W"
-	thermalMetricTypeUnit        = "deg_C"
+	thermalMetricTypeUnit        = "celsius"
 	zramMetricTypeUnit           = "requests"
 )
 
@@ -145,9 +145,9 @@ func ConvertPowerPerfValue(ctx context.Context, values *perf.Values) (map[string
 		// data is all the data points collected for each metric.
 		"data": nil,
 		// type is a map from metric to type.
-		"metric_type": nil,
+		"type": nil,
 		// unit is a map from metric to unit.
-		"metric_unit": nil,
+		"unit": nil,
 	}
 
 	innerDataMap := make(map[string][]float64)
@@ -242,8 +242,8 @@ func ConvertPowerPerfValue(ctx context.Context, values *perf.Values) (map[string
 
 	powerDict["data"] = innerDataMap
 	powerDict["average"] = innerAverageMap
-	powerDict["metric_type"] = typeMap
-	powerDict["metric_unit"] = unitMap
+	powerDict["type"] = typeMap
+	powerDict["unit"] = unitMap
 	return powerDict, nil
 }
 
@@ -340,7 +340,7 @@ func SavePowerLogJSON(ctx context.Context, outDir string, powerLogDict map[strin
 	return nil
 }
 
-// containEmpty() is the helper function to check if there is an empty string among args.
+// containEmpty is the helper function to check if there is an empty string among args.
 func containEmpty(strs ...string) bool {
 	for _, str := range strs {
 		if str == "" {
@@ -445,8 +445,8 @@ func SavePowerLogHTML(ctx context.Context, outDir string, powerLogDict map[strin
 
 	sampleDuration := powerLogDict["power"].(map[string]interface{})["sample_duration"]
 	powerLogDataMap := powerLogDict["power"].(map[string]interface{})["data"].(map[string][]float64)
-	powerLogUnitMap := powerLogDict["power"].(map[string]interface{})["metric_unit"].(map[string]string)
-	powerLogTypeMap := powerLogDict["power"].(map[string]interface{})["metric_type"]
+	powerLogUnitMap := powerLogDict["power"].(map[string]interface{})["unit"].(map[string]string)
+	powerLogTypeMap := powerLogDict["power"].(map[string]interface{})["type"]
 
 	// Generate a map from type to metric names.
 	typeToMetricsMap := make(map[string][]string)
