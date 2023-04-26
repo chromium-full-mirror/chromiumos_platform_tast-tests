@@ -32,7 +32,7 @@ func init() {
 		},
 		BugComponent: "b:1188704",
 		SoftwareDeps: []string{"tpm2"},
-		Attr:         []string{"group:mainline", "informational", "group:tpm_manager"},
+		Attr:         []string{"group:hwsec_destructive_func"},
 	})
 }
 

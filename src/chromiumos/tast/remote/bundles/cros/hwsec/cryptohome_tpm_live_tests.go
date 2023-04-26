@@ -30,7 +30,6 @@ func init() {
 		},
 		BugComponent: "b:1188704",
 		SoftwareDeps: []string{"tpm", "reboot"},
-		Attr:         []string{"group:hwsec_destructive_func"},
 		Timeout:      15 * time.Minute,
 		Params: []testing.Param{{
 			Name: "tpm_ecc_auth_block_test",
@@ -38,42 +37,49 @@ func init() {
 				testName:      "tpm_ecc_auth_block_test",
 				needsTpmReset: false,
 			},
+			ExtraAttr: []string{"group:mainline", "informational"},
 		}, {
 			Name: "tpm_bound_to_pcr_auth_block_test",
 			Val: testParams{
 				testName:      "tpm_bound_to_pcr_auth_block_test",
 				needsTpmReset: false,
 			},
+			ExtraAttr: []string{"group:mainline", "informational"},
 		}, {
 			Name: "tpm_not_bound_to_pcr_auth_block_test",
 			Val: testParams{
 				testName:      "tpm_not_bound_to_pcr_auth_block_test",
 				needsTpmReset: false,
 			},
+			ExtraAttr: []string{"group:mainline", "informational"},
 		}, {
 			Name: "decryption_key_test",
 			Val: testParams{
 				testName:      "decryption_key_test",
 				needsTpmReset: false,
 			},
+			ExtraAttr: []string{"group:mainline", "informational"},
 		}, {
 			Name: "seal_with_current_user_test",
 			Val: testParams{
 				testName:      "seal_with_current_user_test",
 				needsTpmReset: false,
 			},
+			ExtraAttr: []string{"group:mainline", "informational"},
 		}, {
 			Name: "signature_sealed_secret_test",
 			Val: testParams{
 				testName:      "signature_sealed_secret_test",
 				needsTpmReset: true,
 			},
+			ExtraAttr: []string{"group:hwsec_destructive_func"},
 		}, {
 			Name: "recovery_tpm_backend_test",
 			Val: testParams{
 				testName:      "recovery_tpm_backend_test",
 				needsTpmReset: true,
 			},
+			ExtraAttr: []string{"group:hwsec_destructive_func"},
 		}},
 	})
 }

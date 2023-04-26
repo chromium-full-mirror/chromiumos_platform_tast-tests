@@ -24,7 +24,7 @@ func init() {
 		},
 		BugComponent: "b:1188704",
 		SoftwareDeps: []string{"tpm"},
-		Attr:         []string{"group:mainline", "informational", "group:cryptohome"},
+		Attr:         []string{"group:hwsec_destructive_func"},
 	})
 }
 
