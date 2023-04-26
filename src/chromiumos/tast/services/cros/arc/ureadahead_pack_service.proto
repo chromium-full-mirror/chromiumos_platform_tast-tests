@@ -21,8 +21,10 @@ service UreadaheadPackService {
 
 message UreadaheadPackRequest {
   reserved 1, 2, 3, 4;
-  // Credentials to perform login
+  // Credentials to perform login.
   string creds = 5;
+  // Start ureadahead with dev caches being used.
+  bool use_dev_caches = 6;
 }
 
 message UreadaheadPackResponse {

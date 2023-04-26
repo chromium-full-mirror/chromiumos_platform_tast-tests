@@ -93,7 +93,7 @@ func CacheValidation(ctx context.Context, s *testing.State) {
 	// Keep resources needed for failure investigation.
 	artifactsDir := filepath.Join(s.OutDir(), "artifacts")
 	if err := os.Mkdir(artifactsDir, os.ModePerm); err != nil {
-		s.Fatal(errors.Wrap(err, "failed to created artifacts dir"))
+		s.Fatal(errors.Wrap(err, "failed to create artifacts dir"))
 	}
 
 	jarPath, err := cache.InstallCacheBuilderJar(ctx, d, param.vmEnabled, tempDir)
@@ -144,7 +144,7 @@ func CacheValidation(ctx context.Context, s *testing.State) {
 		}
 
 		if err := os.Mkdir(subDir, os.ModePerm); err != nil {
-			s.Fatal(errors.Wrap(err, "failed to created temp dir for GMS Core caches"))
+			s.Fatal(errors.Wrap(err, "failed to create temp dir for GMS Core caches"))
 		}
 
 		// Gets file from DUT and returns local file path.
@@ -188,7 +188,7 @@ func CacheValidation(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Validating GMS Core cache")
-	// Note, vdex and odex are not guarented to be the same even if produced from the same sources.
+	// Note, vdex and odex are not guaranteed to be the same even if produced from the same sources.
 	if err := saveOutput(filepath.Join(s.OutDir(), "app_chimera.diff"),
 		testexec.CommandContext(ctx, "diff", "--recursive", "--no-dereference",
 			"--exclude=*.odex", "--exclude=*.vdex",
@@ -277,7 +277,7 @@ func getTTSCache(ctx context.Context, s *testing.State, cl *rpc.Client, tempDir 
 
 	if _, err := os.Stat(subDir); os.IsNotExist(err) {
 		if err := os.Mkdir(subDir, os.ModePerm); err != nil {
-			s.Fatal(errors.Wrap(err, "failed to created temp dir for TTS caches"))
+			s.Fatal(errors.Wrap(err, "failed to create temp dir for TTS caches"))
 		}
 	}
 

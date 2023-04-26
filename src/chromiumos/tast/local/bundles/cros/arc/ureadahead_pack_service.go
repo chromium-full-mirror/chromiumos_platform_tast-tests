@@ -26,6 +26,7 @@ import (
 	"chromiumos/tast/local/disk"
 	"chromiumos/tast/local/upstart"
 	arcpb "chromiumos/tast/services/cros/arc"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -124,6 +125,9 @@ func (c *UreadaheadPackService) Generate(ctx context.Context, request *arcpb.Ure
 	if vmEnabled {
 		// If VM, only generate guest OS pack file.
 		chromeArgs = append(chromeArgs, "--arcvm-ureadahead-mode=generate")
+		if request.UseDevCaches == true {
+			chromeArgs = append(chromeArgs, "--params=androidboot.user_dev_caches=true")
+		}
 	} else {
 		chromeArgs = append(chromeArgs, "--arc-host-ureadahead-generation")
 	}
@@ -312,7 +316,7 @@ func stopUreadaheadTracing(ctx context.Context, cmd *testexec.Cmd) error {
 	return nil
 }
 
-func (c *UreadaheadPackService) CheckMinMemory(ctx context.Context, req *empty.Empty) (*arcpb.CheckMinMemoryResponse, error) {
+func (c *UreadaheadPackService) CheckMinMemory(ctx context.Context, request *empty.Empty) (*arcpb.CheckMinMemoryResponse, error) {
 	const (
 		ureadaheadVMMinMemoryKB = 7500000
 	)

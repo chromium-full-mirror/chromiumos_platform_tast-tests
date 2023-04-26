@@ -20,6 +20,7 @@ import (
 
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/remote/bundles/cros/arc/cache"
+	"chromiumos/tast/remote/bundles/cros/arc/dututils"
 	"chromiumos/tast/remote/bundles/cros/arc/version"
 	"chromiumos/tast/services/cros/arc"
 	arcpb "chromiumos/tast/services/cros/arc"
@@ -50,6 +51,8 @@ type testParam struct {
 	dataDir string
 	// if set, generates dex opt cache
 	dexOptCacheGen bool
+	// if set, copy non-ureadahead caches temporarily in this directory.
+	tmpCachesDir string
 }
 
 const (
@@ -64,6 +67,13 @@ const (
 
 	// DexOpt cache bucket
 	dexOptCache = "dex_opt_cache"
+
+	// Temporary directory to store copy of non-ureadahead cache artifacts prior
+	// to running genUreadaheadPack.
+	// TODO(b/279554423): Eventually enable this for container-rvc and vm-rvc
+	// devices after initial experiments are conducted on pi-container and vm-tm.
+	tmpContainerCacheArtifactsRoot = "/mnt/stateful_partition/unencrypted/apkcache/data_collector"
+	tmpVMCacheArtifactsRoot        = "/var/run/arcvm/testharness/data_collector"
 )
 
 type dataUploader struct {
@@ -161,6 +171,7 @@ func init() {
 				uprevBranch:             false,
 				dexOptCacheGen:          false,
 				dataDir:                 "",
+				tmpCachesDir:            tmpContainerCacheArtifactsRoot,
 			},
 		}, {
 			Name:              "container_r",
@@ -174,6 +185,7 @@ func init() {
 				uprevBranch:             false,
 				dexOptCacheGen:          false,
 				dataDir:                 "",
+				tmpCachesDir:            "",
 			},
 		}, {
 			Name:              "vm_r",
@@ -187,6 +199,7 @@ func init() {
 				uprevBranch:             false,
 				dexOptCacheGen:          false,
 				dataDir:                 "",
+				tmpCachesDir:            "",
 			},
 		}, {
 			Name:              "vm_t",
@@ -200,6 +213,7 @@ func init() {
 				uprevBranch:             false,
 				dexOptCacheGen:          true,
 				dataDir:                 "",
+				tmpCachesDir:            tmpVMCacheArtifactsRoot,
 			},
 		}, {
 			Name:              "local",
@@ -212,6 +226,7 @@ func init() {
 				uprevBranch:             false,
 				dexOptCacheGen:          false,
 				dataDir:                 "/tmp/data_collector",
+				tmpCachesDir:            tmpContainerCacheArtifactsRoot,
 			},
 		}, {
 			Name:              "container_r_local",
@@ -224,6 +239,7 @@ func init() {
 				uprevBranch:             false,
 				dexOptCacheGen:          false,
 				dataDir:                 "/tmp/data_collector",
+				tmpCachesDir:            "",
 			},
 		}, {
 			Name:              "vm_r_local",
@@ -236,6 +252,7 @@ func init() {
 				uprevBranch:             false,
 				dexOptCacheGen:          false,
 				dataDir:                 "/tmp/data_collector",
+				tmpCachesDir:            "",
 			},
 		}, {
 			Name:              "vm_t_local",
@@ -248,6 +265,7 @@ func init() {
 				uprevBranch:             false,
 				dexOptCacheGen:          true,
 				dataDir:                 "/tmp/data_collector",
+				tmpCachesDir:            tmpVMCacheArtifactsRoot,
 			},
 		}, {
 			// branch_uprev versions are designed to provide caches uprev functionality
@@ -282,6 +300,7 @@ func init() {
 				dexOptCacheGen:                false,
 				requiredCPUAbisForBranchUprev: []string{"x86_64", "arm64"},
 				dataDir:                       "/tmp/data_collector",
+				tmpCachesDir:                  "",
 			},
 		}, {
 			Name:              "container_r_branch_uprev",
@@ -297,6 +316,7 @@ func init() {
 				dexOptCacheGen:                false,
 				requiredCPUAbisForBranchUprev: []string{"x86_64"},
 				dataDir:                       "/tmp/data_collector",
+				tmpCachesDir:                  "",
 			},
 		}, {
 			Name:              "vm_r_branch_uprev",
@@ -316,6 +336,7 @@ func init() {
 				dexOptCacheGen:                false,
 				requiredCPUAbisForBranchUprev: []string{"x86_64", "arm64"},
 				dataDir:                       "/tmp/data_collector",
+				tmpCachesDir:                  "",
 			},
 		}},
 		VarDeps: []string{"arc.perfAccountPool"},
@@ -425,14 +446,15 @@ func DataCollector(ctx context.Context, s *testing.State) {
 		service := arc.NewUreadaheadPackServiceClient(cl.Conn)
 		// First boot is needed to be initial boot with removing all user data.
 		request := arcpb.UreadaheadPackRequest{
-			Creds: s.RequiredVar("arc.perfAccountPool"),
+			Creds:        s.RequiredVar("arc.perfAccountPool"),
+			UseDevCaches: param.tmpCachesDir != "",
 		}
 
 		// Shorten the total context by 5 seconds to allow for cleanup.
 		shortCtx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 		defer cancel()
 
-		// Limit running in PFQ for VM devices to 8GB+ RAM spec only for x86-64. On
+		// Limit running in PFQ for VM devices to 8GB+ RAM spec only for x86_64. On
 		// arm64, we have very few devices in Uprev with >4GB so won't restrict.
 		// No restrictions for local test configs (upload=false && vmEnabled=false).
 		if param.vmEnabled && param.upload && strings.HasPrefix(desc.CPUAbi, "x86") {
@@ -551,7 +573,7 @@ func DataCollector(ctx context.Context, s *testing.State) {
 		if err != nil {
 			return errors.Wrap(err, "failed to generate packages reference and GMS Core caches")
 		}
-		defer d.Conn().CommandContext(ctx, "rm", "-rf", response.TargetDir).Output()
+		defer dututils.RemoveAllRemote(ctx, d, response.TargetDir)
 
 		resources := []string{response.GmsCoreCacheName,
 			response.GmsCoreManifestName,
@@ -620,6 +642,15 @@ func DataCollector(ctx context.Context, s *testing.State) {
 		}
 	}
 
+	// Create temp caches directory before starting generation.
+	tmpCachesDir := param.tmpCachesDir
+	if tmpCachesDir != "" {
+		if err := dututils.MkdirRemote(ctx, d, tmpCachesDir); err != nil {
+			s.Fatalf("Failed to create temp cache dir %q:  %v", tmpCachesDir, err)
+		}
+	}
+	defer dututils.RemoveAllRemote(ctx, d, tmpCachesDir)
+
 	attempts := 0
 	for {
 		err := genPackagesReferenceAndGmsCoreCache()
@@ -632,23 +663,6 @@ func DataCollector(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to generate GMS Core caches. No more retries left: ", err)
 		}
 		s.Log("Retrying generating GMS Core caches, previous attempt failed: ", err)
-	}
-
-	// Due to race condition of using ureadahead in various parts of Chrome,
-	// first generation might be incomplete. Pass GMS Core cache generation as a warm-up
-	// for ureadahead generation.
-	attempts = 0
-	for {
-		err := genUreadaheadPack()
-		if err == nil {
-			break
-		}
-		attempts = attempts + 1
-		dumpLogcat("ureadahead", attempts)
-		if attempts > retryCount {
-			s.Fatal("Failed to generate ureadahead packs. No more retries left: ", err)
-		}
-		s.Log("Retrying generating ureadahead, previous attempt failed: ", err)
 	}
 
 	attempts = 0
@@ -682,6 +696,25 @@ func DataCollector(ctx context.Context, s *testing.State) {
 		}
 	}
 
+	// TODO(b/279554423): Add post-processing steps for cache artifacts in tmpCachesDir
+	// after https://crrev.com/c/4485622 lands.
+	// Make sure ureadahead pack generation is the last data to be generated and
+	// collected because it depends on other caches being pre-installed in the
+	// system to operate correctly.
+	attempts = 0
+	for {
+		err := genUreadaheadPack()
+		if err == nil {
+			break
+		}
+		attempts = attempts + 1
+		dumpLogcat("ureadahead", attempts)
+		if attempts > retryCount {
+			s.Fatal("Failed to generate ureadahead packs. No more retries left: ", err)
+		}
+		s.Log("Retrying generating ureadahead, previous attempt failed: ", err)
+	}
+
 	if param.uprevBranch {
 		if err = maybeUprevBranch(ctx, desc, du.androidPackage, s.OutDir(), param.requiredCPUAbisForBranchUprev); err != nil {
 			s.Fatal("Failed to uprev branch: ", err)
@@ -706,7 +739,7 @@ func genTTSCache(ctx context.Context, s *testing.State, cl *rpc.Client, targetDi
 		return errors.Wrap(err, "failed to generate TTS caches")
 	}
 	d := s.DUT()
-	defer d.Conn().CommandContext(ctx, "rm", "-rf", response.TargetDir).Output()
+	defer dututils.RemoveAllRemote(ctx, d, response.TargetDir)
 
 	if err = os.Mkdir(targetDir, 0744); err != nil {
 		s.Fatalf("Failed to create %q: %v", targetDir, err)
@@ -806,7 +839,7 @@ func genDexOptCache(ctx context.Context, s *testing.State, cl *rpc.Client, targe
 		return errors.Wrap(err, "failed to generate DexOpt cache")
 	}
 	d := s.DUT()
-	defer d.Conn().CommandContext(ctx, "rm", "-rf", response.TargetDir).Output()
+	defer dututils.RemoveAllRemote(ctx, d, response.TargetDir)
 
 	if err = os.Mkdir(targetDir, 0744); err != nil {
 		s.Fatalf("Failed to create %q: %v", targetDir, err)

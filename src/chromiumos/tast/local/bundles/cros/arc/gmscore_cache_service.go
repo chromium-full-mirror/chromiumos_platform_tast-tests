@@ -14,6 +14,7 @@ import (
 
 	"chromiumos/tast/local/bundles/cros/arc/cache"
 	arcpb "chromiumos/tast/services/cros/arc"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
