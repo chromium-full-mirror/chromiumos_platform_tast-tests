@@ -81,6 +81,25 @@ func DevModeTabKey(ctx context.Context, s *testing.State) {
 		}
 	}()
 
+	waitDUTReconnect := func(ctx context.Context) error {
+		s.Log("Waiting for the DUT to reconnect")
+		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
+		defer cancelWaitConnect()
+		if err := h.WaitConnect(waitConnectCtx); err != nil {
+			return errors.Wrap(err, "failed to connect DUT")
+		}
+		return nil
+	}
+
+	// Reset dut to ensure that we're starting with a fresh firmware log,
+	// free of records from previous tests. Also, this reboot would allow
+	// the firmware screen type to be documented for later use in checkFwScreenType().
+	if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
+		s.Fatal("Failed to power on DUT: ", err)
+	}
+	if err := waitDUTReconnect(ctx); err != nil {
+		s.Fatal("Failed to reconnect DUT: ", err)
+	}
 	// Check which firmware screen the dut uses.
 	mainFwScreenID, err := checkFwScreenType(ctx, h, logPath)
 	if err != nil {
@@ -124,18 +143,15 @@ func DevModeTabKey(ctx context.Context, s *testing.State) {
 	if err := h.Servo.KeypressWithDuration(ctx, servo.CtrlD, servo.DurTab); err != nil {
 		s.Fatal("Failed to make Ctrl+D press: ", err)
 	}
-	s.Log("Waiting for the DUT to reconnect")
-	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
-	defer cancelWaitConnect()
-	if err := h.WaitConnect(waitConnectCtx); err != nil {
-		s.Fatal("Failed to connect DUT: ", err)
+	if err := waitDUTReconnect(ctx); err != nil {
+		s.Fatal("Failed to reconnect DUT: ", err)
 	}
 
 	// Grep texts relevant to firmware screens from
 	// the firmware log file, and verify that they appeared
 	// in the expected sequence.
 	regs := `^(vboot_draw_|vb2ex_display_ui|ui_display).*screen=0x|VbDisplayDebugInfo`
-	cmd := h.DUT.Conn().CommandContext(ctx, "grep", "-E", regs, logPath)
+	cmd := h.DUT.Conn().CommandContext(ctx, "grep", "-a", "-E", regs, logPath)
 	stdout, err := cmd.StdoutPipe()
 	scanner := bufio.NewScanner(stdout)
 	if err := cmd.Start(); err != nil {
