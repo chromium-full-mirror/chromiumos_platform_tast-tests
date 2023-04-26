@@ -176,8 +176,10 @@ const (
 	DeveloperMode      FwScreenID = 0x300
 	ReturnToSecureMode FwScreenID = 0x310
 
-	InsertScreen FwScreenID = 0x202
-	OptionScreen FwScreenID = 0x20d
+	InsertScreen             FwScreenID = 0x202
+	OptionScreen             FwScreenID = 0x20d
+	InsertScreenMenuSwitcher FwScreenID = 0x200
+	OptionScreenMenuSwitcher FwScreenID = 0x202
 )
 
 // NewHelper creates a new Helper object with info from testing.State.

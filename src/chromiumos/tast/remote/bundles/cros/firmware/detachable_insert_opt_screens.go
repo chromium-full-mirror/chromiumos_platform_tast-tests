@@ -26,6 +26,7 @@ type testKeys int
 
 const (
 	powerBtn testKeys = iota
+	powerBtnUntilPoweroff
 	volumeUpDown
 	volumeUp
 	volumeDown
@@ -57,8 +58,8 @@ func init() {
 		Attr:         []string{"group:firmware", "firmware_unstable", "firmware_detachable"},
 		SoftwareDeps: []string{"crossystem"},
 		Fixture:      fixture.NormalMode,
-		// To-do: Add all other detachables when we find a way to preserve their firmware logs.
-		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Model("krane", "kakadu", "katsu", "kodama")),
+		// To-do: Find a way to preserve firmware logs on soraka and nocturne.
+		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.FormFactor(hwdep.Detachable), hwdep.SkipOnModel("soraka", "nocturne")),
 		Timeout:      30 * time.Minute,
 	})
 }
@@ -71,7 +72,7 @@ func DetachableInsertOptScreens(ctx context.Context, s *testing.State) {
 	}
 
 	if err := h.RequireConfig(ctx); err != nil {
-		s.Fatal("Requiring config")
+		s.Fatal("Requiring config: ", err)
 	}
 
 	// Ensure no external devices connected for DUTs to boot from.
@@ -82,13 +83,16 @@ func DetachableInsertOptScreens(ctx context.Context, s *testing.State) {
 	for _, tc := range []struct {
 		caseName          testCase
 		buttonPresses     []testKeys
-		steps             []func(ctx context.Context, h *firmware.Helper) error
-		fwLogDataSequence []fwLogInfo
+		steps             map[string][]func(ctx context.Context, h *firmware.Helper) error
+		fwLogDataSequence map[string][]fwLogInfo
 	}{
 		{
-			caseName:          powerBtnOnInsertMenu,
-			buttonPresses:     []testKeys{recBtn, powerBtn},
-			steps:             []func(ctx context.Context, h *firmware.Helper) error{waitForPowerOff, setDUTPowerOn},
+			caseName:      powerBtnOnInsertMenu,
+			buttonPresses: []testKeys{recBtn, powerBtnUntilPoweroff},
+			steps: map[string][]func(ctx context.Context, h *firmware.Helper) error{
+				"kukui":     {waitForPowerOff, setDUTPowerOn},
+				"strongbad": {waitForPowerOff, setDUTPowerOn},
+			},
 			fwLogDataSequence: nil,
 		},
 		{
@@ -110,13 +114,24 @@ func DetachableInsertOptScreens(ctx context.Context, s *testing.State) {
 			*/
 			caseName:      volumeUpDownEffective,
 			buttonPresses: []testKeys{recBtn, volumeUpDown, volumeDown, volumeUp},
-			steps:         []func(ctx context.Context, h *firmware.Helper) error{enableDevMode},
-			fwLogDataSequence: []fwLogInfo{
-				{firmware.InsertScreen, 0},
-				{firmware.OptionScreen, 1},
-				{firmware.OptionScreen, 2},
-				{firmware.OptionScreen, 1},
-				{firmware.OptionScreen, 0},
+			steps: map[string][]func(ctx context.Context, h *firmware.Helper) error{
+				"kukui":     {enableDevMode},
+				"strongbad": {apResetUsingECCmd},
+			},
+			fwLogDataSequence: map[string][]fwLogInfo{
+				"kukui": {
+					{firmware.InsertScreen, 0},
+					{firmware.OptionScreen, 1},
+					{firmware.OptionScreen, 2},
+					{firmware.OptionScreen, 1},
+					{firmware.OptionScreen, 0},
+				},
+				"strongbad": {
+					{firmware.InsertScreenMenuSwitcher, 2},
+					{firmware.OptionScreenMenuSwitcher, 1},
+					{firmware.OptionScreenMenuSwitcher, 2},
+					{firmware.OptionScreenMenuSwitcher, 1},
+				},
 			},
 		},
 		{
@@ -136,11 +151,20 @@ func DetachableInsertOptScreens(ctx context.Context, s *testing.State) {
 			*/
 			caseName:      volumeUpDownUndetected,
 			buttonPresses: []testKeys{recBtn, volumeUpDown, volumeUpDown},
-			steps:         []func(ctx context.Context, h *firmware.Helper) error{enableDevMode},
-			fwLogDataSequence: []fwLogInfo{
-				{firmware.InsertScreen, 0},
-				{firmware.OptionScreen, 1},
-				{firmware.OptionScreen, 0},
+			steps: map[string][]func(ctx context.Context, h *firmware.Helper) error{
+				"kukui":     {enableDevMode},
+				"strongbad": {apResetUsingECCmd},
+			},
+			fwLogDataSequence: map[string][]fwLogInfo{
+				"kukui": {
+					{firmware.InsertScreen, 0},
+					{firmware.OptionScreen, 1},
+					{firmware.OptionScreen, 0},
+				},
+				"strongbad": {
+					{firmware.InsertScreenMenuSwitcher, 2},
+					{firmware.OptionScreenMenuSwitcher, 1},
+				},
 			},
 		},
 	} {
@@ -165,14 +189,14 @@ func DetachableInsertOptScreens(ctx context.Context, s *testing.State) {
 			}
 		}
 
-		for _, fnc := range tc.steps {
+		for _, fnc := range tc.steps[h.Board] {
 			if err := fnc(ctx, h); err != nil {
 				s.Fatal("Unexpected error: ", err)
 			}
 		}
 
 		if tc.fwLogDataSequence != nil {
-			if err := verifyFirmwareLog(ctx, h, tc.fwLogDataSequence, tc.caseName); err != nil {
+			if err := verifyFirmwareLog(ctx, h, tc.fwLogDataSequence[h.Board], tc.caseName); err != nil {
 				s.Fatal("Unexpected error in verifying firmware log: ", err)
 			}
 		}
@@ -197,6 +221,8 @@ func pressBtnOnFWScreen(ctx context.Context, h *firmware.Helper, key testKeys) e
 		err = h.Servo.SetInt(ctx, servo.VolumeDownHold, 100)
 	case powerBtn:
 		err = h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.DurTab)
+	case powerBtnUntilPoweroff:
+		err = h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.Dur(h.Config.HoldPwrButtonNoPowerdShutdown))
 	case recBtn:
 		err = func() error {
 			if err := h.Servo.SetPowerState(ctx, servo.PowerStateRec); err != nil {
@@ -222,7 +248,7 @@ func pressBtnOnFWScreen(ctx context.Context, h *firmware.Helper, key testKeys) e
 func verifyFirmwareLog(ctx context.Context, h *firmware.Helper, data []fwLogInfo, caseName testCase) error {
 	var expMatches []string
 	for _, args := range data {
-		match := fmt.Sprintf(`vboot_draw_ui: screen=0x%x locale=0, selected_index=%d`, args.fwScreenID, args.selectedIdx)
+		match := fmt.Sprintf(`(vboot_draw_ui|vb2ex_display_ui): screen=0x%x.*locale=0, selected_(index|item)=%d`, args.fwScreenID, args.selectedIdx)
 		expMatches = append(expMatches, match)
 	}
 	output, err := h.Reporter.CatFile(ctx, "/sys/firmware/log")
@@ -237,7 +263,7 @@ func verifyFirmwareLog(ctx context.Context, h *firmware.Helper, data []fwLogInfo
 				expMatches, data = expMatches[1:], data[1:]
 			}
 			if caseName == volumeUpDownUndetected {
-				menuChange := `vboot_draw_ui: screen=0x20d locale=0, selected_index=2`
+				menuChange := `(vboot_draw_ui|vb2ex_display_ui): screen=0x(202|20d).*locale=0, selected_(index|item)=2`
 				if match := regexp.MustCompile(menuChange).FindStringSubmatch(scanner.Text()); match != nil {
 					return errors.New("Unexpectedly found power off option selected on the menu")
 				}
@@ -278,6 +304,19 @@ func enableDevMode(ctx context.Context, h *firmware.Helper) error {
 			return errors.Wrap(err, "failed to enable developer mode")
 		}
 	}
+	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 8*time.Minute)
+	defer cancelWaitConnect()
+	if err := h.WaitConnect(waitConnectCtx); err != nil {
+		return errors.Wrap(err, "failed to reconnect to DUT")
+	}
+	return nil
+}
+
+func apResetUsingECCmd(ctx context.Context, h *firmware.Helper) error {
+	if err := h.Servo.RunECCommand(ctx, "apreset"); err != nil {
+		return errors.Wrap(err, "failed to run apreset on ec console")
+	}
+
 	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 8*time.Minute)
 	defer cancelWaitConnect()
 	if err := h.WaitConnect(waitConnectCtx); err != nil {
