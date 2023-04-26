@@ -14,13 +14,13 @@ import (
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/apputil"
-	"go.chromium.org/tast-tests/cros/local/arc/playstore"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast-tests/cros/local/power/util"
 	"go.chromium.org/tast/core/errors"
 )
 
@@ -79,37 +79,25 @@ func New(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, a *arc.ARC, d *u
 }
 
 // Install installs or updates the Element app through Play Store.
+// The app version will be logged after the installation.
 func (e *Element) Install(ctx context.Context) error {
-	return playstore.InstallOrUpdateAppAndClose(ctx, e.tconn, e.a, e.d, elementPackage, &playstore.Options{TryLimit: -1})
+	return util.InstallApp(ctx, e.tconn, e.a, e.d, elementPackage)
 }
 
 // Uninstall uninstalls the Element app if it is installed.
 // This function does nothing if the app is initially uninstalled.
 func (e *Element) Uninstall(ctx context.Context) error {
-	installed, err := e.a.PackageInstalled(ctx, elementPackage)
-	if err != nil {
-		return errors.Wrap(err, "failed to get package install status")
-	}
-	if !installed {
-		return nil
-	}
-	return e.a.Uninstall(ctx, elementPackage)
+	return util.UninstallApp(ctx, e.a, elementPackage)
 }
 
 // Launch launches the Element app.
 func (e *Element) Launch(ctx context.Context, launchTimeout time.Duration) error {
-	if err := apps.Launch(ctx, e.tconn, elementID); err != nil {
-		return errors.Wrapf(err, "failed to launch %s", elementAppName)
-	}
-	return ash.WaitForApp(ctx, e.tconn, elementID, launchTimeout)
+	return util.LaunchApp(ctx, e.tconn, e.kb, apps.Element)
 }
 
 // Close closes the Element app.
 func (e *Element) Close(ctx context.Context) error {
-	if err := apps.Close(ctx, e.tconn, elementID); err != nil {
-		return errors.Wrapf(err, "failed to close %s", elementAppName)
-	}
-	return ash.WaitForAppClosed(ctx, e.tconn, elementID)
+	return util.CloseApp(ctx, e.tconn, elementPackage)
 }
 
 // Login logs in to Element app with Google account.
