@@ -72,14 +72,16 @@ func init() {
 				testName:      "signature_sealed_secret_test",
 				needsTpmReset: true,
 			},
-			ExtraAttr: []string{"group:hwsec_destructive_func"},
+			ExtraSoftwareDeps: []string{"tpm_clear_allowed"},
+			ExtraAttr:         []string{"group:hwsec_destructive_func"},
 		}, {
 			Name: "recovery_tpm_backend_test",
 			Val: testParams{
 				testName:      "recovery_tpm_backend_test",
 				needsTpmReset: true,
 			},
-			ExtraAttr: []string{"group:hwsec_destructive_func"},
+			ExtraSoftwareDeps: []string{"tpm_clear_allowed"},
+			ExtraAttr:         []string{"group:hwsec_destructive_func"},
 		}},
 	})
 }

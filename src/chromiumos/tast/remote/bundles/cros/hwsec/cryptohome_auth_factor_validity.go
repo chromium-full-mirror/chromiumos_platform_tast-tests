@@ -29,7 +29,7 @@ func init() {
 		},
 		BugComponent: "b:1088399",
 		Attr:         []string{"group:hwsec_destructive_func"},
-		SoftwareDeps: []string{"tpm", "reboot"},
+		SoftwareDeps: []string{"tpm_clear_allowed", "reboot"},
 		// Skip "enguarde" due to the reboot issue when removing the key. Please see b/151057300.
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("enguarde")),
 		Timeout:      25 * time.Minute,

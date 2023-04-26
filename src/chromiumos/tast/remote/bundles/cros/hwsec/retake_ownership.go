@@ -21,7 +21,7 @@ func init() {
 		Desc:         "Verifies that the TPM ownership can be cleared and taken",
 		Contacts:     []string{"cros-hwsec@google.com", "cylai@chromium.org"},
 		BugComponent: "b:1188704",
-		SoftwareDeps: []string{"reboot", "tpm"},
+		SoftwareDeps: []string{"reboot", "tpm_clear_allowed"},
 		Attr:         []string{"group:hwsec_destructive_func", "group:tpm_manager"},
 		ServiceDeps:  []string{"tast.cros.hwsec.AttestationDBusService"},
 	})

@@ -26,7 +26,7 @@ func init() {
 			"dlunev@chromium.org",
 		},
 		BugComponent: "b:1188704",
-		SoftwareDeps: []string{"reboot", "tpm"},
+		SoftwareDeps: []string{"reboot", "tpm_clear_allowed"},
 		Attr:         []string{"group:hwsec_destructive_func"},
 		Timeout:      5 * time.Minute,
 	})

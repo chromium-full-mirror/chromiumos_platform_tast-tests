@@ -29,7 +29,7 @@ func init() {
 		},
 		BugComponent: "b:1188704",
 		Attr:         []string{"hwsec_destructive_crosbolt_perbuild", "group:hwsec_destructive_crosbolt"},
-		SoftwareDeps: []string{"tpm", "reboot"},
+		SoftwareDeps: []string{"tpm_clear_allowed", "reboot"},
 		Vars: []string{
 			"hwsec.CryptohomeMountPerf.normalMountIterations",
 			"hwsec.CryptohomeMountPerf.rebootMountIterations",

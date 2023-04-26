@@ -25,7 +25,7 @@ func init() {
 		},
 		BugComponent: "b:1188704",
 		Attr:         []string{"group:hwsec_destructive_func", "group:cryptohome"},
-		SoftwareDeps: []string{"tpm", "reboot"},
+		SoftwareDeps: []string{"tpm_clear_allowed", "reboot"},
 		Timeout:      5 * time.Minute,
 	})
 }

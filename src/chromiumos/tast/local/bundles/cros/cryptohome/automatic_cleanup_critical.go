@@ -12,6 +12,7 @@ import (
 
 	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/common/hwsec"
+	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/local/bundles/cros/cryptohome/cleanup"
@@ -44,7 +45,10 @@ func init() {
 		},
 		Fixture:      fixture.FakeDMSEnrolled,
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
-		SoftwareDeps: []string{"reboot", "chrome"},
+		SoftwareDeps: []string{"reboot", "chrome", "tpm_clear_allowed"},
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.DeviceRunAutomaticCleanupOnLogin{}, pci.VerifiedFunctionalityOS),
+		},
 	})
 }
 

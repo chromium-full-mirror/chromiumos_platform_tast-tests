@@ -23,7 +23,7 @@ func init() {
 			"zuan@chromium.org",
 		},
 		BugComponent: "b:1188704",
-		SoftwareDeps: []string{"tpm"},
+		SoftwareDeps: []string{"tpm_clear_allowed"},
 		Attr:         []string{"group:hwsec_destructive_func"},
 	})
 }

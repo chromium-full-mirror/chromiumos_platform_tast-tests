@@ -35,7 +35,7 @@ func init() {
 			"yich@google.com",
 		},
 		BugComponent: "b:1188704",
-		SoftwareDeps: []string{"reboot", "tpm"},
+		SoftwareDeps: []string{"reboot", "tpm_clear_allowed"},
 	})
 }
 

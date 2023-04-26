@@ -31,7 +31,7 @@ func init() {
 			"zuan@chromium.org",
 		},
 		BugComponent: "b:1188704",
-		SoftwareDeps: []string{"tpm2"},
+		SoftwareDeps: []string{"tpm2", "tpm_clear_allowed"},
 		Attr:         []string{"group:hwsec_destructive_func"},
 	})
 }

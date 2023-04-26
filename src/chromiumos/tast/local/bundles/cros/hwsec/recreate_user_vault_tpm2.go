@@ -32,14 +32,14 @@ func init() {
 			"garryxiao@chromium.org",
 		},
 		BugComponent: "b:1188704",
-		SoftwareDeps: []string{"tpm2"},
+		SoftwareDeps: []string{"tpm2", "tpm_clear_allowed"},
 		Attr:         []string{"group:hwsec_destructive_func"},
 		Timeout:      3 * time.Minute,
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"no_tpm_dynamic"},
 		}, {
 			Name:              "tpm_dynamic",
-			ExtraSoftwareDeps: []string{"tpm_dynamic", "tpm_clear_allowed"},
+			ExtraSoftwareDeps: []string{"tpm_dynamic"},
 			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm2()),
 		}},
 	})
