@@ -16,6 +16,7 @@ import (
 	"github.com/mafredri/cdp/rpcc"
 
 	"chromiumos/tast/common/perf"
+	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
@@ -669,6 +670,17 @@ func testFunction(
 		if err := testing.Sleep(ctx, sleepSeconds); err != nil { // GoBigSleepLint: give session time to settle and save restore data.
 			return errors.Wrapf(err, "failed to sleep for %f seconds", sleepSeconds.Seconds())
 		}
+		// boot metrics have likely been already reported and wiped
+		// away while we were waiting for the cpu to cool down before
+		// running login. Force them to be reported again.
+		if err := testexec.CommandContext(
+			ctx,
+			"sh",
+			"-c",
+			"touch /tmp/stats-logout-started.written && /usr/share/cros/init/send-uptime-metrics",
+		).Run(testexec.DumpLogOnError); err != nil {
+			return errors.Wrap(err, "failed to force send-uptime-metrics to be reported again")
+		}
 
 		// Ash.LoginAnimation.Duration.* are reported only a few frames
 		// after the animation end. Trigger next system UI animation
@@ -718,6 +730,10 @@ func testFunction(
 
 	// CUJ TPS metrics recording wrapper
 	cujFunc := func(ctx context.Context) error {
+		// Sync filesystem to make sure that we do not have pending data to save.
+		if err := testexec.CommandContext(ctx, "sync").Run(testexec.DumpLogOnError); err != nil {
+			return errors.Wrap(err, "failed to sync DUT")
+		}
 		var stopTracingCallback func(ctx context.Context) error
 		if runTracing {
 			// See go/trace-in-cuj-tests about rules for tracing.
