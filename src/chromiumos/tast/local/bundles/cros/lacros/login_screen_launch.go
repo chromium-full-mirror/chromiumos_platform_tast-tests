@@ -8,8 +8,9 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
@@ -229,7 +230,8 @@ func LoginScreenLaunch(ctx context.Context, s *testing.State) {
 	params := s.Param().(loginScreenLaunchTestParam)
 	lacrosCfg := lacrosfixt.NewConfig(
 		lacrosfixt.Selection(params.lacrosSelection),
-		lacrosfixt.Mode(params.lacrosMode))
+		lacrosfixt.Mode(params.lacrosMode),
+		lacrosfixt.KeepAlive(true))
 
 	// Launch Chrome.
 	cr, err := browserfixt.NewChrome(ctx, params.browserType, lacrosCfg, options...)
