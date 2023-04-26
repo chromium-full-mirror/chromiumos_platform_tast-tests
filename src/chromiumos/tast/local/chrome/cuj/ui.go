@@ -460,12 +460,12 @@ func EnableTabletMode(ctx context.Context, tconn *chrome.TestConn, testCaseVar f
 // DismissCriticalSecurityAlert closes the critical security alert, if
 // that alert is found on screen.
 func DismissCriticalSecurityAlert(ctx context.Context, tconn *chrome.TestConn) error {
-	ui := uiauto.New(tconn).WithTimeout(5 * time.Second)
+	ui := uiauto.New(tconn)
 	alertContainer := nodewith.NameStartingWith("Critical security alert").Role(role.Dialog)
 	close := nodewith.NameStartingWith("Close").Ancestor(alertContainer)
 	return uiauto.IfSuccessThen(
-		ui.WaitUntilExists(alertContainer),
-		uiauto.Combine("close security alert", ui.DoDefault(close), ui.WaitUntilGone(close)),
+		ui.Exists(alertContainer),
+		uiauto.Combine("close security alert", ui.DoDefaultUntil(close, ui.Gone(close))),
 	)(ctx)
 }
 

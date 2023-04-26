@@ -10,7 +10,6 @@ import (
 
 	"chromiumos/tast/common/action"
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
@@ -30,6 +29,8 @@ import (
 	"chromiumos/tast/local/ui/cujrecorder"
 	"chromiumos/tast/testing"
 	"chromiumos/tast/testing/hwdep"
+
+	"go.chromium.org/tast/core/ctxutil"
 )
 
 func init() {
@@ -145,6 +146,9 @@ func GoogleSheetsCUJ(ctx context.Context, s *testing.State) {
 		s.Log("Failed to add screenshot recorder: ", err)
 	}
 
+	// Get a small set of metrics to track across each scroll phase.
+	ashMetrics, browserMetrics := cujrecorder.GetShortenedPerformanceMetrics()
+
 	// Create a virtual trackpad.
 	tpw, err := input.Trackpad(ctx)
 	if err != nil {
@@ -198,6 +202,9 @@ func GoogleSheetsCUJ(ctx context.Context, s *testing.State) {
 			// cujrecorder.Recorder.Annotate to describe the scroll method.
 			description string
 
+			// snapshotPrefix is a string prefix for the snapshot metrics.
+			snapshotPrefix string
+
 			// run is a function that performs a single instance of scrolling.
 			run action.Action
 
@@ -205,7 +212,8 @@ func GoogleSheetsCUJ(ctx context.Context, s *testing.State) {
 			recordTrace bool
 		}{
 			{
-				description: "mouse_click",
+				description:    "mouse_click",
+				snapshotPrefix: "ScrollMouseClick.",
 				run: func(ctx context.Context) error {
 					sheetBounds, err := ui.Location(ctx, nodewith.Role("genericContainer").HasClass("grid-scrollable-wrapper"))
 					if err != nil {
@@ -224,25 +232,31 @@ func GoogleSheetsCUJ(ctx context.Context, s *testing.State) {
 				},
 			},
 			{
-				description: "mouse_wheel",
+				description:    "mouse_wheel",
+				snapshotPrefix: "ScrollMouseWheel.",
 				run: func(ctx context.Context) error {
 					return inputsimulations.ScrollMouseDownFor(ctx, mw, 200*time.Millisecond, individualScrollTimeout)
 				},
 				recordTrace: true,
 			},
 			{
-				description: "trackpad_gestures",
+				description: "ScrollTrackpadGestures.",
 				run: func(ctx context.Context) error {
 					return inputsimulations.ScrollDownFor(ctx, tpw, tw, 500*time.Millisecond, individualScrollTimeout)
 				},
 			},
 			{
-				description: "key_press",
+				description: "ScrollKeyPress.",
 				run: func(ctx context.Context) error {
 					return inputsimulations.RepeatKeyPressFor(ctx, kw, "Down", 500*time.Millisecond, individualScrollTimeout)
 				},
 			},
 		} {
+			// Close any potential security alert that pops up.
+			if err := cuj.DismissCriticalSecurityAlert(ctx, tconn); err != nil {
+				return errors.Wrap(err, "failed to dismiss Critical Security Alert")
+			}
+
 			recorder.Annotate(ctx, "Scroll_with_"+scroller.description)
 
 			// See go/trace-in-cuj-tests about rules for tracing.
@@ -252,8 +266,17 @@ func GoogleSheetsCUJ(ctx context.Context, s *testing.State) {
 				}
 			}
 
+			stopSnapshot, err := recorder.StartSnapshot(ctx, scroller.snapshotPrefix, ashMetrics, browserMetrics)
+			if err != nil {
+				return errors.Wrapf(err, "failed to start snapshot for %s", scroller.description)
+			}
+
 			if err := scroller.run(ctx); err != nil {
 				return errors.Wrapf(err, "failed to scroll %s", scroller.description)
+			}
+
+			if err := stopSnapshot(ctx); err != nil {
+				return errors.Wrapf(err, "failed to stop snapshot for %s", scroller.description)
 			}
 
 			if scroller.recordTrace {
@@ -262,18 +285,18 @@ func GoogleSheetsCUJ(ctx context.Context, s *testing.State) {
 				}
 			}
 
+			if err := inputsimulations.DoAshWorkflows(ctx, tconn, pc); err != nil {
+				return errors.Wrap(err, "failed to do Ash workflows")
+			}
+
 			if err := inputsimulations.RunDragMouseCycle(ctx, tconn, info); err != nil {
 				return err
 			}
 
-			if err := inputsimulations.DoAshWorkflows(ctx, tconn, pc); err != nil {
-				return errors.Wrap(err, "failed to do Ash workflows")
-			}
+			// Take a screenshot to see the state of the Google
+			// Sheet after scrolling.
+			recorder.CustomScreenshot(ctx)
 		}
-
-		// Take a screenshot to see the state of the Google
-		// Sheet after scrolling for 10 minutes.
-		recorder.CustomScreenshot(ctx)
 
 		var scrollTop int
 		// Ensure scrollbar gets scrolled.
