@@ -31,7 +31,7 @@ func init() {
 		Desc:         "Test the AloopLoaded fixture",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
 		BugComponent: "b:875484",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		Timeout:      1 * time.Minute,
 		Params: []testing.Param{
 			{
