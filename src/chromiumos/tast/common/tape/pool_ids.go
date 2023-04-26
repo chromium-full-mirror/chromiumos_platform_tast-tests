@@ -29,6 +29,8 @@ const (
 
 // PoolIds for unmanaged owned test accounts.
 const (
+	// For `accountmanager` package.
+	AccountManager                          = "account_manager"
 	ArcDataMigrationUnmanaged               = "arc_data_migration_unmanaged"
 	ArcEnterpriseLoginManagedUnmanagedFalse = "arc_enterprise_login_managed_unmanaged_false"
 	ArcEnterpriseLoginManagedUnmanagedTrue  = "arc_enterprise_login_managed_unmanaged_true"

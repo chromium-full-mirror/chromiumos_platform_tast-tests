@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/ctxutil"
+	"chromiumos/tast/common/tape"
 	"chromiumos/tast/local/accountmanager"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
@@ -19,7 +19,11 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/testing"
+
+	"go.chromium.org/tast/core/ctxutil"
 )
+
+const addAccountOSSettingsTimeout = 7 * time.Minute
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -61,15 +65,12 @@ func init() {
 			Fixture:           "loggedInToChromeAndArcWithLacros",
 			Val:               browser.TypeLacros,
 		}},
-		VarDeps: []string{"accountmanager.username2", "accountmanager.password2"},
-		Timeout: 7 * time.Minute,
+		VarDeps: []string{tape.ServiceAccountVar},
+		Timeout: addAccountOSSettingsTimeout,
 	})
 }
 
 func AddAccountOSSettings(ctx context.Context, s *testing.State) {
-	username := s.RequiredVar("accountmanager.username2")
-	password := s.RequiredVar("accountmanager.password2")
-
 	// Reserve one minute for various cleanup.
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
@@ -109,6 +110,13 @@ func AddAccountOSSettings(ctx context.Context, s *testing.State) {
 	}
 	defer arcDevice.Close(ctx)
 
+	timeout := int32(addAccountOSSettingsTimeout.Seconds())
+	accManager, acc, err := tape.NewOwnedTestAccountManager(ctx, []byte(s.RequiredVar(tape.ServiceAccountVar)), false /*lock*/, tape.WithTimeout(timeout), tape.WithPoolID(tape.AccountManager))
+	if err != nil {
+		s.Fatal("Failed to create an account manager and lease an account: ", err)
+	}
+	defer accManager.CleanUp(cleanupCtx)
+
 	// Open Account Manager page in OS Settings and click Add Google Account button.
 	addAccountButton := nodewith.Name("Add Google Account").Role(role.Button)
 	if err := uiauto.Combine("Click Add Google Account button",
@@ -124,7 +132,7 @@ func AddAccountOSSettings(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Adding a secondary Account")
-	if err := accountmanager.AddAccount(ctx, tconn, username, password); err != nil {
+	if err := accountmanager.AddAccount(ctx, tconn, acc.Username, acc.Password); err != nil {
 		s.Fatal("Failed to add a secondary Account: ", err)
 	}
 	accountAddedStart := time.Now()
@@ -134,7 +142,7 @@ func AddAccountOSSettings(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to find Add Google Account button: ", err)
 	}
 	// Find "More actions, <email>" button to make sure that account was added.
-	moreActionsButton := nodewith.Name("More actions, " + username).Role(role.Button)
+	moreActionsButton := nodewith.Name("More actions, " + acc.Username).Role(role.Button)
 	if err := ui.WaitUntilExists(moreActionsButton)(ctx); err != nil {
 		s.Fatal("Failed to find More actions button: ", err)
 	}
@@ -147,19 +155,19 @@ func AddAccountOSSettings(ctx context.Context, s *testing.State) {
 	arcCheckStart := time.Now()
 	// Note: the method will return as soon as account appears in ARC.
 	if err := accountmanager.CheckIsAccountPresentInARC(ctx, tconn, arcDevice,
-		accountmanager.NewARCAccountOptions(username).ExpectedPresentInARC(true)); err != nil {
+		accountmanager.NewARCAccountOptions(acc.Username).ExpectedPresentInARC(true)); err != nil {
 		s.Fatal("Failed to check that account is present in ARC: ", err)
 	}
 	saveARCAccountAdditionTime(time.Since(arcCheckStart), time.Since(accountAddedStart), s)
 
 	// Check that account is present in OGB.
 	s.Log("Verifying that account is present in OGB")
-	secondaryAccountListItem := nodewith.NameContaining(username).Role(role.Link)
+	secondaryAccountListItem := nodewith.NameContaining(acc.Username).Role(role.Link)
 	if err := accountmanager.CheckOneGoogleBar(ctx, tconn, br, ui.WaitUntilExists(secondaryAccountListItem)); err != nil {
 		s.Fatal("Failed to check that account is present in OGB: ", err)
 	}
 
-	if err := accountmanager.RemoveAccountFromOSSettings(ctx, tconn, cr, username); err != nil {
+	if err := accountmanager.RemoveAccountFromOSSettings(ctx, tconn, cr, acc.Username); err != nil {
 		s.Fatal("Failed to remove account from OS Settings: ", err)
 	}
 
@@ -176,7 +184,7 @@ func AddAccountOSSettings(ctx context.Context, s *testing.State) {
 	// Check that account is not present in ARC.
 	s.Log("Verifying that account is not present in ARC")
 	if err := accountmanager.CheckIsAccountPresentInARCAction(tconn, arcDevice,
-		accountmanager.NewARCAccountOptions(username).ExpectedPresentInARC(false).PreviouslyPresentInARC(true))(ctx); err != nil {
+		accountmanager.NewARCAccountOptions(acc.Username).ExpectedPresentInARC(false).PreviouslyPresentInARC(true))(ctx); err != nil {
 		s.Fatal("Failed to check that account is NOT present in ARC: ", err)
 	}
 }
