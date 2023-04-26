@@ -122,7 +122,6 @@ func InputMethodShelfInputs(ctx context.Context, s *testing.State) {
 
 		verifyAudioInputAction := uiauto.Combine(scenario,
 			its.Clear(inputField),
-			uiauto.Sleep(time.Second),
 			its.ClickFieldAndWaitForActive(inputField),
 			ui.LeftClick(imeMenuTrayButtonFinder),
 			ui.LeftClick(voiceInputItem),
@@ -158,7 +157,6 @@ func InputMethodShelfInputs(ctx context.Context, s *testing.State) {
 		hwFilePath := s.DataPath(hwInputData.HandwritingFile)
 		verifyHandWritingInputAction := uiauto.Combine(scenario,
 			its.Clear(inputField),
-			uiauto.Sleep(time.Second),
 			its.ClickFieldAndWaitForActive(inputField),
 			ui.LeftClick(imeMenuTrayButtonFinder),
 			ui.LeftClick(handwritingInputItem),
@@ -207,7 +205,6 @@ func InputMethodShelfInputs(ctx context.Context, s *testing.State) {
 
 		verifyEmojiInputAction := uiauto.Combine(scenario,
 			its.Clear(inputField),
-			uiauto.Sleep(time.Second),
 			its.ClickFieldAndWaitForActive(inputField),
 			ui.LeftClick(imeMenuTrayButtonFinder),
 			ui.LeftClick(emojiInputMenuItem),
