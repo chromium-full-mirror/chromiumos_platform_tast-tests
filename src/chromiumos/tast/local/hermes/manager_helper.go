@@ -10,8 +10,8 @@ import (
 	"github.com/godbus/dbus/v5"
 
 	"chromiumos/tast/common/hermesconst"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/dbusutil"
+	"go.chromium.org/tast/core/errors"
 )
 
 // Manager wraps a Hermes.Manager DBus object.

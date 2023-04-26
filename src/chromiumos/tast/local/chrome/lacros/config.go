@@ -6,7 +6,7 @@ package lacros
 
 import (
 	internal "chromiumos/tast/local/chrome/internal/lacros"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (

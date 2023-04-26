@@ -16,12 +16,12 @@ import (
 	"strings"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/fsutil"
 	"chromiumos/tast/local/coords"
 	"chromiumos/tast/local/media/videotype"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/shutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 // md5OfYUV is the MD5 value of the YUV file decoded by vpxdec.

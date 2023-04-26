@@ -10,10 +10,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome/internal/config"
 	"chromiumos/tast/local/cryptohome"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // PreflightCheck runs several checks that are nice to be performed before

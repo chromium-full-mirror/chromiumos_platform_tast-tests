@@ -11,9 +11,9 @@ import (
 	"github.com/godbus/dbus/v5"
 
 	pmpb "chromiumos/system_api/power_manager_proto"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/dbusutil"
 	"chromiumos/tast/local/upstart"
+	"go.chromium.org/tast/core/errors"
 )
 
 const (

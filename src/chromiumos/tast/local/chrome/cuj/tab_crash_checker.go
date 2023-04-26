@@ -7,9 +7,9 @@ package cuj
 import (
 	"context"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/metrics"
+	"go.chromium.org/tast/core/errors"
 )
 
 // TabCrashChecker is used to check if any Chrome tab is crashed during CUJ test.

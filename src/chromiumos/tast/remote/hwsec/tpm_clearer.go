@@ -14,9 +14,9 @@ import (
 	"time"
 
 	"chromiumos/tast/common/hwsec"
-	"chromiumos/tast/dut"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // TPMClearer clear the TPM via crossystem, this would work on both TPM1.2 and TPM2.0.

@@ -5,10 +5,10 @@
 package cuj
 
 import (
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/ui/cujrecorder"
+	"go.chromium.org/tast/core/errors"
 )
 
 // AddPerformanceCUJMetrics adds the metrics to the recorder for performance CUJ test.

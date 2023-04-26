@@ -15,10 +15,10 @@ import (
 	"golang.org/x/sys/unix"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/vm"
-	"chromiumos/tast/testing"
 	dtcpb "chromiumos/wilco_dtc"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // dpslMsg is the message format used by the sending and listening DPSL

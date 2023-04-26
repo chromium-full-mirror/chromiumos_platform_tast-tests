@@ -9,7 +9,7 @@ package subnet
 import (
 	"net"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // Pool allocates available subnets for IPv4 and IPv6.

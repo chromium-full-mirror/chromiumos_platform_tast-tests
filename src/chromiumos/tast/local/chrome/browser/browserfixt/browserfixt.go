@@ -9,12 +9,12 @@ package browserfixt
 import (
 	"context"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/lacros"
 	"chromiumos/tast/local/chrome/lacros/lacrosfaillog"
 	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
+	"go.chromium.org/tast/core/errors"
 )
 
 // SetUp returns a Browser instance for a given browser type and a given existing ash-chrome instance.

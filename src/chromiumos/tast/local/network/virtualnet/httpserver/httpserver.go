@@ -13,10 +13,10 @@ import (
 	"net/http"
 	"os"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/network/virtualnet/certs"
 	"chromiumos/tast/local/network/virtualnet/env"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Path in chroot.

@@ -16,9 +16,9 @@ import (
 	"time"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/vm"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // ContainerHomeDir is the default home directory for test user in container.
@@ -65,12 +65,13 @@ func ToTimeUnit(unit time.Duration, ts ...time.Duration) (out []float64) {
 }
 
 // parseLddOutput parses the output of a "ldd" command. Example "ldd" output:
-//         libselinux.so.1 => /lib/x86_64-linux-gnu/libselinux.so.1 (0x00007f96da2cf000)
-//         libc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007f96d9f30000)
-//         libpcre.so.3 => /lib/x86_64-linux-gnu/libpcre.so.3 (0x00007f96d9cbd000)
-//         libdl.so.2 => /lib/x86_64-linux-gnu/libdl.so.2 (0x00007f96d9ab9000)
-//         /lib64/ld-linux-x86-64.so.2 (0x00007f96da71a000)
-//         libpthread.so.0 => /lib/x86_64-linux-gnu/libpthread.so.0 (0x00007f96d989c000)
+//
+//	libselinux.so.1 => /lib/x86_64-linux-gnu/libselinux.so.1 (0x00007f96da2cf000)
+//	libc.so.6 => /lib/x86_64-linux-gnu/libc.so.6 (0x00007f96d9f30000)
+//	libpcre.so.3 => /lib/x86_64-linux-gnu/libpcre.so.3 (0x00007f96d9cbd000)
+//	libdl.so.2 => /lib/x86_64-linux-gnu/libdl.so.2 (0x00007f96d9ab9000)
+//	/lib64/ld-linux-x86-64.so.2 (0x00007f96da71a000)
+//	libpthread.so.0 => /lib/x86_64-linux-gnu/libpthread.so.0 (0x00007f96d989c000)
 func parseLddOutput(ctx context.Context, out string) (dynLibs map[string]string, dynLinker string) {
 	dynLibPattern := regexp.MustCompile(`^(\S+) => (\S+)`)
 	dynLinkerPattern := regexp.MustCompile(`^\S*lib\S*ld-linux\S*\.so\S*`)

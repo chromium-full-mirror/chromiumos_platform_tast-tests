@@ -12,13 +12,13 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/cellular/callbox/manager"
 	"chromiumos/tast/remote/network/ip"
 	"chromiumos/tast/remote/network/iperf"
-	"chromiumos/tast/ssh"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh"
+	"go.chromium.org/tast/core/testing"
 )
 
 // TestType is the type of cellular performance test to run.

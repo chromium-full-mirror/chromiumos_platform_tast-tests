@@ -10,8 +10,8 @@ import (
 	"sort"
 
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Values keeps the reporting values for multiple runs.

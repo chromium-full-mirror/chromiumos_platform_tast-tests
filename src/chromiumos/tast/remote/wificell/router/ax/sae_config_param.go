@@ -4,7 +4,7 @@
 
 package ax
 
-import "chromiumos/tast/errors"
+import "go.chromium.org/tast/core/errors"
 
 // secSAE provides Gen method to build a new Config.
 type secSAE struct {

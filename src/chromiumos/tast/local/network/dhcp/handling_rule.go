@@ -7,7 +7,7 @@ package dhcp
 import (
 	"time"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // Response types.

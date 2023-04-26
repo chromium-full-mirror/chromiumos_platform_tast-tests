@@ -14,7 +14,7 @@ import (
 	"testing"
 	"time"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 func TestParseTestList(t *testing.T) {

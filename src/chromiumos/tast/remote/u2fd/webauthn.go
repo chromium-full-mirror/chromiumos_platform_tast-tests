@@ -12,11 +12,11 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
-	"chromiumos/tast/dut"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/dutfs"
 	hwsecpb "chromiumos/tast/services/cros/hwsec"
-	"chromiumos/tast/ssh/linuxssh"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh/linuxssh"
 )
 
 // CopyFilesToRemote mirrors the given file paths from DataPath to a

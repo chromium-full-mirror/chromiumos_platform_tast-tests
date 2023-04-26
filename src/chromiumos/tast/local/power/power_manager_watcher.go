@@ -10,8 +10,8 @@ import (
 
 	"github.com/godbus/dbus/v5"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/dbusutil"
+	"go.chromium.org/tast/core/errors"
 )
 
 // NewSignalWatcher creates an D-Bus signal watcher on PowerManager interface.

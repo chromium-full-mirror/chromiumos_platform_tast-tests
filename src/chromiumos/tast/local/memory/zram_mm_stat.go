@@ -15,7 +15,7 @@ import (
 	"strings"
 
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // ZramSummary holds a summary of ZRAM usage by the host.

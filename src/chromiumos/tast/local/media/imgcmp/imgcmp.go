@@ -12,8 +12,8 @@ import (
 	"image/png"
 	"os"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/colorcmp"
+	"go.chromium.org/tast/core/errors"
 )
 
 // CountPixelsWithDiff returns how many pixels in the specified color are contained in image with max diff.

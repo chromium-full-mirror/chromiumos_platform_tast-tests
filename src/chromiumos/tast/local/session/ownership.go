@@ -21,9 +21,9 @@ import (
 	"chromiumos/policy/chromium/policy/enterprise_management_proto"
 	lm "chromiumos/system_api/login_manager_proto"
 	upstartcommon "chromiumos/tast/common/upstart"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (

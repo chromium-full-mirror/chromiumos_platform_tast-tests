@@ -8,8 +8,8 @@ package ui
 import (
 	"context"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/services/cros/ui"
+	"go.chromium.org/tast/core/errors"
 )
 
 // CheckNodeWithNameExists checks if a node containing |name| exist, returns an error is node is not found.

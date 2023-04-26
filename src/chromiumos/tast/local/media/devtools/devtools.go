@@ -13,8 +13,8 @@ import (
 
 	"github.com/mafredri/cdp/protocol/media"
 
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // GetVideoDecoder waits for observer to produce a Player properties

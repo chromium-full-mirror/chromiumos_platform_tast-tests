@@ -13,8 +13,8 @@ import (
 	"golang.org/x/sys/unix"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // PowertopRecorderOptions provides options to run PowertopRecorder.

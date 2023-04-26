@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"chromiumos/tast/common/firmware/serial"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/firmware/ti50/dutcontrol"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (

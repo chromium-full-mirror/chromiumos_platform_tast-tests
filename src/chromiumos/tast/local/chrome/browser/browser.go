@@ -13,10 +13,10 @@ import (
 	"android.googlesource.com/platform/external/perfetto/protos/perfetto/trace/github.com/google/perfetto/perfetto_proto"
 	"github.com/mafredri/cdp/protocol/target"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome/internal/cdputil"
 	"chromiumos/tast/local/chrome/internal/driver"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Type indicates the type of Chrome browser to be used.

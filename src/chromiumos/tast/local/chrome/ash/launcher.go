@@ -17,11 +17,11 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/internal/cdputil"
 	"chromiumos/tast/local/chrome/internal/extension"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // AppListBubbleClassName is the automation API class name of the bubble launcher.

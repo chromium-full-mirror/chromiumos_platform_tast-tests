@@ -14,12 +14,12 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
-	"chromiumos/tast/dut"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/rpc"
 	"chromiumos/tast/services/cros/cellular"
-	"chromiumos/tast/ssh"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/ssh"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Timeout for methods of Tast fixture.

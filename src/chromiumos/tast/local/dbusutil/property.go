@@ -10,7 +10,7 @@ import (
 
 	"github.com/godbus/dbus/v5"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // SetProperty sets a DBus property on an object. The property name is in

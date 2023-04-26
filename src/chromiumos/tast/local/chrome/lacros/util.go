@@ -9,11 +9,11 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	internal "chromiumos/tast/local/chrome/internal/lacros"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 var pollOptions = &testing.PollOptions{Timeout: 10 * time.Second}

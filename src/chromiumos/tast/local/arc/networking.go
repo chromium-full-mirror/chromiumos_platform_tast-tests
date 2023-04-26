@@ -12,9 +12,9 @@ import (
 	"chromiumos/tast/common/action"
 	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/shill"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (

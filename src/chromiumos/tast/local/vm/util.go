@@ -16,9 +16,9 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/dbusutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/timing"
 )
 

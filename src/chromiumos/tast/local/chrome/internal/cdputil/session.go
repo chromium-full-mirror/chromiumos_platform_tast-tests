@@ -21,8 +21,8 @@ import (
 	"github.com/mafredri/cdp/rpcc"
 	"github.com/mafredri/cdp/session"
 
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/timing"
 )
 

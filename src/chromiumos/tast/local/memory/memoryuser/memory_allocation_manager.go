@@ -10,8 +10,8 @@ import (
 	"path"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
+	"go.chromium.org/tast/core/errors"
 )
 
 // AllocationTarget is an enum listing up the available target of

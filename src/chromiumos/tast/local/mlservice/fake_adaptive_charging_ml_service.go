@@ -14,9 +14,9 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	pb "chromiumos/system_api/ml_proto"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // FakeAdaptiveChargingMLService manages a fake DBus service which replaces the

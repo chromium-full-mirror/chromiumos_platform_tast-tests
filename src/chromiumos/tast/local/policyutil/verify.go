@@ -12,9 +12,9 @@ import (
 	"path/filepath"
 
 	"chromiumos/tast/common/policy"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // A DUTPolicy represents the information about a single policy as returned by

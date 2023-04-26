@@ -7,7 +7,7 @@ package disk
 import (
 	"golang.org/x/sys/unix"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // FreeSpace returns the number of free bytes available at a specific path

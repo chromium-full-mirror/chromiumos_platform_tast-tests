@@ -18,7 +18,7 @@ import (
 	"strconv"
 	"strings"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // IsBreakpadDmpFileForPID scans the given breakpad/crashpad format .dmp file

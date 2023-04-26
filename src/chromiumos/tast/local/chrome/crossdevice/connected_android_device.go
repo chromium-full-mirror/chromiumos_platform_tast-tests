@@ -17,8 +17,8 @@ import (
 	"chromiumos/tast/common/android/mobly"
 	"chromiumos/tast/common/android/ui"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // DCIMPath is the path to the DCIM directory on Android.

@@ -9,7 +9,7 @@ import (
 	"regexp"
 	"strconv"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 const zoneInfoFile = "/proc/zoneinfo"

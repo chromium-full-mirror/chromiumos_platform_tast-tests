@@ -10,8 +10,8 @@ import (
 	"path/filepath"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/fsutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/fsutil"
 )
 
 const (

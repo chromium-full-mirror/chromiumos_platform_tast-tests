@@ -19,9 +19,9 @@ import (
 	"golang.org/x/sys/unix"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/network/virtualnet/subnet"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 var rootSymlinks = [][]string{{"var/run", "/run"}, {"var/lock", "/run/lock"}}

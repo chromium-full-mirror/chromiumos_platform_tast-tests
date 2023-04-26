@@ -8,8 +8,8 @@ import (
 	"context"
 
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
+	"go.chromium.org/tast/core/errors"
 )
 
 // AppKills holds the number of apps that have been killed, categorized by

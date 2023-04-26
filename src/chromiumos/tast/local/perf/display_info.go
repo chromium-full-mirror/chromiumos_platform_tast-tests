@@ -8,9 +8,9 @@ import (
 	"context"
 
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/display"
+	"go.chromium.org/tast/core/errors"
 )
 
 // DisplayInfo stores display configurations.

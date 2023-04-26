@@ -7,8 +7,8 @@ package upstart
 import (
 	"context"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/dbusutil"
+	"go.chromium.org/tast/core/errors"
 )
 
 // RestartJobAndWaitForDbusService is a utility for restarting jobs

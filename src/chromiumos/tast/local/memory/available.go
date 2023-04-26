@@ -9,8 +9,8 @@ import (
 	"fmt"
 
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/resourced"
+	"go.chromium.org/tast/core/errors"
 )
 
 // ChromeOSAvailableMetrics logs performance metrics for ChromeOS memory margins

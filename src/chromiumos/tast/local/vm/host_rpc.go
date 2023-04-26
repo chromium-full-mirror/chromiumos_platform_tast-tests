@@ -11,9 +11,9 @@ import (
 	"github.com/mdlayher/vsock"
 	"google.golang.org/grpc"
 
-	"chromiumos/tast/errors"
 	vmrpc "chromiumos/vm_tools/vm_rpc"
 	vmtools "chromiumos/vm_tools/vm_tools_proto"
+	"go.chromium.org/tast/core/errors"
 )
 
 // StartupListenerServer is struct to manage an instance of a StartupListener

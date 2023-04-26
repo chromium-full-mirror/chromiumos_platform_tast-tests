@@ -8,8 +8,8 @@ import (
 	"context"
 	"strings"
 
-	"chromiumos/tast/dut"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/errors"
 )
 
 // ResetFlags represents FPMCU reset flags.

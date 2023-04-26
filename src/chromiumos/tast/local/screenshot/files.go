@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // screenshotPaths returns list of screenshot paths in Download folder.

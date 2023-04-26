@@ -10,9 +10,9 @@ import (
 	"fmt"
 	"strings"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto/ossettings"
+	"go.chromium.org/tast/core/errors"
 )
 
 // JS for driving the Nearby Share subpage of OS settings.

@@ -9,9 +9,9 @@ import (
 	"os"
 	"strings"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/lacros"
+	"go.chromium.org/tast/core/errors"
 )
 
 // Option is the function signature used to specify options of Config.

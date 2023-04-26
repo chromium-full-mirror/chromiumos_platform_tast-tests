@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/shillconst"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // WaitForOnline waits for Internet connectivity, a shorthand which is useful so external packages don't have to worry

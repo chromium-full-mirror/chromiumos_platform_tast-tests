@@ -15,7 +15,7 @@ import (
 
 	"github.com/godbus/dbus/v5"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/timing"
 )
 

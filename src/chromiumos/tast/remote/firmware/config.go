@@ -15,7 +15,7 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // ModeSwitcherType represents which methods the platform uses for switching between DUT boot modes.

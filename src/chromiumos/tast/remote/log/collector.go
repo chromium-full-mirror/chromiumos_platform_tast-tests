@@ -15,8 +15,8 @@ import (
 	"sync"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/wificell/fileutil"
+	"go.chromium.org/tast/core/errors"
 )
 
 // Buffer is a buffer for storing logs that supports dumping its contents.

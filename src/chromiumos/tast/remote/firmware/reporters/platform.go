@@ -8,9 +8,9 @@ import (
 	"context"
 	"strings"
 
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/lsbrelease"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Board reports the name of the DUT board, such as coral or veyron_minnie.

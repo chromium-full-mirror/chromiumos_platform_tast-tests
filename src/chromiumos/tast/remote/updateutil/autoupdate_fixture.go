@@ -11,9 +11,9 @@ import (
 
 	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/ssh"
-	"chromiumos/tast/testing"
 	"go.chromium.org/tast/core/lsbrelease"
+	"go.chromium.org/tast/core/ssh"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

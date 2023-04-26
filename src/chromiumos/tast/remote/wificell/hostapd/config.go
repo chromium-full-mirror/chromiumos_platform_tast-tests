@@ -16,7 +16,7 @@ import (
 	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/common/wifi/security"
 	"chromiumos/tast/common/wifi/security/base"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // ModeEnum is the type for specifying hostap mode.

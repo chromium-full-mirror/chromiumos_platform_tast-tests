@@ -10,7 +10,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome/ash/ashproc"
 	"chromiumos/tast/local/chrome/internal/cdputil"
 	"chromiumos/tast/local/chrome/internal/config"
@@ -18,7 +17,8 @@ import (
 	"chromiumos/tast/local/chrome/internal/extension"
 	"chromiumos/tast/local/chrome/jslog"
 	"chromiumos/tast/local/logsaver"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/timing"
 )
 

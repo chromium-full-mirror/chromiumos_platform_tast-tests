@@ -17,8 +17,8 @@ import (
 	"github.com/gogo/protobuf/proto"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
+	"go.chromium.org/tast/core/errors"
 )
 
 const traceProcessorURL = "https://get.perfetto.dev/trace_processor"

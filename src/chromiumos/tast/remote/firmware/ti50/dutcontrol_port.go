@@ -9,9 +9,9 @@ import (
 	"io"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/firmware/ti50/dutcontrol"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // ErrReadTimeout indicates that a read operation exceeded the readTimeout configured on the port.

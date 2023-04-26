@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 // The module load timeout is arbitrarily set. We don't have a clear

@@ -16,9 +16,9 @@ import (
 	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/common/wifi/security"
 	"chromiumos/tast/common/wifi/security/wep"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/ssh"
-	"chromiumos/tast/ssh/linuxssh"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh"
+	"go.chromium.org/tast/core/ssh/linuxssh"
 )
 
 const (

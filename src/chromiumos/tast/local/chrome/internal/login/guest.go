@@ -10,7 +10,7 @@ import (
 	"chromiumos/tast/local/chrome/internal/config"
 	"chromiumos/tast/local/chrome/internal/driver"
 	"chromiumos/tast/local/cryptohome"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/timing"
 )
 

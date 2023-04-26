@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/lockscreen"
@@ -21,6 +20,7 @@ import (
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/mtbf/youtube"
 	"chromiumos/tast/local/personalization"
+	"go.chromium.org/tast/core/errors"
 )
 
 // const for ambient topic sources.

@@ -22,14 +22,14 @@ import (
 	"github.com/google/gopacket/layers"
 
 	"chromiumos/tast/common/network/daemonutil"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/network/iw"
 	"chromiumos/tast/remote/wificell/fileutil"
-	"chromiumos/tast/ssh"
-	"chromiumos/tast/ssh/linuxssh"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/shutil"
+	"go.chromium.org/tast/core/ssh"
+	"go.chromium.org/tast/core/ssh/linuxssh"
+	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/timing"
 )
 

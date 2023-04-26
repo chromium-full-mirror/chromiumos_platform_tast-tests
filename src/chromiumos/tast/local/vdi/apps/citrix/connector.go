@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/errors"
 	crApps "chromiumos/tast/local/apps"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -17,7 +16,8 @@ import (
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/uidetection"
 	"chromiumos/tast/local/vdi/apps"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const uiDetectionTimeout = 45 * time.Second

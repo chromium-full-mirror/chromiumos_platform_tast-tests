@@ -15,7 +15,7 @@ import (
 	"strings"
 
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // ZramOpStats holds stats for one transaction type (read, write, discard).

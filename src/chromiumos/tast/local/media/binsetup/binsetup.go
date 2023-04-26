@@ -10,8 +10,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"chromiumos/tast/errors"
-	"chromiumos/tast/fsutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/fsutil"
 )
 
 // CreateTempDataDir creates a world-readable temporary directory using the supplied prefix

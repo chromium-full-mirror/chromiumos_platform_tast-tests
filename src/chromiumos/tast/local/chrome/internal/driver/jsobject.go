@@ -10,7 +10,7 @@ import (
 
 	"github.com/mafredri/cdp/protocol/runtime"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // JSObject is a reference to a JavaScript object.

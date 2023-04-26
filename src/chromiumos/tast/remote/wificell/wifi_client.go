@@ -14,10 +14,10 @@ import (
 
 	"chromiumos/tast/common/network/protoutil"
 	"chromiumos/tast/common/shillconst"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/services/cros/wifi"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/timing"
 )
 

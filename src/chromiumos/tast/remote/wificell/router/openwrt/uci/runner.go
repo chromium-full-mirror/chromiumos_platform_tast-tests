@@ -10,9 +10,9 @@ import (
 	"strings"
 
 	"chromiumos/tast/common/network/cmd"
-	"chromiumos/tast/errors"
 	remoteCmd "chromiumos/tast/remote/network/cmd"
-	"chromiumos/tast/ssh"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh"
 )
 
 const (

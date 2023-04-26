@@ -9,11 +9,11 @@ import (
 	"path/filepath"
 
 	"chromiumos/tast/common/utils"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/log"
 	"chromiumos/tast/remote/wificell/router/common/support"
-	"chromiumos/tast/ssh"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh"
+	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/timing"
 )
 

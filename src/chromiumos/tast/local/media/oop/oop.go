@@ -6,11 +6,11 @@
 // related to out-of-process video decoding and encoding.
 package oop
 
-import(
+import (
 	"regexp"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome/chromeproc"
+	"go.chromium.org/tast/core/errors"
 )
 
 const videoEncoderUtilSubType = "media.mojom.VideoEncodeAcceleratorProviderFactory"

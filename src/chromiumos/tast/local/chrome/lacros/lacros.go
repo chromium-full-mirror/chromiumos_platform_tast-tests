@@ -13,8 +13,6 @@ import (
 	"android.googlesource.com/platform/external/perfetto/protos/perfetto/trace/github.com/google/perfetto/perfetto_proto"
 	"github.com/mafredri/cdp/protocol/target"
 
-	"chromiumos/tast/errors"
-	"chromiumos/tast/fsutil"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/internal/cdputil"
@@ -22,7 +20,9 @@ import (
 	"chromiumos/tast/local/chrome/internal/lacros"
 	"chromiumos/tast/local/chrome/jslog"
 	"chromiumos/tast/local/chrome/lacros/lacrosinfo"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/fsutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Lacros contains all state associated with a lacros-chrome instance

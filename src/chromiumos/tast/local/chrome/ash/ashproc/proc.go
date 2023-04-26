@@ -11,9 +11,9 @@ import (
 
 	"github.com/shirou/gopsutil/v3/process"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome/internal/chromeproc"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // ExecPath contains the path to the Chrome executable.

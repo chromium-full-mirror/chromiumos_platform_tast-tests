@@ -8,8 +8,8 @@ import (
 	"context"
 	"math"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/resourced"
+	"go.chromium.org/tast/core/errors"
 )
 
 // Limit allows tests to determine if memory use is close to a limit without

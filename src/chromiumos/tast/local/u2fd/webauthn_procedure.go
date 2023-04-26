@@ -9,11 +9,11 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
+	"go.chromium.org/tast/core/errors"
 )
 
 // Below functions of the individual procedures of MakeCredential/GetAssertion

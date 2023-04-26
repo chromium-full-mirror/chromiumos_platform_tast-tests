@@ -9,8 +9,8 @@ import (
 	"chromiumos/tast/common/wifi/security"
 	"chromiumos/tast/common/wifi/security/base"
 	"chromiumos/tast/common/wifi/security/wpa"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/wificell/hostapd"
+	"go.chromium.org/tast/core/errors"
 )
 
 // BandEnum is the type for specifying tethering WiFi downstream band.

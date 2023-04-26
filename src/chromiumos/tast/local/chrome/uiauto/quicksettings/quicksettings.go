@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/bluetooth/bluez"
 	"chromiumos/tast/local/chrome"
@@ -25,7 +24,8 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/state"
 	"chromiumos/tast/local/coords"
 	"chromiumos/tast/local/input"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const uiTimeout = 10 * time.Second

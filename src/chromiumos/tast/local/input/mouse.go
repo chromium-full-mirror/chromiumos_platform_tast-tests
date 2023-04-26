@@ -11,7 +11,7 @@ import (
 	"os"
 	"time"
 
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 // MouseEventWriter supports injecting events into a mouse device.

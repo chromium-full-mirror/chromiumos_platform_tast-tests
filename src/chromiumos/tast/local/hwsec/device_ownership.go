@@ -8,9 +8,9 @@ import (
 	"context"
 
 	"chromiumos/tast/common/hwsec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/session"
 	"chromiumos/tast/local/session/ownership"
+	"go.chromium.org/tast/core/errors"
 )
 
 // SetUpVaultAndUserAsOwner will setup a user and its vault, and setup the policy to make the user the owner of the device.

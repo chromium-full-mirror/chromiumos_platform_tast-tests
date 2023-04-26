@@ -14,7 +14,7 @@ import (
 	"strings"
 	"unsafe"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 const (

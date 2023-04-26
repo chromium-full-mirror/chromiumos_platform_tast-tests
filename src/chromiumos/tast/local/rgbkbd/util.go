@@ -12,7 +12,7 @@ import (
 	"reflect"
 	"strings"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 const logFilename = "capslock_rgb_state_updates.log"

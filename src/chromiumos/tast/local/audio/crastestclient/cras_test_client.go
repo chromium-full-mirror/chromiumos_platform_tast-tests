@@ -15,9 +15,9 @@ import (
 	"time"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/audio"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 type cmdMode int
@@ -256,7 +256,6 @@ type NoStreamError struct {
 // ...
 //
 // Audio Thread Event Log:
-//
 func dumpActiveStreams(ctx context.Context) ([]StreamInfo, error) {
 	dump, err := testexec.CommandContext(ctx, "cras_test_client", "--dump_audio_thread").Output(testexec.DumpLogOnError)
 	if err != nil {

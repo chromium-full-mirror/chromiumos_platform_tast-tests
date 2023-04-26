@@ -7,8 +7,8 @@ package ash
 import (
 	"context"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
+	"go.chromium.org/tast/core/errors"
 )
 
 // SetOverviewModeAndWait requests Ash to set the overview mode state and waits

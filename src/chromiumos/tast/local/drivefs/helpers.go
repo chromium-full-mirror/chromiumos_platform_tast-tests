@@ -18,7 +18,7 @@ import (
 	"time"
 
 	"chromiumos/tast/local/cryptohome"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 // PersistableToken derives the token from the mount path. This is used

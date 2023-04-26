@@ -10,7 +10,7 @@ import (
 	nearbycommon "chromiumos/tast/common/cros/nearbyshare"
 	"chromiumos/tast/local/chrome/crossdevice"
 	"chromiumos/tast/local/chrome/nearbyshare/nearbysnippet"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 // addFlossWebRTCAndWLANFixtures registers fixtures for tests using WebRTC and WLAN transfer mediums, and Floss enabled.

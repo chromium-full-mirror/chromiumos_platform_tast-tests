@@ -9,9 +9,9 @@ import (
 	"fmt"
 
 	"chromiumos/tast/common/hermesconst"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/hermes"
 	"chromiumos/tast/local/shill"
+	"go.chromium.org/tast/core/errors"
 )
 
 // CellularNetworkProvider provides methods to query and manipulate collections of cellular networks.

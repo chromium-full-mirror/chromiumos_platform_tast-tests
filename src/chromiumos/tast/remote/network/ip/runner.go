@@ -8,7 +8,7 @@ package ip
 import (
 	"chromiumos/tast/common/network/ip"
 	"chromiumos/tast/remote/network/cmd"
-	"chromiumos/tast/ssh"
+	"go.chromium.org/tast/core/ssh"
 )
 
 // Runner is an alias for common ip Runner but only for remote execution.

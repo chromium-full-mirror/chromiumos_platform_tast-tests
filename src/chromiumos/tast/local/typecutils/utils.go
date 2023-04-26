@@ -19,12 +19,12 @@ import (
 
 	"chromiumos/policy/chromium/policy/enterprise_management_proto"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/display"
 	"chromiumos/tast/local/graphics"
 	"chromiumos/tast/local/session"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // The maximum number of USB Type C ports that a Chromebook supports.

@@ -9,10 +9,10 @@ import (
 	"context"
 	"net/http"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // AuthCallback is a callback executed when the WebAuthn request is successfully

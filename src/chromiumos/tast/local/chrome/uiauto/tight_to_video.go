@@ -15,7 +15,7 @@ import (
 	"github.com/matts1/vnc2video"
 	"github.com/matts1/vnc2video/encoders"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // createVideo uses VNC to generate images, and then pipes the images into ffmpeg to generate video.

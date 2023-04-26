@@ -10,7 +10,7 @@ import (
 	"context"
 	"fmt"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // Tab represents a browser tab as obtained from the chrome.tabs API.

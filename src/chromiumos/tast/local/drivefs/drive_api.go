@@ -19,8 +19,8 @@ import (
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/option"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
+	"go.chromium.org/tast/core/errors"
 )
 
 var (

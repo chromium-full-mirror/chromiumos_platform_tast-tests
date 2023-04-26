@@ -11,10 +11,10 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/services/cros/network"
 	"chromiumos/tast/services/cros/ui"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (

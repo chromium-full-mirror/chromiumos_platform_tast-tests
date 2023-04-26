@@ -12,9 +12,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/graphics"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // CaseListFilters contain lists on their tests based on expectations

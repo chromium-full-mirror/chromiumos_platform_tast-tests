@@ -15,8 +15,8 @@ import (
 	"strconv"
 	"strings"
 
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // PSIMemoryLines returns a snapshot of /proc/pressure/memory as a list of

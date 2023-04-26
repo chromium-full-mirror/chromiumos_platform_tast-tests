@@ -11,7 +11,7 @@ import (
 
 	"chromiumos/tast/common/mmconst"
 	"chromiumos/tast/common/shillconst"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // KnownAPN is an APN known to a carrier.

@@ -15,7 +15,7 @@ import (
 
 	"golang.org/x/sys/unix"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // RawEventWriter supports injecting raw input events into a device.

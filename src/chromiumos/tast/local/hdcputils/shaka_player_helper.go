@@ -15,7 +15,6 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/audio"
 	"chromiumos/tast/local/audio/crastestclient"
 	"chromiumos/tast/local/chrome"
@@ -27,7 +26,8 @@ import (
 	"chromiumos/tast/local/coords"
 	"chromiumos/tast/local/media/imgcmp"
 	"chromiumos/tast/local/screenshot"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // ShakaPlayer represents connection to the shaka player web page.
@@ -334,32 +334,32 @@ func (s *ShakaPlayer) currentTime(ctx context.Context) (int, error) {
 func (s *ShakaPlayer) VerifyL0Response(ctx context.Context) error {
 	// Example of L0 response json .
 	/*
-	{
-	  "key":[{
-	    ...
-	  },
-	  {
-	    "id":"MDAwMDAwMDAwMDAwMDAwMg==",
-	    "iv":"3mbEJJd7e1E9gGaLEPabwQ==",
-	    "type":"CONTENT",
-	    "level":"HW_SECURE_ALL",
-	    "requiredProtection":{
-	      "hdcp":"HDCP_V2"
-	    },
-	    "requestedProtection":{
-	      "hdcp":"HDCP_V2"
-	    },
-	    "keyControl":{
-	      "keyControlBlock":"Cbjs7CzPdhkohG47GznriHLtdWFuL1nynqGk4Vkwiac=",
-	      "iv":"gObIccyvcDNa2G8j+hyjpg=="
-	    },
-	    "trackLabel":"HD"
-	  },
-	  {
-	    ...
-	  }
-	]}
-        */
+		{
+		  "key":[{
+		    ...
+		  },
+		  {
+		    "id":"MDAwMDAwMDAwMDAwMDAwMg==",
+		    "iv":"3mbEJJd7e1E9gGaLEPabwQ==",
+		    "type":"CONTENT",
+		    "level":"HW_SECURE_ALL",
+		    "requiredProtection":{
+		      "hdcp":"HDCP_V2"
+		    },
+		    "requestedProtection":{
+		      "hdcp":"HDCP_V2"
+		    },
+		    "keyControl":{
+		      "keyControlBlock":"Cbjs7CzPdhkohG47GznriHLtdWFuL1nynqGk4Vkwiac=",
+		      "iv":"gObIccyvcDNa2G8j+hyjpg=="
+		    },
+		    "trackLabel":"HD"
+		  },
+		  {
+		    ...
+		  }
+		]}
+	*/
 	type l0ResponseValues struct {
 		// Level contains expected levels like "SW_SECURE_CRYPTO", "HW_SECURE_ALL".
 		Level string `json:"level"`

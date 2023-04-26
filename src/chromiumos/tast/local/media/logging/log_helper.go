@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // ChromeVmoduleFlag returns a command line option for Chrome (binary test) to

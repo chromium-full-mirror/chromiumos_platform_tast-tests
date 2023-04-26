@@ -7,8 +7,8 @@ package wilco
 import (
 	"context"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/upstart"
+	"go.chromium.org/tast/core/errors"
 )
 
 const (

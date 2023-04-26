@@ -7,8 +7,8 @@ package webutil
 import (
 	"context"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
+	"go.chromium.org/tast/core/errors"
 )
 
 // shadowPiercerJS is built from http://google3/chrome/apps/common/client/testing/shadow_piercer_helper.ts.

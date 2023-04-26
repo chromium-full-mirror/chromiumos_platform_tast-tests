@@ -9,9 +9,9 @@ import (
 	"path/filepath"
 
 	"chromiumos/tast/common/fixture"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/logsaver"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

@@ -8,8 +8,8 @@ package systemlogs
 import (
 	"context"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
+	"go.chromium.org/tast/core/errors"
 )
 
 // systemInformation corresponds to feedbackPrivate.SystemInformation entries.

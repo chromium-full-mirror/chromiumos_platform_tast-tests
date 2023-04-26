@@ -10,8 +10,8 @@ import (
 
 	"chromiumos/tast/common/chameleon"
 	cbt "chromiumos/tast/common/chameleon/devices/common/bluetooth"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 type emulatedBTPeerDeviceCache struct {

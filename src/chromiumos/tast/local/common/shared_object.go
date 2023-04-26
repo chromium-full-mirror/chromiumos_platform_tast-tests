@@ -9,9 +9,9 @@ import (
 	"context"
 	"sync"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
+	"go.chromium.org/tast/core/errors"
 )
 
 // SharedObjectsForService allows services to shared states of important objects, such as

@@ -11,7 +11,7 @@ import (
 	pb "go.chromium.org/chromiumos/config/go/test/api"
 	"google.golang.org/grpc"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // LibsService represents connection to the Test Libs Service.

@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 const (

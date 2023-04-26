@@ -8,9 +8,9 @@ import (
 	"context"
 	"net"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/network/virtualnet/env"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 type testFunc func(ctx context.Context) error

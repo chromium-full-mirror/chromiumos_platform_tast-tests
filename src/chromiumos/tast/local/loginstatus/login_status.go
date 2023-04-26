@@ -8,8 +8,8 @@ package loginstatus
 import (
 	"context"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
+	"go.chromium.org/tast/core/errors"
 )
 
 // LoginStatus represents LoginStatusDict in the chromium code base, in

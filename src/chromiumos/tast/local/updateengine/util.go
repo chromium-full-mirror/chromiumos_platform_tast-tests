@@ -12,11 +12,11 @@ import (
 
 	"chromiumos/tast/common/testexec"
 	ue "chromiumos/tast/common/updateengine"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/dbusutil"
 	"chromiumos/tast/local/upstart"
 	aupb "chromiumos/tast/services/cros/autoupdate"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Update Engine related constants.

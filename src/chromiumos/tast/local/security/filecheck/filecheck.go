@@ -15,7 +15,7 @@ import (
 	"syscall"
 
 	"chromiumos/tast/local/sysutil"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Pattern matches one or more paths.

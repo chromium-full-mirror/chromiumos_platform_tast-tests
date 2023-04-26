@@ -8,9 +8,9 @@ import (
 	"context"
 	"regexp"
 
-	"chromiumos/tast/dut"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/firmware"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/errors"
 )
 
 // EncryptionStatusFlags represents a state of FPMCU encryption engine.

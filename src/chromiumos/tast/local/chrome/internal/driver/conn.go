@@ -13,10 +13,10 @@ import (
 	"github.com/mafredri/cdp/protocol/profiler"
 	"github.com/mafredri/cdp/protocol/target"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome/internal/cdputil"
 	"chromiumos/tast/local/chrome/jslog"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Conn represents a connection to a web content view, e.g. a tab.

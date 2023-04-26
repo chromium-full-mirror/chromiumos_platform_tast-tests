@@ -5,7 +5,7 @@
 package reporters
 
 import (
-	"chromiumos/tast/dut"
+	"go.chromium.org/tast/core/dut"
 )
 
 // Reporter provides information about the DUT.

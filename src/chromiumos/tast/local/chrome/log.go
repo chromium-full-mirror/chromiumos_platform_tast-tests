@@ -8,7 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // CurrentLogFile returns the real path name of the current run of Chrome at that

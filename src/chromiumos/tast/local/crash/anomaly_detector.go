@@ -10,9 +10,9 @@ import (
 	"path/filepath"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // RestartAnomalyDetector restarts the anomaly detector and waits for it to open the journal.

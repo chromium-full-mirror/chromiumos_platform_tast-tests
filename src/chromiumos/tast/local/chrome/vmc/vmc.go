@@ -10,8 +10,8 @@ import (
 	"os"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/session"
+	"go.chromium.org/tast/core/errors"
 )
 
 // UserIDHash returns a sanitized username of the primary session.

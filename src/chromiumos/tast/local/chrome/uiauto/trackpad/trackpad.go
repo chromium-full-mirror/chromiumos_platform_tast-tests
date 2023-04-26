@@ -9,11 +9,11 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/settings"
 	"chromiumos/tast/local/input"
+	"go.chromium.org/tast/core/errors"
 )
 
 // SwipeDirection represents the swipe direction.

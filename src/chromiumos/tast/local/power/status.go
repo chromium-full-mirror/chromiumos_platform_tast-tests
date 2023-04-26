@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // Status holds power supply information reported by powerd's dump_power_status

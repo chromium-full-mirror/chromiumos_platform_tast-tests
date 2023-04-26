@@ -15,8 +15,8 @@ import (
 	"google.golang.org/grpc"
 
 	common "chromiumos/tast/common/firmware/ti50"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/firmware/ti50/dutcontrol"
+	"go.chromium.org/tast/core/errors"
 )
 
 const (

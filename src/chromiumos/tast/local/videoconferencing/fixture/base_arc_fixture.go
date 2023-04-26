@@ -11,7 +11,7 @@ import (
 	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 // List of ARC++ fixture names for video conferencing testing.

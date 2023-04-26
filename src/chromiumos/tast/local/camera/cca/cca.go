@@ -20,8 +20,6 @@ import (
 
 	"github.com/mafredri/cdp/protocol/target"
 
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/camera/testutil"
 	"chromiumos/tast/local/chrome"
@@ -29,7 +27,9 @@ import (
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/screenshot"
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Facing is camera facing from JavaScript VideoFacingModeEnum.

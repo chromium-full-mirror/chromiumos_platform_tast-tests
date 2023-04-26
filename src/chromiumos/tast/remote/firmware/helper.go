@@ -20,16 +20,16 @@ import (
 
 	fwCommon "chromiumos/tast/common/firmware"
 	"chromiumos/tast/common/servo"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/dut"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/firmware/reporters"
 	"chromiumos/tast/remote/firmware/rpm"
-	"chromiumos/tast/rpc"
 	fwpb "chromiumos/tast/services/cros/firmware"
-	"chromiumos/tast/ssh"
-	"chromiumos/tast/ssh/linuxssh"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/ssh"
+	"go.chromium.org/tast/core/ssh/linuxssh"
+	"go.chromium.org/tast/core/testing"
 
 	"go.chromium.org/tast/core/lsbrelease"
 )

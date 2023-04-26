@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/cuj"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -20,7 +19,8 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/state"
 	"chromiumos/tast/local/chrome/webutil"
 	"chromiumos/tast/local/input"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // UIHelper creates chrome target and testapi connectoin.

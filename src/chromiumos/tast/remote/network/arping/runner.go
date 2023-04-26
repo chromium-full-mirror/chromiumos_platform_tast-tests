@@ -8,7 +8,7 @@ package arping
 import (
 	"chromiumos/tast/common/network/arping"
 	"chromiumos/tast/remote/network/cmd"
-	"chromiumos/tast/ssh"
+	"go.chromium.org/tast/core/ssh"
 )
 
 // NewRemoteRunner creates an arping Runner on the given dut for remote execution.

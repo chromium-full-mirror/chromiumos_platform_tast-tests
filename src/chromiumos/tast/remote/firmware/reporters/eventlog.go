@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // Event contains the contents of one line from `elogtool list`.

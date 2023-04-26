@@ -17,7 +17,7 @@ import (
 	"golang.org/x/sys/unix"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Matcher specifies processes to save minidumps of.

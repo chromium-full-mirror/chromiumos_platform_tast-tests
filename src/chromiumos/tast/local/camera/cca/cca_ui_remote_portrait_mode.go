@@ -8,10 +8,10 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/camera/testutil"
 	"chromiumos/tast/local/chrome"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 )
 
 // RunPortraitModeTesting tests that portrait mode works expectedly.

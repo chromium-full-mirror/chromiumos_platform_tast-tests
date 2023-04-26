@@ -11,12 +11,12 @@ import (
 	"time"
 
 	nearbycommon "chromiumos/tast/common/cros/nearbyshare"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bluetooth"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/crossdevice"
 	"chromiumos/tast/local/syslog"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // CrOSSetup enables ChromeOS Nearby Share and configures its settings using the nearby_share_settings

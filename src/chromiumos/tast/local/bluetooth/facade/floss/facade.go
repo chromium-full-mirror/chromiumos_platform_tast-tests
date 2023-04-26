@@ -8,12 +8,12 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/audio"
 	"chromiumos/tast/local/bluetooth/facade/common"
 	"chromiumos/tast/local/bluetooth/floss"
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const flossManagerDaemonJob = "btmanagerd"

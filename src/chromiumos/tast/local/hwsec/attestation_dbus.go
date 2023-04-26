@@ -10,8 +10,8 @@ import (
 	"github.com/godbus/dbus/v5"
 
 	apb "chromiumos/system_api/attestation_proto"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/dbusutil"
+	"go.chromium.org/tast/core/errors"
 )
 
 // AttestationDBus talks to attestation service via D-Bus APIs.

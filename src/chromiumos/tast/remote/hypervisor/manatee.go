@@ -8,8 +8,8 @@ import (
 	"context"
 	"strings"
 
-	"chromiumos/tast/dut"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/errors"
 )
 
 // IsManatee returns true iff the DUT is running a manatee image.

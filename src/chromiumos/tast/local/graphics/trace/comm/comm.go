@@ -6,7 +6,7 @@
 package comm
 
 import (
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (

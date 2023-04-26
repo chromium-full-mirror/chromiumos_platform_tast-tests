@@ -9,7 +9,7 @@ import (
 	"os"
 
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // This file contains helper functions that can be used to parse the log files

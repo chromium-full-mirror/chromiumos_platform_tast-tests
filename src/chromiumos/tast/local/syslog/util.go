@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // CollectSyslog collects shards of system log between timing of calling this

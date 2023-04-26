@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"chromiumos/tast/common/chameleon"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // EdidType describes the types like DP or HDMI for Edids

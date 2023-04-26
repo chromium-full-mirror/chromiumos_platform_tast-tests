@@ -10,8 +10,8 @@ import (
 
 	crossdevicecommon "chromiumos/tast/common/cros/crossdevice"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/lsbrelease"
 )
 

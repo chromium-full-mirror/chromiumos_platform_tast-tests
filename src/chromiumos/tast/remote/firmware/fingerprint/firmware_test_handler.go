@@ -13,15 +13,15 @@ import (
 	fp "chromiumos/tast/common/fingerprint"
 	"chromiumos/tast/common/servo"
 	"chromiumos/tast/common/upstart"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/dutfs"
 	"chromiumos/tast/remote/firmware/fingerprint/rpcdut"
 	"chromiumos/tast/remote/sysutil"
-	"chromiumos/tast/rpc"
 	"chromiumos/tast/services/cros/platform"
-	"chromiumos/tast/ssh"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/ssh"
+	"go.chromium.org/tast/core/testing"
 )
 
 // FirmwareTest provides a common framework for fingerprint firmware tests.

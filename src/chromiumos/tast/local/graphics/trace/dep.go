@@ -6,7 +6,7 @@ package trace
 
 import (
 	"chromiumos/tast/local/crostini"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 // modelAllowlist is a list of model that is targeted to be able to reliably work in the lab for testing.

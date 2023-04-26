@@ -18,13 +18,13 @@ import (
 	"chromiumos/tast/common/android/ui"
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/power"
 	"chromiumos/tast/local/power/setup"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // RunTrace replays a PATrace (GLES) (https://github.com/ARM-software/patrace)

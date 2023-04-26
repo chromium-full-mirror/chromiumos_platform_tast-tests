@@ -8,8 +8,8 @@ import (
 	"context"
 	"io"
 
-	"chromiumos/tast/errors"
-	"chromiumos/tast/ssh"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh"
 )
 
 // LogreadCollector collects messages in syslogd's circular log Buffer using

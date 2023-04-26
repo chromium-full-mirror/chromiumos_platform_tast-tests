@@ -11,7 +11,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 var files = map[string]string{

@@ -22,12 +22,12 @@ import (
 
 	"chromiumos/tast/common/testexec"
 	upstartcommon "chromiumos/tast/common/upstart"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/crash"
 	"chromiumos/tast/local/dbusutil"
 	"chromiumos/tast/local/hwsec"
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Wait waits until the system is (marginally) ready for tests to run.

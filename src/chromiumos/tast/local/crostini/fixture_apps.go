@@ -17,7 +17,7 @@ import (
 	"chromiumos/tast/local/screenshot"
 	"chromiumos/tast/local/terminalapp"
 	"chromiumos/tast/local/vm"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

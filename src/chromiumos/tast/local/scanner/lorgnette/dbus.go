@@ -12,9 +12,9 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	lpb "chromiumos/system_api/lorgnette_proto"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/dbusutil"
 	"chromiumos/tast/local/upstart"
+	"go.chromium.org/tast/core/errors"
 )
 
 const (

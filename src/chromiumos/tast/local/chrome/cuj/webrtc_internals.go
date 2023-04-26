@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
@@ -23,6 +22,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/webrtcinternals"
+	"go.chromium.org/tast/core/errors"
 )
 
 // OpenWebRTCInternals opens chrome://webrtc-internals now so it will collect data on the meeting's streams.

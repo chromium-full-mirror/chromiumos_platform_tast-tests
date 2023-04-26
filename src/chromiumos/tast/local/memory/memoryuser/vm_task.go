@@ -10,10 +10,10 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/vm"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // VMCmd contains a list of vshArgs to use in the container command.

@@ -11,8 +11,8 @@ import (
 
 	"chromiumos/tast/common/hwsec"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const googleKeysDataPath = "/run/attestation/google_keys.data"

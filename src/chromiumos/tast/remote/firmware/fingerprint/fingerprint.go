@@ -18,14 +18,14 @@ import (
 	fp "chromiumos/tast/common/fingerprint"
 	"chromiumos/tast/common/flashrom"
 	"chromiumos/tast/common/servo"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/dutfs"
 	"chromiumos/tast/remote/firmware/fingerprint/rpcdut"
 	"chromiumos/tast/remote/firmware/reporters"
-	"chromiumos/tast/ssh"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/shutil"
+	"go.chromium.org/tast/core/ssh"
+	"go.chromium.org/tast/core/testing"
 )
 
 type firmwareMetadata struct {

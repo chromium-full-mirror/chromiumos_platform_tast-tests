@@ -8,7 +8,7 @@ import (
 	"time"
 
 	nearbycommon "chromiumos/tast/common/cros/nearbyshare"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 // addBasicOnlineFixtures registers fixtures for basic Nearby Sharing tests with online data usage setting.

@@ -7,8 +7,8 @@ package safesearch
 import (
 	"context"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome/browser"
+	"go.chromium.org/tast/core/errors"
 )
 
 // TestGoogleSafeSearch checks whether safe search is automatically enabled for

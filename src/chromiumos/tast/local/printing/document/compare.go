@@ -13,8 +13,8 @@ import (
 
 	"github.com/kylelemons/godebug/diff"
 
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // TODO(crbug.com/973637): Investigate why it is that CUPS is inconsistent on

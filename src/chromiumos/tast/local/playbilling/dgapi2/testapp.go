@@ -14,7 +14,6 @@ import (
 
 	"chromiumos/tast/common/action"
 	"chromiumos/tast/common/android/ui"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/arc/playstore"
@@ -22,7 +21,8 @@ import (
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/webutil"
 	"chromiumos/tast/local/playbilling"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // TestAppDgapi2 represents the Play Billing test PWA and ARC Payments Overlay.

@@ -9,10 +9,10 @@ import (
 	"time"
 
 	"chromiumos/tast/common/shillconst"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/modemmanager"
 	"chromiumos/tast/local/network"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 var uiPollOptions = testing.PollOptions{

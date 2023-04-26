@@ -12,9 +12,9 @@ import (
 	"io/ioutil"
 	"os"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/crosconfig"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // These are constant strings for all the available camera features. Tests may

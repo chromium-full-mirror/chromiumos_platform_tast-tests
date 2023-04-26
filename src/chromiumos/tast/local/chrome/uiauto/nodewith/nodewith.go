@@ -13,11 +13,11 @@ import (
 	"sort"
 	"strings"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome/uiauto/checked"
 	"chromiumos/tast/local/chrome/uiauto/restriction"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/chrome/uiauto/state"
+	"go.chromium.org/tast/core/errors"
 )
 
 // Finder is a mapping of chrome.automation.FindParams to Golang with a nicer API.

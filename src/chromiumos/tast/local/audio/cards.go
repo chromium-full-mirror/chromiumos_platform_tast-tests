@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"strings"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // Card is a card listed in /proc/asound/cards as:

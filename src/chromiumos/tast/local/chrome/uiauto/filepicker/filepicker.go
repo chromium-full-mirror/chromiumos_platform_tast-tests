@@ -10,11 +10,11 @@ import (
 	"fmt"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/filepicker/vars"
 	"chromiumos/tast/local/chrome/uiauto/filesapp"
+	"go.chromium.org/tast/core/errors"
 )
 
 // FilePicker represents an instance of the file picker.

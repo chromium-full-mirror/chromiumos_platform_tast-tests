@@ -9,8 +9,8 @@ import (
 	"math/big"
 	"os"
 
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // AudioJackEventWriter supports injecting events into an audio jack device.

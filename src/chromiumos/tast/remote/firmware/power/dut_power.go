@@ -16,8 +16,8 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/firmware"
+	"go.chromium.org/tast/core/errors"
 )
 
 const (

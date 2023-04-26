@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"chromiumos/tast/local/power/util"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 // GetDeviceInfo returns a map that contains the information of the DUT.

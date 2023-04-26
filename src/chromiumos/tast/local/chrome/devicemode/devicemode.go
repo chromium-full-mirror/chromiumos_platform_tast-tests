@@ -8,9 +8,9 @@ package devicemode
 import (
 	"context"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
+	"go.chromium.org/tast/core/errors"
 )
 
 // DeviceMode represents whether the device is tablet or clamshell.

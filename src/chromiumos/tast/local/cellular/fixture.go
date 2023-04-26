@@ -14,7 +14,6 @@ import (
 	"chromiumos/tast/common/mmconst"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/hermes"
 	"chromiumos/tast/local/modemfwd"
@@ -23,7 +22,8 @@ import (
 	"chromiumos/tast/local/shill"
 	"chromiumos/tast/local/starfish"
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // The Cellular test fixture ensures that modemfwd is stopped.

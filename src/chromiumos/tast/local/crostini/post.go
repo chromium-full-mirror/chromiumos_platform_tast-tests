@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"chromiumos/tast/local/vm"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 // PostTimeout is the standard time reserved for post-test tasks.

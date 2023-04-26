@@ -16,9 +16,9 @@ import (
 	"golang.org/x/crypto/ssh"
 
 	"chromiumos/tast/common/servo"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/firmware"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (

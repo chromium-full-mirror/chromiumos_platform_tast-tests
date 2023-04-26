@@ -12,12 +12,12 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/fsutil"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/arc/optin"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/webapk"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/fsutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (

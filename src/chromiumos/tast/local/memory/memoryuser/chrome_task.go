@@ -8,8 +8,8 @@ import (
 	"context"
 	"fmt"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
+	"go.chromium.org/tast/core/errors"
 )
 
 // ChromeTask implements MemoryTask to open Chrome tabs.

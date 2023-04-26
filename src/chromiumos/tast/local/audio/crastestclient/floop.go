@@ -11,7 +11,7 @@ import (
 	"strconv"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // RequestFloopMask requests the flexible loopback device with the given mask

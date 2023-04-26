@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"chromiumos/tast/common/action"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/apps"
 	"chromiumos/tast/local/chrome/browser"
@@ -19,7 +18,8 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/prompts"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/input"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // navigateToZoomAndSignIn starts a new Chrome browser, navigates to the Zoom website and signs in if not yet.

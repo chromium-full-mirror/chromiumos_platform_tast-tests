@@ -8,11 +8,11 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bluetooth/bluez"
 	"chromiumos/tast/local/bluetooth/facade/common"
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const bluezDaemonJob = "bluetoothd"

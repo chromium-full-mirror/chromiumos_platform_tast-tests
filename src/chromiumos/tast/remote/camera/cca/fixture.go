@@ -16,9 +16,9 @@ import (
 	"chromiumos/tast/common/camera/chart"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/common/utils"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/ssh/linuxssh"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh/linuxssh"
+	"go.chromium.org/tast/core/testing"
 )
 
 type fixture struct{}

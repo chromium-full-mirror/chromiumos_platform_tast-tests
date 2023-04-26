@@ -8,7 +8,7 @@ package wpacli
 import (
 	"chromiumos/tast/common/network/wpacli"
 	"chromiumos/tast/remote/network/cmd"
-	"chromiumos/tast/ssh"
+	"go.chromium.org/tast/core/ssh"
 )
 
 // Runner is an alias for common wpacli Runner but only for remote execution.

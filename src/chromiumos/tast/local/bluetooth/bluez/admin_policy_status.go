@@ -7,8 +7,8 @@ package bluez
 import (
 	"context"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/dbusutil"
+	"go.chromium.org/tast/core/errors"
 )
 
 // ServiceAllowList returns the serviceAllowList of the adapter.

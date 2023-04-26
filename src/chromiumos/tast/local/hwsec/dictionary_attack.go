@@ -12,9 +12,9 @@ import (
 	"time"
 
 	"chromiumos/tast/common/hwsec"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // IncreaseDAForTpm1 uses tpm_manager_client to increase the dictionary attack counter, and should be only used on TPMv1.2 devices.

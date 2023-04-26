@@ -9,12 +9,12 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
-	"chromiumos/tast/dut"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/hwsec"
-	"chromiumos/tast/rpc"
 	oc "chromiumos/tast/services/cros/hwsec"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/testing"
 )
 
 // EnsureTPMAndSystemStateAreResetLocal initialises the required helpers and calls the EnsureTPMAndSystemStateAreReset locally.

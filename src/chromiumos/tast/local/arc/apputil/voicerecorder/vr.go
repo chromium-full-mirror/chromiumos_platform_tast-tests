@@ -14,7 +14,6 @@ import (
 
 	"chromiumos/tast/common/android/ui"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/arc/apputil"
 	"chromiumos/tast/local/chrome"
@@ -24,7 +23,8 @@ import (
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/uidetection"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // VoiceRecorder creates a struct that contains *apputil.App

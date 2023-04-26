@@ -7,11 +7,11 @@ package bluetooth
 import (
 	"context"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bluetooth/bluez"
 	"chromiumos/tast/local/bluetooth/floss"
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

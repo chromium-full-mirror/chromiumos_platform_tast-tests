@@ -15,14 +15,14 @@ import (
 
 	policyBlob "chromiumos/tast/common/policy"
 	"chromiumos/tast/common/utils"
-	"chromiumos/tast/dut"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/policyutil"
 	"chromiumos/tast/remote/wificell/router/common/support"
-	"chromiumos/tast/rpc"
 	"chromiumos/tast/services/cros/policy"
 	"chromiumos/tast/services/cros/wifi"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Timeout for methods of Tast fixture.

@@ -13,7 +13,7 @@ import (
 	"chromiumos/tast/local/chrome"
 	uifaillog "chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/faillog"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 // DumpUITreeAndScreenshot records the current UI tree in

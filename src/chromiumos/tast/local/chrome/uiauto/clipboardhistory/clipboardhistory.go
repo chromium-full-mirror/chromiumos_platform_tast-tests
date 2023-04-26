@@ -9,13 +9,13 @@ import (
 	"fmt"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ime"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/input"
+	"go.chromium.org/tast/core/errors"
 )
 
 const clipboardHistoryContextMenuItemName = "Clipboard"

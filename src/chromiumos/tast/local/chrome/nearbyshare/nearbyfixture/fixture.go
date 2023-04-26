@@ -14,8 +14,6 @@ import (
 	"chromiumos/tast/common/android/adb"
 	nearbycommon "chromiumos/tast/common/cros/nearbyshare"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bluetooth"
 	"chromiumos/tast/local/chrome"
@@ -25,7 +23,9 @@ import (
 	"chromiumos/tast/local/chrome/nearbyshare/nearbytestutils"
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/syslog"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // resetTimeout is the timeout duration to trying reset of the current fixture.

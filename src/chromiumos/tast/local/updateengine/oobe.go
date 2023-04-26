@@ -9,7 +9,7 @@ import (
 	"context"
 	"os"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // OOBE related constants.

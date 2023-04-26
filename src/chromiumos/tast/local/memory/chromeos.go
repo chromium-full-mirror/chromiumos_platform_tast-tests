@@ -17,10 +17,10 @@ import (
 
 	"golang.org/x/sys/unix"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/resourced"
 	"chromiumos/tast/local/syslog"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // ChromeOSAllocator helps test code allocate memory on ChromeOS.

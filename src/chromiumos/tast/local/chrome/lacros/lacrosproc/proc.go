@@ -12,11 +12,11 @@ import (
 
 	"github.com/shirou/gopsutil/v3/process"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/internal/chromeproc"
 	"chromiumos/tast/local/chrome/lacros/lacrosinfo"
 	"chromiumos/tast/local/procutil"
+	"go.chromium.org/tast/core/errors"
 )
 
 // Root returns the Process instance of the root lacros-chrome process.

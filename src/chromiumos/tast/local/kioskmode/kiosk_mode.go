@@ -17,7 +17,6 @@ import (
 
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash/ashproc"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -27,7 +26,8 @@ import (
 	"chromiumos/tast/local/policyutil/fixtures"
 	"chromiumos/tast/local/procutil"
 	"chromiumos/tast/local/syslog"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/timing"
 )
 

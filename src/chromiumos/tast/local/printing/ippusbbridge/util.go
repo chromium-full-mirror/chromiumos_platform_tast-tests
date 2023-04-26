@@ -16,9 +16,9 @@ import (
 	"github.com/shirou/gopsutil/v3/process"
 	"golang.org/x/sys/unix"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/printing/usbprinter"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // SocketPath returns the path to ippusb_bridge's main socket.

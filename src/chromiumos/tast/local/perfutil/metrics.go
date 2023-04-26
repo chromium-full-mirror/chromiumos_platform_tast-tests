@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 type metricType int

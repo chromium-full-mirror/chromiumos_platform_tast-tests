@@ -14,8 +14,8 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	ppb "chromiumos/system_api/printscanmgr_proto"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/dbusutil"
+	"go.chromium.org/tast/core/errors"
 )
 
 const (

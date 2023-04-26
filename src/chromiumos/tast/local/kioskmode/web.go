@@ -21,7 +21,7 @@ import (
 	"strings"
 
 	"chromiumos/tast/common/policy"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (

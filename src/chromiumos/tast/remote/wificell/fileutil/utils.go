@@ -11,10 +11,10 @@ import (
 	"path"
 	"strings"
 
-	"chromiumos/tast/errors"
-	"chromiumos/tast/ssh"
-	"chromiumos/tast/ssh/linuxssh"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh"
+	"go.chromium.org/tast/core/ssh/linuxssh"
+	"go.chromium.org/tast/core/testing"
 )
 
 // WriteTmp writes the content to a temp file created by "mktemp $pattern" on host.

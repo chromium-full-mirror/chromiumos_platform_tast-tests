@@ -10,7 +10,7 @@ import (
 	"golang.org/x/sys/unix"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // FakePCAAgent performs the execution and terminiation of the fake pca agent.

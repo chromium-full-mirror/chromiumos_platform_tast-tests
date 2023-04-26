@@ -11,8 +11,8 @@ import (
 	"os"
 
 	"chromiumos/tast/common/network/cmd"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/ssh"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh"
 )
 
 const logName = "cmdOutput.txt"

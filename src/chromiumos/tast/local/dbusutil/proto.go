@@ -10,7 +10,7 @@ import (
 	"github.com/godbus/dbus/v5"
 	"github.com/golang/protobuf/proto"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // CallProtoMethodWithSequence marshals in, passes it as a byte array arg to method on obj,

@@ -9,9 +9,9 @@ import (
 	"sync"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bluetooth/floss"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 type pairingObserver struct {

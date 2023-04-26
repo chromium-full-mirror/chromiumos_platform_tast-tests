@@ -14,11 +14,11 @@ import (
 	"chromiumos/tast/common/android"
 	"chromiumos/tast/common/android/adb"
 	nearbycommon "chromiumos/tast/common/cros/nearbyshare"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome/crossdevice"
 	"chromiumos/tast/local/chrome/nearbyshare/nearbysnippet"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 type channel int

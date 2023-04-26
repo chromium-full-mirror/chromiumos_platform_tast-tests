@@ -12,7 +12,7 @@ import (
 	"strconv"
 
 	fwCommon "chromiumos/tast/common/firmware"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // FWTries returns the currently booted firmware, the next firmware that should be booted, and the try_count.

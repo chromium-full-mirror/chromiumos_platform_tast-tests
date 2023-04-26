@@ -5,7 +5,7 @@
 package retry
 
 import (
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // Loop is a representation of retry loop state for a test.

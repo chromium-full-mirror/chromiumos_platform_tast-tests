@@ -8,8 +8,8 @@ import (
 	"context"
 	"unicode/utf16"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
+	"go.chromium.org/tast/core/errors"
 )
 
 // ProfileState is the current state of an ESimProfile.

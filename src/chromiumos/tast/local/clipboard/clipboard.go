@@ -8,8 +8,8 @@ package clipboard
 import (
 	"context"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
+	"go.chromium.org/tast/core/errors"
 )
 
 // GetClipboardItemsSize returns the number of items currently in the clipboard.

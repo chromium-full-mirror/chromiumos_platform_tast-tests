@@ -10,10 +10,10 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/policyutil"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // dumpPolicies saves the policies that are available on DUT in json format.

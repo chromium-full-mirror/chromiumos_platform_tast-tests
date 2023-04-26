@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // ipv4Regex is a regex that matches IPv4 address.

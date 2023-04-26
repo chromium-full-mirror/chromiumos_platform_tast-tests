@@ -15,7 +15,6 @@ import (
 	"regexp"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
@@ -25,7 +24,8 @@ import (
 	"chromiumos/tast/local/media/imgcmp"
 	"chromiumos/tast/local/personalization"
 	"chromiumos/tast/local/screenshot"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // OpenWallpaperPicker returns an action to open the personalization hub and navigate to wallpaper subpage.

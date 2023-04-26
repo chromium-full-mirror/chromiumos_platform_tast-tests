@@ -14,7 +14,7 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/common"
 	pb "chromiumos/tast/services/cros/chrome/uiauto/quicksettings"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

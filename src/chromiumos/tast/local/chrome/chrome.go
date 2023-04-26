@@ -17,7 +17,6 @@ import (
 	"android.googlesource.com/platform/external/perfetto/protos/perfetto/trace/github.com/google/perfetto/perfetto_proto"
 	"github.com/golang/protobuf/proto"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome/ash/ashproc"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/internal/cdputil"
@@ -31,7 +30,8 @@ import (
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/logsaver"
 	"chromiumos/tast/local/minidump"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 
 	"go.chromium.org/tast/core/caller"
 	"go.chromium.org/tast/core/timing"

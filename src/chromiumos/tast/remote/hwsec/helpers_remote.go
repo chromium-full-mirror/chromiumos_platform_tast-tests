@@ -12,9 +12,9 @@ import (
 	"context"
 
 	"chromiumos/tast/common/hwsec"
-	"chromiumos/tast/dut"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // CmdHelperRemoteImpl implements the helper functions for CmdHelperRemote

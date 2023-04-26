@@ -13,8 +13,8 @@ import (
 	"golang.org/x/sys/unix"
 
 	"chromiumos/tast/common/action"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Fill creates a temporary file in a directory that fills the disk by

@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // Category is a measurement category, used as the key in measurements map.

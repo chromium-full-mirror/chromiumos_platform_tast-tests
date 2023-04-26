@@ -8,8 +8,8 @@ import (
 	"context"
 	"strings"
 
-	"chromiumos/tast/dut"
-	"chromiumos/tast/ssh/linuxssh"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/ssh/linuxssh"
 )
 
 // IsRunningOnVM returns true if the test is running under a VM.

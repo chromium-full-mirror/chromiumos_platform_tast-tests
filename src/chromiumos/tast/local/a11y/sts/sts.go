@@ -8,7 +8,6 @@ package sts
 import (
 	"context"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/a11y"
 	"chromiumos/tast/local/a11y/tts"
 	"chromiumos/tast/local/chrome"
@@ -16,6 +15,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/event"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast/core/errors"
 )
 
 // Conn represents a connection to the Select-to-Speak background page.

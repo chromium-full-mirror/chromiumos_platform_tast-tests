@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/checked"
@@ -20,6 +19,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/chrome/uiauto/state"
 	"chromiumos/tast/local/input"
+	"go.chromium.org/tast/core/errors"
 )
 
 // Layout represents the layout setting in Chrome print preview.

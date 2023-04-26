@@ -12,9 +12,9 @@ import (
 	"os"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/network/virtualnet/env"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Option is the function type to configure an l4server.

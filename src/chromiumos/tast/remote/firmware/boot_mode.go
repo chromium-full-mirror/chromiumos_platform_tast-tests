@@ -18,10 +18,10 @@ import (
 
 	fwCommon "chromiumos/tast/common/firmware"
 	"chromiumos/tast/common/servo"
-	"chromiumos/tast/errors"
 	fwpb "chromiumos/tast/services/cros/firmware"
-	"chromiumos/tast/ssh"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (

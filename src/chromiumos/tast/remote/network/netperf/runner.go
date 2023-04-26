@@ -12,11 +12,11 @@ import (
 	"time"
 
 	"chromiumos/tast/common/network/firewall"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/network/cmd"
 	remote_firewall "chromiumos/tast/remote/network/firewall"
-	"chromiumos/tast/ssh"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh"
+	"go.chromium.org/tast/core/testing"
 )
 
 // RunnerHost defines host's IP and SSH connection.

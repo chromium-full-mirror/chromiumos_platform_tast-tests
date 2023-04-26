@@ -15,10 +15,10 @@ import (
 
 	"google.golang.org/grpc"
 
-	"chromiumos/tast/dut"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/ssh"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh"
+	"go.chromium.org/tast/core/testing"
 )
 
 // DefaultGRPCServerPort is the default TCP based GRPC Server port for remote testing

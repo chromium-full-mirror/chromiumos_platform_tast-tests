@@ -10,10 +10,10 @@ import (
 
 	"chromiumos/tast/common/action"
 	"chromiumos/tast/common/android/ui"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // OpenAppAndGetStartTime launches a new activity, starts it and records start time.

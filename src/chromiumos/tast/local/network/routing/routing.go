@@ -14,15 +14,15 @@ import (
 	"chromiumos/tast/common/network/ping"
 	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/network/dumputil"
 	localping "chromiumos/tast/local/network/ping"
 	"chromiumos/tast/local/network/virtualnet"
 	"chromiumos/tast/local/network/virtualnet/env"
 	"chromiumos/tast/local/network/virtualnet/subnet"
 	"chromiumos/tast/local/shill"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // TestEnv contains all the variables used in a routing test. In each routing

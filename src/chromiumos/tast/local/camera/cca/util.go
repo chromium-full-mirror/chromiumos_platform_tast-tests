@@ -9,8 +9,8 @@ import (
 
 	"github.com/abema/go-mp4"
 
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 // DeviceWithLayoutMonitored lists the devices we want to monitor the layout correctness.

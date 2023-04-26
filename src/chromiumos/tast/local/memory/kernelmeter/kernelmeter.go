@@ -25,8 +25,8 @@ import (
 	"sync"
 	"time"
 
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Meter collects kernel performance statistics.

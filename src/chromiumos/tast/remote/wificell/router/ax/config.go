@@ -9,8 +9,8 @@ import (
 	"strconv"
 	"strings"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/wificell/dutcfg"
+	"go.chromium.org/tast/core/errors"
 )
 
 // RouterIface is the default interface used by the ASUS router.

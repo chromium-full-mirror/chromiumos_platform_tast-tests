@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"syscall"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // snapshotValue defines the a file snapshot, including the file content, permission, and its urser and group IDs.

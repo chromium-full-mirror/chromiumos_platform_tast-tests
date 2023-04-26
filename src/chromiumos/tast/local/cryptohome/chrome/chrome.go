@@ -8,8 +8,8 @@ package chrome
 import (
 	"context"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
+	"go.chromium.org/tast/core/errors"
 )
 
 // WithUssMigration will execute a given block of code while enabling or

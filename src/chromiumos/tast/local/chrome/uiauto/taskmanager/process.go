@@ -9,10 +9,10 @@ import (
 	"fmt"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/webutil"
+	"go.chromium.org/tast/core/errors"
 )
 
 // ProcessStatus defines the status of the process.

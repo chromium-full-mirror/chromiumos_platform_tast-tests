@@ -10,13 +10,13 @@ import (
 	"net/http"
 
 	"chromiumos/tast/common/utils"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/wificell/dhcp"
 	"chromiumos/tast/remote/wificell/hostapd"
 	httpServer "chromiumos/tast/remote/wificell/http"
 	"chromiumos/tast/remote/wificell/router"
 	"chromiumos/tast/remote/wificell/router/common/support"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/timing"
 )
 

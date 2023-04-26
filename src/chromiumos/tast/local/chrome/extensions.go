@@ -7,14 +7,15 @@ package chrome
 import (
 	"context"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome/internal/extension"
+	"go.chromium.org/tast/core/errors"
 )
 
 // ComputeExtensionID computes the 32-character ID that Chrome will use for an unpacked
 // extension in dir. The extension's manifest file must contain the "key" field.
 // Use the following command to generate a new key:
-//  openssl genrsa 2048 | openssl rsa -pubout -outform der | openssl base64 -A
+//
+//	openssl genrsa 2048 | openssl rsa -pubout -outform der | openssl base64 -A
 func ComputeExtensionID(dir string) (string, error) {
 	return extension.ComputeExtensionID(dir)
 }

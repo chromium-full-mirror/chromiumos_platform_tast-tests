@@ -7,8 +7,8 @@ package arc
 import (
 	"github.com/shirou/gopsutil/v3/process"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/sysutil"
+	"go.chromium.org/tast/core/errors"
 )
 
 var errInitNotFound = errors.New("didn't find init process")

@@ -10,7 +10,7 @@ import (
 
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 // This file is used for methods on Files app that just wrap methods on uiauto.Context.

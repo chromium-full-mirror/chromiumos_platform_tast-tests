@@ -9,7 +9,7 @@ package firewall
 import (
 	"chromiumos/tast/common/network/firewall"
 	"chromiumos/tast/remote/network/cmd"
-	"chromiumos/tast/ssh"
+	"go.chromium.org/tast/core/ssh"
 )
 
 // Runner is an alias for common firewall Runner but only for remote execution.

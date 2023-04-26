@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/shutil"
 )
 

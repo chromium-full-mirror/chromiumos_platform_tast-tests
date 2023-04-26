@@ -12,7 +12,7 @@ import (
 
 	"chromiumos/tast/common/network/cmd"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // LocalCmdRunner is the object used for running local commands.

@@ -8,8 +8,8 @@ import (
 	"context"
 	"strings"
 
-	"chromiumos/tast/errors"
-	"chromiumos/tast/ssh"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh"
 )
 
 // FindCmdPath returns full path for the binary on the given device, defined

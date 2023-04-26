@@ -13,9 +13,9 @@ import (
 	"strings"
 
 	fwCommon "chromiumos/tast/common/firmware"
-	"chromiumos/tast/dut"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/firmware/reporters"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/errors"
 )
 
 // SetFWTries sets which firmware (A or B) the DUT should boot to next, and how many times it should try booting ino that firmware.

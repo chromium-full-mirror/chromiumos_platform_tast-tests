@@ -8,7 +8,7 @@ import (
 	"context"
 	"testing"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 type testSetupCleanup struct {

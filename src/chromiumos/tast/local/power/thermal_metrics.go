@@ -13,8 +13,8 @@ import (
 	"strings"
 
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // ListSysfsThermalSensors lists names and paths of thermal sensors which can be read through sysfs.

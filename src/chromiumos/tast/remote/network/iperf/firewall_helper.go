@@ -8,9 +8,9 @@ import (
 	"context"
 
 	"chromiumos/tast/common/network/firewall"
-	"chromiumos/tast/errors"
 	fwremote "chromiumos/tast/remote/network/firewall"
-	"chromiumos/tast/ssh"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh"
 )
 
 // firewallHelper adds firewall rules and keeps track of them for cleaning up later.

@@ -12,8 +12,8 @@ import (
 	"os"
 	"strings"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome/browser"
+	"go.chromium.org/tast/core/errors"
 )
 
 const (

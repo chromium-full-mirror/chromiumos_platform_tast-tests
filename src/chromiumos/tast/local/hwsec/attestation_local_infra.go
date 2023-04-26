@@ -9,11 +9,11 @@ import (
 	"time"
 
 	"chromiumos/tast/common/hwsec"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/filesnapshot"
 	"chromiumos/tast/local/hwsec/enckey"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // AttestationLocalInfra enables/disables the local server implementation on DUT.

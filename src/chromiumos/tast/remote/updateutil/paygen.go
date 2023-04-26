@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // Paygen is a structure that can hold the unmarshaled paygen.json data.

@@ -11,10 +11,10 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/personalization"
+	"go.chromium.org/tast/core/errors"
 )
 
 // TurnOnDarkTheme turns dark theme on.

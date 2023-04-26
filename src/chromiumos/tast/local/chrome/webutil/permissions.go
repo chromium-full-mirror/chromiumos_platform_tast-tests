@@ -8,8 +8,8 @@ import (
 	"context"
 	"fmt"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
+	"go.chromium.org/tast/core/errors"
 )
 
 // PermissionName represents the name of browser permissions that can be requested by user.

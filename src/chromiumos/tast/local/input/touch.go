@@ -13,9 +13,9 @@ import (
 	"time"
 	"unsafe"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/coords"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // TouchCoord describes an X or Y coordinate in touchscreen coordinates

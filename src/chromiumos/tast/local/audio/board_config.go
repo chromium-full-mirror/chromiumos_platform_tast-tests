@@ -12,8 +12,8 @@ import (
 
 	"gopkg.in/ini.v1"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/crosconfig"
+	"go.chromium.org/tast/core/errors"
 )
 
 // BoardConfig represents a board config file in /etc/cras/${board}/board.ini.

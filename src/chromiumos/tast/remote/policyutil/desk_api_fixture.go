@@ -10,11 +10,11 @@ import (
 
 	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/common/tape"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/rpc"
 	"chromiumos/tast/services/cros/graphics"
 	pspb "chromiumos/tast/services/cros/policy"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

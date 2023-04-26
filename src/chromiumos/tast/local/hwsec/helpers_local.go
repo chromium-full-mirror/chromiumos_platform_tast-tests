@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/hwsec"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // CmdHelperLocalImpl implements the helper functions for CmdHelperLocal

@@ -9,8 +9,8 @@ import (
 	"context"
 	"strings"
 
-	"chromiumos/tast/errors"
-	"chromiumos/tast/ssh"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh"
 )
 
 // CommandOutputLines parses command output by line and report the list of lines.

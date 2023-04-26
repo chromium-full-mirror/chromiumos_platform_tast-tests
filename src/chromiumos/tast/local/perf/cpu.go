@@ -18,7 +18,7 @@ import (
 	"github.com/shirou/gopsutil/v3/cpu"
 
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // CPUUsageSource is an implementation of perf.TimelineDataSource which reports

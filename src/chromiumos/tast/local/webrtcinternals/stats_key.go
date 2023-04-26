@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"strings"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // StatsKey indexes the Stats field of PeerConnection.

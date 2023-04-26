@@ -8,9 +8,9 @@ import (
 	"context"
 
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/metrics"
+	"go.chromium.org/tast/core/errors"
 )
 
 // RestartStages maps Chrome UMA metrics to corresponding crosbolt metrics.

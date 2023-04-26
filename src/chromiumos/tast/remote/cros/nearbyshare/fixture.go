@@ -19,11 +19,11 @@ import (
 
 	"chromiumos/tast/common/cros/nearbyshare"
 	nearbycommon "chromiumos/tast/common/cros/nearbyshare"
-	"chromiumos/tast/dut"
-	"chromiumos/tast/rpc"
 	"chromiumos/tast/services/cros/nearbyservice"
-	"chromiumos/tast/ssh/linuxssh"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/ssh/linuxssh"
+	"go.chromium.org/tast/core/testing"
 )
 
 // resetTimeout is the timeout duration to trying reset of the current fixture.

@@ -18,9 +18,9 @@ import (
 	"chromiumos/tast/common/android/adb"
 	"chromiumos/tast/common/android/ui"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
 	localadb "chromiumos/tast/local/android/adb"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // PhoneIP is the address of the adb-over-wifi device to use in Cross device tests.

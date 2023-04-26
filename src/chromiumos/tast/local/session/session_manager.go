@@ -14,10 +14,10 @@ import (
 
 	"chromiumos/policy/chromium/policy/enterprise_management_proto"
 	lm "chromiumos/system_api/login_manager_proto"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome/ash/ashproc"
 	"chromiumos/tast/local/dbusutil"
 	"chromiumos/tast/local/procutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/timing"
 )
 

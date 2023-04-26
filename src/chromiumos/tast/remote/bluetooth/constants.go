@@ -5,7 +5,7 @@
 package bluetooth
 
 import (
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 // NoAdvertismentFilteringHardwareSupportModels are models that do not have

@@ -9,9 +9,9 @@ import (
 	"sync"
 	"time"
 
-	"chromiumos/tast/dut"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // EventLogger captures events on a WiFi interface with "iw event".

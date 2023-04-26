@@ -13,8 +13,8 @@ import (
 	"strconv"
 	"time"
 
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // LineReader is a common helper for Reader and ChromeReader. It handles getting

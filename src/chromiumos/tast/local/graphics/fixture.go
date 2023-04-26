@@ -13,15 +13,15 @@ import (
 	"time"
 
 	"chromiumos/tast/common/fixture"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/fsutil"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
 	"chromiumos/tast/local/cpu"
 	"chromiumos/tast/local/crash"
 	"chromiumos/tast/local/syslog"
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/fsutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 var (

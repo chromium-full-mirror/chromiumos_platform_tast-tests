@@ -14,10 +14,10 @@ import (
 
 	"github.com/mafredri/cdp/protocol/target"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // UseCameraType defines what camera type is used in a test.

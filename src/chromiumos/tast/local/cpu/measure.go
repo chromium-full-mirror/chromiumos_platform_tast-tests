@@ -10,8 +10,8 @@ import (
 
 	"github.com/shirou/gopsutil/v3/cpu"
 
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // timesStat returns utilization stats across all CPUs as reported by /proc/stat.

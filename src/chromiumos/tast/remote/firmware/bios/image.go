@@ -13,8 +13,8 @@ import (
 
 	commonbios "chromiumos/tast/common/firmware/bios"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // ServoHostCommandRunner runs a command on the servo host. Normally this is the servo proxy.

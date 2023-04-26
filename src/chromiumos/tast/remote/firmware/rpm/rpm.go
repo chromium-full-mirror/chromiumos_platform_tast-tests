@@ -13,8 +13,8 @@ import (
 
 	"chromiumos/tast/common/servo"
 	"chromiumos/tast/common/xmlrpc"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // PowerState is a state to be passed to SetPowerViaPoe or SetPowerViaRPM.

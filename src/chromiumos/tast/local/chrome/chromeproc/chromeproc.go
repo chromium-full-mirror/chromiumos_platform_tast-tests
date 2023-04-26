@@ -12,9 +12,9 @@ import (
 	"github.com/shirou/gopsutil/v3/process"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome/ash/ashproc"
 	"chromiumos/tast/local/chrome/internal/chromeproc"
+	"go.chromium.org/tast/core/errors"
 )
 
 // Version returns the Chrome browser version. E.g. Chrome version W.X.Y.Z will be reported as a list of strings.

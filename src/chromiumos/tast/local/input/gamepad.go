@@ -9,8 +9,8 @@ import (
 	"math/big"
 	"os"
 
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Axis contains information about a gamepad axis.

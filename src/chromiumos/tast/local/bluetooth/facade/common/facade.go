@@ -9,13 +9,13 @@ import (
 	"encoding/json"
 	"time"
 
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/localstate"
 	localCommon "chromiumos/tast/local/common"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const ashSystemBluetoothAdapterEnabled = "ash.system.bluetooth.adapter_enabled"

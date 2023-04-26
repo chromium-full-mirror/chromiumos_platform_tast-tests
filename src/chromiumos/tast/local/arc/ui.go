@@ -13,12 +13,12 @@ import (
 	"chromiumos/tast/common/android/ui"
 	androidui "chromiumos/tast/common/android/ui"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/launcher"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // NewUIDevice creates a Device object by starting and connecting to UI Automator server.

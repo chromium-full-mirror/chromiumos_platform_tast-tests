@@ -15,8 +15,8 @@ import (
 
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
+	"go.chromium.org/tast/core/errors"
 )
 
 const (

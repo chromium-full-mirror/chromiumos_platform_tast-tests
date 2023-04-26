@@ -9,7 +9,7 @@ import (
 	"context"
 	"fmt"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // SettingMenu is the setting menu in CCA.

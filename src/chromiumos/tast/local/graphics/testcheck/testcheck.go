@@ -9,8 +9,8 @@ import (
 	"strings"
 	gotesting "testing"
 
-	"chromiumos/tast/testing"
-	tastcheck "chromiumos/tast/testing/testcheck"
+	"go.chromium.org/tast/core/testing"
+	tastcheck "go.chromium.org/tast/core/testing/testcheck"
 )
 
 // allTests is trying to get all tests via tastcheck.Entities.

@@ -8,7 +8,7 @@ import (
 	"time"
 
 	nearbycommon "chromiumos/tast/common/cros/nearbyshare"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 // addWebRTCAndWLANFixtures registers fixtures for tests using WebRTC and WLAN transfer mediums.

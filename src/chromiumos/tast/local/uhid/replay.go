@@ -13,8 +13,8 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // NewDeviceFromRecording receives a file containing a hid recording recorded using

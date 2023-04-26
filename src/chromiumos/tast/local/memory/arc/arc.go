@@ -8,9 +8,9 @@ import (
 	"context"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/memory"
+	"go.chromium.org/tast/core/errors"
 )
 
 // NewPageReclaimLimit creates a memory.Limit that measures if ARC is reclaiming

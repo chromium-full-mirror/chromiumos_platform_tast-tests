@@ -8,7 +8,7 @@ import (
 	"time"
 
 	nearbycommon "chromiumos/tast/common/cros/nearbyshare"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 // addFlossBackgroundScanningFixtures registers fixtures for tests with background scanning enabled, with Floss enabled.

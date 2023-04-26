@@ -19,11 +19,11 @@ import (
 
 	cpb "chromiumos/system_api/vm_cicerone_proto" // protobufs for container management
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/dbusutil"
-	"chromiumos/tast/testing"
 	"go.chromium.org/tast/core/caller"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 
 	"go.chromium.org/tast/core/shutil"
 )

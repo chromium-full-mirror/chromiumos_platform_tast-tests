@@ -10,8 +10,8 @@ import (
 	"hash/fnv"
 	"math/rand"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/crosconfig"
+	"go.chromium.org/tast/core/errors"
 )
 
 // GetTestDocURL returns a Google Doc link according to the following:

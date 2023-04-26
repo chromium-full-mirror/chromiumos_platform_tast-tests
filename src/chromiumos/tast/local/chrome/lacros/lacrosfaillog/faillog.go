@@ -11,13 +11,13 @@ import (
 	"path/filepath"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/fsutil"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/lacros/lacrosinfo"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/faillog"
 	"chromiumos/tast/local/input"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/fsutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (

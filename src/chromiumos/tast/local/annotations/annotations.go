@@ -12,13 +12,13 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/cryptohome"
+	"go.chromium.org/tast/core/errors"
 )
 
 // StartLogging clicks the "Start logging" button on the net export page.

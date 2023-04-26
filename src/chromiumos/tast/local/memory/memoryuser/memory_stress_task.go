@@ -11,10 +11,10 @@ import (
 	"net/http/httptest"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // MemoryStressUnit creates a Chrome tab that allocates memory like the

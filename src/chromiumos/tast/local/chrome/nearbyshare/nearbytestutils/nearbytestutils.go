@@ -16,11 +16,11 @@ import (
 
 	nearbycommon "chromiumos/tast/common/cros/nearbyshare"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/fsutil"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/nearbyshare/nearbysnippet"
 	"chromiumos/tast/local/cryptohome"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/fsutil"
 )
 
 // UnzipTestFiles extracts test data files to a temporary directory. Returns an array of base filenames and the name of the temporary dir.

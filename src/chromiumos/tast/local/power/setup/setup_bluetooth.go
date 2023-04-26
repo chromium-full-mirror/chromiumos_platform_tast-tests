@@ -8,7 +8,7 @@ import (
 	"context"
 
 	"chromiumos/tast/local/bluetooth/bluez"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func disableBluetoothAdapter(ctx context.Context, adapter *bluez.Adapter) (CleanupCallback, error) {

@@ -21,14 +21,14 @@ import (
 
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/chromeproc"
 	"chromiumos/tast/local/chrome/metrics"
 	"chromiumos/tast/local/media/cpu"
 	"chromiumos/tast/local/power"
 	"chromiumos/tast/local/power/setup"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // collectGPUPerformanceCounters gathers the use time for each of a given set of

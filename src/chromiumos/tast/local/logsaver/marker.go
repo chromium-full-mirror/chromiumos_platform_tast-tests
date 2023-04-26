@@ -10,7 +10,7 @@ import (
 	"io"
 	"os"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // Marker records a specific position of a log file, and provides the ability

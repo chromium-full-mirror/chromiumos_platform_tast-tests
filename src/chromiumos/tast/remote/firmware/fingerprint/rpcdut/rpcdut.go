@@ -9,10 +9,10 @@ package rpcdut
 import (
 	"context"
 
-	"chromiumos/tast/dut"
-	"chromiumos/tast/rpc"
-	"chromiumos/tast/ssh"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/ssh"
+	"go.chromium.org/tast/core/testing"
 )
 
 // RPCDUT extends dut.DUT to maintain an additional RPC connection.

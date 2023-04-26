@@ -8,10 +8,10 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/cellular/callbox/manager"
 	"chromiumos/tast/remote/network/iperf"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // CallboxIperfServer represents a callbox iperf server.

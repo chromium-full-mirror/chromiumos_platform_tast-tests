@@ -11,8 +11,6 @@ import (
 
 	"chromiumos/tast/common/action"
 	"chromiumos/tast/common/android/ui"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/fsutil"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/camera/testutil"
 	"chromiumos/tast/local/chrome"
@@ -22,7 +20,9 @@ import (
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/loginstatus"
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/fsutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (

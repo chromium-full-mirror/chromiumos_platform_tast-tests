@@ -11,8 +11,6 @@ import (
 
 	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/common/tape"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
@@ -23,7 +21,9 @@ import (
 	vdiApps "chromiumos/tast/local/vdi/apps"
 	"chromiumos/tast/local/vdi/apps/citrix"
 	"chromiumos/tast/local/vdi/apps/vmware"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // CitrixUsernamePrefix is the prefix before username (i.e. cros-citrix\user_1).

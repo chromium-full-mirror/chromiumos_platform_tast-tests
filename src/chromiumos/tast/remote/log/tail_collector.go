@@ -8,8 +8,8 @@ import (
 	"context"
 	"io"
 
-	"chromiumos/tast/errors"
-	"chromiumos/tast/ssh"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh"
 )
 
 // TailCollector watches a file on remote host and collects the appended

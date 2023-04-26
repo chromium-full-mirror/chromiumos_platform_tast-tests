@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 
 	"chromiumos/tast/local/screenshot"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Screendiffer contains the required fields for screenshot testing.

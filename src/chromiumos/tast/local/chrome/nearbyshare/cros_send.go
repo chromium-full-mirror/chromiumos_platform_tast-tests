@@ -12,8 +12,8 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
+	"go.chromium.org/tast/core/errors"
 )
 
 // SendSurface is used to control the Nearby Share sending flow on ChromeOS.

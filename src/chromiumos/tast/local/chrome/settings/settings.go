@@ -9,8 +9,8 @@ package settings
 import (
 	"context"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
+	"go.chromium.org/tast/core/errors"
 )
 
 // NightLightScheduleValue provides available values for the Night Light

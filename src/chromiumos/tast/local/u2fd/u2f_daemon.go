@@ -12,10 +12,10 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	u2f "chromiumos/system_api/u2f_proto"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/dbusutil"
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (

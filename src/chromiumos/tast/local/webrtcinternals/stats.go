@@ -4,7 +4,7 @@
 
 package webrtcinternals
 
-import "chromiumos/tast/errors"
+import "go.chromium.org/tast/core/errors"
 
 // StatsMap is for the Stats field of PeerConnection.
 type StatsMap map[StatsKey]Statistic

@@ -8,7 +8,7 @@ package ping
 import (
 	"chromiumos/tast/common/network/ping"
 	"chromiumos/tast/remote/network/cmd"
-	"chromiumos/tast/ssh"
+	"go.chromium.org/tast/core/ssh"
 )
 
 // NewRemoteRunner creates a ping Runner on the given dut for remote execution.

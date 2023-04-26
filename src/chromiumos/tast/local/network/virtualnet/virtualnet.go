@@ -18,8 +18,6 @@ import (
 
 	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/network/virtualnet/certs"
 	"chromiumos/tast/local/network/virtualnet/dnsmasq"
 	"chromiumos/tast/local/network/virtualnet/env"
@@ -27,7 +25,9 @@ import (
 	"chromiumos/tast/local/network/virtualnet/radvd"
 	"chromiumos/tast/local/network/virtualnet/subnet"
 	"chromiumos/tast/local/shill"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Env simulates a node on the network, which can run different kinds of servers

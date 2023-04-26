@@ -8,8 +8,8 @@ import (
 	"context"
 	"io"
 
-	"chromiumos/tast/errors"
-	"chromiumos/tast/ssh"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh"
 )
 
 // JournalctlCollector collects messages from a remote host using the journalctl

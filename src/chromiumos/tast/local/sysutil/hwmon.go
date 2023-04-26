@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // TemperatureInputMax returns the maximum currently observed temperature in Celsius.

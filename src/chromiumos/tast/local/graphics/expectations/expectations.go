@@ -20,11 +20,11 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/crosconfig"
 	"chromiumos/tast/local/graphics"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/lsbrelease"
+	"go.chromium.org/tast/core/testing"
 )
 
 const expectationsDirectory = "/usr/local/graphics/expectations"

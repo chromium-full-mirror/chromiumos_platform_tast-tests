@@ -8,11 +8,11 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bluetooth/facade/bluez"
 	"chromiumos/tast/local/bluetooth/facade/common"
 	"chromiumos/tast/local/bluetooth/facade/floss"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 var bluetoothFacadeSingleton common.BluetoothFacade = nil

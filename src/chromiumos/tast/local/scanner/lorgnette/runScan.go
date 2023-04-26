@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 
 	lpb "chromiumos/system_api/lorgnette_proto"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // RunScan takes in the scan request and temporary directory needed to perform a scan operation

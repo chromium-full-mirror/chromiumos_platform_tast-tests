@@ -10,8 +10,8 @@ import (
 	"strconv"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // crasTestClientRE parses the output of cras_test_client.

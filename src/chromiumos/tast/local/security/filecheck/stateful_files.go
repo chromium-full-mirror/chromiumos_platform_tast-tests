@@ -12,9 +12,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/moblab"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // CheckStatefulFiles verifies file permissions on the stateful partition.

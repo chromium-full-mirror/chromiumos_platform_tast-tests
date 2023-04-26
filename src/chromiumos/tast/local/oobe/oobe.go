@@ -9,12 +9,12 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/chrome/uiauto/state"
+	"go.chromium.org/tast/core/errors"
 )
 
 // IsWelcomeScreenVisible checks the current page in OOBE to see if it's

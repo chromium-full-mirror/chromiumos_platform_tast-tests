@@ -10,7 +10,7 @@ import (
 	"os"
 	"unsafe"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // switchState describes the state of a binary switch reported by an EV_SW device.

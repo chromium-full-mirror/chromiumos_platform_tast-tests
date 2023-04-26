@@ -18,10 +18,10 @@ import (
 
 	"chromiumos/tast/common/action"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/coords"
+	"go.chromium.org/tast/core/errors"
 )
 
 // Capture takes a screenshot and saves it as a PNG image to the specified file

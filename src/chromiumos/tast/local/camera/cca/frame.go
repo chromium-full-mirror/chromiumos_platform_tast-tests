@@ -8,8 +8,8 @@ import (
 	"context"
 	"image"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
+	"go.chromium.org/tast/core/errors"
 )
 
 // Frame is the frame grabbed from preview.

@@ -9,9 +9,9 @@ import (
 	"fmt"
 
 	"chromiumos/tast/common/network/iw"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/wificell/router/common/support"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // IfaceManager manages WiFi ifaces on a controller router and tracks their availability.

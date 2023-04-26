@@ -8,8 +8,8 @@ import (
 	"context"
 
 	"chromiumos/tast/common/firmware"
-	"chromiumos/tast/errors"
 	pb "chromiumos/tast/services/cros/firmware"
+	"go.chromium.org/tast/core/errors"
 )
 
 // GBBFlags checks that the flags on DUT equals the wanted one.

@@ -7,7 +7,7 @@ package input
 import (
 	"strings"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // runeKeyCodes contains runes that can be typed with a single key

@@ -15,11 +15,11 @@ import (
 	common "chromiumos/tast/common/firmware"
 	"chromiumos/tast/common/flashrom"
 	"chromiumos/tast/common/servo"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/firmware"
 	pb "chromiumos/tast/services/cros/firmware"
-	"chromiumos/tast/ssh"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Fixture names for the tests to use.

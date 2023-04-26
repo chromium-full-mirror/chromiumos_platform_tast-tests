@@ -11,10 +11,10 @@ import (
 	"time"
 
 	"chromiumos/tast/common/action"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/webutil"
+	"go.chromium.org/tast/core/errors"
 )
 
 // UIConn returns a connection to the Calculator app HTML page,

@@ -20,14 +20,14 @@ import (
 
 	"chromiumos/tast/common/android/adb"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/fsutil"
 	localadb "chromiumos/tast/local/android/adb"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash/ashproc"
 	"chromiumos/tast/local/procutil"
 	"chromiumos/tast/local/syslog"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/fsutil"
+	"go.chromium.org/tast/core/testing"
 
 	"go.chromium.org/tast/core/caller"
 	"go.chromium.org/tast/core/timing"

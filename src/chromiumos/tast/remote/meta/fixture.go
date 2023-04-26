@@ -14,8 +14,8 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 
 	"chromiumos/tast/common/meta"
-	"chromiumos/tast/fsutil"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/fsutil"
+	"go.chromium.org/tast/core/testing"
 
 	"go.chromium.org/tast/core/framework/protocol"
 )

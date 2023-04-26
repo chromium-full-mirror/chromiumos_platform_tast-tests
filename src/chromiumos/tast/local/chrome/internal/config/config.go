@@ -13,8 +13,8 @@ import (
 	"time"
 
 	"chromiumos/tast/common/chrome/credconfig"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/session"
+	"go.chromium.org/tast/core/errors"
 )
 
 const (

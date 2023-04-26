@@ -7,12 +7,12 @@ package guestos
 import (
 	"context"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/crostini"
 	"chromiumos/tast/local/crostini/ui/settings"
 	"chromiumos/tast/local/graphics/trace"
 	"chromiumos/tast/local/graphics/trace/comm"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // resizeDisk resizes the VM's disk for size > 0 and reports the actual VM size.

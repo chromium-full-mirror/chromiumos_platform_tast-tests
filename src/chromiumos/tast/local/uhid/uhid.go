@@ -16,7 +16,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 const (

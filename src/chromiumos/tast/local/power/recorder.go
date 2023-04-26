@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/cpu"
+	"go.chromium.org/tast/core/errors"
 )
 
 // Recorder is a utility to measure power metrics during tests.

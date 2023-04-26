@@ -9,8 +9,8 @@ import (
 	"path"
 
 	"chromiumos/tast/common/utils"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Constants for relevant config names as specified in the OpenWrt

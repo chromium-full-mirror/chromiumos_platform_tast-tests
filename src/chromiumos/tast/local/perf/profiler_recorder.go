@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/profiler"
+	"go.chromium.org/tast/core/errors"
 )
 
 // ProfilerRecorder records data collected via profilers.

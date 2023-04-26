@@ -10,9 +10,9 @@ import (
 	"time"
 
 	commonash "chromiumos/tast/common/chrome/ash"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // This file contains types and functions used to wait or close notifications in ash, which is on the receiver side of the Chrome notifications.

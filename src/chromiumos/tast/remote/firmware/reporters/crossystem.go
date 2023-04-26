@@ -9,7 +9,7 @@ import (
 	"regexp"
 	"strings"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // CrossystemParam represents known Crossystem attributes.

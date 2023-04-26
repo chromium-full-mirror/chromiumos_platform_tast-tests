@@ -11,7 +11,6 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/structpb"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
@@ -19,7 +18,8 @@ import (
 	"chromiumos/tast/local/network/netconfig"
 	"chromiumos/tast/services/cros/chrome/uiauto/ossettings"
 	pb "chromiumos/tast/services/cros/chrome/uiauto/ossettings"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

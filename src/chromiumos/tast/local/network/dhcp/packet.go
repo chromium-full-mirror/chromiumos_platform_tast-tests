@@ -12,7 +12,7 @@ import (
 	"net"
 	"strings"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // option represents an option in a DHCP packet. Options may or may not be

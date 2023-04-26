@@ -12,11 +12,11 @@ import (
 
 	"chromiumos/tast/common/network/tcpdump"
 	"chromiumos/tast/common/wificell/router"
-	"chromiumos/tast/errors"
 	remotetcpdump "chromiumos/tast/remote/network/tcpdump"
 	"chromiumos/tast/remote/wificell/fileutil"
-	"chromiumos/tast/ssh"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Option is the type of options to start Capturer object.

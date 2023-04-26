@@ -14,10 +14,10 @@ import (
 	"golang.org/x/crypto/ssh"
 
 	"chromiumos/tast/common/hwsec"
-	"chromiumos/tast/dut"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/shutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 // CmdRunnerRemote implements CmdRunner for remote test.

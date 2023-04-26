@@ -8,11 +8,11 @@ import (
 	"context"
 
 	apb "chromiumos/system_api/attestation_proto"
-	"chromiumos/tast/dut"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/rpc"
 	hwsecpb "chromiumos/tast/services/cros/hwsec"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/testing"
 )
 
 // AttestationDBus talks to attestation service via gRPC D-Bus APIs.

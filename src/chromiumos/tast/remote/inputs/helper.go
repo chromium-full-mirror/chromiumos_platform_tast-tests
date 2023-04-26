@@ -10,9 +10,9 @@ import (
 	"regexp"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/firmware"
-	"chromiumos/tast/ssh"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh"
 )
 
 // DeviceScanner returns the evtest scanner for the touch pad and touch screen device

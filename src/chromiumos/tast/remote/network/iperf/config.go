@@ -7,7 +7,7 @@ package iperf
 import (
 	"time"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // Protocol represents the type of protocol to use in a test.

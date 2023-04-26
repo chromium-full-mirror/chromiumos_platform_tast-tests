@@ -12,7 +12,6 @@ import (
 	"net/http"
 	"path/filepath"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -21,6 +20,7 @@ import (
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/policyutil"
+	"go.chromium.org/tast/core/errors"
 )
 
 const (

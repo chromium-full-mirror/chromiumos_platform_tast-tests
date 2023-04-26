@@ -18,9 +18,9 @@ import (
 
 	uda "chromiumos/system_api/user_data_auth_proto"
 	"chromiumos/tast/common/hwsec"
-	"chromiumos/tast/errors"
 	hwseclocal "chromiumos/tast/local/hwsec"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (

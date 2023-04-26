@@ -4,7 +4,7 @@
 
 package cujrecorder
 
-import "chromiumos/tast/testing"
+import "go.chromium.org/tast/core/testing"
 
 // keepWifi forces the Wifi to remain in its initial state,
 // regardless of the options passed to the Recorder. Useful for

@@ -15,7 +15,7 @@ import (
 	"chromiumos/tast/common/network/iw"
 	"chromiumos/tast/common/wifi/security/base"
 	"chromiumos/tast/common/wifi/security/wpa"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 func TestNewConfig(t *testing.T) {

@@ -9,8 +9,8 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
+	"go.chromium.org/tast/core/errors"
 )
 
 // ReceiveSurface is used to control the Nearby Share high-visibility receiving flow.

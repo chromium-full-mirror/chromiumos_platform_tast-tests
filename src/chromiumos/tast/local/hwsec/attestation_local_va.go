@@ -11,7 +11,7 @@ import (
 	"os"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // LocalVA implements the VA functionality by hwsec-test-va binary.

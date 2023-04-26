@@ -12,7 +12,7 @@ import (
 	"strings"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // TopRowLayout represents the top row layout of the Chromebook keyboard.

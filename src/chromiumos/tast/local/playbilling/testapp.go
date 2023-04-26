@@ -9,10 +9,10 @@ import (
 	"fmt"
 
 	"chromiumos/tast/common/android/ui"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/webapk"
+	"go.chromium.org/tast/core/errors"
 )
 
 // TestApp represents the Play Billing test PWA and ARC Payments Overlay.

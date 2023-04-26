@@ -14,11 +14,11 @@ import (
 	"os"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome/internal/chromeproc"
 	"chromiumos/tast/local/chrome/internal/driver"
 	"chromiumos/tast/local/procutil"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (

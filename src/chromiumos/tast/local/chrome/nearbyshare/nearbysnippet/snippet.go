@@ -21,9 +21,9 @@ import (
 	"chromiumos/tast/common/android/ui"
 	nearbycommon "chromiumos/tast/common/cros/nearbyshare"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome/crossdevice"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // AndroidNearbyDevice represents a connected Android device equipped with Nearby Share controls.

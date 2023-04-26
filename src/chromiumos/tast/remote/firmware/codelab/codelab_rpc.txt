@@ -12,10 +12,10 @@ import (
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/reporters"
 	"chromiumos/tast/common/servo"
-	"chromiumos/tast/rpc"
+	"go.chromium.org/tast/core/rpc"
 	fwService "chromiumos/tast/services/cros/firmware"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {

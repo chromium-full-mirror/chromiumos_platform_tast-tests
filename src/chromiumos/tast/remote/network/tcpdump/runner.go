@@ -7,7 +7,7 @@ package tcpdump
 import (
 	"chromiumos/tast/common/network/tcpdump"
 	"chromiumos/tast/remote/network/cmd"
-	"chromiumos/tast/ssh"
+	"go.chromium.org/tast/core/ssh"
 )
 
 // Runner is an alias for common tcpdump Runner but only for remote execution.

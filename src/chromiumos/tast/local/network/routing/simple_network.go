@@ -9,15 +9,15 @@ import (
 	"time"
 
 	"chromiumos/tast/common/shillconst"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/network/virtualnet"
 	"chromiumos/tast/local/network/virtualnet/dnsmasq"
 	"chromiumos/tast/local/network/virtualnet/env"
 	"chromiumos/tast/local/network/virtualnet/radvd"
 	"chromiumos/tast/local/network/virtualnet/subnet"
 	"chromiumos/tast/local/shill"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // SimpleNetworkEnv setup a (DUT)-router-server virtualnet topology for testing.

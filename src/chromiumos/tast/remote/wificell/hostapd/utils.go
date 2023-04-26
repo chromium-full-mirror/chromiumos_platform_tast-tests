@@ -4,7 +4,7 @@
 
 package hostapd
 
-import "chromiumos/tast/errors"
+import "go.chromium.org/tast/core/errors"
 
 // freqToChannelMap maps frequenty (MHz) to channel number.
 var freqToChannelMap = map[int]int{

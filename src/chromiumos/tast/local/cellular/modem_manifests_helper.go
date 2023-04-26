@@ -15,10 +15,10 @@ import (
 	// The contents of chromiumos/modemfwd are built and generated in platform2/modemfwd/.
 	mfwd "chromiumos/modemfwd"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/modemfwd"
 	"chromiumos/tast/local/modemmanager"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/timing"
 )
 

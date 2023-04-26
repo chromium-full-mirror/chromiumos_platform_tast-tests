@@ -13,9 +13,9 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	pp "chromiumos/system_api/patchpanel_proto"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/dbusutil"
 	"chromiumos/tast/local/upstart"
+	"go.chromium.org/tast/core/errors"
 )
 
 const (

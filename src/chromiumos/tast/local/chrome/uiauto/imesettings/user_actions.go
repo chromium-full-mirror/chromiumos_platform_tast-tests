@@ -10,13 +10,13 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome/ime"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/chrome/useractions"
 	"chromiumos/tast/local/input"
+	"go.chromium.org/tast/core/errors"
 )
 
 // EmojiSuggestionsOption represents the option name of Emoji suggestions toggle option.

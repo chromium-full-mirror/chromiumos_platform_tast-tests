@@ -16,9 +16,9 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/coords"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // TaskInfo contains the information found in TaskRecord. See:

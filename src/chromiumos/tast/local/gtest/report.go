@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // Report is a parsed gtest output report.

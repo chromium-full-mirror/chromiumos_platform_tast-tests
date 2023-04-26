@@ -12,10 +12,10 @@ import (
 
 	vnc "github.com/matts1/vnc2video"
 
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/kmsvnc"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // The worst case ratio between the amount of time required to encode a video and the video duration.
@@ -91,9 +91,11 @@ func RecordVNCVideo(ctx context.Context, s testingState, mods ...func(*videoConf
 // non-critical to the test itself, the test will still pass.
 // Example usage:
 // stopRecording, err := RecordVNCVideoCritical(ctx, s, RecordingFramerate(5))
-// if err != nil {
-// 	handle err
-// }
+//
+//	if err != nil {
+//		handle err
+//	}
+//
 // defer stopRecording()
 func RecordVNCVideoCritical(ctx context.Context, s testingState, mods ...func(*videoConfig)) (stopRecording func(), err error) {
 	cfg := defaultConfig

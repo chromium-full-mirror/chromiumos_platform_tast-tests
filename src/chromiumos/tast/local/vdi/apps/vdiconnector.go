@@ -12,7 +12,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/uidetection"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 // VDILoginTimeout is the timeout for login to VDI applications.

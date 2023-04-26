@@ -7,7 +7,7 @@ package dbusutil
 import (
 	"github.com/godbus/dbus/v5"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // DBusError strings from https://www.freedesktop.org/software/systemd/man/sd-bus-errors.html

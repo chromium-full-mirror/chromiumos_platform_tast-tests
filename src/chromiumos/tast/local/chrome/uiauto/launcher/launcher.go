@@ -20,7 +20,6 @@ import (
 	"time"
 
 	"chromiumos/tast/common/action"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
@@ -34,7 +33,8 @@ import (
 	"chromiumos/tast/local/coords"
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/input"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // ExpandedItemsClass define the class name of the expanded launcher view which is used as search parameters in ui.

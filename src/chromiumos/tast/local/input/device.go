@@ -15,7 +15,7 @@ import (
 	"strconv"
 	"strings"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 const (

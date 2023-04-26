@@ -8,9 +8,9 @@ import (
 	"context"
 	"regexp"
 
-	"chromiumos/tast/errors"
-	"chromiumos/tast/ssh"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Control defines functions to switch between tabletmode and laptopmode and

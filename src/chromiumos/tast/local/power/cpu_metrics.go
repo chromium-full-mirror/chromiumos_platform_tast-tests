@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // CPUUsageJiffies stores a snapshot of total (load+idle) and load jiffy

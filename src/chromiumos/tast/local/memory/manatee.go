@@ -14,7 +14,7 @@ import (
 
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 var pgrepRE = regexp.MustCompile(`(?m)^(\d+)$`)

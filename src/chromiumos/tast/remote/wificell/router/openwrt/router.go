@@ -15,8 +15,6 @@ import (
 	"chromiumos/tast/common/network/ip"
 	"chromiumos/tast/common/network/iw"
 	"chromiumos/tast/common/utils"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/log"
 	remoteIp "chromiumos/tast/remote/network/ip"
 	remoteIw "chromiumos/tast/remote/network/iw"
@@ -27,8 +25,10 @@ import (
 	"chromiumos/tast/remote/wificell/pcap"
 	"chromiumos/tast/remote/wificell/router/common"
 	"chromiumos/tast/remote/wificell/router/common/support"
-	"chromiumos/tast/ssh"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh"
+	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/timing"
 )
 

@@ -16,7 +16,6 @@ import (
 	"golang.org/x/sys/unix"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
@@ -26,8 +25,9 @@ import (
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/terminalapp"
 	"chromiumos/tast/local/vm"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 	"go.chromium.org/tast/core/timing"
 
 	"go.chromium.org/tast/core/shutil"

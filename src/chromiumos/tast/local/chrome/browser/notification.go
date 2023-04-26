@@ -8,7 +8,7 @@ import (
 	"context"
 
 	"chromiumos/tast/common/chrome/ash"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // This file contains types and functions used to create or dismiss notifications from browser via chrome.notification APIs, which is on the sender side of the Chrome notifications.

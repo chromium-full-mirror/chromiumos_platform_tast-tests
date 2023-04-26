@@ -14,7 +14,7 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 const chromeUser = "chronos" // Chrome Unix username
@@ -52,7 +52,8 @@ func chownContents(dir, username string) error {
 // ComputeExtensionID computes the 32-character ID that Chrome will use for an unpacked
 // extension in dir. The extension's manifest file must contain the "key" field.
 // Use the following command to generate a new key:
-//  openssl genrsa 2048 | openssl rsa -pubout -outform der | openssl base64 -A
+//
+//	openssl genrsa 2048 | openssl rsa -pubout -outform der | openssl base64 -A
 func ComputeExtensionID(dir string) (string, error) {
 	key, err := readKeyFromExtensionManifest(filepath.Join(dir, "manifest.json"))
 	if err != nil {

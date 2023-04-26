@@ -9,7 +9,7 @@ package reporters
 import (
 	"context"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // RecoveryReasonValue represents recovery_reason attributes.

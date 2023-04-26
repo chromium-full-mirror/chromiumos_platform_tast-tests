@@ -8,7 +8,7 @@ import (
 	"context"
 
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 const package0PowerConstraintName = "package-0-pl"

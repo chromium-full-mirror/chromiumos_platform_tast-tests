@@ -11,7 +11,7 @@ import (
 	"encoding/json"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // Context is a struct representing the device context as probed by the

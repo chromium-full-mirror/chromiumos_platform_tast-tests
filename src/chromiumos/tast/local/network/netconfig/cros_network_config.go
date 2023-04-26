@@ -8,8 +8,8 @@ package netconfig
 import (
 	"context"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
+	"go.chromium.org/tast/core/errors"
 )
 
 // CrosNetworkConfig contains the mojo connection to cros_network_config.

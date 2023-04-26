@@ -9,7 +9,7 @@ import (
 	"fmt"
 
 	"chromiumos/tast/common/action"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // ContentSettingType represents the content setting type.

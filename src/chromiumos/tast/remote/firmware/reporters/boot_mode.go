@@ -8,7 +8,7 @@ import (
 	"context"
 
 	fwCommon "chromiumos/tast/common/firmware"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // CurrentBootMode reports the DUT's active firmware boot mode (normal, dev, rec).

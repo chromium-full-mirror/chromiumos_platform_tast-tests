@@ -7,7 +7,7 @@ package pre
 
 import (
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 // ChromeVideo returns a precondition with Chrome started and logging enabled.

@@ -11,10 +11,10 @@ import (
 	"time"
 
 	"chromiumos/tast/common/action"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/useractions"
+	"go.chromium.org/tast/core/errors"
 )
 
 // TODO(b/192819861): Define new input method struct and migrate existing use of InputMethodCode.

@@ -9,7 +9,7 @@ import (
 	"os"
 	"strings"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 const (

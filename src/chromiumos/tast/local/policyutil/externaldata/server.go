@@ -14,8 +14,8 @@ import (
 	"net/url"
 	"sync"
 
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 type httpHandler struct {

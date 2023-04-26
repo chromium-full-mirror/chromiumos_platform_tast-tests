@@ -13,10 +13,10 @@ import (
 
 	"chromiumos/tast/common/hwsec"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/fsutil"
 	"chromiumos/tast/local/hwsec/enckey"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/fsutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 const attestationDBBackupPath = "/var/lib/attestation/attestation.epb.tast-hwsec-backup"

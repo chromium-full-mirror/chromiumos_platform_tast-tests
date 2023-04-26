@@ -9,10 +9,10 @@ import (
 	"net/http"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
+	"go.chromium.org/tast/core/errors"
 )
 
 // CanaryType is an enum listing up the available canaries of

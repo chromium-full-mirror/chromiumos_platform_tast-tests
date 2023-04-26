@@ -16,12 +16,12 @@ import (
 	"github.com/tklauser/go-sysconf"
 
 	"chromiumos/tast/common/cellularconst"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/crosconfig"
 	"chromiumos/tast/local/modemmanager"
 	"chromiumos/tast/local/shill"
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/timing"
 )
 

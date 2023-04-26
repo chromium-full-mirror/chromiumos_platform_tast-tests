@@ -8,7 +8,7 @@ import (
 	"context"
 
 	fp "chromiumos/tast/common/fingerprint"
-	"chromiumos/tast/dut"
+	"go.chromium.org/tast/core/dut"
 )
 
 const (

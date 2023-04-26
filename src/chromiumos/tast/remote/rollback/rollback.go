@@ -10,14 +10,14 @@ import (
 	"strconv"
 
 	"chromiumos/tast/common/hwsec"
-	"chromiumos/tast/dut"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/policyutil"
 	"chromiumos/tast/remote/updateutil"
-	"chromiumos/tast/rpc"
 	rpb "chromiumos/tast/services/cros/rollback"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/lsbrelease"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/testing"
 )
 
 // DeviceInfo contains the information about the DUT before rollback.

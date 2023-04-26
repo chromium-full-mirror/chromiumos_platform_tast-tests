@@ -8,7 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // CreatePublicTempFile creates a world-readable temporary file. A caller should

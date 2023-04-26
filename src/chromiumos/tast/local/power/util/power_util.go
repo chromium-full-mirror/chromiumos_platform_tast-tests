@@ -16,7 +16,7 @@ import (
 	"strings"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 // GetBoardProperty gets a specific property from /etc/lsb-release.

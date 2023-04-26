@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"strings"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // MountOpt is a bit flag for the mount option.

@@ -12,9 +12,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"chromiumos/tast/errors"
-	"chromiumos/tast/fsutil"
 	"chromiumos/tast/local/chrome/internal/config"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/fsutil"
 )
 
 // TastChromeOptionsJSVar the JavaScript var name for storing the chrome options.

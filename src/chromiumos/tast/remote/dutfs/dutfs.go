@@ -19,8 +19,8 @@ import (
 	"golang.org/x/sys/unix"
 	"google.golang.org/grpc"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/services/cros/baserpc"
+	"go.chromium.org/tast/core/errors"
 )
 
 // ServiceName is the name of the gRPC service this package uses to access remote

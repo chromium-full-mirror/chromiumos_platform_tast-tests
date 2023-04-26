@@ -38,7 +38,7 @@ package firmware
 import (
 	"context"
 
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
@@ -96,14 +96,14 @@ Let's write a test that needs a Chrome EC. For context, some platforms have a Ch
 
 There is already a HardwareDep for ChromeEC, so let's use it.
 
-We'll need to import `"chromiumos/tast/testing/hwdep"`, so add that to the imports:
+We'll need to import `"go.chromium.org/tast/core/testing/hwdep"`, so add that to the imports:
 
 ```go
 import (
 	"context"
 
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 ```
 
@@ -138,8 +138,8 @@ import (
 	"context"
 
 	"chromiumos/tast/remote/firmware/reporters"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 ```
 
@@ -189,8 +189,8 @@ import (
 
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/reporters"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -408,7 +408,7 @@ import (
 
 	...
 	fwService "chromiumos/tast/services/cros/firmware"
-	"chromiumos/tast/rpc"
+	"go.chromium.org/tast/core/rpc"
 )
 ```
 

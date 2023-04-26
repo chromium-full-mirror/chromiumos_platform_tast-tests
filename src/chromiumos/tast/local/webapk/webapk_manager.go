@@ -10,13 +10,13 @@ import (
 	"net/http"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/uiauto/ossettings"
+	"go.chromium.org/tast/core/errors"
 )
 
 // WebAPK is used to represent a ChromeOS WebApk app.

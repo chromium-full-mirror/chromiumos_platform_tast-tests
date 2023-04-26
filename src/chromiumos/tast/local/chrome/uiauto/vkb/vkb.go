@@ -15,7 +15,6 @@ import (
 
 	"github.com/mafredri/cdp/protocol/target"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/internal/driver"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -27,7 +26,8 @@ import (
 	"chromiumos/tast/local/chrome/useractions"
 	"chromiumos/tast/local/chrome/webutil"
 	"chromiumos/tast/local/coords"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // VirtualKeyboardContext represents a context of virtual keyboard.

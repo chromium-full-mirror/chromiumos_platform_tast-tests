@@ -16,9 +16,9 @@ import (
 	grpc "google.golang.org/grpc"
 
 	"chromiumos/tast/common/tape"
-	"chromiumos/tast/errors"
 	ts "chromiumos/tast/services/cros/tape"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // ManagedChromeCustomerIDPath is the path to the secret customer ID var for managedchrome.
