@@ -12,9 +12,9 @@ import (
 	"time"
 
 	"chromiumos/tast/common/network/cmd"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/shutil"
+	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testutil"
 )
 

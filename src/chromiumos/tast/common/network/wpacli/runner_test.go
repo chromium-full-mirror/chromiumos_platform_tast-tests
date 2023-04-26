@@ -13,7 +13,7 @@ import (
 	"strings"
 	"testing"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 func TestSudoWPACLI(t *testing.T) {

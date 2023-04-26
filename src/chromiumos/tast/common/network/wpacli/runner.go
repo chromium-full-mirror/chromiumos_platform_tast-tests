@@ -15,9 +15,9 @@ import (
 	"time"
 
 	"chromiumos/tast/common/network/cmd"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/ssh"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Runner contains methods involving wpa_cli command.

@@ -22,9 +22,9 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	tmpb "chromiumos/system_api/tpm_manager_proto"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/shutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 const ussFlagFile = "/var/lib/cryptohome/uss_enabled"

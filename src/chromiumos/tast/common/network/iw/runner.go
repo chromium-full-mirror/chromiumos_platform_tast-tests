@@ -16,7 +16,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/network/cmd"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 var htTable = map[string]string{

@@ -21,7 +21,7 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // DaemonGoal describes a job's goal. See Section 10.1.6.19, "initctl status", in the Upstart Cookbook.

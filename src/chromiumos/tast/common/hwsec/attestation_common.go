@@ -24,7 +24,7 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	apb "chromiumos/system_api/attestation_proto"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // SendPostRequestTo sends POST request with body to serverURL.

@@ -7,7 +7,7 @@ package hpsutil
 import (
 	"math"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // PercentileForSortedData returns the given percentile from c, or an error. Expects data to be sorted.

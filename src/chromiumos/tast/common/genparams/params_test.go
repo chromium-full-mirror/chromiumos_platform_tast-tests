@@ -91,7 +91,7 @@ func callEnsure(t *testing.T, code, params string) (errors []string, newCode str
 const (
 	testCode = `package example
 
-import "chromiumos/tast/testing"
+import "go.chromium.org/tast/core/testing"
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -122,7 +122,7 @@ func TestEnsureNoChange(t *testing.T) {
 func TestEnsureChange(t *testing.T) {
 	const oldCode = `package example
 
-import "chromiumos/tast/testing"
+import "go.chromium.org/tast/core/testing"
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -149,7 +149,7 @@ TAST_GENERATE_UPDATE=1 ~/trunk/src/platform/tast/tools/go.sh test -count=1 chrom
 func TestEnsureMissingParams(t *testing.T) {
 	const oldCode = `package example
 
-import "chromiumos/tast/testing"
+import "go.chromium.org/tast/core/testing"
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -210,7 +210,7 @@ func init() {
 func TestEnsureTestingAlias(t *testing.T) {
 	const oldCode = `package example
 
-import mytesting "chromiumos/tast/testing"
+import mytesting "go.chromium.org/tast/core/testing"
 
 func init() {
 	mytesting.AddTest(&mytesting.Test{
@@ -220,7 +220,7 @@ func init() {
 `
 	errors, _ := callEnsure(t, oldCode, testParams)
 	wantErrors := []string{
-		"chromiumos/tast/testing must be imported without alias",
+		"go.chromium.org/tast/core/testing must be imported without alias",
 	}
 	if diff := cmp.Diff(errors, wantErrors); diff != "" {
 		t.Errorf("Errors mismatch (-got +want):\n%s", diff)

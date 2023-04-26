@@ -9,7 +9,7 @@ import (
 	"math/rand"
 	"strings"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // Creds contains credentials to log into a Chrome user session.

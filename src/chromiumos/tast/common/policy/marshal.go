@@ -8,7 +8,7 @@ import (
 	"encoding/json"
 	"strconv"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // MarshalList marshals a list of policies into JSON that allows reconstructing

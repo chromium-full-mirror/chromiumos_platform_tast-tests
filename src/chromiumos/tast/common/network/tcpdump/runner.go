@@ -16,9 +16,9 @@ import (
 
 	"chromiumos/tast/common/network/cmd"
 	"chromiumos/tast/common/network/daemonutil"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Runner contains methods rely on running "tcpdump" command.

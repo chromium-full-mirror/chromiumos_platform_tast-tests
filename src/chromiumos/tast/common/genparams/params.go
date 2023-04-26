@@ -53,15 +53,15 @@ func Ensure(t TestingT, file, params string) {
 		t.Fatalf("%s: %v", file, err)
 	}
 
-	// Ensure that chromiumos/tast/testing is imported without alias.
+	// Ensure that go.chromium.org/tast/core/testing is imported without alias.
 	for _, im := range root.Imports {
 		path, err := strconv.Unquote(im.Path.Value)
 		if err != nil {
 			continue
 		}
-		if path == "chromiumos/tast/testing" {
+		if path == "go.chromium.org/tast/core/testing" {
 			if im.Name != nil {
-				t.Fatalf("chromiumos/tast/testing must be imported without alias")
+				t.Fatalf("go.chromium.org/tast/core/testing must be imported without alias")
 			}
 		}
 	}

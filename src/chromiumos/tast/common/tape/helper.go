@@ -8,10 +8,10 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/errors"
-	"chromiumos/tast/rpc"
 	ts "chromiumos/tast/services/cros/tape"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/testing"
 )
 
 // ServiceAccountVar holds the name of the variable which stores the service account credentials for TAPE.

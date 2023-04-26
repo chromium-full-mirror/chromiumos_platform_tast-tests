@@ -11,7 +11,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	empb "chromiumos/policy/chromium/policy/enterprise_management_proto"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // getStringVal marshals the struct into string value.

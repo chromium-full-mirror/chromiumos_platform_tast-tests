@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	uda "chromiumos/system_api/user_data_auth_proto"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/shutil"
 )
 

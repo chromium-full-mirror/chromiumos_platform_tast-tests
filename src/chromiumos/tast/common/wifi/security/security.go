@@ -4,16 +4,16 @@
 
 // Package security defines interfaces for test authors to deal with the
 // diverse WiFi security standards:
-// - Interface Config defines methods to compose configuration files of AP or DUT.
-// - Interface ConfigFactory lets the authors to register the security options
-//   in testing.AddTest and Gen the Config object later in test body.
+//   - Interface Config defines methods to compose configuration files of AP or DUT.
+//   - Interface ConfigFactory lets the authors to register the security options
+//     in testing.AddTest and Gen the Config object later in test body.
 package security
 
 import (
 	"context"
 
 	"chromiumos/tast/common/pkcs11/netcertstore"
-	"chromiumos/tast/ssh"
+	"go.chromium.org/tast/core/ssh"
 )
 
 // Config defines methods to generate hostapd and shill config of protected network.

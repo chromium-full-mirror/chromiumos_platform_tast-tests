@@ -12,8 +12,8 @@ import (
 	"encoding/json"
 	"time"
 
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // DefaultRPCResponseTimeout is the default timeout for receiving an RPC response from the snippet.

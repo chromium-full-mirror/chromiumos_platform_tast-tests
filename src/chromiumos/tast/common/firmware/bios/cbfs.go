@@ -9,7 +9,7 @@ import (
 	"encoding/binary"
 	"io"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // CBFSFileCompression describes compression algorithm.

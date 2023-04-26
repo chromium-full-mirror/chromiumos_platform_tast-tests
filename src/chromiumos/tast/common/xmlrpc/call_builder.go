@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"time"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // RPCInterface is an interface that provides a common way of making RPC calls.

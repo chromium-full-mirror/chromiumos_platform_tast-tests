@@ -19,7 +19,7 @@ import (
 	"strings"
 
 	"chromiumos/tast/common/hwsec"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 const (

@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"time"
 
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Run runs |f| inside a goroutine. If |f| panics, we log the panic message,

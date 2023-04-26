@@ -11,9 +11,9 @@ import (
 	"regexp"
 	"time"
 
-	"chromiumos/tast/dut"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/ssh"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh"
 )
 
 // command unifies exec and dut commands for use in CreatePtyPair.

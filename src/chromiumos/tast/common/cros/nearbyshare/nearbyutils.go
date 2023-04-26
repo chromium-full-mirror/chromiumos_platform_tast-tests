@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"time"
 
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 // EnableFeatures contains optional Chrome features to be enabled with `--enable-features`.

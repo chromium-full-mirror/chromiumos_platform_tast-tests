@@ -10,7 +10,7 @@ import (
 	"context"
 	"reflect"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 const (

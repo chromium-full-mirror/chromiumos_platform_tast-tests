@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"chromiumos/tast/common/async"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Timeline datasources provide periodic performance metrics collected at the

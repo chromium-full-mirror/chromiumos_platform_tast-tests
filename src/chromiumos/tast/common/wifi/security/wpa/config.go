@@ -13,7 +13,7 @@ import (
 	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/common/wifi/security"
 	"chromiumos/tast/common/wifi/security/base"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // A PSK should be a string composed with 64 hex digits, or a ASCII passphrase whose length is between 8 and 63 (inclusive).

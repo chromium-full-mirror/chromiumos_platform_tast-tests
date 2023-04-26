@@ -12,7 +12,7 @@ import (
 	"github.com/golang/mock/gomock"
 
 	"chromiumos/tast/common/firmware/serial/mocks"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 func createDut(ctrl *gomock.Controller, bufLen int) (*Andreiboard, *mocks.MockPort) {

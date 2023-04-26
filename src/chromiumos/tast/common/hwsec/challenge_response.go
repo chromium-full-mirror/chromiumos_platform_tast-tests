@@ -13,7 +13,7 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	cpb "chromiumos/system_api/cryptohome_proto"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // SmartCardAlgorithms is used for listing all the possible types of algorithms that

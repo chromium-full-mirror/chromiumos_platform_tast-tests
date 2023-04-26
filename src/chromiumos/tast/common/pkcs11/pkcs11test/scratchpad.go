@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 
 	"chromiumos/tast/common/hwsec"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // PrepareScratchpadAndTestFiles prepares the scratchpad space at ScratchpadPath by ensuring that it is empty before the test, and exists after the call. Also, this creates 2 test files in it for testing.

@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"syscall"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // CommandContextUser creates a CommandContext that will run as the

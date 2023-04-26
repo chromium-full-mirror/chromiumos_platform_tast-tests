@@ -12,9 +12,9 @@ import (
 	"regexp"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/shutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 // RegexpPred returns a function to be passed to WaitForLogcat that returns true if a given regexp is matched in that line.

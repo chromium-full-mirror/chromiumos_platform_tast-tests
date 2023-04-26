@@ -34,8 +34,8 @@ import (
 	"github.com/4lon/crc8"
 	"go.bug.st/serial"
 
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // This implementation is an adaption of another script which can be found at https://github.com/usbtemp/usbtemp-python3/blob/754fbaa47fa454cac387f12182622f36f57b5757/usbtemp.py.

@@ -12,8 +12,8 @@ import (
 	"regexp"
 
 	"chromiumos/tast/common/hwsec"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // SetupP11TestToken configures a PKCS #11 database in scratchpadPath.

@@ -42,10 +42,10 @@ import (
 
 	"golang.org/x/sys/unix"
 
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
 	tastexec "go.chromium.org/tast/core/exec"
 	"go.chromium.org/tast/core/shutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Cmd represents an external command being prepared or run.

@@ -15,8 +15,8 @@ import (
 	"context"
 
 	"chromiumos/tast/common/xmlrpc"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Servo holds the servod connection information.

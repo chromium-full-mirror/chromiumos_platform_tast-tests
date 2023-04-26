@@ -14,8 +14,8 @@ import (
 	"github.com/google/uuid"
 
 	"chromiumos/tast/common/hwsec"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Chaps is the class that stores the persistent state that is required to run all PKCS#11 related utility calls.

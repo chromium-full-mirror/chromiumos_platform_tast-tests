@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // These are the Cr50 Servo controls which can be get/set with a string value.

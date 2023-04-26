@@ -9,7 +9,7 @@ import (
 	"encoding/hex"
 
 	apb "chromiumos/system_api/attestation_proto"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // AttestationError wraps the attestation error status.

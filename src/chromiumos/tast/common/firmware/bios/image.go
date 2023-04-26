@@ -17,8 +17,8 @@ import (
 
 	"chromiumos/tast/common/flashrom"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
 	pb "chromiumos/tast/services/cros/firmware"
+	"go.chromium.org/tast/core/errors"
 )
 
 // ImageSection is the name of sections supported by this package.

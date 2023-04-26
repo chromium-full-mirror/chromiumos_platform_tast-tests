@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"chromiumos/tast/common/hwsec"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // NOTE: While AES, SHA256, and PBKDF2 are used here, it is not for security,

@@ -15,7 +15,7 @@ import (
 	"text/template"
 	"time"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // funcs is a map of functions available to templates.
@@ -32,9 +32,9 @@ var funcs = map[string]interface{}{
 // This function also installs a few helper function that can be called inside
 // templates:
 //
-//  fmt(v interface{}) string - Formats v in a Go syntax. Supported types are
-//    boolean, integer, float, string, slice of supported types, map of
-//    supported types.
+//	fmt(v interface{}) string - Formats v in a Go syntax. Supported types are
+//	  boolean, integer, float, string, slice of supported types, map of
+//	  supported types.
 func Template(t TestingT, text string, data interface{}) string {
 	t.Helper()
 

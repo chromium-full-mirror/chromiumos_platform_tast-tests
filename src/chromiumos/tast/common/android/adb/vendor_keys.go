@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 type vendorKey struct {

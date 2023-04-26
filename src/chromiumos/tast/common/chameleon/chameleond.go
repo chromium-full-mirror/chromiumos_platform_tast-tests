@@ -13,8 +13,8 @@ import (
 	"chromiumos/tast/common/chameleon/devices"
 	"chromiumos/tast/common/chameleon/devices/common/bluetooth"
 	"chromiumos/tast/common/xmlrpc"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // DeviceStatus is a pairing of chameleond device name to its capability status.

@@ -8,7 +8,7 @@ import (
 	"context"
 
 	"chromiumos/tast/common/pkcs11"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // SignAndVerify is just a convenient runner to test both signing and verification.

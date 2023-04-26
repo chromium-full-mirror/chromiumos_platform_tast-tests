@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/xmlrpc"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // Port holds the chameleon board port information.

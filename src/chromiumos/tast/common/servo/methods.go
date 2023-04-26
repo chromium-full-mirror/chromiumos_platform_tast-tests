@@ -13,8 +13,8 @@ import (
 	"time"
 
 	"chromiumos/tast/common/xmlrpc"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // A StringControl contains the name of a gettable/settable Control which takes a string value.

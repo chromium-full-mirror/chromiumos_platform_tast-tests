@@ -10,7 +10,7 @@ import (
 	"fmt"
 
 	"chromiumos/tast/common/policy"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 // SearchFlagKey represents the key for Policy Coverage Insights Search Flags.

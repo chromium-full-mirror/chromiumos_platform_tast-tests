@@ -11,7 +11,7 @@ file_wiper.go provides the struct that wipes out and resotre a file on the DUT
 import (
 	"context"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // FileWiper wipes or restore a file on the DUT by renaming it.

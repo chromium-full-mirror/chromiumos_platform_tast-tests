@@ -12,7 +12,7 @@ import (
 
 	"golang.org/x/crypto/pbkdf2"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // DeriveOpenSSLAESKeyIV derives the key and IV that was used by OpenSSL when it

@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 type testTimelineDatasource struct {

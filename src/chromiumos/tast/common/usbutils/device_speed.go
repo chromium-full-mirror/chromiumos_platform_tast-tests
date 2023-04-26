@@ -11,8 +11,8 @@ import (
 	"strings"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/dut"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/errors"
 )
 
 // USBDevice represents information of a connected USB device.

@@ -79,7 +79,7 @@ import (
 	"github.com/google/uuid"
 
 	"chromiumos/tast/common/perf/perfpb"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 var (

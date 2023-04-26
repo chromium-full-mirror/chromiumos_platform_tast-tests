@@ -8,8 +8,8 @@ import (
 	"context"
 
 	"chromiumos/tast/common/chameleon"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // ConnectToBTPeers connects to btpeers with the given addresses and returns

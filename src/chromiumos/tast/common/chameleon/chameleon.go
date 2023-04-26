@@ -8,8 +8,8 @@ import (
 	"context"
 
 	"chromiumos/tast/common/xmlrpc"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Chameleon holds the chameleond connection information.

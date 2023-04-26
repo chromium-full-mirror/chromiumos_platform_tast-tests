@@ -14,7 +14,7 @@ import (
 	"chromiumos/tast/common/wifi/security"
 	"chromiumos/tast/common/wifi/security/eap"
 	"chromiumos/tast/common/wifi/security/wpa"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // Config implements security.Config interface for WPA-EAP protected network.

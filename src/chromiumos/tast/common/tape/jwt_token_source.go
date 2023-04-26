@@ -13,7 +13,7 @@ import (
 
 	"golang.org/x/oauth2"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // jwtToken stores the information needed to make a request to a JWT endpoint.

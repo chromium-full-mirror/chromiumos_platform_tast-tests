@@ -7,7 +7,7 @@ package wpa
 import (
 	"strings"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // Valid passphrase for WPA protected network.

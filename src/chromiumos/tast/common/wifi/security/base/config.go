@@ -11,7 +11,7 @@ import (
 	"chromiumos/tast/common/pkcs11/netcertstore"
 	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/common/wifi/security"
-	"chromiumos/tast/ssh"
+	"go.chromium.org/tast/core/ssh"
 )
 
 // Config implements security.Config interface for open network, i.e., no security.

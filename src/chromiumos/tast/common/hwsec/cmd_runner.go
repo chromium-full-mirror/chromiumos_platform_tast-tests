@@ -11,7 +11,7 @@ This file declares the common interfaces of command runner.
 import (
 	"context"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // CmdRunner declares interface that runs command on DUT.

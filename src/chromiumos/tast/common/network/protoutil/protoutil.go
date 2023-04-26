@@ -6,8 +6,8 @@
 package protoutil
 
 import (
-	"chromiumos/tast/errors"
 	"chromiumos/tast/services/cros/wifi"
+	"go.chromium.org/tast/core/errors"
 )
 
 // ShillValMap is a type alias of map[string]*network.ShillVal. It can be sent through protobuf.

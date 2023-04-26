@@ -11,7 +11,7 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	empb "chromiumos/policy/chromium/policy/enterprise_management_proto"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 const (

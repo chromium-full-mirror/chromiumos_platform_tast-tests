@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"chromiumos/tast/common/xmlrpc"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // BluezPeripheral is an interface for making RPC calls to a chameleond daemon

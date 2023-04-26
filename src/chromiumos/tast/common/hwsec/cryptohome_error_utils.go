@@ -6,7 +6,7 @@ package hwsec
 
 import (
 	uda "chromiumos/system_api/user_data_auth_proto"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // CheckForPossibleAction examines the given CryptohomeErrorInfo and see if it contains the specified possible action.

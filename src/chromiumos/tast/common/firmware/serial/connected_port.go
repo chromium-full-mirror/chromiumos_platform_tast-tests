@@ -9,7 +9,7 @@ import (
 
 	"github.com/tarm/serial"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // ConnectedPort implements Port, delegates to tarm/serial.

@@ -5,7 +5,7 @@
 package setup
 
 import (
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 // PerfCUJBasicDevices returns list of DUT model in basic tier.
