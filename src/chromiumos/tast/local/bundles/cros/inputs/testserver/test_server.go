@@ -38,6 +38,9 @@ import (
 // InputField is the type of input field.
 type InputField string
 
+// ButtonName is the name of the button component.
+type ButtonName string
+
 // Different type of input fields.
 const (
 	TextAreaInputField InputField = "textAreaInputField"
@@ -65,6 +68,9 @@ const (
 	TextAreaAutoShiftOff        InputField = "autocapitalize off"
 	OffscreenTextField          InputField = "offscreen"
 
+	// MakeTextButton is used to show password field.
+	MakeTextButton ButtonName = "makeTextButton"
+
 	// pageTitle is also the rootWebArea name in A11y to identify the scope of the page.
 	pageTitle = "E14s test page"
 )
@@ -87,8 +93,9 @@ const html = `<!DOCTYPE html>
 <input type="search" aria-label="searchInputField" style="width: 100%" />
 <br /><br />
 <pre>&lt;input type="<b>password</b>"/&gt;</pre>
-<input id="passwordInput" type="password" aria-label="passwordInputField" style="width: 100%"
-    oninput="document.getElementById('e14s-test-password-mirror').value = this.value;" />
+<button onclick="document.getElementById('password-field').type='text'" aria-label="makeTextButton">Make text</button>
+<button onclick="document.getElementById('password-field').type='password'">Make password</button>
+<input id="password-field" aria-label="passwordInputField" type="password" style="width: 100%" oninput="document.getElementById('e14s-test-password-mirror').value = this.value;">
 <br />
 <input id="e14s-test-password-mirror" aria-label="passwordTextField" type="text" readonly style="width: 100%" />
 <br /><br />
@@ -485,7 +492,7 @@ func (its *InputsTestServer) validatePKTypingInField(uc *useractions.UserContext
 func (its *InputsTestServer) validateVKTypingInField(uc *useractions.UserContext, inputField InputField, inputData data.InputData) uiauto.Action {
 	vkbCtx := vkb.NewContext(its.cr, its.tconn)
 	action := uiauto.Combine("validate vk input function on field "+string(inputField),
-		its.cleanFieldAndTriggerVK(inputField),
+		its.CleanFieldAndTriggerVK(inputField),
 		vkbCtx.TapKeysIgnoringCase(inputData.CharacterKeySeq),
 		func(ctx context.Context) error {
 			if inputData.SubmitFromSuggestion {
@@ -520,7 +527,7 @@ func (its *InputsTestServer) validateVoiceInField(uc *useractions.UserContext, i
 
 		vkbCtx := vkb.NewContext(its.cr, its.tconn)
 		return uiauto.Combine("validate vk voice input function on field "+string(inputField),
-			its.cleanFieldAndTriggerVK(inputField),
+			its.CleanFieldAndTriggerVK(inputField),
 			vkbCtx.SwitchToVoiceInput(),
 			func(ctx context.Context) error {
 				return voice.AudioFromFile(ctx, dataPath(inputData.VoiceFile))
@@ -545,7 +552,7 @@ func (its *InputsTestServer) validateVoiceInField(uc *useractions.UserContext, i
 func (its *InputsTestServer) validateHandwritingInField(uc *useractions.UserContext, inputField InputField, inputData data.InputData, dataPath func(string) string) uiauto.Action {
 	action := func(ctx context.Context) error {
 		vkbCtx := vkb.NewContext(its.cr, its.tconn)
-		if err := its.cleanFieldAndTriggerVK(inputField)(ctx); err != nil {
+		if err := its.CleanFieldAndTriggerVK(inputField)(ctx); err != nil {
 			return err
 		}
 
@@ -626,7 +633,8 @@ func (inputField InputField) isSupported(inputModality util.InputModality) bool 
 	return true
 }
 
-func (its *InputsTestServer) cleanFieldAndTriggerVK(inputField InputField) uiauto.Action {
+// CleanFieldAndTriggerVK returns an action to clear a given input field and trigger the vk.
+func (its *InputsTestServer) CleanFieldAndTriggerVK(inputField InputField) uiauto.Action {
 	vkbCtx := vkb.NewContext(its.cr, its.tconn)
 	return uiauto.Combine("clean and trigger VK on field "+string(inputField),
 		vkbCtx.HideVirtualKeyboard(),
@@ -659,4 +667,9 @@ func (its *InputsTestServer) Conn() *chrome.Conn {
 // to simplify the use for inputs tests.
 func (its *InputsTestServer) RetrieveTextSelectionInfo(ctx context.Context, conn *chrome.Conn, inputField InputField) (*uiauto.TextSelectionInfo, error) {
 	return its.ui.RetrieveTextSelectionInfo(ctx, its.pc, inputField.Finder())
+}
+
+// ClickButton returns an action to click the given button.
+func (its *InputsTestServer) ClickButton(buttonName ButtonName) uiauto.Action {
+	return its.ui.LeftClick(nodewith.Ancestor(pageRootFinder).Name(string(buttonName)))
 }
