@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type testParam struct {
@@ -41,12 +42,19 @@ func init() {
 		SoftwareDeps: []string{"tpm"},
 		Params: []testing.Param{
 			{
-				Val: testParam{pinWeaverSupported: false},
+				ExtraSoftwareDeps: []string{"no_tpm_dynamic"},
+				Val:               testParam{pinWeaverSupported: false},
 			},
 			{
 				Name:              "pin_weaver",
 				ExtraSoftwareDeps: []string{"pinweaver"},
 				Val:               testParam{pinWeaverSupported: true},
+			},
+			{
+				Name:              "tpm_dynamic",
+				ExtraSoftwareDeps: []string{"tpm_dynamic"},
+				ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
+				Val:               testParam{pinWeaverSupported: false},
 			},
 		},
 		Timeout: 5 * time.Minute,

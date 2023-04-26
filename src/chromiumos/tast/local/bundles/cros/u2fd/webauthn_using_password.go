@@ -8,8 +8,6 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
@@ -18,7 +16,10 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/u2fd"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -32,20 +33,34 @@ func init() {
 		},
 		BugComponent: "b:1188704",
 		Attr:         []string{"group:mainline"},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "tpm"},
 		Data: []string{
 			"webauthn.html",
 			"bundle.js",
 		},
 		Params: []testing.Param{{
 			Name:              "tpm",
-			ExtraSoftwareDeps: []string{"tpm", "no_gsc"},
+			ExtraSoftwareDeps: []string{"no_gsc", "no_tpm_dynamic"},
 			ExtraAttr:         []string{"informational", "group:u2fd"},
 			Fixture:           "chromeLoggedIn",
 			Val:               browser.TypeAsh,
 		}, {
 			Name:              "tpm_lacros",
-			ExtraSoftwareDeps: []string{"tpm", "no_gsc", "lacros"},
+			ExtraSoftwareDeps: []string{"no_gsc", "lacros", "no_tpm_dynamic"},
+			ExtraAttr:         []string{"informational", "group:u2fd"},
+			Fixture:           "lacros",
+			Val:               browser.TypeLacros,
+		}, {
+			Name:              "tpm_dynamic",
+			ExtraSoftwareDeps: []string{"tpm_dynamic"},
+			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
+			ExtraAttr:         []string{"informational", "group:u2fd"},
+			Fixture:           "chromeLoggedIn",
+			Val:               browser.TypeAsh,
+		}, {
+			Name:              "tpm_dynamic_lacros",
+			ExtraSoftwareDeps: []string{"tpm_dynamic", "no_gsc", "lacros"},
+			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
 			ExtraAttr:         []string{"informational", "group:u2fd"},
 			Fixture:           "lacros",
 			Val:               browser.TypeLacros,

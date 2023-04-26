@@ -21,6 +21,7 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 // smartCardWithAuthAPIParam contains the test parameters which are different
@@ -42,14 +43,32 @@ func init() {
 		Attr:         []string{"group:mainline", "informational", "group:cryptohome"},
 		SoftwareDeps: []string{"tpm"},
 		Params: []testing.Param{{
-			Name: "smart_card_with_auth_factor_rsassa_sha1",
+			Name:              "smart_card_with_auth_factor_rsassa_sha1",
+			ExtraSoftwareDeps: []string{"no_tpm_dynamic"},
 			Val: smartCardWithAuthAPIParam{
 				smartCardAlgorithms: []cpb.ChallengeSignatureAlgorithm{
 					cpb.ChallengeSignatureAlgorithm_CHALLENGE_RSASSA_PKCS1_V1_5_SHA1,
 				},
 			},
 		}, {
-			Name: "smart_card_with_auth_factor_rsassa_all",
+			Name:              "smart_card_with_auth_factor_rsassa_all",
+			ExtraSoftwareDeps: []string{"no_tpm_dynamic"},
+			Val: smartCardWithAuthAPIParam{
+				smartCardAlgorithms: hwsec.SmartCardAlgorithms,
+			},
+		}, {
+			Name:              "smart_card_with_auth_factor_rsassa_sha1_tpm_dynamic",
+			ExtraSoftwareDeps: []string{"tpm_dynamic"},
+			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
+			Val: smartCardWithAuthAPIParam{
+				smartCardAlgorithms: []cpb.ChallengeSignatureAlgorithm{
+					cpb.ChallengeSignatureAlgorithm_CHALLENGE_RSASSA_PKCS1_V1_5_SHA1,
+				},
+			},
+		}, {
+			Name:              "smart_card_with_auth_factor_rsassa_all_tpm_dynamic",
+			ExtraSoftwareDeps: []string{"tpm_dynamic"},
+			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
 			Val: smartCardWithAuthAPIParam{
 				smartCardAlgorithms: hwsec.SmartCardAlgorithms,
 			},

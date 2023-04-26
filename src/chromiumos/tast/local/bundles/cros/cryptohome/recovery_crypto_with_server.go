@@ -17,6 +17,7 @@ import (
 	"chromiumos/tast/local/cryptohome"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -42,6 +43,13 @@ func init() {
 			"ui.gaiaPoolDefault",
 			"cryptohome.RecoveryCryptoWithServer.accessTokenURL",
 		},
+		Params: []testing.Param{{
+			ExtraSoftwareDeps: []string{"no_tpm_dynamic"},
+		}, {
+			Name:              "tpm_dynamic",
+			ExtraSoftwareDeps: []string{"tpm_dynamic"},
+			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
+		}},
 	})
 }
 

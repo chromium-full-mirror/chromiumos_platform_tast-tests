@@ -9,6 +9,7 @@ import (
 
 	"chromiumos/tast/local/cryptohome"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -22,8 +23,14 @@ func init() {
 		},
 		BugComponent: "b:1148604", // ChromeOS > Security > Cryptohome > Cryptohome Recovery
 		Attr:         []string{"group:mainline", "group:cryptohome"},
-		// For "no_tpm_dynamic" - see http://b/251789202.
-		SoftwareDeps: []string{"tpm", "no_tpm_dynamic"},
+		SoftwareDeps: []string{"tpm"},
+		Params: []testing.Param{{
+			ExtraSoftwareDeps: []string{"no_tpm_dynamic"},
+		}, {
+			Name:              "tpm_dynamic",
+			ExtraSoftwareDeps: []string{"tpm_dynamic"},
+			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
+		}},
 	})
 }
 

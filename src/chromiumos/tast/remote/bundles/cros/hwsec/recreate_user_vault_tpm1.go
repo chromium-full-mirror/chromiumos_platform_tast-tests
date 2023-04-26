@@ -13,6 +13,7 @@ import (
 	"chromiumos/tast/remote/bundles/cros/hwsec/util"
 	hwsecremote "chromiumos/tast/remote/hwsec"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 // NOTE: This test is largely similar to hwsec.RecreateUserVaultTPM2 (a local test), if change is made to one, it is likely that the other have to be changed as well.
@@ -30,7 +31,14 @@ func init() {
 		BugComponent: "b:1188704",
 		SoftwareDeps: []string{"reboot", "tpm1", "tpm_clear_allowed"},
 		Attr:         []string{"group:hwsec_destructive_func"},
-		Timeout:      5 * time.Minute,
+		Params: []testing.Param{{
+			ExtraSoftwareDeps: []string{"no_tpm_dynamic"},
+		}, {
+			Name:              "tpm_dynamic",
+			ExtraSoftwareDeps: []string{"tpm_dynamic"},
+			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm1()),
+		}},
+		Timeout: 5 * time.Minute,
 	})
 }
 

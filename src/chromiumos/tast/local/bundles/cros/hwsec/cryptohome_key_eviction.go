@@ -13,6 +13,7 @@ import (
 	"chromiumos/tast/local/bundles/cros/hwsec/util"
 	hwseclocal "chromiumos/tast/local/hwsec"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -28,6 +29,13 @@ func init() {
 		Attr:         []string{"group:mainline", "informational", "group:cryptohome"},
 		Timeout:      10 * time.Minute,
 		Fixture:      "ussAuthSessionFixture",
+		Params: []testing.Param{{
+			ExtraSoftwareDeps: []string{"no_tpm_dynamic"},
+		}, {
+			Name:              "tpm_dynamic",
+			ExtraSoftwareDeps: []string{"tpm_dynamic"},
+			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
+		}},
 	})
 }
 

@@ -13,6 +13,7 @@ import (
 	hwsecremote "chromiumos/tast/remote/hwsec"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type testParams struct {
@@ -37,35 +38,85 @@ func init() {
 				testName:      "tpm_ecc_auth_block_test",
 				needsTpmReset: false,
 			},
-			ExtraAttr: []string{"group:mainline", "informational"},
+			ExtraAttr:         []string{"group:mainline", "informational"},
+			ExtraSoftwareDeps: []string{"no_tpm_dynamic"},
 		}, {
 			Name: "tpm_bound_to_pcr_auth_block_test",
 			Val: testParams{
 				testName:      "tpm_bound_to_pcr_auth_block_test",
 				needsTpmReset: false,
 			},
-			ExtraAttr: []string{"group:mainline", "informational"},
+			ExtraAttr:         []string{"group:mainline", "informational"},
+			ExtraSoftwareDeps: []string{"no_tpm_dynamic"},
 		}, {
 			Name: "tpm_not_bound_to_pcr_auth_block_test",
 			Val: testParams{
 				testName:      "tpm_not_bound_to_pcr_auth_block_test",
 				needsTpmReset: false,
 			},
-			ExtraAttr: []string{"group:mainline", "informational"},
+			ExtraAttr:         []string{"group:mainline", "informational"},
+			ExtraSoftwareDeps: []string{"no_tpm_dynamic"},
 		}, {
 			Name: "decryption_key_test",
 			Val: testParams{
 				testName:      "decryption_key_test",
 				needsTpmReset: false,
 			},
-			ExtraAttr: []string{"group:mainline", "informational"},
+			ExtraAttr:         []string{"group:mainline", "informational"},
+			ExtraSoftwareDeps: []string{"no_tpm_dynamic"},
 		}, {
 			Name: "seal_with_current_user_test",
 			Val: testParams{
 				testName:      "seal_with_current_user_test",
 				needsTpmReset: false,
 			},
-			ExtraAttr: []string{"group:mainline", "informational"},
+			ExtraAttr:         []string{"group:mainline", "informational"},
+			ExtraSoftwareDeps: []string{"no_tpm_dynamic"},
+		}, {
+			Name: "tpm_ecc_auth_block_test_tpm_dynamic",
+			Val: testParams{
+				testName:      "tpm_ecc_auth_block_test",
+				needsTpmReset: false,
+			},
+			ExtraAttr:         []string{"group:mainline", "informational"},
+			ExtraSoftwareDeps: []string{"tpm_dynamic"},
+			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
+		}, {
+			Name: "tpm_bound_to_pcr_auth_block_test_tpm_dynamic",
+			Val: testParams{
+				testName:      "tpm_bound_to_pcr_auth_block_test",
+				needsTpmReset: false,
+			},
+			ExtraAttr:         []string{"group:mainline", "informational"},
+			ExtraSoftwareDeps: []string{"tpm_dynamic"},
+			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
+		}, {
+			Name: "tpm_not_bound_to_pcr_auth_block_test_tpm_dynamic",
+			Val: testParams{
+				testName:      "tpm_not_bound_to_pcr_auth_block_test",
+				needsTpmReset: false,
+			},
+			ExtraAttr:         []string{"group:mainline", "informational"},
+			ExtraSoftwareDeps: []string{"tpm_dynamic"},
+			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
+		}, {
+			Name: "decryption_key_test_tpm_dynamic",
+			Val: testParams{
+				testName:      "decryption_key_test",
+				needsTpmReset: false,
+			},
+			ExtraAttr:         []string{"group:mainline", "informational"},
+			ExtraSoftwareDeps: []string{"tpm_dynamic"},
+			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
+		}, {
+			Name: "seal_with_current_user_test_tpm_dynamic",
+			Val: testParams{
+				testName:      "seal_with_current_user_test",
+				needsTpmReset: false,
+			},
+			ExtraAttr:         []string{"group:mainline", "informational"},
+			ExtraSoftwareDeps: []string{"tpm_dynamic"},
+			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
 		}, {
 			Name: "signature_sealed_secret_test",
 			Val: testParams{

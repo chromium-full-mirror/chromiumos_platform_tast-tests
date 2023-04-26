@@ -11,6 +11,7 @@ import (
 
 	"chromiumos/tast/common/testexec"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -24,6 +25,13 @@ func init() {
 		BugComponent: "b:1188704",
 		Attr:         []string{"group:mainline", "informational", "group:hwsec_infra"},
 		SoftwareDeps: []string{"tpm2"},
+		Params: []testing.Param{{
+			ExtraSoftwareDeps: []string{"no_tpm_dynamic"},
+		}, {
+			Name:              "tpm_dynamic",
+			ExtraSoftwareDeps: []string{"tpm_dynamic"},
+			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm2()),
+		}},
 	})
 }
 
