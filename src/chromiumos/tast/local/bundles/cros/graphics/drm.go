@@ -226,6 +226,7 @@ func init() {
 			Name:              "yuv_to_rgb_test",
 			Val:               []string{"yuv_to_rgb_test"},
 			Timeout:           30 * time.Second,
+			ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 			ExtraSoftwareDeps: []string{"no_qemu"},
 			ExtraAttr:         []string{"group:mainline", "informational"},
 		}},
