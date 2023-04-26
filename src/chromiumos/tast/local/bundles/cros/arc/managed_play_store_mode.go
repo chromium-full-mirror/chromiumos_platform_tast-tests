@@ -13,20 +13,26 @@ import (
 	"chromiumos/tast/common/chrome/credconfig"
 	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/arc/arcent"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/local/retry"
 	"chromiumos/tast/testing"
+
+	"go.chromium.org/tast/core/ctxutil"
 )
+
+type managedPlayStoreModeArgs struct {
+	playStoreMode string
+	shouldBeEmpty bool
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ManagedPlayStoreModeBlocklist,
+		Func:         ManagedPlayStoreMode,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that apps are shown when Play Store mode is blocklist",
+		Desc:         "Checks that apps are shown/hidden according to playStoreMode",
 		Contacts:     []string{"arc-commercial@google.com", "mhasank@chromium.org"},
 		// ChromeOS > Software > ARC++ > Commercial
 		BugComponent: "b:157100",
@@ -41,32 +47,88 @@ func init() {
 		},
 		Params: []testing.Param{
 			{
+				Name: "allowlist",
+				Val: managedPlayStoreModeArgs{
+					playStoreMode: arcent.PlayStoreModeAllowList,
+					shouldBeEmpty: true,
+				},
 				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
 			},
 			{
-				Name:              "vm",
+				Name: "allowlist_vm",
+				Val: managedPlayStoreModeArgs{
+					playStoreMode: arcent.PlayStoreModeAllowList,
+					shouldBeEmpty: true,
+				},
 				ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
 				ExtraAttr:         []string{"informational"},
 			},
 			{
-				Name:              "betty",
-				ExtraSoftwareDeps: []string{"android_p", "qemu"},
+				Name: "allowlist_betty",
+				Val: managedPlayStoreModeArgs{
+					playStoreMode: arcent.PlayStoreModeAllowList,
+					shouldBeEmpty: true,
+				},
+				ExtraSoftwareDeps: []string{"android_container", "qemu"},
 				ExtraAttr:         []string{"informational"},
 			},
 			{
-				Name:              "vm_betty",
+				Name: "allowlist_vm_betty",
+				Val: managedPlayStoreModeArgs{
+					playStoreMode: arcent.PlayStoreModeAllowList,
+					shouldBeEmpty: true,
+				},
+				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name: "blocklist",
+				Val: managedPlayStoreModeArgs{
+					playStoreMode: arcent.PlayStoreModeBlockList,
+					shouldBeEmpty: false,
+				},
+				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name: "blocklist_vm",
+				Val: managedPlayStoreModeArgs{
+					playStoreMode: arcent.PlayStoreModeBlockList,
+					shouldBeEmpty: false,
+				},
+				ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name: "blocklist_betty",
+				Val: managedPlayStoreModeArgs{
+					playStoreMode: arcent.PlayStoreModeBlockList,
+					shouldBeEmpty: false,
+				},
+				ExtraSoftwareDeps: []string{"android_container", "qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name: "blocklist_vm_betty",
+				Val: managedPlayStoreModeArgs{
+					playStoreMode: arcent.PlayStoreModeBlockList,
+					shouldBeEmpty: false,
+				},
 				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
 				ExtraAttr:         []string{"informational"},
 			}},
 	})
 }
 
-// ManagedPlayStoreModeBlocklist Verifies that apps are shown when Play Store mode is blocklist.
-func ManagedPlayStoreModeBlocklist(ctx context.Context, s *testing.State) {
+// ManagedPlayStoreMode verifies that apps are shown/hidden according to playStoreMode.
+func ManagedPlayStoreMode(ctx context.Context, s *testing.State) {
 	const (
 		bootTimeout      = 4 * time.Minute
 		defaultUITimeout = 1 * time.Minute
 	)
+
+	args := s.Param().(managedPlayStoreModeArgs)
 
 	rl := &retry.Loop{Attempts: 1,
 		MaxAttempts: 2,
@@ -75,7 +137,7 @@ func ManagedPlayStoreModeBlocklist(ctx context.Context, s *testing.State) {
 		Logf:        s.Logf}
 
 	arcPolicy := arcent.CreateArcPolicyWithApps([]string{}, arcent.InstallTypeAvailable)
-	arcPolicy.Val.PlayStoreMode = arcent.PlayStoreModeBlockList
+	arcPolicy.Val.PlayStoreMode = args.playStoreMode
 	arcEnabledPolicy := &policy.ArcEnabled{Val: true}
 	policies := []policy.Policy{arcEnabledPolicy, arcPolicy}
 
@@ -141,12 +203,12 @@ func ManagedPlayStoreModeBlocklist(ctx context.Context, s *testing.State) {
 		}
 		defer d.Close(cleanupCtx)
 
-		if err := arcent.EnsurePlayStoreNotEmpty(ctx, tconn, cr, a, d, s.OutDir(), rl.Attempts); err != nil {
-			return rl.Exit("verify Play Store is not empty", err)
+		if err := arcent.EnsurePlayStoreState(ctx, tconn, cr, a, d, s.OutDir(), rl.Attempts, args.shouldBeEmpty); err != nil {
+			return rl.Exit("verify Play Store state", err)
 		}
 
 		return nil
 	}, nil); err != nil {
-		s.Fatal("Play Store mode blocklist test failed: ", err)
+		s.Fatal("Play Store mode test failed: ", err)
 	}
 }
