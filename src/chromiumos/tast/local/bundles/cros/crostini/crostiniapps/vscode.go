@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"strings"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
@@ -18,7 +17,9 @@ import (
 	"chromiumos/tast/local/terminalapp"
 	"chromiumos/tast/local/uidetection"
 	"chromiumos/tast/local/vm"
-	"chromiumos/tast/testing"
+
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // https://stackoverflow.com/questions/45033015/how-do-i-turn-off-notifications-globally-in-visual-studio-code.
@@ -45,7 +46,7 @@ var (
 // InitialiseVscode configures VS Code for testing by disabling cursor blinking, notifications, updates, and removing the "Getting Started" page.
 func InitialiseVscode(ctx context.Context, cont *vm.Container, uda *uidetection.Context, ui *uiauto.Context, terminalApp *terminalapp.TerminalApp, keyboard *input.KeyboardEventWriter) error {
 	// Cursor blinking and vscode updates break screenshots.
-	cont.WriteFile(ctx, ".config/Code/User/settings.json", `{"editor.cursorBlinking": "solid", "editor.unicodeHighlight.nonBasicASCII": "false", "workbench.startupEditor": "None", "update.mode": "none", "workbench.editor.untitled.hint": "hidden"}`)
+	cont.WriteFile(ctx, ".config/Code/User/settings.json", `{"editor.cursorBlinking": "solid", "editor.unicodeHighlight.nonBasicASCII": "false", "workbench.startupEditor": "none", "update.mode": "none", "workbench.editor.untitled.hint": "hidden"}`)
 
 	version, err := cont.Command(ctx, "code", "--version").Output()
 	if err != nil {
@@ -81,10 +82,9 @@ func disableVscodeNotifications(ctx context.Context, cont *vm.Container) error {
 func launchAndCloseVscode(uda *uidetection.Context, ui *uiauto.Context, terminalApp *terminalapp.TerminalApp, keyboard *input.KeyboardEventWriter) uiauto.Action {
 	return uiauto.Combine("open VSCode for the first time",
 		// Launch Visual Studio Code.
-		terminalApp.RunCommand(keyboard, fmt.Sprintf("code --disable-extensions %s", VscodeTestFile)),
-		// Sometimes the first character got lost if input immediately.
-		// Wait until the menu exists, indicating the window is launched.
-		uda.WaitUntilExists(uidetection.Word("File").WithinA11yNode(VscodeWindow).First()),
+		terminalApp.RunCommand(keyboard, fmt.Sprintf("code --disable-extensions %s", VscodeNewFile)),
+		// Waiting for the welcome page, it always shows when opening the app for the first time.
+		uda.WaitUntilExists(uidetection.Word("Welcome").WithinA11yNode(VscodeWindow).First()),
 		// Left click the app window header to focus.
 		// Do not click the center of the app window, which may unexpectedly
 		// set the theme, see http://b/264336806.
