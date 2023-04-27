@@ -46,6 +46,7 @@ type YtWeb struct {
 	uiHdl   cuj.UIActionHandler
 
 	extendedDisplay bool
+	openNewWindow   bool
 }
 
 // NewYtWeb creates an instance of YtWeb.
@@ -58,7 +59,13 @@ func NewYtWeb(br *browser.Browser, tconn *chrome.TestConn, kb *input.KeyboardEve
 		uiHdl: uiHdl,
 
 		extendedDisplay: extendedDisplay,
+		openNewWindow:   true,
 	}
+}
+
+// SetNewWindow sets new window for playing youtube video.
+func (y *YtWeb) SetNewWindow(value bool) {
+	y.openNewWindow = value
 }
 
 // Install installs the Youtube app with apk.
@@ -70,8 +77,7 @@ func (y *YtWeb) Install(ctx context.Context) error {
 func (y *YtWeb) OpenAndPlayVideo(video VideoSrc) uiauto.Action {
 	return func(ctx context.Context) (err error) {
 		testing.ContextLog(ctx, "Open Youtube web")
-
-		y.ytConn, err = y.uiHdl.NewChromeTab(ctx, y.br, video.URL, true)
+		y.ytConn, err = y.uiHdl.NewChromeTab(ctx, y.br, video.URL, y.openNewWindow)
 		if err != nil {
 			return errors.Wrap(err, "failed to open youtube tab")
 		}

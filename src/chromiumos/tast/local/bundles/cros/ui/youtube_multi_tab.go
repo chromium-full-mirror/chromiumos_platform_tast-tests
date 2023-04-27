@@ -112,6 +112,7 @@ func YoutubeMultiTab(ctx context.Context, s *testing.State) {
 	for tabIdx := 0; tabIdx < 10; tabIdx++ {
 		videoApp := youtube.NewYtWeb(cr.Browser(), tconn, kb, extendedDisplay, ui, uiHandler)
 		defer videoApp.Close(cleanupCtx)
+		videoApp.SetNewWindow(false)
 		if err := videoApp.OpenAndPlayVideo(videoSource)(ctx); err != nil {
 			s.Fatalf("Failed to open %s: %v", videoSource.URL, err)
 		}
