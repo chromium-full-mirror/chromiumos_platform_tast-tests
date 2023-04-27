@@ -52,21 +52,25 @@ func TransitionToTabletMode(ctx context.Context, s *testing.State) {
 	// TransitionToTabletMode function verifies Touch navigation, On-board keyboard, External peripherals, Power, volume
 	// button works or not when dut is transitioned from laptop mode.
 	cr := s.FixtValue().(*chrome.Chrome)
-
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
-		s.Fatal("Failed to create Test API connection: ", err)
+		s.Fatal("Failed to create test API connection: ", err)
 	}
 
 	cleanUp, err := ash.EnsureTabletModeEnabledWithKeyboardDisabled(ctx)
 	if err != nil {
-		s.Fatal("Failed to put DUT in tablet mode: ", err)
+		s.Fatal("Failed to ensure DUT in tablet mode: ", err)
 	}
-	defer cleanUp(cleanupCtx)
+
+	defer func(ctx context.Context) {
+		if err := cleanUp(ctx); err != nil {
+			s.Fatal("Failed to transition back to laptop mode: ", err)
+		}
+	}(cleanupCtx)
 
 	cui := uiauto.New(tconn)
 	searchTabElement := nodewith.NameStartingWith("Search your").Role(role.TextField)
@@ -146,7 +150,16 @@ func TransitionToTabletMode(ctx context.Context, s *testing.State) {
 	}
 
 	// Long press the power button.
-	emitter := &power.PowerManagerEmitter{}
+	emitter, err := power.NewPowerManagerEmitter(ctx)
+	if err != nil {
+		s.Fatal("Unable to create power manager emitter: ", err)
+	}
+	defer func(cleanupCtx context.Context) {
+		if err := emitter.Stop(cleanupCtx); err != nil {
+			s.Log("Unable to stop emitter: ", err)
+		}
+	}(cleanupCtx)
+
 	eventType := pmpb.InputEvent_POWER_BUTTON_DOWN
 	if err := emitter.EmitInputEvent(ctx, &pmpb.InputEvent{Type: &eventType}); err != nil {
 		s.Fatal("Send POWER_BUTTON_DOWN failed: ", err)
@@ -204,18 +217,6 @@ func TransitionToTabletMode(ctx context.Context, s *testing.State) {
 		if err := display.SetDisplayRotationSync(ctx, tconn, internalDisplayID, angle); err != nil {
 			s.Fatalf("Failed to rotate to %v angle: %v", angle, err)
 		}
-	}
-
-	if err := cleanUp(ctx); err != nil {
-		s.Fatal("Failed to transition back to laptop mode: ", err)
-	}
-
-	enabled, err := ash.TabletModeEnabled(ctx, tconn)
-	if err != nil {
-		s.Fatal("Failed to check tabletmode enable status: ", err)
-	}
-	if enabled {
-		s.Fatal("Dut is still in tablet mode")
 	}
 }
 
