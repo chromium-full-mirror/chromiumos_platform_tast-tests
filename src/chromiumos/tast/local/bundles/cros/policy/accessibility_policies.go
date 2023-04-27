@@ -15,7 +15,7 @@ import (
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/policyutil"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 type accessibilityTestCase struct {

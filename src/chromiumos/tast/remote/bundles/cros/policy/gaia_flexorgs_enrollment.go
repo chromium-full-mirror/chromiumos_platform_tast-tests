@@ -11,11 +11,11 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 
 	"chromiumos/tast/common/fixture"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/rpc"
 	"chromiumos/tast/services/cros/graphics"
 	pspb "chromiumos/tast/services/cros/policy"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/testing"
 )
 
 type testDetails struct {

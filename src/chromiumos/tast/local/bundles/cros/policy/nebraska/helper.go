@@ -13,8 +13,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/nebraska"
+	"go.chromium.org/tast/core/errors"
 )
 
 // Helper starts a Nebraska instance in a temporary folder and manages lsb-release.

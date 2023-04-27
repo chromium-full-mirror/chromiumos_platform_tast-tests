@@ -12,11 +12,11 @@ import (
 
 	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/common/tape"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/rpc"
 	"chromiumos/tast/services/cros/enterpriseconnectors"
 	"chromiumos/tast/services/cros/graphics"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/testing"
 )
 
 const deviceTrustInsessionEnrollmentTimeout = 7 * time.Minute

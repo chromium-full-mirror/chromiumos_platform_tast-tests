@@ -24,8 +24,8 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/local/quickanswers"
-	"chromiumos/tast/testing"
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

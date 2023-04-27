@@ -12,11 +12,11 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 
 	"chromiumos/tast/common/policy"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/remote/policyutil"
-	"chromiumos/tast/rpc"
 	pspb "chromiumos/tast/services/cros/policy"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

@@ -11,13 +11,13 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 
 	"chromiumos/tast/common/tape"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/policyutil"
 	"chromiumos/tast/remote/reportingutil"
-	"chromiumos/tast/rpc"
 	"chromiumos/tast/services/cros/graphics"
 	ps "chromiumos/tast/services/cros/policy"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/testing"
 )
 
 const heartbeatReportingTimeout = 7 * time.Minute

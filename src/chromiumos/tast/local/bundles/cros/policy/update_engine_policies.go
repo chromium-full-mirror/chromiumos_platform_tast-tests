@@ -17,12 +17,12 @@ import (
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/policy/nebraska"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 type updateEngineTestParam struct {

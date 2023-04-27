@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"chromiumos/tast/local/ready"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

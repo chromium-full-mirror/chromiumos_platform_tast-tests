@@ -19,7 +19,7 @@ import (
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/local/screenshot"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

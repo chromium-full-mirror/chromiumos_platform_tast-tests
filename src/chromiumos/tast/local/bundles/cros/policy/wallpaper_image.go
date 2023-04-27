@@ -22,7 +22,7 @@ import (
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/local/policyutil/externaldata"
 	"chromiumos/tast/local/wallpaper"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

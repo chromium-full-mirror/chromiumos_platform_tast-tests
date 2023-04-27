@@ -9,12 +9,12 @@ import (
 	"context"
 	"fmt"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
+	"go.chromium.org/tast/core/errors"
 )
 
 // Values for the DefaultSerialGuardSetting policy

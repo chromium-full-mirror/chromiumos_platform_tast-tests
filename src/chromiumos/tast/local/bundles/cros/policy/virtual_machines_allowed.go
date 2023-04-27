@@ -19,7 +19,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/crostini/ui/settings"
 	"chromiumos/tast/local/policyutil"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

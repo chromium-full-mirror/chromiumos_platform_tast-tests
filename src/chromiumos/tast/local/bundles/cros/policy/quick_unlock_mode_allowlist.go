@@ -12,7 +12,6 @@ import (
 	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -24,8 +23,9 @@ import (
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/local/policyutil/fixtures"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type testParam struct {

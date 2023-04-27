@@ -16,7 +16,7 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/local/syslog"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

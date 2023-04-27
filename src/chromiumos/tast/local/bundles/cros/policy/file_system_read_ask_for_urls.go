@@ -16,7 +16,7 @@ import (
 	"chromiumos/tast/common/policy"
 	filesystemreadwrite "chromiumos/tast/local/bundles/cros/policy/file_system_read_write"
 	"chromiumos/tast/local/chrome/browser"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 const readAskTestHTML = "file_system_read_for_urls_index.html"

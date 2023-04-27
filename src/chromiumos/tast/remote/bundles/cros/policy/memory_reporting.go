@@ -14,15 +14,15 @@ import (
 	"google.golang.org/grpc"
 
 	"chromiumos/tast/common/tape"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/dutfs"
 	"chromiumos/tast/remote/policyutil"
 	"chromiumos/tast/remote/reportingutil"
-	"chromiumos/tast/rpc"
 	"chromiumos/tast/services/cros/graphics"
 	ps "chromiumos/tast/services/cros/policy"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 const memoryReportingTimeout = 7 * time.Minute

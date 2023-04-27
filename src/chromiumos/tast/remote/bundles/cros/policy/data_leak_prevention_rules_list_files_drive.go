@@ -14,10 +14,10 @@ import (
 	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/remote/bundles/cros/policy/dlputil"
 	"chromiumos/tast/remote/reportingutil"
-	"chromiumos/tast/rpc"
 	dlp "chromiumos/tast/services/cros/dlp"
-	"chromiumos/tast/ssh/linuxssh"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/ssh/linuxssh"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

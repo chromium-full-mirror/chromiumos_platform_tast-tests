@@ -13,10 +13,10 @@ import (
 
 	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/common/policy"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/rpc"
 	pspb "chromiumos/tast/services/cros/policy"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

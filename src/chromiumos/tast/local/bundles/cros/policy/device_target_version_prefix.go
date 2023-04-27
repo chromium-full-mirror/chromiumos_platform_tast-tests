@@ -20,14 +20,14 @@ import (
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/dbusutil"
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/lsbrelease"
+	"go.chromium.org/tast/core/testing"
 )
 
 // deviceTargetVersionPrefix contains the test parameters which are different

@@ -15,13 +15,13 @@ import (
 
 	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/common/tape"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/remote/gaiaenrollment"
-	"chromiumos/tast/rpc"
 	"chromiumos/tast/services/cros/graphics"
 	ps "chromiumos/tast/services/cros/policy"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/exec"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/testing"
 )
 
 const gaiaZTEEnrollmentTimeout = 4 * time.Minute

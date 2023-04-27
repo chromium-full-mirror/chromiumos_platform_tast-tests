@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"chromiumos/tast/common/servo"
-	"chromiumos/tast/dut"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // EnsureDUTIsOn checks if DUT is pingable and if not, the function waits till DUT boots up.

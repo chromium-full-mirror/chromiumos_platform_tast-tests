@@ -10,7 +10,6 @@ import (
 
 	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/policy/printingtest"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
@@ -22,7 +21,8 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/restriction"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/input"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

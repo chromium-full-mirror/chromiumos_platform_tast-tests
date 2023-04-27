@@ -14,7 +14,6 @@ import (
 	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/annotations"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
@@ -23,8 +22,9 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/restriction"
 	"chromiumos/tast/local/policyutil"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {

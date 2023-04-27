@@ -9,9 +9,9 @@ import (
 	"fmt"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/reportingutil"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Action represents the supported DLP actions.
