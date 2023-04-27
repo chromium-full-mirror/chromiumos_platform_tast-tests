@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/video/power/30s/1080p60fpsH264_boat_sync_30s.mp4",
+  "size": 28713938,
+  "sha256sum": "3b664cf0cf5c80dd7515a37746a31505da07c41af630564ffe62bcb2def198fa"
+}
