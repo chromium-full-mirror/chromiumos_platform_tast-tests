@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
@@ -25,7 +25,8 @@ func init() {
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		SoftwareDeps: []string{"protected_content", "hwdrm_stable"},
 		Timeout:      5 * time.Minute,
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:firmware", "firmware_bios"},
+		Requirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
 		Fixture:      "gpuWatchHangs",
 	})
 }
