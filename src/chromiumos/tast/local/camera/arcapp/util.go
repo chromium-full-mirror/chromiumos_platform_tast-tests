@@ -8,7 +8,6 @@ package arcapp
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -43,6 +42,7 @@ const (
 	intentResetMetrics             = "chromeos.camera.app.arccameratest.ACTION_RESET_METRICS"
 	intentStartOrientationTest     = "chromeos.camera.app.arccameratest.ACTION_START_ORIENTATION_TEST"
 	intentGetOrientationTestResult = "chromeos.camera.app.arccameratest.ACTION_GET_ORIENTATION_TEST_RESULT"
+	intentGetNumOfCameras          = "chromeos.camera.app.arccameratest.ACTION_GET_NUM_OF_CAMERAS"
 	keyCameraFacing                = "chromeos.camera.app.arccameratest.KEY_CAMERA_FACING"
 	keyCameraMode                  = "chromeos.camera.app.arccameratest.KEY_CAMERA_MODE"
 	valuePhoto                     = "Photo"
@@ -65,16 +65,7 @@ type ARCCameraAppMetrics struct {
 	TakingPhoto   []int64 `json:"METRIC_TAKING_PHOTO"`
 }
 
-// ErrorFacingNotSupported is an error which will be thrown when the targeting facing is not supported on the device.
-type ErrorFacingNotSupported struct {
-	facing string
-}
-
 type funcWithTestConn func(context.Context, *chrome.TestConn)
-
-func (err ErrorFacingNotSupported) Error() string {
-	return fmt.Sprintf("Facing %v is not supported", err.facing)
-}
 
 func broadcastIntent(ctx context.Context, a *arc.ARC, action string, params ...string) (*adb.BroadcastResult, error) {
 	return a.BroadcastIntent(ctx, action, append(prioritizingParams, params...)...)
@@ -181,17 +172,23 @@ func StopRecording(ctx context.Context, cr *chrome.Chrome, a *arc.ARC) error {
 	return nil
 }
 
-// SwitchCamera switches camera to the given facing. If given facing is not supported, it returns nil.
-func SwitchCamera(ctx context.Context, a *arc.ARC, facing string) error {
-	rawData, err := broadcastIntentGetData(ctx, a, intentSwitchCamera, "--ei", keyCameraFacing, facing)
+// GetNumOfCameras returns the number of the detected cameras.
+func GetNumOfCameras(ctx context.Context, a *arc.ARC) (int, error) {
+	rawData, err := broadcastIntentGetData(ctx, a, intentGetNumOfCameras)
 	if err != nil {
-		return errors.Wrap(err, "failed to request switching camera")
+		return -1, errors.Wrap(err, "could not get number of cameras")
 	}
-	if success, err := strconv.ParseBool(rawData); err != nil {
-		return errors.Wrap(err, "failed to parse raw data to boolean")
-	} else if !success {
-		// Continue when there is no camera with such facing.
-		return ErrorFacingNotSupported{facing: facing}
+	numOfCameras, err := strconv.Atoi(rawData)
+	if err != nil {
+		return -1, errors.Wrap(err, "failed to parse returned value when getting number of cameras")
+	}
+	return numOfCameras, nil
+}
+
+// SwitchCamera switches to the next camera.
+func SwitchCamera(ctx context.Context, a *arc.ARC) error {
+	if _, err := broadcastIntent(ctx, a, intentSwitchCamera); err != nil {
+		return errors.Wrap(err, "failed to request switching camera")
 	}
 	return nil
 }

@@ -84,16 +84,19 @@ func ARCCameraApp(ctx context.Context, s *testing.State) {
 			}
 			defer cleanupFunc(cleanupCtx, tconn)
 
-			for _, facing := range []string{"0", "1"} {
-				testing.ContextLog(ctx, "Switch to camera ", facing)
-				if err := arcapp.SwitchCamera(ctx, a, facing); err != nil {
-					if _, ok := err.(arcapp.ErrorFacingNotSupported); ok {
-						testing.ContextLogf(ctx, "Skip camera with facing %v since it is not supported on the device", facing)
-						continue
+			numOfCameras, err := arcapp.GetNumOfCameras(ctx, a)
+			if err != nil {
+				s.Fatal("Failed to get number of cameras: ", err)
+			}
+			for i := 0; i < numOfCameras; i++ {
+				if i > 0 {
+					testing.ContextLog(ctx, "Switch camera")
+					if err := arcapp.SwitchCamera(ctx, a); err != nil {
+						s.Fatal("Failed to switch camera: ", err)
 					}
-					s.Fatalf("Failed to switch to camera %v: %v", facing, err)
 				}
 
+				testing.ContextLog(ctx, "Testing camera ", i)
 				if err := tst.testFunc(ctx, cr, a); err != nil {
 					s.Fatalf("Failed when running sub test %v: %v", tst.name, err)
 				}
