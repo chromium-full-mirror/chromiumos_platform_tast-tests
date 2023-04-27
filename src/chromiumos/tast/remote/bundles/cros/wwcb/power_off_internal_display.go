@@ -14,6 +14,7 @@ import (
 	"chromiumos/tast/remote/bundles/cros/wwcb/utils"
 	"chromiumos/tast/services/cros/ui"
 	"chromiumos/tast/services/cros/wwcb"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
@@ -21,9 +22,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Dock17CloseLidGRPC,
+		Func:         PowerOffInternalDisplay,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify that display resolution is still okay after lid close & windows are all still displayed",
+		Desc:         "Set display power to simulate that close DUT lid, then verify display resolution and windows work properly on the external display",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
 		Attr:         []string{"group:wwcb"},
@@ -33,12 +34,11 @@ func init() {
 	})
 }
 
-func Dock17CloseLidGRPC(ctx context.Context, s *testing.State) {
+func PowerOffInternalDisplay(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	dockingID := s.RequiredVar("DockingID")
 	extDispID := s.RequiredVar("ExtDispID1")
 
 	// Connect to the gRPC server on the DUT.
@@ -58,12 +58,6 @@ func Dock17CloseLidGRPC(ctx context.Context, s *testing.State) {
 
 	displaySvc := wwcb.NewDisplayServiceClient(cl.Conn)
 
-	// Open IP power to supply docking power.
-	if err := utils.OpenIppower(ctx, []int{1}); err != nil {
-		s.Fatal("Failed to open IP power: ", err)
-	}
-	defer utils.CloseIppower(cleanupCtx, []int{1})
-
 	// Initialize fixtures to find the connected devices.
 	if err := utils.InitFixture(ctx); err != nil {
 		s.Fatal("Failed to initialize fixtures: ", err)
@@ -72,13 +66,23 @@ func Dock17CloseLidGRPC(ctx context.Context, s *testing.State) {
 
 	// Connect external display via Dock.
 	if err := utils.ControlFixture(ctx, extDispID, "on"); err != nil {
-		s.Fatal("Failed to connect external display: ", err)
+		s.Fatal("Failed to connect to the external display: ", err)
 	}
-	if err := utils.ControlFixture(ctx, dockingID, "on"); err != nil {
-		s.Fatal("Failed to connect docking station: ", err)
+
+	if dockingID, ok := s.Var("DockingID"); ok {
+		ipPowerPorts := []int{1}
+		if err := utils.OpenIppower(ctx, ipPowerPorts); err != nil {
+			s.Fatal("Failed to power on the docking station: ", err)
+		}
+		defer utils.CloseIppower(cleanupCtx, ipPowerPorts)
+
+		if err := utils.ControlFixture(ctx, dockingID, "on"); err != nil {
+			s.Fatal("Failed to connect to the docking station: ", err)
+		}
 	}
+
 	if _, err := displaySvc.VerifyDisplayCount(ctx, &wwcb.QueryRequest{DisplayCount: 2}); err != nil {
-		s.Fatal("Failed to verify external display is connected: ", err)
+		s.Fatal("Failed to verify the external display is connected: ", err)
 	}
 
 	if _, err := displaySvc.VerifyAfterLidClose(ctx, &empty.Empty{}); err != nil {
