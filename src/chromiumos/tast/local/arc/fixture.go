@@ -307,28 +307,6 @@ func init() {
 		TearDownTimeout: ResetTimeout,
 	})
 
-	// TODO(b/254796432): Clean up the flag after the feature launch.
-	// arcBootedWithArcUpdateO4CListViaA2C2 is a fixture similar to arcBooted but with the ArcUpdateO4CListViaA2C2 feature enabled.
-	testing.AddFixture(&testing.Fixture{
-		Name: "arcBootedWithArcUpdateO4CListViaA2C2",
-		Desc: "ARC is booted with ArcUpdateO4CListViaA2C2 feature enabled",
-		Contacts: []string{
-			"toshikikikuchi@chromium.org",
-			"arc-framework+tast@google.com",
-		},
-		Impl: NewArcBootedFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ARCEnabled(),
-				chrome.UnRestrictARCCPU(),
-				chrome.EnableFeatures("ArcUpdateO4CListViaA2C2"),
-			}, nil
-		}),
-		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
-		ResetTimeout:    ResetTimeout,
-		PostTestTimeout: ResetTimeout,
-		TearDownTimeout: ResetTimeout,
-	})
-
 	testing.AddFixture(&testing.Fixture{
 		Name: "arcBootedWithPasspoint",
 		Desc: "ARC is booted with kPasspointARCSupport feature enabled",

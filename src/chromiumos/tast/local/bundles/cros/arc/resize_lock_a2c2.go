@@ -36,7 +36,7 @@ func init() {
 		// ChromeOS > Software > ARC++ > Framework > Window Management
 		BugComponent: "b:537272",
 		Attr:         []string{"group:mainline", "informational"},
-		Fixture:      "arcBootedWithArcUpdateO4CListViaA2C2",
+		Fixture:      "arcBooted",
 		SoftwareDeps: []string{"chrome", "android_vm"},
 		Data:         []string{wm.WhiteWallpaperFileName},
 		Timeout:      5 * time.Minute,
