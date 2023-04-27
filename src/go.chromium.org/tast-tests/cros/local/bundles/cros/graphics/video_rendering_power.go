@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path"
+	"sync"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
@@ -19,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -107,19 +109,6 @@ func VideoRenderingPower(ctx context.Context, s *testing.State) {
 		s.Fatal("Setup failed: ", err)
 	}
 
-	// Setup up the metrics for recording.
-	metrics, err := perf.NewTimeline(
-		ctx,
-		power.TestMetrics(),
-		perf.Interval(checkInterval),
-	)
-	if err != nil {
-		s.Fatal("Failed to build metrics: ", err)
-	}
-	if err := metrics.Start(ctx); err != nil {
-		s.Fatal("Failed to start metrics: ", err)
-	}
-
 	// Get a browser instance ready to start playing the video.
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()
@@ -142,28 +131,61 @@ func VideoRenderingPower(ctx context.Context, s *testing.State) {
 	if err = testing.Sleep(ctx, stabilizeTime); err != nil {
 		s.Fatalf("Failed to sleep before starting to record metrics: %s", err)
 	}
-	if err := metrics.StartRecording(ctx); err != nil {
-		s.Fatal("Failed to start metrics: ", err)
-	}
-	// GoBigSleepLint: Playback time for perf measurement.
-	// Let the video play as we record metrics.
-	if err = testing.Sleep(ctx, playbackTime); err != nil {
-		s.Fatalf("Failed to sleep while running video playback: %s", err)
-	}
-	// Stop the recording for metrics.
-	p, err := metrics.StopRecording(ctx)
-	if err != nil {
-		s.Fatal("Failed to snapshot metrics: ", err)
-	}
+
+	pv := perf.NewValues()
 	defer func() {
-		if err := p.Save(s.OutDir()); err != nil {
+		if err := pv.Save(s.OutDir()); err != nil {
 			s.Error("Failed saving perf data: ", err)
 		}
 	}()
 
-	// Record the system power consumptiom metrics.
-	if err = graphics.MeasureSystemPowerConsumption(ctx, tconn, playbackTime, p); err != nil {
-		s.Fatalf("Error measuring system power consumption : %s", err)
+	// Setup up the metrics for recording.
+	metrics, err := perf.NewTimeline(
+		ctx,
+		power.TestMetrics(),
+		perf.Interval(checkInterval),
+	)
+	if err != nil {
+		s.Fatal("Failed to build metrics: ", err)
+	}
+	if err := metrics.Start(ctx); err != nil {
+		s.Fatal("Failed to start metrics: ", err)
 	}
 
+	var wg sync.WaitGroup
+	wg.Add(2)
+	var raplErr, systemPowerErr error
+	go func() {
+		defer wg.Done()
+		if err := metrics.StartRecording(ctx); err != nil {
+			raplErr = errors.Wrap(err, "failed to start metric")
+			return
+		}
+		// GoBigSleepLint: Playback time for perf measurement.
+		// Let the video play as we record metrics.
+		if err := testing.Sleep(ctx, playbackTime); err != nil {
+			raplErr = errors.Wrap(err, "failed to sleep for playback measurement")
+			return
+		}
+
+		// Stop the recording for metrics.
+		p, err := metrics.StopRecording(ctx)
+		if err != nil {
+			raplErr = errors.Wrap(err, "failed to snapshot metric")
+			return
+		}
+		pv.Merge(p)
+	}()
+	go func() {
+		defer wg.Done()
+		// Record the system power consumptiom metrics.
+		systemPowerErr = graphics.MeasureSystemPowerConsumption(ctx, tconn, playbackTime, pv)
+	}()
+	wg.Wait()
+	if raplErr != nil {
+		s.Fatal("Failed to record power metrics: ", raplErr)
+	}
+	if systemPowerErr != nil {
+		s.Fatal("Error measuring system power consumption: ", systemPowerErr)
+	}
 }
