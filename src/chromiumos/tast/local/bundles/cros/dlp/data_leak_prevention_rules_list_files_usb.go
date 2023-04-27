@@ -284,16 +284,27 @@ func DataLeakPreventionRulesListFilesUSB(ctx context.Context, s *testing.State) 
 		s.Fatal("Failed to download file: ", err)
 	}
 
+	// Open the Files app to cleanup USB devices. Closed at relaunch or Chrome reset.
+	filesApp, err := filesapp.Launch(ctx, tconnAsh)
+	if err != nil {
+		s.Fatal("Failed to launch the Files App: ", err)
+	}
+
+	// Eject all USB devices if some are still around.
+	if err := filesApp.EjectAll()(ctx); err != nil {
+		s.Fatal("Failed to eject: ", err)
+	}
+
 	// Create the virtual USB device.
 	if err := setupVirtualUSBDevice(ctx); err != nil {
 		s.Fatal("Failed to setup virtual USB device: ", err)
 	}
 	defer cleanupVirtualUSBDevice(ctx)
 
-	// Open the Files app, prepare USB drive and try to copy the file.
-	filesApp, err := filesapp.Launch(ctx, tconnAsh)
+	// Re-open the Files app to retrieve the new USB drive, format it and try to copy the file.
+	filesApp, err = filesapp.Relaunch(ctx, tconnAsh, filesApp)
 	if err != nil {
-		s.Fatal("Failed to launch the Files App: ", err)
+		s.Fatal("Failed to relaunch the Files App: ", err)
 	}
 	defer filesApp.Close(cleanupCtx)
 
@@ -312,6 +323,11 @@ func DataLeakPreventionRulesListFilesUSB(ctx context.Context, s *testing.State) 
 	}
 	if err := filesApp.OpenUSBDriveWithName("UNTITLED")(ctx); err != nil {
 		s.Fatal("Failed to open formatted USB drive: ", err)
+	}
+	if err := filesApp.FileExists(files.DlFileName)(ctx); err == nil {
+		if err := filesApp.DeleteFileOrFolder(keyboard, files.DlFileName)(ctx); err != nil {
+			s.Fatal("Failed to delete file before pasting: ", err)
+		}
 	}
 	if err := filesApp.PasteFileFromClipboard(keyboard)(ctx); err != nil {
 		s.Fatal("Failed to paste copied file: ", err)
@@ -340,6 +356,10 @@ func DataLeakPreventionRulesListFilesUSB(ctx context.Context, s *testing.State) 
 		}
 	}
 
+	// Eject all USB devices before force-unmounting.
+	if err := filesApp.EjectAll()(ctx); err != nil {
+		s.Fatal("Failed to eject: ", err)
+	}
 }
 
 // Constants to create a virtual USB drive.

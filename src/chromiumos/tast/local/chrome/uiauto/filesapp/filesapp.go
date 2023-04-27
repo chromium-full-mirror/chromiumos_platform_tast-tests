@@ -580,3 +580,18 @@ func (f *FilesApp) ExpandOpenDropdown() uiauto.Action {
 		f.WaitUntilExists(dropdownMenu),
 	)
 }
+
+// EjectAll ejects all present USB Drives.
+func (f *FilesApp) EjectAll() uiauto.Action {
+	return func(ctx context.Context) error {
+		var steps []uiauto.Action
+		nodes, err := f.NodesInfo(ctx, nodewith.NameStartingWith("Eject").HasClass("root-eject").Role(role.Button))
+		if err != nil {
+			return err
+		}
+		for _, n := range nodes {
+			steps = append(steps, f.LeftClick(nodewith.Role(n.Role).ClassName(n.ClassName).Name(n.Name).First()))
+		}
+		return uiauto.Combine("UnmountAll", steps...)(ctx)
+	}
+}
