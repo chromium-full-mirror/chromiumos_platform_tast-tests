@@ -170,14 +170,14 @@ func DataLeakPreventionRulesListClipboardHistory(ctx context.Context, s *testing
 			// Clicks onto the text box, opens the clipboard history menu (Search+V) and
 			// pastes the first item (Enter).
 			textBoxNode := nodewith.Name("textarea").Role(role.TextField).State(state.Editable, true).First()
-			clipboardHistoryNode := nodewith.NameStartingWith("Clipboard history").Role(role.MenuBar)
+			clipboardHistoryNode := nodewith.NameStartingWith(copiedString).Role(role.MenuItem).ClassName("ClipboardHistoryTextItemView").Visible().First()
 			if err := uiauto.Combine("Pasting into search bar",
 				ui.WaitUntilExists(textBoxNode.Visible()),
-				ui.LeftClick(textBoxNode),
+				ui.DoDefault(textBoxNode),
 				ui.WaitUntilExists(textBoxNode.Focused()),
 				keyboard.AccelAction("Search+V"),
 				ui.WaitUntilExists(clipboardHistoryNode),
-				keyboard.AccelAction("Enter"),
+				ui.LeftClick(clipboardHistoryNode),
 			)(ctx); err != nil {
 				s.Fatal("Failed to paste into search bar: ", err)
 			}
