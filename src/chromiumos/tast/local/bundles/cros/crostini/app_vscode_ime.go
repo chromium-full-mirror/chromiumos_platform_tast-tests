@@ -20,7 +20,7 @@ import (
 	"chromiumos/tast/local/terminalapp"
 	"chromiumos/tast/local/uidetection"
 	"chromiumos/tast/local/vm"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"

@@ -10,7 +10,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // RemoveAllFilesInDirectory removes all files in a directory but leaves the directory itself intact.

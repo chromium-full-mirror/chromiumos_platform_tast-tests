@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/bundles/cros/crostini/cleanupfolder"
 	"chromiumos/tast/local/bundles/cros/crostini/listset"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -21,7 +20,8 @@ import (
 	"chromiumos/tast/local/crostini"
 	"chromiumos/tast/local/crostini/ui/sharedfolders"
 	"chromiumos/tast/local/cryptohome"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

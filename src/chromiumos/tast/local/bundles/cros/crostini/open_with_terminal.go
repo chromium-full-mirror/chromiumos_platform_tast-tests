@@ -9,13 +9,13 @@ import (
 	"path/filepath"
 	"time"
 
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/filesapp"
 	"chromiumos/tast/local/crostini"
 	"chromiumos/tast/local/terminalapp"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

@@ -15,8 +15,6 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/crostini/listset"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto/filesapp"
@@ -25,7 +23,9 @@ import (
 	"chromiumos/tast/local/crostini/ui/sharedfolders"
 	"chromiumos/tast/local/drivefs"
 	"chromiumos/tast/local/vm"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

@@ -9,12 +9,12 @@ import (
 	"os"
 	"time"
 
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/crostini"
 	"chromiumos/tast/local/crostini/ui/settings"
 	"chromiumos/tast/local/disk"
 	"chromiumos/tast/local/vm"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

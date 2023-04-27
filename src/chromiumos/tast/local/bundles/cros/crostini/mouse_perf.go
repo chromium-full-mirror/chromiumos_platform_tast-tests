@@ -16,7 +16,7 @@ import (
 	"chromiumos/tast/local/colorcmp"
 	"chromiumos/tast/local/crostini"
 	"chromiumos/tast/local/input"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

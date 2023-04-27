@@ -12,8 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
@@ -26,7 +24,9 @@ import (
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/screenshot"
 	"chromiumos/tast/local/uidetection"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

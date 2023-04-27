@@ -13,8 +13,6 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
@@ -30,7 +28,9 @@ import (
 	"chromiumos/tast/local/terminalapp"
 	"chromiumos/tast/local/uidetection"
 	"chromiumos/tast/local/vm"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 var (

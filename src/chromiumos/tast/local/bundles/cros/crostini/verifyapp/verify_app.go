@@ -15,7 +15,7 @@ import (
 	"chromiumos/tast/local/crostini"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/vm"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 // RunTest executes a test application directly from the command

@@ -9,8 +9,7 @@ import (
 	"fmt"
 	"time"
 
-	//"chromiumos/tast/errors"
-	"chromiumos/tast/ctxutil"
+	//"go.chromium.org/tast/core/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
@@ -21,7 +20,8 @@ import (
 	cui "chromiumos/tast/local/crostini/ui"
 	"chromiumos/tast/local/crostini/ui/settings"
 	"chromiumos/tast/local/input"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 /*

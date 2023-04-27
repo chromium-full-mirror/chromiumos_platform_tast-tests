@@ -13,7 +13,6 @@ import (
 	"reflect"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/filesapp"
@@ -22,7 +21,8 @@ import (
 	"chromiumos/tast/local/crostini"
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/input"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

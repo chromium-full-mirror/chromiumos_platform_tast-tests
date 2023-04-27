@@ -10,8 +10,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto/filesapp"
 	"chromiumos/tast/local/crostini"
@@ -19,7 +17,9 @@ import (
 	"chromiumos/tast/local/crostini/ui/sharedfolders"
 	"chromiumos/tast/local/terminalapp"
 	"chromiumos/tast/local/vm"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

@@ -16,7 +16,7 @@ import (
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/chrome/vmc"
 	"chromiumos/tast/local/crostini"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 const testScript string = "test-extra-disk.sh"

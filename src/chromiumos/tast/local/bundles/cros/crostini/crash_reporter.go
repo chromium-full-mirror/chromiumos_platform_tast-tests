@@ -12,10 +12,10 @@ import (
 	"syscall"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/crash"
 	"chromiumos/tast/local/crostini"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (

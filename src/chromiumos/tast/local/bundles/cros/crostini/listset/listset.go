@@ -9,7 +9,7 @@ import (
 	"reflect"
 	"sort"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // CheckListsMatch checks whether two lists equal.
