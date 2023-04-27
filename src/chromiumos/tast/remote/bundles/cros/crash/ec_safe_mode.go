@@ -120,7 +120,11 @@ func ECSafeMode(ctx context.Context, s *testing.State) {
 			return testing.PollBreak(errors.Wrap(err, "failed to read UART"))
 		}
 		for _, l := range strings.Split(lines, "\r\n") {
-			timerInfoLine = regexp.MustCompile(`Time:.*\r\n`).FindString(l)
+			timerInfoLine = regexp.MustCompile(`Time:.*`).FindString(l)
+			if timerInfoLine == "" {
+				continue
+			}
+			s.Log("Found timer info line: ", timerInfoLine)
 			return nil
 		}
 		return errors.New("Timer info not found")
