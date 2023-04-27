@@ -105,6 +105,57 @@ func StopLoggingCheckLogs(ctx context.Context, cr *chrome.Chrome, br *browser.Br
 	return isExist, nil
 }
 
+// StopLoggingVerifyNoAnnotation clicks the "Stop logging" button on the net export page and verifies that none of the annotation hash codes in the given list are present in the logs.
+func StopLoggingVerifyNoAnnotation(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, annotationHashCodes []string) (foundAnnotation bool, err error) {
+	// Open the net-export page.
+	netConn, err := NewNetExportConn(ctx, br)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to load chrome://net-export")
+	}
+	defer netConn.Close()
+
+	// Click Stop Logging button.
+	if err := clickBtnOnPage(ctx, netConn, "stop-logging"); err != nil {
+		return false, errors.Wrap(err, "failed to wait for the Stop Logging button to load")
+	}
+
+	// Get the net export log file.
+	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
+	if err != nil {
+		return false, errors.Wrap(err, "failed to get user's Download path")
+	}
+	downloadName := "chrome-net-export-log.json"
+	downloadLocation := filepath.Join(downloadsPath, downloadName)
+
+	// Read the net export log file.
+	logFile, err := ioutil.ReadFile(downloadLocation)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to open logfile")
+	}
+
+	var annotationsFound []string
+	for _, hashCode := range annotationHashCodes {
+		// Check if the traffic annotation exists in the log file.
+		annotationExists, err := regexp.Match(fmt.Sprintf("\"traffic_annotation\":%s", hashCode), logFile)
+		if err != nil {
+			return false, errors.Wrap(err, "failed to search annotation logfile")
+		}
+		if annotationExists {
+			annotationsFound = append(annotationsFound, hashCode)
+		}
+	}
+
+	// Clean up file after reading.
+	if err := os.Remove(downloadLocation); err != nil {
+		return false, errors.Wrap(err, "failed to Clean file")
+	}
+
+	if len(annotationsFound) > 0 {
+		return false, errors.Errorf("found unexpected annotations with the hash codes %+q", annotationsFound)
+	}
+	return true, nil
+}
+
 // NewNetExportConn navigates to chrome://net-export.
 func NewNetExportConn(ctx context.Context, br *browser.Browser) (conn *chrome.Conn, err error) {
 	// Open the net-export page.
