@@ -15,7 +15,8 @@ import (
 const zoneInfoFile = "/proc/zoneinfo"
 
 var zoneInfoRE = regexp.MustCompile(`(?m)^Node +\d+, +zone +([^ ]+)
-(?:(?: +pages free +(\d+)
+(?:(?: +pages free +(\d+)(?:
+ +boost +(?:\d+))?
  +min +(\d+)
  +low +(\d+)
 )|(?: +.*
