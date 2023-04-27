@@ -11,9 +11,9 @@ import (
 
 	"github.com/godbus/dbus/v5"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/crosdisks"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // verifyProp checks if the passed prop satisfies the device property

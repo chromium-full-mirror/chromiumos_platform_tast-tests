@@ -13,7 +13,7 @@ import (
 
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/tracing"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (

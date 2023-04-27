@@ -9,7 +9,7 @@ import (
 	"math"
 
 	"chromiumos/tast/local/bundles/cros/platform/fsinfo"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

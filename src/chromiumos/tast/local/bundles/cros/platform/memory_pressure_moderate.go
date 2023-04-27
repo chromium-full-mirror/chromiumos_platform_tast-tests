@@ -12,7 +12,7 @@ import (
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/memory/kernelmeter"
 	"chromiumos/tast/local/memory/mempressure"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 type memoryPressureModerateParams struct {

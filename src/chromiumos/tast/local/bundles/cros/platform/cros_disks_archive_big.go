@@ -14,10 +14,10 @@ import (
 	"path/filepath"
 	"time"
 
-	"chromiumos/tast/errors"
 	c "chromiumos/tast/local/bundles/cros/platform/crosdisks"
 	"chromiumos/tast/local/crosdisks"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 var preparedArchives = []string{

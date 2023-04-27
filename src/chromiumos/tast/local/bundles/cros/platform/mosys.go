@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/testing"
 	"go.chromium.org/tast/core/shutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

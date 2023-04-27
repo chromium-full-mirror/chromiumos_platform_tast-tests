@@ -12,9 +12,9 @@ import (
 
 	"github.com/godbus/dbus/v5"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/crosdisks"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func testVolumeRename(ctx context.Context, cd *crosdisks.CrosDisks, ld *crosdisks.LoopbackDevice) error {

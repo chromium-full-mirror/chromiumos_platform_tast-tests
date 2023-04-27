@@ -13,8 +13,8 @@ import (
 	"chromiumos/tast/common/servo"
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/fixture"
-	"chromiumos/tast/ssh"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ssh"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

@@ -18,15 +18,15 @@ import (
 
 	"chromiumos/tast/common/perf"
 	tdreq "chromiumos/tast/common/testdevicerequirements"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/dut"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/rpc"
 	"chromiumos/tast/services/cros/arc"
 	"chromiumos/tast/services/cros/platform"
 	"chromiumos/tast/services/cros/security"
-	"chromiumos/tast/ssh/linuxssh"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/ssh/linuxssh"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (

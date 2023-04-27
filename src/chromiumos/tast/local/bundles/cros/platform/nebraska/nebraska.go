@@ -11,9 +11,9 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/nebraska"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Nebraska struct hold Nebraska server runtime information for DLC tests.

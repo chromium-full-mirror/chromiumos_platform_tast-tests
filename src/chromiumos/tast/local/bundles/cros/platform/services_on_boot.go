@@ -13,10 +13,10 @@ import (
 	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/common/testexec"
 	upstartcommon "chromiumos/tast/common/upstart"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {

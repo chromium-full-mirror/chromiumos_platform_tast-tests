@@ -15,8 +15,8 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/services/cros/platform"
+	"go.chromium.org/tast/core/errors"
 )
 
 // RunPerfetto uses gRPC to run perfetto cmdline with

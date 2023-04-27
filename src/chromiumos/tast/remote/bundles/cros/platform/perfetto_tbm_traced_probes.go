@@ -10,9 +10,9 @@ import (
 	"android.googlesource.com/platform/external/perfetto/protos/perfetto/metrics/github.com/google/perfetto/perfetto_proto"
 
 	"chromiumos/tast/remote/bundles/cros/platform/perfetto"
-	"chromiumos/tast/rpc"
 	"chromiumos/tast/services/cros/platform"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (

@@ -16,10 +16,10 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	metrics_event "chromiumos/system_api/metrics_event_proto"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/dbusutil"
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

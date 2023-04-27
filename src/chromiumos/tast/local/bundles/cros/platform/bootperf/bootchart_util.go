@@ -14,7 +14,7 @@ import (
 	"github.com/google/uuid"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 var (

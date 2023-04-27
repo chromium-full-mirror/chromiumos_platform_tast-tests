@@ -9,8 +9,8 @@ import (
 	"fmt"
 	"strings"
 
-	"chromiumos/tast/dut"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

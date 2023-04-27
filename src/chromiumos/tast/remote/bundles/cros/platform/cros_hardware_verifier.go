@@ -26,10 +26,10 @@ import (
 
 	hvpb "chromiumos/hardware_verifier"
 	rppb "chromiumos/system_api/runtime_probe_proto"
-	"chromiumos/tast/dut"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type stringSet map[string]struct{}

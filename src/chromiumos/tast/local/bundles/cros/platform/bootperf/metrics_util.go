@@ -19,10 +19,10 @@ import (
 
 	"chromiumos/tast/common/testexec"
 	upstartcommon "chromiumos/tast/common/upstart"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/services/cros/platform"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (

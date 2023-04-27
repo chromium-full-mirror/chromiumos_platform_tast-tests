@@ -11,7 +11,7 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/memory/mempressure"
 	"chromiumos/tast/local/wpr"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

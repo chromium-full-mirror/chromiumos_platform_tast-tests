@@ -14,12 +14,12 @@ import (
 	"time"
 
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/platform/memorystress"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/lacros"
 	"chromiumos/tast/local/cpu"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 type testParams struct {

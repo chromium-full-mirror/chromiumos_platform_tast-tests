@@ -12,7 +12,7 @@ import (
 	dlctest "chromiumos/tast/local/bundles/cros/platform/dlc"
 	"chromiumos/tast/local/dlc"
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

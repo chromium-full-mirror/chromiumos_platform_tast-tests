@@ -17,12 +17,12 @@ import (
 
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bundles/cros/platform/fsinfo"
 	"chromiumos/tast/local/chrome/lacros"
 	"chromiumos/tast/local/firmware"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

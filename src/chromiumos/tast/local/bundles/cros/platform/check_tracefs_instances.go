@@ -10,7 +10,7 @@ import (
 
 	"github.com/shirou/gopsutil/v3/cpu"
 
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

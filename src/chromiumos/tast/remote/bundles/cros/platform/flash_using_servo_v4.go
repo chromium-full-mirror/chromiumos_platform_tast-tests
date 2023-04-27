@@ -11,12 +11,12 @@ import (
 	"time"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/fixture"
 	"chromiumos/tast/remote/powercontrol"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/shutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 type servoV4Flash struct {

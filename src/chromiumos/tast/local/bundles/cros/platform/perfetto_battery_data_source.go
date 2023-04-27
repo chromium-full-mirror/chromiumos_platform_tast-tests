@@ -11,7 +11,7 @@ import (
 
 	"chromiumos/tast/local/power"
 	"chromiumos/tast/local/tracing"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (

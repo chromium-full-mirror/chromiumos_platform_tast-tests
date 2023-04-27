@@ -16,9 +16,9 @@ import (
 	"syscall"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/crosdisks"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // PreparedArchives is a list of data files used in the test.

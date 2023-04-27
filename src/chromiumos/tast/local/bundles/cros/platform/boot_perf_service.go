@@ -14,7 +14,7 @@ import (
 
 	"chromiumos/tast/local/bundles/cros/platform/bootperf"
 	"chromiumos/tast/services/cros/platform"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

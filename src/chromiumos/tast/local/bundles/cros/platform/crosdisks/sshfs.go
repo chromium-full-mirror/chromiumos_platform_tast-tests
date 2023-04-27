@@ -12,9 +12,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/crosdisks"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const sshDir = "/home/chronos/user/.ssh"

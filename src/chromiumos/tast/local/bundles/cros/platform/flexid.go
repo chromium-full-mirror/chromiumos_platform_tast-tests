@@ -9,7 +9,7 @@ import (
 	"unicode"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
