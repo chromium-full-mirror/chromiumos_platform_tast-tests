@@ -21,6 +21,12 @@ import (
 	"go.chromium.org/tast/core/errors"
 )
 
+const (
+	// UserDirNetLogFile is the file path for netlog in user dir.
+	// This file is present when chrome is started with the `--log-net-log` arg.
+	UserDirNetLogFile string = "/home/chronos/netlog.json"
+)
+
 // StartLogging clicks the "Start logging" button on the net export page.
 func StartLogging(ctx context.Context, cr *chrome.Chrome, br *browser.Browser) error {
 	tconn, err := cr.TestAPIConn(ctx)
@@ -110,7 +116,7 @@ func NewNetExportConn(ctx context.Context, br *browser.Browser) (conn *chrome.Co
 }
 
 // CheckLogs checks logs for given annotation.
-func CheckLogs(ctx context.Context, cr *chrome.Chrome, netConn *chrome.Conn, annotation string) (foundAnnotation bool, err error) {
+func CheckLogs(ctx context.Context, cr *chrome.Chrome, annotation string) (foundAnnotation bool, err error) {
 	// Get the net export log file.
 	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
 	if err != nil {
@@ -119,8 +125,13 @@ func CheckLogs(ctx context.Context, cr *chrome.Chrome, netConn *chrome.Conn, ann
 	downloadName := "chrome-net-export-log.json"
 	downloadLocation := filepath.Join(downloadsPath, downloadName)
 
+	return CheckLogsFromFile(ctx, cr, annotation, downloadLocation)
+}
+
+// CheckLogsFromFile checks logs for given annotation in given file.
+func CheckLogsFromFile(ctx context.Context, cr *chrome.Chrome, annotation, logFilePath string) (foundAnnotation bool, err error) {
 	// Read the net export log file.
-	logFile, err := ioutil.ReadFile(downloadLocation)
+	logFile, err := ioutil.ReadFile(logFilePath)
 	if err != nil {
 		return false, errors.Wrap(err, "failed to open logfile")
 	}

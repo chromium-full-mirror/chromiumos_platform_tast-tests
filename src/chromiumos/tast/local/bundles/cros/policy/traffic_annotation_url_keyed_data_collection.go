@@ -157,16 +157,10 @@ func TrafficAnnotationURLKeyedDataCollection(ctx context.Context, s *testing.Sta
 				s.Fatal("Failed verify log on ukm app: ", err)
 			}
 
-			netConn, err := annotations.NewNetExportConn(ctx, br)
-			if err != nil {
-				s.Fatal("Failed to get net conn: ", err)
-			}
-			defer netConn.Close()
-
 			// wait to allow ukm time to write to log (writes every 20 seconds, starting after 1 minute).
 			foundAnnotationErr := testing.Poll(ctx, func(ctx context.Context) (err error) {
 				// Check the logs for given annotation.
-				isFound, err := annotations.CheckLogs(ctx, cr, netConn, ukmNetworkAnnotationID)
+				isFound, err := annotations.CheckLogs(ctx, cr, ukmNetworkAnnotationID)
 				if err != nil {
 					return testing.PollBreak(err)
 				}
