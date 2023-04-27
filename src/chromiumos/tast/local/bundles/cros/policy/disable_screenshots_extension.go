@@ -14,10 +14,14 @@ import (
 	"path/filepath"
 	"time"
 
+	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/chrome/browser/browserfixt"
+	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/local/policyutil/fixtures"
@@ -39,7 +43,7 @@ var extensionFiles = []string{
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DisableScreenshotsExtension,
-		LacrosStatus: testing.LacrosVariantNeeded,
+		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Behavior of the DisableScreenshots policy, check whether screenshot can be taken by chrome.tabs.captureVisibleTab extensions API",
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
@@ -48,11 +52,20 @@ func init() {
 		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier"},
-		Data:         append(extensionFiles, disableScreenshotsExtensionHTML),
+		Fixture:      fixture.FakeDMS,
+		Params: []testing.Param{{
+			Val: browser.TypeAsh,
+		}, {
+			Name:              "lacros",
+			ExtraSoftwareDeps: []string{"lacros"},
+			Val:               browser.TypeLacros,
+		}},
+		Data: append(extensionFiles, disableScreenshotsExtensionHTML),
 		// 2 minutes is the default local test timeout. Check localTestTimeout constant in tast/src/chromiumos/tast/internal/bundle/local.go.
 		Timeout: chrome.ManagedUserLoginTimeout + 2*time.Minute,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DisableScreenshots{}, pci.VerifiedFunctionalityJS),
+			pci.SearchFlag(&policy.LacrosAvailability{}, pci.Served),
 		},
 	})
 }
@@ -63,6 +76,9 @@ func DisableScreenshotsExtension(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get keyboard: ", err)
 	}
 	defer keyboard.Close(ctx)
+
+	fdms := s.FixtValue().(*fakedms.FakeDMS)
+	bt := s.Param().(browser.Type)
 
 	extDir, err := ioutil.TempDir("", "screen_shooter_extension")
 	if err != nil {
@@ -81,28 +97,33 @@ func DisableScreenshotsExtension(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	fdms, err := fakedms.New(ctx, s.OutDir())
-	if err != nil {
-		s.Fatal("Failed to start FakeDMS: ", err)
+	// Setting Lacros policy if needed
+	pb := policy.NewBlob()
+	if bt == browser.TypeLacros {
+		pb.AddPolicies([]policy.Policy{&policy.LacrosAvailability{Val: "lacros_only"}})
 	}
-	defer fdms.Stop(ctx)
-
-	if err := fdms.WritePolicyBlob(policy.NewBlob()); err != nil {
+	if err := fdms.WritePolicyBlob(pb); err != nil {
 		s.Fatal("Failed to write policies to FakeDMS: ", err)
 	}
 
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()
 
-	cr, err := chrome.New(ctx,
-		chrome.UnpackedExtension(extDir),
-		chrome.FakeLogin(chrome.Creds{User: fixtures.Username, Pass: fixtures.Password}),
-		chrome.DMSPolicy(fdms.URL),
-		chrome.CustomLoginTimeout(chrome.ManagedUserLoginTimeout))
+	// Setup browser based on the chrome type.
+	chromeOpts := []chrome.Option{
+		chrome.DMSPolicy(fdms.URL), chrome.FakeLogin(chrome.Creds{User: fixtures.Username, Pass: fixtures.Password}),
+	}
+	if bt == browser.TypeLacros {
+		chromeOpts = append(chromeOpts, chrome.LacrosUnpackedExtension(extDir))
+	} else {
+		chromeOpts = append(chromeOpts, chrome.UnpackedExtension(extDir))
+	}
+	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, bt, lacrosfixt.NewConfig(), chromeOpts...)
 	if err != nil {
-		s.Fatal("Failed to create Chrome instance: ", err)
+		s.Fatal("Failed to start Chrome: ", err)
 	}
 	defer cr.Close(ctx)
+	defer closeBrowser(ctx)
 
 	for _, tc := range []struct {
 		name      string
@@ -140,22 +161,24 @@ func DisableScreenshotsExtension(ctx context.Context, s *testing.State) {
 				}
 			}(cleanupCtx)
 
-			// Minimum interval between captureVisibleTab requests is 1 second, so we
-			// must sleep for 1 seconds to be able to take screenshot,
-			// otherwise API will return an error.
-			//
+			// GoBigSleepLint: Minimum interval between captureVisibleTab requests 
+			// is 1 second, so we must sleep for 1 seconds to be able to take 
+			// screenshot, otherwise API will return an error.
 			// Please check MAX_CAPTURE_VISIBLE_TAB_CALLS_PER_SECOND constant in
 			// chrome/common/extensions/api/tabs.json
 			if err := testing.Sleep(ctx, time.Second); err != nil {
 				s.Fatal("Failed to sleep: ", err)
 			}
 
-			// Update policies.
-			if err := policyutil.ServeAndVerify(ctx, fdms, cr, tc.value); err != nil {
-				s.Fatal("Failed to update policies: ", err)
+			policies := tc.value
+			if bt == browser.TypeLacros {
+				policies = append(policies, &policy.LacrosAvailability{Val: "lacros_only"})
+			}
+			if err := policyutil.ServeAndVerify(ctx, fdms, cr, policies); err != nil {
+				s.Fatal("Failed to serve and verify: ", err)
 			}
 
-			conn, err := cr.NewConn(ctx, server.URL+"/"+disableScreenshotsExtensionHTML)
+			conn, err := br.NewConn(ctx, server.URL+"/"+disableScreenshotsExtensionHTML)
 			if err != nil {
 				s.Fatal("Failed to create a tab: ", err)
 			}
