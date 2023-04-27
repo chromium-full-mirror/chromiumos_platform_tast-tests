@@ -62,12 +62,12 @@ func (mw *MouseEventWriter) Close(ctx context.Context) error {
 	var firstErr error
 	if mw.rw != nil {
 		if firstErr = mw.rw.Close(); firstErr != nil {
-			testing.ContextLog(ctx, "Failed to close raw event writer: ", firstErr)
+			testing.ContextLog(ctx, "Failed to close raw event writer while closing the mouse event writer: ", firstErr)
 		}
 	}
 	if mw.virt != nil {
 		if err := mw.virt.Close(); err != nil {
-			testing.ContextLog(ctx, "Failed to close virtual file: ", err)
+			testing.ContextLog(ctx, "Failed to close virtual file while closing the mouse event writer: ", err)
 			if firstErr == nil {
 				firstErr = err
 			}

@@ -232,12 +232,12 @@ func (tsw *TouchscreenEventWriter) Close(ctx context.Context) error {
 	var firstErr error
 	if tsw.rw != nil {
 		if firstErr = tsw.rw.Close(); firstErr != nil {
-			testing.ContextLog(ctx, "Failed to close raw event writer: ", firstErr)
+			testing.ContextLog(ctx, "Failed to close raw event writer while closing the touchscreen event writer: ", firstErr)
 		}
 	}
 	if tsw.virt != nil {
 		if err := tsw.virt.Close(); err != nil {
-			testing.ContextLog(ctx, "Failed to close virtual file: ", err)
+			testing.ContextLog(ctx, "Failed to close virtual file while closing the touchscreen event writer: ", err)
 			if firstErr == nil {
 				firstErr = err
 			}

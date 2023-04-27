@@ -166,12 +166,12 @@ func (kw *KeyboardEventWriter) Close(ctx context.Context) error {
 	var firstErr error
 	if kw.rw != nil {
 		if firstErr = kw.rw.Close(); firstErr != nil {
-			testing.ContextLog(ctx, "Failed to close raw event writer: ", firstErr)
+			testing.ContextLog(ctx, "Failed to close raw event writer while closing the keyboard event writer: ", firstErr)
 		}
 	}
 	if kw.virt != nil {
 		if err := kw.virt.Close(); err != nil {
-			testing.ContextLog(ctx, "Failed to close virtual file: ", err)
+			testing.ContextLog(ctx, "Failed to close virtual file while closing the keyboard event writer: ", err)
 			if firstErr == nil {
 				firstErr = err
 			}

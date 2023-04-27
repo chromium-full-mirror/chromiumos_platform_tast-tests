@@ -54,12 +54,12 @@ func (aw *AudioJackEventWriter) Close(ctx context.Context) error {
 	var firstErr error
 	if aw.eventWriter != nil {
 		if firstErr = aw.eventWriter.Close(); firstErr != nil {
-			testing.ContextLog(ctx, "Failed to close raw event writer: ", firstErr)
+			testing.ContextLog(ctx, "Failed to close raw event writer while closing the audio jack event writer: ", firstErr)
 		}
 	}
 	if aw.virtualFile != nil {
 		if err := aw.virtualFile.Close(); err != nil {
-			testing.ContextLog(ctx, "Failed to close virtual file: ", err)
+			testing.ContextLog(ctx, "Failed to close virtual file while closing the audio jack event writer: ", err)
 			if firstErr == nil {
 				firstErr = err
 			}

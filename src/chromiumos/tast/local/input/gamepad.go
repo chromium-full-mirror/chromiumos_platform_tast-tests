@@ -66,12 +66,12 @@ func (gw *GamepadEventWriter) Close(ctx context.Context) error {
 	var firstErr error
 	if gw.rw != nil {
 		if firstErr = gw.rw.Close(); firstErr != nil {
-			testing.ContextLog(ctx, "Failed to close raw event writer: ", firstErr)
+			testing.ContextLog(ctx, "Failed to close raw event writer while closing the gamepad event writer: ", firstErr)
 		}
 	}
 	if gw.virt != nil {
 		if err := gw.virt.Close(); err != nil {
-			testing.ContextLog(ctx, "Failed to close virtual file: ", err)
+			testing.ContextLog(ctx, "Failed to close virtual file while closing the gamepad event writer: ", err)
 			if firstErr == nil {
 				firstErr = err
 			}
