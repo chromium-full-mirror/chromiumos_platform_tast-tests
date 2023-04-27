@@ -14,6 +14,7 @@ import (
 	"chromiumos/tast/remote/bundles/cros/wwcb/utils"
 	"chromiumos/tast/services/cros/ui"
 	"chromiumos/tast/services/cros/wwcb"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
@@ -21,7 +22,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Dock13ChangeResolutionGRPC,
+		Func:         ChangeExternalDisplayResolution,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Change Resolution being displayed on external monitor",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
@@ -33,12 +34,11 @@ func init() {
 	})
 }
 
-func Dock13ChangeResolutionGRPC(ctx context.Context, s *testing.State) {
+func ChangeExternalDisplayResolution(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	dockingID := s.RequiredVar("DockingID")
 	extDispID := s.RequiredVar("ExtDispID1")
 
 	// Connect to the gRPC server on the DUT.
@@ -58,11 +58,13 @@ func Dock13ChangeResolutionGRPC(ctx context.Context, s *testing.State) {
 
 	displaySvc := wwcb.NewDisplayServiceClient(cl.Conn)
 
-	// Open IP power to supply docking power.
-	if err := utils.OpenIppower(ctx, []int{1}); err != nil {
-		s.Fatal("Failed to open IP power: ", err)
+	if _, ok := s.Var("DockingID"); ok {
+		// Open IP power to supply docking power.
+		if err := utils.OpenIppower(ctx, []int{1}); err != nil {
+			s.Fatal("Failed to open IP power: ", err)
+		}
+		defer utils.CloseIppower(cleanupCtx, []int{1})
 	}
-	defer utils.CloseIppower(cleanupCtx, []int{1})
 
 	// Initialize fixtures to find the connected devices.
 	if err := utils.InitFixture(ctx); err != nil {
@@ -74,8 +76,10 @@ func Dock13ChangeResolutionGRPC(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect external display: ", err)
 	}
 
-	if err := utils.ControlFixture(ctx, dockingID, "on"); err != nil {
-		s.Fatal("Failed to connect docking station: ", err)
+	if dockingID, ok := s.Var("DockingID"); ok {
+		if err := utils.ControlFixture(ctx, dockingID, "on"); err != nil {
+			s.Fatal("Failed to connect docking station: ", err)
+		}
 	}
 
 	if _, err := displaySvc.VerifyDisplayCount(ctx, &wwcb.QueryRequest{DisplayCount: 2}); err != nil {
