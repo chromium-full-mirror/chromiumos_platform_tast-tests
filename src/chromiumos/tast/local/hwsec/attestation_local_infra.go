@@ -9,11 +9,12 @@ import (
 	"time"
 
 	"chromiumos/tast/common/hwsec"
+	"chromiumos/tast/errors"
+	"chromiumos/tast/fsutil"
 	"chromiumos/tast/local/filesnapshot"
 	"chromiumos/tast/local/hwsec/enckey"
+	"chromiumos/tast/testing"
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/testing"
 )
 
 // AttestationLocalInfra enables/disables the local server implementation on DUT.
@@ -31,6 +32,11 @@ func NewAttestationLocalInfra(dc *hwsec.DaemonController) *AttestationLocalInfra
 
 // Enable enables the local test infra for attestation flow testing.
 func (ali *AttestationLocalInfra) Enable(ctx context.Context) (lastErr error) {
+	// Restore the backed up attestation database.
+	if err := fsutil.CopyFile(attestationDBBackupPath, hwsec.AttestationDBPath); err != nil {
+		return errors.Wrap(err, "failed to restore the fake attestation database")
+	}
+
 	if err := enckey.InjectWellKnownGoogleKeysAndRestart(ctx, ali.dc); err != nil {
 		return errors.Wrap(err, "failed to inject well-known keys")
 	}
