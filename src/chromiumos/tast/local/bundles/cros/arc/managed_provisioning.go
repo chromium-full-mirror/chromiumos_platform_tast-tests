@@ -11,14 +11,14 @@ import (
 	"chromiumos/tast/common/chrome/credconfig"
 	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/arc/arcent"
 	"chromiumos/tast/local/arc/optin"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/local/retry"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

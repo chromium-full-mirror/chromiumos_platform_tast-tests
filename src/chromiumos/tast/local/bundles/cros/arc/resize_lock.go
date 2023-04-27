@@ -10,8 +10,6 @@ import (
 	"time"
 
 	"chromiumos/tast/common/android/adb"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bundles/cros/arc/wm"
 	"chromiumos/tast/local/chrome"
@@ -22,8 +20,10 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/screenshot"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type resizeLockTestFunc func(context.Context, *chrome.TestConn, *input.KeyboardEventWriter, *testing.State, string) error

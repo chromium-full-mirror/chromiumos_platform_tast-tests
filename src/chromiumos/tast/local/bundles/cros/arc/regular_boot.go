@@ -17,7 +17,7 @@ import (
 	"chromiumos/tast/local/chrome/metrics"
 	"chromiumos/tast/local/cpu"
 	"chromiumos/tast/local/disk"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 
 	"go.chromium.org/tast/core/errors"
 )

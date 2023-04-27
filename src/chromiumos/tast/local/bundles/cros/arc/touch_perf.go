@@ -13,7 +13,7 @@ import (
 	"chromiumos/tast/local/bundles/cros/arc/inputlatency"
 	"chromiumos/tast/local/cpu"
 	"chromiumos/tast/local/input"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

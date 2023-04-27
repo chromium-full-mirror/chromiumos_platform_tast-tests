@@ -18,8 +18,8 @@ import (
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/power/setup"
 	"chromiumos/tast/local/sysutil"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 
 	"go.chromium.org/tast/core/errors"
 )

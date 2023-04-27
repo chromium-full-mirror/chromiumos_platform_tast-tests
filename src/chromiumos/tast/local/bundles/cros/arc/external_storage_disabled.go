@@ -14,7 +14,7 @@ import (
 	"chromiumos/tast/local/bundles/cros/arc/removablemedia"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/policyutil"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

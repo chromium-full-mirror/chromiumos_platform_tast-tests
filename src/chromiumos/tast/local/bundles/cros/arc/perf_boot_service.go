@@ -14,14 +14,14 @@ import (
 
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/common/perf/perfpb"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bundles/cros/arc/perfboot"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/cpu"
 	"chromiumos/tast/local/memory/metrics"
 	arcpb "chromiumos/tast/services/cros/arc"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

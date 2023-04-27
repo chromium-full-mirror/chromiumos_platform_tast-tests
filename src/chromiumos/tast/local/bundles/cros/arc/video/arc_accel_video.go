@@ -18,8 +18,6 @@ import (
 
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bundles/cros/arc/c2e2etest"
 	"chromiumos/tast/local/chrome"
@@ -28,7 +26,9 @@ import (
 	mediacpu "chromiumos/tast/local/media/cpu"
 	"chromiumos/tast/local/media/logging"
 	"chromiumos/tast/local/power/setup"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (

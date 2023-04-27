@@ -9,12 +9,12 @@ import (
 	"path/filepath"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/arc/perfetto"
 	"chromiumos/tast/local/bundles/cros/arc/wm"
 	"chromiumos/tast/local/chrome/ash"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

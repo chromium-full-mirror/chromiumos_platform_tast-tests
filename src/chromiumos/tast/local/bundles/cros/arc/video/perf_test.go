@@ -17,7 +17,7 @@ import (
 	"github.com/kylelemons/godebug/diff"
 
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testutil"
 )
 

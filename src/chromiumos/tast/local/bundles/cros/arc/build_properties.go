@@ -16,7 +16,7 @@ import (
 
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/arc"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 // buildPropertiesTestParameters contains all the data needed to run a single test iteration.

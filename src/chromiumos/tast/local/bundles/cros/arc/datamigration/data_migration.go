@@ -8,9 +8,9 @@ import (
 	"context"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/cryptohome"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // MountVaultWithArchivedHomeData mounts archived home data under the user's cryptohome.

@@ -12,13 +12,13 @@ import (
 	"time"
 
 	"chromiumos/tast/common/android/ui"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bundles/cros/arc/storage"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/cryptohome"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

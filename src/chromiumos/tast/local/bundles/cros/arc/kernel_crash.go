@@ -11,12 +11,12 @@ import (
 	"github.com/shirou/gopsutil/v3/process"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bundles/cros/arc/arccrash"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/crash"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

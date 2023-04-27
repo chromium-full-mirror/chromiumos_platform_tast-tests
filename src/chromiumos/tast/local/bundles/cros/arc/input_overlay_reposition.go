@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"chromiumos/tast/common/action"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/arc/gio"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -21,7 +20,8 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/touch"
 	"chromiumos/tast/local/coords"
 	"chromiumos/tast/local/input"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

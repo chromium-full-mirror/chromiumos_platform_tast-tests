@@ -9,7 +9,6 @@ import (
 	"regexp"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/a11y"
 	"chromiumos/tast/local/a11y/chromevox"
 	arca11y "chromiumos/tast/local/bundles/cros/arc/a11y"
@@ -18,7 +17,8 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/event"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/input"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 type axEventTestStep struct {

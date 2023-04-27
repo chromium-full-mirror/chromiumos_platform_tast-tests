@@ -11,8 +11,6 @@ import (
 
 	"chromiumos/tast/common/android/adb"
 	"chromiumos/tast/common/android/ui"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bundles/cros/arc/wm"
 	"chromiumos/tast/local/chrome"
@@ -21,7 +19,9 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/pointer"
 	"chromiumos/tast/local/power"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

@@ -8,8 +8,8 @@ package notification
 import (
 	"context"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
+	"go.chromium.org/tast/core/errors"
 )
 
 // EnsureNotificationPermission grants the notification permission if needed.

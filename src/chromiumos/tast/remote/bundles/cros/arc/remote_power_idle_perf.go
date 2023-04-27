@@ -13,9 +13,9 @@ import (
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/remote/firmware/fixture"
 	"chromiumos/tast/remote/firmware/power"
-	"chromiumos/tast/rpc"
 	"chromiumos/tast/services/cros/arc"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

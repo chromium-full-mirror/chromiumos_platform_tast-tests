@@ -17,8 +17,6 @@ import (
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/tape"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/arc/arcent"
 	"chromiumos/tast/local/arc/playstore"
@@ -30,7 +28,9 @@ import (
 	"chromiumos/tast/local/retry"
 	"chromiumos/tast/local/screenshot"
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // How to create archived home data to be used by this test:

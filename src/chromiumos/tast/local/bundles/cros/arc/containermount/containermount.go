@@ -17,11 +17,11 @@ import (
 
 	"chromiumos/tast/common/testexec"
 	upstartcommon "chromiumos/tast/common/upstart"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/sysutil"
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // mountsForMinijail returns a list of mount points of the minijail'ed process

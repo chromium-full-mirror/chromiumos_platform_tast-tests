@@ -10,8 +10,8 @@ import (
 
 	"github.com/shirou/gopsutil/v3/process"
 
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // TestMidis verifies midis daemon starts correctly.

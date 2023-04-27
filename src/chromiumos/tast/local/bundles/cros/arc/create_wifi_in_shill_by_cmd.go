@@ -14,11 +14,11 @@ import (
 
 	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/network/hwsim"
 	"chromiumos/tast/local/shill"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 var failReg = regexp.MustCompile(`.*Save failed.*`)

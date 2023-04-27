@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bundles/cros/arc/arcpipvideotest"
 	"chromiumos/tast/local/chrome"
@@ -22,7 +21,8 @@ import (
 	"chromiumos/tast/local/cpu"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/power"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 type arcPIPEnergyAndPowerTestParams struct {

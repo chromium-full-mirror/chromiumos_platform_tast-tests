@@ -28,7 +28,7 @@ import (
 	"chromiumos/tast/local/cpu"
 	"chromiumos/tast/local/disk"
 	"chromiumos/tast/local/power"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/lsbrelease"

@@ -16,12 +16,12 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/colorcmp"
 	"chromiumos/tast/local/screenshot"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (

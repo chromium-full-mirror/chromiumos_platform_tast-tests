@@ -7,7 +7,7 @@ package startstop
 import (
 	"context"
 
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Subtest defines a test runs in arc.StartStop.

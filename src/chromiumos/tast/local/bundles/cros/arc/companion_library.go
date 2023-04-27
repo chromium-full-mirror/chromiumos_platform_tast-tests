@@ -19,8 +19,6 @@ import (
 	"time"
 
 	"chromiumos/tast/common/android/ui"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
@@ -30,7 +28,9 @@ import (
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/media/imgcmp"
 	"chromiumos/tast/local/screenshot"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Default value for arc app window minimize limits (DP).

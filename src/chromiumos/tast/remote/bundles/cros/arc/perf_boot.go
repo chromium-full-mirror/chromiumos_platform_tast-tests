@@ -16,9 +16,9 @@ import (
 
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/common/perf/perfpb"
-	"chromiumos/tast/rpc"
 	"chromiumos/tast/services/cros/arc"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/testing"
 )
 
 var (

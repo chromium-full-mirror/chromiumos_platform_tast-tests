@@ -8,7 +8,7 @@ import (
 	"context"
 
 	"chromiumos/tast/local/arc"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 // TestPID runs inside arc.StartStop.

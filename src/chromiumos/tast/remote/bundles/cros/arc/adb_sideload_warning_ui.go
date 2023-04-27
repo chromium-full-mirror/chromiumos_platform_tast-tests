@@ -9,11 +9,11 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/rpc"
 	"chromiumos/tast/services/cros/arc"
 	arcpb "chromiumos/tast/services/cros/arc"
 	"chromiumos/tast/services/cros/security"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/testing"
 )
 
 const adbSideloadingBootLockboxKey = "arc_sideloading_allowed"

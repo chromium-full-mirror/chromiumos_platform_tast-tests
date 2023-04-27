@@ -14,11 +14,11 @@ import (
 
 	"google.golang.org/grpc"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/a11y/tts"
 	"chromiumos/tast/local/bundles/cros/arc/cache"
 	arcpb "chromiumos/tast/services/cros/arc"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

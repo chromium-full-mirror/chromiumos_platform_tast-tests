@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/errors"
 	arcpkg "chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -17,7 +16,8 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/quicksettings"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/personalization"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

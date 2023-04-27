@@ -12,7 +12,7 @@ import (
 	"chromiumos/tast/local/bundles/cros/arc/wm"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/display"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

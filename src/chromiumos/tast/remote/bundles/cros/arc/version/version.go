@@ -11,8 +11,8 @@ import (
 	"strconv"
 	"strings"
 
-	"chromiumos/tast/dut"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/errors"
 )
 
 // BuildDescriptor contains essential parameters of ARC Android image taken from test device.

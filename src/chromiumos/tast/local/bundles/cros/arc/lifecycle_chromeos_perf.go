@@ -13,7 +13,7 @@ import (
 	"chromiumos/tast/local/memory"
 	"chromiumos/tast/local/memory/kernelmeter"
 	"chromiumos/tast/local/memory/memoryuser"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

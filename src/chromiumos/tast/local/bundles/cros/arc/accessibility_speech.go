@@ -8,13 +8,13 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/a11y/chromevox"
 	"chromiumos/tast/local/a11y/tts"
 	"chromiumos/tast/local/arc"
 	arca11y "chromiumos/tast/local/bundles/cros/arc/a11y"
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 type expectedSpeechLog struct {

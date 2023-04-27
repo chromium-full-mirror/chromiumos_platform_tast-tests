@@ -13,8 +13,8 @@ import (
 	"chromiumos/tast/local/bundles/cros/arc/c2e2etest"
 	"chromiumos/tast/local/bundles/cros/arc/video"
 	"chromiumos/tast/local/media/videotype"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 const (

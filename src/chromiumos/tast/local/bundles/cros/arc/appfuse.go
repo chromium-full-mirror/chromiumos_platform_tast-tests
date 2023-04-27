@@ -12,7 +12,7 @@ import (
 
 	"chromiumos/tast/local/dbusutil"
 	"chromiumos/tast/local/sysutil"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

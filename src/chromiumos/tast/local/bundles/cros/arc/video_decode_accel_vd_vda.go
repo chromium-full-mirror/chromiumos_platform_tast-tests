@@ -10,7 +10,7 @@ import (
 
 	"chromiumos/tast/common/media/caps"
 	"chromiumos/tast/local/media/decoding"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 type videoDecodeAccelVDVDATestParam struct {

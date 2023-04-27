@@ -15,11 +15,11 @@ import (
 	"time"
 
 	"chromiumos/tast/common/android/ui"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/coords"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Action represents a MotionEvent's action key.

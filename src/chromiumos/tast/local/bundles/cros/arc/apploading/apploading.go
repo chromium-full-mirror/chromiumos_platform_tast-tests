@@ -17,15 +17,15 @@ import (
 
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/cpu"
 	"chromiumos/tast/local/disk"
 	"chromiumos/tast/local/power"
 	"chromiumos/tast/local/power/setup"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // TestConfig defines input params for apploading.RunTest function.

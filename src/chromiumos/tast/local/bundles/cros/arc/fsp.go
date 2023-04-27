@@ -11,8 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/errors"
-	"chromiumos/tast/fsutil"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bundles/cros/arc/storage"
 	"chromiumos/tast/local/chrome"
@@ -23,7 +21,9 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/cryptohome"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/fsutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 // arc.Fsp / arc.Fsp.vm tast tests make use of an unarchiver to mount a test zip file

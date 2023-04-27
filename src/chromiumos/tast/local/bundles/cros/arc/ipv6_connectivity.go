@@ -11,13 +11,13 @@ import (
 	pp "chromiumos/system_api/patchpanel_proto"
 	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	patchpanel "chromiumos/tast/local/network/patchpanel_client"
 	"chromiumos/tast/local/network/routing"
 	"chromiumos/tast/local/shill"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 type ipv6TestParams struct {

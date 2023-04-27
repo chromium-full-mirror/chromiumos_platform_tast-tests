@@ -13,14 +13,14 @@ import (
 	"time"
 
 	"chromiumos/tast/common/android"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bundles/cros/arc/storage"
 	"chromiumos/tast/local/chrome/mtp"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/filesapp"
 	"chromiumos/tast/local/cryptohome"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 // mtpURIPrefix is the expected prefix of the Content URI for the Android

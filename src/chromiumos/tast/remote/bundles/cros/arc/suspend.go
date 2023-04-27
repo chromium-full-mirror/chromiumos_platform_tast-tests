@@ -13,12 +13,12 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/empty"
 
-	"chromiumos/tast/errors"
-	"chromiumos/tast/rpc"
 	"chromiumos/tast/services/cros/arc"
 	arcpb "chromiumos/tast/services/cros/arc"
-	"chromiumos/tast/ssh"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/ssh"
+	"go.chromium.org/tast/core/testing"
 )
 
 type testArgsForSuspend struct {

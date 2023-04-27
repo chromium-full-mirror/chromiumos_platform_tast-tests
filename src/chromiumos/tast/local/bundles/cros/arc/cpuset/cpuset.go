@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"strings"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // Parse parses cpus file content from  /dev/cpuset/*/cpus and returns map of used CPUs.

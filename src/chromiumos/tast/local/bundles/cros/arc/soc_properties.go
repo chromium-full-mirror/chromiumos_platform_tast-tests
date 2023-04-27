@@ -11,10 +11,10 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/fsutil"
 	"chromiumos/tast/local/arc"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/fsutil"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -33,9 +33,9 @@ func init() {
 			"dru",
 			"druwl",
 			"dumo",
-			"elm",  // AUE on Container-R
+			"elm", // AUE on Container-R
 			"edgar",
-			"hana",  // AUE on Container-R
+			"hana", // AUE on Container-R
 			"kevin",
 			"ultima",
 		)),
@@ -52,14 +52,14 @@ func init() {
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"no_qemu"},
 		},
-		{
-			// VMs may not have valid ro.soc.* values. It is often unfeasible to find the exact
-			// CPU model as /proc/cpuinfo may have generic information. So we only populate
-			// values for them as best effort.
-			Name: "betty",
-			ExtraSoftwareDeps: []string{"qemu"},
-			ExtraAttr: []string{"informational"},
-		}},
+			{
+				// VMs may not have valid ro.soc.* values. It is often unfeasible to find the exact
+				// CPU model as /proc/cpuinfo may have generic information. So we only populate
+				// values for them as best effort.
+				Name:              "betty",
+				ExtraSoftwareDeps: []string{"qemu"},
+				ExtraAttr:         []string{"informational"},
+			}},
 	})
 }
 

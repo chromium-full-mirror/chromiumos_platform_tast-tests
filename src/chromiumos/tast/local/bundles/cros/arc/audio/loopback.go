@@ -8,11 +8,11 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/audio"
 	"chromiumos/tast/local/audio/crastestclient"
 	"chromiumos/tast/local/chrome"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 )
 
 // SetupLoopbackDevice setups ALSA loopback (aloop) module and select the loopback devices

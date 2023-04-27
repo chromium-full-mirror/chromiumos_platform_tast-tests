@@ -14,11 +14,11 @@ import (
 	"time"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/shutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 // GetPerfValues parses ARC log files and extracts performance metrics Android boot flow.

@@ -16,7 +16,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/filesapp"
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/input"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

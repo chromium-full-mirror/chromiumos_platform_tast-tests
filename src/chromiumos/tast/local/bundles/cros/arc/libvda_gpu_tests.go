@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"chromiumos/tast/local/bundles/cros/arc/libvda"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

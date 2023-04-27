@@ -15,7 +15,6 @@ import (
 	"chromiumos/tast/common/android/ui"
 	nearbycommon "chromiumos/tast/common/cros/nearbyshare"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome/nearbyshare"
 	"chromiumos/tast/local/chrome/nearbyshare/nearbyfixture"
@@ -25,7 +24,8 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/screenshot"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (

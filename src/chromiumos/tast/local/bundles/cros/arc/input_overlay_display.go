@@ -9,13 +9,13 @@ import (
 	"time"
 
 	"chromiumos/tast/common/action"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/arc/gio"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/input"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

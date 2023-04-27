@@ -18,15 +18,15 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/bundles/cros/arc/version"
-	"chromiumos/tast/rpc"
 	"chromiumos/tast/services/cros/arc"
 	arcpb "chromiumos/tast/services/cros/arc"
-	"chromiumos/tast/ssh/linuxssh"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/ssh/linuxssh"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type testParam struct {

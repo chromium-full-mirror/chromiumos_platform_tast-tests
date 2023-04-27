@@ -10,8 +10,8 @@ import (
 
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/testcheck"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/testcheck"
 )
 
 const pattern = "arc.*"

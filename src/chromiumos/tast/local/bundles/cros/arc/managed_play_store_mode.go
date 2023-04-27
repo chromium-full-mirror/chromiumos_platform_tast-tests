@@ -18,7 +18,7 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/local/retry"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 
 	"go.chromium.org/tast/core/ctxutil"
 )

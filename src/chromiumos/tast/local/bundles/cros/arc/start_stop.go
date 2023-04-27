@@ -12,7 +12,7 @@ import (
 	"chromiumos/tast/local/bundles/cros/arc/startstop"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 // testArgs represents the arguments passed to each parameterized test.
