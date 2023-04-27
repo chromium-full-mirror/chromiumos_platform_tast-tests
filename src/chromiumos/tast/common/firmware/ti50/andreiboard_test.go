@@ -15,16 +15,11 @@ import (
 	"go.chromium.org/tast/core/errors"
 )
 
-func createDut(ctrl *gomock.Controller, bufLen int) (*Andreiboard, *mocks.MockPort) {
+func createDut(ctrl *gomock.Controller, bufLen int) (*BufferedConsole, *mocks.MockPort) {
+	dut := NewBufferedConsole("", bufLen, nil)
 	p := mocks.NewMockPort(ctrl)
-
-	dut := Andreiboard{
-		targetBufferUnread: make([]byte, bufLen),
-		port:               p,
-	}
-
 	dut.port = p
-	return &dut, p
+	return dut, p
 }
 
 func TestAndreiboard(t *testing.T) {
@@ -78,7 +73,7 @@ func TestAndreiboard(t *testing.T) {
 
 	ctrl := gomock.NewController(t)
 
-	var dut *Andreiboard
+	var dut *BufferedConsole
 	var port *mocks.MockPort
 
 	t.Log("Read error should result in same error")

@@ -27,13 +27,13 @@ const (
 
 // DevBoard is the generic interface for development boards.
 type DevBoard interface {
-	// Open opens the console port.
+	// Open opens the ti50 console and EC consoles.
 	Open(ctx context.Context) error
-	// ReadSerialSubmatch reads output from port until regex is matched.
+	// ReadSerialSubmatch reads gsc console output from port until regex is matched.
 	ReadSerialSubmatch(ctx context.Context, re *regexp.Regexp) (output [][]byte, err error)
-	// WriteSerial writes to port.
+	// WriteSerial writes to gsc console.
 	WriteSerial(ctx context.Context, bytes []byte) error
-	// FlushSerial flushes un-read/written chars from port.
+	// FlushSerial flushes un-read/written chars on gsc console.
 	FlushSerial(ctx context.Context) error
 	// FlashImage flashes image on DevBoard.
 	FlashImage(ctx context.Context, imagePath string) error
@@ -43,10 +43,16 @@ type DevBoard interface {
 	PlainCommand(ctx context.Context, cmd string, args ...string) (output []byte, err error)
 	// Reset the DevBoard.
 	Reset(ctx context.Context) error
-	// Close closes the console port.
+	// Close closes all open consoles.
 	Close(ctx context.Context) error
 	// GSCToolCommand executes gsctool.
 	GSCToolCommand(ctx context.Context, image string, args ...string) (output []byte, err error)
 	// Executes TCG tests.
 	RunTcgTests(ctx context.Context, outdir string, test_suite string) error
+	// ECSerialWrite writes the specified bytes to the EC console. This also clears any pending
+	// incoming EC console data that hasn't been read yet as this is the most common pattern to
+	// interact with EC console.
+	ECSerialWrite(ctx context.Context, bytes []byte) error
+	// ECSerialRead reads the specified number of bytes from the EC console.
+	ECSerialRead(ctx context.Context, size int) ([]byte, error)
 }

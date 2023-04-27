@@ -11,6 +11,7 @@ import (
 
 	"chromiumos/tast/common/firmware/serial"
 	"chromiumos/tast/remote/firmware/ti50/dutcontrol"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -18,8 +19,10 @@ import (
 const (
 	// ConsoleUart is the rawuart port.
 	ConsoleUart = "console"
-	// ConsoleBaud is the baud rate to use to access the ConsoleUart.
-	ConsoleBaud = 115200
+	// EcUart is the raw uart name for EC.
+	EcUart = "EC"
+	// UartBaud is the baud rate to use to access all raw uarts.
+	UartBaud = 115200
 
 	// qSize is the channel size for the data and write receive channels, it should be large enough to not ever block on writes so that one channel does not block the other.
 	qSize = 100000

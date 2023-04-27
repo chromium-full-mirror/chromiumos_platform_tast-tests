@@ -20,6 +20,7 @@ import (
 
 	common "chromiumos/tast/common/firmware/ti50"
 	"chromiumos/tast/remote/firmware/ti50/dutcontrol"
+
 	"go.chromium.org/tast/core/errors"
 )
 
@@ -37,8 +38,9 @@ var (
 
 // DUTControlAndreiboard controls an Andreiboard through dutcontrol grpc..
 type DUTControlAndreiboard struct {
-	client dutcontrol.DutControlClient
-	*common.Andreiboard
+	client     dutcontrol.DutControlClient
+	gscConsole *common.BufferedConsole
+	ecConsole  *common.BufferedConsole
 }
 
 // NewDUTControlAndreiboard creates a DUTControlAndreiboard.
@@ -59,16 +61,26 @@ type DUTControlAndreiboard struct {
 // defer board.Close(ctx)
 func NewDUTControlAndreiboard(grpcConn *grpc.ClientConn, bufSize int, readTimeout time.Duration) *DUTControlAndreiboard {
 	dutControlClient := dutcontrol.NewDutControlClient(grpcConn)
-	opener := &DUTControlRawUARTPortOpener{
+
+	gscOpener := &DUTControlRawUARTPortOpener{
 		Client:      dutControlClient,
 		Uart:        ConsoleUart,
-		Baud:        ConsoleBaud,
+		Baud:        UartBaud,
 		DataLen:     consoleDataLen,
 		ReadTimeout: readTimeout,
 	}
+	gscConsole := common.NewBufferedConsole("andrieboard.log", bufSize, gscOpener)
 
-	ab := common.NewAndreiboard(bufSize, opener, "")
-	return &DUTControlAndreiboard{client: dutControlClient, Andreiboard: ab}
+	ecOpener := &DUTControlRawUARTPortOpener{
+		Client:      dutControlClient,
+		Uart:        EcUart,
+		Baud:        UartBaud,
+		DataLen:     consoleDataLen,
+		ReadTimeout: readTimeout,
+	}
+	ecConsole := common.NewBufferedConsole("ec.log", bufSize, ecOpener)
+
+	return &DUTControlAndreiboard{client: dutControlClient, gscConsole: gscConsole, ecConsole: ecConsole}
 }
 
 // Setup will tell the devboard service which binary image and configuration we want to use.
@@ -137,14 +149,14 @@ func (a *DUTControlAndreiboard) FlashImage(ctx context.Context, image string) (e
 	}
 
 	// Close and Re-open the port because opentitantool console occupies the UART that rescue uses.
-	wasOpen := a.IsOpen()
-	err = a.Close(ctx)
+	wasOpen := a.gscConsole.IsOpen()
+	err = a.gscConsole.Close(ctx)
 	if err != nil {
 		return errors.Wrap(err, "close console before rescue")
 	}
 	defer func() {
 		if wasOpen {
-			if e := a.Open(ctx); e != nil && err == nil {
+			if e := a.gscConsole.Open(ctx); e != nil && err == nil {
 				err = e
 			}
 		}
@@ -164,6 +176,35 @@ func (a *DUTControlAndreiboard) FlashImage(ctx context.Context, image string) (e
 		return errors.Errorf("bootstrap operation failed: %s, stdout: %s, stderr: %s", resp.Err, resp.Output, resp.ErrOutput)
 	}
 	return nil
+}
+
+// Open opens the ti50 console and EC consoles.
+func (a *DUTControlAndreiboard) Open(ctx context.Context) error {
+	err1 := a.gscConsole.Open(ctx)
+	err2 := a.ecConsole.Open(ctx)
+	return errors.Join(err1, err2)
+}
+
+// ReadSerialSubmatch reads gsc console output from port until regex is matched.
+func (a *DUTControlAndreiboard) ReadSerialSubmatch(ctx context.Context, re *regexp.Regexp) (output [][]byte, err error) {
+	return a.gscConsole.ReadSerialSubmatch(ctx, re)
+}
+
+// WriteSerial writes to gsc console.
+func (a *DUTControlAndreiboard) WriteSerial(ctx context.Context, bytes []byte) error {
+	return a.gscConsole.WriteSerial(ctx, bytes)
+}
+
+// FlushSerial flushes un-read/written chars on gsc console.
+func (a *DUTControlAndreiboard) FlushSerial(ctx context.Context) error {
+	return a.gscConsole.FlushSerial(ctx)
+}
+
+// Close closes all open consoles.
+func (a *DUTControlAndreiboard) Close(ctx context.Context) error {
+	err1 := a.gscConsole.Close(ctx)
+	err2 := a.ecConsole.Close(ctx)
+	return errors.Join(err1, err2)
 }
 
 // PlainCommand executes a opentitantool subcommand that uses no file arguments.
@@ -303,4 +344,21 @@ func (a *DUTControlAndreiboard) RunTcgTests(ctx context.Context, outdir string, 
 	}
 
 	return nil
+}
+
+// ECSerialWrite writes the specified bytes to the EC console. This also clears any pending
+// incoming EC console data that hasn't been read yet as this is the most common pattern to
+// interact with EC console.
+func (a *DUTControlAndreiboard) ECSerialWrite(ctx context.Context, bytes []byte) error {
+	// Clear any pending input before we write since we are just writing binary data and the
+	// UART line gets grounded during GSC reset and adds extra \0 bytes that tests do not want to
+	// have to handle
+	err1 := a.ecConsole.ClearInput(ctx)
+	err2 := a.ecConsole.WriteSerial(ctx, bytes)
+	return errors.Join(err1, err2)
+}
+
+// ECSerialRead reads the specified number of bytes from the EC console.
+func (a *DUTControlAndreiboard) ECSerialRead(ctx context.Context, size int) ([]byte, error) {
+	return a.ecConsole.ReadSerialBytes(ctx, size)
 }
