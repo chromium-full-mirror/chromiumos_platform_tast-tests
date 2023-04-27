@@ -18,6 +18,7 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/local/retry"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -81,11 +82,6 @@ func ManagedPlayAppAvailabilityChange(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
 	defer cancel()
 
-	arcPolicy := arcent.CreateArcPolicyWithApps(packages, arcent.InstallTypeAvailable)
-	arcPolicy.Val.PlayStoreMode = arcent.PlayStoreModeAllowList
-	arcEnabledPolicy := &policy.ArcEnabled{Val: true}
-	policies := []policy.Policy{arcEnabledPolicy, arcPolicy}
-
 	if err := testing.Poll(ctx, func(ctx context.Context) (retErr error) {
 		creds, err := credconfig.PickRandomCreds(s.RequiredVar(arcent.LoginPoolVar))
 		if err != nil {
@@ -93,7 +89,7 @@ func ManagedPlayAppAvailabilityChange(ctx context.Context, s *testing.State) {
 		}
 		login := chrome.GAIALogin(creds)
 
-		fdms, err := policyutil.SetUpFakePolicyServer(ctx, s.OutDir(), creds.User, policies)
+		fdms, err := arcent.SetupPolicyServerWithArcApps(ctx, s.OutDir(), creds.User, packages, arcent.InstallTypeAvailable, arcent.PlayStoreModeAllowList)
 		if err != nil {
 			rl.Exit("setup fake policy server", err)
 		}
@@ -148,8 +144,7 @@ func ManagedPlayAppAvailabilityChange(ctx context.Context, s *testing.State) {
 
 		s.Log("Changing the policy to block the available app")
 
-		arcPolicy := arcent.CreateArcPolicyWithApps(packages, arcent.InstallTypeBlocked)
-		arcPolicy.Val.PlayStoreMode = arcent.PlayStoreModeAllowList
+		arcPolicy := arcent.CreateArcPolicyWithApps(packages, arcent.InstallTypeBlocked, arcent.PlayStoreModeAllowList)
 		arcEnabledPolicy := &policy.ArcEnabled{Val: true}
 		policies := []policy.Policy{arcEnabledPolicy, arcPolicy}
 

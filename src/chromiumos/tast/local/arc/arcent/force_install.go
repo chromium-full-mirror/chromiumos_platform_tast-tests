@@ -19,6 +19,7 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/policyutil"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -48,8 +49,8 @@ const PlayStoreModeAllowList = "WHITELIST"
 var UIAutomatorPackages = []string{"com.github.uiautomator.test", "com.github.uiautomator"}
 
 // SetupPolicyServerWithArcApps sets up a fake policy server with ARC enabled and a list of packages with the corresponding install type
-func SetupPolicyServerWithArcApps(ctx context.Context, outDir, policyUser string, packages []string, installType string) (fdms *fakedms.FakeDMS, retErr error) {
-	arcPolicy := CreateArcPolicyWithApps(packages, installType)
+func SetupPolicyServerWithArcApps(ctx context.Context, outDir, policyUser string, packages []string, installType, playStoreMode string) (fdms *fakedms.FakeDMS, retErr error) {
+	arcPolicy := CreateArcPolicyWithApps(packages, installType, playStoreMode)
 	arcEnabledPolicy := &policy.ArcEnabled{Val: true}
 	policies := []policy.Policy{arcEnabledPolicy, arcPolicy}
 
@@ -112,7 +113,7 @@ func makeList(packages map[string]bool) []string {
 }
 
 // CreateArcPolicyWithApps creates a policy with specified packages with given install type.
-func CreateArcPolicyWithApps(packages []string, installType string) *policy.ArcPolicy {
+func CreateArcPolicyWithApps(packages []string, installType, playStoreMode string) *policy.ArcPolicy {
 	var appsInPolicy []policy.Application
 	for _, packageName := range packages {
 		appsInPolicy = append(appsInPolicy, policy.Application{
@@ -132,7 +133,7 @@ func CreateArcPolicyWithApps(packages []string, installType string) *policy.ArcP
 	arcPolicy := &policy.ArcPolicy{
 		Val: &policy.ArcPolicyValue{
 			Applications:              appsInPolicy,
-			PlayStoreMode:             PlayStoreModeAllowList,
+			PlayStoreMode:             playStoreMode,
 			DpsInteractionsDisabled:   true,
 			PlayEmmApiInstallDisabled: true,
 		},

@@ -20,12 +20,11 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/ossettings"
 	"chromiumos/tast/local/chrome/uiauto/role"
-	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/local/retry"
-	"go.chromium.org/tast/core/testing"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 type managedPlayStoreAccountSwitchArgs struct {
@@ -117,12 +116,7 @@ func ManagedPlayStoreAccountSwitch(ctx context.Context, s *testing.State) {
 		}
 		login := chrome.GAIALogin(creds)
 
-		arcPolicy := arcent.CreateArcPolicyWithApps([]string{}, arcent.InstallTypeAvailable)
-		arcPolicy.Val.PlayStoreMode = args.playStoreMode
-		arcEnabledPolicy := &policy.ArcEnabled{Val: true}
-		policies := []policy.Policy{arcEnabledPolicy, arcPolicy}
-
-		fdms, err := policyutil.SetUpFakePolicyServer(ctx, s.OutDir(), creds.User, policies)
+		fdms, err := arcent.SetupPolicyServerWithArcApps(ctx, s.OutDir(), creds.User, []string{}, arcent.InstallTypeAvailable, args.playStoreMode)
 		if err != nil {
 			rl.Exit("setup fake policy server", err)
 		}

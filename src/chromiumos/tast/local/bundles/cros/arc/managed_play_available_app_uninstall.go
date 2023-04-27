@@ -18,6 +18,7 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/local/retry"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -88,7 +89,7 @@ func ManagedPlayAvailableAppUninstall(ctx context.Context, s *testing.State) {
 		}
 		login := chrome.GAIALogin(creds)
 
-		fdms, err := arcent.SetupPolicyServerWithArcApps(ctx, s.OutDir(), creds.User, packages, arcent.InstallTypeForceInstalled)
+		fdms, err := arcent.SetupPolicyServerWithArcApps(ctx, s.OutDir(), creds.User, packages, arcent.InstallTypeForceInstalled, arcent.PlayStoreModeAllowList)
 		if err != nil {
 			rl.Exit("setup fake policy server", err)
 		}
@@ -131,7 +132,7 @@ func ManagedPlayAvailableAppUninstall(ctx context.Context, s *testing.State) {
 		}, a, filepath.Join(s.OutDir(), fmt.Sprintf("bugreport_%d.zip", rl.Attempts)))
 
 		s.Log("Changing the policy to make the app available")
-		arcPolicy := arcent.CreateArcPolicyWithApps(packages, arcent.InstallTypeAvailable)
+		arcPolicy := arcent.CreateArcPolicyWithApps(packages, arcent.InstallTypeAvailable, arcent.PlayStoreModeAllowList)
 		arcEnabledPolicy := &policy.ArcEnabled{Val: true}
 		policies := []policy.Policy{arcEnabledPolicy, arcPolicy}
 

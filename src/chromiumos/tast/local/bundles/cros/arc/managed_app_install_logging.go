@@ -23,6 +23,7 @@ import (
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/local/retry"
 	"chromiumos/tast/local/syslog"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -247,7 +248,7 @@ func waitForLoggedEvents(ctx context.Context, cr *chrome.Chrome, packageName str
 }
 
 func setupPolicyServerWithArcAppsAndEnableLogging(ctx context.Context, outDir, policyUser string, packages []string) (fdms *fakedms.FakeDMS, retErr error) {
-	arcPolicy := arcent.CreateArcPolicyWithApps(packages, arcent.InstallTypeForceInstalled)
+	arcPolicy := arcent.CreateArcPolicyWithApps(packages, arcent.InstallTypeForceInstalled, arcent.PlayStoreModeAllowList)
 	arcEnabledPolicy := &policy.ArcEnabled{Val: true}
 	arcInstallLoggingEnabledPolicy := &policy.ArcAppInstallEventLoggingEnabled{Val: true}
 	policies := []policy.Policy{arcEnabledPolicy, arcPolicy, arcInstallLoggingEnabledPolicy}

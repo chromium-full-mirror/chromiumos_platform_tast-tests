@@ -14,6 +14,7 @@ import (
 	"chromiumos/tast/local/arc/playstore"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/retry"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -82,7 +83,7 @@ func ManagedPlayAvailableAppInstall(ctx context.Context, s *testing.State) {
 		}
 		login := chrome.GAIALogin(creds)
 
-		fdms, err := arcent.SetupPolicyServerWithArcApps(ctx, s.OutDir(), creds.User, packages, arcent.InstallTypeAvailable)
+		fdms, err := arcent.SetupPolicyServerWithArcApps(ctx, s.OutDir(), creds.User, packages, arcent.InstallTypeAvailable, arcent.PlayStoreModeAllowList)
 		if err != nil {
 			rl.Exit("setup fake policy server", err)
 		}

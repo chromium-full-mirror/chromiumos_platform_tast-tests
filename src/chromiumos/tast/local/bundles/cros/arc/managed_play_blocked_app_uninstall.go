@@ -18,6 +18,7 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/local/retry"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -87,7 +88,7 @@ func ManagedPlayBlockedAppUninstall(ctx context.Context, s *testing.State) {
 		}
 		login := chrome.GAIALogin(creds)
 
-		fdms, err := arcent.SetupPolicyServerWithArcApps(ctx, s.OutDir(), creds.User, packages, arcent.InstallTypeForceInstalled)
+		fdms, err := arcent.SetupPolicyServerWithArcApps(ctx, s.OutDir(), creds.User, packages, arcent.InstallTypeForceInstalled, arcent.PlayStoreModeAllowList)
 		if err != nil {
 			rl.Exit("setup fake policy server", err)
 		}
@@ -128,7 +129,7 @@ func ManagedPlayBlockedAppUninstall(ctx context.Context, s *testing.State) {
 		}
 
 		s.Log("Changing the policy to block the installed app")
-		arcPolicy := arcent.CreateArcPolicyWithApps(packages, arcent.InstallTypeBlocked)
+		arcPolicy := arcent.CreateArcPolicyWithApps(packages, arcent.InstallTypeBlocked, arcent.PlayStoreModeAllowList)
 		arcEnabledPolicy := &policy.ArcEnabled{Val: true}
 		policies := []policy.Policy{arcEnabledPolicy, arcPolicy}
 

@@ -15,6 +15,7 @@ import (
 	"chromiumos/tast/local/arc/arcent"
 	"chromiumos/tast/local/arc/unicorn"
 	"chromiumos/tast/local/retry"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -61,8 +62,7 @@ func UnicornBlockedApps(ctx context.Context, s *testing.State) {
 		Logf:        s.Logf}
 
 	childUser := s.RequiredVar(unicorn.ChildUserVar)
-	arcPolicy := arcent.CreateArcPolicyWithApps([]string{blockedPackage}, arcent.InstallTypeBlocked)
-	arcPolicy.Val.PlayStoreMode = arcent.PlayStoreModeBlockList
+	arcPolicy := arcent.CreateArcPolicyWithApps([]string{blockedPackage}, arcent.InstallTypeBlocked, arcent.PlayStoreModeBlockList)
 	arcEnabledPolicy := &policy.ArcEnabled{Val: true}
 	policies := []policy.Policy{arcEnabledPolicy, arcPolicy}
 

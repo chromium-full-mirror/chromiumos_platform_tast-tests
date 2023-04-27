@@ -24,10 +24,10 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/cryptohome"
-	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/local/retry"
 	"chromiumos/tast/local/screenshot"
 	"chromiumos/tast/local/upstart"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -201,11 +201,7 @@ func tryDataMigration(ctx context.Context, serviceAccount string, params dataMig
 	}
 
 	if params.managed {
-		arcPolicy := arcent.CreateArcPolicyWithApps([]string{}, arcent.InstallTypeAvailable)
-		arcPolicy.Val.PlayStoreMode = arcent.PlayStoreModeBlockList
-		arcEnabledPolicy := &policy.ArcEnabled{Val: true}
-		policies := []policy.Policy{arcEnabledPolicy, arcPolicy}
-		fdms, err := policyutil.SetUpFakePolicyServer(ctx, outDir, creds.User, policies)
+		fdms, err := arcent.SetupPolicyServerWithArcApps(ctx, outDir, creds.User, []string{}, arcent.InstallTypeAvailable, arcent.PlayStoreModeBlockList)
 		if err != nil {
 			return rl.Retry("setup fake policy server", err)
 		}

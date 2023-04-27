@@ -16,11 +16,10 @@ import (
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/arc/arcent"
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/local/retry"
-	"go.chromium.org/tast/core/testing"
 
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 type managedPlayStoreModeArgs struct {
@@ -136,11 +135,6 @@ func ManagedPlayStoreMode(ctx context.Context, s *testing.State) {
 		Fatalf:      s.Fatalf,
 		Logf:        s.Logf}
 
-	arcPolicy := arcent.CreateArcPolicyWithApps([]string{}, arcent.InstallTypeAvailable)
-	arcPolicy.Val.PlayStoreMode = args.playStoreMode
-	arcEnabledPolicy := &policy.ArcEnabled{Val: true}
-	policies := []policy.Policy{arcEnabledPolicy, arcPolicy}
-
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
 	defer cancel()
@@ -152,7 +146,7 @@ func ManagedPlayStoreMode(ctx context.Context, s *testing.State) {
 		}
 		login := chrome.GAIALogin(creds)
 
-		fdms, err := policyutil.SetUpFakePolicyServer(ctx, s.OutDir(), creds.User, policies)
+		fdms, err := arcent.SetupPolicyServerWithArcApps(ctx, s.OutDir(), creds.User, []string{}, arcent.InstallTypeAvailable, args.playStoreMode)
 		if err != nil {
 			rl.Exit("setup fake policy server", err)
 		}
