@@ -18,6 +18,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/prompts"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/input"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -80,8 +81,31 @@ func signIn(ctx context.Context, conn *chrome.Conn, tconn *chrome.TestConn) erro
 	signInArea := nodewith.NameContaining("Google").Role(role.RootWebArea)
 	// Use First() to select the first account in the account list.
 	accountSelectLink := nodewith.NameRegex(regexp.MustCompile("@.*.com")).Role(role.Link).Ancestor(signInArea).First()
-	return ui.WithTimeout(mediumUITimeout).LeftClickUntil(accountSelectLink,
-		ui.WaitUntilGone(accountSelectLink))(ctx)
+
+	if err := conn.WaitForExpr(ctx, "document.readyState === 'complete'"); err != nil {
+		return errors.Wrap(err, "failed to wait for page loading complete")
+	}
+
+	// Two situations need to handle here:
+	// 1. Sometimes clicking account link does not work.
+	//    The page should start to load if click works. Using this expectation to confirm.
+	// 2. Login timeout and the page does not return. Should re-click the account to retry login.
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		if err := ui.LeftClick(accountSelectLink)(ctx); err != nil {
+			return errors.Wrap(err, "failed to click account")
+		}
+		if err := conn.WaitForExprWithTimeout(ctx, "document.readyState === 'loading'", 5*time.Second); err != nil {
+			if accountLinkStillExist, err := ui.IsNodeFound(ctx, accountSelectLink); err != nil {
+				return testing.PollBreak(errors.Wrap(err, "failed to check account link"))
+			} else if !accountLinkStillExist {
+				// Assume sometimes the login is super fast and bypass the page status transition.
+				return nil
+			}
+			return errors.Wrap(err, "failed to wait for page starting to load")
+		}
+		// Login Google can take quite long sometimes, so using mediumUITimeout.
+		return ui.WithTimeout(mediumUITimeout).WaitUntilGone(accountSelectLink)(ctx)
+	}, &testing.PollOptions{Timeout: 2 * time.Minute})
 }
 
 func createAccount(ctx context.Context, tconn *chrome.TestConn) error {
