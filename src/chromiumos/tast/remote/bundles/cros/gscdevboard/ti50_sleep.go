@@ -12,6 +12,7 @@ import (
 	"chromiumos/tast/common/firmware/ti50"
 	"chromiumos/tast/remote/bundles/cros/gscdevboard/utils"
 	"chromiumos/tast/remote/firmware/ti50/fixture"
+
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -95,6 +96,13 @@ func Ti50Sleep(ctx context.Context, s *testing.State) {
 	s.Log("Simulating serial console input")
 	th.MustSucceed(b.WriteSerial(ctx, []byte("hello\r")), "Serial write")
 	verifyWakeup(ctx, s, i, b, wakeSourceGpio, "console input")
+	s.Log("Waiting for sleep with AP off")
+	th.MustSucceed(i.WaitUntilDeepSleep(ctx, time.Minute), "Ti50 did not sleep when AP off")
+
+	s.Log("Simulating EC_PACKET_MODE toggle")
+	b.GpioSet(ctx, ti50.GpioTi50EcPacketMode, true)
+	b.GpioSet(ctx, ti50.GpioTi50EcPacketMode, false)
+	verifyWakeup(ctx, s, i, b, wakeSourceGpio, "EC_PACKET_MODE")
 	s.Log("Waiting for sleep with AP off")
 	th.MustSucceed(i.WaitUntilDeepSleep(ctx, time.Minute), "Ti50 did not sleep when AP off")
 
