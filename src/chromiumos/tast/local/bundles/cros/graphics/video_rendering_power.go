@@ -17,6 +17,7 @@ import (
 	"chromiumos/tast/local/graphics"
 	"chromiumos/tast/local/power"
 	"chromiumos/tast/local/power/setup"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -37,11 +38,11 @@ const (
 )
 
 var (
-	battDischarge    = setup.NewBatteryDischarge(true, true, dischargeThreshold)
+	battDischarge    = setup.NewBatteryDischarge(true, false, dischargeThreshold)
 	powerTestOptions = setup.PowerTestOptions{
 		// The default for the following options is to disable these setting.
 		NightLight: setup.DisableNightLight,
-		Powerd:     1,
+		Powerd:     setup.DoNotChangePowerd,
 		DPTF:       setup.DisableDPTF,
 		Audio:      setup.Mute,
 		Bluetooth:  setup.DisableBluetoothInterfaces,
@@ -137,12 +138,14 @@ func VideoRenderingPower(ctx context.Context, s *testing.State) {
 	if err = conn.WaitForExpr(ctx, "document.readyState === 'complete'"); err != nil {
 		s.Fatal("Page failed to load: ", err)
 	}
+	// GoBigSleepLint: stabilize the machine before recording perf.
 	if err = testing.Sleep(ctx, stabilizeTime); err != nil {
 		s.Fatalf("Failed to sleep before starting to record metrics: %s", err)
 	}
 	if err := metrics.StartRecording(ctx); err != nil {
 		s.Fatal("Failed to start metrics: ", err)
 	}
+	// GoBigSleepLint: Playback time for perf measurement.
 	// Let the video play as we record metrics.
 	if err = testing.Sleep(ctx, playbackTime); err != nil {
 		s.Fatalf("Failed to sleep while running video playback: %s", err)
@@ -152,12 +155,15 @@ func VideoRenderingPower(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to snapshot metrics: ", err)
 	}
+	defer func() {
+		if err := p.Save(s.OutDir()); err != nil {
+			s.Error("Failed saving perf data: ", err)
+		}
+	}()
+
 	// Record the system power consumptiom metrics.
 	if err = graphics.MeasureSystemPowerConsumption(ctx, tconn, playbackTime, p); err != nil {
 		s.Fatalf("Error measuring system power consumption : %s", err)
 	}
 
-	if err := p.Save(s.OutDir()); err != nil {
-		s.Error("Failed saving perf data: ", err)
-	}
 }

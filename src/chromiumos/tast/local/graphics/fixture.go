@@ -191,10 +191,6 @@ func init() {
 type graphicsNoChromeFixture struct {
 }
 
-func videoRenderingPowerFixtExtraArg() chrome.Option {
-	return chrome.ExtraArgs("--disable-features=FirmwareUpdaterApp")
-}
-
 func (f *graphicsNoChromeFixture) Reset(ctx context.Context) error {
 	return nil
 }

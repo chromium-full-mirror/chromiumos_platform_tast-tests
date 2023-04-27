@@ -173,6 +173,7 @@ func collectAMDBusyCounter(ctx context.Context, interval time.Duration) (counter
 			testing.ContextLog(ctx, "Complete AMD gpu counter collecting because context deadline is about to reach")
 			break
 		}
+		// GoBigSleepLint: sleep the sample interval for measurements.
 		if err := testing.Sleep(ctx, samplePeriod); err != nil {
 			return nil, 0, errors.Wrap(err, "error sleeping")
 		}
@@ -332,6 +333,7 @@ func collectDevFreqCounters(ctx context.Context, interval time.Duration) (counte
 		return nil, 0, errors.Wrap(err, "error parsing trans_stat file")
 	}
 
+	// GoBigSleepLint: sleep the sample interval for measurements..
 	if err := testing.Sleep(ctx, interval); err != nil {
 		return nil, 0, errors.Wrap(err, "error sleeping")
 	}
@@ -605,6 +607,7 @@ func MeasureSystemPowerConsumption(ctx context.Context, c *chrome.TestConn, t ti
 			break
 		}
 
+		// GoBigSleepLint: sleep the sample interval for measurements.
 		if err := testing.Sleep(ctx, samplePeriod); err != nil {
 			return errors.Wrap(err, "error sleeping")
 		}
@@ -620,9 +623,12 @@ func MeasureSystemPowerConsumption(ctx context.Context, c *chrome.TestConn, t ti
 		numReadings++
 	}
 
+	if numReadings == 0 {
+		return errors.Errorf("failed to read any valid readings from battery: %v", battery)
+	}
+
 	testing.ContextLogf(ctx, "Average system power consumption: %fW", accuPower/numReadings)
 	reportMetric("system_power", "W", accuPower/numReadings, perf.SmallerIsBetter, p)
-
 	return nil
 }
 
@@ -795,6 +801,7 @@ func UpdateOverlaysMetricFromHistogram(ctx context.Context, tconn *chrome.TestCo
 func MeasureCPUUsageAndPower(ctx context.Context, stabilization, measurement time.Duration, p *perf.Values) error {
 	if stabilization != 0 {
 		testing.ContextLogf(ctx, "Sleeping %v to wait for CPU usage to stabilize", stabilization)
+		// GoBigSleepLint: sleep to wait for CPU usage to stabilize.
 		if err := testing.Sleep(ctx, stabilization); err != nil {
 			return err
 		}
@@ -835,6 +842,7 @@ func MeasureThreadPoolUnnecessaryWakeups(ctx context.Context, tconn *chrome.Test
 		"ThreadPool.UnnecessaryWakeup.GPU.Foreground",
 	}
 	histograms, err := metrics.Run(ctx, tconn, func(ctx context.Context) error {
+		// GoBigSleepLint: sleep the measurement time.
 		if err := testing.Sleep(ctx, measurement); err != nil {
 			return errors.Wrap(err, "failed to wait")
 		}
