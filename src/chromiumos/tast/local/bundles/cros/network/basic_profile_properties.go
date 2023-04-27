@@ -10,7 +10,7 @@ import (
 	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/local/bundles/cros/network/pre"
 	"chromiumos/tast/local/shill"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

@@ -10,13 +10,13 @@ import (
 	"time"
 
 	"chromiumos/tast/common/shillconst"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/network/dhcp"
 	"chromiumos/tast/local/network/hwsim"
 	"chromiumos/tast/local/network/virtualnet"
 	"chromiumos/tast/local/network/virtualnet/subnet"
 	"chromiumos/tast/local/shill"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

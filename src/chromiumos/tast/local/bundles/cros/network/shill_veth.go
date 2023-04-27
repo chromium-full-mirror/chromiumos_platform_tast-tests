@@ -9,11 +9,11 @@ import (
 	"time"
 
 	"chromiumos/tast/common/shillconst"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/bundles/cros/network/veth"
 	"chromiumos/tast/local/shill"
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

@@ -12,9 +12,9 @@ import (
 	"time"
 
 	"chromiumos/tast/common/network/diag"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // MojoAPI is a struct that encapsulates a Network Diagnostics mojo remote.

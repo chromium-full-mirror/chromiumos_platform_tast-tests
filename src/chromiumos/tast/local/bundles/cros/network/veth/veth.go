@@ -9,9 +9,9 @@ import (
 	"context"
 	"net"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/network/ip"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Pair represents a Linux pair of virtual Ethernet (veth) devices. Veth devices come in pairs,

@@ -10,7 +10,7 @@ import (
 
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/bundles/cros/network/proxy"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

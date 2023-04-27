@@ -10,7 +10,7 @@ import (
 
 	diagcommon "chromiumos/tast/common/network/diag"
 	"chromiumos/tast/local/bundles/cros/network/diag"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 type netDiagParams struct {

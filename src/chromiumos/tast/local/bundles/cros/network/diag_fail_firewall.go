@@ -9,10 +9,10 @@ import (
 	"time"
 
 	diagcommon "chromiumos/tast/common/network/diag"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/bundles/cros/network/diag"
 	"chromiumos/tast/local/bundles/cros/network/firewall"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 type failFirewallParams struct {

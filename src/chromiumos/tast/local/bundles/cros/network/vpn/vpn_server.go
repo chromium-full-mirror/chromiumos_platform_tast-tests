@@ -14,9 +14,9 @@ import (
 	"time"
 
 	"chromiumos/tast/common/crypto/certificate"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/network/virtualnet/env"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const logName = "vpnlogs.txt"

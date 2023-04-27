@@ -10,7 +10,6 @@ import (
 
 	"chromiumos/tast/common/hermesconst"
 	"chromiumos/tast/common/shillconst"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/cellular"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -20,7 +19,8 @@ import (
 	"chromiumos/tast/local/modemmanager"
 	"chromiumos/tast/local/network/netconfig"
 	"chromiumos/tast/local/power"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

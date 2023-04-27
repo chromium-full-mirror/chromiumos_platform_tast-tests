@@ -16,9 +16,9 @@ import (
 	"text/template"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/network/virtualnet/env"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // serverRunner is a helper struct to start a VPN server inside a virtualnet Env object.

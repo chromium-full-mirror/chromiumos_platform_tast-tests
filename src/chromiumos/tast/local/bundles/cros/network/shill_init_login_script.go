@@ -7,12 +7,12 @@ package network
 import (
 	"context"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/network/shillscript"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/shill"
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

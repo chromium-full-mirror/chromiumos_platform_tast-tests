@@ -12,7 +12,7 @@ import (
 	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/local/bundles/cros/network/diag"
 	"chromiumos/tast/local/shill"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 type dnsResolverPresentProblem uint32

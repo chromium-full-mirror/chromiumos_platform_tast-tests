@@ -6,7 +6,7 @@ package health
 
 import (
 	"chromiumos/tast/common/shillconst"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // NetworkTypeFromShillType returns an analogous NetworkType.

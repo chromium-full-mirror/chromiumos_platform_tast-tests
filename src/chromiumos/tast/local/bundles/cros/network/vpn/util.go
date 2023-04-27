@@ -15,9 +15,9 @@ import (
 	"golang.org/x/sys/unix"
 
 	"chromiumos/tast/common/shillconst"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/shill"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const charonExitTimeout = 5 * time.Second

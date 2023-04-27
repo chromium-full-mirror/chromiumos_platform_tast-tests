@@ -19,7 +19,7 @@ import (
 	"chromiumos/tast/local/hermes"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/stork"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

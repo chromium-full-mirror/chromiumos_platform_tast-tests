@@ -12,14 +12,14 @@ import (
 
 	"chromiumos/tast/common/crypto/certificate"
 	"chromiumos/tast/common/pkcs11/netcertstore"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/network/shill"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/hwsec"
 	"chromiumos/tast/local/logsaver"
 	"chromiumos/tast/local/network"
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const certOpTimeout = 30 * time.Second

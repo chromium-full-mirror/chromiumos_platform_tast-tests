@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"chromiumos/tast/common/hermesconst"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/cellular"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -18,7 +17,8 @@ import (
 	"chromiumos/tast/local/hermes"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/modemmanager"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

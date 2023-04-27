@@ -13,9 +13,9 @@ import (
 	"time"
 
 	"chromiumos/tast/common/crypto/certificate"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/hostapd"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // STA status definitions (i.e., expectation values for Server.ExpectSTAStatus).
