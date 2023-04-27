@@ -22,6 +22,29 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
+// Models that are allowed to not have a UCM config.
+var ucmOptionalModels = []string{"reven"}
+
+// Command generators for "alsaucm".
+var (
+	sectionVerbCommander = staticCommander{
+		{
+			name:      "SectionVerb",
+			extraArgs: nil,
+		},
+	}
+	sectionDeviceCommander = listCommander{
+		section: "_devices/HiFi",
+		enable:  "_enadev",
+		disable: "_disdev",
+	}
+	sectionModifierCommander = listCommander{
+		section: "_modifiers/HiFi",
+		enable:  "_enamod",
+		disable: "_dismod",
+	}
+)
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         UCMSequences,
@@ -39,33 +62,47 @@ func init() {
 			{
 				Name: "section_verb",
 				Val: ucmSequencesParam{
-					alsaucmCommander: staticCommander{
-						{
-							name:      "SectionVerb",
-							extraArgs: nil,
-						},
-					},
+					alsaucmCommander: sectionVerbCommander,
 				},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(ucmOptionalModels...)),
 			},
 			{
 				Name: "section_device",
 				Val: ucmSequencesParam{
-					alsaucmCommander: listCommander{
-						section: "_devices/HiFi",
-						enable:  "_enadev",
-						disable: "_disdev",
-					},
+					alsaucmCommander: sectionDeviceCommander,
 				},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(ucmOptionalModels...)),
 			},
 			{
 				Name: "section_modifier",
 				Val: ucmSequencesParam{
-					alsaucmCommander: listCommander{
-						section: "_modifiers/HiFi",
-						enable:  "_enamod",
-						disable: "_dismod",
-					},
+					alsaucmCommander: sectionModifierCommander,
 				},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(ucmOptionalModels...)),
+			},
+			{
+				Name: "section_verb_optional",
+				Val: ucmSequencesParam{
+					alsaucmCommander: sectionVerbCommander,
+					optional:         true,
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(ucmOptionalModels...)),
+			},
+			{
+				Name: "section_device_optional",
+				Val: ucmSequencesParam{
+					alsaucmCommander: sectionDeviceCommander,
+					optional:         true,
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(ucmOptionalModels...)),
+			},
+			{
+				Name: "section_modifier_optional",
+				Val: ucmSequencesParam{
+					alsaucmCommander: sectionModifierCommander,
+					optional:         true,
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(ucmOptionalModels...)),
 			},
 		},
 	})
@@ -73,6 +110,7 @@ func init() {
 
 type ucmSequencesParam struct {
 	alsaucmCommander
+	optional bool // If true, allow the UCM config to be absent.
 }
 
 // alsaucmCommander provides commands() that returns a list of alsaucmCommand,
@@ -170,11 +208,11 @@ func UCMSequences(ctx context.Context, s *testing.State) {
 		if ucmSuffix != "" && !shouldIgnoreUCMSuffix {
 			ucmName += "." + ucmSuffix
 		}
-		ucmSequencesTestCard(ctx, s, param.alsaucmCommander, ucmName)
+		ucmSequencesTestCard(ctx, s, param.alsaucmCommander, ucmName, param.optional)
 	}
 }
 
-func ucmSequencesTestCard(ctx context.Context, s *testing.State, c alsaucmCommander, ucmName string) {
+func ucmSequencesTestCard(ctx context.Context, s *testing.State, c alsaucmCommander, ucmName string, optional bool) {
 	const ucmBasePath = "/usr/share/alsa/ucm"
 
 	ucmConf := filepath.Join(ucmBasePath, ucmName, ucmName+".conf")
@@ -183,6 +221,10 @@ func ucmSequencesTestCard(ctx context.Context, s *testing.State, c alsaucmComman
 	// Fail early if UCM does not exist.
 	if _, err := os.Stat(ucmConf); err != nil {
 		if os.IsNotExist(err) {
+			if optional {
+				s.Log("Missing UCM config allowed; skipping test: ", ucmConf)
+				return
+			}
 			// err formats as "stat: /path/to/ucm/conf: no such file or directory".
 			// As this is the common case, craft the error message ourselves
 			// to avoid listing the file path twice.
