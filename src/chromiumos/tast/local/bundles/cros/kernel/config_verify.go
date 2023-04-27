@@ -159,6 +159,9 @@ func newCommonKernelConfigCheck(ver *sysutil.KernelVersion, arch string) *kernel
 		"VFAT_FS",
 		"NFS_FS",
 		"USB_F_FS",
+
+		// Needed for tethering of Android phones
+		"USB_NET_RNDIS_HOST",
 	}
 	enabled := []string{
 		// Either module or enabled, depending on platform.
