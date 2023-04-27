@@ -84,7 +84,10 @@ func RestartChromeForTesting(ctx context.Context, cfg *config.Config, extArgs, l
 		args = append(args, "--no-startup-window") // Do not start up chrome://newtab by default to avoid unexpected patterns (doodle etc.)
 	}
 	if cfg.HideCrashRestoreBubble() {
-		args = append(args, "--hide-crash-restore-bubble") // Do not show "Chrome did not shut down correctly" bubble
+		// Do not show "Chrome did not shut down correctly" bubble.
+		// --hide-crash-restore-bubble is used when full session restore is disabled.
+		args = append(args, "--hide-crash-restore-bubble")
+		args = append(args, "--force-full-restore-and-session-restore-after-crash")
 	}
 
 	if cfg.SkipOOBEAfterLogin() {
