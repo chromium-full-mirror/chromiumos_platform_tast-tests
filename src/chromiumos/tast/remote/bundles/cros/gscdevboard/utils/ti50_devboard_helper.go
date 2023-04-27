@@ -134,10 +134,12 @@ func (h DevboardHelper) GpioGet(ctx context.Context, g ti50.GpioName) bool {
 	return val
 }
 
-// GpioApplyStrap applies a known gpio strap setting
-func (h DevboardHelper) GpioApplyStrap(ctx context.Context, strap ti50.GpioStrap) {
-	if _, err := h.PlainCommand(ctx, "gpio", "apply", string(strap)); err != nil {
-		h.Fatalf("failed to apply gpio strap %s: %s", strap, err)
+// GpioApplyStrap applies one or more known gpio strap setting
+func (h DevboardHelper) GpioApplyStrap(ctx context.Context, straps ...ti50.GpioStrap) {
+	for _, strap := range straps {
+		if _, err := h.PlainCommand(ctx, "gpio", "apply", string(strap)); err != nil {
+			h.Fatalf("failed to apply gpio strap %s: %s", strap, err)
+		}
 	}
 }
 
@@ -228,6 +230,6 @@ func (h DevboardHelper) GpioMonitorFinish(ctx context.Context, session GpioMonit
 // Tpm returns an object that can be used with the go-tpm library to execute TPM commands via SPI
 // or I2C.  See firmware.Ti50Tpm for an example.
 // go-tpm documentation: https://pkg.go.dev/github.com/google/go-tpm@v0.3.3/tpm2
-func (h DevboardHelper) Tpm(ctx context.Context, bus ti50.TpmBus) *tpmHandle {
-	return &tpmHandle{h: h, ctx: ctx, bus: bus}
+func (h DevboardHelper) Tpm(ctx context.Context, bus ti50.TpmBus) *TpmHandle {
+	return &TpmHandle{h: h, ctx: ctx, bus: bus}
 }
