@@ -66,15 +66,13 @@ func init() {
 				ExtraAttr:         []string{"informational"},
 				ExtraHardwareDeps: hwdep.D(pre.InputsUnstableModels),
 			},
-			/* Disabled due to <1% pass rate over 30 days. See b/246818430
 			{
 				Name:              "lacros",
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
 				Fixture:           fixture.LacrosTabletVK,
 				ExtraAttr:         []string{"informational"},
-				ExtraSoftwareDeps: []string{"lacros","lacros_stable"},
-			}
-			*/
+				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
+			},
 		},
 	})
 }
