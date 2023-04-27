@@ -166,6 +166,7 @@ func CheckStatefulFiles(ctx context.Context, outDir string) []error {
 	if _, err := user.Lookup("tpm_manager"); err == nil {
 		prependPatterns(
 			NewPattern(Path("encrypted/var/lib/tpm_manager"), Users("tpm_manager"), Groups("tpm_manager"), NotMode(022)),
+			NewPattern(Path("encrypted/var/lib/tpm_manager/.allowed"), Users("tpm_manager"), Groups("tpm_manager"), NotMode(077)),
 			NewPattern(Path("encrypted/var/lib/tpm_manager/local_tpm_data"), Users("tpm_manager"), Groups("tpm_manager"), NotMode(077)),
 			NewPattern(Path("encrypted/var/lib/tpm_manager/local_tpm_data.tast-hwsec-backup"), Users("tpm_manager"), Groups("tpm_manager"), NotMode(077)),
 			NewPattern(Tree("unencrypted/tpm_manager"), Users("tpm_manager"), Groups("tpm_manager"), NotMode(022)))
