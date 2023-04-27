@@ -53,7 +53,7 @@ import (
 \t"github.com/google/go-cmp/cmp/cmpopts"
 \t"google.golang.org/protobuf/reflect/protoreflect"
 
-\t"chromiumos/tast/errors"
+\t"go.chromium.org/tast/core/errors"
 )
 """
 
