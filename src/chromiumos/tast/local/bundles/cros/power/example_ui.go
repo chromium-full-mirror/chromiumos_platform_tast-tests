@@ -17,13 +17,6 @@ import (
 	"chromiumos/tast/local/power/setup"
 )
 
-const (
-	// Interval between data points for power metrics.
-	interval = 1 * time.Second
-	// Total test time to collect power metrics.
-	total = 10 * time.Second
-)
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ExampleUI,
@@ -37,25 +30,31 @@ func init() {
 			Name:      "ash_kbbl",
 			Fixture:   "powerAshKbbl",
 			ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+			Val:       timeParams{Interval: 1 * time.Second, Total: 10 * time.Second},
 		}, {
 			Name:    "ash",
 			Fixture: "powerAsh",
+			Val:     timeParams{Interval: 1 * time.Second, Total: 10 * time.Second},
 		}, {
 			Name:    "ash_gaia",
 			Fixture: "powerAshGAIA",
+			Val:     timeParams{Interval: 1 * time.Second, Total: 10 * time.Second},
 		}, {
 			Name:              "lacros_kbbl",
 			Fixture:           "powerLacrosKbbl",
 			ExtraSoftwareDeps: []string{"lacros"},
+			Val:               timeParams{Interval: 1 * time.Second, Total: 10 * time.Second},
 		}, {
 			Name:              "lacros_nokbbl",
 			Fixture:           "powerLacros",
 			ExtraSoftwareDeps: []string{"lacros"},
 			ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
+			Val:               timeParams{Interval: 1 * time.Second, Total: 10 * time.Second},
 		}, {
 			Name:              "lacros_gaia",
 			Fixture:           "powerLacrosGAIA",
 			ExtraSoftwareDeps: []string{"lacros"},
+			Val:               timeParams{Interval: 1 * time.Second, Total: 10 * time.Second},
 		}},
 	})
 }
@@ -68,6 +67,8 @@ func ExampleUI(ctx context.Context, s *testing.State) {
 
 	bt := s.FixtValue().(setup.PowerUIFixtureData).Bt
 	cr := s.FixtValue().(setup.PowerUIFixtureData).Cr
+	interval := s.Param().(timeParams).Interval
+	total := s.Param().(timeParams).Total
 
 	// Open a window with about:blank tab on the target browser.
 	conn, _, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, bt, "about:blank")
