@@ -12,11 +12,11 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/fsutil"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/fsutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 // piiTestParam contains all the data needed to run a single test iteration.

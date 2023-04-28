@@ -12,8 +12,6 @@ import (
 
 	"github.com/golang/protobuf/proto"
 
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	fpb "chromiumos/tast/local/bundles/cros/feedback/proto"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -21,7 +19,9 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/feedbackapp"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (

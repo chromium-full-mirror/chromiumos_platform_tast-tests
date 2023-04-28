@@ -12,12 +12,12 @@ import (
 	"google.golang.org/protobuf/types/known/durationpb"
 
 	"chromiumos/tast/common/servo"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/powercontrol"
-	"chromiumos/tast/rpc"
 	"chromiumos/tast/services/cros/ui"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
