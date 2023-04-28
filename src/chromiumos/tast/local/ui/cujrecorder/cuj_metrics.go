@@ -62,6 +62,7 @@ func CUJAshCommonMetricConfigs() []MetricConfig {
 		NewSmoothnessMetricConfig("Ash.HotseatTransition.AnimationSmoothness.TransitionToHiddenHotseat"),
 		NewSmoothnessMetricConfig("Ash.HotseatTransition.AnimationSmoothness.TransitionToShownHotseat"),
 		NewSmoothnessMetricConfig("Ash.SwipeHomeToOverviewGesture"),
+		// Note that BootTime.* metrics have special handling in cujRecorder.Record().
 		NewBootAndShutdownCustomMetricConfig("BootTime.Authenticate", "ms", perf.SmallerIsBetter),
 		NewBootAndShutdownCustomMetricConfig("BootTime.Chrome", "ms", perf.SmallerIsBetter),
 		NewBootAndShutdownCustomMetricConfig("BootTime.Firmware", "ms", perf.SmallerIsBetter),

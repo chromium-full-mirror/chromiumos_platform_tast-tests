@@ -19,6 +19,7 @@ import (
 
 	"chromiumos/tast/common/action"
 	"chromiumos/tast/common/perf"
+	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
@@ -873,6 +874,22 @@ func (r *Recorder) startRecording(ctx context.Context) (runCtx context.Context, 
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to start metrics recorder for browser %v", bt)
 		}
+		bootMetrics, err := r.getBootAndShutdownMetricNames(bt)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to query boot metrics for browser %v", bt)
+		}
+		if len(bootMetrics) > 0 {
+			// Some of BootTime.* metrics are reported only once after reboot.
+			// Force reporting them here in case they are already gone.
+			if err := testexec.CommandContext(
+				ctx,
+				"sh",
+				"-c",
+				"start send-boot-metrics || true",
+			).Run(testexec.DumpLogOnError); err != nil {
+				return nil, errors.Wrap(err, "failed to force send-boot-metrics to be reported again")
+			}
+		}
 	}
 
 	if r.options.Mode == Perf || r.options.Mode == CUJ {
@@ -1092,6 +1109,23 @@ func (r *Recorder) stopRecording(ctx, runCtx context.Context) (e error) {
 		bootAndShutdownMetrics, err := r.getBootAndShutdownMetricNames(bt)
 		if err != nil {
 			return errors.Wrap(err, "failed to get boot and shutdown metric names")
+		}
+
+		if len(bootAndShutdownMetrics) > 0 {
+			// Some BootTime.* metrics are only reported once after
+			// a reboot. We forced them to be reported again after
+			// the recorder started, but ChromeOS metrics are
+			// collected every 30 seconds, so we may need to wait a
+			// while for them to appear.
+			testing.ContextLog(ctx, "Waiting for BootTime.Total2 metrics to be reported")
+			if _, err := metrics.WaitForHistogram(
+				ctx,
+				tconn,
+				"BootTime.Total2",
+				time.Minute,
+			); err != nil {
+				return errors.Wrap(err, "failed to wait until BootTime.Total2 metrics is reported")
+			}
 		}
 
 		bootAndShutdownHistograms, err := metrics.GetHistograms(runCtx, tconn, bootAndShutdownMetrics)
