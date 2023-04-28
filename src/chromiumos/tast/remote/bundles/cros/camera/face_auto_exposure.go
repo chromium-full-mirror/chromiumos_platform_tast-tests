@@ -11,12 +11,12 @@ import (
 
 	"chromiumos/tast/common/camera/chart"
 	"chromiumos/tast/common/media/caps"
-	"chromiumos/tast/dut"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/bundles/cros/camera/camerabox"
 	"chromiumos/tast/remote/bundles/cros/camera/face"
 	pb "chromiumos/tast/services/cros/camerabox"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

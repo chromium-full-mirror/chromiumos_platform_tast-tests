@@ -20,11 +20,11 @@ import (
 
 	"chromiumos/tast/common/android/adb"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
 	remoteadb "chromiumos/tast/remote/android/adb"
-	"chromiumos/tast/rpc"
 	pb "chromiumos/tast/services/cros/camerabox"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/testing"
 )
 
 // To uprev |ctsVerifierX86Zip| and |ctsVerifierArmZip|, download the new zip

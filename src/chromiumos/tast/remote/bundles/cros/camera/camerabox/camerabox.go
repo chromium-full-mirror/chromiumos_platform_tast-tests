@@ -11,11 +11,11 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/dut"
-	"chromiumos/tast/errors"
 	pb "chromiumos/tast/services/cros/camerabox"
-	"chromiumos/tast/ssh/linuxssh"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh/linuxssh"
+	"go.chromium.org/tast/core/testing"
 )
 
 // LogTestScene takes a photo of test scene as log to debug scene related problem.

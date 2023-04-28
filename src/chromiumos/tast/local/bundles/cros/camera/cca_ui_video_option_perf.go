@@ -11,12 +11,12 @@ import (
 
 	"chromiumos/tast/common/media/caps"
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/camera/cca"
 	"chromiumos/tast/local/cpu"
 	mediacpu "chromiumos/tast/local/media/cpu"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

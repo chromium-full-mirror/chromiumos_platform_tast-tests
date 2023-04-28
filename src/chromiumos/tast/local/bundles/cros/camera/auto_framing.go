@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"chromiumos/tast/local/gtest"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 const autoFramingTestImageFile = "person_4032x3024.nv12"

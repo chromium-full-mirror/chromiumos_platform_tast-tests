@@ -11,7 +11,7 @@ import (
 	"chromiumos/tast/common/media/caps"
 	"chromiumos/tast/local/bundles/cros/camera/hal3"
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

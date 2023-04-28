@@ -12,7 +12,7 @@ import (
 
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/local/benchmark"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

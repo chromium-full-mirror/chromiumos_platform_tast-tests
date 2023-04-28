@@ -16,7 +16,7 @@ import (
 	"chromiumos/tast/local/media/pre"
 	"chromiumos/tast/local/media/vm"
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

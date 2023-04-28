@@ -9,11 +9,11 @@ import (
 
 	"google.golang.org/grpc"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/camera/hal3"
 	"chromiumos/tast/local/syslog"
 	cameraboxpb "chromiumos/tast/services/cros/camerabox"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

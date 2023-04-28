@@ -16,9 +16,9 @@ import (
 	"github.com/rwcarlsen/goexif/exif"
 
 	"chromiumos/tast/common/media/caps"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/camera/cca"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

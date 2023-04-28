@@ -11,9 +11,9 @@ import (
 	"chromiumos/tast/common/media/caps"
 	"chromiumos/tast/remote/bundles/cros/camera/camerabox"
 	"chromiumos/tast/remote/bundles/cros/camera/pre"
-	"chromiumos/tast/rpc"
 	pb "chromiumos/tast/services/cros/camerabox"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

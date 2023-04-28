@@ -14,10 +14,10 @@ import (
 
 	"chromiumos/tast/common/servo"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/rpc"
 	"chromiumos/tast/services/cros/camera"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {

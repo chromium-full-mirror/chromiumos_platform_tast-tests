@@ -12,12 +12,12 @@ import (
 	"regexp"
 	"strconv"
 
-	"chromiumos/tast/dut"
-	"chromiumos/tast/errors"
 	pb "chromiumos/tast/services/cros/camerabox"
-	"chromiumos/tast/ssh"
-	"chromiumos/tast/ssh/linuxssh"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh"
+	"go.chromium.org/tast/core/ssh/linuxssh"
+	"go.chromium.org/tast/core/testing"
 )
 
 // CheckRoiSupport checks the camera suppors region of interest control.

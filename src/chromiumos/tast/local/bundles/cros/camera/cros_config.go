@@ -10,10 +10,10 @@ import (
 	"strconv"
 
 	"chromiumos/tast/common/media/caps"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/crosconfig"
-	"chromiumos/tast/testing"
 	"go.chromium.org/tast/core/autocaps"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

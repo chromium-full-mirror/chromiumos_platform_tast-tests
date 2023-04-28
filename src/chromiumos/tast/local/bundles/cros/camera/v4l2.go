@@ -16,8 +16,8 @@ import (
 	"chromiumos/tast/local/bundles/cros/camera/hal3"
 	"chromiumos/tast/local/camera/testutil"
 	"chromiumos/tast/local/gtest"
-	"chromiumos/tast/testing"
 	"go.chromium.org/tast/core/shutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 const hwTimestampsPath = "/sys/module/uvcvideo/parameters/hwtimestamps"

@@ -10,8 +10,8 @@ import (
 
 	"chromiumos/tast/local/camera/testutil"
 	"chromiumos/tast/local/crosconfig"
-	"chromiumos/tast/testing"
 	"go.chromium.org/tast/core/autocaps"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
