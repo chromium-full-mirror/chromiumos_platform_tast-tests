@@ -13,6 +13,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/taskmanager"
 	"chromiumos/tast/local/crostini"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -62,13 +63,12 @@ func init() {
 func TaskManager(ctx context.Context, s *testing.State) {
 	tconn := s.FixtValue().(crostini.FixtureData).Tconn
 	keyboard := s.FixtValue().(crostini.FixtureData).KB
+	ui := uiauto.New(tconn)
 
 	// Use a shortened context for cleanup.
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
-
-	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
 	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
 	defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "screen_recording.webm"), s.HasError)
@@ -76,18 +76,23 @@ func TaskManager(ctx context.Context, s *testing.State) {
 	tm := taskmanager.New(tconn, keyboard)
 
 	if err := tm.Open(ctx); err != nil {
+		faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 		s.Fatal("Failed to open Task Manager: ", err)
 	}
 	defer tm.Close(cleanupCtx, tconn)
+	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
 	crostiniProcessName := "Linux Virtual Machine: termina"
 
-	// TODO(b/270617100): We don't actually need to select the process, just
-	// check that it exists, but the AX tree is flakily missing elements so we do
-	// it this way. This is much slower, but scrolls through the tree looking
-	// for matches so the screen recording we take on failure will show the
-	// entire tree for us to compare with the AX tree.
-	if err := tm.SelectProcess(crostiniProcessName)(ctx); err != nil {
-		s.Fatalf("Failed to find process %q in task manager: %v", crostiniProcessName, err)
+	// The AX tree only flakily reflects the contents of the task manager. First
+	// we try checking the tree for the process at all, this is pretty quick but
+	// only like 90% reliable. If that fails we step through the list selecting
+	// each item one by one, this takes much longer >1 minute but is like 99%
+	// reliable. b/263551138 has some more details.
+	if err := ui.WithTimeout(30 * time.Second).WaitUntilExists(taskmanager.FindProcess().Name(crostiniProcessName).First())(ctx); err != nil {
+		s.Logf("First attempt to find process %q in task manager failed: %v. Falling back to SelectProcess", crostiniProcessName, err)
+		if err := tm.SelectProcess(crostiniProcessName)(ctx); err != nil {
+			s.Fatalf("Failed to find process %q in task manager: %v", crostiniProcessName, err)
+		}
 	}
 }
