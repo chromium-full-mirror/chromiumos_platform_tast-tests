@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"chromiumos/tast/local/graphics/vkbench"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Tast framework requires every subtest's Val have the same reflect type.

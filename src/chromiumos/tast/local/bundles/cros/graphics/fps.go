@@ -17,8 +17,8 @@ import (
 	"chromiumos/tast/local/chrome/display"
 	"chromiumos/tast/local/graphics"
 	"chromiumos/tast/local/input"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {

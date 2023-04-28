@@ -7,11 +7,11 @@ package graphics
 import (
 	"context"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/graph"
 	"chromiumos/tast/local/graphics"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 // dpPlusModels are models that have DP++ support in BIOS.

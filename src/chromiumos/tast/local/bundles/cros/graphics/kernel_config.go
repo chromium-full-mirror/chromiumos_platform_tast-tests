@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"chromiumos/tast/local/kernel"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 var (

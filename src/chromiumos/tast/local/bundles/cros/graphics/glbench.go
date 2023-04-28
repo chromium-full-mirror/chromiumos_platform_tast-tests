@@ -10,7 +10,7 @@ import (
 
 	"chromiumos/tast/local/crostini"
 	"chromiumos/tast/local/graphics/glbench"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Tast framework requires every subtest's Val have the same reflect type.

@@ -9,7 +9,7 @@ import (
 
 	"chromiumos/tast/local/graphics/testcheck"
 	_ "chromiumos/tast/local/policyutil/fixtures" // import fixtures for policyutils in unittest
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 const namePattern = "graphics.*"

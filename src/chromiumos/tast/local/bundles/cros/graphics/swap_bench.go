@@ -12,8 +12,8 @@ import (
 
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/graphics/swapbench"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 const (

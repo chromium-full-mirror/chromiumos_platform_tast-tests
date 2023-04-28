@@ -13,7 +13,7 @@ import (
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/graphics/expectations"
 	"chromiumos/tast/local/gtest"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 // clvkTest is used to describe the config used to run each test.
