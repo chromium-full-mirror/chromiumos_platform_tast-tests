@@ -16,7 +16,7 @@ import (
 	"chromiumos/tast/local/bundles/cros/printer/proxylpprint"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/printing/document"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Params struct used by all ipp print tests for parameterized tests.

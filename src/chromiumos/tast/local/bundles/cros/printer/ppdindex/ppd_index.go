@@ -28,7 +28,7 @@ import (
 	"path"
 	"strings"
 
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Entry is used to add new PPD entries and metadata to the PPD Index Server.

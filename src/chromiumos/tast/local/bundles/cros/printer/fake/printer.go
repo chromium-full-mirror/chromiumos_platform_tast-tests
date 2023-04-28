@@ -11,7 +11,7 @@ import (
 	"net"
 	"sync/atomic"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // Printer is a fake printer implementation, which reads LPR requests,

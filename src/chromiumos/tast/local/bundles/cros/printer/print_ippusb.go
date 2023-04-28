@@ -13,8 +13,8 @@ import (
 	"chromiumos/tast/local/bundles/cros/printer/pre"
 	"chromiumos/tast/local/bundles/cros/printer/usbprintertests"
 	"chromiumos/tast/local/printing/usbprinter"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {

@@ -12,7 +12,7 @@ import (
 	"strings"
 
 	"chromiumos/tast/local/printing/usbprinter"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func getPPDFilename(ctx context.Context, printerName string) string {

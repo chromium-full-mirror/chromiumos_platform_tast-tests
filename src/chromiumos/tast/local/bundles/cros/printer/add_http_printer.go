@@ -11,8 +11,8 @@ import (
 	"chromiumos/tast/local/bundles/cros/printer/pre"
 	"chromiumos/tast/local/debugd"
 	"chromiumos/tast/local/printing/printer"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 // genericPPDFile is ppd.gz file to be registered via debugd.

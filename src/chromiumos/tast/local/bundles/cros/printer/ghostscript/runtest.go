@@ -14,7 +14,7 @@ import (
 
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/printing/document"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 // RunTest runs a ghostscript filter given by gsFilter and verifies that the

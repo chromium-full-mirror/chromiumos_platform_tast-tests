@@ -13,11 +13,11 @@ import (
 	"os"
 	"path/filepath"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/printing/document"
 	"chromiumos/tast/local/printing/lp"
 	"chromiumos/tast/local/printing/usbprinter"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func usbPrinterURI(ctx context.Context, devInfo usbprinter.DevInfo) string {

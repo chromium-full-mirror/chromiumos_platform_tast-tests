@@ -10,11 +10,11 @@ import (
 	"net/http"
 
 	ppb "chromiumos/system_api/printscanmgr_proto"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/printing/printer"
 	"chromiumos/tast/local/printscanmgr"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
