@@ -14,14 +14,14 @@ import (
 
 	"chromiumos/tast/common/servo"
 	"chromiumos/tast/common/usbutils"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/dut"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/cswitch"
 	"chromiumos/tast/remote/powercontrol"
-	"chromiumos/tast/rpc"
 	"chromiumos/tast/services/cros/power"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/testing"
 )
 
 type usbPowerMode int

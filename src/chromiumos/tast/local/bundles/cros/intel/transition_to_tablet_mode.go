@@ -17,8 +17,6 @@ import (
 	pmpb "chromiumos/system_api/power_manager_proto"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/common/usbutils"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/audio"
 	"chromiumos/tast/local/chrome"
@@ -29,8 +27,10 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/power"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {

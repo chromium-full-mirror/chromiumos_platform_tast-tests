@@ -16,8 +16,6 @@ import (
 
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/common/usbutils"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/audio"
 	"chromiumos/tast/local/audio/crastestclient"
 	"chromiumos/tast/local/chrome"
@@ -27,8 +25,10 @@ import (
 	"chromiumos/tast/local/hdcputils/urlconst"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/typecutils"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 // videoContent struct stores test specific data.

@@ -13,10 +13,10 @@ import (
 
 	"chromiumos/tast/common/media/caps"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/camera/cca"
 	"chromiumos/tast/local/media/devtools"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

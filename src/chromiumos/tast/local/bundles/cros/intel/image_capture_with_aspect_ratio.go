@@ -15,9 +15,9 @@ import (
 	"github.com/rwcarlsen/goexif/tiff"
 
 	"chromiumos/tast/common/media/caps"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/camera/cca"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 type cameraOption struct {
@@ -67,8 +67,8 @@ func ImageCaptureWithAspectRatio(ctx context.Context, s *testing.State) {
 	if curFacing, err := app.GetFacing(ctx); err != nil {
 		s.Fatal("Failed to get facing: ", err)
 	} else if curFacing != facing {
-                // By default the camera launches the front facing camera.
-                // Hence not restoring it at the end of the test.
+		// By default the camera launches the front facing camera.
+		// Hence not restoring it at the end of the test.
 		if err := app.SwitchCamera(ctx); err != nil {
 			s.Fatal("Failed to switch camera: ", err)
 		}
