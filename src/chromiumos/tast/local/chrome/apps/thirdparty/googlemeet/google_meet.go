@@ -26,6 +26,7 @@ import (
 	"chromiumos/tast/local/chrome/webutil"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/screenshot"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -115,6 +116,34 @@ func StartNewMeeting(ctx context.Context, cr *chrome.Chrome, br *browser.Browser
 	gm, err := startMeeting(ctx, cr, br, newMeetingURL, urlParams, permissionOption, opts...)
 	if err != nil {
 		return gm, err
+	}
+
+	return gm, gm.waitUntilInMeeting(ctx)
+}
+
+// StartNewMeetingWithConn starts a new Google Meeting using an existing connection.
+func StartNewMeetingWithConn(ctx context.Context, cr *chrome.Chrome, conn *chrome.Conn, urlParams map[string]string) (*GoogleMeet, error) {
+	br := cr.Browser()
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := conn.Navigate(ctx, newMeetingURL); err != nil {
+		return nil, err
+	}
+
+	gm := New(br, conn, tconn)
+
+	if err := webutil.WaitForQuiescence(ctx, conn, longUITimeout); err != nil {
+		return nil, errors.Wrapf(err, "failed to wait for %q to be loaded and achieve quiescence", newMeetingURL)
+	}
+
+	if err := uiauto.Combine("allow permissions",
+		uiauto.Retry(3, gm.ClearPromptsForNewMeeting),
+		chromeApps.AllowPagePermissions(gm.tconn),
+	)(ctx); err != nil {
+		return nil, err
 	}
 
 	return gm, gm.waitUntilInMeeting(ctx)

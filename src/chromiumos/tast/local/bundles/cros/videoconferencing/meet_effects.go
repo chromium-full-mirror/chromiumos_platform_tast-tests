@@ -9,8 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/local/bundles/cros/videoconferencing/commontype"
+	"chromiumos/tast/local/bundles/cros/videoconferencing/common"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/apps/thirdparty/googlemeet"
 	"chromiumos/tast/local/chrome/ash"
@@ -20,8 +19,10 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/vctray"
 	"chromiumos/tast/local/screenshot"
 	"chromiumos/tast/local/videoconferencing/fixture"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -47,24 +48,24 @@ func init() {
 			{
 				Name:    "pwa",
 				Fixture: fixture.GAIALoggedInWithFakeHALAndEffectsEnabled,
-				Val:     commontype.LaunchAppInPWA,
+				Val:     common.LaunchAppInPWA,
 			},
 			{
 				Name:    "web",
 				Fixture: fixture.GAIALoggedInWithFakeHALAndEffectsEnabled,
-				Val:     commontype.LaunchAppInWeb,
+				Val:     common.LaunchAppInWeb,
 			},
 			{
 				Name:              "pwa_lacros",
 				ExtraSoftwareDeps: []string{"lacros"},
 				Fixture:           fixture.GAIALoggedInLacrosWithFakeHALAndEffectsEnabled,
-				Val:               commontype.LaunchAppInPWA,
+				Val:               common.LaunchAppInPWA,
 			},
 			{
 				Name:              "web_lacros",
 				ExtraSoftwareDeps: []string{"lacros"},
 				Fixture:           fixture.GAIALoggedInLacrosWithFakeHALAndEffectsEnabled,
-				Val:               commontype.LaunchAppInWeb,
+				Val:               common.LaunchAppInWeb,
 			},
 		},
 		// Each parameterized test contains multiple subtests.
@@ -98,7 +99,7 @@ func MeetEffects(ctx context.Context, s *testing.State) {
 
 	var gm *googlemeet.GoogleMeet
 
-	if s.Param().(commontype.LaunchAppType) == commontype.LaunchAppInPWA {
+	if s.Param().(common.LaunchAppType) == common.LaunchAppInPWA {
 		gm, err = googlemeet.StartNewMeetingUsingPWA(ctx, cr, br, googlemeet.WithAllPermissions)
 	} else {
 		// Meet can dynamically switch between different segmentation models.

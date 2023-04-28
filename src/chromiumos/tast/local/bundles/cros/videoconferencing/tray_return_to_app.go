@@ -6,11 +6,9 @@ package videoconferencing
 
 import (
 	"context"
-	"strings"
 	"time"
 
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
+	"chromiumos/tast/local/bundles/cros/videoconferencing/common"
 	"chromiumos/tast/local/camera/arcapp"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/apps/thirdparty/googlemeet"
@@ -21,8 +19,11 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/vctray"
 	"chromiumos/tast/local/videoconferencing/fixture"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
+
+	"go.chromium.org/tast/core/ctxutil"
 )
 
 func init() {
@@ -114,7 +115,7 @@ func verifyReturnToGoogleMeet(ctx context.Context, s *testing.State, cr *chrome.
 		s.Fatal("Failed to configure Meet: ", err)
 	}
 
-	if err := verifyReturnToApp(ctx, tconn); err != nil {
+	if err := common.VerifyReturnToApp(ctx, tconn); err != nil {
 		s.Fatal("Failed to verify returnToApp: ", err)
 	}
 }
@@ -140,43 +141,7 @@ func verifyReturnToARCApp(ctx context.Context, s *testing.State, cr *chrome.Chro
 		s.Fatal("Failed to wait for vcTray appears: ", err)
 	}
 
-	if err := verifyReturnToApp(ctx, tconn); err != nil {
+	if err := common.VerifyReturnToApp(ctx, tconn); err != nil {
 		s.Fatal("Failed to verify returnToApp: ", err)
 	}
-}
-
-func verifyReturnToApp(ctx context.Context, tconn *chrome.TestConn) error {
-	appWindow, err := ash.GetActiveWindow(ctx, tconn)
-	if err != nil {
-		return errors.Wrap(err, "failed to get active window")
-	}
-
-	// Save current window state and use it for return verification.
-	appWindowState := appWindow.State
-
-	if err := ash.SetWindowStateAndWait(ctx, tconn, appWindow.ID, ash.WindowStateMinimized); err != nil {
-		return errors.Wrap(err, "failed to minimize window")
-	}
-
-	vcTray := vctray.New(ctx, tconn)
-
-	if err := uiauto.Combine("return to app via mcpanel",
-		vcTray.ExpandPanel,
-		// Remove the "Chrome" prefix to match the window.
-		// vcTray only displays name `Meet - ~new`,
-		// while in Tast API the window title is `Chrome - Meet - ~new`.
-		vcTray.ReturnToApp(strings.TrimPrefix(appWindow.Title, "Chrome - ")),
-	)(ctx); err != nil {
-		return errors.Wrap(err, "failed to return to app")
-	}
-
-	newActiveWindow, err := ash.GetActiveWindow(ctx, tconn)
-	if err != nil {
-		return errors.Wrap(err, "failed to get active window")
-	}
-
-	if newActiveWindow.ID != appWindow.ID || newActiveWindow.State != appWindowState {
-		return errors.Errorf("failed to restore window(expected: %v, actual: %v)", appWindow, newActiveWindow)
-	}
-	return nil
 }

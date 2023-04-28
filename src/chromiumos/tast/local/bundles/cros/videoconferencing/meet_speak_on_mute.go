@@ -8,9 +8,8 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/audio"
-	"chromiumos/tast/local/bundles/cros/videoconferencing/commontype"
+	"chromiumos/tast/local/bundles/cros/videoconferencing/common"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/apps/thirdparty/googlemeet"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
@@ -20,7 +19,9 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/vctray"
 	"chromiumos/tast/local/input/voice"
 	"chromiumos/tast/local/videoconferencing/fixture"
-	"chromiumos/tast/testing"
+
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 const audioInputFile = "voice_en_hello.wav"
@@ -48,22 +49,22 @@ func init() {
 			{
 				Name:    "web",
 				Fixture: fixture.GAIALoggedInWithFakeHALAndEffectsEnabled,
-				Val:     commontype.LaunchAppInWeb,
+				Val:     common.LaunchAppInWeb,
 			},
 			{
 				Name:    "web_lacros",
 				Fixture: fixture.GAIALoggedInLacrosWithFakeHALAndEffectsEnabled,
-				Val:     commontype.LaunchAppInWeb,
+				Val:     common.LaunchAppInWeb,
 			},
 			{
 				Name:    "pwa",
 				Fixture: fixture.GAIALoggedInWithFakeHALAndEffectsEnabled,
-				Val:     commontype.LaunchAppInPWA,
+				Val:     common.LaunchAppInPWA,
 			},
 			{
 				Name:    "pwa_lacros",
 				Fixture: fixture.GAIALoggedInLacrosWithFakeHALAndEffectsEnabled,
-				Val:     commontype.LaunchAppInPWA,
+				Val:     common.LaunchAppInPWA,
 			},
 		},
 	})
@@ -100,7 +101,7 @@ func MeetSpeakOnMute(ctx context.Context, s *testing.State) {
 
 	var gm *googlemeet.GoogleMeet
 
-	if s.Param().(commontype.LaunchAppType) == commontype.LaunchAppInPWA {
+	if s.Param().(common.LaunchAppType) == common.LaunchAppInPWA {
 		gm, err = googlemeet.StartNewMeetingUsingPWA(ctx, cr, br, googlemeet.WithAllPermissions)
 	} else {
 		// Meet can dynamically switch between different segmentation models.

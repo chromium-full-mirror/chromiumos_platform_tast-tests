@@ -8,8 +8,7 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/local/bundles/cros/videoconferencing/commontype"
+	"chromiumos/tast/local/bundles/cros/videoconferencing/common"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/apps/thirdparty/zoom"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
@@ -17,8 +16,11 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/vctray"
 	"chromiumos/tast/local/videoconferencing/fixture"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
+
+	"go.chromium.org/tast/core/ctxutil"
 )
 
 func init() {
@@ -44,24 +46,24 @@ func init() {
 			{
 				Name:    "pwa",
 				Fixture: fixture.GAIALoggedInWithFakeHALAndEffectsEnabled,
-				Val:     commontype.LaunchAppInPWA,
+				Val:     common.LaunchAppInPWA,
 			},
 			{
 				Name:    "web",
 				Fixture: fixture.GAIALoggedInWithFakeHALAndEffectsEnabled,
-				Val:     commontype.LaunchAppInWeb,
+				Val:     common.LaunchAppInWeb,
 			},
 			{
 				Name:              "pwa_lacros",
 				ExtraSoftwareDeps: []string{"lacros"},
 				Fixture:           fixture.GAIALoggedInLacrosWithFakeHALAndEffectsEnabled,
-				Val:               commontype.LaunchAppInPWA,
+				Val:               common.LaunchAppInPWA,
 			},
 			{
 				Name:              "web_lacros",
 				ExtraSoftwareDeps: []string{"lacros"},
 				Fixture:           fixture.GAIALoggedInLacrosWithFakeHALAndEffectsEnabled,
-				Val:               commontype.LaunchAppInWeb,
+				Val:               common.LaunchAppInWeb,
 			},
 		},
 	})
@@ -91,7 +93,7 @@ func ZoomEffects(ctx context.Context, s *testing.State) {
 
 	var zm *zoom.Zoom
 
-	if s.Param().(commontype.LaunchAppType) == commontype.LaunchAppInPWA {
+	if s.Param().(common.LaunchAppType) == common.LaunchAppInPWA {
 		zm, err = zoom.StartNewMeetingUsingPWA(ctx, cr, br, zoom.WithAllPermissions)
 	} else {
 		zm, err = zoom.StartNewMeeting(ctx, cr, br, zoom.WithAllPermissions)

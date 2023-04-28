@@ -10,10 +10,8 @@ import (
 	"time"
 
 	"chromiumos/tast/common/bond"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/a11y"
-	"chromiumos/tast/local/bundles/cros/videoconferencing/commontype"
+	"chromiumos/tast/local/bundles/cros/videoconferencing/common"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/apps/thirdparty/googlemeet"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
@@ -23,7 +21,10 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/chrome/uiauto/vctray"
 	"chromiumos/tast/local/videoconferencing/fixture"
-	"chromiumos/tast/testing"
+
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const credsVarName = "ui.bond_credentials"
@@ -53,22 +54,22 @@ func init() {
 			{
 				Name:    "pwa",
 				Fixture: fixture.GAIALoggedInWithFakeHALAndEffectsEnabled,
-				Val:     commontype.LaunchAppInPWA,
+				Val:     common.LaunchAppInPWA,
 			},
 			{
 				Name:    "web",
 				Fixture: fixture.GAIALoggedInWithFakeHALAndEffectsEnabled,
-				Val:     commontype.LaunchAppInWeb,
+				Val:     common.LaunchAppInWeb,
 			},
 			{
 				Name:    "pwa_lacros",
 				Fixture: fixture.GAIALoggedInLacrosWithFakeHALAndEffectsEnabled,
-				Val:     commontype.LaunchAppInPWA,
+				Val:     common.LaunchAppInPWA,
 			},
 			{
 				Name:    "web_lacros",
 				Fixture: fixture.GAIALoggedInLacrosWithFakeHALAndEffectsEnabled,
-				Val:     commontype.LaunchAppInWeb,
+				Val:     common.LaunchAppInWeb,
 			},
 		},
 	})
@@ -143,7 +144,7 @@ func MeetLiveCaption(ctx context.Context, s *testing.State) {
 	defer cleanup(cleanupCtx)
 
 	var gm *googlemeet.GoogleMeet
-	if s.Param().(commontype.LaunchAppType) == commontype.LaunchAppInPWA {
+	if s.Param().(common.LaunchAppType) == common.LaunchAppInPWA {
 		gm, err = googlemeet.JoinMeetingUsingPWA(ctx, cr, br, meetingCode, googlemeet.WithAllPermissions)
 	} else {
 		// Meet can dynamically switch between different segmentation models.

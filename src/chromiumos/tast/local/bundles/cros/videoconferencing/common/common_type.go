@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Package commontype contains common data types used for mlservice testing.
-package commontype
+// Package common contains common data types and libraries used for video conferencing testing.
+package common
 
 // LaunchAppType is the type to launch meeting app.
 type LaunchAppType int
