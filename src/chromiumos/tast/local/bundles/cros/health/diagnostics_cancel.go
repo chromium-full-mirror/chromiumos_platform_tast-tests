@@ -10,7 +10,7 @@ import (
 	"context"
 
 	"chromiumos/tast/local/croshealthd"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 // newCancelRoutineParams creates and returns a diagnostic routine that will be

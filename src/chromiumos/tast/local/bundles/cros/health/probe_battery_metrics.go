@@ -8,14 +8,14 @@ import (
 	"context"
 	"strconv"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/health/utils"
 	"chromiumos/tast/local/crosconfig"
 	"chromiumos/tast/local/croshealthd"
 	"chromiumos/tast/local/jsontypes"
 	"chromiumos/tast/local/power"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type batteryInfo struct {

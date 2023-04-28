@@ -9,8 +9,8 @@ import (
 	"os"
 	"testing"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/crosconfig"
+	"go.chromium.org/tast/core/errors"
 )
 
 func TestReadStringFileWithLeadingSpaces(t *testing.T) {

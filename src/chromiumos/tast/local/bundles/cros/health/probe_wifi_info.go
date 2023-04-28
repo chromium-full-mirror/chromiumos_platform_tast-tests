@@ -11,8 +11,8 @@ import (
 
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/croshealthd"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type wirelessLinkInfo struct {

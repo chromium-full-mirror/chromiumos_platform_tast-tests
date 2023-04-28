@@ -14,15 +14,15 @@ import (
 	"github.com/google/go-cmp/cmp"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/health/pci"
 	"chromiumos/tast/local/bundles/cros/health/types"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/croshealthd"
 	"chromiumos/tast/local/typecutils"
 	"chromiumos/tast/local/usbutil"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type busInfoTestParams struct {

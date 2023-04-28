@@ -7,9 +7,9 @@ package health
 import (
 	"context"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/croshealthd"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

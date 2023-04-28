@@ -12,8 +12,8 @@ import (
 	"path"
 	"strings"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/crosconfig"
+	"go.chromium.org/tast/core/errors"
 )
 
 // For mocking

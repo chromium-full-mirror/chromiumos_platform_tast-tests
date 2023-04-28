@@ -13,14 +13,14 @@ import (
 	"github.com/google/go-cmp/cmp"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bluetooth/bluez"
 	"chromiumos/tast/local/croshealthd"
 	"chromiumos/tast/local/dbusutil"
 	"chromiumos/tast/local/jsontypes"
 	"chromiumos/tast/local/set"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type deviceInfo struct {

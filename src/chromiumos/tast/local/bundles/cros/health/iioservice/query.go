@@ -13,7 +13,7 @@ import (
 	"strings"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // SensorAttributes stores sensor attributes from iioservice_query.

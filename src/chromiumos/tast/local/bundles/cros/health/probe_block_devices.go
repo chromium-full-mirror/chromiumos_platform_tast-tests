@@ -9,7 +9,7 @@ import (
 
 	"chromiumos/tast/local/croshealthd"
 	"chromiumos/tast/local/jsontypes"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 type nvmeDeviceInfo struct {
