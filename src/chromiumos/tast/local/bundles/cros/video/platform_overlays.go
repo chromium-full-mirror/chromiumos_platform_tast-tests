@@ -31,7 +31,7 @@ type overlaysTestParam struct {
 
 // Only Intel SoCs with GPU Gen 11 (JSL), Gen 12 (TGL, RLK) or later support
 // P010 overlays - this list is SoCs with previous GPUs.
-var preIntelGen11GPUSoCs = []string{"pinetrail", "broadwell", "skylake", "kabylake", "cometlake", "geminilake", "whiskeylake"}
+var preIntelGen11GPUSoCs = []string{"pinetrail", "broadwell", "apollolake", "skylake", "kabylake", "cometlake", "geminilake", "whiskeylake"}
 
 // Intel SoCs with GPU Gen 9 (SKL) or earlier don't support scanning out 30bpp framebuffers.
 var intelGen9AndEarlierGPUSoCs = []string{"pinetrail", "broadwell", "apollolake", "skylake"}
