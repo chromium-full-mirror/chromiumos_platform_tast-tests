@@ -18,9 +18,12 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
+	"chromiumos/tast/common/testexec"
+	"chromiumos/tast/remote/bundles/cros/arc/cache"
 	"chromiumos/tast/remote/bundles/cros/arc/version"
 	"chromiumos/tast/services/cros/arc"
 	arcpb "chromiumos/tast/services/cros/arc"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
@@ -554,6 +557,40 @@ func DataCollector(ctx context.Context, s *testing.State) {
 			response.GmsCoreManifestName,
 			response.GsfCacheName}
 		packAndUploadData(shortCtx, gmsCoreCache, response.TargetDir, resources)
+
+		// Do validity check to make sure we won't fail cache generation during
+		// the official build image.
+		testing.ContextLog(ctx, "Validating packages cache reference")
+
+		tempDir, err := ioutil.TempDir("", "cachebuilder")
+		if err != nil {
+			s.Fatal("Failed to create temp dir: ", err)
+		}
+		defer os.RemoveAll(tempDir)
+		os.Chmod(tempDir, 0744)
+
+		jarPath, err := cache.InstallCacheBuilderJar(ctx, d, param.vmEnabled, tempDir)
+		if err != nil {
+			s.Fatal("Failed to install cache builder library: ", err)
+		}
+
+		localXMLPath := filepath.Join(tempDir, response.PackagesCacheName)
+		if err := linuxssh.GetFile(
+			ctx, d.Conn(),
+			filepath.Join(response.TargetDir, response.PackagesCacheName), localXMLPath,
+			linuxssh.PreserveSymlinks); err != nil {
+			s.Fatalf("Failed to get %q from the device: %v", response.PackagesCacheName, err)
+		}
+
+		// Note, we validate packages cache reference with itself.
+		// This is due to validate the structure of captured document.
+		if err := testexec.CommandContext(
+			ctx, "java", "-cp", jarPath,
+			"org.chromium.arc.cachebuilder.Validator",
+			"--source", localXMLPath, "--reference", localXMLPath,
+			"--dynamic-validate", "no").Run(testexec.DumpLogOnError); err != nil {
+			s.Fatal("Failed to validate packages cache reference: ", err)
+		}
 
 		if param.uploadPackagesReference {
 			resources = []string{response.PackagesCacheName}

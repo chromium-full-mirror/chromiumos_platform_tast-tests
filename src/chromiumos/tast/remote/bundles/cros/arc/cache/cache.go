@@ -1,0 +1,118 @@
+// Copyright 2023 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+// Package cache provides set of util functions used to work with ARC caches.
+package cache
+
+import (
+	"context"
+	"fmt"
+	"path/filepath"
+	"regexp"
+	"strconv"
+	"strings"
+
+	"chromiumos/tast/common/testexec"
+	"chromiumos/tast/remote/bundles/cros/arc/version"
+
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
+)
+
+const (
+	// Base path for Chrome build Android artifacts.
+	buildsRoot = "gs://chromeos-arc-images/builds"
+
+	// Name of jar cache library file.
+	cacheBuilderJarName = "org.chromium.arc.cachebuilder.jar"
+)
+
+// regExpEndsWithBuildID is the regexp to find the build ID from the path entry where build ID
+// is the laset segment in path.
+var regExpEndsWithBuildID = regexp.MustCompile(`^.+/(\d+)/$`)
+
+// findRecentCacheBuilderJar scans the list of available entries with ARC cache builders jar files
+// and returns one whichv has the highest build ID that indicates the most recent entry.
+func findRecentCacheBuilderJar(ctx context.Context, versionRelease int) (string, error) {
+	testing.ContextLogf(ctx, "Build is not official, finding the latest %q", cacheBuilderJarName)
+
+	branch := ""
+	switch versionRelease {
+	case 9:
+		branch = "pi-arc"
+	case 11:
+		branch = "rvc-arc"
+	case 13:
+		branch = "tm-arc"
+	default:
+		return "", errors.Errorf("unrecognized ARC release %d", versionRelease)
+	}
+
+	root := fmt.Sprintf("%s/git_%s-linux-apps/", buildsRoot, branch)
+	out, err := testexec.CommandContext(ctx, "gsutil", "ls", root).Output()
+	if err != nil {
+		return "", errors.Wrap(err, "failed to list apps")
+	}
+
+	result := ""
+	resultBuildID := 0
+
+	for _, candidate := range strings.Split(string(out), "\n") {
+		m := regExpEndsWithBuildID.FindStringSubmatch(candidate)
+		// Not finding match is normal once this is external folder and may contain non-matching entries
+		if m == nil {
+			continue
+		}
+		candidateBuildID, err := strconv.Atoi(m[1])
+		if err != nil {
+			return "", errors.Wrapf(err, "failed to parse buildID from %s", candidate)
+		}
+		if candidateBuildID > resultBuildID {
+			result = candidate
+			resultBuildID = candidateBuildID
+		}
+	}
+
+	if result == "" {
+		return "", errors.Errorf("failed to find %q at %q", cacheBuilderJarName, root)
+	}
+
+	result = result + cacheBuilderJarName
+	testing.ContextLogf(ctx, "Resolved recent cache builder jar as %q", result)
+	return result, nil
+}
+
+// getCacheBuilderJar gets ARC build properties from the device, parses for build ID, and
+// generates gs URL for org.chromium.ard.cachebuilder.jar
+func getCacheBuilderJar(ctx context.Context, dut *dut.DUT, vmEnabled bool) (string, error) {
+	desc, err := version.GetBuildDescriptorRemotely(ctx, dut, vmEnabled)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to get ARC build desc")
+	}
+
+	if desc.Official {
+		return fmt.Sprintf("%s/%s/%s/%s", buildsRoot, "git_*-linux-apps", desc.BuildID, cacheBuilderJarName), nil
+	}
+
+	return findRecentCacheBuilderJar(ctx, desc.VersionRelease)
+}
+
+// InstallCacheBuilderJar downloads corresponding version of cache builder library jar file from
+// the cloud and install it into provided directory.
+func InstallCacheBuilderJar(ctx context.Context, dut *dut.DUT, vmEnabled bool, dir string) (string, error) {
+	url, err := getCacheBuilderJar(ctx, dut, vmEnabled)
+	if err != nil {
+		return "", err
+	}
+
+	testing.ContextLogf(ctx, "Installing cache builder jar from %q", url)
+	jarPath := filepath.Join(dir, filepath.Base(url))
+
+	if err := testexec.CommandContext(ctx, "gsutil", "copy", url, jarPath).Run(testexec.DumpLogOnError); err != nil {
+		return "", errors.Wrapf(err, "failed to download from %s", url)
+	}
+
+	return jarPath, nil
+}

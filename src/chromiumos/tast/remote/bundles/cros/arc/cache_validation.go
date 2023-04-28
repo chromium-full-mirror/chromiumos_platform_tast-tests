@@ -13,15 +13,15 @@ import (
 	"path/filepath"
 	"regexp"
 	"strconv"
-	"strings"
 	"time"
 
 	"chromiumos/tast/common/testexec"
+	"chromiumos/tast/remote/bundles/cros/arc/cache"
 	"chromiumos/tast/remote/bundles/cros/arc/version"
 	"chromiumos/tast/services/cros/arc"
 	arcpb "chromiumos/tast/services/cros/arc"
+
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
@@ -30,18 +30,6 @@ import (
 type testParamCacheValidation struct {
 	vmEnabled bool
 }
-
-const (
-	// Base path
-	buildsRoot = "gs://chromeos-arc-images/builds"
-
-	// Name of jar file
-	jarName = "org.chromium.arc.cachebuilder.jar"
-)
-
-// regExpEndsWithBuildID is the regexp to find the build ID from the path entry where build ID
-// is the laset segment in path.
-var regExpEndsWithBuildID = regexp.MustCompile(`^.+/(\d+)/$`)
 
 // regExpLayoutEntry describes resource entry in layout.txt. For example:
 // /data/user_de/0/com.google.android.gms/app_chimera/m/00000002/oat/x86_64/DynamiteLoader.vdex:644:16
@@ -65,13 +53,12 @@ func init() {
 		SoftwareDeps: []string{"arc_android_data_cros_access", "chrome"},
 		ServiceDeps:  []string{"tast.cros.arc.GmsCoreCacheService", "tast.cros.arc.TTSCacheService"},
 		Params: []testing.Param{{
-			Name:              "pi_container",
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 			Val: testParamCacheValidation{
 				vmEnabled: false,
 			},
 		}, {
-			Name:              "r",
+			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Val: testParamCacheValidation{
 				vmEnabled: true,
@@ -79,67 +66,6 @@ func init() {
 		}},
 		Timeout: 10 * time.Minute,
 	})
-}
-
-// findRecentBuild scans the list of available entries with ARC apps and returns one which
-// has the highest build ID that indicates the most recent entry.
-func findRecentBuild(ctx context.Context, vmEnabled bool) (string, error) {
-	testing.ContextLogf(ctx, "Build is not official, finding the latest %q", jarName)
-
-	branch := ""
-	if vmEnabled {
-		branch = "rvc-arc"
-	} else {
-		branch = "pi-arc"
-	}
-
-	root := fmt.Sprintf("%s/git_%s-linux-apps/", buildsRoot, branch)
-	out, err := testexec.CommandContext(ctx, "gsutil", "ls", root).Output()
-	if err != nil {
-		return "", errors.Wrap(err, "failed to list apps")
-	}
-
-	result := ""
-	resultBuildID := 0
-
-	for _, candidate := range strings.Split(string(out), "\n") {
-		m := regExpEndsWithBuildID.FindStringSubmatch(candidate)
-		// Not finding match is normal once this is external folder and may contain non-matching entries
-		if m == nil {
-			continue
-		}
-		candidateBuildID, err := strconv.Atoi(m[1])
-		if err != nil {
-			return "", errors.Wrapf(err, "failed to parse buildID from %s", candidate)
-		}
-		if candidateBuildID > resultBuildID {
-			result = candidate
-			resultBuildID = candidateBuildID
-		}
-	}
-
-	if result == "" {
-		return "", errors.Errorf("failed to find %q at %q", jarName, root)
-	}
-
-	result = result + jarName
-	testing.ContextLogf(ctx, "Resolved as %q", result)
-	return result, nil
-}
-
-// generateJarURL gets ARC build properties from the device, parses for build ID, and
-// generates gs URL for org.chromium.ard.cachebuilder.jar
-func generateJarURL(ctx context.Context, dut *dut.DUT, vmEnabled bool) (string, error) {
-	desc, err := version.GetBuildDescriptorRemotely(ctx, dut, vmEnabled)
-	if err != nil {
-		return "", errors.Wrap(err, "failed to get ARC build desc")
-	}
-
-	if desc.Official {
-		return fmt.Sprintf("%s/%s/%s/%s", buildsRoot, "git_*-linux-apps", desc.BuildID, jarName), nil
-	}
-
-	return findRecentBuild(ctx, vmEnabled)
 }
 
 func CacheValidation(ctx context.Context, s *testing.State) {
@@ -170,15 +96,9 @@ func CacheValidation(ctx context.Context, s *testing.State) {
 		s.Fatal(errors.Wrap(err, "failed to created artifacts dir"))
 	}
 
-	url, err := generateJarURL(ctx, d, param.vmEnabled)
+	jarPath, err := cache.InstallCacheBuilderJar(ctx, d, param.vmEnabled, tempDir)
 	if err != nil {
-		s.Fatal("Failed to generate jar URL: ", err)
-	}
-
-	jarPath := filepath.Join(tempDir, filepath.Base(url))
-
-	if err := testexec.CommandContext(ctx, "gsutil", "copy", url, jarPath).Run(testexec.DumpLogOnError); err != nil {
-		s.Fatalf("Failed to download from %s: %v", url, err)
+		s.Fatal("Failed to install cache builder library: ", err)
 	}
 
 	// Connect to the gRPC server on the DUT.
