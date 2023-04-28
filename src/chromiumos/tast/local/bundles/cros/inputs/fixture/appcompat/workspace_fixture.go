@@ -263,19 +263,6 @@ func (f *workSpaceFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestS
 		s.Fatal(fmt.Sprintf("Failed to maximize the %s page: ", f.appName), err)
 	}
 
-	// Set big font size for acuiti to do pixel comparison to avoid flaky test.
-	if f.appName == googleDocs {
-		if err := googledocs.ChangeDocFontSize(f.tconn, "18")(ctx); err != nil {
-			s.Fatal("Failed to set font size for google docs: ", err)
-		}
-	}
-
-	if f.appName == googleSheets {
-		if err := googledocs.ChangeSheetFontSize(f.tconn, "12")(ctx); err != nil {
-			s.Fatal("Failed to set font size for google sheets: ", err)
-		}
-	}
-
 	// google slide has to make title field or text field editable first
 	// otherwise, user cannot typing anything.
 	if f.appName == googleSlides {
