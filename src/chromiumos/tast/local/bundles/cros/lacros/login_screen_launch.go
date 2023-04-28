@@ -11,6 +11,7 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 
+	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
@@ -31,6 +32,7 @@ type loginScreenLaunchTestParam struct {
 	browserType     browser.Type
 	lacrosSelection lacros.Selection
 	lacrosMode      lacros.Mode // Ignored when browserType == TypeAsh.
+	keepAlive       bool        // Ignored when browserType == TypeAsh.
 }
 
 func init() {
@@ -61,6 +63,17 @@ func init() {
 					browser.TypeLacros,
 					lacros.Rootfs,
 					lacros.LacrosOnly,
+					false, // keepAlive disabled
+				},
+			},
+			{
+				Name:      "rootfs_keepalive",
+				ExtraAttr: []string{"group:mainline", "informational"},
+				Val: loginScreenLaunchTestParam{
+					browser.TypeLacros,
+					lacros.Rootfs,
+					lacros.LacrosOnly,
+					true, // keepAlive enabled
 				},
 			},
 			{
@@ -70,6 +83,7 @@ func init() {
 					browser.TypeAsh,
 					lacros.Rootfs,
 					lacros.NotSpecified,
+					false, // ignored
 				},
 			},
 		},
@@ -231,7 +245,7 @@ func LoginScreenLaunch(ctx context.Context, s *testing.State) {
 	lacrosCfg := lacrosfixt.NewConfig(
 		lacrosfixt.Selection(params.lacrosSelection),
 		lacrosfixt.Mode(params.lacrosMode),
-		lacrosfixt.KeepAlive(true))
+		lacrosfixt.KeepAlive(params.keepAlive))
 
 	// Launch Chrome.
 	cr, err := browserfixt.NewChrome(ctx, params.browserType, lacrosCfg, options...)
@@ -301,9 +315,21 @@ func LoginScreenLaunch(ctx context.Context, s *testing.State) {
 		if !isSubset(lacrosProcsAtLoginScreen, lacrosProcsAfterLogin) {
 			s.Fatal("Processes running after login are not the ones that were running at login screen")
 		}
+		// Open Lacros from shelf.
+		browser, err := apps.PrimaryBrowser(ctx, tConn)
+		if err != nil {
+			s.Fatal("Failed to get browser app: ", err)
+		}
+		if ash.LaunchAppFromShelf(ctx, tConn, browser.Name, browser.ID); err != nil {
+			s.Fatal("Failed to launch Lacros from shelf: ", err)
+		}
+		// Check that the Lacros window is visible.
+		if err := lacros.WaitForLacrosWindow(ctx, tConn, "New Tab"); err != nil {
+			s.Fatal("Failed waiting for Lacros window to be visible: ", err)
+		}
 		// Check that Lacros's connection works.
 		if _, err = lacros.Connect(ctx, tConn); err != nil {
-			s.Fatal("Could not connect to Lacros after login: ", err)
+			s.Fatal("Could not connect to Lacros: ", err)
 		}
 	} else {
 		// If Lacros is disabled for the user, Lacros should have been terminated.
