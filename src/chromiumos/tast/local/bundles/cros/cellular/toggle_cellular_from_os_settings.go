@@ -10,7 +10,7 @@ import (
 	"chromiumos/tast/local/cellular"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto/ossettings"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

@@ -13,7 +13,7 @@ import (
 	"chromiumos/tast/local/dlc"
 	"chromiumos/tast/local/modemfwd"
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

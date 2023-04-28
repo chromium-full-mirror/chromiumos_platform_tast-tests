@@ -14,7 +14,7 @@ import (
 	"chromiumos/tast/local/hermes"
 	"chromiumos/tast/local/modemmanager"
 	"chromiumos/tast/local/stork"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

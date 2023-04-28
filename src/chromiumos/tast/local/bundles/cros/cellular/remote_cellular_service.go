@@ -14,7 +14,6 @@ import (
 
 	"chromiumos/tast/common/mmconst"
 	"chromiumos/tast/common/shillconst"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/cellular"
 	"chromiumos/tast/local/dbusutil"
 	"chromiumos/tast/local/hermes"
@@ -22,7 +21,8 @@ import (
 	"chromiumos/tast/local/modemmanager"
 	"chromiumos/tast/local/upstart"
 	cellular_pb "chromiumos/tast/services/cros/cellular"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

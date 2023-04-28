@@ -9,10 +9,10 @@ import (
 	"time"
 
 	"chromiumos/tast/common/mmconst"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/modemmanager"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {

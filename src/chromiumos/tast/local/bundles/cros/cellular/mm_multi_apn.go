@@ -12,11 +12,11 @@ import (
 
 	"chromiumos/tast/common/cellularconst"
 	"chromiumos/tast/common/mmconst"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/cellular"
 	"chromiumos/tast/local/modemmanager"
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

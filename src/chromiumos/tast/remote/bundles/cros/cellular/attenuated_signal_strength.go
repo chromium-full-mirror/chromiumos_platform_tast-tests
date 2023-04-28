@@ -11,10 +11,10 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/cellular/callbox/manager"
 	"chromiumos/tast/services/cros/cellular"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (

@@ -8,7 +8,7 @@ import (
 	"context"
 
 	"chromiumos/tast/local/cellular"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Note: This test enables Cellular if not already enabled.

@@ -11,7 +11,7 @@ import (
 	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/local/cellular"
 	"chromiumos/tast/local/modemmanager"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

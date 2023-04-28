@@ -15,7 +15,7 @@ import (
 	cbiperf "chromiumos/tast/remote/cellular/callbox/iperf"
 	"chromiumos/tast/remote/cellular/callbox/manager"
 	"chromiumos/tast/remote/network/iperf"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 type iperfTestCaseConfiguration struct {

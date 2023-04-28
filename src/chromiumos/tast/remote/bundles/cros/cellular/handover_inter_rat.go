@@ -11,9 +11,9 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 
 	"chromiumos/tast/common/shillconst"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/cellular/callbox/manager"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 type interRatTestCase struct {

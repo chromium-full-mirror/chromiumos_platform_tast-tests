@@ -11,9 +11,9 @@ import (
 	"net/http"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/cellular"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Note: This test enables and connects to Cellular if not already enabled or connected.

@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"chromiumos/tast/remote/cellular/callbox/manager"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 type intraRatTestCase struct {

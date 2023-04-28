@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"chromiumos/tast/common/mmconst"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/modemmanager"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // This test runs on all carriers including esim. Slot switch is tested on boards with Modem,

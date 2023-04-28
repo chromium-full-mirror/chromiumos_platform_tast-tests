@@ -10,9 +10,9 @@ import (
 
 	"chromiumos/tast/common/mmconst"
 	"chromiumos/tast/common/shillconst"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/cellular"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

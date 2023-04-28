@@ -9,7 +9,7 @@ import (
 
 	"chromiumos/tast/common/mmconst"
 	"chromiumos/tast/local/modemmanager"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
