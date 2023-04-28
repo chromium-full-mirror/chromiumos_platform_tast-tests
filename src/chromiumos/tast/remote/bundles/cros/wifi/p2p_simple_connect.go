@@ -9,7 +9,9 @@ import (
 
 	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/remote/wificell"
+
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -23,6 +25,7 @@ func init() {
 		Attr:         []string{"group:wificell_cross_device", "wificell_cross_device_p2p", "wificell_cross_device_unstable"},
 		ServiceDeps:  []string{wificell.ShillServiceName},
 		Fixture:      "wificellFixtCompanionDut",
+		HardwareDeps: hwdep.D(hwdep.WifiP2P()),
 		Requirements: []string{tdreq.WiFiGenSupportWFD},
 	})
 }
