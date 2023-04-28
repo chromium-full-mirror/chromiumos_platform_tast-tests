@@ -137,7 +137,7 @@
 	},
 	{
 		"driver": "v4l(CONFIG_VIDEO_V4L2)",
-		"boards": ["kukui"],
+		"boards": ["kukui", "strongbad", "trogdor"],
 		"syscalls": [
 			"ioctl$MEDIA_IOC_REQUEST_ALLOC",
 			"ioctl$MEDIA_REQUEST_IOC_QUEUE",
