@@ -10,10 +10,10 @@ import (
 	"time"
 
 	"chromiumos/tast/common/action"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/drivefs"
 	"chromiumos/tast/local/network"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
