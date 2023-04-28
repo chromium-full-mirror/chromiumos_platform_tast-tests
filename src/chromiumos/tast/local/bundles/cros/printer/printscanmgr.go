@@ -28,9 +28,7 @@ func init() {
 		},
 		// ChromeOS > Platform > Services > Printing
 		BugComponent: "b:167231",
-		// TODO(b/257070388): Remove amd64 software dep once SECCOMP policies for
-		// other architectures are complete.
-		SoftwareDeps: []string{"amd64", "chrome", "cups", "printscanmgr"},
+		SoftwareDeps: []string{"chrome", "cups", "printscanmgr"},
 		Data:         []string{"GenericPostScript.ppd.gz"},
 		Pre:          chrome.LoggedIn(),
 		Attr: []string{
