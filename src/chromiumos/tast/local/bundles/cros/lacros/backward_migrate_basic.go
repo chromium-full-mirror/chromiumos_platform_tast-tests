@@ -10,7 +10,7 @@ import (
 	"chromiumos/tast/local/bundles/cros/lacros/migrate"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

@@ -16,8 +16,6 @@ import (
 
 	lacroscommon "chromiumos/tast/common/cros/lacros"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/bundles/cros/lacros/versionutil"
 	"chromiumos/tast/local/chrome"
@@ -29,9 +27,11 @@ import (
 	"chromiumos/tast/local/chrome/lacros/lacrosfaillog"
 	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
 	"chromiumos/tast/local/chrome/lacros/lacrosinfo"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/lsbrelease"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {

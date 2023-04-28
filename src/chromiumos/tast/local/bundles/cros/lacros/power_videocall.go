@@ -12,7 +12,6 @@ import (
 
 	"chromiumos/tast/common/action"
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
@@ -25,7 +24,8 @@ import (
 	"chromiumos/tast/local/input"
 	memorymetrics "chromiumos/tast/local/memory/metrics"
 	"chromiumos/tast/local/tracing"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (

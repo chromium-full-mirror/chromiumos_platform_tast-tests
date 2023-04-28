@@ -13,7 +13,7 @@ import (
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (

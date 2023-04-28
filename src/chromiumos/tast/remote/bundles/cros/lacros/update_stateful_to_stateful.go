@@ -9,13 +9,13 @@ import (
 	"time"
 
 	lacroscommon "chromiumos/tast/common/cros/lacros"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/remote/bundles/cros/lacros/provision"
 	"chromiumos/tast/remote/bundles/cros/lacros/update"
 	"chromiumos/tast/remote/bundles/cros/lacros/version"
-	"chromiumos/tast/rpc"
 	lacrosservice "chromiumos/tast/services/cros/lacros"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/testing"
 )
 
 type updatePath struct {

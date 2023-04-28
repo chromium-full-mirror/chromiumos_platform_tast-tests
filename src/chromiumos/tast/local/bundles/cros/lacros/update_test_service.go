@@ -19,8 +19,6 @@ import (
 
 	lacroscommon "chromiumos/tast/common/cros/lacros"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/lacros"
@@ -29,7 +27,9 @@ import (
 	"chromiumos/tast/local/chrome/lacros/lacrosproc"
 	"chromiumos/tast/local/cryptohome"
 	lacrosservice "chromiumos/tast/services/cros/lacros"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 var versionRegexp = regexp.MustCompile(`(\d+\.)(\d+\.)(\d+\.)(\d+)`)

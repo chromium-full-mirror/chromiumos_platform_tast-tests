@@ -11,7 +11,6 @@ import (
 	"os"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/lacros"
@@ -23,7 +22,8 @@ import (
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/policyutil"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // LacrosFirstRunPath is the path to `First Run` sentinel file in Lacros profile dir.

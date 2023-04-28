@@ -10,14 +10,14 @@ import (
 	"path/filepath"
 
 	lacroscommon "chromiumos/tast/common/cros/lacros"
-	"chromiumos/tast/dut"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/bundles/cros/lacros/provision"
 	"chromiumos/tast/remote/bundles/cros/lacros/version"
 	"chromiumos/tast/services/cros/lacros"
 	lacrosservice "chromiumos/tast/services/cros/lacros"
-	"chromiumos/tast/ssh/linuxssh"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh/linuxssh"
+	"go.chromium.org/tast/core/testing"
 )
 
 // GetAshVersion returns the version of Ash Chrome.

@@ -13,7 +13,7 @@ import (
 	"chromiumos/tast/local/chrome/lacros"
 	applauncher "chromiumos/tast/local/chrome/uiauto/launcher"
 	"chromiumos/tast/local/input"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

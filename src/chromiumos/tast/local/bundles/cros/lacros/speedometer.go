@@ -12,14 +12,14 @@ import (
 	"time"
 
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/errors"
 	_ "chromiumos/tast/local/bundles/cros/lacros/fixtures" // Include the speedometer specific lacros WPR fixture.
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/lacros/lacrosperf"
 	"chromiumos/tast/local/faillog"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 type testType int

@@ -10,13 +10,13 @@ import (
 	"os"
 	"path/filepath"
 
-	"chromiumos/tast/errors"
-	"chromiumos/tast/fsutil"
 	"chromiumos/tast/local/bundles/cros/lacros/migrate"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/lacros"
 	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/fsutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 var extensionFiles = []string{

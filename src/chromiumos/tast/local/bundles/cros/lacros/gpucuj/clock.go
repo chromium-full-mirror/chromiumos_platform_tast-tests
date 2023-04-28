@@ -8,7 +8,7 @@ package gpucuj
 import (
 	"android.googlesource.com/platform/external/perfetto/protos/perfetto/trace/github.com/google/perfetto/perfetto_proto"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 type clockID uint32

@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
@@ -20,7 +19,8 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/mouse"
 	"chromiumos/tast/local/coords"
 	"chromiumos/tast/local/input"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // TestType describes the type of GpuCUJ test to run.

@@ -24,7 +24,7 @@ import (
 	"chromiumos/tast/local/chrome/userutil"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 type loginScreenLaunchTestParam struct {

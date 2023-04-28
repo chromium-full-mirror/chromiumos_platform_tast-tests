@@ -9,12 +9,12 @@ package migrate
 import (
 	"context"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/localstate"
 	"chromiumos/tast/local/cryptohome"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // BackwardRun starts Chrome and waits until Lacros to Ash migration is marked as completed by Ash.

@@ -12,8 +12,8 @@ import (
 	"go.chromium.org/chromiumos/config/go/api/test/tls/dependencies/longrunning"
 	"google.golang.org/grpc"
 
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // TLSAddrVar is a variable to set the address of TLS for provisioning.

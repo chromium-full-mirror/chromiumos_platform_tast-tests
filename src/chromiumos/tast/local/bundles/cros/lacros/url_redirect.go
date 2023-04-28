@@ -16,7 +16,6 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
@@ -25,7 +24,8 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/browser/browserui"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/input"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 
 	"go.chromium.org/tast/core/ctxutil"
 )
