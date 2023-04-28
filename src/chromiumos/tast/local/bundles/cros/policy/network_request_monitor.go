@@ -15,6 +15,7 @@ import (
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/local/annotations"
+	"chromiumos/tast/local/bundles/cros/policy/quickanswersutil"
 	"chromiumos/tast/local/bundles/cros/policy/spellcheckutil"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
@@ -50,9 +51,11 @@ func init() {
 			Fixture:           fixture.LacrosPolicyLoggedIn,
 			Val:               browser.TypeLacros,
 		}},
-		Data: []string{"spell_checking.html"},
+		Data: []string{"spell_checking.html", "quick_answers.html"},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.SpellCheckServiceEnabled{}, pci.VerifiedFunctionalityUI),
+			pci.SearchFlag(&policy.QuickAnswersUnitConversionEnabled{}, pci.VerifiedFunctionalityUI),
+			pci.SearchFlag(&policy.QuickAnswersUnitConversionEnabled{}, pci.VerifiedFunctionalityOS),
 		},
 	})
 }
@@ -61,6 +64,7 @@ func init() {
 func getPolicyList() []policy.Policy {
 	return []policy.Policy{
 		&policy.SpellCheckServiceEnabled{Val: false},
+		&policy.QuickAnswersUnitConversionEnabled{Val: false},
 	}
 }
 
@@ -68,6 +72,7 @@ func getPolicyList() []policy.Policy {
 func getAnnotationHashCodes() []string {
 	return []string{
 		"132553989", // spellcheck_lookup
+		"46208118",  // quick_answers_loader
 	}
 }
 
@@ -113,18 +118,32 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start logging: ", err)
 	}
 
-	spellCheckParam := spellcheckutil.TestCase{
-		Name:              "disallow",
-		Value:             &policy.SpellCheckServiceEnabled{Val: false},
-		WantRestriction:   restriction.Disabled,
-		WantSettingsCheck: checked.False,
-		// "" means that there is no checkmark.
-		WantContextCheck:     "",
-		ShouldFindAnnotation: false,
-	}
-	if err := spellcheckutil.TriggerSpellCheck(ctx, spellCheckParam, cr, server, br, tconn); err != nil {
-		s.Fatal("Failed to trigger and verify spellcheck: ", err)
-	}
+	s.Run(ctx, "spell_check_service", func(ctx context.Context, s *testing.State) {
+		spellCheckParam := spellcheckutil.TestCase{
+			Name:              "disallow",
+			Value:             &policy.SpellCheckServiceEnabled{Val: false},
+			WantRestriction:   restriction.Disabled,
+			WantSettingsCheck: checked.False,
+			// "" means that there is no checkmark.
+			WantContextCheck:     "",
+			ShouldFindAnnotation: false,
+		}
+		if err := spellcheckutil.TriggerSpellCheck(ctx, spellCheckParam, cr, server, br, tconn); err != nil {
+			s.Fatal("Failed to trigger and verify spellcheck: ", err)
+		}
+	})
+
+	s.Run(ctx, "quick_answers_unit_conversion", func(ctx context.Context, s *testing.State) {
+		quickAnswersUnitCoversionParam := quickanswersutil.UnitConversionTestCase{
+			Name:                  "disabled",
+			ShouldFindAnnotation:  false,
+			ShouldShowContextMenu: false,
+			Policy:                &policy.QuickAnswersUnitConversionEnabled{Val: false},
+		}
+		if err := quickanswersutil.TriggerQuickAnswersUnitConversion(ctx, quickAnswersUnitCoversionParam, server, br, tconn); err != nil {
+			s.Fatal("Failed to trigger and verify quick answers unit conversion: ", err)
+		}
+	})
 
 	// Stop logging and verify annotations related to the optional services are not found in the logs.
 	_, err = annotations.StopLoggingVerifyNoAnnotation(ctx, cr, br, getAnnotationHashCodes())
