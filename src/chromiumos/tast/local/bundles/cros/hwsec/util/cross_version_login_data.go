@@ -18,7 +18,6 @@ import (
 	cpb "chromiumos/system_api/cryptohome_proto"
 	uda "chromiumos/system_api/user_data_auth_proto"
 	"chromiumos/tast/common/hwsec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
@@ -28,7 +27,8 @@ import (
 	hwseclocal "chromiumos/tast/local/hwsec"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/u2fd"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // VaultKeyInfo contains the information of a vault key

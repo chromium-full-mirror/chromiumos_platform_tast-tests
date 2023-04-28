@@ -12,14 +12,14 @@ import (
 	"chromiumos/tast/common/hwsec"
 	"chromiumos/tast/common/pkcs11"
 	"chromiumos/tast/common/servo"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/bundles/cros/hwsec/util"
 	"chromiumos/tast/remote/dutfs"
 	hwsecremote "chromiumos/tast/remote/hwsec"
 	"chromiumos/tast/remote/u2fd"
-	"chromiumos/tast/rpc"
 	webauthnpb "chromiumos/tast/services/cros/hwsec"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/testing"
 )
 
 type webauthnAttestationParam struct {

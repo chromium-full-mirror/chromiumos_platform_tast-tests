@@ -9,7 +9,7 @@ import (
 
 	"chromiumos/tast/common/hwsec"
 	hwseclocal "chromiumos/tast/local/hwsec"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

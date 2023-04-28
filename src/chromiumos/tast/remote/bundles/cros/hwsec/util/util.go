@@ -14,12 +14,12 @@ import (
 	"chromiumos/tast/common/hwsec"
 	"chromiumos/tast/common/pkcs11"
 	"chromiumos/tast/common/servo"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/dutfs"
 	fwfixture "chromiumos/tast/remote/firmware/fixture"
 	hwsecremote "chromiumos/tast/remote/hwsec"
 	"chromiumos/tast/remote/u2fd"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // PowerButtonHelper is a helper interface that can press the power button

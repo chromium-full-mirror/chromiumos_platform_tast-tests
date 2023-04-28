@@ -10,10 +10,10 @@ import (
 
 	uda "chromiumos/system_api/user_data_auth_proto"
 	"chromiumos/tast/common/hwsec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/hwsec/util"
 	hwseclocal "chromiumos/tast/local/hwsec"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 type testParam struct {

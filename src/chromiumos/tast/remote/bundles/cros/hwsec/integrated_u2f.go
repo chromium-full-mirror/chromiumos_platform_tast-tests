@@ -17,13 +17,13 @@ import (
 	"chromiumos/tast/common/hwsec"
 	"chromiumos/tast/common/pkcs11"
 	"chromiumos/tast/common/servo"
-	"chromiumos/tast/dut"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/bundles/cros/hwsec/util"
 	hwsecremote "chromiumos/tast/remote/hwsec"
-	"chromiumos/tast/rpc"
 	"chromiumos/tast/services/cros/example"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/testing"
 )
 
 type integratedU2fParam struct {

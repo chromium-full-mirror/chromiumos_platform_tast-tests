@@ -14,9 +14,9 @@ import (
 
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/common/pkcs11/pkcs11test"
-	"chromiumos/tast/ctxutil"
 	libhwseclocal "chromiumos/tast/local/hwsec"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

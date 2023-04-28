@@ -10,9 +10,9 @@ import (
 	"math/rand"
 	"time"
 
-	"chromiumos/tast/errors"
 	hwseclocal "chromiumos/tast/local/hwsec"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

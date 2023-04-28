@@ -10,10 +10,10 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 
-	"chromiumos/tast/errors"
 	hwseclocal "chromiumos/tast/local/hwsec"
 	hwsecpb "chromiumos/tast/services/cros/hwsec"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

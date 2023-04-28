@@ -8,11 +8,11 @@ import (
 	"context"
 
 	"chromiumos/tast/common/hwsec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/hwsec/fixture"
 	"chromiumos/tast/local/bundles/cros/hwsec/util"
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

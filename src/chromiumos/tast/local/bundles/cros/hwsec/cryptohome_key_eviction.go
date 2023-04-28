@@ -12,7 +12,7 @@ import (
 	"chromiumos/tast/common/pkcs11"
 	"chromiumos/tast/local/bundles/cros/hwsec/util"
 	hwseclocal "chromiumos/tast/local/hwsec"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

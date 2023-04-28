@@ -10,13 +10,13 @@ import (
 	uda "chromiumos/system_api/user_data_auth_proto"
 	cryptohomecommon "chromiumos/tast/common/cryptohome"
 	"chromiumos/tast/common/hwsec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/hwsec/fixture"
 	"chromiumos/tast/local/bundles/cros/hwsec/util"
 	cryptochrome "chromiumos/tast/local/cryptohome/chrome"
 	"chromiumos/tast/local/dbusutil"
 	hwseclocal "chromiumos/tast/local/hwsec"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

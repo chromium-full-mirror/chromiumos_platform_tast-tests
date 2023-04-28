@@ -11,7 +11,7 @@ import (
 
 	hwseclocal "chromiumos/tast/local/hwsec"
 	"chromiumos/tast/local/syslog"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 // NOTE: This test is somewhat similar to hwsec.DictionaryAttackLockoutResetTPM2 (a local test), if change is

@@ -12,7 +12,7 @@ import (
 	"chromiumos/tast/common/hwsec"
 	"chromiumos/tast/remote/bundles/cros/hwsec/util"
 	hwsecremote "chromiumos/tast/remote/hwsec"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 // NOTE: This test is largely similar to hwsec.RecreateUserVaultTPM2 (a local test), if change is made to one, it is likely that the other have to be changed as well.

@@ -13,10 +13,10 @@ import (
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/common/pkcs11"
 	"chromiumos/tast/common/pkcs11/pkcs11test"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/hwsec/util"
 	libhwseclocal "chromiumos/tast/local/hwsec"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

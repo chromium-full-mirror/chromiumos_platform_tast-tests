@@ -14,10 +14,10 @@ import (
 	apb "chromiumos/system_api/attestation_proto"
 	"chromiumos/tast/common/hwsec"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/ctxutil"
 	hwseclocal "chromiumos/tast/local/hwsec"
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

@@ -10,7 +10,7 @@ import (
 	"chromiumos/tast/common/hwsec"
 	"chromiumos/tast/local/cryptohome"
 	hwseclocal "chromiumos/tast/local/hwsec"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 // NOTE: This test is largely similar to hwsec.DictionaryAttackLockoutResetTPM1 (a remote test), if change is

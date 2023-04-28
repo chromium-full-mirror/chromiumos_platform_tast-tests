@@ -12,11 +12,11 @@ import (
 	cryptohomecommon "chromiumos/tast/common/cryptohome"
 	"chromiumos/tast/common/hwsec"
 	"chromiumos/tast/common/storage/files"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/bundles/cros/hwsec/util"
 	hwsecremote "chromiumos/tast/remote/hwsec"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {

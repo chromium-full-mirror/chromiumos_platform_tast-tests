@@ -16,10 +16,10 @@ import (
 
 	"chromiumos/tast/common/hwsec"
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/bundles/cros/hwsec/util"
 	libhwseclocal "chromiumos/tast/local/hwsec"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

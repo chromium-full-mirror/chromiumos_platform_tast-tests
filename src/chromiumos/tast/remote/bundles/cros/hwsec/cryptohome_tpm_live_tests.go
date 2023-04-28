@@ -10,9 +10,9 @@ import (
 	"path/filepath"
 	"time"
 
-	"chromiumos/tast/ctxutil"
 	hwsecremote "chromiumos/tast/remote/hwsec"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 type testParams struct {

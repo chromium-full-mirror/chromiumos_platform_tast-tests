@@ -11,7 +11,7 @@ import (
 
 	"chromiumos/tast/common/hwsec"
 	"chromiumos/tast/common/pkcs11"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // Utilities and helper functions used by chaps performance test are placed here.
