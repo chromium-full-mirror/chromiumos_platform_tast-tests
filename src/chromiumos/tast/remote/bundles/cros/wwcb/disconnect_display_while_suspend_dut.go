@@ -15,6 +15,7 @@ import (
 	"chromiumos/tast/remote/bundles/cros/wwcb/utils"
 	"chromiumos/tast/services/cros/ui"
 	"chromiumos/tast/services/cros/wwcb"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
@@ -38,7 +39,6 @@ func DisconnectDisplayWhileSuspendDUT(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	dockingID := s.RequiredVar("DockingID")
 	extDispID := s.RequiredVar("ExtDispID1")
 
 	// Set up the servo attached to the DUT.
@@ -67,13 +67,6 @@ func DisconnectDisplayWhileSuspendDUT(ctx context.Context, s *testing.State) {
 
 	displaySvc := wwcb.NewDisplayServiceClient(cl.Conn)
 
-	// Open IP power to supply docking power.
-	ippowerPorts := []int{1}
-	if err := utils.OpenIppower(ctx, ippowerPorts); err != nil {
-		s.Fatal("Failed to power on docking station: ", err)
-	}
-	defer utils.CloseIppower(cleanupCtx, ippowerPorts)
-
 	// Initialize fixtures to find the connected devices.
 	if err := utils.InitFixture(ctx); err != nil {
 		s.Fatal("Failed to initialize fixtures: ", err)
@@ -85,16 +78,38 @@ func DisconnectDisplayWhileSuspendDUT(ctx context.Context, s *testing.State) {
 	}
 
 	extDispIDArray := []string{extDispID}
-	if err := utils.MappingWithDockFixture(ctx, s, extDispIDArray, dockingID); err != nil {
-		s.Fatal("Failed to do mapping display fixture to camera: ", err)
+	if dockingID, ok := s.Var("DockingID"); ok {
+		ippowerPorts := []int{1}
+		if err := utils.OpenIppower(ctx, ippowerPorts); err != nil {
+			s.Fatal("Failed to power on the docking station: ", err)
+		}
+		defer utils.CloseIppower(cleanupCtx, ippowerPorts)
+
+		if err := utils.ControlFixture(ctx, dockingID, "on"); err != nil {
+			s.Fatal("Failed to connect to the docking station in the state of mapping the display fixture to camera: ", err)
+		}
+
+		if err := utils.MappingDisplayFixtureToCamera(ctx, s, extDispIDArray); err != nil {
+			s.Fatal("Failed to do mapping display fixture to camera: ", err)
+		}
+
+		if err := utils.ControlFixture(ctx, dockingID, "off"); err != nil {
+			s.Fatal("Failed to disconnect to the docking station in the state of mapping the display fixture to camera: ", err)
+		}
+	} else {
+		if err := utils.MappingDisplayFixtureToCamera(ctx, s, extDispIDArray); err != nil {
+			s.Fatal("Failed to do mapping display fixture to camera: ", err)
+		}
 	}
 
 	if err := utils.ControlFixture(ctx, extDispID, "on"); err != nil {
 		s.Fatal("Failed to connect to the external display: ", err)
 	}
 
-	if err := utils.ControlFixture(ctx, dockingID, "on"); err != nil {
-		s.Fatal("Failed to connect to the docking station: ", err)
+	if dockingID, ok := s.Var("DockingID"); ok {
+		if err := utils.ControlFixture(ctx, dockingID, "on"); err != nil {
+			s.Fatal("Failed to connect to the docking station: ", err)
+		}
 	}
 
 	if _, err := displaySvc.VerifyDisplayCount(ctx, &wwcb.QueryRequest{DisplayCount: 2}); err != nil {
@@ -112,7 +127,13 @@ func DisconnectDisplayWhileSuspendDUT(ctx context.Context, s *testing.State) {
 	defer utils.PowerOnDUT(ctx, pxy, dut)
 
 	if err := utils.ControlFixture(ctx, extDispID, "off"); err != nil {
-		s.Fatal("Failed to disconnect the external display: ", err)
+		s.Fatal("Failed to disconnect to the external display: ", err)
+	}
+
+	sdCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+	if err := dut.WaitUnreachable(sdCtx); err != nil {
+		s.Fatal(ctx, "Failed to wait for DUT to be unreachable: ", err)
 	}
 
 	suspendScreenLight, err := utils.GetGamLightingValue(ctx, s, utils.DUTMonitor)
