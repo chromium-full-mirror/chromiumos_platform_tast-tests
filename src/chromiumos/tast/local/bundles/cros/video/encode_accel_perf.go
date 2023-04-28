@@ -11,7 +11,7 @@ import (
 	"chromiumos/tast/common/media/caps"
 	"chromiumos/tast/local/bundles/cros/video/encode"
 	"chromiumos/tast/local/media/videotype"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (

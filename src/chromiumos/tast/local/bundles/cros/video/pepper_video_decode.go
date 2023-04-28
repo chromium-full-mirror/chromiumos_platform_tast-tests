@@ -18,7 +18,7 @@ import (
 	"chromiumos/tast/local/chrome/metrics"
 	"chromiumos/tast/local/media/constants"
 	"chromiumos/tast/local/media/histogram"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 type verifyHWAcceleratorMode int

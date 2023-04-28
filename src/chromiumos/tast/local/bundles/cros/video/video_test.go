@@ -8,7 +8,7 @@ import (
 
 	"chromiumos/tast/local/graphics/testcheck"
 	_ "chromiumos/tast/local/media/pre"
-	tastcheck "chromiumos/tast/testing/testcheck"
+	tastcheck "go.chromium.org/tast/core/testing/testcheck"
 )
 
 const namePattern = "video.*"

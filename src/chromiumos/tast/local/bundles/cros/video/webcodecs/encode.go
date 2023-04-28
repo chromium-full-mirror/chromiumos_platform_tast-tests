@@ -14,7 +14,6 @@ import (
 	"path/filepath"
 
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/coords"
@@ -22,7 +21,8 @@ import (
 	"chromiumos/tast/local/media/encoding"
 	"chromiumos/tast/local/media/oop"
 	"chromiumos/tast/local/media/videotype"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // TestEncodeArgs is the arguments used in RunEncodeTest.

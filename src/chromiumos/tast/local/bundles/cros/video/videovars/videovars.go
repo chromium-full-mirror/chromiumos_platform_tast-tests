@@ -9,7 +9,7 @@ import (
 	"context"
 	"strconv"
 
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 var (

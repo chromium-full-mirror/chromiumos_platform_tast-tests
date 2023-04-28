@@ -13,13 +13,13 @@ import (
 
 	"github.com/mafredri/cdp/protocol/media"
 
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/media/logging"
 	"chromiumos/tast/local/media/videotype"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // HardwareAcceleration represents the preference of used codecs in WebCodecs API.

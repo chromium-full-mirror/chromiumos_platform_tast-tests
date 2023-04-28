@@ -20,7 +20,7 @@ import (
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/local/bundles/cros/video/play"
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 type drawOnCanvasParams struct {

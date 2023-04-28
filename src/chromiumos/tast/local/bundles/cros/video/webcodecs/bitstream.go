@@ -9,9 +9,9 @@ import (
 	"io"
 	"os"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/media/encoding"
 	"chromiumos/tast/local/media/videotype"
+	"go.chromium.org/tast/core/errors"
 )
 
 // writeIVFFileHeader and writeIVFFrameHeader writes IVF file header and frame header into bitstreamFile, respectively.

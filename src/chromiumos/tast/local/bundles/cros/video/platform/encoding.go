@@ -17,8 +17,8 @@ import (
 	"github.com/shirou/gopsutil/v3/cpu"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/coords"
+	"go.chromium.org/tast/core/errors"
 )
 
 var ym12Detect = regexp.MustCompile(`'YM12'`)

@@ -13,7 +13,7 @@ import (
 	"chromiumos/tast/local/bundles/cros/video/play"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/lacros"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 // seekTest is used to describe the config used to run each Seek test.

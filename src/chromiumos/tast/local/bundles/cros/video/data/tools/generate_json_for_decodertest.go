@@ -4,7 +4,7 @@
 
 // Tool for generating a json file used in video_decode_accelerator_tests from
 // a video file. The json file is created in the same directory as the video file.
-// This script uses chromiumos/tast/errors, so it needs to run with
+// This script uses go.chromium.org/tast/core/errors, so it needs to run with
 // ~/trunk/src/platform/tast/tools/go.sh.
 //
 // Usage example:
@@ -29,7 +29,7 @@ import (
 	"strconv"
 	"strings"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // JSONInfo stores the info in a json file used in video_decode_accelerator_tests.

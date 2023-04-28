@@ -16,8 +16,8 @@ import (
 	"chromiumos/tast/local/bundles/cros/video/platform"
 	"chromiumos/tast/local/graphics/expectations"
 	"chromiumos/tast/local/media/logging"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type platformDecodingParams struct {

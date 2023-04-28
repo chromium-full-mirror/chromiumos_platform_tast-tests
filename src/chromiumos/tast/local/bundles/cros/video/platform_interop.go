@@ -12,15 +12,15 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/video/platform"
 	"chromiumos/tast/local/bundles/cros/video/videovars"
 	"chromiumos/tast/local/coords"
 	"chromiumos/tast/local/media/encoding"
 	"chromiumos/tast/local/media/videotype"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/shutil"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 // Function type to generate per-frame MD5SUM reference values for file.
