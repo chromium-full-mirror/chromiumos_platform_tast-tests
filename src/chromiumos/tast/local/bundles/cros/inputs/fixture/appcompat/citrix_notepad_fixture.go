@@ -22,7 +22,7 @@ import (
 	"chromiumos/tast/local/uidetection"
 	"chromiumos/tast/local/vdi/apps"
 	"chromiumos/tast/local/vdi/fixtures"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (

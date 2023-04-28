@@ -5,8 +5,9 @@
 package util
 
 import (
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome/metrics"
+
+	"go.chromium.org/tast/core/errors"
 )
 
 // PercentSamplesBelow returns the percentage of UMA histogram samples whose buckets that are below a certain threshold.

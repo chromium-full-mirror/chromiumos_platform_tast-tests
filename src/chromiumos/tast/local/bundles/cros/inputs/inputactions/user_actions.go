@@ -7,11 +7,12 @@ package inputactions
 import (
 	"context"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/ime"
 	"chromiumos/tast/local/chrome/useractions"
+
+	"go.chromium.org/tast/core/errors"
 )
 
 type testingState interface {

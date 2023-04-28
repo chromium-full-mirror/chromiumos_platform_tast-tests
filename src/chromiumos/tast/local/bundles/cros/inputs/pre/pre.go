@@ -6,7 +6,7 @@
 package pre
 
 import (
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 // StableModels is a list of models that are stable enough and aim to run

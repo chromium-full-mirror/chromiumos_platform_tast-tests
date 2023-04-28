@@ -14,7 +14,8 @@ import (
 	"chromiumos/tast/remote/crosserverutil"
 	inputspb "chromiumos/tast/services/cros/inputs"
 	uipb "chromiumos/tast/services/cros/ui"
-	"chromiumos/tast/testing"
+
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

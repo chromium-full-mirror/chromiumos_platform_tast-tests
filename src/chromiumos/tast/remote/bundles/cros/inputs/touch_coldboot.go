@@ -13,10 +13,11 @@ import (
 	"chromiumos/tast/remote/firmware/fixture"
 	input "chromiumos/tast/remote/inputs"
 	"chromiumos/tast/remote/powercontrol"
-	"chromiumos/tast/rpc"
 	"chromiumos/tast/services/cros/inputs"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
