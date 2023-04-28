@@ -11,7 +11,7 @@ import (
 
 	"chromiumos/tast/common/network/iw"
 	localIw "chromiumos/tast/local/network/iw"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

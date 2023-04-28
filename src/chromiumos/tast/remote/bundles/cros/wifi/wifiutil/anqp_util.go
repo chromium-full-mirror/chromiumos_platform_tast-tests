@@ -12,8 +12,8 @@ import (
 	"io"
 	"strings"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/wificell/hostapd"
+	"go.chromium.org/tast/core/errors"
 )
 
 // Domains list separator for NAI Realms.

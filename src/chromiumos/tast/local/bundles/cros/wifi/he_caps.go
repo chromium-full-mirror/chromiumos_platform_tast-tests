@@ -11,8 +11,8 @@ import (
 
 	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/local/network/iw"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {

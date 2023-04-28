@@ -7,10 +7,10 @@ package wifiutil
 import (
 	"context"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/wificell"
 	"chromiumos/tast/remote/wificell/hostapd"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // TryConnect asks DUT to connect to an AP with the given ops.

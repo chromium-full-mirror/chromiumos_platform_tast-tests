@@ -12,7 +12,7 @@ import (
 
 	"chromiumos/tast/local/bundles/cros/wifi/iwlwifirescan"
 	"chromiumos/tast/services/cros/wifi"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

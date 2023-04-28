@@ -14,14 +14,14 @@ import (
 	"chromiumos/tast/common/crypto/certificate"
 	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bundles/cros/wifi/certutil"
 	"chromiumos/tast/local/bundles/cros/wifi/eap"
 	"chromiumos/tast/local/hostapd"
 	"chromiumos/tast/local/network/hwsim"
 	"chromiumos/tast/local/shill"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 var failReg = regexp.MustCompile(`.*Save failed.*`)

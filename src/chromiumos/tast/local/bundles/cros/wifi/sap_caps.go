@@ -13,9 +13,9 @@ import (
 	"chromiumos/tast/common/network/iw"
 	tdreq "chromiumos/tast/common/testdevicerequirements"
 	localiw "chromiumos/tast/local/network/iw"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
-	"chromiumos/tast/testing/wlan"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
+	"go.chromium.org/tast/core/testing/wlan"
 )
 
 func init() {

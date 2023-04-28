@@ -11,7 +11,7 @@ import (
 	"io/ioutil"
 	"unicode"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 const (

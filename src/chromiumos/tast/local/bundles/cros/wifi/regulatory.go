@@ -9,14 +9,14 @@ import (
 	"time"
 
 	tdreq "chromiumos/tast/common/testdevicerequirements"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/wifi/regdb"
 	"chromiumos/tast/local/network/iw"
 	"chromiumos/tast/local/shill"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
-	"chromiumos/tast/testing/wlan"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
+	"go.chromium.org/tast/core/testing/wlan"
 )
 
 func init() {

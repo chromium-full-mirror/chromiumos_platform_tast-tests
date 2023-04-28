@@ -14,15 +14,15 @@ import (
 	"chromiumos/tast/common/wifi/security"
 	"chromiumos/tast/common/wifi/security/base"
 	"chromiumos/tast/common/wifi/security/wpa"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/bundles/cros/wifi/wifiutil"
 	"chromiumos/tast/remote/wificell"
 	ap "chromiumos/tast/remote/wificell/hostapd"
-	"chromiumos/tast/rpc"
 	"chromiumos/tast/services/cros/chrome/uiauto/ossettings"
 	"chromiumos/tast/services/cros/chrome/uiauto/quicksettings"
 	"chromiumos/tast/services/cros/ui"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/testing"
 )
 
 const passphrase = "fourwordsalluppercase"

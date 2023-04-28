@@ -14,7 +14,6 @@ import (
 	cip "chromiumos/tast/common/network/ip"
 	"chromiumos/tast/common/shillconst"
 	tdreq "chromiumos/tast/common/testdevicerequirements"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/bundles/cros/wifi/wifiutil"
 	"chromiumos/tast/remote/network/ip"
 	"chromiumos/tast/remote/wificell"
@@ -22,7 +21,8 @@ import (
 	"chromiumos/tast/remote/wificell/hostapd"
 	"chromiumos/tast/remote/wificell/router/common/support"
 	"chromiumos/tast/services/cros/wifi"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

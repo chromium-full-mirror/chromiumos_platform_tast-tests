@@ -10,11 +10,11 @@ import (
 
 	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/common/wpasupplicant"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/remote/wificell"
 	"chromiumos/tast/remote/wificell/hostapd"
 	"chromiumos/tast/services/cros/wifi"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 type disconnectTrigger int

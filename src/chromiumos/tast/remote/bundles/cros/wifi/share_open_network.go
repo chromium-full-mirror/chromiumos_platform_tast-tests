@@ -10,15 +10,15 @@ import (
 
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/bundles/cros/wifi/wifiutil"
 	"chromiumos/tast/remote/wificell"
-	"chromiumos/tast/rpc"
 	"chromiumos/tast/services/cros/chrome/uiauto/quicksettings"
 	"chromiumos/tast/services/cros/ui"
 	"chromiumos/tast/services/cros/wifi"
-	"chromiumos/tast/testing"
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

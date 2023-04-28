@@ -7,10 +7,10 @@ package wifiutil
 import (
 	"context"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/wificell"
 	"chromiumos/tast/remote/wificell/hostapd"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // AssertWifiEnabled makes sure that Wifi is enabled on the DUT. This function sets up a

@@ -12,8 +12,8 @@ import (
 	"chromiumos/tast/local/network/ip"
 	"chromiumos/tast/local/network/iw"
 	"chromiumos/tast/local/shill"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {

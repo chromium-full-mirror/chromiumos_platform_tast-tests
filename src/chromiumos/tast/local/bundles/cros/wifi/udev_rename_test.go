@@ -7,7 +7,7 @@ package wifi
 import (
 	"testing"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 func TestExpectIface(t *testing.T) {

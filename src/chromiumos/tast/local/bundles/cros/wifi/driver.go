@@ -15,9 +15,9 @@ import (
 	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/local/shill"
 	"chromiumos/tast/local/sysutil"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/wlan"
 	"go.chromium.org/tast/core/lsbrelease"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/wlan"
 )
 
 func init() {

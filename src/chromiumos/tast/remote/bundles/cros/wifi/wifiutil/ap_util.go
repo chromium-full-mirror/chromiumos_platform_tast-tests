@@ -10,7 +10,7 @@ import (
 	"chromiumos/tast/common/wifi/security"
 	"chromiumos/tast/remote/wificell"
 	"chromiumos/tast/remote/wificell/hostapd"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 // ConfigureAP is a helper wrapper on TestFixture.ConfigureAP that additionally

@@ -24,8 +24,8 @@ import (
 	ap "chromiumos/tast/remote/wificell/hostapd"
 	"chromiumos/tast/remote/wificell/wifiutil"
 	"chromiumos/tast/services/cros/wifi"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type simpleConnectTestcase struct {

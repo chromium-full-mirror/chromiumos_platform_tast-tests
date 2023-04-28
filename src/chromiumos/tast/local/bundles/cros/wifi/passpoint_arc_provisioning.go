@@ -10,14 +10,14 @@ import (
 
 	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bundles/cros/wifi/passpoint"
 	"chromiumos/tast/local/hostapd"
 	"chromiumos/tast/local/network/hwsim"
 	"chromiumos/tast/local/shill"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

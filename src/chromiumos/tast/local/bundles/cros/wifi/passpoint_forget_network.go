@@ -9,7 +9,6 @@ import (
 	"time"
 
 	tdreq "chromiumos/tast/common/testdevicerequirements"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/bundles/cros/wifi/passpoint"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
@@ -18,7 +17,8 @@ import (
 	"chromiumos/tast/local/network/hwsim"
 	"chromiumos/tast/local/network/netconfig"
 	"chromiumos/tast/local/shill"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

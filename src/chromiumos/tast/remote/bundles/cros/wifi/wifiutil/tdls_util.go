@@ -14,10 +14,10 @@ import (
 	"github.com/google/gopacket/layers"
 
 	"chromiumos/tast/common/network/iw"
-	"chromiumos/tast/errors"
 	remoteiw "chromiumos/tast/remote/network/iw"
 	"chromiumos/tast/remote/wificell/pcap"
-	"chromiumos/tast/ssh"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh"
 )
 
 // CheckTDLSSupport verifies that TDLS is supported according to the driver.

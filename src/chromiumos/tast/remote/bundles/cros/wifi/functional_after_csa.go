@@ -10,7 +10,6 @@ import (
 
 	"chromiumos/tast/common/shillconst"
 	tdreq "chromiumos/tast/common/testdevicerequirements"
-	"chromiumos/tast/ctxutil"
 	remoteiw "chromiumos/tast/remote/network/iw"
 	"chromiumos/tast/remote/wificell"
 	"chromiumos/tast/remote/wificell/dutcfg"
@@ -18,7 +17,8 @@ import (
 	"chromiumos/tast/remote/wificell/hostapd"
 	"chromiumos/tast/remote/wificell/router/common"
 	"chromiumos/tast/services/cros/wifi"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

@@ -9,14 +9,14 @@ import (
 	"time"
 
 	tdreq "chromiumos/tast/common/testdevicerequirements"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/wifi/passpoint"
 	"chromiumos/tast/local/hostapd"
 	"chromiumos/tast/local/network/hwsim"
 	"chromiumos/tast/local/shill"
 	"chromiumos/tast/local/wpasupplicant"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // roamingTest describes the parameters of a single test case.

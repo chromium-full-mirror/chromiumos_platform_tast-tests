@@ -14,7 +14,7 @@ import (
 	"chromiumos/tast/remote/network/iperf"
 	"chromiumos/tast/remote/network/iw"
 	"chromiumos/tast/remote/wificell"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

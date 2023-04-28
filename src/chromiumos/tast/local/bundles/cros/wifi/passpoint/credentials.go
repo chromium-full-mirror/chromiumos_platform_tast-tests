@@ -15,8 +15,8 @@ import (
 
 	"chromiumos/tast/common/crypto/certificate"
 	"chromiumos/tast/common/shillconst"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/wifi/certutil"
+	"go.chromium.org/tast/core/errors"
 )
 
 const (

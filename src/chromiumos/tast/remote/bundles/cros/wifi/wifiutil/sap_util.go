@@ -23,14 +23,14 @@ import (
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/common/wifi/security"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/wificell"
 	"chromiumos/tast/remote/wificell/dutcfg"
 	"chromiumos/tast/remote/wificell/tethering"
 	"chromiumos/tast/services/cros/wifi"
-	"chromiumos/tast/ssh"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh"
+	"go.chromium.org/tast/core/testing"
 )
 
 // ResourceInfoCounter is a collection of a single process-related data, in the [counter]value format.

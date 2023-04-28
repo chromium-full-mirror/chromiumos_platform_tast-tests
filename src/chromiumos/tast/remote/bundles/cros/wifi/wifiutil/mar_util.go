@@ -12,9 +12,9 @@ import (
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/wificell/pcap"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // isBroadcastMAC checks if MAC Address is a broadcast one.

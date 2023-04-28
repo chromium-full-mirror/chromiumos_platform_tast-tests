@@ -14,8 +14,8 @@ import (
 	"text/template"
 
 	"chromiumos/tast/common/crypto/certificate"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/hostapd"
+	"go.chromium.org/tast/core/errors"
 )
 
 // AccessPoint describes a Passpoint compatible access point with its match criteria.

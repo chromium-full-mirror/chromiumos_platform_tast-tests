@@ -31,8 +31,6 @@ import (
 	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/common/utils"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/dbusutil"
 	"chromiumos/tast/local/network"
 	"chromiumos/tast/local/network/cmd"
@@ -47,8 +45,10 @@ import (
 	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/local/wpasupplicant"
 	"chromiumos/tast/services/cros/wifi"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/wlan"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/wlan"
 	"go.chromium.org/tast/core/timing"
 )
 

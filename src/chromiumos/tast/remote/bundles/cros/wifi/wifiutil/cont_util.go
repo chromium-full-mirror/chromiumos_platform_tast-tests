@@ -17,8 +17,6 @@ import (
 	"chromiumos/tast/common/network/ping"
 	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/common/wifi/security"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/network/iw"
 	"chromiumos/tast/remote/wificell"
 	"chromiumos/tast/remote/wificell/dhcp"
@@ -28,7 +26,9 @@ import (
 	"chromiumos/tast/remote/wificell/router"
 	"chromiumos/tast/remote/wificell/router/common/support"
 	"chromiumos/tast/services/cros/wifi"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // ContParam holds all parameters for the continuity test.

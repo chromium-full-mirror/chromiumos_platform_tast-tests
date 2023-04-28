@@ -13,15 +13,15 @@ import (
 	"chromiumos/tast/common/network/iw"
 	"chromiumos/tast/common/perf"
 	tdreq "chromiumos/tast/common/testdevicerequirements"
-	"chromiumos/tast/errors"
 	remoteiw "chromiumos/tast/remote/network/iw"
 	"chromiumos/tast/remote/wificell"
 	ap "chromiumos/tast/remote/wificell/hostapd"
-	"chromiumos/tast/rpc"
 	"chromiumos/tast/services/cros/wifi"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
-	"chromiumos/tast/testing/wlan"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
+	"go.chromium.org/tast/core/testing/wlan"
 )
 
 // scanPerfTestCase holds parameters of a ScanPerf test variant.

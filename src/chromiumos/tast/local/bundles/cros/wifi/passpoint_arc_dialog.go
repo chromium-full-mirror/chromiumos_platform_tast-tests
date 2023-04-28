@@ -14,7 +14,6 @@ import (
 	"chromiumos/tast/common/android/ui"
 	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bundles/cros/wifi/passpoint"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -23,7 +22,8 @@ import (
 	"chromiumos/tast/local/hostapd"
 	"chromiumos/tast/local/network/hwsim"
 	"chromiumos/tast/local/shill"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 // passpointARCDialogTestParams is the parameter of PasspointARCDialog test.

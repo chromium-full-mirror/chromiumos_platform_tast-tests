@@ -12,12 +12,12 @@ import (
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/services/cros/chrome/uiauto/ossettings"
 	"chromiumos/tast/services/cros/chrome/uiauto/quicksettings"
 	"chromiumos/tast/services/cros/inputs"
 	"chromiumos/tast/services/cros/ui"
 	"chromiumos/tast/services/cros/wifi"
+	"go.chromium.org/tast/core/errors"
 )
 
 // JoinWifiServiceNames is the services needed for joining WiFi, through UI operations.
