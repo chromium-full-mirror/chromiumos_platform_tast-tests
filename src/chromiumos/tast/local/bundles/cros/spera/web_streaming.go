@@ -9,14 +9,14 @@ import (
 	"time"
 
 	"chromiumos/tast/common/media/caps"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/bundles/cros/spera/webstreaming"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/cuj"
 	"chromiumos/tast/local/chrome/display"
 	"chromiumos/tast/local/ui/cujrecorder"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

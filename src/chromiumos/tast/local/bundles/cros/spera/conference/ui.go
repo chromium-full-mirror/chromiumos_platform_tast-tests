@@ -11,7 +11,7 @@ import (
 	"chromiumos/tast/common/action"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/screenshot"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 // takeScreenshot returns an action which captures a fullscreen screenshot.

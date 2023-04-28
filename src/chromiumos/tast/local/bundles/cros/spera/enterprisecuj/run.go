@@ -10,8 +10,6 @@ import (
 	"time"
 
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	cx "chromiumos/tast/local/bundles/cros/spera/enterprisecuj/citrix"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
@@ -21,7 +19,9 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/ui/cujrecorder"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // TestParams stores data common to the tests run in this package.

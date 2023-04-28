@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"chromiumos/tast/common/action"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/cuj"
@@ -28,7 +27,8 @@ import (
 	"chromiumos/tast/local/coords"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/uidetection"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // TinkerCad defines the struct related to TinkerCAD website.

@@ -11,8 +11,8 @@ import (
 	"path"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome/cuj"
+	"go.chromium.org/tast/core/errors"
 )
 
 // website defines all web site involved in this test case.

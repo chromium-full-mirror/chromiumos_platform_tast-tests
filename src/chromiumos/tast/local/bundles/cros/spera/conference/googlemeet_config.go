@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // GoogleMeetConfig defines input params and retry settings for Google meet testing.

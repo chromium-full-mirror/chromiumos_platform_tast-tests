@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/bundles/cros/spera/conference"
 	"chromiumos/tast/local/bundles/cros/spera/conference/zoomserver"
 	"chromiumos/tast/local/bundles/cros/spera/enterprisecuj"
@@ -17,7 +16,8 @@ import (
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/cuj"
 	"chromiumos/tast/local/chrome/display"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

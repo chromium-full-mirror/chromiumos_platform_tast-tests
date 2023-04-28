@@ -8,8 +8,6 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/apps"
 	cx "chromiumos/tast/local/bundles/cros/spera/enterprisecuj/citrix"
 	"chromiumos/tast/local/chrome"
@@ -21,7 +19,9 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/chrome/webutil"
 	"chromiumos/tast/local/input"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Since the resolution of each DUT may be different, each coordinate file must be recorded separately.

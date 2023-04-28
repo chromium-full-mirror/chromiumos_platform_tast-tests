@@ -13,8 +13,6 @@ import (
 	"chromiumos/tast/common/android/ui"
 	androidui "chromiumos/tast/common/android/ui"
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/apps/thirdparty/googledocs"
@@ -26,8 +24,10 @@ import (
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/mtbf/youtube"
 	"chromiumos/tast/local/ui/cujrecorder"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {

@@ -15,7 +15,6 @@ import (
 	"time"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/audio/crastestclient"
 	"chromiumos/tast/local/bundles/cros/spera/videoconfproxy"
 	"chromiumos/tast/local/chrome"
@@ -23,7 +22,8 @@ import (
 	"chromiumos/tast/local/chrome/cuj"
 	"chromiumos/tast/local/chrome/display"
 	"chromiumos/tast/local/ui/cujrecorder"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (

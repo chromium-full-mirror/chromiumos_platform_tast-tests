@@ -8,13 +8,13 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/bundles/cros/spera/enterprisecuj"
 	cx "chromiumos/tast/local/bundles/cros/spera/enterprisecuj/citrix"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/cuj"
 	"chromiumos/tast/local/chrome/display"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

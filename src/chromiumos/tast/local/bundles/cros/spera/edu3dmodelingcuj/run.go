@@ -11,8 +11,6 @@ import (
 	"time"
 
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/spera/edu3dmodelingcuj/tinkercad"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
@@ -23,7 +21,9 @@ import (
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/ui/cujrecorder"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (

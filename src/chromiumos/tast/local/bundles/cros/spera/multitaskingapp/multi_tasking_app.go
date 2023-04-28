@@ -10,8 +10,6 @@ import (
 	"time"
 
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/audio"
 	"chromiumos/tast/local/camera/cca"
@@ -27,7 +25,9 @@ import (
 	"chromiumos/tast/local/chrome/webutil"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/ui/cujrecorder"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (
