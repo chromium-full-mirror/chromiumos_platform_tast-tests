@@ -10,7 +10,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"chromiumos/tast/fsutil"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/bundles/cros/apps/fixture"
 	"chromiumos/tast/local/bundles/cros/apps/pre"
@@ -22,8 +21,9 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/cryptohome"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/fsutil"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 const testFile = "gear_wheels_4000x3000_20200624.jpg"

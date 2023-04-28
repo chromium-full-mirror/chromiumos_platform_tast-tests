@@ -5,7 +5,7 @@
 // Package pre contains preconditions for apps tests
 package pre
 
-import "chromiumos/tast/testing/hwdep"
+import "go.chromium.org/tast/core/testing/hwdep"
 
 var stableModels = []string{
 	// Top VK usage board in 2020 -- convertible, ARM.

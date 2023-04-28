@@ -10,8 +10,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/fsutil"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/arc/playstore"
@@ -26,8 +24,10 @@ import (
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/sysutil"
 	"chromiumos/tast/local/uidetection"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/fsutil"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 const testImageFileWithText = "happy_halloween.png"

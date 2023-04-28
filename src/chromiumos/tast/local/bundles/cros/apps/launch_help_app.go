@@ -14,8 +14,8 @@ import (
 	"chromiumos/tast/local/chrome/apps/helpapp"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 // testParameters contains all the data needed to run a single test iteration.
