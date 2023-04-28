@@ -13,12 +13,12 @@ import (
 
 	"chromiumos/tast/common/chameleon"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/assistant"
 	"chromiumos/tast/local/chrome/ash"
-	"chromiumos/tast/ssh"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh"
+	"go.chromium.org/tast/core/testing"
 )
 
 const soundFile = "open_settings.raw"

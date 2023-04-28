@@ -10,7 +10,6 @@ import (
 
 	"chromiumos/tast/common/action"
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/assistant"
 	"chromiumos/tast/local/bundles/cros/assistant/assistantutils"
 	"chromiumos/tast/local/chrome"
@@ -20,7 +19,8 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/cpu"
 	uiconsts "chromiumos/tast/local/ui"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 var uiPollOptions = testing.PollOptions{

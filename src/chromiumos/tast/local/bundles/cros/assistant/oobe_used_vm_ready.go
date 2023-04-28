@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"chromiumos/tast/local/assistant"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

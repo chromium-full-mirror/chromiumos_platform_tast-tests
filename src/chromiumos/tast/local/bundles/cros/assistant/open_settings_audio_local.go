@@ -12,7 +12,7 @@ import (
 	"chromiumos/tast/local/assistant"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/input/voice"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 const soundFile2 = "open_settings.wav"

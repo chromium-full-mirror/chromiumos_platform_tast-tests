@@ -11,7 +11,7 @@ import (
 	"chromiumos/tast/local/assistant"
 	"chromiumos/tast/local/chrome/uiauto/browser"
 	"chromiumos/tast/local/chrome/uiauto/launcher"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
