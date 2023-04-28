@@ -342,7 +342,8 @@ func ECLaptopMode(ctx context.Context, s *testing.State) {
 			vals.runtimeUsageAfter = out
 			s.Logf("Got runtime usage before: %d, and after: %d", vals.runtimeUsageBefore, vals.runtimeUsageAfter)
 		}
-		if args.formFactor != "detachable" || h.Config.ModeSwitcherType != firmware.TabletDetachableSwitcher {
+		if args.formFactor != "detachable" || h.Config.ModeSwitcherType != firmware.TabletDetachableSwitcher ||
+			(h.Board == "kukui" && testCase == atSignin) {
 			s.Log("Checking that display remains on")
 			if err := checkDisplay(ctx); err != nil {
 				s.Fatal("Error in verifying display on: ", err)
