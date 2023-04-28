@@ -11,8 +11,10 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/vctray"
 	"context"
 	"strings"
+	"time"
 
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // VerifyReturnToApp minimises the current VC app window and restores it from vcPanel.
@@ -41,13 +43,15 @@ func VerifyReturnToApp(ctx context.Context, tconn *chrome.TestConn) error {
 		return errors.Wrap(err, "failed to return to app")
 	}
 
-	newActiveWindow, err := ash.GetActiveWindow(ctx, tconn)
-	if err != nil {
-		return errors.Wrap(err, "failed to get active window")
-	}
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		newActiveWindow, err := ash.GetActiveWindow(ctx, tconn)
+		if err != nil {
+			return errors.Wrap(err, "failed to get active window")
+		}
 
-	if newActiveWindow.ID != appWindow.ID || newActiveWindow.State != appWindowState {
-		return errors.Errorf("failed to restore window(expected: %v, actual: %v)", appWindow, newActiveWindow)
-	}
-	return nil
+		if newActiveWindow.ID != appWindow.ID || newActiveWindow.State != appWindowState {
+			return errors.Errorf("failed to restore window(expected: %+v, actual: %+v)", appWindow, newActiveWindow)
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 5 * time.Second})
 }

@@ -20,10 +20,9 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/vctray"
 	"chromiumos/tast/local/videoconferencing/fixture"
 
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
-
-	"go.chromium.org/tast/core/ctxutil"
 )
 
 func init() {
