@@ -14,7 +14,7 @@ import (
 	"chromiumos/tast/common/hwsec"
 	"chromiumos/tast/local/cryptohome"
 	hwseclocal "chromiumos/tast/local/hwsec"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 type fscryptVersionParam struct {
