@@ -57,7 +57,7 @@ func (u *UpdateService) CheckForUpdate(ctx context.Context, req *aupb.UpdateRequ
 
 	cmd := testexec.CommandContext(ctx, "update_engine_client", args...)
 
-	// Ensure update engine is up and running.
+	// Ensure update engine is in a clean state and running.
 	if err := ensureUpdateEngineReady(ctx); err != nil {
 		return &empty.Empty{}, errors.Wrap(err, "failed to ensure update engine is ready")
 	}
@@ -131,13 +131,21 @@ func (u *UpdateService) PeriodicCheckForUpdate(ctx context.Context, e *empty.Emp
 }
 
 func ensureUpdateEngineReady(ctx context.Context) error {
+	// Reset update engine status to ensure there are no previous ongoing updates.
+	// TODO(b/239680170): Reset update engine status in the autoupdate fixture
+	// cleanup.
+	testing.ContextLog(ctx, "Resetting update engine status")
+	if err := updateengine.ClearPrefs(ctx); err != nil {
+		return errors.Wrap(err, "failed to reset udpate engine status")
+	}
+
 	statusRegexp, err := regexp.Compile(`CURRENT_OP=(.*)`)
 	if err != nil {
 		return errors.Wrap(err, "failed to compile the regexp")
 	}
 
+	testing.ContextLog(ctx, "Ensuring update engine is ready")
 	latestStatus := ""
-
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		// Redefine cmd every time, as the Output function can be called only once on it.
 		cmd := testexec.CommandContext(ctx, "update_engine_client", "--status")
