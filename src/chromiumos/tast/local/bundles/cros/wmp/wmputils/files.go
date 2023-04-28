@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // HasScreenRecord checks if any screen record file is present in Download folder.
