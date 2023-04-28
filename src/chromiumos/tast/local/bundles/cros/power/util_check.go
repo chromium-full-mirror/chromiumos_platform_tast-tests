@@ -22,6 +22,7 @@ func init() {
 			"chromeos-platform-power@google.com",
 			"yanyeli@google.com",
 		},
+		Attr:    []string{"group:mainline", "informational"},
 		Timeout: 1 * time.Minute,
 	})
 }
