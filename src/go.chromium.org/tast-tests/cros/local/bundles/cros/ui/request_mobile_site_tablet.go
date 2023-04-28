@@ -78,6 +78,7 @@ type mobileTestResources struct {
 	outDir string
 }
 
+// RequestMobileSiteTablet tests request mobile site function on websites under different types of login account.
 func RequestMobileSiteTablet(ctx context.Context, s *testing.State) {
 	optsForUser := map[userType][]chrome.Option{
 		child: {
@@ -114,13 +115,7 @@ func RequestMobileSiteTablet(ctx context.Context, s *testing.State) {
 		"Google":  "http://maps.google.com",
 	}
 
-	browserRoot := nodewith.Role(role.Window).HasClass("BrowserFrame")
-	if browserType == browser.TypeLacros {
-		browserRoot = nodewith.Role(role.Window).ClassNameRegex(regexp.MustCompile(`^ExoShellSurface(-\d+)?$`)).NameContaining("Chrome")
-	}
-
 	res := &mobileTestResources{
-		threeDotMenuBtn:      nodewith.HasClass("BrowserAppMenuButton").Role(role.PopUpButton).Ancestor(nodewith.HasClass("ToolbarView").Ancestor(browserRoot)),
 		requestMobileSiteBtn: nodewith.Name("Request mobile site").Role(role.MenuItemCheckBox).Ancestor(nodewith.HasClass("SubmenuView")),
 		outDir:               s.OutDir(),
 	}
@@ -162,6 +157,13 @@ func RequestMobileSiteTablet(ctx context.Context, s *testing.State) {
 			}
 
 			for websiteName, url := range websites {
+				browserRoot := nodewith.Role(role.Window).HasClass("BrowserFrame").NameContaining(websiteName)
+				if browserType == browser.TypeLacros {
+					browserClassRegexp := regexp.MustCompile(`^ExoShellSurface(-\d+)?$`)
+					browserRoot = nodewith.Role(role.Window).ClassNameRegex(browserClassRegexp).NameContaining(websiteName)
+				}
+
+				res.threeDotMenuBtn = nodewith.HasClass("BrowserAppMenuButton").Role(role.PopUpButton).Ancestor(nodewith.HasClass("ToolbarView").Ancestor(browserRoot))
 				if err := mobileSiteTest(ctx, br, res, websiteName, url); err != nil {
 					s.Fatalf("Failed to run mobileSiteTest on website %q: %v", websiteName, err)
 				}
