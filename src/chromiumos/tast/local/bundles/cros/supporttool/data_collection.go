@@ -20,7 +20,6 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/input"
-	"chromiumos/tast/local/personalization"
 	"chromiumos/tast/local/uidetection"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -121,17 +120,6 @@ func DataCollection(ctx context.Context, s *testing.State) {
 
 	ud := uidetection.NewDefault(tconn)
 	ui := uiauto.New(tconn)
-
-	// Support Tool UI is implemented for the light-mode and dark-mode
-	// is not supported yet. Some UI items might be hard to detect in
-	// the dark-mode.
-	// TODO(b/261156588): Remove this section when Support Tool UI
-	// supports dark-mode.
-	if err := uiauto.Combine("Enable light mode",
-		personalization.OpenPersonalizationHub(ui),
-		personalization.ToggleLightMode(ui))(ctx); err != nil {
-		s.Fatal("Failed to enable light mode: ", err)
-	}
 
 	conn, err := br.NewConn(ctx, param.url)
 	if err != nil {
