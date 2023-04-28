@@ -11,9 +11,9 @@ import (
 	"github.com/google/go-cmp/cmp"
 
 	"chromiumos/tast/common/servo"
-	"chromiumos/tast/rpc"
 	fwpb "chromiumos/tast/services/cros/firmware"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

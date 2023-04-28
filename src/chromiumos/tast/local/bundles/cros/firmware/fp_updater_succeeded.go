@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	"chromiumos/tast/local/firmware"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {

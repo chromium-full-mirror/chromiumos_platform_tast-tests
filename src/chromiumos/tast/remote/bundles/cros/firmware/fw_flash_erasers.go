@@ -16,11 +16,11 @@ import (
 	"strings"
 
 	"chromiumos/tast/common/flashrom"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/firmware/fixture"
-	"chromiumos/tast/ssh"
-	"chromiumos/tast/ssh/linuxssh"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh"
+	"go.chromium.org/tast/core/ssh/linuxssh"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (

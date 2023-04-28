@@ -12,7 +12,7 @@ import (
 
 	"chromiumos/tast/local/firmware"
 	fwpb "chromiumos/tast/services/cros/firmware"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

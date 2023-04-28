@@ -13,9 +13,9 @@ import (
 	"google.golang.org/grpc"
 
 	"chromiumos/tast/common/firmware/serial"
-	"chromiumos/tast/errors"
 	pb "chromiumos/tast/services/cros/firmware"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

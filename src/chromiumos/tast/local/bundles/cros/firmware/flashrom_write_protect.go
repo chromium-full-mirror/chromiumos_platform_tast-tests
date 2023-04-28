@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/flashrom"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

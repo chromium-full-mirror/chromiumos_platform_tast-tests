@@ -13,7 +13,7 @@ import (
 
 	"chromiumos/tast/common/flashrom"
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 type params struct {

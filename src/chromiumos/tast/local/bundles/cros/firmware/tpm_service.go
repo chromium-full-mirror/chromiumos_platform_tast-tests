@@ -11,10 +11,10 @@ import (
 	"google.golang.org/grpc"
 
 	"chromiumos/tast/common/hwsec"
-	"chromiumos/tast/errors"
 	hwseclocal "chromiumos/tast/local/hwsec"
 	pb "chromiumos/tast/services/cros/firmware"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

@@ -10,8 +10,8 @@ import (
 	"context"
 
 	"chromiumos/tast/common/servo"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/firmware"
+	"go.chromium.org/tast/core/errors"
 )
 
 // SetFWWriteProtect sets a posibility to write to a firmware.

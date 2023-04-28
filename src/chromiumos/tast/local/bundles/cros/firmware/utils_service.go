@@ -16,7 +16,6 @@ import (
 	"google.golang.org/grpc"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -28,7 +27,8 @@ import (
 	"chromiumos/tast/local/firmware"
 	"chromiumos/tast/local/input"
 	fwpb "chromiumos/tast/services/cros/firmware"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

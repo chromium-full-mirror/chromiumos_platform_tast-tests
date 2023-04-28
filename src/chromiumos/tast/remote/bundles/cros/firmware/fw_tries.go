@@ -10,7 +10,7 @@ import (
 	fwCommon "chromiumos/tast/common/firmware"
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/fixture"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

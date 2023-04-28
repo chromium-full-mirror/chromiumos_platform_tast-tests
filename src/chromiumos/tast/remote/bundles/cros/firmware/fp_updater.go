@@ -15,15 +15,15 @@ import (
 	empty "github.com/golang/protobuf/ptypes/empty"
 
 	fp "chromiumos/tast/common/fingerprint"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/dutfs"
 	"chromiumos/tast/remote/firmware/fingerprint"
 	"chromiumos/tast/remote/firmware/fingerprint/rpcdut"
 	"chromiumos/tast/services/cros/firmware"
-	"chromiumos/tast/ssh/linuxssh"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh/linuxssh"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 const (

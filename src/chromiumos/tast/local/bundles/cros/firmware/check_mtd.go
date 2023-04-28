@@ -8,7 +8,7 @@ import (
 	"context"
 	"os"
 
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 const mtd0Path = "/sys/class/mtd/mtd0"

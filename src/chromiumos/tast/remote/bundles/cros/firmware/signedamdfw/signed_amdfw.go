@@ -11,7 +11,7 @@ import (
 
 	"chromiumos/tast/remote/firmware"
 	pb "chromiumos/tast/services/cros/firmware"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 // CheckForSignedAMDFWSection checks whether the FMAP in the DUT contains SIGNED_AMDFW_A/B sections

@@ -10,9 +10,9 @@ import (
 
 	commonSerial "chromiumos/tast/common/firmware/serial"
 	"chromiumos/tast/remote/firmware/serial"
-	"chromiumos/tast/rpc"
 	pb "chromiumos/tast/services/cros/firmware"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

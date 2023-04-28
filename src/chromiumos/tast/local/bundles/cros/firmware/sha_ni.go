@@ -8,8 +8,8 @@ import (
 	"context"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
