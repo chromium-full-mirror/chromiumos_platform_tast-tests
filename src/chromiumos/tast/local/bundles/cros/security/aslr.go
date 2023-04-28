@@ -18,7 +18,7 @@ import (
 	"golang.org/x/sys/unix"
 
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

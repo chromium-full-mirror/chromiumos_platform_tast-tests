@@ -15,8 +15,8 @@ import (
 
 	selinux "github.com/opencontainers/selinux/go-selinux"
 
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // FilterResult is returned by a FileLabelCheckFilter indicating how a file

@@ -10,7 +10,7 @@ import (
 	"chromiumos/tast/local/bundles/cros/security/netlisten"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/moblab"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

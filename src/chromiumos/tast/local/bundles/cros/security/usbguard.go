@@ -14,13 +14,13 @@ import (
 	"golang.org/x/sys/unix"
 
 	upstartcommon "chromiumos/tast/common/upstart"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/security/seccomp"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/session"
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

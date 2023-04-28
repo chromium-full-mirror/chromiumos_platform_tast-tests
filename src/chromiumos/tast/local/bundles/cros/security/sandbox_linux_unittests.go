@@ -14,7 +14,7 @@ import (
 	"chromiumos/tast/local/crash"
 	"chromiumos/tast/local/gtest"
 	"chromiumos/tast/local/sysutil"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

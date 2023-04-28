@@ -15,7 +15,7 @@ import (
 	"strings"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // CommandContext wraps the functionality of testexec.CommandContext injecting the strace

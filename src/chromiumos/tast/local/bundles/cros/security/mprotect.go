@@ -13,7 +13,7 @@ import (
 
 	"golang.org/x/sys/unix"
 
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
@@ -25,7 +25,7 @@ func init() {
 		},
 		// ChromeOS > Security > Hardening
 		BugComponent: "b:1040049",
-		Attr: []string{"group:mainline"},
+		Attr:         []string{"group:mainline"},
 	})
 }
 

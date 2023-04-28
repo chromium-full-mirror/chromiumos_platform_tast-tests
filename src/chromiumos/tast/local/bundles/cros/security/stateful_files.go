@@ -8,7 +8,7 @@ import (
 	"context"
 
 	chk "chromiumos/tast/local/security/filecheck"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

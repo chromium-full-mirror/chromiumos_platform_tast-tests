@@ -14,13 +14,13 @@ import (
 
 	"github.com/shirou/gopsutil/v3/process"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/asan"
 	"chromiumos/tast/local/bundles/cros/security/sandboxing"
 	"chromiumos/tast/local/moblab"
 	"chromiumos/tast/local/sysutil"
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
@@ -135,7 +135,7 @@ func SandboxedServices(ctx context.Context, s *testing.State) {
 		{"cr50-disable-sl", "root", "root", 0},
 		{"rmad", "root", "root", mntNS},                                       // rmad's root-level executor
 		{"rmad", "rmad", "rmad", mntNS | restrictCaps | noNewPrivs | seccomp}, // main RMA daemon
-		{"lvmd", "root", "root", 0}, // TODO(b/278480982): reduce privileges allowed for lvmd.
+		{"lvmd", "root", "root", 0},                                           // TODO(b/278480982): reduce privileges allowed for lvmd.
 
 		// Processes running with CAP_SYS_ADMIN.
 		{"spaced", "spaced", "spaced", restrictCaps},

@@ -10,7 +10,7 @@ import (
 	"chromiumos/tast/local/bundles/cros/security/userfiles"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/mountns"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

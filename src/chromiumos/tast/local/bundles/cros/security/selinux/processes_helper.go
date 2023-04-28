@@ -13,7 +13,7 @@ import (
 
 	"github.com/shirou/gopsutil/v3/process"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // Process represents a running process with an SELinux context.

@@ -14,7 +14,7 @@ import (
 
 	"golang.org/x/sys/unix"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 func init() {

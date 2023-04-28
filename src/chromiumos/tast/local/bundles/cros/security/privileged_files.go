@@ -11,10 +11,10 @@ import (
 	"path/filepath"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/security/fscaps"
 	"chromiumos/tast/local/moblab"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
@@ -26,8 +26,8 @@ func init() {
 		},
 		// ChromeOS > Security > Hardening
 		BugComponent: "b:1040049",
-		Attr:    []string{"group:mainline"},
-		Timeout: 5 * time.Minute,
+		Attr:         []string{"group:mainline"},
+		Timeout:      5 * time.Minute,
 	})
 }
 

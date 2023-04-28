@@ -16,7 +16,7 @@ import (
 	"github.com/shirou/gopsutil/v3/process"
 	"golang.org/x/sys/unix"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // CapSysAdmin is the index of the CAP_SYS_ADMIN capability in linux/capability.h.

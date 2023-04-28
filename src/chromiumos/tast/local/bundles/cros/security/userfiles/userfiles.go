@@ -12,7 +12,7 @@ import (
 	"chromiumos/tast/local/cryptohome"
 	chk "chromiumos/tast/local/security/filecheck"
 	"chromiumos/tast/local/sysutil"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (

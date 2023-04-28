@@ -11,7 +11,7 @@ import (
 
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/sysutil"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
@@ -23,7 +23,7 @@ func init() {
 		},
 		// ChromeOS > Security > Hardening
 		BugComponent: "b:1040049",
-		Attr: []string{"group:mainline"},
+		Attr:         []string{"group:mainline"},
 	})
 }
 

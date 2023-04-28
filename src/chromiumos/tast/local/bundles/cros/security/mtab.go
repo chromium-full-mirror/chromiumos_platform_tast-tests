@@ -14,13 +14,13 @@ import (
 	"strings"
 	"syscall"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bundles/cros/security/filesetup"
 	"chromiumos/tast/local/moblab"
 	"chromiumos/tast/local/syslog"
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
@@ -32,7 +32,7 @@ func init() {
 		},
 		// ChromeOS > Security > Hardening
 		BugComponent: "b:1040049",
-		Attr: []string{"group:mainline"},
+		Attr:         []string{"group:mainline"},
 	})
 }
 

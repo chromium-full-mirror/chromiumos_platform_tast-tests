@@ -15,7 +15,7 @@ import (
 
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash/ashproc"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 // CheckPorts compares processes listening for TCP connections against an expected set.

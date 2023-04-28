@@ -24,7 +24,7 @@ import (
 	"chromiumos/tast/local/moblab"
 	"chromiumos/tast/local/session"
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

@@ -13,11 +13,11 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 
 	"chromiumos/tast/common/hwsec"
-	"chromiumos/tast/errors"
 	hwsecremote "chromiumos/tast/remote/hwsec"
-	"chromiumos/tast/rpc"
 	"chromiumos/tast/services/cros/security"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/testing"
 )
 
 const testKeyNeverStored = "bootlockbox_unused"

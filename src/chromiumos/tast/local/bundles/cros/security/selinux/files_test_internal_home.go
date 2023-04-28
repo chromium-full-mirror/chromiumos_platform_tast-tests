@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 // CheckHomeDirectory checks files contexts under /home.

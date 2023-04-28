@@ -20,8 +20,8 @@ import (
 	"syscall"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
@@ -33,8 +33,8 @@ func init() {
 		},
 		// ChromeOS > Security > Hardening
 		BugComponent: "b:1040049",
-		Data: []string{rootCABaselinePath},
-		Attr: []string{"group:mainline"},
+		Data:         []string{rootCABaselinePath},
+		Attr:         []string{"group:mainline"},
 	})
 }
 

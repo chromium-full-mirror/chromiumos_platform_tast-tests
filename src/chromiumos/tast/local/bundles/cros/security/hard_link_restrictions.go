@@ -14,7 +14,7 @@ import (
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/bundles/cros/security/filesetup"
 	"chromiumos/tast/local/sysutil"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

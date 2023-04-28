@@ -9,7 +9,7 @@ import (
 	"debug/elf"
 	"path/filepath"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // elfIsStatic returns whether the ELF file is statically linked.
