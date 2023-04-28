@@ -440,7 +440,8 @@ func GetStorageType(ctx context.Context) string {
 	return strings.TrimSpace(path.Base(string(readResult)))
 }
 
-func hasScreen(ctx context.Context) bool {
+// HasScreen detects if the device has a screen.
+func HasScreen(ctx context.Context) bool {
 	cmd := "for f in /sys/class/drm/*/*/modes; do head -1 $f; done"
 	readResult, err := testexec.CommandContext(ctx, "bash", "-c", cmd).Output()
 	if err != nil || strings.TrimSpace(string(readResult)) == "" {
@@ -451,7 +452,7 @@ func hasScreen(ctx context.Context) bool {
 
 // GetScreenSize returns the screen size.
 func GetScreenSize(ctx context.Context) string {
-	if !hasScreen(ctx) {
+	if !HasScreen(ctx) {
 		return ""
 	}
 	cmd := "modetest -c | sed -n '/size (mm)/{n;p}'"
@@ -475,7 +476,7 @@ func min(a, b int) int {
 
 // GetScreenRefreshRate returns the screen refresh rate in Hz.
 func GetScreenRefreshRate(ctx context.Context) int {
-	if !hasScreen(ctx) {
+	if !HasScreen(ctx) {
 		return 0
 	}
 	cmd := "modetest -c | grep 'refresh (Hz)'"
