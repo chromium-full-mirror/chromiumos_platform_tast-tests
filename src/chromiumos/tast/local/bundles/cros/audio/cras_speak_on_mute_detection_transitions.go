@@ -16,7 +16,7 @@ import (
 	"chromiumos/tast/local/bundles/cros/audio/data"
 	"chromiumos/tast/local/bundles/cros/audio/device"
 	"chromiumos/tast/local/bundles/cros/audio/internal"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

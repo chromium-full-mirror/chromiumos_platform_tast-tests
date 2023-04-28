@@ -15,8 +15,8 @@ import (
 	"chromiumos/tast/local/procutil"
 	"chromiumos/tast/local/profiler"
 	"chromiumos/tast/local/sysutil"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 // TestParameters contains all the data needed to run a single test iteration.

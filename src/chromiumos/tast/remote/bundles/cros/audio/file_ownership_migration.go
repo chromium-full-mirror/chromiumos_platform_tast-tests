@@ -9,11 +9,11 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/remote/bundles/cros/audio/internal"
 	"chromiumos/tast/remote/firmware/fingerprint/rpcdut"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/exec"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

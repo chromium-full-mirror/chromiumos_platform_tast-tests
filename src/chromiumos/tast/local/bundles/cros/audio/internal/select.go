@@ -7,9 +7,9 @@ package internal
 import (
 	"context"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/audio"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // SelectIODevices sets the default input and output devices of CRAS.

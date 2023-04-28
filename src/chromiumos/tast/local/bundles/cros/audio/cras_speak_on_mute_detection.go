@@ -11,14 +11,14 @@ import (
 
 	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/audio"
 	"chromiumos/tast/local/audio/crastestclient"
 	"chromiumos/tast/local/bundles/cros/audio/data"
 	"chromiumos/tast/local/bundles/cros/audio/device"
 	"chromiumos/tast/local/bundles/cros/audio/internal"
 	"chromiumos/tast/local/dbusutil"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

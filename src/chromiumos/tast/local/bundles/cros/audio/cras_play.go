@@ -13,8 +13,8 @@ import (
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/audio"
 	"chromiumos/tast/local/audio/crastestclient"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 // TODO(b/244254621) : remove "sasukette" when b/244254621 is fixed.

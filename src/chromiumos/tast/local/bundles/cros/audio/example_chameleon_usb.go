@@ -14,7 +14,7 @@ import (
 	"chromiumos/tast/common/chameleon"
 	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/local/audio"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
