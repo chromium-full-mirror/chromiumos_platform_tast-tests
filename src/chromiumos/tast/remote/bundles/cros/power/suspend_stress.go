@@ -23,9 +23,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SuspendToS0ixStress,
+		Func:         SuspendStress,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies suspend stress test with S0ix switching",
+		Desc:         "Verifies suspend stress test",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome", "reboot"},
@@ -45,7 +45,7 @@ func init() {
 		}}})
 }
 
-func SuspendToS0ixStress(ctx context.Context, s *testing.State) {
+func SuspendStress(ctx context.Context, s *testing.State) {
 	ctxForCleanUp := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 2*time.Minute)
 	defer cancel()
@@ -72,39 +72,18 @@ func SuspendToS0ixStress(ctx context.Context, s *testing.State) {
 			}
 		}
 
-		if err := dut.Conn().CommandContext(ctx, "sh", "-c", "umount /var/lib/power_manager && restart powerd").Run(ssh.DumpLogOnError); err != nil {
-			s.Log("Failed to restore powerd settings: ", err)
-		}
 	}(ctxForCleanUp)
-
-	if err := dut.Conn().CommandContext(ctx, "sh", "-c", fmt.Sprintf(
-		"mkdir -p /tmp/power_manager && "+
-			"echo 1 > /tmp/power_manager/suspend_to_idle && "+
-			"mount --bind /tmp/power_manager /var/lib/power_manager && "+
-			"restart powerd"),
-	).Run(ssh.DumpLogOnError); err != nil {
-		s.Fatal("Failed to set suspend to idle: ", err)
-	}
-
-	powerdConfigCmd := "check_powerd_config --suspend_to_idle; echo $?"
-	configValue, err := dut.Conn().CommandContext(ctx, "bash", "-c", powerdConfigCmd).Output(ssh.DumpLogOnError)
-	if err != nil {
-		s.Fatalf("Failed to execute %q command: %v", powerdConfigCmd, err)
-	}
-	got := strings.TrimSpace(string(configValue))
-	const want = "0"
-	if got != want {
-		s.Fatalf("Failed to be in S0ix state: got %s, want %s", got, want)
-	}
 
 	const (
 		prematureWakePattern    = "Premature wakes: 0"
 		suspendFailurePattern   = "Suspend failures: 0"
 		firmwareLogErrorPattern = "Firmware log errors: 0"
 		s0ixErrorPattern        = "s0ix errors: 0"
+		s2idleErrorPattern      = "s2idle errors: 0"
 	)
 
-	suspendErrors := []string{prematureWakePattern, suspendFailurePattern, firmwareLogErrorPattern, s0ixErrorPattern}
+	suspendErrors := []string{prematureWakePattern, suspendFailurePattern, firmwareLogErrorPattern}
+	checkSuspendStates := []string{s0ixErrorPattern, s2idleErrorPattern}
 
 	// Checks poll until no premature wake and/or suspend failures occurs with given poll timeout.
 	if testing.Poll(ctx, func(ctx context.Context) error {
@@ -115,6 +94,13 @@ func SuspendToS0ixStress(ctx context.Context, s *testing.State) {
 		for _, errMsg := range suspendErrors {
 			if !strings.Contains(string(stressOut), errMsg) {
 				return errors.Errorf("failed was expecting %q, but got failures %s", errMsg, string(stressOut))
+			}
+		}
+		// depending upon the suspend state, will have different output, so we check for one
+		for _, errMsg := range checkSuspendStates {
+			s.Logf("Checking for %s", errMsg)
+			if strings.Contains(string(stressOut), errMsg) {
+				break
 			}
 		}
 		return nil
