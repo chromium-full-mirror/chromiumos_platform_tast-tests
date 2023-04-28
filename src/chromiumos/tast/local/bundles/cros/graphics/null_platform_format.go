@@ -17,6 +17,9 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
+// Intel SoCs with GPU Gen 9 (SKL) or earlier don't support scanning out 30bpp framebuffers.
+var intelGen9AndEarlierGPUSoCs = []string{"pinetrail", "broadwell", "apollolake", "skylake"}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         NullPlatformFormat,
@@ -35,9 +38,12 @@ func init() {
 			Name: "24bpp",
 			Val:  []string{"XR24", "XB24"},
 		}, {
-			Name:              "30bpp",
-			Val:               []string{"AR30", "AB30", "XR30", "XB30"},
-			ExtraHardwareDeps: hwdep.D(hwdep.Supports30bppFramebuffer()),
+			Name: "30bpp",
+			Val:  []string{"AR30", "AB30", "XR30", "XB30"},
+			ExtraHardwareDeps: hwdep.D(
+				hwdep.SkipCPUSocFamily([]string{"mediatek", "rockchip", "qualcomm"}),
+				hwdep.SkipGPUFamily(intelGen9AndEarlierGPUSoCs),
+				hwdep.SkipGPUFamily([]string{"stoney"})),
 		}},
 		Fixture: "gpuWatchHangs",
 	})
