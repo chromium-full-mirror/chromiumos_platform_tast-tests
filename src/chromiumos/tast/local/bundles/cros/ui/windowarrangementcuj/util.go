@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"chromiumos/tast/common/action"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
@@ -22,7 +21,9 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/pointer"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/coords"
-	"chromiumos/tast/testing"
+
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (
@@ -98,7 +99,7 @@ func combineTabs(ctx context.Context, tconn *chrome.TestConn, ui *uiauto.Context
 	if err := pc.Drag(
 		firstTabRect.CenterPoint(),
 		uiauto.Sleep(dragStartWaitTime),
-		pc.DragTo(firstTabRect.BottomCenter(), duration),
+		pc.DragTo(firstTabRect.RightCenter(), duration),
 		pc.DragTo(secondTabRect.CenterPoint(), duration),
 		uiauto.Sleep(dragEndWaitTime),
 	)(ctx); err != nil {
