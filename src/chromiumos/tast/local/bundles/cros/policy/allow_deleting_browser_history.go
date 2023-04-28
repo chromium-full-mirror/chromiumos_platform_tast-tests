@@ -32,10 +32,9 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Behavior of AllowDeletingBrowserHistory policy, checking the correspoding checkbox states (restriction and checked) after setting the policy",
 		Contacts: []string{
-			"cros-engprod-muc@google.com",
-			"gabormagda@google.com", // Test author
+			"chrome-enterprise-team@google.com",
 		},
-		BugComponent: "b:1263917",
+		BugComponent: "b:322532",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier"},
 		Params: []testing.Param{{
