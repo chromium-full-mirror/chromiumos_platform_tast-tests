@@ -26,7 +26,6 @@ func init() {
 		BugComponent: "b:167231",
 		Attr: []string{
 			"group:mainline",
-			"informational",
 			"group:paper-io",
 			"paper-io_printing",
 		},
