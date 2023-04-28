@@ -849,6 +849,19 @@ func init() {
 				Fixture:           "chromeVideoOOPVD",
 			},
 			{
+				Name: "av1_1080p_30fps_hw_long_oopvd",
+				Val: playbackPerfParams{
+					fileName:         "crosvideo/av1_1080p_30fps.mp4",
+					decoderType:      0,
+					browserType:      browser.TypeAsh,
+					measureRoughness: true,
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily([]string{"rogue"}), hwdep.InternalDisplay()),
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_1080_30", "drm_atomic"},
+				ExtraData:         []string{"crosvideo/av1_1080p_30fps.mp4"},
+				Fixture:           "chromeVideoOOPVD",
+			},
+			{
 				Name: "h264_720p_30fps_hw_3x3",
 				Val: playbackPerfParams{
 					fileName:    "perf/h264/720p_30fps_300frames.h264.mp4",
@@ -946,6 +959,19 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily([]string{"rogue"}), hwdep.InternalDisplay()),
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_1080_30", "drm_atomic", "lacros"},
 				ExtraData:         []string{"crosvideo/1080.webm"},
+				Fixture:           "chromeVideoLacros",
+			},
+			{
+				Name: "av1_1080p_30fps_hw_long_lacros",
+				Val: playbackPerfParams{
+					fileName:         "crosvideo/av1_1080p_30fps.mp4",
+					decoderType:      0,
+					browserType:      browser.TypeLacros,
+					measureRoughness: true,
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily([]string{"rogue"}), hwdep.InternalDisplay()),
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_1080_30", "drm_atomic", "lacros"},
+				ExtraData:         []string{"crosvideo/av1_1080p_30fps.mp4"},
 				Fixture:           "chromeVideoLacros",
 			},
 			{

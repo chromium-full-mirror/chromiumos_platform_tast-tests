@@ -216,7 +216,7 @@ func TestPlaybackPerfParams(t *testing.T) {
 	}
 
 	// Long Out-of-process video decoding (ash-chrome)
-	for _, codec := range []string{"h264", "vp9"} {
+	for _, codec := range []string{"h264", "vp9", "av1"} {
 		resolution, fps, dec := 1080, 30, "hw"
 		file := playbackPerfLongFile[codec]
 		param := genPlaybackParam(codec, file, resolution, fps, dec,
@@ -249,7 +249,7 @@ func TestPlaybackPerfParams(t *testing.T) {
 	}
 
 	// Long lacros
-	for _, codec := range []string{"h264", "vp9"} {
+	for _, codec := range []string{"h264", "vp9", "av1"} {
 		resolution, fps, dec := 1080, 30, "hw"
 		file := playbackPerfLongFile[codec]
 		param := genPlaybackParam(codec, file, resolution, fps, dec,
