@@ -9,24 +9,20 @@ package setup
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/personalization"
+
 	"go.chromium.org/tast/core/errors"
 )
 
 // TurnOnDarkTheme turns dark theme on.
 // Reset to auto theme (OS default after logging in) when cleaning power test setup.
 func TurnOnDarkTheme(ctx context.Context, c *chrome.TestConn) (CleanupCallback, error) {
-	ui := uiauto.New(c).WithTimeout(30 * time.Second)
-
-	if err := uiauto.Combine("Enable dark mode",
-		personalization.OpenPersonalizationHub(ui),
-		personalization.ToggleDarkMode(ui),
-		personalization.ClosePersonalizationHub(ui),
-	)(ctx); err != nil {
+	if err := setTheme(ctx, c, personalization.DarkModeName); err != nil {
 		return nil, errors.Wrap(err, "failed to enable dark theme")
 	}
 	// TODO(b/267686390): Add CleanupCallback when more controls over dark theme scheduler
@@ -37,16 +33,33 @@ func TurnOnDarkTheme(ctx context.Context, c *chrome.TestConn) (CleanupCallback, 
 // TurnOnLightTheme turns light theme on.
 // Reset to auto theme (OS default after logging in) when cleaning power test setup.
 func TurnOnLightTheme(ctx context.Context, c *chrome.TestConn) (CleanupCallback, error) {
-	ui := uiauto.New(c).WithTimeout(30 * time.Second)
-
-	if err := uiauto.Combine("Enable light mode",
-		personalization.OpenPersonalizationHub(ui),
-		personalization.ToggleLightMode(ui),
-		personalization.ClosePersonalizationHub(ui),
-	)(ctx); err != nil {
+	if err := setTheme(ctx, c, personalization.LightModeName); err != nil {
 		return nil, errors.Wrap(err, "failed to enable light theme")
 	}
 	// TODO(b/267686390): Add CleanupCallback when more controls over dark theme scheduler
 	// are supported.
 	return nil, nil
+}
+
+// setTheme opens the "Wallpaper & style" app from settings and toggles the theme as |theme|.
+func setTheme(ctx context.Context, c *chrome.TestConn, themeName string) error {
+	ui := uiauto.New(c).WithTimeout(30 * time.Second)
+
+	var toggleThemeAction uiauto.Action
+	switch themeName {
+	case personalization.AutoModeName:
+		toggleThemeAction = personalization.ToggleAutoMode(ui)
+	case personalization.DarkModeName:
+		toggleThemeAction = personalization.ToggleDarkMode(ui)
+	case personalization.LightModeName:
+		toggleThemeAction = personalization.ToggleLightMode(ui)
+	default:
+		return errors.Errorf("unknown theme: %s", themeName)
+	}
+
+	return uiauto.Combine(fmt.Sprintf("enable %s theme", themeName),
+		personalization.OpenPersonalizationHub(ui),
+		toggleThemeAction,
+		personalization.ClosePersonalizationHub(ui),
+	)(ctx)
 }

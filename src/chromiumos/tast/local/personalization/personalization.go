@@ -24,9 +24,19 @@ import (
 
 // OpenPersonalizationHub returns an action to open the personalization app by right clicking on the desktop.
 func OpenPersonalizationHub(ui *uiauto.Context) uiauto.Action {
+	// The tablet devices automatically open the launcher after logging in.
+	// Randomly right-clicking at tablet desktop might clicking at an app
+	// and the personalization menu will not show up.
+	// The text "Sort your apps by name or color" only appears on tablet desktop.
+	// Use the text to check and right-click if the DUT is in a tablet mode.
+	sortAppText := nodewith.Name("Sort your apps by name or color").Role(role.StaticText)
 	return uiauto.Retry(3, uiauto.Combine("Open personalization hub from right click desktop",
-		// Open the menu by right click on desktop random coord in upper left corner.
-		ui.WithInterval(500*time.Millisecond).RetryUntil(ui.MouseClickAtLocation(1, coords.Point{X: rand.Intn(200), Y: rand.Intn(200)}), ui.Exists(SetPersonalizationMenu)),
+		uiauto.IfSucceedThenElse(ui.Exists(sortAppText),
+			// Open the menu by right click at the text on tablet desktop.
+			ui.WithInterval(500*time.Millisecond).RightClickUntil(sortAppText, ui.Exists(SetPersonalizationMenu)),
+			// Open the menu by right click on desktop random coord in upper left corner.
+			ui.WithInterval(500*time.Millisecond).RetryUntil(ui.MouseClickAtLocation(1, coords.Point{X: rand.Intn(200), Y: rand.Intn(200)}), ui.Exists(SetPersonalizationMenu)),
+		),
 		// Click the menu item to open Personalization.
 		ui.WithTimeout(500*time.Millisecond).RetryUntil(ui.LeftClick(SetPersonalizationMenu), ui.Gone(SetPersonalizationMenu)),
 		// Wait for Personalization window to appear.
@@ -65,8 +75,14 @@ func openSubpage(subpageButton string, ui *uiauto.Context) uiauto.Action {
 
 // ClosePersonalizationHub returns an action to close the personalization hub by clicking on Close button.
 func ClosePersonalizationHub(ui *uiauto.Context) uiauto.Action {
+	hotseat := nodewith.Role(role.Window).HasClass("HotseatWidget")
+	topContainer := nodewith.HasClass("TopContainerView").Ancestor(PersonalizationHubWindow)
 	closeButton := nodewith.Role(role.Button).Name("Close")
 	return uiauto.Combine("close Personalization Hub",
+		// Click the top container to show the close button on tablet.
+		uiauto.IfSuccessThen(ui.Exists(hotseat),
+			ui.LeftClick(topContainer),
+		),
 		ui.LeftClick(closeButton),
 		ui.WaitUntilGone(PersonalizationHubWindow))
 }
