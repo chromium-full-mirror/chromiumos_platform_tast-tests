@@ -14,13 +14,13 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 
 	commoncrash "chromiumos/tast/common/crash"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/dutfs"
-	"chromiumos/tast/rpc"
 	"chromiumos/tast/services/cros/baserpc"
 	crashservice "chromiumos/tast/services/cros/crash"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

@@ -12,10 +12,10 @@ import (
 	"time"
 
 	"chromiumos/tast/common/hwsec"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/crash"
 	hwseclocal "chromiumos/tast/local/hwsec"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

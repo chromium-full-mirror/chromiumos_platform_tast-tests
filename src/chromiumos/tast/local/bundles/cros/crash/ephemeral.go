@@ -12,11 +12,11 @@ import (
 	"strings"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/crash"
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 type ephemeralCollectionParams struct {

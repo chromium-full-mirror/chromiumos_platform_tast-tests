@@ -12,7 +12,7 @@ import (
 	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/crash"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

@@ -19,15 +19,15 @@ import (
 
 	commoncrash "chromiumos/tast/common/crash"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/crash/crash"
 	"chromiumos/tast/local/chrome"
 	localcrash "chromiumos/tast/local/crash"
 	"chromiumos/tast/local/syslog"
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/shutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (

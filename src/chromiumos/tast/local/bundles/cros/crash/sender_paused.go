@@ -11,7 +11,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 
 	"chromiumos/tast/local/crash"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

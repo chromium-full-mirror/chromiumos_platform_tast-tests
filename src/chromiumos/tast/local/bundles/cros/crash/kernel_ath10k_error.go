@@ -13,12 +13,12 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/crash"
 	"chromiumos/tast/local/network/iface"
 	"chromiumos/tast/local/shill"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 const (

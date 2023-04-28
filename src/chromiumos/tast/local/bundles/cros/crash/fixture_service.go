@@ -13,11 +13,11 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/crash"
 	crash_service "chromiumos/tast/services/cros/crash"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
