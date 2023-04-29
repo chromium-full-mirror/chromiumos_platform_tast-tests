@@ -14,7 +14,7 @@ import (
 	"strings"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/remote/bundles/cros/arc/version"
+	"chromiumos/tast/remote/bundles/cros/arc/dututils"
 
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
@@ -87,7 +87,7 @@ func findRecentCacheBuilderJar(ctx context.Context, versionRelease int) (string,
 // getCacheBuilderJar gets ARC build properties from the device, parses for build ID, and
 // generates gs URL for org.chromium.ard.cachebuilder.jar
 func getCacheBuilderJar(ctx context.Context, dut *dut.DUT, vmEnabled bool) (string, error) {
-	desc, err := version.GetBuildDescriptorRemotely(ctx, dut, vmEnabled)
+	desc, err := dututils.GetBuildDescriptorRemotely(ctx, dut, vmEnabled)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to get ARC build desc")
 	}

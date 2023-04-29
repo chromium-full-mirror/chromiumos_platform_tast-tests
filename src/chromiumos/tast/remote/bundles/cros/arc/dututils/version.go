@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Package version provides set of util functions used to work with ARC version properties.
-package version
+// Package dututils provides set of util functions used to work with ARC version properties.
+package dututils
 
 import (
 	"context"
@@ -40,7 +40,7 @@ type BuildDescriptor struct {
 }
 
 func getHostUreadaheadAbi(ctx context.Context, dut *dut.DUT) (string, error) {
-	b, err := dut.Conn().CommandContext(ctx, "file", "/sbin/ureadahead").Output()
+	b, err := FileRemote(ctx, dut, "/sbin/ureadahead")
 	if err != nil {
 		return "", errors.Wrap(err, "failed to check ureadahead remotely")
 	}
@@ -72,7 +72,7 @@ func getHostUreadaheadAbi(ctx context.Context, dut *dut.DUT) (string, error) {
 }
 
 func getBinaryTranslationType(ctx context.Context, dut *dut.DUT) (string, error) {
-	b, err := dut.Conn().CommandContext(ctx, "lscpu").Output()
+	b, err := LsCPURemote(ctx, dut)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to check lscpu remotely")
 	}
@@ -103,13 +103,13 @@ func GetBuildDescriptorRemotely(ctx context.Context, dut *dut.DUT, vmEnabled boo
 		propertyFile = "/usr/share/arc/properties/build.prop"
 	}
 
-	buildProp, err := dut.Conn().CommandContext(ctx, "cat", propertyFile).Output()
+	buildProp, err := CatRemote(ctx, dut, propertyFile)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read ARC build property file remotely")
 	}
 	buildPropStr := string(buildProp)
 
-	lsbRelease, err := dut.Conn().CommandContext(ctx, "cat", "/etc/lsb-release").Output()
+	lsbRelease, err := CatRemote(ctx, dut, "/etc/lsb-release")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to lsb-release remotely")
 	}

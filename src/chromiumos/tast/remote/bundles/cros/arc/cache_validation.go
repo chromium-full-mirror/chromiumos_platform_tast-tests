@@ -17,7 +17,7 @@ import (
 
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/remote/bundles/cros/arc/cache"
-	"chromiumos/tast/remote/bundles/cros/arc/version"
+	"chromiumos/tast/remote/bundles/cros/arc/dututils"
 	"chromiumos/tast/services/cros/arc"
 	arcpb "chromiumos/tast/services/cros/arc"
 
@@ -73,7 +73,7 @@ func CacheValidation(ctx context.Context, s *testing.State) {
 
 	param := s.Param().(testParamCacheValidation)
 
-	desc, err := version.GetBuildDescriptorRemotely(ctx, d, param.vmEnabled)
+	desc, err := dututils.GetBuildDescriptorRemotely(ctx, d, param.vmEnabled)
 	if err != nil {
 		s.Fatal("Failed to get ARC build desc: ", err)
 	}
@@ -129,7 +129,7 @@ func CacheValidation(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("GmsCoreCacheService.Generate returned an error: ", err)
 		}
-		defer d.Conn().CommandContext(ctx, "rm", "-rf", response.TargetDir).Output()
+		defer dututils.RemoveAllRemote(ctx, d, response.TargetDir)
 
 		newCacheFile := filepath.Join(response.TargetDir, response.PackagesCacheName)
 		genCacheFile := filepath.Join(response.TargetDir, response.GeneratedPackagesCacheName)
@@ -266,7 +266,7 @@ func getTTSCache(ctx context.Context, s *testing.State, cl *rpc.Client, tempDir 
 		s.Fatal(errors.Wrap(err, "failed to generate TTS cache"))
 	}
 	d := s.DUT()
-	defer d.Conn().CommandContext(ctx, "rm", "-rf", response.TargetDir).Output()
+	defer dututils.RemoveAllRemote(ctx, d, response.TargetDir)
 
 	var subDir string
 	if cacheEnabled {

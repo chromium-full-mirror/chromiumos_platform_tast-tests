@@ -21,7 +21,6 @@ import (
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/remote/bundles/cros/arc/cache"
 	"chromiumos/tast/remote/bundles/cros/arc/dututils"
-	"chromiumos/tast/remote/bundles/cros/arc/version"
 	"chromiumos/tast/services/cros/arc"
 	arcpb "chromiumos/tast/services/cros/arc"
 
@@ -81,7 +80,7 @@ type dataUploader struct {
 	androidPackage  string
 	androidVersion  string
 	shouldUpload    bool
-	buildDescriptor *version.BuildDescriptor
+	buildDescriptor *dututils.BuildDescriptor
 }
 
 func (du *dataUploader) needUpload(bucket string) bool {
@@ -386,7 +385,7 @@ func DataCollector(ctx context.Context, s *testing.State) {
 
 	param := s.Param().(testParam)
 
-	desc, err := version.GetBuildDescriptorRemotely(ctx, d, param.vmEnabled)
+	desc, err := dututils.GetBuildDescriptorRemotely(ctx, d, param.vmEnabled)
 	if err != nil {
 		s.Fatal("Failed to get ARC build desc: ", err)
 	}
@@ -605,7 +604,7 @@ func DataCollector(ctx context.Context, s *testing.State) {
 		}
 
 		// Note, we validate packages cache reference with itself.
-		// This is due to validate the structure of captured document.
+		// This is to validate the structure of captured document.
 		if err := testexec.CommandContext(
 			ctx, "java", "-cp", jarPath,
 			"org.chromium.arc.cachebuilder.Validator",
@@ -625,10 +624,7 @@ func DataCollector(ctx context.Context, s *testing.State) {
 	// Helper that dumps logcat on failure. Dumping is optional and error here does not break
 	// DataCollector flow and retries on error.
 	dumpLogcat := func(mode string, attempt int) {
-		log, err := d.Conn().CommandContext(ctx,
-			"/usr/sbin/android-sh",
-			"-c",
-			"/system/bin/logcat -d").Output()
+		log, err := dututils.AndroidShellRemote(ctx, d, "/system/bin/logcat -d")
 		if err != nil {
 			s.Logf("Failed to dump logcat, continue after this error: %q", err)
 			return
@@ -761,7 +757,7 @@ func genTTSCache(ctx context.Context, s *testing.State, cl *rpc.Client, targetDi
 	return nil
 }
 
-func maybeUprevBranch(ctx context.Context, desc *version.BuildDescriptor, androidPackage, outDir string, requiredCPUAbis []string) error {
+func maybeUprevBranch(ctx context.Context, desc *dututils.BuildDescriptor, androidPackage, outDir string, requiredCPUAbis []string) error {
 	testing.ContextLog(ctx, "Trying to uprev branch")
 
 	if !desc.Official {
