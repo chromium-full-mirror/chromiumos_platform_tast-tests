@@ -13,8 +13,8 @@ import (
 	"strconv"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Run executes the memtester utility using the supplied amount of memory and number of iterations.

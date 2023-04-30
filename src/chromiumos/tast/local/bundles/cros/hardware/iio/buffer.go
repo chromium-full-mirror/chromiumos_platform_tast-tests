@@ -14,7 +14,7 @@ import (
 	"strconv"
 	"time"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // Buffer provides a means to read continuous data captured from a sensor.

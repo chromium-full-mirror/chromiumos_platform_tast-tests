@@ -14,7 +14,6 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	"chromiumos/policy/chromium/policy/enterprise_management_proto"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome/ash/ashproc"
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/procutil"
@@ -22,7 +21,8 @@ import (
 	"chromiumos/tast/local/session/ownership"
 	"chromiumos/tast/local/sysutil"
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

@@ -13,8 +13,8 @@ import (
 	"testing"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/crosconfig"
+	"go.chromium.org/tast/core/errors"
 )
 
 const crosConfigChild = "CROSCONFIG_CHILD"

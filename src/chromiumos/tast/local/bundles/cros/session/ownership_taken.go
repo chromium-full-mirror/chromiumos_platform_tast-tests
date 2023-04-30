@@ -12,7 +12,7 @@ import (
 	"chromiumos/policy/chromium/policy/enterprise_management_proto"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/session"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

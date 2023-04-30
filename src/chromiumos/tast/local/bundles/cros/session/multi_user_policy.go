@@ -13,7 +13,7 @@ import (
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/session"
 	"chromiumos/tast/local/session/ownership"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

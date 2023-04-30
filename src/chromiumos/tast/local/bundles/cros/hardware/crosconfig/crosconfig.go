@@ -10,8 +10,8 @@ package crosconfig
 import (
 	"context"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/crosconfig"
+	"go.chromium.org/tast/core/errors"
 )
 
 // HardwareProperty represents an attribute in /hardware-properties.

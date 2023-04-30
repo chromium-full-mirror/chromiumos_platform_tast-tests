@@ -12,7 +12,7 @@ import (
 
 	"golang.org/x/sys/unix"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // CrosRing is an instance of a cros-ec-ring iio device. The buffer for this

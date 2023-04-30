@@ -8,8 +8,6 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/ash/ashproc"
@@ -20,7 +18,9 @@ import (
 	"chromiumos/tast/local/procutil"
 	"chromiumos/tast/local/wallpaper"
 	"chromiumos/tast/local/wallpaper/constants"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

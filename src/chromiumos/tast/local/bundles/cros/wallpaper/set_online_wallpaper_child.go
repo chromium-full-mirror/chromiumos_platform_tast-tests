@@ -14,7 +14,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/wallpaper"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 const notificationID = "time-limit-screen-time"

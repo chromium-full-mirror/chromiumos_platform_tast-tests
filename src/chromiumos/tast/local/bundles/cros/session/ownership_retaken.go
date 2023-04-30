@@ -15,8 +15,6 @@ import (
 	"google.golang.org/protobuf/testing/protocmp"
 
 	empb "chromiumos/policy/chromium/policy/enterprise_management_proto"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
@@ -26,7 +24,9 @@ import (
 	"chromiumos/tast/local/dbusutil"
 	"chromiumos/tast/local/session"
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
