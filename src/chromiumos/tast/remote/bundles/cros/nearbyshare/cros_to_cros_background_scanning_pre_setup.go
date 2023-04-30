@@ -14,8 +14,8 @@ import (
 	nearbycommon "chromiumos/tast/common/cros/nearbyshare"
 	remotenearby "chromiumos/tast/remote/cros/nearbyshare"
 	"chromiumos/tast/services/cros/nearbyservice"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {

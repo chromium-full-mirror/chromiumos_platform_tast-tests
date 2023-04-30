@@ -18,7 +18,7 @@ import (
 	"chromiumos/tast/local/chrome/lacros/lacrosproc"
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/kioskmode"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

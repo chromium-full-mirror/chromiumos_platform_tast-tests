@@ -10,7 +10,7 @@ import (
 
 	"chromiumos/tast/local/chrome/crossdevice"
 	"chromiumos/tast/local/chrome/nearbyshare/nearbysnippet"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
@@ -22,9 +22,9 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1131838",
-		Attr:    []string{"group:cross-device", "cross-device_nearbyshare"},
-		Data:    []string{nearbysnippet.ZipName},
-		Timeout: 3 * time.Minute,
+		Attr:         []string{"group:cross-device", "cross-device_nearbyshare"},
+		Data:         []string{nearbysnippet.ZipName},
+		Timeout:      3 * time.Minute,
 	})
 }
 

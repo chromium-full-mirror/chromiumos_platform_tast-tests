@@ -10,7 +10,7 @@ import (
 
 	"chromiumos/tast/local/bundles/cros/webrtc/capturefromelement"
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

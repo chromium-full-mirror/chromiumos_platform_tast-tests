@@ -9,8 +9,8 @@ import (
 
 	"chromiumos/tast/local/bundles/cros/webrtc/getdisplaymedia"
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {

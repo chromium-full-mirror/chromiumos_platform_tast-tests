@@ -18,8 +18,6 @@ import (
 	"github.com/pixelbender/go-matroska/matroska"
 
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/display"
@@ -30,7 +28,9 @@ import (
 	mediacpu "chromiumos/tast/local/media/cpu"
 	"chromiumos/tast/local/media/histogram"
 	"chromiumos/tast/local/media/videotype"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (

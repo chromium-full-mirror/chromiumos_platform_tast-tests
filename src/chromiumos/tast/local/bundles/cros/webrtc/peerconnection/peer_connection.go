@@ -13,7 +13,6 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
@@ -21,7 +20,8 @@ import (
 	"chromiumos/tast/local/graphics"
 	"chromiumos/tast/local/media/logging"
 	"chromiumos/tast/local/media/oop"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // VerifyDecoderMode is how to verify decoder implementation.
