@@ -24,6 +24,7 @@ import (
 	"chromiumos/tast/local/crostini"
 	"chromiumos/tast/local/crostini/ui/sharedfolders"
 	"chromiumos/tast/local/cryptohome"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -162,7 +163,7 @@ func DragDrop(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to set Files App left-snapped: ", err)
 	}
-	defer setWindowState(cleanupCtx, tconn, "Files - My files", ash.WindowStateNormal)
+	defer setWindowState(cleanupCtx, tconn, "Files - My files", ash.WindowStateDefault)
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, pre.Chrome, "ui_tree")
 
 	// Drag and drop file and dir from FilesApp to app.
