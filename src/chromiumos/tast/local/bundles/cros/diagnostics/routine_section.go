@@ -13,7 +13,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/diagnosticsapp"
 	"chromiumos/tast/local/cpu"
 	"chromiumos/tast/local/procutil"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

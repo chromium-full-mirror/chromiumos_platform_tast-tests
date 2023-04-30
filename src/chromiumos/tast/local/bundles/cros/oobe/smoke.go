@@ -10,7 +10,7 @@ import (
 	"chromiumos/tast/common/action"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/updateengine"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

@@ -9,12 +9,13 @@ import (
 	// Used to embed api_wrapper.js in string variable `systemDataProviderJs`.
 	_ "embed"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
+	"go.chromium.org/tast/core/errors"
 )
 
 // systemDataProviderJs is a stringified JS file that exposes the SystemDataProvider mojo
 // API.
+//
 //go:embed api_wrapper.js
 var systemDataProviderJs string
 
