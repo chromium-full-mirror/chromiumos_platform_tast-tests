@@ -40,7 +40,8 @@ func init() {
 		Desc:         "Verifies the entitlement check feature for tethering works. The test depends on an entitlement check server running on the callbox",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "andrewlassalle@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_amari_callbox"},
+		// TODO(b/280312511): Reenable test when b/275440439 is fixed.
+		// Attr:         []string{"group:cellular", "cellular_unstable", "cellular_amari_callbox"},
 		Params: []testing.Param{{
 			Name:      "static_check_ok_ipv4",
 			Val:       shillCellularEntitlementCheckTestParam{"callbox_attach_ip_default.pbf", shillconst.TetheringReadinessReady, false, false},
