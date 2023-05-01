@@ -19,11 +19,11 @@ import (
 
 	pp "chromiumos/system_api/patchpanel_proto"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/vm/dlc"
 	patchpanel "chromiumos/tast/local/network/patchpanel_client"
 	"chromiumos/tast/local/vm"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const runVhostUserNetTest string = "run-vhost-user-net-test.sh"

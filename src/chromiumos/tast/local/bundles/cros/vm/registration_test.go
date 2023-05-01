@@ -7,7 +7,7 @@ package vm
 import (
 	"testing"
 
-	"chromiumos/tast/testing/testcheck"
+	"go.chromium.org/tast/core/testing/testcheck"
 )
 
 func TestSoftwareDeps(t *testing.T) {

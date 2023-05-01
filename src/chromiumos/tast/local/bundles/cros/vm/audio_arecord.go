@@ -14,7 +14,7 @@ import (
 	"chromiumos/tast/local/audio"
 	"chromiumos/tast/local/bundles/cros/vm/audioutils"
 	"chromiumos/tast/local/bundles/cros/vm/dlc"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 const runAudioArecord string = "run-arecord.sh"

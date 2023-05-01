@@ -18,7 +18,7 @@ import (
 	"chromiumos/tast/local/bundles/cros/vm/storage"
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/disk"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 const runFio string = "run-fio.sh"

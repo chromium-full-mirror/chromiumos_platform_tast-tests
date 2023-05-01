@@ -15,7 +15,7 @@ import (
 
 	"chromiumos/tast/local/bundles/cros/vm/dlc"
 	"chromiumos/tast/local/vm"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

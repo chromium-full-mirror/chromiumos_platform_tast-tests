@@ -24,7 +24,7 @@ import (
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/disk"
 	"chromiumos/tast/local/vm"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 const runManyFiles string = "run-manyfiles.py"

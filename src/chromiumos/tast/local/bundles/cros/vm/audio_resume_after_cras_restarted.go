@@ -17,7 +17,7 @@ import (
 	"chromiumos/tast/local/audio/crastestclient"
 	"chromiumos/tast/local/bundles/cros/vm/audioutils"
 	"chromiumos/tast/local/bundles/cros/vm/dlc"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 const runAudioResumeAfterCrasRestarted string = "run-audio-resume-after-cras-restarted.sh"

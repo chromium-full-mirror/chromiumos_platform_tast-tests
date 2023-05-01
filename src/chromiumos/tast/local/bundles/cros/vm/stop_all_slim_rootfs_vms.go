@@ -10,7 +10,7 @@ import (
 	"chromiumos/tast/local/bundles/cros/vm/slimrootfsutils"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/vm"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

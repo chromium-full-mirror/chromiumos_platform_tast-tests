@@ -11,8 +11,8 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/vm"
+	"go.chromium.org/tast/core/errors"
 )
 
 // VirtioFSCacheTimeoutSecond represents the duration of virtiofs device's cache.
