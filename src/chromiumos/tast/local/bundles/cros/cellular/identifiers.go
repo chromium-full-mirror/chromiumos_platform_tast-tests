@@ -8,8 +8,10 @@ import (
 	"context"
 	"time"
 
+	"chromiumos/tast/common/cellularconst"
 	"chromiumos/tast/local/cellular"
 	"chromiumos/tast/local/modemmanager"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -119,7 +121,11 @@ func Identifiers(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to read EquipmentIdentifier: ", err)
 	}
 	if err := validateIdentifiers("IMEI", shillImei, modemImei, 14, 16); err != nil {
+		// Some NL668 engineering samples used in DVT/PVT devices may lose their IMEI number after an update or recovery.
+		// Ref b/277647418, b/241292924, b/201554938 for details.
+		err = cellular.TagKnownBugOnModemType(ctx, err, "b/277647418", []cellularconst.ModemType{cellularconst.ModemTypeNL668})
 		s.Fatal("IMEI validation failed: ", err)
+
 	}
 
 	shillImsi, err := helper.GetIMSIFromShill(ctx)
