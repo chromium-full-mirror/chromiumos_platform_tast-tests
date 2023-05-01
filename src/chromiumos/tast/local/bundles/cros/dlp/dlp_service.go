@@ -17,7 +17,6 @@ import (
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/dlp/clipboard"
 	"chromiumos/tast/local/bundles/cros/dlp/files"
 	"chromiumos/tast/local/chrome"
@@ -37,7 +36,8 @@ import (
 	"chromiumos/tast/local/screenshot"
 	"chromiumos/tast/local/session"
 	pb "chromiumos/tast/services/cros/dlp"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
