@@ -635,7 +635,7 @@
 	{
 		"driver": "freedreno(CONFIG_DRM_MSM)",
 		"boards": ["trogdor", "strongbad"],
-		"startup_cmds": ["rm -rf /dev/msm && ln -s /dev/dri/card1 /dev/msm"],
+		"startup_cmds": ["rm -rf /dev/msm && ln -s /dev/dri/card0 /dev/msm"],
 		"syscalls": [
 			"openat$msm",
 			"ioctl$DRM_IOCTL_MSM_GET_PARAM",
