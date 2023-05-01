@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"chromiumos/tast/local/bundles/cros/inputs/fixture"
+	"chromiumos/tast/local/bundles/cros/inputs/pre"
 	"chromiumos/tast/local/bundles/cros/inputs/testserver"
 	"chromiumos/tast/local/bundles/cros/inputs/util"
 	"chromiumos/tast/local/chrome"
@@ -19,8 +20,10 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/chrome/uiauto/vkb"
 	"chromiumos/tast/local/chrome/useractions"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -46,6 +49,7 @@ func init() {
 				}},
 			util.IMESearchFlags([]ime.InputMethod{ime.DefaultInputMethod})...),
 		SoftwareDeps: []string{"reboot", "inputs_deps", "chrome", "chrome_internal"},
+		HardwareDeps: hwdep.D(pre.InputsStableModels),
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{
 			{

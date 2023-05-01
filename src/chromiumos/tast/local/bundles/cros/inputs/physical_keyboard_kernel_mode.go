@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"chromiumos/tast/local/input"
+
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -24,7 +25,7 @@ func init() {
 		Timeout:      3 * time.Minute,
 		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		Fixture:      "chromeLoggedIn",
-		HardwareDeps: hwdep.D(hwdep.Keyboard(), hwdep.FormFactor(hwdep.Convertible, hwdep.Clamshell, hwdep.Detachable)),
+		HardwareDeps: hwdep.D(hwdep.Keyboard(), hwdep.FormFactor(hwdep.Convertible, hwdep.Clamshell, hwdep.Detachable), hwdep.SkipOnModel("kodama")),
 	})
 }
 

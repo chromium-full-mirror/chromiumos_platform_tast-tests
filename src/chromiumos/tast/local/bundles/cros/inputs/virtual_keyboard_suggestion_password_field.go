@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"chromiumos/tast/local/bundles/cros/inputs/fixture"
+	"chromiumos/tast/local/bundles/cros/inputs/pre"
 	"chromiumos/tast/local/bundles/cros/inputs/testserver"
 	"chromiumos/tast/local/bundles/cros/inputs/util"
 	"chromiumos/tast/local/chrome/ime"
@@ -19,6 +20,7 @@ import (
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 const password = "password"
@@ -38,6 +40,7 @@ func init() {
 		Attr:         []string{"group:mainline", "group:input-tools", "group:criticalstaging", "informational"},
 		SearchFlags:  util.IMESearchFlags(imes),
 		SoftwareDeps: []string{"inputs_deps", "chrome", "google_virtual_keyboard"},
+		HardwareDeps: hwdep.D(pre.InputsStableModels),
 		Timeout:      2 * time.Minute,
 		Params: []testing.Param{
 			{

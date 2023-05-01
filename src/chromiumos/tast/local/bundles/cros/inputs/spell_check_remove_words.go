@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"chromiumos/tast/local/bundles/cros/inputs/fixture"
+	"chromiumos/tast/local/bundles/cros/inputs/pre"
 	"chromiumos/tast/local/bundles/cros/inputs/spellcheck"
 	"chromiumos/tast/local/bundles/cros/inputs/testserver"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -17,8 +18,10 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/input"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -33,6 +36,7 @@ func init() {
 		BugComponent: "b:95887",
 		Attr:         []string{"group:mainline", "informational", "group:criticalstaging", "group:input-tools"},
 		SoftwareDeps: []string{"inputs_deps", "chrome"},
+		HardwareDeps: hwdep.D(pre.InputsStableModels),
 		Params: []testing.Param{{
 			Fixture: fixture.ClamshellNonVK,
 		}, {
