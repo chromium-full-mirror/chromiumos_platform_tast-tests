@@ -11,11 +11,11 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bluetooth/facade"
 	"chromiumos/tast/local/bluetooth/facade/common"
 	pb "chromiumos/tast/services/cros/bluetooth"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"chromiumos/tast/common/fixture"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bluetooth"
 	"chromiumos/tast/local/bluetooth/bluez"
 	"chromiumos/tast/local/chrome"
@@ -21,8 +20,9 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/chrome/userutil"
 	"chromiumos/tast/local/input"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type enableDisableBluetoothWithDifferentUsersParams struct {
