@@ -10,12 +10,12 @@ import (
 
 	"github.com/godbus/dbus/v5"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/lacros"
 	"chromiumos/tast/local/chrome/metrics"
 	"chromiumos/tast/local/dbusutil"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 type smartDimParam struct {

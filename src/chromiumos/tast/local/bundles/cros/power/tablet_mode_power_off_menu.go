@@ -9,7 +9,6 @@ import (
 	"time"
 
 	pmpb "chromiumos/system_api/power_manager_proto"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -18,7 +17,8 @@ import (
 	"chromiumos/tast/local/coords"
 	"chromiumos/tast/local/power"
 	"chromiumos/tast/local/session"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 type testType int

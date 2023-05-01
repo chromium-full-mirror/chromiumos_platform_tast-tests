@@ -11,10 +11,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"chromiumos/tast/errors"
 	localpower "chromiumos/tast/local/power"
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

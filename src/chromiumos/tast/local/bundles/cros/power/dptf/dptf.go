@@ -12,7 +12,7 @@ import (
 	"strings"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // GetProfileFromOverrideScript checks existence of dptf_override.sh and calls
