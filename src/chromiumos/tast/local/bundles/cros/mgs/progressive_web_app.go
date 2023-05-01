@@ -15,7 +15,7 @@ import (
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/mgs"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 const port = 8080

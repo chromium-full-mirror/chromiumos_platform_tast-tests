@@ -9,8 +9,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/fsutil"
 	"chromiumos/tast/local/bundles/cros/scanapp/scanning"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
@@ -19,7 +17,9 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/scanapp"
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/printing/document"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/fsutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

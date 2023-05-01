@@ -13,15 +13,15 @@ import (
 
 	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/common/policy/fakedms"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/fsutil"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/filesapp"
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/mgs"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/fsutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 const fileName = "files_app_chrome_dino.pdf"

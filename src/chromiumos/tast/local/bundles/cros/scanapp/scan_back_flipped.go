@@ -10,7 +10,7 @@ import (
 	"chromiumos/tast/local/bundles/cros/scanapp/scanning"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto/scanapp"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
