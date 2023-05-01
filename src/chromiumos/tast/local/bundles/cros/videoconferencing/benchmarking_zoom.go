@@ -5,20 +5,20 @@
 package videoconferencing
 
 import (
-	"context"
-	"strconv"
-	"time"
-
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/bundles/cros/videoconferencing/effects"
 	"chromiumos/tast/local/chrome/apps/thirdparty/zoom"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/videoconferencing/fixture"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"context"
+	"strconv"
+	"time"
+
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type zoomParams struct {
@@ -37,7 +37,7 @@ func init() {
 			"chromeos-platform-ml@google.com",
 			"zhaon@google.com",
 		},
-		BugComponent: "b:260653207",
+		BugComponent: "b:1212695",
 		SoftwareDeps: []string{"chrome", "camera_feature_effects"},
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("betty")),
 		Timeout:      35 * time.Minute,

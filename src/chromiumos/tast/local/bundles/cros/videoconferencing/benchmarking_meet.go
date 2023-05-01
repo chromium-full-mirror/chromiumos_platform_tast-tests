@@ -6,20 +6,17 @@ package videoconferencing
 
 import (
 	"chromiumos/tast/common/perf"
-	"context"
-	"strconv"
-	"time"
-
 	"chromiumos/tast/local/bundles/cros/videoconferencing/effects"
 	"chromiumos/tast/local/chrome/apps/thirdparty/googlemeet"
 	"chromiumos/tast/local/chrome/browser"
-	"chromiumos/tast/local/power"
-
-	"chromiumos/tast/local/videoconferencing/fixture"
-
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
+	"chromiumos/tast/local/power"
+	"chromiumos/tast/local/videoconferencing/fixture"
+	"context"
+	"strconv"
+	"time"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -140,18 +137,18 @@ func BenchmarkingMeet(ctx context.Context, s *testing.State) {
 
 	initMemUsage, err := effects.GetSwapAndRSSBytes(ctx)
 	if err != nil {
-		s.Fatal("Failed to read memory usage: ", err)
+		s.Error("Failed to read memory usage: ", err)
+	} else {
+		p.Set(perf.Metric{
+			Name:      "InitialMemoryUsage",
+			Unit:      "Byte",
+			Direction: perf.SmallerIsBetter,
+			Multiple:  false},
+			float64(initMemUsage))
+		testing.ContextLog(ctx, "Initial Memory usage: ", initMemUsage)
 	}
-	p.Set(perf.Metric{
-		Name:      "InitialMemoryUsage",
-		Unit:      "Byte",
-		Direction: perf.SmallerIsBetter,
-		Multiple:  false},
-		float64(initMemUsage))
-	testing.ContextLog(ctx, "Initial Memory usage: ", initMemUsage)
 
 	testing.ContextLog(ctx, "Opening Meet")
-
 	conn, _, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, "")
 	if err != nil {
 		s.Fatal("Failed to launch browser: ", err)
@@ -203,13 +200,13 @@ func BenchmarkingMeet(ctx context.Context, s *testing.State) {
 	if err = effects.ReportFramePerfMetrics(ctx, p, gm.Conn(), s.DataPath("effects_frame_metrics.js"), testDuration); err != nil {
 		s.Fatal("Failed to report fps and frame duration metrics: ", err)
 	}
-	if err = effects.ReportMemoryMetrics(ctx, p, testDuration); err != nil {
-		s.Error("Failed to report memory metrics: ", err)
-	}
 	if raplEnergyBefore != nil {
 		if effects.ReportPowerDiffMetrics(ctx, p, raplEnergyBefore, testDuration) != nil {
 			s.Fatal("Failed to report power metrics: ", err)
 		}
+	}
+	if err = effects.ReportMemoryMetrics(ctx, p, testDuration); err != nil {
+		s.Error("Failed to report memory metrics: ", err)
 	}
 	if err := p.Save(s.OutDir()); err != nil {
 		s.Error("Cannot save perf data: ", err)

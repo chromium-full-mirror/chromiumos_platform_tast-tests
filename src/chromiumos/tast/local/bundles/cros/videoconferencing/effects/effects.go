@@ -9,7 +9,6 @@ import (
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/power"
-	"chromiumos/tast/testing"
 	"context"
 	"encoding/json"
 	"io/ioutil"
@@ -18,6 +17,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (

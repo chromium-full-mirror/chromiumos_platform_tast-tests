@@ -5,6 +5,8 @@
 package effects
 
 import (
+	"chromiumos/tast/common/hps/hpsutil"
+	"chromiumos/tast/common/testexec"
 	"context"
 	"os"
 	"regexp"
@@ -13,10 +15,8 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/common/hps/hpsutil"
-	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (
@@ -26,8 +26,8 @@ const (
 	fieldFilter      = `:\s+(\d+) kB`
 	crosCameraFilter = `root(\s+)(\d+)(.+)cros_camera_service`
 
-	// DefaultTestDuration defines the default test duration of 30 minutes in seconds.
-	DefaultTestDuration = 60 * 30
+	// DefaultTestDuration defines the default test duration of 15 minutes in seconds.
+	DefaultTestDuration = 60 * 15
 )
 
 // PeakMemoryResult returns the peak memory or an error.
@@ -57,7 +57,7 @@ func getCameraServicePID(ctx context.Context) (int, error) {
 	// Find cros_camera_service pid.
 	pids, err := testexec.CommandContext(ctx, "ps", "-ef").CombinedOutput()
 	if err != nil {
-		return -1, err
+		return -1, errors.Wrap(err, "failed to execute testexec command")
 	}
 	cregex := regexp.MustCompile(crosCameraFilter)
 	result := cregex.FindStringSubmatch(string(pids))
@@ -70,12 +70,12 @@ func getCameraServicePID(ctx context.Context) (int, error) {
 func readProcFSMemoryField(ctx context.Context, fieldName string) (int, error) {
 	pid, err := getCameraServicePID(ctx)
 	if err != nil {
-		return -1, err
+		return -1, errors.Wrap(err, "getCameraServicePID failed")
 	}
 	cameraProcPath := strings.Replace(memoryInfo, "self", strconv.Itoa(pid), -1)
 	fileContent, err := os.ReadFile(cameraProcPath)
 	if err != nil {
-		return -1, err
+		return -1, errors.Wrap(err, "failed to read camera proc path")
 	}
 
 	fregex := regexp.MustCompile(fieldName + fieldFilter)
@@ -95,12 +95,12 @@ func readProcFSMemoryField(ctx context.Context, fieldName string) (int, error) {
 func GetSwapAndRSSBytes(ctx context.Context) (int, error) {
 	rssVal, err := readProcFSMemoryField(ctx, "VmRSS")
 	if err != nil {
-		return -1, err
+		return -1, errors.Wrap(err, "readProcFSMemoryField VmRSS failed")
 	}
 
 	swapVal, err := readProcFSMemoryField(ctx, "VmSwap")
 	if err != nil {
-		return -1, err
+		return -1, errors.Wrap(err, "readProcFSMemoryField VmSwap failed")
 	}
 	return (rssVal + swapVal) * 1024, nil
 }

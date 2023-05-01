@@ -5,25 +5,24 @@
 package videoconferencing
 
 import (
-	"context"
-	"net/http"
-	"net/http/httptest"
-	"strconv"
-	"time"
-
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/bundles/cros/videoconferencing/effects"
 	"chromiumos/tast/local/chrome/browser"
-
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/power"
 	"chromiumos/tast/local/videoconferencing/fixture"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"context"
+	"net/http"
+	"net/http/httptest"
+	"strconv"
+	"time"
+
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 const simpleURL = "/effects_video_script.html?resolution="
@@ -49,7 +48,7 @@ func init() {
 			"chromeos-platform-ml@google.com",
 			"zhaon@google.com",
 		},
-		BugComponent: "b:260653207",
+		BugComponent: "b:1212695",
 		Attr:         []string{"group:ml_benchmark", "ml_benchmark_nightly"},
 		SoftwareDeps: []string{"chrome", "camera_feature_effects"},
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("betty")),
@@ -138,15 +137,16 @@ func BenchmarkingHTML(ctx context.Context, s *testing.State) {
 	// Record Memory usage.
 	initMemUsage, err := effects.GetSwapAndRSSBytes(ctx)
 	if err != nil {
-		s.Fatal("Failed to read memory usage: ", err)
+		s.Error("Failed to read memory usage: ", err)
+	} else {
+		p.Set(perf.Metric{
+			Name:      "InitialMemoryUsage",
+			Unit:      "Byte",
+			Direction: perf.SmallerIsBetter,
+			Multiple:  false},
+			float64(initMemUsage))
+		testing.ContextLog(ctx, "Initial Memory usage: ", initMemUsage)
 	}
-	p.Set(perf.Metric{
-		Name:      "InitialMemoryUsage",
-		Unit:      "Byte",
-		Direction: perf.SmallerIsBetter,
-		Multiple:  false},
-		float64(initMemUsage))
-	testing.ContextLog(ctx, "Initial Memory usage: ", initMemUsage)
 
 	//  Open video on simple javascript browser.
 	testing.ContextLog(ctx, "Opening Simple Meeting")
@@ -198,13 +198,13 @@ func BenchmarkingHTML(ctx context.Context, s *testing.State) {
 	if err = effects.ReportFramePerfMetrics(ctx, p, conn, s.DataPath("effects_frame_metrics.js"), testDuration); err != nil {
 		s.Fatal("Failed to report fps and frame duration metrics: ", err)
 	}
-	if err = effects.ReportMemoryMetrics(ctx, p, testDuration); err != nil {
-		s.Error("Failed to report memory metrics: ", err)
-	}
 	if raplEnergyBefore != nil {
 		if effects.ReportPowerDiffMetrics(ctx, p, raplEnergyBefore, testDuration) != nil {
 			s.Fatal("Failed to report power metrics: ", err)
 		}
+	}
+	if err = effects.ReportMemoryMetrics(ctx, p, testDuration); err != nil {
+		s.Error("Failed to report memory metrics: ", err)
 	}
 	if err := p.Save(s.OutDir()); err != nil {
 		s.Error("Cannot save perf data: ", err)
