@@ -16,6 +16,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/vkb"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -40,7 +41,6 @@ func init() {
 		Timeout:      2 * time.Minute,
 		Params: []testing.Param{
 			{
-				Name:    "ash",
 				Fixture: fixture.TabletVK,
 			},
 			{
