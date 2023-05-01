@@ -8,8 +8,8 @@ import (
 	"context"
 	"path/filepath"
 
-	"chromiumos/tast/fsutil"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/fsutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

@@ -11,7 +11,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 
 	"go.chromium.org/tast/core/framework/protocol"
 )

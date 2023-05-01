@@ -10,9 +10,9 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/services/cros/meta"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testutil"
 )
 

@@ -12,7 +12,7 @@ import (
 	"github.com/shirou/gopsutil/v3/process"
 	"golang.org/x/sys/unix"
 
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

@@ -10,8 +10,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 
 	"chromiumos/tast/common/meta"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
