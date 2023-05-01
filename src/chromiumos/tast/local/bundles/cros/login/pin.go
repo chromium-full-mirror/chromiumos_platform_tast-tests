@@ -16,7 +16,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/ossettings"
 	hwseclocal "chromiumos/tast/local/hwsec"
 	"chromiumos/tast/local/input"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 type testParam struct {

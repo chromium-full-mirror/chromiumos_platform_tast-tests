@@ -17,7 +17,7 @@ import (
 	"chromiumos/tast/local/chrome/userutil"
 	hwseclocal "chromiumos/tast/local/hwsec"
 	"chromiumos/tast/local/input"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (

@@ -9,12 +9,12 @@ import (
 	"context"
 	"strings"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/ossettings"
 	"chromiumos/tast/local/chrome/uiauto/role"
+	"go.chromium.org/tast/core/errors"
 )
 
 // RestrictSignInOption is the name of the option in OS Settings that allows user to
