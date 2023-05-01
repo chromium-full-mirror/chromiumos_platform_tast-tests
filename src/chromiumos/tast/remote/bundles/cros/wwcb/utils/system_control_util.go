@@ -6,12 +6,13 @@
 package utils
 
 import (
-	"chromiumos/tast/common/servo"
-	"chromiumos/tast/dut"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
 	"context"
 	"time"
+
+	"chromiumos/tast/common/servo"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // ShutdownDUT performs power long press to shutdown DUT.

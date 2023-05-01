@@ -12,14 +12,14 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/bundles/cros/wwcb/utils"
-	"chromiumos/tast/rpc"
 	pb "chromiumos/tast/services/cros/apps"
 	"chromiumos/tast/services/cros/ui"
 	"chromiumos/tast/services/cros/wwcb"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (

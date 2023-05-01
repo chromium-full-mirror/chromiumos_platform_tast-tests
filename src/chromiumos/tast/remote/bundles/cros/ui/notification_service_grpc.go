@@ -16,7 +16,7 @@ import (
 	"chromiumos/tast/common/chrome/ash"
 	"chromiumos/tast/remote/crosserverutil"
 	pb "chromiumos/tast/services/cros/ui"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

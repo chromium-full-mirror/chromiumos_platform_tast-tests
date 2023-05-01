@@ -10,9 +10,9 @@ import (
 	"fmt"
 	"time"
 
-	"chromiumos/tast/errors"
 	ps "chromiumos/tast/services/cros/policy"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // BuiltInMessaging is a helper to interact with the Wilco built-in messaging API

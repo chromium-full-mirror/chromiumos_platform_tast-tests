@@ -11,12 +11,12 @@ import (
 	"path/filepath"
 	"time"
 
-	"chromiumos/tast/dut"
-	"chromiumos/tast/errors"
 	inputspb "chromiumos/tast/services/cros/inputs"
 	"chromiumos/tast/services/cros/ui"
-	"chromiumos/tast/ssh/linuxssh"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh/linuxssh"
+	"go.chromium.org/tast/core/testing"
 )
 
 // VideoFile is a file to play to use webcam to check.

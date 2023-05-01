@@ -11,11 +11,11 @@ import (
 	"google.golang.org/grpc"
 
 	"chromiumos/tast/common/chrome/credconfig"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/crosserverutil"
 	pb "chromiumos/tast/services/cros/ui"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 const (

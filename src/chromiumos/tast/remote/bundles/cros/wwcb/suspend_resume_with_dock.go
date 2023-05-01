@@ -13,14 +13,14 @@ import (
 	"google.golang.org/grpc"
 
 	"chromiumos/tast/common/servo"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/remote/bundles/cros/wwcb/utils"
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/powercontrol"
-	"chromiumos/tast/rpc"
 	"chromiumos/tast/services/cros/ui"
 	"chromiumos/tast/services/cros/wwcb"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

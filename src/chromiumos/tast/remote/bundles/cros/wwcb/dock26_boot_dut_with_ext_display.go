@@ -9,10 +9,10 @@ import (
 	"time"
 
 	"chromiumos/tast/common/servo"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/remote/bundles/cros/wwcb/utils"
 	"chromiumos/tast/remote/powercontrol"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

@@ -9,10 +9,10 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/dut"
 	"chromiumos/tast/remote/bundles/cros/wwcb/utils"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

@@ -11,12 +11,12 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/remote/bundles/cros/wwcb/utils"
-	"chromiumos/tast/rpc"
 	"chromiumos/tast/services/cros/ui"
 	"chromiumos/tast/services/cros/wwcb"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
@@ -25,7 +25,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that display resolution is still okay after lid close & windows are all still displayed",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
-		BugComponent: "b:1289112",  // ChromeOS > External > WWCB > Allion > Automation
+		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
 		Attr:         []string{"group:wwcb"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"DockingID", "ExtDispID1", "wwcbIPPowerIp"},

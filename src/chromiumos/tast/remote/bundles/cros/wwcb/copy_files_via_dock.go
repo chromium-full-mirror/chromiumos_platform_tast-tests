@@ -16,15 +16,15 @@ import (
 	"google.golang.org/grpc"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/dut"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/bundles/cros/wwcb/utils"
-	"chromiumos/tast/rpc"
 	"chromiumos/tast/services/cros/ui"
 	"chromiumos/tast/services/cros/wwcb"
-	"chromiumos/tast/ssh/linuxssh"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/ssh/linuxssh"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (
