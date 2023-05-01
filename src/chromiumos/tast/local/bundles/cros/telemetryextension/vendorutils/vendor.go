@@ -10,8 +10,9 @@ import (
 	"os"
 	"strings"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/crosconfig"
+
+	"go.chromium.org/tast/core/errors"
 )
 
 // FetchVendor returns vendor name using new CrOSConfig based approach and deprecated sysfs approach as a backup.

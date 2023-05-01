@@ -11,7 +11,8 @@ import (
 	"chromiumos/tast/local/bundles/cros/telemetryextension/dep"
 	"chromiumos/tast/local/bundles/cros/telemetryextension/vendorutils"
 	"chromiumos/tast/local/crosconfig"
-	"chromiumos/tast/testing"
+
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

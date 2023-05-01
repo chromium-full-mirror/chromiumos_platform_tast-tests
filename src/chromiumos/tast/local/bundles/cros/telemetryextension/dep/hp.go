@@ -5,7 +5,7 @@
 package dep
 
 import (
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 // This list was fetched by Plx script, use "HP" as primaryOemName:

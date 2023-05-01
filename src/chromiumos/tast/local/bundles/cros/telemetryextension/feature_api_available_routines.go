@@ -8,7 +8,8 @@ import (
 	"context"
 
 	"chromiumos/tast/local/bundles/cros/telemetryextension/fixture"
-	"chromiumos/tast/testing"
+
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

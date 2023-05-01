@@ -10,9 +10,10 @@ import (
 	"regexp"
 	"strconv"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/telemetryextension/fixture"
-	"chromiumos/tast/testing"
+
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 var (
