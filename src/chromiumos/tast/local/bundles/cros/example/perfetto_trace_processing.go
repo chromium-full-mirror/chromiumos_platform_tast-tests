@@ -11,9 +11,9 @@ import (
 	"reflect"
 	"time"
 
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/tracing"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (

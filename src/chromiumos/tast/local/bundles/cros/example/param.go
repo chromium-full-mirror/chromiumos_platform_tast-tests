@@ -7,7 +7,7 @@ package example
 import (
 	"context"
 
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 type animal struct {

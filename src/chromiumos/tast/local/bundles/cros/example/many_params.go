@@ -8,7 +8,7 @@ import (
 	"context"
 
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 type manyParamsParams struct {
