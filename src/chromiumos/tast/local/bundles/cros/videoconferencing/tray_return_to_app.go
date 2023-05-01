@@ -92,13 +92,13 @@ func verifyReturnToGoogleMeet(ctx context.Context, s *testing.State, cr *chrome.
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	br, cleanup, err := browserfixt.SetUp(ctx, cr, browserType)
+	conn, _, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, browserType, "")
 	if err != nil {
 		s.Fatal("Failed to launch browser: ", err)
 	}
 	defer cleanup(cleanupCtx)
 
-	gm, err := googlemeet.StartNewMeeting(ctx, cr, br, nil, googlemeet.WithAllPermissions)
+	gm, err := googlemeet.StartNewMeeting(ctx, cr, conn, nil, googlemeet.WithAllPermissions)
 	if err != nil {
 		s.Fatal("Failed to start meeting: ", err)
 	}

@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"chromiumos/tast/common/action"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/apps/thirdparty/googlemeet"
@@ -23,7 +22,9 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/chrome/webutil"
 	"chromiumos/tast/local/input"
-	"chromiumos/tast/testing"
+
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // GoogleMeetConference implements the Conference interface.
@@ -82,7 +83,12 @@ func (conf *GoogleMeetConference) Join(ctx context.Context, room string, toBlur 
 		expectedEffect = googlemeet.BlurEffect
 	}
 
-	conf.gm, err = googlemeet.JoinMeetingWithEffect(ctx, cr, br, room, expectedEffect, nil, googlemeet.WithAllPermissions, browser.WithNewWindow())
+	conn, err := br.NewTab(ctx, "")
+	if err != nil {
+		return errors.Wrap(err, "failed to create new tab")
+	}
+
+	conf.gm, err = googlemeet.JoinMeetingWithEffect(ctx, cr, conn, room, expectedEffect, nil, googlemeet.WithAllPermissions, browser.WithNewWindow())
 	if err != nil {
 		return CheckSignedOutError(ctx, tconn, errors.Wrap(err, "failed to join google meeting"))
 	}

@@ -21,6 +21,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/chrome/webutil"
 	"chromiumos/tast/local/input"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -77,7 +78,12 @@ var (
 func (conf *GoogleMeetConference) Join(ctx context.Context, room string) (err error) {
 	cr, br, tconn, ui := conf.cr, conf.br, conf.tconn, conf.ui
 
-	conf.gm, err = googlemeet.JoinMeetingWithEffect(ctx, cr, br, room, googlemeet.BlurEffect, nil, googlemeet.WithAllPermissions, browser.WithNewWindow())
+	conn, err := br.NewTab(ctx, "")
+	if err != nil {
+		return errors.Wrap(err, "failed to create new tab")
+	}
+
+	conf.gm, err = googlemeet.JoinMeetingWithEffect(ctx, cr, conn, room, googlemeet.BlurEffect, nil, googlemeet.WithAllPermissions, browser.WithNewWindow())
 	if err != nil {
 		return CheckSignedOutError(ctx, tconn, errors.Wrap(err, "failed to join google meeting"))
 	}

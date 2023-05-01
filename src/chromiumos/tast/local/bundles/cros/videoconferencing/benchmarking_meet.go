@@ -6,24 +6,24 @@ package videoconferencing
 
 import (
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/testing/hwdep"
 	"context"
 	"strconv"
 	"time"
 
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/bundles/cros/videoconferencing/effects"
-
 	"chromiumos/tast/local/chrome/apps/thirdparty/googlemeet"
+	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/power"
 
 	"chromiumos/tast/local/videoconferencing/fixture"
 
-	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
-	"chromiumos/tast/testing"
+
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type meetParams struct {
@@ -151,13 +151,14 @@ func BenchmarkingMeet(ctx context.Context, s *testing.State) {
 	testing.ContextLog(ctx, "Initial Memory usage: ", initMemUsage)
 
 	testing.ContextLog(ctx, "Opening Meet")
-	br, cleanup, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
+
+	conn, _, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, "")
 	if err != nil {
 		s.Fatal("Failed to launch browser: ", err)
 	}
 	defer cleanup(closeCtx)
 
-	gm, err := googlemeet.StartNewMeeting(ctx, cr, br,
+	gm, err := googlemeet.StartNewMeeting(ctx, cr, conn,
 		map[string]string{
 			"e": "ForceSegmentationModelVariant::GpuMid",
 		}, googlemeet.WithAllPermissions)
