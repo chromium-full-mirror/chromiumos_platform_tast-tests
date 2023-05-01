@@ -18,6 +18,7 @@ import (
 	"chromiumos/tast/local/crostini"
 	"chromiumos/tast/local/screenshot"
 	"chromiumos/tast/local/uidetection"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )

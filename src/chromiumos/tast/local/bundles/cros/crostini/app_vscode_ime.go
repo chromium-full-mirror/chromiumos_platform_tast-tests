@@ -20,6 +20,7 @@ import (
 	"chromiumos/tast/local/terminalapp"
 	"chromiumos/tast/local/uidetection"
 	"chromiumos/tast/local/vm"
+
 	"go.chromium.org/tast/core/testing"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -122,14 +123,14 @@ func testUseIMEInVSCode(ctx context.Context, terminalApp *terminalapp.TerminalAp
 	ui := uiauto.New(tconn)
 	uda := uidetection.NewDefault(tconn)
 
-	if err := crostiniapps.InitialiseVscode(ctx, cont, uda, ui, terminalApp, keyboard); err != nil {
+	if err := crostiniapps.InitialiseVSCode(ctx, cont, uda, ui, terminalApp, keyboard); err != nil {
 		return err
 	}
 
 	inputMethod := imeData.InputMethod
 	// Open the VSCode again, this time, it won't open the Get Started tab.
 	if err := uiauto.Combine("create and compose file with VSCode",
-		crostiniapps.LaunchVscodeForFile(uda, ui, terminalApp, keyboard, crostiniapps.VscodeTestFile),
+		crostiniapps.LaunchVSCodeForFile(uda, ui, terminalApp, keyboard, crostiniapps.VSCodeTestFile),
 		inputMethod.InstallAndActivate(tconn),
 		inputMethod.WaitUntilActivated(tconn),
 		// VSCode will read the first keypress as English input, even when the input method is set otherwise.
@@ -138,12 +139,12 @@ func testUseIMEInVSCode(ctx context.Context, terminalApp *terminalapp.TerminalAp
 		keyboard.AccelAction("Backspace"),
 		keyboard.AccelAction("Backspace"),
 		imeData.EnterTestStringActionPK(keyboard),
-		crostiniapps.SaveFileAndCloseVscode(ui, keyboard, crostiniapps.VscodeTestFile))(ctx); err != nil {
+		crostiniapps.SaveFileAndCloseVSCode(ui, keyboard, crostiniapps.VSCodeTestFile))(ctx); err != nil {
 		return err
 	}
 
 	// Check the content of the test file.
-	if err := cont.CheckFileContent(ctx, crostiniapps.VscodeTestFile, imeData.ExpectedText); err != nil {
+	if err := cont.CheckFileContent(ctx, crostiniapps.VSCodeTestFile, imeData.ExpectedText); err != nil {
 		return errors.Wrap(err, "failed to verify the content of the file")
 	}
 

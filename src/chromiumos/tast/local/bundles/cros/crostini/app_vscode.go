@@ -21,6 +21,7 @@ import (
 	"chromiumos/tast/local/terminalapp"
 	"chromiumos/tast/local/uidetection"
 	"chromiumos/tast/local/vm"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -127,9 +128,9 @@ func testCreateFileWithVSCode(ctx context.Context, terminalApp *terminalapp.Term
 
 	ui := uiauto.New(tconn)
 	uda := uidetection.NewDefault(tconn)
-	appWindowSaved := nodewith.NameStartingWith(fmt.Sprintf("%s - Visual Studio Code", crostiniapps.VscodeTestFile)).Role(role.Window).First()
+	appWindowSaved := nodewith.NameStartingWith(fmt.Sprintf("%s - Visual Studio Code", crostiniapps.VSCodeTestFile)).Role(role.Window).First()
 
-	if err := crostiniapps.InitialiseVscode(ctx, cont, uda, ui, terminalApp, keyboard); err != nil {
+	if err := crostiniapps.InitialiseVSCode(ctx, cont, uda, ui, terminalApp, keyboard); err != nil {
 		return err
 	}
 
@@ -138,18 +139,18 @@ func testCreateFileWithVSCode(ctx context.Context, terminalApp *terminalapp.Term
 	// File -> Save As -> Type file name -> Save.
 	// This corresponds to step 5 at https://testtracker.googleplex.com/testplans/testcase/detail/4163083?id=18920&revision=232.
 	saveFile := uiauto.Combine("save file from save as... dialogue",
-		uda.LeftClick(uidetection.Word("File").WithinA11yNode(crostiniapps.VscodeWindow)),
+		uda.LeftClick(uidetection.Word("File").WithinA11yNode(crostiniapps.VSCodeWindow)),
 		// "Save Workspace As...", "Save", and "Save As..." match the criteria, choose the third one.
 		uda.LeftClick(uidetection.Word("Save").Nth(2)),
 		uda.WaitUntilExists(uidetection.Word("Desktop").WithinA11yNode(saveAsWindow)),
 		keyboard.AccelAction("ctrl+A"),
-		keyboard.TypeAction(crostiniapps.VscodeTestFile),
+		keyboard.TypeAction(crostiniapps.VSCodeTestFile),
 		uda.LeftClick(uidetection.Word("Save").WithinA11yNode(saveAsWindow)),
 	)
 
 	// Open the VSCode again, this time, it won't open the Get Started tab.
 	if err := uiauto.Combine("create file with VSCode",
-		crostiniapps.LaunchVscodeForFile(uda, ui, terminalApp, keyboard, crostiniapps.VscodeNewFile),
+		crostiniapps.LaunchVSCodeForFile(uda, ui, terminalApp, keyboard, crostiniapps.VSCodeNewFile),
 		keyboard.TypeAction(testString),
 		saveFile,
 		ui.WaitUntilExists(appWindowSaved),
@@ -161,7 +162,7 @@ func testCreateFileWithVSCode(ctx context.Context, terminalApp *terminalapp.Term
 	}
 
 	// Check the content of the test file.
-	if err := cont.CheckFileContent(ctx, crostiniapps.VscodeTestFile, testString); err != nil {
+	if err := cont.CheckFileContent(ctx, crostiniapps.VSCodeTestFile, testString); err != nil {
 		return errors.Wrap(err, "failed to verify the content of the file")
 	}
 
