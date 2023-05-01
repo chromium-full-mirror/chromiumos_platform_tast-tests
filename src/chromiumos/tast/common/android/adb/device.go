@@ -263,12 +263,8 @@ func (d *Device) install(ctx context.Context, adbCommand string, apks []string, 
 
 	// "Success" is the only possible positive result. See runInstall() here:
 	// https://android.googlesource.com/platform/frameworks/base/+/bdd94d9979e28c39539e25fbb98621df3cbe86f2/services/core/java/com/android/server/pm/PackageManagerShellCommand.java#901
-	matched, err := regexp.Match("^Success", out)
-	if err != nil {
-		return err
-	}
-	if !matched {
-		return errors.Errorf("failed to install %v %q", apks, string(out))
+	if s := string(out); !strings.Contains(s, "Success") {
+		return errors.Errorf("failed to install %v %q", apks, s)
 	}
 	return nil
 }
