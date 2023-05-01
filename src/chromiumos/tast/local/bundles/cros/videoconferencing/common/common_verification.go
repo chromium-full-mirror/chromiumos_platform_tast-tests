@@ -5,13 +5,14 @@
 package common
 
 import (
+	"context"
+	"strings"
+	"time"
+
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/vctray"
-	"context"
-	"strings"
-	"time"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

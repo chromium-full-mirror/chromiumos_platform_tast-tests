@@ -6,15 +6,16 @@
 package effects
 
 import (
-	"chromiumos/tast/common/perf"
-	"chromiumos/tast/local/chrome/browser"
-	"chromiumos/tast/local/power"
 	"context"
 	"encoding/json"
 	"io/ioutil"
 	"os"
 	"strconv"
 	"time"
+
+	"chromiumos/tast/common/perf"
+	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/power"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

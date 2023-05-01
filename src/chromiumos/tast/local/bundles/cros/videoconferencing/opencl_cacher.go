@@ -13,7 +13,8 @@ import (
 	"chromiumos/tast/local/bundles/cros/videoconferencing/effects"
 	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/local/videoconferencing/fixture"
-	"chromiumos/tast/testing"
+
+	"go.chromium.org/tast/core/testing"
 )
 
 const dlcCLCacheDir = "/run/imageloader/ml-core-internal/package/root/cl_cache"

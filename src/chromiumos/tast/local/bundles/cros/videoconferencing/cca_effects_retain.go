@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/camera/cca"
 	"chromiumos/tast/local/chrome"
@@ -18,8 +17,10 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/vctray"
 	"chromiumos/tast/local/screenshot"
 	"chromiumos/tast/local/videoconferencing/fixture"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {

@@ -5,6 +5,10 @@
 package videoconferencing
 
 import (
+	"context"
+	"strconv"
+	"time"
+
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/local/bundles/cros/videoconferencing/effects"
 	"chromiumos/tast/local/chrome/apps/thirdparty/zoom"
@@ -12,9 +16,6 @@ import (
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/videoconferencing/fixture"
-	"context"
-	"strconv"
-	"time"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
