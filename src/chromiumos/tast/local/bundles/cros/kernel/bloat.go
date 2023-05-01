@@ -17,7 +17,7 @@ import (
 	"strings"
 
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 var (
@@ -36,7 +36,7 @@ func init() {
 			"swboyd@chromium.org",
 		},
 		BugComponent: "b:167278",
-		Attr: []string{"group:crosbolt", "crosbolt_perbuild"},
+		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 	})
 }
 
