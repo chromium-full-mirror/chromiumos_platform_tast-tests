@@ -9,22 +9,24 @@ import (
 	"time"
 
 	"chromiumos/tast/common/fixture"
+	"chromiumos/tast/local/bundles/cros/deskapi/apis"
 	"chromiumos/tast/local/bundles/cros/deskapi/constants"
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/local/chrome/ash"
+	"chromiumos/tast/local/chrome/browser"
+	"chromiumos/tast/local/chrome/browser/browserfixt"
+	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/event"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         LaunchAndClose,
-		LacrosStatus: testing.LacrosVariantNeeded,
+		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks using desk API to launch and remove desk",
 		// Chrome OS Server Projects > Enterprise Management > Commercial Productivity
 		BugComponent: "b:1020793",
@@ -38,6 +40,14 @@ func init() {
 		Timeout:      5 * time.Minute,
 		VarDeps:      []string{"ui.gaiaPoolDefault"},
 		Fixture:      fixture.DeskAPI,
+		Params: []testing.Param{{
+			Name: "ash",
+			Val:  browser.TypeAsh,
+		}, {
+			Name:              "lacros",
+			Val:               browser.TypeLacros,
+			ExtraSoftwareDeps: []string{"lacros"},
+		}},
 	})
 }
 
@@ -47,144 +57,108 @@ func LaunchAndClose(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	//Local test unable to access data from remote fixture in normal way. Use FixtFillValue instead
+	// Local test unable to access data from remote fixture in normal way. Use FixtFillValue instead
 	structVal := fixture.DeskFixtData{}
 	if err := s.FixtFillValue(&structVal); err != nil {
 		s.Fatal("Failed to deserialize remote fixture data: ", err)
 	}
 
+	var opts []chrome.Option
+
+	// Additional config for lacros
+	if s.Param().(browser.Type) == browser.TypeLacros {
+		var err error
+		opts, err = lacrosfixt.NewConfig().Opts()
+		if err != nil {
+			s.Fatal("Failed to retrieve lacro config: ", err)
+		}
+	}
+
 	// Use the same DMServer endpoint as the in the enrollment
-	cr, err := chrome.New(ctx, chrome.KeepState(), chrome.TryReuseSession(), chrome.GAIALogin(chrome.Creds{User: structVal.Username, Pass: structVal.Password}), chrome.DMSPolicy(constants.DmServerURL))
+	opts = append(opts, chrome.KeepState(), chrome.TryReuseSession(), chrome.GAIALogin(chrome.Creds{User: structVal.Username, Pass: structVal.Password}), chrome.DMSPolicy(constants.DmServerURL))
+	cr, err := chrome.New(ctx, opts...)
 	if err != nil {
 		s.Fatal("Failed to start chrome: ", err)
 	}
 	defer cr.Close(cleanupCtx)
 
-	tconn, err := cr.TestAPIConn(ctx)
+	// Use the generic browser interface for both lacros and ash.
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+	if err != nil {
+		s.Fatal("Failed to set up browser: ", err)
+	}
+	defer closeBrowser(cleanupCtx)
+
+	tconn, err := br.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
-	defer ash.CleanUpDesks(cleanupCtx, tconn)
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_dump")
-
-	// Close all existing windows.
-	if err := ash.CloseAllWindows(ctx, tconn); err != nil {
-		s.Fatal("Failed to close all windows: ", err)
-	}
 
 	ac := uiauto.New(tconn)
 	const url string = "https://continuous-sincere-relation.glitch.me"
 
 	// Create a new browser connection with target page opened.
-	conn, err := cr.NewConn(ctx, url)
+	conn, err := br.NewConn(ctx, url)
 	if err != nil {
 		s.Fatal("Failed to create a new browser connection: ", err)
 	}
 	defer conn.Close()
 
 	// Pin window to all-desks.
-	if err := conn.Eval(ctx, `new Promise((resolve, reject) => {
-		chrome.runtime.sendMessage(
-			"kflgdebkpepnpjobkdfeeipcjdahoomc", {
-				"messageType": "SetWindowProperties",
-				"operands": {
-					"allDesks": true
-				}
-		    },
-		    (response) => {
-				if(response.errorMessage) {
-					reject(new Error(response.errorMessage));
-					return;
-				}
-				resolve();
-			});
-		})`, nil); err != nil {
+	if err := apis.SetAllDesk(ctx, conn); err != nil {
 		s.Fatal("Failed to pin window to all desks: ", err)
 	}
 	if err := ac.WithInterval(2*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
 		s.Fatal("Failed to wait for all desks animation to be completed: ", err)
 	}
-	deskCount, err := ash.GetDeskCount(ctx, tconn)
+
+	// Get current active desk.
+	deskID, err := apis.GetActiveDesk(ctx, conn)
 	if err != nil {
-		s.Fatal("Failed to get desk count: ", err)
-	}
-	if deskCount != 1 {
-		s.Fatalf("Unexpected desk cound: want 1, got %d", deskCount)
+		s.Fatal("Failed to get current active desk: ", err)
 	}
 
 	// Launch a new desk.
-	var deskID string
-	if err := conn.Eval(ctx, `new Promise((resolve, reject) => {
-		chrome.runtime.sendMessage(
-			"kflgdebkpepnpjobkdfeeipcjdahoomc", {
-				"messageType": "LaunchDesk",
-				"operands": {
-					"deskName": "test" // Specify desk name.
-				}
-			},
-			(response) => {
-				if(response.errorMessage) {
-					reject(new Error(response.errorMessage));
-					return;
-				}
-				resolve(response.operands.deskUuid);
-			});
-		})`, &deskID); err != nil {
+	deskID1, err := apis.LaunchDesk(ctx, conn)
+	if err != nil {
 		s.Fatal("Failed to launch new desks: ", err)
 	}
 
-	if err := ash.WaitUntilDesksFinishAnimating(ctx, tconn); err != nil {
-		s.Fatal("Failed to wait for launch desk animation: ", err)
-	}
-
-	deskCount, err = ash.GetDeskCount(ctx, tconn)
+	// Get current active desk.
+	deskID2, err := apis.GetActiveDesk(ctx, conn)
 	if err != nil {
-		s.Fatal("Failed to get desk count: ", err)
-	}
-	if deskCount != 2 {
-		s.Fatalf("Unexpected desk cound: want 2, got %d", deskCount)
+		s.Fatal("Failed to get current active desk: ", err)
 	}
 
-	// Remove desk and skip confirmation window.
-	if err := conn.Call(ctx, nil, `async (deskId) => {
-		await new Promise((resolve, reject) => {
-			chrome.runtime.sendMessage(
-				"kflgdebkpepnpjobkdfeeipcjdahoomc", {
-					"messageType": "RemoveDesk",
-					"operands": {
-						"deskId": deskId,
-						"skipConfirmation": true
-					}
-				},
-				(response) => {
-					if (response.errorMessage) {
-						reject(new Error(response.errorMessage));
-						return;
-					}
-					resolve();
-				});
-			});
-		}`, deskID); err != nil {
+	if deskID2 == deskID {
+		s.Fatal("Failed to launch a new desk")
+	}
+
+	// Wait for launch desk animation settled.
+	if err := ac.WithInterval(2*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
+		s.Fatal("Failed to wait for launch desk animation to be completed: ", err)
+	}
+
+	// Remove newly launched desk.
+	if err := apis.RemoveDesk(ctx, conn, deskID1); err != nil {
 		s.Fatal("Failed to remove desk: ", err)
 	}
 
-	if err := ash.WaitUntilDesksFinishAnimating(ctx, tconn); err != nil {
-		s.Fatal("Failed to wait for remove desk animation: ", err)
+	// Wait for removing desk animation settled.
+	if err := ac.WithInterval(2*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
+		s.Fatal("Failed to wait for desk removal animation to be completed: ", err)
 	}
 
-	// Desk clean up is not synchronous. Wait before verify desk count.
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		deskCount, err := ash.GetDeskCount(ctx, tconn)
-		if err != nil {
-			return testing.PollBreak(errors.Wrap(err, "failed to get desks count"))
-		}
-		if deskCount == 1 {
-			return nil
-		}
-		return errors.New("desks are not being removed")
-	}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
-		s.Fatal("Failed to remove new desks")
+	// Get current active desk.
+	deskID3, err := apis.GetActiveDesk(ctx, conn)
+	if err != nil {
+		s.Fatal("Failed to get current active desk: ", err)
+	}
+
+	if deskID3 != deskID {
+		s.Fatal("Failed to remove the desk")
 	}
 
 }
