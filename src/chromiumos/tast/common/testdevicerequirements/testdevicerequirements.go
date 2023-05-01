@@ -292,4 +292,13 @@ const (
 
 	// UfsInterface with The ChromeOS device MAY provide non-volatile storage via NVMe interface.
 	UfsInterface = "store-motherbrd-0004-v01"
+
+	// NvmeStorageSeqReadTp with If the ChromeOS device uses NVMe to provide non-volatile storage, its NVMe storage device MUST support >= 250 MB/second sequential read operations.
+	NvmeStorageSeqReadTp = "store-nvme-0007-v01"
+
+	// NvmeStorageSeqWriteTp with If the ChromeOS device uses NVMe to provide non-volatile storage, its NVMe storage device MUST support >= 100 MB/second sequential write operations.
+	NvmeStorageSeqWriteTp = "store-nvme-0009-v01"
+
+	// RemovableStorageSeqTp with The ChromeOS device MUST support >= 40 MBps throughput to external storage devices.
+	RemovableStorageSeqTp = "rmvbl-general-0001-v01"
 )
