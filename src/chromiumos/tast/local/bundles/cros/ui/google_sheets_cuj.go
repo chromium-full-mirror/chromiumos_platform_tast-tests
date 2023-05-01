@@ -10,7 +10,6 @@ import (
 
 	"chromiumos/tast/common/action"
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
@@ -27,10 +26,11 @@ import (
 	"chromiumos/tast/local/coords"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/ui/cujrecorder"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
 
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -240,13 +240,15 @@ func GoogleSheetsCUJ(ctx context.Context, s *testing.State) {
 				recordTrace: true,
 			},
 			{
-				description: "ScrollTrackpadGestures.",
+				description:    "trackpad_gestures",
+				snapshotPrefix: "ScrollTrackpadGestures.",
 				run: func(ctx context.Context) error {
 					return inputsimulations.ScrollDownFor(ctx, tpw, tw, 500*time.Millisecond, individualScrollTimeout)
 				},
 			},
 			{
-				description: "ScrollKeyPress.",
+				description:    "key_press",
+				snapshotPrefix: "ScrollKeyPress.",
 				run: func(ctx context.Context) error {
 					return inputsimulations.RepeatKeyPressFor(ctx, kw, "Down", 500*time.Millisecond, individualScrollTimeout)
 				},
