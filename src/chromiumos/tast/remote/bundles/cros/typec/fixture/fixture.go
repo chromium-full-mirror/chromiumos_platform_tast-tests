@@ -11,7 +11,7 @@ import (
 
 	"chromiumos/tast/common/servo"
 	"chromiumos/tast/remote/bundles/cros/typec/typecutils"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

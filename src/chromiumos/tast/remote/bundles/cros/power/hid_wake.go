@@ -13,11 +13,11 @@ import (
 	"time"
 
 	"chromiumos/tast/common/servo"
-	"chromiumos/tast/dut"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/dutfs"
-	"chromiumos/tast/rpc"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (

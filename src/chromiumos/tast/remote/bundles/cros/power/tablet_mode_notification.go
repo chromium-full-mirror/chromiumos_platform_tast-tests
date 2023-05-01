@@ -9,12 +9,12 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/dut"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/tabletmode"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type tabletModeConfig struct {
@@ -31,8 +31,8 @@ func init() {
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
 		SoftwareDeps: []string{"chrome"},
 		// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
-		Attr:         []string{"group:mainline", "informational", "group:firmware", "firmware_unstable"},
-		Timeout:      5 * time.Minute,
+		Attr:    []string{"group:mainline", "informational", "group:firmware", "firmware_unstable"},
+		Timeout: 5 * time.Minute,
 		// Restrict boards that don't support any method in the tabletmode package for forcing tabletmode.
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.SkipOnModel("nautilus", "nautiluslte", "soraka", "pantheon", "nocturne")),
 		Params: []testing.Param{{

@@ -7,7 +7,7 @@ package power
 import (
 	"context"
 
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

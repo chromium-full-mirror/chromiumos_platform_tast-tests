@@ -13,13 +13,13 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/dut"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/rpc"
 	"chromiumos/tast/services/cros/typec"
-	"chromiumos/tast/ssh/linuxssh"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/ssh/linuxssh"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 // The maximum number of USB Type C ports that a Chromebook supports.

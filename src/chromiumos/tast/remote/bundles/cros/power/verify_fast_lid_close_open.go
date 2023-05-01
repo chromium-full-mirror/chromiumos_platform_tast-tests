@@ -11,11 +11,11 @@ import (
 	"time"
 
 	"chromiumos/tast/common/servo"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/firmware/fixture"
 	"chromiumos/tast/remote/powercontrol"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const ecErrorMsg string = "CPU did not enter SLP S0 for suspend-to-idle"

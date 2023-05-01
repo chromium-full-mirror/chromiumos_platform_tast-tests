@@ -11,11 +11,11 @@ import (
 	"time"
 
 	"chromiumos/tast/common/action"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/remote/bundles/cros/shimlessrma/rmaweb"
 	"chromiumos/tast/remote/firmware/fixture"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type sensor struct {

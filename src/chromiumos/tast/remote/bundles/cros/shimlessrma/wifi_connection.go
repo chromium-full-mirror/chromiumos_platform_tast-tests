@@ -13,7 +13,7 @@ import (
 	"chromiumos/tast/remote/firmware/fixture"
 	"chromiumos/tast/remote/wificell"
 	ap "chromiumos/tast/remote/wificell/hostapd"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (

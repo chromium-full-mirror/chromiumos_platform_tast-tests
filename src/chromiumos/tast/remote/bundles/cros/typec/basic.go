@@ -11,13 +11,13 @@ import (
 	"time"
 
 	"chromiumos/tast/common/servo"
-	"chromiumos/tast/dut"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/bundles/cros/typec/fixture"
 	"chromiumos/tast/remote/bundles/cros/typec/typecutils"
-	"chromiumos/tast/ssh/linuxssh"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh/linuxssh"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {

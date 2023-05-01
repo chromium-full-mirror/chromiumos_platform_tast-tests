@@ -17,13 +17,13 @@ import (
 
 	"chromiumos/tast/common/action"
 	"chromiumos/tast/common/servo"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/dut"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/firmware"
-	"chromiumos/tast/rpc"
 	pb "chromiumos/tast/services/cros/shimlessrma"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/testing"
 )
 
 // DestinationOption indicates destination.

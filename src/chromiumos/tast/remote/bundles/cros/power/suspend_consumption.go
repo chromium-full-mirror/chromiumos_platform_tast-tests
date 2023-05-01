@@ -13,7 +13,7 @@ import (
 	"chromiumos/tast/remote/firmware/fixture"
 	"chromiumos/tast/remote/firmware/power"
 	"chromiumos/tast/remote/firmware/suspend"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (

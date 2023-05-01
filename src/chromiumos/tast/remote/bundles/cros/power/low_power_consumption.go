@@ -13,12 +13,12 @@ import (
 
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/common/servo"
-	"chromiumos/tast/dut"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/fixture"
 	"chromiumos/tast/remote/powercontrol"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Note: This test makes use of "modular servo" to connect ServoV4.x, Cr50, and

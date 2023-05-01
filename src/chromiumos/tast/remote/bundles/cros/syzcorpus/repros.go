@@ -14,10 +14,10 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
-	"chromiumos/tast/dut"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/bundles/cros/syzcorpus/syzutils"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (
