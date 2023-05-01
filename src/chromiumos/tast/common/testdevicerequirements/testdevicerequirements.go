@@ -272,4 +272,21 @@ const (
 
 	// WiFiTputVHT80TCPRxTx with Wi-Fi connection of 802.11ac 80Mhz, 2 streams in AES RX+TX mode, the Wi-Fi controller SHOULD provide a minimum TCP throughput of 200 mpbs.
 	WiFiTputVHT80TCPRxTx = "wifi-tput-0047-v01"
+
+	// Storage Requirements
+
+	// InternalStorageInterface with The ChromeOS device MUST provide non-volatile storage via one or more of the following interfaces:
+	// * eMMC
+	// * NVMe
+	// * UFS
+	InternalStorageInterface = "store-motherbrd-0001-v01"
+
+	// EmmcInterface with The ChromeOS device MAY provide non-volatile storage via eMMC interface.
+	EmmcInterface = "store-motherbrd-0002-v01"
+
+	// NvmeInterface with The ChromeOS device MAY provide non-volatile storage via NVMe interface.
+	NvmeInterface = "store-motherbrd-0003-v01"
+
+	// UfsInterface with The ChromeOS device MAY provide non-volatile storage via NVMe interface.
+	UfsInterface = "store-motherbrd-0004-v01"
 )

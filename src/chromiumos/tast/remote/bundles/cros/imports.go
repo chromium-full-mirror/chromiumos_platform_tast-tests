@@ -43,6 +43,7 @@ import (
 	_ "chromiumos/tast/remote/bundles/cros/secagentd"
 	_ "chromiumos/tast/remote/bundles/cros/security"
 	_ "chromiumos/tast/remote/bundles/cros/shimlessrma"
+	_ "chromiumos/tast/remote/bundles/cros/storage"
 	_ "chromiumos/tast/remote/bundles/cros/syzcorpus"
 	_ "chromiumos/tast/remote/bundles/cros/syzkaller"
 	_ "chromiumos/tast/remote/bundles/cros/typec"
