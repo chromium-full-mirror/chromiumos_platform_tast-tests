@@ -7,8 +7,8 @@ package meta
 import (
 	"context"
 
-	"chromiumos/tast/rpc"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

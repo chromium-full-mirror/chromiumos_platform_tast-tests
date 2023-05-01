@@ -13,11 +13,11 @@ import (
 	"time"
 
 	"chromiumos/tast/common/firmware/ti50"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/fsutil"
 	"chromiumos/tast/remote/bundles/cros/gscdevboard/utils"
 	"chromiumos/tast/remote/firmware/ti50/fixture"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/fsutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 var consoleUpdateTooSoonRegexp = regexp.MustCompile("Attempted update too soon")

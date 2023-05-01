@@ -14,10 +14,10 @@ import (
 	"time"
 
 	"chromiumos/tast/common/chrome/credconfig"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/bundles/cros/meta/tastrun"
-	"chromiumos/tast/rpc"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (

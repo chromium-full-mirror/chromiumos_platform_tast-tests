@@ -13,7 +13,7 @@ import (
 	"strings"
 
 	"chromiumos/tast/remote/bundles/cros/meta/tastrun"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 // runTestsParam is a parameter to the meta.RunTests test.

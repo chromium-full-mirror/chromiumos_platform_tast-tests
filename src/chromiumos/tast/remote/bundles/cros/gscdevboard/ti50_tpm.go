@@ -8,12 +8,12 @@ import (
 	"context"
 	"time"
 
+	"github.com/google/go-tpm/tpm2"
+
 	"chromiumos/tast/common/firmware/ti50"
 	"chromiumos/tast/remote/bundles/cros/gscdevboard/utils"
 	"chromiumos/tast/remote/firmware/ti50/fixture"
-	"chromiumos/tast/testing"
-
-	"github.com/google/go-tpm/tpm2"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

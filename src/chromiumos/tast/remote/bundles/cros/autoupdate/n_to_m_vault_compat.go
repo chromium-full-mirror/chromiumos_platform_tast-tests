@@ -12,11 +12,11 @@ import (
 
 	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/common/hwsec"
-	"chromiumos/tast/dut"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/bundles/cros/autoupdate/util"
 	"chromiumos/tast/remote/updateutil"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 type vaultType int64

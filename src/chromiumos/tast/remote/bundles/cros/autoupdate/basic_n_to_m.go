@@ -10,7 +10,7 @@ import (
 	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/remote/bundles/cros/autoupdate/util"
 	"chromiumos/tast/remote/updateutil"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

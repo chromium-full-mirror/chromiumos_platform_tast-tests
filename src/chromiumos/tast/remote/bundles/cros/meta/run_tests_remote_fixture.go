@@ -12,7 +12,7 @@ import (
 	"regexp"
 
 	"chromiumos/tast/remote/bundles/cros/meta/tastrun"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 	// Register the fixtures to remote bundle.
 	_ "chromiumos/tast/remote/bundles/cros/meta/fixture"
 )

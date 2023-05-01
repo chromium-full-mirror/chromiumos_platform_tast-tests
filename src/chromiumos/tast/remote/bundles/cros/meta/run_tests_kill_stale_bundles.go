@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"chromiumos/tast/remote/bundles/cros/meta/tastrun"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

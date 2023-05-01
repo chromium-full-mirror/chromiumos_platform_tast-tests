@@ -8,7 +8,7 @@ import (
 	"context"
 
 	"chromiumos/tast/remote/hypervisor"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

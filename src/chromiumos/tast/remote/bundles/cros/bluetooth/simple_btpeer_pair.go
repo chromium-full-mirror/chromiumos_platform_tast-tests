@@ -12,7 +12,7 @@ import (
 	"chromiumos/tast/remote/bluetooth"
 	"chromiumos/tast/remote/bundles/cros/bluetooth/bluetoothutil"
 	bts "chromiumos/tast/services/cros/bluetooth"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 type simpleBTPeerTestCase struct {

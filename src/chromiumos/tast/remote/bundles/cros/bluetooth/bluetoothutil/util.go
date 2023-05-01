@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"chromiumos/tast/common/servo"
-	"chromiumos/tast/errors"
 	bts "chromiumos/tast/services/cros/bluetooth"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // TurnOffServoKeyboardIfOn turns off servo keyboard if on.

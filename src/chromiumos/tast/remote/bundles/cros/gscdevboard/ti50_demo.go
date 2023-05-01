@@ -11,7 +11,7 @@ import (
 	"chromiumos/tast/common/firmware/ti50"
 	"chromiumos/tast/common/servo"
 	"chromiumos/tast/remote/firmware/ti50/fixture"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

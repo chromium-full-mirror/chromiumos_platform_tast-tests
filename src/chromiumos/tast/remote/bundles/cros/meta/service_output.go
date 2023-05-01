@@ -9,9 +9,9 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	"chromiumos/tast/rpc"
 	"chromiumos/tast/services/cros/meta"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testutil"
 )
 

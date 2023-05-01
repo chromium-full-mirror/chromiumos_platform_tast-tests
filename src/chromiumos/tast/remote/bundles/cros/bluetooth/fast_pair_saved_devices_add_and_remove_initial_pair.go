@@ -12,12 +12,12 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	cbt "chromiumos/tast/common/chameleon/devices/common/bluetooth"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/remote/bluetooth"
 	bts "chromiumos/tast/services/cros/bluetooth"
 	"chromiumos/tast/services/cros/ui"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {

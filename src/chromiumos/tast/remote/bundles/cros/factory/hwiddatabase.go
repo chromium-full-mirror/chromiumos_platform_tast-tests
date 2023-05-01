@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"chromiumos/tast/remote/bundles/cros/factory/fixture"
-	"chromiumos/tast/ssh"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/ssh"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type extraCmdParams struct {

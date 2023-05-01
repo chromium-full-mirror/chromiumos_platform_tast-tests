@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"chromiumos/tast/remote/bundles/cros/meta/tastrun"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 // runCUJParam is a parameter to the RunCUJ test.

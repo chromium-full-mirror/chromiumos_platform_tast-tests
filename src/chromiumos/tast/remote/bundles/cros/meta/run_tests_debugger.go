@@ -6,7 +6,6 @@ package meta
 
 import (
 	"bufio"
-	"chromiumos/tast/errors"
 	"context"
 	"fmt"
 	"io"
@@ -19,11 +18,12 @@ import (
 	"golang.org/x/sys/unix"
 
 	"chromiumos/tast/remote/bundles/cros/meta/tastrun"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 
 	// Register the fixtures to remote bundle.
 	_ "chromiumos/tast/remote/bundles/cros/meta/fixture"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {

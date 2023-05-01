@@ -11,13 +11,13 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	cbt "chromiumos/tast/common/chameleon/devices/common/bluetooth"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/remote/bluetooth"
 	crui "chromiumos/tast/remote/cros/ui"
 	oobeui "chromiumos/tast/remote/cros/ui/oobeui"
 	"chromiumos/tast/services/cros/ui"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {

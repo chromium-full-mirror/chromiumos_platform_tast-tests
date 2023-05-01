@@ -10,8 +10,8 @@ import (
 
 	ue "chromiumos/tast/common/updateengine"
 	"chromiumos/tast/remote/updateutil"
-	"chromiumos/tast/testing"
 	"go.chromium.org/tast/core/lsbrelease"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (

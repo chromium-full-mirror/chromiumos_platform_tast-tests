@@ -8,9 +8,9 @@ import (
 	"context"
 
 	"chromiumos/tast/common/hwsec"
-	"chromiumos/tast/dut"
-	"chromiumos/tast/errors"
 	hwsecremote "chromiumos/tast/remote/hwsec"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/errors"
 )
 
 // HwsecEnv groups all hwsec objects together for more convenient access.
