@@ -22,6 +22,7 @@ import (
 	"chromiumos/tast/local/shill"
 	"chromiumos/tast/local/starfish"
 	"chromiumos/tast/local/upstart"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -351,8 +352,7 @@ func (f *cellularFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 		}
 	}
 	if f.modemfwdStopped {
-		err := upstart.EnsureJobRunning(ctx, modemfwd.JobName, upstart.WithArg("DEBUG_MODE", "true"))
-		if err != nil {
+		if err := modemfwd.StartAndWaitForQuiescence(ctx); err != nil {
 			s.Fatalf("Failed to start %q: %s", modemfwd.JobName, err)
 		}
 		s.Logf("Started %q", modemfwd.JobName)
