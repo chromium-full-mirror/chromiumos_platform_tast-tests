@@ -10,7 +10,7 @@ import (
 
 	"chromiumos/tast/local/chrome/metrics"
 	"chromiumos/tast/local/perfutil"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Run is used by perfutil runner to run the performance scenario. It wraps
