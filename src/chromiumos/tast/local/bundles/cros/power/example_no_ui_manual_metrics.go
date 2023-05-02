@@ -9,13 +9,9 @@ import (
 	"time"
 
 	"chromiumos/tast/local/power"
+
 	"go.chromium.org/tast/core/testing"
 )
-
-type timeParams struct {
-	Interval time.Duration
-	Total    time.Duration
-}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -30,21 +26,21 @@ func init() {
 		Params: []testing.Param{{
 			Name:    "fastest",
 			Fixture: "powerNoUINoWiFi",
-			Val: timeParams{
+			Val: power.TimeParams{
 				Interval: 1 * time.Second,
 				Total:    10 * time.Second,
 			},
 		}, {
 			Name:    "fast",
 			Fixture: "powerNoUINoWiFi",
-			Val: timeParams{
+			Val: power.TimeParams{
 				Interval: 5 * time.Second,
 				Total:    20 * time.Second,
 			},
 		}, {
 			Name:    "wifi",
 			Fixture: "powerNoUIWiFi",
-			Val: timeParams{
+			Val: power.TimeParams{
 				Interval: 1 * time.Second,
 				Total:    10 * time.Second,
 			},
@@ -55,8 +51,8 @@ func init() {
 
 func ExampleNoUIManualMetrics(ctx context.Context, s *testing.State) {
 	// Any test specific setup code should go here.
-	interval := s.Param().(timeParams).Interval
-	total := s.Param().(timeParams).Total
+	interval := s.Param().(power.TimeParams).Interval
+	total := s.Param().(power.TimeParams).Total
 
 	r, err := power.NewRecorder(ctx, interval, s.OutDir(), s.TestName())
 	if err != nil {

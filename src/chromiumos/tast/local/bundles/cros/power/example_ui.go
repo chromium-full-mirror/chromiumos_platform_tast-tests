@@ -17,6 +17,8 @@ import (
 	"chromiumos/tast/local/power/setup"
 )
 
+var exampleUITimeParams = power.TimeParams{Interval: 1 * time.Second, Total: 10 * time.Second}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ExampleUI,
@@ -30,31 +32,31 @@ func init() {
 			Name:      "ash_kbbl",
 			Fixture:   "powerAshKbbl",
 			ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
-			Val:       timeParams{Interval: 1 * time.Second, Total: 10 * time.Second},
+			Val:       exampleUITimeParams,
 		}, {
 			Name:    "ash",
 			Fixture: "powerAsh",
-			Val:     timeParams{Interval: 1 * time.Second, Total: 10 * time.Second},
+			Val:     exampleUITimeParams,
 		}, {
 			Name:    "ash_gaia",
 			Fixture: "powerAshGAIA",
-			Val:     timeParams{Interval: 1 * time.Second, Total: 10 * time.Second},
+			Val:     exampleUITimeParams,
 		}, {
 			Name:              "lacros_kbbl",
 			Fixture:           "powerLacrosKbbl",
 			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               timeParams{Interval: 1 * time.Second, Total: 10 * time.Second},
+			Val:               exampleUITimeParams,
 		}, {
 			Name:              "lacros_nokbbl",
 			Fixture:           "powerLacros",
 			ExtraSoftwareDeps: []string{"lacros"},
 			ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
-			Val:               timeParams{Interval: 1 * time.Second, Total: 10 * time.Second},
+			Val:               exampleUITimeParams,
 		}, {
 			Name:              "lacros_gaia",
 			Fixture:           "powerLacrosGAIA",
 			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               timeParams{Interval: 1 * time.Second, Total: 10 * time.Second},
+			Val:               exampleUITimeParams,
 		}},
 	})
 }
@@ -67,8 +69,8 @@ func ExampleUI(ctx context.Context, s *testing.State) {
 
 	bt := s.FixtValue().(setup.PowerUIFixtureData).Bt
 	cr := s.FixtValue().(setup.PowerUIFixtureData).Cr
-	interval := s.Param().(timeParams).Interval
-	total := s.Param().(timeParams).Total
+	interval := s.Param().(power.TimeParams).Interval
+	total := s.Param().(power.TimeParams).Total
 
 	// Open a window with about:blank tab on the target browser.
 	conn, _, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, bt, "about:blank")
