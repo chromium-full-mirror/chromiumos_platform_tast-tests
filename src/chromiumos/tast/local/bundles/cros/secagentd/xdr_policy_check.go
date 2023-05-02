@@ -16,13 +16,14 @@ import (
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/bundles/cros/secagentd/secagentddbusmonitor"
 	"chromiumos/tast/local/bundles/cros/secagentd/secagentdupstart"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/testing"
+
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
@@ -42,6 +43,7 @@ func init() {
 			"group:medium_low_tier",
 			"group:hardware",
 			"group:complementary",
+			"group:enterprise-reporting",
 		},
 		Timeout:      3 * time.Minute,
 		Fixture:      fixture.ChromeEnrolledLoggedIn,
