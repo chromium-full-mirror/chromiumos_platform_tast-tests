@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
@@ -408,6 +409,10 @@ func testDownloadLaunch(
 		// request. Until the download is unblocked, the local server will hang.
 		unblockDownload,
 
+		// Wait for and close the download complete notification as it may be atop
+		// holding space, blocking user interactions.
+		waitForAndCloseDownloadCompleteNotification(arg),
+
 		// Select all download chips.
 		selectAllDownloadChips(arg, holdingspace.Done),
 
@@ -464,6 +469,10 @@ func testDownloadPinAndUnpin(
 		// request. Until the download is unblocked, the local server will hang.
 		unblockDownload,
 
+		// Wait for and close the download complete notification as it may be atop
+		// holding space, blocking user interactions.
+		waitForAndCloseDownloadCompleteNotification(arg),
+
 		// Select all download chips.
 		selectAllDownloadChips(arg, holdingspace.Done),
 
@@ -505,6 +514,10 @@ func testDownloadRemove(
 		// request. Until the download is unblocked, the local server will hang.
 		unblockDownload,
 
+		// Wait for and close the download complete notification as it may be atop
+		// holding space, blocking user interactions.
+		waitForAndCloseDownloadCompleteNotification(arg),
+
 		// Select all download chips.
 		selectAllDownloadChips(arg, holdingspace.Done),
 
@@ -520,6 +533,17 @@ func testDownloadRemove(
 		// Ensure all download chips are removed.
 		holdingspace.DownloadChipHelper(holdingspace.Done).WaitUntilAllRemoved(arg.tconn, arg.files),
 	)
+}
+
+func waitForAndCloseDownloadCompleteNotification(arg *downloadArguments) uiauto.Action {
+	return func(ctx context.Context) error {
+		_, err := ash.WaitForNotification(
+			ctx, arg.tconn, 1*time.Second, ash.WaitTitle("Download complete"))
+		if err != nil {
+			return err
+		}
+		return ash.CloseNotifications(ctx, arg.tconn)
+	}
 }
 
 func selectAllDownloadChips(arg *downloadArguments, chipType holdingspace.ChipType) uiauto.Action {
