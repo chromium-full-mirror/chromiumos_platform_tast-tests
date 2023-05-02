@@ -14,6 +14,7 @@ import (
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/cuj"
 	"chromiumos/tast/local/chrome/uiauto/ossettings"
+
 	"go.chromium.org/tast/core/errors"
 )
 
@@ -37,11 +38,11 @@ func openChromeTabs(ctx context.Context, tconn, bTconn *chrome.TestConn, br *bro
 
 	// Keep track of the initial number of windows, to ensure
 	// we open the right number of windows.
-	ws, err := ash.GetAllWindows(ctx, tconn)
+	initialWindows, err := ash.GetAllWindows(ctx, tconn)
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to get window list")
 	}
-	initialNumWindows := len(ws)
+	initialNumWindows := len(initialWindows)
 
 	// Open up a single window with a couple of tabs, to increase RAM pressure.
 	tabs, err := cuj.NewTabs(ctx, br, false, numExtraWebsites)
@@ -87,7 +88,9 @@ func openChromeTabs(ctx context.Context, tconn, bTconn *chrome.TestConn, br *bro
 	if ws, err := ash.GetAllWindows(ctx, tconn); err != nil {
 		return 0, errors.Wrap(err, "failed to get window list after opening Chrome tabs")
 	} else if expectedNumWindows := expectedNumBrowserWindows + initialNumWindows; len(ws) != expectedNumWindows {
-		return 0, errors.Wrapf(err, "unexpected number of windows open after launching Chrome tabs, got: %d, expected: %d", len(ws), expectedNumWindows)
+		// Print out two window list mismatch details.
+		windowMismatchMsg := cuj.LogWindowMismatch(ctx, initialWindows, ws)
+		return 0, errors.Wrapf(err, "unexpected number of windows open after launching Chrome tabs, got: %d, expected: %d; %s", len(ws), expectedNumWindows, windowMismatchMsg)
 	}
 
 	return expectedNumBrowserWindows, nil
