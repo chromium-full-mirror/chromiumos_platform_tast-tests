@@ -98,6 +98,7 @@ func HEVCDecodeVAAPIargs(ctx context.Context, filename, md5OutputPath string) []
 func MD5Arg(decoder, md5OutputPath string) string {
 	switch {
 	case strings.Contains(decoder, "v4l2"):
+		return fmt.Sprintf("--md5=%s", md5OutputPath)
 	case strings.Contains(decoder, "decode_test"):
 		return fmt.Sprintf("--md5=%s", md5OutputPath)
 	}
