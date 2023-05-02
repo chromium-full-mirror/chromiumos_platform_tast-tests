@@ -42,6 +42,9 @@ func USBResumeFromSuspend(ctx context.Context, s *testing.State) {
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to init servo: ", err)
 	}
+	if err := h.RequireConfig(ctx); err != nil {
+		s.Fatal("Failed to create config: ", err)
+	}
 
 	logPath := "/var/log/messages"
 	if err := h.DUT.Conn().CommandContext(ctx, "rm", "-f", logPath).Run(); err != nil {
@@ -74,9 +77,16 @@ func USBResumeFromSuspend(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to sleep for 5 seconds: ", err)
 	}
 
-	s.Log("Pressing ENTER to resume from suspend")
-	if err := h.Servo.PressKey(ctx, "<enter>", servo.DurTab); err != nil {
-		s.Fatal("Failed to press ENTER key: ", err)
+	if h.Config.ModeSwitcherType == firmware.TabletDetachableSwitcher {
+		s.Log("Waking DUT from suspend by a tab on power button")
+		if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.DurTab); err != nil {
+			s.Fatal("Failed to press power button: ", err)
+		}
+	} else {
+		s.Log("Waking DUT from suspend by pressing ENTER key")
+		if err := h.Servo.KeypressWithDuration(ctx, servo.Enter, servo.DurPress); err != nil {
+			s.Fatal("Failed to press ENTER key: ", err)
+		}
 	}
 	s.Log(ctx, "Checking for S0 powerstate")
 	if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "S0"); err != nil {
