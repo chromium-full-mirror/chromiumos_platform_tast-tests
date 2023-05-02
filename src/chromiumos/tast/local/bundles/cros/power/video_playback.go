@@ -43,6 +43,7 @@ func init() {
 			Fixture:   "powerAshRamfs",
 			Val:       "h264_1080_30fps",
 			ExtraData: []string{"video_playback/h264_1080_30fps.mp4"},
+			ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 		}, {
 			Name:      "h264_1080_60fps_ash",
 			Fixture:   "powerAshRamfs",
@@ -103,6 +104,7 @@ func init() {
 			Fixture:   "powerAshRamfs",
 			Val:       "vp9_1080_30fps",
 			ExtraData: []string{"video_playback/vp9_1080_30fps.webm"},
+			ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 		}, {
 			Name:      "vp9_1080_60fps_ash",
 			Fixture:   "powerAshRamfs",
@@ -156,6 +158,7 @@ func init() {
 			ExtraSoftwareDeps: []string{"lacros"},
 			Val:               "h264_1080_30fps",
 			ExtraData:         []string{"video_playback/h264_1080_30fps.mp4"},
+			ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		}, {
 			Name:              "h264_1080_60fps_lacros",
 			Fixture:           "powerLacrosRamfs",
@@ -228,6 +231,7 @@ func init() {
 			ExtraSoftwareDeps: []string{"lacros"},
 			Val:               "vp9_1080_30fps",
 			ExtraData:         []string{"video_playback/vp9_1080_30fps.webm"},
+			ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		}, {
 			Name:              "vp9_1080_60fps_lacros",
 			Fixture:           "powerLacrosRamfs",
