@@ -22,6 +22,8 @@ import (
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/browser/browserui"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
+	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/chrome/webutil"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/policyutil"
@@ -146,8 +148,8 @@ func DataLeakPreventionRulesListClipboardOmni(ctx context.Context, s *testing.St
 				s.Fatal("Failed to copy text from source browser: ", err)
 			}
 
-			if err := rightClickOmnibox(ctx, tconn, param.sourceURL, param.wantAllowed); err != nil {
-				s.Fatal("Failed to right click omni box: ", err)
+			if err := checkOmniboxContextMenu(ctx, tconn, param.sourceURL, param.wantAllowed); err != nil {
+				s.Fatal("Failed to check omni box context menu: ", err)
 			}
 
 			// Lacros variant doesn't work correctly without dismissing the right click menu first (it doesn't react to "Ctrl+T").
@@ -169,10 +171,32 @@ func DataLeakPreventionRulesListClipboardOmni(ctx context.Context, s *testing.St
 	}
 }
 
-func rightClickOmnibox(ctx context.Context, tconn *chrome.TestConn, url string, wantAllowed bool) error {
+// stableOmniboxRightClick retries right click as we expierienced some flakiness with chromeboxes.
+func stableOmniboxRightClick(ctx context.Context, tconn *chrome.TestConn) error {
+	ui := uiauto.New(tconn)
+	location, _ := ui.Location(ctx, browserui.AddressBarFinder)
+	pasteNode := nodewith.Name("Paste Ctrl+V").Role(role.MenuItem)
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if err := ui.RightClick(browserui.AddressBarFinder)(ctx); err != nil {
+			return errors.Wrap(err, "could not right click omnibox")
+		}
+		if err := ui.WithTimeout(time.Second * 5).WaitUntilExists(pasteNode)(ctx); err != nil {
+			return errors.Wrapf(err, "failed to find context menu after right click omni box at %s", location)
+		}
+		return nil
+	}, &testing.PollOptions{
+		Timeout:  30 * time.Second,
+		Interval: 1 * time.Second,
+	}); err != nil {
+		return errors.Wrapf(err, "failed to right click omni box at %s", location)
+	}
+	return nil
+}
+
+func checkOmniboxContextMenu(ctx context.Context, tconn *chrome.TestConn, url string, wantAllowed bool) error {
 	ui := uiauto.New(tconn)
 
-	if err := ui.RightClick(browserui.AddressBarFinder)(ctx); err != nil {
+	if err := stableOmniboxRightClick(ctx, tconn); err != nil {
 		return errors.Wrap(err, "failed to right click omni box")
 	}
 
