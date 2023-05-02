@@ -6,7 +6,6 @@ package video
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"go.chromium.org/tast/core/errors"
@@ -62,6 +61,16 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_av1"},
 			},
 			{
+				Name: "dav1d_av1_1080p_30fps",
+				Val: platformDecodingPerfParams{
+					filename:           "perf/av1/1080p_30fps_300frames.av1.ivf",
+					decoder:            "/usr/local/bin/dav1d",
+					decoderArgsBuilder: platform.Dav1dDecodeArgs,
+				},
+				ExtraData: []string{"perf/av1/1080p_30fps_300frames.av1.ivf"},
+				ExtraAttr: []string{"graphics_video_av1"},
+			},
+			{
 				Name: "vaapi_av1_1080p_60fps",
 				Val: platformDecodingPerfParams{
 					filename:           "perf/av1/1080p_60fps_600frames.av1.ivf",
@@ -71,6 +80,16 @@ func init() {
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_1080_60", "vaapi"},
 				ExtraData:         []string{"perf/av1/1080p_60fps_600frames.av1.ivf"},
 				ExtraAttr:         []string{"graphics_video_av1"},
+			},
+			{
+				Name: "dav1d_av1_1080p_60fps",
+				Val: platformDecodingPerfParams{
+					filename:           "perf/av1/1080p_60fps_600frames.av1.ivf",
+					decoder:            "/usr/local/bin/dav1d",
+					decoderArgsBuilder: platform.Dav1dDecodeArgs,
+				},
+				ExtraData: []string{"perf/av1/1080p_60fps_600frames.av1.ivf"},
+				ExtraAttr: []string{"graphics_video_av1"},
 			},
 			{
 				Name: "vaapi_av1_2160p_30fps",
@@ -84,6 +103,16 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_av1"},
 			},
 			{
+				Name: "dav1d_av1_2160p_30fps",
+				Val: platformDecodingPerfParams{
+					filename:           "perf/av1/2160p_30fps_300frames.av1.ivf",
+					decoder:            "/usr/local/bin/dav1d",
+					decoderArgsBuilder: platform.Dav1dDecodeArgs,
+				},
+				ExtraData: []string{"perf/av1/2160p_30fps_300frames.av1.ivf"},
+				ExtraAttr: []string{"graphics_video_av1"},
+			},
+			{
 				Name: "vaapi_av1_2160p_60fps",
 				Val: platformDecodingPerfParams{
 					filename:           "perf/av1/2160p_60fps_600frames.av1.ivf",
@@ -93,6 +122,16 @@ func init() {
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_2160_60", "vaapi"},
 				ExtraData:         []string{"perf/av1/2160p_60fps_600frames.av1.ivf"},
 				ExtraAttr:         []string{"graphics_video_av1"},
+			},
+			{
+				Name: "dav1d_av1_2160p_60fps",
+				Val: platformDecodingPerfParams{
+					filename:           "perf/av1/2160p_60fps_600frames.av1.ivf",
+					decoder:            "/usr/local/bin/dav1d",
+					decoderArgsBuilder: platform.Dav1dDecodeArgs,
+				},
+				ExtraData: []string{"perf/av1/2160p_60fps_600frames.av1.ivf"},
+				ExtraAttr: []string{"graphics_video_av1"},
 			},
 			{
 				Name: "vaapi_h264_1080p_30fps",
@@ -194,6 +233,16 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp8"},
 			},
 			{
+				Name: "vpxdec_vp8_1080p_30fps",
+				Val: platformDecodingPerfParams{
+					filename:           "perf/vp8/1080p_30fps_300frames.vp8.ivf",
+					decoder:            "/usr/local/bin/vpxdec",
+					decoderArgsBuilder: platform.VPxDecodeArgs,
+				},
+				ExtraData: []string{"perf/vp8/1080p_30fps_300frames.vp8.ivf"},
+				ExtraAttr: []string{"graphics_video_vp8"},
+			},
+			{
 				Name: "vaapi_vp8_1080p_60fps",
 				Val: platformDecodingPerfParams{
 					filename:           "perf/vp8/1080p_60fps_600frames.vp8.ivf",
@@ -203,6 +252,16 @@ func init() {
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp8_1080_60", "vaapi"},
 				ExtraData:         []string{"perf/vp8/1080p_60fps_600frames.vp8.ivf"},
 				ExtraAttr:         []string{"graphics_video_vp8"},
+			},
+			{
+				Name: "vpxdec_vp8_1080p_60fps",
+				Val: platformDecodingPerfParams{
+					filename:           "perf/vp8/1080p_60fps_600frames.vp8.ivf",
+					decoder:            "/usr/local/bin/vpxdec",
+					decoderArgsBuilder: platform.VPxDecodeArgs,
+				},
+				ExtraData: []string{"perf/vp8/1080p_60fps_600frames.vp8.ivf"},
+				ExtraAttr: []string{"graphics_video_vp8"},
 			},
 			{
 				Name: "vaapi_vp8_2160p_30fps",
@@ -216,6 +275,16 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp8"},
 			},
 			{
+				Name: "vpxdec_vp8_2160p_30fps",
+				Val: platformDecodingPerfParams{
+					filename:           "perf/vp8/2160p_30fps_300frames.vp8.ivf",
+					decoder:            "/usr/local/bin/vpxdec",
+					decoderArgsBuilder: platform.VPxDecodeArgs,
+				},
+				ExtraData: []string{"perf/vp8/2160p_30fps_300frames.vp8.ivf"},
+				ExtraAttr: []string{"graphics_video_vp8"},
+			},
+			{
 				Name: "vaapi_vp8_2160p_60fps",
 				Val: platformDecodingPerfParams{
 					filename:           "perf/vp8/2160p_60fps_600frames.vp8.ivf",
@@ -225,6 +294,16 @@ func init() {
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp8_2160_60", "vaapi"},
 				ExtraData:         []string{"perf/vp8/2160p_60fps_600frames.vp8.ivf"},
 				ExtraAttr:         []string{"graphics_video_vp8"},
+			},
+			{
+				Name: "vpxdec_vp8_2160p_60fps",
+				Val: platformDecodingPerfParams{
+					filename:           "perf/vp8/2160p_60fps_600frames.vp8.ivf",
+					decoder:            "/usr/local/bin/vpxdec",
+					decoderArgsBuilder: platform.VPxDecodeArgs,
+				},
+				ExtraData: []string{"perf/vp8/2160p_60fps_600frames.vp8.ivf"},
+				ExtraAttr: []string{"graphics_video_vp8"},
 			},
 			{
 				Name: "vaapi_vp9_1080p_30fps",
@@ -238,6 +317,16 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
+				Name: "vpxdec_vp9_1080p_30fps",
+				Val: platformDecodingPerfParams{
+					filename:           "perf/vp9/1080p_30fps_300frames.vp9.ivf",
+					decoder:            "/usr/local/bin/vpxdec",
+					decoderArgsBuilder: platform.VPxDecodeArgs,
+				},
+				ExtraData: []string{"perf/vp9/1080p_30fps_300frames.vp9.ivf"},
+				ExtraAttr: []string{"graphics_video_vp9"},
+			},
+			{
 				Name: "vaapi_vp9_1080p_60fps",
 				Val: platformDecodingPerfParams{
 					filename:           "perf/vp9/1080p_60fps_600frames.vp9.ivf",
@@ -247,6 +336,16 @@ func init() {
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_1080_60", "vaapi"},
 				ExtraData:         []string{"perf/vp9/1080p_60fps_600frames.vp9.ivf"},
 				ExtraAttr:         []string{"graphics_video_vp9"},
+			},
+			{
+				Name: "vpxdec_vp9_1080p_60fps",
+				Val: platformDecodingPerfParams{
+					filename:           "perf/vp9/1080p_60fps_600frames.vp9.ivf",
+					decoder:            "/usr/local/bin/vpxdec",
+					decoderArgsBuilder: platform.VPxDecodeArgs,
+				},
+				ExtraData: []string{"perf/vp9/1080p_60fps_600frames.vp9.ivf"},
+				ExtraAttr: []string{"graphics_video_vp9"},
 			},
 			{
 				Name: "vaapi_vp9_2160p_30fps",
@@ -260,6 +359,16 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_vp9"},
 			},
 			{
+				Name: "vpxdec_vp9_2160p_30fps",
+				Val: platformDecodingPerfParams{
+					filename:           "perf/vp9/2160p_30fps_300frames.vp9.ivf",
+					decoder:            "/usr/local/bin/vpxdec",
+					decoderArgsBuilder: platform.VPxDecodeArgs,
+				},
+				ExtraData: []string{"perf/vp9/2160p_30fps_300frames.vp9.ivf"},
+				ExtraAttr: []string{"graphics_video_vp9"},
+			},
+			{
 				Name: "vaapi_vp9_2160p_60fps",
 				Val: platformDecodingPerfParams{
 					filename:           "perf/vp9/2160p_60fps_600frames.vp9.ivf",
@@ -269,6 +378,16 @@ func init() {
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_2160_60", "vaapi"},
 				ExtraData:         []string{"perf/vp9/2160p_60fps_600frames.vp9.ivf"},
 				ExtraAttr:         []string{"graphics_video_vp9"},
+			},
+			{
+				Name: "vpxdec_vp9_2160p_60fps",
+				Val: platformDecodingPerfParams{
+					filename:           "perf/vp9/2160p_60fps_600frames.vp9.ivf",
+					decoder:            "/usr/local/bin/vpxdec",
+					decoderArgsBuilder: platform.VPxDecodeArgs,
+				},
+				ExtraData: []string{"perf/vp9/2160p_60fps_600frames.vp9.ivf"},
+				ExtraAttr: []string{"graphics_video_vp9"},
 			},
 		},
 	})
@@ -284,13 +403,13 @@ func measurePerformance(ctx context.Context, filename, exec string, args []strin
 	// TODO(jchinlee): Modify collection of "metrics per time", i.e. GPU/CPU metrics, such that
 	// they can be collected in the same run as "metrics per run".
 	testing.ContextLogf(ctx, "Collecting metrics per time: looping %s on %s", exec, filename)
-	decodeCmd = testexec.CommandContext(ctx, exec, append(args, platform.LoopArg(exec, 0))...)
+	decodeCmd = testexec.CommandContext(ctx, exec, append(args, platform.LoopArgs(exec, 0, 0)...)...)
 	if err := collectMetricsPerTime(ctx, decodeCmd, p); err != nil {
 		return err
 	}
 
-	testing.ContextLogf(ctx, "Collecting metrics per run: running %s on %s %d times", exec, filename, measurementIterations)
-	decodeCmd = testexec.CommandContext(ctx, exec, append(args, platform.LoopArg(exec, measurementIterations))...)
+	testing.ContextLogf(ctx, "Collecting metrics per run: running %s on %s, first %d frames %d times", exec, filename, framesPerIteration, measurementIterations)
+	decodeCmd = testexec.CommandContext(ctx, exec, append(args, platform.LoopArgs(exec, measurementIterations, framesPerIteration)...)...)
 	if err := collectMetricsPerRun(ctx, decodeCmd, p); err != nil {
 		return err
 	}
@@ -326,7 +445,6 @@ func collectMetricsPerTime(ctx context.Context, decodeCmd *testexec.Cmd, p *perf
 
 // collectMetricsPerRun runs decode a set number of frames and collects metrics based on the runs.
 func collectMetricsPerRun(ctx context.Context, decodeCmd *testexec.Cmd, p *perf.Values) error {
-	decodeCmd.Args = append(decodeCmd.Args, fmt.Sprintf("--frames=%d", framesPerIteration))
 	start := time.Now()
 	if stdout, stderr, err := decodeCmd.SeparatedOutput(testexec.DumpLogOnError); err != nil {
 		output := append(stdout, stderr...)

@@ -39,8 +39,9 @@ func TestPlatformDecodingPerfParams(t *testing.T) {
 		for _, resolution := range resolutions {
 			for _, frameRate := range frameRates {
 				dataPath := genDataPath(codec, resolution, frameRate)
+				testInfo := fmt.Sprintf("%s_%sp_%sfps", codec, resolution, frameRate)
 				param := paramData{
-					Name:               fmt.Sprintf("vaapi_%s_%sp_%sfps", codec, resolution, frameRate),
+					Name:               fmt.Sprintf("vaapi_%s", testInfo),
 					Decoder:            filepath.Join(chrome.BinTestDir, "decode_test"),
 					DecoderArgsBuilder: fmt.Sprintf("platform.%sDecodeVAAPIargs", strings.ToUpper(codec)),
 					File:               dataPath,
@@ -48,8 +49,31 @@ func TestPlatformDecodingPerfParams(t *testing.T) {
 					Metadata:           []string{dataPath},
 					Attr:               []string{fmt.Sprintf("graphics_video_%s", codec)},
 				}
-
 				params = append(params, param)
+
+				if strings.Contains(codec, "vp") {
+					param = paramData{
+						Name:               fmt.Sprintf("vpxdec_%s", testInfo),
+						Decoder:            "/usr/local/bin/vpxdec",
+						DecoderArgsBuilder: "platform.VPxDecodeArgs",
+						File:               dataPath,
+						Metadata:           []string{dataPath},
+						Attr:               []string{fmt.Sprintf("graphics_video_%s", codec)},
+					}
+					params = append(params, param)
+				}
+
+				if codec == "av1" {
+					param = paramData{
+						Name:               fmt.Sprintf("dav1d_%s", testInfo),
+						Decoder:            "/usr/local/bin/dav1d",
+						DecoderArgsBuilder: "platform.Dav1dDecodeArgs",
+						File:               dataPath,
+						Metadata:           []string{dataPath},
+						Attr:               []string{fmt.Sprintf("graphics_video_%s", codec)},
+					}
+					params = append(params, param)
+				}
 			}
 		}
 	}

@@ -3595,7 +3595,7 @@ func PlatformDecoding(ctx context.Context, s *testing.State) {
 	for _, filename := range testOpt.filenames {
 		testing.ContextLogf(ctx, "Running %s on %s", exec, filename)
 		args := testOpt.decoderArgsBuilder(ctx, s.DataPath(filename))
-		args = append(args, platform.MD5Arg(exec, md5LogPath))
+		args = append(args, platform.MD5Args(exec, md5LogPath)...)
 		stdout, stderr, err := testexec.CommandContext(
 			ctx,
 			validatePath,

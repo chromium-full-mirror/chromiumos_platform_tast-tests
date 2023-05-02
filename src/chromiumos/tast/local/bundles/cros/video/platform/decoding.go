@@ -104,35 +104,49 @@ func FFMPEGMD5DecodeVAAPIArgs(ctx context.Context, filename string) []string {
 	}
 }
 
-// MD5Arg returns the argument to specify MD5 hash output for each platform decoder supporting it.
-func MD5Arg(decoder, md5OutputPath string) string {
+// MD5Args returns the arguments to specify MD5 hash output for each platform decoder supporting it.
+func MD5Args(decoder, md5OutputPath string) []string {
 	switch {
 	case strings.Contains(decoder, "v4l2"):
-		return fmt.Sprintf("--md5=%s", md5OutputPath)
+		return []string{fmt.Sprintf("--md5=%s", md5OutputPath)}
 	case strings.Contains(decoder, "decode_test"):
-		return fmt.Sprintf("--md5=%s", md5OutputPath)
+		return []string{fmt.Sprintf("--md5=%s", md5OutputPath)}
 	case strings.Contains(decoder, "ffmpeg_md5"):
-		return fmt.Sprintf("--output=%s", md5OutputPath)
+		return []string{fmt.Sprintf("--output=%s", md5OutputPath)}
+	case strings.Contains(decoder, "vpxdec"):
+		return []string{"-o", "output%w_%h_%4.yuv", "--md5"}
 	}
-	return ""
+	return nil
 }
 
-// LoopArg returns the argument to specify looping decode for each platform decoder supporting it.
-func LoopArg(decoder string, numLoops int) string {
-	if strings.Contains(decoder, "decode_test") {
-		if numLoops > 0 {
-			return fmt.Sprintf("--loop=%d", numLoops)
-		}
-		return "--loop"
+// LoopArgs returns the argument to specify looping decode for each platform decoder supporting it.
+func LoopArgs(decoder string, numLoops, numFrames int) []string {
+	loopsParam := ""
+	if numLoops > 0 {
+		loopsParam = fmt.Sprintf("=%d", numLoops)
 	}
-	return ""
+
+	var args []string
+	switch {
+	case strings.Contains(decoder, "decode_test"):
+		args = []string{fmt.Sprintf("--loop%s", loopsParam)}
+		if numFrames > 0 {
+			args = append(args, fmt.Sprintf("--frames=%d", numLoops))
+		}
+	case strings.Contains(decoder, "decode_test"):
+		args = []string{fmt.Sprintf("--loop%s", loopsParam)}
+		if numFrames > 0 {
+			args = append(args, fmt.Sprintf("--limit=%d", numLoops))
+		}
+	}
+	return args
 }
 
 // VPxDecodeArgs provides the arguments to use with vpxdec decoding binary exe.
 func VPxDecodeArgs(ctx context.Context, filename string) []string {
 	// With --md5 and -o options the md5 of each frame is calculated but frame
 	// files are not created.
-	return []string{"-o", "output%w_%h_%4.yuv", "--i420", "--md5", filename}
+	return []string{"--i420", filename}
 }
 
 // Openh264DecodeArgs provides the arguments to use with openh264dec decoding binary exe.
@@ -140,7 +154,7 @@ func Openh264DecodeArgs(ctx context.Context, filename string) []string {
 	return []string{filename, filename + ".yuv"}
 }
 
-// Dav1dDecodeArgs provides the argument to use with dav1d decoding binary exe.
+// Dav1dDecodeArgs provides the arguments to use with dav1d decoding binary exe.
 func Dav1dDecodeArgs(ctx context.Context, filename string) []string {
-	return []string{"-i", filename, "-o", filename + ".yuv"}
+	return []string{"-i", filename, "-o", "-", "--muxer=null"}
 }
