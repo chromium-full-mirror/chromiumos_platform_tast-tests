@@ -178,8 +178,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 			ValidatorType: "decoding.MD5",
 		}, {
 			Name: "vp9_0_group1_frm_resize",
-			// TODO(b/207057398): Reenable when VideoDecoder supports resolution changes in non keyframes.
-			// Attr: perBuildAttrs,
+			Attr: perBuildAttrs,
 			// TODO(b/207057398): Enable for V4L2 platforms.
 			SoftwareDeps:  `[]string{caps.HWDecodeVP9, "vaapi"}`,
 			VideoFiles:    "vp90Group1FrmResize",
@@ -204,8 +203,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 			ValidatorType: "decoding.MD5",
 		}, {
 			Name: "vp9_0_group1_sub8x8_sf",
-			// TODO(b/207057398): Reenable when VideoDecoder supports resolution changes in non keyframes.
-			// Attr: perBuildAttrs,
+			Attr: perBuildAttrs,
 			// TODO(b/207057398): Enable for V4L2 platforms.
 			SoftwareDeps:  `[]string{caps.HWDecodeVP9, "vaapi"}`,
 			VideoFiles:    "vp90Group1Sub8x8Sf",
@@ -217,9 +215,8 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 			VideoFiles:    "vp92Group1Buf",
 			ValidatorType: "decoding.MD5",
 		}, {
-			Name: "vp9_2_group1_frm_resize",
-			// TODO(b/207057398): Reenable when VideoDecoder supports resolution changes in non keyframes.
-			// Attr: perBuildAttrs,
+			Name:          "vp9_2_group1_frm_resize",
+			Attr:          perBuildAttrs,
 			SoftwareDeps:  `[]string{caps.HWDecodeVP9_2}`,
 			VideoFiles:    "vp92Group1FrmResize",
 			ValidatorType: "decoding.MD5",
@@ -242,9 +239,8 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 			VideoFiles:    "vp92Group1Sub8x8",
 			ValidatorType: "decoding.MD5",
 		}, {
-			Name: "vp9_2_group1_sub8x8_sf",
-			// TODO(b/207057398): Reenable when VideoDecoder supports resolution changes in non keyframes.
-			// Attr: perBuildAttrs,
+			Name:          "vp9_2_group1_sub8x8_sf",
+			Attr:          perBuildAttrs,
 			SoftwareDeps:  `[]string{caps.HWDecodeVP9_2}`,
 			VideoFiles:    "vp92Group1Sub8x8Sf",
 			ValidatorType: "decoding.MD5",

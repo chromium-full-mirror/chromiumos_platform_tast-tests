@@ -760,6 +760,7 @@ func init() {
 			},
 			{
 				Name:              "vp9_0_group1_frm_resize",
+				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "vaapi"},
 				ExtraData:         appendJSONFiles(vp90Group1FrmResize),
 				Val: chromeStackDecoderVerificationTestParam{
@@ -803,6 +804,7 @@ func init() {
 			},
 			{
 				Name:              "vp9_0_group1_sub8x8_sf",
+				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "vaapi"},
 				ExtraData:         appendJSONFiles(vp90Group1Sub8x8Sf),
 				Val: chromeStackDecoderVerificationTestParam{
@@ -824,6 +826,7 @@ func init() {
 			},
 			{
 				Name:              "vp9_2_group1_frm_resize",
+				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9_2},
 				ExtraData:         appendJSONFiles(vp92Group1FrmResize),
 				Val: chromeStackDecoderVerificationTestParam{
@@ -867,6 +870,7 @@ func init() {
 			},
 			{
 				Name:              "vp9_2_group1_sub8x8_sf",
+				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9_2},
 				ExtraData:         appendJSONFiles(vp92Group1Sub8x8Sf),
 				Val: chromeStackDecoderVerificationTestParam{
