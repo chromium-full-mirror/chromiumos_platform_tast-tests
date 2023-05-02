@@ -23,6 +23,7 @@ const (
 	RoutineMemoryV2    string = "memory_v2"
 	RoutineCPUStressV2 string = "cpu_stress_v2"
 	RoutineAudioDriver string = "audio_driver"
+	RoutineCPUCacheV2  string = "cpu_cache_v2"
 )
 
 // RoutineResultV2 contains the progress of the routine as a percentage and
@@ -48,7 +49,10 @@ func RunDiagRoutineV2(ctx context.Context, params RoutineParamsV2) (*RoutineResu
 		diagParams = append(diagParams, "--max_testing_mem_kib=15000")
 	} else if params.Routine == RoutineCPUStressV2 {
 		// Runs the routine for 1 seconds.
-		diagParams = append(diagParams, "--cpu_stress_length_seconds=1")
+		diagParams = append(diagParams, "--length_seconds=1")
+	} else if params.Routine == RoutineCPUCacheV2 {
+		// Runs the routine for 1 seconds.
+		diagParams = append(diagParams, "--length_seconds=1")
 	}
 	var output string
 	var err error
