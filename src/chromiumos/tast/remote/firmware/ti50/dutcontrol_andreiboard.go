@@ -275,36 +275,36 @@ func (a *DUTControlAndreiboard) GSCToolCommand(ctx context.Context, image string
 }
 
 // RunTcgTests executes TCG tests via the DutControl service.
-func (a *DUTControlAndreiboard) RunTcgTests(ctx context.Context, outdir string, test_suite string) (err error) {
-	req := &dutcontrol.RunTcgTestsRequest{Bus: dutcontrol.TpmInterface_SPI, TestSuite: test_suite}
+func (a *DUTControlAndreiboard) RunTcgTests(ctx context.Context, outdir, testSuite string) (err error) {
+	req := &dutcontrol.RunTcgTestsRequest{Bus: dutcontrol.TpmInterface_SPI, TestSuite: testSuite}
 	stream, err := a.client.RunTcgTests(ctx, req)
 
-	test_err, err := os.Create(filepath.Join(outdir, "test_stderr.log"))
+	testErr, err := os.Create(filepath.Join(outdir, "test_stderr.log"))
 	if err != nil {
-		return errors.Wrapf(err, "creating log file")
+		return errors.Wrap(err, "creating log file")
 	}
-	test_out, err := os.Create(filepath.Join(outdir, "test_stdout.log"))
+	testOut, err := os.Create(filepath.Join(outdir, "test_stdout.log"))
 	if err != nil {
-		return errors.Wrapf(err, "creating log file")
+		return errors.Wrap(err, "creating log file")
 	}
-	tpm_err, err := os.Create(filepath.Join(outdir, "tpm_server_stderr.log"))
+	tpmErr, err := os.Create(filepath.Join(outdir, "tpm_server_stderr.log"))
 	if err != nil {
-		return errors.Wrapf(err, "creating log file")
+		return errors.Wrap(err, "creating log file")
 	}
-	tpm_out, err := os.Create(filepath.Join(outdir, "tpm_server_stdout.log"))
+	tpmOut, err := os.Create(filepath.Join(outdir, "tpm_server_stdout.log"))
 	if err != nil {
-		return errors.Wrapf(err, "creating log file")
+		return errors.Wrap(err, "creating log file")
 	}
 	defer func() {
-		test_err.Sync()
-		test_out.Sync()
-		tpm_err.Sync()
-		tpm_out.Sync()
+		testErr.Sync()
+		testOut.Sync()
+		tpmErr.Sync()
+		tpmOut.Sync()
 
-		test_err.Close()
-		test_out.Close()
-		tpm_err.Close()
-		tpm_out.Close()
+		testErr.Close()
+		testOut.Close()
+		tpmErr.Close()
+		tpmOut.Close()
 
 	}()
 
@@ -317,19 +317,19 @@ func (a *DUTControlAndreiboard) RunTcgTests(ctx context.Context, outdir string, 
 		case *dutcontrol.RunTcgTestsResponse_Logs:
 			if resp.Logs.TestStderr != "" {
 				log.Printf("%s", resp.Logs.TestStderr)
-				test_err.WriteString(resp.Logs.TestStderr)
+				testErr.WriteString(resp.Logs.TestStderr)
 			}
 			if resp.Logs.TestStdout != "" {
 				log.Printf("%s", resp.Logs.TestStdout)
-				test_out.WriteString(resp.Logs.TestStdout)
+				testOut.WriteString(resp.Logs.TestStdout)
 			}
 			if resp.Logs.TpmServerStderr != "" {
 				log.Printf("%s", resp.Logs.TpmServerStderr)
-				tpm_err.WriteString(resp.Logs.TpmServerStderr)
+				tpmErr.WriteString(resp.Logs.TpmServerStderr)
 			}
 			if resp.Logs.TpmServerStdout != "" {
 				log.Printf("%s", resp.Logs.TpmServerStdout)
-				tpm_out.WriteString(resp.Logs.TpmServerStdout)
+				tpmOut.WriteString(resp.Logs.TpmServerStdout)
 			}
 		case *dutcontrol.RunTcgTestsResponse_Results:
 			for _, file := range resp.Results.Results {

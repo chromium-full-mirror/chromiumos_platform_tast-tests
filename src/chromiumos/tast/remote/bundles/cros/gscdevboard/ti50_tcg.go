@@ -11,7 +11,7 @@ import (
 	"chromiumos/tast/common/firmware/ti50"
 	"chromiumos/tast/remote/bundles/cros/gscdevboard/utils"
 	"chromiumos/tast/remote/firmware/ti50/fixture"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
@@ -877,6 +877,6 @@ func Ti50Tcg(ctx context.Context, s *testing.State) {
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
 
 	s.Log("Starting TCG tests")
-	test_suite := s.Param().(string)
-	th.MustSucceed(b.RunTcgTests(ctx, s.OutDir(), test_suite), "Tests failed.")
+	testSuite := s.Param().(string)
+	th.MustSucceed(b.RunTcgTests(ctx, s.OutDir(), testSuite), "Tests failed.")
 }
