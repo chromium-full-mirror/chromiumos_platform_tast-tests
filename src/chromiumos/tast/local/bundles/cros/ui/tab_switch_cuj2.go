@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"chromiumos/tast/common/cros/ui/setup"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/bundles/cros/ui/tabswitchcuj"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
@@ -17,8 +16,9 @@ import (
 	"chromiumos/tast/local/chrome/display"
 	"chromiumos/tast/local/ui/cujrecorder"
 	"chromiumos/tast/local/wpr"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type tabSwitchParam struct {
