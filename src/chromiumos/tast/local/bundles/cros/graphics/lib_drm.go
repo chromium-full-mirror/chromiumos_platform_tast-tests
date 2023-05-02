@@ -29,9 +29,10 @@ func init() {
 			Val:     []string{"kmstest"},
 			Timeout: 2 * time.Minute,
 		}, {
-			Name:    "modetest",
-			Val:     []string{"modetest"},
-			Timeout: 2 * time.Minute,
+			Name:      "modetest",
+			Val:       []string{"modetest"},
+			Timeout:   2 * time.Minute,
+			ExtraAttr: []string{"group:cq-medium"},
 		}, {
 			Name:    "proptest",
 			Val:     []string{"proptest"},

@@ -39,6 +39,7 @@ func init() {
 			"informational",
 			"group:paper-io",
 			"paper-io_printing",
+			"group:cq-medium",
 		},
 		// ChromeOS > Platform > Services > Printing
 		BugComponent: "b:167231",

@@ -26,7 +26,7 @@ func init() {
 			"ribalda@chromium.org",
 		},
 		BugComponent: "b:167281",
-		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
+		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera", "group:cq-medium"},
 		SoftwareDeps: []string{"arc_camera3", "chrome", caps.BuiltinCamera},
 	})
 }

@@ -30,6 +30,7 @@ func init() {
 			"informational",
 			"group:paper-io",
 			"paper-io_scanning",
+			"group:cq-medium",
 		},
 		SoftwareDeps: []string{"chrome", "virtual_usb_printer"},
 		// TODO(b/202847398): Skip sona devices due to abnormal failures.

@@ -25,7 +25,7 @@ func init() {
 			"chromeos-gfx-compositor@google.com",
 			"hob@google.com",
 		},
-		Attr:         []string{"group:cq-minimal", "group:mainline"},
+		Attr:         []string{"group:cq-minimal", "group:mainline", "group:cq-medium"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{

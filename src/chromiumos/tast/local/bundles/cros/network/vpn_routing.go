@@ -88,7 +88,8 @@ func init() {
 				vpnType: vpn.TypeOpenVPN,
 				ipType:  vpn.IPTypeIPv4AndIPv6,
 			},
-			Fixture: "vpnEnvWithCerts",
+			Fixture:   "vpnEnvWithCerts",
+			ExtraAttr: []string{"group:cq-medium"},
 		}, {
 			Name: "wireguard_ipv4",
 			Val: vpnRoutingTestCase{

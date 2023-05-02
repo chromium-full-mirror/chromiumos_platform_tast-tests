@@ -32,7 +32,7 @@ func init() {
 		Contacts:     []string{"cros-networking@google.com", "taoyl@google.com"},
 		// ChromeOS > Platform > System > Networking
 		BugComponent: "b:156085",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:cq-medium"},
 		SoftwareDeps: []string{"arc", "chrome"},
 		Timeout:      4 * time.Minute,
 		Fixture:      "arcBooted",

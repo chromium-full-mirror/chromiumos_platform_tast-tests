@@ -22,7 +22,7 @@ func init() {
 			"gwendal@chromium.com",
 			"mathewk@chromium.org", // Test author
 		},
-		Attr: []string{"group:mainline", "informational"},
+		Attr: []string{"group:mainline", "informational", "group:cq-medium"},
 	})
 }
 

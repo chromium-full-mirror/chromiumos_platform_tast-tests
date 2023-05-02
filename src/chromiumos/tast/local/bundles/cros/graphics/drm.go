@@ -207,7 +207,7 @@ func init() {
 			ExtraSoftwareDeps: []string{"no_qemu",
 				// TODO(b:237052709): Reenable when i915 issue is fixed.
 				"no_manatee"},
-			ExtraAttr: []string{"group:mainline"},
+			ExtraAttr: []string{"group:mainline", "group:cq-medium"},
 		}, {
 			Name:    "swrast_test",
 			Val:     []string{"swrast_test"},

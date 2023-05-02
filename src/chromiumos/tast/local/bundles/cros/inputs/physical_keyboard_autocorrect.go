@@ -48,7 +48,7 @@ func init() {
 					CorrectWord:  "hello",
 					UndoMethod:   autocorrect.ViaPopupUsingPK,
 				},
-				ExtraAttr: []string{"group:input-tools-upstream"},
+				ExtraAttr: []string{"group:input-tools-upstream", "group:cq-medium"},
 			},
 			{
 				Name:    "en_us_2",

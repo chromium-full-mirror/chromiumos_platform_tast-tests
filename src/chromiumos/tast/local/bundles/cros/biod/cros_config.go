@@ -22,7 +22,7 @@ func init() {
 		},
 		// ChromeOS > Platform > Services > Fingerprint
 		BugComponent: "b:782045",
-		Attr:         []string{"group:mainline", "group:fingerprint-cq"},
+		Attr:         []string{"group:mainline", "group:fingerprint-cq", "group:cq-medium"},
 		// We omit any dependencies on fingerprint so that we can ensure that
 		// the the fingerprint cros-config section is always reasonable.
 	})

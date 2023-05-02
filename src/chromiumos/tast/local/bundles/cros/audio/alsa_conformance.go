@@ -106,6 +106,7 @@ func init() {
 			{
 				ExtraSoftwareDeps: []string{"audio_stable"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(alsaConformanceUnstableModels...)),
+				ExtraAttr:         []string{"group:cq-medium"},
 			}, {
 				Name:              "unstable_platform",
 				ExtraSoftwareDeps: []string{"audio_unstable"},

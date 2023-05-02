@@ -71,7 +71,7 @@ func init() {
 			{
 				Name:              "",
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(dpPlusModels...)),
-				ExtraAttr:         []string{"group:mainline"},
+				ExtraAttr:         []string{"group:mainline", "group:cq-medium"},
 			}, {
 				Name:              "bad_bios",
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(dpPlusModels...)),

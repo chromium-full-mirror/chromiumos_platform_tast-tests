@@ -24,7 +24,8 @@ func init() {
 		Attr:         []string{"group:graphics", "graphics_perbuild", "group:mainline"},
 		Fixture:      "gpuWatchDog",
 		Params: []testing.Param{{
-			Val: false,
+			Val:       false,
+			ExtraAttr: []string{"group:cq-medium"},
 		}, {
 			Name:      "informational",
 			Val:       true,

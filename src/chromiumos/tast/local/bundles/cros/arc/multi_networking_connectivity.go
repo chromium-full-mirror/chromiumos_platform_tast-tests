@@ -28,7 +28,7 @@ func init() {
 		Contacts:     []string{"cros-networking@google.com", "jasongustaman@google.com"},
 		// ChromeOS > Platform > System > Networking
 		BugComponent: "b:156085",
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging", "group:cq-medium"},
 		// "no_qemu" disables the test on betty (this test is not compatible with the qemu virtual network setup).
 		SoftwareDeps: []string{"chrome", "no_qemu"},
 		Fixture:      "arcBooted",

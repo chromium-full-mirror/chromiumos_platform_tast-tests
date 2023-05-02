@@ -87,7 +87,7 @@ func init() {
 		}, {
 			//TODO(b:271158350): split this test into gles2_smoke, gles3_smoke, gles31_smoke, vk_smoke
 			Name:      "smoke",
-			ExtraAttr: []string{"group:mainline"},
+			ExtraAttr: []string{"group:mainline", "group:cq-medium"},
 			Val: deqpParms{
 				isParallel: false,
 			},

@@ -38,8 +38,9 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
-			Fixture: "chromeLoggedIn",
-			Val:     browser.TypeAsh,
+			Fixture:   "chromeLoggedIn",
+			Val:       browser.TypeAsh,
+			ExtraAttr: []string{"group:cq-medium"},
 		}, {
 			Name:              "lacros",
 			Fixture:           "lacros",

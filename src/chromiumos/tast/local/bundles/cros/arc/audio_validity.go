@@ -28,7 +28,7 @@ func init() {
 		BugComponent: "b:879188",
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",
-		Attr:         []string{"group:mainline", "group:audio"},
+		Attr:         []string{"group:mainline", "group:audio", "group:cq-medium"},
 		Timeout:      3 * time.Minute,
 		Params: []testing.Param{
 			{

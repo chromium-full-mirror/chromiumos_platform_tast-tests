@@ -32,6 +32,7 @@ func init() {
 		Data:         []string{"media_session_60sec_test.ogg", "audio_playback_test.html"},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"lacros_stable"},
+			ExtraAttr:         []string{"group:cq-medium"},
 		}, {
 			Name:              "unstable",
 			ExtraSoftwareDeps: []string{"lacros_unstable"},

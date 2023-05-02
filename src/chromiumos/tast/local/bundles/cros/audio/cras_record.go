@@ -31,6 +31,7 @@ func init() {
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"audio_stable"},
 			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crasRecordUnstableModels...)),
+			ExtraAttr:         []string{"group:cq-medium"},
 		}, {
 			Name:              "unstable_platform",
 			ExtraSoftwareDeps: []string{"audio_unstable"},

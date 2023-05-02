@@ -49,6 +49,7 @@ func init() {
 			Val:               "arc_print_ippusb_golden.pwg",
 			ExtraSoftwareDeps: []string{"android_p"},
 			ExtraData:         []string{"arc_print_ippusb_golden.pwg"},
+			ExtraAttr:         []string{"group:cq-medium"},
 		}, {
 			Name:              "vm",
 			Val:               "arc_print_vm_ippusb_golden.pwg",

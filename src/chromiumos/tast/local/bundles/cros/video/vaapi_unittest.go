@@ -45,6 +45,7 @@ func init() {
 			},
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP8},
 			ExtraData:         vaImageTestFiles["webp"],
+			ExtraAttr:         []string{"group:cq-medium"},
 		}, {
 			Name: "jpeg_decoder",
 			Val: decoderConfig{

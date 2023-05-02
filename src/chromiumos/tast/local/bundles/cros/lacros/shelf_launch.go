@@ -28,6 +28,7 @@ func init() {
 		Params: []testing.Param{{
 			Fixture:           "lacros",
 			ExtraSoftwareDeps: []string{"lacros_stable"},
+			ExtraAttr:         []string{"group:cq-medium"},
 		}, {
 			Name:              "unstable",
 			Fixture:           "lacros",

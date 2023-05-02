@@ -32,6 +32,7 @@ func init() {
 		Timeout:      7 * time.Minute,
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"lacros_stable"},
+			ExtraAttr:         []string{"group:cq-medium"},
 		}, {
 			Name:              "unstable",
 			ExtraAttr:         []string{"informational"},

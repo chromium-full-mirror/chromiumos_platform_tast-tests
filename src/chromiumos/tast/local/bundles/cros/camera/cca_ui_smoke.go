@@ -64,21 +64,21 @@ func init() {
 			Fixture: "ccaLaunchedWithFakeHALCamera",
 			// Marked as information because of flakiness.
 			// TODO(b/275270567): Reenable on CQ once flakiness is gone.
-			ExtraAttr: []string{"informational"},
+			ExtraAttr: []string{"informational", "group:cq-medium"},
 			Val:       none,
 		}, {
 			Name:    "photo_fake_hal",
 			Fixture: "ccaLaunchedWithFakeHALCamera",
 			// Marked as information because of flakiness.
 			// TODO(b/275270567): Reenable on CQ once flakiness is gone.
-			ExtraAttr: []string{"informational"},
+			ExtraAttr: []string{"informational", "group:cq-medium"},
 			Val:       photoTaking,
 		}, {
 			Name:    "video_fake_hal",
 			Fixture: "ccaLaunchedWithFakeHALCamera",
 			// Marked as information because of flakiness.
 			// TODO(b/275270567): Reenable on CQ once flakiness is gone.
-			ExtraAttr:         []string{"informational"},
+			ExtraAttr:         []string{"informational", "group:cq-medium"},
 			ExtraSoftwareDeps: []string{"proprietary_codecs"},
 			Val:               videoRecoridng,
 		}},

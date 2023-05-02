@@ -51,7 +51,7 @@ func init() {
 					CorrectWord:  "hello",
 					UndoMethod:   autocorrect.ViaPopupUsingMouse,
 				},
-				ExtraAttr:        []string{"group:input-tools-upstream"},
+				ExtraAttr:        []string{"group:input-tools-upstream", "group:cq-medium"},
 				ExtraSearchFlags: util.IMESearchFlags([]ime.InputMethod{ime.EnglishUS}),
 			},
 			{

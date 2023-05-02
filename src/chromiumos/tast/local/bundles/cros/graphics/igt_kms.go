@@ -388,7 +388,7 @@ func init() {
 				Exe: "template",
 			},
 			Timeout:   1 * time.Minute,
-			ExtraAttr: []string{"group:mainline"},
+			ExtraAttr: []string{"group:mainline", "group:cq-medium"},
 		}},
 	})
 }

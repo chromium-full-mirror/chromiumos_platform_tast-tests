@@ -25,7 +25,7 @@ func init() {
 		},
 		// ChromeOS > Software > ARC++ > Core > Play Store Setup
 		BugComponent: "b:1131344",
-		Attr:         []string{"group:mainline", "group:arc-functional"},
+		Attr:         []string{"group:mainline", "group:arc-functional", "group:cq-medium"},
 		VarDeps:      []string{"ui.gaiaPoolDefault"},
 		SoftwareDeps: []string{
 			"chrome",

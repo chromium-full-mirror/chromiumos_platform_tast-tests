@@ -26,7 +26,7 @@ func init() {
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 		},
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
-		Attr:         []string{"group:mainline", "group:wificell", "wificell_func"},
+		Attr:         []string{"group:mainline", "group:wificell", "wificell_func", "group:cq-medium"},
 		SoftwareDeps: []string{"wifi", "shill-wifi"},
 		Requirements: []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 	})
