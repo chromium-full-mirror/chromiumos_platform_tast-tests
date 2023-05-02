@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"chromiumos/tast/common/fixture"
 	ue "chromiumos/tast/common/updateengine"
 	"chromiumos/tast/remote/updateutil"
 	"go.chromium.org/tast/core/lsbrelease"
@@ -41,6 +42,7 @@ func init() {
 			"tast.cros.autoupdate.UpdateService",
 		},
 		Timeout: preUpdateTimeout + updateutil.UpdateTimeout + postUpdateTimeout,
+		Fixture: fixture.Autoupdate, // Autoupdate fixture cleans up and ensures the original image is restored.
 		Params: []testing.Param{
 			{
 				Name: "enabled",
