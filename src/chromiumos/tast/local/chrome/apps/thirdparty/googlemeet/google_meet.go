@@ -132,14 +132,20 @@ func JoinMeeting(ctx context.Context, cr *chrome.Chrome, conn *chrome.Conn, meet
 }
 
 // JoinMeetingWithEffect selects specific effect and joins an existing meeting using given browser.
-func JoinMeetingWithEffect(ctx context.Context, cr *chrome.Chrome, conn *chrome.Conn, meetingURL string, effect EffectOption, urlParams map[string]string, permissionOption PermissionOption, opts ...browser.CreateTargetOption) (*GoogleMeet, error) {
+func JoinMeetingWithEffect(ctx context.Context, cr *chrome.Chrome, conn *chrome.Conn, meetingURL string, effectOption EffectOption, urlParams map[string]string, permissionOption PermissionOption, opts ...browser.CreateTargetOption) (*GoogleMeet, error) {
 	gm, err := startMeeting(ctx, cr, conn, meetingURL, urlParams, permissionOption, opts...)
 	if err != nil {
 		return gm, err
 	}
-
-	if err := gm.SetEffectOnJoinPage(effect)(ctx); err != nil {
-		return gm, err
+	// If it automatically join meeting, change the effect on the meeting page.
+	if gm.ui.Exists(moreOptionsButton)(ctx) == nil {
+		if err := gm.ApplyVideoEffects(gm.SetEffect(effectOption))(ctx); err != nil {
+			return gm, err
+		}
+	} else {
+		if err := gm.SetEffectOnJoinPage(effectOption)(ctx); err != nil {
+			return gm, err
+		}
 	}
 
 	return gm, gm.joinConference(ctx)

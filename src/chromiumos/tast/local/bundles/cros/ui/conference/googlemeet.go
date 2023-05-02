@@ -370,14 +370,22 @@ func (conf *GoogleMeetConference) BackgroundChange(ctx context.Context) error {
 		}
 		return uiauto.NamedAction("to pin to main screen", conf.ui.LeftClick(pinBtn))(ctx)
 	}
+	setEffect := func(effectOption googlemeet.EffectOption) action.Action {
+		return func(ctx context.Context) error {
+			if err := gm.SetEffect(effectOption)(ctx); err != nil {
+				// Some accounts have no dynamic effects to choose, print the log for this situation.
+				if effectOption == googlemeet.DynamicEffect {
+					testing.ContextLog(ctx, "This account has no dynamic effects to choose")
+				} else {
+					return err
+				}
+			}
+			return nil
+		}
+	}
 	setEffectAndEnterFullScreen := func(effectOption googlemeet.EffectOption) action.Action {
 		return uiauto.Combine("set effect and enter full screen",
-			gm.ApplyVideoEffects(
-				// Repeated clicking on the same background will turn off the effect.
-				// Turn off effect at the beggining to avoid this.
-				gm.SetEffect(googlemeet.NoEffect),
-				gm.SetEffect(effectOption),
-			),
+			gm.ApplyVideoEffects(setEffect(effectOption)),
 			takeScreenshot(conf.cr, conf.outDir, fmt.Sprintf("set-effect-to-%q", effectOption)),
 			gm.EnterFullScreen,
 			// After applying new background, give it 5 seconds for viewing before applying next one.

@@ -134,7 +134,7 @@ func (gm *GoogleMeet) setToggleValue(finder *nodewith.Finder, value bool) action
 		if info.Checked != shouldBeChecked {
 			return gm.ui.DoDefaultUntil(
 				finder,
-				gm.ui.WithTimeout(shortUITimeout).WaitUntilExists(resultFinder),
+				gm.ui.WithTimeout(shortUITimeout).WaitUntilCheckedState(resultFinder, true),
 			)(ctx)
 		}
 		return nil
@@ -165,9 +165,9 @@ const (
 	// BlurEffect is the blur effect option.
 	BlurEffect EffectOption = "Blur your background"
 	// StaticEffect is the static effect option.
-	StaticEffect EffectOption = "Blurry sky with purple horizon"
+	StaticEffect EffectOption = "Filter showing you"
 	// DynamicEffect is the dynamic effect option.
-	DynamicEffect EffectOption = "Spaceship"
+	DynamicEffect EffectOption = "Immersive background"
 )
 
 var videoEffectsPageHeading = nodewith.Name("Effects").Role(role.Heading).Ancestor(meetRootWebArea)
@@ -198,7 +198,8 @@ func (gm *GoogleMeet) CloseVideoEffects(ctx context.Context) error {
 
 // SetEffect sets the option of video effects.
 func (gm *GoogleMeet) SetEffect(effectOption EffectOption) action.Action {
-	effectButton := nodewith.NameContaining(string(effectOption)).Role(role.ToggleButton).Ancestor(meetRootWebArea)
+	// Effect option may conform to multiple effects. So add First() here.
+	effectButton := nodewith.NameContaining(string(effectOption)).Role(role.ToggleButton).Ancestor(meetRootWebArea).First()
 
 	return uiauto.NamedAction(fmt.Sprintf("set effect %q", effectOption),
 		gm.setToggleValue(effectButton, true))
@@ -222,7 +223,6 @@ func (gm *GoogleMeet) SetEffectOnJoinPage(effectOption EffectOption) action.Acti
 	applyVisualEffectsButton := nodewith.Name("Apply visual effects").Role(role.Button).Ancestor(meetRootWebArea)
 	getReadyDialog := nodewith.Name("Get ready").Role(role.Dialog).Ancestor(meetRootWebArea)
 	effectsTab := nodewith.NameContaining("Effects").Role(role.Tab).Ancestor(getReadyDialog)
-	noEffectButton := nodewith.Name(string(NoEffect)).Role(role.ToggleButton).Ancestor(getReadyDialog)
 	effectButton := nodewith.Name(string(effectOption)).Role(role.ToggleButton).Ancestor(getReadyDialog)
 	closeButton := nodewith.Name("Close").Role(role.Button).Ancestor(getReadyDialog)
 	selectAFileDialog := nodewith.Name("Select a file to open").ClassName("ExtensionViewViews")
@@ -231,19 +231,13 @@ func (gm *GoogleMeet) SetEffectOnJoinPage(effectOption EffectOption) action.Acti
 	return uiauto.NamedCombine(fmt.Sprintf("set effect %q on the join page", effectOption),
 		ui.WithTimeout(longUITimeout).DoDefaultUntil(applyVisualEffectsButton, ui.WaitUntilExists(effectsTab)),
 		ui.LeftClick(effectsTab),
-		// If the effect is already expected from the beginning, clicking it again will
-		// turn off the visual effect.
-		// To avoid this problem, turn off visual effects at the beginning.
-		ui.WithTimeout(mediumUITimeout).DoDefaultUntil(noEffectButton,
-			ui.WaitUntilExists(noEffectButton.Focused())),
 		ui.WithTimeout(mediumUITimeout).DoDefaultUntil(effectButton,
 			ui.WaitUntilExists(effectButton.Focused())),
 		ui.LeftClick(closeButton),
 		// Some DUT performance is too poor, clicking the turn off button will trigger "Upload a background image".
 		// If the dialog "select a file to open" is opened, close it.
 		uiauto.IfSuccessThen(ui.WithTimeout(shortUITimeout).WaitUntilExists(selectAFileDialog),
-			ui.LeftClick(closeDialogButton)),
-	)
+			ui.LeftClick(closeDialogButton)))
 }
 
 // OpenChangeLayout opens change layout page in GoogleMeet.
