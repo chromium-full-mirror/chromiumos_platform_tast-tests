@@ -99,9 +99,11 @@ func CopyToDownloads(downloadsPath, fileDataPath, fileName string) (retErr error
 // page to manually import `caCertFileName` file to CA certificates.
 func ImportCACert(ctx context.Context, ui *uiauto.Context, caCertFileName string) (retErr error) {
 	if err := uiauto.Combine("import CA cert",
+		ui.WaitUntilExists(nodewith.Name("Authorities").Role(role.Tab)),
 		ui.DoDefault(nodewith.Name("Authorities").Role(role.Tab)),
 		ui.WaitUntilExists(nodewith.Name("Authorities").ClassName("tab selected")),
 		ui.DoDefault(nodewith.Name("Import").Role(role.Button)),
+		ui.WaitUntilExists(nodewith.Name(caCertFileName).Role(role.StaticText)),
 		ui.DoDefault(nodewith.Name(caCertFileName).Role(role.StaticText)),
 		ui.WaitUntilExists(nodewith.Name("Open").Role(role.Button).State("focusable", true)),
 		ui.DoDefault(nodewith.Name("Open").Role(role.Button)),
@@ -274,6 +276,20 @@ func SelectCACertificate(ctx context.Context, ui *uiauto.Context, caOrg string) 
 	// Use keyboard to navigate.
 	if err := MoveToNextUIElement(ctx); err != nil {
 		return errors.Wrap(err, failedToSelectNextUIElementErr)
+	}
+	return nil
+}
+
+// PressEscape is pressing Esc button on keyboard, so some popups can be dismissed.
+func PressEscape(ctx context.Context) (retErr error) {
+	kb, err := input.Keyboard(ctx)
+	defer kb.Close(ctx)
+	if err != nil {
+		return errors.Wrap(err, failedToSetupKeyboardErr)
+	}
+
+	if err := kb.Accel(ctx, "Esc"); err != nil {
+		return errors.Wrap(err, "failed to press Esc")
 	}
 	return nil
 }
