@@ -98,3 +98,26 @@ func GetActiveDesk(ctx context.Context, conn *browser.Conn) (string, error) {
 	err := conn.Eval(ctx, getActiveDeskJS, &deskID)
 	return deskID, err
 }
+
+// SwitchDesk switches to a designated desk.
+func SwitchDesk(ctx context.Context, conn *browser.Conn, deskID string) error {
+	const switchDeskJS = `async (deskId) => {
+		await new Promise((resolve, reject) => {
+			chrome.runtime.sendMessage(
+				"kflgdebkpepnpjobkdfeeipcjdahoomc", {
+					"messageType": "SwitchDesk",
+					"operands": {
+						"deskId": deskId
+					}
+				},
+				(response) => {
+					if(response.errorMessage) {
+						reject(new Error(response.errorMessage));
+						return;
+					}
+					resolve();
+				});
+			});
+		}`
+	return conn.Call(ctx, nil, switchDeskJS, deskID)
+}
