@@ -16,6 +16,7 @@ import (
 
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/common/testexec"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -397,7 +398,7 @@ func (b *SysfsBatteryMetrics) Setup(ctx context.Context, prefix, intervalName st
 	}
 
 	b.chargeRemainingMetric = perf.Metric{
-		Name:      prefix + powerRelatedMetricType + "battery_soc",
+		Name:      prefix + batterySOCMetricType + "battery_soc",
 		Unit:      "percent",
 		Direction: perf.BiggerIsBetter,
 		Multiple:  true,
@@ -442,7 +443,7 @@ func (b *SysfsBatteryMetrics) Snapshot(ctx context.Context, values *perf.Values)
 		return err
 	}
 	values.Append(b.powerMetric, power)
-	values.Append(b.chargeRemainingMetric, chargeRemaining/b.batteryChargeSize)
+	values.Append(b.chargeRemainingMetric, (chargeRemaining/b.batteryChargeSize)*100)
 	return nil
 }
 

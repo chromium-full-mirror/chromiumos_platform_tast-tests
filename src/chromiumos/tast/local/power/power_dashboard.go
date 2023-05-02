@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/perf"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -33,6 +34,7 @@ const (
 	gpuFreqMetricType        = "gpufreq_wavg."
 	gpuStateMetricType       = "gpuidle."
 	packageCstatesMetricType = "cpupkg."
+	batterySOCMetricType     = "battery."
 	powerRelatedMetricType   = "power."
 	thermalMetricType        = "temperature."
 	zramMetricType           = "zram."
@@ -40,6 +42,7 @@ const (
 
 // Only keys inside validMetricTypeMap are accepted metric types.
 var validMetricTypeMap = map[string]bool{
+	"battery":      true,
 	"cpuidle":      true,
 	"cpu_usage":    true,
 	"fan":          true,
@@ -95,7 +98,7 @@ const htmlChartStr = `
         };
         var element = document.getElementById('{type}');
         var chart;
-        if (unit == 'percent') {
+        if (unit == 'percent' && numDataCols >= 2) {
             options['isStacked'] = true;
             if (numDataCols == 2) {
                 options['colors'] = ['#d32f2f', '#43a047']
