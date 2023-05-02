@@ -581,9 +581,8 @@ TEST_F(GraphicsGbmTest, GemMap) {
   {
     void* raw_map_data = nullptr;
     uint32_t stride = 0;
-    void* addr = gbm_bo_map2(bo.get(), 0, 0, kWidth, kHeight,
-                             GBM_BO_TRANSFER_READ_WRITE, &stride, &raw_map_data,
-                             0);
+    void* addr = gbm_bo_map(bo.get(), 0, 0, kWidth, kHeight,
+                            GBM_BO_TRANSFER_READ_WRITE, &stride, &raw_map_data);
     ASSERT_NE(MAP_FAILED, addr);
     ASSERT_TRUE(raw_map_data);
     ScopedGbmBoMap map_data(raw_map_data, bo.get());
@@ -597,9 +596,8 @@ TEST_F(GraphicsGbmTest, GemMap) {
   {
     void* raw_map_data = nullptr;
     uint32_t stride = 0;
-    void* addr = gbm_bo_map2(bo.get(), 0, 0, kWidth, kHeight,
-                             GBM_BO_TRANSFER_READ_WRITE, &stride, &raw_map_data,
-                             0);
+    void* addr = gbm_bo_map(bo.get(), 0, 0, kWidth, kHeight,
+                            GBM_BO_TRANSFER_READ_WRITE, &stride, &raw_map_data);
     ASSERT_NE(MAP_FAILED, addr);
     ASSERT_TRUE(raw_map_data);
     ScopedGbmBoMap map_data(raw_map_data, bo.get());
@@ -694,9 +692,8 @@ TEST_F(GraphicsGbmTest, DmabufMap) {
 
   void* raw_map_data = nullptr;
   uint32_t stride = 0;
-  void* addr = gbm_bo_map2(bo.get(), 0, 0, kWidth, kHeight,
-                           GBM_BO_TRANSFER_READ_WRITE, &stride, &raw_map_data,
-                           0);
+  void* addr = gbm_bo_map(bo.get(), 0, 0, kWidth, kHeight,
+                          GBM_BO_TRANSFER_READ_WRITE, &stride, &raw_map_data);
   ASSERT_NE(MAP_FAILED, addr);
   ASSERT_TRUE(raw_map_data);
   ScopedGbmBoMap map_data(raw_map_data, bo.get());
@@ -728,8 +725,8 @@ TEST_F(GraphicsGbmTest, GemMapTiling) {
     {
       void* raw_map_data = nullptr;
       uint32_t stride = 0;
-      void* addr = gbm_bo_map2(bo.get(), 0, 0, kWidth, kHeight,
-                               GBM_BO_TRANSFER_WRITE, &stride, &raw_map_data, 0);
+      void* addr = gbm_bo_map(bo.get(), 0, 0, kWidth, kHeight,
+                              GBM_BO_TRANSFER_WRITE, &stride, &raw_map_data);
       ASSERT_NE(MAP_FAILED, addr);
       ASSERT_TRUE(addr);
       ASSERT_TRUE(raw_map_data);
@@ -748,8 +745,8 @@ TEST_F(GraphicsGbmTest, GemMapTiling) {
     {
       void* raw_map_data = nullptr;
       uint32_t stride = 0;
-      void* addr = gbm_bo_map2(bo.get(), 0, 0, kWidth, kHeight,
-                               GBM_BO_TRANSFER_WRITE, &stride, &raw_map_data, 0);
+      void* addr = gbm_bo_map(bo.get(), 0, 0, kWidth, kHeight,
+                              GBM_BO_TRANSFER_WRITE, &stride, &raw_map_data);
       ASSERT_NE(MAP_FAILED, addr);
       ASSERT_TRUE(addr);
       ASSERT_TRUE(raw_map_data);
