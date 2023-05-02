@@ -11,15 +11,16 @@ import (
 	"chromiumos/tast/common/servo"
 	"chromiumos/tast/remote/bundles/cros/wwcb/utils"
 	"chromiumos/tast/remote/powercontrol"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Dock26BootDUTWithExtDisplay,
+		Func:         ConnectDisplayBeforeBootDUT,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Boot DUT with external display already connected via dock, then verify that the DUT can detect the external display",
+		Desc:         "Boot DUT with external display already connected, then verify that the DUT can detect the external display",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
 		Attr:         []string{"group:wwcb"},
@@ -28,12 +29,11 @@ func init() {
 	})
 }
 
-func Dock26BootDUTWithExtDisplay(ctx context.Context, s *testing.State) {
+func ConnectDisplayBeforeBootDUT(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	dockingID := s.RequiredVar("DockingID")
 	extDispID := s.RequiredVar("ExtDispID1")
 
 	// Set up the servo attached to the DUT.
@@ -50,12 +50,6 @@ func Dock26BootDUTWithExtDisplay(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to shutdown and wait for %q powerstate: %v", shutdownPowerState, err)
 	}
 
-	// Open IP power to supply docking power.
-	if err := utils.OpenIppower(ctx, []int{1}); err != nil {
-		s.Fatal("Failed to open IP power: ", err)
-	}
-	defer utils.CloseIppower(cleanupCtx, []int{1})
-
 	// Initialize fixtures to find the connected devices.
 	if err := utils.InitFixture(ctx); err != nil {
 		s.Fatal("Failed to initialize fixtures: ", err)
@@ -66,8 +60,17 @@ func Dock26BootDUTWithExtDisplay(ctx context.Context, s *testing.State) {
 	if err := utils.ControlFixture(ctx, extDispID, "on"); err != nil {
 		s.Fatal("Failed to connect to the external display: ", err)
 	}
-	if err := utils.ControlFixture(ctx, dockingID, "on"); err != nil {
-		s.Fatal("Failed to connect to the docking station: ", err)
+
+	if dockingID, ok := s.Var("DockingID"); ok {
+		ipPowerPorts := []int{1}
+		if err := utils.OpenIppower(ctx, ipPowerPorts); err != nil {
+			s.Fatal("Failed to power on the docking station: ", err)
+		}
+		defer utils.CloseIppower(cleanupCtx, ipPowerPorts)
+
+		if err := utils.ControlFixture(ctx, dockingID, "on"); err != nil {
+			s.Fatal("Failed to connect to the docking station: ", err)
+		}
 	}
 
 	waitCtx, cancel := context.WithTimeout(ctx, 120*time.Second)
