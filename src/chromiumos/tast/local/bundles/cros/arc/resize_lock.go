@@ -155,25 +155,19 @@ func ResizeLock(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get primary display info: ", err)
 	}
 
-	origShelfAlignment, err := ash.GetShelfAlignment(ctx, tconn, dispInfo.ID)
+	cleanupShelfAlignment, err := ash.EnsureShelfAlignmentBottom(ctx, tconn, dispInfo.ID)
 	if err != nil {
-		s.Fatal("Failed to get shelf alignment: ", err)
-	}
-	if err := ash.SetShelfAlignment(ctx, tconn, dispInfo.ID, ash.ShelfAlignmentBottom); err != nil {
-		s.Fatal("Failed to set shelf alignment to Bottom: ", err)
+		s.Fatal("Failed to ensure shelf alignment is Bottom: ", err)
 	}
 	// Be nice and restore shelf alignment to its original state on exit.
-	defer ash.SetShelfAlignment(cleanupCtx, tconn, dispInfo.ID, origShelfAlignment)
+	defer cleanupShelfAlignment(cleanupCtx)
 
-	origShelfBehavior, err := ash.GetShelfBehavior(ctx, tconn, dispInfo.ID)
+	cleanupShelfBehavior, err := ash.EnsureShelfBehaviorNeverAutoHide(ctx, tconn, dispInfo.ID)
 	if err != nil {
-		s.Fatal("Failed to get shelf behavior: ", err)
-	}
-	if err := ash.SetShelfBehavior(ctx, tconn, dispInfo.ID, ash.ShelfBehaviorNeverAutoHide); err != nil {
-		s.Fatal("Failed to set shelf behavior to Never Auto Hide: ", err)
+		s.Fatal("Failed to ensure shelf behavior is Never Auto Hide: ", err)
 	}
 	// Be nice and restore shelf behavior to its original state on exit.
-	defer ash.SetShelfBehavior(cleanupCtx, tconn, dispInfo.ID, origShelfBehavior)
+	defer cleanupShelfBehavior(cleanupCtx)
 
 	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
 	if err != nil {

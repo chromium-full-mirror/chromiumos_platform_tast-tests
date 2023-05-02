@@ -107,36 +107,30 @@ func ResizeLockA2C2(ctx context.Context, s *testing.State) {
 	a := s.FixtValue().(*arc.PreData).ARC
 	d := s.FixtValue().(*arc.PreData).UIDevice
 
-	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
+	cleanupTabletMode, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
 	if err != nil {
 		s.Fatal("Failed to ensure clamshell mode: ", err)
 	}
-	defer cleanup(cleanupCtx)
+	defer cleanupTabletMode(cleanupCtx)
 
 	dispInfo, err := display.GetPrimaryInfo(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to get primary display info: ", err)
 	}
 
-	origShelfAlignment, err := ash.GetShelfAlignment(ctx, tconn, dispInfo.ID)
+	cleanupShelfAlignment, err := ash.EnsureShelfAlignmentBottom(ctx, tconn, dispInfo.ID)
 	if err != nil {
-		s.Fatal("Failed to get shelf alignment: ", err)
-	}
-	if err := ash.SetShelfAlignment(ctx, tconn, dispInfo.ID, ash.ShelfAlignmentBottom); err != nil {
-		s.Fatal("Failed to set shelf alignment to Bottom: ", err)
+		s.Fatal("Failed to ensure shelf alignment is Bottom: ", err)
 	}
 	// Be nice and restore shelf alignment to its original state on exit.
-	defer ash.SetShelfAlignment(cleanupCtx, tconn, dispInfo.ID, origShelfAlignment)
+	defer cleanupShelfAlignment(cleanupCtx)
 
-	origShelfBehavior, err := ash.GetShelfBehavior(ctx, tconn, dispInfo.ID)
+	cleanupShelfBehavior, err := ash.EnsureShelfBehaviorNeverAutoHide(ctx, tconn, dispInfo.ID)
 	if err != nil {
-		s.Fatal("Failed to get shelf behavior: ", err)
-	}
-	if err := ash.SetShelfBehavior(ctx, tconn, dispInfo.ID, ash.ShelfBehaviorNeverAutoHide); err != nil {
-		s.Fatal("Failed to set shelf behavior to Never Auto Hide: ", err)
+		s.Fatal("Failed to ensure shelf behavior is Never Auto Hide: ", err)
 	}
 	// Be nice and restore shelf behavior to its original state on exit.
-	defer ash.SetShelfBehavior(cleanupCtx, tconn, dispInfo.ID, origShelfBehavior)
+	defer cleanupShelfBehavior(cleanupCtx)
 
 	// Set a pure white wallpaper to reduce the noises on a screenshot because currently checking the visibility of the translucent window border relies on a screenshot.
 	// The wallpaper will exist continuous if the Chrome session gets reused.

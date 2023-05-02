@@ -1287,3 +1287,57 @@ func VerifyShelfAppAlignment(ctx context.Context, tconn *chrome.TestConn, alignm
 
 	return nil
 }
+
+// EnsureShelfAlignmentBottom makes sure that the shelf alignment is bottom,
+// and returns a function which reverts back to the original alignment.
+//
+// Typically, this will be used like:
+//
+//	cleanupShelfAlignment, err := ash.EnsureShelfAlignmentBottom(ctx, tconn, dispInfoID)
+//	if err != nil {
+//	  s.Fatal("Failed to ensure shelf alignment is bottom: ", err)
+//	}
+//	defer cleanupShelfAlignment(ctx)
+func EnsureShelfAlignmentBottom(ctx context.Context, tconn *chrome.TestConn, dispInfoID string) (func(ctx context.Context) error, error) {
+	originalShelfAlignment, err := GetShelfAlignment(ctx, tconn, dispInfoID)
+	if err != nil {
+		return nil, err
+	}
+	if originalShelfAlignment != ShelfAlignmentBottom {
+		if err = SetShelfAlignment(ctx, tconn, dispInfoID, ShelfAlignmentBottom); err != nil {
+			return nil, err
+		}
+	}
+	// Always revert to the original alignment; so it can always be back to the original
+	// alignment even when the alignment changes in another part of the test script.
+	return func(ctx context.Context) error {
+		return SetShelfAlignment(ctx, tconn, dispInfoID, originalShelfAlignment)
+	}, nil
+}
+
+// EnsureShelfBehaviorNeverAutoHide makes sure that the shelf behavior is NeverAutoHide,
+// and returns a function which reverts back to the original behavior.
+//
+// Typically, this will be used like:
+//
+//	cleanupShelfBehavior, err := ash.EnsureShelfBehaviorNeverAutoHide(ctx, tconn, dispInfoID)
+//	if err != nil {
+//	  s.Fatal("Failed to ensure shelf behavior is NeverAutoHide: ", err)
+//	}
+//	defer cleanupShelfBehavior(ctx)
+func EnsureShelfBehaviorNeverAutoHide(ctx context.Context, tconn *chrome.TestConn, dispInfoID string) (func(ctx context.Context) error, error) {
+	originalShelfBehavior, err := GetShelfBehavior(ctx, tconn, dispInfoID)
+	if err != nil {
+		return nil, err
+	}
+	if originalShelfBehavior != ShelfBehaviorNeverAutoHide {
+		if err = SetShelfBehavior(ctx, tconn, dispInfoID, ShelfBehaviorNeverAutoHide); err != nil {
+			return nil, err
+		}
+	}
+	// Always revert to the original behavior; so it can always be back to the original
+	// behavior even when the behavior changes in another part of the test script.
+	return func(ctx context.Context) error {
+		return SetShelfBehavior(ctx, tconn, dispInfoID, originalShelfBehavior)
+	}, nil
+}
