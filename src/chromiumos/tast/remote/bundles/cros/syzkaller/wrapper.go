@@ -38,6 +38,10 @@ const (
 	// syzNewInput is an informational string indicating that a new fuzz input was
 	// found.
 	syzNewInput = "new input from vm-0 for syscall "
+
+	// syzCorpusCorrupt is an informational string indicating that a corrupt corpus
+	// database was found.
+	syzCorpusCorrupt = "failed to deserialize database header"
 )
 
 // A global runtime variable to indicate the test is running locally.
@@ -674,7 +678,7 @@ func logValidity(fname string) error {
 	}
 
 	var unknown []string
-	var newInpFound bool
+	var newInpFound, corpusCorrupt bool
 	for _, line := range lines {
 		if strings.Contains(line, syzUnknownEnabled) {
 			unknown = append(unknown, line)
@@ -682,12 +686,18 @@ func logValidity(fname string) error {
 		if strings.Contains(line, syzNewInput) {
 			newInpFound = true
 		}
+		if strings.Contains(line, syzCorpusCorrupt) {
+			corpusCorrupt = true
+		}
 	}
 	if len(unknown) != 0 {
 		return errors.Errorf("unsupported enabled syscall[s] found: [%v]", unknown)
 	}
 	if !newInpFound {
 		return errors.New("no new input found in fuzzing run")
+	}
+	if corpusCorrupt {
+		return errors.New("corpus found to be corrupted")
 	}
 
 	return nil
