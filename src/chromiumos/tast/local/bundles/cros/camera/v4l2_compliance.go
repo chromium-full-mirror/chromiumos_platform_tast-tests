@@ -7,9 +7,14 @@ package camera
 import (
 	"context"
 	"strings"
+	"time"
 
 	"chromiumos/tast/common/testexec"
+	upstartcommon "chromiumos/tast/common/upstart"
 	"chromiumos/tast/local/camera/testutil"
+	"chromiumos/tast/local/upstart"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -31,11 +36,44 @@ func init() {
 	})
 }
 
+func startCrosCameraService(ctx context.Context) error {
+	testing.ContextLog(ctx, "Starting cros-camera")
+	if err := upstart.EnsureJobRunning(ctx, "cros-camera"); err != nil {
+		return errors.Wrap(err, "failed to start cros-camera")
+	}
+	return nil
+}
+
+func stopCrosCameraService(ctx context.Context) error {
+	testing.ContextLog(ctx, "Stopping cros-camera")
+	if err := upstart.StopJob(ctx, "cros-camera"); err != nil {
+		return errors.Wrap(err, "failed to stop cros-camera")
+	}
+
+	if err := upstart.WaitForJobStatus(ctx, "cros-camera", upstartcommon.StopGoal,
+		upstartcommon.WaitingState, upstart.RejectWrongGoal, ctxutil.MaxTimeout); err != nil {
+		startCrosCameraService(ctx)
+		return errors.Wrap(err, "the cros-camera service did not stop before calling runCrosCameraTest")
+	}
+
+	return nil
+}
+
 func V4L2Compliance(ctx context.Context, s *testing.State) {
 	badCameras := map[string]string{
 		"13d3:5519": "b/258798506",
 		"04f2:b719": "b/272738845",
 	}
+
+	// Use a shorter context to save time for clean.
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	err := stopCrosCameraService(ctx)
+	if err != nil {
+		s.Fatal("Error stopping cros-camera service: ", err)
+	}
+	defer startCrosCameraService(ctx)
 
 	captureDevices, err := testutil.CaptureDevicesFromV4L2Test(ctx)
 	if err != nil {
