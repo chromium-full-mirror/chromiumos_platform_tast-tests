@@ -14,6 +14,7 @@ import (
 	"chromiumos/tast/local/camera/cca"
 	"chromiumos/tast/local/camera/testutil"
 	"chromiumos/tast/local/chrome"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -151,8 +152,8 @@ func CCAUIAssistant(ctx context.Context, s *testing.State) {
 					if err := app.WaitForState(ctx, "recording", true); err != nil {
 						s.Fatal("Recording is not started: ", err)
 					}
-					// Wait video recording for 1 second to simulate user taking a 1
-					// second long video.
+					// GoBigSleepLint: Wait video recording for 1 second to
+					// simulate user taking a 1 second long video.
 					if err := testing.Sleep(ctx, 1*time.Second); err != nil {
 						s.Fatal("Failed to sleep for 1 second: ", err)
 					}

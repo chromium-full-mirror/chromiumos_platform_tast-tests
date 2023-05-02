@@ -18,6 +18,7 @@ import (
 	"chromiumos/tast/local/cpu"
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/disk"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -98,7 +99,7 @@ func CCAUIRecordVideoEdgeCase(ctx context.Context, s *testing.State) {
 			// Pushing device to low storage may affect performance, we
 			// should wait until CPU is stable before starting the new subtest.
 			defer func() {
-				// TODO(b/264217261): Find better approach to cooldown for scarlet/dru.
+				// GoBigSleepLint: TODO(b/264217261): Find better approach to cooldown for scarlet/dru.
 				if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 					s.Errorf("Failed to wait while sleep before cooldown CPU for %v subtest: %v", tc.name, err)
 				}
@@ -219,7 +220,7 @@ func testLowStorageAutoStop(ctx context.Context, app *cca.App, cr *chrome.Chrome
 		return errors.Wrap(err, "recording is not started")
 	}
 
-	// Sleep 1 second to prevent too short video.
+	// GoBigSleepLint: Record the video for 1 second.
 	if err := testing.Sleep(ctx, time.Second); err != nil {
 		return err
 	}

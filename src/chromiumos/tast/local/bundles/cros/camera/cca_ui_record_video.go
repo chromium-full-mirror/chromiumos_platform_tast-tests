@@ -15,6 +15,7 @@ import (
 	"chromiumos/tast/local/camera/cca"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/input"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -242,6 +243,8 @@ func testRecordVideoWithWindowChanged(ctx context.Context, app *cca.App) error {
 	if err := app.ClickShutter(ctx); err != nil {
 		return err
 	}
+	// TODO(b/278996399): Group all record-related sleep into one function.
+	// GoBigSleepLint: Record the video for 1 second.
 	if err := testing.Sleep(ctx, time.Second); err != nil {
 		return err
 	}
@@ -249,6 +252,7 @@ func testRecordVideoWithWindowChanged(ctx context.Context, app *cca.App) error {
 	if err := app.MaximizeWindow(ctx); err != nil {
 		return errors.Wrap(err, "failed to maximize window")
 	}
+	// GoBigSleepLint: Continue recording in the maximized window for 1 second.
 	if err := testing.Sleep(ctx, time.Second); err != nil {
 		return err
 	}
@@ -256,6 +260,7 @@ func testRecordVideoWithWindowChanged(ctx context.Context, app *cca.App) error {
 	if err := app.RestoreWindow(ctx); err != nil {
 		return errors.Wrap(err, "failed to restore window")
 	}
+	// GoBigSleepLint: Continue recording in the restored window for 1 second.
 	if err := testing.Sleep(ctx, time.Second); err != nil {
 		return err
 	}
@@ -297,6 +302,7 @@ func testRecordCancelTimer(ctx context.Context, app *cca.App) error {
 	if err := app.ClickShutter(ctx); err != nil {
 		return err
 	}
+	// GoBigSleepLint: Wait for 1 second before canceling the timer.
 	if err := testing.Sleep(ctx, time.Second); err != nil {
 		return err
 	}
@@ -320,7 +326,7 @@ func testVideoSnapshot(ctx context.Context, app *cca.App) error {
 		return errors.Wrap(err, "recording is not started")
 	}
 
-	// Ensure video have at least 1s duration.
+	// GoBigSleepLint: Ensure video have at least 1s duration.
 	if err := testing.Sleep(ctx, time.Second); err != nil {
 		return errors.Wrap(err, "failed to sleep in video duration")
 	}
@@ -349,6 +355,7 @@ func startRecordAndPause(ctx context.Context, app *cca.App) (*video, error) {
 	if err := v.start(ctx, app); err != nil {
 		return nil, err
 	}
+	// GoBigSleepLint: Record the video for 1 second.
 	if err := testing.Sleep(ctx, time.Second); err != nil {
 		return nil, err
 	}
@@ -405,6 +412,7 @@ func testStopInPause(ctx context.Context, app *cca.App) error {
 		return errors.Wrap(err, "failed to start and pause recording")
 	}
 
+	// GoBigSleepLint: Pause the video for 1 second.
 	if err := testing.Sleep(ctx, time.Second); err != nil {
 		return err
 	}
@@ -417,12 +425,14 @@ func testPauseResume(ctx context.Context, app *cca.App) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to start and pause recording")
 	}
+	// GoBigSleepLint: Pause the video for 1 second.
 	if err := testing.Sleep(ctx, time.Second); err != nil {
 		return errors.Wrap(err, "failed to sleep 1 second in pausing state")
 	}
 	if err := v.resume(ctx, app); err != nil {
 		return err
 	}
+	// GoBigSleepLint: Continue recording the video for 1 second.
 	if err := testing.Sleep(ctx, time.Second); err != nil {
 		return errors.Wrap(err, "failed to sleep 1 second after resuming")
 	}

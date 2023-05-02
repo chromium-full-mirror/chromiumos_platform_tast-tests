@@ -13,6 +13,7 @@ import (
 	"chromiumos/tast/local/camera/arcapp"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/upstart"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -108,6 +109,7 @@ func recordVideo(ctx context.Context, cr *chrome.Chrome, a *arc.ARC) error {
 		return errors.Wrap(err, "failed to start recording")
 	}
 
+	// GoBigSleepLint: Record the video for 5 seconds.
 	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 		return errors.Wrap(err, "failed to sleep")
 	}

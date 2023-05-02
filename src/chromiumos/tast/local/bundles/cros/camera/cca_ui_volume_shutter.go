@@ -14,6 +14,7 @@ import (
 	"chromiumos/tast/local/camera/cca"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/input"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -271,6 +272,7 @@ func testRecordVideo(ctx context.Context, cr *chrome.Chrome, app *cca.App, kb *i
 		}
 
 		testing.ContextLog(ctx, "Record video for a second")
+		// GoBigSleepLint: Record a video for a second.
 		if err := testing.Sleep(ctx, time.Second); err != nil {
 			return err
 		}
