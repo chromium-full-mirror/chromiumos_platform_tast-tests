@@ -20,6 +20,7 @@ import (
 	"chromiumos/tast/local/chrome/internal/cdputil"
 	"chromiumos/tast/local/coords"
 	"chromiumos/tast/local/input"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -402,7 +403,18 @@ func WaitForARCAppWindowStateWithPollOptions(ctx context.Context, tconn *chrome.
 			return errors.Wrap(err, "failed to get Ash window state")
 		}
 		if actual != state {
-			return errors.Errorf("window isn't in expected state yet; got: %s, want: %s", actual, state)
+			// TODO(b/252512988): Autotest API currently still uses left and right for primary and secondary.
+			// The WaitForARCAppWindowStateWithPollOptions may not match actual state only because autotest
+			// API has not been updated yet.
+			const (
+				primarySnapAlternateName   = "LeftSnapped"
+				secondarySnapAlternateName = "RightSnapped"
+			)
+			var primaryCorrect = (state == WindowStatePrimarySnapped && actual == primarySnapAlternateName)
+			var secondaryCorrect = (state == WindowStateSecondarySnapped && actual == secondarySnapAlternateName)
+			if !primaryCorrect && !secondaryCorrect {
+				return errors.Errorf("window isn't in expected state yet; got: %s, want: %s", actual, state)
+			}
 		}
 		return nil
 	}, pollOptions)
