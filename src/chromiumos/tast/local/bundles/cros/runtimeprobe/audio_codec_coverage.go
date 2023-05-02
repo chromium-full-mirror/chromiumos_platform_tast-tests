@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/testexec"
+
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -45,7 +46,7 @@ func init() {
 			"clarkchung@google.com",
 		},
 		BugComponent: "b:606088",
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:racc", "racc_general"},
 		SoftwareDeps: []string{"racc"},
 		VarDeps: []string{
 			"runtimeprobe.AudioCodecCoverage.allowlist",

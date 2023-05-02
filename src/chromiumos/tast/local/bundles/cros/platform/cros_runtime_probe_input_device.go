@@ -9,6 +9,7 @@ import (
 
 	rppb "chromiumos/system_api/runtime_probe_proto"
 	"chromiumos/tast/local/bundles/cros/platform/runtimeprobe"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -23,7 +24,7 @@ func init() {
 			"clarkchung@google.com",
 		},
 		BugComponent: "b:606088",
-		Attr:         []string{"group:runtime_probe"},
+		Attr:         []string{"group:racc", "racc_config_installed"},
 		SoftwareDeps: []string{"racc"},
 		HardwareDeps: hwdep.D(hwdep.RuntimeProbeConfig()),
 		Vars:         []string{"autotest_host_info_labels"},

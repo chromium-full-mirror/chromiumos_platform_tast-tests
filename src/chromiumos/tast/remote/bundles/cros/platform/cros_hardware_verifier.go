@@ -26,6 +26,7 @@ import (
 
 	hvpb "chromiumos/hardware_verifier"
 	rppb "chromiumos/system_api/runtime_probe_proto"
+
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -86,7 +87,7 @@ func init() {
 		BugComponent: "b:606088",
 		SoftwareDeps: []string{"reboot", "racc"},
 		HardwareDeps: hwdep.D(hwdep.RuntimeProbeConfig()),
-		Attr:         []string{"group:runtime_probe"},
+		Attr:         []string{"group:racc", "racc_config_installed"},
 	})
 }
 
