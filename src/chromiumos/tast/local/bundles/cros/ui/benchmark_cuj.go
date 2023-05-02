@@ -11,7 +11,7 @@ import (
 	"chromiumos/tast/local/bundles/cros/ui/benchmarkcuj"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/ui/cujrecorder"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 const defaultTimeout = 15*time.Minute + cujrecorder.CooldownTimeout

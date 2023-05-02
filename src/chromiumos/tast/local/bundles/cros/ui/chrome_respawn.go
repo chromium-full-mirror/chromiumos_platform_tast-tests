@@ -11,7 +11,7 @@ import (
 	"chromiumos/tast/local/chrome/ash/ashproc"
 	"chromiumos/tast/local/procutil"
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
