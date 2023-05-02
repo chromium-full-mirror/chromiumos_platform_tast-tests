@@ -155,7 +155,7 @@ func EnsurePlayStoreNotEmpty(ctx context.Context, tconn *chrome.TestConn, cr *ch
 // EnsurePlayStoreState ensures that the asset browser has expected state.
 func EnsurePlayStoreState(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, a *arc.ARC, d *ui.Device, outDir string, runID int, shouldBeEmpty bool) (retErr error) {
 	const (
-		searchBarTextStart = "Search for apps"
+		searchBarTextStart = "Search.*apps.*"
 		emptyPlayStoreText = "No results found."
 	)
 
@@ -194,7 +194,7 @@ func EnsurePlayStoreState(ctx context.Context, tconn *chrome.TestConn, cr *chrom
 			}
 
 			// This is to ensure that we're looking at a normal asset browser UI.
-			if err := d.Object(ui.TextStartsWith(searchBarTextStart)).Exists(ctx); err != nil {
+			if err := d.Object(ui.TextMatches(searchBarTextStart)).Exists(ctx); err != nil {
 				return errors.Wrap(err, "Search bar is missing")
 			}
 
