@@ -10,13 +10,13 @@ import (
 	"time"
 
 	"chromiumos/tast/local/apps"
-	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
+	"chromiumos/tast/local/chrome/uiauto/mouse"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/pointer"
 	"chromiumos/tast/local/coords"
@@ -52,8 +52,7 @@ func init() {
 			Val:               browser.TypeLacros,
 			ExtraSoftwareDeps: []string{"lacros"},
 		}},
-		Timeout: chrome.GAIALoginTimeout + 120*time.Second,
-		VarDeps: []string{"ui.gaiaPoolDefault"},
+		Timeout: 2 * time.Minute,
 	})
 }
 
@@ -72,8 +71,7 @@ func VirtualDesksBasic(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	bt := s.Param().(browser.Type)
-	cr, _, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, bt, lacrosfixt.NewConfig(),
-		chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")))
+	cr, _, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, bt, lacrosfixt.NewConfig())
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
@@ -183,10 +181,29 @@ func VirtualDesksBasic(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get the location of the Files app: ", err)
 	}
-	if err := pc.Drag(
-		almostTopLeft(filesAppWindowViewLoc, 50),
-		pc.DragTo(firstDeskMiniViewLoc.CenterPoint(), 3*time.Second))(ctx); err != nil {
-		s.Fatal("Failed to drag Files app into the new desk: ", err)
+	// Dragging a window in overview in portrait orientation causes a bar to
+	// appear that pushes the desk mini views downward. We want to start drag and
+	// then find the new positions of those mini views to account for this
+	// situation.
+	filesAppWindowViewAdjustedLoc := almostTopLeft(filesAppWindowViewLoc, 50)
+	mc := pointer.NewMouseController(tconn)
+	defer mc.Close(ctx)
+	if err := mc.Press(ctx, filesAppWindowViewAdjustedLoc); err != nil {
+		s.Fatal("Failed to press on overview window view: ", err)
+	}
+	windowDragMidpoint := coords.Point{X: filesAppWindowViewAdjustedLoc.X, Y: filesAppWindowViewAdjustedLoc.Y + 10}
+	if err := mc.Move(ctx, filesAppWindowViewAdjustedLoc, windowDragMidpoint, 3*time.Second); err != nil {
+		s.Fatal("Failed to move the overview window view: ", err)
+	}
+	deskMiniViewsInfo, err = ash.FindDeskMiniViews(ctx, ac)
+	if err != nil {
+		s.Fatal("Failed to find new desk mini view locations: ", err)
+	}
+	if err := mc.Move(ctx, windowDragMidpoint, deskMiniViewsInfo[0].Location.CenterPoint(), 2*time.Second); err != nil {
+		s.Fatal("Failed to move the overview window view to the desk preview: ", err)
+	}
+	if err := mc.Release(ctx); err != nil {
+		s.Fatal("Failed to drop the overview window view onto the desk preview: ", err)
 	}
 	// Checks that Files App is in the new desk. The new desk is inactive.
 	if err := ash.ForEachWindow(ctx, tconn, func(w *ash.Window) error {
@@ -199,6 +216,12 @@ func VirtualDesksBasic(ctx context.Context, s *testing.State) {
 		return nil
 	}); err != nil {
 		s.Fatal("Failed to verify the desk of the app: ", err)
+	}
+
+	// Moves the mouse to first desk mini view and hovers to show the close
+	// buttons.
+	if err := mouse.Move(tconn, firstDeskMiniViewLoc.CenterPoint(), 100*time.Millisecond)(ctx); err != nil {
+		s.Fatal("Failed to hover at the second desk mini view: ", err)
 	}
 
 	// Delete the new desk.
