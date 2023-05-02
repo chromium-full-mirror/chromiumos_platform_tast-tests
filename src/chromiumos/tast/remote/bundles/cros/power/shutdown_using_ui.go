@@ -20,6 +20,8 @@ import (
 )
 
 func init() {
+	// TODO(b/238157101): We are not running this test on any bots intentionally.
+	// ambalavanan.m.m@intel.com needs to add this test as part of a new suite.
 	testing.AddTest(&testing.Test{
 		Func:         ShutdownUsingUI,
 		LacrosStatus: testing.LacrosVariantUnneeded,
@@ -29,7 +31,7 @@ func init() {
 		SoftwareDeps: []string{"chrome", "reboot"},
 		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.ui.AutomationService"},
 		VarDeps:      []string{"servo"},
-		Timeout:      8 * time.Minute,
+		Timeout:      15 * time.Minute,
 	})
 }
 

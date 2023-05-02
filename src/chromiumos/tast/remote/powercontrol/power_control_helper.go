@@ -120,7 +120,7 @@ func WaitForSuspendState(ctx context.Context, h *firmware.Helper) error {
 // PowerOntoDUT performs power normal press to wake DUT.
 func PowerOntoDUT(ctx context.Context, pxy *servo.Proxy, dut *dut.DUT) error {
 	return testing.Poll(ctx, func(ctx context.Context) error {
-		waitCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+		waitCtx, cancel := context.WithTimeout(ctx, 40*time.Second)
 		defer cancel()
 		if err := pxy.Servo().KeypressWithDuration(ctx, servo.PowerKey, servo.DurPress); err != nil {
 			return errors.Wrap(err, "failed to power normal press")
@@ -129,7 +129,7 @@ func PowerOntoDUT(ctx context.Context, pxy *servo.Proxy, dut *dut.DUT) error {
 			return errors.Wrap(err, "failed to wait connect DUT")
 		}
 		return nil
-	}, &testing.PollOptions{Timeout: 2 * time.Minute, Interval: 30 * time.Second})
+	}, &testing.PollOptions{Timeout: 3 * time.Minute, Interval: 30 * time.Second})
 }
 
 // PowerOnDutWithRetry performs power normal press to wake DUT. Retries if it fails.
