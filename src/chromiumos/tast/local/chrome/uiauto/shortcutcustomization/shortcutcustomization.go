@@ -8,6 +8,7 @@ package shortcutcustomization
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"time"
 
 	"chromiumos/tast/local/apps"
@@ -17,6 +18,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/input"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -106,4 +108,88 @@ func VerifyShortcuts(ctx context.Context, ui *uiauto.Context, description, short
 	}
 
 	return nil
+}
+
+// SearchAndCheck searches for the given query in the Shortcuts `SearchBox`.
+// Then, it verifies if any of the results match the given regex, and also
+// whether the existence of search results or not matches expectations.
+func SearchAndCheck(ctx context.Context, ui *uiauto.Context, kb *input.KeyboardEventWriter, queryAndExpectation ShortcutsSearchQueryAndExpectation) (*uiauto.NodeInfo, error) {
+	testing.ContextLogf(ctx, "Search for %q", queryAndExpectation.Query)
+	infos, noResults, err := SearchWithQuery(ctx, ui, kb, queryAndExpectation.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	// Expected no results, and got no results, so we can return early with no errors.
+	if queryAndExpectation.ExpectNoResults && noResults {
+		return nil, nil
+	}
+
+	// Expected no results, but got some results.
+	if queryAndExpectation.ExpectNoResults && !noResults {
+		return nil, errors.New("expected no results to exist, but some results found")
+	}
+
+	// Expected results, but got no results.
+	if !queryAndExpectation.ExpectNoResults && noResults {
+		return nil, errors.New("expected results to exist, but no results found")
+	}
+
+	if len(infos) == 0 {
+		// The keyword did not return a search result (ie. there is a mismatch).
+		// We can return as we do not need to verify the resulting string any further.
+		// The check for whether the correct node with the name `No search results found` is
+		// returned is done in function searchWithKeyword() below,
+		// so there is no need for further verification.
+		return nil, nil
+	} else if len(infos) > 5 || len(infos) < 1 {
+		// The results should show a minimum of 1 or maximum of 5 results.
+		return nil, errors.Errorf("unexpected result count, want: [1,5], got: %d", len(infos))
+	}
+
+	// Verify result.
+	rExpected := regexp.MustCompile(queryAndExpectation.ExpectedDescriptionRegex)
+	for idx, info := range infos {
+		if rExpected.MatchString(info.Name) {
+			testing.ContextLogf(ctx, "Found: %q", infos[idx].Name)
+			return &infos[idx], nil
+		}
+	}
+
+	return nil, errors.Errorf("no match results found for expected regex %q, the first result is %q", queryAndExpectation.ExpectedDescriptionRegex, infos[0].Name)
+}
+
+// SearchWithQuery searches for the given query in the `SearchBox`.
+func SearchWithQuery(ctx context.Context, ui *uiauto.Context, kb *input.KeyboardEventWriter, query string) (results []uiauto.NodeInfo, noResults bool, err error) {
+
+	if err := uiauto.Combine(fmt.Sprintf("query with query %q", query),
+		kb.TypeAction(query),
+		ui.WaitUntilExists(nodewith.HasClass("ContentsWebView").Focused()),
+	)(ctx); err != nil {
+		return nil, false, errors.Wrap(err, "failed to type into search box")
+	}
+
+	if err := ui.WaitForLocation(SearchResultFinder.First())(ctx); err == nil {
+		// No errors, so retrieve the search result's info and return the results.
+		results, err = ui.NodesInfo(ctx, SearchResultFinder)
+		return results, false, err
+	}
+
+	SearchNoResultsFinder := nodewith.Name("No search results found").Role(role.StaticText)
+	if err := ui.WaitUntilExists(SearchNoResultsFinder)(ctx); err == nil {
+		// No errors, but no search results found.
+		return nil, true, nil
+	}
+
+	return nil, false, errors.New("Shortcuts app search error")
+}
+
+// ClearSearch clears text in `SearchBox` and waits for the search results to be gone.
+func ClearSearch(ctx context.Context, ui *uiauto.Context) uiauto.Action {
+	clearSearchBtn := nodewith.NameContaining("Clear search").Role(role.Button)
+	return uiauto.Combine("clear text in search box",
+		uiauto.IfSuccessThen(ui.WaitUntilExists(clearSearchBtn), ui.LeftClick(clearSearchBtn)),
+		ui.WaitUntilGone(clearSearchBtn),
+		ui.WaitUntilGone(SearchResultFinder),
+	)
 }
