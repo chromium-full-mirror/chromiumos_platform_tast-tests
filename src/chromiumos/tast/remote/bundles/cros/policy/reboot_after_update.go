@@ -37,8 +37,8 @@ func init() {
 			"chromeos-commercial-remote-management@google.com",
 			"artyomchen@google.com", // Test author
 		},
-		Fixture:      fixture.CleanOwnership,
-		BugComponent: "b:1031231", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Version Control
+		Fixture:      fixture.Autoupdate, // Cleans the updates and ensures the original image is restored.
+		BugComponent: "b:1031231",        // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Version Control
 		Attr:         []string{"group:autoupdate"},
 		SoftwareDeps: []string{"reboot", "chrome", "auto_update_stable"},
 		SearchFlags: []*testing.StringPair{
