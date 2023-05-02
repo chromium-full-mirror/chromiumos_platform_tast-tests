@@ -75,6 +75,16 @@ const (
 	CellularTechnologyNR5GNSA CellularTechnology = "NR5G_NSA"
 )
 
+// IPAddressType represents a network IP type.
+type IPAddressType string
+
+// Supported IPAddressTypes
+const (
+	IPV4   = "IPV4"
+	IPV6   = "IPV6"
+	IPV4V6 = "IPV4V6"
+)
+
 // MimoMode represents a cellular MIMO configuration.
 type MimoMode string
 
@@ -302,12 +312,29 @@ func New5GNSACellConfiguration(options ...CellOption) CellConfiguration {
 	return config
 }
 
+// NetworkConfiguration represents a set of additional callbox network options.
+type NetworkConfiguration struct {
+	APN    string        `json:"apn,omitempty"`
+	MTU    int           `json:"mtu,omitempty"`
+	IPType IPAddressType `json:"ip_type,omitempty"`
+}
+
+// NewNetworkConfiguration a NetworkConfiguration with the provided settings.
+func NewNetworkConfiguration(apn string, mtu int, ipType IPAddressType) *NetworkConfiguration {
+	return &NetworkConfiguration{
+		APN:    apn,
+		MTU:    mtu,
+		IPType: ipType,
+	}
+}
+
 // ConfigureCallboxRequestBody is the request body for ConfigureCallbox requests.
 type ConfigureCallboxRequestBody struct {
-	Callbox      string              `json:"callbox,omitempty"`
-	Hardware     CallboxHardware     `json:"hardware,omitempty"`
-	CellularType CellularTechnology  `json:"cellular_type,omitempty"`
-	Parameters   []CellConfiguration `json:"configuration,omitempty"`
+	Callbox      string                `json:"callbox,omitempty"`
+	Hardware     CallboxHardware       `json:"hardware,omitempty"`
+	CellularType CellularTechnology    `json:"cellular_type,omitempty"`
+	Parameters   []CellConfiguration   `json:"configuration,omitempty"`
+	Network      *NetworkConfiguration `json:"network,omitempty"`
 }
 
 // BeginSimulationRequestBody is the request body for BeginSimulation requests.
