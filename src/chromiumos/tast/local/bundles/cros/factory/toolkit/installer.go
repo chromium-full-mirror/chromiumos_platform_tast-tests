@@ -16,7 +16,7 @@ import (
 
 	factorycommon "chromiumos/tast/common/factory"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 const (

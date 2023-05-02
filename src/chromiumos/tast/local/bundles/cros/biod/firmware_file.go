@@ -10,8 +10,8 @@ import (
 
 	fp "chromiumos/tast/common/fingerprint"
 	"chromiumos/tast/local/crosconfig"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {

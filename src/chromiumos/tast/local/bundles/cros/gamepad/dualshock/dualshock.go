@@ -11,8 +11,8 @@ import (
 	"context"
 	"encoding/binary"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/uhid"
+	"go.chromium.org/tast/core/errors"
 )
 
 // Uniq is a hardcoded uniq field for gamepads

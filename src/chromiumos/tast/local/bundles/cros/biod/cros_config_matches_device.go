@@ -12,9 +12,9 @@ import (
 
 	fp "chromiumos/tast/common/fingerprint"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/crosconfig"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

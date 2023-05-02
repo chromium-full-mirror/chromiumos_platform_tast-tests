@@ -5,6 +5,10 @@
 package crostini
 
 import (
+	"context"
+	"regexp"
+	"time"
+
 	"chromiumos/tast/local/bundles/cros/crostini/imetestutil"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ime"
@@ -17,13 +21,9 @@ import (
 	"chromiumos/tast/local/terminalapp"
 	"chromiumos/tast/local/uidetection"
 	"chromiumos/tast/local/vm"
-	"chromiumos/tast/testing"
-	"context"
-	"regexp"
-	"time"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Firefox test page content. Contains a single input box which is focused upon launch for user input.

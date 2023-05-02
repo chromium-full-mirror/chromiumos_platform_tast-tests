@@ -14,9 +14,6 @@ import (
 	"time"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/fsutil"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
@@ -27,7 +24,10 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/printing/ippusbbridge"
 	"chromiumos/tast/local/printing/usbprinter"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/fsutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

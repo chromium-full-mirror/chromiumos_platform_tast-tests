@@ -18,7 +18,6 @@ import (
 	durationpb "google.golang.org/protobuf/types/known/durationpb"
 
 	"chromiumos/system_api/hps_proto"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -28,7 +27,8 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/dbusutil"
 	pb "chromiumos/tast/services/cros/hps"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (

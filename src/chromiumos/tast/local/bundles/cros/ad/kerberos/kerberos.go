@@ -13,9 +13,9 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	kp "chromiumos/system_api/kerberos_proto"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/dbusutil"
 	"chromiumos/tast/local/upstart"
+	"go.chromium.org/tast/core/errors"
 )
 
 const (

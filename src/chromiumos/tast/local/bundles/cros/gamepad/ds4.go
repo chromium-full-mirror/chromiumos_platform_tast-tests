@@ -10,11 +10,11 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/gamepad/dualshock"
 	"chromiumos/tast/local/bundles/cros/gamepad/jstest"
 	"chromiumos/tast/local/uhid"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

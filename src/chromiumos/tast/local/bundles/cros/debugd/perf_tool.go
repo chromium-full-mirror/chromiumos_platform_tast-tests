@@ -16,10 +16,10 @@ import (
 	"sync"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/debugd"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type testCase struct {

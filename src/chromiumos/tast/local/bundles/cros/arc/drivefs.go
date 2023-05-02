@@ -14,11 +14,11 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bundles/cros/arc/storage"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/drivefs"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 

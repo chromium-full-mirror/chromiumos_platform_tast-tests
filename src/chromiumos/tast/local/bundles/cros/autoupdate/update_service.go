@@ -18,11 +18,11 @@ import (
 
 	"chromiumos/tast/common/testexec"
 	ue "chromiumos/tast/common/updateengine"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/updateengine"
 	aupb "chromiumos/tast/services/cros/autoupdate"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/lsbrelease"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

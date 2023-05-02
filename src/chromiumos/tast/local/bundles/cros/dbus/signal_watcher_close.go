@@ -11,7 +11,7 @@ import (
 	"github.com/godbus/dbus/v5"
 
 	"chromiumos/tast/local/dbusutil"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

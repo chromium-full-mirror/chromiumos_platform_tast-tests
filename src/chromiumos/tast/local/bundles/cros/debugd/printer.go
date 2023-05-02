@@ -9,11 +9,11 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/debugd"
 	"chromiumos/tast/local/printing/printer"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

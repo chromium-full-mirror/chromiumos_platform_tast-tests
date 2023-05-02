@@ -12,7 +12,7 @@ import (
 
 	"chromiumos/tast/local/bundles/cros/factory/toolkit"
 	factoryservice "chromiumos/tast/services/cros/factory"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

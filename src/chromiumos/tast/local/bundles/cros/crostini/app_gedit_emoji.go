@@ -5,6 +5,9 @@
 package crostini
 
 import (
+	"context"
+	"time"
+
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ime/emojipicker"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -15,11 +18,8 @@ import (
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/terminalapp"
 	"chromiumos/tast/local/uidetection"
-	"chromiumos/tast/testing"
-	"context"
-	"time"
-
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

@@ -13,8 +13,8 @@ import (
 	"chromiumos/tast/common/hps/hpsutil"
 	"chromiumos/tast/local/dbusutil"
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type testParam struct {

@@ -11,7 +11,7 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/debugd"
 	"chromiumos/tast/local/printing/printer"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 // A printerSpec defines a struct carrying an omnibus of printer

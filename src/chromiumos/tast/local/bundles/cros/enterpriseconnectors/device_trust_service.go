@@ -13,7 +13,6 @@ import (
 	"google.golang.org/grpc"
 
 	"chromiumos/tast/common/policy"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/enterpriseconnectors/signals"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -21,7 +20,8 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/policyutil"
 	pb "chromiumos/tast/services/cros/enterpriseconnectors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // defaultUITimeout is the default timeout for UI interactions.

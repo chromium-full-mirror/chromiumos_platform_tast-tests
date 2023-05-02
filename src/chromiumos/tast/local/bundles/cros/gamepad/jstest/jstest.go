@@ -14,10 +14,10 @@ import (
 	"os"
 	"path"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/uhid"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // KernelCommunicationDone is used to determine when the get report requests by

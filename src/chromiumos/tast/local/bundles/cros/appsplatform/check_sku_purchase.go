@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"chromiumos/tast/local/playbilling"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

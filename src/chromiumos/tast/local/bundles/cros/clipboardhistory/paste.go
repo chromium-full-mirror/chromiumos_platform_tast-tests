@@ -18,7 +18,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/clipboardhistory"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/input"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 type pasteTestParams struct {

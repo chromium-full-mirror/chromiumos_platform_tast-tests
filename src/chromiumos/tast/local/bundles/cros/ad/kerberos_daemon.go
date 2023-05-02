@@ -15,7 +15,7 @@ import (
 
 	kp "chromiumos/system_api/kerberos_proto"
 	"chromiumos/tast/local/bundles/cros/ad/kerberos"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

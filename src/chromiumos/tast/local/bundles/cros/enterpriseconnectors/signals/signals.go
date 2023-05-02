@@ -8,7 +8,7 @@ import (
 	"encoding/json"
 	"reflect"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 // Fields are sorted in alphabetical order.

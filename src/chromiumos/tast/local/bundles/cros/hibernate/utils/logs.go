@@ -11,8 +11,8 @@ import (
 	"strings"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // DetectLogs reads the string channel until the all string match or context expires.

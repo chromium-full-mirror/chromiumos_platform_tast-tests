@@ -10,9 +10,8 @@ import (
 
 	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/local/cellular"
-	"chromiumos/tast/testing"
-
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 type shillCellularEntitlementCheckTestParam struct {

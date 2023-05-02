@@ -14,7 +14,7 @@ import (
 	"google.golang.org/grpc"
 
 	"chromiumos/tast/services/cros/baserpc"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
