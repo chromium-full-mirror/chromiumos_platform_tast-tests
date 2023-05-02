@@ -17,6 +17,7 @@ import (
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/bundles/cros/health/iioservice"
 	"chromiumos/tast/local/croshealthd"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -28,6 +29,7 @@ func init() {
 		Desc:         "Checks that cros_healthd can fetch sensor info",
 		Contacts:     []string{"cros-tdm-tpe-eng@google.com"},
 		BugComponent: "b:982097",
+		// TODO(b/251306646): Promote to critical.
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "diagnostics"},
 		Fixture:      "crosHealthdRunning",

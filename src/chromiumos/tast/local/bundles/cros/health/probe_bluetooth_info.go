@@ -18,6 +18,7 @@ import (
 	"chromiumos/tast/local/dbusutil"
 	"chromiumos/tast/local/jsontypes"
 	"chromiumos/tast/local/set"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -68,6 +69,7 @@ func init() {
 		Desc:         "Checks that cros_healthd can fetch Bluetooth info",
 		Contacts:     []string{"cros-tdm-tpe-eng@google.com"},
 		BugComponent: "b:982097",
+		// TODO(b/280387742): Promote to critical.
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "diagnostics"},
 		Fixture:      "crosHealthdRunning",

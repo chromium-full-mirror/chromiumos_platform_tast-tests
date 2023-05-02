@@ -16,6 +16,7 @@ import (
 	"chromiumos/tast/local/bundles/cros/health/utils"
 	"chromiumos/tast/local/croshealthd"
 	"chromiumos/tast/local/jsontypes"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/lsbrelease"
 	"go.chromium.org/tast/core/testing"
@@ -42,7 +43,8 @@ func init() {
 				checkPsr: false,
 			},
 		}, {
-			Name:      "platform_service_record",
+			Name: "platform_service_record",
+			// TODO(b/277667306): Promote to critical.
 			ExtraAttr: []string{"informational"},
 			Val: psrInfoTestParams{
 				checkPsr: true,

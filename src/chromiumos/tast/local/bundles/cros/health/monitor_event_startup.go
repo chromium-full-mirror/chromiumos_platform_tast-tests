@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/testexec"
+
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -51,6 +52,7 @@ func init() {
 				category: "hdmi",
 				duration: 3 * time.Second,
 			},
+			// TODO(b/279849605): Promote to critical.
 			ExtraAttr: []string{"informational"},
 		}, {
 			Name: "sd_card",
@@ -58,6 +60,7 @@ func init() {
 				category: "sd_card",
 				duration: 3 * time.Second,
 			},
+			// TODO(b/279849703): Promote to critical.
 			ExtraAttr: []string{"informational"},
 		}, {
 			Name: "touchscreen",

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"chromiumos/tast/local/croshealthd"
+
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -111,12 +112,14 @@ func init() {
 			Name: "https_latency",
 			Val:  newRoutineParams(croshealthd.RoutineHTTPSLatency),
 		}, {
-			Name:      "memory",
-			Val:       newRoutineParams(croshealthd.RoutineMemory),
+			Name: "memory",
+			Val:  newRoutineParams(croshealthd.RoutineMemory),
+			// TODO(b/279849842): Promote to critical.
 			ExtraAttr: []string{"informational"},
 		}, {
-			Name:      "sensitive_sensor",
-			Val:       newRoutineParams(croshealthd.RoutineSensitiveSensor),
+			Name: "sensitive_sensor",
+			Val:  newRoutineParams(croshealthd.RoutineSensitiveSensor),
+			// TODO(b/280388091): Promote to critical.
 			ExtraAttr: []string{"informational"},
 		}, {
 			Name: "fingerprint",
@@ -125,7 +128,8 @@ func init() {
 			// cros_config. At this moment, only jinlon and drobit
 			// are enabled.
 			ExtraHardwareDeps: hwdep.D(hwdep.Model("jinlon", "drobit")),
-			ExtraAttr:         []string{"informational"},
+			// TODO(b/279374234): Promote to critical.
+			ExtraAttr: []string{"informational"},
 		}, {
 			Name: "fingerprint_alive",
 			Val:  newRoutineParams(croshealthd.RoutineFingerprintAlive),
@@ -133,37 +137,44 @@ func init() {
 			// cros_config. At this moment, only jinlon and drobit
 			// are enabled.
 			ExtraHardwareDeps: hwdep.D(hwdep.Model("jinlon", "drobit")),
-			ExtraAttr:         []string{"informational"},
+			// TODO(b/279374234): Promote to critical.
+			ExtraAttr: []string{"informational"},
 		}, {
 			Name:              "emmc_lifetime",
 			Val:               newRoutineParams(croshealthd.RoutineEMMCLifetime),
 			ExtraHardwareDeps: hwdep.D(hwdep.Emmc()),
-			ExtraAttr:         []string{"informational"},
+			// TODO(b/279707249): Promote to critical.
+			ExtraAttr: []string{"informational"},
 		}, {
 			Name:              "led_lit_up",
 			Val:               newRoutineParams(croshealthd.RoutineLedLitUp),
 			ExtraHardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		}, {
-			Name:      "audio_set_volume",
-			Val:       newRoutineParams(croshealthd.RoutineAudioSetVolume),
+			Name: "audio_set_volume",
+			Val:  newRoutineParams(croshealthd.RoutineAudioSetVolume),
+			// TODO(b/279670424): Promote to critical.
 			ExtraAttr: []string{"informational"},
 		}, {
-			Name:      "audio_set_gain",
-			Val:       newRoutineParams(croshealthd.RoutineAudioSetGain),
+			Name: "audio_set_gain",
+			Val:  newRoutineParams(croshealthd.RoutineAudioSetGain),
+			// TODO(b/279670424): Promote to critical.
 			ExtraAttr: []string{"informational"},
 		}, {
-			Name:              "bluetooth_power",
-			Val:               newRoutineParams(croshealthd.RoutineBluetoothPower),
+			Name: "bluetooth_power",
+			Val:  newRoutineParams(croshealthd.RoutineBluetoothPower),
+			// TODO(b/280388009): Promote to critical.
 			ExtraAttr:         []string{"informational"},
 			ExtraHardwareDeps: hwdep.D(hwdep.Bluetooth()),
 		}, {
-			Name:              "bluetooth_discovery",
-			Val:               newRoutineParams(croshealthd.RoutineBluetoothDiscovery),
+			Name: "bluetooth_discovery",
+			Val:  newRoutineParams(croshealthd.RoutineBluetoothDiscovery),
+			// TODO(b/280388009): Promote to critical.
 			ExtraAttr:         []string{"informational"},
 			ExtraHardwareDeps: hwdep.D(hwdep.Bluetooth()),
 		}, {
-			Name:              "bluetooth_scanning",
-			Val:               newRoutineParams(croshealthd.RoutineBluetoothScanning),
+			Name: "bluetooth_scanning",
+			Val:  newRoutineParams(croshealthd.RoutineBluetoothScanning),
+			// TODO(b/280388009): Promote to critical.
 			ExtraAttr:         []string{"informational"},
 			ExtraHardwareDeps: hwdep.D(hwdep.Bluetooth()),
 		}},
