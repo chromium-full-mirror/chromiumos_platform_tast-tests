@@ -441,12 +441,22 @@ func DataCollector(ctx context.Context, s *testing.State) {
 		buildDescriptor: desc,
 	}
 
+	// Create temp caches directory before starting generation.
+	tmpCachesDir := param.tmpCachesDir
+	useDevCaches := (tmpCachesDir != "")
+	if useDevCaches {
+		if err := dututils.MkdirRemote(ctx, d, tmpCachesDir); err != nil {
+			s.Fatalf("Failed to create temp cache dir %q:  %v", tmpCachesDir, err)
+		}
+	}
+	defer dututils.RemoveAllRemote(ctx, d, tmpCachesDir)
+
 	genUreadaheadPack := func() (retErr error) {
 		service := arc.NewUreadaheadPackServiceClient(cl.Conn)
 		// First boot is needed to be initial boot with removing all user data.
 		request := arcpb.UreadaheadPackRequest{
 			Creds:        s.RequiredVar("arc.perfAccountPool"),
-			UseDevCaches: param.tmpCachesDir != "",
+			UseDevCaches: useDevCaches,
 		}
 
 		// Shorten the total context by 5 seconds to allow for cleanup.
@@ -570,7 +580,7 @@ func DataCollector(ctx context.Context, s *testing.State) {
 
 		response, err := service.Generate(shortCtx, &request)
 		if err != nil {
-			return errors.Wrap(err, "failed to generate packages reference and GMS Core caches")
+			return errors.Wrap(err, "failed to generate packages reference and GMS core caches")
 		}
 		defer dututils.RemoveAllRemote(ctx, d, response.TargetDir)
 
@@ -578,10 +588,6 @@ func DataCollector(ctx context.Context, s *testing.State) {
 			response.GmsCoreManifestName,
 			response.GsfCacheName}
 		packAndUploadData(shortCtx, gmsCoreCache, response.TargetDir, resources)
-
-		// Do validity check to make sure we won't fail cache generation during
-		// the official build image.
-		testing.ContextLog(ctx, "Validating packages cache reference")
 
 		tempDir, err := ioutil.TempDir("", "cachebuilder")
 		if err != nil {
@@ -595,6 +601,67 @@ func DataCollector(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to install cache builder library: ", err)
 		}
 
+		// TODO(b/279554423): Only use dev caches in local builds until all caches are
+		// installed and extra verification checks are in place.
+		if useDevCaches && !param.upload {
+			testing.ContextLogf(ctx, "Installing GMS core caches into dev directory: %q", tmpCachesDir)
+
+			if err := decompressSystemImage(ctx, s, param.vmEnabled, tempDir); err != nil {
+				s.Fatal("Failed to decompress system image: ", err)
+			}
+
+			localGMSTar := filepath.Join(tempDir, response.GmsCoreCacheName)
+			if err := linuxssh.GetFile(
+				ctx, d.Conn(),
+				filepath.Join(response.TargetDir, response.GmsCoreCacheName), localGMSTar,
+				linuxssh.PreserveSymlinks); err != nil {
+				s.Fatalf("Failed to get %q from the device: %v", response.GmsCoreCacheName, err)
+			}
+			localGMSManifest := filepath.Join(tempDir, response.GmsCoreManifestName)
+			if err := linuxssh.GetFile(
+				ctx, d.Conn(),
+				filepath.Join(response.TargetDir, response.GmsCoreManifestName), localGMSManifest,
+				linuxssh.PreserveSymlinks); err != nil {
+				s.Fatalf("Failed to get %q from the device: %v", response.GmsCoreManifestName, err)
+			}
+			baseName := strings.TrimSuffix(response.GmsCoreCacheName, filepath.Ext(response.GmsCoreCacheName))
+			localGMSCoreCache := filepath.Join(tempDir, baseName)
+
+			if err := cache.InstallGmsCoreCaches(ctx, jarPath, tempDir, localGMSTar, localGMSManifest, localGMSCoreCache); err != nil {
+				s.Fatal("Failed to install GMS core caches: ", err)
+			}
+
+			// Copy to remote host temp cache artifacts root directory.
+			remoteGMSCoreCache := filepath.Join(tmpCachesDir, baseName)
+			dataMap := map[string]string{
+				localGMSCoreCache: remoteGMSCoreCache,
+			}
+			if _, err := linuxssh.PutFiles(ctx, d.Conn(), dataMap, linuxssh.DereferenceSymlinks); err != nil {
+				s.Fatalf("Failed to send data from %q to remote data path %q: %v", localGMSCoreCache, remoteGMSCoreCache, err)
+			}
+
+			// Update file ownership and permissions of remote files. This is mimicking what
+			// GmsCoreCacheInstaller is already doing but on the remote host.
+			var ugid string
+			if param.vmEnabled {
+				// ARCVM requires system user.
+				ugid = "1000"
+			} else {
+				// Container can use Android system user instead.
+				ugid = "656360"
+			}
+			if err := dututils.ChownRemote(ctx, d, ugid, ugid, remoteGMSCoreCache); err != nil {
+				s.Fatal("Failed to chown GMS core caches path: ", err)
+			}
+			if err := dututils.ChmodRemote(ctx, d, "0700", remoteGMSCoreCache); err != nil {
+				s.Fatal("Failed to chmod GMS core caches path: ", err)
+			}
+		}
+
+		// Do validity check to make sure we won't fail cache generation during
+		// the official build image.
+		testing.ContextLog(ctx, "Validating packages cache reference")
+
 		localXMLPath := filepath.Join(tempDir, response.PackagesCacheName)
 		if err := linuxssh.GetFile(
 			ctx, d.Conn(),
@@ -605,12 +672,8 @@ func DataCollector(ctx context.Context, s *testing.State) {
 
 		// Note, we validate packages cache reference with itself.
 		// This is to validate the structure of captured document.
-		if err := testexec.CommandContext(
-			ctx, "java", "-cp", jarPath,
-			"org.chromium.arc.cachebuilder.Validator",
-			"--source", localXMLPath, "--reference", localXMLPath,
-			"--dynamic-validate", "no").Run(testexec.DumpLogOnError); err != nil {
-			s.Fatal("Failed to validate packages cache reference: ", err)
+		if err := cache.ValidatePackagesCache(ctx, jarPath, localXMLPath, localXMLPath, false /* validateAll */); err != nil {
+			s.Fatal("Failed to validate Packages cache reference: ", err)
 		}
 
 		if param.uploadPackagesReference {
@@ -637,15 +700,6 @@ func DataCollector(ctx context.Context, s *testing.State) {
 			return
 		}
 	}
-
-	// Create temp caches directory before starting generation.
-	tmpCachesDir := param.tmpCachesDir
-	if tmpCachesDir != "" {
-		if err := dututils.MkdirRemote(ctx, d, tmpCachesDir); err != nil {
-			s.Fatalf("Failed to create temp cache dir %q:  %v", tmpCachesDir, err)
-		}
-	}
-	defer dututils.RemoveAllRemote(ctx, d, tmpCachesDir)
 
 	attempts := 0
 	for {
@@ -850,5 +904,37 @@ func genDexOptCache(ctx context.Context, s *testing.State, cl *rpc.Client, targe
 		s.Fatalf("Failed to upload %q: %v", targetFile, err)
 	}
 
+	return nil
+}
+
+func getAndroidPath(vmEnabled bool) string {
+	const (
+		// Path where the container images are installed in the rootfs.
+		arcPath = "/opt/google/containers/android"
+		// Path where the VM images are installed in the rootfs.
+		arcVMPath = "/opt/google/vms/android"
+	)
+
+	if vmEnabled {
+		return arcVMPath
+	}
+	return arcPath
+}
+
+func decompressSystemImage(ctx context.Context, s *testing.State, vmEnabled bool, dstDir string) error {
+	systemImg := "system.raw.img"
+	localSystemImg := filepath.Join(dstDir, systemImg)
+	d := s.DUT()
+	if err := linuxssh.GetFile(
+		ctx, d.Conn(),
+		filepath.Join(getAndroidPath(vmEnabled), systemImg), localSystemImg,
+		linuxssh.PreserveSymlinks); err != nil {
+		return errors.Wrapf(err, "failed to get %q from the device", systemImg)
+	}
+
+	// Decompress system image.
+	if err := testexec.CommandContext(ctx, "unsquashfs", "-no-xattrs", "-f", "-d", dstDir, localSystemImg).Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "failed to unsquashfs system image")
+	}
 	return nil
 }

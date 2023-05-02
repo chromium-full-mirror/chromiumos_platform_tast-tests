@@ -84,21 +84,10 @@ func CacheValidation(ctx context.Context, s *testing.State) {
 		s.Fatal("Cache validation should only be run on a user build")
 	}
 
-	tempDir, err := ioutil.TempDir("", "tmp_dir")
-	if err != nil {
-		s.Fatal("Failed to create global temp dir: ", err)
-	}
-	defer os.RemoveAll(tempDir)
-
 	// Keep resources needed for failure investigation.
 	artifactsDir := filepath.Join(s.OutDir(), "artifacts")
 	if err := os.Mkdir(artifactsDir, os.ModePerm); err != nil {
 		s.Fatal(errors.Wrap(err, "failed to create artifacts dir"))
-	}
-
-	jarPath, err := cache.InstallCacheBuilderJar(ctx, d, param.vmEnabled, tempDir)
-	if err != nil {
-		s.Fatal("Failed to install cache builder library: ", err)
 	}
 
 	// Connect to the gRPC server on the DUT.
@@ -206,22 +195,23 @@ func CacheValidation(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	const javaClass = "org.chromium.arc.cachebuilder.Validator"
+	tempDir, err := ioutil.TempDir("", "tmp_dir")
+	if err != nil {
+		s.Fatal("Failed to create global temp dir: ", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	jarPath, err := cache.InstallCacheBuilderJar(ctx, d, param.vmEnabled, tempDir)
+	if err != nil {
+		s.Fatal("Failed to install cache builder library: ", err)
+	}
 
 	s.Log("Validating Packages cache")
-	if err := testexec.CommandContext(
-		ctx, "java", "-cp", jarPath, javaClass,
-		"--source", withCache,
-		"--reference", withoutCache,
-		"--dynamic-validate", "yes").Run(testexec.DumpLogOnError); err != nil {
+	if err := cache.ValidatePackagesCache(ctx, jarPath, withCache, withoutCache, true /* validateAll */); err != nil {
 		s.Error("Failed to validate withCache against withoutCache: ", err)
 	}
 
-	if err := testexec.CommandContext(
-		ctx, "java", "-cp", jarPath, javaClass,
-		"--source", withoutCache,
-		"--reference", genCache,
-		"--dynamic-validate", "no").Run(testexec.DumpLogOnError); err != nil {
+	if err := cache.ValidatePackagesCache(ctx, jarPath, withoutCache, genCache, false /* validateAll */); err != nil {
 		s.Error("Failed to validate withoutCache against generated: ", err)
 	}
 

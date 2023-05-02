@@ -116,3 +116,53 @@ func InstallCacheBuilderJar(ctx context.Context, dut *dut.DUT, vmEnabled bool, d
 
 	return jarPath, nil
 }
+
+// ValidatePackagesCache validates sourcePath packages xml against the referencePath packages
+// xml where dynamicValidate will determine whether to verify all permissions elements and
+// fingerprints are also required (e.g. certificates, tag metadata, non user ID attributes,
+// signatures, signing keyset, etc.)
+func ValidatePackagesCache(ctx context.Context, jarPath, sourcePath, referencePath string, validateAll bool) error {
+	const javaClass = "org.chromium.arc.cachebuilder.Validator"
+	if jarPath == "" || sourcePath == "" || referencePath == "" {
+		return errors.New("failed to run cache validator with invalid empty path(s)")
+	}
+	var dynamicValidateStr string
+	if validateAll {
+		dynamicValidateStr = "yes"
+	} else {
+		dynamicValidateStr = "no"
+	}
+
+	if err := testexec.CommandContext(
+		ctx, "java", "-cp", jarPath, javaClass,
+		"--source", sourcePath, "--reference", referencePath,
+		"--dynamic-validate", dynamicValidateStr).Run(testexec.DumpLogOnError); err != nil {
+		return err
+	}
+	return nil
+}
+
+// InstallGmsCoreCaches installs GMS Core caches based on files from manifestPath and tarPath.
+func InstallGmsCoreCaches(ctx context.Context, jarPath, rootDir, tarPath, manifestPath, outDir string) error {
+	const javaClass = "org.chromium.arc.cachebuilder.GmsCoreCacheInstaller"
+	if tarPath == manifestPath {
+		return errors.New("failed to run cache installer due to invalid identical tar and manifest paths")
+	}
+	if jarPath == "" || tarPath == "" || manifestPath == "" {
+		return errors.New("failed to run cache installer with invalid empty path(s)")
+	}
+	if !strings.Contains(rootDir, "/") || !strings.Contains(outDir, "/") {
+		return errors.New("failed to run cache installer, please specify valid directories")
+	}
+
+	if err := testexec.CommandContext(
+		ctx, "sudo", "java", "-cp", jarPath, javaClass,
+		"--system-root", rootDir, "--gms-caches", tarPath,
+		"--manifest", manifestPath, "--output-dir", outDir).Run(testexec.DumpLogOnError); err != nil {
+		return err
+	}
+	if err := testexec.CommandContext(ctx, "sudo", "chmod", "0744", outDir).Run(testexec.DumpLogOnError); err != nil {
+		return err
+	}
+	return nil
+}
