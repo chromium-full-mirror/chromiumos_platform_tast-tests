@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+// Package googledocs provides the control of Google apps, including Google docs and Google slides.
 package googledocs
 
 import (
@@ -27,15 +28,18 @@ import (
 // docsName represents the name of the Google Docs web area.
 const docsName = "Google Docs"
 
-var docWebArea = nodewith.NameContaining(docsName).Role(role.RootWebArea)
+var (
+	docsWebArea     = nodewith.NameContaining(docsName).Role(role.RootWebArea)
+	docsApplication = nodewith.Role(role.Application).Ancestor(docsWebArea)
+)
 
-// NewGoogleDocs returns an action to create a new google document.
+// NewGoogleDocs returns an action to create a new Google document.
 func NewGoogleDocs(ctx context.Context, tconn *chrome.TestConn, br *browser.Browser, uiHandler cuj.UIActionHandler, newWindow bool) error {
 	var opts []browser.CreateTargetOption
 	if newWindow {
 		opts = append(opts, browser.WithNewWindow())
 	}
-	testing.ContextLog(ctx, "Start to create google document")
+	testing.ContextLog(ctx, "Start to create Google document")
 	// If there is an account sign-out issue when navigating to a Google Docs page,
 	// it will continue to evaluate the JS expression in br.NewConn until
 	// the test case timeout is exceeded.
@@ -44,7 +48,7 @@ func NewGoogleDocs(ctx context.Context, tconn *chrome.TestConn, br *browser.Brow
 	defer cancel()
 	conn, err := uiHandler.NewChromeTab(newChromeTabCtx, br, cuj.NewGoogleDocsURL, newWindow)
 	if err != nil {
-		return errors.Wrap(err, "failed to open the google document")
+		return errors.Wrap(err, "failed to open the Google document")
 	}
 	defer conn.Close()
 	return webutil.WaitForQuiescence(ctx, conn, longUITimeout)
@@ -53,9 +57,10 @@ func NewGoogleDocs(ctx context.Context, tconn *chrome.TestConn, br *browser.Brow
 // RenameDoc returns an action to rename the document.
 func RenameDoc(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, title string) action.Action {
 	ui := uiauto.New(tconn)
-	renameTextbox := nodewith.Name("Rename").ClassName("docs-title-input").Ancestor(docWebArea).Editable().Focusable()
+	renameTextbox := nodewith.Name("Rename").ClassName("docs-title-input").Ancestor(docsWebArea).Editable().Focusable()
 	return ui.Retry(5, uiauto.NamedCombine("rename document",
-		ui.WaitUntilExists(docWebArea),
+		ShowTheDocMenus(tconn, kb),
+		ui.WaitUntilExists(docsWebArea),
 		ui.LeftClickUntil(renameTextbox, ui.WithTimeout(5*time.Second).WaitUntilExists(renameTextbox.State("focused", true))),
 		kb.AccelAction("Ctrl+A"),
 		kb.TypeAction(title),
@@ -68,8 +73,8 @@ func RenameDoc(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, title stri
 // EditDoc returns an action to edit the document.
 func EditDoc(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, paragraph string) action.Action {
 	ui := uiauto.New(tconn)
-	content := nodewith.Name("Document content").Role(role.TextField).Ancestor(docWebArea).Editable().First()
-	canvas := nodewith.Role(role.Canvas).Ancestor(docWebArea).First()
+	content := nodewith.Name("Document content").Role(role.TextField).Ancestor(docsWebArea).Editable().First()
+	canvas := nodewith.Role(role.Canvas).Ancestor(docsWebArea).First()
 	return uiauto.NamedCombine("edit document",
 		ui.WaitUntilExists(content),
 		ui.LeftClick(canvas),
@@ -81,9 +86,9 @@ func EditDoc(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, paragraph st
 // ChangeDocTextColor returns an action to change text color to specific color.
 func ChangeDocTextColor(tconn *chrome.TestConn, color string) action.Action {
 	ui := uiauto.New(tconn)
-	moreButton := nodewith.Name("More").Role(role.ToggleButton).Ancestor(docWebArea)
-	textColorButton := nodewith.Name("Text color").Role(role.PopUpButton).Ancestor(docWebArea)
-	colorButton := nodewith.Name(color).Role(role.Cell).Ancestor(docWebArea)
+	moreButton := nodewith.Name("More").Role(role.ToggleButton).Ancestor(docsWebArea)
+	textColorButton := nodewith.Name("Text color").Role(role.PopUpButton).Ancestor(docsWebArea)
+	colorButton := nodewith.Name(color).Role(role.Cell).Ancestor(docsWebArea)
 	return uiauto.Retry(retryTimes, uiauto.NamedCombine("change document text color to "+color,
 		uiauto.IfSuccessThen(ui.Gone(textColorButton), ui.LeftClickUntil(moreButton, ui.WithTimeout(shortUITimeout).WaitUntilExists(textColorButton))),
 		ui.LeftClickUntil(textColorButton, ui.WithTimeout(shortUITimeout).WaitUntilExists(colorButton)),
@@ -95,9 +100,9 @@ func ChangeDocTextColor(tconn *chrome.TestConn, color string) action.Action {
 // ChangeDocFontSize returns an action to change font size to specific font size.
 func ChangeDocFontSize(tconn *chrome.TestConn, size string) action.Action {
 	ui := uiauto.New(tconn)
-	moreButton := nodewith.Name("More").Role(role.ToggleButton).Ancestor(docWebArea)
-	fontSizeTextField := nodewith.Name("Font size").Role(role.TextField).Ancestor(docWebArea)
-	fontSizeOption18 := nodewith.Name(size).Role(role.ListBoxOption).Ancestor(docWebArea)
+	moreButton := nodewith.Name("More").Role(role.ToggleButton).Ancestor(docsWebArea)
+	fontSizeTextField := nodewith.Name("Font size").Role(role.TextField).Ancestor(docsWebArea)
+	fontSizeOption18 := nodewith.Name(size).Role(role.ListBoxOption).Ancestor(docsWebArea)
 	return uiauto.Retry(retryTimes, uiauto.NamedCombine("change document font size to "+size,
 		uiauto.IfSuccessThen(ui.Gone(fontSizeTextField), ui.LeftClickUntil(moreButton, ui.WithTimeout(shortUITimeout).WaitUntilExists(fontSizeTextField))),
 		ui.LeftClickUntil(fontSizeTextField, ui.WithTimeout(shortUITimeout).WaitUntilExists(fontSizeOption18)),
@@ -109,7 +114,7 @@ func ChangeDocFontSize(tconn *chrome.TestConn, size string) action.Action {
 // UndoDoc returns an action to undo document.
 func UndoDoc(tconn *chrome.TestConn) action.Action {
 	ui := uiauto.New(tconn)
-	undoButton := nodewith.NameContaining("Undo").Role(role.Button).Ancestor(docWebArea)
+	undoButton := nodewith.NameContaining("Undo").Role(role.Button).Ancestor(docsWebArea)
 	return uiauto.NamedCombine("undo document",
 		ui.LeftClick(undoButton),
 		waitForDocsSaved(tconn),
@@ -119,7 +124,7 @@ func UndoDoc(tconn *chrome.TestConn) action.Action {
 // RedoDoc returns an action to redo document.
 func RedoDoc(tconn *chrome.TestConn) action.Action {
 	ui := uiauto.New(tconn)
-	redoButton := nodewith.NameContaining("Redo").Role(role.Button).Ancestor(docWebArea)
+	redoButton := nodewith.NameContaining("Redo").Role(role.Button).Ancestor(docsWebArea)
 	return uiauto.NamedCombine("redo document",
 		ui.LeftClick(redoButton),
 		waitForDocsSaved(tconn),
@@ -130,9 +135,8 @@ func RedoDoc(tconn *chrome.TestConn) action.Action {
 func DeleteDoc(tconn *chrome.TestConn) action.Action {
 	ui := uiauto.New(tconn)
 	docHomeWebArea := nodewith.Name(docsName).Role(role.RootWebArea)
-	application := nodewith.Role(role.Application).Ancestor(docWebArea) // Google Docs appliction node.
-	fileButton := nodewith.Name("File").Role(role.MenuItem).Ancestor(application)
-	menu := nodewith.Role(role.Menu).Ancestor(application)
+	fileButton := nodewith.Name("File").Role(role.MenuItem).Ancestor(docsApplication)
+	menu := nodewith.Role(role.Menu).Ancestor(docsApplication)
 	moveToTrash := nodewith.NameContaining("Move to trash t").Role(role.MenuItem)
 	goToDocsHome := nodewith.Name("Go to Docs home screen").Role(role.Button)
 	return uiauto.NamedCombine("delete document",
@@ -169,9 +173,8 @@ func WaitUntilDocContentToBe(tconn *chrome.TestConn, expectedContent string) act
 
 func docContent(ctx context.Context, tconn *chrome.TestConn) (string, error) {
 	ui := uiauto.New(tconn)
-	application := nodewith.Role(role.Application).Ancestor(docWebArea) // Google Docs application node.
-	menu := nodewith.Role(role.Menu).Ancestor(application)
-	editButton := nodewith.Name("Edit").Role(role.MenuItem).Ancestor(application)
+	menu := nodewith.Role(role.Menu).Ancestor(docsApplication)
+	editButton := nodewith.Name("Edit").Role(role.MenuItem).Ancestor(docsApplication)
 	selectAllMenuItem := nodewith.NameContaining("Select all").Role(role.MenuItem)
 	copyMenuItem := nodewith.NameContaining("Copy").Role(role.MenuItem)
 
@@ -192,4 +195,18 @@ func docContent(ctx context.Context, tconn *chrome.TestConn) (string, error) {
 		return "", errors.Wrap(err, "failed to get clipboard content")
 	}
 	return strings.TrimRight(clipData, "\n"), nil
+}
+
+// ShowTheDocMenus shows the doc menus if it's hidden.
+func ShowTheDocMenus(tconn *chrome.TestConn, kb *input.KeyboardEventWriter) action.Action {
+	ui := uiauto.New(tconn)
+	hideTheMenusButton := nodewith.Name("Hide the menus (Ctrl+Shift+F)").Role(role.Button).Ancestor(docsApplication)
+	showTheMenusButton := nodewith.Name("Show the menus (Ctrl+Shift+F)").Role(role.Button).Ancestor(docsApplication)
+	showTheMenus := uiauto.NamedCombine("show the menus",
+		kb.AccelAction("Ctrl+Shift+F"),
+		ui.WaitUntilExists(hideTheMenusButton),
+		ui.WaitForLocation(hideTheMenusButton))
+	return uiauto.Combine("show the doc menus",
+		ui.WaitUntilAnyExists(hideTheMenusButton, showTheMenusButton),
+		uiauto.IfSuccessThen(ui.Exists(showTheMenusButton), showTheMenus))
 }

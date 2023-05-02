@@ -12,7 +12,7 @@ import (
 
 	"chromiumos/tast/common/action"
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/local/chrome/cuj/googledocs"
+	"chromiumos/tast/local/chrome/apps/thirdparty/googledocs"
 	"chromiumos/tast/local/chrome/cuj/inputsimulations"
 	"chromiumos/tast/local/chrome/ime"
 	"chromiumos/tast/local/chrome/uiauto"

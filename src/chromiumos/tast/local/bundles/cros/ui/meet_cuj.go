@@ -19,11 +19,11 @@ import (
 	"chromiumos/tast/common/bond"
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/apps/thirdparty/googledocs"
 	"chromiumos/tast/local/chrome/apps/thirdparty/googlemeet"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/cuj"
-	"chromiumos/tast/local/chrome/cuj/googledocs"
 	"chromiumos/tast/local/chrome/cuj/inputsimulations"
 	"chromiumos/tast/local/chrome/display"
 	"chromiumos/tast/local/chrome/lacros"
@@ -1125,9 +1125,8 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 				}
 			}(docsBlockerCleanupCtx)
 
-			// Ensure no security alert popup obscures the Google Doc.
-			if err := cuj.DismissCriticalSecurityAlert(ctx, tconn); err != nil {
-				return errors.Wrap(err, "failed to dismiss critical security alert")
+			if err := googledocs.ShowTheDocMenus(tconn, kw)(ctx); err != nil {
+				return errors.Wrap(err, "failed to show the doc menus")
 			}
 		} else if meet.jamboard {
 			// Create another browser window and open a new Jamboard file.
@@ -1394,8 +1393,20 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 				return errors.Wrap(err, "failed to activate the collaboration window")
 			}
 
+			// The UI elements might not immediately appear after activating the window.
+			// Wait for the web area of the Google Docs website to appear
+			// to ensure the security alert can be correctly dismissed.
+			docsRootWebArea := nodewith.NameContaining("Google Docs").Role(role.RootWebArea)
+			if err := ui.WaitUntilExists(docsRootWebArea)(ctx); err != nil {
+				return errors.Wrap(err, "failed to wait for docs root web area to appear")
+			}
+			if err := cuj.DismissCriticalSecurityAlert(ctx, tconn); err != nil {
+				return errors.Wrap(err, "failed to dismiss critical security alert")
+			}
+
+			docsCanvas := nodewith.Role(role.Canvas).Ancestor(docsRootWebArea)
 			if err := action.Combine("select and zoom document",
-				pc.Click(nodewith.Name("Document content").Role(role.TextField)),
+				pc.Click(docsCanvas),
 				kw.AccelAction("Ctrl+Alt+["),
 				kw.AccelAction("Ctrl+A"),
 			)(ctx); err != nil {
@@ -1410,9 +1421,6 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 				// Ctrl+Alt+1 is the shortcut for activating Heading 1.
 				kw.AccelAction("Ctrl+Alt+1"),
 
-				// Generate mouse/touch events by updating the text style to
-				// be bold.
-				googledocs.UpdateTextStyleAction(ctx, pc, ui, googledocs.Bold),
 				inputsimulations.TypeSequenceWPMAction(ctx, kw, 120, strings.Split("my bolded header", "")),
 
 				// Press enter to go to the next line and undo the bold lettering.

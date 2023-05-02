@@ -460,7 +460,7 @@ func DismissCriticalSecurityAlert(ctx context.Context, tconn *chrome.TestConn) e
 	close := nodewith.NameStartingWith("Close").Ancestor(alertContainer)
 	return uiauto.IfSuccessThen(
 		ui.Exists(alertContainer),
-		uiauto.Combine("close security alert", ui.DoDefaultUntil(close, ui.Gone(close))),
+		uiauto.NamedAction("close security alert", ui.DoDefaultUntil(close, ui.Gone(close))),
 	)(ctx)
 }
 
