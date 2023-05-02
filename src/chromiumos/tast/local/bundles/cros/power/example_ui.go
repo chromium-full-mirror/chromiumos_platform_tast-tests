@@ -61,6 +61,11 @@ func init() {
 			Fixture:           "powerLacrosGAIA",
 			ExtraSoftwareDeps: []string{"lacros"},
 			Val:               exampleUITimeParams,
+		}, {
+			Name:              "lacros_arc",
+			Fixture:           "powerLacrosARC",
+			ExtraSoftwareDeps: []string{"lacros"},
+			Val:               exampleUITimeParams,
 		}},
 	})
 }
