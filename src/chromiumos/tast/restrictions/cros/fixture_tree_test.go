@@ -9,7 +9,7 @@ import (
 	gotesting "testing"
 
 	"chromiumos/tast/restrictions"
-	"chromiumos/tast/testing/testcheck"
+	"go.chromium.org/tast/core/testing/testcheck"
 )
 
 const (
