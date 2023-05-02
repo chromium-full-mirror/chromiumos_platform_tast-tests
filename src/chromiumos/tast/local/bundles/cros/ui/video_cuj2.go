@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"chromiumos/tast/common/cros/ui/setup"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/cuj"
@@ -18,8 +17,9 @@ import (
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/mtbf/youtube"
 	"chromiumos/tast/local/ui/cujrecorder"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type videoCUJParam struct {

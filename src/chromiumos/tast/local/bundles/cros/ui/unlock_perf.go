@@ -21,7 +21,7 @@ import (
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/perfutil"
 	"chromiumos/tast/local/power"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
