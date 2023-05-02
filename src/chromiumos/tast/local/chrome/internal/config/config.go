@@ -346,10 +346,6 @@ func NewConfig(opts []Option) (*Config, error) {
 		},
 	}
 
-	// Always enable TerminalAlternativeEmulator flag.
-	// TODO(lxj) Remove after landing https://crrev.com/c/4368901.
-	cfg.m.EnableFeatures = append(cfg.m.EnableFeatures, "TerminalAlternativeEmulator")
-
 	for _, opt := range opts {
 		if err := opt(&cfg.m); err != nil {
 			return nil, err
