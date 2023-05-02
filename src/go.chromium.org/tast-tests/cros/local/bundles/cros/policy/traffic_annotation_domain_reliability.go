@@ -8,6 +8,8 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"time"
 
 	policyannotations "go.chromium.org/tast-tests/cros/local/bundles/cros/policy/policy_annotations"
@@ -27,13 +29,11 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-const ukmTestURL = "https://www.google.com"
-
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         TrafficAnnotationURLKeyedDataCollection,
+		Func:         TrafficAnnotationDomainReliability,
 		LacrosStatus: testing.LacrosVariantNeeded,
-		Desc:         "This test checks the network annotataion for UKM policy to make sure we are not sending network traffic when it's off",
+		Desc:         "This test checks the network annotataion for Domain Reliability to make sure we are not sending network traffic when it's off",
 		Contacts: []string{
 			"chrome-ess-engprod@google.com",
 			"meyron@google.com",
@@ -42,7 +42,7 @@ func init() {
 		BugComponent: "b:1152652", // Chrome Operations > BrApp EngProd > ESS > Enterprise Infra
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
-		Timeout:      8 * time.Minute,
+		Timeout:      4 * time.Minute,
 		Params: []testing.Param{
 			{
 				Fixture: fixture.ChromeEnrolledLoggedInShortMetricsInterval,
@@ -51,14 +51,31 @@ func init() {
 		},
 		Data: []string{"autofill_address_enabled.html"},
 		SearchFlags: []*testing.StringPair{
-			pci.SearchFlag(&policy.UrlKeyedAnonymizedDataCollectionEnabled{}, pci.VerifiedFunctionalityJS),
+			pci.SearchFlag(&policy.DomainReliabilityAllowed{}, pci.VerifiedFunctionalityJS),
 			pci.SearchFlag(&policy.EnableSyncConsent{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.SyncDisabled{}, pci.VerifiedFunctionalityUI),
 		},
 	})
 }
 
-func TrafficAnnotationURLKeyedDataCollection(ctx context.Context, s *testing.State) {
+func TrafficAnnotationDomainReliability(ctx context.Context, s *testing.State) {
+	const domainReliabilityTestURL = "images.google.com"
+
+	// Create temp dir
+	tmpDir, err := os.MkdirTemp("", "")
+	if err != nil {
+		s.Fatal("Failed to create fdms temp dir: ", err)
+	}
+	defer os.RemoveAll(tmpDir)
+	altHostPath := filepath.Join(tmpDir, "hosts")
+	hostsContent := []byte("127.0.0.1       " + domainReliabilityTestURL)
+	// Add line to hosts file
+	if err := os.WriteFile(altHostPath, hostsContent, 0644); err != nil {
+		s.Fatal("Failed to create alternate hosts file: ", err)
+	}
+
+	os.Setenv("HOSTALIASES", altHostPath)
+
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 
@@ -70,46 +87,29 @@ func TrafficAnnotationURLKeyedDataCollection(ctx context.Context, s *testing.Sta
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()
 
-	const ukmNetworkAnnotationID = "727478"
+	const domainReliabilityNetworkAnnotationID = "108804096"
 	for _, param := range []policyannotations.AnnotationTestParams{
 		{
-			Name:                  "ukm_true_msbb_true",
-			AnnotationLogExpected: true,
+			Name:                  "domain_reliability_false",
+			AnnotationLogExpected: false,
 			Policies: []policy.Policy{
-				&policy.UrlKeyedAnonymizedDataCollectionEnabled{Val: true},
+				&policy.DomainReliabilityAllowed{Val: false},
 				&policy.SyncDisabled{Val: false},
 				&policy.EnableSyncConsent{Val: true},
 			},
 		},
 		{
-			Name:                  "ukm_false_msbb_false",
-			AnnotationLogExpected: false,
-			Policies: []policy.Policy{
-				&policy.UrlKeyedAnonymizedDataCollectionEnabled{Val: false},
-				&policy.SyncDisabled{Val: true},
-				&policy.EnableSyncConsent{Val: false},
-			},
-		},
-		{
-			Name:                  "ukm_false_msbb_true",
-			AnnotationLogExpected: false,
-			Policies: []policy.Policy{
-				&policy.UrlKeyedAnonymizedDataCollectionEnabled{Val: false},
-				&policy.SyncDisabled{Val: false},
-				&policy.EnableSyncConsent{Val: true},
-			},
-		},
-		{
-			Name:                  "ukm_true_msbb_false",
+			Name:                  "domain_reliability_true",
 			AnnotationLogExpected: true,
 			Policies: []policy.Policy{
-				&policy.UrlKeyedAnonymizedDataCollectionEnabled{Val: true},
-				&policy.SyncDisabled{Val: true},
-				&policy.EnableSyncConsent{Val: false},
+				&policy.DomainReliabilityAllowed{Val: true},
+				&policy.SyncDisabled{Val: false},
+				&policy.EnableSyncConsent{Val: true},
 			},
 		},
 	} {
 		s.Run(ctx, param.Name, func(ctx context.Context, s *testing.State) {
+
 			// Perform cleanup.
 			if err := policyutil.ResetChrome(ctx, fdms, cr); err != nil {
 				s.Fatal("Failed to clean up: ", err)
@@ -133,29 +133,17 @@ func TrafficAnnotationURLKeyedDataCollection(ctx context.Context, s *testing.Sta
 				s.Fatal("Failed to start logging: ", err)
 			}
 
-			ukmAppConn, err := navigateToPageAndLogElement(ctx, br,
-				"chrome://ukm", `document.getElementsByClassName("ukm-collection-status")[0]`)
+			// Try to open the website to domain event.
+			conn, err := br.NewConn(ctx, "https://"+domainReliabilityTestURL)
 			if err != nil {
-				s.Fatal("Failed to open website: ", err)
-			}
-			defer ukmAppConn.Close()
-
-			// Open the website to log to ukm.
-			conn, err := br.NewConn(ctx, ukmTestURL)
-			if err != nil {
-				s.Fatal("Failed to open website: ", err)
+				s.Log("Failed to open website: ", err)
 			}
 			defer conn.Close()
 
-			// verify logs on ukm app.
-			if err := verifyOnUkmApp(ctx, ukmAppConn, param); err != nil {
-				s.Fatal("Failed verify log on ukm app: ", err)
-			}
-
-			// wait to allow ukm time to write to log (writes every 20 seconds, starting after 1 minute).
+			// wait to allow time to write to log (writes every 20 seconds, starting after 1 minute).
 			foundAnnotationErr := testing.Poll(ctx, func(ctx context.Context) (err error) {
 				// Check the logs for given annotation.
-				isFound, err := annotations.CheckLogs(ctx, cr, ukmNetworkAnnotationID)
+				isFound, err := annotations.CheckLogs(ctx, cr, domainReliabilityNetworkAnnotationID)
 				if err != nil {
 					return testing.PollBreak(err)
 				}
@@ -165,7 +153,7 @@ func TrafficAnnotationURLKeyedDataCollection(ctx context.Context, s *testing.Sta
 				}
 				return errors.New("Annotation ID not found yet")
 			}, &testing.PollOptions{
-				Timeout:  80 * time.Second,
+				Timeout:  60 * time.Second,
 				Interval: 10 * time.Second,
 			})
 
@@ -180,43 +168,7 @@ func TrafficAnnotationURLKeyedDataCollection(ctx context.Context, s *testing.Sta
 			}
 		})
 	}
-}
 
-// verifyOnUkmApp - verifying that the test url is logged the ukm app.
-func verifyOnUkmApp(ctx context.Context, ukmAppConn *chrome.Conn, param policyannotations.AnnotationTestParams) error {
-	if param.AnnotationLogExpected {
-		refreshBtn := `document.getElementById("refresh").click()`
-		if err := ukmAppConn.Eval(ctx, refreshBtn, nil); err != nil {
-			return errors.Wrap(err, "failed to refresh")
-		}
-
-		// Find a row in UKM.
-		urlxPath := `//td[contains(@class, 'url') and normalize-space(text()) = '` + ukmTestURL + `/']`
-		xpathFinder := `document.evaluate("` + urlxPath +
-			`", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue`
-		if err := ukmAppConn.WaitForExprWithTimeout(ctx, xpathFinder, 3*time.Second); err != nil {
-			return errors.Wrap(err, "failed to find url in the ukm app")
-		}
-	}
-
-	return nil
-}
-
-// navigateToPageAndLogElement - used to navigate to a page and log the contents of an element on it.
-func navigateToPageAndLogElement(ctx context.Context, br *browser.Browser, url, element string) (newConn *chrome.Conn, err error) {
-	conn, err := br.NewConn(ctx, url)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to open url app "+url)
-	}
-
-	if err := conn.WaitForExpr(ctx, element); err != nil {
-		return nil, errors.Wrap(err, "failed to wait for the element "+element)
-	}
-	var content string
-	if err := conn.Eval(ctx, element+".innerText", &content); err != nil {
-		return nil, errors.Wrap(err, "failed to get element "+element)
-	}
-	testing.ContextLog(ctx, content)
-
-	return conn, nil
+	// Restore hosts file
+	os.Setenv("HOSTALIASES", "")
 }
