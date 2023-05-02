@@ -17,6 +17,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/saveddesks"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -71,6 +72,9 @@ func SavedDeskDelete(ctx context.Context, s *testing.State) {
 
 	cr := s.FixtValue().(*saveddesks.SavedDeskFixtData).Chrome
 
+	// Set up the apps to launch list.
+	appsList := s.Param().([]apps.App)
+
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
@@ -109,8 +113,12 @@ func SavedDeskDelete(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for the animation to be completed: ", err)
 	}
 
-	// Open Chrome and Files.
-	appsList := []apps.App{apps.Chrome, apps.FilesSWA}
+	// Open PlayStore, Chrome and Files.
+	browserApp, err := apps.PrimaryBrowser(ctx, tconn)
+	if err != nil {
+		s.Fatal("Could not find the primary browser app info: ", err)
+	}
+	appsList = append(appsList, browserApp)
 	if err := saveddesks.OpenApps(ctx, tconn, ac, appsList); err != nil {
 		s.Fatal("Failed to open apps: ", err)
 	}
