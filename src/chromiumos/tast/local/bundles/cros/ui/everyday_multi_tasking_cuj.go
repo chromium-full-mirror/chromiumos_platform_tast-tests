@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"chromiumos/tast/common/cros/ui/setup"
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/audio"
 	"chromiumos/tast/local/audio/crastestclient"
 	et "chromiumos/tast/local/bundles/cros/ui/everydaymultitaskingcuj"
@@ -19,8 +18,9 @@ import (
 	"chromiumos/tast/local/chrome/cuj/bluetooth"
 	"chromiumos/tast/local/chrome/display"
 	"chromiumos/tast/local/ui/cujrecorder"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type multiTaskingParam struct {
