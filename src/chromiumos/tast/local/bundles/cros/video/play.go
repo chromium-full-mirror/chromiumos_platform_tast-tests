@@ -316,6 +316,7 @@ func init() {
 			},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         []string{"bear-320x240.hevc.mp4"},
+			ExtraHardwareDeps: hwdep.D(hwdep.SupportsHEVCVideoDecodingInChrome()),
 			ExtraSoftwareDeps: []string{caps.HWDecodeHEVC, "proprietary_codecs"},
 			Fixture:           "chromeVideo",
 		}, {
@@ -328,6 +329,7 @@ func init() {
 			},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         []string{"bear-320x240.hevc10.mp4"},
+			ExtraHardwareDeps: hwdep.D(hwdep.SupportsHEVCVideoDecodingInChrome()),
 			ExtraSoftwareDeps: []string{caps.HWDecodeHEVC10BPP, "proprietary_codecs"},
 			Fixture:           "chromeVideo",
 		}, {
@@ -376,6 +378,7 @@ func init() {
 			},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         append(play.MSEDataFiles(), "bear-320x240-video-only.hevc.mp4", "bear-320x240-audio-only.aac.mp4", "bear-320x240.hevc.mpd"),
+			ExtraHardwareDeps: hwdep.D(hwdep.SupportsHEVCVideoDecodingInChrome()),
 			ExtraSoftwareDeps: []string{caps.HWDecodeHEVC, "proprietary_codecs"},
 			Fixture:           "chromeVideo",
 		}, {

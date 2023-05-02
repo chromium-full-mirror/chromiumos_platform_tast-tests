@@ -14,6 +14,7 @@ import (
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/lacros"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 // seekTest is used to describe the config used to run each Seek test.
@@ -88,6 +89,7 @@ func init() {
 			},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         []string{"720_hevc.mp4"},
+			ExtraHardwareDeps: hwdep.D(hwdep.SupportsHEVCVideoDecodingInChrome()),
 			ExtraSoftwareDeps: []string{caps.HWDecodeHEVC, "proprietary_codecs"},
 			Fixture:           "chromeVideo",
 		}, {
@@ -165,6 +167,7 @@ func init() {
 			},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         []string{"smpte_bars_resolution_ladder.hevc.mp4"},
+			ExtraHardwareDeps: hwdep.D(hwdep.SupportsHEVCVideoDecodingInChrome()),
 			ExtraSoftwareDeps: []string{caps.HWDecodeHEVC, "proprietary_codecs"},
 			Fixture:           "chromeVideo",
 		}, {
@@ -246,6 +249,7 @@ func init() {
 			},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_weekly"},
 			ExtraData:         []string{"720_hevc.mp4"},
+			ExtraHardwareDeps: hwdep.D(hwdep.SupportsHEVCVideoDecodingInChrome()),
 			ExtraSoftwareDeps: []string{caps.HWDecodeHEVC, "proprietary_codecs"},
 			Timeout:           20 * time.Minute,
 			Fixture:           "chromeVideo",

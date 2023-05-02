@@ -157,9 +157,13 @@ func TestPlaybackPerfParams(t *testing.T) {
 			}
 			for _, fps := range fpss {
 				for _, dec := range decs {
-					params = append(params,
+					param :=
 						genPlaybackParam(codec, genPlaybackPerfDataPath(codec, resolution, fps),
-							resolution, fps, dec, "", "", nil))
+							resolution, fps, dec, "", "", nil)
+					if codec == "hevc" {
+						param.HardwareDeps = "hwdep.SupportsHEVCVideoDecodingInChrome()"
+					}
+					params = append(params, param)
 				}
 			}
 		}
@@ -168,10 +172,10 @@ func TestPlaybackPerfParams(t *testing.T) {
 	for _, fps := range []int{30, 60} {
 		for _, resolution := range []int{2160, 4320} {
 			codec, dec := "hevc10", "hw"
-			params = append(params,
-				genPlaybackParam(codec, genPlaybackPerfDataPath(codec, resolution, fps),
-					resolution, fps, dec,
-					"", "", []string{}))
+			param := genPlaybackParam(codec, genPlaybackPerfDataPath(codec, resolution, fps),
+				resolution, fps, dec, "", "", []string{})
+			param.HardwareDeps = "hwdep.SupportsHEVCVideoDecodingInChrome()"
+			params = append(params, param)
 		}
 	}
 	// Alt
