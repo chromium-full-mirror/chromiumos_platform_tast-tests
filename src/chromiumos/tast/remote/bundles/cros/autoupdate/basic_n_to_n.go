@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/remote/updateutil"
 	"go.chromium.org/tast/core/lsbrelease"
 	"go.chromium.org/tast/core/testing"
@@ -36,6 +37,7 @@ func init() {
 			"tast.cros.autoupdate.UpdateService",
 		},
 		Timeout: preUpdateTimeoutN2N + updateutil.UpdateTimeout + postUpdateTimeoutN2N,
+		Fixture: fixture.Autoupdate,
 	})
 }
 
@@ -83,4 +85,6 @@ func BasicNToN(ctx context.Context, s *testing.State) {
 	if version != originalVersion {
 		s.Errorf("Image version changed after the update; got %s, want %s", version, originalVersion)
 	}
+
+	// Autoupdate fixture cleans up and ensures the original image is restored.
 }
