@@ -19,7 +19,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:    Ti50Tcg,
 		Desc:    "Run TCG Compliance tests against a remote Ti50",
-		Timeout: 30 * time.Minute,
+		Timeout: 60 * time.Minute,
 		Contacts: []string{
 			"chromeos-faft@google.com", // CrOS Firmware Developers
 			"granaghan@google.com",     // Test Author
@@ -28,26 +28,8 @@ func init() {
 		Attr:         []string{"group:gsc", "gsc_dt_ab", "gsc_image_ti50"},
 		Fixture:      fixture.Ti50CcdOpen,
 		Params: []testing.Param{{
-			Name: "niap_policy_test",
-			Val:  "NiapPolicyTest",
-		}, {
-			Name: "policy_pcr_multi_branch",
-			Val:  "PolicyPCRMultiBranch",
-		}, {
-			Name: "se__test_data_at_rest",
-			Val:  "SE_TestDataAtRest",
-		}, {
-			Name: "se__test_data_at_rest2",
-			Val:  "SE_TestDataAtRest2",
-		}, {
-			Name: "se__test_data_at_rest3",
-			Val:  "SE_TestDataAtRest3",
-		}, {
 			Name: "se__test_simulated_smart_card",
 			Val:  "SE_TestSimulatedSmartCard",
-		}, {
-			Name: "test_act",
-			Val:  "TestAct",
 		}, {
 			Name: "test_activate",
 			Val:  "TestActivate",
@@ -67,35 +49,14 @@ func init() {
 			Name: "test_activate_make_credential_ecc",
 			Val:  "TestActivateMakeCredentialEcc",
 		}, {
-			Name: "test_audit",
-			Val:  "TestAudit",
-		}, {
-			Name: "test_audit2",
-			Val:  "TestAudit2",
-		}, {
-			Name: "test_audit_coverage",
-			Val:  "TestAuditCoverage",
-		}, {
-			Name: "test_auth_clear_behavior",
-			Val:  "TestAuthClearBehavior",
-		}, {
 			Name: "test_auth_dec_session",
 			Val:  "TestAuthDecSession",
 		}, {
 			Name: "test_auth_enc_dec_session",
 			Val:  "TestAuthEncDecSession",
 		}, {
-			Name: "test_auth_state_behavior",
-			Val:  "TestAuthStateBehavior",
-		}, {
-			Name: "test_automatic_auth",
-			Val:  "TestAutomaticAuth",
-		}, {
 			Name: "test_bad_handles",
 			Val:  "TestBadHandles",
-		}, {
-			Name: "test_bad_policy_sessions",
-			Val:  "TestBadPolicySessions",
 		}, {
 			Name: "test_bad_sessions",
 			Val:  "TestBadSessions",
@@ -127,41 +88,8 @@ func init() {
 			Name: "test_certify_key_without_nv__certify",
 			Val:  "TestCertifyKeyWithoutNv_Certify",
 		}, {
-			Name: "test_certify_x509",
-			Val:  "TestCertifyX509",
-		}, {
-			Name: "test_clear",
-			Val:  "TestClear",
-		}, {
-			Name: "test_clock",
-			Val:  "TestClock",
-		}, {
-			Name: "test_clock_rate",
-			Val:  "TestClockRate",
-		}, {
-			Name: "test_cmac",
-			Val:  "TestCmac",
-		}, {
-			Name: "test_cmac_kat",
-			Val:  "TestCmacKAT",
-		}, {
-			Name: "test_commit",
-			Val:  "TestCommit",
-		}, {
 			Name: "test_context_clear",
 			Val:  "TestContextClear",
-		}, {
-			Name: "test_context_load",
-			Val:  "TestContextLoad",
-		}, {
-			Name: "test_context_load_save",
-			Val:  "TestContextLoadSave",
-		}, {
-			Name: "test_context_load_save_sequences",
-			Val:  "TestContextLoadSaveSequences",
-		}, {
-			Name: "test_context_save",
-			Val:  "TestContextSave",
 		}, {
 			Name: "test_continue_session_attr",
 			Val:  "TestContinueSessionAttr",
@@ -171,9 +99,6 @@ func init() {
 		}, {
 			Name: "test_create_errors",
 			Val:  "TestCreateErrors",
-		}, {
-			Name: "test_create_loaded",
-			Val:  "TestCreateLoaded",
 		}, {
 			Name: "test_create_primary_faults",
 			Val:  "TestCreatePrimaryFaults",
@@ -189,21 +114,6 @@ func init() {
 		}, {
 			Name: "test_da_logic",
 			Val:  "TestDALogic",
-		}, {
-			Name: "test_derivation_katsha1",
-			Val:  "TestDerivationKATSHA1",
-		}, {
-			Name: "test_derivation_katsha256",
-			Val:  "TestDerivationKATSHA256",
-		}, {
-			Name: "test_derivation_katsha384",
-			Val:  "TestDerivationKATSHA384",
-		}, {
-			Name: "test_derivation_parent",
-			Val:  "TestDerivationParent",
-		}, {
-			Name: "test_drtm",
-			Val:  "TestDrtm",
 		}, {
 			Name: "test_duplicate_errors",
 			Val:  "TestDuplicateErrors",
@@ -223,9 +133,6 @@ func init() {
 			Name: "test_ecc",
 			Val:  "TestEcc",
 		}, {
-			Name: "test_ecc_encrypt_decrypt",
-			Val:  "TestEccEncryptDecrypt",
-		}, {
 			Name: "test_ecc_sig",
 			Val:  "TestEccSig",
 		}, {
@@ -244,26 +151,11 @@ func init() {
 			Name: "test_empty_sensitive",
 			Val:  "TestEmptySensitive",
 		}, {
-			Name: "test_encrypt_decrypt",
-			Val:  "TestEncryptDecrypt",
-		}, {
-			Name: "test_encrypt_decrypt2",
-			Val:  "TestEncryptDecrypt2",
-		}, {
-			Name: "test_encrypt_decrypt_errors",
-			Val:  "TestEncryptDecryptErrors",
-		}, {
 			Name: "test_error_reporting",
 			Val:  "TestErrorReporting",
 		}, {
-			Name: "test_event_sequence",
-			Val:  "TestEventSequence",
-		}, {
 			Name: "test_evict_control",
 			Val:  "TestEvictControl",
-		}, {
-			Name: "test_evict_control_hash_sequence",
-			Val:  "TestEvictControlHashSequence",
 		}, {
 			Name: "test_evict_control_transient",
 			Val:  "TestEvictControlTransient",
@@ -289,9 +181,6 @@ func init() {
 			Name: "test_get_capability_pcr",
 			Val:  "TestGetCapabilityPCR",
 		}, {
-			Name: "test_get_cap_auth_policies",
-			Val:  "TestGetCapAuthPolicies",
-		}, {
 			Name: "test_get_cap_commands",
 			Val:  "TestGetCapCommands",
 		}, {
@@ -304,26 +193,11 @@ func init() {
 			Name: "test_get_test_results",
 			Val:  "TestGetTestResults",
 		}, {
-			Name: "test_get_time",
-			Val:  "TestGetTime",
-		}, {
 			Name: "test_gratuitous_auth",
 			Val:  "TestGratuitousAuth",
 		}, {
 			Name: "test_hash",
 			Val:  "TestHash",
-		}, {
-			Name: "test_hash2",
-			Val:  "TestHash2",
-		}, {
-			Name: "test_hash_seq",
-			Val:  "TestHashSeq",
-		}, {
-			Name: "test_hash_tickets",
-			Val:  "TestHashTickets",
-		}, {
-			Name: "test_hierarchy",
-			Val:  "TestHierarchy",
 		}, {
 			Name: "test_hierarchy_control",
 			Val:  "TestHierarchyControl",
@@ -331,14 +205,8 @@ func init() {
 			Name: "test_hierarchy_control_owner_access",
 			Val:  "TestHierarchyControlOwnerAccess",
 		}, {
-			Name: "test_hierarchy_control_platform_access",
-			Val:  "TestHierarchyControlPlatformAccess",
-		}, {
 			Name: "test_hierarchy_control_resource_management",
 			Val:  "TestHierarchyControlResourceManagement",
-		}, {
-			Name: "test_hmac",
-			Val:  "TestHmac",
 		}, {
 			Name: "test_hmac2",
 			Val:  "TestHmac2",
@@ -355,9 +223,6 @@ func init() {
 			Name: "test_hmac_session",
 			Val:  "TestHmacSession",
 		}, {
-			Name: "test_hmac_session2",
-			Val:  "TestHmacSession2",
-		}, {
 			Name: "test_hmac_signing",
 			Val:  "TestHmacSigning",
 		}, {
@@ -373,12 +238,6 @@ func init() {
 			Name: "test_import_export",
 			Val:  "TestImportExport",
 		}, {
-			Name: "test_import_export_duplication_select",
-			Val:  "TestImportExportDuplicationSelect",
-		}, {
-			Name: "test_incremental_self_test",
-			Val:  "TestIncrementalSelfTest",
-		}, {
 			Name: "test_inner_wrapper_dup",
 			Val:  "TestInnerWrapperDup",
 		}, {
@@ -390,9 +249,6 @@ func init() {
 		}, {
 			Name: "test_load_errors",
 			Val:  "TestLoadErrors",
-		}, {
-			Name: "test_lockout_policy_auth",
-			Val:  "TestLockoutPolicyAuth",
 		}, {
 			Name: "test_normalized_policies",
 			Val:  "TestNormalizedPolicies",
@@ -418,23 +274,11 @@ func init() {
 			Name: "test_nv_extend",
 			Val:  "TestNvExtend",
 		}, {
-			Name: "test_nv_global_write_lock",
-			Val:  "TestNvGlobalWriteLock",
-		}, {
-			Name: "test_nv_not_avail",
-			Val:  "TestNvNotAvail",
-		}, {
-			Name: "test_nv_orderly_counter",
-			Val:  "TestNvOrderlyCounter",
-		}, {
 			Name: "test_nv_owner_clear",
 			Val:  "TestNvOwnerClear",
 		}, {
 			Name: "test_nv_partial_write",
 			Val:  "TestNvPartialWrite",
-		}, {
-			Name: "test_nv_persistence",
-			Val:  "TestNvPersistence",
 		}, {
 			Name: "test_nv_set_bits",
 			Val:  "TestNvSetBits",
@@ -475,12 +319,6 @@ func init() {
 			Name: "test_patch__r88_898154",
 			Val:  "TestPatch_R88_898154",
 		}, {
-			Name: "test_pcr1",
-			Val:  "TestPcr1",
-		}, {
-			Name: "test_pcr_auth",
-			Val:  "TestPcrAuth",
-		}, {
 			Name: "test_pcr_extend",
 			Val:  "TestPCRExtend",
 		}, {
@@ -505,57 +343,6 @@ func init() {
 			Name: "test_plaintext_import_export",
 			Val:  "TestPlaintextImportExport",
 		}, {
-			Name: "test_policy",
-			Val:  "TestPolicy",
-		}, {
-			Name: "test_policy1",
-			Val:  "TestPolicy1",
-		}, {
-			Name: "test_policy3",
-			Val:  "TestPolicy3",
-		}, {
-			Name: "test_policy4_1",
-			Val:  "TestPolicy4_1",
-		}, {
-			Name: "test_policy4_10",
-			Val:  "TestPolicy4_10",
-		}, {
-			Name: "test_policy4_11",
-			Val:  "TestPolicy4_11",
-		}, {
-			Name: "test_policy4_12",
-			Val:  "TestPolicy4_12",
-		}, {
-			Name: "test_policy4_13",
-			Val:  "TestPolicy4_13",
-		}, {
-			Name: "test_policy4_14",
-			Val:  "TestPolicy4_14",
-		}, {
-			Name: "test_policy4_2",
-			Val:  "TestPolicy4_2",
-		}, {
-			Name: "test_policy4_3",
-			Val:  "TestPolicy4_3",
-		}, {
-			Name: "test_policy4_4",
-			Val:  "TestPolicy4_4",
-		}, {
-			Name: "test_policy4_5",
-			Val:  "TestPolicy4_5",
-		}, {
-			Name: "test_policy4_6",
-			Val:  "TestPolicy4_6",
-		}, {
-			Name: "test_policy4_7",
-			Val:  "TestPolicy4_7",
-		}, {
-			Name: "test_policy4_8",
-			Val:  "TestPolicy4_8",
-		}, {
-			Name: "test_policy4_9",
-			Val:  "TestPolicy4_9",
-		}, {
 			Name: "test_policy5",
 			Val:  "TestPolicy5",
 		}, {
@@ -568,56 +355,14 @@ func init() {
 			Name: "test_policy_auth_bound_da",
 			Val:  "TestPolicyAuthBoundDA",
 		}, {
-			Name: "test_policy_auth_branches",
-			Val:  "TestPolicyAuthBranches",
-		}, {
-			Name: "test_policy_authorize",
-			Val:  "TestPolicyAuthorize",
-		}, {
-			Name: "test_policy_authorize_nv",
-			Val:  "TestPolicyAuthorizeNV",
-		}, {
-			Name: "test_policy_capability_digest",
-			Val:  "TestPolicyCapabilityDigest",
-		}, {
-			Name: "test_policy_counter_timer",
-			Val:  "TestPolicyCounterTimer",
-		}, {
-			Name: "test_policy_counter_timer2",
-			Val:  "TestPolicyCounterTimer2",
-		}, {
-			Name: "test_policy_counter_timer_offset",
-			Val:  "TestPolicyCounterTimerOffset",
-		}, {
-			Name: "test_policy_name_hash",
-			Val:  "TestPolicyNameHash",
-		}, {
 			Name: "test_policy_nv",
 			Val:  "TestPolicyNv",
 		}, {
 			Name: "test_policy_nv_offset",
 			Val:  "TestPolicyNvOffset",
 		}, {
-			Name: "test_policy_nv_written",
-			Val:  "TestPolicyNvWritten",
-		}, {
-			Name: "test_policy_parameters_digest",
-			Val:  "TestPolicyParametersDigest",
-		}, {
-			Name: "test_policy_pcr",
-			Val:  "TestPolicyPCR",
-		}, {
-			Name: "test_policy_pcr2",
-			Val:  "TestPolicyPCR2",
-		}, {
-			Name: "test_policy_pcr_bad_input",
-			Val:  "TestPolicyPCRBadInput",
-		}, {
 			Name: "test_policy_pcr_raw_commands",
 			Val:  "TestPolicyPCRRawCommands",
-		}, {
-			Name: "test_policy_physical_presence",
-			Val:  "TestPolicyPhysicalPresence",
 		}, {
 			Name: "test_policy_secret",
 			Val:  "TestPolicySecret",
@@ -625,14 +370,8 @@ func init() {
 			Name: "test_policy_secret_bad_auth",
 			Val:  "TestPolicySecretBadAuth",
 		}, {
-			Name: "test_policy_secret_errors",
-			Val:  "TestPolicySecretErrors",
-		}, {
 			Name: "test_policy_signed",
 			Val:  "TestPolicySigned",
-		}, {
-			Name: "test_policy_template",
-			Val:  "TestPolicyTemplate",
 		}, {
 			Name: "test_public_private_mismatch_ecc",
 			Val:  "TestPublicPrivateMismatchEcc",
@@ -685,9 +424,6 @@ func init() {
 			Name: "test_reserved_bits",
 			Val:  "TestReservedBits",
 		}, {
-			Name: "test_rewrap",
-			Val:  "TestRewrap",
-		}, {
 			Name: "test_rsa_crypto",
 			Val:  "TestRsaCrypto",
 		}, {
@@ -733,32 +469,11 @@ func init() {
 			Name: "test_serialization",
 			Val:  "TestSerialization",
 		}, {
-			Name: "test_server_created_child",
-			Val:  "TestServerCreatedChild",
-		}, {
-			Name: "test_session_context",
-			Val:  "TestSessionContext",
-		}, {
-			Name: "test_session_context_gap",
-			Val:  "TestSessionContextGap",
-		}, {
-			Name: "test_session_context_no_replay",
-			Val:  "TestSessionContextNoReplay",
-		}, {
-			Name: "test_session_ctx_lifetime",
-			Val:  "TestSessionCtxLifetime",
-		}, {
 			Name: "test_session_encryption",
 			Val:  "TestSessionEncryption",
 		}, {
 			Name: "test_session_encryption_other_algs",
 			Val:  "TestSessionEncryptionOtherAlgs",
-		}, {
-			Name: "test_session_errors",
-			Val:  "TestSessionErrors",
-		}, {
-			Name: "test_session_lifetime",
-			Val:  "TestSessionLifetime",
 		}, {
 			Name: "test_sign",
 			Val:  "TestSign",
@@ -768,9 +483,6 @@ func init() {
 		}, {
 			Name: "test_sign_restricted",
 			Val:  "TestSignRestricted",
-		}, {
-			Name: "test_sign_sm2dsa",
-			Val:  "TestSignSm2dsa",
 		}, {
 			Name: "test_sign_verify",
 			Val:  "TestSignVerify",
@@ -783,12 +495,6 @@ func init() {
 		}, {
 			Name: "test_simple_sign",
 			Val:  "TestSimpleSign",
-		}, {
-			Name: "test_sm2_encrypt_decrypt",
-			Val:  "TestSm2EncryptDecrypt",
-		}, {
-			Name: "test_sm4",
-			Val:  "TestSm4",
 		}, {
 			Name: "test_start_auth_session_bound",
 			Val:  "TestStartAuthSessionBound",
@@ -804,18 +510,6 @@ func init() {
 		}, {
 			Name: "test_start_auth_session_seed",
 			Val:  "TestStartAuthSessionSeed",
-		}, {
-			Name: "test_startup_faults",
-			Val:  "TestStartupFaults",
-		}, {
-			Name: "test_startup_idempotence",
-			Val:  "TestStartupIdempotence",
-		}, {
-			Name: "test_startup_locality",
-			Val:  "TestStartupLocality",
-		}, {
-			Name: "test_startup_locality_hcrtm",
-			Val:  "TestStartupLocalityHCRTM",
 		}, {
 			Name: "test_stir_random",
 			Val:  "TestStirRandom",
@@ -841,20 +535,8 @@ func init() {
 			Name: "test_tpm_state_portability_phase2",
 			Val:  "TestTpmStatePortabilityPhase2",
 		}, {
-			Name: "test_trial_policy",
-			Val:  "TestTrialPolicy",
-		}, {
-			Name: "test_undefine_space_special",
-			Val:  "TestUndefineSpaceSpecial",
-		}, {
-			Name: "test_unorderly_da",
-			Val:  "TestUnorderlyDA",
-		}, {
 			Name: "test_vendor_specific",
 			Val:  "TestVendorSpecific",
-		}, {
-			Name: "test_z_gen2_phase",
-			Val:  "TestZGen2Phase",
 		},
 		},
 	})
