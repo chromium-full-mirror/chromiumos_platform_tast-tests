@@ -18,6 +18,7 @@ import (
 
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/remote/firmware/reporters"
+
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh/linuxssh"
@@ -386,6 +387,7 @@ func Wrapper(ctx context.Context, s *testing.State) {
 			managerCmd.Wait()
 		}()
 
+		// GoBigSleepLint: Sleep for run duration while syz-manager runs indefinitely.
 		if err := testing.Sleep(ctx, syzkallerRunDuration); err != nil {
 			managerCmd.Kill()
 			s.Fatal("Failed to wait on syz-manager: ", err)
@@ -661,7 +663,7 @@ func runPeriodic(ctx context.Context, d *dut.DUT, done chan bool, cfg *periodicC
 		if err := d.Conn().CommandContext(ctx, cmd[0], cmd[1:]...).Run(); err != nil {
 			testing.ContextLogf(ctx, "Failed to run [%v]: %v", cmd, err)
 		}
-		// Poll is not used as device might reboot during fuzzing.
+		// GoBigSleepLint: Poll is not used as device might reboot during fuzzing.
 		testing.Sleep(ctx, time.Duration(cfg.Periodicity)*time.Second)
 	}
 }
