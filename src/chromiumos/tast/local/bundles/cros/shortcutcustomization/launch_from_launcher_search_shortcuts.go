@@ -6,9 +6,9 @@ package shortcutcustomization
 
 import (
 	"context"
+	"fmt"
 	"time"
 
-	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
@@ -22,9 +22,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         LaunchFromLauncher,
+		Func:         LaunchFromLauncherSearchShortcuts,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Launch the app from the Launcher via searching",
+		Desc:         "Launch the app from the Launcher via searching for a shortcut",
 		Contacts: []string{
 			"cros-peripherals@google.com",
 			"longbowei@google.com",
@@ -45,8 +45,8 @@ func init() {
 	})
 }
 
-// LaunchFromLauncher verifies launching Shortcut Customization app from the launcher.
-func LaunchFromLauncher(ctx context.Context, s *testing.State) {
+// LaunchFromLauncherSearchShortcuts verifies launching Shortcut Customization app from the launcher.
+func LaunchFromLauncherSearchShortcuts(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(*chrome.Chrome)
 
 	cleanupCtx := ctx
@@ -69,10 +69,17 @@ func LaunchFromLauncher(ctx context.Context, s *testing.State) {
 	}
 	defer kb.Close(ctx)
 
-	// Launch Shortcut Customization app from launcher search.
-	if err := launcher.SearchAndLaunchWithQuery(
-		tconn, kb, "Shortcuts", apps.ShortcutCustomization.Name)(ctx); err != nil {
-		s.Fatal("Failed to search and launch app: ", err)
+	// Search for shortcut using launcher and attempt to click result.
+	query := "go to next tab"
+	shortcutsSearchItem := launcher.SearchResultListItemFinder.NameContaining("Shortcuts")
+
+	if err := uiauto.Combine(fmt.Sprintf("search %q in launcher", query),
+		launcher.Open(tconn),
+		launcher.Search(tconn, kb, query),
+		ui.WaitUntilExists(shortcutsSearchItem),
+		ui.DoDefault(shortcutsSearchItem),
+	)(ctx); err != nil {
+		s.Fatalf("Failed to search query (%q) and click result (%p)", query, shortcutsSearchItem)
 	}
 
 	// Verify shortcut customization app is launched.
