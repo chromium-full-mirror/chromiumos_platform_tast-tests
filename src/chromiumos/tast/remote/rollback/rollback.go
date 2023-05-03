@@ -33,7 +33,7 @@ type DeviceInfo struct {
 
 // dumpRollbackFiles retrieves Rollback relevant files and logs. Ensures
 // they are available for debugging in case of failure.
-func dumpRollbackFiles(ctx context.Context, dut *dut.DUT, outDirName string) error {
+func dumpRollbackFiles(ctx context.Context, dut *dut.DUT) error {
 	outDir, ok := testing.ContextOutDir(ctx)
 	if !ok {
 		return errors.New("output directory unavailable in context")
@@ -41,7 +41,7 @@ func dumpRollbackFiles(ctx context.Context, dut *dut.DUT, outDirName string) err
 
 	// Use a timestamp to avoid overwriting any existing directories.
 	timeStr := time.Now().UTC().Format(time.RFC3339Nano)
-	dir := filepath.Join(outDir, outDirName, timeStr)
+	dir := filepath.Join(outDir, "rollback_before_powerwash", timeStr)
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return errors.Wrapf(err, "failed to create directory %q to store rollback data", dir)
 	}
@@ -68,7 +68,7 @@ func dumpRollbackFiles(ctx context.Context, dut *dut.DUT, outDirName string) err
 	for _, fileInfo := range rollbackFiles {
 		pathDst := filepath.Join(dir, fileInfo.SaveName)
 		if err := linuxssh.GetFile(ctx, dut.Conn(), fileInfo.Path, pathDst, linuxssh.DereferenceSymlinks); err != nil {
-			testing.ContextLogf(ctx, "Failed to download %v from DUT (%v) to %v at local host: %v", fileInfo.Path, dut.HostName(), pathDst, err)
+			testing.ContextLog(ctx, "Not possible to download ", fileInfo.Path)
 		}
 	}
 
@@ -77,7 +77,7 @@ func dumpRollbackFiles(ctx context.Context, dut *dut.DUT, outDirName string) err
 
 // SimulatePowerwash resets the TPM and system state.
 func SimulatePowerwash(ctx context.Context, dut *dut.DUT, rpcHint *testing.RPCHint) error {
-	if err := dumpRollbackFiles(ctx, dut, "rollback_before_powerwash"); err != nil {
+	if err := dumpRollbackFiles(ctx, dut); err != nil {
 		testing.ContextLog(ctx, "Failed to dump Rollback files before powerwash: ", err)
 	}
 	return policyutil.EnsureTPMAndSystemStateAreReset(ctx, dut, rpcHint)
@@ -89,7 +89,7 @@ func SimulatePowerwash(ctx context.Context, dut *dut.DUT, rpcHint *testing.RPCHi
 // reboot the device, we will need to add reboot logic here for rollback to
 // happen. See b/240541326.
 func SimulatePowerwashAndReboot(ctx context.Context, dut *dut.DUT) error {
-	if err := dumpRollbackFiles(ctx, dut, "rollback_before_powerwash"); err != nil {
+	if err := dumpRollbackFiles(ctx, dut); err != nil {
 		testing.ContextLog(ctx, "Failed to dump Rollback files before powerwash and reboot: ", err)
 	}
 	return policyutil.EnsureTPMAndSystemStateAreResetRemote(ctx, dut)
