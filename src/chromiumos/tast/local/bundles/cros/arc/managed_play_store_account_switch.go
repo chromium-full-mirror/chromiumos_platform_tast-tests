@@ -12,13 +12,13 @@ import (
 	"chromiumos/tast/common/chrome/credconfig"
 	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
+
 	"chromiumos/tast/local/accountmanager"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/arc/arcent"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
-	"chromiumos/tast/local/chrome/uiauto/ossettings"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/retry"
 
@@ -164,7 +164,7 @@ func ManagedPlayStoreAccountSwitch(ctx context.Context, s *testing.State) {
 			rl.Exit("get secondary user creds", err)
 		}
 
-		if err := addSecondaryAccount(ctx, tconn, d, secondaryUser.User, secondaryUser.Pass); err != nil {
+		if err := addSecondaryAccount(ctx, tconn, cr, d, secondaryUser.User, secondaryUser.Pass); err != nil {
 			rl.Exit("add secondary account", err)
 		}
 
@@ -190,33 +190,19 @@ func ManagedPlayStoreAccountSwitch(ctx context.Context, s *testing.State) {
 }
 
 // addSecondaryAccount adds a secondary account to CrOS account manager.
-func addSecondaryAccount(ctx context.Context, tconn *chrome.TestConn, d *ui.Device, user, pass string) error {
-	settings, err := ossettings.LaunchAtPage(ctx, tconn,
-		nodewith.Name("Apps").Role(role.Heading))
-	if err != nil {
-		return errors.Wrap(err, "failed to open settings page")
-	}
+func addSecondaryAccount(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, d *ui.Device, user, pass string) error {
+	addAccountButton := nodewith.Name("Add Google Account").Role(role.Button)
 
-	playStoreButton := nodewith.Name("Google Play Store").Role(role.Button)
-	if err := uiauto.Combine("Open Android Settings",
-		settings.FocusAndWait(playStoreButton),
-		settings.LeftClick(playStoreButton),
-		settings.LeftClick(nodewith.Name("Manage Android preferences").Role(role.Link)),
+	ui := uiauto.New(tconn).WithTimeout(time.Minute)
+	if err := uiauto.Combine("open account manager settings",
+		accountmanager.OpenAccountManagerSettingsAction(tconn, cr),
+		ui.LeftClickUntil(addAccountButton, ui.Exists(accountmanager.AddAccountDialog())),
 	)(ctx); err != nil {
-		return errors.Wrap(err, "failed to open ARC settings page")
-	}
-
-	if err := arc.ClickAddAccountInSettings(ctx, d, tconn); err != nil {
-		return errors.Wrap(err, "failed to open Add account dialog from ARC")
+		return errors.Wrap(err, "failed to open account manager settings")
 	}
 
 	if err := accountmanager.AddAccount(ctx, tconn, user, pass); err != nil {
 		return errors.Wrap(err, "failed to an add account in account manager")
-	}
-
-	uia := uiauto.New(tconn)
-	if err := uia.WaitUntilExists(nodewith.Name("Manage Android preferences").Role(role.Link).Focused())(ctx); err != nil {
-		return errors.Wrap(err, "failed to find Manage Android preferences link")
 	}
 
 	return nil
