@@ -97,7 +97,7 @@ func MeetIncognitoSmoke(ctx context.Context, s *testing.State) {
 	}
 
 	// googlemeet.WithAllPermissions does not work in incognito mode.
-	gm, err := googlemeet.StartNewMeeting(ctx, cr, browserConn, nil, googlemeet.WithDefaultPermissions)
+	gm, err := googlemeet.StartNewMeeting(ctx, cr, br, browserConn, nil, googlemeet.WithDefaultPermissions)
 	if err != nil {
 		s.Fatal("Failed to start meeting: ", err)
 	}

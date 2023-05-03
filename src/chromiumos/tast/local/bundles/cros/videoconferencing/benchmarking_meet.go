@@ -11,6 +11,7 @@ import (
 
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/local/bundles/cros/videoconferencing/effects"
+	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/apps/thirdparty/googlemeet"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
@@ -150,13 +151,13 @@ func BenchmarkingMeet(ctx context.Context, s *testing.State) {
 	}
 
 	testing.ContextLog(ctx, "Opening Meet")
-	conn, _, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, "")
+	conn, br, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, chrome.NewTabURL)
 	if err != nil {
 		s.Fatal("Failed to launch browser: ", err)
 	}
 	defer cleanup(closeCtx)
 
-	gm, err := googlemeet.StartNewMeeting(ctx, cr, conn,
+	gm, err := googlemeet.StartNewMeeting(ctx, cr, br, conn,
 		map[string]string{
 			"e": "ForceSegmentationModelVariant::GpuMid",
 		}, googlemeet.WithAllPermissions)

@@ -137,7 +137,7 @@ func MeetLiveCaption(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to add bots: %d bots are not added: %v", nFailures, err)
 	}
 
-	conn, _, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, browserType, "")
+	conn, br, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, browserType, chrome.NewTabURL)
 	if err != nil {
 		s.Fatal("Failed to launch browser: ", err)
 	}
@@ -145,11 +145,11 @@ func MeetLiveCaption(ctx context.Context, s *testing.State) {
 
 	var gm *googlemeet.GoogleMeet
 	if s.Param().(common.LaunchAppType) == common.LaunchAppInPWA {
-		gm, err = googlemeet.JoinMeetingUsingPWA(ctx, cr, meetingCode, googlemeet.WithAllPermissions)
+		gm, err = googlemeet.JoinMeetingUsingPWA(ctx, cr, br, meetingCode, googlemeet.WithAllPermissions)
 	} else {
 		// Meet can dynamically switch between different segmentation models.
 		// Force the same model the platform effects use with the experiment ?e=ForceSegmentationModelVariant::GpuMid.
-		gm, err = googlemeet.JoinMeeting(ctx, cr, conn, meetingCode,
+		gm, err = googlemeet.JoinMeeting(ctx, cr, br, conn, meetingCode,
 			map[string]string{
 				"e": "ForceSegmentationModelVariant::GpuMid",
 			}, googlemeet.WithAllPermissions)

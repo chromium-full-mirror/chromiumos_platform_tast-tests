@@ -83,7 +83,7 @@ func (conf *GoogleMeetConference) Join(ctx context.Context, room string) (err er
 		return errors.Wrap(err, "failed to create new tab")
 	}
 
-	conf.gm, err = googlemeet.JoinMeetingWithEffect(ctx, cr, conn, room, googlemeet.BlurEffect, nil, googlemeet.WithAllPermissions, browser.WithNewWindow())
+	conf.gm, err = googlemeet.JoinMeetingWithEffect(ctx, cr, br, conn, room, googlemeet.BlurEffect, nil, googlemeet.WithAllPermissions, browser.WithNewWindow())
 	if err != nil {
 		return CheckSignedOutError(ctx, tconn, errors.Wrap(err, "failed to join google meeting"))
 	}

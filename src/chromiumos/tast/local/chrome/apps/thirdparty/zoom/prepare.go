@@ -94,7 +94,7 @@ func signIn(ctx context.Context, conn *chrome.Conn, tconn *chrome.TestConn) erro
 		if err := ui.LeftClick(accountSelectLink)(ctx); err != nil {
 			return errors.Wrap(err, "failed to click account")
 		}
-		if err := conn.WaitForExprWithTimeout(ctx, "document.readyState === 'loading'", 5*time.Second); err != nil {
+		if err := conn.WaitForExprWithTimeout(ctx, "document.readyState === 'loading'", 10*time.Second); err != nil {
 			if accountLinkStillExist, err := ui.IsNodeFound(ctx, accountSelectLink); err != nil {
 				return testing.PollBreak(errors.Wrap(err, "failed to check account link"))
 			} else if !accountLinkStillExist {

@@ -93,7 +93,7 @@ func MeetSpeakOnMute(ctx context.Context, s *testing.State) {
 
 	browserType := s.FixtValue().(fixture.FixtData).BrowserType()
 
-	conn, _, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, browserType, "")
+	conn, br, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, browserType, chrome.NewTabURL)
 	if err != nil {
 		s.Fatal("Failed to launch browser: ", err)
 	}
@@ -102,11 +102,11 @@ func MeetSpeakOnMute(ctx context.Context, s *testing.State) {
 	var gm *googlemeet.GoogleMeet
 
 	if s.Param().(common.LaunchAppType) == common.LaunchAppInPWA {
-		gm, err = googlemeet.StartNewMeetingUsingPWA(ctx, cr, googlemeet.WithAllPermissions)
+		gm, err = googlemeet.StartNewMeetingUsingPWA(ctx, cr, br, googlemeet.WithAllPermissions)
 	} else {
 		// Meet can dynamically switch between different segmentation models.
 		// Force the same model the platform effects use with the experiment ?e=ForceSegmentationModelVariant::GpuMid.
-		gm, err = googlemeet.StartNewMeeting(ctx, cr, conn,
+		gm, err = googlemeet.StartNewMeeting(ctx, cr, br, conn,
 			map[string]string{
 				"e": "ForceSegmentationModelVariant::GpuMid",
 			}, googlemeet.WithAllPermissions)

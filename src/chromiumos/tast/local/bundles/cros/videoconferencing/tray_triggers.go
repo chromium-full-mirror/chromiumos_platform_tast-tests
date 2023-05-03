@@ -140,12 +140,9 @@ func TrayTriggers(ctx context.Context, s *testing.State) {
 
 func verifyScreenTrigger(ctx context.Context, s *testing.State, br *browser.Browser, zm *zoom.Zoom, vcTray *vctray.VCTray) {
 	// Create a new tab for sharing screen.
-	const (
-		newTabURL   = ""
-		newTabTitle = "about:blank"
-	)
+	const newTabTitle = "New Tab"
 
-	newTabConn, err := br.NewTab(ctx, newTabURL, browser.WithBackground())
+	newTabConn, err := br.NewTab(ctx, chrome.NewTabURL, browser.WithBackground())
 	if err != nil {
 		s.Fatal("Failed to create new tab: ", err)
 	}

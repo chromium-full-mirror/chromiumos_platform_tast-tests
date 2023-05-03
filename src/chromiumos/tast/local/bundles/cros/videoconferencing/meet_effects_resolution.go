@@ -81,13 +81,13 @@ func MeetEffectsResolution(ctx context.Context, s *testing.State) {
 
 	browserType := s.FixtValue().(fixture.FixtData).BrowserType()
 
-	conn, _, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, browserType, "")
+	conn, br, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, browserType, chrome.NewTabURL)
 	if err != nil {
 		s.Fatal("Failed to launch browser: ", err)
 	}
 	defer cleanup(cleanupCtx)
 
-	gm, err := googlemeet.StartNewMeeting(ctx, cr, conn,
+	gm, err := googlemeet.StartNewMeeting(ctx, cr, br, conn,
 		map[string]string{
 			"e": "ForceSegmentationModelVariant::GpuMid",
 		}, googlemeet.WithAllPermissions)

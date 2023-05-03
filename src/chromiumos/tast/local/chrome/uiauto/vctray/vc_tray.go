@@ -17,6 +17,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -35,9 +36,9 @@ var (
 	adjustLightingButton = nodewith.NameStartingWith("Toggle Adjust Lighting").Role(role.ToggleButton).Ancestor(panelSection)
 	liveCaptionButton    = nodewith.NameStartingWith("Toggle Live Caption").Role(role.ToggleButton).Ancestor(panelSection)
 
-	bgBlurOffButton   = nodewith.Name("Off").Role(role.Button).Ancestor(panelSection)
-	bgBlurLightButton = nodewith.Name("Light").Role(role.Button).Ancestor(panelSection)
-	bgBlurFullButton  = nodewith.Name("Full").Role(role.Button).Ancestor(panelSection)
+	bgBlurOffButton   = nodewith.NameContaining("Off").Role(role.Button).Ancestor(panelSection)
+	bgBlurLightButton = nodewith.NameContaining("Light").Role(role.Button).Ancestor(panelSection)
+	bgBlurFullButton  = nodewith.NameContaining("Full").Role(role.Button).Ancestor(panelSection)
 
 	showAppsButton = nodewith.Name("Show apps").Role(role.Button).Ancestor(panelSection)
 )
