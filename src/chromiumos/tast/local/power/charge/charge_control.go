@@ -9,7 +9,6 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/common/servo"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/power"
 	"chromiumos/tast/local/power/setup"
@@ -22,18 +21,13 @@ import (
 // Powerd reports battery_percent & battery_display_percent and for all the operations the latter
 // one has been taken into consideration.
 // This function queries the current battery display percentage of DUT and initiates charging or draining as required.
-func EnsureBatteryWithinRange(ctx context.Context, cr *chrome.Chrome, s *servo.Servo, minPercentage, maxPercentage float64) error {
+func EnsureBatteryWithinRange(ctx context.Context, cr *chrome.Chrome, minPercentage, maxPercentage float64) error {
 	if minPercentage < 0.0 || minPercentage > 100.0 {
 		return errors.New("invalid min percentage, it should be within [0.0, 100.0]")
 	}
 	if maxPercentage < 0.0 || maxPercentage > 100.0 {
 		return errors.New("invalid max percentage, it should be within [0.0, 100.0]")
 	}
-
-	// Shorten deadline to leave time for cleanup.
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
 
 	status, err := power.GetStatus(ctx)
 	if err != nil {
@@ -44,34 +38,11 @@ func EnsureBatteryWithinRange(ctx context.Context, cr *chrome.Chrome, s *servo.S
 		return nil
 	}
 
-	role, err := s.GetPDRole(ctx) // storing the current servo role to perform a deferred restore
-	if err != nil {
-		return errors.Wrap(err, "failed to get current servo power delivery (pd) role")
-	}
-
-	if role == servo.PDRoleNA {
-		return errors.New(`requires "servo v4" for operating DUT power delivery through servo_pd_role`)
-	}
-
-	defer func(ctx context.Context) {
-		if err := s.SetPDRole(ctx, role); err != nil {
-			testing.ContextLogf(ctx, "Failed to restore servo_pd_role to %s during cleanup: %v", role, err)
-		}
-	}(cleanupCtx)
-
 	if status.BatteryDisplayPercent < minPercentage { // charging
-		if err := s.SetPDRole(ctx, servo.PDRoleSrc); err != nil {
-			return errors.Wrapf(err, "unable to set servo_pd_role to %s", servo.PDRoleSrc)
-		}
-		testing.ContextLogf(ctx, "Battery charging has been initiated. Target percentage: %.2f%%", minPercentage)
 		if err := charge(ctx, minPercentage); err != nil {
 			return err
 		}
 	} else { // discharging
-		if err := s.SetPDRole(ctx, servo.PDRoleSnk); err != nil {
-			return errors.Wrapf(err, "unable to set servo_pd_role to %s", servo.PDRoleSnk)
-		}
-		testing.ContextLogf(ctx, "Battery discharging has been initiated. Target percentage: %.2f%%", maxPercentage)
 		if err := drain(ctx, cr, maxPercentage); err != nil {
 			return err
 		}
@@ -129,16 +100,14 @@ func charge(ctx context.Context, displayPercentage float64) error {
 	return nil
 }
 
+const maxForceDischargeErrors = 5
+
 // drain discharges the device battery to the specified display percentage by rendering a resource heavy WebGL graphics.
 func drain(ctx context.Context, cr *chrome.Chrome, desiredPercentage float64) error {
 	// Shorten deadline to leave time for cleanup.
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
-
-	if err := powerSourceStatus(ctx, false); err != nil {
-		return err
-	}
 
 	// Maxing out screen brightness to drain faster.
 	pm, err := power.NewPowerManager(ctx)
@@ -168,14 +137,24 @@ func drain(ctx context.Context, cr *chrome.Chrome, desiredPercentage float64) er
 		return errors.Wrap(err, "failed to create Chrome Test API Connection")
 	}
 
-	// Don't set BatteryDischarge, since that's handled with servo.
+	status, err := power.GetStatus(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get power supply status")
+	}
+
+	// This forces battery discharge and prevents the display from turning off
+	// or dimming.
 	sup.Add(setup.PowerTest(ctx, tconn, setup.PowerTestOptions{
 		Powerd:    setup.DisablePowerd,
 		Backlight: setup.DoNotChangeBacklight,
 		DPTF:      setup.DoNotChangeDPTF,
-	}, nil))
+	}, setup.NewBatteryDischarge(true, true, status.BatteryDisplayPercent-desiredPercentage)))
 	if err := sup.Check(ctx); err != nil {
-		return errors.Wrap(err, "setup failed to stop powerd and fwupd")
+		return errors.Wrap(err, "setup failed to setup battery drain conditions")
+	}
+
+	if err := powerSourceStatus(ctx, false); err != nil {
+		return err
 	}
 
 	// Rendering a WebGL website to consume power quickly.
@@ -186,13 +165,21 @@ func drain(ctx context.Context, cr *chrome.Chrome, desiredPercentage float64) er
 	defer conn.Close()
 	defer conn.CloseTarget(cleanupCtx)
 
+	forceDischargeErrors := 0
 	if err := testing.Poll(ctx, func(context.Context) error {
 		status, err := power.GetStatus(ctx)
 		if err != nil {
 			return testing.PollBreak(errors.Wrap(err, "failed to obtain DUT power status"))
 		}
 		if status.LinePowerConnected {
-			return testing.PollBreak(errors.New("battery draining requires device disconnected from the power source"))
+			forceDischargeErrors++
+			// We can discard the cleanup callback since setup will take care of that.
+			if _, err = setup.SetBatteryDischarge(ctx, 5.0); err != nil {
+				testing.ContextLog(ctx, "Failed to reset force discharge with error: ", err)
+			}
+			if forceDischargeErrors > maxForceDischargeErrors {
+				return testing.PollBreak(errors.New("maximum number of force discharge errors reached"))
+			}
 		}
 
 		if status.BatteryDisplayPercent > desiredPercentage {
@@ -204,6 +191,8 @@ func drain(ctx context.Context, cr *chrome.Chrome, desiredPercentage float64) er
 	}); err != nil {
 		return errors.Wrapf(err, "failed to drain battery to %.2f%%", desiredPercentage)
 	}
+
+	testing.ContextLogf(ctx, "Succeeded in draining battery with %d force discharge errors", forceDischargeErrors)
 
 	return nil
 }

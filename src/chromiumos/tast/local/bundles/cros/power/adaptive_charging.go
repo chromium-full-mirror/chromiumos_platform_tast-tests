@@ -13,7 +13,6 @@ import (
 	"strconv"
 	"time"
 
-	"chromiumos/tast/common/servo"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -47,8 +46,8 @@ func init() {
 			hwdep.Battery(),  // Test doesn't run on ChromeOS devices without a battery.
 			hwdep.ChromeEC(), // Test requires Chrome EC to set battery sustainer.
 			hwdep.ECFeatureChargeControlV2(),
+			hwdep.ForceDischarge(),
 		),
-		Vars:    []string{"servo"},
 		Timeout: time.Hour, // We only need up to an hour if the battery is low. Otherwise, the test should finish in about 10 minutes.
 	})
 }
@@ -70,15 +69,9 @@ func AdaptiveCharging(ctx context.Context, s *testing.State) {
 	}
 	defer cr.Close(cleanupCtx)
 
-	srvo, err := servo.NewDirect(ctx, s.RequiredVar("servo"))
-	if err != nil {
-		s.Fatal("Failed to connect to servo: ", err)
-	}
-	defer srvo.Close(cleanupCtx)
-
 	// Putting battery within testable range where the Adaptive Charging
 	// notification will show.
-	if err := charge.EnsureBatteryWithinRange(ctx, cr, srvo, 80.0, 95.0); err != nil {
+	if err := charge.EnsureBatteryWithinRange(ctx, cr, 80.0, 95.0); err != nil {
 		s.Fatalf("Failed to ensure battery percentage within %d%% to %d%%: %v", 80, 95, err)
 	}
 
