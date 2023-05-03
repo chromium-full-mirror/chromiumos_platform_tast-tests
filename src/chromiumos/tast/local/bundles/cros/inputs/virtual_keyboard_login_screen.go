@@ -20,6 +20,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/vkb"
 	"chromiumos/tast/local/chrome/useractions"
 	"chromiumos/tast/local/uidetection"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -100,12 +101,13 @@ func VirtualKeyboardLoginScreen(ctx context.Context, s *testing.State) {
 	ud := uidetection.NewDefault(tconn).WithTimeout(3 * time.Second).WithScreenshotStrategy(uidetection.ImmediateScreenshot)
 	vkbCtx := vkb.NewContext(cr, tconn)
 	leftShiftKey := nodewith.Name("shift").Ancestor(vkb.NodeFinder.HasClass("key_pos_shift_left"))
+	passwordField := nodewith.NameContaining("Password").Role(role.TextField)
 
 	// Manually enable A11y VK and click password field to trigger VK.
 	if !isTabletVK {
 		if err := uiauto.Combine("trigger A11y VK",
 			vkbCtx.EnableA11yVirtualKeyboard(true),
-			vkbCtx.ClickUntilVKShown(nodewith.NameContaining("Password").Role(role.TextField)),
+			vkbCtx.ClickUntilVKShown(passwordField),
 		)(ctx); err != nil {
 			s.Fatal("Failed to enable A11y VK: ", err)
 		}
@@ -118,6 +120,7 @@ func VirtualKeyboardLoginScreen(ctx context.Context, s *testing.State) {
 	if err := uiauto.UserAction(
 		"VK typing input",
 		uiauto.Combine(`input and verify login password`,
+			ui.WaitUntilExists(passwordField.Focused().Editable()),
 			vkbCtx.TapKeys([]string{"x", "2"}), // pwd: x2
 			uiauto.Retry(3, uiauto.Combine(
 				"press left SHIFT key and check VK shifted",

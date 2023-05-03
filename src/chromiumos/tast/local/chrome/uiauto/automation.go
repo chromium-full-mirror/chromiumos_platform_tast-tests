@@ -24,6 +24,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/state"
 	"chromiumos/tast/local/chrome/useractions"
 	"chromiumos/tast/local/coords"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -521,6 +522,30 @@ func (ac *Context) Exists(finder *nodewith.Finder) Action {
 			await this.execute();
 		}`
 		return q.Call(ctx, nil, expr)
+	}
+}
+
+// EnsureExistsFor returns a function that check the specified node exists for
+// the timeout period. Use this if IsNodeFound is flake due to racing issues.
+func (ac *Context) EnsureExistsFor(finder *nodewith.Finder, duration time.Duration) Action {
+	return func(ctx context.Context) error {
+		// Use custom timeout watchdog rather than relying on context due to
+		// possible race condition. More context is here https://groups.google.com/a/google.com/g/tast-reviewers/c/sGxqggEGVAg/
+		start := time.Now()
+		return testing.Poll(ctx,
+			func(ctx context.Context) error {
+				if err := ac.Gone(finder)(ctx); err == nil {
+					// If node gone break the poll immediately with error.
+					return testing.PollBreak(errors.New(nodewith.ErrNotFound))
+				}
+				if time.Since(start) >= duration {
+					// Timeout is reached and element still exists.
+					return nil
+				}
+				return errors.Errorf("still waiting for the node for %.1fs", (duration - time.Since(start)).Seconds())
+			},
+			nil,
+		)
 	}
 }
 

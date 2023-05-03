@@ -24,6 +24,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/state"
 	"chromiumos/tast/local/coords"
 	"chromiumos/tast/local/input"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -426,17 +427,15 @@ func OpenAudioSettings(ctx context.Context, tconn *chrome.TestConn) error {
 	}
 	defer cleanup(ctx)
 
-	audioSettingsBtn := nodewith.Role(role.Button).Name("Audio settings")
-	audioDetailedView := nodewith.HasClass("AudioDetailedView")
+	audioSettingsBtn := nodewith.Role(role.Button).Name("Audio settings").Onscreen()
+	audioDetailedView := nodewith.HasClass("AudioDetailedView").Onscreen()
 
-	// If audio settings view is open, just return.
 	ui := uiauto.New(tconn)
-	exist, err := ui.IsNodeFound(ctx, audioDetailedView)
-	if err != nil {
-		return errors.Wrap(err, "failed to check audio detailed view")
-	}
-	if exist {
+	// If audio settings view is open, just return.
+	if err := ui.EnsureExistsFor(audioDetailedView, time.Second)(ctx); err == nil {
 		return nil
+	} else if !nodewith.IsNodeNotFoundErr(err) {
+		return errors.Wrap(err, "failed to check the existence of the audio detailed view")
 	}
 
 	// Expand the Quick Settings if it is collapsed.
