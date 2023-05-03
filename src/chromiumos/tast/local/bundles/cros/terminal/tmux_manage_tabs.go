@@ -10,15 +10,16 @@ import (
 	"regexp"
 	"time"
 
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/terminalapp"
-	"chromiumos/tast/testing"
+
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
@@ -31,7 +32,7 @@ func init() {
 			"lxj@chromium.org",
 		},
 		BugComponent: "b:658562",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		SoftwareDeps: []string{"chrome"},
 		// It takes time to WaitForLocation for the last tab.
 		// With the default 2min, it sometimes runs timeout.
