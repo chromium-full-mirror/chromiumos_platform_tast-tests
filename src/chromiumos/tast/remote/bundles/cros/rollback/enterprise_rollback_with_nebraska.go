@@ -14,11 +14,14 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
+	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/remote/policyutil"
 	"chromiumos/tast/remote/updateutil"
 	aupb "chromiumos/tast/services/cros/autoupdate"
+	"chromiumos/tast/services/cros/nebraska"
 	pspb "chromiumos/tast/services/cros/policy"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/ssh/linuxssh"
@@ -45,7 +48,7 @@ func init() {
 		Attr:         []string{}, // Manual execution only.
 		SoftwareDeps: []string{"reboot", "chrome"},
 		ServiceDeps: []string{
-			"tast.cros.autoupdate.NebraskaService",
+			"tast.cros.nebraska.Service",
 			"tast.cros.autoupdate.UpdateService",
 			"tast.cros.policy.PolicyService",
 		},
@@ -69,6 +72,13 @@ func init() {
 					expectedVersion: "13982.82.0",
 				},
 			},
+		},
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.DeviceTargetVersionPrefix{}, pci.VerifiedFunctionalityOS),
+			pci.SearchFlag(&policy.DeviceRollbackAllowedMilestones{}, pci.VerifiedFunctionalityOS),
+			pci.SearchFlag(&policy.DeviceRollbackToTargetVersion{}, pci.VerifiedFunctionalityOS),
+			pci.SearchFlag(&policy.ChromeOsReleaseChannel{}, pci.VerifiedFunctionalityOS),
+			pci.SearchFlag(&policy.ChromeOsReleaseChannelDelegated{}, pci.VerifiedFunctionalityOS),
 		},
 	})
 }
@@ -130,7 +140,7 @@ func EnterpriseRollbackWithNebraska(ctx context.Context, s *testing.State) {
 		defer cl.Close(cleanupCtx)
 
 		// Create clients.
-		nebraskaClient := aupb.NewNebraskaServiceClient(cl.Conn)
+		nebraskaClient := nebraska.NewServiceClient(cl.Conn)
 		policyClient := pspb.NewPolicyServiceClient(cl.Conn)
 		updateClient := aupb.NewUpdateServiceClient(cl.Conn)
 

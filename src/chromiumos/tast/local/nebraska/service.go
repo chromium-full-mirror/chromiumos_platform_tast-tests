@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package autoupdate
+package nebraska
 
 import (
 	"context"
@@ -14,8 +14,8 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 
-	"chromiumos/tast/local/nebraska"
 	aupb "chromiumos/tast/services/cros/autoupdate"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -23,22 +23,22 @@ import (
 func init() {
 	testing.AddService(&testing.Service{
 		Register: func(srv *grpc.Server, s *testing.ServiceState) {
-			aupb.RegisterNebraskaServiceServer(srv, &NebraskaService{s: s})
+			aupb.RegisterNebraskaServiceServer(srv, &Service{s: s})
 		},
 	})
 }
 
-// NebraskaService implements tast.cros.policy.NebraskaService.
-type NebraskaService struct {
+// Service implements tast.cros.policy.NebraskaService.
+type Service struct {
 	s *testing.ServiceState
 
-	instance *nebraska.Nebraska
+	instance *Nebraska
 	tmpDir   string
 	logPath  string
 }
 
 // CreateTempDir creates a temporary directory that is used by Nebraska.
-func (n *NebraskaService) CreateTempDir(ctx context.Context, req *empty.Empty) (*aupb.CreateTempDirResponse, error) {
+func (n *Service) CreateTempDir(ctx context.Context, req *empty.Empty) (*aupb.CreateTempDirResponse, error) {
 	dir, err := ioutil.TempDir("", "nebraska")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create temp dir")
@@ -49,7 +49,7 @@ func (n *NebraskaService) CreateTempDir(ctx context.Context, req *empty.Empty) (
 }
 
 // Start starts a Nebraska service instance with the given parameters.
-func (n *NebraskaService) Start(ctx context.Context, req *aupb.StartRequest) (*aupb.StartResponse, error) {
+func (n *Service) Start(ctx context.Context, req *aupb.StartRequest) (*aupb.StartResponse, error) {
 	logPath := filepath.Join(n.tmpDir, "nebraska.log")
 
 	// Collect the arguments.
@@ -71,7 +71,7 @@ func (n *NebraskaService) Start(ctx context.Context, req *aupb.StartRequest) (*a
 	}
 
 	// Start the Nebraska service.
-	instance, err := nebraska.Start(n.s.ServiceContext(), n.tmpDir, args)
+	instance, err := Start(n.s.ServiceContext(), n.tmpDir, args)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to start Nebraska")
 	}
@@ -91,7 +91,7 @@ func (n *NebraskaService) Start(ctx context.Context, req *aupb.StartRequest) (*a
 }
 
 // Stop gracefully stops the previously started Nebraska instance.
-func (n *NebraskaService) Stop(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+func (n *Service) Stop(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
 	if err := n.instance.Stop(ctx); err != nil {
 		return nil, err
 	}
@@ -100,7 +100,7 @@ func (n *NebraskaService) Stop(ctx context.Context, req *empty.Empty) (*empty.Em
 }
 
 // RemoveTempDir removes the temporary directory that was created for Nebraska.
-func (n *NebraskaService) RemoveTempDir(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+func (n *Service) RemoveTempDir(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
 	if n.tmpDir == "" {
 		testing.ContextLog(ctx, "No temp diretory to remove")
 		return &empty.Empty{}, nil

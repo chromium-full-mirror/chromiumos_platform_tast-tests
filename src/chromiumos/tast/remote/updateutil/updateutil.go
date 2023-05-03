@@ -25,6 +25,8 @@ import (
 
 	"chromiumos/tast/common/testexec"
 	aupb "chromiumos/tast/services/cros/autoupdate"
+	"chromiumos/tast/services/cros/nebraska"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
@@ -235,7 +237,7 @@ func updateFromGSInternal(ctx context.Context, dut *dut.DUT, outdir string, rpcH
 	defer cl.Close(cleanupCtx)
 
 	// Create a temp dir to store the Nebraska logs and the update payload metadata.
-	nebraskaClient := aupb.NewNebraskaServiceClient(cl.Conn)
+	nebraskaClient := nebraska.NewNebraskaServiceClient(cl.Conn)
 	tempDir, err := nebraskaClient.CreateTempDir(preparationCtx, &empty.Empty{})
 	if err != nil {
 		return errors.Wrap(err, "failed to create temporary directory for Nebraska")
@@ -406,7 +408,7 @@ func lroWait(ctx context.Context, client longrunning.OperationsClient, name stri
 				return op, err
 			}
 			delay := rand.Int63n(initialBackoffMillis * (1 << attempt))
-			testing.Sleep(ctx, time.Duration(delay)*time.Millisecond) // The sleep method was changed.
+			testing.Sleep(ctx, time.Duration(delay)*time.Millisecond) // GoBigSleepLint waiting for resource that is expensive to poll.
 			attempt++
 		default:
 			// Non-retryable error

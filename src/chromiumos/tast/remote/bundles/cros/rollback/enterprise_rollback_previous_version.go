@@ -11,6 +11,7 @@ import (
 	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/remote/rollback"
 	"chromiumos/tast/remote/updateutil"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -33,7 +34,7 @@ func init() {
 		Attr:         []string{"group:autoupdate"},
 		SoftwareDeps: []string{"reboot", "chrome", "auto_update_stable"},
 		ServiceDeps: []string{
-			"tast.cros.autoupdate.NebraskaService",
+			"tast.cros.nebraska.Service",
 			"tast.cros.autoupdate.UpdateService",
 			"tast.cros.rollback.EnterpriseRollbackService",
 			"tast.cros.hwsec.OwnershipService",
