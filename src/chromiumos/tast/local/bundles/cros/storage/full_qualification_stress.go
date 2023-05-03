@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"chromiumos/tast/local/bundles/cros/storage/util"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

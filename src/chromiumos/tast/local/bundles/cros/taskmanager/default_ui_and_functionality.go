@@ -9,8 +9,6 @@ import (
 	"math/rand"
 	"time"
 
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
@@ -21,7 +19,9 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/state"
 	"chromiumos/tast/local/chrome/uiauto/taskmanager"
 	"chromiumos/tast/local/input"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

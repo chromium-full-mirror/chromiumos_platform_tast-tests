@@ -14,7 +14,7 @@ import (
 	"sort"
 	"time"
 
-	"chromiumos/tast/errors"
+	"go.chromium.org/tast/core/errors"
 )
 
 const keyValFileName = "keyval"

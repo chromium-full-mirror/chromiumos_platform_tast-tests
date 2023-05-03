@@ -14,8 +14,8 @@ import (
 	"chromiumos/tast/local/chrome/crossdevice"
 	"chromiumos/tast/local/chrome/crossdevice/smartlock"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {

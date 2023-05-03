@@ -11,9 +11,9 @@ import (
 
 	"google.golang.org/grpc"
 
-	"chromiumos/tast/errors"
 	ts "chromiumos/tast/services/cros/tape"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

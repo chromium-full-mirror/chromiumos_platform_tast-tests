@@ -11,8 +11,8 @@ import (
 	"sync"
 	"time"
 
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // runContinuousStorageStress is a storage stress that is periodically interrupted by a power suspend.

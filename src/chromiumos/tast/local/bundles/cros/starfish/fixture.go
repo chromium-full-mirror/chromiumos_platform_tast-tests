@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"chromiumos/tast/local/starfish"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 // The starfish test fixture ensures that the correct SIM slot is configured for the test.

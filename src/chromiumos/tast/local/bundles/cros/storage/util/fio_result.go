@@ -14,7 +14,7 @@ import (
 	"sync"
 
 	"chromiumos/tast/common/perf"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 // fioResult is a serializable structure representing fio results output.
