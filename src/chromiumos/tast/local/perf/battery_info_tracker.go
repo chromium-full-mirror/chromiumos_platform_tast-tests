@@ -12,7 +12,9 @@ import (
 
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/common/testexec"
+	"chromiumos/tast/local/crosconfig"
 	"chromiumos/tast/local/power"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -55,6 +57,16 @@ func NewBatteryInfoTracker(ctx context.Context, metricPrefix string) (*BatteryIn
 		// TODO(b/180915240): find the way to measure power data on those devices.
 		testing.ContextLog(ctx, "Failed to get battery path: ", err)
 		testing.ContextLog(ctx, "This might be okay. Continue the test without battery info")
+		return nil, nil
+	}
+
+	// Drallion does not support automated power testing (see b/277659498#comment4).
+	model, err := crosconfig.Get(ctx, "/", "name")
+	if err != nil {
+		return nil, errors.Wrap(err, "could not find model name")
+	}
+	if strings.Contains(model, "drallion") {
+		testing.ContextLog(ctx, "Drallion does not support automated power testing, continuing the test without battery info")
 		return nil, nil
 	}
 
