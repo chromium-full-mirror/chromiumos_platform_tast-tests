@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -16,7 +15,8 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/mouse"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/coords"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
@@ -83,7 +83,7 @@ func ControlMedia(ctx context.Context, s *testing.State) {
 	// Showing media tray.
 	mediaTray := nodewith.NameContaining("Control your music,").HasClass("ImageView")
 	if err := ui.WaitUntilExists(mediaTray)(ctx); err != nil {
-		s.Fatal("Failed to find media tray after playing a video", err)
+		s.Fatal("Failed to find media tray after playing a video: ", err)
 	}
 
 	// Open media view.
@@ -93,12 +93,12 @@ func ControlMedia(ctx context.Context, s *testing.State) {
 
 	mediaItemList := nodewith.HasClass("MediaItemUIListView")
 	if err := ui.WaitUntilExists(mediaItemList)(ctx); err != nil {
-		s.Fatal("Failed to find media item list after clicking on the media tray", err)
+		s.Fatal("Failed to find media item list after clicking on the media tray: ", err)
 	}
 
 	pauseButton := nodewith.Name("Pause").HasClass("ToggleImageButton")
 	if err := ui.WaitUntilExists(pauseButton)(ctx); err != nil {
-		s.Fatal("Failed to find the pause button after clicking on the media tray", err)
+		s.Fatal("Failed to find the pause button after clicking on the media tray: ", err)
 	}
 
 	// Pause the playing.
@@ -108,7 +108,7 @@ func ControlMedia(ctx context.Context, s *testing.State) {
 
 	playButton := nodewith.Name("Play").HasClass("ToggleImageButton")
 	if err := ui.WaitUntilExists(playButton)(ctx); err != nil {
-		s.Fatal("Failed to find the play button after clicking on the pause button", err)
+		s.Fatal("Failed to find the play button after clicking on the pause button: ", err)
 	}
 
 	// Continue playing.
@@ -117,7 +117,7 @@ func ControlMedia(ctx context.Context, s *testing.State) {
 	}
 
 	if err := ui.WaitUntilExists(pauseButton)(ctx); err != nil {
-		s.Fatal("Failed to find the pause button after clicking on the play button", err)
+		s.Fatal("Failed to find the pause button after clicking on the play button: ", err)
 	}
 
 	// (TODO: b/237826754) Need to test the previous and next button after this bug is fixed.
