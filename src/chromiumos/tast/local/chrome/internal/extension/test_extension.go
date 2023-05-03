@@ -208,10 +208,21 @@ tast.promisify = function(f) {
 tast.bind = function(obj, name) {
   return obj[name].bind(obj);
 };
+tast.poll = async function(predicate, intervalMs) {
+  return new Promise(resolve => {
+    const intervalId = setInterval(() => {
+      if (predicate()) {
+        clearInterval(intervalId);
+        resolve();
+      }
+    }, intervalMs);
+  });
+};
 tast.automation = (() => {
   let desktop;
   let timerId;
 
+  let pendingReleaseDesktop;
   let doNothing = () => {};
   let automation = {
     "getDesktop" : async () => {
@@ -222,6 +233,13 @@ tast.automation = (() => {
 
       if (desktop)
         return desktop;
+
+      // Wait for previous automation tree to finish tearing down before
+      // creating a new one.
+      if (pendingReleaseDesktop) {
+        await tast.poll(() => pendingReleaseDesktop.role === undefined, 100);
+        pendingReleaseDesktop = undefined;
+      }
 
       desktop = await tast.promisify(chrome.automation.getDesktop)();
 
@@ -241,6 +259,7 @@ tast.automation = (() => {
          // triggers automation tree tearing down.
          desktop.removeEventListener("focus", doNothing);
 
+         pendingReleaseDesktop = desktop;
          desktop = undefined;
          timerId = undefined;
        }, 10000);
