@@ -21,8 +21,8 @@ import (
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/kerberos"
 	"chromiumos/tast/local/policyutil/fixtures"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
