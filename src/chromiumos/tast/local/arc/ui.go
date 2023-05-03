@@ -17,6 +17,7 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/launcher"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -81,7 +82,7 @@ func OpenPlayStoreAccountSettings(ctx context.Context, arcDevice *androidui.Devi
 		return errors.Wrap(err, "failed to click Avatar Icon")
 	}
 
-	expandAccountButton := arcDevice.Object(androidui.ClassName("android.view.ViewGroup"), androidui.Clickable(true))
+	expandAccountButton := arcDevice.Object(androidui.DescriptionContains("Expand account"), androidui.Enabled(true))
 	if err := expandAccountButton.WaitForExists(ctx, 10*time.Second); err != nil {
 		testing.ContextLog(ctx, "Expand account button doesn't exist: ", err)
 	} else if err := expandAccountButton.Click(ctx); err != nil {
@@ -126,7 +127,7 @@ func ClickAddAccountInSettings(ctx context.Context, arcDevice *androidui.Device,
 	scrollLayout := arcDevice.Object(androidui.ClassName(scrollClassName),
 		androidui.Scrollable(true))
 	accounts := arcDevice.Object(androidui.ClassName("android.widget.TextView"),
-		androidui.TextMatches("(?i)Accounts"), androidui.Enabled(true))
+		androidui.TextMatches("(?i).*Accounts"), androidui.Enabled(true))
 	if err := scrollLayout.WaitForExists(ctx, 10*time.Second); err == nil {
 		scrollLayout.ScrollTo(ctx, accounts)
 	}
