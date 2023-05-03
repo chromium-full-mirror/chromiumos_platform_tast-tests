@@ -27,6 +27,7 @@ import (
 	"chromiumos/tast/local/modemmanager"
 	"chromiumos/tast/local/shill"
 	"chromiumos/tast/local/upstart"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/fsutil"
@@ -451,9 +452,9 @@ func (h *Helper) Connect(ctx context.Context) (*shill.Service, error) {
 		}
 	}
 
-	// Wait up to 1 minute for the service state to become connected.
+	// Wait up to 1 minute for the service state to become connected and online.
 	if err := service.WaitForProperty(ctx, shillconst.ServicePropertyState, shillconst.ServiceStateOnline, time.Minute); err != nil {
-		return nil, errors.Wrapf(err, "default service %q failed to become connected", name)
+		return nil, errors.Wrapf(err, "default service %q connected but failed to become online", name)
 	}
 
 	return service, nil
