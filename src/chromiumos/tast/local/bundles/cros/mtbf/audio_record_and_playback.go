@@ -8,14 +8,14 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/arc/apputil"
 	"chromiumos/tast/local/arc/apputil/voicerecorder"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/mtbf"
 	"chromiumos/tast/local/uidetection"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 const recordingDuration = 5 * time.Second

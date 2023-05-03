@@ -16,7 +16,7 @@ import (
 	"chromiumos/tast/local/memory/metrics"
 	"chromiumos/tast/local/multivm"
 	"chromiumos/tast/local/resourced"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

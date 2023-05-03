@@ -18,7 +18,7 @@ import (
 	"chromiumos/tast/local/memory/memoryuser"
 	"chromiumos/tast/local/memory/metrics"
 	"chromiumos/tast/local/multivm"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 type lifecycleParam struct {

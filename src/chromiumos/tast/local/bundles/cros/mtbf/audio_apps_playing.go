@@ -8,14 +8,14 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/arc/apputil"
 	"chromiumos/tast/local/arc/apputil/spotify"
 	"chromiumos/tast/local/arc/apputil/youtubemusic"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/mtbf"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 type audioAppType string

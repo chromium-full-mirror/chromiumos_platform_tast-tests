@@ -12,7 +12,7 @@ import (
 	"chromiumos/tast/local/crostini"
 	"chromiumos/tast/local/memory/metrics"
 	"chromiumos/tast/local/multivm"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
