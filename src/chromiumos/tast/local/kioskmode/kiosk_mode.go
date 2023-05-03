@@ -26,7 +26,6 @@ import (
 	"chromiumos/tast/local/policyutil/fixtures"
 	"chromiumos/tast/local/procutil"
 	"chromiumos/tast/local/syslog"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -62,7 +61,7 @@ const (
 	kioskReadyToLaunchLog = "Kiosk app is ready to launch."
 	// kioskReadyToLaunchDuration is the time estimate to emit a kioskReadyToLaunchLog after
 	// kioskStartingLog was emitted.
-	kioskReadyToLaunchDuration = 90 * time.Second
+	kioskReadyToLaunchDuration = 3 * time.Minute
 	// kioskLaunchSucceededLog is reported by Chrome once Kiosk launched successfully.
 	kioskLaunchSucceededLog = "Kiosk launch succeeded"
 	// kioskLaunchSucceededDuration is the time estimate to emit a kioskLaunchSucceededLog after
@@ -76,7 +75,7 @@ const (
 	setPolicyDuration = 60 * time.Second
 	// SetupDuration is the time estimate to set up a Kiosk session with kioskmode.New. This does not
 	// include time to launch the session.
-	SetupDuration = setPolicyDuration
+	SetupDuration = setPolicyDuration + CleanupDuration
 	// LaunchDuration is the time estimate to launch a Kiosk session.
 	LaunchDuration = kioskStartingDuration + kioskReadyToLaunchDuration + kioskLaunchSucceededDuration
 	// CleanupDuration is the time estimate to clean up a Kiosk session with kiosk.Close.
@@ -91,8 +90,89 @@ type Kiosk struct {
 	fdms          *fakedms.FakeDMS
 	localAccounts *policy.DeviceLocalAccounts
 	httpServer    *httptest.Server
+	// reader for Chrome syslog messages from this Kiosk session. Used to wait for Kiosk logs.
+	reader                         *syslog.Reader
+	signinTestExtensionManifestKey string
 	// TODO(b/280555587) remove this field when kiosk.DeprecatedClose is removed.
 	autostart bool
+}
+
+// New sets up Chrome for a Kiosk session using policies based on the given options.
+//
+// Callers must clean up the resulting Kiosk struct with kiosk.Close.
+//
+// If auto launch was configured in opts, the app should eventually launch automatically. Otherwise,
+// callers can use kiosmode.StartFromSignInScreen to launch Kiosk manually.
+//
+// Note New does not wait for Kiosk launch. Callers should use kiosk.WaitLaunchLogs.
+//
+// Tests using New should have a long enough Timeout to account for kioskmode.SetupDuration.
+func New(ctx context.Context, fdms *fakedms.FakeDMS, signinTestExtensionManifestKey string, opts ...Option) (k *Kiosk, c *chrome.Chrome, retErr error) {
+	// Make sure the context deadline is long enough before starting.
+	if ctxutil.DeadlineBefore(ctx, time.Now().Add(SetupDuration)) {
+		return nil, nil, errors.New("Insufficient time remaining for kioskmode.New")
+	}
+
+	// Parse necessary structs from test provided options.
+	cfg, deviceLocalAccounts, httpServer, policyBlob, err := parseOptions(ctx, opts)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "failed to parse Kiosk configuration from options")
+	}
+	defer func() {
+		if retErr != nil && httpServer != nil {
+			httpServer.Close()
+		}
+	}()
+
+	// If an error occurs after the SetPolicyBlob call below, the device may or may not have Kiosk
+	// policies set. From now on always clear Kiosk policies on error.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, CleanupDuration)
+	defer cancel()
+	defer func(ctx context.Context) {
+		if retErr != nil {
+			if err := clearPolicies(ctx, fdms, signinTestExtensionManifestKey); err != nil {
+				testing.ContextLog(ctx, "Failed to clean up Kiosk policies, this may impact next test: ", err)
+			}
+		}
+	}(cleanupCtx)
+
+	// Apply Kiosk policies.
+	testing.ContextLog(ctx, "Kiosk mode: Starting Chrome to set Kiosk policies")
+	if err := setPolicyBlob(ctx, fdms, signinTestExtensionManifestKey, policyBlob); err != nil {
+		return nil, nil, errors.Wrap(err, "failed to set Kiosk policy blob")
+	}
+
+	// Create a syslog.Reader before the new Chrome instance to capture Kiosk launch messages.
+	reader, err := syslog.NewReader(ctx, syslog.Program("chrome"))
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "failed to start Chrome syslog reader")
+	}
+
+	// Start a new Chrome instance now that Kiosk policies are in place.
+	testing.ContextLog(ctx, "Kiosk mode: Starting Chrome after Kiosk policies were set")
+	crOpts := []chrome.Option{
+		chrome.NoLogin(),
+		chrome.DMSPolicy(fdms.URL),
+		chrome.KeepEnrollment(),
+	}
+	crOpts = append(crOpts, cfg.m.ExtraChromeOptions...)
+	cr, err := chrome.New(ctx, crOpts...)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "failed to start chrome after Kiosk policies were set")
+	}
+
+	testing.ContextLog(ctx, "Kiosk mode: Setup succeeded")
+	return &Kiosk{
+		ctx:                            ctx,
+		cr:                             cr,
+		fdms:                           fdms,
+		localAccounts:                  deviceLocalAccounts,
+		httpServer:                     httpServer,
+		reader:                         reader,
+		signinTestExtensionManifestKey: signinTestExtensionManifestKey,
+		autostart:                      cfg.m.AutoLaunch,
+	}, cr, nil
 }
 
 // Close cleans up resources used by the Kiosk struct and resets policies to an empty slice.
@@ -120,7 +200,7 @@ type Kiosk struct {
 //			s.Error("Failed to close kiosk: ", err)
 //		}
 //	}(cleanupCtx)
-func (k *Kiosk) Close(ctx context.Context, signinTestExtensionManifestKey string) (retErr error) {
+func (k *Kiosk) Close(ctx context.Context) (retErr error) {
 	if ctxutil.DeadlineBefore(ctx, time.Now().Add(CleanupDuration)) {
 		testing.ContextLog(ctx, "Deadline too short for kiosk.Close, did you reserve cleanupCtx?")
 		retErr = errors.New("potentially insufficient time remaining for kiosk.Close")
@@ -130,19 +210,29 @@ func (k *Kiosk) Close(ctx context.Context, signinTestExtensionManifestKey string
 		k.httpServer.Close()
 	}
 
+	if k.reader != nil {
+		if err := k.reader.Close(); err != nil {
+			if retErr == nil {
+				retErr = errors.Wrap(err, "failed to close Chrome syslog reader for Kiosk session")
+			} else {
+				testing.ContextLog(ctx, "Failed to close Chrome syslog reader for Kiosk session: ", err)
+			}
+		}
+	}
+
 	// Proceed with cleanup if Chrome is already closed or fails to close, because clearPolicies will
 	// start a new Chrome instance.
 	if k.cr != nil {
 		if err := k.cr.Close(ctx); err != nil {
 			if retErr == nil {
-				retErr = errors.Wrap(err, "failed to close chrome")
+				retErr = errors.Wrap(err, "failed to close Chrome")
 			} else {
-				testing.ContextLog(ctx, "Failed to close chrome: ", err)
+				testing.ContextLog(ctx, "Failed to close Chrome: ", err)
 			}
 		}
 	}
 
-	if err := clearPolicies(ctx, k.fdms, signinTestExtensionManifestKey); err != nil {
+	if err := clearPolicies(ctx, k.fdms, k.signinTestExtensionManifestKey); err != nil {
 		if retErr == nil {
 			retErr = errors.Wrap(err, "failed to clean up Kiosk policies, this may impact next test")
 		} else {
@@ -234,6 +324,14 @@ func (k *Kiosk) DeprecatedClose(ctx context.Context) (retErr error) {
 	return nil
 }
 
+// WaitLaunchLogs is the same as the top level WaitLaunchLogs below, but uses the reader stored in
+// this Kiosk struct.
+//
+// This avoids the caveats of creating the reader at the right time, and should be preferred.
+func (k *Kiosk) WaitLaunchLogs(ctx context.Context) error {
+	return WaitLaunchLogs(ctx, k.reader)
+}
+
 // WaitLaunchLogs uses reader to look for logs that confirm Kiosk mode launched successfully.
 //
 // reader is expected to process syslogs filtered for Chrome and to include messages since before
@@ -249,6 +347,8 @@ func (k *Kiosk) DeprecatedClose(ctx context.Context) (retErr error) {
 //
 // Tests using WaitLaunchLogs should have a long enough Timeout to account for
 // kioskmode.LaunchDuration.
+//
+// TODO(b/280555587) consider removing this when callers migrate to kiosk.WaitLaunchLogs.
 func WaitLaunchLogs(ctx context.Context, reader *syslog.Reader) error {
 	if ctxutil.DeadlineBefore(ctx, time.Now().Add(LaunchDuration)) {
 		return errors.New("potentially insufficient time remaining to wait for Kiosk launch")
@@ -662,7 +762,7 @@ func DeviceLocalAccountUserID(account *policy.DeviceLocalAccountInfo) string {
 // if Kiosk auto launch policies were configured, as Kiosk cannot auto launch if no Chrome instance
 // is running.
 func setPolicyBlob(ctx context.Context, fdms *fakedms.FakeDMS, signinTestExtensionManifestKey string, pb *policy.Blob) (retErr error) {
-	testing.ContextLog(ctx, "Kiosk mode: go to login screen to set policies")
+	testing.ContextLog(ctx, "Kiosk mode: Starting Chrome in signin screen to set policies")
 	cr, err := chrome.New(
 		ctx,
 		chrome.NoLogin(),
@@ -704,4 +804,76 @@ func setPolicies(ctx context.Context, fdms *fakedms.FakeDMS, signinTestExtension
 		return errors.Wrap(err, "failed to add policies to policy blob")
 	}
 	return setPolicyBlob(ctx, fdms, signinTestExtensionManifestKey, blob)
+}
+
+// parseOptions processes opts and returns relevant structs as needed for kioskmode.New.
+func parseOptions(ctx context.Context, opts []Option) (_ *Config, _ *policy.DeviceLocalAccounts, _ *httptest.Server, _ *policy.Blob, retErr error) {
+	cfg, err := NewConfig(opts)
+	if err != nil {
+		return nil, nil, nil, nil, errors.Wrap(err, "failed to process options")
+	}
+
+	deviceLocalAccounts, httpServer := deviceLocalAccountsForConfig(ctx, cfg)
+	defer func() {
+		if retErr != nil && httpServer != nil {
+			httpServer.Close()
+		}
+	}()
+
+	pb, err := policyBlobForConfig(cfg, deviceLocalAccounts)
+	if err != nil {
+		return nil, nil, nil, nil, errors.Wrap(err, "failed to create Kiosk policy blob for config")
+	}
+	return cfg, deviceLocalAccounts, httpServer, pb, nil
+}
+
+// deviceLocalAccountsForConfig sets up a policy.DeviceLocalAccounts slice and the default http
+// server if necessary, as configured in the given cfg.
+func deviceLocalAccountsForConfig(ctx context.Context, cfg *Config) (*policy.DeviceLocalAccounts, *httptest.Server) {
+	if cfg.m.DeviceLocalAccounts == nil {
+		httpServer := NewWebKioskAppServer(ctx)
+		webKioskAppAccountInfo := WebKioskAppAccountInfo(httpServer.URL, WebKioskAccountID)
+		deviceLocalAccounts := &policy.DeviceLocalAccounts{
+			Val: []policy.DeviceLocalAccountInfo{KioskAppAccountInfo, webKioskAppAccountInfo}}
+		return deviceLocalAccounts, httpServer
+	}
+	return cfg.m.DeviceLocalAccounts, nil
+}
+
+// policyBlobForConfig creates the policy.Blob for the given cfg.
+func policyBlobForConfig(cfg *Config, deviceLocalAccounts *policy.DeviceLocalAccounts) (*policy.Blob, error) {
+	// Set policies for device local accounts.
+	policies := []policy.Policy{deviceLocalAccounts}
+
+	// Set auto launch policies.
+	if cfg.m.AutoLaunch {
+		policies = append(policies, &policy.DeviceLocalAccountAutoLoginId{Val: *cfg.m.AutoLaunchKioskAppID})
+	}
+
+	// Set extra policies provided by the test.
+	if cfg.m.ExtraPolicies != nil {
+		policies = append(policies, cfg.m.ExtraPolicies...)
+	}
+
+	// Add policies to policy blob.
+	pb := policy.NewBlob()
+	if err := pb.AddPolicies(policies); err != nil {
+		return nil, errors.Wrap(err, "failed to add policy slice to policy blob")
+	}
+
+	// Set public account policies.
+	if cfg.m.PublicAccountPolicies != nil {
+		for accountID, policies := range cfg.m.PublicAccountPolicies {
+			if err := pb.AddPublicAccountPolicies(accountID, policies); err != nil {
+				return nil, errors.Wrap(err, "failed to add public account policies to policy blob")
+			}
+		}
+	}
+
+	// Set custom directory API ID.
+	if cfg.m.CustomDirectoryAPIID != nil {
+		pb.DirectoryAPIID = *cfg.m.CustomDirectoryAPIID
+	}
+
+	return pb, nil
 }

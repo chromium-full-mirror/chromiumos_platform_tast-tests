@@ -21,8 +21,6 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/kioskmode"
 	"chromiumos/tast/local/screenshot"
-	"chromiumos/tast/local/syslog"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -85,7 +83,7 @@ func init() {
 		// Enough time for kioskmode.New, kiosk launch, and kiosk.Close.
 		Timeout:      kioskmode.SetupDuration + kioskmode.LaunchDuration + kioskmode.CleanupDuration,
 		SoftwareDeps: []string{"reboot", "chrome", "lacros"},
-		Vars:         []string{"ui.signinProfileTestExtensionManifestKey"},
+		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		Fixture:      fixture.FakeDMSEnrolled,
 		Params: []testing.Param{
 			{
@@ -162,9 +160,7 @@ func (param smokeTestParam) appPageHeading() string {
 
 // kioskModeOptions returns the option slice to configure this test parameter.
 func (param smokeTestParam) kioskModeOptions(signinProfileTestExtensionManifestKey string) []kioskmode.Option {
-	// DefaultLocalAccount() includes device local accounts for one chrome app and one web app.
-	// SkipSuccessfulLaunchCheck() tells kioskmode.New to not wait Kiosk launch, we wait ourselves.
-	options := []kioskmode.Option{kioskmode.DefaultLocalAccounts(), kioskmode.SkipSuccessfulLaunchCheck()}
+	var options []kioskmode.Option
 
 	if param.isLacros {
 		options = append(options, kioskmode.PublicAccountPolicies(
@@ -253,19 +249,14 @@ func Smoke(ctx context.Context, s *testing.State) {
 
 	signinTestExtensionManifestKey := s.RequiredVar("ui.signinProfileTestExtensionManifestKey")
 
-	// Start syslog reader before launching Kiosk to wait for Kiosk launch logs.
-	reader, err := syslog.NewReader(ctx, syslog.Program("chrome"))
-	if err != nil {
-		s.Fatal("Failed to start Chrome syslog reader: ", err)
-	}
-	defer reader.Close()
-
-	kiosk, cr, err := kioskmode.DeprecatedNew(ctx, fdms, param.kioskModeOptions(signinTestExtensionManifestKey)...)
+	kiosk, cr, err := kioskmode.New(
+		ctx, fdms, signinTestExtensionManifestKey, param.kioskModeOptions(signinTestExtensionManifestKey)...,
+	)
 	if err != nil {
 		s.Fatal("Failed to create Chrome in Kiosk mode: ", err)
 	}
 	defer func(ctx context.Context) {
-		if err := kiosk.Close(ctx, signinTestExtensionManifestKey); err != nil {
+		if err := kiosk.Close(ctx); err != nil {
 			s.Error("Failed to close kiosk: ", err)
 		}
 	}(cleanupCtx)
@@ -276,7 +267,7 @@ func Smoke(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	if err := kioskmode.WaitLaunchLogs(ctx, reader); err != nil {
+	if err := kiosk.WaitLaunchLogs(ctx); err != nil {
 		s.Fatal("Failed to launch Kiosk: ", err)
 	}
 

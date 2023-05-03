@@ -19,6 +19,9 @@ func ExtraPolicies(p []policy.Policy) Option {
 
 // DefaultLocalAccounts uses default Kiosk applications configuration generated
 // in kioskmode.New().
+//
+// TODO(b/279900827): This will be the default unless options contain CustomLocalAccounts. Remove it
+// once callers are removed.
 func DefaultLocalAccounts() Option {
 	return func(cfg *MutableConfig) error {
 		cfg.UseDefaultLocalAccounts = true
@@ -26,9 +29,11 @@ func DefaultLocalAccounts() Option {
 	}
 }
 
-// CustomLocalAccounts sets custom local accounts on DUT. Use when the default
-// configuration provided by DefaultLocalAccounts() option is not enough.
-// E.g. when test has to use a specific website or a specific Chrome App.
+// CustomLocalAccounts sets custom local accounts on DUT. Use when the test
+// needs a specific website or a specific Chrome App.
+//
+// If not specified, a default set of device local accounts including one web
+// app and one Chrome App is used instead.
 func CustomLocalAccounts(accounts *policy.DeviceLocalAccounts) Option {
 	return func(cfg *MutableConfig) error {
 		cfg.DeviceLocalAccounts = accounts
@@ -81,6 +86,7 @@ func CustomDirectoryAPIID(directoryAPIID string) Option {
 // wait for Kiosk start sequence and it being ready to launch.
 // Use if you want to interact with Kiosk splashscreen view e.g. for bailing
 // out.
+// TODO(b/279900827): remove it once DeprecatedNew is removed.
 func SkipSuccessfulLaunchCheck() Option {
 	return func(cfg *MutableConfig) error {
 		cfg.SkipSuccessfulLaunchCheck = true

@@ -17,8 +17,6 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/kioskmode"
-	"chromiumos/tast/local/syslog"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -34,7 +32,7 @@ func init() {
 			"zubeil@google.com", // Original test author
 		},
 		BugComponent: "b:1253865",
-		Vars:         []string{"ui.signinProfileTestExtensionManifestKey"},
+		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		Attr: []string{
 			"group:golden_tier",
 			"group:medium_low_tier",
@@ -47,76 +45,96 @@ func init() {
 			pci.SearchFlag(&policy.DeviceLocalAccounts{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.KioskCRXManifestUpdateURLIgnored{}, pci.VerifiedFunctionalityUI),
 		},
-		Timeout: 7 * time.Minute, // Starting multiple extensions requires longer timeout.
+		Timeout: time.Duration(len(crxManifestUpdateURLIgnoredTestCases)) * crxManifestUpdateURLIgnoredTestCaseTimeout,
 	})
 }
 
-func CRXManifestUpdateURLIgnored(ctx context.Context, s *testing.State) {
-	for _, tc := range []struct {
-		ignoreCrxURL     bool
-		originalAppTitle string
-		updatedAppTitle  string
-		appID            string
-		updateURL        string
-	}{
-		// The test uses three mock Extensions, with 2 versions each. This allows testing of the correct
-		// update logic in accordance with KioskCRXManifestUpdateURLIgnored policy.
+// crxManifestUpdateURLIgnoredTestcaseTimeout is the timeout of one test case. Each test case sets
+// up, launches, and closes Kiosk, plus 30 seconds buffer time per test case.
+const crxManifestUpdateURLIgnoredTestCaseTimeout = kioskmode.SetupDuration + kioskmode.LaunchDuration + kioskmode.CleanupDuration + 30*time.Second
 
-		// crx-File does not contain an update URL. Version should correspond to updateURL in policy.
-		{
-			ignoreCrxURL:     true,
-			originalAppTitle: "Test extension #4",
-			updatedAppTitle:  "Test extension #4",
-			appID:            "kjecmldfmbflidigcdfdnegjgkgggoih",
-			updateURL:        "https://storage.googleapis.com/extension_test/kjecmldfmbflidigcdfdnegjgkgggoih-update-7.xml",
-		},
-		{
-			ignoreCrxURL:     true,
-			originalAppTitle: "Test extension #4 (updated)",
-			updatedAppTitle:  "Test extension #4 (updated)",
-			appID:            "kjecmldfmbflidigcdfdnegjgkgggoih",
-			updateURL:        "https://storage.googleapis.com/extension_test/kjecmldfmbflidigcdfdnegjgkgggoih-update-8.xml",
-		},
-		// Update URL in crx points to V1 of the app. Version should correspond to updateURL in policy.
-		{
-			ignoreCrxURL:     true,
-			originalAppTitle: "Test extension #5",
-			updatedAppTitle:  "Test extension #5",
-			appID:            "fimgekdokgldflggeacgijngdienfdml",
-			updateURL:        "https://storage.googleapis.com/extension_test/fimgekdokgldflggeacgijngdienfdml-update-9.xml",
-		},
-		{
-			ignoreCrxURL:     true,
-			originalAppTitle: "Test extension #5 (updated)",
-			updatedAppTitle:  "Test extension #5 (updated)",
-			appID:            "fimgekdokgldflggeacgijngdienfdml",
-			updateURL:        "https://storage.googleapis.com/extension_test/fimgekdokgldflggeacgijngdienfdml-update-10.xml",
-		},
-		// Update URL in crx points to V2 of the app. It should only upgrade to V2 if policy is false.
-		{
-			ignoreCrxURL:     true,
-			originalAppTitle: "Test extension #6",
-			updatedAppTitle:  "Test extension #6",
-			appID:            "epeagdmdgnhlibpbnhalblaohdhhkpne",
-			updateURL:        "https://storage.googleapis.com/extension_test/epeagdmdgnhlibpbnhalblaohdhhkpne-update-11.xml",
-		},
-		{
-			ignoreCrxURL:     true,
-			originalAppTitle: "Test extension #6 (updated)",
-			updatedAppTitle:  "Test extension #6 (updated)",
-			appID:            "epeagdmdgnhlibpbnhalblaohdhhkpne",
-			updateURL:        "https://storage.googleapis.com/extension_test/epeagdmdgnhlibpbnhalblaohdhhkpne-update-12.xml",
-		},
-		// Since policy is set to false, the App should upgrade automatically.
-		{
-			ignoreCrxURL:     false,
-			originalAppTitle: "Test extension #6",
-			updatedAppTitle:  "Test extension #6 (updated)",
-			appID:            "epeagdmdgnhlibpbnhalblaohdhhkpne",
-			updateURL:        "https://storage.googleapis.com/extension_test/epeagdmdgnhlibpbnhalblaohdhhkpne-update-11.xml",
-		},
-	} {
-		launchKioskAndVerify(ctx, s, tc.ignoreCrxURL, tc.originalAppTitle, tc.updatedAppTitle, tc.appID, tc.updateURL)
+// crxManifestUpdateURLIgnoredTestcases is a slice of all test case parameters in this test.
+var crxManifestUpdateURLIgnoredTestCases = []struct {
+	name             string
+	ignoreCrxURL     bool
+	originalAppTitle string
+	updatedAppTitle  string
+	appID            string
+	updateURL        string
+}{
+	// The test uses three mock Extensions, with 2 versions each. This allows testing of the correct
+	// update logic in accordance with KioskCRXManifestUpdateURLIgnored policy.
+
+	// crx-File does not contain an update URL. Version should correspond to updateURL in policy.
+	{
+		name:             "no_update_url_v1",
+		ignoreCrxURL:     true,
+		originalAppTitle: "Test extension #4",
+		updatedAppTitle:  "Test extension #4",
+		appID:            "kjecmldfmbflidigcdfdnegjgkgggoih",
+		updateURL:        "https://storage.googleapis.com/extension_test/kjecmldfmbflidigcdfdnegjgkgggoih-update-7.xml",
+	},
+	{
+		name:             "no_update_url_v2",
+		ignoreCrxURL:     true,
+		originalAppTitle: "Test extension #4 (updated)",
+		updatedAppTitle:  "Test extension #4 (updated)",
+		appID:            "kjecmldfmbflidigcdfdnegjgkgggoih",
+		updateURL:        "https://storage.googleapis.com/extension_test/kjecmldfmbflidigcdfdnegjgkgggoih-update-8.xml",
+	},
+	// Update URL in crx points to V1 of the app. Version should correspond to updateURL in policy.
+	{
+		name:             "old_version_url_v1",
+		ignoreCrxURL:     true,
+		originalAppTitle: "Test extension #5",
+		updatedAppTitle:  "Test extension #5",
+		appID:            "fimgekdokgldflggeacgijngdienfdml",
+		updateURL:        "https://storage.googleapis.com/extension_test/fimgekdokgldflggeacgijngdienfdml-update-9.xml",
+	},
+	{
+		name:             "old_version_url_v2",
+		ignoreCrxURL:     true,
+		originalAppTitle: "Test extension #5 (updated)",
+		updatedAppTitle:  "Test extension #5 (updated)",
+		appID:            "fimgekdokgldflggeacgijngdienfdml",
+		updateURL:        "https://storage.googleapis.com/extension_test/fimgekdokgldflggeacgijngdienfdml-update-10.xml",
+	},
+	// Update URL in crx points to V2 of the app. It should only upgrade to V2 if policy is false.
+	{
+		name:             "new_version_url_v1",
+		ignoreCrxURL:     true,
+		originalAppTitle: "Test extension #6",
+		updatedAppTitle:  "Test extension #6",
+		appID:            "epeagdmdgnhlibpbnhalblaohdhhkpne",
+		updateURL:        "https://storage.googleapis.com/extension_test/epeagdmdgnhlibpbnhalblaohdhhkpne-update-11.xml",
+	},
+	{
+		name:             "new_version_url_v2",
+		ignoreCrxURL:     true,
+		originalAppTitle: "Test extension #6 (updated)",
+		updatedAppTitle:  "Test extension #6 (updated)",
+		appID:            "epeagdmdgnhlibpbnhalblaohdhhkpne",
+		updateURL:        "https://storage.googleapis.com/extension_test/epeagdmdgnhlibpbnhalblaohdhhkpne-update-12.xml",
+	},
+	// Since policy is set to false, the App should upgrade automatically.
+	{
+		name:             "crx_updates",
+		ignoreCrxURL:     false,
+		originalAppTitle: "Test extension #6",
+		updatedAppTitle:  "Test extension #6 (updated)",
+		appID:            "epeagdmdgnhlibpbnhalblaohdhhkpne",
+		updateURL:        "https://storage.googleapis.com/extension_test/epeagdmdgnhlibpbnhalblaohdhhkpne-update-11.xml",
+	},
+}
+
+func CRXManifestUpdateURLIgnored(ctx context.Context, s *testing.State) {
+	for _, tc := range crxManifestUpdateURLIgnoredTestCases {
+		testcaseCtx, cancel := context.WithTimeout(ctx, crxManifestUpdateURLIgnoredTestCaseTimeout)
+		defer cancel()
+
+		s.Run(ctx, tc.name, func(ctx context.Context, s *testing.State) {
+			launchKioskAndVerify(testcaseCtx, s, tc.ignoreCrxURL, tc.originalAppTitle, tc.updatedAppTitle, tc.appID, tc.updateURL)
+		})
 	}
 }
 
@@ -148,9 +166,10 @@ func launchKioskAndVerify(ctx context.Context, s *testing.State, ignoreCrxURL bo
 
 	signinTestExtensionManifestKey := s.RequiredVar("ui.signinProfileTestExtensionManifestKey")
 
-	kiosk, cr, err := kioskmode.DeprecatedNew(
+	kiosk, cr, err := kioskmode.New(
 		ctx,
 		fdms,
+		signinTestExtensionManifestKey,
 		kioskmode.CustomLocalAccounts(account),
 		kioskmode.ExtraPolicies(kioskPolicy),
 		kioskmode.ExtraChromeOptions(chrome.LoadSigninProfileExtension(signinTestExtensionManifestKey)),
@@ -159,18 +178,18 @@ func launchKioskAndVerify(ctx context.Context, s *testing.State, ignoreCrxURL bo
 		s.Fatal("Failed to start Chrome in Kiosk mode: ", err)
 	}
 	defer func(ctx context.Context) {
-		if err := kiosk.Close(ctx, signinTestExtensionManifestKey); err != nil {
+		if err := kiosk.Close(ctx); err != nil {
 			s.Error("Failed to close kiosk: ", err)
 		}
 	}(cleanupCtx)
 
-	if !openExtensionAndCheckTitleChange(ctx, s, cr, originalAppTitle, updatedAppTitle) {
+	if !openExtensionAndCheckTitleChange(ctx, s, kiosk, cr, originalAppTitle, updatedAppTitle) {
 		s.Fatal("Missmatch in Version")
 	}
 }
 
 // openExtensionAndCheckTitleChange opens the kiosk app from login screen using the originalAppTitle and evaluates if the launched app has updatedAppTitle.
-func openExtensionAndCheckTitleChange(ctx context.Context, s *testing.State, cr *chrome.Chrome, originalAppTitle, updatedAppTitle string) bool {
+func openExtensionAndCheckTitleChange(ctx context.Context, s *testing.State, kiosk *kioskmode.Kiosk, cr *chrome.Chrome, originalAppTitle, updatedAppTitle string) bool {
 	tconn, err := cr.SigninProfileTestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
@@ -183,13 +202,6 @@ func openExtensionAndCheckTitleChange(ctx context.Context, s *testing.State, cr 
 	// I was not able to find another stable way to interact with the UI.
 	// GoBigSleepLint: TODO(b/280952514) "Apps" button in sign in screen needs some time.
 	testing.Sleep(ctx, 3*time.Second)
-
-	// Start syslog reader.
-	reader, err := syslog.NewReader(ctx, syslog.Program("chrome"))
-	if err != nil {
-		s.Fatal("Failed to start log reader: ", err)
-	}
-	defer reader.Close()
 
 	testing.ContextLog(ctx, "Opening Kiosk app from signin screen")
 	kioskAppsBtn := nodewith.Name("Apps").ClassName("MenuButton")
@@ -205,9 +217,9 @@ func openExtensionAndCheckTitleChange(ctx context.Context, s *testing.State, cr 
 		s.Fatal("Failed to start extension: ", err)
 	}
 
-	// Wait for kiosk to start.
-	if err := kioskmode.WaitLaunchLogs(ctx, reader); err != nil {
-		s.Fatal("There was a problem while checking chrome logs for Kiosk related entries: ", err)
+	// Wait for Kiosk launch.
+	if err := kiosk.WaitLaunchLogs(ctx); err != nil {
+		s.Fatal("Failed to launch Kiosk: ", err)
 	}
 
 	// Wait for extension UI to be visible.
