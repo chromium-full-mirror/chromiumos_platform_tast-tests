@@ -16,7 +16,6 @@ import (
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
-	"chromiumos/tast/local/chrome/uiauto/launcher"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -64,7 +63,7 @@ func OpenPlayStoreAccountSettings(ctx context.Context, arcDevice *androidui.Devi
 		testing.ContextLog(ctx, "Failed to close Play Store: ", err)
 	}
 
-	if err := launcher.LaunchApp(tconn, apps.PlayStore.Name)(ctx); err != nil {
+	if err := apps.Launch(ctx, tconn, apps.PlayStore.ID); err != nil {
 		return errors.Wrap(err, "failed to launch Play Store")
 	}
 
