@@ -128,6 +128,20 @@ func init() {
 		TearDownTimeout: tearDownTimeout,
 	})
 
+	// TODO(http://b/275895388): Remove after feature launch.
+	testing.AddFixture(&testing.Fixture{
+		Name:            "ccaLaunchedWithHoldingSpaceIntegrationEnabled",
+		Desc:            "Launched CCA with holding space integration enabled",
+		Contacts:        []string{"chromeos-camera-eng@google.com", "cros-system-ui-eng@google.com", "dmblack@google.com"},
+		Data:            []string{"cca_ui.js"},
+		Impl:            &fixture{launchCCA: true, enableFeatures: []feature{"HoldingSpaceCameraAppIntegration"}},
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    testBridgeSetUpTimeout,
+		PreTestTimeout:  ccaSetUpTimeout,
+		PostTestTimeout: ccaTearDownTimeout,
+		TearDownTimeout: tearDownTimeout,
+	})
+
 	testing.AddFixture(&testing.Fixture{
 		Name:            "ccaLaunchedWithFakeVCDCameraFinchOff",
 		Desc:            "Launched CCA with fake VCD camera input with finch field trial config disabled",
