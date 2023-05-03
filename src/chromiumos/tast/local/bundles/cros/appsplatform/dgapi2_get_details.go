@@ -10,6 +10,7 @@ import (
 
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/playbilling/dgapi2"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -24,7 +25,7 @@ func init() {
 			"jshikaram@chromium.org",
 		},
 		BugComponent: "crbug:Platform>Apps>Foundation>Stores",
-		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+		Attr:         []string{"group:hw_agnostic"}, // TODO(crbug.com/1441386) reintroduce the test once sample app is restored
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "playBillingDgapi2Fixture",
 		Params: []testing.Param{{
