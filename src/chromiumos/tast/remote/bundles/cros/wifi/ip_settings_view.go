@@ -143,8 +143,9 @@ func checkIPSettings(ctx context.Context, tf *wificell.TestFixture, uiSvc ui.Aut
 // and are only distinguished by their order.
 func fetchIPContent(order int32) func(ctx context.Context, uiSvc ui.AutomationServiceClient, root *ui.NodeHelper) (string, error) {
 	return func(ctx context.Context, uiSvc ui.AutomationServiceClient, root *ui.NodeHelper) (string, error) {
-		ipSettingsContainer := root.Role(ui.Role_ROLE_GENERIC_CONTAINER).HasClass("cr-secondary-text").Nth(order).Finder()
-		textBox := ui.Node().Role(ui.Role_ROLE_INLINE_TEXT_BOX).Ancestor(ipSettingsContainer).Finder()
+		// This finder uses a regex that will match any IPv4 address, e.g. 127.0.0.1, and is required
+		// since the network details page has very little other information to leverage when searching.
+		textBox := ui.Node().NameRegex(`^([0-9]{1,3}\.){3}[0-9]{1,3}$`).Role(ui.Role_ROLE_INLINE_TEXT_BOX).Nth(order).Finder()
 
 		resp, err := uiSvc.Info(ctx, &ui.InfoRequest{Finder: textBox})
 		if err != nil {
@@ -191,7 +192,7 @@ func checkIPv4Content(order int32) func(ctx context.Context, tf *wificell.TestFi
 
 		// Validate the IP matches with the one reported by router.
 		if ip != ipFromRouter[0].String() {
-			return errors.New("the IP address from UI does not match with the one reported by router")
+			return errors.Errorf("IP address shown in UI does not match router, found: %s, expected: %s", ip, ipFromRouter[0].String())
 		}
 		return nil
 	}
