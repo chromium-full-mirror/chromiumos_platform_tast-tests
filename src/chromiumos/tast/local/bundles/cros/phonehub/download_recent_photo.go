@@ -14,7 +14,6 @@ import (
 	"time"
 
 	cdcommon "chromiumos/tast/common/cros/crossdevice"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome/crossdevice"
 	"chromiumos/tast/local/chrome/crossdevice/phonehub"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -22,8 +21,9 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/holdingspace"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/cryptohome"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 const statusAreaOverflowButtonTrayClassName = "StatusAreaOverflowButtonTray"
