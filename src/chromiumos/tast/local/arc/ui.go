@@ -144,12 +144,17 @@ func ClickAddAccountInSettings(ctx context.Context, arcDevice *androidui.Device,
 		return errors.Wrap(err, "failed to click Add account")
 	}
 
-	// Click on Google button which appears only on tablet flow.
-	gaiaButton := arcDevice.Object(androidui.ClassName("android.widget.TextView"), androidui.TextMatches("(?i)Google"), androidui.Enabled(true), androidui.ResourceIDMatches("(android:id/title)"))
-	if err := gaiaButton.WaitForExists(ctx, 10*time.Second); err != nil {
+	accountTypeButton := func(text string) *androidui.Object {
+		return arcDevice.Object(androidui.ClassName("android.widget.TextView"), androidui.TextMatches("(?i)"+text), androidui.Enabled(true), androidui.ResourceIDMatches("(android:id/title)"))
+	}
+
+	// Click on account type if the account type screen is shown e.g. Google, Exchange, Managed, etc.
+	if err := accountTypeButton("Exchange|Managed Account").WaitForExists(ctx, 10*time.Second); err != nil {
 		testing.ContextLog(ctx, "Google button doesn't exist: ", err)
-	} else if err := gaiaButton.Click(ctx); err != nil {
-		return errors.Wrap(err, "failed to click Google")
+	} else if err := accountTypeButton("Google").Click(ctx); err != nil {
+		return errors.Wrap(err, "failed to click Google account type button")
+	} else {
+		testing.ContextLog(ctx, "Google account type button found and clicked")
 	}
 	return nil
 }
