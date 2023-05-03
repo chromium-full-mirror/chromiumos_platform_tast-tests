@@ -156,7 +156,7 @@ func GetVideoPlaybackRoughness(ctx context.Context, observer media.PlayerPropert
 // decoder and we are not using a video decrypting demuxer (which is a sign of
 // L3 fallback in dev mode). It returns true if expectations are met for HW DRM.
 func CheckHWDRMPipeline(ctx context.Context, observer media.PlayerPropertiesChangedClient, url string) (isHWDRMPipeline bool, err error) {
-	var hasPlatform, hasEncrypted, hasDemux, isPlatform, isVideoDecryptingDemuxer, isVideoEncrypted bool
+	var hasPlatform, hasCdm, hasDemux, isPlatform, isVideoDecryptingDemuxer, isCdmAttached bool
 	// We may not get all the properties on the first call to recv(), so poll for
 	// a few seconds until we get them to account for that. This is due to how
 	// Chrome DevTools sends out media player property updates.
@@ -179,36 +179,36 @@ func CheckHWDRMPipeline(ctx context.Context, observer media.PlayerPropertiesChan
 				hasDemux = true
 				isVideoDecryptingDemuxer = s.Value == "true"
 				testing.ContextLogf(ctx, "%s: %s", s.Name, s.Value)
-			} else if s.Name == "kIsVideoEncrypted" {
-				hasEncrypted = true
-				isVideoEncrypted = s.Value == "true"
+			} else if s.Name == "kIsCdmAttached" {
+				hasCdm = true
+				isCdmAttached = s.Value == "true"
 				testing.ContextLogf(ctx, "%s: %s", s.Name, s.Value)
 			}
 
-			if hasEncrypted && hasDemux && hasPlatform {
+			if hasCdm && hasDemux && hasPlatform {
 				break
 			}
 		}
 
-		if !hasEncrypted && !hasDemux && !hasPlatform {
+		if !hasCdm && !hasDemux && !hasPlatform {
 			// Marshall reply.Properties to add it to the error log for debugging.
 			var log string
 			for _, s := range reply.Properties {
 				log = fmt.Sprintf("%s, %s: %s", log, s.Name, s.Value)
 			}
-			return errors.Errorf("failed to find kIsPlatformVideoDecoder, kVideoDecoderName, kIsVideoEncrypted and kIsVideoDecryptingDemuxerStream in media DevTools Properties. Observed: %s", log)
+			return errors.Errorf("failed to find kIsPlatformVideoDecoder, kVideoDecoderName, kIsCdmAttached and kIsVideoDecryptingDemuxerStream in media DevTools Properties. Observed: %s", log)
 		}
 		if !hasPlatform {
 			return errors.New("failed to find kIsPlatformVideoDecoder in media DevTools Properties")
 		}
-		if !hasEncrypted {
-			return errors.New("failed to find kIsVideoEncrypted in media DevTools Properties")
+		if !hasCdm {
+			return errors.New("failed to find kIsiCdmAttached in media DevTools Properties")
 		}
 		if !hasDemux {
 			return errors.New("failed to find kIsVideoDecryptingDemuxerStream in media DevTools Properties")
 		}
-		if !isVideoEncrypted {
-			return errors.New("video was not encrypted in HW DRM pipeline")
+		if !isCdmAttached {
+			return errors.New("video was not using a CDM in HW DRM pipeline")
 		}
 		if !isPlatform {
 			return errors.New("HW decoder was not used in HW DRM pipeline")
