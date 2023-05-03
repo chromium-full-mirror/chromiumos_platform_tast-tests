@@ -12,6 +12,7 @@ import (
 
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/graphics/swapbench"
+
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -39,9 +40,12 @@ func init() {
 }
 
 func SwapBench(ctx context.Context, s *testing.State) {
-	targetRefreshRate, refreshMs, err := swapbench.GetRefreshRateArgs(ctx)
+	targetRefreshRate, refreshMs, width, height, err := swapbench.GetRefreshRateArgs(ctx)
 	args := []string{
 		targetRefreshRate,
+		"--width", width,
+		"--height", height,
+		"--display-scale", "1.0",
 		"--gpu-workload-ms", refreshMs,
 	}
 

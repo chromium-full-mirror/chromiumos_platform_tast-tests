@@ -19,6 +19,7 @@ import (
 
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/local/graphics"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -179,23 +180,29 @@ func OutputResultsToJSON(ctx context.Context, version, outDir string, f *os.File
 	return nil
 }
 
-// GetRefreshRateArgs queries modetest for the devices panel refresh rate,
-// and returns
-func GetRefreshRateArgs(ctx context.Context) (string, string, error) {
+// GetRefreshRateArgs queries modetest for the devices panel refresh rate
+// and resolution, returning an error on failure. It also returns either
+// --target-refresh-rate or --no-target-refresh-rate depending on whether or not
+// it was able to acquire the refresh rate of the device's internal display.
+func GetRefreshRateArgs(ctx context.Context) (string, string, string, string, error) {
 	refreshRate := 60.0
+	width := "1280"
+	height := "720"
 	connectors, err := graphics.ModetestConnectors(ctx)
 	if err != nil {
-		return targetRefreshRate, refreshMs, errors.Wrap(err, "failed to get connectors")
+		return targetRefreshRate, refreshMs, width, height, errors.Wrap(err, "failed to get connectors")
 	}
 	// switch manually input refresh rate instead of targeted/automatic one
 	targetRefreshRate = "--no-target-refresh-rate"
 	for _, connector := range connectors {
 		refreshRate = connector.Modes[0].Refresh
+		width = strconv.FormatUint(uint64(connector.Modes[0].HDisplay), 10)
+		height = strconv.FormatUint(uint64(connector.Modes[0].VDisplay), 10)
 		break
 	}
 
 	testing.ContextLogf(ctx, "Display has refresh rate of %f Hz", refreshRate)
 	refreshMs := strconv.FormatFloat(1000/refreshRate, 'f', 2, 64)
 
-	return targetRefreshRate, refreshMs, nil
+	return targetRefreshRate, refreshMs, width, height, nil
 }
