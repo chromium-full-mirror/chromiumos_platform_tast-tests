@@ -104,7 +104,8 @@ func ServeAndVerify(ctx context.Context, fdms *fakedms.FakeDMS, cr *chrome.Chrom
 	return serveAndVerify(ctx, fdms, cr, tconn, ps)
 }
 
-// ServeAndVerifyOnLoginScreen same as ServeAndVerify but in the login context. It uses the Signin Profile Test API connection.
+// ServeAndVerifyOnLoginScreen does the same as ServeAndVerify but in the login screen. It uses the
+// Signin Profile Test API connection.
 func ServeAndVerifyOnLoginScreen(ctx context.Context, fdms *fakedms.FakeDMS, cr *chrome.Chrome, ps []policy.Policy) error {
 	tconn, err := cr.SigninProfileTestAPIConn(ctx)
 	if err != nil {
@@ -123,7 +124,8 @@ func ServeAndRefresh(ctx context.Context, fdms *fakedms.FakeDMS, cr *chrome.Chro
 	return serveAndRefresh(ctx, fdms, cr, tconn, ps)
 }
 
-// ServeAndRefreshOnLoginScreen same as ServeAndRefresh but in the login context. It uses the Signin Profile Test API connection.
+// ServeAndRefreshOnLoginScreen does the same as ServeAndRefresh but in the login screen. It uses
+// the Signin Profile Test API connection.
 func ServeAndRefreshOnLoginScreen(ctx context.Context, fdms *fakedms.FakeDMS, cr *chrome.Chrome, ps []policy.Policy) error {
 	tconn, err := cr.SigninProfileTestAPIConn(ctx)
 	if err != nil {
@@ -144,6 +146,16 @@ func ServeBlobAndRefresh(ctx context.Context, fdms *fakedms.FakeDMS, cr *chrome.
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to create Test API connection")
+	}
+	return serveBlobAndRefresh(ctx, fdms, cr, tconn, pb)
+}
+
+// ServeBlobAndRefreshOnLoginScreen does the same as ServeBlobAndRefresh but in the login screen. It
+// uses the Signin Profile Test API connection.
+func ServeBlobAndRefreshOnLoginScreen(ctx context.Context, fdms *fakedms.FakeDMS, cr *chrome.Chrome, pb *policy.Blob) error {
+	tconn, err := cr.SigninProfileTestAPIConn(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to create Signin Profile Test API connection")
 	}
 	return serveBlobAndRefresh(ctx, fdms, cr, tconn, pb)
 }

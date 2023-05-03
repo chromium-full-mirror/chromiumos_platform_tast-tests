@@ -21,6 +21,8 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/kioskmode"
 	"chromiumos/tast/local/screenshot"
+
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -81,52 +83,45 @@ func init() {
 		},
 		SoftwareDeps: []string{"reboot", "chrome", "lacros"},
 		Vars:         []string{"ui.signinProfileTestExtensionManifestKey"},
+		Fixture:      fixture.FakeDMSEnrolled,
 		Params: []testing.Param{
 			{
 				Name:             "ash_manual_chromeapp",
 				Val:              smokeTestParam{isLacros: false, autoLaunch: false, isWebApp: false},
-				Fixture:          fixture.FakeDMSEnrolled,
 				ExtraSearchFlags: []*testing.StringPair{&launchChromeAppKioskFeature, &manualLaunchChromeAppKioskFeature}},
 			{
 				Name:             "ash_manual_webapp",
 				Val:              smokeTestParam{isLacros: false, autoLaunch: false, isWebApp: true},
-				Fixture:          fixture.FakeDMSEnrolled,
 				ExtraSearchFlags: []*testing.StringPair{&launchWebKioskFeature, &manualLaunchWebKioskFeature},
 			},
 			{
 				Name:             "ash_auto_chromeapp",
 				Val:              smokeTestParam{isLacros: false, autoLaunch: true, isWebApp: false},
-				Fixture:          fixture.KioskAutoLaunchCleanup,
 				ExtraSearchFlags: []*testing.StringPair{&launchChromeAppKioskFeature, &autoLaunchKioskFeature},
 			},
 			{
 				Name:             "ash_auto_webapp",
 				Val:              smokeTestParam{isLacros: false, autoLaunch: true, isWebApp: true},
-				Fixture:          fixture.KioskAutoLaunchCleanup,
 				ExtraSearchFlags: []*testing.StringPair{&launchWebKioskFeature, &autoLaunchKioskFeature},
 			},
 			{
 				Name:             "lacros_manual_chromeapp",
 				Val:              smokeTestParam{isLacros: true, autoLaunch: false, isWebApp: false},
-				Fixture:          fixture.FakeDMSEnrolled,
 				ExtraSearchFlags: []*testing.StringPair{&launchChromeAppKioskFeature, &manualLaunchChromeAppKioskFeature},
 			},
 			{
 				Name:             "lacros_manual_webapp",
 				Val:              smokeTestParam{isLacros: true, autoLaunch: false, isWebApp: true},
-				Fixture:          fixture.FakeDMSEnrolled,
 				ExtraSearchFlags: []*testing.StringPair{&launchWebKioskFeature, &manualLaunchWebKioskFeature},
 			},
 			{
 				Name:             "lacros_auto_chromeapp",
 				Val:              smokeTestParam{isLacros: true, autoLaunch: true, isWebApp: false},
-				Fixture:          fixture.KioskAutoLaunchCleanup,
 				ExtraSearchFlags: []*testing.StringPair{&launchChromeAppKioskFeature, &autoLaunchKioskFeature},
 			},
 			{
 				Name:             "lacros_auto_webapp",
 				Val:              smokeTestParam{isLacros: true, autoLaunch: true, isWebApp: true},
-				Fixture:          fixture.KioskAutoLaunchCleanup,
 				ExtraSearchFlags: []*testing.StringPair{&launchWebKioskFeature, &autoLaunchKioskFeature},
 			},
 		},
@@ -248,13 +243,21 @@ func Smoke(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 	param := s.Param().(smokeTestParam)
 
-	kiosk, cr, err := kioskmode.DeprecatedNew(
-		ctx, fdms, param.kioskModeOptions(s.RequiredVar("ui.signinProfileTestExtensionManifestKey"))...,
-	)
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, kioskmode.CleanupDuration)
+	defer cancel()
+
+	signinTestExtensionManifestKey := s.RequiredVar("ui.signinProfileTestExtensionManifestKey")
+
+	kiosk, cr, err := kioskmode.DeprecatedNew(ctx, fdms, param.kioskModeOptions(signinTestExtensionManifestKey)...)
 	if err != nil {
 		s.Fatal("Failed to create Chrome in Kiosk mode: ", err)
 	}
-	defer kiosk.DeprecatedClose(ctx)
+	defer func(ctx context.Context) {
+		if err := kiosk.Close(ctx, signinTestExtensionManifestKey); err != nil {
+			s.Error("Failed to close kiosk: ", err)
+		}
+	}(cleanupCtx)
 
 	if !param.autoLaunch {
 		if err := launchKioskAppManually(ctx, cr, param); err != nil {

@@ -18,6 +18,8 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/kioskmode"
 	"chromiumos/tast/local/syslog"
+
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -140,23 +142,27 @@ func launchKioskAndVerify(ctx context.Context, s *testing.State, ignoreCrxURL bo
 		},
 	}
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, kioskmode.CleanupDuration)
+	defer cancel()
+
+	signinTestExtensionManifestKey := s.RequiredVar("ui.signinProfileTestExtensionManifestKey")
+
 	kiosk, cr, err := kioskmode.DeprecatedNew(
 		ctx,
 		fdms,
 		kioskmode.CustomLocalAccounts(account),
 		kioskmode.ExtraPolicies(kioskPolicy),
-		kioskmode.ExtraChromeOptions(
-			chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
-		),
+		kioskmode.ExtraChromeOptions(chrome.LoadSigninProfileExtension(signinTestExtensionManifestKey)),
 	)
 	if err != nil {
 		s.Fatal("Failed to start Chrome in Kiosk mode: ", err)
 	}
 	defer func(ctx context.Context) {
-		if err := kiosk.DeprecatedClose(ctx); err != nil {
+		if err := kiosk.Close(ctx, signinTestExtensionManifestKey); err != nil {
 			s.Error("Failed to close kiosk: ", err)
 		}
-	}(ctx)
+	}(cleanupCtx)
 
 	if !openExtensionAndCheckTitleChange(ctx, s, cr, originalAppTitle, updatedAppTitle) {
 		s.Fatal("Missmatch in Version")
@@ -175,6 +181,7 @@ func openExtensionAndCheckTitleChange(ctx context.Context, s *testing.State, cr 
 
 	// UI needs some time to be stable to interact, see also start_app_from_sign_in_screen.go
 	// I was not able to find another stable way to interact with the UI.
+	// GoBigSleepLint: TODO(b/280952514) "Apps" button in sign in screen needs some time.
 	testing.Sleep(ctx, 3*time.Second)
 
 	// Start syslog reader.

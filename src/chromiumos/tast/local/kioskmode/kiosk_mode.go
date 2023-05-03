@@ -26,6 +26,8 @@ import (
 	"chromiumos/tast/local/policyutil/fixtures"
 	"chromiumos/tast/local/procutil"
 	"chromiumos/tast/local/syslog"
+
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/timing"
@@ -59,6 +61,17 @@ const (
 	kioskLaunchSucceededLog = "Kiosk launch succeeded"
 	// kioskClosingSplashScreenLog is reported by chrome once the splash screen is gone.
 	kioskClosingSplashScreenLog = "App window created, closing splash screen."
+
+	// setPolicyDuration is the time estimate to set policies in Kiosk with setPolicies or
+	// setPolicyBlob.
+	setPolicyDuration = 60 * time.Second
+	// SetupDuration is the time estimate to set up a Kiosk session with kioskmode.New. This does not
+	// include time to launch the session.
+	SetupDuration = setPolicyDuration
+	// LaunchDuration is the time estimate to launch a Kiosk session.
+	LaunchDuration = 2 * time.Minute
+	// CleanupDuration is the time estimate to clean up a Kiosk session with kiosk.Close.
+	CleanupDuration = setPolicyDuration
 )
 
 // Kiosk structure holds necessary references and provides a way to safely
@@ -69,7 +82,70 @@ type Kiosk struct {
 	fdms          *fakedms.FakeDMS
 	localAccounts *policy.DeviceLocalAccounts
 	httpServer    *httptest.Server
-	autostart     bool
+	// TODO(b/280555587) remove this field when kiosk.DeprecatedClose is removed.
+	autostart bool
+}
+
+// Close cleans up resources used by the Kiosk struct and resets policies to an empty slice.
+//
+// Calls to kioskmode.New should be paired with a call to Close. This is important as Close clears
+// Kiosk policies before the next tests.
+//
+// The error returned from Close must be checked, and tests should fail if Close returns an error.
+//
+// Tests should reserve time for Close using CleanupDuration, for example:
+//
+//	// Store initial context in cleanupCtx and shorten ctx.
+//	cleanupCtx := ctx
+//	ctx, cancel := ctxutil.Shorten(ctx, kioskmode.CleanupDuration)
+//	defer cancel()
+//
+//	// From now on use ctx in the rest of the test as usual.
+//	kiosk, cr, err := kioskmode.New(ctx, ...)
+//	if err != nil { ... }
+//
+//	// Pass in cleanupCtx when calling kiosk.Close.
+//	defer func(ctx context.Context) {
+//		// Fail the test if kiosk.Close fails.
+//		if err := kiosk.Close(ctx); err != nil {
+//			s.Error("Failed to close kiosk: ", err)
+//		}
+//	}(cleanupCtx)
+func (k *Kiosk) Close(ctx context.Context, signinTestExtensionManifestKey string) (retErr error) {
+	if ctxutil.DeadlineBefore(ctx, time.Now().Add(CleanupDuration)) {
+		testing.ContextLog(ctx, "Deadline too short for kiosk.Close, did you reserve cleanupCtx?")
+		retErr = errors.New("potentially insufficient time remaining for kiosk.Close")
+	}
+
+	if k.httpServer != nil {
+		k.httpServer.Close()
+	}
+
+	// Proceed with cleanup if Chrome is already closed or fails to close, because clearPolicies will
+	// start a new Chrome instance.
+	if k.cr != nil {
+		if err := k.cr.Close(ctx); err != nil {
+			if retErr == nil {
+				retErr = errors.Wrap(err, "failed to close chrome")
+			} else {
+				testing.ContextLog(ctx, "Failed to close chrome: ", err)
+			}
+		}
+	}
+
+	if err := clearPolicies(ctx, k.fdms, signinTestExtensionManifestKey); err != nil {
+		if retErr == nil {
+			retErr = errors.Wrap(err, "failed to clean up Kiosk policies, this may impact next test")
+		} else {
+			testing.ContextLog(ctx, "Failed to clean up Kiosk policies, this may impact next test: ", err)
+		}
+	}
+	return retErr
+}
+
+// clearPolicies sets policies to an empty policy slice.
+func clearPolicies(ctx context.Context, fdms *fakedms.FakeDMS, signinTestExtensionManifestKey string) error {
+	return setPolicies(ctx, fdms, signinTestExtensionManifestKey, []policy.Policy{})
 }
 
 // DeprecatedClose clears policies, but keeps serving device local accounts
@@ -572,4 +648,57 @@ func DeviceLocalAccountUserID(account *policy.DeviceLocalAccountInfo) string {
 		}
 	}
 	return user + "@" + prefix + ".device-local.localhost"
+}
+
+// setPolicyBlob starts a new Chrome instance to set the given policy blob.
+//
+// Note that once this function returns Chrome will be closed and the device will be in the login
+// screen.
+//
+// Callers are expected to start a new Chrome themselves after this function. This is required even
+// if Kiosk auto launch policies were configured, as Kiosk cannot auto launch if no Chrome instance
+// is running.
+func setPolicyBlob(ctx context.Context, fdms *fakedms.FakeDMS, signinTestExtensionManifestKey string, pb *policy.Blob) (retErr error) {
+	testing.ContextLog(ctx, "Kiosk mode: go to login screen to set policies")
+	cr, err := chrome.New(
+		ctx,
+		chrome.NoLogin(),
+		chrome.DMSPolicy(fdms.URL),
+		chrome.KeepEnrollment(),
+		chrome.LoadSigninProfileExtension(signinTestExtensionManifestKey),
+		// Use the test-only command line switch to prevent Kiosk auto launch in case the current test
+		// configured it in policies.
+		//
+		// This is important because Chrome decides to auto launch Kiosk very early at startup. Without
+		// this flag Chrome would respect the previous policies and auto launch before the new policy
+		// blob applies.
+		chrome.ExtraArgs("--prevent-kiosk-autolaunch-for-testing"),
+	)
+	if err != nil {
+		return errors.Wrap(err, "failed to start Chrome to stay on the login screen and prevent Kiosk autolaunch")
+	}
+	defer func(ctx context.Context) {
+		if err := cr.Close(ctx); err != nil {
+			if retErr != nil {
+				testing.ContextLog(ctx, "Failed to close Chrome started to set policy blob: ", err)
+			} else {
+				retErr = errors.Wrap(err, "failed to close Chrome ")
+			}
+		}
+	}(ctx)
+
+	if err := policyutil.ServeBlobAndRefreshOnLoginScreen(ctx, fdms, cr, pb); err != nil {
+		return errors.Wrap(err, "could not serve and verify empty policies on login screen")
+
+	}
+	return nil
+}
+
+// setPolicies is the same as setPolicyBlob but takes a []policy.Policy slice instead.
+func setPolicies(ctx context.Context, fdms *fakedms.FakeDMS, signinTestExtensionManifestKey string, policies []policy.Policy) error {
+	blob := policy.NewBlob()
+	if err := blob.AddPolicies(policies); err != nil {
+		return errors.Wrap(err, "failed to add policies to policy blob")
+	}
+	return setPolicyBlob(ctx, fdms, signinTestExtensionManifestKey, blob)
 }
