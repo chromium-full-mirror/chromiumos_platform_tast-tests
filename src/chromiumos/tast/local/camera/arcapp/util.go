@@ -130,8 +130,8 @@ func launchApp(ctx context.Context, a *arc.ARC, tconn *chrome.TestConn, act stri
 	return cleanupFunc, nil
 }
 
-// TakePhoto asks ArcCameraFpsTest app to take a photo via intent and ensures
-// that the captured photo is saved successfully.
+// TakePhoto asks ArcCameraTest app to take a photo via intent and ensures that
+// the captured photo is saved successfully.
 func TakePhoto(ctx context.Context, cr *chrome.Chrome, a *arc.ARC) error {
 	if _, err := broadcastIntent(ctx, a, intentSwitchMode, "--es", keyCameraMode, valuePhoto); err != nil {
 		return errors.Wrap(err, "failed to switch to photo mode")
