@@ -7,11 +7,10 @@ package setup
 import (
 	"context"
 	"fmt"
-	"io"
-	"net/http"
 	"strings"
 	"time"
 
+	"chromiumos/tast/common/utils"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
@@ -348,11 +347,11 @@ func gaiaLoginOption(ctx context.Context) (chrome.Option, error) {
 		pltpURL     = pltpBaseURL + "/pltp_rand"
 	)
 
-	usernames, err := fetchFromURL(ctx, pltuURL)
+	usernames, err := utils.FetchFromURL(ctx, pltuURL)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to fetch usernames")
 	}
-	password, err := fetchFromURL(ctx, pltpURL)
+	password, err := utils.FetchFromURL(ctx, pltpURL)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to fetch password")
 	}
@@ -370,25 +369,6 @@ func gaiaLoginOption(ctx context.Context) (chrome.Option, error) {
 	}
 
 	return chrome.GAIALoginPool(loginPool), nil
-}
-
-// fetchFromURL fetches content from a specific URL.
-func fetchFromURL(ctx context.Context, url string) (string, error) {
-	resp, err := http.Get(url)
-	if err != nil {
-		return "", errors.Wrapf(err, "failed to send request %q", url)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return "", errors.Errorf("failed with status %v", resp.Status)
-	}
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", errors.Wrap(err, "failed to read response body")
-	}
-	return string(body), nil
 }
 
 type powerUIFixture struct {
