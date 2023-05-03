@@ -251,7 +251,7 @@ func init() {
 					P99Threshold: defaultP99Threshold,
 					StressConfig: nil,
 				},
-				ExtraSoftwareDeps: []string{"arm"}, // arm has heterogeneous cores.
+				ExtraSoftwareDeps: []string{"cpu_heterogeneous"},
 			},
 			{
 				Name: "rr12_1thread_10ms_big_core",
@@ -267,7 +267,7 @@ func init() {
 					P99Threshold: defaultP99Threshold,
 					StressConfig: nil,
 				},
-				ExtraSoftwareDeps: []string{"arm"}, // arm has heterogeneous cores.
+				ExtraSoftwareDeps: []string{"cpu_heterogeneous"},
 			},
 		},
 	})
