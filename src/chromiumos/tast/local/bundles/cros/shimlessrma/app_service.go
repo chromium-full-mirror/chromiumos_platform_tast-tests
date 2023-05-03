@@ -18,14 +18,14 @@ import (
 
 	"chromiumos/tast/common/action"
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/ctxutil"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/shimlessrmaapp"
 	"chromiumos/tast/local/shill"
 	pb "chromiumos/tast/services/cros/shimlessrma"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (

@@ -24,9 +24,9 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	"chromiumos/tast/common/action"
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
 	xdr "chromiumos/xdr/secagentd"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (

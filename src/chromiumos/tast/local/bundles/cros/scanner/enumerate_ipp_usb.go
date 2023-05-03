@@ -11,7 +11,7 @@ import (
 	lpb "chromiumos/system_api/lorgnette_proto"
 	"chromiumos/tast/local/printing/usbprinter"
 	"chromiumos/tast/local/scanner/lorgnette"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 type scannerInfo struct {

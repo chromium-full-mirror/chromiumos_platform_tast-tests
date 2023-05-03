@@ -7,9 +7,9 @@ package rollbacknetworks
 import (
 	"context"
 
-	"chromiumos/tast/errors"
 	nc "chromiumos/tast/local/network/netconfig"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // SupportedConfiguration contains the configuration of the network and its

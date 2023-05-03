@@ -13,7 +13,7 @@ import (
 	upstartcommon "chromiumos/tast/common/upstart"
 	"chromiumos/tast/local/bundles/cros/secagentd/secagentdprocfsscraper"
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 // RestartSecagentd restarts the daemon with the given upstart args, verifies

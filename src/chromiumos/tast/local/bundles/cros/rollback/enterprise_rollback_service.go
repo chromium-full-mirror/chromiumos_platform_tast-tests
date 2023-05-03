@@ -9,12 +9,12 @@ import (
 
 	"google.golang.org/grpc"
 
-	"chromiumos/tast/errors"
 	nws "chromiumos/tast/local/bundles/cros/rollback/rollbacknetworks"
 	"chromiumos/tast/local/chrome"
 	nc "chromiumos/tast/local/network/netconfig"
 	rpb "chromiumos/tast/services/cros/rollback"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

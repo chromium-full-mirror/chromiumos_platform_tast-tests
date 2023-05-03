@@ -13,9 +13,9 @@ import (
 	"github.com/google/go-cmp/cmp"
 
 	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/debugd"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 type verifySandboxTestParams struct {
