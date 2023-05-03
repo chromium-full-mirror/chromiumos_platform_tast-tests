@@ -117,7 +117,7 @@ func FillFromLSBRelease(ctx context.Context, dut *dut.DUT, rpcHint *testing.RPCH
 
 // ReadBootID reads back the current boot_id from the DUT.
 func ReadBootID(ctx context.Context, dut *dut.DUT) (string, error) {
-	out, err := dut.Conn().CommandContext(ctx, "cat", "/proc/sys/kernel/random/boot_id").Output()
+	out, err := dut.Conn().CommandContext(ctx, "cat", "/proc/sys/kernel/random/boot_id").Output(testexec.DumpLogOnError)
 	if err != nil {
 		return "", err
 	}
@@ -133,7 +133,7 @@ func ApplyDeferredUpdate(ctx context.Context, dut *dut.DUT) error {
 
 	// Call update_engine DBus method to apply the update and reboot.
 	// The command is non-blocking, so need to wait for the operations to complete afterward.
-	if err := dut.Conn().CommandContext(ctx, "update_engine_client", "--apply_deferred_update").Run(); err != nil {
+	if err := dut.Conn().CommandContext(ctx, "update_engine_client", "--apply_deferred_update").Run(testexec.DumpLogOnError); err != nil {
 		return errors.Wrap(err, "failed to apply deferred update")
 	}
 
@@ -236,20 +236,14 @@ func updateFromGSInternal(ctx context.Context, dut *dut.DUT, outdir string, rpcH
 	}
 	defer cl.Close(cleanupCtx)
 
-	// Create a temp dir to store the Nebraska logs and the update payload metadata.
-	nebraskaClient := nebraska.NewNebraskaServiceClient(cl.Conn)
-	tempDir, err := nebraskaClient.CreateTempDir(preparationCtx, &empty.Empty{})
+	nebraskaClient := nebraska.NewServiceClient(cl.Conn)
+	startResponse, err := nebraskaClient.Start(preparationCtx, &nebraska.StartRequest{})
 	if err != nil {
-		return errors.Wrap(err, "failed to create temporary directory for Nebraska")
+		return errors.Wrap(err, "failed to start Nebraska")
 	}
 	defer func(ctx context.Context) {
-		if _, err := nebraskaClient.RemoveTempDir(ctx, &empty.Empty{}); err != nil {
-			if retErr == nil {
-				retErr = errors.Wrap(err, "failed to remove the temporary directory")
-			} else {
-				testing.ContextLog(ctx, "Failed to remove the temporary directory: ", err)
-			}
-		}
+		_, err := nebraskaClient.Stop(ctx, &empty.Empty{})
+		retErr = errors.Join(retErr, err)
 	}(cleanupCtx)
 
 	// Find the metadata file in the GS bucket, as we need the full filename to download it from the caching server.
@@ -272,13 +266,13 @@ func updateFromGSInternal(ctx context.Context, dut *dut.DUT, outdir string, rpcH
 	args := []string{
 		"--tries=1",
 		"--connect-timeout=20",
-		"-P", tempDir.Path, // download folder
+		"-P", startResponse.RuntimeRoot, // download folder
 		url + "/" + metadataFilename, // payload metadata address
 	}
 
 	// Download the payload metadata from the caching server.
 	testing.ContextLogf(preparationCtx, "Downloading payload metadata %q", metadataFilename)
-	if err := dut.Conn().CommandContext(preparationCtx, "wget", args...).Run(); err != nil {
+	if _, err := dut.Conn().CommandContext(preparationCtx, "wget", args...).CombinedOutput(testexec.DumpLogOnError); err != nil {
 		// List files to see if it contains the file we wanted to download.
 		// We are saving the whole list in case the file name pattern is changed.
 		// A longer context is used here, otherwise it won't work in case of a timeout.
@@ -289,29 +283,11 @@ func updateFromGSInternal(ctx context.Context, dut *dut.DUT, outdir string, rpcH
 		return errors.Wrap(err, "failed to download payload metadata")
 	}
 
-	nebraska, err := nebraskaClient.Start(preparationCtx, &aupb.StartRequest{
-		Update: &aupb.Payload{
-			Address:        url,
-			MetadataFolder: tempDir.Path,
-		},
-	})
-	if err != nil {
-		return errors.Wrap(err, "failed to start Nebraska")
+	if _, err = nebraskaClient.UpdatePayload(ctx, &nebraska.UpdatePayloadRequest{Update: &nebraska.Payload{
+		Address:        url,
+		MetadataFolder: startResponse.RuntimeRoot}}); err != nil {
+		return errors.Wrap(err, "failed to stage payload in Nebraska")
 	}
-	defer func(ctx context.Context) {
-		if err := linuxssh.GetFile(ctx, dut.Conn(), nebraska.LogPath, filepath.Join(outdir, "nebraska.log"), linuxssh.DereferenceSymlinks); err != nil {
-			testing.ContextLog(ctx, "Failed to save Nebraska log: ", err)
-		}
-	}(cleanupCtx)
-	defer func(ctx context.Context) {
-		if _, err := nebraskaClient.Stop(ctx, &empty.Empty{}); err != nil {
-			if retErr == nil {
-				retErr = errors.Wrap(err, "failed to stop Nebraska")
-			} else {
-				testing.ContextLog(ctx, "Failed to stop Nebraska: ", err)
-			}
-		}
-	}(cleanupCtx)
 
 	// Get the update log files even if the update fails.
 	defer func(ctx context.Context) {
@@ -322,7 +298,7 @@ func updateFromGSInternal(ctx context.Context, dut *dut.DUT, outdir string, rpcH
 
 	// Trigger the update and wait for the results.
 	return doUpdate(updateCtx, cl.Conn, &aupb.UpdateRequest{
-		OmahaUrl: fmt.Sprintf("http://127.0.0.1:%s/update?critical_update=True", nebraska.Port),
+		OmahaUrl: fmt.Sprintf("http://127.0.0.1:%d/update?critical_update=True", startResponse.Port),
 	})
 }
 

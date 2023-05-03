@@ -181,28 +181,22 @@ func EnterpriseRollbackWithNebraska(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to enroll using chrome: ", err)
 		}
 
-		if _, err := nebraskaClient.CreateTempDir(ctx, &empty.Empty{}); err != nil {
-			s.Fatal("Failed to create temporary directory for Nebraska: ", err)
-		}
-		defer func(ctx context.Context) {
-			if _, err := nebraskaClient.RemoveTempDir(ctx, &empty.Empty{}); err != nil {
-				s.Error("Failed to remove the temporary directory: ", err)
-			}
-		}(cleanupCtx)
-
 		// Start Nebraska (the fake Omaha service).
 		dataDir := path.Join(updateFolder, params.subfolder)
-		nebraska, err := nebraskaClient.Start(ctx, &aupb.StartRequest{
-			Update: &aupb.Payload{
-				Address:        "file://" + dataDir, // URL or file URL.
-				MetadataFolder: dataDir,
-			},
-		})
+		startResponse, err := nebraskaClient.Start(ctx, &nebraska.StartRequest{})
 		if err != nil {
 			s.Fatal("Failed to start Nebraska: ", err)
 		}
+
+		if _, err := nebraskaClient.UpdatePayload(ctx, &nebraska.UpdatePayloadRequest{Update: &nebraska.Payload{
+			Address:        "file://" + dataDir, // URL or file URL.
+			MetadataFolder: dataDir,
+		}}); err != nil {
+			s.Fatal("Failed to configure Nebraska: ", err)
+		}
+
 		defer func(ctx context.Context) {
-			if err := linuxssh.GetFile(ctx, s.DUT().Conn(), nebraska.LogPath, filepath.Join(s.OutDir(), "nebraska.log"), linuxssh.DereferenceSymlinks); err != nil {
+			if err := linuxssh.GetFile(ctx, s.DUT().Conn(), startResponse.LogFile, filepath.Join(s.OutDir(), "nebraska.log"), linuxssh.DereferenceSymlinks); err != nil {
 				s.Log("Failed to save Nebraska log: ", err)
 			}
 		}(cleanupCtx)
@@ -221,7 +215,7 @@ func EnterpriseRollbackWithNebraska(ctx context.Context, s *testing.State) {
 
 		// Do the update.
 		if _, err := updateClient.CheckForUpdate(ctx, &aupb.UpdateRequest{
-			OmahaUrl: fmt.Sprintf("http://127.0.0.1:%s/update?critical_update=True", nebraska.Port),
+			OmahaUrl: fmt.Sprintf("http://127.0.0.1:%d/update?critical_update=True", startResponse.Port),
 		}); err != nil {
 			s.Fatal("Failed to check for updates: ", err)
 		}

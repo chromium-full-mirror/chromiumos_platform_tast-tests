@@ -1,4 +1,4 @@
-// Copyright 2021 The ChromiumOS Authors
+// Copyright 2023 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -8,7 +8,7 @@
 // 	protoc        v3.21.9
 // source: nebraska.proto
 
-package autoupdate
+package nebraska
 
 import (
 	context "context"
@@ -34,10 +34,7 @@ type StartRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Port        string   `protobuf:"bytes,1,opt,name=port,proto3" json:"port,omitempty"`
-	HostLogPath string   `protobuf:"bytes,2,opt,name=host_log_path,json=hostLogPath,proto3" json:"host_log_path,omitempty"`
-	Install     *Payload `protobuf:"bytes,3,opt,name=install,proto3" json:"install,omitempty"`
-	Update      *Payload `protobuf:"bytes,4,opt,name=update,proto3" json:"update,omitempty"`
+	Port *int32 `protobuf:"varint,1,opt,name=port,proto3,oneof" json:"port,omitempty"`
 }
 
 func (x *StartRequest) Reset() {
@@ -72,28 +69,54 @@ func (*StartRequest) Descriptor() ([]byte, []int) {
 	return file_nebraska_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *StartRequest) GetPort() string {
-	if x != nil {
-		return x.Port
+func (x *StartRequest) GetPort() int32 {
+	if x != nil && x.Port != nil {
+		return *x.Port
 	}
-	return ""
+	return 0
 }
 
-func (x *StartRequest) GetHostLogPath() string {
-	if x != nil {
-		return x.HostLogPath
-	}
-	return ""
+type UpdatePayloadRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Update *Payload `protobuf:"bytes,1,opt,name=update,proto3" json:"update,omitempty"`
 }
 
-func (x *StartRequest) GetInstall() *Payload {
-	if x != nil {
-		return x.Install
+func (x *UpdatePayloadRequest) Reset() {
+	*x = UpdatePayloadRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_nebraska_proto_msgTypes[1]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
 	}
-	return nil
 }
 
-func (x *StartRequest) GetUpdate() *Payload {
+func (x *UpdatePayloadRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdatePayloadRequest) ProtoMessage() {}
+
+func (x *UpdatePayloadRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_nebraska_proto_msgTypes[1]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdatePayloadRequest.ProtoReflect.Descriptor instead.
+func (*UpdatePayloadRequest) Descriptor() ([]byte, []int) {
+	return file_nebraska_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *UpdatePayloadRequest) GetUpdate() *Payload {
 	if x != nil {
 		return x.Update
 	}
@@ -112,7 +135,7 @@ type Payload struct {
 func (x *Payload) Reset() {
 	*x = Payload{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_nebraska_proto_msgTypes[1]
+		mi := &file_nebraska_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -125,7 +148,7 @@ func (x *Payload) String() string {
 func (*Payload) ProtoMessage() {}
 
 func (x *Payload) ProtoReflect() protoreflect.Message {
-	mi := &file_nebraska_proto_msgTypes[1]
+	mi := &file_nebraska_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -138,7 +161,7 @@ func (x *Payload) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Payload.ProtoReflect.Descriptor instead.
 func (*Payload) Descriptor() ([]byte, []int) {
-	return file_nebraska_proto_rawDescGZIP(), []int{1}
+	return file_nebraska_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *Payload) GetAddress() string {
@@ -160,14 +183,15 @@ type StartResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Port    string `protobuf:"bytes,1,opt,name=port,proto3" json:"port,omitempty"`
-	LogPath string `protobuf:"bytes,2,opt,name=log_path,json=logPath,proto3" json:"log_path,omitempty"`
+	Port        int32  `protobuf:"varint,1,opt,name=port,proto3" json:"port,omitempty"`
+	LogFile     string `protobuf:"bytes,2,opt,name=log_file,json=logFile,proto3" json:"log_file,omitempty"`
+	RuntimeRoot string `protobuf:"bytes,3,opt,name=runtime_root,json=runtimeRoot,proto3" json:"runtime_root,omitempty"`
 }
 
 func (x *StartResponse) Reset() {
 	*x = StartResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_nebraska_proto_msgTypes[2]
+		mi := &file_nebraska_proto_msgTypes[3]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -180,7 +204,7 @@ func (x *StartResponse) String() string {
 func (*StartResponse) ProtoMessage() {}
 
 func (x *StartResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_nebraska_proto_msgTypes[2]
+	mi := &file_nebraska_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -193,66 +217,26 @@ func (x *StartResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StartResponse.ProtoReflect.Descriptor instead.
 func (*StartResponse) Descriptor() ([]byte, []int) {
-	return file_nebraska_proto_rawDescGZIP(), []int{2}
-}
-
-func (x *StartResponse) GetPort() string {
-	if x != nil {
-		return x.Port
-	}
-	return ""
-}
-
-func (x *StartResponse) GetLogPath() string {
-	if x != nil {
-		return x.LogPath
-	}
-	return ""
-}
-
-type CreateTempDirResponse struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Path string `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
-}
-
-func (x *CreateTempDirResponse) Reset() {
-	*x = CreateTempDirResponse{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_nebraska_proto_msgTypes[3]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *CreateTempDirResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CreateTempDirResponse) ProtoMessage() {}
-
-func (x *CreateTempDirResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_nebraska_proto_msgTypes[3]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use CreateTempDirResponse.ProtoReflect.Descriptor instead.
-func (*CreateTempDirResponse) Descriptor() ([]byte, []int) {
 	return file_nebraska_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *CreateTempDirResponse) GetPath() string {
+func (x *StartResponse) GetPort() int32 {
 	if x != nil {
-		return x.Path
+		return x.Port
+	}
+	return 0
+}
+
+func (x *StartResponse) GetLogFile() string {
+	if x != nil {
+		return x.LogFile
+	}
+	return ""
+}
+
+func (x *StartResponse) GetRuntimeRoot() string {
+	if x != nil {
+		return x.RuntimeRoot
 	}
 	return ""
 }
@@ -261,56 +245,46 @@ var File_nebraska_proto protoreflect.FileDescriptor
 
 var file_nebraska_proto_rawDesc = []byte{
 	0x0a, 0x0e, 0x6e, 0x65, 0x62, 0x72, 0x61, 0x73, 0x6b, 0x61, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x12, 0x14, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x61, 0x75, 0x74, 0x6f,
-	0x75, 0x70, 0x64, 0x61, 0x74, 0x65, 0x1a, 0x1b, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2f, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2f, 0x65, 0x6d, 0x70, 0x74, 0x79, 0x2e, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x22, 0xb6, 0x01, 0x0a, 0x0c, 0x53, 0x74, 0x61, 0x72, 0x74, 0x52, 0x65, 0x71,
-	0x75, 0x65, 0x73, 0x74, 0x12, 0x12, 0x0a, 0x04, 0x70, 0x6f, 0x72, 0x74, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x04, 0x70, 0x6f, 0x72, 0x74, 0x12, 0x22, 0x0a, 0x0d, 0x68, 0x6f, 0x73, 0x74,
-	0x5f, 0x6c, 0x6f, 0x67, 0x5f, 0x70, 0x61, 0x74, 0x68, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x0b, 0x68, 0x6f, 0x73, 0x74, 0x4c, 0x6f, 0x67, 0x50, 0x61, 0x74, 0x68, 0x12, 0x37, 0x0a, 0x07,
-	0x69, 0x6e, 0x73, 0x74, 0x61, 0x6c, 0x6c, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1d, 0x2e,
-	0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x61, 0x75, 0x74, 0x6f, 0x75, 0x70,
-	0x64, 0x61, 0x74, 0x65, 0x2e, 0x50, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x52, 0x07, 0x69, 0x6e,
-	0x73, 0x74, 0x61, 0x6c, 0x6c, 0x12, 0x35, 0x0a, 0x06, 0x75, 0x70, 0x64, 0x61, 0x74, 0x65, 0x18,
-	0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f,
-	0x73, 0x2e, 0x61, 0x75, 0x74, 0x6f, 0x75, 0x70, 0x64, 0x61, 0x74, 0x65, 0x2e, 0x50, 0x61, 0x79,
-	0x6c, 0x6f, 0x61, 0x64, 0x52, 0x06, 0x75, 0x70, 0x64, 0x61, 0x74, 0x65, 0x22, 0x4c, 0x0a, 0x07,
-	0x50, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x12, 0x18, 0x0a, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65,
-	0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73,
-	0x73, 0x12, 0x27, 0x0a, 0x0f, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x5f, 0x66, 0x6f,
-	0x6c, 0x64, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0e, 0x6d, 0x65, 0x74, 0x61,
-	0x64, 0x61, 0x74, 0x61, 0x46, 0x6f, 0x6c, 0x64, 0x65, 0x72, 0x22, 0x3e, 0x0a, 0x0d, 0x53, 0x74,
-	0x61, 0x72, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x70,
-	0x6f, 0x72, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x70, 0x6f, 0x72, 0x74, 0x12,
-	0x19, 0x0a, 0x08, 0x6c, 0x6f, 0x67, 0x5f, 0x70, 0x61, 0x74, 0x68, 0x18, 0x02, 0x20, 0x01, 0x28,
-	0x09, 0x52, 0x07, 0x6c, 0x6f, 0x67, 0x50, 0x61, 0x74, 0x68, 0x22, 0x2b, 0x0a, 0x15, 0x43, 0x72,
-	0x65, 0x61, 0x74, 0x65, 0x54, 0x65, 0x6d, 0x70, 0x44, 0x69, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x70, 0x61, 0x74, 0x68, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x09, 0x52, 0x04, 0x70, 0x61, 0x74, 0x68, 0x32, 0xba, 0x02, 0x0a, 0x0f, 0x4e, 0x65, 0x62, 0x72,
-	0x61, 0x73, 0x6b, 0x61, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x52, 0x0a, 0x05, 0x53,
-	0x74, 0x61, 0x72, 0x74, 0x12, 0x22, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73,
-	0x2e, 0x61, 0x75, 0x74, 0x6f, 0x75, 0x70, 0x64, 0x61, 0x74, 0x65, 0x2e, 0x53, 0x74, 0x61, 0x72,
-	0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x23, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e,
-	0x63, 0x72, 0x6f, 0x73, 0x2e, 0x61, 0x75, 0x74, 0x6f, 0x75, 0x70, 0x64, 0x61, 0x74, 0x65, 0x2e,
-	0x53, 0x74, 0x61, 0x72, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12,
-	0x38, 0x0a, 0x04, 0x53, 0x74, 0x6f, 0x70, 0x12, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65,
-	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a,
-	0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75,
-	0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x12, 0x56, 0x0a, 0x0d, 0x43, 0x72, 0x65,
-	0x61, 0x74, 0x65, 0x54, 0x65, 0x6d, 0x70, 0x44, 0x69, 0x72, 0x12, 0x16, 0x2e, 0x67, 0x6f, 0x6f,
-	0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70,
-	0x74, 0x79, 0x1a, 0x2b, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x61,
-	0x75, 0x74, 0x6f, 0x75, 0x70, 0x64, 0x61, 0x74, 0x65, 0x2e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65,
-	0x54, 0x65, 0x6d, 0x70, 0x44, 0x69, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22,
-	0x00, 0x12, 0x41, 0x0a, 0x0d, 0x52, 0x65, 0x6d, 0x6f, 0x76, 0x65, 0x54, 0x65, 0x6d, 0x70, 0x44,
-	0x69, 0x72, 0x12, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x16, 0x2e, 0x67, 0x6f, 0x6f,
-	0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70,
-	0x74, 0x79, 0x22, 0x00, 0x42, 0x2a, 0x5a, 0x28, 0x63, 0x68, 0x72, 0x6f, 0x6d, 0x69, 0x75, 0x6d,
-	0x6f, 0x73, 0x2f, 0x74, 0x61, 0x73, 0x74, 0x2f, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x73,
-	0x2f, 0x63, 0x72, 0x6f, 0x73, 0x2f, 0x61, 0x75, 0x74, 0x6f, 0x75, 0x70, 0x64, 0x61, 0x74, 0x65,
-	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x12, 0x12, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x6e, 0x65, 0x62, 0x72,
+	0x61, 0x73, 0x6b, 0x61, 0x1a, 0x1b, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2f, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x62, 0x75, 0x66, 0x2f, 0x65, 0x6d, 0x70, 0x74, 0x79, 0x2e, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x22, 0x30, 0x0a, 0x0c, 0x53, 0x74, 0x61, 0x72, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x12, 0x17, 0x0a, 0x04, 0x70, 0x6f, 0x72, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x48,
+	0x00, 0x52, 0x04, 0x70, 0x6f, 0x72, 0x74, 0x88, 0x01, 0x01, 0x42, 0x07, 0x0a, 0x05, 0x5f, 0x70,
+	0x6f, 0x72, 0x74, 0x22, 0x4b, 0x0a, 0x14, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x79,
+	0x6c, 0x6f, 0x61, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x33, 0x0a, 0x06, 0x75,
+	0x70, 0x64, 0x61, 0x74, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1b, 0x2e, 0x74, 0x61,
+	0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x6e, 0x65, 0x62, 0x72, 0x61, 0x73, 0x6b, 0x61,
+	0x2e, 0x50, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x52, 0x06, 0x75, 0x70, 0x64, 0x61, 0x74, 0x65,
+	0x22, 0x4c, 0x0a, 0x07, 0x50, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x12, 0x18, 0x0a, 0x07, 0x61,
+	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x61, 0x64,
+	0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x27, 0x0a, 0x0f, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74,
+	0x61, 0x5f, 0x66, 0x6f, 0x6c, 0x64, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0e,
+	0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x46, 0x6f, 0x6c, 0x64, 0x65, 0x72, 0x22, 0x61,
+	0x0a, 0x0d, 0x53, 0x74, 0x61, 0x72, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
+	0x12, 0x0a, 0x04, 0x70, 0x6f, 0x72, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x04, 0x70,
+	0x6f, 0x72, 0x74, 0x12, 0x19, 0x0a, 0x08, 0x6c, 0x6f, 0x67, 0x5f, 0x66, 0x69, 0x6c, 0x65, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x6c, 0x6f, 0x67, 0x46, 0x69, 0x6c, 0x65, 0x12, 0x21,
+	0x0a, 0x0c, 0x72, 0x75, 0x6e, 0x74, 0x69, 0x6d, 0x65, 0x5f, 0x72, 0x6f, 0x6f, 0x74, 0x18, 0x03,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x72, 0x75, 0x6e, 0x74, 0x69, 0x6d, 0x65, 0x52, 0x6f, 0x6f,
+	0x74, 0x32, 0xe8, 0x01, 0x0a, 0x07, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x4e, 0x0a,
+	0x05, 0x53, 0x74, 0x61, 0x72, 0x74, 0x12, 0x20, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72,
+	0x6f, 0x73, 0x2e, 0x6e, 0x65, 0x62, 0x72, 0x61, 0x73, 0x6b, 0x61, 0x2e, 0x53, 0x74, 0x61, 0x72,
+	0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x21, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e,
+	0x63, 0x72, 0x6f, 0x73, 0x2e, 0x6e, 0x65, 0x62, 0x72, 0x61, 0x73, 0x6b, 0x61, 0x2e, 0x53, 0x74,
+	0x61, 0x72, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x38, 0x0a,
+	0x04, 0x53, 0x74, 0x6f, 0x70, 0x12, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x16, 0x2e,
+	0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e,
+	0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x12, 0x53, 0x0a, 0x0d, 0x55, 0x70, 0x64, 0x61, 0x74,
+	0x65, 0x50, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x12, 0x28, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e,
+	0x63, 0x72, 0x6f, 0x73, 0x2e, 0x6e, 0x65, 0x62, 0x72, 0x61, 0x73, 0x6b, 0x61, 0x2e, 0x55, 0x70,
+	0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x79, 0x6c, 0x6f, 0x61, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x1a, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x42, 0x28, 0x5a, 0x26,
+	0x63, 0x68, 0x72, 0x6f, 0x6d, 0x69, 0x75, 0x6d, 0x6f, 0x73, 0x2f, 0x74, 0x61, 0x73, 0x74, 0x2f,
+	0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x73, 0x2f, 0x63, 0x72, 0x6f, 0x73, 0x2f, 0x6e, 0x65,
+	0x62, 0x72, 0x61, 0x73, 0x6b, 0x61, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -327,28 +301,25 @@ func file_nebraska_proto_rawDescGZIP() []byte {
 
 var file_nebraska_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_nebraska_proto_goTypes = []interface{}{
-	(*StartRequest)(nil),          // 0: tast.cros.autoupdate.StartRequest
-	(*Payload)(nil),               // 1: tast.cros.autoupdate.Payload
-	(*StartResponse)(nil),         // 2: tast.cros.autoupdate.StartResponse
-	(*CreateTempDirResponse)(nil), // 3: tast.cros.autoupdate.CreateTempDirResponse
-	(*emptypb.Empty)(nil),         // 4: google.protobuf.Empty
+	(*StartRequest)(nil),         // 0: tast.cros.nebraska.StartRequest
+	(*UpdatePayloadRequest)(nil), // 1: tast.cros.nebraska.UpdatePayloadRequest
+	(*Payload)(nil),              // 2: tast.cros.nebraska.Payload
+	(*StartResponse)(nil),        // 3: tast.cros.nebraska.StartResponse
+	(*emptypb.Empty)(nil),        // 4: google.protobuf.Empty
 }
 var file_nebraska_proto_depIdxs = []int32{
-	1, // 0: tast.cros.autoupdate.StartRequest.install:type_name -> tast.cros.autoupdate.Payload
-	1, // 1: tast.cros.autoupdate.StartRequest.update:type_name -> tast.cros.autoupdate.Payload
-	0, // 2: tast.cros.autoupdate.NebraskaService.Start:input_type -> tast.cros.autoupdate.StartRequest
-	4, // 3: tast.cros.autoupdate.NebraskaService.Stop:input_type -> google.protobuf.Empty
-	4, // 4: tast.cros.autoupdate.NebraskaService.CreateTempDir:input_type -> google.protobuf.Empty
-	4, // 5: tast.cros.autoupdate.NebraskaService.RemoveTempDir:input_type -> google.protobuf.Empty
-	2, // 6: tast.cros.autoupdate.NebraskaService.Start:output_type -> tast.cros.autoupdate.StartResponse
-	4, // 7: tast.cros.autoupdate.NebraskaService.Stop:output_type -> google.protobuf.Empty
-	3, // 8: tast.cros.autoupdate.NebraskaService.CreateTempDir:output_type -> tast.cros.autoupdate.CreateTempDirResponse
-	4, // 9: tast.cros.autoupdate.NebraskaService.RemoveTempDir:output_type -> google.protobuf.Empty
-	6, // [6:10] is the sub-list for method output_type
-	2, // [2:6] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	2, // 0: tast.cros.nebraska.UpdatePayloadRequest.update:type_name -> tast.cros.nebraska.Payload
+	0, // 1: tast.cros.nebraska.Service.Start:input_type -> tast.cros.nebraska.StartRequest
+	4, // 2: tast.cros.nebraska.Service.Stop:input_type -> google.protobuf.Empty
+	1, // 3: tast.cros.nebraska.Service.UpdatePayload:input_type -> tast.cros.nebraska.UpdatePayloadRequest
+	3, // 4: tast.cros.nebraska.Service.Start:output_type -> tast.cros.nebraska.StartResponse
+	4, // 5: tast.cros.nebraska.Service.Stop:output_type -> google.protobuf.Empty
+	4, // 6: tast.cros.nebraska.Service.UpdatePayload:output_type -> google.protobuf.Empty
+	4, // [4:7] is the sub-list for method output_type
+	1, // [1:4] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for extension type_name
+	1, // [1:1] is the sub-list for extension extendee
+	0, // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_nebraska_proto_init() }
@@ -370,7 +341,7 @@ func file_nebraska_proto_init() {
 			}
 		}
 		file_nebraska_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Payload); i {
+			switch v := v.(*UpdatePayloadRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -382,7 +353,7 @@ func file_nebraska_proto_init() {
 			}
 		}
 		file_nebraska_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*StartResponse); i {
+			switch v := v.(*Payload); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -394,7 +365,7 @@ func file_nebraska_proto_init() {
 			}
 		}
 		file_nebraska_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*CreateTempDirResponse); i {
+			switch v := v.(*StartResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -406,6 +377,7 @@ func file_nebraska_proto_init() {
 			}
 		}
 	}
+	file_nebraska_proto_msgTypes[0].OneofWrappers = []interface{}{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
@@ -434,180 +406,144 @@ var _ grpc.ClientConnInterface
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion6
 
-// NebraskaServiceClient is the client API for NebraskaService service.
+// ServiceClient is the client API for Service service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
-type NebraskaServiceClient interface {
+type ServiceClient interface {
 	Start(ctx context.Context, in *StartRequest, opts ...grpc.CallOption) (*StartResponse, error)
 	Stop(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
-	CreateTempDir(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*CreateTempDirResponse, error)
-	RemoveTempDir(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	UpdatePayload(ctx context.Context, in *UpdatePayloadRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
-type nebraskaServiceClient struct {
+type serviceClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewNebraskaServiceClient(cc grpc.ClientConnInterface) NebraskaServiceClient {
-	return &nebraskaServiceClient{cc}
+func NewServiceClient(cc grpc.ClientConnInterface) ServiceClient {
+	return &serviceClient{cc}
 }
 
-func (c *nebraskaServiceClient) Start(ctx context.Context, in *StartRequest, opts ...grpc.CallOption) (*StartResponse, error) {
+func (c *serviceClient) Start(ctx context.Context, in *StartRequest, opts ...grpc.CallOption) (*StartResponse, error) {
 	out := new(StartResponse)
-	err := c.cc.Invoke(ctx, "/tast.cros.autoupdate.NebraskaService/Start", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tast.cros.nebraska.Service/Start", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *nebraskaServiceClient) Stop(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *serviceClient) Stop(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/tast.cros.autoupdate.NebraskaService/Stop", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tast.cros.nebraska.Service/Stop", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *nebraskaServiceClient) CreateTempDir(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*CreateTempDirResponse, error) {
-	out := new(CreateTempDirResponse)
-	err := c.cc.Invoke(ctx, "/tast.cros.autoupdate.NebraskaService/CreateTempDir", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *nebraskaServiceClient) RemoveTempDir(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *serviceClient) UpdatePayload(ctx context.Context, in *UpdatePayloadRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/tast.cros.autoupdate.NebraskaService/RemoveTempDir", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tast.cros.nebraska.Service/UpdatePayload", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// NebraskaServiceServer is the server API for NebraskaService service.
-type NebraskaServiceServer interface {
+// ServiceServer is the server API for Service service.
+type ServiceServer interface {
 	Start(context.Context, *StartRequest) (*StartResponse, error)
 	Stop(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
-	CreateTempDir(context.Context, *emptypb.Empty) (*CreateTempDirResponse, error)
-	RemoveTempDir(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
+	UpdatePayload(context.Context, *UpdatePayloadRequest) (*emptypb.Empty, error)
 }
 
-// UnimplementedNebraskaServiceServer can be embedded to have forward compatible implementations.
-type UnimplementedNebraskaServiceServer struct {
+// UnimplementedServiceServer can be embedded to have forward compatible implementations.
+type UnimplementedServiceServer struct {
 }
 
-func (*UnimplementedNebraskaServiceServer) Start(context.Context, *StartRequest) (*StartResponse, error) {
+func (*UnimplementedServiceServer) Start(context.Context, *StartRequest) (*StartResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Start not implemented")
 }
-func (*UnimplementedNebraskaServiceServer) Stop(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
+func (*UnimplementedServiceServer) Stop(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Stop not implemented")
 }
-func (*UnimplementedNebraskaServiceServer) CreateTempDir(context.Context, *emptypb.Empty) (*CreateTempDirResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateTempDir not implemented")
-}
-func (*UnimplementedNebraskaServiceServer) RemoveTempDir(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RemoveTempDir not implemented")
+func (*UnimplementedServiceServer) UpdatePayload(context.Context, *UpdatePayloadRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdatePayload not implemented")
 }
 
-func RegisterNebraskaServiceServer(s *grpc.Server, srv NebraskaServiceServer) {
-	s.RegisterService(&_NebraskaService_serviceDesc, srv)
+func RegisterServiceServer(s *grpc.Server, srv ServiceServer) {
+	s.RegisterService(&_Service_serviceDesc, srv)
 }
 
-func _NebraskaService_Start_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Service_Start_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(StartRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(NebraskaServiceServer).Start(ctx, in)
+		return srv.(ServiceServer).Start(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tast.cros.autoupdate.NebraskaService/Start",
+		FullMethod: "/tast.cros.nebraska.Service/Start",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(NebraskaServiceServer).Start(ctx, req.(*StartRequest))
+		return srv.(ServiceServer).Start(ctx, req.(*StartRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _NebraskaService_Stop_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Service_Stop_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(NebraskaServiceServer).Stop(ctx, in)
+		return srv.(ServiceServer).Stop(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tast.cros.autoupdate.NebraskaService/Stop",
+		FullMethod: "/tast.cros.nebraska.Service/Stop",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(NebraskaServiceServer).Stop(ctx, req.(*emptypb.Empty))
+		return srv.(ServiceServer).Stop(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _NebraskaService_CreateTempDir_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(emptypb.Empty)
+func _Service_UpdatePayload_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdatePayloadRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(NebraskaServiceServer).CreateTempDir(ctx, in)
+		return srv.(ServiceServer).UpdatePayload(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tast.cros.autoupdate.NebraskaService/CreateTempDir",
+		FullMethod: "/tast.cros.nebraska.Service/UpdatePayload",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(NebraskaServiceServer).CreateTempDir(ctx, req.(*emptypb.Empty))
+		return srv.(ServiceServer).UpdatePayload(ctx, req.(*UpdatePayloadRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _NebraskaService_RemoveTempDir_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(emptypb.Empty)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(NebraskaServiceServer).RemoveTempDir(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/tast.cros.autoupdate.NebraskaService/RemoveTempDir",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(NebraskaServiceServer).RemoveTempDir(ctx, req.(*emptypb.Empty))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-var _NebraskaService_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "tast.cros.autoupdate.NebraskaService",
-	HandlerType: (*NebraskaServiceServer)(nil),
+var _Service_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "tast.cros.nebraska.Service",
+	HandlerType: (*ServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "Start",
-			Handler:    _NebraskaService_Start_Handler,
+			Handler:    _Service_Start_Handler,
 		},
 		{
 			MethodName: "Stop",
-			Handler:    _NebraskaService_Stop_Handler,
+			Handler:    _Service_Stop_Handler,
 		},
 		{
-			MethodName: "CreateTempDir",
-			Handler:    _NebraskaService_CreateTempDir_Handler,
-		},
-		{
-			MethodName: "RemoveTempDir",
-			Handler:    _NebraskaService_RemoveTempDir_Handler,
+			MethodName: "UpdatePayload",
+			Handler:    _Service_UpdatePayload_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
