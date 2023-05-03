@@ -5,11 +5,11 @@
 package videoconferencing
 
 import (
-	"context"
-	"time"
-
+	"chromiumos/tast/common/perf"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/videoconferencing/fixture"
+	"context"
+	"time"
 
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -22,7 +22,7 @@ func init() {
 		Timeout: 2 * time.Minute,
 		Contacts: []string{
 			"chromeos-platform-ml-accelerators@google.com",
-			"shafron@google.com",
+			"zhaon@google.com",
 		},
 		BugComponent: "b:1140118",
 		Attr: []string{
@@ -39,17 +39,43 @@ func init() {
 					"group:video_conference", "video_conference_per_build",
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("betty")),
-				Val:               []string{"cros_effects_sm_tests"},
 			},
 		},
 	})
 }
 
 func CrosCameraEffectsStreamManipulator(ctx context.Context, s *testing.State) {
-	cmdArgs := s.Param().([]string)
+	testSuiteName := "cros_effects_sm_tests"
+	s.Run(ctx, "CrosEffectsSMTests", func(ctx context.Context, s *testing.State) {
+		cmd := testexec.CommandContext(ctx, testSuiteName)
+		if err := cmd.Run(testexec.DumpLogOnError); err != nil {
+			s.Error("Failed to run test suite: ", err)
+		}
+	})
 
-	cmd := testexec.CommandContext(ctx, cmdArgs[0], cmdArgs[1:]...)
-	if err := cmd.Run(testexec.DumpLogOnError); err != nil {
-		s.Error("Failed to run test suite: ", err)
-	}
+	s.Run(ctx, "OpenCLCacheStartup", func(ctx context.Context, s *testing.State) {
+		gTestFilter := "--gtest_filter=EffectsStreamManipulatorTest.OpenCLCacheStartup"
+
+		start := time.Now()
+		cmd := testexec.CommandContext(ctx, testSuiteName, gTestFilter)
+		if err := cmd.Run(testexec.DumpLogOnError); err != nil {
+			s.Error("Failed to run external command: ", err)
+		}
+		end := time.Now()
+		elapsed := end.Sub(start).Seconds()
+		s.Log("OpenCLCacheStartup time: ", elapsed, " seconds")
+
+		p := perf.NewValues()
+		p.Set(perf.Metric{
+			Name:      "startupTime",
+			Unit:      "s",
+			Direction: perf.SmallerIsBetter,
+			Multiple:  false},
+			float64(elapsed))
+
+		if err := p.Save(s.OutDir()); err != nil {
+			s.Error("Cannot save perf data: ", err)
+		}
+	})
+
 }

@@ -5,6 +5,8 @@
 package effects
 
 import (
+	"chromiumos/tast/common/hps/hpsutil"
+	"chromiumos/tast/common/testexec"
 	"context"
 	"os"
 	"regexp"
@@ -12,9 +14,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"chromiumos/tast/common/hps/hpsutil"
-	"chromiumos/tast/common/testexec"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
