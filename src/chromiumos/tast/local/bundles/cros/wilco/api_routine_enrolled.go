@@ -9,11 +9,11 @@ import (
 	"os"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/wilco/routines"
 	"chromiumos/tast/local/wilco"
-	"chromiumos/tast/testing"
 	dtcpb "chromiumos/wilco_dtc"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

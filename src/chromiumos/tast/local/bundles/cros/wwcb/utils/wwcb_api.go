@@ -16,8 +16,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 var wwcbIP = testing.RegisterVarString(

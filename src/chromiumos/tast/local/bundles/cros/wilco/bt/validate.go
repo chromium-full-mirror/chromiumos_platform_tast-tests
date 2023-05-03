@@ -8,9 +8,9 @@ package bt
 import (
 	"context"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bluetooth/bluez"
 	dtcpb "chromiumos/wilco_dtc"
+	"go.chromium.org/tast/core/errors"
 )
 
 type bluetoothAdapter struct {

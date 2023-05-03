@@ -8,8 +8,8 @@ import (
 	"context"
 
 	"chromiumos/tast/local/wilco"
-	"chromiumos/tast/testing"
 	dtcpb "chromiumos/wilco_dtc"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

@@ -12,8 +12,8 @@ import (
 	"chromiumos/tast/local/bundles/cros/wilco/wilcoextension"
 	"chromiumos/tast/local/policyutil/fixtures"
 	"chromiumos/tast/local/wilco"
-	"chromiumos/tast/testing"
 	dtcpb "chromiumos/wilco_dtc"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

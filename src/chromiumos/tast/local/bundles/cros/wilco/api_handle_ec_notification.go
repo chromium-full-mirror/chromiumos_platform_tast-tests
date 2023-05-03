@@ -8,11 +8,11 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/bundles/cros/wilco/pre"
 	"chromiumos/tast/local/wilco"
-	"chromiumos/tast/testing"
 	dtcpb "chromiumos/wilco_dtc"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {

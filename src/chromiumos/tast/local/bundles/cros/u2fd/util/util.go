@@ -8,12 +8,12 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto/lockscreen"
 	"chromiumos/tast/local/chrome/uiauto/ossettings"
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/input"
+	"go.chromium.org/tast/core/errors"
 )
 
 // SetUpUserPIN sets up a test user with a specific PIN.

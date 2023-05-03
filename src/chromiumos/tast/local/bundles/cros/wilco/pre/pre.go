@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"chromiumos/tast/local/wilco"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/timing"
 )
 

@@ -13,12 +13,12 @@ import (
 	"golang.org/x/sys/unix"
 	"google.golang.org/grpc"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/bundles/cros/wilco/routines"
 	"chromiumos/tast/local/wilco"
 	wpb "chromiumos/tast/services/cros/wilco"
-	"chromiumos/tast/testing"
 	dtcpb "chromiumos/wilco_dtc"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/timing"
 )
 

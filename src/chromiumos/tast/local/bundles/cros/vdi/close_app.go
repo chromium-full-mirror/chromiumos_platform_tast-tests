@@ -9,14 +9,14 @@ import (
 	"time"
 
 	"chromiumos/tast/common/fixture"
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/coords"
 	"chromiumos/tast/local/uidetection"
 	"chromiumos/tast/local/vdi/fixtures"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 type closeAppParams struct {

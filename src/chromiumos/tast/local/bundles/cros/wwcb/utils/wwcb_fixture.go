@@ -7,8 +7,8 @@ package utils
 import (
 	"context"
 
-	"chromiumos/tast/errors"
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // InitFixtures resets all fixtures at the beginning of testing.
