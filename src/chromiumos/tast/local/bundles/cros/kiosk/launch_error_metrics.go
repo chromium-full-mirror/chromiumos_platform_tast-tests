@@ -74,7 +74,7 @@ func LaunchErrorMetrics(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 	chromeOptions := chrome.ExtraArgs("--kiosk-splash-screen-min-time-seconds=60")
 	param := s.Param().(kioskmode.TestData)
-	kiosk, cr, err := kioskmode.New(
+	kiosk, cr, err := kioskmode.DeprecatedNew(
 		ctx,
 		fdms,
 		kioskmode.DefaultLocalAccounts(),

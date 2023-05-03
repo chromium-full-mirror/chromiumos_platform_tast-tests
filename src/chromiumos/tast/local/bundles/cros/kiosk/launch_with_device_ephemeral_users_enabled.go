@@ -112,7 +112,7 @@ func LaunchWithDeviceEphemeralUsersEnabled(ctx context.Context, s *testing.State
 			[]policy.Policy{&policy.LacrosAvailability{Val: "lacros_only"}}))
 	}
 
-	kiosk, cr, err := kioskmode.New(ctx, fdms, opts...)
+	kiosk, cr, err := kioskmode.DeprecatedNew(ctx, fdms, opts...)
 	if err != nil {
 		s.Fatal("Failed to start Chrome in Kiosk mode: ", err)
 	}

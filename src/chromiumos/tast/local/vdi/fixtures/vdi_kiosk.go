@@ -184,7 +184,7 @@ func (v *kioskFixtureState) SetUp(ctx context.Context, s *testing.FixtState) int
 		},
 	}
 
-	kiosk, cr, err := kioskmode.New(
+	kiosk, cr, err := kioskmode.DeprecatedNew(
 		ctx,
 		fdms,
 		kioskmode.CustomLocalAccounts(&v.accountsConfiguration),

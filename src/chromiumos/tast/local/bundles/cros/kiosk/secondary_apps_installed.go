@@ -101,7 +101,7 @@ func SecondaryAppsInstalled(ctx context.Context, s *testing.State) {
 	var ui *uiauto.Context = nil
 	var err error = nil
 	if param.autoLaunch {
-		kiosk, cr, err = kioskmode.New(
+		kiosk, cr, err = kioskmode.DeprecatedNew(
 			ctx,
 			fdms,
 			kioskmode.CustomLocalAccounts(account),
@@ -125,7 +125,7 @@ func SecondaryAppsInstalled(ctx context.Context, s *testing.State) {
 		ui = uiauto.New(testConn)
 
 	} else {
-		kiosk, cr, err = kioskmode.New(
+		kiosk, cr, err = kioskmode.DeprecatedNew(
 			ctx,
 			fdms,
 			kioskmode.CustomLocalAccounts(account),

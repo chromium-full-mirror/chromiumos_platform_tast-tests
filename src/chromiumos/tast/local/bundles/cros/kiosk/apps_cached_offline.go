@@ -75,7 +75,7 @@ func AppsCachedOffline(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 	param := s.Param().(kioskmode.TestData)
 
-	kiosk, _, err := kioskmode.New(
+	kiosk, _, err := kioskmode.DeprecatedNew(
 		ctx,
 		fdms,
 		kioskmode.DefaultLocalAccounts(),

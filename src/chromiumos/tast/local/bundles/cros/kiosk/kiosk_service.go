@@ -112,7 +112,7 @@ func (c *KioskService) StartKiosk(ctx context.Context, req *empty.Empty) (*empty
 		return nil, errors.Wrap(err, "failed to start Chrome")
 	}
 
-	kiosk, cr, err := kioskmode.New(
+	kiosk, cr, err := kioskmode.DeprecatedNew(
 		ctx,
 		fdms,
 		kioskmode.DefaultLocalAccounts(),

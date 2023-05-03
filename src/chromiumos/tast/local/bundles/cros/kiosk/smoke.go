@@ -248,7 +248,7 @@ func Smoke(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 	param := s.Param().(smokeTestParam)
 
-	kiosk, cr, err := kioskmode.New(
+	kiosk, cr, err := kioskmode.DeprecatedNew(
 		ctx, fdms, param.kioskModeOptions(s.RequiredVar("ui.signinProfileTestExtensionManifestKey"))...,
 	)
 	if err != nil {

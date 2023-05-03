@@ -73,7 +73,7 @@ func TTSExtensionSettings(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 	param := s.Param().(kioskmode.TestData)
 
-	kiosk, cr, err := kioskmode.New(
+	kiosk, cr, err := kioskmode.DeprecatedNew(
 		ctx,
 		fdms,
 		kioskmode.DefaultLocalAccounts(),

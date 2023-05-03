@@ -46,7 +46,7 @@ func AutoLoginBailout(ctx context.Context, s *testing.State) {
 
 	chromeOptions := chrome.ExtraArgs("--kiosk-splash-screen-min-time-seconds=60")
 
-	kiosk, _, err := kioskmode.New(
+	kiosk, _, err := kioskmode.DeprecatedNew(
 		ctx,
 		fdms,
 		kioskmode.DefaultLocalAccounts(),

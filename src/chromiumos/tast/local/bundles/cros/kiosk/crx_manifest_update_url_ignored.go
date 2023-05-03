@@ -140,7 +140,7 @@ func launchKioskAndVerify(ctx context.Context, s *testing.State, ignoreCrxURL bo
 		},
 	}
 
-	kiosk, cr, err := kioskmode.New(
+	kiosk, cr, err := kioskmode.DeprecatedNew(
 		ctx,
 		fdms,
 		kioskmode.CustomLocalAccounts(account),

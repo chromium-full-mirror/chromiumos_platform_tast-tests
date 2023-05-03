@@ -160,7 +160,7 @@ func (k *inputsKioskFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 		},
 	}
 
-	kiosk, cr, err := kioskmode.New(
+	kiosk, cr, err := kioskmode.DeprecatedNew(
 		ctx,
 		fdms,
 		kioskmode.AutoLaunch(webKioskAccountID),

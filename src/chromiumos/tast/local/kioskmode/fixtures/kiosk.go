@@ -132,7 +132,7 @@ func (k *kioskFixture) SetUp(ctx context.Context, s *testing.FixtState) interfac
 		options = append(options, kioskmode.CustomLocalAccounts(k.localAccounts))
 	}
 
-	kiosk, cr, err := kioskmode.New(ctx, fdms, options...)
+	kiosk, cr, err := kioskmode.DeprecatedNew(ctx, fdms, options...)
 	if err != nil {
 		path := filepath.Join(s.OutDir(), "kiosk_fixture_failure.png")
 		if err := screenshot.Capture(ctx, path); err != nil {

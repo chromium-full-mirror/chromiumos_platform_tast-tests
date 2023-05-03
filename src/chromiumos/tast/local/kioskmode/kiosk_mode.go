@@ -210,13 +210,16 @@ func IsKioskAppStarted(ctx context.Context) error {
 	return nil
 }
 
-// New starts Chrome, sets passed Kiosk related options to policies and
-// restarts Chrome. When kioskmode.AutoLaunch() is used, then it auto starts
+// DeprecatedNew starts Chrome, sets passed Kiosk related options to policies
+// and restarts Chrome. When kioskmode.AutoLaunch() is used, then it auto starts
 // given Kiosk application. Alternatively use kioskmode.ExtraChromeOptions()
 // passing chrome.LoadSigninProfileExtension(). In that case Chrome is started
 // and stays on Signin screen with Kiosk accounts loaded.
 // Use defer kiosk.Close(ctx) to clean.
-func New(ctx context.Context, fdms *fakedms.FakeDMS, opts ...Option) (k *Kiosk, c *chrome.Chrome, e error) {
+//
+// Deprecated: Prefer using New, as it sets Kiosk policies in Chrome using the
+// safer --prevent-kiosk-autolaunch-for-testing flag.
+func DeprecatedNew(ctx context.Context, fdms *fakedms.FakeDMS, opts ...Option) (k *Kiosk, c *chrome.Chrome, e error) {
 	cfg, err := NewConfig(opts)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to process options")
