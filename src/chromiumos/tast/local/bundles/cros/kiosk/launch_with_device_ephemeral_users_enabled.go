@@ -117,7 +117,7 @@ func LaunchWithDeviceEphemeralUsersEnabled(ctx context.Context, s *testing.State
 		s.Fatal("Failed to start Chrome in Kiosk mode: ", err)
 	}
 	defer func(ctx context.Context) {
-		if err := kiosk.Close(ctx); err != nil {
+		if err := kiosk.DeprecatedClose(ctx); err != nil {
 			s.Error("Failed to close kiosk: ", err)
 		}
 	}(ctx)

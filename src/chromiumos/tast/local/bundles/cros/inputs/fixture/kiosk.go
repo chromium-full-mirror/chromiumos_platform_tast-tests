@@ -202,7 +202,7 @@ func (k *inputsKioskFixture) TearDown(ctx context.Context, s *testing.FixtState)
 		s.Log("Chrome not yet started")
 	}
 
-	if err := k.kiosk.Close(ctx); err != nil {
+	if err := k.kiosk.DeprecatedClose(ctx); err != nil {
 		s.Log("There was an error while closing Kiosk: ", err)
 	}
 

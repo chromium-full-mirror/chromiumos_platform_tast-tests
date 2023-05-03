@@ -125,7 +125,7 @@ func (c *KioskService) StartKiosk(ctx context.Context, req *empty.Empty) (*empty
 	c.chrome = cr
 	defer func() {
 		if !ok {
-			kiosk.Close(ctx)
+			kiosk.DeprecatedClose(ctx)
 			c.kiosk = nil
 			c.chrome = nil
 		}
@@ -165,7 +165,7 @@ func (c *KioskService) CloseKiosk(ctx context.Context, req *empty.Empty) (*empty
 	var lastErr error
 
 	if c.kiosk != nil {
-		if err := c.kiosk.Close(ctx); err != nil {
+		if err := c.kiosk.DeprecatedClose(ctx); err != nil {
 			testing.ContextLog(ctx, "Failed to close kiosk: ", err)
 			lastErr = errors.Wrap(err, "failed to close kiosk")
 		}

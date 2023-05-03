@@ -151,7 +151,7 @@ func (k *kioskFixture) SetUp(ctx context.Context, s *testing.FixtState) interfac
 
 	proc, err := ashproc.Root()
 	if err != nil {
-		if err := kiosk.Close(ctx); err != nil {
+		if err := kiosk.DeprecatedClose(ctx); err != nil {
 			s.Error("There was an error while closing Kiosk: ", err)
 		}
 		s.Fatal("Failed to get root Chrome PID: ", err)
@@ -171,7 +171,7 @@ func (k *kioskFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 		s.Fatal("Chrome not yet started")
 	}
 
-	if err := k.kiosk.Close(ctx); err != nil {
+	if err := k.kiosk.DeprecatedClose(ctx); err != nil {
 		s.Error("There was an error while closing Kiosk: ", err)
 	}
 

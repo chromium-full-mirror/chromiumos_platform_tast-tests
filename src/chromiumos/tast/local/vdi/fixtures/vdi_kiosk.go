@@ -211,7 +211,7 @@ func (v *kioskFixtureState) SetUp(ctx context.Context, s *testing.FixtState) int
 	ok = false
 	defer func(ctx context.Context) {
 		if !ok {
-			if err := kiosk.Close(ctx); err != nil {
+			if err := kiosk.DeprecatedClose(ctx); err != nil {
 				s.Error("Failed to close kiosk: ", err)
 			}
 		}
@@ -301,7 +301,7 @@ func (v *kioskFixtureState) TearDown(ctx context.Context, s *testing.FixtState) 
 		s.Error("Chrome not yet started")
 	}
 
-	if err := v.kiosk.Close(cleanupCtx); err != nil {
+	if err := v.kiosk.DeprecatedClose(cleanupCtx); err != nil {
 		s.Error("Failed to close kiosk: ", err)
 	}
 

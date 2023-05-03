@@ -72,10 +72,13 @@ type Kiosk struct {
 	autostart     bool
 }
 
-// Close clears policies, but keeps serving device local accounts then closes
-// Chrome. Ideally we would serve an empty policies slice however, that makes
-// Chrome crashes when AutoLaunch() option was used.
-func (k *Kiosk) Close(ctx context.Context) (retErr error) {
+// DeprecatedClose clears policies, but keeps serving device local accounts
+// then closes Chrome. Ideally we would serve an empty policies slice however,
+// that makes Chrome crashes when AutoLaunch() option was used.
+//
+// Deprecated: Prefer using Close, as it clears Kiosk policies correctly between
+// tests.
+func (k *Kiosk) DeprecatedClose(ctx context.Context) (retErr error) {
 	// If Chrome fails to start in RestartChromeWithOptions it has already been
 	// cleaned up by startChromeClearPolicies.
 	if k.cr == nil {
