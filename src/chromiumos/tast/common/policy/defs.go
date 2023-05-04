@@ -6034,37 +6034,6 @@ func (p *ExtensionSettings) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
-// 279. SSLVersionMin
-// This policy can be modified without rebooting.
-// ****************************************************************************
-type SSLVersionMin struct {
-	Stat Status
-	Val  string
-}
-
-func (p *SSLVersionMin) Name() string          { return "SSLVersionMin" }
-func (p *SSLVersionMin) Scope() Scope          { return ScopeUser }
-func (p *SSLVersionMin) Status() Status        { return p.Stat }
-func (p *SSLVersionMin) UntypedV() interface{} { return p.Val }
-func (p *SSLVersionMin) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v string
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as string", m)
-	}
-	return v, nil
-}
-func (p *SSLVersionMin) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *SSLVersionMin) Equal(iface interface{}) bool {
-	v, ok := iface.(string)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
 // 282. ForceGoogleSafeSearch
 // This policy can be modified without rebooting.
 // ****************************************************************************
@@ -18323,6 +18292,7 @@ type WebAppSettings struct {
 
 type WebAppSettingsValue struct {
 	ManifestId   string `json:"manifest_id"`
+	PreventClose bool   `json:"prevent_close"`
 	RunOnOsLogin string `json:"run_on_os_login"`
 }
 
@@ -22612,7 +22582,6 @@ func (p *OnFileTransferEnterpriseConnector) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 992. ChromeRootStoreEnabled
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type ChromeRootStoreEnabled struct {
 	Stat Status
@@ -23340,37 +23309,6 @@ func (p *DeskAPIThirdPartyAllowlist) SetProto(m *protoreflect.Message) {
 }
 func (p *DeskAPIThirdPartyAllowlist) Equal(iface interface{}) bool {
 	v, ok := iface.([]string)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
-// 1025. HindiInscriptLayoutEnabled
-// This policy can be modified without rebooting.
-// ****************************************************************************
-type HindiInscriptLayoutEnabled struct {
-	Stat Status
-	Val  bool
-}
-
-func (p *HindiInscriptLayoutEnabled) Name() string          { return "HindiInscriptLayoutEnabled" }
-func (p *HindiInscriptLayoutEnabled) Scope() Scope          { return ScopeUser }
-func (p *HindiInscriptLayoutEnabled) Status() Status        { return p.Stat }
-func (p *HindiInscriptLayoutEnabled) UntypedV() interface{} { return p.Val }
-func (p *HindiInscriptLayoutEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v bool
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as bool", m)
-	}
-	return v, nil
-}
-func (p *HindiInscriptLayoutEnabled) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *HindiInscriptLayoutEnabled) Equal(iface interface{}) bool {
-	v, ok := iface.(bool)
 	if !ok {
 		return ok
 	}
@@ -24987,7 +24925,6 @@ func (p *HttpsUpgradesEnabled) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1084. RealTimeDownloadProtectionRequestAllowed
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type RealTimeDownloadProtectionRequestAllowed struct {
 	Stat Status
@@ -25089,7 +25026,6 @@ func (p *RemoteAccessHostAllowEnterpriseRemoteSupportConnections) Equal(iface in
 // ****************************************************************************
 // 1088. ClientSidePhishingProtectionAllowed
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type ClientSidePhishingProtectionAllowed struct {
 	Stat Status
@@ -25400,6 +25336,134 @@ func (p *DeviceLoginScreenGeolocationAccessLevel) SetProto(m *protoreflect.Messa
 }
 func (p *DeviceLoginScreenGeolocationAccessLevel) Equal(iface interface{}) bool {
 	v, ok := iface.(int)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1097. DeviceReportNetworkEvents
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type DeviceReportNetworkEvents struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *DeviceReportNetworkEvents) Name() string          { return "DeviceReportNetworkEvents" }
+func (p *DeviceReportNetworkEvents) Scope() Scope          { return ScopeDevice }
+func (p *DeviceReportNetworkEvents) Status() Status        { return p.Stat }
+func (p *DeviceReportNetworkEvents) UntypedV() interface{} { return p.Val }
+func (p *DeviceReportNetworkEvents) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *DeviceReportNetworkEvents) SetProto(m *protoreflect.Message) {
+	SetDeviceProto(m, "device_reporting", "report_network_events", p.Val)
+}
+func (p *DeviceReportNetworkEvents) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1098. SafeBrowsingExtensionProtectionAllowed
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type SafeBrowsingExtensionProtectionAllowed struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *SafeBrowsingExtensionProtectionAllowed) Name() string {
+	return "SafeBrowsingExtensionProtectionAllowed"
+}
+func (p *SafeBrowsingExtensionProtectionAllowed) Scope() Scope          { return ScopeUser }
+func (p *SafeBrowsingExtensionProtectionAllowed) Status() Status        { return p.Stat }
+func (p *SafeBrowsingExtensionProtectionAllowed) UntypedV() interface{} { return p.Val }
+func (p *SafeBrowsingExtensionProtectionAllowed) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *SafeBrowsingExtensionProtectionAllowed) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *SafeBrowsingExtensionProtectionAllowed) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1099. ShowDisplaySizeScreenEnabled
+// This policy has a default value of False.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type ShowDisplaySizeScreenEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *ShowDisplaySizeScreenEnabled) Name() string          { return "ShowDisplaySizeScreenEnabled" }
+func (p *ShowDisplaySizeScreenEnabled) Scope() Scope          { return ScopeUser }
+func (p *ShowDisplaySizeScreenEnabled) Status() Status        { return p.Stat }
+func (p *ShowDisplaySizeScreenEnabled) UntypedV() interface{} { return p.Val }
+func (p *ShowDisplaySizeScreenEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *ShowDisplaySizeScreenEnabled) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *ShowDisplaySizeScreenEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1100. AnonymousSearchEnabled
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type AnonymousSearchEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *AnonymousSearchEnabled) Name() string          { return "AnonymousSearchEnabled" }
+func (p *AnonymousSearchEnabled) Scope() Scope          { return ScopeUser }
+func (p *AnonymousSearchEnabled) Status() Status        { return p.Stat }
+func (p *AnonymousSearchEnabled) UntypedV() interface{} { return p.Val }
+func (p *AnonymousSearchEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *AnonymousSearchEnabled) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *AnonymousSearchEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
 	if !ok {
 		return ok
 	}
@@ -25791,8 +25855,6 @@ func newByName(name string) (Policy, error) {
 		return &BrowserAddPersonEnabled{}, nil
 	case "ExtensionSettings":
 		return &ExtensionSettings{}, nil
-	case "SSLVersionMin":
-		return &SSLVersionMin{}, nil
 	case "ForceGoogleSafeSearch":
 		return &ForceGoogleSafeSearch{}, nil
 	case "ForceYouTubeSafetyMode":
@@ -26847,8 +26909,6 @@ func newByName(name string) (Policy, error) {
 		return &IsolatedWebAppInstallForceList{}, nil
 	case "DeskAPIThirdPartyAllowlist":
 		return &DeskAPIThirdPartyAllowlist{}, nil
-	case "HindiInscriptLayoutEnabled":
-		return &HindiInscriptLayoutEnabled{}, nil
 	case "DeviceKeyboardBacklightColor":
 		return &DeviceKeyboardBacklightColor{}, nil
 	case "LensDesktopNTPSearchEnabled":
@@ -26973,6 +27033,14 @@ func newByName(name string) (Policy, error) {
 		return &InsecureHashesInTLSHandshakesEnabled{}, nil
 	case "DeviceLoginScreenGeolocationAccessLevel":
 		return &DeviceLoginScreenGeolocationAccessLevel{}, nil
+	case "DeviceReportNetworkEvents":
+		return &DeviceReportNetworkEvents{}, nil
+	case "SafeBrowsingExtensionProtectionAllowed":
+		return &SafeBrowsingExtensionProtectionAllowed{}, nil
+	case "ShowDisplaySizeScreenEnabled":
+		return &ShowDisplaySizeScreenEnabled{}, nil
+	case "AnonymousSearchEnabled":
+		return &AnonymousSearchEnabled{}, nil
 	default:
 		return nil, errors.New("Unknown policy " + name)
 	}
@@ -26982,32 +27050,15 @@ func newByName(name string) (Policy, error) {
 // Reference values (used via '$ref' in JSON Schema).
 // ****************************************************************************
 
-type RefTimeUsageLimitEntry struct {
-	LastUpdatedMillis string `json:"last_updated_millis"`
-	UsageQuotaMins    int    `json:"usage_quota_mins"`
+type RefDayPercentagePair struct {
+	Days       int `json:"days"`
+	Percentage int `json:"percentage"`
 }
 
-type RefTime struct {
-	Hour   int `json:"hour"`
-	Minute int `json:"minute"`
-}
-
-type RefConfig struct {
-	AccessCodeTtl       int    `json:"access_code_ttl"`
-	ClockDriftTolerance int    `json:"clock_drift_tolerance"`
-	SharedSecret        string `json:"shared_secret"`
-}
-
-type RefPowerManagementDelays struct {
-	Delays     *RefPowerManagementDelaysDelays `json:"Delays"`
-	IdleAction string                          `json:"IdleAction"`
-}
-
-type RefPowerManagementDelaysDelays struct {
-	Idle        int `json:"Idle"`
-	IdleWarning int `json:"IdleWarning"`
-	ScreenDim   int `json:"ScreenDim"`
-	ScreenOff   int `json:"ScreenOff"`
+type RefDisallowedTimeInterval struct {
+	DayOfWeek string `json:"day_of_week"`
+	Hours     int    `json:"hours"`
+	Minutes   int    `json:"minutes"`
 }
 
 type RefDeviceLoginScreenPowerSettings struct {
@@ -27021,24 +27072,21 @@ type RefDeviceLoginScreenPowerSettingsDelays struct {
 	ScreenOff int `json:"ScreenOff"`
 }
 
-type RefUsbDeviceId struct {
+type RefBookmarkType struct {
+	Children     []*RefBookmarkType `json:"children,omitempty"`
+	Name         string             `json:"name"`
+	ToplevelName string             `json:"toplevel_name"`
+	Url          string             `json:"url"`
+}
+
+type RefUsbDeviceIdInclusive struct {
 	ProductId int `json:"product_id"`
 	VendorId  int `json:"vendor_id"`
 }
 
-type RefWeeklyTimeIntervals struct {
-	End   *RefWeeklyTime               `json:"end"`
-	Start *RefWeeklyTimeIntervalsStart `json:"start"`
-}
-
-type RefWeeklyTimeIntervalsStart struct {
-	DayOfWeek string `json:"day_of_week"`
-	Time      int    `json:"time"`
-}
-
-type RefWeeklyTime struct {
-	DayOfWeek string `json:"day_of_week"`
-	Time      int    `json:"time"`
+type RefUsbDeviceId struct {
+	ProductId int `json:"product_id"`
+	VendorId  int `json:"vendor_id"`
 }
 
 type Reffile_transfer_enable_disable_schema struct {
@@ -27059,32 +27107,52 @@ type Reffile_transfer_source_destination_schema struct {
 	FileSystemType string `json:"file_system_type"`
 }
 
+type RefWeeklyTimeIntervals struct {
+	End   *RefWeeklyTime               `json:"end"`
+	Start *RefWeeklyTimeIntervalsStart `json:"start"`
+}
+
+type RefWeeklyTimeIntervalsStart struct {
+	DayOfWeek string `json:"day_of_week"`
+	Time      int    `json:"time"`
+}
+
+type RefWeeklyTime struct {
+	DayOfWeek string `json:"day_of_week"`
+	Time      int    `json:"time"`
+}
+
 type RefDomainFiletypePair struct {
 	Domains       []string `json:"domains,omitempty"`
 	FileExtension string   `json:"file_extension"`
 }
 
-type RefBookmarkType struct {
-	Children     []*RefBookmarkType `json:"children,omitempty"`
-	Name         string             `json:"name"`
-	ToplevelName string             `json:"toplevel_name"`
-	Url          string             `json:"url"`
+type RefPowerManagementDelays struct {
+	Delays     *RefPowerManagementDelaysDelays `json:"Delays"`
+	IdleAction string                          `json:"IdleAction"`
 }
 
-type RefUsbDeviceIdInclusive struct {
-	ProductId int `json:"product_id"`
-	VendorId  int `json:"vendor_id"`
+type RefPowerManagementDelaysDelays struct {
+	Idle        int `json:"Idle"`
+	IdleWarning int `json:"IdleWarning"`
+	ScreenDim   int `json:"ScreenDim"`
+	ScreenOff   int `json:"ScreenOff"`
 }
 
-type RefDayPercentagePair struct {
-	Days       int `json:"days"`
-	Percentage int `json:"percentage"`
+type RefTimeUsageLimitEntry struct {
+	LastUpdatedMillis string `json:"last_updated_millis"`
+	UsageQuotaMins    int    `json:"usage_quota_mins"`
 }
 
-type RefDisallowedTimeInterval struct {
-	DayOfWeek string `json:"day_of_week"`
-	Hours     int    `json:"hours"`
-	Minutes   int    `json:"minutes"`
+type RefTime struct {
+	Hour   int `json:"hour"`
+	Minute int `json:"minute"`
+}
+
+type RefConfig struct {
+	AccessCodeTtl       int    `json:"access_code_ttl"`
+	ClockDriftTolerance int    `json:"clock_drift_tolerance"`
+	SharedSecret        string `json:"shared_secret"`
 }
 
 // ****************************************************************************
