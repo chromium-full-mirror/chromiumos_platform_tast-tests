@@ -138,7 +138,7 @@ func JoinMeetingWithEffect(ctx context.Context, cr *chrome.Chrome, br *browser.B
 		return gm, err
 	}
 	// If it automatically join meeting, change the effect on the meeting page.
-	if gm.ui.Exists(moreOptionsButton)(ctx) == nil {
+	if gm.ui.Exists(inMeetingIdentifier)(ctx) == nil {
 		if err := gm.ApplyVideoEffects(gm.SetEffect(effectOption))(ctx); err != nil {
 			return gm, err
 		}
