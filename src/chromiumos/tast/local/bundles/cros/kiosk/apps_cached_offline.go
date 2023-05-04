@@ -43,6 +43,7 @@ func init() {
 			"group:complementary",
 		},
 		SoftwareDeps: []string{"reboot", "chrome"},
+		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		Params: []testing.Param{{
 			Name: "ash",
 			Val: kioskmode.TestData{
@@ -58,8 +59,8 @@ func init() {
 			},
 			ExtraSoftwareDeps: []string{"lacros"},
 		}},
-		Fixture: fixture.KioskAutoLaunchCleanup,
-		Timeout: 5 * time.Minute, // Starting Kiosk twice requires longer timeout.
+		Fixture: fixture.FakeDMSEnrolled,
+		Timeout: kioskmode.SetupDuration + 2*kioskmode.LaunchDuration + kioskmode.CleanupDuration + time.Minute,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.LacrosAvailability{}, pci.VerifiedFunctionalityOS),
 			{
@@ -75,10 +76,14 @@ func AppsCachedOffline(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 	param := s.Param().(kioskmode.TestData)
 
-	kiosk, _, err := kioskmode.DeprecatedNew(
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, kioskmode.CleanupDuration)
+	defer cancel()
+
+	kiosk, _, err := kioskmode.New(
 		ctx,
 		fdms,
-		kioskmode.DefaultLocalAccounts(),
+		s.RequiredVar("ui.signinProfileTestExtensionManifestKey"),
 		kioskmode.AutoLaunch(kioskmode.KioskAppAccountID),
 		kioskmode.PublicAccountPolicies(kioskmode.KioskAppAccountID, param.Policies),
 	)
@@ -86,10 +91,14 @@ func AppsCachedOffline(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start Chrome in Kiosk mode: ", err)
 	}
 	defer func(ctx context.Context) {
-		if err := kiosk.DeprecatedClose(ctx); err != nil {
+		if err := kiosk.Close(ctx); err != nil {
 			s.Error("Failed to close kiosk: ", err)
 		}
-	}(ctx)
+	}(cleanupCtx)
+
+	if err := kiosk.WaitLaunchLogs(ctx); err != nil {
+		s.Fatal("Failed to launch Kiosk: ", err)
+	}
 
 	s.Log("Waiting for Kiosk crx to be cached")
 	if err := kioskmode.WaitForCrxInCache(ctx, kioskmode.KioskAppID); err != nil {
@@ -150,8 +159,8 @@ func AppsCachedOffline(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "failed to restart Chrome")
 		}
 
-		if err := kioskmode.WaitLaunchLogs(ctx, reader); err != nil {
-			return errors.Wrap(err, "kiosk is not started after restarting Chrome")
+		if err := kiosk.WaitLaunchLogs(ctx); err != nil {
+			return errors.Wrap(err, "failed to launch Kiosk after restarting Chrome")
 		}
 
 		if param.IsLacros {
