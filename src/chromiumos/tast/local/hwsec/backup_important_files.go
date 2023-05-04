@@ -14,6 +14,8 @@ import (
 	"chromiumos/tast/common/hwsec"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/hwsec/enckey"
+
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
@@ -84,88 +86,110 @@ func RestoreTPMOwnerPasswordIfNeeded(ctx context.Context, dc *hwsec.DaemonContro
 	return nil
 }
 
-// BackupAttestationDbWithFakeGoogleKeys backs up the attestation database.
-func BackupAttestationDbWithFakeGoogleKeys(ctx context.Context) (lastErr error) {
-	if _, err := os.Stat(attestationDBBackupPath); !os.IsNotExist(err) {
-		testing.ContextLog(ctx, "Backup db exists. Skipping")
-		return
-	}
-
-	// Create dir to backup a9n db.
+// CreateFakeAttestationDatabase creates a fake attestation database.
+func CreateFakeAttestationDatabase(ctx context.Context, helper *FullHelperLocal) (lastError error) {
+	dc := helper.DaemonController()
+	// Create dir to back up attestation database.
 	if err := os.MkdirAll(path.Dir(attestationDBBackupPath), 0644); err != nil {
 		return errors.Wrap(err, "failed to create dir to back up attestation db")
 	}
 
-	// Initialize daemon controller.
-	r := NewCmdRunner()
-	helper, err := NewFullHelper(ctx, r)
-	if err != nil {
-		return errors.Wrap(err, "error while creating helper")
-	}
-	dc := helper.DaemonController()
-
-	// Stop the currently running a9n daemon.
+	// Stop the currently running attestation daemon.
 	if err := dc.Stop(ctx, hwsec.AttestationDaemon); err != nil {
 		return errors.Wrap(err, "failed to stop attestation service")
 	}
 
-	// Remove the existing a9n DB.
+	ctxForCleanup := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
+	defer func(ctx context.Context) {
+		if err := dc.Start(ctx, hwsec.AttestationDaemon); err != nil {
+			lastError = errors.Wrap(err, "failed to resume attestation service")
+			return
+		}
+		if err := helper.EnsureIsPreparedForEnrollment(ctx, hwsec.DefaultPreparationForEnrolmentTimeout); err != nil {
+			lastError = errors.Wrap(err, "failed to prepare for enrollment after creating fake database")
+			return
+		}
+		testing.ContextLog(ctx, "Prepared for enrollment after creating fake database")
+	}(ctxForCleanup)
+
+	// Remove the existing attestation database.
 	if err := os.Remove(hwsec.AttestationDBPath); err != nil {
-		return errors.Wrap(err, "failed to remove attestation database")
+		return errors.Wrap(err, "failed to remove attestation database; might be a flex device")
 	}
 
-	// Inject fake Google Keys.
+	// Inject fake Google keys.
 	if err := enckey.InjectWellKnownGoogleKeys(ctx); err != nil {
 		return errors.Wrap(err, "failed to inject well-known keys")
 	}
+	return nil
+}
 
-	// Revert the key injection if other parts of this function fails.
-	defer func() {
-		if lastErr != nil {
-			if err := enckey.InjectNormalGoogleKeysAndRestart(ctx, dc); err != nil {
-				testing.ContextLog(ctx, "Failed to inject the normal keys back: ", err)
-			}
-		}
-	}()
-
-	// Start a9n daemon again.
-	if err := dc.Start(ctx, hwsec.AttestationDaemon); err != nil {
-		return errors.Wrap(err, "failed to start attestation while enabling ali")
-	}
-
-	// Ensure a9n is prepared for enrollment.
-	if err := helper.EnsureIsPreparedForEnrollment(ctx, hwsec.DefaultPreparationForEnrolmentTimeout); err != nil {
-		return errors.Wrap(err, "failed to prepare for enrollment")
-	}
-	testing.ContextLog(ctx, "Prepared for Enrollment")
-
-	// Backup the newly created a9n DB with fake google keys.
-	if err := fsutil.CopyFile(hwsec.AttestationDBPath, attestationDBBackupPath); err != nil {
-		return errors.Wrap(err, "failed to back up fake attestation database")
-	}
-
+// RestoreNormalAttestationDatabase creates the normal attestation database back.
+func RestoreNormalAttestationDatabase(ctx context.Context, helper *FullHelperLocal) (lastError error) {
+	dc := helper.DaemonController()
+	// Stop currently running attestation daemon.
 	if err := dc.Stop(ctx, hwsec.AttestationDaemon); err != nil {
-		return errors.Wrap(err, "failed to stop attestation after backing up fake a9n db")
+		return errors.Wrap(err, "failed to stop attestation service after backing up the database")
 	}
 
+	ctxForCleanup := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
+	defer func(ctx context.Context) {
+		if err := dc.Start(ctx, hwsec.AttestationDaemon); err != nil {
+			lastError = errors.Wrap(err, "failed to resume attestation service")
+			return
+		}
+		if err := helper.EnsureIsPreparedForEnrollment(ctx, hwsec.DefaultPreparationForEnrolmentTimeout); err != nil {
+			lastError = errors.Wrap(err, "failed to prepare for enrollment after reverting to normal database")
+			return
+		}
+		testing.ContextLog(ctx, "Prepared for enrollment after reverting to normal database")
+	}(ctxForCleanup)
+
+	// Remove the fake attestation database.
 	if err := os.Remove(hwsec.AttestationDBPath); err != nil {
 		return errors.Wrap(err, "failed to remove fake attestation database")
 	}
 
+	// Remove fake google keys.
 	if err := enckey.InjectNormalGoogleKeys(ctx); err != nil {
 		return errors.Wrap(err, "failed to inject the normal keys back")
 	}
+	return nil
+}
 
-	if err := dc.Start(ctx, hwsec.AttestationDaemon); err != nil {
-		return errors.Wrap(err, "failed to start attestation after backing up fake a9n db")
+// BackupAttestationDbWithFakeGoogleKeys backs up the attestation database with fake google keys.
+func BackupAttestationDbWithFakeGoogleKeys(ctx context.Context) error {
+	if _, err := os.Stat(attestationDBBackupPath); !os.IsNotExist(err) {
+		testing.ContextLog(ctx, "Backup db exists. Skipping")
+		return nil
 	}
 
-	testing.ContextLog(ctx, "Sleeping for 5s so that attestation daemon can start and create the database")
-	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
-		return errors.Wrap(err, "failed to sleep")
+	r := NewCmdRunner()
+	helper, err := NewFullHelper(ctx, r)
+	if err != nil {
+		return errors.Wrap(err, "error while creating helper instance")
 	}
 
-	// Replace the a9n DB with the fake one.
+	if err := CreateFakeAttestationDatabase(ctx, helper); err != nil {
+		return errors.Wrap(err, "failed to create the fake attestation database")
+	}
+
+	// Backup the fake attestation database.
+	if err := fsutil.CopyFile(hwsec.AttestationDBPath, attestationDBBackupPath); err != nil {
+		return errors.Wrap(err, "failed to back up the fake attestation database")
+	}
+
+	if err := RestoreNormalAttestationDatabase(ctx, helper); err != nil {
+		return errors.Wrap(err, "something went wrong while restoring normal attestation database")
+	}
+
+	// Replace the attestation database with the fake one.
 	if err := fsutil.CopyFile(attestationDBBackupPath, hwsec.AttestationDBPath); err != nil {
 		return errors.Wrap(err, "failed to replace with the fake attestation database")
 	}
