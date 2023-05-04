@@ -81,6 +81,8 @@ func init() {
 			"group:hardware",
 			"group:complementary",
 		},
+		// Enough time for kioskmode.New, kiosk launch, and kiosk.Close.
+		Timeout:      kioskmode.SetupDuration + kioskmode.LaunchDuration + kioskmode.CleanupDuration,
 		SoftwareDeps: []string{"reboot", "chrome", "lacros"},
 		Vars:         []string{"ui.signinProfileTestExtensionManifestKey"},
 		Fixture:      fixture.FakeDMSEnrolled,
