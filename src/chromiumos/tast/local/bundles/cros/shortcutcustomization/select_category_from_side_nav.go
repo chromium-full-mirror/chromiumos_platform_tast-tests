@@ -13,7 +13,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
-	"chromiumos/tast/local/chrome/uiauto/shortcutcustomization"
+	sc "chromiumos/tast/local/chrome/uiauto/shortcutcustomization"
 	"chromiumos/tast/local/input"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -69,20 +69,20 @@ func SelectCategoryFromSideNav(ctx context.Context, s *testing.State) {
 	defer kb.Close(ctx)
 
 	// Launch shortcut customization app.
-	shortcutCustomizationRootNode, err := shortcutcustomization.Launch(ctx, tconn)
+	shortcutCustomizationRootNode, err := sc.Launch(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to launch shortcut customization app: ", err)
 	}
 
 	// Verify shortcut customization app is launched and categories are visible.
-	if err := shortcutcustomization.VerifyShortcutCustomizationIsLaunched(ctx, tconn, ui); err != nil {
+	if err := sc.VerifyShortcutCustomizationIsLaunched(ctx, tconn, ui); err != nil {
 		s.Fatal("Failed to verify that the Shortcut Customization app is launched: ", err)
 	}
 
 	// Shortcuts app opened to the “General” category by default.
 	// Verify "General" subcategories are visible.
 	generalSubcategories := []string{"General Controls", "Apps"}
-	if err := shortcutcustomization.VerifySubcategory(ctx, ui, generalSubcategories); err != nil {
+	if err := sc.VerifySubcategory(ctx, ui, generalSubcategories); err != nil {
 		s.Fatal("Failed to find subcategories within General category: ", err)
 	}
 	// Verify shortcuts within "General" are visible.
@@ -91,14 +91,14 @@ func SelectCategoryFromSideNav(ctx context.Context, s *testing.State) {
 	// devices will show either "search" icon or "launcher" icon.
 	shortcutsInGeneralCategory := []struct {
 		description string
-		keys        string
+		keys        sc.ShortcutKeys
 	}{
-		{"Open notifications", "alt shift n"},
-		{"Open Crosh window", "ctrl alt t"},
-		{"Submit feedback", "alt shift i"},
+		{"Open notifications", sc.ShortcutKeys{Keys: "alt shift n", Role: role.Cell}},
+		{"Open Crosh window", sc.ShortcutKeys{Keys: "ctrl alt t", Role: role.Cell}},
+		{"Submit feedback", sc.ShortcutKeys{Keys: "alt shift i", Role: role.Cell}},
 	}
 	for _, shortcut := range shortcutsInGeneralCategory {
-		if err := shortcutcustomization.VerifyShortcuts(ctx, ui, shortcut.description, shortcut.keys); err != nil {
+		if err := sc.VerifyShortcuts(ctx, ui, shortcut.description, shortcut.keys); err != nil {
 			s.Fatal("Failed to find shortcuts within General category: ", err)
 		}
 	}
@@ -110,20 +110,20 @@ func SelectCategoryFromSideNav(ctx context.Context, s *testing.State) {
 	}
 	// Verify subcategories within "Device" are visible.
 	deviceSubcategories := []string{"Media", "Inputs", "Display"}
-	if err := shortcutcustomization.VerifySubcategory(ctx, ui, deviceSubcategories); err != nil {
+	if err := sc.VerifySubcategory(ctx, ui, deviceSubcategories); err != nil {
 		s.Fatal("Failed to find subcategories within device category: ", err)
 	}
 	// Verify shortcuts within "Device" are visible.
 	shortcutsInDeviceCategory := []struct {
 		description string
-		keys        string
+		keys        sc.ShortcutKeys
 	}{
-		{"Switch to next available input method", "ctrl shift space"},
-		{"Show stylus tools", "alt shift p"},
-		{"Switch to last language selected", "ctrl space"},
+		{"Switch to next available input method", sc.ShortcutKeys{Keys: "ctrl shift space", Role: role.Cell}},
+		{"Show stylus tools", sc.ShortcutKeys{Keys: "alt shift p", Role: role.Cell}},
+		{"Switch to last language selected", sc.ShortcutKeys{Keys: "ctrl space", Role: role.Cell}},
 	}
 	for _, shortcut := range shortcutsInDeviceCategory {
-		if err := shortcutcustomization.VerifyShortcuts(ctx, ui, shortcut.description, shortcut.keys); err != nil {
+		if err := sc.VerifyShortcuts(ctx, ui, shortcut.description, shortcut.keys); err != nil {
 			s.Fatal("Failed to find shortcuts within Device category: ", err)
 		}
 	}
@@ -135,20 +135,20 @@ func SelectCategoryFromSideNav(ctx context.Context, s *testing.State) {
 	}
 	// Verify subcategories within "Browser" are visible.
 	browserSubcategories := []string{"General", "Browser navigation", "Pages", "Tabs", "Bookmarks", "Developer tools"}
-	if err := shortcutcustomization.VerifySubcategory(ctx, ui, browserSubcategories); err != nil {
+	if err := sc.VerifySubcategory(ctx, ui, browserSubcategories); err != nil {
 		s.Fatal("Failed to find subcategories within browser category: ", err)
 	}
 	// Verify shortcuts within "Browser" are visible.
 	shortcutsInBrowserCategory := []struct {
 		description string
-		keys        string
+		keys        sc.ShortcutKeys
 	}{
-		{"Open History page", "ctrl h"},
-		{"Open Downloads page", "ctrl j"},
-		{"Open file in Chrome browser", "ctrl o"},
+		{"Open History page", sc.ShortcutKeys{Keys: "ctrl h", Role: role.Cell}},
+		{"Open Downloads page", sc.ShortcutKeys{Keys: "ctrl j", Role: role.Cell}},
+		{"Open file in Chrome browser", sc.ShortcutKeys{Keys: "ctrl o", Role: role.Cell}},
 	}
 	for _, shortcut := range shortcutsInBrowserCategory {
-		if err := shortcutcustomization.VerifyShortcuts(ctx, ui, shortcut.description, shortcut.keys); err != nil {
+		if err := sc.VerifyShortcuts(ctx, ui, shortcut.description, shortcut.keys); err != nil {
 			s.Fatal("Failed to find shortcuts within Browser category: ", err)
 		}
 	}
@@ -160,20 +160,20 @@ func SelectCategoryFromSideNav(ctx context.Context, s *testing.State) {
 	}
 	// Verify subcategories within "Text" are visible.
 	textSubcategories := []string{"Text editing", "Text navigation"}
-	if err := shortcutcustomization.VerifySubcategory(ctx, ui, textSubcategories); err != nil {
+	if err := sc.VerifySubcategory(ctx, ui, textSubcategories); err != nil {
 		s.Fatal("Failed to find subcategories within text category: ", err)
 	}
 	// Verify shortcuts within "Text" are visible.
 	shortcutsInTextCategory := []struct {
 		description string
-		keys        string
+		keys        sc.ShortcutKeys
 	}{
-		{"Copy selected content to clipboard", "ctrl c"},
-		{"Select everything on page", "ctrl a"},
-		{"Undo last action", "ctrl z"},
+		{"Copy selected content to clipboard", sc.ShortcutKeys{Keys: "ctrl c", Role: role.Cell}},
+		{"Select everything on page", sc.ShortcutKeys{Keys: "ctrl a", Role: role.Cell}},
+		{"Undo last action", sc.ShortcutKeys{Keys: "ctrl z", Role: role.Cell}},
 	}
 	for _, shortcut := range shortcutsInTextCategory {
-		if err := shortcutcustomization.VerifyShortcuts(ctx, ui, shortcut.description, shortcut.keys); err != nil {
+		if err := sc.VerifyShortcuts(ctx, ui, shortcut.description, shortcut.keys); err != nil {
 			s.Fatal("Failed to find shortcuts within Text category: ", err)
 		}
 	}
@@ -185,20 +185,20 @@ func SelectCategoryFromSideNav(ctx context.Context, s *testing.State) {
 	}
 	// Verify subcategories within "Windows and Desks" are visible.
 	windowsAndDesksSubcategories := []string{"Windows", "Desks"}
-	if err := shortcutcustomization.VerifySubcategory(ctx, ui, windowsAndDesksSubcategories); err != nil {
+	if err := sc.VerifySubcategory(ctx, ui, windowsAndDesksSubcategories); err != nil {
 		s.Fatal("Failed to find subcategories within windows and desks category: ", err)
 	}
 	// Verify shortcuts within "Windows and Desks" are visible.
 	shortcutsInWindowsAndDesksCategory := []struct {
 		description string
-		keys        string
+		keys        sc.ShortcutKeys
 	}{
-		{"Maximize window", "alt ="},
-		{"Minimize window", "alt -"},
-		{"Close current window", "ctrl shift w"},
+		{"Maximize window", sc.ShortcutKeys{Keys: "alt =", Role: role.Cell}},
+		{"Minimize window", sc.ShortcutKeys{Keys: "alt -", Role: role.Cell}},
+		{"Close current window", sc.ShortcutKeys{Keys: "ctrl shift w", Role: role.Cell}},
 	}
 	for _, shortcut := range shortcutsInWindowsAndDesksCategory {
-		if err := shortcutcustomization.VerifyShortcuts(ctx, ui, shortcut.description, shortcut.keys); err != nil {
+		if err := sc.VerifyShortcuts(ctx, ui, shortcut.description, shortcut.keys); err != nil {
 			s.Fatal("Failed to find shortcuts within Windows and Desks category: ", err)
 		}
 	}
@@ -210,20 +210,20 @@ func SelectCategoryFromSideNav(ctx context.Context, s *testing.State) {
 	}
 	// Verify subcategories within "Accessibility" are visible.
 	accessibilitySubcategories := []string{"ChromeVox", "Visibility", "Accessibility navigation"}
-	if err := shortcutcustomization.VerifySubcategory(ctx, ui, accessibilitySubcategories); err != nil {
+	if err := sc.VerifySubcategory(ctx, ui, accessibilitySubcategories); err != nil {
 		s.Fatal("Failed to find subcategories within accessibility category: ", err)
 	}
 	// Verify shortcuts within "Accessibility" are visible.
 	shortcutsInAccessibilityCategory := []struct {
 		description string
-		keys        string
+		keys        sc.ShortcutKeys
 	}{
-		{"Highlight launcher button on shelf", "alt shift l"},
-		{"Move focus to popups and dialogs", "alt shift a"},
-		{"Select first icon to the left of address bar", "alt shift t"},
+		{"Highlight launcher button on shelf", sc.ShortcutKeys{Keys: "alt shift l", Role: role.Cell}},
+		{"Move focus to popups and dialogs", sc.ShortcutKeys{Keys: "alt shift a", Role: role.Cell}},
+		{"Select first icon to the left of address bar", sc.ShortcutKeys{Keys: "alt shift t", Role: role.Cell}},
 	}
 	for _, shortcut := range shortcutsInAccessibilityCategory {
-		if err := shortcutcustomization.VerifyShortcuts(ctx, ui, shortcut.description, shortcut.keys); err != nil {
+		if err := sc.VerifyShortcuts(ctx, ui, shortcut.description, shortcut.keys); err != nil {
 			s.Fatal("Failed to find shortcuts within Accessibility category: ", err)
 		}
 	}

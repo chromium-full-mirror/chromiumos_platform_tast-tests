@@ -23,6 +23,12 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+// ShortcutKeys represents shortcut keys and its role.
+type ShortcutKeys struct {
+	Keys string
+	Role role.Role
+}
+
 // Launch starts the Shortcut Customization app via ctrl+alt+/.
 func Launch(ctx context.Context, tconn *chrome.TestConn) (*nodewith.Finder, error) {
 	// Set up keyboard.
@@ -96,9 +102,9 @@ func VerifySubcategory(ctx context.Context, ui *uiauto.Context, subcategories []
 }
 
 // VerifyShortcuts checks that the shortcut descriptions and the shortcut keys exists.
-func VerifyShortcuts(ctx context.Context, ui *uiauto.Context, description, shortcutKeys string) error {
+func VerifyShortcuts(ctx context.Context, ui *uiauto.Context, description string, shortcutKeys ShortcutKeys) error {
 	descriptionNode := nodewith.Name(description).Role(role.RowHeader)
-	shortcutKeysNode := nodewith.Name(shortcutKeys).Role(role.Cell)
+	shortcutKeysNode := nodewith.Name(shortcutKeys.Keys).Role(shortcutKeys.Role)
 
 	if err := uiauto.Combine("Verify shortcut description and shortcut keys exist",
 		ui.WaitUntilExists(descriptionNode),
