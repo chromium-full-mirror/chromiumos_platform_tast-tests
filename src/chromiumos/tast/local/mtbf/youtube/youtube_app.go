@@ -20,6 +20,7 @@ import (
 	androidui "chromiumos/tast/common/android/ui"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/arc"
+	"chromiumos/tast/local/arc/apputil"
 	"chromiumos/tast/local/arc/playstore"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
@@ -34,14 +35,14 @@ import (
 
 const (
 	youtubePkg       = "com.google.android.youtube"
-	playPauseBtnID   = youtubePkg + ":id/player_control_play_pause_replay_button"
+	noThanksText     = "NO THANKS"
 	playBtnDesc      = "Play video"
 	pauseBtnDesc     = "Pause video"
+	playPauseBtnID   = youtubePkg + ":id/player_control_play_pause_replay_button"
 	playerViewID     = youtubePkg + ":id/player_view"
 	moreOptionsID    = youtubePkg + ":id/player_overflow_button"
-	bottomSheetID    = youtubePkg + ":id/design_bottom_sheet"
-	optionsDialogID  = youtubePkg + ":id/bottom_sheet_list_view"
 	optionsID        = youtubePkg + ":id/bottom_sheet_list"
+	dismissID        = youtubePkg + ":id/dismiss"
 	optionsClassName = "android.view.ViewGroup"
 	uiWaitTime       = 3 * time.Second // this is for arc-obj, not for uiauto.Context
 	retryTimes       = 3
@@ -154,31 +155,32 @@ func downloadToLocalFile(url, downloadPath string) error {
 	return nil
 }
 
-// OpenAndPlayVideo opens a video on youtube app.
-func (y *YtApp) OpenAndPlayVideo(video VideoSrc) uiauto.Action {
-	return func(ctx context.Context) (err error) {
-		testing.ContextLog(ctx, "Open Youtube app")
+// Launch opens Youtube app and return error if it failed.
+func (y *YtApp) Launch(ctx context.Context) (err error) {
+	const (
+		youtubeApp              = "Youtube App"
+		youtubeAct              = "com.google.android.apps.youtube.app.WatchWhileActivity"
+		skipTrialTextReg        = "(?i)Skip trial"
+		closeDescription        = "Close"
+		youtubeLogoDescription  = "YouTube Premium"
+		accountImageDescription = "Account"
+		androidUpdateID         = "com.android.vending:id/0_resource_name_obfuscated"
+		accountImageID          = youtubePkg + ":id/image"
+	)
 
-		const (
-			youtubeApp              = "Youtube App"
-			youtubeAct              = "com.google.android.apps.youtube.app.WatchWhileActivity"
-			noThanksText            = "NO THANKS"
-			androidUpdateID         = "com.android.vending:id/0_resource_name_obfuscated"
-			closeDescription        = "Close"
-			youtubeLogoDescription  = "YouTube Premium"
-			accountImageDescription = "Account"
-			skipTrialTextReg        = "(?i)Skip trial"
-			accountImageID          = youtubePkg + ":id/image"
-			searchButtonID          = youtubePkg + ":id/menu_item_1"
-			searchEditTextID        = youtubePkg + ":id/search_edit_text"
-			resultsViewID           = youtubePkg + ":id/results"
-			dismissID               = youtubePkg + ":id/dismiss"
-		)
+	if appStartTime, y.act, err = cuj.OpenAppAndGetStartTime(ctx, y.tconn, y.a, youtubePkg, youtubeApp, youtubeAct); err != nil {
+		return errors.Wrap(err, "failed to get app start time")
+	}
 
-		if appStartTime, y.act, err = cuj.OpenAppAndGetStartTime(ctx, y.tconn, y.a, youtubePkg, youtubeApp, youtubeAct); err != nil {
-			return errors.Wrap(err, "failed to get app start time")
+	dismissMobilePrompt := func(ctx context.Context) error {
+		// The "This app is designed for mobile" prompt needs to be dismissed to get to the log in page.
+		if err := apputil.DismissMobilePrompt(ctx, y.tconn); err != nil {
+			return errors.Wrap(err, `failed to dismiss "This app is designed for mobile" prompt`)
 		}
+		return nil
+	}
 
+	dismissTrialPrompt := func(ctx context.Context) error {
 		// Skip the "Update Youtube?" popup since the last known good version might not be the latest version.
 		noThanksButton := y.d.Object(androidui.ID(androidUpdateID), androidui.Text(noThanksText))
 		if err := cuj.ClickIfExist(noThanksButton, 5*time.Second)(ctx); err != nil {
@@ -194,7 +196,10 @@ func (y *YtApp) OpenAndPlayVideo(video VideoSrc) uiauto.Action {
 		if err := cuj.ClickIfExist(closeButton, 5*time.Second)(ctx); err != nil {
 			return errors.Wrap(err, "failed to click 'Close' to the close premium trial prompt")
 		}
+		return nil
+	}
 
+	checkAccountState := func(ctx context.Context) error {
 		accountImage := y.d.Object(androidui.ID(accountImageID), androidui.DescriptionContains(accountImageDescription))
 		if err := accountImage.WaitForExists(ctx, uiWaitTime); err != nil {
 			return errors.Wrap(err, "failed to check for Youtube app launched")
@@ -205,6 +210,100 @@ func (y *YtApp) OpenAndPlayVideo(video VideoSrc) uiauto.Action {
 			y.premium = false
 			testing.ContextLog(ctx, "Current account is free account")
 		}
+		return nil
+	}
+
+	return uiauto.Combine("dismiss prompt and check if it is free account",
+		dismissMobilePrompt,
+		dismissTrialPrompt,
+		checkAccountState,
+	)(ctx)
+}
+
+// SearchAndPlayVideo search for a given video and play it.
+func (y *YtApp) SearchAndPlayVideo(ctx context.Context, video VideoSrc) error {
+	testing.ContextLog(ctx, "Search and play video")
+	const (
+		searchButtonID   = youtubePkg + ":id/menu_item_1"
+		searchEditTextID = youtubePkg + ":id/search_edit_text"
+		resultsViewID    = youtubePkg + ":id/results"
+	)
+
+	searchButton := y.d.Object(androidui.ID(searchButtonID))
+	if err := cuj.ClickIfExist(searchButton, 2*uiWaitTime)(ctx); err != nil {
+		return errors.Wrap(err, "failed to click search button")
+	}
+
+	searchEditText := y.d.Object(androidui.ID(searchEditTextID))
+	if err := cuj.FindAndClick(searchEditText, uiWaitTime)(ctx); err != nil {
+		return errors.Wrap(err, "failed to find 'searchTextfield'")
+	}
+
+	inputURL := uiauto.Combine("input video url",
+		y.kb.AccelAction("Ctrl+A"),
+		y.kb.TypeAction(video.URL),
+	)
+
+	verifyURL := func(ctx context.Context) error {
+		url, err := searchEditText.GetText(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to get search text")
+		}
+		if url != video.URL {
+			testing.ContextLog(ctx, "Search text: ", url)
+			return errors.Wrap(err, "failed to input correct video url")
+		}
+		return nil
+	}
+
+	ui := uiauto.New(y.tconn)
+	if err := uiauto.NamedCombine("search video",
+		ui.RetryUntil(inputURL, verifyURL),
+		y.kb.AccelAction("Enter"),
+	)(ctx); err != nil {
+		return err
+	}
+
+	resultsView := y.d.Object(androidui.ID(resultsViewID))
+	if err := resultsView.WaitForExists(ctx, uiWaitTime); err != nil {
+		return errors.Wrap(err, "failed to find the results from video URL")
+	}
+
+	firstVideo := y.d.Object(androidui.DescriptionContains(video.Title))
+	startTime := time.Now()
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+
+		if err := cuj.FindAndClick(firstVideo, uiWaitTime)(ctx); err != nil {
+			if strings.Contains(err.Error(), "click") {
+				return testing.PollBreak(err)
+			}
+			return errors.Wrap(err, "failed to find 'First Video'")
+		}
+
+		testing.ContextLogf(ctx, "Elapsed time when waiting the video list: %.3f s", time.Since(startTime).Seconds())
+		return nil
+	}, &testing.PollOptions{Interval: 3 * time.Second, Timeout: 30 * time.Second}); err != nil {
+		return errors.Wrap(err, "failed to click first video")
+	}
+
+	// It has been seen that low-end DUTs sometimes can take as much as 10-20 seconds to finish loading after clicking
+	// on a video from the search results. Logic is added here to wait for the loading to complete before proceeding to
+	// prevent unexpected errors.
+	if err := y.waitForLoadingComplete(ctx); err != nil {
+		return errors.Wrap(err, "failed to wait for loading to complete")
+	}
+
+	return nil
+}
+
+// OpenAndPlayVideo opens a video on youtube app.
+func (y *YtApp) OpenAndPlayVideo(video VideoSrc) uiauto.Action {
+	return func(ctx context.Context) (err error) {
+		testing.ContextLog(ctx, "Open Youtube app")
+
+		if err = y.Launch(ctx); err != nil {
+			return errors.Wrap(err, "failed to launch the app")
+		}
 
 		// Clear notification prompt if it exists.
 		noThanksEle := y.d.Object(androidui.ID(dismissID), androidui.Text(noThanksText))
@@ -212,77 +311,8 @@ func (y *YtApp) OpenAndPlayVideo(video VideoSrc) uiauto.Action {
 			return errors.Wrap(err, "failed to click 'NO THANKS' to clear notification prompt")
 		}
 
-		playVideo := func() error {
-			testing.ContextLog(ctx, "Search and play video")
-
-			searchButton := y.d.Object(androidui.ID(searchButtonID))
-			if err := searchButton.Click(ctx); err != nil {
-				return err
-			}
-
-			searchEditText := y.d.Object(androidui.ID(searchEditTextID))
-			if err := cuj.FindAndClick(searchEditText, uiWaitTime)(ctx); err != nil {
-				return errors.Wrap(err, "failed to find 'searchTextfield'")
-			}
-
-			inputURL := uiauto.Combine("input video url",
-				y.kb.AccelAction("Ctrl+A"),
-				y.kb.TypeAction(video.URL),
-			)
-
-			verifyURL := func(ctx context.Context) error {
-				url, err := searchEditText.GetText(ctx)
-				if err != nil {
-					return errors.Wrap(err, "failed to get search text")
-				}
-				if url != video.URL {
-					testing.ContextLog(ctx, "Search text: ", url)
-					return errors.Wrap(err, "failed to input correct video url")
-				}
-				return nil
-			}
-
-			ui := uiauto.New(y.tconn)
-			if err := uiauto.NamedCombine("search video",
-				ui.RetryUntil(inputURL, verifyURL),
-				y.kb.AccelAction("Enter"),
-			)(ctx); err != nil {
-				return err
-			}
-
-			resultsView := y.d.Object(androidui.ID(resultsViewID))
-			if err := resultsView.WaitForExists(ctx, uiWaitTime); err != nil {
-				return errors.Wrap(err, "failed to find the results from video URL")
-			}
-
-			firstVideo := y.d.Object(androidui.DescriptionContains(video.Title))
-			startTime := time.Now()
-			if err := testing.Poll(ctx, func(ctx context.Context) error {
-
-				if err := cuj.FindAndClick(firstVideo, uiWaitTime)(ctx); err != nil {
-					if strings.Contains(err.Error(), "click") {
-						return testing.PollBreak(err)
-					}
-					return errors.Wrap(err, "failed to find 'First Video'")
-				}
-
-				testing.ContextLogf(ctx, "Elapsed time when waiting the video list: %.3f s", time.Since(startTime).Seconds())
-				return nil
-			}, &testing.PollOptions{Interval: 3 * time.Second, Timeout: 30 * time.Second}); err != nil {
-				return errors.Wrap(err, "failed to click first video")
-			}
-			return nil
-		}
-
-		if err := playVideo(); err != nil {
+		if err := y.SearchAndPlayVideo(ctx, video); err != nil {
 			return errors.Wrap(err, "failed to play video")
-		}
-
-		// It has been seen that low-end DUTs sometimes can take as much as 10-20 seconds to finish loading after clicking
-		// on a video from the search results. Logic is added here to wait for the loading to complete before proceeding to
-		// prevent unexpected errors.
-		if err := y.waitForLoadingComplete(ctx); err != nil {
-			return errors.Wrap(err, "failed to wait for loading to complete")
 		}
 
 		if err := y.switchQuality(ctx, video.Quality); err != nil {
