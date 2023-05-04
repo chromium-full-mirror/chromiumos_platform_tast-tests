@@ -11,11 +11,11 @@ import (
 )
 
 var (
-	// KeyboardRow is a finder for the Keyboard subpage in device settings
+	// KeyboardRow is a finder for the Keyboard subpage in device settings.
 	KeyboardRow = nodewith.Name("Keyboard").Role(role.GenericContainer)
-	// MouseRow is a finder for the Mouse subpage in device settings
+	// MouseRow is a finder for the Mouse subpage in device settings.
 	MouseRow = nodewith.Name("Mouse").Role(role.GenericContainer)
-	// TouchpadRow is a finder for the Touchpad subpage in device settings
+	// TouchpadRow is a finder for the Touchpad subpage in device settings.
 	TouchpadRow = nodewith.Name("Touchpad").Role(role.GenericContainer)
 	// RemapKeyboardKeys is a finder for the Remap keys  subpage in
 	// the keyboard settings page.
