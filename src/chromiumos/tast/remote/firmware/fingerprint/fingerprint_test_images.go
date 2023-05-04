@@ -16,6 +16,7 @@ import (
 	"time"
 
 	fp "chromiumos/tast/common/fingerprint"
+	"chromiumos/tast/common/firmware/futility"
 	"chromiumos/tast/remote/dutfs"
 	"chromiumos/tast/remote/firmware/fingerprint/rpcdut"
 	"go.chromium.org/tast/core/errors"
@@ -108,9 +109,11 @@ func hostCommand(ctx context.Context, name string, arg ...string) *exec.Cmd {
 	return exec.CommandContext(ctx, name, arg...)
 }
 
-func signFirmware(ctx context.Context, futilityPath, privateKeyFile, firmwareFile string) error {
-	cmd := []string{futilityPath, "sign", "--type", "rwsig", "--prikey", privateKeyFile, "--version", "1", firmwareFile}
-	if err := hostCommand(ctx, cmd[0], cmd[1:]...).Run(); err != nil {
+func signFirmware(ctx context.Context, futilityInstance *futility.Instance, privateKeyFile, firmwareFile string) error {
+	opt := futility.NewSignRWSigOptions(firmwareFile).WithPrivateKeyPath(privateKeyFile).WithVersion(1)
+
+	_, err := futilityInstance.SignRWSig(ctx, opt)
+	if err != nil {
 		return errors.Wrap(err, "failed to run futility sign")
 	}
 	return nil
@@ -253,7 +256,7 @@ func newFirmwareImageGenerator(devKeyPair *keyPair, futilityPath, origFirmwareFi
 	}
 }
 
-func (f *firmwareImageGenerator) DevSignedImage(ctx context.Context) (string, error) {
+func (f *firmwareImageGenerator) DevSignedImage(ctx context.Context, futilityInstance *futility.Instance) (string, error) {
 	devFilePath := strings.TrimSuffix(f.origFirmwareFilePath, filepath.Ext(f.origFirmwareFilePath)) + ".dev"
 
 	if err := fsutil.CopyFile(f.origFirmwareFilePath, devFilePath); err != nil {
@@ -269,14 +272,14 @@ func (f *firmwareImageGenerator) DevSignedImage(ctx context.Context) (string, er
 	}
 
 	// The firmware was modified, so we need to re-sign it.
-	if err := signFirmware(ctx, f.futilityPath, f.devKeyPair.PrivateKeyPath, devFilePath); err != nil {
+	if err := signFirmware(ctx, futilityInstance, f.devKeyPair.PrivateKeyPath, devFilePath); err != nil {
 		return "", errors.Wrap(err, "failed to sign firmware")
 	}
 
 	return devFilePath, nil
 }
 
-func (f *firmwareImageGenerator) Rollback(ctx context.Context, rollback *fmapSectionValue, newRollbackValue uint32) (string, error) {
+func (f *firmwareImageGenerator) Rollback(ctx context.Context, futilityInstance *futility.Instance, rollback *fmapSectionValue, newRollbackValue uint32) (string, error) {
 	versionSuffix := ".rb" + strconv.FormatUint(uint64(newRollbackValue), 10)
 	ext := ".dev" + versionSuffix
 	rollbackFilePath := strings.TrimSuffix(f.origFirmwareFilePath, filepath.Ext(f.origFirmwareFilePath)) + ext
@@ -298,7 +301,7 @@ func (f *firmwareImageGenerator) Rollback(ctx context.Context, rollback *fmapSec
 	}
 
 	// The firmware was modified, so we need to re-sign it
-	if err := signFirmware(ctx, f.futilityPath, f.devKeyPair.PrivateKeyPath, rollbackFilePath); err != nil {
+	if err := signFirmware(ctx, futilityInstance, f.devKeyPair.PrivateKeyPath, rollbackFilePath); err != nil {
 		return "", errors.Wrap(err, "failed to sign firmware")
 	}
 
@@ -374,6 +377,11 @@ func readFMAPSection(ctx context.Context, futilityPath, firmwareFilePath string,
 
 // generateImages generates various test images from provided file using futility. Please note that the function works on host.
 func generateImages(ctx context.Context, futilityPath, keyFilePath, origFWFileCopy string, fpBoard fp.BoardName) (ret TestImages, retErr error) {
+	futilityInstance, err := futility.NewRemoteBuilder(0).Build()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get futility instance")
+	}
+
 	devKeyPair, err := createKeyPairFromRSAKey(ctx, futilityPath, keyFilePath, string(fpBoard)+" dev key")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create key pair")
@@ -396,22 +404,22 @@ func generateImages(ctx context.Context, futilityPath, keyFilePath, origFWFileCo
 
 	firmwareImageGenerator := newFirmwareImageGenerator(devKeyPair, futilityPath, origFWFileCopy, roVersion, rwVersion)
 
-	devFilePath, err := firmwareImageGenerator.DevSignedImage(ctx)
+	devFilePath, err := firmwareImageGenerator.DevSignedImage(ctx, futilityInstance)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to generate dev signed image")
 	}
 
-	rollbackZeroFilePath, err := firmwareImageGenerator.Rollback(ctx, rollback, 0)
+	rollbackZeroFilePath, err := firmwareImageGenerator.Rollback(ctx, futilityInstance, rollback, 0)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to generate image with modified rollback value 0")
 	}
 
-	rollbackOneFilePath, err := firmwareImageGenerator.Rollback(ctx, rollback, 1)
+	rollbackOneFilePath, err := firmwareImageGenerator.Rollback(ctx, futilityInstance, rollback, 1)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to generate image with modified rollback value 1")
 	}
 
-	rollbackNineFilePath, err := firmwareImageGenerator.Rollback(ctx, rollback, 9)
+	rollbackNineFilePath, err := firmwareImageGenerator.Rollback(ctx, futilityInstance, rollback, 9)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to generate image with modified rollback value 9")
 	}
