@@ -178,7 +178,7 @@ func TBTDisplayVideoPlaybackStress(ctx context.Context, s *testing.State) {
 
 	var videoSource = youtube.VideoSrc{
 		URL:     "https://www.youtube.com/watch?v=uu_B4ywAhOM",
-		Title:   "8 Hours Beautiful World from a Bird's Eye View 4K / Relaxation Time",
+		Title:   "8 Hours Beautiful World from a Bird’s Eye View 4K / Relaxation Time - YouTube",
 		Quality: "2160p4K",
 	}
 
