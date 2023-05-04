@@ -362,6 +362,10 @@ func (s *Servo) GetCCDSerial(ctx context.Context) (string, error) {
 	if ok {
 		return ccdSerial, nil
 	}
+	ccdSerial, ok = value["ccd_cr50"]
+	if ok {
+		return ccdSerial, nil
+	}
 	servoType, err := s.GetServoType(ctx)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to get servo type")
