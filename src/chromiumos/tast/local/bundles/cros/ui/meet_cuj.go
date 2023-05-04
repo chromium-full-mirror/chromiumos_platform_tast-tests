@@ -83,6 +83,13 @@ const (
 
 const defaultTestTimeout = 30 * time.Minute
 
+var (
+	createDumpSectionReg = regexp.MustCompile("(Create Dump)|(Create a WebRTC-Internals dump)")
+	createDumpSection    = nodewith.NameRegex(createDumpSectionReg).Role(role.DisclosureTriangle)
+	webRTCRootWebArea    = nodewith.Name("WebRTC Internals").Role(role.RootWebArea)
+	webRTCDownloadButton = nodewith.NameContaining("Download").Role(role.Button).Ancestor(webRTCRootWebArea)
+)
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         MeetCUJ,
@@ -852,11 +859,9 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 	// until after the meeting, but we can expand the section much faster now while
 	// chrome://webrtc-internals does not have much data to show.
 	ui := uiauto.New(tconn)
-	createDumpSectionReg := regexp.MustCompile("(Create Dump)|(Create a WebRTC-Internals dump)")
-	createDumpSection := nodewith.NameRegex(createDumpSectionReg).Role(role.DisclosureTriangle)
 	if err := uiauto.Combine("expand",
 		ui.DoDefault(createDumpSection.Collapsed()),
-		ui.WaitUntilExists(createDumpSection.Expanded()),
+		ui.WaitUntilExists(webRTCDownloadButton),
 	)(ctx); err != nil {
 		s.Fatal("Failed to expand Create Dump section of chrome://webrtc-internals: ", err)
 	}
@@ -1733,10 +1738,13 @@ func dumpWebRTCInternals(ctx context.Context, tconn *chrome.TestConn, ui *uiauto
 		return "", errors.Wrap(err, "failed to get Downloads path")
 	}
 
-	downloadButton := nodewith.NameContaining("Download").Role(role.Button)
+	waitForDownloadButton := ui.WithTimeout(5 * time.Second).WaitUntilExists(webRTCDownloadButton)
 	if err := uiauto.Combine("invoke the button for the dump download",
-		ui.WaitUntilExists(downloadButton),
-		ui.DoDefault(downloadButton),
+		uiauto.IfFailThen(
+			waitForDownloadButton,
+			ui.DoDefaultUntil(createDumpSection, waitForDownloadButton),
+		),
+		ui.DoDefault(webRTCDownloadButton),
 	)(ctx); err != nil {
 		return "", err
 	}
