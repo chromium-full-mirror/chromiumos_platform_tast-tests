@@ -92,7 +92,6 @@ type keyPair struct {
 
 type firmwareImageGenerator struct {
 	devKeyPair           *keyPair
-	futilityPath         string
 	origFirmwareFilePath string
 	rwVersion            *fmapSectionValue
 	roVersion            *fmapSectionValue
@@ -113,20 +112,19 @@ func signFirmware(ctx context.Context, futilityInstance *futility.Instance, priv
 	return nil
 }
 
-func createKeyPairFromRSAKey(ctx context.Context, futilityPath, pemFilePath, keyDescription string) (*keyPair, error) {
-	curDir, err := os.Getwd()
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to get working directory")
-	}
+func createKeyPairFromRSAKey(ctx context.Context, futilityInstance *futility.Instance, pemFilePath, keyDescription string) (*keyPair, error) {
+	opt := futility.NewCreateKeyPairOptions(pemFilePath).WithDescription(keyDescription)
 
-	cmd := []string{futilityPath, "create", "--desc", keyDescription, pemFilePath, "key"}
-	if err := hostCommand(ctx, cmd[0], cmd[1:]...).Run(); err != nil {
+	_, err := futilityInstance.CreateKeyPair(ctx, opt)
+	if err != nil {
 		return nil, errors.Wrap(err, "failed to run futility create")
 	}
 
+	outputFilePrefix := strings.TrimSuffix(pemFilePath, filepath.Ext(pemFilePath))
+
 	return &keyPair{
-		PublicKeyPath:  filepath.Join(curDir, "key.vbpubk2"),
-		PrivateKeyPath: filepath.Join(curDir, "key.vbprik2"),
+		PublicKeyPath:  outputFilePrefix + ".vbpubk2",
+		PrivateKeyPath: outputFilePrefix + ".vbprik2",
 	}, nil
 }
 
@@ -354,13 +352,13 @@ func readFMAPSections(ctx context.Context, futilityInstance *futility.Instance, 
 }
 
 // generateImages generates various test images from provided file using futility. Please note that the function works on host.
-func generateImages(ctx context.Context, futilityPath, keyFilePath, origFWFileCopy string, fpBoard fp.BoardName) (ret TestImages, retErr error) {
+func generateImages(ctx context.Context, keyFilePath, origFWFileCopy string, fpBoard fp.BoardName) (ret TestImages, retErr error) {
 	futilityInstance, err := futility.NewRemoteBuilder(0).Build()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get futility instance")
 	}
 
-	devKeyPair, err := createKeyPairFromRSAKey(ctx, futilityPath, keyFilePath, string(fpBoard)+" dev key")
+	devKeyPair, err := createKeyPairFromRSAKey(ctx, futilityInstance, keyFilePath, string(fpBoard)+" dev key")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create key pair")
 	}
@@ -439,7 +437,7 @@ func GenerateTestFirmwareImages(ctx context.Context, d *rpcdut.RPCDUT, futilityP
 	// help to detect issues with slow 'futility'.
 	generateCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	images, err := generateImages(generateCtx, futilityPath, keyFilePath, origFWFileCopy, fpBoard)
+	images, err := generateImages(generateCtx, keyFilePath, origFWFileCopy, fpBoard)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to generate test images on host")
 	}
