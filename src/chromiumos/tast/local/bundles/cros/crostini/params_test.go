@@ -342,8 +342,9 @@ func TestAppIMELanguageTestParams(t *testing.T) {
 
 // TODO(b/272366776) move to clamshell only when the flag is enabled by default.
 var appIMEFlagTests = []string{
-	"app_gedit_emoji.go",
 	"app_firefox_emoji.go",
+	"app_gedit_emoji.go",
+	"app_gedit_nonalphanumeric_input.go",
 }
 
 func TestAppIMEFlagTestParams(t *testing.T) {

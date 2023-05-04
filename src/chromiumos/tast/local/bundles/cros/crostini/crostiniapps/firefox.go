@@ -10,7 +10,6 @@ import (
 	"regexp"
 	"time"
 
-	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
@@ -50,28 +49,6 @@ func LaunchFirefoxWithTestPage(ctx context.Context, uda *uidetection.Context, ui
 	)(ctx); err != nil {
 		return err
 	}
-	return nil
-}
-
-// CheckFirefoxInputViaClipboard copies the text from the currently focused input text field and checks the clipboard content for a matching string. The input field must be focused before this function is called.
-func CheckFirefoxInputViaClipboard(ctx context.Context, keyboard *input.KeyboardEventWriter, tconn *chrome.TestConn, expectedText string) error {
-	if err := uiauto.Combine("get text entered via the clipboard",
-		// Select all the text in the input box.
-		keyboard.AccelAction("ctrl+A"),
-		// Copy selected content.
-		keyboard.AccelAction("ctrl+C"),
-	)(ctx); err != nil {
-		return errors.Wrap(err, "failed to copy input to clipboard")
-	}
-
-	var clipData string
-	if err := tconn.Eval(ctx, `tast.promisify(chrome.autotestPrivate.getClipboardTextData)()`, &clipData); err != nil {
-		return errors.Wrap(err, "failed to get clipboard content")
-	}
-	if clipData != expectedText {
-		return errors.Errorf("clipboard data mismatch: got %q, want %q", clipData, expectedText)
-	}
-
 	return nil
 }
 

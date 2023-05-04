@@ -15,6 +15,7 @@ import (
 	"chromiumos/tast/local/crostini"
 	"chromiumos/tast/local/terminalapp"
 	"chromiumos/tast/local/uidetection"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -84,7 +85,7 @@ func AppFirefoxEmoji(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to enter test string Firefox: ", err)
 	}
 
-	if err := crostiniapps.CheckFirefoxInputViaClipboard(ctx, keyboard, tconn, inputEmoji); err != nil {
+	if err := crostiniapps.CheckInputViaClipboard(ctx, keyboard, tconn, inputEmoji); err != nil {
 		s.Fatal("Failed to verify emoji input via clipboard: ", err)
 	}
 
