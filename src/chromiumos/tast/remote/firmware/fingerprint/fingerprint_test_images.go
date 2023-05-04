@@ -80,14 +80,8 @@ const (
 // TestImages maps a given test image type to data describing the image.
 type TestImages map[TestImageType]*TestImageData
 
-type fmapSection struct {
-	Name   string
-	Offset int
-	Size   int
-}
-
 type fmapSectionValue struct {
-	Section *fmapSection
+	Section *futility.FMapSection
 	Bytes   []byte
 }
 
@@ -136,37 +130,18 @@ func createKeyPairFromRSAKey(ctx context.Context, futilityPath, pemFilePath, key
 	}, nil
 }
 
-func fmapSectionInfo(ctx context.Context, futilityPath, firmwareFilePath string, section FMAPSection) (*fmapSection, error) {
-	cmd := []string{futilityPath, "dump_fmap", "-p", firmwareFilePath, string(section)}
-	output, err := hostCommand(ctx, cmd[0], cmd[1:]...).Output()
+func fmapSectionInfo(ctx context.Context, futilityInstance *futility.Instance, firmwareFilePath string, sections []FMAPSection) ([]futility.FMapSection, error) {
+	var sectionsString []string
+	for _, section := range sections {
+		sectionsString = append(sectionsString, string(section))
+	}
+
+	sectionsInfo, _, err := futilityInstance.DumpFmap(ctx, firmwareFilePath, sectionsString)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to run futility dump_fmap")
 	}
 
-	// The format of the output is:
-	// SECTION OFFSET SIZE
-	fields := strings.Fields(string(output))
-	if len(fields) != 3 {
-		return nil, errors.Errorf("unexpected number of fields: %q, output: %q", len(fields), string(output))
-	}
-
-	name := fields[0]
-
-	offset, err := strconv.Atoi(fields[1])
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to convert offset string to int")
-	}
-
-	size, err := strconv.Atoi(fields[2])
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to convert size string to int")
-	}
-
-	return &fmapSection{
-		Name:   name,
-		Offset: offset,
-		Size:   size,
-	}, nil
+	return sectionsInfo, nil
 }
 
 func readFileAtOffset(fileName string, data []byte, offset int64) error {
@@ -246,10 +221,9 @@ func modifyFirmwareFileRollbackValue(firmwareFilePath string, newRollbackValue u
 	return nil
 }
 
-func newFirmwareImageGenerator(devKeyPair *keyPair, futilityPath, origFirmwareFilePath string, rwVersion, roVersion *fmapSectionValue) *firmwareImageGenerator {
+func newFirmwareImageGenerator(devKeyPair *keyPair, origFirmwareFilePath string, rwVersion, roVersion *fmapSectionValue) *firmwareImageGenerator {
 	return &firmwareImageGenerator{
 		devKeyPair:           devKeyPair,
-		futilityPath:         futilityPath,
 		origFirmwareFilePath: origFirmwareFilePath,
 		rwVersion:            rwVersion,
 		roVersion:            roVersion,
@@ -308,17 +282,18 @@ func (f *firmwareImageGenerator) Rollback(ctx context.Context, futilityInstance 
 	return rollbackFilePath, nil
 }
 
-func (f *firmwareImageGenerator) CorruptFirstByte(ctx context.Context) (string, error) {
+func (f *firmwareImageGenerator) CorruptFirstByte(ctx context.Context, futilityInstance *futility.Instance) (string, error) {
 	corruptFilePath := strings.TrimSuffix(f.origFirmwareFilePath, filepath.Ext(f.origFirmwareFilePath)) + "_corrupt_first_byte.bin"
 
 	if err := fsutil.CopyFile(f.origFirmwareFilePath, corruptFilePath); err != nil {
 		return "", errors.Wrap(err, "failed to copy file")
 	}
 
-	rwSection, err := fmapSectionInfo(ctx, f.futilityPath, corruptFilePath, RWFirmware)
+	sections, err := fmapSectionInfo(ctx, futilityInstance, corruptFilePath, []FMAPSection{RWFirmware})
 	if err != nil {
 		return "", errors.Wrap(err, "failed to get FMAP info for EC_RW")
 	}
+	rwSection := sections[0]
 
 	byteToCorrupt := make([]byte, 1)
 	if err := readFileAtOffset(corruptFilePath, byteToCorrupt, int64(rwSection.Offset)+100); err != nil {
@@ -333,17 +308,18 @@ func (f *firmwareImageGenerator) CorruptFirstByte(ctx context.Context) (string, 
 	return corruptFilePath, nil
 }
 
-func (f *firmwareImageGenerator) CorruptLastByte(ctx context.Context) (string, error) {
+func (f *firmwareImageGenerator) CorruptLastByte(ctx context.Context, futilityInstance *futility.Instance) (string, error) {
 	corruptFilePath := strings.TrimSuffix(f.origFirmwareFilePath, filepath.Ext(f.origFirmwareFilePath)) + "_corrupt_last_byte.bin"
 
 	if err := fsutil.CopyFile(f.origFirmwareFilePath, corruptFilePath); err != nil {
 		return "", errors.Wrap(err, "failed to copy file")
 	}
 
-	rwSection, err := fmapSectionInfo(ctx, f.futilityPath, corruptFilePath, SignatureRW)
+	sections, err := fmapSectionInfo(ctx, futilityInstance, corruptFilePath, []FMAPSection{SignatureRW})
 	if err != nil {
 		return "", errors.Wrap(err, "failed to get FMAP info for SIG_RW")
 	}
+	rwSection := sections[0]
 
 	byteToCorrupt := make([]byte, 1)
 	if err := readFileAtOffset(corruptFilePath, byteToCorrupt, int64(rwSection.Offset)-100); err != nil {
@@ -358,21 +334,23 @@ func (f *firmwareImageGenerator) CorruptLastByte(ctx context.Context) (string, e
 	return corruptFilePath, nil
 }
 
-func readFMAPSection(ctx context.Context, futilityPath, firmwareFilePath string, section FMAPSection) (*fmapSectionValue, error) {
-	sectionInfo, err := fmapSectionInfo(ctx, futilityPath, firmwareFilePath, section)
+func readFMAPSections(ctx context.Context, futilityInstance *futility.Instance, firmwareFilePath string, sections []FMAPSection, sectionValues ...*fmapSectionValue) error {
+	sectionInfoList, err := fmapSectionInfo(ctx, futilityInstance, firmwareFilePath, sections)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to get FMAP info for section: %q", section)
+		return errors.Wrapf(err, "failed to get FMAP info for sections: %q", sections)
 	}
 
-	sectionData := make([]byte, sectionInfo.Size)
-	if err := readFileAtOffset(firmwareFilePath, sectionData, int64(sectionInfo.Offset)); err != nil {
-		return nil, errors.Wrapf(err, "unable to read FMAP section: %q", section)
+	for i, sectionInfo := range sectionInfoList {
+		sectionData := make([]byte, sectionInfo.Size)
+		if err := readFileAtOffset(firmwareFilePath, sectionData, int64(sectionInfo.Offset)); err != nil {
+			return errors.Wrapf(err, "unable to read FMAP section: %q", sectionInfo.Name)
+		}
+
+		sectionValues[i].Section = &sectionInfoList[i]
+		sectionValues[i].Bytes = sectionData
 	}
 
-	return &fmapSectionValue{
-		Section: sectionInfo,
-		Bytes:   sectionData,
-	}, nil
+	return nil
 }
 
 // generateImages generates various test images from provided file using futility. Please note that the function works on host.
@@ -387,49 +365,41 @@ func generateImages(ctx context.Context, futilityPath, keyFilePath, origFWFileCo
 		return nil, errors.Wrap(err, "failed to create key pair")
 	}
 
-	roVersion, err := readFMAPSection(ctx, futilityPath, origFWFileCopy, ROFirmwareID)
+	var roVersion, rwVersion, rollback fmapSectionValue
+
+	err = readFMAPSections(ctx, futilityInstance, origFWFileCopy, []FMAPSection{ROFirmwareID, RWFirmwareID, RWRollbackVersion}, &roVersion, &rwVersion, &rollback)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to read RO firmware info")
+		return nil, errors.Wrap(err, "failed to read firmware info")
 	}
 
-	rwVersion, err := readFMAPSection(ctx, futilityPath, origFWFileCopy, RWFirmwareID)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to read RW firmware info")
-	}
-
-	rollback, err := readFMAPSection(ctx, futilityPath, origFWFileCopy, RWRollbackVersion)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to read rollback version")
-	}
-
-	firmwareImageGenerator := newFirmwareImageGenerator(devKeyPair, futilityPath, origFWFileCopy, roVersion, rwVersion)
+	firmwareImageGenerator := newFirmwareImageGenerator(devKeyPair, origFWFileCopy, &roVersion, &rwVersion)
 
 	devFilePath, err := firmwareImageGenerator.DevSignedImage(ctx, futilityInstance)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to generate dev signed image")
 	}
 
-	rollbackZeroFilePath, err := firmwareImageGenerator.Rollback(ctx, futilityInstance, rollback, 0)
+	rollbackZeroFilePath, err := firmwareImageGenerator.Rollback(ctx, futilityInstance, &rollback, 0)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to generate image with modified rollback value 0")
 	}
 
-	rollbackOneFilePath, err := firmwareImageGenerator.Rollback(ctx, futilityInstance, rollback, 1)
+	rollbackOneFilePath, err := firmwareImageGenerator.Rollback(ctx, futilityInstance, &rollback, 1)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to generate image with modified rollback value 1")
 	}
 
-	rollbackNineFilePath, err := firmwareImageGenerator.Rollback(ctx, futilityInstance, rollback, 9)
+	rollbackNineFilePath, err := firmwareImageGenerator.Rollback(ctx, futilityInstance, &rollback, 9)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to generate image with modified rollback value 9")
 	}
 
-	corruptFirstBytePath, err := firmwareImageGenerator.CorruptFirstByte(ctx)
+	corruptFirstBytePath, err := firmwareImageGenerator.CorruptFirstByte(ctx, futilityInstance)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to generate image with corrupt first byte")
 	}
 
-	corruptLastBytePath, err := firmwareImageGenerator.CorruptLastByte(ctx)
+	corruptLastBytePath, err := firmwareImageGenerator.CorruptLastByte(ctx, futilityInstance)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to generate image with corrupt last byte")
 	}
