@@ -414,7 +414,7 @@ func generateImages(ctx context.Context, keyFilePath, origFWFileCopy string, fpB
 }
 
 // GenerateTestFirmwareImages generates a set of test firmware images from the firmware that is on the DUT.
-func GenerateTestFirmwareImages(ctx context.Context, d *rpcdut.RPCDUT, futilityPath, keyFilePath string, fpBoard fp.BoardName, buildFWFile, dutTempDir string) (ret TestImages, retErr error) {
+func GenerateTestFirmwareImages(ctx context.Context, d *rpcdut.RPCDUT, keyFilePath string, fpBoard fp.BoardName, buildFWFile, dutTempDir string) (ret TestImages, retErr error) {
 	testing.ContextLog(ctx, "Creating temp dir")
 	serverTmpDir, err := ioutil.TempDir("", "*")
 	if err != nil {

@@ -66,7 +66,6 @@ func init() {
 		SetUpTimeout:    10 * time.Second,
 		TearDownTimeout: 10 * time.Second,
 		Data: []string{
-			Futility,
 			BloonchipperDevKey,
 			DartmonkeyDevKey,
 			NamiFPDevKey,
@@ -105,7 +104,7 @@ func (f *fingerprintImagesFixture) SetUp(ctx context.Context, s *testing.FixtSta
 	testing.ContextLog(ctx, "Created non-temporary fptast directory")
 
 	// Generate test images to flash to RW.
-	f.testData.TestImages, err = fingerprint.GenerateTestFirmwareImages(ctx, dut, s.DataPath(Futility), s.DataPath(devKeyForFPBoard(fpBoard)), fpBoard, buildFwFile, f.imagesFolder)
+	f.testData.TestImages, err = fingerprint.GenerateTestFirmwareImages(ctx, dut, s.DataPath(devKeyForFPBoard(fpBoard)), fpBoard, buildFwFile, f.imagesFolder)
 	if err != nil {
 		if err := dutfsService.RemoveAll(ctx, f.imagesFolder); err != nil {
 			testing.ContextLog(ctx, "Failed to delete dir: ", err)
