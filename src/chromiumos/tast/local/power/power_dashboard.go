@@ -53,6 +53,7 @@ var validMetricTypeMap = map[string]bool{
 	"power":        true,
 	"temperature":  true,
 	"zram":         true,
+	"other":        true,
 }
 
 // Units for each metric type.
@@ -175,7 +176,7 @@ func ConvertPowerPerfValue(ctx context.Context, values *perf.Values) (map[string
 		// for "system" because metric.Name doesn't include a metric type.
 		// 2. "t": not a power metric, therefore a metric type isn't assigned and
 		// it will not be included in the typeMap.
-		// 3. size == 1: skip for non power.TestMetrics()
+		// 3. size == 1: assign metricType to "other" when type is not provided.
 		// 4. Retrieve metricType from metricNameSlice.
 		if metricName == "system" {
 			metricType = "power"
@@ -183,7 +184,7 @@ func ConvertPowerPerfValue(ctx context.Context, values *perf.Values) (map[string
 			innerDataMap[metricName] = value
 			continue
 		} else if size == 1 {
-			continue
+			metricType = "other"
 		} else {
 			metricType = metricNameSlice[size-2]
 		}
@@ -449,12 +450,12 @@ func SavePowerLogHTML(ctx context.Context, outDir string, powerLogDict map[strin
 	sampleDuration := powerLogDict["power"].(map[string]interface{})["sample_duration"]
 	powerLogDataMap := powerLogDict["power"].(map[string]interface{})["data"].(map[string][]float64)
 	powerLogUnitMap := powerLogDict["power"].(map[string]interface{})["unit"].(map[string]string)
-	powerLogTypeMap := powerLogDict["power"].(map[string]interface{})["type"]
+	powerLogTypeMap := powerLogDict["power"].(map[string]interface{})["type"].(map[string]string)
 
 	// Generate a map from type to metric names.
 	typeToMetricsMap := make(map[string][]string)
 
-	for metric, metricType := range powerLogTypeMap.(map[string]string) {
+	for metric, metricType := range powerLogTypeMap {
 		if _, ok := typeToMetricsMap[metricType]; !ok {
 			typeToMetricsMap[metricType] = make([]string, 0)
 		}
