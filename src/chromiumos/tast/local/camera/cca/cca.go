@@ -27,6 +27,7 @@ import (
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/screenshot"
 	"chromiumos/tast/local/upstart"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -1547,4 +1548,27 @@ func (a *App) CheckCameraFacing(ctx context.Context, facing Facing) error {
 		}
 		return nil
 	})
+}
+
+// SwitchToTimeLapseMode switches the app to "Time Lapse" sub-mode under "Video" mode
+func (a *App) SwitchToTimeLapseMode(ctx context.Context) error {
+	if err := a.SwitchMode(ctx, Video); err != nil {
+		return err
+	}
+	if err := a.Click(ctx, TimeLapseRecordingOption); err != nil {
+		return errors.Wrap(err, "failed to click on time-lapse mode button")
+	}
+	if err := a.WaitForState(ctx, "record-type-time-lapse", true); err != nil {
+		return errors.Wrap(err, "failed to wait for time-lapse mode state to be active")
+	}
+	return nil
+}
+
+// TimeLapseDuration returns the expected duration of time-lapse video recorded for |recordTime|.
+func (a *App) TimeLapseDuration(ctx context.Context, recordTime time.Duration) (time.Duration, error) {
+	var duration float64
+	if err := a.conn.Call(ctx, &duration, "CCATest.getTimeLapseDuration", recordTime.Seconds()); err != nil {
+		return 0, nil
+	}
+	return time.Duration(duration * float64(time.Second)), nil
 }

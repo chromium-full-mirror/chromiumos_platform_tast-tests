@@ -13,6 +13,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/coords"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -201,6 +202,8 @@ const (
 	TimerOptionOff UIComponentName = "timerOptionOff"
 	// TiltUpButton is the button for tilting up preview.
 	TiltUpButton UIComponentName = "tiltUpButton"
+	// TimeLapseRecordingOption is the radio button to toggle time-lapse recording option.
+	TimeLapseRecordingOption UIComponentName = "timeLapseRecordingOption"
 	// VideoProfileSelect is select-options for selecting video profile.
 	VideoProfileSelect UIComponentName = "videoProfileSelect"
 	// ZoomInButton is the button for zoom in preview.

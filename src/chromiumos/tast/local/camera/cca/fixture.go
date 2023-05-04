@@ -22,6 +22,7 @@ import (
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
 	"chromiumos/tast/local/chrome/uiauto"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/fsutil"
@@ -38,6 +39,10 @@ const (
 )
 
 type feature string
+
+const (
+	timeLapse feature = "CameraAppTimeLapse"
+)
 
 var (
 	recordScreen = testing.RegisterVarString(
@@ -253,6 +258,20 @@ func init() {
 		Impl:            &fixture{forceEnableAutoFraming: true},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
+		TearDownTimeout: tearDownTimeout,
+	})
+
+	// TODO(b/236800499): Remove this fixture once the feature flag is enabled by default.
+	testing.AddFixture(&testing.Fixture{
+		Name:            "ccaLaunchedWithTimeLapseOnFakeHALCamera",
+		Desc:            "Launched CCA with fake camera HAL input and with time-lapse flag enabled",
+		Contacts:        []string{"chromeos-camera-eng@google.com", "kamchonlathorn@chromium.org"},
+		Data:            []string{"cca_ui.js"},
+		Impl:            &fixture{useCameraType: testutil.UseFakeHALCamera, enableFeatures: []feature{timeLapse}, launchCCA: true},
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    testBridgeSetUpTimeout,
+		PreTestTimeout:  ccaSetUpTimeout,
+		PostTestTimeout: ccaTearDownTimeout,
 		TearDownTimeout: tearDownTimeout,
 	})
 }

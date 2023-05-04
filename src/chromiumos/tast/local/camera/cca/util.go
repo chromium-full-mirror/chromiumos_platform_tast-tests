@@ -5,11 +5,14 @@
 package cca
 
 import (
+	"context"
 	"os"
+	"time"
 
 	"github.com/abema/go-mp4"
 
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
@@ -59,4 +62,46 @@ func CheckVideoProfile(path string, profile Profile) error {
 		return errors.Errorf("mismatch video profile, got %v; want %v", config.Profile, profile.Value)
 	}
 	return nil
+}
+
+// VideoDuration returns duration of the video file in the given |path|.
+func VideoDuration(ctx context.Context, path string) (time.Duration, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return 0, errors.Wrapf(err, "failed to open file %v", path)
+	}
+	defer f.Close()
+
+	fraInfo, err := mp4.ProbeFra(f)
+	if err != nil {
+		return 0, errors.Wrapf(err, "failed to probe fragments from %v", path)
+	}
+
+	duration := 0.0
+	if len(fraInfo.Segments) == 0 {
+		// Regular MP4
+		boxes, err := mp4.ExtractBoxWithPayload(f, nil, mp4.BoxPath{mp4.BoxTypeMoov(), mp4.BoxTypeMvhd()})
+		if err != nil {
+			return 0, errors.Wrapf(err, "failed to parse mp4 header from %v", path)
+		}
+		if len(boxes) == 0 {
+			return 0, errors.New("no mvhd box found")
+		}
+		mvhd, ok := boxes[0].Payload.(*mp4.Mvhd)
+		if !ok {
+			return 0, errors.New("got invalid mvhd box")
+		}
+		duration = float64(mvhd.DurationV0) / float64(mvhd.Timescale)
+		// TODO(crbug.com/1140852): Remove the logging once we fully migrated to regular mp4.
+		testing.ContextLogf(ctx, "Found a regular mp4 with duration %.2fs", duration)
+	} else {
+		// Fragmented MP4
+		// TODO(crbug.com/1140852): Remove fmp4 code path once we fully migrated to regular mp4.
+		for _, s := range fraInfo.Segments {
+			duration += float64(s.Duration) / float64(fraInfo.Tracks[s.TrackID-1].Timescale)
+		}
+		testing.ContextLogf(ctx, "Found a fragmented mp4 with duration %.2fs", duration)
+	}
+
+	return time.Duration(duration * float64(time.Second)), nil
 }
