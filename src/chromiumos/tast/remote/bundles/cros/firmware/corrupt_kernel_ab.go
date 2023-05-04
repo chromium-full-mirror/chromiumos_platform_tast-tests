@@ -2,21 +2,16 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Copyright 2023 The ChromiumOS Authors
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
 package firmware
 
 import (
 	"context"
 	"time"
 
-	"github.com/golang/protobuf/ptypes/empty"
-
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/fixture"
 	pb "chromiumos/tast/services/cros/firmware"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
@@ -78,7 +73,7 @@ func CorruptKernelAB(ctx context.Context, s *testing.State) {
 		s.Fatal("Creating mode switcher: ", err)
 	}
 
-	kernelBackup, err := h.KernelServiceClient.BackupKernel(ctx, &empty.Empty{})
+	kernelBackup, err := h.KernelServiceClient.BackupKernel(ctx, &pb.Partition{})
 	if err != nil {
 		s.Fatal("Failed to back up KERN-A and KERN-B: ", err)
 	}
@@ -128,14 +123,6 @@ func CorruptKernelAB(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to prioritize copy %q: %v", kernCopyStr, err)
 	}
 
-	backupPrioritizedCopy, err := h.KernelServiceClient.BackupPartition(ctx, &pb.Partition{
-		Name: pb.PartitionName_KERNEL,
-		Copy: kernCopy,
-	})
-	if err != nil {
-		s.Fatalf("Failed to back up KERN-%s: %v", kernCopyStr, err)
-	}
-
 	s.Log("Performing mode aware reboot to ensure boot to copy ", kernCopyStr)
 	if err := ms.ModeAwareReboot(ctx, firmware.WarmReset); err != nil {
 		s.Fatal("Failed to reboot: ", err)
@@ -154,7 +141,10 @@ func CorruptKernelAB(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Corrupt kernel partition ", copyToCorrupt.Table.Label)
-	if _, err := h.KernelServiceClient.CorruptKernel(ctx, copyToCorrupt); err != nil {
+	if _, err := h.KernelServiceClient.SetKernelHeaderMagic(ctx, &pb.KernelHeaderMagicInfo{
+		Table: copyToCorrupt.Table,
+		Magic: pb.KernelHeaderMagic_CORRUPTD,
+	}); err != nil {
 		s.Fatalf("Failed to corrupt %s: %v", copyToCorrupt.Table.Label, err)
 	}
 
@@ -175,9 +165,12 @@ func CorruptKernelAB(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to verify DUT currently is in copy %q: %v", notKernCopyStr, err)
 	}
 
-	s.Logf("Restoring just KERN-%s from backup", kernCopyStr)
-	if _, err := h.KernelServiceClient.RestorePartition(ctx, backupPrioritizedCopy); err != nil {
-		s.Fatalf("Failed to restore KERN-%s from backup: %v", kernCopyStr, err)
+	s.Log("Restore kernel partition ", copyToCorrupt.Table.Label)
+	if _, err := h.KernelServiceClient.SetKernelHeaderMagic(ctx, &pb.KernelHeaderMagicInfo{
+		Table: copyToCorrupt.Table,
+		Magic: pb.KernelHeaderMagic_CHROMEOS,
+	}); err != nil {
+		s.Fatalf("Failed to restore %s: %v", copyToCorrupt.Table.Label, err)
 	}
 
 	s.Log("Performing mode aware reboot to ensure boots back to copy ", kernCopyStr)

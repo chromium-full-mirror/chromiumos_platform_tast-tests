@@ -8,11 +8,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/golang/protobuf/ptypes/empty"
-
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/fixture"
 	pb "chromiumos/tast/services/cros/firmware"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
@@ -60,12 +59,12 @@ func VerityCorruptRootfs(ctx context.Context, s *testing.State) {
 		s.Fatal("Creating mode switcher: ", err)
 	}
 
-	initialCopy, err := h.KernelServiceClient.GetCurrentCopy(ctx, &empty.Empty{})
+	initialCopy, err := h.KernelServiceClient.GetCurrentCopy(ctx, &pb.Partition{})
 	if err != nil {
 		s.Fatal("Failed to get label of initial part")
 	}
 
-	kernelBackup, err := h.KernelServiceClient.BackupKernel(ctx, &empty.Empty{})
+	kernelBackup, err := h.KernelServiceClient.BackupKernel(ctx, &pb.Partition{})
 	if err != nil {
 		s.Fatal("Failed to back up KERN-A and KERN-B: ", err)
 	}

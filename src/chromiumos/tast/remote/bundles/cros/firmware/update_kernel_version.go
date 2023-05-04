@@ -12,11 +12,10 @@ import (
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/fixture"
 	pb "chromiumos/tast/services/cros/firmware"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
-
-	"github.com/golang/protobuf/ptypes/empty"
 )
 
 func init() {
@@ -52,7 +51,7 @@ func UpdateKernelVersion(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Backing up current Kernel")
-	kernelBackup, err := h.KernelServiceClient.BackupKernel(ctx, &empty.Empty{})
+	kernelBackup, err := h.KernelServiceClient.BackupKernel(ctx, &pb.Partition{})
 	if err != nil {
 		s.Fatal("Failed to back up KERN-A and KERN-B: ", err)
 	}

@@ -19,6 +19,7 @@ import (
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/sysutil"
 	pb "chromiumos/tast/services/cros/firmware"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
@@ -30,6 +31,22 @@ const (
 	// KernelKeyblockPath is the path to kernel keyblock.
 	KernelKeyblockPath string = "/usr/share/vboot/devkeys/kernel.keyblock"
 )
+
+// HeaderMagic holds the possible values for the kernel header magic.
+type HeaderMagic string
+
+const (
+	// CHROMEOS is the default header magic for kernel stored in the first 8 bytes of the partition.
+	CHROMEOS HeaderMagic = "CHROMEOS"
+	// CORRUPTD is the corrupted header magic for kernel, this makes the kernel appear corrupted.
+	CORRUPTD HeaderMagic = "CORRUPTD"
+)
+
+// HeaderMagicEnumToMagic maps the KernelHeaderMagic enum to the relevant HeaderMagic.
+var HeaderMagicEnumToMagic = map[pb.KernelHeaderMagic]HeaderMagic{
+	pb.KernelHeaderMagic_CHROMEOS: CHROMEOS,
+	pb.KernelHeaderMagic_CORRUPTD: CORRUPTD,
+}
 
 // PartNameEnumToName maps the PartitionName enum to the name from cgpt table.
 var PartNameEnumToName = map[pb.PartitionName]string{
@@ -121,8 +138,8 @@ func readKernelConfigBytes(ctx context.Context) ([]byte, error) {
 }
 
 // GetCgptTable returns structure containing metadata with CGPT partitions.
-func GetCgptTable(ctx context.Context, blockdev string) (map[string]*pb.CgptPartition, error) {
-	cgptOut, err := testexec.CommandContext(ctx, "cgpt", "show", blockdev).Output(testexec.DumpLogOnError)
+func GetCgptTable(ctx context.Context, rootDevWithoutPart string) (map[string]*pb.CgptPartition, error) {
+	cgptOut, err := testexec.CommandContext(ctx, "cgpt", "show", rootDevWithoutPart).Output(testexec.DumpLogOnError)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to retrieve cgpt table")
 	}
@@ -153,14 +170,7 @@ func GetCgptTable(ctx context.Context, blockdev string) (map[string]*pb.CgptPart
 			return nil, errors.Wrap(err, "failed to parse partition number")
 		}
 
-		var partitionPath string
-		lastChar := blockdev[len(blockdev)-1:]
-		if _, err := strconv.Atoi(lastChar); err != nil {
-			// if last char is not number, don't need 'p' between device path and partition number.
-			partitionPath = fmt.Sprintf("%s%d", blockdev, partitionNumber)
-		} else {
-			partitionPath = fmt.Sprintf("%sp%d", blockdev, partitionNumber)
-		}
+		partitionPath := RootDevPartitionPath(rootDevWithoutPart, partitionNumber)
 
 		partitionLabel := strings.ReplaceAll(fields[4], "\"", "")
 
@@ -234,17 +244,16 @@ func PartitionNameCopyToLabel(part pb.PartitionName, copy pb.PartitionCopy) stri
 }
 
 // BackupPartition backs up partition and saves to a file.
-func BackupPartition(ctx context.Context, rootDev, label string) (*pb.CgptPartition, string, error) {
-	partitionTables, err := GetCgptTable(ctx, rootDev)
+func BackupPartition(ctx context.Context, rootDevWithoutPart, label string) (*pb.CgptPartition, string, error) {
+	partitionTables, err := GetCgptTable(ctx, rootDevWithoutPart)
 	if err != nil {
 		return nil, "", errors.Wrap(err, "failed to get cgpt table")
 	}
 
 	// Look for table with expected label (eg. KERN-A, MINIOS-B, ROOT-A).
 	table := partitionTables[label]
-	testing.ContextLogf(ctx, "Partition %s saved at path: %v has size %v", label, table.PartitionPath, table.Size)
 
-	backupPath, err := ioutil.TempFile("/usr/local/share/tast", fmt.Sprintf("%s_", label))
+	backupPath, err := ioutil.TempFile("/var/tmp", fmt.Sprintf("%s_", label))
 	if err != nil {
 		os.Remove(backupPath.Name())
 		return nil, "", errors.Wrapf(err, "creating tmpfile for backing up partition %s", label)
@@ -256,6 +265,7 @@ func BackupPartition(ctx context.Context, rootDev, label string) (*pb.CgptPartit
 		return nil, "", errors.Wrap(err, "failed to save partition to file")
 	}
 
+	testing.ContextLogf(ctx, "Partition %q saved from %q to %q, size %v", label, table.PartitionPath, backupPath.Name(), table.Size)
 	return table, backupPath.Name(), nil
 }
 
@@ -264,24 +274,20 @@ func RestorePartition(ctx context.Context, backupPath, partitionPath string) err
 	testing.ContextLogf(ctx, "Restoring partition at %q from backup at %q ", partitionPath, backupPath)
 	cmd := fmt.Sprintf("cat %s > %s", backupPath, partitionPath)
 	if err := testexec.CommandContext(ctx, "sh", "-c", cmd).Run(testexec.DumpLogOnError); err != nil {
-		return errors.Wrap(err, "failed to restore kernel from backup file")
+		return errors.Wrap(err, "failed to restore partition from backup file")
 	}
 	return nil
 }
 
 // PrioritizeKernelCopy makes both kernel copies (KERN-A and KERN-B) identical and ensures DUT boots to expected kernel copy on next reboot.
-func PrioritizeKernelCopy(ctx context.Context, label string) error {
-	currKernel, err := GetCurrentKernel(ctx)
+func PrioritizeKernelCopy(ctx context.Context, rootDevWithPart, label string) error {
+	currKernel, err := GetPartitionTable(ctx, rootDevWithPart)
 	if err != nil {
 		return errors.Wrap(err, "failed to get current cgpt table for current kernel copy")
 	}
 
-	rootDev, err := GetCurrentRootDevice(ctx, false)
-	if err != nil {
-		return errors.Wrap(err, "failed to get root device")
-	}
-
-	partitionTable, err := GetCgptTable(ctx, rootDev)
+	rootDevWithoutPart, _ := SplitRootDevAndPart(ctx, rootDevWithPart)
+	partitionTable, err := GetCgptTable(ctx, rootDevWithoutPart)
 	if err != nil {
 		return errors.Wrap(err, "failed to read cgpt table")
 	}
@@ -327,19 +333,19 @@ func PrioritizeKernelCopy(ctx context.Context, label string) error {
 		}
 	}
 
-	cmd := testexec.CommandContext(ctx, "cgpt", "add", fmt.Sprintf("-i%d", kernA.PartitionNumber), "-P1", "-S1", "-T0", rootDev)
+	cmd := testexec.CommandContext(ctx, "cgpt", "add", fmt.Sprintf("-i%d", kernA.PartitionNumber), "-P2", "-S1", "-T0", rootDevWithoutPart)
 	if err := cmd.Run(testexec.DumpLogOnError); err != nil {
 		return errors.Wrap(err, "failed to make KERN-A bootable")
 	}
 
-	cmd = testexec.CommandContext(ctx, "cgpt", "add", fmt.Sprintf("-i%d", kernB.PartitionNumber), "-P2", "-S1", "-T0", rootDev)
+	cmd = testexec.CommandContext(ctx, "cgpt", "add", fmt.Sprintf("-i%d", kernB.PartitionNumber), "-P2", "-S1", "-T0", rootDevWithoutPart)
 	if err := cmd.Run(testexec.DumpLogOnError); err != nil {
 		return errors.Wrap(err, "failed to make KERN-B bootable")
 	}
 
 	testing.ContextLog(ctx, "Prioritizing partition ", label)
 	targetTable := partitionTable[label]
-	cmd = testexec.CommandContext(ctx, "cgpt", "prioritize", fmt.Sprintf("-i%d", targetTable.PartitionNumber), rootDev)
+	cmd = testexec.CommandContext(ctx, "cgpt", "prioritize", fmt.Sprintf("-i%d", targetTable.PartitionNumber), rootDevWithoutPart)
 	if err := cmd.Run(testexec.DumpLogOnError); err != nil {
 		return errors.Wrapf(err, "failed to make prioritize kernel copy %q", label)
 	}
@@ -347,38 +353,53 @@ func PrioritizeKernelCopy(ctx context.Context, label string) error {
 	return nil
 }
 
-// GetCurrentKernel returns the partition table for the kernel copy currently being used.
-func GetCurrentKernel(ctx context.Context) (*pb.CgptPartition, error) {
-	rootDevWithPart, err := GetCurrentRootDevice(ctx, true)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get root device with part")
-	}
-
+// SplitRootDevAndPart takes a rootdev path and splits the device and part num, inverse of RootDevPartitionPath.
+func SplitRootDevAndPart(ctx context.Context, rootDevWithPart string) (string, int) {
 	// Partition path looks like /dev/{device}p?{partition} with a 'p' between only if `device` ends with a digit.
-	partStr := regexp.MustCompile(`/dev/\S+?(\d+)$`).FindStringSubmatch(rootDevWithPart)
-	part, _ := strconv.Atoi(partStr[1]) // Get just the partition number for current kernel copy.
-
-	rootDev, err := GetCurrentRootDevice(ctx, false)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get root device")
+	// e.g. /dev/mmcblk1p1 -> (/dev/mmcblk1, 1) and /dev/sda1 -> (/dev/sda, 1)
+	match := regexp.MustCompile(`/dev/(?:(?:(\S+?\d)p)|(\S+[A-Za-z]))(\d+)$`).FindStringSubmatch(rootDevWithPart)
+	part, _ := strconv.Atoi(match[len(match)-1]) // Get just the partition number for current kernel copy.
+	var device string
+	// The device could be in match[1] or match[2] depending on format so iterate and find the non-empty one.
+	for _, str := range match[1:] {
+		if str != "" {
+			device = str
+			break
+		}
 	}
+	rootDevWithoutPart := "/dev/" + device
 
-	partitionTable, err := GetCgptTable(ctx, rootDev)
+	return rootDevWithoutPart, part
+}
+
+// RootDevPartitionPath takes a device and partition number and joins them, inverse of SplitRootDevAndPart.
+func RootDevPartitionPath(rootDevWithoutPart string, partitionNum int) string {
+	lastChar := rootDevWithoutPart[len(rootDevWithoutPart)-1:]
+	if _, err := strconv.Atoi(lastChar); err != nil {
+		// if last char of rootdev is not number, don't need 'p' between device path and partition number.
+		return fmt.Sprintf("%s%d", rootDevWithoutPart, partitionNum)
+	}
+	return fmt.Sprintf("%sp%d", rootDevWithoutPart, partitionNum)
+}
+
+// GetPartitionTable returns the partition table for the provided partition.
+func GetPartitionTable(ctx context.Context, rootDevWithPart string) (*pb.CgptPartition, error) {
+	rootDevWithoutPart, part := SplitRootDevAndPart(ctx, rootDevWithPart)
+	partitionTable, err := GetCgptTable(ctx, rootDevWithoutPart)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read cgpt table")
 	}
 
-	var currKernel *pb.CgptPartition
 	for _, t := range partitionTable {
 		if int(t.PartitionNumber) == part {
-			currKernel = t
+			return t, nil
 		}
 	}
-	return currKernel, nil
+	return nil, errors.Errorf("failed to find partition %d in cgpt table", part)
 }
 
 // BackupRootfsVerityHash saves the verity hash for given kernel from the corresponding rootfs partition.
-func BackupRootfsVerityHash(ctx context.Context, rootDev string, table *pb.CgptPartition) (int, int, string, error) {
+func BackupRootfsVerityHash(ctx context.Context, rootDevWithoutPart string, table *pb.CgptPartition) (int, int, string, error) {
 	out, err := testexec.CommandContext(ctx, "vbutil_kernel", "--verify", table.PartitionPath, "--verbose").Output(testexec.DumpLogOnError)
 	if err != nil {
 		return 0, 0, "", errors.Wrap(err, "failed to get vbutil kernel")
@@ -405,7 +426,7 @@ func BackupRootfsVerityHash(ctx context.Context, rootDev string, table *pb.CgptP
 	// TODO(tij@): Verify with dlunev@ this calculation makes sense and these numbers are not variable.
 	hashSize := hashStartBytes/4096*64 + 512
 
-	partitionTables, err := GetCgptTable(ctx, rootDev)
+	partitionTables, err := GetCgptTable(ctx, rootDevWithoutPart)
 	if err != nil {
 		return 0, 0, "", errors.Wrap(err, "failed to get cgpt table")
 	}
@@ -417,7 +438,7 @@ func BackupRootfsVerityHash(ctx context.Context, rootDev string, table *pb.CgptP
 	rootfsLabel := fmt.Sprintf("ROOT-%s", section)
 	rootfsTable := partitionTables[rootfsLabel]
 
-	backupPath, err := ioutil.TempFile("/usr/local/share/tast", fmt.Sprintf("rootfsVerityHash%s_", table.Label))
+	backupPath, err := ioutil.TempFile("/var/tmp", fmt.Sprintf("rootfsVerityHash%s_", table.Label))
 	if err != nil {
 		os.Remove(backupPath.Name())
 		return 0, 0, "", errors.Wrap(err, "creating tmpfile for backing up verity hash")
@@ -441,8 +462,8 @@ func BackupRootfsVerityHash(ctx context.Context, rootDev string, table *pb.CgptP
 }
 
 // RestoreRootfsVerityHash restores saved verity hash for given kernel copy to rootfs partition from backup file.
-func RestoreRootfsVerityHash(ctx context.Context, offset int64, backupPath, rootDev, label string) error {
-	partitionTables, err := GetCgptTable(ctx, rootDev)
+func RestoreRootfsVerityHash(ctx context.Context, offset int64, backupPath, rootDevWithoutPart, label string) error {
+	partitionTables, err := GetCgptTable(ctx, rootDevWithoutPart)
 	if err != nil {
 		return errors.Wrap(err, "failed to get cgpt table")
 	}
@@ -469,8 +490,8 @@ func RestoreRootfsVerityHash(ctx context.Context, offset int64, backupPath, root
 }
 
 // CorruptRootfsVerityHash corrupts verity hash for given kernel copy.
-func CorruptRootfsVerityHash(ctx context.Context, offset, size int64, rootDev, label string) error {
-	partitionTables, err := GetCgptTable(ctx, rootDev)
+func CorruptRootfsVerityHash(ctx context.Context, offset, size int64, rootDevWithoutPart, label string) error {
+	partitionTables, err := GetCgptTable(ctx, rootDevWithoutPart)
 	if err != nil {
 		return errors.Wrap(err, "failed to get cgpt table")
 	}
@@ -517,14 +538,15 @@ func GetNameFromLabel(label string) (string, error) {
 }
 
 // GetKernelVersion uses vbutil_kernel to get the kernel version for a given partition.
-func GetKernelVersion(ctx context.Context, rootDev, label string) (string, *pb.CgptPartition, error) {
-	partitionTables, err := GetCgptTable(ctx, rootDev)
+func GetKernelVersion(ctx context.Context, rootDevWithoutPart, label string) (string, *pb.CgptPartition, error) {
+	partitionTables, err := GetCgptTable(ctx, rootDevWithoutPart)
 	if err != nil {
 		return "", nil, errors.Wrap(err, "failed to get cgpt table")
 	}
 
 	table := partitionTables[label]
 
+	// TODO(tij@): Update this to use the futility vbutil_kernel library after it gets implemented.
 	out, err := testexec.CommandContext(ctx, "vbutil_kernel", "--verify", table.PartitionPath).Output(testexec.DumpLogOnError)
 	if err != nil {
 		return "", nil, errors.Wrap(err, "failed to get vbutil kernel")
@@ -540,7 +562,7 @@ func GetKernelVersion(ctx context.Context, rootDev, label string) (string, *pb.C
 
 // SetKernelVersion uses vbutil_kernel to set the kernel version for a given partition.
 func SetKernelVersion(ctx context.Context, table *pb.CgptPartition, version string) error {
-	tmpFile, err := ioutil.TempFile("/usr/local/share/tast", fmt.Sprintf("%s-repack_*.bin", table.Label))
+	tmpFile, err := ioutil.TempFile("/var/tmp", fmt.Sprintf("%s-repack_*.bin", table.Label))
 	if err != nil {
 		os.Remove(tmpFile.Name())
 		return errors.Wrap(err, "creating tmpfile for storing modified kernel with new version")
@@ -554,6 +576,7 @@ func SetKernelVersion(ctx context.Context, table *pb.CgptPartition, version stri
 		"--keyblock", KernelKeyblockPath,
 		"--version", version,
 	}
+	// TODO(tij@): Update this to use the futility vbutil_kernel library after it gets implemented.
 	out, err := testexec.CommandContext(ctx, "vbutil_kernel", args...).Output(testexec.DumpLogOnError)
 	if err != nil {
 		return errors.Wrapf(err, "failed to load repack kernel from %s with version %s: %s", table.Label, version, string(out))
@@ -571,18 +594,19 @@ func SetKernelVersion(ctx context.Context, table *pb.CgptPartition, version stri
 	return nil
 }
 
-// CorruptKernel corrupts the kernel copy and writes it to disk.
-func CorruptKernel(ctx context.Context, table *pb.CgptPartition) error {
-	// Writes 0 to first 100 bytes which should be sufficient to corrupt it. The original autotest just shifted the first byte.
+// SetKernelHeaderMagic sets the kernel header magic for provided partition table.
+func SetKernelHeaderMagic(ctx context.Context, table *pb.CgptPartition, magic HeaderMagic) error {
+	testing.ContextLogf(ctx, "Setting header to %s on device %s (label %q)", magic, table.PartitionPath, table.Label)
 	args := []string{
-		"if=/dev/zero",
 		fmt.Sprintf("of=%s", table.PartitionPath),
-		fmt.Sprintf("count=%d", 100),
 		"conv=notrunc",
-		"iflag=count_bytes",
+		"oflag=sync",
 	}
-	if err := testexec.CommandContext(ctx, "dd", args...).Run(testexec.DumpLogOnError); err != nil {
-		return errors.Wrap(err, "failed to corrupt kernel partition")
+	cmd := testexec.CommandContext(ctx, "dd", args...)
+	cmd.Stdin = strings.NewReader(string(magic))
+
+	if err := cmd.Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrapf(err, "failed setting header magic for partition %s (%s) to %s", table.PartitionPath, table.Label, string(magic))
 	}
 	return nil
 }
@@ -600,10 +624,10 @@ func comparePartitions(ctx context.Context, pathA, pathB string, n int) (bool, e
 	return true, nil
 }
 
-func getSectorSize(ctx context.Context, rootDev string) (int, error) {
-	out, err := testexec.CommandContext(ctx, "fdisk", "-l", rootDev).Output(testexec.DumpLogOnError)
+func getSectorSize(ctx context.Context, rootDevWithPart string) (int, error) {
+	out, err := testexec.CommandContext(ctx, "fdisk", "-l", rootDevWithPart).Output(testexec.DumpLogOnError)
 	if err != nil {
-		return -1, errors.Wrapf(err, "failed to get fdisk output for disk %q", rootDev)
+		return -1, errors.Wrapf(err, "failed to get fdisk output for disk %q", rootDevWithPart)
 	}
 
 	// Example output: "Units: sectors of 1 * 512 = 512 bytes".
@@ -614,13 +638,4 @@ func getSectorSize(ctx context.Context, rootDev string) (int, error) {
 	}
 
 	return strconv.Atoi(match[3])
-}
-
-func rootDevPartitionPath(device string, partitionNum int) string {
-	lastChar := device[len(device)-1:]
-	if _, err := strconv.Atoi(lastChar); err != nil {
-		// if last char of device is not number, don't need 'p' between device path and partition number.
-		return fmt.Sprintf("%s%d", device, partitionNum)
-	}
-	return fmt.Sprintf("%sp%d", device, partitionNum)
 }

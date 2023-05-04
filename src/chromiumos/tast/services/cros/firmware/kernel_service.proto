@@ -30,7 +30,7 @@ service KernelService {
     rpc RestorePartition (PartitionInfo) returns (google.protobuf.Empty) {}
 
     // BackupKernel backs up both kernel A and B copies and saves them to a file.
-    rpc BackupKernel (google.protobuf.Empty) returns (KernelBackup) {}
+    rpc BackupKernel (Partition) returns (KernelBackup) {}
 
     // RestoreKernel restores both kernel A and B from back ups.
     rpc RestoreKernel (KernelBackup) returns (google.protobuf.Empty) {}
@@ -38,8 +38,8 @@ service KernelService {
     // PrioritizeKernelCopy ensures DUT boots to expected kernel copy on next reboot (eg. KERN-A or KERN-B) and makes both kernel copies identical.
     rpc PrioritizeKernelCopy (Partition) returns (google.protobuf.Empty) {}
 
-    // GetCurrentCopy returns the current label DUT is using.
-    rpc GetCurrentCopy (google.protobuf.Empty) returns (Partition) {}
+    // GetCurrentCopy returns the current label DUT is using or from the provided root device.
+    rpc GetCurrentCopy (Partition) returns (Partition) {}
 
     // VerifyKernelCopy checks that DUT is currently booted to expected kernel copy.
     rpc VerifyKernelCopy (Partition) returns (google.protobuf.Empty) {}
@@ -59,8 +59,11 @@ service KernelService {
     // SetKernelVersion uses vbutil_kernel to set the kernel version for a given partition.
     rpc SetKernelVersion (KernelVersion) returns (google.protobuf.Empty) {}
 
-    // CorruptKernel corrupts a kernel copy.
-    rpc CorruptKernel (PartitionInfo) returns (google.protobuf.Empty) {}
+    // SetKernelHeaderMagic sets the header magic for the kernel, simulate a corrupted kernel copy by setting header to CORRUPTD.
+    rpc SetKernelHeaderMagic (KernelHeaderMagicInfo) returns (google.protobuf.Empty) {}
+
+    // GetCurrentRootDevice gets the path to the current root device.
+    rpc GetCurrentRootDevice (google.protobuf.Empty) returns (Partition) {}
 }
 
 // PartitionCopy holds the copy of the partition (eg. A for KERN-A or B for ROOT-B).
@@ -75,6 +78,12 @@ enum PartitionName {
     KERNEL = 0;
     MINIOS = 1;
     ROOTFS = 2;
+}
+
+// KernelHeaderMagic the possible values for the kernel header magic.
+enum KernelHeaderMagic  {
+    CHROMEOS = 0;
+    CORRUPTD = 1;
 }
 
 // CgptPartitionAttribute holds the value for an individual attribute for a partitions in the cgpt table.
@@ -96,7 +105,7 @@ message CgptPartition {
 }
 
 message GetCgptTableRequest {
-    string BlockDevice = 1;
+    string BlockDevice = 1; // Ensure BlockDevice includes a partition number. 
 }
 
 message GetCgptTableResponse {
@@ -128,7 +137,7 @@ message RestoreCgptAttributesRequest {
 // Partition just holds the partition label to identify a particular partition.
 message Partition {
     reserved 1;
-    string RootDev = 2; // If not provided, defaults to current rootdev.
+    string RootDev = 2; // If not provided, defaults to current rootdev, if providing ensure rootdev includes part number.
     PartitionName Name = 3;
     PartitionCopy Copy = 4;
 }
@@ -165,4 +174,10 @@ message KernelVersion {
     string RootDev = 1;
     string Version = 2;
     CgptPartition Table = 3;
+}
+
+// KernelHeaderMagicInfo is used for setting the kernel header magic for a kernel section.
+message KernelHeaderMagicInfo {
+    CgptPartition Table = 1;
+    KernelHeaderMagic Magic = 2;
 }
