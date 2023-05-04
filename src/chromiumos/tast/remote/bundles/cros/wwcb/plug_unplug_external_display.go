@@ -17,6 +17,7 @@ import (
 	inputspb "chromiumos/tast/services/cros/inputs"
 	"chromiumos/tast/services/cros/ui"
 	"chromiumos/tast/services/cros/wwcb"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
@@ -24,9 +25,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PlugUnplugExtDisplay,
+		Func:         PlugUnplugExternalDisplay,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Connect / disconnect external display via Dock then play video to check external display is functional by camera connecting to the host",
+		Desc:         "Plug in the external display then play video to check the external display is functional by the camera connecting to the host, then unplug the external display",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
 		Attr:         []string{"group:wwcb"},
@@ -37,12 +38,11 @@ func init() {
 	})
 }
 
-func PlugUnplugExtDisplay(ctx context.Context, s *testing.State) {
+func PlugUnplugExternalDisplay(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	dockingID := s.RequiredVar("DockingID")
 	extDispID := s.RequiredVar("ExtDispID1")
 
 	// Connect to the gRPC server on the DUT.
@@ -68,13 +68,6 @@ func PlugUnplugExtDisplay(ctx context.Context, s *testing.State) {
 	}
 	defer dut.Conn().CommandContext(cleanupCtx, "rm", remoteAudioPath).Output()
 
-	// Open IP power to supply docking power.
-	ipPowerPorts := []int{1}
-	if err := utils.OpenIppower(ctx, ipPowerPorts); err != nil {
-		s.Fatal("Failed to power on the docking station: ", err)
-	}
-	defer utils.CloseIppower(cleanupCtx, ipPowerPorts)
-
 	// Initialize fixtures to find the connected devices.
 	if err := utils.InitFixture(ctx); err != nil {
 		s.Fatal("Failed to initialize the fixture: ", err)
@@ -85,9 +78,31 @@ func PlugUnplugExtDisplay(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to initialize the webcam: ", err)
 	}
 
+	// If the test is being run with a docking station, it will need to power on docking station.
+	// Then map the display fixture to camera with docking station connected to DUT.
 	extDispIDArray := []string{extDispID}
-	if err := utils.MappingWithDockFixture(ctx, s, extDispIDArray, dockingID); err != nil {
-		s.Fatal("Failed to mapping display fixture to camera: ", err)
+	if dockingID, ok := s.Var("DockingID"); ok {
+		ippowerPorts := []int{1}
+		if err := utils.OpenIppower(ctx, ippowerPorts); err != nil {
+			s.Fatal("Failed to power on the docking station: ", err)
+		}
+		defer utils.CloseIppower(cleanupCtx, ippowerPorts)
+
+		if err := utils.ControlFixture(ctx, dockingID, "on"); err != nil {
+			s.Fatal("Failed to connect to the docking station in the state of mapping the display fixture to camera: ", err)
+		}
+
+		if err := utils.MappingDisplayFixtureToCamera(ctx, s, extDispIDArray); err != nil {
+			s.Fatal("Failed to map display fixture to camera: ", err)
+		}
+
+		if err := utils.ControlFixture(ctx, dockingID, "off"); err != nil {
+			s.Fatal("Failed to disconnect to the docking station in the state of mapping the display fixture to camera: ", err)
+		}
+	} else {
+		if err := utils.MappingDisplayFixtureToCamera(ctx, s, extDispIDArray); err != nil {
+			s.Fatal("Failed to map display fixture to camera: ", err)
+		}
 	}
 
 	// Connect the external display & Dock.
@@ -95,8 +110,10 @@ func PlugUnplugExtDisplay(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to the external display: ", err)
 	}
 
-	if err := utils.ControlFixture(ctx, dockingID, "on"); err != nil {
-		s.Fatal("Failed to connect to the docking station: ", err)
+	if dockingID, ok := s.Var("DockingID"); ok {
+		if err := utils.ControlFixture(ctx, dockingID, "on"); err != nil {
+			s.Fatal("Failed to connect to the docking station: ", err)
+		}
 	}
 
 	displaySvc := wwcb.NewDisplayServiceClient(cl.Conn)
