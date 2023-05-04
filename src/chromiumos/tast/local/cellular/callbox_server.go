@@ -15,9 +15,9 @@ import (
 	"chromiumos/tast/common/mmconst"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/modemmanager"
-	"chromiumos/tast/testing"
 
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/timing"
 )
 

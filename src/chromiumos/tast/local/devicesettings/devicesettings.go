@@ -11,10 +11,11 @@ import (
 	"fmt"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
+
+	"go.chromium.org/tast/core/errors"
 )
 
 // Remap changes the action performed by a modifier key.

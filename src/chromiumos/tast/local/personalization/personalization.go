@@ -12,13 +12,14 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/coords"
 	"chromiumos/tast/local/input"
-	"chromiumos/tast/testing"
+
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // OpenPersonalizationHub returns an action to open the personalization app by right clicking on the desktop.
