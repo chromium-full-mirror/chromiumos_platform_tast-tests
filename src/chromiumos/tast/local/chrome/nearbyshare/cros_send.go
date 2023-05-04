@@ -14,6 +14,7 @@ import (
 
 	"chromiumos/tast/errors"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/testing"
 )
 
 // SendSurface is used to control the Nearby Share sending flow on ChromeOS.
@@ -99,6 +100,11 @@ func (s *SendSurface) WaitForShareTarget(ctx context.Context, receiverName strin
 func (s *SendSurface) SelectShareTarget(ctx context.Context, receiverName string, timeout time.Duration) error {
 	if err := s.WaitForShareTarget(ctx, receiverName, timeout); err != nil {
 		return errors.Wrap(err, "failed to wait for share target")
+	}
+	// GoBigSleepLint: Introduce a slight delay between discovering the target and selecting it to better
+	// simulate real user behavior. This is a workaround for Bluetooth issues such as b/276477270.
+	if err := testing.Sleep(ctx, 2*time.Second); err != nil {
+		return errors.Wrap(err, "failed to sleep")
 	}
 	if err := s.conn.Eval(ctx, selectedShareTargetJS+`=`+findShareTargetJS(receiverName), nil); err != nil {
 		return errors.Wrap(err, "failed to assign selectedShareTarget")
