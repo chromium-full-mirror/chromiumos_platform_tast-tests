@@ -14,6 +14,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/cws"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/webutil"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -41,7 +42,21 @@ func EnsureDocsOfflineInstalled(ctx context.Context, br *browser.Browser, tconn 
 	}
 
 	testing.ContextLog(ctx, "Install docs offline extension")
-	return cws.InstallApp(ctx, br, tconn, docsOfflineExt)
+	// Allow at maximum 2 minutes to install the extension. This normally only takes several seconds.
+	cwsCtx, cancel := context.WithTimeout(ctx, 2*time.Minute)
+	defer cancel()
+	cwsErr := cws.InstallApp(cwsCtx, br, tconn, docsOfflineExt)
+	if cwsErr != nil {
+		// If Docs Offline extention is included in /usr/share/google-chrome/extensions/,
+		// it will be installed by the Chrome automatically.
+		// Check if the extension has been installed even if the CWS installation fails.
+		isInstalled, err := ash.ChromeAppInstalled(ctx, tconn, docsOfflineID)
+		if err == nil && isInstalled {
+			testing.ContextLog(ctx, "Docs offline extension has been installed even though the CWS installation returned an error: ", cwsErr)
+			return nil
+		}
+	}
+	return cwsErr
 }
 
 // EnsureDocsOfflineEnabled ensures that docs offline extension is installed for
