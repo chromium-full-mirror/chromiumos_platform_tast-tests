@@ -8,11 +8,15 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path"
 	"time"
 
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
+	localTcpdump "chromiumos/tast/local/network/tcpdump"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -85,6 +89,28 @@ func WebHandwritingRecognition(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set up browser: ", err)
 	}
 	defer closeBrowser(cleanupCtx)
+
+	// Prepare a tdpdump to investigate https://crbug.com/1440735.
+	tcpdumpRunner := localTcpdump.NewLocalRunner()
+	packetPath := path.Join(s.OutDir(), "pcap-crbug-1440735.pcap")
+	stdoutFile, err := os.OpenFile(path.Join(s.OutDir(), "pcap-crbug-1440735.stdout.txt"), os.O_WRONLY|os.O_CREATE, 0644)
+	if err != nil {
+		s.Log(ctx, "Failed to open tcpdump stdout file: ", err)
+	}
+	stderrFile, err := os.OpenFile(path.Join(s.OutDir(), "pcap-crbug-1440735.stderr.txt"), os.O_WRONLY|os.O_CREATE, 0644)
+	if err != nil {
+		s.Log(ctx, "Failed to open tcpdump stderr file: ", err)
+	}
+	if err := tcpdumpRunner.StartTcpdump(ctx, "lo", packetPath, stdoutFile, stderrFile); err != nil {
+		s.Error(err, "failed to start tdpdump:")
+		return
+	}
+	cleanupCtx = ctx
+	ctx, cancel = tcpdumpRunner.ReserveForClose(ctx)
+	defer cancel()
+	defer func(cleanupCtx context.Context) {
+		tcpdumpRunner.Close(cleanupCtx)
+	}(cleanupCtx)
 
 	// Open the test page.
 	conn, err := br.NewConn(ctx, server.URL+"/web_handwriting_recognition.html")
