@@ -6,6 +6,7 @@ package kiosk
 
 import (
 	"context"
+	"time"
 
 	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/common/pci"
@@ -16,6 +17,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/kioskmode"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -37,13 +39,13 @@ func init() {
 			"group:complementary",
 		},
 		SoftwareDeps: []string{"reboot", "chrome"},
-		Fixture:      fixture.KioskAutoLaunchCleanup,
+		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
+		Fixture:      fixture.FakeDMSEnrolled,
+		Timeout:      kioskmode.SetupDuration + kioskmode.LaunchDuration + kioskmode.CleanupDuration + 30*time.Second,
 		Params: []testing.Param{
 			{
 				Name: "ash",
-				Val: kioskmode.TestData{
-					IsLacros: false,
-				},
+				Val:  kioskmode.TestData{IsLacros: false},
 			},
 			{
 				Name:              "lacros",
@@ -63,16 +65,23 @@ func init() {
 				Key: "feature_id",
 				// Enable accessibility menu in kiosk.
 				Value: "screenplay-fff0f806-5b29-44a8-b48a-075c3d0e19f0",
-			}}})
+			},
+		},
+	})
 }
 
 func FloatingAccessibilityMenuEnabled(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 	param := s.Param().(kioskmode.TestData)
-	kiosk, cr, err := kioskmode.DeprecatedNew(
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, kioskmode.CleanupDuration)
+	defer cancel()
+
+	kiosk, cr, err := kioskmode.New(
 		ctx,
 		fdms,
-		kioskmode.DefaultLocalAccounts(),
+		s.RequiredVar("ui.signinProfileTestExtensionManifestKey"),
 		kioskmode.PublicAccountPolicies(kioskmode.WebKioskAccountID, append(param.Policies, &policy.FloatingAccessibilityMenuEnabled{Val: true})),
 		kioskmode.AutoLaunch(kioskmode.WebKioskAccountID),
 	)
@@ -80,10 +89,14 @@ func FloatingAccessibilityMenuEnabled(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start Chrome in Kiosk mode: ", err)
 	}
 	defer func(ctx context.Context) {
-		if err := kiosk.DeprecatedClose(ctx); err != nil {
+		if err := kiosk.Close(ctx); err != nil {
 			s.Error("Failed to close kiosk: ", err)
 		}
-	}(ctx)
+	}(cleanupCtx)
+
+	if err := kiosk.WaitLaunchLogs(ctx); err != nil {
+		s.Fatal("Failed to launch Kiosk: ", err)
+	}
 
 	testConn, err := cr.TestAPIConn(ctx)
 	if err != nil {
