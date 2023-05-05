@@ -15,6 +15,7 @@ import (
 	"context"
 
 	"chromiumos/tast/common/xmlrpc"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -24,13 +25,15 @@ type Servo struct {
 	xmlrpc *xmlrpc.XMLRpc
 
 	// Cache queried attributes that won't change.
-	version       string
-	dutConnType   DUTConnTypeValue
-	servoType     string
-	hasCCD        bool
-	hasServoMicro bool
-	hasC2D2       bool
-	isDualV4      bool
+	version            string
+	dutConnType        DUTConnTypeValue
+	dutCCDController   DUTController
+	dutDebugController DUTController
+	servoType          string
+	hasCCD             bool
+	hasServoMicro      bool
+	hasC2D2            bool
+	isDualV4           bool
 
 	// If initialPDRole is set, then upon Servo.Close(), the PDRole control will be set to initialPDRole.
 	initialPDRole PDRoleValue

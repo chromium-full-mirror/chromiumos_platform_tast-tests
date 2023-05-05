@@ -232,6 +232,7 @@ const (
 	DUTControllerC2D2       DUTController = "c2d2"
 	DUTControllerCCDCr50    DUTController = "ccd_cr50"
 	DUTControllerCCD        DUTController = "ccd_gsc"
+	DUTControllerCCDTi50    DUTController = "ccd_ti50"
 	DUTControllerServoMicro DUTController = "servo_micro"
 )
 
@@ -1140,7 +1141,37 @@ func (s *Servo) GetServoType(ctx context.Context) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	hasCCD := strings.Contains(servoType, "ccd")
+
+	devices, err := s.GetStringList(ctx, Devices)
+	if err != nil {
+		return "", err
+	}
+
+	var dutCCDController DUTController
+	var dutDebugController DUTController
+	hasCCD := false
+	hasServoMicro := false
+	hasC2D2 := false
+
+	for _, device := range devices {
+		servoDeviceType, err := PropertyToString(device, "type")
+		if err != nil {
+			return "", err
+		}
+		if strings.HasPrefix(servoDeviceType, "ccd") {
+			hasCCD = true
+			dutCCDController = DUTController(servoDeviceType)
+		}
+		if strings.Compare(servoDeviceType, string(DUTControllerServoMicro)) == 0 {
+			hasServoMicro = true
+			dutDebugController = DUTController(servoDeviceType)
+		}
+		if strings.Compare(servoDeviceType, string(DUTControllerC2D2)) == 0 {
+			hasC2D2 = true
+			dutDebugController = DUTController(servoDeviceType)
+		}
+	}
+
 	if !hasCCD {
 		if hasCCDState, err := s.HasControl(ctx, string(CCDState)); err != nil {
 			return "", errors.Wrap(err, "failed to check ccd_state control")
@@ -1152,9 +1183,8 @@ func (s *Servo) GetServoType(ctx context.Context) (string, error) {
 			hasCCD = ccdState
 		}
 	}
-	hasServoMicro := strings.Contains(servoType, string(DUTControllerServoMicro))
-	hasC2D2 := strings.Contains(servoType, string(DUTControllerC2D2))
-	isDualV4 := strings.Contains(servoType, "_and_")
+
+	isDualV4 := hasCCD && (hasServoMicro || hasC2D2)
 
 	if !hasCCD && !hasServoMicro && !hasC2D2 {
 		testing.ContextLogf(ctx, "Assuming %s is equivalent to servo_micro", servoType)
@@ -1165,6 +1195,9 @@ func (s *Servo) GetServoType(ctx context.Context) (string, error) {
 	s.hasServoMicro = hasServoMicro
 	s.hasC2D2 = hasC2D2
 	s.isDualV4 = isDualV4
+	s.dutCCDController = dutCCDController
+	s.dutDebugController = dutDebugController
+
 	return s.servoType, nil
 }
 
@@ -1188,11 +1221,7 @@ func (s *Servo) RequireCCD(ctx context.Context) error {
 		return errors.Wrapf(err, "servo %s is not CCD", servoType)
 	}
 	if s.isDualV4 {
-		controller := DUTControllerCCDCr50
-		if strings.Contains(servoType, string(DUTControllerCCD)) {
-			controller = DUTControllerCCD
-		}
-		if err = s.SetActiveDUTController(ctx, controller); err != nil {
+		if err = s.SetActiveDUTController(ctx, s.dutCCDController); err != nil {
 			return errors.Wrap(err, "failed to set active dut controller")
 		}
 	}
@@ -1217,17 +1246,10 @@ func (s *Servo) PreferDebugHeader(ctx context.Context) (bool, error) {
 		return false, errors.Wrap(err, "failed to get servo type")
 	}
 	if s.isDualV4 {
-		if s.hasServoMicro {
-			if err = s.SetActiveDUTController(ctx, DUTControllerServoMicro); err != nil {
-				return false, errors.Wrap(err, "failed to set active dut controller")
-			}
-			return true, nil
-		} else if s.hasC2D2 {
-			if err = s.SetActiveDUTController(ctx, DUTControllerC2D2); err != nil {
-				return false, errors.Wrap(err, "failed to set active dut controller")
-			}
-			return true, nil
+		if err = s.SetActiveDUTController(ctx, s.dutDebugController); err != nil {
+			return false, errors.Wrap(err, "failed to set active dut controller")
 		}
+		return true, nil
 	}
 	return s.hasServoMicro || s.hasC2D2, nil
 }
@@ -1242,14 +1264,8 @@ func (s *Servo) RequireDebugHeader(ctx context.Context) error {
 		return errors.Wrapf(err, "servo %s doesn't have debug header", servoType)
 	}
 	if s.isDualV4 {
-		if s.hasServoMicro {
-			if err = s.SetActiveDUTController(ctx, DUTControllerServoMicro); err != nil {
-				return errors.Wrap(err, "failed to set active dut controller")
-			}
-		} else if s.hasC2D2 {
-			if err = s.SetActiveDUTController(ctx, DUTControllerC2D2); err != nil {
-				return errors.Wrap(err, "failed to set active dut controller")
-			}
+		if err = s.SetActiveDUTController(ctx, s.dutDebugController); err != nil {
+			return errors.Wrap(err, "failed to set active dut controller")
 		}
 	}
 	return nil
