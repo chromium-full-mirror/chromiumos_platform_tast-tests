@@ -1152,6 +1152,8 @@ func (s *Servo) GetServoType(ctx context.Context) (string, error) {
 	hasCCD := false
 	hasServoMicro := false
 	hasC2D2 := false
+	hasPDPartner := false
+	hasDebugController := false
 
 	for _, device := range devices {
 		servoDeviceType, err := PropertyToString(device, "type")
@@ -1162,12 +1164,17 @@ func (s *Servo) GetServoType(ctx context.Context) (string, error) {
 			hasCCD = true
 			dutCCDController = DUTController(servoDeviceType)
 		}
+		if strings.HasPrefix(servoDeviceType, "servo_v4") {
+			hasPDPartner = true
+		}
+
 		if strings.Compare(servoDeviceType, string(DUTControllerServoMicro)) == 0 {
 			hasServoMicro = true
+			hasDebugController = true
 			dutDebugController = DUTController(servoDeviceType)
-		}
-		if strings.Compare(servoDeviceType, string(DUTControllerC2D2)) == 0 {
+		} else if strings.Compare(servoDeviceType, string(DUTControllerC2D2)) == 0 {
 			hasC2D2 = true
+			hasDebugController = true
 			dutDebugController = DUTController(servoDeviceType)
 		}
 	}
@@ -1185,6 +1192,7 @@ func (s *Servo) GetServoType(ctx context.Context) (string, error) {
 	}
 
 	isDualV4 := hasCCD && (hasServoMicro || hasC2D2)
+	isPDTester := hasDebugController && hasPDPartner
 
 	if !hasCCD && !hasServoMicro && !hasC2D2 {
 		testing.ContextLogf(ctx, "Assuming %s is equivalent to servo_micro", servoType)
@@ -1195,6 +1203,7 @@ func (s *Servo) GetServoType(ctx context.Context) (string, error) {
 	s.hasServoMicro = hasServoMicro
 	s.hasC2D2 = hasC2D2
 	s.isDualV4 = isDualV4
+	s.isPDTester = isPDTester
 	s.dutCCDController = dutCCDController
 	s.dutDebugController = dutDebugController
 
@@ -1224,6 +1233,19 @@ func (s *Servo) RequireCCD(ctx context.Context) error {
 		if err = s.SetActiveDUTController(ctx, s.dutCCDController); err != nil {
 			return errors.Wrap(err, "failed to set active dut controller")
 		}
+	}
+	return nil
+}
+
+// RequirePDTester verifies that the servo has both sides of the PD connection.
+func (s *Servo) RequirePDTester(ctx context.Context) error {
+	servoType, err := s.GetServoType(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get servo type")
+	}
+
+	if !s.isPDTester {
+		return errors.Wrapf(err, "servo %s is not a PD tester", servoType)
 	}
 	return nil
 }
