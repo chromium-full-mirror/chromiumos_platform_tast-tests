@@ -13,6 +13,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/kioskmode"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -21,7 +22,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AutoLoginBailout,
 		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Stop a kiosk app launch on a splash screen",
+		Desc:         "Cancel Kiosk app launch on the splash screen",
 		Contacts: []string{
 			"chromeos-kiosk-eng+TAST@google.com",
 			"pbond@google.com", // Test author
@@ -34,55 +35,56 @@ func init() {
 			"group:complementary",
 		},
 		SoftwareDeps: []string{"reboot", "chrome", "lacros"},
-		Fixture:      fixture.KioskAutoLaunchCleanup,
-		VarDeps: []string{
-			"ui.signinProfileTestExtensionManifestKey",
-		},
+		Timeout:      kioskmode.SetupDuration + kioskmode.LaunchDuration + kioskmode.CleanupDuration,
+		Fixture:      fixture.FakeDMSEnrolled,
+		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 	})
 }
 
 func AutoLoginBailout(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
+	signinTestExtensionManifestKey := s.RequiredVar("ui.signinProfileTestExtensionManifestKey")
 
-	chromeOptions := chrome.ExtraArgs("--kiosk-splash-screen-min-time-seconds=60")
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, kioskmode.CleanupDuration)
+	defer cancel()
 
-	kiosk, _, err := kioskmode.DeprecatedNew(
+	kiosk, _, err := kioskmode.New(
 		ctx,
 		fdms,
-		kioskmode.DefaultLocalAccounts(),
+		signinTestExtensionManifestKey,
 		kioskmode.AutoLaunch(kioskmode.WebKioskAccountID),
 		kioskmode.SkipSuccessfulLaunchCheck(),
 		kioskmode.ExtraChromeOptions(
-			chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
-			chromeOptions,
+			chrome.LoadSigninProfileExtension(signinTestExtensionManifestKey),
+			chrome.ExtraArgs("--kiosk-splash-screen-min-time-seconds=60"),
 		),
 	)
 	if err != nil {
 		s.Fatal("Failed to start Chrome in Kiosk mode: ", err)
 	}
-
 	defer func(ctx context.Context) {
-		if err := kiosk.DeprecatedClose(ctx); err != nil {
-			s.Error("Failed to close kiosk: ", err)
+		if err := kiosk.Close(ctx); err != nil {
+			s.Error("Failed to close Kiosk: ", err)
 		}
-	}(ctx)
+	}(cleanupCtx)
 
 	if err := kiosk.WaitForSplashScreenShowing(); err != nil {
-		s.Error("Failed to wait for kiosk splash screen: ", err)
+		s.Error("Failed to wait for Kiosk splash screen: ", err)
 	}
 
 	cr, err := kiosk.CancelKioskLaunch(
 		ctx,
 		chrome.NoLogin(),
 		chrome.DMSPolicy(fdms.URL),
-		chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
+		chrome.LoadSigninProfileExtension(signinTestExtensionManifestKey),
 		chrome.KeepState())
 	if err != nil {
-		s.Fatal("Failed to connect to new chrome instance: ", err)
+		s.Fatal("Failed to cancel Kiosk launch: ", err)
 	}
 
 	if err := verifyKioskCanceledToastShown(ctx, cr); err != nil {
-		s.Fatal("Failed to verify the canceled toast")
+		s.Fatal("Failed to verify the canceled toast: ", err)
 	}
 }
 
