@@ -23,24 +23,28 @@ import (
 	"chromiumos/tast/local/kioskmode"
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/local/screenshot"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
+	const setupTimeout = kioskmode.SetupDuration + kioskmode.LaunchDuration
+	const resetTimeout = chrome.ResetTimeout
+	const tearDownTimeout = 5*time.Second + kioskmode.CleanupDuration // Chrome unlock time + kiosk clean up time.
+	const postTestTimeout = 15 * time.Second
+
 	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.KioskLoggedInAsh,
-		Desc:     "Kiosk mode started with default app setup, DUT is enrolled",
-		Contacts: []string{"kamilszarek@google.com", "alt-modalities-stability@google.com"},
-		Impl: &kioskFixture{
-			autoLaunchKioskAppID:    kioskmode.WebKioskAccountID,
-			useDefaultLocalAccounts: true,
-		},
-		SetUpTimeout:    chrome.ManagedUserLoginTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-		PostTestTimeout: 15 * time.Second,
+		Name:            fixture.KioskLoggedInAsh,
+		Desc:            "Kiosk mode started with default app setup, DUT is enrolled",
+		Contacts:        []string{"kamilszarek@google.com", "alt-modalities-stability@google.com"},
+		Impl:            &kioskFixture{autoLaunchKioskAppID: kioskmode.WebKioskAccountID},
+		SetUpTimeout:    setupTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: tearDownTimeout,
+		PostTestTimeout: postTestTimeout,
 		Parent:          fixture.FakeDMSEnrolled,
+		Vars:            []string{"ui.signinProfileTestExtensionManifestKey"},
 	})
 
 	testing.AddFixture(&testing.Fixture{
@@ -48,18 +52,18 @@ func init() {
 		Desc:     "Kiosk mode started with default app setup, DUT is enrolled and Lacros enabled",
 		Contacts: []string{"irfedorova@google.com", "chromeos-kiosk-eng@google.com"},
 		Impl: &kioskFixture{
-			autoLaunchKioskAppID:    kioskmode.WebKioskAccountID,
-			useDefaultLocalAccounts: true,
+			autoLaunchKioskAppID: kioskmode.WebKioskAccountID,
 			extraPublicAccountPolicies: []policy.Policy{
 				&policy.LacrosAvailability{Val: "lacros_only"},
 			},
 			lacros: true,
 		},
-		SetUpTimeout:    chrome.ManagedUserLoginTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-		PostTestTimeout: 15 * time.Second,
+		SetUpTimeout:    setupTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: tearDownTimeout,
+		PostTestTimeout: postTestTimeout,
 		Parent:          fixture.FakeDMSEnrolled,
+		Vars:            []string{"ui.signinProfileTestExtensionManifestKey"},
 	})
 }
 
@@ -68,12 +72,6 @@ type kioskFixture struct {
 	cr *chrome.Chrome
 	// fdms is the already running DMS server from the parent fixture.
 	fdms *fakedms.FakeDMS
-	// useDefaultLocalAccounts enables default local accounts generated in
-	// kioskmode.New().
-	useDefaultLocalAccounts bool
-	// localAccounts is the policy with local accounts configuration that will
-	// be applied for Kiosk mode.
-	localAccounts *policy.DeviceLocalAccounts
 	// autoLaunchKioskAppID is a preselected Kiosk app ID used for autolaunch.
 	autoLaunchKioskAppID string
 	// extraPublicAccountPolicies holds a policies that will be applied.
@@ -85,6 +83,9 @@ type kioskFixture struct {
 	kiosk *kioskmode.Kiosk
 	// lacros is a flag indicating whether fixture implementation suppose to run Lacros.
 	lacros bool
+	// signinTestExtensionManifestKey is the manifest key of the test extension used to interact with
+	// Chrome in the sign in screen.
+	signinTestExtensionManifestKey string
 }
 
 // KioskFixtData is returned by the fixture.
@@ -121,24 +122,37 @@ func (k *kioskFixture) SetUp(ctx context.Context, s *testing.FixtState) interfac
 	}
 
 	k.fdms = fdms
+	k.signinTestExtensionManifestKey = s.RequiredVar("ui.signinProfileTestExtensionManifestKey")
 
-	options := []kioskmode.Option{
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, kioskmode.CleanupDuration)
+	defer cancel()
+
+	kiosk, cr, err := kioskmode.New(
+		ctx,
+		fdms,
+		k.signinTestExtensionManifestKey,
 		kioskmode.AutoLaunch(k.autoLaunchKioskAppID),
 		kioskmode.PublicAccountPolicies(k.autoLaunchKioskAppID, k.extraPublicAccountPolicies),
-	}
-	if k.useDefaultLocalAccounts {
-		options = append(options, kioskmode.DefaultLocalAccounts())
-	} else {
-		options = append(options, kioskmode.CustomLocalAccounts(k.localAccounts))
-	}
-
-	kiosk, cr, err := kioskmode.DeprecatedNew(ctx, fdms, options...)
+	)
 	if err != nil {
 		path := filepath.Join(s.OutDir(), "kiosk_fixture_failure.png")
 		if err := screenshot.Capture(ctx, path); err != nil {
 			s.Error("Failed to take screenshot: ", err)
 		}
 		s.Fatal("Failed to create Chrome in kiosk mode: ", err)
+	}
+	// Make sure to clean up kiosk if an error occurs after this point.
+	defer func(ctx context.Context) {
+		if s.HasError() {
+			if err := kiosk.Close(ctx); err != nil {
+				s.Error("Failed to close Kiosk: ", err)
+			}
+		}
+	}(cleanupCtx)
+
+	if err := kiosk.WaitLaunchLogs(ctx); err != nil {
+		s.Fatal("Failed to launch Kiosk: ", err)
 	}
 
 	if k.lacros {
@@ -151,9 +165,6 @@ func (k *kioskFixture) SetUp(ctx context.Context, s *testing.FixtState) interfac
 
 	proc, err := ashproc.Root()
 	if err != nil {
-		if err := kiosk.DeprecatedClose(ctx); err != nil {
-			s.Error("There was an error while closing Kiosk: ", err)
-		}
 		s.Fatal("Failed to get root Chrome PID: ", err)
 	}
 
@@ -171,8 +182,8 @@ func (k *kioskFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 		s.Fatal("Chrome not yet started")
 	}
 
-	if err := k.kiosk.DeprecatedClose(ctx); err != nil {
-		s.Error("There was an error while closing Kiosk: ", err)
+	if err := k.kiosk.Close(ctx); err != nil {
+		s.Error("Failed to close Kiosk: ", err)
 	}
 
 	k.cr = nil

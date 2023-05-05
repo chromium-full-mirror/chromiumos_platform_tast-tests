@@ -35,16 +35,17 @@ func init() {
 			"group:complementary",
 		},
 		SoftwareDeps: []string{"reboot", "chrome"},
-		Params: []testing.Param{{
-			Name:    "ash",
-			Fixture: fixture.KioskLoggedInAsh,
-			Timeout: 1 * time.Minute,
-		}, {
-			Name:              "lacros",
-			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.KioskLoggedInLacros,
-			Timeout:           1 * time.Minute,
-		}},
+		Timeout:      1 * time.Minute,
+		Params: []testing.Param{
+			{
+				Name:    "ash",
+				Fixture: fixture.KioskLoggedInAsh,
+			}, {
+				Name:              "lacros",
+				ExtraSoftwareDeps: []string{"lacros"},
+				Fixture:           fixture.KioskLoggedInLacros,
+			},
+		},
 		SearchFlags: []*testing.StringPair{
 			{
 				Key: "feature_id",
