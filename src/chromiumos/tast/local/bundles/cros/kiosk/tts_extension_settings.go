@@ -41,7 +41,9 @@ func init() {
 			"group:hardware",
 			"group:complementary"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      fixture.KioskAutoLaunchCleanup,
+		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
+		Fixture:      fixture.FakeDMSEnrolled,
+		Timeout:      kioskmode.SetupDuration + kioskmode.LaunchDuration + kioskmode.CleanupDuration + time.Minute,
 		Params: []testing.Param{{
 			Name: "ash",
 			Val: kioskmode.TestData{
@@ -61,7 +63,6 @@ func init() {
 			},
 			ExtraSoftwareDeps: []string{"lacros"},
 		}},
-		Timeout: 5 * time.Minute,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.FloatingAccessibilityMenuEnabled{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.LacrosAvailability{}, pci.VerifiedFunctionalityOS),
@@ -73,21 +74,29 @@ func TTSExtensionSettings(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 	param := s.Param().(kioskmode.TestData)
 
-	kiosk, cr, err := kioskmode.DeprecatedNew(
+	cleanupKioskCtx := ctx
+	ctx, cancelKioskCtx := ctxutil.Shorten(ctx, kioskmode.CleanupDuration)
+	defer cancelKioskCtx()
+
+	kiosk, cr, err := kioskmode.New(
 		ctx,
 		fdms,
-		kioskmode.DefaultLocalAccounts(),
+		s.RequiredVar("ui.signinProfileTestExtensionManifestKey"),
 		kioskmode.AutoLaunch(kioskmode.KioskAppAccountID),
 		kioskmode.PublicAccountPolicies(kioskmode.KioskAppAccountID, param.Policies),
 	)
 	if err != nil {
-		s.Fatal("Failed to start Chrome in Kiosk mode: ", err)
+		s.Fatal("Failed to create Chrome in Kiosk mode: ", err)
 	}
 	defer func(ctx context.Context) {
-		if err := kiosk.DeprecatedClose(ctx); err != nil {
+		if err := kiosk.Close(ctx); err != nil {
 			s.Error("Failed to close kiosk: ", err)
 		}
-	}(ctx)
+	}(cleanupKioskCtx)
+
+	if err := kiosk.WaitLaunchLogs(ctx); err != nil {
+		s.Fatal("Failed to launch Kiosk: ", err)
+	}
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -101,19 +110,19 @@ func TTSExtensionSettings(ctx context.Context, s *testing.State) {
 	}
 
 	// Mute the device to avoid noisiness.
-	ctxCleanup := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, time.Second)
-	defer cancel()
+	cleanupMuteCtx := ctx
+	ctx, cancelMuteCtx := ctxutil.Shorten(ctx, time.Second)
+	defer cancelMuteCtx()
 	if err := crastestclient.Mute(ctx); err != nil {
 		s.Fatal("Failed to mute: ", err)
 	}
-	defer crastestclient.Unmute(ctxCleanup)
+	defer crastestclient.Unmute(cleanupMuteCtx)
 
 	// Force-enable ChromeVox for the duration of this test.
 	if err := a11y.SetFeatureEnabled(ctx, tconn, a11y.SpokenFeedback, true); err != nil {
 		s.Fatal("Failed to enable ChromeVox: ", err)
 	}
-	defer a11y.ClearFeature(ctxCleanup, tconn, a11y.SpokenFeedback)
+	defer a11y.ClearFeature(cleanupMuteCtx, tconn, a11y.SpokenFeedback)
 
 	ui := uiauto.New(tconn)
 

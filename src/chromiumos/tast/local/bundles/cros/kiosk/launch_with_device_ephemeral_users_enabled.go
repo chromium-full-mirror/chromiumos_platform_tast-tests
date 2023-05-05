@@ -14,6 +14,7 @@ import (
 	"chromiumos/tast/local/chrome/lacros/lacrosproc"
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/kioskmode"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -32,6 +33,7 @@ func init() {
 			"chromeos-kiosk-eng+TAST@google.com",
 			"kamilszarek@google.com", // Test author
 		},
+		BugComponent: "b:892153", // ChromeOS > Software > Commercial (Enterprise) > Kiosk
 		Attr: []string{
 			"group:golden_tier",
 			"group:medium_low_tier",
@@ -39,12 +41,13 @@ func init() {
 			"group:complementary",
 		},
 		SoftwareDeps: []string{"reboot", "chrome"},
-		Fixture:      fixture.KioskAutoLaunchCleanup,
+		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
+		Fixture:      fixture.FakeDMSEnrolled,
+		Timeout:      kioskmode.SetupDuration + 2*kioskmode.LaunchDuration + kioskmode.CleanupDuration,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DeviceEphemeralUsersEnabled{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.LacrosAvailability{}, pci.VerifiedFunctionalityOS),
 		},
-		BugComponent: "b:892153", // ChromeOS > Software > Commercial (Enterprise) > Kiosk
 		Params: []testing.Param{
 			{
 				Name: "ash_unset",
@@ -103,7 +106,6 @@ func LaunchWithDeviceEphemeralUsersEnabled(ctx context.Context, s *testing.State
 	param := s.Param().(ephemeralModeTestData)
 
 	opts := []kioskmode.Option{
-		kioskmode.DefaultLocalAccounts(),
 		kioskmode.AutoLaunch(kioskmode.KioskAppAccountID),
 		kioskmode.ExtraPolicies(param.Policies),
 	}
@@ -112,15 +114,23 @@ func LaunchWithDeviceEphemeralUsersEnabled(ctx context.Context, s *testing.State
 			[]policy.Policy{&policy.LacrosAvailability{Val: "lacros_only"}}))
 	}
 
-	kiosk, cr, err := kioskmode.DeprecatedNew(ctx, fdms, opts...)
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, kioskmode.CleanupDuration)
+	defer cancel()
+
+	kiosk, cr, err := kioskmode.New(ctx, fdms, s.RequiredVar("ui.signinProfileTestExtensionManifestKey"), opts...)
 	if err != nil {
 		s.Fatal("Failed to start Chrome in Kiosk mode: ", err)
 	}
 	defer func(ctx context.Context) {
-		if err := kiosk.DeprecatedClose(ctx); err != nil {
-			s.Error("Failed to close kiosk: ", err)
+		if err := kiosk.Close(ctx); err != nil {
+			s.Error("Failed to close Kiosk: ", err)
 		}
-	}(ctx)
+	}(cleanupCtx)
+
+	if err := kiosk.WaitLaunchLogs(ctx); err != nil {
+		s.Fatal("Failed to launch Kiosk: ", err)
+	}
 
 	testing.ContextLog(ctx, "Checking the mount type of the Kiosk cryptohome (permanent or ephemeral)")
 	expectedMountType := cryptohome.Permanent

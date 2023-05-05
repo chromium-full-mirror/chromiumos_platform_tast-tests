@@ -8,7 +8,6 @@ import (
 	"context"
 	"os"
 	"path/filepath"
-	"time"
 
 	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/common/pci"
@@ -18,6 +17,7 @@ import (
 	"chromiumos/tast/local/chrome/lacros/lacrosproc"
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/kioskmode"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -37,13 +37,14 @@ func init() {
 			"group:hardware",
 			"group:complementary",
 		},
-		Fixture: fixture.KioskAutoLaunchCleanup,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DeviceEphemeralUsersEnabled{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.DeviceLocalAccounts{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.LacrosAvailability{}, pci.VerifiedFunctionalityOS),
 		},
 		SoftwareDeps: []string{"reboot", "chrome"},
+		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
+		Fixture:      fixture.FakeDMSEnrolled,
 		Params: []testing.Param{
 			{
 				Name: "ash",
@@ -58,9 +59,12 @@ func init() {
 			// 	ExtraSoftwareDeps: []string{"lacros"},
 			// },
 		},
-		Timeout: 3 * 2 * 120 * time.Second, // (num test cases) * (num stages) * 2 mins
+		// Timeout is (num test cases) * (num stages) * (test time)
+		Timeout: 3 * 2 * testCaseTimeout,
 	})
 }
+
+const testCaseTimeout = kioskmode.SetupDuration + kioskmode.LaunchDuration + kioskmode.CleanupDuration
 
 func EphemeralPolicies(ctx context.Context, s *testing.State) {
 	// Each test case simulates running a different Kiosk app twice: the first time, to "init" the
@@ -120,7 +124,7 @@ func EphemeralPolicies(ctx context.Context, s *testing.State) {
 		for i, tc := range testCases {
 
 			if success := s.Run(ctx, stage+"_"+tc.AccountID, func(ctx context.Context, s *testing.State) {
-				ctx, cancel := context.WithTimeout(ctx, 120*time.Second)
+				ctx, cancel := context.WithTimeout(ctx, testCaseTimeout)
 				defer cancel()
 
 				opts := []kioskmode.Option{
@@ -141,15 +145,23 @@ func EphemeralPolicies(ctx context.Context, s *testing.State) {
 					}))
 				}
 
-				kiosk, cr, err := kioskmode.DeprecatedNew(ctx, fdms, opts...)
+				cleanupCtx := ctx
+				ctx, cancelCleanup := ctxutil.Shorten(ctx, kioskmode.CleanupDuration)
+				defer cancelCleanup()
+
+				kiosk, cr, err := kioskmode.New(ctx, fdms, s.RequiredVar("ui.signinProfileTestExtensionManifestKey"), opts...)
 				if err != nil {
-					s.Fatal("Failed to start Chrome in Kiosk mode: ", err)
+					s.Fatal("Failed to create Chrome in Kiosk mode: ", err)
 				}
 				defer func(ctx context.Context) {
-					if err := kiosk.DeprecatedClose(ctx); err != nil {
+					if err := kiosk.Close(ctx); err != nil {
 						s.Error("Failed to close kiosk: ", err)
 					}
-				}(ctx)
+				}(cleanupCtx)
+
+				if err := kiosk.WaitLaunchLogs(ctx); err != nil {
+					s.Fatal("Failed to launch Kiosk: ", err)
+				}
 
 				// Verify the kiosk homedir is permanent/ephemeral.
 				userID := kioskmode.DeviceLocalAccountUserID(&localAccounts.Val[i])

@@ -18,6 +18,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/kioskmode"
 	"chromiumos/tast/local/syslog"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -47,24 +48,17 @@ func init() {
 		// 	"group:complementary",
 		// },
 		SoftwareDeps: []string{"reboot", "chrome"},
-		VarDeps: []string{
-			"ui.signinProfileTestExtensionManifestKey",
-		},
-		Timeout: 2 * time.Minute,
+		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
+		Fixture:      fixture.FakeDMSEnrolled,
+		Timeout:      kioskmode.SetupDuration + kioskmode.LaunchDuration + kioskmode.CleanupDuration + time.Minute,
 		Params: []testing.Param{
 			{
 				Name: "auto_launch",
-				Val: secondaryAppsInstalledParam{
-					autoLaunch: true,
-				},
-				Fixture: fixture.KioskAutoLaunchCleanup,
+				Val:  secondaryAppsInstalledParam{autoLaunch: true},
 			},
 			{
 				Name: "manual_launch",
-				Val: secondaryAppsInstalledParam{
-					autoLaunch: false,
-				},
-				Fixture: fixture.FakeDMSEnrolled,
+				Val:  secondaryAppsInstalledParam{autoLaunch: false},
 				ExtraSearchFlags: []*testing.StringPair{
 					pci.SearchFlag(&policy.DeviceLocalAccounts{}, pci.VerifiedFunctionalityOS),
 				},
@@ -94,15 +88,23 @@ func SecondaryAppsInstalled(ctx context.Context, s *testing.State) {
 			},
 		},
 	}
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, kioskmode.CleanupDuration)
+	defer cancel()
+
+	signinTestExtensionManifestKey := s.RequiredVar("ui.signinProfileTestExtensionManifestKey")
+
 	// Below variables will be initialized depending on the Kiosk launch mode.
 	var kiosk *kioskmode.Kiosk = nil
 	var cr *chrome.Chrome = nil
 	var testConn *chrome.TestConn = nil
 	var err error = nil
 	if param.autoLaunch {
-		kiosk, cr, err = kioskmode.DeprecatedNew(
+		kiosk, cr, err = kioskmode.New(
 			ctx,
 			fdms,
+			signinTestExtensionManifestKey,
 			kioskmode.CustomLocalAccounts(account),
 			kioskmode.AutoLaunch(accountID),
 		)
@@ -110,10 +112,10 @@ func SecondaryAppsInstalled(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to start Chrome in Kiosk mode: ", err)
 		}
 		defer func(ctx context.Context) {
-			if err := kiosk.DeprecatedClose(ctx); err != nil {
+			if err := kiosk.Close(ctx); err != nil {
 				s.Error("Failed to close kiosk: ", err)
 			}
-		}(ctx)
+		}(cleanupCtx)
 
 		testConn, err = cr.TestAPIConn(ctx)
 		if err != nil {
@@ -122,22 +124,21 @@ func SecondaryAppsInstalled(ctx context.Context, s *testing.State) {
 		defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, testConn)
 
 	} else {
-		kiosk, cr, err = kioskmode.DeprecatedNew(
+		kiosk, cr, err = kioskmode.New(
 			ctx,
 			fdms,
+			signinTestExtensionManifestKey,
 			kioskmode.CustomLocalAccounts(account),
-			kioskmode.ExtraChromeOptions(
-				chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
-			),
+			kioskmode.ExtraChromeOptions(chrome.LoadSigninProfileExtension(signinTestExtensionManifestKey)),
 		)
 		if err != nil {
 			s.Fatal("Failed to start Chrome in Kiosk mode: ", err)
 		}
 		defer func(ctx context.Context) {
-			if err := kiosk.DeprecatedClose(ctx); err != nil {
+			if err := kiosk.Close(ctx); err != nil {
 				s.Error("Failed to close kiosk: ", err)
 			}
-		}(ctx)
+		}(cleanupCtx)
 
 		testConn, err = cr.SigninProfileTestAPIConn(ctx)
 		if err != nil {
@@ -154,14 +155,14 @@ func SecondaryAppsInstalled(ctx context.Context, s *testing.State) {
 		if err := kioskmode.LaunchAppManually(ctx, testConn, appName); err != nil {
 			s.Fatal("Failed to start Kiosk application from Sign-in screen: ", err)
 		}
+	}
 
-		if err := kioskmode.WaitLaunchLogs(ctx, reader); err != nil {
-			s.Fatal("There was a problem while checking chrome logs for Kiosk related entries: ", err)
-		}
+	if err := kiosk.WaitLaunchLogs(ctx); err != nil {
+		s.Fatal("Failed to launch Kiosk: ", err)
 	}
 
 	if err := checkSecondaryAppAndExtension(ctx, uiauto.New(testConn)); err != nil {
-		s.Fatal("Failed to check secondary app and extension")
+		s.Fatal("Failed to check secondary app and extension: ", err)
 	}
 }
 
