@@ -897,6 +897,7 @@ func (r *Recorder) startRecording(ctx context.Context) (runCtx context.Context, 
 		r.tpsTimeline, err = perf.NewTimeline(ctx, []perf.TimelineDatasource{
 			perfSrc.NewCPUUsageSource("CPU"),
 			perfSrc.NewThermalDataSource(),
+			perfSrc.NewThermalStateDataSource(true /*ignoreChargerType*/),
 			r.gpuDataSource,
 			perfSrc.NewMemoryDataSource("RAM.Absolute", "RAM.Diff.Absolute", "RAM"),
 		}, perf.Interval(checkInterval), perf.Prefix(tpsMetricPrefix), perf.EnableGracePeriod(), perf.WithCustomStartTime(r.startedAtTm))
