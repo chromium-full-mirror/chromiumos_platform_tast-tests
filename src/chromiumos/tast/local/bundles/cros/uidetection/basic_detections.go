@@ -233,4 +233,13 @@ func BasicDetections(ctx context.Context, s *testing.State) {
 		))(ctx); err != nil {
 		s.Fatal("Failed to perform image-based UI interactions: ", err)
 	}
+
+	startTime := time.Now()
+	detectionTime, err := ud.AccurateTimeElementAppears(ctx, uidetection.Word("Tab"))
+	if err != nil {
+		s.Fatal("Failed to time a basic detection: ", err)
+	}
+	if detectionTime.Before(startTime) {
+		s.Fatal("Timer found that element appeared before it was started")
+	}
 }

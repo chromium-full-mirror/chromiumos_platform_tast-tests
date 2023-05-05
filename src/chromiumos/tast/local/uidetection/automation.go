@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/sync/errgroup"
+
 	"chromiumos/tast/common/action"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/display"
@@ -16,6 +18,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/mouse"
 	"chromiumos/tast/local/chrome/uiauto/touch"
 	"chromiumos/tast/local/coords"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -44,6 +47,8 @@ const (
 	StableScreenshot ScreenshotStrategy = iota
 	ImmediateScreenshot
 )
+
+const maxPollingGoroutines = 5
 
 // Context provides functionalities for image-based UI automation.
 type Context struct {
@@ -314,4 +319,61 @@ func (uda *Context) WaitUntilGone(s *Finder) uiauto.Action {
 	return func(ctx context.Context) error {
 		return testing.Poll(ctx, uda.Gone(s), &uda.pollOpts)
 	}
+}
+
+// TimeElementAppears waits for the specified element to exist, then returns the
+// time when the first successful poll began. This is an approximation of when
+// the element first appeared on the screen.
+func (uda *Context) TimeElementAppears(ctx context.Context, s *Finder) (time.Time, error) {
+	timeout := uda.pollOpts.Timeout
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	for {
+		startTime := time.Now()
+		err := uda.Exists(s)(ctx)
+		if err == nil {
+			return startTime, nil
+		}
+
+		if ctx.Err() != nil {
+			return time.Time{}, errors.Wrapf(err, "%s during a poll with timeout %v; last error follows", ctx.Err(), timeout)
+		}
+	}
+}
+
+// AccurateTimeElementAppears is similar to TimeElementAppears, but provides
+// are more accurate timing by increasing the polling rate.
+func (uda *Context) AccurateTimeElementAppears(ctx context.Context, s *Finder) (time.Time, error) {
+	// Create multiple goroutines to poll for the element.
+	times := make(chan time.Time, maxPollingGoroutines)
+	errs, ctx := errgroup.WithContext(ctx)
+	for i := 0; i < maxPollingGoroutines; i++ {
+		errs.Go(func() error {
+			successTime, err := uda.TimeElementAppears(ctx, s)
+			if err != nil {
+				return err
+			}
+			times <- successTime
+			return nil
+		})
+		// GoBigSleepLint: Stagger requests.
+		testing.Sleep(ctx, uda.pollOpts.Interval)
+	}
+
+	// Wait until all goroutines complete, since even the last goroutine to
+	// complete could have found the element first.
+	if err := errs.Wait(); err != nil {
+		return time.Time{}, err
+	}
+	close(times)
+
+	// Find the earliest time the element was detected between the goroutines.
+	earliestTime := <-times
+	for t := range times {
+		if t.Before(earliestTime) {
+			earliestTime = t
+		}
+	}
+	return earliestTime, nil
 }
