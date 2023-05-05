@@ -345,6 +345,7 @@ var appIMEFlagTests = []string{
 	"app_firefox_emoji.go",
 	"app_gedit_emoji.go",
 	"app_gedit_nonalphanumeric_input.go",
+	"app_firefox_nonalphanumeric_input.go",
 }
 
 func TestAppIMEFlagTestParams(t *testing.T) {

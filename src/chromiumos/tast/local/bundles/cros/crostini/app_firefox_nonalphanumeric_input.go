@@ -8,11 +8,10 @@ import (
 	"context"
 	"time"
 
+	"chromiumos/tast/local/bundles/cros/crostini/crostiniapps"
 	"chromiumos/tast/local/bundles/cros/crostini/imetestutil"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
-	"chromiumos/tast/local/chrome/uiauto/nodewith"
-	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/crostini"
 	"chromiumos/tast/local/terminalapp"
 	"chromiumos/tast/local/uidetection"
@@ -23,9 +22,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AppGeditNonalphanumericInput,
+		Func:         AppFirefoxNonalphanumericInput,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify non-alphanumeric keys (tab, ctrl+c, ctrl+v, arrows, backspace and enter) work in gedit app",
+		Desc:         "Verify non-alphanumeric keys (tab, ctrl+c, ctrl+v, arrows, backspace and enter) work in firefox test webpage",
 		Contacts:     []string{"clumptini@google.com", "sophialin@google.com"},
 		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		SoftwareDeps: []string{"chrome", "vm_host"},
@@ -50,13 +49,15 @@ func init() {
 	})
 }
 
-func AppGeditNonalphanumericInput(ctx context.Context, s *testing.State) {
+func AppFirefoxNonalphanumericInput(ctx context.Context, s *testing.State) {
 	tconn := s.FixtValue().(crostini.FixtureData).Tconn
+	cont := s.FixtValue().(crostini.FixtureData).Cont
 	keyboard := s.FixtValue().(crostini.FixtureData).KB
+	cr := s.FixtValue().(crostini.FixtureData).Chrome
 
-	// Reserve time for clean-up tasks.
+	// Use a shortened context for test operations to reserve time for cleanup.
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 15*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
 
 	// Open Terminal app.
@@ -66,39 +67,21 @@ func AppGeditNonalphanumericInput(ctx context.Context, s *testing.State) {
 	}
 	defer terminalApp.Exit(keyboard)(cleanupCtx)
 
-	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
-
-	const testFile = "test.txt"
+	// Since defers are executed in a stack, this needs to be the last defer so it doesn't close the window before dumping the tree.
+	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree")
 
 	ui := uiauto.New(tconn)
 	uda := uidetection.NewDefault(tconn)
-	appWindow := nodewith.NameStartingWith(testFile).Role(role.Window).First()
 
-	if err := uiauto.Combine("Open file with Gedit via the terminal",
-		// Launch Gedit.
-		terminalApp.RunCommand(keyboard, "gedit "+testFile),
-		// Sometimes the first character gets lost if input is entered immediately.
-		// Wait until the menu exists, indicating the window is launched.
-		uda.WaitUntilExists(uidetection.Word("Open").WithinA11yNode(appWindow)),
-		ui.LeftClick(appWindow),
-	)(ctx); err != nil {
-		s.Fatal("Failed to open gedit: ", err)
+	if err := crostiniapps.LaunchFirefoxWithTestPage(ctx, uda, ui, cont, terminalApp, keyboard); err != nil {
+		s.Fatal("Failed to create Firefox test page: ", err)
 	}
 
-	// Test basic string editing using non-alphanumeric keys.
-	if err := imetestutil.TestEditorInputActions(ctx, keyboard, tconn); err != nil {
-		s.Fatal("Failed to type and do basic editing on string: ", err)
+	if err := imetestutil.TestFirefoxInputActions(ctx, keyboard, tconn); err != nil {
+		s.Fatal("Failed to type and edit string: ", err)
 	}
 
-	if err := uiauto.Combine("Close gedit",
-		// Save the file.
-		keyboard.AccelAction("ctrl+S"),
-		// Press ctrl+W twice to exit window.
-		keyboard.AccelAction("ctrl+W"),
-		keyboard.AccelAction("ctrl+W"),
-		// Check window close.
-		ui.WaitUntilGone(appWindow),
-	)(ctx); err != nil {
-		s.Fatal("Failed to open file in gedit: ", err)
+	if err := crostiniapps.CloseFirefoxTestPage(ctx, ui, cont, keyboard); err != nil {
+		s.Fatal("Failed to close firefox: ", err)
 	}
 }

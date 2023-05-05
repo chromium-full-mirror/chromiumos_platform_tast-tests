@@ -146,7 +146,7 @@ func testUseIMEInFirefox(ctx context.Context, terminalApp *terminalapp.TerminalA
 		return errors.Wrap(err, "failed to enter test string Firefox")
 	}
 
-	if err := crostiniapps.CheckInputViaClipboard(ctx, keyboard, tconn, imeData.ExpectedText); err != nil {
+	if err := imetestutil.CheckInputViaClipboard(ctx, keyboard, tconn, imeData.ExpectedText); err != nil {
 		return err
 	}
 

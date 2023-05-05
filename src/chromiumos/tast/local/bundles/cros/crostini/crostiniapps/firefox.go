@@ -21,10 +21,12 @@ import (
 	"go.chromium.org/tast/core/errors"
 )
 
-// Firefox test page content. Contains a single input box which is focused upon launch for user input.
+// Firefox test page content. Contains a single input box which is focused upon launch for user input. The test page contains two input boxes to test tab behaviour.
 const html = `<!DOCTYPE html>
 <title>Crostini Firefox Input Test Page</title>
-<input style="width: 100%" autofocus/>
+<textarea style="width: 100%" autofocus></textarea>
+<br>
+<input style="width: 100%" />
 `
 
 // Slower devices could take up to a minute to start Firefox.
