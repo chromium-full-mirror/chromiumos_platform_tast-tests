@@ -18,7 +18,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/kioskmode"
-	"chromiumos/tast/local/policyutil/fixtures"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -40,28 +40,25 @@ func init() {
 			"group:complementary",
 		},
 		SoftwareDeps: []string{"reboot", "chrome"},
-		VarDeps: []string{
-			"ui.signinProfileTestExtensionManifestKey",
-		},
-		Params: []testing.Param{{
-			Name: "ash",
-			Val: kioskmode.TestData{
-				IsLacros: false,
-			},
-		}, {
-			Name: "lacros",
-			Val: kioskmode.TestData{
-				IsLacros: true,
-				Policies: []policy.Policy{
-					&policy.LacrosAvailability{Val: "lacros_only"},
+		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
+		Params: []testing.Param{
+			{
+				Name: "ash",
+				Val:  kioskmode.TestData{IsLacros: false},
+			}, {
+				Name: "lacros",
+				Val: kioskmode.TestData{
+					IsLacros: true,
+					Policies: []policy.Policy{
+						&policy.LacrosAvailability{Val: "lacros_only"},
+					},
 				},
+				ExtraSoftwareDeps: []string{"lacros"},
 			},
-			ExtraSoftwareDeps: []string{"lacros"},
-		}},
-		Fixture: fixture.FakeDMSEnrolled,
-		SearchFlags: []*testing.StringPair{
-			pci.SearchFlag(&policy.LacrosAvailability{}, pci.VerifiedFunctionalityOS),
 		},
+		Fixture:     fixture.FakeDMSEnrolled,
+		Timeout:     kioskmode.SetupDuration + kioskmode.LaunchDuration + kioskmode.CleanupDuration,
+		SearchFlags: []*testing.StringPair{pci.SearchFlag(&policy.LacrosAvailability{}, pci.VerifiedFunctionalityOS)},
 	})
 }
 
@@ -72,15 +69,21 @@ const (
 
 func LaunchErrorMetrics(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
-	chromeOptions := chrome.ExtraArgs("--kiosk-splash-screen-min-time-seconds=60")
 	param := s.Param().(kioskmode.TestData)
-	kiosk, cr, err := kioskmode.DeprecatedNew(
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, kioskmode.CleanupDuration)
+	defer cancel()
+
+	signinTestExtensionManifestKey := s.RequiredVar("ui.signinProfileTestExtensionManifestKey")
+
+	kiosk, cr, err := kioskmode.New(
 		ctx,
 		fdms,
-		kioskmode.DefaultLocalAccounts(),
+		signinTestExtensionManifestKey,
 		kioskmode.ExtraChromeOptions(
-			chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
-			chromeOptions,
+			chrome.LoadSigninProfileExtension(signinTestExtensionManifestKey),
+			chrome.ExtraArgs("--kiosk-splash-screen-min-time-seconds=60"),
 		),
 		kioskmode.PublicAccountPolicies(kioskmode.KioskAppAccountID, param.Policies),
 	)
@@ -88,10 +91,10 @@ func LaunchErrorMetrics(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start Chrome in Kiosk mode: ", err)
 	}
 	defer func(ctx context.Context) {
-		if err := kiosk.DeprecatedClose(ctx); err != nil {
-			s.Error("Failed to close kiosk: ", err)
+		if err := kiosk.Close(ctx); err != nil {
+			s.Error("Failed to close Kiosk: ", err)
 		}
-	}(ctx)
+	}(cleanupCtx)
 
 	testConn, err := cr.SigninProfileTestAPIConn(ctx)
 	if err != nil {
@@ -111,23 +114,23 @@ func LaunchErrorMetrics(ctx context.Context, s *testing.State) {
 	// kioskmode.KioskAppBtnNode the UI element froze. I was not able to find
 	// out how to overcome flakiness other than using sleep before interacting
 	// with UI.
+	// GoBigSleepLint: TODO(b/280952514) apps button needs some time.
 	testing.Sleep(ctx, 3*time.Second)
 
 	if err := kioskmode.StartFromSignInScreen(ctx, ui, kioskmode.KioskAppBtnName); err != nil {
 		s.Fatal("Failed to start Kiosk application from Sign-in screen: ", err)
 	}
 
-	// No way to check if it's really a lacros/non-lacros launch, since the kiosk session is getting cancelled immediately.
-
-	// Sign-in profile extension is needed to check the error message on the UI.
+	// Note: we can't verify if ash or lacros was launched, since we cancel the launch immediately.
 	cr, err = kiosk.CancelKioskLaunch(
 		ctx,
 		chrome.NoLogin(),
 		chrome.DMSPolicy(fdms.URL),
-		chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
-		chrome.KeepState())
+		chrome.LoadSigninProfileExtension(signinTestExtensionManifestKey),
+		chrome.KeepState(),
+	)
 	if err != nil {
-		s.Fatal("Failed to connect to new chrome instance: ", err)
+		s.Fatal("Failed to connect to new Chrome instance: ", err)
 	}
 
 	testConn, err = cr.SigninProfileTestAPIConn(ctx)
@@ -136,21 +139,11 @@ func LaunchErrorMetrics(ctx context.Context, s *testing.State) {
 	}
 	ui = uiauto.New(testConn)
 	if err := ui.WaitUntilExists(nodewith.Name("Kiosk application launch canceled."))(ctx); err != nil {
-		s.Fatal("Launch cancelled message did not appear: ", err)
+		s.Fatal("Failed to find launch cancelled message: ", err)
 	}
 
 	if err := verifyLaunchErrorHistogram(ctx, testConn, oldHistogram); err != nil {
 		s.Fatal("Failed to verify launch error histogram: ", err)
-	}
-
-	// Restart Chrome into regular user session to do cleanup. Policy refresh
-	// doesn't work on the login screen, and it will fail during cleanup.
-	if _, err := kiosk.RestartChromeWithOptions(
-		ctx,
-		chrome.FakeLogin(chrome.Creds{User: fixtures.Username, Pass: fixtures.Password}), // Required as refreshing policies require test API.
-		chrome.DMSPolicy(fdms.URL),
-		chrome.KeepState()); err != nil {
-		s.Fatal("Failed to prepare for cleanup: ", err)
 	}
 }
 
