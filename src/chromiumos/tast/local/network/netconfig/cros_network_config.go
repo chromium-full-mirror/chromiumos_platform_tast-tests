@@ -18,6 +18,7 @@ import (
 type CrosNetworkConfig struct {
 	conn       *chrome.Conn
 	mojoRemote *chrome.JSObject
+	isLoggedIn bool
 }
 
 // CreateOobeCrosNetworkConfig creates a connection to cros_network_config
@@ -28,7 +29,7 @@ func CreateOobeCrosNetworkConfig(ctx context.Context, cr *chrome.Chrome) (*CrosN
 		return nil, errors.Wrap(err, "failed to open connection with oobe")
 	}
 
-	return NewCrosNetworkConfig(ctx, oobeConn)
+	return NewCrosNetworkConfig(ctx, oobeConn, false /* isLoggedIn */)
 }
 
 // CreateLoggedInCrosNetworkConfig creates a connection to cros_network_config
@@ -39,25 +40,34 @@ func CreateLoggedInCrosNetworkConfig(ctx context.Context, cr *chrome.Chrome) (*C
 		return nil, errors.Wrap(err, "failed to open network tab")
 	}
 
-	return NewCrosNetworkConfig(ctx, conn)
+	return NewCrosNetworkConfig(ctx, conn, true /* isLoggedIn */)
 }
 
 // NewCrosNetworkConfig creates a connection to cros_network_config that allows
 // to make mojo calls. It receives a connection where it is possible to create
 // a mojo connection to cros_network_config.
-func NewCrosNetworkConfig(ctx context.Context, conn *chrome.Conn) (*CrosNetworkConfig, error) {
+func NewCrosNetworkConfig(ctx context.Context, conn *chrome.Conn, isLoggedIn bool) (*CrosNetworkConfig, error) {
 	var mojoRemote chrome.JSObject
 	if err := conn.Call(ctx, &mojoRemote, crosNetworkConfigJs); err != nil {
 		return nil, errors.Wrap(err, "failed to set up the network mojo API")
 	}
 
-	return &CrosNetworkConfig{conn, &mojoRemote}, nil
+	return &CrosNetworkConfig{
+		conn:       conn,
+		mojoRemote: &mojoRemote,
+		isLoggedIn: isLoggedIn,
+	}, nil
 }
 
 // Close cleans up the injected javascript.
 func (c *CrosNetworkConfig) Close(ctx context.Context) error {
 	if err := c.mojoRemote.Release(ctx); err != nil {
 		return err
+	}
+	if c.isLoggedIn {
+		if err := c.conn.CloseTarget(ctx); err != nil {
+			return err
+		}
 	}
 	return c.conn.Close()
 }
