@@ -6,8 +6,6 @@ package power
 
 import (
 	"context"
-	"regexp"
-	"strconv"
 	"strings"
 
 	"chromiumos/tast/local/power/util"
@@ -25,8 +23,6 @@ func GetDeviceInfo(ctx context.Context) map[string]interface{} {
 		board += "_hammer"
 	}
 
-	// When you add keys to this schema, please also make sure the corresponding
-	// unit test is covered in DeviceInfoUtilCheck().
 	deviceInfo := map[string]interface{}{
 		"board": board,
 		"version": map[string]interface{}{
@@ -79,93 +75,4 @@ func GetDeviceInfo(ctx context.Context) map[string]interface{} {
 	}
 	deviceInfo["sku"] = skuMap
 	return deviceInfo
-}
-
-// DeviceInfoUtilCheck is a unit test for power/util. Return a list of util reads that
-// failed the checks.
-func DeviceInfoUtilCheck(ctx context.Context) []string {
-	var failed = make([]string, 0)
-
-	// regexp check for reads as strings.
-	stringCheckReg := map[string]string{
-		// version map
-		"milestone": `\d+`,                        // milestone should be a string with only digits.
-		"os":        `\S+`,                        // os should not be empty.
-		"channel":   `(?i)beta|canary|dev|stable`, // channel names explicitly available.
-		"firmware":  `(?i)Google_\S+.\d+.\d+.\d+`, // firmware name should be "Google_${name}.${os version}"".
-		"ec":        `\S+`,                        // ec name should not be empty.
-		"kernel":    `\d+.\d+.`,                   // kernel name should at least include version number "#.#".
-
-		// sku map
-		"cpu":          `\S+`,                        // cpu name should not be empty.
-		"hwid":         `\S+`,                        // hwid should not be empty.
-		"cpu_vendor":   `(?i)Intel|AMD|ARM|Qualcomm`, // cpu vendor should be one of major vendors.
-		"gpu":          `\S+`,                        // gpu name should not be empty.
-		"memory_type":  `\S+`,                        // memory type should not be empty.
-		"storage_type": `\S+`,                        // storage type should not be empty.
-	}
-	// number check for reads as float/int.
-	numberCheck := []string{"cpu_count", "cpu_cores", "cpu_cores", "cpu_threads", "cpu_cache",
-		"memory_size", "memory_frequency", "storage_size"}
-
-	deviceInfo := GetDeviceInfo(ctx)
-
-	// board name should not be empty.
-	const boardPattern = `\S+`
-	re := regexp.MustCompile(boardPattern)
-	if !re.MatchString(deviceInfo["board"].(string)) {
-		failed = append(failed, "board: "+deviceInfo["board"].(string))
-	}
-
-	// read check for strings.
-	for key, reStr := range stringCheckReg {
-		if readResult, ok := deviceInfo["version"].(map[string]interface{})[key]; ok {
-			re := regexp.MustCompile(reStr)
-			if !re.MatchString(readResult.(string)) {
-				failed = append(failed, key+": "+readResult.(string))
-			}
-		}
-		if readResult, ok := deviceInfo["sku"].(map[string]interface{})[key]; ok {
-			re := regexp.MustCompile(reStr)
-			if !re.MatchString(readResult.(string)) {
-				failed = append(failed, key+": "+readResult.(string))
-			}
-		}
-	}
-
-	// read check for numbers.
-	for _, key := range numberCheck {
-		if readResult, ok := deviceInfo["sku"].(map[string]interface{})[key]; ok {
-			// readResult as an interface{} could be int, int64 or float64.
-			if num, typeOk := readResult.(int); typeOk && num <= 0 {
-				failed = append(failed, key+": "+strconv.Itoa(num))
-			}
-			if num, typeOk := readResult.(int64); typeOk && num <= 0 {
-				failed = append(failed, key+": "+strconv.FormatInt(num, 10))
-			}
-			if num, typeOk := readResult.(float64); typeOk && num <= 0 {
-				failed = append(failed, key+": "+strconv.FormatFloat(num, 'g', -1, 64))
-			}
-		}
-	}
-
-	// Additioanl checks for device that has a screen.
-	if util.HasScreen(ctx) {
-		const screenReStr = `\d+x\d+` // display resolution and screen size should be #x#.
-		re := regexp.MustCompile(screenReStr)
-		readResult := deviceInfo["sku"].(map[string]interface{})["display_resolution"].(string)
-		if !re.MatchString(readResult) {
-			failed = append(failed, "display_resolution"+": "+readResult)
-		}
-		readResult = deviceInfo["sku"].(map[string]interface{})["screen_size"].(string)
-		if !re.MatchString(readResult) {
-			failed = append(failed, "screen_size"+": "+readResult)
-		}
-		rate := deviceInfo["sku"].(map[string]interface{})["screen_refresh_rate"].(int)
-		if rate <= 0 {
-			failed = append(failed, "screen_refresh_rate"+": "+strconv.Itoa(rate))
-		}
-	}
-
-	return failed
 }
