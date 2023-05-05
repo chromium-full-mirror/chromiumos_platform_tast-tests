@@ -6,7 +6,9 @@ package hwsec
 
 import (
 	"context"
+	"math"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -464,6 +466,11 @@ func ensurePINLockedOut(ctx context.Context, testUser string, cryptohomeClient *
 			if authIntent == uda.AuthIntent_AUTH_INTENT_DECRYPT {
 				return errors.New("PIN not locked when it should have been")
 			}
+		}
+
+		var statusInfo = pinAuthFactor.StatusInfo
+		if statusInfo.TimeAvailableIn != math.MaxUint64 {
+			return errors.New("Pin not locked for indefinite amount of time, available in " + strconv.FormatUint(statusInfo.TimeAvailableIn, 10))
 		}
 		return nil
 	}
