@@ -25,6 +25,7 @@ import (
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/terminalapp"
 	"chromiumos/tast/local/vm"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
