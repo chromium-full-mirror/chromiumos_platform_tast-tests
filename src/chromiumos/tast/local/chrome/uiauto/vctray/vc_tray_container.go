@@ -9,10 +9,11 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"context"
-	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/testing"
 	"strings"
 	"time"
+
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // DevType represents the AV device type.
@@ -26,22 +27,32 @@ const (
 )
 
 // AVState represents the state of VC device state indicated in vcTray.
-type AVState int
+type AVState string
 
 // Available options of AVState.
 const (
-	DeviceDisabled AVState = iota
-	DeviceAvailable
-	DeviceInUse
-	DeviceUnknownState // Should only be used on error.
+	DeviceDisabled     AVState = "disabled"
+	DeviceAvailable            = "available"
+	DeviceInUse                = "in use"
+	DeviceHidden               = "hidden"
+	DeviceUnknownState         = "unknown" // Should only be used on error.
 )
 
 func devFinder(devName DevType) *nodewith.Finder {
-	return nodewith.Role(role.ToggleButton).NameStartingWith(`Toggle ` + string(devName)).Ancestor(vcTraySection)
+	if devName == DevScreen {
+		return nodewith.Role(role.ToggleButton).NameContaining(string(devName)).Ancestor(vcTraySection)
+	}
+	return nodewith.Role(role.ToggleButton).NameContaining(`Toggle ` + string(devName)).Ancestor(vcTraySection)
 }
 
 // DevState returns the current state of a certain av device.
 func (vcTray VCTray) DevState(ctx context.Context, devName DevType) (AVState, error) {
+	if isNodeFound, err := vcTray.ui.IsNodeFound(ctx, devFinder(devName)); err != nil {
+		return DeviceUnknownState, errors.Wrapf(err, "failed to check %v", devFinder(devName))
+	} else if !isNodeFound {
+		return DeviceHidden, nil
+	}
+
 	nodeInfo, err := vcTray.ui.Info(ctx, devFinder(devName))
 	if err != nil {
 		return DeviceUnknownState, errors.Wrap(err, "failed to get node info")

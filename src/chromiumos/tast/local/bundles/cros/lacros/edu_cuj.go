@@ -13,6 +13,7 @@ import (
 	"chromiumos/tast/local/chrome/lacros"
 	"chromiumos/tast/local/chrome/lacros/lacrosfaillog"
 	"chromiumos/tast/local/chrome/uiauto/cws"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -57,18 +58,9 @@ func EduCUJ(ctx context.Context, s *testing.State) {
 	defer lacrosfaillog.SaveIf(cleanupCtx, tconn, s.HasError)
 	// Extensions in cws will be installed.
 	apps := []cws.App{
-		{
-			Name: "Read&Write",
-			URL:  "https://chrome.google.com/webstore/detail/readwrite-for-google-chro/inoeonmfapjbbkmdafoankkfajkcphgd",
-		},
-		{
-			Name: "Kami",
-			URL:  "https://chrome.google.com/webstore/detail/kami-for-google-chrome/ecnphlgnajanjnkcmbpancdjoidceilk",
-		},
-		{
-			Name: "Screencastify",
-			URL:  "https://chrome.google.com/webstore/detail/screencastify-screen-vide/mmeijimgabbpbgpdklnllpncmdofkcpn",
-		},
+		cws.ReadAndWrite,
+		cws.Kami,
+		cws.Screencastify,
 	}
 	// Install the the extensions above.
 	for _, app := range apps {

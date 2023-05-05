@@ -13,3 +13,13 @@ const (
 	LaunchAppInWeb LaunchAppType = iota
 	LaunchAppInPWA
 )
+
+// TrayTriggerType represents the media device to trigger vcTray.
+type TrayTriggerType int
+
+// Media device types to trigger vcTray.
+const (
+	MicTrigger TrayTriggerType = iota
+	CamTrigger
+	ScreenTrigger
+)

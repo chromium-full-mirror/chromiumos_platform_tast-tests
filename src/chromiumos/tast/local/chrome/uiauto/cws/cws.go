@@ -16,6 +16,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -139,4 +140,22 @@ func UninstallApp(ctx context.Context, br *browser.Browser, tconn *chrome.TestCo
 		ui.DoDefault(nodewith.Role(role.Button).Name("Remove from Chrome").First()),
 		ui.LeftClick(nodewith.Role(role.Button).Name("Remove")),
 	)(ctx)
+}
+
+// Screencastify is one of the popular extensions for screen video recorder.
+var Screencastify = App{
+	Name: "Screencastify",
+	URL:  "https://chrome.google.com/webstore/detail/screencastify-screen-vide/mmeijimgabbpbgpdklnllpncmdofkcpn",
+}
+
+// Kami extension for Google Chrome.
+var Kami = App{
+	Name: "Kami",
+	URL:  "https://chrome.google.com/webstore/detail/kami-for-google-chrome/ecnphlgnajanjnkcmbpancdjoidceilk",
+}
+
+// ReadAndWrite represents the "Read&Write" extension for Google Chrome.
+var ReadAndWrite = App{
+	Name: "Read&Write",
+	URL:  "https://chrome.google.com/webstore/detail/readwrite-for-google-chro/inoeonmfapjbbkmdafoankkfajkcphgd",
 }

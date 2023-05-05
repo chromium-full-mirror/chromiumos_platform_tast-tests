@@ -12,3 +12,9 @@ import (
 
 // AddressBarFinder represents the address bar node finder.
 var AddressBarFinder = nodewith.HasClass("OmniboxViewViews").Role(role.TextField)
+
+// ExtensionsToolbarButton represents the extensions button in browser bar.
+var ExtensionsToolbarButton = nodewith.Name("Extensions").Role(role.PopUpButton).HasClass("ExtensionsToolbarButton")
+
+// ExtensionPopupRootView represents the extension popup root window.
+var ExtensionPopupRootView = nodewith.Role(role.WebView).HasClass("ExtensionViewViews").First()

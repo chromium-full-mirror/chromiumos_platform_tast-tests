@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"chromiumos/tast/local/bundles/cros/videoconferencing/common"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/apps/thirdparty/zoom"
 	"chromiumos/tast/local/chrome/browser"
@@ -20,14 +21,6 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
-)
-
-type triggerType int
-
-const (
-	micTrigger triggerType = iota
-	camTrigger
-	screenTrigger
 )
 
 func init() {
@@ -49,34 +42,34 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name:    "screen",
-				Val:     screenTrigger,
+				Val:     common.ScreenTrigger,
 				Fixture: fixture.GAIALoggedInWithFakeHALAndEffectsEnabled,
 			},
 			{
 				Name:              "screen_lacros",
-				Val:               screenTrigger,
+				Val:               common.ScreenTrigger,
 				ExtraSoftwareDeps: []string{"lacros"},
 				Fixture:           fixture.GAIALoggedInLacrosWithFakeHALAndEffectsEnabled,
 			},
 			{
 				Name:    "mic",
-				Val:     micTrigger,
+				Val:     common.MicTrigger,
 				Fixture: fixture.GAIALoggedInWithFakeHALAndEffectsEnabled,
 			},
 			{
 				Name:              "mic_lacros",
-				Val:               micTrigger,
+				Val:               common.MicTrigger,
 				ExtraSoftwareDeps: []string{"lacros"},
 				Fixture:           fixture.GAIALoggedInLacrosWithFakeHALAndEffectsEnabled,
 			},
 			{
 				Name:    "cam",
-				Val:     camTrigger,
+				Val:     common.CamTrigger,
 				Fixture: fixture.GAIALoggedInWithFakeHALAndEffectsEnabled,
 			},
 			{
 				Name:              "cam_lacros",
-				Val:               camTrigger,
+				Val:               common.CamTrigger,
 				ExtraSoftwareDeps: []string{"lacros"},
 				Fixture:           fixture.GAIALoggedInLacrosWithFakeHALAndEffectsEnabled,
 			},
@@ -121,12 +114,12 @@ func TrayTriggers(ctx context.Context, s *testing.State) {
 	}
 
 	// Verify different triggers.
-	switch s.Param().(triggerType) {
-	case camTrigger:
+	switch s.Param().(common.TrayTriggerType) {
+	case common.CamTrigger:
 		verifyCameraTrigger(ctx, s, zm, vcTray)
-	case micTrigger:
+	case common.MicTrigger:
 		verifyMicTrigger(ctx, s, zm, vcTray)
-	case screenTrigger:
+	case common.ScreenTrigger:
 		verifyScreenTrigger(ctx, s, br, zm, vcTray)
 	}
 
