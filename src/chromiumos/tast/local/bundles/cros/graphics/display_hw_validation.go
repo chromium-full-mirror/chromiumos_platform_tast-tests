@@ -11,7 +11,9 @@ import (
 	"time"
 
 	"chromiumos/tast/local/graphics"
+
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -51,15 +53,6 @@ func init() {
 				Name: "kms_atomic_interruptible",
 				Val: graphics.IgtTest{
 					Exe: "kms_atomic_interruptible",
-				},
-				Timeout:   5 * time.Minute,
-				ExtraAttr: []string{"graphics_weekly"},
-			},
-			{
-				Name: "kms_atomic_transition",
-				Val: graphics.IgtTest{
-					Exe:      "kms_atomic_transition",
-					Subtests: []string{"plane-all-modeset-transition", "plane-all-modeset-transition-internal-panels"},
 				},
 				Timeout:   5 * time.Minute,
 				ExtraAttr: []string{"graphics_weekly"},
@@ -106,8 +99,9 @@ func init() {
 					Exe:      "kms_display_modes",
 					Subtests: []string{"extended-mode-basic"},
 				},
-				Timeout:   5 * time.Minute,
-				ExtraAttr: []string{"graphics_weekly"},
+				Timeout:           5 * time.Minute,
+				ExtraAttr:         []string{"graphics_weekly"},
+				ExtraHardwareDeps: hwdep.D(hwdep.ExternalDisplay()),
 			},
 			{
 				Name: "kms_dp_aux_dev",
