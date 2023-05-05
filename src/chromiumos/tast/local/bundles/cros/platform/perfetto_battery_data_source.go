@@ -63,6 +63,10 @@ func PerfettoBatteryDataSource(ctx context.Context, s *testing.State) {
 	s.Log("Battery counters: ", batt)
 
 	status, err := power.GetStatus(ctx)
+	if err != nil {
+		s.Log("Skipped validation of battery counters: failed to get power status: ", err)
+		return
+	}
 	// Battery is not always available (e.g. on VM). Skip validation if the device is equipped with a battery.
 	if !status.BatteryPresent {
 		s.Log("Skipped validation of battery counters: battery is not present")
