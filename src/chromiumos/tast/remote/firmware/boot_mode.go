@@ -732,6 +732,7 @@ func (ms *ModeSwitcher) FwScreenToNormalMode(ctx context.Context, opts ...ModeSw
 		return errors.Wrap(err, "requiring servo")
 	}
 	testing.ContextLogf(ctx, "Sleeping %s (FirmwareScreen)", h.Config.FirmwareScreen)
+	// GoBigSleepLint: Sleeping for model specific time.
 	if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
 		return errors.Wrapf(err, "sleeping for %s (FirmwareScreen) to wait for INSERT screen", h.Config.FirmwareScreen)
 	}
@@ -746,6 +747,7 @@ func (ms *ModeSwitcher) FwScreenToNormalMode(ctx context.Context, opts ...ModeSw
 				return errors.Wrap(err, "pressing SPACE on firmware screen while disabling dev mode")
 			}
 			testing.ContextLogf(ctx, "Sleeping %s (KeypressDelay)", h.Config.KeypressDelay)
+			// GoBigSleepLint: Sleeping for model specific time.
 			if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
 				return errors.Wrapf(err, "sleeping for %s (KeypressDelay) while disabling dev mode", h.Config.KeypressDelay)
 			}
@@ -754,6 +756,7 @@ func (ms *ModeSwitcher) FwScreenToNormalMode(ctx context.Context, opts ...ModeSw
 				return errors.Wrap(err, "pressing Enter on firmware screen while disabling dev mode")
 			}
 			testing.ContextLogf(ctx, "Sleeping %s (KeypressDelay)", h.Config.KeypressDelay)
+			// GoBigSleepLint: Sleeping for model specific time.
 			if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
 				return errors.Wrapf(err, "sleeping for %s (KeypressDelay) while disabling dev mode", h.Config.KeypressDelay)
 			}
@@ -771,6 +774,7 @@ func (ms *ModeSwitcher) FwScreenToNormalMode(ctx context.Context, opts ...ModeSw
 				return errors.Wrap(err, "pressing Ctrl-S on firmware screen while disabling dev mode")
 			}
 			testing.ContextLogf(ctx, "Sleeping %s (KeypressDelay)", h.Config.KeypressDelay)
+			// GoBigSleepLint: Sleeping for model specific time.
 			if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
 				return errors.Wrapf(err, "sleeping for %s (KeypressDelay) while disabling dev mode", h.Config.KeypressDelay)
 			}
@@ -790,12 +794,14 @@ func (ms *ModeSwitcher) FwScreenToNormalMode(ctx context.Context, opts ...ModeSw
 			if err := h.Servo.SetInt(ctx, servo.VolumeUpHold, 100); err != nil {
 				return errors.Wrap(err, "changing menu selection to 'Enable Root Verification'")
 			}
+			// GoBigSleepLint: Sleeping for model specific time.
 			if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
 				return errors.Wrapf(err, "sleeping for %s (KeypressDelay) while disabling dev mode", h.Config.KeypressDelay)
 			}
 			if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.DurTab); err != nil {
 				return errors.Wrap(err, "selecting menu option 'Enable Root Verification'")
 			}
+			// GoBigSleepLint: Sleeping for model specific time.
 			if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
 				return errors.Wrapf(err, "sleeping for %s (KeypressDelay) while disabling dev mode", h.Config.KeypressDelay)
 			}
@@ -870,6 +876,7 @@ func (ms *ModeSwitcher) FwScreenToDevMode(ctx context.Context, reconnTimeout tim
 				return err
 			}
 			testing.ContextLogf(ctx, "Sleeping %s (KeypressDelay)", h.Config.KeypressDelay)
+			// GoBigSleepLint: Sleeping for model specific time.
 			if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
 				return err
 			}
@@ -879,9 +886,22 @@ func (ms *ModeSwitcher) FwScreenToDevMode(ctx context.Context, reconnTimeout tim
 					return err
 				}
 			} else if h.Config.PowerButtonDevSwitch {
+				// GoBigSleepLint: Frequent presses of the power key might power off the dut accidentally.
+				// Add a short delay to ensure that it doesn't get enforced at the wrong time, for example,
+				// on the "OS verification is OFF" screen, or when the dut is already past the firmware
+				// screens, and on the way to ChromeOS.
+				if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+					return err
+				}
 				testing.ContextLog(ctx, "Pressing power key")
 				if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.DurPress); err != nil {
 					return err
+				}
+				// For wilco devices, pressing the power button twice on the welcome page will power-off the DUT.
+				// Press esc key to cancel the power menu so that the dut won't get powered off accidentally.
+				testing.ContextLog(ctx, "Pressing esc key")
+				if err := h.Servo.PressKey(ctx, "<esc>", servo.DurTab); err != nil {
+					return errors.Wrap(err, "failed to press the esc key")
 				}
 			} else {
 				testing.ContextLog(ctx, "Pressing enter key")
@@ -912,12 +932,14 @@ func (ms *ModeSwitcher) FwScreenToDevMode(ctx context.Context, reconnTimeout tim
 		if err := h.Servo.SetInt(ctx, servo.VolumeUpDownHold, 100); err != nil {
 			return errors.Wrap(err, "triggering TO_DEV screen")
 		}
+		// GoBigSleepLint: Sleeping for model specific time.
 		if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
 			return errors.Wrapf(err, "sleeping for %s (KeypressDelay) to confirm triggering TO_DEV screen", h.Config.KeypressDelay)
 		}
 		if err := h.Servo.SetInt(ctx, servo.VolumeUpHold, 100); err != nil {
 			return errors.Wrap(err, "changing menu selection to 'Confirm enabling developer mode' on TO_DEV screen")
 		}
+		// GoBigSleepLint: Sleeping for model specific time.
 		if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
 			return errors.Wrapf(err, "sleeping for %s (KeypressDelay) to confirm changing menu selection on TO_DEV screen", h.Config.KeypressDelay)
 		}
