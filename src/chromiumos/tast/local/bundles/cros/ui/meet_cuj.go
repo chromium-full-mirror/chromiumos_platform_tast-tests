@@ -1616,6 +1616,12 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 	// Before recording the metrics, check if there is any tab crashed.
 	assertTabActive(ctx)
 
+	// Sometimes the nodes on the background window cannot be found.
+	// Activate the window to download the dump from the WebRTC-internals window.
+	if err := webRTCInternalsWindow.ActivateWindow(ctx, tconn); err != nil {
+		s.Fatal("Failed to activate the WebRTC-internals window: ", err)
+	}
+
 	// Report info from chrome://webrtc-internals.
 	webRTCUI := ui.WithTimeout(10 * time.Minute)
 	if path, err := dumpWebRTCInternals(ctx, tconn, webRTCUI, cr.NormalizedUser()); err != nil {
@@ -1623,9 +1629,6 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 		// Take a screenshot with the chrome://webrtc-internals tab in
 		// the foreground, to facilitate investigation of b/255343902.
 		// TODO(b/255343902): Remove this when the bug is fixed.
-		if err := webRTCInternalsWindow.ActivateWindow(ctx, tconn); err != nil {
-			s.Log("Failed to activate the WebRTC Internals window: ", err)
-		}
 		recorder.CustomScreenshot(ctx)
 	} else {
 		dump, readErr := os.ReadFile(path)
@@ -1646,6 +1649,11 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 				pv.Merge(webRTCInternalsPV)
 			}
 		}
+	}
+
+	// Activate the Meet window to clean up browser zoom and effect settings.
+	if err := meetWindow.ActivateWindow(ctx, tconn); err != nil {
+		s.Fatal("Failed to activate the Meet window: ", err)
 	}
 
 	// Reset the browser zoom, because the browser retains the zoom
@@ -1740,6 +1748,9 @@ func dumpWebRTCInternals(ctx context.Context, tconn *chrome.TestConn, ui *uiauto
 
 	waitForDownloadButton := ui.WithTimeout(5 * time.Second).WaitUntilExists(webRTCDownloadButton)
 	if err := uiauto.Combine("invoke the button for the dump download",
+		// Wait for |createDumpSection| node to appear to ensure
+		// the following UI operations can be successfully applied.
+		ui.WaitUntilExists(createDumpSection),
 		uiauto.IfFailThen(
 			waitForDownloadButton,
 			ui.DoDefaultUntil(createDumpSection, waitForDownloadButton),
