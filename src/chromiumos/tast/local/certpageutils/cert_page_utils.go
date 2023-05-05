@@ -95,6 +95,16 @@ func CopyToDownloads(downloadsPath, fileDataPath, fileName string) (retErr error
 	return nil
 }
 
+// RemoveFromDownloads removes file with `fileName` from the Downloads
+// directory, so Downloads can be cleaned up after the test.
+func RemoveFromDownloads(downloadsPath, fileDataPath, fileName string) (retErr error) {
+	filePath := filepath.Join(downloadsPath, fileName)
+	if err := os.Remove(filePath); err != nil {
+		return errors.Wrapf(err, "failed to remove file %s ", fileName)
+	}
+	return nil
+}
+
 // ImportCACert uses the Import button on the chrome://settings/certificates
 // page to manually import `caCertFileName` file to CA certificates.
 func ImportCACert(ctx context.Context, ui *uiauto.Context, caCertFileName string) (retErr error) {
@@ -119,10 +129,10 @@ func ImportCACert(ctx context.Context, ui *uiauto.Context, caCertFileName string
 	return nil
 }
 
-// ImportClientCert uses the Import and Bind button on the
+// ImportClientCertImpl uses the provided buttonName on the
 // chrome://settings/certificates page to manually import
 // the client certificate from file.
-func ImportClientCert(ctx context.Context, ui *uiauto.Context, clientCertFileName, certFilePassword string) (retErr error) {
+func ImportClientCertImpl(ctx context.Context, ui *uiauto.Context, clientCertFileName, certFilePassword, buttonName string) (retErr error) {
 	kb, err := input.Keyboard(ctx)
 	defer kb.Close(ctx)
 	if err != nil {
@@ -135,7 +145,7 @@ func ImportClientCert(ctx context.Context, ui *uiauto.Context, clientCertFileNam
 	if err := uiauto.Combine("import client cert",
 		ui.DoDefault(nodewith.Name("Your certificates").Role(role.Tab)),
 		ui.WaitUntilExists(nodewith.Name("Your certificates").ClassName("tab selected")),
-		ui.DoDefault(nodewith.Name("Import and Bind").Role(role.Button)),
+		ui.DoDefault(nodewith.Name(buttonName).Role(role.Button)),
 		ui.DoDefault(nodewith.Name(clientCertFileName).Role(role.StaticText)),
 		ui.WaitUntilExists(nodewith.Name("Open").Role(role.Button).State("focusable", true)),
 		ui.DoDefault(nodewith.Name("Open").Role(role.Button)),
@@ -148,6 +158,27 @@ func ImportClientCert(ctx context.Context, ui *uiauto.Context, clientCertFileNam
 
 	if err := PressOkButton(ctx, ui, ManageCertSettingsWebArea); err != nil {
 		return errors.Wrap(err, failedToPressOkErr)
+	}
+	return nil
+}
+
+// ImportClientCert uses the Import and Bind button on the chrome://settings/certificates page
+// to manually import the client certificate from file. It is default action for importing certificates,
+// so Bind is not used in name.
+func ImportClientCert(ctx context.Context, ui *uiauto.Context, clientCertFileName, certFilePassword string) (retErr error) {
+	buttonNameForImport := "Import and Bind"
+	if err := ImportClientCertImpl(ctx, ui, clientCertFileName, certFilePassword, buttonNameForImport); err != nil {
+		return err
+	}
+	return nil
+}
+
+// ImportNoBindClientCert uses the Import button on the chrome://settings/certificates
+// page to manually import the client certificate from file.
+func ImportNoBindClientCert(ctx context.Context, ui *uiauto.Context, clientCertFileName, certFilePassword string) (retErr error) {
+	buttonNameForImport := "Import"
+	if err := ImportClientCertImpl(ctx, ui, clientCertFileName, certFilePassword, buttonNameForImport); err != nil {
+		return err
 	}
 	return nil
 }
@@ -189,6 +220,7 @@ func OpenActionMenuForClientCertificate(ctx context.Context, ui *uiauto.Context,
 		ui.WaitUntilExists(nodewith.Name(clientOrg).First()),
 		ui.DoDefault(nodewith.Name("Show certificates for organization").Role(role.Button)),
 		ui.DoDefault(nodewith.Name("More actions").Role(role.Button)),
+		ui.WaitUntilExists(nodewith.Name("View").Role(role.MenuItem)),
 	)(ctx); err != nil {
 		return errors.Wrap(err, failedToDeleteCACertErr)
 	}
