@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/ctxutil"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
@@ -19,8 +18,9 @@ import (
 	"chromiumos/tast/local/devicesettings/constants"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/upstart"
-	"chromiumos/tast/testing"
-	"chromiumos/tast/testing/hwdep"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {

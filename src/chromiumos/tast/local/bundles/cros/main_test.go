@@ -7,7 +7,7 @@ package main
 import (
 	gotesting "testing"
 
-	"chromiumos/tast/testing"
+	"go.chromium.org/tast/core/testing"
 )
 
 func TestTestRegistration(t *gotesting.T) {
