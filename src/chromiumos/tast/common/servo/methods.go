@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/xmlrpc"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -388,17 +389,9 @@ func (s *Servo) RemoveCCDWatchdogs(ctx context.Context) error {
 	}
 	didRemove := false
 	for _, device := range devices {
-		deviceMap, ok := device.(map[string]interface{})
-		if !ok {
-			return errors.Errorf("failed to cast %+v to map", device)
-		}
-		deviceType, ok := deviceMap["type"]
-		if !ok {
-			return errors.Errorf("device has no type: %+v", device)
-		}
-		stringType, ok := deviceType.(string)
-		if !ok {
-			return errors.Errorf("failed to cast %+v to string", stringType)
+		stringType, err := PropertyToString(device, "type")
+		if err != nil {
+			return err
 		}
 		if strings.HasPrefix(stringType, "ccd") {
 			testing.ContextLog(ctx, "Removing watchdog: ", stringType)
@@ -680,6 +673,24 @@ func parseStringMapInternal(value []rune, index *int) (map[string]interface{}, e
 		(*index)++
 	}
 	return nil, errors.Errorf("unexpected end of string at %d in %s", *index, string(value))
+}
+
+// PropertyToString returns the string value assigned to a property
+func PropertyToString(property interface{}, name string) (string, error) {
+	propertyMap, ok := property.(map[string]interface{})
+	if !ok {
+		return "", errors.Errorf("failed to cast %+v to map", property)
+	}
+	propertyRaw, ok := propertyMap[name]
+	if !ok {
+		return "", errors.Errorf("device has no property %s: %+v", name, property)
+	}
+	propertyString, ok := propertyRaw.(string)
+	if !ok {
+		return "", errors.Errorf("failed to cast %+v to string", propertyString)
+	}
+
+	return propertyString, nil
 }
 
 // ParseStringList parses `value` as a possibly nested list of strings, each quoted and separated by commas.

@@ -91,3 +91,35 @@ func TestParseStringList(t *testing.T) {
 		}
 	}
 }
+
+func TestPropertyToString(t *testing.T) {
+	type testCase struct {
+		propertyParam interface{}
+		nameParam     string
+		expectErr     bool
+		expected      string
+	}
+	for _, tc := range []testCase{
+		{[]interface{}(nil), "", true, "[]"},
+		{map[string]interface{}{
+			"type": string("servo_v4p1"),
+		}, "serial", true, "servo_v4p1"},
+		{map[string]interface{}{
+			"product_id": int(21005),
+		}, "product_id", true, "servo_v4p1"},
+		{map[string]interface{}{
+			"type": string("servo_v4p1"),
+		}, "type", false, "servo_v4p1"},
+	} {
+		res, err := PropertyToString(tc.propertyParam, tc.nameParam)
+		if tc.expectErr {
+			if err == nil {
+				t.Errorf("PropertyToString(%q, %q) unexpectedly succeeded", tc.propertyParam, tc.nameParam)
+			}
+		} else if err != nil {
+			t.Errorf("PropertyToString(%q, %q) failed %s", tc.propertyParam, tc.nameParam, err)
+		} else if !cmp.Equal(tc.expected, res) {
+			t.Errorf("PropertyToString(%q, %q) %s", tc.propertyParam, tc.nameParam, cmp.Diff(tc.expected, res))
+		}
+	}
+}
