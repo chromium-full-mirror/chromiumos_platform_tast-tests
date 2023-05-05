@@ -89,12 +89,13 @@ func (c *client) sendRequestWithTimeout(ctx context.Context, method, endpoint st
 
 	var err error
 	// Try to make the call 3 times as a call might fail occasionally.
+	var req *http.Request
 	var response *http.Response
 
 	for i := 0; i < 3; i++ {
 		// Create a request.
 		payload := bytes.NewReader(payloadBytes)
-		req, err := http.NewRequestWithContext(ctx, method, tapeURL+endpoint, payload)
+		req, err = http.NewRequestWithContext(ctx, method, tapeURL+endpoint, payload)
 		if err != nil {
 			testing.ContextLog(ctx, "Failed to create request: ", err)
 			continue
