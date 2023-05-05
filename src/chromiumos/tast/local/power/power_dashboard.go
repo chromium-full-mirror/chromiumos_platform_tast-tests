@@ -443,9 +443,7 @@ func SavePowerLogHTML(ctx context.Context, outDir string, powerLogDict map[strin
 		return errors.Errorf("sampleCount is %d and should be bigger than 0", sampleCount)
 	}
 
-	// Initialize htmlStr to be empty for now.
-	// Power dashboard link, etc. will be added later on.
-	htmlStr := ``
+	htmlStr := generateDashboardLink(powerLogDict)
 
 	sampleDuration := powerLogDict["power"].(map[string]interface{})["sample_duration"]
 	powerLogDataMap := powerLogDict["power"].(map[string]interface{})["data"].(map[string][]float64)
