@@ -24,6 +24,7 @@ import (
 	"chromiumos/tast/common/perf/perfpb"
 	"chromiumos/tast/local/graphics"
 	"chromiumos/tast/local/profiler"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -99,6 +100,7 @@ func Start(ctx context.Context, sDur, mDur time.Duration, outPrefix, outdir stri
 			return pv, nil
 		},
 		GPU: func() (*perf.Values, error) {
+			// GoBigSleepLint: Sleep to stabilize before measuring the GPU usage.
 			if err := testing.Sleep(ctx, pctx.StabilizeDuration); err != nil {
 				return nil, errors.Wrap(err, "failed to wait for stabilization")
 			}
@@ -175,6 +177,7 @@ func convertFromProtobuf(pbv []*perfpb.Value, outputPV *perf.Values, outputPrefi
 }
 
 func runProfiler(ctx context.Context, pctx *ProfilerContext, name string, prof profiler.Profiler) (*perf.Values, error) {
+	// GoBigSleepLint: Sleep to stabilize before starting the profiler.
 	if err := testing.Sleep(ctx, pctx.StabilizeDuration); err != nil {
 		return nil, errors.Wrap(err, "failed to wait for stabilization")
 	}
@@ -182,6 +185,7 @@ func runProfiler(ctx context.Context, pctx *ProfilerContext, name string, prof p
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to start %s profiler", name)
 	}
+	// GoBigSleepLint: Sleep to let the profiler measure for the specified duration.
 	if err := testing.Sleep(ctx, pctx.MeasureDuration); err != nil {
 		return nil, errors.Wrap(err, "failed to measure the full duration")
 	}

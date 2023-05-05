@@ -16,6 +16,7 @@ import (
 	"chromiumos/tast/local/camera/cca"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/display"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -139,14 +140,8 @@ func clickPhotoShutterContinuously(ctx context.Context, s *testing.State, app *c
 
 	testing.ContextLog(ctx, "Start to take photos")
 	var startTime = time.Now()
-	for i := 0; i < iterations; i++ {
-		if err := app.ClickShutter(ctx); err != nil {
-			return err
-		}
-		var interval = time.Duration(rand.Intn(500)) * time.Millisecond
-		if err := testing.Sleep(ctx, interval); err != nil {
-			return err
-		}
+	if err := clickShutterContinuously(ctx, app, iterations); err != nil {
+		return err
 	}
 
 	if err := app.WaitForState(ctx, "taking", false); err != nil {
@@ -178,14 +173,8 @@ func clickVideoShutterContinuously(ctx context.Context, s *testing.State, app *c
 		return err
 	}
 	var startTime = time.Now()
-	for i := 0; i < iterations; i++ {
-		if err := app.ClickShutter(ctx); err != nil {
-			return err
-		}
-		var interval = time.Duration(rand.Intn(500)) * time.Millisecond
-		if err := testing.Sleep(ctx, interval); err != nil {
-			return err
-		}
+	if err := clickShutterContinuously(ctx, app, iterations); err != nil {
+		return err
 	}
 	if err := app.Close(ctx); err != nil {
 		return err
@@ -200,6 +189,23 @@ func clickVideoShutterContinuously(ctx context.Context, s *testing.State, app *c
 		return err
 	}
 
+	return nil
+}
+
+func clickShutterContinuously(ctx context.Context, app *cca.App, iterations int) error {
+	for i := 0; i < iterations; i++ {
+		if err := app.ClickShutter(ctx); err != nil {
+			return err
+		}
+		if i == iterations-1 {
+			break
+		}
+		var interval = time.Duration(rand.Intn(500)) * time.Millisecond
+		// GoBigSleepLint: Wait for a random time interval (0-500ms) before clicking shutter button again.
+		if err := testing.Sleep(ctx, interval); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

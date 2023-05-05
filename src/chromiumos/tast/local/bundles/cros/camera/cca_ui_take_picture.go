@@ -10,6 +10,7 @@ import (
 
 	"chromiumos/tast/common/media/caps"
 	"chromiumos/tast/local/camera/cca"
+
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -67,6 +68,7 @@ func testCancelTimer(ctx context.Context, app *cca.App) error {
 	if err := app.ClickShutter(ctx); err != nil {
 		return err
 	}
+	// GoBigSleepLint: Wait for a second before canceling the shutter.
 	if err := testing.Sleep(ctx, time.Second); err != nil {
 		return err
 	}

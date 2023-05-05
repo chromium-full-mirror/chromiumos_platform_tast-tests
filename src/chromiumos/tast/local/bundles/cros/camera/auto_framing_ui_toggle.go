@@ -14,6 +14,7 @@ import (
 	"chromiumos/tast/local/camera/histogramutil"
 	"chromiumos/tast/local/chrome/uiauto/quicksettings"
 	"chromiumos/tast/local/crosconfig"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -61,6 +62,7 @@ func AutoFramingUIToggle(ctx context.Context, s *testing.State) {
 		return Action{
 			name: "sleep",
 			run: func(ctx context.Context, app *cca.App) error {
+				// GoBigSleepLint: Simulate a pause between actions.
 				return testing.Sleep(ctx, d)
 			},
 		}
