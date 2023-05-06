@@ -25,11 +25,11 @@ import (
 	"chromiumos/tast/local/chrome/ash/ashproc"
 	"chromiumos/tast/local/procutil"
 	"chromiumos/tast/local/syslog"
+
+	"go.chromium.org/tast/core/caller"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
-
-	"go.chromium.org/tast/core/caller"
 	"go.chromium.org/tast/core/timing"
 )
 

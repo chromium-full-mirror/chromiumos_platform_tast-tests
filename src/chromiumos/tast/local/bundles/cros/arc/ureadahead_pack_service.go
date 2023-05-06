@@ -22,6 +22,7 @@ import (
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/arc/optin"
+	"chromiumos/tast/local/bundles/cros/arc/ureadahead"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/disk"
 	"chromiumos/tast/local/upstart"
@@ -68,6 +69,13 @@ func (c *UreadaheadPackService) Generate(ctx context.Context, request *arcpb.Ure
 		vmLogName = "vm_ureadahead.log"
 
 		ureadaheadTimeout = 30 * time.Second
+
+		// These are the same limits as arc.UreadaheadValidation test performed after
+		// PFQ / Uprev and ChromeOS build image (BSS) are completed. This is to catch
+		// issues before building full ChromeOS image but post-build testing is still
+		// important to catch any unexpected build infra issues.
+		minAcceptableHostPackSizeKB  = 300 * 1024
+		minAcceptableGuestPackSizeKB = 100 * 1024
 	)
 
 	// Create arguments for running ureadahead.
@@ -169,10 +177,15 @@ func (c *UreadaheadPackService) Generate(ctx context.Context, request *arcpb.Ure
 
 		vmLogPath = filepath.Join(ureadaheadDataDir, vmLogName)
 
-		// Pull and obtain ARCVM pack from guest OS.
+		// Pull and obtain ARCVM pack from guest OS and dump pack file content to log.
 		vmPackPath, err = getGuestPack(ctx, vmLogPath)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to obtain ureadahead pack from ARCVM guest OS")
+		}
+
+		// Verify the guest pack file dump for VM.
+		if err := ureadahead.CheckPackFileDump(ctx, vmLogPath, minAcceptableGuestPackSizeKB); err != nil {
+			return nil, errors.Wrapf(err, "failed to verify guest ureadahead pack file dump, please check %q", vmLogName)
 		}
 	} else {
 		// Generate host OS pack file.
@@ -285,6 +298,15 @@ func (c *UreadaheadPackService) Generate(ctx context.Context, request *arcpb.Ure
 		}
 
 		testing.ContextLog(ctx, "Ureadahead pack was generated")
+
+		if err = ureadahead.DumpHostPack(ctx, packPath, logPath); err != nil {
+			return nil, errors.Wrap(err, "failed to dump host ureadahead pack")
+		}
+
+		// Verify the host pack file dump for Container.
+		if err = ureadahead.CheckPackFileDump(ctx, logPath, minAcceptableHostPackSizeKB); err != nil {
+			return nil, errors.Wrapf(err, "failed to verify host ureadahead pack file dump, please check %q", logName)
+		}
 	}
 
 	response := arcpb.UreadaheadPackResponse{
@@ -392,13 +414,13 @@ func getGuestPack(ctx context.Context, logPath string) (string, error) {
 		return "", errors.Wrapf(err, "failed to clean up %s on the host", packPath)
 	}
 
-	outdir, ok := testing.ContextOutDir(ctx)
+	outDir, ok := testing.ContextOutDir(ctx)
 	if !ok {
 		return "", errors.New("failed to get name of the output directory")
 	}
 
 	// Connect to ARCVM instance.
-	a, err := arc.New(ctx, outdir)
+	a, err := arc.New(ctx, outDir)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to connect ARCVM")
 	}
@@ -450,16 +472,8 @@ func getGuestPack(ctx context.Context, logPath string) (string, error) {
 		return "", errors.Wrapf(err, "failed to pull %s from ARCVM", srcPath)
 	}
 
-	logFile, err := os.Create(logPath)
-	if err != nil {
-		return "", errors.Wrap(err, "failed to create ARCVM log file")
-	}
-	defer logFile.Close()
-
-	// Capture stdout into log file.
-	cmd := a.Command(ctx, "/system/bin/ureadahead", "--dump", "--verbose")
-	cmd.Stdout = logFile
-	if err := cmd.Run(testexec.DumpLogOnError); err != nil {
+	// Dump guest ureadahead pack for validation.
+	if err := ureadahead.DumpGuestPack(ctx, a, logPath); err != nil {
 		return "", errors.Wrap(err, "failed to dump guest ureadahead pack")
 	}
 
