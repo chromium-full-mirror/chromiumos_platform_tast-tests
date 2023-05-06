@@ -255,6 +255,9 @@ func New(ctx context.Context, opts ...Option) (c *Chrome, retErr error) {
 	ctx, st := timing.Start(ctx, "chrome_new")
 	defer st.End()
 
+	// TODO(b/281865378): Remove once InputDeviceSettingsSplit flag is enabled by default in Chromium.
+	opts = append(opts, EnableFeatures("InputDeviceSettingsSplit"))
+
 	cfg, err := config.NewConfig(opts)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to process options")

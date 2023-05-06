@@ -90,6 +90,20 @@ func KeyboardTopRowLayout(ctx context.Context, ew *KeyboardEventWriter) (*TopRow
 		VolumeUp:       "F10",
 	}
 
+	// External keyboards receive top row layouts equivalent to mapping1, but with search prepended.
+	externalMapping1 := TopRowLayout{
+		BrowserBack:    "Search+F1",
+		BrowserForward: "Search+F2",
+		BrowserRefresh: "Search+F3",
+		ZoomToggle:     "Search+F4",
+		SelectTask:     "Search+F5",
+		BrightnessDown: "Search+F6",
+		BrightnessUp:   "Search+F7",
+		VolumeMute:     "Search+F8",
+		VolumeDown:     "Search+F9",
+		VolumeUp:       "Search+F10",
+	}
+
 	// BROWSER_FORWARD removed, MEDIA_PLAY_PAUSE added.
 	mapping2 := TopRowLayout{
 		BrowserBack:    "F1",
@@ -142,6 +156,10 @@ func KeyboardTopRowLayout(ctx context.Context, ew *KeyboardEventWriter) (*TopRow
 
 	switch layout {
 	case Layout1:
+		// If its a virtual device, it will be considered an external keyboard.
+		if ew.virt != nil {
+			return &externalMapping1, nil
+		}
 		return &mapping1, nil
 	case Layout2:
 		return &mapping2, nil

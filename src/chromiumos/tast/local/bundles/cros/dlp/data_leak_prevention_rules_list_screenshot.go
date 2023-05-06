@@ -333,8 +333,13 @@ func DataLeakPreventionRulesListScreenshot(ctx context.Context, s *testing.State
 
 // testScreenshot attempts to take a screenshot, and reports errors if the behavior is different than expected.
 func testScreenshot(ctx context.Context, s *testing.State, tconn *chrome.TestConn, keyboard *input.KeyboardEventWriter, downloadsPath string, params screenshotTestParams) {
+	layout, err := input.KeyboardTopRowLayout(ctx, keyboard)
+	if err != nil {
+		s.Fatal("Failed to retrieve keyboard top row layout: ", err)
+	}
+
 	// Press Ctrl+F5 to take the screenshot.
-	if err := keyboard.Accel(ctx, "Ctrl+F5"); err != nil {
+	if err := keyboard.Accel(ctx, "Ctrl+"+layout.SelectTask); err != nil {
 		s.Fatal("Failed to type screenshot hotkey: ", err)
 	}
 
