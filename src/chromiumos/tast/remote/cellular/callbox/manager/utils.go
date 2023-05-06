@@ -7,7 +7,7 @@ package manager
 import (
 	"context"
 
-	"chromiumos/tast/common/cellularconst"
+	"go.chromium.org/tast/core/testing/cellularconst"
 )
 
 // GetMaxLTETxThroughputInMbps returns known modem max upload throughput.

@@ -10,12 +10,13 @@ import (
 
 	"github.com/godbus/dbus/v5"
 
-	"chromiumos/tast/common/cellularconst"
 	"chromiumos/tast/common/mmconst"
 	"chromiumos/tast/local/cellular"
 	"chromiumos/tast/local/modemmanager"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/cellularconst"
 )
 
 type verifyExpectedApnRelatedErrorCodesTest int

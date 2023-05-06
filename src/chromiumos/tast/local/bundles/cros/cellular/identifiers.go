@@ -8,12 +8,12 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/common/cellularconst"
 	"chromiumos/tast/local/cellular"
 	"chromiumos/tast/local/modemmanager"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/cellularconst"
 )
 
 func init() {

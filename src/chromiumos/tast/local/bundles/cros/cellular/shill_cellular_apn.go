@@ -9,13 +9,14 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/common/cellularconst"
 	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/cellular"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/cellularconst"
 )
 
 type apnTestParam struct {

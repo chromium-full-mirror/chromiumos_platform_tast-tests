@@ -9,13 +9,14 @@ import (
 	"reflect"
 	"time"
 
-	"chromiumos/tast/common/cellularconst"
 	"chromiumos/tast/common/mmconst"
 	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/local/cellular"
 	"chromiumos/tast/local/modemmanager"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/cellularconst"
 )
 
 type shillCellularCustomAPNTestParam struct {
