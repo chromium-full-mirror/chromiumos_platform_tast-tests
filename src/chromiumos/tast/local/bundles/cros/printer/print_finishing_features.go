@@ -30,6 +30,7 @@ import (
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/printing/lp"
 	"chromiumos/tast/local/printing/printer"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -179,7 +180,7 @@ func PrintFinishingFeatures(ctx context.Context, s *testing.State) {
 
 	if err := uiauto.Combine("open the add printer window",
 		ui.LeftClick(entryFinder),
-		ui.LeftClick(nodewith.ClassName("action-button").Name("Add printer")),
+		ui.LeftClick(nodewith.HasClass("action-button").Name("Add printer")),
 	)(ctx); err != nil {
 		s.Fatal("Failed to open Add Printer window: ", err)
 	}
