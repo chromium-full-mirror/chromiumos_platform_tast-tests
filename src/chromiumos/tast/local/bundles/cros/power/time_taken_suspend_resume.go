@@ -16,7 +16,7 @@ import (
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/local/power"
+	"chromiumos/tast/local/power/suspend"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
@@ -105,8 +105,15 @@ func TimeTakenSuspendResume(ctx context.Context, s *testing.State) {
 	}
 	pkgOpSetPre := matchSetPre[1]
 
-	if err := power.SuspendAndResume(ctx, cr, 15*time.Second); err != nil {
+	// Requests a 15 second suspension, without retries. The resume will be
+	// marked failed if it has not completed within 30 seconds.
+	if _, err := suspend.Request(ctx, suspend.Delay(0*time.Second), suspend.WithoutRetries(),
+		suspend.For(15*time.Second), suspend.Timeout(30*time.Second)); err != nil {
 		s.Fatal("Failed to suspend resume the DUT: ", err)
+	}
+
+	if err := cr.Reconnect(ctx); err != nil {
+		s.Fatal("Failed to reconnect Chrome: ", err)
 	}
 
 	slpOpSetPost := cmdOutput(slpS0Cmd)
