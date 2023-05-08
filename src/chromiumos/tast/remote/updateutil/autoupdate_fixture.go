@@ -11,6 +11,7 @@ import (
 
 	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/common/testexec"
+
 	"go.chromium.org/tast/core/lsbrelease"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
@@ -30,7 +31,7 @@ func init() {
 		PostTestTimeout: 15 * time.Minute,
 		TearDownTimeout: 1 * time.Minute,
 		ServiceDeps: []string{
-			"tast.cros.autoupdate.NebraskaService",
+			"tast.cros.nebraska.Service",
 			"tast.cros.autoupdate.UpdateService",
 		},
 	})

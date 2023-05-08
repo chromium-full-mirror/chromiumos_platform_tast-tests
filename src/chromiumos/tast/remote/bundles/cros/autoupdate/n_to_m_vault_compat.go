@@ -14,6 +14,7 @@ import (
 	"chromiumos/tast/common/hwsec"
 	"chromiumos/tast/remote/bundles/cros/autoupdate/util"
 	"chromiumos/tast/remote/updateutil"
+
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -51,7 +52,7 @@ func init() {
 		Attr:         []string{"group:autoupdate"},
 		SoftwareDeps: []string{"tpm", "reboot", "chrome", "auto_update_stable"},
 		ServiceDeps: []string{
-			"tast.cros.autoupdate.NebraskaService",
+			"tast.cros.nebraska.Service",
 			"tast.cros.autoupdate.UpdateService",
 		},
 		Timeout: util.TotalTestTime + 2*sleepTimeN2M,

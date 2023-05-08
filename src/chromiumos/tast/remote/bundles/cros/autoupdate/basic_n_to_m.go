@@ -10,6 +10,7 @@ import (
 	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/remote/bundles/cros/autoupdate/util"
 	"chromiumos/tast/remote/updateutil"
+
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -27,7 +28,7 @@ func init() {
 		Attr:         []string{},  // Manual execution only.
 		SoftwareDeps: []string{"reboot", "chrome", "auto_update_stable"},
 		ServiceDeps: []string{
-			"tast.cros.autoupdate.NebraskaService",
+			"tast.cros.nebraska.Service",
 			"tast.cros.autoupdate.UpdateService",
 		},
 		Timeout: util.TotalTestTime,

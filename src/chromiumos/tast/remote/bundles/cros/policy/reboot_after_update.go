@@ -17,6 +17,7 @@ import (
 	"chromiumos/tast/remote/policyutil"
 	"chromiumos/tast/remote/updateutil"
 	pspb "chromiumos/tast/services/cros/policy"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/lsbrelease"
 	"go.chromium.org/tast/core/rpc"
@@ -72,7 +73,7 @@ func init() {
 			},
 		},
 		ServiceDeps: []string{
-			"tast.cros.autoupdate.NebraskaService",
+			"tast.cros.nebraska.Service",
 			"tast.cros.autoupdate.UpdateService",
 			"tast.cros.hwsec.OwnershipService",
 			"tast.cros.policy.PolicyService",
