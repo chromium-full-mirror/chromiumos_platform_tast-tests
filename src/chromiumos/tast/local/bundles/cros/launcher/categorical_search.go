@@ -102,10 +102,10 @@ func CategoricalSearch(ctx context.Context, s *testing.State) {
 			result:        "Files, Installed App",
 		},
 		{
-			searchKeyword: "Shortcuts",
+			searchKeyword: "Keyboard shortcuts",
 			category:      "Best Match , search result category",
 			categoryLabel: "Best Match",
-			result:        "Shortcuts, App",
+			result:        "Keyboard shortcuts, Installed App",
 		},
 	}
 
