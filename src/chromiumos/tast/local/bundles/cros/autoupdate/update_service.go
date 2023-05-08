@@ -130,10 +130,19 @@ func (u *UpdateService) PeriodicCheckForUpdate(ctx context.Context, e *empty.Emp
 	return status, nil
 }
 
+// ResetUpdateEngine stops update engine, clears the prefs and restarts it to
+// ensure the DUT is left in a clean state after an update attempt.
+func (u *UpdateService) ResetUpdateEngine(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+	testing.ContextLog(ctx, "Resetting update engine status")
+	if err := updateengine.ClearPrefs(ctx); err != nil {
+		return &empty.Empty{}, errors.Wrap(err, "failed to reset udpate engine status")
+	}
+	return &empty.Empty{}, nil
+}
+
 func ensureUpdateEngineReady(ctx context.Context) error {
 	// Reset update engine status to ensure there are no previous ongoing updates.
-	// TODO(b/239680170): Reset update engine status in the autoupdate fixture
-	// cleanup.
+	// TODO(b/239680170): Remove when update engine cleanup is deferred in tests.
 	testing.ContextLog(ctx, "Resetting update engine status")
 	if err := updateengine.ClearPrefs(ctx); err != nil {
 		return errors.Wrap(err, "failed to reset udpate engine status")

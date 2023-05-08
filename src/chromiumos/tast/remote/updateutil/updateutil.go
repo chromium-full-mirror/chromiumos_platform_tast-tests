@@ -158,6 +158,23 @@ func ApplyDeferredUpdate(ctx context.Context, dut *dut.DUT) error {
 	return nil
 }
 
+// ResetUpdateStatus resets update engine to ensure it is left in a clean state.
+// Must be called after requesting an update.
+func ResetUpdateStatus(ctx context.Context, dut *dut.DUT, rpcHint *testing.RPCHint) error {
+	cl, err := rpc.Dial(ctx, dut, rpcHint)
+	if err != nil {
+		return errors.Wrap(err, "failed to connect to the RPC service on the DUT")
+	}
+	defer cl.Close(ctx)
+
+	updateClient := aupb.NewUpdateServiceClient(cl.Conn)
+	if _, err := updateClient.ResetUpdateEngine(ctx, &empty.Empty{}); err != nil {
+		return errors.Wrap(err, "failed to reset update engine")
+	}
+
+	return nil
+}
+
 // UpdateFromGS updates the DUT to an image found in the Google Storage under the builder path folder.
 // It saves the logs (udpdate engine logs and Nebraska logs) to the given outdir.
 func UpdateFromGS(ctx context.Context, dut *dut.DUT, outdir string, rpcHint *testing.RPCHint, builderPath string) (retErr error) {
