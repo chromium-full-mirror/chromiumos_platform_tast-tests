@@ -21,6 +21,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/kioskmode"
 	"chromiumos/tast/local/screenshot"
+	"chromiumos/tast/local/syslog"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -162,7 +163,8 @@ func (param smokeTestParam) appPageHeading() string {
 // kioskModeOptions returns the option slice to configure this test parameter.
 func (param smokeTestParam) kioskModeOptions(signinProfileTestExtensionManifestKey string) []kioskmode.Option {
 	// DefaultLocalAccount() includes device local accounts for one chrome app and one web app.
-	options := []kioskmode.Option{kioskmode.DefaultLocalAccounts()}
+	// SkipSuccessfulLaunchCheck() tells kioskmode.New to not wait Kiosk launch, we wait ourselves.
+	options := []kioskmode.Option{kioskmode.DefaultLocalAccounts(), kioskmode.SkipSuccessfulLaunchCheck()}
 
 	if param.isLacros {
 		options = append(options, kioskmode.PublicAccountPolicies(
@@ -251,6 +253,13 @@ func Smoke(ctx context.Context, s *testing.State) {
 
 	signinTestExtensionManifestKey := s.RequiredVar("ui.signinProfileTestExtensionManifestKey")
 
+	// Start syslog reader before launching Kiosk to wait for Kiosk launch logs.
+	reader, err := syslog.NewReader(ctx, syslog.Program("chrome"))
+	if err != nil {
+		s.Fatal("Failed to start Chrome syslog reader: ", err)
+	}
+	defer reader.Close()
+
 	kiosk, cr, err := kioskmode.DeprecatedNew(ctx, fdms, param.kioskModeOptions(signinTestExtensionManifestKey)...)
 	if err != nil {
 		s.Fatal("Failed to create Chrome in Kiosk mode: ", err)
@@ -267,8 +276,12 @@ func Smoke(ctx context.Context, s *testing.State) {
 		}
 	}
 
+	if err := kioskmode.WaitLaunchLogs(ctx, reader); err != nil {
+		s.Fatal("Failed to launch Kiosk: ", err)
+	}
+
 	if err := waitUntilKioskAppStarted(ctx, cr, param, s.OutDir()); err != nil {
-		s.Fatal("Kiosk app did not start: ", err)
+		s.Fatal("Kiosk launched but app did not start: ", err)
 	}
 
 	if param.isLacros {
