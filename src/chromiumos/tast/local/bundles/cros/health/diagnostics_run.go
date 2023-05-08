@@ -105,9 +105,13 @@ func init() {
 		}, {
 			Name: "http_firewall",
 			Val:  newRoutineParams(croshealthd.RoutineHTTPFirewall),
+			// TODO(b/281464322): Promote to critical.
+			ExtraAttr: []string{"informational"},
 		}, {
 			Name: "https_firewall",
 			Val:  newRoutineParams(croshealthd.RoutineHTTPSFirewall),
+			// TODO(b/281464322): Promote to critical.
+			ExtraAttr: []string{"informational"},
 		}, {
 			Name: "https_latency",
 			Val:  newRoutineParams(croshealthd.RoutineHTTPSLatency),
