@@ -53,13 +53,22 @@ var (
 )
 
 const (
-	// kioskStartingLog is reported by chrome once the kiosk mode is starting.
+	// kioskStartingLog is reported by Chrome once Kiosk is starting.
 	kioskStartingLog = "Starting kiosk mode"
-	// kioskReadyToLaunchLog is reported by chrome once the kiosk mode is ready to launch.
+	// kioskStartingDuration is the time estimate to emit a kioskStartingLog after Kiosk launch has
+	// started (either manual or auto launch).
+	kioskStartingDuration = 30 * time.Second
+	// kioskReadyToLaunchLog is reported by Chrome once the Kiosk app is ready to launch.
 	kioskReadyToLaunchLog = "Kiosk app is ready to launch."
-	// kioskLaunchSucceededLog is reported by chrome once the kiosk launch is succeeded.
+	// kioskReadyToLaunchDuration is the time estimate to emit a kioskReadyToLaunchLog after
+	// kioskStartingLog was emitted.
+	kioskReadyToLaunchDuration = 90 * time.Second
+	// kioskLaunchSucceededLog is reported by Chrome once Kiosk launched successfully.
 	kioskLaunchSucceededLog = "Kiosk launch succeeded"
-	// kioskClosingSplashScreenLog is reported by chrome once the splash screen is gone.
+	// kioskLaunchSucceededDuration is the time estimate to emit a kioskLaunchSucceededLog after
+	// kioskReadyToLaunchLog was emitted.
+	kioskLaunchSucceededDuration = 60 * time.Second
+	// kioskClosingSplashScreenLog is reported by Chrome once the splash screen is closing.
 	kioskClosingSplashScreenLog = "App window created, closing splash screen."
 
 	// setPolicyDuration is the time estimate to set policies in Kiosk with setPolicies or
@@ -69,7 +78,7 @@ const (
 	// include time to launch the session.
 	SetupDuration = setPolicyDuration
 	// LaunchDuration is the time estimate to launch a Kiosk session.
-	LaunchDuration = 2 * time.Minute
+	LaunchDuration = kioskStartingDuration + kioskReadyToLaunchDuration + kioskLaunchSucceededDuration
 	// CleanupDuration is the time estimate to clean up a Kiosk session with kiosk.Close.
 	CleanupDuration = setPolicyDuration
 )
@@ -225,54 +234,48 @@ func (k *Kiosk) DeprecatedClose(ctx context.Context) (retErr error) {
 	return nil
 }
 
-// ConfirmKioskStarted uses reader for looking for logs that confirm Kiosk
-// mode starting, ready for launch, and successful launch of Kiosk.
-// reader Reader instance should be processing logs filtered for Chrome only.
-func ConfirmKioskStarted(ctx context.Context, reader *syslog.Reader) error {
-	if err := confirmKioskInitialized(ctx, reader); err != nil {
-		return errors.Wrap(err, "failed to verify starting sequence of Kiosk mode")
+// WaitLaunchLogs uses reader to look for logs that confirm Kiosk mode launched successfully.
+//
+// reader is expected to process syslogs filtered for Chrome and to include messages since before
+// the session was launched. As in:
+//
+//	reader, err := syslog.NewReader(ctx, syslog.Program("chrome"))
+//	...
+//	kiosk, cr, err := kioskmode.New(ctx, ...)  // Reader was created before Kiosk launches.
+//	...
+//	err := kioskmode.WaitLaunchLogs(ctx, reader)
+//
+// This is necessary because syslog.NewReader only contains logs from the moment it was created.
+//
+// Tests using WaitLaunchLogs should have a long enough Timeout to account for
+// kioskmode.LaunchDuration.
+func WaitLaunchLogs(ctx context.Context, reader *syslog.Reader) error {
+	if ctxutil.DeadlineBefore(ctx, time.Now().Add(LaunchDuration)) {
+		return errors.New("potentially insufficient time remaining to wait for Kiosk launch")
 	}
 
-	testing.ContextLog(ctx, "Waiting for successful Kiosk mode launch")
-	// Wait for kioskLaunchSucceededLog to be present in logs. Used timeout
-	// accommodates for launching up from the moment all data for its launch
-	// is available.
-	if _, err := reader.Wait(ctx, 60*time.Second,
-		func(e *syslog.Entry) bool {
-			return strings.Contains(e.Content, kioskLaunchSucceededLog)
-		},
-	); err != nil {
-		return errors.Wrap(err, "failed to verify successful launch of Kiosk mode")
+	if err := waitLog(ctx, reader, kioskStartingLog, kioskStartingDuration); err != nil {
+		return errors.Wrap(err, "failed to verify Kiosk is starting")
+	}
+
+	if err := waitLog(ctx, reader, kioskReadyToLaunchLog, kioskReadyToLaunchDuration); err != nil {
+		return errors.Wrap(err, "failed to verify Kiosk is ready to launch")
+	}
+
+	if err := waitLog(ctx, reader, kioskLaunchSucceededLog, kioskLaunchSucceededDuration); err != nil {
+		return errors.Wrap(err, "failed to verify Kiosk launch succeeded")
 	}
 
 	return nil
 }
 
-// confirmKioskInitialized uses reader for looking for logs that confirm Kiosk
-// mode starting and ready for launch.
-func confirmKioskInitialized(ctx context.Context, reader *syslog.Reader) error {
-	testing.ContextLog(ctx, "Waiting for Kiosk mode start")
-	// Wait for kioskStartingLog to be present in logs. Used timeout should be
-	// rather short as this kicks off the Kiosk right away.
-	if _, err := reader.Wait(ctx, 30*time.Second,
-		func(e *syslog.Entry) bool {
-			return strings.Contains(e.Content, kioskStartingLog)
-		},
-	); err != nil {
-		return errors.Wrap(err, "failed to verify starting of Kiosk mode")
+// waitLog waits for the Chrome syslog reader to emit the given Kiosk message.
+func waitLog(ctx context.Context, reader *syslog.Reader, message string, timeout time.Duration) error {
+	testing.ContextLogf(ctx, "Kiosk mode: waiting log message %q", message)
+	containsMessage := func(e *syslog.Entry) bool { return strings.Contains(e.Content, message) }
+	if _, err := reader.Wait(ctx, timeout, containsMessage); err != nil {
+		return errors.Wrapf(err, "could not find log message %q", message)
 	}
-
-	// Wait for kioskReadyToLaunchLog to be present in logs. Used timeout needs
-	// to accommodate downloading apps, and extensions. It should be kept over
-	// one minute.
-	if _, err := reader.Wait(ctx, 90*time.Second,
-		func(e *syslog.Entry) bool {
-			return strings.Contains(e.Content, kioskReadyToLaunchLog)
-		},
-	); err != nil {
-		return errors.Wrap(err, "failed to verify Kiosk being ready for launch")
-	}
-
 	return nil
 }
 
@@ -420,7 +423,7 @@ func DeprecatedNew(ctx context.Context, fdms *fakedms.FakeDMS, opts ...Option) (
 			// Library waits for Kiosk start sequence to start then it checks
 			// that Kiosk is ready for launch, and finally it waits for Kiosk
 			// to be launched.
-			if err := ConfirmKioskStarted(ctx, reader); err != nil {
+			if err := WaitLaunchLogs(ctx, reader); err != nil {
 				if err := policyutil.ServeAndRefresh(ctx, fdms, cr, []policy.Policy{deviceLocalAccounts}); err != nil {
 					testing.ContextLog(ctx, "Could not serve and refresh policies. If kioskmode.AutoLaunch() option was used it may impact next test: ", err)
 				}

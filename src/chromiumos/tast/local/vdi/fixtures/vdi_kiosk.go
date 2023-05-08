@@ -352,7 +352,7 @@ func (v *kioskFixtureState) PostTest(ctx context.Context, s *testing.FixtTestSta
 	v.cr = cr
 	chrome.Lock()
 
-	if err := kioskmode.ConfirmKioskStarted(ctx, reader); err != nil {
+	if err := kioskmode.WaitLaunchLogs(ctx, reader); err != nil {
 		s.Fatal("Kiosk is not started after restarting Chrome: ", err)
 	}
 

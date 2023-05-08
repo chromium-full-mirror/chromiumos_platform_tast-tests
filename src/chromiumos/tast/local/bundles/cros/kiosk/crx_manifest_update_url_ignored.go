@@ -206,7 +206,7 @@ func openExtensionAndCheckTitleChange(ctx context.Context, s *testing.State, cr 
 	}
 
 	// Wait for kiosk to start.
-	if err := kioskmode.ConfirmKioskStarted(ctx, reader); err != nil {
+	if err := kioskmode.WaitLaunchLogs(ctx, reader); err != nil {
 		s.Fatal("There was a problem while checking chrome logs for Kiosk related entries: ", err)
 	}
 

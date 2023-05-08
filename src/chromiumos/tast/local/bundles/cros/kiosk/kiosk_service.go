@@ -50,7 +50,7 @@ func (c *KioskService) ConfirmKioskStarted(ctx context.Context, req *ppb.Confirm
 	}
 	defer reader.Close()
 
-	if err := kioskmode.ConfirmKioskStarted(ctx, reader); err != nil {
+	if err := kioskmode.WaitLaunchLogs(ctx, reader); err != nil {
 		return nil, errors.Wrap(err, "There was a problem while checking chrome logs for Kiosk related entries")
 	}
 

@@ -167,7 +167,7 @@ func SecondaryAppsInstalled(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to start Kiosk application from Sign-in screen: ", err)
 		}
 
-		if err := kioskmode.ConfirmKioskStarted(ctx, reader); err != nil {
+		if err := kioskmode.WaitLaunchLogs(ctx, reader); err != nil {
 			s.Fatal("There was a problem while checking chrome logs for Kiosk related entries: ", err)
 		}
 	}

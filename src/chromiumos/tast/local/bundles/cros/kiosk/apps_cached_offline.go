@@ -150,7 +150,7 @@ func AppsCachedOffline(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "failed to restart Chrome")
 		}
 
-		if err := kioskmode.ConfirmKioskStarted(ctx, reader); err != nil {
+		if err := kioskmode.WaitLaunchLogs(ctx, reader); err != nil {
 			return errors.Wrap(err, "kiosk is not started after restarting Chrome")
 		}
 
