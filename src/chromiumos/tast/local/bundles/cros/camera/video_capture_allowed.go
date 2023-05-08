@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package policy
+package camera
 
 import (
 	"context"
@@ -23,19 +23,21 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/policyutil"
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         VideoCaptureAllowedUrls,
+		Func:         VideoCaptureAllowed,
 		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Behavior of VideoCaptureAllowedUrls policy, checking that allow URLs don't request for video capture access",
+		Desc:         "Behavior of VideoCaptureAllowed policy, checking if a website is allowed to capture video",
 		Contacts: []string{
-			"cros-engprod-muc@google.com",
-			"eariassoto@google.com", // Test author
+			"chromeos-camera-eng@google.com",
+			"wtlee@google.com",
+			"alexanderhartl@google.com", // Test author
 		},
-		BugComponent: "b:1263917",
+		BugComponent: "b:167281",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier"},
 		Params: []testing.Param{{
@@ -49,13 +51,13 @@ func init() {
 		}},
 		Data: []string{"video_capture_allowed.html"},
 		SearchFlags: []*testing.StringPair{
-			pci.SearchFlag(&policy.VideoCaptureAllowedUrls{}, pci.VerifiedFunctionalityUI),
+			pci.SearchFlag(&policy.VideoCaptureAllowed{}, pci.VerifiedFunctionalityUI),
 		},
 	})
 }
 
-// VideoCaptureAllowedUrls tests the VideoCaptureAllowedUrls policy.
-func VideoCaptureAllowedUrls(ctx context.Context, s *testing.State) {
+// VideoCaptureAllowed tests the VideoCaptureAllowed policy.
+func VideoCaptureAllowed(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 
@@ -70,47 +72,47 @@ func VideoCaptureAllowedUrls(ctx context.Context, s *testing.State) {
 	// Connect to Test API to use it with the UI library.
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
-		s.Error("Failed to create Test API connection: ", err)
+		s.Fatal("Failed to create Test API connection: ", err)
 	}
-
 	ui := uiauto.New(tconn)
 
 	for _, param := range []struct {
-		name        string
-		expectedAsk bool // expectedAsk states whether a dialog to ask for permission should appear or not.
-		policy      *policy.VideoCaptureAllowedUrls
+		name          string
+		expectedBlock bool // expectedBlock states whether a dialog to ask for permission should appear or not.
+		policy        *policy.VideoCaptureAllowed
 	}{
 		{
-			name:        "include_url",
-			expectedAsk: false,
-			policy:      &policy.VideoCaptureAllowedUrls{Val: []string{server.URL + "/video_capture_allowed.html"}},
+			name:          "unset",
+			expectedBlock: false,
+			policy:        &policy.VideoCaptureAllowed{Stat: policy.StatusUnset},
 		},
 		{
-			name:        "exclude_url",
-			expectedAsk: true,
-			policy:      &policy.VideoCaptureAllowedUrls{Val: []string{"https://my_corp_site.com/conference.html"}},
+			name:          "blocked",
+			expectedBlock: true,
+			policy:        &policy.VideoCaptureAllowed{Val: false},
 		},
 		{
-			name:        "unset",
-			expectedAsk: true,
-			policy:      &policy.VideoCaptureAllowedUrls{Stat: policy.StatusUnset},
+			name:          "allowed",
+			expectedBlock: false,
+			policy:        &policy.VideoCaptureAllowed{Val: true},
 		},
 	} {
 		s.Run(ctx, param.name, func(ctx context.Context, s *testing.State) {
+
 			// Perform cleanup.
 			if err := policyutil.ResetChrome(ctx, fdms, cr); err != nil {
-				s.Error("Failed to clean up: ", err)
+				s.Fatal("Failed to clean up: ", err)
 			}
 
 			// Update policies.
 			if err := policyutil.ServeAndVerify(ctx, fdms, cr, []policy.Policy{param.policy}); err != nil {
-				s.Error("Failed to update policies: ", err)
+				s.Fatal("Failed to update policies: ", err)
 			}
 
 			// Setup browser based on the chrome type.
 			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
 			if err != nil {
-				s.Error("Failed to open the browser: ", err)
+				s.Fatal("Failed to open the browser: ", err)
 			}
 			defer closeBrowser(cleanupCtx)
 
@@ -119,19 +121,33 @@ func VideoCaptureAllowedUrls(ctx context.Context, s *testing.State) {
 			// Open the test website.
 			conn, err := br.NewConn(ctx, server.URL+"/video_capture_allowed.html")
 			if err != nil {
-				s.Error("Failed to open website: ", err)
+				s.Fatal("Failed to open website: ", err)
 			}
 			defer conn.Close()
 
+			// Check for existence of either the allow or block button until one of them appears.
 			allowButton := nodewith.Name("Allow").Role(role.Button)
-			if param.expectedAsk {
-				if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(allowButton)(ctx); err != nil {
-					s.Error("Failed to find the video capture prompt dialog: ", err)
+			blockedButton := nodewith.Name("This page has been blocked from accessing your camera.").Role(role.Button)
+			blocked := false
+			if err := testing.Poll(ctx, func(ctx context.Context) error {
+
+				if err = ui.Exists(allowButton)(ctx); err == nil {
+					return testing.PollBreak(nil)
 				}
-			} else {
-				if err := ui.EnsureGoneFor(allowButton, 10*time.Second)(ctx); err != nil {
-					s.Error("Failed to make sure no video capture prompt dialog shows: ", err)
+
+				if err = ui.Exists(blockedButton)(ctx); err == nil {
+					blocked = true
+					return testing.PollBreak(nil)
 				}
+
+				return errors.New("failed to find allow or blocked button")
+
+			}, &testing.PollOptions{Timeout: 15 * time.Second}); err != nil {
+				s.Fatal("Failed to find indicator if video capture is allowed or blocked: ", err)
+			}
+
+			if blocked != param.expectedBlock {
+				s.Errorf("Unexpected blocking of video capture: want %t got %t", param.expectedBlock, blocked)
 			}
 		})
 	}
