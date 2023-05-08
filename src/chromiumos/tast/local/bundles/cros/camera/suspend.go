@@ -12,6 +12,7 @@ import (
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/camera/testutil"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/power/suspend"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -55,8 +56,7 @@ func Suspend(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to use camera before suspend: ", err)
 	}
 
-	cmd = testexec.CommandContext(ctx, "powerd_dbus_suspend", "--delay=0", "--suspend_for_sec=5", "--wakeup_timeout=10")
-	if err := cmd.Run(testexec.DumpLogOnError); err != nil {
+	if _, err := suspend.ForDuration(ctx, 5*time.Second); err != nil {
 		s.Fatal("Failed to suspend: ", err)
 	}
 
