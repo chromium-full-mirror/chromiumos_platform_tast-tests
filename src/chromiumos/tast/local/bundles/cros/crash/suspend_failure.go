@@ -12,6 +12,7 @@ import (
 
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/crash"
+	"chromiumos/tast/local/power/suspend"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -64,11 +65,16 @@ func SuspendFailure(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set permissions on /sys/power/state: ", err)
 	}
 
-	// Error is expected here. Set a 60 second wakeup just in case suspend
-	// somehow works here.
-	err = testexec.CommandContext(ctx, "powerd_dbus_suspend", "--timeout=30", "--wakeup_timeout=60").Run()
-	if err == nil {
-		s.Error("powerd_dbus_suspend didn't fail when we expect it to")
+	// Error is expected here, due to /sys/power/state being inaccessible.
+	// Sets a 60 second wakeup just in case suspend somehow works here.
+	// Sets a 30 second timeout to fail after allowing time for ~3 suspend
+	// attempts.
+	// If we were to allow powerd to fail to suspend 10 times (~100 seconds),
+	// powerd would shut down the DUT. Since this is a local test, there is no
+	// way to recover from a shutdown DUT, so we should not allow that to
+	// happen.
+	if _, err := suspend.Request(ctx, suspend.For(60*time.Second), suspend.Timeout(30*time.Second)); err == nil {
+		s.Error("powerd_dbus_suspend didn't fail when we expected it to")
 	}
 
 	// Restart powerd since it's still trying to suspend (which we don't want to
