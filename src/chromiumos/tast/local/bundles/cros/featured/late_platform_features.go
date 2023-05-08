@@ -6,12 +6,14 @@ package featured
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"time"
 
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -33,6 +35,7 @@ func init() {
 		BugComponent: "b:1096648",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
+		Timeout:      chrome.LoginTimeout + 20*time.Second,
 		Params: []testing.Param{{
 			Name: "file_exists_enabled",
 			Val: latePlatformParams{
@@ -73,7 +76,28 @@ const (
 	filePath = "/run/featured_test/test_write"
 	// expectedContents is the expected contents of the filePath after featured writes to it.
 	expectedContents = "test_featured"
+	// A sentinel error value used when we're not yet sure if the test has passed in the "experiment disabled, file exists" case.
+	experimentDisabledSentinel = "experiment_disabled_sentinel"
+	// A sentinel error value used when we're not yet sure if the test has passed in the "file does not exist" cases.
+	fileNotExistSentinel = "file_not_exist_sentinel"
 )
+
+type keepWaiting struct {
+	desc string
+}
+
+func (e keepWaiting) Error() string {
+	return fmt.Sprintf("Keep waiting: %s", e.desc)
+}
+
+func (e keepWaiting) Is(target error) bool {
+	switch target.(type) {
+	case keepWaiting:
+		return true
+	default:
+		return false
+	}
+}
 
 func LatePlatformFeatures(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
@@ -102,6 +126,7 @@ func LatePlatformFeatures(ctx context.Context, s *testing.State) {
 	}
 
 	// Restart featured.
+	s.Log("Restarting featured")
 	if err := upstart.RestartJob(ctx, "featured"); err != nil {
 		s.Fatal("Failed to restart featured: ", err)
 	}
@@ -112,6 +137,7 @@ func LatePlatformFeatures(ctx context.Context, s *testing.State) {
 	// If we run into flakiness, add functionality to featured to write a file once it's registered
 	// the signal handler.
 
+	s.Log("Restarting chrome")
 	arg := chrome.EnableFeatures(enabledFeature)
 	if !params.ExperimentEnabled {
 		arg = chrome.DisableFeatures(enabledFeature)
@@ -122,28 +148,46 @@ func LatePlatformFeatures(ctx context.Context, s *testing.State) {
 	}
 	defer cr.Close(cleanupCtx)
 
-	if params.FileExist {
-		// In all events, it should exist -- featured should not have removed it.
-		if _, err := os.Stat(filePath); err != nil {
-			s.Fatalf("Failed to stat %s: %v", filePath, err)
-		}
-		contents, err := os.ReadFile(filePath)
-		if err != nil {
-			s.Fatalf("Failed to read %s: %v", filePath, err)
-		}
-		if params.ExperimentEnabled {
-			if string(contents) != expectedContents {
-				s.Fatalf("Unexpected contents: got %q, want %q", string(contents), expectedContents)
+	if err := testing.Poll(ctx, func(c context.Context) error {
+		if params.FileExist {
+			// In all events, it should exist -- featured should not have removed it.
+			if _, err := os.Stat(filePath); err != nil {
+				return testing.PollBreak(errors.Wrapf(err, "failed to stat %s", filePath))
+			}
+			contents, err := os.ReadFile(filePath)
+			if err != nil {
+				return testing.PollBreak(errors.Wrapf(err, "failed to read %s", filePath))
+			}
+			if params.ExperimentEnabled {
+				if string(contents) != expectedContents {
+					return errors.Errorf("unexpected contents: got %q, want %q", string(contents), expectedContents)
+				}
+			} else {
+				if len(contents) != 0 {
+					return errors.Errorf("unexpected contents: got %q, wanted empty", string(contents))
+				}
+				// Return a special sentinel error so we do not immediately assume featured won't overwrite this
+				// file, but instead keep waiting.
+				// Later, we'll treat failures with this sentinel as successes.
+				return keepWaiting{experimentDisabledSentinel}
 			}
 		} else {
-			if len(contents) != 0 {
-				s.Fatalf("Unexpected contents: got %q, wanted empty", string(contents))
+			// In all events, it should NOT exist -- featured should not have created it.
+			if _, err := os.Stat(filePath); err == nil {
+				return testing.PollBreak(errors.Errorf("file %s existed but it should not have", filePath))
 			}
+			// Return a special sentinel error so we do not immediately assume featured won't create this
+			// file, but instead keep waiting.
+			// Later, we'll treat failures with this sentinel as successes.
+			return keepWaiting{fileNotExistSentinel}
 		}
-	} else {
-		// In all events, it should NOT exist -- featured should not have created it.
-		if _, err := os.Stat(filePath); err == nil {
-			s.Fatalf("File %s existed but it should not have", filePath)
+		return nil
+	}, &testing.PollOptions{Timeout: 20 * time.Second}); err != nil {
+		if errors.Is(err, keepWaiting{}) && !(params.FileExist && params.ExperimentEnabled) {
+			// We expected to have a keepWaiting, and got one.
+			s.Logf("Suceeding because err was %s", err.Error())
+			return
 		}
+		s.Error("Failed to wait for featured: ", err)
 	}
 }
