@@ -966,20 +966,9 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 	// Find the web view of Meet window.
 	webview := nodewith.ClassName("ContentsWebView").Role(role.WebView)
 
-	uiLongWait := ui.WithTimeout(time.Minute)
-	bubble := nodewith.ClassName("PermissionPromptBubbleView").First()
-	allow := nodewith.Name("Allow").Role(role.Button).Ancestor(bubble)
+	const longUITimeout = time.Minute
 	// Check and grant permissions.
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		// Long wait for permission bubble and break poll loop when it times out.
-		if err := uiLongWait.WaitUntilExists(bubble)(ctx); err != nil {
-			return nil
-		}
-		if err := pc.Click(allow)(ctx); err != nil {
-			return errors.Wrap(err, "failed to click the allow button")
-		}
-		return errors.New("granting permissions")
-	}, &testing.PollOptions{Interval: time.Second, Timeout: 2 * time.Minute}); err != nil {
+	if err := prompts.ClearPotentialPrompts(tconn, longUITimeout, prompts.ShowNotificationsPrompt, prompts.AllowAVPermissionPrompt)(ctx); err != nil {
 		s.Fatal("Failed to grant permissions: ", err)
 	}
 
@@ -999,6 +988,17 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 			return errors.Errorf("got %d participants, expected %d", participantCount, expectedCount)
 		}
 		return nil
+	}
+	uiLongWait := ui.WithTimeout(longUITimeout)
+	meetRootWebArea := nodewith.NameContaining("Meet").Role(role.RootWebArea)
+	participantText := nodewith.NameRegex(regexp.MustCompile(`^[\d]+$`)).Role(role.StaticText).Ancestor(meetRootWebArea)
+	if err := uiauto.NamedAction("wait for the number of participants to be loaded",
+		// Some DUT models have poor performance. When joining a large conference
+		// (over 15 participants), it would take much time to render DOM elements.
+		// Set a longer timer here.
+		uiLongWait.WaitUntilExists(participantText),
+	)(ctx); err != nil {
+		s.Fatal("Failed to wait for participant info: ", err)
 	}
 	if err := checkParticipantCount(ctx, expectedParticipantCount); err != nil {
 		s.Fatal("The number of bots is unexpected: ", err)
