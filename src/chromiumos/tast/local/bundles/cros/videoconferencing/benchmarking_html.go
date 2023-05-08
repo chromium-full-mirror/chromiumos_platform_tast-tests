@@ -165,7 +165,7 @@ func BenchmarkingHTML(ctx context.Context, s *testing.State) {
 	defer faillog.DumpUITreeWithScreenshotOnError(closeCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
 	// Find camera permissions prompt.
-	bubble := nodewith.ClassName("PermissionPromptBubbleView").First()
+	bubble := nodewith.ClassName("PermissionPromptBubbleBaseView").First()
 	allow := nodewith.Name("Allow").Role(role.Button).Ancestor(bubble)
 
 	// Find the web view of Simple Meeting window.
@@ -195,16 +195,19 @@ func BenchmarkingHTML(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to let things settle: ", err)
 	}
 
+	memoryChannel := make(chan effects.PeakMemoryResult)
+	go effects.GetMaxMemoryUsage(ctx, memoryChannel, testDuration)
+
 	// Capture metrics.
 	if err = effects.ReportFramePerfMetrics(ctx, p, conn, s.DataPath("effects_frame_metrics.js"), testDuration); err != nil {
-		s.Fatal("Failed to report fps and frame duration metrics: ", err)
+		s.Error("Failed to report fps and frame duration metrics: ", err)
 	}
 	if raplEnergyBefore != nil {
 		if effects.ReportPowerDiffMetrics(ctx, p, raplEnergyBefore, testDuration) != nil {
-			s.Fatal("Failed to report power metrics: ", err)
+			s.Error("Failed to report power metrics: ", err)
 		}
 	}
-	if err = effects.ReportMemoryMetrics(ctx, p, testDuration); err != nil {
+	if err = effects.ReportMemoryMetrics(ctx, p, memoryChannel); err != nil {
 		s.Error("Failed to report memory metrics: ", err)
 	}
 	if err := p.Save(s.OutDir()); err != nil {

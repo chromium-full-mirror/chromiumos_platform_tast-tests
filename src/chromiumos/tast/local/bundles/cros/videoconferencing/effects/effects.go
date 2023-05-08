@@ -89,10 +89,9 @@ func CaptureFPSData(ctx context.Context, conn *browser.Conn, file string, second
 
 // ReportFramePerfMetrics reports FPS and Frame duration metrics.
 func ReportFramePerfMetrics(ctx context.Context, p *perf.Values, conn *browser.Conn, file string, testDuration int) error {
-	var err error
-	var results DataResult
-	if results, err = CaptureFPSData(ctx, conn, file, testDuration); err != nil {
-		return errors.Wrap(err, "failed to read FPS script")
+	results, err := CaptureFPSData(ctx, conn, file, testDuration)
+	if err != nil {
+		return errors.Wrap(err, "failed to run FPS script")
 	}
 
 	p.Set(perf.Metric{
@@ -133,12 +132,8 @@ func ReportFramePerfMetrics(ctx context.Context, p *perf.Values, conn *browser.C
 }
 
 // ReportMemoryMetrics reports peak memory usage.
-func ReportMemoryMetrics(ctx context.Context, p *perf.Values, testDuration int) error {
+func ReportMemoryMetrics(ctx context.Context, p *perf.Values, memoryChannel chan PeakMemoryResult) error {
 	var err error
-	memoryChannel := make(chan PeakMemoryResult)
-
-	go GetMaxMemoryUsage(ctx, memoryChannel, testDuration)
-
 	peakMemoryUsage := <-memoryChannel
 	if peakMemoryUsage.Err != nil {
 		return errors.Wrap(err, "memory capture failed")

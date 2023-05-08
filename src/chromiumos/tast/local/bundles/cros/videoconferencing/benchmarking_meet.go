@@ -198,16 +198,20 @@ func BenchmarkingMeet(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to let things settle: ", err)
 	}
 
+	memoryChannel := make(chan effects.PeakMemoryResult)
+	go effects.GetMaxMemoryUsage(ctx, memoryChannel, testDuration)
+
 	// Capture metrics.
 	if err = effects.ReportFramePerfMetrics(ctx, p, gm.Conn(), s.DataPath("effects_frame_metrics.js"), testDuration); err != nil {
-		s.Fatal("Failed to report fps and frame duration metrics: ", err)
+		s.Error("Failed to report fps and frame duration metrics: ", err)
 	}
 	if raplEnergyBefore != nil {
 		if effects.ReportPowerDiffMetrics(ctx, p, raplEnergyBefore, testDuration) != nil {
-			s.Fatal("Failed to report power metrics: ", err)
+			s.Error("Failed to report power metrics: ", err)
 		}
 	}
-	if err = effects.ReportMemoryMetrics(ctx, p, testDuration); err != nil {
+
+	if err = effects.ReportMemoryMetrics(ctx, p, memoryChannel); err != nil {
 		s.Error("Failed to report memory metrics: ", err)
 	}
 	if err := p.Save(s.OutDir()); err != nil {
