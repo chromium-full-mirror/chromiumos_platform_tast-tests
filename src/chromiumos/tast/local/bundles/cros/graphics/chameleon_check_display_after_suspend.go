@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"chromiumos/tast/common/chameleon"
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/graphics"
+	"chromiumos/tast/local/power/suspend"
 	"chromiumos/tast/local/screenshot"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -178,12 +178,9 @@ func ChameleonCheckDisplayAfterSuspend(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Start suspending the DUT")
-	cmd := testexec.CommandContext(ctx, "powerd_dbus_suspend", "--delay=0", "--timeout=30", "--suspend_for_sec=10")
-	err = cmd.Run()
-	if err != nil {
+	if _, err := suspend.ForDuration(ctx, 10*time.Second); err != nil {
 		s.Fatal("The powerd_dbus_suspend failed to properly suspend: ", err)
 	}
-	testing.ContextLog(ctx, "DUT resumes from being suspended")
 
 	s.Log("Reconnecting to Chrome")
 	err = cr.Reconnect(ctx)
