@@ -13,10 +13,14 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+// maxReadError defines the max consecutive read errors allowed.
+const maxReadError = 5
+
 type thermalStateDataSource struct {
 	ignoreChargerType bool
 	coolingDevices    []*power.CoolingDevice
 	metric            perf.Metric
+	errCount          map[*power.CoolingDevice]int
 }
 
 // NewThermalStateDataSource creates a new instance of thermalStateDataSource.
@@ -25,6 +29,7 @@ type thermalStateDataSource struct {
 func NewThermalStateDataSource(ignoreChargerType bool) *thermalStateDataSource {
 	return &thermalStateDataSource{
 		ignoreChargerType: ignoreChargerType,
+		errCount:          make(map[*power.CoolingDevice]int),
 	}
 }
 
@@ -67,8 +72,15 @@ func (ds *thermalStateDataSource) Snapshot(ctx context.Context, values *perf.Val
 
 		deviceState, err := dev.GetThermalState(ctx)
 		if err != nil {
-			return errors.Wrapf(err, "failed to read %s", dev.CurStatePath)
+			ds.errCount[dev]++
+			if ds.errCount[dev] > maxReadError {
+				return errors.Wrapf(err, "failed to read %s", dev.CurStatePath)
+			}
+			continue
 		}
+
+		// Resets error count on successful read.
+		ds.errCount[dev] = 0
 
 		if deviceState > thermalState {
 			thermalState = deviceState
