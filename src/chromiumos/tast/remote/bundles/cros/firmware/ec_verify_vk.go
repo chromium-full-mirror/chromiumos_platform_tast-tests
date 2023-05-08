@@ -161,6 +161,29 @@ func ECVerifyVK(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
+	// Turn servo usb keyboard off prior to testing virtual keyboard.
+	initUSBKeyboard, err := h.Servo.GetOnOff(ctx, servo.USBKeyboard)
+	if err != nil {
+		s.Fatal("Failed to get state for servo usb keyboard: ", err)
+	}
+	s.Logf("Found servo usb keyboard: %t", initUSBKeyboard)
+	defer func(kbEmulator bool) {
+		var restoreVal servo.OnOffValue
+		switch kbEmulator {
+		case true:
+			restoreVal = servo.On
+		case false:
+			restoreVal = servo.Off
+		}
+		if err := h.Servo.SetOnOff(ctx, servo.USBKeyboard, restoreVal); err != nil {
+			s.Fatal("Failed to restore servo usb keyboard state: ", err)
+		}
+	}(initUSBKeyboard)
+	s.Log("Disabling servo usb keyboard")
+	if err := h.Servo.SetOnOff(ctx, servo.USBKeyboard, servo.Off); err != nil {
+		s.Fatal("Failed to disable servo usb keyboard: ", err)
+	}
+
 	// Restore tablet mode settings so that DUT won't
 	// be left in tablet mode at the end of test.
 	args := s.Param().(dutTestParams)
