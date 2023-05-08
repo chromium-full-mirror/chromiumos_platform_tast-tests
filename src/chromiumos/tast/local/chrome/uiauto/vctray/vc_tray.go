@@ -40,7 +40,7 @@ var (
 	bgBlurLightButton = nodewith.NameContaining("Light").Role(role.Button).Ancestor(panelSection)
 	bgBlurFullButton  = nodewith.NameContaining("Full").Role(role.Button).Ancestor(panelSection)
 
-	showAppsButton = nodewith.NameStartingWith("Used by").Role(role.Button).Ancestor(panelSection)
+	showAppsButton = nodewith.NameContaining("Used by").Role(role.Button).Ancestor(panelSection)
 )
 
 // VCTray represents the type of video conference tray.

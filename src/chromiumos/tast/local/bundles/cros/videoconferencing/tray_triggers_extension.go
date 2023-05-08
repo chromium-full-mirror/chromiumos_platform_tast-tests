@@ -86,6 +86,7 @@ func TrayTriggersExtension(ctx context.Context, s *testing.State) {
 
 	// By default, only audio is activated by launching extension popup.
 	s.Run(ctx, "mic_only", func(ctx context.Context, s *testing.State) {
+		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_mic_only")
 		sc, err := screencastify.Launch(ctx, cr, tconn)
 		if err != nil {
 			s.Fatal("Failed to launch Screencastify extension: ", err)
@@ -111,6 +112,7 @@ func TrayTriggersExtension(ctx context.Context, s *testing.State) {
 
 	// Verify extension triggers vcTray on camera.
 	s.Run(ctx, "cam_only", func(ctx context.Context, s *testing.State) {
+		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_cam_only")
 		sc, err := screencastify.Launch(ctx, cr, tconn)
 		if err != nil {
 			s.Fatal("Failed to launch Screencastify extension: ", err)
@@ -145,6 +147,7 @@ func TrayTriggersExtension(ctx context.Context, s *testing.State) {
 
 	// Verify extension triggers vcTray on sharing screen.
 	s.Run(ctx, "screen_only", func(ctx context.Context, s *testing.State) {
+		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_screen_only")
 		sc, err := screencastify.Launch(ctx, cr, tconn)
 		if err != nil {
 			s.Fatal("Failed to launch Screencastify extension: ", err)
