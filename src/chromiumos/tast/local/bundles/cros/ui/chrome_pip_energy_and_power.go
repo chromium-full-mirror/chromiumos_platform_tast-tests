@@ -28,6 +28,7 @@ import (
 	"chromiumos/tast/local/cpu"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/power"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -42,7 +43,7 @@ func init() {
 		Func:         ChromePIPEnergyAndPower,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures energy and power usage of Chrome PIP",
-		Contacts:     []string{"chromeos-perf@google.com", "petermcneeley@chromium.org", "amusbach@chromium.org"},
+		Contacts:     []string{"chromeos-perf@google.com", "petermcneeley@chromium.org"},
 		BugComponent: "b:167191", // ChromeOS > Platform > System > Power
 		Attr:         []string{"group:crosbolt", "crosbolt_nightly"},
 		SoftwareDeps: []string{"chrome", "proprietary_codecs"},

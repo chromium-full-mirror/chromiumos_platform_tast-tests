@@ -23,6 +23,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/chrome/webutil"
 	"chromiumos/tast/local/coords"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -43,7 +44,7 @@ func init() {
 		Func:         ChromePIPRoundedCornersUnderlay,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verifies that Chrome PIP rounded corners are implemented with a hardware underlay",
-		Contacts:     []string{"chromeos-perf@google.com", "petermcneeley@chromium.org", "amusbach@chromium.org", "oshima@chromium.org"},
+		Contacts:     []string{"chromeos-perf@google.com", "petermcneeley@chromium.org", "oshima@chromium.org"},
 		BugComponent: "b:1021073",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "proprietary_codecs"},

@@ -15,6 +15,7 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/cuj"
 	"chromiumos/tast/local/ui/cujrecorder"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -25,7 +26,7 @@ func init() {
 		Func:         ArcYoutubeCUJ,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures the performance of critical user journey for the YouTube ARC app",
-		Contacts:     []string{"chromeos-perfmetrics-eng@google.com", "amusbach@chromium.org"},
+		Contacts:     []string{"chromeos-perfmetrics-eng@google.com", "ramsaroop@chromium.org"},
 		BugComponent: "b:1045832",
 		Attr:         []string{"group:cuj"},
 		SoftwareDeps: []string{"chrome", "arc"},

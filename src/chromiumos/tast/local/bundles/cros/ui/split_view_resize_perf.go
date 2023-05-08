@@ -24,6 +24,7 @@ import (
 	"chromiumos/tast/local/perfutil"
 	"chromiumos/tast/local/power"
 	"chromiumos/tast/local/ui"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -46,7 +47,6 @@ func init() {
 		Contacts: []string{
 			"chromeos-perfmetrics-eng@google.com",
 			"sammiequon@chromium.org",
-			"amusbach@chromium.org",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},

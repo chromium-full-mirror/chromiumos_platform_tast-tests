@@ -19,6 +19,7 @@ import (
 	"chromiumos/tast/local/chrome/lacros"
 	"chromiumos/tast/local/perfutil"
 	"chromiumos/tast/local/power"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -32,7 +33,6 @@ func init() {
 		Desc:         "Measures animation smoothness of entering/exiting the overview mode",
 		Contacts: []string{
 			"chromeos-perfmetrics-eng@google.com",
-			"amusbach@chromium.org",
 			"oshima@chromium.org",
 			"xiyuan@chromium.org",
 		},

@@ -20,6 +20,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/pointer"
 	"chromiumos/tast/local/coords"
 	"chromiumos/tast/local/ui/cujrecorder"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -32,7 +33,7 @@ func init() {
 		Desc:         "Measures the performance of critical user journey for window state transitions",
 		Contacts: []string{
 			"chromeos-perfmetrics-eng@google.com",
-			"amusbach@chromium.org",
+			"ramsaroop@chromium.org",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		SoftwareDeps: []string{"chrome"},

@@ -14,6 +14,7 @@ import (
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -46,7 +47,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "driveFsStartedLacros",
 		Desc:            "Lacros variant of driveFsStarted",
-		Contacts:        []string{"amusbach@chromium.org", "chromeos-files-syd@chromium.org"},
+		Contacts:        []string{"chromeos-files-syd@chromium.org"},
 		Impl:            &fixture{bt: browser.TypeLacros},
 		SetUpTimeout:    chrome.LoginTimeout + driveFsSetupAndTearDownTimeout,
 		ResetTimeout:    driveFsSetupAndTearDownTimeout,

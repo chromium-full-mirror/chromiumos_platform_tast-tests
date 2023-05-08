@@ -15,6 +15,7 @@ import (
 	"chromiumos/tast/local/arc/optin"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -240,9 +241,12 @@ func init() {
 
 	// lacrosWithArcBooted is a fixture that combines the functionality of arcBooted and lacros.
 	testing.AddFixture(&testing.Fixture{
-		Name:     "lacrosWithArcBooted",
-		Desc:     "Lacros Chrome from a pre-built image with ARC booted",
-		Contacts: []string{"amusbach@chromium.org", "xiyuan@chromium.org"},
+		Name: "lacrosWithArcBooted",
+		Desc: "Lacros Chrome from a pre-built image with ARC booted",
+		Contacts: []string{
+			"chromeos-perfmetrics-eng@google.com",
+			"xiyuan@chromium.org",
+		},
 		Impl: NewArcBootedFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(chrome.ARCEnabled(), chrome.UnRestrictARCCPU())).Opts()
 		}),
@@ -254,9 +258,12 @@ func init() {
 
 	// lacrosWithArcBootedInTabletMode is a fixture similar to lacrosWithArcBooted. The only difference is that Chrome is launched in tablet mode in this fixture.
 	testing.AddFixture(&testing.Fixture{
-		Name:     "lacrosWithArcBootedInTabletMode",
-		Desc:     "Lacros Chrome from a pre-built image with ARC booted in tablet mode",
-		Contacts: []string{"amusbach@chromium.org", "xiyuan@chromium.org"},
+		Name: "lacrosWithArcBootedInTabletMode",
+		Desc: "Lacros Chrome from a pre-built image with ARC booted in tablet mode",
+		Contacts: []string{
+			"chromeos-perfmetrics-eng@google.com",
+			"xiyuan@chromium.org",
+		},
 		Impl: NewArcBootedFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(chrome.ARCEnabled(), chrome.UnRestrictARCCPU(), chrome.ExtraArgs("--force-tablet-mode=touch_view", "--enable-virtual-keyboard"))).Opts()
 		}),
@@ -268,10 +275,13 @@ func init() {
 
 	// lacrosWithArcBootedAndPlayStore is a fixture that combines the functionality of arcBootedWithPlayStore and lacros.
 	testing.AddFixture(&testing.Fixture{
-		Name:     "lacrosWithArcBootedAndPlayStore",
-		Desc:     "Lacros Chrome from a pre-built image with ARC booted and the Play Store enabled",
-		Contacts: []string{"amusbach@chromium.org", "xiyuan@chromium.org"},
-		Vars:     []string{"ui.gaiaPoolDefault"},
+		Name: "lacrosWithArcBootedAndPlayStore",
+		Desc: "Lacros Chrome from a pre-built image with ARC booted and the Play Store enabled",
+		Contacts: []string{
+			"chromeos-perfmetrics-eng@google.com",
+			"xiyuan@chromium.org",
+		},
+		Vars: []string{"ui.gaiaPoolDefault"},
 		Impl: NewArcBootedWithPlayStoreFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
 				chrome.ARCEnabled(),

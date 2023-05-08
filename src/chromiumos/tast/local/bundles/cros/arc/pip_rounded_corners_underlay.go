@@ -12,6 +12,7 @@ import (
 	"chromiumos/tast/local/bundles/cros/arc/arcpipvideotest"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/metrics"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -23,7 +24,7 @@ func init() {
 		Func:         PIPRoundedCornersUnderlay,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that ARC++ PIP rounded corners are implemented with a hardware underlay",
-		Contacts:     []string{"chromeos-perf@google.com", "petermcneeley@chromium.org", "amusbach@chromium.org", "oshima@chromium.org"},
+		Contacts:     []string{"chromeos-perf@google.com", "petermcneeley@chromium.org", "oshima@chromium.org"},
 		BugComponent: "b:1021073",
 		Attr:         []string{"group:mainline"},
 		// Video playback doesn't work well on VM boards.
