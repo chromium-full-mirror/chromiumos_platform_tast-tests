@@ -75,9 +75,6 @@ func LoginGoogleAccount(ctx context.Context, cr *chrome.Chrome, account, passwor
 		))(ctx)
 	}
 
-	warning := nodewith.Name("Protect your account").Role(role.StaticText)
-	confirm := nodewith.Name("CONFIRM").Role(role.Button).Focusable()
-
 	return uiauto.Combine("login to browser",
 		// Although the browser has been changed to English, the login page will still display another default language in low-end DUTs.
 		changeLanguage,
@@ -87,9 +84,6 @@ func LoginGoogleAccount(ctx context.Context, cr *chrome.Chrome, account, passwor
 		ui.DoDefault(showPassword),
 		confirmInput(passwordField, password),
 		kb.AccelAction("Enter"),
-		uiauto.IfSuccessThen(
-			ui.WaitUntilExists(warning),
-			uiauto.NamedAction(`click the "CONFIRM" button`, ui.LeftClick(confirm)),
-		),
+		ui.WaitUntilGone(passwordField),
 	)(ctx)
 }
