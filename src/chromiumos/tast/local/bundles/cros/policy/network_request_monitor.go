@@ -10,6 +10,7 @@ import (
 	"net/http/httptest"
 	"time"
 
+	"chromiumos/tast/common/chrome/credconfig"
 	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
@@ -20,6 +21,7 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
+	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
 	"chromiumos/tast/local/chrome/uiauto/checked"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/restriction"
@@ -37,18 +39,19 @@ func init() {
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
 			"ramyagopalan@google.com",
-			"shahinmd@google.com", // Test author
+			"shahinmd@google.com", // Test author.
 		},
 		BugComponent: "b:1129862",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
+		VarDeps:      []string{"policy.managedUserAccountPool"},
 		Params: []testing.Param{{
-			Fixture: fixture.ChromePolicyLoggedIn,
+			Fixture: fixture.FakeDMS,
 			Val:     browser.TypeAsh,
 		}, {
 			Name:              "lacros",
 			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.LacrosPolicyLoggedIn,
+			Fixture:           fixture.PersistentLacros, // FakeDMS with lacros policy.
 			Val:               browser.TypeLacros,
 		}},
 		Data: []string{"spell_checking.html", "quick_answers.html"},
@@ -71,19 +74,47 @@ func getPolicyList() []policy.Policy {
 // getAnnotationHashCodes returns a list of annotations that are not supposed to be found in the logs when the optional services are disabled.
 func getAnnotationHashCodes() []string {
 	return []string{
-		"132553989", // spellcheck_lookup
-		"46208118",  // quick_answers_loader
+		"132553989", // spellcheck_lookup.
+		"46208118",  // quick_answers_loader.
 	}
 }
 
 func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 
 	// Reserve ten seconds for cleanup.
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
+
+	gaiaCreds, err := credconfig.PickRandomCreds(s.RequiredVar("policy.managedUserAccountPool"))
+	if err != nil {
+		s.Fatal("Failed to parse managed user creds: ", err)
+	}
+
+	policyBlob := policy.NewBlob()
+	policyBlob.PolicyUser = gaiaCreds.User
+	if err := fdms.WritePolicyBlob(policyBlob); err != nil {
+		s.Fatal("Failed to write policies to FakeDMS: ", err)
+	}
+
+	opts := []chrome.Option{
+		chrome.DMSPolicy(fdms.URL),  // FakeDMS for setting policies.
+		chrome.GAIALogin(gaiaCreds), // Real GAIA to enable calendar_get_events call.
+	}
+	// If browser type is lacros, handle differently.
+	if s.Param().(browser.Type) == browser.TypeLacros {
+		opts, err = lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(opts...)).Opts()
+		if err != nil {
+			s.Fatal("Failed to compute lacros chrome options: ", err)
+		}
+	}
+
+	cr, err := chrome.New(ctx, opts...)
+	if err != nil {
+		s.Fatal("Failed to start Chrome: ", err)
+	}
+	defer cr.Close(ctx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -100,8 +131,14 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 	}
 
 	// Update policies.
-	if err := policyutil.ServeAndVerify(ctx, fdms, cr, getPolicyList()); err != nil {
+	policies := getPolicyList()
+	policyBlob.AddPolicies(policies)
+	// Updates policies in Chrome by updating the the policy blob of FakeDMS. This allows using a custom PolicyUser for the policy blob instead of the default one.
+	if err := policyutil.ServeBlobAndRefresh(ctx, fdms, cr, policyBlob); err != nil {
 		s.Fatal("Failed to update policies: ", err)
+	}
+	if err := policyutil.Verify(ctx, tconn, policies); err != nil {
+		s.Fatal("Failed to verify updated policies: ", err)
 	}
 
 	// Setup the browser for lacros tests after the policy was set.
