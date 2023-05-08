@@ -77,12 +77,21 @@ type FakeCameraImageConfig struct {
 	Path string `json:"path,omitempty"`
 }
 
+// FakeCameraFormatsConfig represents the config of the video format.
+type FakeCameraFormatsConfig struct {
+	Width  int `json:"width"`
+	Height int `json:"height"`
+	// Support only constant frame rates [30, 60] but not frame rate ranges [[1, 999], [10, 30]] for now.
+	FrameRates []int `json:"frame_rates"`
+}
+
 // FakeCameraConfig represents the config for a single camera for fake HAL.
 type FakeCameraConfig struct {
-	ID        int                    `json:"id"`
-	Connected bool                   `json:"connected"`
-	Frames    *FakeCameraImageConfig `json:"frames,omitempty"`
-	// TODO(pihsun): Add other fields
+	ID               int                      `json:"id"`
+	Connected        bool                     `json:"connected"`
+	Frames           *FakeCameraImageConfig   `json:"frames,omitempty"`
+	SupportedFormats *FakeCameraFormatsConfig `json:"supported_formats,omitempty"`
+	// TODO(pihsun): Add other fields.
 }
 
 // FakeHALConfig represents the config for the fake HAL.

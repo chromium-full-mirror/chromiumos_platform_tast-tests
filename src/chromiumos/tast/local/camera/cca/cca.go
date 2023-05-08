@@ -36,6 +36,11 @@ import (
 // Facing is camera facing from JavaScript VideoFacingModeEnum.
 type Facing string
 
+// FPSObserver communicates to the FPS observer implementation on JS side.
+type FPSObserver struct {
+	jsObj *chrome.JSObject
+}
+
 const (
 	// FacingBack is the constant string from JavaScript VideoFacingModeEnum.
 	FacingBack Facing = "environment"
@@ -1116,6 +1121,51 @@ func (a *App) SetEnableMultiStreamRecording(ctx context.Context, enabled bool) e
 		return errors.Wrap(err, "failed to enable multi-stream recording")
 	}
 
+	// TODO(b/275304766): Remove the sleep once we collect enough performance data and can decide which solution should be kept.
+	//
+	// GoBigSleepLint: Sleep here as a workaround since now we have two multi-stream options so CCA might reconfigure twice.
+	//                 Since we need two options only temporarily to collect performance data, use a sleep as a workaround
+	//                 instead of introducing complex mechanism in CCA.
+	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+		return errors.Wrap(err, "failed to sleep before waiting for video active")
+	}
+
+	if err := a.WaitForVideoActive(ctx); err != nil {
+		return errors.Wrap(err, "failed to wait for video active")
+	}
+
+	return nil
+}
+
+// SetEnableMultiStreamRecordingChrome enables/disables recording videos with multiple streams (scale by Chrome version) via expert mode.
+func (a *App) SetEnableMultiStreamRecordingChrome(ctx context.Context, enabled bool) error {
+	if err := a.EnableExpertMode(ctx); err != nil {
+		return errors.Wrap(err, "failed to enable expert mode")
+	}
+
+	if err := a.OpenSettingMenu(ctx, MainMenu); err != nil {
+		return errors.Wrap(err, "failed to open main menu")
+	}
+	defer a.CloseSettingMenu(ctx, MainMenu)
+
+	if err := a.OpenSettingMenu(ctx, ExpertMenu); err != nil {
+		return errors.Wrap(err, "failed to open expert menu")
+	}
+	defer a.CloseSettingMenu(ctx, ExpertMenu)
+
+	if err := a.SetOptionChecked(ctx, MultistreamRecordingChromeOption, enabled); err != nil {
+		return errors.Wrap(err, "failed to enable multi-stream-chrome recording")
+	}
+
+	// TODO(b/275304766): Remove the sleep once we collect enough performance data and can decide which solution should be kept.
+	//
+	// GoBigSleepLint: Sleep here as a workaround since now we have two multi-stream options so CCA might reconfigure twice.
+	//                 Since we need two options only temporarily to collect performance data, use a sleep as a workaround
+	//                 instead of introducing complex mechanism in CCA.
+	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+		return errors.Wrap(err, "failed to sleep before waiting for video active")
+	}
+
 	if err := a.WaitForVideoActive(ctx); err != nil {
 		return errors.Wrap(err, "failed to wait for video active")
 	}
@@ -1481,4 +1531,28 @@ func (a *App) TimeLapseDuration(ctx context.Context, recordTime time.Duration) (
 		return 0, nil
 	}
 	return time.Duration(duration * float64(time.Second)), nil
+}
+
+// FPSObserver returns the FPS observer which can be later used to get average FPS.
+func (a *App) FPSObserver(ctx context.Context) (*FPSObserver, error) {
+	var fpsObserver chrome.JSObject
+	if err := a.conn.Eval(ctx, "CCATest.getFpsObserver()", &fpsObserver); err != nil {
+		return nil, errors.Wrap(err, "failed to get FPS observer")
+	}
+	return &FPSObserver{jsObj: &fpsObserver}, nil
+}
+
+// AverageFPS accepts a FPSObserver as the parameter and get the average FPS via the observer. This call also releases the observer object.
+func (f *FPSObserver) AverageFPS(ctx context.Context) (float64, error) {
+	var averageFPS float64
+	if err := f.jsObj.Call(ctx, &averageFPS, "function() { return this.getAverageFps() ?? 0; }"); err != nil {
+		return 0.0, err
+	}
+	return averageFPS, nil
+}
+
+// Stop stops the given FPS observer and release the associated JS object.
+func (f *FPSObserver) Stop(ctx context.Context) error {
+	defer f.jsObj.Release(ctx)
+	return f.jsObj.Call(ctx, nil, "function() { return this.stop(); }")
 }

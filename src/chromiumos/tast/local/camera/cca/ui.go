@@ -196,6 +196,8 @@ const (
 	ExpertModeOption Option = "expertModeOption"
 	// MultistreamRecordingOption is the option to enable multistream video recording.
 	MultistreamRecordingOption Option = "multiStreamRecordingOption"
+	// MultistreamRecordingChromeOption is the option to enable multistream video recording (scale by Chrome version).
+	MultistreamRecordingChromeOption Option = "multiStreamRecordingChromeOption"
 	// SaveMetadataOption is the option to save metadata of capture result.
 	SaveMetadataOption Option = "saveMetadataOption"
 	// ShowMetadataOption is the option to show preview metadata.
