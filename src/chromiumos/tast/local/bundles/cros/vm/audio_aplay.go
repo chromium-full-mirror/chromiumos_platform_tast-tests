@@ -140,6 +140,8 @@ func init() {
 					expectedDeviceNames:      []string{"Intel 82801AA-ICH"},
 					expectedStreamsPerDevice: 1,
 				},
+				// TODO(b/281092802): Remove this once the issue is fixed.
+				ExtraAttr: []string{"informational"},
 			},
 		},
 	})
