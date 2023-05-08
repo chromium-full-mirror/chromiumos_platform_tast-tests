@@ -37,7 +37,7 @@ type DataResult struct {
 }
 
 // ApplyPlatformEffects applies the configured platform effects.
-func ApplyPlatformEffects(ctx context.Context, blur, relight bool) (func(ctx context.Context) error, error) {
+func ApplyPlatformEffects(ctx context.Context, blur, relight, useLowResModel bool) (func(ctx context.Context) error, error) {
 	testing.ContextLog(ctx, "Configuring platform effects")
 	if err := os.Mkdir(platformEffectsOverrideDir, 0755); err != nil && !os.IsExist(err) {
 		return nil, errors.Wrap(err, "failed to write platform override")
@@ -45,7 +45,9 @@ func ApplyPlatformEffects(ctx context.Context, blur, relight bool) (func(ctx con
 
 	// This configuration format may change, update as needed.
 	platformEffects := struct {
-		Effect string `json:"effect"`
+		Effect                string `json:"effect"`
+		SegmentationModelType string `json:"segmentation_model_type"`
+		GpuAPI                string `json:"gpu_api"`
 	}{
 		Effect: "none",
 	}
@@ -55,6 +57,13 @@ func ApplyPlatformEffects(ctx context.Context, blur, relight bool) (func(ctx con
 		platformEffects.Effect = "blur"
 	} else if relight {
 		platformEffects.Effect = "relight"
+	}
+	if useLowResModel {
+		platformEffects.SegmentationModelType = "full"
+		platformEffects.GpuAPI = "opencl"
+	} else {
+		platformEffects.SegmentationModelType = "hd"
+		platformEffects.GpuAPI = "vulkan"
 	}
 
 	platformEffectsJSON, err := json.Marshal(platformEffects)

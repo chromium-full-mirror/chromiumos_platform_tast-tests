@@ -30,6 +30,8 @@ type meetParams struct {
 	appRelight      bool
 	platformBlur    bool
 	platformRelight bool
+	// Whether to use the low res ("full") segmentation model or not.
+	useLowResModel bool
 }
 
 func init() {
@@ -72,6 +74,13 @@ func init() {
 				},
 			},
 			{
+				Name: "platform_blur_720p_low_segm",
+				Val: meetParams{
+					platformBlur:   true,
+					useLowResModel: true,
+				},
+			},
+			{
 				Name: "app_relight_720p",
 				Val: meetParams{
 					appRelight: true,
@@ -81,6 +90,13 @@ func init() {
 				Name: "platform_relight_720p",
 				Val: meetParams{
 					platformRelight: true,
+				},
+			},
+			{
+				Name: "platform_relight_720p_low_segm",
+				Val: meetParams{
+					platformRelight: true,
+					useLowResModel:  true,
 				},
 			},
 			{
@@ -95,6 +111,14 @@ func init() {
 				Val: meetParams{
 					platformBlur:    true,
 					platformRelight: true,
+				},
+			},
+			{
+				Name: "platform_blur_relight_720p_low_segm",
+				Val: meetParams{
+					platformBlur:    true,
+					platformRelight: true,
+					useLowResModel:  true,
 				},
 			},
 		},
@@ -174,7 +198,7 @@ func BenchmarkingMeet(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to configure Meet: ", err)
 	}
 
-	cleanupApply, err := effects.ApplyPlatformEffects(ctx, param.platformBlur, param.platformRelight)
+	cleanupApply, err := effects.ApplyPlatformEffects(ctx, param.platformBlur, param.platformRelight, param.useLowResModel)
 	if err != nil {
 		s.Fatal("Failed to apply platform effects: ", err)
 	}
