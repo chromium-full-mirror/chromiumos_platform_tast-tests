@@ -11,6 +11,7 @@ import (
 	"chromiumos/tast/local/bundles/cros/ui/benchmarkcuj"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/ui/cujrecorder"
+
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -102,6 +103,25 @@ func init() {
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeLacros,
 					BenchmarkInfo: benchmarkcuj.KrakenInfo,
+				},
+				ExtraSoftwareDeps: []string{"lacros"},
+			},
+			{
+				Name:    "octane",
+				Timeout: defaultTimeout,
+				Fixture: "loggedInToCUJUser",
+				Val: benchmarkcuj.BenchmarkTest{
+					BrowserType:   browser.TypeAsh,
+					BenchmarkInfo: benchmarkcuj.OctaneInfo,
+				},
+			},
+			{
+				Name:    "lacros_octane",
+				Timeout: defaultTimeout,
+				Fixture: "loggedInToCUJUserLacros",
+				Val: benchmarkcuj.BenchmarkTest{
+					BrowserType:   browser.TypeLacros,
+					BenchmarkInfo: benchmarkcuj.OctaneInfo,
 				},
 				ExtraSoftwareDeps: []string{"lacros"},
 			},
