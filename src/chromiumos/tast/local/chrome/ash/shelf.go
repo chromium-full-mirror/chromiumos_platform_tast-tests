@@ -60,6 +60,9 @@ const (
 // uiPollingInterval is a default interval of time to poll UI events for tests that are not time-sensitive. Defaults to 300ms like uiauto default now. Heuristics may help to find optimal interval to avoid flake in polling when it becomes problematic.
 const uiPollingInterval = 300 * time.Millisecond
 
+// stateChangePollingTimeout is the default timeout when polling for shelf and hotseat state changes and animations.
+const stateChangePollingTimeout = 5 * time.Second
+
 // SetShelfBehavior sets the shelf visibility behavior.
 // displayID is the display that contains the shelf.
 func SetShelfBehavior(ctx context.Context, tconn *chrome.TestConn, displayID string, b ShelfBehavior) error {
@@ -554,7 +557,7 @@ func WaitUntilShelfIconAnimationFinishAction(tconn *chrome.TestConn) func(ctx co
 				return errors.New("unexpected shelf icon animation status: got true; want false")
 			}
 			return nil
-		}, &testing.PollOptions{Timeout: 2 * time.Second})
+		}, &testing.PollOptions{Timeout: stateChangePollingTimeout})
 	}
 }
 
@@ -570,7 +573,7 @@ func ScrollShelfAndWaitUntilFinish(ctx context.Context, tconn *chrome.TestConn, 
 			return errors.New("unexpected scroll animation status: got true; want false")
 		}
 		return nil
-	}, &testing.PollOptions{Timeout: 2 * time.Second}); err != nil {
+	}, &testing.PollOptions{Timeout: stateChangePollingTimeout}); err != nil {
 		return errors.Wrap(err, "failed to wait scrollable shelf to be idle before starting the scroll animation")
 	}
 
@@ -589,7 +592,7 @@ func ScrollShelfAndWaitUntilFinish(ctx context.Context, tconn *chrome.TestConn, 
 			return errors.Errorf("unexpected scrollable shelf status; actual offset: %f, actual animation status: %t, target offset: %f, target animation status: false", info.MainAxisOffset, info.IsAnimating, targetOffset)
 		}
 		return nil
-	}, &testing.PollOptions{Timeout: 2 * time.Second}); err != nil {
+	}, &testing.PollOptions{Timeout: stateChangePollingTimeout}); err != nil {
 		return errors.Wrap(err, "failed to wait scrollable shelf to finish scroll animation")
 	}
 
@@ -685,7 +688,7 @@ func WaitForHotseatToUpdateAutoHideState(ctx context.Context, tconn *chrome.Test
 		}
 
 		return nil
-	}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
+	}, &testing.PollOptions{Timeout: stateChangePollingTimeout}); err != nil {
 		return errors.Wrap(err, "failed to wait for the expected autohide state")
 	}
 
@@ -881,7 +884,7 @@ func WaitForHotseatAnimatingToIdealState(ctx context.Context, tconn *chrome.Test
 		}
 
 		return nil
-	}, &testing.PollOptions{Timeout: 2 * time.Second}); err != nil {
+	}, &testing.PollOptions{Timeout: stateChangePollingTimeout}); err != nil {
 		return errors.Wrap(err, "failed to wait for the expected hotseat state")
 	}
 
@@ -1178,7 +1181,7 @@ func WaitForHotseatAnimationToFinish(ctx context.Context, tconn *chrome.TestConn
 			return errors.New("hotseat is animating")
 		}
 		return nil
-	}, &testing.PollOptions{Timeout: 2 * time.Second}); err != nil {
+	}, &testing.PollOptions{Timeout: stateChangePollingTimeout}); err != nil {
 		return errors.Wrap(err, "failed to wait for the hotseat animation to finish")
 	}
 
@@ -1217,7 +1220,7 @@ func WaitForStableShelfBounds(ctx context.Context, tconn *chrome.TestConn) error
 		}
 
 		return nil
-	}, &testing.PollOptions{Timeout: 5 * time.Second, Interval: 500 * time.Millisecond}); err != nil {
+	}, &testing.PollOptions{Timeout: stateChangePollingTimeout, Interval: 500 * time.Millisecond}); err != nil {
 		return errors.Wrap(err, "Shelf bounds unstable")
 	}
 
