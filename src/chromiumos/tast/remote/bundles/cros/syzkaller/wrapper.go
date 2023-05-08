@@ -28,7 +28,7 @@ import (
 
 const (
 	// syzkallerRunDuration represents the overall run duration of the fuzzer.
-	syzkallerRunDuration = 30 * time.Minute
+	syzkallerRunDuration = 50 * time.Minute
 
 	// gsURL points to the GCS bucket for syzkaller artifacts.
 	gsURL = "gs://syzkaller-ctp-corpus"
@@ -143,8 +143,9 @@ func init() {
 		// ChromeOS > Platform > System > Kernel > Syzkaller > Syzkaller-Dev > CTP-Infra
 		BugComponent: "b:1047538",
 		SoftwareDeps: []string{"pstore", "reboot"},
-		// This wrapper runs syzkaller against the DUT for a duration of 30 minutes before
-		// stopping. The overall test duration is 40 minutes.
+		// This wrapper runs syzkaller against the DUT for a duration of 50 minutes before
+		// stopping. The overall test duration is 60 minutes. Note that this test does not
+		// run on CQ, only on postsubmit.
 		Timeout: syzkallerRunDuration + 10*time.Minute,
 		Attr:    []string{"group:syzkaller"},
 		Data:    []string{"testing_rsa", "periodic.json"},
