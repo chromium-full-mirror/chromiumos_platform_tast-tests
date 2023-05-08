@@ -17,6 +17,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/launcher"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
+	"chromiumos/tast/local/chrome/uiauto/shortcutcustomization"
 	"chromiumos/tast/local/input"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -131,22 +132,17 @@ func ShortcutSearch(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to launch the search result: ", err)
 			}
 
-			if err := ash.WaitForApp(ctx, tconn, apps.KeyboardSV.ID, time.Minute); err != nil {
-				s.Fatal("Keyboard Shortcut Viewer failed to open: ", err)
+			// Verify shortcut customization app is launched.
+			if err := shortcutcustomization.VerifyShortcutCustomizationIsLaunched(ctx, tconn, ui); err != nil {
+				s.Fatal("Failed to verify that the Shortcut Customization app is launched: ", err)
 			}
 
-			if running, err := ash.AppRunning(ctx, tconn, apps.KeyboardSV.ID); err != nil {
-				s.Fatal("Failed to check if Keyboard Shortcut View is running: ", err)
-			} else if !running {
-				s.Fatal("KeyboardSV not running: ", err)
+			if err := apps.Close(ctx, tconn, apps.ShortcutCustomization.ID); err != nil {
+				s.Fatal("Failed to close Shortcut Customization app: ", err)
 			}
 
-			if err := apps.Close(ctx, tconn, apps.KeyboardSV.ID); err != nil {
-				s.Fatal("Failed to close Keyboard Shortcut View: ", err)
-			}
-
-			if err := ash.WaitForAppClosed(ctx, tconn, apps.KeyboardSV.ID); err != nil {
-				s.Fatal("Keyboard Shortcut View did not close successfully: ", err)
+			if err := ash.WaitForAppClosed(ctx, tconn, apps.ShortcutCustomization.ID); err != nil {
+				s.Fatal("Shortcut Customization app did not close successfully: ", err)
 			}
 		})
 	}
