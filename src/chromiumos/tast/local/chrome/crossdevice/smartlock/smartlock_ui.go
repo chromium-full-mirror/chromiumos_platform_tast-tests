@@ -83,7 +83,7 @@ func ToggleSmartLockEnabled(ctx context.Context, enable bool, tconn *chrome.Test
 		}
 		// When the toggle is enabled, the password dialog will be shown,
 		// but we only need to cancel it since we've already provided a token.
-		if err := settingsConn.Eval(ctx, multidevicePasswordPrompt+`.onCancelTap_()`, nil); err != nil {
+		if err := settingsConn.Eval(ctx, multidevicePasswordPrompt+`.onCancelClick_()`, nil); err != nil {
 			return errors.Wrap(err, "failed to close password prompt")
 		}
 	} else {
