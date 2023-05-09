@@ -19,9 +19,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CarrierLockEndToEnd,
+		Func:         CarrierLockEndToEndWildcard,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that carrier lock restrictions are enforced by modem",
+		Desc:         "Verifies that cellular can connect to any carrier with wildcard profile",
 		Contacts:     []string{"ujjwalpande@google.com", "chromeos-cellular-team@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active"},
@@ -33,8 +33,9 @@ func init() {
 	})
 }
 
-// CarrierLockEndToEnd validates that carrier lock restrictions are enforced by modem.
-func CarrierLockEndToEnd(ctx context.Context, s *testing.State) {
+// CarrierLockEndToEndWildcard validates that all carriers can connect with wild card
+// carrier lock config.
+func CarrierLockEndToEndWildcard(ctx context.Context, s *testing.State) {
 	// Gather Shill Device sim properties.
 	labels, err := cellular.GetLabelsAsStringArray(ctx, s.Var, "autotest_host_info_labels")
 	if err != nil {
@@ -87,8 +88,8 @@ func CarrierLockEndToEnd(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Create and upload CSV file to lock the device")
-	// Create and upload appropriate lock file for Verizon
-	err = helper.CreateAndUploadCarrierLockCsv(ctx, gaiaCreds, cellular.SimLockVzwProfileID)
+	// Create and upload appropriate lock file for wild card config
+	err = helper.CreateAndUploadCarrierLockCsv(ctx, gaiaCreds, cellular.SimLockWildcardProfileID)
 	if err != nil {
 		s.Fatal("Failed to create and upload CSV file: ", err)
 	}
@@ -121,12 +122,8 @@ func CarrierLockEndToEnd(ctx context.Context, s *testing.State) {
 	s.Log("Test Connect after locking")
 	_, err = helper.Connect(ctx)
 
-	if err == nil && carrier != "NETWORK_VERIZON" {
-		s.Fatal("Connect succeeded expectedly after applying carrier lock. Current carrier: ", carrier)
-	}
-
-	if err != nil && carrier == "NETWORK_VERIZON" {
-		s.Fatal("Connect failed unexpectedly after applying carrier lock. Current carrier: ", carrier)
+	if err != nil {
+		s.Fatal("Connect failed unexpectedly after applying wild card carrier lock config. Current carrier: ", carrier)
 	}
 
 	s.Log("upload the unlock config")
