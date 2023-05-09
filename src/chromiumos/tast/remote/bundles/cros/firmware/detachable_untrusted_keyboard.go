@@ -6,6 +6,8 @@ package firmware
 
 import (
 	"context"
+	"io/ioutil"
+	"path/filepath"
 	"regexp"
 	"time"
 
@@ -18,6 +20,15 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
+type caseName int
+
+const (
+	insertToOption caseName = iota
+	ctrlD
+	keyboardUpDown
+	keyboardF9F10
+)
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: DetachableUntrustedKeyboard,
@@ -26,10 +37,11 @@ func init() {
 			"cienet-firmware@cienet.corp-partner.google.com",
 			"chromeos-firmware@google.com"},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:firmware", "firmware_unstable"},
+		Attr:         []string{"group:firmware", "firmware_unstable", "firmware_detachable"},
 		SoftwareDeps: []string{"crossystem"},
 		Fixture:      fixture.NormalMode,
-		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.FormFactor(hwdep.Detachable)),
+		// To-do: Find a way to preserve firmware logs on soraka and nocturne.
+		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.FormFactor(hwdep.Detachable), hwdep.SkipOnModel("soraka", "nocturne")),
 		Timeout:      20 * time.Minute,
 	})
 }
@@ -42,22 +54,33 @@ func DetachableUntrustedKeyboard(ctx context.Context, s *testing.State) {
 	}
 
 	if err := h.RequireConfig(ctx); err != nil {
-		s.Fatal("Failed to init config: ", err)
+		s.Fatal("Requiring config: ", err)
 	}
 
+	// Save the firmware log file for upload to Stainless at the end of the test.
+	defer func() {
+		output, err := h.Reporter.CatFile(ctx, "/sys/firmware/log")
+		if err != nil {
+			s.Fatal("Failed to read firmware log: ", err)
+		}
+		destPath := filepath.Join(s.OutDir(), "firmware.log")
+		if err := ioutil.WriteFile(destPath, []byte(output), 0666); err != nil {
+			s.Fatal("Failed to write firmware log: ", err)
+		}
+	}()
+
 	for _, tc := range []struct {
+		casename       caseName
 		keysToBeTested []string
-		recoverDUTConn func(context.Context, *firmware.Helper) error
-		checkScreen    string
 	}{
 		// Expect that DUT moves form insert screen to to_dev screen.
-		{nil, insertToDev, "insertAndToDevScreen"},
+		{insertToOption, []string{""}},
 		// Expect that after pressing ctrlD three times, the DUT stays at the insert screen.
-		{[]string{"ctrlD", "ctrlD", "ctrlD"}, insertToDev, "ctrlD"},
+		{ctrlD, []string{"ctrlD", "ctrlD", "ctrlD"}},
 		// Expect to_dev screen menu selection at default.
-		{[]string{"volumeUpDown", "keyboardUp", "keyboardDown", "enter"}, insertToDev, "insertAndToDevScreen"},
+		{keyboardUpDown, []string{"volumeUpDown", "keyboardUp", "keyboardDown", "enter"}},
 		// Expect to_dev screen menu selection at default.
-		{[]string{"volumeUpDown", "keyBoardF9", "keyboardF10", "enter"}, insertToDev, "insertAndToDevScreen"},
+		{keyboardF9F10, []string{"volumeUpDown", "keyBoardF9", "keyboardF10", "enter"}},
 	} {
 		if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxOff); err != nil {
 			s.Fatal("Failed to power off usbkey: ", err)
@@ -68,18 +91,17 @@ func DetachableUntrustedKeyboard(ctx context.Context, s *testing.State) {
 		if err := h.Servo.SetPowerState(ctx, servo.PowerStateOff); err != nil {
 			s.Fatal("Failed to power off DUT: ", err)
 		}
-		// Soraka would stay at S5 after setting its power state off.
-		if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "G3", "S5"); err != nil {
-			s.Fatal("Failed to get power state at G3 or S5: ", err)
+		if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "G3"); err != nil {
+			s.Fatal("Failed to get power state at G3: ", err)
 		}
 
 		s.Log("Booting the DUT to recovery mode")
 		if err := h.Servo.SetPowerState(ctx, servo.PowerStateRec); err != nil {
-			s.Fatal("Failed to power on DUT: ", err)
+			s.Fatal("Failed to set power_state to rec: ", err)
 		}
-		s.Logf("Sleeping for %s (FirmwareScreen) ", h.Config.FirmwareScreen)
+		// GoBigSleepLint: Sleep for model specific time to wait for firmware screen.
 		if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
-			s.Fatalf("Failed to sleep for %s: %v", h.Config.FirmwareScreen, err)
+			s.Fatalf("Failed to sleep for %s", h.Config.FirmwareScreen)
 		}
 
 		for _, key := range tc.keysToBeTested {
@@ -87,14 +109,9 @@ func DetachableUntrustedKeyboard(ctx context.Context, s *testing.State) {
 			if err := pressKeyOnFWScreen(ctx, h, key); err != nil {
 				s.Fatal("Failed to press: ", err)
 			}
-			// Short delay between each presses.
-			if err := testing.Sleep(ctx, 100*time.Millisecond); err != nil {
-				s.Fatal("Failed to sleep: ", err)
-			}
 		}
-		// Power cycles would clear records saved until now in firmware log.
-		// But, allowing the DUT to boot directly from recovery to dev did not.
-		if err := tc.recoverDUTConn(ctx, h); err != nil {
+		// Run bootupDUT prior to scanning firmware log.
+		if err := bootupDUT(ctx, h); err != nil {
 			s.Fatal("While attempting to boot: ", err)
 		}
 
@@ -111,78 +128,151 @@ func DetachableUntrustedKeyboard(ctx context.Context, s *testing.State) {
 		}
 
 		s.Log("Verifying firmware log")
-		if err := checkScreenFromFirmwareLog(ctx, h, tc.checkScreen); err != nil {
+		if err := checkScreenFromFirmwareLog(ctx, h, h.Board, tc.casename); err != nil {
 			s.Fatal("Failed to check screen from firmware log: ", err)
 		}
 		// Disable dev request here so that a cold reset would reboot DUT directly back to normal mode.
 		if err := h.DUT.Conn().CommandContext(ctx, "crossystem", "disable_dev_request=1").Run(ssh.DumpLogOnError); err != nil {
 			s.Fatal("Failed to set disable_dev_request: ", err)
 		}
-
-		// Run a cold reset to reboot dut back to normal mode.
-		if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
-			s.Fatal("Failed to reset DUT to normal mode: ", err)
-		}
-		if err := func() error {
-			s.Log("Waiting for reconnection to DUT")
-			waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 8*time.Minute)
-			defer cancelWaitConnect()
-			if err := h.WaitConnect(waitConnectCtx); err != nil {
-				return err
-			}
-			return nil
-		}(); err != nil {
-			s.Fatal("Failed to reconnect to DUT: ", err)
-		}
 	}
 }
 
-// insertToDev presses volumeUpDown, volumeUp, and enter to boot DUT to developer mode.
-func insertToDev(ctx context.Context, h *firmware.Helper) error {
-	keysToBootIntoDev := []string{"volumeUpDown", "volumeUp", "enter"}
-	for _, key := range keysToBootIntoDev {
-		if err := pressKeyOnFWScreen(ctx, h, key); err != nil {
+// bootupDUT presses volumeUpDown, volumeUp, and enter to boot Kukui
+// devices to developer mode. On Strongbad machines, bootupDUT presses
+// volumeUpDown, and performs ec command 'apreset'. The purpose of bootupDUT
+// is to boot the dut to ChromeOS with firmware log preserved, prior to scan.
+func bootupDUT(ctx context.Context, h *firmware.Helper) error {
+	switch h.Board {
+	case "kukui":
+		keysToBootIntoDev := []string{"volumeUpDown", "volumeUp", "enter"}
+		for _, key := range keysToBootIntoDev {
+			if err := pressKeyOnFWScreen(ctx, h, key); err != nil {
+				return errors.Wrap(err, "failed to press insertToDev buttons")
+			}
+		}
+	case "strongbad":
+		if err := pressKeyOnFWScreen(ctx, h, "volumeUpDown"); err != nil {
 			return errors.Wrap(err, "failed to press insertToDev buttons")
 		}
+		if err := h.Servo.RunECCommand(ctx, "apreset"); err != nil {
+			return errors.Wrap(err, "failed to set apreset")
+		}
+	default:
+		return errors.Errorf("unable to identify board %s", h.Board)
 	}
 	return nil
 }
 
 // checkScreenFromFirmwareLog checks whether the insert screen
 // and to-dev screen were triggered, and recorded by the firmware log.
-func checkScreenFromFirmwareLog(ctx context.Context, h *firmware.Helper, option string) error {
+func checkScreenFromFirmwareLog(ctx context.Context, h *firmware.Helper, board string, casename caseName) error {
 	output, err := h.Reporter.CatFile(ctx, "/sys/firmware/log")
 	if err != nil {
 		return errors.Wrap(err, "failed to read firmware log")
 	}
 
-	var reContains, reExcludes []string
-	switch option {
-	case "ctrlD":
-		// Pressing ctrlD three times at the insert screen should have no effect.
-		// Verify this by scanning for three consecutive presses, and no additional
-		// screens in between.
-		reContains = append(reContains,
-			`vboot_draw_ui: screen=0x202(.|\n)*vb2_handle_menu_input: pressed key 0x4\nvb2_handle_menu_input: pressed key 0x4\nvb2_handle_menu_input: pressed key 0x4\n`)
-	case "insertAndToDevScreen":
-		// Expect both insert screen and to-dev screen to be recorded.
-		// Also, at the to-dev screen, the menu selection should stay at
-		// the default position of "cancel", with selected_index=1.
-		// Expected no change on the value of selected_index.
-		reContains = append(reContains, `vboot_draw_ui: screen=0x202(.|\n)*vboot_draw_ui: screen=0x20d`)
-		reExcludes = append(reExcludes, `vboot_draw_ui: screen=0x20d(.|\n)*selected_index=0(.|\n)*vboot_draw_ui: screen=0x202`)
-		reExcludes = append(reExcludes, `vboot_draw_ui: screen=0x20d(.|\n)*selected_index=2(.|\n)*vboot_draw_ui: screen=0x202`)
-	default:
-		return errors.Errorf("Unable to identify screen: %s", option)
+	// fwLogContains lists the expected messages to find in firmware log, as a result
+	// of various presses on firmware screens.
+	fwLogContains := map[string]map[caseName][]string{
+		"kukui": {
+			// Expect both insert screen and to-dev screen to be recorded.
+			// Also, at the to-dev screen, the menu selection should stay at
+			// the default position of "cancel", with selected_index=1.
+			// Expected no change on the value of selected_index.
+			insertToOption: {
+				`vboot_draw_ui: screen=0x202 locale=0, selected_index=0`,
+				`vboot_draw_ui: screen=0x20d locale=0, selected_index=1`,
+			},
+			// Pressing ctrlD three times at the insert screen should have no effect.
+			// Verify this by scanning for three consecutive presses, and no additional
+			// screens in between.
+			ctrlD: {
+				`vb2_handle_menu_input: pressed key 0x4\nvb2_handle_menu_input: pressed key 0x4\nvb2_handle_menu_input: pressed key 0x4`,
+			},
+			// Pressing keyboard up or down triggers a beep sound, which is recorded
+			// in the firmware log as untrusted inputs.
+			keyboardUpDown: {
+				`vb2_error_notify: vb2_handle_menu_input\(\) - Untrusted \(USB keyboard\) input disabled`,
+			},
+			// Pressing keyboard F9 and F10 should have no effect on the menu.
+			// Expect the same information to be found as the insertToOption case.
+			keyboardF9F10: {
+				`vboot_draw_ui: screen=0x202 locale=0, selected_index=0`,
+				`vboot_draw_ui: screen=0x20d locale=0, selected_index=1`,
+			},
+		},
+		"strongbad": {
+			// Expect both insert screen and to-dev screen to be recorded,
+			// and menu selections at default.
+			insertToOption: {
+				`vb2ex_display_ui: screen=0x200, locale=0, selected_item=2`,
+				`vb2ex_display_ui: screen=0x202, locale=0, selected_item=1`,
+			},
+			// Pressing ctrlD once at the insert screen leads to the to-dev screen.
+			// Additional ctrlD presses at the to-dev screen should have no effects.
+			// Expect both insert screen and to-dev screen to be recorded,
+			// and menu selections at default.
+			ctrlD: {
+
+				`vb2ex_display_ui: screen=0x200, locale=0, selected_item=2`,
+				`vb2ex_display_ui: screen=0x202, locale=0, selected_item=1`,
+			},
+			// Pressing keyboard up down, and then enter, triggers a beep sound, which is recorded
+			// in the firmware log as untrusted inputs.
+			keyboardUpDown: {
+				`recovery_to_dev_confirm_action: Reject untrusted ENTER confirmation`,
+				`ui_display_screen: Use built-in keyboard to confirm`,
+			},
+			// Pressing keyboard F9 and F10 should have no effect on the menu.
+			// Expect the same information to be found as the insertToOption case.
+			keyboardF9F10: {
+				`vb2ex_display_ui: screen=0x200, locale=0, selected_item=2`,
+				`vb2ex_display_ui: screen=0x202, locale=0, selected_item=1`,
+			},
+		},
+	}
+	// fwLogExcludes lists the messages to exclude from firmware log, as a way to confirm
+	// that certain keys do not work on firmware screens. Note that cases, such as insertToOption,
+	// keyboardUpDown, and ctrlD have empty lists, because their counterparts in fwLogContains
+	// already suffice.
+	fwLogExcludes := map[string]map[caseName][]string{
+		`kukui`: {
+			insertToOption: nil,
+			keyboardUpDown: nil,
+			ctrlD:          nil,
+			keyboardF9F10: {
+				`vboot_draw_ui: screen=0x20d locale=0, selected_index=0(.|\n)*vboot_draw_ui: screen=0x202`,
+				`vboot_draw_ui: screen=0x20d locale=0, selected_index=2(.|\n)*vboot_draw_ui: screen=0x202`,
+			},
+		},
+		"strongbad": {
+			insertToOption: nil,
+			keyboardUpDown: nil,
+			ctrlD:          nil,
+			keyboardF9F10: {
+				`vb2ex_display_ui: screen=0x202, locale=0, selected_item=0`,
+				`vb2ex_display_ui: screen=0x202, locale=0, selected_item=2`,
+			},
+		},
 	}
 
-	for _, reContain := range reContains {
+	if _, ok := fwLogContains[board][casename]; !ok {
+		return errors.Errorf("Unknwon fw-log-contains for board %v", board)
+	}
+	for _, reContain := range fwLogContains[board][casename] {
+		testing.ContextLogf(ctx, "verifing %s", reContain)
 		re := regexp.MustCompile(reContain)
 		if match := re.FindStringSubmatch(string(output)); match == nil {
 			return errors.Errorf("failed to verify log containing: %s", reContain)
 		}
 	}
-	for _, reExclude := range reExcludes {
+
+	if _, ok := fwLogExcludes[board][casename]; !ok {
+		return errors.Errorf("Unknwon fw-log-excludes for board %v", board)
+	}
+	for _, reExclude := range fwLogExcludes[board][casename] {
+		testing.ContextLogf(ctx, "verifing %s doesn't exist", reExclude)
 		re := regexp.MustCompile(reExclude)
 		if match := re.FindStringSubmatch(string(output)); match != nil {
 			return errors.Errorf("found %s unexpectedly in firmware log", reExclude)
@@ -209,12 +299,13 @@ func pressKeyOnFWScreen(ctx context.Context, h *firmware.Helper, key string) err
 	case "keyboardF10":
 		err = h.Servo.PressUSBKey(ctx, "<f10>", servo.DurTab)
 	case "enter":
-		err = h.Servo.KeypressWithDuration(ctx, servo.Enter, servo.DurTab)
+		err = h.Servo.PressUSBKey(ctx, "<enter>", servo.DurTab)
 	}
 	if err != nil {
 		return errors.Wrapf(err, "failed to press %s", key)
 	}
-	if err := testing.Sleep(ctx, time.Second); err != nil {
+	// GoBigSleepLint: Sleep for model specific time to ensure keypresses effective.
+	if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
 		return errors.Wrap(err, "failed to sleep for 1s")
 	}
 	return nil
