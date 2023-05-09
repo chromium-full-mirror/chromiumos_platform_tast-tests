@@ -14,10 +14,9 @@ import (
 
 	"chromiumos/tast/common/servo"
 	"chromiumos/tast/remote/bundles/cros/wwcb/utils"
-	"chromiumos/tast/remote/firmware"
-	"chromiumos/tast/remote/powercontrol"
 	"chromiumos/tast/services/cros/ui"
 	"chromiumos/tast/services/cros/wwcb"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
@@ -25,7 +24,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SuspendResumeWithDock,
+		Func:         SuspendResumeWithExternalDisplay,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Suspend/resume DUT then check screen light on DUT & external display by camera connecting to the host",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
@@ -37,12 +36,11 @@ func init() {
 	})
 }
 
-func SuspendResumeWithDock(ctx context.Context, s *testing.State) {
+func SuspendResumeWithExternalDisplay(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	dockingID := s.RequiredVar("DockingID")
 	extDispID := s.RequiredVar("ExtDispID1")
 
 	// Set up the servo attached to the DUT.
@@ -69,13 +67,6 @@ func SuspendResumeWithDock(ctx context.Context, s *testing.State) {
 	}
 	defer cs.Close(cleanupCtx, &empty.Empty{})
 
-	// Open IP power to supply docking power.
-	ipPowerPorts := []int{1}
-	if err := utils.OpenIppower(ctx, ipPowerPorts); err != nil {
-		s.Fatal("Failed to power on docking station: ", err)
-	}
-	defer utils.CloseIppower(cleanupCtx, ipPowerPorts)
-
 	// Initialize fixtures to find the connected devices.
 	if err := utils.InitFixture(ctx); err != nil {
 		s.Fatal("Failed to initialize fixtures: ", err)
@@ -86,17 +77,41 @@ func SuspendResumeWithDock(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to initialize webcam: ", err)
 	}
 
+	// What if the script is testing for dock test case, it will need to power on docking station.
+	// Then do the mapping the camera to display fixture with docking station connected to DUT.
 	extDispIDArray := []string{extDispID}
-	if err := utils.MappingWithDockFixture(ctx, s, extDispIDArray, dockingID); err != nil {
-		s.Fatal("Failed to mapping display fixture to camera: ", err)
+	if dockingID, ok := s.Var("DockingID"); ok {
+		ippowerPorts := []int{1}
+		if err := utils.OpenIppower(ctx, ippowerPorts); err != nil {
+			s.Fatal("Failed to power on the docking station: ", err)
+		}
+		defer utils.CloseIppower(cleanupCtx, ippowerPorts)
+
+		if err := utils.ControlFixture(ctx, dockingID, "on"); err != nil {
+			s.Fatal("Failed to connect to the docking station in the state of mapping the display fixture to camera: ", err)
+		}
+
+		if err := utils.MappingDisplayFixtureToCamera(ctx, s, extDispIDArray); err != nil {
+			s.Fatal("Failed to do mapping display fixture to camera: ", err)
+		}
+
+		if err := utils.ControlFixture(ctx, dockingID, "off"); err != nil {
+			s.Fatal("Failed to disconnect to the docking station in the state of mapping the display fixture to camera: ", err)
+		}
+	} else {
+		if err := utils.MappingDisplayFixtureToCamera(ctx, s, extDispIDArray); err != nil {
+			s.Fatal("Failed to do mapping display fixture to camera: ", err)
+		}
 	}
 
 	if err := utils.ControlFixture(ctx, extDispID, "on"); err != nil {
 		s.Fatal("Failed to connect to the external display: ", err)
 	}
 
-	if err := utils.ControlFixture(ctx, dockingID, "on"); err != nil {
-		s.Fatal("Failed to connect to the docking station: ", err)
+	if dockingID, ok := s.Var("DockingID"); ok {
+		if err := utils.ControlFixture(ctx, dockingID, "on"); err != nil {
+			s.Fatal("Failed to connect to the docking station: ", err)
+		}
 	}
 
 	displaySvc := wwcb.NewDisplayServiceClient(cl.Conn)
@@ -118,14 +133,14 @@ func SuspendResumeWithDock(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get the DUT light from camera: ", err)
 	}
 
-	if err := powercontrol.PerformPowerdbusSuspend(ctx, s.DUT(), pxy); err != nil {
+	if err := utils.SuspendDUT(ctx, s.DUT(), pxy); err != nil {
 		s.Fatal("Failed to perform powerdbus suspend: ", err)
 	}
-
-	firmwareHelper := &firmware.Helper{Servo: pxy.Servo()}
-	if err := powercontrol.WaitForSuspendState(ctx, firmwareHelper); err != nil {
-		s.Fatal("Failed to wait for DUT suspend state: ", err)
-	}
+	defer func(ctx context.Context) {
+		if err := utils.PowerOnDUT(ctx, pxy, dut); err != nil {
+			s.Error("Failed to power-on DUT at cleanup: ", err)
+		}
+	}(cleanupCtx)
 
 	extDispSuspendLight, err := utils.GetGamLightingValue(ctx, s, extDispID)
 	if err != nil {
