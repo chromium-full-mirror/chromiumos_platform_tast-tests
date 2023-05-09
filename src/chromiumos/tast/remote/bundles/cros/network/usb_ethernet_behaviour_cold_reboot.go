@@ -13,12 +13,13 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 
 	"chromiumos/tast/common/servo"
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/fixture"
 	"chromiumos/tast/services/cros/network"
+	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -50,7 +51,7 @@ func UsbEthernetBehaviourColdReboot(ctx context.Context, s *testing.State) {
 	h := s.FixtValue().(*fixture.Value).Helper
 	expectedUsbType := s.Param().(*regexp.Regexp)
 
-	if err := checkUSBType(ctx, expectedUsbType); err != nil {
+	if err := checkUSBType(ctx, h.DUT, expectedUsbType); err != nil {
 		s.Fatal("Failed to verify USB type: ", err)
 	}
 
@@ -75,12 +76,6 @@ func UsbEthernetBehaviourColdReboot(ctx context.Context, s *testing.State) {
 		defer cl.Close(ctx)
 
 		client := network.NewEthernetServiceClient(cl.Conn)
-
-		s.Log("Sleeping for a few seconds before starting a new Chrome")
-		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
-			s.Fatal("Failed to sleep for a few seconds: ", err)
-		}
-
 		if _, err := client.New(ctx, &empty.Empty{}); err != nil {
 			s.Fatal("Failed to start Chrome: ", err)
 		}
@@ -124,9 +119,9 @@ func UsbEthernetBehaviourColdReboot(ctx context.Context, s *testing.State) {
 }
 
 // checkUSBType verifies the expected USB version, and returns an error if it does not match.
-func checkUSBType(ctx context.Context, usbDetectionRe *regexp.Regexp) error {
+func checkUSBType(ctx context.Context, dut *dut.DUT, usbDetectionRe *regexp.Regexp) error {
 	lsusbCMD := "lsusb -t"
-	out, err := testexec.CommandContext(ctx, "sh", "-c", lsusbCMD).Output(testexec.DumpLogOnError)
+	out, err := dut.Conn().CommandContext(ctx, "sh", "-c", lsusbCMD).Output(ssh.DumpLogOnError)
 	if err != nil {
 		return errors.Wrap(err, "failed to execute lsusb command")
 	}
