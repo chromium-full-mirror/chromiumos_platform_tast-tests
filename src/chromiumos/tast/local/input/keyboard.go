@@ -17,6 +17,13 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+const (
+	// Vendor ID / Product ID that is unlikely to match the internal keyboard.
+	vendorID  = 0x1234
+	productID = 0x5678
+	versionID = 0x1
+)
+
 // KeyboardEventWriter supports injecting events into a keyboard device.
 type KeyboardEventWriter struct {
 	rw               *RawEventWriter
@@ -112,7 +119,7 @@ func FindPowerKeyDevice(ctx context.Context) (bool, string, error) {
 }
 
 // virtualKeyboard creates a virtual keyboard device and returns an EventWriter that injects events into it.
-func virtualKeyboard(ctx context.Context, busType uint16) (*KeyboardEventWriter, error) {
+func virtualKeyboard(ctx context.Context, deviceID devID) (*KeyboardEventWriter, error) {
 	kw := &KeyboardEventWriter{}
 
 	// Include our PID in the device name to be extra careful in case an old bundle process hasn't exited.
@@ -122,7 +129,7 @@ func virtualKeyboard(ctx context.Context, busType uint16) (*KeyboardEventWriter,
 
 	// These values are copied from the "AT Translated Set 2 keyboard" device on an amd64-generic VM.
 	var err error
-	if kw.dev, kw.virt, err = createVirtual(name, devID{busType, 0x1, 0x1, 0xab41}, 0, 0x120013,
+	if kw.dev, kw.virt, err = createVirtual(name, deviceID, 0, 0x120013,
 		map[EventType]*big.Int{
 			EV_KEY: makeBigInt([]uint64{0x402000000, 0x3803078f800d001, 0xfeffffdfffefffff, 0xfffffffffffffffe}),
 			EV_MSC: big.NewInt(1 << MSC_SCAN),
@@ -131,7 +138,7 @@ func virtualKeyboard(ctx context.Context, busType uint16) (*KeyboardEventWriter,
 		return nil, err
 	}
 
-	// Sleep briefly to give Chrome and other processes time to see the new device.
+	// GoBigSleepLint: Sleep briefly to give Chrome and other processes time to see the new device.
 	// This delay is probably unnecessary if the device is created before calling chrome.New,
 	// but that's not guaranteed to happen.
 	// TODO(crbug.com/1015264): Remove the hard-coded sleep.
@@ -153,12 +160,12 @@ func virtualKeyboard(ctx context.Context, busType uint16) (*KeyboardEventWriter,
 func VirtualKeyboard(ctx context.Context) (*KeyboardEventWriter, error) {
 	// Hardcode as BUS_USB (0x3), as BUS_I8042 (0x11) doesn't work on some hardware.
 	// See https://crrev.com/c/1407138 for more discussion.
-	return virtualKeyboard(ctx, 0x3) // BUS_USB = 0x3 as an usb keyboard from input.h
+	return virtualKeyboard(ctx, devID{0x3, vendorID, productID, versionID}) // BUS_USB = 0x3 as an usb keyboard from input.h
 }
 
 // VirtualKeyboardWithBusType creates a virtual keyboard device with specific bus type and returns an EventWriter that injects events into it.
 func VirtualKeyboardWithBusType(ctx context.Context, busType uint16) (*KeyboardEventWriter, error) {
-	return virtualKeyboard(ctx, busType)
+	return virtualKeyboard(ctx, devID{busType, vendorID, productID, versionID})
 }
 
 // Close closes the keyboard device.
@@ -323,6 +330,7 @@ func (kw *KeyboardEventWriter) sleepAfterType(ctx context.Context, firstErr *err
 		return
 	}
 
+	// GoBigSleepLint: Sleeps to simulate key strokes by a keyboard.
 	if err := testing.Sleep(ctx, 50*time.Millisecond); err != nil {
 		*firstErr = errors.Wrap(err, "timeout while typing")
 	}

@@ -28,6 +28,7 @@ const (
 	absSetupIoctl    = 4   // UI_ABS_SETUP
 	getSysnameIoctl  = 44  // UI_GET_SYSNAME
 	setEvbitIoctl    = 100 // UI_SET_EVBIT
+	setPhys          = 108 // UI_SET_PHYS
 	setPropbitIoctl  = 110 // UI_SET_PROPBIT
 	uinputMaxNameLen = 80  // UINPUT_MAX_NAME_SIZE
 )
@@ -79,6 +80,13 @@ func createVirtual(name string, id devID, props, eventTypes uint32,
 			fileToClose.Close()
 		}
 	}()
+
+	// Set the phys address of the device to be equal to the name. This guarantees different devices will have different phys paths.
+	var phys [uinputMaxNameLen]byte
+	copy(phys[:], []byte(name))
+	if err := ioctl(fd, iow(uinputIoctlBase, setPhys, unsafe.Sizeof(unsafe.Pointer(&phys))), uintptr(unsafe.Pointer(&phys))); err != nil {
+		return "", nil, errors.Wrap(err, "failed to set phys")
+	}
 
 	// Make a UI_SET_EVBIT ioctl for each supported event type.
 	for i := uint32(0); i < 32; i++ {
