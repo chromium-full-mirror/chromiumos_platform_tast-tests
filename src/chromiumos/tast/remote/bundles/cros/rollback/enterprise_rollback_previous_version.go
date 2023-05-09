@@ -20,6 +20,9 @@ type testParam struct {
 	previousVersionTarget int
 }
 
+// Tests using autoupdate.UpdateService need to be run in the lab and have tlw service running.
+// See https://source.chromium.org/chromium/chromiumos/platform/tast-tests/+/main:src/chromiumos/tast/remote/bundles/cros/autoupdate/README.md
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         EnterpriseRollbackPreviousVersion,

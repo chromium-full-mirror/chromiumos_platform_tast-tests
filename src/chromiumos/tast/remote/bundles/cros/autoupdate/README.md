@@ -1,8 +1,20 @@
 ## How to run autoupdate tests
 
-So far the tests can only be run on leased devices from the test lab.
+Autoupdate tests can only be run on leased devices from the test lab
+(crosfleet).
 Note that TLW service instructions are subject to change. Please update the
 documentation if the instructions don't work anymore.
+
+To run tests on self-built images you need to add the following on your
+lab device:
+
+```bash
+# Add correct partition to this command. It tells you which one when you run it.
+/usr/share/vboot/bin/make_dev_ssd.sh --remove_rootfs_verification
+
+reboot
+echo "CHROMEOS_RELEASE_BUILDER_PATH=None" >> /etc/lsb-release
+```
 
 ### Install the TLW service
 
@@ -26,6 +38,9 @@ export GOPATH="$GOPATH:$HOME/chrome_infra/infra/go"
 cd ~/chrome_infra/infra/go/src/infra/cros/cmd
 (cd prototype-tlw && go run . -port 7151) &
 ```
+
+If you want to run tests on a lab device with hostname matching "chromeos8-*",
+add `-lab8` to the `prototype-tlw` command.
 
 > **_TIP:_** Make sure the service is running using `ps aux | grep tlw`
 
