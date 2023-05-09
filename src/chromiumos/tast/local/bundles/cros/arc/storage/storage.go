@@ -25,12 +25,13 @@ import (
 const (
 	// Timeout to wait for UI item to appear.
 	uiTimeout = 10 * time.Second
+
 	// Test app's name displayed in the context menu of the Files app.
 	testAppName = "ARC File Reader Test"
-	// Test app's id.
-	testAppID = "org.chromium.arc.testapp.filereader"
-	// Test app's path.
-	testAppPath = "ArcFileReaderTest.apk"
+	// Test app's package name.
+	testAppPkgName = "org.chromium.arc.testapp.filereader"
+	// Test app's APK file name.
+	testAppApkName = "ArcFileReaderTest.apk"
 )
 
 // TestConfig stores the details of the directory under test and misc test configurations.
@@ -61,10 +62,14 @@ func TestOpenWithAndroidApp(ctx context.Context, a *arc.ARC, cr *chrome.Chrome, 
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
+	if config.DirTitle == "" {
+		config.DirTitle = filesapp.FilesTitlePrefix + config.DirName
+	}
+
 	testing.ContextLogf(ctx, "Performing TestOpenWithAndroidApp on: %s", config.DirName)
 
 	testing.ContextLog(ctx, "Installing ArcFileReaderTest app")
-	if err := a.Install(ctx, arc.APKPath(testAppPath)); err != nil {
+	if err := a.Install(ctx, arc.APKPath(testAppApkName)); err != nil {
 		return errors.Wrap(err, "failed to install ArcFileReaderTest app")
 	}
 
@@ -74,14 +79,20 @@ func TestOpenWithAndroidApp(ctx context.Context, a *arc.ARC, cr *chrome.Chrome, 
 
 	files, err := openFilesApp(ctx, cr)
 	if err != nil {
-		return errors.Wrap(err, "failed to open Files App")
+		return errors.Wrap(err, "failed to open Files app")
 	}
 	defer files.Close(cleanupCtx)
+
+	if config.CheckFileType {
+		if err := waitForFileType(ctx, files, config); err != nil {
+			return errors.Wrap(err, "failed to wait for file type to be populated")
+		}
+	}
 
 	if err := openWithReaderApp(ctx, files, config); err != nil {
 		return errors.Wrap(err, "could not open file with ArcFileReaderTest")
 	}
-	defer a.Command(cleanupCtx, "am", "force-stop", testAppID).Run(testexec.DumpLogOnError)
+	defer a.Command(cleanupCtx, "am", "force-stop", testAppPkgName).Run(testexec.DumpLogOnError)
 
 	if err := validateResult(ctx, d, config); err != nil {
 		return errors.Wrap(err, "ArcFileReaderTest's data is invalid")
@@ -112,34 +123,24 @@ func openFilesApp(ctx context.Context, cr *chrome.Chrome) (*filesapp.FilesApp, e
 func openWithReaderApp(ctx context.Context, files *filesapp.FilesApp, config TestConfig) error {
 	testing.ContextLog(ctx, "Opening the test file with ArcFileReaderTest")
 
-	dirTitle := config.DirTitle
-	if dirTitle == "" {
-		dirTitle = filesapp.FilesTitlePrefix + config.DirName
-	}
-
 	return uiauto.Combine("open the test file with ArcFileReaderTest",
-		files.OpenPath(dirTitle, config.DirName, config.SubDirectories...),
+		files.OpenPath(config.DirTitle, config.DirName, config.SubDirectories...),
 		// Note: due to the banner loading, this may still be flaky.
 		// If that is the case, we may want to increase the interval and timeout for this next call.
 		files.SelectFile(config.FileName),
-		func(ctx context.Context) error {
-			if config.CheckFileType {
-				if err := waitForFileType(ctx, files); err != nil {
-					return errors.Wrap(err, "waiting for file type failed")
-				}
-				if err := files.SelectFile(config.FileName)(ctx); err != nil {
-					return errors.Wrapf(err, "selecting the test file %s failed", config.FileName)
-				}
-			}
-			return nil
-		},
 		files.ClickContextMenuItem(config.FileName, filesapp.OpenWith, testAppName),
 	)(ctx)
 }
 
 // waitForFileType waits for file type (mime type) to be populated. This is an
 // indication that the backend metadata is ready.
-func waitForFileType(ctx context.Context, files *filesapp.FilesApp) error {
+func waitForFileType(ctx context.Context, files *filesapp.FilesApp, config TestConfig) error {
+	if err := uiauto.Combine("select the test file with Files app",
+		files.OpenPath(config.DirTitle, config.DirName, config.SubDirectories...),
+		files.SelectFile(config.FileName))(ctx); err != nil {
+		return errors.Wrap(err, "failed to select the test file with Files app")
+	}
+
 	// Get the keyboard.
 	keyboard, err := input.Keyboard(ctx)
 	if err != nil {
@@ -164,7 +165,7 @@ func waitForFileType(ctx context.Context, files *filesapp.FilesApp) error {
 
 // validateResult validates the data read from ArcFileReaderTest app.
 func validateResult(ctx context.Context, d *androidui.Device, config TestConfig) error {
-	const fileContentID = "org.chromium.arc.testapp.filereader:id/file_content"
+	const fileContentID = testAppPkgName + ":id/file_content"
 
 	testing.ContextLog(ctx, "Validating result in ArcFileReaderTest")
 

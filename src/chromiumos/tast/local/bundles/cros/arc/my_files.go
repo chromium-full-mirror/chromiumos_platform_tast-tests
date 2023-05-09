@@ -16,6 +16,7 @@ import (
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bundles/cros/arc/storage"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/uiauto/filesapp"
 	"chromiumos/tast/local/cryptohome"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -138,7 +139,7 @@ func testCrosToARC(ctx context.Context, a *arc.ARC, cr *chrome.Chrome, d *ui.Dev
 	defer os.Remove(testFilePath)
 
 	config := storage.TestConfig{
-		DirName:     "My files",
+		DirName:     filesapp.MyFiles,
 		FileName:    filename,
 		FileContent: fileContent,
 	}

@@ -203,7 +203,7 @@ func testOpenInPlayfiles(ctx context.Context, cr *chrome.Chrome, a *arc.ARC, fil
 	}
 
 	config := storage.TestConfig{
-		DirName:        "Play files",
+		DirName:        filesapp.Playfiles,
 		SubDirectories: []string{"Pictures"},
 		FileName:       filename,
 		FileContent:    fileContent,

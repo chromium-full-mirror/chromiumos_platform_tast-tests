@@ -15,6 +15,7 @@ import (
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bundles/cros/arc/storage"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/uiauto/filesapp"
 	"chromiumos/tast/local/drivefs"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -92,9 +93,9 @@ func Drivefs(ctx context.Context, s *testing.State) {
 	}
 
 	config := storage.TestConfig{
-		DirName:       "Google Drive",
+		DirName:       filesapp.GoogleDrive,
 		FileName:      filename,
-		DirTitle:      "Files - My Drive",
+		DirTitle:      filesapp.FilesTitlePrefix + filesapp.MyDrive,
 		FileContent:   fileContent,
 		CheckFileType: true,
 	}

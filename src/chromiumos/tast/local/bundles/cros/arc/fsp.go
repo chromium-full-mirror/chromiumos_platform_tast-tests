@@ -62,6 +62,9 @@ func Fsp(ctx context.Context, s *testing.State) {
 		// These need to match with the one contained in |fspZipFile|.
 		filename    = "storage.txt"
 		fileContent = "this is a test"
+
+		unarchiverName = "Wicked Good Unarchiver"
+		unarchiverURL  = "https://chrome.google.com/webstore/detail/wicked-good-unarchiver/mljpablpddhocfbnokacjggdbmafjnon?hl=en"
 	)
 
 	// GAIA login is required to use Chrome Web Store.
@@ -101,8 +104,6 @@ func Fsp(ctx context.Context, s *testing.State) {
 	}
 
 	// Install the unarchiver Chrome app, that supports FSP.
-	unarchiverName := "Wicked Good Unarchiver"
-	unarchiverURL := "https://chrome.google.com/webstore/detail/wicked-good-unarchiver/mljpablpddhocfbnokacjggdbmafjnon?hl=en"
 	app := cws.App{Name: unarchiverName, URL: unarchiverURL}
 	if err := cws.InstallApp(ctx, cr.Browser(), tconn, app); err != nil {
 		s.Fatal("Chrome app installation failed: ", err)
@@ -165,7 +166,7 @@ func unzipFile(ctx context.Context, tconn *chrome.TestConn, zipFile, folder, una
 	defer files.Close(ctx)
 
 	return uiauto.Combine(msg,
-		files.OpenPath("Files - "+folder, folder),
+		files.OpenPath(filesapp.FilesTitlePrefix+folder, folder),
 		files.SelectFile(zipFile),
 		files.LeftClick(nodewith.Name("Open").Role(role.Button)),
 		files.LeftClick(nodewith.Name(unarchiver).Role(role.StaticText)),
