@@ -33,6 +33,10 @@ func init() {
 			Val:       croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineCPUStressV2},
 			Timeout:   5 * time.Minute,
 			ExtraAttr: []string{"informational", "group:criticalstaging"},
+		}, {
+			Name:      "audio_driver",
+			Val:       croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineAudioDriver},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}}})
 }
 

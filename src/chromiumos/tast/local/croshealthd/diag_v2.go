@@ -22,6 +22,7 @@ import (
 const (
 	RoutineMemoryV2    string = "memory_v2"
 	RoutineCPUStressV2 string = "cpu_stress_v2"
+	RoutineAudioDriver string = "audio_driver"
 )
 
 // RoutineResultV2 contains the progress of the routine as a percentage and
