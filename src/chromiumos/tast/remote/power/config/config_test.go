@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package power
+package config
 
 import (
 	"encoding/json"
@@ -111,7 +111,7 @@ func TestValidateConfig(t *gotesting.T) {
 			},
 		},
 	}
-	tests, err := validateConfig(&correctConfig)
+	tests, err := ValidateConfig(&correctConfig)
 	if err != nil {
 		t.Fatal("failed to validate correct config; error:", err)
 	}
@@ -124,7 +124,7 @@ func TestValidateConfig(t *gotesting.T) {
 	}
 	sort.Strings(expected)
 	if !reflect.DeepEqual(tests, expected) {
-		t.Errorf("validateConfig returned wrong tests: expect %v, got %v", expected, tests)
+		t.Errorf("ValidateConfig returned wrong tests: expect %v, got %v", expected, tests)
 	}
 
 	wrongFormatVersion := Config{
@@ -140,11 +140,11 @@ func TestValidateConfig(t *gotesting.T) {
 			},
 		}},
 	}
-	tests, err = validateConfig(&wrongFormatVersion)
+	tests, err = ValidateConfig(&wrongFormatVersion)
 	if err == nil {
-		t.Error("validateConfig didn't return error for wrong format version")
+		t.Error("ValidateConfig didn't return error for wrong format version")
 	} else if !strings.Contains(err.Error(), "the format version is not supported") {
-		t.Error("validateConfig returned an incorrect error for wrong format version; got:", err)
+		t.Error("ValidateConfig returned an incorrect error for wrong format version; got:", err)
 	}
 
 	missingPersonas := Config{
@@ -154,11 +154,11 @@ func TestValidateConfig(t *gotesting.T) {
 		Control:       Control{MaxDuration: 0, Retry: 0, FailOnSkippedTest: false},
 		Personas:      []Persona{},
 	}
-	tests, err = validateConfig(&missingPersonas)
+	tests, err = ValidateConfig(&missingPersonas)
 	if err == nil {
-		t.Error("validateConfig didn't return error for missing personas")
+		t.Error("ValidateConfig didn't return error for missing personas")
 	} else if !strings.Contains(err.Error(), "no personas are given") {
-		t.Error("validateConfig returned an incorrect error for missing personas; got:", err)
+		t.Error("ValidateConfig returned an incorrect error for missing personas; got:", err)
 	}
 
 	missingTests := Config{
@@ -171,11 +171,11 @@ func TestValidateConfig(t *gotesting.T) {
 			Tests: []Test{},
 		}},
 	}
-	tests, err = validateConfig(&missingTests)
+	tests, err = ValidateConfig(&missingTests)
 	if err == nil {
-		t.Error("validateConfig didn't return error for missing tests")
+		t.Error("ValidateConfig didn't return error for missing tests")
 	} else if !strings.Contains(err.Error(), "no tests are given for persona") {
-		t.Error("validateConfig returned an incorrect error for missing tests; got:", err)
+		t.Error("ValidateConfig returned an incorrect error for missing tests; got:", err)
 	}
 
 	emptyTestName := Config{
@@ -191,11 +191,11 @@ func TestValidateConfig(t *gotesting.T) {
 			},
 		}},
 	}
-	tests, err = validateConfig(&emptyTestName)
+	tests, err = ValidateConfig(&emptyTestName)
 	if err == nil {
-		t.Error("validateConfig didn't return error for empty test name")
+		t.Error("ValidateConfig didn't return error for empty test name")
 	} else if !strings.Contains(err.Error(), "test name is empty") {
-		t.Error("validateConfig returned an incorrect error for empty test name; got:", err)
+		t.Error("ValidateConfig returned an incorrect error for empty test name; got:", err)
 	}
 
 	duplicateTests := Config{
@@ -211,11 +211,11 @@ func TestValidateConfig(t *gotesting.T) {
 			},
 		}},
 	}
-	tests, err = validateConfig(&duplicateTests)
+	tests, err = ValidateConfig(&duplicateTests)
 	if err == nil {
-		t.Error("validateConfig didn't return error for duplicate tests")
+		t.Error("ValidateConfig didn't return error for duplicate tests")
 	} else if !strings.Contains(err.Error(), "duplicated test") {
-		t.Error("validateConfig returned an incorrect error for duplicate tests; got:", err)
+		t.Error("ValidateConfig returned an incorrect error for duplicate tests; got:", err)
 	}
 
 	negativeWeight := Config{
@@ -230,11 +230,11 @@ func TestValidateConfig(t *gotesting.T) {
 			},
 		}},
 	}
-	tests, err = validateConfig(&negativeWeight)
+	tests, err = ValidateConfig(&negativeWeight)
 	if err == nil {
-		t.Error("validateConfig didn't return error for negative weight")
+		t.Error("ValidateConfig didn't return error for negative weight")
 	} else if !strings.Contains(err.Error(), "has negative weight") {
-		t.Error("validateConfig returned an incorrect error for negative weight; got:", err)
+		t.Error("ValidateConfig returned an incorrect error for negative weight; got:", err)
 	}
 
 	totalWeightNotOne := Config{
@@ -250,10 +250,10 @@ func TestValidateConfig(t *gotesting.T) {
 			},
 		}},
 	}
-	tests, err = validateConfig(&totalWeightNotOne)
+	tests, err = ValidateConfig(&totalWeightNotOne)
 	if err == nil {
-		t.Error("validateConfig didn't return error for total weight not one")
+		t.Error("ValidateConfig didn't return error for total weight not one")
 	} else if !strings.Contains(err.Error(), "total weight for tests") {
-		t.Error("validateConfig returned an incorrect error for total weight not one; got:", err)
+		t.Error("ValidateConfig returned an incorrect error for total weight not one; got:", err)
 	}
 }

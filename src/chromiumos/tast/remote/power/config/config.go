@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package power
+// Package config defines the power qual run configuration.
+package config
 
 import (
 	"sort"
@@ -42,8 +43,8 @@ type Config struct {
 	Personas      []Persona `json:"persona"`
 }
 
-// validateConfig validates the configuration and returns all the tests.
-func validateConfig(c *Config) ([]string, error) {
+// ValidateConfig validates the configuration and returns all the tests.
+func ValidateConfig(c *Config) ([]string, error) {
 	formatSupported := false
 	for _, v := range supportedFormatVersions {
 		if c.FormatVersion == v {

@@ -9,13 +9,14 @@ import (
 	"encoding/json"
 
 	"chromiumos/tast/common/utils"
+	"chromiumos/tast/remote/power/config"
 
 	"go.chromium.org/tast/core/errors"
 )
 
 // QualRun holds the power qual run information.
 type QualRun struct {
-	Config *Config
+	Config *config.Config
 	Tests  []string
 }
 
@@ -26,17 +27,17 @@ func NewQualRun(ctx context.Context, url string) (*QualRun, error) {
 		return nil, errors.Wrapf(err, "failed to fetch configuration from %s", url)
 	}
 
-	config := &Config{}
-	if err := json.Unmarshal([]byte(configJSON), config); err != nil {
+	cfg := &config.Config{}
+	if err := json.Unmarshal([]byte(configJSON), cfg); err != nil {
 		return nil, errors.Wrap(err, "failed to unmarshal configuration")
 	}
 
-	tests, err := validateConfig(config)
+	tests, err := config.ValidateConfig(cfg)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to validate configuration")
 	}
 
-	return &QualRun{Config: config, Tests: tests}, nil
+	return &QualRun{Config: cfg, Tests: tests}, nil
 }
 
 // GenerateReport generates the power qual run test report.
