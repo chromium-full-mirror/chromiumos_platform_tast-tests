@@ -31,7 +31,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/common/utils"
-	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast-tests/cros/local/network"
 	"go.chromium.org/tast-tests/cros/local/network/cmd"
 	local_firewall "go.chromium.org/tast-tests/cros/local/network/firewall"
@@ -3038,32 +3037,6 @@ func (s *ShillService) WatchDarkResume(_ *empty.Empty, sender wifi.ShillService_
 	}
 }
 
-func waitForTetheringState(ctx context.Context, manager *shill.Manager, state string) (*dbusutil.Properties, error) {
-	var props *dbusutil.Properties
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		var err error
-		if props, err = manager.TetheringStatus(ctx); err != nil {
-			return testing.PollBreak(errors.Wrap(err, "failed to read tethering status"))
-		}
-		if s, err := props.GetString(shillconst.TetheringStatusState); err != nil {
-			return testing.PollBreak(errors.Wrap(err, "failed to get tethering status"))
-		} else if s != state && s == shillconst.TetheringStateIdle {
-			// Try a best effort read of a possible failure reason.
-			errMsg, err := props.GetString(shillconst.TetheringStatusIdleReason)
-			if err != nil {
-				errMsg = "[Unknown]"
-			}
-			return testing.PollBreak(errors.Errorf("tethering status == %q, for a reason %q", s, errMsg))
-		} else if s != state {
-			return errors.Errorf("wrong tethering state, got %s, want %s", s, state)
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: time.Second}); err != nil {
-		return nil, errors.Wrapf(err, "failed to wait for the correct tethering status %s", state)
-	}
-	return props, nil
-}
-
 // StartTethering attempts to start a tethering session.
 // This is the implementation of wifi.ShillService/StartTethering gRPC.
 func (s *ShillService) StartTethering(ctx context.Context, request *wifi.TetheringRequest) (ret *wifi.TetheringResponse, retErr error) {
@@ -3232,7 +3205,7 @@ func (s *ShillService) startShillTethering(ctx context.Context, request *wifi.Te
 		return errors.Wrap(err, "failed to enable tethering")
 	}
 
-	if _, err := waitForTetheringState(ctx, manager, shillconst.TetheringStateActive); err != nil {
+	if _, err := manager.WaitForTetheringState(ctx, shillconst.TetheringStateActive); err != nil {
 		return errors.Wrapf(err, "failed to reach a correct tethering state %s", shillconst.TetheringStateActive)
 	}
 
@@ -3293,7 +3266,7 @@ func (s *ShillService) stopShillTethering(ctx context.Context, _ *empty.Empty) e
 		utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to enable tethering"))
 	}
 
-	if _, err := waitForTetheringState(ctx, manager, shillconst.TetheringStateIdle); err != nil {
+	if _, err := manager.WaitForTetheringState(ctx, shillconst.TetheringStateIdle); err != nil {
 		utils.CollectFirstErr(ctx, &firstErr, errors.Wrapf(err, "failed to reach a correct tethering state %s", shillconst.TetheringStateIdle))
 	}
 

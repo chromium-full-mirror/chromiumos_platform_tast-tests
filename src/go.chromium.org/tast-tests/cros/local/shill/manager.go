@@ -784,6 +784,33 @@ func (m *Manager) TetheringStatus(ctx context.Context) (*dbusutil.Properties, er
 	return p.GetMap("TetheringStatus")
 }
 
+// WaitForTetheringState waits until the tethering state is the requested one.
+func (m *Manager) WaitForTetheringState(ctx context.Context, state string) (*dbusutil.Properties, error) {
+	var props *dbusutil.Properties
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		var err error
+		if props, err = m.TetheringStatus(ctx); err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to read tethering status"))
+		}
+		if s, err := props.GetString(shillconst.TetheringStatusState); err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to get tethering status"))
+		} else if s != state && s == shillconst.TetheringStateIdle {
+			// Try a best effort read of a possible failure reason.
+			errMsg, err := props.GetString(shillconst.TetheringStatusIdleReason)
+			if err != nil {
+				errMsg = "[Unknown]"
+			}
+			return testing.PollBreak(errors.Errorf("tethering status == %q, for a reason %q", s, errMsg))
+		} else if s != state {
+			return errors.Errorf("wrong tethering state, got %s, want %s", s, state)
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: time.Second}); err != nil {
+		return nil, errors.Wrapf(err, "failed to wait for the correct tethering status %s", state)
+	}
+	return props, nil
+}
+
 // GetDefaultService gets the current default shill service.
 func (m *Manager) GetDefaultService(ctx context.Context) (*Service, error) {
 	p, err := m.GetProperties(ctx)
