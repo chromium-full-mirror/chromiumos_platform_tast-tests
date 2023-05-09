@@ -19,6 +19,7 @@ import (
 	"chromiumos/tast/common/servo"
 	"chromiumos/tast/remote/firmware"
 	pb "chromiumos/tast/services/cros/shimlessrma"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
@@ -61,6 +62,7 @@ const (
 	timeInSecondToEnableButton     = 5
 	longTimeInSecondToEnableButton = 60
 	firmwareInstallationTime       = 240 * time.Second
+	stateFileUpdateTime            = 3 * time.Second
 	usbTempMountDir                = "/media/usb-drive"
 	stateFile                      = "/mnt/stateful_partition/unencrypted/rma-data/state"
 )
@@ -299,7 +301,8 @@ func (uiHelper *UIHelper) RepairCompletedPageOperation(ctx context.Context, stor
 		if err := uiHelper.FirmwareHelper.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
 			return err
 		}
-		testing.Sleep(ctx, 5*time.Second) // Wait for USB connection.
+		// GoBigSleepLint: Wait for USB connection.
+		testing.Sleep(ctx, 5*time.Second)
 		if err := uiHelper.deleteLogsIfExisting(ctx); err != nil {
 			return err
 		}
@@ -396,8 +399,9 @@ func (uiHelper *UIHelper) RSUPageOperation(ctx context.Context) error {
 
 // BypassFirmwareInstallation will skip firmware installation.
 func (uiHelper *UIHelper) BypassFirmwareInstallation(ctx context.Context) error {
-	// This sleep is important since we need to wait for RMAD to update state file completed.
-	testing.Sleep(ctx, 3*time.Second)
+	// GoBigSleepLint: This sleep is important since we need to wait for RMAD to update state
+	// file completed.
+	testing.Sleep(ctx, stateFileUpdateTime)
 	if _, err := uiHelper.Client.BypassFirmwareInstallation(ctx, &empty.Empty{}); err != nil {
 		return err
 	}
@@ -407,8 +411,9 @@ func (uiHelper *UIHelper) BypassFirmwareInstallation(ctx context.Context) error 
 
 // BypassCalibration will skip calibration.
 func (uiHelper *UIHelper) BypassCalibration(ctx context.Context) error {
-	// This sleep is important since we need to wait for RMAD to update state file completed.
-	testing.Sleep(ctx, 3*time.Second)
+	// GoBigSleepLint: This sleep is important since we need to wait for RMAD to update state
+	// file completed.
+	testing.Sleep(ctx, stateFileUpdateTime)
 	if _, err := uiHelper.Client.BypassCalibration(ctx, &empty.Empty{}); err != nil {
 		return err
 	}
@@ -431,6 +436,7 @@ func (uiHelper *UIHelper) WaitForFirmwareInstallation(ctx context.Context) error
 	}
 
 	testing.ContextLogf(ctx, "Sleeping %s to wait for firmware installation", firmwareInstallationTime)
+	// GoBigSleepLint: Wait for firmware installation.
 	return testing.Sleep(ctx, firmwareInstallationTime)
 }
 
