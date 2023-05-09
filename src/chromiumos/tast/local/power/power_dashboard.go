@@ -436,6 +436,35 @@ func UploadToDashboard(ctx context.Context, powerLogDict map[string]interface{},
 	return nil
 }
 
+// sortMetricsNumerically is the helper function to sort metrics in numerical order.
+func sortMetricsNumerically(ctx context.Context, metrics []string) {
+	sort.Slice(metrics, func(i, j int) bool {
+		re := regexp.MustCompile("[0-9]+")
+		iSlices := re.FindAllString(metrics[i], -1)
+		jSlices := re.FindAllString(metrics[j], -1)
+
+		var si int64
+		var sj int64
+		var err error
+
+		if len(iSlices) >= 1 {
+			si, err = strconv.ParseInt(iSlices[len(iSlices)-1], 10, 64)
+			if err != nil {
+				testing.ContextLog(ctx, "Failed to parse string to int: ", err)
+			}
+		}
+
+		if len(jSlices) >= 1 {
+			sj, err = strconv.ParseInt(jSlices[len(jSlices)-1], 10, 64)
+			if err != nil {
+				testing.ContextLog(ctx, "Failed to parse string to int: ", err)
+			}
+		}
+
+		return si < sj
+	})
+}
+
 // SavePowerLogHTML saves the power log as a json file format.
 func SavePowerLogHTML(ctx context.Context, outDir string, powerLogDict map[string]interface{}) error {
 	sampleCount := powerLogDict["power"].(map[string]interface{})["sample_count"].(int)
@@ -465,7 +494,7 @@ func SavePowerLogHTML(ctx context.Context, outDir string, powerLogDict map[strin
 		}
 
 		// For now, just visualize the aggregated cpu stats, not per-cpu stats.
-		if metricType == "cpuidle" && !strings.Contains(metric, "cpu-") {
+		if metricType == "cpuidle" && !strings.HasPrefix(metric, "cpu-") {
 			continue
 		}
 
@@ -486,6 +515,11 @@ func SavePowerLogHTML(ctx context.Context, outDir string, powerLogDict map[strin
 	// Add "perf" back to the end of the list so that "perf" always
 	// stays at the bottom of power_log.html page.
 	types = append(types, "perf")
+
+	for _, metrics := range typeToMetricsMap {
+		// Numerical order: cpu-C0, cpu-C1E, cpu-C6, cpu-C8, cpu-C10.
+		sortMetricsNumerically(ctx, metrics)
+	}
 
 	rowIndentation := strings.Repeat(" ", 12)
 
