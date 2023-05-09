@@ -17,7 +17,7 @@ import (
 )
 
 type testParam struct {
-	previousVersionTarget int
+	targetMilestoneFor func(int) int
 }
 
 // Tests using autoupdate.UpdateService need to be run in the lab and have tlw service running.
@@ -46,7 +46,9 @@ func init() {
 		Params: []testing.Param{{
 			Name: "rollback_1_version",
 			Val: testParam{
-				previousVersionTarget: 1,
+				targetMilestoneFor: func(milestone int) int {
+					return milestone - 1
+				},
 			},
 			ExtraSearchFlags: []*testing.StringPair{{
 				Key: "feature_id",
@@ -60,7 +62,9 @@ func init() {
 		}, {
 			Name: "rollback_2_versions",
 			Val: testParam{
-				previousVersionTarget: 2,
+				targetMilestoneFor: func(milestone int) int {
+					return milestone - 2
+				},
 			},
 			ExtraSearchFlags: []*testing.StringPair{{
 				Key: "feature_id",
@@ -74,7 +78,9 @@ func init() {
 		}, {
 			Name: "rollback_3_versions",
 			Val: testParam{
-				previousVersionTarget: 3,
+				targetMilestoneFor: func(milestone int) int {
+					return milestone - 3
+				},
 			},
 			ExtraSearchFlags: []*testing.StringPair{{
 				Key: "feature_id",
@@ -84,6 +90,40 @@ func init() {
 				// rollback_target=n-3
 				// COM_FOUND_CUJ13_TASK4_WF3
 				Value: "screenplay-02406ce4-6923-4d51-8a1d-cfbf5a07eb63",
+			}},
+		}, {
+			Name: "rollback_to_next_ltc",
+			Val: testParam{
+				targetMilestoneFor: func(milestone int) int {
+					// TODO(b:281981511) Update when we have a better way to determine the previous LTS milestone.
+					return ((milestone - 1) / 6) * 6
+				},
+			},
+			ExtraSearchFlags: []*testing.StringPair{{
+				Key: "feature_id",
+				// Configure "Roll back to target version" in Admin Console
+				// policy and ensure that supported devices correctly roll
+				// back while preserving networks and enrollment.
+				// rollback_target=last LTC.
+				// COM_FOUND_CUJ13_TASK4_WF5
+				Value: "screenplay-0623ac53-18d4-46f2-b0fa-43850d93dd37",
+			}},
+		}, {
+			Name: "rollback_to_next_lts",
+			Val: testParam{
+				targetMilestoneFor: func(milestone int) int {
+					// TODO(b:281981511) Update when we have a better way to determine the previous LTS milestone.
+					return ((milestone-1)/6)*6 - 6
+				},
+			},
+			ExtraSearchFlags: []*testing.StringPair{{
+				Key: "feature_id",
+				// Configure "Roll back to target version" in Admin Console
+				// policy and ensure that supported devices correctly roll
+				// back while preserving networks and enrollment.
+				// rollback_target=last LTS.
+				// COM_FOUND_CUJ13_TASK4_WF5
+				Value: "screenplay-0623ac53-18d4-46f2-b0fa-43850d93dd37",
 			}},
 		},
 		},
@@ -118,7 +158,7 @@ func EnterpriseRollbackPreviousVersion(ctx context.Context, s *testing.State) {
 	// Before going through any setup for the test we want to be sure that there
 	// is a release for the target milestone.
 	param := s.Param().(testParam)
-	targetMilestone := deviceInfo.Milestone - param.previousVersionTarget
+	targetMilestone := param.targetMilestoneFor(deviceInfo.Milestone)
 
 	// Find the latest release for milestone M.
 	paygen := s.FixtValue().(updateutil.WithPaygen).Paygen()
