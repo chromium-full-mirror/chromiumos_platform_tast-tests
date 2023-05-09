@@ -11,6 +11,7 @@ import (
 	"chromiumos/tast/common/firmware/ti50"
 	"chromiumos/tast/remote/bundles/cros/gscdevboard/utils"
 	"chromiumos/tast/remote/firmware/ti50/fixture"
+
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -26,15 +27,29 @@ func init() {
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware"},
 		Fixture:      fixture.Ti50,
+		Params: []testing.Param{{
+			Name: "gsc_reset_gpio",
+			Val:  verifyEcRestOnGscReset,
+		}, {
+			Name: "gsc_reset_tpmv",
+			Val:  verifyEcResetOnTpmvRebootCmd,
+		}},
 	})
 }
 
 func Ti50EcReset(ctx context.Context, s *testing.State) {
+	subTest := s.Param().(func(context.Context, *testing.State, utils.DevboardHelper, *ti50.CrOSImage, utils.FirmwareTestingHelper))
+
 	f := s.FixtValue().(*fixture.Value)
 	b := utils.NewDevboardHelper(f.DevBoard(), s)
 	i := ti50.NewCrOSImage(b)
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 
+	subTest(ctx, s, b, i, th)
+}
+
+func verifyEcRestOnGscReset(ctx context.Context, s *testing.State, b utils.DevboardHelper, i *ti50.CrOSImage, th utils.FirmwareTestingHelper) {
+	s.Log("Verify EC reset on GSC_RST_L toggle")
 	// Hold GSC in reset before start GPIO monitoring
 	b.GpioSet(ctx, ti50.GpioTi50ResetL, false)
 
@@ -46,27 +61,63 @@ func Ti50EcReset(ctx context.Context, s *testing.State) {
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 
 	// Give a little more time for gpio monitoring to catch EC_RST edges after GSC boots
-	testing.Sleep(ctx, time.Second)
+	testing.Sleep(ctx, time.Second) // GoBigSleepLint: No good way to poll for EC_RST
 
 	events := b.GpioMonitorFinish(ctx, gpioMonitor)
 	s.Log("Stop gpio monitoring: ", events)
 
 	resetReleased := events.FindFirst(ti50.GpioTi50ResetL, utils.GpioEdgeRising)
 	if resetReleased == nil {
-		// Fatal since we need to deference gpio event later
-		s.Fatal("GSC did not come out of reset")
+		s.Error("GSC did not come out of reset")
+		// Must return so we don't dereference null below
+		return
 	}
 	firstFetAfterRelease := events.FindFirstAfter(*resetReleased, ti50.GpioTi50EcRstFet)
 	if firstFetAfterRelease == nil {
-		// Fatal since we need to deference gpio event later
-		s.Fatalf("%s did have an edge after release GSC from reset", ti50.GpioTi50EcRstFet)
+		s.Errorf("%s did have an edge after release GSC from reset", ti50.GpioTi50EcRstFet)
+		// Must return so we don't dereference null below
+		return
 	}
 
 	firstEcAfterFet := events.FindFirstAfter(*firstFetAfterRelease, ti50.GpioTi50EcRstL)
 	if firstEcAfterFet == nil || firstEcAfterFet.Edge != utils.GpioEdgeRising {
-		// Fatal since we need to deference gpio event later
-		s.Fatalf("%s edge right after FET release is not rising edge", ti50.GpioTi50EcRstL)
+		s.Errorf("%s edge right after FET release is not rising edge", ti50.GpioTi50EcRstL)
+		// Must return so we don't dereference null below
+		return
 	}
 
 	s.Logf("EC released from Reset %dms after GSC released", (firstEcAfterFet.TimestampUS-resetReleased.TimestampUS)/1000)
+}
+
+func verifyEcResetOnTpmvRebootCmd(ctx context.Context, s *testing.State, b utils.DevboardHelper, i *ti50.CrOSImage, th utils.FirmwareTestingHelper) {
+	s.Log("Verify EC reset on GSC reboot TPMV command")
+
+	// Ensure we have a stable (after waiting) CCD connection for gsctool commands
+	b.GpioApplyStrap(ctx, ti50.CcdSuzyQ)
+	testing.Sleep(ctx, time.Second) // GoBigSleepLint: No good way to poll for USB stability
+
+	s.Log("Start gpio monitoring")
+	gpioMonitor := b.GpioMonitorStart(ctx, ti50.GpioTi50EcRstL)
+
+	_, err := b.GSCToolCommand(ctx, "", "--reboot")
+	th.MustSucceed(err, "Error calling gsctool --reboot")
+
+	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
+
+	// Give a little more time for gpio monitoring to catch EC_RST edges after GSC boots
+	testing.Sleep(ctx, time.Second) // GoBigSleepLint: No good way to poll for EC_RST
+
+	events := b.GpioMonitorFinish(ctx, gpioMonitor)
+	s.Log("Stop gpio monitoring: ", events)
+
+	ecReset := events.FindFirst(ti50.GpioTi50EcRstL, utils.GpioEdgeFalling)
+	if ecReset == nil {
+		s.Error("EC not put in reset with GSC reboot TPMV command")
+		// Must return so we don't dereference null below
+		return
+	}
+	ecResetReleased := events.FindFirstAfter(*ecReset, ti50.GpioTi50EcRstL)
+	if ecResetReleased == nil {
+		s.Error("EC not released from reset after GSC reboot TPMV command")
+	}
 }
