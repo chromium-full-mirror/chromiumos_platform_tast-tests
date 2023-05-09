@@ -1,0 +1,23 @@
+mno {
+  data {
+    uuid: "d433d22c-02ac-43b5-b2b3-91f96c4b2d7a"
+    country: "us"
+    localized_name {
+      name: "Cros Cellular Network"
+    }
+    mccmnc: "00101"
+    tethering_allowed: true
+    use_dun_apn_as_default: true
+    mobile_apn {
+      apn: "callbox-ipv4"
+      ip_type: IPV4
+      type: DEFAULT
+      type: IA
+    }
+    mobile_apn {
+      apn: "callbox-dun-ipv6"
+      ip_type: IPV6
+      type: DUN
+    }
+  }
+}
