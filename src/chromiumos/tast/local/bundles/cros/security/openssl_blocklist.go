@@ -13,6 +13,7 @@ import (
 	"golang.org/x/sys/unix"
 
 	"chromiumos/tast/common/testexec"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -35,7 +36,7 @@ func init() {
 			"openssl_blocklist_sha1_blocklist",
 			"openssl_blocklist_sha256_blocklist",
 		},
-		Attr: []string{"group:mainline", "informational"},
+		Attr: []string{"group:mainline", "informational", "group:criticalstaging"},
 	})
 }
 
