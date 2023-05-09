@@ -17,6 +17,7 @@ import (
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/arc/optin"
+	"chromiumos/tast/local/audio/crastestclient"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
@@ -24,8 +25,11 @@ import (
 	"chromiumos/tast/local/chrome/lacros"
 	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
 	"chromiumos/tast/local/chrome/metrics"
+	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/lockscreen"
+	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/cpu"
+	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/logsaver"
 	"chromiumos/tast/local/power"
 	"chromiumos/tast/local/power/setup"
@@ -620,6 +624,25 @@ func init() {
 		SetUpTimeout:    batterySaverTimeout,
 		TearDownTimeout: batterySaverTimeout,
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithChromeVox",
+		Desc: "CUJ fixture with ChromeVox enabled",
+		Contacts: []string{
+			"ramsaroop@google.com",
+			"chromeos-perfmetrics-eng@google.com",
+		},
+		Impl: &loggedInToCUJUserFixture{
+			bt:              browser.TypeAsh,
+			enableChromeVox: true,
+		},
+		Parent:          "cpuIdleForCUJ",
+		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
 }
 
 func prepareDocsBlockerExtension(s *testing.FixtState) (string, error) {
@@ -844,6 +867,7 @@ type loggedInToCUJUserFixture struct {
 	fakeCameraFileName string
 	docsBlocker        bool
 	disableARC         bool
+	enableChromeVox    bool
 }
 
 func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -1014,6 +1038,28 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 			}
 		}()
 	}
+
+	if f.enableChromeVox {
+		kw, err := input.Keyboard(ctx)
+		if err != nil {
+			s.Fatal("Failed to create a keyboard: ", err)
+		}
+		defer kw.Close(ctx)
+
+		if err := crastestclient.Mute(ctx); err != nil {
+			s.Log("Failed to mute audio: ", err)
+		}
+
+		ui := uiauto.New(tconn)
+		if err := uiauto.Combine(
+			"enable ChromeVox",
+			kw.AccelAction("Ctrl+Alt+z"),
+			ui.WaitUntilExists(nodewith.HasClass("AccessibilityBubbleContainer")),
+		)(ctx); err != nil {
+			s.Fatal("Failed to press Ctrl+Alt+z to enable ChromeVox: ", err)
+		}
+	}
+
 	f.cr = cr
 	f.arc = a
 	cr = nil
@@ -1022,6 +1068,32 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 
 func (f *loggedInToCUJUserFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 	chrome.Unlock()
+
+	if f.enableChromeVox {
+		tconn, err := f.cr.TestAPIConn(ctx)
+		if err != nil {
+			s.Log("Failed to get the test conn")
+		}
+
+		kw, err := input.Keyboard(ctx)
+		if err != nil {
+			s.Log("Failed to create keyboard")
+		}
+		defer kw.Close(ctx)
+
+		ui := uiauto.New(tconn)
+		if err := uiauto.Combine(
+			"disable ChromeVox",
+			kw.AccelAction("Ctrl+Alt+z"),
+			ui.WaitUntilGone(nodewith.HasClass("AccessibilityBubbleContainer")),
+		)(ctx); err != nil {
+			s.Log("Failed to disable ChromeVox")
+		}
+
+		if err := crastestclient.Unmute(ctx); err != nil {
+			s.Log("Failed to unmute audio: ", err)
+		}
+	}
 
 	if f.arc != nil {
 		if err := f.arc.Close(ctx); err != nil {

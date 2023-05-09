@@ -61,6 +61,12 @@ func init() {
 				Val:       browser.TypeAsh,
 				Fixture:   "loggedInToCUJUserWithBatterySaver",
 			},
+			{
+				Name:      "chromevox",
+				ExtraAttr: []string{"cuj_experimental"},
+				Val:       browser.TypeAsh,
+				Fixture:   "loggedInToCUJUserWithChromeVox",
+			},
 		},
 	})
 }
