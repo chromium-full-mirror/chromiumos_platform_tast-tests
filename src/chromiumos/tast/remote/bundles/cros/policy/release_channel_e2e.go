@@ -70,8 +70,8 @@ func init() {
 				Key: "feature_id",
 				// Configure "Release channel" in Admin Console and ensure that
 				// ChromeOsReleaseChannel policy propagates to the device.
-				// channel=lts.
-				// COM_FOUND_CUJ11_TASK3_WF1.
+				// channel=lts
+				// COM_FOUND_CUJ11_TASK3_WF3.
 				Value: "screenplay-a1bdf4ff-f14d-43a5-90ec-17a4bd2cb397",
 			}},
 		}, {
@@ -86,8 +86,8 @@ func init() {
 				Key: "feature_id",
 				// Configure "Release channel" in Admin Console and ensure that
 				// ChromeOsReleaseChannel policy propagates to the device.
-				// channel=stable.
-				// COM_FOUND_CUJ11_TASK3_WF1.
+				// channel=stable
+				// COM_FOUND_CUJ11_TASK3_WF2.
 				Value: "screenplay-54300da1-e6b1-4664-a175-ff3fc644a17b",
 			}},
 		}, {
@@ -102,7 +102,7 @@ func init() {
 				Key: "feature_id",
 				// Configure "Release channel" in Admin Console and ensure that
 				// ChromeOsReleaseChannel policy propagates to the device.
-				// channel=beta.
+				// channel=beta
 				// COM_FOUND_CUJ11_TASK3_WF1.
 				Value: "screenplay-cbd3450e-2c0e-4da8-9d55-8977a34e5e4b",
 			}},

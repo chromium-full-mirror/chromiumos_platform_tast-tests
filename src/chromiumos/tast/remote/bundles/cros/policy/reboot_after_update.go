@@ -54,8 +54,8 @@ func init() {
 				// managed user devices without an active session should
 				// automatically reboot after downloading an update without
 				// the need to manually reboot them.
+				// reboot=yes
 				// COM_FOUND_CUJ12_TASK3_WF1
-				// {"reboot":"yes"}
 				Value: "screenplay-30ab5088-d395-4c50-a424-6307cde95c51",
 			},
 			{
@@ -67,8 +67,8 @@ func init() {
 				// managed user devices without an active session should
 				// automatically reboot after downloading an update without
 				// the need to manually reboot them.
-				// COM_FOUND_CUJ12_TASK3_WF1
-				// {"reboot":"no"}
+				// reboot=no
+				// COM_FOUND_CUJ12_TASK3_WF2
 				Value: "screenplay-6c00ff64-eb5d-4176-89ab-a260ad9ea279",
 			},
 		},

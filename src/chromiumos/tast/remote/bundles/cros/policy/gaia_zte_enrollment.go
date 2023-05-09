@@ -51,8 +51,7 @@ func init() {
 			// policies are applied on the device and then move the same
 			// device to another OU to ensure that policies are correctly
 			// updated on the device.
-			// COM_FOUND_CUJ13_TASK3_WF1
-			// enrollment_type = zte
+			// COM_FOUND_CUJ25_TASK4_WF1
 			Value: "screenplay-cd82fc31-3640-4ccb-ba06-33ddffa54733",
 		}},
 		Params: []testing.Param{

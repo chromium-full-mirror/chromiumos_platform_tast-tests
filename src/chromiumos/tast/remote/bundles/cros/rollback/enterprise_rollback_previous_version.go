@@ -65,7 +65,7 @@ func init() {
 				// policy and ensure that supported devices correctly roll
 				// back while preserving networks and enrollment.
 				// rollback_target=n-2
-				// COM_FOUND_CUJ13_TASK4_WF1
+				// COM_FOUND_CUJ13_TASK4_WF2
 				Value: "screenplay-6f3f655c-5fa3-4d04-b513-50c049a9d762",
 			}},
 		}, {
@@ -79,7 +79,7 @@ func init() {
 				// policy and ensure that supported devices correctly roll
 				// back while preserving networks and enrollment.
 				// rollback_target=n-3
-				// COM_FOUND_CUJ13_TASK4_WF1
+				// COM_FOUND_CUJ13_TASK4_WF3
 				Value: "screenplay-02406ce4-6923-4d51-8a1d-cfbf5a07eb63",
 			}},
 		},

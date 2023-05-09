@@ -101,7 +101,7 @@ func init() {
 				Key: "feature_id",
 				// Set ChromeOsReleaseChannel policy on the device locally via FakeDMS and ensure that updates work as expected.
 				// channel-from-to=stable-to-lts
-				// COM_FOUND_CUJ11_TASK5_WF1
+				// COM_FOUND_CUJ11_TASK5_WF4
 				Value: "screenplay-6e042833-6078-4ca2-ae09-ff808c5db446",
 			}},
 		}, {
@@ -134,7 +134,7 @@ func init() {
 				Key: "feature_id",
 				// Set ChromeOsReleaseChannel policy on the device locally via FakeDMS and ensure that updates work as expected.
 				// channel-from-to=ltc-to-stable
-				// COM_FOUND_CUJ11_TASK5_WF1
+				// COM_FOUND_CUJ11_TASK5_WF3
 				Value: "screenplay-fdbbf9e6-564f-4a6c-97d3-43c899c5d2e4",
 			}},
 		}, {
@@ -161,7 +161,7 @@ func init() {
 				Key: "feature_id",
 				// Set ChromeOsReleaseChannel policy on the device locally via FakeDMS and ensure that updates work as expected.
 				// channel-from-to=stable-to-dev
-				// COM_FOUND_CUJ11_TASK5_WF1
+				// COM_FOUND_CUJ11_TASK5_WF2
 				Value: "screenplay-ffe64e90-9827-4dde-8f66-ac0143a9b71b",
 			}},
 		}, {
