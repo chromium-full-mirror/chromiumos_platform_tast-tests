@@ -154,11 +154,7 @@ func CollectEthernet(ctx context.Context, tconn *chrome.TestConn, isLoggedIn boo
 // The network must be a remembered or opened.
 func CollectWifi(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, wifiSsid string, isLoggedIn bool) (*ProxySettings, error) {
 	if isLoggedIn {
-		if _, err := ossettings.OpenNetworkDetailPage(ctx, tconn, cr, wifiSsid, netconfigtypes.WiFi); err != nil {
-			return nil, errors.Wrap(err, "failed to open specific wifi setting")
-		}
-
-		return &ProxySettings{isLoggedIn: true}, expandProxyOption(ctx, tconn)
+		return collectFromOsSettings(ctx, cr, tconn, wifiSsid)
 	}
 	return collectFromQuickSettings(ctx, tconn, netconfigtypes.WiFi, wifiSsid, isLoggedIn)
 }
@@ -176,11 +172,10 @@ func (ps *ProxySettings) Close(ctx context.Context, tconn *chrome.TestConn, kb *
 	}
 }
 
-// collectFromQuickSettings launches the proxy setting page of the specified network.
-// Note that the network has to be connected to further collect the proxy settings.
-func collectFromQuickSettings(ctx context.Context, tconn *chrome.TestConn, networkType netconfigtypes.NetworkType, wifiSsid string, isLoggedIn bool) (*ProxySettings, error) {
+// launchProxySettingsFromQuickSettings launches the proxy settings dialog for a specified network from quick settings.
+func launchProxySettingsFromQuickSettings(ctx context.Context, tconn *chrome.TestConn, networkType netconfigtypes.NetworkType, wifiSsid string) error {
 	if err := quicksettings.NavigateToNetworkDetailedView(ctx, tconn); err != nil {
-		return nil, errors.Wrap(err, "failed to navigate to network detailed view")
+		return errors.Wrap(err, "failed to navigate to network detailed view")
 	}
 
 	var networkList *nodewith.Finder
@@ -190,50 +185,118 @@ func collectFromQuickSettings(ctx context.Context, tconn *chrome.TestConn, netwo
 	case netconfigtypes.WiFi:
 		networkList = quicksettings.NetworkListItemView.NameContaining(wifiSsid)
 	default:
-		return nil, errors.Errorf("unsupported network type: %d", networkType)
+		return errors.Errorf("unsupported network type: %d", networkType)
 	}
 
 	ui := uiauto.New(tconn)
-	if err := uiauto.Combine("open the target network proxy settings page",
+	return uiauto.Combine("open the target network proxy settings page",
 		ui.WaitUntilExists(nodewith.NameStartingWith("Connected").Role(role.StaticText).Ancestor(networkList)), // The target network has to be connected.
 		ui.LeftClick(networkList),
-	)(ctx); err != nil {
-		return nil, err
+	)(ctx)
+}
+
+// collectFromQuickSettings launches the proxy setting page of the specified network.
+// Note that the network has to be connected to further collect the proxy settings.
+func collectFromQuickSettings(ctx context.Context, tconn *chrome.TestConn, networkType netconfigtypes.NetworkType, wifiSsid string, isLoggedIn bool) (*ProxySettings, error) {
+	if err := launchProxySettingsFromQuickSettings(ctx, tconn, networkType, wifiSsid); err != nil {
+		return nil, errors.Wrap(err, "failed to launch proxy settings from QuickSettings")
 	}
 
 	if isLoggedIn {
-		if err := expandProxyOption(ctx, tconn); err != nil {
-			return nil, errors.Wrap(err, "failed to expand proxy option on settings")
+		if err := prepareProxySettingsSection(ctx, tconn); err != nil {
+			return nil, errors.Wrap(err, "failed to prepare proxy settings section")
 		}
 	}
 
 	return &ProxySettings{isLoggedIn: isLoggedIn}, nil
 }
 
-// expandProxyOption expands the proxy option within the OS-Settings.
-func expandProxyOption(ctx context.Context, tconn *chrome.TestConn) error {
-	app := ossettings.New(tconn)
-	if err := app.WaitUntilExists(ossettings.ShowProxySettingsTab)(ctx); err != nil {
-		return errors.Wrap(err, "failed to find 'Shared networks' toggle button")
+// launchProxySettingsFromOsSettings launches the proxy settings page for a specified network from os-settings.
+func launchProxySettingsFromOsSettings(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, wifiSsid string) error {
+	_, err := ossettings.OpenNetworkDetailPage(ctx, tconn, cr, wifiSsid, netconfigtypes.WiFi)
+	return err
+}
+
+// collectFromOsSettings launches the proxy settings page for a specified network from os-settings, expand the proxy sections and
+// turn on the 'Allow proxies for shared network' toggle button.
+func collectFromOsSettings(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, wifiSsid string) (*ProxySettings, error) {
+	if err := launchProxySettingsFromOsSettings(ctx, cr, tconn, wifiSsid); err != nil {
+		return nil, errors.Wrap(err, "failed to launch proxy settings from QuickSettings")
 	}
 
-	if err := uiauto.Combine("expand 'Proxy' section",
-		app.LeftClick(ossettings.ShowProxySettingsTab),
-		app.WaitForLocation(ossettings.SharedNetworksToggleButton),
-	)(ctx); err != nil {
+	if err := prepareProxySettingsSection(ctx, tconn); err != nil {
+		return nil, errors.Wrap(err, "failed to prepare proxy settings section")
+	}
+
+	// OSSettings can only be launched after DUT is logged in.
+	return &ProxySettings{isLoggedIn: true}, nil
+}
+
+// prepareProxySettingsSection prepare the proxy settings section to be able to setup proxies.
+func prepareProxySettingsSection(ctx context.Context, tconn *chrome.TestConn) error {
+	if err := ExpandProxySettingsSection(ctx, tconn); err != nil {
+		return errors.Wrap(err, "failed to expand proxy option on settings")
+	}
+	if err := AllowProxiesForSharedNetwork(ctx, tconn, true /* allow */); err != nil {
+		return errors.Wrap(err, "failed to allows or disallows proxies for shared networks")
+	}
+	return nil
+}
+
+// ExpandProxySettingsSection ensures the proxy settings section of a network to be expanded.
+// This method should only be called from the network detail page of a network within OS Settings.
+// Calling on the WebUI before login fails since the proxy settings are not within an expandable section.
+func ExpandProxySettingsSection(ctx context.Context, tconn *chrome.TestConn) error {
+	// This method should only be called from the network detail page of a network within OS Settings,
+	// so all nodes should be scoped under the OS-Settings.
+	settings := ossettings.New(tconn)
+
+	if err := settings.WaitUntilExists(ossettings.ShowProxySettingsButton)(ctx); err != nil {
+		return errors.Wrap(err, "failed to find the 'Show proxy settings' button")
+	}
+
+	return uiauto.IfSuccessThen(
+		settings.WaitUntilExists(ossettings.ShowProxySettingsButton.Collapsed()),
+		uiauto.Combine("expand 'Proxy' section",
+			settings.LeftClick(ossettings.ShowProxySettingsButton),
+			settings.WaitForLocation(ossettings.ProxyDropDownMenu), // Wait for the Proxy section is expanded.
+		),
+	)(ctx)
+}
+
+// AllowProxiesForSharedNetwork allows or disallows proxies for shared
+// networks by toggling the "Allow proxies for shared networks" toggle button.
+// This method should only be called from the network detail page of a network within OS Settings
+// that has an expanded proxy settings section.
+// Calling on the WebUI before login does nothing since the "Allow proxies for shared networks" toggle button isn't available.
+func AllowProxiesForSharedNetwork(ctx context.Context, tconn *chrome.TestConn, allow bool) error {
+	// This method should only be called from the network detail page of a network within OS Settings,
+	// so all nodes should be scoped under the OS-Settings.
+	settings := ossettings.New(tconn)
+	expected := checked.True
+	if !allow {
+		expected = checked.False
+	}
+
+	// There is no 'Allow proxies for shared networks' toggle button if the Wi-Fi network is not shared.
+	if err := settings.WithTimeout(5 * time.Second).WaitUntilExists(ossettings.SharedNetworksToggleButton)(ctx); err != nil {
+		if nodewith.IsNodeNotFoundErr(err) {
+			return nil
+		}
 		return err
 	}
 
-	if toggleInfo, err := app.Info(ctx, ossettings.SharedNetworksToggleButton); err != nil {
+	if toggleInfo, err := settings.Info(ctx, ossettings.SharedNetworksToggleButton); err != nil {
 		return errors.Wrap(err, "failed to get toggle button info")
-	} else if toggleInfo.Checked == checked.True {
-		testing.ContextLog(ctx, "'Allow proxies for shared networks' is already turned on")
+	} else if toggleInfo.Checked == expected {
 		return nil
 	}
 
-	return uiauto.Combine("turn on 'Allow proxies for shared networks' option",
-		app.LeftClick(ossettings.SharedNetworksToggleButton),
-		app.LeftClick(ossettings.ConfirmButton),
+	return uiauto.Combine("toggle 'Allow proxies for shared networks' button",
+		settings.MakeVisible(ossettings.SharedNetworksToggleButton),
+		settings.LeftClick(ossettings.SharedNetworksToggleButton),
+		settings.LeftClick(ossettings.ConfirmButton),
+		settings.WaitUntilCheckedState(ossettings.SharedNetworksToggleButton, allow),
 	)(ctx)
 }
 

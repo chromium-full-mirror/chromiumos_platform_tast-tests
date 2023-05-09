@@ -10,6 +10,7 @@ import (
 
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
+
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -113,7 +114,12 @@ func (s *OSSettings) NodesInfo(ctx context.Context, finder *nodewith.Finder) ([]
 	return s.ui.NodesInfo(ctx, finder.FinalAncestor(WindowFinder))
 }
 
-// IsNodeFound returns calls ui.IsNodeFound scoping the finder to the Settings app.
+// IsNodeFound calls ui.IsNodeFound scoping the finder to the Settings app.
 func (s *OSSettings) IsNodeFound(ctx context.Context, finder *nodewith.Finder) (bool, error) {
 	return s.ui.IsNodeFound(ctx, finder.FinalAncestor(WindowFinder))
+}
+
+// WaitUntilCheckedState calls ui.WaitUntilCheckedState scoping the finder to the Settings app.
+func (s *OSSettings) WaitUntilCheckedState(finder *nodewith.Finder, expectedState bool) uiauto.Action {
+	return s.ui.WaitUntilCheckedState(finder.FinalAncestor(WindowFinder), expectedState)
 }

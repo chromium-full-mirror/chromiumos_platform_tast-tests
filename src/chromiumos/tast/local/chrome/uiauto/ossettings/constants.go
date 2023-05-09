@@ -240,6 +240,9 @@ var (
 	// ShowProxySettingsTab is the finder for the "show proxy settings" tab.
 	ShowProxySettingsTab = nodewith.HasClass("settings-box").Name("Show proxy settings").Role(role.GenericContainer)
 
+	// ShowProxySettingsButton is the finder for the "show proxy settings" button.
+	ShowProxySettingsButton = nodewith.Name("Show proxy settings").Role(role.Button)
+
 	// SharedNetworksToggleButton is the finder for the "show shared networks" button.
 	SharedNetworksToggleButton = nodewith.Name("Allow proxies for shared networks").Role(role.ToggleButton)
 
