@@ -11,6 +11,7 @@ import (
 	"chromiumos/tast/common/firmware/ti50"
 	"chromiumos/tast/remote/bundles/cros/gscdevboard/utils"
 	"chromiumos/tast/remote/firmware/ti50/fixture"
+
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -32,6 +33,9 @@ func init() {
 		}, {
 			Name: "gsc_reset_tpmv",
 			Val:  verifyEcResetOnTpmvRebootCmd,
+		}, {
+			Name: "gsc_reset_console",
+			Val:  verifyEcResetOnConsoleRebootCmd,
 		}},
 	})
 }
@@ -101,6 +105,33 @@ func verifyEcResetOnTpmvRebootCmd(ctx context.Context, s *testing.State, b utils
 	_, err := b.GSCToolCommand(ctx, "", "--reboot")
 	th.MustSucceed(err, "Error calling gsctool --reboot")
 
+	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
+
+	// Give a little more time for gpio monitoring to catch EC_RST edges after GSC boots
+	testing.Sleep(ctx, time.Second) // GoBigSleepLint: No good way to poll for EC_RST
+
+	events := b.GpioMonitorFinish(ctx, gpioMonitor)
+	s.Log("Stop gpio monitoring: ", events)
+
+	ecReset := events.FindFirst(ti50.GpioTi50EcRstL, utils.GpioEdgeFalling)
+	if ecReset == nil {
+		s.Error("EC not put in reset with GSC reboot TPMV command")
+		// Must return so we don't dereference null below
+		return
+	}
+	ecResetReleased := events.FindFirstAfter(*ecReset, ti50.GpioTi50EcRstL)
+	if ecResetReleased == nil {
+		s.Error("EC not released from reset after GSC reboot TPMV command")
+	}
+}
+
+func verifyEcResetOnConsoleRebootCmd(ctx context.Context, s *testing.State, b utils.DevboardHelper, i *ti50.CrOSImage, th utils.FirmwareTestingHelper) {
+	s.Log("Verify EC reset on GSC reboot console command")
+
+	s.Log("Start gpio monitoring")
+	gpioMonitor := b.GpioMonitorStart(ctx, ti50.GpioTi50EcRstL)
+
+	th.MustSucceed(i.SendConsoleRebootCmd(ctx), "Error calling `reboot` gsctool console command")
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 
 	// Give a little more time for gpio monitoring to catch EC_RST edges after GSC boots

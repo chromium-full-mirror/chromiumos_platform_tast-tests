@@ -97,6 +97,16 @@ func (i *CommandImage) WaitUntilBooted(ctx context.Context, interval time.Durati
 	}
 }
 
+// SendConsoleRebootCmd issues the reboot command but does not listen for a response since the GSC
+// is expected to reboot. Note that this does not detect if reboot was not performed because
+// CCD wasn't open.
+func (i *CommandImage) SendConsoleRebootCmd(ctx context.Context) error {
+	if err := i.board.WriteSerial(ctx, []byte("reboot")); err != nil {
+		return err
+	}
+	return nil
+}
+
 // WaitUntilNormalSleep waits until gsc goes into deep sleep via monitoring print statement
 func (i *CommandImage) WaitUntilNormalSleep(ctx context.Context, interval time.Duration) error {
 	pOpts := testing.PollOptions{Timeout: interval}
