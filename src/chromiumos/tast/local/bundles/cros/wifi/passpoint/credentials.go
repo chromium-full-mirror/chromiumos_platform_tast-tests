@@ -25,7 +25,9 @@ const (
 	testPackageName = "app.passpoint.example.com"
 )
 
-var testCerts = certificate.TestCert1()
+// TestCerts is the set of certificates/private keys used for authentication
+// during the tests.
+var TestCerts = certificate.TestCert1()
 
 // Auth is the authentication method the access point will expose.
 type Auth int
@@ -51,6 +53,10 @@ type Credentials struct {
 	RoamingOIs []uint64
 	// Auth is the EAP network authentication.
 	Auth
+	// CertID is the identifier of the client certificate in the store.
+	CertID string
+	// KeyID is the identifier of the client private key in the store.
+	KeyID string
 }
 
 // FQDN returns the fully qualified domain name of the service provider.
@@ -74,20 +80,26 @@ func (pc *Credentials) OtherHomePartners() []string {
 // ToShillProperties converts the set of credentials to a map for credentials D-Bus
 // properties. ToShillProperties only supports EAP-TTLS authentication.
 func (pc *Credentials) ToShillProperties() (map[string]interface{}, error) {
-	if pc.Auth != AuthTTLS {
-		return nil, errors.Errorf("unsupported authentication method: %v", pc.Auth)
-	}
-
 	props := map[string]interface{}{
 		shillconst.PasspointCredentialsPropertyDomains:            pc.Domains,
 		shillconst.PasspointCredentialsPropertyRealm:              pc.FQDN(),
 		shillconst.PasspointCredentialsPropertyMeteredOverride:    false,
 		shillconst.PasspointCredentialsPropertyAndroidPackageName: testPackageName,
-		shillconst.ServicePropertyEAPMethod:                       "TTLS",
-		shillconst.ServicePropertyEAPInnerEAP:                     "auth=MSCHAPV2",
-		shillconst.ServicePropertyEAPIdentity:                     testUser,
-		shillconst.ServicePropertyEAPPassword:                     testPassword,
-		shillconst.ServicePropertyEAPCACertPEM:                    []string{testCerts.CACred.Cert},
+		shillconst.ServicePropertyEAPCACertPEM:                    []string{TestCerts.CACred.Cert},
+	}
+
+	switch pc.Auth {
+	case AuthTTLS:
+		props[shillconst.ServicePropertyEAPMethod] = "TTLS"
+		props[shillconst.ServicePropertyEAPInnerEAP] = "auth=MSCHAPV2"
+		props[shillconst.ServicePropertyEAPIdentity] = testUser
+		props[shillconst.ServicePropertyEAPPassword] = testPassword
+	case AuthTLS:
+		props[shillconst.ServicePropertyEAPMethod] = "TLS"
+		props[shillconst.ServicePropertyEAPIdentity] = testUser
+		props[shillconst.ServicePropertyEAPPin] = "000000"
+		props[shillconst.ServicePropertyEAPCertID] = pc.CertID
+		props[shillconst.ServicePropertyEAPKeyID] = pc.KeyID
 	}
 
 	for propName, ois := range map[string][]uint64{
@@ -114,11 +126,11 @@ func (pc *Credentials) ToAndroidConfig(ctx context.Context) (string, error) {
 
 	params := map[string]string{
 		"profile": base64.StdEncoding.EncodeToString([]byte(ppsMoProfile)),
-		"caCert":  base64.StdEncoding.EncodeToString([]byte(testCerts.CACred.Cert)),
+		"caCert":  base64.StdEncoding.EncodeToString([]byte(TestCerts.CACred.Cert)),
 	}
 
 	if pc.Auth == AuthTLS {
-		pkcs12Cert, err := certutil.PreparePKCS12Cert(ctx, testCerts)
+		pkcs12Cert, err := certutil.PreparePKCS12Cert(ctx, TestCerts)
 		if err != nil {
 			return "", errors.Wrap(err, "failed to create PKCS#12 certificate")
 		}
@@ -295,7 +307,7 @@ func (pc *Credentials) preparePPSMOCred() (string, error) {
 	}
 	switch pc.Auth {
 	case AuthTLS:
-		fingerprint, err := certutil.PrepareCertSHA256Fingerprint(testCerts)
+		fingerprint, err := certutil.PrepareCertSHA256Fingerprint(TestCerts)
 		if err != nil {
 			return "", errors.Wrap(err, "failed to get certificate's fingerprint")
 		}

@@ -6,11 +6,14 @@ package wifi
 
 import (
 	"context"
+	"fmt"
 	"time"
 
+	"chromiumos/tast/common/pkcs11/netcertstore"
 	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/local/bundles/cros/wifi/passpoint"
 	"chromiumos/tast/local/hostapd"
+	"chromiumos/tast/local/hwsec"
 	"chromiumos/tast/local/network/hwsim"
 	"chromiumos/tast/local/shill"
 	"go.chromium.org/tast/core/ctxutil"
@@ -348,6 +351,32 @@ func init() {
 					},
 					expectedSSID: "passpoint-red",
 				},
+			}, {
+				Name: "home_match_with_tls_realm",
+				Val: selectionTest{
+					credentials: []*passpoint.Credentials{
+						{
+							Domains: []string{passpoint.BlueDomain},
+							Auth:    passpoint.AuthTLS,
+						},
+					},
+					aps: []passpoint.AccessPoint{
+						{
+							SSID:               "passpoint-tls-blue",
+							Domain:             passpoint.BlueDomain,
+							Realms:             []string{passpoint.BlueDomain},
+							RoamingConsortiums: []uint64{passpoint.HomeOI},
+							Auth:               passpoint.AuthTLS,
+						}, {
+							SSID:               "passpoint-ttls-blue",
+							Domain:             passpoint.BlueDomain,
+							Realms:             []string{passpoint.BlueDomain},
+							RoamingConsortiums: []uint64{passpoint.HomeOI},
+							Auth:               passpoint.AuthTTLS,
+						},
+					},
+					expectedSSID: "passpoint-tls-blue",
+				},
 			},
 		},
 	})
@@ -361,6 +390,8 @@ type selectionTestContext struct {
 	aps []*hostapd.Server
 	// credentials is the set of Passpoint credentials under test.
 	credentials []*passpoint.Credentials
+	// hasTLS is true when the test will use TLS authentication.
+	hasTLS bool
 	// clientIface is the simulated interface used by Shill as a client interface.
 	clientIface string
 	// expectedAP is the access point instance where to expect the device connection.
@@ -378,6 +409,22 @@ func PasspointSelection(ctx context.Context, s *testing.State) {
 	tc, err := prepareSelectionTest(ctx, s)
 	if err != nil {
 		s.Fatal("Failed to initialize test: ", err)
+	}
+
+	// Prepare the certificate storage.
+	var certOrKeyID string
+	if tc.hasTLS {
+		store, err := netcertstore.CreateStore(ctx, hwsec.NewCmdRunner())
+		if err != nil {
+			s.Fatal("Failed to create cert store: ", err)
+		}
+		defer store.Cleanup(cleanupCtx)
+
+		id, err := store.InstallCertKeyPair(ctx, passpoint.TestCerts.ClientCred.PrivateKey, passpoint.TestCerts.ClientCred.Cert)
+		if err != nil {
+			s.Fatal("Failed to install test certificate/private key: ", err)
+		}
+		certOrKeyID = fmt.Sprintf("%d:%s", store.UserToken.Slot, id)
 	}
 
 	// Create a profile dedicated to the test
@@ -410,6 +457,10 @@ func PasspointSelection(ctx context.Context, s *testing.State) {
 
 	// Add the sets of credentials to Shill.
 	for _, c := range tc.credentials {
+		if c.Auth == passpoint.AuthTLS {
+			c.CertID = certOrKeyID
+			c.KeyID = certOrKeyID
+		}
 		prop, err := c.ToShillProperties()
 		if err != nil {
 			s.Fatal("Failed to get credentials' shill properties: ", err)
@@ -471,6 +522,15 @@ func prepareSelectionTest(ctx context.Context, s *testing.State) (tc *selectionT
 			len(ifaces.Client))
 	}
 
+	// Check if one of the credentials uses TLS.
+	hasTLS := false
+	for _, c := range params.credentials {
+		if c.Auth == passpoint.AuthTLS {
+			hasTLS = true
+			break
+		}
+	}
+
 	// Create one access point per test network
 	var servers []*hostapd.Server
 	var expectedServer *hostapd.Server
@@ -490,6 +550,7 @@ func prepareSelectionTest(ctx context.Context, s *testing.State) (tc *selectionT
 		manager:      m,
 		aps:          servers,
 		credentials:  params.credentials,
+		hasTLS:       hasTLS,
 		clientIface:  ifaces.Client[0],
 		expectedAP:   expectedServer,
 		expectedSSID: params.expectedSSID,
