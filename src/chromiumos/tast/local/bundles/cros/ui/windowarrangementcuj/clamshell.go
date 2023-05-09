@@ -19,7 +19,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/pointer"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/coords"
-	"chromiumos/tast/local/input"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -114,7 +114,7 @@ func RunClamShell(ctx, closeCtx context.Context, tconn *chrome.TestConn, ui *uia
 		return errors.Wrap(err, "failed to wait for the browser window animation")
 	}
 
-	// Wait a little longer because the following resizing drag has
+	// GoBigSleepLint: Wait a little longer because the following resizing drag has
 	// had several flaky problems which do not cause test failures
 	// but lead to misleading performance data. See b/263131909.
 	if err := testing.Sleep(ctx, 3*time.Second); err != nil {
@@ -242,23 +242,8 @@ func RunClamShell(ctx, closeCtx context.Context, tconn *chrome.TestConn, ui *uia
 		return errors.Wrap(err, dividerDragError)
 	}
 
-	kw, err := input.Keyboard(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to open the keyboard")
-	}
-	defer cleanUp(closeCtx, action.Named(
-		"close the keyboard",
-		func(ctx context.Context) error {
-			return kw.Close(ctx)
-		},
-	), &retErr)
 	// Enter the overview mode.
-	topRow, err := input.KeyboardTopRowLayout(ctx, kw)
-	if err != nil {
-		return errors.Wrap(err, "failed to obtain the top-row layout")
-	}
-	enterOverview := kw.AccelAction(topRow.SelectTask)
-	if err := enterOverview(ctx); err != nil {
+	if err := setOverviewModeAndWait(ctx, tconn); err != nil {
 		return errors.Wrap(err, "failed to enter overview mode")
 	}
 	defer cleanUp(closeCtx, action.Named(

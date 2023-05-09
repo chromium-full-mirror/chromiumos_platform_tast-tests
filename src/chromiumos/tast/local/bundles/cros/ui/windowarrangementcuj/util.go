@@ -17,10 +17,12 @@ import (
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/display"
 	"chromiumos/tast/local/chrome/uiauto"
+	"chromiumos/tast/local/chrome/uiauto/event"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/pointer"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/coords"
+	"chromiumos/tast/local/input"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -240,4 +242,31 @@ func getAllNonPipWindows(ctx context.Context, tconn *chrome.TestConn) ([]*ash.Wi
 		}
 	}
 	return filtered, nil
+}
+
+func setOverviewModeAndWait(ctx context.Context, tconn *chrome.TestConn) error {
+	kw, err := input.Keyboard(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to open the keyboard")
+	}
+	defer kw.Close(ctx)
+
+	topRow, err := input.KeyboardTopRowLayout(ctx, kw)
+	if err != nil {
+		return errors.Wrap(err, "failed to obtain the top-row layout")
+	}
+
+	waitForOverviewState := func(ctx context.Context) error {
+		return ash.WaitForOverviewState(ctx, tconn, ash.Shown, 30*time.Second)
+	}
+
+	ui := uiauto.New(tconn)
+	return uiauto.NamedCombine("set overview mode and wait",
+		// Add a stabilization delay before entering overview mode to
+		// mitigate the potential timing issue between desktop
+		// splitting and entering overview mode.
+		ui.WithTimeout(5*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged),
+		kw.AccelAction(topRow.SelectTask),
+		waitForOverviewState,
+	)(ctx)
 }

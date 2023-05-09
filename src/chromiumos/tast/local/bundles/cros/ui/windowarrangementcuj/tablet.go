@@ -19,7 +19,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/pointer"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/coords"
-	"chromiumos/tast/local/input"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -221,33 +221,12 @@ func RunTablet(ctx, closeCtx context.Context, br *browser.Browser, tconn *chrome
 		},
 	), &retErr)
 
-	kw, err := input.Keyboard(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to open the keyboard")
-	}
-	defer cleanUp(closeCtx, action.Named(
-		"close the keyboard",
-		func(ctx context.Context) error {
-			return kw.Close(ctx)
-		},
-	), &retErr)
-
-	enterOverviewAndVerify := func(ctx context.Context) error {
-		topRow, err := input.KeyboardTopRowLayout(ctx, kw)
-		if err != nil {
-			return errors.Wrap(err, "failed to obtain the top-row layout")
-		}
-		waitForOverviewState := func(ctx context.Context) error {
-			return ash.WaitForOverviewState(ctx, tconn, ash.Shown, 30*time.Second)
-		}
-		return uiauto.NamedCombine("enter overview mode and verify",
-			kw.AccelAction(topRow.SelectTask),
-			waitForOverviewState,
-		)(ctx)
+	setOverviewMode := func(ctx context.Context) error {
+		return setOverviewModeAndWait(ctx, tconn)
 	}
 
 	// Exercise split view resize functionality.
-	if err := exerciseSplitViewResize(ctx, tconn, ui, pc, enterOverviewAndVerify, splitViewDragPoints...); err != nil {
+	if err := exerciseSplitViewResize(ctx, tconn, ui, pc, setOverviewMode, splitViewDragPoints...); err != nil {
 		return errors.Wrap(err, "failed to exercise split view resize functionality with two browser windows")
 	}
 
