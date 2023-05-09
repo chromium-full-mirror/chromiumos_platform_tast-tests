@@ -193,7 +193,7 @@ func externalTypecDisplayDetection(ctx context.Context, dut *dut.DUT, numberOfDi
 		displayInfoRe     = regexp.MustCompile(`.*pipe\s+[BCD]\]:\n.*active=yes, mode=.[0-9]+x[0-9]+.: [0-9]+.*\s+[hw: active=yes]+`)
 		connectorInfoRe   = regexp.MustCompile(`.*: connectors:\n.\s+\[CONNECTOR:\d+:[DP]+.*`)
 		connectedStatusRe = regexp.MustCompile(`\[CONNECTOR:\d+:DP.*status: connected`)
-		modesRe           = regexp.MustCompile(`modes:\n.*"1920x1080":.60`)
+		modesRe           = regexp.MustCompile(`modes:\n.*"\d+x\d+":.60`)
 	)
 
 	displayInfoFile := "/sys/kernel/debug/dri/0/i915_display_info"
