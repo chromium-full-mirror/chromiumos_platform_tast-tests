@@ -293,7 +293,22 @@ func (cs *CpuidleStateMetrics) Snapshot(ctx context.Context, values *perf.Values
 
 	for cpuName, perCPUDiffs := range diffs {
 		perCPUC0Residency := timeSlice
+
+		var perCPUTotalResidency int64
+		var adjustRate float64
+		for _, diff := range perCPUDiffs {
+			perCPUTotalResidency += diff
+		}
+		if perCPUTotalResidency > timeSlice {
+			// This could happen if the values read from system CPU files are not the realtime ones.
+			adjustRate = float64(timeSlice) / float64(perCPUTotalResidency)
+		}
+
 		for stateName, diff := range perCPUDiffs {
+			if adjustRate > 0 {
+				// Adjust each state proportionally.
+				diff = int64(float64(diff) * adjustRate)
+			}
 			values.Append(cs.metrics[cpuName+"-"+stateName], (float64(diff)/float64(timeSlice))*100)
 			c0Residency -= diff
 			perCPUC0Residency -= diff
