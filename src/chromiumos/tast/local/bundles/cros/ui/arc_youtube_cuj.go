@@ -14,6 +14,8 @@ import (
 	"chromiumos/tast/local/arc/playstore"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/cuj"
+	"chromiumos/tast/local/chrome/uiauto"
+	"chromiumos/tast/local/mtbf/youtube"
 	"chromiumos/tast/local/ui/cujrecorder"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -106,42 +108,62 @@ func ArcYoutubeCUJ(ctx context.Context, s *testing.State) {
 		// Take a screenshot before closing the ARC YouTube app.
 		defer recorder.CustomScreenshot(cleanupCtx)
 
-		// Click the Search icon.
-		searchIcon := d.Object(
-			ui.ClassName("android.widget.ImageView"),
-			ui.Description("Search"),
-			ui.PackageName(ytAppPkgName),
-		)
+		if err := youtube.DismissTrialPrompt(d)(ctx); err != nil {
+			s.Fatal("Failed to dismiss trial prompt: ", err)
+		}
+
 		const uiTimeout = 15 * time.Second
-		if err := searchIcon.WaitForExists(ctx, uiTimeout); err != nil {
-			return errors.Wrap(err, "failed to wait for Search icon")
-		}
-		if err := searchIcon.Click(ctx); err != nil {
-			return errors.Wrap(err, "failed to click Search")
+		clickSearchButton := func(ctx context.Context) error {
+			searchImageViewButton := d.Object(
+				ui.ClassName("android.widget.ImageView"),
+				ui.Description("Search"),
+				ui.PackageName(ytAppPkgName),
+			)
+			searchWidgetButton := d.Object(
+				ui.ClassName("android.widget.Button"),
+				ui.Description("Search"),
+				ui.PackageName(ytAppPkgName),
+			)
+			// There might be two different ARC dump hierarchies that affect how nodes are captured.
+			searchButton, err := cuj.FindAnyExists(ctx, uiTimeout, searchImageViewButton, searchWidgetButton)
+			if err != nil {
+				return errors.Wrap(err, "failed to find Search button")
+			}
+			return searchButton.Click(ctx)
 		}
 
-		// Put 862r3XS2YB0 in the search box, because we want this video: https://www.youtube.com/watch?v=862r3XS2YB0
-		searchQueryField := d.Object(
-			ui.Text("Search YouTube"),
-			ui.ClassName("android.widget.EditText"),
-			ui.PackageName(ytAppPkgName),
-		)
-		if err := searchQueryField.WaitForExists(ctx, uiTimeout); err != nil {
-			return errors.Wrap(err, "failed to wait for Search query field")
-		}
-		if err := searchQueryField.SetText(ctx, "862r3XS2YB0"); err != nil {
-			return errors.Wrap(err, "failed to set search query")
+		// Put 862r3XS2YB0 in the search box for searching https://www.youtube.com/watch?v=862r3XS2YB0.
+		const testVideoID = "862r3XS2YB0"
+		searchVideo := func(videoID string) uiauto.Action {
+			return func(ctx context.Context) error {
+				searchQueryField := d.Object(
+					ui.Text("Search YouTube"),
+					ui.ClassName("android.widget.EditText"),
+					ui.PackageName(ytAppPkgName),
+				)
+				if err := searchQueryField.WaitForExists(ctx, uiTimeout); err != nil {
+					return errors.Wrap(err, "failed to wait for Search query field")
+				}
+				if err := searchQueryField.SetText(ctx, videoID); err != nil {
+					return errors.Wrap(err, "failed to set search query")
+				}
+				// Press Enter to search.
+				return d.PressKeyCode(ctx, ui.KEYCODE_ENTER, 0)
+			}
 		}
 
-		// Press Enter to search.
-		if err := d.PressKeyCode(ctx, ui.KEYCODE_ENTER, 0); err != nil {
-			return errors.Wrap(err, "failed to press Enter")
+		const retryTimes = 3
+		if err := uiauto.Retry(retryTimes, uiauto.NamedCombine("search video",
+			clickSearchButton,
+			searchVideo(testVideoID),
+		))(ctx); err != nil {
+			return errors.Wrap(err, "failed to search video")
 		}
 
 		// Click the desired video.
 		video := d.Object(
 			ui.ClassName("android.view.ViewGroup"),
-			ui.DescriptionMatches("Google I/O 2016 - Keynote - 1 hour, 54 minutes - Go to channel - Google Developers .+ - play video"),
+			ui.DescriptionContains("Google I/O 2016 - Keynote"),
 			ui.PackageName(ytAppPkgName),
 		)
 		if err := video.WaitForExists(ctx, uiTimeout); err != nil {
@@ -198,41 +220,55 @@ func ArcYoutubeCUJ(ctx context.Context, s *testing.State) {
 		// Log the position along the timeline of video playback.
 		s.Log("Initial video position (after waiting for everything to load): ", videoPosition)
 
-		// Make sure the video is 60fps.
-		optionsView := d.Object(
-			ui.ClassName("android.widget.ImageView"),
-			ui.Description("More options"),
-			ui.PackageName(ytAppPkgName),
-		)
-		if err := d.PressKeyCode(ctx, ui.KEYCODE_ESCAPE, 0); err != nil {
-			return errors.Wrap(err, "failed to press ESC")
+		switchQuality := func(ctx context.Context) error {
+			// Make sure the video is 60fps.
+			if err := d.PressKeyCode(ctx, ui.KEYCODE_ESCAPE, 0); err != nil {
+				return errors.Wrap(err, "failed to press ESC")
+			}
+			optionsView := d.Object(
+				ui.ClassName("android.widget.ImageView"),
+				ui.Description("More options"),
+				ui.PackageName(ytAppPkgName),
+			)
+			if err := optionsView.Click(ctx); err != nil {
+				return errors.Wrap(err, "failed to click the options view")
+			}
+			// TODO(b/277108157): Assume the first button is `Quality` button because it can not
+			// find the `Quality` button with UI Automator selector.
+			if err := d.PressKeyCode(ctx, ui.KEYCODE_TAB, 0); err != nil {
+				return errors.Wrap(err, "failed to press TAB")
+			}
+			if err := d.PressKeyCode(ctx, ui.KEYCODE_ENTER, 0); err != nil {
+				return errors.Wrap(err, "failed to press ENTER")
+			}
+			// Sometimes clicking `Quality` button will show "Quality unavailable"
+			// message and changing quality will not be allowed.
+			qualityUnavailableText := d.Object(
+				ui.ClassName("android.widget.TextView"),
+				ui.Text("Quality unavailable"),
+				ui.PackageName(ytAppPkgName),
+			)
+			if err := qualityUnavailableText.WaitForExists(ctx, 3*time.Second); err == nil {
+				return errors.New(`"Quality unavailable" message is shown, cannot change quality`)
+			}
+
+			advanceView := d.Object(
+				ui.ClassName("android.widget.TextView"),
+				ui.TextContains("Advance"),
+				ui.PackageName(ytAppPkgName),
+			)
+			if err := advanceView.Click(ctx); err != nil {
+				return errors.Wrap(err, "failed to click the advance view")
+			}
+			fps60Button := d.Object(
+				ui.ClassName("android.widget.TextView"),
+				ui.TextContains(string(youtube.Quality1080P60)),
+				ui.PackageName(ytAppPkgName),
+			)
+			return fps60Button.Click(ctx)
 		}
-		if err := optionsView.Click(ctx); err != nil {
-			return errors.Wrap(err, "failed to click the options view")
-		}
-		// TODO(b/277108157): Assume the first button is `Quality` button because it can not
-		// find the `Quality` button with UI Automator selector.
-		if err := d.PressKeyCode(ctx, ui.KEYCODE_TAB, 0); err != nil {
-			return errors.Wrap(err, "failed to press TAB")
-		}
-		if err := d.PressKeyCode(ctx, ui.KEYCODE_ENTER, 0); err != nil {
-			return errors.Wrap(err, "failed to press ENTER")
-		}
-		advanceView := d.Object(
-			ui.ClassName("android.widget.TextView"),
-			ui.TextContains("Advance"),
-			ui.PackageName(ytAppPkgName),
-		)
-		if err := advanceView.Click(ctx); err != nil {
-			return errors.Wrap(err, "failed to click the advance view")
-		}
-		fps60Button := d.Object(
-			ui.ClassName("android.widget.TextView"),
-			ui.TextContains("1080p60"),
-			ui.PackageName(ytAppPkgName),
-		)
-		if err := fps60Button.Click(ctx); err != nil {
-			return errors.Wrap(err, "failed to click the 1080p60 view")
+		if err := uiauto.Retry(retryTimes, uiauto.NamedAction("switch quality", switchQuality))(ctx); err != nil {
+			return errors.Wrap(err, "failed to switch quality")
 		}
 
 		recorder.Annotate(ctx, "Start_watching_video")
@@ -246,6 +282,7 @@ func ArcYoutubeCUJ(ctx context.Context, s *testing.State) {
 				}
 			}
 			const verificationInterval = 30 * time.Second
+			// GoBigSleepLint: Sleep 30 seconds to let the video play before checking the state of the video.
 			if err := testing.Sleep(ctx, verificationInterval); err != nil {
 				return errors.Wrapf(err, "failed to wait %s", verificationInterval)
 			}
