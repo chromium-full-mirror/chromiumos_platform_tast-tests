@@ -304,7 +304,7 @@ func (y *YtWeb) MaximizeWindow(ctx context.Context) error {
 		return nil
 	}
 
-	maximizeButton := nodewith.Name("Maximize").HasClass("FrameCaptionButton").Role(role.Button)
+	maximizeButton := nodewith.Name("Maximize").HasClass("FrameSizeButton").Role(role.Button)
 	if err := y.uiHdl.Click(maximizeButton)(ctx); err != nil {
 		return errors.Wrap(err, "failed to maximize the window")
 	}
