@@ -11,7 +11,6 @@ import (
 	"chromiumos/tast/common/firmware/ti50"
 	"chromiumos/tast/remote/bundles/cros/gscdevboard/utils"
 	"chromiumos/tast/remote/firmware/ti50/fixture"
-
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -26,7 +25,7 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware"},
-		Fixture:      fixture.Ti50,
+		Fixture:      fixture.Ti50CcdOpen,
 		Params: []testing.Param{{
 			Name: "gsc_reset_gpio",
 			Val:  verifyEcRestOnGscReset,

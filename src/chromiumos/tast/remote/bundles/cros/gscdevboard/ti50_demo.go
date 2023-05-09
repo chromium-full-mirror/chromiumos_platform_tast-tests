@@ -11,6 +11,7 @@ import (
 	"chromiumos/tast/common/firmware/ti50"
 	"chromiumos/tast/common/servo"
 	"chromiumos/tast/remote/firmware/ti50/fixture"
+
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -25,7 +26,7 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware"},
-		Fixture:      fixture.Ti50,
+		Fixture:      fixture.Ti50CcdOpen,
 		Vars:         []string{"servo"},
 	})
 }
@@ -40,7 +41,7 @@ func Ti50Demo(ctx context.Context, s *testing.State) {
 	}
 	// Wait a little for opentitantool to take over the console, this will test
 	// that flashing still works after the console command.
-	testing.Sleep(ctx, 5*time.Second)
+	testing.Sleep(ctx, 5*time.Second) // GoBigSleepLint: TODO(b/278113474) fix this
 
 	var svo *servo.Servo
 

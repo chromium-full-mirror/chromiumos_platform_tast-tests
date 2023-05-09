@@ -25,7 +25,7 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware"},
-		Fixture:      fixture.Ti50,
+		Fixture:      fixture.Ti50CcdOpen,
 		Params: []testing.Param{{
 			Name: "niap_policy_test",
 			Val:  "NiapPolicyTest",

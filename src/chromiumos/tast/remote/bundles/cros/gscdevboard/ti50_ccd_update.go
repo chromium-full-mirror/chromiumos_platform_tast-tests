@@ -15,6 +15,7 @@ import (
 	"chromiumos/tast/common/firmware/ti50"
 	"chromiumos/tast/remote/bundles/cros/gscdevboard/utils"
 	"chromiumos/tast/remote/firmware/ti50/fixture"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
@@ -41,7 +42,7 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware"},
-		Fixture:      fixture.Ti50,
+		Fixture:      fixture.Ti50CcdOpen,
 	})
 }
 
@@ -66,7 +67,7 @@ func Ti50CCDUpdate(ctx context.Context, s *testing.State) {
 	i := ti50.NewCrOSImage(b)
 
 	// Wait for reboot output to finish before reading version.
-	testing.Sleep(ctx, 1*time.Second)
+	testing.Sleep(ctx, 1*time.Second) // GoBigSleepLint: TODO(b/278113474) fix this
 
 	outStr, err := i.Command(ctx, "version")
 	if err != nil {
@@ -80,7 +81,7 @@ func Ti50CCDUpdate(ctx context.Context, s *testing.State) {
 	}
 
 	// Wait one more second to ensure that USB is connected before running gsctool.
-	testing.Sleep(ctx, 1*time.Second)
+	testing.Sleep(ctx, 1*time.Second) // GoBigSleepLint: TODO(b/278113474) fix this
 
 	out, err := b.GSCToolCommand(ctx, "", "--fwver")
 	if err != nil {
@@ -100,7 +101,7 @@ func Ti50CCDUpdate(ctx context.Context, s *testing.State) {
 	}
 
 	// Wait for reboot output to finish before reading version.
-	testing.Sleep(ctx, 1*time.Second)
+	testing.Sleep(ctx, 1*time.Second) // GoBigSleepLint: TODO(b/278113474) fix this
 
 	outStr, err = i.Command(ctx, "version")
 	if err != nil {
@@ -136,7 +137,7 @@ func Ti50CCDUpdate(ctx context.Context, s *testing.State) {
 	}
 
 	// Wait for reboot output to finish before reading version.
-	testing.Sleep(ctx, 1*time.Second)
+	testing.Sleep(ctx, 1*time.Second) // GoBigSleepLint: TODO(b/278113474) fix this
 
 	outStr, err = i.Command(ctx, "version")
 	if err != nil {

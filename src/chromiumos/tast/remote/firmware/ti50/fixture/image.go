@@ -49,7 +49,7 @@ func init() {
 		Name:            Ti50Image,
 		Desc:            "Provides access to a Ti50 image",
 		Contacts:        []string{"tast-fw-library-reviewers@google.com", "jbettis@google.com"},
-		Impl:            &imageImpl{image: Ti50Image},
+		Impl:            &imageFixture{image: Ti50Image},
 		Vars:            []string{BuildURL, FwConfigJSON},
 		SetUpTimeout:    imageDownloadTimeout,
 		TearDownTimeout: imageDeleteTimeout,
@@ -58,7 +58,7 @@ func init() {
 		Name:            SystemTestAutoImage,
 		Desc:            "Uses devboardsvc to flash a system_test_auto image",
 		Contacts:        []string{"tast-fw-library-reviewers@google.com", "jbettis@google.com"},
-		Impl:            &imageImpl{image: SystemTestAutoImage},
+		Impl:            &imageFixture{image: SystemTestAutoImage},
 		Vars:            []string{BuildURL, FwConfigJSON},
 		SetUpTimeout:    imageDownloadTimeout,
 		TearDownTimeout: imageDeleteTimeout,
@@ -87,13 +87,13 @@ func (v *ImageValue) FwConfigPaths() []string {
 	return v.configPaths
 }
 
-type imageImpl struct {
+type imageFixture struct {
 	image      string
 	downloaded bool
 	v          *ImageValue
 }
 
-func (i *imageImpl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+func (i *imageFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	url, _ := s.Var(BuildURL)
 	i.v = &ImageValue{imageType: i.image}
 
@@ -109,17 +109,17 @@ func (i *imageImpl) SetUp(ctx context.Context, s *testing.FixtState) interface{}
 	return i.v
 }
 
-func (i *imageImpl) Reset(ctx context.Context) error {
+func (i *imageFixture) Reset(ctx context.Context) error {
 	return nil
 }
 
-func (i *imageImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
+func (i *imageFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
 }
 
-func (i *imageImpl) PostTest(ctx context.Context, s *testing.FixtTestState) {
+func (i *imageFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
 }
 
-func (i *imageImpl) TearDown(ctx context.Context, s *testing.FixtState) {
+func (i *imageFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 	if i.downloaded && i.v.imagePath != "" {
 		if err := os.Remove(i.v.imagePath); err != nil {
 			s.Errorf("Failed to remove downloaded image %q: %v", i.v.imagePath, err)
@@ -127,13 +127,13 @@ func (i *imageImpl) TearDown(ctx context.Context, s *testing.FixtState) {
 	}
 }
 
-func (i *imageImpl) String() string {
+func (i *imageFixture) String() string {
 	return i.image
 }
 
 // downloadImage downloads the image from google storage if necessary.
 // inputURL can be a local file, a gs file, or a gs build folder.
-func (i *imageImpl) downloadImage(ctx context.Context, inputURL string, configPaths []string) error {
+func (i *imageFixture) downloadImage(ctx context.Context, inputURL string, configPaths []string) error {
 	if i.image == "" {
 		return nil
 	}

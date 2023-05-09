@@ -134,6 +134,15 @@ func (i *CommandImage) WaitUntilRoBoot(ctx context.Context, interval time.Durati
 	}, &pOpts)
 }
 
+// WaitUntilMatch waits until specified match is present
+func (i *CommandImage) WaitUntilMatch(ctx context.Context, re *regexp.Regexp, interval time.Duration) error {
+	pOpts := testing.PollOptions{Timeout: interval}
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		_, err := i.board.ReadSerialSubmatch(ctx, re)
+		return err
+	}, &pOpts)
+}
+
 // GetPrompt gets a fresh prompt from the image by  the prompt.
 func (i *CommandImage) GetPrompt(ctx context.Context) error {
 	if err := i.board.FlushSerial(ctx); err != nil {

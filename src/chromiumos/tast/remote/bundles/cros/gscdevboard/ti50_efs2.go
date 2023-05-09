@@ -72,7 +72,7 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware"},
-		Fixture:      fixture.Ti50,
+		Fixture:      fixture.Ti50CcdOpen,
 	})
 }
 

@@ -83,4 +83,6 @@ const (
 	GpioTi50KsiBack GpioName = "KSI_00"
 	// GpioTi50EcPacketMode is the pin that EC drives high when it is sending packet information
 	GpioTi50EcPacketMode GpioName = "EC_GSC_PACKET_MODE"
+	// GpioTi50ChassisOpen is the pin that GSC reads to know if end-user has physical access
+	GpioTi50ChassisOpen GpioName = "CHASSIS_OPEN"
 )

@@ -13,6 +13,7 @@ import (
 
 	"chromiumos/tast/common/firmware/ti50"
 	remoteTi50 "chromiumos/tast/remote/firmware/ti50"
+
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -20,11 +21,12 @@ const (
 	// DevBoardService arg name for the service's host:port pair and also the name of the fixture.
 	DevBoardService = "devboardsvc"
 
-	// Ti50 fixture flashes a ti50 image.
-	Ti50 = "ti50"
+	// Ti50Devboard fixture flashes a ti50 image and sets up a devboard connection
+	Ti50Devboard = "ti50Devboard"
 
-	// SystemTestAuto fixture flashes a system_test_auto image.
-	SystemTestAuto = "systemTestAuto"
+	// SystemTestAutoDevboard fixture flashes a system_test_auto image and sets up a devboard
+	// connection
+	SystemTestAutoDevboard = "systemTestAutoDevboard"
 
 	setUpTimeout    = 2 * time.Minute
 	resetTimeout    = 5 * time.Second
@@ -33,24 +35,14 @@ const (
 	postTestTimeout = 5 * time.Second
 )
 
+type extraPreTestMethod func(ctx context.Context, board ti50.DevBoard) error
+
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name:            DevBoardService,
-		Desc:            "A DevBoard connected to a devboardsvc service host",
-		Contacts:        []string{"tast-fw-library-reviewers@google.com", "jbettis@google.com"},
-		Impl:            &impl{},
-		Vars:            []string{DevBoardService},
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: tearDownTimeout,
-		PreTestTimeout:  preTestTimeout,
-		PostTestTimeout: postTestTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name:            Ti50,
+		Name:            Ti50Devboard,
 		Desc:            "Uses devboardsvc to flash a Ti50 image",
 		Contacts:        []string{"tast-fw-library-reviewers@google.com", "jbettis@google.com"},
-		Impl:            &impl{},
+		Impl:            &devboardFixture{},
 		Vars:            []string{DevBoardService},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
@@ -60,10 +52,10 @@ func init() {
 		Parent:          Ti50Image,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:            SystemTestAuto,
+		Name:            SystemTestAutoDevboard,
 		Desc:            "Uses devboardsvc to flash a system_test_auto image",
 		Contacts:        []string{"tast-fw-library-reviewers@google.com", "jbettis@google.com"},
-		Impl:            &impl{},
+		Impl:            &devboardFixture{},
 		Vars:            []string{DevBoardService},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
@@ -86,13 +78,14 @@ func (v *Value) DevBoard() ti50.DevBoard {
 	return v.devboard
 }
 
-type impl struct {
+type devboardFixture struct {
 	imageValue *ImageValue
 	hostPort   string
 	v          *Value
+	preTest    extraPreTestMethod
 }
 
-func (i *impl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+func (i *devboardFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	if s.ParentValue() != nil {
 		i.imageValue = s.ParentValue().(*ImageValue)
 	}
@@ -123,7 +116,7 @@ func (i *impl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	return i.v
 }
 
-func (i *impl) Reset(ctx context.Context) error {
+func (i *devboardFixture) Reset(ctx context.Context) error {
 	if i.v.devboard != nil {
 		if err := i.v.devboard.Reset(ctx); err != nil {
 			return err
@@ -136,7 +129,24 @@ func (i *impl) Reset(ctx context.Context) error {
 	return nil
 }
 
-func (i *impl) PreTest(ctx context.Context, s *testing.FixtTestState) {
+// resetTpmOpenCcd assumes that testlab has already been enabled for this device previously.
+// If not, then this code will silently fail and not do anything
+func resetTpmOpenCcd(ctx context.Context, board ti50.DevBoard) error {
+	testing.ContextLog(ctx, "Erasing TPM data and opening CCD")
+	image := ti50.NewCrOSImage(board)
+	// If we don't close the UART connections here, then tests don't get uart data correctly
+	defer board.Close(ctx)
+	image.WaitUntilBooted(ctx)
+	image.Command(ctx, "ccd testlab open")
+	image.Command(ctx, "ccd reset factory")
+	image.Command(ctx, "ccd set OpenNoTPMWipe ifopened")
+	image.Command(ctx, "ccd lock")
+	image.Command(ctx, "ccd open")
+	image.Command(ctx, "ccd reset factory")
+	return nil
+}
+
+func (i *devboardFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
 	testing.ContextLog(ctx, "Starting OTT session")
 	i.v.devboard = remoteTi50.NewDUTControlAndreiboard(i.v.grpcConn, 10000, time.Second)
 	// At this point, the plan is to start an opentitantool session, which could invove either
@@ -151,7 +161,7 @@ func (i *impl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 	}
 }
 
-func (i *impl) PostTest(ctx context.Context, s *testing.FixtTestState) {
+func (i *devboardFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
 	testing.ContextLog(ctx, "Ending OTT session")
 	// At this point, we should end the opentitantool session, that is, stop host emulator, or
 	// disconnect from devboard.
@@ -164,7 +174,7 @@ func (i *impl) PostTest(ctx context.Context, s *testing.FixtTestState) {
 	i.v.devboard = nil
 }
 
-func (i *impl) TearDown(ctx context.Context, s *testing.FixtState) {
+func (i *devboardFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 	if i.v.grpcConn != nil {
 		if err := i.v.grpcConn.Close(); err != nil {
 			s.Error("Failed to close grpc: ", err)
@@ -173,7 +183,7 @@ func (i *impl) TearDown(ctx context.Context, s *testing.FixtState) {
 	}
 }
 
-func (i *impl) String() string {
+func (i *devboardFixture) String() string {
 	if i.imageValue != nil {
 		return DevBoardService + "_" + i.imageValue.ImageType()
 	}
@@ -181,7 +191,7 @@ func (i *impl) String() string {
 }
 
 // dialGrpc connects to the devboardsvc host.
-func (i *impl) dialGrpc(ctx context.Context) error {
+func (i *devboardFixture) dialGrpc(ctx context.Context) error {
 	conn, err := grpc.DialContext(ctx, i.hostPort, grpc.WithInsecure())
 	if err != nil {
 		return err
