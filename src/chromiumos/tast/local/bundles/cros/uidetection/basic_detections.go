@@ -21,6 +21,7 @@ import (
 	"chromiumos/tast/local/coords"
 	"chromiumos/tast/local/personalization"
 	"chromiumos/tast/local/uidetection"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -178,6 +179,11 @@ func BasicDetections(ctx context.Context, s *testing.State) {
 		uiauto.Combine("verify that basic matchers work",
 			ud.LeftClick(chromeIcon),
 			verifyChromeIsShown,
+			// Close Chrome popups.
+			uiauto.IfSuccessThen(
+				ud.WithTimeout(10*time.Second).Exists(uidetection.TextBlock([]string{"No", "Thanks"})),
+				ud.LeftClick(uidetection.TextBlock([]string{"No", "Thanks"})),
+			),
 			ud.WithScreenshotStrategy(uidetection.ImmediateScreenshot).LeftClick(uidetection.TextBlock([]string{"Customize", "Chrome"})),
 			ud.LeftClick(uidetection.Word("Cancel")),
 			ud.WaitUntilGone(uidetection.Word("Cancel")),
