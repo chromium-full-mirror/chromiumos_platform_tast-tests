@@ -7,6 +7,7 @@ package power
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"time"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -69,18 +70,28 @@ func ManualUI(ctx context.Context, s *testing.State) {
 		s.Log("Failed to create test start setup notification: ", err)
 	}
 
-	// Pressing "Ctrl + Alt + /" will bring up the keyboard shortcut and
-	// notify the test that it proceed with the automation setup
-	// by checking that the panel appears on the display.
-	// Testers will use this shortcut to end the manual setup phase early.
+	// Give a few minutes for testers to do manual testing setup.
+	// Testers can press "Ctrl + Alt + /" to bring up the keyboard
+	// shortcuts widget to end the manual setup at any time.
 	ui := uiauto.New(tconn)
-	keyboardShortcutWindow := nodewith.ClassName("KeyboardShortcutWidget").Role(role.Window)
-	closeButton := nodewith.Name("Close").Role(role.Button).Ancestor(keyboardShortcutWindow)
-	if err := uiauto.NamedCombine("wait for manual operation",
-		ui.WithTimeout(manualSetupTimeout).WaitUntilExists(keyboardShortcutWindow),
-		ui.LeftClick(closeButton),
-	)(ctx); err != nil {
-		s.Fatal("Failed to start manual testing: ", err)
+	ksReg := regexp.MustCompile("(Keyboard shortcuts|Shortcuts)")
+	keyboardShortcutsWindow := nodewith.NameRegex(ksReg).ClassName("Widget").Role(role.Window)
+	closeButton := nodewith.Name("Close").Role(role.Button).Ancestor(keyboardShortcutsWindow)
+	if err := ui.WithTimeout(manualSetupTimeout).WaitUntilExists(keyboardShortcutsWindow)(ctx); err == nil {
+		if err := ui.LeftClick(closeButton)(ctx); err != nil {
+			s.Error("Failed to close the Keyboard shortcuts widget: ", err)
+		}
+		msg := "You indicated the test setup is done. Test will proceed to next step."
+		if _, err := browser.CreateTestNotification(ctx, tconn, browser.NotificationTypeBasic,
+			"Power Manual Test Setup Finish", msg); err != nil {
+			s.Log("Failed to create test setup completion notification: ", err)
+		}
+	} else {
+		msg := fmt.Sprintf("%v setup time has been reached. Test will proceed to next step.", manualSetupTimeout)
+		if _, err := browser.CreateTestNotification(ctx, tconn, browser.NotificationTypeBasic,
+			"Power Manual Test Setup Finish", msg); err != nil {
+			s.Log("Failed to create test setup completion notification: ", err)
+		}
 	}
 
 	testing.ContextLog(ctx, "Start setting up the power recorder")
@@ -106,14 +117,16 @@ func ManualUI(ctx context.Context, s *testing.State) {
 	}
 
 	// Given few minutes for testers to do manual testing.
-	if err := ui.WithTimeout(manualTestTimeout).WaitUntilExists(keyboardShortcutWindow)(ctx); err == nil {
+	if err := ui.WithTimeout(manualTestTimeout).WaitUntilExists(keyboardShortcutsWindow)(ctx); err == nil {
+		msg := "You indicated the manual test is done. Test will collect the result."
 		if _, err := browser.CreateTestNotification(ctx, tconn, browser.NotificationTypeBasic,
-			"Power Manual Test Finish", "Manual notification of manual test completion"); err != nil {
+			"Power Manual Test Finish", msg); err != nil {
 			s.Log("Failed to create test completion notification: ", err)
 		}
 	} else {
+		msg := fmt.Sprintf("%v manual test time has been reached. Test will collect the result.", manualTestTimeout)
 		if _, err := browser.CreateTestNotification(ctx, tconn, browser.NotificationTypeBasic,
-			"Power Manual Test Finish", fmt.Sprintf("Exceed %v timeout", manualTestTimeout)); err != nil {
+			"Power Manual Test Finish", msg); err != nil {
 			s.Log("Failed to create test completion notification: ", err)
 		}
 	}
