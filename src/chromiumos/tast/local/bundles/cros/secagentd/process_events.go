@@ -57,7 +57,7 @@ func init() {
 		},
 		// ChromeOS > Security > ChromeOS Enterprise Security
 		BugComponent: "b:1208373",
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging", "group:enterprise-reporting"},
+		Attr:         []string{"group:mainline", "group:enterprise-reporting"},
 		Timeout:      time.Duration(len(processEventsTestParams)) * 4 * time.Minute,
 		SoftwareDeps: []string{"bpf", "chrome"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
