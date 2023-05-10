@@ -75,7 +75,7 @@ func init() {
 		},
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		Fixture:      "graphicsNoChrome",
-		Attr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+		Attr:         []string{"group:graphics", "graphics_video", "graphics_nightly"},
 		// Guado, buddy and rikku have a companion video acceleration chip
 		// (called Kepler), skip this test in these models.
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("guado", "buddy", "rikku")),
