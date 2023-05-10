@@ -16,7 +16,6 @@ import (
 	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
 	"chromiumos/tast/local/chrome/uiauto"
 
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -290,12 +289,6 @@ func (f *baseSetupFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestS
 func (f *baseSetupFixtureImpl) PostTest(ctx context.Context, s *testing.FixtTestState) {}
 
 func (f *baseSetupFixtureImpl) Reset(ctx context.Context) error {
-	if err := f.cr.Responded(ctx); err != nil {
-		return errors.Wrap(err, "existing Chrome connection is unusable")
-	}
-	if err := f.cr.ResetState(ctx); err != nil {
-		return errors.Wrap(err, "failed resetting existing Chrome session")
-	}
 	return nil
 }
 

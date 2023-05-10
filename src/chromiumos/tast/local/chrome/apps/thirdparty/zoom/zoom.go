@@ -20,6 +20,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/prompts"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/chrome/webutil"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -119,15 +120,14 @@ func NewFromTarget(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, 
 //	     s.Fatal("Failed to start meeting: ", err)
 //	}
 //	defer zm.Close(cleanupCtx)
-func StartNewMeeting(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, permissionsOption PermissionOption) (*Zoom, error) {
+func StartNewMeeting(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, conn *chrome.Conn, permissionsOption PermissionOption) (*Zoom, error) {
 	if permissionsOption == WithAllPermissions {
 		if err := GrantPermissions(ctx, br); err != nil {
 			return nil, errors.Wrap(err, "failed to grant permissions")
 		}
 	}
 
-	conn, err := navigateToZoomAndSignIn(ctx, cr, br)
-	if err != nil {
+	if err := navigateToZoomAndSignIn(ctx, cr, br, conn); err != nil {
 		return nil, errors.Wrap(err, "failed to navigate to Zoom or sign-in")
 	}
 
@@ -161,15 +161,14 @@ func StartNewMeeting(ctx context.Context, cr *chrome.Chrome, br *browser.Browser
 
 // JoinMeeting joins a Zoom meeting via invite link.
 // And make sure the camera and microphone are turned on before entering the meeting.
-func JoinMeeting(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, inviteLink string, permissionsOption PermissionOption) (*Zoom, error) {
+func JoinMeeting(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, conn *chrome.Conn, inviteLink string, permissionsOption PermissionOption) (*Zoom, error) {
 	if permissionsOption == WithAllPermissions {
 		if err := GrantPermissions(ctx, br); err != nil {
 			return nil, errors.Wrap(err, "failed to grant permissions")
 		}
 	}
 
-	conn, err := navigateToZoomAndSignIn(ctx, cr, br)
-	if err != nil {
+	if err := navigateToZoomAndSignIn(ctx, cr, br, conn); err != nil {
 		return nil, errors.Wrap(err, "failed to navigate to Zoom or sign-in")
 	}
 	tconn, err := cr.TestAPIConn(ctx)

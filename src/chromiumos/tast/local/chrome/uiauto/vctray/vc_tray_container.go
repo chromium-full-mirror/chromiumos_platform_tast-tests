@@ -76,7 +76,7 @@ func (vcTray VCTray) WaitUntilState(devName DevType, expectedState AVState) acti
 				return err
 			}
 			if currentDevState != expectedState {
-				return errors.Errorf("expected %v, got %v", expectedState, currentDevState)
+				return errors.Errorf("failed to verify %s status; expected %v, got %v", string(devName), expectedState, currentDevState)
 			}
 			return nil
 		}, &testing.PollOptions{Timeout: 10 * time.Second})

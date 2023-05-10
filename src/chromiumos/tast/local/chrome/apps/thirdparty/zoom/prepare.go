@@ -24,51 +24,50 @@ import (
 )
 
 // navigateToZoomAndSignIn starts a new Chrome browser, navigates to the Zoom website and signs in if not yet.
-func navigateToZoomAndSignIn(ctx context.Context, cr *chrome.Chrome, br *browser.Browser) (*chrome.Conn, error) {
-	conn, err := br.NewTab(ctx, zoomWebsite)
-	if err != nil {
-		return nil, err
+func navigateToZoomAndSignIn(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, conn *chrome.Conn) error {
+	if err := conn.Navigate(ctx, zoomWebsite); err != nil {
+		return err
 	}
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	ui := uiauto.New(tconn)
 
 	if err := acceptCookiePrompts(tconn)(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed to dimiss cookie prompt")
+		return errors.Wrap(err, "failed to dimiss cookie prompt")
 	}
 
 	// Sign in if needed.
 	var nodeFound *nodewith.Finder
 	nodeFound, err = ui.FindAnyExists(ctx, myAccountLink, myProfileImg, signInLink)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to wait for either MY ACCOUNT or SIGN IN node")
+		return errors.Wrap(err, "failed to wait for either MY ACCOUNT or SIGN IN node")
 	}
 
 	if nodeFound == signInLink {
 		testing.ContextLog(ctx, "Sign in Zoom")
 		if err := signIn(ctx, conn, tconn); err != nil {
-			return nil, errors.Wrap(err, "failed to sign-in")
+			return errors.Wrap(err, "failed to sign-in")
 		}
 	}
 
 	// Register new account if required.
 	nodeFound, err = ui.FindAnyExists(ctx, myAccountLink, myProfileImg, agreeToTermsArea)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to reach either my account or registration flow")
+		return errors.Wrap(err, "failed to reach either my account or registration flow")
 	}
 
 	if nodeFound == agreeToTermsArea {
 		testing.ContextLog(ctx, "Creating new Zoom account")
 		if err := createAccount(ctx, tconn); err != nil {
-			return nil, errors.Wrap(err, "failed to create account")
+			return errors.Wrap(err, "failed to create account")
 		}
 	}
 
-	return conn, nil
+	return nil
 }
 
 func signIn(ctx context.Context, conn *chrome.Conn, tconn *chrome.TestConn) error {

@@ -18,6 +18,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/chrome/webutil"
 	"chromiumos/tast/local/input"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -114,9 +115,10 @@ func (zm *Zoom) SetJoinAudio(expectedValue bool) action.Action {
 			return dismissJoinAudioDialog(ctx)
 		}
 
-		return ui.DoDefaultUntil(
-			joinAudioByComputerButton,
-			ui.WithTimeout(shortUITimeout).WaitUntilGone(joinAudioByComputerButton),
+		return uiauto.RetrySilently(5, uiauto.Combine("join audio",
+			prompts.ActionAndGrantPermissionIfRequired(
+				zm.tconn, zm.conn, zm.ui.DoDefault(joinAudioByComputerButton), webutil.PermissionMicrophone),
+			ui.WithTimeout(5*time.Second).WaitUntilGone(joinAudioByComputerButton)),
 		)(ctx)
 	}
 }
@@ -323,14 +325,14 @@ func (zm *Zoom) CloseChatPanel() action.Action {
 // ShareScreen shares screen via "Chrome Tab" and select the tab to share.
 func (zm *Zoom) ShareScreen(tabName string) action.Action {
 	ui := zm.ui
-	shareScreenButton := nodewith.Name("Share Screen").Role(role.StaticText)
+	shareScreenButton := nodewith.Name("Share Screen").Role(role.Button)
 	presentMode := nodewith.Name("Chrome Tab").Role(role.Tab)
 	presentTab := nodewith.ClassName("AXVirtualView").Role(role.Cell).NameContaining(tabName)
 	shareButton := nodewith.Name("Share").Role(role.Button)
 
 	return uiauto.NamedCombine("share screen",
 		zm.ShowInterface,
-		ui.LeftClickUntil(shareScreenButton, ui.WithTimeout(shortUITimeout).WaitUntilExists(presentMode)),
+		ui.DoDefaultUntil(shareScreenButton, ui.WithTimeout(shortUITimeout).WaitUntilExists(presentMode)),
 		ui.LeftClick(presentMode),
 		ui.LeftClick(presentTab),
 		ui.LeftClickUntil(shareButton, ui.WithTimeout(shortUITimeout).WaitUntilGone(shareButton)),

@@ -11,6 +11,7 @@ import (
 
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/local/bundles/cros/videoconferencing/effects"
+	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/apps/thirdparty/zoom"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
@@ -110,13 +111,15 @@ func BenchmarkingZoom(ctx context.Context, s *testing.State) {
 	fixt := s.FixtValue().(fixture.BenchmarkSetUpFixtureData)
 	cr := fixt.Chrome
 
-	br, cleanup, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
+	conn, br, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, chrome.NewTabURL)
 	if err != nil {
 		s.Fatal("Failed to launch browser: ", err)
 	}
 	defer cleanup(closeCtx)
+	defer conn.Close()
+	defer conn.CloseTarget(closeCtx)
 
-	zm, err := zoom.StartNewMeeting(ctx, cr, br, zoom.WithAllPermissions)
+	zm, err := zoom.StartNewMeeting(ctx, cr, br, conn, zoom.WithAllPermissions)
 	if err != nil {
 		s.Fatal("Failed to start meeting: ", err)
 	}

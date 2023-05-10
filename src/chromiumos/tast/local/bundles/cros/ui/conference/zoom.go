@@ -17,6 +17,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/webutil"
 	"chromiumos/tast/local/input"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -43,7 +44,13 @@ const zoomTitle = "Zoom"
 // Join joins a new conference room.
 func (conf *ZoomConference) Join(ctx context.Context, room string, toBlur bool) (err error) {
 	ui := conf.ui
-	conf.zm, err = zoom.JoinMeeting(ctx, conf.cr, conf.br, room, zoom.WithAllPermissions)
+
+	conn, err := conf.br.NewTab(ctx, chrome.NewTabURL)
+	if err != nil {
+		return errors.Wrap(err, "failed to create new tab")
+	}
+
+	conf.zm, err = zoom.JoinMeeting(ctx, conf.cr, conf.br, conn, room, zoom.WithAllPermissions)
 	if err != nil {
 		return errors.Wrap(err, "failed to join zoom meeting")
 	}

@@ -85,18 +85,20 @@ func ZoomEffects(ctx context.Context, s *testing.State) {
 
 	browserType := s.FixtValue().(fixture.FixtData).BrowserType()
 
-	br, cleanup, err := browserfixt.SetUp(ctx, cr, browserType)
+	conn, br, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, browserType, chrome.NewTabURL)
 	if err != nil {
 		s.Fatal("Failed to launch browser: ", err)
 	}
 	defer cleanup(cleanupCtx)
+	defer conn.Close()
+	defer conn.CloseTarget(cleanupCtx)
 
 	var zm *zoom.Zoom
 
 	if s.Param().(common.LaunchAppType) == common.LaunchAppInPWA {
 		zm, err = zoom.StartNewMeetingUsingPWA(ctx, cr, br, zoom.WithAllPermissions)
 	} else {
-		zm, err = zoom.StartNewMeeting(ctx, cr, br, zoom.WithAllPermissions)
+		zm, err = zoom.StartNewMeeting(ctx, cr, br, conn, zoom.WithAllPermissions)
 	}
 	if err != nil {
 		s.Fatal("Failed to start meeting: ", err)
