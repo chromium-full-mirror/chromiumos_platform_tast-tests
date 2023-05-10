@@ -102,6 +102,14 @@ func VirtualKeyboardTypingOmnibox(ctx context.Context, s *testing.State) {
 	tconn := s.FixtValue().(fixture.FixtData).TestAPIConn
 	uc := s.FixtValue().(fixture.FixtData).UserContext
 
+	// Keep the automation tree around. Otherwise, the re-created tree could be
+	// incomplete in the lacros variant.
+	automationKeepAlive, err := uiauto.NewKeepAlive(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to create automation KeepAlive: ", err)
+	}
+	defer automationKeepAlive.Release(ctx)
+
 	vkbCtx := vkb.NewContext(cr, tconn)
 
 	testIMEs := s.Param().([]ime.InputMethod)

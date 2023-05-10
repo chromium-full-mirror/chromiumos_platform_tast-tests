@@ -157,6 +157,27 @@ func Repeat(n int, fn Action) Action {
 	}
 }
 
+// KeepAlive keeps the automation tree alive.
+type KeepAlive struct {
+	tconn *chrome.TestConn
+}
+
+// NewKeepAlive creates the automation tree and creates a new KeepAlive object
+// to hold one ref count. The ref count is released on Release.
+func NewKeepAlive(ctx context.Context, tconn *chrome.TestConn) (*KeepAlive, error) {
+	if err := tconn.Eval(ctx, `tast.automation.getDesktop()`, nil); err != nil {
+		return nil, errors.Wrap(err, "failed to call getDesktop")
+	}
+	return &KeepAlive{
+		tconn: tconn,
+	}, nil
+}
+
+// Release releases the automation tree ref count acquired in construction.
+func (k *KeepAlive) Release(ctx context.Context) error {
+	return k.tconn.Eval(ctx, "tast.automation.releaseDesktop()", nil)
+}
+
 // `query` holds context of a finder query and provides a "release" method to
 // clean up when query results are no longer needed.
 type query struct {
@@ -167,6 +188,7 @@ type query struct {
 // string.
 func (ac *Context) createQueryFromString(ctx context.Context, q string) (*query, error) {
 	expr := fmt.Sprintf(`async function() {
+		let desktop = tast.automation.getDesktop();
 		let query  = {
 			"execute": async () => {
 				%s
@@ -174,7 +196,7 @@ func (ac *Context) createQueryFromString(ctx context.Context, q string) (*query,
 				query.nodes = nodes;
 			},
 			"release": () => {
-				tast.automation.scheduleRelease();
+				tast.automation.releaseDesktop();
 			}
 		};
 		return query;
@@ -431,6 +453,7 @@ func (ac *Context) setupWatcher(ctx context.Context, finder *nodewith.Finder, ev
 		return nil, err
 	}
 	expr := fmt.Sprintf(`async function(eventType) {
+		let desktop = tast.automation.getDesktop();
 		%s
 		let watcher = {
 			"events": [],
@@ -439,7 +462,7 @@ func (ac *Context) setupWatcher(ctx context.Context, finder *nodewith.Finder, ev
 			},
 			"release": () => {
 				node.removeEventListener(eventType, watcher.callback);
-				tast.automation.scheduleRelease();
+				tast.automation.releaseDesktop();
 			}
 		};
 		node.addEventListener(eventType, watcher.callback);

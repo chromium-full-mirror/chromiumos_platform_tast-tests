@@ -223,6 +223,24 @@ tast.automation = (() => {
   let timerId;
 
   let pendingReleaseDesktop;
+  let desktopRefCount = 0;
+
+  function scheduleRelease() {
+    if (timerId)
+      return;
+
+    timerId = setTimeout(() => {
+      // Serves as a release to balance the addEventListener call in
+      // getDesktop. This should be the last listener on the tree so that it
+      // triggers automation tree tearing down.
+      desktop.removeEventListener("focus", doNothing);
+
+      pendingReleaseDesktop = desktop;
+      desktop = undefined;
+      timerId = undefined;
+    }, 10000);
+  }
+
   let doNothing = () => {};
   let automation = {
     "getDesktop" : async () => {
@@ -231,8 +249,10 @@ tast.automation = (() => {
         timerId = undefined;
       }
 
-      if (desktop)
+      if (desktop) {
+        ++desktopRefCount;
         return desktop;
+      }
 
       // Wait for previous automation tree to finish tearing down before
       // creating a new one.
@@ -242,6 +262,7 @@ tast.automation = (() => {
       }
 
       desktop = await tast.promisify(chrome.automation.getDesktop)();
+      desktopRefCount = 1;
 
       // Serves as an addRef to keep the automation tree. It is balanced in
       // the timer callback in scheduleRelease.
@@ -249,20 +270,14 @@ tast.automation = (() => {
       return desktop;
      },
 
-     "scheduleRelease": () => {
-       if (timerId)
-         return;
-
-       timerId = setTimeout(() => {
-         // Serves as a release to balance the addEventListener call in
-         // getDesktop. This should be the last listener on the tree so that it
-         // triggers automation tree tearing down.
-         desktop.removeEventListener("focus", doNothing);
-
-         pendingReleaseDesktop = desktop;
-         desktop = undefined;
-         timerId = undefined;
-       }, 10000);
+     "releaseDesktop": () => {
+       if (desktopRefCount <= 0) {
+         throw new Error('unexpected releaseDesktop call');
+       }
+       --desktopRefCount;
+       if (desktopRefCount == 0) {
+         scheduleRelease();
+       }
      },
   };
   return automation;

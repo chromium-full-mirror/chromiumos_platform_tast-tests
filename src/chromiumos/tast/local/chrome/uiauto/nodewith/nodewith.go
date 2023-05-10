@@ -178,6 +178,7 @@ func (f *Finder) generateQuery(multipleNodes bool) (string, error) {
 		let node = await tast.automation.getDesktop();
 		let nodes = [];
 	`
+	epilog := `tast.automation.releaseDesktop();`
 	if f.nameInTree() {
 		out += `
 		 let locale = chrome.i18n.getUILanguage();
@@ -187,13 +188,13 @@ func (f *Finder) generateQuery(multipleNodes bool) (string, error) {
 		`
 	}
 	if f.root {
-		return out, nil
+		return out + epilog, nil
 	}
 	subQuery, err := f.generateSubQuery(multipleNodes)
 	if err != nil {
 		return "", err
 	}
-	return out + subQuery, nil
+	return out + subQuery + epilog, nil
 }
 
 // nameInTree returns whether this node or any of its sub-nodes have used the Name attribute.
