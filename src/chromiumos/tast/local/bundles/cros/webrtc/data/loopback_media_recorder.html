@@ -14,12 +14,12 @@ let elapsedTime = 0;
 // Starts recording with specified video codec and waits for the first
 // recorded blob in ondataavailable, after recording for |recordDurationMs|
 // milliseconds.
-async function startRecordingForResult(codec, width, height, recordDurationMs) {
+async function startRecordingForResult(codecMime, width, height, recordDurationMs) {
   const stream = await navigator.mediaDevices.getUserMedia(
     {audio: true, video: {width: width, height: height}});
 
   document.getElementById('video').srcObject = stream;
-  const mimeType = 'video/webm; codecs=' + codec;
+  const mimeType = 'video/webm; codecs=' + codecMime;
   const recorder = new MediaRecorder(stream, {mimeType});
 
   return await new Promise((resolve, reject) => {
@@ -37,12 +37,12 @@ async function startRecordingForResult(codec, width, height, recordDurationMs) {
 
 // Starts recording with the specified video codec.
 // Recording result will not be available until calling stopRecording().
-async function startRecording(codec, width, height) {
+async function startRecording(codecMime, width, height) {
   const stream = await navigator.mediaDevices.getUserMedia(
     {audio: true,video: {width: width, height: height}});
 
   document.getElementById('video').srcObject = stream;
-  const mimeType = 'video/webm; codecs=' + codec;
+  const mimeType = 'video/webm; codecs=' + codecMime;
   mediaRecorder = new MediaRecorder(stream, {mimeType});
   mediaRecorder.ondataavailable = (event) => {
     if (event.data.size > 0) {

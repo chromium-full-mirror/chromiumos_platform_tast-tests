@@ -46,8 +46,32 @@ func reportMetric(name, unit string, value float64, direction perf.Direction, p 
 	}, value)
 }
 
+func codecProfileMime(profile videotype.CodecProfile) (string, error) {
+	switch profile {
+	case videotype.H264BaselineProf:
+		return "avc1.", nil
+	case videotype.H264HighProf:
+		// https://www.rfc-editor.org/rfc/rfc6381
+		// H264 High profile level 4.0 for 1080p@30 encoding.
+		return "avc1.640028", nil
+	case videotype.VP8Prof:
+		return "vp8", nil
+	case videotype.VP9Prof:
+		return "vp9", nil
+	case videotype.AV1MainProf:
+		return "av1", nil
+	default:
+		return "", errors.Errorf("failed to codec meme type: %v", profile)
+
+	}
+}
+
 // MeasurePerf measures the frame processing time and CPU usage while recording and report the results.
-func MeasurePerf(ctx context.Context, cs ash.ConnSource, tconn, bTconn *chrome.TestConn, fileSystem http.FileSystem, outDir, codec string, resolution graphics.Size, hwAccelEnabled bool) error {
+func MeasurePerf(ctx context.Context, cs ash.ConnSource, tconn, bTconn *chrome.TestConn, fileSystem http.FileSystem, outDir string, profile videotype.CodecProfile, resolution graphics.Size, hwAccelEnabled bool) error {
+	codecMeme, err := codecProfileMime(profile)
+	if err != nil {
+		return err
+	}
 
 	p := perf.NewValues()
 	// Wait until CPU is idle enough. CPU usage can be high immediately after login for various reasons (e.g. animated images on the lock screen).
@@ -84,10 +108,9 @@ func MeasurePerf(ctx context.Context, cs ash.ConnSource, tconn, bTconn *chrome.T
 	if err := conn.WaitForExpr(ctx, "pageLoaded"); err != nil {
 		return errors.Wrap(err, "timed out waiting for page loading")
 	}
-
 	// startRecording() a video in given format until stopRecording() is called.
-	if err := conn.Call(ctx, nil, "startRecording", codec, resolution.Width, resolution.Height); err != nil {
-		return errors.Wrapf(err, "failed to evaluate startRecording(%s)", codec)
+	if err := conn.Call(ctx, nil, "startRecording", codecMeme, resolution.Width, resolution.Height); err != nil {
+		return errors.Wrapf(err, "failed to evaluate startRecording(%v)", profile)
 	}
 
 	var gpuErr, cpuErr error
@@ -211,7 +234,7 @@ VideoTrackNumLoop:
 }
 
 // VerifyMediaRecorderUsesEncodeAccelerator checks whether MediaRecorder uses HW encoder for codec and resolution
-func VerifyMediaRecorderUsesEncodeAccelerator(ctx context.Context, cs ash.ConnSource, tconn, bTconn *chrome.TestConn, fileSystem http.FileSystem, codec videotype.Codec, resolution graphics.Size, recordTime time.Duration) error {
+func VerifyMediaRecorderUsesEncodeAccelerator(ctx context.Context, cs ash.ConnSource, tconn, bTconn *chrome.TestConn, fileSystem http.FileSystem, profile videotype.CodecProfile, resolution graphics.Size, recordTime time.Duration) error {
 	server := httptest.NewServer(http.FileServer(fileSystem))
 	defer server.Close()
 
@@ -249,6 +272,11 @@ func VerifyMediaRecorderUsesEncodeAccelerator(ctx context.Context, cs ash.ConnSo
 		}
 	}
 
+	codecMeme, err := codecProfileMime(profile)
+	if err != nil {
+		return err
+	}
+
 	initHistogram, err := metrics.GetHistogram(ctx, bTconn, constants.MediaRecorderVEAUsed)
 	if err != nil {
 		return errors.Wrap(err, "failed to get initial histogram")
@@ -272,8 +300,8 @@ func VerifyMediaRecorderUsesEncodeAccelerator(ctx context.Context, cs ash.ConnSo
 	// is fixed: b/158858449.
 	testing.Sleep(ctx, 2*time.Second)
 
-	if err := conn.Call(ctx, nil, "startRecordingForResult", codec, resolution.Width, resolution.Height, recordTime.Milliseconds()); err != nil {
-		return errors.Wrapf(err, "failed to evaluate startRecordingForResult(%q, %d)", codec, recordTime.Milliseconds())
+	if err := conn.Call(ctx, nil, "startRecordingForResult", codecMeme, resolution.Width, resolution.Height, recordTime.Milliseconds()); err != nil {
+		return errors.Wrapf(err, "failed to evaluate startRecordingForResult(%q, %d)", profile, recordTime.Milliseconds())
 	}
 
 	if hwUsed, err := histogram.WasHWAccelUsed(ctx, bTconn, initHistogram, constants.MediaRecorderVEAUsed, int64(constants.MediaRecorderVEAUsedSuccess), histogram.SuccessCountAtLeastOne); err != nil {

@@ -19,7 +19,7 @@ import (
 
 // mediaRecorderTest is used to describe the config used to run each test case.
 type mediaRecorderTest struct {
-	codec       videotype.Codec
+	profile     videotype.CodecProfile
 	browserType browser.Type
 	// Capture resolution. 720p if it is not filled.
 	resolution graphics.Size
@@ -40,73 +40,78 @@ func init() {
 		Attr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 		Params: []testing.Param{{
 			Name:              "h264",
-			Val:               mediaRecorderTest{codec: videotype.H264, browserType: browser.TypeAsh},
+			Val:               mediaRecorderTest{profile: videotype.H264BaselineProf, browserType: browser.TypeAsh},
 			ExtraSoftwareDeps: []string{caps.HWEncodeH264, "proprietary_codecs"},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
-			Name:              "h264_1080p",
-			Val:               mediaRecorderTest{codec: videotype.H264, browserType: browser.TypeAsh, resolution: graphics.Size{Width: 1920, Height: 1080}},
+			Name:              "h264_high",
+			Val:               mediaRecorderTest{profile: videotype.H264HighProf, browserType: browser.TypeAsh, resolution: graphics.Size{Width: 1920, Height: 1080}},
+			ExtraSoftwareDeps: []string{caps.HWEncodeH264, "proprietary_codecs"},
+			Fixture:           "chromeVideoWithFakeWebcam",
+		}, {
+			Name:              "h264_high_1080p",
+			Val:               mediaRecorderTest{profile: videotype.H264HighProf, browserType: browser.TypeAsh, resolution: graphics.Size{Width: 1920, Height: 1080}},
 			ExtraSoftwareDeps: []string{caps.HWEncodeH264, "proprietary_codecs"},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
 			Name:              "h264_lacros",
-			Val:               mediaRecorderTest{codec: videotype.H264, browserType: browser.TypeLacros},
+			Val:               mediaRecorderTest{profile: videotype.H264BaselineProf, browserType: browser.TypeLacros},
 			ExtraSoftwareDeps: []string{caps.HWEncodeH264, "proprietary_codecs", "lacros"},
 			Fixture:           "chromeVideoLacrosWithFakeWebcam",
 		}, {
 			// TODO(b/236546408): Remove once hardware variable bitrate encoding is enabled by default.
 			Name:              "h264_vbr",
-			Val:               mediaRecorderTest{codec: videotype.H264, browserType: browser.TypeAsh},
+			Val:               mediaRecorderTest{profile: videotype.H264BaselineProf, browserType: browser.TypeAsh},
 			ExtraSoftwareDeps: []string{caps.HWEncodeH264VBR, "proprietary_codecs"},
 			Fixture:           "chromeVideoWithFakeWebcamAndHWVBREncoding",
 		}, {
 			Name:              "vp8",
-			Val:               mediaRecorderTest{codec: videotype.VP8, browserType: browser.TypeAsh},
+			Val:               mediaRecorderTest{profile: videotype.VP8Prof, browserType: browser.TypeAsh},
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP8},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
 			Name:              "vp8_1080p",
-			Val:               mediaRecorderTest{codec: videotype.VP8, browserType: browser.TypeAsh, resolution: graphics.Size{Width: 1920, Height: 1080}},
+			Val:               mediaRecorderTest{profile: videotype.VP8Prof, browserType: browser.TypeAsh, resolution: graphics.Size{Width: 1920, Height: 1080}},
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP8},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
 			Name:              "vp8_lacros",
-			Val:               mediaRecorderTest{codec: videotype.VP8, browserType: browser.TypeLacros},
+			Val:               mediaRecorderTest{profile: videotype.VP8Prof, browserType: browser.TypeLacros},
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP8, "lacros"},
 			Fixture:           "chromeVideoLacrosWithFakeWebcam",
 		}, {
+			Name:              "vp8_cam",
+			Val:               mediaRecorderTest{profile: videotype.VP8Prof, browserType: browser.TypeAsh},
+			ExtraSoftwareDeps: []string{caps.BuiltinCamera, caps.HWEncodeVP8},
+			Fixture:           "chromeCameraPerf",
+		}, {
 			Name:              "vp9",
-			Val:               mediaRecorderTest{codec: videotype.VP9, browserType: browser.TypeAsh},
+			Val:               mediaRecorderTest{profile: videotype.VP9Prof, browserType: browser.TypeAsh},
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP9},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
 			Name:              "vp9_1080p",
-			Val:               mediaRecorderTest{codec: videotype.VP9, browserType: browser.TypeAsh, resolution: graphics.Size{Width: 1920, Height: 1080}},
+			Val:               mediaRecorderTest{profile: videotype.VP9Prof, browserType: browser.TypeAsh, resolution: graphics.Size{Width: 1920, Height: 1080}},
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP9},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
 			Name:              "vp9_lacros",
-			Val:               mediaRecorderTest{codec: videotype.VP9, browserType: browser.TypeLacros},
+			Val:               mediaRecorderTest{profile: videotype.VP9Prof, browserType: browser.TypeLacros},
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP9, "lacros"},
 			Fixture:           "chromeVideoLacrosWithFakeWebcam",
 		}, {
-			Name:              "vp8_cam",
-			Val:               mediaRecorderTest{codec: videotype.VP8, browserType: browser.TypeAsh},
-			ExtraSoftwareDeps: []string{caps.BuiltinCamera, caps.HWEncodeVP8},
-			Fixture:           "chromeCameraPerf",
-		}, {
 			Name:              "av1",
-			Val:               mediaRecorderTest{codec: videotype.AV1, browserType: browser.TypeAsh},
+			Val:               mediaRecorderTest{profile: videotype.AV1MainProf, browserType: browser.TypeAsh},
 			ExtraSoftwareDeps: []string{caps.HWEncodeAV1},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
 			Name:              "av1_1080p",
-			Val:               mediaRecorderTest{codec: videotype.AV1, browserType: browser.TypeAsh, resolution: graphics.Size{Width: 1920, Height: 1080}},
+			Val:               mediaRecorderTest{profile: videotype.AV1MainProf, browserType: browser.TypeAsh, resolution: graphics.Size{Width: 1920, Height: 1080}},
 			ExtraSoftwareDeps: []string{caps.HWEncodeAV1},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
 			Name:              "av1_lacros",
-			Val:               mediaRecorderTest{codec: videotype.AV1, browserType: browser.TypeLacros},
+			Val:               mediaRecorderTest{profile: videotype.AV1MainProf, browserType: browser.TypeLacros},
 			ExtraSoftwareDeps: []string{caps.HWEncodeAV1, "lacros"},
 			Fixture:           "chromeVideoLacrosWithFakeWebcam",
 		}},
@@ -150,7 +155,7 @@ func MediaRecorder(ctx context.Context, s *testing.State) {
 		params.resolution = graphics.Size{Width: 1280, Height: 720}
 	}
 
-	if err := mediarecorder.VerifyMediaRecorderUsesEncodeAccelerator(ctx, cs, tconn, bTconn, s.DataFileSystem(), params.codec, params.resolution, recordDuration); err != nil {
+	if err := mediarecorder.VerifyMediaRecorderUsesEncodeAccelerator(ctx, cs, tconn, bTconn, s.DataFileSystem(), params.profile, params.resolution, recordDuration); err != nil {
 		s.Error("Failed to run VerifyMediaRecorderUsesEncodeAccelerator: ", err)
 	}
 }
