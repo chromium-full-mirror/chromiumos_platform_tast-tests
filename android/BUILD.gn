@@ -63,6 +63,7 @@ group("all") {
     "ArcShelfIconTest:ArcShelfIconTest",
     "ArcSoftInputModeTest:ArcSoftInputModeTest",
     "ArcSurfaceInsetsTest:ArcSurfaceInsetsTest",
+    "ArcSwapTest:ArcSwapTest",
     "ArcTtsTest:ArcTtsTest",
     "ArcInstallAppWithAppListSortedTest:ArcInstallAppWithAppListSortedTest",
     "ArcVpnTest:ArcVpnTest",

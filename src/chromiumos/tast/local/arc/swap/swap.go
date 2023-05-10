@@ -18,6 +18,17 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+var (
+	// TestApk is the apk used by swap tests
+	TestApk = "ArcSwapTest.apk"
+	// AppName is the name of the swap test app
+	AppName = "ARC Swap Test"
+	// Pkg is the package name of the swap test app
+	Pkg = "org.chromium.arc.testapp.swap"
+	// Activity is the activity name of the swap test activity
+	Activity = ".SwapActivity"
+)
+
 // Status represents the current status of crosvm vmm-swap.
 type Status int
 

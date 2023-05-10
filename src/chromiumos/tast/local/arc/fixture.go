@@ -386,6 +386,26 @@ func init() {
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: "arcBootedBoostedVmmSwap",
+		Desc: "ARC is booted and Chrome will use a very short timeout for vmm swap",
+		Contacts: []string{
+			"cros-vm-technology@google.com",
+			"kawasin@google.com",
+			"hikalium@chromium.org",
+		},
+		Impl: NewArcBootedWithConfigFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{
+				chrome.ARCEnabled(),
+				chrome.EnableFeatures("ArcVmmSwapPolicy:arc_silence_interval_sec/1"),
+			}, nil
+		}, "SKIP_SWAP_TBW_MANAGEMENT=true"),
+		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
+		ResetTimeout:    ResetTimeout,
+		PostTestTimeout: PostTestTimeout,
+		TearDownTimeout: ResetTimeout,
+	})
 }
 
 type bootedFixture struct {
