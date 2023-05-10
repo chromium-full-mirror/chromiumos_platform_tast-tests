@@ -171,11 +171,10 @@ func CreateAndMountImage(ctx context.Context, imageSize int64, diskName string) 
 // RunTest executes the testing scenario of arc.RemovableMedia.
 func RunTest(ctx context.Context, s *testing.State, a *arc.ARC, cr *chrome.Chrome, d *ui.Device, testFile string) {
 	const (
-		imageSize = 64 * 1024 * 1024
-		diskName  = "MyDisk"
+		imageSize   = 64 * 1024 * 1024
+		diskName    = "MyDisk"
+		fileContent = "this is a test"
 	)
-
-	expected := []byte(storage.ExpectedFileContent)
 
 	mountDir, cleanupFunc, err := CreateAndMountImage(ctx, imageSize, diskName)
 	if err != nil {
@@ -189,17 +188,17 @@ func RunTest(ctx context.Context, s *testing.State, a *arc.ARC, cr *chrome.Chrom
 
 	// Create a text file in the removable media.
 	tpath := filepath.Join(mountDir, testFile)
-	if err := ioutil.WriteFile(tpath, expected, 0644); err != nil {
+	if err := ioutil.WriteFile(tpath, []byte(fileContent), 0644); err != nil {
 		s.Fatal("Failed to write a data file: ", err)
 	}
 
-	config := storage.TestConfig{DirName: diskName, SubDirectories: []string{}, FileName: testFile}
-	expectations := []storage.Expectation{
-		{LabelID: storage.ActionID, Value: storage.ExpectedAction},
-		{LabelID: storage.URIID, Predicate: arc.VerifyContentURIForArcVolumeProviderPath(filepath.Join(arc.RemovableMediaUUID, testFile))},
-		{LabelID: storage.FileContentID, Value: storage.ExpectedFileContent}}
-
-	if err := storage.TestOpenWithAndroidApp(ctx, a, cr, d, config, expectations); err != nil {
+	config := storage.TestConfig{
+		DirName:        diskName,
+		SubDirectories: []string{},
+		FileName:       testFile,
+		FileContent:    fileContent,
+	}
+	if err := storage.TestOpenWithAndroidApp(ctx, a, cr, d, config); err != nil {
 		s.Fatal("Failed to open file with Android app: ", err)
 	}
 }

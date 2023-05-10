@@ -104,13 +104,16 @@ func PlayFiles(ctx context.Context, s *testing.State) {
 // manipulated through the Files app, and 2) the results of the manipulations
 // are properly reflected on the Android side.
 func testCrosToAndroid(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, a *arc.ARC) error {
-	const filename = "storage.txt"
+	const (
+		filename    = "storage.txt"
+		fileContent = "this is a test"
+	)
 
-	if err := testCopyToPlayfiles(ctx, cr, tconn, a, filename); err != nil {
+	if err := testCopyToPlayfiles(ctx, cr, tconn, a, filename, fileContent); err != nil {
 		return errors.Wrapf(err, "failed to copy %s to Play files", filename)
 	}
 
-	if err := testOpenInPlayfiles(ctx, cr, a, filename); err != nil {
+	if err := testOpenInPlayfiles(ctx, cr, a, filename, fileContent); err != nil {
 		return errors.Wrapf(err, "failed to open %s in Play files", filename)
 	}
 
@@ -124,8 +127,8 @@ func testCrosToAndroid(ctx context.Context, cr *chrome.Chrome, tconn *chrome.Tes
 // testCopyToPlayfiles writes a file to the ChromeOS Downloads directory and
 // copies it to Play files through the Files app. It also checks that the copied
 // file appears on the Android side.
-func testCopyToPlayfiles(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, a *arc.ARC, filename string) error {
-	expected := []byte(storage.ExpectedFileContent)
+func testCopyToPlayfiles(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, a *arc.ARC, filename, fileContent string) error {
+	expected := []byte(fileContent)
 	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
 	if err != nil {
 		return errors.Wrap(err, "failed to get user's Download path")
@@ -193,18 +196,19 @@ func copyFileInDownloadsToPlayfiles(ctx context.Context, tconn *chrome.TestConn,
 }
 
 // testOpenInPlayfiles opens a file in Play files with an Android app.
-func testOpenInPlayfiles(ctx context.Context, cr *chrome.Chrome, a *arc.ARC, filename string) error {
+func testOpenInPlayfiles(ctx context.Context, cr *chrome.Chrome, a *arc.ARC, filename, fileContent string) error {
 	d, err := a.NewUIDevice(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to initialize UI Automator")
 	}
 
-	config := storage.TestConfig{DirName: "Play files", SubDirectories: []string{"Pictures"}, FileName: filename}
-	expectations := []storage.Expectation{
-		{LabelID: storage.ActionID, Value: storage.ExpectedAction},
-		{LabelID: storage.URIID, Predicate: arc.VerifyContentURIForArcVolumeProviderPath(filepath.Join("external_files", "Pictures", filename))},
-		{LabelID: storage.FileContentID, Value: storage.ExpectedFileContent}}
-	return storage.TestOpenWithAndroidApp(ctx, a, cr, d, config, expectations)
+	config := storage.TestConfig{
+		DirName:        "Play files",
+		SubDirectories: []string{"Pictures"},
+		FileName:       filename,
+		FileContent:    fileContent,
+	}
+	return storage.TestOpenWithAndroidApp(ctx, a, cr, d, config)
 }
 
 // testDeleteFromPlayfiles deletes a file in Play files through the Files app.

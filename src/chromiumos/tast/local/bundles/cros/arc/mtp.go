@@ -9,7 +9,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"chromiumos/tast/common/android"
@@ -20,13 +19,6 @@ import (
 	"chromiumos/tast/local/cryptohome"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
-)
-
-// mtpURIPrefix is the expected prefix of the Content URI for the Android
-// device under test. The full URI would contain the device's serial number,
-// which would be different for different devices.
-const (
-	mtpURIPrefix = "content://org.chromium.arc.chromecontentprovider/externalfile%3Afileman-mtp-mtp"
 )
 
 // arc.Mtp / arc.Mtp.vm tast tests depend on the use of actual Android device in the lab.
@@ -59,6 +51,11 @@ func init() {
 }
 
 func MTP(ctx context.Context, s *testing.State) {
+	const (
+		filename    = "storage.txt"
+		fileContent = "this is a test"
+	)
+
 	cr := s.FixtValue().(*mtp.FixtData).Chrome
 	tconn := s.FixtValue().(*mtp.FixtData).TestConn
 	adb := s.FixtValue().(*mtp.FixtData).AdbDevice
@@ -85,9 +82,8 @@ func MTP(ctx context.Context, s *testing.State) {
 	}
 
 	// Set up the test file.
-	const textFile = "storage.txt"
-	testFileLocation := filepath.Join(downloadsPath, textFile)
-	if err := ioutil.WriteFile(testFileLocation, []byte("this is a test"), 0777); err != nil {
+	testFileLocation := filepath.Join(downloadsPath, filename)
+	if err := ioutil.WriteFile(testFileLocation, []byte(fileContent), 0777); err != nil {
 		s.Fatalf("Creating file %s failed: %s", testFileLocation, err)
 	}
 	defer os.Remove(testFileLocation)
@@ -99,17 +95,13 @@ func MTP(ctx context.Context, s *testing.State) {
 
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
-	config := storage.TestConfig{DirName: mtp.DeviceName, SubDirectories: []string{"Download"},
-		FileName: textFile}
-	expectations := []storage.Expectation{
-		{LabelID: storage.ActionID, Value: storage.ExpectedAction},
-		{LabelID: storage.URIID, Predicate: func(actual string) bool {
-			return strings.HasPrefix(actual, mtpURIPrefix) &&
-				strings.HasSuffix(actual, "%2FDownload%2Fstorage.txt")
-		}},
-		{LabelID: storage.FileContentID, Value: storage.ExpectedFileContent}}
-
-	if err := storage.TestOpenWithAndroidApp(ctx, a, cr, d, config, expectations); err != nil {
+	config := storage.TestConfig{
+		DirName:        mtp.DeviceName,
+		SubDirectories: []string{"Download"},
+		FileName:       filename,
+		FileContent:    fileContent,
+	}
+	if err := storage.TestOpenWithAndroidApp(ctx, a, cr, d, config); err != nil {
 		s.Fatal("Failed to open file with Android app: ", err)
 	}
 }

@@ -166,15 +166,3 @@ func MyFilesVolumeID(ctx context.Context, a *ARC) (string, error) {
 func SDCardVolumeID(ctx context.Context, a *ARC) (string, error) {
 	return waitForARCVolumeStatusAndGetVolumeID(ctx, a, sdCardVolumeIDRegex, "mounted", "null")
 }
-
-// VerifyContentURIForArcVolumeProviderPath returns a function that checks if a
-// URI is an ArcVolumeProvider content URI corresponding to the given path or a
-// valid MediaDocumentsProvider content URI. The MediaDocumentsProvider check
-// is needed because ARC can dynamically translate ArcVolumeProvider content
-// URIs to MediaDocumentsProvider ones in certain cases (but not always).
-func VerifyContentURIForArcVolumeProviderPath(subPath string) func(string) bool {
-	uri := VolumeProviderContentURIPrefix + subPath
-	return func(actual string) bool {
-		return actual == uri || strings.HasPrefix(actual, MediaDocumentsProviderURIPrefix)
-	}
-}

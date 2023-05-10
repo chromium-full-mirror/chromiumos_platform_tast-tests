@@ -31,31 +31,7 @@ const (
 	testAppID = "org.chromium.arc.testapp.filereader"
 	// Test app's path.
 	testAppPath = "ArcFileReaderTest.apk"
-
-	// Labels to appear in the test app and their expected values.
-
-	// ActionID is the id of the action label.
-	ActionID = "org.chromium.arc.testapp.filereader:id/action"
-	// ExpectedAction should be VIEW intent.
-	ExpectedAction = "android.intent.action.VIEW"
-	// URIID is the id of the uri label.
-	URIID = "org.chromium.arc.testapp.filereader:id/uri"
-	// FileContentID is the id of the file content label.
-	FileContentID = "org.chromium.arc.testapp.filereader:id/file_content"
-	// ExpectedFileContent in the test file.
-	ExpectedFileContent = "this is a test"
 )
-
-// Expectation is used for validating app label contents.
-type Expectation struct {
-	LabelID string
-	// Predicate returns whether the actual value is valid. It can be nil, in
-	// which case the implied validation condition is "actual == Value".
-	Predicate func(actual string) bool
-	// Value is the expected value (when Predicate is nil). This field is
-	// ignored if Predicate is non-nil.
-	Value string
-}
 
 // TestConfig stores the details of the directory under test and misc test configurations.
 type TestConfig struct {
@@ -69,6 +45,8 @@ type TestConfig struct {
 	// Optional: Expected title of the Ash window of the Files app when opened |DirName| on the
 	// navigation tree. When unspecified, |filesapp.FilesTitlePrefix + DirName| will be used.
 	DirTitle string
+	// Expected file content of the test file.
+	FileContent string
 	// Optional: If set to true, wait for file type to appear before opening the file.
 	// Currently used by DriveFS to ensure metadata has arrived.
 	CheckFileType bool
@@ -76,9 +54,9 @@ type TestConfig struct {
 
 // TestOpenWithAndroidApp opens a test file in the specified directory, e.g. Google Drive,
 // Downloads, MyFiles etc, using the test android app, ArcFileReaderTest. The app will display
-// the respective Action, URI and FileContent on its UI, to be validated against our
-// expected values.
-func TestOpenWithAndroidApp(ctx context.Context, a *arc.ARC, cr *chrome.Chrome, d *androidui.Device, config TestConfig, expectations []Expectation) error {
+// the intent action, URI and file content on its UI, and the displayed file content is validated
+// against the expected value.
+func TestOpenWithAndroidApp(ctx context.Context, a *arc.ARC, cr *chrome.Chrome, d *androidui.Device, config TestConfig) error {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
@@ -105,7 +83,7 @@ func TestOpenWithAndroidApp(ctx context.Context, a *arc.ARC, cr *chrome.Chrome, 
 	}
 	defer a.Command(cleanupCtx, "am", "force-stop", testAppID).Run(testexec.DumpLogOnError)
 
-	if err := validateResult(ctx, d, expectations); err != nil {
+	if err := validateResult(ctx, d, config); err != nil {
 		return errors.Wrap(err, "ArcFileReaderTest's data is invalid")
 	}
 	return nil
@@ -185,40 +163,30 @@ func waitForFileType(ctx context.Context, files *filesapp.FilesApp) error {
 }
 
 // validateResult validates the data read from ArcFileReaderTest app.
-func validateResult(ctx context.Context, d *androidui.Device, expectations []Expectation) error {
+func validateResult(ctx context.Context, d *androidui.Device, config TestConfig) error {
+	const fileContentID = "org.chromium.arc.testapp.filereader:id/file_content"
+
 	testing.ContextLog(ctx, "Validating result in ArcFileReaderTest")
 
-	for _, e := range expectations {
-		if err := validateLabel(ctx, d, e); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return validateLabel(ctx, d, fileContentID, config.FileContent)
 }
 
 // validateLabel is a helper function to load app label texts and compare it with expectation.
-func validateLabel(ctx context.Context, d *androidui.Device, expectation Expectation) error {
-	uiObj := d.Object(androidui.ID(expectation.LabelID))
+func validateLabel(ctx context.Context, d *androidui.Device, labelID, expected string) error {
+	uiObj := d.Object(androidui.ID(labelID))
 	if err := uiObj.WaitForExists(ctx, uiTimeout); err != nil {
-		return errors.Wrapf(err, "failed to find the label id %s", expectation.LabelID)
+		return errors.Wrapf(err, "failed to find the label id %s", labelID)
 	}
 
 	actual, err := uiObj.GetText(ctx)
 	if err != nil {
-		return errors.Wrapf(err, "failed to get text from the label id %s", expectation.LabelID)
+		return errors.Wrapf(err, "failed to get text from the label id %s", labelID)
 	}
 
-	if expectation.Predicate != nil {
-		if !expectation.Predicate(actual) {
-			return errors.Errorf("unexpected value in label %s: got %q", expectation.LabelID, actual)
-		}
-	} else {
-		if actual != expectation.Value {
-			return errors.Errorf("unexpected value in label %s: got %q, want %q", expectation.LabelID, actual, expectation.Value)
-		}
+	if actual != expected {
+		return errors.Errorf("unexpected value in label %s: got %q, want %q", labelID, actual, expected)
 	}
 
-	testing.ContextLogf(ctx, "Label content of %s = %s", expectation.LabelID, actual)
+	testing.ContextLogf(ctx, "Label content of %s = %s", labelID, actual)
 	return nil
 }

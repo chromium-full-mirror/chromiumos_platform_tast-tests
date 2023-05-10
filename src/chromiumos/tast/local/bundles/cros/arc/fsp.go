@@ -6,9 +6,7 @@ package arc
 
 import (
 	"context"
-	"net/url"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"chromiumos/tast/local/arc"
@@ -31,9 +29,6 @@ import (
 // file on this file system via FSP.
 
 const (
-	// fspURI contains the FSP id of Wicked Good Unarchiver.
-	// It is defined in ui/file_manager/file_manager/background/js/mount_metrics.js
-	fspURI = "content://org.chromium.arc.chromecontentprovider/externalfile%3Amljpablpddhocfbnokacjggdbmafjnon%253A~%25252FMyFiles%25252Farc_fsp_storage%25252Ezip%253A"
 	// fspZipFile is the name of the test zip file.
 	fspZipFile = "arc_fsp_storage.zip"
 )
@@ -63,6 +58,12 @@ func init() {
 }
 
 func Fsp(ctx context.Context, s *testing.State) {
+	const (
+		// These need to match with the one contained in |fspZipFile|.
+		filename    = "storage.txt"
+		fileContent = "this is a test"
+	)
+
 	// GAIA login is required to use Chrome Web Store.
 	cr, err := chrome.New(
 		ctx,
@@ -122,13 +123,12 @@ func Fsp(ctx context.Context, s *testing.State) {
 		s.Fatal("Unzip test zip file failed: ", err)
 	}
 
-	config := storage.TestConfig{DirName: fspZipFile, FileName: "storage.txt"}
-	expect := []storage.Expectation{
-		{LabelID: storage.ActionID, Value: storage.ExpectedAction},
-		{LabelID: storage.URIID, Value: constructFSPURI(userPath, config.FileName)},
-		{LabelID: storage.FileContentID, Value: storage.ExpectedFileContent}}
-
-	if err := storage.TestOpenWithAndroidApp(ctx, a, cr, d, config, expect); err != nil {
+	config := storage.TestConfig{
+		DirName:     fspZipFile,
+		FileName:    filename,
+		FileContent: fileContent,
+	}
+	if err := storage.TestOpenWithAndroidApp(ctx, a, cr, d, config); err != nil {
 		s.Fatal("Failed to open file with Android app: ", err)
 	}
 }
@@ -170,10 +170,4 @@ func unzipFile(ctx context.Context, tconn *chrome.TestConn, zipFile, folder, una
 		files.LeftClick(nodewith.Name("Open").Role(role.Button)),
 		files.LeftClick(nodewith.Name(unarchiver).Role(role.StaticText)),
 	)(ctx)
-}
-
-// constructFSPURI constructs a FSP URI.
-func constructFSPURI(path, file string) string {
-	hash := strings.ReplaceAll(path, "/home/user/", "")
-	return fspURI + hash + url.PathEscape("/") + file
 }

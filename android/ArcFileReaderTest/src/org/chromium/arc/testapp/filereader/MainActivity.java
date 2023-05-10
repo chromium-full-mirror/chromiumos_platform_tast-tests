@@ -50,12 +50,14 @@ public class MainActivity extends Activity {
 
         String action = intent.getAction();
         mAction.setText(action);
+        Log.i(LOG_TAG, "Action = " + action);
 
         Uri uri = intent.getData();
         if (uri == null) {
           return;
         }
         mUri.setText(uri.toString());
+        Log.i(LOG_TAG, "URI = " + uri);
 
         try (InputStream input = getContentResolver().openInputStream(uri);
             Scanner sc = new Scanner(input)) {
