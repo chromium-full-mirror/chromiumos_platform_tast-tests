@@ -44,6 +44,8 @@ type GpioEvent struct {
 
 // GpioMonitorSession represents a list of GpioNames that are currently being monitoring.
 type GpioMonitorSession struct {
+	// Gpios is the list of signals being monitored in this session
+	Gpios []ti50.GpioName
 	// InitialValues contains the initial value of each GpioName that is being monitored
 	InitialValues map[ti50.GpioName]bool
 	// AbsoluteTimestampUS specified the absolute time measurement started
@@ -173,6 +175,7 @@ func (h DevboardHelper) GpioMonitorStart(ctx context.Context, gpios ...ti50.Gpio
 	// Set timestamp so we can use it to calculate relative timestamps later
 	session.AbsoluteTimestampUS = output.Time
 
+	session.Gpios = gpios
 	session.InitialValues = make(map[ti50.GpioName]bool, len(gpios))
 	for _, signal := range output.InitialLevels {
 		session.InitialValues[signal.Name] = signal.Value
@@ -200,8 +203,10 @@ func (h DevboardHelper) GpioMonitorFinish(ctx context.Context, session GpioMonit
 	args := make([]string, 2)
 	args[0] = "monitoring"
 	args[1] = "read"
-	for k := range session.InitialValues {
-		args = append(args, string(k))
+	// opentitantool requires that the pin names be given in exactly the same order as they
+	// were to `monitoring start`.
+	for i := range session.Gpios {
+		args = append(args, string(session.Gpios[i]))
 	}
 	readOutput, err := h.PlainCommand(ctx, "gpio", args...)
 	if err != nil {
