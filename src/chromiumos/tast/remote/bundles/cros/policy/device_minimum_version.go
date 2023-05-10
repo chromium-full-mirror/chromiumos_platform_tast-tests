@@ -11,6 +11,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
+	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/remote/policyutil"
 	pspb "chromiumos/tast/services/cros/policy"
@@ -27,9 +28,9 @@ func init() {
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
 			"snijhara@google.com", // Test author
-			"marcgrimme@google.com",
+			"chromeos-commercial-remote-management@google.com",
 		},
-		BugComponent: "b:1263917",
+		BugComponent: "b:1031231",
 		Attr:         []string{"group:enrollment"},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps: []string{
@@ -37,6 +38,8 @@ func init() {
 			"tast.cros.policy.DeviceMinimumVersionService",
 			"tast.cros.policy.PolicyService",
 		},
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.DeviceMinimumVersion{}, pci.VerifiedFunctionalityJS)},
 		Timeout: 7 * time.Minute,
 	})
 }
