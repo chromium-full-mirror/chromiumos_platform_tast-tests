@@ -22,6 +22,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/ossettings"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/input"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -229,16 +230,16 @@ func AddAccount(ctx context.Context, tconn *chrome.TestConn, email, password str
 		// Enter the User Name.
 		kb.TypeAction(email+"\n"),
 		ui.WaitUntilExists(passwordField),
-		ui.LeftClickUntil(passwordField, ui.Exists(passwordField.Focused())),
+		ui.DoDefaultUntil(passwordField, ui.Exists(passwordField.Focused())),
 		// Enter the Password.
 		kb.TypeAction(password),
-		ui.LeftClick(nextButton),
+		ui.DoDefault(nextButton),
 		// We need to focus the button first to click at right location
 		// as it returns wrong coordinates when button is offscreen.
 		ui.FocusAndWait(iAgreeButton),
-		ui.LeftClick(iAgreeButton),
+		ui.DoDefault(iAgreeButton),
 	)(ctx); err != nil {
-		somethingWentWrong := nodewith.Name("Something went wrong").Role(role.Heading).Ancestor(root)
+		somethingWentWrong := nodewith.NameContaining("Something went wrong").Role(role.Heading)
 		if existsErr := ui.Exists(somethingWentWrong); existsErr == nil {
 			return errors.Wrap(err, "failed to enter email and password: something went wrong")
 		}
