@@ -115,7 +115,7 @@ func NewFirmwareTest(ctx context.Context, dut *rpcdut.RPCDUT, servoSpec, outDir 
 			// Get upstart service client instance and restore daemons.
 			upstartService, err := t.UpstartService(ctx)
 			if err == nil {
-				err = restoreDaemons(ctx, upstartService, t.daemonState)
+				err = restoreDaemons(ctx, upstartService, true, t.daemonState)
 			}
 
 			if err != nil {
@@ -286,7 +286,7 @@ func (t *FirmwareTest) Close(ctx context.Context) error {
 	}
 
 	if upstartService != nil {
-		if err := restoreDaemons(ctx, upstartService, t.daemonState); err != nil && firstErr == nil {
+		if err := restoreDaemons(ctx, upstartService, t.needsRebootAfterFlashing, t.daemonState); err != nil && firstErr == nil {
 			firstErr = err
 		}
 	}
@@ -382,11 +382,28 @@ func stopDaemons(ctx context.Context, upstartService platform.UpstartServiceClie
 }
 
 // restoreDaemons restores the daemons to the state provided in daemonState.
-func restoreDaemons(ctx context.Context, upstartService platform.UpstartServiceClient, daemons []daemonState) error {
+func restoreDaemons(ctx context.Context, upstartService platform.UpstartServiceClient, skipWaitingForJob bool, daemons []daemonState) error {
 	var firstErr error
 
 	for i := len(daemons) - 1; i >= 0; i-- {
 		daemon := daemons[i]
+
+		if daemon.wasStarted && !skipWaitingForJob {
+			// The service can be in stop/waiting state when
+			// dependencies are not satisfied yet. Let's wait for
+			// the service to enter running state.
+			testing.ContextLog(ctx, "Waiting for "+daemon.name+" to reach start/running state")
+			_, err := upstartService.WaitForJobStatus(ctx, &platform.WaitForJobStatusRequest{
+				JobName: daemon.name,
+				Goal:    string(upstart.StartGoal),
+				State:   string(upstart.RunningState),
+				Timeout: durationpb.New(10 * time.Second),
+			})
+			if err == nil {
+				continue
+			}
+			testing.ContextLog(ctx, "Wait for "+daemon.name+" finished with: ", err)
+		}
 
 		testing.ContextLog(ctx, "Checking state for ", daemon.name)
 		status, err := upstartService.JobStatus(ctx, &platform.JobStatusRequest{JobName: daemon.name})
@@ -401,7 +418,6 @@ func restoreDaemons(ctx context.Context, upstartService platform.UpstartServiceC
 		testing.ContextLog(ctx, "Job "+daemon.name+" is "+status.GetGoal()+"/"+status.GetState())
 
 		started := upstart.Goal(status.GetGoal()) == upstart.StartGoal
-		running := upstart.State(status.GetState()) == upstart.RunningState
 
 		if daemon.wasStarted {
 			if !started {
@@ -413,20 +429,6 @@ func restoreDaemons(ctx context.Context, upstartService platform.UpstartServiceC
 				})
 				if err != nil {
 					testing.ContextLog(ctx, "Failed to start "+daemon.name+": ", err)
-					if firstErr == nil {
-						firstErr = err
-					}
-				}
-			} else if !running {
-				testing.ContextLog(ctx, "Job "+daemon.name+" already started. Waiting for running state")
-				_, err := upstartService.WaitForJobStatus(ctx, &platform.WaitForJobStatusRequest{
-					JobName: daemon.name,
-					Goal:    string(upstart.StartGoal),
-					State:   string(upstart.RunningState),
-					Timeout: durationpb.New(10 * time.Second),
-				})
-				if err != nil {
-					testing.ContextLog(ctx, "Failed to wait for "+daemon.name+": ", err)
 					if firstErr == nil {
 						firstErr = err
 					}
