@@ -26,7 +26,7 @@ func init() {
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		SoftwareDeps: []string{"chrome"},
 		Data:         capturefromelement.DataFiles(),
-		Attr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+		Attr:         []string{"group:graphics", "graphics_video", "graphics_nightly"},
 		Params: []testing.Param{{
 			Name:    "canvas",
 			Val:     capturefromelement.UseGlClearColor,

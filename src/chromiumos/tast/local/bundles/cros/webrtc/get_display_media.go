@@ -25,7 +25,7 @@ func init() {
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		SoftwareDeps: []string{"chrome"},
 		Data:         getdisplaymedia.DataFiles(),
-		Attr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+		Attr:         []string{"group:graphics", "graphics_video", "graphics_nightly"},
 		// See https://w3c.github.io/mediacapture-screen-share/#displaycapturesurfacetype
 		// for where the case names come from.
 		// TODO(crbug.com/1063449): add other cases when the adequate precondition is ready.
