@@ -164,6 +164,22 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()),
 			},
 			{
+				Name: "vp8_180_v4l2sf_to_v4l2sl",
+				Val: platformInteropParam{
+					filename:              "gipsrestat-320x180.vp9.webm",
+					size:                  coords.NewSize(320, 180),
+					fps:                   50,
+					encoderCommand:        "v4l2_stateful_encoder",
+					encoderCommandBuilder: platform.ArgsV4L2,
+					decoderCommand:        "/usr/local/libexec/chrome-binary-tests/v4l2_stateless_decoder",
+					decoderArgsBuilder:    platform.V4L2StatelessDecodeArgs,
+					referenceSWDecoder:    genMD5VPX,
+				},
+				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
+				ExtraSoftwareDeps: []string{"v4l2_codec", "autotest-capability:hw_enc_vp8_1080_30", "autotest-capability:hw_dec_vp8_1080_30"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipCPUSocFamily([]string{"rockchip"}), hwdep.SupportsV4L2StatelessVideoDecoding()),
+			},
+			{
 				Name: "vp9_180_sw_to_vaapi",
 				Val: platformInteropParam{
 					filename:              "gipsrestat-320x180.vp9.webm",
@@ -270,6 +286,22 @@ func init() {
 				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
 				ExtraSoftwareDeps: []string{"v4l2_codec", "autotest-capability:hw_enc_vp9_1080_30", "autotest-capability:hw_dec_vp9_1080_30"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()),
+			},
+			{
+				Name: "vp9_180_v4l2sf_to_v4l2sl",
+				Val: platformInteropParam{
+					filename:              "gipsrestat-320x180.vp9.webm",
+					size:                  coords.NewSize(320, 180),
+					fps:                   50,
+					encoderCommand:        "v4l2_stateful_encoder",
+					encoderCommandBuilder: platform.ArgsV4L2,
+					decoderCommand:        "/usr/local/libexec/chrome-binary-tests/v4l2_stateless_decoder",
+					decoderArgsBuilder:    platform.V4L2StatelessDecodeArgs,
+					referenceSWDecoder:    genMD5VPX,
+				},
+				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
+				ExtraSoftwareDeps: []string{"v4l2_codec", "autotest-capability:hw_enc_vp9_1080_30", "autotest-capability:hw_dec_vp9_1080_30"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatelessVideoDecoding()),
 			},
 			{
 				Name: "h264_180_sw_to_vaapi",

@@ -34,8 +34,17 @@ func isSoftwareAPI(api codecAPI) bool {
 	return !isHardwareAPI(api)
 }
 
+// isMixedHardwareAPIs returns whether encoder and decoder use different hardware APIs.
 func isMixedHardwareAPIs(encoder, decoder codecAPI) bool {
-	return isHardwareAPI(encoder) && isHardwareAPI(decoder) && decoder != encoder
+	if !isHardwareAPI(encoder) || !isHardwareAPI(decoder) {
+		return false
+	}
+
+	// Returns true if encoder is vaapi and decoder is v4l2sl or v4l2sf, or
+	// encoder is v4l2l or v4l2sf and decoder is vaapi.
+	isVaapiEncoder := encoder == vaapi
+	isVaapiDecoder := decoder == vaapi
+	return isVaapiEncoder != isVaapiDecoder
 }
 
 func getEncoderBinaryAndParams(encoder codecAPI, codec string) (binary, paramGenerator string) {
