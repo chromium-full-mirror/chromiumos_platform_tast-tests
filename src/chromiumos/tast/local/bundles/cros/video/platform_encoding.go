@@ -80,6 +80,20 @@ func init() {
 		// (called Kepler), skip this test in these models.
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("guado", "buddy", "rikku")),
 		Params: []testing.Param{{
+			Name: "vaapi_av1_180",
+			Val: testParam{
+				command:        "av1encode",
+				filename:       "tulip2-320x180.vp9.webm",
+				numFrames:      500,
+				fps:            30,
+				size:           coords.NewSize(320, 180),
+				commandBuilder: platform.AV1ArgsVAAPI,
+				regExpFPS:      regExpFPSAV1,
+				decoder:        encoding.LibaomDecoder,
+			},
+			ExtraData:         []string{"tulip2-320x180.vp9.webm"},
+			ExtraSoftwareDeps: []string{"vaapi", caps.HWEncodeAV1},
+		}, {
 			Name: "vaapi_av1_360",
 			Val: testParam{
 				command:        "av1encode",
@@ -106,6 +120,50 @@ func init() {
 				decoder:        encoding.LibaomDecoder,
 			},
 			ExtraData:         []string{"tulip2-1280x720.vp9.webm"},
+			ExtraSoftwareDeps: []string{"vaapi", caps.HWEncodeAV1},
+			// Devices with small SSDs can't store the files, see b/181165183.
+			ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(24)),
+		}, {
+			Name: "vaapi_av1_180_meet",
+			Val: testParam{
+				command:        "av1encode",
+				filename:       "gipsrestat-320x180.vp9.webm",
+				numFrames:      846,
+				fps:            50,
+				size:           coords.NewSize(320, 180),
+				commandBuilder: platform.AV1ArgsVAAPI,
+				regExpFPS:      regExpFPSAV1,
+				decoder:        encoding.LibaomDecoder,
+			},
+			ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
+			ExtraSoftwareDeps: []string{"vaapi", caps.HWEncodeAV1},
+		}, {
+			Name: "vaapi_av1_360_meet",
+			Val: testParam{
+				command:        "av1encode",
+				filename:       "gipsrestat-640x360.vp9.webm",
+				numFrames:      846,
+				fps:            50,
+				size:           coords.NewSize(640, 360),
+				commandBuilder: platform.AV1ArgsVAAPI,
+				regExpFPS:      regExpFPSAV1,
+				decoder:        encoding.LibaomDecoder,
+			},
+			ExtraData:         []string{"gipsrestat-640x360.vp9.webm"},
+			ExtraSoftwareDeps: []string{"vaapi", caps.HWEncodeAV1},
+		}, {
+			Name: "vaapi_av1_720_meet",
+			Val: testParam{
+				command:        "av1encode",
+				filename:       "gipsrestat-1280x720.vp9.webm",
+				numFrames:      846,
+				fps:            50,
+				size:           coords.NewSize(1280, 720),
+				commandBuilder: platform.AV1ArgsVAAPI,
+				regExpFPS:      regExpFPSAV1,
+				decoder:        encoding.LibaomDecoder,
+			},
+			ExtraData:         []string{"gipsrestat-1280x720.vp9.webm"},
 			ExtraSoftwareDeps: []string{"vaapi", caps.HWEncodeAV1},
 			// Devices with small SSDs can't store the files, see b/181165183.
 			ExtraHardwareDeps: hwdep.D(hwdep.MinStorage(24)),
