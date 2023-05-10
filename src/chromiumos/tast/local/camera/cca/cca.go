@@ -638,15 +638,6 @@ func (a *App) PreviewFrame(ctx context.Context) (*Frame, error) {
 	return &Frame{&f}, nil
 }
 
-// PortraitModeSupported returns whether portrait mode is supported by the current active video device.
-func (a *App) PortraitModeSupported(ctx context.Context) (bool, error) {
-	var result bool
-	if err := a.conn.Eval(ctx, "Tast.isPortraitModeSupported()", &result); err != nil {
-		return false, err
-	}
-	return result, nil
-}
-
 // TakeSinglePhoto takes a photo and save to default location.
 func (a *App) TakeSinglePhoto(ctx context.Context, timerState TimerState) ([]os.FileInfo, error) {
 	var patterns []*regexp.Regexp
@@ -991,36 +982,10 @@ func (a *App) Mirrored(ctx context.Context) (bool, error) {
 	return actual, err
 }
 
-// CheckConfirmUIExists returns whether the confirm UI exists.
-func (a *App) CheckConfirmUIExists(ctx context.Context, mode Mode) error {
-	// Legacy UI use 'review-result' state to show the review page while new UI use review view.
-	// TODO(b/209726472): Clean code path of legacy UI after crrev.com/c/3338157 fully landed.
-	isLegacyUI, err := a.State(ctx, "review-result")
-	if err != nil {
-		return errors.Wrap(err, "failed to judge legacy/new UI")
-	}
-
-	if isLegacyUI {
-		testing.ContextLog(ctx, "Using legacy review UI")
-		var reviewElementID string
-		if mode == Photo {
-			reviewElementID = "#review-photo-result"
-		} else if mode == Video {
-			reviewElementID = "#review-video-result"
-		} else {
-			return errors.Errorf("unrecognized mode: %s", mode)
-		}
-		var visible bool
-		if err := a.conn.Call(ctx, &visible, "Tast.isVisible", reviewElementID); err != nil {
-			return err
-		} else if !visible {
-			return errors.New("review result is not shown")
-		}
-	} else {
-		testing.ContextLog(ctx, "Using new review UI")
-		if err := a.WaitForVisibleState(ctx, ReviewView, true); err != nil {
-			return errors.New("review result is not shown")
-		}
+// CheckReviewUIExists returns whether the review UI exists.
+func (a *App) CheckReviewUIExists(ctx context.Context, mode Mode) error {
+	if err := a.WaitForVisibleState(ctx, ReviewView, true); err != nil {
+		return errors.New("review result is not shown")
 	}
 
 	if visible, err := a.Visible(ctx, ConfirmResultButton); err != nil {
@@ -1043,7 +1008,7 @@ func (a *App) ConfirmResult(ctx context.Context, isConfirmed bool, mode Mode) er
 		return errors.Wrap(err, "failed to wait for review ui showing up")
 	}
 
-	if err := a.CheckConfirmUIExists(ctx, mode); err != nil {
+	if err := a.CheckReviewUIExists(ctx, mode); err != nil {
 		return errors.Wrap(err, "check confirm UI failed")
 	}
 
@@ -1102,7 +1067,7 @@ func (a *App) ToggleExpertMode(ctx context.Context) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	if err := a.conn.Eval(ctx, "Tast.toggleExpertMode()", nil); err != nil {
+	if err := a.conn.Eval(ctx, "CCATest.toggleExpertMode()", nil); err != nil {
 		return false, errors.Wrap(err, "failed to toggle expert mode")
 	}
 	if err := a.WaitForState(ctx, "expert", !prev); err != nil {
@@ -1127,15 +1092,6 @@ func (a *App) EnableExpertMode(ctx context.Context) error {
 	}
 	if !enabled {
 		return errors.New("unexpected state after toggling expert mode")
-	}
-	return nil
-}
-
-// CheckMetadataVisibility checks if metadata is shown/hidden on screen given enabled.
-func (a *App) CheckMetadataVisibility(ctx context.Context, enabled bool) error {
-	code := fmt.Sprintf("Tast.isVisible('#preview-exposure-time') === %t", enabled)
-	if err := a.conn.WaitForExpr(ctx, code); err != nil {
-		return errors.Wrapf(err, "failed to wait for metadata visibility set to %v", enabled)
 	}
 	return nil
 }
@@ -1193,7 +1149,7 @@ func (a *App) SwitchMode(ctx context.Context, mode Mode) error {
 	} else if active {
 		return nil
 	}
-	if err := a.conn.Call(ctx, nil, "Tast.switchMode", modeName); err != nil {
+	if err := a.conn.Call(ctx, nil, "CCATest.switchMode", modeName); err != nil {
 		return errors.Wrapf(err, "failed to switch to mode %s", mode)
 	}
 	if err := a.WaitForState(ctx, "mode-switching", false); err != nil {

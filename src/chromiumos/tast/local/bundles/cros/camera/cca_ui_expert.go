@@ -56,8 +56,8 @@ func CCAUIExpert(ctx context.Context, s *testing.State) {
 }
 
 func verifyExpertMode(ctx context.Context, app *cca.App, enabled bool) error {
-	if err := app.CheckMetadataVisibility(ctx, enabled); err != nil {
-		return err
+	if err := app.WaitForVisibleState(ctx, cca.PreviewExposureTime, enabled); err != nil {
+		return errors.Wrapf(err, "failed to wait for metadata visibility to set to %v", enabled)
 	}
 	if _, err := app.TakeSinglePhoto(ctx, cca.TimerOff); err != nil {
 		return err

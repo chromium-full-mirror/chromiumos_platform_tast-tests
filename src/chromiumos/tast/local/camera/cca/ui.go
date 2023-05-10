@@ -132,6 +132,8 @@ const (
 	PanRightButton UIComponentName = "panRightButton"
 	// PTZResetAllButton is the button for reset PTZ to default value.
 	PTZResetAllButton UIComponentName = "ptzResetAllButton"
+	// PreviewExposureTime is the exposure data displayed when the expert option to show metadata is enabled.
+	PreviewExposureTime UIComponentName = "previewExposureTime"
 	// PreviewViewport is the container of the preview video.
 	PreviewViewport UIComponentName = "previewViewport"
 	// ReviewView is the review view after taking a photo under document mode.
