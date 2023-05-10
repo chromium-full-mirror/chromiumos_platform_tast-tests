@@ -15,10 +15,10 @@ import (
 )
 
 const (
+	tulip135P  = "tulip2-240x135.vp9.webm"
 	tulip180P  = "tulip2-320x180.vp9.webm"
 	tulip270P  = "tulip2-480x270.vp9.webm"
 	tulip360P  = "tulip2-640x360.vp9.webm"
-	tulip361P  = "crowd-641x361.vp9.webm"
 	tulip540P  = "tulip2-960x540.vp9.webm"
 	tulip720P  = "tulip2-1280x720.vp9.webm"
 	crowd1080P = "crowd-1920x1080.vp9.webm"
@@ -100,6 +100,11 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWEncodeH264_4K},
 			ExtraData:         encode.TestData(crowd2160P),
 		}, {
+			Name:              "vp8_135p",
+			Val:               encode.MakeTestOptions(tulip135P, videotype.VP8Prof),
+			ExtraSoftwareDeps: []string{caps.HWEncodeVP8, caps.HWEncodeVP8OddDimension},
+			ExtraData:         encode.TestData(tulip135P),
+		}, {
 			Name:              "vp8_180p",
 			Val:               encode.MakeTestOptions(tulip180P, videotype.VP8Prof),
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP8},
@@ -159,6 +164,11 @@ func init() {
 			Val:               encode.MakeTestOptions(tulip180P, videotype.VP9Prof),
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP9},
 			ExtraData:         encode.TestData(tulip180P),
+		}, {
+			Name:              "vp9_135p",
+			Val:               encode.MakeTestOptions(tulip135P, videotype.VP9Prof),
+			ExtraSoftwareDeps: []string{caps.HWEncodeVP9, caps.HWEncodeVP9OddDimension},
+			ExtraData:         encode.TestData(tulip135P),
 		}, {
 			Name:              "vp9_270p",
 			Val:               encode.MakeTestOptions(tulip270P, videotype.VP9Prof),
@@ -220,39 +230,38 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP9},
 			ExtraData:         encode.TestData(tulip720P),
 		}, {
+			Name:              "av1_135p",
+			Val:               encode.MakeTestOptions(tulip135P, videotype.AV1MainProf),
+			ExtraData:         encode.TestData(tulip135P),
+			ExtraSoftwareDeps: []string{caps.HWEncodeAV1, caps.HWEncodeAV1OddDimension},
+		}, {
 			Name:              "av1_180p",
 			Val:               encode.MakeTestOptions(tulip180P, videotype.AV1MainProf),
-			ExtraAttr:         []string{"graphics_perbuild"},
 			ExtraData:         encode.TestData(tulip180P),
 			ExtraSoftwareDeps: []string{caps.HWEncodeAV1},
 		}, {
 			Name:              "av1_270p",
 			Val:               encode.MakeTestOptions(tulip270P, videotype.AV1MainProf),
-			ExtraAttr:         []string{"graphics_perbuild"},
 			ExtraData:         encode.TestData(tulip270P),
 			ExtraSoftwareDeps: []string{caps.HWEncodeAV1},
 		}, {
 			Name:              "av1_360p",
 			Val:               encode.MakeTestOptions(tulip360P, videotype.AV1MainProf),
-			ExtraAttr:         []string{"graphics_perbuild"},
 			ExtraData:         encode.TestData(tulip360P),
 			ExtraSoftwareDeps: []string{caps.HWEncodeAV1},
 		}, {
 			Name:              "av1_720p",
 			Val:               encode.MakeTestOptions(tulip720P, videotype.AV1MainProf),
-			ExtraAttr:         []string{"graphics_perbuild"},
 			ExtraData:         encode.TestData(tulip720P),
 			ExtraSoftwareDeps: []string{caps.HWEncodeAV1},
 		}, {
 			Name:              "av1_1080p",
 			Val:               encode.MakeTestOptions(crowd1080P, videotype.AV1MainProf),
-			ExtraAttr:         []string{"graphics_perbuild"},
 			ExtraData:         encode.TestData(crowd1080P),
 			ExtraSoftwareDeps: []string{caps.HWEncodeAV1},
 		}, {
 			Name:              "av1_2160p",
 			Val:               encode.MakeTestOptions(crowd2160P, videotype.AV1MainProf),
-			ExtraAttr:         []string{"graphics_perbuild"},
 			ExtraData:         encode.TestData(crowd2160P),
 			ExtraSoftwareDeps: []string{caps.HWEncodeAV1_4K},
 		}},
