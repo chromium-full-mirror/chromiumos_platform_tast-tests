@@ -76,9 +76,9 @@ func init() {
 func CrasStreamMix(ctx context.Context, s *testing.State) {
 	const (
 		cleanupTime          = 45 * time.Second
-		captureDuration      = 2   // second(s)
-		playbackDuration     = 6   // second(s)
-		waitForStreamTimeout = 2   // second(s)
+		captureDuration      = 2 // second(s)
+		playbackDuration     = 6 // second(s)
+		waitForStreamTimeout = 2 * time.Second
 		goldenFrequency      = 440 // Hz
 		incorrectLimit       = 3
 	)
