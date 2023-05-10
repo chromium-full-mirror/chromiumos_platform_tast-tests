@@ -221,6 +221,18 @@ func init() {
 			ExtraData:         encode.TestData(crowd1080p),
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP8},
 		}, {
+			Name:              "vp8_1080p_l1t2",
+			Val:               encode.MakeTestOptionsWithSVCMode(crowd1080p, videotype.VP8Prof, "L1T2"),
+			ExtraAttr:         []string{"graphics_perbuild"},
+			ExtraData:         encode.TestData(crowd1080p),
+			ExtraSoftwareDeps: []string{caps.HWEncodeVP8},
+		}, {
+			Name:              "vp8_1080p_l1t3",
+			Val:               encode.MakeTestOptionsWithSVCMode(crowd1080p, videotype.VP8Prof, "L1T3"),
+			ExtraAttr:         []string{"graphics_perbuild"},
+			ExtraData:         encode.TestData(crowd1080p),
+			ExtraSoftwareDeps: []string{caps.HWEncodeVP8},
+		}, {
 			Name:              "vp8_1080p_global_vaapi_lock_disabled",
 			Val:               encode.MakeTestOptionsWithNoGlobalVaapiLock(crowd1080p, videotype.VP8Prof),
 			ExtraAttr:         []string{"graphics_perbuild"},
