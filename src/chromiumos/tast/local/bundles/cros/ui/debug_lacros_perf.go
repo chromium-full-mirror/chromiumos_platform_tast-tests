@@ -60,7 +60,7 @@ func init() {
 				browserType: browser.TypeAsh,
 				windowURL:   textScrollingURL,
 			},
-			Fixture: "chromeLoggedInDisableFirmwareUpdaterApp",
+			Fixture: "chromeLoggedInDisableSync",
 		}, {
 			Name:              "text_scroll_lacros",
 			ExtraSoftwareDeps: []string{"lacros"},
@@ -68,14 +68,14 @@ func init() {
 				browserType: browser.TypeLacros,
 				windowURL:   textScrollingURL,
 			},
-			Fixture: "lacrosPerf",
+			Fixture: "lacrosDisableSync",
 		}, {
 			Name: "color_change_ash",
 			Val: debugLacrosTest{
 				browserType: browser.TypeAsh,
 				windowURL:   colorChangeURL,
 			},
-			Fixture: "chromeLoggedInDisableFirmwareUpdaterApp",
+			Fixture: "chromeLoggedInDisableSync",
 		}, {
 			Name:              "color_change_lacros",
 			ExtraSoftwareDeps: []string{"lacros"},
@@ -83,14 +83,14 @@ func init() {
 				browserType: browser.TypeLacros,
 				windowURL:   colorChangeURL,
 			},
-			Fixture: "lacrosPerf",
+			Fixture: "lacrosDisableSync",
 		}, {
 			Name: "video_playback_ash",
 			Val: debugLacrosTest{
 				browserType: browser.TypeAsh,
 				windowURL:   videoPlaybackURL,
 			},
-			Fixture: "chromeLoggedInDisableFirmwareUpdaterApp",
+			Fixture: "chromeLoggedInDisableSync",
 		}, {
 			Name:              "video_playback_lacros",
 			ExtraSoftwareDeps: []string{"lacros"},
@@ -98,7 +98,7 @@ func init() {
 				browserType: browser.TypeLacros,
 				windowURL:   videoPlaybackURL,
 			},
-			Fixture: "lacrosPerf",
+			Fixture: "lacrosDisableSync",
 		}},
 	})
 }

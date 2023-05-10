@@ -17,6 +17,7 @@ import (
 	"chromiumos/tast/local/cpu"
 	"chromiumos/tast/local/power"
 	"chromiumos/tast/local/ui/cujrecorder"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -70,14 +71,14 @@ func init() {
 				testType:    testTypeBrowser,
 				browserType: browser.TypeLacros,
 			},
-			Fixture: "lacrosPerf",
+			Fixture: "lacrosDisableSync",
 		}, {
 			Name: "ash",
 			Val: idlePerfTest{
 				testType:    testTypeBrowser,
 				browserType: browser.TypeAsh,
 			},
-			Fixture: "chromeLoggedInDisableFirmwareUpdaterApp",
+			Fixture: "chromeLoggedInDisableSync",
 		}},
 	})
 }

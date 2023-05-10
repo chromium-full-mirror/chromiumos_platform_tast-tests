@@ -30,6 +30,7 @@ import (
 	"chromiumos/tast/local/power"
 	"chromiumos/tast/local/power/setup"
 	"chromiumos/tast/local/sysutil"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
@@ -864,7 +865,6 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 
 		opts := []chrome.Option{
 			loginOption(s, f.useEnterprisePool),
-			chrome.DisableFeatures("FirmwareUpdaterApp"),
 			chrome.ExtraArgs("--disable-sync"),
 		}
 		if f.keepState {

@@ -10,6 +10,7 @@ import (
 
 	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/local/logsaver"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -149,18 +150,6 @@ func init() {
 		Vars:     []string{"ui.signinProfileTestExtensionManifestKey"},
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
 			return []Option{DeferLogin(), LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey"))}, nil
-		}),
-		SetUpTimeout:    LoginTimeout,
-		ResetTimeout:    ResetTimeout,
-		TearDownTimeout: ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.ChromeLoggedInDisableFirmwareUpdaterApp,
-		Desc:     "Logged into a user session with FirmwareUpdaterApp disabled",
-		Contacts: []string{"ramsaroop@google.com", "chromeos-perfmetrics-eng@google.com"},
-		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
-			return []Option{DisableFeatures("FirmwareUpdaterApp")}, nil
 		}),
 		SetUpTimeout:    LoginTimeout,
 		ResetTimeout:    ResetTimeout,

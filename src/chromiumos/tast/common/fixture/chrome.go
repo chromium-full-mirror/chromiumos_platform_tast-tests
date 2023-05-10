@@ -28,8 +28,6 @@ const (
 	ChromeLoggedInWithGaia = "chromeLoggedInWithGaia"
 	// Logged into a user session to support thunderbolt devices.
 	ChromeLoggedInThunderbolt = "chromeLoggedInThunderbolt"
-	// Logged into a user session with FirmwareUpdaterApp disabled.
-	ChromeLoggedInDisableFirmwareUpdaterApp = "chromeLoggedInDisableFirmwareUpdaterApp"
 	// Logged into a user session with OS Feedback enabled.
 	ChromeLoggedInWithOsFeedback = "chromeLoggedInWithOsFeedback"
 	// Logged into a user session with ShortcutCustomizationApp enabled.
