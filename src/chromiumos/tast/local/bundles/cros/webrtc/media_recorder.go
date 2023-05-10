@@ -12,6 +12,7 @@ import (
 	"chromiumos/tast/local/bundles/cros/webrtc/mediarecorder"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/lacros"
+	"chromiumos/tast/local/graphics"
 	"chromiumos/tast/local/media/videotype"
 	"go.chromium.org/tast/core/testing"
 )
@@ -20,6 +21,8 @@ import (
 type mediaRecorderTest struct {
 	codec       videotype.Codec
 	browserType browser.Type
+	// Capture resolution. 720p if it is not filled.
+	resolution graphics.Size
 }
 
 func init() {
@@ -41,6 +44,11 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWEncodeH264, "proprietary_codecs"},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
+			Name:              "h264_1080p",
+			Val:               mediaRecorderTest{codec: videotype.H264, browserType: browser.TypeAsh, resolution: graphics.Size{Width: 1920, Height: 1080}},
+			ExtraSoftwareDeps: []string{caps.HWEncodeH264, "proprietary_codecs"},
+			Fixture:           "chromeVideoWithFakeWebcam",
+		}, {
 			Name:              "h264_lacros",
 			Val:               mediaRecorderTest{codec: videotype.H264, browserType: browser.TypeLacros},
 			ExtraSoftwareDeps: []string{caps.HWEncodeH264, "proprietary_codecs", "lacros"},
@@ -57,6 +65,11 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP8},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
+			Name:              "vp8_1080p",
+			Val:               mediaRecorderTest{codec: videotype.VP8, browserType: browser.TypeAsh, resolution: graphics.Size{Width: 1920, Height: 1080}},
+			ExtraSoftwareDeps: []string{caps.HWEncodeVP8},
+			Fixture:           "chromeVideoWithFakeWebcam",
+		}, {
 			Name:              "vp8_lacros",
 			Val:               mediaRecorderTest{codec: videotype.VP8, browserType: browser.TypeLacros},
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP8, "lacros"},
@@ -64,6 +77,11 @@ func init() {
 		}, {
 			Name:              "vp9",
 			Val:               mediaRecorderTest{codec: videotype.VP9, browserType: browser.TypeAsh},
+			ExtraSoftwareDeps: []string{caps.HWEncodeVP9},
+			Fixture:           "chromeVideoWithFakeWebcam",
+		}, {
+			Name:              "vp9_1080p",
+			Val:               mediaRecorderTest{codec: videotype.VP9, browserType: browser.TypeAsh, resolution: graphics.Size{Width: 1920, Height: 1080}},
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP9},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
@@ -79,6 +97,11 @@ func init() {
 		}, {
 			Name:              "av1",
 			Val:               mediaRecorderTest{codec: videotype.AV1, browserType: browser.TypeAsh},
+			ExtraSoftwareDeps: []string{caps.HWEncodeAV1},
+			Fixture:           "chromeVideoWithFakeWebcam",
+		}, {
+			Name:              "av1_1080p",
+			Val:               mediaRecorderTest{codec: videotype.AV1, browserType: browser.TypeAsh, resolution: graphics.Size{Width: 1920, Height: 1080}},
 			ExtraSoftwareDeps: []string{caps.HWEncodeAV1},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
@@ -122,7 +145,12 @@ func MediaRecorder(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to browser test API: ", err)
 	}
 
-	if err := mediarecorder.VerifyMediaRecorderUsesEncodeAccelerator(ctx, cs, tconn, bTconn, s.DataFileSystem(), params.codec, recordDuration); err != nil {
+	// If resolution is not filled, then 720p is set.
+	if params.resolution.Width == 0 && params.resolution.Height == 0 {
+		params.resolution = graphics.Size{Width: 1280, Height: 720}
+	}
+
+	if err := mediarecorder.VerifyMediaRecorderUsesEncodeAccelerator(ctx, cs, tconn, bTconn, s.DataFileSystem(), params.codec, params.resolution, recordDuration); err != nil {
 		s.Error("Failed to run VerifyMediaRecorderUsesEncodeAccelerator: ", err)
 	}
 }

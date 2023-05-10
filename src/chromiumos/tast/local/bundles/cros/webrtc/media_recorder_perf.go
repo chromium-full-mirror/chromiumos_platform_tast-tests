@@ -12,14 +12,16 @@ import (
 	"chromiumos/tast/local/bundles/cros/webrtc/mediarecorder"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/lacros"
+	"chromiumos/tast/local/graphics"
 	"go.chromium.org/tast/core/testing"
 )
 
 // mediaRecorderPerfTest is used to describe the config used to run each test case.
 type mediaRecorderPerfTest struct {
-	enableHWAccel bool         // Instruct to use hardware or software encoding.
-	profile       string       // Codec to try, e.g. VP8, VP9.
-	browserType   browser.Type // Type of Chrome browser to be used: Ash Chrome or Lacros Chrome.
+	enableHWAccel bool          // Instruct to use hardware or software encoding.
+	profile       string        // Codec to try, e.g. VP8, VP9.
+	resolution    graphics.Size // Capture resolution. 720p if it is not filled.
+	browserType   browser.Type  // Type of Chrome browser to be used: Ash Chrome or Lacros Chrome.
 }
 
 func init() {
@@ -43,20 +45,42 @@ func init() {
 			ExtraSoftwareDeps: []string{"proprietary_codecs"},
 			Fixture:           "chromeVideoWithFakeWebcamAndSWEncoding",
 		}, {
+			Name:              "h264_1080p_sw",
+			Val:               mediaRecorderPerfTest{enableHWAccel: false, profile: "H264", resolution: graphics.Size{Width: 1920, Height: 1080}, browserType: browser.TypeAsh},
+			ExtraSoftwareDeps: []string{"proprietary_codecs"},
+			Fixture:           "chromeVideoWithFakeWebcamAndSWEncoding",
+		}, {
 			Name:    "vp8_sw",
 			Val:     mediaRecorderPerfTest{enableHWAccel: false, profile: "VP8", browserType: browser.TypeAsh},
+			Fixture: "chromeVideoWithFakeWebcamAndSWEncoding",
+		}, {
+			Name:    "vp8_1080p_sw",
+			Val:     mediaRecorderPerfTest{enableHWAccel: false, profile: "VP8", resolution: graphics.Size{Width: 1920, Height: 1080}, browserType: browser.TypeAsh},
 			Fixture: "chromeVideoWithFakeWebcamAndSWEncoding",
 		}, {
 			Name:    "vp9_sw",
 			Val:     mediaRecorderPerfTest{enableHWAccel: false, profile: "VP9", browserType: browser.TypeAsh},
 			Fixture: "chromeVideoWithFakeWebcamAndSWEncoding",
 		}, {
+			Name:    "vp9_1080p_sw",
+			Val:     mediaRecorderPerfTest{enableHWAccel: false, profile: "VP9", resolution: graphics.Size{Width: 1920, Height: 1080}, browserType: browser.TypeAsh},
+			Fixture: "chromeVideoWithFakeWebcamAndSWEncoding",
+		}, {
 			Name:    "av1_sw",
 			Val:     mediaRecorderPerfTest{enableHWAccel: false, profile: "AV1", browserType: browser.TypeAsh},
 			Fixture: "chromeVideoWithFakeWebcamAndSWEncoding",
 		}, {
+			Name:    "av1_1080p_sw",
+			Val:     mediaRecorderPerfTest{enableHWAccel: false, profile: "AV1", resolution: graphics.Size{Width: 1920, Height: 1080}, browserType: browser.TypeAsh},
+			Fixture: "chromeVideoWithFakeWebcamAndSWEncoding",
+		}, {
 			Name:              "h264_hw",
 			Val:               mediaRecorderPerfTest{enableHWAccel: true, profile: "H264", browserType: browser.TypeAsh},
+			ExtraSoftwareDeps: []string{caps.HWEncodeH264, "proprietary_codecs"},
+			Fixture:           "chromeVideoWithFakeWebcam",
+		}, {
+			Name:              "h264_1080p_hw",
+			Val:               mediaRecorderPerfTest{enableHWAccel: true, profile: "H264", resolution: graphics.Size{Width: 1920, Height: 1080}, browserType: browser.TypeAsh},
 			ExtraSoftwareDeps: []string{caps.HWEncodeH264, "proprietary_codecs"},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
@@ -76,6 +100,11 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP8},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
+			Name:              "vp8_1080p_hw",
+			Val:               mediaRecorderPerfTest{enableHWAccel: true, profile: "VP8", resolution: graphics.Size{Width: 1920, Height: 1080}, browserType: browser.TypeAsh},
+			ExtraSoftwareDeps: []string{caps.HWEncodeVP8},
+			Fixture:           "chromeVideoWithFakeWebcam",
+		}, {
 			Name:              "vp8_hw_lacros",
 			Val:               mediaRecorderPerfTest{enableHWAccel: true, profile: "VP8", browserType: browser.TypeLacros},
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP8, "lacros"},
@@ -86,6 +115,11 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP9},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
+			Name:              "vp9_1080p_hw",
+			Val:               mediaRecorderPerfTest{enableHWAccel: true, profile: "VP9", resolution: graphics.Size{Width: 1920, Height: 1080}, browserType: browser.TypeAsh},
+			ExtraSoftwareDeps: []string{caps.HWEncodeVP9},
+			Fixture:           "chromeVideoWithFakeWebcam",
+		}, {
 			Name:              "vp9_hw_lacros",
 			Val:               mediaRecorderPerfTest{enableHWAccel: true, profile: "VP9", browserType: browser.TypeLacros},
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP9, "lacros"},
@@ -93,6 +127,11 @@ func init() {
 		}, {
 			Name:              "av1_hw",
 			Val:               mediaRecorderPerfTest{enableHWAccel: true, profile: "AV1", browserType: browser.TypeAsh},
+			ExtraSoftwareDeps: []string{caps.HWEncodeAV1},
+			Fixture:           "chromeVideoWithFakeWebcam",
+		}, {
+			Name:              "av1_1080p_hw",
+			Val:               mediaRecorderPerfTest{enableHWAccel: true, profile: "AV1", resolution: graphics.Size{Width: 1920, Height: 1080}, browserType: browser.TypeAsh},
 			ExtraSoftwareDeps: []string{caps.HWEncodeAV1},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
@@ -132,7 +171,12 @@ func MediaRecorderPerf(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to browser test API: ", err)
 	}
 
-	if err := mediarecorder.MeasurePerf(ctx, cs, tconn, bTconn, s.DataFileSystem(), s.OutDir(), testOpt.profile, testOpt.enableHWAccel); err != nil {
+	// If resolution is not filled, then 720p is set.
+	if testOpt.resolution.Width == 0 && testOpt.resolution.Height == 0 {
+		testOpt.resolution = graphics.Size{Width: 1280, Height: 720}
+	}
+
+	if err := mediarecorder.MeasurePerf(ctx, cs, tconn, bTconn, s.DataFileSystem(), s.OutDir(), testOpt.profile, testOpt.resolution, testOpt.enableHWAccel); err != nil {
 		s.Error("Failed to measure performance: ", err)
 	}
 }

@@ -47,7 +47,7 @@ func reportMetric(name, unit string, value float64, direction perf.Direction, p 
 }
 
 // MeasurePerf measures the frame processing time and CPU usage while recording and report the results.
-func MeasurePerf(ctx context.Context, cs ash.ConnSource, tconn, bTconn *chrome.TestConn, fileSystem http.FileSystem, outDir, codec string, hwAccelEnabled bool) error {
+func MeasurePerf(ctx context.Context, cs ash.ConnSource, tconn, bTconn *chrome.TestConn, fileSystem http.FileSystem, outDir, codec string, resolution graphics.Size, hwAccelEnabled bool) error {
 
 	p := perf.NewValues()
 	// Wait until CPU is idle enough. CPU usage can be high immediately after login for various reasons (e.g. animated images on the lock screen).
@@ -86,7 +86,7 @@ func MeasurePerf(ctx context.Context, cs ash.ConnSource, tconn, bTconn *chrome.T
 	}
 
 	// startRecording() a video in given format until stopRecording() is called.
-	if err := conn.Call(ctx, nil, "startRecording", codec); err != nil {
+	if err := conn.Call(ctx, nil, "startRecording", codec, resolution.Width, resolution.Height); err != nil {
 		return errors.Wrapf(err, "failed to evaluate startRecording(%s)", codec)
 	}
 
@@ -210,8 +210,8 @@ VideoTrackNumLoop:
 	return frameNum, nil
 }
 
-// VerifyMediaRecorderUsesEncodeAccelerator checks whether MediaRecorder uses HW encoder for codec.
-func VerifyMediaRecorderUsesEncodeAccelerator(ctx context.Context, cs ash.ConnSource, tconn, bTconn *chrome.TestConn, fileSystem http.FileSystem, codec videotype.Codec, recordTime time.Duration) error {
+// VerifyMediaRecorderUsesEncodeAccelerator checks whether MediaRecorder uses HW encoder for codec and resolution
+func VerifyMediaRecorderUsesEncodeAccelerator(ctx context.Context, cs ash.ConnSource, tconn, bTconn *chrome.TestConn, fileSystem http.FileSystem, codec videotype.Codec, resolution graphics.Size, recordTime time.Duration) error {
 	server := httptest.NewServer(http.FileServer(fileSystem))
 	defer server.Close()
 
@@ -265,13 +265,14 @@ func VerifyMediaRecorderUsesEncodeAccelerator(ctx context.Context, cs ash.ConnSo
 		return errors.Wrap(err, "timed out waiting for page loading")
 	}
 
-	// Hardware encoding is not available right after login on some devices (e.g.
-	// krane) so the encoding capabilities are enumerated asynchronously, see
-	// b/147404923. Sadly, MediaRecorder doesn't know about this and this code is
-	// racy. Insert a sleep() temporarily until Blink code is fixed: b/158858449.
+	// GoBigSleepLint: Hardware encoding is not available right after login on
+	// some devices (e.g. krane) so the encoding capabilities are enumerated
+	// asynchronously, see b/147404923. Sadly, MediaRecorder doesn't know about
+	// this and this code is racy. Insert a sleep() temporarily until Blink code
+	// is fixed: b/158858449.
 	testing.Sleep(ctx, 2*time.Second)
 
-	if err := conn.Call(ctx, nil, "startRecordingForResult", codec, recordTime.Milliseconds()); err != nil {
+	if err := conn.Call(ctx, nil, "startRecordingForResult", codec, resolution.Width, resolution.Height, recordTime.Milliseconds()); err != nil {
 		return errors.Wrapf(err, "failed to evaluate startRecordingForResult(%q, %d)", codec, recordTime.Milliseconds())
 	}
 
