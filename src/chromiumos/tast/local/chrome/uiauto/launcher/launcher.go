@@ -33,6 +33,7 @@ import (
 	"chromiumos/tast/local/coords"
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/input"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -139,6 +140,13 @@ func WaitForCategorizedResult(tconn *chrome.TestConn, category, result string) u
 	ui := uiauto.New(tconn)
 	categoryListView := SearchResultListViewFinder.Name(category)
 	return ui.WaitUntilExists(SearchResultListItemFinder.Name(result).Ancestor(categoryListView))
+}
+
+// WaitForCategorizedResultFromRegex waits for a search result list view of type via regex.
+// This function is used for answer cards because the content on cards is dynamic.
+func WaitForCategorizedResultFromRegex(tconn *chrome.TestConn, pattern string) uiauto.Action {
+	ui := uiauto.New(tconn)
+	return ui.WaitUntilExists(SearchResultListItemFinder.NameRegex(regexp.MustCompile(pattern)))
 }
 
 // WaitForResult waits for 'result'.
