@@ -26,6 +26,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/restriction"
 	"chromiumos/tast/local/policyutil"
+	"chromiumos/tast/local/quickanswers"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -57,6 +58,8 @@ func init() {
 		Data: []string{"spell_checking.html", "quick_answers.html"},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.SpellCheckServiceEnabled{}, pci.VerifiedFunctionalityUI),
+			pci.SearchFlag(&policy.QuickAnswersDefinitionEnabled{}, pci.VerifiedFunctionalityUI),
+			pci.SearchFlag(&policy.QuickAnswersDefinitionEnabled{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.QuickAnswersUnitConversionEnabled{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.QuickAnswersUnitConversionEnabled{}, pci.VerifiedFunctionalityOS),
 		},
@@ -67,6 +70,7 @@ func init() {
 func getPolicyList() []policy.Policy {
 	return []policy.Policy{
 		&policy.SpellCheckServiceEnabled{Val: false},
+		&policy.QuickAnswersDefinitionEnabled{Val: false},
 		&policy.QuickAnswersUnitConversionEnabled{Val: false},
 	}
 }
@@ -100,7 +104,7 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 
 	opts := []chrome.Option{
 		chrome.DMSPolicy(fdms.URL),  // FakeDMS for setting policies.
-		chrome.GAIALogin(gaiaCreds), // Real GAIA to enable calendar_get_events call.
+		chrome.GAIALogin(gaiaCreds), // Some of the optional service tests need a real GAIA account.
 	}
 	// If browser type is lacros, handle differently.
 	if s.Param().(browser.Type) == browser.TypeLacros {
@@ -114,11 +118,16 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
-	defer cr.Close(ctx)
+	defer cr.Close(cleanupCtx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
+	}
+
+	// Enable the pref that indicates the user has enabled the Quick Answers services.
+	if err := quickanswers.SetPrefValue(ctx, tconn, "settings.quick_answers.enabled", true); err != nil {
+		s.Fatal("Failed to enable Quick Answers: ", err)
 	}
 
 	// Setup and start webserver (implicitly provides data form above).
@@ -170,7 +179,17 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 		}
 	})
 
-	s.Run(ctx, "quick_answers_unit_conversion", func(ctx context.Context, s *testing.State) {
+	s.Run(ctx, "quick_answers_service", func(ctx context.Context, s *testing.State) {
+		quickAnswersDefinitionParam := quickanswersutil.DefinitionTestCase{
+			Name:                  "disabled",
+			ShouldFindAnnotation:  false,
+			ShouldShowContextMenu: false,
+			Policy:                &policy.QuickAnswersDefinitionEnabled{Val: false},
+		}
+		if err := quickanswersutil.TriggerQuickAnswersDefinition(ctx, quickAnswersDefinitionParam, server, br, tconn); err != nil {
+			s.Fatal("Failed to trigger and verify quick answers definition: ", err)
+		}
+
 		quickAnswersUnitCoversionParam := quickanswersutil.UnitConversionTestCase{
 			Name:                  "disabled",
 			ShouldFindAnnotation:  false,
