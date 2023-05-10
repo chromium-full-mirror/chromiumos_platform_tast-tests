@@ -47,6 +47,9 @@ const failedToPressOkErr = "failed to press OK button"
 // failedToSelectNextUIElementErr is error message for failed interaction next UI element.
 const failedToSelectNextUIElementErr = "failed to select next UI element"
 
+// KeyboardKey is a key name for the keyboard in ctx if it is provided.
+const KeyboardKey = "keyboard"
+
 // ManageCertSettingsWebArea is UI element finder for "Settings - Manage certificates" root web area.
 var ManageCertSettingsWebArea = nodewith.Name("Settings - Manage certificates").Role("rootWebArea")
 
@@ -59,7 +62,7 @@ func PressOkButton(ctx context.Context, ui *uiauto.Context, parent *nodewith.Fin
 	if err := uiauto.Combine("press OK",
 		ui.WaitUntilExists(okButton),
 		ui.DoDefault(okButton),
-		ui.WithTimeout(1*time.Second).WaitUntilGone(okButton),
+		ui.WithTimeout(3*time.Second).WaitUntilGone(okButton),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to focus on OK button")
 	}
@@ -68,8 +71,8 @@ func PressOkButton(ctx context.Context, ui *uiauto.Context, parent *nodewith.Fin
 
 // CloseCurrentPage presses "ctrl+w" to close the current active window / tab.
 func CloseCurrentPage(ctx context.Context) (retErr error) {
-	kb, err := input.Keyboard(ctx)
-	defer kb.Close(ctx)
+	kb, kbCleanup, err := getKeyboard(ctx)
+	defer kbCleanup(ctx)
 	if err != nil {
 		return errors.Wrap(err, failedToSetupKeyboardErr)
 	}
@@ -133,8 +136,8 @@ func ImportCACert(ctx context.Context, ui *uiauto.Context, caCertFileName string
 // chrome://settings/certificates page to manually import
 // the client certificate from file.
 func ImportClientCertImpl(ctx context.Context, ui *uiauto.Context, clientCertFileName, certFilePassword, buttonName string) (retErr error) {
-	kb, err := input.Keyboard(ctx)
-	defer kb.Close(ctx)
+	kb, kbCleanup, err := getKeyboard(ctx)
+	defer kbCleanup(ctx)
 	if err != nil {
 		return errors.Wrap(err, failedToSetupKeyboardErr)
 	}
@@ -275,29 +278,52 @@ func DeleteCACert(ctx context.Context, ui *uiauto.Context, caOrgName, caOrg stri
 	return nil
 }
 
-// MoveToNextUIElement selects next UI element on page with keyboard.
-func MoveToNextUIElement(ctx context.Context) (retErr error) {
+// getKeyboard will try to get keyboard from ctx before initializing it.
+func getKeyboard(ctx context.Context) (*input.KeyboardEventWriter, func(context.Context), error) {
+	emptyCleanup := func(ctx context.Context) {}
+
+	if ctx.Value(KeyboardKey) != nil {
+		kb := ctx.Value(KeyboardKey).(*input.KeyboardEventWriter)
+		return kb, emptyCleanup, nil
+	}
+
 	kb, err := input.Keyboard(ctx)
-	defer kb.Close(ctx)
+	if err != nil {
+		return nil, emptyCleanup, errors.Wrap(err, failedToSetupKeyboardErr)
+	}
+	cleanup := func(ctx context.Context) { kb.Close(ctx) }
+	return kb, cleanup, nil
+}
+
+// pressTabsThenPressEnter will press "Tab" on keyboard according to "tabsToPress" parameter and then press "Enter" on the focused element.
+// Function can be used when it is difficult or not possible to create UI element Finder and use DoDefault().
+func pressTabsThenPressEnter(ctx context.Context, tabsToPress int) (retErr error) {
+	kb, kbCleanup, err := getKeyboard(ctx)
+	defer kbCleanup(ctx)
 	if err != nil {
 		return errors.Wrap(err, failedToSetupKeyboardErr)
 	}
-	if err := kb.Accel(ctx, "tab"); err != nil {
-		return errors.Wrap(err, failedToUseKeyboardErr)
+	for i := 0; i < tabsToPress; i++ {
+		if err := kb.Accel(ctx, "tab"); err != nil {
+			return errors.Wrap(err, failedToUseKeyboardErr)
+		}
 	}
+
 	if err := kb.Accel(ctx, "enter"); err != nil {
 		return errors.Wrap(err, failedToUseKeyboardErr)
 	}
 	return nil
 }
 
-// SelectCACertificate selects CA on CA tab and open/close list of certificates
-// for an organization.
-func SelectCACertificate(ctx context.Context, ui *uiauto.Context, caOrg string) (retErr error) {
+// SelectCACertificateImpl selects CA on CA tab and open/close list of certificates
+// for the organization. Sometimes extra icons are shown before open/close button,
+// tabsToPress parameter helps to move through all extra UI elements with "Tab" button.
+func SelectCACertificateImpl(ctx context.Context, ui *uiauto.Context, caOrg string, tabsToPress int) (retErr error) {
 	caCertOrg := nodewith.Name(caOrg).Role(role.StaticText)
 	if err := uiauto.Combine("select CA from list",
 		ui.DoDefault(nodewith.Name("Authorities").Role(role.Tab)),
 		ui.WaitUntilExists(nodewith.Name("Authorities").ClassName("tab selected")),
+		ui.WaitUntilExists(caCertOrg),
 		ui.MakeVisible(caCertOrg),
 		ui.LeftClick(caCertOrg),
 	)(ctx); err != nil {
@@ -306,7 +332,27 @@ func SelectCACertificate(ctx context.Context, ui *uiauto.Context, caOrg string) 
 	// Open/close drop down list of certificates under selected CA.
 	// The UI tree for these elements is not very convenient.
 	// Use keyboard to navigate.
-	if err := MoveToNextUIElement(ctx); err != nil {
+	if err := pressTabsThenPressEnter(ctx, tabsToPress); err != nil {
+		return errors.Wrap(err, failedToSelectNextUIElementErr)
+	}
+	return nil
+}
+
+// SelectCACertificate selects CA on CA tab and open/close list of certificates
+// for the organization. This is default case when only 1 tab needs to be pressed and dropdown
+// button will be selected.
+func SelectCACertificate(ctx context.Context, ui *uiauto.Context, caOrg string) (retErr error) {
+	if err := SelectCACertificateImpl(ctx, ui, caOrg, 1 /*tabsToPress*/); err != nil {
+		return errors.Wrap(err, failedToSelectNextUIElementErr)
+	}
+	return nil
+}
+
+// SelectPolicyProvidedCACertificate selects CA on CA tab and open/close list of certificates
+// for the organization. Policy management icon is show for policy provided CA,
+// so Tab needs to be pressed 2 times before dropdown button is selected.
+func SelectPolicyProvidedCACertificate(ctx context.Context, ui *uiauto.Context, caOrg string) (retErr error) {
+	if err := SelectCACertificateImpl(ctx, ui, caOrg, 2 /*tabsToPress*/); err != nil {
 		return errors.Wrap(err, failedToSelectNextUIElementErr)
 	}
 	return nil
@@ -314,8 +360,8 @@ func SelectCACertificate(ctx context.Context, ui *uiauto.Context, caOrg string) 
 
 // PressEscape is pressing Esc button on keyboard, so some popups can be dismissed.
 func PressEscape(ctx context.Context) (retErr error) {
-	kb, err := input.Keyboard(ctx)
-	defer kb.Close(ctx)
+	kb, kbCleanup, err := getKeyboard(ctx)
+	defer kbCleanup(ctx)
 	if err != nil {
 		return errors.Wrap(err, failedToSetupKeyboardErr)
 	}
@@ -394,9 +440,12 @@ func SetCACertTrust(ctx context.Context, ui *uiauto.Context, targetState checked
 	return nil
 }
 
-// OpenActionMenuForCACertificate selects specific CA certificate on CA tab and open actions menu for it.
-func OpenActionMenuForCACertificate(ctx context.Context, ui *uiauto.Context, caOrgName string) (retErr error) {
-	caCertificateNode := nodewith.Name(caOrgName).Role(role.StaticText)
+// chooseCACertificateImpl selects CA certificate from the list of certificates for CA org.
+// It is expected that list of certificates is already expanded.
+// Sometimes extra icons are shown before action menu button,
+// tabsToPress parameter helps to move through all extra UI elements with "Tab" button.
+func chooseCACertificateImpl(ctx context.Context, ui *uiauto.Context, caOrg string, tabsToPress int) (retErr error) {
+	caCertificateNode := nodewith.Name(caOrg).Role(role.StaticText)
 	if err := uiauto.Combine("select CA cert from list",
 		ui.WaitUntilExists(caCertificateNode),
 		ui.DoDefault(caCertificateNode),
@@ -405,8 +454,30 @@ func OpenActionMenuForCACertificate(ctx context.Context, ui *uiauto.Context, caO
 	}
 
 	// Open menu for the selected certificate from 3 dots using keyboard.
-	if err := MoveToNextUIElement(ctx); err != nil {
-		return errors.Wrap(err, failedToSelectNextUIElementErr)
+	if err := pressTabsThenPressEnter(ctx, tabsToPress); err != nil {
+		return err
+	}
+	// Make sure that menu become visible on older DUT with slow UI.
+	if err := ui.WaitUntilExists(nodewith.Name("View").Role(role.MenuItem))(ctx); err != nil {
+		return errors.Wrap(err, "failed to select CA certificate")
+	}
+	return nil
+}
+
+// OpenActionMenuForCACertificate selects specific CA certificate on CA tab and open actions menu for it.
+// This is default case when only 1 tab needs to be pressed and dropdown button will be selected.
+func OpenActionMenuForCACertificate(ctx context.Context, ui *uiauto.Context, caOrg string) (retErr error) {
+	if err := chooseCACertificateImpl(ctx, ui, caOrg, 1 /*tabsToPress*/); err != nil {
+		return err
+	}
+	return nil
+}
+
+// OpenActionMenuForPolicyProvidedCACertificate selects specific CA certificate on CA tab and open actions menu for it.
+// Policy management icon will be shows before the action menu, so "Tab" needs to be pressed 2 times.
+func OpenActionMenuForPolicyProvidedCACertificate(ctx context.Context, ui *uiauto.Context, caOrg string) (retErr error) {
+	if err := chooseCACertificateImpl(ctx, ui, caOrg, 2 /*tabsToPress*/); err != nil {
+		return err
 	}
 	return nil
 }

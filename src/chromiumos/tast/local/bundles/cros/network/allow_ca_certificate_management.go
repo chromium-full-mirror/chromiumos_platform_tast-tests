@@ -20,7 +20,9 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/cryptohome"
+	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/policyutil"
+
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -36,11 +38,29 @@ const providedCaCertName = "GTS Root R1"
 // providedCaOrg is a name for the org which has issued CA certificate provided by OS, it is visible in the list of Authorities.
 const providedCaOrg = "org-Google Trust Services LLC"
 
+// policyProvidedCaCertName is a name for the CA certificate provided by policy, usually it is CN or OU in certificate.
+const policyProvidedCaCertName = "root_ca_cert"
+
+// policyProvidedCaOrg is a name for the org which has issued CA certificate provided by policy, it is visible in the list of Authorities.
+const policyProvidedCaOrg = "org-root_ca_cert"
+
 // caCertFile is a file's name for the root certificate that
 // is used to create a client and website certificates.
 // Chrome will need to import it to trust that the website certificate is valid.
 // Website server will need to use it to trust that the client certificate is valid.
 const caCertFile = "cert_settings_page_root_cert.crt"
+
+// editMenuItem  is UI element finder for "Edit" menu item.
+var editMenuItem = nodewith.Name("Edit").Role(role.MenuItem)
+
+// viewMenuItem  is UI element finder for "View" menu item.
+var viewMenuItem = nodewith.Name("View").Role(role.MenuItem)
+
+// exportMenuItem  is UI element finder for "Export" menu item.
+var exportMenuItem = nodewith.Name("Export").Role(role.MenuItem)
+
+// deleteMenuItem  is UI element finder for "Delete" menu item.
+var deleteMenuItem = nodewith.Name("Delete").Role(role.MenuItem)
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -59,6 +79,7 @@ func init() {
 		Data:         []string{caCertFile},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.CACertificateManagementAllowed{}, pci.VerifiedFunctionalityUI),
+			pci.SearchFlag(&policy.OpenNetworkConfiguration{}, pci.VerifiedFunctionalityUI),
 			{
 				Key: "feature_id",
 				// verify that managed users either have or don't have the ability to manage and CA certificates based on the setting of the configured policy.
@@ -74,6 +95,14 @@ func prepareCACertificate(s *testing.State, downloadsPath string) {
 	const caCert = caCertFile
 	if err := utils.CopyToDownloads(downloadsPath, s.DataPath(caCert), caCert); err != nil {
 		s.Fatal("Failed to copy CA certificate file to Download: ", err)
+	}
+}
+
+// cleanCACertificate removes certificate from the Downloads.
+func cleanCACertificate(s *testing.State, downloadsPath string) {
+	const caCert = caCertFile
+	if err := utils.RemoveFromDownloads(downloadsPath, s.DataPath(caCert), caCert); err != nil {
+		s.Fatal("Failed to delete certificate file from Download: ", err)
 	}
 }
 
@@ -137,7 +166,7 @@ func expectDeleteUserCACertNotPossible(ctx context.Context, s *testing.State, ui
 		s.Fatal("Failed to open action menu: ", err)
 	}
 
-	// Make sure that Edit button is not present in popup menu, but other buttons are there.
+	// Make sure that Delete buttons are not present in the popup menu, but other buttons are there.
 	deleteItem := nodewith.Name("Delete").Role(role.MenuItem)
 	viewItem := nodewith.Name("View").Role(role.MenuItem)
 	exportItem := nodewith.Name("Export").Role(role.MenuItem)
@@ -174,25 +203,55 @@ func expectEditTrustProvidedCACertSuccess(ctx context.Context, s *testing.State,
 	}
 }
 
-// expectEditTrustForCACertNotPossible testing that trust bit for CA certificate can not be turned off.
-func expectEditTrustForCACertNotPossible(ctx context.Context, s *testing.State, ui *uiauto.Context, caOrg, caCertName string) {
+// expectManagePolicyProvidedCACertNotPossible testing that it is not possible to manage CA certificate provided by policy.
+// It will select CA org, then it will select specific CA certificate and open action menu for it. Then
+// it will check that "Edit" and "Delete" buttons are not shown while "View" and "Export" buttons are shown.
+func expectManagePolicyProvidedCACertNotPossible(ctx context.Context, s *testing.State, ui *uiauto.Context, caOrg, caCertName string) {
+	if err := utils.SelectPolicyProvidedCACertificate(ctx, ui, caOrg); err != nil {
+		s.Fatal("Failed to select CA certificate: ", err)
+	}
+
+	if err := utils.OpenActionMenuForPolicyProvidedCACertificate(ctx, ui, caCertName); err != nil {
+		s.Fatal("Failed to open action menu for the certificate: ", err)
+	}
+
+	// Make sure that "Edit" and "Delete" menu items are not present in the popup menu, but other buttons are there.
+	assertUIElementNotPresent(ctx, s, ui, editMenuItem)
+	assertUIElementPresent(ctx, s, ui, viewMenuItem)
+	assertUIElementPresent(ctx, s, ui, exportMenuItem)
+	assertUIElementNotPresent(ctx, s, ui, deleteMenuItem)
+
+	// Close popup menu and previously selected CA org.
+	if err := utils.PressEscape(ctx); err != nil {
+		s.Fatal("Failed to press Esc: ", err)
+	}
+	if err := utils.SelectPolicyProvidedCACertificate(ctx, ui, caOrg); err != nil {
+		s.Fatal("Failed to select CA certificate: ", err)
+	}
+}
+
+// expectManageCACertNotPossible testing that it is not possible to manage CA certificate.
+// It will select CA org, then it will select specific CA certificate and open action menu for it. Then
+// it will check that "Edit" and "Delete" buttons are not shown while "View" and "Export" buttons are shown.
+func expectManageCACertNotPossible(ctx context.Context, s *testing.State, ui *uiauto.Context, caOrg, caCertName string) {
 	if err := utils.SelectCACertificate(ctx, ui, caOrg); err != nil {
 		s.Fatal("Failed to select CA certificate: ", err)
 	}
+
 	if err := utils.OpenActionMenuForCACertificate(ctx, ui, caCertName); err != nil {
 		s.Fatal("Failed to open action menu for the certificate: ", err)
 	}
 
-	// Make sure that Edit button is not present in popup menu, but other buttons are there.
-	editItem := nodewith.Name("Edit").Role(role.MenuItem)
-	viewItem := nodewith.Name("View").Role(role.MenuItem)
-	exportItem := nodewith.Name("Export").Role(role.MenuItem)
-	assertUIElementNotPresent(ctx, s, ui, editItem)
-	assertUIElementPresent(ctx, s, ui, viewItem)
-	assertUIElementPresent(ctx, s, ui, exportItem)
+	// Make sure that "Edit" and "Delete" menu items are not present in the popup menu, but other buttons are there.
+	assertUIElementNotPresent(ctx, s, ui, editMenuItem)
+	assertUIElementPresent(ctx, s, ui, viewMenuItem)
+	assertUIElementPresent(ctx, s, ui, exportMenuItem)
+	assertUIElementNotPresent(ctx, s, ui, deleteMenuItem)
 
 	// Close popup menu and previously selected CA org.
-	utils.PressEscape(ctx)
+	if err := utils.PressEscape(ctx); err != nil {
+		s.Fatal("Failed to press Esc: ", err)
+	}
 	if err := utils.SelectCACertificate(ctx, ui, caOrg); err != nil {
 		s.Fatal("Failed to select CA certificate: ", err)
 	}
@@ -216,37 +275,72 @@ func AllowCACertificateManagement(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get user's Download path: ", err)
 	}
 
+	kb, err := input.Keyboard(ctx)
+	defer kb.Close(ctx)
+	if err != nil {
+		s.Fatal("Can not use keyboard: ", err)
+	}
+	ctx = context.WithValue(ctx, utils.KeyboardKey, kb)
+
 	// Copy all required for test certificates to Download.
 	prepareCACertificate(s, downloadsPath)
+	defer cleanCACertificate(s, downloadsPath)
+
+	commonPolicies := []policy.Policy{
+		&policy.OpenNetworkConfiguration{
+			Val: &policy.ONC{
+				Certificates: []*policy.ONCCertificate{
+					{
+						GUID:      "{b3aae353-cfa9-4093-9aff-9f8ee2bf8c29}",
+						TrustBits: []string{"Web"},
+						Type:      "Authority",
+						X509:      "-----BEGIN CERTIFICATE-----\nMIIDHzCCAgegAwIBAgIUKb0vi5cSMIah3JFznmml8NFDPSkwDQYJKoZIhvcNAQEL\nBQAwFzEVMBMGA1UEAwwMcm9vdF9jYV9jZXJ0MB4XDTE5MTIwNTEyNTMyM1oXDTI5\nMTIwMjEyNTMyM1owFzEVMBMGA1UEAwwMcm9vdF9jYV9jZXJ0MIIBIjANBgkqhkiG\n9w0BAQEFAAOCAQ8AMIIBCgKCAQEAt1JobSyZGOXzNARok+UMWTWJ0PEkXb7qWYGB\nv6eWuEBvUywCUyq8D29qzWGBc2JW3KdI5l8WRoQ2WPfo6+3MHVht13gzN0icAMTW\naQKedk+b6dcQZVESEPFHF8m47iEfQEsoF2RvlYIN/WQuYxAcf0SJFfsgq1A7St94\n0nO3gl5RNjLtFBpTIGyri/SmD1/EEyD3J2XFPGLtVYQH65c8m7kNDuHQawBvEAnv\nAlEsXxNUeqVg887UdkhG4N8i3ULvzI1QZX0WzugCrQX9XCG1w7txzmYKfIYPa2zP\nG7p+MjdEflahrXNCbLnnD7nALUJ3zgRRxZ3ZleUdSDv71bU2fwIDAQABo2MwYTAP\nBgNVHRMBAf8EBTADAQH/MB0GA1UdDgQWBBRzXr2ldI6MxTGQB2CS2dcsV69MZzAf\nBgNVHSMEGDAWgBRzXr2ldI6MxTGQB2CS2dcsV69MZzAOBgNVHQ8BAf8EBAMCAQYw\nDQYJKoZIhvcNAQELBQADggEBALVxM5T4JYxv8X8vG/tNRpdStkQUFWSQVDuwjEVx\nbg3DMmR+OT8N4UGwgkzz/wC6VCiNKUStfjtu3vbA98qKykEpBI5G973JZdLNqZuz\nJJxsG1lsma+dHLMFJV8LCYQAjYMTlD9YgJezL0B5jbquOxCXSTbzSuyzIvjyMSZk\nQsxxNsKuGuvdXm8Nd2zOzIixibOsd3kYRAkqLTG5QBm0K6Bt+jdYkGrh8WbFIAZr\nNZ8WwHnPI0DAYwSNrCfx9ofBMoaWa3vxf64rO4+A/snJ4RTEN+Jj+F5anDgTnK9S\nhjk7IYiGv73aNhOZ5wQSsJQAEWdE/h6oeXR2T946XOJIcGI=\n-----END CERTIFICATE-----\n",
+					},
+				},
+			},
+		},
+	}
 
 	// Loop via different policy settings and check that they are working as expected.
 	for _, param := range []struct {
 		name                          string
-		value                         *policy.CACertificateManagementAllowed
+		policies                      []policy.Policy
 		canManageUserCACert           bool
 		canEditTrustForProvidedCACert bool
 	}{
 		{
-			name:                          "unset",
-			value:                         &policy.CACertificateManagementAllowed{Stat: policy.StatusUnset},
+			name: "unset",
+			policies: append(
+				commonPolicies,
+				&policy.CACertificateManagementAllowed{Stat: policy.StatusUnset},
+			),
 			canManageUserCACert:           true,
 			canEditTrustForProvidedCACert: true,
 		},
 		{
-			name:                          "all_allowed",
-			value:                         &policy.CACertificateManagementAllowed{Val: 0},
+			name: "all_allowed",
+			policies: append(
+				commonPolicies,
+				&policy.CACertificateManagementAllowed{Val: 0},
+			),
 			canManageUserCACert:           true,
 			canEditTrustForProvidedCACert: true,
 		},
 		{
-			name:                          "only_user_allowed",
-			value:                         &policy.CACertificateManagementAllowed{Val: 1},
+			name: "only_user_allowed",
+			policies: append(
+				commonPolicies,
+				&policy.CACertificateManagementAllowed{Val: 1},
+			),
 			canManageUserCACert:           true,
 			canEditTrustForProvidedCACert: false,
 		},
 		{
-			name:                          "not_allowed",
-			value:                         &policy.CACertificateManagementAllowed{Val: 2},
+			name: "not_allowed",
+			policies: append(
+				commonPolicies,
+				&policy.CACertificateManagementAllowed{Val: 2},
+			),
 			canManageUserCACert:           false,
 			canEditTrustForProvidedCACert: false,
 		},
@@ -273,7 +367,10 @@ func AllowCACertificateManagement(ctx context.Context, s *testing.State) {
 			}
 
 			// Update policies.
-			if err := policyutil.ServeAndVerify(ctx, fdms, cr, []policy.Policy{param.value}); err != nil {
+			// Due to e.g. onc_normalizer.cc, a re-exported policy for ONC usually doesn't
+			// match the provided policy, so ServerAndVerify would fail.
+			// Use ServeAndRefresh instead.
+			if err := policyutil.ServeAndRefresh(ctx, fdms, cr, param.policies); err != nil {
 				s.Fatal("Failed to update policies: ", err)
 			}
 
@@ -284,20 +381,23 @@ func AllowCACertificateManagement(ctx context.Context, s *testing.State) {
 			}
 			defer conn.Close()
 
+			// CA certificates provided by policy can not be managed at all.
+			expectManagePolicyProvidedCACertNotPossible(ctx, s, ui, policyProvidedCaOrg, policyProvidedCaCertName)
+
 			if param.canManageUserCACert {
 				expectImportUserCACertSuccess(ctx, s, ui)
 				expectEditTrustUserCACertSuccess(ctx, s, ui)
 				expectDeleteUserCACertSuccess(ctx, s, ui)
 			} else {
 				expectImportUserCACertNotPossible(ctx, s, ui)
-				expectEditTrustForCACertNotPossible(ctx, s, ui, userCaOrg, userCaCertName)
+				expectManageCACertNotPossible(ctx, s, ui, userCaOrg, userCaCertName)
 				expectDeleteUserCACertNotPossible(ctx, s, ui)
 			}
 
 			if param.canEditTrustForProvidedCACert {
 				expectEditTrustProvidedCACertSuccess(ctx, s, ui)
 			} else {
-				expectEditTrustForCACertNotPossible(ctx, s, ui, providedCaOrg, providedCaCertName)
+				expectManageCACertNotPossible(ctx, s, ui, providedCaOrg, providedCaCertName)
 			}
 		})
 	}

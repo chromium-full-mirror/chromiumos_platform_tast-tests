@@ -27212,6 +27212,13 @@ type ONCNetworkConfiguration struct {
 	WiFi     *ONCWifi     `json:"WiFi,omitempty"`
 }
 
+type ONCCertificate struct {
+	GUID      string   `json:"GUID"`
+	TrustBits []string `json:"TrustBits"`
+	Type      string   `json:"Type"`
+	X509      string   `json:"X509"`
+}
+
 type ONCGlobalNetworkConfiguration struct {
 	AllowOnlyPolicyNetworksToAutoconnect bool     `json:"AllowOnlyPolicyNetworksToAutoconnect"`
 	AllowOnlyPolicyNetworksToConnect     bool     `json:"AllowOnlyPolicyNetworksToConnect"`
@@ -27223,4 +27230,5 @@ type ONCGlobalNetworkConfiguration struct {
 type ONC struct {
 	GlobalNetworkConfiguration *ONCGlobalNetworkConfiguration `json:"GlobalNetworkConfiguration,omitempty"`
 	NetworkConfigurations      []*ONCNetworkConfiguration     `json:"NetworkConfigurations,omitempty"`
+	Certificates               []*ONCCertificate              `json:"Certificates,omitempty"`
 }

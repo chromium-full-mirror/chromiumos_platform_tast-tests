@@ -150,6 +150,13 @@ type ONCNetworkConfiguration struct {
 \tWiFi\t*ONCWifi\t`json:"WiFi,omitempty"`
 }
 
+type ONCCertificate struct {
+\tGUID\tstring\t`json:"GUID"`
+\tTrustBits\t[]string\t`json:"TrustBits"`
+\tType\tstring\t`json:"Type"`
+\tX509\tstring\t`json:"X509"`
+}
+
 type ONCGlobalNetworkConfiguration struct {
 \tAllowOnlyPolicyNetworksToAutoconnect\tbool\t`json:"AllowOnlyPolicyNetworksToAutoconnect"`
 \tAllowOnlyPolicyNetworksToConnect\tbool\t`json:"AllowOnlyPolicyNetworksToConnect"`
@@ -161,6 +168,7 @@ type ONCGlobalNetworkConfiguration struct {
 type ONC struct {
 \tGlobalNetworkConfiguration\t*ONCGlobalNetworkConfiguration\t`json:"GlobalNetworkConfiguration,omitempty"`
 \tNetworkConfigurations\t[]*ONCNetworkConfiguration\t`json:"NetworkConfigurations,omitempty"`
+\tCertificates\t[]*ONCCertificate\t`json:"Certificates,omitempty"`
 }
 """
 
