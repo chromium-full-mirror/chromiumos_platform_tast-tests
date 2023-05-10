@@ -63,6 +63,7 @@ func V4L2Compliance(ctx context.Context, s *testing.State) {
 	badCameras := map[string]string{
 		"13d3:5519": "b/258798506",
 		"04f2:b719": "b/272738845",
+		"0c45:636e": "b/281539980",
 	}
 
 	// Use a shorter context to save time for clean.
