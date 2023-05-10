@@ -15,6 +15,7 @@ import (
 	"chromiumos/tast/remote/bundles/cros/wwcb/utils"
 	"chromiumos/tast/services/cros/ui"
 	"chromiumos/tast/services/cros/wwcb"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
@@ -39,7 +40,6 @@ func DisconnectDisplayWhileShutdownDUT(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	dockingID := s.RequiredVar("DockingID")
 	extDispID := s.RequiredVar("ExtDispID1")
 
 	// Set up the servo attached to the DUT.
@@ -68,12 +68,16 @@ func DisconnectDisplayWhileShutdownDUT(ctx context.Context, s *testing.State) {
 
 	displaySvc := wwcb.NewDisplayServiceClient(cl.Conn)
 
+	dockingID, hasDockingID := s.Var("DockingID")
+
 	// Open IP power to supply docking power.
-	ipPowerPorts := []int{1}
-	if err := utils.OpenIppower(ctx, ipPowerPorts); err != nil {
-		s.Fatal("Failed to open IP power: ", err)
+	if hasDockingID {
+		ipPowerPorts := []int{1}
+		if err := utils.OpenIppower(ctx, ipPowerPorts); err != nil {
+			s.Fatal("Failed to open IP power: ", err)
+		}
+		defer utils.CloseIppower(cleanupCtx, ipPowerPorts)
 	}
-	defer utils.CloseIppower(cleanupCtx, ipPowerPorts)
 
 	// Initialize fixtures to find the connected devices.
 	if err := utils.InitFixture(ctx); err != nil {
@@ -86,16 +90,25 @@ func DisconnectDisplayWhileShutdownDUT(ctx context.Context, s *testing.State) {
 	}
 
 	extDispIDArray := []string{extDispID}
-	if err := utils.MappingWithDockFixture(ctx, s, extDispIDArray, dockingID); err != nil {
-		s.Fatal("Failed to do mapping display fixture to camera: ", err)
+
+	if hasDockingID {
+		if err := utils.MappingWithDockFixture(ctx, s, extDispIDArray, dockingID); err != nil {
+			s.Fatal("Failed to do mapping display fixture to camera: ", err)
+		}
+	} else {
+		if err := utils.MappingDisplayFixtureToCamera(ctx, s, extDispIDArray); err != nil {
+			s.Fatal("Failed to do mapping display fixture to camera: ", err)
+		}
 	}
 
 	if err := utils.ControlFixture(ctx, extDispID, "on"); err != nil {
 		s.Fatal("Failed to connect to the external display: ", err)
 	}
 
-	if err := utils.ControlFixture(ctx, dockingID, "on"); err != nil {
-		s.Fatal("Failed to connect to the docking station: ", err)
+	if hasDockingID {
+		if err := utils.ControlFixture(ctx, dockingID, "on"); err != nil {
+			s.Fatal("Failed to connect to the docking station: ", err)
+		}
 	}
 
 	if _, err := displaySvc.VerifyDisplayCount(ctx, &wwcb.QueryRequest{DisplayCount: 2}); err != nil {
