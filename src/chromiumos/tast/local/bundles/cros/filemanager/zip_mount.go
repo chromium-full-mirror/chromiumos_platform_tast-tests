@@ -17,6 +17,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/cryptohome"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
@@ -34,7 +35,11 @@ func init() {
 			"jboulic@chromium.org",
 			"msalomao@chromium.org",
 		},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr: []string{
+			"group:criticalstaging",
+			"group:mainline",
+			"informational",
+		},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      8 * time.Minute,
 		Data: []string{

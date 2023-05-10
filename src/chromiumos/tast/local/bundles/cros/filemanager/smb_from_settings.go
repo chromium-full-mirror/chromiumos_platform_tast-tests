@@ -20,6 +20,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/smb"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -34,7 +35,11 @@ func init() {
 			"chromeos-files-syd@google.com",
 			"benreich@chromium.org",
 		},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr: []string{
+			"group:criticalstaging",
+			"group:mainline",
+			"informational",
+		},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "smbStarted",
 		SearchFlags: []*testing.StringPair{

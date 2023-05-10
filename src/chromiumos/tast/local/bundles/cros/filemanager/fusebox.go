@@ -16,6 +16,7 @@ import (
 	"golang.org/x/sys/unix"
 
 	"chromiumos/tast/local/chrome"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -33,7 +34,11 @@ func init() {
 			"nigeltao@chromium.org",
 			"noel@chromium.org",
 		},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr: []string{
+			"group:criticalstaging",
+			"group:mainline",
+			"informational",
+		},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
 			Name: "advanced",
