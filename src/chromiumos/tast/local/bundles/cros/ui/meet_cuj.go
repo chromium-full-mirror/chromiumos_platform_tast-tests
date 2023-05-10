@@ -1745,7 +1745,7 @@ func dumpWebRTCInternals(ctx context.Context, tconn *chrome.TestConn, ui *uiauto
 
 	notificationPredicate := ash.WaitTitle("Download complete")
 	notificationIDs := make(map[string]struct{})
-	notification, err := ash.WaitForNotification(ctx, tconn, 10*time.Minute, func(notification *ash.Notification) bool {
+	notification, err := ash.WaitForNotification(ctx, tconn, time.Minute, func(notification *ash.Notification) bool {
 		if notificationPredicate(notification) {
 			return true
 		}
