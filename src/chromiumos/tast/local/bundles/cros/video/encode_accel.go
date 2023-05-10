@@ -135,16 +135,6 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP8_4K},
 			ExtraData:         encode.TestData(crowd2160P),
 		}, {
-			Name:              "vp8_540p_l1t2",
-			Val:               encode.MakeTestOptionsWithSVCMode(tulip540P, videotype.VP8Prof, "L1T2"),
-			ExtraSoftwareDeps: []string{caps.HWEncodeVP8, "vaapi"},
-			ExtraData:         encode.TestData(tulip540P),
-		}, {
-			Name:              "vp8_540p_l1t3",
-			Val:               encode.MakeTestOptionsWithSVCMode(tulip540P, videotype.VP8Prof, "L1T3"),
-			ExtraSoftwareDeps: []string{caps.HWEncodeVP8, "vaapi"},
-			ExtraData:         encode.TestData(tulip540P),
-		}, {
 			Name:              "vp8_720p_l1t2",
 			Val:               encode.MakeTestOptionsWithSVCMode(tulip720P, videotype.VP8Prof, "L1T2"),
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP8, "vaapi"},
@@ -154,6 +144,16 @@ func init() {
 			Val:               encode.MakeTestOptionsWithSVCMode(tulip720P, videotype.VP8Prof, "L1T3"),
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP8, "vaapi"},
 			ExtraData:         encode.TestData(tulip720P),
+		}, {
+			Name:              "vp8_1080p_l1t2",
+			Val:               encode.MakeTestOptionsWithSVCMode(crowd1080P, videotype.VP8Prof, "L1T2"),
+			ExtraSoftwareDeps: []string{caps.HWEncodeVP8, "vaapi"},
+			ExtraData:         encode.TestData(crowd1080P),
+		}, {
+			Name:              "vp8_1080p_l1t3",
+			Val:               encode.MakeTestOptionsWithSVCMode(crowd1080P, videotype.VP8Prof, "L1T3"),
+			ExtraSoftwareDeps: []string{caps.HWEncodeVP8, "vaapi"},
+			ExtraData:         encode.TestData(crowd1080P),
 		}, {
 			Name:              "vp9_180p",
 			Val:               encode.MakeTestOptions(tulip180P, videotype.VP9Prof),
