@@ -58,8 +58,6 @@ func init() {
 // QuickAnswersUnitConversionEnabled tests that Quick Answers unit conversion
 // can be enabled and disabled via policy.
 func QuickAnswersUnitConversionEnabled(ctx context.Context, s *testing.State) {
-	const annotationID = "46208118" // quick_answers_loader
-
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 
@@ -128,7 +126,7 @@ func QuickAnswersUnitConversionEnabled(ctx context.Context, s *testing.State) {
 			}
 
 			// Stop logging and check the logs for quick_answers_loader NetworkTrafficAnnotationTag.
-			foundAnnotation, err := annotations.StopLoggingCheckLogs(ctx, cr, br, annotationID)
+			foundAnnotation, err := annotations.StopLoggingCheckLogs(ctx, cr, br, quickanswersutil.AnnotationID)
 			if err != nil {
 				s.Fatal("Failed to stop logging and check logs: ", err)
 			}
