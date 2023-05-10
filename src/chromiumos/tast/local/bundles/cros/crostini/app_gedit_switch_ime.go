@@ -11,7 +11,6 @@ import (
 
 	"chromiumos/tast/local/bundles/cros/crostini/imetestutil"
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/local/chrome/ime"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
@@ -77,14 +76,7 @@ func AppGeditSwitchIME(ctx context.Context, s *testing.State) {
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
 	// Switch back to default IME.
-	defer func(ctx context.Context) {
-		if err := uiauto.Combine("ensure ime is back to default",
-			ime.DefaultInputMethod.InstallAndActivate(tconn),
-			ime.DefaultInputMethod.WaitUntilActivated(tconn),
-		)(ctx); err != nil {
-			s.Log("Failed switch back to default IME: ", err)
-		}
-	}(cleanupCtx)
+	defer imetestutil.ResetToDefaultIME(cleanupCtx, tconn)
 
 	if err := testSwitchIMEInGeditFile(ctx, terminalApp, keyboard, tconn, cont); err != nil {
 		s.Fatal("Failed to use and switch IME in Gedit file: ", err)

@@ -11,7 +11,6 @@ import (
 	"chromiumos/tast/local/bundles/cros/crostini/crostiniapps"
 	"chromiumos/tast/local/bundles/cros/crostini/imetestutil"
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/local/chrome/ime"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/crostini"
@@ -113,7 +112,7 @@ func AppFirefoxIME(ctx context.Context, s *testing.State) {
 	defer terminalApp.Exit(keyboard)(cleanupCtx)
 
 	// Switch back to default IME.
-	defer ime.DefaultInputMethod.InstallAndActivate(tconn)(cleanupCtx)
+	defer imetestutil.ResetToDefaultIME(cleanupCtx, tconn)
 
 	// Since defers are executed in a stack, this needs to be the last defer so it doesn't close the window before dumping the tree.
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")

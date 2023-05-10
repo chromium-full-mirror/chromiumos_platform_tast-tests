@@ -10,7 +10,6 @@ import (
 
 	"chromiumos/tast/local/bundles/cros/crostini/imetestutil"
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/local/chrome/ime"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
@@ -108,7 +107,7 @@ func AppGeditIME(ctx context.Context, s *testing.State) {
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
 	// Switch back to default IME.
-	defer ime.DefaultInputMethod.InstallAndActivate(tconn)(cleanupCtx)
+	defer imetestutil.ResetToDefaultIME(cleanupCtx, tconn)
 
 	imeName := s.Param().(string)
 	imeData := imetestutil.IMETestCases[imeName]
