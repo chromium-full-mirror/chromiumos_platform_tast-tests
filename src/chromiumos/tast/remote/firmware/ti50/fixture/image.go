@@ -26,6 +26,15 @@ const (
 	// specifies a single .bin file, rather than a directory).
 	FwConfigJSON = "fw_configjson"
 
+	// Chip is an arg name for specifying Ti50 target.
+	Chip = "chip"
+
+	// Variant is an arg name for specifying Ti50 target.
+	Variant = "variant"
+
+	// Slot can be left empty, or set to either 'A' or 'B'.
+	Slot = "slot"
+
 	// Ti50Image fixture downloads the ti50 image bin.
 	Ti50Image = "ti50Image"
 
@@ -50,7 +59,7 @@ func init() {
 		Desc:            "Provides access to a Ti50 image",
 		Contacts:        []string{"tast-fw-library-reviewers@google.com", "jbettis@google.com"},
 		Impl:            &imageFixture{image: Ti50Image},
-		Vars:            []string{BuildURL, FwConfigJSON},
+		Vars:            []string{BuildURL, FwConfigJSON, Chip, Variant, Slot},
 		SetUpTimeout:    imageDownloadTimeout,
 		TearDownTimeout: imageDeleteTimeout,
 	})
@@ -59,7 +68,7 @@ func init() {
 		Desc:            "Uses devboardsvc to flash a system_test_auto image",
 		Contacts:        []string{"tast-fw-library-reviewers@google.com", "jbettis@google.com"},
 		Impl:            &imageFixture{image: SystemTestAutoImage},
-		Vars:            []string{BuildURL, FwConfigJSON},
+		Vars:            []string{BuildURL, FwConfigJSON, Chip, Variant, Slot},
 		SetUpTimeout:    imageDownloadTimeout,
 		TearDownTimeout: imageDeleteTimeout,
 	})
@@ -94,15 +103,7 @@ type imageFixture struct {
 }
 
 func (i *imageFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	url, _ := s.Var(BuildURL)
-	i.v = &ImageValue{imageType: i.image}
-
-	var confs []string
-	if conf, ok := s.Var(FwConfigJSON); ok {
-		confs = append(confs, conf)
-	}
-
-	if err := i.downloadImage(ctx, url, confs); err != nil {
+	if err := i.downloadImage(ctx, s); err != nil {
 		s.Fatal("download image: ", err)
 	}
 
@@ -133,9 +134,17 @@ func (i *imageFixture) String() string {
 
 // downloadImage downloads the image from google storage if necessary.
 // inputURL can be a local file, a gs file, or a gs build folder.
-func (i *imageFixture) downloadImage(ctx context.Context, inputURL string, configPaths []string) error {
+func (i *imageFixture) downloadImage(ctx context.Context, s *testing.FixtState) error {
 	if i.image == "" {
 		return nil
+	}
+
+	inputURL, _ := s.Var(BuildURL)
+	i.v = &ImageValue{imageType: i.image}
+
+	var configPaths []string
+	if conf, ok := s.Var(FwConfigJSON); ok {
+		configPaths = append(configPaths, conf)
 	}
 
 	if inputURL == "" {
@@ -155,7 +164,7 @@ func (i *imageFixture) downloadImage(ctx context.Context, inputURL string, confi
 		return errors.Errorf("unknown image type: %q", i.image)
 	}
 
-	if inputURL[:len(gsPrefix)] == gsPrefix {
+	if len(inputURL) > len(gsPrefix) && inputURL[:len(gsPrefix)] == gsPrefix {
 		fullURL := inputURL
 		// Assume URL is a build folder if it doesn't end in .bin.
 		if fullURL[len(fullURL)-4:] != ".bin" {
@@ -186,6 +195,27 @@ func (i *imageFixture) downloadImage(ctx context.Context, inputURL string, confi
 		// the command line argument is not present.
 		i.v.configPaths = configPaths
 		i.downloaded = true
+		return nil
+	}
+
+	img, err := os.Stat(inputURL)
+	if err != nil {
+		return err
+	}
+	if img.IsDir() {
+		// Given directory is assumed to have ports/ and build/ subdirectories, that is,
+		// be ti50/common.
+		var name string
+		slot, _ := s.Var(Slot)
+		chip, _ := s.Var(Chip)
+		variant, _ := s.Var(Variant)
+		if slot != "" {
+			name = "full_image." + slot + ".signed.bin"
+		} else {
+			name = "full_image.signed.bin"
+		}
+		i.v.imagePath = filepath.Join(inputURL, "build", imageType, chip, variant, name)
+		i.v.configPaths = []string{filepath.Join(inputURL, "ports", chip, "software", "tools", imageType+"_"+chip+".json")}
 		return nil
 	}
 
