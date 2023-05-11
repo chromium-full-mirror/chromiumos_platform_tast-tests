@@ -25,10 +25,6 @@ func init() {
 		},
 		Fixture: "graphicsNoChrome",
 		Params: []testing.Param{{
-			Name:    "kmstest",
-			Val:     []string{"kmstest"},
-			Timeout: 2 * time.Minute,
-		}, {
 			Name:      "modetest",
 			Val:       []string{"modetest"},
 			Timeout:   2 * time.Minute,
