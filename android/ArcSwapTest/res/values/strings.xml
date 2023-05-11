@@ -5,5 +5,5 @@
 -->
 <resources>
     <string name="title">Title</string>
-    <string name="text">Text</string>
+    <string name="text">org.chromium.arc.testapp.swap</string>
 </resources>

@@ -27,6 +27,8 @@ var (
 	Pkg = "org.chromium.arc.testapp.swap"
 	// Activity is the activity name of the swap test activity
 	Activity = ".SwapActivity"
+	// ReceiverAction is the intent action for displaying a notification
+	ReceiverAction = "org.chromium.arc.testapp.swap.NOTIFICATION"
 )
 
 // Status represents the current status of crosvm vmm-swap.

@@ -16,5 +16,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <receiver android:name=".SwapReceiver" android:exported="true">
+            <intent-filter>
+                <action android:name="org.chromium.arc.testapp.swap.NOTIFICATION" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>
