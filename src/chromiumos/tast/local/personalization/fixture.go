@@ -9,6 +9,7 @@ import (
 
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
+
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -178,6 +179,39 @@ func init() {
 		Vars: []string{
 			"ui.gaiaPoolDefault",
 		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "personalizationWithTimeOfDayFeature",
+		Desc: "Login with Personalization Hub with Time of Day feature enabled",
+		Contacts: []string{
+			"assistive-eng@google.com",
+			"chromeos-sw-engprod@google.com",
+			"jasontt@google.com",
+		},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{chrome.EnableFeatures("Jelly",
+				"PersonalizationJelly",
+				"TimeOfDayWallpaper",
+				"TimeOfDayScreenSaver",
+				"UseWallpaperStagingUrl")}, nil
+		}),
+		SetUpTimeout:    chrome.LoginTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "personalizationWithTimeOfDayFeatureClamshell",
+		Desc: "Login with Personalization Hub with Time of Day feature enabled in clamshell mode",
+		Contacts: []string{
+			"assistive-eng@google.com",
+			"chromeos-sw-engprod@google.com",
+			"jasontt@google.com",
+		},
+		Impl:            &clamshellFixture{},
+		Parent:          "personalizationWithTimeOfDayFeature",
+		SetUpTimeout:    chrome.GAIALoginTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
 	})
 }
 

@@ -24,6 +24,7 @@ import (
 	"chromiumos/tast/local/media/imgcmp"
 	"chromiumos/tast/local/personalization"
 	"chromiumos/tast/local/screenshot"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -103,6 +104,16 @@ func SelectImage(ui *uiauto.Context, image string) uiauto.Action {
 		ui.WaitUntilExists(imageNode),
 		ui.MakeVisible(imageNode),
 		ui.LeftClick(imageNode))
+}
+
+// ConfirmTimeOfDayWallpaper returns an action to click the confirm button in the dialog, which
+// indicates setting a time of day wallpaper will enable auto color mode and dynamic colors.
+func ConfirmTimeOfDayWallpaper(ui *uiauto.Context) uiauto.Action {
+	buttonNode := nodewith.Role(role.Button).Name("Confirm")
+	return uiauto.Combine("Confirming Time of Day wallpaper",
+		ui.WaitUntilExists(buttonNode),
+		ui.MakeVisible(buttonNode),
+		ui.LeftClick(buttonNode))
 }
 
 // BackToWallpaper presses the wallpaper tag from the breadcrumb.

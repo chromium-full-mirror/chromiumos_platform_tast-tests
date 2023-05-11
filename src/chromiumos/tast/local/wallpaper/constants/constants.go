@@ -60,6 +60,15 @@ const (
 	LightElementImage = "Wind Light Digital Art by Rutger Paulusse"
 )
 
+// DawnToDarkCollection is the time of day wallpaper collection.
+const DawnToDarkCollection = "Dawn to dark"
+
+// The two time of day wallpapers.
+const (
+	EarthFlowImage = "Dawn to dark - Earth Flow Exclusive to Chromebook"
+	CloudFlowImage = "Dawn to dark - Cloud Flow Exclusive to Chromebook"
+)
+
 // YellowWallpaperName is the name of a solid yellow wallpaper in the solid colors collection.
 const YellowWallpaperName = "Yellow"
 
