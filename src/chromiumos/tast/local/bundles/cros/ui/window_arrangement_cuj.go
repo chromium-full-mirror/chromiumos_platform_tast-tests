@@ -306,6 +306,12 @@ func WindowArrangementCUJ(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for quiescence: ", err)
 	}
 
+	// Check if "Picture in picture" window is displayed after clicking.
+	pipWindow := nodewith.Name("Picture in picture").Role(role.Window).ClassName("Widget").First()
+	if err := ui.WaitUntilExists(pipWindow)(ctx); err != nil {
+		s.Fatal("Failed to wait for pip to be active: ", err)
+	}
+
 	// For clamshell variants, activate the tab on the left.
 	if !tabletMode {
 		var tabs []map[string]interface{}
