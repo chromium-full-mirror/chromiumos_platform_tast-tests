@@ -147,6 +147,20 @@ func getHardwareDeps(decoder codecAPI) string {
 	return ""
 }
 
+func capableDeviceExists(codec string, encoder, decoder codecAPI) bool {
+	// V4L2 encoder API is stateful only.
+	if encoder == v4l2Stateless {
+		return false
+	}
+	if codec == "vp9" {
+		// No ChromeOS device using V4L2 supports vp9 hardware encoding.
+		if encoder == v4l2Stateful {
+			return false
+		}
+	}
+	return true
+}
+
 func TestPlatformInteropParamParams(t *testing.T) {
 	type paramData struct {
 		TestCaseName          string
@@ -189,6 +203,10 @@ func TestPlatformInteropParamParams(t *testing.T) {
 				}
 				if isMixedHardwareAPIs(decoder, encoder) {
 					// Skip mixing HW APIs.
+					continue
+				}
+				if !capableDeviceExists(codec, encoder, decoder) {
+					// Skip a test that will never runs on any device.
 					continue
 				}
 				// TODO(b/251256531): Enable this once H.264 v4l2_stateless_decoder
