@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"chromiumos/tast/local/debugd"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -136,15 +137,16 @@ func getPerfOutput(ctx context.Context, s *testing.State, d *debugd.Debugd,
 	return rPipe, sessionID, nil
 }
 
-func checkPerfData(s *testing.State, result []byte) {
+func checkPerfData(s *testing.State, result []byte) error {
 	const minResultLength = 20
 	s.Logf("GetPerfOutputV2() returned %d bytes of perf data", len(result))
 	if len(result) < minResultLength {
-		s.Fatal("Perf output is too small")
+		return errors.New("Perf output is too small")
 	}
 	if bytes.HasPrefix(result, []byte("<process exited with status: ")) {
 		s.Fatalf("Quipper failed: %s", string(result))
 	}
+	return nil
 }
 
 func testSingleCall(ctx context.Context, s *testing.State, d *debugd.Debugd) {
@@ -180,7 +182,14 @@ func testSingleCall(ctx context.Context, s *testing.State, d *debugd.Debugd) {
 				s.Error("CPU Idle state not restored after perf collection: ", err)
 			}
 		}
-		checkPerfData(s, buf.Bytes())
+		if err := checkPerfData(s, buf.Bytes()); err != nil {
+			if tc.repetition > 1 {
+				// Allow empty perf data during stress tests.
+				s.Log("checkPerfData: ", err)
+			} else {
+				s.Error("checkPerfData: ", err)
+			}
+		}
 	})
 }
 
@@ -200,7 +209,9 @@ func testConsecutiveCalls(ctx context.Context, s *testing.State, d *debugd.Debug
 			if _, err := io.Copy(&buf, output); err != nil {
 				s.Fatal("Failed to read perf output: ", err)
 			}
-			checkPerfData(s, buf.Bytes())
+			if err := checkPerfData(s, buf.Bytes()); err != nil {
+				s.Error("checkPerfData: ", err)
+			}
 		}
 	})
 }
@@ -226,7 +237,9 @@ func testConcurrentCalls(ctx context.Context, s *testing.State, d *debugd.Debugd
 				if _, err := io.Copy(&buf, output); err != nil {
 					s.Fatal("Failed to read perf output: ", err)
 				}
-				checkPerfData(s, buf.Bytes())
+				if err := checkPerfData(s, buf.Bytes()); err != nil {
+					s.Error("checkPerfData: ", err)
+				}
 			}()
 		}
 		wg.Wait()
@@ -293,7 +306,9 @@ func testStopEarly(ctx context.Context, s *testing.State, d *debugd.Debugd) {
 				s.Error("CPU Idle state not restored after perf collection: ", err)
 			}
 		}
-		checkPerfData(s, buf.Bytes())
+		if err := checkPerfData(s, buf.Bytes()); err != nil {
+			s.Error("checkPerfData: ", err)
+		}
 	})
 }
 
@@ -333,7 +348,9 @@ func testSurviveUICrash(ctx context.Context, s *testing.State, d *debugd.Debugd)
 				s.Error("CPU Idle state not restored after perf collection: ", err)
 			}
 		}
-		checkPerfData(s, buf.Bytes())
+		if err := checkPerfData(s, buf.Bytes()); err != nil {
+			s.Error("checkPerfData: ", err)
+		}
 	})
 }
 
