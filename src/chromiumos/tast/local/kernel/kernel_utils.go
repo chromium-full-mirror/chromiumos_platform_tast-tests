@@ -399,7 +399,7 @@ func GetPartitionTable(ctx context.Context, rootDevWithPart string) (*pb.CgptPar
 }
 
 // BackupRootfsVerityHash saves the verity hash for given kernel from the corresponding rootfs partition.
-func BackupRootfsVerityHash(ctx context.Context, rootDevWithoutPart string, table *pb.CgptPartition) (int, int, string, error) {
+func BackupRootfsVerityHash(ctx context.Context, rootDevWithoutPart string, table *pb.CgptPartition) (int64, int64, string, error) {
 	out, err := testexec.CommandContext(ctx, "vbutil_kernel", "--verify", table.PartitionPath, "--verbose").Output(testexec.DumpLogOnError)
 	if err != nil {
 		return 0, 0, "", errors.Wrap(err, "failed to get vbutil kernel")
@@ -418,7 +418,7 @@ func BackupRootfsVerityHash(ctx context.Context, rootDevWithoutPart string, tabl
 		return 0, 0, "", errors.Wrap(err, "failed to get size of sectors")
 	}
 
-	hashStartBlock, _ := strconv.Atoi(string(match[2]))
+	hashStartBlock, _ := strconv.ParseInt(string(match[2]), 10, 64)
 	// Multiplying by sector size converts from block count to bytes.
 	hashStartBytes := hashStartBlock * sectorSize
 	// The size / 4096 * 64 + 512 - calculation of the size of the merkle tree of dm-verity protected partition
@@ -624,7 +624,7 @@ func comparePartitions(ctx context.Context, pathA, pathB string, n int) (bool, e
 	return true, nil
 }
 
-func getSectorSize(ctx context.Context, rootDevWithPart string) (int, error) {
+func getSectorSize(ctx context.Context, rootDevWithPart string) (int64, error) {
 	out, err := testexec.CommandContext(ctx, "fdisk", "-l", rootDevWithPart).Output(testexec.DumpLogOnError)
 	if err != nil {
 		return -1, errors.Wrapf(err, "failed to get fdisk output for disk %q", rootDevWithPart)
@@ -637,5 +637,5 @@ func getSectorSize(ctx context.Context, rootDevWithPart string) (int, error) {
 		return -1, errors.Errorf("failed to get size of sectors, got output: %v", string(out))
 	}
 
-	return strconv.Atoi(match[3])
+	return strconv.ParseInt(match[3], 10, 64)
 }

@@ -295,8 +295,8 @@ func (ks *KernelService) BackupRootfsVerityHash(ctx context.Context, req *pb.Par
 		Name:       req.Name,
 		Copy:       req.Copy,
 		RootDev:    req.RootDev,
-		Offset:     int64(offset),
-		HashSize:   int64(size),
+		Offset:     offset,
+		HashSize:   size,
 		BackupPath: backupPath,
 	}, nil
 }
