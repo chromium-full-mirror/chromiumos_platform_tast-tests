@@ -309,6 +309,7 @@ func (e *Element) CreateRoom(roomName string) uiauto.Action {
 }
 
 // LeaveCurrentRoom leaves the current room.
+// The room will be deleted after seven days after the last member leaves.
 func (e *Element) LeaveCurrentRoom() uiauto.Action {
 	toolBar := e.d.Object(ui.ResourceID(elementIDPrefix + "includeRoomToolbar"))
 	navigateUpButton := e.d.Object(ui.Description("Navigate up"), ui.ClassName("android.widget.ImageButton"))

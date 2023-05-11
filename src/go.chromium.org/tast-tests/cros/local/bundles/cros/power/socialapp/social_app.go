@@ -5,7 +5,15 @@
 // Package socialapp implements helpers for the power.SocialApp* tests.
 package socialapp
 
-import "context"
+import (
+	"context"
+	"time"
+)
+
+// AppName represents the name of the social apps.
+type AppName = string
+
+const appLaunchTimeout = 30 * time.Second
 
 // SocialApp defines the operations applied in social app.
 type SocialApp interface {
