@@ -28,6 +28,7 @@ import (
 	"chromiumos/tast/local/terminalapp"
 	"chromiumos/tast/local/uidetection"
 	"chromiumos/tast/local/vm"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -131,7 +132,7 @@ func AppGeditFilesharing(ctx context.Context, s *testing.State) {
 	}
 	tmpFileCrosDownloadsPath := filepath.Join(downloadsPath, tmpFilename)
 
-	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
 	// Create a temp text file in the /Downloads folder to use in this test.
 	if err := ioutil.WriteFile(tmpFileCrosDownloadsPath, []byte(tmpFileContents), 0644); err != nil {

@@ -17,6 +17,7 @@ import (
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/terminalapp"
 	"chromiumos/tast/local/uidetection"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -114,7 +115,7 @@ func AppAndroidStudio(ctx context.Context, s *testing.State) {
 		}
 	}()
 
-	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree")
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 	androidWindow := nodewith.Name("Import Android Studio Settings From...").Role(role.Window).First()
 	if err := uiauto.Combine("Open android studio",
 		terminalApp.RunCommand(keyboard, "/android-studio/bin/studio.sh &"),

@@ -110,7 +110,7 @@ func AppVscodeIME(ctx context.Context, s *testing.State) {
 	defer ime.DefaultInputMethod.InstallAndActivate(tconn)(cleanupCtx)
 
 	// Since defers are executed in a stack, this needs to be the last defer so it doesn't close the window before dumping the tree.
-	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree")
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
 	imeName := s.Param().(string)
 	imeData := imetestutil.IMETestCases[imeName]

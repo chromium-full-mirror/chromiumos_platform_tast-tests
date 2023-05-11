@@ -18,6 +18,7 @@ import (
 	"chromiumos/tast/local/crostini"
 	"chromiumos/tast/local/screenshot"
 	"chromiumos/tast/local/uidetection"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -94,6 +95,7 @@ func init() {
 }
 func AppAudacity(ctx context.Context, s *testing.State) {
 	tconn := s.FixtValue().(crostini.FixtureData).Tconn
+	cr := s.FixtValue().(crostini.FixtureData).Chrome
 	keyboard := s.FixtValue().(crostini.FixtureData).KB
 	cont := s.FixtValue().(crostini.FixtureData).Cont
 	d := s.FixtValue().(crostini.FixtureData).Differ()
@@ -102,7 +104,7 @@ func AppAudacity(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
-	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
 	// Disable the welcome screen.
 	if err := cont.WriteFile(ctx, fmt.Sprintf(".audacity-data/audacity.cfg"), "[GUI]\nShowSplashScreen=0\n"); err != nil {

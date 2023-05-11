@@ -68,7 +68,7 @@ func AppGeditEmoji(ctx context.Context, s *testing.State) {
 	}
 	defer terminalApp.Exit(keyboard)(cleanupCtx)
 
-	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
 	// Open app and enter emoji.
 	const (

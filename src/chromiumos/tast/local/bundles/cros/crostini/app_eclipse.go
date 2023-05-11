@@ -16,6 +16,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/crostini"
 	"chromiumos/tast/local/terminalapp"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -126,7 +127,7 @@ func AppEclipse(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create test file in the Container: ", err)
 	}
 
-	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
 	// Find eclipse window.
 	eclipseWindow := nodewith.NameContaining("Eclipse").Role(role.Window).First()

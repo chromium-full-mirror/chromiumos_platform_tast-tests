@@ -89,6 +89,7 @@ func init() {
 
 func AppGeditIME(ctx context.Context, s *testing.State) {
 	tconn := s.FixtValue().(crostini.FixtureData).Tconn
+	cr := s.FixtValue().(crostini.FixtureData).Chrome
 	cont := s.FixtValue().(crostini.FixtureData).Cont
 	keyboard := s.FixtValue().(crostini.FixtureData).KB
 
@@ -104,7 +105,7 @@ func AppGeditIME(ctx context.Context, s *testing.State) {
 	}
 	defer terminalApp.Exit(keyboard)(cleanupCtx)
 
-	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
 	// Switch back to default IME.
 	defer ime.DefaultInputMethod.InstallAndActivate(tconn)(cleanupCtx)

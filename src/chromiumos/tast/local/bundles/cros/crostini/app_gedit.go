@@ -19,6 +19,7 @@ import (
 	"chromiumos/tast/local/terminalapp"
 	"chromiumos/tast/local/uidetection"
 	"chromiumos/tast/local/vm"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -96,6 +97,7 @@ func init() {
 }
 func AppGedit(ctx context.Context, s *testing.State) {
 	tconn := s.FixtValue().(crostini.FixtureData).Tconn
+	cr := s.FixtValue().(crostini.FixtureData).Chrome
 	keyboard := s.FixtValue().(crostini.FixtureData).KB
 	cont := s.FixtValue().(crostini.FixtureData).Cont
 	d := s.FixtValue().(crostini.FixtureData).Differ()
@@ -111,8 +113,7 @@ func AppGedit(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open Terminal app: ", err)
 	}
 	defer terminalApp.Exit(keyboard)(cleanupCtx)
-
-	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
 	// Create a file using gedit in Terminal.
 	if err := testCreateFileWithGedit(ctx, terminalApp, keyboard, tconn, cont, d); err != nil {

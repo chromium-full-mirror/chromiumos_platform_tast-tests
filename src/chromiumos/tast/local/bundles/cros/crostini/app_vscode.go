@@ -117,7 +117,7 @@ func AppVscode(ctx context.Context, s *testing.State) {
 	defer terminalApp.Exit(keyboard)(cleanupCtx)
 
 	// Since defers are executed in a stack, this needs to be the last defer so it doesn't close the window before dumping the tree.
-	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree")
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 	if err := testCreateFileWithVSCode(ctx, terminalApp, keyboard, tconn, cont, d); err != nil {
 		s.Fatal("Failed to create file with Visual Studio Code in Terminal: ", err)
 	}

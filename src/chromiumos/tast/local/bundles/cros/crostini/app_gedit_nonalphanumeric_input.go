@@ -52,6 +52,7 @@ func init() {
 
 func AppGeditNonalphanumericInput(ctx context.Context, s *testing.State) {
 	tconn := s.FixtValue().(crostini.FixtureData).Tconn
+	cr := s.FixtValue().(crostini.FixtureData).Chrome
 	keyboard := s.FixtValue().(crostini.FixtureData).KB
 
 	// Reserve time for clean-up tasks.
@@ -66,7 +67,7 @@ func AppGeditNonalphanumericInput(ctx context.Context, s *testing.State) {
 	}
 	defer terminalApp.Exit(keyboard)(cleanupCtx)
 
-	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
 	const testFile = "test.txt"
 

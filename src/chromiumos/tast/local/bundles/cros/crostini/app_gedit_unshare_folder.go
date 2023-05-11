@@ -24,6 +24,7 @@ import (
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/screenshot"
 	"chromiumos/tast/local/uidetection"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
