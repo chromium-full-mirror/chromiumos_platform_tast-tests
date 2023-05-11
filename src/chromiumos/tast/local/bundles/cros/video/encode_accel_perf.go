@@ -15,13 +15,14 @@ import (
 )
 
 const (
-	crowd180p  = "crowd-320x180_30frames.vp9.webm"
-	crowd270p  = "crowd-480x270_30frames.vp9.webm"
-	crowd360p  = "crowd-640x360_30frames.vp9.webm"
-	crowd540p  = "crowd-960x540_30frames.vp9.webm"
-	crowd720p  = "crowd-1280x720_30frames.vp9.webm"
-	crowd1080p = "crowd-1920x1080_30frames.vp9.webm"
-	crowd2160p = "crowd-3840x2160_30frames.vp9.webm"
+	crowd180p   = "crowd-320x180_30frames.vp9.webm"
+	crowd270p   = "crowd-480x270_30frames.vp9.webm"
+	crowd360p   = "crowd-640x360_30frames.vp9.webm"
+	crowd540p   = "crowd-960x540_30frames.vp9.webm"
+	crowd720p   = "crowd-1280x720_30frames.vp9.webm"
+	crowd1080p  = "crowd-1920x1080_30frames.vp9.webm"
+	crowd2160p  = "crowd-3840x2160_30frames.vp9.webm"
+	static1080p = "static-1920x1080_30frames.vp9.webm"
 )
 
 func init() {
@@ -238,6 +239,12 @@ func init() {
 			ExtraAttr:         []string{"graphics_perbuild"},
 			ExtraData:         encode.TestData(crowd1080p),
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP8, "thread_safe_libva_backend"},
+		}, {
+			Name:              "vp8_1080p_static",
+			Val:               encode.MakeTestOptions(static1080p, videotype.VP8Prof),
+			ExtraAttr:         []string{"graphics_perbuild"},
+			ExtraData:         encode.TestData(static1080p),
+			ExtraSoftwareDeps: []string{caps.HWEncodeVP8},
 		}, {
 			Name:              "vp8_2160p",
 			Val:               encode.MakeTestOptions(crowd2160p, videotype.VP8Prof),

@@ -58,6 +58,7 @@ func ParseQualityPerfMetrics(metricsPath, scalabilityMode string, p *perf.Values
 	}
 	defer f.Close()
 	var metrics struct {
+		QPValues                  []float64
 		SSIMAverage               float64
 		PSNRAverage               float64
 		BitrateDeviation          float64
@@ -70,11 +71,23 @@ func ParseQualityPerfMetrics(metricsPath, scalabilityMode string, p *perf.Values
 	if scalabilityMode != "" {
 		scalabilityMode = "." + scalabilityMode
 	}
+
+	var last10Average float64
+	for i := 0; i < 10; i++ {
+		last10Average += metrics.QPValues[len(metrics.QPValues)-1-i]
+	}
+	last10Average /= 10
+
 	p.Set(perf.Metric{
 		Name:      "ssim" + scalabilityMode + ".average",
 		Unit:      "scalar",
 		Direction: perf.BiggerIsBetter,
 	}, metrics.SSIMAverage)
+	p.Set(perf.Metric{
+		Name:      "qp" + scalabilityMode + ".last10average",
+		Unit:      "scalar",
+		Direction: perf.SmallerIsBetter,
+	}, last10Average)
 	p.Set(perf.Metric{
 		Name:      "psnr" + scalabilityMode + ".average",
 		Unit:      "scalar",
