@@ -1,6 +1,0 @@
-{
-  "url": "gs://chromiumos-test-assets-public/tast/cros/firmware/futility_20230213",
-  "size": 8166752,
-  "sha256sum": "1bc9378756793314e99f149d7813ed4a9f01974886bb71a728bf630004042ce8",
-  "executable": true
-}

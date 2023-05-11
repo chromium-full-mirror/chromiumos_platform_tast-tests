@@ -11,6 +11,7 @@ import (
 	"chromiumos/tast/common/flashrom"
 	"chromiumos/tast/remote/dutfs"
 	"chromiumos/tast/remote/firmware/fingerprint"
+	"chromiumos/tast/remote/firmware/fingerprint/fixture"
 	"chromiumos/tast/remote/firmware/fingerprint/rpcdut"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -33,13 +34,7 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.Fingerprint()),
 		ServiceDeps:  []string{"tast.cros.platform.UpstartService", dutfs.ServiceName},
 		Vars:         []string{"servo"},
-		Data: []string{
-			fingerprint.Futility,
-			fingerprint.BloonchipperDevKey,
-			fingerprint.DartmonkeyDevKey,
-			fingerprint.NamiFPDevKey,
-			fingerprint.NocturneFPDevKey,
-		},
+		Fixture:      fixture.FingerprintImages,
 	})
 }
 
@@ -71,10 +66,7 @@ func FpRWNoUpdateRO(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, t.CleanupTime())
 	defer cancel()
 
-	testImages, err := fingerprint.GenerateTestFirmwareImages(ctx, d, s.DataPath(fingerprint.Futility), s.DataPath(fingerprint.DevKeyForFPBoard(t.FPBoard())), t.FPBoard(), t.FirmwareFile().FilePath, t.DUTTempDir())
-	if err != nil {
-		s.Fatal("Failed to generate test images: ", err)
-	}
+	testImages := s.FixtValue().(*fixture.ImagesTestData).TestImages
 
 	if err := fingerprint.CheckRunningFirmwareCopy(ctx, d.DUT(), fingerprint.ImageTypeRW); err != nil {
 		s.Fatal("Test expects RW firmware copy to be running")

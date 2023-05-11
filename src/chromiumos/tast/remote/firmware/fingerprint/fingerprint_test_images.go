@@ -25,26 +25,6 @@ import (
 )
 
 const (
-	// Futility is the futility executable name.
-	Futility = "futility"
-	// BloonchipperDevKey is the path to the dev key.
-	BloonchipperDevKey = "fingerprint_dev_keys/bloonchipper/dev_key.pem"
-	// DartmonkeyDevKey is the path to the dev key.
-	DartmonkeyDevKey = "fingerprint_dev_keys/dartmonkey/dev_key.pem"
-	// NamiFPDevKey is the path to the dev key.
-	NamiFPDevKey = "fingerprint_dev_keys/nami_fp/dev_key.pem"
-	// NocturneFPDevKey is the path to the dev key.
-	NocturneFPDevKey = "fingerprint_dev_keys/nocturne_fp/dev_key.pem"
-)
-
-var devKeyMap = map[fp.BoardName]string{
-	fp.BoardNameBloonchipper: BloonchipperDevKey,
-	fp.BoardNameDartmonkey:   DartmonkeyDevKey,
-	fp.BoardNameNami:         NamiFPDevKey,
-	fp.BoardNameNocturne:     NocturneFPDevKey,
-}
-
-const (
 	generatedImagesSubDirectory = "images"
 	versionStringLenBytes       = 32
 	rollbackSizeBytes           = 4
@@ -121,11 +101,6 @@ type firmwareImageGenerator struct {
 	origFirmwareFilePath string
 	rwVersion            *fmapSectionValue
 	roVersion            *fmapSectionValue
-}
-
-// DevKeyForFPBoard gets the dev key for the given fpBoard.
-func DevKeyForFPBoard(fpBoard fp.BoardName) string {
-	return devKeyMap[fpBoard]
 }
 
 func hostCommand(ctx context.Context, name string, arg ...string) *exec.Cmd {
