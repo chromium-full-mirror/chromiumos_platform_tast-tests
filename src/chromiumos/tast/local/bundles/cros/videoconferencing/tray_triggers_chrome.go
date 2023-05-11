@@ -47,6 +47,68 @@ func init() {
 		},
 		SoftwareDeps: []string{"chrome", "camera_feature_effects"},
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("betty")),
+		SearchFlags: []*testing.StringPair{
+			// Test coverage on Chrome apps.
+			{
+				// Trigger VC tray with Camera on Chrome apps.
+				Key:   "feature_id",
+				Value: "screenplay-eb95a7e3-db7d-4856-b12f-c72206223f6a",
+			},
+			{
+				// Trigger VC tray with Mic on Chrome apps.
+				Key:   "feature_id",
+				Value: "screenplay-9bee2da7-d1b3-4c75-ba10-b598d8c93b8e",
+			},
+			{
+				// Trigger VC tray with sharing screen on Chrome apps.
+				Key:   "feature_id",
+				Value: "screenplay-9423c5ea-5050-4828-96fa-52ba838449e1",
+			},
+			{
+				// Use VC tray to return to a Chrome app.
+				Key:   "feature_id",
+				Value: "screenplay-1be20f28-70a4-44c0-9124-81ad373b68a9",
+			},
+
+			// Test coverage on Lacros apps.
+			{
+				// Trigger VC tray with Camera on Lacros apps.
+				Key:   "feature_id",
+				Value: "screenplay-897ef5fb-a9c4-4ae5-85f2-f1f82bc396a0",
+			},
+			{
+				// Trigger VC tray with Mic on Lacros apps.
+				Key:   "feature_id",
+				Value: "screenplay-cac94449-3699-45a0-adff-98708f2da826",
+			},
+			{
+				// Trigger VC tray with sharing screen on Lacros apps.
+				Key:   "feature_id",
+				Value: "screenplay-09d4f0df-d171-40d5-9eab-486fa54710ab",
+			},
+			{
+				// Use VC tray to return to a Lacros app.
+				Key:   "feature_id",
+				Value: "screenplay-4a47131d-4a9f-450d-b256-f6796f0c26ef",
+			},
+
+			// Test coverage on Chrome apps in incognito mode.
+			{
+				// Trigger VC tray with Camera on Chrome Apps in incognito mode.
+				Key:   "feature_id",
+				Value: "screenplay-54e7cbef-5790-4678-9514-6ef3c0c10b94",
+			},
+			{
+				// Trigger VC tray with Mic on Chrome Apps in incognito mode.
+				Key:   "feature_id",
+				Value: "screenplay-97909041-2ae0-4e2b-b4bf-219042215bce",
+			},
+			{
+				// Use VC tray to return to a Chrome app in incognito mode.
+				Key:   "feature_id",
+				Value: "screenplay-9cdbd9c7-34b8-479d-a6d5-5d6b42092bc0",
+			},
+		},
 		Params: []testing.Param{
 			{
 				Name: "screen",

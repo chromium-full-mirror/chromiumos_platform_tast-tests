@@ -44,6 +44,23 @@ func init() {
 		},
 		SoftwareDeps: []string{"chrome", "camera_feature_effects"},
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("betty")),
+		SearchFlags: []*testing.StringPair{
+			{
+				// Enable background blur.
+				Key:   "feature_id",
+				Value: "screenplay-895a7022-c19e-42b9-ad7c-c3e4a0693210",
+			},
+			{
+				// Lighting improvement on visible person.
+				Key:   "feature_id",
+				Value: "screenplay-b36fac8e-b0d6-4ba4-9c1d-fa172326816d",
+			},
+			{
+				// Blur and lightning improvement.
+				Key:   "feature_id",
+				Value: "screenplay-1f125a69-4a47-4156-8cb5-97bc6244016b",
+			},
+		},
 		Params: []testing.Param{
 			{
 				Name:    "pwa",

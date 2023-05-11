@@ -41,6 +41,23 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("betty")),
 		Data:         []string{"ArcCameraTest.apk"},
 		Fixture:      fixture.GAIALoggedInARCWithInternalCameraAndEffectsEnabled,
+		SearchFlags: []*testing.StringPair{
+			{
+				// Trigger VC tray with Camera on ARC++ apps.
+				Key:   "feature_id",
+				Value: "screenplay-766f6f86-dfff-4725-89e7-a45c24592135",
+			},
+			{
+				// Trigger VC tray with Mic on ARC++ apps.
+				Key:   "feature_id",
+				Value: "screenplay-4a6a19bd-9555-43f9-ba9f-66adae46e406",
+			},
+			{
+				// Use VC tray to return to an ARC++ app.
+				Key:   "feature_id",
+				Value: "screenplay-eee4ab4b-b263-4c9c-8499-0266ae241a41",
+			},
+		},
 	})
 }
 

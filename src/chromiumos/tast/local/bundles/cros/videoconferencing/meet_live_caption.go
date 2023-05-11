@@ -50,6 +50,23 @@ func init() {
 		VarDeps: []string{
 			credsVarName,
 		},
+		SearchFlags: []*testing.StringPair{
+			{
+				// Live captions display on Meet.
+				Key:   "feature_id",
+				Value: "screenplay-6bddb622-b203-4c4f-9dec-47df1a280f21",
+			},
+			{
+				// Remove Live captions on Meet.
+				Key:   "feature_id",
+				Value: "screenplay-25b74f07-6422-4f4d-90e9-193ac21063d2",
+			},
+			{
+				// Retain Live captions on Meet.
+				Key:   "feature_id",
+				Value: "screenplay-447a9654-a25f-45b6-9b3d-bf95b9864d64",
+			},
+		},
 		Params: []testing.Param{
 			{
 				Name:    "pwa",
@@ -161,39 +178,46 @@ func MeetLiveCaption(ctx context.Context, s *testing.State) {
 
 	vcTray := vctray.New(ctx, tconn)
 
-	if err := vcTray.ChangeSettingsInPanel(vcTray.SetLiveCaption(true))(ctx); err != nil {
-		s.Fatal("Failed to turn on live caption: ", err)
-	}
-
-	// Wait until dlc libsoda and libsoda-model-en-us are installed.
-	if err := testing.Poll(ctx, a11y.VerifySodaInstalled, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
-		s.Fatal("Failed to wait for libsoda dlc to be installed: ", err)
-	}
-
+	ui := uiauto.New(tconn)
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "caption")
 
 	liveCaptionBubble := nodewith.ClassName("CaptionBubbleFrameView")
 	// Only the text in first row can be validated, as each row is a separate node.
 	liveCaptionContent := nodewith.Role(role.StaticText).Ancestor(liveCaptionBubble).First()
 
-	ui := uiauto.New(tconn)
-
 	// The expected caption content is from the bot audio input.
 	// The input file is hardcoded in bondClient.AddBots options.
 	expectedCaptionContain := "what color is cheese"
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		nodeInfo, err := ui.Info(ctx, liveCaptionContent)
-		if err != nil {
-			return err
+
+	turnOnLiveCaptionAndCheckBubble := func(checkDLC bool) {
+		if err := vcTray.ChangeSettingsInPanel(vcTray.SetLiveCaption(true))(ctx); err != nil {
+			s.Fatal("Failed to turn on live caption: ", err)
 		}
 
-		if !strings.Contains(strings.ToLower(nodeInfo.Name), expectedCaptionContain) {
-			return errors.Errorf("failed to validate caption content: expected contain %q, got %q", expectedCaptionContain, nodeInfo.Name)
+		if checkDLC {
+			// Wait until dlc libsoda and libsoda-model-en-us are installed.
+			if err := testing.Poll(ctx, a11y.VerifySodaInstalled, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
+				s.Fatal("Failed to wait for libsoda dlc to be installed: ", err)
+			}
 		}
-		return nil
-	}, &testing.PollOptions{Timeout: 60 * time.Second}); err != nil {
-		s.Fatal("Failed to validate live caption: ", err)
+
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			nodeInfo, err := ui.Info(ctx, liveCaptionContent)
+			if err != nil {
+				return err
+			}
+
+			if !strings.Contains(strings.ToLower(nodeInfo.Name), expectedCaptionContain) {
+				return errors.Errorf("failed to validate caption content: expected contain %q, got %q", expectedCaptionContain, nodeInfo.Name)
+			}
+			return nil
+		}, &testing.PollOptions{Timeout: 60 * time.Second}); err != nil {
+			s.Fatal("Failed to validate live caption: ", err)
+		}
 	}
+
+	// Check DLC mounted for the first time switch on.
+	turnOnLiveCaptionAndCheckBubble(true)
 
 	if err := vcTray.ChangeSettingsInPanel(vcTray.SetLiveCaption(false))(ctx); err != nil {
 		s.Fatal("Failed to turn off live caption: ", err)
@@ -203,4 +227,7 @@ func MeetLiveCaption(ctx context.Context, s *testing.State) {
 	if err := ui.WithTimeout(10 * time.Second).WaitUntilGone(liveCaptionBubble)(ctx); err != nil {
 		s.Fatal("Failed to wait for live caption disappear: ", err)
 	}
+
+	// Switch on live caption again.
+	turnOnLiveCaptionAndCheckBubble(false)
 }

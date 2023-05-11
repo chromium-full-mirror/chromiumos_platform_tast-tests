@@ -321,7 +321,10 @@ func (zm *Zoom) EndMeetingForAll(ctx context.Context) error {
 	// Only the host needs to end the meeting.
 	return uiauto.Combine("end meeting for all",
 		ui.DoDefaultUntil(endMenu, ui.WithTimeout(shortUITimeout).WaitUntilExists(endMeetingForAllButton)),
-		ui.DoDefaultUntil(endMeetingForAllButton, ui.WaitUntilGone(mainLayoutCanvas)),
+		ui.RetrySilently(3, uiauto.Combine("confirm and wait for canvas gone",
+			ui.DoDefault(endMeetingForAllButton),
+			ui.WaitUntilGone(mainLayoutCanvas),
+		)),
 	)(ctx)
 }
 

@@ -39,6 +39,23 @@ func init() {
 		},
 		SoftwareDeps: []string{"chrome", "camera_feature_effects"},
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("betty")),
+		SearchFlags: []*testing.StringPair{
+			{
+				// Blur retain.
+				Key:   "feature_id",
+				Value: "screenplay-ad05d869-0d1a-4340-832c-b08fece20bb3",
+			},
+			{
+				// Retain Blur and lighting improvement.
+				Key:   "feature_id",
+				Value: "screenplay-f6e8fc90-04dc-49eb-9051-00391c045fce",
+			},
+			{
+				// Retain relighting.
+				Key:   "feature_id",
+				Value: "screenplay-bff2442b-de76-422e-a45c-f077f0f6eca3",
+			},
+		},
 		Params: []testing.Param{
 			{
 				Fixture: fixture.LoggedInWithFakeHALAndEffectsEnabled,

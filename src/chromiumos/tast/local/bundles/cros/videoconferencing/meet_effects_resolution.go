@@ -43,6 +43,13 @@ func init() {
 		SoftwareDeps: []string{"chrome", "camera_feature_effects"},
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("betty")),
 		Vars:         screenshot.ScreenDiffVars,
+		SearchFlags: []*testing.StringPair{
+			{
+				// Resolution change for camera.
+				Key:   "feature_id",
+				Value: "screenplay-0a0d786d-a9ec-4d9b-a9ed-0578f464de43",
+			},
+		},
 		Params: []testing.Param{
 			// Note: 720p has already been covered in MeetEffects test as default value.
 			{

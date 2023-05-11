@@ -33,7 +33,7 @@ var (
 	panelSection = nodewith.HasClass("RootView").Role(role.Dialog).First().Ancestor(
 		nodewith.HasClass("SettingBubbleContainer").Role(role.Window).First(),
 	)
-	adjustLightingButton = nodewith.NameStartingWith("Toggle Adjust Lighting").Role(role.ToggleButton).Ancestor(panelSection)
+	adjustLightingButton = nodewith.NameStartingWith("Toggle Improve lighting").Role(role.ToggleButton).Ancestor(panelSection)
 	liveCaptionButton    = nodewith.NameStartingWith("Toggle Live Caption").Role(role.ToggleButton).Ancestor(panelSection)
 
 	bgBlurOffButton   = nodewith.NameContaining("Off").Role(role.Button).Ancestor(panelSection)

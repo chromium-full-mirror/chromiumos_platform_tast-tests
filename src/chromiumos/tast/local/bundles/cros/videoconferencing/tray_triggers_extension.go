@@ -38,6 +38,48 @@ func init() {
 		},
 		SoftwareDeps: []string{"chrome", "camera_feature_effects"},
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("betty")),
+		SearchFlags: []*testing.StringPair{
+			{
+				// Trigger VC tray with Camera on Chrome Extension.
+				Key:   "feature_id",
+				Value: "screenplay-a2a23547-4fab-4b65-a21a-a88daecd16aa",
+			},
+			{
+				// Trigger VC tray with Mic on Chrome Extension.
+				Key:   "feature_id",
+				Value: "screenplay-2864041b-956e-4583-901c-96881f63ab71",
+			},
+			{
+				// Trigger VC tray with sharing screen on Chrome Extension.
+				Key:   "feature_id",
+				Value: "screenplay-e2ae14f5-3dec-44de-aed4-b2975c62f17f",
+			},
+			{
+				// Use VC tray to return to an Chrome extension app.
+				Key:   "feature_id",
+				Value: "screenplay-82edd651-0483-49c3-b6bb-58af7acb5a75",
+			},
+			{
+				// Trigger VC tray with Camera on Lacros Extension.
+				Key:   "feature_id",
+				Value: "screenplay-dc04650a-6dc8-42cf-a75c-f107a80b231c",
+			},
+			{
+				// Trigger VC tray with Mic on Lacros Extension.
+				Key:   "feature_id",
+				Value: "screenplay-8547de4e-4932-4ac7-9570-d0e73d0b1118",
+			},
+			{
+				// Trigger VC tray with sharing screen on Lacros Extension.
+				Key:   "feature_id",
+				Value: "screenplay-201cb73e-9071-44e0-a251-188c3937a841",
+			},
+			{
+				// Use VC tray to return to an Lacros extension app.
+				Key:   "feature_id",
+				Value: "screenplay-09f693df-f573-4880-a4cf-707b6f78aa03",
+			},
+		},
 		Params: []testing.Param{
 			{
 				Fixture: fixture.GAIALoggedInWithFakeHALAndEffectsEnabled,

@@ -45,6 +45,18 @@ func init() {
 		BugComponent: "b:187682",
 		Timeout:      3 * time.Minute,
 		SoftwareDeps: []string{"chrome", "camera_feature_effects"},
+		SearchFlags: []*testing.StringPair{
+			{
+				// Mute Mic and speak more.
+				Key:   "feature_id",
+				Value: "screenplay-d03cca4a-3789-4003-bcfe-67e8595601fd",
+			},
+			{
+				// Notification timeframe reset by unmute Mic.
+				Key:   "feature_id",
+				Value: "screenplay-6d4f36ee-fac1-4112-8593-190e813bbd43",
+			},
+		},
 		Params: []testing.Param{
 			{
 				Name:    "web",

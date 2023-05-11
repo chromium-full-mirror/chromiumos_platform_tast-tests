@@ -41,6 +41,13 @@ func init() {
 		SoftwareDeps: []string{"chrome", "camera_feature_effects"},
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("betty")),
 		Fixture:      fixture.LoggedInWithFakeHALAndEffectsEnabled,
+		SearchFlags: []*testing.StringPair{
+			{
+				// VC features on virtual desktop.
+				Key:   "feature_id",
+				Value: "screenplay-9a4e65ac-ea29-4367-8053-a6683af49bf1",
+			},
+		},
 	})
 }
 
