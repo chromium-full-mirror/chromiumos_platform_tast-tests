@@ -348,6 +348,67 @@ func init() {
 				ExtraSoftwareDeps: []string{"v4l2_codec", "autotest-capability:hw_enc_h264_1080_30", "autotest-capability:hw_dec_h264_1080_30"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()),
 			},
+			{
+				Name: "av1_180_sw_to_vaapi",
+				Val: platformInteropParam{
+					filename:              "gipsrestat-320x180.vp9.webm",
+					size:                  coords.NewSize(320, 180),
+					fps:                   50,
+					encoderCommand:        "aomenc",
+					encoderCommandBuilder: platform.ArgsAomenc,
+					decoderCommand:        "/usr/local/libexec/chrome-binary-tests/decode_test",
+					decoderArgsBuilder:    platform.AV1DecodeVAAPIargs,
+					referenceSWDecoder:    genMD5AOM,
+				},
+				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
+				ExtraSoftwareDeps: []string{"vaapi", "autotest-capability:hw_dec_av1_1080_30"},
+			},
+			{
+				Name: "av1_180_sw_to_v4l2sl",
+				Val: platformInteropParam{
+					filename:              "gipsrestat-320x180.vp9.webm",
+					size:                  coords.NewSize(320, 180),
+					fps:                   50,
+					encoderCommand:        "aomenc",
+					encoderCommandBuilder: platform.ArgsAomenc,
+					decoderCommand:        "/usr/local/libexec/chrome-binary-tests/v4l2_stateless_decoder",
+					decoderArgsBuilder:    platform.V4L2StatelessDecodeArgs,
+					referenceSWDecoder:    genMD5AOM,
+				},
+				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_1080_30"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatelessVideoDecoding()),
+			},
+			{
+				Name: "av1_180_vaapi_to_sw",
+				Val: platformInteropParam{
+					filename:              "gipsrestat-320x180.vp9.webm",
+					size:                  coords.NewSize(320, 180),
+					fps:                   50,
+					encoderCommand:        "av1encode",
+					encoderCommandBuilder: platform.AV1ArgsVAAPI,
+					decoderCommand:        "dav1d",
+					decoderArgsBuilder:    platform.Dav1dDecodeArgs,
+					referenceSWDecoder:    nil,
+				},
+				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
+				ExtraSoftwareDeps: []string{"vaapi", "autotest-capability:hw_enc_av1_1080_30"},
+			},
+			{
+				Name: "av1_180_vaapi_to_vaapi",
+				Val: platformInteropParam{
+					filename:              "gipsrestat-320x180.vp9.webm",
+					size:                  coords.NewSize(320, 180),
+					fps:                   50,
+					encoderCommand:        "av1encode",
+					encoderCommandBuilder: platform.AV1ArgsVAAPI,
+					decoderCommand:        "/usr/local/libexec/chrome-binary-tests/decode_test",
+					decoderArgsBuilder:    platform.AV1DecodeVAAPIargs,
+					referenceSWDecoder:    genMD5AOM,
+				},
+				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
+				ExtraSoftwareDeps: []string{"vaapi", "autotest-capability:hw_enc_av1_1080_30", "autotest-capability:hw_dec_av1_1080_30"},
+			},
 		},
 	})
 }
@@ -393,7 +454,10 @@ func PlatformInterop(ctx context.Context, s *testing.State) {
 	defer os.Remove(md5LogPath)
 
 	decoderCommandArgs := testOpt.decoderArgsBuilder(ctx, encodedFile)
-	decoderCommandArgs = append(decoderCommandArgs, platform.MD5Arg(testOpt.decoderCommand, md5LogPath))
+	md5Arg := platform.MD5Arg(testOpt.decoderCommand, md5LogPath)
+	if md5Arg != "" {
+		decoderCommandArgs = append(decoderCommandArgs, md5Arg)
+	}
 	if err != nil {
 		s.Fatal("Failed to construct the decoder command line: ", err)
 	}
@@ -441,10 +505,18 @@ func PlatformInterop(ctx context.Context, s *testing.State) {
 	}
 }
 
+func genMD5AOM(file string) ([]string, error) {
+	return genMD5VPXInternal(file, "aomdec")
+}
+
 func genMD5VPX(file string) ([]string, error) {
+	return genMD5VPXInternal(file, "vpxdec")
+}
+
+func genMD5VPXInternal(file, decBinary string) ([]string, error) {
 	// -o option is necessary for libvpx to output each frame, and with --md5
 	// the md5 of each frame is output but a frame file is not created.
-	out, err := exec.Command("vpxdec", "-o", "output%w_%h_%4.yuv", "--i420", "--md5", file).Output()
+	out, err := exec.Command(decBinary, "-o", "output%w_%h_%4.yuv", "--i420", "--md5", file).Output()
 	if err != nil {
 		return []string{}, errors.Wrap(err, "failed executing vpxdec")
 	}

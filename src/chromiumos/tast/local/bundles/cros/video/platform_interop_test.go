@@ -50,18 +50,24 @@ func isMixedHardwareAPIs(encoder, decoder codecAPI) bool {
 func getEncoderBinaryAndParams(encoder codecAPI, codec string) (binary, paramGenerator string) {
 	switch encoder {
 	case software:
-		if codec == "vp8" || codec == "vp9" {
+		switch codec {
+		case "vp8", "vp9":
 			return "vpxenc", "platform.ArgsVpxenc"
-		} else if codec == "h264" {
+		case "h264":
 			return "openh264enc", "platform.ArgsOpenh264enc"
+		case "av1":
+			return "aomenc", "platform.ArgsAomenc"
 		}
 	case vaapi:
-		if codec == "vp8" {
+		switch codec {
+		case "vp8":
 			return "vp8enc", "platform.VP8ArgsVAAPI"
-		} else if codec == "vp9" {
+		case "vp9":
 			return "vp9enc", "platform.VP9ArgsVAAPI"
-		} else if codec == "h264" {
+		case "h264":
 			return "h264encode", "platform.H264ArgsVAAPI"
+		case "av1":
+			return "av1encode", "platform.AV1ArgsVAAPI"
 		}
 	case v4l2Stateful:
 		return "v4l2_stateful_encoder", "platform.ArgsV4L2"
@@ -75,18 +81,24 @@ const decodeTestBinary = "/usr/local/libexec/chrome-binary-tests/decode_test"
 func getDecoderBinaryAndParams(decoder codecAPI, codec string) (binary, paramGenerator string) {
 	switch decoder {
 	case software:
-		if codec == "vp8" || codec == "vp9" {
+		switch codec {
+		case "vp8", "vp9":
 			return "vpxdec", "platform.VPxDecodeArgs"
-		} else if codec == "h264" {
+		case "h264":
 			return "openh264dec", "platform.Openh264DecodeArgs"
+		case "av1":
+			return "dav1d", "platform.Dav1dDecodeArgs"
 		}
 	case vaapi:
-		if codec == "vp8" {
+		switch codec {
+		case "vp8":
 			return decodeTestBinary, "platform.VP8DecodeVAAPIargs"
-		} else if codec == "vp9" {
+		case "vp9":
 			return decodeTestBinary, "platform.VP9DecodeVAAPIargs"
-		} else if codec == "h264" {
+		case "h264":
 			return decodeTestBinary, "platform.H264DecodeVAAPIargs"
+		case "av1":
+			return decodeTestBinary, "platform.AV1DecodeVAAPIargs"
 		}
 	case v4l2Stateful:
 		return "v4l2_stateful_decoder", "platform.V4L2StatefulDecodeArgs"
@@ -100,10 +112,13 @@ func getReferenceSWDecoder(decoder codecAPI, codec string) string {
 	if isSoftwareAPI(decoder) {
 		return "nil"
 	}
-	if codec == "vp8" || codec == "vp9" {
+	switch codec {
+	case "vp8", "vp9":
 		return "genMD5VPX"
-	} else if codec == "h264" {
+	case "h264":
 		return "genMD5FFMPEG"
+	case "av1":
+		return "genMD5AOM"
 	}
 	return "nil"
 }
@@ -117,21 +132,27 @@ func getSoftwareDeps(codec string, encoder, decoder codecAPI) []string {
 		deps = append(deps, "v4l2_codec")
 	}
 	if isHardwareAPI(encoder) {
-		if codec == "vp8" {
+		switch codec {
+		case "vp8":
 			deps = append(deps, caps.HWEncodeVP8)
-		} else if codec == "vp9" {
+		case "vp9":
 			deps = append(deps, caps.HWEncodeVP9)
-		} else if codec == "h264" {
+		case "h264":
 			deps = append(deps, caps.HWEncodeH264)
+		case "av1":
+			deps = append(deps, caps.HWEncodeAV1)
 		}
 	}
 	if isHardwareAPI(decoder) {
-		if codec == "vp8" {
+		switch codec {
+		case "vp8":
 			deps = append(deps, caps.HWDecodeVP8)
-		} else if codec == "vp9" {
+		case "vp9":
 			deps = append(deps, caps.HWDecodeVP9)
-		} else if codec == "h264" {
+		case "h264":
 			deps = append(deps, caps.HWDecodeH264)
+		case "av1":
+			deps = append(deps, caps.HWDecodeAV1)
 		}
 	}
 	return deps
@@ -158,6 +179,18 @@ func capableDeviceExists(codec string, encoder, decoder codecAPI) bool {
 			return false
 		}
 	}
+	if codec == "av1" {
+		// It is V4L2 stateless API that is used for av1 hardware decoding on
+		// existing ChromeOS ARM devices.
+		if decoder == v4l2Stateful {
+			return false
+		}
+		// No ChromeOS device using V4L2 supports av1 hardware encoding.
+		if encoder == v4l2Stateful {
+			return false
+		}
+	}
+
 	return true
 }
 
@@ -191,7 +224,7 @@ func TestPlatformInteropParamParams(t *testing.T) {
 		Fps:    50,
 	}}
 
-	var codecs = []string{"vp8", "vp9", "h264"}
+	var codecs = []string{"vp8", "vp9", "h264", "av1"}
 	var encoders = []codecAPI{software, vaapi, v4l2Stateful}
 	var decoders = []codecAPI{software, vaapi, v4l2Stateful, v4l2Stateless}
 	for _, codec := range codecs {

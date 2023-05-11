@@ -139,3 +139,8 @@ func VPxDecodeArgs(ctx context.Context, filename string) []string {
 func Openh264DecodeArgs(ctx context.Context, filename string) []string {
 	return []string{filename, filename + ".yuv"}
 }
+
+// Dav1dDecodeArgs provides the argument to use with dav1d decoding binary exe.
+func Dav1dDecodeArgs(ctx context.Context, filename string) []string {
+	return []string{"-i", filename, "-o", filename + ".yuv"}
+}
