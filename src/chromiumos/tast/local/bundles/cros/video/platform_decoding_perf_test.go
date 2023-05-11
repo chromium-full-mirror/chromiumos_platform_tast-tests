@@ -20,13 +20,13 @@ import (
 
 func TestPlatformDecodingPerfParams(t *testing.T) {
 	type paramData struct {
-		Name         string
-		Decoder      string
-		CmdBuilder   string
-		File         string
-		SoftwareDeps []string
-		Metadata     []string
-		Attr         []string
+		Name               string
+		Decoder            string
+		DecoderArgsBuilder string
+		File               string
+		SoftwareDeps       []string
+		Metadata           []string
+		Attr               []string
 	}
 
 	var params []paramData
@@ -40,13 +40,13 @@ func TestPlatformDecodingPerfParams(t *testing.T) {
 			for _, frameRate := range frameRates {
 				dataPath := genDataPath(codec, resolution, frameRate)
 				param := paramData{
-					Name:         fmt.Sprintf("vaapi_%s_%sp_%sfps", codec, resolution, frameRate),
-					Decoder:      filepath.Join(chrome.BinTestDir, "decode_test"),
-					CmdBuilder:   fmt.Sprintf("platform.%sDecodeVAAPIargs", strings.ToUpper(codec)),
-					File:         dataPath,
-					SoftwareDeps: append(fillSwDeps(codec, resolution, frameRate), "vaapi"),
-					Metadata:     []string{dataPath},
-					Attr:         []string{fmt.Sprintf("graphics_video_%s", codec)},
+					Name:               fmt.Sprintf("vaapi_%s_%sp_%sfps", codec, resolution, frameRate),
+					Decoder:            filepath.Join(chrome.BinTestDir, "decode_test"),
+					DecoderArgsBuilder: fmt.Sprintf("platform.%sDecodeVAAPIargs", strings.ToUpper(codec)),
+					File:               dataPath,
+					SoftwareDeps:       append(fillSwDeps(codec, resolution, frameRate), "vaapi"),
+					Metadata:           []string{dataPath},
+					Attr:               []string{fmt.Sprintf("graphics_video_%s", codec)},
 				}
 
 				params = append(params, param)
@@ -59,7 +59,7 @@ func TestPlatformDecodingPerfParams(t *testing.T) {
 		Val:  platformDecodingPerfParams{
 			filename: {{ .File | fmt }},
 			decoder: {{ .Decoder | fmt }},
-			commandBuilder: {{ .CmdBuilder }},
+			decoderArgsBuilder: {{ .DecoderArgsBuilder }},
 		},
 		{{ if .SoftwareDeps }}
 		ExtraSoftwareDeps: {{ .SoftwareDeps | fmt }},

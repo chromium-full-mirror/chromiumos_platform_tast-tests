@@ -34,7 +34,7 @@ type platformInteropParam struct {
 	encoderCommand        string                          // The encoder to be used. This should be relative to /usr/local/bin.
 	encoderCommandBuilder platform.CommandBuilderEncodeFn // Function to create the encoder command line.
 	decoderCommand        string                          // Command line decoder binary
-	decoderArgsBuilder    platform.CommandBuilderDecodeFn // Function to create the decoder command line arguments.
+	decoderArgsBuilder    platform.DecoderArgsBuilderFn   // Function to create the decoder command line arguments.
 	referenceSWDecoder    referenceSWDecoderFn            // When specified, function to calculate the reference per-frame MD5SUM values.
 }
 
@@ -439,7 +439,7 @@ func PlatformInterop(ctx context.Context, s *testing.State) {
 	}
 	defer os.Remove(md5LogPath)
 
-	decoderCommandArgs := testOpt.decoderArgsBuilder(ctx, encodedFile, md5LogPath)
+	decoderCommandArgs := testOpt.decoderArgsBuilder(ctx, encodedFile)
 	decoderCommandArgs = append(decoderCommandArgs, platform.MD5Arg(testOpt.decoderCommand, md5LogPath))
 	if err != nil {
 		s.Fatal("Failed to construct the decoder command line: ", err)

@@ -32,9 +32,9 @@ const (
 )
 
 type platformDecodingPerfParams struct {
-	filename       string
-	decoder        string
-	commandBuilder platform.CommandBuilderDecodeFn
+	filename           string
+	decoder            string
+	decoderArgsBuilder platform.DecoderArgsBuilderFn
 }
 
 func init() {
@@ -53,9 +53,9 @@ func init() {
 			{
 				Name: "vaapi_av1_1080p_30fps",
 				Val: platformDecodingPerfParams{
-					filename:       "perf/av1/1080p_30fps_300frames.av1.ivf",
-					decoder:        "/usr/local/libexec/chrome-binary-tests/decode_test",
-					commandBuilder: platform.AV1DecodeVAAPIargs,
+					filename:           "perf/av1/1080p_30fps_300frames.av1.ivf",
+					decoder:            "/usr/local/libexec/chrome-binary-tests/decode_test",
+					decoderArgsBuilder: platform.AV1DecodeVAAPIargs,
 				},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_1080_30", "vaapi"},
 				ExtraData:         []string{"perf/av1/1080p_30fps_300frames.av1.ivf"},
@@ -64,9 +64,9 @@ func init() {
 			{
 				Name: "vaapi_av1_1080p_60fps",
 				Val: platformDecodingPerfParams{
-					filename:       "perf/av1/1080p_60fps_600frames.av1.ivf",
-					decoder:        "/usr/local/libexec/chrome-binary-tests/decode_test",
-					commandBuilder: platform.AV1DecodeVAAPIargs,
+					filename:           "perf/av1/1080p_60fps_600frames.av1.ivf",
+					decoder:            "/usr/local/libexec/chrome-binary-tests/decode_test",
+					decoderArgsBuilder: platform.AV1DecodeVAAPIargs,
 				},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_1080_60", "vaapi"},
 				ExtraData:         []string{"perf/av1/1080p_60fps_600frames.av1.ivf"},
@@ -75,9 +75,9 @@ func init() {
 			{
 				Name: "vaapi_av1_2160p_30fps",
 				Val: platformDecodingPerfParams{
-					filename:       "perf/av1/2160p_30fps_300frames.av1.ivf",
-					decoder:        "/usr/local/libexec/chrome-binary-tests/decode_test",
-					commandBuilder: platform.AV1DecodeVAAPIargs,
+					filename:           "perf/av1/2160p_30fps_300frames.av1.ivf",
+					decoder:            "/usr/local/libexec/chrome-binary-tests/decode_test",
+					decoderArgsBuilder: platform.AV1DecodeVAAPIargs,
 				},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_2160_30", "vaapi"},
 				ExtraData:         []string{"perf/av1/2160p_30fps_300frames.av1.ivf"},
@@ -86,9 +86,9 @@ func init() {
 			{
 				Name: "vaapi_av1_2160p_60fps",
 				Val: platformDecodingPerfParams{
-					filename:       "perf/av1/2160p_60fps_600frames.av1.ivf",
-					decoder:        "/usr/local/libexec/chrome-binary-tests/decode_test",
-					commandBuilder: platform.AV1DecodeVAAPIargs,
+					filename:           "perf/av1/2160p_60fps_600frames.av1.ivf",
+					decoder:            "/usr/local/libexec/chrome-binary-tests/decode_test",
+					decoderArgsBuilder: platform.AV1DecodeVAAPIargs,
 				},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_2160_60", "vaapi"},
 				ExtraData:         []string{"perf/av1/2160p_60fps_600frames.av1.ivf"},
@@ -97,9 +97,9 @@ func init() {
 			{
 				Name: "vaapi_h264_1080p_30fps",
 				Val: platformDecodingPerfParams{
-					filename:       "perf/h264/1080p_30fps_300frames.h264",
-					decoder:        "/usr/local/libexec/chrome-binary-tests/decode_test",
-					commandBuilder: platform.H264DecodeVAAPIargs,
+					filename:           "perf/h264/1080p_30fps_300frames.h264",
+					decoder:            "/usr/local/libexec/chrome-binary-tests/decode_test",
+					decoderArgsBuilder: platform.H264DecodeVAAPIargs,
 				},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_h264_1080_30", "proprietary_codecs", "vaapi"},
 				ExtraData:         []string{"perf/h264/1080p_30fps_300frames.h264"},
@@ -108,9 +108,9 @@ func init() {
 			{
 				Name: "vaapi_h264_1080p_60fps",
 				Val: platformDecodingPerfParams{
-					filename:       "perf/h264/1080p_60fps_600frames.h264",
-					decoder:        "/usr/local/libexec/chrome-binary-tests/decode_test",
-					commandBuilder: platform.H264DecodeVAAPIargs,
+					filename:           "perf/h264/1080p_60fps_600frames.h264",
+					decoder:            "/usr/local/libexec/chrome-binary-tests/decode_test",
+					decoderArgsBuilder: platform.H264DecodeVAAPIargs,
 				},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_h264_1080_60", "proprietary_codecs", "vaapi"},
 				ExtraData:         []string{"perf/h264/1080p_60fps_600frames.h264"},
@@ -119,9 +119,9 @@ func init() {
 			{
 				Name: "vaapi_h264_2160p_30fps",
 				Val: platformDecodingPerfParams{
-					filename:       "perf/h264/2160p_30fps_300frames.h264",
-					decoder:        "/usr/local/libexec/chrome-binary-tests/decode_test",
-					commandBuilder: platform.H264DecodeVAAPIargs,
+					filename:           "perf/h264/2160p_30fps_300frames.h264",
+					decoder:            "/usr/local/libexec/chrome-binary-tests/decode_test",
+					decoderArgsBuilder: platform.H264DecodeVAAPIargs,
 				},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_h264_2160_30", "proprietary_codecs", "vaapi"},
 				ExtraData:         []string{"perf/h264/2160p_30fps_300frames.h264"},
@@ -130,9 +130,9 @@ func init() {
 			{
 				Name: "vaapi_h264_2160p_60fps",
 				Val: platformDecodingPerfParams{
-					filename:       "perf/h264/2160p_60fps_600frames.h264",
-					decoder:        "/usr/local/libexec/chrome-binary-tests/decode_test",
-					commandBuilder: platform.H264DecodeVAAPIargs,
+					filename:           "perf/h264/2160p_60fps_600frames.h264",
+					decoder:            "/usr/local/libexec/chrome-binary-tests/decode_test",
+					decoderArgsBuilder: platform.H264DecodeVAAPIargs,
 				},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_h264_2160_60", "proprietary_codecs", "vaapi"},
 				ExtraData:         []string{"perf/h264/2160p_60fps_600frames.h264"},
@@ -141,9 +141,9 @@ func init() {
 			{
 				Name: "vaapi_hevc_1080p_30fps",
 				Val: platformDecodingPerfParams{
-					filename:       "perf/hevc/1080p_30fps_300frames.hevc",
-					decoder:        "/usr/local/libexec/chrome-binary-tests/decode_test",
-					commandBuilder: platform.HEVCDecodeVAAPIargs,
+					filename:           "perf/hevc/1080p_30fps_300frames.hevc",
+					decoder:            "/usr/local/libexec/chrome-binary-tests/decode_test",
+					decoderArgsBuilder: platform.HEVCDecodeVAAPIargs,
 				},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_hevc_1080_30", "proprietary_codecs", "vaapi"},
 				ExtraData:         []string{"perf/hevc/1080p_30fps_300frames.hevc"},
@@ -152,9 +152,9 @@ func init() {
 			{
 				Name: "vaapi_hevc_1080p_60fps",
 				Val: platformDecodingPerfParams{
-					filename:       "perf/hevc/1080p_60fps_600frames.hevc",
-					decoder:        "/usr/local/libexec/chrome-binary-tests/decode_test",
-					commandBuilder: platform.HEVCDecodeVAAPIargs,
+					filename:           "perf/hevc/1080p_60fps_600frames.hevc",
+					decoder:            "/usr/local/libexec/chrome-binary-tests/decode_test",
+					decoderArgsBuilder: platform.HEVCDecodeVAAPIargs,
 				},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_hevc_1080_60", "proprietary_codecs", "vaapi"},
 				ExtraData:         []string{"perf/hevc/1080p_60fps_600frames.hevc"},
@@ -163,9 +163,9 @@ func init() {
 			{
 				Name: "vaapi_hevc_2160p_30fps",
 				Val: platformDecodingPerfParams{
-					filename:       "perf/hevc/2160p_30fps_300frames.hevc",
-					decoder:        "/usr/local/libexec/chrome-binary-tests/decode_test",
-					commandBuilder: platform.HEVCDecodeVAAPIargs,
+					filename:           "perf/hevc/2160p_30fps_300frames.hevc",
+					decoder:            "/usr/local/libexec/chrome-binary-tests/decode_test",
+					decoderArgsBuilder: platform.HEVCDecodeVAAPIargs,
 				},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_hevc_2160_30", "proprietary_codecs", "vaapi"},
 				ExtraData:         []string{"perf/hevc/2160p_30fps_300frames.hevc"},
@@ -174,9 +174,9 @@ func init() {
 			{
 				Name: "vaapi_hevc_2160p_60fps",
 				Val: platformDecodingPerfParams{
-					filename:       "perf/hevc/2160p_60fps_600frames.hevc",
-					decoder:        "/usr/local/libexec/chrome-binary-tests/decode_test",
-					commandBuilder: platform.HEVCDecodeVAAPIargs,
+					filename:           "perf/hevc/2160p_60fps_600frames.hevc",
+					decoder:            "/usr/local/libexec/chrome-binary-tests/decode_test",
+					decoderArgsBuilder: platform.HEVCDecodeVAAPIargs,
 				},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_hevc_2160_60", "proprietary_codecs", "vaapi"},
 				ExtraData:         []string{"perf/hevc/2160p_60fps_600frames.hevc"},
@@ -185,9 +185,9 @@ func init() {
 			{
 				Name: "vaapi_vp8_1080p_30fps",
 				Val: platformDecodingPerfParams{
-					filename:       "perf/vp8/1080p_30fps_300frames.vp8.ivf",
-					decoder:        "/usr/local/libexec/chrome-binary-tests/decode_test",
-					commandBuilder: platform.VP8DecodeVAAPIargs,
+					filename:           "perf/vp8/1080p_30fps_300frames.vp8.ivf",
+					decoder:            "/usr/local/libexec/chrome-binary-tests/decode_test",
+					decoderArgsBuilder: platform.VP8DecodeVAAPIargs,
 				},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp8_1080_30", "vaapi"},
 				ExtraData:         []string{"perf/vp8/1080p_30fps_300frames.vp8.ivf"},
@@ -196,9 +196,9 @@ func init() {
 			{
 				Name: "vaapi_vp8_1080p_60fps",
 				Val: platformDecodingPerfParams{
-					filename:       "perf/vp8/1080p_60fps_600frames.vp8.ivf",
-					decoder:        "/usr/local/libexec/chrome-binary-tests/decode_test",
-					commandBuilder: platform.VP8DecodeVAAPIargs,
+					filename:           "perf/vp8/1080p_60fps_600frames.vp8.ivf",
+					decoder:            "/usr/local/libexec/chrome-binary-tests/decode_test",
+					decoderArgsBuilder: platform.VP8DecodeVAAPIargs,
 				},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp8_1080_60", "vaapi"},
 				ExtraData:         []string{"perf/vp8/1080p_60fps_600frames.vp8.ivf"},
@@ -207,9 +207,9 @@ func init() {
 			{
 				Name: "vaapi_vp8_2160p_30fps",
 				Val: platformDecodingPerfParams{
-					filename:       "perf/vp8/2160p_30fps_300frames.vp8.ivf",
-					decoder:        "/usr/local/libexec/chrome-binary-tests/decode_test",
-					commandBuilder: platform.VP8DecodeVAAPIargs,
+					filename:           "perf/vp8/2160p_30fps_300frames.vp8.ivf",
+					decoder:            "/usr/local/libexec/chrome-binary-tests/decode_test",
+					decoderArgsBuilder: platform.VP8DecodeVAAPIargs,
 				},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp8_2160_30", "vaapi"},
 				ExtraData:         []string{"perf/vp8/2160p_30fps_300frames.vp8.ivf"},
@@ -218,9 +218,9 @@ func init() {
 			{
 				Name: "vaapi_vp8_2160p_60fps",
 				Val: platformDecodingPerfParams{
-					filename:       "perf/vp8/2160p_60fps_600frames.vp8.ivf",
-					decoder:        "/usr/local/libexec/chrome-binary-tests/decode_test",
-					commandBuilder: platform.VP8DecodeVAAPIargs,
+					filename:           "perf/vp8/2160p_60fps_600frames.vp8.ivf",
+					decoder:            "/usr/local/libexec/chrome-binary-tests/decode_test",
+					decoderArgsBuilder: platform.VP8DecodeVAAPIargs,
 				},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp8_2160_60", "vaapi"},
 				ExtraData:         []string{"perf/vp8/2160p_60fps_600frames.vp8.ivf"},
@@ -229,9 +229,9 @@ func init() {
 			{
 				Name: "vaapi_vp9_1080p_30fps",
 				Val: platformDecodingPerfParams{
-					filename:       "perf/vp9/1080p_30fps_300frames.vp9.ivf",
-					decoder:        "/usr/local/libexec/chrome-binary-tests/decode_test",
-					commandBuilder: platform.VP9DecodeVAAPIargs,
+					filename:           "perf/vp9/1080p_30fps_300frames.vp9.ivf",
+					decoder:            "/usr/local/libexec/chrome-binary-tests/decode_test",
+					decoderArgsBuilder: platform.VP9DecodeVAAPIargs,
 				},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_1080_30", "vaapi"},
 				ExtraData:         []string{"perf/vp9/1080p_30fps_300frames.vp9.ivf"},
@@ -240,9 +240,9 @@ func init() {
 			{
 				Name: "vaapi_vp9_1080p_60fps",
 				Val: platformDecodingPerfParams{
-					filename:       "perf/vp9/1080p_60fps_600frames.vp9.ivf",
-					decoder:        "/usr/local/libexec/chrome-binary-tests/decode_test",
-					commandBuilder: platform.VP9DecodeVAAPIargs,
+					filename:           "perf/vp9/1080p_60fps_600frames.vp9.ivf",
+					decoder:            "/usr/local/libexec/chrome-binary-tests/decode_test",
+					decoderArgsBuilder: platform.VP9DecodeVAAPIargs,
 				},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_1080_60", "vaapi"},
 				ExtraData:         []string{"perf/vp9/1080p_60fps_600frames.vp9.ivf"},
@@ -251,9 +251,9 @@ func init() {
 			{
 				Name: "vaapi_vp9_2160p_30fps",
 				Val: platformDecodingPerfParams{
-					filename:       "perf/vp9/2160p_30fps_300frames.vp9.ivf",
-					decoder:        "/usr/local/libexec/chrome-binary-tests/decode_test",
-					commandBuilder: platform.VP9DecodeVAAPIargs,
+					filename:           "perf/vp9/2160p_30fps_300frames.vp9.ivf",
+					decoder:            "/usr/local/libexec/chrome-binary-tests/decode_test",
+					decoderArgsBuilder: platform.VP9DecodeVAAPIargs,
 				},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_2160_30", "vaapi"},
 				ExtraData:         []string{"perf/vp9/2160p_30fps_300frames.vp9.ivf"},
@@ -262,9 +262,9 @@ func init() {
 			{
 				Name: "vaapi_vp9_2160p_60fps",
 				Val: platformDecodingPerfParams{
-					filename:       "perf/vp9/2160p_60fps_600frames.vp9.ivf",
-					decoder:        "/usr/local/libexec/chrome-binary-tests/decode_test",
-					commandBuilder: platform.VP9DecodeVAAPIargs,
+					filename:           "perf/vp9/2160p_60fps_600frames.vp9.ivf",
+					decoder:            "/usr/local/libexec/chrome-binary-tests/decode_test",
+					decoderArgsBuilder: platform.VP9DecodeVAAPIargs,
 				},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_2160_60", "vaapi"},
 				ExtraData:         []string{"perf/vp9/2160p_60fps_600frames.vp9.ivf"},
@@ -354,7 +354,7 @@ func PlatformDecodingPerf(ctx context.Context, s *testing.State) {
 	testOpt := s.Param().(platformDecodingPerfParams)
 	filename := testOpt.filename
 	exec := testOpt.decoder
-	args := testOpt.commandBuilder(ctx, s.DataPath(filename), "")
+	args := testOpt.decoderArgsBuilder(ctx, s.DataPath(filename))
 	if err := measurePerformance(ctx, filename, exec, args, s.OutDir()); err != nil {
 		s.Fatal("Error collecting perf metrics: ", err)
 	}
