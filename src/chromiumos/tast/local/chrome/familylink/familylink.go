@@ -17,6 +17,7 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
+	"chromiumos/tast/local/chrome/lacros"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
@@ -24,6 +25,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/restriction"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/input"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -385,21 +387,56 @@ func VerifyUserSignedIntoBrowserAsChild(ctx context.Context, cr *chrome.Chrome, 
 	return nil
 }
 
-// NavigateExtensionApprovalFlow runs through flow to add extension up to the point of actually adding it, but does not add to avoid interfering with future runs of the test.
-func NavigateExtensionApprovalFlow(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, bt browser.Type, parentEmail, parentPassword string) error {
-	testing.ContextLog(ctx, "Adding extension as a supervised user")
-
-	// Reserve ten seconds for cleanup.
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
-
-	// Set up browser.
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, bt)
-	if err != nil {
-		return errors.Wrap(err, "failed to set up browser")
+func boolPref(ctx context.Context, tconn *chrome.TestConn, prefName string) (bool, error) {
+	var value struct {
+		Value bool `json:"value"`
 	}
-	defer closeBrowser(cleanupCtx)
+	if err := tconn.Call(ctx, &value, "tast.promisify(chrome.settingsPrivate.getPref)", prefName); err != nil {
+		return false, err
+	}
+	return value.Value, nil
+}
+
+func waitForBoolPrefValue(ctx context.Context, tconn *chrome.TestConn, prefName string, expectedValue bool, timeout time.Duration) error {
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		value, err := boolPref(ctx, tconn, prefName)
+		if err != nil {
+			return err
+		}
+		if value != expectedValue {
+			return errors.Errorf("%q is not the right value", prefName)
+		}
+		return nil
+	}, &testing.PollOptions{Interval: 10 * time.Millisecond, Timeout: timeout}); err != nil {
+		return err
+	}
+	return nil
+}
+
+// WaitForBoolPrefValueFromAshOrLacros waits for the specified pref value to load.
+func WaitForBoolPrefValueFromAshOrLacros(ctx context.Context, tconn *chrome.TestConn, bt browser.Type, prefName string, expectedValue bool, timeout time.Duration) error {
+	if bt == browser.TypeAsh {
+		return waitForBoolPrefValue(ctx, tconn, prefName, expectedValue, timeout)
+	}
+
+	// Launch Lacros so that we can sync the preference and poll its status.
+	l, err := lacros.Launch(ctx, tconn)
+	if err != nil {
+		return err
+	}
+	// Ensure we close Lacros before we return.
+	defer l.Close(ctx)
+
+	ltconn, err := l.TestAPIConn(ctx)
+	if err != nil {
+		return err
+	}
+	return waitForBoolPrefValue(ctx, ltconn, prefName, expectedValue, timeout)
+}
+
+// AddExtension attempts to add an extension from the Chrome Webstore.
+func AddExtension(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, br *browser.Browser) error {
+	testing.ContextLog(ctx, "Adding extension as a supervised user")
 
 	// Open webstore in browser.
 	const extensionID = "djflhoibgkdhkhhcedjiklpkjnoahfmg" // Google-developed extension from Chrome Store.
@@ -424,6 +461,13 @@ func NavigateExtensionApprovalFlow(ctx context.Context, cr *chrome.Chrome, tconn
 	if err := ui.LeftClick(addButton)(ctx); err != nil {
 		return errors.Wrap(err, "failed to click add extension")
 	}
+
+	return nil
+}
+
+// NavigateExtensionPermissionV1Dialog runs through the V1 extension approval flow to add an extension without actually adding it to avoid interfering with future runs of the test.
+func NavigateExtensionPermissionV1Dialog(ctx context.Context, tconn *chrome.TestConn, parentEmail, parentPassword string) error {
+	ui := uiauto.New(tconn).WithTimeout(time.Minute)
 
 	testing.ContextLog(ctx, "Clicking ask parent")
 	askParentButton := nodewith.Name("Ask a parent").Role(role.Button)
@@ -475,8 +519,8 @@ func NavigateExtensionApprovalFlow(ctx context.Context, cr *chrome.Chrome, tconn
 	return nil
 }
 
-// NavigateParentAccessDialog chooses the supplied parent account from the dropdown and authenticates by entering the password.
-func NavigateParentAccessDialog(ctx context.Context, tconn *chrome.TestConn, parentEmail, parentPassword string) error {
+// NavigateParentAccessDialogAuthentication chooses the supplied parent account from the dropdown and authenticates by entering the password.
+func NavigateParentAccessDialogAuthentication(ctx context.Context, tconn *chrome.TestConn, parentEmail, parentPassword string) error {
 	ui := uiauto.New(tconn).WithTimeout(shortUITimeout)
 
 	// Ensure the contents of the dialog have loaded.

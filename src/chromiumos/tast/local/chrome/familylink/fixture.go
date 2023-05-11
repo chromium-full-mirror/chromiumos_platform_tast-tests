@@ -16,6 +16,7 @@ import (
 	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/local/upstart"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -54,7 +55,8 @@ func init() {
 		Name:     "familyLinkUnicornLogin",
 		Desc:     "Supervised Family Link user login with Unicorn account",
 		Contacts: []string{"tobyhuang@chromium.org", "cros-families-eng+test@google.com"},
-		Impl:     NewFamilyLinkFixture("family.parentEmail", "family.parentPassword", "family.unicornEmail", "family.unicornPassword", true),
+		// TODO(b/282026286): Remove disabling V2 flag when V2 is fully launched.
+		Impl: NewFamilyLinkFixture("family.parentEmail", "family.parentPassword", "family.unicornEmail", "family.unicornPassword", true, chrome.DisableFeatures("LocalExtensionApprovalsV2")),
 		Vars: []string{
 			"family.parentEmail",
 			"family.parentPassword",
@@ -257,6 +259,25 @@ func init() {
 		Desc:     "Supervised Family Link user login with Unicorn account and local web approvals enabled",
 		Contacts: []string{"courtneywong@chromium.org", "cros-families-eng+test@google.com"},
 		Impl:     NewFamilyLinkFixture("family.parentEmail", "family.parentPassword", "family.unicornEmail", "family.unicornPassword", true, chrome.EnableFeatures("LocalWebApprovals", "WebFilterInterstitialRefresh")),
+		Vars: []string{
+			"family.parentEmail",
+			"family.parentPassword",
+			"family.unicornEmail",
+			"family.unicornPassword",
+		},
+		SetUpTimeout:    chrome.GAIALoginChildTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  resetTimeout,
+		PostTestTimeout: resetTimeout,
+	})
+
+	// TODO(b/282026286): Clean up this fixture when V2 is fully launched.
+	testing.AddFixture(&testing.Fixture{
+		Name:     "familyLinkUnicornLoginWithExtensionApprovalsV2",
+		Desc:     "Supervised Family Link user login with Unicorn account and local extension approvals V2 enabled",
+		Contacts: []string{"courtneywong@chromium.org", "cros-families-eng+test@google.com"},
+		Impl:     NewFamilyLinkFixture("family.parentEmail", "family.parentPassword", "family.unicornEmail", "family.unicornPassword", true, chrome.EnableFeatures("LocalExtensionApprovalsV2")),
 		Vars: []string{
 			"family.parentEmail",
 			"family.parentPassword",

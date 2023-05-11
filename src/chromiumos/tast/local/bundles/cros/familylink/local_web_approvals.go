@@ -15,6 +15,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
+
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -44,7 +45,7 @@ func LocalWebApprovals(ctx context.Context, s *testing.State) {
 
 	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
 
-	// TODO(b/254891227): Remove this when chrome.New() doesn't have a race condition.
+	// GoBigSleepLint TODO(b/254891227): Remove this when chrome.New() doesn't have a race condition.
 	testing.Sleep(ctx, 5*time.Second)
 
 	matureSite := s.RequiredVar("unicorn.matureSite")
@@ -69,7 +70,7 @@ func LocalWebApprovals(ctx context.Context, s *testing.State) {
 
 	parentEmail := s.RequiredVar("family.parentEmail")
 	parentPassword := s.RequiredVar("family.parentPassword")
-	if err := familylink.NavigateParentAccessDialog(ctx, tconn, parentEmail, parentPassword); err != nil {
+	if err := familylink.NavigateParentAccessDialogAuthentication(ctx, tconn, parentEmail, parentPassword); err != nil {
 		s.Fatal("Failed to navigate parent access widget: ", err)
 	}
 
