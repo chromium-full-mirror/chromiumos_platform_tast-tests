@@ -6,7 +6,6 @@ package platform
 
 import (
 	"context"
-	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -41,12 +40,12 @@ func init() {
 func PerfettoBatteryDataSource(ctx context.Context, s *testing.State) {
 	// Start a trace session using the perfetto command line tool.
 	traceConfigPath := s.DataPath(batteryTraceConfigFile)
-	traceDataPath := filepath.Join(s.OutDir(), "perfetto-trace.pb")
-	sess, err := tracing.StartSessionAndWaitUntilDone(ctx, traceConfigPath, tracing.WithTraceDataPath(traceDataPath), tracing.WithCompression())
+	sess, err := tracing.StartSessionAndWaitUntilDone(ctx, traceConfigPath)
 	if err != nil {
 		s.Fatal("Failed to start tracing: ", err)
 	}
-	defer sess.Finalize(ctx)
+	// The temporary file of trace data is no longer needed when returned.
+	defer sess.RemoveTraceResultFile()
 
 	// Process the trace data with the SQL query and get [][]string as the result.
 	// See the content of batteryTraceQueryFile for details.
