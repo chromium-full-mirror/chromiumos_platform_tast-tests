@@ -213,7 +213,13 @@ func launchNewMeeting(ctx context.Context, conn *chrome.Conn, tconn *chrome.Test
 			}
 			return err
 		}
-		return nil
+
+		// Joining meeting can take a while, it sometimes hangs on `Joining Meeting...` screen.
+		joiningMeetingFinder := nodewith.Name("Joining Meeting...").Role(role.StaticText).First()
+		return uiauto.IfSuccessThen(
+			ui.WithTimeout(5*time.Second).WaitUntilExists(joiningMeetingFinder),
+			ui.WithTimeout(mediumUITimeout).WaitUntilGone(joiningMeetingFinder),
+		)(ctx)
 	})(ctx)
 }
 
