@@ -245,6 +245,10 @@ func validateConnectedDevices(ctx context.Context, got []deviceInfo) error {
 	expected := make([]deviceInfo, 0)
 	for _, device := range devices {
 		if connected, err := device.Connected(ctx); err != nil {
+			// Handle unreleased device objects after stopping discovery.
+			if dbusutil.IsDBusError(err, dbusutil.DBusErrorUnknownObject) {
+				continue
+			}
 			return errors.Wrap(err, "failed to get device connected status")
 		} else if !connected {
 			continue
