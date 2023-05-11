@@ -66,6 +66,9 @@ func MgsManualTicketAccessWebsite(ctx context.Context, s *testing.State) {
 		mgs.AddPublicAccountPolicies(mgs.MgsAccountID, []policy.Policy{&policy.KerberosEnabled{Val: true},
 			&policy.AuthServerAllowlist{Val: config.ServerAllowlist}}),
 	)
+	if err != nil {
+		s.Fatal("MGS login failed: ", err)
+	}
 
 	defer func(ctx context.Context) {
 		// Use mgs as a reference to close the last started MGS instance.
