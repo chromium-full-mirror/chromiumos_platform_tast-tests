@@ -50,9 +50,11 @@ func init() {
 					{
 						PrintableName: "open_2_4G",
 						TetheringOpts: []tethering.Option{tethering.Band(tethering.Band2p4g), tethering.NoUplink(true)},
+						UseWpaCliAPI:  true,
 					}, {
 						PrintableName: "open_5G",
 						TetheringOpts: []tethering.Option{tethering.Band(tethering.Band5g), tethering.NoUplink(true)},
+						UseWpaCliAPI:  true,
 					},
 					// WPA2 encryption in low band and high band.
 					{

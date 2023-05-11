@@ -63,6 +63,7 @@ type SAPOnOffStressTestcase struct {
 	PrintableName string
 	TetheringOpts []tethering.Option
 	SecConfFac    security.ConfigFactory
+	UseWpaCliAPI  bool // Use wpa_cli API to setup tethering.
 }
 
 func (ri ResourceInfo) keysSorted() []string {
@@ -251,6 +252,7 @@ func SAPOnOffStressTest(ctx context.Context, s *testing.State, tf *wificell.Test
 	rounds int, thresholds ResourceThreshold, processes string, pv *perf.Values) error {
 	options := tc.TetheringOpts
 	fac := tc.SecConfFac
+	tf.UseWpaCliAPI(tc.UseWpaCliAPI)
 	resInfo, err := GetResourceInfo(ctx, tf.DUT(wificell.DefaultDUT).Conn(), processes)
 	if err != nil {
 		return errors.Wrap(err, "failed to get resource info")

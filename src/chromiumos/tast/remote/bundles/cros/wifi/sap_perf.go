@@ -30,6 +30,8 @@ type sapPerfTestcase struct {
 	tetheringOpts []tethering.Option
 	// Security facility (nil for Open mode).
 	secConfFac security.ConfigFactory
+	// Use wpa_cli API to setup tethering.
+	useWpaCliAPI bool
 	// TCP vs UDP.
 	protocol iperf.Protocol
 	// Reverse direction (AP=>STA).
@@ -69,12 +71,14 @@ func init() {
 				Val: []sapPerfTestcase{{
 					printableName: "open_2_4",
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band2p4g), tethering.NoUplink(true)},
+					useWpaCliAPI:  true,
 					protocol:      iperf.ProtocolTCP,
 					opts:          []iperf.ConfigOption{},
 					minThroughput: 95 * iperf.Mbps,
 				}, {
 					printableName: "open_5",
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band5g), tethering.NoUplink(true)},
+					useWpaCliAPI:  true,
 					protocol:      iperf.ProtocolTCP,
 					opts:          []iperf.ConfigOption{},
 					// TODO(b/269164431): adjust per channel BW and MCS.
@@ -107,6 +111,7 @@ func init() {
 				Val: []sapPerfTestcase{{
 					printableName: "open2_4",
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band2p4g), tethering.NoUplink(true)},
+					useWpaCliAPI:  true,
 					protocol:      iperf.ProtocolTCP,
 					reverse:       true,
 					opts:          []iperf.ConfigOption{},
@@ -114,6 +119,7 @@ func init() {
 				}, {
 					printableName: "open_5",
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band5g), tethering.NoUplink(true)},
+					useWpaCliAPI:  true,
 					protocol:      iperf.ProtocolTCP,
 					reverse:       true,
 					opts:          []iperf.ConfigOption{},
@@ -148,6 +154,7 @@ func init() {
 				Val: []sapPerfTestcase{{
 					printableName: "open2_4",
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band2p4g), tethering.NoUplink(true)},
+					useWpaCliAPI:  true,
 					protocol:      iperf.ProtocolUDP,
 					opts:          []iperf.ConfigOption{},
 					minThroughput: 100 * iperf.Mbps,
@@ -155,6 +162,7 @@ func init() {
 				}, {
 					printableName: "open5",
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band5g), tethering.NoUplink(true)},
+					useWpaCliAPI:  true,
 					protocol:      iperf.ProtocolUDP,
 					opts:          []iperf.ConfigOption{},
 					minThroughput: 125 * iperf.Mbps,
@@ -189,6 +197,7 @@ func init() {
 				Val: []sapPerfTestcase{{
 					printableName: "open2_4",
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band2p4g), tethering.NoUplink(true)},
+					useWpaCliAPI:  true,
 					protocol:      iperf.ProtocolUDP,
 					reverse:       true,
 					opts:          []iperf.ConfigOption{},
@@ -197,6 +206,7 @@ func init() {
 				}, {
 					printableName: "open5",
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band5g), tethering.NoUplink(true)},
+					useWpaCliAPI:  true,
 					protocol:      iperf.ProtocolUDP,
 					reverse:       true,
 					opts:          []iperf.ConfigOption{},
@@ -234,6 +244,7 @@ func init() {
 				Val: []sapPerfTestcase{{
 					printableName: "open2_4",
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band2p4g), tethering.NoUplink(true)},
+					useWpaCliAPI:  true,
 					protocol:      iperf.ProtocolUDP,
 					opts:          []iperf.ConfigOption{iperf.DatagramLengthOption(112 * iperf.B)},
 					minThroughput: 40 * iperf.Mbps,
@@ -241,6 +252,7 @@ func init() {
 				}, {
 					printableName: "open5",
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band5g), tethering.NoUplink(true)},
+					useWpaCliAPI:  true,
 					protocol:      iperf.ProtocolUDP,
 					opts:          []iperf.ConfigOption{iperf.DatagramLengthOption(112 * iperf.B)},
 					minThroughput: 65 * iperf.Mbps,
@@ -275,6 +287,7 @@ func init() {
 				Val: []sapPerfTestcase{{
 					printableName: "open2_4",
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band2p4g), tethering.NoUplink(true)},
+					useWpaCliAPI:  true,
 					protocol:      iperf.ProtocolUDP,
 					reverse:       true,
 					opts:          []iperf.ConfigOption{iperf.DatagramLengthOption(112 * iperf.B)},
@@ -283,6 +296,7 @@ func init() {
 				}, {
 					printableName: "open5",
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band5g), tethering.NoUplink(true)},
+					useWpaCliAPI:  true,
 					protocol:      iperf.ProtocolUDP,
 					reverse:       true,
 					opts:          []iperf.ConfigOption{iperf.DatagramLengthOption(112 * iperf.B)},
@@ -345,6 +359,7 @@ func SAPPerf(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	testOnce := func(ctx context.Context, s *testing.State, tc sapPerfTestcase) {
+		tf.UseWpaCliAPI(tc.useWpaCliAPI)
 		tetheringConf, _, err := tf.StartTethering(ctx, wificell.DefaultDUT, tc.tetheringOpts, tc.secConfFac)
 		if err != nil {
 			s.Fatal("Failed to start tethering session on DUT, err: ", err)

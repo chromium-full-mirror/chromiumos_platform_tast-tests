@@ -72,7 +72,6 @@ func init() {
 					secConfFac: wpa.NewConfigFactory(
 						"chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP),
 					),
-					useWpaCliAPI: true,
 				}},
 			},
 			{
@@ -91,7 +90,6 @@ func init() {
 					secConfFac: wpa.NewConfigFactory(
 						"chromeos", wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP),
 					),
-					useWpaCliAPI: true,
 				}},
 			},
 			{
@@ -110,7 +108,6 @@ func init() {
 					secConfFac: wpa.NewConfigFactory(
 						"chromeos", wpa.Mode(wpa.ModeMixedWPA3), wpa.Ciphers2(wpa.CipherCCMP),
 					),
-					useWpaCliAPI: true,
 				}},
 			},
 		},

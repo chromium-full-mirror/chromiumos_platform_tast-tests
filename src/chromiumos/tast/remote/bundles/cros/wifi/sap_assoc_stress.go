@@ -23,6 +23,7 @@ type sapAssocStressTestcase struct {
 	printableName string
 	tetheringOpts []tethering.Option
 	secConfFac    security.ConfigFactory
+	useWpaCliAPI  bool // Use wpa_cli API to setup tethering.
 }
 
 // sapAssocRounds can be changed to manually extend the test for measurements in a longer period.
@@ -56,9 +57,11 @@ func init() {
 					{
 						printableName: "open_2_4G",
 						tetheringOpts: []tethering.Option{tethering.Band(tethering.Band2p4g), tethering.NoUplink(true)},
+						useWpaCliAPI:  true,
 					}, {
 						printableName: "open_5G",
 						tetheringOpts: []tethering.Option{tethering.Band(tethering.Band5g), tethering.NoUplink(true)},
+						useWpaCliAPI:  true,
 					},
 					// WPA2 encryption in low band and high band.
 					{
@@ -140,6 +143,7 @@ func SAPAssocStress(ctx context.Context, s *testing.State) {
 	}
 
 	testOnce := func(ctx context.Context, s *testing.State, tc sapAssocStressTestcase) {
+		tf.UseWpaCliAPI(tc.useWpaCliAPI)
 		tetheringConf, _, err := tf.StartTethering(ctx, wificell.DefaultDUT, tc.tetheringOpts, tc.secConfFac)
 		if err != nil {
 			s.Fatal("Failed to start tethering session on DUT, err: ", err)

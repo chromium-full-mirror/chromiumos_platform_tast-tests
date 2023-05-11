@@ -51,6 +51,7 @@ import (
 	"chromiumos/tast/remote/wificell/tethering"
 	"chromiumos/tast/services/cros/bluetooth"
 	"chromiumos/tast/services/cros/wifi"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
@@ -2228,6 +2229,21 @@ func (tf *TestFixture) StartTethering(ctx context.Context, dutIdx DutIdx, ops []
 	resp, err := tf.duts[dutIdx].wifiClient.StartTethering(ctx, request)
 	if err != nil {
 		return nil, nil, errors.Wrapf(err, "client failed to start tethering session with SSID %q", c.SSID)
+	}
+	defer func(ctx context.Context) {
+		if retErr != nil {
+			tf.StopTethering(ctx, dutIdx)
+		}
+	}(ctx)
+	// The assumption is, that we don't need to return the new context as that would
+	// be relevant only in case of error further in this function only
+	// (precisely: in StartCapture()), so it won't be used anyway.
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	if (c.Band == tethering.Band5g && resp.Channel <= 14) ||
+		(c.Band == tethering.Band2p4g && resp.Channel > 14) {
+		return nil, nil, errors.Errorf("AP Chanel/band mismatch, got %v, wanted band %s", resp.Channel, c.Band.String())
 	}
 
 	testing.ContextLogf(ctx, "Tethering started on channel %v, width: %v", resp.Channel, resp.ChannelWidth)
