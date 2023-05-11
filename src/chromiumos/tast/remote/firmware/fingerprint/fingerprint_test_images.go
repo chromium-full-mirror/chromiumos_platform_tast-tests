@@ -7,8 +7,6 @@ package fingerprint
 import (
 	"context"
 	"encoding/binary"
-	"io/ioutil"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
@@ -20,7 +18,6 @@ import (
 	"chromiumos/tast/remote/dutfs"
 	"chromiumos/tast/remote/firmware/fingerprint/rpcdut"
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
 )
@@ -142,28 +139,18 @@ func fmapSectionInfo(ctx context.Context, futilityInstance *futility.Instance, f
 	return sectionsInfo, nil
 }
 
-func readFileAtOffset(fileName string, data []byte, offset int64) error {
-	f, err := os.OpenFile(fileName, os.O_RDONLY, 0644)
+func readFileAtOffset(ctx context.Context, d *rpcdut.RPCDUT, fileName string, data []byte, offset int64) error {
+	out, err := dutfs.NewClient(d.RPC().Conn).ReadFileAtOffset(ctx, fileName, offset, int64(len(data)))
 	if err != nil {
-		return errors.Wrapf(err, "failed to open file: %q", fileName)
-	}
-	defer f.Close()
-
-	if _, err := f.ReadAt(data, offset); err != nil {
 		return errors.Wrapf(err, "failed to read from offset: %v", offset)
 	}
 
+	data = out
 	return nil
 }
 
-func writeFileAtOffset(fileName string, data []byte, offset int64) error {
-	f, err := os.OpenFile(fileName, os.O_RDWR, 0644)
-	if err != nil {
-		return errors.Wrapf(err, "failed to open file: %q", fileName)
-	}
-	defer f.Close()
-
-	if _, err := f.WriteAt(data, offset); err != nil {
+func writeFileAtOffset(ctx context.Context, d *rpcdut.RPCDUT, fileName string, data []byte, offset int64) error {
+	if err := dutfs.NewClient(d.RPC().Conn).WriteFileAtOffset(ctx, fileName, data, offset); err != nil {
 		return errors.Wrapf(err, "failed to write data: %v to offset: %v", data, offset)
 	}
 
@@ -186,13 +173,13 @@ func createVersionStringWithSuffix(suffix string, version []byte) ([]byte, error
 	return newVersion, nil
 }
 
-func addSuffixToVersionString(filePath, suffix string, version *fmapSectionValue) error {
+func addSuffixToVersionString(ctx context.Context, d *rpcdut.RPCDUT, filePath, suffix string, version *fmapSectionValue) error {
 	newVersion, err := createVersionStringWithSuffix(suffix, version.Bytes)
 	if err != nil {
 		return errors.Wrap(err, "failed to modify version string")
 	}
 
-	if err := writeFileAtOffset(filePath, newVersion, int64(version.Section.Offset)); err != nil {
+	if err := writeFileAtOffset(ctx, d, filePath, newVersion, int64(version.Section.Offset)); err != nil {
 		return errors.Wrap(err, "failed to update RO version string")
 	}
 
@@ -205,14 +192,14 @@ func createRollbackBytes(newRollbackValue uint32) []byte {
 	return rollbackBytes
 }
 
-func modifyFirmwareFileRollbackValue(firmwareFilePath string, newRollbackValue uint32, rollback *fmapSectionValue) error {
+func modifyFirmwareFileRollbackValue(ctx context.Context, d *rpcdut.RPCDUT, firmwareFilePath string, newRollbackValue uint32, rollback *fmapSectionValue) error {
 	if rollback.Section.Size != rollbackSizeBytes {
 		return errors.Errorf("incorrect version size, actual: %v, expected: %v", rollback.Section.Size, rollbackSizeBytes)
 	}
 
 	rollbackBytes := createRollbackBytes(newRollbackValue)
 
-	if err := writeFileAtOffset(firmwareFilePath, rollbackBytes, int64(rollback.Section.Offset)); err != nil {
+	if err := writeFileAtOffset(ctx, d, firmwareFilePath, rollbackBytes, int64(rollback.Section.Offset)); err != nil {
 		return errors.Wrap(err, "failed to update rollback")
 	}
 
@@ -228,18 +215,18 @@ func newFirmwareImageGenerator(devKeyPair *keyPair, origFirmwareFilePath string,
 	}
 }
 
-func (f *firmwareImageGenerator) DevSignedImage(ctx context.Context, futilityInstance *futility.Instance) (string, error) {
+func (f *firmwareImageGenerator) DevSignedImage(ctx context.Context, d *rpcdut.RPCDUT, futilityInstance *futility.Instance) (string, error) {
 	devFilePath := strings.TrimSuffix(f.origFirmwareFilePath, filepath.Ext(f.origFirmwareFilePath)) + ".dev"
 
-	if err := fsutil.CopyFile(f.origFirmwareFilePath, devFilePath); err != nil {
+	if err := dutfs.NewClient(d.RPC().Conn).CopyFile(ctx, f.origFirmwareFilePath, devFilePath); err != nil {
 		return "", errors.Wrap(err, "failed to copy file")
 	}
 
-	if err := addSuffixToVersionString(devFilePath, ".dev", f.roVersion); err != nil {
+	if err := addSuffixToVersionString(ctx, d, devFilePath, ".dev", f.roVersion); err != nil {
 		return "", errors.Wrap(err, "failed to modify RO version string")
 	}
 
-	if err := addSuffixToVersionString(devFilePath, ".dev", f.rwVersion); err != nil {
+	if err := addSuffixToVersionString(ctx, d, devFilePath, ".dev", f.rwVersion); err != nil {
 		return "", errors.Wrap(err, "failed to modify RW version string")
 	}
 
@@ -251,24 +238,24 @@ func (f *firmwareImageGenerator) DevSignedImage(ctx context.Context, futilityIns
 	return devFilePath, nil
 }
 
-func (f *firmwareImageGenerator) Rollback(ctx context.Context, futilityInstance *futility.Instance, rollback *fmapSectionValue, newRollbackValue uint32) (string, error) {
+func (f *firmwareImageGenerator) Rollback(ctx context.Context, d *rpcdut.RPCDUT, futilityInstance *futility.Instance, rollback *fmapSectionValue, newRollbackValue uint32) (string, error) {
 	versionSuffix := ".rb" + strconv.FormatUint(uint64(newRollbackValue), 10)
 	ext := ".dev" + versionSuffix
 	rollbackFilePath := strings.TrimSuffix(f.origFirmwareFilePath, filepath.Ext(f.origFirmwareFilePath)) + ext
 
-	if err := fsutil.CopyFile(f.origFirmwareFilePath, rollbackFilePath); err != nil {
+	if err := dutfs.NewClient(d.RPC().Conn).CopyFile(ctx, f.origFirmwareFilePath, rollbackFilePath); err != nil {
 		return "", errors.Wrap(err, "failed to copy file")
 	}
 
-	if err := addSuffixToVersionString(rollbackFilePath, ".dev", f.roVersion); err != nil {
+	if err := addSuffixToVersionString(ctx, d, rollbackFilePath, ".dev", f.roVersion); err != nil {
 		return "", errors.Wrap(err, "failed to modify RO version string")
 	}
 
-	if err := addSuffixToVersionString(rollbackFilePath, versionSuffix, f.rwVersion); err != nil {
+	if err := addSuffixToVersionString(ctx, d, rollbackFilePath, versionSuffix, f.rwVersion); err != nil {
 		return "", errors.Wrap(err, "failed to modify RW version string")
 	}
 
-	if err := modifyFirmwareFileRollbackValue(rollbackFilePath, newRollbackValue, rollback); err != nil {
+	if err := modifyFirmwareFileRollbackValue(ctx, d, rollbackFilePath, newRollbackValue, rollback); err != nil {
 		return "", errors.Wrap(err, "failed to modify rollback value")
 	}
 
@@ -280,10 +267,10 @@ func (f *firmwareImageGenerator) Rollback(ctx context.Context, futilityInstance 
 	return rollbackFilePath, nil
 }
 
-func (f *firmwareImageGenerator) CorruptFirstByte(ctx context.Context, futilityInstance *futility.Instance) (string, error) {
+func (f *firmwareImageGenerator) CorruptFirstByte(ctx context.Context, d *rpcdut.RPCDUT, futilityInstance *futility.Instance) (string, error) {
 	corruptFilePath := strings.TrimSuffix(f.origFirmwareFilePath, filepath.Ext(f.origFirmwareFilePath)) + "_corrupt_first_byte.bin"
 
-	if err := fsutil.CopyFile(f.origFirmwareFilePath, corruptFilePath); err != nil {
+	if err := dutfs.NewClient(d.RPC().Conn).CopyFile(ctx, f.origFirmwareFilePath, corruptFilePath); err != nil {
 		return "", errors.Wrap(err, "failed to copy file")
 	}
 
@@ -294,22 +281,22 @@ func (f *firmwareImageGenerator) CorruptFirstByte(ctx context.Context, futilityI
 	rwSection := sections[0]
 
 	byteToCorrupt := make([]byte, 1)
-	if err := readFileAtOffset(corruptFilePath, byteToCorrupt, int64(rwSection.Offset)+100); err != nil {
+	if err := readFileAtOffset(ctx, d, corruptFilePath, byteToCorrupt, int64(rwSection.Offset)+100); err != nil {
 		return "", errors.Wrap(err, "failed to read byte")
 	}
 
 	byteToCorrupt[0]++
-	if err := writeFileAtOffset(corruptFilePath, byteToCorrupt, int64(rwSection.Offset)+100); err != nil {
+	if err := writeFileAtOffset(ctx, d, corruptFilePath, byteToCorrupt, int64(rwSection.Offset)+100); err != nil {
 		return "", errors.Wrap(err, "failed to write corrupted byte")
 	}
 
 	return corruptFilePath, nil
 }
 
-func (f *firmwareImageGenerator) CorruptLastByte(ctx context.Context, futilityInstance *futility.Instance) (string, error) {
+func (f *firmwareImageGenerator) CorruptLastByte(ctx context.Context, d *rpcdut.RPCDUT, futilityInstance *futility.Instance) (string, error) {
 	corruptFilePath := strings.TrimSuffix(f.origFirmwareFilePath, filepath.Ext(f.origFirmwareFilePath)) + "_corrupt_last_byte.bin"
 
-	if err := fsutil.CopyFile(f.origFirmwareFilePath, corruptFilePath); err != nil {
+	if err := dutfs.NewClient(d.RPC().Conn).CopyFile(ctx, f.origFirmwareFilePath, corruptFilePath); err != nil {
 		return "", errors.Wrap(err, "failed to copy file")
 	}
 
@@ -320,19 +307,19 @@ func (f *firmwareImageGenerator) CorruptLastByte(ctx context.Context, futilityIn
 	rwSection := sections[0]
 
 	byteToCorrupt := make([]byte, 1)
-	if err := readFileAtOffset(corruptFilePath, byteToCorrupt, int64(rwSection.Offset)-100); err != nil {
+	if err := readFileAtOffset(ctx, d, corruptFilePath, byteToCorrupt, int64(rwSection.Offset)-100); err != nil {
 		return "", errors.Wrap(err, "failed to read byte")
 	}
 
 	byteToCorrupt[0]++
-	if err := writeFileAtOffset(corruptFilePath, byteToCorrupt, int64(rwSection.Offset)-100); err != nil {
+	if err := writeFileAtOffset(ctx, d, corruptFilePath, byteToCorrupt, int64(rwSection.Offset)-100); err != nil {
 		return "", errors.Wrap(err, "failed to write corrupted byte")
 	}
 
 	return corruptFilePath, nil
 }
 
-func readFMAPSections(ctx context.Context, futilityInstance *futility.Instance, firmwareFilePath string, sections []FMAPSection, sectionValues ...*fmapSectionValue) error {
+func readFMAPSections(ctx context.Context, d *rpcdut.RPCDUT, futilityInstance *futility.Instance, firmwareFilePath string, sections []FMAPSection, sectionValues ...*fmapSectionValue) error {
 	sectionInfoList, err := fmapSectionInfo(ctx, futilityInstance, firmwareFilePath, sections)
 	if err != nil {
 		return errors.Wrapf(err, "failed to get FMAP info for sections: %q", sections)
@@ -340,7 +327,7 @@ func readFMAPSections(ctx context.Context, futilityInstance *futility.Instance, 
 
 	for i, sectionInfo := range sectionInfoList {
 		sectionData := make([]byte, sectionInfo.Size)
-		if err := readFileAtOffset(firmwareFilePath, sectionData, int64(sectionInfo.Offset)); err != nil {
+		if err := readFileAtOffset(ctx, d, firmwareFilePath, sectionData, int64(sectionInfo.Offset)); err != nil {
 			return errors.Wrapf(err, "unable to read FMAP section: %q", sectionInfo.Name)
 		}
 
@@ -352,8 +339,8 @@ func readFMAPSections(ctx context.Context, futilityInstance *futility.Instance, 
 }
 
 // generateImages generates various test images from provided file using futility. Please note that the function works on host.
-func generateImages(ctx context.Context, keyFilePath, origFWFileCopy string, fpBoard fp.BoardName) (ret TestImages, retErr error) {
-	futilityInstance, err := futility.NewRemoteBuilder(0).Build()
+func generateImages(ctx context.Context, d *rpcdut.RPCDUT, keyFilePath, origFWFileCopy string, fpBoard fp.BoardName) (ret TestImages, retErr error) {
+	futilityInstance, err := futility.NewLocalBuilder(d.DUT()).Build()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get futility instance")
 	}
@@ -365,39 +352,39 @@ func generateImages(ctx context.Context, keyFilePath, origFWFileCopy string, fpB
 
 	var roVersion, rwVersion, rollback fmapSectionValue
 
-	err = readFMAPSections(ctx, futilityInstance, origFWFileCopy, []FMAPSection{ROFirmwareID, RWFirmwareID, RWRollbackVersion}, &roVersion, &rwVersion, &rollback)
+	err = readFMAPSections(ctx, d, futilityInstance, origFWFileCopy, []FMAPSection{ROFirmwareID, RWFirmwareID, RWRollbackVersion}, &roVersion, &rwVersion, &rollback)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read firmware info")
 	}
 
 	firmwareImageGenerator := newFirmwareImageGenerator(devKeyPair, origFWFileCopy, &roVersion, &rwVersion)
 
-	devFilePath, err := firmwareImageGenerator.DevSignedImage(ctx, futilityInstance)
+	devFilePath, err := firmwareImageGenerator.DevSignedImage(ctx, d, futilityInstance)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to generate dev signed image")
 	}
 
-	rollbackZeroFilePath, err := firmwareImageGenerator.Rollback(ctx, futilityInstance, &rollback, 0)
+	rollbackZeroFilePath, err := firmwareImageGenerator.Rollback(ctx, d, futilityInstance, &rollback, 0)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to generate image with modified rollback value 0")
 	}
 
-	rollbackOneFilePath, err := firmwareImageGenerator.Rollback(ctx, futilityInstance, &rollback, 1)
+	rollbackOneFilePath, err := firmwareImageGenerator.Rollback(ctx, d, futilityInstance, &rollback, 1)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to generate image with modified rollback value 1")
 	}
 
-	rollbackNineFilePath, err := firmwareImageGenerator.Rollback(ctx, futilityInstance, &rollback, 9)
+	rollbackNineFilePath, err := firmwareImageGenerator.Rollback(ctx, d, futilityInstance, &rollback, 9)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to generate image with modified rollback value 9")
 	}
 
-	corruptFirstBytePath, err := firmwareImageGenerator.CorruptFirstByte(ctx, futilityInstance)
+	corruptFirstBytePath, err := firmwareImageGenerator.CorruptFirstByte(ctx, d, futilityInstance)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to generate image with corrupt first byte")
 	}
 
-	corruptLastBytePath, err := firmwareImageGenerator.CorruptLastByte(ctx, futilityInstance)
+	corruptLastBytePath, err := firmwareImageGenerator.CorruptLastByte(ctx, d, futilityInstance)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to generate image with corrupt last byte")
 	}
@@ -415,21 +402,14 @@ func generateImages(ctx context.Context, keyFilePath, origFWFileCopy string, fpB
 
 // GenerateTestFirmwareImages generates a set of test firmware images from the firmware that is on the DUT.
 func GenerateTestFirmwareImages(ctx context.Context, d *rpcdut.RPCDUT, keyFilePath string, fpBoard fp.BoardName, buildFWFile, dutTempDir string) (ret TestImages, retErr error) {
-	testing.ContextLog(ctx, "Creating temp dir")
-	serverTmpDir, err := ioutil.TempDir("", "*")
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create temp dir")
-	}
-	defer os.RemoveAll(serverTmpDir)
-
-	testing.ContextLog(ctx, "Copying firmware from DUT to host")
-	serverFWFilePath := filepath.Join(serverTmpDir, filepath.Base(buildFWFile))
-	if err := linuxssh.GetFile(ctx, d.Conn(), buildFWFile, serverFWFilePath, linuxssh.DereferenceSymlinks); err != nil {
-		return nil, errors.Wrap(err, "failed to get file")
+	testing.ContextLog(ctx, "Copying developer key to DUT")
+	dutKeyFilePath := filepath.Join(dutTempDir, filepath.Base(keyFilePath))
+	if _, err := linuxssh.PutFiles(ctx, d.Conn(), map[string]string{keyFilePath: dutKeyFilePath}, linuxssh.PreserveSymlinks); err != nil {
+		return nil, errors.Wrapf(err, "failed to copy file from %q to %q", keyFilePath, dutTempDir)
 	}
 
-	origFWFileCopy := filepath.Join(serverTmpDir, string(fpBoard)+".bin")
-	if err := fsutil.CopyFile(serverFWFilePath, origFWFileCopy); err != nil {
+	origFWFileCopy := filepath.Join(dutTempDir, string(fpBoard)+".bin")
+	if err := dutfs.NewClient(d.RPC().Conn).CopyFile(ctx, buildFWFile, origFWFileCopy); err != nil {
 		return nil, errors.Wrap(err, "failed to copy original firmware file")
 	}
 
@@ -437,21 +417,9 @@ func GenerateTestFirmwareImages(ctx context.Context, d *rpcdut.RPCDUT, keyFilePa
 	// help to detect issues with slow 'futility'.
 	generateCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	images, err := generateImages(generateCtx, keyFilePath, origFWFileCopy, fpBoard)
+	images, err := generateImages(generateCtx, d, dutKeyFilePath, origFWFileCopy, fpBoard)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to generate test images on host")
-	}
-
-	filesToCopy := make(map[string]string)
-	for imageType, imageData := range images {
-		dutFileName := filepath.Join(dutTempDir, generatedImagesSubDirectory, filepath.Base(imageData.Path))
-		filesToCopy[imageData.Path] = dutFileName
-		images[imageType].Path = dutFileName
-	}
-
-	testing.ContextLog(ctx, "Copying generated firmware images to DUT")
-	if _, err := linuxssh.PutFiles(ctx, d.Conn(), filesToCopy, linuxssh.PreserveSymlinks); err != nil {
-		return nil, errors.Wrapf(err, "failed to copy files from %q to %q", serverTmpDir, dutTempDir)
 	}
 
 	for _, imageData := range images {
