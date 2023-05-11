@@ -14,6 +14,7 @@ import (
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/lacros/lacrosfaillog"
 	"chromiumos/tast/local/chrome/lacros/lacrosproc"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
@@ -21,6 +22,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/kioskmode"
 	"chromiumos/tast/local/screenshot"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -223,23 +225,26 @@ func waitUntilKioskAppStarted(ctx context.Context, cr *chrome.Chrome, param smok
 func verifyLacrosIsRunning(ctx context.Context, cr *chrome.Chrome) error {
 	testing.ContextLog(ctx, "Verifying lacros is running")
 	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to create Test API connection")
+	}
+
 	if _, err = lacrosproc.Root(ctx, tconn); err != nil {
 		return errors.Wrap(err, "failed to get lacros process")
 	}
 	return nil
 }
 
-func Smoke(ctx context.Context, s *testing.State) {
-	defer func(ctx context.Context) {
-		// Take a screenshot if the test ends with an error.
-		if s.HasError() {
-			path := filepath.Join(s.OutDir(), s.TestName()+".png")
-			if err := screenshot.Capture(ctx, path); err != nil {
-				s.Error("Failed to take screenshot: ", err)
-			}
-		}
-	}(ctx)
+func saveLacrosFaillog(ctx context.Context, cr *chrome.Chrome) error {
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to create Test API connection")
+	}
+	lacrosfaillog.Save(ctx, tconn)
+	return nil
+}
 
+func Smoke(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 	param := s.Param().(smokeTestParam)
 
@@ -256,6 +261,16 @@ func Smoke(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Chrome in Kiosk mode: ", err)
 	}
 	defer func(ctx context.Context) {
+		if s.HasError() {
+			if err := screenshot.Capture(ctx, filepath.Join(s.OutDir(), s.TestName()+".png")); err != nil {
+				s.Error("Failed to take screenshot: ", err)
+			}
+		}
+		if param.isLacros {
+			if err := saveLacrosFaillog(ctx, cr); err != nil {
+				s.Error("Failed to save lacros logs: ", err)
+			}
+		}
 		if err := kiosk.Close(ctx); err != nil {
 			s.Error("Failed to close kiosk: ", err)
 		}
