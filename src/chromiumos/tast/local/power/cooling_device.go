@@ -74,6 +74,12 @@ func NewCoolingDevice(ctx context.Context, devPath string) (*CoolingDevice, erro
 		return nil, errors.New("failed to read max_state for cooling device " + devPath)
 	}
 
+	curStatePath := path.Join(devPath, "cur_state")
+	_, err = readInt64(ctx, curStatePath)
+	if err != nil {
+		return nil, errors.New("failed to read cur_state for cooling device " + devPath)
+	}
+
 	devTypeString, err := readFirstLine(ctx, path.Join(devPath, "type"))
 	if err != nil {
 		return nil, errors.New("failed to read type for cooling device " + devPath)
@@ -105,7 +111,7 @@ func NewCoolingDevice(ctx context.Context, devPath string) (*CoolingDevice, erro
 	devType := deviceTypeFromString(devTypeString)
 	scale := thresholdScaleByType[devType]
 	return &CoolingDevice{
-		CurStatePath:      path.Join(devPath, "cur_state"),
+		CurStatePath:      curStatePath,
 		Type:              devType,
 		thresholdFair:     math.Ceil(float64(maxState) * scale.fair),
 		thresholdSerious:  math.Ceil(float64(maxState) * scale.serious),
