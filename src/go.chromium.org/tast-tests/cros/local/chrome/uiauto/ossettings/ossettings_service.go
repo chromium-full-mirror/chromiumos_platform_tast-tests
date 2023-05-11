@@ -118,7 +118,7 @@ func (s *Service) WaitUntilToggleOption(ctx context.Context, req *pb.WaitUntilTo
 		}
 
 		osSettings := New(tconn)
-		if err := osSettings.WaitUntilToggleOption(cr, "Wi-Fi enable", req.Enabled)(ctx); err != nil {
+		if err := osSettings.WaitUntilToggleOption(cr, req.ToggleOptionName, req.Enabled)(ctx); err != nil {
 			return &emptypb.Empty{}, errors.Wrap(err, "failed to check if toggle state is enabled")
 		}
 
