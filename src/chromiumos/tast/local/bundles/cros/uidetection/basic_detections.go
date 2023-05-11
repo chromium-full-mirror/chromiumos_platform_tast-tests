@@ -179,10 +179,10 @@ func BasicDetections(ctx context.Context, s *testing.State) {
 		uiauto.Combine("verify that basic matchers work",
 			ud.LeftClick(chromeIcon),
 			verifyChromeIsShown,
-			// Close Chrome popups.
+			// Click 'No thanks' to close Chrome popups.
 			uiauto.IfSuccessThen(
-				ud.WithTimeout(10*time.Second).Exists(uidetection.TextBlock([]string{"No", "Thanks"})),
-				ud.LeftClick(uidetection.TextBlock([]string{"No", "Thanks"})),
+				ud.WithTimeout(10*time.Second).Exists(uidetection.Word("thanks")),
+				ud.LeftClick(uidetection.Word("thanks")),
 			),
 			ud.WithScreenshotStrategy(uidetection.ImmediateScreenshot).LeftClick(uidetection.TextBlock([]string{"Customize", "Chrome"})),
 			ud.LeftClick(uidetection.Word("Cancel")),
