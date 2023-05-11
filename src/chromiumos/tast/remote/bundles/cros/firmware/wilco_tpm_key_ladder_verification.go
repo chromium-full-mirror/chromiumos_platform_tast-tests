@@ -45,6 +45,19 @@ func WilcoTPMKeyLadderVerification(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get config: ", err)
 	}
 
+	s.Log("Connecting charger")
+	if err := h.SetDUTPower(ctx, true); err != nil {
+		s.Fatal("Unable to connect charger: ", err)
+	}
+	deviceStates, err := h.CheckPowerSupplyDeviceStates(ctx)
+	if err != nil {
+		s.Fatal("Failed to check for current AC state: ", err)
+	}
+	s.Log("Verifying charger connected")
+	if deviceStates.ACOnline != "yes" {
+		s.Fatalf("Expected ac online, but got %s", deviceStates.ACOnline)
+	}
+
 	// Disconnect USB to ensure that recovery screen would be reached.
 	s.Log("Powering off the USB")
 	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxOff); err != nil {
@@ -147,6 +160,7 @@ func enterDiagMode(ctx context.Context, h *firmware.Helper) error {
 		return errors.Wrap(err, "failed to boot to recovery screen")
 	}
 	testing.ContextLogf(ctx, "Sleeping for %s (FirmwareScreen)", h.Config.FirmwareScreen)
+	// GoBigSleepLint: Sleeping for model specific time.
 	if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
 		return errors.Wrap(err, "failed to sleep")
 	}
@@ -155,6 +169,7 @@ func enterDiagMode(ctx context.Context, h *firmware.Helper) error {
 		return errors.Wrap(err, "failed to press the f12 key")
 	}
 	testing.ContextLog(ctx, "Sleeping for 15 seconds till dut reaches confirmation page")
+	// GoBigSleepLint: Sleeping for a specific delay to wait for the confirmation page.
 	if err := testing.Sleep(ctx, 15*time.Second); err != nil {
 		return errors.Wrap(err, "failed to sleep")
 	}
@@ -163,6 +178,7 @@ func enterDiagMode(ctx context.Context, h *firmware.Helper) error {
 		return errors.Wrap(err, "failed to press power key")
 	}
 	testing.ContextLog(ctx, "Waiting for DUT to enter diagnostics mode")
+	// GoBigSleepLint: Sleeping for a specific delay to ensure entry to the diagnostics mode.
 	if err := testing.Sleep(ctx, 15*time.Second); err != nil {
 		return errors.Wrap(err, "failed to sleep")
 	}

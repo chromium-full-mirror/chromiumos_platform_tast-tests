@@ -46,6 +46,19 @@ func WilcoNormalToDev(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get config: ", err)
 	}
 
+	s.Log("Connecting charger")
+	if err := h.SetDUTPower(ctx, true); err != nil {
+		s.Fatal("Unable to connect charger: ", err)
+	}
+	deviceStates, err := h.CheckPowerSupplyDeviceStates(ctx)
+	if err != nil {
+		s.Fatal("Failed to check for current AC state: ", err)
+	}
+	s.Log("Verifying charger connected")
+	if deviceStates.ACOnline != "yes" {
+		s.Fatalf("Expected ac online, but got %s", deviceStates.ACOnline)
+	}
+
 	defer func() {
 		// By default, the usb mux state is set as 'dut_sees_usbkey'.
 		// Resume this state before the test ends.
@@ -63,6 +76,7 @@ func WilcoNormalToDev(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to enter recovery mode: ", err)
 	}
 	s.Logf("Sleeping %s (FirmwareScreen)", h.Config.FirmwareScreen)
+	// GoBigSleepLint: Sleeping for model specific time.
 	if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
 		s.Fatal("Failed to sleep: ", err)
 	}
@@ -72,6 +86,7 @@ func WilcoNormalToDev(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to press ctrl-d: ", err)
 	}
 	s.Logf("Sleeping %s (KeypressDelay)", h.Config.KeypressDelay)
+	// GoBigSleepLint: Sleeping for model specific time.
 	if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
 		s.Fatal("Failed to sleep: ", err)
 	}

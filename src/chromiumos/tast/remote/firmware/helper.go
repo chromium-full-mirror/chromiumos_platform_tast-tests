@@ -1570,3 +1570,38 @@ func (h *Helper) CheckBrokenScreen(ctx context.Context) error {
 	}
 	return nil
 }
+
+// powerSupplyDeviceStates contains status info for ac and battery.
+type powerSupplyDeviceStates struct {
+	ACOnline      string
+	BatteryStatus string
+}
+
+// CheckPowerSupplyDeviceStates runs the command 'power_supply_info' and returns
+// device status, specifically for ac and battery.
+func (h *Helper) CheckPowerSupplyDeviceStates(ctx context.Context) (*powerSupplyDeviceStates, error) {
+	devices := map[string]*regexp.Regexp{
+		"ac":      regexp.MustCompile(`online:\s+(.+)`),
+		"battery": regexp.MustCompile(`state:\s+(.+)`),
+	}
+	checkState := func(expMatch *regexp.Regexp) (string, error) {
+		out, err := h.DUT.Conn().CommandContext(ctx, "power_supply_info").Output()
+		if err != nil {
+			return "", errors.Wrap(err, "failed to get power supply info")
+		}
+		matches := expMatch.FindStringSubmatch(string(out))
+		if len(matches) != 2 {
+			return "", errors.Errorf("failed to match regex %q in %q", expMatch, string(out))
+		}
+		return matches[1], nil
+	}
+	var err error
+	var data powerSupplyDeviceStates
+	if data.ACOnline, err = checkState(devices["ac"]); err != nil {
+		return nil, err
+	}
+	if data.BatteryStatus, err = checkState(devices["battery"]); err != nil {
+		return nil, err
+	}
+	return &data, nil
+}
