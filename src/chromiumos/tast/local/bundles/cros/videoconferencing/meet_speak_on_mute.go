@@ -70,7 +70,7 @@ func init() {
 	})
 }
 
-var speakOnMuteToast = nodewith.NameStartingWith("Are you speaking? You are on mute").HasClass("SystemToastInnerLabel")
+var speakOnMuteToast = nodewith.NameStartingWith("Are you talking?").HasClass("SystemToastInnerLabel")
 
 func MeetSpeakOnMute(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
@@ -120,9 +120,6 @@ func MeetSpeakOnMute(ctx context.Context, s *testing.State) {
 
 	vcTray := vctray.New(ctx, tconn)
 
-	if err := vcTray.ToggleAVDevice(vctray.DevMicrophone, false)(ctx); err != nil {
-		s.Fatal("Failed to toggle off microphone in vcTray: ", err)
-	}
 	defer func(ctx context.Context) error {
 		if err := vcTray.ToggleAVDevice(vctray.DevMicrophone, true)(ctx); err != nil {
 			testing.ContextLog(ctx, "Failed to toggle on microphone in cleanup: ", err)
@@ -130,15 +127,32 @@ func MeetSpeakOnMute(ctx context.Context, s *testing.State) {
 		return nil
 	}(cleanupCtx)
 
-	if err := audio.PlayWavToPCM(ctx, s.DataPath(audioInputFile), "hw:Loopback,0"); err != nil {
-		s.Fatal("Failed to input audio: ", err)
+	ui := uiauto.New(tconn)
+
+	speakAndWaitForToast := uiauto.Combine("mute and speak",
+		vcTray.ToggleAVDevice(vctray.DevMicrophone, false),
+		uiauto.Retry(10, uiauto.Combine("",
+			func(ctx context.Context) error {
+				return audio.PlayWavToPCM(ctx, s.DataPath(audioInputFile), "hw:Loopback,0")
+			},
+			ui.WithTimeout(time.Second).WaitUntilExists(speakOnMuteToast),
+		)),
+	)
+
+	if err := speakAndWaitForToast(ctx); err != nil {
+		s.Fatal("Failed to input audio and wait for toast: ", err)
 	}
 
-	ui := uiauto.New(tconn)
-	if err := uiauto.Combine("speakOnMuteToast should appear and auto clear",
-		ui.WaitUntilExists(speakOnMuteToast),
+	if err := uiauto.Combine("unmute clears toast",
+		vcTray.ToggleAVDevice(vctray.DevMicrophone, true),
 		ui.WaitUntilGone(speakOnMuteToast),
 	)(ctx); err != nil {
-		s.Fatal("Failed to verify speak on mute: ", err)
+		s.Fatal("Failed to verify unmute: ", err)
+	}
+
+	// Toast time frame should reset by unmute.
+	// Mute and speak again should trigger the toast.
+	if err := speakAndWaitForToast(ctx); err != nil {
+		s.Fatal("Failed to input audio and wait for toast after reset: ", err)
 	}
 }
