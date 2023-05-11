@@ -74,7 +74,7 @@ func AppFirefoxEmoji(ctx context.Context, s *testing.State) {
 	ui := uiauto.New(tconn)
 	uda := uidetection.NewDefault(tconn)
 
-	if err := crostiniapps.LaunchFirefoxWithTestPage(ctx, uda, ui, cont, terminalApp, keyboard); err != nil {
+	if err := crostiniapps.LaunchFirefoxWithTestPage(ctx, tconn, uda, ui, cont, terminalApp, keyboard); err != nil {
 		s.Fatal("Failed to create Firefox test page: ", err)
 	}
 
@@ -89,7 +89,7 @@ func AppFirefoxEmoji(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to verify emoji input via clipboard: ", err)
 	}
 
-	if err := crostiniapps.CloseFirefoxTestPage(ctx, ui, cont, keyboard); err != nil {
+	if err := crostiniapps.CloseFirefoxTestPage(ctx, uda, ui, cont, keyboard); err != nil {
 		s.Fatal("Failed to close firefox: ", err)
 	}
 }

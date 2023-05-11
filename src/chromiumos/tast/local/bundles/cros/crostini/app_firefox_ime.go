@@ -133,7 +133,7 @@ func testUseIMEInFirefox(ctx context.Context, terminalApp *terminalapp.TerminalA
 	ui := uiauto.New(tconn)
 	uda := uidetection.NewDefault(tconn)
 
-	if err := crostiniapps.LaunchFirefoxWithTestPage(ctx, uda, ui, cont, terminalApp, keyboard); err != nil {
+	if err := crostiniapps.LaunchFirefoxWithTestPage(ctx, tconn, uda, ui, cont, terminalApp, keyboard); err != nil {
 		return errors.Wrap(err, "failed to create Firefox test page")
 	}
 
@@ -150,7 +150,7 @@ func testUseIMEInFirefox(ctx context.Context, terminalApp *terminalapp.TerminalA
 		return err
 	}
 
-	if err := crostiniapps.CloseFirefoxTestPage(ctx, ui, cont, keyboard); err != nil {
+	if err := crostiniapps.CloseFirefoxTestPage(ctx, uda, ui, cont, keyboard); err != nil {
 		return errors.Wrap(err, "failed to close firefox")
 	}
 
