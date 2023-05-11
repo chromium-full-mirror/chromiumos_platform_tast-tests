@@ -79,6 +79,7 @@ func CheckHomeDirectory(ctx context.Context, s *testing.State) {
 		{`/home/\.shadow/[0-9a-f]*/mount/root/kerberosd(/.*)?`, `cros_home_shadow_uid_root_kerberosd`},
 		{`/home/\.shadow/[0-9a-f]*/mount/root/pvm(/.*)?`, `cros_home_shadow_uid_root_pvm`},
 		{`/home/\.shadow/[0-9a-f]*/mount/root/pvm-dispatcher(/.*)?`, `cros_home_shadow_uid_root_pvm-dispatcher`},
+		{`/home/\.shadow/[0-9a-f]*/mount/root/secagentd(/.*)?`, `cros_home_shadow_uid_root_secagentd`},
 		{`/home/\.shadow/[0-9a-f]*/mount/root/session_manager(/.*)?`, `cros_home_shadow_uid_root_session_manager`},
 		{`/home/\.shadow/[0-9a-f]*/mount/root/shill(/.*)?`, `cros_home_shadow_uid_root_shill`},
 		{`/home/\.shadow/[0-9a-f]*/mount/root/shill_logs(/.*)?`, `cros_home_shadow_uid_root_shill_logs`},
