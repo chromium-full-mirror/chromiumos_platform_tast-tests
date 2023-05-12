@@ -6,7 +6,6 @@ package imetestutil
 
 import (
 	"context"
-	"time"
 
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
@@ -37,19 +36,7 @@ func CheckInputViaClipboard(ctx context.Context, keyboard *input.KeyboardEventWr
 		return errors.Wrap(err, "failed to copy input to clipboard")
 	}
 
-	// Poll to check clipboard data in case ClipboardTextData runs faster than ctrl+C.
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		clipData, err := ash.ClipboardTextData(ctx, tconn)
-		if err != nil {
-			return errors.Wrap(err, "failed to get clipboard content")
-		}
-		if clipData != expectedText {
-			return errors.Errorf("clipboard data mismatch: got %q, want %q", clipData, expectedText)
-		}
-		return nil
-	}, &testing.PollOptions{
-		Timeout: 5 * time.Second,
-	}); err != nil {
+	if err := ash.WaitUntilClipboardText(ctx, tconn, expectedText); err != nil {
 		return err
 	}
 
