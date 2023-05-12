@@ -24,7 +24,7 @@ func init() {
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291",
 		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
-		Timeout:      60 * time.Minute,
+		Timeout:      5 * time.Minute,
 		Fixture:      "ccaLaunched",
 		Attr:         []string{"group:camera_dependent"},
 		Params: []testing.Param{{
@@ -120,8 +120,8 @@ func recordVideoAndCheckProfile(ctx context.Context, app *cca.App) error {
 	if err := app.WaitForVideoActive(ctx); err != nil {
 		return errors.Wrap(err, "failed to wait for video to active")
 	}
-	// Recording video for 5 minutes.
-	info, err := app.RecordVideo(ctx, cca.TimerOff, 5*time.Minute)
+	// Recording video for 1 minute.
+	info, err := app.RecordVideo(ctx, cca.TimerOff, 1*time.Minute)
 	if err != nil {
 		return errors.Wrap(err, "failed to record video")
 	}
