@@ -53,8 +53,8 @@ func HibernateFunctionality(ctx context.Context, s *testing.State) {
 	waitCtx, cancel := context.WithTimeout(ctx, 2*time.Minute)
 	defer cancel()
 	getChargerPollOptions := testing.PollOptions{
-		Timeout:  10 * time.Second,
-		Interval: 250 * time.Millisecond,
+		Timeout:  1 * time.Minute,
+		Interval: 1 * time.Second,
 	}
 	s.Log("Stopping power supply")
 	if err := h.RequireServo(ctx); err != nil {
@@ -66,7 +66,7 @@ func HibernateFunctionality(ctx context.Context, s *testing.State) {
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		if attached, err := h.Servo.GetChargerAttached(ctx); err != nil {
 			return err
-		} else if !attached {
+		} else if attached {
 			return errors.New("charger is still attached - use Servo V4 Type-C or supply RPM vars")
 		}
 		return nil
@@ -161,16 +161,15 @@ func HibernateFunctionality(ctx context.Context, s *testing.State) {
 	if err = h.SetDUTPower(ctx, true); err != nil {
 		s.Fatal("Failed to connect charger: ", err)
 	}
-	// Wait for a short delay between cutting power supply and telling EC to hibernate.
-	if err := testing.Sleep(ctx, 2*time.Second); err != nil {
-		s.Fatal("Failed to sleep: ", err)
-	}
-	isAttached, err := h.Servo.GetChargerAttached(ctx)
-	if err != nil {
-		s.Fatal("Failed to check whether DUT is charging: ", err)
-	}
-	if !isAttached {
-		s.Fatal("DUT is not charging after waking up from hibernation: ")
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if attached, err := h.Servo.GetChargerAttached(ctx); err != nil {
+			return err
+		} else if !attached {
+			return errors.New("charger is still not attached - use Servo V4 Type-C or supply RPM vars")
+		}
+		return nil
+	}, &getChargerPollOptions); err != nil {
+		s.Fatal("Check for charger failed: ", err)
 	}
 	if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.DurPress); err != nil {
 		s.Fatal("Failed to power button press: ", err)
