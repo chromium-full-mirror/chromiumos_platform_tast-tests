@@ -17,8 +17,6 @@ const (
 
 	// MediaPepperVideoDecoderHardwareAccelerationBehavior is the name of the histogram used to report the hardware/software decoding behavior used for a PPB_VideoDecoder API instance.
 	MediaPepperVideoDecoderHardwareAccelerationBehavior = "Media.PepperVideoDecoder.HardwareAccelerationBehavior"
-	// MediaPepperVideoDecoderHardwareAccelerationBehaviorWithoutMojoVD is the bucket value in Media.PepperVideoDecoder.HardwareAccelerationBehavior to be incremented when a hardware decoder is backed by the legacy VideoDecodeAccelerator.
-	MediaPepperVideoDecoderHardwareAccelerationBehaviorWithoutMojoVD = 1
 	// MediaPepperVideoDecoderHardwareAccelerationBehaviorWithMojoVD is the bucket value in Media.PepperVideoDecoder.HardwareAccelerationBehavior to be incremented when a hardware decoder is backed by the MojoVideoDecoder.
 	MediaPepperVideoDecoderHardwareAccelerationBehaviorWithMojoVD = 3
 	// MediaPepperVideoDecoderHardwareAccelerationBehaviorWithSWVD is the bucket value in Media.PepperVideoDecoder.HardwareAccelerationBehavior to be incremented when fallback to software decoding happens after trying to use a hardware decoder backed by the MojoVideoDecoder.

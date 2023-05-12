@@ -24,10 +24,8 @@ import (
 type verifyHWAcceleratorMode int
 
 const (
-	// verifyLegacyVDAPathWasUsed is a mode that verifies that a hardware decoder backed by the legacy VideoDecodeAccelerator path was used.
-	verifyLegacyVDAPathWasUsed verifyHWAcceleratorMode = iota
 	// verifyMojoVDPathWasUsed is a mode that verifies that a hardware decoder backed by the the newer MojoVideoDecoder path was used.
-	verifyMojoVDPathWasUsed
+	verifyMojoVDPathWasUsed verifyHWAcceleratorMode = iota
 	// verifySWPathWasUsed is a mode that verifies that fallback to the software decoding path happens after trying to use the MojoVideoDecoder path.
 	verifySWPathWasUsed
 )
@@ -53,22 +51,15 @@ func init() {
 			"pepper/video_decode/video_decode.html",
 		},
 		SoftwareDeps: []string{"chrome", "nacl"},
+		Attr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 		Params: []testing.Param{{
 			Name:              "h264_hw",
-			Val:               pepperVideoDecodeTestParam{browserType: browser.TypeAsh, verifyHWMode: verifyLegacyVDAPathWasUsed},
-			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
-			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "video_decoder_legacy_supported", "proprietary_codecs"},
-			Fixture:           "chromeVideoNaCl",
-		}, {
-			Name:              "h264_hw_mojovd",
 			Val:               pepperVideoDecodeTestParam{browserType: browser.TypeAsh, verifyHWMode: verifyMojoVDPathWasUsed},
-			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
-			Fixture:           "chromeVideoNaClWithMojoVideoDecoder",
+			Fixture:           "chromeVideoNaCl",
 		}, {
 			Name:              "h264_sw",
 			Val:               pepperVideoDecodeTestParam{browserType: browser.TypeAsh, verifyHWMode: verifySWPathWasUsed},
-			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraSoftwareDeps: []string{"proprietary_codecs"},
 			Fixture:           "chromeVideoNaClWithSWDecoding",
 		}},
@@ -120,14 +111,11 @@ func PepperVideoDecode(ctx context.Context, s *testing.State) {
 	}
 
 	var hwBehaviourSucessValue int64
-	switch params.verifyHWMode {
-	case verifyMojoVDPathWasUsed:
+	if params.verifyHWMode == verifyMojoVDPathWasUsed {
 		hwBehaviourSucessValue = int64(constants.MediaPepperVideoDecoderHardwareAccelerationBehaviorWithMojoVD)
-	case verifyLegacyVDAPathWasUsed:
-		hwBehaviourSucessValue = int64(constants.MediaPepperVideoDecoderHardwareAccelerationBehaviorWithoutMojoVD)
-	case verifySWPathWasUsed:
+	} else if params.verifyHWMode == verifySWPathWasUsed {
 		hwBehaviourSucessValue = int64(constants.MediaPepperVideoDecoderHardwareAccelerationBehaviorWithSWVD)
-	default:
+	} else {
 		s.Fatal("Unrecognized value for params.verifyHWMode: ", params.verifyHWMode)
 	}
 
@@ -138,12 +126,9 @@ func PepperVideoDecode(ctx context.Context, s *testing.State) {
 	}
 
 	if !expectedModeUsed {
-		switch params.verifyHWMode {
-		case verifyMojoVDPathWasUsed:
+		if params.verifyHWMode == verifyMojoVDPathWasUsed {
 			s.Fatal("Hardware decoder backed by MojoVideoDecoder was not used")
-		case verifyLegacyVDAPathWasUsed:
-			s.Fatal("Hardware decoder backed by legacy VDA was not used")
-		case verifySWPathWasUsed:
+		} else if params.verifyHWMode == verifySWPathWasUsed {
 			s.Fatal("Software decoder was not used")
 		}
 	}
