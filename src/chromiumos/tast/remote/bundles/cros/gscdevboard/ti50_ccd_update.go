@@ -41,7 +41,7 @@ func init() {
 			"ti50-core@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:firmware"},
+		Attr:         []string{"group:gsc", "gsc_dt_ab", "gsc_image_ti50"},
 		Fixture:      fixture.Ti50CcdOpen,
 	})
 }

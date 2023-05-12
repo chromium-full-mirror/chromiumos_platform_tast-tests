@@ -11,6 +11,7 @@ import (
 	"chromiumos/tast/common/firmware/ti50"
 	"chromiumos/tast/remote/bundles/cros/gscdevboard/utils"
 	"chromiumos/tast/remote/firmware/ti50/fixture"
+
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -35,7 +36,7 @@ func init() {
 			"jettrink@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:firmware"},
+		Attr:         []string{"group:gsc", "gsc_dt_ab", "gsc_image_ti50"},
 		Fixture:      fixture.Ti50CcdOpen,
 	})
 }
