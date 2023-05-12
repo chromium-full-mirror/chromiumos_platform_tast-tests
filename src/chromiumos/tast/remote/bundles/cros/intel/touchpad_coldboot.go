@@ -15,6 +15,8 @@ import (
 	input "chromiumos/tast/remote/inputs"
 	"chromiumos/tast/remote/powercontrol"
 	"chromiumos/tast/services/cros/inputs"
+
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
@@ -38,6 +40,10 @@ func init() {
 }
 
 func TouchpadColdboot(ctx context.Context, s *testing.State) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 2*time.Minute)
+	defer cancel()
+
 	h := s.FixtValue().(*fixture.Value).Helper
 	rpcHint := s.RPCHint()
 
@@ -45,6 +51,15 @@ func TouchpadColdboot(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to init servo: ", err)
 	}
 	dut := s.DUT()
+
+	// Due to any reason if DUT is not up at the end of test, make the DUT up.
+	defer func(ctx context.Context) {
+		if !dut.Connected(ctx) {
+			if err := powercontrol.PowerOntoDUT(ctx, h.ServoProxy, dut); err != nil {
+				s.Fatal("Failed to power on DUT at cleanup: ", err)
+			}
+		}
+	}(cleanupCtx)
 
 	iterations := 10
 	for i := 1; i <= iterations; i++ {
