@@ -27,7 +27,6 @@ func init() {
 		Desc:         "Test behavior of UserPrintersAllowed policy: check if Add printer button is restricted based on the value of the policy",
 		Contacts: []string{
 			"chromeos-commercial-printing@google.com",
-			"project-bolton@google.com",
 			"alexanderhartl@google.com", // Test author
 		},
 		// ChromeOS > Software > Commercial (Enterprise) > Printing
@@ -38,8 +37,6 @@ func init() {
 			"group:medium_low_tier",
 			"group:hardware",
 			"group:complementary",
-			"group:paper-io",
-			"paper-io_printing",
 		},
 		Fixture: fixture.ChromePolicyLoggedIn,
 		SearchFlags: []*testing.StringPair{

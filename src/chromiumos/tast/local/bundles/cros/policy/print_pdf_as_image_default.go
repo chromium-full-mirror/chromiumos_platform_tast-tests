@@ -36,7 +36,6 @@ func init() {
 		Desc:         "Checking if the 'Print as image' option is set by default depending on the value of this policy",
 		Contacts: []string{
 			"chromeos-commercial-printing@google.com",
-			"project-bolton@google.com",
 		},
 		// ChromeOS > Software > Commercial (Enterprise) > Printing
 		BugComponent: "b:1111614",
@@ -46,8 +45,6 @@ func init() {
 			"group:medium_low_tier",
 			"group:hardware",
 			"group:complementary",
-			"group:paper-io",
-			"paper-io_printing",
 			"group:hw_agnostic",
 		},
 		Params: []testing.Param{{

@@ -33,7 +33,6 @@ func init() {
 		Desc:         "Behavior of Printers policy, checking that configured printers are available to users in the printer selection after setting the policy",
 		Contacts: []string{
 			"chromeos-commercial-printing@google.com",
-			"project-bolton@google.com",
 		},
 		// ChromeOS > Software > Commercial (Enterprise) > Printing
 		BugComponent: "b:1111614",
@@ -43,8 +42,6 @@ func init() {
 			"group:medium_low_tier",
 			"group:hardware",
 			"group:complementary",
-			"group:paper-io",
-			"paper-io_printing",
 			"group:hw_agnostic",
 		},
 		Fixture: fixture.LacrosPolicyLoggedIn,

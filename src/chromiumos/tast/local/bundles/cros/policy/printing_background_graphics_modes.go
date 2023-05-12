@@ -37,8 +37,6 @@ func init() {
 			"group:medium_low_tier",
 			"group:hardware",
 			"group:complementary",
-			"group:paper-io",
-			"paper-io_printing",
 		},
 		Params: []testing.Param{{
 			Fixture: "virtualUsbPrinterModulesLoadedWithChromePolicyLoggedIn",

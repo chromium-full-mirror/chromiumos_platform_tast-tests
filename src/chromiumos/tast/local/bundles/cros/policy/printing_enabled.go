@@ -41,7 +41,6 @@ func init() {
 		Desc:         "Behavior of PrintingEnabled policy, checking the correspoding menu item restriction and printing preview dialog after setting the policy",
 		Contacts: []string{
 			"chromeos-commercial-printing@google.com",
-			"project-bolton@google.com",
 			"ust@google.com",
 		},
 		// ChromeOS > Software > Commercial (Enterprise) > Printing
@@ -52,8 +51,6 @@ func init() {
 			"group:medium_low_tier",
 			"group:hardware",
 			"group:complementary",
-			"group:paper-io",
-			"paper-io_printing",
 		},
 		Params: []testing.Param{
 			{
