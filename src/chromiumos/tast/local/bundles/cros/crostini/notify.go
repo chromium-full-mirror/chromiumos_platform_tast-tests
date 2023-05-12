@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"chromiumos/tast/common/testexec"
+	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/crostini"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -63,15 +63,6 @@ func init() {
 	})
 }
 
-type notification struct {
-	ID       string `json:"id"`
-	Type     string `json:"type"`
-	Title    string `json:"title"`
-	Message  string `json:"message"`
-	Priority int    `json:"priority"`
-	Progress int    `json:"progress"`
-}
-
 func Notify(ctx context.Context, s *testing.State) {
 	const notificationTitle = "Some test notification"
 	const notificationBody = "A notification body with lots more text"
@@ -83,29 +74,9 @@ func Notify(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to run notify-send: ", err)
 	}
 
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		var notifications []notification
-		if err := tconn.Call(ctx,
-			&notifications,
-			`tast.promisify(chrome.autotestPrivate.getVisibleNotifications)`,
-		); err != nil {
-			return testing.PollBreak(errors.Wrap(err, "failed to get visible notifications"))
-		}
-
-		found := false
-		for _, n := range notifications {
-			if n.Title == notificationTitle && n.Message == notificationBody {
-				found = true
-				break
-			}
-		}
-		if !found {
-			errors.Errorf("%q %q in %q", notificationTitle, notificationBody, notifications)
-		}
-		return nil
-	}, &testing.PollOptions{
-		Timeout: 10 * time.Second,
-	}); err != nil {
+	//  Notification should show up instantly, 10 seconds gives a generous margin of error
+	_, err := ash.WaitForNotification(ctx, tconn, 10*time.Second, ash.WaitTitle(notificationTitle), ash.WaitMessageContains(notificationBody))
+	if err != nil {
 		s.Fatal("Did not find expected notification: ", err)
 	}
 }
