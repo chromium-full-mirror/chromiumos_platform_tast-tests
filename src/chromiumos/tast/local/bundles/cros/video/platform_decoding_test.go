@@ -1201,7 +1201,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 					Timeout:      defaultTimeout,
 					SoftwareDeps: []string{"vaapi"},
 					Metadata:     genExtraData(files),
-					Attr:         []string{"graphics_video_vp9"},
+					Attr:         []string{"graphics_video_vp9", "graphics_perbuild"},
 				}
 				if extension, ok := vp9GroupExtensions[levelGroup]; ok {
 					param.Timeout = extension
@@ -1238,7 +1238,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 		Timeout:      defaultTimeout,
 		SoftwareDeps: []string{"vaapi", caps.HWDecodeVP9},
 		Metadata:     genExtraData([]string{vp9SVCFile}),
-		Attr:         []string{"graphics_video_vp9"},
+		Attr:         []string{"graphics_video_vp9", "graphics_perbuild"},
 	})
 
 	// Generate VAAPI AV1 tests.
@@ -1251,7 +1251,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 		// These SoftwareDeps do not include the 10 bit version of AV1.
 		SoftwareDeps: []string{"vaapi", caps.HWDecodeAV1},
 		Metadata:     genExtraData(av1Files),
-		Attr:         []string{"graphics_video_av1"},
+		Attr:         []string{"graphics_video_av1", "graphics_perbuild"},
 	})
 
 	for _, bit := range []string{"8bit"} {
@@ -1266,7 +1266,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 				// These SoftwareDeps do not include the 10 bit version of AV1.
 				SoftwareDeps: []string{"vaapi", caps.HWDecodeAV1},
 				Metadata:     genExtraData(files),
-				Attr:         []string{"graphics_video_av1"},
+				Attr:         []string{"graphics_video_av1", "graphics_perbuild"},
 			}
 
 			params = append(params, param)
@@ -1285,7 +1285,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 			Timeout:      defaultTimeout,
 			SoftwareDeps: []string{"vaapi", caps.HWDecodeHEVC},
 			Metadata:     genExtraData(files),
-			Attr:         []string{"graphics_video_hevc"},
+			Attr:         []string{"graphics_video_hevc", "graphics_perbuild"},
 		})
 	}
 
@@ -1308,7 +1308,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 				Timeout:      time.Minute,
 				SoftwareDeps: []string{"vaapi", caps.HWDecodeHEVC},
 				Metadata:     genExtraData(files),
-				Attr:         []string{"graphics_video_hevc"},
+				Attr:         []string{"graphics_video_hevc", "graphics_perbuild"},
 			})
 		}
 	}
@@ -1325,7 +1325,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 			Timeout:      defaultTimeout,
 			SoftwareDeps: []string{"vaapi", caps.HWDecodeVP8},
 			Metadata:     genExtraData(files),
-			Attr:         []string{"graphics_video_vp8"},
+			Attr:         []string{"graphics_video_vp8", "graphics_perbuild"},
 		})
 	}
 
@@ -1341,7 +1341,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 			Timeout:      defaultTimeout,
 			SoftwareDeps: []string{"vaapi", caps.HWDecodeH264},
 			Metadata:     genExtraData(files),
-			Attr:         []string{"graphics_video_h264"},
+			Attr:         []string{"graphics_video_h264", "graphics_perbuild"},
 		}
 		params = append(params, param)
 	}
@@ -1382,7 +1382,11 @@ func TestPlatformDecodingParams(t *testing.T) {
 					if extension, ok := vp9GroupExtensions[levelGroup]; ok {
 						param.Timeout = extension
 					}
-
+					if stateness == "Stateless" {
+						param.Attr = append(param.Attr, "graphics_perbuild")
+					} else {
+						param.Attr = append(param.Attr, "graphics_nightly")
+					}
 					hardwareDeps := commonHardwareDeps
 
 					if profile == "profile_2" {
@@ -1433,6 +1437,12 @@ func TestPlatformDecodingParams(t *testing.T) {
 				Metadata:     genExtraData(files),
 				Attr:         []string{"graphics_video_vp8"},
 			}
+			if stateness == "Stateless" {
+				param.Attr = append(param.Attr, "graphics_perbuild")
+			} else {
+				param.Attr = append(param.Attr, "graphics_nightly")
+			}
+
 			params = append(params, param)
 		}
 
@@ -1456,6 +1466,11 @@ func TestPlatformDecodingParams(t *testing.T) {
 				Metadata:     genExtraData(files),
 				Attr:         []string{"graphics_video_h264"},
 			}
+			if stateness == "Stateless" {
+				param.Attr = append(param.Attr, "graphics_perbuild")
+			} else {
+				param.Attr = append(param.Attr, "graphics_nightly")
+			}
 			params = append(params, param)
 		}
 
@@ -1473,6 +1488,11 @@ func TestPlatformDecodingParams(t *testing.T) {
 				SoftwareDeps: []string{"v4l2_codec", caps.HWDecodeHEVC},
 				Metadata:     genExtraData(files),
 				Attr:         []string{"graphics_video_hevc"},
+			}
+			if stateness == "Stateless" {
+				param.Attr = append(param.Attr, "graphics_perbuild")
+			} else {
+				param.Attr = append(param.Attr, "graphics_nightly")
 			}
 			params = append(params, param)
 		}
@@ -1492,7 +1512,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 			SoftwareDeps: []string{"v4l2_codec", caps.HWDecodeVP9},
 			HardwareDeps: strings.Join(commonHardwareDeps, ", "),
 			Metadata:     genExtraData([]string{vp9SVCFile}),
-			Attr:         []string{"graphics_video_vp9"},
+			Attr:         []string{"graphics_video_vp9", "graphics_nightly"},
 		})
 	}
 
@@ -1508,7 +1528,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 		// TODO(b/242075797): use HW capabilities.
 		HardwareDeps: "hwdep.SupportsV4L2StatelessVideoDecoding(), hwdep.Model(\"tomato\", \"dojo\")",
 		Metadata:     genExtraData(av1Files),
-		Attr:         []string{"graphics_video_av1"},
+		Attr:         []string{"graphics_video_av1", "graphics_perbuild"},
 	})
 
 	for _, bit := range []string{"8bit"} {
@@ -1524,7 +1544,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 				// TODO(b/242075797): use HW capabilities.
 				HardwareDeps: "hwdep.SupportsV4L2StatelessVideoDecoding(), hwdep.Model(\"tomato\", \"dojo\")",
 				Metadata:     genExtraData(files),
-				Attr:         []string{"graphics_video_av1"},
+				Attr:         []string{"graphics_video_av1", "graphics_perbuild"},
 			}
 
 			params = append(params, param)
@@ -1546,7 +1566,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 					Timeout:      defaultTimeout,
 					SoftwareDeps: []string{"vaapi"},
 					Metadata:     genExtraData(files),
-					Attr:         []string{"graphics_video_vp9"},
+					Attr:         []string{"graphics_video_vp9", "graphics_nightly"},
 				}
 				if extension, ok := vp9GroupExtensions[levelGroup]; ok {
 					param.Timeout = extension
@@ -1595,7 +1615,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 				// These SoftwareDeps do not include the 10 bit version of AV1.
 				SoftwareDeps: []string{"vaapi", caps.HWDecodeAV1},
 				Metadata:     genExtraData(files),
-				Attr:         []string{"graphics_video_av1"},
+				Attr:         []string{"graphics_video_av1", "graphics_nightly"},
 			}
 
 			params = append(params, param)
@@ -1614,7 +1634,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 			Timeout:      defaultTimeout,
 			SoftwareDeps: []string{"vaapi", caps.HWDecodeVP8},
 			Metadata:     genExtraData(files),
-			Attr:         []string{"graphics_video_vp8"},
+			Attr:         []string{"graphics_video_vp8", "graphics_nightly"},
 		})
 	}
 
@@ -1630,7 +1650,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 			Timeout:      defaultTimeout,
 			SoftwareDeps: []string{"vaapi", caps.HWDecodeVP8},
 			Metadata:     genExtraData(files),
-			Attr:         []string{"graphics_video_h264"},
+			Attr:         []string{"graphics_video_h264", "graphics_nightly"},
 		}
 		params = append(params, param)
 	}
@@ -1647,7 +1667,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 			Timeout:      defaultTimeout,
 			SoftwareDeps: []string{"vaapi", caps.HWDecodeHEVC},
 			Metadata:     genExtraData(files),
-			Attr:         []string{"graphics_video_hevc"},
+			Attr:         []string{"graphics_video_hevc", "graphics_nightly"},
 		}
 		params = append(params, param)
 	}
@@ -1671,7 +1691,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 				Timeout:      time.Minute,
 				SoftwareDeps: []string{"vaapi", caps.HWDecodeHEVC},
 				Metadata:     genExtraData(files),
-				Attr:         []string{"graphics_video_hevc"},
+				Attr:         []string{"graphics_video_hevc", "graphics_nightly"},
 			})
 		}
 	}
