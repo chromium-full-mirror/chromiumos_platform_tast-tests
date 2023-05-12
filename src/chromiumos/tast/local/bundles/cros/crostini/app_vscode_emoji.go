@@ -82,6 +82,11 @@ func AppVSCodeEmoji(ctx context.Context, s *testing.State) {
 	// Open the VSCode again, this time, it won't open the Get Started tab.
 	if err := uiauto.Combine("create and compose file with VSCode",
 		crostiniapps.LaunchVSCodeForFile(uda, ui, terminalApp, keyboard, crostiniapps.VSCodeTestFile),
+		// VSCode will read the first keypress as English input, even when the input method is set otherwise.
+		// Enter two backspaces first so that the testing string is entered correctly.
+		// TODO(b/274709150): Remove the following 2 lines after this bug is fixed.
+		keyboard.AccelAction("Backspace"),
+		keyboard.AccelAction("Backspace"),
 		imetestutil.OpenEmojiPickerAndInputEmoji(ctx, cr, keyboard, tconn, inputEmoji),
 		crostiniapps.SaveFileAndCloseVSCode(ui, keyboard, crostiniapps.VSCodeTestFile))(ctx); err != nil {
 		s.Fatal("Failed to open file and enter emoji: ", err)
