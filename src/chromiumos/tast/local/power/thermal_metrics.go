@@ -91,22 +91,27 @@ func (b *SysfsThermalMetrics) Setup(ctx context.Context, prefix, intervalName st
 		return nil
 	}
 	testing.ContextLogf(ctx, "SysfsThermalMetrics uses %v sensors:", len(thermalSensors))
-	for name, path := range thermalSensors {
-		testing.ContextLogf(ctx, "%s (%s)", name, path)
+	for name, sensorPath := range thermalSensors {
+		testing.ContextLogf(ctx, "%s (%s)", name, sensorPath)
 		// Some sensor names contain characters that are not allowed in metric names.
 		reg := regexp.MustCompile("[^a-zA-Z0-9]+")
 		metricName := reg.ReplaceAllString(name, "_")
-		perfMetric := perf.Metric{
-			Name:      prefix + thermalMetricType + metricName,
-			Unit:      thermalMetricTypeUnit,
-			Direction: perf.SmallerIsBetter,
-			Multiple:  true,
-			Interval:  intervalName}
-		thermalMetric := ThermalMetric{
-			name:   name,
-			path:   path,
-			metric: perfMetric}
-		b.metrics = append(b.metrics, thermalMetric)
+
+		// Check if temperature sensor reading is enabled before creating the metric.
+		tempFile := path.Join(sensorPath, "temp")
+		if _, err := readInt64(ctx, tempFile); err == nil {
+			perfMetric := perf.Metric{
+				Name:      prefix + thermalMetricType + metricName,
+				Unit:      thermalMetricTypeUnit,
+				Direction: perf.SmallerIsBetter,
+				Multiple:  true,
+				Interval:  intervalName}
+			thermalMetric := ThermalMetric{
+				name:   name,
+				path:   sensorPath,
+				metric: perfMetric}
+			b.metrics = append(b.metrics, thermalMetric)
+		}
 	}
 	return nil
 }
@@ -124,7 +129,8 @@ func (b *SysfsThermalMetrics) SnapshotValues(ctx context.Context) (map[perf.Metr
 		tempFile := path.Join(metric.path, "temp")
 		temp, err := readInt64(ctx, tempFile)
 		if err != nil {
-			return nil, errors.Wrapf(err, "cannot read temperature from %s", tempFile)
+			// Append an unrealistic number (-40C).
+			temp = -40.0
 		}
 		m[metric.metric] = float64(temp) / 1000
 	}
