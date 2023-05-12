@@ -507,8 +507,11 @@ func (f *powerUIFixture) SetUp(ctx context.Context, s *testing.FixtState) interf
 	opts := []chrome.Option{
 		// --disable-sync disables test account info sync, eg. Wi-Fi credentials,
 		// so that each test run does not remember info from last test run.
-		// TODO(b/264508768): Add gaia accounts for testing.
 		chrome.ExtraArgs("--disable-sync"),
+		// Prefer using constant frame rate for camera streaming.
+		chrome.ExtraArgs("--enable-features=PreferConstantFrameRate"),
+		// Allow 2 windows side by side.
+		chrome.ExtraArgs("--force-tablet-mode=clamshell"),
 		// b/228256145 to avoid powerd restart.
 		chrome.DisableFeatures("FirmwareUpdaterApp"),
 	}
