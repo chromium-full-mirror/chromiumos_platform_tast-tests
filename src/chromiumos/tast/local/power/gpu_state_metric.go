@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/perf"
+	"chromiumos/tast/local/cpu"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -96,7 +97,7 @@ func (g *GPUStateMetrics) Setup(ctx context.Context, prefix, intervalName string
 			Multiple:  true,
 			Interval:  intervalName,
 		}
-		readCPUUarch, err := fetchIntelCPUUarch()
+		readCPUUarch, err := cpu.FetchIntelCPUUarch()
 		if err != nil {
 			return errors.Wrap(err, "unknown architecture: update power.fetchPackageStates()")
 		}
