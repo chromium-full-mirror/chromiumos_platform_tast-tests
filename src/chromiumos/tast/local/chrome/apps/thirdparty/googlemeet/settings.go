@@ -62,7 +62,7 @@ func (gm *GoogleMeet) SetLeaveEmptyCalls(value bool) action.Action {
 		actionDesc = `set "leave empty calls" to true`
 	}
 
-	return uiauto.Combine(actionDesc,
+	return uiauto.NamedCombine(actionDesc,
 		gm.ui.DoDefault(generalSettingsTabButton),
 		gm.setToggleValue(finder, value),
 	)
@@ -120,10 +120,8 @@ func (gm *GoogleMeet) SetReceiveResolution(value ResolutionOption) action.Action
 func (gm *GoogleMeet) setToggleValue(finder *nodewith.Finder, value bool) action.Action {
 	return func(ctx context.Context) error {
 		shouldBeChecked := checked.False
-		resultFinder := finder.Attribute("checked", "false")
 		if value {
 			shouldBeChecked = checked.True
-			resultFinder = finder.Attribute("checked", "true")
 		}
 
 		info, err := gm.ui.Info(ctx, finder)
@@ -134,7 +132,7 @@ func (gm *GoogleMeet) setToggleValue(finder *nodewith.Finder, value bool) action
 		if info.Checked != shouldBeChecked {
 			return gm.ui.DoDefaultUntil(
 				finder,
-				gm.ui.WithTimeout(shortUITimeout).WaitUntilCheckedState(resultFinder, true),
+				gm.ui.WithTimeout(shortUITimeout).WaitUntilCheckedState(finder, value),
 			)(ctx)
 		}
 		return nil

@@ -757,7 +757,7 @@ func (ac *Context) WaitUntilEnabled(finder *nodewith.Finder) Action {
 
 // WaitUntilCheckedState returns a function that waits until the node reaches the
 // expected state. This property is typically used in following nodes:
-// {Switch, RadioButton, CheckBox}
+// {Switch, RadioButton, CheckBox, ToggleButton}
 func (ac *Context) WaitUntilCheckedState(finder *nodewith.Finder, expectedState bool) Action {
 	return func(ctx context.Context) error {
 		return testing.Poll(ctx, func(ctx context.Context) error {
