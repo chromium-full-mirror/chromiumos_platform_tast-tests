@@ -13,6 +13,7 @@ import (
 	"chromiumos/tast/remote/wificell"
 	"chromiumos/tast/services/cros/ui"
 	"chromiumos/tast/services/cros/wifi"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -24,9 +25,9 @@ func init() {
 		Desc:         "Verify ChromeOS is able to transition from LAN connection to a Wifi connection on OOBE, user and guest session",
 		Contacts: []string{
 			"cros-connectivity@google.com",
-			"cros-conn-test-team@google.com",
-			"cienet-development@googlegroups.com",
-			"sun.tsai@cienet.com",
+			"chromeos-connectivity-engprod@google.com",
+			"shijinabraham@google.com",
+			"chadduffin@chromium.org",
 		},
 		BugComponent: "b:1131775", // ChromeOS > Software > System Services > Connectivity
 		Attr:         []string{"group:wificell", "wificell_e2e_unstable"},
