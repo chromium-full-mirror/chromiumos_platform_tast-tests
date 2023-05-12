@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path/filepath"
+	"path"
 	"strconv"
 	"strings"
 	"unicode"
@@ -48,17 +48,11 @@ func init() {
 	})
 }
 
-func crosCommonFunc(ctx context.Context, s *testing.State, funcname string) string {
-	// Return the result of funcname as a string.
-	script := `
-set -e
-. /usr/sbin/write_gpt.sh
-. /usr/share/misc/chromeos-common.sh
-load_base_vars`
-	script = fmt.Sprintf("%s\n%s", script, funcname)
-	out, err := testexec.CommandContext(ctx, "sh", "-c", strings.TrimSpace(script)).Output(testexec.DumpLogOnError)
+func getRootdev(ctx context.Context, s *testing.State) string {
+	// Returns the root device path.
+	out, err := testexec.CommandContext(ctx, "rootdev", "-s", "-d").Output(testexec.DumpLogOnError)
 	if err != nil {
-		s.Fatal("Failed to call: ", funcname)
+		s.Error("Failed while running rootdev: ", err)
 	}
 	return strings.TrimSpace(string(out))
 }
@@ -75,25 +69,10 @@ func devIsPresent(devname string) bool {
 
 func PartitionSizes(ctx context.Context, s *testing.State) {
 	testParam := s.Param().(partitionTestParams)
-	// Try getting the internal disk device name using write_gpt.sh.
-	//
-	// Note that this will return an empty string in the case where
-	// disk_layout.json did not specify a `rootdev_base`.
-	devPath := crosCommonFunc(ctx, s, "get_fixed_dst_drive")
-	baseDev := filepath.Base(devPath)
-	if baseDev == "." { // filepath.Base("") returns "."
-		s.Log("Got empty device, attempting to discover")
-		baseDev = "sda"
-		// In the case where the fixed disk is an NVMe device, it will appear at a
-		// different location under /sys/block, so fall back to that location in the
-		// case where /sys/block/sda does not exist.
-		if !devIsPresent(baseDev) {
-			// Try getting the largest NVMe namespace, e.g. "nvme0n1".
-			baseDev = crosCommonFunc(ctx, s, "get_largest_nvme_namespace")
-			if !devIsPresent(baseDev) {
-				s.Error("Failed to discover the internal disk device")
-			}
-		}
+	s.Log("Using rootdev to get the booted device")
+	_, baseDev := path.Split(getRootdev(ctx, s))
+	if !devIsPresent(baseDev) {
+		s.Error("Failed to discover the internal disk device")
 	}
 	s.Log("Checking partitions on device ", baseDev)
 
@@ -111,7 +90,6 @@ func PartitionSizes(ctx context.Context, s *testing.State) {
 	}
 	for _, partNum := range []int{3, 5} {
 		partDev := partPrefix + strconv.Itoa(partNum)
-
 		// This file contains the partition size in 512-byte sectors.
 		// See https://patchwork.kernel.org/patch/7922301/ .
 		sizePath := fmt.Sprintf("/sys/block/%s/%s/size", baseDev, partDev)
