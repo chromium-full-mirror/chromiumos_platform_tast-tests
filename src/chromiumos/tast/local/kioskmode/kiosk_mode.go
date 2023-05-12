@@ -85,7 +85,6 @@ const (
 // Kiosk structure holds necessary references and provides a way to safely
 // close Kiosk mode.
 type Kiosk struct {
-	ctx           context.Context
 	cr            *chrome.Chrome
 	fdms          *fakedms.FakeDMS
 	localAccounts *policy.DeviceLocalAccounts
@@ -164,7 +163,6 @@ func New(ctx context.Context, fdms *fakedms.FakeDMS, signinTestExtensionManifest
 
 	testing.ContextLog(ctx, "Kiosk mode: Setup succeeded")
 	return &Kiosk{
-		ctx:                            ctx,
 		cr:                             cr,
 		fdms:                           fdms,
 		localAccounts:                  deviceLocalAccounts,
@@ -547,7 +545,7 @@ func DeprecatedNew(ctx context.Context, fdms *fakedms.FakeDMS, opts ...Option) (
 		}
 	}
 
-	return &Kiosk{ctx: ctx, cr: cr, fdms: fdms, localAccounts: deviceLocalAccounts, httpServer: httpServer, autostart: cfg.m.AutoLaunch}, cr, nil
+	return &Kiosk{cr: cr, fdms: fdms, localAccounts: deviceLocalAccounts, httpServer: httpServer, autostart: cfg.m.AutoLaunch}, cr, nil
 }
 
 // startChromeClearPolicies is called when Chrome fails to start in autostart
@@ -648,58 +646,63 @@ func StartFromSignInScreen(ctx context.Context, ui *uiauto.Context, name string)
 }
 
 // CancelKioskLaunch cancels the current Kiosk launch by pressing Ctrl+Alt+S.
-// Must be invoked on the Kiosk splash screen. A new Chrome instance will be
-// started with given options. It verifies a successful cancel by checking for
-// cancelled message on the screen.
-func (k *Kiosk) CancelKioskLaunch(ctx context.Context, opts ...chrome.Option) (*chrome.Chrome, error) {
-	const disableChromeRestartFile = "/run/disable_chrome_restart"
+//
+// A new Chrome instance will be started with given opts.
+func (k *Kiosk) CancelKioskLaunch(ctx context.Context, opts ...chrome.Option) (retCr *chrome.Chrome, retErr error) {
+	// Make sure to clean up Chrome on error.
+	defer func() {
+		if retErr != nil && retCr != nil {
+			if err := retCr.Close(ctx); err != nil {
+				testing.ContextLog(ctx, "Failed to close Chrome after cancel launch error: ", err)
+			}
+		}
+	}()
 
-	testing.ContextLog(ctx, "Cancelling Kiosk launch via Ctrl+Alt+S")
-	kw, err := input.Keyboard(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create a keyboard")
-	}
-	defer kw.Close(ctx)
-
+	testing.ContextLog(ctx, "Kiosk mode: Cancelling Kiosk launch via Ctrl+Alt+S")
 	if err := chrome.PrepareForRestart(); err != nil {
 		return nil, errors.Wrap(err, "failed to remove old dev tools port file")
 	}
 
-	// Create the flag file to make sure session_manager does not start Chrome
-	// again after Chrome exits.
-	_, err = os.Create(disableChromeRestartFile)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create Chrome flag file")
+	if err := waitSplashScreen(ctx, k.cr); err != nil {
+		return nil, errors.Wrap(err, "failed to wait for Kiosk splash screen")
 	}
-	defer func(ctx context.Context) {
-		if err := os.RemoveAll(disableChromeRestartFile); err != nil && !os.IsNotExist(err) {
-			testing.ContextLog(ctx, "Failed to remove flag file: ", err)
+
+	// Create the flag file so session_manager does not restart Chrome automatically. We will restart
+	// it ourselves.
+	clearFlag, err := setupDisableChromeRestartFlagFile()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to setup flag file")
+	}
+	defer func() {
+		if err := clearFlag(); err != nil {
+			if retErr == nil {
+				retErr = errors.Wrap(err, "failed to clear flag file")
+			} else {
+				testing.ContextLog(ctx, "Failed to clear flag file: ", err)
+			}
 		}
-	}(ctx)
+	}()
 
 	// Find the current Chrome process to wait for it to shut down later.
-	old, err := ashproc.WaitForRoot(ctx, time.Minute)
+	oldCr, err := ashproc.WaitForRoot(ctx, time.Minute)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to find the browser process")
 	}
 
-	if err := kw.Accel(ctx, "Ctrl+Alt+S"); err != nil {
-		return nil, errors.Wrap(err, "failed to hit Ctrl+Alt+S and attempt to quit a kiosk app")
+	if err := pressCancelLaunchAccelerator(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to cancel launch")
 	}
 
-	// Wait for the current Chrome to shut down.
-	if err := procutil.WaitForTerminated(ctx, old, 10*time.Second); err != nil {
+	if err := procutil.WaitForTerminated(ctx, oldCr, 10*time.Second); err != nil {
 		return nil, errors.Wrap(err, "browser process didn't terminate")
 	}
 
-	// Remove flag file so that session_manager will start Chrome after UI task is
-	// restarted.
-	if err := os.RemoveAll(disableChromeRestartFile); err != nil {
+	// Clean up flag file we created.
+	if err := clearFlag(); err != nil {
 		return nil, errors.Wrap(err, "failed to remove flag file")
 	}
 
-	// Restart Chrome without closing since the current Chrome process has already
-	// exited itself.
+	// Restart Chrome without closing since the current Chrome process already terminated.
 	cr, err := k.restartChromeNoCloseWithOptions(ctx, opts...)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to restart Chrome")
@@ -707,19 +710,60 @@ func (k *Kiosk) CancelKioskLaunch(ctx context.Context, opts ...chrome.Option) (*
 	return cr, nil
 }
 
-// WaitForSplashScreenShowing waits for the kiosk splash screen to show up as
-// identified by the cancelation message
-func (k *Kiosk) WaitForSplashScreenShowing() error {
-	testConn, err := k.cr.SigninProfileTestAPIConn(k.ctx)
+// setupDisableChromeRestartFlagFile creates a flag file to disable Chrome restart.
+//
+// The cleanup function returned can be used to later delete the file. It is safe and idempotent to
+// run the cleanup function multiple times.
+func setupDisableChromeRestartFlagFile() (func() error, error) {
+	const disableChromeRestartFile = "/run/disable_chrome_restart"
+	_, err := os.Create(disableChromeRestartFile)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create Chrome flag file to disable restart")
+	}
+	didClear := false
+	var clearErr error = nil
+	clearFunc := func() error {
+		if !didClear {
+			if err := os.RemoveAll(disableChromeRestartFile); err != nil && !os.IsNotExist(err) {
+				clearErr = errors.Wrap(err, "failed to remove Chrome flag file to reenable restart")
+			}
+		}
+		didClear = true
+		return clearErr
+	}
+	return clearFunc, nil
+}
+
+// waitSplashScreen waits for the Kiosk splash screen, as identified by the cancel launch message.
+func waitSplashScreen(ctx context.Context, cr *chrome.Chrome) error {
+	testConn, err := cr.SigninProfileTestAPIConn(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to signin extension")
 	}
 
 	ui := uiauto.New(testConn)
-	if err := ui.WaitUntilExists(cancelLaunchText)(k.ctx); err != nil {
+	if err := ui.WaitUntilExists(cancelLaunchText)(ctx); err != nil {
 		return errors.Wrap(err, "failed to find splash screen")
 	}
 	return nil
+}
+
+// pressCancelLaunchAccelerator presses the "Ctrl+Alt+S" accelerator to cancel launch.
+func pressCancelLaunchAccelerator(ctx context.Context) (retErr error) {
+	kw, err := input.Keyboard(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to create a keyboard")
+	}
+	if err := kw.Accel(ctx, "Ctrl+Alt+S"); err != nil {
+		retErr = errors.Wrap(err, "failed to hit Ctrl+Alt+S and attempt to quit a kiosk app")
+	}
+	if err := kw.Close(ctx); err != nil {
+		if retErr == nil {
+			return errors.Wrap(err, "failed to close keyboard writer")
+		}
+		testing.ContextLog(ctx, "Failed to close keyboard writer: ", err)
+	}
+	return
 }
 
 // GetLocalAccounts fetches DeviceLocalAccounts policy

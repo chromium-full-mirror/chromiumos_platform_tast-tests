@@ -69,16 +69,13 @@ func AutoLoginBailout(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	if err := kiosk.WaitForSplashScreenShowing(); err != nil {
-		s.Error("Failed to wait for Kiosk splash screen: ", err)
-	}
-
 	cr, err := kiosk.CancelKioskLaunch(
 		ctx,
 		chrome.NoLogin(),
 		chrome.DMSPolicy(fdms.URL),
 		chrome.LoadSigninProfileExtension(signinTestExtensionManifestKey),
-		chrome.KeepState())
+		chrome.KeepState(),
+	)
 	if err != nil {
 		s.Fatal("Failed to cancel Kiosk launch: ", err)
 	}
