@@ -13,6 +13,7 @@ import (
 	"net/url"
 	"path"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -471,9 +472,25 @@ func SavePowerLogHTML(ctx context.Context, outDir string, powerLogDict map[strin
 		typeToMetricsMap[metricType] = append(typeToMetricsMap[metricType], metric)
 	}
 
+	// Use a slice to maintain the metric type order and position "perf"
+	// table to the bottom of html page.
+	types := make([]string, 0, len(typeToMetricsMap))
+	for t := range typeToMetricsMap {
+		if t == "perf" {
+			continue
+		}
+		types = append(types, t)
+	}
+
+	sort.Strings(types)
+	// Add "perf" back to the end of the list so that "perf" always
+	// stays at the bottom of power_log.html page.
+	types = append(types, "perf")
+
 	rowIndentation := strings.Repeat(" ", 12)
 
-	for metricType, metrics := range typeToMetricsMap {
+	for _, metricType := range types {
+		metrics := typeToMetricsMap[metricType]
 		// Generate metric name string.
 		// headerRowStr example:
 		// "            ['time', 'zram_read_IOs', 'zram_IOs_in_flight', 'zram_write_IOs']".
