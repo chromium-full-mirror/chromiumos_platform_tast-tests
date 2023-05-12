@@ -6,6 +6,7 @@ package firmware
 
 import (
 	"context"
+	"io/ioutil"
 	"path/filepath"
 	"strings"
 	"time"
@@ -116,12 +117,6 @@ func ECVerifyVK(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
 	}
 
-	// Temporary sleep would help prevent the streaming RPC call error.
-	s.Log("Sleeping for a few seconds before starting a new Chrome")
-	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
-		s.Fatal("Failed to sleep for a few seconds: ", err)
-	}
-
 	s.Log("Logging in as a guest user")
 	chromeService := pb.NewChromeServiceClient(h.RPCClient.Conn)
 	if _, err := chromeService.New(ctx, &pb.NewRequest{
@@ -161,27 +156,36 @@ func ECVerifyVK(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	// Turn servo usb keyboard off prior to testing virtual keyboard.
-	initUSBKeyboard, err := h.Servo.GetOnOff(ctx, servo.USBKeyboard)
-	if err != nil {
-		s.Fatal("Failed to get state for servo usb keyboard: ", err)
-	}
-	s.Logf("Found servo usb keyboard: %t", initUSBKeyboard)
-	defer func(kbEmulator bool) {
-		var restoreVal servo.OnOffValue
-		switch kbEmulator {
-		case true:
-			restoreVal = servo.On
-		case false:
-			restoreVal = servo.Off
+	// Turn all emulated keyboards off prior to
+	// testing the virtual keyboard, and record their initial
+	// states for restoration later.
+	var initUSBKBState, initDefaultKBState bool
+	for kb, state := range map[servo.OnOffControl]bool{
+		servo.USBKeyboard:  initUSBKBState,
+		servo.InitKeyboard: initDefaultKBState,
+	} {
+		var err error
+		state, err = h.Servo.GetOnOff(ctx, kb)
+		if err != nil {
+			s.Fatalf("Failed to get state for %s: %v", kb, err)
 		}
-		if err := h.Servo.SetOnOff(ctx, servo.USBKeyboard, restoreVal); err != nil {
-			s.Fatal("Failed to restore servo usb keyboard state: ", err)
+		s.Logf("Disabling %s", kb)
+		if err := h.Servo.SetOnOff(ctx, kb, servo.Off); err != nil {
+			s.Fatalf("Failed to set %s off: %v", kb, err)
 		}
-	}(initUSBKeyboard)
-	s.Log("Disabling servo usb keyboard")
-	if err := h.Servo.SetOnOff(ctx, servo.USBKeyboard, servo.Off); err != nil {
-		s.Fatal("Failed to disable servo usb keyboard: ", err)
+		defer func(restoreVal bool, ctrl servo.OnOffControl) {
+			var onoff servo.OnOffValue
+			switch restoreVal {
+			case true:
+				onoff = servo.On
+			case false:
+				onoff = servo.Off
+			}
+			s.Logf("Restoring %s to %s", ctrl, onoff)
+			if err := h.Servo.SetOnOff(ctx, ctrl, onoff); err != nil {
+				s.Fatalf("Failed to restore %s to %s: %v", ctrl, onoff, err)
+			}
+		}(state, kb)
 	}
 
 	// Restore tablet mode settings so that DUT won't
@@ -233,8 +237,9 @@ func ECVerifyVK(ctx context.Context, s *testing.State) {
 		default:
 			restoreECTabletMode = false
 		}
-		// Short delay to ensure that the command on changing DUT's tablet mode state has fully propagated.
 		s.Log("Sleeping for a few seconds")
+		// GoBigSleepLint: Short delay to ensure that switching to tablet mode has
+		// fully taken effect.
 		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 			s.Fatal("Failed to sleep: ", err)
 		}
@@ -271,6 +276,11 @@ func ECVerifyVK(ctx context.Context, s *testing.State) {
 				if err := verifyVK(); err != nil {
 					s.Fatal("Failed to verify on-screen keyboard: ", err)
 				}
+			}
+			// If vk did not pop-up, document the output of lsusb for debugging
+			// purposes, and to check if any keyboards were enabled.
+			if err := recordUSBDevices(ctx, h, filepath.Join(s.OutDir(), "lsusb.txt")); err != nil {
+				s.Fatal("Failed to record lsusb: ", err)
 			}
 			s.Fatal("Failed to verify virtual keyboard, but passed with on-screen keyboard enabled: ", err)
 		}
@@ -338,6 +348,17 @@ func checkVKIsPresent(ctx context.Context, h *firmware.Helper, cvkc pb.CheckVirt
 		return errors.Errorf(
 			"found unexpected behavior, and got tabletmode: %t, VirtualKeyboardPresent: %t",
 			tabletMode, res.IsVirtualKeyboardPresent)
+	}
+	return nil
+}
+
+func recordUSBDevices(ctx context.Context, h *firmware.Helper, destPath string) error {
+	output, err := h.DUT.Conn().CommandContext(ctx, "lsusb").Output()
+	if err != nil {
+		return errors.Wrap(err, "running lsusb")
+	}
+	if err := ioutil.WriteFile(destPath, []byte(output), 0666); err != nil {
+		return errors.Wrap(err, "failed to write")
 	}
 	return nil
 }

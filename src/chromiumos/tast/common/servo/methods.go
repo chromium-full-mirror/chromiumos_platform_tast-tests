@@ -99,6 +99,7 @@ const (
 	CCDState       OnOffControl = "ccd_state"
 	DTSMode        OnOffControl = "servo_dts_mode"
 	RecMode        OnOffControl = "rec_mode"
+	InitKeyboard   OnOffControl = "init_keyboard"
 	USBKeyboard    OnOffControl = "init_usb_keyboard"
 	I2CMuxEn       OnOffControl = "i2c_mux_en"
 	ColdReset      OnOffControl = "cold_reset"
