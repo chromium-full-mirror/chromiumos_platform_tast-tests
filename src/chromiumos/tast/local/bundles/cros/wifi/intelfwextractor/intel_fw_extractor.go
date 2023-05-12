@@ -159,6 +159,9 @@ func validateYoYoMagicFWDump(fwDumpBuffer *bytes.Buffer) error {
 	var yoyoExpectedFileRegionIDs []int
 	var yoyoFoundFileRegionIDs []int
 
+	monitorFile := false
+	monitorFileSizeMB := 0
+
 	for fwDumpBuffer.Len() > 0 {
 		// Read a TLV header.
 		err := binary.Read(fwDumpBuffer, binary.LittleEndian, &tssrlHeader)
@@ -202,10 +205,27 @@ func validateYoYoMagicFWDump(fwDumpBuffer *bytes.Buffer) error {
 					return errors.Wrap(err, "failed to read the header of the fw dump")
 				}
 
+				if vYoYoMemHeader.NameLength > 0 {
+					name := string(bytes.Trim(value.Next(int(vYoYoMemHeader.NameLength)), "\x00"))
+					if name == "monitor" {
+						monitorFile = true
+						monitorFileSizeMB = value.Len() / 1048576
+					}
+				}
 				yoyoFoundFileRegionIDs = append(yoyoFoundFileRegionIDs, int(vYoYoMemHeader.RegionID))
 			}
 		}
 		fwDumpBuffer.Next(int(tssrlHeader.Length))
+	}
+
+	// Verify that the mandatory file monitor.lst exists.
+	if !monitorFile {
+		return errors.New("failed to find the monitor.lst file in the dump")
+	}
+
+	// Verify that the size of the monitor.lst file is equal to 4MB, refer to b/273749981#comment14
+	if monitorFileSizeMB != 4 {
+		return errors.Errorf("unexpected monitor.lst file size: got %d MB, want 4 MB", monitorFileSizeMB)
 	}
 
 	// Check that all expected files exists in the fw dump.
