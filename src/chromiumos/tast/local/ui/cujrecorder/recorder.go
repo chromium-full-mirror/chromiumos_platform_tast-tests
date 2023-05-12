@@ -9,7 +9,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"os"
 	"path"
 	"path/filepath"
 	"reflect"
@@ -31,6 +33,7 @@ import (
 	"chromiumos/tast/local/power"
 	"chromiumos/tast/local/power/setup"
 	"chromiumos/tast/local/tracing"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -255,6 +258,9 @@ type Recorder struct {
 
 	// screenRecorderCleanup cleans up the screen recorder, if present.
 	screenRecorderCleanup func(ctx context.Context)
+
+	// perfettoTmpConfigCleanup cleans up the temporary perfetto config file, if present.
+	perfettoTmpConfigCleanup func(ctx context.Context)
 
 	screenshotRecorder uiauto.ScreenshotRecorder
 
@@ -665,7 +671,21 @@ func (r *Recorder) StartTracingWithName(ctx context.Context, outDir, traceName, 
 	if r.activeSession != nil {
 		return errors.New("there is a tracing session currently running")
 	}
-	testing.ContextLog(ctx, "Starting system tracing session; Make sure to explicitly call StopTracing afterwards")
+
+	// If cujrecorder.extraChromeCategoriesForTracing is not empty, add
+	// those categories to the perfetto config.
+	if extraChromeCategoriesForTracing.Value() != "" {
+		cleanup, configPath, err := addExtraChromeTraceCategories(ctx, perfettoCfgPath, extraChromeCategoriesForTracing.Value())
+		if err != nil {
+			return err
+		}
+		r.perfettoTmpConfigCleanup = cleanup
+		perfettoCfgPath = configPath
+	}
+
+	testing.ContextLogf(ctx,
+		"Starting system tracing session (with config %s); Make sure to explicitly call StopTracing afterwards",
+		perfettoCfgPath)
 	sess, err := tracing.StartSession(ctx, perfettoCfgPath, tracing.WithTraceDataPath(tracePath), tracing.WithCompression())
 	if err != nil {
 		return errors.Wrap(err, "failed to start tracing")
@@ -697,8 +717,10 @@ func (r *Recorder) StopTracing(ctx context.Context) error {
 func (r *Recorder) SaveTraceFiles(ctx context.Context) error {
 	// Save trace files from all tracing sessions.
 	for tracePath, sess := range r.sessions {
-		testing.ContextLog(ctx, "Finalizing (and compressing) the trace data: ", tracePath)
-		sess.Finalize(ctx)
+		testing.ContextLog(ctx, "Finalizing (and compressing) the trace data at ", tracePath)
+		if err := sess.Finalize(ctx); err != nil {
+			testing.ContextLog(ctx, "Failed to save the trace data: ", err)
+		}
 	}
 
 	return nil
@@ -1090,6 +1112,9 @@ func (r *Recorder) stopRecording(ctx, runCtx context.Context) (e error) {
 
 	if r.screenRecorderCleanup != nil {
 		r.screenRecorderCleanup(ctx)
+	}
+	if r.perfettoTmpConfigCleanup != nil {
+		r.perfettoTmpConfigCleanup(ctx)
 	}
 
 	if r.screenshotRecorder != nil {
@@ -1633,4 +1658,60 @@ func collectMSPH(ctx context.Context, pv *perf.Values) {
 		}, psiSomeValues[0]*0.36)
 	}
 
+}
+
+// readAll reads from `filePath` and returns the content as a string.
+func readAll(filePath string) (string, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to open file %s", filePath)
+	}
+	buf, err := io.ReadAll(file)
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to read from file %s", filePath)
+	}
+	return string(buf), nil
+}
+
+// addExtraChromeTraceCategories adds `extraCategories` based on `templateConfigFilePath`,
+// saves the new config file and returns the clean up function and the path to the new config file.
+func addExtraChromeTraceCategories(
+	ctx context.Context, templateConfigFilePath, extraCategories string) (func(context.Context), string, error) {
+	configStr, err := readAll(templateConfigFilePath)
+	if err != nil {
+		return nil, "", err
+	}
+	categoriesReg := regexp.MustCompile(`included_categories\\":\[(.*)\]`)
+	subMatches := categoriesReg.FindAllStringSubmatch(configStr, -1)
+	if len(subMatches) != 2 {
+		return nil, "", errors.Errorf(
+			"expect 2 chrome data sources org.chromium.trace_event and org.chromium.trace_metadata, but found %v sources",
+			len(subMatches))
+	}
+	// Ensure the 2 matches from `org.chromium.trace_event` and
+	// `org.chromium.trace_metadata` are exactly the same.
+	if subMatches[0][1] != subMatches[1][1] {
+		return nil, "", errors.Errorf(
+			"%s != %s; expect two chrome data sources to have same categories", subMatches[0][1], subMatches[1][1])
+	}
+	categoriesStr := subMatches[0][1]
+	newCategories := strings.Split(extraCategories, ",")
+	newCategoriesStr := ""
+	for _, category := range newCategories {
+		newCategoriesStr += `,\"` + category + `\"`
+	}
+	newConfigStr := strings.Replace(configStr, categoriesStr, categoriesStr+newCategoriesStr, 2)
+
+	f, err := os.CreateTemp("", "perfetto_config.pbtxt")
+	perfettoTmpConfigCleanup := func(ctx context.Context) {
+		if err := os.Remove(f.Name()); err != nil {
+			testing.ContextLog(ctx, "Failed to remove the perfetto config tmp file")
+		}
+		testing.ContextLog(ctx, "Removed the perfetto config tmp file")
+	}
+	if _, err := f.WriteString(newConfigStr); err != nil {
+		perfettoTmpConfigCleanup(ctx)
+		return nil, "", errors.Wrap(err, "failed to write new config to config tmp file")
+	}
+	return perfettoTmpConfigCleanup, f.Name(), nil
 }

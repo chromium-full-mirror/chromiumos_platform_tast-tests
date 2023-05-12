@@ -54,3 +54,14 @@ var isLocalVar = testing.RegisterVarString(
 	"",
 	"A boolean string (true/false) signifying whether or not to skip certain startup procedures for local testing",
 )
+
+// extraChromeCategoriesForTracing is a runtime variable that specifies what
+// extra chrome categories will be added to perfetto config for tracing.
+// Refer to https://source.chromium.org/chromium/chromium/src/+/refs/heads/main:base/trace_event/builtin_categories.h;l=26-378;drc=b18d59d36ac77ddf968b6e3452109e67471ee38f;bpv=0;bpt=1
+// for the list of available categories.
+var extraChromeCategoriesForTracing = testing.RegisterVarString(
+	"cujrecorder.extraChromeCategoriesForTracing",
+	"",
+	`A comma-separated string specifying what extra chrome categories should be
+	 added to perfetto config for tracing`,
+)
