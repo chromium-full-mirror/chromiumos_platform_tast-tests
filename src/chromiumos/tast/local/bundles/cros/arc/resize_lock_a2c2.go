@@ -16,6 +16,7 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/display"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -141,6 +142,10 @@ func ResizeLockA2C2(ctx context.Context, s *testing.State) {
 	// The wallpaper will exist continuous if the Chrome session gets reused.
 	if err := wm.SetSolidWhiteWallpaper(ctx, tconn, s); err != nil {
 		s.Fatal("Failed to set the white wallpaper: ", err)
+	}
+
+	if err := wm.ResetSplashScreenCounter(ctx, tconn); err != nil {
+		s.Fatal("Failed to reset splash screen count: ", err)
 	}
 
 	// Install the test apps.

@@ -25,6 +25,7 @@ import (
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/media/imgcmp"
 	"chromiumos/tast/local/screenshot"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -98,6 +99,10 @@ const (
 
 	// WhiteWallpaperFileName is a filename of the white wallpaper.
 	WhiteWallpaperFileName = "white_wallpaper.jpg"
+
+	// ShowSplashLimit is the number of times a splash screen will appear for resize-locked apps.
+	ShowSplashLimit     = 2
+	splashLimitPrefName = "arc.show_resize_lock_splash_screen_limits"
 )
 
 // Represents the size of a window.
@@ -746,6 +751,16 @@ func SetSolidWhiteWallpaper(ctx context.Context, tconn *chrome.TestConn, s *test
               filename: 'test_wallpaper'
             })`, server.URL+"/"+WhiteWallpaperFileName); err != nil {
 		return errors.Wrap(err, "failed to set white wallpaper")
+	}
+
+	return nil
+}
+
+// ResetSplashScreenCounter resets the splash screen counter so that the splash screen shows up on the next app launch.
+func ResetSplashScreenCounter(ctx context.Context, tconn *chrome.TestConn) error {
+	// Make sure the splash screen shows |ShowSplashLimit| times.
+	if err := tconn.Call(ctx, nil, "tast.promisify(chrome.autotestPrivate.setAllowedPref)", splashLimitPrefName, ShowSplashLimit); err != nil {
+		return errors.Wrap(err, "failed to set splash screen show limit pref")
 	}
 
 	return nil

@@ -20,6 +20,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/screenshot"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -518,18 +519,11 @@ func testFullyLockedApp(ctx context.Context, tconn *chrome.TestConn, keyboard *i
 // testSplash installs 3 different resize-locked app, launches an activity twice, and verifies that the splash screen works as expected.
 // The spec of visibility: The splash must be shown twice per user, once per app at most.
 func testSplash(ctx context.Context, tconn *chrome.TestConn, keyboard *input.KeyboardEventWriter, s *testing.State, testName string) (retErr error) {
-	const (
-		// The splash must be shown twice per user at most.
-		showSplashLimit     = 2
-		splashLimitPrefName = "arc.show_resize_lock_splash_screen_limits"
-	)
-
 	a := s.FixtValue().(*arc.PreData).ARC
 	cr := s.FixtValue().(*arc.PreData).Chrome
 
-	// Make sure the splash screen shows |showSplashLimit| times.
-	if err := tconn.Call(ctx, nil, "tast.promisify(chrome.autotestPrivate.setAllowedPref)", splashLimitPrefName, showSplashLimit); err != nil {
-		return errors.Wrap(err, "failed to set splash screen show limit pref")
+	if err := wm.ResetSplashScreenCounter(ctx, tconn); err != nil {
+		return errors.Wrap(err, "ailed to reset splash screen count")
 	}
 
 	for i, test := range []struct {
@@ -553,11 +547,11 @@ func testSplash(ctx context.Context, tconn *chrome.TestConn, keyboard *input.Key
 		}
 		defer activity.Stop(ctx, tconn)
 
-		if err := wm.CheckResizeLockState(ctx, tconn, cr, activity, wm.PhoneResizeLockMode, i < showSplashLimit /* isSplashVisible */); err != nil {
+		if err := wm.CheckResizeLockState(ctx, tconn, cr, activity, wm.PhoneResizeLockMode, i < wm.ShowSplashLimit /* isSplashVisible */); err != nil {
 			return errors.Wrapf(err, "failed to verify resize lock state of %s", wm.ResizeLockMainActivityName)
 		}
 
-		if i < showSplashLimit {
+		if i < wm.ShowSplashLimit {
 			if err := wm.CloseSplash(ctx, tconn, test.method, keyboard); err != nil {
 				return errors.Wrapf(err, "failed to close the splash screen of %s via %s", wm.ResizeLockMainActivityName, test.method)
 			}
