@@ -49,6 +49,11 @@ func CellularRoamingPerProfileOrSim(ctx context.Context, s *testing.State) {
 		s.Fatal("Could not set PolicyAllowRoaming to false: ", err)
 	}
 	defer cleanup(ctxForCleanUp)
+	cleanup2, err := helper.InitServiceProperty(ctx, shillconst.ServicePropertyAutoConnect, false)
+	if err != nil {
+		s.Fatal("Could not set AutoConnect to false: ", err)
+	}
+	defer cleanup2(ctxForCleanUp)
 
 	cr, err := chrome.New(ctx)
 	if err != nil {
@@ -72,7 +77,8 @@ func CellularRoamingPerProfileOrSim(ctx context.Context, s *testing.State) {
 	cellularRow := nodewith.NameRegex(regexp.MustCompile(".*Connect")).HasClass("horizontal")
 
 	// Finder for row to first cellular network
-	firstCellularRowBtn := nodewith.HasClass("subpage-arrow").Role(role.Button).Ancestor(cellularRow.First()).Focusable()
+	firstCellularRow := cellularRow.First()
+	firstCellularRowBtn := nodewith.HasClass("subpage-arrow").Role(role.Button).Ancestor(firstCellularRow).Focusable()
 
 	if err := uiauto.Combine("Go to details page of first cellular network",
 		mdp.WaitUntilExists(firstCellularRowBtn),
@@ -81,7 +87,7 @@ func CellularRoamingPerProfileOrSim(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to go to details page of first cellular network: ", err)
 	}
 
-	if err := enableRoamingAndConnect(ctx, tconn, cr, mdp); err != nil {
+	if err := enableRoamingAndConnect(ctx, tconn, cr, mdp, firstCellularRowBtn); err != nil {
 		s.Fatal("Failed to connect to first network: ", err)
 	}
 
@@ -99,22 +105,41 @@ func CellularRoamingPerProfileOrSim(ctx context.Context, s *testing.State) {
 	if err := uiauto.Combine("Go to details page of second cellular network",
 		mdp.WaitUntilExists(secondCellularRowBtn),
 		mdp.LeftClick(secondCellularRowBtn),
-	)(ctx); err != nil {
-		s.Fatal("Failed to go to details page of second cellular network: ", err)
-	}
+	)(ctx); err == nil {
+		if err := enableRoamingAndConnect(ctx, tconn, cr, mdp, secondCellularRowBtn); err != nil {
+			s.Fatal("Failed to connect to second network: ", err)
+		}
 
-	if err := enableRoamingAndConnect(ctx, tconn, cr, mdp); err != nil {
-		s.Fatal("Failed to connect to second network: ", err)
+		if err := mdp.LeftClick(ossettings.BackArrowBtn)(ctx); err != nil {
+			s.Fatal("Failed to go back to mobile data page: ", err)
+		}
+
+		if err := ossettings.WaitUntilRefreshProfileCompletes(ctx, tconn); err != nil {
+			s.Fatal("Failed to wait until refresh profile complete: ", err)
+		}
+
+		if err := uiauto.Combine("Reconnect with first cellular row",
+			mdp.WaitUntilExists(firstCellularRow.Focusable()),
+			mdp.LeftClick(firstCellularRow),
+		)(ctx); err != nil {
+			s.Fatal("Failed to make click on first cellular row: ", err)
+		}
 	}
 }
 
-func enableRoamingAndConnect(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, mdp *ossettings.OSSettings) error {
+func enableRoamingAndConnect(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, mdp *ossettings.OSSettings, entryBtn *nodewith.Finder) error {
 	roamingToggleLabel := "Allow mobile data roaming"
 	ui := uiauto.New(tconn)
 
 	// If auto-connect is on, the network could already be connected. Auto-connect will be disabled and
 	// roaming will also be disabled. Once roaming is disabled, the network should disconnect on its own.
 	if err := ui.EnsureGoneFor(ossettings.DisconnectedStatus, 5*time.Second)(ctx); err == nil {
+		if err := ui.WithTimeout(15 * time.Second).WaitUntilExists(ossettings.AutoconnectToggle)(ctx); err != nil {
+			return errors.Wrap(err, "failed to wait for auto connect toggle to show")
+		}
+		if err := ui.WithTimeout(15 * time.Second).WaitUntilExists(ossettings.RoamingToggle)(ctx); err != nil {
+			return errors.Wrap(err, "failed to wait for roaming toggle to show")
+		}
 		if err := mdp.SetToggleOption(cr, "Automatically connect to cellular network", false)(ctx); err != nil {
 			return errors.Wrap(err, "failed to set auto-connect toggle option to false")
 		}
@@ -134,10 +159,14 @@ func enableRoamingAndConnect(ctx context.Context, tconn *chrome.TestConn, cr *ch
 		return errors.Wrap(err, "failed to find Connect button")
 	}
 
+	if err := ui.WithTimeout(15 * time.Second).WaitUntilExists(entryBtn)(ctx); err == nil {
+		if err := ui.LeftClick(entryBtn)(ctx); err != nil {
+			return errors.Wrap(err, "failed to navigate to cellular details page")
+		}
+	}
 	if err := uiauto.Combine("Ensure connecting label gone",
 		ui.WithTimeout(15*time.Second).WaitUntilEnabled(ossettings.RoamingToggle),
-		ui.WaitUntilGone(ossettings.ConnectingStatus),
-		ui.EnsureGoneFor(ossettings.ConnectingStatus, 10*time.Second),
+		ui.WithTimeout(15*time.Second).WaitUntilGone(ossettings.ConnectingStatus),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to exit connecting state")
 	}
