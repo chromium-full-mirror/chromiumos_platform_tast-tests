@@ -27,6 +27,7 @@ import (
 	"chromiumos/tast/remote/firmware/fixture"
 	"chromiumos/tast/remote/firmware/reporters"
 	fwpb "chromiumos/tast/services/cros/firmware"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/ssh/linuxssh"
@@ -35,9 +36,10 @@ import (
 )
 
 type jsonFwInfo struct {
-	Board string `json:"board_name"`
-	Model string `json:"model_name"`
-	FwID  string `json:"firmware_build_cros_version"`
+	Board  string `json:"board_name"`
+	Model  string `json:"model_name"`
+	FwID   string `json:"firmware_build_cros_version"`
+	Branch string `json:"branch_name"`
 }
 
 // secInfo will contain the fmap information for a fw image section.
@@ -201,9 +203,9 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 	// The 'SHIPPED' firmware IDs can be generated and exported to a json file
 	// by running the following bq command:
 	/*
-		bq query --use_legacy_sql=false --format json -n 3000 'SELECT DISTINCT board_name, model_name, firmware_build_cros_version
+		bq query --use_legacy_sql=false --format json -n 3000 'SELECT DISTINCT branch_name, board_name, model_name, firmware_build_cros_version
 		FROM `google.com:cros-goldeneye.prod.FirmwareQuals`
-		WHERE ship_status <> "NOT_SHIPPED" AND firmware_type <> "TYPE_RW"
+		WHERE ship_status <> "NOT_SHIPPED" AND firmware_type <> "TYPE_RW" AND firmware_build_cros_version <> "null"
 		ORDER BY board_name, model_name, firmware_build_cros_version' | json_pp > ~/chromiumos/src/platform/tast-tests/src/chromiumos/tast/remote/bundles/cros/firmware/data/shipped-firmwares.json
 	*/
 	// The json file was manually deposited as internal data under 'firmware/data'.
@@ -214,7 +216,10 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("While collecting the shipped fw versions: ", err)
 	}
-	s.Logf("SHIPPED firmwares found for model %s: %s", h.Model, shippedFwVersions)
+	s.Logf("SHIPPED firmwares found for model %s:", h.Model)
+	for i := range shippedFwVersions {
+		s.Log(shippedFwVersions[i].FwID)
+	}
 
 	// Create a new directory to store the downloaded files.
 	tmpDir, err := ioutil.TempDir("", "firmware-APROBootabilityPerformance")
@@ -224,8 +229,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 	defer os.RemoveAll(tmpDir)
 
 	// Download the latest shipped firmware.
-	board := firmware.CfgPlatformFromLSBBoard(h.Board)
-	if err := downloadFirmwareFile(ctx, s, board, shippedFwVersions[len(shippedFwVersions)-1], tmpDir); err != nil {
+	if err := downloadFirmwareFile(ctx, s, tmpDir, shippedFwVersions[len(shippedFwVersions)-1]); err != nil {
 		s.Fatal("Failed while downloading file: ", err)
 	}
 
@@ -310,7 +314,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 
 	// Verify RO/RW firmware versions are the latest shipped firmware after flashing.
 	// This is when RO and RW have the same version ids (i.e., RO_old + RW_old).
-	if err = verifyFwIDs(ctx, h, shippedFwVersions[len(shippedFwVersions)-1], shippedFwVersions[len(shippedFwVersions)-1]); err != nil {
+	if err = verifyFwIDs(ctx, h, shippedFwVersions[len(shippedFwVersions)-1].FwID, shippedFwVersions[len(shippedFwVersions)-1].FwID); err != nil {
 		s.Fatal("While comparing firmware versions: ", err)
 	}
 
@@ -323,7 +327,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 
 	// Skip speedometer test if the RW_new firmware is the same as the
 	// RO_old shipped version because this was already verified and set as baseline.
-	if shippedFwVersions[len(shippedFwVersions)-1] == rwNewID {
+	if shippedFwVersions[len(shippedFwVersions)-1].FwID == rwNewID {
 		s.Log("WARNING! Speed test skipped because RW_new is the same as RO_old. Already verified")
 	} else {
 		// Setting DUT to boot from the RW section that contains the newest firmware ID.
@@ -341,7 +345,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 		}
 
 		// Verify that the RO firmware has not been modified and RW has the RW_new after the flashing process.
-		if err := verifyFwIDs(ctx, h, shippedFwVersions[len(shippedFwVersions)-1], rwNewID); err != nil {
+		if err := verifyFwIDs(ctx, h, shippedFwVersions[len(shippedFwVersions)-1].FwID, rwNewID); err != nil {
 			s.Fatal("While comparing firmware versions: ", err)
 		}
 
@@ -360,7 +364,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 	// Repeat steps for older RO firmware versions (i.e., RO_old-n + RW_new).
 	for i := len(shippedFwVersions) - 2; i >= 0; i-- {
 		s.Log("Downloading an older shipped firmware file")
-		if err := downloadFirmwareFile(ctx, s, board, shippedFwVersions[i], tmpDir); err != nil {
+		if err := downloadFirmwareFile(ctx, s, tmpDir, shippedFwVersions[i]); err != nil {
 			s.Fatal("Failed while downloading file: ", err)
 		}
 
@@ -375,7 +379,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 		}
 
 		s.Log("Verifying the firmware versions after flash")
-		if err := verifyFwIDs(ctx, h, shippedFwVersions[i], rwNewID); err != nil {
+		if err := verifyFwIDs(ctx, h, shippedFwVersions[i].FwID, rwNewID); err != nil {
 			s.Fatal("Failed while checking firmware versions: ", err)
 		}
 
@@ -391,7 +395,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	if shippedFwVersions[len(shippedFwVersions)-1] == roNewID {
+	if shippedFwVersions[len(shippedFwVersions)-1].FwID == roNewID {
 		s.Log("WARNING! Speed test skipped because RO_new is the same as RO_old. Already verified")
 	} else {
 		// Testing scenario RO/RW with the to-be-qualified firmware (i.e., RO_new + RW_new).
@@ -421,30 +425,36 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 
 // downloadFirmwareFile will download a tar file from cloud and save to a temporary directory,
 // based on the shipped firmware version passed in for test.
-func downloadFirmwareFile(ctx context.Context, s *testing.State, board, fwid, tmpDir string) error {
+func downloadFirmwareFile(ctx context.Context, s *testing.State, tmpDir string, fwToTest jsonFwInfo) error {
 	// Split fwid into separate components.
-	splitout := strings.Split(fwid, ".")
+	splitout := strings.Split(fwToTest.FwID, ".")
 	if len(splitout) != 3 {
-		return errors.Errorf("unexpected fw id format: %s", fwid)
+		return errors.Errorf("unexpected fw id format: %s", fwToTest.FwID)
 	}
 
 	// List of possible paths that contain the firmware_from_source.tar.bz2 file.
 	pathsPool := []string{
 		/*
+			Use the branch name obtained from the json file as the first source to download the firmware file:
+			gs://chromeos-image-archive/firmware-kukui-12573.B-branch-firmware/R79-12573.342.0/
+		*/
+		"gs://chromeos-image-archive/" + fwToTest.Branch + "-branch-firmware",
+
+		/*
 			This format is one of the most commonly found:
 			gs://chromeos-image-archive/zork-firmware/R87-13434.635.0/
 		*/
-		"gs://chromeos-image-archive/" + board + "-firmware",
+		"gs://chromeos-image-archive/" + fwToTest.Board + "-firmware",
 
 		/*
 			We've also seen the following on some models:
 			gs://chromeos-image-archive/firmware-zork-13434.B-branch-firmware/R87-13434.636.0/
 		*/
-		"gs://chromeos-image-archive/firmware-" + board + "-" + splitout[0] + ".B-branch-firmware",
+		"gs://chromeos-image-archive/firmware-" + fwToTest.Board + "-" + splitout[0] + ".B-branch-firmware",
 	}
 
 	// Regular expression to match the required firmware id.
-	re := regexp.MustCompile(`\/[R].*-` + fwid)
+	re := regexp.MustCompile(`\/[R].*-` + fwToTest.FwID)
 
 	var releasedFWid, dir string
 	for _, dir = range pathsPool {
@@ -453,7 +463,7 @@ func downloadFirmwareFile(ctx context.Context, s *testing.State, board, fwid, tm
 			if !strings.Contains(string(stderr), "One or more URLs matched no objects.") {
 				return errors.Wrapf(err, "failed to run 'gsutil ls' to find the complete path: %v", stderr)
 			}
-			testing.ContextLogf(ctx, "WARNING! Model %q doesn't have the following path: %s", board, dir)
+			testing.ContextLogf(ctx, "WARNING! Model %q doesn't have the following path: %s", fwToTest.Board, dir)
 		} else {
 			releasedFWid = re.FindString(string(out))
 			if releasedFWid != "" {
@@ -462,7 +472,7 @@ func downloadFirmwareFile(ctx context.Context, s *testing.State, board, fwid, tm
 		}
 	}
 	if releasedFWid == "" {
-		return errors.Errorf("no matches found for firmware id: %s board: %s in known paths", fwid, board)
+		return errors.Errorf("no matches found for firmware id: %s board: %s in known paths", fwToTest.FwID, fwToTest.Board)
 	}
 
 	// Stage the complete path.
@@ -472,13 +482,13 @@ func downloadFirmwareFile(ctx context.Context, s *testing.State, board, fwid, tm
 	if err != nil {
 		// Some firmware files were found under a sub-directory defined by the board name.
 		if !strings.Contains(err.Error(), "file does not exist") {
-			return errors.Wrapf(err, "failed to stage file for board %q", board)
+			return errors.Wrapf(err, "failed to stage file for board %q", fwToTest.Board)
 		}
-		testing.ContextLogf(ctx, "WARNING! file does not exist, re-attempting on sub-directory: %s", board)
-		url = dir + releasedFWid + "/" + board + "/" + firmwareFileName
+		testing.ContextLogf(ctx, "WARNING! file does not exist, re-attempting on sub-directory: %s", fwToTest.Board)
+		url = dir + releasedFWid + "/" + fwToTest.Board + "/" + firmwareFileName
 		r, err = cs.Stage(ctx, url)
 		if err != nil {
-			return errors.Wrapf(err, "failed to stage file after adding sub-directory %s", board)
+			return errors.Wrapf(err, "failed to stage file after adding sub-directory %s", fwToTest.Board)
 		}
 	}
 
@@ -656,7 +666,7 @@ func checkDeviation(ctx context.Context, h *firmware.Helper, baseline, result fl
 }
 
 // collectShippedFws will parse the firmware IDs from the json file.
-func collectShippedFws(h *firmware.Helper, filepath string) ([]string, error) {
+func collectShippedFws(h *firmware.Helper, filepath string) ([]jsonFwInfo, error) {
 	out, err := ioutil.ReadFile(filepath)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read JSON file")
@@ -667,12 +677,12 @@ func collectShippedFws(h *firmware.Helper, filepath string) ([]string, error) {
 		return nil, errors.Wrap(err, "failed to parse JSON file")
 	}
 
-	var shippedFws []string
+	var shippedFws []jsonFwInfo
 	for _, values := range data {
 		if values.Model == h.Model {
-			shippedFws = append(shippedFws, values.FwID)
+			shippedFws = append(shippedFws, values)
 		} else if values.Board == h.Model && values.Model == "" {
-			shippedFws = append(shippedFws, values.FwID)
+			shippedFws = append(shippedFws, values)
 		}
 	}
 
