@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package pvs
+package pvsutils
 
 import (
 	"context"
@@ -14,9 +14,15 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-const pvsOutputDir = "/home/chronos/user/.pvs"
+const chronosHome = "/home/chronos/user"
+const uploadConfigJSON = `{"bucket":"chromeos-moblab-pvs-dev","service_account":"/home/chronos/user/.pvs/upload_config/.service_account.json","boto_key":""}`
 
+var pvsOutputDir = path.Join(chronosHome, ".pvs")
 var pvsResultsDir = path.Join(pvsOutputDir, "results")
+var gitCookiesPath = path.Join(chronosHome, ".gitcookies")
+var uploadConfigDir = path.Join(pvsOutputDir, "upload_config")
+var serviceAccountPath = path.Join(uploadConfigDir, ".service_account.json")
+var uploadConfigJSONPath = path.Join(uploadConfigDir, "upload_config.json")
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
@@ -32,6 +38,7 @@ func init() {
 		TearDownTimeout: 2 * time.Minute,
 		PreTestTimeout:  2 * time.Minute,
 		PostTestTimeout: 1 * time.Minute,
+		Vars:            []string{"pvs.git_cookies", "pvs.service_account"},
 	})
 
 }
@@ -41,9 +48,31 @@ type pvsFixture struct {
 }
 
 func (f *pvsFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	// Run shop unpack
+	// Populate git cookies
 	dut := s.DUT().Conn()
-	shopUnpack := `echo test0000 | sudo -Sv && FORCE_DLM_SKU_ID=1111 shop unpack --dut localhost:2223 --milestone 115 --chromeos-version 15460.0.0`
+	gitCookies := s.RequiredVar("pvs.git_cookies")
+	if _, err := writeToFileAsChronos(ctx, dut, gitCookies, gitCookiesPath); err != nil {
+		s.Fatal("Error occured when populating git cookies: ", err)
+	}
+
+	// Populate service account and upload config
+	if _, err := removeAsRoot(ctx, dut, pvsOutputDir); err != nil {
+		s.Fatal("Error occured when trying to cleanup pvs output dir: ", err)
+	}
+	serviceAccount := s.RequiredVar("pvs.service_account")
+	createUploadConfig := fmt.Sprintf(`mkdir -p %v`, uploadConfigDir)
+	if _, err := RunAsChronos(ctx, dut, createUploadConfig); err != nil {
+		s.Fatal("Error occured when creating upload config dir: ", err)
+	}
+	if _, err := writeToFileAsChronos(ctx, dut, serviceAccount, serviceAccountPath); err != nil {
+		s.Fatal("Error occured when populating service account: ", err)
+	}
+	if _, err := writeToFileAsChronos(ctx, dut, uploadConfigJSON, uploadConfigJSONPath); err != nil {
+		s.Fatal("Error occured when populating upload config : ", err)
+	}
+
+	// Run shop unpack
+	shopUnpack := `FORCE_DLM_SKU_ID=1111 shop unpack --dut localhost:2223 --milestone 115 --chromeos-version 15393.59.0`
 	shopOutput, err := RunAsChronos(ctx, dut, shopUnpack)
 	if err != nil {
 		s.Fatal("Error occured when running shop unpack: ", err)
@@ -63,7 +92,7 @@ func (f *pvsFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{
 func (f *pvsFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 	// Remove pvs output dir created during tests
 	dut := s.DUT().Conn()
-	if _, err := removeDirAsRoot(ctx, dut, pvsOutputDir); err != nil {
+	if _, err := removeAsRoot(ctx, dut, pvsOutputDir); err != nil {
 		s.Fatal("Error occured when trying to cleanup pvs output dir: ", err)
 	}
 
@@ -78,7 +107,7 @@ func (f *pvsFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 func (f *pvsFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
 	// Remove any pre-existing results dir so incremental run tests can work correctly
 	dut := s.DUT().Conn()
-	if _, err := removeDirAsRoot(ctx, dut, pvsResultsDir); err != nil {
+	if _, err := removeAsRoot(ctx, dut, pvsResultsDir); err != nil {
 		s.Fatal("Error occured when trying to cleanup existing pvs results dir: ", err)
 	}
 }

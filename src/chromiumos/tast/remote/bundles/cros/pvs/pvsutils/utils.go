@@ -2,10 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package pvs
+package pvsutils
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"go.chromium.org/tast/core/ssh"
@@ -30,7 +31,18 @@ func runAsRoot(ctx context.Context, cmd *ssh.Cmd) (string, error) {
 	return string(out), err
 }
 
-func removeDirAsRoot(ctx context.Context, dut *ssh.Conn, dir string) (string, error) {
-	cmd := dut.CommandContext(ctx, "sudo", "rm", "-rf", dir)
+func removeAsRoot(ctx context.Context, dut *ssh.Conn, path string) (string, error) {
+	cmd := dut.CommandContext(ctx, "sudo", "rm", "-rf", path)
 	return runAsRoot(ctx, cmd)
+}
+
+func runAsChronosWithStdin(ctx context.Context, dut *ssh.Conn, cmd, stdin string) (string, error) {
+	wrappedCmd := dut.CommandContext(ctx, "runuser", "-l", "chronos", "-c", cmd)
+	wrappedCmd.Stdin = strings.NewReader(stdin)
+	return runAsRoot(ctx, wrappedCmd)
+}
+
+func writeToFileAsChronos(ctx context.Context, dut *ssh.Conn, content, path string) (string, error) {
+	writeToFile := fmt.Sprintf(`cat > %v`, path)
+	return runAsChronosWithStdin(ctx, dut, writeToFile, content)
 }

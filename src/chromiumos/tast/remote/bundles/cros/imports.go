@@ -38,6 +38,7 @@ import (
 	_ "chromiumos/tast/remote/bundles/cros/platform"
 	_ "chromiumos/tast/remote/bundles/cros/policy"
 	_ "chromiumos/tast/remote/bundles/cros/power"
+	_ "chromiumos/tast/remote/bundles/cros/pvs"
 	_ "chromiumos/tast/remote/bundles/cros/rollback"
 	_ "chromiumos/tast/remote/bundles/cros/sdcard"
 	_ "chromiumos/tast/remote/bundles/cros/secagentd"

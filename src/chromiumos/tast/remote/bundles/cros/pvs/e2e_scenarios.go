@@ -2,14 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package platform
+package pvs
 
 import (
 	"context"
 	"fmt"
 	"time"
 
-	"chromiumos/tast/remote/bundles/cros/platform/pvs"
+	"chromiumos/tast/remote/bundles/cros/pvs/pvsutils"
+
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -20,7 +21,7 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PVSValidation,
+		Func:         E2EScenarios,
 		Desc:         "Validate PVS",
 		BugComponent: "b:1110659",
 		Contacts: []string{
@@ -71,25 +72,24 @@ func init() {
 	})
 }
 
-// PVSValidation runs the PVS scenario tests against a DUT using the NextGen
+// E2EScenarios runs the PVS scenario tests against a DUT using the NextGen
 // workflow
 // Current preconditions:
 //   - .gitcookies are populated in ${CHRONOS_HOME}/.gitcookies
 //   - upload_config dir is populated in ${CHRONOS_HOME}/.pvs/
-//   - /etc/sudoers.d is configured with `Defaults !tty_tickets`
 //   - reverse tunnel is set up from the host to the dut on port 2223
-func PVSValidation(ctx context.Context, s *testing.State) {
+func E2EScenarios(ctx context.Context, s *testing.State) {
 	dut := s.DUT().Conn()
 	containerID := s.FixtValue().(string)
 	scenarioTest := s.Param().(string)
 	runScenarioTest := fmt.Sprintf(
-		`docker exec -e TESTDATA_DIR=%q %q /usr/bin/gosu pvs %q -test.v -test.run %q`,
+		`docker exec -e TESTDATA_DIR=%q %q /usr/bin/gosu pvs %q -test.v -test.run "^%v\$"`,
 		testDataPath,
 		containerID,
 		scenarioTestRunnerPath,
 		scenarioTest,
 	)
-	if _, err := pvs.RunAsChronos(ctx, dut, runScenarioTest); err != nil {
+	if _, err := pvsutils.RunAsChronos(ctx, dut, runScenarioTest); err != nil {
 		s.Fatal("Error occured when running scenario test: ", err)
 	}
 }
