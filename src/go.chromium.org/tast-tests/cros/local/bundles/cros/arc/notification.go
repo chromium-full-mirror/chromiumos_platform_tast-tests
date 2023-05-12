@@ -6,14 +6,12 @@ package arc
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/notification"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -88,7 +86,6 @@ func Notification(ctx context.Context, s *testing.State) {
 		// earlier.
 		notificationID = "|" + pkg + "|" + msgID + "|"
 	)
-	pollOpts := &testing.PollOptions{Timeout: 10 * time.Second}
 
 	s.Logf("Installing %s", apk)
 	if err := a.Install(ctx, arc.APKPath(apk)); err != nil {
@@ -126,36 +123,13 @@ func Notification(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to click %s button: %v", sendID, err)
 	}
 
-	findNotification := func() (*ash.Notification, error) {
-		ns, err := ash.Notifications(ctx, tconn)
-		if err != nil {
-			return nil, err
-		}
-		for _, n := range ns {
-			if strings.Contains(n.ID, notificationID) {
-				return n, nil
-			}
-		}
-		return nil, errors.New("notification not found")
-	}
+	//  Default message timeout, Messages should be almost instant, and 10 seconds is very generous margin of error.
+	timeout := 10 * time.Second
 
-	var notif *ash.Notification
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		n, err := findNotification()
-		if err != nil {
-			return err
-		}
-		notif = n
-		return nil
-	}, pollOpts); err != nil {
-		s.Fatal("Notification wasn't shown: ", err)
-	}
-
-	if notif.Title != title {
-		s.Fatalf("Unexpected notification title: got %q; want %q", notif.Title, title)
-	}
-	if notif.Message != text {
-		s.Fatalf("Unexpected notification message: got %q; want %q", notif.Message, text)
+	//  Wait for the initial notification to show.
+	_, err = ash.WaitForNotification(ctx, tconn, timeout, ash.WaitIDContains(notificationID), ash.WaitTitle(title), ash.WaitMessageContains(text))
+	if err != nil {
+		s.Fatalf("Expected notification for %s did not show", title)
 	}
 
 	// Update the title.
@@ -166,32 +140,18 @@ func Notification(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to click %s button: %v", sendID, err)
 	}
 
-	// Wait for that the title is updated.
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		n, err := findNotification()
-		if err != nil {
-			return err
-		}
-		if n.Title != title2 {
-			return errors.Errorf("unexpected title: got %q; want %q", n.Title, title2)
-		}
-		return nil
-	}, pollOpts); err != nil {
-		s.Fatal("Notification wasn't updated: ", err)
+	// Wait for that the title is updated in new notification.
+	_, err = ash.WaitForNotification(ctx, tconn, timeout, ash.WaitIDContains(notificationID), ash.WaitTitle(title2), ash.WaitMessageContains(text))
+	if err != nil {
+		s.Fatalf("Expected notification for %s did not show: %v", title2, err)
 	}
 
 	// Remove the notification.
-	if err := d.Object(ui.ID(removeID)).Click(ctx); err != nil {
-		s.Fatalf("Failed to click %s button: %v", removeID, err)
+	if err = ash.CloseNotifications(ctx, tconn); err != nil {
+		s.Fatal("Failed to close all notifications: ", err)
 	}
-
-	// Wait for that the notification was removed.
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if _, err := findNotification(); err == nil {
-			return errors.New("notification still visible")
-		}
-		return nil
-	}, pollOpts); err != nil {
+	// Ensure notification was removed.
+	if err = ash.WaitUntilNotificationGone(ctx, tconn, timeout, ash.WaitIDContains(notificationID), ash.WaitTitle(title2), ash.WaitMessageContains(text)); err != nil {
 		s.Fatal("Notification wasn't removed: ", err)
 	}
 }
