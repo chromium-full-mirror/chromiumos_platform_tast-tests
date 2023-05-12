@@ -141,13 +141,6 @@ func (u *UpdateService) ResetUpdateEngine(ctx context.Context, req *empty.Empty)
 }
 
 func ensureUpdateEngineReady(ctx context.Context) error {
-	// Reset update engine status to ensure there are no previous ongoing updates.
-	// TODO(b/239680170): Remove when update engine cleanup is deferred in tests.
-	testing.ContextLog(ctx, "Resetting update engine status")
-	if err := updateengine.ClearPrefs(ctx); err != nil {
-		return errors.Wrap(err, "failed to reset udpate engine status")
-	}
-
 	statusRegexp, err := regexp.Compile(`CURRENT_OP=(.*)`)
 	if err != nil {
 		return errors.Wrap(err, "failed to compile the regexp")
@@ -171,6 +164,9 @@ func ensureUpdateEngineReady(ctx context.Context) error {
 
 		latestStatus = result[1]
 		if latestStatus != string(ue.UpdateStatusIdle) {
+			// If this error is triggered, ensure the previous test in the suite
+			// resets update engine successfully after an update attempt. See
+			// b/239680170.
 			return errors.Wrapf(err, "update engine is not ready yet, current status is %q", latestStatus)
 		}
 

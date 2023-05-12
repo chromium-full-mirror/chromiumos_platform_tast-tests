@@ -25,6 +25,7 @@ func init() {
 			"gabormada@google.com",
 			"chromeos-commercial-remote-management@google.com",
 		},
+		Parent:          fixture.UpdateEngine, // Ensure update engine is reset.
 		Impl:            &autoupdateFixt{},
 		SetUpTimeout:    2 * time.Minute,
 		PreTestTimeout:  30 * time.Second,
