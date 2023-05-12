@@ -15,6 +15,7 @@ import (
 	"chromiumos/tast/services/cros/chrome/uiauto/quicksettings"
 	"chromiumos/tast/services/cros/ui"
 	"chromiumos/tast/services/cros/wifi"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
@@ -28,9 +29,9 @@ func init() {
 		Desc:         "Verify the open network can be shared with all users",
 		Contacts: []string{
 			"cros-connectivity@google.com",
-			"cros-conn-test-team@google.com",
-			"vivian.chen@cienet.com",
-			"cienet-development@googlegroups.com",
+			"chromeos-connectivity-engprod@google.com",
+			"shijinabraham@google.com",
+			"chadduffin@chromium.org",
 		},
 		BugComponent: "b:1131912", // ChromeOS > Software > System Services > Connectivity > WiFi
 		Attr:         []string{"group:wificell", "wificell_e2e_unstable"},
