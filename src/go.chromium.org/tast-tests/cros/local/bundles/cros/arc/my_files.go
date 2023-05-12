@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
+	"go.chromium.org/tast-tests/cros/local/sysutil"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -46,6 +47,7 @@ func init() {
 	})
 }
 
+// MyFiles implements the test scenario of arc.MyFiles.
 func MyFiles(ctx context.Context, s *testing.State) {
 	a := s.FixtValue().(*arc.PreData).ARC
 	cr := s.FixtValue().(*arc.PreData).Chrome
@@ -65,8 +67,8 @@ func MyFiles(ctx context.Context, s *testing.State) {
 		s.Fatal("Android -> CrOS failed: ", err)
 	}
 
-	if err := testCrosToARC(ctx, a, cr, d, myFilesPath); err != nil {
-		s.Fatal("CrOS -> Android failed: ", err)
+	if err := testFilesAppIntegrationForMyFiles(ctx, a, cr, d, myFilesPath); err != nil {
+		s.Fatal("Files app integration test failed: ", err)
 	}
 }
 
@@ -122,29 +124,33 @@ func testPushToARCAndReadFromCros(ctx context.Context, a *arc.ARC, sourcePath, a
 	return nil
 }
 
-// testCrosToARC checks whether a file put in the ChromeOS MyFiles directory
-// can be read by Android apps.
-func testCrosToARC(ctx context.Context, a *arc.ARC, cr *chrome.Chrome, d *ui.Device, myFilesPath string) error {
+// testFilesAppIntegrationForMyFiles checks whether a file put in the ChromeOS MyFiles directory
+// can be edited with test Android app after it is opened with the app from Files app's
+// "Open with..." menu.
+func testFilesAppIntegrationForMyFiles(ctx context.Context, a *arc.ARC, cr *chrome.Chrome, d *ui.Device, myFilesPath string) error {
 	const (
 		filename    = "storage.txt"
 		fileContent = "this is a test"
 	)
 
-	testing.ContextLog(ctx, "Testing CrOS -> Android")
+	testing.ContextLog(ctx, "Testing Files app integration")
 
 	testFilePath := filepath.Join(myFilesPath, filename)
 	if err := ioutil.WriteFile(testFilePath, []byte(fileContent), 0666); err != nil {
 		return errors.Wrapf(err, "failed to create test file %s", testFilePath)
 	}
 	defer os.Remove(testFilePath)
+	// The test file's mode will be 0644 due to umask. Change the ownership of the file
+	// appropriately so that the test Android app can write to it.
+	if err := os.Chown(testFilePath, int(sysutil.ChronosUID), int(sysutil.ChronosGID)); err != nil {
+		return errors.Wrapf(err, "failed to chown test file %s", testFilePath)
+	}
 
 	config := storage.TestConfig{
 		DirName:     filesapp.MyFiles,
 		FileName:    filename,
 		FileContent: fileContent,
+		ReadOnly:    false,
 	}
-	if err := storage.TestOpenWithAndroidApp(ctx, a, cr, d, config); err != nil {
-		return errors.Wrap(err, "failed to open file with Android app")
-	}
-	return nil
+	return storage.TestFilesAppIntegration(ctx, a, cr, d, config)
 }

@@ -44,6 +44,7 @@ func init() {
 	})
 }
 
+// Drivefs implements the test scenario of arc.Drivefs.
 func Drivefs(ctx context.Context, s *testing.State) {
 	const (
 		filename    = "storage_drivefs.txt"
@@ -98,8 +99,9 @@ func Drivefs(ctx context.Context, s *testing.State) {
 		DirTitle:      filesapp.FilesTitlePrefix + filesapp.MyDrive,
 		FileContent:   fileContent,
 		CheckFileType: true,
+		ReadOnly:      true,
 	}
-	if err := storage.TestOpenWithAndroidApp(ctx, a, cr, d, config); err != nil {
+	if err := storage.TestFilesAppIntegration(ctx, a, cr, d, config); err != nil {
 		s.Fatal("Failed to open file with Android app: ", err)
 	}
 }

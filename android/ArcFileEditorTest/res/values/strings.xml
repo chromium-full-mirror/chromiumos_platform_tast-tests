@@ -6,5 +6,6 @@
 
 <resources>
     <!-- The application name [CHAR_LIMIT=NONE] -->
-    <string name="app_name" translatable="false">ARC File Reader Test</string>
+    <string name="app_name" translatable="false">ARC File Editor Test</string>
+    <string name="label_button_modify" translatable="false">Modify file</string>
 </resources>

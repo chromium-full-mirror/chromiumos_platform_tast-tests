@@ -50,6 +50,7 @@ func init() {
 	})
 }
 
+// MTP implements the test scenario of arc.MTP.
 func MTP(ctx context.Context, s *testing.State) {
 	const (
 		filename    = "storage.txt"
@@ -100,8 +101,9 @@ func MTP(ctx context.Context, s *testing.State) {
 		SubDirectories: []string{"Download"},
 		FileName:       filename,
 		FileContent:    fileContent,
+		ReadOnly:       true,
 	}
-	if err := storage.TestOpenWithAndroidApp(ctx, a, cr, d, config); err != nil {
+	if err := storage.TestFilesAppIntegration(ctx, a, cr, d, config); err != nil {
 		s.Fatal("Failed to open file with Android app: ", err)
 	}
 }

@@ -27,11 +27,18 @@ const (
 	uiTimeout = 10 * time.Second
 
 	// Test app's name displayed in the context menu of the Files app.
-	testAppName = "ARC File Reader Test"
+	testAppName = "ARC File Editor Test"
 	// Test app's package name.
-	testAppPkgName = "org.chromium.arc.testapp.filereader"
+	testAppPkgName = "org.chromium.arc.testapp.fileeditor"
 	// Test app's APK file name.
-	testAppApkName = "ArcFileReaderTest.apk"
+	testAppApkName = "ArcFileEditorTest.apk"
+	// IDs of UI elements shown on test app.
+	fileContentID  = testAppPkgName + ":id/file_content"
+	modifyButtonID = testAppPkgName + ":id/button_modify"
+
+	// The message that should be added by ArcFileEditorTest when "Modify file" button is clicked.
+	// This should be kept in sync with MainActivity.java of ArcFileEditorTest.
+	messageAddedByApp = ", this is added by Android"
 )
 
 // TestConfig stores the details of the directory under test and misc test configurations.
@@ -46,18 +53,24 @@ type TestConfig struct {
 	// Optional: Expected title of the Ash window of the Files app when opened |DirName| on the
 	// navigation tree. When unspecified, |filesapp.FilesTitlePrefix + DirName| will be used.
 	DirTitle string
-	// Expected file content of the test file.
+	// File content of the provided test file.
 	FileContent string
 	// Optional: If set to true, wait for file type to appear before opening the file.
 	// Currently used by DriveFS to ensure metadata has arrived.
 	CheckFileType bool
+	// Optional: If set to true, skip checking if the test app can write to the test file opened
+	// from Files app.
+	ReadOnly bool
 }
 
-// TestOpenWithAndroidApp opens a test file in the specified directory, e.g. Google Drive,
-// Downloads, MyFiles etc, using the test android app, ArcFileReaderTest. The app will display
-// the intent action, URI and file content on its UI, and the displayed file content is validated
-// against the expected value.
-func TestOpenWithAndroidApp(ctx context.Context, a *arc.ARC, cr *chrome.Chrome, d *androidui.Device, config TestConfig) error {
+// TestFilesAppIntegration tests ARC storage integration with Files app for a test file in the
+// specified directory, e.g. Google Drive, Downloads, MyFiles etc, using the test android app,
+// ArcFileEditorTest. The tested scenario is as follows:
+//  1. Open the file with the Android app via Files app's "Open with...", and validate the file
+//     content read by the Android app (which is shown on its UI).
+//  2. (optional, only when TestConfig.ReadOnly is false) Modify the file with the Android app and
+//     validate the modification on the CrOS side with Files app's QuickView.
+func TestFilesAppIntegration(ctx context.Context, a *arc.ARC, cr *chrome.Chrome, d *androidui.Device, config TestConfig) error {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
@@ -66,11 +79,11 @@ func TestOpenWithAndroidApp(ctx context.Context, a *arc.ARC, cr *chrome.Chrome, 
 		config.DirTitle = filesapp.FilesTitlePrefix + config.DirName
 	}
 
-	testing.ContextLogf(ctx, "Performing TestOpenWithAndroidApp on: %s", config.DirName)
+	testing.ContextLogf(ctx, "Performing TestFilesAppIntegration on: %s", config.DirName)
 
-	testing.ContextLog(ctx, "Installing ArcFileReaderTest app")
+	testing.ContextLog(ctx, "Installing ArcFileEditorTest app")
 	if err := a.Install(ctx, arc.APKPath(testAppApkName)); err != nil {
-		return errors.Wrap(err, "failed to install ArcFileReaderTest app")
+		return errors.Wrap(err, "failed to install ArcFileEditorTest app")
 	}
 
 	if err := a.WaitIntentHelper(ctx); err != nil {
@@ -89,15 +102,34 @@ func TestOpenWithAndroidApp(ctx context.Context, a *arc.ARC, cr *chrome.Chrome, 
 		}
 	}
 
-	if err := openWithReaderApp(ctx, files, config); err != nil {
-		return errors.Wrap(err, "could not open file with ArcFileReaderTest")
+	testing.ContextLogf(ctx, "Testing opening %s with Android app", config.FileName)
+	if err := openWithTestApp(ctx, files, config); err != nil {
+		return errors.Wrap(err, "could not open file with ArcFileEditorTest")
 	}
 	defer a.Command(cleanupCtx, "am", "force-stop", testAppPkgName).Run(testexec.DumpLogOnError)
 
-	if err := validateResult(ctx, d, config); err != nil {
-		return errors.Wrap(err, "ArcFileReaderTest's data is invalid")
+	if err := validateLabel(ctx, d, fileContentID, config.FileContent); err != nil {
+		return errors.Wrap(err, "failed to validate file content")
 	}
-	return nil
+
+	if config.ReadOnly {
+		return nil
+	}
+	testing.ContextLogf(ctx, "Testing writing to %s with Android app", config.FileName)
+	if err := d.Object(androidui.ID(modifyButtonID)).Click(ctx); err != nil {
+		return errors.Wrap(err, "failed to click modify button")
+	}
+	if err := validateLabel(ctx, d, fileContentID, config.FileContent+messageAddedByApp); err != nil {
+		return errors.Wrap(err, "failed to validate file content modified by app")
+	}
+	// Close Android app window to ensure that Files app window UI is visible in
+	// |validateWriteResult|.
+	if err := a.Command(ctx, "am", "force-stop", testAppPkgName).Run(testexec.DumpLogOnError); err != nil {
+		// Do not mark the entire test as failure, since in ARCVM R+ Files app window will
+		// automatically come in front of the Android app window in |validateWriteResult|.
+		testing.ContextLog(ctx, "Failed to close test app window")
+	}
+	return validateWriteResult(ctx, files, config)
 }
 
 // openFilesApp opens the Files App and returns a pointer to it.
@@ -119,11 +151,11 @@ func openFilesApp(ctx context.Context, cr *chrome.Chrome) (*filesapp.FilesApp, e
 	return files, nil
 }
 
-// openWithReaderApp opens the test file with ArcFileReaderTest.
-func openWithReaderApp(ctx context.Context, files *filesapp.FilesApp, config TestConfig) error {
-	testing.ContextLog(ctx, "Opening the test file with ArcFileReaderTest")
+// openWithTestApp opens the test file with ArcFileEditorTest.
+func openWithTestApp(ctx context.Context, files *filesapp.FilesApp, config TestConfig) error {
+	testing.ContextLog(ctx, "Opening the test file with ArcFileEditorTest")
 
-	return uiauto.Combine("open the test file with ArcFileReaderTest",
+	return uiauto.Combine("open the test file with ArcFileEditorTest",
 		files.OpenPath(config.DirTitle, config.DirName, config.SubDirectories...),
 		// Note: due to the banner loading, this may still be flaky.
 		// If that is the case, we may want to increase the interval and timeout for this next call.
@@ -163,31 +195,26 @@ func waitForFileType(ctx context.Context, files *filesapp.FilesApp, config TestC
 	return nil
 }
 
-// validateResult validates the data read from ArcFileReaderTest app.
-func validateResult(ctx context.Context, d *androidui.Device, config TestConfig) error {
-	const fileContentID = testAppPkgName + ":id/file_content"
-
-	testing.ContextLog(ctx, "Validating result in ArcFileReaderTest")
-
-	return validateLabel(ctx, d, fileContentID, config.FileContent)
-}
-
 // validateLabel is a helper function to load app label texts and compare it with expectation.
 func validateLabel(ctx context.Context, d *androidui.Device, labelID, expected string) error {
-	uiObj := d.Object(androidui.ID(labelID))
-	if err := uiObj.WaitForExists(ctx, uiTimeout); err != nil {
-		return errors.Wrapf(err, "failed to find the label id %s", labelID)
-	}
+	testing.ContextLogf(ctx, "Validating label content of %s with %q", labelID, expected)
+	return d.Object(androidui.ID(labelID)).WaitForText(ctx, expected, uiTimeout)
+}
 
-	actual, err := uiObj.GetText(ctx)
+// validateWriteResult validates the modification to the file made with test Android app using
+// Files app's QuickView.
+func validateWriteResult(ctx context.Context, files *filesapp.FilesApp, config TestConfig) error {
+	keyboard, err := input.Keyboard(ctx)
 	if err != nil {
-		return errors.Wrapf(err, "failed to get text from the label id %s", labelID)
+		return errors.Wrap(err, "failed to get keyboard")
 	}
+	defer keyboard.Close(ctx)
 
-	if actual != expected {
-		return errors.Errorf("unexpected value in label %s: got %q, want %q", labelID, actual, expected)
-	}
-
-	testing.ContextLogf(ctx, "Label content of %s = %s", labelID, actual)
-	return nil
+	return uiauto.Combine("validate the content of test file with QuickView",
+		files.OpenPath(config.DirTitle, config.DirName, config.SubDirectories...),
+		files.SelectFile(config.FileName),
+		keyboard.AccelAction("Space"),
+		files.WithTimeout(5*time.Second).WaitUntilExists(nodewith.Name(config.FileContent+messageAddedByApp).Role(role.StaticText)),
+		keyboard.AccelAction("Space"),
+	)(ctx)
 }

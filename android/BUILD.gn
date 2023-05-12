@@ -23,7 +23,7 @@ group("all") {
     "ArcDragSourceTest:ArcDragSourceTest",
     "ArcDragTargetTest:ArcDragTargetTest",
     "ArcExternalStorageTest:ArcExternalStorageTest",
-    "ArcFileReaderTest:ArcFileReaderTest",
+    "ArcFileEditorTest:ArcFileEditorTest",
     "ArcGamePerformanceTest:ArcGamePerformanceTest",
     "ArcGamepadTest:ArcGamepadTest",
     "ArcImagePasteTest:ArcImagePasteTest",

@@ -57,6 +57,7 @@ func init() {
 	})
 }
 
+// Fsp implements the test scenario of arc.Fsp.
 func Fsp(ctx context.Context, s *testing.State) {
 	const (
 		// These need to match with the one contained in |fspZipFile|.
@@ -96,9 +97,9 @@ func Fsp(ctx context.Context, s *testing.State) {
 		s.Fatal("Creating test API connection failed: ", err)
 	}
 
-	// Ensure the existence of Text app. This is because TestOpenWithAndroidApp expects that
-	// there is at least one app (other than ArcFileReaderTest, the Android app installed in
-	// TestOpenWithAndroidApp) that can open a text file.
+	// Ensure the existence of Text app. This is because TestFilesAppIntegration expects that
+	// there is at least one app (other than ArcFileEditorTest, the Android app installed in
+	// TestFilesAppIntegration) that can open a text file.
 	if err := installTextAppIfNotInstalled(ctx, cr, tconn); err != nil {
 		s.Fatal("Failed to ensure the existence of Text app: ", err)
 	}
@@ -128,8 +129,9 @@ func Fsp(ctx context.Context, s *testing.State) {
 		DirName:     fspZipFile,
 		FileName:    filename,
 		FileContent: fileContent,
+		ReadOnly:    true,
 	}
-	if err := storage.TestOpenWithAndroidApp(ctx, a, cr, d, config); err != nil {
+	if err := storage.TestFilesAppIntegration(ctx, a, cr, d, config); err != nil {
 		s.Fatal("Failed to open file with Android app: ", err)
 	}
 }

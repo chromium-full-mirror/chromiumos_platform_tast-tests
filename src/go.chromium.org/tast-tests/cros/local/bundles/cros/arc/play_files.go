@@ -49,6 +49,7 @@ func init() {
 	})
 }
 
+// PlayFiles implements the test scenario of arc.PlayFiles.
 func PlayFiles(ctx context.Context, s *testing.State) {
 	crosPlayfilesPath := s.Param().(string)
 
@@ -89,9 +90,9 @@ func PlayFiles(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for the sdcard volume to be mounted in ARC: ", err)
 	}
 
-	testing.ContextLog(ctx, "Testing CrOS -> Android")
-	if err := testCrosToAndroid(ctx, cr, tconn, a); err != nil {
-		s.Fatal("CrOS -> Android failed: ", err)
+	testing.ContextLog(ctx, "Testing storage integration with apps")
+	if err := testStorageIntegrationForPlayfilesWithApps(ctx, cr, tconn, a); err != nil {
+		s.Fatal("Storage integration test with apps failed: ", err)
 	}
 
 	testing.ContextLog(ctx, "Testing Android -> CrOS")
@@ -100,10 +101,12 @@ func PlayFiles(ctx context.Context, s *testing.State) {
 	}
 }
 
-// testCrosToAndroid checks whether 1) the contents of Play files can be
-// manipulated through the Files app, and 2) the results of the manipulations
-// are properly reflected on the Android side.
-func testCrosToAndroid(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, a *arc.ARC) error {
+// testStorageIntegrationForPlayfilesWithApps tests the following scenario:
+//  1. Create a file in Play files with Files app and read it from Android side.
+//  2. Open the file with a test Android app via Files app's "Open with..." menu,
+//     edit the file with the app, and verify the modification with Files app.
+//  3. Delete the file with Files app and verify the deletion from Android side.
+func testStorageIntegrationForPlayfilesWithApps(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, a *arc.ARC) error {
 	const (
 		filename    = "storage.txt"
 		fileContent = "this is a test"
@@ -113,8 +116,8 @@ func testCrosToAndroid(ctx context.Context, cr *chrome.Chrome, tconn *chrome.Tes
 		return errors.Wrapf(err, "failed to copy %s to Play files", filename)
 	}
 
-	if err := testOpenInPlayfiles(ctx, cr, a, filename, fileContent); err != nil {
-		return errors.Wrapf(err, "failed to open %s in Play files", filename)
+	if err := testFilesAppIntegrationForPlayfiles(ctx, cr, a, filename, fileContent); err != nil {
+		return errors.Wrapf(err, "failed to test Files app integration for %s in Play files", filename)
 	}
 
 	if err := testDeleteFromPlayfiles(ctx, tconn, a, filename); err != nil {
@@ -195,8 +198,8 @@ func copyFileInDownloadsToPlayfiles(ctx context.Context, tconn *chrome.TestConn,
 	return uiauto.Combine("copy file from Downloads to Play files", steps...)(ctx)
 }
 
-// testOpenInPlayfiles opens a file in Play files with an Android app.
-func testOpenInPlayfiles(ctx context.Context, cr *chrome.Chrome, a *arc.ARC, filename, fileContent string) error {
+// testFilesAppIntegrationForPlayfiles opens a file in Play files with an Android app and edits it.
+func testFilesAppIntegrationForPlayfiles(ctx context.Context, cr *chrome.Chrome, a *arc.ARC, filename, fileContent string) error {
 	d, err := a.NewUIDevice(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to initialize UI Automator")
@@ -207,8 +210,9 @@ func testOpenInPlayfiles(ctx context.Context, cr *chrome.Chrome, a *arc.ARC, fil
 		SubDirectories: []string{"Pictures"},
 		FileName:       filename,
 		FileContent:    fileContent,
+		ReadOnly:       false,
 	}
-	return storage.TestOpenWithAndroidApp(ctx, a, cr, d, config)
+	return storage.TestFilesAppIntegration(ctx, a, cr, d, config)
 }
 
 // testDeleteFromPlayfiles deletes a file in Play files through the Files app.

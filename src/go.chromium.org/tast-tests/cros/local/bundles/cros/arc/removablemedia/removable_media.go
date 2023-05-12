@@ -197,8 +197,9 @@ func RunTest(ctx context.Context, s *testing.State, a *arc.ARC, cr *chrome.Chrom
 		SubDirectories: []string{},
 		FileName:       testFile,
 		FileContent:    fileContent,
+		ReadOnly:       false,
 	}
-	if err := storage.TestOpenWithAndroidApp(ctx, a, cr, d, config); err != nil {
-		s.Fatal("Failed to open file with Android app: ", err)
+	if err := storage.TestFilesAppIntegration(ctx, a, cr, d, config); err != nil {
+		s.Fatal("Failed to test Files app integration: ", err)
 	}
 }

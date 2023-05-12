@@ -22,4 +22,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/file_content" />
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/button_modify"
+        android:onClick="onModifyButtonClicked"
+        android:text="@string/label_button_modify" />
 </LinearLayout>
