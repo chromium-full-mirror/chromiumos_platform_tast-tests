@@ -134,6 +134,10 @@ const (
 )
 
 type fixtureFeatures struct {
+	// EnableChromeUI will ensure that chrome UI is enabled during the test if
+	// true, or disabled if false.
+	EnableChromeUI bool
+
 	// BTPeerCount requires the specified amount of btpeers to exist in the
 	// testbed and connects to them during setup. A testbed can have more btpeers
 	// than the BTPeerCount, but only that many connections are configured.
@@ -182,6 +186,11 @@ type DUTConfig struct {
 
 	// BluetoothService is a client of the BluetoothService that is used to
 	// interact and manage the bluetooth stack on the DUT.
+	//
+	// Note: Functions that modify the adapter state should only be used in
+	// tests where the chrome UI is disabled to avoid interference with the
+	// bluetooth daemon it runs. For UI testing, the BluetoothUIService should
+	// be used instead.
 	BluetoothService bts.BluetoothServiceClient
 
 	// BluetoothUIService is a client of the BluetoothUIService that uses the
@@ -243,6 +252,11 @@ type FixtValue struct {
 
 	// BluetoothService is a client of the BluetoothService that is used to
 	// interact and manage the bluetooth stack on the DUT.
+	//
+	// Note: Functions that modify the adapter state should only be used in
+	// tests where the chrome UI is disabled to avoid interference with the
+	// bluetooth daemon it runs. For UI testing, the BluetoothUIService should
+	// be used instead.
 	BluetoothService bts.BluetoothServiceClient
 
 	// BluetoothUIService is a client of the BluetoothUIService that uses the
@@ -321,41 +335,6 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 		}
 	}
 
-	// Resolve chrome user credentials.
-	s.Log("Resolving chrome user credentials")
-	var chromeUsername, chromePassword string
-	if tf.features.RequireFastPairUserVars {
-		// Fast Pair tests require GAIA credentials to be provided, which can be
-		// passed via CLI or will use the default credentials.
-		chromeUsername = s.RequiredVar(fixtureVarFastPairChromeUsername)
-		chromePassword = s.RequiredVar(fixtureVarFastPairChromePassword)
-		s.Logf("Using Fast Pair test chrome user credentials for user %q", chromeUsername)
-	} else if tf.features.UseFastPairTapeAccount {
-		// Create a tape account manager and lease a test account for the duration
-		// of the fixture.
-		s.Log("Leasing Fast Pair OTA chrome user with Tape")
-		tapeServiceAccountVar := s.RequiredVar(tape.ServiceAccountVar)
-		var err error
-		tf.fv.tapeAccountManager, tf.fv.tapeAccount, err = tape.NewOwnedTestAccountManager(
-			ctx,
-			[]byte(tapeServiceAccountVar),
-			true,
-			tape.WithTimeout(int32(fixtureVarFastPairTapeCleanupTimeout.Seconds())),
-			tape.WithPoolID(tape.CrossDeviceFastPair),
-		)
-		if err != nil {
-			s.Fatal("Failed to create a tape account manager and lease an account: ", err)
-		}
-		chromeUsername = tf.fv.tapeAccount.Username
-		chromePassword = tf.fv.tapeAccount.Password
-		s.Logf("Using Fast Pair OTA chrome user credentials leased with Tape for user %q", chromeUsername)
-	} else {
-		// By default, use the default username/password used for Fake login.
-		chromeUsername = defaultChromeUsername
-		chromePassword = defaultChromePassword
-		s.Log("Using default fake chrome user credentials")
-	}
-
 	// Connect to btpeers and reset them to a fresh state.
 	if err := tf.setUpBTPeers(ctx, s, tf.features.BTPeerCount); err != nil {
 		s.Fatal("Failed to set up btpeers: ", err)
@@ -419,24 +398,61 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 			tf.features.DisableFeatures = append(tf.features.DisableFeatures, chromeFeatureFloss)
 		}
 
-		// Start Chrome with the features and login mode provided by the test fixture.
-		var extraArgs []string
-		if tf.fastPairEnabled {
-			extraArgs = fixtureVarFastPairExtraArgs
-		}
-		if _, err := dutConfig.ChromeService.New(ctx, &ui.NewRequest{
-			LoginMode:       tf.features.LoginMode,
-			EnableFeatures:  tf.features.EnableFeatures,
-			DisableFeatures: tf.features.DisableFeatures,
-			Credentials: &ui.NewRequest_Credentials{
-				Username: chromeUsername,
-				Password: chromePassword,
-			},
-			EnableHidScreenOnOobe:        tf.features.EnableHidScreenOnOobe,
-			SigninProfileTestExtensionId: signinProfileTestExtensionID,
-			ExtraArgs:                    extraArgs,
-		}); err != nil {
-			s.Fatalf("Failed to log into chrome on DUT %s: %v", dutName, err)
+		if tf.features.EnableChromeUI {
+			// Resolve chrome user credentials.
+			var chromeUsername, chromePassword string
+			s.Log("Resolving chrome user credentials")
+			if tf.features.RequireFastPairUserVars {
+				// Fast Pair tests require GAIA credentials to be provided, which can be
+				// passed via CLI or will use the default credentials.
+				chromeUsername = s.RequiredVar(fixtureVarFastPairChromeUsername)
+				chromePassword = s.RequiredVar(fixtureVarFastPairChromePassword)
+				s.Logf("Using Fast Pair test chrome user credentials for user %q", chromeUsername)
+			} else if tf.features.UseFastPairTapeAccount {
+				// Create a tape account manager and lease a test account for the duration
+				// of the fixture.
+				s.Log("Leasing Fast Pair OTA chrome user with Tape")
+				tapeServiceAccountVar := s.RequiredVar(tape.ServiceAccountVar)
+				var err error
+				tf.fv.tapeAccountManager, tf.fv.tapeAccount, err = tape.NewOwnedTestAccountManager(
+					ctx,
+					[]byte(tapeServiceAccountVar),
+					true,
+					tape.WithTimeout(int32(fixtureVarFastPairTapeCleanupTimeout.Seconds())),
+					tape.WithPoolID(tape.CrossDeviceFastPair),
+				)
+				if err != nil {
+					s.Fatal("Failed to create a tape account manager and lease an account: ", err)
+				}
+				chromeUsername = tf.fv.tapeAccount.Username
+				chromePassword = tf.fv.tapeAccount.Password
+				s.Logf("Using Fast Pair OTA chrome user credentials leased with Tape for user %q", chromeUsername)
+			} else {
+				// By default, use the default username/password used for Fake login.
+				chromeUsername = defaultChromeUsername
+				chromePassword = defaultChromePassword
+				s.Log("Using default fake chrome user credentials")
+			}
+
+			// Start Chrome with the features and login mode provided by the test fixture.
+			var extraArgs []string
+			if tf.fastPairEnabled {
+				extraArgs = fixtureVarFastPairExtraArgs
+			}
+			if _, err := dutConfig.ChromeService.New(ctx, &ui.NewRequest{
+				LoginMode:       tf.features.LoginMode,
+				EnableFeatures:  tf.features.EnableFeatures,
+				DisableFeatures: tf.features.DisableFeatures,
+				Credentials: &ui.NewRequest_Credentials{
+					Username: chromeUsername,
+					Password: chromePassword,
+				},
+				EnableHidScreenOnOobe:        tf.features.EnableHidScreenOnOobe,
+				SigninProfileTestExtensionId: signinProfileTestExtensionID,
+				ExtraArgs:                    extraArgs,
+			}); err != nil {
+				s.Fatalf("Failed to log into chrome on DUT %s: %v", dutName, err)
+			}
 		}
 
 		// Configure and enable desired DUT bluetooth stack.
@@ -532,9 +548,11 @@ func (tf *fixture) TearDown(ctx context.Context, s *testing.FixtState) {
 			s.Errorf("Failed to disable bluetooth stack on DUT %s: %v", dutName, err)
 		}
 
-		// Clean up chrome login state.
-		if _, err := dutConfig.ChromeService.Close(ctx, &emptypb.Empty{}); err != nil {
-			s.Error("Failed to close Chrome on the DUT: ", err)
+		if tf.features.EnableChromeUI {
+			// Clean up chrome login state.
+			if _, err := dutConfig.ChromeService.Close(ctx, &emptypb.Empty{}); err != nil {
+				s.Error("Failed to close Chrome on the DUT: ", err)
+			}
 		}
 
 		// Close gRPC connection to DUT.

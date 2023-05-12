@@ -40,7 +40,7 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name:      "floss_disabled__le_keyboard",
-				Fixture:   "chromeLoggedInWith1BTPeerFlossDisabled",
+				Fixture:   "chromeUIDisabledWith1BTPeerFlossDisabled",
 				ExtraAttr: []string{"bluetooth_flaky"},
 				Val: &simpleBTPeerTestCase{
 					DeviceType: cbt.DeviceTypeLEKeyboard,
@@ -48,7 +48,7 @@ func init() {
 			},
 			{
 				Name:      "floss_disabled__le_mouse",
-				Fixture:   "chromeLoggedInWith1BTPeerFlossDisabled",
+				Fixture:   "chromeUIDisabledWith1BTPeerFlossDisabled",
 				ExtraAttr: []string{"bluetooth_flaky"},
 				Val: &simpleBTPeerTestCase{
 					DeviceType: cbt.DeviceTypeLEMouse,
@@ -56,7 +56,7 @@ func init() {
 			},
 			{
 				Name:      "floss_disabled__le_phone",
-				Fixture:   "chromeLoggedInWith1BTPeerFlossDisabled",
+				Fixture:   "chromeUIDisabledWith1BTPeerFlossDisabled",
 				ExtraAttr: []string{"bluetooth_flaky"},
 				Val: &simpleBTPeerTestCase{
 					DeviceType: cbt.DeviceTypeLEPhone,
@@ -64,7 +64,7 @@ func init() {
 			},
 			{
 				Name:      "floss_disabled__keyboard",
-				Fixture:   "chromeLoggedInWith1BTPeerFlossDisabled",
+				Fixture:   "chromeUIDisabledWith1BTPeerFlossDisabled",
 				ExtraAttr: []string{"bluetooth_flaky"},
 				Val: &simpleBTPeerTestCase{
 					DeviceType: cbt.DeviceTypeKeyboard,
@@ -72,7 +72,7 @@ func init() {
 			},
 			{
 				Name:      "floss_disabled__mouse",
-				Fixture:   "chromeLoggedInWith1BTPeerFlossDisabled",
+				Fixture:   "chromeUIDisabledWith1BTPeerFlossDisabled",
 				ExtraAttr: []string{"bluetooth_flaky"},
 				Val: &simpleBTPeerTestCase{
 					DeviceType: cbt.DeviceTypeMouse,
@@ -80,7 +80,7 @@ func init() {
 			},
 			{
 				Name:              "floss_enabled__le_keyboard",
-				Fixture:           "chromeLoggedInWith1BTPeerFlossEnabled",
+				Fixture:           "chromeUIDisabledWith1BTPeerFlossEnabled",
 				ExtraAttr:         []string{"bluetooth_flaky"},
 				ExtraSoftwareDeps: []string{"bluetooth_floss"},
 				Val: &simpleBTPeerTestCase{
@@ -89,7 +89,7 @@ func init() {
 			},
 			{
 				Name:              "floss_enabled__le_mouse",
-				Fixture:           "chromeLoggedInWith1BTPeerFlossEnabled",
+				Fixture:           "chromeUIDisabledWith1BTPeerFlossEnabled",
 				ExtraAttr:         []string{"bluetooth_flaky"},
 				ExtraSoftwareDeps: []string{"bluetooth_floss"},
 				Val: &simpleBTPeerTestCase{
@@ -98,7 +98,7 @@ func init() {
 			},
 			{
 				Name:              "floss_enabled__le_phone",
-				Fixture:           "chromeLoggedInWith1BTPeerFlossEnabled",
+				Fixture:           "chromeUIDisabledWith1BTPeerFlossEnabled",
 				ExtraAttr:         []string{"bluetooth_flaky"},
 				ExtraSoftwareDeps: []string{"bluetooth_floss"},
 				Val: &simpleBTPeerTestCase{
@@ -107,7 +107,7 @@ func init() {
 			},
 			{
 				Name:              "floss_enabled__keyboard",
-				Fixture:           "chromeLoggedInWith1BTPeerFlossEnabled",
+				Fixture:           "chromeUIDisabledWith1BTPeerFlossEnabled",
 				ExtraAttr:         []string{"bluetooth_flaky"},
 				ExtraSoftwareDeps: []string{"bluetooth_floss"},
 				Val: &simpleBTPeerTestCase{
@@ -116,7 +116,7 @@ func init() {
 			},
 			{
 				Name:              "floss_enabled__mouse",
-				Fixture:           "chromeLoggedInWith1BTPeerFlossEnabled",
+				Fixture:           "chromeUIDisabledWith1BTPeerFlossEnabled",
 				ExtraAttr:         []string{"bluetooth_flaky"},
 				ExtraSoftwareDeps: []string{"bluetooth_floss"},
 				Val: &simpleBTPeerTestCase{

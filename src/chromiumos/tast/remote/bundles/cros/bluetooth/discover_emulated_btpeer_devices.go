@@ -34,12 +34,12 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name:      "floss_disabled",
-				Fixture:   "chromeLoggedInWith2BTPeersFlossDisabled",
+				Fixture:   "chromeUIDisabledWith2BTPeersFlossDisabled",
 				ExtraAttr: []string{"bluetooth_flaky"},
 			},
 			{
 				Name:              "floss_enabled",
-				Fixture:           "chromeLoggedInWith2BTPeersFlossEnabled",
+				Fixture:           "chromeUIDisabledWith2BTPeersFlossEnabled",
 				ExtraAttr:         []string{"bluetooth_flaky"},
 				ExtraSoftwareDeps: []string{"bluetooth_floss"},
 			},

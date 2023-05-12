@@ -19,6 +19,7 @@ func init() {
 			"cros-connectivity@google.com",
 		},
 		Impl: newFixture(&fixtureFeatures{
+			EnableChromeUI:  true,
 			EnableFeatures:  []string{},
 			DisableFeatures: []string{},
 			LoginMode:       ui.LoginMode_LOGIN_MODE_FAKE_LOGIN,
@@ -42,6 +43,7 @@ func init() {
 			"cros-connectivity@google.com",
 		},
 		Impl: newFixture(&fixtureFeatures{
+			EnableChromeUI:  true,
 			EnableFeatures:  []string{},
 			DisableFeatures: []string{},
 			LoginMode:       ui.LoginMode_LOGIN_MODE_FAKE_LOGIN,
@@ -58,6 +60,214 @@ func init() {
 		},
 	})
 	testing.AddFixture(&testing.Fixture{
+		Name: "chromeUIDisabledWith1BTPeerFlossDisabled",
+		Desc: "Disables Chrome UI, enables Bluetooth, and connects to 1 btpeer",
+		Contacts: []string{
+			"jaredbennett@google.com",
+			"chadduffin@chromium.org",
+			"cros-connectivity@google.com",
+		},
+		Impl: newFixture(&fixtureFeatures{
+			EnableChromeUI: false,
+			BTPeerCount:    1,
+			FlossEnabled:   false,
+		}),
+		Vars: []string{
+			fixtureVarBTPeers,
+		},
+		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer,
+		ResetTimeout:    resetTimeout + btpeerResetBuffer,
+		TearDownTimeout: tearDownTimeout + btpeerResetBuffer,
+		PostTestTimeout: postTestTimeout,
+		ServiceDeps: []string{
+			serviceDepBluetoothUIService,
+			serviceDepBluetoothService,
+			serviceDepChromeService,
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "chromeUIDisabledWith1BTPeerFlossEnabled",
+		Desc: "Disables Chrome UI, enables Bluetooth, and connects to 1 btpeer",
+		Contacts: []string{
+			"jaredbennett@google.com",
+			"chadduffin@chromium.org",
+			"cros-connectivity@google.com",
+		},
+		Impl: newFixture(&fixtureFeatures{
+			EnableChromeUI: false,
+			BTPeerCount:    1,
+			FlossEnabled:   true,
+		}),
+		Vars: []string{
+			fixtureVarBTPeers,
+		},
+		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer,
+		ResetTimeout:    resetTimeout + btpeerResetBuffer,
+		TearDownTimeout: tearDownTimeout + btpeerResetBuffer,
+		PostTestTimeout: postTestTimeout,
+		ServiceDeps: []string{
+			serviceDepBluetoothUIService,
+			serviceDepBluetoothService,
+			serviceDepChromeService,
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "chromeUIDisabledWith2BTPeersFlossDisabled",
+		Desc: "Disables Chrome UI, enables Bluetooth, and connects to 2 btpeers",
+		Contacts: []string{
+			"jaredbennett@google.com",
+			"chadduffin@chromium.org",
+			"cros-connectivity@google.com",
+		},
+		Impl: newFixture(&fixtureFeatures{
+			EnableChromeUI: false,
+			BTPeerCount:    2,
+			FlossEnabled:   false,
+		}),
+		Vars: []string{
+			fixtureVarBTPeers,
+		},
+		SetUpTimeout:    setUpTimeout + 2*btpeerSetUpBuffer,
+		ResetTimeout:    resetTimeout + 2*btpeerResetBuffer,
+		TearDownTimeout: tearDownTimeout + 2*btpeerResetBuffer,
+		PostTestTimeout: postTestTimeout,
+		ServiceDeps: []string{
+			serviceDepBluetoothUIService,
+			serviceDepBluetoothService,
+			serviceDepChromeService,
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "chromeUIDisabledWith2BTPeersFlossEnabled",
+		Desc: "Disables Chrome UI, enables Bluetooth, and connects to 2 btpeers",
+		Contacts: []string{
+			"jaredbennett@google.com",
+			"chadduffin@chromium.org",
+			"cros-connectivity@google.com",
+		},
+		Impl: newFixture(&fixtureFeatures{
+			EnableChromeUI: false,
+			BTPeerCount:    2,
+			FlossEnabled:   true,
+		}),
+		Vars: []string{
+			fixtureVarBTPeers,
+		},
+		SetUpTimeout:    setUpTimeout + 2*btpeerSetUpBuffer,
+		ResetTimeout:    resetTimeout + 2*btpeerResetBuffer,
+		TearDownTimeout: tearDownTimeout + 2*btpeerResetBuffer,
+		PostTestTimeout: postTestTimeout,
+		ServiceDeps: []string{
+			serviceDepBluetoothUIService,
+			serviceDepBluetoothService,
+			serviceDepChromeService,
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "chromeUIDisabledWith3BTPeersFlossDisabled",
+		Desc: "Disables Chrome UI, enables Bluetooth, and connects to 3 btpeers",
+		Contacts: []string{
+			"jaredbennett@google.com",
+			"chadduffin@chromium.org",
+			"cros-connectivity@google.com",
+		},
+		Impl: newFixture(&fixtureFeatures{
+			EnableChromeUI: false,
+			BTPeerCount:    3,
+			FlossEnabled:   false,
+		}),
+		Vars: []string{
+			fixtureVarBTPeers,
+		},
+		SetUpTimeout:    setUpTimeout + 3*btpeerSetUpBuffer,
+		ResetTimeout:    resetTimeout + 3*btpeerResetBuffer,
+		TearDownTimeout: tearDownTimeout + 3*btpeerResetBuffer,
+		PostTestTimeout: postTestTimeout,
+		ServiceDeps: []string{
+			serviceDepBluetoothUIService,
+			serviceDepBluetoothService,
+			serviceDepChromeService,
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "chromeUIDisabledWith3BTPeersFlossEnabled",
+		Desc: "Disables Chrome UI, enables Bluetooth, and connects to 3 btpeers",
+		Contacts: []string{
+			"jaredbennett@google.com",
+			"chadduffin@chromium.org",
+			"cros-connectivity@google.com",
+		},
+		Impl: newFixture(&fixtureFeatures{
+			EnableChromeUI: false,
+			BTPeerCount:    3,
+			FlossEnabled:   true,
+		}),
+		Vars: []string{
+			fixtureVarBTPeers,
+		},
+		SetUpTimeout:    setUpTimeout + 3*btpeerSetUpBuffer,
+		ResetTimeout:    resetTimeout + 3*btpeerResetBuffer,
+		TearDownTimeout: tearDownTimeout + 3*btpeerResetBuffer,
+		PostTestTimeout: postTestTimeout,
+		ServiceDeps: []string{
+			serviceDepBluetoothUIService,
+			serviceDepBluetoothService,
+			serviceDepChromeService,
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "chromeUIDisabledWith4BTPeersFlossDisabled",
+		Desc: "Disables Chrome UI, enables Bluetooth, and connects to 4 btpeers",
+		Contacts: []string{
+			"jaredbennett@google.com",
+			"chadduffin@chromium.org",
+			"cros-connectivity@google.com",
+		},
+		Impl: newFixture(&fixtureFeatures{
+			EnableChromeUI: false,
+			BTPeerCount:    4,
+			FlossEnabled:   false,
+		}),
+		Vars: []string{
+			fixtureVarBTPeers,
+		},
+		SetUpTimeout:    setUpTimeout + 4*btpeerSetUpBuffer,
+		ResetTimeout:    resetTimeout + 4*btpeerResetBuffer,
+		TearDownTimeout: tearDownTimeout + 4*btpeerResetBuffer,
+		PostTestTimeout: postTestTimeout,
+		ServiceDeps: []string{
+			serviceDepBluetoothUIService,
+			serviceDepBluetoothService,
+			serviceDepChromeService,
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "chromeUIDisabledWith4BTPeersFlossEnabled",
+		Desc: "Disables Chrome UI, enables Bluetooth, and connects to 4 btpeers",
+		Contacts: []string{
+			"jaredbennett@google.com",
+			"chadduffin@chromium.org",
+			"cros-connectivity@google.com",
+		},
+		Impl: newFixture(&fixtureFeatures{
+			EnableChromeUI: false,
+			BTPeerCount:    4,
+			FlossEnabled:   true,
+		}),
+		Vars: []string{
+			fixtureVarBTPeers,
+		},
+		SetUpTimeout:    setUpTimeout + 4*btpeerSetUpBuffer,
+		ResetTimeout:    resetTimeout + 4*btpeerResetBuffer,
+		TearDownTimeout: tearDownTimeout + 4*btpeerResetBuffer,
+		PostTestTimeout: postTestTimeout,
+		ServiceDeps: []string{
+			serviceDepBluetoothUIService,
+			serviceDepBluetoothService,
+			serviceDepChromeService,
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
 		Name: "chromeLoggedInWith1BTPeerFlossDisabled",
 		Desc: "Logs into a user session, enables Bluetooth, and connects to 1 btpeer",
 		Contacts: []string{
@@ -65,6 +275,7 @@ func init() {
 			"cros-connectivity@google.com",
 		},
 		Impl: newFixture(&fixtureFeatures{
+			EnableChromeUI:  true,
 			BTPeerCount:     1,
 			EnableFeatures:  []string{},
 			DisableFeatures: []string{},
@@ -92,6 +303,7 @@ func init() {
 			"cros-connectivity@google.com",
 		},
 		Impl: newFixture(&fixtureFeatures{
+			EnableChromeUI:  true,
 			BTPeerCount:     1,
 			EnableFeatures:  []string{},
 			DisableFeatures: []string{},
@@ -119,6 +331,7 @@ func init() {
 			"cros-connectivity@google.com",
 		},
 		Impl: newFixture(&fixtureFeatures{
+			EnableChromeUI:  true,
 			BTPeerCount:     2,
 			EnableFeatures:  []string{},
 			DisableFeatures: []string{},
@@ -146,6 +359,7 @@ func init() {
 			"cros-connectivity@google.com",
 		},
 		Impl: newFixture(&fixtureFeatures{
+			EnableChromeUI:  true,
 			BTPeerCount:     2,
 			EnableFeatures:  []string{},
 			DisableFeatures: []string{},
@@ -173,6 +387,7 @@ func init() {
 			"cros-connectivity@google.com",
 		},
 		Impl: newFixture(&fixtureFeatures{
+			EnableChromeUI:  true,
 			BTPeerCount:     3,
 			EnableFeatures:  []string{},
 			DisableFeatures: []string{},
@@ -200,6 +415,7 @@ func init() {
 			"cros-connectivity@google.com",
 		},
 		Impl: newFixture(&fixtureFeatures{
+			EnableChromeUI:  true,
 			BTPeerCount:     3,
 			EnableFeatures:  []string{},
 			DisableFeatures: []string{},
@@ -227,6 +443,7 @@ func init() {
 			"cros-connectivity@google.com",
 		},
 		Impl: newFixture(&fixtureFeatures{
+			EnableChromeUI:  true,
 			BTPeerCount:     4,
 			EnableFeatures:  []string{},
 			DisableFeatures: []string{},
@@ -254,6 +471,7 @@ func init() {
 			"cros-connectivity@google.com",
 		},
 		Impl: newFixture(&fixtureFeatures{
+			EnableChromeUI:  true,
 			BTPeerCount:     4,
 			EnableFeatures:  []string{},
 			DisableFeatures: []string{},
@@ -281,6 +499,7 @@ func init() {
 			"cros-connectivity@google.com",
 		},
 		Impl: newFixture(&fixtureFeatures{
+			EnableChromeUI:        true,
 			BTPeerCount:           1,
 			EnableFeatures:        []string{chromeFeatureOobeHidDetectionRevamp},
 			DisableFeatures:       []string{},
@@ -310,6 +529,7 @@ func init() {
 			"cros-connectivity@google.com",
 		},
 		Impl: newFixture(&fixtureFeatures{
+			EnableChromeUI:        true,
 			BTPeerCount:           1,
 			EnableFeatures:        []string{chromeFeatureOobeHidDetectionRevamp},
 			DisableFeatures:       []string{},
@@ -339,7 +559,8 @@ func init() {
 			"cros-connectivity@google.com",
 		},
 		Impl: newFixture(&fixtureFeatures{
-			BTPeerCount: 1,
+			EnableChromeUI: true,
+			BTPeerCount:    1,
 			EnableFeatures: []string{
 				chromeFeatureFastPair,
 				chromeFeatureFastPairSavedDevices,
@@ -373,7 +594,8 @@ func init() {
 			"cros-connectivity@google.com",
 		},
 		Impl: newFixture(&fixtureFeatures{
-			BTPeerCount: 1,
+			EnableChromeUI: true,
+			BTPeerCount:    1,
 			EnableFeatures: []string{
 				chromeFeatureFastPair,
 				chromeFeatureFastPairSavedDevices,
@@ -408,7 +630,8 @@ func init() {
 			"chromeos-cross-device-eng@google.com",
 		},
 		Impl: newFixture(&fixtureFeatures{
-			BTPeerCount: 1,
+			EnableChromeUI: true,
+			BTPeerCount:    1,
 			EnableFeatures: []string{
 				chromeFeatureFastPair,
 				chromeFeatureFastPairSavedDevices,
@@ -444,7 +667,8 @@ func init() {
 			"chromeos-cross-device-eng@google.com",
 		},
 		Impl: newFixture(&fixtureFeatures{
-			BTPeerCount: 1,
+			EnableChromeUI: true,
+			BTPeerCount:    1,
 			EnableFeatures: []string{
 				chromeFeatureFastPair,
 				chromeFeatureFastPairSavedDevices,
