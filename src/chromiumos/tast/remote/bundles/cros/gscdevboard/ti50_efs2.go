@@ -96,7 +96,7 @@ func Ti50Efs2(ctx context.Context, s *testing.State) {
 	}
 
 	// Undefine the space to ensure we are in a good state. Not a failure if doesn't work/
-	tpm2.NVUndefineSpace(tpm, utils.EmptyPassword, utils.RootPlatformHandle, utils.KernelFileID)
+	tpm2.NVUndefineSpace(tpm, ti50.EmptyPassword, ti50.RootPlatformHandle, ti50.KernelFileID)
 
 	// Note if this goes last, it fails with a timeout reading EC console, but if even one of
 	// the preceding tests is commented out, then it doesn't. It does not seem to be flaky if
@@ -178,7 +178,7 @@ func sendEcPacketNoResponse(ctx context.Context, s *testing.State, b utils.Devbo
 
 // checkApBootMode verifies that the boot mode exposed to the AP via TPMV interface returns the
 // specified wanted value.
-func checkApBootMode(ctx context.Context, s *testing.State, tpm *utils.TpmHandle, wanted byte) {
+func checkApBootMode(ctx context.Context, s *testing.State, tpm *utils.TpmHelper, wanted byte) {
 	s.Logf("AP checks that boot mode is %s", bootModeToString(wanted))
 	var tpmvGetBootMode, _ = hex.DecodeString("8001" + // tag: TPM_ST_NO_SESSIONS
 		"0000000c" + // size
@@ -202,7 +202,7 @@ func resetEc(ctx context.Context, s *testing.State, b utils.DevboardHelper) {
 	b.GpioSet(ctx, ti50.GpioTi50KsiRefresh, true)
 }
 
-func testDefaultBootMode(ctx context.Context, s *testing.State, b utils.DevboardHelper, tpm *utils.TpmHandle) {
+func testDefaultBootMode(ctx context.Context, s *testing.State, b utils.DevboardHelper, tpm *utils.TpmHelper) {
 	resetEc(ctx, s, b)
 
 	s.Log("Start gpio monitoring to ensure EC doesn't reset unexpectedly")
@@ -224,7 +224,7 @@ func testDefaultBootMode(ctx context.Context, s *testing.State, b utils.Devboard
 	}
 }
 
-func testNoBootMode(ctx context.Context, s *testing.State, b utils.DevboardHelper, tpm *utils.TpmHandle) {
+func testNoBootMode(ctx context.Context, s *testing.State, b utils.DevboardHelper, tpm *utils.TpmHelper) {
 	resetEc(ctx, s, b)
 
 	s.Log("Start gpio monitoring to ensure EC doesn't reset unexpectedly")
@@ -276,7 +276,7 @@ func testNoBootMode(ctx context.Context, s *testing.State, b utils.DevboardHelpe
 	checkApBootMode(ctx, s, tpm, efs2BootModeTrustedRo)
 }
 
-func testVerifiedMode(ctx context.Context, s *testing.State, b utils.DevboardHelper, tpm *utils.TpmHandle) {
+func testVerifiedMode(ctx context.Context, s *testing.State, b utils.DevboardHelper, tpm *utils.TpmHelper) {
 	resetEc(ctx, s, b)
 
 	s.Log("Start gpio monitoring to ensure EC doesn't reset unexpectedly")
@@ -296,23 +296,23 @@ func testVerifiedMode(ctx context.Context, s *testing.State, b utils.DevboardHel
 	kernelFile := makeKernelFile(hash)
 	// Define space in NV storage and clean up afterwards or subsequent runs will fail.
 	if err := tpm2.NVDefineSpace(tpm,
-		utils.RootPlatformHandle,
-		utils.KernelFileID,
-		utils.EmptyPassword,
-		utils.EmptyPassword,
+		ti50.RootPlatformHandle,
+		ti50.KernelFileID,
+		ti50.EmptyPassword,
+		ti50.EmptyPassword,
 		nil,
-		utils.KernelFileAttr,
+		ti50.KernelFileAttr,
 		uint16(len(kernelFile)),
 	); err != nil {
 		s.Fatal("NVDefineSpace failed: ", err)
 	}
-	defer tpm2.NVUndefineSpace(tpm, utils.EmptyPassword, utils.RootPlatformHandle, utils.KernelFileID)
+	defer tpm2.NVUndefineSpace(tpm, ti50.EmptyPassword, ti50.RootPlatformHandle, ti50.KernelFileID)
 
 	// Write the kernel file data to new space.
 	if err := tpm2.NVWrite(tpm,
-		utils.RootPlatformHandle,
-		utils.KernelFileID,
-		utils.EmptyPassword,
+		ti50.RootPlatformHandle,
+		ti50.KernelFileID,
+		ti50.EmptyPassword,
 		kernelFile,
 		0,
 	); err != nil {
@@ -366,7 +366,7 @@ func testVerifiedMode(ctx context.Context, s *testing.State, b utils.DevboardHel
 	checkApBootMode(ctx, s, tpm, efs2BootModeTrustedRo)
 }
 
-func testErrorCases(ctx context.Context, s *testing.State, b utils.DevboardHelper, tpm *utils.TpmHandle) {
+func testErrorCases(ctx context.Context, s *testing.State, b utils.DevboardHelper, tpm *utils.TpmHelper) {
 	resetEc(ctx, s, b)
 
 	s.Log("Start gpio monitoring to ensure EC doesn't reset unexpectedly")
@@ -386,23 +386,23 @@ func testErrorCases(ctx context.Context, s *testing.State, b utils.DevboardHelpe
 	kernelFile := makeKernelFile(hash)
 	// Define space in NV storage and clean up afterwards or subsequent runs will fail.
 	if err := tpm2.NVDefineSpace(tpm,
-		utils.RootPlatformHandle,
-		utils.KernelFileID,
-		utils.EmptyPassword,
-		utils.EmptyPassword,
+		ti50.RootPlatformHandle,
+		ti50.KernelFileID,
+		ti50.EmptyPassword,
+		ti50.EmptyPassword,
 		nil,
-		utils.KernelFileAttr,
+		ti50.KernelFileAttr,
 		uint16(len(kernelFile)),
 	); err != nil {
 		s.Fatal("NVDefineSpace failed: ", err)
 	}
-	defer tpm2.NVUndefineSpace(tpm, utils.EmptyPassword, utils.RootPlatformHandle, utils.KernelFileID)
+	defer tpm2.NVUndefineSpace(tpm, ti50.EmptyPassword, ti50.RootPlatformHandle, ti50.KernelFileID)
 
 	// Write the kernel file data to new space.
 	if err := tpm2.NVWrite(tpm,
-		utils.RootPlatformHandle,
-		utils.KernelFileID,
-		utils.EmptyPassword,
+		ti50.RootPlatformHandle,
+		ti50.KernelFileID,
+		ti50.EmptyPassword,
 		kernelFile,
 		0,
 	); err != nil {
@@ -485,7 +485,7 @@ func testErrorCases(ctx context.Context, s *testing.State, b utils.DevboardHelpe
 	}
 }
 
-func testKernelFileOverwritten(ctx context.Context, s *testing.State, b utils.DevboardHelper, tpm *utils.TpmHandle) {
+func testKernelFileOverwritten(ctx context.Context, s *testing.State, b utils.DevboardHelper, tpm *utils.TpmHelper) {
 	resetEc(ctx, s, b)
 
 	s.Log("Start gpio monitoring to ensure EC doesn't reset unexpectedly")
@@ -505,23 +505,23 @@ func testKernelFileOverwritten(ctx context.Context, s *testing.State, b utils.De
 	kernelFile := makeKernelFile(hash)
 	// Define space in NV storage and clean up afterwards or subsequent runs will fail.
 	if err := tpm2.NVDefineSpace(tpm,
-		utils.RootPlatformHandle,
-		utils.KernelFileID,
-		utils.EmptyPassword,
-		utils.EmptyPassword,
+		ti50.RootPlatformHandle,
+		ti50.KernelFileID,
+		ti50.EmptyPassword,
+		ti50.EmptyPassword,
 		nil,
-		utils.KernelFileAttr,
+		ti50.KernelFileAttr,
 		uint16(len(kernelFile)),
 	); err != nil {
 		s.Fatal("NVDefineSpace failed: ", err)
 	}
-	defer tpm2.NVUndefineSpace(tpm, utils.EmptyPassword, utils.RootPlatformHandle, utils.KernelFileID)
+	defer tpm2.NVUndefineSpace(tpm, ti50.EmptyPassword, ti50.RootPlatformHandle, ti50.KernelFileID)
 
 	// Write the kernel file data to new space.
 	if err := tpm2.NVWrite(tpm,
-		utils.RootPlatformHandle,
-		utils.KernelFileID,
-		utils.EmptyPassword,
+		ti50.RootPlatformHandle,
+		ti50.KernelFileID,
+		ti50.EmptyPassword,
 		kernelFile,
 		0,
 	); err != nil {
@@ -539,9 +539,9 @@ func testKernelFileOverwritten(ctx context.Context, s *testing.State, b utils.De
 	hash[0] ^= 0xFF
 	kernelFile = makeKernelFile(hash)
 	if err := tpm2.NVWrite(tpm,
-		utils.RootPlatformHandle,
-		utils.KernelFileID,
-		utils.EmptyPassword,
+		ti50.RootPlatformHandle,
+		ti50.KernelFileID,
+		ti50.EmptyPassword,
 		kernelFile,
 		0,
 	); err != nil {
@@ -559,7 +559,7 @@ func testKernelFileOverwritten(ctx context.Context, s *testing.State, b utils.De
 	}
 }
 
-func testPreambleLengths(ctx context.Context, s *testing.State, b utils.DevboardHelper, tpm *utils.TpmHandle) {
+func testPreambleLengths(ctx context.Context, s *testing.State, b utils.DevboardHelper, tpm *utils.TpmHelper) {
 	resetEc(ctx, s, b)
 
 	s.Log("Start gpio monitoring to ensure EC doesn't reset unexpectedly")

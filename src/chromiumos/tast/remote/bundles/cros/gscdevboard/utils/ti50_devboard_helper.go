@@ -235,6 +235,6 @@ func (h DevboardHelper) GpioMonitorFinish(ctx context.Context, session GpioMonit
 // Tpm returns an object that can be used with the go-tpm library to execute TPM commands via SPI
 // or I2C.  See firmware.Ti50Tpm for an example.
 // go-tpm documentation: https://pkg.go.dev/github.com/google/go-tpm@v0.3.3/tpm2
-func (h DevboardHelper) Tpm(ctx context.Context, bus ti50.TpmBus) *TpmHandle {
-	return &TpmHandle{h: h, ctx: ctx, bus: bus}
+func (h DevboardHelper) Tpm(ctx context.Context, bus ti50.TpmBus) *TpmHelper {
+	return &TpmHelper{ti50.NewTpmHandle(ctx, h, bus), h}
 }
