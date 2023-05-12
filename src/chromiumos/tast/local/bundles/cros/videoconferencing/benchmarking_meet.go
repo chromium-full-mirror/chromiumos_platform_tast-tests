@@ -128,12 +128,6 @@ func BenchmarkingMeet(ctx context.Context, s *testing.State) {
 	cr := fixt.Chrome
 	defer faillog.DumpUITreeWithScreenshotOnError(closeCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
-	// Record power before camera opened.
-	raplEnergyBefore, err := power.NewRAPLSnapshot()
-	if err != nil {
-		testing.ContextLog(ctx, "RAPL Energy status is not available for this board: ", err)
-	}
-
 	// Record Memory usage.
 	p := perf.NewValues()
 
@@ -198,6 +192,13 @@ func BenchmarkingMeet(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to let things settle: ", err)
 	}
 
+	// Take initial power snapshot.
+	powerStart := time.Now()
+	raplEnergyBefore, err := power.NewRAPLSnapshot()
+	if err != nil {
+		testing.ContextLog(ctx, "RAPL Energy status is not available for this board: ", err)
+	}
+
 	memoryChannel := make(chan effects.PeakMemoryResult)
 	go effects.GetMaxMemoryUsage(ctx, memoryChannel, testDuration)
 
@@ -205,8 +206,11 @@ func BenchmarkingMeet(ctx context.Context, s *testing.State) {
 	if err = effects.ReportFramePerfMetrics(ctx, p, gm.Conn(), s.DataPath("effects_frame_metrics.js"), testDuration); err != nil {
 		s.Error("Failed to report fps and frame duration metrics: ", err)
 	}
+
+	powerEnd := time.Now()
+	powerDuration := int(powerEnd.Sub(powerStart).Seconds())
 	if raplEnergyBefore != nil {
-		if effects.ReportPowerDiffMetrics(ctx, p, raplEnergyBefore, testDuration) != nil {
+		if effects.ReportPowerDiffMetrics(ctx, p, raplEnergyBefore, powerDuration) != nil {
 			s.Error("Failed to report power metrics: ", err)
 		}
 	}
