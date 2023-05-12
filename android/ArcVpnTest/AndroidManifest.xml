@@ -21,5 +21,10 @@
                 <action android:name="android.net.VpnService" />
             </intent-filter>
         </service>
+        <receiver android:name="org.chromium.arc.testapp.arcvpn.VpnLaunchReceiver" android:exported="true">
+            <intent-filter>
+                <action android:name="org.chromium.arc.testapp.swap.LAUNCH_VPN" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>

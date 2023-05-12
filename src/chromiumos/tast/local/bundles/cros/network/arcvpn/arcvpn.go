@@ -28,11 +28,12 @@ const (
 // These need to stay in sync with
 // //platform/tast-tests/android/ArcVpnTest/src/org/chromium/arc/testapp/arcvpn/ArcTestVpnService.java
 const (
-	VPNTestAppAPK = "ArcVpnTest.apk"
-	VPNTestAppPkg = "org.chromium.arc.testapp.arcvpn"
-	VPNTestAppAct = "org.chromium.arc.testapp.arcvpn.MainActivity"
-	VPNTestAppSvc = "org.chromium.arc.testapp.arcvpn.ArcTestVpnService"
-	TunIP         = "192.168.2.2"
+	VPNTestAppAPK       = "ArcVpnTest.apk"
+	VPNTestAppPkg       = "org.chromium.arc.testapp.arcvpn"
+	VPNTestAppAct       = "org.chromium.arc.testapp.arcvpn.MainActivity"
+	VPNTestAppSvc       = "org.chromium.arc.testapp.arcvpn.ArcTestVpnService"
+	VPNTestAppBroadcast = "org.chromium.arc.testapp.swap.LAUNCH_VPN"
+	TunIP               = "192.168.2.2"
 )
 
 // SetUpHostVPN create the host VPN server, but does not initiate a connection.
