@@ -2498,9 +2498,9 @@ func (s *ShillService) ResetTest(ctx context.Context, req *wifi.ResetTestRequest
 		pingInterval             = 1 // In seconds.
 		pingLossThreshold        = 20.0
 
-		mwifiexFormat       = "/sys/kernel/debug/mwifiex/%s/reset"
-		ath10kFormat        = "/sys/kernel/debug/ieee80211/%s/ath10k/simulate_fw_crash"
-		ath11kWCN6855Format = "/sys/kernel/debug/ath11k/wcn6855 hw2.1/simulate_fw_crash"
+		mwifiexFormat = "/sys/kernel/debug/mwifiex/%s/reset"
+		ath10kFormat  = "/sys/kernel/debug/ieee80211/%s/ath10k/simulate_fw_crash"
+		ath11kFormat  = "/sys/kernel/debug/ath11k/%s-%s/simulate_fw_crash"
 		// Possible reset paths for Intel wireless NICs are:
 		// 1. /sys/kernel/debug/iwlwifi/{iface}/iwlmvm/fw_restart
 		//    Logs look like: iwlwifi 0000:00:0c.0: 0x00000038 | BAD_COMMAND
@@ -2618,11 +2618,21 @@ func (s *ShillService) ResetTest(ctx context.Context, req *wifi.ResetTestRequest
 		}
 		return nil
 	}
-	ath11kWCN6855ResetPath := func(_ context.Context, iface string) (string, error) {
-		if !fileExists(ath11kWCN6855Format) {
-			return "", errors.Errorf("ath11k WCN6855 reset path %q does not exist", ath11kWCN6855Format)
+	ath11kResetPath := func(ctx context.Context, iface string) (string, error) {
+		deviceName, err := network_iface.NewInterface(iface).ParentDeviceName(ctx)
+		if err != nil {
+			return "", errors.Wrapf(err, "failed to get the parent device name of the WiFi interface (%s)", iface)
 		}
-		return ath11kWCN6855Format, nil
+		busName, err := network_iface.NewInterface(iface).DeviceBusName(ctx)
+		if err != nil {
+			return "", errors.Wrapf(err, "failed to get the device bus name of the WiFi interface (%s)", iface)
+		}
+
+		resetPath := fmt.Sprintf(ath11kFormat, busName, deviceName)
+		if !fileExists(resetPath) {
+			return "", errors.Errorf("ath11k reset path %q does not exist", resetPath)
+		}
+		return resetPath, nil
 	}
 	ath11kReset := func(ctx context.Context, resetPath string) error {
 		if err := writeStringToFile(resetPath, "assert"); err != nil {
@@ -2779,7 +2789,7 @@ func (s *ShillService) ResetTest(ctx context.Context, req *wifi.ResetTestRequest
 		// WCN3990 belongs to ath10k Wi-Fi family. Evaluate the specific Wi-Fi module detectors first.
 		{ath10kWCN3990Reset, ath10kWCN3990ResetPath},
 		{ath10kReset, ath10kResetPath},
-		{ath11kReset, ath11kWCN6855ResetPath},
+		{ath11kReset, ath11kResetPath},
 		{iwlwifiReset, iwlwifiResetPath},
 		{mt76Reset, mt76ResetPath},
 		{rtwReset, rtw88ResetPath},
