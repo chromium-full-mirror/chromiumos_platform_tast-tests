@@ -37,6 +37,17 @@ func (i *Iface) ParentDeviceName(ctx context.Context) (string, error) {
 	return deviceName, nil
 }
 
+// DeviceBusName returns the name of the bus on which device is enumerated.
+func (i *Iface) DeviceBusName(ctx context.Context) (string, error) {
+	busPath := filepath.Join(deviceInfoRoot, i.name, "device", "subsystem")
+	rel, err := os.Readlink(busPath)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to readlink bus path")
+	}
+	busName := filepath.Base(rel)
+	return busName, nil
+}
+
 // PhyName returns name of the WiFi phy (e.g., "phy0").
 func (i *Iface) PhyName(_ context.Context) (string, error) {
 	p, err := os.Readlink(filepath.Join(deviceInfoRoot, i.name, "phy80211"))
