@@ -162,11 +162,9 @@ func EnableDisableBluetoothWithAudioPlay(ctx context.Context, s *testing.State) 
 	}(cleanupCtx)
 
 	// Bluetooth button in the quick setting menu, when Bluetooth is on.
-	bluetoothTurnOffButton := nodewith.NameContaining("Toggle Bluetooth. Connected to " + btHeadset).Role(role.ToggleButton)
+	bluetoothTurnOffButton := nodewith.NameContaining("Toggle Bluetooth. Connected to a device named " + btHeadset).Role(role.ToggleButton)
 	// Bluetooth button in the quick setting menu, when Bluetooth is off.
 	bluetoothTurnOnButton := nodewith.NameContaining("Toggle Bluetooth. Bluetooth is off").Role(role.ToggleButton)
-	// Bluetooth device button when bluetooth is on.
-	btDeviceNode := nodewith.Name(btHeadset + ", Audio device").Role(role.Button)
 
 	for i := 1; i <= iter; i++ {
 		testing.ContextLogf(ctx, "Iteration %d/%d", i, iter)
@@ -195,10 +193,6 @@ func EnableDisableBluetoothWithAudioPlay(ctx context.Context, s *testing.State) 
 			ui.LeftClick(bluetoothTurnOnButton),
 			// Confirm Bluetooth adapter is enabled.
 			bluez.PollForBTEnabled,
-			// Wait for bluetooth device in scanned device list.
-			ui.WaitForLocation(btDeviceNode),
-			// Left click on bluetooth device.
-			ui.LeftClick(btDeviceNode),
 		)(ctx); err != nil {
 			s.Fatal("Failed to enable Bluetooth via toggle button: ", err)
 		}
@@ -206,7 +200,7 @@ func EnableDisableBluetoothWithAudioPlay(ctx context.Context, s *testing.State) 
 		// After bluetooth on/off, audio file playback may pause,
 		// play audio file if paused and check audio route on bluetooth device.
 		if err := verifyRunningDevice(ctx, devName); err != nil {
-			playPauseButton := nodewith.Name("Toggle play pause").Role(role.Button)
+			playPauseButton := nodewith.Name("Toggle play pause").Role(role.ToggleButton)
 			if err := ui.LeftClick(playPauseButton)(ctx); err != nil {
 				s.Fatal("Failed to select btDeviceNode: ", err)
 			}
