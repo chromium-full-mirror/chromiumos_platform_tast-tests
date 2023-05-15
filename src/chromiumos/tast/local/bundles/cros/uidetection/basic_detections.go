@@ -132,11 +132,18 @@ func BasicDetections(ctx context.Context, s *testing.State) {
 	bottomBar := nodewith.ClassName("ShelfView")
 	notificationArea := nodewith.ClassName("StatusAreaWidget")
 	chromeWindow := nodewith.Role(role.Window).Name("Chrome - New Tab")
+	noThanksButton := nodewith.Role(role.Button).Name("No thanks")
 
 	verifyChromeIsMinimized := uiauto.NamedAction("verify that chrome is minimized",
 		ui.WaitUntilExists(chromeWindow.Invisible()))
 	verifyChromeIsShown := uiauto.NamedAction("verify that chrome is shown",
 		ui.WaitUntilExists(chromeWindow.Visible()))
+	closeChromePopup := uiauto.NamedAction("close chrome popup",
+		uiauto.IfSuccessThen(
+			ui.WithTimeout(20*time.Second).WaitUntilExists(noThanksButton),
+			ui.LeftClick(noThanksButton),
+		),
+	)
 
 	expectError := func(f *uidetection.Finder, expectation string) func(ctx context.Context) error {
 		return func(ctx context.Context) error {
@@ -179,11 +186,7 @@ func BasicDetections(ctx context.Context, s *testing.State) {
 		uiauto.Combine("verify that basic matchers work",
 			ud.LeftClick(chromeIcon),
 			verifyChromeIsShown,
-			// Click 'No thanks' to close Chrome popups.
-			uiauto.IfSuccessThen(
-				ud.WithTimeout(10*time.Second).Exists(uidetection.Word("thanks")),
-				ud.LeftClick(uidetection.Word("thanks")),
-			),
+			closeChromePopup,
 			ud.WithScreenshotStrategy(uidetection.ImmediateScreenshot).LeftClick(uidetection.TextBlock([]string{"Customize", "Chrome"})),
 			ud.LeftClick(uidetection.Word("Cancel")),
 			ud.WaitUntilGone(uidetection.Word("Cancel")),

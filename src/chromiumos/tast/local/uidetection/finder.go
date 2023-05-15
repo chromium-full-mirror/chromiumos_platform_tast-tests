@@ -15,6 +15,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/coords"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -90,6 +91,7 @@ func (f *Finder) copy() *Finder {
 	c.request = f.request
 	c.desc = f.desc
 	c.nth = f.nth
+	c.exactMatch = f.exactMatch
 	c.constraints = f.constraints
 	return c
 }
