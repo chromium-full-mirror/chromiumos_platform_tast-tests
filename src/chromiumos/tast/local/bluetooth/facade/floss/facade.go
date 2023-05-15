@@ -12,6 +12,7 @@ import (
 	"chromiumos/tast/local/bluetooth/facade/common"
 	"chromiumos/tast/local/bluetooth/floss"
 	"chromiumos/tast/local/upstart"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -104,6 +105,14 @@ func NewBluetoothFlossFacade(ctx context.Context) (*BluetoothFlossFacade, error)
 // StackType returns the BluetoothStackType the facade uses.
 func (b *BluetoothFlossFacade) StackType() common.BluetoothStackType {
 	return common.BluetoothStackTypeFloss
+}
+
+// IsAlive checks if the bluetooth is alive by checking relative job/service.
+func (b *BluetoothFlossFacade) IsAlive(ctx context.Context) (bool, error) {
+	if !upstart.JobExists(ctx, flossManagerDaemonJob) {
+		return false, nil
+	}
+	return upstart.IsServiceAvailable(ctx, floss.DBusFlossManagerService)
 }
 
 // Enable will turn on the bluetooth daemons and power on adapter.

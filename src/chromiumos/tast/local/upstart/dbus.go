@@ -8,6 +8,7 @@ import (
 	"context"
 
 	"chromiumos/tast/local/dbusutil"
+
 	"go.chromium.org/tast/core/errors"
 )
 
@@ -47,4 +48,14 @@ func waitForDbusService(ctx context.Context, serviceName string) error {
 		return errors.Wrapf(err, "failed to wait for D-Bus service %s", serviceName)
 	}
 	return nil
+}
+
+// IsServiceAvailable is a utility for checking if the |serviceName|
+// service is available.
+func IsServiceAvailable(ctx context.Context, serviceName string) (bool, error) {
+	bus, err := dbusutil.SystemBus()
+	if err != nil {
+		return false, errors.Wrap(err, "failed to connect to the message bus")
+	}
+	return dbusutil.ServiceOwned(ctx, bus, serviceName), nil
 }

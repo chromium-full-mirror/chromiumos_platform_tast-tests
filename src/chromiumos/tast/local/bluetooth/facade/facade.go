@@ -11,6 +11,7 @@ import (
 	"chromiumos/tast/local/bluetooth/facade/bluez"
 	"chromiumos/tast/local/bluetooth/facade/common"
 	"chromiumos/tast/local/bluetooth/facade/floss"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -43,10 +44,17 @@ func NewBluetoothFacade(ctx context.Context, stackType common.BluetoothStackType
 			testing.ContextLogf(ctx, "Reusing existing %s bluetooth facade", currentStackType)
 			return bluetoothFacadeSingleton, nil
 		}
-		testing.ContextLogf(ctx, "Disabling existing %s bluetooth facade", currentStackType)
-		if err := bluetoothFacadeSingleton.Disable(ctx); err != nil {
-			bluetoothFacadeSingleton = nil
-			return nil, errors.Wrapf(err, "failed to disable existing %s bluetooth facade", currentStackType)
+
+		if alive, err := bluetoothFacadeSingleton.IsAlive(ctx); err != nil {
+			// Only logs the error, assuming the existing bluetooth facade is not alive if the method fails,
+			// continue on creating a new instance with the desired stack as it can still be initiated anyway.
+			testing.ContextLogf(ctx, "Failed to check if existing %s bluetooth facade is alive: %v", currentStackType, err)
+		} else if alive {
+			testing.ContextLogf(ctx, "Disabling existing %s bluetooth facade", currentStackType)
+			if err := bluetoothFacadeSingleton.Disable(ctx); err != nil {
+				bluetoothFacadeSingleton = nil
+				return nil, errors.Wrapf(err, "failed to disable existing %s bluetooth facade", currentStackType)
+			}
 		}
 		bluetoothFacadeSingleton = nil
 	}

@@ -13,6 +13,7 @@ import (
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/localstate"
 	localCommon "chromiumos/tast/local/common"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -101,6 +102,9 @@ const (
 type BluetoothFacade interface {
 	// StackType returns the BluetoothStackType the facade uses.
 	StackType() BluetoothStackType
+
+	// IsAlive checks if the bluetooth is alive by checking relative job/service.
+	IsAlive(ctx context.Context) (bool, error)
 
 	// Enable will turn on the bluetooth daemons and power on adapter.
 	Enable(ctx context.Context) error
