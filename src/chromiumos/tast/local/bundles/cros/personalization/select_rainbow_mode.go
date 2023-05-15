@@ -62,7 +62,8 @@ func SelectRainbowMode(ctx context.Context, s *testing.State) {
 			name:           "Vell",
 			capability:     individualKey,
 			expectedLogLen: 77,
-		}, {
+		},
+		{
 			name:           "Taniks",
 			capability:     fourZoneFortyLed,
 			expectedLogLen: 40,
@@ -140,11 +141,11 @@ func SelectRainbowMode(ctx context.Context, s *testing.State) {
 
 func selectRainbowMode(ui *uiauto.Context) uiauto.Action {
 	rainbowColor := "Rainbow"
-	colorOption := nodewith.HasClass("color-container").Name(rainbowColor)
-	selectedColor := nodewith.HasClass("color-container tast-selected-color").Name(rainbowColor)
+	rainbowColorOption := nodewith.Role(role.RadioButton).Name(rainbowColor)
 
 	return uiauto.Combine("validate the selected backlight color",
-		ui.MakeVisible(colorOption),
-		ui.LeftClick(colorOption),
-		ui.WaitUntilExists(selectedColor))
+		ui.MakeVisible(rainbowColorOption),
+		ui.WaitUntilExists(rainbowColorOption.Attribute("checked", "false")),
+		ui.LeftClick(rainbowColorOption),
+		ui.WaitUntilExists(rainbowColorOption.Attribute("checked", "true")))
 }
