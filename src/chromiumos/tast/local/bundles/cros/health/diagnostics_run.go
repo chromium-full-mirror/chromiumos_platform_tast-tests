@@ -181,6 +181,11 @@ func init() {
 			// TODO(b/280388009): Promote to critical.
 			ExtraAttr:         []string{"informational"},
 			ExtraHardwareDeps: hwdep.D(hwdep.Bluetooth()),
+		}, {
+			Name: "disk_read",
+			Val:  newRoutineParams(croshealthd.RoutineDiskRead),
+			// TODO(b/282664940): Promote to critical.
+			ExtraAttr: []string{"informational"},
 		}},
 	})
 }

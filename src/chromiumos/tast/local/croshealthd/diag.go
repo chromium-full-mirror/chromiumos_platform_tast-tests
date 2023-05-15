@@ -14,10 +14,10 @@ import (
 
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/crosconfig"
-	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/testing"
 
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/shutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 // List of cros_healthd diagnostic routines
@@ -146,6 +146,9 @@ func RunDiagRoutine(ctx context.Context, params RoutineParams) (*RoutineResult, 
 	} else if params.Routine == RoutineURandom {
 		// Run routine for 1 second to verify it doesn't crash.
 		diagParams = append(diagParams, "--urandom_length_seconds=1")
+	} else if params.Routine == RoutineDiskRead {
+		diagParams = append(diagParams, "--length_seconds=1")
+		diagParams = append(diagParams, "--file_size_mb=64")
 	}
 
 	var output string
