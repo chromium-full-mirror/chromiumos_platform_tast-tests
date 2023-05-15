@@ -28,9 +28,9 @@ func init() {
 		Desc:         "Tests that the proxy values remain the same after DUT reboots",
 		Contacts: []string{
 			"cros-connectivity@google.com",
-			"cros-conn-test-team@google.com",
-			"cienet-development@googlegroups.com",
-			"edgar.chang@cienet.com",
+			"chromeos-connectivity-engprod@google.com",
+			"shijinabraham@google.com",
+			"chadduffin@chromium.org",
 		},
 		BugComponent: "b:1131775", // ChromeOS > Software > System Services > Connectivity
 		// TODO(b/275127708): Move this test to network suite.
