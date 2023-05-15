@@ -28,7 +28,7 @@ func init() {
 		Attr:         []string{"group:arc-functional", "group:mainline"},
 		SoftwareDeps: []string{"play_store", "chrome"},
 		Params: []testing.Param{{
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
+			ExtraAttr:         []string{"informational"},
 			ExtraSoftwareDeps: []string{"android_container"},
 		}, {
 			Name:              "vm",
