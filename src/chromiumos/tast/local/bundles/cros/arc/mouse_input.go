@@ -14,6 +14,7 @@ import (
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/uiauto/mouse"
 	"chromiumos/tast/local/coords"
+
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -46,11 +47,11 @@ func init() {
 				}, {
 					Name:          "Tablet Snapped Left",
 					TabletMode:    true,
-					WmEventToSend: ash.WMEventSnapLeft,
+					WmEventToSend: ash.WMEventSnapPrimary,
 				}, {
 					Name:          "Tablet Snapped Right",
 					TabletMode:    true,
-					WmEventToSend: ash.WMEventSnapRight,
+					WmEventToSend: ash.WMEventSnapSecondary,
 				},
 			}},
 		}, {

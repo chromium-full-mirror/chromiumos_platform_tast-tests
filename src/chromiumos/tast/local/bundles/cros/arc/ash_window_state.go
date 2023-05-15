@@ -10,6 +10,7 @@ import (
 
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome/ash"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -88,8 +89,8 @@ func AshWindowState(ctx context.Context, s *testing.State) {
 
 		// Remaining tests
 		{ash.WMEventMaximize, ash.WindowStateMaximized},
-		{ash.WMEventSnapLeft, ash.WindowStatePrimarySnapped},
-		{ash.WMEventSnapRight, ash.WindowStateSecondarySnapped},
+		{ash.WMEventSnapPrimary, ash.WindowStatePrimarySnapped},
+		{ash.WMEventSnapSecondary, ash.WindowStateSecondarySnapped},
 		{ash.WMEventMinimize, ash.WindowStateMinimized},
 	} {
 		s.Logf("Sending event %s to Settings app", test.wmEvent)

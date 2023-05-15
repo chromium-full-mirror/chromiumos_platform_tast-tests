@@ -19,6 +19,7 @@ import (
 	"chromiumos/tast/local/chrome/settings"
 	"chromiumos/tast/local/coords"
 	"chromiumos/tast/local/screenshot"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -865,7 +866,7 @@ func wmSnapping(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.D
 	}
 
 	// Snap the activity to the left.
-	if _, err := ash.SetARCAppWindowState(ctx, tconn, wm.Pkg24, ash.WMEventSnapLeft); err != nil {
+	if _, err := ash.SetARCAppWindowState(ctx, tconn, wm.Pkg24, ash.WMEventSnapPrimary); err != nil {
 		return errors.Wrapf(err, "failed to left snap %s", wm.Pkg24)
 	}
 

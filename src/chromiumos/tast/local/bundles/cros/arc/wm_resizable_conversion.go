@@ -15,6 +15,7 @@ import (
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/display"
 	"chromiumos/tast/local/coords"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -528,7 +529,7 @@ func wmRV22(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Devic
 	}
 
 	// Snap the over activity to the left and ensure its updated state.
-	if _, err := ash.SetARCAppWindowState(ctx, tconn, wm.Pkg24InMaximizedList, ash.WMEventSnapLeft); err != nil {
+	if _, err := ash.SetARCAppWindowState(ctx, tconn, wm.Pkg24InMaximizedList, ash.WMEventSnapPrimary); err != nil {
 		return errors.Wrapf(err, "failed to left snap %s", wm.Pkg24InMaximizedList)
 	}
 
@@ -547,7 +548,7 @@ func wmRV22(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Devic
 	}
 
 	// Snap the under activity to the right and ensure its updated state.
-	if _, err := ash.SetARCAppWindowState(ctx, tconn, wm.Pkg24, ash.WMEventSnapRight); err != nil {
+	if _, err := ash.SetARCAppWindowState(ctx, tconn, wm.Pkg24, ash.WMEventSnapSecondary); err != nil {
 		return errors.Wrapf(err, "failed to right snap %s", wm.Pkg24)
 	}
 

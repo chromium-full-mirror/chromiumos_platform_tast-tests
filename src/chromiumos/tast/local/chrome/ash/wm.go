@@ -44,23 +44,19 @@ const (
 	WindowStateFloated          WindowStateType = "Floated"
 )
 
-// WindowStateLeftSnapped is a temporaily alternative to WindowStatePrimarySnapped.
-// TODO(b/252512988): Tast test private repo still uses left snapped. Remove this once it has been updated.
-const WindowStateLeftSnapped = WindowStatePrimarySnapped
-
 // WMEventType represents the different WM Event type in Ash.
 type WMEventType string
 
 // As defined in ash::wm::WMEventType here:
 // https://cs.chromium.org/chromium/src/ash/wm/wm_event.h
 const (
-	WMEventNormal     WMEventType = "WMEventNormal"
-	WMEventMaximize   WMEventType = "WMEventMaximize"
-	WMEventMinimize   WMEventType = "WMEventMinimize"
-	WMEventFullscreen WMEventType = "WMEventFullscreen"
-	WMEventSnapLeft   WMEventType = "WMEventSnapLeft"
-	WMEventSnapRight  WMEventType = "WMEventSnapRight"
-	WMEventFloat      WMEventType = "WMEventFloat"
+	WMEventNormal        WMEventType = "WMEventNormal"
+	WMEventMaximize      WMEventType = "WMEventMaximize"
+	WMEventMinimize      WMEventType = "WMEventMinimize"
+	WMEventFullscreen    WMEventType = "WMEventFullscreen"
+	WMEventSnapPrimary   WMEventType = "WMEventSnapPrimary"
+	WMEventSnapSecondary WMEventType = "WMEventSnapSecondary"
+	WMEventFloat         WMEventType = "WMEventFloat"
 )
 
 // SnapPosition represents the different snap position in split view.
@@ -213,8 +209,8 @@ var stateToWmTypes = map[WindowStateType]WMEventType{
 	WindowStateMinimized:        WMEventMinimize,
 	WindowStateMaximized:        WMEventMaximize,
 	WindowStateFullscreen:       WMEventFullscreen,
-	WindowStatePrimarySnapped:   WMEventSnapLeft,
-	WindowStateSecondarySnapped: WMEventSnapRight,
+	WindowStatePrimarySnapped:   WMEventSnapPrimary,
+	WindowStateSecondarySnapped: WMEventSnapSecondary,
 	WindowStateFloated:          WMEventFloat,
 }
 
@@ -260,17 +256,7 @@ func SetWindowStateAndWait(ctx context.Context, tconn *chrome.TestConn, id int, 
 		return errors.Wrap(err, "failed to set the window state")
 	}
 	if gotState != targetState {
-		// TODO(b/252512988): Autotest API currently still uses left and right for primary and secondary. The gotState
-		// may not match targetState only because autotest API has not been updated yet.
-		const (
-			primarySnapAlternateName   = "LeftSnapped"
-			secondarySnapAlternateName = "RightSnapped"
-		)
-		var primaryCorrect = (targetState == WindowStatePrimarySnapped && gotState == primarySnapAlternateName)
-		var secondaryCorrect = (targetState == WindowStateSecondarySnapped && gotState == secondarySnapAlternateName)
-		if !primaryCorrect && !secondaryCorrect {
-			return errors.Errorf("failed to set the window state: got %v want %v", gotState, targetState)
-		}
+		return errors.Errorf("failed to set the window state: got %v want %v", gotState, targetState)
 	}
 
 	if err = WaitWindowFinishAnimating(ctx, tconn, id); err != nil {
@@ -405,18 +391,7 @@ func WaitForARCAppWindowStateWithPollOptions(ctx context.Context, tconn *chrome.
 			return errors.Wrap(err, "failed to get Ash window state")
 		}
 		if actual != state {
-			// TODO(b/252512988): Autotest API currently still uses left and right for primary and secondary.
-			// The WaitForARCAppWindowStateWithPollOptions may not match actual state only because autotest
-			// API has not been updated yet.
-			const (
-				primarySnapAlternateName   = "LeftSnapped"
-				secondarySnapAlternateName = "RightSnapped"
-			)
-			var primaryCorrect = (state == WindowStatePrimarySnapped && actual == primarySnapAlternateName)
-			var secondaryCorrect = (state == WindowStateSecondarySnapped && actual == secondarySnapAlternateName)
-			if !primaryCorrect && !secondaryCorrect {
-				return errors.Errorf("window isn't in expected state yet; got: %s, want: %s", actual, state)
-			}
+			return errors.Errorf("window isn't in expected state yet; got: %s, want: %s", actual, state)
 		}
 		return nil
 	}, pollOptions)
