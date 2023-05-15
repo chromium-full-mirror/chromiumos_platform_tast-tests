@@ -22,10 +22,12 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/mouse"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/pointer"
+	"chromiumos/tast/local/chrome/uiauto/prompts"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/coords"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/ui/cujrecorder"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -237,20 +239,8 @@ func MeetMultiTaskingCUJ(ctx context.Context, s *testing.State) {
 	// Find the web view of Meet window.
 	webview := nodewith.ClassName("ContentsWebView").Role(role.WebView)
 
-	uiLongWait := ui.WithTimeout(time.Minute)
-	bubble := nodewith.ClassName("PermissionPromptBubbleView").First()
-	allow := nodewith.Name("Allow").Role(role.Button).Ancestor(bubble)
 	// Check and grant permissions.
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		// Long wait for permission bubble and break poll loop when it times out.
-		if uiLongWait.WaitUntilExists(bubble)(ctx) != nil {
-			return nil
-		}
-		if err := pc.Click(allow)(ctx); err != nil {
-			return errors.Wrap(err, "failed to click the allow button")
-		}
-		return errors.New("granting permissions")
-	}, &testing.PollOptions{Interval: time.Second, Timeout: 2 * time.Minute}); err != nil {
+	if err := prompts.ClearPotentialPrompts(tconn, time.Minute, prompts.ShowNotificationsPrompt, prompts.AllowAVPermissionPrompt)(ctx); err != nil {
 		s.Fatal("Failed to grant permissions: ", err)
 	}
 
