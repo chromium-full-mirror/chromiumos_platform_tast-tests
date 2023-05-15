@@ -16,9 +16,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         Smoke,
+		Func:         PlatformServiceSmoke,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Video Pipeline Smoke Test",
+		Desc:         "Smoke test for the Platform Camera Service",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "hidenorik@chromium.org"},
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera", "group:criticalstaging", "group:cq-medium"},
 		SoftwareDeps: []string{"arc_camera3", caps.BuiltinCamera},
@@ -26,7 +26,7 @@ func init() {
 	})
 }
 
-func Smoke(ctx context.Context, s *testing.State) {
+func PlatformServiceSmoke(ctx context.Context, s *testing.State) {
 	const exec = "cros_camera_connector_test"
 
 	if err := testutil.WaitForCameraSocket(ctx); err != nil {
