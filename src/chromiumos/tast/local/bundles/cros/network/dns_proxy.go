@@ -46,7 +46,7 @@ func init() {
 				mode:   dns.DoHOff,
 				chrome: true,
 			},
-			ExtraAttr: []string{"group:criticalstaging"},
+			ExtraAttr: []string{},
 			Fixture:   "chromeLoggedIn",
 		}, {
 			Name: "chrome_doh_automatic",
@@ -54,7 +54,7 @@ func init() {
 				mode:   dns.DoHAutomatic,
 				chrome: true,
 			},
-			ExtraAttr: []string{"group:criticalstaging"},
+			ExtraAttr: []string{},
 			Fixture:   "chromeLoggedIn",
 		}, {
 			Name: "chrome_doh_always_on",
@@ -62,7 +62,7 @@ func init() {
 				mode:   dns.DoHAlwaysOn,
 				chrome: true,
 			},
-			ExtraAttr: []string{"group:criticalstaging"},
+			ExtraAttr: []string{},
 			Fixture:   "chromeLoggedIn",
 		}, {
 			Name: "arc_doh_off",

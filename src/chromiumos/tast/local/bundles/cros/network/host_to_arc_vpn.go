@@ -23,7 +23,7 @@ func init() {
 		Desc:         "Switch from a host VPN to an ARC VPN",
 		Contacts:     []string{"cros-networking@google.com", "cassiewang@google.com"},
 		BugComponent: "b:156085",
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      "arcBooted",
 		SoftwareDeps: []string{"arc"},
 	})
