@@ -6,8 +6,8 @@ package policy
 
 import (
 	"context"
+	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -19,7 +19,7 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/nebraska"
 	"chromiumos/tast/local/policyutil"
-	"chromiumos/tast/local/upstart"
+	"chromiumos/tast/local/updateengine"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -196,48 +196,14 @@ func init() {
 	})
 }
 
-const updateEngineLog = "/var/log/update_engine.log"
-const waitTime = 10 * time.Second
-
-// clearAndUpdate restarts update engine, clears the logs and requests an update.
-func clearAndUpdate(ctx context.Context) error {
-	ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
+// triggerUpdate requests an update check at the specified Omaha URL.
+func triggerUpdate(ctx context.Context, url string) error {
+	// Make sure update_engine_client does not hang.
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	if err := upstart.StopJob(ctx, "update-engine"); err != nil {
-		return errors.Wrap(err, "failed to stop update_engine")
-	}
-
-	realLog, err := os.Readlink(updateEngineLog)
-	if err != nil {
-		return errors.Wrap(err, "failed to find the real update_engine log")
-	}
-
-	if err := os.Remove(realLog); err != nil {
-		return errors.Wrap(err, "failed to clear the real update_engine log")
-	}
-
-	if err := os.Remove(updateEngineLog); err != nil {
-		return errors.Wrap(err, "failed to clear the update_engine log")
-	}
-
-	if err := upstart.StartJob(ctx, "update-engine"); err != nil {
-		return errors.Wrap(err, "failed to start update_engine")
-	}
-
-	// update_engine is not ready right after start.
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		// Make sure update_engine_client does not hang.
-		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-		defer cancel()
-
-		if err := testexec.CommandContext(ctx, "update_engine_client", "--check_for_update").Run(testexec.DumpLogOnError); err != nil {
-			return err
-		}
-
-		return nil
-	}, nil); err != nil {
-		return errors.Wrap(err, "failed to trigger update check")
+	if err := testexec.CommandContext(ctx, "update_engine_client", "--check_for_update", fmt.Sprintf("--omaha_url=%s", url)).Run(testexec.DumpLogOnError); err != nil {
+		return err
 	}
 
 	return nil
@@ -250,8 +216,16 @@ func UpdateEnginePolicies(ctx context.Context, s *testing.State) {
 	param := s.Param().(*updateEngineTestParam)
 
 	// Restart update-engine after clearing policies.
-	defer upstart.RestartJob(ctx, "update-engine")
+	defer updateengine.RestartDaemon(ctx)
 	defer policyutil.ServeAndVerify(ctx, fdms, cr, []policy.Policy{})
+
+	// Make sure update_engine is restarted after enrollment.
+
+	if err := updateengine.RestartDaemon(ctx); err != nil {
+		s.Fatal("Failed to restart update-engine: ", err)
+	}
+
+	const waitTime = 20 * time.Second
 
 	s.Run(ctx, "set", func(ctx context.Context, s *testing.State) {
 		updateServer, err := nebraska.New(ctx, nebraska.ConfigureUpdateEngine())
@@ -265,7 +239,7 @@ func UpdateEnginePolicies(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to update policies: ", err)
 		}
 
-		if err := clearAndUpdate(ctx); err != nil {
+		if err := triggerUpdate(ctx, nebraska.UpdateURL(updateServer.Port, true)); err != nil {
 			s.Fatal("Failed to trigger update request: ", err)
 		}
 
@@ -279,7 +253,7 @@ func UpdateEnginePolicies(ctx context.Context, s *testing.State) {
 			}
 
 			if !strings.Contains(string(updateServerLog), attributeEntry) {
-				return errors.Errorf("%q not in the update_engine logs", attributeEntry)
+				return errors.Errorf("%q not in the nebraska logs", attributeEntry)
 			}
 
 			return nil
@@ -287,15 +261,6 @@ func UpdateEnginePolicies(ctx context.Context, s *testing.State) {
 			Timeout: waitTime,
 		}); err != nil {
 			s.Error("Could not find expected values: ", err)
-		}
-
-		updateEngineLog, err := os.ReadFile("/var/log/update_engine.log")
-		if err != nil {
-			s.Fatal("Failed to read update_engine logs: ", err)
-		}
-
-		if err := os.WriteFile(filepath.Join(s.OutDir(), "set_log.txt"), updateEngineLog, 0644); err != nil {
-			s.Error("Failed to dump update_engine logs: ", err)
 		}
 	})
 
@@ -311,23 +276,28 @@ func UpdateEnginePolicies(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to clear policies: ", err)
 		}
 
-		if err := clearAndUpdate(ctx); err != nil {
+		if err := triggerUpdate(ctx, nebraska.UpdateURL(updateServer.Port, true)); err != nil {
 			s.Fatal("Failed to trigger update request: ", err)
 		}
 
-		s.Log("Waiting for update_engine to have a chance to log")
-		// GoBigSleepLint we are waiting for "nothing" to happen in the logs. Polling is not possible.
-		if err := testing.Sleep(ctx, waitTime); err != nil {
-			s.Fatal("Failed to wait for messages: ", err)
-		}
+		s.Log("Waiting for the nebraska request to finish")
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			var err error
+			updateServerLog, err := os.ReadFile(updateServer.LogFile)
+			if err != nil {
+				return testing.PollBreak(errors.Wrap(err, "failed to read nebraska logs"))
+			}
 
-		updateEngineLog, err := os.ReadFile("/var/log/update_engine.log")
-		if err != nil {
-			s.Fatal("Failed to read update_engine logs: ", err)
-		}
+			responseLog := "Sent response"
+			if !strings.Contains(string(updateServerLog), responseLog) {
+				return errors.Errorf("%q not in the nebraska logs", responseLog)
+			}
 
-		if err := os.WriteFile(filepath.Join(s.OutDir(), "unset_log.txt"), updateEngineLog, 0644); err != nil {
-			s.Error("Failed to dump update_engine logs: ", err)
+			return nil
+		}, &testing.PollOptions{
+			Timeout: waitTime,
+		}); err != nil {
+			s.Error("Could not find expected values: ", err)
 		}
 
 		updateServerLog, err := os.ReadFile(updateServer.LogFile)

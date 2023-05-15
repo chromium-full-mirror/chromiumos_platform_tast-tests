@@ -15,6 +15,7 @@ import (
 	"chromiumos/tast/local/dbusutil"
 	"chromiumos/tast/local/upstart"
 	aupb "chromiumos/tast/services/cros/autoupdate"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -36,6 +37,12 @@ func StartDaemon(ctx context.Context) error {
 func StopDaemon(ctx context.Context) error {
 	testing.ContextLog(ctx, "stop daemon: ", JobName)
 	return upstart.StopJob(ctx, JobName)
+}
+
+// RestartDaemon will restart the daemon.
+func RestartDaemon(ctx context.Context) error {
+	testing.ContextLog(ctx, "restart daemon: ", JobName)
+	return upstart.RestartJob(ctx, JobName)
 }
 
 // WaitForService waits for the update-engine DBus service to be available.
