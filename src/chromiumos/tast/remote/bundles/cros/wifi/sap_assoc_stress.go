@@ -14,6 +14,7 @@ import (
 	"chromiumos/tast/remote/bundles/cros/wifi/wifiutil"
 	"chromiumos/tast/remote/wificell"
 	"chromiumos/tast/remote/wificell/tethering"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -43,13 +44,7 @@ func init() {
 		Timeout:      time.Minute + 8*sapAssocRounds*10*time.Second, // Default: 10 minutes, typically test runs in half that time.
 		ServiceDeps:  []string{wificell.ShillServiceName},
 		SoftwareDeps: []string{"wpa3_sae"},
-		HardwareDeps: hwdep.D(hwdep.WifiSAP(),
-			// Skip test on devices that don't support AP/STA concurrency.
-			// TODO(b/223075313) We don't do this globally, because AVL hasn't changed (yet) and we don't want to impact SAPCaps test.
-			hwdep.SkipOnWifiDevice(
-				hwdep.Realtek8822CPCIE, hwdep.Realtek8852APCIE,
-				hwdep.QualcommWCN6855,
-			)),
+		HardwareDeps: hwdep.D(hwdep.WifiSAP()),
 		Params: []testing.Param{
 			{
 				Val: []sapAssocStressTestcase{

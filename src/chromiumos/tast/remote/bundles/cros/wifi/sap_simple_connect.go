@@ -17,6 +17,7 @@ import (
 	"chromiumos/tast/remote/wificell/dutcfg"
 	"chromiumos/tast/remote/wificell/tethering"
 	"chromiumos/tast/services/cros/wifi"
+
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -38,13 +39,7 @@ func init() {
 		Attr:         []string{"group:wificell_cross_device", "wificell_cross_device_sap", "wificell_cross_device_unstable"},
 		ServiceDeps:  []string{wificell.ShillServiceName},
 		Fixture:      "wificellFixtCompanionDutWithCapture",
-		HardwareDeps: hwdep.D(hwdep.WifiSAP(),
-			// Skip test on devices that don't support AP/STA concurrency.
-			// TODO(b/223075313) We don't do this globally, because AVL hasn't changed (yet) and we don't want to impact SAPCaps test.
-			hwdep.SkipOnWifiDevice(
-				hwdep.Realtek8822CPCIE, hwdep.Realtek8852APCIE,
-				hwdep.QualcommWCN6855,
-			)),
+		HardwareDeps: hwdep.D(hwdep.WifiSAP()),
 		Params: []testing.Param{
 			{
 				// Verifies that Soft AP DUT can accept connection from a station with no encryption in low band and high band.

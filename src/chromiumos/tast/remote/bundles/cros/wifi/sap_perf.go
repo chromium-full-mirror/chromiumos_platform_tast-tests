@@ -18,6 +18,7 @@ import (
 	"chromiumos/tast/remote/wificell"
 	"chromiumos/tast/remote/wificell/dutcfg"
 	"chromiumos/tast/remote/wificell/tethering"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -57,13 +58,7 @@ func init() {
 		ServiceDeps:  []string{wificell.ShillServiceName},
 		Fixture:      "wificellFixtCompanionDut",
 		Timeout:      15 * time.Minute,
-		HardwareDeps: hwdep.D(hwdep.WifiSAP(),
-			// Skip test on devices that don't support AP/STA concurrency.
-			// TODO(b/223075313) We don't do this globally, because AVL hasn't changed (yet) and we don't want to impact SAPCaps test.
-			hwdep.SkipOnWifiDevice(
-				hwdep.Realtek8822CPCIE, hwdep.Realtek8852APCIE,
-				hwdep.QualcommWCN6855,
-			)),
+		HardwareDeps: hwdep.D(hwdep.WifiSAP()),
 		Params: []testing.Param{
 			{
 				// TCP performance. Download|Upload directions based on the STA perspective.
