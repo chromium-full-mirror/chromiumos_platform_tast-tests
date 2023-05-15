@@ -188,10 +188,5 @@ func BackupAttestationDbWithFakeGoogleKeys(ctx context.Context) error {
 	if err := RestoreNormalAttestationDatabase(ctx, helper); err != nil {
 		return errors.Wrap(err, "something went wrong while restoring normal attestation database")
 	}
-
-	// Replace the attestation database with the fake one.
-	if err := fsutil.CopyFile(attestationDBBackupPath, hwsec.AttestationDBPath); err != nil {
-		return errors.Wrap(err, "failed to replace with the fake attestation database")
-	}
 	return nil
 }

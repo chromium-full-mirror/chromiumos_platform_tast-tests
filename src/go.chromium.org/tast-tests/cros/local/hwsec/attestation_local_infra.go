@@ -6,6 +6,7 @@ package hwsec
 
 import (
 	"context"
+	"os"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/hwsec"
@@ -33,7 +34,30 @@ func NewAttestationLocalInfra(dc *hwsec.DaemonController) *AttestationLocalInfra
 
 // Enable enables the local test infra for attestation flow testing.
 func (ali *AttestationLocalInfra) Enable(ctx context.Context) (lastErr error) {
-	// Restore the backed up attestation database.
+	if _, err := os.Stat(hwsec.AttestationDBPath); err == nil {
+		if err := ali.snapshot.Stash(hwsec.AttestationDBPath); err != nil {
+			return errors.Wrap(err, "failed to stash attestation database")
+		}
+		ali.dbStashed = true
+	} else if !os.IsNotExist(err) {
+		return errors.Wrap(err, "failed to check stat of attestation database")
+	}
+
+	cleanupCtx := ctx
+	// The shortened ctx's associated cancel() is not called intentionally as it will
+	// be used in FakePCAAgent created below. The object will hold the ctx and it
+	// outlives this function. We rely on the ctx's parent to cancel it.
+	ctx, _ = ctxutil.Shorten(ctx, 5*time.Second)
+
+	defer func(ctx context.Context) {
+		if lastErr != nil && ali.dbStashed {
+			if err := ali.snapshot.Pop(hwsec.AttestationDBPath); err != nil {
+				testing.ContextLog(ctx, "Failed to pop attestation database back: ", err)
+			}
+		}
+	}(cleanupCtx)
+
+	// Restore the fake attestation database.
 	if err := fsutil.CopyFile(attestationDBBackupPath, hwsec.AttestationDBPath); err != nil {
 		return errors.Wrap(err, "failed to restore the fake attestation database")
 	}
@@ -41,10 +65,6 @@ func (ali *AttestationLocalInfra) Enable(ctx context.Context) (lastErr error) {
 	if err := enckey.InjectWellKnownGoogleKeysAndRestart(ctx, ali.dc); err != nil {
 		return errors.Wrap(err, "failed to inject well-known keys")
 	}
-
-	cleanupCtx := ctx
-	// We must not cancel the context here as it is being used by the caller.
-	ctx, _ = ctxutil.Shorten(ctx, 5*time.Second)
 
 	// Revert the key injection if other parts of this function fails.
 	defer func(ctx context.Context) {
@@ -70,7 +90,7 @@ func (ali *AttestationLocalInfra) Disable(ctx context.Context) error {
 			lastErr = errors.Wrap(err, "failed to pop the snapshot of attestation database back")
 		}
 	}
-	if err := enckey.InjectNormalGoogleKeys(ctx); err != nil {
+	if err := enckey.InjectNormalGoogleKeysAndRestart(ctx, ali.dc); err != nil {
 		testing.ContextLog(ctx, "Failed to inject the normal key back: ", err)
 		lastErr = errors.Wrap(err, "failed to inject the normal key back")
 	}
@@ -86,13 +106,20 @@ func (ali *AttestationLocalInfra) enableFakePCAAgent(ctx context.Context) (lastE
 	if err := ali.dc.Stop(ctx, hwsec.PCAAgentDaemon); err != nil {
 		return errors.Wrap(err, "failed to stop normal pca agent")
 	}
-	defer func() {
+
+	cleanupCtx := ctx
+	// The shortened ctx's associated cancel() is not called intentionally as it will
+	// be used in FakePCAAgent created below. The object will hold the ctx and it
+	// outlives this function. We rely on the ctx's parent to cancel it.
+	ctx, _ = ctxutil.Shorten(ctx, 3*time.Second)
+	defer func(ctx context.Context) {
 		if lastErr != nil {
 			if err := ali.dc.Start(ctx, hwsec.PCAAgentDaemon); err != nil {
 				testing.ContextLog(ctx, "Failed to stop start normal pca agent: ", err)
 			}
 		}
-	}()
+	}(cleanupCtx)
+
 	if ali.fpca == nil {
 		ali.fpca = FakePCAAgentContext(ctx)
 		if err := ali.fpca.Start(); err != nil {
