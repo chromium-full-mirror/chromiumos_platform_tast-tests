@@ -121,12 +121,12 @@ func skuNumber(ctx context.Context) (string, error) {
 
 	// has-sku-number is missing in cros-config, so API should return empty
 	// `sku_number`.
-	if got == "false" {
+	if got == "" || got == "false" {
 		return "", nil
 	}
 
 	if got != "true" {
-		return "", errors.Errorf(`unexpected has-sku-number value = got %q, want "true" or "false"`, got)
+		return "", errors.Errorf(`unexpected has-sku-number value = got %q, want "", "false" or "true"`, got)
 	}
 
 	return fetchOptionalVpdField("/sys/firmware/vpd/ro/sku_number")
