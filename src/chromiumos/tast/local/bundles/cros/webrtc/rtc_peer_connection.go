@@ -35,7 +35,7 @@ func init() {
 		Data:         append(peerconnection.DataFiles(), peerconnection.LoopbackFile),
 		Attr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 		Params: []testing.Param{{
-			Name: "h264",
+			Name: "h264_no_verify_hw",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
 				VerifyEncoderMode: peerconnection.NoVerifyEncoderMode,
@@ -47,7 +47,7 @@ func init() {
 			ExtraSoftwareDeps: []string{"proprietary_codecs"},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
-			Name: "vp8",
+			Name: "vp8_no_verify_hw",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
 				VerifyEncoderMode: peerconnection.NoVerifyEncoderMode,
@@ -58,7 +58,7 @@ func init() {
 			},
 			Fixture: "chromeVideoWithFakeWebcam",
 		}, {
-			Name: "vp8_simulcast",
+			Name: "vp8_simulcast_no_verify_hw",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
 				VerifyEncoderMode: peerconnection.NoVerifyEncoderMode,
@@ -70,7 +70,7 @@ func init() {
 			},
 			Fixture: "chromeVideoWithFakeWebcam",
 		}, {
-			Name: "vp9",
+			Name: "vp9_no_verify_hw",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
 				VerifyEncoderMode: peerconnection.NoVerifyEncoderMode,
@@ -81,7 +81,7 @@ func init() {
 			},
 			Fixture: "chromeVideoWithFakeWebcam",
 		}, {
-			Name: "av1",
+			Name: "av1_no_verify_hw",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
 				VerifyEncoderMode: peerconnection.NoVerifyEncoderMode,
@@ -92,7 +92,7 @@ func init() {
 			},
 			Fixture: "chromeVideoWithFakeWebcam",
 		}, {
-			Name: "h264_dec",
+			Name: "h264_verify_hw_dec",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
 				VerifyEncoderMode: peerconnection.NoVerifyEncoderMode,
@@ -104,7 +104,7 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
-			Name: "h264_dec_alt",
+			Name: "h264_verify_hw_dec_alt",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
 				VerifyEncoderMode: peerconnection.NoVerifyEncoderMode,
@@ -116,7 +116,7 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "video_decoder_legacy_supported", "proprietary_codecs"},
 			Fixture:           "chromeVideoWithFakeWebcamAndAlternateVideoDecoder",
 		}, {
-			Name: "vp8_dec",
+			Name: "vp8_verify_hw_dec",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
 				VerifyEncoderMode: peerconnection.NoVerifyEncoderMode,
@@ -128,7 +128,7 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP8},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
-			Name: "vp8_dec_alt",
+			Name: "vp8_verify_hw_dec_alt",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
 				VerifyEncoderMode: peerconnection.NoVerifyEncoderMode,
@@ -140,7 +140,7 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "video_decoder_legacy_supported"},
 			Fixture:           "chromeVideoWithFakeWebcamAndAlternateVideoDecoder",
 		}, {
-			Name: "vp9_dec",
+			Name: "vp9_verify_hw_dec",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
 				VerifyEncoderMode: peerconnection.NoVerifyEncoderMode,
@@ -152,7 +152,7 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
-			Name: "vp9_dec_alt",
+			Name: "vp9_verify_hw_dec_alt",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
 				VerifyEncoderMode: peerconnection.NoVerifyEncoderMode,
@@ -164,7 +164,7 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "video_decoder_legacy_supported"},
 			Fixture:           "chromeVideoWithFakeWebcamAndAlternateVideoDecoder",
 		}, {
-			Name: "vp9_dec_1080p",
+			Name: "vp9_1080p_verify_hw_dec",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
 				VerifyEncoderMode: peerconnection.NoVerifyEncoderMode,
@@ -178,7 +178,7 @@ func init() {
 		}, {
 			// This is a decoding test of 2 temporal layers test, via the (experimental) API.
 			// See https://www.w3.org/TR/webrtc-svc/#scalabilitymodes for SVC identifiers.
-			Name: "vp9_dec_svc_l1t2",
+			Name: "vp9_svc_l1t2_verify_hw_dec",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
 				VerifyEncoderMode: peerconnection.NoVerifyEncoderMode,
@@ -193,7 +193,7 @@ func init() {
 		}, {
 			// This is a decoding test of 3 temporal layers test, via the (experimental) API.
 			// See https://www.w3.org/TR/webrtc-svc/#scalabilitymodes for SVC identifiers.
-			Name: "vp9_dec_svc_l1t3",
+			Name: "vp9_svc_l1t3_verify_hw_dec",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
 				VerifyEncoderMode: peerconnection.NoVerifyEncoderMode,
@@ -208,7 +208,7 @@ func init() {
 		}, {
 			// This is a decoding test of 3 spatial layers, 3 temporal layers (each) k-SVC test, via the (experimental) API.
 			// See https://www.w3.org/TR/webrtc-svc/#scalabilitymodes for SVC identifiers.
-			Name: "vp9_dec_svc_l3t3_key",
+			Name: "vp9_l3t3_key_verify_hw_dec",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
 				VerifyEncoderMode: peerconnection.NoVerifyEncoderMode,
@@ -224,7 +224,7 @@ func init() {
 		}, {
 			// This is a decoding test of 3 spatial layers, 3 temporal layers (each) k-SVC test, via the (experimental) API.
 			// See https://www.w3.org/TR/webrtc-svc/#scalabilitymodes for SVC identifiers.
-			Name: "vp9_dec_svc_l3t3_key_oopvd",
+			Name: "vp9_svc_l3t3_key_verify_hw_dec_oopvd",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
 				VerifyEncoderMode: peerconnection.NoVerifyEncoderMode,
@@ -238,7 +238,7 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.SupportsVP9KSVCHWDecoding()),
 			Fixture:           "chromeVideoOOPVDWithFakeWebcamAndSVCEnabled",
 		}, {
-			Name: "av1_dec",
+			Name: "av1_verify_hw_dec",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
 				VerifyEncoderMode: peerconnection.NoVerifyEncoderMode,
@@ -250,7 +250,7 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWDecodeAV1},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
-			Name: "h264_enc",
+			Name: "h264_verify_hw_enc",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
 				VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
@@ -262,7 +262,7 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWEncodeH264, "proprietary_codecs"},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
-			Name: "h264_enc_lacros",
+			Name: "h264_lacros_verify_hw_enc",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
 				VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
@@ -274,7 +274,7 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWEncodeH264, "proprietary_codecs", "lacros"},
 			Fixture:           "chromeVideoLacrosWithFakeWebcam",
 		}, {
-			Name: "h264_enc_cam",
+			Name: "h264_cam_verify_hw_enc",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
 				VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
@@ -286,7 +286,7 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.BuiltinCamera, caps.HWEncodeH264, "proprietary_codecs"},
 			Fixture:           "chromeCameraPerf",
 		}, {
-			Name: "h264_enc_oopve",
+			Name: "h264_oopve_verify_hw_enc",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode:                     peerconnection.NoVerifyDecoderMode,
 				VerifyEncoderMode:                     peerconnection.VerifyHWEncoderUsed,
@@ -299,7 +299,7 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWEncodeH264, "proprietary_codecs"},
 			Fixture:           "chromeVideoWithFakeWebcamAndOOPVE",
 		}, {
-			Name: "vp8_enc",
+			Name: "vp8_verify_hw_enc",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
 				VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
@@ -311,7 +311,7 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP8},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
-			Name: "vp8_enc_lacros",
+			Name: "vp8_lacros_verify_hw_enc",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
 				VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
@@ -323,7 +323,7 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP8, "lacros"},
 			Fixture:           "chromeVideoLacrosWithFakeWebcam",
 		}, {
-			Name: "vp8_enc_cam",
+			Name: "vp8_cam_verify_hw_enc",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
 				VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
@@ -335,7 +335,7 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.BuiltinCamera, caps.HWEncodeVP8},
 			Fixture:           "chromeCameraPerf",
 		}, {
-			Name: "vp8_enc_oopve",
+			Name: "vp8_oopve_verify_hw_enc",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode:                     peerconnection.NoVerifyDecoderMode,
 				VerifyEncoderMode:                     peerconnection.VerifyHWEncoderUsed,
@@ -348,7 +348,7 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP8},
 			Fixture:           "chromeVideoWithFakeWebcamAndOOPVE",
 		}, {
-			Name: "vp8_enc_simulcast",
+			Name: "vp8_simulcast_verify_hw_enc",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
 				VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
@@ -361,7 +361,7 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP8},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
-			Name: "vp8_capture_monitor",
+			Name: "vp8_capture_monitor_verify_hw_enc",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
 				VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
@@ -375,7 +375,7 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP8},
 			Fixture:           "chromeScreenCapture",
 		}, {
-			Name: "vp8_capture_window",
+			Name: "vp8_capture_window_verify_hw_enc",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
 				VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
@@ -388,7 +388,7 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP8},
 			Fixture:           "chromeWindowCapture",
 		}, {
-			Name: "vp8_capture_tab",
+			Name: "vp8_capture_tab_verify_hw_enc",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
 				VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
@@ -403,7 +403,7 @@ func init() {
 		}, {
 			// This is a 2 temporal layers test, via the (experimental) API.
 			// See https://www.w3.org/TR/webrtc-svc/#scalabilitymodes for SVC identifiers.
-			Name: "vp8_enc_svc_l1t2",
+			Name: "vp8_svc_l1t2_verify_hw_enc",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
 				VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
@@ -418,7 +418,7 @@ func init() {
 		}, {
 			// This is an encoding test of 3 temporal layers test, via the (experimental) API.
 			// See https://www.w3.org/TR/webrtc-svc/#scalabilitymodes for SVC identifiers.
-			Name: "vp8_enc_svc_l1t3",
+			Name: "vp8_svc_l1t3_verify_hw_enc",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
 				VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
@@ -431,7 +431,7 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP8},
 			Fixture:           "chromeVideoWithFakeWebcamAndSVCEnabledWithHWVp8TemporalLayerEncoding",
 		}, {
-			Name: "vp9_enc",
+			Name: "vp9_verify_hw_enc",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
 				VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
@@ -443,7 +443,7 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP9},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
-			Name: "vp9_enc_lacros",
+			Name: "vp9_lacros_verify_hw_enc",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
 				VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
@@ -455,7 +455,7 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP9},
 			Fixture:           "chromeVideoLacrosWithFakeWebcam",
 		}, {
-			Name: "vp9_enc_1080p",
+			Name: "vp9_1080p_verify_hw_enc",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
 				VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
@@ -467,7 +467,7 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP9},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
-			Name: "vp9_enc_cam",
+			Name: "vp9_cam_verify_hw_enc",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
 				VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
@@ -479,7 +479,7 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.BuiltinCamera, caps.HWEncodeVP9},
 			Fixture:           "chromeCameraPerf",
 		}, {
-			Name: "vp9_enc_oopve",
+			Name: "vp9_oopve_verify_hw_enc",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode:                     peerconnection.NoVerifyDecoderMode,
 				VerifyEncoderMode:                     peerconnection.VerifyHWEncoderUsed,
@@ -494,7 +494,7 @@ func init() {
 		}, {
 			// This is a 2 temporal layers test, via the (experimental) API.
 			// See https://www.w3.org/TR/webrtc-svc/#scalabilitymodes for SVC identifiers.
-			Name: "vp9_enc_svc_l1t2",
+			Name: "vp9_svc_l1t2_verify_hw_enc",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
 				VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
@@ -509,7 +509,7 @@ func init() {
 		}, {
 			// This is an encoding test of 3 temporal layers test, via the (experimental) API.
 			// See https://www.w3.org/TR/webrtc-svc/#scalabilitymodes for SVC identifiers.
-			Name: "vp9_enc_svc_l1t3",
+			Name: "vp9_svc_l1t3_verify_hw_enc",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
 				VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
@@ -524,7 +524,7 @@ func init() {
 		}, {
 			// This is an encoding test of 3 spatial layers, 3 temporal layers (each) k-SVC test, via the (experimental) API.
 			// See https://www.w3.org/TR/webrtc-svc/#scalabilitymodes for SVC identifiers.
-			Name: "vp9_enc_svc_l3t3_key",
+			Name: "vp9_svc_l3t3_key_verify_hw_enc",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
 				VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
@@ -537,7 +537,7 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP9},
 			Fixture:           "chromeVideoWithFakeWebcamAndSVCEnabled",
 		}, {
-			Name: "av1_enc",
+			Name: "av1_verify_hw_enc",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
 				VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
