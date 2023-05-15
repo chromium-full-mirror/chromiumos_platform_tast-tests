@@ -18,6 +18,8 @@ import (
 const (
 	defaultRTCStreamWidth  = 1280
 	defaultRTCStreamHeight = 720
+	screenRTCStreamWidth   = 1920
+	screenRTCStreamHeight  = 1080
 )
 
 func init() {
@@ -416,8 +418,8 @@ func init() {
 				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
 				VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
 				Profile:           "VP8",
-				StreamWidth:       defaultRTCStreamWidth,
-				StreamHeight:      defaultRTCStreamHeight,
+				StreamWidth:       screenRTCStreamWidth,
+				StreamHeight:      screenRTCStreamHeight,
 				DisplayMediaType:  peerconnection.CaptureMonitor,
 				BrowserType:       browser.TypeAsh,
 			},
@@ -430,8 +432,8 @@ func init() {
 				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
 				VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
 				Profile:           "VP8",
-				StreamWidth:       defaultRTCStreamWidth,
-				StreamHeight:      defaultRTCStreamHeight,
+				StreamWidth:       screenRTCStreamWidth,
+				StreamHeight:      screenRTCStreamHeight,
 				DisplayMediaType:  peerconnection.CaptureWindow,
 				BrowserType:       browser.TypeAsh,
 			},
@@ -443,8 +445,8 @@ func init() {
 				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
 				VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
 				Profile:           "VP8",
-				StreamWidth:       defaultRTCStreamWidth,
-				StreamHeight:      defaultRTCStreamHeight,
+				StreamWidth:       screenRTCStreamWidth,
+				StreamHeight:      screenRTCStreamHeight,
 				DisplayMediaType:  peerconnection.CaptureTab,
 				BrowserType:       browser.TypeAsh,
 			},
