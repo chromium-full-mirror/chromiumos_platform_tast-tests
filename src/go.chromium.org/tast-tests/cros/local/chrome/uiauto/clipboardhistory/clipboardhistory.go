@@ -7,6 +7,7 @@ package clipboardhistory
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -19,6 +20,7 @@ import (
 )
 
 const clipboardHistoryContextMenuItemName = "Clipboard"
+const clipboardHistorySubmenuItemName = "Paste from clipboard"
 const clipboardHistoryTextItemViewClassName = "ClipboardHistoryTextItemView"
 const contextMenuItemViewClassName = "MenuItemView"
 
@@ -35,12 +37,36 @@ const (
 	Toggle
 )
 
+// PasteSource indicates the source of the pasted clipboard history data.
+type PasteSource int
+
+const (
+	// ClipboardHistoryMenuFromContextMenu indicates the standalone clipboard
+	// history menu opened from a context menu. NOTE: This source is available
+	// only when clipboard history refresh feature is disabled.
+	ClipboardHistoryMenuFromContextMenu PasteSource = iota
+
+	// ClipboardHistoryMenuFromContextMenuSubmenu indicates the standalone clipboard
+	// history menu opened from a context menu submenu. NOTE: This source is available
+	// only when clipboard history refresh feature is enabled.
+	ClipboardHistoryMenuFromContextMenuSubmenu
+
+	// ClipboardHistoryMenuFromShortcut indicates the standalone clipboard history menu
+	// opened by the keyboard shortcut.
+	ClipboardHistoryMenuFromShortcut
+
+	// ClipboardHistorySubmenu indicates the clipboard history submenu. NOTE: This
+	// source is available only when clipboard history refresh feature is enabled.
+	ClipboardHistorySubmenu
+)
+
 // PasteAndVerify returns an Action that pastes `text` from clipboard history
 // into the field specified by `inputField`, replacing whatever text may have
-// already been there, and verifies that the paste was successful.
+// already been there, and verifies that the paste was successful. `source`
+// indicates the source of clipboard history data.
 func PasteAndVerify(tconn *chrome.TestConn, ui *uiauto.Context,
 	kb *input.KeyboardEventWriter, inputField *nodewith.Finder,
-	useContextMenu bool, text string, pasteType PasteType) uiauto.Action {
+	source PasteSource, text string, pasteType PasteType) uiauto.Action {
 	return func(ctx context.Context) error {
 		// Set input method to US-en so that Ctrl+A behaves as expected.
 		ime.EnglishUS.InstallAndActivate(tconn)(ctx)
@@ -55,9 +81,20 @@ func PasteAndVerify(tconn *chrome.TestConn, ui *uiauto.Context,
 			return err
 		}
 
-		item := nodewith.Name(text).Role(role.MenuItem).HasClass(clipboardHistoryTextItemViewClassName).First()
+		item := nodewith.Name(text).Role(role.MenuItem).First()
+		switch source {
+		case ClipboardHistorySubmenu:
+			// Specify that `item` is in the clipboard history submenu.
+			item = item.Ancestor(nodewith.Name(clipboardHistorySubmenuItemName).Role(role.Menu))
+		case ClipboardHistoryMenuFromShortcut:
+		case ClipboardHistoryMenuFromContextMenu:
+		case ClipboardHistoryMenuFromContextMenuSubmenu:
+			// Specify that `item` is in the standalone clipboard history menu.
+			item = item.HasClass(clipboardHistoryTextItemViewClassName)
+		}
+
 		if err := uiauto.Combine(fmt.Sprintf("paste %q from clipboard history", text),
-			performPaste(ui, kb, inputField, item, text, useContextMenu, pasteType),
+			performPaste(ui, kb, inputField, item, source, pasteType),
 			waitForFieldTextToBe(ui, inputField, text),
 		)(ctx); err != nil {
 			return err
@@ -78,7 +115,7 @@ func waitForFieldTextToBe(ui *uiauto.Context, inputField *nodewith.Finder,
 				return err
 			}
 
-			if nodeInfo.Value != expectedText {
+			if !strings.Contains(nodeInfo.Value, expectedText) {
 				return errors.Errorf("failed to validate input value: got: %s; want: %s", nodeInfo.Value, expectedText)
 			}
 
@@ -87,28 +124,55 @@ func waitForFieldTextToBe(ui *uiauto.Context, inputField *nodewith.Finder,
 }
 
 func performPaste(ui *uiauto.Context, kb *input.KeyboardEventWriter,
-	inputField, item *nodewith.Finder, text string, useContextMenu bool,
+	inputField, item *nodewith.Finder, source PasteSource,
 	pasteType PasteType) uiauto.Action {
 	return func(ctx context.Context) error {
-		// Open clipboard history menu.
+		if source == ClipboardHistorySubmenu && pasteType == Toggle {
+			return errors.New("failed to perform paste: clipboard history submenu does not support toggle pastes")
+		}
+
+		// Show `source`.
 		var err error
-		if useContextMenu {
-			err = uiauto.Combine("opening clipboard history using context menu",
+		switch source {
+		case ClipboardHistoryMenuFromShortcut:
+			err = uiauto.Combine("opening the standalone clipboard history menu using the accelerator",
+				kb.AccelAction("Search+V"))(ctx)
+		case ClipboardHistoryMenuFromContextMenu:
+			err = uiauto.Combine("opening the standalone clipboard history menu from the context menu",
 				ui.RightClick(inputField),
 				ui.DoDefault(nodewith.NameStartingWith(clipboardHistoryContextMenuItemName).Role(role.MenuItem)),
 				ui.WaitUntilGone(nodewith.HasClass(contextMenuItemViewClassName)),
 			)(ctx)
-		} else {
-			err = kb.Accel(ctx, "Search+V")
+		case ClipboardHistoryMenuFromContextMenuSubmenu:
+		case ClipboardHistorySubmenu:
+			err = uiauto.Combine("opening the clipboard history submenu by mouse hovering",
+				ui.RightClick(inputField),
+				ui.MouseMoveTo(nodewith.NameStartingWith(clipboardHistorySubmenuItemName).Role(role.MenuItem), 0 /*duration*/),
+			)(ctx)
+			if err != nil {
+				return err
+			}
+			if source == ClipboardHistoryMenuFromContextMenuSubmenu {
+				err = uiauto.Combine("opening the standalone clipboard history menu from submenu",
+					ui.DoDefault(nodewith.NameStartingWith(clipboardHistoryContextMenuItemName).Role(role.MenuItem)),
+					ui.WaitUntilGone(nodewith.HasClass(contextMenuItemViewClassName)),
+				)(ctx)
+				if err != nil {
+					return err
+				}
+			}
 		}
+
 		if err != nil {
 			return err
 		}
 
-		// Paste item from menu.
+		// Paste `item`.
 		switch pasteType {
 		case Click:
-			return ui.LeftClick(item)(ctx)
+			return uiauto.Combine("paste by left-clicking the item",
+				ui.WaitUntilExists(item),
+				ui.LeftClick(item))(ctx)
 		case Enter:
 			return uiauto.Combine("paste by pressing enter with an item selected",
 				// TODO(crbug.com/1385186): Wait until `item` not only exists but also is selected.

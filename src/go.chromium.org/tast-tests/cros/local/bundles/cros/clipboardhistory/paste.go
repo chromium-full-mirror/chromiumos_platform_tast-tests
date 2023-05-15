@@ -133,7 +133,7 @@ func Paste(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to add %q to clipboard history: %v", text, err)
 	}
 
-	if err := clipboardhistory.PasteAndVerify(tconn, ui, kb, browserui.AddressBarFinder, false /*useContextMenu*/, text, params.pasteType)(ctx); err != nil {
+	if err := clipboardhistory.PasteAndVerify(tconn, ui, kb, browserui.AddressBarFinder, clipboardhistory.ClipboardHistoryMenuFromShortcut, text, params.pasteType)(ctx); err != nil {
 		s.Fatal("Failed to paste from clipboard history: ", err)
 	}
 }

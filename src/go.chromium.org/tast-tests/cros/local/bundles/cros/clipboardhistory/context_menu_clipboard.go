@@ -7,11 +7,13 @@ package clipboardhistory
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
+	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/browser/browserui"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/clipboardhistory"
@@ -21,6 +23,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -31,6 +34,14 @@ type clipboardResource struct {
 	bt    browser.Type
 	tconn *chrome.TestConn
 	text  string
+}
+
+type clipboardHistoryTestParam struct {
+	// browserType indicates the browser type under testing.
+	browserType browser.Type
+
+	// source indicates the source of the pasted clipboard history data.
+	source clipboardhistory.PasteSource
 }
 
 func init() {
@@ -48,14 +59,26 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
-			Name:    "ash",
-			Val:     browser.TypeAsh,
-			Fixture: "chromeLoggedIn",
+			Name: "ash",
+			Val:  clipboardHistoryTestParam{browser.TypeAsh, clipboardhistory.ClipboardHistoryMenuFromContextMenu},
 		}, {
 			Name:              "lacros",
-			Val:               browser.TypeLacros,
+			Val:               clipboardHistoryTestParam{browser.TypeLacros, clipboardhistory.ClipboardHistoryMenuFromContextMenu},
 			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           "lacros",
+		}, {
+			Name: "ash_from_submenu",
+			Val:  clipboardHistoryTestParam{browser.TypeAsh, clipboardhistory.ClipboardHistorySubmenu},
+		}, {
+			Name:              "lacros_from_submenu",
+			Val:               clipboardHistoryTestParam{browser.TypeLacros, clipboardhistory.ClipboardHistorySubmenu},
+			ExtraSoftwareDeps: []string{"lacros"},
+		}, {
+			Name: "ash_from_submenu_standalone_menu",
+			Val:  clipboardHistoryTestParam{browser.TypeAsh, clipboardhistory.ClipboardHistoryMenuFromContextMenuSubmenu},
+		}, {
+			Name:              "lacros_from_submenu_standalone_menu",
+			Val:               clipboardHistoryTestParam{browser.TypeLacros, clipboardhistory.ClipboardHistoryMenuFromContextMenuSubmenu},
+			ExtraSoftwareDeps: []string{"lacros"},
 		}},
 	})
 }
@@ -63,8 +86,24 @@ func init() {
 // ContextMenuClipboard verifies that it is possible to open clipboard history
 // via various surfaces' context menus.
 func ContextMenuClipboard(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
 
+	testParam := s.Param().(clipboardHistoryTestParam)
+
+	// Enable the clipboard history refresh feature if the paste source requires
+	// the clipboard history submenu.
+	var option chrome.Option
+	var features = []string{"ClipboardHistoryRefresh", "Jelly"}
+	if testParam.source == clipboardhistory.ClipboardHistorySubmenu ||
+		testParam.source == clipboardhistory.ClipboardHistoryMenuFromContextMenuSubmenu {
+		option = chrome.EnableFeatures(features...)
+	} else {
+		option = chrome.DisableFeatures(features...)
+	}
+
+	cr, err := browserfixt.NewChrome(ctx, testParam.browserType, lacrosfixt.NewConfig(), option)
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to test API: ", err)
@@ -80,27 +119,27 @@ func ContextMenuClipboard(ctx context.Context, s *testing.State) {
 		ui:    uiauto.New(tconn),
 		kb:    kb,
 		cr:    cr,
-		bt:    s.Param().(browser.Type),
+		bt:    testParam.browserType,
 		tconn: tconn,
 		text:  "abc",
 	}
 
-	if err := ash.SetClipboard(ctx, res.tconn, res.text); err != nil {
+	if err := ash.SetClipboard(cleanupCtx, res.tconn, res.text); err != nil {
 		s.Fatalf("Failed to add %q to clipboard history: %v", res.text, err)
 	}
 
-	s.Run(ctx, "verify Chrome", func(ctx context.Context, s *testing.State) {
-		verifyChrome(ctx, s, res)
+	s.Run(cleanupCtx, "verify Chrome", func(ctx context.Context, s *testing.State) {
+		verifyChrome(ctx, s, res, testParam.source)
 	})
-	s.Run(ctx, "verify Settings", func(ctx context.Context, s *testing.State) {
-		verifySettings(ctx, s, res)
+	s.Run(cleanupCtx, "verify Settings", func(ctx context.Context, s *testing.State) {
+		verifySettings(ctx, s, res, testParam.source)
 	})
-	s.Run(ctx, "verify Launcher", func(ctx context.Context, s *testing.State) {
-		verifyLauncher(ctx, s, res)
+	s.Run(cleanupCtx, "verify Launcher", func(ctx context.Context, s *testing.State) {
+		verifyLauncher(ctx, res.tconn, s, res, testParam.source)
 	})
 }
 
-func verifyChrome(ctx context.Context, s *testing.State, res *clipboardResource) {
+func verifyChrome(ctx context.Context, s *testing.State, res *clipboardResource, source clipboardhistory.PasteSource) {
 	br, closeBrowser, err := browserfixt.SetUp(ctx, res.cr, res.bt)
 	if err != nil {
 		s.Fatal("Failed to open the browser: ", err)
@@ -116,12 +155,13 @@ func verifyChrome(ctx context.Context, s *testing.State, res *clipboardResource)
 	defer faillog.DumpUITreeWithScreenshotOnError(
 		ctx, s.OutDir(), s.HasError, res.cr, fmt.Sprintf("%s_dump", s.TestName()))
 
-	if err := clipboardhistory.PasteAndVerify(res.tconn, res.ui, res.kb, browserui.AddressBarFinder, true /*useContextMenu*/, res.text, clipboardhistory.Click)(ctx); err != nil {
+	if err := clipboardhistory.PasteAndVerify(res.tconn, res.ui, res.kb,
+		browserui.AddressBarFinder, source, res.text, clipboardhistory.Click)(ctx); err != nil {
 		s.Fatal("Failed to paste to Chrome and verify: ", err)
 	}
 }
 
-func verifySettings(ctx context.Context, s *testing.State, res *clipboardResource) {
+func verifySettings(ctx context.Context, s *testing.State, res *clipboardResource, source clipboardhistory.PasteSource) {
 	settings, err := ossettings.Launch(ctx, res.tconn)
 	if err != nil {
 		s.Fatal("Failed to launch Settings: ", err)
@@ -130,12 +170,13 @@ func verifySettings(ctx context.Context, s *testing.State, res *clipboardResourc
 	defer faillog.DumpUITreeWithScreenshotOnError(
 		ctx, s.OutDir(), s.HasError, res.cr, fmt.Sprintf("%s_dump", s.TestName()))
 
-	if err := clipboardhistory.PasteAndVerify(res.tconn, res.ui, res.kb, ossettings.SearchBoxFinder, true /*useContextMenu*/, res.text, clipboardhistory.Click)(ctx); err != nil {
+	if err := clipboardhistory.PasteAndVerify(res.tconn, res.ui, res.kb,
+		ossettings.SearchBoxFinder, source, res.text, clipboardhistory.Click)(ctx); err != nil {
 		s.Fatal("Failed to paste to Settings and verify: ", err)
 	}
 }
 
-func verifyLauncher(ctx context.Context, s *testing.State, res *clipboardResource) {
+func verifyLauncher(ctx context.Context, tconn *chrome.TestConn, s *testing.State, res *clipboardResource, source clipboardhistory.PasteSource) {
 	if err := launcher.OpenBubbleLauncher(res.tconn)(ctx); err != nil {
 		s.Fatal("Failed to connect to open Launcher: ", err)
 	}
@@ -145,7 +186,7 @@ func verifyLauncher(ctx context.Context, s *testing.State, res *clipboardResourc
 
 	search := nodewith.HasClass("SearchBoxView")
 	searchbox := nodewith.HasClass("Textfield").Role(role.TextField).Ancestor(search)
-	if err := clipboardhistory.PasteAndVerify(res.tconn, res.ui, res.kb, searchbox, true /*useContextMenu*/, res.text, clipboardhistory.Click)(ctx); err != nil {
+	if err := clipboardhistory.PasteAndVerify(res.tconn, res.ui, res.kb, searchbox, source, res.text, clipboardhistory.Click)(ctx); err != nil {
 		s.Fatal("Failed to paste to Launcher and verify: ", err)
 	}
 }
