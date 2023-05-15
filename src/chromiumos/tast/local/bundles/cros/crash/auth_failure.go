@@ -15,6 +15,7 @@ import (
 	hwseclocal "chromiumos/tast/local/hwsec"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 const (
@@ -40,6 +41,13 @@ func init() {
 		BugComponent: "b:1032705",
 		SoftwareDeps: []string{"tpm1"},
 		Attr:         []string{"group:mainline"},
+		Params: []testing.Param{{
+			ExtraSoftwareDeps: []string{"no_tpm_dynamic"},
+		}, {
+			Name:              "tpm_dynamic",
+			ExtraSoftwareDeps: []string{"tpm_dynamic"},
+			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm1()),
+		}},
 	})
 }
 
