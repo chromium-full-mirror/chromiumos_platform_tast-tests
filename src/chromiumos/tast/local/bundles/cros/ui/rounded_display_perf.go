@@ -20,15 +20,16 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/pointer"
 	"chromiumos/tast/local/coords"
 	"chromiumos/tast/local/ui/cujrecorder"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
-type TestParam struct {
-	RoundedDisplay    bool
-	BackgroundWindows bool
+type roundedDisplayPerfParam struct {
+	roundedDisplay    bool
+	backgroundWindows bool
 }
 
 func init() {
@@ -47,16 +48,16 @@ func init() {
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{{
 			Name: "rounded_display_on",
-			Val:  TestParam{RoundedDisplay: true, BackgroundWindows: true},
+			Val:  roundedDisplayPerfParam{roundedDisplay: true, backgroundWindows: true},
 		}, {
 			Name: "rounded_display_off",
-			Val:  TestParam{RoundedDisplay: false, BackgroundWindows: true},
+			Val:  roundedDisplayPerfParam{roundedDisplay: false, backgroundWindows: true},
 		}, {
 			Name: "rounded_display_on_no_background_windows",
-			Val:  TestParam{RoundedDisplay: true, BackgroundWindows: false},
+			Val:  roundedDisplayPerfParam{roundedDisplay: true, backgroundWindows: false},
 		}, {
 			Name: "rounded_display_off_no_background_windows",
-			Val:  TestParam{RoundedDisplay: false, BackgroundWindows: false},
+			Val:  roundedDisplayPerfParam{roundedDisplay: false, backgroundWindows: false},
 		}},
 	})
 }
@@ -69,9 +70,9 @@ func RoundedDisplayPerf(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	param := s.Param().(TestParam)
+	param := s.Param().(roundedDisplayPerfParam)
 	var opts []chrome.Option
-	if param.RoundedDisplay {
+	if param.roundedDisplay {
 		opts = append(opts, chrome.EnableFeatures("kRoundedDisplay"))
 	}
 	cr, err := chrome.New(ctx, opts...)
@@ -117,7 +118,7 @@ func RoundedDisplayPerf(ctx context.Context, s *testing.State) {
 	displayBounds := displayInfo.Bounds
 	s.Log("Display bounds: ", displayBounds)
 
-	if param.BackgroundWindows {
+	if param.backgroundWindows {
 		// Open 4 app windows to cover the whole screen.
 		for i := 0; i < 4; i++ {
 			if err := apps.Launch(ctx, tconn, apps.Gallery.ID); err != nil {
@@ -161,11 +162,9 @@ func RoundedDisplayPerf(ctx context.Context, s *testing.State) {
 	}
 	startDragPt := titleBar.Location.CenterPoint()
 
-	w, err := ash.FindWindow(ctx, tconn, func(w *ash.Window) bool {
-		return w.Title == "Files - My files"
-	})
+	w, err := ash.WaitForAnyWindowWithTitle(ctx, tconn, "Files - My files")
 	if err != nil {
-		s.Fatal("Failed to get Files windows: ", err)
+		s.Fatal("Failed to wait for Files window: ", err)
 	}
 	wID := w.ID
 
