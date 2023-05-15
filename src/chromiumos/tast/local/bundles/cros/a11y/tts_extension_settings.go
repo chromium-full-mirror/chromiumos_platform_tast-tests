@@ -20,6 +20,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/ossettings"
 	"chromiumos/tast/local/chrome/uiauto/role"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -32,7 +33,7 @@ func init() {
 		Contacts:     []string{"chromeos-a11y-eng@google.com", "neis@chromium.org"},
 		BugComponent: "b:1272672",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		Params: []testing.Param{{
 			Name:    "ash",
 			Fixture: "chromeLoggedIn",

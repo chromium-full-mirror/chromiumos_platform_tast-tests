@@ -18,6 +18,7 @@ import (
 	"chromiumos/tast/local/chrome/lacros/lacrosinfo"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/input"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -32,8 +33,9 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "lacros"},
 		Params: []testing.Param{{
-			Name:    "no_keep_alive",
-			Fixture: "lacros",
+			Name:      "no_keep_alive",
+			Fixture:   "lacros",
+			ExtraAttr: []string{"group:criticalstaging"},
 		}, {
 			Name:    "keep_alive",
 			Fixture: "lacrosKeepAlive",
