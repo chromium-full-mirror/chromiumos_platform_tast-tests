@@ -46,7 +46,7 @@ type State struct {
 
 // Install calls the DBus method to install a DLC.
 func Install(ctx context.Context, id, omahaURL string) error {
-	testing.ContextLog(ctx, "Installing DLC: ", id, " using ", omahaURL)
+	testing.ContextLogf(ctx, "Installing DLC: %s using omaha_url=%q", id, omahaURL)
 	// TODO(b/172220710): Remove retries once util + dlcservice timeouts are fixed.
 	var err error
 	for i := 0; i < 3; i++ {
