@@ -50,7 +50,7 @@ func PasspointCerts(ctx context.Context, s *testing.State) {
 	const fqdn = "chromelab-wifi-testbed-server.mtv.google.com"
 	creds := passpoint.Credentials{
 		Domains: []string{fqdn},
-		HomeOIs: []uint64{passpoint.HomeOI},
+		HomeOIs: []string{passpoint.HomeOI},
 		Auth:    passpoint.AuthTLS,
 	}
 

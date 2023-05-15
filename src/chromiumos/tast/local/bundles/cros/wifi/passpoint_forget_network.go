@@ -79,7 +79,7 @@ func PasspointForgetNetwork(ctx context.Context, s *testing.State) {
 		SSID:               "TestSSID",
 		Domain:             passpoint.BlueDomain,
 		Realms:             []string{passpoint.BlueDomain},
-		RoamingConsortiums: []uint64{passpoint.HomeOI},
+		RoamingConsortiums: []string{passpoint.HomeOI},
 		Auth:               passpoint.AuthTTLS,
 	}
 	server := ap.ToServer(ifaces.AP[0], s.OutDir())

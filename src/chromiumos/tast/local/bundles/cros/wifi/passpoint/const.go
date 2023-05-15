@@ -12,11 +12,13 @@ const (
 // Domains and Organisation Identifier (OI) used to test Passpoint
 // network selection. The domains and OIs are extracted from Passpoint
 // specification v3.2 - Appendix C.
+// OI is a 24-bit OUI, 24-bit CID, or 36-bit OUI-36 of IEEE standards.
+// The value is expected to be represented as a hex string of length 6 or 10.
 const (
-	BlueDomain         = "sp-blue.com"
-	GreenDomain        = "sp-green.com"
-	RedDomain          = "sp-red.com"
-	HomeOI      uint64 = 0x871d2e
-	RoamingOI1  uint64 = 0x1bc50050
-	RoamingOI2  uint64 = 0x1bc500b5
+	BlueDomain  = "sp-blue.com"
+	GreenDomain = "sp-green.com"
+	RedDomain   = "sp-red.com"
+	HomeOI      = "871d2e"
+	RoamingOI1  = "001bc50050"
+	RoamingOI2  = "001bc500b5"
 )

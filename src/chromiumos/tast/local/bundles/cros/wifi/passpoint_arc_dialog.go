@@ -147,7 +147,7 @@ func PasspointARCDialog(ctx context.Context, s *testing.State) {
 		SSID:               "passpoint-ttls-home-oi",
 		Domain:             fqdn,
 		Realms:             []string{fqdn},
-		RoamingConsortiums: []uint64{passpoint.HomeOI},
+		RoamingConsortiums: []string{passpoint.HomeOI},
 		Auth:               passpoint.AuthTTLS,
 	}
 	server := ap.ToServer(ifaces.AP[0], s.OutDir())
@@ -169,7 +169,7 @@ func PasspointARCDialog(ctx context.Context, s *testing.State) {
 	// Provision Passpoint credentials from ARC.
 	creds := passpoint.Credentials{
 		Domains: []string{fqdn},
-		HomeOIs: []uint64{passpoint.HomeOI},
+		HomeOIs: []string{passpoint.HomeOI},
 		Auth:    passpoint.AuthTTLS,
 	}
 	config, err := creds.ToAndroidConfig(ctx)

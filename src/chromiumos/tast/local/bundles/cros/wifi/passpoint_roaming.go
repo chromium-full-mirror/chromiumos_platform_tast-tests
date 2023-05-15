@@ -54,7 +54,7 @@ func init() {
 				Val: roamingTest{
 					credentials: &passpoint.Credentials{
 						Domains: []string{passpoint.BlueDomain},
-						HomeOIs: []uint64{passpoint.HomeOI},
+						HomeOIs: []string{passpoint.HomeOI},
 						Auth:    passpoint.AuthTTLS,
 					},
 					aps: []passpoint.AccessPoint{
@@ -62,13 +62,13 @@ func init() {
 							SSID:               "passpoint-green",
 							Domain:             passpoint.GreenDomain,
 							Realms:             []string{passpoint.GreenDomain},
-							RoamingConsortiums: []uint64{passpoint.HomeOI},
+							RoamingConsortiums: []string{passpoint.HomeOI},
 							Auth:               passpoint.AuthTTLS,
 						}, {
 							SSID:               "passpoint-blue",
 							Domain:             passpoint.BlueDomain,
 							Realms:             []string{passpoint.BlueDomain},
-							RoamingConsortiums: []uint64{passpoint.HomeOI},
+							RoamingConsortiums: []string{passpoint.HomeOI},
 							Auth:               passpoint.AuthTTLS,
 						},
 					},
@@ -78,8 +78,8 @@ func init() {
 				Val: roamingTest{
 					credentials: &passpoint.Credentials{
 						Domains:    []string{passpoint.BlueDomain},
-						HomeOIs:    []uint64{passpoint.HomeOI},
-						RoamingOIs: []uint64{passpoint.RoamingOI1, passpoint.RoamingOI2},
+						HomeOIs:    []string{passpoint.HomeOI},
+						RoamingOIs: []string{passpoint.RoamingOI1, passpoint.RoamingOI2},
 						Auth:       passpoint.AuthTTLS,
 					},
 					aps: []passpoint.AccessPoint{
@@ -87,13 +87,13 @@ func init() {
 							SSID:               "passpoint-green",
 							Domain:             passpoint.GreenDomain,
 							Realms:             []string{passpoint.GreenDomain},
-							RoamingConsortiums: []uint64{passpoint.RoamingOI1},
+							RoamingConsortiums: []string{passpoint.RoamingOI1},
 							Auth:               passpoint.AuthTTLS,
 						}, {
 							SSID:               "passpoint-blue",
 							Domain:             passpoint.BlueDomain,
 							Realms:             []string{passpoint.BlueDomain},
-							RoamingConsortiums: []uint64{passpoint.HomeOI},
+							RoamingConsortiums: []string{passpoint.HomeOI},
 							Auth:               passpoint.AuthTTLS,
 						},
 					},
@@ -103,8 +103,8 @@ func init() {
 				Val: roamingTest{
 					credentials: &passpoint.Credentials{
 						Domains:    []string{passpoint.BlueDomain},
-						HomeOIs:    []uint64{passpoint.HomeOI},
-						RoamingOIs: []uint64{passpoint.RoamingOI1, passpoint.RoamingOI2},
+						HomeOIs:    []string{passpoint.HomeOI},
+						RoamingOIs: []string{passpoint.RoamingOI1, passpoint.RoamingOI2},
 						Auth:       passpoint.AuthTTLS,
 					},
 					aps: []passpoint.AccessPoint{
@@ -112,13 +112,13 @@ func init() {
 							SSID:               "passpoint-blue",
 							Domain:             passpoint.BlueDomain,
 							Realms:             []string{passpoint.BlueDomain},
-							RoamingConsortiums: []uint64{passpoint.HomeOI},
+							RoamingConsortiums: []string{passpoint.HomeOI},
 							Auth:               passpoint.AuthTTLS,
 						}, {
 							SSID:               "passpoint-red",
 							Domain:             passpoint.RedDomain,
 							Realms:             []string{passpoint.RedDomain},
-							RoamingConsortiums: []uint64{passpoint.RoamingOI2},
+							RoamingConsortiums: []string{passpoint.RoamingOI2},
 							Auth:               passpoint.AuthTTLS,
 						},
 					},
@@ -128,8 +128,8 @@ func init() {
 				Val: roamingTest{
 					credentials: &passpoint.Credentials{
 						Domains:    []string{passpoint.BlueDomain},
-						HomeOIs:    []uint64{passpoint.HomeOI},
-						RoamingOIs: []uint64{passpoint.RoamingOI1, passpoint.RoamingOI2},
+						HomeOIs:    []string{passpoint.HomeOI},
+						RoamingOIs: []string{passpoint.RoamingOI1, passpoint.RoamingOI2},
 						Auth:       passpoint.AuthTTLS,
 					},
 					aps: []passpoint.AccessPoint{
@@ -137,13 +137,13 @@ func init() {
 							SSID:               "passpoint-green",
 							Domain:             passpoint.GreenDomain,
 							Realms:             []string{passpoint.GreenDomain},
-							RoamingConsortiums: []uint64{passpoint.RoamingOI1},
+							RoamingConsortiums: []string{passpoint.RoamingOI1},
 							Auth:               passpoint.AuthTTLS,
 						}, {
 							SSID:               "passpoint-red",
 							Domain:             passpoint.RedDomain,
 							Realms:             []string{passpoint.RedDomain},
-							RoamingConsortiums: []uint64{passpoint.RoamingOI2},
+							RoamingConsortiums: []string{passpoint.RoamingOI2},
 							Auth:               passpoint.AuthTTLS,
 						},
 					},
@@ -153,7 +153,7 @@ func init() {
 				Val: roamingTest{
 					credentials: &passpoint.Credentials{
 						Domains: []string{passpoint.BlueDomain},
-						HomeOIs: []uint64{passpoint.HomeOI, passpoint.RoamingOI1, passpoint.RoamingOI2},
+						HomeOIs: []string{passpoint.HomeOI, passpoint.RoamingOI1, passpoint.RoamingOI2},
 						Auth:    passpoint.AuthTTLS,
 					},
 					aps: []passpoint.AccessPoint{
@@ -161,19 +161,19 @@ func init() {
 							SSID:               "passpoint-blue-1",
 							Domain:             passpoint.BlueDomain,
 							Realms:             []string{passpoint.BlueDomain},
-							RoamingConsortiums: []uint64{passpoint.HomeOI},
+							RoamingConsortiums: []string{passpoint.HomeOI},
 							Auth:               passpoint.AuthTTLS,
 						}, {
 							SSID:               "passpoint-blue-2",
 							Domain:             passpoint.BlueDomain,
 							Realms:             []string{passpoint.BlueDomain},
-							RoamingConsortiums: []uint64{passpoint.RoamingOI1, passpoint.RoamingOI2},
+							RoamingConsortiums: []string{passpoint.RoamingOI1, passpoint.RoamingOI2},
 							Auth:               passpoint.AuthTTLS,
 						}, {
 							SSID:               "passpoint-red",
 							Domain:             passpoint.RedDomain,
 							Realms:             []string{passpoint.RedDomain},
-							RoamingConsortiums: []uint64{passpoint.RoamingOI2},
+							RoamingConsortiums: []string{passpoint.RoamingOI2},
 							Auth:               passpoint.AuthTTLS,
 						},
 					},

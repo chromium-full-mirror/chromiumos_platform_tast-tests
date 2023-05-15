@@ -27,7 +27,7 @@ type AccessPoint struct {
 	// Realms is the set of FQDN supported by this network.
 	Realms []string
 	// RoamingConsortiums is the list of OIs supported by this network.
-	RoamingConsortiums []uint64
+	RoamingConsortiums []string
 	// Auth is the EAP network authentication.
 	Auth
 }
@@ -35,10 +35,6 @@ type AccessPoint struct {
 // ToServer transforms the Passpoint access point descriptions into a valid hostapd service instance.
 func (ap *AccessPoint) ToServer(iface, outDir string) *hostapd.Server {
 	certs := certificate.TestCert1()
-	var roamingConsortiums []string
-	for _, rc := range ap.RoamingConsortiums {
-		roamingConsortiums = append(roamingConsortiums, fmt.Sprintf("%x", rc))
-	}
 	return hostapd.NewServer(
 		iface,
 		filepath.Join(outDir, iface),
@@ -50,7 +46,7 @@ func (ap *AccessPoint) ToServer(iface, outDir string) *hostapd.Server {
 			&certs,
 			ap.Domain,
 			ap.Realms,
-			roamingConsortiums,
+			ap.RoamingConsortiums,
 		),
 	)
 }

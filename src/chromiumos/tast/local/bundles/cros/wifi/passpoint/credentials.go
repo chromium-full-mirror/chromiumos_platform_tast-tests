@@ -46,11 +46,11 @@ type Credentials struct {
 	// are the FQDNs of partner service providers.
 	Domains []string
 	// HomeOIs is a list of organisation identifiers (OI).
-	HomeOIs []uint64
+	HomeOIs []string
 	// RequiredHomeOIs is a list of required organisation identifiers.
-	RequiredHomeOIs []uint64
+	RequiredHomeOIs []string
 	// RoamingOIs is a list of roaming-compatible OIs.
-	RoamingOIs []uint64
+	RoamingOIs []string
 	// Auth is the EAP network authentication.
 	Auth
 	// CertID is the identifier of the client certificate in the store.
@@ -102,14 +102,18 @@ func (pc *Credentials) ToShillProperties() (map[string]interface{}, error) {
 		props[shillconst.ServicePropertyEAPKeyID] = pc.KeyID
 	}
 
-	for propName, ois := range map[string][]uint64{
+	for propName, ois := range map[string][]string{
 		shillconst.PasspointCredentialsPropertyHomeOIs:          pc.HomeOIs,
 		shillconst.PasspointCredentialsPropertyRequiredHomeOIs:  pc.RequiredHomeOIs,
 		shillconst.PasspointCredentialsPropertyRoamingConsortia: pc.RoamingOIs,
 	} {
 		var propOIs []string
 		for _, oi := range ois {
-			propOIs = append(propOIs, strconv.FormatUint(oi, 10))
+			u, err := strconv.ParseUint(oi, 16, 64)
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to parse OI")
+			}
+			propOIs = append(propOIs, strconv.FormatUint(u, 10))
 		}
 		props[propName] = propOIs
 	}
@@ -206,19 +210,19 @@ func (pc *Credentials) preparePPSMOHomeSP() (string, error) {
 	var ois []homeOI
 	for _, oi := range pc.HomeOIs {
 		ois = append(ois, homeOI{
-			Value:    strconv.FormatUint(oi, 16),
+			Value:    oi,
 			Required: "FALSE",
 		})
 	}
 	for _, oi := range pc.RequiredHomeOIs {
 		ois = append(ois, homeOI{
-			Value:    strconv.FormatUint(oi, 16),
+			Value:    oi,
 			Required: "TRUE",
 		})
 	}
 	var roamingOIs []string
 	for _, oi := range pc.RoamingOIs {
-		roamingOIs = append(roamingOIs, strconv.FormatUint(oi, 16))
+		roamingOIs = append(roamingOIs, oi)
 	}
 
 	// Nodes are starting at index 1, we need a helper to fill the template.
