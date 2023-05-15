@@ -549,15 +549,19 @@ func USBStorageDevicePath(ctx context.Context, usbDeviceType string) (string, er
 		if len(removableDevicesList.RemovableDevices) == 0 {
 			return errors.New("failed to get removable devices info")
 		}
-		usbType := removableDevicesList.RemovableDevices[0].UsbType
-		if usbType != usbDeviceType {
-			return errors.Errorf("unexpected USB version type: got %q, want %q", usbType, usbDeviceType)
+
+		var usbTypes []string = []string{}
+		for _, usb := range removableDevicesList.RemovableDevices {
+			if usb.UsbType == usbDeviceType {
+				if usb.Mountpoint == "" {
+					return errors.New("failed to get valid devicePath")
+				}
+				usbDevicePath = usb.Mountpoint
+				return nil
+			}
+			usbTypes = append(usbTypes, usb.UsbType)
 		}
-		usbDevicePath = removableDevicesList.RemovableDevices[0].Mountpoint
-		if usbDevicePath == "" {
-			return errors.New("failed to get valid devicePath")
-		}
-		return nil
+		return errors.Errorf("expected USB version is %q not found in %v", usbDeviceType, usbTypes)
 	}, &testing.PollOptions{Timeout: 15 * time.Second}); err != nil {
 		return "", errors.Wrap(err, "timeout waiting to get storage path")
 	}

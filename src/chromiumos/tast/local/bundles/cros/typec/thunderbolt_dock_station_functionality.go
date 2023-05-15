@@ -183,7 +183,7 @@ func ThunderboltDockStationFunctionality(ctx context.Context, s *testing.State) 
 		s.Fatal("Timeout waiting for USB pendrive speed detection: ", err)
 	}
 
-	usbType := "3.0"
+	usbType := "3.00"
 	usb3DevicePath, err := usbutil.USBStorageDevicePath(ctx, usbType)
 	if err != nil {
 		s.Fatalf("Failed to get %q USB type device path: %v", usbType, err)
