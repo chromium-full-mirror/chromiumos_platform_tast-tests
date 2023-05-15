@@ -31,6 +31,26 @@ type selectionTest struct {
 	expectedSSID string
 }
 
+// Quoting IEEE802.11-2020 §9.4.1.31:
+// "The Organization Identifier field contains a public unique identifier
+// assigned by the IEEE Registration Authority as a 24-bit OUI, a 24-bit CID,
+// or a 36-bit OUI-36.
+// The length of the Organization Identifier field is the minimum number of
+// octets required to contain the entire IEEE-assigned identifier. Thus, the
+// Organization Identifier field is 3 octets in length if the IEEE-assigned
+// identifier is an OUI or CID, or 5 octets in length if the IEEE-assigned
+// identifier is an OUI-36."
+// Both shill and Android internally stores OIs as integers. This means that
+// it is possible for the representation to lose the leading 00s information
+// from the OIs. To fix the issue, shill has an internal logic to assume the
+// correct 00s padding for OIs (b/277299855).
+const (
+	ouiOI                   = "871d2e"
+	ouiOIWithLeadingZeros   = "00002e"
+	oui36OI                 = "0a1bc500b5"
+	oui36OIWithLeadingZeros = "000bc500b5"
+)
+
 func init() {
 	// Selection tests are designed to verify a device connects to the best
 	// available Passpoint network. Shill is provisioned with one (or more) set
@@ -376,6 +396,90 @@ func init() {
 						},
 					},
 					expectedSSID: "passpoint-tls-blue",
+				},
+			}, {
+				Name: "match_with_oui",
+				Val: selectionTest{
+					credentials: []*passpoint.Credentials{
+						{
+							Domains: []string{passpoint.BlueDomain},
+							HomeOIs: []string{ouiOI},
+							Auth:    passpoint.AuthTTLS,
+						},
+					},
+					aps: []passpoint.AccessPoint{
+						{
+							SSID:               "passpoint-oui-oi",
+							Domain:             passpoint.GreenDomain,
+							Realms:             []string{passpoint.GreenDomain},
+							RoamingConsortiums: []string{ouiOI},
+							Auth:               passpoint.AuthTTLS,
+						},
+					},
+					expectedSSID: "passpoint-oui-oi",
+				},
+			}, {
+				Name: "match_with_oui_with_leading_zeros",
+				Val: selectionTest{
+					credentials: []*passpoint.Credentials{
+						{
+							Domains: []string{passpoint.BlueDomain},
+							HomeOIs: []string{ouiOIWithLeadingZeros},
+							Auth:    passpoint.AuthTTLS,
+						},
+					},
+					aps: []passpoint.AccessPoint{
+						{
+							SSID:               "passpoint-oui-oi",
+							Domain:             passpoint.GreenDomain,
+							Realms:             []string{passpoint.GreenDomain},
+							RoamingConsortiums: []string{ouiOIWithLeadingZeros},
+							Auth:               passpoint.AuthTTLS,
+						},
+					},
+					expectedSSID: "passpoint-oui-oi",
+				},
+			}, {
+				Name: "match_with_oui36",
+				Val: selectionTest{
+					credentials: []*passpoint.Credentials{
+						{
+							Domains: []string{passpoint.BlueDomain},
+							HomeOIs: []string{oui36OI},
+							Auth:    passpoint.AuthTTLS,
+						},
+					},
+					aps: []passpoint.AccessPoint{
+						{
+							SSID:               "passpoint-oui36-oi",
+							Domain:             passpoint.GreenDomain,
+							Realms:             []string{passpoint.GreenDomain},
+							RoamingConsortiums: []string{oui36OI},
+							Auth:               passpoint.AuthTTLS,
+						},
+					},
+					expectedSSID: "passpoint-oui36-oi",
+				},
+			}, {
+				Name: "match_with_oui36_with_leading_zeros",
+				Val: selectionTest{
+					credentials: []*passpoint.Credentials{
+						{
+							Domains: []string{passpoint.BlueDomain},
+							HomeOIs: []string{oui36OIWithLeadingZeros},
+							Auth:    passpoint.AuthTTLS,
+						},
+					},
+					aps: []passpoint.AccessPoint{
+						{
+							SSID:               "passpoint-oui36-oi",
+							Domain:             passpoint.GreenDomain,
+							Realms:             []string{passpoint.GreenDomain},
+							RoamingConsortiums: []string{oui36OIWithLeadingZeros},
+							Auth:               passpoint.AuthTTLS,
+						},
+					},
+					expectedSSID: "passpoint-oui36-oi",
 				},
 			},
 		},
