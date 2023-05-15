@@ -7,6 +7,7 @@ package deskscuj
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"chromiumos/tast/common/perf"
@@ -22,6 +23,8 @@ import (
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/power"
 	"chromiumos/tast/local/ui/cujrecorder"
+
+	"github.com/mafredri/cdp/protocol/target"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -250,9 +253,26 @@ func Run(ctx context.Context, s *testing.State) {
 			s.Logf("Switched desk by %s %d times", deskSwitcher.name, cycles)
 		}
 
+		const chromeVersionURL = chrome.VersionURL
 		// Navigate away to record PageLoad.PaintTiming.NavigationToLargestContentfulPaint2.
-		if err := slidesConn.Conn.Navigate(ctx, "chrome://version"); err != nil {
-			return errors.Wrap(err, "failed to navigate to chrome://version")
+		if err := slidesConn.Conn.Navigate(ctx, chromeVersionURL); err != nil {
+			if !strings.Contains(err.Error(), "the connection is closing") {
+				return errors.Wrapf(err, "failed to navigate to %s", chromeVersionURL)
+			}
+			testing.ContextLog(ctx, "Attempt to reconnect to Google Slides after losing connection: ", err)
+			// Sometimes the connection is lost due to tab discarding.
+			// Try to reconnect it and navigate to chrome://version.
+			matcher := func(t *target.Info) bool {
+				return strings.Contains(t.URL, slidesURL)
+			}
+			br := cr.Browser()
+			slidesConn.Conn, err = br.NewConnForTarget(ctx, matcher)
+			if err != nil {
+				return errors.Wrap(err, "failed to reconnect to Google Slides tab")
+			}
+			if err := slidesConn.Conn.Navigate(ctx, chromeVersionURL); err != nil {
+				return errors.Wrapf(err, "failed to navigate to %s", chromeVersionURL)
+			}
 		}
 		return nil
 	}); err != nil {
