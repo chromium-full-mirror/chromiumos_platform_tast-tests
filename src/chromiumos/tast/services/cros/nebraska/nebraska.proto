@@ -16,6 +16,8 @@ service Service {
   rpc Stop (google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
   rpc UpdatePayload (UpdatePayloadRequest) returns (google.protobuf.Empty) {}
+
+  rpc ReadLog (google.protobuf.Empty) returns (ReadLogResponse) {}
 }
 
 message StartRequest {
@@ -36,4 +38,8 @@ message StartResponse {
   string runtime_root = 3;
 
   reserved 2;
+}
+
+message ReadLogResponse {
+  bytes data = 1;
 }

@@ -6,6 +6,7 @@ package nebraska
 
 import (
 	"context"
+	"os"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
@@ -81,4 +82,16 @@ func (s *Service) UpdatePayload(ctx context.Context, req *nebraska.UpdatePayload
 	}
 
 	return &empty.Empty{}, nil
+}
+
+// ReadLog reads the nebraska log.
+func (s *Service) ReadLog(ctx context.Context, req *empty.Empty) (*nebraska.ReadLogResponse, error) {
+	updateServerLog, err := os.ReadFile(s.instance.LogFile)
+	if err != nil {
+		return nil, err
+	}
+
+	return &nebraska.ReadLogResponse{
+		Data: updateServerLog,
+	}, nil
 }

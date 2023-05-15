@@ -13,7 +13,9 @@ import (
 	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/tape"
+	"chromiumos/tast/remote/bundles/cros/policy/update"
 	"chromiumos/tast/remote/policyutil"
+	aupb "chromiumos/tast/services/cros/autoupdate"
 	pspb "chromiumos/tast/services/cros/policy"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -27,6 +29,7 @@ type majorVersionPinningE2ETestParam struct {
 	releaseChannelPolicy tape.ReleaseChannelWithLtsEnum
 	targetMilestone      string
 	expectedPolicies     []policy.Policy
+	expectedParameters   []string
 }
 
 func init() {
@@ -45,6 +48,8 @@ func init() {
 			"tast.cros.hwsec.OwnershipService",
 			"tast.cros.policy.PolicyService",
 			"tast.cros.tape.Service",
+			"tast.cros.nebraska.Service",
+			"tast.cros.autoupdate.UpdateService",
 		},
 		Timeout: majorVersionPinningE2ETimeout,
 		Vars: []string{
@@ -66,6 +71,7 @@ func init() {
 					&policy.DeviceReleaseLtsTag{Stat: policy.StatusSet, Val: "lts"},
 					&policy.DeviceTargetVersionPrefix{Stat: policy.StatusSet, Val: "15183."},
 				},
+				expectedParameters: []string{"targetversionprefix=\"15183.\"", "ltstag=\"lts\""},
 			},
 		}, {
 			Name: "stable",
@@ -76,6 +82,7 @@ func init() {
 					&policy.ChromeOsReleaseChannel{Stat: policy.StatusSet, Val: "stable-channel"},
 					&policy.DeviceTargetVersionPrefix{Stat: policy.StatusSet, Val: "15359."},
 				},
+				expectedParameters: []string{"targetversionprefix=\"15359.\""},
 			},
 		}},
 	})
@@ -162,6 +169,12 @@ func MajorVersionPinningE2E(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
+	// Restart update_engine after enrollment.
+	updateClient := aupb.NewUpdateServiceClient(cl.Conn)
+	if _, err := updateClient.ResetUpdateEngine(ctx, &empty.Empty{}); err != nil {
+		s.Fatal("Failed to reset update_engine: ", err)
+	}
+
 	pJSON, err := policy.MarshalList(param.expectedPolicies)
 	if err != nil {
 		s.Fatal("Error while marshalling policies to JSON: ", err)
@@ -175,5 +188,9 @@ func MajorVersionPinningE2E(ctx context.Context, s *testing.State) {
 		return err
 	}, &testing.PollOptions{Timeout: 1 * time.Minute}); err != nil {
 		s.Error("Failed to verify policy: ", err)
+	}
+
+	if err := update.TriggerUpdateAndCheckNebraskaLogs(ctx, cl, param.expectedParameters); err != nil {
+		s.Error("Failed to verify update request: ", err)
 	}
 }

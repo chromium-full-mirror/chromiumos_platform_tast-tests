@@ -13,8 +13,11 @@ import (
 	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/tape"
+	"chromiumos/tast/remote/bundles/cros/policy/update"
 	"chromiumos/tast/remote/policyutil"
+	aupb "chromiumos/tast/services/cros/autoupdate"
 	pspb "chromiumos/tast/services/cros/policy"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
@@ -25,6 +28,7 @@ const releaseChannelE2ETimeout = 4 * time.Minute
 type testParam struct {
 	ReleaseChannelPolicy tape.ReleaseChannelWithLtsEnum
 	ExpectedPolicies     []policy.Policy
+	expectedParameters   []string
 }
 
 func init() {
@@ -44,6 +48,8 @@ func init() {
 			"tast.cros.hwsec.OwnershipService",
 			"tast.cros.policy.PolicyService",
 			"tast.cros.tape.Service",
+			"tast.cros.nebraska.Service",
+			"tast.cros.autoupdate.UpdateService",
 		},
 		Timeout: releaseChannelE2ETimeout,
 		Vars: []string{
@@ -65,6 +71,7 @@ func init() {
 					// DeviceTargetVersionPrefix needs to be updated.
 					&policy.DeviceTargetVersionPrefix{Stat: policy.StatusSet, Val: "15183."},
 				},
+				expectedParameters: []string{"targetversionprefix=\"15183.\"", "ltstag=\"lts\"", "track=\"stable-channel\""},
 			},
 			ExtraSearchFlags: []*testing.StringPair{{
 				Key: "feature_id",
@@ -81,6 +88,7 @@ func init() {
 				ExpectedPolicies: []policy.Policy{
 					&policy.ChromeOsReleaseChannel{Stat: policy.StatusSet, Val: "stable-channel"},
 				},
+				expectedParameters: []string{"track=\"stable-channel\""},
 			},
 			ExtraSearchFlags: []*testing.StringPair{{
 				Key: "feature_id",
@@ -97,6 +105,7 @@ func init() {
 				ExpectedPolicies: []policy.Policy{
 					&policy.ChromeOsReleaseChannel{Stat: policy.StatusSet, Val: "beta-channel"},
 				},
+				expectedParameters: []string{"track=\"beta-channel\""},
 			},
 			ExtraSearchFlags: []*testing.StringPair{{
 				Key: "feature_id",
@@ -190,6 +199,12 @@ func ReleaseChannelE2E(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
+	// Restart update_engine after enrollment.
+	updateClient := aupb.NewUpdateServiceClient(cl.Conn)
+	if _, err := updateClient.ResetUpdateEngine(ctx, &empty.Empty{}); err != nil {
+		s.Fatal("Failed to reset update_engine: ", err)
+	}
+
 	pJSON, err := policy.MarshalList(param.ExpectedPolicies)
 	if err != nil {
 		s.Fatal("Error while marshalling policies to JSON: ", err)
@@ -203,5 +218,9 @@ func ReleaseChannelE2E(ctx context.Context, s *testing.State) {
 		return err
 	}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
 		s.Error("Failed to verify policy: ", err)
+	}
+
+	if err := update.TriggerUpdateAndCheckNebraskaLogs(ctx, cl, param.expectedParameters); err != nil {
+		s.Error("Failed to verify update reqeust: ", err)
 	}
 }
