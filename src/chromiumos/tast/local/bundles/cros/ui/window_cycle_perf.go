@@ -14,12 +14,13 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
-	"chromiumos/tast/local/chrome/lacros"
+	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/metrics"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/perfutil"
-	"chromiumos/tast/local/power"
 	"chromiumos/tast/local/ui"
+	"chromiumos/tast/local/ui/cujrecorder"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -30,7 +31,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         WindowCyclePerf,
 		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Measures the animation smoothness of window cycle animations when alt + tabbing",
+		Desc:         "Measures the animation smoothness of window cycle animations when Alt + tabbing",
 		Contacts: []string{
 			"chromeos-perfmetrics-eng@google.com",
 			"xiyuan@chromium.org",
@@ -61,20 +62,28 @@ func init() {
 }
 
 func WindowCyclePerf(ctx context.Context, s *testing.State) {
-	// Ensure display on to record ui performance correctly.
-	if err := power.TurnOnDisplay(ctx); err != nil {
-		s.Fatal("Failed to turn on display: ", err)
-	}
+	// Reserve five seconds for various cleanup.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
 
-	cr, l, cs, err := lacros.Setup(ctx, s.FixtValue(), s.Param().(browser.Type))
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+
+	blankConn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, s.Param().(browser.Type), chrome.BlankURL)
 	if err != nil {
-		s.Fatal("Failed to initialize test: ", err)
+		s.Fatal("Failed to set up the browser: ", err)
 	}
-	defer lacros.CloseLacros(ctx, l)
+	defer closeBrowser(cleanupCtx)
+	defer blankConn.Close()
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to test API: ", err)
+	}
+
+	bTconn, err := br.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to get browser test API connection: ", err)
 	}
 
 	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
@@ -92,85 +101,104 @@ func WindowCyclePerf(ctx context.Context, s *testing.State) {
 	numExistingWindows := 0
 
 	runner := perfutil.NewRunner(cr.Browser(), perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
-	// If these window number values are changed, make sure to check lacros blank pages are closed correctly.
-	for i, numWindows := range []int{2, 8} {
-		if err := ash.CreateWindows(ctx, tconn, cs, ui.PerftestURL, numWindows-numExistingWindows); err != nil {
-			s.Fatal("Failed to open browser windows: ", err)
-		}
 
-		// This must be done after ash.CreateWindows to avoid terminating lacros-chrome.
-		if i == 0 && s.Param().(browser.Type) == browser.TypeLacros {
-			if err := l.Browser().CloseWithURL(ctx, chrome.NewTabURL); err != nil {
-				s.Fatal("Failed to close blank tab: ", err)
-			}
-		}
+	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, nil, cujrecorder.RecorderOptions{Mode: cujrecorder.Perf})
+	if err != nil {
+		s.Fatal("Failed to create a CUJ recorder: ", err)
+	}
+	defer recorder.Close(cleanupCtx)
 
-		// Maximize all windows to ensure a consistent state.
-		if err := ash.ForEachWindow(ctx, tconn, func(w *ash.Window) error {
-			return ash.SetWindowStateAndWait(ctx, tconn, w.ID, ash.WindowStateMaximized)
-		}); err != nil {
-			s.Fatal("Failed to maximize windows: ", err)
-		}
-
-		// TODO(crbug.com/1171056): Lacros may consume the Alt from Alt-tab after being maximized, without this sleep.
-		if err := testing.Sleep(ctx, 1000*time.Millisecond); err != nil {
-			s.Fatal("Failed to wait: ", err)
-		}
-
-		numExistingWindows = numWindows
-
-		suffix := fmt.Sprintf("%dwindows", numWindows)
-		runner.RunMultiple(ctx, suffix, uiperf.Run(s, perfutil.RunAndWaitAny(tconn, func(ctx context.Context) error {
-			// Create a shorter context to ensure the time to release the alt-key.
-			sctx, cancel := ctxutil.Shorten(ctx, 500*time.Millisecond)
-			defer cancel()
-			// first long press alt + tab to bring up the window cycle view
-			if err := keyboard.AccelPress(sctx, "Alt"); err != nil {
-				return errors.Wrap(err, "failed to press alt")
-			}
-			defer keyboard.AccelRelease(ctx, "Alt")
-			if err := testing.Sleep(sctx, 500*time.Millisecond); err != nil {
-				return errors.Wrap(err, "failed to wait")
-			}
-			if err := keyboard.Accel(sctx, "Tab"); err != nil {
-				return errors.Wrap(err, "failed to type tab")
+	if err := recorder.Run(ctx, func(ctx context.Context) error {
+		for i, numWindows := range []int{2, 8} {
+			if err := ash.CreateWindows(ctx, tconn, br, ui.PerftestURL, numWindows-numExistingWindows); err != nil {
+				s.Fatal("Failed to open browser windows: ", err)
 			}
 
-			for i := 0; i < numWindows*2; i++ {
+			// This must be done after ash.CreateWindows to avoid terminating lacros-chrome.
+			if i == 0 {
+				if err := br.CloseWithURL(ctx, chrome.BlankURL); err != nil {
+					return errors.Wrap(err, "failed to close initial blank tab")
+				}
+			}
+
+			// Maximize all windows to ensure a consistent state.
+			if err := ash.ForEachWindow(ctx, tconn, func(w *ash.Window) error {
+				return ash.SetWindowStateAndWait(ctx, tconn, w.ID, ash.WindowStateMaximized)
+			}); err != nil {
+				s.Fatal("Failed to maximize windows: ", err)
+			}
+
+			numExistingWindows = numWindows
+
+			suffix := fmt.Sprintf("%dwindows", numWindows)
+			runner.RunMultiple(ctx, suffix, uiperf.Run(s, perfutil.RunAndWaitAny(tconn, func(ctx context.Context) error {
+				// Create a shorter context to ensure the time to release the Alt-key.
+				sctx, cancel := ctxutil.Shorten(ctx, 500*time.Millisecond)
+				defer cancel()
+
+				// First long press Alt + Tab to bring up the window cycle view.
+				if err := keyboard.AccelPress(sctx, "Alt"); err != nil {
+					return errors.Wrap(err, "failed to press alt")
+				}
+				defer keyboard.AccelRelease(ctx, "Alt")
+
+				// GoBigSleepLint: Sleep to wait for the window lists to appear.
+				if err := testing.Sleep(sctx, 500*time.Millisecond); err != nil {
+					return errors.Wrap(err, "failed to wait")
+				}
 				if err := keyboard.Accel(sctx, "Tab"); err != nil {
 					return errors.Wrap(err, "failed to type tab")
 				}
-				if err := testing.Sleep(sctx, 200*time.Millisecond); err != nil {
+
+				for i := 0; i < numWindows*2; i++ {
+					if err := keyboard.Accel(sctx, "Tab"); err != nil {
+						return errors.Wrap(err, "failed to type tab")
+					}
+
+					// GoBigSleepLint: Sleep to wait for the Alt+Tab animation
+					// to complete. Use sleeps to ensure timing consistency
+					// between test runs.
+					if err := testing.Sleep(sctx, 200*time.Millisecond); err != nil {
+						return errors.Wrap(err, "failed to wait")
+					}
+				}
+
+				// GoBigSleepLint: Sleep in between each test variation.
+				if err := testing.Sleep(sctx, time.Second); err != nil {
 					return errors.Wrap(err, "failed to wait")
 				}
-			}
-
-			if err := testing.Sleep(sctx, time.Second); err != nil {
-				return errors.Wrap(err, "failed to wait")
-			}
-			return nil
-		},
-			"Ash.WindowCycleView.AnimationSmoothness.Show",
-			"Ash.WindowCycleView.AnimationSmoothness.Container")),
-			func(ctx context.Context, pv *perfutil.Values, hists []*metrics.Histogram) error {
-				for _, hist := range hists {
-					mean, err := hist.Mean()
-					if err != nil {
-						continue
-					}
-					name := hist.Name + "." + suffix
-					testing.ContextLog(ctx, name, " = ", mean)
-					pv.Append(perf.Metric{
-						Name:      name,
-						Unit:      "percent",
-						Direction: perf.BiggerIsBetter,
-					}, mean)
-				}
 				return nil
-			})
+			},
+				"Ash.WindowCycleView.AnimationSmoothness.Show",
+				"Ash.WindowCycleView.AnimationSmoothness.Container")),
+				func(ctx context.Context, pv *perfutil.Values, hists []*metrics.Histogram) error {
+					for _, hist := range hists {
+						mean, err := hist.Mean()
+						if err != nil {
+							continue
+						}
+						name := hist.Name + "." + suffix
+						testing.ContextLog(ctx, name, " = ", mean)
+						pv.Append(perf.Metric{
+							Name:      name,
+							Unit:      "percent",
+							Direction: perf.BiggerIsBetter,
+						}, mean)
+					}
+					return nil
+				})
+		}
+		return nil
+	}); err != nil {
+		s.Fatal("Failed to run the test scenario: ", err)
 	}
 
-	if err = runner.Values().Save(ctx, s.OutDir()); err != nil {
-		s.Error("Failed saving perf data: ", err)
+	pv := runner.Values().Values(ctx)
+	if err := recorder.Record(ctx, pv); err != nil {
+		s.Fatal("Failed to record the data: ", err)
+	}
+
+	if err := pv.Save(s.OutDir()); err != nil {
+		s.Error("Failed to save the perf data: ", err)
 	}
 }

@@ -16,9 +16,13 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
-	"chromiumos/tast/local/chrome/lacros"
+	"chromiumos/tast/local/chrome/browser/browserfixt"
+	"chromiumos/tast/local/chrome/uiauto"
+	"chromiumos/tast/local/chrome/uiauto/event"
+	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/perfutil"
 	"chromiumos/tast/local/power"
+	"chromiumos/tast/local/ui/cujrecorder"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -43,7 +47,7 @@ func init() {
 		Params: []testing.Param{{
 			Val:     browser.TypeAsh,
 			Fixture: "chromeLoggedIn",
-			Timeout: 14 * time.Minute,
+			Timeout: 20 * time.Minute,
 		}, {
 			Name:              "lacros",
 			Val:               browser.TypeLacros,
@@ -54,7 +58,7 @@ func init() {
 			Name:    "passthrough",
 			Val:     browser.TypeAsh,
 			Fixture: "chromeLoggedInWith100FakeAppsPassthroughCmdDecoder",
-			Timeout: 14 * time.Minute,
+			Timeout: 20 * time.Minute,
 		}},
 		Data: []string{"animation.html", "animation.js"},
 	})
@@ -66,15 +70,23 @@ func OverviewPerf(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	cr, l, cs, err := lacros.Setup(ctx, s.FixtValue(), s.Param().(browser.Type))
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+
+	blankConn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, s.Param().(browser.Type), chrome.BlankURL)
 	if err != nil {
-		s.Fatal("Failed to initialize test: ", err)
+		s.Fatal("Failed to set up the browser: ", err)
 	}
-	defer lacros.CloseLacros(cleanupCtx, l)
+	defer closeBrowser(cleanupCtx)
+	defer blankConn.Close()
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to test API: ", err)
+	}
+
+	bTconn, err := br.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to get browser test API connection: ", err)
 	}
 
 	originalTabletMode, err := ash.TabletModeEnabled(ctx, tconn)
@@ -89,88 +101,110 @@ func OverviewPerf(ctx context.Context, s *testing.State) {
 	url := server.URL + "/animation.html"
 
 	defer ash.SetOverviewModeAndWait(cleanupCtx, tconn, false)
+
 	runner := perfutil.NewRunner(cr.Browser(), perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
-	currentWindows := 0
-	// Run the overview mode enter/exit flow for various situations.
-	// - change the number of browser windows,
-	// - the window system status; clamshell mode with maximized windows,
-	//   clamshell mode with normal windows, tablet mode with maximized
-	//   windows, tablet mode with minimized windows (the home screen),
-	//   tablet split view with maximized overview windows, or tablet
-	//   split view with minimized overview windows.
-	for i, windows := range []int{2, 3, 4, 8} {
-		// This assumes that the test scenarios are sorted by
-		// number of windows. If not, then this will generate
-		// Panic: runtime error: makeslice: cap out of range
-		if err := ash.CreateWindows(ctx, tconn, cs, url, windows-currentWindows); err != nil {
-			s.Fatal("Failed to create browser windows: ", err)
-		}
 
-		// This must be done after ash.CreateWindows to avoid terminating lacros-chrome.
-		if i == 0 && s.Param().(browser.Type) == browser.TypeLacros {
-			if err := l.Browser().CloseWithURL(ctx, chrome.NewTabURL); err != nil {
-				s.Fatal("Failed to close about:blank: ", err)
-			}
-		}
+	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, nil, cujrecorder.RecorderOptions{Mode: cujrecorder.Perf})
+	if err != nil {
+		s.Fatal("Failed to create a CUJ recorder: ", err)
+	}
+	defer recorder.Close(cleanupCtx)
 
-		currentWindows = windows
-
-		windowsDescription := fmt.Sprintf("%dwindows", windows)
-		for _, test := range []struct {
-			fullDescriptionFmt  string
-			tablet              bool
-			overviewWindowState ash.WindowStateType
-			histogramSuffix     string
-		}{
-			{"SingleClamshellMode-%dwindows", false, ash.WindowStateMaximized, "SingleClamshellMode"},
-			{"ClamshellMode-%dwindows", false, ash.WindowStateNormal, "ClamshellMode"},
-			{"TabletMode-%dwindows", true, ash.WindowStateMaximized, "TabletMode"},
-			{"MinimizedTabletMode-%dwindows", true, ash.WindowStateMinimized, "MinimizedTabletMode"},
-		} {
-			fullDescription := fmt.Sprintf(test.fullDescriptionFmt, windows)
-			if err := doTestCase(
-				ctx, s, tconn, runner, fullDescription, windowsDescription, test.tablet, test.overviewWindowState,
-				false /*splitview*/, "Ash.Overview.AnimationSmoothness.Enter."+test.histogramSuffix,
-				"Ash.Overview.AnimationSmoothness.Exit."+test.histogramSuffix,
-			); err != nil {
-				s.Fatalf("Test case %q failed: %s", fullDescription, err)
-			}
-		}
-
-		if windows == 2 {
-			// The overview exit animation does not include the window being activated.
-			// Thus, the SplitView-2windows case has no overview exit animation at all.
-			if err := doTestCase(
-				ctx, s, tconn, runner, "SplitView-2windows", "2windows", true /*tablet*/, ash.WindowStateMaximized,
-				true /*splitview*/, "Ash.Overview.AnimationSmoothness.Enter.SplitView",
-			); err != nil {
-				s.Fatal("Test case \"SplitView-2windows\" failed: ", err)
-			}
-			continue
-		}
-
-		for _, test := range []struct {
-			fullDescriptionFmt    string
-			windowsDescriptionFmt string
-			overviewWindowState   ash.WindowStateType
-		}{
-			{"SplitView-%dwindowsincludingmaximizedoverviewwindows", "%dwindowsincludingmaximizedoverviewwindows", ash.WindowStateMaximized},
-			{"SplitView-%dwindowsincludingminimizedoverviewwindows", "%dwindowsincludingminimizedoverviewwindows", ash.WindowStateMinimized},
-		} {
-			fullDescription := fmt.Sprintf(test.fullDescriptionFmt, windows)
-			windowsDescription := fmt.Sprintf(test.windowsDescriptionFmt, windows)
-			if err := doTestCase(
-				ctx, s, tconn, runner, fullDescription, windowsDescription, true /*tablet*/, test.overviewWindowState,
-				true /*splitview*/, "Ash.Overview.AnimationSmoothness.Enter.SplitView",
-				"Ash.Overview.AnimationSmoothness.Exit.SplitView",
-			); err != nil {
-				s.Fatalf("Test case %q failed: %s", fullDescription, err)
-			}
-		}
+	if err := recorder.AddCommonMetrics(tconn, bTconn); err != nil {
+		s.Fatal("Failed to add common metrics to recorder: ", err)
 	}
 
-	if err := runner.Values().Save(ctx, s.OutDir()); err != nil {
-		s.Error("Failed saving perf data: ", err)
+	if err := recorder.Run(ctx, func(ctx context.Context) error {
+		currentWindows := 0
+		// Run the overview mode enter/exit flow for various situations.
+		// - change the number of browser windows,
+		// - the window system status; clamshell mode with maximized windows,
+		//   clamshell mode with normal windows, tablet mode with maximized
+		//   windows, tablet mode with minimized windows (the home screen),
+		//   tablet split view with maximized overview windows, or tablet
+		//   split view with minimized overview windows.
+		for i, windows := range []int{2, 3, 4, 8} {
+			// This assumes that the test scenarios are sorted by
+			// number of windows. If not, then this will generate
+			// Panic: runtime error: makeslice: cap out of range
+			if err := ash.CreateWindows(ctx, tconn, br, url, windows-currentWindows); err != nil {
+				return errors.Wrap(err, "failed to create browser windows")
+			}
+
+			// This must be done after ash.CreateWindows to avoid terminating lacros-chrome.
+			if i == 0 {
+				if err := br.CloseWithURL(ctx, chrome.BlankURL); err != nil {
+					return errors.Wrap(err, "failed to close initial blank tab")
+				}
+			}
+
+			currentWindows = windows
+
+			windowsDescription := fmt.Sprintf("%dwindows", windows)
+			for _, test := range []struct {
+				fullDescriptionFmt  string
+				tablet              bool
+				overviewWindowState ash.WindowStateType
+				histogramSuffix     string
+			}{
+				{"SingleClamshellMode-%dwindows", false, ash.WindowStateMaximized, "SingleClamshellMode"},
+				{"ClamshellMode-%dwindows", false, ash.WindowStateNormal, "ClamshellMode"},
+				{"TabletMode-%dwindows", true, ash.WindowStateMaximized, "TabletMode"},
+				{"MinimizedTabletMode-%dwindows", true, ash.WindowStateMinimized, "MinimizedTabletMode"},
+			} {
+				fullDescription := fmt.Sprintf(test.fullDescriptionFmt, windows)
+				if err := doTestCase(
+					ctx, s, tconn, runner, fullDescription, windowsDescription, test.tablet, test.overviewWindowState,
+					false /*splitview*/, "Ash.Overview.AnimationSmoothness.Enter."+test.histogramSuffix,
+					"Ash.Overview.AnimationSmoothness.Exit."+test.histogramSuffix,
+				); err != nil {
+					return errors.Wrapf(err, "test case %q failed", fullDescription)
+				}
+			}
+
+			if windows == 2 {
+				// The overview exit animation does not include the window being activated.
+				// Thus, the SplitView-2windows case has no overview exit animation at all.
+				if err := doTestCase(
+					ctx, s, tconn, runner, "SplitView-2windows", "2windows", true /*tablet*/, ash.WindowStateMaximized,
+					true /*splitview*/, "Ash.Overview.AnimationSmoothness.Enter.SplitView",
+				); err != nil {
+					s.Fatal("Test case \"SplitView-2windows\" failed: ", err)
+				}
+				continue
+			}
+
+			for _, test := range []struct {
+				fullDescriptionFmt    string
+				windowsDescriptionFmt string
+				overviewWindowState   ash.WindowStateType
+			}{
+				{"SplitView-%dwindowsincludingmaximizedoverviewwindows", "%dwindowsincludingmaximizedoverviewwindows", ash.WindowStateMaximized},
+				{"SplitView-%dwindowsincludingminimizedoverviewwindows", "%dwindowsincludingminimizedoverviewwindows", ash.WindowStateMinimized},
+			} {
+				fullDescription := fmt.Sprintf(test.fullDescriptionFmt, windows)
+				windowsDescription := fmt.Sprintf(test.windowsDescriptionFmt, windows)
+				if err := doTestCase(
+					ctx, s, tconn, runner, fullDescription, windowsDescription, true /*tablet*/, test.overviewWindowState,
+					true /*splitview*/, "Ash.Overview.AnimationSmoothness.Enter.SplitView",
+					"Ash.Overview.AnimationSmoothness.Exit.SplitView",
+				); err != nil {
+					s.Fatalf("Test case %q failed: %s", fullDescription, err)
+				}
+			}
+		}
+		return nil
+	}); err != nil {
+		s.Fatal("Failed to run the test scenario: ", err)
+	}
+
+	pv := runner.Values().Values(ctx)
+	if err := recorder.Record(ctx, pv); err != nil {
+		s.Fatal("Failed to record the data: ", err)
+	}
+
+	if err := pv.Save(s.OutDir()); err != nil {
+		s.Error("Failed to save the perf data: ", err)
 	}
 }
 
@@ -230,12 +264,9 @@ func doTestCase(
 		}
 	}
 
-	// Wait for 3 seconds to stabilize the result. Note that this doesn't
-	// have to be cpu.WaitUntilIdle(). It may wait too much.
-	// TODO(mukai): find the way to wait more properly on the idleness of Ash.
-	// https://crbug.com/1001314.
-	if err := testing.Sleep(ctx, 3*time.Second); err != nil {
-		return errors.Wrap(err, "failed to wait")
+	ui := uiauto.New(tconn)
+	if err := ui.WithTimeout(3*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
+		s.Log("Failed to wait for overview stabilization: ", err)
 	}
 
 	runner.RunMultiple(ctx, fullDescription, uiperf.Run(s,
