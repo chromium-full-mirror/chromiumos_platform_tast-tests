@@ -14,6 +14,8 @@ import (
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/wallpaper"
+	"chromiumos/tast/local/wallpaper/constants"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -38,13 +40,6 @@ func init() {
 }
 
 func SetOnlineWallpaper(ctx context.Context, s *testing.State) {
-	const (
-		firstCollection  = "Cityscapes"
-		firstImage       = "J. Paul Getty Museum, Los Angeles Photo by Victor Cheng"
-		secondCollection = "Imaginary"
-		secondImage      = "Birthday Memento Digital Art by Leo Natsume"
-	)
-
 	cr := s.FixtValue().(*chrome.Chrome)
 
 	cleanupCtx := ctx
@@ -70,21 +65,21 @@ func SetOnlineWallpaper(ctx context.Context, s *testing.State) {
 	// time to wait for nodes to load.
 	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
 
-	if err := uiauto.Combine(fmt.Sprintf("Change the wallpaper to %s %s", firstCollection, firstImage),
+	if err := uiauto.Combine(fmt.Sprintf("Change the wallpaper to %s %s", constants.CityscapesCollection, constants.CityscapesImage),
 		wallpaper.OpenWallpaperPicker(ui),
-		wallpaper.SelectCollection(ui, firstCollection),
-		wallpaper.SelectImage(ui, firstImage),
-		ui.WaitUntilExists(wallpaper.CurrentWallpaperWithSpecificNameFinder(firstImage)),
+		wallpaper.SelectCollection(ui, constants.CityscapesCollection),
+		wallpaper.SelectImage(ui, constants.CityscapesImage),
+		ui.WaitUntilExists(wallpaper.CurrentWallpaperWithSpecificNameFinder(constants.CityscapesImage)),
 	)(ctx); err != nil {
-		s.Fatalf("Failed to validate selected wallpaper %s %s: %v", firstCollection, firstImage, err)
+		s.Fatalf("Failed to validate selected wallpaper %s %s: %v", constants.CityscapesCollection, constants.CityscapesImage, err)
 	}
 
 	// Navigate back to collection view by clicking on the back arrow in breadcrumb.
-	if err := uiauto.Combine(fmt.Sprintf("Change the wallpaper to %s %s", secondCollection, secondImage),
+	if err := uiauto.Combine(fmt.Sprintf("Change the wallpaper to %s %s", constants.ImaginaryCollection, constants.ImaginaryImage),
 		wallpaper.BackToWallpaper(ui),
-		wallpaper.SelectCollection(ui, secondCollection),
-		wallpaper.SelectImage(ui, secondImage),
-		ui.WaitUntilExists(wallpaper.CurrentWallpaperWithSpecificNameFinder(secondImage)))(ctx); err != nil {
-		s.Fatalf("Failed to validate selected wallpaper %s %s: %v", secondCollection, secondImage, err)
+		wallpaper.SelectCollection(ui, constants.ImaginaryCollection),
+		wallpaper.SelectImage(ui, constants.ImaginaryImage),
+		ui.WaitUntilExists(wallpaper.CurrentWallpaperWithSpecificNameFinder(constants.ImaginaryImage)))(ctx); err != nil {
+		s.Fatalf("Failed to validate selected wallpaper %s %s: %v", constants.ImaginaryCollection, constants.ImaginaryImage, err)
 	}
 }

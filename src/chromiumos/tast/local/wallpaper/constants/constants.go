@@ -80,3 +80,11 @@ var LocalWallpaperColor = color.RGBA{255, 203, 198, 255}
 
 // WhiteWallpaperName is the name of a solid white wallpaper in the solid colors collection.
 const WhiteWallpaperName = "White"
+
+// Constants used to set online wallpapers.
+const (
+	CityscapesCollection = "Cityscapes"
+	CityscapesImage      = "J. Paul Getty Museum, Los Angeles Photo by Victor Cheng"
+	ImaginaryCollection  = "Imaginary"
+	ImaginaryImage       = "Birthday Memento Digital Art by Leo Natsume"
+)

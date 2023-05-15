@@ -14,7 +14,6 @@ import (
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
-	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/media/imgcmp"
 	"chromiumos/tast/local/personalization"
 	"chromiumos/tast/local/screenshot"
@@ -97,6 +96,16 @@ func SetGooglePhotosWallpaper(ctx context.Context, s *testing.State) {
 	album := s.Param().(setGooglePhotosWallpaperParams).album
 	isShared := s.Param().(setGooglePhotosWallpaperParams).isShared
 
+	// Cancel any daily refresh by selecting an online wallpaper
+	if err := uiauto.Combine("Set a new wallpaper and minimize wallpaper picker",
+		wallpaper.OpenWallpaperPicker(ui),
+		wallpaper.SelectCollection(ui, constants.CityscapesCollection),
+		wallpaper.SelectImage(ui, constants.CityscapesImage),
+		wallpaper.CloseWallpaperPicker(),
+	)(ctx); err != nil {
+		s.Fatal("Failed to set new wallpaper: ", err)
+	}
+
 	if err := uiauto.Combine("Set a new wallpaper and minimize wallpaper picker",
 		wallpaper.OpenWallpaperPicker(ui),
 		wallpaper.SelectCollection(ui, constants.GooglePhotosWallpaperCollection),
@@ -118,21 +127,6 @@ func SetGooglePhotosWallpaper(ctx context.Context, s *testing.State) {
 		wallpaper.SelectGooglePhotosPhoto(ui, constants.GooglePhotosWallpaperPhoto),
 	)(ctx); err != nil {
 		s.Fatal("Failed to set new wallpaper: ", err)
-	}
-
-	// Cancel daily refresh if daily refresh is enabled for the current album
-	if album != "" {
-		kb, err := input.Keyboard(ctx)
-		if err != nil {
-			s.Fatal("Failed to get keyboard: ", err)
-		}
-		defer kb.Close(ctx)
-		if err := uiauto.Combine("Cancel daily refresh",
-			ui.DoDefault(constants.ChangeDailyButton),
-			kb.AccelAction("Esc"),
-		)(ctx); err != nil {
-			s.Fatal("Failed to cancel daily refresh: ", err)
-		}
 	}
 
 	// Navigate to Google Photos subpage and select "Fill" mode for the selected wallpaper.
