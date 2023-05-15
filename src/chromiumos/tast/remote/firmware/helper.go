@@ -712,6 +712,17 @@ func (h *Helper) SetupUSBKey(ctx context.Context, cloudStorage *testing.CloudSto
 
 // CorruptUSBKey makes a minimal change to the USB key to prevent it from booting. Use RestoreUSBKey to repair it afterwards.
 func (h *Helper) CorruptUSBKey(ctx context.Context, usbdev string) (retErr error) {
+	defer func() {
+		if retErr != nil {
+			testing.ContextLog(ctx, "Checking for USB model name and serial numbers")
+			modelName, serialNumber, err := h.getUSBModelAndSerial(ctx, usbdev)
+			if err != nil {
+				retErr = errors.Wrapf(err, "got %v, but failed to get usb info", retErr)
+			} else {
+				retErr = errors.Errorf("got %v, and found usb model %s, serial number %s", retErr, modelName, serialNumber)
+			}
+		}
+	}()
 	testing.ContextLog(ctx, "Corrupting ChromeOS image name on usbkey")
 	// ChromeOS kernel is at /dev/sdx2.
 	kernelPart := usbdev + "2"
