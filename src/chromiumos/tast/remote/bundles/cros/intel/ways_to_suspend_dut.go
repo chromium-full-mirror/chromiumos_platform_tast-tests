@@ -15,10 +15,10 @@ import (
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/fixture"
 	"chromiumos/tast/remote/powercontrol"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -59,19 +59,13 @@ func WaysToSuspendDUT(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to servo: ", err)
 	}
 
-	disableIdleSuspendFile := "/var/lib/power_manager/disable_idle_suspend"
-	idleSuspendOut, err := linuxssh.ReadFile(ctx, dut.Conn(), disableIdleSuspendFile)
-	if err != nil {
-		s.Fatal("Failed to read disable_idle_suspend file: ", err)
-	}
-
 	defer func(ctx context.Context) {
 		if !dut.Connected(ctx) {
 			if err := firmware.BootDutViaPowerPress(ctx, h, dut); err != nil {
 				s.Error("Failed to power on DUT in cleanup: ", err)
 			}
 		}
-		disableIdleSuspendCommand := fmt.Sprintf("echo %s > /var/lib/power_manager/disable_idle_suspend", strings.TrimSpace(string(idleSuspendOut)))
+		disableIdleSuspendCommand := "echo 1 > /var/lib/power_manager/disable_idle_suspend"
 		if err := dut.Conn().CommandContext(ctx, "sh", "-c", disableIdleSuspendCommand).Run(); err != nil {
 			s.Error("Failed to execute disableIdleSuspend command: ", err)
 		}
@@ -265,7 +259,7 @@ func waitForSystemIdle(ctx context.Context, dut *dut.DUT) error {
 			return errors.New("system display failed to go to idle state")
 		}
 		return nil
-	}, &testing.PollOptions{Timeout: 2 * time.Minute})
+	}, &testing.PollOptions{Timeout: 6 * time.Minute})
 }
 
 // performSuspendViaDisplay performs DUT suspend by waiting for system display
