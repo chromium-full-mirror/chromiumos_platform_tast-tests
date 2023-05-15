@@ -20,15 +20,22 @@ import (
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name:            fixture.ServicesOnBoot,
-		Desc:            "Fixture for platform.ServicesOnBoot.* tests; DO NOT USE for other tests",
-		Contacts:        []string{"aaronyu@google.com", "chromeos-audio-sw@google.com"},
-		Impl:            ServicesOnBootFixt{},
-		SetUpTimeout:    5 * time.Minute,
-		TearDownTimeout: 1 * time.Minute,
-		ServiceDeps:     []string{"tast.cros.platform.UpstartService"},
+		Name:         fixture.ServicesOnBoot,
+		Desc:         "Fixture for platform.ServicesOnBoot.* tests; DO NOT USE for other tests",
+		Contacts:     []string{"aaronyu@google.com", "chromeos-audio-sw@google.com"},
+		Impl:         ServicesOnBootFixt{},
+		SetUpTimeout: servicesOnBootSetUpTimeout,
+		ServiceDeps:  []string{"tast.cros.platform.UpstartService"},
 	})
 }
+
+const (
+	servicesOnBootRebootTimeout      time.Duration = 5 * time.Minute
+	servicesOnBootWaitJobTimeout                   = 3 * time.Minute
+	servicesOnBootCollectionDuration               = 30 * time.Second
+	servicesOnBootCleanupTimeout                   = 1 * time.Minute
+	servicesOnBootSetUpTimeout                     = servicesOnBootRebootTimeout + servicesOnBootWaitJobTimeout + servicesOnBootCollectionDuration + servicesOnBootCleanupTimeout
+)
 
 // ServicesOnBootFixt is a fixture for the platform.ServiceOnBoot.* tests.
 // DO NOT USE it on other tests.
@@ -47,7 +54,7 @@ func (ServicesOnBootFixt) SetUp(ctx context.Context, s *testing.FixtState) inter
 
 	// Leave time for clean up.
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(cleanupCtx, time.Minute)
+	ctx, cancel := ctxutil.Shorten(cleanupCtx, servicesOnBootCleanupTimeout)
 	defer cancel()
 
 	d, err := rpcdut.NewRPCDUT(ctx, s.DUT(), s.RPCHint(), "cros")
@@ -67,23 +74,22 @@ func (ServicesOnBootFixt) SetUp(ctx context.Context, s *testing.FixtState) inter
 		JobName: "system-services",
 		Goal:    string(upstart.StartGoal),
 		State:   string(upstart.RunningState),
-		Timeout: durationpb.New(3 * time.Minute),
+		Timeout: durationpb.New(servicesOnBootWaitJobTimeout),
 	}); err != nil {
 		s.Fatal("Failed to wait for system-services: ", err)
 	}
 
-	// Sleep to observe service failures.
+	s.Logf("Sleeping for %s to collect service activity", servicesOnBootCollectionDuration)
+	// GoBigSleepLint: Sleep to observe service failures.
 	// Generally, we recommend polling with a timeout instead of sleeping,
 	// due to sleeping makes the test either slow or flaky.
 	// However here, we're waiting for a service to fail. We don't have a
 	// good way to tell if services have finished their initialization
 	// sequences and can no longer fail spontaneously.
-	// For our case, the happy path we should reach the timeout.
+	// For our case, in the happy path we should reach the timeout.
 	// Polling with a timeout instead of sleeping makes only the sad path faster if we
 	// detect failures early, but optimizing the sad path is not useful.
-	const sleepDuration = 30 * time.Second
-	s.Logf("Sleeping for %s to collect service activity", sleepDuration)
-	testing.Sleep(ctx, sleepDuration)
+	testing.Sleep(ctx, servicesOnBootCollectionDuration)
 
 	return nil
 }
