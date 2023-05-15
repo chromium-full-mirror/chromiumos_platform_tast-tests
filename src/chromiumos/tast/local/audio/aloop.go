@@ -30,6 +30,7 @@ func init() {
 		Impl:            &aloopLoadedFixture{},
 		SetUpTimeout:    20 * time.Second,
 		TearDownTimeout: 20 * time.Second,
+		PreTestTimeout:  20 * time.Second,
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            fixture.StereoAloopLoaded,
@@ -38,6 +39,7 @@ func init() {
 		Impl:            &aloopLoadedFixture{Channels: 2},
 		SetUpTimeout:    20 * time.Second,
 		TearDownTimeout: 20 * time.Second,
+		PreTestTimeout:  20 * time.Second,
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            fixture.AloopLoadedWithoutUI,
@@ -194,13 +196,6 @@ func (f *aloopLoadedFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 		s.Fatal("Cannot load aloop: ", err)
 	}
 
-	if f.Channels != 0 {
-		// Restart CRAS, in case the UCM for aloop was already loaded.
-		if _, err := RestartCras(ctx); err != nil {
-			s.Fatal("Cannot restart CRAS: ", err)
-		}
-	}
-
 	return nil
 }
 
@@ -222,7 +217,30 @@ func (aloopLoadedFixture) Reset(ctx context.Context) error {
 	return nil
 }
 
-func (aloopLoadedFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {}
+func (aloopLoadedFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
+	// Restart CRAS to prevent CRAS state leakage between tests.
+	if _, err := RestartCras(ctx); err != nil {
+		s.Fatal("Cannot restart CRAS: ", err)
+	}
+
+	// Wait for the aloop device to be actually available in CRAS.
+	cras, err := NewCras(ctx)
+	if err != nil {
+		s.Fatal("Cannot connect to CRAS: ", err)
+	}
+	if err := testing.Poll(ctx,
+		func(ctx context.Context) error {
+			_, err := cras.GetNodeByType(ctx, "ALSA_LOOPBACK")
+			return err
+		},
+		&testing.PollOptions{
+			Timeout:  10 * time.Second,
+			Interval: 1 * time.Second,
+		},
+	); err != nil {
+		s.Error("CRAS alsa loopback device not found: ", err)
+	}
+}
 
 func (aloopLoadedFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {}
 
@@ -245,11 +263,6 @@ func (uiStoppedFixture) Reset(ctx context.Context) error {
 	return nil
 }
 
-func (uiStoppedFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
-	// Restart CRAS to prevent CRAS state leakage between tests.
-	if _, err := RestartCras(ctx); err != nil {
-		s.Fatal("Cannot restart CRAS: ", err)
-	}
-}
+func (uiStoppedFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {}
 
 func (uiStoppedFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {}
