@@ -62,6 +62,10 @@ type bluetoothInfo struct {
 	Adapters []adapterInfo `json:"adapters"`
 }
 
+type bluetoothInfoTestParams struct {
+	SkipSupportedCapabilities bool
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ProbeBluetoothInfo,
@@ -69,11 +73,25 @@ func init() {
 		Desc:         "Checks that cros_healthd can fetch Bluetooth info",
 		Contacts:     []string{"cros-tdm-tpe-eng@google.com"},
 		BugComponent: "b:982097",
-		// TODO(b/280387742): Promote to critical.
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "diagnostics"},
 		Fixture:      "crosHealthdRunning",
 		HardwareDeps: hwdep.D(hwdep.Bluetooth()),
+		Params: []testing.Param{{
+			Name: "",
+			Val: bluetoothInfoTestParams{
+				SkipSupportedCapabilities: true,
+			},
+			// TODO(b/280387742): Promote to critical.
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
+		}, {
+			Name: "supported_capabilities",
+			Val: bluetoothInfoTestParams{
+				SkipSupportedCapabilities: false,
+			},
+			// TODO(b/280387742): Merge this back to the main test.
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
+		}},
 	})
 }
 
@@ -103,7 +121,7 @@ func initiateBluetoothAdapterData(ctx context.Context) error {
 	return nil
 }
 
-func validateBluetoothAdapterData(ctx context.Context, info *bluetoothInfo) error {
+func validateBluetoothAdapterData(ctx context.Context, info *bluetoothInfo, skipSupportedCapabilities bool) error {
 	// Get Bluetooth adapter values to compare to the output of cros_healthd.
 	adapters, err := bluez.Adapters(ctx)
 	if err != nil {
@@ -128,8 +146,10 @@ func validateBluetoothAdapterData(ctx context.Context, info *bluetoothInfo) erro
 		return err
 	}
 
-	if err := validateAdvertising(ctx, info, adapters[0]); err != nil {
-		return err
+	if !skipSupportedCapabilities {
+		if err := validateAdvertising(ctx, info, adapters[0]); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -322,6 +342,8 @@ func validateConnectedDevices(ctx context.Context, got []deviceInfo) error {
 }
 
 func ProbeBluetoothInfo(ctx context.Context, s *testing.State) {
+	skipSupportedCapabilities := s.Param().(bluetoothInfoTestParams).SkipSupportedCapabilities
+
 	if err := initiateBluetoothAdapterData(ctx); err != nil {
 		s.Fatal("Failed to initiate bluetooth adapter data: ", err)
 	}
@@ -339,7 +361,7 @@ func ProbeBluetoothInfo(ctx context.Context, s *testing.State) {
 		if len(info.Adapters) == 0 {
 			return errors.New("failed to get Bluetooth adapter data: empty adapters slice")
 		}
-		return validateBluetoothAdapterData(ctx, &info)
+		return validateBluetoothAdapterData(ctx, &info, skipSupportedCapabilities)
 	}, &testing.PollOptions{Interval: 3 * time.Second, Timeout: 15 * time.Second}); err != nil {
 		s.Fatal("Failed to validate bluetooth adapter data: ", err)
 	}
