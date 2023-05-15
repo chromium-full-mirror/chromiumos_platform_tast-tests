@@ -349,7 +349,8 @@ func (k *Kiosk) WaitLaunchLogs(ctx context.Context) error {
 // TODO(b/280555587) consider removing this when callers migrate to kiosk.WaitLaunchLogs.
 func WaitLaunchLogs(ctx context.Context, reader *syslog.Reader) error {
 	if ctxutil.DeadlineBefore(ctx, time.Now().Add(LaunchDuration)) {
-		return errors.New("potentially insufficient time remaining to wait for Kiosk launch")
+		// TODO(b/279900827): make this an error after callers are migrated.
+		testing.ContextLog(ctx, "Potentially insufficient time remaining to wait for Kiosk launch")
 	}
 
 	if err := waitLog(ctx, reader, kioskStartingLog, kioskStartingDuration); err != nil {
