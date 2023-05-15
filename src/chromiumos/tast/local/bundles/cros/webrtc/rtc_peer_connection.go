@@ -116,6 +116,18 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "video_decoder_legacy_supported", "proprietary_codecs"},
 			Fixture:           "chromeVideoWithFakeWebcamAndAlternateVideoDecoder",
 		}, {
+			Name: "h264_verify_hw_dec_oopvd",
+			Val: peerconnection.RTCTestParams{
+				VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
+				VerifyEncoderMode: peerconnection.NoVerifyEncoderMode,
+				Profile:           "H264",
+				StreamWidth:       defaultRTCStreamWidth,
+				StreamHeight:      defaultRTCStreamHeight,
+				BrowserType:       browser.TypeAsh,
+			},
+			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
+			Fixture:           "chromeVideoOOPVDWithFakeWebcam",
+		}, {
 			Name: "vp8_verify_hw_dec",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
@@ -140,6 +152,18 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "video_decoder_legacy_supported"},
 			Fixture:           "chromeVideoWithFakeWebcamAndAlternateVideoDecoder",
 		}, {
+			Name: "vp8_verify_hw_dec_oopvd",
+			Val: peerconnection.RTCTestParams{
+				VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
+				VerifyEncoderMode: peerconnection.NoVerifyEncoderMode,
+				Profile:           "VP8",
+				StreamWidth:       defaultRTCStreamWidth,
+				StreamHeight:      defaultRTCStreamHeight,
+				BrowserType:       browser.TypeAsh,
+			},
+			ExtraSoftwareDeps: []string{caps.HWDecodeVP8},
+			Fixture:           "chromeVideoOOPVDWithFakeWebcam",
+		}, {
 			Name: "vp9_verify_hw_dec",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
@@ -163,6 +187,18 @@ func init() {
 			},
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "video_decoder_legacy_supported"},
 			Fixture:           "chromeVideoWithFakeWebcamAndAlternateVideoDecoder",
+		}, {
+			Name: "vp9_verify_hw_dec_oopvd",
+			Val: peerconnection.RTCTestParams{
+				VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
+				VerifyEncoderMode: peerconnection.NoVerifyEncoderMode,
+				Profile:           "VP9",
+				StreamWidth:       defaultRTCStreamWidth,
+				StreamHeight:      defaultRTCStreamHeight,
+				BrowserType:       browser.TypeAsh,
+			},
+			ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
+			Fixture:           "chromeVideoOOPVDWithFakeWebcam",
 		}, {
 			Name: "vp9_1080p_verify_hw_dec",
 			Val: peerconnection.RTCTestParams{
@@ -221,22 +257,6 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
 			ExtraHardwareDeps: hwdep.D(hwdep.SupportsVP9KSVCHWDecoding()),
 			Fixture:           "chromeVideoWithFakeWebcamAndSVCEnabled",
-		}, {
-			// This is a decoding test of 3 spatial layers, 3 temporal layers (each) k-SVC test, via the (experimental) API.
-			// See https://www.w3.org/TR/webrtc-svc/#scalabilitymodes for SVC identifiers.
-			Name: "vp9_svc_l3t3_key_verify_hw_dec_oopvd",
-			Val: peerconnection.RTCTestParams{
-				VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
-				VerifyEncoderMode: peerconnection.NoVerifyEncoderMode,
-				Profile:           "VP9",
-				StreamWidth:       defaultRTCStreamWidth,
-				StreamHeight:      defaultRTCStreamHeight,
-				Svc:               "L3T3_KEY",
-				BrowserType:       browser.TypeAsh,
-			},
-			ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
-			ExtraHardwareDeps: hwdep.D(hwdep.SupportsVP9KSVCHWDecoding()),
-			Fixture:           "chromeVideoOOPVDWithFakeWebcamAndSVCEnabled",
 		}, {
 			Name: "av1_verify_hw_dec",
 			Val: peerconnection.RTCTestParams{

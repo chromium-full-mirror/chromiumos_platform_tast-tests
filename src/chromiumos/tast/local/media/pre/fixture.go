@@ -406,24 +406,6 @@ func init() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 
-	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoOOPVDWithFakeWebcamAndSVCEnabled",
-		Desc:     "Like chromeVideoWithFakeWebcamAndSVCEnabled but with out-of-process video decoding",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ExtraArgs(chromeVideoArgs...),
-				chrome.ExtraArgs(chromeFakeWebcamArgs...),
-				chrome.ExtraArgs("--enable-blink-features=RTCSvcScalabilityMode"),
-				chrome.EnableFeatures("UseOutOfProcessVideoDecoding"),
-			}, nil
-		}),
-		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.LoginTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
 	// TODO(b/202926617): Remove once vp8 hardware temporal layer encoding is enabled by default.
 	testing.AddFixture(&testing.Fixture{
 		Name:     "chromeVideoWithFakeWebcamAndSVCEnabledWithHWVp8TemporalLayerEncoding",
