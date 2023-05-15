@@ -32,9 +32,9 @@ func init() {
 		Desc:         "Verify that installed certificates are usable after suspend and resume",
 		Contacts: []string{
 			"cros-connectivity@google.com",
-			"cros-conn-test-team@google.com",
-			"cienet-development@googlegroups.com",
-			"jason.hsiao@cienet.com",
+			"chromeos-connectivity-engprod@google.com",
+			"shijinabraham@google.com",
+			"chadduffin@chromium.org",
 		},
 		BugComponent: "b:1131775", // ChromeOS > Software > System Services > Connectivity
 		Attr:         []string{"group:wificell", "wificell_e2e_unstable"},
