@@ -21,7 +21,7 @@ type memtesterMode int
 const (
 	single memtesterMode = iota
 	dual
-	iterationDuration = 15 * time.Minute
+	iterationDuration = 25 * time.Minute
 )
 
 type memtesterParams struct {
