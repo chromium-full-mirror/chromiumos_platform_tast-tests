@@ -7,6 +7,7 @@ package cellular
 import (
 	"context"
 	"encoding/json"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -188,4 +189,32 @@ func RunHostIPSpeedTest(ctx context.Context, cmd func(context.Context, string, .
 		return 0, 0, errors.Wrap(err, "failed speed test")
 	}
 	return uploadSpeed, downloadSpeed, nil
+}
+
+// LogL3Info Logs the output of l3info --all to l3info.txt file.
+func LogL3Info(ctx context.Context) error {
+	outDir, ok := testing.ContextOutDir(ctx)
+	if !ok {
+		return errors.New("failed to get out dir")
+	}
+
+	outFile, err := os.Create(filepath.Join(outDir, "l3info.txt"))
+	if err != nil {
+		return err
+	}
+	if outFile == nil {
+		return errors.New("failed to create l3info.txt file")
+	}
+
+	cmd := testexec.CommandContext(ctx, "/usr/local/lib/flimflam/test/l3info", "--all")
+	cmd.Stdout = outFile
+	cmd.Stderr = outFile
+
+	if err := cmd.Run(); err != nil {
+		return errors.Wrap(err, "failed to run l3info")
+	}
+	if err := outFile.Close(); err != nil {
+		return errors.Wrap(err, "failed to close l3info.txt")
+	}
+	return nil
 }

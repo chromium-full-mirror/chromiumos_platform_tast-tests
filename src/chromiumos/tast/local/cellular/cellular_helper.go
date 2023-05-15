@@ -1329,7 +1329,12 @@ func (h *Helper) RunTestOnCellularInterface(ctx context.Context, testBody func(c
 	}
 	defer h.enablePreviouslyDisabledNonCellularInterfaceforTesting(ctx)
 
-	return testBody(ctx)
+	if err := testBody(ctx); err != nil {
+		LogL3Info(ctx)
+		return err
+	}
+
+	return nil
 }
 
 // PrintHostInfoLabels prints the host info labels
