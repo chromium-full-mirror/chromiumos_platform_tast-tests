@@ -66,8 +66,8 @@ func VerifyCrostiniIPConnectivity(ctx context.Context, cmd func(context.Context,
 func verifyIPConnectivityUsingCurl(ctx context.Context, cmd func(context.Context, string, ...string) *testexec.Cmd, ipType, addr string) error {
 	testing.ContextLogf(ctx, "Verify IP%s connectivity using curl to: %s", ipType, addr)
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if err := cmd(ctx, "curl", ipType, addr).Run(); err != nil {
-			return errors.Wrap(err, "failed curl test")
+		if out, err := cmd(ctx, "curl", ipType, addr).CombinedOutput(); err != nil {
+			return errors.Wrapf(err, "failed curl test: %v ", string(out))
 		}
 		return nil
 	}, &testing.PollOptions{
