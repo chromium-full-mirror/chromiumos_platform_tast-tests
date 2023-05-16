@@ -26,6 +26,7 @@ import (
 	"chromiumos/tast/local/crostini/ui/settings"
 	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/local/vm"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -141,7 +142,9 @@ func (p *Installer) Install(ctx context.Context) error {
 	installingMsg := nodewith.NameStartingWith("Installing Linux").Role(role.StaticText)
 	if err := uiauto.Combine("click install and wait it to finish",
 		ui.LeftClickUntil(installButton, ui.WithTimeout(3*time.Second).WaitUntilExists(installingMsg)),
-		ui.WithTimeout(installationTimeout).WaitUntilGone(installingMsg),
+		// The installation message seems unstable, thus using WaitUntilGoneFor
+		// instead of WaitUntilGone.
+		ui.WithTimeout(installationTimeout).WaitUntilGoneFor(installingMsg, 2*time.Second),
 	)(ctx); err != nil {
 		if message, _ := p.checkErrorMessage(cleanupCtx); message != "" {
 			return errors.Errorf("error in installer dialog: %s", message)

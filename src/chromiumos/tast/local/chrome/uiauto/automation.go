@@ -865,6 +865,14 @@ func (ac *Context) WaitUntilGone(finder *nodewith.Finder) Action {
 	}
 }
 
+// WaitUntilGoneFor returns a function that waits until the node found by the
+// input finder is gone for a specified period of time.
+func (ac *Context) WaitUntilGoneFor(finder *nodewith.Finder, duration time.Duration) Action {
+	return func(ctx context.Context) error {
+		return testing.Poll(ctx, ac.EnsureGoneFor(finder, duration), &ac.pollOpts)
+	}
+}
+
 // clickType describes how user clicks mouse.
 type clickType int
 
