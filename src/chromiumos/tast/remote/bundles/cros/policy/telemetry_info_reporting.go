@@ -15,6 +15,7 @@ import (
 	"chromiumos/tast/remote/reportingutil"
 	"chromiumos/tast/services/cros/graphics"
 	pspb "chromiumos/tast/services/cros/policy"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
@@ -211,11 +212,20 @@ func TelemetryInfoReporting(ctx context.Context, s *testing.State) {
 				},
 			},
 			{
-				name:     "networkTelemetry",
+				name:     "networksTelemetry-httpsLatencyData",
 				testType: telemetry,
 				validator: func(event reportingutil.InputEvent) bool {
 					return verifyTelemetry(event, func(telemetry *reportingutil.TelemetryData) bool {
-						return telemetry.NetworkTelemetry != nil
+						return telemetry.NetworksTelemetry != nil && telemetry.NetworksTelemetry.HTTPSLatencyData != nil
+					})
+				},
+			},
+			{
+				name:     "networksTelemetry-networkTelemetry",
+				testType: telemetry,
+				validator: func(event reportingutil.InputEvent) bool {
+					return verifyTelemetry(event, func(telemetry *reportingutil.TelemetryData) bool {
+						return telemetry.NetworksTelemetry != nil && telemetry.NetworksTelemetry.NetworkTelemetry != nil
 					})
 				},
 			},
@@ -265,6 +275,7 @@ func TelemetryInfoReporting(ctx context.Context, s *testing.State) {
 				},
 			},
 		} {
+			testing.ContextLog(ctx, "running sub-test: ", internalParam.name, " - reportingEnabled: ", param.reportingEnabled)
 			events := telemetryEvents
 			if internalParam.testType == info {
 				events = infoEvents

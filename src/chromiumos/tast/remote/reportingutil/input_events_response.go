@@ -113,7 +113,7 @@ type InfoData struct {
 // TelemetryData mirrors the telemetryData JSON field.
 type TelemetryData struct {
 	AudioTelemetry       *AudioTelemetry       `json:"audioTelemetry"`
-	NetworkTelemetry     *NetworkTelemetry     `json:"networksTelemetry"`
+	NetworksTelemetry    *NetworksTelemetry    `json:"networksTelemetry"`
 	PeripheralsTelemetry *PeripheralsTelemetry `json:"peripheralsTelemetry"`
 	DisplaysTelemetry    *DisplaysTelemetry    `json:"displaysTelemetry"`
 }
@@ -198,9 +198,26 @@ type AudioTelemetry struct {
 	InputDeviceName  string `json:"inputDeviceName"`
 }
 
-// NetworkTelemetry mirrors the audioTelemetry JSON field.
+// NetworksTelemetry mirrors the networksTelemetry JSON field.
+type NetworksTelemetry struct {
+	NetworkTelemetry []NetworkTelemetry `json:"networkTelemetry"`
+	HTTPSLatencyData *HTTPSLatencyData  `json:"httpsLatencyData"`
+}
+
+// NetworkTelemetry mirrors the networkTelemetry JSON field.
 type NetworkTelemetry struct {
-	BandwidthData *BandwidthData `json:"bandwidthData"`
+	GUID            string `json:"guid"`
+	ConnectionState string `json:"connectionState"`
+	DevicePath      string `json:"devicePath"`
+	IPAddress       string `json:"ipAddress"`
+	Gateway         string `json:"gateway"`
+	Type            string `json:"type"`
+}
+
+// HTTPSLatencyData mirrors httpsLatencyData JSON field.
+type HTTPSLatencyData struct {
+	Verdict   string `json:"verdict"`
+	LatencyMs string `json:"latencyMs"`
 }
 
 // BandwidthData mirrors the bandwidthData JSON field.
