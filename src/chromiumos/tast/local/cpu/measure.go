@@ -33,6 +33,7 @@ func MeasureUsage(ctx context.Context, duration time.Duration) (float64, error) 
 		return 0, err
 	}
 
+	// GoBigSleepLint: sleep to catch the cpu usage during duration.
 	if err := testing.Sleep(ctx, duration); err != nil {
 		return 0, err
 	}
@@ -57,4 +58,43 @@ func MeasureUsage(ctx context.Context, duration time.Duration) (float64, error) 
 	}
 
 	return (activeTimeEnd - activeTimeBegin) / (totalTimeEnd - totalTimeBegin) * 100.0, nil
+}
+
+// MeasurePkgUsage measures utilization of x86 cpu's package cstates during
+// duration. Returns a percentage in the range [0.0, 100.0].
+func MeasurePkgUsage(ctx context.Context, duration time.Duration) (float64, error) {
+	// Get the first snapshot of pkg c-states register reads.
+	pCStates, err := FetchPackageStates()
+	if err != nil {
+		return 0, errors.Wrap(err, "error finding package C-states")
+	}
+	perPackageCPUs, err := FindCPUPerPackage(ctx)
+	if err != nil {
+		return 0, errors.Wrap(err, "error finding per package cpus")
+	}
+
+	statBegin, err := ReadPackageCStates(perPackageCPUs, pCStates)
+	if err != nil {
+		return 0, err
+	}
+	c0C1StateBegin := statBegin[c0C1Key]
+	nonC0C1StateBegin := statBegin[aggregateNonC0C1Key]
+
+	// GoBigSleepLint: sleep to catch the cpu package usage during duration.
+	if err := testing.Sleep(ctx, duration); err != nil {
+		return 0, err
+	}
+
+	// Get the second snapshot of pkg c-states register reads.
+	statEnd, err := ReadPackageCStates(perPackageCPUs, pCStates)
+	if err != nil {
+		return 0, err
+	}
+	c0C1StateEnd := statEnd[c0C1Key]
+	nonC0C1StateEnd := statEnd[aggregateNonC0C1Key]
+
+	// Calculate the percent of time under active package c-states.
+	activeDiff := c0C1StateEnd - c0C1StateBegin
+	totalDiff := nonC0C1StateEnd - nonC0C1StateBegin + activeDiff
+	return float64(activeDiff) / float64(totalDiff) * 100, nil
 }

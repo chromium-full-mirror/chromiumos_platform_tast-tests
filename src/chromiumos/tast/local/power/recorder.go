@@ -6,6 +6,7 @@ package power
 
 import (
 	"context"
+	"runtime"
 	"time"
 
 	"chromiumos/tast/common/perf"
@@ -36,9 +37,12 @@ func (r *Recorder) Cooldown(ctx context.Context) error {
 	if err := cpu.WaitUntilIdle(ctx); err != nil {
 		return errors.Wrap(err, "CPU failed to idle")
 	}
-
-	// TODO(b/271799379): Need to add additional cool down time here.
-
+	// Usually takes longer than WaitUntilIdle().
+	if arch := runtime.GOARCH; arch != "arm" && arch != "arm64" {
+		if err := cpu.WaitUntilPkgStateIdleWithConfig(ctx, cpu.DefaultPkgIdleConfig()); err != nil {
+			return errors.Wrap(err, "CPU package c-state failed to idle")
+		}
+	}
 	return nil
 }
 

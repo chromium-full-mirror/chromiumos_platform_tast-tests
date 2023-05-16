@@ -37,6 +37,19 @@ func DefaultIdleConfig() IdleConfig {
 	}
 }
 
+// DefaultPkgIdleConfig returns the default config to wait until the CPU package
+// state is idle. It usually takes long (>1 min) for pkg c-state to stabilize
+// when launching Chrome or having performed heavy duty. Lacros could take
+// longer time than ash to cooldown.
+func DefaultPkgIdleConfig() IdleConfig {
+	return IdleConfig{
+		Timeout:             3 * time.Minute,
+		CPUUsagePercentBase: 5.0,
+		CPUUsagePercentMax:  30.0,
+		Steps:               6,
+	}
+}
+
 // WaitUntilIdle waits until the CPU is idle, for a maximum of 120s. The CPU is
 // considered idle if the average usage over all CPU cores is less than 5%.
 // This percentage will be gradually increased to 20%, as older boards might
@@ -90,6 +103,62 @@ func waitUntilIdleStep(ctx context.Context, timeout time.Duration, maxUsage floa
 		}
 		if usage >= maxUsage {
 			return errors.Errorf("CPU not idle: got %.1f%%; want < %.1f%%", usage, maxUsage)
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: timeout})
+	if err != nil {
+		return usage, err
+	}
+	return usage, nil
+}
+
+// WaitUntilPkgStateIdleWithConfig waits until the CPU package c-state is idle,
+// based on provided configuration.
+func WaitUntilPkgStateIdleWithConfig(ctx context.Context, config IdleConfig) error {
+	// Wait for the CPU package state to become idle. It's e.g. possible the board
+	// just booted and is running various startup programs.
+	if config.Steps < 2 {
+		return errors.Errorf("invalid Steps in config: got %d; want >= 2", config.Steps)
+	}
+	var err error
+	startTime := time.Now()
+	idleIncrease := (config.CPUUsagePercentMax - config.CPUUsagePercentBase) / (float64(config.Steps) - 1)
+	testing.ContextLogf(ctx, "Waiting for idle CPU package c-state at most %v, threshold will be gradually relaxed (from %.1f%% to %.1f%%)",
+		config.Timeout, config.CPUUsagePercentBase, config.CPUUsagePercentMax)
+
+	// Gradually increase threshold.
+	for i := 0; i < config.Steps; i++ {
+		idlePercent := config.CPUUsagePercentBase + (idleIncrease * float64(i))
+		timeout := time.Duration(config.Timeout.Seconds()/float64(config.Steps)) * time.Second
+		testing.ContextLogf(ctx, "Waiting up to %v for CPU package c-state to drop below %.1f%% (%d/%d)",
+			timeout.Round(time.Second), idlePercent, i+1, config.Steps)
+		var usage float64
+		if usage, err = waitUntilPkgStateIdleStep(ctx, timeout, idlePercent); err == nil {
+			testing.ContextLogf(ctx, "Waiting for idle CPU package c-state took %v (usage: %.1f%%, threshold: %.1f%%)",
+				time.Now().Sub(startTime).Round(time.Second), usage, idlePercent)
+			return nil
+		}
+	}
+	return err
+}
+
+// waitUntilPkgStateIdleStep waits until the CPU package c-state is idle or the
+// specified timeout has elapsed and returns CPU package c-state usage. The CPU
+// is considered idle if the average CPU usage over all cores is less than
+// maxUsage, which is a percentage in the range [0.0, 100.0].
+func waitUntilPkgStateIdleStep(ctx context.Context, timeout time.Duration, maxUsage float64) (usage float64, err error) {
+	const measureDuration = time.Second
+	err = testing.Poll(ctx, func(context.Context) error {
+		var e error
+		// testing.Poll shortens ctx so that its deadline matches timeout. Use the
+		// original ctx to prevent the Sleep in cpu.MeasureUsage from always failing
+		// during the last poll iteration.
+		usage, e = MeasurePkgUsage(ctx, measureDuration)
+		if e != nil {
+			return testing.PollBreak(errors.Wrap(e, "failed measuring CPU package state usage"))
+		}
+		if usage >= maxUsage {
+			return errors.Errorf("CPU package state not idle: got %.1f%%; want < %.1f%%", usage, maxUsage)
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: timeout})
