@@ -268,7 +268,7 @@ func Init(ctx context.Context, cr *chrome.Chrome, scriptPaths []string, outDir s
 
 func loadScripts(ctx context.Context, conn *chrome.Conn, scriptPaths []string) error {
 	for _, scriptPath := range scriptPaths {
-		script, err := ioutil.ReadFile(scriptPath)
+		script, err := os.ReadFile(scriptPath)
 		if err != nil {
 			return err
 		}
@@ -725,7 +725,7 @@ func (a *App) TakeSinglePhoto(ctx context.Context, timerState TimerState) ([]os.
 		}
 
 		var jsonString map[string]interface{}
-		if content, err := ioutil.ReadFile(path); err != nil {
+		if content, err := os.ReadFile(path); err != nil {
 			return nil, errors.Wrapf(err, "failed to read metadata file %v", info.Name())
 		} else if err := json.Unmarshal(content, &jsonString); err != nil {
 			return nil, errors.Wrapf(err, "not a valid json file %v", info.Name())
@@ -895,7 +895,7 @@ func ClearSavedDir(ctx context.Context, cr *chrome.Chrome) error {
 	// created by CCA, we have assumption in CCA that it won't be deleted during
 	// user session. Therefore, instead of completely deleting the it, we clear
 	// all the contents inside if it exists.
-	files, err := ioutil.ReadDir(dir)
+	files, err := os.ReadDir(dir)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil
@@ -952,18 +952,22 @@ func (a *App) SaveCameraFolder(ctx context.Context) error {
 		return errors.Wrap(err, "failed to make folder to save camera folder")
 	}
 
-	files, err := ioutil.ReadDir(cameraFolderPath)
+	files, err := os.ReadDir(cameraFolderPath)
 	if err != nil {
 		return errors.Wrap(err, "failed to read camera folder")
 	}
 	for _, file := range files {
+		// Filtering out hidden dotfiles like .Temp folder storing temporary files when recording videos.
+		if strings.HasPrefix(file.Name(), ".") {
+			continue
+		}
 		srcFilePath := filepath.Join(cameraFolderPath, file.Name())
 		dstFilePath := filepath.Join(targetFolderPath, file.Name())
-		data, err := ioutil.ReadFile(srcFilePath)
+		data, err := os.ReadFile(srcFilePath)
 		if err != nil {
 			return errors.Wrapf(err, "failed to read file: %v", srcFilePath)
 		}
-		if err := ioutil.WriteFile(dstFilePath, data, 0644); err != nil {
+		if err := os.WriteFile(dstFilePath, data, 0644); err != nil {
 			return errors.Wrapf(err, "failed to write file: %v", dstFilePath)
 		}
 	}
@@ -1326,7 +1330,7 @@ func (a *App) OutputCodeCoverage(ctx context.Context) error {
 	for idx := 0; ; idx++ {
 		coverageFilePath := filepath.Join(coverageDirPath, fmt.Sprintf("coverage-%d.json", idx))
 		if _, err := os.Stat(coverageFilePath); os.IsNotExist(err) {
-			if err := ioutil.WriteFile(coverageFilePath, coverageData, 0644); err != nil {
+			if err := os.WriteFile(coverageFilePath, coverageData, 0644); err != nil {
 				return err
 			}
 			break
