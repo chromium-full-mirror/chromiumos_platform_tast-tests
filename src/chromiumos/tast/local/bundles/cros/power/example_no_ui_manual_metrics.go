@@ -10,6 +10,7 @@ import (
 
 	"chromiumos/tast/local/power"
 
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -50,6 +51,11 @@ func init() {
 }
 
 func ExampleNoUIManualMetrics(ctx context.Context, s *testing.State) {
+	// Reserve some time to cleanup, even if it fails due to ctx timeout.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
 	// Any test specific setup code should go here.
 	interval := s.Param().(power.TimeParams).Interval
 	total := s.Param().(power.TimeParams).Total
@@ -58,6 +64,7 @@ func ExampleNoUIManualMetrics(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Cannot create a new Recorder to collect power metrics: ", err)
 	}
+	defer r.Close(cleanupCtx)
 	if err := r.Cooldown(ctx); err != nil {
 		s.Error("Cooldown failed: ", err)
 	}

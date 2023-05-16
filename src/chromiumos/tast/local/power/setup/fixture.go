@@ -437,6 +437,8 @@ func (f *powerMetricsNoUIFixture) PreTest(ctx context.Context, s *testing.FixtTe
 }
 
 func (f *powerMetricsNoUIFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
+	defer f.recorder.Close(ctx)
+
 	if err := f.recorder.Finish(s.TestContext()); err != nil {
 		s.Error("Cannot finish collecting power metrics: ", err)
 	}

@@ -330,6 +330,7 @@ func VideoPlayback(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Cannot create a new Recorder to collect power metrics: ", err)
 	}
+	defer r.Close(cleanupCtx)
 	if err := r.Cooldown(ctx); err != nil {
 		s.Error("Cooldown failed: ", err)
 	}

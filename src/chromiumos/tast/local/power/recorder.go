@@ -10,6 +10,7 @@ import (
 
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/local/cpu"
+
 	"go.chromium.org/tast/core/errors"
 )
 
@@ -18,6 +19,8 @@ type Recorder struct {
 	metrics  *perf.Timeline
 	outDir   string
 	testName string
+
+	isRecording bool
 }
 
 // Cooldown device before running test load.
@@ -52,6 +55,7 @@ func (r *Recorder) Start(ctx context.Context) error {
 	if err := r.metrics.StartRecording(ctx); err != nil {
 		return errors.Wrap(err, "failed to start recording")
 	}
+	r.isRecording = true
 
 	return nil
 }
@@ -62,6 +66,10 @@ func (r *Recorder) Start(ctx context.Context) error {
 // Out:
 // error: propagate back to the test.
 func (r *Recorder) Finish(ctx context.Context) error {
+	if !r.isRecording {
+		return errors.New("recorder is not recording")
+	}
+	r.isRecording = false
 	p, err := r.metrics.StopRecording(ctx)
 	if err != nil {
 		return errors.Wrap(err, "error while recording power metrics")
@@ -71,6 +79,22 @@ func (r *Recorder) Finish(ctx context.Context) error {
 		return errors.Wrap(err, "failed to generate power_log.json and/or save perf data for crosbolt")
 	}
 
+	return nil
+}
+
+// Close cleans up the recorder resources.
+// In:
+// ctx: context for the test.
+// Out:
+// error: propagate back to the test.
+func (r *Recorder) Close(ctx context.Context) error {
+	if !r.isRecording {
+		return nil
+	}
+	r.isRecording = false
+	if _, err := r.metrics.StopRecording(ctx); err != nil {
+		return errors.Wrap(err, "failed to stop metrics recording")
+	}
 	return nil
 }
 
