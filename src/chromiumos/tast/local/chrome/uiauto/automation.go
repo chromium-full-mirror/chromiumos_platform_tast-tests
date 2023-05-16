@@ -157,25 +157,27 @@ func Repeat(n int, fn Action) Action {
 	}
 }
 
-// KeepAlive keeps the automation tree alive.
-type KeepAlive struct {
+// ScopedAutoRelease allows the automation tree to be released when not used for
+// some time. It is needed for perf tests (such as ui.MeetCUJ) to reduce cpu and
+// power usage.
+type ScopedAutoRelease struct {
 	tconn *chrome.TestConn
 }
 
-// NewKeepAlive creates the automation tree and creates a new KeepAlive object
-// to hold one ref count. The ref count is released on Release.
-func NewKeepAlive(ctx context.Context, tconn *chrome.TestConn) (*KeepAlive, error) {
-	if err := tconn.Eval(ctx, `tast.automation.getDesktop()`, nil); err != nil {
-		return nil, errors.Wrap(err, "failed to call getDesktop")
+// NewScopedAutoRelease creates a new ScopedAutoRelease object.
+func NewScopedAutoRelease(ctx context.Context, tconn *chrome.TestConn) (*ScopedAutoRelease, error) {
+	if err := tconn.Eval(ctx, `tast.automation.setAutoRelease(true)`, nil); err != nil {
+		return nil, errors.Wrap(err, "failed to call setAutoRelease")
 	}
-	return &KeepAlive{
+	return &ScopedAutoRelease{
 		tconn: tconn,
 	}, nil
 }
 
-// Release releases the automation tree ref count acquired in construction.
-func (k *KeepAlive) Release(ctx context.Context) error {
-	return k.tconn.Eval(ctx, "tast.automation.releaseDesktop()", nil)
+// Reset resets the auto release to false. The existing automation tree will be
+// kept around.
+func (ar *ScopedAutoRelease) Reset(ctx context.Context) error {
+	return ar.tconn.Eval(ctx, "tast.automation.setAutoRelease(false)", nil)
 }
 
 // `query` holds context of a finder query and provides a "release" method to
@@ -188,7 +190,7 @@ type query struct {
 // string.
 func (ac *Context) createQueryFromString(ctx context.Context, q string) (*query, error) {
 	expr := fmt.Sprintf(`async function() {
-		let desktop = tast.automation.getDesktop();
+		let desktop = await tast.automation.getDesktop();
 		let query  = {
 			"execute": async () => {
 				%s
@@ -453,7 +455,7 @@ func (ac *Context) setupWatcher(ctx context.Context, finder *nodewith.Finder, ev
 		return nil, err
 	}
 	expr := fmt.Sprintf(`async function(eventType) {
-		let desktop = tast.automation.getDesktop();
+		let desktop = await tast.automation.getDesktop();
 		%s
 		let watcher = {
 			"events": [],

@@ -855,6 +855,15 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 
 	defer faillog.DumpUITreeWithScreenshotOnError(closeCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 
+	// Autorelease the automation tree when it is not used so that excessive
+	// automation events in lacros runs do not consumer too much cpu/power.
+	// See b/278649596.
+	automationAutoRelease, err := uiauto.NewScopedAutoRelease(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to create automation ScopedAutoRelease: ", err)
+	}
+	defer automationAutoRelease.Reset(ctx)
+
 	// Expand the Create Dump section of chrome://webrtc-internals. We will not need it
 	// until after the meeting, but we can expand the section much faster now while
 	// chrome://webrtc-internals does not have much data to show.

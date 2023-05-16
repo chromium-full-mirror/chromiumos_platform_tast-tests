@@ -221,6 +221,7 @@ tast.poll = async function(predicate, intervalMs) {
 tast.automation = (() => {
   let desktop;
   let timerId;
+  let autoRelease = false;
 
   let pendingReleaseDesktop;
   let desktopRefCount = 0;
@@ -249,16 +250,19 @@ tast.automation = (() => {
         timerId = undefined;
       }
 
-      if (desktop) {
-        ++desktopRefCount;
-        return desktop;
-      }
-
       // Wait for previous automation tree to finish tearing down before
       // creating a new one.
       if (pendingReleaseDesktop) {
-        await tast.poll(() => pendingReleaseDesktop.role === undefined, 100);
+        await tast.poll(() => {
+          return !pendingReleaseDesktop ||
+              pendingReleaseDesktop.role === undefined;
+        }, 100);
         pendingReleaseDesktop = undefined;
+      }
+
+      if (desktop) {
+        ++desktopRefCount;
+        return desktop;
       }
 
       desktop = await tast.promisify(chrome.automation.getDesktop)();
@@ -276,8 +280,13 @@ tast.automation = (() => {
        }
        --desktopRefCount;
        if (desktopRefCount == 0) {
-         scheduleRelease();
+         if (autoRelease)
+           scheduleRelease();
        }
+     },
+
+     "setAutoRelease": (newAutoRelease) => {
+       autoRelease = newAutoRelease;
      },
   };
   return automation;

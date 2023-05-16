@@ -177,8 +177,13 @@ func (f *Finder) generateQuery(multipleNodes bool) (string, error) {
 	out := `
 		let node = await tast.automation.getDesktop();
 		let nodes = [];
+		try {
 	`
-	epilog := `tast.automation.releaseDesktop();`
+	epilog := `
+		} finally {
+			tast.automation.releaseDesktop();
+		}
+	`
 	if f.nameInTree() {
 		out += `
 		 let locale = chrome.i18n.getUILanguage();
