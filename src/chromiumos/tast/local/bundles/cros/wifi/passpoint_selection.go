@@ -16,6 +16,7 @@ import (
 	"chromiumos/tast/local/hwsec"
 	"chromiumos/tast/local/network/hwsim"
 	"chromiumos/tast/local/shill"
+	"chromiumos/tast/local/wpasupplicant"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -549,6 +550,23 @@ func PasspointSelection(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to enable interworking selection: ", err)
 	}
 	defer tc.manager.SetInterworkingSelectEnabled(cleanupCtx, tc.clientIface, false)
+
+	// Ensure the cache of scanned network will be flushed right after the
+	// removal of the access points.
+	// As the test run is quicker than real life network changes, the cache might
+	// keep a list of available networks between two tests and lead to spurious
+	// connection attempts from Shill (b/282090326) on networks that does no
+	// exist anymore.
+	wpas, err := wpasupplicant.NewSupplicant(ctx)
+	if err != nil {
+		s.Fatal("Failed to create wpa_supplicant proxy")
+	}
+	iface, err := wpas.GetInterface(ctx, tc.clientIface)
+	if err != nil {
+		s.Fatalf("Failed to obtain %s interface from wpa_supplicant", tc.clientIface)
+	}
+	// Set the expiration time of the cache entries to 0 (i.e. immediate flush).
+	defer iface.FlushBSS(cleanupCtx, 0)
 
 	// Start all the access points.
 	for _, ap := range tc.aps {
