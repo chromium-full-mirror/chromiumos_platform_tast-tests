@@ -12,6 +12,7 @@ import (
 	"time"
 
 	pb "chromiumos/tast/services/cros/camerabox"
+
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh/linuxssh"
@@ -52,13 +53,13 @@ func LogTestScene(ctx context.Context, d *dut.DUT, facing pb.Facing, outdir stri
 		facingArg = "front"
 	}
 	const sceneLog = "/tmp/scene.jpg"
-	if err := d.Conn().CommandContext(captureCtx,
-		"sudo", "--user=arc-camera", "cros_camera_test",
+	captureCmd := append([]string{}, "sudo", "--user=arc-camera", "cros_camera_test",
 		"--gtest_filter=Camera3StillCaptureTest/Camera3DumpSimpleStillCaptureTest.DumpCaptureResult/0",
 		"--camera_facing="+facingArg,
 		"--dump_still_capture_path="+sceneLog,
-		"--connect_to_camera_service=false",
-	).Run(); err != nil {
+		"--connect_to_camera_service=false")
+	testing.ContextLog(ctx, "Running ", strings.Join(captureCmd, " "))
+	if err := d.Conn().CommandContext(captureCtx, "sudo", captureCmd...).Run(); err != nil {
 		return errors.Wrap(err, "failed to run cros_camera_test to take a scene photo")
 	}
 
