@@ -12,12 +12,12 @@ import (
 
 	"chromiumos/tast/common/crypto/certificate"
 	"chromiumos/tast/common/pkcs11/netcertstore"
-	"chromiumos/tast/local/bundles/cros/network/shill"
+	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/hwsec"
 	"chromiumos/tast/local/logsaver"
-	"chromiumos/tast/local/network"
-	"chromiumos/tast/local/upstart"
+	"chromiumos/tast/local/shill"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -27,60 +27,71 @@ const certOpTimeout = 30 * time.Second
 func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name: "vpnEnv",
-		Desc: "A fixture that sets up the environment for VPN connections, including resetting shill",
+		Desc: "A fixture that sets up the environment for VPN connections, including resetting shill states",
 		Contacts: []string{
 			"jiejiang@google.com",        // fixture maintainer
 			"cros-networking@google.com", // platform networking team
 		},
-		SetUpTimeout:    shill.ResetShillTimeout + 5*time.Second,
+		SetUpTimeout:    5 * time.Second,
 		PostTestTimeout: charonExitTimeout + 5*time.Second,
-		ResetTimeout:    shill.ResetShillTimeout + 5*time.Second,
-		TearDownTimeout: shill.ResetShillTimeout + 5*time.Second,
+		ResetTimeout:    5 * time.Second,
+		TearDownTimeout: 5 * time.Second,
 		Impl:            &vpnFixture{useCert: false, useCr: false},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "vpnEnvWithCerts",
-		Desc: "A fixture that sets up the environment for VPN connections, including resetting shill and installing certs",
+		Desc: "A fixture that sets up the environment for VPN connections, including resetting shill states and installing certs",
 		Contacts: []string{
 			"jiejiang@google.com",        // fixture maintainer
 			"cros-networking@google.com", // platform networking team
 		},
-		SetUpTimeout:    shill.ResetShillTimeout + certOpTimeout + 5*time.Second,
+		SetUpTimeout:    certOpTimeout + 5*time.Second,
 		PostTestTimeout: charonExitTimeout + 5*time.Second,
-		ResetTimeout:    shill.ResetShillTimeout + 5*time.Second,
-		TearDownTimeout: shill.ResetShillTimeout + certOpTimeout + 5*time.Second,
+		ResetTimeout:    5 * time.Second,
+		TearDownTimeout: certOpTimeout + 5*time.Second,
 		Impl:            &vpnFixture{useCert: true, useCr: false},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "vpnEnvWithCertsAndChromeLoggedIn",
-		Desc: "A fixture that sets up the environment for VPN connections, including resetting shill, installing certs, and starting Chrome session",
+		Desc: "A fixture that sets up the environment for VPN connections, including resetting shill states, installing certs, and starting Chrome session",
 		Contacts: []string{
 			"jiejiang@google.com",        // fixture maintainer
 			"cros-networking@google.com", // platform networking team
 		},
-		SetUpTimeout:    shill.ResetShillTimeout + certOpTimeout + chrome.LoginTimeout + 5*time.Second,
+		SetUpTimeout:    certOpTimeout + chrome.LoginTimeout + 5*time.Second,
 		PostTestTimeout: charonExitTimeout + 5*time.Second,
-		ResetTimeout:    shill.ResetShillTimeout + chrome.ResetTimeout + 5*time.Second,
-		TearDownTimeout: shill.ResetShillTimeout + certOpTimeout + chrome.LoginTimeout + 5*time.Second,
+		ResetTimeout:    chrome.ResetTimeout + 5*time.Second,
+		TearDownTimeout: certOpTimeout + chrome.LoginTimeout + 5*time.Second,
 		Impl:            &vpnFixture{useCert: true, useCr: true},
 	})
 }
 
-func resetShillWithLockingHook(ctx context.Context) error {
-	// We lose connectivity along the way here, and if that races with the
-	// recover_duts network-recovery hooks, it may interrupt us. Lock the hook
-	// before shill restarted.
-	unlock, err := network.LockCheckNetworkHook(ctx)
+// resetShillVPNState resets the VPN-related states in shill. Currently it will
+// remove all the existing VPN services in shill. Note that resetting all the
+// shill profiles and then restarting shill should be the most ideal way, but in
+// practice we found that restarting shill may cause tests flaky due to ssh
+// connection lost (b/228272750).
+func resetShillVPNState(ctx context.Context) error {
+	m, err := shill.NewManager(ctx)
 	if err != nil {
-		return errors.Wrap(err, "failed to lock check network hook")
+		return errors.Wrap(err, "failed to connect to shill Manager")
 	}
-	defer unlock()
 
-	if errs := shill.ResetShill(ctx); len(errs) != 0 {
-		for _, err := range errs {
-			testing.ContextLog(ctx, "ResetShill error: ", err)
+	for {
+		vpnSvc, err := m.FindMatchingService(ctx, map[string]interface{}{
+			shillconst.ServicePropertyType: shillconst.TypeVPN,
+		})
+		if err != nil && err.Error() == shillconst.ErrorMatchingServiceNotFound {
+			// No VPN services left.
+			break
 		}
-		return errors.Wrap(errs[0], "failed to reset shill")
+		if err != nil {
+			return errors.Wrap(err, "failed to call FindMatchingService")
+		}
+		testing.ContextLog(ctx, "Removing VPN service: ", vpnSvc)
+		if err := vpnSvc.Remove(ctx); err != nil {
+			return errors.Wrap(err, "failed to remove VPN service")
+		}
 	}
 
 	return nil
@@ -130,8 +141,9 @@ func (f *vpnFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{
 		s.Error("Failed to start log saver: ", err)
 	}
 
-	if err := resetShillWithLockingHook(ctx); err != nil {
-		s.Fatal("Failed to reset shill: ", err)
+	if err := resetShillVPNState(ctx); err != nil {
+		// Failure here doesn't mean the following tests will fail, so continue the test anyway.
+		s.Log("Failed to reset VPN state in shill: ", err)
 	}
 
 	var certVals CertVals
@@ -180,29 +192,13 @@ func (f *vpnFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{
 }
 
 func (f *vpnFixture) Reset(ctx context.Context) error {
-	// When there is a failure and no Chrome, we only need to reset shill.
-	if !f.useCr && f.hasError {
-		f.hasError = false
-		testing.ContextLog(ctx, "Test failed, resetting shill")
-		if err := resetShillWithLockingHook(ctx); err != nil {
-			return errors.Wrap(err, "failed to reset shill")
-		}
-		return nil
+	if err := resetShillVPNState(ctx); err != nil {
+		// Failure here doesn't mean the following tests will fail, so continue the test anyway.
+		testing.ContextLog(ctx, "Failed to reset VPN state in shill: ", err)
 	}
-
 	if !f.useCr {
 		return nil
 	}
-
-	// We need to reset shill when the test failed, and thus it will invalidate
-	// the shill profile known to Chrome. Since there seems to be no reliable way
-	// to check that Chrome gets new profile, we'll fully restart of this fixture,
-	// which is triggered by reporting error here.
-	if f.hasError {
-		f.hasError = false
-		return errors.New("last test failed, triggering a full reset")
-	}
-
 	if err := f.cr.Responded(ctx); err != nil {
 		return errors.Wrap(err, "existing Chrome connection is unusable")
 	}
@@ -244,17 +240,6 @@ func (f *vpnFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 		if err := f.certStore.Cleanup(ctx); err != nil {
 			s.Error("Failed to clean up cert store: ", err)
 		}
-	}
-
-	// Restart ui so that cryptohome unmounts all user mounts before shill is
-	// restarted so that shill does not keep the mounts open perpetually.
-	// TODO(b/205726835): Remove once the mount propagation for shill is fixed.
-	if err := upstart.RestartJob(ctx, "ui"); err != nil {
-		s.Error("Failed to restart ui: ", err)
-	}
-
-	if err := resetShillWithLockingHook(ctx); err != nil {
-		s.Error("Failed to reset shill in TearDown: ", err)
 	}
 
 	if err := f.stopLogSaver(ctx, "net.teardown.log"); err != nil {
