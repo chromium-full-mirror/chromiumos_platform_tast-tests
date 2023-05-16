@@ -16,6 +16,7 @@ import (
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/local/annotations"
+	"chromiumos/tast/local/bundles/cros/policy/calendarintegration"
 	"chromiumos/tast/local/bundles/cros/policy/quickanswersutil"
 	"chromiumos/tast/local/bundles/cros/policy/spellcheckutil"
 	"chromiumos/tast/local/chrome"
@@ -57,6 +58,8 @@ func init() {
 		}},
 		Data: []string{"spell_checking.html", "quick_answers.html"},
 		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.CalendarIntegrationEnabled{}, pci.VerifiedFunctionalityUI),
+			pci.SearchFlag(&policy.CalendarIntegrationEnabled{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.SpellCheckServiceEnabled{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.QuickAnswersDefinitionEnabled{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.QuickAnswersDefinitionEnabled{}, pci.VerifiedFunctionalityOS),
@@ -69,6 +72,7 @@ func init() {
 // getPolicyList returns the list of policies to be set at the beginning of the test.
 func getPolicyList() []policy.Policy {
 	return []policy.Policy{
+		&policy.CalendarIntegrationEnabled{Val: false},
 		&policy.SpellCheckServiceEnabled{Val: false},
 		&policy.QuickAnswersDefinitionEnabled{Val: false},
 		&policy.QuickAnswersUnitConversionEnabled{Val: false},
@@ -78,6 +82,7 @@ func getPolicyList() []policy.Policy {
 // getAnnotationHashCodes returns a list of annotations that are not supposed to be found in the logs when the optional services are disabled.
 func getAnnotationHashCodes() []string {
 	return []string{
+		"86429515",  // calendar_get_events.
 		"132553989", // spellcheck_lookup.
 		"46208118",  // quick_answers_loader.
 	}
@@ -163,6 +168,19 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 	if err := annotations.StartLogging(ctx, cr, br); err != nil {
 		s.Fatal("Failed to start logging: ", err)
 	}
+
+	s.Run(ctx, "calendar_integration_service", func(ctx context.Context, s *testing.State) {
+		calendarIntegrationParam := calendarintegration.TestCase{
+			Name:                    "disabled",
+			ShouldFindEventListView: false,
+			ShouldFindManagedIcon:   true,
+			ShouldFindAnnotation:    false,
+			Policy:                  &policy.CalendarIntegrationEnabled{Val: false},
+		}
+		if err := calendarintegration.TriggerCalendarIntegration(ctx, calendarIntegrationParam, br, tconn, s); err != nil {
+			s.Fatal("Failed to trigger and verify calendar integration: ", err)
+		}
+	})
 
 	s.Run(ctx, "spell_check_service", func(ctx context.Context, s *testing.State) {
 		spellCheckParam := spellcheckutil.TestCase{
