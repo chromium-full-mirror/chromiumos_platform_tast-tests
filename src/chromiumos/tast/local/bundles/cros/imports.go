@@ -23,7 +23,6 @@ import (
 	_ "chromiumos/tast/local/bundles/cros/bruschetta"
 	_ "chromiumos/tast/local/bundles/cros/calendar"
 	_ "chromiumos/tast/local/bundles/cros/camera"
-	_ "chromiumos/tast/local/bundles/cros/cbx"
 	_ "chromiumos/tast/local/bundles/cros/cellular"
 	_ "chromiumos/tast/local/bundles/cros/clipboardhistory"
 	_ "chromiumos/tast/local/bundles/cros/crash"
