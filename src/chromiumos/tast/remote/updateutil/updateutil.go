@@ -158,6 +158,23 @@ func ApplyDeferredUpdate(ctx context.Context, dut *dut.DUT) error {
 	return nil
 }
 
+// EnsureUpdateStatusIdle ensures update engine is running and its status is
+// idle.
+func EnsureUpdateStatusIdle(ctx context.Context, dut *dut.DUT, rpcHint *testing.RPCHint) error {
+	cl, err := rpc.Dial(ctx, dut, rpcHint)
+	if err != nil {
+		return errors.Wrap(err, "failed to connect to the RPC service on the DUT")
+	}
+	defer cl.Close(ctx)
+
+	updateClient := aupb.NewUpdateServiceClient(cl.Conn)
+	if _, err := updateClient.EnsureUpdateEngineReady(ctx, &empty.Empty{}); err != nil {
+		return errors.Wrap(err, "update engine is not idle")
+	}
+
+	return nil
+}
+
 // ResetUpdateStatus resets update engine to ensure it is left in a clean state.
 // Must be called after requesting an update.
 func ResetUpdateStatus(ctx context.Context, dut *dut.DUT, rpcHint *testing.RPCHint) error {

@@ -218,7 +218,7 @@ var file_update_service_proto_rawDesc = []byte{
 	0x73, 0x73, 0x12, 0x2b, 0x0a, 0x11, 0x63, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x5f, 0x6f, 0x70,
 	0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x10, 0x63,
 	0x75, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x32,
-	0x84, 0x04, 0x0a, 0x0d, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63,
+	0xd1, 0x04, 0x0a, 0x0d, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63,
 	0x65, 0x12, 0x4f, 0x0a, 0x0e, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x46, 0x6f, 0x72, 0x55, 0x70, 0x64,
 	0x61, 0x74, 0x65, 0x12, 0x23, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e,
 	0x61, 0x75, 0x74, 0x6f, 0x75, 0x70, 0x64, 0x61, 0x74, 0x65, 0x2e, 0x55, 0x70, 0x64, 0x61, 0x74,
@@ -250,10 +250,15 @@ var file_update_service_proto_rawDesc = []byte{
 	0x67, 0x69, 0x6e, 0x65, 0x12, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72,
 	0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x16, 0x2e, 0x67,
 	0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45,
-	0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x42, 0x2a, 0x5a, 0x28, 0x63, 0x68, 0x72, 0x6f, 0x6d, 0x69,
-	0x75, 0x6d, 0x6f, 0x73, 0x2f, 0x74, 0x61, 0x73, 0x74, 0x2f, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63,
-	0x65, 0x73, 0x2f, 0x63, 0x72, 0x6f, 0x73, 0x2f, 0x61, 0x75, 0x74, 0x6f, 0x75, 0x70, 0x64, 0x61,
-	0x74, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x12, 0x4b, 0x0a, 0x17, 0x45, 0x6e, 0x73, 0x75, 0x72, 0x65,
+	0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x45, 0x6e, 0x67, 0x69, 0x6e, 0x65, 0x52, 0x65, 0x61, 0x64,
+	0x79, 0x12, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67,
+	0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74,
+	0x79, 0x22, 0x00, 0x42, 0x2a, 0x5a, 0x28, 0x63, 0x68, 0x72, 0x6f, 0x6d, 0x69, 0x75, 0x6d, 0x6f,
+	0x73, 0x2f, 0x74, 0x61, 0x73, 0x74, 0x2f, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x73, 0x2f,
+	0x63, 0x72, 0x6f, 0x73, 0x2f, 0x61, 0x75, 0x74, 0x6f, 0x75, 0x70, 0x64, 0x61, 0x74, 0x65, 0x62,
+	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -282,14 +287,16 @@ var file_update_service_proto_depIdxs = []int32{
 	3, // 3: tast.cros.autoupdate.UpdateService.StatefulLSBReleaseContent:input_type -> google.protobuf.Empty
 	1, // 4: tast.cros.autoupdate.UpdateService.OverwriteStatefulLSBRelease:input_type -> tast.cros.autoupdate.LSBRelease
 	3, // 5: tast.cros.autoupdate.UpdateService.ResetUpdateEngine:input_type -> google.protobuf.Empty
-	3, // 6: tast.cros.autoupdate.UpdateService.CheckForUpdate:output_type -> google.protobuf.Empty
-	2, // 7: tast.cros.autoupdate.UpdateService.PeriodicCheckForUpdate:output_type -> tast.cros.autoupdate.StatusResult
-	1, // 8: tast.cros.autoupdate.UpdateService.LSBReleaseContent:output_type -> tast.cros.autoupdate.LSBRelease
-	1, // 9: tast.cros.autoupdate.UpdateService.StatefulLSBReleaseContent:output_type -> tast.cros.autoupdate.LSBRelease
-	3, // 10: tast.cros.autoupdate.UpdateService.OverwriteStatefulLSBRelease:output_type -> google.protobuf.Empty
-	3, // 11: tast.cros.autoupdate.UpdateService.ResetUpdateEngine:output_type -> google.protobuf.Empty
-	6, // [6:12] is the sub-list for method output_type
-	0, // [0:6] is the sub-list for method input_type
+	3, // 6: tast.cros.autoupdate.UpdateService.EnsureUpdateEngineReady:input_type -> google.protobuf.Empty
+	3, // 7: tast.cros.autoupdate.UpdateService.CheckForUpdate:output_type -> google.protobuf.Empty
+	2, // 8: tast.cros.autoupdate.UpdateService.PeriodicCheckForUpdate:output_type -> tast.cros.autoupdate.StatusResult
+	1, // 9: tast.cros.autoupdate.UpdateService.LSBReleaseContent:output_type -> tast.cros.autoupdate.LSBRelease
+	1, // 10: tast.cros.autoupdate.UpdateService.StatefulLSBReleaseContent:output_type -> tast.cros.autoupdate.LSBRelease
+	3, // 11: tast.cros.autoupdate.UpdateService.OverwriteStatefulLSBRelease:output_type -> google.protobuf.Empty
+	3, // 12: tast.cros.autoupdate.UpdateService.ResetUpdateEngine:output_type -> google.protobuf.Empty
+	3, // 13: tast.cros.autoupdate.UpdateService.EnsureUpdateEngineReady:output_type -> google.protobuf.Empty
+	7, // [7:14] is the sub-list for method output_type
+	0, // [0:7] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -376,6 +383,7 @@ type UpdateServiceClient interface {
 	StatefulLSBReleaseContent(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*LSBRelease, error)
 	OverwriteStatefulLSBRelease(ctx context.Context, in *LSBRelease, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	ResetUpdateEngine(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	EnsureUpdateEngineReady(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type updateServiceClient struct {
@@ -440,6 +448,15 @@ func (c *updateServiceClient) ResetUpdateEngine(ctx context.Context, in *emptypb
 	return out, nil
 }
 
+func (c *updateServiceClient) EnsureUpdateEngineReady(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/tast.cros.autoupdate.UpdateService/EnsureUpdateEngineReady", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UpdateServiceServer is the server API for UpdateService service.
 type UpdateServiceServer interface {
 	CheckForUpdate(context.Context, *UpdateRequest) (*emptypb.Empty, error)
@@ -448,6 +465,7 @@ type UpdateServiceServer interface {
 	StatefulLSBReleaseContent(context.Context, *emptypb.Empty) (*LSBRelease, error)
 	OverwriteStatefulLSBRelease(context.Context, *LSBRelease) (*emptypb.Empty, error)
 	ResetUpdateEngine(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
+	EnsureUpdateEngineReady(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 }
 
 // UnimplementedUpdateServiceServer can be embedded to have forward compatible implementations.
@@ -471,6 +489,9 @@ func (*UnimplementedUpdateServiceServer) OverwriteStatefulLSBRelease(context.Con
 }
 func (*UnimplementedUpdateServiceServer) ResetUpdateEngine(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ResetUpdateEngine not implemented")
+}
+func (*UnimplementedUpdateServiceServer) EnsureUpdateEngineReady(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method EnsureUpdateEngineReady not implemented")
 }
 
 func RegisterUpdateServiceServer(s *grpc.Server, srv UpdateServiceServer) {
@@ -585,6 +606,24 @@ func _UpdateService_ResetUpdateEngine_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UpdateService_EnsureUpdateEngineReady_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UpdateServiceServer).EnsureUpdateEngineReady(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/tast.cros.autoupdate.UpdateService/EnsureUpdateEngineReady",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UpdateServiceServer).EnsureUpdateEngineReady(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _UpdateService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "tast.cros.autoupdate.UpdateService",
 	HandlerType: (*UpdateServiceServer)(nil),
@@ -612,6 +651,10 @@ var _UpdateService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ResetUpdateEngine",
 			Handler:    _UpdateService_ResetUpdateEngine_Handler,
+		},
+		{
+			MethodName: "EnsureUpdateEngineReady",
+			Handler:    _UpdateService_EnsureUpdateEngineReady_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

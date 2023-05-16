@@ -22,6 +22,7 @@ func init() {
 			"chromeos-commercial-remote-management@google.com",
 		},
 		Impl:            &updateEngineFixture{},
+		PreTestTimeout:  30 * time.Second,
 		PostTestTimeout: 30 * time.Second,
 		ServiceDeps: []string{
 			"tast.cros.autoupdate.UpdateService",
@@ -30,6 +31,16 @@ func init() {
 }
 
 type updateEngineFixture struct{}
+
+// PreTest ensures update engine is ready and idle.
+func (*updateEngineFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
+	s.Log("UpdateEngine Fixture PreTest")
+	if err := EnsureUpdateStatusIdle(ctx, s.DUT(), s.RPCHint()); err != nil {
+		// If a failure is triggered, ensure the previous tests in the suite reset
+		// update engine successfully after an update attempt. See b/239680170.
+		s.Fatal("Update engine is not ready, did a previous test not clean up properly?: ", err)
+	}
+}
 
 // PostTest ensures that the state of update engine is reset.
 func (*updateEngineFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
@@ -40,6 +51,5 @@ func (*updateEngineFixture) PostTest(ctx context.Context, s *testing.FixtTestSta
 }
 
 func (*updateEngineFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} { return nil }
-func (*updateEngineFixture) PreTest(ctx context.Context, s *testing.FixtTestState)       {}
 func (*updateEngineFixture) Reset(ctx context.Context) error                             { return nil }
 func (*updateEngineFixture) TearDown(ctx context.Context, s *testing.FixtState)          {}

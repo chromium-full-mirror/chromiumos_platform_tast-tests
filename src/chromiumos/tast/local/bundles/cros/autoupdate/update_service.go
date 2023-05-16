@@ -10,7 +10,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"regexp"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -56,11 +55,6 @@ func (u *UpdateService) CheckForUpdate(ctx context.Context, req *aupb.UpdateRequ
 	}
 
 	cmd := testexec.CommandContext(ctx, "update_engine_client", args...)
-
-	// Ensure update engine is in a clean state and running.
-	if err := ensureUpdateEngineReady(ctx); err != nil {
-		return &empty.Empty{}, errors.Wrap(err, "failed to ensure update engine is ready")
-	}
 
 	testing.ContextLog(ctx, "Starting the update")
 	_, err := cmd.Output(testexec.DumpLogOnError)
@@ -140,42 +134,27 @@ func (u *UpdateService) ResetUpdateEngine(ctx context.Context, req *empty.Empty)
 	return &empty.Empty{}, nil
 }
 
-func ensureUpdateEngineReady(ctx context.Context) error {
-	statusRegexp, err := regexp.Compile(`CURRENT_OP=(.*)`)
-	if err != nil {
-		return errors.Wrap(err, "failed to compile the regexp")
-	}
-
+// EnsureUpdateEngineReady checks that update engine is running and idle.
+func (u *UpdateService) EnsureUpdateEngineReady(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
 	testing.ContextLog(ctx, "Ensuring update engine is ready")
-	latestStatus := ""
+	latestStatus := &aupb.StatusResult{}
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		// Redefine cmd every time, as the Output function can be called only once on it.
-		cmd := testexec.CommandContext(ctx, "update_engine_client", "--status")
-		output, err := cmd.Output(testexec.DumpLogOnError)
+		var err error
+		latestStatus, err = updateengine.Status(ctx)
 		if err != nil {
-			return errors.Wrapf(err, "failed to get update engine status, latest polled status was %q", latestStatus)
+			return errors.Wrapf(err, "failed to get update engine status, latest polled status was %q", latestStatus.CurrentOperation)
 		}
 
-		// We expect CURRENT_OP=UPDATE_STATUS_IDLE.
-		result := statusRegexp.FindStringSubmatch(string(output))
-		if result == nil || len(result) != 2 {
-			return errors.New("failed to find CURRENT_OP in status output")
-		}
-
-		latestStatus = result[1]
-		if latestStatus != string(ue.UpdateStatusIdle) {
-			// If this error is triggered, ensure the previous test in the suite
-			// resets update engine successfully after an update attempt. See
-			// b/239680170.
-			return errors.Wrapf(err, "update engine is not ready yet, current status is %q", latestStatus)
+		if latestStatus.CurrentOperation != string(ue.UpdateStatusIdle) {
+			return errors.Wrapf(err, "update engine is not ready yet, current status is %q", latestStatus.CurrentOperation)
 		}
 
 		return nil
-	}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
-		return err
+	}, &testing.PollOptions{Timeout: 15 * time.Second}); err != nil {
+		return &empty.Empty{}, err
 	}
 
-	return nil
+	return &empty.Empty{}, nil
 }
 
 // LSBReleaseContent gets the content of /etc/lsb-release.
