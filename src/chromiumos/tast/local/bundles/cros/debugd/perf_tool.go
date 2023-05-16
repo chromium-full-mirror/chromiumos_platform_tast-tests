@@ -76,9 +76,8 @@ func init() {
 		}, {
 			Name: "etm_stress_crosvm",
 			Val: testCase{
-				// TODO(b/277060471): record both userspace and kernel.
 				quipperArgs: []string{"--run_inject", "--inject_args", "inject;--itrace=i512il;--strip",
-					"--", "record", "-e", "cs_etm/autofdo/u", "-a", "-N"},
+					"--", "record", "-e", "cs_etm/autofdo/", "-a", "-N"},
 				disableCPUIdle: true,
 				repetition:     100,
 			},
