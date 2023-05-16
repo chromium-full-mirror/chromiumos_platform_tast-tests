@@ -193,7 +193,7 @@ func (y *YtApp) Launch(ctx context.Context) (err error) {
 
 	return uiauto.Combine("dismiss prompt and check if it is free account",
 		dismissMobilePrompt,
-		DismissTrialPrompt(y.d),
+		DismissPrompts(y.d),
 		checkAccountState,
 	)(ctx)
 }
@@ -646,38 +646,38 @@ func (y *YtApp) IsPlaying() uiauto.Action {
 	}
 }
 
-// DismissTrialPrompt dismisses trial prompts if exist.
-func DismissTrialPrompt(d *ui.Device) uiauto.Action {
+// DismissPrompts dismisses prompts if exist.
+func DismissPrompts(d *ui.Device) uiauto.Action {
 	return func(ctx context.Context) error {
 		testing.ContextLog(ctx, "Dismiss trial prompt")
 		const (
-			androidUpdateID  = "com.android.vending:id/0_resource_name_obfuscated"
-			skipTrialTextReg = "(?i)Skip trial"
-			closeDescription = "Close"
+			androidUpdateID       = "com.android.vending:id/0_resource_name_obfuscated"
+			androidNotificationID = "com.android.permissioncontroller:id/permission_deny_button"
+			doNotAllowText        = "Don’t allow"
+			skipTrialTextReg      = "(?i)Skip trial"
+			closeDescription      = "Close"
 		)
 
 		// Skip the "Update Youtube?" popup since the last known good version
 		// might not be the latest version.
 		noThanksButton := d.Object(androidui.ID(androidUpdateID), androidui.Text(noThanksText))
-		if err := cuj.ClickIfExist(noThanksButton, 5*time.Second)(ctx); err != nil {
-			return errors.Wrap(err, "failed to click 'NO THANKS' to clear notification prompt")
-		}
-
+		// Dismiss the "Allow YouTube to send you notifications?" popup.
+		doNotAllowButton := d.Object(androidui.ID(androidNotificationID), androidui.Text(doNotAllowText))
 		skipTrial := d.Object(androidui.ID(dismissID), androidui.TextMatches(skipTrialTextReg))
-		if err := cuj.ClickIfExist(skipTrial, 5*time.Second)(ctx); err != nil {
-			return errors.Wrap(err, "failed to click 'SKIP TRIAL' to skip premium trial")
-		}
-
 		closeButton := d.Object(androidui.Description(closeDescription))
-		if err := cuj.ClickIfExist(closeButton, 5*time.Second)(ctx); err != nil {
-			return errors.Wrap(err, "failed to click 'Close' to the close premium trial prompt")
-		}
-
 		noThanksEle := d.Object(androidui.ID(dismissID), androidui.Text(noThanksText))
-		if err := cuj.ClickIfExist(noThanksEle, 5*time.Second)(ctx); err != nil {
-			return errors.Wrap(err, "failed to click 'NO THANKS' to clear notification prompt")
-		}
-		return nil
+		promptList := []*androidui.Object{noThanksButton, doNotAllowButton, skipTrial, closeButton, noThanksEle}
+		timeout := time.Duration(len(promptList)) * uiWaitTime
+		return testing.Poll(ctx, func(ctx context.Context) error {
+			closeBtn, err := cuj.FindAnyExists(ctx, uiWaitTime, promptList...)
+			if err != nil {
+				return nil
+			}
+			if err := closeBtn.Click(ctx); err != nil {
+				return errors.Wrap(err, "failed to click close button")
+			}
+			return errors.New("dismiss prompts")
+		}, &testing.PollOptions{Timeout: timeout})
 	}
 }
 

@@ -108,8 +108,8 @@ func ArcYoutubeCUJ(ctx context.Context, s *testing.State) {
 		// Take a screenshot before closing the ARC YouTube app.
 		defer recorder.CustomScreenshot(cleanupCtx)
 
-		if err := youtube.DismissTrialPrompt(d)(ctx); err != nil {
-			s.Fatal("Failed to dismiss trial prompt: ", err)
+		if err := youtube.DismissPrompts(d)(ctx); err != nil {
+			s.Fatal("Failed to dismiss prompts: ", err)
 		}
 
 		const uiTimeout = 15 * time.Second
