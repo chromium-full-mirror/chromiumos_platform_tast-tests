@@ -6,26 +6,25 @@ package bruschetta
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
+	"io"
+	"io/ioutil"
+	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
+
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
-	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/policyutil/fixtures"
 	"go.chromium.org/tast-tests/cros/local/terminalapp"
 	"go.chromium.org/tast-tests/cros/local/vm"
-	"io"
-	"io/fs"
-	"os"
-	"path"
-	"path/filepath"
-	"time"
 
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -40,19 +39,26 @@ const (
 	chronosUID = 1000
 	crosvmUID  = 299
 
-	// testOemString is an OEM string set in the VM for these tests.
-	testOemString = "OEM string set by tast test"
+	// installOemString is an OEM string set during install to signal to the
+	// VM that it should install itself to the permanent disk.
+	installOemString = "refvm:install=true"
 
 	// referenceVMInstaller is the installer image for the reference VM.
-	referenceVMInstaller = "refvm.img.zst"
-	// referenceVMPflash is the pflash image for the reference VM.
-	referenceVMPflash = "refvm_VARS.fd"
+	referenceVMInstaller     = "refvm.qcow2"
+	referenceVMInstallerHash = "refvm.qcow2.SHA256"
 
-	imageInstallPath  = "crosvm/YnJ1.img"
-	pflashInstallPath = "crosvm/YnJ1.pflash"
+	// referenceVMPflash is the pflash image for the reference VM.
+	referenceVMPflash     = "refvm_VARS.fd"
+	referenceVMPflashHash = "refvm_VARS.fd.SHA256"
 
 	// BruschettaFixture is the name of the fixture defined in this file.
 	BruschettaFixture = "bruschettaReferenceVM"
+
+	defaultVMName = "bru"
+
+	httpAddr          = "localhost:12345"
+	httpInstallerPath = "files/refvm.qcow2"
+	httpPflashPath    = "files/refvm_VARS.fd"
 )
 
 // BruschettaMinDiskSize prevents tests from running on devices without enough storage.
@@ -68,7 +74,7 @@ func init() {
 		ResetTimeout:    resetTimeout,
 		PostTestTimeout: postTestTimeout,
 		TearDownTimeout: uninstallationTimeout,
-		Data:            []string{referenceVMInstaller, referenceVMPflash},
+		Data:            []string{referenceVMInstaller, referenceVMInstallerHash, referenceVMPflash, referenceVMPflashHash},
 		Parent:          fixture.ChromePolicyLoggedInBruschetta,
 	})
 }
@@ -104,6 +110,11 @@ type FixtureData struct {
 }
 
 func (f *bruschettaFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	// Use a shortened context for setup operations to reserve time for cleanup.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
 	f.fakeDMS = s.ParentValue().(*fixtures.FixtData).FakeDMS()
 	f.chrome = s.ParentValue().(*fixtures.FixtData).Chrome()
 	tconn, err := f.chrome.TestAPIConn(ctx)
@@ -112,32 +123,47 @@ func (f *bruschettaFixture) SetUp(ctx context.Context, s *testing.FixtState) int
 	}
 	f.tconn = tconn
 
-	s.Log("Computing chrome policy")
+	s.Log("Starting local HTTP server")
 
-	imagePolicy, err := makeFilePolicy(s.DataPath(referenceVMInstaller))
+	// Use cleanupCtx here because the HTTP server needs to use the cleanup time for shutdown.
+	shutdownServer := startHTTPServer(cleanupCtx, s.DataPath(referenceVMInstaller), s.DataPath(referenceVMPflash))
+	defer func() {
+		s.Log("Stopping local HTTP server")
+		shutdownServer()
+	}()
+
+	s.Log("Setting chrome policy")
+
+	imageHash, err := ioutil.ReadFile(s.DataPath(referenceVMInstallerHash))
 	if err != nil {
-		s.Fatal("Failed to generate policy for installer: ", err)
+		s.Fatal("Failed to read disk image hash: ", err)
 	}
 
-	pflashPolicy, err := makeFilePolicy(s.DataPath(referenceVMPflash))
+	pflashHash, err := ioutil.ReadFile(s.DataPath(referenceVMPflashHash))
 	if err != nil {
-		s.Fatal("Failed to generate policy for pflash: ", err)
+		s.Fatal("Failed to read pflash hash: ", err)
 	}
 
 	f.policy = &policy.BruschettaVMConfiguration{
 		Stat: policy.StatusSet,
 		Val: map[string]interface{}{
 			"glinux-latest": map[string]interface{}{
-				"name":                   "Test VM Configuration",
-				"enabled_state":          "INSTALL_ALLOWED",
-				"installer_image_x86_64": imagePolicy,
-				"uefi_pflash_x86_64":     pflashPolicy,
+				"name":          "Test VM Configuration",
+				"enabled_state": "INSTALL_ALLOWED",
+				"installer_image_x86_64": map[string]interface{}{
+					"url":  fmt.Sprintf("http://%s/%s", httpAddr, httpInstallerPath),
+					"hash": strings.TrimSpace(string(imageHash)),
+				},
+				"uefi_pflash_x86_64": map[string]interface{}{
+					"url":  fmt.Sprintf("http://%s/%s", httpAddr, httpPflashPath),
+					"hash": strings.TrimSpace(string(pflashHash)),
+				},
 				"vtpm": map[string]interface{}{
 					"enabled":              true,
 					"policy_update_action": "NONE",
 				},
 				"oem_strings": []interface{}{
-					testOemString,
+					installOemString,
 				},
 			},
 		},
@@ -147,51 +173,9 @@ func (f *bruschettaFixture) SetUp(ctx context.Context, s *testing.FixtState) int
 		s.Fatal("Failed to serve bruschetta policy to chrome: ", err)
 	}
 
-	s.Log("Installing VM")
-
-	// Because the graphical install flow is currently pretty dodgy, we don't actually
-	// install the VM properly through chrome. Instead we set the BruschettaAlphaMigrate
-	// feature in the parent fixture which makes chrome just assume there's a VM called "bru"
-	// associated with the "glinux-latest" VM config. We will now create that VM by copying
-	// the files into concierge's data directory.
-	// TODO(281772103) Change that
-
-	systemPath, err := cryptohome.SystemPath(ctx, f.chrome.User())
+	concierge, err := vm.GetRunningConcierge(ctx, f.chrome.NormalizedUser())
 	if err != nil {
-		s.Fatal("Couldn't find user's system directory: ", err)
-	}
-
-	if err := decompressVMImage(ctx, s.DataPath(referenceVMInstaller), path.Join(systemPath, imageInstallPath)); err != nil {
-		s.Fatal("Failed to install VM image: ", err)
-	}
-	defer func() {
-		if !s.HasError() {
-			return
-		}
-
-		if err := os.Remove(path.Join(systemPath, imageInstallPath)); err != nil {
-			s.Fatal("Failed to delete VM image after setup failure: ", err)
-		}
-	}()
-
-	if err := copyPflashFile(ctx, s.DataPath(referenceVMPflash), path.Join(systemPath, pflashInstallPath)); err != nil {
-		s.Fatal("Failed to install pflash file: ", err)
-	}
-	defer func() {
-		if !s.HasError() {
-			return
-		}
-
-		if err := os.Remove(path.Join(systemPath, pflashInstallPath)); err != nil {
-			s.Fatal("Failed to delete pflash image after setup failure: ", err)
-		}
-	}()
-
-	s.Log("Starting VM")
-
-	concierge, err := vm.NewConcierge(ctx, f.chrome.NormalizedUser())
-	if err != nil {
-		s.Fatal("Failed to restart concierge: ", err)
+		s.Fatal("Failed to get concierge: ", err)
 	}
 
 	vm, err := vm.NewSystemRecognizedVM(concierge, false, 0, vm.Bruschetta)
@@ -199,20 +183,6 @@ func (f *bruschettaFixture) SetUp(ctx context.Context, s *testing.FixtState) int
 		s.Fatal("Failed to get VM object: ", err)
 	}
 	f.vm = vm
-
-	defer func(ctx context.Context) {
-		if !s.HasError() {
-			// No error, so no cleanup is required.
-			return
-		}
-
-		if err := f.vm.Stop(ctx); err != nil {
-			s.Error("Failed to stop VM after setup failure: ", err)
-		}
-		if err := f.vm.Delete(ctx); err != nil {
-			s.Error("Failed to delete VM after setup failure: ", err)
-		}
-	}(ctx)
 
 	// Skip past logs that might be left over from previous tests.
 	existingLogs, err := f.vm.RetrieveLogs(ctx)
@@ -225,10 +195,33 @@ func (f *bruschettaFixture) SetUp(ctx context.Context, s *testing.FixtState) int
 		if err := f.saveLogs(ctx, s.OutDir(), "setup"); err != nil {
 			s.Fatal("Failed to save VM logs from fixture setup: ", err)
 		}
-	}(ctx)
+	}(cleanupCtx)
+
+	s.Log("Installing VM")
+
+	if err := installBruschetta(ctx, f.tconn); err != nil {
+		s.Fatal("Failed to install VM: ", err)
+	}
+	defer func(ctx context.Context) {
+		if !s.HasError() {
+			return
+		}
+
+		if err := removeBruschetta(ctx, f.tconn); err != nil {
+			s.Fatal("Failed to remove VM after setup failure: ", err)
+		}
+	}(cleanupCtx)
+
+	s.Log("VM installer booted, waiting for VM to stop")
+
+	if err := concierge.WaitForVMStop(ctx, f.vm); err != nil {
+		s.Fatal("Failed to wait for VM to finish installing: ", err)
+	}
+
+	s.Log("Starting installed VM")
 
 	// Now use the terminal app to boot the VM.
-	term, err := terminalapp.LaunchBruschetta(ctx, f.tconn)
+	term, err := terminalapp.FindBruschetta(ctx, f.tconn)
 	if err != nil {
 		s.Fatal("Failed to start bruschetta VM using terminal app: ", err)
 	}
@@ -278,12 +271,8 @@ func (f *bruschettaFixture) PostTest(ctx context.Context, s *testing.FixtTestSta
 }
 
 func (f *bruschettaFixture) TearDown(ctx context.Context, s *testing.FixtState) {
-	if err := f.vm.Stop(ctx); err != nil {
-		s.Error("Failed to stop VM: ", err)
-	}
-
-	if err := f.vm.Delete(ctx); err != nil {
-		s.Error("Failed to delete VM: ", err)
+	if err := removeBruschetta(ctx, f.tconn); err != nil {
+		s.Error("Failed to remove VM after setup failure: ", err)
 	}
 
 	if err := f.saveLogs(ctx, s.OutDir(), "tear_down"); err != nil {
@@ -314,96 +303,62 @@ func (f *bruschettaFixture) saveLogs(ctx context.Context, outdir, suffix string)
 	return nil
 }
 
-func hashDataFile(path string) (string, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return "", errors.Wrapf(err, "failed to open data file %q", path)
-	}
-	defer file.Close()
+func startHTTPServer(ctx context.Context, installerPath, pflashPath string) context.CancelFunc {
+	serverCtx, cancel := context.WithCancel(ctx)
 
-	sha := sha256.New()
-
-	if _, err := io.Copy(sha, file); err != nil {
-		return "", errors.Wrapf(err, "failed to hash data file %q", path)
-	}
-
-	return hex.EncodeToString(sha.Sum(nil)), nil
-}
-
-func makeFilePolicy(path string) (map[string]interface{}, error) {
-	hash, err := hashDataFile(path)
-	if err != nil {
-		return nil, err
+	handleFile := func(file string, w http.ResponseWriter, r *http.Request) {
+		f, err := os.Open(file)
+		if err != nil {
+			testing.ContextLogf(serverCtx, "Error: Couldn't open file %q: %v", file, err)
+		}
+		defer f.Close()
+		if _, err := io.Copy(w, f); err != nil {
+			testing.ContextLogf(serverCtx, "Error: Couldn't copy file %q to client: %v", file, err)
+		}
 	}
 
-	return map[string]interface{}{
-		"url":  "file://" + path,
-		"hash": hash,
-	}, nil
-}
+	mux := http.NewServeMux()
+	mux.HandleFunc("/"+httpInstallerPath, func(w http.ResponseWriter, r *http.Request) {
+		// Installer image is compressed using brotli.
+		w.Header().Set("Content-Encoding", "br")
+		handleFile(installerPath, w, r)
+	})
+	mux.HandleFunc("/"+httpPflashPath, func(w http.ResponseWriter, r *http.Request) {
+		handleFile(pflashPath, w, r)
+	})
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(404)
+		testing.ContextLogf(serverCtx, "HTTP server received request to unknown path %s", r.URL)
+	})
 
-func decompressVMImage(ctx context.Context, srcPath, dstPath string) (retErr error) {
-	// Defer cleanup first, because if zstd fails we won't know if it created the destination file or not.
-	defer func() {
-		if retErr != nil {
-			if err := os.Remove(dstPath); err != nil {
-				testing.ContextLog(ctx, "Failed to delete VM image file after error: ", err)
-			}
+	server := &http.Server{
+		Handler: mux,
+		Addr:    httpAddr,
+	}
+
+	// Run the server in another goroutine because ListenAndServe() is blocking.
+	go func() {
+		if err := server.ListenAndServe(); err != http.ErrServerClosed {
+			testing.ContextLog(serverCtx, "Error starting HTTP server: ", err)
 		}
 	}()
 
-	if err := testexec.CommandContext(ctx, "zstd", "--decompress", "--sparse", srcPath, "-o", dstPath).Run(testexec.DumpLogOnError); err != nil {
-		return errors.Wrap(err, "failed to decompress VM image")
-	}
-
-	file, err := os.Open(dstPath)
-	if err != nil {
-		return errors.Wrap(err, "failed to open VM image")
-	}
-	defer file.Close()
-
-	if err := file.Chmod(fs.ModePerm); err != nil {
-		return errors.Wrap(err, "failed to change permissions on VM image")
-	}
-
-	if err := file.Chown(crosvmUID, crosvmUID); err != nil {
-		return errors.Wrap(err, "failed to change owner on VM image")
-	}
-
-	return nil
-}
-
-func copyPflashFile(ctx context.Context, srcPath, dstPath string) (retErr error) {
-	dst, err := os.Create(dstPath)
-	if err != nil {
-		return errors.Wrap(err, "failed to create pflash file")
-	}
-	defer func() {
-		if retErr != nil {
-			if err := os.Remove(dstPath); err != nil {
-				testing.ContextLog(ctx, "Failed to delete pflash file after error: ", err)
-			}
+	// Shutdown the server once the nested context expires.
+	go func() {
+		<-serverCtx.Done()
+		// Note: use ctx here because serverCtx has already expired.
+		if err := server.Shutdown(ctx); err != nil {
+			testing.ContextLog(ctx, "Error shutting down HTTP server: ", err)
 		}
 	}()
-	defer dst.Close()
 
-	if err := dst.Chmod(fs.ModePerm); err != nil {
-		return errors.Wrap(err, "failed to change permissions on pflash file")
-	}
+	return cancel
+}
 
-	if err := dst.Chown(crosvmUID, crosvmUID); err != nil {
-		return errors.Wrap(err, "failed to change owner on pflash file")
-	}
+func installBruschetta(ctx context.Context, tconn *chrome.TestConn) error {
+	return tconn.Call(ctx, nil, `tast.promisify(chrome.autotestPrivate.installBruschetta)`, defaultVMName)
+}
 
-	src, err := os.Open(srcPath)
-	if err != nil {
-		return errors.Wrap(err, "failed to open pflash file")
-	}
-	defer src.Close()
-
-	if _, err := io.Copy(dst, src); err != nil {
-		return errors.Wrap(err, "failed to copy pflash file to destination")
-	}
-
-	return nil
+func removeBruschetta(ctx context.Context, tconn *chrome.TestConn) error {
+	return tconn.Call(ctx, nil, `tast.promisify(chrome.autotestPrivate.removeBruschetta)`, defaultVMName)
 }

@@ -17,6 +17,7 @@ import (
 
 	cpb "chromiumos/system_api/vm_cicerone_proto"   // protobufs for container management
 	vmpb "chromiumos/system_api/vm_concierge_proto" // protobufs for VM management
+
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast-tests/cros/local/upstart"
@@ -428,4 +429,47 @@ func (c *Concierge) ListVms(ctx context.Context) ([]*vmpb.ExtendedVmInfo, error)
 
 	testing.ContextLog(ctx, "List VMs")
 	return resp.GetVms(), nil
+}
+
+// WaitForVMStop waits for a VmStoppedSignal indicating that `vm` has stopped running.
+func (c *Concierge) WaitForVMStop(ctx context.Context, vm *VM) error {
+	watcher, err := dbusutil.NewSignalWatcherForSystemBus(ctx, dbusutil.MatchSpec{
+		Type:      "signal",
+		Path:      conciergePath,
+		Interface: conciergeInterface,
+		Member:    "VmStoppedSignal",
+	})
+	if err != nil {
+		return errors.Wrap(err, "failed to create signal watcher")
+	}
+	defer watcher.Close(ctx)
+
+	sigProto := &vmpb.VmStoppedSignal{}
+
+	for {
+		select {
+		case signal := <-watcher.Signals:
+			if len(signal.Body) == 0 {
+				return errors.New("got VmStoppedSignal with empty body")
+			}
+
+			buf, ok := signal.Body[0].([]byte)
+			if !ok {
+				return errors.New("got VmStoppedSignal with body that has wrong type")
+			}
+
+			if err := proto.Unmarshal(buf, sigProto); err != nil {
+				return errors.Wrap(err, "failed unmarshaling VmStoppedSignal body")
+			}
+
+			if sigProto.Name == vm.name &&
+				sigProto.OwnerId == vm.Concierge.ownerID &&
+				(vm.ContextID == -1 || sigProto.Cid == vm.ContextID) {
+
+				return nil
+			}
+		case <-ctx.Done():
+			return ctx.Err()
+		}
+	}
 }

@@ -139,6 +139,12 @@ func LaunchBruschetta(ctx context.Context, tconn *chrome.TestConn) (*TerminalApp
 	return launch(ctx, tconn, bruschettaLink, bruschettaTab)
 }
 
+// FindBruschetta finds an open Terminal App and opens a connection to the default bruschetta VM and returns it.
+// An error is returned if terminal cannot be found.
+func FindBruschetta(ctx context.Context, tconn *chrome.TestConn) (*TerminalApp, error) {
+	return find(ctx, tconn, bruschettaLink, bruschettaTab)
+}
+
 // LaunchSSH launches Terminal App and connects to chronos@localhost.
 // with the optional sshArgs. An error is returned if the app fails to launch.
 // Sets IME to en-US in order to send @ symbol correctly as Shift-2.
