@@ -106,7 +106,7 @@ func ToggleAutoMode(ui *uiauto.Context) uiauto.Action {
 
 // toggleThemeButton returns an action to toggle a theme button.
 func toggleThemeButton(themeButton string, ui *uiauto.Context) uiauto.Action {
-	toggleThemeButton := nodewith.Role(role.ToggleButton).Name(themeButton)
+	toggleThemeButton := nodewith.Role(role.RadioButton).Name(themeButton)
 	return uiauto.Combine(fmt.Sprintf("toggle theme button - %s", themeButton),
 		ui.WaitUntilExists(toggleThemeButton),
 		ui.LeftClick(toggleThemeButton),
