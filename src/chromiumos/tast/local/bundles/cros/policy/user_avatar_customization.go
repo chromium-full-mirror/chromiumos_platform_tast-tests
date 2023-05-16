@@ -159,11 +159,16 @@ func UserAvatarCustomization(ctx context.Context, s *testing.State) {
 
 			ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
 
+			// Open personalization hub.
+			if err := personalization.OpenPersonalizationHub(ui)(ctx); err != nil {
+				s.Fatal("Failed to open personalization hub: ", err)
+			}
+			// Wait for personalization hub to finish loading.
+			if err := tconn.WaitForExpr(ctx, "document.readyState === 'complete'"); err != nil {
+				s.Fatal("Failed to wait for personalization hub to load: ", err)
+			}
 			// Open avatar subpage.
-			if err := uiauto.Combine("open avatar subpage",
-				personalization.OpenPersonalizationHub(ui),
-				personalization.OpenAvatarSubpage(ui),
-			)(ctx); err != nil {
+			if err := personalization.OpenAvatarSubpage(ui)(ctx); err != nil {
 				s.Fatal("Failed to open avatar subpage: ", err)
 			}
 
