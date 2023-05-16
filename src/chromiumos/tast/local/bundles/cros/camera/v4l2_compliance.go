@@ -29,7 +29,7 @@ func init() {
 			"ribalda@chromium.org",
 		},
 		BugComponent: "b:1093480",
-		Attr:         []string{"group:mainline", "group:camera-usb-qual", "informational", "group:cq-medium"},
+		Attr:         []string{"group:mainline", "group:camera-usb-qual", "group:criticalstaging", "informational", "group:cq-medium"},
 		// TODO(b/173778998) Jinlon privacy switch is not compliance: EBUSY during streamoff.
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("jinlon")),
 		SoftwareDeps: []string{"uvc_compliant"},
