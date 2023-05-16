@@ -182,9 +182,9 @@ func ArgsAomenc(ctx context.Context, testName, exe, yuvFile string, size coords.
 		command = append(command, "--threads=2")
 	}
 
-	// AV1 uses a 30% better bitrate than VP9, which targets 0.07 bpp.
+	// AV1 uses a 30% better bitrate than VP9, which targets 0.07 bpp. Note that aomenc expects bitrate in kbps, not bps, so we divide by 1000.
 	bitrate = int(0.70 * 0.07 /* BPP */ * float64(fps) * float64(size.Width) * float64(size.Height))
-	command = append(command, "--target-bitrate="+strconv.Itoa(bitrate))
+	command = append(command, "--target-bitrate="+strconv.Itoa(bitrate/1000))
 	command = append(command, fmt.Sprintf("--fps=%d/1", fps))
 
 	ivfFile = yuvFile + ".ivf"
