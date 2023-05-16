@@ -6,15 +6,25 @@ package wifi
 
 import (
 	"context"
+	"fmt"
 	"time"
 
+	group_owner "chromiumos/tast/common/network/wpacli"
 	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/remote/wificell"
+
+	ap "chromiumos/tast/remote/wificell/hostapd"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
+
+type p2pConcurrencyTestcase struct {
+	printableName string
+	p2pOpts       []group_owner.P2PGOOption
+	apOpts        []ap.Option
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -29,6 +39,49 @@ func init() {
 		Fixture:      "wificellFixtCompanionDut",
 		HardwareDeps: hwdep.D(hwdep.WifiP2P()),
 		Requirements: []string{tdreq.WiFiGenSupportWFD},
+		Params: []testing.Param{
+			{
+				// Verifies that DUT can connect to AP and p2p client on 2GHz band on different channels.
+				Name: "different_channel_2ghz",
+				Val: []p2pConcurrencyTestcase{{
+					p2pOpts: []group_owner.P2PGOOption{group_owner.SetP2PGOMode(group_owner.PhyModeHT40), group_owner.SetP2PGOFreq(2462)},
+					apOpts:  []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(6), ap.HTCaps(ap.HTCapHT20)},
+				}},
+			}, {
+				// Verifies that DUT can connect to AP and p2p client on 5GHz band on different channels.
+				Name: "different_channel_5ghz",
+				Val: []p2pConcurrencyTestcase{{
+					p2pOpts: []group_owner.P2PGOOption{group_owner.SetP2PGOMode(group_owner.PhyModeHT40), group_owner.SetP2PGOFreq(5180)},
+					apOpts:  []ap.Option{ap.Mode(ap.Mode80211acPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT40), ap.VHTChWidth(ap.VHTChWidth20Or40)},
+				}},
+			}, {
+				// Verifies that DUT can connect to AP and p2p client on same channel on the 2GHz band.
+				Name: "same_channel_2ghz",
+				Val: []p2pConcurrencyTestcase{{
+					p2pOpts: []group_owner.P2PGOOption{group_owner.SetP2PGOMode(group_owner.PhyModeHT40), group_owner.SetP2PGOFreq(2462)},
+					apOpts:  []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(11), ap.HTCaps(ap.HTCapHT20)},
+				}},
+			}, {
+				// Verifies that DUT can connect to AP and p2p client on same channel on the 5GHz band.
+				Name: "same_channel_5ghz",
+				Val: []p2pConcurrencyTestcase{{
+					p2pOpts: []group_owner.P2PGOOption{group_owner.SetP2PGOMode(group_owner.PhyModeHT40), group_owner.SetP2PGOFreq(5180)},
+					apOpts:  []ap.Option{ap.Mode(ap.Mode80211acPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT40), ap.VHTChWidth(ap.VHTChWidth20Or40)},
+				}},
+			}, {
+				// Verifies that DUT can connect to AP and p2p client on different bands.
+				Name: "different_bands",
+				Val: []p2pConcurrencyTestcase{{
+					printableName: "P2P GO connection on 5GHz band and Infra AP connection on 2.4GHz band",
+					p2pOpts:       []group_owner.P2PGOOption{group_owner.SetP2PGOMode(group_owner.PhyModeHT40), group_owner.SetP2PGOFreq(5180)},
+					apOpts:        []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(11), ap.HTCaps(ap.HTCapHT20)},
+				}, {
+					printableName: "P2P GO connection on 2.4GHz band and Infra AP connection on 5GHz band",
+					p2pOpts:       []group_owner.P2PGOOption{group_owner.SetP2PGOMode(group_owner.PhyModeHT40), group_owner.SetP2PGOFreq(2462)},
+					apOpts:        []ap.Option{ap.Mode(ap.Mode80211acPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT40), ap.VHTChWidth(ap.VHTChWidth20Or40)},
+				}},
+			},
+		},
 	})
 }
 
@@ -58,9 +111,9 @@ func P2PConcurrencyFunc(ctx context.Context, s *testing.State) {
 	P2PGOIsConfigured := false
 	P2PClientIsConfigured := false
 	P2PIPRouteIsConfigured := false
-	configureP2PConnection := func(ctx context.Context) {
+	configureP2PConnection := func(ctx context.Context, options []group_owner.P2PGOOption) {
 		successfulRun := false
-		if err := tf.P2PConfigureGO(ctx, wificell.P2PDeviceDUT); err != nil {
+		if err := tf.P2PConfigureGO(ctx, wificell.P2PDeviceDUT, options...); err != nil {
 			s.Fatal("Failed to configure the p2p group owner (GO): ", err)
 		}
 		P2PGOIsConfigured = true
@@ -131,11 +184,11 @@ func P2PConcurrencyFunc(ctx context.Context, s *testing.State) {
 	APIsConfigured := false
 	APIsConnected := false
 	var currAP *wificell.APIface
-	configureInfraWiFiConnection := func(ctx context.Context) {
+	configureInfraWiFiConnection := func(ctx context.Context, options []ap.Option) {
 		successfulRun := false
-		ap, err := tf.DefaultOpenNetworkAP(ctx)
+		ap, err := tf.ConfigureAP(ctx, options, nil)
 		if err != nil {
-			s.Fatal("Failed to configure AP: ", err)
+			s.Fatal("Failed to configure ap, err: ", err)
 		}
 		currAP = ap
 		APIsConfigured = true
@@ -198,47 +251,59 @@ func P2PConcurrencyFunc(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	// Create the P2P connection.
-	ctxDeconfigP2PConn := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
-	configureP2PConnection(ctx)
-	defer deconfigureP2PConnection(ctxDeconfigP2PConn)
+	testOnce := func(ctx context.Context, s *testing.State, tc p2pConcurrencyTestcase) {
+		// Create the P2P connection.
+		ctxDeconfigP2PConn := ctx
+		ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+		defer cancel()
+		configureP2PConnection(ctx, tc.p2pOpts)
+		defer deconfigureP2PConnection(ctxDeconfigP2PConn)
 
-	// Verify the P2P connection.
-	verifyP2PConnection(ctx)
+		// Verify the P2P connection.
+		verifyP2PConnection(ctx)
 
-	// Create the Infra WiFi connection.
-	ctxDeconfigInfraWiFiConn := ctx
-	ctx, cancel = ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
-	configureInfraWiFiConnection(ctx)
-	defer deconfigureInfraWiFiConnection(ctxDeconfigInfraWiFiConn)
+		// Create the Infra WiFi connection.
+		ctxDeconfigInfraWiFiConn := ctx
+		ctx, cancel = ctxutil.Shorten(ctx, 10*time.Second)
+		defer cancel()
+		configureInfraWiFiConnection(ctx, tc.apOpts)
+		defer deconfigureInfraWiFiConnection(ctxDeconfigInfraWiFiConn)
 
-	// Verify both P2P and Infra WiFi connections.
-	verifyP2PConnection(ctx)
-	verifyInfraWiFiConnection(ctx)
+		// Verify both P2P and Infra WiFi connections.
+		verifyP2PConnection(ctx)
+		verifyInfraWiFiConnection(ctx)
 
-	// Deconfigure the P2P connection.
-	deconfigureP2PConnection(ctx)
+		// Deconfigure the P2P connection.
+		deconfigureP2PConnection(ctx)
 
-	// Verify the Infra WiFi connection.
-	verifyInfraWiFiConnection(ctx)
+		// Verify the Infra WiFi connection.
+		verifyInfraWiFiConnection(ctx)
 
-	// Configure the P2P connection again.
-	ctxDeconfigP2PConn = ctx
-	ctx, cancel = ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
-	configureP2PConnection(ctx)
-	defer deconfigureP2PConnection(ctxDeconfigP2PConn)
+		// Configure the P2P connection again.
+		ctxDeconfigP2PConn = ctx
+		ctx, cancel = ctxutil.Shorten(ctx, 10*time.Second)
+		defer cancel()
+		configureP2PConnection(ctx, tc.p2pOpts)
+		defer deconfigureP2PConnection(ctxDeconfigP2PConn)
 
-	// Verify both the P2P and Infra WiFi connections.
-	verifyP2PConnection(ctx)
-	verifyInfraWiFiConnection(ctx)
+		// Verify both the P2P and Infra WiFi connections.
+		verifyP2PConnection(ctx)
+		verifyInfraWiFiConnection(ctx)
 
-	// Deconfigure the Infra WiFi connection.
-	deconfigureInfraWiFiConnection(ctx)
+		// Deconfigure the Infra WiFi connection.
+		deconfigureInfraWiFiConnection(ctx)
 
-	// Verify the P2P connection.
-	verifyP2PConnection(ctx)
+		// Verify the P2P connection.
+		verifyP2PConnection(ctx)
+
+		s.Log("Tearing down")
+	}
+
+	testcases := s.Param().([]p2pConcurrencyTestcase)
+	for i, tc := range testcases {
+		subtest := func(ctx context.Context, s *testing.State) {
+			testOnce(ctx, s, tc)
+		}
+		s.Run(ctx, fmt.Sprintf("Testcase #%d/%d: %s", i+1, len(testcases), tc.printableName), subtest)
+	}
 }
