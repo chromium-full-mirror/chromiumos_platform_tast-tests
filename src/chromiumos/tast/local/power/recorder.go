@@ -12,7 +12,9 @@ import (
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/local/cpu"
 
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Recorder is a utility to measure power metrics during tests.
@@ -84,6 +86,43 @@ func (r *Recorder) Finish(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+// Record does the setup, execution, and result collection for the power test
+// logic as defined in the given function f.
+// It calls Cooldown() and Start() before the test, and does Finish() after the
+// test.
+// In:
+// ctx: context for the test.
+// f: the function containing main test logic.
+// Out:
+// error: propagate back to the test.
+func (r *Recorder) Record(ctx context.Context, f func(context.Context) error) error {
+	if err := r.Cooldown(ctx); err != nil {
+		return errors.Wrap(err, "failed to cool down")
+	}
+	if err := r.Start(ctx); err != nil {
+		return errors.Wrap(err, "failed to start the recorder")
+	}
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
+	// Execute the main test logic.
+	err := f(ctx)
+
+	// Record the performance result even if the main test func returns error.
+	finishErr := r.Finish(cleanupCtx)
+	if finishErr != nil {
+		if err == nil {
+			// Wrap finishErr as the return error.
+			err = errors.Wrap(finishErr, "failed to finish recording")
+		} else {
+			// Just log the Finish error.
+			testing.ContextLog(ctx, "Failed to finish recording: ", finishErr)
+		}
+	}
+	return err
 }
 
 // Close cleans up the recorder resources.
