@@ -13,6 +13,7 @@ import (
 	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
+	"chromiumos/tast/local/annotations"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
@@ -20,6 +21,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/browser/browserui"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/policyutil"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -73,6 +75,9 @@ func DefaultSearchProviderEnabled(ctx context.Context, s *testing.State) {
 
 	uiauto := uiauto.New(tconn)
 
+	// Hash code for NetworkTrafficAnnotationTag with id navigation_url_loader.
+	const navigationURLLoaderHashCode = "63171670"
+
 	// Set up keyboard.
 	kb, err := input.Keyboard(ctx)
 	if err != nil {
@@ -84,21 +89,26 @@ func DefaultSearchProviderEnabled(ctx context.Context, s *testing.State) {
 		name    string                               // name is the subtest name.
 		enabled bool                                 // enabled is the expected enabled state of the policy.
 		value   *policy.DefaultSearchProviderEnabled // value is the policy value.
+		// shouldFindAnnotation states whether navigation_url_loader annotation should be found in the net-export log.
+		shouldFindAnnotation bool
 	}{
 		{
-			name:    "true",
-			enabled: true,
-			value:   &policy.DefaultSearchProviderEnabled{Val: true},
+			name:                 "true",
+			enabled:              true,
+			value:                &policy.DefaultSearchProviderEnabled{Val: true},
+			shouldFindAnnotation: true,
 		},
 		{
-			name:    "false",
-			enabled: false,
-			value:   &policy.DefaultSearchProviderEnabled{Val: false},
+			name:                 "false",
+			enabled:              false,
+			value:                &policy.DefaultSearchProviderEnabled{Val: false},
+			shouldFindAnnotation: true, // The Disabled value is not supported by the Google Admin console.
 		},
 		{
-			name:    "unset",
-			enabled: true,
-			value:   &policy.DefaultSearchProviderEnabled{Stat: policy.StatusUnset},
+			name:                 "unset",
+			enabled:              true,
+			value:                &policy.DefaultSearchProviderEnabled{Stat: policy.StatusUnset},
+			shouldFindAnnotation: true,
 		},
 	} {
 		s.Run(ctx, param.name, func(ctx context.Context, s *testing.State) {
@@ -117,6 +127,11 @@ func DefaultSearchProviderEnabled(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to setup chrome: ", err)
 			}
 			defer closeBrowser(cleanupCtx)
+
+			// Open the net-export page and start logging.
+			if err := annotations.StartLogging(ctx, cr, br); err != nil {
+				s.Fatal("Failed to start logging: ", err)
+			}
 
 			// Connect to Test API of the used browser to clear the browser
 			// history. We need a second connection as the clearing of the
@@ -166,6 +181,20 @@ func DefaultSearchProviderEnabled(ctx context.Context, s *testing.State) {
 			defaultSearchEngineUsed := strings.Contains(location, defaultSearchEngine)
 			if param.enabled != defaultSearchEngineUsed {
 				s.Fatalf("Unexpected usage of search engine: got %t; want %t (got %q; want %q)", defaultSearchEngineUsed, param.enabled, location, defaultSearchEngine)
+			}
+
+			// Stop logging and check the logs for navigation_url_loader NetworkTrafficAnnotationTag.
+			foundAnnotation, err := annotations.StopLoggingCheckLogs(ctx, cr, br, navigationURLLoaderHashCode)
+			if err != nil {
+				s.Fatal("Failed to stop logging and check logs: ", err)
+			}
+
+			if foundAnnotation && !param.shouldFindAnnotation {
+				s.Fatal("Unexpected NetworkTrafficAnnotationTag with id navigation_url_loader found")
+			}
+
+			if !foundAnnotation && param.shouldFindAnnotation {
+				s.Fatal("Failed to find NetworkTrafficAnnotationTag with id navigation_url_loader")
 			}
 		})
 	}
