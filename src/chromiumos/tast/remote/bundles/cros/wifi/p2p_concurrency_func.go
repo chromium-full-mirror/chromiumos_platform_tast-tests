@@ -109,20 +109,20 @@ func P2PConcurrencyFunc(ctx context.Context, s *testing.State) {
 		s.Log("Deconfigure P2P connection")
 		if P2PIPRouteIsConfigured {
 			if err := tf.P2PDeleteIPRoute(ctx); err != nil {
-				s.Fatal("Failed to delete the IP routing in the p2p group owner and p2p client: ", err)
+				s.Error("Failed to delete the IP routing in the p2p group owner and p2p client: ", err)
 			}
 			P2PIPRouteIsConfigured = false
 		}
 		if P2PClientIsConfigured {
 			if err := tf.P2PDeconfigureClient(ctx); err != nil {
-				s.Fatal("Failed to deconfigure the p2p client: ", err)
+				s.Error("Failed to deconfigure the p2p client: ", err)
 			}
 			P2PClientIsConfigured = false
 		}
 
 		if P2PGOIsConfigured {
 			if err := tf.P2PDeconfigureGO(ctx); err != nil {
-				s.Fatal("Failed to deconfigure the p2p group owner (GO): ", err)
+				s.Error("Failed to deconfigure the p2p group owner (GO): ", err)
 			}
 			P2PGOIsConfigured = false
 		}
