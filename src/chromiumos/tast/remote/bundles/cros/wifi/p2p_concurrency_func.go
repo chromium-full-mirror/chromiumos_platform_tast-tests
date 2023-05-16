@@ -6,10 +6,12 @@ package wifi
 
 import (
 	"context"
+	"time"
 
 	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/remote/wificell"
 
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -130,7 +132,7 @@ func P2PConcurrencyFunc(ctx context.Context, s *testing.State) {
 	APIsConnected := false
 	var currAP *wificell.APIface
 	configureInfraWiFiConnection := func(ctx context.Context) {
-		successfulRun := true
+		successfulRun := false
 		ap, err := tf.DefaultOpenNetworkAP(ctx)
 		if err != nil {
 			s.Fatal("Failed to configure AP: ", err)
@@ -197,15 +199,21 @@ func P2PConcurrencyFunc(ctx context.Context, s *testing.State) {
 	}
 
 	// Create the P2P connection.
+	ctxDeconfigP2PConn := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
 	configureP2PConnection(ctx)
-	defer deconfigureP2PConnection(ctx)
+	defer deconfigureP2PConnection(ctxDeconfigP2PConn)
 
 	// Verify the P2P connection.
 	verifyP2PConnection(ctx)
 
 	// Create the Infra WiFi connection.
+	ctxDeconfigInfraWiFiConn := ctx
+	ctx, cancel = ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
 	configureInfraWiFiConnection(ctx)
-	defer deconfigureInfraWiFiConnection(ctx)
+	defer deconfigureInfraWiFiConnection(ctxDeconfigInfraWiFiConn)
 
 	// Verify both P2P and Infra WiFi connections.
 	verifyP2PConnection(ctx)
@@ -218,8 +226,11 @@ func P2PConcurrencyFunc(ctx context.Context, s *testing.State) {
 	verifyInfraWiFiConnection(ctx)
 
 	// Configure the P2P connection again.
+	ctxDeconfigP2PConn = ctx
+	ctx, cancel = ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
 	configureP2PConnection(ctx)
-	defer deconfigureP2PConnection(ctx)
+	defer deconfigureP2PConnection(ctxDeconfigP2PConn)
 
 	// Verify both the P2P and Infra WiFi connections.
 	verifyP2PConnection(ctx)
