@@ -91,14 +91,14 @@ func TestMessageEqual(t *testing.T) {
 }
 
 func TestSetSubMessage(t *testing.T) {
-	policy := &UseMojoVideoDecoderForPepperAllowed{Val: true}
+	policy := &ReportAppUsageCollectionRateMs{Val: 20}
 
 	var userProto empb.CloudPolicySettings
 	message := userProto.ProtoReflect()
 
 	policy.SetProto(&message)
 
-	if *userProto.GetSubProto1().UseMojoVideoDecoderForPepperAllowed.Value != true {
-		t.Errorf("UseMojoVideoDecoderForPepperAllowed not set in %s", proto.MarshalTextString(&userProto))
+	if *userProto.GetSubProto1().ReportAppUsageCollectionRateMs.Value != 20 {
+		t.Errorf("ReportAppUsageCollectionRateMs not set in %s", proto.MarshalTextString(&userProto))
 	}
 }
