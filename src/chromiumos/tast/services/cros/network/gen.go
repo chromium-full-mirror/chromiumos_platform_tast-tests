@@ -8,7 +8,6 @@
 //go:generate protoc -I . --go_out=plugins=grpc:../../../../.. ethernet_service.proto
 //go:generate protoc -I . --go_out=plugins=grpc:../../../../.. proxy_setting_service.proto
 //go:generate protoc -I . --go_out=plugins=grpc:../../../../.. certificate_service.proto
-//go:generate protoc -I . --go_out=plugins=grpc:../../../../.. cros_network_config_service.proto
 
 package network
 
