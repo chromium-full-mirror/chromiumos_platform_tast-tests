@@ -75,3 +75,10 @@ func (s *StartupListenerServer) VmReady(ctx context.Context, msg *vmtools.EmptyM
 	close(s.rec)
 	return &vmtools.EmptyMessage{}, nil
 }
+
+// VmInstallStatus is the implementation of the StartupListenerServer gRPC stub. VmInstallStatus
+// accepts the install status of VMs and returns a signal through an empty channel.
+func (s *StartupListenerServer) VmInstallStatus(ctx context.Context, status *vmrpc.VmInstallState) (*vmtools.EmptyMessage, error) {
+	close(s.rec)
+	return &vmtools.EmptyMessage{}, nil
+}
