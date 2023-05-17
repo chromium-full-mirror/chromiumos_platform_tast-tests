@@ -12,6 +12,7 @@ import (
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bundles/cros/arc/c2e2etest"
 	"chromiumos/tast/local/bundles/cros/arc/video"
+	"chromiumos/tast/local/cpu"
 	"chromiumos/tast/local/media/videotype"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -126,7 +127,17 @@ func init() {
 	})
 }
 
+// preBenchmarkIdle returns the idle config that ensures CPU is idle before benchmarking.
+// Note that this is more stringent than the idle.DefaultIdleConfig as we really want
+// the system to be nice and quiet at the cost of waiting longer.
+func preBenchmarkIdle() cpu.IdleConfig {
+	idleConfig := cpu.DefaultIdleConfig()
+	idleConfig.Timeout = 10 * time.Minute
+	idleConfig.Steps = 10
+	return idleConfig
+}
+
 func VideoEncodeAccelPerf(ctx context.Context, s *testing.State) {
 	video.RunARCPerfVideoTest(ctx, s, s.FixtValue().(*arc.PreData).ARC,
-		s.Param().(video.EncodeTestOptions), veapCacheExtractedVideo)
+		s.Param().(video.EncodeTestOptions), veapCacheExtractedVideo, preBenchmarkIdle())
 }
