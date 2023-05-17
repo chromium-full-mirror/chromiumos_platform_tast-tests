@@ -245,6 +245,17 @@ func ConvertPowerPerfValue(ctx context.Context, values *perf.Values) (map[string
 	typeMap["minutes_battery_life_tested"] = "perf"
 	unitMap["minutes_battery_life_tested"] = "minute"
 
+	// Check if package-0 is collected first because `rapl` is not supported on all platforms.
+	if _, ok := innerDataMap[package0]; ok && len(innerDataMap["system"]) == len(innerDataMap[package0]) {
+		innerDataMap["non_SoC"], innerAverageMap["non_SoC"] = getNonSocSubsystemPowerData(ctx, innerDataMap, innerAverageMap)
+		typeMap["non_SoC"] = "power"
+		unitMap["non_SoC"] = powerRelatedMetricTypeUnit
+		values.Append(perf.Metric{
+			Name:     powerRelatedMetricType + "non_SoC",
+			Unit:     powerRelatedMetricTypeUnit,
+			Multiple: true,
+		}, innerDataMap["non_SoC"]...)
+	}
 	powerDict["data"] = innerDataMap
 	powerDict["average"] = innerAverageMap
 	powerDict["type"] = typeMap
@@ -304,6 +315,25 @@ func getMinutesBatteryLife(ctx context.Context,
 		testing.ContextLog(ctx, "Failed to calculate minutes_battery_life: 0 energy usage")
 	}
 	return MinutesBatteryLife
+}
+
+// getNonSocSubsystemPowerData calculates and returns all subsystem power data other than SoC.
+func getNonSocSubsystemPowerData(ctx context.Context,
+	innerDataMap map[string][]float64,
+	innerAverageMap map[string]float64) ([]float64, float64) {
+	// System power data.
+	systemPowerNumbers := innerDataMap["system"]
+	// SoC power data.
+	SocPowerNumbers := innerDataMap[package0]
+	// All subsystem(nonSoc) power data.
+	nonSoCPowerNumbers := make([]float64, 0)
+
+	for index := 0; index < len(systemPowerNumbers); index++ {
+		nonSoCPowerNumbers = append(nonSoCPowerNumbers, systemPowerNumbers[index]-SocPowerNumbers[index])
+	}
+
+	nonSoCPowerAverage := innerAverageMap["system"] - innerAverageMap[package0]
+	return nonSoCPowerNumbers, nonSoCPowerAverage
 }
 
 // CreatePowerLogDict creates the power log dictionary from power dict.
