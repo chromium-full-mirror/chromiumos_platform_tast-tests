@@ -87,10 +87,11 @@ func (v *Values) Values(ctx context.Context) *perf.Values {
 		if len(vs) == 0 {
 			continue
 		}
+		otherMetric := metric
+		otherMetric.Variant = "average"
 		sum := 0.0
 		count := 0
 		if len(vs) != 1 {
-			otherMetric := metric
 			otherMetric.Multiple = true
 			minIndex, maxIndex := minMaxIndices(vs)
 			for i, val := range vs {
@@ -102,7 +103,7 @@ func (v *Values) Values(ctx context.Context) *perf.Values {
 				count++
 			}
 		} else {
-			pv.Set(metric, vs[0])
+			pv.Set(otherMetric, vs[0])
 			sum = vs[0]
 			count = 1
 		}
