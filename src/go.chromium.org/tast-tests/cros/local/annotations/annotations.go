@@ -11,6 +11,8 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -25,6 +27,9 @@ const (
 	// UserDirNetLogFile is the file path for netlog in user dir.
 	// This file is present when chrome is started with the `--log-net-log` arg.
 	UserDirNetLogFile string = "/home/chronos/netlog.json"
+
+	// DownloadName is the file name for the default netlog.
+	DownloadName string = "chrome-net-export-log.json"
 )
 
 // StartLogging clicks the "Start logging" button on the net export page.
@@ -83,8 +88,7 @@ func StopLoggingCheckLogs(ctx context.Context, cr *chrome.Chrome, br *browser.Br
 	if err != nil {
 		return false, errors.Wrap(err, "failed to get user's Download path")
 	}
-	downloadName := "chrome-net-export-log.json"
-	downloadLocation := filepath.Join(downloadsPath, downloadName)
+	downloadLocation := filepath.Join(downloadsPath, DownloadName)
 
 	// Read the net export log file.
 	logFile, err := ioutil.ReadFile(downloadLocation)
@@ -103,6 +107,54 @@ func StopLoggingCheckLogs(ctx context.Context, cr *chrome.Chrome, br *browser.Br
 	}
 
 	return isExist, nil
+}
+
+// StopLoggingCheckLogsFilterByTriggerTime clicks the "Stop logging" button on the net export page and checks logs for given annotation and filter out annotations before trigger time.
+func StopLoggingCheckLogsFilterByTriggerTime(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, annotation string, triggerTime time.Time) (foundAnnotation bool, err error) {
+	// Open the net-export page.
+	netConn, err := NewNetExportConn(ctx, br)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to load chrome://net-export")
+	}
+	defer netConn.Close()
+
+	// Click Stop Logging button.
+	if err := clickBtnOnPage(ctx, netConn, "stop-logging"); err != nil {
+		return false, errors.Wrap(err, "failed to wait for the Stop Logging button to load")
+	}
+
+	// Get the net export log file.
+	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
+	if err != nil {
+		return false, errors.Wrap(err, "failed to get user's Download path")
+	}
+	downloadLocation := filepath.Join(downloadsPath, DownloadName)
+
+	// Read the net export log file.
+	logFile, err := ioutil.ReadFile(downloadLocation)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to open logfile")
+	}
+
+	// Check if the traffic annotation exists in the log file.
+	isExist, err := regexp.Match(fmt.Sprintf("\"traffic_annotation\":%s", annotation), logFile)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to search annotation logfile")
+	}
+
+	// Check if annotation timestamps are after trigger.
+	isValid, err := CheckAnnotationTimes(annotation, logFile, triggerTime)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to check annotation timestamps")
+	}
+
+	// Clean up file after reading.
+	if err := os.Remove(downloadLocation); err != nil {
+		return false, errors.Wrap(err, "failed to clean file")
+	}
+
+	// Return true if annotation exists and occurs after trigger.
+	return isExist && isValid, nil
 }
 
 // StopLoggingVerifyNoAnnotation clicks the "Stop logging" button on the net export page and verifies that none of the annotation hash codes in the given list are present in the logs.
@@ -173,8 +225,7 @@ func CheckLogs(ctx context.Context, cr *chrome.Chrome, annotation string) (found
 	if err != nil {
 		return false, errors.Wrap(err, "failed to get user's Download path")
 	}
-	downloadName := "chrome-net-export-log.json"
-	downloadLocation := filepath.Join(downloadsPath, downloadName)
+	downloadLocation := filepath.Join(downloadsPath, DownloadName)
 
 	return CheckLogsFromFile(ctx, cr, annotation, downloadLocation)
 }
@@ -214,8 +265,7 @@ func StopLogging(ctx context.Context, cr *chrome.Chrome, br *browser.Browser) er
 	if err != nil {
 		return errors.Wrap(err, "failed to get user's Download path")
 	}
-	downloadName := "chrome-net-export-log.json"
-	downloadLocation := filepath.Join(downloadsPath, downloadName)
+	downloadLocation := filepath.Join(downloadsPath, DownloadName)
 
 	// Clean up file after reading
 	if err := os.Remove(downloadLocation); err != nil {
@@ -236,4 +286,57 @@ func clickBtnOnPage(ctx context.Context, netConn *chrome.Conn, btnID string) err
 	}
 
 	return nil
+}
+
+// CheckAnnotationTimes checks validity of annotations by comparing an input trigger time with the annotation times.
+// Returns true if and only if an annotation exists after the trigger time.
+func CheckAnnotationTimes(annotation string, logFile []byte, triggerTime time.Time) (bool, error) {
+	annotationTimes, err := GetAnnotationTimes(annotation, logFile)
+	if err != nil {
+		return false, err
+	}
+	for _, annotationTime := range annotationTimes {
+		if triggerTime.Before(annotationTime) {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+// GetAnnotationTimes checks a log file and returns the annotation times in time.Time objects.
+func GetAnnotationTimes(annotation string, logFile []byte) (realTimes []time.Time, err error) {
+	startTimeTick, err := GetStartTimeTick(logFile)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get annotation offset times.
+	var annotationTimeTicks []int
+	annotationPrefix := fmt.Sprintf("\"traffic_annotation\":%s", annotation)
+	re := regexp.MustCompile(fmt.Sprintf(`%s.*\"time\":\"(\d+)`, annotationPrefix))
+	matches := re.FindAllSubmatch(logFile, -1)
+	for _, match := range matches {
+		matchTimeTick, err := strconv.Atoi(string(match[1]))
+		if err == nil {
+			annotationTimeTicks = append(annotationTimeTicks, matchTimeTick)
+		}
+	}
+
+	// Calculate annotation times.
+	for _, annotationTimeTick := range annotationTimeTicks {
+		timeTick := startTimeTick + annotationTimeTick
+		realTime := time.Unix(0, int64(timeTick)*int64(time.Millisecond))
+		realTimes = append(realTimes, realTime)
+	}
+	return realTimes, nil
+}
+
+// GetStartTimeTick gets the log start time in milliseconds. If timeTickOffset is not found, returns 0 with error.
+func GetStartTimeTick(logFile []byte) (int, error) {
+	re := regexp.MustCompile(`timeTickOffset\":(\d+)`)
+	matches := re.FindSubmatch(logFile)
+	if matches == nil {
+		return 0, errors.New("failed to find timeTickOffset in logfile")
+	}
+	return strconv.Atoi(string(matches[1]))
 }

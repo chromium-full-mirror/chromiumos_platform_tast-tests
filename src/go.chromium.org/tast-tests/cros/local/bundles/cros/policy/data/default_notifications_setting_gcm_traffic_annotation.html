@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>Default Notifications Setting GCM Traffic Annotation Page</title>
+</head>
+
+<body>
+  <h1 id="status">Status</h1>
+  <button onclick="subscribe()">subscribe</button>
+  <script>
+    // Dummy key for subscription.
+    const APP_SERVER_KEY = 'BJFmMwi53IFUjF4N5mHdCVqoVi4L4mAVjazBmuo6kYUVJb_YgOzIwxgzTDEeEwH8j3Ia39yVVn6QpNMRNrMS_1w';
+    const SUBSCRIPTION_OPTIONS = {
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(APP_SERVER_KEY)
+    };
+    const SERVICE_WORKER_JS = 'default_notifications_setting_gcm_traffic_annotation_service-worker.js';
+    const STATUS_HEADING = document.querySelector('#status');
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register(SERVICE_WORKER_JS);
+      });
+    }
+
+    // Request notifications permission and subscribe.
+    function subscribe() {
+      navigator.serviceWorker.getRegistration().then((registration) => {
+        Notification.requestPermission().then(() => {
+          return registration.pushManager.subscribe(SUBSCRIPTION_OPTIONS);
+        }).then((pushSubscription) => {
+          updateStatus(JSON.stringify(pushSubscription));
+        }, (error) => {
+          updateStatus(error);
+        });
+      }, (err) => {
+        console.log('Service Worker registration failed', err);
+      });
+    }
+
+    function updateStatus(text) {
+      STATUS_HEADING.textContent = text;
+    }
+
+    function urlBase64ToUint8Array(base64String) {
+      const padding = '='.repeat((4 - base64String.length % 4) % 4);
+      const base64 = (base64String + padding)
+        .replace(/\-/g, '+')
+        .replace(/_/g, '/');
+      const rawData = window.atob(base64);
+      const outputArray = new Uint8Array(rawData.length);
+      for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+      }
+      return outputArray;
+    }
+  </script>
+</body>
+
+</html>
