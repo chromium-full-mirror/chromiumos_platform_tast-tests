@@ -9,6 +9,7 @@ package kioskmode
 import (
 	"context"
 	"encoding/hex"
+	"fmt"
 	"io/ioutil"
 	"net/http/httptest"
 	"os"
@@ -26,6 +27,7 @@ import (
 	"chromiumos/tast/local/policyutil/fixtures"
 	"chromiumos/tast/local/procutil"
 	"chromiumos/tast/local/syslog"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -70,9 +72,11 @@ const (
 	// kioskClosingSplashScreenLog is reported by Chrome once the splash screen is closing.
 	kioskClosingSplashScreenLog = "App window created, closing splash screen."
 
-	// setPolicyDuration is the time estimate to set policies in Kiosk with setPolicies or
-	// setPolicyBlob.
-	setPolicyDuration = 60 * time.Second
+	// policyPersistDuration is the time estimate for Chrome to store policies after a refresh.
+	policyPersistDuration = 15 * time.Second
+	// setPolicyDuration is the time estimate to set policies in Kiosk with setPolicyBlob or
+	// clearPolicies.
+	setPolicyDuration = 60*time.Second + policyPersistDuration
 	// SetupDuration is the time estimate to set up a Kiosk session with kioskmode.New. This does not
 	// include time to launch the session.
 	SetupDuration = setPolicyDuration + CleanupDuration
@@ -138,7 +142,7 @@ func New(ctx context.Context, fdms *fakedms.FakeDMS, signinTestExtensionManifest
 
 	// Apply Kiosk policies.
 	testing.ContextLog(ctx, "Kiosk mode: Starting Chrome to set Kiosk policies")
-	if err := setPolicyBlob(ctx, fdms, signinTestExtensionManifestKey, policyBlob); err != nil {
+	if err := setPolicyBlob(ctx, fdms, signinTestExtensionManifestKey, policyBlob, deviceLocalAccounts.Val); err != nil {
 		return nil, nil, errors.Wrap(err, "failed to set Kiosk policy blob")
 	}
 
@@ -238,11 +242,6 @@ func (k *Kiosk) Close(ctx context.Context) (retErr error) {
 		}
 	}
 	return retErr
-}
-
-// clearPolicies sets policies to an empty policy slice.
-func clearPolicies(ctx context.Context, fdms *fakedms.FakeDMS, signinTestExtensionManifestKey string) error {
-	return setPolicies(ctx, fdms, signinTestExtensionManifestKey, []policy.Policy{})
 }
 
 // DeprecatedClose clears policies, but keeps serving device local accounts
@@ -798,6 +797,11 @@ func DeviceLocalAccountUserID(account *policy.DeviceLocalAccountInfo) string {
 	return user + "@" + prefix + ".device-local.localhost"
 }
 
+// clearPolicies sets policies to an empty policy blob.
+func clearPolicies(ctx context.Context, fdms *fakedms.FakeDMS, signinTestExtensionManifestKey string) error {
+	return setPolicyBlob(ctx, fdms, signinTestExtensionManifestKey, policy.NewBlob(), []policy.DeviceLocalAccountInfo{})
+}
+
 // setPolicyBlob starts a new Chrome instance to set the given policy blob.
 //
 // Note that once this function returns Chrome will be closed and the device will be in the login
@@ -806,7 +810,7 @@ func DeviceLocalAccountUserID(account *policy.DeviceLocalAccountInfo) string {
 // Callers are expected to start a new Chrome themselves after this function. This is required even
 // if Kiosk auto launch policies were configured, as Kiosk cannot auto launch if no Chrome instance
 // is running.
-func setPolicyBlob(ctx context.Context, fdms *fakedms.FakeDMS, signinTestExtensionManifestKey string, pb *policy.Blob) (retErr error) {
+func setPolicyBlob(ctx context.Context, fdms *fakedms.FakeDMS, signinTestExtensionManifestKey string, pb *policy.Blob, accs []policy.DeviceLocalAccountInfo) (retErr error) {
 	testing.ContextLog(ctx, "Kiosk mode: Starting Chrome in signin screen to set policies")
 	cr, err := chrome.New(
 		ctx,
@@ -837,18 +841,47 @@ func setPolicyBlob(ctx context.Context, fdms *fakedms.FakeDMS, signinTestExtensi
 
 	if err := policyutil.ServeBlobAndRefreshOnLoginScreen(ctx, fdms, cr, pb); err != nil {
 		return errors.Wrap(err, "could not serve and verify empty policies on login screen")
-
 	}
+
+	if err := waitPoliciesPersisted(ctx, accs); err != nil {
+		return errors.Wrap(err, "could not verify device local account policies persisted")
+	}
+
 	return nil
 }
 
-// setPolicies is the same as setPolicyBlob but takes a []policy.Policy slice instead.
-func setPolicies(ctx context.Context, fdms *fakedms.FakeDMS, signinTestExtensionManifestKey string, policies []policy.Policy) error {
-	blob := policy.NewBlob()
-	if err := blob.AddPolicies(policies); err != nil {
-		return errors.Wrap(err, "failed to add policies to policy blob")
+// waitPoliciesPersisted polls for files in /var/lib/device_local_accounts/<account>/policy/policy
+// until the number of files matches the expected number of deviceLocalAccounts.
+//
+// This is neeced because policyutil.Refresh returns too early, before policies are stored in disk.
+//
+// TODO(b/282959122): Consider removing this function if policyutil.Refresh solves this.
+func waitPoliciesPersisted(ctx context.Context, deviceLocalAccounts []policy.DeviceLocalAccountInfo) error {
+	const policyDir = "/var/lib/device_local_accounts"
+
+	checkPolicyFilesExist := func(_ context.Context) error {
+		accountDirs, err := os.ReadDir(policyDir)
+		if err != nil {
+			return errors.Wrapf(err, "failed to read directory %q", policyDir)
+		}
+		// We can't match accountDirs to deviceLocalAccounts, so just check the number of policy files
+		// is what we expect.
+		if len(accountDirs) != len(deviceLocalAccounts) {
+			return errors.Errorf("found %q entries in %q, expected %q", len(accountDirs), policyDir, len(deviceLocalAccounts))
+		}
+		for _, accountDir := range accountDirs {
+			file := fmt.Sprintf("%v/%v/policy/policy", policyDir, accountDir.Name())
+			if _, err := os.Stat(file); err != nil {
+				return errors.Wrapf(err, "failed to stat %q, does it exist?", file)
+			}
+		}
+		return nil
 	}
-	return setPolicyBlob(ctx, fdms, signinTestExtensionManifestKey, blob)
+
+	if err := testing.Poll(ctx, checkPolicyFilesExist, &testing.PollOptions{Timeout: policyPersistDuration}); err != nil {
+		return errors.Wrap(err, "failed to find device local account policy files")
+	}
+	return nil
 }
 
 // parseOptions processes opts and returns relevant structs as needed for kioskmode.New.
