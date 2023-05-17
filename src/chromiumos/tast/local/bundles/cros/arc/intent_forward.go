@@ -50,6 +50,8 @@ func init() {
 			Fixture:           "arcBooted",
 		}, {
 			Name:              "lacros_vm",
+			// TODO(crbug.com/1446233): Remove "informational" attribute (flaky).
+			ExtraAttr:         []string{"informational"},
 			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
 			Val:               browser.TypeLacros,
 			Fixture:           "lacrosWithArcBooted",
