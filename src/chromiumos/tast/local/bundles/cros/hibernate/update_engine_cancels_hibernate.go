@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/bundles/cros/hibernate/utils"
 	"go.chromium.org/tast/core/testing"
@@ -24,6 +25,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      3 * time.Minute,
 		LacrosStatus: testing.LacrosVariantUnneeded,
+		Fixture:      fixture.UpdateEngine, // Ensures update engine is ready and resets its status.
 	})
 }
 
@@ -38,9 +40,6 @@ func UpdateEngineCancelsHibernate(ctx context.Context, s *testing.State) {
 	defer logCmd.Kill()
 
 	updateEngineCmd := []string{"update_engine_client", "--interactive=false", "--set_status=1"}
-
-	// Revert update_engine status to IDLE at end of test
-	defer testexec.CommandContext(ctx, updateEngineCmd[0], updateEngineCmd[1], "--set_status=0").Output(testexec.DumpLogOnError)
 
 	// Set up Update Engine to run
 	_, err = testexec.CommandContext(ctx, updateEngineCmd[0], updateEngineCmd[1:]...).Output(testexec.DumpLogOnError)

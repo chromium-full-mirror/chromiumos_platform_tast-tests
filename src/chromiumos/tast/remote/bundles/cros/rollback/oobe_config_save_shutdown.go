@@ -10,6 +10,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
+	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/services/cros/autoupdate"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
@@ -38,6 +39,7 @@ func init() {
 		ServiceDeps: []string{
 			"tast.cros.autoupdate.UpdateUIService"},
 		Timeout: 7 * time.Minute,
+		Fixture: fixture.UpdateEngine, // Ensures update engine is ready and resets its status.
 	})
 }
 
@@ -68,10 +70,6 @@ func OobeConfigSaveShutdown(ctx context.Context, s *testing.State) {
 	if err := s.DUT().Conn().CommandContext(ctx, "update_engine_client", "--set_status=6").Run(); err != nil {
 		s.Fatal("Failed to fake a pending update: ", err)
 	}
-	// Restart update-engine after leaving the test.
-	defer func(ctx context.Context) {
-		s.DUT().Conn().CommandContext(ctx, "restart", "update-engine").Run()
-	}(ctx)
 
 	s.Log("Clicking relaunch button")
 	if _, err = service.RelaunchAfterUpdate(ctx, &empty.Empty{}); err != nil {
