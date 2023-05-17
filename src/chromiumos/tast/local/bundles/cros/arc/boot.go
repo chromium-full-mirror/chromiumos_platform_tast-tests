@@ -65,6 +65,17 @@ func init() {
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Timeout:           5 * time.Minute,
 		}, {
+			Name: "vm_virtio_blk",
+			Val: bootConfig{
+				numTrials: 1,
+				chromeArgs: []string{
+					"--enable-features=ArcEnableVirtioBlkForData",
+				},
+			},
+			ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+			ExtraSoftwareDeps: []string{"android_vm"},
+			Timeout:           5 * time.Minute,
+		}, {
 			Name: "vm_with_per_vcpu_core_scheduling",
 			Val: bootConfig{
 				numTrials: 1,
