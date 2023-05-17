@@ -137,6 +137,9 @@ create data visualizations.
 ```
 
 ## Look at the collected power metrics
+To understand what metrics are collected, see [metrics.md].
+
+[metrics.md]: https://crsrc.org/o/src/platform/tast-tests/src/chromiumos/tast/local/power/doc/metrics.md
 
 ### Local visualization
 A local html data visualization of the collected power metrics is at
