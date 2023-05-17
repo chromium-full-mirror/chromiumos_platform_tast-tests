@@ -7,7 +7,7 @@ package uidetection
 import (
 	"context"
 
-	pb "google.golang.org/genproto/googleapis/chromeos/uidetection/v1"
+	pb "chromiumos/tast/local/uidetection/api"
 
 	"runtime/debug"
 

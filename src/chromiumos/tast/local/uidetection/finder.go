@@ -10,7 +10,7 @@ import (
 	"math"
 	"strings"
 
-	pb "google.golang.org/genproto/googleapis/chromeos/uidetection/v1"
+	pb "chromiumos/tast/local/uidetection/api"
 
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"

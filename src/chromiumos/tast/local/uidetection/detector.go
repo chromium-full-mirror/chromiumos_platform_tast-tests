@@ -8,7 +8,8 @@ package uidetection
 import (
 	"context"
 
-	pb "google.golang.org/genproto/googleapis/chromeos/uidetection/v1"
+	pb "chromiumos/tast/local/uidetection/api"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
