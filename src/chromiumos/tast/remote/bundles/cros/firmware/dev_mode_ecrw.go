@@ -14,6 +14,7 @@ import (
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/fixture"
 	"chromiumos/tast/remote/firmware/reporters"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -107,9 +108,9 @@ func DevModeECRW(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to press power key on DUT: ", err)
 	}
 
-	s.Log("Pressing Ctrl-D or equivalent to get to Dev mode for 1.5 minutes (expected to fail)")
-	if err := ms.FwScreenToDevMode(ctx, 90*time.Second, firmware.SkipWaitConnect); err != nil {
-		testing.ContextLog(ctx, "Failed to transition to dev mode from rec mode, this is expected behaviour")
+	s.Log("Pressing Ctrl-D or equivalent to get to Dev mode (expected to fail)")
+	if err := ms.FwScreenToDevMode(ctx, firmware.SkipWaitConnect); err != nil {
+		testing.ContextLog(ctx, "Failed to transition to dev mode from rec mode, this is expected behavior")
 	} else {
 		s.Fatal("Expected transitioning to dev mode from recovery screen while in EC_RW to fail, but succeeded instead")
 	}
