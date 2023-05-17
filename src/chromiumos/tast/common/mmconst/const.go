@@ -196,6 +196,7 @@ const (
 	// Modem.Simple interface methods
 	ModemConnect    = "Connect"
 	ModemDisconnect = "Disconnect"
+	ModemSetLogging = "SetLogging"
 )
 
 // Modem Sar DBus methods

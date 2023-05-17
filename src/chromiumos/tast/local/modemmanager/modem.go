@@ -14,6 +14,7 @@ import (
 
 	"chromiumos/tast/common/mmconst"
 	"chromiumos/tast/local/dbusutil"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -97,7 +98,7 @@ func (m *Modem) GetSARInterface(ctx context.Context) (*Modem, error) {
 	return &Modem{ph}, nil
 }
 
-// GetMessagingInterface creates a PropertyHolder for the SAR object.
+// GetMessagingInterface creates a PropertyHolder for the Message object.
 func (m *Modem) GetMessagingInterface(ctx context.Context) (*Modem, error) {
 	modemPath := dbus.ObjectPath(m.String())
 	ph, err := dbusutil.NewPropertyHolder(ctx, DBusModemmanagerService, DBusModemmanagerMessageInterface, modemPath)
@@ -877,6 +878,18 @@ func (m *Modem) DeleteAllBearers(ctx context.Context, modem *Modem) error {
 		if c := modem.Call(ctx, mmconst.ModemDeleteBearer, opath); c.Err != nil {
 			return errors.Wrapf(c.Err, "failed to delete bearer: %q", opath)
 		}
+	}
+	return nil
+}
+
+// SetModemmanagerLogLevel - Set the logging level of ModemManager to the specified level.
+func SetModemmanagerLogLevel(ctx context.Context, level string) error {
+	obj, err := dbusutil.NewDBusObject(ctx, DBusModemmanagerService, DBusModemmanagerInterface, DBusModemmanagerPath)
+	if err != nil {
+		return errors.Wrap(err, "failed to get modemmanager object")
+	}
+	if c := obj.Call(ctx, mmconst.ModemSetLogging, level); c.Err != nil {
+		return errors.Wrap(c.Err, "failed to set modemmanager log level to DEBUG")
 	}
 	return nil
 }

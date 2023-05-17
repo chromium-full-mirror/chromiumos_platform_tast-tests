@@ -184,6 +184,9 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	if err := SetShillVerboseLogging(ctx); err != nil {
 		s.Fatal("Failed to set shill's logging config to verbose: ", err)
 	}
+	if err := modemmanager.SetModemmanagerLogLevel(ctx, "DEBUG"); err != nil {
+		s.Fatal("Failed to set Modemmanager log level to DEBUG: ", err)
+	}
 	// Before stopping modemfwd, check and wait for modemfwd to idle.
 	if err := waitForModemFwdToIdle(ctx); err != nil {
 		s.Fatal("Could not confirm if ModemFwd is idle: ", err)
@@ -361,6 +364,9 @@ func (f *cellularFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 		if err := f.sf.Teardown(ctx); err != nil {
 			s.Fatalf("Failed to teardown starfish: %s", err)
 		}
+	}
+	if err := modemmanager.SetModemmanagerLogLevel(ctx, "INFO"); err != nil {
+		s.Fatal("Failed to set Modemmanager log level to INFO: ", err)
 	}
 	if err := SetShillDefaultLogging(ctx); err != nil {
 		s.Fatal("Failed to reset shill's logging config: ", err)
