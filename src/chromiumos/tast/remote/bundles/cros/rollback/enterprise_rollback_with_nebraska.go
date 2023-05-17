@@ -196,11 +196,6 @@ func EnterpriseRollbackWithNebraska(ctx context.Context, s *testing.State) {
 		}
 
 		defer func(ctx context.Context) {
-			if err := linuxssh.GetFile(ctx, s.DUT().Conn(), startResponse.LogFile, filepath.Join(s.OutDir(), "nebraska.log"), linuxssh.DereferenceSymlinks); err != nil {
-				s.Log("Failed to save Nebraska log: ", err)
-			}
-		}(cleanupCtx)
-		defer func(ctx context.Context) {
 			if _, err := nebraskaClient.Stop(ctx, &empty.Empty{}); err != nil {
 				s.Error("Failed to stop Nebraska: ", err)
 			}

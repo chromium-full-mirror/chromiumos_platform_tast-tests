@@ -33,6 +33,7 @@ message Payload {
 
 message StartResponse {
   int32 port = 1;
-  string log_file = 2;
   string runtime_root = 3;
+
+  reserved 2;
 }
