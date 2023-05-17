@@ -42,6 +42,8 @@ func init() {
 				extensionConns: make(map[string]*chrome.Conn),
 			})
 		},
+		// GuaranteeCompatibility allows tests outside ChromeOS to call this service.
+		GuaranteeCompatibility: true,
 	})
 }
 
