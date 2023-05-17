@@ -8,19 +8,26 @@ import (
 	"chromiumos/tast/common/perf"
 )
 
+var timelineSources = []perf.TimelineDatasource{
+	NewCpuidleStateMetrics(),
+	NewRAPLPowerMetrics(),
+	NewSysfsBatteryMetrics(),
+	NewSysfsThermalMetrics(),
+	NewPackageCStatesMetrics(),
+	NewProcfsCPUMetrics(),
+	NewFanMetrics(),
+	NewGPUStateMetrics(),
+	NewGPUFreqMetrics(),
+	NewZramIOMetrics(),
+}
+
+// RegisterPowerMetrics register test specific metric for that power test.
+func RegisterPowerMetrics(metric perf.TimelineDatasource) {
+	timelineSources = append(timelineSources, metric)
+}
+
 // TestMetrics returns a slice of metrics that should be used for power
 // tests.
 func TestMetrics() []perf.TimelineDatasource {
-	return []perf.TimelineDatasource{
-		NewCpuidleStateMetrics(),
-		NewRAPLPowerMetrics(),
-		NewSysfsBatteryMetrics(),
-		NewSysfsThermalMetrics(),
-		NewPackageCStatesMetrics(),
-		NewProcfsCPUMetrics(),
-		NewFanMetrics(),
-		NewGPUStateMetrics(),
-		NewGPUFreqMetrics(),
-		NewZramIOMetrics(),
-	}
+	return timelineSources
 }
