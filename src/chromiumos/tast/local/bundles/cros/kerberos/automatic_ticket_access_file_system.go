@@ -24,7 +24,6 @@ import (
 	"chromiumos/tast/local/kerberos"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -39,8 +38,6 @@ func init() {
 		},
 		// ChromeOS > Software > Commercial (Enterprise) > Identity > Active Directory
 		BugComponent: "b:1253670",
-		// TODO(b/260522053): Remove when this bug is fixed.
-		HardwareDeps: hwdep.D(hwdep.SkipOnModel(kerberos.ModelsToSkipOnSmb...)),
 		SoftwareDeps: []string{"chrome"},
 		Attr: []string{
 			"group:golden_tier",
