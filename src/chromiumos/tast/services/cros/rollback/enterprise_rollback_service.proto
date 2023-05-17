@@ -6,39 +6,72 @@ syntax = "proto3";
 
 package tast.cros.rollback;
 
+import "google/protobuf/empty.proto";
+
 option go_package = "chromiumos/tast/services/cros/rollback";
 
-// EnterpriseRollbackService provides functions to set up and verify enterprise rollback.
+// EnterpriseRollbackService provides functions to set up and verify enterprise
+// rollback.
 service EnterpriseRollbackService {
+  // Connect sets up connection to ash Chrome and network API. Calling this function is a prerequisite to call other functions.
+  rpc Connect(SessionState) returns (google.protobuf.Empty);
+  // CloseConnections closes ash Chrome and network API connections. This function is resilient to any of the connections not existing.
+  rpc CloseConnections(google.protobuf.Empty) returns (google.protobuf.Empty);
+  // Login can be called after connecting in OOBE and continues to login as normal user.
+  rpc Login(google.protobuf.Empty) returns (google.protobuf.Empty);
   // SetUpNetworks sets various networks supported by rollback automatically.
-  rpc SetUpNetworks (SetUpNetworksRequest) returns (SetUpNetworksResponse);
-  // VerifyRollback verifies that oobe ends up on the enrollment screen after
-  // rollback and that the networks provided still exists.
-  rpc VerifyRollback (VerifyRollbackRequest) returns (VerifyRollbackResponse);
-}
-
-message NetworkInformation {
-  string guid = 1;
-}
-
-message SetUpNetworksRequest {
-  // Empty but created in case it is needed in the future.
+  rpc SetUpNetworks(google.protobuf.Empty) returns (SetUpNetworksResponse);
+  // VerifyNetworks verifies that networks were preserved during rollback for tests without enrollment. It may be called during OOBE or after login.
+  rpc VerifyNetworks(VerifyNetworksRequest) returns (VerifyNetworksResponse);
+  rpc GetNetworkProperties(GetNetworkPropertiesRequest) returns (GetNetworkPropertiesResponse);
 }
 
 message SetUpNetworksResponse {
   repeated NetworkInformation networks = 1;
 }
 
-// VerifyRollbackRequest needs to contain the unchanged NetworkInformation from
+message NetworkInformation {
+  string guid = 1;
+}
+
+// VerifyNetworksRequest needs to contain the unchanged NetworkInformation from
 // SetUpNetworksResponse.
-message VerifyRollbackRequest {
-  reserved 1; // deprecated guid
+message VerifyNetworksRequest {
+  Ownership ownership = 1;
   repeated NetworkInformation networks = 2;
 }
 
-message VerifyRollbackResponse {
+message VerifyNetworksResponse {
   bool successful = 1;
-  // It provides details about the failure or further information about the
-  // success that should be logged for reference.
+  // verification_details should be logged no matter if successful or not.
   string verification_details = 2;
+}
+
+message SessionState {
+  Ownership ownership = 1;
+  optional LoginData login_data = 2;
+}
+
+enum Ownership {
+  OOBE = 0;
+  ENROLLED = 1;
+  CONSUMER = 2;
+}
+
+message LoginData {
+  string username = 1;
+  string password = 2;
+  string dmserver_url = 3;
+}
+
+message GetNetworkPropertiesRequest {
+  string guid = 1;
+}
+
+message GetNetworkPropertiesResponse {
+  ManagedProperties properties = 1;
+}
+
+message ManagedProperties {
+  bytes serialized_data = 1;
 }

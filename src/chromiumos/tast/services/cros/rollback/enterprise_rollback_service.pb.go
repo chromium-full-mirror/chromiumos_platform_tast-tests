@@ -17,6 +17,7 @@ import (
 	status "google.golang.org/grpc/status"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	reflect "reflect"
 	sync "sync"
 )
@@ -28,89 +29,53 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type NetworkInformation struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
+type Ownership int32
 
-	Guid string `protobuf:"bytes,1,opt,name=guid,proto3" json:"guid,omitempty"`
-}
+const (
+	Ownership_OOBE     Ownership = 0
+	Ownership_ENROLLED Ownership = 1
+	Ownership_CONSUMER Ownership = 2
+)
 
-func (x *NetworkInformation) Reset() {
-	*x = NetworkInformation{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_enterprise_rollback_service_proto_msgTypes[0]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
+// Enum value maps for Ownership.
+var (
+	Ownership_name = map[int32]string{
+		0: "OOBE",
+		1: "ENROLLED",
+		2: "CONSUMER",
 	}
-}
-
-func (x *NetworkInformation) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*NetworkInformation) ProtoMessage() {}
-
-func (x *NetworkInformation) ProtoReflect() protoreflect.Message {
-	mi := &file_enterprise_rollback_service_proto_msgTypes[0]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
+	Ownership_value = map[string]int32{
+		"OOBE":     0,
+		"ENROLLED": 1,
+		"CONSUMER": 2,
 	}
-	return mi.MessageOf(x)
+)
+
+func (x Ownership) Enum() *Ownership {
+	p := new(Ownership)
+	*p = x
+	return p
 }
 
-// Deprecated: Use NetworkInformation.ProtoReflect.Descriptor instead.
-func (*NetworkInformation) Descriptor() ([]byte, []int) {
+func (x Ownership) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (Ownership) Descriptor() protoreflect.EnumDescriptor {
+	return file_enterprise_rollback_service_proto_enumTypes[0].Descriptor()
+}
+
+func (Ownership) Type() protoreflect.EnumType {
+	return &file_enterprise_rollback_service_proto_enumTypes[0]
+}
+
+func (x Ownership) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use Ownership.Descriptor instead.
+func (Ownership) EnumDescriptor() ([]byte, []int) {
 	return file_enterprise_rollback_service_proto_rawDescGZIP(), []int{0}
-}
-
-func (x *NetworkInformation) GetGuid() string {
-	if x != nil {
-		return x.Guid
-	}
-	return ""
-}
-
-type SetUpNetworksRequest struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-}
-
-func (x *SetUpNetworksRequest) Reset() {
-	*x = SetUpNetworksRequest{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_enterprise_rollback_service_proto_msgTypes[1]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *SetUpNetworksRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*SetUpNetworksRequest) ProtoMessage() {}
-
-func (x *SetUpNetworksRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_enterprise_rollback_service_proto_msgTypes[1]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use SetUpNetworksRequest.ProtoReflect.Descriptor instead.
-func (*SetUpNetworksRequest) Descriptor() ([]byte, []int) {
-	return file_enterprise_rollback_service_proto_rawDescGZIP(), []int{1}
 }
 
 type SetUpNetworksResponse struct {
@@ -124,7 +89,7 @@ type SetUpNetworksResponse struct {
 func (x *SetUpNetworksResponse) Reset() {
 	*x = SetUpNetworksResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_enterprise_rollback_service_proto_msgTypes[2]
+		mi := &file_enterprise_rollback_service_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -137,7 +102,7 @@ func (x *SetUpNetworksResponse) String() string {
 func (*SetUpNetworksResponse) ProtoMessage() {}
 
 func (x *SetUpNetworksResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_enterprise_rollback_service_proto_msgTypes[2]
+	mi := &file_enterprise_rollback_service_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -150,7 +115,7 @@ func (x *SetUpNetworksResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetUpNetworksResponse.ProtoReflect.Descriptor instead.
 func (*SetUpNetworksResponse) Descriptor() ([]byte, []int) {
-	return file_enterprise_rollback_service_proto_rawDescGZIP(), []int{2}
+	return file_enterprise_rollback_service_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *SetUpNetworksResponse) GetNetworks() []*NetworkInformation {
@@ -160,18 +125,122 @@ func (x *SetUpNetworksResponse) GetNetworks() []*NetworkInformation {
 	return nil
 }
 
-// VerifyRollbackRequest needs to contain the unchanged NetworkInformation from
-// SetUpNetworksResponse.
-type VerifyRollbackRequest struct {
+type NetworkInformation struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Networks []*NetworkInformation `protobuf:"bytes,2,rep,name=networks,proto3" json:"networks,omitempty"`
+	Guid string `protobuf:"bytes,1,opt,name=guid,proto3" json:"guid,omitempty"`
 }
 
-func (x *VerifyRollbackRequest) Reset() {
-	*x = VerifyRollbackRequest{}
+func (x *NetworkInformation) Reset() {
+	*x = NetworkInformation{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_enterprise_rollback_service_proto_msgTypes[1]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *NetworkInformation) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*NetworkInformation) ProtoMessage() {}
+
+func (x *NetworkInformation) ProtoReflect() protoreflect.Message {
+	mi := &file_enterprise_rollback_service_proto_msgTypes[1]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use NetworkInformation.ProtoReflect.Descriptor instead.
+func (*NetworkInformation) Descriptor() ([]byte, []int) {
+	return file_enterprise_rollback_service_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *NetworkInformation) GetGuid() string {
+	if x != nil {
+		return x.Guid
+	}
+	return ""
+}
+
+// VerifyNetworksRequest needs to contain the unchanged NetworkInformation from
+// SetUpNetworksResponse.
+type VerifyNetworksRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Ownership Ownership             `protobuf:"varint,1,opt,name=ownership,proto3,enum=tast.cros.rollback.Ownership" json:"ownership,omitempty"`
+	Networks  []*NetworkInformation `protobuf:"bytes,2,rep,name=networks,proto3" json:"networks,omitempty"`
+}
+
+func (x *VerifyNetworksRequest) Reset() {
+	*x = VerifyNetworksRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_enterprise_rollback_service_proto_msgTypes[2]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *VerifyNetworksRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*VerifyNetworksRequest) ProtoMessage() {}
+
+func (x *VerifyNetworksRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_enterprise_rollback_service_proto_msgTypes[2]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use VerifyNetworksRequest.ProtoReflect.Descriptor instead.
+func (*VerifyNetworksRequest) Descriptor() ([]byte, []int) {
+	return file_enterprise_rollback_service_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *VerifyNetworksRequest) GetOwnership() Ownership {
+	if x != nil {
+		return x.Ownership
+	}
+	return Ownership_OOBE
+}
+
+func (x *VerifyNetworksRequest) GetNetworks() []*NetworkInformation {
+	if x != nil {
+		return x.Networks
+	}
+	return nil
+}
+
+type VerifyNetworksResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Successful bool `protobuf:"varint,1,opt,name=successful,proto3" json:"successful,omitempty"`
+	// verification_details should be logged no matter if successful or not.
+	VerificationDetails string `protobuf:"bytes,2,opt,name=verification_details,json=verificationDetails,proto3" json:"verification_details,omitempty"`
+}
+
+func (x *VerifyNetworksResponse) Reset() {
+	*x = VerifyNetworksResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_enterprise_rollback_service_proto_msgTypes[3]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -179,13 +248,13 @@ func (x *VerifyRollbackRequest) Reset() {
 	}
 }
 
-func (x *VerifyRollbackRequest) String() string {
+func (x *VerifyNetworksResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*VerifyRollbackRequest) ProtoMessage() {}
+func (*VerifyNetworksResponse) ProtoMessage() {}
 
-func (x *VerifyRollbackRequest) ProtoReflect() protoreflect.Message {
+func (x *VerifyNetworksResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_enterprise_rollback_service_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -197,31 +266,36 @@ func (x *VerifyRollbackRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use VerifyRollbackRequest.ProtoReflect.Descriptor instead.
-func (*VerifyRollbackRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use VerifyNetworksResponse.ProtoReflect.Descriptor instead.
+func (*VerifyNetworksResponse) Descriptor() ([]byte, []int) {
 	return file_enterprise_rollback_service_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *VerifyRollbackRequest) GetNetworks() []*NetworkInformation {
+func (x *VerifyNetworksResponse) GetSuccessful() bool {
 	if x != nil {
-		return x.Networks
+		return x.Successful
 	}
-	return nil
+	return false
 }
 
-type VerifyRollbackResponse struct {
+func (x *VerifyNetworksResponse) GetVerificationDetails() string {
+	if x != nil {
+		return x.VerificationDetails
+	}
+	return ""
+}
+
+type SessionState struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Successful bool `protobuf:"varint,1,opt,name=successful,proto3" json:"successful,omitempty"`
-	// It provides details about the failure or further information about the
-	// success that should be logged for reference.
-	VerificationDetails string `protobuf:"bytes,2,opt,name=verification_details,json=verificationDetails,proto3" json:"verification_details,omitempty"`
+	Ownership Ownership  `protobuf:"varint,1,opt,name=ownership,proto3,enum=tast.cros.rollback.Ownership" json:"ownership,omitempty"`
+	LoginData *LoginData `protobuf:"bytes,2,opt,name=login_data,json=loginData,proto3,oneof" json:"login_data,omitempty"`
 }
 
-func (x *VerifyRollbackResponse) Reset() {
-	*x = VerifyRollbackResponse{}
+func (x *SessionState) Reset() {
+	*x = SessionState{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_enterprise_rollback_service_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -229,13 +303,13 @@ func (x *VerifyRollbackResponse) Reset() {
 	}
 }
 
-func (x *VerifyRollbackResponse) String() string {
+func (x *SessionState) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*VerifyRollbackResponse) ProtoMessage() {}
+func (*SessionState) ProtoMessage() {}
 
-func (x *VerifyRollbackResponse) ProtoReflect() protoreflect.Message {
+func (x *SessionState) ProtoReflect() protoreflect.Message {
 	mi := &file_enterprise_rollback_service_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -247,23 +321,227 @@ func (x *VerifyRollbackResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use VerifyRollbackResponse.ProtoReflect.Descriptor instead.
-func (*VerifyRollbackResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use SessionState.ProtoReflect.Descriptor instead.
+func (*SessionState) Descriptor() ([]byte, []int) {
 	return file_enterprise_rollback_service_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *VerifyRollbackResponse) GetSuccessful() bool {
+func (x *SessionState) GetOwnership() Ownership {
 	if x != nil {
-		return x.Successful
+		return x.Ownership
 	}
-	return false
+	return Ownership_OOBE
 }
 
-func (x *VerifyRollbackResponse) GetVerificationDetails() string {
+func (x *SessionState) GetLoginData() *LoginData {
 	if x != nil {
-		return x.VerificationDetails
+		return x.LoginData
+	}
+	return nil
+}
+
+type LoginData struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Username    string `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty"`
+	Password    string `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
+	DmserverUrl string `protobuf:"bytes,3,opt,name=dmserver_url,json=dmserverUrl,proto3" json:"dmserver_url,omitempty"`
+}
+
+func (x *LoginData) Reset() {
+	*x = LoginData{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_enterprise_rollback_service_proto_msgTypes[5]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *LoginData) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LoginData) ProtoMessage() {}
+
+func (x *LoginData) ProtoReflect() protoreflect.Message {
+	mi := &file_enterprise_rollback_service_proto_msgTypes[5]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LoginData.ProtoReflect.Descriptor instead.
+func (*LoginData) Descriptor() ([]byte, []int) {
+	return file_enterprise_rollback_service_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *LoginData) GetUsername() string {
+	if x != nil {
+		return x.Username
 	}
 	return ""
+}
+
+func (x *LoginData) GetPassword() string {
+	if x != nil {
+		return x.Password
+	}
+	return ""
+}
+
+func (x *LoginData) GetDmserverUrl() string {
+	if x != nil {
+		return x.DmserverUrl
+	}
+	return ""
+}
+
+type GetNetworkPropertiesRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Guid string `protobuf:"bytes,1,opt,name=guid,proto3" json:"guid,omitempty"`
+}
+
+func (x *GetNetworkPropertiesRequest) Reset() {
+	*x = GetNetworkPropertiesRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_enterprise_rollback_service_proto_msgTypes[6]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GetNetworkPropertiesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetNetworkPropertiesRequest) ProtoMessage() {}
+
+func (x *GetNetworkPropertiesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_enterprise_rollback_service_proto_msgTypes[6]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetNetworkPropertiesRequest.ProtoReflect.Descriptor instead.
+func (*GetNetworkPropertiesRequest) Descriptor() ([]byte, []int) {
+	return file_enterprise_rollback_service_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *GetNetworkPropertiesRequest) GetGuid() string {
+	if x != nil {
+		return x.Guid
+	}
+	return ""
+}
+
+type GetNetworkPropertiesResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Properties *ManagedProperties `protobuf:"bytes,1,opt,name=properties,proto3" json:"properties,omitempty"`
+}
+
+func (x *GetNetworkPropertiesResponse) Reset() {
+	*x = GetNetworkPropertiesResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_enterprise_rollback_service_proto_msgTypes[7]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GetNetworkPropertiesResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetNetworkPropertiesResponse) ProtoMessage() {}
+
+func (x *GetNetworkPropertiesResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_enterprise_rollback_service_proto_msgTypes[7]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetNetworkPropertiesResponse.ProtoReflect.Descriptor instead.
+func (*GetNetworkPropertiesResponse) Descriptor() ([]byte, []int) {
+	return file_enterprise_rollback_service_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *GetNetworkPropertiesResponse) GetProperties() *ManagedProperties {
+	if x != nil {
+		return x.Properties
+	}
+	return nil
+}
+
+type ManagedProperties struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	SerializedData []byte `protobuf:"bytes,1,opt,name=serialized_data,json=serializedData,proto3" json:"serialized_data,omitempty"`
+}
+
+func (x *ManagedProperties) Reset() {
+	*x = ManagedProperties{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_enterprise_rollback_service_proto_msgTypes[8]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ManagedProperties) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ManagedProperties) ProtoMessage() {}
+
+func (x *ManagedProperties) ProtoReflect() protoreflect.Message {
+	mi := &file_enterprise_rollback_service_proto_msgTypes[8]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ManagedProperties.ProtoReflect.Descriptor instead.
+func (*ManagedProperties) Descriptor() ([]byte, []int) {
+	return file_enterprise_rollback_service_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *ManagedProperties) GetSerializedData() []byte {
+	if x != nil {
+		return x.SerializedData
+	}
+	return nil
 }
 
 var File_enterprise_rollback_service_proto protoreflect.FileDescriptor
@@ -272,48 +550,103 @@ var file_enterprise_rollback_service_proto_rawDesc = []byte{
 	0x0a, 0x21, 0x65, 0x6e, 0x74, 0x65, 0x72, 0x70, 0x72, 0x69, 0x73, 0x65, 0x5f, 0x72, 0x6f, 0x6c,
 	0x6c, 0x62, 0x61, 0x63, 0x6b, 0x5f, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x2e, 0x70, 0x72,
 	0x6f, 0x74, 0x6f, 0x12, 0x12, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x72,
-	0x6f, 0x6c, 0x6c, 0x62, 0x61, 0x63, 0x6b, 0x22, 0x28, 0x0a, 0x12, 0x4e, 0x65, 0x74, 0x77, 0x6f,
-	0x72, 0x6b, 0x49, 0x6e, 0x66, 0x6f, 0x72, 0x6d, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x12, 0x0a,
-	0x04, 0x67, 0x75, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x67, 0x75, 0x69,
-	0x64, 0x22, 0x16, 0x0a, 0x14, 0x53, 0x65, 0x74, 0x55, 0x70, 0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72,
-	0x6b, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x5b, 0x0a, 0x15, 0x53, 0x65, 0x74,
-	0x55, 0x70, 0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x12, 0x42, 0x0a, 0x08, 0x6e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x73, 0x18, 0x01,
+	0x6f, 0x6c, 0x6c, 0x62, 0x61, 0x63, 0x6b, 0x1a, 0x1b, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2f,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2f, 0x65, 0x6d, 0x70, 0x74, 0x79, 0x2e, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x22, 0x5b, 0x0a, 0x15, 0x53, 0x65, 0x74, 0x55, 0x70, 0x4e, 0x65, 0x74,
+	0x77, 0x6f, 0x72, 0x6b, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x42, 0x0a,
+	0x08, 0x6e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32,
+	0x26, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x72, 0x6f, 0x6c, 0x6c,
+	0x62, 0x61, 0x63, 0x6b, 0x2e, 0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x49, 0x6e, 0x66, 0x6f,
+	0x72, 0x6d, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x08, 0x6e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b,
+	0x73, 0x22, 0x28, 0x0a, 0x12, 0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x49, 0x6e, 0x66, 0x6f,
+	0x72, 0x6d, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x12, 0x0a, 0x04, 0x67, 0x75, 0x69, 0x64, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x67, 0x75, 0x69, 0x64, 0x22, 0x98, 0x01, 0x0a, 0x15,
+	0x56, 0x65, 0x72, 0x69, 0x66, 0x79, 0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x73, 0x52, 0x65,
+	0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x3b, 0x0a, 0x09, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x73, 0x68,
+	0x69, 0x70, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x1d, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e,
+	0x63, 0x72, 0x6f, 0x73, 0x2e, 0x72, 0x6f, 0x6c, 0x6c, 0x62, 0x61, 0x63, 0x6b, 0x2e, 0x4f, 0x77,
+	0x6e, 0x65, 0x72, 0x73, 0x68, 0x69, 0x70, 0x52, 0x09, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x73, 0x68,
+	0x69, 0x70, 0x12, 0x42, 0x0a, 0x08, 0x6e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x73, 0x18, 0x02,
 	0x20, 0x03, 0x28, 0x0b, 0x32, 0x26, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73,
 	0x2e, 0x72, 0x6f, 0x6c, 0x6c, 0x62, 0x61, 0x63, 0x6b, 0x2e, 0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72,
 	0x6b, 0x49, 0x6e, 0x66, 0x6f, 0x72, 0x6d, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x08, 0x6e, 0x65,
-	0x74, 0x77, 0x6f, 0x72, 0x6b, 0x73, 0x22, 0x61, 0x0a, 0x15, 0x56, 0x65, 0x72, 0x69, 0x66, 0x79,
-	0x52, 0x6f, 0x6c, 0x6c, 0x62, 0x61, 0x63, 0x6b, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12,
-	0x42, 0x0a, 0x08, 0x6e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28,
-	0x0b, 0x32, 0x26, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x72, 0x6f,
-	0x6c, 0x6c, 0x62, 0x61, 0x63, 0x6b, 0x2e, 0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x49, 0x6e,
-	0x66, 0x6f, 0x72, 0x6d, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x08, 0x6e, 0x65, 0x74, 0x77, 0x6f,
-	0x72, 0x6b, 0x73, 0x4a, 0x04, 0x08, 0x01, 0x10, 0x02, 0x22, 0x6b, 0x0a, 0x16, 0x56, 0x65, 0x72,
-	0x69, 0x66, 0x79, 0x52, 0x6f, 0x6c, 0x6c, 0x62, 0x61, 0x63, 0x6b, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x12, 0x1e, 0x0a, 0x0a, 0x73, 0x75, 0x63, 0x63, 0x65, 0x73, 0x73, 0x66, 0x75,
-	0x6c, 0x18, 0x01, 0x20, 0x01, 0x28, 0x08, 0x52, 0x0a, 0x73, 0x75, 0x63, 0x63, 0x65, 0x73, 0x73,
-	0x66, 0x75, 0x6c, 0x12, 0x31, 0x0a, 0x14, 0x76, 0x65, 0x72, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74,
-	0x69, 0x6f, 0x6e, 0x5f, 0x64, 0x65, 0x74, 0x61, 0x69, 0x6c, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28,
-	0x09, 0x52, 0x13, 0x76, 0x65, 0x72, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x44,
-	0x65, 0x74, 0x61, 0x69, 0x6c, 0x73, 0x32, 0xea, 0x01, 0x0a, 0x19, 0x45, 0x6e, 0x74, 0x65, 0x72,
+	0x74, 0x77, 0x6f, 0x72, 0x6b, 0x73, 0x22, 0x6b, 0x0a, 0x16, 0x56, 0x65, 0x72, 0x69, 0x66, 0x79,
+	0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x12, 0x1e, 0x0a, 0x0a, 0x73, 0x75, 0x63, 0x63, 0x65, 0x73, 0x73, 0x66, 0x75, 0x6c, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x08, 0x52, 0x0a, 0x73, 0x75, 0x63, 0x63, 0x65, 0x73, 0x73, 0x66, 0x75, 0x6c,
+	0x12, 0x31, 0x0a, 0x14, 0x76, 0x65, 0x72, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e,
+	0x5f, 0x64, 0x65, 0x74, 0x61, 0x69, 0x6c, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x13,
+	0x76, 0x65, 0x72, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x44, 0x65, 0x74, 0x61,
+	0x69, 0x6c, 0x73, 0x22, 0x9d, 0x01, 0x0a, 0x0c, 0x53, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x53,
+	0x74, 0x61, 0x74, 0x65, 0x12, 0x3b, 0x0a, 0x09, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x73, 0x68, 0x69,
+	0x70, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x1d, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63,
+	0x72, 0x6f, 0x73, 0x2e, 0x72, 0x6f, 0x6c, 0x6c, 0x62, 0x61, 0x63, 0x6b, 0x2e, 0x4f, 0x77, 0x6e,
+	0x65, 0x72, 0x73, 0x68, 0x69, 0x70, 0x52, 0x09, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x73, 0x68, 0x69,
+	0x70, 0x12, 0x41, 0x0a, 0x0a, 0x6c, 0x6f, 0x67, 0x69, 0x6e, 0x5f, 0x64, 0x61, 0x74, 0x61, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f,
+	0x73, 0x2e, 0x72, 0x6f, 0x6c, 0x6c, 0x62, 0x61, 0x63, 0x6b, 0x2e, 0x4c, 0x6f, 0x67, 0x69, 0x6e,
+	0x44, 0x61, 0x74, 0x61, 0x48, 0x00, 0x52, 0x09, 0x6c, 0x6f, 0x67, 0x69, 0x6e, 0x44, 0x61, 0x74,
+	0x61, 0x88, 0x01, 0x01, 0x42, 0x0d, 0x0a, 0x0b, 0x5f, 0x6c, 0x6f, 0x67, 0x69, 0x6e, 0x5f, 0x64,
+	0x61, 0x74, 0x61, 0x22, 0x66, 0x0a, 0x09, 0x4c, 0x6f, 0x67, 0x69, 0x6e, 0x44, 0x61, 0x74, 0x61,
+	0x12, 0x1a, 0x0a, 0x08, 0x75, 0x73, 0x65, 0x72, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x08, 0x75, 0x73, 0x65, 0x72, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x1a, 0x0a, 0x08,
+	0x70, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08,
+	0x70, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64, 0x12, 0x21, 0x0a, 0x0c, 0x64, 0x6d, 0x73, 0x65,
+	0x72, 0x76, 0x65, 0x72, 0x5f, 0x75, 0x72, 0x6c, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b,
+	0x64, 0x6d, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x55, 0x72, 0x6c, 0x22, 0x31, 0x0a, 0x1b, 0x47,
+	0x65, 0x74, 0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x50, 0x72, 0x6f, 0x70, 0x65, 0x72, 0x74,
+	0x69, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x12, 0x0a, 0x04, 0x67, 0x75,
+	0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x67, 0x75, 0x69, 0x64, 0x22, 0x65,
+	0x0a, 0x1c, 0x47, 0x65, 0x74, 0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x50, 0x72, 0x6f, 0x70,
+	0x65, 0x72, 0x74, 0x69, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x45,
+	0x0a, 0x0a, 0x70, 0x72, 0x6f, 0x70, 0x65, 0x72, 0x74, 0x69, 0x65, 0x73, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x0b, 0x32, 0x25, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x72,
+	0x6f, 0x6c, 0x6c, 0x62, 0x61, 0x63, 0x6b, 0x2e, 0x4d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x64, 0x50,
+	0x72, 0x6f, 0x70, 0x65, 0x72, 0x74, 0x69, 0x65, 0x73, 0x52, 0x0a, 0x70, 0x72, 0x6f, 0x70, 0x65,
+	0x72, 0x74, 0x69, 0x65, 0x73, 0x22, 0x3c, 0x0a, 0x11, 0x4d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x64,
+	0x50, 0x72, 0x6f, 0x70, 0x65, 0x72, 0x74, 0x69, 0x65, 0x73, 0x12, 0x27, 0x0a, 0x0f, 0x73, 0x65,
+	0x72, 0x69, 0x61, 0x6c, 0x69, 0x7a, 0x65, 0x64, 0x5f, 0x64, 0x61, 0x74, 0x61, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x0c, 0x52, 0x0e, 0x73, 0x65, 0x72, 0x69, 0x61, 0x6c, 0x69, 0x7a, 0x65, 0x64, 0x44,
+	0x61, 0x74, 0x61, 0x2a, 0x31, 0x0a, 0x09, 0x4f, 0x77, 0x6e, 0x65, 0x72, 0x73, 0x68, 0x69, 0x70,
+	0x12, 0x08, 0x0a, 0x04, 0x4f, 0x4f, 0x42, 0x45, 0x10, 0x00, 0x12, 0x0c, 0x0a, 0x08, 0x45, 0x4e,
+	0x52, 0x4f, 0x4c, 0x4c, 0x45, 0x44, 0x10, 0x01, 0x12, 0x0c, 0x0a, 0x08, 0x43, 0x4f, 0x4e, 0x53,
+	0x55, 0x4d, 0x45, 0x52, 0x10, 0x02, 0x32, 0x95, 0x04, 0x0a, 0x19, 0x45, 0x6e, 0x74, 0x65, 0x72,
 	0x70, 0x72, 0x69, 0x73, 0x65, 0x52, 0x6f, 0x6c, 0x6c, 0x62, 0x61, 0x63, 0x6b, 0x53, 0x65, 0x72,
-	0x76, 0x69, 0x63, 0x65, 0x12, 0x64, 0x0a, 0x0d, 0x53, 0x65, 0x74, 0x55, 0x70, 0x4e, 0x65, 0x74,
-	0x77, 0x6f, 0x72, 0x6b, 0x73, 0x12, 0x28, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f,
-	0x73, 0x2e, 0x72, 0x6f, 0x6c, 0x6c, 0x62, 0x61, 0x63, 0x6b, 0x2e, 0x53, 0x65, 0x74, 0x55, 0x70,
-	0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a,
+	0x76, 0x69, 0x63, 0x65, 0x12, 0x43, 0x0a, 0x07, 0x43, 0x6f, 0x6e, 0x6e, 0x65, 0x63, 0x74, 0x12,
+	0x20, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x72, 0x6f, 0x6c, 0x6c,
+	0x62, 0x61, 0x63, 0x6b, 0x2e, 0x53, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x53, 0x74, 0x61, 0x74,
+	0x65, 0x1a, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x12, 0x42, 0x0a, 0x10, 0x43, 0x6c, 0x6f,
+	0x73, 0x65, 0x43, 0x6f, 0x6e, 0x6e, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0x16, 0x2e,
+	0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e,
+	0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x12, 0x37, 0x0a,
+	0x05, 0x4c, 0x6f, 0x67, 0x69, 0x6e, 0x12, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x16,
+	0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66,
+	0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x12, 0x52, 0x0a, 0x0d, 0x53, 0x65, 0x74, 0x55, 0x70, 0x4e,
+	0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x73, 0x12, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65,
+	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a,
 	0x29, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x72, 0x6f, 0x6c, 0x6c,
 	0x62, 0x61, 0x63, 0x6b, 0x2e, 0x53, 0x65, 0x74, 0x55, 0x70, 0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72,
 	0x6b, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x67, 0x0a, 0x0e, 0x56, 0x65,
-	0x72, 0x69, 0x66, 0x79, 0x52, 0x6f, 0x6c, 0x6c, 0x62, 0x61, 0x63, 0x6b, 0x12, 0x29, 0x2e, 0x74,
+	0x72, 0x69, 0x66, 0x79, 0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x73, 0x12, 0x29, 0x2e, 0x74,
 	0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x72, 0x6f, 0x6c, 0x6c, 0x62, 0x61, 0x63,
-	0x6b, 0x2e, 0x56, 0x65, 0x72, 0x69, 0x66, 0x79, 0x52, 0x6f, 0x6c, 0x6c, 0x62, 0x61, 0x63, 0x6b,
+	0x6b, 0x2e, 0x56, 0x65, 0x72, 0x69, 0x66, 0x79, 0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x73,
 	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2a, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63,
 	0x72, 0x6f, 0x73, 0x2e, 0x72, 0x6f, 0x6c, 0x6c, 0x62, 0x61, 0x63, 0x6b, 0x2e, 0x56, 0x65, 0x72,
-	0x69, 0x66, 0x79, 0x52, 0x6f, 0x6c, 0x6c, 0x62, 0x61, 0x63, 0x6b, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x42, 0x28, 0x5a, 0x26, 0x63, 0x68, 0x72, 0x6f, 0x6d, 0x69, 0x75, 0x6d, 0x6f,
-	0x73, 0x2f, 0x74, 0x61, 0x73, 0x74, 0x2f, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x73, 0x2f,
-	0x63, 0x72, 0x6f, 0x73, 0x2f, 0x72, 0x6f, 0x6c, 0x6c, 0x62, 0x61, 0x63, 0x6b, 0x62, 0x06, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x69, 0x66, 0x79, 0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x12, 0x79, 0x0a, 0x14, 0x47, 0x65, 0x74, 0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72,
+	0x6b, 0x50, 0x72, 0x6f, 0x70, 0x65, 0x72, 0x74, 0x69, 0x65, 0x73, 0x12, 0x2f, 0x2e, 0x74, 0x61,
+	0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x72, 0x6f, 0x6c, 0x6c, 0x62, 0x61, 0x63, 0x6b,
+	0x2e, 0x47, 0x65, 0x74, 0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x50, 0x72, 0x6f, 0x70, 0x65,
+	0x72, 0x74, 0x69, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x30, 0x2e, 0x74,
+	0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x72, 0x6f, 0x6c, 0x6c, 0x62, 0x61, 0x63,
+	0x6b, 0x2e, 0x47, 0x65, 0x74, 0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x50, 0x72, 0x6f, 0x70,
+	0x65, 0x72, 0x74, 0x69, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0x28,
+	0x5a, 0x26, 0x63, 0x68, 0x72, 0x6f, 0x6d, 0x69, 0x75, 0x6d, 0x6f, 0x73, 0x2f, 0x74, 0x61, 0x73,
+	0x74, 0x2f, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x73, 0x2f, 0x63, 0x72, 0x6f, 0x73, 0x2f,
+	0x72, 0x6f, 0x6c, 0x6c, 0x62, 0x61, 0x63, 0x6b, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -328,26 +661,45 @@ func file_enterprise_rollback_service_proto_rawDescGZIP() []byte {
 	return file_enterprise_rollback_service_proto_rawDescData
 }
 
-var file_enterprise_rollback_service_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_enterprise_rollback_service_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_enterprise_rollback_service_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_enterprise_rollback_service_proto_goTypes = []interface{}{
-	(*NetworkInformation)(nil),     // 0: tast.cros.rollback.NetworkInformation
-	(*SetUpNetworksRequest)(nil),   // 1: tast.cros.rollback.SetUpNetworksRequest
-	(*SetUpNetworksResponse)(nil),  // 2: tast.cros.rollback.SetUpNetworksResponse
-	(*VerifyRollbackRequest)(nil),  // 3: tast.cros.rollback.VerifyRollbackRequest
-	(*VerifyRollbackResponse)(nil), // 4: tast.cros.rollback.VerifyRollbackResponse
+	(Ownership)(0),                       // 0: tast.cros.rollback.Ownership
+	(*SetUpNetworksResponse)(nil),        // 1: tast.cros.rollback.SetUpNetworksResponse
+	(*NetworkInformation)(nil),           // 2: tast.cros.rollback.NetworkInformation
+	(*VerifyNetworksRequest)(nil),        // 3: tast.cros.rollback.VerifyNetworksRequest
+	(*VerifyNetworksResponse)(nil),       // 4: tast.cros.rollback.VerifyNetworksResponse
+	(*SessionState)(nil),                 // 5: tast.cros.rollback.SessionState
+	(*LoginData)(nil),                    // 6: tast.cros.rollback.LoginData
+	(*GetNetworkPropertiesRequest)(nil),  // 7: tast.cros.rollback.GetNetworkPropertiesRequest
+	(*GetNetworkPropertiesResponse)(nil), // 8: tast.cros.rollback.GetNetworkPropertiesResponse
+	(*ManagedProperties)(nil),            // 9: tast.cros.rollback.ManagedProperties
+	(*emptypb.Empty)(nil),                // 10: google.protobuf.Empty
 }
 var file_enterprise_rollback_service_proto_depIdxs = []int32{
-	0, // 0: tast.cros.rollback.SetUpNetworksResponse.networks:type_name -> tast.cros.rollback.NetworkInformation
-	0, // 1: tast.cros.rollback.VerifyRollbackRequest.networks:type_name -> tast.cros.rollback.NetworkInformation
-	1, // 2: tast.cros.rollback.EnterpriseRollbackService.SetUpNetworks:input_type -> tast.cros.rollback.SetUpNetworksRequest
-	3, // 3: tast.cros.rollback.EnterpriseRollbackService.VerifyRollback:input_type -> tast.cros.rollback.VerifyRollbackRequest
-	2, // 4: tast.cros.rollback.EnterpriseRollbackService.SetUpNetworks:output_type -> tast.cros.rollback.SetUpNetworksResponse
-	4, // 5: tast.cros.rollback.EnterpriseRollbackService.VerifyRollback:output_type -> tast.cros.rollback.VerifyRollbackResponse
-	4, // [4:6] is the sub-list for method output_type
-	2, // [2:4] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	2,  // 0: tast.cros.rollback.SetUpNetworksResponse.networks:type_name -> tast.cros.rollback.NetworkInformation
+	0,  // 1: tast.cros.rollback.VerifyNetworksRequest.ownership:type_name -> tast.cros.rollback.Ownership
+	2,  // 2: tast.cros.rollback.VerifyNetworksRequest.networks:type_name -> tast.cros.rollback.NetworkInformation
+	0,  // 3: tast.cros.rollback.SessionState.ownership:type_name -> tast.cros.rollback.Ownership
+	6,  // 4: tast.cros.rollback.SessionState.login_data:type_name -> tast.cros.rollback.LoginData
+	9,  // 5: tast.cros.rollback.GetNetworkPropertiesResponse.properties:type_name -> tast.cros.rollback.ManagedProperties
+	5,  // 6: tast.cros.rollback.EnterpriseRollbackService.Connect:input_type -> tast.cros.rollback.SessionState
+	10, // 7: tast.cros.rollback.EnterpriseRollbackService.CloseConnections:input_type -> google.protobuf.Empty
+	10, // 8: tast.cros.rollback.EnterpriseRollbackService.Login:input_type -> google.protobuf.Empty
+	10, // 9: tast.cros.rollback.EnterpriseRollbackService.SetUpNetworks:input_type -> google.protobuf.Empty
+	3,  // 10: tast.cros.rollback.EnterpriseRollbackService.VerifyNetworks:input_type -> tast.cros.rollback.VerifyNetworksRequest
+	7,  // 11: tast.cros.rollback.EnterpriseRollbackService.GetNetworkProperties:input_type -> tast.cros.rollback.GetNetworkPropertiesRequest
+	10, // 12: tast.cros.rollback.EnterpriseRollbackService.Connect:output_type -> google.protobuf.Empty
+	10, // 13: tast.cros.rollback.EnterpriseRollbackService.CloseConnections:output_type -> google.protobuf.Empty
+	10, // 14: tast.cros.rollback.EnterpriseRollbackService.Login:output_type -> google.protobuf.Empty
+	1,  // 15: tast.cros.rollback.EnterpriseRollbackService.SetUpNetworks:output_type -> tast.cros.rollback.SetUpNetworksResponse
+	4,  // 16: tast.cros.rollback.EnterpriseRollbackService.VerifyNetworks:output_type -> tast.cros.rollback.VerifyNetworksResponse
+	8,  // 17: tast.cros.rollback.EnterpriseRollbackService.GetNetworkProperties:output_type -> tast.cros.rollback.GetNetworkPropertiesResponse
+	12, // [12:18] is the sub-list for method output_type
+	6,  // [6:12] is the sub-list for method input_type
+	6,  // [6:6] is the sub-list for extension type_name
+	6,  // [6:6] is the sub-list for extension extendee
+	0,  // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_enterprise_rollback_service_proto_init() }
@@ -357,30 +709,6 @@ func file_enterprise_rollback_service_proto_init() {
 	}
 	if !protoimpl.UnsafeEnabled {
 		file_enterprise_rollback_service_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*NetworkInformation); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_enterprise_rollback_service_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*SetUpNetworksRequest); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_enterprise_rollback_service_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*SetUpNetworksResponse); i {
 			case 0:
 				return &v.state
@@ -392,8 +720,32 @@ func file_enterprise_rollback_service_proto_init() {
 				return nil
 			}
 		}
+		file_enterprise_rollback_service_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*NetworkInformation); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_enterprise_rollback_service_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*VerifyNetworksRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 		file_enterprise_rollback_service_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*VerifyRollbackRequest); i {
+			switch v := v.(*VerifyNetworksResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -405,7 +757,55 @@ func file_enterprise_rollback_service_proto_init() {
 			}
 		}
 		file_enterprise_rollback_service_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*VerifyRollbackResponse); i {
+			switch v := v.(*SessionState); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_enterprise_rollback_service_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*LoginData); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_enterprise_rollback_service_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GetNetworkPropertiesRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_enterprise_rollback_service_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GetNetworkPropertiesResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_enterprise_rollback_service_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ManagedProperties); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -417,18 +817,20 @@ func file_enterprise_rollback_service_proto_init() {
 			}
 		}
 	}
+	file_enterprise_rollback_service_proto_msgTypes[4].OneofWrappers = []interface{}{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_enterprise_rollback_service_proto_rawDesc,
-			NumEnums:      0,
-			NumMessages:   5,
+			NumEnums:      1,
+			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_enterprise_rollback_service_proto_goTypes,
 		DependencyIndexes: file_enterprise_rollback_service_proto_depIdxs,
+		EnumInfos:         file_enterprise_rollback_service_proto_enumTypes,
 		MessageInfos:      file_enterprise_rollback_service_proto_msgTypes,
 	}.Build()
 	File_enterprise_rollback_service_proto = out.File
@@ -449,11 +851,17 @@ const _ = grpc.SupportPackageIsVersion6
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type EnterpriseRollbackServiceClient interface {
+	// Connect sets up connection to ash Chrome and network API. Calling this function is a prerequisite to call other functions.
+	Connect(ctx context.Context, in *SessionState, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// CloseConnections closes ash Chrome and network API connections. This function is resilient to any of the connections not existing.
+	CloseConnections(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// Login can be called after connecting in OOBE and continues to login as normal user.
+	Login(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// SetUpNetworks sets various networks supported by rollback automatically.
-	SetUpNetworks(ctx context.Context, in *SetUpNetworksRequest, opts ...grpc.CallOption) (*SetUpNetworksResponse, error)
-	// VerifyRollback verifies that oobe ends up on the enrollment screen after
-	// rollback and that the networks provided still exists.
-	VerifyRollback(ctx context.Context, in *VerifyRollbackRequest, opts ...grpc.CallOption) (*VerifyRollbackResponse, error)
+	SetUpNetworks(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*SetUpNetworksResponse, error)
+	// VerifyNetworks verifies that networks were preserved during rollback for tests without enrollment. It may be called during OOBE or after login.
+	VerifyNetworks(ctx context.Context, in *VerifyNetworksRequest, opts ...grpc.CallOption) (*VerifyNetworksResponse, error)
+	GetNetworkProperties(ctx context.Context, in *GetNetworkPropertiesRequest, opts ...grpc.CallOption) (*GetNetworkPropertiesResponse, error)
 }
 
 type enterpriseRollbackServiceClient struct {
@@ -464,7 +872,34 @@ func NewEnterpriseRollbackServiceClient(cc grpc.ClientConnInterface) EnterpriseR
 	return &enterpriseRollbackServiceClient{cc}
 }
 
-func (c *enterpriseRollbackServiceClient) SetUpNetworks(ctx context.Context, in *SetUpNetworksRequest, opts ...grpc.CallOption) (*SetUpNetworksResponse, error) {
+func (c *enterpriseRollbackServiceClient) Connect(ctx context.Context, in *SessionState, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/tast.cros.rollback.EnterpriseRollbackService/Connect", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *enterpriseRollbackServiceClient) CloseConnections(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/tast.cros.rollback.EnterpriseRollbackService/CloseConnections", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *enterpriseRollbackServiceClient) Login(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/tast.cros.rollback.EnterpriseRollbackService/Login", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *enterpriseRollbackServiceClient) SetUpNetworks(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*SetUpNetworksResponse, error) {
 	out := new(SetUpNetworksResponse)
 	err := c.cc.Invoke(ctx, "/tast.cros.rollback.EnterpriseRollbackService/SetUpNetworks", in, out, opts...)
 	if err != nil {
@@ -473,9 +908,18 @@ func (c *enterpriseRollbackServiceClient) SetUpNetworks(ctx context.Context, in 
 	return out, nil
 }
 
-func (c *enterpriseRollbackServiceClient) VerifyRollback(ctx context.Context, in *VerifyRollbackRequest, opts ...grpc.CallOption) (*VerifyRollbackResponse, error) {
-	out := new(VerifyRollbackResponse)
-	err := c.cc.Invoke(ctx, "/tast.cros.rollback.EnterpriseRollbackService/VerifyRollback", in, out, opts...)
+func (c *enterpriseRollbackServiceClient) VerifyNetworks(ctx context.Context, in *VerifyNetworksRequest, opts ...grpc.CallOption) (*VerifyNetworksResponse, error) {
+	out := new(VerifyNetworksResponse)
+	err := c.cc.Invoke(ctx, "/tast.cros.rollback.EnterpriseRollbackService/VerifyNetworks", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *enterpriseRollbackServiceClient) GetNetworkProperties(ctx context.Context, in *GetNetworkPropertiesRequest, opts ...grpc.CallOption) (*GetNetworkPropertiesResponse, error) {
+	out := new(GetNetworkPropertiesResponse)
+	err := c.cc.Invoke(ctx, "/tast.cros.rollback.EnterpriseRollbackService/GetNetworkProperties", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -484,30 +928,102 @@ func (c *enterpriseRollbackServiceClient) VerifyRollback(ctx context.Context, in
 
 // EnterpriseRollbackServiceServer is the server API for EnterpriseRollbackService service.
 type EnterpriseRollbackServiceServer interface {
+	// Connect sets up connection to ash Chrome and network API. Calling this function is a prerequisite to call other functions.
+	Connect(context.Context, *SessionState) (*emptypb.Empty, error)
+	// CloseConnections closes ash Chrome and network API connections. This function is resilient to any of the connections not existing.
+	CloseConnections(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
+	// Login can be called after connecting in OOBE and continues to login as normal user.
+	Login(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 	// SetUpNetworks sets various networks supported by rollback automatically.
-	SetUpNetworks(context.Context, *SetUpNetworksRequest) (*SetUpNetworksResponse, error)
-	// VerifyRollback verifies that oobe ends up on the enrollment screen after
-	// rollback and that the networks provided still exists.
-	VerifyRollback(context.Context, *VerifyRollbackRequest) (*VerifyRollbackResponse, error)
+	SetUpNetworks(context.Context, *emptypb.Empty) (*SetUpNetworksResponse, error)
+	// VerifyNetworks verifies that networks were preserved during rollback for tests without enrollment. It may be called during OOBE or after login.
+	VerifyNetworks(context.Context, *VerifyNetworksRequest) (*VerifyNetworksResponse, error)
+	GetNetworkProperties(context.Context, *GetNetworkPropertiesRequest) (*GetNetworkPropertiesResponse, error)
 }
 
 // UnimplementedEnterpriseRollbackServiceServer can be embedded to have forward compatible implementations.
 type UnimplementedEnterpriseRollbackServiceServer struct {
 }
 
-func (*UnimplementedEnterpriseRollbackServiceServer) SetUpNetworks(context.Context, *SetUpNetworksRequest) (*SetUpNetworksResponse, error) {
+func (*UnimplementedEnterpriseRollbackServiceServer) Connect(context.Context, *SessionState) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Connect not implemented")
+}
+func (*UnimplementedEnterpriseRollbackServiceServer) CloseConnections(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CloseConnections not implemented")
+}
+func (*UnimplementedEnterpriseRollbackServiceServer) Login(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Login not implemented")
+}
+func (*UnimplementedEnterpriseRollbackServiceServer) SetUpNetworks(context.Context, *emptypb.Empty) (*SetUpNetworksResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetUpNetworks not implemented")
 }
-func (*UnimplementedEnterpriseRollbackServiceServer) VerifyRollback(context.Context, *VerifyRollbackRequest) (*VerifyRollbackResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method VerifyRollback not implemented")
+func (*UnimplementedEnterpriseRollbackServiceServer) VerifyNetworks(context.Context, *VerifyNetworksRequest) (*VerifyNetworksResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VerifyNetworks not implemented")
+}
+func (*UnimplementedEnterpriseRollbackServiceServer) GetNetworkProperties(context.Context, *GetNetworkPropertiesRequest) (*GetNetworkPropertiesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetNetworkProperties not implemented")
 }
 
 func RegisterEnterpriseRollbackServiceServer(s *grpc.Server, srv EnterpriseRollbackServiceServer) {
 	s.RegisterService(&_EnterpriseRollbackService_serviceDesc, srv)
 }
 
+func _EnterpriseRollbackService_Connect_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SessionState)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EnterpriseRollbackServiceServer).Connect(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/tast.cros.rollback.EnterpriseRollbackService/Connect",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EnterpriseRollbackServiceServer).Connect(ctx, req.(*SessionState))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _EnterpriseRollbackService_CloseConnections_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EnterpriseRollbackServiceServer).CloseConnections(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/tast.cros.rollback.EnterpriseRollbackService/CloseConnections",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EnterpriseRollbackServiceServer).CloseConnections(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _EnterpriseRollbackService_Login_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EnterpriseRollbackServiceServer).Login(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/tast.cros.rollback.EnterpriseRollbackService/Login",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EnterpriseRollbackServiceServer).Login(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _EnterpriseRollbackService_SetUpNetworks_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SetUpNetworksRequest)
+	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -519,25 +1035,43 @@ func _EnterpriseRollbackService_SetUpNetworks_Handler(srv interface{}, ctx conte
 		FullMethod: "/tast.cros.rollback.EnterpriseRollbackService/SetUpNetworks",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(EnterpriseRollbackServiceServer).SetUpNetworks(ctx, req.(*SetUpNetworksRequest))
+		return srv.(EnterpriseRollbackServiceServer).SetUpNetworks(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _EnterpriseRollbackService_VerifyRollback_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(VerifyRollbackRequest)
+func _EnterpriseRollbackService_VerifyNetworks_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(VerifyNetworksRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(EnterpriseRollbackServiceServer).VerifyRollback(ctx, in)
+		return srv.(EnterpriseRollbackServiceServer).VerifyNetworks(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tast.cros.rollback.EnterpriseRollbackService/VerifyRollback",
+		FullMethod: "/tast.cros.rollback.EnterpriseRollbackService/VerifyNetworks",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(EnterpriseRollbackServiceServer).VerifyRollback(ctx, req.(*VerifyRollbackRequest))
+		return srv.(EnterpriseRollbackServiceServer).VerifyNetworks(ctx, req.(*VerifyNetworksRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _EnterpriseRollbackService_GetNetworkProperties_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetNetworkPropertiesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EnterpriseRollbackServiceServer).GetNetworkProperties(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/tast.cros.rollback.EnterpriseRollbackService/GetNetworkProperties",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EnterpriseRollbackServiceServer).GetNetworkProperties(ctx, req.(*GetNetworkPropertiesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -547,12 +1081,28 @@ var _EnterpriseRollbackService_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*EnterpriseRollbackServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
+			MethodName: "Connect",
+			Handler:    _EnterpriseRollbackService_Connect_Handler,
+		},
+		{
+			MethodName: "CloseConnections",
+			Handler:    _EnterpriseRollbackService_CloseConnections_Handler,
+		},
+		{
+			MethodName: "Login",
+			Handler:    _EnterpriseRollbackService_Login_Handler,
+		},
+		{
 			MethodName: "SetUpNetworks",
 			Handler:    _EnterpriseRollbackService_SetUpNetworks_Handler,
 		},
 		{
-			MethodName: "VerifyRollback",
-			Handler:    _EnterpriseRollbackService_VerifyRollback_Handler,
+			MethodName: "VerifyNetworks",
+			Handler:    _EnterpriseRollbackService_VerifyNetworks_Handler,
+		},
+		{
+			MethodName: "GetNetworkProperties",
+			Handler:    _EnterpriseRollbackService_GetNetworkProperties_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -14,6 +14,10 @@ import (
 	"go.chromium.org/tast/core/errors"
 )
 
+// ErrNetworkNotFound indicates that the client was asked to do an operation on a network that could not be found.
+// Most of the time, this will be returned if the network does not exist.
+var ErrNetworkNotFound = errors.New("network not found")
+
 // CrosNetworkConfig contains the mojo connection to cros_network_config.
 type CrosNetworkConfig struct {
 	conn       *chrome.Conn
@@ -76,12 +80,16 @@ func (c *CrosNetworkConfig) Close(ctx context.Context) error {
 // managed properties contain information on which values are set by policy or
 // user. Look at cros_network_config.mojom or onc_spec.md for more information.
 func (c *CrosNetworkConfig) GetManagedProperties(ctx context.Context, guid string) (*types.ManagedProperties, error) {
-	var result types.ManagedProperties
+	var result *types.ManagedProperties
 	if err := c.mojoRemote.Call(ctx, &result, "function(guid) {return this.getManagedProperties(guid)}", guid); err != nil {
 		return nil, errors.Wrap(err, "failed to call cros_network_config javascript wrapper")
 	}
 
-	return &result, nil
+	if result == nil {
+		return nil, ErrNetworkNotFound
+	}
+
+	return result, nil
 }
 
 // ConfigureNetwork either configures a new network or updates an existing

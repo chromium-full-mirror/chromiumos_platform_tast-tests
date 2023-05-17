@@ -6,7 +6,10 @@ package rollback
 
 import (
 	"context"
+	"encoding/json"
+	"time"
 
+	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 
 	"chromiumos/tast/common/network/netconfigtypes"
@@ -15,6 +18,7 @@ import (
 	nc "chromiumos/tast/local/network/netconfig"
 	rpb "chromiumos/tast/services/cros/rollback"
 
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -29,33 +33,132 @@ func init() {
 
 // EnterpriseRollbackService implements tast.cros.rollback.EnterpriseRollbackService.
 type EnterpriseRollbackService struct {
-	s *testing.ServiceState
+	s          *testing.ServiceState
+	ash        *chrome.Chrome
+	networkAPI *nc.CrosNetworkConfig
+	ownership  *rpb.Ownership
 }
 
-// SetUpNetworks sets up a series of network configuration on the device that
-// are supported by rollback.
-// The device needs to be in a state so that chrome://network may be opened.
-func (e *EnterpriseRollbackService) SetUpNetworks(ctx context.Context, request *rpb.SetUpNetworksRequest) (*rpb.SetUpNetworksResponse, error) {
-	testing.ContextLog(ctx, "setting up networks supported by rollback")
-	// Open chrome and create a connection to the network configuration api.
-	// This is needed to set up each network without having to create a connection
-	// each time.
-	cr, err := chrome.New(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to start Chrome")
-	}
-	defer cr.Close(ctx)
+// Connect sets up connection to ash Chrome and network API. Calling this function is a prerequisite to call other functions.
+func (e *EnterpriseRollbackService) Connect(ctx context.Context, sessionState *rpb.SessionState) (_ *empty.Empty, returnErr error) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
 
-	api, err := nc.CreateLoggedInCrosNetworkConfig(ctx, cr)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get cros network config api")
+	if e.ash != nil || e.networkAPI != nil {
+		return nil, errors.New("not connecting because Chrome or network API already set up")
 	}
-	defer api.Close(ctx)
+
+	// Clean up any partial setup if an error occurs.
+	defer func(ctx context.Context) {
+		if returnErr != nil {
+			e.CloseConnections(ctx, &empty.Empty{})
+		}
+	}(cleanupCtx)
+
+	ash, err := getAsh(ctx, sessionState)
+	if err != nil {
+		return &empty.Empty{}, errors.Wrap(err, "failed to connect to ash")
+	}
+
+	networkAPI, err := getNetworkConfigAPI(ctx, ash, sessionState.Ownership)
+	if err != nil {
+		return &empty.Empty{}, errors.Wrap(err, "failed to connect to network API")
+	}
+
+	e.ownership = &sessionState.Ownership
+	e.ash = ash
+	e.networkAPI = networkAPI
+	return &empty.Empty{}, nil
+}
+
+// CloseConnections closes ash Chrome and network API connections. This function is resilient to any of the connections not existing.
+func (e *EnterpriseRollbackService) CloseConnections(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+	var lastError error
+	if e.networkAPI != nil {
+		lastError = e.networkAPI.Close(ctx)
+
+	}
+	e.networkAPI = nil
+	if e.ash != nil {
+
+		e.ownership = nil
+		lastError = e.ash.Close(ctx)
+	}
+	e.ash = nil
+	return &empty.Empty{}, lastError
+}
+
+// Login can be called after connecting in OOBE and continues to login as normal user.
+func (e *EnterpriseRollbackService) Login(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+	if *e.ownership != rpb.Ownership_OOBE {
+		return nil, errors.New("cannot login because we are not in OOBE")
+	}
+
+	// Close JS API connection in the OOBE before login.
+	if err := e.networkAPI.Close(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to close cros network config api")
+	}
+	e.networkAPI = nil
+
+	if err := e.ash.ContinueLogin(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to login as normal user after rollback")
+	}
+	e.ownership = rpb.Ownership_CONSUMER.Enum()
+
+	networkAPI, err := nc.CreateLoggedInCrosNetworkConfig(ctx, e.ash)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get cros network config api after logged in")
+	}
+	e.networkAPI = networkAPI
+
+	return &empty.Empty{}, nil
+}
+
+func getNetworkConfigAPI(ctx context.Context, ash *chrome.Chrome, ownership rpb.Ownership) (*nc.CrosNetworkConfig, error) {
+	if ownership == rpb.Ownership_OOBE {
+		return nc.CreateOobeCrosNetworkConfig(ctx, ash)
+	}
+	return nc.CreateLoggedInCrosNetworkConfig(ctx, ash)
+}
+
+func getAsh(ctx context.Context, sessionState *rpb.SessionState) (*chrome.Chrome, error) {
+	return chrome.New(ctx, getAshConfig(sessionState)...)
+}
+
+func getAshConfig(sessionState *rpb.SessionState) []chrome.Option {
+	switch sessionState.Ownership {
+	case rpb.Ownership_OOBE:
+		return []chrome.Option{
+			chrome.TryReuseSession(),
+			chrome.ExtraArgs("--enterprise-force-manual-enrollment"),
+			chrome.SkipAutoEnrollmentCheck(),
+			chrome.DeferLogin()}
+	case rpb.Ownership_ENROLLED:
+		return []chrome.Option{
+			chrome.TryReuseSession(),
+			chrome.SkipAutoEnrollmentCheck(),
+			chrome.GAIAEnterpriseEnroll(chrome.Creds{User: sessionState.LoginData.Username, Pass: sessionState.LoginData.Password}),
+			chrome.GAIALogin(chrome.Creds{User: sessionState.LoginData.Username, Pass: sessionState.LoginData.Password}),
+			chrome.DMSPolicy(sessionState.LoginData.DmserverUrl)}
+	case rpb.Ownership_CONSUMER:
+		return []chrome.Option{chrome.TryReuseSession()}
+	}
+	return []chrome.Option{}
+}
+
+// SetUpNetworks sets various networks supported by rollback automatically.
+func (e *EnterpriseRollbackService) SetUpNetworks(ctx context.Context, req *empty.Empty) (*rpb.SetUpNetworksResponse, error) {
+	if e.networkAPI == nil {
+		return nil, errors.New("rollback service has no connection to network API")
+	}
+
+	testing.ContextLog(ctx, "setting up networks supported by rollback")
 
 	// Set up the supported networks.
 	var networks []*rpb.NetworkInformation
 	for _, nw := range rollback.SupportedNetworks {
-		nwInfo, err := setUpNetwork(ctx, api, nw.Config)
+		nwInfo, err := setUpNetwork(ctx, e.networkAPI, nw.Config)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to set up %s network", nw.Type)
 		}
@@ -82,17 +185,22 @@ func setUpNetwork(ctx context.Context, api *nc.CrosNetworkConfig, properties net
 	return networkResponse, nil
 }
 
-// verifyNetworks checks the networks set are the expected ones.
-func verifyNetworks(ctx context.Context, networks []*rpb.NetworkInformation, api *nc.CrosNetworkConfig) (*rpb.VerifyRollbackResponse, error) {
-	response := &rpb.VerifyRollbackResponse{
+// VerifyNetworks verifies that networks were preserved during rollback for tests without enrollment. It may be called during OOBE or after login.
+func (e *EnterpriseRollbackService) VerifyNetworks(ctx context.Context, request *rpb.VerifyNetworksRequest) (*rpb.VerifyNetworksResponse, error) {
+	if e.networkAPI == nil {
+		return nil, errors.New("rollback service has no connection to network API")
+	}
+
+	testing.ContextLogf(ctx, "Verifying preservation of the following networks in %v: %v", ownershipToString(request.Ownership), request.Networks)
+
+	response := &rpb.VerifyNetworksResponse{
 		Successful:          true,
 		VerificationDetails: "",
 	}
 
-	for idx, networkInfo := range networks {
-		// Obtain properties of network set.
+	for idx, networkInfo := range request.Networks {
 		guid := networkInfo.Guid
-		managedProperties, err := api.GetManagedProperties(ctx, guid)
+		managedProperties, err := e.networkAPI.GetManagedProperties(ctx, guid)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to get managed properties for guid %s", guid)
 		}
@@ -115,53 +223,38 @@ func verifyNetworks(ctx context.Context, networks []*rpb.NetworkInformation, api
 	return response, nil
 }
 
-// VerifyRollback verifies the previously set-up networks exists during OOBE,
-// logs in as a normal user and verifies the networks again.
-// VerifyRollbackRequest needs to contain the unchanged NetworkInformation from
-// SetUpNetworksResponse.
-func (e *EnterpriseRollbackService) VerifyRollback(ctx context.Context, request *rpb.VerifyRollbackRequest) (*rpb.VerifyRollbackResponse, error) {
-	// Chrome would send an auto re-enrollment request to the real DMServer
-	// which will fail because the device wasn't enrolled at all.
-	// Try to prevent that by setting DMServer URL to nonsense.
-	cr, err := chrome.New(ctx, chrome.DMSPolicy("do-not-call-any-dmserver"), chrome.DeferLogin())
+func ownershipToString(ownership rpb.Ownership) string {
+	switch ownership {
+	case rpb.Ownership_OOBE:
+		return "OOBE"
+	case rpb.Ownership_ENROLLED:
+		return "enrolled session"
+	case rpb.Ownership_CONSUMER:
+		return "consumer session"
+	}
+	return "unkown"
+}
+
+func (e *EnterpriseRollbackService) GetNetworkProperties(ctx context.Context, request *rpb.GetNetworkPropertiesRequest) (*rpb.GetNetworkPropertiesResponse, error) {
+	if e.networkAPI == nil {
+		return nil, errors.New("Rollback service has no connection to network API")
+	}
+
+	testing.ContextLog(ctx, "Requesting network properties from the API")
+
+	properties, err := e.networkAPI.GetManagedProperties(ctx, request.Guid)
+	if err == nc.ErrNetworkNotFound {
+		testing.ContextLog(ctx, "Requested properties for non-existent network: ", request.Guid)
+		return &rpb.GetNetworkPropertiesResponse{}, nil
+	}
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to restart Chrome for testing after rollback")
+		return nil, errors.Wrapf(err, "failed to get managed properties for GUID %v", request.Guid)
 	}
-	defer cr.Close(ctx)
 
-	// Verify network configuration during OOBE.
-	apiOOBE, err := nc.CreateOobeCrosNetworkConfig(ctx, cr)
+	serializedProperties, err := json.Marshal(properties)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get cros network config api during OOBE")
-	}
-	testing.ContextLogf(ctx, "Verify preservation of networks during OOBE: %s ", request.Networks)
-	if response, err := verifyNetworks(ctx, request.Networks, apiOOBE); err != nil {
-		return nil, errors.Wrap(err, "failed to verify networks during OOBE")
-	} else if !response.Successful {
-		// The verification is unsuccessful. Finish here and return the response.
-		return response, nil
-	}
-	// Close JS API connection in the OOBE before login.
-	if err := apiOOBE.Close(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed to close cros network config api")
+		return nil, errors.Wrapf(err, "failed to serialize %v", properties)
 	}
 
-	if err := cr.ContinueLogin(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed to login as normal user after rollback")
-	}
-
-	apiLoggedIn, err := nc.CreateLoggedInCrosNetworkConfig(ctx, cr)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get cros network config api after logged in")
-	}
-	defer apiLoggedIn.Close(ctx)
-
-	// Verify network configuration after login.
-	testing.ContextLogf(ctx, "Verify preservation of networks after login: %s ", request.Networks)
-	response, err := verifyNetworks(ctx, request.Networks, apiLoggedIn)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to verify networks")
-	}
-
-	return response, nil
+	return &rpb.GetNetworkPropertiesResponse{Properties: &rpb.ManagedProperties{SerializedData: serializedProperties}}, nil
 }

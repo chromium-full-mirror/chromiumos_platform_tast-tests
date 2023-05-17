@@ -301,6 +301,7 @@ type NetworkTypeManagedProperties struct {
 // ManagedProperties are provided by GetManagedProperties, see onc_spec.md for
 // details.
 type ManagedProperties struct {
+	Source         OncSource                    `json:"source"`
 	Type           NetworkType                  `json:"type"`
 	TypeProperties NetworkTypeManagedProperties `json:"typeProperties"`
 	ProxySettings  ManagedProxySettings         `json:"proxySettings"`

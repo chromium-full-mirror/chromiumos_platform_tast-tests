@@ -12,10 +12,14 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/golang/protobuf/ptypes/empty"
+
 	"chromiumos/tast/common/hwsec"
 	"chromiumos/tast/remote/policyutil"
 	"chromiumos/tast/remote/updateutil"
 	rpb "chromiumos/tast/services/cros/rollback"
+
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/lsbrelease"
@@ -125,15 +129,25 @@ func DUTInfo(ctx context.Context, dut *dut.DUT, rpcHint *testing.RPCHint) (*Devi
 
 // ConfigureNetworks sets up the networks supported by rollback.
 func ConfigureNetworks(ctx context.Context, dut *dut.DUT, rpcHint *testing.RPCHint) ([]*rpb.NetworkInformation, error) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
 	client, err := rpc.Dial(ctx, dut, rpcHint)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to connect to the RPC service on the DUT")
 	}
-	defer client.Close(ctx)
+	defer client.Close(cleanupCtx)
 
 	// Configure networks to check preservation across rollback.
 	rollbackService := rpb.NewEnterpriseRollbackServiceClient(client.Conn)
-	response, err := rollbackService.SetUpNetworks(ctx, &rpb.SetUpNetworksRequest{})
+	defer rollbackService.CloseConnections(cleanupCtx, &empty.Empty{})
+
+	if _, err := rollbackService.Connect(ctx, &rpb.SessionState{Ownership: rpb.Ownership_CONSUMER}); err != nil {
+		return nil, errors.Wrap(err, "failed to connect the rollback service")
+	}
+
+	response, err := rollbackService.SetUpNetworks(ctx, &empty.Empty{})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to configure networks on client")
 	}
@@ -219,6 +233,10 @@ func CheckImageVersion(ctx context.Context, dut *dut.DUT, rpcHint *testing.RPCHi
 // during rollback but certain data, like network configuration, has been
 // preserved.
 func VerifyRollbackData(ctx context.Context, dut *dut.DUT, rpcHint *testing.RPCHint, networks []*rpb.NetworkInformation, sensitive string) error {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
 	// Ensure that the sensitive data was not logged.
 	logsAndCrashes := []string{"/var/log", "/var/spool/crash", "/home/chronos/crash", "/mnt/stateful_partition/unencrypted/preserve/crash", "/run/crash_reporter/crash"}
 	for _, folder := range logsAndCrashes {
@@ -232,15 +250,33 @@ func VerifyRollbackData(ctx context.Context, dut *dut.DUT, rpcHint *testing.RPCH
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to the RPC service on the DUT")
 	}
-	defer client.Close(ctx)
+	defer client.Close(cleanupCtx)
 
 	rollbackService := rpb.NewEnterpriseRollbackServiceClient(client.Conn)
-	response, err := rollbackService.VerifyRollback(ctx, &rpb.VerifyRollbackRequest{Networks: networks})
+
+	if _, err := rollbackService.Connect(ctx, &rpb.SessionState{Ownership: rpb.Ownership_OOBE}); err != nil {
+		return errors.Wrap(err, "failed to connect the rollback service")
+	}
+	defer rollbackService.CloseConnections(cleanupCtx, &empty.Empty{})
+
+	response, err := rollbackService.VerifyNetworks(ctx, &rpb.VerifyNetworksRequest{Ownership: rpb.Ownership_OOBE, Networks: networks})
 	if err != nil {
-		return errors.Wrap(err, "failed to verify rollback on client")
+		return errors.Wrap(err, "failed to verify networks in OOBE")
 	}
 	if !response.Successful {
-		return errors.Errorf("rollback was not successful: %s", response.VerificationDetails)
+		return errors.Errorf("networks were not correctly preserved in OOBE: %s", response.VerificationDetails)
+	}
+
+	if _, err := rollbackService.Login(ctx, &empty.Empty{}); err != nil {
+		return errors.Wrap(err, "failed to login after rollback")
+	}
+
+	response, err = rollbackService.VerifyNetworks(ctx, &rpb.VerifyNetworksRequest{Ownership: rpb.Ownership_CONSUMER, Networks: networks})
+	if err != nil {
+		return errors.Wrap(err, "failed to verify networks in consumer session")
+	}
+	if !response.Successful {
+		return errors.Errorf("networks were not correctly preserved in consumer session: %s", response.VerificationDetails)
 	}
 
 	return nil
