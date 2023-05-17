@@ -88,10 +88,11 @@ func PINWeaver(ctx context.Context, s *testing.State) {
 
 	/**Initial User Setup. Test both user 1 and user 2 can login successfully.**/
 	// Setup a user 1 for testing. This user will be locked out and re-authed to ensure the PIN is unlocked.
+	// This user will be removed at last and the le_credential file will be checked.
 	if err = setupUserWithPIN(ctx, ctxForCleanUp, testUser1, cmdRunner, helper); err != nil {
 		s.Fatal("Failed to run setupUserWithPIN with error: ", err)
 	}
-	defer removeLeCredential(ctx, ctxForCleanUp, testUser1, authFactorLabelPIN, cmdRunner, helper)
+	defer cryptohomeHelper.UnmountAndRemoveVault(ctxForCleanUp, testUser1)
 
 	// Ensure we can authenticate with correct pin.
 	if _, err = authenticateWithCorrectPIN(ctx, ctxForCleanUp, testUser1, cmdRunner, helper, true /*shouldAuthenticate*/); err != nil {
@@ -103,11 +104,11 @@ func PINWeaver(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to run authenticateWithCorrectPassword with error: ", err)
 	}
 
-	// Setup a user 2 for testing. This user will be removed and the le_credential file will be checked.
+	// Setup a user 2 for testing. This user's pin will be removed and the le_credential file will be checked.
 	if err = setupUserWithPIN(ctx, ctxForCleanUp, testUser2, cmdRunner, helper); err != nil {
 		s.Fatal("Failed to run setupUserWithPIN with error: ", err)
 	}
-	defer removeLeCredential(ctx, ctxForCleanUp, testUser2, authFactorLabelPIN, cmdRunner, helper)
+	defer cryptohomeHelper.UnmountAndRemoveVault(ctxForCleanUp, testUser2)
 
 	// Ensure we can authenticate with correct password for testUser2.
 	if err = authenticateWithCorrectPassword(ctx, ctxForCleanUp, testUser2, cmdRunner, helper); err != nil {
@@ -245,6 +246,11 @@ func PINWeaver(ctx context.Context, s *testing.State) {
 	/** Ensure test user 1 can still login with PIN**/
 	if _, err = authenticateWithCorrectPIN(ctx, ctxForCleanUp, testUser1, cmdRunner, helper, true /*shouldAuthenticate*/); err != nil {
 		s.Fatal("Failed to run authenticateWithCorrectPIN with error: ", err)
+	}
+
+	// Remove test user 1 and check to see if le_credential file was updated.
+	if err = removeUser(ctx, ctxForCleanUp, testUser1, cmdRunner, helper); err != nil {
+		s.Fatal("Failed to run removeUser with error: ", err)
 	}
 }
 
@@ -424,7 +430,7 @@ func removeLeCredential(ctx, ctxForCleanUp context.Context, testUser, label stri
 	}
 
 	if err := cryptohomeHelper.RemoveAuthFactor(ctx, authSessionID, label); err != nil {
-		return errors.Wrap(err, "failed to remove vault")
+		return errors.Wrap(err, "failed to remove auth factor")
 	}
 
 	leCredsAfterRemove, err := getLeCredsFromDisk(ctx, r)
@@ -462,4 +468,28 @@ func ensurePINLockedOut(ctx context.Context, testUser string, cryptohomeClient *
 		return nil
 	}
 	return errors.New(testUser + " does not have any PIN-based AuthFactors.")
+}
+
+// removeUser removes testUser and checks to see if the leCreds on disk was updated.
+func removeUser(ctx, ctxForCleanUp context.Context, testUser string, r *hwsecremote.CmdRunnerRemote, helper *hwsecremote.CmdHelperRemote) error {
+	cryptohomeHelper := helper.CryptohomeClient()
+
+	leCredsBeforeRemove, err := getLeCredsFromDisk(ctx, r)
+	if err != nil {
+		return errors.Wrap(err, "failed to get le creds from disk")
+	}
+
+	if err := cryptohomeHelper.UnmountAndRemoveVault(ctx, testUser); err != nil {
+		return errors.Wrap(err, "failed to remove the user")
+	}
+
+	leCredsAfterRemove, err := getLeCredsFromDisk(ctx, r)
+	if err != nil {
+		return errors.Wrap(err, "failed to get le creds from disk")
+	}
+
+	if diff := cmp.Diff(leCredsAfterRemove, leCredsBeforeRemove); diff == "" {
+		return errors.Wrap(err, "LE cred not cleaned up successfully")
+	}
+	return nil
 }
