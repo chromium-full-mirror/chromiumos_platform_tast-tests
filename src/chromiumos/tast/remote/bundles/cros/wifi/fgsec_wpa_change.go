@@ -9,6 +9,7 @@ import (
 
 	"chromiumos/tast/common/crypto/certificate"
 	"chromiumos/tast/common/shillconst"
+	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/common/wifi/security"
 	"chromiumos/tast/common/wifi/security/wpa"
 	"chromiumos/tast/common/wifi/security/wpaeap"
@@ -38,6 +39,7 @@ func init() {
 		ServiceDeps:  []string{wificell.ShillServiceName},
 		SoftwareDeps: []string{"wpa3_sae"},
 		Fixture:      "wificellFixtWithCapture",
+		Requirements: []string{tdreq.WiFiGenSupportWiFi, tdreq.WiFiGenSupportLegacy, tdreq.WiFiGenSupportPMF, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 		Params: []testing.Param{
 			{
 				Name: "wpa_1_2_3",
@@ -55,6 +57,7 @@ func init() {
 						expectedSecurity: shillconst.SecurityWPAAll,
 					},
 				},
+				ExtraRequirements: []string{tdreq.WiFiSecSupportWPA2Personal, tdreq.WiFiSecSupportWPA3Personal},
 			},
 			{
 				Name: "wpa_2_1_3",
@@ -72,6 +75,7 @@ func init() {
 						expectedSecurity: shillconst.SecurityWPAAll,
 					},
 				},
+				ExtraRequirements: []string{tdreq.WiFiSecSupportWPA2Personal, tdreq.WiFiSecSupportWPA3Personal},
 			},
 			{
 				Name: "wpa_1_3",
@@ -85,6 +89,7 @@ func init() {
 						expectedSecurity: shillconst.SecurityWPAAll,
 					},
 				},
+				ExtraRequirements: []string{tdreq.WiFiSecSupportWPA3Personal},
 			},
 			{
 				Name: "wpa_1_23",
@@ -98,6 +103,7 @@ func init() {
 						expectedSecurity: shillconst.SecurityWPAAll,
 					},
 				},
+				ExtraRequirements: []string{tdreq.WiFiSecSupportWPA2Personal, tdreq.WiFiSecSupportWPA3Personal},
 			},
 			{
 				Name: "wpa_2_23_1",
@@ -115,6 +121,7 @@ func init() {
 						expectedSecurity: shillconst.SecurityWPAAll,
 					},
 				},
+				ExtraRequirements: []string{tdreq.WiFiSecSupportWPA2Personal, tdreq.WiFiSecSupportWPA3Personal},
 			},
 			{
 				Name: "wpa_3_12",
@@ -128,6 +135,7 @@ func init() {
 						expectedSecurity: shillconst.SecurityWPAAll,
 					},
 				},
+				ExtraRequirements: []string{tdreq.WiFiSecSupportWPA2Personal, tdreq.WiFiSecSupportWPA3Personal},
 			},
 			{
 				Name: "wpa_3_2_1",
@@ -145,6 +153,7 @@ func init() {
 						expectedSecurity: shillconst.SecurityWPAAll,
 					},
 				},
+				ExtraRequirements: []string{tdreq.WiFiSecSupportWPA2Personal, tdreq.WiFiSecSupportWPA3Personal},
 			},
 			{
 				Name: "wpa_12_3",
@@ -158,6 +167,7 @@ func init() {
 						expectedSecurity: shillconst.SecurityWPAAll,
 					},
 				},
+				ExtraRequirements: []string{tdreq.WiFiSecSupportWPA2Personal, tdreq.WiFiSecSupportWPA3Personal},
 			},
 			{
 				Name: "wpa_23_1",
@@ -171,6 +181,7 @@ func init() {
 						expectedSecurity: shillconst.SecurityWPAAll,
 					},
 				},
+				ExtraRequirements: []string{tdreq.WiFiSecSupportWPA2Personal, tdreq.WiFiSecSupportWPA3Personal},
 			},
 			{
 				Name: "8021xwpa_1_2_3",
@@ -200,6 +211,7 @@ func init() {
 						expectedSecurity: shillconst.SecurityWPAAllEnterprise,
 					},
 				},
+				ExtraRequirements: []string{tdreq.WiFiSecSupportWPA2Enterprise, tdreq.WiFiSecSupportWPA3Enterprise},
 			},
 			{
 				Name: "8021xwpa_2_1_3",
@@ -229,6 +241,7 @@ func init() {
 						expectedSecurity: shillconst.SecurityWPAAllEnterprise,
 					},
 				},
+				ExtraRequirements: []string{tdreq.WiFiSecSupportWPA2Enterprise, tdreq.WiFiSecSupportWPA3Enterprise},
 			},
 			{
 				Name: "8021xwpa_1_3",
@@ -250,6 +263,7 @@ func init() {
 						expectedSecurity: shillconst.SecurityWPAAllEnterprise,
 					},
 				},
+				ExtraRequirements: []string{tdreq.WiFiSecSupportWPA3Enterprise},
 			},
 			{
 				Name: "8021xwpa_1_23",
@@ -271,6 +285,7 @@ func init() {
 						expectedSecurity: shillconst.SecurityWPAAllEnterprise,
 					},
 				},
+				ExtraRequirements: []string{tdreq.WiFiSecSupportWPA2Enterprise, tdreq.WiFiSecSupportWPA3Enterprise},
 			},
 			{
 				Name: "8021xwpa_2_23_1",
@@ -300,6 +315,7 @@ func init() {
 						expectedSecurity: shillconst.SecurityWPAAllEnterprise,
 					},
 				},
+				ExtraRequirements: []string{tdreq.WiFiSecSupportWPA2Enterprise, tdreq.WiFiSecSupportWPA3Enterprise},
 			},
 			{
 				Name: "8021xwpa_3_12",
@@ -321,6 +337,7 @@ func init() {
 						expectedSecurity: shillconst.SecurityWPAAllEnterprise,
 					},
 				},
+				ExtraRequirements: []string{tdreq.WiFiSecSupportWPA2Enterprise, tdreq.WiFiSecSupportWPA3Enterprise},
 			},
 			{
 				Name: "8021xwpa_3_2_1",
@@ -350,6 +367,7 @@ func init() {
 						expectedSecurity: shillconst.SecurityWPAAllEnterprise,
 					},
 				},
+				ExtraRequirements: []string{tdreq.WiFiSecSupportWPA2Enterprise, tdreq.WiFiSecSupportWPA3Enterprise},
 			},
 			{
 				Name: "8021xwpa_12_3",
@@ -371,6 +389,7 @@ func init() {
 						expectedSecurity: shillconst.SecurityWPAAllEnterprise,
 					},
 				},
+				ExtraRequirements: []string{tdreq.WiFiSecSupportWPA2Enterprise, tdreq.WiFiSecSupportWPA3Enterprise},
 			},
 			{
 				Name: "8021xwpa_23_1",
@@ -392,6 +411,7 @@ func init() {
 						expectedSecurity: shillconst.SecurityWPAAllEnterprise,
 					},
 				},
+				ExtraRequirements: []string{tdreq.WiFiSecSupportWPA2Enterprise, tdreq.WiFiSecSupportWPA3Enterprise},
 			},
 		},
 	})

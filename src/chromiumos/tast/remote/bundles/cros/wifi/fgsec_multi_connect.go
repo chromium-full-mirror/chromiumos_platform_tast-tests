@@ -11,6 +11,7 @@ import (
 
 	"chromiumos/tast/common/crypto/certificate"
 	"chromiumos/tast/common/shillconst"
+	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/common/wifi/security"
 	"chromiumos/tast/common/wifi/security/wpa"
 	"chromiumos/tast/common/wifi/security/wpaeap"
@@ -40,6 +41,7 @@ func init() {
 		Attr:         []string{"group:wificell", "wificell_func"},
 		ServiceDeps:  []string{wificell.ShillServiceName},
 		Fixture:      "wificellFixtRouters",
+		Requirements: []string{tdreq.WiFiGenSupportWiFi, tdreq.WiFiGenSupportLegacy, tdreq.WiFiGenSupportPMF, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 		Params: []testing.Param{
 			{
 				// WpaWpa2 mixed mode for network with two APs configured with Wpa and Wpa2.
@@ -55,6 +57,7 @@ func init() {
 						expectedSecurity: shillconst.SecurityWPAWPA2,
 					},
 				},
+				ExtraRequirements: []string{tdreq.WiFiSecSupportWPA2Personal},
 			},
 			{
 				// Wpa2Wpa3 mixed mode for network with two APs configured with Wpa2 and Wpa3.
@@ -71,6 +74,7 @@ func init() {
 					},
 				},
 				ExtraSoftwareDeps: []string{"wpa3_sae"},
+				ExtraRequirements: []string{tdreq.WiFiSecSupportWPA2Personal, tdreq.WiFiSecSupportWPA3Personal},
 			},
 			{
 				// Wpa2Wpa3 mixed mode for network with two APs configured with Wpa2Wpa3 and Wpa2.
@@ -87,6 +91,7 @@ func init() {
 					},
 				},
 				ExtraSoftwareDeps: []string{"wpa3_sae"},
+				ExtraRequirements: []string{tdreq.WiFiSecSupportWPA2Personal, tdreq.WiFiSecSupportWPA3Personal},
 			},
 			{
 				// Wpa2Wpa3 mixed mode for network with two APs configured with Wpa2Wpa3 and Wpa3.
@@ -103,6 +108,7 @@ func init() {
 					},
 				},
 				ExtraSoftwareDeps: []string{"wpa3_sae"},
+				ExtraRequirements: []string{tdreq.WiFiSecSupportWPA2Personal, tdreq.WiFiSecSupportWPA3Personal},
 			},
 			{
 				// WpaAll mode for network with two APs configured with WpaWpa2 and Wpa3.
@@ -119,6 +125,7 @@ func init() {
 					},
 				},
 				ExtraSoftwareDeps: []string{"wpa3_sae"},
+				ExtraRequirements: []string{tdreq.WiFiSecSupportWPA2Personal, tdreq.WiFiSecSupportWPA3Personal},
 			},
 			{
 				// WpaAll mode for network with three APs configured with Wpa, Wpa2 and Wpa3.
@@ -143,6 +150,7 @@ func init() {
 					},
 				},
 				ExtraSoftwareDeps: []string{"wpa3_sae"},
+				ExtraRequirements: []string{tdreq.WiFiSecSupportWPA2Personal, tdreq.WiFiSecSupportWPA3Personal},
 			},
 			// And the same below but this time in "Enterprise" mode.
 			{
@@ -166,6 +174,7 @@ func init() {
 						expectedSecurity: shillconst.SecurityWPAWPA2Enterprise,
 					},
 				},
+				ExtraRequirements: []string{tdreq.WiFiSecSupportWPA2Enterprise},
 			},
 			{
 				Name: "8021xwpa2wpa3_2_3",
@@ -189,6 +198,7 @@ func init() {
 					},
 				},
 				ExtraSoftwareDeps: []string{"wpa3_sae"},
+				ExtraRequirements: []string{tdreq.WiFiSecSupportWPA2Enterprise, tdreq.WiFiSecSupportWPA3Enterprise},
 			},
 			{
 				Name: "8021xwpa2wpa3_23_2",
@@ -212,6 +222,7 @@ func init() {
 					},
 				},
 				ExtraSoftwareDeps: []string{"wpa3_sae"},
+				ExtraRequirements: []string{tdreq.WiFiSecSupportWPA2Enterprise, tdreq.WiFiSecSupportWPA3Enterprise},
 			},
 			{
 				Name: "8021xwpa2wpa3_23_3",
@@ -235,6 +246,7 @@ func init() {
 					},
 				},
 				ExtraSoftwareDeps: []string{"wpa3_sae"},
+				ExtraRequirements: []string{tdreq.WiFiSecSupportWPA2Enterprise, tdreq.WiFiSecSupportWPA3Enterprise},
 			},
 			{
 				Name: "8021xwpaall_12_3",
@@ -258,6 +270,7 @@ func init() {
 					},
 				},
 				ExtraSoftwareDeps: []string{"wpa3_sae"},
+				ExtraRequirements: []string{tdreq.WiFiSecSupportWPA2Enterprise, tdreq.WiFiSecSupportWPA3Enterprise},
 			},
 			{
 				Name: "8021xwpaall_1_2_3",
@@ -293,6 +306,7 @@ func init() {
 					},
 				},
 				ExtraSoftwareDeps: []string{"wpa3_sae"},
+				ExtraRequirements: []string{tdreq.WiFiSecSupportWPA2Enterprise, tdreq.WiFiSecSupportWPA3Enterprise},
 			},
 		},
 	})
