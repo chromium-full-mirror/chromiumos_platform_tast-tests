@@ -63,6 +63,10 @@ type PolicyService struct { // NOLINT
 }
 
 func (c *PolicyService) VerifyPolicyStatus(ctx context.Context, req *ppb.VerifyPolicyStatusRequest) (*empty.Empty, error) {
+	if c.chrome == nil {
+		return nil, errors.New("chrome is not started")
+	}
+
 	testing.ContextLog(ctx, "Verifying the policy is set to correct status")
 	tconn, err := c.chrome.TestAPIConn(ctx)
 	if err != nil {
