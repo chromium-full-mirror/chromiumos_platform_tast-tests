@@ -31,6 +31,7 @@ const (
 	cpuIdleMetricType        = "cpuidle."
 	cpuUsageMetricType       = "cpu_usage."
 	fanMetricType            = "fan."
+	fpsMetricType            = "fps."
 	generalPerfMetricType    = "perf."
 	gpuFreqMetricType        = "gpufreq_wavg."
 	gpuStateMetricType       = "gpuidle."
@@ -47,6 +48,7 @@ var validMetricTypeMap = map[string]bool{
 	"cpuidle":      true,
 	"cpu_usage":    true,
 	"fan":          true,
+	"fps":          true,
 	"perf":         true,
 	"gpufreq_wavg": true,
 	"gpuidle":      true,
@@ -62,6 +64,7 @@ const (
 	cpuIdleMetricTypeUnit        = "percent"
 	cpuUsageMetricTypeUnit       = "percent"
 	fanMetricTypeUnit            = "rpm"
+	fpsMetricTypeUnit            = "fps"
 	gpuFreqMetricTypeUnit        = "megahertz"
 	gpuStateMetricTypeUnit       = "percent"
 	packageCstatesMetricTypeUnit = "percent"
