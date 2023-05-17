@@ -6,6 +6,7 @@ package input
 
 import (
 	"context"
+	"fmt"
 	"math/big"
 	"os"
 
@@ -19,6 +20,9 @@ type AudioJackEventWriter struct {
 	path        string
 	virtualFile *os.File
 }
+
+// Appended to virtual audio jack device name
+var nextVirtAudioJackNum = 1
 
 // AudioJack returns an EventWriter to inject events into an arbitrary audio
 // jack device. To release the resources of this event writer, the `Close`
@@ -106,10 +110,8 @@ func (aw *AudioJackEventWriter) PlugOutMicrophone() error {
 
 // virtualAudioJackDevice creates a virtual audio jack device and returns an
 // event writer that injects into it.
-func virtualAudioJackDevice(ctx context.Context) (*AudioJackEventWriter, error) {
+func virtualAudioJackDevice(ctx context.Context) (aw *AudioJackEventWriter, retErr error) {
 	const (
-		deviceName = "Headset Jack"
-
 		// Device constants all set to zero.
 		busType = 0
 		vendor  = 0
@@ -121,19 +123,34 @@ func virtualAudioJackDevice(ctx context.Context) (*AudioJackEventWriter, error) 
 		evTypes = 1 << EV_SW
 	)
 
+	// Include our PID in the device name to be extra careful in case an old bundle process hasn't exited.
+	deviceName := fmt.Sprintf("Tast virtual audio jack %d.%d", os.Getpid(), nextVirtAudioJackNum)
+	nextVirtAudioJackNum++
+
+	testing.ContextLogf(ctx, "Creating virtual audio jack device %q", deviceName)
 	dev, virt, err := createVirtual(
 		deviceName, devID{busType, vendor, product, version}, props, evTypes,
 		map[EventType]*big.Int{
 			// The device supports plugging and unplugging of a microphone and headphone.
 			EV_SW: makeBigIntFromEventCodes([]EventCode{SW_HEADPHONE_INSERT, SW_MICROPHONE_INSERT}),
 		}, map[EventCode]Axis{})
-
 	if err != nil {
 		return nil, err
 	}
+
+	defer func(ctx context.Context) {
+		if retErr != nil {
+			if err := virt.Close(); err != nil {
+				testing.ContextLog(ctx, "Failed to close the virtual device for the audio jack event writer: ", err)
+			}
+		}
+	}(ctx)
+	testing.ContextLog(ctx, "Using virtual audio jack device ", dev)
+
 	device, err := Device(ctx, dev)
 	if err != nil {
-		return nil, err
+		retErr = err
+		return nil, retErr
 	}
 
 	return &AudioJackEventWriter{

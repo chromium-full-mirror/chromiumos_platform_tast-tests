@@ -108,15 +108,16 @@ func PlatformAPIEventsAudioJack(ctx context.Context, s *testing.State) {
 		}
 	}(goroutineCtx)
 
-	// Wait for an event or time out after 5s.
 	var resp string
-	if err := v.ExtConn.Eval(ctx,
-		`(async () => {
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		// Wait for an event or time out after 2s.
+		err := v.ExtConn.Eval(ctx,
+			`(async () => {
 			return await new Promise(async (resolve, reject) => {
-				// Cancel after 5s.
+				// Cancel after 2s.
 				setTimeout(() => {
 					reject(new Error("Promise timed out"));
-				}, 5 * 1000);
+				}, 2 * 1000);
 
 				// First add an event listener that stops listening on events
 				// and resolves the promise.
@@ -127,8 +128,20 @@ func PlatformAPIEventsAudioJack(ctx context.Context, s *testing.State) {
 				// Then start capturing events.
 				await chrome.os.events.startCapturingEvents("audio_jack");
 			})
-		})()`, &resp,
-	); err != nil {
+		})()`, &resp)
+
+		// Stop observing the audio jack device.
+		if jsErr := v.ExtConn.Call(ctx, nil,
+			"tast.promisify(chrome.os.events.stopCapturingEvents)", "audio_jack"); jsErr != nil {
+			if err != nil {
+				testing.ContextLog(ctx, "Failed listen to events: ", err)
+			}
+
+			return testing.PollBreak(errors.Wrap(jsErr, "unable to call start and stop APIs, aborting test"))
+		}
+
+		return errors.Wrap(err, "failed to wait for audio jack event")
+	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
 		s.Fatal("Failed to get response from Telemetry extension service worker: ", err)
 	}
 
