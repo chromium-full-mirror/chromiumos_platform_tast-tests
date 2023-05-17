@@ -326,6 +326,7 @@ func VideoPlayback(ctx context.Context, s *testing.State) {
 		s.Fatalf("Can't copy video from %s to %s : %v", filePathOnDisk, filePathOnRAM, err)
 	}
 
+	power.RegisterPowerMetrics(power.NewVideoFpsMetrics(conn))
 	r, err := power.NewRecorder(ctx, 5*time.Second, s.OutDir(), s.TestName())
 	if err != nil {
 		s.Fatal("Cannot create a new Recorder to collect power metrics: ", err)
@@ -333,9 +334,6 @@ func VideoPlayback(ctx context.Context, s *testing.State) {
 	defer r.Close(cleanupCtx)
 	if err := r.Cooldown(ctx); err != nil {
 		s.Error("Cooldown failed: ", err)
-	}
-	if err := r.Start(ctx); err != nil {
-		s.Fatal("Cannot start collecting power metrics: ", err)
 	}
 
 	// Start of main test body.
@@ -345,6 +343,10 @@ func VideoPlayback(ctx context.Context, s *testing.State) {
 	}
 	if err := conn.Eval(ctx, "document.getElementsByTagName('video')[0].loop=true", nil); err != nil {
 		s.Fatal("Failed to make video loop: ", err)
+	}
+
+	if err := r.Start(ctx); err != nil {
+		s.Fatal("Cannot start collecting power metrics: ", err)
 	}
 
 	// GoBigSleepLint: sleep to let device play the video.

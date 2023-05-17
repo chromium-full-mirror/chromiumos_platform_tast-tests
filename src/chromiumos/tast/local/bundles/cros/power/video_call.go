@@ -131,6 +131,8 @@ func VideoCall(ctx context.Context, s *testing.State) {
 	}
 	defer kb.Close(cleanupCtx)
 
+	power.RegisterPowerMetrics(power.NewVideoFpsMetrics(videoConn))
+
 	// TODO(b/280888518): Use shorter interval in shorter test run.
 	r, err := power.NewRecorder(ctx, 20*time.Second, s.OutDir(), s.TestName())
 	if err != nil {
