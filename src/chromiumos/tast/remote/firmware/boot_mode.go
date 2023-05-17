@@ -143,7 +143,17 @@ func (ms ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMod
 	if err := h.RequireServo(ctx); err != nil {
 		return errors.Wrap(err, "requiring servo")
 	}
+	if err := h.RequireConfig(ctx); err != nil {
+		return errors.Wrap(err, "failed to require config at the start of RebootToMode")
+	}
 
+	if !h.DUT.Connected(ctx) {
+		connectCtx, cancel := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
+		defer cancel()
+		if err := h.WaitConnect(connectCtx); err != nil {
+			return errors.Wrap(err, "failed to ssh at the start of RebootToMode")
+		}
+	}
 	fromMode, err := h.Reporter.CurrentBootMode(ctx)
 	if err != nil {
 		return errors.Wrap(err, "determining boot mode at the start of RebootToMode")
