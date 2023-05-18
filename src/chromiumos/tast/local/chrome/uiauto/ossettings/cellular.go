@@ -52,27 +52,6 @@ func GoToCellularNetworkDetailPageWithNickName(ctx context.Context, tconn *chrom
 	return nil
 }
 
-// GoToNetworkWithNickName will go to the network details page of the cellular network with the name of |name|.
-func GoToNetworkWithNickName(ctx context.Context, tconn *chrome.TestConn, name string) error {
-	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
-
-	if err := WaitUntilRefreshProfileCompletes(ctx, tconn); err != nil {
-		return errors.Wrap(err, "failed to wait until refresh profile complete")
-	}
-
-	var NetworkButton = nodewith.NameContaining(name).Role(role.Button)
-
-	if err := ui.WithTimeout(90 * time.Second).WaitUntilExists(NetworkButton)(ctx); err != nil {
-		return errors.Wrap(err, "failed to find cellular network with name: "+name)
-	}
-
-	if err := ui.LeftClick(NetworkButton)(ctx); err != nil {
-		return errors.Wrap(err, "failed to click into cellular networks detail view with name: "+name)
-	}
-
-	return nil
-}
-
 // GoToActiveNetworkDetails will go to the network details page of the active cellular network.
 func GoToActiveNetworkDetails(ctx context.Context, tconn *chrome.TestConn) error {
 	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
@@ -99,6 +78,25 @@ func GoToActiveNetworkDetails(ctx context.Context, tconn *chrome.TestConn) error
 
 	if err := uiauto.IfFailThen(ui.WithTimeout(10*time.Second).WaitUntilExists(ConnectedStatus), ui.WithTimeout(10*time.Second).WaitUntilExists(SignInToNetwork))(ctx); err != nil {
 		return errors.Wrap(err, "failed to verify active cellular network in details settings page")
+	}
+
+	return nil
+}
+
+// GoToFirstInactiveNetworkDetails will go to the network details page of the first inactive cellular network.
+func GoToFirstInactiveNetworkDetails(ctx context.Context, tconn *chrome.TestConn) error {
+	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
+
+	if err := WaitUntilRefreshProfileCompletes(ctx, tconn); err != nil {
+		return errors.Wrap(err, "failed to wait until refresh profile complete")
+	}
+
+	if err := ui.DoDefault(NotActiveCellularBtn.First())(ctx); err != nil {
+		return errors.Wrap(err, "failed to click into inactive cellular networks detail view")
+	}
+
+	if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(DisconnectedStatus)(ctx); err != nil {
+		return errors.Wrap(err, "failed to verify inactive cellular network in details settings page")
 	}
 
 	return nil

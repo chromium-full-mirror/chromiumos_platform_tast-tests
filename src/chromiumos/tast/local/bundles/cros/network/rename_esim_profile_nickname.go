@@ -88,8 +88,8 @@ func RenameESimProfileNickname(ctx context.Context, s *testing.State) {
 	}
 	defer mdp.Close(ctx)
 
-	connectedProfileNickName := ""
-	disconnectedProfileNickName := ""
+	hasConnectedProfile := false
+	hasDisconnectedProfile := false
 	for _, profilex := range profiles {
 		propsx, err := dbusutil.NewDBusProperties(ctx, profilex.DBusObject)
 
@@ -98,27 +98,23 @@ func RenameESimProfileNickname(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to read profile ICCID: ", err)
 		}
 
-		nickNamex, err := propsx.GetString(hermesconst.ProfilePropertyNickname)
-		if err != nil {
-			s.Fatal("Failed to read profile nickname: ", err)
-		}
-
-		if iccid == connectedIccid {
-			connectedProfileNickName = nickNamex
-		} else {
-			disconnectedProfileNickName = nickNamex
-		}
+		hasConnectedProfile = hasConnectedProfile || (iccid == connectedIccid)
+		hasDisconnectedProfile = hasDisconnectedProfile || (iccid != connectedIccid)
 	}
 
-	if connectedProfileNickName == "" {
+	if !hasConnectedProfile {
 		s.Fatal("No connected eSIM profile")
 	}
 
-	if disconnectedProfileNickName == "" {
+	if !hasDisconnectedProfile {
 		s.Fatal("No disconnected eSIM profile")
 	}
 
-	if err := testRenameProfile(ctx, tconn, connectedProfileNickName); err != nil {
+	if err := ossettings.GoToActiveNetworkDetails(ctx, tconn); err != nil {
+		s.Fatal("Failed to go to connected network details: ", err)
+	}
+
+	if err := testRenameProfile(ctx, tconn); err != nil {
 		s.Fatal("Failed to rename profile: ", err)
 	}
 
@@ -133,21 +129,21 @@ func RenameESimProfileNickname(ctx context.Context, s *testing.State) {
 		s.Fatal("Did not navigate to mobile data page: ", err)
 	}
 
-	if err := testRenameProfile(ctx, tconn, disconnectedProfileNickName); err != nil {
+	if err := ossettings.GoToFirstInactiveNetworkDetails(ctx, tconn); err != nil {
+		s.Fatal("Failed to go to disconnected network details: ", err)
+	}
+
+	if err := testRenameProfile(ctx, tconn); err != nil {
 		s.Fatal("Failed to rename profile: ", err)
 	}
 }
 
-func testRenameProfile(ctx context.Context, tconn *chrome.TestConn, profileNickName string) error {
+func testRenameProfile(ctx context.Context, tconn *chrome.TestConn) error {
 	kb, err := input.Keyboard(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to open the keyboard")
 	}
 	defer kb.Close(ctx)
-
-	if err := ossettings.GoToNetworkWithNickName(ctx, tconn, profileNickName); err != nil {
-		return errors.Wrap(err, "failed to go to network with nickname")
-	}
 
 	ui := uiauto.New(tconn).WithTimeout(5 * time.Minute)
 
