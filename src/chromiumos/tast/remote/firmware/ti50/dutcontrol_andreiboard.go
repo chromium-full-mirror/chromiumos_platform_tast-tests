@@ -80,7 +80,32 @@ func NewDUTControlAndreiboard(grpcConn *grpc.ClientConn, bufSize int, readTimeou
 	}
 	ecConsole := common.NewBufferedConsole("ec.log", bufSize, ecOpener)
 
-	return &DUTControlAndreiboard{client: dutControlClient, gscConsole: gscConsole, ecConsole: ecConsole}
+	return &DUTControlAndreiboard{
+		client:     dutControlClient,
+		gscConsole: gscConsole,
+		ecConsole:  ecConsole,
+	}
+}
+
+// TestbedProperties states aspects of the testbed controlled by this instance of devboardservice,
+// such as what kind of board/chip it has.
+type TestbedProperties struct {
+	TestbedType common.TestbedType
+}
+
+// Query will return an instance of TestbedProperties, stating aspects of the testbed controlled
+// by this instance of devboardservice, such as what kind of board/chip it has.
+func (a *DUTControlAndreiboard) Query(ctx context.Context) (props TestbedProperties, err error) {
+	resp, err := a.client.Query(ctx, &dutcontrol.QueryRequest{})
+	if err != nil {
+		return TestbedProperties{}, errors.Wrap(err, "Query request")
+	}
+	if resp.Err != "" {
+		return TestbedProperties{}, errors.Errorf("Query operation failed: %s", resp.Err)
+	}
+	return TestbedProperties{
+		TestbedType: common.TestbedType(resp.TestbedType),
+	}, nil
 }
 
 // Setup will tell the devboard service which binary image and configuration we want to use.

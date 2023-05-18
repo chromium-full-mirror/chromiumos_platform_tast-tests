@@ -157,6 +157,14 @@ func (c *ccdOpenImpl) wipeTpmAndOpenCcd(ctx context.Context, s *testing.FixtTest
 }
 
 func (c *ccdOpenImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
+	props, err := c.v.devboard.Query(ctx)
+	mustSucceed(s, err, "Testbed query failed")
+	if props.TestbedType == ti50.GscHostEmulation {
+		// TODO(b/283151960): Enabling Testlab mode not yet supported on host emulation
+		// (no SPI).
+		return
+	}
+
 	// Ensure that test lab is open before we try to open ccd
 	c.ensureTestLabOpen(ctx, s)
 	c.wipeTpmAndOpenCcd(ctx, s)

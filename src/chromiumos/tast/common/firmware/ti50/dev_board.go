@@ -46,7 +46,7 @@ type DevBoard interface {
 	// GSCToolCommand executes gsctool.
 	GSCToolCommand(ctx context.Context, image string, args ...string) (output []byte, err error)
 	// Executes TCG tests.
-	RunTcgTests(ctx context.Context, outdir string, test_suite string) error
+	RunTcgTests(ctx context.Context, outdir, testSuite string) error
 	// ECSerialWrite writes the specified bytes to the EC console. This also clears any pending
 	// incoming EC console data that hasn't been read yet as this is the most common pattern to
 	// interact with EC console.
@@ -54,3 +54,20 @@ type DevBoard interface {
 	// ECSerialRead reads the specified number of bytes from the EC console.
 	ECSerialRead(ctx context.Context, size int) ([]byte, error)
 }
+
+// TestbedType represents a kind of testbed, including which GSC devboard, debugger and wiring.
+type TestbedType string
+
+const (
+	// GscDauntlessAndreiboard is a traditional AndreiBoard with dozens of wires to a
+	// HyperDebug according to:
+	// https://docs.google.com/spreadsheets/d/1youX_Yh2A6-Zd2T98ShjH_O8M9CZexDB9DCHpegNMvE
+	GscDauntlessAndreiboard TestbedType = "gsc_dt_ab"
+
+	// GscOpentitanCw310Fpga is a ChipWhisperer 310 FPGA board connected via ribbon cables to
+	// a "swizzle board" on top of HyperDebug.
+	GscOpentitanCw310Fpga TestbedType = "gsc_ot_fpga_cw310"
+
+	// GscHostEmulation is not a physical testbed, but an emulation on a Linux host computer.
+	GscHostEmulation TestbedType = "gsc_he"
+)
