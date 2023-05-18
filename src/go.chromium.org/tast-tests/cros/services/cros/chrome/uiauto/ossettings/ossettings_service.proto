@@ -36,6 +36,12 @@ service OsSettingsService {
 
   // EvalJSWithShadowPiercer executes javascript in Settings app web page.
   rpc EvalJSWithShadowPiercer(EvalJSWithShadowPiercerRequest) returns (google.protobuf.Value) {}
+
+  // AvailableWifiNetworks looks for all available WiFi networks in the WiFi detail page,
+  // returns a list of SSID of available WiFi networks.
+  // This RPC requires the WiFi detail page to be opened, an error will be returned if
+  // the page is not opened.
+  rpc AvailableWifiNetworks(google.protobuf.Empty) returns (AvailableWifiNetworksResponse) {}
 }
 
 message OpenNetworkDetailPageRequest {
@@ -70,4 +76,8 @@ message WaitUntilToggleOptionRequest {
 message EvalJSWithShadowPiercerRequest {
   // The javascript expression going to be executed.
   string expression = 1;
+}
+
+message AvailableWifiNetworksResponse {
+  repeated string ssids = 1;
 }

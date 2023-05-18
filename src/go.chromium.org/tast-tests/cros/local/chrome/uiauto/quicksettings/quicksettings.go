@@ -379,6 +379,53 @@ func ToggleSetting(ctx context.Context, tconn *chrome.TestConn, setting SettingP
 	return nil
 }
 
+// IsToggleOptionEnabled checks if the specified toggle option is on or off.
+func IsToggleOptionEnabled(ctx context.Context, tconn *chrome.TestConn, toggleButton *nodewith.Finder) (bool, error) {
+	cleanup, err := ensureVisible(ctx, tconn)
+	if err != nil {
+		return false, err
+	}
+	defer cleanup(ctx)
+
+	ui := uiauto.New(tconn)
+	if err := ui.WaitUntilExists(toggleButton)(ctx); err != nil {
+		return false, errors.Wrap(err, "failed to fine the toggle option")
+	}
+	info, err := ui.Info(ctx, toggleButton)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to get the toggle option info")
+	}
+	switch status := info.Checked; status {
+	case checked.True:
+		return true, nil
+	case checked.False:
+		return false, nil
+	default:
+		return false, errors.New("invalid checked state for toggle option; quick setting may not be toggleable")
+	}
+}
+
+// ToggleOption toggles a toggle option by clicking the corresponding toggle button.
+func ToggleOption(ctx context.Context, tconn *chrome.TestConn, toggleButton *nodewith.Finder, enable bool) error {
+	cleanup, err := ensureVisible(ctx, tconn)
+	if err != nil {
+		return err
+	}
+	defer cleanup(ctx)
+
+	if currentState, err := IsToggleOptionEnabled(ctx, tconn, toggleButton); err != nil {
+		return errors.Wrap(err, "failed to get initial setting state")
+	} else if currentState == enable {
+		return nil
+	}
+
+	ui := uiauto.New(tconn)
+	if err := ui.LeftClick(toggleButton)(ctx); err != nil {
+		return errors.Wrap(err, "failed to click the pod icon button")
+	}
+	return nil
+}
+
 // TileRestricted checks if a feature tile is restricted and unable to be used
 // on the lock screen.
 func TileRestricted(ctx context.Context, tconn *chrome.TestConn, tile *nodewith.Finder) (bool, error) {

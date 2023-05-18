@@ -16,7 +16,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/common"
-	"go.chromium.org/tast-tests/cros/services/cros/chrome/uiauto/ossettings"
 	pb "go.chromium.org/tast-tests/cros/services/cros/chrome/uiauto/ossettings"
 
 	"go.chromium.org/tast/core/errors"
@@ -27,7 +26,7 @@ func init() {
 	var osSettingsService Service
 	testing.AddService(&testing.Service{
 		Register: func(srv *grpc.Server, s *testing.ServiceState) {
-			osSettingsService = Service{sharedObject: common.SharedObjectsForServiceSingleton}
+			osSettingsService = Service{sharedObject: common.SharedObjectsForServiceSingleton, serviceState: s}
 			pb.RegisterOsSettingsServiceServer(srv, &osSettingsService)
 		},
 	})
@@ -35,6 +34,7 @@ func init() {
 
 // Service implements tast.cros.chrome.uiauto.ossettings.OsSettingsService
 type Service struct {
+	serviceState *testing.ServiceState
 	sharedObject *common.SharedObjectsForService
 }
 
@@ -137,7 +137,7 @@ func (s *Service) Close(ctx context.Context, e *emptypb.Empty) (*emptypb.Empty, 
 }
 
 // EvalJSWithShadowPiercer executes javascript in Settings app web page.
-func (s *Service) EvalJSWithShadowPiercer(ctx context.Context, req *ossettings.EvalJSWithShadowPiercerRequest) (*structpb.Value, error) {
+func (s *Service) EvalJSWithShadowPiercer(ctx context.Context, req *pb.EvalJSWithShadowPiercerRequest) (*structpb.Value, error) {
 	return common.UseTconn(ctx, s.sharedObject, func(tconn *chrome.TestConn) (_ *structpb.Value, retErr error) {
 		cr := s.sharedObject.Chrome
 		if cr == nil {
@@ -151,5 +151,32 @@ func (s *Service) EvalJSWithShadowPiercer(ctx context.Context, req *ossettings.E
 		}
 
 		return structpb.NewValue(out)
+	})
+}
+
+// AvailableWifiNetworks looks for all available WiFi networks in the WiFi detail page,
+// returns a list of SSID of available WiFi networks.
+// This RPC requires the WiFi detail page to be opened, an error will be returned if
+// the page is not opened.
+func (s *Service) AvailableWifiNetworks(ctx context.Context, e *emptypb.Empty) (*pb.AvailableWifiNetworksResponse, error) {
+	return common.UseTconn(ctx, s.sharedObject, func(tconn *chrome.TestConn) (_ *pb.AvailableWifiNetworksResponse, retErr error) {
+		// Extract the SSID from the name of the arrow button on the right of the generic container as
+		// the content of the generic container contains multiple other information, hard to extract SSID from it.
+		infos, err := New(tconn).NodesInfo(ctx, WifiNetworkDetailArrowButton)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to retrieve the info of items in network list")
+		}
+
+		res := &pb.AvailableWifiNetworksResponse{
+			Ssids: make([]string, 0, len(infos)),
+		}
+		for _, info := range infos {
+			ss := WifiSubPageArrowButtonNameRegex.FindStringSubmatch(info.Name)
+			if len(ss) < 2 {
+				return nil, errors.Errorf("failed to extract SSID from %q", info.Name)
+			}
+			res.Ssids = append(res.Ssids, ss[1])
+		}
+		return res, nil
 	})
 }

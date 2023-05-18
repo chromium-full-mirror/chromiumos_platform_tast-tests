@@ -20,5 +20,29 @@ service QuickSettingsService {
 
   // Hide hides Quick Settings.
   rpc Hide(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  // ToggleOption clicks the specified toggle button to enable or disable an option.
+  // It does nothing if the state of the toggle button is already as expected.
+  rpc ToggleOption(ToggleOptionRequest) returns (google.protobuf.Empty) {}
+
+  // AvailableWifiNetworks looks for all available WiFi networks in the network detailed view,
+  // returns a list of SSID of available WiFi networks.
+  // This RPC requires the network detailed view to be opened, an error will be returned if
+  // the view is not presented.
+  rpc AvailableWifiNetworks(google.protobuf.Empty) returns (AvailableWifiNetworksResponse) {}
 }
 
+message ToggleOptionRequest {
+  enum ToggleButton {
+    Wifi = 0;
+  }
+
+  ToggleButton toggle_button = 1;
+
+  // This indicates the option to be enabled or disabled.
+  bool enabled = 2;
+}
+
+message AvailableWifiNetworksResponse {
+  repeated string ssids = 1;
+}

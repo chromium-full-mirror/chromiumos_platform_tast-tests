@@ -329,3 +329,10 @@ const ManagedEsimProfileName = "ManagedProfile"
 
 // UnmanagedEsimProfileName is the name of the unmanagde eSim profile name used in network.CellularPolicyConnection* tests.
 const UnmanagedEsimProfileName = "UnmanagedProfile"
+
+// Elements in "Wi-Fi" page (WiFi known networks).
+var (
+	WifiSubPageArrowButtonNameRegex = regexp.MustCompile(`^(.*), Details`)
+
+	WifiNetworkDetailArrowButton = nodewith.NameRegex(WifiSubPageArrowButtonNameRegex).Role(role.Button).HasClass("subpage-arrow")
+)
