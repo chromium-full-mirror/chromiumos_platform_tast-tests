@@ -34,7 +34,6 @@ func init() {
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
 		Attr: []string{
-			"group:input-tools",
 			"group:golden_tier",
 			"group:medium_low_tier",
 			"group:hardware",
