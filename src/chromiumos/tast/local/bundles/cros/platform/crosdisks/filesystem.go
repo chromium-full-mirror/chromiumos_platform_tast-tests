@@ -60,6 +60,20 @@ func WithLoopbackDeviceDo(ctx context.Context, cd *crosdisks.CrosDisks, sizeByte
 	// We don't really care if this fails.
 	defer cd.RemoveDeviceFromAllowlist(ctx, ld.SysDevicePath())
 
+	// Wait udev to setup the right permission/ownership of the new created
+	// device. udev will chmod first and then chown later, so just check if
+	// the gid of this file is moved away from root.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		info, _ := os.Stat(ld.DevicePath())
+		fileSys := info.Sys()
+		if fileSys.(*syscall.Stat_t).Gid == 0 {
+			return errors.New("not ready")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 1 * time.Second}); err != nil {
+		return errors.Wrapf(err, "failed to wait udev setup %q", ld.DevicePath())
+	}
+
 	if formatCmd != "" {
 		testing.ContextLogf(ctx, "Formatting %q with %q", ld.DevicePath(), formatCmd)
 		if err := formatDevice(ctx, formatCmd, ld.DevicePath()); err != nil {
