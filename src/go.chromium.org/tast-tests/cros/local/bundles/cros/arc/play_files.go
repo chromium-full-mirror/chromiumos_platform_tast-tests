@@ -105,7 +105,8 @@ func PlayFiles(ctx context.Context, s *testing.State) {
 //  1. Create a file in Play files with Files app and read it from Android side.
 //  2. Open the file with a test Android app via Files app's "Open with..." menu,
 //     edit the file with the app, and verify the modification with Files app.
-//  3. Delete the file with Files app and verify the deletion from Android side.
+//  3. Open the file with a test Android app via SAF.
+//  4. Delete the file with Files app and verify the deletion from Android side.
 func testStorageIntegrationForPlayfilesWithApps(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, a *arc.ARC) error {
 	const (
 		filename    = "storage.txt"

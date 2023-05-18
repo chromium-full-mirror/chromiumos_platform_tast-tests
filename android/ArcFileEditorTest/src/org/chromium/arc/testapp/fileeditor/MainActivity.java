@@ -28,7 +28,8 @@ import java.util.Scanner;
  *
  * <p>Used by tast test to read and edit files shared with ChromeOS.
  * User can specify a file to read by including URI of the file in the intent to
- * launch this activity. This activity then reads the file and displays its
+ * launch this activity, or launching the file picker with "Select file" button
+ * and selecting a file. This activity then reads the file and displays its
  * content in TextView for validation.
  * When a file's content is displayed on UI, pressing the "Modify file" button
  * modifies the file by appending string to it and updates the file content
@@ -41,6 +42,8 @@ public class MainActivity extends Activity {
     // when the "Modify file" button is pressed.
     // This should be kept in sync with storage.go.
     private static final String CONTENT_APPEND = ", this is added by Android";
+
+    private static final int REQUEST_PICK_FILE = 1;
 
     // Displays the intent action that launched this activity (for debugging).
     private TextView mActionView;
@@ -67,6 +70,9 @@ public class MainActivity extends Activity {
         mActionView.setText(action);
         Log.i(LOG_TAG, "Action = " + action);
 
+        // |uri| will be null if |action| is ACTION_MAIN (which is the case in the SAF test
+        // scenario in storage.go), but non-null if |action| is ACTION_VIEW (which is the case when
+        // this Activity is launched from CrOS Files app's "Open with..." menu).
         Uri uri = intent.getData();
         if (uri == null) {
             return;
@@ -76,6 +82,25 @@ public class MainActivity extends Activity {
         Log.i(LOG_TAG, "URI = " + uri);
 
         openFileAndDisplay(uri);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
+        if (requestCode == REQUEST_PICK_FILE) {
+            Log.i(LOG_TAG, "Result code for ACTION_OPEN_DOCUMENT: " + resultCode);
+            if (resultCode != RESULT_OK) {
+                return;
+            }
+            Uri uri = intent.getData();
+            if (uri == null) {
+                return;
+            }
+            mUri = uri;
+            mUriView.setText(uri.toString());
+            Log.i(LOG_TAG, "URI = " + uri);
+
+            openFileAndDisplay(uri);
+        }
     }
 
     public void onModifyButtonClicked(View view) {
@@ -89,6 +114,13 @@ public class MainActivity extends Activity {
             return;
         }
         openFileAndDisplay(mUri);
+    }
+
+    public void onSelectButtonClicked(View view) {
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.setType("text/plain");
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        startActivityForResult(intent, REQUEST_PICK_FILE);
     }
 
     private void openFileAndDisplay(Uri uri) {

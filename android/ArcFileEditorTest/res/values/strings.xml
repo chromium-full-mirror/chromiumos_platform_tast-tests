@@ -8,4 +8,5 @@
     <!-- The application name [CHAR_LIMIT=NONE] -->
     <string name="app_name" translatable="false">ARC File Editor Test</string>
     <string name="label_button_modify" translatable="false">Modify file</string>
+    <string name="label_button_select" translatable="false">Select file</string>
 </resources>

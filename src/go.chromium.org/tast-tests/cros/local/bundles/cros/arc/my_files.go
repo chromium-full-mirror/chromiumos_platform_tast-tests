@@ -125,8 +125,10 @@ func testPushToARCAndReadFromCros(ctx context.Context, a *arc.ARC, sourcePath, a
 }
 
 // testFilesAppIntegrationForMyFiles checks whether a file put in the ChromeOS MyFiles directory
-// can be edited with test Android app after it is opened with the app from Files app's
-// "Open with..." menu.
+// can be:
+//   - edited with test Android app after it is opened with the app from Files app's "Open with..."
+//     menu, and
+//   - opened with test Android app via SAF.
 func testFilesAppIntegrationForMyFiles(ctx context.Context, a *arc.ARC, cr *chrome.Chrome, d *ui.Device, myFilesPath string) error {
 	const (
 		filename    = "storage.txt"

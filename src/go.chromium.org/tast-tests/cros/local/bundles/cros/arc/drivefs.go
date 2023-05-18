@@ -100,6 +100,10 @@ func Drivefs(ctx context.Context, s *testing.State) {
 		FileContent:   fileContent,
 		CheckFileType: true,
 		ReadOnly:      true,
+		// TODO(b/283742435): Enable SAF test for Drivefs by generalizing
+		// filepicker.OpenDir for directories whose dirName and expectedTitle
+		// are different.
+		SkipSAF: true,
 	}
 	if err := storage.TestFilesAppIntegration(ctx, a, cr, d, config); err != nil {
 		s.Fatal("Failed to open file with Android app: ", err)

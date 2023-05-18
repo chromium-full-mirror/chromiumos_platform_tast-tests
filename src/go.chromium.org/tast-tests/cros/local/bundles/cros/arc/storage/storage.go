@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filepicker"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -35,6 +36,7 @@ const (
 	// IDs of UI elements shown on test app.
 	fileContentID  = testAppPkgName + ":id/file_content"
 	modifyButtonID = testAppPkgName + ":id/button_modify"
+	selectButtonID = testAppPkgName + ":id/button_select"
 
 	// The message that should be added by ArcFileEditorTest when "Modify file" button is clicked.
 	// This should be kept in sync with MainActivity.java of ArcFileEditorTest.
@@ -61,20 +63,20 @@ type TestConfig struct {
 	// Optional: If set to true, skip checking if the test app can write to the test file opened
 	// from Files app.
 	ReadOnly bool
+	// Optional: If set to true, skip checking if the test app can open the file via SAF.
+	SkipSAF bool
 }
 
 // TestFilesAppIntegration tests ARC storage integration with Files app for a test file in the
 // specified directory, e.g. Google Drive, Downloads, MyFiles etc, using the test android app,
 // ArcFileEditorTest. The tested scenario is as follows:
 //  1. Open the file with the Android app via Files app's "Open with...", and validate the file
-//     content read by the Android app (which is shown on its UI).
+//     content read by the Android app.
 //  2. (optional, only when TestConfig.ReadOnly is false) Modify the file with the Android app and
 //     validate the modification on the CrOS side with Files app's QuickView.
+//  3. (optional, only when TestConfig.SkipSAF is false) Open the file with the Android app via SAF
+//     and validate the content read by the Android app (which is shown on its UI).
 func TestFilesAppIntegration(ctx context.Context, a *arc.ARC, cr *chrome.Chrome, d *androidui.Device, config TestConfig) error {
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
-	defer cancel()
-
 	if config.DirTitle == "" {
 		config.DirTitle = filesapp.FilesTitlePrefix + config.DirName
 	}
@@ -90,6 +92,27 @@ func TestFilesAppIntegration(ctx context.Context, a *arc.ARC, cr *chrome.Chrome,
 		return errors.Wrap(err, "failed to wait for ARC Intent Helper")
 	}
 
+	if err := testOpenFromFilesApp(ctx, a, cr, d, config); err != nil {
+		return errors.Wrap(err, "failed to open a file from Files app")
+	}
+	if !config.SkipSAF {
+		if err := testOpenViaSAF(ctx, a, cr, d, config); err != nil {
+			return errors.Wrap(err, "failed to open a file via SAF")
+		}
+	}
+	return nil
+}
+
+// testOpenFromFilesApp opens a test file in the specified directory with the test Android app
+// via Files app. The app will display the intent action, URI and file content on its UI, and the
+// displayed file content is validated against the expected value. If |config.ReadOnly| is false,
+// this subsequently tests writing to the file from the app by pressing the "Modify file" button and
+// validating the write result from CrOS side using Files app's QuickView.
+func testOpenFromFilesApp(ctx context.Context, a *arc.ARC, cr *chrome.Chrome, d *androidui.Device, config TestConfig) error {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
 	files, err := openFilesApp(ctx, cr)
 	if err != nil {
 		return errors.Wrap(err, "failed to open Files app")
@@ -102,7 +125,7 @@ func TestFilesAppIntegration(ctx context.Context, a *arc.ARC, cr *chrome.Chrome,
 		}
 	}
 
-	testing.ContextLogf(ctx, "Testing opening %s with Android app", config.FileName)
+	testing.ContextLogf(ctx, "Testing opening %s with Android app from Files app", config.FileName)
 	if err := openWithTestApp(ctx, files, config); err != nil {
 		return errors.Wrap(err, "could not open file with ArcFileEditorTest")
 	}
@@ -199,6 +222,56 @@ func waitForFileType(ctx context.Context, files *filesapp.FilesApp, config TestC
 func validateLabel(ctx context.Context, d *androidui.Device, labelID, expected string) error {
 	testing.ContextLogf(ctx, "Validating label content of %s with %q", labelID, expected)
 	return d.Object(androidui.ID(labelID)).WaitForText(ctx, expected, uiTimeout)
+}
+
+// testOpenViaSAF opens a test file with the test Android app by launching CrOS file picker via SAF
+// with an ACTION_OPEN_DOCUMENT intent and picking the file, and validates the file content read by
+// the app.
+func testOpenViaSAF(ctx context.Context, a *arc.ARC, cr *chrome.Chrome, d *androidui.Device, config TestConfig) error {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return errors.Wrap(err, "creating test API connection failed")
+	}
+	act, err := arc.NewActivity(a, testAppPkgName, testAppPkgName+".MainActivity")
+	if err != nil {
+		return errors.Wrap(err, "failed to create new activity")
+	}
+	defer act.Close(cleanupCtx)
+
+	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
+		return errors.Wrap(err, "failed to start new activity")
+	}
+	defer act.Stop(cleanupCtx, tconn)
+
+	selectButton := d.Object(androidui.ID(selectButtonID))
+	if err := selectButton.WaitForExists(ctx, uiTimeout); err != nil {
+		return errors.Wrap(err, "failed to wait for select button to appear")
+	}
+	if err := selectButton.Click(ctx); err != nil {
+		return errors.Wrap(err, "failed to click select button")
+	}
+	filePicker, err := filepicker.Find(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to find file picker")
+	}
+	actions := []uiauto.Action{filePicker.OpenDir(config.DirName)}
+	for _, subdir := range config.SubDirectories {
+		actions = append(actions, filePicker.OpenFile(subdir))
+	}
+	actions = append(actions, filePicker.OpenFile(config.FileName))
+	if err := uiauto.Combine("select file on file picker", actions...)(ctx); err != nil {
+		return errors.Wrap(err, "failed to select file on file picker")
+	}
+	expectedFileContent := config.FileContent
+	if !config.ReadOnly {
+		// The file has been modified in testOpenFromFilesApp.
+		expectedFileContent += messageAddedByApp
+	}
+	return validateLabel(ctx, d, fileContentID, expectedFileContent)
 }
 
 // validateWriteResult validates the modification to the file made with test Android app using
