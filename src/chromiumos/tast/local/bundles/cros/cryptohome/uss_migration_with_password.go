@@ -112,14 +112,15 @@ func UssMigrationWithPassword(ctx context.Context, s *testing.State) {
 
 		cr, err := chrome.New(ctx,
 			chrome.FakeLogin(chrome.Creds{User: userName, Pass: userPassword}),
-			chrome.DisableFeatures("CrOSLateBootMigrateToUserSecretStash"))
+			chrome.DisableFeatures("CrOSLateBootMigrateToUserSecretStash"),
+			chrome.KeepState())
 		if err != nil {
 			s.Fatal("Failed to start Chrome at login screen: ", err)
 		}
 		defer cr.Close(ctx)
 
 		if err = checkMetricPresence(ctx, cr, backingStoreConfigUMA, noKeysetsPresent); err != nil {
-			s.Fatal("Failed to get empty metric for backingStroreConfig: ", err)
+			s.Fatal("Failed to get empty metric for backingStoreConfig: ", err)
 		}
 
 		// Restart UI to logout.
@@ -146,7 +147,7 @@ func UssMigrationWithPassword(ctx context.Context, s *testing.State) {
 		defer cr.Close(ctx)
 
 		if err = checkMetricPresence(ctx, cr, backingStoreConfigUMA, vaultKeyset); err != nil {
-			s.Fatal("Failed to get vaultKeyset metric for backingStroreConfig: ", err)
+			s.Fatal("Failed to get vaultKeyset metric for backingStoreConfig: ", err)
 		}
 
 		// Restart UI to logout.
@@ -166,7 +167,7 @@ func UssMigrationWithPassword(ctx context.Context, s *testing.State) {
 		defer cr.Close(ctx)
 
 		if err = checkMetricPresence(ctx, cr, backingStoreConfigUMA, userSecretStash); err != nil {
-			s.Fatal("Failed to get userSecretStash metric for backingStroreConfig: ", err)
+			s.Fatal("Failed to get userSecretStash metric for backingStoreConfig: ", err)
 		}
 
 		// Restart UI to logout.
