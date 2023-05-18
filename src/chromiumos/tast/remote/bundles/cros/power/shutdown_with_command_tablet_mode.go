@@ -6,13 +6,13 @@ package power
 
 import (
 	"context"
-	"regexp"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
 
 	"chromiumos/tast/common/servo"
 	"chromiumos/tast/remote/powercontrol"
+	"chromiumos/tast/remote/tabletmode"
 	"chromiumos/tast/services/cros/security"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -25,6 +25,10 @@ const (
 	cbmemSleepStateValue = 5
 )
 
+type shutdownWithCmdTabletModeParams struct {
+	control tabletmode.Control
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ShutdownWithCommandTabletMode,
@@ -36,8 +40,17 @@ func init() {
 		SoftwareDeps: []string{"chrome", "reboot"},
 		Attr:         []string{"group:mainline", "informational"},
 		Vars:         []string{"servo"},
-		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.FormFactor(hwdep.Convertible, hwdep.Detachable)),
-		Timeout:      10 * time.Minute,
+		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
+		Params: []testing.Param{{
+			Name:              "convertible",
+			Val:               shutdownWithCmdTabletModeParams{control: &tabletmode.ConvertibleModeControl{}},
+			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Convertible)),
+		}, {
+			Name:              "detachable",
+			Val:               shutdownWithCmdTabletModeParams{control: &tabletmode.DetachableModeControl{}},
+			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Detachable)),
+		}},
+		Timeout: 10 * time.Minute,
 	})
 }
 
@@ -54,22 +67,20 @@ func ShutdownWithCommandTabletMode(ctx context.Context, s *testing.State) {
 	}
 	defer pxy.Close(ctxForCleanUp)
 
-	// Get the initial tablet_mode_angle settings to restore at the end of test.
-	re := regexp.MustCompile(`tablet_mode_angle=(\d+) hys=(\d+)`)
-	out, err := dut.Conn().CommandContext(ctx, "ectool", "motionsense", "tablet_mode_angle").Output()
-	if err != nil {
-		s.Fatal("Failed to retrieve tablet_mode_angle settings: ", err)
+	tmc := s.Param().(shutdownWithCmdTabletModeParams).control
+	if err := tmc.InitControl(ctx, dut); err != nil {
+		s.Fatal("Failed to init TabletModeControl: ", err)
 	}
-	m := re.FindSubmatch(out)
-	if len(m) != 3 {
-		s.Fatalf("Failed to get initial tablet_mode_angle settings: got submatches %+v", m)
-	}
-	initLidAngle := m[1]
-	initHys := m[2]
+	defer func(ctx context.Context) {
+		testing.ContextLog(ctx, "Resetting tabletmode")
+		if err := tmc.Reset(ctx); err != nil {
+			s.Fatal("Failed to restore tabletmode to the original settings: ", err)
+		}
+	}(ctxForCleanUp)
 
-	// Set tabletModeAngle to 0 to force the DUT into tablet mode.
+	// Force DUT into tablet mode.
 	testing.ContextLog(ctx, "Put DUT into tablet mode")
-	if err := dut.Conn().CommandContext(ctx, "ectool", "motionsense", "tablet_mode_angle", "0", "0").Run(); err != nil {
+	if err := tmc.ForceTabletMode(ctx); err != nil {
 		s.Fatal("Failed to set DUT into tablet mode: ", err)
 	}
 
@@ -90,9 +101,6 @@ func ShutdownWithCommandTabletMode(ctx context.Context, s *testing.State) {
 			if err := powercontrol.PowerOntoDUT(ctx, pxy, dut); err != nil {
 				s.Fatal("Failed to wake up DUT at cleanup: ", err)
 			}
-		}
-		if err := dut.Conn().CommandContext(ctx, "ectool", "motionsense", "tablet_mode_angle", string(initLidAngle), string(initHys)).Run(); err != nil {
-			s.Fatal("Failed to restore tablet_mode_angle to the original settings: ", err)
 		}
 	}(ctxForCleanUp)
 
