@@ -320,21 +320,30 @@ func (f *cellularFixture) PreTest(ctx context.Context, s *testing.FixtTestState)
 	}
 }
 
+func getUpstartArgsForVerboseLogging(job string) []upstart.Arg {
+	switch job {
+	case shill.JobName:
+		return GetShillUpstartArgsForVerboseLogging()
+	case modemmanager.JobName:
+		return GetMMUpstartArgsForVerboseLogging()
+	}
+	return []upstart.Arg{}
+}
+
 func (f *cellularFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
 	if s.HasError() {
-		testing.ContextLog(ctx, "Fixture detected a test failure, restarting MM and Shill")
+		testing.ContextLog(ctx, "Fixture detected a test failure, restarting MM, Shill and Hermes")
+		processes := []string{shill.JobName, modemmanager.JobName, hermes.JobName}
 		// stop and start jobs instead of upstart.Restart to emulate a reboot.
-		if _, err := stopJob(ctx, shill.JobName); err != nil {
-			testing.ContextLogf(ctx, "Failed to stop job: %q, %s", shill.JobName, err)
+		for _, p := range processes {
+			if _, err := stopJob(ctx, p); err != nil {
+				testing.ContextLogf(ctx, "Failed to stop job: %q, %s", p, err)
+			}
 		}
-		if _, err := stopJob(ctx, modemmanager.JobName); err != nil {
-			testing.ContextLogf(ctx, "Failed to stop job: %q, %s", modemmanager.JobName, err)
-		}
-		if err := upstart.StartJob(ctx, shill.JobName, GetShillUpstartArgsForVerboseLogging()...); err != nil {
-			testing.ContextLogf(ctx, "Failed to restart job: %q, %s", shill.JobName, err)
-		}
-		if err := upstart.StartJob(ctx, modemmanager.JobName, GetMMUpstartArgsForVerboseLogging()...); err != nil {
-			testing.ContextLogf(ctx, "Failed to restart job: %q, %s", modemmanager.JobName, err)
+		for _, p := range processes {
+			if err := upstart.StartJob(ctx, p, getUpstartArgsForVerboseLogging(p)...); err != nil {
+				testing.ContextLogf(ctx, "Failed to restart job: %q, %s", p, err)
+			}
 		}
 		if _, err := modemmanager.NewModem(ctx); err != nil {
 			testing.ContextLog(ctx, "Could not find MM dbus object after restarting ModemManager: ", err)
