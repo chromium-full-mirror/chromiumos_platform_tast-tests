@@ -44,7 +44,7 @@ const (
 	optionsID        = youtubePkg + ":id/bottom_sheet_list"
 	dismissID        = youtubePkg + ":id/dismiss"
 	optionsClassName = "android.view.ViewGroup"
-	uiWaitTime       = 3 * time.Second // this is for arc-obj, not for uiauto.Context
+	uiWaitTime       = 5 * time.Second // this is for arc-obj, not for uiauto.Context
 	retryTimes       = 3
 )
 
@@ -287,7 +287,7 @@ func (y *YtApp) OpenAndPlayVideo(video VideoSrc) uiauto.Action {
 			return errors.Wrap(err, "failed to play video")
 		}
 
-		if err := y.switchQuality(ctx, video.Quality); err != nil {
+		if err := y.SwitchQuality(ctx, video.Quality); err != nil {
 			return errors.Wrap(err, "failed to switch Quality")
 		}
 
@@ -295,10 +295,10 @@ func (y *YtApp) OpenAndPlayVideo(video VideoSrc) uiauto.Action {
 	}
 }
 
-// switchQuality switches the video quality by continuous action.
+// SwitchQuality switches the video quality by continuous action.
 // Due to the different response time of DUTs.
 // We need to combine these actions in Poll to make switch quality works smoothly.
-func (y *YtApp) switchQuality(ctx context.Context, quality Quality) error {
+func (y *YtApp) SwitchQuality(ctx context.Context, quality Quality) error {
 	testing.ContextLogf(ctx, "Switch Quality to %q", quality)
 
 	const (
@@ -307,13 +307,18 @@ func (y *YtApp) switchQuality(ctx context.Context, quality Quality) error {
 		// qualityButtonIndex is the index of "Quality" button shown in "Settings" list.
 		qualityButtonIndex = 0
 
-		qualityText     = "Quality"
-		advancedText    = "Advanced"
-		moreOptionsText = "More options"
+		qualityText                   = "Quality"
+		advancedText                  = "Advanced"
+		moreOptionsText               = "More options"
+		qualityUnavailableMessageID   = youtubePkg + ":id/message"
+		qualityUnavailableMessageText = "Quality unavailable"
 	)
 
 	if err := y.skipAds(ctx); err != nil {
 		return errors.Wrap(err, "failed to skip YouTube ads")
+	}
+	if err := y.skipSurvey(ctx); err != nil {
+		return errors.Wrap(err, "failed to skip YouTube survey")
 	}
 
 	clickMoreOptions := func(ctx context.Context) error {
@@ -339,6 +344,12 @@ func (y *YtApp) switchQuality(ctx context.Context, quality Quality) error {
 	}
 
 	clickAdvancedButton := func(context.Context) error {
+		// Sometimes clicking `Quality` button will show "Quality unavailable"
+		// message and changing quality will not be allowed.
+		qualityUnavailableText := y.d.Object(androidui.ID(qualityUnavailableMessageID), ui.Text(qualityUnavailableMessageText))
+		if err := qualityUnavailableText.WaitForExists(ctx, 3*time.Second); err == nil {
+			return errors.Errorf("%q message is shown, cannot change quality", qualityUnavailableMessageText)
+		}
 		// There might be two different arc dump hierarchies that affect how nodes are captured.
 		var advancedButton *ui.Object
 		options := y.d.Object(androidui.ID(optionsID))
@@ -405,6 +416,36 @@ func (y *YtApp) clickQualityOption(quality Quality) action.Action {
 		}
 		return nil
 	}
+}
+
+// SetLoopVideo sets loop the video by continuous action.
+// Due to the different response time of DUTs.
+// We need to combine these actions in Poll to make switch quality works smoothly.
+func (y *YtApp) SetLoopVideo(ctx context.Context) error {
+	testing.ContextLog(ctx, "Set loop the video")
+
+	const (
+		// loopButtonIndex is the index of "Loop" button shown in "Settings" list.
+		loopButtonIndex = 2
+
+		loopText         = "Loop video"
+		moreOptionsText  = "More options"
+		optionsClassName = "android.support.v7.widget.RecyclerView"
+		loopClassName    = "android.view.ViewGroup"
+		moreOptions      = youtubePkg + ":id/player_overflow_button"
+		loopListItemID   = youtubePkg + ":id/list_item_text"
+	)
+
+	moreBtn := y.d.Object(androidui.ID(moreOptionsID))
+	playerView := y.d.Object(androidui.ID(playerViewID))
+	loopButton := y.d.Object(androidui.ClassName(loopClassName), androidui.Index(loopButtonIndex), androidui.Clickable(true))
+	setLoopVideoOn := uiauto.NamedCombine("set loop video on",
+		y.kb.AccelAction("Esc"),
+		uiauto.IfFailThen(moreBtn.Exists, cuj.FindAndClick(playerView, uiWaitTime)),
+		cuj.FindAndClick(moreBtn, uiWaitTime),
+		cuj.FindAndClick(loopButton, uiWaitTime),
+	)
+	return uiauto.Retry(retryTimes, setLoopVideoOn)(ctx)
 }
 
 func (y *YtApp) waitForLoadingComplete(ctx context.Context) error {
@@ -494,7 +535,7 @@ func (y *YtApp) EnterFullScreen(ctx context.Context) error {
 	playerView := y.d.Object(androidui.ID(playerViewID))
 	enterFsBtn := y.d.Object(androidui.Description(string(enterFullscreen)))
 
-	return uiauto.Retry(retryTimes, uiauto.NamedCombine("exit Youtube from fullscreen",
+	return uiauto.Retry(retryTimes, uiauto.NamedCombine("enter Youtube to fullscreen",
 		uiauto.IfFailThen(enterFsBtn.Exists, cuj.FindAndClick(playerView, uiWaitTime)),
 		cuj.FindAndClick(enterFsBtn, uiWaitTime),
 		waitWindowStateFullscreen(y.tconn, YoutubeWindowTitle),
@@ -545,6 +586,10 @@ func (y *YtApp) isFullscreen(ctx context.Context) (bool, error) {
 
 // showMoreOptionsButton checks if the "More Options" button is not on the display, click on the video to bring it up.
 func (y *YtApp) showMoreOptionsButton(ctx context.Context) (err error) {
+	if err := y.skipAds(ctx); err != nil {
+		return errors.Wrap(err, "failed to skip YouTube ads")
+	}
+
 	moreBtn := y.d.Object(androidui.ID(moreOptionsID))
 	playerView := y.d.Object(androidui.ID(playerViewID))
 	return uiauto.IfFailThen(moreBtn.Exists,
@@ -739,6 +784,14 @@ func (y *YtApp) skipAds(ctx context.Context) error {
 		}
 		return errors.New("have not determined whether the ad has been skipped successfully")
 	}, &testing.PollOptions{Timeout: time.Minute})
+}
+
+func (y *YtApp) skipSurvey(ctx context.Context) error {
+	testing.ContextLog(ctx, "Checking for YouTube survey")
+
+	const skipSurveyID = youtubePkg + ":id/skip_button"
+	skipSurveyBtn := y.d.Object(androidui.ID(skipSurveyID))
+	return cuj.ClickIfExist(skipSurveyBtn, uiWaitTime)(ctx)
 }
 
 // Close closes the resources related to video.
