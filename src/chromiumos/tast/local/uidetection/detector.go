@@ -36,13 +36,15 @@ const retryPolicy = `{
 		}
 	}]}`
 
-func (d *uiDetector) sendDetectionRequest(ctx context.Context, imagePng []byte, request *pb.DetectionRequest, resizingEnabled bool, testMetadata *pb.TestMetadata) (*pb.UiDetectionResponse, error) {
+func (d *uiDetector) sendDetectionRequest(ctx context.Context, imagePng []byte, request *pb.DetectionRequest, resizingStrategy ScreenshotResizingStrategy, testMetadata *pb.TestMetadata) (*pb.UiDetectionResponse, error) {
 	// Create the UI detection request.
+	resizeImage := resizingStrategy == ResizeAsFallback
 	uiDetectionRequest := &pb.UiDetectionRequest{
-		ImagePng:     imagePng,
-		Request:      request,
-		ResizeImage:  &resizingEnabled,
-		TestMetadata: testMetadata,
+		ImagePng:           imagePng,
+		Request:            request,
+		ResizeImage:        &resizeImage,
+		ForceImageResizing: resizingStrategy == AlwaysResize,
+		TestMetadata:       testMetadata,
 	}
 
 	ctx = metadata.NewOutgoingContext(ctx, metadata.Pairs(d.keyType, d.key))

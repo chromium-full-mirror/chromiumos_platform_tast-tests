@@ -238,8 +238,9 @@ func BasicDetections(ctx context.Context, s *testing.State) {
 				verifyChromeIsShown)),
 
 		uiauto.Combine("verify that resized images successfully match",
-			ud.WithScreenshotResizing().WaitUntilExists(addShortcut),
-			ud.WithScreenshotResizing().WaitUntilExists(uidetection.Word("Tab")),
+			ud.WithScreenshotResizingStrategy(uidetection.AlwaysResize).WaitUntilExists(addShortcut),
+			ud.WithScreenshotResizingStrategy(uidetection.ResizeAsFallback).WaitUntilExists(uidetection.Word("New")),
+			ud.WithScreenshotResizingStrategy(uidetection.ResizingDisabled).WaitUntilExists(uidetection.Word("Tab")),
 		))(ctx); err != nil {
 		s.Fatal("Failed to perform image-based UI interactions: ", err)
 	}

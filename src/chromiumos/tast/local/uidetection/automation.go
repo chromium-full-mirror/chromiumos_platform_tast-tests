@@ -42,10 +42,33 @@ var serverKeyAddr = testing.RegisterVarString(
 // ScreenshotStrategy holds the different screenshot strategies that can be used for image-based UI detection.
 type ScreenshotStrategy int
 
-// Holds all the screenshot types that can be used.
+// Holds all the screenshot strategies that can be used.
 const (
+	// Default. Wait until the screen is not changing before taking a screenshot.
 	StableScreenshot ScreenshotStrategy = iota
+	// Take a screenshot immediately.
 	ImmediateScreenshot
+)
+
+// ScreenshotResizingStrategy holds all of the image resizing strategies that
+// can be used.
+//
+// Resizing scales the screenshot up by 50% with bicubic scaling
+// to prevent common detection issues. Detection coordinates are automatically
+// scaled back down.
+type ScreenshotResizingStrategy int
+
+// Holds all the resizing strategies that can be used.
+const (
+	// Default. Do not resize the original image. This minimises detection
+	// latency.
+	ResizingDisabled ScreenshotResizingStrategy = iota
+	// Fall back to the resized image if no elements were detected using the
+	// original image.
+	ResizeAsFallback
+	// Start with the resized image, and fall back to the original image if
+	// no elements are detected.
+	AlwaysResize
 )
 
 const maxPollingGoroutines = 5
@@ -58,7 +81,7 @@ type Context struct {
 	options                      *Options
 	deviceInfo                   *DeviceInfo
 	screenshotStrategy           ScreenshotStrategy
-	resizingEnabled              bool
+	screenshotResizingStrategy   ScreenshotResizingStrategy
 	disableDynamicElementMasking bool
 }
 
@@ -75,9 +98,9 @@ func New(t *chrome.TestConn, keyType, key, server string) *Context {
 			Interval: 300 * time.Millisecond,
 			Timeout:  60 * time.Second,
 		},
-		options:            DefaultOptions(),
-		screenshotStrategy: StableScreenshot,
-		resizingEnabled:    false,
+		options:                    DefaultOptions(),
+		screenshotStrategy:         StableScreenshot,
+		screenshotResizingStrategy: ResizingDisabled,
 	}
 }
 
@@ -88,13 +111,13 @@ func NewDefault(t *chrome.TestConn) *Context {
 
 func (uda *Context) copy() *Context {
 	return &Context{
-		tconn:              uda.tconn,
-		detector:           uda.detector,
-		pollOpts:           uda.pollOpts,
-		options:            uda.options,
-		deviceInfo:         uda.deviceInfo,
-		screenshotStrategy: uda.screenshotStrategy,
-		resizingEnabled:    uda.resizingEnabled,
+		tconn:                      uda.tconn,
+		detector:                   uda.detector,
+		pollOpts:                   uda.pollOpts,
+		options:                    uda.options,
+		deviceInfo:                 uda.deviceInfo,
+		screenshotStrategy:         uda.screenshotStrategy,
+		screenshotResizingStrategy: uda.screenshotResizingStrategy,
 	}
 }
 
@@ -126,17 +149,18 @@ func (uda *Context) WithScreenshotStrategy(s ScreenshotStrategy) *Context {
 	return c
 }
 
-// WithScreenshotResizing returns a new Context with screenshot resizing enabled.
-// Resizing scales the screenshot up by 50% with bicubic scaling to prevent common
-// detection issues. Detection coordinates are automatically scaled back down in
-// the response.
-//
-// For example, resizing may help when two words, "Log" and "In", are incorrectly
-// detected as one: "Login".
-func (uda *Context) WithScreenshotResizing() *Context {
+// WithScreenshotResizingStrategy returns a new Context with the specified
+// screenshot resizing strategy.
+func (uda *Context) WithScreenshotResizingStrategy(s ScreenshotResizingStrategy) *Context {
 	c := uda.copy()
-	c.resizingEnabled = true
+	c.screenshotResizingStrategy = s
 	return c
+}
+
+// WithScreenshotResizing is deprecated: use
+// WithScreenshotResizingStrategy(uidetection.AlwaysResize) instead.
+func (uda *Context) WithScreenshotResizing() *Context {
+	return uda.WithScreenshotResizingStrategy(AlwaysResize)
 }
 
 // DisableDynamicElementMasking returns a new Context that disables masking dynamic
