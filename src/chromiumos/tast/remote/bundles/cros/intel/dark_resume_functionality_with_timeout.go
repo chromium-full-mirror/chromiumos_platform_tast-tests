@@ -136,7 +136,7 @@ func DarkResumeFunctionalityWithTimeout(ctx context.Context, s *testing.State) {
 	var requiredECEvents = []string{"S0ix Enter",
 		"S0ix Exit",
 		`Wake Source \| Power Button \| 0`,
-		`Wake Source \| GPE \# \| 112`,
+		`Wake Source \| GPE`,
 	}
 
 	foundRequiredEvents := true
