@@ -25,6 +25,8 @@ func init() {
 				s: s,
 			})
 		},
+		// GuaranteeCompatibility allows non-Tast test harness clients to call this service.
+		GuaranteeCompatibility: true,
 	})
 }
 

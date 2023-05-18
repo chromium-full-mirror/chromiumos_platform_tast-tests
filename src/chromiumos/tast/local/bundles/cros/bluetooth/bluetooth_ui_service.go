@@ -32,6 +32,8 @@ func init() {
 				sharedObject: common.SharedObjectsForServiceSingleton,
 			})
 		},
+		// GuaranteeCompatibility allows non-Tast test harness clients to call this service.
+		GuaranteeCompatibility: true,
 	})
 }
 
@@ -288,8 +290,9 @@ func (bui *BtUIService) PairDeviceWithQuickSettings(ctx context.Context, req *pb
 		}
 	}()
 
-	// Include a short delay before attempting to pair with the Bluetooth peripheral since attempting to
-	// pair immediately results in flaky behavior where the device will disappear/reappear sporadically.
+	// GoBigSleepLint: Include a short delay before attempting to pair with the Bluetooth
+	// peripheral since attempting to pair immediately results in flaky behavior where
+	// the device will disappear/reappear sporadically.
 	testing.Sleep(ctx, 5*time.Second)
 
 	deviceFinder := nodewith.NameContaining(req.AdvertisedName).Ancestor(quicksettings.BluetoothPairNewDeviceDialog).Role(role.Button).First()
