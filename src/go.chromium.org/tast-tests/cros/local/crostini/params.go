@@ -186,6 +186,10 @@ type Param struct {
 	// This name will be used in naming the test and as a test Val.
 	// If no additional input_method is used, set as empty string.
 	IMEName string
+
+	// NoBusterTest is used to control whether the test runs on the Debian
+	// buster container.
+	NoBusterTest bool
 }
 
 type generatedParam struct {
@@ -273,6 +277,10 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 
 			if testCase.MinimalSet && i.debianVersion != vm.DebianBuster {
 				// The minimal set is currently Buster.
+				return
+			}
+
+			if testCase.NoBusterTest && i.debianVersion == vm.DebianBuster {
 				return
 			}
 

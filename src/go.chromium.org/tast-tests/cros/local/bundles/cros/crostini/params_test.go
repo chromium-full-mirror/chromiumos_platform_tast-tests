@@ -377,3 +377,30 @@ func TestGaiaTestParams(t *testing.T) {
 		genparams.Ensure(t, filename, params)
 	}
 }
+
+type containerTestOptions struct {
+	noBuster bool
+}
+
+var containerTests = map[string]containerTestOptions{
+	"docker.go":      {},
+	"podman_root.go": {noBuster: true},
+	"podman_user.go": {noBuster: true},
+}
+
+// The container managers are quite heavy in terms of install size, so they are
+// installed in the "large" or "app test" container, even though they have low
+// runtime performance requirements.
+func TestContainerTestParams(t *testing.T) {
+	for filename, options := range containerTests {
+		params := crostini.MakeTestParamsFromList(t, []crostini.Param{{
+			Timeout:           15 * time.Minute,
+			ExtraData:         []string{"hello-world.tar"},
+			ExtraSoftwareDeps: []string{"vm_host"},
+			UseLargeContainer: true,
+			UseFixture:        true,
+			NoBusterTest:      options.noBuster,
+		}})
+		genparams.Ensure(t, filename, params)
+	}
+}
