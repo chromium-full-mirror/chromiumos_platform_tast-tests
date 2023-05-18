@@ -106,7 +106,6 @@ func init() {
 				probeConfig: probeConfig{[]probeStatement{
 					probeStatement{"mmc_host"},
 				}}},
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}},
 	})
 }
