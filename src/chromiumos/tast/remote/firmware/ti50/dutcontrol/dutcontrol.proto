@@ -101,6 +101,23 @@ message CommandResponse {
 }
 
 
+// QueryRequest is a request for information about the testbed, such as what
+// kind of chip it has, what kind of images it accepts, etc.
+message QueryRequest {
+}
+
+// QueryResponse contains information about the testbed, such as what kind of
+// chip it has, what kind of images it accepts, etc.
+message QueryResponse {
+  // Empty indicates no error.
+  string err = 1;
+
+  // "gsc_dt_ab", "gsc_ot_fpga_cw310" or "gsc_he" to be used for filtering tast
+  // test cases.
+  string testbed_type = 2;
+}
+
+
 message File {
   // This is a file name without path, mostly for informational purposes, such
   // that e.g. error messages can refer to the file by name.
@@ -251,7 +268,6 @@ enum TpmInterface {
   I2C = 2;
 }
 
-
 // Request to begin executing TCG Conformance tests.
 message RunTcgTestsRequest {
   TpmInterface bus = 1;
@@ -291,6 +307,9 @@ service DutControl {
 
   // Run a generic gsctool command.
   rpc GSCToolCommand(CommandRequest) returns (CommandResponse);
+
+  // Query the nature and capabilities of this testbed.
+  rpc Query(QueryRequest) returns (QueryResponse);
 
   // Transfers binary image and OTT configuration files to use going forward.
   // For devboards, the image will be flashed immediately, for host emulation,
