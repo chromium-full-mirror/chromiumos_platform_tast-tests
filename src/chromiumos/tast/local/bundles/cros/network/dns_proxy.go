@@ -96,7 +96,7 @@ func init() {
 			},
 			ExtraSoftwareDeps: []string{"vm_host", "dlc"},
 			ExtraHardwareDeps: crostini.CrostiniStable,
-			Fixture:           "crostiniBuster",
+			Fixture:           "crostiniBullseye",
 		}, {
 			Name: "crostini_doh_automatic",
 			Val: dnsProxyTestParams{
@@ -105,7 +105,7 @@ func init() {
 			},
 			ExtraSoftwareDeps: []string{"vm_host", "dlc"},
 			ExtraHardwareDeps: crostini.CrostiniStable,
-			Fixture:           "crostiniBuster",
+			Fixture:           "crostiniBullseye",
 		}, {
 			Name: "crostini_doh_always_on",
 			Val: dnsProxyTestParams{
@@ -114,7 +114,7 @@ func init() {
 			},
 			ExtraSoftwareDeps: []string{"vm_host", "dlc"},
 			ExtraHardwareDeps: crostini.CrostiniStable,
-			Fixture:           "crostiniBuster",
+			Fixture:           "crostiniBullseye",
 		}},
 	})
 }
