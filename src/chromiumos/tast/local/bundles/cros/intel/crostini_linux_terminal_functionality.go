@@ -96,20 +96,16 @@ func CrostiniLinuxTerminalFunctionality(ctx context.Context, s *testing.State) {
 	}
 
 	const (
-		cpuCheckerInstallCommand = "sudo apt-get install cpu-checker --yes"
-		sudoKvmCommand           = "sudo kvm-ok"
+		sudoKvmCommand = "sudo kvm-ok"
 	)
 
 	var (
-		installSuccessElement = nodewith.NameContaining("Processing triggers for man-db").Role(role.StaticText)
-		kvmExistsElement      = nodewith.Name("INFO: /dev/kvm exists").Role(role.StaticText)
-		kvmUsedElement        = nodewith.Name("KVM acceleration can be used").Role(role.StaticText)
+		kvmExistsElement = nodewith.Name("INFO: /dev/kvm exists").Role(role.StaticText)
+		kvmUsedElement   = nodewith.Name("KVM acceleration can be used").Role(role.StaticText)
 	)
 
 	cui := uiauto.New(tconn)
 	if err := uiauto.Combine("check for VT-d functionality",
-		terminalApp.RunCommand(kb, cpuCheckerInstallCommand),
-		cui.WithTimeout(80*time.Second).WaitUntilExists(installSuccessElement),
 		terminalApp.RunCommand(kb, sudoKvmCommand),
 		cui.WaitUntilExists(kvmExistsElement),
 		cui.WaitUntilExists(kvmUsedElement),

@@ -1,5 +1,5 @@
 {
-    "sha256sum": "bf0fe6370db638cef15968c93da157526bf633557905033e7efdcba449f958b3",
-    "size": 1132908544,
-    "url": "gs://cros-containers-staging/115/images/debian/bullseye/arm64/app_test/20230427_01:38/rootfs.squashfs"
+    "sha256sum": "1363bc4233f5ad5463e3299f3516a9cd10c00354a69a33b39c04e998eaf156db",
+    "size": 1101082624,
+    "url": "gs://cros-containers-staging/115/images/debian/bullseye/arm64/app_test/20230522_08:11/rootfs.squashfs"
 }

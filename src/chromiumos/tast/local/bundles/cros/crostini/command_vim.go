@@ -13,8 +13,6 @@ import (
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/crostini"
 	"chromiumos/tast/local/terminalapp"
-	"chromiumos/tast/local/vm"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -78,9 +76,9 @@ func CommandVim(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open Terminal app: ", err)
 	}
 
-	// Install vim in container.
-	if err := installVimInContainer(ctx, cont); err != nil {
-		s.Fatal("Failed to install vim in container: ", err)
+	// Check that vim is preinstalled.
+	if err := cont.Command(ctx, "vim", "--version").Run(testexec.DumpLogOnError); err != nil {
+		s.Fatal("Failed to execute vim")
 	}
 
 	const (
@@ -110,28 +108,4 @@ func CommandVim(ctx context.Context, s *testing.State) {
 	if err := cont.CheckFileContent(ctx, testFile, testString+"\n"); err != nil {
 		s.Fatal("The content of the file is wrong: ", err)
 	}
-}
-
-// installVimInContainer installs vim in container.
-func installVimInContainer(ctx context.Context, cont *vm.Container) error {
-	// Check whether vim is preinstalled or not.
-	if err := cont.Command(ctx, "vim", "--version").Run(testexec.DumpLogOnError); err == nil {
-		return nil
-	}
-
-	// Run command sudo apt update in container.
-	if err := cont.Command(ctx, "sudo", "apt", "update").Run(testexec.DumpLogOnError); err != nil {
-		return errors.Wrap(err, "failed to run command sudo apt update in container")
-	}
-
-	// Run command sudo apt install vim in container.
-	if err := cont.Command(ctx, "sudo", "DEBIAN_FRONTEND=noninteractive", "apt-get", "-y", "install", "vim").Run(testexec.DumpLogOnError); err != nil {
-		return errors.Wrap(err, "failed to run command sudo apt install vim in container")
-	}
-
-	// Run command vim --version and check the output to make sure vim has been installed successfully.
-	if err := cont.Command(ctx, "vim", "--version").Run(testexec.DumpLogOnError); err != nil {
-		return errors.Wrap(err, "failed to install vim in container")
-	}
-	return nil
 }
