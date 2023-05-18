@@ -7,11 +7,13 @@ package ossettings
 import (
 	"context"
 	"regexp"
+	"strings"
 	"time"
 
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/restriction"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/input"
 	"go.chromium.org/tast/core/errors"
@@ -99,6 +101,177 @@ func GoToFirstInactiveNetworkDetails(ctx context.Context, tconn *chrome.TestConn
 		return errors.Wrap(err, "failed to verify inactive cellular network in details settings page")
 	}
 
+	return nil
+}
+
+// GoToActiveNetworkApnSubpage will go to the APN subpage of the active cellular network.
+func GoToActiveNetworkApnSubpage(ctx context.Context, tconn *chrome.TestConn, isFromMobileDataSubpage bool) error {
+	if isFromMobileDataSubpage {
+		if err := GoToActiveNetworkDetails(ctx, tconn); err != nil {
+			return errors.Wrap(err, "failed to go to active cellular network detail page view")
+		}
+	}
+
+	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
+	if err := uiauto.Combine("Go to APN subpage",
+		ui.WaitUntilExists(ApnSubpageButton.Focusable()),
+		ui.LeftClick(ApnSubpageButton.Focusable()),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to go to APN subpage")
+	}
+	return nil
+}
+
+// ClickAPNMoreActionsButton will click the 'More Actions' button associated to the APN.
+func ClickAPNMoreActionsButton(ctx context.Context, tconn *chrome.TestConn, apn string) error {
+	ui := uiauto.New(tconn)
+
+	apnMoreActionBtn := nodewith.Name("More actions for " + apn).Role(role.Button)
+
+	// More actions button may be temporarily disabled if cellular is connecting or disconnecting.
+	if err := ui.WithTimeout(30 * time.Second).WaitUntilExists(apnMoreActionBtn.Focusable())(ctx); err != nil {
+		return errors.Wrap(err, "failed to show more actions button")
+	}
+
+	if err := ui.LeftClickUntil(apnMoreActionBtn, ui.Exists(DetailsBtn))(ctx); err != nil {
+		return errors.Wrap(err, "failed to click more actions button")
+	}
+
+	return nil
+}
+
+// CheckAutomaticallyDetectedAPNDetailesDialog willcheck that the APN details dialog is correct for automatically detected APN.
+func CheckAutomaticallyDetectedAPNDetailesDialog(ctx context.Context, tconn *chrome.TestConn) error {
+	ui := uiauto.New(tconn)
+	if err := ui.WaitUntilExists(NameOfAPNInput)(ctx); err != nil {
+		return errors.Wrap(err, "failed to wait for name of apn input")
+	}
+
+	if err := ui.CheckRestriction(NameOfAPNInput, restriction.Disabled)(ctx); err != nil {
+		return errors.Wrap(err, "failed to verify APN name input disabled")
+	}
+
+	if err := ui.CheckRestriction(UserNameOfAPNInput, restriction.Disabled)(ctx); err != nil {
+		return errors.Wrap(err, "failed to verify APN username input disabled")
+	}
+
+	if err := ui.CheckRestriction(PasswordOfAPNInput, restriction.Disabled)(ctx); err != nil {
+		return errors.Wrap(err, "failed to verify APN password input disabled")
+	}
+
+	if err := ui.LeftClick(APNAdvancedBtn)(ctx); err != nil {
+		return errors.Wrap(err, "failed to click on APN advanced settings button")
+	}
+
+	if err := ui.CheckRestriction(AuthenticationTypeDropdown, restriction.Disabled)(ctx); err != nil {
+		return errors.Wrap(err, "failed to verify Authentication type dropdown disabled")
+	}
+
+	if err := ui.WaitUntilExists(IPTypeDropdown)(ctx); err != nil {
+		return errors.Wrap(err, "failed to wait for name of apn input")
+	}
+
+	if err := ui.CheckRestriction(IPTypeDropdown, restriction.Disabled)(ctx); err != nil {
+		return errors.Wrap(err, "failed to verify IP type dropdown disabled")
+	}
+
+	if err := ui.CheckRestriction(DefaultAPNCheckbox, restriction.Disabled)(ctx); err != nil {
+		return errors.Wrap(err, "failed to verify default checkbox disabled")
+	}
+
+	if err := ui.CheckRestriction(AttachAPNCheckbox, restriction.Disabled)(ctx); err != nil {
+		return errors.Wrap(err, "failed to verify attach checkbox disabled")
+	}
+
+	return nil
+}
+
+// VerifyAPNSubpageConnectedApnUI verifies that the UI of the connected APN's row in the APN subpage is correct.
+func (s *OSSettings) VerifyAPNSubpageConnectedApnUI(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, apn, source string) error {
+	expr := `var nodes = shadowPiercingQueryAll(
+		'apn-list-item div#labelWrapper');
+		var connectedNode = undefined;
+		nodes.forEach(node => {
+			if (node.innerText.includes("Connected")) {
+				connectedNode = node
+			}
+		})
+		if (connectedNode == undefined) {
+			throw new Error("No connected APN node found.");
+		}
+		connectedNode.innerText;
+		`
+	var connectedNodeInnterText string
+	if err := s.EvalJSWithShadowPiercer(ctx, cr, expr, &connectedNodeInnterText); err != nil {
+		return errors.Wrap(err, "failed to find connected APN row text")
+	}
+
+	if !strings.Contains(connectedNodeInnterText, apn) {
+		return errors.New("failed to show APN name in connected APN row text")
+	}
+
+	// If the APN is automatically detected, it is provided by the modb.
+	if source == "modb" && !strings.Contains(connectedNodeInnterText, "Automatically detected") {
+		return errors.New("failed to show Automatically detected for database provided APN in connected APN row text")
+	}
+
+	return nil
+}
+
+// VerifyAPNMoreActionsMenuItemsPresent verifies the presence of more actions APN menu items.
+func VerifyAPNMoreActionsMenuItemsPresent(ctx context.Context, tconn *chrome.TestConn, apn string, hasEnable, hasDisable, hasRemove bool) error {
+	ui := uiauto.New(tconn)
+
+	if err := ui.Exists(DetailsBtn)(ctx); err != nil {
+		if err := ClickAPNMoreActionsButton(ctx, tconn, apn); err != nil {
+			return errors.Wrap(err, "failed to click more actions button")
+		}
+		if err := ui.Exists(DetailsBtn)(ctx); err != nil {
+			return errors.Wrap(err, "failed to find Details button")
+		}
+	}
+
+	if hasDisable {
+		if err := ui.Exists(DisableBtn)(ctx); err != nil {
+			return errors.Wrap(err, "failed to find Disable menu item")
+		}
+	} else {
+		if err := ui.Gone(DisableBtn)(ctx); err != nil {
+			return errors.Wrap(err, "failed to verify lack of Disable menu item")
+		}
+	}
+
+	if hasEnable {
+		if err := ui.Exists(EnableBtn)(ctx); err != nil {
+			return errors.Wrap(err, "failed to find Enable menu item")
+		}
+	} else {
+		if err := ui.Gone(EnableBtn)(ctx); err != nil {
+			return errors.Wrap(err, "failed to verify lack of Enable menu item")
+		}
+	}
+
+	if hasRemove {
+		if err := ui.Exists(RemoveBtn)(ctx); err != nil {
+			return errors.Wrap(err, "failed to find Remove menu item")
+		}
+	} else {
+		if err := ui.Gone(RemoveBtn)(ctx); err != nil {
+			return errors.Wrap(err, "failed to verify lack of Remove menu item")
+		}
+	}
+
+	return nil
+}
+
+// VerifyApnIsVisibleInSubtext will verify that the APN shows in the subtext of cellular details page.
+func VerifyApnIsVisibleInSubtext(ctx context.Context, tconn *chrome.TestConn, apn string) error {
+	ui := uiauto.New(tconn)
+	apnSubpageButton := nodewith.NameContaining("Access point name").NameContaining(apn).Role(role.Link)
+
+	if err := ui.WaitUntilExists(apnSubpageButton)(ctx); err != nil {
+		return errors.Wrap(err, "failed to find APN in subtext")
+	}
 	return nil
 }
 

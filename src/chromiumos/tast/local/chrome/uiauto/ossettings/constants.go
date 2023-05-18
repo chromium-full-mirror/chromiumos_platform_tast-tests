@@ -210,6 +210,9 @@ var (
 	// AutoconnectToggle is the finder for the autoconnect toggle UI in the cellular detail page.
 	AutoconnectToggle = nodewith.Name("Automatically connect to cellular network").Role(role.ToggleButton)
 
+	// ApnSubpageButton is the finder for the APN subpage button in the cellular detail page that opens the APN subpage.
+	ApnSubpageButton = nodewith.NameContaining("Access point name").Role(role.Link)
+
 	// CellularAdvanced is the finder for the button that collapses/expands the advanced section of cellular details page.
 	CellularAdvanced = nodewith.Name("Show advanced network properties").Role(role.Button)
 
@@ -233,6 +236,44 @@ var (
 
 	// NetworkAddedText is the finder for the header to the eSIM cellular setup dialog when an eSIM profile is successfully added.
 	NetworkAddedText = nodewith.NameContaining("Network added").Role(role.StaticText)
+)
+
+var (
+	// DetailsBtn is the finder for the APN details menu item in more actions menu for an APN.
+	DetailsBtn = nodewith.Name("Details").Role(role.MenuItem)
+
+	// DisableBtn is the finder for the disable APN menu item in more actions menu for an APN.
+	DisableBtn = nodewith.Name("Disable").Role(role.MenuItem)
+
+	// EnableBtn is the finder for the enable APN menu item in more actions menu for an APN.
+	EnableBtn = nodewith.Name("Enable").Role(role.MenuItem)
+
+	// RemoveBtn is the finder for the remove APN menu item in more actions menu for an APN.
+	RemoveBtn = nodewith.Name("Remove").Role(role.MenuItem)
+
+	// NameOfAPNInput is the finder for the APN* input in the APN details dialog.
+	NameOfAPNInput = nodewith.Name("APN*").Role(role.TextField)
+
+	// UserNameOfAPNInput is the finder for the username input in the APN details dialog.
+	UserNameOfAPNInput = nodewith.Name("Username").Role(role.TextField)
+
+	// PasswordOfAPNInput is the finder for the password input in the APN details dialog.
+	PasswordOfAPNInput = nodewith.Name("Password").Role(role.TextField)
+
+	// APNAdvancedBtn is the finder for the advanced button in the APN details dialog.
+	APNAdvancedBtn = nodewith.Role(role.Button).NameContaining("Advanced settings").Focusable()
+
+	// AuthenticationTypeDropdown is the finder for the authentication dropdown in the APN details dialog.
+	AuthenticationTypeDropdown = nodewith.HasClass("select-field").NameContaining("Authentication type")
+
+	// IPTypeDropdown is the finder for the IP type dropdown in the APN details dialog.
+	IPTypeDropdown = nodewith.HasClass("select-field").NameContaining("IP type")
+
+	// DefaultAPNCheckbox is the finder for the default checkbox in the APN details dialog.
+	DefaultAPNCheckbox = nodewith.Role(role.CheckBox).NameContaining("Default")
+
+	// AttachAPNCheckbox is the finder for the attach checkbox in the APN details dialog.
+	AttachAPNCheckbox = nodewith.Role(role.CheckBox).NameContaining("Attach")
 )
 
 // Elements in "Proxy" section of Network page.
