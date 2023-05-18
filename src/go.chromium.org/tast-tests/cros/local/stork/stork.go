@@ -14,6 +14,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (
@@ -155,7 +156,7 @@ func performFetchStorkProfile(ctx context.Context, data string) (ActivationCode,
 		dataArgName, data,
 		startGtsSessionURL)
 
-	output, err := command.Output()
+	output, err := tryCommand(ctx, command)
 	if err != nil {
 		return ActivationCode(""), nil, errors.Wrap(err, "failed sending Stork request")
 	}
@@ -165,30 +166,42 @@ func performFetchStorkProfile(ctx context.Context, data string) (ActivationCode,
 		return ActivationCode(""), nil, errors.Wrap(err, "Stork response was invalid")
 	}
 
-	activationCode, err := getActivationCode(jsonOutput)
-	if err != nil {
-		return ActivationCode(""), nil, errors.Wrap(err, "could not find an activation code")
-	}
-
 	sessionID, err := getSessionID(jsonOutput)
 	if err != nil {
 		return ActivationCode(""), nil, errors.Wrap(err, "could not find session ID")
 	}
 
-	cleanpProfile := CleanupProfileFunc(func(ctx context.Context) error {
+	cleanupProfile := CleanupProfileFunc(func(ctx context.Context) error {
 		command := testexec.CommandContext(ctx, curlCommandName,
 			cacertArgName, cacertArgValue,
 			endGtsSessionURLPrefix+sessionID)
-
-		err := command.Run()
-		if err != nil {
+		if _, err := tryCommand(ctx, command); err != nil {
 			return errors.Wrap(err, "failed Stork cleanup request")
 		}
-
 		return nil
 	})
 
-	return activationCode, cleanpProfile, nil
+	activationCode, err := getActivationCode(jsonOutput)
+	if err != nil {
+		return ActivationCode(""), cleanupProfile, errors.Wrap(err, "could not find an activation code")
+	}
+
+	return activationCode, cleanupProfile, nil
+}
+
+func tryCommand(ctx context.Context, command *testexec.Cmd) ([]byte, error) {
+	testing.ContextLog(ctx, "STORK COMMAND: ", command.String())
+	var output []byte
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		var outErr error
+		if output, outErr = command.Output(); outErr != nil {
+			return outErr
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: time.Second}); err != nil {
+		return nil, err
+	}
+	return output, nil
 }
 
 // FetchStorkProfile fetches a test eSIM profile that does not require a confirmation code from Stork.
