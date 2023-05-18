@@ -15,7 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/chrome/projector"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
@@ -137,13 +137,12 @@ func testProjectorEnabled(ctx context.Context, cr *chrome.Chrome, fdms *fakedms.
 
 	// SWA installation is not guaranteed during startup.
 	// Wait for installation finished before starting test.
-	if err := ash.WaitForChromeAppInstalled(ctx, tconn, apps.Projector.ID,
-		2*time.Minute); err != nil {
-		return errors.Wrap(err, "failed to wait for installed app")
+	expectedApp, err := projector.GetProjectorApp(ctx, tconn)
+	if err != nil {
+		return err
 	}
-
 	// Waits until the Screencast app window exists:
-	if err := launcher.LaunchAndWaitForAppOpen(tconn, apps.Projector)(ctx); err != nil {
+	if err := launcher.LaunchAndWaitForAppOpen(tconn, *expectedApp)(ctx); err != nil {
 		return errors.Wrap(err, "failed to open Projector app")
 	}
 

@@ -56,7 +56,8 @@ func SavedFileToDefaultFolder(ctx context.Context, s *testing.State) {
 
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
-	cleanup, err := projector.SetUpProjectorApp(ctx, tconn)
+	app := s.FixtValue().(projector.HasApp).App()
+	cleanup, err := projector.SetUpProjectorApp(ctx, tconn, app)
 	if err != nil {
 		s.Fatal("Failed to set up Projector app: ", err)
 	}

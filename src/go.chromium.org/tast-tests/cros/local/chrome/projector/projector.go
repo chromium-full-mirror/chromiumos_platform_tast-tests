@@ -31,8 +31,8 @@ import (
 // microphone and sets up a fake one if necessary. The caller should
 // schedule a deferred call to the returned cleanup function to unload
 // aloop if err is nil.
-func SetUpProjectorApp(ctx context.Context, tconn *chrome.TestConn) (func(ctx context.Context), error) {
-	if err := launcher.LaunchAndWaitForAppOpen(tconn, apps.Projector)(ctx); err != nil {
+func SetUpProjectorApp(ctx context.Context, tconn *chrome.TestConn, app *apps.App) (func(ctx context.Context), error) {
+	if err := launcher.LaunchAndWaitForAppOpen(tconn, *app)(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to open Projector app")
 	}
 
@@ -126,7 +126,7 @@ func LaunchCreationFlow(ctx context.Context, tconn *chrome.TestConn, launchAnnot
 		}
 	}
 
-	// Ensure the recording is at least a couple seconds long.
+	// GoBigSleepLint: Ensure the recording is at least a couple seconds long.
 	testing.Sleep(ctx, 6*time.Second)
 
 	testing.ContextLog(ctx, "Stopping recording")

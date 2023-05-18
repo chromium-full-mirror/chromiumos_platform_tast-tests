@@ -337,9 +337,19 @@ var VMWare = App{
 	Name: "VMware Horizon",
 }
 
-// Projector has details about the Screencast app.
+// Projector has details about the Projector app.
+// This id corresponds to the app hosted under
+// chrome://projector main frame.
 var Projector = App{
 	ID:   "nblbgfbmjfjaeonhjnbbkabkdploocij",
+	Name: "Screencast",
+}
+
+// ProjectorV2 has details about the Projector app
+// hosted under the chrome-untrusted://projector
+// main frame.
+var ProjectorV2 = App{
+	ID:   "hohmppfoilmflgicnofelkdablfahbnl",
 	Name: "Screencast",
 }
 

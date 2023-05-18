@@ -47,7 +47,8 @@ func LocalPlayback(ctx context.Context, s *testing.State) {
 
 	ui := uiauto.New(tconn).WithTimeout(2 * time.Minute)
 
-	cleanup, err := projector.SetUpProjectorApp(ctx, tconn)
+	app := s.FixtValue().(projector.HasApp).App()
+	cleanup, err := projector.SetUpProjectorApp(ctx, tconn, app)
 	if err != nil {
 		s.Fatal("Failed to set up Projector app: ", err)
 	}

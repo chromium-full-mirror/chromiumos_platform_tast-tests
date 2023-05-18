@@ -32,6 +32,30 @@ func NewProjectorFixture(fOpts chrome.OptionsCallback) testing.FixtureImpl {
 	return &projectorFixture{fOpts: fOpts}
 }
 
+// GetProjectorApp gets the installed Projector app.
+func GetProjectorApp(ctx context.Context, tconn *chrome.TestConn) (*apps.App, error) {
+	var appID *apps.App = nil
+	err := testing.Poll(ctx, func(ctx context.Context) error {
+		if installed, err := ash.ChromeAppInstalled(ctx, tconn, apps.Projector.ID); err != nil {
+			return testing.PollBreak(err)
+		} else if installed {
+			appID = &apps.Projector
+			return nil
+		}
+
+		if installed, err := ash.ChromeAppInstalled(ctx, tconn, apps.ProjectorV2.ID); err != nil {
+			return testing.PollBreak(err)
+		} else if installed {
+			appID = &apps.ProjectorV2
+			return nil
+		}
+
+		return errors.New("failed to wait for Projector installed")
+	}, &testing.PollOptions{Timeout: 2 * time.Minute, Interval: 300 * time.Millisecond})
+
+	return appID, err
+}
+
 func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:     "projectorLogin",
@@ -134,6 +158,11 @@ type projectorFixture struct {
 	fdms  *fakedms.FakeDMS
 }
 
+// HasApp interface provides access to the installed projector app.
+type HasApp interface {
+	App() *apps.App
+}
+
 // FixtData holds information made available to tests that specify this Fixture.
 type FixtData struct {
 	// Chrome is the running chrome instance.
@@ -142,6 +171,8 @@ type FixtData struct {
 	testConn *chrome.TestConn
 	// FakeDMS is the running DMS server if any.
 	fakeDMS *fakedms.FakeDMS
+	// The installed Projector app information.
+	appRef *apps.App
 }
 
 // Chrome implements the HasChrome interface.
@@ -168,10 +199,19 @@ func (f FixtData) FakeDMS() *fakedms.FakeDMS {
 	return f.fakeDMS
 }
 
+// App implements the HasApp interface.
+func (f FixtData) App() *apps.App {
+	if f.appRef == nil {
+		panic("Projector App has not been set.")
+	}
+	return f.appRef
+}
+
 // Check at compile-time that FixtData implements the appropriate interfaces.
 var _ chrome.HasChrome = FixtData{}
 var _ familylink.HasTestConn = FixtData{}
 var _ fakedms.HasFakeDMS = FixtData{}
+var _ HasApp = FixtData{}
 
 func (f *projectorFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	opts, err := f.fOpts(ctx, s)
@@ -211,8 +251,9 @@ func (f *projectorFixture) SetUp(ctx context.Context, s *testing.FixtState) inte
 	// SWA installation is not guaranteed during startup.
 	// Wait for installation finished before starting test.
 	s.Log("Wait for Screencast app to be installed")
-	if err := ash.WaitForChromeAppInstalled(ctx, tconn, apps.Projector.ID, 2*time.Minute); err != nil {
-		s.Fatal("Failed to wait for installed app: ", err)
+	app, err := GetProjectorApp(ctx, tconn)
+	if err != nil {
+		s.Fatal("Something failed: ", err)
 	}
 
 	// Lock chrome after all Setup is complete so we don't block other fixtures.
@@ -221,6 +262,7 @@ func (f *projectorFixture) SetUp(ctx context.Context, s *testing.FixtState) inte
 		chrome:   cr,
 		testConn: tconn,
 		fakeDMS:  fdms,
+		appRef:   app,
 	}
 }
 

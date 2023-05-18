@@ -39,10 +39,11 @@ func CreationFlow(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	tconn := s.FixtValue().(familylink.HasTestConn).TestConn()
+	app := s.FixtValue().(projector.HasApp).App()
 
 	defer faillog.DumpUITreeOnError(ctxForCleanUp, s.OutDir(), s.HasError, tconn)
 
-	cleanup, err := projector.SetUpProjectorApp(ctx, tconn)
+	cleanup, err := projector.SetUpProjectorApp(ctx, tconn, app)
 	if err != nil {
 		s.Fatal("Failed to set up Projector app: ", err)
 	}
