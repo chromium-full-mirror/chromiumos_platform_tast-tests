@@ -36,6 +36,8 @@ func init() {
 	})
 }
 
+// HermesTestCI ensures that Hermes can install and uninstall test profiles
+// received from stork.
 func HermesTestCI(ctx context.Context, s *testing.State) {
 	testMode, ok := s.Param().(string)
 	if !ok {
@@ -57,6 +59,11 @@ func HermesTestCI(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to reset test euicc: ", err)
 	}
 
+	eid, err := euicc.Eid(ctx)
+	if err != nil {
+		s.Fatal("Unable to get Hermes eid: ", err)
+	}
+
 	// Emulate Chrome's call that occurs during OOBE
 	if testMode != hermesconst.HermesOnly {
 		switchSlotIfMMTest(ctx, s, testMode)
@@ -69,7 +76,7 @@ func HermesTestCI(ctx context.Context, s *testing.State) {
 	const numProfiles = 2
 	profiles := make([]*hermes.Profile, numProfiles)
 	for i := 0; i < numProfiles; i++ {
-		activationCode, cleanupFunc, err := stork.FetchStorkProfile(ctx)
+		activationCode, cleanupFunc, err := stork.FetchStorkProfilesForEid(ctx, eid)
 		if err != nil {
 			s.Fatal("Failed to fetch Stork profile: ", err)
 		}

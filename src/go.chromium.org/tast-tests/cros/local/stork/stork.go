@@ -25,7 +25,6 @@ const (
 const (
 	// Used in POST request.
 	gtsTestProfileListKey    = "gtsTestProfileList"
-	eidValue                 = ""
 	maxDownloadAttemptsValue = 5
 	profileStatusValue       = "RELEASED"
 	profileClassValue        = "OPERATIONAL"
@@ -84,9 +83,9 @@ type RequestData struct {
 	Eid                string            `json:"eid"`
 }
 
-func generateStorkRequestData(confirmationCode string, maxConfirmationCodeAttempts int) (string, error) {
+func generateStorkRequestData(eid, confirmationCode string, maxConfirmationCodeAttempts int) (string, error) {
 	profileListData := &ProfileListData{
-		Eid:                         eidValue,
+		Eid:                         eid,
 		ConfirmationCode:            confirmationCode,
 		MaxConfirmationCodeAttempts: maxConfirmationCodeAttempts,
 		MaxDownloadAttempts:         maxDownloadAttemptsValue,
@@ -99,7 +98,7 @@ func generateStorkRequestData(confirmationCode string, maxConfirmationCodeAttemp
 
 	storkRequestData := &RequestData{
 		GtsTestProfileList: []ProfileListData{*profileListData},
-		Eid:                eidValue,
+		Eid:                eid,
 	}
 
 	jsonBytes, err := json.Marshal(storkRequestData)
@@ -194,7 +193,12 @@ func performFetchStorkProfile(ctx context.Context, data string) (ActivationCode,
 
 // FetchStorkProfile fetches a test eSIM profile that does not require a confirmation code from Stork.
 func FetchStorkProfile(ctx context.Context) (ActivationCode, CleanupProfileFunc, error) {
-	data, err := generateStorkRequestData("", 1)
+	return FetchStorkProfilesForEid(ctx, "")
+}
+
+// FetchStorkProfilesForEid fetches a test eSIM profile without a confirmation code for a specific eID.
+func FetchStorkProfilesForEid(ctx context.Context, eid string) (ActivationCode, CleanupProfileFunc, error) {
+	data, err := generateStorkRequestData(eid, "", 1)
 	if err != nil {
 		return ActivationCode(""), nil, err
 	}
@@ -203,7 +207,7 @@ func FetchStorkProfile(ctx context.Context) (ActivationCode, CleanupProfileFunc,
 
 // FetchStorkProfileWithCustomConfirmationCode fetches a test eSIM profile with a custom confirmation code from Stork.
 func FetchStorkProfileWithCustomConfirmationCode(ctx context.Context, confirmationCode string, maxConfirmationCodeAttempts int) (ActivationCode, CleanupProfileFunc, error) {
-	data, err := generateStorkRequestData(confirmationCode, maxConfirmationCodeAttempts)
+	data, err := generateStorkRequestData("", confirmationCode, maxConfirmationCodeAttempts)
 	if err != nil {
 		return ActivationCode(""), nil, err
 	}

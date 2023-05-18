@@ -28,17 +28,18 @@ func init() {
 	})
 }
 
+// StorkProfile ensures that fetching profiles from stork succeeds.
 func StorkProfile(ctx context.Context, s *testing.State) {
-	ctxForCleanup := ctx
+	testEid := "89033023425120000000000971681225"
 
+	ctxForCleanup := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, stork.CleanupProfileTime)
 	defer cancel()
 
-	activationCode, cleanupFunc, err := stork.FetchStorkProfile(ctx)
+	activationCode, cleanupFunc, err := stork.FetchStorkProfilesForEid(ctx, testEid)
 	if err != nil {
 		s.Fatal("Failed to fetch Stork profile: ", err)
 	}
-
 	defer cleanupFunc(ctxForCleanup)
 	s.Log("Fetched Stork profile with activation code: ", activationCode)
 }
