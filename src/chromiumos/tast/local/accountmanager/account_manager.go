@@ -229,7 +229,10 @@ func AddAccount(ctx context.Context, tconn *chrome.TestConn, email, password str
 	if err := uiauto.Combine("Enter email and password",
 		// Enter the User Name.
 		kb.TypeAction(email+"\n"),
-		ui.WaitUntilExists(passwordField),
+		uiauto.IfFailThen(
+			ui.Exists(passwordField),
+			ui.DoDefaultUntil(nextButton, ui.Exists(passwordField)),
+		),
 		ui.DoDefaultUntil(passwordField, ui.Exists(passwordField.Focused())),
 		// Enter the Password.
 		kb.TypeAction(password),
