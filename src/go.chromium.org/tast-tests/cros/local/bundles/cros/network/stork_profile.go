@@ -36,7 +36,7 @@ func StorkProfile(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, stork.CleanupProfileTime)
 	defer cancel()
 
-	activationCode, cleanupFunc, err := stork.FetchStorkProfilesForEid(ctx, testEid)
+	activationCode, cleanupFunc, err := stork.FetchStorkProfilesForEid(ctx, testEid, 1)
 	if err != nil {
 		s.Fatal("Failed to fetch Stork profile: ", err)
 	}

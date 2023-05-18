@@ -10,6 +10,9 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/hermesconst"
 	"go.chromium.org/tast-tests/cros/local/hermes"
+	"go.chromium.org/tast-tests/cros/local/stork"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -22,10 +25,25 @@ func init() {
 		Attr:         []string{"group:cellular", "cellular_sim_test_esim"},
 		Fixture:      "cellular",
 		Timeout:      5 * time.Minute,
+		Params: []testing.Param{{
+			// Calls Hermes.Euicc.RefreshSmdxProfiles and ensures non-empty activation codes.
+			Name: "refresh",
+			Val:  "",
+		}, {
+			// Calls Hermes.Euicc.RefreshSmdxProfiles then installs and uninstalls the profiles.
+			Name: "install",
+			Val:  "install",
+		}},
 	})
 }
 
+// HermesSMDS ensures that Hermes SMDS eSIM operations work with a stork server.
 func HermesSMDS(ctx context.Context, s *testing.State) {
+	testVal, ok := s.Param().(string)
+	if !ok {
+		s.Fatal("Unable to read test mode")
+	}
+
 	// Get a test euicc.
 	euicc, _, err := hermes.GetEUICC(ctx, true)
 	if err != nil {
@@ -37,14 +55,25 @@ func HermesSMDS(ctx context.Context, s *testing.State) {
 	}
 	s.Log("Using test certs")
 
-	// Please ensure there is a stork profile for this EID already before running the test.
-	eid := ""
-	if err := euicc.Property(ctx, hermesconst.EuiccPropertyEid, &eid); err != nil {
-		s.Fatal("Failed to read euicc EID")
+	eid, err := euicc.Eid(ctx)
+	if err != nil {
+		s.Fatal("Unable to get Hermes eid: ", err)
 	}
 	s.Log("EID of the euicc: ", eid)
 
+	ctxForCleanup := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, stork.CleanupProfileTime)
+	defer cancel()
+
 	const numProfiles = 2
+	_, cleanupFunc, err := stork.FetchStorkProfilesForEid(ctx, eid, numProfiles)
+	if cleanupFunc != nil {
+		defer cleanupFunc(ctxForCleanup)
+	}
+	if err != nil {
+		s.Fatal("Failed to fetch Stork profile: ", err)
+	}
+
 	pendingProfiles, err := euicc.RefreshSmdxProfiles(ctx, hermesconst.RootSmdsAddress, false)
 	if err != nil {
 		s.Fatal("Failed to get pending profiles: ", err)
@@ -55,12 +84,46 @@ func HermesSMDS(ctx context.Context, s *testing.State) {
 
 	for _, profile := range pendingProfiles {
 		s.Logf("Pending profile %s", profile.String())
-		c, err := profile.ActivationCode(ctx)
-		if err != nil {
-			s.Fatal("Failed to get activation code: ", err)
-		}
-		if c == "" {
-			s.Fatal("Activation code is empty")
+		if testVal == "install" {
+			if err := installProfile(ctx, s, euicc, profile); err != nil {
+				s.Fatalf("Failed to install profile %q: %v", profile.String(), err)
+			}
+			if err := uninstallProfile(ctx, s, euicc, profile); err != nil {
+				s.Fatalf("Failed to uninstall profile %q: %v", profile.String(), err)
+			}
+		} else {
+			code, err := profile.ActivationCode(ctx)
+			if err != nil {
+				s.Fatal("Failed to get activation code: ", err)
+			}
+			if code == "" {
+				s.Fatal("Activation code is empty")
+			}
 		}
 	}
+}
+
+func installProfile(ctx context.Context, s *testing.State, euicc *hermes.EUICC, profile hermes.Profile) error {
+	s.Logf("Installing profile %s", profile.String())
+	activationCode, err := profile.ActivationCode(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get activation code")
+	}
+	confirmationCode := ""
+	response := euicc.Call(ctx, hermesconst.EuiccMethodInstallProfileFromActivationCode, activationCode, confirmationCode)
+	if response.Err != nil {
+		return errors.Wrapf(response.Err, "failed to install profile with code: %s", activationCode)
+	}
+	if len(response.Body) != 1 {
+		return errors.Errorf("InstallProfile resulted in incorrect response len: %d", len(response.Body))
+	}
+	return nil
+}
+
+func uninstallProfile(ctx context.Context, s *testing.State, euicc *hermes.EUICC, profile hermes.Profile) error {
+	s.Logf("Uninstalling profile %s", profile.String())
+	if response := euicc.Call(ctx, hermesconst.EuiccMethodUninstallProfile, profile.DBusObject.ObjectPath()); response.Err != nil {
+		return errors.Wrap(response.Err, "failed to uninstall profile")
+	}
+	return nil
 }

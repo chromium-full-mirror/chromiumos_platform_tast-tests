@@ -76,7 +76,7 @@ func HermesTestCI(ctx context.Context, s *testing.State) {
 	const numProfiles = 2
 	profiles := make([]*hermes.Profile, numProfiles)
 	for i := 0; i < numProfiles; i++ {
-		activationCode, cleanupFunc, err := stork.FetchStorkProfilesForEid(ctx, eid)
+		activationCode, cleanupFunc, err := stork.FetchStorkProfilesForEid(ctx, eid, 1)
 		if err != nil {
 			s.Fatal("Failed to fetch Stork profile: ", err)
 		}
