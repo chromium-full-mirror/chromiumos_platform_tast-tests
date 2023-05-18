@@ -109,8 +109,8 @@ func BrowserCommonMetricConfigs() []MetricConfig {
 		NewCustomMetricConfig("PageLoad.PaintTiming.NavigationToLargestContentfulPaint2", "ms", perf.SmallerIsBetter),
 		NewCustomMetricConfig("PageLoad.PaintTiming.NavigationToFirstContentfulPaint", "ms", perf.SmallerIsBetter),
 		NewCustomMetricConfig("PageLoad.Experimental.NavigationTiming.NavigationStartToFirstResponseStart", "ms", perf.SmallerIsBetter),
-		NewCustomMetricConfig("Browser.Responsiveness.JankyIntervalsPerThirtySeconds", "janks", perf.SmallerIsBetter),
-		NewCustomMetricConfig("Browser.Responsiveness.JankyIntervalsPerThirtySeconds3", "janks", perf.SmallerIsBetter),
+		NewCustomMetricConfig("Browser.MainThreadsCongestion", "janks", perf.SmallerIsBetter),
+		NewCustomMetricConfig("Browser.MainThreadsCongestion.RunningOnly", "janks", perf.SmallerIsBetter),
 
 		// Startup Latency.
 		NewCustomMetricConfig("Startup.FirstWebContents.NonEmptyPaint3", "ms", perf.SmallerIsBetter),
