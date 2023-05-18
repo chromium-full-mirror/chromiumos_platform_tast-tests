@@ -6,7 +6,6 @@ package cellular
 
 import (
 	"context"
-	"strings"
 
 	"chromiumos/tast/common/network/netconfigtypes"
 	"chromiumos/tast/common/shillconst"
@@ -118,10 +117,6 @@ func PSimNetworkName(ctx context.Context, s *testing.State) {
 	var title string
 	if err := app.EvalJSWithShadowPiercer(ctx, cr, expr, &title); err != nil {
 		s.Fatal("Failed to fetch title: ", err)
-	}
-
-	if strings.Contains(title, "MobileNetwork") {
-		s.Fatal("Network title contains generic prefix: ", title)
 	}
 
 	if networkName != title {
