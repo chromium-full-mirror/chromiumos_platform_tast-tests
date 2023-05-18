@@ -51,7 +51,7 @@ func init() {
 			ExtraSoftwareDeps: []string{"lacros"},
 			Val:               exampleUITimeParams,
 		}, {
-			Name:              "lacros_nokbbl",
+			Name:              "lacros",
 			Fixture:           "powerLacros",
 			ExtraSoftwareDeps: []string{"lacros"},
 			ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
