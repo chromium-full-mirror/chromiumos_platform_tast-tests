@@ -122,6 +122,20 @@ func (y *YtApp) Install(ctx context.Context) error {
 	return y.a.Install(ctx, downloadPath)
 }
 
+// Uninstall uninstalls the Youtube app if it is installed.
+// This function does nothing if the app is initially uninstalled.
+func (y *YtApp) Uninstall(ctx context.Context) error {
+	installed, err := y.a.PackageInstalled(ctx, youtubePkg)
+	if err != nil {
+		return errors.Wrap(err, "failed to get package install status")
+	}
+	if !installed {
+		testing.ContextLog(ctx, "The app is already uninstalled")
+		return nil
+	}
+	return y.a.Uninstall(ctx, youtubePkg)
+}
+
 // parseKnownGoodVersionCode parses known good version code by apk filename.
 // The correct format for the apk filename is "youtube_<versioncode>_<date>".
 func parseKnownGoodVersionCode(apkFileName string) (string, error) {
@@ -273,6 +287,18 @@ func (y *YtApp) SearchAndPlayVideo(ctx context.Context, video VideoSrc) error {
 	}
 
 	return nil
+}
+
+// StartFromBeginning starts the video to the beginning by dragging
+// the current time node to the most left of the bar.
+func (y *YtApp) StartFromBeginning(ctx context.Context) error {
+	timeBar := y.d.Object(androidui.ClassName("android.widget.SeekBar"), androidui.DescriptionContains("minutes"))
+	timeBarBounds, err := timeBar.GetBounds(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get node bounds")
+	}
+
+	return apputil.DragAndDrop(y.a, timeBarBounds.CenterPoint(), timeBarBounds.LeftCenter(), time.Second)(ctx)
 }
 
 // OpenAndPlayVideo opens a video on youtube app.
@@ -675,6 +701,15 @@ func (y *YtApp) PauseAndPlayVideo(ctx context.Context) error {
 
 func (y *YtApp) ensureVideoPlaying(ctx context.Context, playerView, playBtn *androidui.Object) error {
 	return testing.Poll(ctx, func(ctx context.Context) error {
+		const (
+			loadingViewID        = youtubePkg + ":id/player_loading_view_thin"
+			loadingViewClassName = "android.widget.ProgressBar"
+		)
+		loadingView := y.d.Object(androidui.ClassName(loadingViewClassName), androidui.ID(loadingViewID))
+		if err := loadingView.Exists(ctx); err == nil {
+			return errors.New("Video is loading")
+		}
+
 		if err := cuj.FindAndClick(playerView, 2*time.Second)(ctx); err != nil {
 			return errors.Wrap(err, "failed to find/click the player view in 2s")
 		}
