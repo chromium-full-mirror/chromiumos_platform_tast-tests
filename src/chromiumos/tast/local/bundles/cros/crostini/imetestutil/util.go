@@ -12,7 +12,6 @@ import (
 	"chromiumos/tast/local/chrome/ime"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/input"
-
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -47,9 +46,9 @@ func CheckInputViaClipboard(ctx context.Context, keyboard *input.KeyboardEventWr
 	return nil
 }
 
-// TestEditorInputActions tests basic string input and editing in English in an editor app (VSCode, gedit).
+// TestInputActionsInEditor tests basic string input and editing in English in an editor app (VSCode, gedit).
 // It assumes that the editor is already opened and focused for entering test strings.
-func TestEditorInputActions(ctx context.Context, keyboard *input.KeyboardEventWriter, tconn *chrome.TestConn) error {
+func TestInputActionsInEditor(ctx context.Context, keyboard *input.KeyboardEventWriter, tconn *chrome.TestConn) error {
 	inputActions := getBasicInputActions(ctx, keyboard)
 	editorTabActions := []InputActionData{
 		{uiauto.Combine("insert Tab key at start",
@@ -73,9 +72,9 @@ func TestEditorInputActions(ctx context.Context, keyboard *input.KeyboardEventWr
 	return runInputActions(ctx, keyboard, tconn, inputActions)
 }
 
-// TestFirefoxInputActions tests basic string input and editing in English in the firefox app.
+// TestInputActionsInFirefox tests basic string input and editing in English in the firefox app.
 // It assumes Firefox is launched with a test page containing 2 input fields, and the first input box is focused.
-func TestFirefoxInputActions(ctx context.Context, keyboard *input.KeyboardEventWriter, tconn *chrome.TestConn) error {
+func TestInputActionsInFirefox(ctx context.Context, keyboard *input.KeyboardEventWriter, tconn *chrome.TestConn) error {
 	inputActions := getBasicInputActions(ctx, keyboard)
 	firefoxTabActions := []InputActionData{
 		{uiauto.Combine("test tab functionality",

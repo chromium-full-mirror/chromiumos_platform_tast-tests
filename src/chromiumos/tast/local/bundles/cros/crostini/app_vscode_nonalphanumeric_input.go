@@ -16,7 +16,6 @@ import (
 	"chromiumos/tast/local/screenshot"
 	"chromiumos/tast/local/terminalapp"
 	"chromiumos/tast/local/uidetection"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -84,7 +83,7 @@ func AppVSCodeNonalphanumericInput(ctx context.Context, s *testing.State) {
 	}
 
 	// Test basic string editing using non-alphanumeric keys.
-	if err := imetestutil.TestEditorInputActions(ctx, keyboard, tconn); err != nil {
+	if err := imetestutil.TestInputActionsInEditor(ctx, keyboard, tconn); err != nil {
 		s.Fatal("Failed to type string and do basic editing: ", err)
 	}
 

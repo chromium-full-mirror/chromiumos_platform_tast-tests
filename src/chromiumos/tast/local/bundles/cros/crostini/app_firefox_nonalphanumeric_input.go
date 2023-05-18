@@ -15,7 +15,6 @@ import (
 	"chromiumos/tast/local/crostini"
 	"chromiumos/tast/local/terminalapp"
 	"chromiumos/tast/local/uidetection"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -77,7 +76,7 @@ func AppFirefoxNonalphanumericInput(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Firefox test page: ", err)
 	}
 
-	if err := imetestutil.TestFirefoxInputActions(ctx, keyboard, tconn); err != nil {
+	if err := imetestutil.TestInputActionsInFirefox(ctx, keyboard, tconn); err != nil {
 		s.Fatal("Failed to type and edit string: ", err)
 	}
 

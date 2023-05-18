@@ -11,6 +11,7 @@ import (
 	"chromiumos/tast/local/bundles/cros/crostini/crostiniapps"
 	"chromiumos/tast/local/bundles/cros/crostini/imetestutil"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/ime"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/crostini"
@@ -18,19 +19,10 @@ import (
 	"chromiumos/tast/local/terminalapp"
 	"chromiumos/tast/local/uidetection"
 	"chromiumos/tast/local/vm"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
-
-// Firefox test page content. Contains a single input box which is focused upon launch for user input.
-const html = `<!DOCTYPE html>
-<title>Crostini Firefox Input Test Page</title>
-<input style="width: 100%" autofocus/>
-`
-
-const testPageName = "test_page.html"
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -117,9 +109,6 @@ func AppFirefoxIME(ctx context.Context, s *testing.State) {
 	// Since defers are executed in a stack, this needs to be the last defer so it doesn't close the window before dumping the tree.
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
-	// Create a html file to be opened by Firefox.
-	cont.WriteFile(ctx, testPageName, html)
-
 	imeName := s.Param().(string)
 	imeData := imetestutil.IMETestCases[imeName]
 	if err := testUseIMEInFirefox(ctx, terminalApp, keyboard, tconn, cont, imeData); err != nil {
@@ -147,6 +136,12 @@ func testUseIMEInFirefox(ctx context.Context, terminalApp *terminalapp.TerminalA
 
 	if err := imetestutil.CheckInputViaClipboard(ctx, keyboard, tconn, imeData.ExpectedText); err != nil {
 		return err
+	}
+
+	if imeData.InputMethod == ime.Japanese {
+		if err := imetestutil.TestJapaneseCandidatesBoxInFirefox(ctx, ui, uda, keyboard); err != nil {
+			return err
+		}
 	}
 
 	if err := crostiniapps.CloseFirefoxTestPage(ctx, uda, ui, cont, keyboard); err != nil {

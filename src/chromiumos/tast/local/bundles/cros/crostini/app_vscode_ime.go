@@ -11,6 +11,7 @@ import (
 	"chromiumos/tast/local/bundles/cros/crostini/crostiniapps"
 	"chromiumos/tast/local/bundles/cros/crostini/imetestutil"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/ime"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/crostini"
@@ -19,7 +20,6 @@ import (
 	"chromiumos/tast/local/terminalapp"
 	"chromiumos/tast/local/uidetection"
 	"chromiumos/tast/local/vm"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -137,6 +137,17 @@ func testUseIMEInVSCode(ctx context.Context, terminalApp *terminalapp.TerminalAp
 		keyboard.AccelAction("Backspace"),
 		keyboard.AccelAction("Backspace"),
 		imeData.EnterTestStringActionPK(keyboard),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to enter test string")
+	}
+
+	if imeData.InputMethod == ime.Japanese {
+		if err := imetestutil.TestJapaneseCandidatesBoxInEditor(ctx, ui, uda, keyboard); err != nil {
+			return err
+		}
+	}
+
+	if err := uiauto.Combine("save file",
 		crostiniapps.SaveFileAndCloseVSCode(ui, keyboard, crostiniapps.VSCodeTestFile))(ctx); err != nil {
 		return err
 	}

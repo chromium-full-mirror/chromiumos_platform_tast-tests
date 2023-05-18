@@ -10,6 +10,7 @@ import (
 
 	"chromiumos/tast/local/bundles/cros/crostini/imetestutil"
 	"chromiumos/tast/local/chrome"
+	"chromiumos/tast/local/chrome/ime"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
@@ -19,7 +20,6 @@ import (
 	"chromiumos/tast/local/terminalapp"
 	"chromiumos/tast/local/uidetection"
 	"chromiumos/tast/local/vm"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -126,7 +126,7 @@ func testUseIMEInGeditFile(ctx context.Context, terminalApp *terminalapp.Termina
 	appWindow := nodewith.NameStartingWith(testFile).Role(role.Window).First()
 	inputMethod := imeData.InputMethod
 
-	if err := uiauto.Combine("Open file with Gedit via the terminal",
+	if err := uiauto.Combine("open file with Gedit via the terminal",
 		// Launch Gedit.
 		terminalApp.RunCommand(keyboard, "gedit "+testFile),
 		// Sometimes the first character gets lost if input is entered immediately.
@@ -136,6 +136,17 @@ func testUseIMEInGeditFile(ctx context.Context, terminalApp *terminalapp.Termina
 		inputMethod.InstallAndActivate(tconn),
 		inputMethod.WaitUntilActivated(tconn),
 		imeData.EnterTestStringActionPK(keyboard),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to enter test string")
+	}
+
+	if imeData.InputMethod == ime.Japanese {
+		if err := imetestutil.TestJapaneseCandidatesBoxInEditor(ctx, ui, uda, keyboard); err != nil {
+			return err
+		}
+	}
+
+	if err := uiauto.Combine("save file",
 		// Press ctrl+S to save the file.
 		keyboard.AccelAction("ctrl+S"),
 		// Take screenshot.
@@ -148,7 +159,6 @@ func testUseIMEInGeditFile(ctx context.Context, terminalApp *terminalapp.Termina
 	)(ctx); err != nil {
 		return err
 	}
-
 	// Check the content of the test file.
 	if err := cont.CheckFileContent(ctx, testFile, imeData.ExpectedText+"\n"); err != nil {
 		return errors.Wrap(err, "failed to verify the content of the test file")
