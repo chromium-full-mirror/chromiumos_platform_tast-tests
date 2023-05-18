@@ -7,13 +7,22 @@ package lacros
 import (
 	"context"
 	"os"
+	"strings"
+	"time"
 
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/lacros"
 	"chromiumos/tast/local/chrome/lacros/lacrosfaillog"
+	"chromiumos/tast/local/screenshot"
 	"go.chromium.org/tast/core/testing"
+)
+
+var enablePixelTesting = testing.RegisterVarString(
+	"lacros.enablePixelTesting",
+	"False",
+	"Whether to enable pixel testing",
 )
 
 func init() {
@@ -44,6 +53,7 @@ func init() {
 			ExtraSoftwareDeps: []string{"lacros_unstable"},
 			ExtraAttr:         []string{"informational"},
 		}},
+		Vars: screenshot.ScreenDiffVars,
 	})
 }
 
@@ -137,7 +147,24 @@ func ShelfLaunch(ctx context.Context, s *testing.State) {
 	if err := lacros.WaitForLacrosWindow(ctx, tconn, "about:blank"); err != nil {
 		s.Fatal("Failed waiting for Lacros to navigate to about:blank page: ", err)
 	}
-
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	if strings.ToLower(enablePixelTesting.Value()) == "true" {
+		s.Log("Starting pixel testing")
+		d, err := screenshot.NewDifferFromChrome(ctx, s, cr, screenshot.Config{
+			DefaultOptions: screenshot.Options{
+				WindowState: ash.WindowStateDefault,
+			},
+			SkipDpiNormalization: true,
+		})
+		if err != nil {
+			s.Fatal("Failed to start screen differ: ", err)
+		}
+		defer d.DieOnFailedDiffs()
+		if err := d.DiffWindow(ctx, "shelf_launch", screenshot.Retries(3),
+			screenshot.RetryInterval(time.Millisecond*600))(ctx); err != nil {
+			s.Error("Failed the skia gold diff: ", err)
+		}
+	}
 	s.Log("Closing lacros-chrome browser")
 	if err := l.Close(ctx); err != nil {
 		s.Fatal("Failed to close lacros-chrome: ", err)
