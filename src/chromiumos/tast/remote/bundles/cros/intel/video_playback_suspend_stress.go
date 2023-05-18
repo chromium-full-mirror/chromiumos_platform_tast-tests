@@ -80,6 +80,11 @@ func VideoPlaybackSuspendStress(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to send data to remote data path: ", err)
 	}
 	defer func(ctx context.Context) {
+		if !dut.Connected(ctx) {
+			if err := powercontrol.PowerOntoDUT(ctx, pxy, dut); err != nil {
+				s.Fatal("Failed to power on DUT at cleanup: ", err)
+			}
+		}
 		if err := dut.Conn().CommandContext(cleanupCtx, "sh", "-c", fmt.Sprintf("rm -rf %s %s %s", htmlPath, videoPath, jsPath)).Run(); err != nil {
 			s.Errorf("Failed to remove  %s %s %s files : %v", htmlPath, videoPath, jsPath, err)
 		}
