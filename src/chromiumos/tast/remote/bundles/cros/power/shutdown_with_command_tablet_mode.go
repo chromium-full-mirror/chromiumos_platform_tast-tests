@@ -40,7 +40,7 @@ func init() {
 		SoftwareDeps: []string{"chrome", "reboot"},
 		Attr:         []string{"group:mainline", "informational"},
 		Vars:         []string{"servo"},
-		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
+		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.SkipOnModel("nautilus", "nautiluslte", "soraka", "pantheon", "nocturne", "kodama")),
 		Params: []testing.Param{{
 			Name:              "convertible",
 			Val:               shutdownWithCmdTabletModeParams{control: &tabletmode.ConvertibleModeControl{}},
