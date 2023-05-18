@@ -14,6 +14,7 @@ import (
 
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/debugd"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -99,7 +100,6 @@ func init() {
 				probeConfig: probeConfig{[]probeStatement{
 					probeStatement{"audio_codec"},
 				}}},
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			Name: "mmc_host",
 			Val: verifySandboxTestParams{
