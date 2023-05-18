@@ -153,7 +153,7 @@ func (ks *KernelService) RestorePartition(ctx context.Context, req *pb.Partition
 }
 
 // BackupKernel backs up both kernel A and B copies, and corresponding ROOTFS verity hashes and saves them to a file.
-func (ks *KernelService) BackupKernel(ctx context.Context, req *pb.Partition) (*pb.KernelBackup, error) {
+func (ks *KernelService) BackupKernel(ctx context.Context, req *pb.KernelBackup) (*pb.KernelBackup, error) {
 	kernA, err := ks.BackupPartition(ctx, &pb.Partition{
 		Name:    pb.PartitionName_KERNEL,
 		Copy:    pb.PartitionCopy_A,
@@ -175,13 +175,42 @@ func (ks *KernelService) BackupKernel(ctx context.Context, req *pb.Partition) (*
 		return nil, errors.Wrap(err, "failed to back up KERN-B")
 	}
 
-	return &pb.KernelBackup{
-		KernA: kernA,
-		KernB: kernB,
-	}, nil
+	req.KernA = kernA
+	req.KernB = kernB
+	req.RootDev = kernA.RootDev
+
+	if req.BackupRootfs {
+		rootA, err := ks.BackupPartition(ctx, &pb.Partition{
+			Name:    pb.PartitionName_ROOTFS,
+			Copy:    pb.PartitionCopy_A,
+			RootDev: req.RootDev,
+		})
+		if err != nil {
+			os.Remove(kernA.BackupPath)
+			os.Remove(kernB.BackupPath)
+			return nil, errors.Wrap(err, "failed to back up ROOTFS-A")
+		}
+
+		rootB, err := ks.BackupPartition(ctx, &pb.Partition{
+			Name:    pb.PartitionName_ROOTFS,
+			Copy:    pb.PartitionCopy_B,
+			RootDev: req.RootDev,
+		})
+		if err != nil {
+			os.Remove(kernA.BackupPath)
+			os.Remove(kernB.BackupPath)
+			os.Remove(rootA.BackupPath)
+			return nil, errors.Wrap(err, "failed to back up ROOTFS-B")
+		}
+
+		req.RootA = rootA
+		req.RootB = rootB
+	}
+
+	return req, nil
 }
 
-// RestoreKernel restores both kernel A and B, and corresponding rootfs verity hashes from back ups.
+// RestoreKernel restores both kernel A and B, and corresponding rootfs from back ups.
 func (ks *KernelService) RestoreKernel(ctx context.Context, req *pb.KernelBackup) (*empty.Empty, error) {
 	var retErr error
 	if _, err := ks.RestorePartition(ctx, req.KernA); err != nil {
@@ -198,10 +227,43 @@ func (ks *KernelService) RestoreKernel(ctx context.Context, req *pb.KernelBackup
 		}
 	}
 
+	if req.BackupRootfs {
+		if _, err := ks.RestorePartition(ctx, req.RootA); err != nil {
+			retErr = errors.Wrap(err, "failed to restore ROOT-A")
+		}
+
+		if _, err := ks.RestorePartition(ctx, req.RootB); err != nil {
+			if retErr != nil {
+				// If restoring both A and B fails, report both errors instead of just latest.
+				retErr = errors.Wrap(errors.Wrap(err, "failed to restore ROOT-B"), retErr.Error())
+			} else {
+				retErr = errors.Wrap(err, "failed to restore ROOT-B")
+			}
+		}
+	}
 	return &empty.Empty{}, retErr
 }
 
-// PrioritizeKernelCopy ensures DUT boots to expected kernel copy on next reboot (eg. KERN-A or KERN-B) and makes both kernel copies identical.
+// EnsureBothKernelCopiesBootable makes sure both kernel copies are identical and bootable.
+func (ks *KernelService) EnsureBothKernelCopiesBootable(ctx context.Context, req *pb.Partition) (*empty.Empty, error) {
+	var rootDevWithPart string
+	if req.RootDev != "" {
+		rootDevWithPart = req.RootDev
+	} else {
+		var err error
+		rootDevWithPart, err = kernel.GetCurrentRootDevice(ctx, true)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get root device")
+		}
+	}
+
+	if err := kernel.EnsureBothKernelCopiesBootable(ctx, rootDevWithPart); err != nil {
+		return nil, err
+	}
+	return &empty.Empty{}, nil
+}
+
+// PrioritizeKernelCopy ensures DUT boots to expected kernel copy on next reboot (eg. KERN-A or KERN-B).
 func (ks *KernelService) PrioritizeKernelCopy(ctx context.Context, req *pb.Partition) (*empty.Empty, error) {
 	var rootDevWithPart string
 	if req.RootDev != "" {
@@ -214,7 +276,8 @@ func (ks *KernelService) PrioritizeKernelCopy(ctx context.Context, req *pb.Parti
 		}
 	}
 
-	if err := kernel.PrioritizeKernelCopy(ctx, rootDevWithPart, kernel.PartitionNameCopyToLabel(req.Name, req.Copy)); err != nil {
+	rootDevWithoutPart, _ := kernel.SplitRootDevAndPart(ctx, rootDevWithPart)
+	if err := kernel.PrioritizeKernelCopy(ctx, rootDevWithoutPart, kernel.PartitionNameCopyToLabel(req.Name, req.Copy)); err != nil {
 		return nil, err
 	}
 	return &empty.Empty{}, nil
@@ -360,7 +423,7 @@ func (ks *KernelService) SetKernelVersion(ctx context.Context, req *pb.KernelVer
 
 // SetKernelHeaderMagic sets the header magic for the kernel.
 func (ks *KernelService) SetKernelHeaderMagic(ctx context.Context, req *pb.KernelHeaderMagicInfo) (*empty.Empty, error) {
-	if err := kernel.SetKernelHeaderMagic(ctx, req.Table, kernel.HeaderMagicEnumToMagic[req.Magic]); err != nil {
+	if err := kernel.SetKernelHeaderMagic(ctx, req.Table, kernel.HeaderMagicEnumToMagic[req.Magic], req.ForceBoot); err != nil {
 		return nil, errors.Wrap(err, "failed to set kernel header magic")
 	}
 	return &empty.Empty{}, nil

@@ -31,7 +31,7 @@ func init() {
 		Attr:        []string{"group:firmware", "firmware_unstable"},
 		ServiceDeps: []string{"tast.cros.firmware.KernelService"},
 		Fixture:     fixture.DevModeGBB,
-		Timeout:     10 * time.Minute,
+		Timeout:     15 * time.Minute,
 	})
 }
 
@@ -51,7 +51,7 @@ func UpdateKernelVersion(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Backing up current Kernel")
-	kernelBackup, err := h.KernelServiceClient.BackupKernel(ctx, &pb.Partition{})
+	kernelBackup, err := h.KernelServiceClient.BackupKernel(ctx, &pb.KernelBackup{})
 	if err != nil {
 		s.Fatal("Failed to back up KERN-A and KERN-B: ", err)
 	}
@@ -78,13 +78,16 @@ func UpdateKernelVersion(ctx context.Context, s *testing.State) {
 		}
 
 		s.Log("Performing mode aware reboot to ensure restored kernel takes effect")
-		if err := ms.ModeAwareReboot(ctx, firmware.WarmReset); err != nil {
+		if err := ms.ModeAwareReboot(ctx, firmware.ColdReset); err != nil {
 			s.Fatal("Failed to reboot: ", err)
 		}
 	}(cleanupContext)
 
 	// Make sure we start with a deterministic state so we don't have a
 	// situation where for example KERN-B is many version ahead of KERN-A.
+	if _, err := h.KernelServiceClient.EnsureBothKernelCopiesBootable(ctx, &pb.Partition{}); err != nil {
+		s.Fatal("Failed to ensure both kernel copies are bootable: ", err)
+	}
 	if _, err := h.KernelServiceClient.PrioritizeKernelCopy(ctx, &pb.Partition{
 		Name: pb.PartitionName_KERNEL,
 		Copy: pb.PartitionCopy_A,
@@ -93,7 +96,7 @@ func UpdateKernelVersion(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Performing mode aware reboot to ensure boot to copy A")
-	if err := ms.ModeAwareReboot(ctx, firmware.WarmReset); err != nil {
+	if err := ms.ModeAwareReboot(ctx, firmware.ColdReset); err != nil {
 		s.Fatal("Failed to reboot: ", err)
 	}
 
@@ -124,7 +127,7 @@ func UpdateKernelVersion(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Performing mode aware reboot")
-	if err := ms.ModeAwareReboot(ctx, firmware.WarmReset); err != nil {
+	if err := ms.ModeAwareReboot(ctx, firmware.ColdReset); err != nil {
 		s.Fatal("Failed to reboot: ", err)
 	}
 

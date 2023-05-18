@@ -30,7 +30,7 @@ func init() {
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		ServiceDeps:  []string{"tast.cros.firmware.KernelService"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
-		Timeout:      20 * time.Minute,
+		Timeout:      30 * time.Minute,
 		Params: []testing.Param{
 			{
 				Name:    "a",
@@ -58,7 +58,7 @@ func init() {
 
 func CorruptKernelAB(ctx context.Context, s *testing.State) {
 	h := s.FixtValue().(*fixture.Value).Helper
-	kernCopy := s.Param().(pb.PartitionCopy)
+	copyToCorrupt := s.Param().(pb.PartitionCopy)
 
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to connect to servo: ", err)
@@ -73,7 +73,7 @@ func CorruptKernelAB(ctx context.Context, s *testing.State) {
 		s.Fatal("Creating mode switcher: ", err)
 	}
 
-	kernelBackup, err := h.KernelServiceClient.BackupKernel(ctx, &pb.Partition{})
+	kernelBackup, err := h.KernelServiceClient.BackupKernel(ctx, &pb.KernelBackup{BackupRootfs: true})
 	if err != nil {
 		s.Fatal("Failed to back up KERN-A and KERN-B: ", err)
 	}
@@ -92,39 +92,40 @@ func CorruptKernelAB(ctx context.Context, s *testing.State) {
 		}
 
 		s.Log("Performing mode aware reboot to ensure restored kernel takes effect")
-		if err := ms.ModeAwareReboot(ctx, firmware.WarmReset); err != nil {
+		if err := ms.ModeAwareReboot(ctx, firmware.ColdReset); err != nil {
 			s.Fatal("Failed to reboot: ", err)
 		}
 		s.Log("Delete backup files from DUT")
 		rmargs := []string{
 			kernelBackup.KernA.BackupPath,
 			kernelBackup.KernB.BackupPath,
+			kernelBackup.RootA.BackupPath,
+			kernelBackup.RootB.BackupPath,
 		}
 		if _, err := h.DUT.Conn().CommandContext(ctx, "rm", rmargs...).Output(ssh.DumpLogOnError); err != nil {
 			s.Fatal("Failed to delete backup files: ", err)
 		}
 	}(cleanupContext)
 
-	kernCopyStr := "A"
-	notKernCopyStr := "B"
-	notKernCopy := pb.PartitionCopy_B
-	copyToCorrupt := kernelBackup.KernA
-	if kernCopy == pb.PartitionCopy_B {
-		kernCopyStr = "B"
-		notKernCopyStr = "A"
-		notKernCopy = pb.PartitionCopy_A
-		copyToCorrupt = kernelBackup.KernB
+	kernToCorrupt := kernelBackup.KernA.Table
+	otherCopy := pb.PartitionCopy_B
+	if copyToCorrupt == pb.PartitionCopy_B {
+		kernToCorrupt = kernelBackup.KernB.Table
+		otherCopy = pb.PartitionCopy_A
 	}
 
+	if _, err := h.KernelServiceClient.EnsureBothKernelCopiesBootable(ctx, &pb.Partition{}); err != nil {
+		s.Fatal("Failed to ensure both kernel copies are bootable: ", err)
+	}
 	if _, err := h.KernelServiceClient.PrioritizeKernelCopy(ctx, &pb.Partition{
 		Name: pb.PartitionName_KERNEL,
-		Copy: kernCopy,
+		Copy: copyToCorrupt,
 	}); err != nil {
-		s.Fatalf("Failed to prioritize copy %q: %v", kernCopyStr, err)
+		s.Fatalf("Failed to prioritize copy %s: %v", copyToCorrupt, err)
 	}
 
-	s.Log("Performing mode aware reboot to ensure boot to copy ", kernCopyStr)
-	if err := ms.ModeAwareReboot(ctx, firmware.WarmReset); err != nil {
+	s.Log("Performing mode aware reboot to ensure boot to copy ", copyToCorrupt)
+	if err := ms.ModeAwareReboot(ctx, firmware.ColdReset); err != nil {
 		s.Fatal("Failed to reboot: ", err)
 	}
 
@@ -132,24 +133,22 @@ func CorruptKernelAB(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to kernel service: ", err)
 	}
 
-	s.Log("Verify DUT in copy ", kernCopyStr)
+	s.Log("Verify DUT in copy ", copyToCorrupt)
 	if _, err := h.KernelServiceClient.VerifyKernelCopy(ctx, &pb.Partition{
-		Name: pb.PartitionName_KERNEL,
-		Copy: kernCopy,
+		Copy: copyToCorrupt,
 	}); err != nil {
-		s.Fatalf("Failed to verify DUT currently is in copy %q: %v", kernCopyStr, err)
+		s.Fatalf("Failed to prioritize copy %s: %v", copyToCorrupt, err)
 	}
 
-	s.Log("Corrupt kernel partition ", copyToCorrupt.Table.Label)
 	if _, err := h.KernelServiceClient.SetKernelHeaderMagic(ctx, &pb.KernelHeaderMagicInfo{
-		Table: copyToCorrupt.Table,
+		Table: kernToCorrupt,
 		Magic: pb.KernelHeaderMagic_CORRUPTD,
 	}); err != nil {
-		s.Fatalf("Failed to corrupt %s: %v", copyToCorrupt.Table.Label, err)
+		s.Fatalf("Failed to corrupt %s: %v", kernToCorrupt.Label, err)
 	}
 
-	s.Log("Performing mode aware reboot to ensure boot copy ", notKernCopyStr)
-	if err := ms.ModeAwareReboot(ctx, firmware.WarmReset); err != nil {
+	s.Log("Performing mode aware reboot to ensure boot copy ", otherCopy)
+	if err := ms.ModeAwareReboot(ctx, firmware.ColdReset); err != nil {
 		s.Fatal("Failed to reboot: ", err)
 	}
 
@@ -157,24 +156,24 @@ func CorruptKernelAB(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to kernel service: ", err)
 	}
 
-	s.Log("Verify DUT in copy ", notKernCopyStr)
+	s.Log("Verify DUT in copy ", otherCopy)
 	if _, err := h.KernelServiceClient.VerifyKernelCopy(ctx, &pb.Partition{
-		Name: pb.PartitionName_KERNEL,
-		Copy: notKernCopy,
+		Copy: otherCopy,
 	}); err != nil {
-		s.Fatalf("Failed to verify DUT currently is in copy %q: %v", notKernCopyStr, err)
+		s.Fatalf("Failed to verify DUT currently is in copy %s: %v", otherCopy, err)
 	}
 
-	s.Log("Restore kernel partition ", copyToCorrupt.Table.Label)
-	if _, err := h.KernelServiceClient.SetKernelHeaderMagic(ctx, &pb.KernelHeaderMagicInfo{
-		Table: copyToCorrupt.Table,
-		Magic: pb.KernelHeaderMagic_CHROMEOS,
+	s.Log("ore kernel partition ", kernToCorrupt.Label)
+	if _, err = h.KernelServiceClient.SetKernelHeaderMagic(ctx, &pb.KernelHeaderMagicInfo{
+		Table:     kernToCorrupt,
+		Magic:     pb.KernelHeaderMagic_CHROMEOS,
+		ForceBoot: true,
 	}); err != nil {
-		s.Fatalf("Failed to restore %s: %v", copyToCorrupt.Table.Label, err)
+		s.Fatalf("Failed to restore %s: %v", kernToCorrupt.Label, err)
 	}
 
-	s.Log("Performing mode aware reboot to ensure boots back to copy ", kernCopyStr)
-	if err := ms.ModeAwareReboot(ctx, firmware.WarmReset); err != nil {
+	s.Log("Performing mode aware reboot to ensure boots back to copy ", copyToCorrupt)
+	if err := ms.ModeAwareReboot(ctx, firmware.ColdReset); err != nil {
 		s.Fatal("Failed to reboot: ", err)
 	}
 
@@ -182,11 +181,11 @@ func CorruptKernelAB(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to kernel service: ", err)
 	}
 
-	s.Log("Verify DUT in copy ", kernCopyStr)
+	s.Log("Verify DUT in copy ", copyToCorrupt)
 	if _, err := h.KernelServiceClient.VerifyKernelCopy(ctx, &pb.Partition{
 		Name: pb.PartitionName_KERNEL,
-		Copy: kernCopy,
+		Copy: copyToCorrupt,
 	}); err != nil {
-		s.Fatalf("Failed to verify DUT currently is in copy %q: %v", kernCopyStr, err)
+		s.Fatalf("Failed to verify DUT currently is in copy %s: %v", copyToCorrupt, err)
 	}
 }

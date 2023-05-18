@@ -64,7 +64,7 @@ func VerityCorruptRootfs(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get label of initial part")
 	}
 
-	kernelBackup, err := h.KernelServiceClient.BackupKernel(ctx, &pb.Partition{})
+	kernelBackup, err := h.KernelServiceClient.BackupKernel(ctx, &pb.KernelBackup{})
 	if err != nil {
 		s.Fatal("Failed to back up KERN-A and KERN-B: ", err)
 	}
@@ -96,7 +96,7 @@ func VerityCorruptRootfs(ctx context.Context, s *testing.State) {
 			}
 
 			s.Log("Performing mode aware reboot to ensure restored kernel takes effect")
-			if err := ms.ModeAwareReboot(ctx, firmware.WarmReset); err != nil {
+			if err := ms.ModeAwareReboot(ctx, firmware.ColdReset); err != nil {
 				s.Fatal("Failed to reboot: ", err)
 			}
 		}
@@ -111,6 +111,9 @@ func VerityCorruptRootfs(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupContext)
 
+	if _, err := h.KernelServiceClient.EnsureBothKernelCopiesBootable(ctx, &pb.Partition{}); err != nil {
+		s.Fatal("Failed to ensure both kernel copies are bootable: ", err)
+	}
 	if _, err := h.KernelServiceClient.PrioritizeKernelCopy(ctx, &pb.Partition{
 		Name: pb.PartitionName_KERNEL,
 		Copy: pb.PartitionCopy_A,
@@ -119,7 +122,7 @@ func VerityCorruptRootfs(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Performing mode aware reboot to ensure boot to copy A")
-	if err := ms.ModeAwareReboot(ctx, firmware.WarmReset); err != nil {
+	if err := ms.ModeAwareReboot(ctx, firmware.ColdReset); err != nil {
 		s.Fatal("Failed to reboot: ", err)
 	}
 
@@ -141,7 +144,7 @@ func VerityCorruptRootfs(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Performing mode aware reboot")
-	if err := ms.ModeAwareReboot(ctx, firmware.WarmReset); err != nil {
+	if err := ms.ModeAwareReboot(ctx, firmware.ColdReset); err != nil {
 		s.Fatal("Failed to reboot: ", err)
 	}
 
@@ -166,7 +169,7 @@ func VerityCorruptRootfs(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Performing mode aware reboot")
-	if err := ms.ModeAwareReboot(ctx, firmware.WarmReset); err != nil {
+	if err := ms.ModeAwareReboot(ctx, firmware.ColdReset); err != nil {
 		s.Fatal("Failed to reboot: ", err)
 	}
 

@@ -279,8 +279,8 @@ func RestorePartition(ctx context.Context, backupPath, partitionPath string) err
 	return nil
 }
 
-// PrioritizeKernelCopy makes both kernel copies (KERN-A and KERN-B) identical and ensures DUT boots to expected kernel copy on next reboot.
-func PrioritizeKernelCopy(ctx context.Context, rootDevWithPart, label string) error {
+// EnsureBothKernelCopiesBootable makes sure both kernel copies are identical and bootable.
+func EnsureBothKernelCopiesBootable(ctx context.Context, rootDevWithPart string) error {
 	currKernel, err := GetPartitionTable(ctx, rootDevWithPart)
 	if err != nil {
 		return errors.Wrap(err, "failed to get current cgpt table for current kernel copy")
@@ -333,19 +333,27 @@ func PrioritizeKernelCopy(ctx context.Context, rootDevWithPart, label string) er
 		}
 	}
 
-	cmd := testexec.CommandContext(ctx, "cgpt", "add", fmt.Sprintf("-i%d", kernA.PartitionNumber), "-P2", "-S1", "-T0", rootDevWithoutPart)
-	if err := cmd.Run(testexec.DumpLogOnError); err != nil {
+	if err := forcePartitionBootable(ctx, kernA.PartitionPath, 2); err != nil {
 		return errors.Wrap(err, "failed to make KERN-A bootable")
 	}
 
-	cmd = testexec.CommandContext(ctx, "cgpt", "add", fmt.Sprintf("-i%d", kernB.PartitionNumber), "-P2", "-S1", "-T0", rootDevWithoutPart)
-	if err := cmd.Run(testexec.DumpLogOnError); err != nil {
+	if err := forcePartitionBootable(ctx, kernB.PartitionPath, 2); err != nil {
 		return errors.Wrap(err, "failed to make KERN-B bootable")
+	}
+
+	return nil
+}
+
+// PrioritizeKernelCopy ensures DUT boots to expected kernel copy on next reboot (eg. KERN-A or KERN-B).
+func PrioritizeKernelCopy(ctx context.Context, rootDevWithoutPart, label string) error {
+	partitionTable, err := GetCgptTable(ctx, rootDevWithoutPart)
+	if err != nil {
+		return errors.Wrap(err, "failed to read cgpt table")
 	}
 
 	testing.ContextLog(ctx, "Prioritizing partition ", label)
 	targetTable := partitionTable[label]
-	cmd = testexec.CommandContext(ctx, "cgpt", "prioritize", fmt.Sprintf("-i%d", targetTable.PartitionNumber), rootDevWithoutPart)
+	cmd := testexec.CommandContext(ctx, "cgpt", "prioritize", fmt.Sprintf("-i%d", targetTable.PartitionNumber), rootDevWithoutPart)
 	if err := cmd.Run(testexec.DumpLogOnError); err != nil {
 		return errors.Wrapf(err, "failed to make prioritize kernel copy %q", label)
 	}
@@ -546,6 +554,7 @@ func GetKernelVersion(ctx context.Context, rootDevWithoutPart, label string) (st
 
 	table := partitionTables[label]
 
+	testing.ContextLogf(ctx, "Getting kernel version for %s (label: %s)", table.PartitionPath, table.Label)
 	// TODO(tij@): Update this to use the futility vbutil_kernel library after it gets implemented.
 	out, err := testexec.CommandContext(ctx, "vbutil_kernel", "--verify", table.PartitionPath).Output(testexec.DumpLogOnError)
 	if err != nil {
@@ -595,7 +604,7 @@ func SetKernelVersion(ctx context.Context, table *pb.CgptPartition, version stri
 }
 
 // SetKernelHeaderMagic sets the kernel header magic for provided partition table.
-func SetKernelHeaderMagic(ctx context.Context, table *pb.CgptPartition, magic HeaderMagic) error {
+func SetKernelHeaderMagic(ctx context.Context, table *pb.CgptPartition, magic HeaderMagic, forceBoot bool) error {
 	testing.ContextLogf(ctx, "Setting header to %s on device %s (label %q)", magic, table.PartitionPath, table.Label)
 	args := []string{
 		fmt.Sprintf("of=%s", table.PartitionPath),
@@ -607,6 +616,17 @@ func SetKernelHeaderMagic(ctx context.Context, table *pb.CgptPartition, magic He
 
 	if err := cmd.Run(testexec.DumpLogOnError); err != nil {
 		return errors.Wrapf(err, "failed setting header magic for partition %s (%s) to %s", table.PartitionPath, table.Label, string(magic))
+	}
+
+	if forceBoot {
+		rootDevWithoutPart, _ := SplitRootDevAndPart(ctx, table.PartitionPath)
+		// If restoring after corruption it might be necessary to reset cgpt attributes to make restored kernel bootable again.
+		if err := forcePartitionBootable(ctx, table.PartitionPath, 1); err != nil {
+			testing.ContextLogf(ctx, "Failed to reset cgpt attributes for %q: %v", table.Label, err)
+		}
+		if err := PrioritizeKernelCopy(ctx, rootDevWithoutPart, table.Label); err != nil {
+			testing.ContextLogf(ctx, "Failed to make %q bootable after restoring header magic, got error: %v", table.Label, err)
+		}
 	}
 	return nil
 }
@@ -638,4 +658,19 @@ func getSectorSize(ctx context.Context, rootDevWithPart string) (int64, error) {
 	}
 
 	return strconv.ParseInt(match[3], 10, 64)
+}
+
+func forcePartitionBootable(ctx context.Context, rootDevWithPart string, priority int) error {
+	rootDevWithoutPart, part := SplitRootDevAndPart(ctx, rootDevWithPart)
+	args := []string{
+		"add",
+		fmt.Sprintf("-i%d", part),
+		fmt.Sprintf("-P%d", priority),
+		"-S1", "-T0", rootDevWithoutPart,
+	}
+	cmd := testexec.CommandContext(ctx, "cgpt", args...)
+	if err := cmd.Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrapf(err, "failed to make %s bootable", rootDevWithPart)
+	}
+	return nil
 }

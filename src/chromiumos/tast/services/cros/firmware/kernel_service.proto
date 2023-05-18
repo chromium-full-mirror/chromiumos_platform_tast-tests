@@ -30,12 +30,15 @@ service KernelService {
     rpc RestorePartition (PartitionInfo) returns (google.protobuf.Empty) {}
 
     // BackupKernel backs up both kernel A and B copies and saves them to a file.
-    rpc BackupKernel (Partition) returns (KernelBackup) {}
+    rpc BackupKernel (KernelBackup) returns (KernelBackup) {}
 
     // RestoreKernel restores both kernel A and B from back ups.
     rpc RestoreKernel (KernelBackup) returns (google.protobuf.Empty) {}
 
-    // PrioritizeKernelCopy ensures DUT boots to expected kernel copy on next reboot (eg. KERN-A or KERN-B) and makes both kernel copies identical.
+    // EnsureBothKernelCopiesBootable makes sure both kernel copies are identical and bootable.
+    rpc EnsureBothKernelCopiesBootable (Partition) returns (google.protobuf.Empty) {}
+
+    // PrioritizeKernelCopy ensures DUT boots to expected kernel copy on next reboot (eg. KERN-A or KERN-B).
     rpc PrioritizeKernelCopy (Partition) returns (google.protobuf.Empty) {}
 
     // GetCurrentCopy returns the current label DUT is using or from the provided root device.
@@ -152,10 +155,14 @@ message PartitionInfo {
     PartitionCopy Copy = 6;
 }
 
-// KernelBackup holds the information for backups for both KERN-A and KERN-B.
+// KernelBackup holds the information for backups for KERN-A/B, ROOT-A/B.
 message KernelBackup {
     PartitionInfo KernA = 1;
     PartitionInfo KernB = 2;
+    PartitionInfo RootA = 3;
+    PartitionInfo RootB = 4;
+    bool BackupRootfs = 5;
+    string RootDev = 6;
 }
 
 // RootfsVerityHashBackup holds the offset and backup file for verity hash for rootfs.
@@ -180,4 +187,5 @@ message KernelVersion {
 message KernelHeaderMagicInfo {
     CgptPartition Table = 1;
     KernelHeaderMagic Magic = 2;
+    bool ForceBoot = 3; // Force partition to be bootable after setting header magic.
 }
