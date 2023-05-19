@@ -89,6 +89,7 @@ func CheckStatefulFiles(ctx context.Context, outDir string) []error {
 		NewPattern(Tree("encrypted/var/lib/timezone"), Users("chronos", "root"), NotMode(022)),
 		NewPattern(Tree("encrypted/var/lib/tpm"), Users("root"), Groups("root"), NotMode(077)),
 		NewPattern(Tree("encrypted/var/lib/vm_cicerone"), Users("vm_cicerone"), Groups("vm_cicerone"), NotMode(022)),
+		NewPattern(Tree("encrypted/var/lib/vm_concierge"), Users("crosvm"), Groups("crosvm"), NotMode(022)),
 		NewPattern(Tree("encrypted/var/lib/vtpm"), Users("vtpm"), Groups("vtpm"), NotMode(022)),
 		NewPattern(Path("encrypted/var/lib/whitelist"), Users("root"), Groups("policy-readers"), Mode(0750)),      // directory itself
 		NewPattern(Tree("encrypted/var/lib/whitelist"), Users("root"), Groups("root"), NotMode(022)),              // children
