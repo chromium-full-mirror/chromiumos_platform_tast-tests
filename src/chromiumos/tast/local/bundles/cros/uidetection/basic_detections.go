@@ -133,6 +133,7 @@ func BasicDetections(ctx context.Context, s *testing.State) {
 	notificationArea := nodewith.ClassName("StatusAreaWidget")
 	chromeWindow := nodewith.Role(role.Window).Name("Chrome - New Tab")
 	noThanksButton := nodewith.Role(role.Button).Name("No thanks")
+	closeCustomizationDrawerButton := nodewith.Role(role.Button).Name("Close").Ancestor(nodewith.ClassName("SidePanel"))
 
 	verifyChromeIsMinimized := uiauto.NamedAction("verify that chrome is minimized",
 		ui.WaitUntilExists(chromeWindow.Invisible()))
@@ -188,8 +189,8 @@ func BasicDetections(ctx context.Context, s *testing.State) {
 			verifyChromeIsShown,
 			closeChromePopup,
 			ud.WithScreenshotStrategy(uidetection.ImmediateScreenshot).LeftClick(uidetection.TextBlock([]string{"Customize", "Chrome"})),
-			ud.LeftClick(uidetection.Word("Cancel")),
-			ud.WaitUntilGone(uidetection.Word("Cancel")),
+			ui.LeftClick(closeCustomizationDrawerButton),
+			ui.WaitUntilGone(closeCustomizationDrawerButton),
 			// Check the negative cases.
 			expectError(uidetection.Word("Google"), uidetection.ErrMultipleMatch),
 			expectError(uidetection.Word("Google").Nth(10), uidetection.ErrNthNotFound),
