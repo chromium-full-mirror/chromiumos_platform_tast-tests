@@ -141,7 +141,7 @@ func PowerVideocall(ctx context.Context, s *testing.State) {
 
 	pc := pointer.NewMouse(tconn)
 
-	bubble := nodewith.ClassName("PermissionPromptBubbleView").First()
+	bubble := nodewith.ClassName("PermissionPromptBubbleBaseView").First()
 	allow := nodewith.Name("Allow").Role(role.Button).Ancestor(bubble)
 	if err := pc.Click(allow)(ctx); err != nil {
 		s.Fatal("Failed to click permission bubble: ", err)
