@@ -83,7 +83,7 @@ func Ti50Sleep(ctx context.Context, s *testing.State) {
 	s.Log("Waiting for sleep with AP off")
 	th.MustSucceed(i.WaitUntilDeepSleep(ctx, time.Minute), "Ti50 did not sleep when AP off")
 
-	s.Log("Simulating SuzyQ inserted")
+	s.Log("Simulating SuzyQ inserted, wait 3 minutes")
 	b.GpioApplyStrap(ctx, ti50.CcdSuzyQ)
 	verifyWakeup(ctx, s, i, b, wakeSourceAdc, "CCD connection")
 	if err := i.WaitUntilAnySleep(ctx, 3*time.Minute); err == nil {
