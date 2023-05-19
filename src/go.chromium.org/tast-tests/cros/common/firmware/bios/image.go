@@ -424,6 +424,20 @@ func (i *Image) ReadSectionData(sec ImageSection, off, sz uint, out interface{})
 	return binary.Read(r, binary.LittleEndian, out)
 }
 
+// ReadSectionBytes returns bytes of a given size at the specified location.
+func (i *Image) ReadSectionBytes(sec ImageSection, off, sz uint) ([]byte, error) {
+	si, ok := i.Sections[sec]
+	if !ok {
+		return nil, errors.Errorf("Section %s not found", sec)
+	}
+	beg := si.Start + off
+	end := si.Start + off + sz
+	if len(i.Data) < int(end) {
+		return nil, errors.Errorf("Data length too short: %d (<=%d)", len(i.Data), end)
+	}
+	return i.Data[beg:end], nil
+}
+
 // WriteSectionData writes data to the specified section location.
 func (i *Image) WriteSectionData(sec ImageSection, off uint, data interface{}) error {
 	var buf bytes.Buffer
