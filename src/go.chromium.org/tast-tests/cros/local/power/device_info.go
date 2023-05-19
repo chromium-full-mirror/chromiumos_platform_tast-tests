@@ -72,7 +72,7 @@ func GetDeviceInfo(ctx context.Context) map[string]interface{} {
 		}
 		skuMap["battery_shutdown_percent"] = shutdownPercent
 
-		batterySize, err := ReadBatteryEnergySize(ctx, batteryPath)
+		batterySize, err := ReadBatteryDesignEnergySize(ctx, batteryPath)
 		if err != nil {
 			testing.ContextLog(ctx, "Invalid battery_size: ", err)
 		}

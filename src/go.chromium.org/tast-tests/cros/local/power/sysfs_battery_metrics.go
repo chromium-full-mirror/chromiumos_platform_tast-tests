@@ -451,7 +451,7 @@ func (b *SysfsBatteryMetrics) Setup(ctx context.Context, prefix, intervalName st
 	}
 
 	b.chargeRemainingMetric = perf.Metric{
-		Name:      prefix + batterySOCMetricType + "battery_soc",
+		Name:      prefix + batterySOCMetricType + "battery_percent",
 		Unit:      "percent",
 		Direction: perf.BiggerIsBetter,
 		Multiple:  true,

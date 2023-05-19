@@ -20,7 +20,7 @@ This document lists the metrics collected in power package through TestMetrics()
 | Name                        | Unit  | Note                                                                         |
 | system                      | W     | Total energy consumption out of the battery.                                 |
 | discharge_mwh               | mWh   | Total energy discharge during test run.                                      |
-| battery_soc                 | %     | Remaining battery charge percentage over full charge by design.              |
+| battery_percent             | %     | Remaining battery charge percentage over full charge by design.              |
 | **Sysfs Thermal Metrics**   |
 | Name                        | Unit  | Note                                                                         |
 | TCPU                        | C     | Temperature of the CPU.                                                      |

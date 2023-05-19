@@ -245,37 +245,31 @@ func ConvertPowerPerfValue(ctx context.Context, values *perf.Values) (map[string
 		}
 	}
 
-	minutesBatteryLifeLastFull, minutesBatteryLifeDesign := getMinutesBatteryLife(ctx, innerDataMap, innerAverageMap, totalDurationSec)
+	const (
+		minutesBatteryLifeKey       = "minutes_battery_life"
+		minutesBatteryLifeTestedKey = "minutes_battery_life_tested"
+	)
 
+	minutesBatteryLife := getMinutesBatteryLife(ctx, innerDataMap, innerAverageMap, totalDurationSec)
 	values.Set(perf.Metric{
-		Name:      generalPerfMetricType + "minutes_battery_life_last_full",
+		Name:      generalPerfMetricType + minutesBatteryLifeKey,
 		Unit:      "minute",
 		Direction: perf.BiggerIsBetter,
-	}, minutesBatteryLifeLastFull)
-	innerDataMap["minutes_battery_life_last_full"] = []float64{minutesBatteryLifeLastFull}
-	innerAverageMap["minutes_battery_life_last_full"] = minutesBatteryLifeLastFull
-	typeMap["minutes_battery_life_last_full"] = "perf"
-	unitMap["minutes_battery_life_last_full"] = "minute"
+	}, minutesBatteryLife)
+	innerDataMap[minutesBatteryLifeKey] = []float64{minutesBatteryLife}
+	innerAverageMap[minutesBatteryLifeKey] = minutesBatteryLife
+	typeMap[minutesBatteryLifeKey] = "perf"
+	unitMap[minutesBatteryLifeKey] = "minute"
 
 	values.Set(perf.Metric{
-		Name:      generalPerfMetricType + "minutes_battery_life_design",
-		Unit:      "minute",
-		Direction: perf.BiggerIsBetter,
-	}, minutesBatteryLifeDesign)
-	innerDataMap["minutes_battery_life_design"] = []float64{minutesBatteryLifeDesign}
-	innerAverageMap["minutes_battery_life_design"] = minutesBatteryLifeDesign
-	typeMap["minutes_battery_life_design"] = "perf"
-	unitMap["minutes_battery_life_design"] = "minute"
-
-	values.Set(perf.Metric{
-		Name:      generalPerfMetricType + "minutes_battery_life_tested",
+		Name:      generalPerfMetricType + minutesBatteryLifeTestedKey,
 		Unit:      "minute",
 		Direction: perf.BiggerIsBetter,
 	}, totalDurationSec/60.0)
-	innerDataMap["minutes_battery_life_tested"] = []float64{totalDurationSec / 60.0}
-	innerAverageMap["minutes_battery_life_tested"] = totalDurationSec / 60.0
-	typeMap["minutes_battery_life_tested"] = "perf"
-	unitMap["minutes_battery_life_tested"] = "minute"
+	innerDataMap[minutesBatteryLifeTestedKey] = []float64{totalDurationSec / 60.0}
+	innerAverageMap[minutesBatteryLifeTestedKey] = totalDurationSec / 60.0
+	typeMap[minutesBatteryLifeTestedKey] = "perf"
+	unitMap[minutesBatteryLifeTestedKey] = "minute"
 
 	// Check if package-0 is collected first because `rapl` is not supported on all platforms.
 	if _, ok := innerDataMap[package0]; ok && len(innerDataMap["system"]) == len(innerDataMap[package0]) {
@@ -296,24 +290,30 @@ func ConvertPowerPerfValue(ctx context.Context, values *perf.Values) (map[string
 }
 
 // getMinutesBatteryLife calculates and returns the projected operating minutes.
-func getMinutesBatteryLife(ctx context.Context, innerDataMap map[string][]float64, innerAverageMap map[string]float64, totalDurationSec float64) (minutesBatteryLifeLastFull, minutesBatteryLifeDesign float64) {
+func getMinutesBatteryLife(ctx context.Context, innerDataMap map[string][]float64, innerAverageMap map[string]float64, totalDurationSec float64) (minutesBatteryLife float64) {
 	// Power key value calculation.
 	batteryPath, err := SysfsBatteryPath(ctx)
 	if err != nil {
 		testing.ContextLog(ctx, "Failed to calculate key value: ", err)
-		return 0, 0
+		return 0
 	}
 
-	energyFull, err := ReadBatteryEnergySize(ctx, batteryPath)
+	chargeFullDesign, err := ReadBatteryChargeDesignSize(ctx, batteryPath)
 	if err != nil {
-		testing.ContextLog(ctx, "Failed to get battery energy size: ", err)
-		return 0, 0
+		testing.ContextLog(ctx, "Failed to get battery charge design size: ", err)
+		return 0
+	}
+
+	chargeFull, err := ReadBatteryChargeSize(ctx, batteryPath)
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to get battery charge size: ", err)
+		return 0
 	}
 
 	energyFullDesign, err := ReadBatteryDesignEnergySize(ctx, batteryPath)
 	if err != nil {
 		testing.ContextLog(ctx, "Failed to get battery design energy size: ", err)
-		return 0, 0
+		return 0
 	}
 
 	if energyUsed, ok := innerAverageMap["discharge_mwh"]; ok && energyUsed > 0 && totalDurationSec > 0 {
@@ -325,7 +325,7 @@ func getMinutesBatteryLife(ctx context.Context, innerDataMap map[string][]float6
 		batSizeScale := 1 - lowBatteryShutdownPercent/100.0
 
 		var chargeUsedInPercent float64
-		if chargeValue, exist := innerDataMap["battery_soc"]; exist && len(chargeValue) > 1 {
+		if chargeValue, exist := innerDataMap["battery_percent"]; exist && len(chargeValue) > 1 {
 			chargeUsedInPercent = chargeValue[len(chargeValue)-1] - chargeValue[0]
 		}
 		// For longer tests (> 1hr), charge (Ah) consumption is more accurate for calculating projected battery life.
@@ -334,20 +334,19 @@ func getMinutesBatteryLife(ctx context.Context, innerDataMap map[string][]float6
 		if totalDurationSec > MinReasonableDuration && chargeUsedInPercent > 0 {
 			// Use charge to project operation time when test run time > 1 hour.
 			chargeRate := chargeUsedInPercent / (totalDurationSec / 60.0)
-			minutesBatteryLifeLastFull = batSizeScale / chargeRate
+			minutesBatteryLife = batSizeScale * (chargeFullDesign / chargeFull) / chargeRate
 		} else {
 			// Use energy to project operation time when test run time < 1 hour.
 			// Notice energyUsed is in mWh and battery (design) size is in Wh. energyRate is in Wh/min.
 			energyRate := energyUsed / (totalDurationSec / 60.0) / 1000.0
-			minutesBatteryLifeLastFull = energyFull * batSizeScale / energyRate
-			minutesBatteryLifeDesign = energyFullDesign * batSizeScale / energyRate
+			minutesBatteryLife = energyFullDesign * batSizeScale / energyRate
 		}
 	} else {
 		// If energy used is 0 (test too short to cover valid samplings, test did not run on battery, ...):
-		// Log that we will not calculate minutes_battery_last_full and minutes_battery_life_design.
-		testing.ContextLog(ctx, "Failed to calculate minutes_battery_last_full and minutes_battery_life_design: 0 energy usage")
+		// Log that we will not calculate minutes_battery_life.
+		testing.ContextLog(ctx, "Failed to calculate minutes_battery_life: 0 energy usage")
 	}
-	return minutesBatteryLifeLastFull, minutesBatteryLifeDesign
+	return minutesBatteryLife
 }
 
 // getNonSocSubsystemPowerData calculates and returns all subsystem power data other than SoC.
