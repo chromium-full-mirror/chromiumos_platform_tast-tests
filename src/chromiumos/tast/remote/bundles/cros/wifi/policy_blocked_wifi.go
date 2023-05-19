@@ -43,10 +43,10 @@ const osSettings int = 1
 
 // ExpectDialog indicates that join WiFi dialog is expected to be opened during test.
 const expectDialog bool = true
-const canNotJoinWiFi string = "Failed to join WiFi"
-const canNotAddNewWiFi string = "Failed to add new WiFi network"
-const scanWaitingFailure string = "Failed to wait for current scan to be done"
-const connectionVerificationFailure string = "failed to to verify that WiFi was connected"
+const canNotJoinWiFi string = "Failed to join WiFi: "
+const canNotAddNewWiFi string = "Failed to add new WiFi network: "
+const scanWaitingFailure string = "failed to wait for current scan to be done"
+const connectionVerificationFailure string = "failed to verify that WiFi was connected"
 const ssidDataRemovalFailure string = "failed to remove entries for SSID"
 const tabPressFailure string = "failed to move to next UI element with Tab"
 
