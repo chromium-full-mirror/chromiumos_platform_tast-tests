@@ -23,6 +23,7 @@ import (
 )
 
 type sapSimpleConnectTestcase struct {
+	printableName string
 	tetheringOpts []tethering.Option
 	secConfFac    security.ConfigFactory
 	useWpaCliAPI  bool // Use wpa_cli API to setup tethering.
@@ -45,9 +46,11 @@ func init() {
 				// Verifies that Soft AP DUT can accept connection from a station with no encryption in low band and high band.
 				Name: "open",
 				Val: []sapSimpleConnectTestcase{{
+					printableName: "LowBand",
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band2p4g), tethering.NoUplink(true)},
 					useWpaCliAPI:  true,
 				}, {
+					printableName: "HighBand",
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band5g), tethering.NoUplink(true)},
 					useWpaCliAPI:  true,
 				}},
@@ -56,12 +59,14 @@ func init() {
 				// Verifies that Soft AP DUT can accept connection from a station with WPA2 PSK encryption in low band and high band.
 				Name: "wpa2",
 				Val: []sapSimpleConnectTestcase{{
+					printableName: "LowBand",
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band2p4g), tethering.NoUplink(true),
 						tethering.SecMode(wpa.ModePureWPA2)},
 					secConfFac: wpa.NewConfigFactory(
 						"chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP),
 					),
 				}, {
+					printableName: "HighBand",
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band5g), tethering.NoUplink(true),
 						tethering.SecMode(wpa.ModePureWPA2)},
 					secConfFac: wpa.NewConfigFactory(
@@ -74,12 +79,14 @@ func init() {
 				Name:              "wpa3",
 				ExtraSoftwareDeps: []string{"wpa3_sae"},
 				Val: []sapSimpleConnectTestcase{{
+					printableName: "LowBand",
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band2p4g), tethering.NoUplink(true),
 						tethering.SecMode(wpa.ModePureWPA3)},
 					secConfFac: wpa.NewConfigFactory(
 						"chromeos", wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP),
 					),
 				}, {
+					printableName: "HighBand",
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band5g), tethering.NoUplink(true),
 						tethering.SecMode(wpa.ModePureWPA3)},
 					secConfFac: wpa.NewConfigFactory(
@@ -92,12 +99,14 @@ func init() {
 				Name:              "wpa3mixed",
 				ExtraSoftwareDeps: []string{"wpa3_sae"},
 				Val: []sapSimpleConnectTestcase{{
+					printableName: "LowBand",
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band2p4g), tethering.NoUplink(true),
 						tethering.SecMode(wpa.ModeMixedWPA3)},
 					secConfFac: wpa.NewConfigFactory(
 						"chromeos", wpa.Mode(wpa.ModeMixedWPA3), wpa.Ciphers2(wpa.CipherCCMP),
 					),
 				}, {
+					printableName: "HighBand",
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band5g), tethering.NoUplink(true),
 						tethering.SecMode(wpa.ModeMixedWPA3)},
 					secConfFac: wpa.NewConfigFactory(
@@ -179,7 +188,7 @@ func SAPSimpleConnect(ctx context.Context, s *testing.State) {
 		subtest := func(ctx context.Context, s *testing.State) {
 			testOnce(ctx, s, tc)
 		}
-		s.Run(ctx, fmt.Sprintf("Testcase #%d", i), subtest)
+		s.Run(ctx, fmt.Sprintf("Testcase #%d/%d: %s", i+1, len(testcases), tc.printableName), subtest)
 	}
 	s.Log("Tearing down")
 }

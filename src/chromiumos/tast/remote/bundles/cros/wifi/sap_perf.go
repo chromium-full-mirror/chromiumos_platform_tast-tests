@@ -388,7 +388,7 @@ func SAPPerf(ctx context.Context, s *testing.State) {
 		}
 
 		if pr.Throughput < tc.minThroughput {
-			s.Fatalf("Unacceptable throughput in performance test. Wanted > %v, got %v", tc.minThroughput, pr.Throughput)
+			s.Fatalf("Unacceptable throughput in performance test. Wanted > %v Mbps, got %v Mbps", tc.minThroughput/iperf.Mbps, pr.Throughput/iperf.Mbps)
 		}
 		if pr.PercentLoss > 5.0 {
 			s.Fatalf("Unacceptable loss in performance test. Wanted <= 5%%, got %f", pr.PercentLoss)
@@ -397,9 +397,9 @@ func SAPPerf(ctx context.Context, s *testing.State) {
 		// Store perf metrics. Using only tc.printableName is enough because results of each subtest are stored in a separate directory.
 		pv.Set(perf.Metric{
 			Name:      "throughput_" + tc.printableName,
-			Unit:      "bps",
+			Unit:      "Mbps",
 			Direction: perf.BiggerIsBetter,
-		}, math.Round(float64(pr.Throughput))) // Rounding to get rid of the excess of non-significant data, e.g. 184.026360 Mbit/s.
+		}, math.Round(float64(pr.Throughput/iperf.Mbps))) // Rounding to get rid of the excess of non-significant data, e.g. 184.026360 Mbit/s.
 		pv.Set(perf.Metric{
 			Name:      "loss_" + tc.printableName,
 			Unit:      "percent",
@@ -434,7 +434,7 @@ func SAPPerf(ctx context.Context, s *testing.State) {
 		subtest := func(ctx context.Context, s *testing.State) {
 			testOnce(ctx, s, tc)
 		}
-		s.Run(ctx, fmt.Sprintf("Testcase #%d", i), subtest)
+		s.Run(ctx, fmt.Sprintf("Testcase #%d/%d: %s", i+1, len(testcases), tc.printableName), subtest)
 	}
 	s.Log("Tearing down")
 }
