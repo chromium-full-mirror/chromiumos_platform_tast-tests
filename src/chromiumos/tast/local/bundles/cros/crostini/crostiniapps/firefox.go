@@ -37,6 +37,7 @@ const testPageName = "test_page.html"
 
 var firefoxWindow = nodewith.NameRegex(regexp.MustCompile(`.*Mozilla Firefox`)).Role(role.Window).First()
 var testPageTab = uidetection.TextBlock([]string{"Crostini", "Firefox", "Input", "Test", "Page"}).WithinA11yNode(firefoxWindow).First()
+var maximizeButton = nodewith.Name("Maximize").Role(role.Button).Ancestor(firefoxWindow)
 
 // LaunchFirefoxWithTestPage creates a test webpage and launches it with the Firefox app.
 func LaunchFirefoxWithTestPage(ctx context.Context, tconn *chrome.TestConn, uda *uidetection.Context, ui *uiauto.Context, cont *vm.Container, terminalApp *terminalapp.TerminalApp, keyboard *input.KeyboardEventWriter) error {
@@ -45,22 +46,26 @@ func LaunchFirefoxWithTestPage(ctx context.Context, tconn *chrome.TestConn, uda 
 		return err
 	}
 
+	maximizeWindow := func(ctx context.Context) error {
+		// Maximise the firefox window so that elements can be found easily.
+		activeWindow, err := ash.GetActiveWindow(ctx, tconn)
+		if err != nil {
+			return errors.Wrap(err, "failed to get active window")
+		}
+		if err := ash.SetWindowStateAndWait(ctx, tconn, activeWindow.ID, ash.WindowStateMaximized); err != nil {
+			return errors.Wrap(err, "failed to maximize Chrome window")
+		}
+		return nil
+	}
+
 	if err := uiauto.Combine("create test page in terminal and open in firefox",
 		terminalApp.RunCommand(keyboard, "firefox-esr "+testPageName),
 		ui.WithTimeout(firefoxStartupTimeout).WaitUntilExists(firefoxWindow),
+		maximizeWindow,
 		// Wait until the page is loaded.
 		uda.WaitUntilExists(testPageTab),
 	)(ctx); err != nil {
 		return err
-	}
-
-	// Maximise the firefox window so that elements can be found easily.
-	activeWindow, err := ash.GetActiveWindow(ctx, tconn)
-	if err != nil {
-		return errors.Wrap(err, "failed to get active window")
-	}
-	if err := ash.SetWindowStateAndWait(ctx, tconn, activeWindow.ID, ash.WindowStateMaximized); err != nil {
-		return errors.Wrap(err, "failed to maximize Chrome window")
 	}
 
 	return nil
