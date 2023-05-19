@@ -17,6 +17,7 @@ import (
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/local/annotations"
 	"chromiumos/tast/local/bundles/cros/policy/calendarintegration"
+	"chromiumos/tast/local/bundles/cros/policy/passwordleakdetection"
 	"chromiumos/tast/local/bundles/cros/policy/quickanswersutil"
 	"chromiumos/tast/local/bundles/cros/policy/spellcheckutil"
 	"chromiumos/tast/local/chrome"
@@ -56,15 +57,17 @@ func init() {
 			Fixture:           fixture.PersistentLacros, // FakeDMS with lacros policy.
 			Val:               browser.TypeLacros,
 		}},
-		Data: []string{"spell_checking.html", "quick_answers.html"},
+		Data: []string{"spell_checking.html", "quick_answers.html", "password_leak_detection.html"},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.CalendarIntegrationEnabled{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.CalendarIntegrationEnabled{}, pci.VerifiedFunctionalityOS),
-			pci.SearchFlag(&policy.SpellCheckServiceEnabled{}, pci.VerifiedFunctionalityUI),
+			pci.SearchFlag(&policy.PasswordLeakDetectionEnabled{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.QuickAnswersDefinitionEnabled{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.QuickAnswersDefinitionEnabled{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.QuickAnswersUnitConversionEnabled{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.QuickAnswersUnitConversionEnabled{}, pci.VerifiedFunctionalityOS),
+			pci.SearchFlag(&policy.SafeBrowsingProtectionLevel{}, pci.VerifiedValue),
+			pci.SearchFlag(&policy.SpellCheckServiceEnabled{}, pci.VerifiedFunctionalityUI),
 		},
 	})
 }
@@ -73,9 +76,10 @@ func init() {
 func getPolicyList() []policy.Policy {
 	return []policy.Policy{
 		&policy.CalendarIntegrationEnabled{Val: false},
-		&policy.SpellCheckServiceEnabled{Val: false},
+		&policy.PasswordLeakDetectionEnabled{Val: false},
 		&policy.QuickAnswersDefinitionEnabled{Val: false},
 		&policy.QuickAnswersUnitConversionEnabled{Val: false},
+		&policy.SpellCheckServiceEnabled{Val: false},
 	}
 }
 
@@ -83,8 +87,9 @@ func getPolicyList() []policy.Policy {
 func getAnnotationHashCodes() []string {
 	return []string{
 		"86429515",  // calendar_get_events.
-		"132553989", // spellcheck_lookup.
+		"16927377",  // lookup_single_password_leak.
 		"46208118",  // quick_answers_loader.
+		"132553989", // spellcheck_lookup.
 	}
 }
 
@@ -216,6 +221,12 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 		}
 		if err := quickanswersutil.TriggerQuickAnswersUnitConversion(ctx, quickAnswersUnitCoversionParam, server, br, tconn); err != nil {
 			s.Fatal("Failed to trigger and verify quick answers unit conversion: ", err)
+		}
+	})
+
+	s.Run(ctx, "password_leak_detection", func(ctx context.Context, s *testing.State) {
+		if err := passwordleakdetection.TriggerPasswordLeakDetection(ctx, cr, server, br); err != nil {
+			s.Fatal("Failed to trigger password leak detection: ", err)
 		}
 	})
 
