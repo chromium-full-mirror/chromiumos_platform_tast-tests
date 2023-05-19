@@ -15,6 +15,7 @@ import (
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/uiauto"
+	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/pointer"
 	"chromiumos/tast/local/chrome/uiauto/role"
@@ -84,14 +85,16 @@ func VideoCall(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get ash tconn: ", err)
 	}
+	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
 
 	uiauto := uiauto.New(tconn)
 
 	// TODO(b/280888518): Add preset
 	const (
-		urlVideo = "https://storage.googleapis.com/chromiumos-test-assets-public/power_VideoCall/power_VideoCall.webrtc.html?preset=high"
-		urlDoc   = "http://crospower.page.link/power_VideoCall_doc"
-		titleDoc = "power_VideoCall Doc"
+		urlVideo       = "https://storage.googleapis.com/chromiumos-test-assets-public/power_VideoCall/power_VideoCall.webrtc.html?preset=high"
+		urlDoc         = "http://crospower.page.link/power_VideoCall_doc"
+		permBubbleName = "storage.googleapis.com wants to"
+		titleDoc       = "power_VideoCall Doc"
 	)
 
 	// Open a VideoWindow and snap to the left
@@ -146,7 +149,7 @@ func VideoCall(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to navigate: ", err)
 	}
 
-	bubble := nodewith.ClassName("PermissionPromptBubbleView").First()
+	bubble := nodewith.NameStartingWith(permBubbleName).First()
 	allow := nodewith.Name("Allow").Role(role.Button).Ancestor(bubble)
 	if err := uiauto.WaitUntilExists(allow)(ctx); err != nil {
 		s.Fatal("Failed to find the permission bubble: ", err)
