@@ -30,16 +30,8 @@ func init() {
 		BugComponent: "b:156085",
 		Attr:         []string{"group:mainline", "informational", "group:cq-medium"},
 		// "no_qemu" disables the test on betty (this test is not compatible with the qemu virtual network setup).
-		SoftwareDeps: []string{"chrome", "no_qemu"},
+		SoftwareDeps: []string{"chrome", "arc", "no_qemu"},
 		Fixture:      "arcBooted",
-		Params: []testing.Param{
-			{
-				ExtraSoftwareDeps: []string{"android_container"},
-			}, {
-				Name:              "vm",
-				ExtraSoftwareDeps: []string{"android_vm"},
-			},
-		},
 	})
 }
 
