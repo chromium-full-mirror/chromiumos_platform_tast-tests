@@ -111,8 +111,14 @@ func TakeScreenshot(ctx context.Context, downloadsPath string) (string, error) {
 	}
 	defer keyboard.Close(ctx)
 
+	// Look up top row layout for `keyboard`.
+	layout, err := input.KeyboardTopRowLayout(ctx, keyboard)
+	if err != nil {
+		return result, err
+	}
+
 	// Take a screenshot.
-	if err := keyboard.Accel(ctx, "Ctrl+F5"); err != nil {
+	if err := keyboard.Accel(ctx, "Ctrl+"+layout.SelectTask); err != nil {
 		return result, err
 	}
 
