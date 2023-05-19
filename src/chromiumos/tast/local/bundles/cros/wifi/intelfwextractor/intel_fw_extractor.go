@@ -288,6 +288,12 @@ func validateMemoryAPIMagicFWDump(fwDumpBuffer *bytes.Buffer, mandatoryFiles *Ma
 			wifiDeviceName = hValue.String()
 		case 5:
 			mandatoryFiles.Monitor = true
+			monitorFileSizeBytes := int(tlHeader.Length)
+
+			// Verify that the size of the monitor.lst file is not 0 Bytes, refer to b/273749981#comment20.
+			if monitorFileSizeBytes == 0 {
+				return errors.Errorf("unexpected monitor.lst file size: got %d Bytes, want > 0 Bytes", monitorFileSizeBytes)
+			}
 		case 9:
 			// Extract the TLV value from the buffer using the tlHeader.Length.
 			hValue := bytes.NewBuffer(fwDumpBuffer.Bytes())
