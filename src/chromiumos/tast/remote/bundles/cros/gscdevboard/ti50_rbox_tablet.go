@@ -20,9 +20,8 @@ const (
 	tabletEcResetHoldDelay = 10 * time.Second
 	// tabletGscResetHoldDelay is how long GSC reset keys must be held to trigger GSC reset
 	tabletGscResetHoldDelay = 20 * time.Second
-	// tabletMinEcResetPulse is how long EC reset must be asserted. 10 ms is minimum, but allow test
-	// to have 1% drift fudge factor
-	tabletMinEcResetPulse = 9900 * time.Microsecond
+	// tabletMinEcResetPulse is how long EC reset must be asserted
+	tabletMinEcResetPulse = 10 * time.Millisecond
 )
 
 func init() {
@@ -93,14 +92,16 @@ func Ti50RboxTablet(ctx context.Context, s *testing.State) {
 			s.Error("EC_RST_L did not de-assert after key combo released")
 		} else {
 			assertTime := deassertReset.TimestampUS - assertReset.TimestampUS
-			if assertTime < uint64(tabletMinEcResetPulse.Microseconds()) {
+			// Allow 1% measurement error.
+			if assertTime < uint64(float64(tabletMinEcResetPulse.Microseconds())*0.99) {
 				s.Errorf("EC_RST_L did stay asserted long enough: %dus", assertTime)
 			} else {
 				s.Logf("EC_RST_L asserted for %dus", assertTime)
 			}
 
 			resetDelayMs := assertReset.TimestampUS / 1000
-			if resetDelayMs < uint64(tabletEcResetHoldDelay.Milliseconds()) {
+			// Allow 1% measurement error.
+			if resetDelayMs < uint64(float64(tabletEcResetHoldDelay.Milliseconds())*0.99) {
 				s.Errorf("EC_RST_L asserted before minimum 10 second hold %dms", resetDelayMs)
 			} else {
 				s.Logf("EC_RST_L delayed by %dms", resetDelayMs)
