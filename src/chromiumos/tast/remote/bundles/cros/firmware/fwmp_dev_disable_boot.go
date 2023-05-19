@@ -16,6 +16,7 @@ import (
 	"chromiumos/tast/common/servo"
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/fixture"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
@@ -32,13 +33,12 @@ func init() {
 			"cienet-firmware@cienet.corp-partner.google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		// TODO(b/235742217): This test might be leaving broken DUTS that can't be auto-repaired. Add attr firmware_unstable when fixed.
 		// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
-		Attr:         []string{"group:firmware"},
+		Attr:         []string{"group:firmware", "firmware_unstable"},
 		Timeout:      30 * time.Minute,
 		Fixture:      fixture.DevMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
-		SoftwareDeps: []string{"tpm"},
+		SoftwareDeps: []string{"tpm2"},
 	})
 }
 
