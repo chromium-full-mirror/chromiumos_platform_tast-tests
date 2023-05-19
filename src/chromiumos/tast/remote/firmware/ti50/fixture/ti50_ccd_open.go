@@ -123,20 +123,22 @@ func (c *ccdOpenImpl) ensureTestLabOpen(ctx context.Context, s *testing.FixtTest
 	}
 
 	s.Log("Setting testlab to enabled")
-	out = runCommand(ctx, s, i, "ccd testlab enable")
+	// Reset to clear chip factory mode to allow testlab enable.
+	runCommand(ctx, s, i, "ccd reset")
+	// Use WriteSerial here so we can WaitUntilMatch(pushButton) below. runCommand doesn't work
+	// because the pushButton message comes before the console prompt.
+	mustSucceed(s, b.WriteSerial(ctx, []byte("ccd testlab enable\r")), "Testlab enable")
 
-	// Push the initial power button to enable testlab
-	gpioSet(ctx, s, b, ti50.GpioTi50PowerBtnL, false)
-	gpioSet(ctx, s, b, ti50.GpioTi50PowerBtnL, true)
-
-	for powerPush := 2; powerPush <= 5; powerPush++ {
-		// Wait for prompt before pushing again
-		err := i.WaitUntilMatch(ctx, pushButton, time.Second*5)
+	for powerPush := 1; powerPush <= 5; powerPush++ {
+		// Wait for prompt before pushing
+		err := i.WaitUntilMatch(ctx, pushButton, time.Second*2)
 		mustSucceed(s, err, "Power button prompt %d did not happen", powerPush)
+		// Ti50 requires 100ms delay between short presses.
+		testing.Sleep(ctx, 100*time.Millisecond) // GoBigSleepLint: Simulating button press
 		gpioSet(ctx, s, b, ti50.GpioTi50PowerBtnL, false)
 		gpioSet(ctx, s, b, ti50.GpioTi50PowerBtnL, true)
 	}
-	err := i.WaitUntilMatch(ctx, testLabEnabled, time.Second*5)
+	err := i.WaitUntilMatch(ctx, testLabEnabled, time.Second*2)
 	mustSucceed(s, err, "Testlab was not enabled")
 
 	s.Log("Testlab mode is now enabled")
