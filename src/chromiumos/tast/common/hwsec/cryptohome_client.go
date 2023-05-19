@@ -865,6 +865,25 @@ func (u *CryptohomeClient) RemoveAuthFactor(ctx context.Context, authSessionID, 
 	return err
 }
 
+// AuthenticatePinAuthFactorWithStatusUpdate authenticates an AuthSession with a given authSessionID via pin and intercepts the AuthFactorStatusUpdate signal.
+func (u *CryptohomeClient) AuthenticatePinAuthFactorWithStatusUpdate(ctx context.Context, authSessionID, label, pin string) (*uda.AuthFactorStatusUpdate, error) {
+	binaryMsg, err := u.binary.authenticatePinAuthFactorWithStatusUpdate(ctx, authSessionID, label, pin)
+	// Unmarshal proto first, even if there was an error.
+	authenticateReply := &uda.AuthenticateAuthFactorReply{}
+	if unmarshErr := proto.Unmarshal(binaryMsg, authenticateReply); unmarshErr != nil {
+		return nil, errors.Wrap(unmarshErr, "failed to unmarshal AuthenticateAuthFactor reply")
+	}
+	statusUpdateReply := &uda.AuthFactorStatusUpdate{}
+	if unmarshErr := proto.Unmarshal(binaryMsg, statusUpdateReply); unmarshErr != nil {
+		return nil, errors.Wrap(unmarshErr, "failed to unmarshal AuthFactorStatusUpdate reply")
+	}
+	if err != nil {
+		return statusUpdateReply, errors.Wrap(err, "AuthenticateAuthFactor failed")
+	}
+
+	return statusUpdateReply, nil
+}
+
 // AuthenticatePinAuthFactor authenticates an AuthSession with a given authSessionID via pin.
 func (u *CryptohomeClient) AuthenticatePinAuthFactor(ctx context.Context, authSessionID, label, pin string) (*uda.AuthenticateAuthFactorReply, error) {
 	binaryMsg, err := u.binary.authenticatePinAuthFactor(ctx, authSessionID, label, pin)
