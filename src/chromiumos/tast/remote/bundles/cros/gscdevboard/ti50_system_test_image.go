@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"chromiumos/tast/common/firmware/ti50"
+	"chromiumos/tast/remote/bundles/cros/gscdevboard/utils"
 	"chromiumos/tast/remote/firmware/ti50/fixture"
 
 	"go.chromium.org/tast/core/testing"
@@ -37,8 +38,8 @@ func init() {
 func Ti50SystemTestImage(ctx context.Context, s *testing.State) {
 
 	f := s.FixtValue().(*fixture.Value)
+	board := utils.NewDevboardHelper(f.DevBoard(), s)
 
-	board := f.DevBoard()
 	err := board.Open(ctx)
 	if err != nil {
 		s.Fatal("Open console port: ", err)
@@ -47,6 +48,9 @@ func Ti50SystemTestImage(ctx context.Context, s *testing.State) {
 	if err = board.Reset(ctx); err != nil {
 		s.Fatal("Failed to reset: ", err)
 	}
+
+	// Deassert PLT_RST_L to prevent deep sleep while tests are running.
+	board.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
 
 	s.Log("Kernel tests:")
 	checkTestResults(ctx, s, board, "KERNEL")
