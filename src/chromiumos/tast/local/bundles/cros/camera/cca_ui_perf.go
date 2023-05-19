@@ -12,6 +12,7 @@ import (
 	"chromiumos/tast/local/camera/cca"
 	"chromiumos/tast/local/cpu"
 	mediacpu "chromiumos/tast/local/media/cpu"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -27,9 +28,9 @@ func init() {
 		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
 		Data:         []string{"cca_ui.js"},
 		// Three subtests each have 200s timeout and one subtest have 300s timeout.
-		// 200s * 3 + 300s = 15 minutes
-		Timeout:      15 * time.Minute,
-		Fixture:      "ccaTestBridgeReady",
+		// 200s * 4 + 300s = 19 minutes (rounded up)
+		Timeout:      19 * time.Minute,
+		Fixture:      "ccaTestBridgeReadyWithTimeLapse",
 		BugComponent: "b:978428",
 	})
 }
@@ -75,6 +76,10 @@ func CCAUIPerf(ctx context.Context, s *testing.State) {
 	}, {
 		"testGifRecordingPerformance",
 		testGifRecordingPerformance,
+		defaultTimeout,
+	}, {
+		"testTimeLapseRecordingPerformance",
+		testTimeLapseRecordingPerformance,
 		defaultTimeout,
 	}} {
 		subTestCtx, cancel := context.WithTimeout(ctx, tst.timeout)
@@ -174,4 +179,10 @@ func testGifRecordingPerformance(ctx context.Context, app *cca.App, perfData *cc
 	// TODO(b/201335131): Measure performance of per camera facing test
 	// without cached web assembly result.
 	return cca.MeasureGifRecordingPerformance(ctx, app)
+}
+
+func testTimeLapseRecordingPerformance(ctx context.Context, app *cca.App, perfData *cca.PerfData) error {
+	return app.RunThroughCameras(ctx, func(facing cca.Facing) error {
+		return cca.MeasureTimeLapsePerformance(ctx, app, perfData, facing)
+	})
 }

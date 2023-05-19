@@ -274,6 +274,18 @@ func init() {
 		PostTestTimeout: ccaTearDownTimeout,
 		TearDownTimeout: tearDownTimeout,
 	})
+
+	// TODO(b/236800499): Remove this fixture once the feature flag is enabled by default.
+	testing.AddFixture(&testing.Fixture{
+		Name:            "ccaTestBridgeReadyWithTimeLapse",
+		Desc:            "Set up test bridge for CCA with time-lapse flag enabled",
+		Contacts:        []string{"chromeos-camera-eng@google.com", "kamchonlathorn@chromium.org"},
+		Data:            []string{"cca_ui.js"},
+		Impl:            &fixture{enableFeatures: []feature{timeLapse}},
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    testBridgeSetUpTimeout,
+		TearDownTimeout: tearDownTimeout,
+	})
 }
 
 // DebugParams defines some useful flags for debug CCA tests.

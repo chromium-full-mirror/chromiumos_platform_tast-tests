@@ -15,6 +15,7 @@ import (
 	"chromiumos/tast/common/perf"
 	"chromiumos/tast/local/camera/testutil"
 	mediacpu "chromiumos/tast/local/media/cpu"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -201,13 +202,26 @@ func MeasurePreviewPerformance(ctx context.Context, app *App, perfData *PerfData
 	return nil
 }
 
-// MeasureRecordingPerformance measures the performance of video recording.
+// MeasureRecordingPerformance measures the performance of normal video recording.
 func MeasureRecordingPerformance(ctx context.Context, app *App, perfData *PerfData, facing Facing) error {
 	testing.ContextLog(ctx, "Switching to video mode")
 	if err := app.SwitchMode(ctx, Video); err != nil {
 		return errors.Wrap(err, "failed to switch to video mode")
 	}
+	return MeasureVideoRecordingPerformance(ctx, app, perfData, facing, "recording")
+}
 
+// MeasureTimeLapsePerformance measures the performance of time-lapse video recording.
+func MeasureTimeLapsePerformance(ctx context.Context, app *App, perfData *PerfData, facing Facing) error {
+	testing.ContextLog(ctx, "Switch to time-lapse mode")
+	if err := app.SwitchToTimeLapseMode(ctx); err != nil {
+		return errors.Wrap(err, "failed to switch to time-lapse mode")
+	}
+	return MeasureVideoRecordingPerformance(ctx, app, perfData, facing, "time-lapse")
+}
+
+// MeasureVideoRecordingPerformance measures the performance of video recording.
+func MeasureVideoRecordingPerformance(ctx context.Context, app *App, perfData *PerfData, facing Facing, mode string) error {
 	recordingStartTime, err := app.StartRecording(ctx, TimerOff)
 	if err != nil {
 		return errors.Wrap(err, "failed to start recording for performance measurement")
@@ -226,7 +240,7 @@ func MeasureRecordingPerformance(ctx context.Context, app *App, perfData *PerfDa
 		testing.ContextLogf(ctx, "Measured recording CPU usage: %.1f%%", cpuUsage)
 
 		perfData.SetMetricValue(perf.Metric{
-			Name:      fmt.Sprintf("cpu_usage_recording-facing-%s", facing),
+			Name:      fmt.Sprintf("cpu_usage_%s-facing-%s", mode, facing),
 			Unit:      "percent",
 			Direction: perf.SmallerIsBetter,
 		}, cpuUsage)
@@ -238,7 +252,7 @@ func MeasureRecordingPerformance(ctx context.Context, app *App, perfData *PerfDa
 		testing.ContextLogf(ctx, "Measured recording power usage: %.1f Watts", powerUsage)
 
 		perfData.SetMetricValue(perf.Metric{
-			Name:      fmt.Sprintf("power_usage_recording-facing-%s", facing),
+			Name:      fmt.Sprintf("power_usage_%s-facing-%s", mode, facing),
 			Unit:      "Watts",
 			Direction: perf.SmallerIsBetter,
 		}, powerUsage)
