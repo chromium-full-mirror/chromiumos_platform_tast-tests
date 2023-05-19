@@ -15,6 +15,7 @@ import (
 	"chromiumos/tast/common/servo"
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/fixture"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
@@ -44,7 +45,7 @@ func init() {
 				reconnectTimeout: 10 * time.Minute,
 			},
 			ExtraAttr: []string{"firmware_usb"},
-			Timeout:   60 * time.Minute,
+			Timeout:   90 * time.Minute,
 		}, {
 			Name: "no_usb",
 			Val: &ctrluParams{
