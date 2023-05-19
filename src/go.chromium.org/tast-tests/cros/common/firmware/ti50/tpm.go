@@ -62,8 +62,11 @@ const (
 	TpmBusI2c TpmBus = "i2c"
 )
 
-// TpmDidVidHexValue is the value of the DID_VID register used by Ti50.
-const TpmDidVidHexValue = "66664a50"
+// TpmI2cAddress is Ti50's 7-bit I2C address (0x50 = decimal 80).
+const TpmI2cAddress = "80"
+
+// TpmDidVidValue is the value of the DID_VID register used by Ti50.
+var TpmDidVidValue = []byte{0x66, 0x66, 0x4a, 0x50}
 
 const (
 	// EmptyPassword is blank password used for authentication
@@ -95,17 +98,43 @@ func NewTpmHandle(ctx context.Context, b DevBoard, bus TpmBus) *TpmHandle {
 	return &TpmHandle{b: b, Ctx: ctx, Bus: bus}
 }
 
+// OpenTitanToolTpmCommand runs one of the OpenTitanTool TPM subcommands (read-register or execute-command).
+func (t *TpmHandle) OpenTitanToolTpmCommand(subcmd string, subargs ...string) ([]byte, error) {
+	var args []string
+	if t.Bus == TpmBusI2c {
+		args = append(args, "--addr", TpmI2cAddress)
+	}
+	args = append(args, "tpm", subcmd)
+	args = append(args, subargs...)
+	response, err := t.b.OpenTitanToolCommand(t.Ctx, string(t.Bus), args...)
+	if err != nil {
+		return nil, err
+	}
+	b, err := hex.DecodeString(response["hexdata"].(string))
+	if err != nil {
+		return nil, err
+	}
+	return b, nil
+}
+
+// Execute sends a TPM request using possibly multiple writes to the FIFO and status
+// registers, and waits for the execution to complete before retrieving the reply. Only use this
+// if the Tpm interface does not provided access, e.g. VendorCommands
+func (t *TpmHandle) Execute(request []byte) ([]byte, error) {
+	response, err := t.OpenTitanToolTpmCommand("execute-command", "--hexdata", string(hex.EncodeToString(request)))
+	if err != nil {
+		return nil, err
+	}
+	return response, nil
+}
+
 // Write will be called by the go-tpm library to send a command to the TPM.
 func (t *TpmHandle) Write(data []byte) (int, error) {
-	response, err := t.b.OpenTitanToolCommand(t.Ctx,
-		string(t.Bus), "tpm", "execute-command", "--hexdata", string(hex.EncodeToString(data)))
+	response, err := t.Execute(data)
 	if err != nil {
 		return 0, err
 	}
-	t.response, err = hex.DecodeString(response["hexdata"].(string))
-	if err != nil {
-		return 0, err
-	}
+	t.response = response
 	return len(data), nil
 }
 

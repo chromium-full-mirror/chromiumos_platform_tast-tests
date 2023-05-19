@@ -5,6 +5,7 @@
 package gscdevboard
 
 import (
+	"bytes"
 	"context"
 	"regexp"
 	"time"
@@ -121,7 +122,7 @@ func Ti50Sleep(ctx context.Context, s *testing.State) {
 	s.Log("Simulating AP SPI request")
 	tpmHandle := b.Tpm(ctx, ti50.TpmBusSpi)
 	didVid := tpmHandle.ReadRegister(ti50.TpmRegDidVid)
-	if didVid != ti50.TpmDidVidHexValue {
+	if !bytes.Equal(didVid, ti50.TpmDidVidValue) {
 		s.Error("Unexpected TPM DID_VID immediately after wakeup: ", didVid)
 	}
 	verifyWakeup(ctx, s, i, b, wakeSourceGpio, "SPI TPM request")

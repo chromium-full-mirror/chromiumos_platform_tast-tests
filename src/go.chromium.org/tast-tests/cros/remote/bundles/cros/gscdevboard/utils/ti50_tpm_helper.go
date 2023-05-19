@@ -17,27 +17,25 @@ type TpmHelper struct {
 }
 
 // ReadRegister retrieves the value of a TPM register by communicating via SPI or I2C.
-func (t *TpmHelper) ReadRegister(register ti50.TpmRegister) string {
-	data, err := t.h.OpenTitanToolCommand(t.Ctx,
-		string(t.Bus), "tpm", "read-register", string(register))
+func (t *TpmHelper) ReadRegister(register ti50.TpmRegister) []byte {
+	response, err := t.OpenTitanToolTpmCommand("read-register", string(register))
 	if err != nil {
 		t.h.Fatalf("failed to read TPM register %s: %s", register, err)
 	}
-	return data["hexdata"].(string)
+	return response
 }
 
-// Execute sends a TPM request using possibly multiple writes to the FIFO and status
-// registers, and waits for the execution to complete before retrieving the reply. Only use this
-// if the Tpm interface does not provided access, e.g. VendorCommands
-func (t *TpmHelper) Execute(request []byte) []byte {
-	response, err := t.h.OpenTitanToolCommand(t.Ctx,
-		string(t.Bus), "tpm", "execute-command", "--hexdata", hex.EncodeToString(request))
+// TpmvGetBootMode reads boot mode via TPM GetBootMode vendor command.
+func (t *TpmHelper) TpmvGetBootMode() (byte, error) {
+	var tpmvGetBootMode, _ = hex.DecodeString("8001" + // tag: TPM_ST_NO_SESSIONS
+		"0000000c" + // size
+		"20000000" + // ordinal: vendor
+		"0034") // subcommand: GetBootMode
+
+	response, err := t.Execute(tpmvGetBootMode)
 	if err != nil {
-		t.h.Fatalf("failed to execute TPM command: %s", err)
+		return 0, err
 	}
-	out, err := hex.DecodeString(response["hexdata"].(string))
-	if err != nil {
-		t.h.Fatalf("response was not hex: %s", response["hexdata"].(string))
-	}
-	return out
+	mode := response[12]
+	return mode, nil
 }

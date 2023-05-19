@@ -8,7 +8,6 @@ import (
 	"bytes"
 	"context"
 	"crypto/rand"
-	"encoding/hex"
 	"time"
 
 	"github.com/google/go-tpm/tpm2"
@@ -180,13 +179,10 @@ func sendEcPacketNoResponse(ctx context.Context, s *testing.State, b utils.Devbo
 // specified wanted value.
 func checkApBootMode(ctx context.Context, s *testing.State, tpm *utils.TpmHelper, wanted byte) {
 	s.Logf("AP checks that boot mode is %s", bootModeToString(wanted))
-	var tpmvGetBootMode, _ = hex.DecodeString("8001" + // tag: TPM_ST_NO_SESSIONS
-		"0000000c" + // size
-		"20000000" + // ordinal: vendor
-		"0034") // subcommand: GetBootMode
-
-	response := tpm.Execute(tpmvGetBootMode)
-	got := response[12]
+	got, err := tpm.TpmvGetBootMode()
+	if err != nil {
+		s.Error("Failed TPM command: ", err)
+	}
 	if wanted != got {
 		s.Errorf("Boot Mode incorrect wanted %s, but got %s", bootModeToString(wanted), bootModeToString(got))
 	}
