@@ -103,9 +103,13 @@ var StableModelsForAppsTesting = []string{
 	"drobit",
 	"eldrid",
 	"elemi",
+	"lillipup",
 	"lindar",
 	"voema",
+	"volet",
 	"volta",
+	"volteer2",
+	"voxel",
 }
 
 // CrostiniAppStable is a hardware dependency limiting the boards on which the Crostini Apps tests run.
