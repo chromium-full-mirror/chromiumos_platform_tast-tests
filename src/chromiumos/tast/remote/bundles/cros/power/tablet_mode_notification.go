@@ -34,7 +34,7 @@ func init() {
 		Attr:    []string{"group:mainline", "informational", "group:firmware", "firmware_unstable"},
 		Timeout: 5 * time.Minute,
 		// Restrict boards that don't support any method in the tabletmode package for forcing tabletmode.
-		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.SkipOnModel("nautilus", "nautiluslte", "soraka", "pantheon", "nocturne")),
+		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.SkipOnModel("nautilus", "nautiluslte", "soraka", "pantheon", "nocturne", "kodama")),
 		Params: []testing.Param{{
 			Name:              "convertible",
 			Val:               tabletModeConfig{control: &tabletmode.ConvertibleModeControl{}},
