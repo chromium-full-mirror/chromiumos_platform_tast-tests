@@ -375,7 +375,7 @@ func getNonSocSubsystemPowerData(ctx context.Context,
 }
 
 // CreatePowerLogDict creates the power log dictionary from power dict.
-func CreatePowerLogDict(ctx context.Context, testName string, powerDict map[string]interface{}) map[string]interface{} {
+func CreatePowerLogDict(ctx context.Context, testName string, powerDict map[string]interface{}, args ...OptionalRecorderArg) map[string]interface{} {
 	powerLogDict := map[string]interface{}{
 		"format_version": 7,
 		// TODO: see b/271917877
@@ -392,7 +392,7 @@ func CreatePowerLogDict(ctx context.Context, testName string, powerDict map[stri
 		// 	},
 		"timestamp": time.Now().Unix(),
 		"test":      testName,
-		"dut":       GetDeviceInfo(ctx),
+		"dut":       GetDeviceInfo(ctx, args...),
 		"power":     powerDict,
 	}
 
@@ -659,12 +659,12 @@ func SavePowerLogHTML(ctx context.Context, outDir string, powerLogDict map[strin
 
 // GeneratePowerLog returns the power dict and the power log dict, and
 // stores power_log.json and power_log.html.
-func GeneratePowerLog(ctx context.Context, outDir, testName string, values *perf.Values) (map[string]interface{}, map[string]interface{}, error) {
+func GeneratePowerLog(ctx context.Context, outDir, testName string, values *perf.Values, args ...OptionalRecorderArg) (map[string]interface{}, map[string]interface{}, error) {
 	powerDict, err := ConvertPowerPerfValue(ctx, values)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to convert power perf values to power dictionary")
 	}
-	powerLogDict := CreatePowerLogDict(ctx, testName, powerDict)
+	powerLogDict := CreatePowerLogDict(ctx, testName, powerDict, args...)
 
 	if err := SavePowerLogJSON(ctx, outDir, powerLogDict); err != nil {
 		return nil, nil, errors.Wrap(err, "failed to generate power_log.json")
@@ -678,8 +678,8 @@ func GeneratePowerLog(ctx context.Context, outDir, testName string, values *perf
 
 // GeneratePowerLogAndSaveToCrosbolt generates power_log.{json, html}
 // and upload results to Crosbolt.
-func GeneratePowerLogAndSaveToCrosbolt(ctx context.Context, outDir, testName string, values *perf.Values) error {
-	powerDict, powerLogDict, err := GeneratePowerLog(ctx, outDir, testName, values)
+func GeneratePowerLogAndSaveToCrosbolt(ctx context.Context, outDir, testName string, values *perf.Values, args ...OptionalRecorderArg) error {
+	powerDict, powerLogDict, err := GeneratePowerLog(ctx, outDir, testName, values, args...)
 	if err != nil {
 		return errors.Wrap(err, "failed to generate power log")
 	}

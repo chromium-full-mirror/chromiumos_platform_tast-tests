@@ -6,6 +6,7 @@ package power
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
@@ -41,14 +42,27 @@ const (
 // Recorder is a utility to measure power metrics during tests.
 type Recorder struct {
 	// Fields passed in from NewRecorder().
-	interval time.Duration // The metrics collect interval.
-	outDir   string
-	testName string
+	interval     time.Duration // The metrics collect interval.
+	outDir       string
+	testName     string
+	optionalArgs []OptionalRecorderArg
 
 	// Fields used internally by the recorder.
 	dataSources []perf.TimelineDatasource
 	metrics     *perf.Timeline
 	isRecording bool
+}
+
+// OptionalRecorderArg is used for denoting optional args for recorder.
+// For example, pdash_note.
+type OptionalRecorderArg struct {
+	argName  string
+	argValue interface{}
+}
+
+// AddOptionalRecorderArg adds optional args for recorder, for example pdash_note.
+func (r *Recorder) AddOptionalRecorderArg(key string, val interface{}) {
+	r.optionalArgs = append(r.optionalArgs, OptionalRecorderArg{key, val})
 }
 
 // Cooldown device before running test load.
@@ -104,9 +118,13 @@ func (r *Recorder) Finish(ctx context.Context, vs ...*perf.Values) error {
 		return errors.Wrap(err, "error while recording power metrics")
 	}
 
+	if len(strings.TrimSpace(pdashNoteVar.Value())) != 0 {
+		r.AddOptionalRecorderArg("pdash_note", strings.TrimSpace(pdashNoteVar.Value()))
+	}
+
 	p.Merge(vs...)
 
-	if err := GeneratePowerLogAndSaveToCrosbolt(ctx, r.outDir, r.testName, p); err != nil {
+	if err := GeneratePowerLogAndSaveToCrosbolt(ctx, r.outDir, r.testName, p, r.optionalArgs...); err != nil {
 		return errors.Wrap(err, "failed to generate power_log.json and/or save perf data for crosbolt")
 	}
 
@@ -181,13 +199,15 @@ func (r *Recorder) RegisterMetrics(metrics ...perf.TimelineDatasource) {
 // interval: time interval between two data points.
 // outDir: directory to print test results.
 // testName: name of the test.
+// args: optional recorder args for recorder.
 // Out:
 // Recorder: collect power metrics in the test.
-func NewRecorder(ctx context.Context, interval time.Duration, outDir, testName string) *Recorder {
+func NewRecorder(ctx context.Context, interval time.Duration, outDir, testName string, args ...OptionalRecorderArg) *Recorder {
 	return &Recorder{
-		interval: interval,
-		outDir:   outDir,
-		testName: testName,
+		interval:     interval,
+		outDir:       outDir,
+		testName:     testName,
+		optionalArgs: args,
 
 		dataSources: TestMetrics(),
 		isRecording: false,

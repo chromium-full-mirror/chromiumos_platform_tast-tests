@@ -16,7 +16,7 @@ import (
 )
 
 // GetDeviceInfo returns a map that contains the information of the DUT.
-func GetDeviceInfo(ctx context.Context) map[string]interface{} {
+func GetDeviceInfo(ctx context.Context, args ...OptionalRecorderArg) map[string]interface{} {
 	board := util.GetBoard()
 	platform := util.GetPlatform(ctx)
 	if !strings.HasPrefix(platform, board) {
@@ -43,7 +43,8 @@ func GetDeviceInfo(ctx context.Context) map[string]interface{} {
 			"version": 0,
 			// TODO: Add 'ina' : power_rails.
 		},
-		// TODO: Add 'notes' for Power Dashboard.
+		// pdash_note: note to annotate results on the dashboard.
+		"note": getNote(args),
 	}
 
 	skuMap := map[string]interface{}{
@@ -171,4 +172,14 @@ func DeviceInfoUtilCheck(ctx context.Context) []string {
 	}
 
 	return failed
+}
+
+func getNote(args []OptionalRecorderArg) string {
+	for _, recorderArg := range args {
+		if recorderArg.argName == "pdash_note" {
+			return recorderArg.argValue.(string)
+		}
+	}
+
+	return ""
 }
