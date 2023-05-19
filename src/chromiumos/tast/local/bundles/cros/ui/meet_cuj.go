@@ -798,7 +798,7 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 	}()
 
 	// Open chrome://webrtc-internals now so it will collect data on the meeting's streams.
-	webrtcInternals, err := cs.NewConn(ctx, "chrome://webrtc-internals", browser.WithNewWindow())
+	webrtcInternals, err := recorder.NewConn(ctx, br, "WebRTC_Internals", "chrome://webrtc-internals", browser.WithNewWindow())
 	if err != nil {
 		s.Fatal("Failed to open chrome://webrtc-internals: ", err)
 	}
@@ -1103,7 +1103,7 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 			}
 
 			// Create another browser window and open a Google Docs file.
-			collaborationConn, err = cs.NewConn(ctx, docsURL, browser.WithNewWindow())
+			collaborationConn, err = recorder.NewConn(ctx, br, "Docs", docsURL, browser.WithNewWindow())
 			if err != nil {
 				return errors.Wrap(err, "failed to open the Google Docs website")
 			}
@@ -1145,7 +1145,7 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 		} else if meet.jamboard {
 			// Create another browser window and open a new Jamboard file.
 			recorder.Annotate(ctx, "Open_Jamboard_window")
-			collaborationConn, err = cs.NewConn(ctx, jamboardURL, browser.WithNewWindow())
+			collaborationConn, err = recorder.NewConn(ctx, br, "Jamboard", jamboardURL, browser.WithNewWindow())
 			if err != nil {
 				return errors.Wrap(err, "failed to open the Jamboard website")
 			}
@@ -1166,7 +1166,8 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 		}
 
 		if meet.split {
-			recorder.Annotate(ctx, "Split_screen_windows")
+			// Start an annotation section for split screening each window.
+			endSplitScreenSection := recorder.AnnotateSection(ctx, "Split_screen_windows")
 			if collaborationRE == nil {
 				return errors.New("need a collaboration window for split view")
 			}
@@ -1176,6 +1177,7 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 			if err := ash.SetWindowStateAndWait(ctx, tconn, meetWindow.ID, ash.WindowStateSecondarySnapped); err != nil {
 				return errors.Wrap(err, "failed to snap the Meet window to the right")
 			}
+			endSplitScreenSection(ctx)
 		} else {
 			if err := meetWindow.ActivateWindow(ctx, tconn); err != nil {
 				return errors.Wrap(err, "failed to activate the Meet window")
@@ -1242,7 +1244,9 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 				return errors.New("need a Google Docs or Jamboard tab to present")
 			}
 
-			recorder.Annotate(ctx, "Start_presenting_tab")
+			// Start an annotation section for opening the screen share window
+			// and screen sharing the collaboration window.
+			endPresentSection := recorder.AnnotateSection(ctx, "Screenshare")
 			if err := meetHelper.OpenPresentDialog(ctx); err != nil {
 				return errors.Wrap(err, "failed to start to present a tab")
 			}
@@ -1275,8 +1279,7 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 			)(ctx); err != nil {
 				return errors.Wrap(err, "failed to select the tab to share")
 			}
-
-			recorder.Annotate(ctx, "Finished_presenting_tab")
+			endPresentSection(ctx)
 		}
 
 		errc := make(chan error)
@@ -1460,13 +1463,14 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 				)
 			}
 
-			recorder.Annotate(ctx, "Start_typing_on_Docs")
+			// Start an annotation section for typing on the Google Doc.
+			endTypingSection := recorder.AnnotateSection(ctx, "Type_on_docs")
 			for time.Until(end) > 0 {
 				if err := action.Combine(cycleDescription, cycleActions...)(ctx); err != nil {
 					return err
 				}
 			}
-			recorder.Annotate(ctx, "End_typing_on_Docs")
+			endTypingSection(ctx)
 
 			// Toggle the Google Docs File menu button for press and
 			// release metrics.
@@ -1556,7 +1560,9 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 			}
 			centerX, centerY, offsetX, offsetY := contentArea.CenterPoint().X, contentArea.CenterPoint().Y, 10, 10
 			end := time.Now().Add(meetTimeout)
-			recorder.Annotate(ctx, "Start_Jamboard_interactions")
+
+			// Start an annotation section for interacting with the Jamboard.
+			endJamboardInteractions := recorder.AnnotateSection(ctx, "Jamboard_interactions")
 			for end.Sub(time.Now()).Seconds() > 42 {
 				for i := 1; i <= 10; i++ {
 					if err := uiauto.Combine(
@@ -1573,6 +1579,7 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 					}
 				}
 			}
+			endJamboardInteractions(ctx)
 			meetTimeout = end.Sub(time.Now())
 		}
 

@@ -487,6 +487,10 @@ func (r *Recorder) CustomScreenshot(ctx context.Context) {
 // also be less than 240 characters, since the length of a name for
 // perf.Metric has a limit of 256 characters.
 //
+// If the given annotation string is invalid, this function returns false.
+// Otherwise, it returns true. The output of this function can be ignored,
+// as failure logs are self contained.
+//
 // Soft rules for the annotation should be that each word should be
 // separated by an underscore.
 //
@@ -494,14 +498,14 @@ func (r *Recorder) CustomScreenshot(ctx context.Context) {
 // 1. Open_Gmail
 // 2. Switch_windows_by_hotseat
 // 3. Start_switching_CNN_tabs
-func (r *Recorder) Annotate(ctx context.Context, annotation string) {
+func (r *Recorder) Annotate(ctx context.Context, annotation string) bool {
 	if r.startedAtTm.IsZero() {
 		testing.ContextLog(ctx, "Failed to add annotation because the recorder hasn't started yet")
-		return
+		return false
 	}
 	if !annotationRe.MatchString(annotation) {
 		testing.ContextLog(ctx, "Failed to add annotation because of invalid annotation string: ", annotation)
-		return
+		return false
 	}
 
 	r.annotationCount++
@@ -511,6 +515,34 @@ func (r *Recorder) Annotate(ctx context.Context, annotation string) {
 	}, time.Since(r.startedAtTm).Seconds())
 
 	testing.ContextLog(ctx, "Annotation: ", strings.ReplaceAll(annotation, "_", " "))
+
+	return true
+}
+
+// AnnotateSection creates an annotation metric with the name |annotation|,
+// and returns a function that will both create an annotation when this cleanup
+// function is called, and create a metric that records how long this
+// annotation section took in seconds.
+// The start metric that is created will be in the form |annotation|_start, and
+// the end metric created will be in the form |annotation|_end. For example, if
+// the annotation representing what we are doing is "Split_screen_windows", the
+// two metrics created will look like:
+// Annotation.Split_screen_windows_start,
+// Annotation.Split_screen_windows_end.
+func (r *Recorder) AnnotateSection(ctx context.Context, annotation string) func(ctx context.Context) {
+	startTime := time.Now()
+	if ok := r.Annotate(ctx, annotation+"_start"); !ok {
+		return func(ctx context.Context) {}
+	}
+
+	return func(ctx context.Context) {
+		r.Annotate(ctx, annotation+"_end")
+		r.pv.Set(perf.Metric{
+			Name:      annotation,
+			Unit:      "s",
+			Direction: perf.SmallerIsBetter,
+		}, float64(time.Since(startTime).Seconds()))
+	}
 }
 
 // NewRecorderWithTestConn creates a Recorder. It also aggregates the metrics of each
@@ -1488,6 +1520,28 @@ func (r *Recorder) SaveHistograms(outDir string) error {
 		}
 	}
 	return saveJSONFile(histogramFileName, allRecords)
+}
+
+// NewConn is a wrapper around browser.NewConn that opens a tab for |url|,
+// using the browser options |opts|. This wrapper records how long it took to
+// open up this specific url. The metric name is constructed as follows:
+//
+// PageLoadTime.{shortTitle}
+//
+// |shortTitle| must follow all of the rules for perf.Metric names, including
+// only alphanumeric characters, periods, dashes, and underscores.
+func (r *Recorder) NewConn(ctx context.Context, br *browser.Browser, shortTitle, url string, opts ...browser.CreateTargetOption) (*browser.Conn, error) {
+	start := time.Now()
+	conn, err := br.NewConn(ctx, url, opts...)
+	if err != nil {
+		return nil, err
+	}
+	r.pv.Set(perf.Metric{
+		Name:      fmt.Sprintf("PageLoadTime.%s", shortTitle),
+		Unit:      "s",
+		Direction: perf.SmallerIsBetter,
+	}, float64(time.Since(start).Seconds()))
+	return conn, nil
 }
 
 // StartSnapshot takes a snapshot of the given Ash and browser metrics, in order
