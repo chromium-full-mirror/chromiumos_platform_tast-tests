@@ -17,6 +17,7 @@ import (
 	"chromiumos/tast/remote/wificell"
 	ap "chromiumos/tast/remote/wificell/hostapd"
 	"chromiumos/tast/services/cros/wifi"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
@@ -35,9 +36,6 @@ type scanPerfTestCase struct {
 // TODO(b/263890395): The following chipsets are known to fail the AVL requirement.
 // Separate these chipsets and move into wificell_unstable suite until fixed.
 var deviceWithUnstableScan = []wlan.DeviceID{
-	wlan.QualcommAtherosQCA6174,
-	wlan.QualcommAtherosQCA6174SDIO,
-	wlan.QualcommWCN3990,
 	wlan.QualcommWCN6750,
 	wlan.QualcommWCN6855,
 	wlan.MediaTekMT7921PCIE,
@@ -128,19 +126,10 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 		// Thresholds for scan tests.
 		fgFullScanThreshold        = 4 * time.Second
 		bgFullScanThreshold        = 7 * time.Second
-		fgFullScanThresholdRelaxed = 5 * time.Second
 		bgFullScanThresholdRelaxed = 9 * time.Second
 		fgFullScanThresholdWiFi6E  = 15 * time.Second
 		bgFullScanThresholdWiFi6E  = 20 * time.Second
 	)
-
-	// TODO(b/253099273): The following chipsets are known to have slower fg scan times.
-	// Use relaxed threshold until the bug has been solved.
-	fgRelaxedChipsets := map[wlan.DeviceID]struct{}{
-		wlan.QualcommAtherosQCA6174:     {},
-		wlan.QualcommWCN3990:            {},
-		wlan.QualcommAtherosQCA6174SDIO: {},
-	}
 
 	// TODO(b/253096914): The following chipsets are known to have slower bg scan times.
 	// Use relaxed threshold until the bug has been solved.
@@ -278,13 +267,8 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 	count := 0
 	var sum time.Duration
 	threshold := fgFullScanThreshold
-	// In wificell_perf suite, use relaxed thresholds for pre-certified chipsets and monitor if the perf gets worse.
-	// In wificell_unstable suite, use AVL requirements (non-relaxed thresholds) for vendors.
 	if tc.useRelaxedThreshold {
-		if _, ok := fgRelaxedChipsets[devID]; ok {
-			threshold = fgFullScanThresholdRelaxed
-			s.Logf("There is a known issue (b/253099273) for this WiFi chip (%s), use a relaxed threshold: %s", devInfo.Name, threshold)
-		} else if _, ok := wifi6eRelaxedChipsets[devID]; ok {
+		if _, ok := wifi6eRelaxedChipsets[devID]; ok {
 			threshold = fgFullScanThresholdWiFi6E
 			s.Logf("There is a known issue (b/256486257) for this WiFi6E chip (%s), use a sufficiently long threshold and this test always passes", devInfo.Name)
 		}
