@@ -25,6 +25,17 @@ func init() {
 		ResetTimeout:    10 * time.Second,
 		TearDownTimeout: 10 * time.Second,
 	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:            "chromeLoggedInPsrEnableDisable",
+		Desc:            "Enables and disables PSR 2, if required reboots the DUT and return logged into user session",
+		Contacts:        []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
+		Impl:            &loggedIn{},
+		Parent:          "enableDisablePsrFixture",
+		SetUpTimeout:    5 * time.Minute,
+		ResetTimeout:    10 * time.Second,
+		TearDownTimeout: 10 * time.Second,
+	})
 }
 
 // Value holds the Chrome object.
