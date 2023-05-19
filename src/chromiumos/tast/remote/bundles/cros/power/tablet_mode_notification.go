@@ -90,7 +90,7 @@ func TabletModeNotification(ctx context.Context, s *testing.State) {
 
 	dut := s.DUT()
 	tmc := s.Param().(tabletModeConfig).control
-	if err := tmc.InitControl(ctx, dut.Conn()); err != nil {
+	if err := tmc.InitControl(ctx, dut); err != nil {
 		s.Fatal("Failed to init TabletModeControl: ", err)
 	}
 	defer func(ctx context.Context) {
