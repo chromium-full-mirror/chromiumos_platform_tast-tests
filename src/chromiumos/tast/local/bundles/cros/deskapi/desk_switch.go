@@ -114,21 +114,24 @@ func DeskSwitch(ctx context.Context, s *testing.State) {
 	}
 
 	// Create a new desk
-	if _, err := apis.LaunchDesk(ctx, conn); err != nil {
+	deskID1, err := apis.LaunchDesk(ctx, conn)
+	if err != nil {
 		s.Fatal("Failed to launch a new desk: ", err)
 	}
+	// Clean up desk.
+	defer apis.RemoveDesk(ctx, conn, deskID1)
 
 	// Wait for launch desk animation settled.
 	if err := ac.WithInterval(2*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
 		s.Fatal("Failed to wait for launch desk animation to be completed: ", err)
 	}
 
-	deskID1, err := apis.GetActiveDesk(ctx, conn)
+	deskID2, err := apis.GetActiveDesk(ctx, conn)
 	if err != nil {
 		s.Fatal("Failed to get active desk: ", err)
 	}
 
-	if deskID == deskID1 {
+	if deskID == deskID2 {
 		s.Fatal("Failed to move to new desk: ", err)
 	}
 
@@ -141,13 +144,13 @@ func DeskSwitch(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for switch desk animation to be completed: ", err)
 	}
 
-	deskID2, err := apis.GetActiveDesk(ctx, conn)
+	deskID3, err := apis.GetActiveDesk(ctx, conn)
 	if err != nil {
 		s.Fatal("Failed to get active desk: ", err)
 	}
 
-	if deskID != deskID2 {
-		s.Fatalf("Failed to switch back to previous desk, want:%s, got %s", deskID, deskID2)
+	if deskID != deskID3 {
+		s.Fatalf("Failed to switch back to previous desk, want:%s, got %s", deskID, deskID3)
 	}
 
 }
