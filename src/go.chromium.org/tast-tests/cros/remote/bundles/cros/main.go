@@ -8,7 +8,7 @@
 package main
 
 import (
-	"chromiumos/tast/remote/bundlemain"
+	"go.chromium.org/tast-tests/cros/remote/bundlemain"
 )
 
 func main() {

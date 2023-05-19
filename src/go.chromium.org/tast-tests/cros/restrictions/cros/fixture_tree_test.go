@@ -8,7 +8,7 @@ package main
 import (
 	gotesting "testing"
 
-	"chromiumos/tast/restrictions"
+	"go.chromium.org/tast-tests/cros/restrictions"
 	"go.chromium.org/tast/core/testing/testcheck"
 )
 
