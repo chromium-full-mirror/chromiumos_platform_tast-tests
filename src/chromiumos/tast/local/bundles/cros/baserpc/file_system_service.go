@@ -157,6 +157,47 @@ func (fs *FileSystemService) CopyFile(ctx context.Context, req *baserpc.CopyFile
 	return &res, nil
 }
 
+// ReadFileAtOffset read data from given offset to data buffer.
+func (fs *FileSystemService) ReadFileAtOffset(ctx context.Context, req *baserpc.ReadFileAtOffsetRequest) (*baserpc.ReadFileAtOffsetResponse, error) {
+	var res baserpc.ReadFileAtOffsetResponse
+	res.Error = encodeErr(func() error {
+		f, err := os.OpenFile(req.Path, os.O_RDONLY, 0644)
+
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+
+		data := make([]byte, req.Size)
+		if _, err := f.ReadAt(data, req.Offset); err != nil {
+			return err
+		}
+		res.Data = data
+		return nil
+	}())
+	return &res, nil
+}
+
+// WriteFileAtOffset saves data buffer at given offset. The file provided in
+// path variable must exist.
+func (fs *FileSystemService) WriteFileAtOffset(ctx context.Context, req *baserpc.WriteFileAtOffsetRequest) (*baserpc.WriteFileAtOffsetResponse, error) {
+	var res baserpc.WriteFileAtOffsetResponse
+	res.Error = encodeErr(func() error {
+		f, err := os.OpenFile(req.Path, os.O_WRONLY, 0644)
+
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+
+		if _, err := f.WriteAt(req.Data, req.Offset); err != nil {
+			return err
+		}
+		return nil
+	}())
+	return &res, nil
+}
+
 func toFileInfoProto(fi os.FileInfo) (*baserpc.FileInfo, error) {
 	ts, err := ptypes.TimestampProto(fi.ModTime())
 	if err != nil {

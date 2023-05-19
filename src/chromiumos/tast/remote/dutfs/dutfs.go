@@ -172,6 +172,39 @@ func (c *Client) CopyFile(ctx context.Context, source, destination string) error
 	return nil
 }
 
+// ReadFileAtOffset read data from given offset to data buffer.
+func (c *Client) ReadFileAtOffset(ctx context.Context, path string, offset, size int64) ([]byte, error) {
+	res, err := c.fs.ReadFileAtOffset(ctx, &baserpc.ReadFileAtOffsetRequest{
+		Path:   path,
+		Offset: offset,
+		Size:   size,
+	})
+	if err != nil {
+		return nil, err
+	}
+	if res.Error != nil {
+		return nil, decodeErr(res.Error)
+	}
+	return res.Data, nil
+}
+
+// WriteFileAtOffset saves data buffer at given offset. The file provided in
+// path variable must exist.
+func (c *Client) WriteFileAtOffset(ctx context.Context, path string, data []byte, offset int64) error {
+	res, err := c.fs.WriteFileAtOffset(ctx, &baserpc.WriteFileAtOffsetRequest{
+		Path:   path,
+		Data:   data,
+		Offset: offset,
+	})
+	if err != nil {
+		return err
+	}
+	if res.Error != nil {
+		return decodeErr(res.Error)
+	}
+	return nil
+}
+
 // fileInfo wraps baserpc.FileInfo to implement os.FileInfo interface.
 type fileInfo struct {
 	pb *baserpc.FileInfo

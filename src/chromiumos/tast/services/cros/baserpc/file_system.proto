@@ -37,6 +37,13 @@ service FileSystem {
 
   // CopyFile copies file between to locations on DUT.
   rpc CopyFile (CopyFileRequest) returns (CopyFileResponse) {}
+
+  // ReadFileAtOffset read data from given offset to data buffer.
+  rpc ReadFileAtOffset (ReadFileAtOffsetRequest) returns (ReadFileAtOffsetResponse) {}
+
+  // WriteFileAtOffset saves data buffer at given offset. The file provided in
+  // path variable must exist.
+  rpc WriteFileAtOffset (WriteFileAtOffsetRequest) returns (WriteFileAtOffsetResponse) {}
 }
 
 message ReadDirRequest {
@@ -117,6 +124,27 @@ message CopyFileRequest {
 }
 
 message CopyFileResponse {
+  Error error = 1;
+}
+
+message ReadFileAtOffsetRequest {
+  string path = 1;
+  int64 offset = 2;
+  int64 size = 3;
+}
+
+message ReadFileAtOffsetResponse {
+  Error error = 1;
+  bytes data = 2;
+}
+
+message WriteFileAtOffsetRequest {
+  string path = 1;
+  bytes data = 2;
+  int64 offset = 3;
+}
+
+message WriteFileAtOffsetResponse {
   Error error = 1;
 }
 
