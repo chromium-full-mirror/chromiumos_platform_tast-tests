@@ -8,14 +8,13 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/ossettings"
 	"chromiumos/tast/local/chrome/uiauto/role"
-	"chromiumos/tast/local/input"
+	"chromiumos/tast/local/devicesettings/constants"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -58,39 +57,21 @@ func DeviceAssistantKeyInModifierList(ctx context.Context, s *testing.State) {
 
 	ui := uiauto.New(tconn).WithTimeout(20 * time.Second)
 
-	// Set up keyboard.
-	kb, err := input.Keyboard(ctx)
+	s.Log("Open setting page and starting test")
+	settings, err := ossettings.LaunchAtPage(ctx, tconn, ossettings.Device)
 	if err != nil {
-		s.Fatal("Failed to find keyboard: ", err)
+		s.Fatal("Failed to open setting page: ", err)
 	}
-	defer kb.Close(ctx)
-
-	// Open OS Settings app.
-	if err := apps.Launch(ctx, tconn, apps.Settings.ID); err != nil {
-		s.Fatal("Failed to launch Settings app: ", err)
-	}
-
-	if err := ash.WaitForApp(ctx, tconn, apps.Settings.ID, time.Minute); err != nil {
-		s.Fatal("Settings app did not appear in shelf after launch: ", err)
-	}
-
-	// Find Device row and click it.
-	deviceRow := nodewith.Name("Device").Role(role.Link)
-	if err := ui.DoDefault(deviceRow)(ctx); err != nil {
-		s.Fatal("Failed to click device row: ", err)
-	}
+	defer settings.Close(cleanupCtx)
 
 	// Find Keyboard row and click it.
-	keyboardRow := nodewith.Name("Keyboard").Role(role.GenericContainer)
-	if err := ui.DoDefault(keyboardRow)(ctx); err != nil {
+	if err := ui.DoDefault(constants.KeyboardRow)(ctx); err != nil {
 		s.Fatal("Failed to click keyboard row: ", err)
 	}
 
-	// Click remap keyboard keys row and verify if all the buttons show up.
-	remapKeyboardKeys := nodewith.Name(
-		"Built-in Keyboard Customize keyboard keys").Role(role.GenericContainer)
-	if err := ui.DoDefault(remapKeyboardKeys)(ctx); err != nil {
-		s.Fatal("Failed to click Built-in Keyboard Customize keyboard keys row: ", err)
+	// Click customize keyboard keys row and verify if all the buttons show up.
+	if err := ui.DoDefault(constants.CustomizeKeyboardKeys)(ctx); err != nil {
+		s.Fatal("Failed to click Customize keyboard keys row: ", err)
 	}
 
 	assistantKeyRow := nodewith.Name("assistant").Role(role.GenericContainer)

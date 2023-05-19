@@ -32,6 +32,7 @@ func init() {
 		},
 		// ChromeOS > Software > System Services > Peripherals > Keyboard
 		BugComponent: "b:1131926",
+		Fixture:      "chromeLoggedInWithInputDeviceSettingsSplit",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      time.Minute,
@@ -41,17 +42,11 @@ func init() {
 // DeviceAddNewKeyboard tests if a new keyboard appear in the keyboard subpage
 // when adding a new keyboard.
 func DeviceAddNewKeyboard(ctx context.Context, s *testing.State) {
+	cr := s.FixtValue().(*chrome.Chrome)
+
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
-
-	// Set up a new chrome since we are changing settings in the test.
-	s.Log("Setting up chrome")
-	cr, err := chrome.New(ctx, chrome.EnableFeatures("InputDeviceSettingsSplit"))
-	if err != nil {
-		s.Fatal("Failed to start Chrome: ", err)
-	}
-	defer cr.Close(cleanupCtx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {

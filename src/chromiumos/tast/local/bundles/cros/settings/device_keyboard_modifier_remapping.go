@@ -16,7 +16,9 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	la "chromiumos/tast/local/chrome/uiauto/launcher"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"chromiumos/tast/local/chrome/uiauto/ossettings"
 	"chromiumos/tast/local/chrome/uiauto/role"
+	"chromiumos/tast/local/devicesettings/constants"
 	"chromiumos/tast/local/input"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -71,62 +73,51 @@ func DeviceKeyboardModifierRemapping(ctx context.Context, s *testing.State) {
 	}
 	defer kb.Close(ctx)
 
-	// Open OS Settings app.
-	if err := apps.Launch(ctx, tconn, apps.Settings.ID); err != nil {
-		s.Fatal("Failed to launch Settings app: ", err)
+	s.Log("Open setting page and starting test")
+	settings, err := ossettings.LaunchAtPage(ctx, tconn, ossettings.Device)
+	if err != nil {
+		s.Fatal("Failed to open setting page: ", err)
 	}
-
-	if err := ash.WaitForApp(ctx, tconn, apps.Settings.ID, time.Minute); err != nil {
-		s.Fatal("Settings app did not appear in shelf after launch: ", err)
-	}
-
-	// Find Device row and click it.
-	deviceRow := nodewith.Name("Device").Role(role.Link)
-	if err := ui.DoDefault(deviceRow)(ctx); err != nil {
-		s.Fatal("Failed to click device row: ", err)
-	}
+	defer settings.Close(cleanupCtx)
 
 	// Find Keyboard row and click it.
-	keyboardRow := nodewith.Name("Keyboard").Role(role.GenericContainer)
-	if err := ui.LeftClick(keyboardRow)(ctx); err != nil {
+	if err := ui.DoDefault(constants.KeyboardRow)(ctx); err != nil {
 		s.Fatal("Failed to click keyboard row: ", err)
 	}
 
-	// Click remap keyboard keys row and verify if all the buttons show up.
-	remapKeyboardKeys := nodewith.Name(
-		"Built-in Keyboard Remap keyboard keys").Role(role.GenericContainer)
-	if err := ui.DoDefault(remapKeyboardKeys)(ctx); err != nil {
-		s.Fatal("Failed to click Built-in Keyboard Remap keyboard keys row: ", err)
+	// Click customize keyboard keys row and verify if all the buttons show up.
+	if err := ui.DoDefault(constants.CustomizeKeyboardKeys)(ctx); err != nil {
+		s.Fatal("Failed to click Customize keyboard keys row: ", err)
 	}
 
-	restoreDefaultsButton := nodewith.Name(
-		"Restore defaults").Role(role.Button)
+	resetKeysButton := nodewith.Name(
+		"Reset keys").Role(role.Button)
 	metaKeyRow := nodewith.NameRegex(
-		regexp.MustCompile("(Launcher)|(Search)")).Role(role.GenericContainer)
-	ctrlKeyRow := nodewith.Name("Ctrl").Role(role.GenericContainer)
+		regexp.MustCompile("(launcher)|(search)")).Role(role.GenericContainer)
+	ctrlKeyRow := nodewith.Name(constants.Control).Role(role.GenericContainer)
 	metaKey := nodewith.NameRegex(
-		regexp.MustCompile("(Launcher)|(Search)")).Role(
+		regexp.MustCompile("(launcher)|(search)")).Role(
 		role.ComboBoxSelect).Ancestor(metaKeyRow)
-	ctrlKey := nodewith.Name("Ctrl").Role(
+	ctrlKey := nodewith.Name(constants.Control).Role(
 		role.ComboBoxSelect).Ancestor(ctrlKeyRow)
-	altKey := nodewith.Name("Alt").Role(role.ComboBoxSelect)
-	escapeKey := nodewith.Name("Escape").Role(role.ComboBoxSelect)
-	backspaceKey := nodewith.Name("Backspace").Role(role.ComboBoxSelect)
-	if err := uiauto.Combine("verify restore default button and modifier remapping keys exist",
-		ui.WaitUntilExists(restoreDefaultsButton),
+	altKey := nodewith.Name(constants.Alt).Role(role.ComboBoxSelect)
+	escapeKey := nodewith.Name(constants.Escape).Role(role.ComboBoxSelect)
+	backspaceKey := nodewith.Name(constants.Backspace).Role(role.ComboBoxSelect)
+	if err := uiauto.Combine("verify reset keys button and modifier remapping keys exist",
+		ui.WaitUntilExists(resetKeysButton),
 		ui.WaitUntilExists(metaKey),
 		ui.WaitUntilExists(ctrlKey),
 		ui.WaitUntilExists(altKey),
 		ui.WaitUntilExists(escapeKey),
 		ui.WaitUntilExists(backspaceKey),
 	)(ctx); err != nil {
-		s.Fatal("Failed to verify restore default button or modifier remapping keys exist: ", err)
+		s.Fatal("Failed to verify reset keys button or modifier remapping keys exist: ", err)
 	}
 
 	// Remap Launcher(Search) and Ctrl.
 	launcherOrSearchOption := nodewith.NameRegex(
-		regexp.MustCompile("(Launcher)|(Search)")).Role(role.ListBoxOption)
-	controlOption := nodewith.Name("Ctrl").Role(role.ListBoxOption)
+		regexp.MustCompile("(launcher)|(search)")).Role(role.ListBoxOption)
+	controlOption := nodewith.Name(constants.Control).Role(role.ListBoxOption)
 
 	if err := uiauto.Combine("choose control option",
 		ui.LeftClickUntil(metaKey, ui.WithTimeout(
@@ -175,14 +166,14 @@ func DeviceKeyboardModifierRemapping(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to close Explore app: ", err)
 	}
 
-	// Verify restore defaults button functionality.
-	// Click restore defaults button.
-	if err := uiauto.Combine("Restore defaults",
-		ui.DoDefault(restoreDefaultsButton),
+	// Verify reset keys button functionality.
+	// Click reset keys button.
+	if err := uiauto.Combine("Reset keys",
+		ui.DoDefault(resetKeysButton),
 		ui.WaitUntilExists(metaKey),
 		ui.WaitUntilExists(ctrlKey),
 	)(ctx); err != nil {
-		s.Fatal("Failed to restore default: ", err)
+		s.Fatal("Failed to reset keys: ", err)
 	}
 
 	// Open and close Launcher with Launcher(Search).

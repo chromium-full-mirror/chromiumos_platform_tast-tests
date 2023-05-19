@@ -86,13 +86,13 @@ func DeviceLoginScreen(ctx context.Context, s *testing.State) {
 		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui")
 
 		// Find Keyboard row and click it.
-		if err := ui.LeftClick(constants.KeyboardRow)(ctx); err != nil {
+		if err := ui.DoDefault(constants.KeyboardRow)(ctx); err != nil {
 			s.Fatal("Failed to click keyboard row: ", err)
 		}
 
-		// Click remap keyboard keys row and verify if all the buttons show up.
-		if err := ui.DoDefault(constants.RemapKeyboardKeys)(ctx); err != nil {
-			s.Fatal("Failed to click Built-in Keyboard Remap keyboard keys row: ", err)
+		// Click customize keyboard keys row and verify if all the buttons show up.
+		if err := ui.DoDefault(constants.CustomizeKeyboardKeys)(ctx); err != nil {
+			s.Fatal("Failed to click Customize keyboard keys row: ", err)
 		}
 
 		err = devicesettings.Remap(ctx, ui, constants.Control, constants.Backspace)

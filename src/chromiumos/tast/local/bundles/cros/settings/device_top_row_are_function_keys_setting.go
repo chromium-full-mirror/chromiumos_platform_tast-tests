@@ -14,7 +14,8 @@ import (
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
-	"chromiumos/tast/local/chrome/uiauto/role"
+	"chromiumos/tast/local/chrome/uiauto/ossettings"
+	"chromiumos/tast/local/devicesettings/constants"
 	"chromiumos/tast/local/input"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -70,24 +71,15 @@ func DeviceTopRowAreFunctionKeysSetting(ctx context.Context, s *testing.State) {
 	topRow, err := input.KeyboardTopRowLayout(ctx, kb)
 	defer kb.Close(ctx)
 
-	// Open OS Settings app.
-	if err := apps.Launch(ctx, tconn, apps.Settings.ID); err != nil {
-		s.Fatal("Failed to launch Settings app: ", err)
+	s.Log("Open setting page and starting test")
+	settings, err := ossettings.LaunchAtPage(ctx, tconn, ossettings.Device)
+	if err != nil {
+		s.Fatal("Failed to open setting page: ", err)
 	}
-
-	if err := ash.WaitForApp(ctx, tconn, apps.Settings.ID, time.Minute); err != nil {
-		s.Fatal("Settings app did not appear in shelf after launch: ", err)
-	}
-
-	// Find Device row and click it.
-	deviceRow := nodewith.Name("Device").Role(role.Link)
-	if err := ui.DoDefault(deviceRow)(ctx); err != nil {
-		s.Fatal("Failed to click device row: ", err)
-	}
+	defer settings.Close(cleanupCtx)
 
 	// Find Keyboard row and click it.
-	keyboardRow := nodewith.Name("Keyboard").Role(role.GenericContainer)
-	if err := ui.LeftClick(keyboardRow)(ctx); err != nil {
+	if err := ui.DoDefault(constants.KeyboardRow)(ctx); err != nil {
 		s.Fatal("Failed to click keyboard row: ", err)
 	}
 
@@ -96,7 +88,7 @@ func DeviceTopRowAreFunctionKeysSetting(ctx context.Context, s *testing.State) {
 	if err := kb.Accel(ctx, topRow.BrowserBack); err != nil {
 		s.Fatal("Failed to press top row back button: ", err)
 	}
-	if err := ui.WaitUntilExists(keyboardRow)(ctx); err != nil {
+	if err := ui.WaitUntilExists(constants.KeyboardRow)(ctx); err != nil {
 		s.Fatal("Failed to wait until keyboard row exists: ", err)
 	}
 
@@ -115,12 +107,12 @@ func DeviceTopRowAreFunctionKeysSetting(ctx context.Context, s *testing.State) {
 	}
 
 	// Find Keyboard row and click it.
-	if err := ui.DoDefault(keyboardRow)(ctx); err != nil {
+	if err := ui.DoDefault(constants.KeyboardRow)(ctx); err != nil {
 		s.Fatal("Failed to click keyboard row: ", err)
 	}
 
 	// Turn on the toggle.
-	topRowKeyButton := nodewith.Name("Built-in Keyboard Treat top-row keys as function keys")
+	topRowKeyButton := nodewith.Name("Treat top-row keys as function keys")
 	if err := uiauto.Combine("Verify if the toggle is turned on",
 		ui.WaitUntilExists(topRowKeyButton),
 		ui.DoDefault(topRowKeyButton),
@@ -147,7 +139,7 @@ func DeviceTopRowAreFunctionKeysSetting(ctx context.Context, s *testing.State) {
 	if err := kb.Accel(ctx, "search+"+topRow.BrowserBack); err != nil {
 		s.Fatal("Failed to press search + top row back button: ", err)
 	}
-	if err := ui.WaitUntilExists(keyboardRow)(ctx); err != nil {
+	if err := ui.WaitUntilExists(constants.KeyboardRow)(ctx); err != nil {
 		s.Fatal("Failed to wait until keyboard row exists: ", err)
 	}
 }

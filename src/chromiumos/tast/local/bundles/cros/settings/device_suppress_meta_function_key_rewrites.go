@@ -109,14 +109,14 @@ func DeviceSuppressMetaFunctionKeyRewrites(ctx context.Context, s *testing.State
 		s.Fatal("Failed to find the keyboard row and click it: ", err)
 	}
 
-	// Turn on the toggle to suppress meta + function key rewrites.
-	topRowKeyButton := nodewith.NameContaining("change behavior of Chromebook top row keys")
-	if err := uiauto.Combine("Verify if the toggle is turned on",
+	// Turn off the toggle to suppress meta + function key rewrites.
+	topRowKeyButton := nodewith.NameContaining("change the behavior of function keys")
+	if err := uiauto.Combine("Verify if the toggle is turned off",
 		ui.WaitUntilExists(topRowKeyButton),
 		ui.DoDefault(topRowKeyButton),
-		ui.WaitUntilExists(topRowKeyButton.Attribute("checked", "true")),
+		ui.WaitUntilExists(topRowKeyButton.Attribute("checked", "false")),
 	)(ctx); err != nil {
-		s.Fatal("Failed to turn on the toggle: ", err)
+		s.Fatal("Failed to turn off the toggle: ", err)
 	}
 
 	// Verify pressing search + top row back button is suppressed

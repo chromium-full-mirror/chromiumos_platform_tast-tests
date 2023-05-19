@@ -70,7 +70,6 @@ func DeviceSwapPrimaryMouseButton(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open setting page: ", err)
 	}
 	defer settings.Close(cleanupCtx)
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui")
 
 	// Find Mouse row and click it.
 	if err := ui.DoDefault(constants.MouseRow)(ctx); err != nil {
@@ -78,8 +77,7 @@ func DeviceSwapPrimaryMouseButton(ctx context.Context, s *testing.State) {
 	}
 
 	// Swap primary mouse button to Right button.
-	mouseComboBoxSelect := nodewith.NameContaining("Tast virtual mouse").Role(
-		role.ComboBoxSelect)
+	mouseComboBoxSelect := nodewith.Role(role.ComboBoxSelect)
 	rightButtonOption := nodewith.NameContaining("Right button").Role(role.ListBoxOption)
 
 	if err := uiauto.Combine("choose right button option",
@@ -92,8 +90,7 @@ func DeviceSwapPrimaryMouseButton(ctx context.Context, s *testing.State) {
 	}
 
 	// Test if primary mouse button is right button.
-	accelerationToggleButton := nodewith.NameContaining("Tast virtual mouse").Role(
-		role.ToggleButton).First()
+	accelerationToggleButton := nodewith.Role(role.ToggleButton).First()
 	if err := ui.WaitUntilExists(accelerationToggleButton)(ctx); err != nil {
 		s.Fatal("Failed to find acceleration toggle button: ", err)
 	}

@@ -17,20 +17,22 @@ var (
 	MouseRow = nodewith.Name("Mouse").Role(role.GenericContainer)
 	// TouchpadRow is a finder for the Touchpad subpage in device settings.
 	TouchpadRow = nodewith.Name("Touchpad").Role(role.GenericContainer)
-	// RemapKeyboardKeys is a finder for the Remap keys  subpage in
+	// TrackPointRow is a finder for the TrackPoint subpage in device settings.
+	TrackPointRow = nodewith.Name("TrackPoint").Role(role.GenericContainer)
+	// CustomizeKeyboardKeys is a finder for the Remap keys subpage in
 	// the keyboard settings page.
-	RemapKeyboardKeys = nodewith.Name(
-		"Built-in Keyboard Remap keyboard keys").Role(role.GenericContainer)
+	CustomizeKeyboardKeys = nodewith.NameContaining(
+		"Customize keyboard keys").Role(role.Link)
 )
 
 // List of modifier keys.
 const (
-	Launcher  = "Launcher"
-	Search    = "Search"
-	Control   = "Ctrl"
-	Alt       = "Alt"
-	CapsLock  = "Caps Lock"
-	Escape    = "Esc"
-	Backspace = "Backspace"
-	Assistant = "Assistant"
+	Launcher  = "launcher"
+	Search    = "search"
+	Control   = "ctrl"
+	Alt       = "alt"
+	CapsLock  = "caps Lock"
+	Escape    = "escape"
+	Backspace = "backspace"
+	Assistant = "assistant"
 )

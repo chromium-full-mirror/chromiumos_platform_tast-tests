@@ -69,7 +69,6 @@ func DeviceAddNewMouse(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open setting page: ", err)
 	}
 	defer settings.Close(cleanupCtx)
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui")
 
 	// Find Mouse row and click it.
 	if err := ui.DoDefault(constants.MouseRow)(ctx); err != nil {
