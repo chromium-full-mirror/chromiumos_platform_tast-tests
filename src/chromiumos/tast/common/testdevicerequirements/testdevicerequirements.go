@@ -73,8 +73,11 @@ const (
 	// WiFiGenSupportLegacyBands the device MUST support 2.4 and 5Ghz for STA.
 	WiFiGenSupportLegacyBands = "wifi-gen-0007-v02"
 
-	// WiFiGenSupport6GHz the device MAY support 6Ghz for STA.
+	// WiFiGenSupport6GHz the device MAY support 6Ghz for STA and Mobile AP.
 	WiFiGenSupport6GHz = "wifi-gen-0013-v01"
+
+	// WiFiGenSupport6GHzV2 the device MAY support 6Ghz for STA.
+	WiFiGenSupport6GHzV2 = "wifi-gen-0013-v02"
 
 	// WiFiGenSupportMARScan the Linux driver for the Wi-Fi controller MUST support MAC address randomization for scans.
 	WiFiGenSupportMARScan = "wifi-gen-0014-v01"
