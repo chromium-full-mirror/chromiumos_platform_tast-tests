@@ -6,7 +6,6 @@ package croshealthd
 
 import (
 	"context"
-	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -43,7 +42,7 @@ type RoutineParamsV2 struct {
 // RunDiagRoutineV2 runs the specified routine based on `params`. Returns a
 // RoutineResult on success or an error.
 func RunDiagRoutineV2(ctx context.Context, params RoutineParamsV2) (*RoutineResultV2, error) {
-	diagParams := []string{"--action=run_routine", "--single_line_json", fmt.Sprintf("--routine=%s", params.Routine)}
+	diagParams := []string{params.Routine, "--single_line_json"}
 	if params.Routine == RoutineMemoryV2 {
 		// 15000 KiB runs for about 3 seconds on a volteer machine.
 		diagParams = append(diagParams, "--max_testing_mem_kib=15000")

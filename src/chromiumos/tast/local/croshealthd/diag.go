@@ -97,7 +97,7 @@ type RoutineParams struct {
 // RunDiagRoutine runs the specified routine based on `params`. Returns a
 // RoutineResult on success or an error.
 func RunDiagRoutine(ctx context.Context, params RoutineParams) (*RoutineResult, error) {
-	diagParams := []string{"--action=run_routine", fmt.Sprintf("--routine=%s", params.Routine)}
+	diagParams := []string{params.Routine}
 	if params.Cancel {
 		diagParams = append(diagParams, "--force_cancel_at_percent=5")
 	}
@@ -167,7 +167,7 @@ func RunDiagRoutine(ctx context.Context, params RoutineParams) (*RoutineResult, 
 // GetDiagRoutines returns a list of valid routines for the device on success,
 // or an error.
 func GetDiagRoutines(ctx context.Context) ([]string, error) {
-	output, err := runDiag(ctx, []string{"--action=get_routines"})
+	output, err := runDiag(ctx, []string{"get_routines"})
 	if err != nil {
 		return []string{}, err
 	}
