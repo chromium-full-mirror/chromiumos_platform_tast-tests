@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc"
 
 	"chromiumos/tast/services/cros/baserpc"
+	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -137,6 +138,18 @@ func (fs *FileSystemService) MkDir(ctx context.Context, req *baserpc.MkDirReques
 	var res baserpc.MkDirResponse
 	res.Error = encodeErr(func() error {
 		if err := os.Mkdir(req.Name, os.FileMode(req.Mode)); err != nil {
+			return err
+		}
+		return nil
+	}())
+	return &res, nil
+}
+
+// CopyFile copies file between two locations on DUT.
+func (fs *FileSystemService) CopyFile(ctx context.Context, req *baserpc.CopyFileRequest) (*baserpc.CopyFileResponse, error) {
+	var res baserpc.CopyFileResponse
+	res.Error = encodeErr(func() error {
+		if err := fsutil.CopyFile(req.Source, req.Destination); err != nil {
 			return err
 		}
 		return nil

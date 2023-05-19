@@ -34,6 +34,9 @@ service FileSystem {
 
   // MkDir creates a temporary directory.
   rpc MkDir (MkDirRequest) returns (MkDirResponse) {}
+
+  // CopyFile copies file between to locations on DUT.
+  rpc CopyFile (CopyFileRequest) returns (CopyFileResponse) {}
 }
 
 message ReadDirRequest {
@@ -105,6 +108,15 @@ message MkDirRequest {
 }
 
 message MkDirResponse {
+  Error error = 1;
+}
+
+message CopyFileRequest {
+  string source = 1;
+  string destination = 2;
+}
+
+message CopyFileResponse {
   Error error = 1;
 }
 

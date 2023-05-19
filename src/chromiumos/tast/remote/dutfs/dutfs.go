@@ -160,6 +160,18 @@ func (c *Client) MkDir(ctx context.Context, name string, mode os.FileMode) error
 	return nil
 }
 
+// CopyFile copies file between to locations on DUT.
+func (c *Client) CopyFile(ctx context.Context, source, destination string) error {
+	res, err := c.fs.CopyFile(ctx, &baserpc.CopyFileRequest{Source: source, Destination: destination})
+	if err != nil {
+		return err
+	}
+	if res.Error != nil {
+		return decodeErr(res.Error)
+	}
+	return nil
+}
+
 // fileInfo wraps baserpc.FileInfo to implement os.FileInfo interface.
 type fileInfo struct {
 	pb *baserpc.FileInfo
