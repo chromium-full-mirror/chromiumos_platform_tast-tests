@@ -48,32 +48,34 @@ type pvsFixture struct {
 }
 
 func (f *pvsFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	pvsHost := s.DUT().Conn()
+	dutHostname := s.CompanionDUT("dut").HostName()
+
 	// Populate git cookies
-	dut := s.DUT().Conn()
 	gitCookies := s.RequiredVar("pvs.git_cookies")
-	if _, err := writeToFileAsChronos(ctx, dut, gitCookies, gitCookiesPath); err != nil {
+	if _, err := writeToFileAsChronos(ctx, pvsHost, gitCookies, gitCookiesPath); err != nil {
 		s.Fatal("Error occured when populating git cookies: ", err)
 	}
 
 	// Populate service account and upload config
-	if _, err := removeAsRoot(ctx, dut, pvsOutputDir); err != nil {
+	if _, err := removeAsRoot(ctx, pvsHost, pvsOutputDir); err != nil {
 		s.Fatal("Error occured when trying to cleanup pvs output dir: ", err)
 	}
 	serviceAccount := s.RequiredVar("pvs.service_account")
 	createUploadConfig := fmt.Sprintf(`mkdir -p %v`, uploadConfigDir)
-	if _, err := RunAsChronos(ctx, dut, createUploadConfig); err != nil {
+	if _, err := RunAsChronos(ctx, pvsHost, createUploadConfig); err != nil {
 		s.Fatal("Error occured when creating upload config dir: ", err)
 	}
-	if _, err := writeToFileAsChronos(ctx, dut, serviceAccount, serviceAccountPath); err != nil {
+	if _, err := writeToFileAsChronos(ctx, pvsHost, serviceAccount, serviceAccountPath); err != nil {
 		s.Fatal("Error occured when populating service account: ", err)
 	}
-	if _, err := writeToFileAsChronos(ctx, dut, uploadConfigJSON, uploadConfigJSONPath); err != nil {
+	if _, err := writeToFileAsChronos(ctx, pvsHost, uploadConfigJSON, uploadConfigJSONPath); err != nil {
 		s.Fatal("Error occured when populating upload config : ", err)
 	}
 
 	// Run shop unpack
-	shopUnpack := `FORCE_DLM_SKU_ID=1111 shop unpack --dut localhost:2223 --milestone 115 --chromeos-version 15393.59.0`
-	shopOutput, err := RunAsChronos(ctx, dut, shopUnpack)
+	shopUnpack := fmt.Sprintf(`FORCE_DLM_SKU_ID=1111 shop unpack --dut %v --milestone 115 --chromeos-version 15465.0.0`, dutHostname)
+	shopOutput, err := RunAsChronos(ctx, pvsHost, shopUnpack)
 	if err != nil {
 		s.Fatal("Error occured when running shop unpack: ", err)
 	}
