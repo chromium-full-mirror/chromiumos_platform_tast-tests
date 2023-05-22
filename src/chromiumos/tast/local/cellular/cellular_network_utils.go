@@ -7,6 +7,7 @@ package cellular
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"time"
@@ -27,6 +28,27 @@ const (
 	googleDotComIPv4 = "ipv4.google.com"
 	testIPv6DotCom   = "test-ipv6.com"
 )
+
+func logOutputToFile(ctx context.Context, log, fn string) {
+	outDir, ok := testing.ContextOutDir(ctx)
+	if !ok {
+		testing.ContextLog(ctx, "Failed to get out dir")
+		return
+	}
+
+	outFile, err := os.OpenFile(filepath.Join(outDir, fn), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil || outFile == nil {
+		return
+	}
+	fmt.Fprintf(outFile, "%s\n", time.Now())
+	if _, err := outFile.WriteString(log + "\n"); err != nil {
+		testing.ContextLogf(ctx, "Failed to write log to %q: %s", fn, err)
+		return
+	}
+	if err := outFile.Close(); err != nil {
+		testing.ContextLogf(ctx, "Failed to close %q: %s", fn, err)
+	}
+}
 
 func verifyCrostiniConnectivityUsingPing(ctx context.Context, binCmd, addr string, cmd func(context.Context, ...string) *testexec.Cmd) error {
 	testing.ContextLog(ctx, "Verify connectivity to: ", addr)
@@ -66,15 +88,16 @@ func VerifyCrostiniIPConnectivity(ctx context.Context, cmd func(context.Context,
 func verifyIPConnectivityUsingCurl(ctx context.Context, cmd func(context.Context, string, ...string) *testexec.Cmd, ipType, addr string) error {
 	testing.ContextLogf(ctx, "Verify IP%s connectivity using curl to: %s", ipType, addr)
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if out, err := cmd(ctx, "curl", ipType, addr).CombinedOutput(); err != nil {
-			return errors.Wrapf(err, "failed curl test: %v ", string(out))
+		if out, err := cmd(ctx, "curl", "-v", ipType, addr).CombinedOutput(); err != nil {
+			logOutputToFile(ctx, string(out), "curl"+ipType+".txt")
+			return errors.Wrap(err, "failed curl test-1")
 		}
 		return nil
 	}, &testing.PollOptions{
 		Timeout:  curlTimeout,
 		Interval: defaultInterval,
 	}); err != nil {
-		return errors.Wrap(err, "failed  curl test")
+		return errors.Wrap(err, "failed  curl test-2")
 	}
 	return nil
 }
@@ -85,7 +108,7 @@ func VerifyIPConnectivityUsingCurl(ctx context.Context, cmd func(context.Context
 		return errors.New("no ip network found")
 	}
 	if ipv4 {
-		if err := verifyIPConnectivityUsingCurl(ctx, cmd, "-4", testIPv6DotCom); err != nil {
+		if err := verifyIPConnectivityUsingCurl(ctx, cmd, "", testIPv6DotCom); err != nil {
 			return err
 		}
 	}
@@ -100,8 +123,8 @@ func VerifyIPConnectivityUsingCurl(ctx context.Context, cmd func(context.Context
 func verifyIPConnectivityUsingPing(ctx context.Context, binCmd, addr string, cmd func(context.Context, string, ...string) *testexec.Cmd) error {
 	testing.ContextLog(ctx, "Verify IP connectivity to: ", addr)
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if err := cmd(ctx, binCmd, "-c1", "-w5", addr).Run(); err != nil {
-			testing.ContextLog(ctx, "Failed to ping: ", addr)
+		if out, err := cmd(ctx, binCmd, "-v", "-c1", "-w5", addr).CombinedOutput(); err != nil {
+			logOutputToFile(ctx, string(out), "ping"+ipType+".txt")
 			return errors.Wrap(err, "failed ping test")
 		}
 		return nil
