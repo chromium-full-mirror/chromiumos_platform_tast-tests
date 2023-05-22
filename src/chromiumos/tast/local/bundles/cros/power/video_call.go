@@ -38,35 +38,35 @@ func init() {
 		Params: []testing.Param{{
 			Name:    "3m_ash",
 			Fixture: "powerAsh",
-			Val:     3,
+			Val:     power.TimeParams{Interval: 5 * time.Second, Total: 3 * time.Minute},
 			Timeout: 3*time.Minute + timeoutBuffer,
 		}, {
 			Name:    "25m_ash",
 			Fixture: "powerAsh",
-			Val:     25,
+			Val:     power.TimeParams{Interval: 20 * time.Second, Total: 25 * time.Minute},
 			Timeout: 25*time.Minute + timeoutBuffer,
 		}, {
 			Name:    "2hr_ash",
 			Fixture: "powerAsh",
-			Val:     120,
+			Val:     power.TimeParams{Interval: 20 * time.Second, Total: 2 * time.Hour},
 			Timeout: 2*time.Hour + timeoutBuffer,
 		}, {
 			Name:              "3m_lacros",
 			Fixture:           "powerLacros",
 			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               3,
+			Val:               power.TimeParams{Interval: 5 * time.Second, Total: 3 * time.Minute},
 			Timeout:           3*time.Minute + timeoutBuffer,
 		}, {
 			Name:              "25m_lacros",
 			Fixture:           "powerLacros",
 			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               25,
+			Val:               power.TimeParams{Interval: 20 * time.Second, Total: 25 * time.Minute},
 			Timeout:           25*time.Minute + timeoutBuffer,
 		}, {
 			Name:              "2hr_lacros",
 			Fixture:           "powerLacros",
 			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               120,
+			Val:               power.TimeParams{Interval: 20 * time.Second, Total: 2 * time.Hour},
 			Timeout:           2*time.Hour + timeoutBuffer,
 		}},
 	})
@@ -80,6 +80,8 @@ func VideoCall(ctx context.Context, s *testing.State) {
 
 	bt := s.FixtValue().(setup.PowerUIFixtureData).Bt
 	cr := s.FixtValue().(setup.PowerUIFixtureData).Cr
+	interval := s.Param().(power.TimeParams).Interval
+	total := s.Param().(power.TimeParams).Total
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -136,8 +138,7 @@ func VideoCall(ctx context.Context, s *testing.State) {
 
 	power.RegisterPowerMetrics(power.NewVideoFpsMetrics(videoConn))
 
-	// TODO(b/280888518): Use shorter interval in shorter test run.
-	r, err := power.NewRecorder(ctx, 20*time.Second, s.OutDir(), s.TestName())
+	r, err := power.NewRecorder(ctx, interval, s.OutDir(), s.TestName())
 	if err != nil {
 		s.Fatal("Cannot create a new Recorder to collect power metrics: ", err)
 	}
@@ -176,12 +177,12 @@ func VideoCall(ctx context.Context, s *testing.State) {
 	// Start of main test body.
 
 	// Typing 1 minute per loops, 6 seconds per string.
-	numLoop := s.Param().(int)
 	var typingStrs = []string{
 		"1234567890 ", "1234567891 ", "1234567892 ", "1234567893 ", "1234567894 \n",
 		"1234567895 ", "1234567896 ", "1234567897 ", "1234567898 ", "1234567899 \n",
 	}
 	const secPerChunk = 6
+	numLoop := int(total.Minutes())
 
 	startTime := time.Now()
 	for loop := 0; loop < numLoop; loop++ {
