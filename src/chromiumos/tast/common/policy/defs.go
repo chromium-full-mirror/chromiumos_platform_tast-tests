@@ -23150,7 +23150,6 @@ func (p *ShoppingListEnabled) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1019. DeskAPIThirdPartyAccessEnabled
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type DeskAPIThirdPartyAccessEnabled struct {
 	Stat Status
@@ -23255,7 +23254,6 @@ func (p *IsolatedWebAppInstallForceList) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1023. DeskAPIThirdPartyAllowlist
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type DeskAPIThirdPartyAllowlist struct {
 	Stat Status
@@ -25567,6 +25565,38 @@ func (p *PdfUseSkiaRendererEnabled) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
+// 1109. DataUrlInSvgUseEnabled
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type DataUrlInSvgUseEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *DataUrlInSvgUseEnabled) Name() string          { return "DataUrlInSvgUseEnabled" }
+func (p *DataUrlInSvgUseEnabled) Scope() Scope          { return ScopeUser }
+func (p *DataUrlInSvgUseEnabled) Status() Status        { return p.Stat }
+func (p *DataUrlInSvgUseEnabled) UntypedV() interface{} { return p.Val }
+func (p *DataUrlInSvgUseEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *DataUrlInSvgUseEnabled) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *DataUrlInSvgUseEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
 // JSON deserialization logic (used by policy.Unmarshal).
 // ****************************************************************************
 
@@ -27143,6 +27173,8 @@ func newByName(name string) (Policy, error) {
 		return &GoogleSearchSidePanelEnabled{}, nil
 	case "PdfUseSkiaRendererEnabled":
 		return &PdfUseSkiaRendererEnabled{}, nil
+	case "DataUrlInSvgUseEnabled":
+		return &DataUrlInSvgUseEnabled{}, nil
 	default:
 		return nil, errors.New("Unknown policy " + name)
 	}
@@ -27152,31 +27184,9 @@ func newByName(name string) (Policy, error) {
 // Reference values (used via '$ref' in JSON Schema).
 // ****************************************************************************
 
-type RefTimeUsageLimitEntry struct {
-	LastUpdatedMillis string `json:"last_updated_millis"`
-	UsageQuotaMins    int    `json:"usage_quota_mins"`
-}
-
-type RefTime struct {
-	Hour   int `json:"hour"`
-	Minute int `json:"minute"`
-}
-
-type RefConfig struct {
-	AccessCodeTtl       int    `json:"access_code_ttl"`
-	ClockDriftTolerance int    `json:"clock_drift_tolerance"`
-	SharedSecret        string `json:"shared_secret"`
-}
-
-type RefDeviceLoginScreenPowerSettings struct {
-	Delays     *RefDeviceLoginScreenPowerSettingsDelays `json:"Delays"`
-	IdleAction string                                   `json:"IdleAction"`
-}
-
-type RefDeviceLoginScreenPowerSettingsDelays struct {
-	Idle      int `json:"Idle"`
-	ScreenDim int `json:"ScreenDim"`
-	ScreenOff int `json:"ScreenOff"`
+type RefUsbDeviceIdInclusive struct {
+	ProductId int `json:"product_id"`
+	VendorId  int `json:"vendor_id"`
 }
 
 type Reffile_transfer_enable_disable_schema struct {
@@ -27197,11 +27207,6 @@ type Reffile_transfer_source_destination_schema struct {
 	FileSystemType string `json:"file_system_type"`
 }
 
-type RefUsbDeviceIdInclusive struct {
-	ProductId int `json:"product_id"`
-	VendorId  int `json:"vendor_id"`
-}
-
 type RefBookmarkType struct {
 	Children     []*RefBookmarkType `json:"children,omitempty"`
 	Name         string             `json:"name"`
@@ -27209,9 +27214,9 @@ type RefBookmarkType struct {
 	Url          string             `json:"url"`
 }
 
-type RefDomainFiletypePair struct {
-	Domains       []string `json:"domains,omitempty"`
-	FileExtension string   `json:"file_extension"`
+type RefUsbDeviceId struct {
+	ProductId int `json:"product_id"`
+	VendorId  int `json:"vendor_id"`
 }
 
 type RefWeeklyTimeIntervals struct {
@@ -27229,9 +27234,47 @@ type RefWeeklyTime struct {
 	Time      int    `json:"time"`
 }
 
-type RefUsbDeviceId struct {
-	ProductId int `json:"product_id"`
-	VendorId  int `json:"vendor_id"`
+type RefDomainFiletypePair struct {
+	Domains       []string `json:"domains,omitempty"`
+	FileExtension string   `json:"file_extension"`
+}
+
+type RefDeviceLoginScreenPowerSettings struct {
+	Delays     *RefDeviceLoginScreenPowerSettingsDelays `json:"Delays"`
+	IdleAction string                                   `json:"IdleAction"`
+}
+
+type RefDeviceLoginScreenPowerSettingsDelays struct {
+	Idle      int `json:"Idle"`
+	ScreenDim int `json:"ScreenDim"`
+	ScreenOff int `json:"ScreenOff"`
+}
+
+type RefDisallowedTimeInterval struct {
+	DayOfWeek string `json:"day_of_week"`
+	Hours     int    `json:"hours"`
+	Minutes   int    `json:"minutes"`
+}
+
+type RefDayPercentagePair struct {
+	Days       int `json:"days"`
+	Percentage int `json:"percentage"`
+}
+
+type RefTimeUsageLimitEntry struct {
+	LastUpdatedMillis string `json:"last_updated_millis"`
+	UsageQuotaMins    int    `json:"usage_quota_mins"`
+}
+
+type RefTime struct {
+	Hour   int `json:"hour"`
+	Minute int `json:"minute"`
+}
+
+type RefConfig struct {
+	AccessCodeTtl       int    `json:"access_code_ttl"`
+	ClockDriftTolerance int    `json:"clock_drift_tolerance"`
+	SharedSecret        string `json:"shared_secret"`
 }
 
 type RefPowerManagementDelays struct {
@@ -27244,17 +27287,6 @@ type RefPowerManagementDelaysDelays struct {
 	IdleWarning int `json:"IdleWarning"`
 	ScreenDim   int `json:"ScreenDim"`
 	ScreenOff   int `json:"ScreenOff"`
-}
-
-type RefDisallowedTimeInterval struct {
-	DayOfWeek string `json:"day_of_week"`
-	Hours     int    `json:"hours"`
-	Minutes   int    `json:"minutes"`
-}
-
-type RefDayPercentagePair struct {
-	Days       int `json:"days"`
-	Percentage int `json:"percentage"`
 }
 
 // ****************************************************************************
