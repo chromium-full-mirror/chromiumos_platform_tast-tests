@@ -7,6 +7,7 @@ package element
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
@@ -23,14 +24,29 @@ import (
 	"go.chromium.org/tast/core/errors"
 )
 
+// Emoji represents the type of emoji in the Element app.
+type Emoji string
+
+// These are emoji options in the Element app.
+const (
+	Smile Emoji = "smile"
+	Angry Emoji = "angry"
+	Sad   Emoji = "sad"
+)
+
 const (
 	elementPackage     = "im.vector.app"
 	elementIDPrefix    = elementPackage + ":id/"
 	createChatButtonID = elementIDPrefix + "newLayoutCreateChatButton"
+	messageFieldID     = elementIDPrefix + "composerEditText"
+	actionTitleID      = elementIDPrefix + "actionTitle"
+	roomNameFieldID    = elementIDPrefix + "formTextInputTextInputEditText"
+	searchFieldID      = elementIDPrefix + "search_src_text"
 
 	buttonClass = "android.widget.Button"
 	textClass   = "android.widget.TextView"
 
+	retryTimes       = 3
 	longUITimeout    = 30 * time.Second
 	defaultUITimeout = 15 * time.Second
 	shortUITimeout   = 5 * time.Second
@@ -267,6 +283,176 @@ func (e *Element) SignOut() uiauto.Action {
 		openGeneralSettings,
 		swipeToShowSignOut,
 		clickSignOutButton,
+	)
+}
+
+// CreateRoom creates a new room in the Element app.
+func (e *Element) CreateRoom(roomName string) uiauto.Action {
+	createRoomButton := e.d.Object(ui.Description("Create a new conversation or room"), ui.ResourceID(createChatButtonID))
+	createRoomText := e.d.Object(ui.Text("Create Room"), ui.ResourceID(elementIDPrefix+"create_room"))
+	enterRoomCreationPage := uiauto.NamedCombine("enter room creation page",
+		apputil.FindAndClick(createRoomButton, defaultUITimeout),
+		apputil.FindAndClick(createRoomText, defaultUITimeout),
+	)
+
+	roomSettingsText := e.d.Object(ui.Text("Room settings"), ui.ResourceID(elementIDPrefix+"settings_section_title_text"))
+	roomNameFieldWithText := e.d.Object(ui.Text(roomName), ui.ResourceID(roomNameFieldID))
+	createButton := e.d.Object(ui.Text("CREATE"), ui.ResourceID(elementIDPrefix+"form_submit_button"))
+	roomTitle := e.d.Object(ui.Text(roomName), ui.ClassName(textClass))
+	return uiauto.NamedCombine("create room",
+		enterRoomCreationPage,
+		e.typeText(roomNameFieldID, roomName),
+		e.swipeFromObjectToObject(roomSettingsText, roomNameFieldWithText, swipeDuration),
+		apputil.FindAndClick(createButton, defaultUITimeout),
+		apputil.WaitForExists(roomTitle, defaultUITimeout),
+	)
+}
+
+// LeaveCurrentRoom leaves the current room.
+func (e *Element) LeaveCurrentRoom() uiauto.Action {
+	toolBar := e.d.Object(ui.ResourceID(elementIDPrefix + "includeRoomToolbar"))
+	navigateUpButton := e.d.Object(ui.Description("Navigate up"), ui.ClassName("android.widget.ImageButton"))
+	moreText := e.d.Object(ui.Text("More"), ui.ResourceID(elementIDPrefix+"itemProfileSectionView"))
+	leaveRoomButton := e.d.Object(ui.Text("Leave Room"), ui.ResourceID(actionTitleID))
+	leaveButton := e.d.Object(ui.Text("LEAVE"), ui.ClassName(buttonClass))
+	return uiauto.NamedCombine("leave room",
+		e.navigateUpToObject(toolBar),
+		apputil.FindAndClick(toolBar, defaultUITimeout),
+		e.swipeFromObjectToObject(moreText, navigateUpButton, swipeDuration),
+		apputil.FindAndClick(leaveRoomButton, shortUITimeout),
+		apputil.FindAndClick(leaveButton, defaultUITimeout),
+		apputil.WaitUntilGone(toolBar, defaultUITimeout),
+	)
+}
+
+// SendTextMessage sends a text message to the current room.
+func (e *Element) SendTextMessage(message string) uiauto.Action {
+	return uiauto.NamedCombine("send text message",
+		e.typeText(messageFieldID, message),
+		e.sendMessageAndWait(message),
+	)
+}
+
+// SendEmojiMessage sends a message contains emojis to the current room.
+func (e *Element) SendEmojiMessage(textMessage string, emojis ...Emoji) uiauto.Action {
+	sendEmojiActions := []uiauto.Action{
+		e.typeText(messageFieldID, textMessage),
+	}
+	for _, emoji := range emojis {
+		sendEmojiActions = append(sendEmojiActions, e.addEmoji(emoji))
+	}
+	sendEmojiActions = append(sendEmojiActions, e.sendMessageAndWait(textMessage))
+	return uiauto.NamedCombine("send emoji message", sendEmojiActions...)
+}
+
+// addEmoji types emoji text and chooses the last emoji from the recommended list.
+func (e *Element) addEmoji(emoji Emoji) uiauto.Action {
+	emojiMessage := fmt.Sprintf(", :%s", emoji)
+	// The recommended emoji list is not captured by ARC UI or uiautomator,
+	// so it cannot be interacted with UI device or uiautomator.
+	// The list would appear above the message field,
+	// clicking at the location above the message field to add the emoji.
+	// The emoji clicked might be different in different DUTs.
+	clickEmoji := func(ctx context.Context) error {
+		messageField := e.d.Object(ui.ResourceID(messageFieldID))
+		messageFieldBound, err := messageField.GetBounds(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to get message field bound")
+		}
+		x := messageFieldBound.CenterX()
+		y := messageFieldBound.Top - messageFieldBound.Height/2
+		return e.d.Click(ctx, x, y)
+	}
+	messageFieldWithText := e.d.Object(ui.TextContains(string(emoji)), ui.ResourceID(messageFieldID))
+	return uiauto.NamedCombine(fmt.Sprintf("add emoji %s", emoji),
+		e.kb.TypeAction(emojiMessage),
+		apputil.WaitForExists(messageFieldWithText, defaultUITimeout),
+		clickEmoji,
+	)
+}
+
+// sendMessageAndWait clicks the send button and wait for the expected message to appear.
+func (e *Element) sendMessageAndWait(expectedMessage string) uiauto.Action {
+	sendButton := e.d.Object(ui.Description("Send"), ui.ResourceID(elementIDPrefix+"sendButton"))
+	expectedMessageText := e.d.Object(ui.TextContains(expectedMessage), ui.ResourceID(elementIDPrefix+"messageTextView"))
+	return uiauto.NamedCombine("send message and wait for expected message",
+		apputil.FindAndClick(sendButton, defaultUITimeout),
+		apputil.WaitForExists(expectedMessageText, defaultUITimeout),
+	)
+}
+
+// RenameCurrentRoom renames the current room.
+func (e *Element) RenameCurrentRoom(newRoomName string) uiauto.Action {
+	moreOptionsButton := e.d.Object(ui.Description("More options"), ui.Clickable(true))
+	optionTitle := e.d.Object(ui.Text("Settings"), ui.ResourceID(elementIDPrefix+"title"))
+	roomSettingsTitle := e.d.Object(ui.Text("Room settings"), ui.ResourceID(actionTitleID))
+	openRoomSettings := uiauto.NamedCombine("open room settings",
+		apputil.FindAndClick(moreOptionsButton, defaultUITimeout),
+		apputil.FindAndClick(optionTitle, defaultUITimeout),
+		apputil.WaitForExists(roomSettingsTitle, defaultUITimeout),
+	)
+
+	saveButton := e.d.Object(ui.Text("SAVE"), ui.ResourceID(elementIDPrefix+"roomSettingsSaveAction"))
+	newToolbarTitle := e.d.Object(ui.Text(newRoomName), ui.ResourceID(elementIDPrefix+"roomSettingsToolbarTitleView"))
+	setRoomNameAndSave := uiauto.Combine("set room name and save",
+		// Return to the room settings page when retrying.
+		uiauto.IfFailThen(
+			roomSettingsTitle.Exists,
+			e.navigateUpToObject(roomSettingsTitle),
+		),
+		apputil.FindAndClick(roomSettingsTitle, defaultUITimeout),
+		e.typeText(roomNameFieldID, newRoomName),
+		apputil.FindAndClick(saveButton, defaultUITimeout),
+		apputil.WaitForExists(newToolbarTitle, defaultUITimeout),
+	)
+	return uiauto.NamedCombine("rename current room as "+newRoomName,
+		e.navigateUpToObject(moreOptionsButton),
+		openRoomSettings,
+		// Sometimes the save button does not appear.
+		// Retry to ensure the room is renamed.
+		uiauto.Retry(retryTimes, setRoomNameAndSave),
+	)
+}
+
+// SearchPublicRoom searches the existing public room with the ID and the name.
+func (e *Element) SearchPublicRoom(roomID, roomName string) uiauto.Action {
+	createRoomButton := e.d.Object(ui.Description("Create a new conversation or room"), ui.ResourceID(createChatButtonID))
+	exploreRoomsText := e.d.Object(ui.Text("Explore Rooms"), ui.ResourceID(elementIDPrefix+"explore_rooms"))
+	publicRoom := e.d.Object(ui.Text(roomName), ui.ClassName(textClass))
+	return uiauto.NamedCombine("explore public room with ID "+roomID,
+		e.navigateUpToObject(createRoomButton),
+		apputil.FindAndClick(createRoomButton, defaultUITimeout),
+		apputil.FindAndClick(exploreRoomsText, defaultUITimeout),
+		e.typeText(searchFieldID, roomID),
+		apputil.WaitForExists(publicRoom, defaultUITimeout),
+	)
+}
+
+// JoinRoom uses |roomFilter| to find the given room from the room list and joins the room.
+func (e *Element) JoinRoom(roomName string) uiauto.Action {
+	roomFilter := e.d.Object(ui.Description("Filter room names"), ui.ResourceID(elementIDPrefix+"menu_home_filter"))
+	room := e.d.Object(ui.Text(roomName), ui.ResourceID(elementIDPrefix+"roomNameView"))
+	roomTitle := e.d.Object(ui.Text(roomName), ui.ClassName(textClass))
+	return uiauto.NamedCombine(fmt.Sprintf("join %q room from home page", roomName),
+		e.navigateUpToObject(roomFilter),
+		apputil.FindAndClick(roomFilter, defaultUITimeout),
+		e.typeText(searchFieldID, roomName),
+		apputil.FindAndClick(room, defaultUITimeout),
+		apputil.WaitForExists(roomTitle, defaultUITimeout),
+	)
+}
+
+// typeText types the text in the given field.
+func (e *Element) typeText(fieldID, text string) uiauto.Action {
+	textField := e.d.Object(ui.ResourceID(fieldID))
+	textFieldFocused := e.d.Object(ui.ResourceID(fieldID), ui.Focused(true))
+	textFieldWithText := e.d.Object(ui.TextContains(text), ui.ResourceID(fieldID))
+	return uiauto.NamedCombine(fmt.Sprintf("type text %s", text),
+		apputil.FindAndClick(textField, defaultUITimeout),
+		apputil.WaitForExists(textFieldFocused, defaultUITimeout),
+		e.kb.AccelAction("Ctrl+A"),
+		e.kb.TypeAction(text),
+		apputil.WaitForExists(textFieldWithText, defaultUITimeout),
 	)
 }
 
