@@ -28,7 +28,7 @@ func init() {
 		Attr: []string{
 			"group:camera_dependent",
 		},
-		Fixture:      fixture.NoLogInWithInternalCameraAndEffectsEnabled,
+		Fixture:      fixture.LoggedInWithFakeHALAndEffectsEnabled,
 		SoftwareDeps: []string{"camera_feature_effects"},
 		Params: []testing.Param{
 			{
