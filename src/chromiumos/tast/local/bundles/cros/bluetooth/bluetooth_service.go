@@ -6,7 +6,6 @@ package bluetooth
 
 import (
 	"context"
-	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -44,9 +43,9 @@ type BtService struct {
 func (b *BtService) SetBluetoothStack(ctx context.Context, request *pb.SetBluetoothStackRequest) (*emptypb.Empty, error) {
 	var stackType common.BluetoothStackType
 	switch request.StackType {
-	case pb.BluetoothStackType_BLUEZ:
+	case pb.BluetoothStackType_BLUETOOTH_STACK_TYPE_BLUEZ:
 		stackType = common.BluetoothStackTypeBluez
-	case pb.BluetoothStackType_FLOSS:
+	case pb.BluetoothStackType_BLUETOOTH_STACK_TYPE_FLOSS:
 		stackType = common.BluetoothStackTypeFloss
 	default:
 		return nil, errors.Errorf("invalid request stackType %d", request.StackType)
@@ -74,9 +73,9 @@ func (b *BtService) StackType(ctx context.Context, request *emptypb.Empty) (*pb.
 	response := &pb.StackTypeResponse{}
 	switch b.facade.StackType() {
 	case common.BluetoothStackTypeBluez:
-		response.StackType = pb.BluetoothStackType_BLUEZ
+		response.StackType = pb.BluetoothStackType_BLUETOOTH_STACK_TYPE_BLUEZ
 	case common.BluetoothStackTypeFloss:
-		response.StackType = pb.BluetoothStackType_FLOSS
+		response.StackType = pb.BluetoothStackType_BLUETOOTH_STACK_TYPE_FLOSS
 	default:
 		return nil, errors.Errorf("bluetooth facade has unknown stack type %q", b.facade.StackType())
 	}
@@ -463,7 +462,7 @@ func (b *BtService) DiscoverDevice(ctx context.Context, request *pb.DiscoverDevi
 	if err := b.assertHasFacade(); err != nil {
 		return nil, err
 	}
-	if err := b.facade.DiscoverDevice(ctx, request.DeviceAddress, time.Duration(request.DiscoveryTimeout)); err != nil {
+	if err := b.facade.DiscoverDevice(ctx, request.DeviceAddress, request.DiscoveryTimeout.AsDuration()); err != nil {
 		return nil, err
 	}
 	return &emptypb.Empty{}, nil

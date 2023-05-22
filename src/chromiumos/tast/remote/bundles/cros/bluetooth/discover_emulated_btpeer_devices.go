@@ -12,6 +12,7 @@ import (
 	"chromiumos/tast/remote/bluetooth"
 	pb "chromiumos/tast/services/cros/bluetooth"
 	"go.chromium.org/tast/core/testing"
+	"google.golang.org/protobuf/types/known/durationpb"
 )
 
 func init() {
@@ -52,7 +53,7 @@ func init() {
 func DiscoverEmulatedBTPeerDevices(ctx context.Context, s *testing.State) {
 	fv := s.FixtValue().(*bluetooth.FixtValue)
 
-	const discoveryTimeout = int64(45 * time.Second)
+	discoveryTimeout := durationpb.New(45 * time.Second)
 
 	// Discover btpeer1 as a keyboard.
 	testing.ContextLog(ctx, "Configuring btpeer1 as a keyboard device")

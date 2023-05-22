@@ -13,6 +13,7 @@ import (
 	bts "chromiumos/tast/services/cros/bluetooth"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"google.golang.org/protobuf/types/known/durationpb"
 )
 
 // TurnOffServoKeyboardIfOn turns off servo keyboard if on.
@@ -36,7 +37,7 @@ func TurnOffServoKeyboardIfOn(ctx context.Context, s *testing.State) {
 func DiscoverAndPairDevice(ctx context.Context, bluetoothService bts.BluetoothServiceClient, deviceAddress, devicePin string, discoveryTimeout time.Duration) error {
 	if _, err := bluetoothService.DiscoverDevice(ctx, &bts.DiscoverDeviceRequest{
 		DeviceAddress:    deviceAddress,
-		DiscoveryTimeout: int64(discoveryTimeout),
+		DiscoveryTimeout: durationpb.New(discoveryTimeout),
 	}); err != nil {
 		return errors.Wrapf(err, "failed to discover device with address %q", deviceAddress)
 	}

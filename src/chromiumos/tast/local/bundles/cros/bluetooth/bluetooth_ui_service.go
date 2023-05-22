@@ -181,7 +181,7 @@ func (bui *BtUIService) ConfirmSavedDevicesState(ctx context.Context, request *p
 	return &emptypb.Empty{}, nil
 }
 
-// RemoveAllSavedDevices will attempt to remove all of the devices from the Saved Devices subpage.
+// RemoveAllSavedDevices will attempt to remove all the devices from the Saved Devices subpage.
 func (bui *BtUIService) RemoveAllSavedDevices(ctx context.Context, request *emptypb.Empty) (*emptypb.Empty, error) {
 	cr := bui.sharedObject.Chrome
 	if cr == nil {

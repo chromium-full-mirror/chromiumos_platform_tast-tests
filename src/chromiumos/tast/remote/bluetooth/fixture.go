@@ -311,9 +311,9 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 	// Determine desired bluetooth stack for DUTs.
 	var btStack bts.BluetoothStackType
 	if tf.features.FlossEnabled {
-		btStack = bts.BluetoothStackType_FLOSS
+		btStack = bts.BluetoothStackType_BLUETOOTH_STACK_TYPE_FLOSS
 	} else {
-		btStack = bts.BluetoothStackType_BLUEZ
+		btStack = bts.BluetoothStackType_BLUETOOTH_STACK_TYPE_BLUEZ
 	}
 
 	// Parse OOBE fixture var.
@@ -392,7 +392,7 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 		tf.bluetoothServicesDBusMonitors = append(tf.bluetoothServicesDBusMonitors, bluetoothServicesDBusMonitor)
 
 		// Enable/Disable floss feature based on desired bluetooth stack.
-		if btStack == bts.BluetoothStackType_FLOSS {
+		if btStack == bts.BluetoothStackType_BLUETOOTH_STACK_TYPE_FLOSS {
 			tf.features.EnableFeatures = append(tf.features.EnableFeatures, chromeFeatureFloss)
 		} else {
 			tf.features.DisableFeatures = append(tf.features.DisableFeatures, chromeFeatureFloss)

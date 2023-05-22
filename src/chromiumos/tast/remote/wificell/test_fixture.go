@@ -411,7 +411,7 @@ func NewTestFixture(fullCtx, daemonCtx context.Context, d *dut.DUT, rpcHint *tes
 
 		// Set DUT to use bluez bluetooth stack and enable bluetooth.
 		if _, err := d.bluetoothClient.SetBluetoothStack(ctx, &bluetooth.SetBluetoothStackRequest{
-			StackType: bluetooth.BluetoothStackType_BLUEZ,
+			StackType: bluetooth.BluetoothStackType_BLUETOOTH_STACK_TYPE_BLUEZ,
 		}); err != nil {
 			return nil, errors.Wrap(err, "failed to set DUT bluetooth stack to bluez")
 		}

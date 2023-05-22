@@ -7,6 +7,7 @@ syntax = "proto3";
 package tast.cros.bluetooth;
 
 import "google/protobuf/empty.proto";
+import "google/protobuf/duration.proto";
 
 option go_package = "chromiumos/tast/services/cros/bluetooth";
 
@@ -149,8 +150,9 @@ service BluetoothService {
 }
 
 enum BluetoothStackType {
-  BLUEZ = 0;
-  FLOSS = 1;
+  BLUETOOTH_STACK_TYPE_NULL = 0;
+  BLUETOOTH_STACK_TYPE_BLUEZ = 1;
+  BLUETOOTH_STACK_TYPE_FLOSS = 2;
 }
 
 message BluetoothAdapterProperties {
@@ -325,8 +327,9 @@ message DeviceAliasResponse {
 }
 
 message DiscoverDeviceRequest {
+  reserved 2;
   string deviceAddress = 1;
-  int64 discoveryTimeout = 2;
+  google.protobuf.Duration discoveryTimeout = 3;
 }
 
 message PairDeviceRequest {

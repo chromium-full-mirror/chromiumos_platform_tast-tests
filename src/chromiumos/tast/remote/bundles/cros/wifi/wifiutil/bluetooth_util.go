@@ -40,7 +40,7 @@ func NewChromeServiceClient(ctx context.Context, dutConn *grpc.ClientConn, chrom
 func NewBluetoothServiceClient(ctx context.Context, dutConn *grpc.ClientConn) (bluetooth.BluetoothServiceClient, error) {
 	bluetoothService := bluetooth.NewBluetoothServiceClient(dutConn)
 	if _, err := bluetoothService.SetBluetoothStack(ctx, &bluetooth.SetBluetoothStackRequest{
-		StackType: bluetooth.BluetoothStackType_BLUEZ,
+		StackType: bluetooth.BluetoothStackType_BLUETOOTH_STACK_TYPE_BLUEZ,
 	}); err != nil {
 		return nil, errors.Wrap(err, "failed to set DUT bluetooth stack to bluez")
 	}
