@@ -91,7 +91,8 @@ func init() {
 			{
 				Name:             "ash_manual_chromeapp",
 				Val:              smokeTestParam{isLacros: false, autoLaunch: false, isWebApp: false},
-				ExtraSearchFlags: []*testing.StringPair{&launchChromeAppKioskFeature, &manualLaunchChromeAppKioskFeature}},
+				ExtraSearchFlags: []*testing.StringPair{&launchChromeAppKioskFeature, &manualLaunchChromeAppKioskFeature},
+			},
 			{
 				Name:             "ash_manual_webapp",
 				Val:              smokeTestParam{isLacros: false, autoLaunch: false, isWebApp: true},
@@ -188,7 +189,7 @@ func launchKioskAppManually(ctx context.Context, cr *chrome.Chrome, param smokeT
 	testing.ContextLog(ctx, "Launching Kiosk app manually")
 	tconn, err := cr.SigninProfileTestAPIConn(ctx)
 	if err != nil {
-		errors.Wrap(err, "failed to get Test API connection")
+		return errors.Wrap(err, "failed to get Test API connection")
 	}
 
 	// It looks like UI is not stable to interact even when polling for
@@ -201,7 +202,7 @@ func launchKioskAppManually(ctx context.Context, cr *chrome.Chrome, param smokeT
 
 	ui := uiauto.New(tconn)
 	if err := kioskmode.StartFromSignInScreen(ctx, ui, param.appButtonName()); err != nil {
-		errors.Wrap(err, "failed to start Kiosk app from Sign-in screen")
+		return errors.Wrap(err, "failed to start Kiosk app from Sign-in screen")
 	}
 	return nil
 }
