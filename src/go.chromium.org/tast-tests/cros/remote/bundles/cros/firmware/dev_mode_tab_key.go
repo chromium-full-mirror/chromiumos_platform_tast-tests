@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
+	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -91,17 +92,29 @@ func DevModeTabKey(ctx context.Context, s *testing.State) {
 		return nil
 	}
 
-	// Reset dut to ensure that we're starting with a fresh firmware log,
-	// free of records from previous tests. Also, this reboot would allow
-	// the firmware screen type to be documented for later use in checkFwScreenType().
-	if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
-		s.Fatal("Failed to power on DUT: ", err)
-	}
-	if err := waitDUTReconnect(ctx); err != nil {
-		s.Fatal("Failed to reconnect DUT: ", err)
-	}
 	// Check which firmware screen the dut uses.
-	mainFwScreenID, err := checkFwScreenType(ctx, h, logPath)
+	// Retry if it wasn't found in the firmware log.
+	var err error
+	var mainFwScreenID firmware.FwScreenID
+	const retry = 2
+	for i := 0; i <= retry; i++ {
+		mainFwScreenID, err = checkFwScreenType(ctx, h, logPath)
+		if err == nil {
+			break
+		}
+		if i == retry {
+			// Don't reboot the dut at the last retry.
+			continue
+		}
+		// Reset dut to ensure that we always start with a fresh firmware log.
+		s.Log("Checking fw screen type failed. Reset DUT and retry")
+		if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
+			s.Fatal("Failed to warm reset dut: ", err)
+		}
+		if err := waitDUTReconnect(ctx); err != nil {
+			s.Fatal("Failed to reconnect DUT: ", err)
+		}
+	}
 	if err != nil {
 		s.Fatal("Failed to check fw screen type: ", err)
 	}
@@ -111,6 +124,11 @@ func DevModeTabKey(ctx context.Context, s *testing.State) {
 	s.Log("Disabling dev_boot_usb & dev_boot_altfw")
 	if err := h.DUT.Conn().CommandContext(ctx, "crossystem", "dev_boot_usb=0", "dev_boot_altfw=0").Run(); err != nil {
 		s.Fatal("Failed to disable dev_boot_usb & dev_boot_altfw: ", err)
+	}
+	if devBootUsb, err := h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamDevBootUsb); err != nil {
+		s.Fatal("Failed to get crossystem dev_boot_usb: ", err)
+	} else if devBootUsb != "0" {
+		s.Fatal("Crossystem param dev_boot_usb was not set to 0")
 	}
 
 	// Power cycle the DUT to clear the firmware log, so that records prior
@@ -136,7 +154,7 @@ func DevModeTabKey(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Starting to traverse all firmware screens")
-	if err := blindlyNavigateThruMenu(ctx, h, mainFwScreenID); err != nil {
+	if err := blindlyNavigateThruMenu(ctx, h, mainFwScreenID, ffIsChromebox); err != nil {
 		s.Fatal("Failed to traverse the firmware screen: ", err)
 	}
 	s.Log("Pressing Ctrl+D")
@@ -246,15 +264,13 @@ func checkFwScreenType(ctx context.Context, h *firmware.Helper, logPath string) 
 
 func getScreenID(log string, mainFwScreen firmware.FwScreenID, checkDebugInfoPage bool) (firmware.FwScreenID, error) {
 	screenID := firmware.Blank
-	if checkDebugInfoPage {
-		// On some DUTs, such as astronaut/coral, debug info is shown in the top left corner.
-		// On some other DUTs, such as jinlon/hatch, pressing <tab> would bring up a separate debug info page.
-		// For the former case, return the id of the background firmware screen.
-		// For the latter case, check for the VbDisplayDebugInfo or the screen=0x140 string.
-		if strings.Contains(log, "VbDisplayDebugInfo") ||
-			strings.Contains(log, "screen=0x140") {
-			return firmware.DebugInfo, nil
-		}
+	// On some DUTs, such as astronaut/coral, debug info is shown in the top left corner.
+	// On some other DUTs, such as jinlon/hatch, pressing <tab> would bring up a separate debug info page.
+	// For the former case, return the id of the background firmware screen.
+	// For the latter case, check for the VbDisplayDebugInfo or the screen=0x140 string.
+	if strings.Contains(log, "VbDisplayDebugInfo") ||
+		strings.Contains(log, "screen=0x140") {
+		return firmware.DebugInfo, nil
 	}
 	var screenPrefix string
 	if _, err := fmt.Sscanf(log, "%s screen=0x%x", &screenPrefix, &screenID); err != nil {
@@ -267,14 +283,10 @@ func getScreenID(log string, mainFwScreen firmware.FwScreenID, checkDebugInfoPag
 }
 
 func checkDebugInfo(ctx context.Context, h *firmware.Helper, mainFwScreen firmware.FwScreenID, logPath string) error {
-	// Grep for HWID information, which is usually the first line
-	// displayed on the debug info page, and check that debug info
-	// data is available.
-	output, err := h.DUT.Conn().CommandContext(ctx, "grep", "-m1", "-A20", `HWID:[^\n\r]*`, logPath).Output()
+	debugInfo, err := h.Reporter.CatFile(ctx, logPath)
 	if err != nil {
-		return errors.Wrap(err, "failed to capture debug info data")
+		return errors.Wrap(err, "failed to read firmware log")
 	}
-	debugInfo := string(output)
 
 	regs := `HWID:(\n|.)*?kernel_subkey:[^\n\r]*`
 	if mainFwScreen == firmware.DeveloperMode {
@@ -289,7 +301,7 @@ func checkDebugInfo(ctx context.Context, h *firmware.Helper, mainFwScreen firmwa
 	return nil
 }
 
-func blindlyNavigateThruMenu(ctx context.Context, h *firmware.Helper, mainFwScreenID firmware.FwScreenID) error {
+func blindlyNavigateThruMenu(ctx context.Context, h *firmware.Helper, mainFwScreenID firmware.FwScreenID, ffIsChromebox bool) error {
 	var (
 		upKey    = "<up>"
 		downKey  = "<down>"
@@ -298,28 +310,25 @@ func blindlyNavigateThruMenu(ctx context.Context, h *firmware.Helper, mainFwScre
 		escKey   = "<esc>"
 		tabKey   = "<tab>"
 	)
+	if h.Config.ModeSwitcherType == firmware.TabletDetachableSwitcher || ffIsChromebox {
+		upKey = "<uparrow>"
+		downKey = "<downarrow>"
+	}
 
 	ecKBPress := func(key string) error {
-		row, col, err := h.Servo.GetKeyRowCol(key)
+		var err error
+		if h.Config.ModeSwitcherType == firmware.TabletDetachableSwitcher || ffIsChromebox {
+			err = h.Servo.PressUSBKey(ctx, key, servo.DurTab)
+		} else {
+			err = h.Servo.PressKey(ctx, key, servo.DurTab)
+		}
 		if err != nil {
-			return errors.Wrapf(err, "failed to get key column and row for %s", key)
+			return errors.Wrapf(err, "failed to press %s", key)
 		}
-		holdKey := fmt.Sprintf("kbpress %d %d 1", col, row)
-		releaseKey := fmt.Sprintf("kbpress %d %d 0", col, row)
-		// Press key.
-		if err := h.Servo.RunECCommand(ctx, holdKey); err != nil {
-			return errors.Wrapf(err, "failed to press and hold %s", key)
+		// GoBigSleepLint: Simulate a specific speed of key presses.
+		if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
+			return errors.Wrap(err, "failed to wait for keypress delay")
 		}
-		// Release key.
-		defer func() error {
-			if err := h.Servo.RunECCommand(ctx, releaseKey); err != nil {
-				return errors.Wrapf(err, "failed to release %s", releaseKey)
-			}
-			if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
-				return errors.Wrap(err, "failed to wait for keypress delay")
-			}
-			return nil
-		}()
 		return nil
 	}
 
