@@ -691,6 +691,10 @@ func (h *Helper) SetupUSBKey(ctx context.Context, cloudStorage *testing.CloudSto
 		dataURL.Path = strings.Replace(dataURL.Path, "chromiumos_test_image.tar.xz", "chromiumos_test_image.bin", 1)
 	}
 
+	testing.ContextLog(ctx, "Cleaning usb before flashing a new test OS image")
+	if err := h.FormatUSB(ctx, usbdev); err != nil {
+		return errors.Wrap(err, "failed to format the usb device")
+	}
 	testing.ContextLogf(ctx, "Flashing test OS image to USB from %q", dataURL.String())
 
 	// If it did have tast files, it won't shortly.
