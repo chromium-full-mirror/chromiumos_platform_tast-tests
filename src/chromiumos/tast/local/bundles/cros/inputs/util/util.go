@@ -56,16 +56,11 @@ type AppCompatTestCase struct {
 	Steps       uiauto.Action
 }
 
-// CheckMethod is the way of verification.
-type CheckMethod int
-
-// Different ways for CheckMethod.
-// VerifyInA11yTree will check the content in a11y tree.
-// VerifyInScreenshot will check the content in screenshot.
-const (
-	VerifyInA11yTree CheckMethod = iota
-	VerifyInScreenshot
-)
+// UIDetectionOptions is a data structure to define options for UIDetection.
+type UIDetectionOptions struct {
+	ApproxMatch bool
+	UseRegex    bool
+}
 
 // WaitForFieldTextToBe returns an action checking whether the input field value equals given text.
 // The text is case sensitive.
@@ -288,28 +283,14 @@ func IMESearchFlags(imes []ime.InputMethod) []*testing.StringPair {
 	return searchFlags
 }
 
-// VerifyTextToBe returns an action checking whether the given text is shown on screen or not.
-// It supports two ways of checking now.
-// checkType VerifyInA11yTree will use a11y tree node to check a specific node content.
-// checkType VerifyInScreenshot will use ACUITI to check if the content exists on the screen or not.
-func VerifyTextToBe(tconn *chrome.TestConn, finder *nodewith.Finder, expectedText string, checkMethod CheckMethod) uiauto.Action {
-	switch checkMethod {
-	case VerifyInA11yTree:
-		return WaitForFieldTextToBe(tconn, finder, expectedText)
-	case VerifyInScreenshot:
-		return VerifyTextWithUIDetection(tconn, finder, expectedText)
-	}
-	return nil
-
-}
-
 // VerifyTextWithUIDetection returns an action checking the given text is shown on screen using ACUITI.
-func VerifyTextWithUIDetection(tconn *chrome.TestConn, finder *nodewith.Finder, expectedText string) uiauto.Action {
+func VerifyTextWithUIDetection(tconn *chrome.TestConn, finder *nodewith.Finder, expectedText string, opts UIDetectionOptions) uiauto.Action {
 	ud := uidetection.NewDefault(tconn).WithTimeout(time.Minute).WithScreenshotStrategy(uidetection.ImmediateScreenshot).WithScreenshotResizing()
+	text := uidetection.Word(expectedText, uidetection.DisableApproxMatch(opts.ApproxMatch), uidetection.RegexMode(opts.UseRegex))
 	if finder != nil {
-		return ud.WaitUntilExists(uidetection.Word(expectedText, uidetection.DisableApproxMatch(true)).WithinA11yNode(finder))
+		return ud.WaitUntilExists(text.WithinA11yNode(finder))
 	}
-	return ud.WaitUntilExists(uidetection.Word(expectedText, uidetection.DisableApproxMatch(true)).First())
+	return ud.WaitUntilExists(text.First())
 }
 
 // OpenRemoteApplicationInCitirx opens a remote application in citirx workspace.

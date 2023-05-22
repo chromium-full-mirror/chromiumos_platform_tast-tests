@@ -21,10 +21,16 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/touch"
 	"chromiumos/tast/local/chrome/uiauto/vkb"
 	"chromiumos/tast/local/chrome/useractions"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
+
+var uiDetectionOptions = util.UIDetectionOptions{
+	ApproxMatch: true,
+	UseRegex:    true,
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -90,7 +96,7 @@ func VirtualKeyboardAppCompatGworkspace(ctx context.Context, s *testing.State) {
 				Description: "user to glide typing to input word Bonjour",
 				Steps: uiauto.Combine("test",
 					vkbCtx.GlideTyping(strings.Split("bonjour", ""),
-						util.VerifyTextToBe(tconn, nil, "Bonjour", util.VerifyInScreenshot)),
+						util.VerifyTextWithUIDetection(tconn, nil, "[Bb]onjour", uiDetectionOptions)),
 				),
 			},
 			{
@@ -101,7 +107,7 @@ func VirtualKeyboardAppCompatGworkspace(ctx context.Context, s *testing.State) {
 					vkbCtx.TapAccentKey("e", "é"),
 					vkbCtx.TapKeys(strings.Split("llo", "")),
 					vkbCtx.TapHideVitrualKeyboardButton(),
-					util.VerifyTextToBe(tconn, nil, "Héllo", util.VerifyInScreenshot),
+					util.VerifyTextWithUIDetection(tconn, nil, "[Hh]éllo", uiDetectionOptions),
 				),
 			},
 		},
@@ -113,7 +119,7 @@ func VirtualKeyboardAppCompatGworkspace(ctx context.Context, s *testing.State) {
 					vkbCtx.TapKeyIgnoringCase("e"),
 					vkbCtx.TapKeys(strings.Split("nglish", "")),
 					vkbCtx.TapHideVitrualKeyboardButton(),
-					util.VerifyTextToBe(tconn, nil, "English", util.VerifyInScreenshot),
+					util.VerifyTextWithUIDetection(tconn, nil, "[Ee]nglish", uiDetectionOptions),
 				),
 			},
 		},

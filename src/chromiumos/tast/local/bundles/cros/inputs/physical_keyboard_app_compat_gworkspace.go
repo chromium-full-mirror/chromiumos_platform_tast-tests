@@ -18,6 +18,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/useractions"
 	"chromiumos/tast/local/input"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -101,7 +102,10 @@ func PhysicalKeyboardAppCompatGworkspace(ctx context.Context, s *testing.State) 
 					subtest.Description,
 					uiauto.Combine(subtest.Description,
 						kb.TypeSequenceAction(subtest.LocationKeySeq),
-						util.VerifyTextToBe(tconn, nil, subtest.ExpectedText, util.VerifyInScreenshot),
+						util.VerifyTextWithUIDetection(tconn, nil, subtest.ExpectedText, util.UIDetectionOptions{
+							ApproxMatch: true,
+							UseRegex:    false,
+						}),
 					),
 					uc, &useractions.UserActionCfg{
 						Attributes: map[string]string{
