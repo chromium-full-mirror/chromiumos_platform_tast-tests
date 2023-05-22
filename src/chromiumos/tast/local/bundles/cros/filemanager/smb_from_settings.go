@@ -36,7 +36,6 @@ func init() {
 			"benreich@chromium.org",
 		},
 		Attr: []string{
-			"group:criticalstaging",
 			"group:mainline",
 			"informational",
 		},

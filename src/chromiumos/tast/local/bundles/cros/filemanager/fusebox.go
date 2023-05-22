@@ -35,14 +35,13 @@ func init() {
 			"noel@chromium.org",
 		},
 		Attr: []string{
-			"group:criticalstaging",
 			"group:mainline",
-			"informational",
 		},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
-			Name: "advanced",
-			Val:  "advancedVal",
+			Name:      "advanced",
+			Val:       "advancedVal",
+			ExtraAttr: []string{"informational"},
 		}, {
 			Name: "basic",
 			Val:  "basicVal",
