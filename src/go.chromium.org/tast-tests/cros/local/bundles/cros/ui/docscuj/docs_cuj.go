@@ -190,7 +190,7 @@ func Run(ctx context.Context, s *testing.State) {
 		}
 
 		// Close any potential security alert that pops up.
-		if err := cuj.DismissCriticalSecurityAlert(ctx, tconn); err != nil {
+		if err := cuj.DismissCriticalSecurityAlert(ctx, tconn, conn); err != nil {
 			return errors.Wrap(err, "failed to dismiss Critical Security Alert")
 		}
 

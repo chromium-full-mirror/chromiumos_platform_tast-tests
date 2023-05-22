@@ -1417,7 +1417,7 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 			if err := ui.WaitUntilExists(docsRootWebArea)(ctx); err != nil {
 				return errors.Wrap(err, "failed to wait for docs root web area to appear")
 			}
-			if err := cuj.DismissCriticalSecurityAlert(ctx, tconn); err != nil {
+			if err := cuj.DismissCriticalSecurityAlert(ctx, tconn, collaborationConn); err != nil {
 				return errors.Wrap(err, "failed to dismiss critical security alert")
 			}
 

@@ -452,16 +452,27 @@ func EnableTabletMode(ctx context.Context, tconn *chrome.TestConn, testCaseVar f
 	return tabletMode, cleanup, nil
 }
 
-// DismissCriticalSecurityAlert closes the critical security alert, if
-// that alert is found on screen.
-func DismissCriticalSecurityAlert(ctx context.Context, tconn *chrome.TestConn) error {
+// DismissCriticalSecurityAlert closes the critical security alert, if that
+// alert is found on screen. If clicking action fails, it will remove the
+// alert dialog HTML element with javascript directly.
+func DismissCriticalSecurityAlert(ctx context.Context, tconn *chrome.TestConn, conn *chrome.Conn) error {
+	const uiWaitTime = 5 * time.Second
 	ui := uiauto.New(tconn)
 	alertContainer := nodewith.NameStartingWith("Critical security alert").Role(role.Dialog)
 	close := nodewith.NameStartingWith("Close").Ancestor(alertContainer)
-	return uiauto.IfSuccessThen(
-		ui.Exists(alertContainer),
-		uiauto.NamedAction("close security alert", ui.DoDefaultUntil(close, ui.WithTimeout(5*time.Second).WaitUntilGone(close))),
-	)(ctx)
+	if err := uiauto.IfSuccessThen(ui.Exists(alertContainer),
+		uiauto.NamedAction("close security alert", ui.DoDefaultUntil(close, ui.WithTimeout(uiWaitTime).WaitUntilGone(close))),
+	)(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to close critical security alert by clicking, use javascript to delete the HTML element instead")
+		const alertDivElement = `document.querySelector("iframe[role='presentation'][name='callout']").parentElement`
+		if err := conn.Eval(ctx, fmt.Sprintf("%s.remove()", alertDivElement), nil); err != nil {
+			return errors.Wrap(err, "failed to remove critical security alert HTML element")
+		}
+		if err := ui.WithTimeout(uiWaitTime).WaitUntilGone(alertContainer)(ctx); err != nil {
+			return errors.Wrap(err, "failed to wait until critical security alert gone")
+		}
+	}
+	return nil
 }
 
 // LogWindowMismatch prints out mismatched window details.

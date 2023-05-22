@@ -82,6 +82,7 @@ func init() {
 	})
 }
 
+// GoogleSheetsCUJ measures the total performance of critical user journey for Google Sheets.
 func GoogleSheetsCUJ(ctx context.Context, s *testing.State) {
 	const (
 		timeout                 = 10 * time.Second
@@ -261,7 +262,7 @@ func GoogleSheetsCUJ(ctx context.Context, s *testing.State) {
 			},
 		} {
 			// Close any potential security alert that pops up.
-			if err := cuj.DismissCriticalSecurityAlert(ctx, tconn); err != nil {
+			if err := cuj.DismissCriticalSecurityAlert(ctx, tconn, sheetConn); err != nil {
 				return errors.Wrap(err, "failed to dismiss Critical Security Alert")
 			}
 

@@ -14,17 +14,16 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj/inputsimulations"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/pointer"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/prompts"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
-	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 
@@ -291,7 +290,7 @@ func MeetMultiTaskingCUJ(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to add common metrics to recorder: ", err)
 	}
 
-	if err := recorder.Run(ctx, func(ctx context.Context) error {
+	if err := recorder.Run(ctx, func(ctx context.Context) (retErr error) {
 		// Hide notifications so that they won't overlap with other UI components.
 		if err := ash.CloseNotifications(ctx, tconn); err != nil {
 			return errors.Wrap(err, "failed to close all notifications")
@@ -356,6 +355,7 @@ func MeetMultiTaskingCUJ(ctx context.Context, s *testing.State) {
 		}
 		defer docsConn.Close()
 		defer docsConn.CloseTarget(closeCtx)
+		defer faillog.DumpUITreeWithScreenshotOnError(closeCtx, s.OutDir(), func() bool { return retErr != nil }, cr, "docs_dump")
 
 		// Left snap the Docs window.
 		if err := leftSnapNonRightSnappedWindows(); err != nil {
@@ -368,14 +368,15 @@ func MeetMultiTaskingCUJ(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "failed to click the Got it button")
 		}
 
-		// Move mouse to the left side of screen so that mouse will be on top of the left snapped window.
-		info, err := display.GetPrimaryInfo(ctx, tconn)
-		if err != nil {
-			return errors.Wrap(err, "failed to get the primary display info")
+		if err := cuj.DismissCriticalSecurityAlert(ctx, tconn, docsConn); err != nil {
+			return errors.Wrap(err, "failed to dismiss critical security alert")
 		}
-		leftSidePoint := coords.NewPoint(info.WorkArea.Left+info.WorkArea.Width/4, info.WorkArea.CenterY())
-		if err := mouse.Move(tconn, leftSidePoint, 0)(ctx); err != nil {
-			return errors.Wrap(err, "failed to move mouse to the left side of the screen")
+
+		// Move mouse to the google docs website window.
+		docsRootWebArea := nodewith.NameContaining("Google Docs").Role(role.RootWebArea)
+		docsCanvas := nodewith.Role(role.Canvas).Ancestor(docsRootWebArea).First()
+		if err := ui.MouseMoveTo(docsCanvas, 0)(ctx); err != nil {
+			return errors.Wrap(err, "failed to move mouse to the google docs website")
 		}
 
 		// Scroll down the Docs file.
