@@ -17,10 +17,16 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+type testCaseRtoS struct {
+	skew      *version.Version
+	validSkew bool // true if it's a valid supported skew
+}
+
 var (
 	// Version to increment from rootfs.
 	statefulIsNewerThanRootfs = version.New(1, 0, 0, 0)
 	statefulIsSameAsRootfs    = version.New(0, 0, 0, 0)
+	statefulIsTooNew          = version.New(3, 0, 0, 0)
 )
 
 func init() {
@@ -38,15 +44,25 @@ func init() {
 		Vars: []string{"lacrosComponent"},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"lacros_stable"},
-			Val:               statefulIsNewerThanRootfs,
+			Val:               testCaseRtoS{skew: statefulIsNewerThanRootfs, validSkew: true},
 		}, {
 			Name:              "unstable",
 			ExtraSoftwareDeps: []string{"lacros_unstable"},
-			Val:               statefulIsNewerThanRootfs,
+			Val:               testCaseRtoS{skew: statefulIsNewerThanRootfs, validSkew: true},
 		}, {
 			Name:              "no_skew",
 			ExtraSoftwareDeps: []string{"lacros_stable"},
-			Val:               statefulIsSameAsRootfs, // no skew. rootfs-lacros and stateful-lacros will be the same version. stateful-lacros should be used.
+			Val: testCaseRtoS{
+				skew:      statefulIsSameAsRootfs, // no skew. rootfs-lacros and stateful-lacros will be the same version. stateful-lacros should be used.
+				validSkew: true,
+			},
+		}, {
+			Name:              "invalid_skew",
+			ExtraSoftwareDeps: []string{"lacros_stable"},
+			Val: testCaseRtoS{
+				skew:      statefulIsTooNew, // invalid skew; + 3 milestone newer than ash-chrome is not supported (crbug.com/1258138)
+				validSkew: false,
+			},
 		}},
 		Timeout: 5 * time.Minute,
 	})
@@ -72,15 +88,15 @@ func UpdateRootfsToStateful(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get the Ash version: ", err)
 	}
 	statefulLacrosVersion := rootfsLacrosVersion
-	skew := s.Param().(*version.Version)
-	// TODO(crbug.com/1258138): Update the supported version skew policy once implemented.
+	skew := s.Param().(testCaseRtoS).skew
+	validSkew := s.Param().(testCaseRtoS).validSkew
 	statefulLacrosVersion.Increment(skew)
 	if !statefulLacrosVersion.IsValid() {
 		s.Fatal("Invalid Stateful Lacros version: ", statefulLacrosVersion)
 	} else if rootfsLacrosVersion.IsNewerThan(statefulLacrosVersion) {
 		s.Fatalf("Invalid Stateful Lacros version: %v, should not be older than Rootfs: %v", statefulLacrosVersion, rootfsLacrosVersion)
-	} else if !statefulLacrosVersion.IsSkewValid(ashVersion) {
-		s.Fatalf("Invalid Stateful Lacros version: %v, should be compatible with Ash: %v", statefulLacrosVersion, ashVersion)
+	} else if validSkew != statefulLacrosVersion.IsSkewValid(ashVersion) {
+		s.Fatalf("Invalid Stateful Lacros version: %v, should be compatible with Ash: %v, should be a valid skew? %v", statefulLacrosVersion, ashVersion, validSkew)
 	}
 
 	// Get the component to override from the runtime var. Defaults to Lacros dev channel.

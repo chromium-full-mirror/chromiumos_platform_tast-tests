@@ -5,7 +5,6 @@
 package version
 
 import (
-	"math"
 	"regexp"
 	"strconv"
 	"strings"
@@ -116,11 +115,13 @@ func (v *Version) IsValid() bool {
 
 // IsSkewValid returns whether it is a valid version skew that is compatible with the given ash/OS version.
 func (v *Version) IsSkewValid(ash Version) bool {
-	// TODO(crbug.com/1258138): Update version skew policy for Tast. Currently, it is [-1, inf] but should be [0, +2] as soon as the issue is resolved.
+	// Version skew policy is [0, +2].
 	// Note that this version skew policy should be in line with the production code.
 	// See LacrosInstallerPolicy::ComponentReady at
 	//   https://osscs.corp.google.com/chromium/chromium/src/+/main:chrome/browser/component_updater/cros_component_installer_chromeos.cc
-	const minMajorVersionSkew = -1
+	const minMajorVersionSkew = 0
+	// The maximum version skew is now 2 (crbug.com/1258138).
+	const maxMajorVersionSkew = 2
 	return v.components[0] >= ash.components[0]+minMajorVersionSkew &&
-		v.components[0] <= math.MaxInt64
+		v.components[0] <= ash.components[0]+maxMajorVersionSkew
 }

@@ -18,9 +18,9 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-type testCase struct {
+type testCaseStoR struct {
 	skew      *version.Version
-	validSkew bool // true if it's a valid supporting skew
+	validSkew bool // true if it's a valid supported skew
 }
 
 func init() {
@@ -37,21 +37,21 @@ func init() {
 		Vars: []string{"lacrosComponent"},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"lacros_stable"},
-			Val: testCase{
+			Val: testCaseStoR{
 				skew:      version.New(0, 0, 1000, 0), // 0 major -1000 build version skew from rootfs-lacros
 				validSkew: true,
 			},
 		}, {
 			Name:              "unstable",
 			ExtraSoftwareDeps: []string{"lacros_unstable"},
-			Val: testCase{
+			Val: testCaseStoR{
 				skew:      version.New(0, 0, 1000, 0), // 0 major -1000 build version skew from rootfs-lacros
 				validSkew: true,
 			},
 		}, {
 			Name:              "invalid_skew",
 			ExtraSoftwareDeps: []string{"lacros_stable"},
-			Val: testCase{
+			Val: testCaseStoR{
 				skew:      version.New(10, 0, 0, 0), // invalid skew; -10 milestone older than ash-chrome. if stateful-lacros is incompatible with ash-chrome, rootfs-lacros should be used.
 				validSkew: false,
 			},
@@ -81,8 +81,8 @@ func UpdateStatefulToRootfs(ctx context.Context, s *testing.State) {
 	}
 
 	statefulLacrosVersion := rootfsLacrosVersion
-	skew := s.Param().(testCase).skew
-	validSkew := s.Param().(testCase).validSkew
+	skew := s.Param().(testCaseStoR).skew
+	validSkew := s.Param().(testCaseStoR).validSkew
 	statefulLacrosVersion.Decrement(skew)
 	s.Logf("Versions: ash=%s rootfs-lacros=%s stateful-lacros=%s", ashVersion.GetString(), rootfsLacrosVersion.GetString(), statefulLacrosVersion.GetString())
 	if !statefulLacrosVersion.IsValid() {
