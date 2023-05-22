@@ -103,6 +103,8 @@ func LaunchVSCodeForFile(uda *uidetection.Context, ui *uiauto.Context, terminalA
 		// Sometimes the first character got lost if input immediately.
 		// Wait until the menu exists, indicating the window is launched.
 		uda.WaitUntilExists(uidetection.Word("File").WithinA11yNode(VSCodeWindow).First()),
+		// Also wait for the editor tab to load before further input.
+		uda.WaitUntilExists(uidetection.Word(testFile).WithinA11yNode(VSCodeWindow).First()),
 		// Left click the app window to wait for input.
 		ui.LeftClick(nodewith.HasClass("HeaderView").Ancestor(vscodeUnsavedWindow)))
 }
