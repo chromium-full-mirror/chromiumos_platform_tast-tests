@@ -19,6 +19,7 @@ import (
 	"chromiumos/tast/local/chrome/display"
 	"chromiumos/tast/local/chrome/internal/cdputil"
 	"chromiumos/tast/local/coords"
+	"chromiumos/tast/local/crosconfig"
 	"chromiumos/tast/local/input"
 
 	"go.chromium.org/tast/core/errors"
@@ -251,18 +252,28 @@ func SetWindowState(ctx context.Context, tconn *chrome.TestConn, id int, et WMEv
 // returns an error when it can't be in the target state. It will return nil
 // when the window is already in the target state.
 func SetWindowStateAndWait(ctx context.Context, tconn *chrome.TestConn, id int, targetState WindowStateType) error {
-	gotState, err := SetWindowState(ctx, tconn, id, stateToWmTypes[targetState], true /* waitForStateChange */)
+	// Don't use autotest API waitForStateChange, because if the window state
+	// change does not occur, the autotestPrivate API never returns.
+	_, err := SetWindowState(ctx, tconn, id, stateToWmTypes[targetState], false /* waitForStateChange */)
 	if err != nil {
 		return errors.Wrap(err, "failed to set the window state")
-	}
-	if gotState != targetState {
-		return errors.Errorf("failed to set the window state: got %v want %v", gotState, targetState)
 	}
 
 	if err = WaitWindowFinishAnimating(ctx, tconn, id); err != nil {
 		return errors.Wrap(err, "failed to wait for the window animation")
 	}
-	return nil
+
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		w, err := GetWindow(ctx, tconn, id)
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to get window"))
+		}
+
+		if w.State != targetState {
+			return errors.New("window is still not in target state")
+		}
+		return nil
+	}, defaultPollOptions)
 }
 
 // SetWindowBounds requests changing the bounds of the window and which display it is on to the given values.
@@ -1017,4 +1028,22 @@ func WaitForAppWindow(ctx context.Context, tconn *chrome.TestConn, appID string)
 	return WaitForAnyWindow(ctx, tconn, func(w *Window) bool {
 		return w.AppID == appID && w.IsVisible
 	})
+}
+
+// CanSplitScreenForChrome returns whether or not the device supports split-screen
+// for a Chrome window. Preferably, this function would directly get the answer
+// over the autotest private API, but in an effort to adding fewer API
+// functions, just use a list of models to determine split screen availability.
+func CanSplitScreenForChrome(ctx context.Context) (bool, error) {
+	model, err := crosconfig.Get(ctx, "/", "name")
+	if err != nil {
+		return false, errors.Wrap(err, "could not find model name")
+	}
+
+	for _, m := range []string{"quackingstick", "kodama", "katsu", "krane"} {
+		if m == model {
+			return false, nil
+		}
+	}
+	return true, nil
 }

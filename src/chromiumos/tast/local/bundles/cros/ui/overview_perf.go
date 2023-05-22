@@ -95,6 +95,11 @@ func OverviewPerf(ctx context.Context, s *testing.State) {
 	}
 	defer ash.SetTabletModeEnabled(cleanupCtx, tconn, originalTabletMode)
 
+	canSplitScreen, err := ash.CanSplitScreenForChrome(ctx)
+	if err != nil {
+		s.Fatal("Failed to determine if Chrome can be split screened: ", err)
+	}
+
 	// Run an http server to serve the test contents for accessing from the chrome browsers.
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()
@@ -160,6 +165,12 @@ func OverviewPerf(ctx context.Context, s *testing.State) {
 				); err != nil {
 					return errors.Wrapf(err, "test case %q failed", fullDescription)
 				}
+			}
+
+			// Some devices are unable to enter split screen, because the
+			// display is too small. Skip split screening on those devices.
+			if !canSplitScreen {
+				continue
 			}
 
 			if windows == 2 {
