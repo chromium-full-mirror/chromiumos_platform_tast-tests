@@ -196,7 +196,6 @@ func init() {
 				},
 				ExtraData: []string{"epson_xp_7100_series_descriptor.json"},
 				ExtraAttr: []string{"paper-io_mfp_printscan"},
-				ExtraSoftwareDeps: []string{"lacros"},
 				Fixture:   "lacros",
 			}, {
 				//MFP in BLD lab
