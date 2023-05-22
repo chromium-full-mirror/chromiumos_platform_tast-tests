@@ -17,6 +17,12 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+var (
+	// Version to increment from rootfs.
+	statefulIsNewerThanRootfs = version.New(1, 0, 0, 0)
+	statefulIsSameAsRootfs    = version.New(0, 0, 0, 0)
+)
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         UpdateRootfsToStateful,
@@ -32,9 +38,15 @@ func init() {
 		Vars: []string{"lacrosComponent"},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"lacros_stable"},
+			Val:               statefulIsNewerThanRootfs,
 		}, {
 			Name:              "unstable",
 			ExtraSoftwareDeps: []string{"lacros_unstable"},
+			Val:               statefulIsNewerThanRootfs,
+		}, {
+			Name:              "no_skew",
+			ExtraSoftwareDeps: []string{"lacros_stable"},
+			Val:               statefulIsSameAsRootfs, // no skew. rootfs-lacros and stateful-lacros will be the same version. stateful-lacros should be used.
 		}},
 		Timeout: 5 * time.Minute,
 	})
@@ -60,11 +72,12 @@ func UpdateRootfsToStateful(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get the Ash version: ", err)
 	}
 	statefulLacrosVersion := rootfsLacrosVersion
+	skew := s.Param().(*version.Version)
 	// TODO(crbug.com/1258138): Update the supported version skew policy once implemented.
-	statefulLacrosVersion.Increment(version.New(9000, 0, 0, 0))
+	statefulLacrosVersion.Increment(skew)
 	if !statefulLacrosVersion.IsValid() {
 		s.Fatal("Invalid Stateful Lacros version: ", statefulLacrosVersion)
-	} else if !statefulLacrosVersion.IsNewerThan(rootfsLacrosVersion) {
+	} else if rootfsLacrosVersion.IsNewerThan(statefulLacrosVersion) {
 		s.Fatalf("Invalid Stateful Lacros version: %v, should not be older than Rootfs: %v", statefulLacrosVersion, rootfsLacrosVersion)
 	} else if !statefulLacrosVersion.IsSkewValid(ashVersion) {
 		s.Fatalf("Invalid Stateful Lacros version: %v, should be compatible with Ash: %v", statefulLacrosVersion, ashVersion)

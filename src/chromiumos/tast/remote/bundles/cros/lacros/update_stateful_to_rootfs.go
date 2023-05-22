@@ -49,13 +49,6 @@ func init() {
 				validSkew: true,
 			},
 		}, {
-			Name:              "no_skew",
-			ExtraSoftwareDeps: []string{"lacros_stable"},
-			Val: testCase{
-				skew:      version.New(0, 0, 0, 0), // no skew. rootfs-lacros and stateful-lacros will be the same version. rootfs-lacros should be used.
-				validSkew: true,
-			},
-		}, {
 			Name:              "invalid_skew",
 			ExtraSoftwareDeps: []string{"lacros_stable"},
 			Val: testCase{
