@@ -19,6 +19,7 @@ import (
 	"chromiumos/tast/local/moblab"
 	"chromiumos/tast/local/syslog"
 	"chromiumos/tast/local/upstart"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -150,6 +151,9 @@ func Mtab(ctx context.Context, s *testing.State) {
 		"/var/lib/portage",
 		// imageloader creates mount point at /run/imageloader/{id}/{package}.
 		"/run/imageloader/[^/]+/[^/]+",
+		// Used for chrome sideloading by skylab test builders in Chrome CI.
+		// TODO(b:282891741): remove this when the sideloading mechanism is changed.
+		"/opt/google/chrome",
 	}
 	if moblab.IsMoblab() {
 		ignoredLiveMountPatterns = append(ignoredLiveMountPatterns, "^/mnt/moblab/containers/docker/.*")
