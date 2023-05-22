@@ -13,6 +13,7 @@ import (
 	"chromiumos/tast/local/croshealthd"
 
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -44,6 +45,12 @@ func init() {
 			Timeout: 5 * time.Minute,
 			// TODO(b/281766836): Promote tast to critical
 			ExtraAttr: []string{"informational", "group:criticalstaging"},
+		}, {
+			Name: "ufs_lifetime",
+			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineUFSLifetime},
+			// TODO(b/283724445): Promote tast to critical.
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
+			ExtraHardwareDeps: hwdep.D(hwdep.Ufs()),
 		}}})
 }
 

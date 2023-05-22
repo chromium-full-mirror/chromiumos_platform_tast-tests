@@ -23,6 +23,7 @@ const (
 	RoutineCPUStressV2 string = "cpu_stress_v2"
 	RoutineAudioDriver string = "audio_driver"
 	RoutineCPUCacheV2  string = "cpu_cache_v2"
+	RoutineUFSLifetime string = "ufs_lifetime"
 )
 
 // RoutineResultV2 contains the progress of the routine as a percentage and
@@ -52,6 +53,10 @@ func RunDiagRoutineV2(ctx context.Context, params RoutineParamsV2) (*RoutineResu
 	} else if params.Routine == RoutineCPUCacheV2 {
 		// Runs the routine for 1 seconds.
 		diagParams = append(diagParams, "--length_seconds=1")
+	} else {
+		// No extra parameters required for the following routines:
+		//   - RoutineAudioDriver
+		//   - RoutineUFSLifetime
 	}
 	var output string
 	var err error
