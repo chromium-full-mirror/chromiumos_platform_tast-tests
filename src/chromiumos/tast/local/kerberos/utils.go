@@ -9,6 +9,7 @@ package kerberos
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"chromiumos/tast/local/apps"
@@ -117,5 +118,20 @@ func ClickAdvancedAndProceed(ctx context.Context, conn *chrome.Conn) error {
 		return errors.Wrap(err, "failed to wait for the URL to load")
 	}
 
+	return nil
+}
+
+// CheckThatWebsiteTitleIs401 checks that current page shows 401 error.
+func CheckThatWebsiteTitleIs401(ctx context.Context, conn *chrome.Conn) error {
+	var websiteTitle string
+	if err := conn.Eval(ctx, "document.title", &websiteTitle); err != nil {
+		return errors.Wrap(err, "failed to get the website title")
+	}
+	if websiteTitle == "" {
+		return errors.New("Website title is empty")
+	}
+	if !strings.Contains(websiteTitle, "401") {
+		return errors.New("Website title does not contain 401")
+	}
 	return nil
 }

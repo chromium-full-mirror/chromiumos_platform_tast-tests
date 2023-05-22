@@ -108,15 +108,8 @@ func ManualTicketAccessWebsite(ctx context.Context, s *testing.State) {
 	}
 
 	// Check that title is 401 - unauthorized.
-	var websiteTitle string
-	if err := conn.Eval(ctx, "document.title", &websiteTitle); err != nil {
-		s.Fatal("Failed to get the website title: ", err)
-	}
-	if websiteTitle == "" {
-		s.Fatal("Website title is empty")
-	}
-	if !strings.Contains(websiteTitle, "401") {
-		s.Fatal("Website title does not contain 401")
+	if err := kerberos.CheckThatWebsiteTitleIs401(ctx, conn); err != nil {
+		s.Fatal("Failed to verify website title: ", err)
 	}
 
 	// Access keyboard.
@@ -140,6 +133,7 @@ func ManualTicketAccessWebsite(ctx context.Context, s *testing.State) {
 
 	// Sometimes the window refreshes too fast and Kerberos settings are not yet applied
 	// so this part is done until success/timeout.
+	var websiteTitle string
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		// Refresh the website.
 		if err := conn.Navigate(ctx, config.WebsiteAddress); err != nil {
