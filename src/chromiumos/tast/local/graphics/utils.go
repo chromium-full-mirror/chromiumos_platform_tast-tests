@@ -113,7 +113,7 @@ func getKernelDriverDebugFile(ctx context.Context, relPath string) (string, erro
 			continue
 		}
 
-		name, err := os.ReadFile(strings.Replace(path, relPath, "name", -1))
+		name, err := os.ReadFile(fmt.Sprintf("%v/%v/name", sysPath, minor))
 		if err != nil {
 			return "", errors.Wrap(err, "failed to read driver name")
 		}

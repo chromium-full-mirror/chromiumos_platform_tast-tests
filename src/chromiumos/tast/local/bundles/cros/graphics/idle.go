@@ -432,7 +432,7 @@ func i915MinClock(ctx context.Context) error {
 func rc6(ctx context.Context) error {
 	rc6Path, err := graphics.GetValidKernelDriverDebugFile(ctx, []string{
 		"i915_drpc_info",
-		"gt/drpc",
+		"gt*/drpc",
 	})
 	if err != nil {
 		return errors.Wrap(err, "failed to get valid rc6 path")
