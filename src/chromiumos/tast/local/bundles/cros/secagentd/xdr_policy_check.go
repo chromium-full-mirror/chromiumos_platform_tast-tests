@@ -49,7 +49,7 @@ func init() {
 		},
 		Timeout:      3 * time.Minute,
 		Fixture:      fixture.ChromeEnrolledLoggedIn,
-		SoftwareDeps: []string{"reboot", "bpf", "chrome"},
+		SoftwareDeps: []string{"reboot", "bpf", "chrome", "boot_perf_info"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DeviceReportXDREvents{}, pci.VerifiedFunctionalityOS),
