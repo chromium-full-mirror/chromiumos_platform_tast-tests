@@ -261,6 +261,10 @@ func CheckStatefulFiles(ctx context.Context, outDir string) []error {
 		prependPatterns(NewPattern(Tree("unencrypted/rma-data"), Users("rmad"), Groups("rmad"), NotMode(022)))
 	}
 
+	if _, err := user.Lookup("node_exporter"); err == nil {
+		prependPatterns(NewPattern(Tree("encrypted/var/lib/node_exporter"), Users("node_exporter"), Groups("node_exporter"), Mode(0755), SkipChildren()))
+	}
+
 	if moblab.IsMoblab() {
 		// On moblab devices, there are additional user dirs and tons of stuff (MySQL, etc.) in /var.
 		prependPatterns(
