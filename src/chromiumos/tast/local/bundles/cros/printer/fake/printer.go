@@ -25,7 +25,7 @@ type Printer struct {
 
 // NewPrinter creates and starts a fake printer.
 func NewPrinter(ctx context.Context) (*Printer, error) {
-	const address = "localhost:9100"
+	const address = "localhost:9101"
 	ln, err := net.Listen("tcp", address)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to listen on %s", address)

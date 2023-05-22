@@ -49,7 +49,7 @@ func Run(ctx context.Context, chrome *chrome.Chrome, ppdFilePath, toPrintFilePat
 	}
 
 	testing.ContextLog(ctx, "Registering a printer")
-	err = tconn.Call(ctx, nil, "chrome.autotestPrivate.updatePrinter", map[string]string{"printerName": printerID, "printerId": printerID, "printerUri": "socket://127.0.0.1/", "printerPpd": ppdFilePath})
+	err = tconn.Call(ctx, nil, "chrome.autotestPrivate.updatePrinter", map[string]string{"printerName": printerID, "printerId": printerID, "printerUri": "socket://localhost:9101/", "printerPpd": ppdFilePath})
 	if err != nil {
 		return nil, errors.Wrap(err, "autotestPrivate.updatePrinter() failed")
 	}

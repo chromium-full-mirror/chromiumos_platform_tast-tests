@@ -69,11 +69,12 @@ func Printscanmgr(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Validating that a printer can be installed")
+	const printerAddr = "localhost:9101"
 	if result, err := p.CupsAddManuallyConfiguredPrinter(
 		ctx,
 		&ppb.CupsAddManuallyConfiguredPrinterRequest{
 			Name:        "ManualPrinterGood",
-			Uri:         "socket://127.0.0.1/ipp/fake_printer",
+			Uri:         "socket://" + printerAddr + "/ipp/fake_printer",
 			PpdContents: ppd}); err != nil {
 		s.Error("Failed to call CupsAddManuallyConfiguredPrinter: ", err)
 	} else if printscanmgr.CUPSResult(result.Result) != printscanmgr.CUPSSuccess {
@@ -85,7 +86,7 @@ func Printscanmgr(ctx context.Context, s *testing.State) {
 		ctx,
 		&ppb.CupsAddManuallyConfiguredPrinterRequest{
 			Name:        "CUPS rejects names with spaces",
-			Uri:         "socket://127.0.0.1/ipp/fake_printer",
+			Uri:         "socket://" + printerAddr + "/ipp/fake_printer",
 			PpdContents: ppd}); err != nil {
 		s.Error("Failed to call CupsAddManuallyConfiguredPrinter: ", err)
 	} else if printscanmgr.CUPSResult(result.Result) != printscanmgr.CUPSFatal {
@@ -98,7 +99,7 @@ func Printscanmgr(ctx context.Context, s *testing.State) {
 		ctx,
 		&ppb.CupsAddManuallyConfiguredPrinterRequest{
 			Name:        "ManualPrinterBreaks",
-			Uri:         "socket://127.0.0.1/ipp/fake_printer",
+			Uri:         "socket://" + printerAddr + "/ipp/fake_printer",
 			PpdContents: badPPD}); err != nil {
 		s.Error("Failed to call CupsAddManuallyConfiguredPrinter: ", err)
 	} else if printscanmgr.CUPSResult(result.Result) != printscanmgr.CUPSInvalidPPD {
@@ -110,7 +111,7 @@ func Printscanmgr(ctx context.Context, s *testing.State) {
 		ctx,
 		&ppb.CupsAddAutoConfiguredPrinterRequest{
 			Name: "AutoconfPrinter",
-			Uri:  "ipp://127.0.0.1/ipp/print"}); err != nil {
+			Uri:  "ipp://" + printerAddr + "/ipp/print"}); err != nil {
 		s.Error("Failed to call CupsAddAutoConfiguredPrinter: ", err)
 	} else if printscanmgr.CUPSResult(result.Result) != printscanmgr.CUPSPrinterUnreachable {
 		s.Error("Incorrect error code received: ", printscanmgr.CUPSResult(result.Result))
@@ -118,7 +119,7 @@ func Printscanmgr(ctx context.Context, s *testing.State) {
 
 	// Make sure that the HTTP server on port 7001 is ready.
 	getPage := func(ctx context.Context) error {
-		httpReq, err := http.NewRequestWithContext(ctx, "GET", "http://127.0.0.1:7001/not_a_printer", nil)
+		httpReq, err := http.NewRequestWithContext(ctx, "GET", "http://localhost:7001/not_a_printer", nil)
 		if err == nil {
 			var res *http.Response
 			res, err = http.DefaultClient.Do(httpReq)
@@ -137,7 +138,7 @@ func Printscanmgr(ctx context.Context, s *testing.State) {
 		ctx,
 		&ppb.CupsAddAutoConfiguredPrinterRequest{
 			Name: "NotAPrinter",
-			Uri:  "ipp://127.0.0.1:7001/bad_request"}); err != nil {
+			Uri:  "ipp://localhost:7001/bad_request"}); err != nil {
 		s.Error("Calling printer setup crashed: ", err)
 	} else if printscanmgr.CUPSResult(result.Result) != printscanmgr.CUPSPrinterWrongResponse {
 		s.Error("Incorrect error code received: ", printscanmgr.CUPSResult(result.Result))

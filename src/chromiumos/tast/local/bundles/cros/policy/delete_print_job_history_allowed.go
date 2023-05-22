@@ -111,7 +111,7 @@ func DeletePrintJobHistoryAllowed(ctx context.Context, s *testing.State) {
 			  "description": "The printer next to the water cooler.",
 			  "manufacturer": "Printer Manufacturer",
 			  "model": "Color Laser 2004",
-			  "uri": "lpd://localhost:9100",
+			  "uri": "lpd://localhost:9101",
 			  "uuid": "1c395fdb-5d93-4904-b246-b2c046e79d12",
 			  "ppd_resource": {
     			"effective_model": "generic pcl 6/pcl xl printer pxlcolor",

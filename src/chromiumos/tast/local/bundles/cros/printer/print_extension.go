@@ -121,7 +121,8 @@ func PrintExtension(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Registering a printer")
-	if err := ctconn.Call(ctx, nil, "chrome.autotestPrivate.updatePrinter", map[string]string{"printerName": printerName, "printerId": printerID, "printerDesc": printerDesc, "printerUri": "socket://localhost", "printerPpd": ppdFilePath}); err != nil {
+	const printerURI = "localhost:9101"
+	if err := ctconn.Call(ctx, nil, "chrome.autotestPrivate.updatePrinter", map[string]string{"printerName": printerName, "printerId": printerID, "printerDesc": printerDesc, "printerUri": "socket://" + printerURI, "printerPpd": ppdFilePath}); err != nil {
 		s.Fatal("autotestPrivate.updatePrinter() failed: ", err)
 	}
 
@@ -155,7 +156,7 @@ func PrintExtension(ctx context.Context, s *testing.State) {
 			printer.IsDefault == false &&
 			printer.Name == printerName &&
 			printer.Source == "USER" &&
-			printer.URI == "socket://localhost:9100" {
+			printer.URI == "socket://"+printerURI {
 			count++
 		}
 	}
