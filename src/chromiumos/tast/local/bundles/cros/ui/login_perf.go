@@ -33,10 +33,12 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/ossettings"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/disk"
+	"chromiumos/tast/local/graphics"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/perfutil"
 	"chromiumos/tast/local/session"
 	"chromiumos/tast/local/ui/cujrecorder"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -344,7 +346,8 @@ func loginPerfDoLogin(
 				return retL, lacrosConnectTime, err
 			}
 			testing.ContextLog(ctx, "loginPerfDoLogin: Connect to lacros failed. Sleeping for 10 milliseconds before retry")
-			if err := testing.Sleep(ctx, 10*time.Millisecond); err != nil { // GoBigSleepLint: This is sleep between retries.
+			// GoBigSleepLint: This is sleep between retries.
+			if err := testing.Sleep(ctx, 10*time.Millisecond); err != nil {
 				return nil, nil, errors.Wrap(err, "failed to wait for lacros-chrome test connection")
 			}
 		}
@@ -505,7 +508,8 @@ func setAlwaysRestoreSettings(ctx context.Context, tconn *chrome.TestConn) error
 	// According to the PRD of Full Restore go/chrome-os-full-restore-dd,
 	// it uses a throttle of 2.5s to save the app launching and window
 	// state information to the backend. Therefore, sleep 3 seconds here.
-	return testing.Sleep(ctx, 3*time.Second) // GoBigSleepLint: crbug.com/1314785
+	// GoBigSleepLint: crbug.com/1314785
+	return testing.Sleep(ctx, 3*time.Second)
 }
 
 // initializeLoginPerfTest initializes user session state that will be restored
@@ -598,12 +602,14 @@ func initializeLoginPerfTest(ctx context.Context,
 			histogram)
 
 		testing.ContextLog(ctx, "Initialize: Waiting 30 seconds to allow time for session to fully initialize")
-		if err := testing.Sleep(ctx, 30*time.Second); err != nil { // GoBigSleepLint: give session time to settle.
+		// GoBigSleepLint: Give session time to settle.
+		if err := testing.Sleep(ctx, 30*time.Second); err != nil {
 			return chrome.Creds{}, errors.Wrap(err, "failed to run initial wait time")
 		}
 	} else {
 		testing.ContextLog(ctx, "Initialize: Waiting 1 minute to allow time for session to fully initialize")
-		if err := testing.Sleep(ctx, time.Minute); err != nil { // GoBigSleepLint: give session time to settle.
+		// GoBigSleepLint: Give session time to settle.
+		if err := testing.Sleep(ctx, time.Minute); err != nil {
 			return chrome.Creds{}, errors.Wrap(err, "failed to run initial wait time")
 		}
 	}
@@ -663,7 +669,8 @@ func testFunction(
 			// elapsed reduces the trace file size by approximately
 			// 20% (from ~10MB to ~8MB) per file.
 			s.Log("Sleep for 5 seconds to wait for last metrics before stopping tracing")
-			if err := testing.Sleep(ctx, 5*time.Second); err != nil { // GoBigSleepLint: Controls the tracing time.
+			// GoBigSleepLint: Controls the tracing time.
+			if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 				return errors.Wrap(err, "failed to sleep for 5 seconds")
 			}
 			if err := stopTracing(ctx); err != nil {
@@ -672,7 +679,8 @@ func testFunction(
 			sleepSeconds = 5 * time.Second
 		}
 		s.Logf("Sleep for %f seconds to let session settle and save restore data", sleepSeconds.Seconds())
-		if err := testing.Sleep(ctx, sleepSeconds); err != nil { // GoBigSleepLint: give session time to settle and save restore data.
+		// GoBigSleepLint: Give session time to settle and save restore data.
+		if err := testing.Sleep(ctx, sleepSeconds); err != nil {
 			return errors.Wrapf(err, "failed to sleep for %f seconds", sleepSeconds.Seconds())
 		}
 		// boot metrics have likely been already reported and wiped
@@ -896,6 +904,11 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 		}
 	}
 
+	displCount, err := graphics.NumberOfOutputsConnected(ctx)
+	if err != nil {
+		s.Fatal("Failed to get connected displays count: ", err)
+	}
+
 	currentWindows := 0
 	// Run the login flow for various situations.
 	// - change the number of browser windows, 2 or 8
@@ -957,7 +970,10 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 						return err
 					}
 					s.Log("Sign out: sleep for 20 seconds to let session settle")
-					testing.Sleep(ctx, 20*time.Second) // GoBigSleepLint: give session time to settle.
+					// GoBigSleepLint: Give session time to settle.
+					if err := testing.Sleep(ctx, 20*time.Second); err != nil {
+						return errors.Wrap(err, "failed to sleep for 20 seconds")
+					}
 					return logout(ctx, cr, l)
 				}()
 				if err != nil {
@@ -995,7 +1011,6 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 					ensureWorkVisibleLowResHistogram,
 					allBrowserWindowsCreated,
 					allBrowserWindowsShown,
-					allBrowserWindowsPresented,
 					allShelfIconsLoaded,
 					shelfLoginAnimationEnd,
 					ashTastBootTimeLogin2,
@@ -1006,6 +1021,10 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 					uptimeLogout,
 					uptimeLoginPromptSetupTimeAfterLogout,
 					uptimeLogoutToLoginPromptVisible,
+				}
+				// Histogram is only collected when the DUT is connected to the display.
+				if displCount > 0 {
+					allHistograms = append(allHistograms, allBrowserWindowsPresented)
 				}
 				if arcMode != noarc {
 					allHistograms = append(allHistograms,
