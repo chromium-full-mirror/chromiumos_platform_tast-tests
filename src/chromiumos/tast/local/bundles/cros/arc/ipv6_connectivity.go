@@ -15,6 +15,7 @@ import (
 	patchpanel "chromiumos/tast/local/network/patchpanel_client"
 	"chromiumos/tast/local/network/routing"
 	"chromiumos/tast/local/shill"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -50,6 +51,10 @@ func init() {
 func IPv6Connectivity(ctx context.Context, s *testing.State) {
 	a := s.FixtValue().(*arc.PreData).ARC
 	v6only := s.Param().(ipv6TestParams).v6Only
+	arcVersion, err := arc.SDKVersion()
+	if err != nil {
+		s.Fatal("Failed to get ARC SDK version: ", err)
+	}
 
 	// Use a shortened context for test operations to reserve time for cleanup.
 	cleanupCtx := ctx
@@ -132,8 +137,11 @@ func IPv6Connectivity(ctx context.Context, s *testing.State) {
 		if err := arc.ExpectPingSuccess(ctx, a, arcIfname, target); err != nil {
 			s.Errorf("Failed to ping %s from ARC over %q: %v", target, arcIfname, err)
 		}
-		if err := arc.ExpectPingSuccess(ctx, a, "", target); err != nil {
-			s.Errorf("Failed to ping %s from ARC over default network: %v", target, err)
+		// b/265877162: ARC T+ no longer support network ranking, so we only verify default network till R.
+		if arcVersion <= arc.SDKR {
+			if err := arc.ExpectPingSuccess(ctx, a, "", target); err != nil {
+				s.Errorf("Failed to ping %s from ARC over default network: %v", target, err)
+			}
 		}
 	}
 }
