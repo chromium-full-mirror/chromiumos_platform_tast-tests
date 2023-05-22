@@ -137,6 +137,7 @@ func VideoCall(ctx context.Context, s *testing.State) {
 	defer kb.Close(cleanupCtx)
 
 	power.RegisterPowerMetrics(power.NewVideoFpsMetrics(videoConn))
+	power.RegisterPowerMetrics(power.NewWebRTCMetrics(videoConn))
 
 	r, err := power.NewRecorder(ctx, interval, s.OutDir(), s.TestName())
 	if err != nil {

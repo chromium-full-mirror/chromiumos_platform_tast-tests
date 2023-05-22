@@ -28,49 +28,67 @@ import (
 // This is to help categorize each metric in power_log.json/.html, which can also be used as a
 // filter on power_dashboard.
 const (
-	cpuIdleMetricType        = "cpuidle."
-	cpuUsageMetricType       = "cpu_usage."
-	fanMetricType            = "fan."
-	fpsMetricType            = "fps."
-	generalPerfMetricType    = "perf."
-	gpuFreqMetricType        = "gpufreq_wavg."
-	gpuStateMetricType       = "gpuidle."
-	packageCstatesMetricType = "cpupkg."
-	batterySOCMetricType     = "battery."
-	powerRelatedMetricType   = "power."
-	thermalMetricType        = "temperature."
-	zramMetricType           = "zram."
+	cpuIdleMetricType          = "cpuidle."
+	cpuUsageMetricType         = "cpu_usage."
+	fanMetricType              = "fan."
+	fpsMetricType              = "fps."
+	generalPerfMetricType      = "perf."
+	gpuFreqMetricType          = "gpufreq_wavg."
+	gpuStateMetricType         = "gpuidle."
+	packageCstatesMetricType   = "cpupkg."
+	batterySOCMetricType       = "battery."
+	powerRelatedMetricType     = "power."
+	thermalMetricType          = "temperature."
+	webrtcBitrateMetricType    = "webrtc_bitrate."
+	webrtcFpsMetricType        = "webrtc_fps."
+	webrtcLimitationMetricType = "webrtc_limitation."
+	webrtcPixelMetricType      = "webrtc_pixel."
+	webrtcTimeMetricType       = "webrtc_time."
+	webrtcQPMetricType         = "webrtc_qp."
+	zramMetricType             = "zram."
 )
 
 // Only keys inside validMetricTypeMap are accepted metric types.
 var validMetricTypeMap = map[string]bool{
-	"battery":      true,
-	"cpuidle":      true,
-	"cpu_usage":    true,
-	"fan":          true,
-	"fps":          true,
-	"perf":         true,
-	"gpufreq_wavg": true,
-	"gpuidle":      true,
-	"cpupkg":       true,
-	"power":        true,
-	"temperature":  true,
-	"zram":         true,
-	"other":        true,
+	"battery":           true,
+	"cpuidle":           true,
+	"cpu_usage":         true,
+	"fan":               true,
+	"fps":               true,
+	"perf":              true,
+	"gpufreq_wavg":      true,
+	"gpuidle":           true,
+	"cpupkg":            true,
+	"power":             true,
+	"temperature":       true,
+	"webrtc_bitrate":    true,
+	"webrtc_fps":        true,
+	"webrtc_pixel":      true,
+	"webrtc_limitation": true,
+	"webrtc_time":       true,
+	"webrtc_qp":         true,
+	"zram":              true,
+	"other":             true,
 }
 
 // Units for each metric type.
 const (
-	cpuIdleMetricTypeUnit        = "percent"
-	cpuUsageMetricTypeUnit       = "percent"
-	fanMetricTypeUnit            = "rpm"
-	fpsMetricTypeUnit            = "fps"
-	gpuFreqMetricTypeUnit        = "megahertz"
-	gpuStateMetricTypeUnit       = "percent"
-	packageCstatesMetricTypeUnit = "percent"
-	powerRelatedMetricTypeUnit   = "W"
-	thermalMetricTypeUnit        = "celsius"
-	zramMetricTypeUnit           = "requests"
+	cpuIdleMetricTypeUnit          = "percent"
+	cpuUsageMetricTypeUnit         = "percent"
+	fanMetricTypeUnit              = "rpm"
+	fpsMetricTypeUnit              = "fps"
+	gpuFreqMetricTypeUnit          = "megahertz"
+	gpuStateMetricTypeUnit         = "percent"
+	packageCstatesMetricTypeUnit   = "percent"
+	powerRelatedMetricTypeUnit     = "W"
+	thermalMetricTypeUnit          = "celsius"
+	webrtcBitrateMetricTypeUnit    = "kbps"
+	webrtcFpsMetricTypeUnit        = "fps"
+	webrtcLimitationMetricTypeUnit = "percent"
+	webrtcPixelMetricTypeUnit      = "pixel"
+	webrtcTimeMetricTypeUnit       = "ms"
+	webrtcQPMetricTypeUnit         = "point"
+	zramMetricTypeUnit             = "requests"
 )
 
 // Power log file name.
