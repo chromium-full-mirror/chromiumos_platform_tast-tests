@@ -840,7 +840,7 @@
 	{
 		"driver": "camx(CONFIG_QTI_CAMERA_CRM)",
 		"boards": ["strongbad"],
-		"startup_cmds": ["until stop cros-camera; do sleep 1; done"],
+		"startup_cmds": ["echo manual > /etc/init/cros-camera.override ; stop cros-camera||true"],
 		"syscalls": [
 			"openat$camx",
 			"ioctl$CAM_REQ_MGR_CREATE_SESSION",
