@@ -31,7 +31,7 @@ func EnsureDocsOfflineInstalled(ctx context.Context, br *browser.Browser, tconn 
 	)
 	docsOfflineExt := cws.App{Name: docsOfflineName, URL: docsOfflineURL}
 
-	isInstalled, err := ash.ChromeAppInstalled(ctx, tconn, docsOfflineID)
+	isInstalled, err := ash.ExtensionAppInstalled(ctx, tconn, docsOfflineID)
 	if err != nil {
 		return errors.Wrap(err, "failed to check existence of docs offline extension")
 	}
@@ -50,7 +50,7 @@ func EnsureDocsOfflineInstalled(ctx context.Context, br *browser.Browser, tconn 
 		// If Docs Offline extention is included in /usr/share/google-chrome/extensions/,
 		// it will be installed by the Chrome automatically.
 		// Check if the extension has been installed even if the CWS installation fails.
-		isInstalled, err := ash.ChromeAppInstalled(ctx, tconn, docsOfflineID)
+		isInstalled, err := ash.ExtensionAppInstalled(ctx, tconn, docsOfflineID)
 		if err == nil && isInstalled {
 			testing.ContextLog(ctx, "Docs offline extension has been installed even though the CWS installation returned an error: ", cwsErr)
 			return nil
