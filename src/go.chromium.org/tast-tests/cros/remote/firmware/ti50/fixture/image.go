@@ -14,9 +14,15 @@ import (
 	"strings"
 	"time"
 
+	remoteTi50 "go.chromium.org/tast-tests/cros/remote/firmware/ti50"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
+
+// ImageType represents a kind of ti50 image, either the main production image, or a special test
+// image, such as "system_test_auto".
+type ImageType string
 
 const (
 	// BuildURL is the arg name for the directory of the gs build or full path of the image (local or in gs).
@@ -36,10 +42,10 @@ const (
 	Slot = "slot"
 
 	// Ti50Image fixture downloads the ti50 image bin.
-	Ti50Image = "ti50Image"
+	Ti50Image ImageType = "ti50"
 
 	// SystemTestAutoImage fixture downloads the system_test_auto image bin.
-	SystemTestAutoImage = "systemTestAutoImage"
+	SystemTestAutoImage ImageType = "system_test_auto"
 
 	// imageBin is the name of the image file, it is the same for both images.
 	imageBin = "ti50_Unknown_PrePVT_ti50-accessory-nodelocked-ro-premp.bin"
@@ -53,32 +59,14 @@ const (
 	imageDeleteTimeout   = 5 * time.Second
 )
 
-func init() {
-	testing.AddFixture(&testing.Fixture{
-		Name:            Ti50Image,
-		Desc:            "Provides access to a Ti50 image",
-		Contacts:        []string{"tast-fw-library-reviewers@google.com", "jbettis@google.com"},
-		Impl:            &imageFixture{image: Ti50Image},
-		Vars:            []string{BuildURL, FwConfigJSON, Chip, Variant, Slot},
-		SetUpTimeout:    imageDownloadTimeout,
-		TearDownTimeout: imageDeleteTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name:            SystemTestAutoImage,
-		Desc:            "Uses devboardsvc to flash a system_test_auto image",
-		Contacts:        []string{"tast-fw-library-reviewers@google.com", "jbettis@google.com"},
-		Impl:            &imageFixture{image: SystemTestAutoImage},
-		Vars:            []string{BuildURL, FwConfigJSON, Chip, Variant, Slot},
-		SetUpTimeout:    imageDownloadTimeout,
-		TearDownTimeout: imageDeleteTimeout,
-	})
-}
-
 // ImageValue provides access to a image binary along with json configuration files.
 type ImageValue struct {
 	imagePath   string
-	imageType   string
 	configPaths []string
+
+	// If downloaded is true, it means that the imagePath and each of the configPaths are
+	// temporary files, which should be eventually deleted by the caller.
+	downloaded bool
 }
 
 // ImagePath returns the path to the image binary.
@@ -86,61 +74,16 @@ func (v *ImageValue) ImagePath() string {
 	return v.imagePath
 }
 
-// ImageType returns the type of the image binary.
-func (v *ImageValue) ImageType() string {
-	return v.imageType
-}
-
 // FwConfigPaths returns the list of json FW configuration files to use with the image.
 func (v *ImageValue) FwConfigPaths() []string {
 	return v.configPaths
 }
 
-type imageFixture struct {
-	image      string
-	downloaded bool
-	v          *ImageValue
-}
-
-func (i *imageFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	if err := i.downloadImage(ctx, s); err != nil {
-		s.Fatal("download image: ", err)
-	}
-
-	return i.v
-}
-
-func (i *imageFixture) Reset(ctx context.Context) error {
-	return nil
-}
-
-func (i *imageFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
-}
-
-func (i *imageFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
-}
-
-func (i *imageFixture) TearDown(ctx context.Context, s *testing.FixtState) {
-	if i.downloaded && i.v.imagePath != "" {
-		if err := os.Remove(i.v.imagePath); err != nil {
-			s.Errorf("Failed to remove downloaded image %q: %v", i.v.imagePath, err)
-		}
-	}
-}
-
-func (i *imageFixture) String() string {
-	return i.image
-}
-
 // downloadImage downloads the image from google storage if necessary.
 // inputURL can be a local file, a gs file, or a gs build folder.
-func (i *imageFixture) downloadImage(ctx context.Context, s *testing.FixtState) error {
-	if i.image == "" {
-		return nil
-	}
-
+func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProperties, imageType ImageType, s *testing.FixtState) (*ImageValue, error) {
 	inputURL, _ := s.Var(BuildURL)
-	i.v = &ImageValue{imageType: i.image}
+	iv := &ImageValue{downloaded: false}
 
 	var configPaths []string
 	if conf, ok := s.Var(FwConfigJSON); ok {
@@ -148,59 +91,90 @@ func (i *imageFixture) downloadImage(ctx context.Context, s *testing.FixtState) 
 	}
 
 	if inputURL == "" {
-		testing.ContextLogf(ctx, "-var=%s= not provided, assuming the devboard has a %s image", BuildURL, i)
-		i.v.imagePath = ""
-		i.v.configPaths = configPaths
-		return nil
-	}
-
-	var imageType string
-	switch i.image {
-	case Ti50Image:
-		imageType = "ti50"
-	case SystemTestAutoImage:
-		imageType = "system_test_auto"
-	default:
-		return errors.Errorf("unknown image type: %q", i.image)
+		testing.ContextLogf(ctx, "-var=%s= not provided, assuming the devboard has a %s image", BuildURL, imageType)
+		iv.imagePath = ""
+		iv.configPaths = configPaths
+		return iv, nil
 	}
 
 	if len(inputURL) > len(gsPrefix) && inputURL[:len(gsPrefix)] == gsPrefix {
 		fullURL := inputURL
+		jsonURL := ""
 		// Assume URL is a build folder if it doesn't end in .bin.
-		if fullURL[len(fullURL)-4:] != ".bin" {
-			// Assume branch builds have a -channel in the URL.
-			var subDir string
-			bin := branchImageBin
-			if !strings.Contains(inputURL, "-channel/") {
-				// Postsubmit builder images are 1 subdir deeper.
-				subDir = imageType + ".tar.bz2"
-				bin = imageBin
+		if inputURL[len(inputURL)-4:] != ".bin" {
+			tastURL := gsPrefix + filepath.Join(inputURL[len(gsPrefix):], "tast")
+			args := []string{"ls", tastURL}
+			testing.ContextLogf(ctx, "Looking for tast directory: gsutil %s", strings.Join(args, " "))
+			cmd := exec.CommandContext(ctx, "gsutil", args...)
+			if err := cmd.Run(); err == nil {
+				// Cloud directory (branch or main) has a "tast/" subdirectory,
+				// use images from there.
+
+				var prefix string
+				switch testbedProperties.TestbedType {
+				case "gsc_dt_ab":
+					prefix = "andreiboard-"
+				case "gsc_ot_fpga_cw310":
+					prefix = "opentitan-"
+				case "gsc_he":
+					prefix = "host_emulation-"
+				default:
+					return nil, errors.Errorf("unknown testbed type: %q", testbedProperties.TestbedType)
+				}
+				tastDir := filepath.Join(inputURL[len(gsPrefix):], "tast", prefix+string(imageType))
+				fullURL = gsPrefix + filepath.Join(tastDir, "image*.bin")
+				jsonURL = gsPrefix + filepath.Join(tastDir, "opentitantool_fw_config.json")
+			} else {
+				// Legacy artifact directory structure.
+				// Assume branch builds have a -channel in the URL.
+				var subDir string
+				bin := branchImageBin
+				if !strings.Contains(inputURL, "-channel/") {
+					// Postsubmit builder images are 1 subdir deeper.
+					subDir = string(imageType) + ".tar.bz2"
+					bin = imageBin
+				}
+				fullURL = gsPrefix + filepath.Join(inputURL[len(gsPrefix):], subDir, bin)
 			}
-			fullURL = gsPrefix + filepath.Join(inputURL[len(gsPrefix):], subDir, bin)
 		}
-		f, err := ioutil.TempFile("", imageType+"_")
+		f, err := ioutil.TempFile("", "*.bin")
 		if err != nil {
-			return errors.Wrap(err, "create temp image file")
+			return nil, errors.Wrap(err, "create temp image file")
 		}
 		f.Close()
 
-		args := []string{"cp", fullURL, f.Name()}
-		testing.ContextLogf(ctx, "Download image: gsutil %s", strings.Join(args, " "))
-		cmd := exec.CommandContext(ctx, "gsutil", args...)
-		if err := cmd.Run(); err != nil {
-			return errors.Wrapf(err, "download %q", fullURL)
+		{
+			args := []string{"cp", fullURL, f.Name()}
+			testing.ContextLogf(ctx, "Download image: gsutil %s", strings.Join(args, " "))
+			cmd := exec.CommandContext(ctx, "gsutil", args...)
+			if err := cmd.Run(); err != nil {
+				return nil, errors.Wrapf(err, "download %q", fullURL)
+			}
+			iv.imagePath = f.Name()
 		}
-		i.v.imagePath = f.Name()
-		// TODO: Figure out how to fetch FW config json files from build folder, in case
-		// the command line argument is not present.
-		i.v.configPaths = configPaths
-		i.downloaded = true
-		return nil
+
+		if jsonURL != "" {
+			jsonf, err := ioutil.TempFile("", "*.json")
+			if err != nil {
+				return nil, errors.Wrap(err, "create temp json file")
+			}
+			jsonf.Close()
+			iv.configPaths = []string{jsonf.Name()}
+
+			args := []string{"cp", jsonURL, jsonf.Name()}
+			testing.ContextLogf(ctx, "Download conf: gsutil %s", strings.Join(args, " "))
+			cmd := exec.CommandContext(ctx, "gsutil", args...)
+			if err := cmd.Run(); err != nil {
+				return nil, errors.Wrapf(err, "download %q", jsonURL)
+			}
+		}
+		iv.downloaded = true
+		return iv, nil
 	}
 
 	img, err := os.Stat(inputURL)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if img.IsDir() {
 		// Given directory is assumed to have ports/ and build/ subdirectories, that is,
@@ -214,12 +188,12 @@ func (i *imageFixture) downloadImage(ctx context.Context, s *testing.FixtState) 
 		} else {
 			name = "full_image.signed.bin"
 		}
-		i.v.imagePath = filepath.Join(inputURL, "build", imageType, chip, variant, name)
-		i.v.configPaths = []string{filepath.Join(inputURL, "ports", chip, "software", "tools", imageType+"_"+chip+".json")}
-		return nil
+		iv.imagePath = filepath.Join(inputURL, "build", string(imageType), chip, variant, name)
+		iv.configPaths = []string{filepath.Join(inputURL, "ports", chip, "software", "tools", string(imageType)+"_"+chip+".json")}
+		return iv, nil
 	}
 
-	i.v.imagePath = inputURL
-	i.v.configPaths = configPaths
-	return nil
+	iv.imagePath = inputURL
+	iv.configPaths = configPaths
+	return iv, nil
 }

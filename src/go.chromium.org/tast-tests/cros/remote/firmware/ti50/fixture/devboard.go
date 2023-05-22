@@ -7,6 +7,7 @@ package fixture
 
 import (
 	"context"
+	"os"
 	"time"
 
 	"google.golang.org/grpc"
@@ -41,27 +42,25 @@ func init() {
 		Name:            Ti50Devboard,
 		Desc:            "Uses devboardsvc to flash a Ti50 image",
 		Contacts:        []string{"tast-fw-library-reviewers@google.com", "jbettis@google.com"},
-		Impl:            &devboardFixture{},
-		Vars:            []string{DevBoardService},
+		Impl:            &devboardFixture{image: Ti50Image},
+		Vars:            []string{DevBoardService, BuildURL, FwConfigJSON, Chip, Variant, Slot},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: tearDownTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
-		Parent:          Ti50Image,
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            SystemTestAutoDevboard,
 		Desc:            "Uses devboardsvc to flash a system_test_auto image",
 		Contacts:        []string{"tast-fw-library-reviewers@google.com", "jbettis@google.com"},
-		Impl:            &devboardFixture{},
-		Vars:            []string{DevBoardService},
+		Impl:            &devboardFixture{image: SystemTestAutoImage},
+		Vars:            []string{DevBoardService, BuildURL, FwConfigJSON, Chip, Variant, Slot},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: tearDownTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
-		Parent:          SystemTestAutoImage,
 	})
 }
 
@@ -78,6 +77,7 @@ func (v *Value) DevBoard() ti50.DevBoard {
 }
 
 type devboardFixture struct {
+	image      ImageType
 	imageValue *ImageValue
 	hostPort   string
 	v          *Value
@@ -85,10 +85,6 @@ type devboardFixture struct {
 }
 
 func (i *devboardFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	if s.ParentValue() != nil {
-		i.imageValue = s.ParentValue().(*ImageValue)
-	}
-
 	i.hostPort = s.RequiredVar(DevBoardService)
 	i.v = &Value{}
 
@@ -97,6 +93,17 @@ func (i *devboardFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	}
 	board := remoteTi50.NewDUTControlAndreiboard(i.v.grpcConn, 0, 0*time.Second)
 	defer board.Close(ctx)
+
+	testbedProperties, err := board.Query(ctx)
+	if err != nil {
+		s.Fatal("querying testbed: ", err)
+	}
+
+	iv, err := downloadImage(ctx, testbedProperties, i.image, s)
+	if err != nil {
+		s.Fatal("download image: ", err)
+	}
+	i.imageValue = iv
 
 	imagePath := ""
 	var fwConfigJsons []string
@@ -176,6 +183,16 @@ func (i *devboardFixture) PostTest(ctx context.Context, s *testing.FixtTestState
 }
 
 func (i *devboardFixture) TearDown(ctx context.Context, s *testing.FixtState) {
+	if i.imageValue.downloaded && i.imageValue.imagePath != "" {
+		if err := os.Remove(i.imageValue.imagePath); err != nil {
+			s.Errorf("Failed to remove downloaded image %q: %v", i.imageValue.imagePath, err)
+		}
+		for _, confPath := range i.imageValue.configPaths {
+			if err := os.Remove(confPath); err != nil {
+				s.Errorf("Failed to remove downloaded conf %q: %v", confPath, err)
+			}
+		}
+	}
 	if i.v.grpcConn != nil {
 		if err := i.v.grpcConn.Close(); err != nil {
 			s.Error("Failed to close grpc: ", err)
@@ -185,10 +202,7 @@ func (i *devboardFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 }
 
 func (i *devboardFixture) String() string {
-	if i.imageValue != nil {
-		return DevBoardService + "_" + i.imageValue.ImageType()
-	}
-	return DevBoardService
+	return DevBoardService + "_" + string(i.image)
 }
 
 // dialGrpc connects to the devboardsvc host.
