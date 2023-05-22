@@ -6,6 +6,7 @@ package policy
 
 import (
 	"context"
+	"time"
 
 	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
@@ -17,6 +18,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/printpreview"
 	"chromiumos/tast/local/chrome/uiauto/restriction"
 	"chromiumos/tast/local/chrome/uiauto/role"
+
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -41,6 +43,7 @@ func init() {
 		Params: []testing.Param{{
 			Fixture: "virtualUsbPrinterModulesLoadedWithChromePolicyLoggedIn",
 			Val:     browser.TypeAsh,
+			Timeout: 4 * time.Minute,
 		}, {
 			Name:              "lacros",
 			ExtraSoftwareDeps: []string{"lacros"},
