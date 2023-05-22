@@ -112,6 +112,12 @@ var Duo = App{
 	Name: "Duo",
 }
 
+// Element has details about the Element app.
+var Element = App{
+	ID:   "ldkimphifgfeohfgodpbhdlcgegcllbp",
+	Name: "Element",
+}
+
 // FamilyLink has details about the Family Link app.
 var FamilyLink = App{
 	ID:   "mljomdcpdfpfdplmgghfeoofmbbianlf",
