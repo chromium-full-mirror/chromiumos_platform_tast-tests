@@ -37,6 +37,7 @@ func init() {
 			"group:camera_dependent",
 			"group:video_conference",
 			"video_conference_per_build",
+			"video_conference_cq_critical",
 		},
 		SoftwareDeps: []string{"chrome", "camera_feature_effects"},
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("betty")),

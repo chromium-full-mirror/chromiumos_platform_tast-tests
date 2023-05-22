@@ -59,9 +59,10 @@ func init() {
 		},
 		Params: []testing.Param{
 			{
-				Name:    "web",
-				Fixture: fixture.GAIALoggedInWithFakeHALAndEffectsEnabled,
-				Val:     common.LaunchAppInWeb,
+				Name:      "web",
+				Fixture:   fixture.GAIALoggedInWithFakeHALAndEffectsEnabled,
+				Val:       common.LaunchAppInWeb,
+				ExtraAttr: []string{"video_conference_cq_critical"},
 			},
 			{
 				Name:    "web_lacros",
