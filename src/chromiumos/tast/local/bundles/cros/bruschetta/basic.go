@@ -20,6 +20,7 @@ func init() {
 		Desc:         "Tests startup for the bruschetta VM",
 		Contacts:     []string{"sidereal@google.com", "clumptini+oncall@google.com"},
 		SoftwareDeps: []string{"chrome", "vm_host", "dlc", "amd64"},
+		HardwareDeps: bruschetta.BruschettaMinDiskSize,
 		Attr:         []string{"group:mainline", "informational"},
 		BugComponent: "b:658562", // ChromeOS > Software > GuestOS
 		Fixture:      bruschetta.BruschettaFixture,

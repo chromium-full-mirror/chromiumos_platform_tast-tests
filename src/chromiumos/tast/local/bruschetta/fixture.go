@@ -28,6 +28,7 @@ import (
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 const (
@@ -53,6 +54,9 @@ const (
 	// BruschettaFixture is the name of the fixture defined in this file.
 	BruschettaFixture = "bruschettaReferenceVM"
 )
+
+// BruschettaMinDiskSize prevents tests from running on devices without enough storage.
+var BruschettaMinDiskSize = hwdep.D(hwdep.MinStorage(16))
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
