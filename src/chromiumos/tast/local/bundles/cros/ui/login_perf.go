@@ -1068,6 +1068,7 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 				// Values are not stored to the perf results, but only reported to the test log.
 				// Tracing run is different from performance run and we need metrics values from the
 				// tracing run to analyze the trace.
+				// Tracing run errors are logged but do not fail the test.
 				tracingValues := perfutil.NewValues(false /*dropMinMax*/)
 
 				var tracingHistograms []*metrics.Histogram
@@ -1088,19 +1089,21 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 					tracingValues,
 					tracingHistograms,
 				); err != nil {
-					s.Fatalf("Failed to dump tracing histograms for the test scenario %s-tracing: %s", testName, err)
-				}
-				tracingValues.ForEach(func(name string, value []float64) {
-					if len(value) != 1 {
-						s.Fatalf("%s-tracing: number of %s values is not equal to one: %v", testName, name, value)
+					s.Logf("WARNING: Failed to dump tracing histograms for the test scenario %s-tracing: %v", testName, err)
+				} else {
+					tracingValues.ForEach(func(name string, value []float64) {
+						if len(value) != 1 {
+							s.Logf("WARNING: %s-tracing: number of %s values is not equal to one: %v", testName, name, value)
+						} else {
+							s.Logf("%s-tracing %s: %f", testName, name, value[0])
+						}
+					})
+					for metric, values := range tpsValues {
+						s.Logf("%s-tracing %s: %v", testName, metric.Name, values)
 					}
-					s.Logf("%s-tracing %s: %f", testName, name, value[0])
-				})
-				for metric, values := range tpsValues {
-					s.Logf("%s-tracing %s: %v", testName, metric.Name, values)
 				}
 				if err := logout(ctx, cr, l); err != nil {
-					s.Fatalf("Failed to sign out from the tracing session %s-tracing: %s", testName, err)
+					s.Logf("WARNING: Failed to sign out from the tracing session %s-tracing: %v", testName, err)
 				}
 			}
 		}
