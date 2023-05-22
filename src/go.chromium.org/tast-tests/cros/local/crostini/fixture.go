@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -495,6 +496,11 @@ func (f *crostiniFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	// Report disk size again after successful install.
 	if err := reportDiskUsage(ctx); err != nil {
 		s.Log("Failed to gather disk usage: ", err)
+	}
+
+	// Disable cursor blinking for GTK apps.
+	if err := f.cont.Command(ctx, "gsettings", "set", "org.gnome.desktop.interface", "cursor-blink", "false").Run(testexec.DumpLogOnError); err != nil {
+		s.Fatal("Failed to stop cursor blink: ", err)
 	}
 
 	downloadsPath, err := cryptohome.DownloadsPath(ctx, f.cr.NormalizedUser())

@@ -228,6 +228,7 @@ func TestOldAppTestParams(t *testing.T) {
 var appTests = []string{
 	"app_audacity.go",
 	"app_firefox.go",
+	"app_libre_office.go",
 }
 
 func TestAppTestParams(t *testing.T) {
