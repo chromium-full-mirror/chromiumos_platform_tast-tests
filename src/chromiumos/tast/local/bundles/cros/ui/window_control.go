@@ -109,7 +109,7 @@ func WindowControl(ctx context.Context, s *testing.State) {
 	}
 
 	r := perfutil.NewRunner(br, perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
-	r.Runs = 5
+	r.SetRunsNumber(perfutil.RunnerCyclesOptions{MaxRuns: 5, MinSuccessfulRuns: 5})
 	r.RunTracing = false
 
 	s.Log("Step 1: window state transition")

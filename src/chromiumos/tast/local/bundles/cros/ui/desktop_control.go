@@ -141,7 +141,7 @@ func DesktopControl(ctx context.Context, s *testing.State) {
 	}
 
 	r := perfutil.NewRunner(br, perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
-	r.Runs = 3
+	r.SetRunsNumber(perfutil.RunnerCyclesOptions{MaxRuns: 3, MinSuccessfulRuns: 3})
 	r.RunTracing = false
 
 	// Clamshell "bubble" launcher:

@@ -327,7 +327,7 @@ func HotseatScrollPerf(ctx context.Context, s *testing.State) {
 		if setting.state == overviewIsVisible {
 			suffix = "OverviewShown"
 		}
-		runnerError := runner.RunMultiple(ctx, setting.state.String(), uiperf.Run(s, perfutil.RunAndWaitAll(tconn, func(ctx context.Context) error {
+		_, runnerError := runner.RunMultiple(ctx, setting.state.String(), uiperf.Run(s, perfutil.RunAndWaitAll(tconn, func(ctx context.Context) error {
 			return runShelfScroll(ctx, tconn)
 		}, shelfAnimationHistogramName(setting.mode, setting.state))),
 			perfutil.StoreAll(perf.BiggerIsBetter, "percent", suffix))

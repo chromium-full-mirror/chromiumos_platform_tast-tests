@@ -105,6 +105,7 @@ func StoreLatency(ctx context.Context, pv *Values, hists []*metrics.Histogram) e
 	return StoreAll(perf.SmallerIsBetter, "ms", "")(ctx, pv, hists)
 }
 
+// RunnerOptions is a structure to help name NewRunner() parameters.
 type RunnerOptions struct {
 	// In many tests the first run will actually initialize resources and
 	// thus will be very slow. If `IgnoreFirstRun` flag is true the metrics
@@ -118,11 +119,15 @@ type RunnerOptions struct {
 }
 
 // Runner is an entity to manage multiple runs of the test scenario.
+// Runner will run test in a loop until `minSuccessfulRuns` number of successful
+// test runs reached. If this number was not reached until `maxRuns` runner
+// will be raised.
 type Runner struct {
-	br         *browser.Browser
-	pv         *Values
-	Runs       int
-	RunTracing bool
+	br                *browser.Browser
+	pv                *Values
+	maxRuns           int
+	minSuccessfulRuns int
+	RunTracing        bool
 
 	options RunnerOptions
 }
@@ -130,12 +135,33 @@ type Runner struct {
 // NewRunner creates a new instance of Runner.
 func NewRunner(br *browser.Browser, options RunnerOptions) *Runner {
 	return &Runner{
-		br:         br,
-		pv:         NewValues(options.DropMinMaxValues),
-		Runs:       DefaultRuns,
-		RunTracing: (br != nil),
-		options:    options,
+		br:                br,
+		pv:                NewValues(options.DropMinMaxValues),
+		maxRuns:           DefaultRuns,
+		minSuccessfulRuns: DefaultRuns,
+		RunTracing:        (br != nil),
+		options:           options,
 	}
+}
+
+// RunnerCyclesOptions is a structure to help name SetRunsNumber() parameters.
+type RunnerCyclesOptions struct {
+	// This sets the maximum number of test runs for the RunMultiple().
+	MaxRuns int
+
+	// This sets the maximum number of required successful runs for the
+	// RunMultiple(). If MinSuccessfulRuns < MaxRuns the RunMultiple will
+	// stop as soon as MinSuccessfulRuns is reached.
+	MinSuccessfulRuns int
+}
+
+// SetRunsNumber allows to adjust the number of test runs.
+func (r *Runner) SetRunsNumber(options RunnerCyclesOptions) {
+	if (options.MinSuccessfulRuns < 1) || (options.MaxRuns < options.MinSuccessfulRuns) {
+		panic("Incorrect RunnerCyclesOptions")
+	}
+	r.maxRuns = options.MaxRuns
+	r.minSuccessfulRuns = options.MinSuccessfulRuns
 }
 
 // Values returns the values in the runner.
@@ -143,25 +169,47 @@ func (r *Runner) Values() *Values {
 	return r.pv
 }
 
-// RunMultiple runs scenario multiple times and store the data through store
-// function. It invokes scenario+store 10 times (actually r.Runs times), and
-// then invokes scenario only with tracing enabled.  If one of the runs fails,
-// it quits immediately and reports an error. The run function is executed
-// within the scenario one and has to be implemented by the caller. The name
-// parameter is used for the prefix of subtest names for calling scenario/store
-// function and the prefix for the trace data file. The name can be empty, in
-// which case the runner uses default prefix values.  Returns false when it has
-// an error.
-func (r *Runner) RunMultiple(ctx context.Context, name string, scenario ScenarioFunc, store StoreFunc) error {
+// RunMultiple runs a test scenario multiple times and stores the results using
+// the store function. It runs the `scenario` and `store` functions until the
+// minimum number of successful runs (`r.minSuccessfulRuns`) is reached, up to
+// a maximum of `r.maxRuns`. After that, it runs the scenario again with
+// tracing enabled. If any of the runs fail, their errors are added to the
+// resulting errors array. If `r.minSuccessfulRuns` cannot be met (i.e. the
+// remaining number of allowed runs is not enough to reach the required number
+// of successful runs), it quits immediately and reports an error. The test
+// function is executed within the scenario function and must be implemented by
+// the caller. The name parameter is used as the prefix for subtest names when
+// calling the scenario/store function and as the prefix for the trace data
+// file. The name can be empty, in which case the runner uses default prefix
+// values.
+func (r *Runner) RunMultiple(ctx context.Context, name string, scenario ScenarioFunc, store StoreFunc) ([]error, error) {
 	runPrefix := name
 	if name == "" {
 		runPrefix = "run"
 	}
+	successCount := 0
+	var runErrors []error
 
-	for i := 0; i < r.Runs; i++ {
-		hists, err := scenario(ctx, fmt.Sprintf("%s-%d", runPrefix, i))
-		if err != nil {
-			return errors.Wrap(err, "failed to run the test scenario")
+	appendRunError := func(index int, e error) error {
+		if e == nil {
+			return nil
+		}
+		runErrors = append(runErrors, errors.Wrap(e, "failed to run the test scenario"))
+		if r.maxRuns-len(runErrors) < r.minSuccessfulRuns-successCount {
+			return errors.Wrapf(e,
+				"failed to get the required number of "+
+					"succesful runs (%d); got (%d/%d) "+
+					"successful runs, with errors: %v",
+				r.minSuccessfulRuns, successCount,
+				index+1, runErrors)
+		}
+		return nil
+	}
+
+	for i := 0; i < r.maxRuns; i++ {
+		hists, e := scenario(ctx, fmt.Sprintf("%s-%d", runPrefix, i))
+		if err := appendRunError(i, e); err != nil {
+			return runErrors, err
 		}
 		storage := r.pv
 		if r.options.IgnoreFirstRun && i == 0 {
@@ -169,18 +217,22 @@ func (r *Runner) RunMultiple(ctx context.Context, name string, scenario Scenario
 			storage = NewValues(false)
 		}
 
-		if err := store(ctx, storage, hists); err != nil {
-			return errors.Wrap(err, "failed to store the histogram data")
+		if err := appendRunError(i, store(ctx, storage, hists)); err != nil {
+			return runErrors, errors.Wrap(err, "failed to store the histogram data")
+		}
+		successCount++
+		if successCount >= r.minSuccessfulRuns {
+			break
 		}
 	}
 	if !r.RunTracing {
-		return nil
+		return runErrors, nil
 	}
 
 	const traceCleanupDuration = 2 * time.Second
 	if deadline, ok := ctx.Deadline(); ok && deadline.Sub(time.Now()) < traceCleanupDuration {
 		testing.ContextLog(ctx, "There are no time to conduct a tracing run. Skipping")
-		return nil
+		return runErrors, nil
 	}
 
 	defer r.br.StopTracing(ctx)
@@ -191,20 +243,20 @@ func (r *Runner) RunMultiple(ctx context.Context, name string, scenario Scenario
 	// UI tests, disable systraces for the time being.
 	// TODO(https://crbug.com/1162385, b/177636800): enable it.
 	if err := r.br.StartTracing(sctx, []string{"benchmark", "cc", "gpu", "input", "toplevel", "ui", "views", "viz"}, browser.DisableSystrace()); err != nil {
-		return errors.Wrap(err, "failed to start tracing")
+		return runErrors, errors.Wrap(err, "failed to start tracing")
 	}
 
 	_, err := scenario(sctx, fmt.Sprintf("%s-tracing", runPrefix))
 	if err != nil {
-		return errors.Wrap(err, "failed to run the test scenario")
+		return runErrors, errors.Wrap(err, "failed to run the test scenario")
 	}
 
 	tr, err := r.br.StopTracing(ctx)
 	if err != nil {
-		return errors.Wrap(err, "failed to stop tracing")
+		return runErrors, errors.Wrap(err, "failed to stop tracing")
 	}
 	if tr == nil || len(tr.Packet) == 0 {
-		return errors.Wrap(err, "no trace data is collected")
+		return runErrors, errors.Wrap(err, "no trace data is collected")
 	}
 	filename := "trace.data.gz"
 	if name != "" {
@@ -213,21 +265,21 @@ func (r *Runner) RunMultiple(ctx context.Context, name string, scenario Scenario
 
 	outdir, ok := testing.ContextOutDir(ctx)
 	if !ok {
-		return errors.Wrap(err, "failed to get name of the output directory")
+		return runErrors, errors.Wrap(err, "failed to get name of the output directory")
 	}
 
 	if err := chrome.SaveTraceToFile(ctx, tr, filepath.Join(outdir, filename)); err != nil {
-		return errors.Wrap(err, "failed to save trace to file")
+		return runErrors, errors.Wrap(err, "failed to save trace to file")
 	}
 
-	return nil
+	return runErrors, nil
 }
 
 // RunMultipleAndSave is a utility to create a new runner, conduct runs multiple times,
 // and save the recorded values.
 func RunMultipleAndSave(ctx context.Context, outDir string, br *browser.Browser, scenario ScenarioFunc, store StoreFunc, options RunnerOptions) error {
 	r := NewRunner(br, options)
-	if err := r.RunMultiple(ctx, "", scenario, store); err != nil {
+	if _, err := r.RunMultiple(ctx, "", scenario, store); err != nil {
 		return err
 	}
 	if err := r.Values().Save(ctx, outDir); err != nil {

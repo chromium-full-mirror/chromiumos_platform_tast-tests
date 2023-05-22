@@ -743,6 +743,10 @@ func testFunction(
 			stopTracingCallback = cujRecorder.StopTracing
 		}
 
+		// Limit each test run to 2 minutes (so that we could retry early).
+		ctx, cancel := context.WithTimeout(ctx, 2*time.Minute)
+		defer cancel()
+
 		var err error
 		histograms, err = metrics.RunAndWaitAll(
 			ctx,
@@ -864,8 +868,8 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 			DropMinMaxValues: false,
 		},
 	)
-	// Use 3 runs instead of 10, to reduce tests time.
-	r.Runs = 3
+	// Use 3 (successful) runs instead of 10, to reduce tests time.
+	r.SetRunsNumber(perfutil.RunnerCyclesOptions{MaxRuns: 5, MinSuccessfulRuns: 3})
 	// Run an http server to serve the test contents for accessing from the chrome browsers.
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()
@@ -1025,7 +1029,8 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 
 				// Performaance run.
 				// Metrics are collected and saved to `pv`.
-				if err := r.RunMultiple(
+				var allRunErrors []error
+				if allRunErrors, err = r.RunMultiple(
 					ctx,
 					testName,
 					uiperf.Run(
@@ -1063,7 +1068,9 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 					}); err != nil {
 					s.Fatalf("Failed to run test scenario %s: %s", testName, err)
 				}
-
+				if len(allRunErrors) > 0 {
+					s.Logf("WARNING: Some of the %s runs ended with failures. All run errors: %v", testName, allRunErrors)
+				}
 				// Do a tracing run.
 				// Values are not stored to the perf results, but only reported to the test log.
 				// Tracing run is different from performance run and we need metrics values from the
