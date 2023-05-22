@@ -12,16 +12,20 @@ import (
 	"go.chromium.org/tast-tests/cros/common/genparams"
 	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/webrtc/peerconnection"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/graphics"
 )
 
 // To regenerate the test parameters by running the following in a chroot:
 // TAST_GENERATE_UPDATE=1 ~/trunk/src/platform/tast/tools/go.sh test -count=1 go.chromium.org/tast-tests/cros/local/bundles/cros/webrtc
 
-// This matches peerconnection.RTCTestParams except that the members that are of
-// enumerated types are made strings so that the generated Tast code retains the
-// enumeration names.
+// This matches peerconnection.RTCTestParams except for a couple of things:
+//
+//   - The members that are of enumerated types are made strings so that the
+//     generated Tast code retains the enumeration names.
+//
+//   - RTCTestParams.VideoGridDimension and RTCTestParams.VideoGridFile are not
+//     here because we don't have test cases that use it.
+//     TODO(hiroh): remove those fields in RTCTestParams.
 type rtcTestParamsData struct {
 	VerifyDecoderMode                     string
 	VerifyEncoderMode                     string
@@ -30,470 +34,348 @@ type rtcTestParamsData struct {
 	StreamHeight                          int
 	Svc                                   string
 	Simulcasts                            int
-	DisplayMediaType                      string
-	VideoGridDimension                    int
-	VideoGridFile                         string
 	SimulcastHWEncs                       []bool
+	DisplayMediaType                      string
 	BrowserType                           string
 	VerifyOutOfProcessVideoEncodingIsUsed bool
 }
 
 type rtcPerfTestSourceData struct {
-	Name string
-
-	ParamData rtcTestParamsData
-
+	Name         string
+	ParamData    rtcTestParamsData
 	SoftwareDeps []string
 	HardwareDeps string
 	Fixture      string
-	Data         []string
 }
 
-type rtcPerfTestOOPOption int
-
-const (
-	noTestOption   rtcPerfTestOOPOption = iota
-	outOfProcessVD                      // Out-of-process video decoding.
-	outOfProcessVE                      // Out-of-process video encoding.
-)
-
-type captureSourceType struct {
-	displayMediaType   peerconnection.DisplayMediaType
-	zeroCopyTabCapture bool
-}
-
-var cameraCapture = captureSourceType{displayMediaType: "", zeroCopyTabCapture: false}
-
-var k180p = graphics.Size{Width: 320, Height: 180}
-var k270p = graphics.Size{Width: 480, Height: 270}
-var k360p = graphics.Size{Width: 640, Height: 360}
 var k720p = graphics.Size{Width: 1280, Height: 720}
 var k1080p = graphics.Size{Width: 1920, Height: 1080}
 
-func genFixture(verifyDecoderMode peerconnection.VerifyDecoderMode, verifyEncoderMode peerconnection.VerifyEncoderMode,
-	useSvc bool, captureSource captureSourceType, browserType browser.Type, testOption rtcPerfTestOOPOption) string {
-	if browserType == browser.TypeLacros {
-		if verifyEncoderMode != peerconnection.VerifyHWEncoderUsed ||
-			verifyDecoderMode != peerconnection.VerifyHWDecoderUsed ||
-			useSvc || captureSource.displayMediaType != "" || testOption != noTestOption {
-			panic("lacros testing does not currently support the requested options")
-		}
-		return "chromeVideoLacrosWithFakeWebcam"
-	}
-	if captureSource != cameraCapture {
-		if verifyEncoderMode != peerconnection.VerifyHWEncoderUsed ||
-			verifyDecoderMode != peerconnection.VerifyHWDecoderUsed ||
-			useSvc || testOption != noTestOption {
-			panic("display capture testing does not currently support the requested options")
-		}
-		var captureFixtureMap = map[peerconnection.DisplayMediaType]map[bool]string{
-			peerconnection.CaptureMonitor: map[bool]string{false: "chromeScreenCapture", true: "chromeZeroCopyScreenCapture"},
-			peerconnection.CaptureWindow:  map[bool]string{false: "chromeWindowCapture", true: "chromeZeroCopyWindowCapture"},
-			peerconnection.CaptureTab:     map[bool]string{false: "chromeTabCapture", true: "chromeZeroCopyTabCapture"},
-		}
+type streamType string
 
-		captureFixture, found := captureFixtureMap[captureSource.displayMediaType][captureSource.zeroCopyTabCapture]
-		if !found {
-			panic(fmt.Sprintf("unknown displayMediaType: %v", captureSource.displayMediaType))
-		}
-		return captureFixture
-	}
-	if useSvc {
-		if verifyDecoderMode != peerconnection.VerifyHWDecoderUsed ||
-			testOption != noTestOption {
-			panic("svc testing does not currently support the requested options")
-		}
-		if verifyEncoderMode == peerconnection.VerifyHWEncoderUsed {
-			return "chromeVideoWithFakeWebcamAndSVCEnabled"
-		}
-		return "chromeVideoWithFakeWebcamAndSVCEnabledAndSWEncoding"
-	}
-	if verifyEncoderMode == peerconnection.VerifyHWEncoderUsed {
-		if verifyDecoderMode != peerconnection.VerifyHWDecoderUsed {
-			panic("if encoder is hardware then the decoder must be also hardware currently")
-		}
+const (
+	vanilla   streamType = "vanilla"
+	l1t3      streamType = "L1T3"
+	l2t3key   streamType = "L2T3_KEY"
+	l3t3key   streamType = "L3T3_KEY"
+	simulcast streamType = "simulcast"
+)
 
-		if testOption == outOfProcessVD {
-			return "chromeVideoOOPVDWithFakeWebcam"
-		} else if testOption == outOfProcessVE {
-			return "chromeVideoWithFakeWebcamAndOOPVE"
-		}
-		return "chromeVideoWithFakeWebcam"
-	} else if verifyDecoderMode == peerconnection.VerifyHWDecoderUsed {
-		if testOption != noTestOption {
-			panic("peer connection testing does not currently support the requested options")
-		}
-		return "chromeVideoWithFakeWebcamAndSWEncoding"
+type encoderImpl string
+type decoderImpl string
+
+const (
+	swEnc encoderImpl = "sw_enc"
+	hwEnc encoderImpl = "hw_enc"
+	oopVE encoderImpl = "hw_oopve"
+
+	swDec decoderImpl = "sw_dec"
+	hwDec decoderImpl = "hw_dec"
+	oopVD decoderImpl = "hw_oopvd"
+)
+
+func isHardwareEncoderImpl(enc encoderImpl) bool {
+	switch enc {
+	case swEnc:
+		return false
+	case hwEnc, oopVE:
+		return true
 	}
-	return "chromeVideoWithFakeWebcamAndNoHwAcceleration"
+	panic(fmt.Sprintf("unknown encoder: %v", enc))
 }
 
-func genTestName(codec string, resolution graphics.Size,
-	verifyDecoderMode peerconnection.VerifyDecoderMode, verifyEncoderMode peerconnection.VerifyEncoderMode,
-	svc string, simulcastHwEncs []bool, captureSource captureSourceType, browserType browser.Type, testOption rtcPerfTestOOPOption) string {
-	testName := codec
-	switch resolution {
-	case k180p:
-		testName += "_180p"
-	case k270p:
-		testName += "_270p"
-	case k360p:
-		testName += "_360p"
-	case k720p:
-		// Add no suffix because 720p is the default resolution.
-	case k1080p:
-		testName += "_1080p"
-	default:
-		panic(fmt.Sprintf("unknown resolution: %v", resolution))
+func isHardwareDecoderImpl(dec decoderImpl) bool {
+	switch dec {
+	case swDec:
+		return false
+	case hwDec, oopVD:
+		return true
 	}
-
-	hasSwEnc := false
-	if len(simulcastHwEncs) == 0 {
-		if verifyEncoderMode == peerconnection.VerifyHWEncoderUsed {
-			testName += "_hw"
-		} else {
-			testName += "_sw"
-			hasSwEnc = true
-		}
-		if svc != "" {
-			testName += "_svc_" + strings.ToLower(svc)
-		}
-	} else {
-		testName += "_simulcast"
-		for i, hwEnc := range simulcastHwEncs {
-			height := resolution.Height >> (len(simulcastHwEncs) - (i + 1))
-			suffix := "sw"
-			if hwEnc {
-				suffix = "hw"
-			} else {
-				hasSwEnc = true
-			}
-			testName += fmt.Sprintf("_%d_%s", height, suffix)
-		}
-	}
-
-	if captureSource != cameraCapture {
-		switch captureSource.displayMediaType {
-		case peerconnection.CaptureMonitor:
-			testName += "_capture_monitor"
-		case peerconnection.CaptureWindow:
-			testName += "_capture_window"
-		case peerconnection.CaptureTab:
-			testName += "_capture_tab"
-		default:
-			panic(fmt.Sprintf("unknown DisplayMediaType: %v", captureSource.displayMediaType))
-		}
-		if captureSource.zeroCopyTabCapture {
-			testName += "_zero_copy"
-		}
-	}
-	if browserType == browser.TypeLacros {
-		testName += "_lacros"
-	}
-	// outOfProcessVD is not handled here because the only the only current
-	// OOP-VD variant is "hw_multi" and the test names are produced in-line on
-	// TestRTCPeerConnectionPerfParams().
-	if testOption == outOfProcessVE {
-		testName += "_oopve"
-	}
-	// The sw_enc suffix is added to a test case where a hardware video decoder
-	// is used but a software video encoder is used.
-	if hasSwEnc && verifyDecoderMode == peerconnection.VerifyHWDecoderUsed {
-		testName += "_enc"
-	}
-	return testName
+	panic(fmt.Sprintf("unknown decoder: %v", dec))
 }
 
-func genSoftwareDeps(codec string,
-	verifyDecoderMode peerconnection.VerifyDecoderMode,
-	verifyEncoderMode peerconnection.VerifyEncoderMode,
-	browserType browser.Type) []string {
-	var softwareDeps []string
+func toVerifyEncoderMode(enc encoderImpl) string {
+	if isHardwareEncoderImpl(enc) {
+		return "peerconnection.VerifyHWEncoderUsed"
+	}
+	return "peerconnection.VerifySWEncoderUsed"
+}
+
+func toVerifyDecoderMode(dec decoderImpl) string {
+	if isHardwareDecoderImpl(dec) {
+		return "peerconnection.VerifyHWDecoderUsed"
+	}
+	return "peerconnection.VerifySWDecoderUsed"
+}
+
+func softwareCodecsDeps(codec string, enc encoderImpl, dec decoderImpl) []string {
+	var deps []string
 	if codec == "h264" {
-		softwareDeps = append(softwareDeps, "proprietary_codecs")
+		deps = append(deps, "proprietary_codecs")
 	}
-
-	// If the tests verifies that a hardware decoder is used, the test should only run
-	// on devices that support hardware decoding. In those cases, we only care about
-	// devices that support hardware encoding for the same codec (even if the test
-	// ends up using software encoding), with one exception: vp9_1080p_sw_enc can run
-	// on devices that support VP9 hardware decoding regardless of hardware encoder
-	// support.
-	if verifyDecoderMode == peerconnection.VerifyHWDecoderUsed {
+	if enc == hwEnc || enc == oopVE {
 		switch codec {
 		case "h264":
-			softwareDeps = append(softwareDeps, caps.HWEncodeH264, caps.HWDecodeH264)
+			deps = append(deps, caps.HWEncodeH264)
 		case "vp8":
-			softwareDeps = append(softwareDeps, caps.HWEncodeVP8, caps.HWDecodeVP8)
+			deps = append(deps, caps.HWEncodeVP8)
 		case "vp9":
-			softwareDeps = append(softwareDeps, caps.HWEncodeVP9, caps.HWDecodeVP9)
-		default:
-			panic(fmt.Sprintf("unknown codec: %v", codec))
+			deps = append(deps, caps.HWEncodeVP9)
+		case "av1":
+			deps = append(deps, caps.HWEncodeAV1)
 		}
 	}
-	if browserType == browser.TypeLacros {
-		softwareDeps = append(softwareDeps, "lacros")
+	if dec == hwDec || dec == oopVD {
+		switch codec {
+		case "h264":
+			deps = append(deps, caps.HWDecodeH264)
+		case "vp8":
+			deps = append(deps, caps.HWDecodeVP8)
+		case "vp9":
+			deps = append(deps, caps.HWDecodeVP9)
+		case "av1":
+			deps = append(deps, caps.HWDecodeAV1)
+		}
 	}
-
-	return softwareDeps
+	return deps
 }
 
-func genParamsData(codec string, resolution graphics.Size,
-	verifyDecoderMode peerconnection.VerifyDecoderMode, verifyEncoderMode peerconnection.VerifyEncoderMode,
-	svc string, simulcastHwEncs []bool,
-	displayMediaType peerconnection.DisplayMediaType, browserType browser.Type) rtcTestParamsData {
-	profile := strings.ToUpper(codec)
-	var verifyDecoderModeStr, verifyEncoderModeStr, browserTypeStr, displayMediaTypeStr string
-	switch verifyDecoderMode {
-	case peerconnection.VerifyHWDecoderUsed:
-		verifyDecoderModeStr = "peerconnection.VerifyHWDecoderUsed"
-	case peerconnection.VerifySWDecoderUsed:
-		verifyDecoderModeStr = "peerconnection.VerifySWDecoderUsed"
-	case peerconnection.NoVerifyDecoderMode:
-		verifyDecoderModeStr = "peerconnection.NoVerifyDecoderMode"
-	default:
-		panic(fmt.Sprintf("unknown verifyDecoderMode: %v", verifyDecoderMode))
+func skipTest(codec string, stream streamType, enc encoderImpl, dec decoderImpl) bool {
+	if isHardwareEncoderImpl(enc) && !isHardwareDecoderImpl(dec) {
+		// There is no device that has a hardware encoder but no hardware decoder for any codec.
+		return true
 	}
-	switch verifyEncoderMode {
-	case peerconnection.VerifyHWEncoderUsed:
-		verifyEncoderModeStr = "peerconnection.VerifyHWEncoderUsed"
-	case peerconnection.VerifySWEncoderUsed:
-		verifyEncoderModeStr = "peerconnection.VerifySWEncoderUsed"
-	case peerconnection.NoVerifyEncoderMode:
-		verifyEncoderModeStr = "peerconnection.NoVerifyEncoderMode"
-	default:
-		panic(fmt.Sprintf("unknown verifyEncoderMode: %v", verifyEncoderMode))
+
+	switch stream {
+	case l1t3:
+		if codec == "h264" {
+			// H264 temporal layer encoding is not supported for webrtc.
+			return true
+		}
+	case l2t3key, l3t3key:
+		if codec != "vp9" {
+			// Spatial layer encoding is supported only in vp9.
+			return true
+		}
+	case simulcast:
+		if codec != "vp8" {
+			// Simulcast encoding is used in vp8 only today.
+			return true
+		}
 	}
-	switch browserType {
-	case browser.TypeAsh:
-		browserTypeStr = "browser.TypeAsh"
-	case browser.TypeLacros:
-		browserTypeStr = "browser.TypeLacros"
-	default:
-		panic(fmt.Sprintf("unknown browserType: %v", browserType))
-	}
-	switch displayMediaType {
-	case peerconnection.CaptureMonitor:
-		displayMediaTypeStr = "peerconnection.CaptureMonitor"
-	case peerconnection.CaptureWindow:
-		displayMediaTypeStr = "peerconnection.CaptureWindow"
-	case peerconnection.CaptureTab:
-		displayMediaTypeStr = "peerconnection.CaptureTab"
-	}
-	return rtcTestParamsData{
-		VerifyDecoderMode:  verifyDecoderModeStr,
-		VerifyEncoderMode:  verifyEncoderModeStr,
-		Profile:            profile,
-		StreamWidth:        resolution.Width,
-		StreamHeight:       resolution.Height,
-		VideoGridDimension: 1,
-		Svc:                svc,
-		Simulcasts:         len(simulcastHwEncs),
-		SimulcastHWEncs:    simulcastHwEncs,
-		DisplayMediaType:   displayMediaTypeStr,
-		BrowserType:        browserTypeStr,
-	}
+	return false
 }
 
-func genRtcPerfTestSourceData(codec string, resolution graphics.Size,
-	verifyDecoderMode peerconnection.VerifyDecoderMode, verifyEncoderMode peerconnection.VerifyEncoderMode,
-	svc string, simulcastHWEncs []bool, captureSource captureSourceType,
-	browserType browser.Type, testOption rtcPerfTestOOPOption) rtcPerfTestSourceData {
-	return rtcPerfTestSourceData{
-		Name: genTestName(codec, resolution, verifyDecoderMode, verifyEncoderMode,
-			svc, simulcastHWEncs, captureSource, browserType, testOption),
-		ParamData: genParamsData(codec, resolution, verifyDecoderMode, verifyEncoderMode,
-			svc, simulcastHWEncs, captureSource.displayMediaType, browserType),
-		SoftwareDeps: genSoftwareDeps(codec, verifyDecoderMode, verifyEncoderMode, browserType),
-		Fixture:      genFixture(verifyDecoderMode, verifyEncoderMode, svc != "", captureSource, browserType, testOption),
+func toFixture(enc encoderImpl, dec decoderImpl) string {
+	switch enc {
+	case swEnc:
+		switch dec {
+		case swDec:
+			return "chromeVideoWithFakeWebcamAndNoHwAcceleration"
+		case hwDec:
+			return "chromeVideoWithFakeWebcamAndSWEncoding"
+		case oopVD:
+			panic("we don't test OOP-VD + software encoding")
+		}
+	case hwEnc:
+		switch dec {
+		case swDec:
+			panic("we don't test hardware encoding + software decoding")
+		case hwDec:
+			return "chromeVideoWithFakeWebcam"
+		case oopVD:
+			return "chromeVideoOOPVDWithFakeWebcam"
+		}
+	case oopVE:
+		switch dec {
+		case swDec:
+			panic("we don't test OOP-VE + software decoding")
+		case hwDec:
+			return "chromeVideoWithFakeWebcamAndOOPVE"
+		case oopVD:
+			return "chromeVideoWithFakeWebcamAndOOPVDAndOOPVE"
+		}
 	}
+	panic(fmt.Sprintf("unexpected pair, enc=%s, dec=%s", string(enc), string(dec)))
 }
 
 func TestRTCPeerConnectionPerfParams(t *testing.T) {
-	verifyDecoderMode := map[bool]peerconnection.VerifyDecoderMode{
-		false: peerconnection.VerifySWDecoderUsed, true: peerconnection.VerifyHWDecoderUsed,
-	}
-	verifyEncoderMode := map[bool]peerconnection.VerifyEncoderMode{
-		false: peerconnection.VerifySWEncoderUsed, true: peerconnection.VerifyHWEncoderUsed,
-	}
-
-	var params []rtcPerfTestSourceData
-
-	// Standard case.
+	var sourceDatas []rtcPerfTestSourceData
 	for _, codec := range []string{"h264", "vp8", "vp9", "av1"} {
-		for _, hardware := range []bool{false, true} {
-			if codec == "av1" && hardware {
-				continue
-			}
-			param := genRtcPerfTestSourceData(codec, k720p,
-				verifyDecoderMode[hardware], verifyEncoderMode[hardware],
-				"", nil, cameraCapture, browser.TypeAsh, noTestOption)
-			params = append(params, param)
-		}
-	}
-	// Lacros.
-	for _, codec := range []string{"h264", "vp8", "vp9"} {
-		for _, resolution := range []graphics.Size{k720p, k360p} {
-			param := genRtcPerfTestSourceData(codec, resolution,
-				peerconnection.VerifyHWDecoderUsed, peerconnection.VerifyHWEncoderUsed,
-				"", nil, cameraCapture, browser.TypeLacros, noTestOption)
-			params = append(params, param)
-		}
-	}
-	// Out-of-Process video encoding.
-	for _, codec := range []string{"h264", "vp8", "vp9"} {
-		param := genRtcPerfTestSourceData(codec, k720p,
-			peerconnection.VerifyHWDecoderUsed, peerconnection.VerifyHWEncoderUsed,
-			"", nil, cameraCapture, browser.TypeAsh, outOfProcessVE)
-		params = append(params, param)
-	}
-	// VP9 1080p.
-	for _, hardware := range []bool{false, true} {
-		param := genRtcPerfTestSourceData("vp9", k1080p,
-			verifyDecoderMode[hardware], verifyEncoderMode[hardware],
-			"", nil, cameraCapture, browser.TypeAsh, noTestOption)
-		params = append(params, param)
-	}
-	// vp9_1080p_sw_enc.
-	param := genRtcPerfTestSourceData("vp9", k1080p,
-		peerconnection.VerifyHWDecoderUsed, peerconnection.VerifySWEncoderUsed,
-		"", nil, cameraCapture, browser.TypeAsh, noTestOption)
-	// This is a special case in which HWEncodeVP9 is dropped even if we require to use a vp9 hardware decoder.
-	param.SoftwareDeps = []string{caps.HWDecodeVP9}
-	params = append(params, param)
+		for _, resolution := range []graphics.Size{k720p, k1080p} {
+			for _, stream := range []streamType{vanilla, l1t3, l2t3key, l3t3key, simulcast} {
+				for _, enc := range []encoderImpl{swEnc, hwEnc} {
+					for _, dec := range []decoderImpl{swDec, hwDec} {
+						if skipTest(codec, stream, enc, dec) {
+							continue
+						}
 
-	// VP8 display capture.
-	for _, displayMediaType := range []peerconnection.DisplayMediaType{peerconnection.CaptureMonitor, peerconnection.CaptureWindow, peerconnection.CaptureTab} {
-		for _, zeroCopyTabCapture := range []bool{false, true} {
-			captureSource := captureSourceType{displayMediaType: displayMediaType, zeroCopyTabCapture: zeroCopyTabCapture}
-			param := genRtcPerfTestSourceData("vp8", k720p,
-				peerconnection.VerifyHWDecoderUsed, peerconnection.VerifyHWEncoderUsed,
-				"", nil, captureSource, browser.TypeAsh, noTestOption)
-			if displayMediaType == peerconnection.CaptureMonitor {
-				param.HardwareDeps = "hwdep.InternalDisplay()"
-			}
-			params = append(params, param)
-		}
-	}
-	// VP9 SVC.
-	for _, svc := range []string{"L1T2", "L1T3", "L3T3_KEY"} {
-		param := genRtcPerfTestSourceData("vp9", k720p,
-			peerconnection.VerifyHWDecoderUsed, peerconnection.VerifyHWEncoderUsed,
-			svc, nil, cameraCapture, browser.TypeAsh, noTestOption)
-		params = append(params, param)
-	}
-	// VP8|VP9 hw multi.
-	for _, disableVaapiLock := range []bool{false, true} {
-		type multiTestParam struct {
-			codec         string
-			gridDimension int
-			testOption    rtcPerfTestOOPOption
-		}
-		mtParams := []multiTestParam{{"vp8", 3, noTestOption}, {"vp8", 4, noTestOption}, {"vp9", 3, noTestOption}}
-		// We test out-of-process video decoding only with the VA-API global lock enabled.
-		if !disableVaapiLock {
-			mtParams = append(mtParams, multiTestParam{"vp8", 3, outOfProcessVD})
-		}
-		for _, mp := range mtParams {
-			var param rtcPerfTestSourceData
-			param.Name = fmt.Sprintf("%s_hw_multi_vp9_%dx%d", mp.codec, mp.gridDimension, mp.gridDimension)
-			param.ParamData = genParamsData(mp.codec, k720p,
-				peerconnection.VerifyHWDecoderUsed, peerconnection.VerifyHWEncoderUsed,
-				"", nil, "", browser.TypeAsh)
-			param.ParamData.VideoGridDimension = mp.gridDimension
-			param.ParamData.VideoGridFile = "tulip2-320x180.vp9.webm"
-			param.Data = []string{param.ParamData.VideoGridFile}
-
-			param.Fixture = "chromeVideoWithFakeWebcam"
-			param.SoftwareDeps = []string{caps.HWDecodeVP9}
-			if mp.codec == "vp8" {
-				param.SoftwareDeps = append(param.SoftwareDeps, []string{caps.HWDecodeVP8, caps.HWEncodeVP8}...)
-				if mp.gridDimension > 3 && !disableVaapiLock {
-					param.HardwareDeps = "hwdep.SkipOnPlatform(\"trogdor\")"
-				}
-			} else {
-				param.SoftwareDeps = append(param.SoftwareDeps, caps.HWEncodeVP9)
-			}
-			if disableVaapiLock {
-				param.Name += "_global_vaapi_lock_disabled"
-				param.SoftwareDeps = append(param.SoftwareDeps, "thread_safe_libva_backend")
-				param.Fixture = "chromeVideoWithFakeWebcamAndGlobalVaapiLockDisabled"
-			} else if mp.testOption == outOfProcessVD {
-				param.Name += "_oopvd"
-				param.Fixture = "chromeVideoOOPVDWithFakeWebcam"
-			}
-
-			params = append(params, param)
-		}
-	}
-
-	// Encoder small resolution performance tests.
-	for _, codec := range []string{"h264", "vp8", "vp9"} {
-		for _, resolution := range []graphics.Size{k360p, k180p} {
-			for _, hwEnc := range []bool{false, true} {
-				param := genRtcPerfTestSourceData(codec, resolution,
-					peerconnection.VerifyHWDecoderUsed,
-					verifyEncoderMode[hwEnc],
-					"", nil, cameraCapture, browser.TypeAsh, noTestOption)
-				params = append(params, param)
-			}
-		}
-	}
-	// VP8 simulcast encoding tests.
-	for _, resolution := range []graphics.Size{k720p, k360p} {
-		var hwEncsPatterns [3][]bool
-		switch resolution {
-		case k360p:
-			hwEncsPatterns = [3][]bool{
-				[]bool{false, false},
-				[]bool{false, true},
-				[]bool{true, true},
-			}
-		case k720p:
-			hwEncsPatterns = [3][]bool{
-				[]bool{false, false, false},
-				[]bool{false, true, true},
-				[]bool{true, true, true},
-			}
-		}
-		for _, hwEncs := range hwEncsPatterns {
-			// minResOnlySwEnc is specified if a software encoder is used for
-			// the smallest resolution and a hardware encoder is used for larger
-			// resolution in the simulcast encodings.
-			minResOnlySwEnc := hwEncs[0] == false
-			for i := 1; i < len(hwEncs); i++ {
-				if !hwEncs[i] {
-					minResOnlySwEnc = false
-					break
+						paramData := rtcTestParamsData{
+							VerifyDecoderMode: toVerifyDecoderMode(dec),
+							VerifyEncoderMode: toVerifyEncoderMode(enc),
+							Profile:           strings.ToUpper(codec),
+							StreamWidth:       resolution.Width,
+							StreamHeight:      resolution.Height,
+							BrowserType:       "browser.TypeAsh",
+						}
+						var streamTypeStr string
+						if stream != vanilla {
+							streamTypeStr = "_" + strings.ToLower(string(stream))
+							if stream == simulcast {
+								paramData.Simulcasts = 3
+								for i := 0; i < paramData.Simulcasts; i++ {
+									paramData.SimulcastHWEncs = append(paramData.SimulcastHWEncs, enc == hwEnc)
+								}
+							} else {
+								paramData.Svc = string(stream)
+							}
+						}
+						sourceData := rtcPerfTestSourceData{
+							Name:         fmt.Sprintf("%s_%dp%s_%s_%s", codec, resolution.Height, streamTypeStr, enc, dec),
+							ParamData:    paramData,
+							SoftwareDeps: softwareCodecsDeps(codec, enc, dec),
+							Fixture:      toFixture(enc, dec),
+						}
+						if dec == hwDec &&
+							(stream == l2t3key || stream == l3t3key) {
+							sourceData.HardwareDeps = "hwdep.SupportsVP9KSVCHWDecoding()"
+						}
+						sourceDatas = append(sourceDatas, sourceData)
+					}
 				}
 			}
-			// verifyEncoderMode is VerifyHWEncoderUsed HWEncoder if the encoder for the largest resolution is hardware one.
-			verifyEncoderMode := peerconnection.VerifySWEncoderUsed
-			if hwEncs[len(hwEncs)-1] {
-				verifyEncoderMode = peerconnection.VerifyHWEncoderUsed
-			}
-
-			param := genRtcPerfTestSourceData("vp8", resolution,
-				peerconnection.VerifyHWDecoderUsed, verifyEncoderMode,
-				"", hwEncs, cameraCapture, browser.TypeAsh, noTestOption)
-			if minResOnlySwEnc {
-				param.SoftwareDeps = append(param.SoftwareDeps, "vaapi")
-				param.Fixture = "chromeVideoWithFakeWebcamAndEnableVaapiVideoMinResolution"
-			}
-			params = append(params, param)
-		}
-	}
-	// VP9 SVC (L2T3_KEY).
-	for _, resolution := range []graphics.Size{k360p, k270p} {
-		for _, hardware := range []bool{false, true} {
-			param := genRtcPerfTestSourceData("vp9", resolution,
-				peerconnection.VerifyHWDecoderUsed, verifyEncoderMode[hardware],
-				"L2T3_KEY", nil, cameraCapture, browser.TypeAsh, noTestOption)
-			param.HardwareDeps = "hwdep.SupportsVP9KSVCHWDecoding()"
-			params = append(params, param)
 		}
 	}
 
+	// Display capture test cases.
+	for _, captureSource := range []peerconnection.DisplayMediaType{
+		peerconnection.CaptureTab,
+		peerconnection.CaptureWindow,
+		peerconnection.CaptureMonitor,
+	} {
+		for _, zeroCopy := range []bool{false, true} {
+			var captureStr, displayMediaTypeStr string
+			switch captureSource {
+			case peerconnection.CaptureMonitor:
+				captureStr += "monitor"
+				displayMediaTypeStr = "peerconnection.CaptureMonitor"
+			case peerconnection.CaptureWindow:
+				captureStr += "window"
+				displayMediaTypeStr = "peerconnection.CaptureWindow"
+			case peerconnection.CaptureTab:
+				captureStr += "tab"
+				displayMediaTypeStr = "peerconnection.CaptureTab"
+			}
+			if zeroCopy {
+				captureStr += "_zero_copy"
+			}
+			// Test with a hardware video decoding and encoding.
+			// TODO(b/267966835): Test with software encoding if it is useful.
+			enc := hwEnc
+			dec := hwDec
+			paramData := rtcTestParamsData{
+				VerifyDecoderMode: toVerifyDecoderMode(dec),
+				VerifyEncoderMode: toVerifyEncoderMode(enc),
+				Profile:           "VP8",
+				StreamWidth:       k1080p.Width,
+				StreamHeight:      k1080p.Height,
+				Svc:               "L1T3",
+				DisplayMediaType:  displayMediaTypeStr,
+				BrowserType:       "browser.TypeAsh",
+			}
+			var captureFixtureMap = map[peerconnection.DisplayMediaType]map[bool]string{
+				peerconnection.CaptureMonitor: map[bool]string{false: "chromeScreenCapture", true: "chromeZeroCopyScreenCapture"},
+				peerconnection.CaptureWindow:  map[bool]string{false: "chromeWindowCapture", true: "chromeZeroCopyWindowCapture"},
+				peerconnection.CaptureTab:     map[bool]string{false: "chromeTabCapture", true: "chromeZeroCopyTabCapture"},
+			}
+			sourceData := rtcPerfTestSourceData{
+				Name:         fmt.Sprintf("vp8_1080p_%s_l1t3_hw_enc_hw_dec", captureStr),
+				ParamData:    paramData,
+				SoftwareDeps: softwareCodecsDeps("vp8", enc, dec),
+				Fixture:      captureFixtureMap[captureSource][zeroCopy],
+			}
+			if captureSource == peerconnection.CaptureMonitor {
+				sourceData.HardwareDeps = "hwdep.InternalDisplay()"
+			}
+			sourceDatas = append(sourceDatas, sourceData)
+		}
+	}
+
+	// OOP-VD and OOP-VE test cases.
+	for _, codec := range []string{"h264", "vp8", "vp9", "av1"} {
+		for _, ed := range [][]interface{}{
+			{oopVE, hwDec},
+			{oopVE, oopVD},
+			{hwEnc, oopVD},
+			// {swEnc, oopVD}, there is no fixture for this.
+		} {
+			var enc encoderImpl = ed[0].(encoderImpl)
+			var dec decoderImpl = ed[1].(decoderImpl)
+			paramData := rtcTestParamsData{
+				VerifyDecoderMode: toVerifyDecoderMode(dec),
+				VerifyEncoderMode: toVerifyEncoderMode(enc),
+				Profile:           strings.ToUpper(codec),
+				StreamWidth:       k720p.Width,
+				StreamHeight:      k720p.Height,
+				BrowserType:       "browser.TypeAsh",
+			}
+			if enc == oopVE {
+				paramData.VerifyOutOfProcessVideoEncodingIsUsed = true
+			}
+			sourceData := rtcPerfTestSourceData{
+				Name:         fmt.Sprintf("%s_720p_%s_%s", codec, enc, dec),
+				ParamData:    paramData,
+				SoftwareDeps: softwareCodecsDeps(codec, enc, dec),
+				Fixture:      toFixture(enc, dec),
+			}
+			sourceDatas = append(sourceDatas, sourceData)
+		}
+	}
+
+	// LaCrOS test cases.
+	for _, codec := range []string{"h264", "vp8", "vp9", "av1"} {
+		enc := hwEnc
+		dec := hwDec
+		paramData := rtcTestParamsData{
+			VerifyDecoderMode: toVerifyDecoderMode(dec),
+			VerifyEncoderMode: toVerifyEncoderMode(enc),
+			Profile:           strings.ToUpper(codec),
+			StreamWidth:       k720p.Width,
+			StreamHeight:      k720p.Height,
+			BrowserType:       "browser.TypeLacros",
+		}
+		sourceData := rtcPerfTestSourceData{
+			Name:         fmt.Sprintf("%s_720p_lacros_hw_enc_hw_dec", codec),
+			ParamData:    paramData,
+			SoftwareDeps: softwareCodecsDeps(codec, enc, dec),
+			Fixture:      "chromeVideoLacrosWithFakeWebcam",
+		}
+		sourceDatas = append(sourceDatas, sourceData)
+	}
+
+	// Vaapi lock disabled test cases.
+	for _, codec := range []string{"h264", "vp8", "vp9", "av1"} {
+		dec := hwDec
+		// TODO(b/183515570): Test with software encoding if it is useful.
+		enc := hwEnc
+		paramData := rtcTestParamsData{
+			VerifyDecoderMode: toVerifyDecoderMode(dec),
+			VerifyEncoderMode: toVerifyEncoderMode(enc),
+			Profile:           strings.ToUpper(codec),
+			StreamWidth:       k720p.Width,
+			StreamHeight:      k720p.Height,
+			BrowserType:       "browser.TypeAsh",
+		}
+		swDeps := softwareCodecsDeps(codec, enc, dec)
+		swDeps = append(swDeps, "thread_safe_libva_backend")
+		sourceData := rtcPerfTestSourceData{
+			Name:         fmt.Sprintf("%s_720p_%s_%s_global_vaapi_lock_disabled", codec, enc, dec),
+			ParamData:    paramData,
+			SoftwareDeps: swDeps,
+			Fixture:      "chromeVideoWithGlobalVaapiLockDisabled",
+		}
+		sourceDatas = append(sourceDatas, sourceData)
+	}
 	code := genparams.Template(t, `{{ range . }}{
 			Name: {{ .Name | fmt }},
 			Val: peerconnection.RTCTestParams{
@@ -507,12 +389,6 @@ func TestRTCPeerConnectionPerfParams(t *testing.T) {
 				{{ end }}
 				{{ if .ParamData.DisplayMediaType }}
 				DisplayMediaType: {{ .ParamData.DisplayMediaType }},
-				{{ end }}
-				{{ if (gt .ParamData.VideoGridDimension 1) }}
-				VideoGridDimension: {{ .ParamData.VideoGridDimension }},
-				{{ end }}
-				{{ if .ParamData.VideoGridFile }}
-				VideoGridFile: {{ .ParamData.VideoGridFile | fmt }},
 				{{ end }}
 				{{ if .ParamData.Simulcasts }}
 				Simulcasts: {{ .ParamData.Simulcasts }},
@@ -531,14 +407,11 @@ func TestRTCPeerConnectionPerfParams(t *testing.T) {
 			{{ if .SoftwareDeps }}
 			ExtraSoftwareDeps: {{ .SoftwareDeps | fmt }},
 			{{ end }}
-			{{ if .Data }}
-			ExtraData: {{ .Data | fmt }},
-			{{ end }}
 			{{ if .Fixture }}
 			Fixture: {{ .Fixture | fmt }},
 			{{ end }}
 		},
-		{{ end }}`, params)
+		{{ end }}`, sourceDatas)
 
 	genparams.Ensure(t, "rtc_peer_connection_perf.go", code)
 }

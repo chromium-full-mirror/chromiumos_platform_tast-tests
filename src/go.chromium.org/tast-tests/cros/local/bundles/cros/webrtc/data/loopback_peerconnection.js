@@ -115,7 +115,14 @@ async function runLoopbackPeerConnectionWithSimulcast(constraints, simulcasts,
 
 async function runLoopbackPeerConnectionWithSVC(
     constraints, svcScalabilityMode, profile, targetBitrate) {
-  const stream = await navigator.mediaDevices.getUserMedia(constraints);
+  let stream;
+  if (constraints.video.displaySurface) {
+    stream = await navigator.mediaDevices.getDisplayMedia(constraints);
+    constraints.framerate = {min:30, max:30};
+    stream.getVideoTracks()[0].applyConstraints(constraints);
+  } else {
+    stream = await navigator.mediaDevices.getUserMedia(constraints);
+  }
   localPeerConnection.addTransceiver(stream.getVideoTracks()[0], {
     // Prefer resolution even at the cost of visual quality to avoid falling
     // down to SW video encoding, see b/181320567 or crbug.com/1179020.

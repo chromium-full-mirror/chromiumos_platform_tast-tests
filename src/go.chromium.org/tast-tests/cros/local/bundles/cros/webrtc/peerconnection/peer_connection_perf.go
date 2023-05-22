@@ -114,6 +114,7 @@ func measureRTCStats(ctx context.Context, conn *chrome.Conn, streamWidth, stream
 	var txMeasurements []txMeas
 	var rxMeasurements []rxMeas
 	for i := 0; i < timeSamples; i++ {
+		// GoBigSleepLint: sleep 1 second so that getStats() is not called too many times in a short term.
 		if err := testing.Sleep(ctx, time.Second); err != nil {
 			return err
 		}
@@ -229,6 +230,17 @@ func peerConnectionPerf(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrom
 	defer conn.Close()
 	defer conn.CloseTarget(ctx)
 
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to connect to test API")
+	}
+	// Maximize window size.
+	if err := ash.ForEachWindow(ctx, tconn, func(w *ash.Window) error {
+		return ash.SetWindowStateAndWait(ctx, tconn, w.ID, ash.WindowStateMaximized)
+	}); err != nil {
+		return errors.Wrap(err, "failed to maximize window")
+	}
+
 	if err := conn.WaitForExpr(ctx, "document.readyState === 'complete'"); err != nil {
 		return errors.Wrap(err, "timed out waiting for page loading")
 	}
@@ -252,11 +264,6 @@ func peerConnectionPerf(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrom
 
 	if err := measureRTCStats(shortCtx, conn, params.StreamWidth, params.StreamHeight, params.DisplayMediaType, p); err != nil {
 		return errors.Wrap(err, "failed to measure")
-	}
-
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to connect to test API")
 	}
 
 	var gpuErr, cStateErr, cpuErr, batErr error
