@@ -7,12 +7,15 @@ package arc
 import (
 	"bufio"
 	"context"
+	"io/ioutil"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
 	"chromiumos/tast/common/perf"
+	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/cpu"
@@ -166,9 +169,21 @@ func PowerIdlePerf(ctx context.Context, s *testing.State) {
 		s.Fatal("CPU failed to idle: ", err)
 	}
 
+	out, err := testexec.CommandContext(ctx, "top", "-n1", "-b").Output(testexec.DumpLogOnError)
+	if err == nil {
+		s.Log("Saving `top` results to top.txt")
+		ioutil.WriteFile(filepath.Join(s.OutDir(), "top.txt"), []byte(out), 0644)
+	}
+
 	if hasarc {
 		if err := arc.CheckNoDex2Oat(s.OutDir()); err != nil {
 			s.Fatal("Failed to verify dex2oat was not running: ", err)
+		}
+
+		out, err := arc.BootstrapCommand(ctx, "/system/bin/top", "-n1", "-b").Output()
+		if err == nil {
+			s.Log("Saving `android-sh -c top` results to arc-top.txt")
+			ioutil.WriteFile(filepath.Join(s.OutDir(), "arc-top.txt"), []byte(out), 0644)
 		}
 	}
 
