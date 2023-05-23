@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"chromiumos/tast/local/power/util"
+
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -71,7 +72,7 @@ func GetDeviceInfo(ctx context.Context) map[string]interface{} {
 		}
 		skuMap["battery_shutdown_percent"] = shutdownPercent
 
-		batterySize, err := ReadBatterySize(ctx, batteryPath)
+		batterySize, err := ReadBatteryEnergySize(ctx, batteryPath)
 		if err != nil {
 			testing.ContextLog(ctx, "Invalid battery_size: ", err)
 		}
