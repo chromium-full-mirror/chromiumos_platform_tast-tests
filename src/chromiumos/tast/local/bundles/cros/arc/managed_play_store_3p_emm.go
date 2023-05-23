@@ -77,7 +77,7 @@ func ManagedPlayStore3pEmm(ctx context.Context, s *testing.State) {
 		Logf:        s.Logf}
 
 	arcPolicy := arcent.CreateArcPolicyWithApps([]string{}, arcent.InstallTypeAvailable, arcent.PlayStoreModeBlockList)
-	arcPolicy.Val.DpsInteractionsDisabled = false
+	arcPolicy.Val.DpsInteractionsDisabled = true
 	arcEnabledPolicy := &policy.ArcEnabled{Val: true}
 	policies := []policy.Policy{arcEnabledPolicy, arcPolicy}
 
