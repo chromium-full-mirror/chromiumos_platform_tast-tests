@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/media/caps"
+	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/apps"
@@ -33,13 +33,18 @@ func init() {
 		Desc:         "Verifies if CCA is unusable when the camera app is disabled by the Adenterprise policy",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
-		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
+		SoftwareDeps: []string{"camera_app", "chrome"},
 		Data:         []string{"cca_ui.js"},
 		Fixture:      "chromePolicyLoggedIn",
 		BugComponent: "b:978428",
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.SystemFeaturesDisableList{Val: []string{"camera"}}, pci.VerifiedFunctionalityUI),
+			pci.SearchFlag(&policy.VideoCaptureAllowed{Val: false}, pci.VerifiedFunctionalityJS),
+		},
 	})
 }
 
+// CCAUIPolicy verifies CCA is unusable when enterprise policy disables it.
 func CCAUIPolicy(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
@@ -96,7 +101,7 @@ func servePolicy(ctx context.Context, fdms *fakedms.FakeDMS, cr *chrome.Chrome, 
 
 // testNoPolicy tests without any policy and expects CCA works fine.
 func testNoPolicy(ctx context.Context, cr *chrome.Chrome, scripts []string, outDir string) error {
-	tb, err := testutil.NewTestBridge(ctx, cr, testutil.UseRealCamera)
+	tb, err := testutil.NewTestBridge(ctx, cr, testutil.UseFakeHALCamera)
 	if err != nil {
 		return errors.Wrap(err, "failed to construct test bridge")
 	}
@@ -146,7 +151,7 @@ func testBlockCameraFeature(ctx context.Context, cr *chrome.Chrome, scripts []st
 // testBlockVideoCapture tries to block video capture and expects CCA fails to
 // initialize since the preview won't show.
 func testBlockVideoCapture(ctx context.Context, cr *chrome.Chrome, scripts []string, outDir string) error {
-	tb, err := testutil.NewTestBridge(ctx, cr, testutil.UseRealCamera)
+	tb, err := testutil.NewTestBridge(ctx, cr, testutil.UseFakeHALCamera)
 	if err != nil {
 		return errors.Wrap(err, "failed to construct test bridge")
 	}

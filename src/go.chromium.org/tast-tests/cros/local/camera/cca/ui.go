@@ -134,6 +134,8 @@ const (
 	PTZResetAllButton UIComponentName = "ptzResetAllButton"
 	// PreviewExposureTime is the exposure data displayed when the expert option to show metadata is enabled.
 	PreviewExposureTime UIComponentName = "previewExposureTime"
+	// PreviewResolution is the resolution displayed when the expert option to show metadata is enabled.
+	PreviewResolution UIComponentName = "previewResolution"
 	// PreviewViewport is the container of the preview video.
 	PreviewViewport UIComponentName = "previewViewport"
 	// ReviewView is the review view after taking a photo under document mode.

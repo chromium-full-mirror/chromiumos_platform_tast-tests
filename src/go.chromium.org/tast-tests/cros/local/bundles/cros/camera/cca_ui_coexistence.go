@@ -10,7 +10,6 @@ import (
 	"net/http/httptest"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/local/camera/cca"
 	"go.chromium.org/tast-tests/cros/local/camera/testpage"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -26,13 +25,15 @@ func init() {
 		Desc:         "Verifies CCA can coexist with web page with camera open",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
-		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
+		SoftwareDeps: []string{"camera_app", "chrome"},
 		Data:         []string{"camera_page.html", "camera_page.js", "cca_ui.js"},
-		Fixture:      "ccaTestBridgeReadyBypassPermissionClamshell",
+		Fixture:      "ccaTestBridgeReadyWithFakeHALCameraBypassPermissionClamshell",
 		BugComponent: "b:978428",
 	})
 }
 
+// CCAUICoexistence checks CCA behavior when it's opened together with webpage
+// that use camera.
 func CCAUICoexistence(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)

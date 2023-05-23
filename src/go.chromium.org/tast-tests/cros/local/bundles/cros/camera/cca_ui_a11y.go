@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/local/camera/cca"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/ctxutil"
@@ -24,12 +23,14 @@ func init() {
 		Desc:         "Checks Chromevox reads Chrome Camera App elements as expected",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "dorahkim@chromium.org"},
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
-		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
-		Fixture:      "ccaLaunched",
+		SoftwareDeps: []string{"camera_app", "chrome"},
+		Fixture:      "ccaLaunchedWithFakeHALCamera",
 		BugComponent: "b:978428",
 	})
 }
 
+// CCAUIA11y checks that take photo button can be navigated to by tab, and
+// pressing space takes a photo.
 func CCAUIA11y(ctx context.Context, s *testing.State) {
 	app := s.FixtValue().(cca.FixtureData).App()
 

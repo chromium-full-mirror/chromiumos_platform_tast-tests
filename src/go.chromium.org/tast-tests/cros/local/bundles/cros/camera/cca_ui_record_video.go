@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/local/camera/cca"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/input"
@@ -25,9 +24,9 @@ func init() {
 		Desc:         "Opens CCA and verifies video recording related use cases",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "kamchonlathorn@chromium.org"},
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera", "group:intel-gating"},
-		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
+		SoftwareDeps: []string{"camera_app", "chrome"},
 		Timeout:      5 * time.Minute,
-		Fixture:      "ccaTestBridgeReady",
+		Fixture:      "ccaTestBridgeReadyWithFakeHALCamera",
 		Params: []testing.Param{{
 			Val: false,
 		}, {
@@ -168,6 +167,7 @@ func (v *video) stop(ctx context.Context, app *cca.App) error {
 	return nil
 }
 
+// CCAUIRecordVideo verifies video recording related functionalities works.
 func CCAUIRecordVideo(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(cca.FixtureData).Chrome
 	s.FixtValue().(cca.FixtureData).SetDebugParams(cca.DebugParams{SaveCameraFolderWhenFail: true})

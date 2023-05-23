@@ -11,7 +11,6 @@ import (
 
 	"github.com/mafredri/cdp/protocol/target"
 
-	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/local/camera/cca"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -28,18 +27,19 @@ func init() {
 		Desc:         "Opens CCA and verifies the settings menu behavior",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
-		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
+		SoftwareDeps: []string{"camera_app", "chrome"},
 		Params: []testing.Param{{
-			Fixture: "ccaTestBridgeReady",
+			Fixture: "ccaTestBridgeReadyWithFakeHALCamera",
 		}, {
 			Name:              "lacros",
 			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           "ccaTestBridgeReadyLacros",
+			Fixture:           "ccaTestBridgeReadyWithFakeHALCameraLacros",
 		}},
 		BugComponent: "b:978428",
 	})
 }
 
+// CCAUISettings verifies settings menu behavior.
 func CCAUISettings(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(cca.FixtureData).Chrome
 	bt := s.FixtValue().(cca.FixtureData).BrowserType

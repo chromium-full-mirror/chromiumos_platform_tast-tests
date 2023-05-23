@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/local/camera/cca"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -23,12 +22,13 @@ func init() {
 		Desc:         "Opens CCA and verifies the expert options",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "dorahkim@chromium.org", "shik@chromium.org"},
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
-		SoftwareDeps: []string{"camera_app", "chrome", "arc_camera3", caps.BuiltinOrVividCamera},
-		Fixture:      "ccaLaunched",
+		SoftwareDeps: []string{"camera_app", "chrome", "arc_camera3"},
+		Fixture:      "ccaLaunchedWithFakeHALCamera",
 		BugComponent: "b:978428",
 	})
 }
 
+// CCAUIExpert verifies expert mode related options in CCA.
 func CCAUIExpert(ctx context.Context, s *testing.State) {
 	app := s.FixtValue().(cca.FixtureData).App()
 	for i, action := range []struct {
@@ -56,7 +56,7 @@ func CCAUIExpert(ctx context.Context, s *testing.State) {
 }
 
 func verifyExpertMode(ctx context.Context, app *cca.App, enabled bool) error {
-	if err := app.WaitForVisibleState(ctx, cca.PreviewExposureTime, enabled); err != nil {
+	if err := app.WaitForVisibleState(ctx, cca.PreviewResolution, enabled); err != nil {
 		return errors.Wrapf(err, "failed to wait for metadata visibility to set to %v", enabled)
 	}
 	if _, err := app.TakeSinglePhoto(ctx, cca.TimerOff); err != nil {

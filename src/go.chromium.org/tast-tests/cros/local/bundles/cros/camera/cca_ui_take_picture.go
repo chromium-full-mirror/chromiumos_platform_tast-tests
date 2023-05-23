@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/local/camera/cca"
 
 	"go.chromium.org/tast/core/testing"
@@ -21,12 +20,13 @@ func init() {
 		Desc:         "Opens CCA and verifies photo taking related use cases",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera", "group:intel-gating"},
-		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
-		Fixture:      "ccaTestBridgeReady",
+		SoftwareDeps: []string{"camera_app", "chrome"},
+		Fixture:      "ccaTestBridgeReadyWithFakeHALCamera",
 		BugComponent: "b:978428",
 	})
 }
 
+// CCAUITakePicture verifies photo taking related functionalities works.
 func CCAUITakePicture(ctx context.Context, s *testing.State) {
 	runTestWithApp := s.FixtValue().(cca.FixtureData).RunTestWithApp
 

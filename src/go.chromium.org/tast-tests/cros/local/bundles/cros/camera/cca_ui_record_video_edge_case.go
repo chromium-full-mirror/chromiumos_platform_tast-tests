@@ -12,7 +12,6 @@ import (
 
 	"github.com/mafredri/cdp/protocol/target"
 
-	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/local/camera/cca"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/cpu"
@@ -30,9 +29,9 @@ func init() {
 		Desc:         "Opens CCA and verifies edge cases for video recording",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "kamchonlathorn@chromium.org"},
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
-		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
+		SoftwareDeps: []string{"camera_app", "chrome"},
 		Timeout:      7 * time.Minute,
-		Fixture:      "ccaTestBridgeReady",
+		Fixture:      "ccaTestBridgeReadyWithFakeHALCamera",
 		BugComponent: "b:978428",
 	})
 }
@@ -80,6 +79,8 @@ func (f *fillFile) delete() error {
 	return nil
 }
 
+// CCAUIRecordVideoEdgeCase verifies recording video when storage is low works
+// as expected.
 func CCAUIRecordVideoEdgeCase(ctx context.Context, s *testing.State) {
 	// TODO(b/244261957): Move testConfirmDialog from cca_ui_record_video to this test.
 	// TODO(b/244261957): Add testLowStorageOnPause

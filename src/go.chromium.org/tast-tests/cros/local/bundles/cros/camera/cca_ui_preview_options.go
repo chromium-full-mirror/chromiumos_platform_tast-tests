@@ -8,8 +8,9 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/local/camera/cca"
+	"go.chromium.org/tast-tests/cros/local/camera/testutil"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -21,14 +22,30 @@ func init() {
 		Desc:         "Opens CCA and verifies the use cases of preview options like mirror",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "chuhsuan@chromium.org"},
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
-		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
-		Fixture:      "ccaTestBridgeReady",
+		SoftwareDeps: []string{"camera_app", "chrome"},
+		Fixture:      "ccaTestBridgeReadyWithFakeHALCamera",
 		BugComponent: "b:978428",
 	})
 }
 
+// CCAUIPreviewOptions verifies preview options like mirror works.
 func CCAUIPreviewOptions(ctx context.Context, s *testing.State) {
 	runTestWithApp := s.FixtValue().(cca.FixtureData).RunTestWithApp
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	// setup multiple fake cameras for testing camera switching behavior.
+	if err := testutil.WriteFakeHALConfig(ctx, testutil.FakeHALConfig{
+		Cameras: []testutil.FakeCameraConfig{
+			{ID: 1, Connected: true},
+			{ID: 2, Connected: true},
+		},
+	}); err != nil {
+		s.Fatal("Failed to write fake HAL config: ", err)
+	}
+	defer testutil.SetupFakeHALConfig(cleanupCtx)
 
 	subTestTimeout := 30 * time.Second
 	for _, tst := range []struct {

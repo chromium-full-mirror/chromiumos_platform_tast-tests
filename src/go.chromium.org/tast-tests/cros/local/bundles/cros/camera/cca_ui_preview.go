@@ -7,7 +7,6 @@ package camera
 import (
 	"context"
 
-	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/local/camera/cca"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -20,12 +19,13 @@ func init() {
 		Desc:         "Opens CCA and verifies the preview functions",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "chuhsuan@chromium.org", "shik@chromium.org"},
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
-		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
-		Fixture:      "ccaLaunched",
+		SoftwareDeps: []string{"camera_app", "chrome"},
+		Fixture:      "ccaLaunchedWithFakeHALCamera",
 		BugComponent: "b:978428",
 	})
 }
 
+// CCAUIPreview verifies preview related functionalities of CCA.
 func CCAUIPreview(ctx context.Context, s *testing.State) {
 	app := s.FixtValue().(cca.FixtureData).App()
 

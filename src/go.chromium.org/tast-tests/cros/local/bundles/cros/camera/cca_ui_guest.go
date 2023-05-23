@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/local/camera/cca"
 	"go.chromium.org/tast-tests/cros/local/mountns"
 	"go.chromium.org/tast/core/testing"
@@ -21,12 +20,13 @@ func init() {
 		Desc:         "Checks camera app can be launched in guest mode",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "pihsun@chromium.org"},
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
-		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
-		Fixture:      "ccaLaunchedGuest",
+		SoftwareDeps: []string{"camera_app", "chrome"},
+		Fixture:      "ccaLaunchedGuestWithFakeHALCamera",
 		BugComponent: "b:978428",
 	})
 }
 
+// CCAUIGuest checks CCA can be launched in guest mode.
 func CCAUIGuest(ctx context.Context, s *testing.State) {
 	app := s.FixtValue().(cca.FixtureData).App()
 	s.FixtValue().(cca.FixtureData).SetDebugParams(cca.DebugParams{SaveCameraFolderWhenFail: true})

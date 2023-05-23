@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
-	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/camera/cca"
@@ -93,10 +92,10 @@ func init() {
 		Desc:         "Verifies if the camera intents fired from Android apps could be delivered and handled by CCA",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
-		SoftwareDeps: []string{"camera_app", "chrome", "proprietary_codecs", caps.BuiltinOrVividCamera},
+		SoftwareDeps: []string{"camera_app", "chrome", "proprietary_codecs"},
 		Data:         []string{"cca_ui.js"},
 		Timeout:      7 * time.Minute,
-		Fixture:      "ccaTestBridgeReadyWithArc",
+		Fixture:      "ccaTestBridgeReadyWithArcFakeHALCamera",
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_p"},
 		}, {
@@ -107,6 +106,7 @@ func init() {
 	})
 }
 
+// CCAUIIntent verifies camera intents from Android apps can be handled by CCA.
 func CCAUIIntent(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
