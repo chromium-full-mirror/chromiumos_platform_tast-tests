@@ -329,7 +329,7 @@ func (f *powerSetUpFixture) SetUp(ctx context.Context, s *testing.FixtState) int
 		Wifi: DisableWifiInterfaces,
 		// Since we stop the UI disabling the Night Light is redundant.
 		NightLight: DoNotDisableNightLight,
-	}, nil))
+	}, NewBatteryDischarge(false /*discharge*/, true /*ignoreErr*/, DefaultDischargeThreshold)))
 
 	if err := sup.Check(ctx); err != nil {
 		s.Fatal("Power setup failed: ", err)
