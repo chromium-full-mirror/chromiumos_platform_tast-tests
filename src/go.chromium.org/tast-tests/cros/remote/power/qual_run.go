@@ -31,6 +31,11 @@ type QualRun struct {
 	OrderedTests []string
 	// UnorderedTests contains all tests that can be run in any order.
 	UnorderedTests []string
+
+	// testPowers holds the power results for each test.
+	testPowers map[string]*result.Power
+	// skippedTests holds skipped tests.
+	skippedTests []string
 }
 
 // NewQualRun returns a new QualRun from a test configuration URL.
@@ -50,36 +55,42 @@ func NewQualRun(ctx context.Context, url string) (*QualRun, error) {
 		return nil, errors.Wrap(err, "failed to validate configuration")
 	}
 
-	return &QualRun{Config: cfg, Tests: tests, OrderedTests: orderedTests,
-		UnorderedTests: unorderedTests}, nil
+	return &QualRun{
+		Config:         cfg,
+		Tests:          tests,
+		OrderedTests:   orderedTests,
+		UnorderedTests: unorderedTests,
+		testPowers:     make(map[string]*result.Power),
+	}, nil
 }
 
-// GenerateReport generates the power qual run test report.
-func (r *QualRun) GenerateReport(ctx context.Context, skippedTests []string, inputDir, outputDir string) error {
+func (r *QualRun) isTestSkipped(test string) bool {
+	for _, t := range r.skippedTests {
+		if t == test {
+			return true
+		}
+	}
+	return false
+}
+
+// AddTestResults adds power qual run test results.
+func (r *QualRun) AddTestResults(ctx context.Context, tests, skippedTests []string, resultDir string) error {
 	if len(skippedTests) > 0 && r.Config.Control.FailOnSkippedTest {
 		return errors.Errorf("skipped tests are not allowed from the test control but got skipped test(s) %v ", skippedTests)
 	}
 
-	isSkipped := func(test string) bool {
-		for _, t := range skippedTests {
-			if t == test {
-				return true
-			}
-		}
-		return false
-	}
-
 	// Get test directories.
-	testsDir := path.Join(inputDir, "tests")
+	testsDir := path.Join(resultDir, "tests")
 	dirs, err := os.ReadDir(testsDir)
 	if err != nil {
-		return errors.Wrapf(err, "failed to read tests directory under %s", inputDir)
+		return errors.Wrapf(err, "failed to read tests directory under %s", resultDir)
 	}
 
+	r.skippedTests = append(r.skippedTests, skippedTests...)
+
 	// Read the power test result for each test.
-	testPowers := map[string]result.Power{}
-	for _, t := range r.Tests {
-		if isSkipped(t) {
+	for _, t := range tests {
+		if r.isTestSkipped(t) {
 			continue
 		}
 		dir, err := findTestDir(t, dirs)
@@ -91,9 +102,13 @@ func (r *QualRun) GenerateReport(ctx context.Context, skippedTests []string, inp
 		if err != nil {
 			return errors.Wrapf(err, "failed to read power metrics for test %s", t)
 		}
-		testPowers[t] = power
+		r.testPowers[t] = &power
 	}
+	return nil
+}
 
+// GenerateReport generates the power qual run test report.
+func (r *QualRun) GenerateReport(ctx context.Context, outputDir string) error {
 	// The power qual test final result.
 	res := result.Result{
 		FormatVersion: result.FormatVersion,
@@ -109,12 +124,15 @@ func (r *QualRun) GenerateReport(ctx context.Context, skippedTests []string, inp
 		var values []float64
 		var weights []float64
 		for _, t := range p.Tests {
-			if isSkipped(t.Name) {
+			if r.isTestSkipped(t.Name) {
 				persona.Skipped = append(persona.Skipped, t.Name)
 				continue
 			}
-			power := testPowers[t.Name]
-			persona.Tests = append(persona.Tests, result.Test{Name: t.Name, Weight: t.Weight, Power: power})
+			power := r.testPowers[t.Name]
+			if power == nil {
+				return errors.Errorf("no power test result for %s", t.Name)
+			}
+			persona.Tests = append(persona.Tests, result.Test{Name: t.Name, Weight: t.Weight, Power: *power})
 			values = append(values, power.Average.MinutesBatteryLife)
 			weights = append(weights, t.Weight)
 		}

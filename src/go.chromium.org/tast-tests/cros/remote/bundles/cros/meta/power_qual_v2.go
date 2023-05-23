@@ -58,7 +58,6 @@ func PowerQualV2(ctx context.Context, s *testing.State) {
 	config := run.Config
 	control := config.Control
 
-	resultsDir := filepath.Join(s.OutDir(), "power_qual_tests")
 	flags := []string{fmt.Sprintf("-retries=%d", control.Retry)}
 	var skipPolicy tastrun.SkipPolicy = tastrun.SkipPolicyAllowSkipping
 	if control.FailOnSkippedTest {
@@ -72,15 +71,35 @@ func PowerQualV2(ctx context.Context, s *testing.State) {
 	}
 
 	s.Logf("Start power qual test: %s (version %s)", config.Name, config.Version)
-	skippedTests := tastrun.RunAndEvaluate(runCtx, s, flags, run.Tests, resultsDir, skipPolicy)
-
-	// RunAndEvaluate propagates any test errors to the testing state s.
-	// Check if there are errors before generating report.
-	if s.HasError() {
-		// Just return. The propagated errors will be logged and test will fail.
-		return
+	// Define test groups. Tests in one group don't have to run in fixed order,
+	// but the groups must be executed in sequence.
+	var testGroups [][]string
+	for _, t := range run.OrderedTests {
+		// Each ordered test will be run as a single test group.
+		testGroups = append(testGroups, []string{t})
 	}
-	if err := run.GenerateReport(ctx, skippedTests, resultsDir, s.OutDir()); err != nil {
+	if len(run.UnorderedTests) != 0 {
+		// UnorderedTests will be put into a single group and run together.
+		testGroups = append(testGroups, run.UnorderedTests)
+	}
+
+	for i, tests := range testGroups {
+		resultsDir := filepath.Join(s.OutDir(), fmt.Sprintf("power_qual_tests_%d", i))
+		s.Logf("Start to run test(s) %v and save results in %s", tests, resultsDir)
+		skippedTests := tastrun.RunAndEvaluate(runCtx, s, flags, tests, resultsDir, skipPolicy)
+
+		// RunAndEvaluate propagates any test errors to the testing state s.
+		// Check if there are errors before generating report.
+		if s.HasError() {
+			// Just return. The propagated errors will be logged and test will fail.
+			return
+		}
+		if err := run.AddTestResults(ctx, tests, skippedTests, resultsDir); err != nil {
+			s.Fatal("Failed to add test results: ", err)
+		}
+	}
+
+	if err := run.GenerateReport(ctx, s.OutDir()); err != nil {
 		s.Fatal("Failed to generate power qual test results: ", err)
 	}
 }
