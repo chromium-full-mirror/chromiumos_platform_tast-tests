@@ -51,8 +51,6 @@ func CaptureModeDemoToolsEntryPoint(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
-	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
-
 	// Enter screen capture mode.
 	if err := wmputils.EnsureCaptureModeActivated(tconn, true)(ctx); err != nil {
 		s.Fatal("Failed to enable recording: ", err)
@@ -61,10 +59,12 @@ func CaptureModeDemoToolsEntryPoint(ctx context.Context, s *testing.State) {
 	// Ensure case exit screen capture mode.
 	defer wmputils.EnsureCaptureModeActivated(tconn, false)(cleanupCtx)
 
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_dump")
+
 	// TODO(b/266149105): Avoid using UI text to identify the button.
 	var (
 		captureModeSettingsButton = nodewith.HasClass("IconButton").Name("Settings")
-		demoToolsToggleButton     = nodewith.HasClass("ToggleButton").Name("Show clicks and keys")
+		demoToolsToggleButton     = nodewith.HasClass("Switch").Name("Show clicks and keys")
 		captureSettingsWiget      = nodewith.HasClass("CaptureModeSettingsWidget")
 	)
 
