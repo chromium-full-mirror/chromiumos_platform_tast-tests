@@ -24,6 +24,10 @@ const (
 	ChromeLoggedInWithCalendarEvents = "chromeLoggedInWithCalendarEvents"
 	// Logged into a session with Gaia user where there are upcoming events.
 	ChromeLoggedInWithUpcomingCalendarEvents = "chromeLoggedInWithUpcomingCalendarEvents"
+	// Logged into a session with feature QsRevamp enabled.
+	ChromeLoggedInQsRevampEnabled = "chromeLoggedInQsRevampEnabled"
+	// Logged into a session with feature QsRevamp disabled.
+	ChromeLoggedInQsRevampDisabled = "chromeLoggedInQsRevampDisabled"
 	// Logged into a session with Gaia user.
 	ChromeLoggedInWithGaia = "chromeLoggedInWithGaia"
 	// Logged into a user session to support thunderbolt devices.

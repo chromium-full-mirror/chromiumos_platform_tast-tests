@@ -19,9 +19,18 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/quicksettings"
 	"chromiumos/tast/local/policyutil/fixtures"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
+
+// managedDeviceInfoTestParam is the parameter for ManagedDeviceInfo tests.
+type managedDeviceInfoTestParam struct {
+	// Which type of browser to start (ash or lacros).
+	browserType browser.Type
+	// Whether feature QsRevamp is enabled.
+	qsRevamp bool
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -38,14 +47,37 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
+			Name:    "qs_revamp_disabled",
 			Fixture: fixture.FakeDMS,
-			Val:     browser.TypeAsh,
+			Val: managedDeviceInfoTestParam{
+				browserType: browser.TypeAsh,
+				qsRevamp:    false,
+			},
 		}, {
-			Name:              "lacros",
+			Name:    "qs_revamp_enabled",
+			Fixture: fixture.FakeDMS,
+			Val: managedDeviceInfoTestParam{
+				browserType: browser.TypeAsh,
+				qsRevamp:    true,
+			},
+		}, {
+			Name:              "lacros_qs_revamp_disabled",
 			Fixture:           fixture.PersistentLacros,
 			ExtraAttr:         []string{"informational"},
 			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               browser.TypeLacros,
+			Val: managedDeviceInfoTestParam{
+				browserType: browser.TypeLacros,
+				qsRevamp:    false,
+			},
+		}, {
+			Name:              "lacros_qs_revamp_enabled",
+			Fixture:           fixture.PersistentLacros,
+			ExtraAttr:         []string{"informational"},
+			ExtraSoftwareDeps: []string{"lacros"},
+			Val: managedDeviceInfoTestParam{
+				browserType: browser.TypeLacros,
+				qsRevamp:    true,
+			},
 		}},
 	})
 }
@@ -61,11 +93,17 @@ func ManagedDeviceInfo(ctx context.Context, s *testing.State) {
 
 	// Start a Browser instance that will fetch policies from the FakeDMS.
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
-	bt := s.Param().(browser.Type)
+	param := s.Param().(managedDeviceInfoTestParam)
+	bt := param.browserType
 	opts := []chrome.Option{
 		chrome.FakeLogin(chrome.Creds{User: fixtures.Username, Pass: fixtures.Password}),
 		chrome.DMSPolicy(fdms.URL),
 		chrome.EnableFeatures("ManagedDeviceUIRedesign"),
+	}
+	if param.qsRevamp {
+		opts = append(opts, chrome.EnableFeatures("QsRevamp"))
+	} else {
+		opts = append(opts, chrome.DisableFeatures("QsRevamp"))
 	}
 	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, bt, lacrosfixt.NewConfig(), opts...)
 	if err != nil {
@@ -80,6 +118,9 @@ func ManagedDeviceInfo(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
+
+	cleanup := quicksettings.SetQsRevampEnabled(param.qsRevamp)
+	defer cleanup()
 
 	if err := quicksettings.Show(ctx, tconn); err != nil {
 		s.Fatal("Failed to show Quick Settings: ", err)

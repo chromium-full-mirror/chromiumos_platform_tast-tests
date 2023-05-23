@@ -31,6 +31,8 @@ import (
 
 const uiTimeout = 10 * time.Second
 
+var qsRevampEnabled = false
+
 // findStatusArea finds the status area UI node.
 func findStatusArea(ctx context.Context, tconn *chrome.TestConn) (*nodewith.Finder, error) {
 	ui := uiauto.New(tconn)
@@ -70,6 +72,23 @@ func clickAndWaitForAnimation(ctx context.Context, tconn *chrome.TestConn, node 
 	return nil
 }
 
+// SetQsRevampEnabled configures the package to assume the feature QsRevamp is
+// either enabled or disabled. Returns a cleanup function which callers should
+// defer.
+func SetQsRevampEnabled(enabled bool) func() {
+	qsRevampEnabled = enabled
+	return func() { qsRevampEnabled = false }
+}
+
+// GetRootFinder returns the finder for the root quick settings view.
+// The finder is different based on whether QsRevamp is enabled or not.
+func GetRootFinder() *nodewith.Finder {
+	if qsRevampEnabled {
+		return QsRootFinder
+	}
+	return RootFinder
+}
+
 // Rect returns a coords.Rect struct for the Quick Settings area, which contains
 // coordinate information about the rectangular region it occupies on the screen.
 // As clients of this function generally expect the bounds of the window, not the
@@ -84,7 +103,7 @@ func Rect(ctx context.Context, tconn *chrome.TestConn) (coords.Rect, error) {
 	}
 
 	for i := range results {
-		if err := ui.Exists(RootFinder.Ancestor(bubbleFrameView.Nth(i)))(ctx); err == nil {
+		if err := ui.Exists(GetRootFinder().Ancestor(bubbleFrameView.Nth(i)))(ctx); err == nil {
 			return results[i].Location, nil
 		}
 	}
@@ -107,7 +126,7 @@ func ClickStatusArea(ctx context.Context, tconn *chrome.TestConn) error {
 
 // Shown checks if Quick Settings exists in the UI.
 func Shown(ctx context.Context, tconn *chrome.TestConn) (bool, error) {
-	return uiauto.New(tconn).IsNodeFound(ctx, RootFinder)
+	return uiauto.New(tconn).IsNodeFound(ctx, GetRootFinder())
 }
 
 // Show will click the status area to show Quick Settings and wait for it to appear.
@@ -126,7 +145,7 @@ func Show(ctx context.Context, tconn *chrome.TestConn) error {
 	}
 
 	ui := uiauto.New(tconn)
-	if err := ui.WithTimeout(uiTimeout).WaitUntilExists(RootFinder)(ctx); err != nil {
+	if err := ui.WithTimeout(uiTimeout).WaitUntilExists(GetRootFinder())(ctx); err != nil {
 		return errors.Wrap(err, "failed waiting for quick settings to appear")
 	}
 	return nil
@@ -146,7 +165,7 @@ func Hide(ctx context.Context, tconn *chrome.TestConn) error {
 	}
 
 	ui := uiauto.New(tconn)
-	if err := ui.WithTimeout(uiTimeout).WaitUntilGone(RootFinder)(ctx); err != nil {
+	if err := ui.WithTimeout(uiTimeout).WaitUntilGone(GetRootFinder())(ctx); err != nil {
 		return errors.Wrap(err, "failed waiting for quick settings to be hidden")
 	}
 	return nil
@@ -215,7 +234,8 @@ func ShowWithRetry(ctx context.Context, tconn *chrome.TestConn, timeout time.Dur
 	}
 
 	ui := uiauto.New(tconn)
-	if err := ui.WithPollOpts(testing.PollOptions{Timeout: timeout, Interval: time.Second}).LeftClickUntil(statusArea, ui.Exists(RootFinder))(ctx); err != nil {
+	if err := ui.WithPollOpts(testing.PollOptions{Timeout: timeout, Interval: time.Second}).
+		LeftClickUntil(statusArea, ui.Exists(GetRootFinder()))(ctx); err != nil {
 		return errors.Wrap(err, "quick settings not shown")
 	}
 	return nil
