@@ -13,7 +13,11 @@ const exampleConfig = `
 	"test_control": {
 		"max_duration": 60,
 		"retry": 1,
-		"fail_on_skipped_test": false
+		"fail_on_skipped_test": false,
+		"fixed_order_tests": [
+			"power.Browsing",
+			"power.VideoPlayback.1080p_vp9"
+		]
 	},
 	"persona": [
 		{

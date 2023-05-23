@@ -24,7 +24,12 @@ func TestUnmarshalConfig(t *gotesting.T) {
 		FormatVersion: 1,
 		Name:          "LowEndChromebook",
 		Version:       "1.0",
-		Control:       Control{MaxDuration: 60, Retry: 1, FailOnSkippedTest: false},
+		Control: Control{
+			MaxDuration:       60,
+			Retry:             1,
+			FailOnSkippedTest: false,
+			FixedOrderTests:   []string{"power.Browsing", "power.VideoPlayback.1080p_vp9"},
+		},
 		Personas: []Persona{
 			{
 				Name: "MKT",
@@ -83,7 +88,12 @@ func TestValidateConfig(t *gotesting.T) {
 		FormatVersion: 1,
 		Name:          "LowEndChromebook",
 		Version:       "1.0",
-		Control:       Control{MaxDuration: 60, Retry: 1, FailOnSkippedTest: false},
+		Control: Control{
+			MaxDuration:       60,
+			Retry:             1,
+			FailOnSkippedTest: false,
+			FixedOrderTests:   []string{"power.Browsing", "power.VideoPlayback.1080p_vp9"},
+		},
 		Personas: []Persona{
 			{
 				Name: "MKT",
@@ -111,7 +121,7 @@ func TestValidateConfig(t *gotesting.T) {
 			},
 		},
 	}
-	tests, err := ValidateConfig(&correctConfig)
+	tests, orderedTests, unorderedTests, err := ValidateConfig(&correctConfig)
 	if err != nil {
 		t.Fatal("failed to validate correct config; error:", err)
 	}
@@ -127,6 +137,18 @@ func TestValidateConfig(t *gotesting.T) {
 		t.Errorf("ValidateConfig returned wrong tests: expect %v, got %v", expected, tests)
 	}
 
+	orderedExpected := []string{"power.Browsing", "power.VideoPlayback.1080p_vp9"}
+	if !reflect.DeepEqual(orderedTests, orderedExpected) {
+		t.Errorf("ValidateConfig returned wrong ordered tests: expect %v, got %v",
+			orderedExpected, orderedTests)
+	}
+
+	unorderedExpected := []string{"power.VideoPlayback.1080p_h264", "power.YoutubeArc.1080p"}
+	if !reflect.DeepEqual(unorderedTests, unorderedExpected) {
+		t.Errorf("ValidateConfig returned wrong unordered tests: expect %v, got %v",
+			unorderedExpected, unorderedTests)
+	}
+
 	wrongFormatVersion := Config{
 		FormatVersion: 2,
 		Name:          "LowEndChromebook",
@@ -140,8 +162,7 @@ func TestValidateConfig(t *gotesting.T) {
 			},
 		}},
 	}
-	tests, err = ValidateConfig(&wrongFormatVersion)
-	if err == nil {
+	if _, _, _, err = ValidateConfig(&wrongFormatVersion); err == nil {
 		t.Error("ValidateConfig didn't return error for wrong format version")
 	} else if !strings.Contains(err.Error(), "the format version is not supported") {
 		t.Error("ValidateConfig returned an incorrect error for wrong format version; got:", err)
@@ -154,8 +175,7 @@ func TestValidateConfig(t *gotesting.T) {
 		Control:       Control{MaxDuration: 0, Retry: 0, FailOnSkippedTest: false},
 		Personas:      []Persona{},
 	}
-	tests, err = ValidateConfig(&missingPersonas)
-	if err == nil {
+	if _, _, _, err = ValidateConfig(&missingPersonas); err == nil {
 		t.Error("ValidateConfig didn't return error for missing personas")
 	} else if !strings.Contains(err.Error(), "no personas are given") {
 		t.Error("ValidateConfig returned an incorrect error for missing personas; got:", err)
@@ -171,8 +191,7 @@ func TestValidateConfig(t *gotesting.T) {
 			Tests: []Test{},
 		}},
 	}
-	tests, err = ValidateConfig(&missingTests)
-	if err == nil {
+	if _, _, _, err = ValidateConfig(&missingTests); err == nil {
 		t.Error("ValidateConfig didn't return error for missing tests")
 	} else if !strings.Contains(err.Error(), "no tests are given for persona") {
 		t.Error("ValidateConfig returned an incorrect error for missing tests; got:", err)
@@ -191,8 +210,7 @@ func TestValidateConfig(t *gotesting.T) {
 			},
 		}},
 	}
-	tests, err = ValidateConfig(&emptyTestName)
-	if err == nil {
+	if _, _, _, err = ValidateConfig(&emptyTestName); err == nil {
 		t.Error("ValidateConfig didn't return error for empty test name")
 	} else if !strings.Contains(err.Error(), "test name is empty") {
 		t.Error("ValidateConfig returned an incorrect error for empty test name; got:", err)
@@ -211,8 +229,7 @@ func TestValidateConfig(t *gotesting.T) {
 			},
 		}},
 	}
-	tests, err = ValidateConfig(&duplicateTests)
-	if err == nil {
+	if _, _, _, err = ValidateConfig(&duplicateTests); err == nil {
 		t.Error("ValidateConfig didn't return error for duplicate tests")
 	} else if !strings.Contains(err.Error(), "duplicated test") {
 		t.Error("ValidateConfig returned an incorrect error for duplicate tests; got:", err)
@@ -230,8 +247,7 @@ func TestValidateConfig(t *gotesting.T) {
 			},
 		}},
 	}
-	tests, err = ValidateConfig(&negativeWeight)
-	if err == nil {
+	if _, _, _, err = ValidateConfig(&negativeWeight); err == nil {
 		t.Error("ValidateConfig didn't return error for negative weight")
 	} else if !strings.Contains(err.Error(), "has negative weight") {
 		t.Error("ValidateConfig returned an incorrect error for negative weight; got:", err)
@@ -250,10 +266,33 @@ func TestValidateConfig(t *gotesting.T) {
 			},
 		}},
 	}
-	tests, err = ValidateConfig(&totalWeightNotOne)
-	if err == nil {
+	if _, _, _, err = ValidateConfig(&totalWeightNotOne); err == nil {
 		t.Error("ValidateConfig didn't return error for total weight not one")
 	} else if !strings.Contains(err.Error(), "total weight for tests") {
 		t.Error("ValidateConfig returned an incorrect error for total weight not one; got:", err)
+	}
+
+	unknownOrderedTests := Config{
+		FormatVersion: 1,
+		Name:          "LowEndChromebook",
+		Version:       "1.0",
+		Control: Control{
+			MaxDuration:       0,
+			Retry:             0,
+			FailOnSkippedTest: false,
+			FixedOrderTests:   []string{"power.DrainBattery"},
+		},
+		Personas: []Persona{{
+			Name: "MKT",
+			Tests: []Test{
+				{"power.Browsing", 0.5},
+				{"power.YoutubeArc.1080p", 0.5},
+			},
+		}},
+	}
+	if _, _, _, err = ValidateConfig(&unknownOrderedTests); err == nil {
+		t.Error("ValidateConfig didn't return error for unknown ordered tests")
+	} else if !strings.Contains(err.Error(), "fixed order test") {
+		t.Error("ValidateConfig returned an incorrect error for unknown ordered tests; got:", err)
 	}
 }

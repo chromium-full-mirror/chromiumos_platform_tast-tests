@@ -29,9 +29,15 @@ type Persona struct {
 
 // Control has the test control information for power tests.
 type Control struct {
-	Retry             int32 `json:"retry"`
-	MaxDuration       int64 `json:"max_duration"`
-	FailOnSkippedTest bool  `json:"fail_on_skipped_test"`
+	// Retry specifies the retry number for failed tests.
+	Retry int32 `json:"retry"`
+	// MaxDuration specifies the max test duration in minutes.
+	MaxDuration int64 `json:"max_duration"`
+	// FailOnSkippedTest indicates whether to fail if there are skipped tests.
+	FailOnSkippedTest bool `json:"fail_on_skipped_test"`
+	// FixedOrderTests specifies the tests that need to be run in the given
+	// order. These tests will be run before other tests.
+	FixedOrderTests []string `json:"fixed_order_tests"`
 }
 
 // Config is the power test persona configuration.
@@ -44,7 +50,8 @@ type Config struct {
 }
 
 // ValidateConfig validates the configuration and returns all the tests.
-func ValidateConfig(c *Config) ([]string, error) {
+// Tests are grouped into ordered tests and unordered tests.
+func ValidateConfig(c *Config) (tests, orderedTests, unorderedTests []string, err error) {
 	formatSupported := false
 	for _, v := range supportedFormatVersions {
 		if c.FormatVersion == v {
@@ -53,47 +60,73 @@ func ValidateConfig(c *Config) ([]string, error) {
 		}
 	}
 	if !formatSupported {
-		return nil, errors.Errorf("the format version is not supported; want one of %v, got %d",
+		err = errors.Errorf("the format version is not supported; want one of %v, got %d",
 			supportedFormatVersions, c.FormatVersion)
+		return nil, nil, nil, err
 	}
 
 	if len(c.Personas) == 0 {
-		return nil, errors.New("no personas are given")
+		err = errors.New("no personas are given")
+		return nil, nil, nil, err
 	}
 
 	allTests := make(map[string]bool)
 	for _, persona := range c.Personas {
 		if len(persona.Tests) == 0 {
-			return nil, errors.Errorf("no tests are given for persona %q", persona.Name)
+			err = errors.Errorf("no tests are given for persona %q", persona.Name)
+			return nil, nil, nil, err
 		}
 		// Check test name duplication and weight.
 		personaTests := make(map[string]bool)
 		var totalWeight float64 = 0.0
 		for _, t := range persona.Tests {
 			if t.Name == "" {
-				return nil, errors.Errorf("test name is empty in persona %q", persona.Name)
+				err = errors.Errorf("test name is empty in persona %q", persona.Name)
+				return nil, nil, nil, err
 			}
 			if personaTests[t.Name] {
-				return nil, errors.Errorf("duplicated test %q is given for persona %q", t.Name, persona.Name)
+				err = errors.Errorf("duplicated test %q is given for persona %q", t.Name, persona.Name)
+				return nil, nil, nil, err
 			}
 			personaTests[t.Name] = true
 			allTests[t.Name] = true
 			// Allow 0 weight, but not negative numbers.
 			if t.Weight < 0 {
-				return nil, errors.Errorf("test %s in persona %q has negative weight %s", t.Name, persona.Name,
+				err = errors.Errorf("test %s in persona %q has negative weight %s", t.Name, persona.Name,
 					strconv.FormatFloat(t.Weight, 'f', -1, 64))
+				return nil, nil, nil, err
 			}
 			totalWeight += t.Weight
 		}
 		if totalWeight != 1 {
-			return nil, errors.Errorf("total weight for tests in persona %q is not 1.0; got %s", persona.Name,
+			err = errors.Errorf("total weight for tests in persona %q is not 1.0; got %s", persona.Name,
 				strconv.FormatFloat(totalWeight, 'f', -1, 64))
+			return nil, nil, nil, err
+
 		}
 	}
-	var tests []string
+
+	testsInOrder := make(map[string]bool)
+	// Verify ordered tests are included in the tests defined by personas.
+	for _, t := range c.Control.FixedOrderTests {
+		if !allTests[t] {
+			err = errors.Errorf("fixed order test %s is not included in any personas", t)
+			return nil, nil, nil, err
+		}
+		testsInOrder[t] = true
+	}
+
 	for t := range allTests {
+		if !testsInOrder[t] {
+			unorderedTests = append(unorderedTests, t)
+		}
 		tests = append(tests, t)
 	}
+
+	// Sort all tests and unordered tests alphabetically for easy lookup if printed in logs.
 	sort.Strings(tests)
-	return tests, nil
+	sort.Strings(unorderedTests)
+	orderedTests = c.Control.FixedOrderTests
+
+	return tests, orderedTests, unorderedTests, nil
 }

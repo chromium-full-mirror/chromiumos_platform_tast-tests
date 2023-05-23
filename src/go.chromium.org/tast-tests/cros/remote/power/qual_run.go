@@ -23,8 +23,14 @@ import (
 
 // QualRun holds the power qual run information.
 type QualRun struct {
+	// Config defines the test configuration.
 	Config *config.Config
-	Tests  []string
+	// Tests includes all the tests.
+	Tests []string
+	// OrderedTests includes tests that must run first with the given order.
+	OrderedTests []string
+	// UnorderedTests contains all tests that can be run in any order.
+	UnorderedTests []string
 }
 
 // NewQualRun returns a new QualRun from a test configuration URL.
@@ -39,12 +45,13 @@ func NewQualRun(ctx context.Context, url string) (*QualRun, error) {
 		return nil, errors.Wrap(err, "failed to unmarshal configuration")
 	}
 
-	tests, err := config.ValidateConfig(cfg)
+	tests, orderedTests, unorderedTests, err := config.ValidateConfig(cfg)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to validate configuration")
 	}
 
-	return &QualRun{Config: cfg, Tests: tests}, nil
+	return &QualRun{Config: cfg, Tests: tests, OrderedTests: orderedTests,
+		UnorderedTests: unorderedTests}, nil
 }
 
 // GenerateReport generates the power qual run test report.
