@@ -192,16 +192,7 @@ func launchKioskAppManually(ctx context.Context, cr *chrome.Chrome, param smokeT
 		return errors.Wrap(err, "failed to get Test API connection")
 	}
 
-	// It looks like UI is not stable to interact even when polling for
-	// elements. When waiting for elements and then clicking on
-	// kioskmode.KioskAppBtnNode the UI element froze. I was not able to find
-	// out how to overcome flakiness other than using sleep before interacting
-	// with UI.
-	// GoBigSleepLint: "Apps" button in sign in screen needs some time.
-	testing.Sleep(ctx, 3*time.Second)
-
-	ui := uiauto.New(tconn)
-	if err := kioskmode.StartFromSignInScreen(ctx, ui, param.appButtonName()); err != nil {
+	if err := kioskmode.LaunchAppManually(ctx, tconn, param.appButtonName()); err != nil {
 		return errors.Wrap(err, "failed to start Kiosk app from Sign-in screen")
 	}
 	return nil

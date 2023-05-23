@@ -50,7 +50,12 @@ var (
 		KioskAppInfo: &policy.KioskAppInfo{
 			AppId: &KioskAppID,
 		}}
+	// cancelLaunchText is a text shown in the launch screen with instructions to cancel launch.
 	cancelLaunchText = nodewith.Name("Press Ctrl + Alt + S to switch to ChromeOS").Role("staticText")
+	// chromeAppWindow is the Kiosk app window in Chrome app deployments.
+	chromeAppWindow = nodewith.ClassName("NativeAppWindowViews").Role("window")
+	// webAppWindow is the Kiosk app window in web deployments.
+	webAppWindow = nodewith.ClassName("BrowserFrame").Role("window")
 )
 
 const (
@@ -105,7 +110,7 @@ type Kiosk struct {
 // Callers must clean up the resulting Kiosk struct with kiosk.Close.
 //
 // If auto launch was configured in opts, the app should eventually launch automatically. Otherwise,
-// callers can use kiosmode.StartFromSignInScreen to launch Kiosk manually.
+// callers can use kiosmode.LaunchAppManually.
 //
 // Note New does not wait for Kiosk launch. Callers should use kiosk.WaitLaunchLogs.
 //
@@ -625,20 +630,39 @@ func (k *Kiosk) RestartChromeWithOptions(ctx context.Context, opts ...chrome.Opt
 	return k.restartChromeNoCloseWithOptions(ctx, opts...)
 }
 
-// StartFromSignInScreen starts a Kiosk app from the Apps menu on the sign-in
-// screen, simulating a manual launch. It doesn't wait for a successful launch
-// so that the launch can be cancelled by pressing Ctrl+Alt+S.
+// LaunchAppManually starts the Kiosk app with given name from the Apps menu on the sign-in screen,
+// simulating a manual launch. The given tconn should be a sign in profile test connection.
+//
+// It doesn't wait for a successful launch so that the launch can be cancelled by pressing
+// Ctrl+Alt+S.
+//
+// See kiosk.WaitLaunchLogs to wait for launch.
+//
 // TODO(b/230840565): Extract and extend this function to support MGS.
-func StartFromSignInScreen(ctx context.Context, ui *uiauto.Context, name string) error {
-	testing.ContextLog(ctx, "Starting Kiosk app from sign-in screen: "+name)
+func LaunchAppManually(ctx context.Context, tconn *chrome.TestConn, name string) error {
+	testing.ContextLogf(ctx, "Kiosk mode: Starting Kiosk app from signin screen %q", name)
+	ui := uiauto.New(tconn)
 	localAccountsBtn := nodewith.Name("Apps").HasClass("MenuButton")
+	if err := ui.WithTimeout(30 * time.Second).WaitUntilExists(localAccountsBtn)(ctx); err != nil {
+		return errors.Wrap(err, "failed to find 'Apps' button")
+	}
+
+	// There's a known issue with the "Apps" button, where clicking it too fast has no response, the
+	// apps menu does not open, and the test hangs. As a result all manual launch Kiosk tests needed
+	// to have this sleep before calling LaunchAppManually.
+	//
+	// GoBigSleepLint: TODO(b/280952514) "Apps" button in sign in screen needs some time.
+	if err := testing.Sleep(ctx, 3*time.Second); err != nil {
+		return errors.Wrap(err, "failed to sleep after finding 'Apps' button")
+	}
+
 	kioskAppBtn := nodewith.Name(name).HasClass("MenuItemView")
 	if err := uiauto.Combine("launch Kiosk app from menu",
-		ui.WaitUntilExists(localAccountsBtn),
 		ui.LeftClick(localAccountsBtn),
 		ui.WaitUntilExists(kioskAppBtn),
 		ui.LeftClick(kioskAppBtn),
-		ui.WaitUntilExists(cancelLaunchText),
+		// Wait until the launch screen appears, or until it's gone and the Kiosk app is launched.
+		ui.WaitUntilAnyExists(cancelLaunchText, chromeAppWindow, webAppWindow),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to start Kiosk application from apps menu")
 	}

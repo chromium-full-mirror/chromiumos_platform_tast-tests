@@ -98,7 +98,6 @@ func SecondaryAppsInstalled(ctx context.Context, s *testing.State) {
 	var kiosk *kioskmode.Kiosk = nil
 	var cr *chrome.Chrome = nil
 	var testConn *chrome.TestConn = nil
-	var ui *uiauto.Context = nil
 	var err error = nil
 	if param.autoLaunch {
 		kiosk, cr, err = kioskmode.DeprecatedNew(
@@ -121,8 +120,6 @@ func SecondaryAppsInstalled(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to get Test API connection: ", err)
 		}
 		defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, testConn)
-
-		ui = uiauto.New(testConn)
 
 	} else {
 		kiosk, cr, err = kioskmode.DeprecatedNew(
@@ -148,22 +145,13 @@ func SecondaryAppsInstalled(ctx context.Context, s *testing.State) {
 		}
 		defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, testConn)
 
-		ui = uiauto.New(testConn)
-
 		reader, err := syslog.NewReader(ctx, syslog.Program("chrome"))
 		if err != nil {
 			s.Fatal("Failed to start log reader: ", err)
 		}
 		defer reader.Close()
 
-		// It looks like UI is not stable to interact even when polling for
-		// elements. When waiting for elements and then clicking on
-		// kioskmode.KioskAppBtnNode the UI element froze. I was not able to find
-		// out how to overcome flakiness other than using sleep before interacting
-		// with UI.
-		testing.Sleep(ctx, 3*time.Second)
-
-		if err := kioskmode.StartFromSignInScreen(ctx, ui, appName); err != nil {
+		if err := kioskmode.LaunchAppManually(ctx, testConn, appName); err != nil {
 			s.Fatal("Failed to start Kiosk application from Sign-in screen: ", err)
 		}
 
@@ -172,7 +160,7 @@ func SecondaryAppsInstalled(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	if err := checkSecondaryAppAndExtension(ctx, ui); err != nil {
+	if err := checkSecondaryAppAndExtension(ctx, uiauto.New(testConn)); err != nil {
 		s.Fatal("Failed to check secondary app and extension")
 	}
 }
