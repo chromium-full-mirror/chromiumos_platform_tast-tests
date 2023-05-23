@@ -58,8 +58,7 @@ func init() {
 		},
 		Params: []testing.Param{
 			{
-				Fixture:   fixture.LoggedInWithFakeHALAndEffectsEnabled,
-				ExtraAttr: []string{"video_conference_cq_critical"},
+				Fixture: fixture.LoggedInWithFakeHALAndEffectsEnabled,
 			},
 			{
 				Name:              "lacros",
