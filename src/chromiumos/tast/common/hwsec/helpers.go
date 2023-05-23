@@ -323,6 +323,19 @@ func (h *CmdTPMClearHelper) ensureTPMIsReset(ctx context.Context, removeFiles bo
 			}
 		}(ctx)
 
+		if err := h.daemonController.TryStopDaemons(ctx, StatefulDaemons); err != nil {
+			// Stateful daemons might not be running because there is no guarantee
+			// that it is running when we start the test. If we actually failed to
+			// stop them and something ends up being wrong, then we can use the
+			// logging below to let whoever that's debugging this problem find out.
+			testing.ContextLog(ctx, "Failed to stop Stateful daemons, this is normal if they were not running: ", err)
+		}
+		defer func(ctx context.Context) {
+			if err := h.daemonController.EnsureDaemons(ctx, StatefulDaemons); err != nil {
+				testing.ContextLog(ctx, "Failed to ensure Stateful daemons: ", err)
+			}
+		}(ctx)
+
 		if err := h.tpmClearer.ClearTPM(ctx); err != nil {
 			return errors.Wrap(err, "failed to clear TPM")
 		}

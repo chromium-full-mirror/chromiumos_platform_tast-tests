@@ -205,6 +205,14 @@ var LowLevelTPMDaemons = []*DaemonInfo{
 	TrunksDaemon,
 }
 
+// UpdateEngineDaemon represents the DaemonsInfo for update engine.
+var UpdateEngineDaemon = &DaemonInfo{
+	Name:       "update-engine",
+	DaemonName: "update-engine",
+	HasDBus:    true,
+	DBusName:   "org.chromium.UpdateEngine",
+}
+
 // HighLevelTPMDaemons represents the high level TPM daemons.
 var HighLevelTPMDaemons = []*DaemonInfo{
 	TPMManagerDaemon,
@@ -214,6 +222,12 @@ var HighLevelTPMDaemons = []*DaemonInfo{
 	AttestationDaemon,
 	U2fdDaemon,
 	CryptohomeDaemon,
+}
+
+// StatefulDaemons represents the daemons using disk state that is wiped on
+// powerwash.
+var StatefulDaemons = []*DaemonInfo{
+	UpdateEngineDaemon,
 }
 
 // DaemonController controls the daemons via upstart commands.

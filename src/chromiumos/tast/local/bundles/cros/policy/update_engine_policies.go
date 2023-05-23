@@ -19,7 +19,6 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/nebraska"
 	"chromiumos/tast/local/policyutil"
-	"chromiumos/tast/local/updateengine"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -216,11 +215,6 @@ func UpdateEnginePolicies(ctx context.Context, s *testing.State) {
 	param := s.Param().(*updateEngineTestParam)
 
 	defer policyutil.ServeAndVerify(ctx, fdms, cr, []policy.Policy{})
-
-	// Make sure update_engine is restarted after enrollment.
-	if err := updateengine.RestartDaemon(ctx); err != nil {
-		s.Fatal("Failed to restart update-engine: ", err)
-	}
 
 	const waitTime = 20 * time.Second
 
