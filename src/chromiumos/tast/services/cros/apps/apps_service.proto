@@ -13,7 +13,10 @@ option go_package = "chromiumos/tast/services/cros/apps";
 // AppService provides functions for managing app lifecycle, like launching and closing apps.
 service AppsService {
 	// LaunchApp requests to launch an app.
-  rpc LaunchApp(LaunchAppRequest) returns (google.protobuf.Empty) {}
+  	rpc LaunchApp(LaunchAppRequest) returns (google.protobuf.Empty) {}
+
+	// CloseApp requests to close an app.
+	rpc CloseApp(CloseAppRequest) returns (google.protobuf.Empty) {}
 
 	// GetPrimaryBrowser returns the app that is set to the primary browser.
 	// This can be used to tell whether Lacros is enabled.
@@ -27,7 +30,14 @@ service AppsService {
 message LaunchAppRequest {
 	string app_name = 1;
 	// Defaults to 1 minute.
-  int32 timeout_secs = 2;
+  	int32 timeout_secs = 2;
+}
+
+// CloseAppRequest requests closing an app.
+message CloseAppRequest {
+	string app_name = 1;
+	// Defaults to 1 minute.
+  	int32 timeout_secs = 2;
 }
 
 // App represents a chromeOS app.

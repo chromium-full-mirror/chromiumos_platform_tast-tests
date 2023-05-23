@@ -94,6 +94,10 @@ func AppsServiceGRPC(ctx context.Context, s *testing.State) { // NOLINT
 		s.Fatal("Files app never appeared: ", err)
 	}
 
+	if _, err := appsSvc.CloseApp(ctx, &pb.CloseAppRequest{AppName: "Files", TimeoutSecs: 60}); err != nil {
+		s.Fatal("Failed to close files app: ", err)
+	}
+
 	browser, err := appsSvc.LaunchPrimaryBrowser(ctx, &empty.Empty{})
 	if err != nil {
 		s.Fatal("Failed to launch primary browser: ", err)

@@ -15,11 +15,13 @@ import (
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/common"
 	pb "chromiumos/tast/services/cros/apps"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
 const defaultAppLaunchTimeout = 60
+const defaultAppCloseTimeout = 10
 
 func init() {
 	var svc service
@@ -54,6 +56,36 @@ func (svc *service) LaunchApp(ctx context.Context, req *pb.LaunchAppRequest) (*e
 		}
 		if err := ash.WaitForApp(ctx, tconn, appID, time.Duration(req.TimeoutSecs)*time.Second); err != nil {
 			return nil, errors.Wrapf(err, "app %s never opened", req.AppName)
+		}
+		return &empty.Empty{}, nil
+	})
+}
+
+// CloseApp closes an app.
+func (svc *service) CloseApp(ctx context.Context, req *pb.CloseAppRequest) (*empty.Empty, error) {
+	if req.TimeoutSecs == 0 {
+		req.TimeoutSecs = defaultAppCloseTimeout
+	}
+	return common.UseTconn(ctx, svc.sharedObject, func(tconn *chrome.TestConn) (*empty.Empty, error) {
+		appID, err := getInstalledAppID(ctx, tconn, func(app *ash.ChromeApp) bool {
+			return app.Name == req.AppName
+		}, &testing.PollOptions{Timeout: time.Duration(req.TimeoutSecs) * time.Second})
+		if err != nil {
+			return nil, err
+		}
+
+		isAppRunning, err := ash.AppRunning(ctx, tconn, appID)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to check app %s running", req.AppName)
+		} else if !isAppRunning {
+			return nil, errors.Wrapf(err, "app %s is not running", req.AppName)
+		}
+
+		if err := tconn.Call(ctx, nil, `tast.promisify(chrome.autotestPrivate.closeApp)`, appID); err != nil {
+			return nil, errors.Wrapf(err, "failed to close app %s", req.AppName)
+		}
+		if err := ash.WaitForAppClosed(ctx, tconn, appID); err != nil {
+			return nil, errors.Wrapf(err, "app %s is not closed", req.AppName)
 		}
 		return &empty.Empty{}, nil
 	})
