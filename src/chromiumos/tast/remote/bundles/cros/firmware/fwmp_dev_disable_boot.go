@@ -7,6 +7,8 @@ package firmware
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -138,6 +140,16 @@ func FwmpDevDisableBoot(ctx context.Context, s *testing.State) {
 		s.Log("Reverting the 'dev mode disable' state on DUT at the end of test")
 		if err := setFWMP(cleanupCtx, "0"); err != nil {
 			s.Fatal("Failed while taking ownership and setting flags at the end of test: ", err)
+		}
+
+		// Save the firmware log file for upload to Testhaus at the end of the test.
+		output, err := h.Reporter.CatFile(ctx, "/sys/firmware/log")
+		if err != nil {
+			s.Fatal("Failed to read firmware log: ", err)
+		}
+		destPath := filepath.Join(s.OutDir(), "firmware.log")
+		if err := ioutil.WriteFile(destPath, []byte(output), 0666); err != nil {
+			s.Fatal("Failed to write firmware log: ", err)
 		}
 	}(cleanupCtx)
 
