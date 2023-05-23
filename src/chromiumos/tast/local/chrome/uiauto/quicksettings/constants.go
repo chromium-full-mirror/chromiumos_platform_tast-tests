@@ -12,13 +12,7 @@ import (
 )
 
 // RootFinder is the finder to find the Quick Settings area in the UI.
-// It should be used when feature QsRevamp is disabled.
-// TODO(jamescook): Rename this to LegacyRootFinder.
 var RootFinder = nodewith.HasClass("UnifiedSystemTrayView")
-
-// QsRootFinder is the finder to find the Quick Settings area in the UI.
-// It should be used when feature QsRevamp is enabled.
-var QsRootFinder = nodewith.HasClass("QuickSettingsView")
 
 // SystemTray is to distinguish it from calendar view in cases that use the calendar, it is also the finder to find the Quick Settings area in the UI.
 var SystemTray = nodewith.HasClass("UnifiedSystemTray")
@@ -36,7 +30,6 @@ var ExpandButton = nodewith.Role(role.Button).HasClass("CollapseButton").Name("E
 var LockButton = nodewith.Name("Lock").HasClass("IconButton")
 
 // SettingsButton is the finder for the Quick Settings' setting button.
-// This button is the same pre- and post-QsRevamp.
 var SettingsButton = nodewith.Name("Settings").HasClass("IconButton")
 
 // ShutdownButton is the finder for the shutdown button in Quick Settings.

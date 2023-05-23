@@ -13,7 +13,6 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/ossettings"
 	"chromiumos/tast/local/chrome/uiauto/quicksettings"
-
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -30,25 +29,12 @@ func init() {
 		BugComponent: "b:1246070", // ChromeOS > Software > System UI Surfaces > Status Area
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
-		Params: []testing.Param{
-			{
-				Name:    "qs_revamp_enabled",
-				Fixture: "chromeLoggedInQsRevampEnabled",
-				Val:     true,
-			},
-			{
-				Name:    "qs_revamp_disabled",
-				Fixture: "chromeLoggedInQsRevampDisabled",
-				Val:     false,
-			},
-		},
+		Fixture:      "chromeLoggedIn",
 	})
 }
 
 // OpenSettings tests that we can open the settings app from Quick Settings.
 func OpenSettings(ctx context.Context, s *testing.State) {
-	quicksettings.SetQsRevampEnabled(s.Param().(bool))
-
 	cr := s.FixtValue().(*chrome.Chrome)
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
