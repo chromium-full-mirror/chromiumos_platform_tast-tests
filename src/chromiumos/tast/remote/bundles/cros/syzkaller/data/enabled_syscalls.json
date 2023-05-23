@@ -137,7 +137,7 @@
 	},
 	{
 		"driver": "v4l(CONFIG_VIDEO_V4L2)",
-		"boards": ["kukui", "strongbad", "trogdor"],
+		"boards": ["kukui", "strongbad", "trogdor", "corsola"],
 		"syscalls": [
 			"ioctl$MEDIA_IOC_REQUEST_ALLOC",
 			"ioctl$MEDIA_REQUEST_IOC_QUEUE",
@@ -241,6 +241,7 @@
 			"ioctl$VIDIOC_TRY_EXT_CTRLS",
 			"ioctl$VIDIOC_TRY_FMT",
 			"ioctl$VIDIOC_UNSUBSCRIBE_EVENT",
+			"ioctl$VIDIOC_QUERYBUF_DMABUF",
 			"openat$vicodec0",
 			"openat$vicodec1",
 			"openat$vimc0",
