@@ -7,9 +7,8 @@ package oobe
 import (
 	"context"
 
-	"chromiumos/tast/common/action"
+	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/local/updateengine"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -28,6 +27,7 @@ func init() {
 		BugComponent: "b:1263090", // ChromeOS > Software > OOBE
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
+		Fixture:      fixture.UpdateEngine, // Ensure to update engine status is idle and to reset between tests (b/263421799).
 		Params: []testing.Param{{
 			Name: "finch_on",
 			Val:  "enable",
@@ -39,15 +39,6 @@ func init() {
 }
 
 func Smoke(ctx context.Context, s *testing.State) {
-	// Restart update-engine to ensure it is idle (b/263421799).
-	if err := action.Combine("restart update-engine",
-		updateengine.StopDaemon,
-		updateengine.StartDaemon,
-		updateengine.WaitForService,
-	)(ctx); err != nil {
-		testing.ContextLogf(ctx, "Failed to restart update-engine: %s", err)
-	}
-
 	cr, err := chrome.New(ctx,
 		chrome.FieldTrialConfig(s.Param().(string)),
 		chrome.NoLogin(),
