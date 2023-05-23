@@ -139,6 +139,18 @@ func init() {
 		Parent:          "gpuWatchHangs",
 	})
 	testing.AddFixture(&testing.Fixture{
+		Name: "prepareForCUJWithoutCooldown",
+		Desc: "The fixture to prepare DUT for CUJ tests without CPU cooldown",
+		Contacts: []string{
+			"vincentchiang@google.com",
+			"chromeos-perfmetrics-eng@google.com",
+		},
+		Impl:            &prepareCUJFixture{skipCPUCooldown: true},
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Parent:          "gpuWatchHangs",
+	})
+	testing.AddFixture(&testing.Fixture{
 		Name: "cpuIdleForCUJ",
 		Desc: "The fixture to wait DUT cpu to idle for CUJ tests",
 		Contacts: []string{
@@ -643,6 +655,36 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		Vars:            []string{"ui.cujAccountPool"},
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithoutCooldown",
+		Desc: "CUJ fixture that skips CPU cooldown",
+		Contacts: []string{
+			"vincentchiang@google.com",
+			"chromeos-perfmetrics-eng@google.com",
+		},
+		Impl:            &loggedInToCUJUserFixture{bt: browser.TypeAsh},
+		Parent:          "prepareForCUJWithoutCooldown",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserLacrosWithoutCooldown",
+		Desc: "Lacros CUJ fixture that skips CPU cooldown",
+		Contacts: []string{
+			"vincentchiang@google.com",
+			"chromeos-perfmetrics-eng@google.com",
+		},
+		Impl:            &loggedInToCUJUserFixture{bt: browser.TypeLacros},
+		Parent:          "prepareForCUJWithoutCooldown",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
 }
 
 func prepareDocsBlockerExtension(s *testing.FixtState) (string, error) {
@@ -719,7 +761,9 @@ func CPUCoolDownConfig() cpu.CoolDownConfig {
 	return cdConfig
 }
 
-type prepareCUJFixture struct{}
+type prepareCUJFixture struct {
+	skipCPUCooldown bool
+}
 
 func (f *prepareCUJFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	return nil
@@ -735,6 +779,11 @@ func (f *prepareCUJFixture) Reset(ctx context.Context) error {
 func (f *prepareCUJFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
 	if strings.ToLower(isLocalVar.Value()) == "true" {
 		s.Log("Skipping CPU cooldown because local testing variable is set")
+		return
+	}
+
+	if f.skipCPUCooldown {
+		s.Log("Skipping CPU cooldown because of fixture")
 		return
 	}
 
@@ -1063,6 +1112,24 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 	f.cr = cr
 	f.arc = a
 	cr = nil
+
+	// Wait for up to 2 minutes for all windows to close.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		windows, err := ash.GetAllWindows(ctx, tconn)
+		if err != nil {
+			return errors.Wrap(err, "failed to get all windows")
+		}
+		if len(windows) != 0 {
+			return errors.Errorf("unexpected number of windows; got %d, expected 0", len(windows))
+		}
+		return nil
+	}, &testing.PollOptions{
+		Timeout:  2 * time.Minute,
+		Interval: 10 * time.Second,
+	}); err != nil {
+		s.Fatal("Failed to set pre-testing state: ", err)
+	}
+
 	return FixtureData{chrome: f.cr, ARC: f.arc}
 }
 

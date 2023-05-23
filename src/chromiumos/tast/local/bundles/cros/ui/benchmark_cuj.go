@@ -33,7 +33,7 @@ func init() {
 			{
 				Name:    "speedometer",
 				Timeout: defaultTimeout,
-				Fixture: "loggedInToCUJUser",
+				Fixture: "loggedInToCUJUserWithoutCooldown",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.SpeedometerInfo,
@@ -42,7 +42,7 @@ func init() {
 			{
 				Name:    "lacros_speedometer",
 				Timeout: defaultTimeout,
-				Fixture: "loggedInToCUJUserLacros",
+				Fixture: "loggedInToCUJUserLacrosWithoutCooldown",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeLacros,
 					BenchmarkInfo: benchmarkcuj.SpeedometerInfo,

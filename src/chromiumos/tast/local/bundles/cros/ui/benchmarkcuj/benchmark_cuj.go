@@ -17,6 +17,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/ui/cujrecorder"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -80,6 +81,7 @@ func Run(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get all windows: ", err)
 	}
 
+	// Make sure the benchmark page is the only window opened.
 	if len(windows) != 1 {
 		s.Fatalf("Unexpected number of windows; got %d, expected 1", len(windows))
 	}
