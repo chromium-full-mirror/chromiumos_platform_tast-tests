@@ -25,6 +25,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/input"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -40,7 +41,7 @@ func init() {
 		BugComponent: "b:875484",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline"},
-		Fixture:      "chromeLoggedIn",
+		Fixture:      "chromeLoggedInQsRevampEnabled",
 		HardwareDeps: hwdep.D(hwdep.Speaker()),
 		Params: []testing.Param{
 			{
@@ -55,6 +56,9 @@ func init() {
 }
 
 func PlaybackAudioControls(ctx context.Context, s *testing.State) {
+	cleanup := quicksettings.SetQsRevampEnabled(true)
+	defer cleanup()
+
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	// Open the test API.

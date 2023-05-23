@@ -18,6 +18,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/quicksettings"
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/input"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
@@ -35,7 +36,7 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		HardwareDeps: hwdep.D(hwdep.Speaker()),
 		Data:         []string{"audio.flac", "audio.m4a", "audio.ogg", "audio.wav", "audio.mp3", "audio.5.1.mp3"},
-		Fixture:      "chromeLoggedIn",
+		Fixture:      "chromeLoggedInQsRevampEnabled",
 		Params: []testing.Param{
 			{
 				ExtraSoftwareDeps: []string{"audio_stable"},
@@ -49,6 +50,9 @@ func init() {
 }
 
 func CheckingAudioFormats(ctx context.Context, s *testing.State) {
+	cleanup := quicksettings.SetQsRevampEnabled(true)
+	defer cleanup()
+
 	cr := s.FixtValue().(*chrome.Chrome)
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
