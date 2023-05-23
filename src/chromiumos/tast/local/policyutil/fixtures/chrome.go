@@ -173,6 +173,28 @@ func init() {
 		Parent:          fixture.FakeDMSEnrolled,
 	})
 
+	// ChromeUpdateEngineEnrolledLoggedIn is identical to ChromeEnrolledLoggedIn
+	// but the root inheritance is UpdateEngineEnrolled to ensure update engine
+	// is reset.
+	testing.AddFixture(&testing.Fixture{
+		Name: fixture.ChromeUpdateEngineEnrolledLoggedIn,
+		Desc: "Logged into a user session with enrollment and ensure update engine is reset",
+		Contacts: []string{
+			"crisguerrero@chromium.org",
+			"chromeos-commercial-remote-management@google.com",
+		},
+		Impl: &policyChromeFixture{
+			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+				return []chrome.Option{chrome.KeepEnrollment()}, nil
+			},
+		},
+		SetUpTimeout:    chrome.ManagedUserLoginTimeout + cleanupTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+		PostTestTimeout: 15 * time.Second,
+		Parent:          fixture.FakeDMSUpdateEngineEnrolled,
+	})
+
 	testing.AddFixture(&testing.Fixture{
 		Name:     fixture.ChromeEnrolledLoggedInARC,
 		Desc:     "Logged into a user session with enrollment with ARC support",

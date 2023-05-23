@@ -54,7 +54,7 @@ func init() {
 			"group:complementary",
 		},
 		SoftwareDeps: []string{"reboot", "chrome", "auto_update_stable"},
-		Fixture:      fixture.ChromeEnrolledLoggedIn,
+		Fixture:      fixture.ChromeUpdateEngineEnrolledLoggedIn,
 		// TODO(b/230317245): Add variant with real DPanel server after go/tape-tast
 		//                    is implemented and available.
 		Params: []testing.Param{

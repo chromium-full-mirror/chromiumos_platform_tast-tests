@@ -28,6 +28,24 @@ func init() {
 			"tast.cros.autoupdate.UpdateService",
 		},
 	})
+
+	// UpdateEngineEnrolled is identical to UpdateEngine but it also provides
+	// enrollment.
+	testing.AddFixture(&testing.Fixture{
+		Name: fixture.UpdateEngineEnrolled,
+		Desc: "Fixture providing enrollment and udpate engine reset",
+		Contacts: []string{
+			"crisguerrero@chromium.org",
+			"chromeos-commercial-remote-management@google.com",
+		},
+		Parent:          fixture.Enrolled, // Provides enrollment.
+		Impl:            &updateEngineFixture{},
+		PreTestTimeout:  30 * time.Second,
+		PostTestTimeout: 30 * time.Second,
+		ServiceDeps: []string{
+			"tast.cros.autoupdate.UpdateService",
+		},
+	})
 }
 
 type updateEngineFixture struct{}

@@ -9,4 +9,6 @@ const (
 	// Fixture for tests that use update engine. Ensures that update engine status
 	// is reset at the end of the test.
 	UpdateEngine = "updateEngine"
+	// UpdateEngineEnrolled provides enrollment as well.
+	UpdateEngineEnrolled = "updateEngineEnrolled"
 )

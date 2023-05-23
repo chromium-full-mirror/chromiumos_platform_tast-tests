@@ -43,7 +43,7 @@ func init() {
 			"group:complementary",
 		},
 		SoftwareDeps: []string{"reboot", "chrome"},
-		Fixture:      fixture.FakeDMSEnrolled,
+		Fixture:      fixture.FakeDMSUpdateEngineEnrolled,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.ChromeOsReleaseChannelDelegated{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.ChromeOsReleaseChannel{}, pci.VerifiedFunctionalityUI),

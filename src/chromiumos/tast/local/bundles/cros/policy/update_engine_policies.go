@@ -63,7 +63,7 @@ func init() {
 			"group:complementary",
 		},
 		SoftwareDeps: []string{"reboot", "chrome"},
-		Fixture:      fixture.ChromeEnrolledLoggedIn,
+		Fixture:      fixture.ChromeUpdateEngineEnrolledLoggedIn,
 		Timeout:      1 * time.Minute,
 		Params: []testing.Param{{
 			Name: "device_target_version_selector",
@@ -215,12 +215,9 @@ func UpdateEnginePolicies(ctx context.Context, s *testing.State) {
 
 	param := s.Param().(*updateEngineTestParam)
 
-	// Restart update-engine after clearing policies.
-	defer updateengine.RestartDaemon(ctx)
 	defer policyutil.ServeAndVerify(ctx, fdms, cr, []policy.Policy{})
 
 	// Make sure update_engine is restarted after enrollment.
-
 	if err := updateengine.RestartDaemon(ctx); err != nil {
 		s.Fatal("Failed to restart update-engine: ", err)
 	}

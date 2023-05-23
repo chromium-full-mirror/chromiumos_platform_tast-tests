@@ -15,11 +15,9 @@ import (
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/common/testexec"
-	updateenginecommon "chromiumos/tast/common/updateengine"
 	"chromiumos/tast/local/chrome"
 	nebraskapkg "chromiumos/tast/local/nebraska"
 	"chromiumos/tast/local/policyutil"
-	updateenginelocal "chromiumos/tast/local/updateengine"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -42,7 +40,7 @@ func init() {
 		BugComponent: "b:1031231",
 		Attr:         []string{"group:hw_agnostic", "group:mainline", "informational"},
 		Timeout:      4 * time.Minute,
-		Fixture:      fixture.ChromeEnrolledLoggedIn,
+		Fixture:      fixture.ChromeUpdateEngineEnrolledLoggedIn,
 		Params: []testing.Param{{
 			Name: "kernel_rollback_protection",
 			Val: &rollbackBlockerTestParam{
@@ -109,23 +107,6 @@ func BlockedByRollbackProtection(ctx context.Context, s *testing.State) {
 	if err := nebraska.SetRollbackPreventionImage(ctx, param.imageKernelAndFirmwareVersion); err != nil {
 		s.Fatal("Failed to configure nebraska to send kernel and fw versions: ", err)
 	}
-
-	// We expect update engine to be running and idle. Fail if its not.
-	// If the test fails here that's a sign that a previous test has not cleaned up update_engine properly.
-	status, err := updateenginelocal.Status(ctx)
-	if err != nil {
-		s.Fatal("Failed to request update engine status: ", err)
-	}
-	if status.CurrentOperation != string(updateenginecommon.UpdateStatusIdle) {
-		s.Fatalf("Update engine is not idle but %s, did a previous test not clean up properly?", status.CurrentOperation)
-	}
-
-	// Clean up update engine after the test.
-	defer func(ctx context.Context) {
-		if err := updateenginelocal.ClearPrefs(ctx); err != nil {
-			s.Error("Failed to clear and restart update engine after test: ", err)
-		}
-	}(cleanupCtx)
 
 	// No need to worry about the update not being blocked. We are not offering any payload. All update attempts will fail.
 	if err := testexec.CommandContext(ctx,

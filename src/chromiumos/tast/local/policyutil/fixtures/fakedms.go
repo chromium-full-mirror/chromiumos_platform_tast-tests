@@ -47,6 +47,26 @@ func init() {
 		PostTestTimeout: 5 * time.Second,
 		Parent:          fixture.Enrolled,
 	})
+
+	// FakeDMSUpdateEngineEnrolled is identical to FakeDMSEnrolled but inherits
+	// from UpdateEngineEnrolled fixture to ensure update engine is reset.
+	testing.AddFixture(&testing.Fixture{
+		Name: fixture.FakeDMSUpdateEngineEnrolled,
+		Desc: "Fixture for a running FakeDMS ensuring to reset update engine",
+		Contacts: []string{
+			"crisguerrero@chromium.org",
+			"chromeos-commercial-remote-management@google.com",
+		},
+		Impl: &fakeDMSFixture{
+			importState: filepath.Join(fakedms.EnrollmentFakeDMSDir, fakedms.StateFile),
+		},
+		SetUpTimeout:    15 * time.Second,
+		ResetTimeout:    5 * time.Second,
+		TearDownTimeout: 5 * time.Second,
+		PreTestTimeout:  5 * time.Second,
+		PostTestTimeout: 5 * time.Second,
+		Parent:          fixture.UpdateEngineEnrolled,
+	})
 }
 
 type fakeDMSFixture struct {

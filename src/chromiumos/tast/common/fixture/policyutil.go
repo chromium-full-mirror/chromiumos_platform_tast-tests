@@ -21,6 +21,8 @@ const (
 	FakeDMS = "fakeDMS"
 	// FakeDMSEnrolled is a fixture name.
 	FakeDMSEnrolled = "fakeDMSEnrolled"
+	// FakeDMSUpdateEngineEnrolled is a fixture name.
+	FakeDMSUpdateEngineEnrolled = "fakeDMSUpdateEngineEnrolled"
 )
 
 // Fixtures defined in chromiumos/tast/local/policyutil/fixtures/chrome.go.
@@ -45,6 +47,8 @@ const (
 	ChromePolicyLoggedInBruschetta = "chromePolicyLoggedInBruschetta"
 	// ChromeEnrolledLoggedIn is a fixture name.
 	ChromeEnrolledLoggedIn = "chromeEnrolledLoggedIn"
+	// ChromeUpdateEngineEnrolledLoggedIn is a fixture name.
+	ChromeUpdateEngineEnrolledLoggedIn = "chromeUpdateEngineEnrolledLoggedIn"
 	// ChromeEnrolledLoggedInARC is a fixture name.
 	ChromeEnrolledLoggedInARC = "chromeEnrolledLoggedInARC"
 	// ChromeAdminDeskTemplatesLoggedIn is a fixture name.
