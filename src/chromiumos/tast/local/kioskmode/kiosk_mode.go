@@ -19,15 +19,10 @@ import (
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/local/chrome"
-	"chromiumos/tast/local/chrome/ash/ashproc"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
-	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/policyutil"
-	"chromiumos/tast/local/policyutil/fixtures"
-	"chromiumos/tast/local/procutil"
 	"chromiumos/tast/local/syslog"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -101,8 +96,6 @@ type Kiosk struct {
 	// reader for Chrome syslog messages from this Kiosk session. Used to wait for Kiosk logs.
 	reader                         *syslog.Reader
 	signinTestExtensionManifestKey string
-	// TODO(b/280555587) remove this field when kiosk.DeprecatedClose is removed.
-	autostart bool
 }
 
 // New sets up Chrome for a Kiosk session using policies based on the given options.
@@ -178,7 +171,6 @@ func New(ctx context.Context, fdms *fakedms.FakeDMS, signinTestExtensionManifest
 		httpServer:                     httpServer,
 		reader:                         reader,
 		signinTestExtensionManifestKey: signinTestExtensionManifestKey,
-		autostart:                      cfg.m.AutoLaunch,
 	}, cr, nil
 }
 
@@ -249,83 +241,6 @@ func (k *Kiosk) Close(ctx context.Context) (retErr error) {
 	return retErr
 }
 
-// DeprecatedClose clears policies, but keeps serving device local accounts
-// then closes Chrome. Ideally we would serve an empty policies slice however,
-// that makes Chrome crashes when AutoLaunch() option was used.
-//
-// Deprecated: Prefer using Close, as it clears Kiosk policies correctly between
-// tests.
-func (k *Kiosk) DeprecatedClose(ctx context.Context) (retErr error) {
-	// If Chrome fails to start in RestartChromeWithOptions it has already been
-	// cleaned up by startChromeClearPolicies.
-	if k.cr == nil {
-		return errors.New("Skipping kiosk.Close() because Chrome is nil")
-	}
-
-	// Using defer to make sure Chrome is always closed.
-	defer func(ctx context.Context) {
-		if err := k.cr.Close(ctx); err != nil {
-			// Chrome error supersedes previous error if any.
-			retErr = errors.Wrap(err, "could not close Chrome while closing Kiosk session")
-		}
-	}(ctx)
-
-	if k.httpServer != nil {
-		k.httpServer.Close()
-	}
-
-	var policies []policy.Policy
-	// When AutoLaunch() option was used, then the corresponding policy has to
-	// be removed before starting a new Chrome session. Otherwise Kiosk will
-	// start again. When applying an empty policies slice, Chrome crashes.
-	// Hence the safest way is to apply local accounts again. That way Chrome
-	// will load them but will start normally. If the next tests want to use
-	// policy they will override them.
-	if k.autostart {
-		policies = append(policies, k.localAccounts)
-	}
-
-	var serveAndRefreshErr error
-
-	defer func(ctx context.Context) {
-		if serveAndRefreshErr == nil {
-			return
-		}
-
-		// If `policyutil.ServeAndRefresh` is failed, we might be on the login screen
-		// if test interrupted kiosk autolaunch or manual kiosk launch failed.
-		//
-		// So we try to refresh policies from login screen using signin profile test extension.
-		//
-		// Test has to use next kiosk option to load signin profile test extension:
-		//
-		//   kioskmode.ExtraChromeOptions(
-		//	   chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")))
-
-		// TODO(b/278071203): Figure out more robust way to cleanup autolaunch kiosk.
-
-		ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
-		defer cancel()
-
-		if err := policyutil.ServeAndRefreshOnLoginScreen(ctx, k.fdms, k.cr, policies); err != nil {
-			testing.ContextLog(ctx, "Could not serve and refresh policies on login screen. If kioskmode.AutoLaunch() option was used it may impact next test : ", err)
-			retErr = serveAndRefreshErr
-		}
-	}(ctx)
-
-	defer func(ctx context.Context) {
-		ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
-		defer cancel()
-
-		if err := policyutil.ServeAndRefresh(ctx, k.fdms, k.cr, policies); err != nil {
-			testing.ContextLog(ctx, "Could not serve and refresh policies. If kioskmode.AutoLaunch() option was used it may impact next test : ", err)
-			serveAndRefreshErr = errors.Wrap(err, "could not clear policies")
-		}
-	}(ctx)
-
-	return nil
-}
-
 // WaitLaunchLogs is the same as WaitLaunchLogsWithReader below, but uses the reader stored in this
 // Kiosk struct.
 //
@@ -376,201 +291,6 @@ func waitLog(ctx context.Context, reader *syslog.Reader, message string, timeout
 	containsMessage := func(e *syslog.Entry) bool { return strings.Contains(e.Content, message) }
 	if _, err := reader.Wait(ctx, timeout, containsMessage); err != nil {
 		return errors.Wrapf(err, "could not find log message %q", message)
-	}
-	return nil
-}
-
-// IsKioskAppStarted searches for existing logs to confirm Kiosk is running.
-func IsKioskAppStarted(ctx context.Context) error {
-	logContent, err := ioutil.ReadFile(syslog.ChromeLogFile)
-	if err != nil {
-		return errors.Wrap(err, "failed to read "+syslog.ChromeLogFile)
-	}
-
-	if !strings.Contains(string(logContent), kioskClosingSplashScreenLog) {
-		return errors.New("failed to verify successful launch of Kiosk mode")
-	}
-	return nil
-}
-
-// DeprecatedNew starts Chrome, sets passed Kiosk related options to policies
-// and restarts Chrome. When kioskmode.AutoLaunch() is used, then it auto starts
-// given Kiosk application. Alternatively use kioskmode.ExtraChromeOptions()
-// passing chrome.LoadSigninProfileExtension(). In that case Chrome is started
-// and stays on Signin screen with Kiosk accounts loaded.
-// Use defer kiosk.Close(ctx) to clean.
-//
-// Deprecated: Prefer using New, as it sets Kiosk policies in Chrome using the
-// safer --prevent-kiosk-autolaunch-for-testing flag.
-func DeprecatedNew(ctx context.Context, fdms *fakedms.FakeDMS, opts ...Option) (k *Kiosk, c *chrome.Chrome, e error) {
-	cfg, err := NewConfig(opts)
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to process options")
-	}
-
-	var deviceLocalAccounts *policy.DeviceLocalAccounts
-	var httpServer *httptest.Server
-
-	if cfg.m.UseDefaultLocalAccounts {
-		if cfg.m.DeviceLocalAccounts != nil {
-			return nil, nil, errors.New("invalid config: DeviceLocalAccounts and UseDefaultLocalAccounts should not be used at the same time")
-		}
-
-		httpServer = NewWebKioskAppServer(ctx)
-		webKioskAppAccountInfo := WebKioskAppAccountInfo(httpServer.URL, WebKioskAccountID)
-		deviceLocalAccounts = &policy.DeviceLocalAccounts{
-			Val: []policy.DeviceLocalAccountInfo{KioskAppAccountInfo, webKioskAppAccountInfo}}
-
-		// Close local http server if Kiosk fails to start.
-		defer func() {
-			if httpServer != nil && k == nil {
-				httpServer.Close()
-			}
-		}()
-	} else if cfg.m.DeviceLocalAccounts != nil {
-		deviceLocalAccounts = cfg.m.DeviceLocalAccounts
-	} else {
-		return nil, nil, errors.Wrap(err, "local device accounts were not set")
-	}
-
-	err = func(ctx context.Context) error {
-		testing.ContextLog(ctx, "Kiosk mode: Starting Chrome to set Kiosk policies")
-		cr, err := chrome.New(
-			ctx,
-			chrome.FakeLogin(chrome.Creds{User: fixtures.Username, Pass: fixtures.Password}), // Required as refreshing policies require test API.
-			chrome.DMSPolicy(fdms.URL),
-			chrome.KeepEnrollment(),
-		)
-		if err != nil {
-			return errors.Wrap(err, "failed to start Chrome")
-		}
-
-		// Close the previous Chrome instance.
-		defer cr.Close(ctx)
-
-		// Set local accounts policy.
-		policies := []policy.Policy{
-			deviceLocalAccounts,
-		}
-
-		// Handle the AutoLaunch setup.
-		if cfg.m.AutoLaunch == true {
-			policies = append(policies, &policy.DeviceLocalAccountAutoLoginId{
-				Val: *cfg.m.AutoLaunchKioskAppID,
-			})
-		}
-
-		// Handle setting device policies.
-		if cfg.m.ExtraPolicies != nil {
-			policies = append(policies, cfg.m.ExtraPolicies...)
-		}
-
-		pb := policy.NewBlob()
-		pb.AddPolicies(policies)
-		// Handle public account policies.
-		if cfg.m.PublicAccountPolicies != nil {
-			for accountID, policies := range cfg.m.PublicAccountPolicies {
-				pb.AddPublicAccountPolicies(accountID, policies)
-			}
-		}
-		// Handle custom directory api id.
-		if cfg.m.CustomDirectoryAPIID != nil {
-			pb.DirectoryAPIID = *cfg.m.CustomDirectoryAPIID
-		}
-		// Update policies.
-		if err := policyutil.ServeBlobAndRefresh(ctx, fdms, cr, pb); err != nil {
-			// In case of AutoLaunch was used we try to override policies with
-			// local accounts similarly as in kioskmode.Close().
-			if cfg.m.AutoLaunch == true {
-				if err := policyutil.ServeAndRefresh(ctx, fdms, cr, []policy.Policy{deviceLocalAccounts}); err != nil {
-					testing.ContextLog(ctx, "Could not serve and refresh policies. If kioskmode.AutoLaunch() option was used it may impact next test : ", err)
-				}
-			}
-			return errors.Wrap(err, "failed to serve and refresh policies")
-		}
-
-		return nil
-	}(ctx)
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed preparing Chrome to start with given Kiosk configuration")
-	}
-
-	reader, err := syslog.NewReader(ctx, syslog.Program("chrome"))
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to start log reader")
-	}
-	defer reader.Close()
-
-	var cr *chrome.Chrome
-	if cfg.m.AutoLaunch {
-		opts := []chrome.Option{
-			chrome.NoLogin(),
-			chrome.DMSPolicy(fdms.URL),
-			chrome.KeepEnrollment(),
-		}
-		opts = append(opts, cfg.m.ExtraChromeOptions...)
-
-		testing.ContextLog(ctx, "Kiosk mode: Starting Chrome in Kiosk mode")
-		// Restart Chrome. After that Kiosk auto starts.
-		cr, err = chrome.New(ctx, opts...)
-		if err != nil {
-			if err := startChromeClearPolicies(ctx, fdms, fixtures.Username, fixtures.Password); err != nil {
-				return nil, nil, errors.Wrap(err, "could not finish cleanup")
-			}
-			return nil, nil, errors.Wrap(err, "Chrome restart failed")
-		}
-
-		if !cfg.m.SkipSuccessfulLaunchCheck {
-			// Library waits for Kiosk start sequence to start then it checks
-			// that Kiosk is ready for launch, and finally it waits for Kiosk
-			// to be launched.
-			if err := WaitLaunchLogsWithReader(ctx, reader); err != nil {
-				if err := policyutil.ServeAndRefresh(ctx, fdms, cr, []policy.Policy{deviceLocalAccounts}); err != nil {
-					testing.ContextLog(ctx, "Could not serve and refresh policies. If kioskmode.AutoLaunch() option was used it may impact next test: ", err)
-				}
-				cr.Close(ctx)
-				return nil, nil, errors.Wrap(err, "there was a problem while checking chrome logs for Kiosk related entries")
-			}
-		}
-	} else {
-		opts := []chrome.Option{
-			chrome.DeferLogin(),
-			chrome.DMSPolicy(fdms.URL),
-			chrome.KeepEnrollment(),
-		}
-		opts = append(opts, cfg.m.ExtraChromeOptions...)
-
-		testing.ContextLog(ctx, "Kiosk mode: Starting Chrome on Signin screen with set Kiosk apps")
-		// Restart Chrome. Chrome stays on Sing-in screen
-		cr, err = chrome.New(ctx, opts...)
-		if err != nil {
-			return nil, nil, errors.Wrap(err, "Chrome restart failed")
-		}
-	}
-
-	return &Kiosk{cr: cr, fdms: fdms, localAccounts: deviceLocalAccounts, httpServer: httpServer, autostart: cfg.m.AutoLaunch}, cr, nil
-}
-
-// startChromeClearPolicies is called when Chrome fails to start in autostart
-// mode - when kioskmode.AutoLaunch() option was used. We need to start Chrome
-// and clean policies to prevent Chrome starting automatically in Kiosk mode
-// for next test.
-// FIXME: this cleanup doesn't work on some devices (e.g. chell). FakeLogin()
-// doesn't work either. Need to figure out some way to fix this.
-func startChromeClearPolicies(ctx context.Context, fdms *fakedms.FakeDMS, username, password string) error {
-	cr, err := chrome.New(
-		ctx,
-		chrome.NoLogin(),
-		chrome.DMSPolicy(fdms.URL),
-		chrome.KeepEnrollment(),
-	)
-	if err != nil {
-		return errors.Wrap(err, "failed to start Chrome for cleanup")
-	}
-	defer cr.Close(ctx)
-
-	if err := policyutil.ServeAndRefresh(ctx, fdms, cr, []policy.Policy{}); err != nil {
-		return errors.Wrap(err, "failed to clear policies")
 	}
 	return nil
 }
@@ -645,27 +365,6 @@ func (k *Kiosk) RestartChromeWithOptions(ctx context.Context, opts ...chrome.Opt
 	return cr, nil
 }
 
-// restartChromeNoCloseWithOptions replaces the current Chrome in this Kiosk instance with a new one
-// using the given opts without closing the old one.
-func (k *Kiosk) restartChromeNoCloseWithOptions(ctx context.Context, opts ...chrome.Option) (*chrome.Chrome, error) {
-	k.cr = nil
-	k.reader = nil
-
-	reader, err := syslog.NewReader(ctx, syslog.Program("chrome"))
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to start Chrome syslog reader")
-	}
-
-	cr, err := chrome.New(ctx, opts...)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to start new Chrome")
-	}
-
-	k.cr = cr
-	k.reader = reader
-	return cr, err
-}
-
 // LaunchAppManually starts the Kiosk app with given name from the Apps menu on the sign-in screen,
 // simulating a manual launch. The given tconn should be a sign in profile test connection.
 //
@@ -703,127 +402,6 @@ func LaunchAppManually(ctx context.Context, tconn *chrome.TestConn, name string)
 		return errors.Wrap(err, "failed to start Kiosk application from apps menu")
 	}
 	return nil
-}
-
-// CancelKioskLaunch cancels the current Kiosk launch by pressing Ctrl+Alt+S.
-//
-// A new Chrome instance will be started with given opts.
-func (k *Kiosk) CancelKioskLaunch(ctx context.Context, opts ...chrome.Option) (retCr *chrome.Chrome, retErr error) {
-	// Make sure to clean up Chrome on error.
-	defer func() {
-		if retErr != nil && retCr != nil {
-			if err := retCr.Close(ctx); err != nil {
-				testing.ContextLog(ctx, "Failed to close Chrome after cancel launch error: ", err)
-			}
-		}
-	}()
-
-	testing.ContextLog(ctx, "Kiosk mode: Cancelling Kiosk launch via Ctrl+Alt+S")
-	if err := chrome.PrepareForRestart(); err != nil {
-		return nil, errors.Wrap(err, "failed to remove old dev tools port file")
-	}
-
-	if err := waitSplashScreen(ctx, k.cr); err != nil {
-		return nil, errors.Wrap(err, "failed to wait for Kiosk splash screen")
-	}
-
-	// Create the flag file so session_manager does not restart Chrome automatically. We will restart
-	// it ourselves.
-	clearFlag, err := setupDisableChromeRestartFlagFile()
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to setup flag file")
-	}
-	defer func() {
-		if err := clearFlag(); err != nil {
-			if retErr == nil {
-				retErr = errors.Wrap(err, "failed to clear flag file")
-			} else {
-				testing.ContextLog(ctx, "Failed to clear flag file: ", err)
-			}
-		}
-	}()
-
-	// Find the current Chrome process to wait for it to shut down later.
-	oldCr, err := ashproc.WaitForRoot(ctx, time.Minute)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to find the browser process")
-	}
-
-	if err := pressCancelLaunchAccelerator(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed to cancel launch")
-	}
-
-	if err := procutil.WaitForTerminated(ctx, oldCr, 10*time.Second); err != nil {
-		return nil, errors.Wrap(err, "browser process didn't terminate")
-	}
-
-	// Clean up flag file we created.
-	if err := clearFlag(); err != nil {
-		return nil, errors.Wrap(err, "failed to remove flag file")
-	}
-
-	// Restart Chrome without closing since the current Chrome process already terminated.
-	cr, err := k.restartChromeNoCloseWithOptions(ctx, opts...)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to restart Chrome")
-	}
-	return cr, nil
-}
-
-// setupDisableChromeRestartFlagFile creates a flag file to disable Chrome restart.
-//
-// The cleanup function returned can be used to later delete the file. It is safe and idempotent to
-// run the cleanup function multiple times.
-func setupDisableChromeRestartFlagFile() (func() error, error) {
-	const disableChromeRestartFile = "/run/disable_chrome_restart"
-	_, err := os.Create(disableChromeRestartFile)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create Chrome flag file to disable restart")
-	}
-	didClear := false
-	var clearErr error = nil
-	clearFunc := func() error {
-		if !didClear {
-			if err := os.RemoveAll(disableChromeRestartFile); err != nil && !os.IsNotExist(err) {
-				clearErr = errors.Wrap(err, "failed to remove Chrome flag file to reenable restart")
-			}
-		}
-		didClear = true
-		return clearErr
-	}
-	return clearFunc, nil
-}
-
-// waitSplashScreen waits for the Kiosk splash screen, as identified by the cancel launch message.
-func waitSplashScreen(ctx context.Context, cr *chrome.Chrome) error {
-	testConn, err := cr.SigninProfileTestAPIConn(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to connect to signin extension")
-	}
-
-	ui := uiauto.New(testConn)
-	if err := ui.WaitUntilExists(cancelLaunchText)(ctx); err != nil {
-		return errors.Wrap(err, "failed to find splash screen")
-	}
-	return nil
-}
-
-// pressCancelLaunchAccelerator presses the "Ctrl+Alt+S" accelerator to cancel launch.
-func pressCancelLaunchAccelerator(ctx context.Context) (retErr error) {
-	kw, err := input.Keyboard(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to create a keyboard")
-	}
-	if err := kw.Accel(ctx, "Ctrl+Alt+S"); err != nil {
-		retErr = errors.Wrap(err, "failed to hit Ctrl+Alt+S and attempt to quit a kiosk app")
-	}
-	if err := kw.Close(ctx); err != nil {
-		if retErr == nil {
-			return errors.Wrap(err, "failed to close keyboard writer")
-		}
-		testing.ContextLog(ctx, "Failed to close keyboard writer: ", err)
-	}
-	return
 }
 
 // GetLocalAccounts fetches DeviceLocalAccounts policy

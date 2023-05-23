@@ -10,6 +10,4 @@ const (
 	KioskLoggedInAsh = "kioskLoggedInAsh"
 	// KioskLoggedInLacros
 	KioskLoggedInLacros = "kioskLoggedInLacros"
-	// KioskAutoLaunchCleanup is a fixture name.
-	KioskAutoLaunchCleanup = "kioskAutoLaunchCleanup"
 )

@@ -17,18 +17,6 @@ func ExtraPolicies(p []policy.Policy) Option {
 	}
 }
 
-// DefaultLocalAccounts uses default Kiosk applications configuration generated
-// in kioskmode.New().
-//
-// TODO(b/279900827): This will be the default unless options contain CustomLocalAccounts. Remove it
-// once callers are removed.
-func DefaultLocalAccounts() Option {
-	return func(cfg *MutableConfig) error {
-		cfg.UseDefaultLocalAccounts = true
-		return nil
-	}
-}
-
 // CustomLocalAccounts sets custom local accounts on DUT. Use when the test
 // needs a specific website or a specific Chrome App.
 //
@@ -77,19 +65,6 @@ func ExtraChromeOptions(opts ...chrome.Option) Option {
 func CustomDirectoryAPIID(directoryAPIID string) Option {
 	return func(cfg *MutableConfig) error {
 		cfg.CustomDirectoryAPIID = &directoryAPIID
-		return nil
-	}
-}
-
-// SkipSuccessfulLaunchCheck when used the kiosk library won't wait for
-// successful launch message - indicating Kiosk is up. Instead it will only
-// wait for Kiosk start sequence and it being ready to launch.
-// Use if you want to interact with Kiosk splashscreen view e.g. for bailing
-// out.
-// TODO(b/279900827): remove it once DeprecatedNew is removed.
-func SkipSuccessfulLaunchCheck() Option {
-	return func(cfg *MutableConfig) error {
-		cfg.SkipSuccessfulLaunchCheck = true
 		return nil
 	}
 }
