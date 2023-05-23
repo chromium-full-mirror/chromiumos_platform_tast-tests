@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filepicker"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -57,6 +58,8 @@ type TestConfig struct {
 	DirTitle string
 	// File content of the provided test file.
 	FileContent string
+	// Path to the output directory.
+	OutDir string
 	// Optional: If set to true, wait for file type to appear before opening the file.
 	// Currently used by DriveFS to ensure metadata has arrived.
 	CheckFileType bool
@@ -108,7 +111,7 @@ func TestFilesAppIntegration(ctx context.Context, a *arc.ARC, cr *chrome.Chrome,
 // displayed file content is validated against the expected value. If |config.ReadOnly| is false,
 // this subsequently tests writing to the file from the app by pressing the "Modify file" button and
 // validating the write result from CrOS side using Files app's QuickView.
-func testOpenFromFilesApp(ctx context.Context, a *arc.ARC, cr *chrome.Chrome, d *androidui.Device, config TestConfig) error {
+func testOpenFromFilesApp(ctx context.Context, a *arc.ARC, cr *chrome.Chrome, d *androidui.Device, config TestConfig) (retErr error) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
@@ -118,6 +121,7 @@ func testOpenFromFilesApp(ctx context.Context, a *arc.ARC, cr *chrome.Chrome, d 
 		return errors.Wrap(err, "failed to open Files app")
 	}
 	defer files.Close(cleanupCtx)
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, config.OutDir, func() bool { return retErr != nil }, cr, "open_with_1")
 
 	if config.CheckFileType {
 		if err := waitForFileType(ctx, files, config); err != nil {
@@ -130,6 +134,7 @@ func testOpenFromFilesApp(ctx context.Context, a *arc.ARC, cr *chrome.Chrome, d 
 		return errors.Wrap(err, "could not open file with ArcFileEditorTest")
 	}
 	defer a.Command(cleanupCtx, "am", "force-stop", testAppPkgName).Run(testexec.DumpLogOnError)
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, config.OutDir, func() bool { return retErr != nil }, cr, "open_with_2")
 
 	if err := validateLabel(ctx, d, fileContentID, config.FileContent); err != nil {
 		return errors.Wrap(err, "failed to validate file content")
@@ -227,7 +232,7 @@ func validateLabel(ctx context.Context, d *androidui.Device, labelID, expected s
 // testOpenViaSAF opens a test file with the test Android app by launching CrOS file picker via SAF
 // with an ACTION_OPEN_DOCUMENT intent and picking the file, and validates the file content read by
 // the app.
-func testOpenViaSAF(ctx context.Context, a *arc.ARC, cr *chrome.Chrome, d *androidui.Device, config TestConfig) error {
+func testOpenViaSAF(ctx context.Context, a *arc.ARC, cr *chrome.Chrome, d *androidui.Device, config TestConfig) (retErr error) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
@@ -246,6 +251,7 @@ func testOpenViaSAF(ctx context.Context, a *arc.ARC, cr *chrome.Chrome, d *andro
 		return errors.Wrap(err, "failed to start new activity")
 	}
 	defer act.Stop(cleanupCtx, tconn)
+	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnError(cleanupCtx, config.OutDir, func() bool { return retErr != nil }, tconn, "saf")
 
 	selectButton := d.Object(androidui.ID(selectButtonID))
 	if err := selectButton.WaitForExists(ctx, uiTimeout); err != nil {

@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/storage"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/input"
@@ -91,7 +92,7 @@ func PlayFiles(ctx context.Context, s *testing.State) {
 	}
 
 	testing.ContextLog(ctx, "Testing storage integration with apps")
-	if err := testStorageIntegrationForPlayfilesWithApps(ctx, cr, tconn, a); err != nil {
+	if err := testStorageIntegrationForPlayfilesWithApps(ctx, cr, tconn, a, s.OutDir()); err != nil {
 		s.Fatal("Storage integration test with apps failed: ", err)
 	}
 
@@ -107,21 +108,21 @@ func PlayFiles(ctx context.Context, s *testing.State) {
 //     edit the file with the app, and verify the modification with Files app.
 //  3. Open the file with a test Android app via SAF.
 //  4. Delete the file with Files app and verify the deletion from Android side.
-func testStorageIntegrationForPlayfilesWithApps(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, a *arc.ARC) error {
+func testStorageIntegrationForPlayfilesWithApps(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, a *arc.ARC, outDir string) error {
 	const (
 		filename    = "storage.txt"
 		fileContent = "this is a test"
 	)
 
-	if err := testCopyToPlayfiles(ctx, cr, tconn, a, filename, fileContent); err != nil {
+	if err := testCopyToPlayfiles(ctx, cr, tconn, a, filename, fileContent, outDir); err != nil {
 		return errors.Wrapf(err, "failed to copy %s to Play files", filename)
 	}
 
-	if err := testFilesAppIntegrationForPlayfiles(ctx, cr, a, filename, fileContent); err != nil {
+	if err := testFilesAppIntegrationForPlayfiles(ctx, cr, a, filename, fileContent, outDir); err != nil {
 		return errors.Wrapf(err, "failed to test Files app integration for %s in Play files", filename)
 	}
 
-	if err := testDeleteFromPlayfiles(ctx, tconn, a, filename); err != nil {
+	if err := testDeleteFromPlayfiles(ctx, tconn, a, filename, outDir); err != nil {
 		return errors.Wrapf(err, "failed to delete %s from Play files", filename)
 	}
 
@@ -131,7 +132,7 @@ func testStorageIntegrationForPlayfilesWithApps(ctx context.Context, cr *chrome.
 // testCopyToPlayfiles writes a file to the ChromeOS Downloads directory and
 // copies it to Play files through the Files app. It also checks that the copied
 // file appears on the Android side.
-func testCopyToPlayfiles(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, a *arc.ARC, filename, fileContent string) error {
+func testCopyToPlayfiles(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, a *arc.ARC, filename, fileContent, outDir string) error {
 	expected := []byte(fileContent)
 	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
 	if err != nil {
@@ -143,7 +144,7 @@ func testCopyToPlayfiles(ctx context.Context, cr *chrome.Chrome, tconn *chrome.T
 	}
 	defer os.Remove(crosPath)
 
-	if err := copyFileInDownloadsToPlayfiles(ctx, tconn, filename); err != nil {
+	if err := copyFileInDownloadsToPlayfiles(ctx, tconn, filename, outDir); err != nil {
 		return errors.Wrapf(err, "failed to copy %s through the Files app", filename)
 	}
 
@@ -162,7 +163,7 @@ func testCopyToPlayfiles(ctx context.Context, cr *chrome.Chrome, tconn *chrome.T
 }
 
 // copyFileInDownloadsToPlayfiles copies a file in Downloads to Play files.
-func copyFileInDownloadsToPlayfiles(ctx context.Context, tconn *chrome.TestConn, filename string) error {
+func copyFileInDownloadsToPlayfiles(ctx context.Context, tconn *chrome.TestConn, filename, outDir string) (retErr error) {
 	// Shorten the context to make room for cleanup jobs.
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
@@ -173,6 +174,7 @@ func copyFileInDownloadsToPlayfiles(ctx context.Context, tconn *chrome.TestConn,
 		return errors.Wrap(err, "failed to launch the Files app")
 	}
 	defer filesApp.Close(cleanupCtx)
+	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnError(cleanupCtx, outDir, func() bool { return retErr != nil }, tconn, "copy_to_playfiles")
 
 	steps := []uiauto.Action{
 		// Open "Downloads".
@@ -200,7 +202,7 @@ func copyFileInDownloadsToPlayfiles(ctx context.Context, tconn *chrome.TestConn,
 }
 
 // testFilesAppIntegrationForPlayfiles opens a file in Play files with an Android app and edits it.
-func testFilesAppIntegrationForPlayfiles(ctx context.Context, cr *chrome.Chrome, a *arc.ARC, filename, fileContent string) error {
+func testFilesAppIntegrationForPlayfiles(ctx context.Context, cr *chrome.Chrome, a *arc.ARC, filename, fileContent, outDir string) error {
 	d, err := a.NewUIDevice(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to initialize UI Automator")
@@ -211,6 +213,7 @@ func testFilesAppIntegrationForPlayfiles(ctx context.Context, cr *chrome.Chrome,
 		SubDirectories: []string{"Pictures"},
 		FileName:       filename,
 		FileContent:    fileContent,
+		OutDir:         outDir,
 		ReadOnly:       false,
 	}
 	return storage.TestFilesAppIntegration(ctx, a, cr, d, config)
@@ -218,7 +221,7 @@ func testFilesAppIntegrationForPlayfiles(ctx context.Context, cr *chrome.Chrome,
 
 // testDeleteFromPlayfiles deletes a file in Play files through the Files app.
 // It also checks that the file is properly deleted on the Android side.
-func testDeleteFromPlayfiles(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, filename string) error {
+func testDeleteFromPlayfiles(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, filename, outDir string) (retErr error) {
 	// Shorten the context to make room for cleanup jobs.
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
@@ -235,6 +238,7 @@ func testDeleteFromPlayfiles(ctx context.Context, tconn *chrome.TestConn, a *arc
 		return errors.Wrap(err, "failed to open Files app")
 	}
 	defer filesApp.Close(cleanupCtx)
+	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnError(cleanupCtx, outDir, func() bool { return retErr != nil }, tconn, "delete_from_playfiles")
 
 	steps := []uiauto.Action{
 		// Open "Play files".

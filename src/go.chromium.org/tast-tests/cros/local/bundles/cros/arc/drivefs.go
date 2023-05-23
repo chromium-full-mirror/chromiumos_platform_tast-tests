@@ -98,6 +98,7 @@ func Drivefs(ctx context.Context, s *testing.State) {
 		FileName:      filename,
 		DirTitle:      filesapp.FilesTitlePrefix + filesapp.MyDrive,
 		FileContent:   fileContent,
+		OutDir:        s.OutDir(),
 		CheckFileType: true,
 		ReadOnly:      true,
 		// TODO(b/283742435): Enable SAF test for Drivefs by generalizing

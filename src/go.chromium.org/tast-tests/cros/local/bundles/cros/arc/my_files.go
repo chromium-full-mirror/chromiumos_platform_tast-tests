@@ -67,7 +67,7 @@ func MyFiles(ctx context.Context, s *testing.State) {
 		s.Fatal("Android -> CrOS failed: ", err)
 	}
 
-	if err := testFilesAppIntegrationForMyFiles(ctx, a, cr, d, myFilesPath); err != nil {
+	if err := testFilesAppIntegrationForMyFiles(ctx, a, cr, d, myFilesPath, s.OutDir()); err != nil {
 		s.Fatal("Files app integration test failed: ", err)
 	}
 }
@@ -129,7 +129,7 @@ func testPushToARCAndReadFromCros(ctx context.Context, a *arc.ARC, sourcePath, a
 //   - edited with test Android app after it is opened with the app from Files app's "Open with..."
 //     menu, and
 //   - opened with test Android app via SAF.
-func testFilesAppIntegrationForMyFiles(ctx context.Context, a *arc.ARC, cr *chrome.Chrome, d *ui.Device, myFilesPath string) error {
+func testFilesAppIntegrationForMyFiles(ctx context.Context, a *arc.ARC, cr *chrome.Chrome, d *ui.Device, myFilesPath, outDir string) error {
 	const (
 		filename    = "storage.txt"
 		fileContent = "this is a test"
@@ -152,6 +152,7 @@ func testFilesAppIntegrationForMyFiles(ctx context.Context, a *arc.ARC, cr *chro
 		DirName:     filesapp.MyFiles,
 		FileName:    filename,
 		FileContent: fileContent,
+		OutDir:      outDir,
 		ReadOnly:    false,
 	}
 	return storage.TestFilesAppIntegration(ctx, a, cr, d, config)

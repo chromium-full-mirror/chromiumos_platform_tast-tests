@@ -101,6 +101,7 @@ func MTP(ctx context.Context, s *testing.State) {
 		SubDirectories: []string{"Download"},
 		FileName:       filename,
 		FileContent:    fileContent,
+		OutDir:         s.OutDir(),
 		ReadOnly:       true,
 	}
 	if err := storage.TestFilesAppIntegration(ctx, a, cr, d, config); err != nil {
