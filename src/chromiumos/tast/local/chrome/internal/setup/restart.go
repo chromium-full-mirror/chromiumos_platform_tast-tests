@@ -21,6 +21,7 @@ import (
 	"chromiumos/tast/local/chrome/internal/driver"
 	"chromiumos/tast/local/session"
 	"chromiumos/tast/local/upstart"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
@@ -210,11 +211,20 @@ func RestartChromeForTesting(ctx context.Context, cfg *config.Config, extArgs, l
 			"--arcvm-use-hugepages")
 	}
 
-	if fs := cfg.EnableFeatures(); len(fs) != 0 {
-		args = append(args, "--enable-features="+strings.Join(fs, ","))
+	enabledFeatures := cfg.EnableFeatures()
+	disabledFeatures := cfg.DisableFeatures()
+	// Enable QsRevamp if the test has explicitly requested it, otherwise force it off.
+	// TODO(b/252870625): Remove this once all tests have been ported to work with QsRevamp.
+	if cfg.EnableQuickSettingsRevamp() {
+		enabledFeatures = append(enabledFeatures, "QsRevamp")
+	} else {
+		disabledFeatures = append(disabledFeatures, "QsRevamp")
 	}
-	if fs := cfg.DisableFeatures(); len(fs) != 0 {
-		args = append(args, "--disable-features="+strings.Join(fs, ","))
+	if len(enabledFeatures) != 0 {
+		args = append(args, "--enable-features="+strings.Join(enabledFeatures, ","))
+	}
+	if len(disabledFeatures) != 0 {
+		args = append(args, "--disable-features="+strings.Join(disabledFeatures, ","))
 	}
 
 	stackProfilerArg := "--disable-stack-profiler"

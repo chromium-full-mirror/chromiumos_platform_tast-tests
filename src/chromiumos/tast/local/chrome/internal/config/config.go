@@ -249,6 +249,10 @@ func (c *Config) SkipAutoEnrollmentCheck() bool { return c.m.SkipAutoEnrollmentC
 // ForceManualEnrollment returns true if automatic (cert based) enrollment is disabled.
 func (c *Config) ForceManualEnrollment() bool { return c.m.ForceManualEnrollment }
 
+// EnableQuickSettingsRevamp returns true if the new (2023) version of the quick settings
+// UI is enabled ("QsRevamp").
+func (c *Config) EnableQuickSettingsRevamp() bool { return c.m.EnableQuickSettingsRevamp }
+
 // MutableConfig is a mutable version of Config. MutableConfig is wrapped with
 // Config to prevent mutation after it is returned by NewConfig.
 //
@@ -311,6 +315,7 @@ type MutableConfig struct {
 	EnableHDR                       bool             `reuse_match:"false"`
 	SkipAutoEnrollmentCheck         bool             `reuse_match:"true"`
 	ForceManualEnrollment           bool             `reuse_match:"true"`
+	EnableQuickSettingsRevamp       bool             `reuse_match:"true"`
 }
 
 // Option is a self-referential function can be used to configure Chrome.
@@ -348,6 +353,7 @@ func NewConfig(opts []Option) (*Config, error) {
 			UseSandboxGaia:                  false,
 			EnableHIDScreenOnOOBE:           false,
 			EnableStackSampledMetrics:       false,
+			EnableQuickSettingsRevamp:       false,
 		},
 	}
 

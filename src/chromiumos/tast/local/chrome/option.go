@@ -560,6 +560,19 @@ func EnableStackSampledMetrics() Option {
 	}
 }
 
+// EnableQuickSettingsRevamp returns an Option that can be passed to New to turn
+// on the revamped (2023) quick settings UI ("QsRevamp").
+// By default, in tast tests, we force the old UI because many tests rely on it
+// to enable and disable features. In general, they aren't actually testing the UI.
+// This way we can port tests one-by-one to work with the new UI.
+// TODO(b/252870625): Remove this once all tests have been ported to work with QsRevamp.
+func EnableQuickSettingsRevamp() Option {
+	return func(cfg *config.MutableConfig) error {
+		cfg.EnableQuickSettingsRevamp = true
+		return nil
+	}
+}
+
 // FieldTrialConfig returns an Option that can be passed to New to set finch
 // field trial config to [enable|disable|default].
 func FieldTrialConfig(value string) Option {

@@ -38,7 +38,7 @@ func init() {
 			},
 			{
 				Name:    "qs_revamp_disabled",
-				Fixture: "chromeLoggedInQsRevampDisabled",
+				Fixture: "chromeLoggedIn",
 				Val:     false,
 			},
 		},

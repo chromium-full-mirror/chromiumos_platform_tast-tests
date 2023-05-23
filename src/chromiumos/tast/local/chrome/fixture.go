@@ -135,19 +135,7 @@ func init() {
 		Desc:     "Logged into a user session that has updated quick settings enabled (QsRevamp)",
 		Contacts: []string{"cros-status-area-eng@google.com", "jamescook@google.com"},
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
-			return []Option{EnableFeatures("QsRevamp")}, nil
-		}),
-		SetUpTimeout:    LoginTimeout,
-		ResetTimeout:    ResetTimeout,
-		TearDownTimeout: ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.ChromeLoggedInQsRevampDisabled,
-		Desc:     "Logged into a user session that has updated quick settings disabled (QsRevamp)",
-		Contacts: []string{"cros-status-area-eng@google.com", "jamescook@google.com"},
-		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
-			return []Option{DisableFeatures("QsRevamp")}, nil
+			return []Option{EnableQuickSettingsRevamp()}, nil
 		}),
 		SetUpTimeout:    LoginTimeout,
 		ResetTimeout:    ResetTimeout,
