@@ -578,15 +578,20 @@ func initializeLoginPerfTest(ctx context.Context,
 	// Wait for ARC++ aps to download and initialize.
 	if arc.Supported() {
 		testing.ContextLog(ctx, "Initialize: Waiting for arc to install initial apps")
-		histogram, err := metrics.WaitForHistogram(
+		histogram, metricsErr := metrics.WaitForHistogram(
 			ctx,
 			tconn,
 			"Ash.ArcAppInitialAppsInstallDuration",
 			10*time.Minute,
 		)
-		if err != nil {
-			return chrome.Creds{}, errors.Wrap(err, "failed to wait until ARC initial "+
-				"apps installed")
+		if metricsErr != nil {
+			if err := optin.DumpLogCat(ctx, "error"); err != nil {
+				testing.ContextLog(ctx,
+					"WARNING: Failed to dump logcat: ", err)
+			}
+			return chrome.Creds{}, errors.Wrap(metricsErr,
+				"failed to wait until ARC initial "+
+					"apps installed")
 		}
 		testing.ContextLog(ctx, "Initialize: "+
 			"Ash.ArcAppInitialAppsInstallDuration histogram=",
