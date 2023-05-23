@@ -13,6 +13,7 @@ import (
 	"chromiumos/tast/local/ui/cujrecorder"
 
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -24,6 +25,7 @@ func init() {
 		BugComponent: "b:1045832",
 		Attr:         []string{"group:cuj"},
 		SoftwareDeps: []string{"chrome", "no_android_vm_t"},
+		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Data:         []string{cujrecorder.SystemTraceConfigFile},
 		Timeout:      30 * time.Minute,
 		Params: []testing.Param{
