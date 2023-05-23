@@ -14,6 +14,7 @@ import (
 
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/fixture"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
@@ -42,7 +43,6 @@ func init() {
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Lid()),
 		Requirements: []string{"sys-fw-0022-v01"},
-		ServiceDeps:  []string{"tast.cros.firmware.UtilsService"},
 		Timeout:      10 * time.Minute,
 		Params: []testing.Param{
 			{
@@ -147,7 +147,8 @@ func suspendAndWakeWithLid(ctx context.Context, h *firmware.Helper, delay time.D
 		return err
 	}
 
-	// Used by main function to either immediately wake or wake after some delay.
+	testing.ContextLog(ctx, "Delaying opening lid for ", delay)
+	// GoBigSleepLint: used by main function to either immediately wake or wake after some delay.
 	if err := testing.Sleep(ctx, delay); err != nil {
 		return err
 	}
@@ -160,6 +161,11 @@ func suspendAndWakeWithLid(ctx context.Context, h *firmware.Helper, delay time.D
 	if err != nil {
 		return errors.Wrap(err, "failed to get S0 powerstate")
 	}
+
+	if err := h.EnsureDUTBooted(ctx); err != nil {
+		return errors.Wrap(err, "failed to reconnect to DUT after unsuspending")
+	}
+
 	return nil
 }
 
@@ -176,7 +182,8 @@ func shutdownWithLidClose(ctx context.Context, h *firmware.Helper, delay time.Du
 	}
 	testing.ContextLog(ctx, "Files in /var/lib/power_manager: ", string(out))
 
-	// Delay a few seconds to ensure no lid state change from system.
+	testing.ContextLog(ctx, "Delaying closing lid for ", bootDelay)
+	// GoBigSleepLint: delay a few seconds to ensure no lid state change from system.
 	if err := testing.Sleep(ctx, bootDelay); err != nil {
 		return err
 	}
@@ -192,7 +199,8 @@ func shutdownWithLidClose(ctx context.Context, h *firmware.Helper, delay time.Du
 		return errors.Wrap(err, "failed to get G3 or S5 powerstate")
 	}
 
-	// Delay by `lidDelay` to ensure lid is detected as closed.
+	testing.ContextLog(ctx, "Delaying opening lid for ", delay)
+	// GoBigSleepLint: delay by `lidDelay` to ensure lid is detected as closed.
 	if err := testing.Sleep(ctx, delay); err != nil {
 		return err
 	}
@@ -206,9 +214,10 @@ func shutdownWithLidClose(ctx context.Context, h *firmware.Helper, delay time.Du
 		return errors.Wrap(err, "failed to get S0 powerstate")
 	}
 
-	if err := h.WaitConnect(ctx); err != nil {
-		return errors.Wrap(err, "failed to connect to DUT")
+	if err := h.EnsureDUTBooted(ctx); err != nil {
+		return errors.Wrap(err, "failed to reconnect to DUT after unsuspending")
 	}
+
 	return nil
 }
 
@@ -227,8 +236,8 @@ func bootWithLidOpen(ctx context.Context, h *firmware.Helper, delay time.Duratio
 		return err
 	}
 
-	// Used by main function to either immediately wake or wake after some delay.
 	testing.ContextLogf(ctx, "Delay opening lid by %s", delay)
+	// GoBigSleepLint: used by main function to either immediately wake or wake after some delay.
 	if err := testing.Sleep(ctx, delay); err != nil {
 		return err
 	}
@@ -242,9 +251,10 @@ func bootWithLidOpen(ctx context.Context, h *firmware.Helper, delay time.Duratio
 		return errors.Wrap(err, "failed to get S0 powerstate")
 	}
 
-	if err := h.WaitConnect(ctx); err != nil {
-		return errors.Wrap(err, "failed to reconnect to dut")
+	if err := h.EnsureDUTBooted(ctx); err != nil {
+		return errors.Wrap(err, "failed to reconnect to DUT after unsuspending")
 	}
+
 	return nil
 }
 
@@ -305,7 +315,7 @@ func checkKeyPressesWithLidClosed(ctx context.Context, h *firmware.Helper) (rete
 		return errors.Wrap(err, "error opening lid")
 	}
 
-	// Delay by `lidDelay` to ensure lid is detected as open before re-closing.
+	// GoBigSleepLint: delay by `lidDelay` to ensure lid is detected as open before re-closing.
 	if err := testing.Sleep(ctx, lidDelay); err != nil {
 		return errors.Wrap(err, "failed to sleep")
 	}
