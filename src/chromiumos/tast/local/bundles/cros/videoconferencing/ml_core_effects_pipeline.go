@@ -36,7 +36,7 @@ func init() {
 				// this binary is installed from ml-core-tests
 				// into /usr/bin/
 				ExtraAttr: []string{
-					"group:video_conference", "video_conference_cq_critical",
+					"group:video_conference",
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("betty")),
 				Val:               []string{"ml_core_effects_pipeline_test"},
