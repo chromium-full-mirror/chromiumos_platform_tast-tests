@@ -14,6 +14,7 @@ import (
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -97,6 +98,29 @@ func init() {
 		PostTestTimeout: 15 * time.Second,
 		Parent:          fixture.PersistentLacros,
 		Vars:            []string{"policy.ManagedUser.accountPool"},
+	})
+
+	// LacrosPolicyRealUserLoggedIn is similar to LacrosPolicyLoggedInRealUser, but instead starts up a Chrome instance
+	// and has an Ash equivalent: ChromePolicyRealUserLoggedIn.
+	testing.AddFixture(&testing.Fixture{
+		Name:     fixture.LacrosPolicyRealUserLoggedIn,
+		Desc:     "Fixture for running FakeDMS with lacros with a real managed user logged on",
+		Contacts: []string{"chiav@google.com", "dp-chromeos-eng@google.com"},
+		Vars:     []string{"tape.service_account_key"},
+		Impl: &policyChromeFixture{
+			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+				return lacrosfixt.NewConfig().Opts()
+			},
+			useRealUser: true,
+			// Total timeout for TAPE leased account. This needs to be higher than the total runtime
+			// of all tests consuming this fixture.
+			tapeTimeout: 60 * time.Minute,
+		},
+		SetUpTimeout:    chrome.ManagedUserLoginTimeout + cleanupTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+		PostTestTimeout: 15 * time.Second,
+		Parent:          fixture.PersistentLacros,
 	})
 
 	testing.AddFixture(&testing.Fixture{

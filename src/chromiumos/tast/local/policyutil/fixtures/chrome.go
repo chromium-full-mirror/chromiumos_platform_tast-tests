@@ -12,7 +12,9 @@ import (
 	"time"
 
 	"chromiumos/tast/common/fixture"
+	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
+	"chromiumos/tast/common/tape"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
@@ -22,6 +24,7 @@ import (
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/local/screenshot"
 	"chromiumos/tast/local/syslog"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -249,6 +252,24 @@ func init() {
 		PostTestTimeout: 15 * time.Second,
 		Parent:          fixture.FakeDMS,
 	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:     fixture.ChromePolicyRealUserLoggedIn,
+		Desc:     "Logged into a user session with a real user and FakeDMS",
+		Contacts: []string{"chiav@google.com", "dp-chromeos-eng@google.com"},
+		Vars:     []string{"tape.service_account_key"},
+		Impl: &policyChromeFixture{
+			useRealUser: true,
+			// Total timeout for TAPE leased account. This needs to be higher than the total runtime
+			// of all tests consuming this fixture.
+			tapeTimeout: 60 * time.Minute,
+		},
+		SetUpTimeout:    chrome.ManagedUserLoginTimeout + cleanupTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+		PostTestTimeout: 15 * time.Second,
+		Parent:          fixture.FakeDMS,
+	})
 }
 
 type policyChromeFixture struct {
@@ -270,6 +291,17 @@ type policyChromeFixture struct {
 	// clean stores if Chrome is clean after PostTest.
 	// It is considered clean if it does not interfere with the next test, e.g. with a locked screen.
 	clean bool
+
+	// useRealUser is an optional flag which should be set to true when real GAIA login is required.
+	// By default, this fixture uses fake login. Note: `tapeTimeout` must also be set when this flag is set to true.
+	useRealUser bool
+
+	// tapeTimeout specifies the total timeout for the TAPE account lease. Required when `useRealUser` is set to true.
+	tapeTimeout time.Duration
+
+	// tapeAccountManager is stored internally by this fixture so that TAPE accounts can be released on TearDown.
+	// Only used when `useRealUser` is set to true.
+	tapeAccountManager *tape.OwnedTestAccountManager
 }
 
 // FixtData is returned by the fixtures and used in tests
@@ -344,10 +376,41 @@ func (p *policyChromeFixture) SetUp(ctx context.Context, s *testing.FixtState) i
 	}(screenshotCtx)
 
 	opts := []chrome.Option{
-		chrome.FakeLogin(chrome.Creds{User: Username, Pass: Password}),
 		chrome.DMSPolicy(fdms.URL),
 		chrome.CustomLoginTimeout(chrome.ManagedUserLoginTimeout),
 		chrome.DeferLogin(),
+	}
+
+	if !p.useRealUser {
+		// Use fake login by default.
+		opts = append(opts, chrome.FakeLogin(chrome.Creds{User: Username, Pass: Password}))
+	} else {
+		if p.tapeTimeout == 0 {
+			s.Fatal("Invalid 'policyChromeFixture' options: 'tapeTimeout' must be specified when 'useRealUser' is set to 'true'")
+		}
+
+		// Request an owned test account from TAPE. All tests using this fixture will use this account.
+		timeout := int32(p.tapeTimeout.Seconds())
+		accountManager, tapeAccount, err := tape.NewOwnedTestAccountManager(
+			ctx,
+			[]byte(s.RequiredVar(tape.ServiceAccountVar)),
+			false, /*lock*/
+			tape.WithTimeout(timeout),
+			tape.WithPoolID(tape.DefaultManaged))
+		p.tapeAccountManager = accountManager // store for cleanup in TearDown
+		if err != nil {
+			s.Fatal("Failed to request owned test account from TAPE: ", err)
+		}
+
+		// Use TAPE account credentials for login.
+		gaiaCreds := chrome.Creds{User: tapeAccount.Username, Pass: tapeAccount.Password}
+		opts = append(opts, chrome.GAIALogin(gaiaCreds))
+
+		// Set policy user.
+		fdms.SetPersistentPolicyUser(&gaiaCreds.User)
+		if err := fdms.WritePolicyBlob(policy.NewBlob()); err != nil {
+			s.Fatal("Failed to write policies to FakeDMS: ", err)
+		}
 	}
 
 	if p.extraOptsFunc != nil {
@@ -422,6 +485,18 @@ func (p *policyChromeFixture) TearDown(ctx context.Context, s *testing.FixtState
 
 	if err := p.cr.Close(ctx); err != nil {
 		s.Error("Failed to close Chrome connection: ", err)
+	}
+
+	if p.useRealUser {
+		// Clear FDMS user.
+		p.fdms.SetPersistentPolicyUser(nil)
+
+		// Release TAPE accounts.
+		if p.tapeAccountManager != nil {
+			if err := p.tapeAccountManager.CleanUp(ctx); err != nil {
+				s.Fatal("Failed to cleanup TAPE: ", err)
+			}
+		}
 	}
 
 	p.cr = nil

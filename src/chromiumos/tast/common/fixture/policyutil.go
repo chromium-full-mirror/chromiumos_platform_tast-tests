@@ -53,6 +53,8 @@ const (
 	ChromeEnrolledLoggedInARC = "chromeEnrolledLoggedInARC"
 	// ChromeAdminDeskTemplatesLoggedIn is a fixture name.
 	ChromeAdminDeskTemplatesLoggedIn = "chromeAdminDeskTemplatesLoggedIn"
+	// ChromePolicyRealUserLoggedIn is a fixture name.
+	ChromePolicyRealUserLoggedIn = "chromePolicyRealUserLoggedIn"
 )
 
 // Fixtures defined in chromiumos/tast/local/mgs/fixture.go.
@@ -75,6 +77,8 @@ const (
 	LacrosPolicyLoggedInFeatureChromeLabs = "lacrosPolicyLoggedInFeatureChromeLabs"
 	// LacrosPolicyLoggedInRealUser is a fixture name.
 	LacrosPolicyLoggedInRealUser = "lacrosPolicyLoggedInRealUser"
+	// LacrosPolicyRealUserLoggedIn is a fixture name.
+	LacrosPolicyRealUserLoggedIn = "lacrosPolicyRealUserLoggedIn"
 	// LacrosAdminDeskTemplatesLoggedIn is a fixture name.
 	LacrosAdminDeskTemplatesLoggedIn = "lacrosAdminDeskTemplatesLoggedIn"
 	// LacrosEnrolledLoggedIn is a fixture name.

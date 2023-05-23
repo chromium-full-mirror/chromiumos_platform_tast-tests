@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/common/chrome/credconfig"
 	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
@@ -18,7 +17,6 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
-	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/policyutil"
 
@@ -37,7 +35,6 @@ func init() {
 		},
 		Attr:         []string{"group:commercial_limited"},
 		SoftwareDeps: []string{"chrome"},
-		Vars:         []string{"policy.managedUserAccountPool"},
 		Timeout:      3 * time.Minute,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.CalendarIntegrationEnabled{}, pci.VerifiedFunctionalityUI),
@@ -45,11 +42,11 @@ func init() {
 		},
 		Params: []testing.Param{{
 			Val:     browser.TypeAsh,
-			Fixture: fixture.FakeDMS,
+			Fixture: fixture.ChromePolicyRealUserLoggedIn,
 		}, {
 			Name:              "lacros",
 			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           fixture.PersistentLacros, // FakeDMS with lacros policy
+			Fixture:           fixture.LacrosPolicyRealUserLoggedIn,
 			Val:               browser.TypeLacros,
 		}},
 	})
@@ -57,35 +54,7 @@ func init() {
 
 func CalendarIntegrationEnabled(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
-
-	gaiaCreds, err := credconfig.PickRandomCreds(
-		s.RequiredVar("policy.managedUserAccountPool"))
-	if err != nil {
-		s.Fatal("Failed to parse managed user creds: ", err)
-	}
-
-	policyBlob := policy.NewBlob()
-	policyBlob.PolicyUser = gaiaCreds.User
-	if err := fdms.WritePolicyBlob(policyBlob); err != nil {
-		s.Fatal("Failed to write policies to FakeDMS: ", err)
-	}
-
-	opts := []chrome.Option{
-		chrome.DMSPolicy(fdms.URL),  // FakeDMS for setting policies
-		chrome.GAIALogin(gaiaCreds), // Real GAIA to enable calendar_get_events call
-	}
-	if isLacros(s) {
-		opts, err = lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(opts...)).Opts()
-		if err != nil {
-			s.Fatal("Failed to compute lacros chrome options: ", err)
-		}
-	}
-
-	cr, err := chrome.New(ctx, opts...)
-	if err != nil {
-		s.Fatal("Failed to start Chrome: ", err)
-	}
-	defer cr.Close(ctx)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -123,15 +92,8 @@ func CalendarIntegrationEnabled(ctx context.Context, s *testing.State) {
 			}
 
 			// Update policies.
-			policies := []policy.Policy{param.Policy}
-			policyBlob := policy.NewBlob()
-			policyBlob.PolicyUser = gaiaCreds.User
-			policyBlob.AddPolicies(policies)
-			if err := policyutil.ServeBlobAndRefresh(ctx, fdms, cr, policyBlob); err != nil {
+			if err := policyutil.ServeAndVerify(ctx, fdms, cr, []policy.Policy{param.Policy}); err != nil {
 				s.Fatal("Failed to update policies: ", err)
-			}
-			if err := policyutil.Verify(ctx, tconn, policies); err != nil {
-				s.Fatal("Failed to verify updated policies: ", err)
 			}
 
 			// Setup browser based on the chrome type.
