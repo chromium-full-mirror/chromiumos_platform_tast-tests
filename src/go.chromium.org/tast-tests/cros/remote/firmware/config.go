@@ -76,6 +76,7 @@ type Config struct {
 	Parent                string            `json:"parent"`
 	ECCapability          []ECCapability    `json:"ec_capability"`
 	ModeSwitcherType      ModeSwitcherType  `json:"mode_switcher_type"`
+	IsDetachable          bool              `json:"is_detachable"`
 	PowerButtonDevSwitch  bool              `json:"power_button_dev_switch"`
 	RecButtonDevSwitch    bool              `json:"rec_button_dev_switch"`
 	Hibernate             bool              `json:"hibernate"`

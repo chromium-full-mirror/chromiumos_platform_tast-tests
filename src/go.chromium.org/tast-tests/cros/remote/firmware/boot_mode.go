@@ -912,6 +912,13 @@ func (ms *ModeSwitcher) FwScreenToDevMode(ctx context.Context, opts ...ModeSwitc
 				if err := h.Servo.PressKey(ctx, "<esc>", servo.DurTab); err != nil {
 					return errors.Wrap(err, "failed to press the esc key")
 				}
+			} else if h.Config.IsDetachable {
+				// When transitioning from normal mode to dev mode, TO_DEV screen allows only truested input to
+				// press `Confirm`. For the detachable with menu UI, the power key is the only trusted input.
+				testing.ContextLog(ctx, "Pressing power key")
+				if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.DurTab); err != nil {
+					return err
+				}
 			} else {
 				testing.ContextLog(ctx, "Pressing enter key")
 				if err := h.Servo.KeypressWithDuration(ctx, servo.Enter, servo.DurTab); err != nil {
