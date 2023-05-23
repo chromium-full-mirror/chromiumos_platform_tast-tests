@@ -525,6 +525,31 @@ func (r *Runner) SetRegulatoryDomain(ctx context.Context, country string) error 
 	return nil
 }
 
+// SetAndVerifyRegulatoryDomain sets the regulatory domain code to
+// region non-self-managed WiFi chip and verify if the setting has
+// taken effect.
+func (r *Runner) SetAndVerifyRegulatoryDomain(ctx context.Context, country string) error {
+	selfManaged, err := r.IsRegulatorySelfManaged(ctx)
+	if err != nil {
+		return errors.Wrap(err, "Failed to read regulatory status")
+	}
+	if selfManaged {
+		return errors.New("Set regulatory domain on a self-managed solution")
+	}
+	err = r.SetRegulatoryDomain(ctx, country)
+	if err != nil {
+		return errors.Wrap(err, "Failed to set country code")
+	}
+	domain, err := r.PhyRegulatoryDomain(ctx, "phy0")
+	if err != nil {
+		return errors.Wrap(err, "Failed to read regulatory status")
+	}
+	if domain != country {
+		return errors.Wrapf(err, "Wrong domain, required %s, got %s", country, domain)
+	}
+	return nil
+}
+
 // SetTxPower sets the wireless interface's transmit power.
 // mode: 'fixed' or 'limit'
 // power: power in mBm (milli-Bel-milliwatts). 1 mBm = 100 * dBm (deci-Bell-milliwatts).

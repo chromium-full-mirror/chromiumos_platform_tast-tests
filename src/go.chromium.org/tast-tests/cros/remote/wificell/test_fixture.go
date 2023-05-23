@@ -2193,6 +2193,18 @@ func (tf *TestFixture) StartTethering(ctx context.Context, dutIdx DutIdx, ops []
 	ctx, st := timing.Start(ctx, "tf.StartTethering")
 	defer st.End()
 
+	iwr := iw.NewRemoteRunner(tf.duts[dutIdx].dut.Conn())
+	selfManaged, err := iwr.IsRegulatorySelfManaged(ctx)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "Failed to read regulatory status: ")
+	}
+
+	if !selfManaged {
+		if err := iwr.SetAndVerifyRegulatoryDomain(ctx, "US"); err != nil {
+			return nil, nil, errors.Wrap(err, "Failed to set regulatory domain to WiFi")
+		}
+	}
+
 	c, err := tethering.NewConfig(ops...)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to create tethering config")

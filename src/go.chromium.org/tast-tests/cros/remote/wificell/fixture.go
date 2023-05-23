@@ -15,6 +15,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/common/utils"
+	"go.chromium.org/tast-tests/cros/remote/network/iw"
 	"go.chromium.org/tast-tests/cros/remote/policyutil"
 	"go.chromium.org/tast-tests/cros/remote/wificell/router/common/support"
 	"go.chromium.org/tast-tests/cros/services/cros/policy"
@@ -437,9 +438,18 @@ func (f *tastFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) inter
 	}
 
 	if f.features&TFFeaturesCompanionDUT != 0 {
-		// Setup AP to provide reference regulatory domain for all testcases.
-		if err := tf.SeedRegdomain(ctx, DefaultDUT); err != nil {
-			s.Fatal("Failed to configure Regdomain seeding AP: ", err)
+		// Set DUT regulatory domain to US for all testcases.
+		iwr := iw.NewRemoteRunner(tf.DUTConn(DefaultDUT))
+		selfManaged, err := iwr.IsRegulatorySelfManaged(ctx)
+		if err != nil {
+			s.Fatal("Failed to read regulatory status: ", err)
+		}
+
+		if selfManaged {
+			// For self-managed solution, seed the region through AP 802.11d IE.
+			if err := tf.SeedRegdomain(ctx, DefaultDUT); err != nil {
+				s.Fatal("Failed to configure Regdomain seeding AP: ", err)
+			}
 		}
 	}
 
