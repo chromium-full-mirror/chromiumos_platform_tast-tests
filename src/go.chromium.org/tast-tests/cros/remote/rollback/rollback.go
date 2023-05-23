@@ -143,7 +143,7 @@ func ConfigureNetworks(ctx context.Context, dut *dut.DUT, rpcHint *testing.RPCHi
 	rollbackService := rpb.NewEnterpriseRollbackServiceClient(client.Conn)
 	defer rollbackService.CloseConnections(cleanupCtx, &empty.Empty{})
 
-	if _, err := rollbackService.Connect(ctx, &rpb.SessionState{Ownership: rpb.Ownership_CONSUMER}); err != nil {
+	if _, err := rollbackService.Connect(ctx, &rpb.SessionState{Ownership: rpb.Ownership_LOGGED_IN}); err != nil {
 		return nil, errors.Wrap(err, "failed to connect the rollback service")
 	}
 
@@ -271,12 +271,12 @@ func VerifyRollbackData(ctx context.Context, dut *dut.DUT, rpcHint *testing.RPCH
 		return errors.Wrap(err, "failed to login after rollback")
 	}
 
-	response, err = rollbackService.VerifyNetworks(ctx, &rpb.VerifyNetworksRequest{Ownership: rpb.Ownership_CONSUMER, Networks: networks})
+	response, err = rollbackService.VerifyNetworks(ctx, &rpb.VerifyNetworksRequest{Ownership: rpb.Ownership_LOGGED_IN, Networks: networks})
 	if err != nil {
-		return errors.Wrap(err, "failed to verify networks in consumer session")
+		return errors.Wrap(err, "failed to verify networks in logged in session")
 	}
 	if !response.Successful {
-		return errors.Errorf("networks were not correctly preserved in consumer session: %s", response.VerificationDetails)
+		return errors.Errorf("networks were not correctly preserved in logged in session: %s", response.VerificationDetails)
 	}
 
 	return nil

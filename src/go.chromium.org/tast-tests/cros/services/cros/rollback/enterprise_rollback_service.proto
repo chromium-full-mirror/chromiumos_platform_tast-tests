@@ -54,8 +54,9 @@ message SessionState {
 
 enum Ownership {
   OOBE = 0;
-  ENROLLED = 1;
-  CONSUMER = 2;
+  ENROLLED_LOGGED_IN = 1;
+  LOGGED_IN = 2;
+  AUTO_ENROLLING = 3;
 }
 
 message LoginData {

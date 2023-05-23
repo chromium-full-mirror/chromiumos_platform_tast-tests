@@ -91,20 +91,36 @@ func (e *EnterpriseRollbackService) CloseConnections(ctx context.Context, req *e
 
 // Login can be called after connecting in OOBE and continues to login as normal user.
 func (e *EnterpriseRollbackService) Login(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
-	if *e.ownership != rpb.Ownership_OOBE {
+	if *e.ownership != rpb.Ownership_OOBE && *e.ownership != rpb.Ownership_AUTO_ENROLLING {
 		return nil, errors.New("cannot login because we are not in OOBE")
 	}
 
-	// Close JS API connection in the OOBE before login.
-	if err := e.networkAPI.Close(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed to close cros network config api")
+	// Close JS API connection in OOBE before login.
+	if e.networkAPI != nil {
+		if err := e.networkAPI.Close(ctx); err != nil {
+			return nil, errors.Wrap(err, "failed to close cros network config api")
+		}
+		e.networkAPI = nil
 	}
-	e.networkAPI = nil
+
+	// When auto-enrolling, we need Wait for the signin OOBE page to be shown.
+	// Waiting if enrollment is not expected causes the test to fail.
+	if *e.ownership == rpb.Ownership_AUTO_ENROLLING {
+		_, err := e.ash.WaitForOOBEConnectionWithPrefix(ctx, "chrome://oobe/gaia-signin")
+		if err != nil {
+			return nil, errors.Wrap(err, "could not find OOBE connection for gaia sign in")
+		}
+		testing.ContextLog(ctx, "Login page found after re-enrollment, logging in now")
+	}
 
 	if err := e.ash.ContinueLogin(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to login as normal user after rollback")
 	}
-	e.ownership = rpb.Ownership_CONSUMER.Enum()
+	if *e.ownership == rpb.Ownership_AUTO_ENROLLING {
+		e.ownership = rpb.Ownership_ENROLLED_LOGGED_IN.Enum()
+	} else {
+		e.ownership = rpb.Ownership_LOGGED_IN.Enum()
+	}
 
 	networkAPI, err := nc.CreateLoggedInCrosNetworkConfig(ctx, e.ash)
 	if err != nil {
@@ -116,10 +132,10 @@ func (e *EnterpriseRollbackService) Login(ctx context.Context, req *empty.Empty)
 }
 
 func getNetworkConfigAPI(ctx context.Context, ash *chrome.Chrome, ownership rpb.Ownership) (*nc.CrosNetworkConfig, error) {
-	if ownership == rpb.Ownership_OOBE {
-		return nc.CreateOobeCrosNetworkConfig(ctx, ash)
+	if ownership == rpb.Ownership_LOGGED_IN || ownership == rpb.Ownership_ENROLLED_LOGGED_IN {
+		return nc.CreateLoggedInCrosNetworkConfig(ctx, ash)
 	}
-	return nc.CreateLoggedInCrosNetworkConfig(ctx, ash)
+	return nc.CreateOobeCrosNetworkConfig(ctx, ash)
 }
 
 func getAsh(ctx context.Context, sessionState *rpb.SessionState) (*chrome.Chrome, error) {
@@ -130,19 +146,23 @@ func getAshConfig(sessionState *rpb.SessionState) []chrome.Option {
 	switch sessionState.Ownership {
 	case rpb.Ownership_OOBE:
 		return []chrome.Option{
-			chrome.TryReuseSession(),
+			chrome.DeferLogin(),
 			chrome.ExtraArgs("--enterprise-force-manual-enrollment"),
-			chrome.SkipAutoEnrollmentCheck(),
-			chrome.DeferLogin()}
-	case rpb.Ownership_ENROLLED:
+			chrome.SkipAutoEnrollmentCheck()}
+	case rpb.Ownership_ENROLLED_LOGGED_IN:
 		return []chrome.Option{
-			chrome.TryReuseSession(),
+			chrome.DMSPolicy(sessionState.LoginData.DmserverUrl),
 			chrome.SkipAutoEnrollmentCheck(),
+			chrome.ExtraArgs("--enterprise-force-manual-enrollment"),
 			chrome.GAIAEnterpriseEnroll(chrome.Creds{User: sessionState.LoginData.Username, Pass: sessionState.LoginData.Password}),
-			chrome.GAIALogin(chrome.Creds{User: sessionState.LoginData.Username, Pass: sessionState.LoginData.Password}),
-			chrome.DMSPolicy(sessionState.LoginData.DmserverUrl)}
-	case rpb.Ownership_CONSUMER:
+			chrome.GAIALogin(chrome.Creds{User: sessionState.LoginData.Username, Pass: sessionState.LoginData.Password})}
+	case rpb.Ownership_LOGGED_IN:
 		return []chrome.Option{chrome.TryReuseSession()}
+	case rpb.Ownership_AUTO_ENROLLING:
+		return []chrome.Option{
+			chrome.DeferLogin(),
+			chrome.DMSPolicy(sessionState.LoginData.DmserverUrl),
+			chrome.GAIALogin(chrome.Creds{User: sessionState.LoginData.Username, Pass: sessionState.LoginData.Password})}
 	}
 	return []chrome.Option{}
 }
@@ -226,11 +246,13 @@ func (e *EnterpriseRollbackService) VerifyNetworks(ctx context.Context, request 
 func ownershipToString(ownership rpb.Ownership) string {
 	switch ownership {
 	case rpb.Ownership_OOBE:
-		return "OOBE"
-	case rpb.Ownership_ENROLLED:
-		return "enrolled session"
-	case rpb.Ownership_CONSUMER:
-		return "consumer session"
+		return "staying in OOBE"
+	case rpb.Ownership_ENROLLED_LOGGED_IN:
+		return "enrolled and logged in"
+	case rpb.Ownership_LOGGED_IN:
+		return "logged in"
+	case rpb.Ownership_AUTO_ENROLLING:
+		return "going through auto enrollment but staying in OOBE"
 	}
 	return "unkown"
 }

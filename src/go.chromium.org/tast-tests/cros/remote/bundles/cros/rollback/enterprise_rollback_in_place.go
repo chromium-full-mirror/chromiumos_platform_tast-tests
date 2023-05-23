@@ -61,7 +61,7 @@ func init() {
 
 // EnterpriseRollbackInPlace does not expect to use enrollment so any
 // functionality that depend on the enrollment of the device should be not be
-// added to this test.
+// added to this test. Refer to EnterpriseRollbackEnrolled instead.
 func EnterpriseRollbackInPlace(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Minute)

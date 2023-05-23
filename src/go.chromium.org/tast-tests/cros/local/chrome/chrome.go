@@ -746,6 +746,13 @@ func (c *Chrome) WaitForOOBEConnectionToBeDismissed(ctx context.Context) error {
 	return login.WaitForOOBEConnectionToBeDismissed(ctx, c.sess)
 }
 
+// WaitForOOBEConnectionWithPrefix waits for the prefix OOBE page to be shown,
+// then returns a connection to the page. The caller must close the returned
+// connection.
+func (c *Chrome) WaitForOOBEConnectionWithPrefix(ctx context.Context, prefix string) (*Conn, error) {
+	return login.WaitForOOBEConnectionWithPrefix(ctx, c.sess, prefix)
+}
+
 // ContinueLogin continues login deferred by DeferLogin option. It is an error to call
 // this method when DeferLogin option was not passed to New.
 func (c *Chrome) ContinueLogin(ctx context.Context) error {
