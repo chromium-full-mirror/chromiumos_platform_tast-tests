@@ -272,8 +272,8 @@ func ReadBatteryEnergySize(ctx context.Context, devPath string) (float64, error)
 	return math.Round(result), nil
 }
 
-// ReadBatteryChargeSize returns the size of battery in Ah.
-func ReadBatteryChargeSize(ctx context.Context, devPath string) (float64, error) {
+// ReadBatteryChargeDesignSize returns the design size of battery in Ah.
+func ReadBatteryChargeDesignSize(ctx context.Context, devPath string) (float64, error) {
 	var result float64
 	if readBattery, err := ReadBatteryProperty(ctx, devPath, "charge_full_design"); err == nil {
 		// Battery reports energy type data.
@@ -291,6 +291,29 @@ func ReadBatteryChargeSize(ctx context.Context, devPath string) (float64, error)
 			return 0, err
 		}
 		result = energyFullDesign / voltageNominal
+	}
+	return result, nil
+}
+
+// ReadBatteryChargeSize returns the size of battery in Ah.
+func ReadBatteryChargeSize(ctx context.Context, devPath string) (float64, error) {
+	var result float64
+	if readBattery, err := ReadBatteryProperty(ctx, devPath, "charge_full"); err == nil {
+		// Battery reports energy type data.
+		result = readBattery * 1e-6
+	} else {
+		// Battery reports charge type data.
+		energyFull, err := ReadBatteryProperty(ctx, devPath, "energy_full")
+		if err != nil {
+			// Return an invalid value.
+			return 0, err
+		}
+		voltageNominal, err := ReadBatteryProperty(ctx, devPath, "voltage_min_design")
+		if err != nil {
+			// Return an invalid value.
+			return 0, err
+		}
+		result = energyFull / voltageNominal
 	}
 	return result, nil
 }
@@ -378,12 +401,13 @@ func SysfsBatteryPath(ctx context.Context) (string, error) {
 
 // SysfsBatteryMetrics hold the metrics read from sysfs.
 type SysfsBatteryMetrics struct {
-	batteryPath           string
-	initialEnergy         float64 // in Wh
-	batteryChargeSize     float64 // in Ah
-	chargeRemainingMetric perf.Metric
-	dischargeMetric       perf.Metric
-	powerMetric           perf.Metric
+	batteryPath             string
+	initialEnergy           float64 // in Wh
+	batteryChargeSize       float64 // in Ah
+	batteryChargeDesignSize float64 // in Ah
+	chargeRemainingMetric   perf.Metric
+	dischargeMetric         perf.Metric
+	powerMetric             perf.Metric
 }
 
 // Assert that SysfsBatteryMetrics can be used in perf.Timeline.
@@ -418,6 +442,10 @@ func (b *SysfsBatteryMetrics) Setup(ctx context.Context, prefix, intervalName st
 		return err
 	}
 	b.batteryChargeSize, err = ReadBatteryChargeSize(ctx, b.batteryPath)
+	if err != nil {
+		return err
+	}
+	b.batteryChargeDesignSize, err = ReadBatteryChargeDesignSize(ctx, b.batteryPath)
 	if err != nil {
 		return err
 	}
