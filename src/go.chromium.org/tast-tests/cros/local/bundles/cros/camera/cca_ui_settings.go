@@ -87,8 +87,7 @@ func testFeedback(ctx context.Context, cr *chrome.Chrome, _ browser.Type, app *c
 		return errors.Wrap(err, "failed to click feedback button")
 	}
 	matcher := func(t *target.Info) bool {
-		// TODO(b/280533194): Remove the old URL once the new feedback app is enabled by default.
-		return strings.Contains(t.URL, "chrome://feedback") || strings.Contains(t.URL, "chrome://os-feedback")
+		return strings.Contains(t.URL, "chrome://os-feedback")
 	}
 	fConn, err := cr.NewConnForTarget(ctx, matcher)
 	if err != nil {
