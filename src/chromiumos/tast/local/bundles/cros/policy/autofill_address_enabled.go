@@ -98,7 +98,7 @@ func AutofillAddressEnabled(ctx context.Context, s *testing.State) {
 			htmlFieldID: "city",
 		},
 		{
-			fieldName:   "Postal code",
+			fieldName:   "ZIP code",
 			fieldValue:  "11111",
 			htmlFieldID: "postal-code",
 		},
@@ -210,8 +210,8 @@ func AutofillAddressEnabled(ctx context.Context, s *testing.State) {
 				defer conn.Close()
 
 				// Trigger the autofill by clicking the email field and choosing the suggested address (this could be any of the address fields).
-				suggestionPopup := nodewith.Role(role.ListBoxOption).ClassName("AutofillPopupSuggestionView")
-				emailTextBox := nodewith.Role(role.InlineTextBox).Name("Email")
+				suggestionPopup := nodewith.Role(role.ListBoxOption).ClassName("PopupCellView").First()
+				emailTextBox := nodewith.Role(role.TextField).Name("Email")
 				if err := uiauto.Combine("clicking the Email field and choosing the suggested address",
 					ui.WaitUntilExists(nodewith.Name("OK").Role(role.Button).ClassName("test-target-button")),
 					ui.MakeVisible(emailTextBox),
