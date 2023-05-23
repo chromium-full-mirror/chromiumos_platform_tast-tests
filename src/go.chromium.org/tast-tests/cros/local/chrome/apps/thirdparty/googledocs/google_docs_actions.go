@@ -9,6 +9,7 @@ package googledocs
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -83,17 +84,28 @@ func UpdatePagelessModeAction(pc pointer.Context, docsConn *chrome.Conn, ac *uia
 	}
 
 	file := nodewith.Name("File").Role(role.MenuItem)
+	menu := nodewith.Role(role.Menu).Ancestor(docsWebArea)
 	pageSetup := nodewith.NameStartingWith("Page setup").Role(role.MenuItem)
 	mode := nodewith.NameStartingWith(toggle).Role(role.Tab)
-	ok := nodewith.Name("OK").Role(role.Button)
+	pageSetupDialog := nodewith.NameStartingWith("Page setup").Role(role.Dialog)
+	okButton := nodewith.Name("OK").Role(role.Button).Ancestor(pageSetupDialog)
 	return uiauto.Combine(
 		fmt.Sprintf("set pageless mode to %t", isEnabled),
 		pc.Click(file),
-		ac.WaitUntilExists(pageSetup),
+		// In chromevox subcase pageSetup would be hidden,
+		// so we need to add keyboard actions to make it show up.
+		ac.WaitForLocation(menu),
+		uiauto.IfFailThen(
+			ac.Exists(pageSetup.Onscreen()),
+			ac.RetryUntil(
+				kw.AccelAction("Up"),
+				ac.WithTimeout(5*time.Second).WaitUntilExists(pageSetup),
+			),
+		),
 		pc.Click(pageSetup),
 		ac.WaitUntilExists(mode),
 		pc.Click(mode),
-		ac.WaitUntilExists(ok),
+		ac.WaitUntilExists(okButton),
 		// TODO(b/232554445): An existing bug with opening pageless mode
 		// prevents the "OK" button from appearing on screen, since the
 		// currently visible modal is wrongly centered. A crude
@@ -101,7 +113,7 @@ func UpdatePagelessModeAction(pc pointer.Context, docsConn *chrome.Conn, ac *uia
 		// click itself through Javascript. This also addresses a
 		// separate issue, where Lacros does not accurately calculate
 		// the location of the "OK" button.
-		ac.DoDefault(ok),
-		ac.WaitUntilGone(ok),
+		ac.DoDefault(okButton),
+		ac.WaitUntilGone(okButton),
 	)
 }
