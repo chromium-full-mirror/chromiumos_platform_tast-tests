@@ -26,6 +26,7 @@ import (
 
 func init() {
 	testing.AddService(&testing.Service{
+		Vars: []string{"ui.signinProfileTestExtensionManifestKey"},
 		Register: func(srv *grpc.Server, s *testing.ServiceState) {
 			ppb.RegisterKioskServiceServer(srv, &KioskService{s: s})
 		},
@@ -50,7 +51,7 @@ func (c *KioskService) ConfirmKioskStarted(ctx context.Context, req *ppb.Confirm
 	}
 	defer reader.Close()
 
-	if err := kioskmode.WaitLaunchLogs(ctx, reader); err != nil {
+	if err := kioskmode.WaitLaunchLogsWithReader(ctx, reader); err != nil {
 		return nil, errors.Wrap(err, "There was a problem while checking chrome logs for Kiosk related entries")
 	}
 
@@ -58,22 +59,25 @@ func (c *KioskService) ConfirmKioskStarted(ctx context.Context, req *ppb.Confirm
 }
 
 // StartKiosk starts kiosk in autolaunch mode and local DMServer.
-func (c *KioskService) StartKiosk(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
-	ok := false
-
+func (c *KioskService) StartKiosk(ctx context.Context, req *empty.Empty) (_ *empty.Empty, retErr error) {
 	tmpdir, err := ioutil.TempDir("", "fdms-")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create temp dir")
 	}
 	c.fakeDMSDir = tmpdir
 	defer func() {
-		if !ok {
+		if retErr != nil {
 			if err := os.RemoveAll(c.fakeDMSDir); err != nil {
 				testing.ContextLogf(ctx, "Failed to delete %s: %v", c.fakeDMSDir, err)
 			}
 			c.fakeDMSDir = ""
 		}
 	}()
+
+	signinTestExtensionManifestKey, ok := c.s.Var("ui.signinProfileTestExtensionManifestKey")
+	if !ok {
+		return nil, errors.New("missing ui.signinProfileTestExtensionManifestKey variable")
+	}
 
 	// fakedms.New starts a background process that outlives the current context.
 	fdms, err := fakedms.New(c.s.ServiceContext(), c.fakeDMSDir) // NOLINT
@@ -82,7 +86,7 @@ func (c *KioskService) StartKiosk(ctx context.Context, req *empty.Empty) (*empty
 	}
 	c.fakeDMS = fdms
 	defer func() {
-		if !ok {
+		if retErr != nil {
 			c.fakeDMS.Stop(ctx)
 			c.fakeDMS = nil
 		}
@@ -97,7 +101,7 @@ func (c *KioskService) StartKiosk(ctx context.Context, req *empty.Empty) (*empty
 		return nil, errors.Wrap(err, "failed to write policy blob")
 	}
 
-	ctx, cancel := context.WithTimeout(ctx, chrome.EnrollmentAndLoginTimeout)
+	ctx, cancel := context.WithTimeout(ctx, chrome.EnrollmentAndLoginTimeout+kioskmode.SetupDuration+kioskmode.LaunchDuration+kioskmode.CleanupDuration)
 	defer cancel()
 
 	// Enroll the device.
@@ -112,26 +116,32 @@ func (c *KioskService) StartKiosk(ctx context.Context, req *empty.Empty) (*empty
 		return nil, errors.Wrap(err, "failed to start Chrome")
 	}
 
-	kiosk, cr, err := kioskmode.DeprecatedNew(
+	kiosk, cr, err := kioskmode.New(
 		ctx,
 		fdms,
-		kioskmode.DefaultLocalAccounts(),
+		signinTestExtensionManifestKey,
 		kioskmode.AutoLaunch(kioskmode.WebKioskAccountID),
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to start Chrome in Kiosk mode")
 	}
-	c.kiosk = kiosk
-	c.chrome = cr
-	defer func() {
-		if !ok {
-			kiosk.DeprecatedClose(ctx)
+	defer func(ctx context.Context) {
+		if retErr != nil {
+			if err := kiosk.Close(ctx); err != nil {
+				testing.ContextLog(ctx, "Failed to clean up Kiosk: ", err)
+			}
 			c.kiosk = nil
 			c.chrome = nil
 		}
-	}()
+	}(ctx)
 
-	ok = true
+	if err := kiosk.WaitLaunchLogs(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to launch Kiosk")
+	}
+
+	c.kiosk = kiosk
+	c.chrome = cr
+
 	return &empty.Empty{}, nil
 }
 
@@ -161,13 +171,10 @@ func (c *KioskService) UpdatePolicies(ctx context.Context, req *ppb.UpdatePolici
 	return &empty.Empty{}, nil
 }
 
-func (c *KioskService) CloseKiosk(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
-	var lastErr error
-
+func (c *KioskService) CloseKiosk(ctx context.Context, req *empty.Empty) (_ *empty.Empty, retErr error) {
 	if c.kiosk != nil {
-		if err := c.kiosk.DeprecatedClose(ctx); err != nil {
-			testing.ContextLog(ctx, "Failed to close kiosk: ", err)
-			lastErr = errors.Wrap(err, "failed to close kiosk")
+		if err := c.kiosk.Close(ctx); err != nil {
+			retErr = errors.Wrap(err, "failed to close kiosk")
 		}
 		c.kiosk = nil
 		c.chrome = nil
@@ -181,10 +188,14 @@ func (c *KioskService) CloseKiosk(ctx context.Context, req *empty.Empty) (*empty
 	if c.fakeDMSDir != "" {
 		if err := os.RemoveAll(c.fakeDMSDir); err != nil {
 			testing.ContextLog(ctx, "Failed to remove temporary directory: ", err)
-			lastErr = errors.Wrap(err, "failed to remove temporary directory")
+			if retErr == nil {
+				retErr = errors.Wrap(err, "failed to remove temporary directory")
+			} else {
+				testing.ContextLog(ctx, "Failed to remove temporary directory: ", err)
+			}
 		}
 		c.fakeDMSDir = ""
 	}
 
-	return &empty.Empty{}, lastErr
+	return &empty.Empty{}, retErr
 }

@@ -326,15 +326,15 @@ func (k *Kiosk) DeprecatedClose(ctx context.Context) (retErr error) {
 	return nil
 }
 
-// WaitLaunchLogs is the same as the top level WaitLaunchLogs below, but uses the reader stored in
-// this Kiosk struct.
+// WaitLaunchLogs is the same as WaitLaunchLogsWithReader below, but uses the reader stored in this
+// Kiosk struct.
 //
 // This avoids the caveats of creating the reader at the right time, and should be preferred.
 func (k *Kiosk) WaitLaunchLogs(ctx context.Context) error {
-	return WaitLaunchLogs(ctx, k.reader)
+	return WaitLaunchLogsWithReader(ctx, k.reader)
 }
 
-// WaitLaunchLogs uses reader to look for logs that confirm Kiosk mode launched successfully.
+// WaitLaunchLogsWithReader uses reader to look for logs that confirm Kiosk mode launched successfully.
 //
 // reader is expected to process syslogs filtered for Chrome and to include messages since before
 // the session was launched. As in:
@@ -343,18 +343,16 @@ func (k *Kiosk) WaitLaunchLogs(ctx context.Context) error {
 //	...
 //	kiosk, cr, err := kioskmode.New(ctx, ...)  // Reader was created before Kiosk launches.
 //	...
-//	err := kioskmode.WaitLaunchLogs(ctx, reader)
+//	err := kioskmode.WaitLaunchLogsWithReader(ctx, reader)
 //
 // This is necessary because syslog.NewReader only contains logs from the moment it was created.
+// Prefer using kiosk.WaitLaunchLogs, which does not have this problem.
 //
-// Tests using WaitLaunchLogs should have a long enough Timeout to account for
+// Tests using WaitLaunchLogsWithReader should have a long enough Timeout to account for
 // kioskmode.LaunchDuration.
-//
-// TODO(b/280555587) consider removing this when callers migrate to kiosk.WaitLaunchLogs.
-func WaitLaunchLogs(ctx context.Context, reader *syslog.Reader) error {
+func WaitLaunchLogsWithReader(ctx context.Context, reader *syslog.Reader) error {
 	if ctxutil.DeadlineBefore(ctx, time.Now().Add(LaunchDuration)) {
-		// TODO(b/279900827): make this an error after callers are migrated.
-		testing.ContextLog(ctx, "Potentially insufficient time remaining to wait for Kiosk launch")
+		return errors.New("potentially insufficient time remaining to wait for Kiosk launch")
 	}
 
 	if err := waitLog(ctx, reader, kioskStartingLog, kioskStartingDuration); err != nil {
@@ -526,7 +524,7 @@ func DeprecatedNew(ctx context.Context, fdms *fakedms.FakeDMS, opts ...Option) (
 			// Library waits for Kiosk start sequence to start then it checks
 			// that Kiosk is ready for launch, and finally it waits for Kiosk
 			// to be launched.
-			if err := WaitLaunchLogs(ctx, reader); err != nil {
+			if err := WaitLaunchLogsWithReader(ctx, reader); err != nil {
 				if err := policyutil.ServeAndRefresh(ctx, fdms, cr, []policy.Policy{deviceLocalAccounts}); err != nil {
 					testing.ContextLog(ctx, "Could not serve and refresh policies. If kioskmode.AutoLaunch() option was used it may impact next test: ", err)
 				}

@@ -22,7 +22,10 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-const gaiaKioskEnrollmentTimeout = 7 * time.Minute
+const (
+	gaiaKioskEnrollmentLaunchTimeout = 5 * time.Minute
+	gaiaKioskEnrollmentTimeout       = 5*time.Minute + gaiaKioskEnrollmentLaunchTimeout
+)
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -97,6 +100,8 @@ func GAIAKioskEnrollment(ctx context.Context, s *testing.State) {
 	kioskErr := make(chan error)
 	checkKioskStarted := func() {
 		kioskErr <- func() error {
+			ctx, cancel := context.WithTimeout(ctx, gaiaKioskEnrollmentLaunchTimeout)
+			defer cancel()
 			if _, err := kc.ConfirmKioskStarted(ctx, &kspb.ConfirmKioskStartedRequest{}); err != nil {
 				return errors.Wrap(err, "failed to start kiosk mode")
 			}
