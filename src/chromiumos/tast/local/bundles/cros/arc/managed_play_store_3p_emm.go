@@ -46,19 +46,9 @@ func init() {
 				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
 			},
 			{
-				Name:              "betty",
-				ExtraAttr:         []string{"informational"},
-				ExtraSoftwareDeps: []string{"android_container", "qemu"},
-			},
-			{
 				Name:              "vm",
 				ExtraAttr:         []string{"informational"},
 				ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
-			},
-			{
-				Name:              "vm_betty",
-				ExtraAttr:         []string{"informational"},
-				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
 			}},
 	})
 }
