@@ -608,7 +608,7 @@ func SetKernelHeaderMagic(ctx context.Context, table *pb.CgptPartition, magic He
 	testing.ContextLogf(ctx, "Setting header to %s on device %s (label %q)", magic, table.PartitionPath, table.Label)
 	args := []string{
 		fmt.Sprintf("of=%s", table.PartitionPath),
-		"conv=notrunc",
+		"conv=notrunc,nocreat",
 		"oflag=sync",
 	}
 	cmd := testexec.CommandContext(ctx, "dd", args...)

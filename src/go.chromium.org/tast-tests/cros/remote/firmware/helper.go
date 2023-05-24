@@ -732,7 +732,7 @@ func (h *Helper) CorruptUSBKey(ctx context.Context, usbdev string) (retErr error
 	kernelPart := usbdev + "2"
 	stdin := strings.NewReader("CORRUPTD")
 
-	if err := h.ServoProxy.InputCommand(ctx, true, stdin, "dd", fmt.Sprintf("of=%s", kernelPart), "oflag=sync", "conv=notrunc"); err != nil {
+	if err := h.ServoProxy.InputCommand(ctx, true, stdin, "dd", fmt.Sprintf("of=%s", kernelPart), "oflag=sync", "conv=notrunc,nocreat"); err != nil {
 		return errors.Wrap(err, "failed to corrupt kernel magic")
 	}
 	return nil
@@ -754,7 +754,7 @@ func (h *Helper) RestoreUSBKey(ctx context.Context) (retErr error) {
 	kernelPart := usbdev + "2"
 	stdin := strings.NewReader("CHROMEOS")
 
-	if err := h.ServoProxy.InputCommand(ctx, true, stdin, "dd", fmt.Sprintf("of=%s", kernelPart), "oflag=sync", "conv=notrunc"); err != nil {
+	if err := h.ServoProxy.InputCommand(ctx, true, stdin, "dd", fmt.Sprintf("of=%s", kernelPart), "oflag=sync", "conv=notrunc,nocreat"); err != nil {
 		return errors.Wrap(err, "failed to corrupt kernel magic")
 	}
 	return nil
