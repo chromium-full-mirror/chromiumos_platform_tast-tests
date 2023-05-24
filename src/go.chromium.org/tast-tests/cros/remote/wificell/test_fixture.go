@@ -2071,24 +2071,28 @@ func (tf *TestFixture) P2PDeconfigureGO(ctx context.Context) error {
 
 // P2PDeconfigureClient deconfigures the p2p client.
 func (tf *TestFixture) P2PDeconfigureClient(ctx context.Context) error {
+	var firstErr error
+
 	iface, err := tf.DUTWifiClient(PeerDUT).Interface(ctx)
 	if err != nil {
-		return errors.Wrap(err, "failed to get the WiFi interface")
+		utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to get the WiFi interface"))
 	}
 	wpa := remotewpacli.NewRemoteRunnerOnIface(tf.p2pClient.Conn(), iface)
 
 	if err := wpa.P2PGroupRemove(ctx, tf.p2pClientIface); err != nil {
-		return err
+		utils.CollectFirstErr(ctx, &firstErr, err)
 	}
 	if err := wpa.RemoveNetwork(ctx, tf.p2pClientNetID); err != nil {
-		return err
+		utils.CollectFirstErr(ctx, &firstErr, err)
 	}
 	if err := wpa.P2PFlush(ctx); err != nil {
-		return err
+		utils.CollectFirstErr(ctx, &firstErr, err)
 	}
-	testing.ContextLog(ctx, "P2P Client: Deconfigured")
+	if firstErr == nil {
+		testing.ContextLog(ctx, "P2P Client: Deconfigured")
+	}
 
-	return nil
+	return firstErr
 }
 
 // ReserveForDeconfigP2P returns a shorter ctx and cancel function for tf.P2PDeconfigureGO() or tf.P2PDeconfigureClient().
