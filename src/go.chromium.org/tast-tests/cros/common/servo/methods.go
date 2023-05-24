@@ -95,15 +95,17 @@ type OnOffControl string
 
 // These controls accept only "on" and "off" as values.
 const (
+	CCDCPUFWSPI    OnOffControl = "ccd_cpu_fw_spi"
 	CCDKeepaliveEn OnOffControl = "ccd_keepalive_en"
 	CCDState       OnOffControl = "ccd_state"
-	DTSMode        OnOffControl = "servo_dts_mode"
-	RecMode        OnOffControl = "rec_mode"
-	InitKeyboard   OnOffControl = "init_keyboard"
-	USBKeyboard    OnOffControl = "init_usb_keyboard"
-	I2CMuxEn       OnOffControl = "i2c_mux_en"
+	CPUFWSPI       OnOffControl = "cpu_fw_spi"
 	ColdReset      OnOffControl = "cold_reset"
+	DTSMode        OnOffControl = "servo_dts_mode"
 	DutEthPwrEn    OnOffControl = "dut_eth_pwr_en"
+	I2CMuxEn       OnOffControl = "i2c_mux_en"
+	InitKeyboard   OnOffControl = "init_keyboard"
+	RecMode        OnOffControl = "rec_mode"
+	USBKeyboard    OnOffControl = "init_usb_keyboard"
 )
 
 // An OnOffValue is a string value that would be accepted by an OnOffControl.
