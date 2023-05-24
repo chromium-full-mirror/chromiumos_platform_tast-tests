@@ -107,7 +107,11 @@ func (f *FanMetrics) Snapshot(ctx context.Context, values *perf.Values) error {
 		return errors.Wrap(err, "failed to read fan RPM")
 	}
 	if len(readData) != len(f.rpmmetric) {
-		return errors.New("the number of fan metrics tracker does not align with the number of fan rpm reads")
+		// TODO(b/283697544): Temporarily skip bad fan readings. Find out why
+		// fan number changes in the middle of test.
+		testing.ContextLogf(ctx, "Fan readings %v has different length from fan metric tracker with length %d",
+			readData, len(f.rpmmetric))
+		return nil
 	}
 	for i, singleFanMetric := range f.rpmmetric {
 		values.Append(singleFanMetric, float64(readData[i]))
