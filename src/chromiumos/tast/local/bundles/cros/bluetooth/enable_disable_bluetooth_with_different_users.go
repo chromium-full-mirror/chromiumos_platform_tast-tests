@@ -58,6 +58,7 @@ func init() {
 			},
 			// TODO(b/246007564): Add floss_enabled variant once b/270447662 is fixed.
 		},
+		Timeout: time.Minute * 3,
 	})
 }
 
@@ -266,6 +267,8 @@ func toggleBluetooth(ctx context.Context, tconn *chrome.TestConn, bt bluetooth.B
 	if err := quicksettings.Show(ctx, tconn); err != nil {
 		return errors.Wrap(err, "failed to show the Quick Settings")
 	}
+	defer quicksettings.Hide(ctx, tconn)
+
 	ui := uiauto.New(tconn)
 	if err := ui.LeftClick(quicksettings.PodIconButton(quicksettings.SettingPodBluetooth))(ctx); err != nil {
 		return errors.Wrap(err, "failed to click the Bluetooth feature pod icon button")
