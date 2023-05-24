@@ -12,6 +12,7 @@ import (
 	"chromiumos/tast/common/tape"
 	"chromiumos/tast/services/cros/graphics"
 	pspb "chromiumos/tast/services/cros/policy"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
@@ -102,7 +103,7 @@ func (e *deskFixt) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 
 	// Create an account manager and lease a test account for the duration of the test.
 
-	accManager, acc, err := tape.NewOwnedTestAccountManagerFromClient(ctx, tapeClient, false /*lock*/, tape.WithTimeout(5) /*timeout_in_seconds*/, tape.WithPoolID(tape.DefaultManaged))
+	accManager, acc, err := tape.NewOwnedTestAccountManagerFromClient(ctx, tapeClient, true /*lock*/, tape.WithTimeout(1800) /*timeout_in_seconds*/, tape.WithPoolID(tape.DefaultManaged))
 	if err != nil {
 		s.Fatal("Failed to create an account manager and lease an account: ", err)
 	}
