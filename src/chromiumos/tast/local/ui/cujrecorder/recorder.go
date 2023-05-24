@@ -528,7 +528,8 @@ func (r *Recorder) Annotate(ctx context.Context, annotation string) bool {
 // the annotation representing what we are doing is "Split_screen_windows", the
 // two metrics created will look like:
 // Annotation.Split_screen_windows_start,
-// Annotation.Split_screen_windows_end.
+// Annotation.Split_screen_windows_end,
+// AnnotationSectionDuration.Split_screen_windows.
 func (r *Recorder) AnnotateSection(ctx context.Context, annotation string) func(ctx context.Context) {
 	startTime := time.Now()
 	if ok := r.Annotate(ctx, annotation+"_start"); !ok {
@@ -538,7 +539,7 @@ func (r *Recorder) AnnotateSection(ctx context.Context, annotation string) func(
 	return func(ctx context.Context) {
 		r.Annotate(ctx, annotation+"_end")
 		r.pv.Set(perf.Metric{
-			Name:      annotation,
+			Name:      "AnnotationSectionDuration" + annotation,
 			Unit:      "s",
 			Direction: perf.SmallerIsBetter,
 		}, float64(time.Since(startTime).Seconds()))
