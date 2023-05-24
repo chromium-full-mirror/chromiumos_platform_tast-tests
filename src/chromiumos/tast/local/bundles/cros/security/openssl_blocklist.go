@@ -36,7 +36,7 @@ func init() {
 			"openssl_blocklist_sha1_blocklist",
 			"openssl_blocklist_sha256_blocklist",
 		},
-		Attr: []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr: []string{"group:mainline"},
 	})
 }
 
