@@ -313,3 +313,29 @@ func OpenRemoteApplicationInCitirx(ctx context.Context, s *testing.FixtTestState
 		s.Fatal("Failed to click on launched window: ", err)
 	}
 }
+
+// SearchFlagsWithIMEAndScreenPlay generates searchFlags based on the list of input methods with screenplay id.
+func SearchFlagsWithIMEAndScreenPlay(imes []ime.InputMethod, screenPlayIDs []string) []*testing.StringPair {
+	var searchFlags = []*testing.StringPair{}
+	for _, ime := range imes {
+		searchFlags = append(
+			searchFlags,
+			&testing.StringPair{
+				Key:   "ime",
+				Value: ime.Name,
+			},
+		)
+	}
+
+	for _, screenPlayID := range screenPlayIDs {
+		searchFlags = append(
+			searchFlags,
+			&testing.StringPair{
+				Key:   "feature_id",
+				Value: screenPlayID,
+			},
+		)
+	}
+
+	return searchFlags
+}
