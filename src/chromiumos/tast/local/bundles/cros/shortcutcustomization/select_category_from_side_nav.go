@@ -118,7 +118,7 @@ func SelectCategoryFromSideNav(ctx context.Context, s *testing.State) {
 		description string
 		keys        sc.ShortcutKeys
 	}{
-		{"Switch to next available input method", sc.ShortcutKeys{Keys: "ctrl shift space", Role: role.Cell}},
+		{"Reset zoom level", sc.ShortcutKeys{Keys: "ctrl shift 0", Role: role.Cell}},
 		{"Show stylus tools", sc.ShortcutKeys{Keys: "alt shift p", Role: role.Cell}},
 		{"Switch to last language selected", sc.ShortcutKeys{Keys: "ctrl space", Role: role.Cell}},
 	}
