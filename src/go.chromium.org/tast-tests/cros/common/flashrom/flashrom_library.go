@@ -43,6 +43,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
@@ -169,7 +170,9 @@ type Params struct {
 	verbosity       VerbosityLevel
 	programmer      Programmer
 	programmerParam string
-	testDut         *dut.DUT // Remote DUT or nil for local run
+	commandRunner   func(ctx context.Context, cmdArgs []string) ([]byte, error)
+	servo           *servo.Servo
+	servoSPIControl servo.OnOffControl
 }
 
 // Config configures flashrom instance.
@@ -221,17 +224,8 @@ func appendFileAndRegionNamesArgs(cmdArgs []string, fullSizeFilePath string, reg
 // It returns the output from command line execution.
 // If an error happens during command line execution, a non-nil error is returned.
 func (i *Instance) runCommandLine(ctx context.Context, cmdArgs []string) ([]byte, error) {
-	var out []byte
-	var err error
-	if i.params.testDut != nil {
-		out, err = runCommandLineRemote(ctx, i.params.testDut.Conn(), cmdArgs)
-	} else {
-		out, err = runCommandLineLocal(ctx, cmdArgs)
-	}
-
 	// TODO(b:247668196) make sure errors are informative for the caller.
-
-	return out, err
+	return i.params.commandRunner(ctx, cmdArgs)
 }
 
 // FlashromInit sets verbosity level.
@@ -258,7 +252,21 @@ func (c *Config) ProgrammerInit(programmer Programmer, programmerParams string) 
 
 // SetDut sets dut for test run. nil indicates local run.
 func (c *Config) SetDut(testDut *dut.DUT) *Config {
-	c.params.testDut = testDut
+	c.params.commandRunner = func(ctx context.Context, cmdArgs []string) ([]byte, error) {
+		return runCommandLineRemote(ctx, testDut.Conn(), cmdArgs)
+	}
+	return c
+}
+
+// SetServoProxy sets servo proxy to run commands on the servo host. Don't call ProgrammerInit if you call this.
+// The Probe() function will setup the servo and DUT for flashing, and the shutdown function returned from Probe()
+// will restore the servo to it's normal state, and reboot the DUT, so be sure to call the shutdown function as soon as possible
+// after flashing.
+func (c *Config) SetServoProxy(proxy *servo.Proxy) *Config {
+	c.params.servo = proxy.Servo()
+	c.params.commandRunner = func(ctx context.Context, cmdArgs []string) ([]byte, error) {
+		return proxy.OutputCommand(ctx, true, cmdArgs[0], cmdArgs[1:]...)
+	}
 	return c
 }
 
@@ -285,19 +293,66 @@ func (c *Config) isReady() error {
 // Instance is only returned when error = nil.
 func (c *Config) Probe(ctx context.Context) (*Instance, context.Context, func() error, []byte, error) {
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 20*time.Second)
 	shutdown := func() error {
 		err := c.fullShutdown(cleanupCtx)
 		cancel()
 		return err
 	}
 
+	if c.params.servo != nil {
+		if c.params.programmer != "" {
+			return nil, ctx, shutdown, nil, errors.New("cannot call both SetServoProxy and ProgrammerInit")
+		}
+		devices, err := c.params.servo.GetStringList(ctx, servo.Devices)
+		if err != nil {
+			return nil, ctx, shutdown, nil, errors.Wrap(err, "failed to read servo devices")
+		}
+
+		for _, device := range devices {
+			stringType, err := servo.PropertyToString(device, "type")
+			if err != nil {
+				return nil, ctx, shutdown, nil, errors.Wrapf(err, "no type in %v", device)
+			}
+			deviceSerial, err := servo.PropertyToString(device, "serial")
+			if err != nil {
+				return nil, ctx, shutdown, nil, errors.Wrapf(err, "no serial in %v", device)
+			}
+			if strings.HasPrefix(stringType, "ccd") {
+				c.params.servoSPIControl = servo.CCDCPUFWSPI
+				c.params.programmer = ProgrammerRaidenDebugSpi
+				c.params.programmerParam = fmt.Sprintf("target=AP,custom_rst=true,serial=%s", deviceSerial)
+				// Don't break, continue to see if we can find a better choice than CCD.
+			} else if strings.HasPrefix(stringType, "c2d2") || strings.HasPrefix(stringType, "servo_micro") {
+				c.params.servoSPIControl = servo.CPUFWSPI
+				c.params.programmer = ProgrammerRaidenDebugSpi
+				c.params.programmerParam = fmt.Sprintf("serial=%s", deviceSerial)
+				break
+			} else if strings.HasPrefix(stringType, "servo_v2") {
+				c.params.servoSPIControl = servo.CPUFWSPI
+				c.params.programmer = ProgrammerFt2232spi
+				c.params.programmerParam = fmt.Sprintf("type=google-servo-v2,serial=%s", deviceSerial)
+				break
+			}
+		}
+
+		if c.params.servoSPIControl == "" {
+			return nil, ctx, shutdown, nil, errors.Errorf("failed to find servo programmer, got %v", devices)
+		}
+		testing.ContextLogf(ctx, "Setting %s:on", c.params.servoSPIControl)
+		if err := c.params.servo.SetOnOff(ctx, c.params.servoSPIControl, servo.On); err != nil {
+			return nil, ctx, shutdown, nil, errors.Wrapf(err, "failed to enable %s", c.params.servoSPIControl)
+		}
+	}
 	if err := c.isReady(); err != nil {
 		return nil, ctx, shutdown, nil, errors.Wrap(err, "config missing required data")
 	}
 
 	var instance Instance
 	instance.params = c.params
+	if instance.params.commandRunner == nil {
+		instance.params.commandRunner = runCommandLineLocal
+	}
 
 	cmdArgs := []string{dutFlashromPath, "-p", instance.programmerWithParamsArg()}
 	cmdArgs = instance.appendVerbosityArg(cmdArgs)
@@ -328,6 +383,12 @@ func (c *Config) Probe(ctx context.Context) (*Instance, context.Context, func() 
 func (c *Config) fullShutdown(ctx context.Context) error {
 	// TODO Implement when switching the library to use libflashrom.
 	// Shutdown is called implicitly for command line invocations.
+	if c.params.servo != nil {
+		testing.ContextLogf(ctx, "Setting %s:off", c.params.servoSPIControl)
+		if err := c.params.servo.SetOnOff(ctx, c.params.servoSPIControl, servo.Off); err != nil {
+			return errors.Wrapf(err, "failed to disable %s", c.params.servoSPIControl)
+		}
+	}
 
 	return nil
 }
