@@ -197,7 +197,7 @@ func resetEc(ctx context.Context, s *testing.State, b utils.DevboardHelper) {
 	s.Log("Toggle EC Reset so GSC resets boot mode to ", bootModeToString(efs2BootModeTrustedRo))
 	b.GpioSet(ctx, ti50.GpioTi50PowerBtnL, false)
 	b.GpioSet(ctx, ti50.GpioTi50KsiRefresh, false)
-
+	testing.Sleep(ctx, 100*time.Millisecond) // GoBigSleepLint: Simulating button press
 	b.GpioSet(ctx, ti50.GpioTi50PowerBtnL, true)
 	b.GpioSet(ctx, ti50.GpioTi50KsiRefresh, true)
 }
@@ -263,6 +263,8 @@ func testNoBootMode(ctx context.Context, s *testing.State, b utils.DevboardHelpe
 		s.Error("EC_RST_L not de-asserted before when starting monitoring")
 	}
 	sendEcPacketNoResponse(ctx, s, b, setTrustedRo)
+	// Wait for gpio monitoring to see EC_RST edge.
+	testing.Sleep(ctx, 500*time.Millisecond) // GoBigSleepLint: No good way to poll for EC_RST
 	events = b.GpioMonitorFinish(ctx, gpioMonitor)
 	s.Log("Stop gpio monitoring: ", events)
 	ecReset := events.FindFirst(ti50.GpioTi50EcRstL, utils.GpioEdgeFalling)
@@ -353,6 +355,8 @@ func testVerifiedMode(ctx context.Context, s *testing.State, b utils.DevboardHel
 		s.Error("EC_RST_L not de-asserted before when starting monitoring")
 	}
 	sendEcPacketNoResponse(ctx, s, b, setTrustedRo)
+	// Wait for gpio monitoring to see EC_RST edge.
+	testing.Sleep(ctx, 500*time.Millisecond) // GoBigSleepLint: No good way to poll for EC_RST
 	events = b.GpioMonitorFinish(ctx, gpioMonitor)
 	s.Log("Stop gpio monitoring: ", events)
 	ecReset := events.FindFirst(ti50.GpioTi50EcRstL, utils.GpioEdgeFalling)
