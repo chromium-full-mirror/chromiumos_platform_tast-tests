@@ -534,7 +534,7 @@ func init() {
 		},
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
-				chrome.ExtraArgs("enable-field-trial-config"),
+				chrome.ExtraArgs("--enable-field-trial-config"),
 			},
 			bt: browser.TypeAsh,
 		},
@@ -556,7 +556,7 @@ func init() {
 		Data: docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
-				chrome.ExtraArgs("enable-field-trial-config"),
+				chrome.ExtraArgs("--enable-field-trial-config"),
 				chrome.ExtraArgs(webRTCEventLogCommandFlag),
 			},
 			bt:          browser.TypeAsh,
