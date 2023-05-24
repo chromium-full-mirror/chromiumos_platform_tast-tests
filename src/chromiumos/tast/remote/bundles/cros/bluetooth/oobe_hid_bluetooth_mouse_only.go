@@ -53,11 +53,15 @@ func init() {
 				ExtraAttr:         []string{"bluetooth_flaky"},
 			},
 		},
+		Timeout: time.Minute * 2,
 	})
 }
 
 // OobeHidBluetoothMouseOnly tests that a single Bluetooth mouse is connected to during OOBE.
 func OobeHidBluetoothMouseOnly(ctx context.Context, s *testing.State) {
+	// This test waits for UI elements to become visible that frequently take more than the default of 15 seconds.
+	const defaultTimeout time.Duration = time.Second * 30
+
 	fv := s.FixtValue().(*bluetooth.FixtValue)
 
 	// Shorten deadline to leave time for cleanup
@@ -78,7 +82,7 @@ func OobeHidBluetoothMouseOnly(ctx context.Context, s *testing.State) {
 	}()
 
 	// Verify pointer device is not found.
-	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.SearchingForPointerNodeName); err != nil {
+	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.SearchingForPointerNodeName, defaultTimeout); err != nil {
 		s.Fatal("Failed to find node: ", err)
 	}
 
@@ -95,7 +99,7 @@ func OobeHidBluetoothMouseOnly(ctx context.Context, s *testing.State) {
 	}
 
 	// Verify pointer device is found.
-	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.FoundPointerNodeName); err != nil {
+	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.FoundPointerNodeName, defaultTimeout); err != nil {
 		s.Fatal("Failed to find node: ", err)
 	}
 
@@ -104,7 +108,7 @@ func OobeHidBluetoothMouseOnly(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to turn of btPeer adapter: ", err)
 	}
 
-	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.SearchingForPointerNodeName); err != nil {
+	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.SearchingForPointerNodeName, defaultTimeout); err != nil {
 		s.Fatal("Failed to find node: ", err)
 	}
 
@@ -114,7 +118,7 @@ func OobeHidBluetoothMouseOnly(ctx context.Context, s *testing.State) {
 	}
 
 	// Verify pointer device is found.
-	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.FoundPointerNodeName); err != nil {
+	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.FoundPointerNodeName, defaultTimeout); err != nil {
 		s.Fatal("Failed to find node: ", err)
 	}
 

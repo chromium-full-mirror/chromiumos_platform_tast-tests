@@ -7,13 +7,15 @@ package ui
 
 import (
 	"context"
+	"time"
 
 	"chromiumos/tast/services/cros/ui"
 	"go.chromium.org/tast/core/errors"
+	"google.golang.org/protobuf/types/known/durationpb"
 )
 
 // CheckNodeWithNameExists checks if a node containing |name| exist, returns an error is node is not found.
-func CheckNodeWithNameExists(ctx context.Context, uiautoSvc ui.AutomationServiceClient, name string) error {
+func CheckNodeWithNameExists(ctx context.Context, uiautoSvc ui.AutomationServiceClient, name string, timeout time.Duration) error {
 	finder := &ui.Finder{
 		NodeWiths: []*ui.NodeWith{
 			{Value: &ui.NodeWith_NameContaining{NameContaining: name}},
@@ -21,7 +23,7 @@ func CheckNodeWithNameExists(ctx context.Context, uiautoSvc ui.AutomationService
 		},
 	}
 	if _, err := uiautoSvc.WaitUntilExists(
-		ctx, &ui.WaitUntilExistsRequest{Finder: finder}); err != nil {
+		ctx, &ui.WaitUntilExistsRequest{Finder: finder, Timeout: durationpb.New(timeout)}); err != nil {
 		return errors.Wrapf(err, "failed to find node with name %s", name)
 	}
 	return nil

@@ -55,11 +55,15 @@ func init() {
 				ExtraAttr:         []string{"bluetooth_flaky"},
 			},
 		},
+		Timeout: time.Minute * 2,
 	})
 }
 
 // OobeHidBluetoothKeyboardOnly tests that a single Blueooth keyboard is connected to during OOBE.
 func OobeHidBluetoothKeyboardOnly(ctx context.Context, s *testing.State) {
+	// This test waits for UI elements to become visible that frequently take more than the default of 15 seconds.
+	const defaultTimeout time.Duration = time.Second * 30
+
 	fv := s.FixtValue().(*bluetooth.FixtValue)
 
 	// Shorten deadline to leave time for cleanup
@@ -81,7 +85,7 @@ func OobeHidBluetoothKeyboardOnly(ctx context.Context, s *testing.State) {
 
 	util.TurnOffServoKeyboardIfOn(ctx, s)
 
-	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.SearchingForKeyboardNodeName); err != nil {
+	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.SearchingForKeyboardNodeName, defaultTimeout); err != nil {
 		s.Fatal("Failed to find node: ", err)
 	}
 
@@ -95,7 +99,7 @@ func OobeHidBluetoothKeyboardOnly(ctx context.Context, s *testing.State) {
 
 	// Verify keyboard device is pairing.
 	// TODO(b/254524000): use approraite authentication method.
-	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.PairingKeyboardNodeName); err != nil {
+	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.PairingKeyboardNodeName, defaultTimeout); err != nil {
 		s.Fatal("Failed to find node: ", err)
 	}
 
@@ -103,7 +107,7 @@ func OobeHidBluetoothKeyboardOnly(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to turn of btPeer adapter: ", err)
 	}
 
-	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.SearchingForKeyboardNodeName); err != nil {
+	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.SearchingForKeyboardNodeName, defaultTimeout); err != nil {
 		s.Fatal("Failed to find node: ", err)
 	}
 
@@ -113,7 +117,7 @@ func OobeHidBluetoothKeyboardOnly(ctx context.Context, s *testing.State) {
 	}
 
 	// Verify keyboard device is pairing.
-	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.PairingKeyboardNodeName); err != nil {
+	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.PairingKeyboardNodeName, defaultTimeout); err != nil {
 		s.Fatal("Failed to find node: ", err)
 	}
 
