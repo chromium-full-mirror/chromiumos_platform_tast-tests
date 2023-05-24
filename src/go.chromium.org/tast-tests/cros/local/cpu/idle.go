@@ -115,12 +115,21 @@ func waitUntilIdleStep(ctx context.Context, timeout time.Duration, maxUsage floa
 // WaitUntilPkgStateIdleWithConfig waits until the CPU package c-state is idle,
 // based on provided configuration.
 func WaitUntilPkgStateIdleWithConfig(ctx context.Context, config IdleConfig) error {
+	// Check if CPU package state track is supported.
+	pCStates, err := FetchPackageStates()
+	if err != nil {
+		return err
+	}
+	if pCStates == nil {
+		testing.ContextLog(ctx, "Device microarchitecture does not support wait until package c-state idle")
+		return nil
+	}
+
 	// Wait for the CPU package state to become idle. It's e.g. possible the board
 	// just booted and is running various startup programs.
 	if config.Steps < 2 {
 		return errors.Errorf("invalid Steps in config: got %d; want >= 2", config.Steps)
 	}
-	var err error
 	startTime := time.Now()
 	idleIncrease := (config.CPUUsagePercentMax - config.CPUUsagePercentBase) / (float64(config.Steps) - 1)
 	testing.ContextLogf(ctx, "Waiting for idle CPU package c-state at most %v, threshold will be gradually relaxed (from %.1f%% to %.1f%%)",
