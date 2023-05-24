@@ -24,12 +24,14 @@ import (
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/uiauto/lockscreen"
 	"chromiumos/tast/local/chrome/uiauto/quicksettings"
+	"chromiumos/tast/local/common"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/local/policyutil/externaldata"
 	"chromiumos/tast/local/session"
 	"chromiumos/tast/local/syslog"
 	ppb "chromiumos/tast/services/cros/policy"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -40,6 +42,7 @@ func init() {
 			ppb.RegisterPolicyServiceServer(srv, &PolicyService{
 				s:              s,
 				extensionConns: make(map[string]*chrome.Conn),
+				sharedObject:   common.SharedObjectsForServiceSingleton,
 			})
 		},
 		// GuaranteeCompatibility allows tests outside ChromeOS to call this service.
@@ -51,7 +54,6 @@ func init() {
 type PolicyService struct { // NOLINT
 	s *testing.ServiceState
 
-	chrome         *chrome.Chrome
 	extensionConns map[string]*chrome.Conn
 	extensionDirs  []string
 	fakeDMS        *fakedms.FakeDMS
@@ -59,16 +61,17 @@ type PolicyService struct { // NOLINT
 	fakeDMSRemoval bool
 	chromeReader   *syslog.ChromeReader
 
-	eds *externaldata.Server
+	eds          *externaldata.Server
+	sharedObject *common.SharedObjectsForService
 }
 
 func (c *PolicyService) VerifyPolicyStatus(ctx context.Context, req *ppb.VerifyPolicyStatusRequest) (*empty.Empty, error) {
-	if c.chrome == nil {
+	if c.sharedObject.Chrome == nil {
 		return nil, errors.New("chrome is not started")
 	}
 
 	testing.ContextLog(ctx, "Verifying the policy is set to correct status")
-	tconn, err := c.chrome.TestAPIConn(ctx)
+	tconn, err := c.sharedObject.Chrome.TestAPIConn(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "create test API connection")
 	}
@@ -127,18 +130,15 @@ func (c *PolicyService) WaitForEnrollmentError(ctx context.Context, req *empty.E
 func (c *PolicyService) GAIAEnrollAndLoginUsingChrome(ctx context.Context, req *ppb.GAIAEnrollAndLoginUsingChromeRequest) (*empty.Empty, error) {
 	testing.ContextLogf(ctx, "Enrolling using Chrome with username: %s, dmserver: %s", string(req.Username), string(req.DmserverURL))
 
-	cr, err := chrome.New(
+	if err := c.newChrome(
 		ctx,
 		chrome.GAIAEnterpriseEnroll(chrome.Creds{User: req.Username, Pass: req.Password}),
 		chrome.SkipAutoEnrollmentCheck(),
 		chrome.GAIALogin(chrome.Creds{User: req.Username, Pass: req.Password}),
 		chrome.DMSPolicy(req.DmserverURL),
-	)
-	if err != nil {
+	); err != nil {
 		return nil, errors.Wrap(err, "failed to start chrome")
 	}
-
-	c.chrome = cr
 
 	return &empty.Empty{}, nil
 }
@@ -147,18 +147,15 @@ func (c *PolicyService) GAIAEnrollAndLoginUsingChrome(ctx context.Context, req *
 func (c *PolicyService) GAIAEnrollUsingChrome(ctx context.Context, req *ppb.GAIAEnrollUsingChromeRequest) (*empty.Empty, error) {
 	testing.ContextLogf(ctx, "Enrolling using Chrome with username: %s, dmserver: %s", string(req.Username), string(req.DmserverURL))
 
-	cr, err := chrome.New(
+	if err := c.newChrome(
 		ctx,
 		chrome.GAIAEnterpriseEnroll(chrome.Creds{User: req.Username, Pass: req.Password}),
 		chrome.SkipAutoEnrollmentCheck(),
 		chrome.NoLogin(),
 		chrome.DMSPolicy(req.DmserverURL),
-	)
-	if err != nil {
+	); err != nil {
 		return nil, errors.Wrap(err, "failed to start chrome")
 	}
-
-	c.chrome = cr
 
 	return &empty.Empty{}, nil
 }
@@ -167,19 +164,16 @@ func (c *PolicyService) GAIAEnrollUsingChrome(ctx context.Context, req *ppb.GAIA
 func (c *PolicyService) GAIAZTEEnrollUsingChrome(ctx context.Context, req *ppb.GAIAZTEEnrollUsingChromeRequest) (*empty.Empty, error) {
 	testing.ContextLogf(ctx, "ZTE Enrolling using Chrome with dmserver: %s", string(req.DmserverURL))
 
-	cr, err := chrome.New(
+	if err := c.newChrome(
 		ctx,
 		chrome.GAIAZTEEnterpriseEnroll(),
 		chrome.KeepState(),
 		chrome.NoLogin(),
 		chrome.DMSPolicy(req.DmserverURL),
 		chrome.LoadSigninProfileExtension(req.ManifestKey),
-	)
-	if err != nil {
+	); err != nil {
 		return nil, errors.Wrap(err, "failed to start chrome")
 	}
-
-	c.chrome = cr
 
 	return &empty.Empty{}, nil
 }
@@ -203,12 +197,10 @@ func (c *PolicyService) GAIAEnrollForReporting(ctx context.Context, req *ppb.GAI
 	opts = append(opts, chrome.ExtraArgs(req.ExtraArgs))
 	opts = append(opts, chrome.CustomLoginTimeout(chrome.EnrollmentAndLoginTimeout))
 
-	cr, err := chrome.New(ctx, opts...)
-	if err != nil {
+	if err := c.newChrome(ctx, opts...); err != nil {
 		return nil, errors.Wrap(err, "failed to start chrome")
 	}
 
-	c.chrome = cr
 	return &empty.Empty{}, nil
 }
 
@@ -216,18 +208,15 @@ func (c *PolicyService) GAIAEnrollForReporting(ctx context.Context, req *ppb.GAI
 func (c *PolicyService) SAMLTestIdPEnrollUsingChrome(ctx context.Context, req *ppb.SAMLTestIdPEnrollUsingChromeRequest) (*empty.Empty, error) {
 	testing.ContextLogf(ctx, "Enrolling using Chrome with username: %s, dmserver: %s", string(req.Username), string(req.DmserverURL))
 
-	cr, err := chrome.New(
+	if err := c.newChrome(
 		ctx,
 		chrome.SAMLTestIdPEnterpriseEnroll(chrome.Creds{User: req.Username, Pass: req.Password}),
 		chrome.SkipAutoEnrollmentCheck(),
 		chrome.NoLogin(),
 		chrome.DMSPolicy(req.DmserverURL),
-	)
-	if err != nil {
+	); err != nil {
 		return nil, errors.Wrap(err, "failed to start chrome")
 	}
-
-	c.chrome = cr
 
 	return &empty.Empty{}, nil
 }
@@ -331,12 +320,9 @@ func (c *PolicyService) EnrollUsingChrome(ctx context.Context, req *ppb.EnrollUs
 	ctx, cancel := context.WithTimeout(ctx, chrome.EnrollmentAndLoginTimeout)
 	defer cancel()
 
-	cr, err := chrome.New(ctx, opts...)
-	if err != nil {
+	if err := c.newChrome(ctx, opts...); err != nil {
 		return nil, errors.Wrap(err, "failed to start chrome")
 	}
-
-	c.chrome = cr
 
 	ok = true
 
@@ -354,7 +340,7 @@ func (c *PolicyService) UpdatePolicies(ctx context.Context, req *ppb.UpdatePolic
 		return nil, errors.Wrap(err, "failed to write policy blob")
 	}
 
-	tconn, err := c.chrome.TestAPIConn(ctx)
+	tconn, err := c.sharedObject.Chrome.TestAPIConn(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create test API connection")
 	}
@@ -373,7 +359,7 @@ func (c *PolicyService) CheckChromeAndFakeDMS(ctx context.Context, req *empty.Em
 		return nil, errors.New("fake DMS server not started")
 	}
 
-	tconn, err := c.chrome.TestAPIConn(ctx)
+	tconn, err := c.sharedObject.Chrome.TestAPIConn(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create test API connection")
 	}
@@ -419,12 +405,17 @@ func (c *PolicyService) StopChromeAndFakeDMS(ctx context.Context, req *empty.Emp
 		}
 	}
 
-	if c.chrome != nil {
-		if err := c.chrome.Close(ctx); err != nil {
-			testing.ContextLog(ctx, "Failed to close chrome: ", err)
-			lastErr = errors.Wrap(err, "failed to close chrome")
-		}
-		c.chrome = nil
+	if c.sharedObject.Chrome != nil {
+		func() {
+			c.sharedObject.ChromeMutex.Lock()
+			defer c.sharedObject.ChromeMutex.Unlock()
+
+			if err := c.sharedObject.Chrome.Close(ctx); err != nil {
+				testing.ContextLog(ctx, "Failed to close chrome: ", err)
+				lastErr = errors.Wrap(err, "failed to close chrome")
+			}
+			c.sharedObject.Chrome = nil
+		}()
 	}
 
 	for _, extDir := range c.extensionDirs {
@@ -440,7 +431,7 @@ func (c *PolicyService) StopChromeAndFakeDMS(ctx context.Context, req *empty.Emp
 func (c *PolicyService) StartChrome(ctx context.Context, req *ppb.StartChromeRequest) (*empty.Empty, error) {
 	testing.ContextLogf(ctx, "Starting Chrome with policy %s", string(req.PolicyJson))
 
-	if c.chrome != nil {
+	if c.sharedObject.Chrome != nil {
 		return nil, errors.New("Chrome is already started")
 	}
 
@@ -472,12 +463,9 @@ func (c *PolicyService) StartChrome(ctx context.Context, req *ppb.StartChromeReq
 	}
 	opts = append(opts, chrome.EnableLoginVerboseLogs())
 
-	cr, err := chrome.New(ctx, opts...)
-	if err != nil {
+	if err := c.newChrome(ctx, opts...); err != nil {
 		return nil, errors.Wrap(err, "failed to start Chrome")
 	}
-
-	c.chrome = cr
 
 	return &empty.Empty{}, nil
 }
@@ -485,9 +473,12 @@ func (c *PolicyService) StartChrome(ctx context.Context, req *ppb.StartChromeReq
 func (c *PolicyService) StopChrome(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
 	var lastErr error
 
-	if c.chrome == nil {
+	if c.sharedObject.Chrome == nil {
 		return nil, errors.New("no active Chrome instance")
 	}
+
+	c.sharedObject.ChromeMutex.Lock()
+	defer c.sharedObject.ChromeMutex.Unlock()
 
 	for id, conn := range c.extensionConns {
 		if err := conn.Close(); err != nil {
@@ -497,21 +488,22 @@ func (c *PolicyService) StopChrome(ctx context.Context, req *empty.Empty) (*empt
 	}
 	c.extensionConns = make(map[string]*chrome.Conn)
 
-	if err := c.chrome.Close(ctx); err != nil {
+	if err := c.sharedObject.Chrome.Close(ctx); err != nil {
 		testing.ContextLog(ctx, "Failed to close Chrome: ", err)
 		lastErr = errors.Wrap(err, "failed to close Chrome")
 	}
-	c.chrome = nil
+
+	c.sharedObject.Chrome = nil
 
 	return &empty.Empty{}, lastErr
 }
 
 func (c *PolicyService) ContinueLogin(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
-	if c.chrome == nil {
+	if c.sharedObject.Chrome == nil {
 		return nil, errors.New("no active Chrome instance")
 	}
 
-	if err := c.chrome.ContinueLogin(ctx); err != nil {
+	if err := c.sharedObject.Chrome.ContinueLogin(ctx); err != nil {
 		return nil, errors.Wrap(err, "Chrome login failed")
 	}
 
@@ -589,7 +581,7 @@ func (c *PolicyService) connToExtension(ctx context.Context, id string) (*chrome
 	}
 
 	bgURL := chrome.ExtensionBackgroundPageURL(id)
-	conn, err := c.chrome.NewConnForTarget(ctx, chrome.MatchTargetURL(bgURL))
+	conn, err := c.sharedObject.Chrome.NewConnForTarget(ctx, chrome.MatchTargetURL(bgURL))
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to connect to extension at %s", bgURL)
 	}
@@ -634,14 +626,14 @@ func (c *PolicyService) EvalInExtension(ctx context.Context, req *ppb.EvalInExte
 }
 
 func (c *PolicyService) VerifyVisibleNotification(ctx context.Context, req *ppb.VerifyVisibleNotificationRequest) (*empty.Empty, error) {
-	if c.chrome == nil {
+	if c.sharedObject.Chrome == nil {
 		return nil, errors.New("chrome is not available")
 	}
 	if req.NotificationId == "" {
 		return nil, errors.New("request has empty notification id")
 	}
 
-	tconn, err := c.chrome.TestAPIConn(ctx)
+	tconn, err := c.sharedObject.Chrome.TestAPIConn(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create test API connection")
 	}
@@ -669,7 +661,7 @@ func (c *PolicyService) VerifyVisibleNotification(ctx context.Context, req *ppb.
 }
 
 func (c *PolicyService) EvalExpressionInChromeURL(ctx context.Context, req *ppb.EvalExpressionInChromeUrlRequest) (*empty.Empty, error) {
-	if c.chrome == nil {
+	if c.sharedObject.Chrome == nil {
 		return nil, errors.New("chrome is not available")
 	}
 	if req.Url == "" {
@@ -679,7 +671,7 @@ func (c *PolicyService) EvalExpressionInChromeURL(ctx context.Context, req *ppb.
 		return nil, errors.New("request has empty expression")
 	}
 
-	conn, err := c.chrome.NewConn(ctx, req.Url)
+	conn, err := c.sharedObject.Chrome.NewConn(ctx, req.Url)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to connect to %s", req.Url)
 	}
@@ -715,7 +707,7 @@ func (c *PolicyService) GetTimeOfDay(ctx context.Context, req *empty.Empty) (*pp
 
 // LockDevice locks the device's screen.
 func (c *PolicyService) LockDevice(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
-	tconn, err := c.chrome.TestAPIConn(ctx)
+	tconn, err := c.sharedObject.Chrome.TestAPIConn(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create test API connection")
 	}
@@ -729,7 +721,7 @@ func (c *PolicyService) LockDevice(ctx context.Context, req *empty.Empty) (*empt
 
 // UnlockDeviceWithPassword tries to unlock the lock screen with the password provided as a param.
 func (c *PolicyService) UnlockDeviceWithPassword(ctx context.Context, req *ppb.UnlockDeviceWithPasswordRequest) (*empty.Empty, error) {
-	tconn, err := c.chrome.TestAPIConn(ctx)
+	tconn, err := c.sharedObject.Chrome.TestAPIConn(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create test API connection")
 	}
@@ -752,7 +744,7 @@ func (c *PolicyService) UnlockDeviceWithPassword(ctx context.Context, req *ppb.U
 
 // Logout performs a logout on the current user session.
 func (c *PolicyService) Logout(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
-	tconn, err := c.chrome.TestAPIConn(ctx)
+	tconn, err := c.sharedObject.Chrome.TestAPIConn(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create test API connection")
 	}
@@ -761,4 +753,15 @@ func (c *PolicyService) Logout(ctx context.Context, req *empty.Empty) (*empty.Em
 	}
 
 	return &empty.Empty{}, nil
+}
+
+func (c *PolicyService) newChrome(ctx context.Context, opts ...chrome.Option) error {
+	c.sharedObject.ChromeMutex.Lock()
+	defer c.sharedObject.ChromeMutex.Unlock()
+	cr, err := chrome.New(ctx, opts...)
+	if err != nil {
+		return errors.Wrap(err, "failed to start Chrome")
+	}
+	c.sharedObject.Chrome = cr
+	return nil
 }
