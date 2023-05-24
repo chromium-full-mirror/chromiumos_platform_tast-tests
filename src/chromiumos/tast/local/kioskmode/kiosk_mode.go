@@ -603,31 +603,69 @@ func WaitForCrxInCache(ctx context.Context, id string) error {
 	}, nil)
 }
 
-// restartChromeNoCloseWithOptions replaces the current Chrome in kiosk instance
-// with a new one using custom options without closing the old one. It will be
-// closed by Kiosk.Close(). Useful when Chrome already closes itself, for
-// example when cancelling a Kiosk launch.
-func (k *Kiosk) restartChromeNoCloseWithOptions(ctx context.Context, opts ...chrome.Option) (*chrome.Chrome, error) {
+// RestartChromeWithOptions replaces the current Chrome in kiosk instance with a new one using the
+// given opts.
+func (k *Kiosk) RestartChromeWithOptions(ctx context.Context, opts ...chrome.Option) (_ *chrome.Chrome, retErr error) {
+	if err := k.cr.Close(ctx); err != nil {
+		retErr = errors.Wrap(err, "failed to close Chrome")
+	}
 	k.cr = nil
+
+	if err := k.reader.Close(); err != nil {
+		if retErr == nil {
+			retErr = errors.Wrap(err, "failed to close Chrome syslog reader for Kiosk session")
+		} else {
+			testing.ContextLog(ctx, "Failed to close Chrome syslog reader for Kiosk session: ", err)
+		}
+	}
+	k.reader = nil
+
+	if retErr != nil {
+		return nil, retErr
+	}
+
+	// Create reader before Chrome to make sure it captures all logs from the Kiosk launch.
+	reader, err := syslog.NewReader(ctx, syslog.Program("chrome"))
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to start Chrome syslog reader")
+	}
+	defer func() {
+		if retErr != nil {
+			if err := reader.Close(); err != nil {
+				testing.ContextLog(ctx, "Failed to close Chrome syslog reader for Kiosk session after error: ", err)
+			}
+		}
+	}()
 
 	cr, err := chrome.New(ctx, opts...)
 	if err != nil {
-		if err := startChromeClearPolicies(ctx, k.fdms, fixtures.Username, fixtures.Password); err != nil {
-			return nil, errors.Wrap(err, "could not finish cleanup")
-		}
 		return nil, errors.Wrap(err, "failed to start new Chrome")
 	}
+
 	k.cr = cr
-	return cr, err
+	k.reader = reader
+	return cr, nil
 }
 
-// RestartChromeWithOptions replaces the current Chrome in kiosk instance with
-// a new one using custom options. It will be closed by Kiosk.Close().
-func (k *Kiosk) RestartChromeWithOptions(ctx context.Context, opts ...chrome.Option) (*chrome.Chrome, error) {
-	if err := k.cr.Close(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed to close Chrome")
+// restartChromeNoCloseWithOptions replaces the current Chrome in this Kiosk instance with a new one
+// using the given opts without closing the old one.
+func (k *Kiosk) restartChromeNoCloseWithOptions(ctx context.Context, opts ...chrome.Option) (*chrome.Chrome, error) {
+	k.cr = nil
+	k.reader = nil
+
+	reader, err := syslog.NewReader(ctx, syslog.Program("chrome"))
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to start Chrome syslog reader")
 	}
-	return k.restartChromeNoCloseWithOptions(ctx, opts...)
+
+	cr, err := chrome.New(ctx, opts...)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to start new Chrome")
+	}
+
+	k.cr = cr
+	k.reader = reader
+	return cr, err
 }
 
 // LaunchAppManually starts the Kiosk app with given name from the Apps menu on the sign-in screen,

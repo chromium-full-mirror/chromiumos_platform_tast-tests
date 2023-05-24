@@ -21,7 +21,6 @@ import (
 	"chromiumos/tast/local/kioskmode"
 	"chromiumos/tast/local/policyutil/fixtures"
 	"chromiumos/tast/local/screenshot"
-	"chromiumos/tast/local/syslog"
 	"chromiumos/tast/local/uidetection"
 	vdiApps "chromiumos/tast/local/vdi/apps"
 	"chromiumos/tast/local/vdi/apps/citrix"
@@ -29,6 +28,13 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+)
+
+const (
+	setUpTimeout    = kioskmode.SetupDuration + kioskmode.LaunchDuration + vdiApps.VDILoginTimeout
+	resetTimeout    = chrome.ResetTimeout
+	tearDownTimeout = kioskmode.CleanupDuration + time.Minute
+	postTestTimeout = kioskmode.LaunchDuration + time.Minute
 )
 
 func init() {
@@ -48,14 +54,15 @@ func init() {
 		Vars: []string{
 			tape.ServiceAccountVar,
 			"vdi.citrix_url",
+			"ui.signinProfileTestExtensionManifestKey",
 			"uidetection.key_type",
 			"uidetection.key",
 			"uidetection.server",
 		},
-		SetUpTimeout:    chrome.EnrollmentAndLoginTimeout + vdiApps.VDILoginTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: time.Minute,
-		PostTestTimeout: time.Minute,
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: tearDownTimeout,
+		PostTestTimeout: postTestTimeout,
 		Data:            citrix.CitrixData,
 		Parent:          fixture.FakeDMSEnrolled,
 	})
@@ -68,26 +75,25 @@ func init() {
 			"cros-engprod-muc@google.com",
 		},
 		Impl: &kioskFixtureState{
-			vdiApplicationToStart: apps.Citrix,
-			vdiConnector:          &citrix.Connector{},
-			vdiServerKey:          "vdi.citrix_url",
-			useTape:               true,
-			extraPublicAccountPolicies: []policy.Policy{
-				&policy.LacrosAvailability{Val: "lacros_only"},
-			},
-			lacros: true,
+			vdiApplicationToStart:      apps.Citrix,
+			vdiConnector:               &citrix.Connector{},
+			vdiServerKey:               "vdi.citrix_url",
+			useTape:                    true,
+			extraPublicAccountPolicies: []policy.Policy{&policy.LacrosAvailability{Val: "lacros_only"}},
+			lacros:                     true,
 		},
 		Vars: []string{
 			tape.ServiceAccountVar,
 			"vdi.citrix_url",
+			"ui.signinProfileTestExtensionManifestKey",
 			"uidetection.key_type",
 			"uidetection.key",
 			"uidetection.server",
 		},
-		SetUpTimeout:    chrome.EnrollmentAndLoginTimeout + vdiApps.VDILoginTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: time.Minute,
-		PostTestTimeout: time.Minute,
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: tearDownTimeout,
+		PostTestTimeout: postTestTimeout,
 		Data:            citrix.CitrixData,
 		Parent:          fixture.FakeDMSEnrolled,
 	})
@@ -111,14 +117,15 @@ func init() {
 			"vdi.vmware_url",
 			"vdi.vmware_username",
 			"vdi.vmware_password",
+			"ui.signinProfileTestExtensionManifestKey",
 			"uidetection.key_type",
 			"uidetection.key",
 			"uidetection.server",
 		},
-		SetUpTimeout:    chrome.EnrollmentAndLoginTimeout + vdiApps.VDILoginTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: time.Minute,
-		PostTestTimeout: time.Minute,
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: tearDownTimeout,
+		PostTestTimeout: postTestTimeout,
 		Data:            vmware.VmwareData,
 		Parent:          fixture.FakeDMSEnrolled,
 	})
@@ -160,6 +167,9 @@ type kioskFixtureState struct {
 	extraPublicAccountPolicies []policy.Policy
 	// lacros is a flag indicating whether fixture implementation suppose to run Lacros.
 	lacros bool
+	// signinTestExtensionManifestKey is the manifest key of the test extension used to interact with
+	// Chrome in the sign in screen.
+	signinTestExtensionManifestKey string
 }
 
 func (v *kioskFixtureState) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -168,6 +178,7 @@ func (v *kioskFixtureState) SetUp(ctx context.Context, s *testing.FixtState) int
 		s.Fatal("Parent is not a FakeDMS fixture")
 	}
 	v.fdms = fdms
+	v.signinTestExtensionManifestKey = s.RequiredVar("ui.signinProfileTestExtensionManifestKey")
 
 	vdiAccountID := "vdi_kiosk@managedchrome.com"
 	accountType := policy.AccountTypeKioskApp
@@ -184,9 +195,14 @@ func (v *kioskFixtureState) SetUp(ctx context.Context, s *testing.FixtState) int
 		},
 	}
 
-	kiosk, cr, err := kioskmode.DeprecatedNew(
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, kioskmode.CleanupDuration)
+	defer cancel()
+
+	kiosk, cr, err := kioskmode.New(
 		ctx,
 		fdms,
+		v.signinTestExtensionManifestKey,
 		kioskmode.CustomLocalAccounts(&v.accountsConfiguration),
 		kioskmode.PublicAccountPolicies(vdiAccountID, v.extraPublicAccountPolicies),
 		kioskmode.AutoLaunch(vdiAccountID),
@@ -198,6 +214,17 @@ func (v *kioskFixtureState) SetUp(ctx context.Context, s *testing.FixtState) int
 		}
 		s.Fatal("Failed to start Chrome in kiosk mode: ", err)
 	}
+	defer func(ctx context.Context) {
+		if s.HasError() {
+			if err := kiosk.Close(ctx); err != nil {
+				s.Error("Failed to close kiosk: ", err)
+			}
+		}
+	}(cleanupCtx)
+
+	if err := kiosk.WaitLaunchLogs(ctx); err != nil {
+		s.Fatal("Failed to launch Kiosk: ", err)
+	}
 
 	if v.lacros {
 		// If we run Lacros flavor fail fast if Lacros is not up.
@@ -207,15 +234,6 @@ func (v *kioskFixtureState) SetUp(ctx context.Context, s *testing.FixtState) int
 			s.Fatal("Failed to get lacros proc: ", err)
 		}
 	}
-
-	ok = false
-	defer func(ctx context.Context) {
-		if !ok {
-			if err := kiosk.DeprecatedClose(ctx); err != nil {
-				s.Error("Failed to close kiosk: ", err)
-			}
-		}
-	}(ctx)
 
 	v.cr = cr
 	v.kiosk = kiosk
@@ -276,18 +294,20 @@ func (v *kioskFixtureState) SetUp(ctx context.Context, s *testing.FixtState) int
 	}
 
 	chrome.Lock()
-	ok = true
 	return &FixtureData{vdiConnector: v.vdiConnector, cr: cr, uidetector: detector, inKioskMode: true}
 }
 
 func (v *kioskFixtureState) TearDown(ctx context.Context, s *testing.FixtState) {
-	// Use a shortened context to reserve time for cleanup.
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	// Shorten ctx to reserve time for cleanups.
+	kioskCloseCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, kioskmode.CleanupDuration)
+	defer cancel()
+	tapeCleanupCtx := ctx
+	ctx, cancel = ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
 	if v.useTape {
-		v.tapeAccountManager.CleanUp(cleanupCtx)
+		v.tapeAccountManager.CleanUp(tapeCleanupCtx)
 	}
 
 	if err := v.vdiConnector.Logout(ctx); err != nil {
@@ -301,7 +321,7 @@ func (v *kioskFixtureState) TearDown(ctx context.Context, s *testing.FixtState) 
 		s.Error("Chrome not yet started")
 	}
 
-	if err := v.kiosk.DeprecatedClose(cleanupCtx); err != nil {
+	if err := v.kiosk.Close(kioskCloseCtx); err != nil {
 		s.Error("Failed to close kiosk: ", err)
 	}
 
@@ -333,12 +353,6 @@ func (v *kioskFixtureState) PostTest(ctx context.Context, s *testing.FixtTestSta
 		s.Fatal("Could not store policies: ", err)
 	}
 
-	reader, err := syslog.NewReader(ctx, syslog.Program("chrome"))
-	if err != nil {
-		s.Fatal("Failed to start log reader: ", err)
-	}
-	defer reader.Close()
-
 	chrome.Unlock()
 	testing.ContextLog(ctx, "VDI kiosk: Restarting VDI app")
 	cr, err := v.kiosk.RestartChromeWithOptions(
@@ -352,7 +366,7 @@ func (v *kioskFixtureState) PostTest(ctx context.Context, s *testing.FixtTestSta
 	v.cr = cr
 	chrome.Lock()
 
-	if err := kioskmode.WaitLaunchLogs(ctx, reader); err != nil {
+	if err := v.kiosk.WaitLaunchLogs(ctx); err != nil {
 		s.Fatal("Kiosk is not started after restarting Chrome: ", err)
 	}
 
