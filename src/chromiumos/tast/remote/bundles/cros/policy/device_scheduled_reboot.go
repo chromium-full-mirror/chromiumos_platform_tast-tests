@@ -26,7 +26,7 @@ func init() {
 		Func:         DeviceScheduledReboot,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Behavior of DeviceScheduledReboot policy for kiosk",
-		BugComponent: "b:259933971",
+		BugComponent: "b:1263917", // ChromeOS > Software > Commercial (Enterprise) > Testing
 		Contacts: []string{
 			"cros-policy-muc-eng@google.com",
 			"sanjaperisic@google.com", // Test author
