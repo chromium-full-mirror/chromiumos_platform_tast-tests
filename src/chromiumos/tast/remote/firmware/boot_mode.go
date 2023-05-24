@@ -93,7 +93,7 @@ const (
 
 	// SkipWaitConnect can be passed in as an option to ModeAwareReboot, skipping
 	// waiting for establish connection after resetting DUT. It is useful when
-	// systen cannot boot due to a corrupted firmware.
+	// system cannot boot due to a corrupted firmware.
 	SkipWaitConnect ModeSwitchOption = iota
 
 	// AssumeRecoveryMode cause skip checking current boot mode and assume that recovery is current boot mode.
