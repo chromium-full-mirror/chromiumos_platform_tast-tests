@@ -79,11 +79,15 @@ func init() {
 
 func ISH(ctx context.Context, s *testing.State) {
 	var flashromConfig flashrom.Config
-	flashromInstance, ctx, cleanup, _, err := flashromConfig.
+	flashromInstance, ctx, shutdown, _, err := flashromConfig.
 		FlashromInit("").
 		ProgrammerInit(flashrom.ProgrammerHost, "").
 		Probe(ctx)
-	defer cleanup()
+	defer func() {
+		if err := shutdown(); err != nil {
+			s.Error("Failed to shutdown flashromInstance: ", err)
+		}
+	}()
 
 	if err != nil {
 		s.Fatal("Failed flashrom probe, unable to build flashrom instance: ", err)

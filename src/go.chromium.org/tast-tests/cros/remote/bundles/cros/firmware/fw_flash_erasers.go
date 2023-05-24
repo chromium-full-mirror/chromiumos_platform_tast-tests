@@ -312,13 +312,17 @@ func prepareJunkImage(ctx context.Context, conn *ssh.Conn,
 func FwFlashErasers(ctx context.Context, s *testing.State) {
 	// Configure flashrom instance
 	var flashromConfig flashrom.Config
-	instance, ctx, cleanup, _, err := flashromConfig.
+	instance, ctx, shutdown, _, err := flashromConfig.
 		FlashromInit(flashrom.VerbosityInfo).
 		ProgrammerInit(flashrom.ProgrammerHost, "").
 		SetDut(s.DUT()).
 		Probe(ctx)
 
-	defer cleanup()
+	defer func() {
+		if err := shutdown(); err != nil {
+			s.Error("Failed to shutdown flashromInstance: ", err)
+		}
+	}()
 
 	if err != nil {
 		s.Fatal("Flashrom probe failed, unable to build flashrom instance: ", err)

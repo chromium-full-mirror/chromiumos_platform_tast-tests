@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // ImageSection is the name of sections supported by this package.
@@ -462,13 +463,21 @@ func (i *Image) GetLayout() []byte {
 }
 
 // SetAPSoftwareWriteProtect sets write protect using flashrom.
-func SetAPSoftwareWriteProtect(ctx context.Context, enable bool) error {
+func SetAPSoftwareWriteProtect(ctx context.Context, enable bool) (retErr error) {
 	var flashromConfig flashrom.Config
-	flashromInstance, ctx, cleanup, _, err := flashromConfig.
+	flashromInstance, ctx, shutdown, _, err := flashromConfig.
 		FlashromInit("").
 		ProgrammerInit(flashrom.ProgrammerHost, "").
 		Probe(ctx)
-	defer cleanup()
+	defer func() {
+		if err := shutdown(); err != nil {
+			if retErr == nil {
+				retErr = errors.Wrap(err, "failed to shutdown flashromInstance")
+			} else {
+				testing.ContextLog(ctx, "Failed to shutdown flashromInstance: ", err)
+			}
+		}
+	}()
 	if err != nil {
 		return errors.Wrap(err, "flashrom probe failed, unable to build flashrom instance")
 	}

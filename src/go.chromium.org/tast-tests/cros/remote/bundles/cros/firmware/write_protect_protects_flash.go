@@ -67,12 +67,16 @@ func WriteProtectProtectsFlash(ctx context.Context, s *testing.State) {
 	}
 
 	var flashromConfig flashrom.Config
-	flash, ctx, cleanup, _, err := flashromConfig.
+	flash, ctx, shutdown, _, err := flashromConfig.
 		FlashromInit(flashrom.VerbosityDebug).
 		ProgrammerInit(flashrom.ProgrammerHost, "").
 		SetDut(h.DUT).
 		Probe(ctx)
-	defer cleanup()
+	defer func() {
+		if err := shutdown(); err != nil {
+			s.Error("Failed to shutdown flashromInstance: ", err)
+		}
+	}()
 
 	if err != nil {
 		s.Fatal("Flashrom probe failed, unable to build flashrom instance: ", err)

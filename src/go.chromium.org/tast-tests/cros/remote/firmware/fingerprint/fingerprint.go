@@ -433,7 +433,7 @@ func FlashFirmware(ctx context.Context, d *rpcdut.RPCDUT, fpFirmwarePath string,
 
 // FlashRWFirmware flashes the specified firmwareFile as the RW image on the FPMCU.
 // It does not modify the RO image.
-func FlashRWFirmware(ctx context.Context, d *rpcdut.RPCDUT, firmwareFile string) error {
+func FlashRWFirmware(ctx context.Context, d *rpcdut.RPCDUT, firmwareFile string) (retErr error) {
 	fs := dutfs.NewClient(d.RPC().Conn)
 	exists, err := fs.Exists(ctx, firmwareFile)
 	if err != nil {
@@ -444,12 +444,20 @@ func FlashRWFirmware(ctx context.Context, d *rpcdut.RPCDUT, firmwareFile string)
 	}
 
 	var flashromConfig flashrom.Config
-	flashromInstance, ctx, cleanup, _, err := flashromConfig.
+	flashromInstance, ctx, shutdown, _, err := flashromConfig.
 		FlashromInit(flashrom.VerbosityDebug).
 		ProgrammerInit(flashrom.ProgrammerEc, "type=fp").
 		SetDut(d.DUT()).
 		Probe(ctx)
-	defer cleanup()
+	defer func() {
+		if err := shutdown(); err != nil {
+			if retErr == nil {
+				retErr = errors.Wrap(err, "failed to shutdown flashromInstance")
+			} else {
+				testing.ContextLog(ctx, "Failed to shutdown flashromInstance: ", err)
+			}
+		}
+	}()
 	if err != nil {
 		return errors.Wrap(err, "flashrom probe failed, unable to build flashrom instance")
 	}

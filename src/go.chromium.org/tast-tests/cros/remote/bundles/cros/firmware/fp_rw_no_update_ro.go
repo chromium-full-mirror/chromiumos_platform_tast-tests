@@ -80,12 +80,16 @@ func FpRWNoUpdateRO(ctx context.Context, s *testing.State) {
 	s.Log("Flashing RO firmware (expected to fail)")
 
 	var flashromConfig flashrom.Config
-	flashromInstance, ctx, cleanup, _, err := flashromConfig.
+	flashromInstance, ctx, shutdown, _, err := flashromConfig.
 		FlashromInit(flashrom.VerbosityDebug).
 		ProgrammerInit(flashrom.ProgrammerEc, "type=fp").
 		SetDut(d.DUT()).
 		Probe(ctx)
-	defer cleanup()
+	defer func() {
+		if err := shutdown(); err != nil {
+			s.Error("Failed to shutdown flashromInstance: ", err)
+		}
+	}()
 
 	if err != nil {
 		s.Fatal("Flashrom probe failed, unable to build flashrom instance: ", err)

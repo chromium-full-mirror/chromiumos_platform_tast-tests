@@ -41,12 +41,16 @@ func FWROMSize(ctx context.Context, s *testing.State) {
 	h := s.FixtValue().(*fixture.Value).Helper
 
 	var flashromConfig flashrom.Config
-	flashromHost, ctx, cleanup, _, err := flashromConfig.
+	flashromHost, ctx, shutdown, _, err := flashromConfig.
 		FlashromInit(flashrom.VerbosityInfo).
 		ProgrammerInit(flashrom.ProgrammerHost, "").
 		SetDut(h.DUT).
 		Probe(ctx)
-	defer cleanup()
+	defer func() {
+		if err := shutdown(); err != nil {
+			s.Error("Failed to shutdown flashromInstance: ", err)
+		}
+	}()
 	if err != nil {
 		s.Fatal("Flashrom probe failed, unable to build host flashrom instance: ", err)
 	}
@@ -56,12 +60,16 @@ func FWROMSize(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to determine AP firmware size: ", err)
 	}
 
-	flashromEc, ctx, cleanup, _, err := flashromConfig.
+	flashromEc, ctx, shutdown, _, err := flashromConfig.
 		FlashromInit(flashrom.VerbosityInfo).
 		ProgrammerInit(flashrom.ProgrammerEc, "").
 		SetDut(h.DUT).
 		Probe(ctx)
-	defer cleanup()
+	defer func() {
+		if err := shutdown(); err != nil {
+			s.Error("Failed to shutdown flashromInstance: ", err)
+		}
+	}()
 	if err != nil {
 		s.Fatal("Flashrom probe failed, unable to build ec flashrom instance: ", err)
 	}

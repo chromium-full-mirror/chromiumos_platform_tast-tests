@@ -259,14 +259,22 @@ func testReadWrite(ctx context.Context, h *firmware.Helper, target wpTarget) (re
 	return nil
 }
 
-func setWriteProtect(ctx context.Context, h *firmware.Helper, target wpTarget, enable bool) error {
+func setWriteProtect(ctx context.Context, h *firmware.Helper, target wpTarget, enable bool) (retErr error) {
 	var flashromConfig flashrom.Config
-	flash, ctx, cleanup, _, err := flashromConfig.
+	flash, ctx, shutdown, _, err := flashromConfig.
 		FlashromInit(flashrom.VerbosityDebug).
 		ProgrammerInit(flashrom.ProgrammerHost, "").
 		SetDut(h.DUT).
 		Probe(ctx)
-	defer cleanup()
+	defer func() {
+		if err := shutdown(); err != nil {
+			if retErr == nil {
+				retErr = errors.Wrap(err, "failed to shutdown flashromInstance")
+			} else {
+				testing.ContextLog(ctx, "Failed to shutdown flashromInstance: ", err)
+			}
+		}
+	}()
 	if err != nil {
 		return errors.Wrap(err, "flashrom probe failed, unable to build flashrom instance")
 	}

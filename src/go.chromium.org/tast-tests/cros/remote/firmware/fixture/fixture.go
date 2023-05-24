@@ -384,13 +384,17 @@ func (i *impl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 			}
 
 			var flashromConfig flashrom.Config
-			flashromInstance, ctx, cleanup, _, err := flashromConfig.
+			flashromInstance, ctx, shutdown, _, err := flashromConfig.
 				FlashromInit(flashrom.VerbosityInfo).
 				ProgrammerInit(flashrom.ProgrammerHost, "").
 				SetDut(i.value.Helper.DUT).
 				Probe(ctx)
 
-			defer cleanup()
+			defer func() {
+				if err := shutdown(); err != nil {
+					s.Error("Failed to shutdown flashromInstance: ", err)
+				}
+			}()
 
 			if err != nil {
 				s.Fatal("Flashrom probe failed, unable to build flashrom instance: ", err)

@@ -112,13 +112,21 @@ var updateModeEnumtoMode = map[pb.UpdateMode]bios.FirmwareUpdateMode{
 }
 
 // BackupImageSection dumps the image region into temporary file locally and returns its path.
-func (*BiosService) BackupImageSection(ctx context.Context, req *pb.FWSectionInfo) (*pb.FWSectionInfo, error) {
+func (*BiosService) BackupImageSection(ctx context.Context, req *pb.FWSectionInfo) (ret *pb.FWSectionInfo, retErr error) {
 	var flashromConfig flashrom.Config
-	flashromInstance, ctx, cleanup, _, err := flashromConfig.
+	flashromInstance, ctx, shutdown, _, err := flashromConfig.
 		FlashromInit("").
 		ProgrammerInit(programmerEnumToProgrammer[req.Programmer], "").
 		Probe(ctx)
-	defer cleanup()
+	defer func() {
+		if err := shutdown(); err != nil {
+			if retErr == nil {
+				retErr = errors.Wrap(err, "failed to shutdown flashromInstance")
+			} else {
+				testing.ContextLog(ctx, "Failed to shutdown flashromInstance: ", err)
+			}
+		}
+	}()
 
 	if err != nil {
 		return nil, errors.Wrap(err, "flashrom probe failed, unable to build flashrom instance")
@@ -132,13 +140,21 @@ func (*BiosService) BackupImageSection(ctx context.Context, req *pb.FWSectionInf
 }
 
 // RestoreImageSection restores image region from temporary file locally and restores fw with it.
-func (bs *BiosService) RestoreImageSection(ctx context.Context, req *pb.FWSectionInfo) (*empty.Empty, error) {
+func (bs *BiosService) RestoreImageSection(ctx context.Context, req *pb.FWSectionInfo) (ret *empty.Empty, retErr error) {
 	var flashromConfig flashrom.Config
-	flashromInstance, ctx, cleanup, _, err := flashromConfig.
+	flashromInstance, ctx, shutdown, _, err := flashromConfig.
 		FlashromInit("").
 		ProgrammerInit(programmerEnumToProgrammer[req.Programmer], "").
 		Probe(ctx)
-	defer cleanup()
+	defer func() {
+		if err := shutdown(); err != nil {
+			if retErr == nil {
+				retErr = errors.Wrap(err, "failed to shutdown flashromInstance")
+			} else {
+				testing.ContextLog(ctx, "Failed to shutdown flashromInstance: ", err)
+			}
+		}
+	}()
 
 	if err != nil {
 		return nil, errors.Wrap(err, "flashrom probe failed, unable to build flashrom instance")
@@ -190,13 +206,21 @@ func copyAndFlash(ctx context.Context, img *bios.Image, req *pb.FWSectionInfo, f
 
 // CorruptFWSection writes garbage over part of the specified firmware section.
 // Provide a dir to save corrupted image in the request, else temp image file will be cleaned up.
-func (bs *BiosService) CorruptFWSection(ctx context.Context, req *pb.FWSectionInfo) (*pb.FWSectionInfo, error) {
+func (bs *BiosService) CorruptFWSection(ctx context.Context, req *pb.FWSectionInfo) (ret *pb.FWSectionInfo, retErr error) {
 	var flashromConfig flashrom.Config
-	flashromInstance, ctx, cleanup, _, err := flashromConfig.
+	flashromInstance, ctx, shutdown, _, err := flashromConfig.
 		FlashromInit("").
 		ProgrammerInit(programmerEnumToProgrammer[req.Programmer], "").
 		Probe(ctx)
-	defer cleanup()
+	defer func() {
+		if err := shutdown(); err != nil {
+			if retErr == nil {
+				retErr = errors.Wrap(err, "failed to shutdown flashromInstance")
+			} else {
+				testing.ContextLog(ctx, "Failed to shutdown flashromInstance: ", err)
+			}
+		}
+	}()
 
 	if err != nil {
 		return nil, errors.Wrap(err, "flashrom probe failed, unable to build flashrom instance")
@@ -214,13 +238,21 @@ func (bs *BiosService) CorruptFWSection(ctx context.Context, req *pb.FWSectionIn
 }
 
 // WriteImageFromMultiSectionFile writes the provided multi section file in the specified section.
-func (bs *BiosService) WriteImageFromMultiSectionFile(ctx context.Context, req *pb.FWSectionInfo) (*empty.Empty, error) {
+func (bs *BiosService) WriteImageFromMultiSectionFile(ctx context.Context, req *pb.FWSectionInfo) (ret *empty.Empty, retErr error) {
 	var flashromConfig flashrom.Config
-	flashromInstance, ctx, cleanup, _, err := flashromConfig.
+	flashromInstance, ctx, shutdown, _, err := flashromConfig.
 		FlashromInit("").
 		ProgrammerInit(programmerEnumToProgrammer[req.Programmer], "").
 		Probe(ctx)
-	defer cleanup()
+	defer func() {
+		if err := shutdown(); err != nil {
+			if retErr == nil {
+				retErr = errors.Wrap(err, "failed to shutdown flashromInstance")
+			} else {
+				testing.ContextLog(ctx, "Failed to shutdown flashromInstance: ", err)
+			}
+		}
+	}()
 
 	if err != nil {
 		return nil, errors.Wrap(err, "flashrom probe failed, unable to build flashrom instance")
@@ -247,13 +279,21 @@ func (*BiosService) ChromeosFirmwareUpdate(ctx context.Context, req *pb.Firmware
 	return &empty.Empty{}, nil
 }
 
-func (bs *BiosService) ParseFMAP(ctx context.Context, req *pb.FMAP) (*pb.FMAP, error) {
+func (bs *BiosService) ParseFMAP(ctx context.Context, req *pb.FMAP) (ret *pb.FMAP, retErr error) {
 	var flashromConfig flashrom.Config
-	flashromInstance, ctx, cleanup, _, err := flashromConfig.
+	flashromInstance, ctx, shutdown, _, err := flashromConfig.
 		FlashromInit("").
 		ProgrammerInit(programmerEnumToProgrammer[req.Programmer], "").
 		Probe(ctx)
-	defer cleanup()
+	defer func() {
+		if err := shutdown(); err != nil {
+			if retErr == nil {
+				retErr = errors.Wrap(err, "failed to shutdown flashromInstance")
+			} else {
+				testing.ContextLog(ctx, "Failed to shutdown flashromInstance: ", err)
+			}
+		}
+	}()
 
 	if err != nil {
 		return nil, errors.Wrap(err, "flashrom probe failed, unable to build flashrom instance")
@@ -269,17 +309,25 @@ func (bs *BiosService) ParseFMAP(ctx context.Context, req *pb.FMAP) (*pb.FMAP, e
 
 // CorruptCBFSFWSection corrupts CBFS file in the specified way and in specified section.
 // Provide a dir to save corrupted image in the request, else temp image file will be cleaned up.
-func (bs *BiosService) CorruptCBFSFWSection(ctx context.Context, req *pb.CBFSCorruptInfo) (*pb.FWSectionInfo, error) {
+func (bs *BiosService) CorruptCBFSFWSection(ctx context.Context, req *pb.CBFSCorruptInfo) (ret *pb.FWSectionInfo, retErr error) {
 	if req.Type == pb.CBFSCorruptType_NONE {
 		return nil, errors.New("NONE corruption type is not allowed")
 	}
 
 	var flashromConfig flashrom.Config
-	flashromInstance, ctx, cleanup, _, err := flashromConfig.
+	flashromInstance, ctx, shutdown, _, err := flashromConfig.
 		FlashromInit("").
 		ProgrammerInit(programmerEnumToProgrammer[req.SectionInfo.Programmer], "").
 		Probe(ctx)
-	defer cleanup()
+	defer func() {
+		if err := shutdown(); err != nil {
+			if retErr == nil {
+				retErr = errors.Wrap(err, "failed to shutdown flashromInstance")
+			} else {
+				testing.ContextLog(ctx, "Failed to shutdown flashromInstance: ", err)
+			}
+		}
+	}()
 
 	if err != nil {
 		return nil, errors.Wrap(err, "flashrom probe failed, unable to build flashrom instance")

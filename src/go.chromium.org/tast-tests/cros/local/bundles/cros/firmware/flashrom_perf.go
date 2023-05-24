@@ -108,14 +108,18 @@ func testFlashromReadTime(ctx context.Context, s *testing.State, regions []strin
 	defer os.Remove(opTempFile.Name())
 
 	var flashromConfig flashrom.Config
-	flashromInstance, ctx, cleanup, _, err := flashromConfig.
+	flashromInstance, ctx, shutdown, _, err := flashromConfig.
 		FlashromInit(flashrom.VerbosityInfo).
 		ProgrammerInit(flashrom.ProgrammerHost, "").
 		Probe(ctx)
 
 	// Full shutdown is a symmetric operation to FlashromInit and needs to be called
 	// regardless of whether err is nil (to do a cleanup).
-	defer cleanup()
+	defer func() {
+		if err := shutdown(); err != nil {
+			s.Error("Failed to shutdown flashromInstance: ", err)
+		}
+	}()
 
 	if err != nil {
 		s.Fatal("Flashrom probe failed, unable to build flashrom instance: ", err)

@@ -32,12 +32,16 @@ func FlashromWriteProtect(ctx context.Context, s *testing.State) {
 	// to check the flash IC is supported
 
 	var flashromConfig flashrom.Config
-	flashromInstance, ctx, cleanup, out, err := flashromConfig.
+	flashromInstance, ctx, shutdown, out, err := flashromConfig.
 		FlashromInit(flashrom.VerbosityInfo).
 		ProgrammerInit(flashrom.ProgrammerHost, "").
 		Probe(ctx)
 
-	defer cleanup()
+	defer func() {
+		if err := shutdown(); err != nil {
+			s.Error("Failed to shutdown flashromInstance: ", err)
+		}
+	}()
 
 	if err != nil {
 		s.Fatal("Flashrom probe failed, unable to build flashrom instance: ", err)

@@ -35,12 +35,16 @@ func Flashrom(ctx context.Context, s *testing.State) {
 	// This test intentionally avoids SPI ROM read and write operations, so as not
 	// to stress devices-under-test.
 	var flashromConfig flashrom.Config
-	_, ctx, cleanup, out, err := flashromConfig.
+	_, ctx, shutdown, out, err := flashromConfig.
 		FlashromInit(flashrom.VerbosityDebug).
 		ProgrammerInit(flashrom.ProgrammerHost, "").
 		Probe(ctx)
 
-	defer cleanup()
+	defer func() {
+		if err := shutdown(); err != nil {
+			s.Error("Failed to shutdown flashromInstance: ", err)
+		}
+	}()
 
 	if err != nil {
 		path := filepath.Join(s.OutDir(), "flashrom.txt")

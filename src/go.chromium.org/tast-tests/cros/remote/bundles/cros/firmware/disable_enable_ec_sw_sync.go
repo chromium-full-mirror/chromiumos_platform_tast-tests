@@ -208,16 +208,24 @@ func checkECVersion(ctx context.Context, dut *dut.DUT) (string, string, error) {
 }
 
 // flashEC flashes DUT using flashrom.
-func flashEC(ctx context.Context, dut *dut.DUT, imagePath string) error {
+func flashEC(ctx context.Context, dut *dut.DUT, imagePath string) (retErr error) {
 	testing.ContextLogf(ctx, "Writing image from file %s", imagePath)
 
 	var flashromConfig flashrom.Config
-	flashromInstance, ctx, cleanup, _, err := flashromConfig.
+	flashromInstance, ctx, shutdown, _, err := flashromConfig.
 		FlashromInit(flashrom.VerbosityInfo).
 		ProgrammerInit(flashrom.ProgrammerEc, "").
 		SetDut(dut).
 		Probe(ctx)
-	defer cleanup()
+	defer func() {
+		if err := shutdown(); err != nil {
+			if retErr == nil {
+				retErr = errors.Wrap(err, "failed to shutdown flashromInstance")
+			} else {
+				testing.ContextLog(ctx, "Failed to shutdown flashromInstance: ", err)
+			}
+		}
+	}()
 	if err != nil {
 		errors.Wrap(err, "flashrom probe failed, unable to build flashrom instance")
 	}

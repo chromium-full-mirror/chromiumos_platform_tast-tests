@@ -236,12 +236,16 @@ func BootBatteryCutoff(ctx context.Context, s *testing.State) {
 	// Enable write protections before battery cutoff.
 	for _, programmer := range []flashrom.Programmer{flashrom.ProgrammerEc, flashrom.ProgrammerHost} {
 		var flashromConfig flashrom.Config
-		flashromInstance, ctx, cleanup, _, err := flashromConfig.
+		flashromInstance, ctx, shutdown, _, err := flashromConfig.
 			FlashromInit("").
 			ProgrammerInit(programmer, "").
 			SetDut(s.DUT()).
 			Probe(ctx)
-		defer cleanup()
+		defer func() {
+			if err := shutdown(); err != nil {
+				s.Error("Failed to shutdown flashromInstance: ", err)
+			}
+		}()
 		if err != nil {
 			s.Fatal("Flashrom probe failed, unable to build flashrom instance: ", err)
 		}
@@ -381,14 +385,22 @@ func wakeDUTS0(ctx context.Context, h *firmware.Helper) error {
 // verifyECSoftwareWPStatus checks that the ec write protection status is the
 // expected value using flashrom. Some DUTs, such as Nautilus and Nautiluslte,
 // failed the ectool command, but their wp status from flashrom showed otherwise.
-func verifyECSoftwareWPStatus(ctx context.Context, s *testing.State, expected bool) error {
+func verifyECSoftwareWPStatus(ctx context.Context, s *testing.State, expected bool) (retErr error) {
 	var flashromConfig flashrom.Config
-	flashromInstance, ctx, cleanup, _, err := flashromConfig.
+	flashromInstance, ctx, shutdown, _, err := flashromConfig.
 		FlashromInit("").
 		ProgrammerInit(flashrom.ProgrammerEc, "").
 		SetDut(s.DUT()).
 		Probe(ctx)
-	defer cleanup()
+	defer func() {
+		if err := shutdown(); err != nil {
+			if retErr == nil {
+				retErr = errors.Wrap(err, "failed to shutdown flashromInstance")
+			} else {
+				testing.ContextLog(ctx, "Failed to shutdown flashromInstance: ", err)
+			}
+		}
+	}()
 	if err != nil {
 		return errors.Wrap(err, "flashrom probe failed, unable to build flashrom instance")
 	}

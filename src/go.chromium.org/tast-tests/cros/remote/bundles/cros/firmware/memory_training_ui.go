@@ -54,12 +54,16 @@ func MemoryTrainingUI(ctx context.Context, s *testing.State) {
 
 	s.Log("Clearing MRC cache")
 	var flashromConfig flashrom.Config
-	flashromInstance, ctx, cleanup, _, err := flashromConfig.
+	flashromInstance, ctx, shutdown, _, err := flashromConfig.
 		FlashromInit("").
 		ProgrammerInit(flashrom.ProgrammerHost, "").
 		SetDut(dut).
 		Probe(ctx)
-	defer cleanup()
+	defer func() {
+		if err := shutdown(); err != nil {
+			s.Error("Failed to shutdown flashromInstance: ", err)
+		}
+	}()
 	if err != nil {
 		s.Fatal("Flashrom probe failed, unable to build flashrom instance: ", err)
 	}

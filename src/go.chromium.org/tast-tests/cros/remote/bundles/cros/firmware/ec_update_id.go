@@ -238,18 +238,26 @@ func testCorruptActiveSectionAndReboot(ctx context.Context, h *firmware.Helper, 
 	return activeCopy, nil
 }
 
-func corruptSection(ctx context.Context, h *firmware.Helper, section string) error {
+func corruptSection(ctx context.Context, h *firmware.Helper, section string) (retErr error) {
 	// Temp file to hold current and later corrupted image section.
 	sectionPath := filepath.Join(tmpUpdateIDDir, fmt.Sprintf("img_%d", time.Now().Unix()))
 	testing.ContextLog(ctx, "Read WP_RO section to file ", sectionPath)
 
 	var flashromConfig flashrom.Config
-	flashromInstance, ctx, cleanup, _, err := flashromConfig.
+	flashromInstance, ctx, shutdown, _, err := flashromConfig.
 		FlashromInit(flashrom.VerbosityInfo).
 		ProgrammerInit(flashrom.ProgrammerEc, "").
 		SetDut(h.DUT).
 		Probe(ctx)
-	defer cleanup()
+	defer func() {
+		if err := shutdown(); err != nil {
+			if retErr == nil {
+				retErr = errors.Wrap(err, "failed to shutdown flashromInstance")
+			} else {
+				testing.ContextLog(ctx, "Failed to shutdown flashromInstance: ", err)
+			}
+		}
+	}()
 	if err != nil {
 		errors.Wrap(err, "flashrom probe failed, unable to build flashrom instance")
 	}

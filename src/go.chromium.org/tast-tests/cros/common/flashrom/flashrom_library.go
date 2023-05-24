@@ -14,17 +14,23 @@ and probe the chip. Probe() method returns Instance which is ready to use.
 
 Sample usage:
 
-var flashromConfig flashrom.Config
-flashromInstance, ctx, fullShutdown, out, err := flashromConfig.
+	var flashromConfig flashrom.Config
+	flashromInstance, ctx, fullShutdown, out, err := flashromConfig.
+		FlashromInit(flashrom.VerbosityDebug).
+		ProgrammerInit(flashrom.ProgrammerHost, "").
+		SetDut(s.DUT).
+		Probe(ctx)
 
-	FlashromInit(flashrom.VerbosityDebug).
-	ProgrammerInit(flashrom.ProgrammerHost, "").
-	SetDut(s.DUT).
-	Probe(ctx)
+	defer func() {
+		if err := fullShutdown(); err != nil {
+			s.Error("Failed to shutdown flashromInstance: ", err)
+		}
+	}()
+	if err != nil {
+		s.Error("Failed to probe flashrom instance: ", err)
+	}
 
-defer fullShutdown()
-
-retCode, err := instance.Read(ctx, "tmp/dump.bin")
+	retCode, err := instance.Read(ctx, "tmp/dump.bin")
 */
 package flashrom
 
@@ -277,12 +283,13 @@ func (c *Config) isReady() error {
 //
 // ctx, func and []byte are always returned, even in the case of error, and func must always be called.
 // Instance is only returned when error = nil.
-func (c *Config) Probe(ctx context.Context) (*Instance, context.Context, func(), []byte, error) {
+func (c *Config) Probe(ctx context.Context) (*Instance, context.Context, func() error, []byte, error) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	shutdown := func() {
-		c.fullShutdown(cleanupCtx)
+	shutdown := func() error {
+		err := c.fullShutdown(cleanupCtx)
 		cancel()
+		return err
 	}
 
 	if err := c.isReady(); err != nil {

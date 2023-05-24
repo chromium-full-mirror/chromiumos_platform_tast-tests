@@ -62,12 +62,16 @@ func FlashromTester(ctx context.Context, s *testing.State) {
 	}
 
 	var flashromConfig flashrom.Config
-	flash, ctx, cleanup, _, err := flashromConfig.
+	flash, ctx, shutdown, _, err := flashromConfig.
 		FlashromInit(flashrom.VerbosityDebug).
 		ProgrammerInit(flashrom.ProgrammerHost, "").
 		SetDut(h.DUT).
 		Probe(ctx)
-	defer cleanup()
+	defer func() {
+		if err := shutdown(); err != nil {
+			s.Error("Failed to shutdown flashromInstance: ", err)
+		}
+	}()
 
 	ctx, restore, _, err := utils.BackupAndRestoreAPFirmwareAndWriteProtect(ctx, h.DUT, h.Servo, flash)
 	if err != nil {
