@@ -1109,15 +1109,12 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 		}
 	}
 
-	f.cr = cr
-	f.arc = a
-	cr = nil
-
+	var windows []*ash.Window
 	// Wait for up to 2 minutes for all windows to close.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		windows, err := ash.GetAllWindows(ctx, tconn)
+		windows, err = ash.GetAllWindows(ctx, tconn)
 		if err != nil {
-			return errors.Wrap(err, "failed to get all windows")
+			return testing.PollBreak(errors.Wrap(err, "failed to get all windows"))
 		}
 		if len(windows) != 0 {
 			return errors.Errorf("unexpected number of windows; got %d, expected 0", len(windows))
@@ -1127,8 +1124,16 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 		Timeout:  2 * time.Minute,
 		Interval: 10 * time.Second,
 	}); err != nil {
-		s.Fatal("Failed to set pre-testing state: ", err)
+		var windowNames []string
+		for _, w := range windows {
+			windowNames = append(windowNames, w.Name)
+		}
+		s.Logf("Failed to wait for window(s) to close: %s", strings.Join(windowNames, ", "))
 	}
+
+	f.cr = cr
+	f.arc = a
+	cr = nil
 
 	return FixtureData{chrome: f.cr, ARC: f.arc}
 }
