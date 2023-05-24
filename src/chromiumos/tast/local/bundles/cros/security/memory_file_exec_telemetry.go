@@ -6,12 +6,15 @@ package security
 
 import (
 	"context"
+	"os"
+	"path/filepath"
 	"time"
 
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/metrics"
 	"chromiumos/tast/local/upstart"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/shutil"
@@ -77,7 +80,7 @@ func MemoryFileExecTelemetry(ctx context.Context, s *testing.State) {
 		s.Error("Could not truncate existing metrics files: ", err)
 	}
 
-	// Create a new chrome user session.
+	// Create a new Chrome user session.
 	cr, err := chrome.New(ctx)
 	if err != nil {
 		s.Fatal("Chrome login failed: ", err)
@@ -115,6 +118,15 @@ func MemoryFileExecTelemetry(ctx context.Context, s *testing.State) {
 	if err := cmd.Run(testexec.DumpLogOnError); err != nil {
 		s.Fatalf("%q failed: %v", shutil.EscapeSlice(cmd.Args), err)
 	}
+	// The blockage will generate a crash report. Defer cleanup of the crash.
+	defer func() {
+		matches, _ := filepath.Glob("/var/spool/crash/security_anomaly.*")
+
+		for _, match := range matches {
+			s.Logf("Removing %q", match)
+			os.Remove(match)
+		}
+	}()
 
 	// We can't use metrics.WaitForHistogramUpdate because other buckets in
 	// ChromeOS.SecurityAnomaly can be updated by other anomalous events in
@@ -147,6 +159,6 @@ func MemoryFileExecTelemetry(ctx context.Context, s *testing.State) {
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: umaTimeout}); err != nil {
-		s.Error("Failed when looking for expected Histogram diffs: ", err)
+		s.Error("Failed when looking for expected histogram diffs: ", err)
 	}
 }
