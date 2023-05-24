@@ -58,7 +58,8 @@ func init() {
 		Attr:         []string{"group:firmware", "firmware_unstable", "firmware_detachable"},
 		SoftwareDeps: []string{"crossystem"},
 		Fixture:      fixture.NormalMode,
-		// To-do: Find a way to preserve firmware logs on soraka and nocturne.
+		// Preserving the firmware log on Soraka and Nocturne requires modifying Kconfig
+		// under coreboot. Skip because they will soon become EOF devices.
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.FormFactor(hwdep.Detachable), hwdep.SkipOnModel("soraka", "nocturne")),
 		Timeout:      30 * time.Minute,
 	})
@@ -183,10 +184,6 @@ func DetachableInsertOptScreens(ctx context.Context, s *testing.State) {
 			if err := pressBtnOnFWScreen(ctx, h, key); err != nil {
 				s.Fatal("Failed to press: ", err)
 			}
-			// GoBigSleepLint: Simulate a specific speed of button presses.
-			if err := testing.Sleep(ctx, 5*time.Second); err != nil {
-				s.Fatal("Failed to sleep: ", err)
-			}
 		}
 
 		for _, fnc := range tc.steps[h.Board] {
@@ -239,6 +236,10 @@ func pressBtnOnFWScreen(ctx context.Context, h *firmware.Helper, key testKeys) e
 	}
 	if err != nil {
 		return errors.Wrapf(err, "failed to press %v", key)
+	}
+	// GoBigSleepLint: Simulate a specific speed of button presses.
+	if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
+		return errors.Wrap(err, "failed to sleep between button presses")
 	}
 	return nil
 }
