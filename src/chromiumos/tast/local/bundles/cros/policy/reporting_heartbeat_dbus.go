@@ -61,6 +61,16 @@ func ReportingHeartbeatDbus(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create chrome instance: ", err)
 	}
 
+	testing.ContextLog(ctx,
+		"Sleeping for 15 secs")
+	// GoBigSleepLint: Sleep for 15 seconds to allow time for events to be
+	// generated and reported.
+	// TODO(b/278252387): Convert this to poll when tast's
+	// dbusutil.DbusEventMonitor supports it.
+	if err := testing.Sleep(ctx, 15*time.Second); err != nil {
+		s.Fatal("Failed to sleep: ", err)
+	}
+
 	enqueuedEvents, err := mon()
 	if err != nil {
 		s.Fatal("Failed to capture dbus calls to missive: ", err)
