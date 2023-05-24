@@ -139,13 +139,11 @@ func RunDiagRoutine(ctx context.Context, params RoutineParams) (*RoutineResult, 
 		// 15000 KiB runs for about 3 seconds on a volteer machine
 		diagParams = append(diagParams, "--max_testing_mem_kib=15000")
 	} else if params.Routine == RoutineCPUCache || params.Routine == RoutineCPUStress ||
-		params.Routine == RoutineFloatingPointAccurary || params.Routine == RoutinePrimeSearch {
+		params.Routine == RoutineFloatingPointAccurary || params.Routine == RoutinePrimeSearch ||
+		params.Routine == RoutineURandom {
 		// Run routine for 1 second to verify it doesn't crash. These routines
-		// share the same command line argument `--cpu_stress_length_seconds`.
-		diagParams = append(diagParams, "--cpu_stress_length_seconds=1")
-	} else if params.Routine == RoutineURandom {
-		// Run routine for 1 second to verify it doesn't crash.
-		diagParams = append(diagParams, "--urandom_length_seconds=1")
+		// share the same command line argument `--length_seconds`.
+		diagParams = append(diagParams, "--length_seconds=1")
 	} else if params.Routine == RoutineDiskRead {
 		diagParams = append(diagParams, "--length_seconds=1")
 		diagParams = append(diagParams, "--file_size_mb=64")
