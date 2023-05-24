@@ -14,6 +14,8 @@ import (
 	"chromiumos/tast/local/audio/crastestclient"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/lacros"
+	"chromiumos/tast/local/chrome/uiauto/quicksettings"
+
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -26,7 +28,7 @@ func init() {
 		BugComponent: "crbug:OS>LaCrOS",
 		Attr:         []string{"group:mainline", "group:audio"},
 		SoftwareDeps: []string{"chrome", "lacros"},
-		Fixture:      "lacrosAudio",
+		Fixture:      "lacrosAudioQsRevampEnabled",
 		Timeout:      7 * time.Minute, // A lenient limit for launching Lacros Chrome.
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"lacros_stable"},
@@ -40,6 +42,9 @@ func init() {
 }
 
 func AudioRecord(ctx context.Context, s *testing.State) {
+	cleanup := quicksettings.SetQsRevampEnabled(true)
+	defer cleanup()
+
 	chrome := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	// Load ALSA loopback module.

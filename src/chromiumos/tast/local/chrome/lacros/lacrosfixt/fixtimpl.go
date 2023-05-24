@@ -10,6 +10,7 @@ import (
 
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/lacros"
+
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -94,14 +95,15 @@ func init() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 
-	// lacrosAudio is the same as lacros but has some special flags for audio
-	// tests.
+	// lacrosAudioQsRevampEnabled is the same as lacros but has some special flags for audio
+	// tests. "QsRevamp" is enabled to access the new audio controls in quick settings.
 	testing.AddFixture(&testing.Fixture{
-		Name:     "lacrosAudio",
+		Name:     "lacrosAudioQsRevampEnabled",
 		Desc:     "Lacros Chrome from a pre-built image with camera/microphone permissions",
 		Contacts: []string{"hidehiko@chromium.org", "edcourtney@chromium.org"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return NewConfig(ChromeOptions(
+				chrome.EnableQuickSettingsRevamp(),
 				chrome.ExtraArgs("--use-fake-ui-for-media-stream"),
 				chrome.ExtraArgs("--autoplay-policy=no-user-gesture-required"), // Allow media autoplay.
 				chrome.LacrosExtraArgs("--use-fake-ui-for-media-stream"),

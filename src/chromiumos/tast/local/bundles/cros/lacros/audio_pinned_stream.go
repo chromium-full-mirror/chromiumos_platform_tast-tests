@@ -14,6 +14,8 @@ import (
 	"chromiumos/tast/local/audio/crastestclient"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/lacros"
+	"chromiumos/tast/local/chrome/uiauto/quicksettings"
+
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -26,7 +28,7 @@ func init() {
 		Attr:         []string{"group:mainline", "group:audio"},
 		BugComponent: "crbug:OS>LaCrOS",
 		SoftwareDeps: []string{"chrome", "lacros"},
-		Fixture:      "lacrosAudio",
+		Fixture:      "lacrosAudioQsRevampEnabled",
 		Data:         []string{"media_session_60sec_test.ogg", "audio_playback_test.html"},
 		Params: []testing.Param{{
 			Name:              "play",
@@ -51,6 +53,9 @@ func init() {
 }
 
 func AudioPinnedStream(ctx context.Context, s *testing.State) {
+	cleanup := quicksettings.SetQsRevampEnabled(true)
+	defer cleanup()
+
 	// Load ALSA loopback module.
 	unload, err := audio.LoadAloop(ctx)
 	if err != nil {
