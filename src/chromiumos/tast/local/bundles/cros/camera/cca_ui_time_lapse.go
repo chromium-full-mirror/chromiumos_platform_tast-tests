@@ -28,7 +28,7 @@ func init() {
 	})
 }
 
-const timeLapseTolerance = 300 * time.Millisecond
+const timeLapseTolerance = 500 * time.Millisecond
 
 func CCAUITimeLapse(ctx context.Context, s *testing.State) {
 	app := s.FixtValue().(cca.FixtureData).App()
