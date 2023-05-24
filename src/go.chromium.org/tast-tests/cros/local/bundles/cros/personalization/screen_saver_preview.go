@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/personalization"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -26,14 +27,14 @@ func init() {
 		Contacts: []string{
 			"assistive-eng@google.com",
 			"chromeos-sw-engprod@google.com",
-			"safarli@google.com",
+			"cowmoo@google.com",
 		},
 		// ChromeOS > Software > Personalization
 		BugComponent: "b:1006527",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      6 * time.Minute,
-		Fixture:      "personalizationWithScreenSaverPreviewClamshell",
+		Fixture:      "personalizationScreenSaverClamshell",
 	})
 }
 

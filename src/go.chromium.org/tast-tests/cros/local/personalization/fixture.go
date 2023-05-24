@@ -159,36 +159,35 @@ func init() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name: "personalizationWithScreenSaverPreview",
-		Desc: "Login with Gaia account with screen saver preview enabled",
+		Name: "personalizationScreenSaver",
+		Desc: "Login with Gaia account that has google photos albums for screen saver tests",
 		Contacts: []string{
 			"assistive-eng@google.com",
 			"chromeos-sw-engprod@google.com",
-			"safarli@google.com",
+			"cowmoo@google.com",
 		},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
-				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
-				chrome.EnableFeatures("ScreenSaverPreview"),
+				chrome.GAIALoginPool(s.RequiredVar("wallpaper.googlePhotosAccountPool")),
 			}, nil
 		}),
 		SetUpTimeout:    chrome.GAIALoginTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 		Vars: []string{
-			"ui.gaiaPoolDefault",
+			"wallpaper.googlePhotosAccountPool",
 		},
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name: "personalizationWithScreenSaverPreviewClamshell",
-		Desc: "Login using Gaia account with Personalization Hub enabled in Clamshell mode",
+		Name: "personalizationScreenSaverClamshell",
+		Desc: "Login with Gaia account that has google photos albums for screen saver tests in Clamshell mode",
 		Contacts: []string{
 			"assistive-eng@google.com",
 			"chromeos-sw-engprod@google.com",
-			"safarli@google.com",
+			"cowmoo@google.com",
 		},
 		Impl:            &clamshellFixture{},
-		Parent:          "personalizationWithScreenSaverPreview",
+		Parent:          "personalizationScreenSaver",
 		SetUpTimeout:    chrome.GAIALoginTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,

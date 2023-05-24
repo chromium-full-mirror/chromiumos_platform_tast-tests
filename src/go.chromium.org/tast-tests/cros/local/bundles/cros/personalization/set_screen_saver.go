@@ -11,7 +11,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/ambient"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -20,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/mtbf/youtube"
 	"go.chromium.org/tast-tests/cros/local/personalization"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -29,7 +29,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SetScreenSaver,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test setting screensaver in the personalization hub app",
+		Desc:         "Test setting screen saver in the personalization hub app",
 		Contacts: []string{
 			"assistive-eng@google.com",
 			"thuongphan@google.com",
@@ -41,7 +41,7 @@ func init() {
 		VarDeps:      []string{"ambient.username", "ambient.password"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,
-		Fixture:      "personalizationWithGaiaLoginClamshell",
+		Fixture:      "personalizationScreenSaverClamshell",
 		Params: []testing.Param{
 			{
 				Name: "google_photos",
@@ -108,14 +108,6 @@ func SetScreenSaver(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
-	// Force Chrome to be in clamshell mode to make sure it's possible to close
-	// the personalization hub.
-	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
-	if err != nil {
-		s.Fatal("Failed to ensure DUT is not in tablet mode: ", err)
-	}
-	defer cleanup(cleanupCtx)
-
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
 	// The test has a dependency of network speed, so we give uiauto.Context ample
@@ -130,8 +122,8 @@ func SetScreenSaver(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to enable ambient mode: ", err)
 	}
 
-	if err := prepareScreensaver(ctx, tconn, ui, testParams); err != nil {
-		s.Fatalf("Failed to prepare %v/%v screensaver: %v", testParams.TopicSource, testParams.Theme, err)
+	if err := prepareScreenSaver(ctx, tconn, ui, testParams); err != nil {
+		s.Fatalf("Failed to prepare %v/%v screen saver: %v", testParams.TopicSource, testParams.Theme, err)
 	}
 
 	if testParams.PlayTestVideo {
@@ -148,7 +140,7 @@ func SetScreenSaver(ctx context.Context, s *testing.State) {
 		defer uiHandler.Close(ctx)
 
 		// Open up an arbitrary Youtube video to test "media string". The name of
-		// the media playing should be displayed in the screensaver.
+		// the media playing should be displayed in the screen saver.
 		const extendedDisplay = false
 		videoApp := youtube.NewYtWeb(cr.Browser(), tconn, kb, extendedDisplay, ui, uiHandler)
 		if err := videoApp.OpenAndPlayVideo(ambient.TestVideoSrc)(ctx); err != nil {
@@ -161,12 +153,12 @@ func SetScreenSaver(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start ambient mode: ", err)
 	}
 
-	if err := ambient.UnlockScreen(ctx, tconn, s.RequiredVar("ambient.username"), s.RequiredVar("ambient.password")); err != nil {
+	if err := ambient.UnlockScreen(ctx, tconn, cr.Creds().User, cr.Creds().Pass); err != nil {
 		s.Fatal("Failed to unlock screen: ", err)
 	}
 }
 
-func prepareScreensaver(ctx context.Context, tconn *chrome.TestConn, ui *uiauto.Context, testParams ambient.TestParams) error {
+func prepareScreenSaver(ctx context.Context, tconn *chrome.TestConn, ui *uiauto.Context, testParams ambient.TestParams) error {
 	themeContainer := nodewith.Role(role.RadioButton).Name(testParams.Theme)
 	if err := uiauto.Combine("Choose animation theme",
 		ui.FocusAndWait(themeContainer),
