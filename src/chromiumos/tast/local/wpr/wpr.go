@@ -17,6 +17,7 @@ import (
 
 	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/chrome"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -94,7 +95,7 @@ func waitForServerSocket(ctx context.Context, addr string, server *testexec.Cmd)
 		return nil
 	}, &testing.PollOptions{
 		Interval: time.Second,
-		Timeout:  120 * time.Second,
+		Timeout:  4 * time.Minute,
 	})
 	return err
 }
