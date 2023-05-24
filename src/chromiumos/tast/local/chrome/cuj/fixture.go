@@ -108,6 +108,18 @@ var EnableWaylandLoggingVar = testing.RegisterVarString(
 	"A boolean string (true/false) signifying whether to enable Wayland logging into Lacros logs",
 )
 
+var extraArgsVar = testing.RegisterVarString(
+	"cuj.extraArgs",
+	"",
+	"A comma separated list of extra args to be passed into Chrome",
+)
+
+var extraFeaturesVar = testing.RegisterVarString(
+	"cuj.extraFeatures",
+	"",
+	"A comma separated list of extra features to be passed into Chrome",
+)
+
 // DocsBlocker extension files.
 var docsBlockerFiles = []string{
 	"docs_blocker/background.js",
@@ -953,6 +965,18 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 		// are longer than 10 minutes, this could guarantee at least one histogram for each
 		// memory metric.
 		opts = append(opts, chrome.ExtraArgs("--test-memory-log-delay-in-minutes=6"))
+
+		extraArgs := extraArgsVar.Value()
+		if extraArgs != "" {
+			testing.ContextLog(ctx, "Adding extra args to Chrome: ", extraArgs)
+			opts = append(opts, chrome.ExtraArgs(strings.Split(extraArgs, ",")...))
+		}
+
+		extraFeatures := extraFeaturesVar.Value()
+		if extraFeatures != "" {
+			testing.ContextLog(ctx, "Enabling additional features: ", extraFeatures)
+			opts = append(opts, chrome.EnableFeatures(strings.Split(extraFeatures, ",")...))
+		}
 
 		if f.bt == browser.TypeLacros {
 			if strings.ToLower(EnableWaylandLoggingVar.Value()) == "true" {
