@@ -75,9 +75,6 @@ func SpellCheckServiceEnabled(ctx context.Context, s *testing.State) {
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()
 
-	// Hash code for NetworkTrafficAnnotationTag with id spellcheck_lookup.
-	const spellcheckLookupHashCode = "132553989"
-
 	for _, param := range []spellcheckutil.TestCase{
 		{
 			Name:                 "allow",
@@ -135,8 +132,9 @@ func SpellCheckServiceEnabled(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to trigger and verify spellcheck: ", err)
 			}
 
-			// Stop logging and check the logs for spellcheck_lookup NetworkTrafficAnnotationTag.
-			foundAnnotation, err := annotations.StopLoggingCheckLogs(ctx, cr, br, spellcheckLookupHashCode)
+			// Stop logging and check the logs for annotation hashcode associated with
+			// the policy.
+			foundAnnotation, err := annotations.StopLoggingCheckLogs(ctx, cr, br, spellcheckutil.AnnotationHashCode)
 			if err != nil {
 				s.Fatal("Failed to stop logging and check logs: ", err)
 			}

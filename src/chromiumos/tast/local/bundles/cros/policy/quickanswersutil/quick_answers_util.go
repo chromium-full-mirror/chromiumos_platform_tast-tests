@@ -20,8 +20,9 @@ import (
 )
 
 const (
-	// AnnotationID is the hashcode network annotation tag quick_answers_loader.
-	AnnotationID = "46208118"
+	// AnnotationHashCode is the hashcode of network annotation tag
+	// quick_answers_loader.
+	AnnotationHashCode = "46208118"
 
 	originalUnitsText        = "50 kg"
 	expectedConversionResult = "110.231 pounds"

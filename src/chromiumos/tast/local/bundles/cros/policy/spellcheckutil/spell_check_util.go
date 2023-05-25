@@ -17,8 +17,13 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/restriction"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/policyutil"
+
 	"go.chromium.org/tast/core/errors"
 )
+
+// AnnotationHashCode is the hashcode of network annotation tag
+// spellcheck_lookup.
+const AnnotationHashCode = "132553989"
 
 // TestCase defines test expectations based on the policy value.
 type TestCase struct {

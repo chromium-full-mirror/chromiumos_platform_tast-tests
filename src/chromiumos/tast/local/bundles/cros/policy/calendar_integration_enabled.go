@@ -156,9 +156,8 @@ func CalendarIntegrationEnabled(ctx context.Context, s *testing.State) {
 			// Check for annotation. Skip for lacros until we fix b/278750986.
 			if !isLacros(s) {
 				didFindAnnotation := false
-				// Stop logging and check the logs for calendar_get_events
-				// NetworkTrafficAnnotationTag with hash 86429515.
-				if foundAnnotation, err := annotations.StopLoggingCheckLogs(ctx, cr, br, "86429515"); err != nil {
+				// Stop logging and check the logs for annotation.
+				if foundAnnotation, err := annotations.StopLoggingCheckLogs(ctx, cr, br, calendarintegration.AnnotationHashCode); err != nil {
 					s.Fatal("Failed to stop logging and check logs: ", err)
 				} else if foundAnnotation == true {
 					didFindAnnotation = true

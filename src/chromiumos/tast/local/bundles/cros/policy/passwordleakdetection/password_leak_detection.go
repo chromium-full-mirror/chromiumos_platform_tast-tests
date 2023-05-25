@@ -28,8 +28,9 @@ type TestCase struct {
 }
 
 const (
-	// AnnotationID is the hashcode for annotation lookup_single_password_leak.
-	AnnotationID = "16927377"
+	// AnnotationHashCode is the hashcode of network annotation tag
+	// lookup_single_password_leak.
+	AnnotationHashCode = "16927377"
 
 	// Test webpage that stores password credentials using the Credential
 	// Management API.
@@ -58,7 +59,7 @@ func TriggerPasswordLeakDetection(ctx context.Context, cr *chrome.Chrome, server
 	var errorCheckingLogs error
 	err = testing.Poll(ctx, func(ctx context.Context) error {
 		foundAnnotation := false
-		foundAnnotation, errorCheckingLogs = annotations.CheckLogs(ctx, cr, AnnotationID)
+		foundAnnotation, errorCheckingLogs = annotations.CheckLogs(ctx, cr, AnnotationHashCode)
 
 		if errorCheckingLogs != nil || foundAnnotation {
 			return nil

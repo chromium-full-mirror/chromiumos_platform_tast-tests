@@ -125,8 +125,9 @@ func QuickAnswersUnitConversionEnabled(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to trigger and verify quick answers unit conversion: ", err)
 			}
 
-			// Stop logging and check the logs for quick_answers_loader NetworkTrafficAnnotationTag.
-			foundAnnotation, err := annotations.StopLoggingCheckLogs(ctx, cr, br, quickanswersutil.AnnotationID)
+			// Stop logging and check the logs for annotation hashcode associated with
+			// the policy.
+			foundAnnotation, err := annotations.StopLoggingCheckLogs(ctx, cr, br, quickanswersutil.AnnotationHashCode)
 			if err != nil {
 				s.Fatal("Failed to stop logging and check logs: ", err)
 			}

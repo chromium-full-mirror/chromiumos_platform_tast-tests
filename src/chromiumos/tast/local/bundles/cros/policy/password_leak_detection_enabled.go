@@ -165,9 +165,9 @@ func PasswordLeakDetectionEnabled(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to trigger password leak detection: ", err)
 			}
 
-			// Stop logging and check the logs for annotation
-			// lookup_single_password_leak.
-			foundAnnotation, err := annotations.StopLoggingCheckLogs(ctx, cr, br, passwordleakdetection.AnnotationID)
+			// Stop logging and check the logs for annotation hashcode associated with
+			// the policy.
+			foundAnnotation, err := annotations.StopLoggingCheckLogs(ctx, cr, br, passwordleakdetection.AnnotationHashCode)
 			if err != nil {
 				s.Fatal("Failed to stop logging and check logs: ", err)
 			}

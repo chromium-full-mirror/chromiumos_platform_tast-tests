@@ -83,16 +83,6 @@ func getPolicyList() []policy.Policy {
 	}
 }
 
-// getAnnotationHashCodes returns a list of annotations that are not supposed to be found in the logs when the optional services are disabled.
-func getAnnotationHashCodes() []string {
-	return []string{
-		"86429515",  // calendar_get_events.
-		"16927377",  // lookup_single_password_leak.
-		"46208118",  // quick_answers_loader.
-		"132553989", // spellcheck_lookup.
-	}
-}
-
 func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 
@@ -174,6 +164,9 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start logging: ", err)
 	}
 
+	// Network traffic annotation hashcodes associated with the optional services.
+	var hashCodes []string
+
 	s.Run(ctx, "calendar_integration_service", func(ctx context.Context, s *testing.State) {
 		calendarIntegrationParam := calendarintegration.TestCase{
 			Name:                    "disabled",
@@ -185,6 +178,7 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 		if err := calendarintegration.TriggerCalendarIntegration(ctx, calendarIntegrationParam, br, tconn, s); err != nil {
 			s.Fatal("Failed to trigger and verify calendar integration: ", err)
 		}
+		hashCodes = append(hashCodes, calendarintegration.AnnotationHashCode)
 	})
 
 	s.Run(ctx, "spell_check_service", func(ctx context.Context, s *testing.State) {
@@ -200,6 +194,7 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 		if err := spellcheckutil.TriggerSpellCheck(ctx, spellCheckParam, cr, server, br, tconn); err != nil {
 			s.Fatal("Failed to trigger and verify spellcheck: ", err)
 		}
+		hashCodes = append(hashCodes, spellcheckutil.AnnotationHashCode)
 	})
 
 	s.Run(ctx, "quick_answers_service", func(ctx context.Context, s *testing.State) {
@@ -222,16 +217,19 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 		if err := quickanswersutil.TriggerQuickAnswersUnitConversion(ctx, quickAnswersUnitCoversionParam, server, br, tconn); err != nil {
 			s.Fatal("Failed to trigger and verify quick answers unit conversion: ", err)
 		}
+		hashCodes = append(hashCodes, quickanswersutil.AnnotationHashCode)
 	})
 
 	s.Run(ctx, "password_leak_detection", func(ctx context.Context, s *testing.State) {
 		if err := passwordleakdetection.TriggerPasswordLeakDetection(ctx, cr, server, br); err != nil {
 			s.Fatal("Failed to trigger password leak detection: ", err)
 		}
+		hashCodes = append(hashCodes, passwordleakdetection.AnnotationHashCode)
 	})
 
-	// Stop logging and verify annotations related to the optional services are not found in the logs.
-	_, err = annotations.StopLoggingVerifyNoAnnotation(ctx, cr, br, getAnnotationHashCodes())
+	// Stop logging and verify network traffic annotations associated with the
+	// optional services are not found in the logs.
+	_, err = annotations.StopLoggingVerifyNoAnnotation(ctx, cr, br, hashCodes)
 	if err != nil {
 		s.Fatal("Failed to stop logging and verify logs: ", err)
 	}

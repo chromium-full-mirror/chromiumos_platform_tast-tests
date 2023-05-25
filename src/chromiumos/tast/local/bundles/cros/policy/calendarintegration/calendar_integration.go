@@ -23,6 +23,10 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+// AnnotationHashCode is the hashcode of network annotation
+// tag calendar_get_events.
+const AnnotationHashCode = "86429515"
+
 // TestCase defines test expectations based on the policy value.
 type TestCase struct {
 	Name                    string
