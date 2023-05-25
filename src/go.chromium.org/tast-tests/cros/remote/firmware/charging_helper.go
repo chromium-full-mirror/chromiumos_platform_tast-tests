@@ -9,9 +9,12 @@ package firmware
 
 import (
 	"context"
+	"strconv"
 	"strings"
+	"time"
 
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // GetChargingState returns map[string]string of parsed chgstate output
@@ -76,4 +79,41 @@ func GetChargingState(ctx context.Context, h *Helper) (map[string]string, error)
 	}
 
 	return cstateMap, nil
+}
+
+// ChargeToLevel waits for the DUT to charge to minimum battery level
+func ChargeToLevel(ctx context.Context, h *Helper, minBatteryLevel int, timeout time.Duration) error {
+	testing.ContextLogf(ctx, "Wait for DUT battery charge to exceed %d%%", minBatteryLevel)
+
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		chargeState, err := GetChargingState(ctx, h)
+		if err != nil {
+			return testing.PollBreak(err)
+		}
+
+		batteryLevel, err := strconv.Atoi(strings.Trim(chargeState["batt.state_of_charge"], "%"))
+		if err != nil {
+			return testing.PollBreak(err)
+		}
+
+		testing.ContextLogf(ctx, "Current battery state of charge %d%%", batteryLevel)
+
+		if batteryLevel >= minBatteryLevel {
+			// Done charging
+			return nil
+		}
+
+		if chargeState["global.batt_is_charging"] != "1" {
+			return testing.PollBreak(errors.Errorf("Battery not charging, current level %d%%", batteryLevel))
+		}
+
+		return errors.Errorf("battery level %d%% too low", batteryLevel)
+	}, &testing.PollOptions{
+		Timeout:  timeout,
+		Interval: 30 * time.Second,
+	}); err != nil {
+		return errors.Wrap(err, "failed to charge battery")
+	}
+
+	return nil
 }
