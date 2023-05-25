@@ -814,16 +814,6 @@
 		]
 	},
 	{
-		"driver": "virtio-net-vmsockets(CONFIG_VIRTIO_NET)",
-		"exclude_boards": ["octopus", "kukui", "jacuzzi", "cherry", "dedede", "strongbad", "trogdor", "herobrine"],
-		"syscalls": [
-			"setsockopt$SO_VM_SOCKETS_BUFFER_SIZE",
-			"setsockopt$SO_VM_SOCKETS_BUFFER_MAX_SIZE",
-			"setsockopt$SO_VM_SOCKETS_BUFFER_MIN_SIZE",
-			"setsockopt$SO_VM_SOCKETS_CONNECT_TIMEOUT"
-		]
-	},
-	{
 		"driver": "media-controller(CONFIG_MEDIA_CONTROLLER)",
 		"boards": ["kukui", "strongbad", "trogdor"],
 		"syscalls": [
