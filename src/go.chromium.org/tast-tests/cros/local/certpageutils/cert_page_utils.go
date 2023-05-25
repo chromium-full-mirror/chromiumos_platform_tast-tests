@@ -60,7 +60,7 @@ var ManageCertSettingsWebArea = nodewith.Name("Settings - Manage certificates").
 func PressOkButton(ctx context.Context, ui *uiauto.Context, parent *nodewith.Finder) (retErr error) {
 	okButton := nodewith.Name("OK").Role(role.Button).Ancestor(parent)
 	if err := uiauto.Combine("press OK",
-		ui.WaitUntilExists(okButton),
+		ui.WaitUntilExists(okButton.Focusable()),
 		ui.DoDefault(okButton),
 		ui.WithTimeout(3*time.Second).WaitUntilGone(okButton),
 	)(ctx); err != nil {
