@@ -12,13 +12,13 @@ import (
 	"path/filepath"
 	"runtime"
 	"strconv"
-	"strings"
 
 	"github.com/dave/dst"
 	"github.com/dave/dst/decorator"
 	"github.com/dave/dst/dstutil"
 
 	"go.chromium.org/tast/core/caller"
+	"go.chromium.org/tast/core/packages"
 )
 
 // envName is the name of the environment variable that instructs Ensure to
@@ -152,7 +152,7 @@ var _ = []testing.Param{
 	}
 
 	if !bytes.Equal(newCode, oldCode) {
-		pkg := strings.Split(caller.Get(2), ".")[0]
+		pkg, _ := packages.SplitFuncName(caller.Get(2))
 		t.Errorf(`%s: Params is stale; run the following command to update:
 %s=1 ~/trunk/src/platform/tast/tools/go.sh test -count=1 %s`, file, envName, pkg)
 	}
