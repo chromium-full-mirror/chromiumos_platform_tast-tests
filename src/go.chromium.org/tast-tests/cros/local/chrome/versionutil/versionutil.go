@@ -24,14 +24,23 @@ type lacrosMetadata struct {
 
 // AshVersion returns the version of Ash Chrome.
 func AshVersion(ctx context.Context) (version.Version, error) {
-	out, err := testexec.CommandContext(ctx, ashproc.ExecPath, "--version").Output(testexec.DumpLogOnError)
+	v, err := VersionFromExecPath(ctx, ashproc.ExecPath)
+	if err != nil {
+		return version.Version{}, errors.Wrap(err, "failed to get Ash Chrome version")
+	}
+	return v, nil
+}
+
+// VersionFromExecPath returns the version of Chrome from the given executable path.
+func VersionFromExecPath(ctx context.Context, chromeExecPath string) (version.Version, error) {
+	out, err := testexec.CommandContext(ctx, chromeExecPath, "--version").Output(testexec.DumpLogOnError)
 	if err != nil {
 		return version.Version{}, err
 	}
 	versionStr := version.VersionRegexp.FindString(string(out))
 	v := version.Parse(versionStr)
 	if !v.IsValid() {
-		return version.Version{}, errors.New("invalid Ash Chrome version: " + versionStr)
+		return version.Version{}, errors.Errorf("invalid Chrome version: %v, from path: %v", versionStr, chromeExecPath)
 	}
 	return v, nil
 }
