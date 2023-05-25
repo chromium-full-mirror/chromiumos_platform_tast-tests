@@ -6,21 +6,16 @@ package policy
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/developertools"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
-	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -30,7 +25,8 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DeveloperToolsAvailability,
 		LacrosStatus: testing.LacrosVariantExists,
-		// TODO(crbug/1125548): add functionality to verify policy with force installed extension.
+		// TODO(crbug/1125548): add functionality to verify policy with
+		// force installed extension.
 		Desc: "Behavior of the DeveloperToolsAvailability policy, check whether developer tools can be opened on chrome://user-actions page",
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
@@ -74,46 +70,36 @@ func DeveloperToolsAvailability(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to test API: ", err)
 	}
 
-	keyboard, err := input.VirtualKeyboard(ctx)
-	if err != nil {
-		s.Fatal("Failed to get keyboard: ", err)
-	}
-	defer keyboard.Close(ctx)
-
-	for _, tc := range []struct {
-		name        string
-		value       []policy.Policy
-		wantAllowed bool
-	}{
+	for _, tc := range []developertools.TestCase{
 		{
-			name:        "disallowed_for_force_installed_extensions",
-			value:       []policy.Policy{&policy.DeveloperToolsAvailability{Val: 0}},
-			wantAllowed: true,
+			Name:        "disallowed_for_force_installed_extensions",
+			Value:       &policy.DeveloperToolsAvailability{Val: 0},
+			WantAllowed: true,
 		},
 		{
-			name:        "alowed",
-			value:       []policy.Policy{&policy.DeveloperToolsAvailability{Val: 1}},
-			wantAllowed: true,
+			Name:        "allowed",
+			Value:       &policy.DeveloperToolsAvailability{Val: 1},
+			WantAllowed: true,
 		},
 		{
-			name:        "disallowed",
-			value:       []policy.Policy{&policy.DeveloperToolsAvailability{Val: 2}},
-			wantAllowed: false,
+			Name:        "disallowed",
+			Value:       &policy.DeveloperToolsAvailability{Val: 2},
+			WantAllowed: false,
 		},
 		{
-			name:        "unset",
-			value:       []policy.Policy{},
-			wantAllowed: true,
+			Name:        "unset",
+			Value:       &policy.DeveloperToolsAvailability{Stat: policy.StatusUnset},
+			WantAllowed: true,
 		},
 	} {
-		s.Run(ctx, tc.name, func(ctx context.Context, s *testing.State) {
+		s.Run(ctx, tc.Name, func(ctx context.Context, s *testing.State) {
 			// Perform cleanup.
 			if err := policyutil.ResetChrome(ctx, fdms, cr); err != nil {
 				s.Fatal("Failed to clean up: ", err)
 			}
 
 			// Update policies.
-			if err := policyutil.ServeAndVerify(ctx, fdms, cr, tc.value); err != nil {
+			if err := policyutil.ServeAndVerify(ctx, fdms, cr, []policy.Policy{tc.Value}); err != nil {
 				s.Fatal("Failed to update policies: ", err)
 			}
 
@@ -123,47 +109,8 @@ func DeveloperToolsAvailability(ctx context.Context, s *testing.State) {
 			}
 			defer closeBrowser(cleanupCtx)
 
-			for _, keys := range []string{
-				"Ctrl+Shift+C",
-				"Ctrl+Shift+I",
-				"F12",
-				"Ctrl+Shift+J",
-			} {
-				s.Run(ctx, keys, func(ctx context.Context, s *testing.State) {
-					defer faillog.DumpUITreeOnErrorToFile(cleanupCtx, s.OutDir(), s.HasError, tconn, fmt.Sprintf("ui_tree_%s_%s.txt", tc.name, keys))
-
-					// Open new tab and navigate to chrome://user-actions.
-					// Here we cannot use cr.Conn, because Chrome DevTools Protocol
-					// relies on DevTools.
-					if err := keyboard.Accel(ctx, "Ctrl+T"); err != nil {
-						s.Fatal("Failed to press Ctrl+T: ", err)
-					}
-					if err := keyboard.Type(ctx, "chrome://user-actions\n"); err != nil {
-						s.Fatal("Failed to type chrome://user-actions: ", err)
-					}
-
-					// Check that we have access to chrome://user-actions accessability tree.
-					ui := uiauto.New(tconn)
-					userAction := nodewith.Name("User Action").Role(role.ColumnHeader)
-					if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(userAction)(ctx); err != nil {
-						s.Fatal("Failed to wait for page nodes: ", err)
-					}
-					// Press keys combination to open DevTools.
-					if err := keyboard.Accel(ctx, keys); err != nil {
-						s.Fatalf("Failed to press %s: %v", keys, err)
-					}
-					timeout := 15 * time.Second
-					elements := nodewith.Name("Elements").Role(role.Tab)
-					if tc.wantAllowed {
-						if err := ui.WithTimeout(timeout).WaitUntilExists(elements)(ctx); err != nil {
-							s.Error("Failed to wait for DevTools: ", err)
-						}
-					} else {
-						if err := policyutil.VerifyNotExists(ctx, tconn, elements, timeout); err != nil {
-							s.Errorf("Failed to verify that DevTools are not available after %s: %s", timeout, err)
-						}
-					}
-				})
+			if err := developertools.TriggerDeveloperToolsAvailability(ctx, tc, tconn, s); err != nil {
+				s.Fatal("Failed to trigger and verify developer tools availability: ", err)
 			}
 		})
 	}
