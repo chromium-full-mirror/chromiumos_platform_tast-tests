@@ -24,6 +24,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -159,17 +160,28 @@ func UserAvatarCustomization(ctx context.Context, s *testing.State) {
 
 			ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
 
-			// Open personalization hub.
-			if err := personalization.OpenPersonalizationHub(ui)(ctx); err != nil {
-				s.Fatal("Failed to open personalization hub: ", err)
-			}
-			// Wait for personalization hub to finish loading.
-			if err := tconn.WaitForExpr(ctx, "document.readyState === 'complete'"); err != nil {
-				s.Fatal("Failed to wait for personalization hub to load: ", err)
-			}
-			// Open avatar subpage.
-			if err := personalization.OpenAvatarSubpage(ui)(ctx); err != nil {
-				s.Fatal("Failed to open avatar subpage: ", err)
+			// Open user avatar personalization app. Note: We retry here because sometimes the button
+			// to open the user avatar subpage does not load properly.
+			breadcrumbAvatar := personalization.BreadcrumbNodeFinder(personalization.AvatarSubpageName)
+			if err := testing.Poll(ctx, func(ctx context.Context) error {
+				// Close any previously opened personalization apps.
+				if err := ash.CloseAllWindows(ctx, tconn); err != nil {
+					return errors.Wrap(err, "failed to close app window")
+				}
+
+				// Open avatar subpage.
+				if err := uiauto.Combine("open avatar subpage",
+					personalization.OpenPersonalizationHub(ui),
+					personalization.OpenAvatarSubpage(ui),
+					ui.WithTimeout(3*time.Second).WaitUntilExists(breadcrumbAvatar),
+				)(ctx); err != nil {
+					s.Log("Failed to open avatar subpage: ", err)
+					return errors.Wrap(err, "failed to open avatar subpage")
+				}
+
+				return nil // exit successfully
+			}, &testing.PollOptions{Timeout: 15 * time.Second}); err != nil {
+				s.Fatal("Failed to open avatar personalization app: ", err)
 			}
 
 			chooseFromFileSelector := selectorFinder(chooseFromFileButtonName, avatarButtonContainerClass)
