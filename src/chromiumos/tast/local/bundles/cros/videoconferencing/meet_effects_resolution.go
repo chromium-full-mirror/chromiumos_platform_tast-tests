@@ -55,7 +55,7 @@ func init() {
 			{
 				Name: "1080p",
 				// Only a few boards support 1080p in Google Meet.
-				ExtraHardwareDeps: hwdep.D(hwdep.Model("guybrush", "skyrim")),
+				ExtraHardwareDeps: hwdep.D(hwdep.Platform("guybrush", "skyrim")),
 				Fixture:           fixture.GAIALoggedInWithFakeHALAndEffectsEnabled,
 				Val:               googlemeet.ResolutionFullHD1080P,
 			},
@@ -107,7 +107,6 @@ func MeetEffectsResolution(ctx context.Context, s *testing.State) {
 
 	resolution := s.Param().(string)
 	if err := uiauto.Combine("configure Meet",
-		gm.MuteIfMicAvailable,
 		gm.ChangeSettings(
 			gm.SetSendResolution(googlemeet.ResolutionOption(resolution)),
 		),
