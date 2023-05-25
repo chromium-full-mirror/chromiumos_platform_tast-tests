@@ -20,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/mtbf/youtube"
 	"go.chromium.org/tast-tests/cros/local/personalization"
+
 	"go.chromium.org/tast/core/errors"
 )
 
@@ -89,63 +90,58 @@ func toNearestSecond(d time.Duration) int {
 
 // SetDeviceSettings changes settings for Ambient mode to speed up testing.
 // Rounds values to the nearest second.
-func SetDeviceSettings(
-	ctx context.Context,
-	tconn *chrome.TestConn,
-	deviceSettings DeviceSettings,
-) error {
-	if err := tconn.Call(
-		ctx,
-		nil,
-		`tast.promisify(chrome.settingsPrivate.setPref)`,
-		"ash.ambient.lock_screen_idle_timeout",
-		toNearestSecond(deviceSettings.LockScreenIdle),
-	); err != nil {
-		return errors.Wrap(err, "failed to set lock screen idle timeout")
-	}
+func SetDeviceSettings(tconn *chrome.TestConn, deviceSettings DeviceSettings) uiauto.Action {
+	return func(ctx context.Context) error {
+		if err := tconn.Call(
+			ctx,
+			nil,
+			`tast.promisify(chrome.settingsPrivate.setPref)`,
+			"ash.ambient.lock_screen_idle_timeout",
+			toNearestSecond(deviceSettings.LockScreenIdle),
+		); err != nil {
+			return errors.Wrap(err, "failed to set lock screen idle timeout")
+		}
 
-	if err := tconn.Call(
-		ctx,
-		nil,
-		`tast.promisify(chrome.settingsPrivate.setPref)`,
-		"ash.ambient.lock_screen_background_timeout",
-		toNearestSecond(deviceSettings.BackgroundLockScreen),
-	); err != nil {
-		return errors.Wrap(err, "failed to set lock screen background timeout")
-	}
+		if err := tconn.Call(
+			ctx,
+			nil,
+			`tast.promisify(chrome.settingsPrivate.setPref)`,
+			"ash.ambient.lock_screen_background_timeout",
+			toNearestSecond(deviceSettings.BackgroundLockScreen),
+		); err != nil {
+			return errors.Wrap(err, "failed to set lock screen background timeout")
+		}
 
-	if err := tconn.Call(
-		ctx,
-		nil,
-		`tast.promisify(chrome.settingsPrivate.setPref)`,
-		"ash.ambient.photo_refresh_interval",
-		toNearestSecond(deviceSettings.PhotoRefreshInterval),
-	); err != nil {
-		return errors.Wrap(err, "failed to set photo refresh interval")
-	}
+		if err := tconn.Call(
+			ctx,
+			nil,
+			`tast.promisify(chrome.settingsPrivate.setPref)`,
+			"ash.ambient.photo_refresh_interval",
+			toNearestSecond(deviceSettings.PhotoRefreshInterval),
+		); err != nil {
+			return errors.Wrap(err, "failed to set photo refresh interval")
+		}
 
-	if err := tconn.Call(
-		ctx,
-		nil,
-		`tast.promisify(chrome.settingsPrivate.setPref)`,
-		"ash.ambient.animation_playback_speed",
-		deviceSettings.AnimationPlaybackSpeed,
-	); err != nil {
-		return errors.Wrap(err, "failed to set playback speed")
+		if err := tconn.Call(
+			ctx,
+			nil,
+			`tast.promisify(chrome.settingsPrivate.setPref)`,
+			"ash.ambient.animation_playback_speed",
+			deviceSettings.AnimationPlaybackSpeed,
+		); err != nil {
+			return errors.Wrap(err, "failed to set playback speed")
+		}
+		return nil
 	}
-	return nil
 }
 
-// OpenAmbientSubpage returns an action to open Ambient subpage from Personalization Hub.
-func OpenAmbientSubpage(ctx context.Context, ui *uiauto.Context) error {
-	if err := uiauto.Combine("open Ambient Subpage",
+// OpenAmbientSubpage returns an action to open Personalization App and then ambient subpage.
+func OpenAmbientSubpage(ui *uiauto.Context) uiauto.Action {
+	return uiauto.Combine("open Ambient Subpage",
 		personalization.OpenPersonalizationHub(ui),
 		personalization.OpenScreenSaverSubpage(ui),
 		ui.WaitUntilExists(personalization.BreadcrumbNodeFinder(personalization.ScreenSaverSubpageName)),
-	)(ctx); err != nil {
-		return errors.Wrap(err, "failed to open Ambient subpage")
-	}
-	return nil
+	)
 }
 
 // toggleAmbientMode returns an action to toggle ambient mode in ambient subpage.
@@ -163,17 +159,19 @@ func ambientModeEnabled(ctx context.Context, ui *uiauto.Context) (bool, error) {
 
 // EnableAmbientMode enables ambient mode in Personalization Hub from Ambient Subpage.
 // If ambient mode is already enabled, it does nothing.
-func EnableAmbientMode(ctx context.Context, ui *uiauto.Context) error {
-	ambientMode, err := ambientModeEnabled(ctx, ui)
-	if err != nil {
-		return errors.Wrap(err, "failed to check ambient mode status")
-	}
-	if !ambientMode {
-		if err := toggleAmbientMode(OffStatus, ui)(ctx); err != nil {
-			return errors.Wrap(err, "failed to enable ambient mode")
+func EnableAmbientMode(ui *uiauto.Context) uiauto.Action {
+	return func(ctx context.Context) error {
+		ambientMode, err := ambientModeEnabled(ctx, ui)
+		if err != nil {
+			return errors.Wrap(err, "failed to check ambient mode status")
 		}
+		if !ambientMode {
+			if err := toggleAmbientMode(OffStatus, ui)(ctx); err != nil {
+				return errors.Wrap(err, "failed to enable ambient mode")
+			}
+		}
+		return nil
 	}
-	return nil
 }
 
 // waitForPhotoTransitions blocks until the desired number of photo transitions
@@ -196,49 +194,51 @@ func waitForPhotoTransitions(
 // TestLockScreenIdle performs screen saver test including locking screen, waiting for ambient mode
 // to start, then escaping from ambient mode and returning to lockscreen again.
 func TestLockScreenIdle(
-	ctx context.Context,
 	cr *chrome.Chrome,
 	tconn *chrome.TestConn,
 	ui *uiauto.Context,
 	ambientStartTimeout time.Duration,
 	playTestVideo bool,
-) error {
-	return uiauto.Combine("start, hide, and restart ambient mode",
-		lockScreen(ctx, tconn),
-		waitForAmbientStart(tconn, ui, ambientStartTimeout, playTestVideo),
-		hideAmbientMode(tconn, ui, mouseMove),
-		waitForAmbientStart(tconn, ui, ambientStartTimeout, playTestVideo),
-		hideAmbientMode(tconn, ui, mouseClick),
-		waitForAmbientStart(tconn, ui, ambientStartTimeout, playTestVideo),
-		hideAmbientMode(tconn, ui, keyboardClick),
-		waitForAmbientStart(tconn, ui, ambientStartTimeout, playTestVideo),
-	)(ctx)
+) uiauto.Action {
+	return func(ctx context.Context) error {
+		return uiauto.Combine("start, hide, and restart screen saver",
+			lockScreen(ctx, tconn),
+			waitForAmbientStart(tconn, ui, ambientStartTimeout, playTestVideo),
+			hideAmbientMode(tconn, ui, mouseMove),
+			waitForAmbientStart(tconn, ui, ambientStartTimeout, playTestVideo),
+			hideAmbientMode(tconn, ui, mouseClick),
+			waitForAmbientStart(tconn, ui, ambientStartTimeout, playTestVideo),
+			hideAmbientMode(tconn, ui, keyboardClick),
+			waitForAmbientStart(tconn, ui, ambientStartTimeout, playTestVideo),
+		)(ctx)
+	}
 }
 
-// CloseScreenSaverPreview closes screen saver preview by clicking left mouse button.
-func CloseScreenSaverPreview(ctx context.Context, tconn *chrome.TestConn,
-	ui *uiauto.Context) error {
-	container := nodewith.ClassName("InSessionAmbientModeContainer").Role(role.Window)
-	if err := ui.Exists(container)(ctx); err != nil {
-		return errors.Wrap(err, "failed to find ambient mode container")
-	}
+// CloseScreenSaverPreview returns an action to close screen saver preview by clicking left mouse button.
+func CloseScreenSaverPreview(tconn *chrome.TestConn, ui *uiauto.Context) uiauto.Action {
+	return func(ctx context.Context) error {
+		container := nodewith.ClassName("InSessionAmbientModeContainer").Role(role.Window)
+		if err := ui.Exists(container)(ctx); err != nil {
+			return errors.Wrap(err, "failed to find ambient mode container")
+		}
 
-	if err := mouse.Click(tconn, coords.Point{X: 0, Y: 0}, mouse.LeftButton)(ctx); err != nil {
-		return errors.Wrap(err, "failed to click mouse")
-	}
+		if err := mouse.Click(tconn, coords.Point{X: 0, Y: 0}, mouse.LeftButton)(ctx); err != nil {
+			return errors.Wrap(err, "failed to click mouse")
+		}
 
-	// Ambient mode container should not exist.
-	if err := ui.WaitUntilGone(container)(ctx); err != nil {
-		return errors.Wrap(err, "failed to ensure ambient container dismissed")
-	}
+		// Ambient mode container should not exist.
+		if err := ui.WaitUntilGone(container)(ctx); err != nil {
+			return errors.Wrap(err, "failed to ensure ambient container dismissed")
+		}
 
-	if st, err := lockscreen.GetState(ctx, tconn); err != nil {
-		return errors.Wrap(err, "failed to get lockscreen state")
-	} else if st.Locked {
-		return errors.Wrap(err, "failed to ensure that screen is not locked")
-	}
+		if st, err := lockscreen.GetState(ctx, tconn); err != nil {
+			return errors.Wrap(err, "failed to get lockscreen state")
+		} else if st.Locked {
+			return errors.Wrap(err, "failed to ensure that screen is not locked")
+		}
 
-	return nil
+		return nil
+	}
 }
 
 // lockScreen returns an action to lock screen.
@@ -254,22 +254,24 @@ func lockScreen(ctx context.Context, tconn *chrome.TestConn) uiauto.Action {
 	}
 }
 
-// UnlockScreen enters the password to unlock screen.
-func UnlockScreen(ctx context.Context, tconn *chrome.TestConn, username, password string) error {
-	// Open a keyboard device.
-	kb, err := input.Keyboard(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to open keyboard device")
-	}
-	defer kb.Close(ctx)
+// UnlockScreen returns an action to  enter the password and unlock screen.
+func UnlockScreen(tconn *chrome.TestConn, username, password string) uiauto.Action {
+	return func(ctx context.Context) error {
+		// Open a keyboard device.
+		kb, err := input.Keyboard(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to open keyboard device")
+		}
+		defer kb.Close(ctx)
 
-	if err := lockscreen.EnterPassword(ctx, tconn, username, password, kb); err != nil {
-		return errors.Wrap(err, "failed to unlock the screen")
+		if err := lockscreen.EnterPassword(ctx, tconn, username, password, kb); err != nil {
+			return errors.Wrap(err, "failed to unlock the screen")
+		}
+		if st, err := lockscreen.WaitState(ctx, tconn, func(st lockscreen.State) bool { return !st.Locked }, 30*time.Second); err != nil {
+			return errors.Errorf("failed to wait for screen to be unlocked: %v (last status %+v)", err, st)
+		}
+		return nil
 	}
-	if st, err := lockscreen.WaitState(ctx, tconn, func(st lockscreen.State) bool { return !st.Locked }, 30*time.Second); err != nil {
-		return errors.Errorf("failed to wait for screen to be unlocked: %v (last status %+v)", err, st)
-	}
-	return nil
 }
 
 // waitForAmbientStart returns an action to wait for ambient mode to start and validate

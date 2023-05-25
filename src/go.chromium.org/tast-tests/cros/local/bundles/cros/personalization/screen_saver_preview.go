@@ -23,7 +23,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ScreenSaverPreview,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test setting previewing screen saver in the personalization hub app",
+		Desc:         "Test previewing screen saver in the personalization hub app",
 		Contacts: []string{
 			"assistive-eng@google.com",
 			"chromeos-sw-engprod@google.com",
@@ -53,36 +53,14 @@ func ScreenSaverPreview(ctx context.Context, s *testing.State) {
 	// time to wait for nodes to load.
 	ui := uiauto.New(tconn).WithTimeout(60 * time.Second)
 
-	if err := ambient.OpenAmbientSubpage(ctx, ui); err != nil {
-		s.Fatal("Failed to open Ambient Subpage: ", err)
-	}
-
-	if err := ambient.EnableAmbientMode(ctx, ui); err != nil {
-		s.Fatal("Failed to enable ambient mode: ", err)
-	}
-
-	previewButton := nodewith.Role(role.Button).HasClass("preview-button")
-	if err := ui.LeftClick(previewButton)(ctx); err != nil {
-		s.Fatal("Failed to click the preview button: ", err)
-	}
-
-	// Preview button text changes to "Downloading" when it gets disabled to load screen saver resources.
-	previewButtonDisabled := nodewith.HasClass("preview-button-disabled")
-	if err := ui.WaitUntilExists(previewButtonDisabled)(ctx); err != nil {
-		s.Fatal("Failed to show 'Downloading' message: ", err)
-	}
-
-	if err := ui.WaitUntilExists(
-		nodewith.ClassName("InSessionAmbientModeContainer").Role(role.Window),
-	)(ctx); err != nil {
-		s.Fatal("Failed to start ambient mode: ", err)
-	}
-
-	if err := ambient.CloseScreenSaverPreview(ctx, tconn, ui); err != nil {
-		s.Fatal("Failed to close screeen saver preview: ", err)
-	}
-
-	if err := personalization.ClosePersonalizationHub(ui)(ctx); err != nil {
-		s.Fatal("Failed to close Personalization Hub: ", err)
+	if err := uiauto.Combine("open ambient and start screen saver preview",
+		ambient.OpenAmbientSubpage(ui),
+		ambient.EnableAmbientMode(ui),
+		ui.LeftClick(nodewith.Role(role.Button).HasClass("preview-button")),
+		ui.WaitUntilExists(nodewith.HasClass("preview-button-disabled")),
+		ui.WaitUntilExists(nodewith.ClassName("InSessionAmbientModeContainer").Role(role.Window)),
+		ambient.CloseScreenSaverPreview(tconn, ui),
+		personalization.ClosePersonalizationHub(ui))(ctx); err != nil {
+		s.Fatal("Failed to start ambient preview: ", err)
 	}
 }

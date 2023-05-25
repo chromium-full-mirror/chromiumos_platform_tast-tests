@@ -29,7 +29,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SetScreenSaver,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test setting screen saver in the personalization hub app",
+		Desc:         "Test setting screen saver options and starting screen saver",
 		Contacts: []string{
 			"assistive-eng@google.com",
 			"thuongphan@google.com",
@@ -114,15 +114,10 @@ func SetScreenSaver(ctx context.Context, s *testing.State) {
 	// time to wait for nodes to load.
 	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
 
-	if err := ambient.OpenAmbientSubpage(ctx, ui); err != nil {
-		s.Fatal("Failed to open Ambient Subpage: ", err)
-	}
-
-	if err := ambient.EnableAmbientMode(ctx, ui); err != nil {
-		s.Fatal("Failed to enable ambient mode: ", err)
-	}
-
-	if err := prepareScreenSaver(ctx, tconn, ui, testParams); err != nil {
+	if err := uiauto.Combine("Open ambient subpage and enable screen saver",
+		ambient.OpenAmbientSubpage(ui),
+		ambient.EnableAmbientMode(ui),
+		prepareScreenSaver(tconn, ui, testParams))(ctx); err != nil {
 		s.Fatalf("Failed to prepare %v/%v screen saver: %v", testParams.TopicSource, testParams.Theme, err)
 	}
 
@@ -131,13 +126,13 @@ func SetScreenSaver(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to open the keyboard: ", err)
 		}
-		defer kb.Close(ctx)
+		defer kb.Close(cleanupCtx)
 
 		var uiHandler cuj.UIActionHandler
 		if uiHandler, err = cuj.NewClamshellActionHandler(ctx, tconn); err != nil {
 			s.Fatal("Failed to create clamshell action handler: ", err)
 		}
-		defer uiHandler.Close(ctx)
+		defer uiHandler.Close(cleanupCtx)
 
 		// Open up an arbitrary Youtube video to test "media string". The name of
 		// the media playing should be displayed in the screen saver.
@@ -149,97 +144,91 @@ func SetScreenSaver(ctx context.Context, s *testing.State) {
 		defer videoApp.Close(cleanupCtx)
 	}
 
-	if err := ambient.TestLockScreenIdle(ctx, cr, tconn, ui, testParams.AnimationStartTimeout, testParams.PlayTestVideo); err != nil {
-		s.Fatal("Failed to start ambient mode: ", err)
-	}
-
-	if err := ambient.UnlockScreen(ctx, tconn, cr.Creds().User, cr.Creds().Pass); err != nil {
-		s.Fatal("Failed to unlock screen: ", err)
+	if err := uiauto.Combine("Run screen saver and unlock screen",
+		ambient.TestLockScreenIdle(cr, tconn, ui, testParams.AnimationStartTimeout, testParams.PlayTestVideo),
+		ambient.UnlockScreen(tconn, cr.Creds().User, cr.Creds().Pass))(ctx); err != nil {
+		s.Fatalf("Failed to run %v/%v screen saver: %v", testParams.TopicSource, testParams.Theme, err)
 	}
 }
 
-func prepareScreenSaver(ctx context.Context, tconn *chrome.TestConn, ui *uiauto.Context, testParams ambient.TestParams) error {
-	themeContainer := nodewith.Role(role.RadioButton).Name(testParams.Theme)
-	if err := uiauto.Combine("Choose animation theme",
-		ui.FocusAndWait(themeContainer),
-		ui.LeftClick(themeContainer))(ctx); err != nil {
-		return errors.Wrapf(err, "failed to select %v", testParams.Theme)
-	}
-
-	topicSourceContainer := nodewith.Role(role.RadioButton).NameContaining(testParams.TopicSource)
-	albumsFinder := nodewith.Role(role.ListBoxOption).HasClass("album")
-
-	if err := uiauto.Combine("Choose topic source",
-		ui.FocusAndWait(topicSourceContainer),
-		ui.LeftClick(topicSourceContainer),
-		ui.WaitUntilExists(albumsFinder.First()))(ctx); err != nil {
-		return errors.Wrapf(err, "failed to select %v", testParams.TopicSource)
-	}
-
-	albums, err := ui.NodesInfo(ctx, albumsFinder)
-	if err != nil {
-		return errors.Wrapf(err, "failed to find %v albums", testParams.TopicSource)
-	}
-	if len(albums) < 2 {
-		return errors.Errorf("at least 2 %v albums expected", testParams.TopicSource)
-	}
-
-	// For animated themes, trust the default album selection. Test cases for
-	// slideshow theme will verify that the default album selection is correct
-	// and test custom album selection.
-	if testParams.Theme == ambient.SlideShow {
-		if testParams.TopicSource == ambient.GooglePhotos {
-			// Select all Google Photos albums.
-			for i, album := range albums {
-				if strings.Contains(album.ClassName, "album-selected") {
-					return errors.Errorf("Google Photos album %d should be unselected", i)
-				}
-				selectedAlbumNode := nodewith.HasClass("album-selected").Name(album.Name)
-				if err := uiauto.Retry(3, uiauto.Combine("select Google Photo album",
-					ui.Gone(selectedAlbumNode),
-					ui.MouseClickAtLocation(0, album.Location.CenterPoint()),
-					ui.WithTimeout(3*time.Second).WaitUntilExists(selectedAlbumNode),
-				))(ctx); err != nil {
-					return errors.Wrapf(err, "failed to select Google Photos album %d", i)
-				}
-			}
-		} else if testParams.TopicSource == ambient.ArtGallery {
-			// Turn off all but one art gallery album.
-			for i, album := range albums[1:] {
-				if !strings.Contains(album.ClassName, "album-selected") {
-					return errors.Errorf("Art album %d should be selected", i)
-				}
-				selectedAlbumNode := nodewith.HasClass("album-selected").Name(album.Name)
-				if err := uiauto.Retry(3, uiauto.Combine("deselect Art Gallery album",
-					ui.Exists(selectedAlbumNode),
-					ui.MouseClickAtLocation(0, album.Location.CenterPoint()),
-					ui.WithTimeout(3*time.Second).WaitUntilGone(selectedAlbumNode),
-				))(ctx); err != nil {
-					return errors.Wrapf(err, "failed to deselect Art Gallery album %d", i)
-				}
-			}
-		} else {
-			return errors.Errorf("topicSource - %v is invalid", testParams.TopicSource)
+func prepareScreenSaver(tconn *chrome.TestConn, ui *uiauto.Context, testParams ambient.TestParams) uiauto.Action {
+	return func(ctx context.Context) error {
+		themeContainer := nodewith.Role(role.RadioButton).Name(testParams.Theme)
+		if err := uiauto.Combine("Choose animation theme",
+			ui.FocusAndWait(themeContainer),
+			ui.LeftClick(themeContainer))(ctx); err != nil {
+			return errors.Wrapf(err, "failed to select %v", testParams.Theme)
 		}
-	}
 
-	// Close Personalization Hub after ambient mode setup is finished.
-	if err := personalization.ClosePersonalizationHub(ui)(ctx); err != nil {
-		return errors.Wrap(err, "failed to close Personalization Hub")
-	}
+		topicSourceContainer := nodewith.Role(role.RadioButton).NameContaining(testParams.TopicSource)
+		albumsFinder := nodewith.Role(role.ListBoxOption).HasClass("album")
 
-	if err := ambient.SetDeviceSettings(
-		ctx,
-		tconn,
-		ambient.DeviceSettings{
-			LockScreenIdle:         1 * time.Second,
-			BackgroundLockScreen:   2 * time.Second,
-			PhotoRefreshInterval:   1 * time.Second,
-			AnimationPlaybackSpeed: testParams.AnimationPlaybackSpeed,
-		},
-	); err != nil {
-		return errors.Wrap(err, "failed to configure ambient settings")
-	}
+		if err := uiauto.Combine("Choose topic source",
+			ui.FocusAndWait(topicSourceContainer),
+			ui.LeftClick(topicSourceContainer),
+			ui.WaitUntilExists(albumsFinder.First()))(ctx); err != nil {
+			return errors.Wrapf(err, "failed to select %v", testParams.TopicSource)
+		}
 
-	return nil
+		albums, err := ui.NodesInfo(ctx, albumsFinder)
+		if err != nil {
+			return errors.Wrapf(err, "failed to find %v albums", testParams.TopicSource)
+		}
+		if len(albums) < 2 {
+			return errors.Errorf("at least 2 %v albums expected", testParams.TopicSource)
+		}
+
+		// For animated themes, trust the default album selection. Test cases for
+		// slideshow theme will verify that the default album selection is correct
+		// and test custom album selection.
+		if testParams.Theme == ambient.SlideShow {
+			if testParams.TopicSource == ambient.GooglePhotos {
+				// Select all Google Photos albums.
+				for i, album := range albums {
+					if strings.Contains(album.ClassName, "album-selected") {
+						return errors.Errorf("Google Photos album %d should be unselected", i)
+					}
+					selectedAlbumNode := nodewith.HasClass("album-selected").Name(album.Name)
+					if err := uiauto.Retry(3, uiauto.Combine("select Google Photo album",
+						ui.Gone(selectedAlbumNode),
+						ui.MouseClickAtLocation(0, album.Location.CenterPoint()),
+						ui.WithTimeout(3*time.Second).WaitUntilExists(selectedAlbumNode),
+					))(ctx); err != nil {
+						return errors.Wrapf(err, "failed to select Google Photos album %d", i)
+					}
+				}
+			} else if testParams.TopicSource == ambient.ArtGallery {
+				// Turn off all but one art gallery album.
+				for i, album := range albums[1:] {
+					if !strings.Contains(album.ClassName, "album-selected") {
+						return errors.Errorf("Art album %d should be selected", i)
+					}
+					selectedAlbumNode := nodewith.HasClass("album-selected").Name(album.Name)
+					if err := uiauto.Retry(3, uiauto.Combine("deselect Art Gallery album",
+						ui.Exists(selectedAlbumNode),
+						ui.MouseClickAtLocation(0, album.Location.CenterPoint()),
+						ui.WithTimeout(3*time.Second).WaitUntilGone(selectedAlbumNode),
+					))(ctx); err != nil {
+						return errors.Wrapf(err, "failed to deselect Art Gallery album %d", i)
+					}
+				}
+			} else {
+				return errors.Errorf("topicSource - %v is invalid", testParams.TopicSource)
+			}
+		}
+
+		// Close Personalization Hub after ambient mode setup is finished.
+		if err := uiauto.Combine("Close personalization app and set device settings",
+			personalization.ClosePersonalizationHub(ui),
+			ambient.SetDeviceSettings(tconn, ambient.DeviceSettings{
+				LockScreenIdle:         1 * time.Second,
+				BackgroundLockScreen:   2 * time.Second,
+				PhotoRefreshInterval:   1 * time.Second,
+				AnimationPlaybackSpeed: testParams.AnimationPlaybackSpeed,
+			}))(ctx); err != nil {
+			return errors.Wrap(err, "failed to prepare screen saver")
+		}
+
+		return nil
+	}
 }
