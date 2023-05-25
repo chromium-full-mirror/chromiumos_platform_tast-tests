@@ -11,7 +11,10 @@ import (
 	"chromiumos/tast/local/chrome/settings"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
+	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/quicksettings"
+	"chromiumos/tast/local/chrome/uiauto/role"
+
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -28,13 +31,16 @@ func init() {
 		BugComponent: "b:1246070", // ChromeOS > Software > System UI Surfaces > Status Area
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		Pre:          chrome.LoggedIn(),
+		Fixture:      "chromeLoggedInQsRevampEnabled",
 	})
 }
 
 // NightLight tests that Night Light feature pod button is working correctly.
 func NightLight(ctx context.Context, s *testing.State) {
-	cr := s.PreValue().(*chrome.Chrome)
+	cleanup := quicksettings.SetQsRevampEnabled(true)
+	defer cleanup()
+
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
@@ -54,8 +60,11 @@ func NightLight(ctx context.Context, s *testing.State) {
 	defer quicksettings.Hide(ctx, tconn)
 	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
 
-	if err := ui.LeftClick(quicksettings.PodIconButton(quicksettings.SettingPodNightLight))(ctx); err != nil {
-		s.Fatal("Failed to click the Night Light feature pod icon button: ", err)
+	// Night light is a top-level button in quick settings.
+	nightLightBtn := nodewith.Role(role.ToggleButton).NameStartingWith("Toggle Night Light")
+
+	if err := ui.LeftClick(nightLightBtn)(ctx); err != nil {
+		s.Fatal("Failed to click the Night Light button: ", err)
 	}
 
 	// Get night light state after the first toggle.
@@ -68,8 +77,8 @@ func NightLight(ctx context.Context, s *testing.State) {
 		s.Fatal("Night Light state did not change after toggling the feature pod button")
 	}
 
-	if err := ui.LeftClick(quicksettings.PodIconButton(quicksettings.SettingPodNightLight))(ctx); err != nil {
-		s.Fatal("Failed to click the Night Light feature pod icon button: ", err)
+	if err := ui.LeftClick(nightLightBtn)(ctx); err != nil {
+		s.Fatal("Failed to click the Night Light button: ", err)
 	}
 
 	// Get night light state after the second toggle.
