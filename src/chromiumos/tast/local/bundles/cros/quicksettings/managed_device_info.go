@@ -101,7 +101,7 @@ func ManagedDeviceInfo(ctx context.Context, s *testing.State) {
 		chrome.EnableFeatures("ManagedDeviceUIRedesign"),
 	}
 	if param.qsRevamp {
-		opts = append(opts, chrome.EnableQuickSettingsRevamp())
+		opts = append(opts, chrome.EnableFeatures("QsRevamp"))
 	}
 	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, bt, lacrosfixt.NewConfig(), opts...)
 	if err != nil {

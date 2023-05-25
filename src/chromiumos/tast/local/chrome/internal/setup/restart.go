@@ -213,11 +213,12 @@ func RestartChromeForTesting(ctx context.Context, cfg *config.Config, extArgs, l
 
 	enabledFeatures := cfg.EnableFeatures()
 	disabledFeatures := cfg.DisableFeatures()
-	// Enable QsRevamp if the test has explicitly requested it, otherwise force it off.
+	// Force QsRevamp off unless the test has explicitly enabled it.
+	// We force the old quick settings UI because many tests rely on it to
+	// enable and disable features. In general, they aren't actually testing
+	// the UI. This way we can port tests one-by-one to work with the new UI.
 	// TODO(b/252870625): Remove this once all tests have been ported to work with QsRevamp.
-	if cfg.EnableQuickSettingsRevamp() {
-		enabledFeatures = append(enabledFeatures, "QsRevamp")
-	} else {
+	if !contains(enabledFeatures, "QsRevamp") {
 		disabledFeatures = append(disabledFeatures, "QsRevamp")
 	}
 	if len(enabledFeatures) != 0 {
@@ -487,4 +488,16 @@ func fixLogSymlink(ctx context.Context) {
 		// the symlink.
 		testing.ContextLogf(ctx, "Warning: failed to fix Chrome log symlink: %v; continuing anyway", err)
 	}
+}
+
+// contains returns whether the slice "list" contains "s".
+// This can be replaced with slices.Contains() once Go releases the slices
+// package: https://pkg.go.dev/golang.org/x/exp/slices#Contains
+func contains(list []string, s string) bool {
+	for _, v := range list {
+		if v == s {
+			return true
+		}
+	}
+	return false
 }

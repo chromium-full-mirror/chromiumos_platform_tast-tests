@@ -103,7 +103,7 @@ func init() {
 		Contacts: []string{"hidehiko@chromium.org", "edcourtney@chromium.org"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return NewConfig(ChromeOptions(
-				chrome.EnableQuickSettingsRevamp(),
+				chrome.EnableFeatures("QsRevamp"),
 				chrome.ExtraArgs("--use-fake-ui-for-media-stream"),
 				chrome.ExtraArgs("--autoplay-policy=no-user-gesture-required"), // Allow media autoplay.
 				chrome.LacrosExtraArgs("--use-fake-ui-for-media-stream"),
