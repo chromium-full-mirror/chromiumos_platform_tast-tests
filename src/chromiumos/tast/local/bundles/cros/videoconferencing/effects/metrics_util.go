@@ -26,8 +26,8 @@ const (
 	fieldFilter      = `:\s+(\d+) kB`
 	crosCameraFilter = `root(\s+)(\d+)(.+)cros_camera_service`
 
-	// DefaultTestDuration defines the default test duration of 15 minutes in seconds.
-	DefaultTestDuration = 60 * 15
+	// DefaultTestDuration defines the default test duration of 5 minutes in seconds.
+	DefaultTestDuration = 60 * 5
 )
 
 // PeakMemoryResult returns the peak memory or an error.
