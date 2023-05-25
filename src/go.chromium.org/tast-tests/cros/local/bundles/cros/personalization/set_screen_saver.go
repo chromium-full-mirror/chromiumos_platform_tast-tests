@@ -6,6 +6,8 @@ package personalization
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/ambient"
@@ -182,6 +184,7 @@ func prepareScreenSaver(tconn *chrome.TestConn, ui *uiauto.Context, testParams a
 		// and test custom album selection.
 		if testParams.Theme == ambient.SlideShow {
 			if testParams.TopicSource == ambient.GooglePhotos {
+				var albumNames []string
 				// Select all Google Photos albums.
 				for i, album := range albums {
 					if ambient.IsAlbumSelected(&album) {
@@ -190,6 +193,11 @@ func prepareScreenSaver(tconn *chrome.TestConn, ui *uiauto.Context, testParams a
 					if err := ambient.SelectAlbum(ctx, ui, &album); err != nil {
 						return errors.Wrapf(err, "failed to select Google Photos album %d", i)
 					}
+					albumNames = append(albumNames, album.Name)
+				}
+				expectedText := strings.Join(albumNames, " ")
+				if err := waitForCurrentlySetWithName(ui, expectedText)(ctx); err != nil {
+					return errors.Wrap(err, "failed to find matching currently set header")
 				}
 			} else if testParams.TopicSource == ambient.ArtGallery {
 				// Turn off all but one art gallery album.
@@ -200,6 +208,9 @@ func prepareScreenSaver(tconn *chrome.TestConn, ui *uiauto.Context, testParams a
 					if err := ambient.DeselectAlbum(ctx, ui, &album); err != nil {
 						return errors.Wrapf(err, "failed to deselect Art Gallery album %d", i)
 					}
+				}
+				if err := waitForCurrentlySetWithName(ui, albums[0].Name)(ctx); err != nil {
+					return errors.Wrap(err, "failed to wait for currently set")
 				}
 			} else {
 				return errors.Errorf("topicSource - %v is invalid", testParams.TopicSource)
@@ -220,4 +231,9 @@ func prepareScreenSaver(tconn *chrome.TestConn, ui *uiauto.Context, testParams a
 
 		return nil
 	}
+}
+
+func waitForCurrentlySetWithName(ui *uiauto.Context, name string) uiauto.Action {
+	currentlySetNode := nodewith.NameStartingWith(fmt.Sprintf("Currently set %v", name)).Role(role.Heading).Ancestor(personalization.PersonalizationHubWindow)
+	return ui.WaitUntilExists(currentlySetNode)
 }
