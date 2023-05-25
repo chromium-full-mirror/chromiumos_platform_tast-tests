@@ -12,6 +12,7 @@ import (
 	"chromiumos/tast/remote/bundles/cros/lacros/update"
 	"chromiumos/tast/remote/bundles/cros/lacros/version"
 	lacrosservice "chromiumos/tast/services/cros/lacros"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
@@ -36,8 +37,7 @@ func init() {
 		Desc:         "Tests that Stateful Lacros is selected when it is newer than Rootfs Lacros",
 		Contacts:     []string{"chromeos-sw-engprod@google.com", "lacros-team@google.com", "hyungtaekim@chromium.org"},
 		BugComponent: "crbug:OS>LaCrOS",
-		// TODO(b/266740467): Reenable this test for the group:mainline once fixed.
-		// Attr:         []string{"group:mainline", "informational"},	// running manually
+		Attr:         []string{"group:mainline", "informational"}, // running manually
 		SoftwareDeps: []string{"chrome", "lacros"},
 		ServiceDeps:  []string{"tast.cros.lacros.UpdateTestService"},
 		// lacrosComponent is a runtime var to specify a name of the component which Lacros is provisioned to.
