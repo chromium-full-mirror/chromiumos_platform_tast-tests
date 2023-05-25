@@ -166,6 +166,11 @@ func (c *ccdOpenImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 		// (no SPI).
 		return
 	}
+	if props.TestbedType == ti50.GscOpentitanCw310Fpga {
+		// TODO(jbk): Once OpenTitan port has SPI TPM capability, and other feature
+		// parity, this should be re-enabled.
+		return
+	}
 
 	// Ensure that test lab is open before we try to open ccd
 	c.ensureTestLabOpen(ctx, s)
