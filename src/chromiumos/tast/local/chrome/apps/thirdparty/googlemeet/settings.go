@@ -290,7 +290,7 @@ func (gm *GoogleMeet) SetLayout(layoutOption LayoutOption) action.Action {
 
 	return uiauto.NamedAction(fmt.Sprintf("set layout to %q", layoutOption),
 		ui.DoDefaultUntil(layoutRadioButton,
-			ui.WithTimeout(shortUITimeout).WaitUntilExists(layoutRadioButton.Focused())))
+			ui.WithTimeout(shortUITimeout).WaitUntilCheckedState(layoutRadioButton, true)))
 }
 
 // SetToMaxTiles sets the tile number to max in the Tiled layout.
