@@ -700,6 +700,22 @@ func (c *PolicyService) ClientID(ctx context.Context, req *empty.Empty) (*ppb.Cl
 	return &ppb.ClientIdResponse{ClientId: *p.DeviceId}, nil
 }
 
+func (c *PolicyService) DirectoryAPIID(ctx context.Context, req *empty.Empty) (*ppb.DirectoryAPIIDResponse, error) {
+	sm, err := session.NewSessionManager(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create session_manager binding")
+	}
+
+	p, err := session.RetrievePolicyData(ctx, sm)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to retrieve settings")
+	} else if p == nil {
+		return nil, errors.New("client ID not found")
+	}
+
+	return &ppb.DirectoryAPIIDResponse{DirectoryAPIID: *p.DirectoryApiId}, nil
+}
+
 func (c *PolicyService) GetTimeOfDay(ctx context.Context, req *empty.Empty) (*ppb.GetTimeOfDayResponse, error) {
 	now := time.Now()
 	return &ppb.GetTimeOfDayResponse{Hour: int32(now.Hour()), Minute: int32(now.Minute())}, nil

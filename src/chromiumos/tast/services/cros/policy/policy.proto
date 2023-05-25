@@ -53,6 +53,9 @@ service PolicyService {
   // Grabs Client ID for the session.
   rpc ClientID(google.protobuf.Empty) returns (ClientIdResponse) {}
 
+  // Grabs DirectoryAPIID of the managed session.
+  rpc DirectoryAPIID(google.protobuf.Empty) returns (DirectoryAPIIDResponse) {}
+
   // Gets the local time.
   rpc GetTimeOfDay(google.protobuf.Empty) returns (GetTimeOfDayResponse) {}
 
@@ -174,6 +177,10 @@ message StartChromeRequest {
 
 message ClientIdResponse {
   string clientId = 1;
+}
+
+message DirectoryAPIIDResponse {
+  string directoryAPIID = 1;
 }
 
 message GetTimeOfDayResponse{
