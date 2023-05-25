@@ -9,6 +9,7 @@ import (
 	"context"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/power"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -16,6 +17,29 @@ import (
 
 // CleanupCallback cleans up a single setup item.
 type CleanupCallback func(context.Context) error
+
+// PowerTestSetup is a util function that allows power fixtures and other
+// fixtures / tests to set up the DUT for power testing.
+func PowerTestSetup(ctx context.Context, name string, tconn *chrome.TestConn, powerTestOptions *PowerTestOptions) (cleanup CleanupCallback, err error) {
+	su, cleanup := New(name)
+
+	discharge := false
+	if _, err := power.SysfsBatteryPath(ctx); err == nil {
+		discharge = true
+	} else if errors.Is(err, power.ErrNoBattery) {
+		// If it's ErrNoBattery, leave dischargeMode at NoBatteryDischarge.
+		testing.ContextLog(ctx, "Unable to find battery, do not force discharge: ", err)
+	} else {
+		testing.ContextLog(ctx, "Unable to determine if a battery exists, do not force discharge: ", err)
+	}
+
+	su.Add(PowerTest(ctx, tconn, *powerTestOptions, NewBatteryDischarge(discharge, true /*ignoreErr*/, DefaultDischargeThreshold)))
+	if err := su.Check(ctx); err != nil {
+		cleanup(ctx)
+		return nil, errors.Wrap(err, "power test options setup failed for fixture "+name)
+	}
+	return cleanup, nil
+}
 
 // Nested is used by setup items that have multiple stages that need separate
 // cleanup callbacks.

@@ -368,23 +368,20 @@ func NewPowerNoUIFixture(pto PowerTestOptions) testing.FixtureImpl {
 }
 
 func (f *powerNoUIFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
 	// Set up the testing environment.
-	su, cleanup := New("powerNoUIFixture")
-
-	discharge := false
-	if _, err := power.SysfsBatteryPath(ctx); err == nil {
-		discharge = true
-	} else if errors.Is(err, power.ErrNoBattery) {
-		// If it's ErrNoBattery, leave dischargeMode at NoBatteryDischarge.
-		s.Log("Unable to find battery, do not force discharge: ", err)
-	} else {
-		s.Log("Unable to determine if a battery exists, do not force discharge: ", err)
+	cleanup, err := PowerTestSetup(ctx, "powerNoUIFixture", nil, f.powerTestOptions)
+	if err != nil {
+		s.Fatal("Power fixture failed: ", err)
 	}
-
-	su.Add(PowerTest(ctx, nil, *f.powerTestOptions, NewBatteryDischarge(discharge, true /*ignoreErr*/, DefaultDischargeThreshold)))
-	if err := su.Check(ctx); err != nil {
-		s.Fatal("Power test setup failed: ", err)
-	}
+	defer func() {
+		if s.HasError() {
+			cleanup(cleanupCtx)
+		}
+	}()
 
 	f.cleanup = cleanup
 
@@ -563,27 +560,15 @@ func (f *powerUIFixture) SetUp(ctx context.Context, s *testing.FixtState) interf
 	}
 
 	// Set up the testing environment.
-	su, cleanup := New("powerUIFixture")
+	cleanup, err := PowerTestSetup(ctx, "powerUIFixture", tconn, f.powerTestOptions)
+	if err != nil {
+		s.Fatal("Power fixture failed: ", err)
+	}
 	defer func() {
 		if s.HasError() {
 			cleanup(cleanupCtx)
 		}
 	}()
-
-	discharge := false
-	if _, err := power.SysfsBatteryPath(ctx); err == nil {
-		discharge = true
-	} else if errors.Is(err, power.ErrNoBattery) {
-		// If it's ErrNoBattery, leave dischargeMode at NoBatteryDischarge.
-		s.Log("Unable to find battery, do not force discharge: ", err)
-	} else {
-		s.Log("Unable to determine if a battery exists, do not force discharge: ", err)
-	}
-
-	su.Add(PowerTest(ctx, tconn, *f.powerTestOptions, NewBatteryDischarge(discharge, true /*ignoreErr*/, DefaultDischargeThreshold)))
-	if err := su.Check(ctx); err != nil {
-		s.Fatal("Power test setup failed: ", err)
-	}
 
 	chrome.Lock()
 	f.cr = cr

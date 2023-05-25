@@ -36,6 +36,10 @@ power impact, adjusting backlights, etc.
 For examples on how to use the power fixtures, please refer to test [ExampleUI]
 and [ExampleNoUIManualMetrics].
 
+If your test already uses fixtures and is unable to inherit from a power
+fixture, take a look at how to use `PowerTestSetup` directly.
+TODO: b/283738206 - add a link to `PowerTestSetup`.
+
 [power/setup/fixture.go]: https://crsrc.org/o/src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/local/power/setup/fixture.go
 [ExampleUI]: https://crsrc.org/o/src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/local/bundles/cros/power/example_ui.go
 [ExampleNoUIManualMetrics]: https://crsrc.org/o/src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/local/bundles/cros/power/example_no_ui_manual_metrics.go
