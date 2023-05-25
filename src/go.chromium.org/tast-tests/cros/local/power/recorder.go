@@ -17,6 +17,28 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+const (
+	// RecorderTempCooldownTimeout is the max amount of time needed for device
+	// temperature to cooldown.
+	RecorderTempCooldownTimeout = 5 * time.Minute
+	// RecorderIdleStateCooldownTimeout is the max amount of time needed for cpu
+	// idle state activity to drop.
+	RecorderIdleStateCooldownTimeout = 2 * time.Minute
+	// RecorderPkgStateCooldownTimeout is the max amount of time needed for cpu
+	// pkg state activity to drop.
+	RecorderPkgStateCooldownTimeout = 3 * time.Minute
+
+	// RecorderCooldownTimeout is the max amount of time that Recorder allows
+	// for all combined cooldown items.
+	RecorderCooldownTimeout = RecorderTempCooldownTimeout + RecorderIdleStateCooldownTimeout +
+		RecorderPkgStateCooldownTimeout
+
+	// RecorderTimeout is the max amount of time that Recorder is expected to
+	// take. It includes recorder & metrics construction, recorder cooldown,
+	// recorder destruction and data post-processing.
+	RecorderTimeout = RecorderCooldownTimeout + 3*time.Minute
+)
+
 // Recorder is a utility to measure power metrics during tests.
 type Recorder struct {
 	// Fields passed in from NewRecorder().

@@ -39,35 +39,35 @@ func init() {
 			Name:    "3m_ash",
 			Fixture: "powerAsh",
 			Val:     power.TimeParams{Interval: 5 * time.Second, Total: 3 * time.Minute},
-			Timeout: 3*time.Minute + timeoutBuffer,
+			Timeout: 3*time.Minute + timeoutBuffer + power.RecorderTimeout,
 		}, {
 			Name:    "25m_ash",
 			Fixture: "powerAsh",
 			Val:     power.TimeParams{Interval: 20 * time.Second, Total: 25 * time.Minute},
-			Timeout: 25*time.Minute + timeoutBuffer,
+			Timeout: 25*time.Minute + timeoutBuffer + power.RecorderTimeout,
 		}, {
 			Name:    "2hr_ash",
 			Fixture: "powerAsh",
 			Val:     power.TimeParams{Interval: 20 * time.Second, Total: 2 * time.Hour},
-			Timeout: 2*time.Hour + timeoutBuffer,
+			Timeout: 2*time.Hour + timeoutBuffer + power.RecorderTimeout,
 		}, {
 			Name:              "3m_lacros",
 			Fixture:           "powerLacros",
 			ExtraSoftwareDeps: []string{"lacros"},
 			Val:               power.TimeParams{Interval: 5 * time.Second, Total: 3 * time.Minute},
-			Timeout:           3*time.Minute + timeoutBuffer,
+			Timeout:           3*time.Minute + timeoutBuffer + power.RecorderTimeout,
 		}, {
 			Name:              "25m_lacros",
 			Fixture:           "powerLacros",
 			ExtraSoftwareDeps: []string{"lacros"},
 			Val:               power.TimeParams{Interval: 20 * time.Second, Total: 25 * time.Minute},
-			Timeout:           25*time.Minute + timeoutBuffer,
+			Timeout:           25*time.Minute + timeoutBuffer + power.RecorderTimeout,
 		}, {
 			Name:              "2hr_lacros",
 			Fixture:           "powerLacros",
 			ExtraSoftwareDeps: []string{"lacros"},
 			Val:               power.TimeParams{Interval: 20 * time.Second, Total: 2 * time.Hour},
-			Timeout:           2*time.Hour + timeoutBuffer,
+			Timeout:           2*time.Hour + timeoutBuffer + power.RecorderTimeout,
 		}},
 	})
 }

@@ -23,7 +23,7 @@ func init() {
 			"chromeos-platform-power@google.com",
 			"mqg@chromium.org",
 		},
-		Timeout: 3 * time.Minute,
+		Timeout: 1*time.Minute + power.RecorderTimeout,
 		Params: []testing.Param{{
 			Name:    "fastest",
 			Fixture: "powerNoUINoWiFi",

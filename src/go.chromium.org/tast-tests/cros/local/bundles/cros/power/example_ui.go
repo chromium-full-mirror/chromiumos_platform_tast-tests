@@ -27,7 +27,7 @@ func init() {
 		BugComponent: "b:167191",
 		Contacts:     []string{"chromeos-platform-power@google.com"},
 		SoftwareDeps: []string{"chrome"},
-		Timeout:      3 * time.Minute,
+		Timeout:      1*time.Minute + power.RecorderTimeout,
 		Params: []testing.Param{{
 			Name:      "ash_kbbl",
 			Fixture:   "powerAshKbbl",

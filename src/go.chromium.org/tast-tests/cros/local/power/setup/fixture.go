@@ -48,8 +48,8 @@ func init() {
 			"jakebarnes@google.com",
 		},
 		Impl:            &powerSetUpFixture{},
-		SetUpTimeout:    time.Minute,
-		TearDownTimeout: time.Minute,
+		SetUpTimeout:    setUpTimeout,
+		TearDownTimeout: tearDownTimeout,
 	})
 
 	testing.AddFixture(&testing.Fixture{
@@ -102,7 +102,7 @@ func init() {
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: tearDownTimeout,
-		PreTestTimeout:  preTestTimeout,
+		PreTestTimeout:  preTestTimeout + power.RecorderTimeout,
 		PostTestTimeout: postTestTimeout,
 		Parent:          "powerNoUIWiFi",
 	})

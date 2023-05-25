@@ -26,8 +26,8 @@ func init() {
 		BugComponent: "b:167191", // ChromeOS > Platform > System > Power
 		Contacts:     []string{"chromeos-platform-power@google.com"},
 		SoftwareDeps: []string{"chrome"},
-		// Test will run for 1 hour plus 5 minutes buffer time
-		Timeout: 65 * time.Minute,
+		// Test will run for 1 hour plus 5 minutes buffer time.
+		Timeout: 65*time.Minute + power.RecorderTimeout,
 		Params: []testing.Param{{
 			Name:    "ash",
 			Fixture: "powerAsh",

@@ -31,7 +31,7 @@ func init() {
 		Contacts:     []string{"chromeos-platform-power@google.com"},
 		BugComponent: "b:167191", // ChromeOS > Platform > System > Power
 		SoftwareDeps: []string{"chrome"},
-		Timeout:      10 * time.Minute,
+		Timeout:      10*time.Minute + power.RecorderTimeout,
 		Fixture:      "powerAshARC",
 	})
 }

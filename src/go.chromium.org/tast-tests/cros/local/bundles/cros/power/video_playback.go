@@ -27,7 +27,7 @@ func init() {
 		BugComponent: "b:167191",
 		Contacts:     []string{"chromeos-platform-power@google.com"},
 		SoftwareDeps: []string{"chrome"},
-		Timeout:      5 * time.Minute,
+		Timeout:      5*time.Minute + power.RecorderTimeout,
 		Params: []testing.Param{{
 			Name:      "h264_720_30fps_ash",
 			Fixture:   "powerAshRamfs",

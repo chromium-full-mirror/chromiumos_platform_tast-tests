@@ -19,7 +19,7 @@ func init() {
 		Contacts:     []string{"chromeos-platform-power@google.com"},
 		// Disabled because this is an example test for other tests to follow.
 		// Attr:      []string{"group:mainline", "informational"},
-		Timeout: 3 * time.Minute,
+		Timeout: 1 * time.Minute,
 		Fixture: "powerMetricsNoUI",
 	})
 }
