@@ -2,7 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package quickanswersutil
+// Package quickanswers contains helpers to verify quick answers definition and
+// unit conversion.
+package quickanswers
 
 import (
 	"context"

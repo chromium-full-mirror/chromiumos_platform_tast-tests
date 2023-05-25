@@ -15,7 +15,7 @@ import (
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/local/annotations"
-	"chromiumos/tast/local/bundles/cros/policy/quickanswersutil"
+	policyquickanswers "chromiumos/tast/local/bundles/cros/policy/quickanswers"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
@@ -77,7 +77,7 @@ func QuickAnswersUnitConversionEnabled(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to enable Quick Answers: ", err)
 	}
 
-	for _, param := range []quickanswersutil.UnitConversionTestCase{
+	for _, param := range []policyquickanswers.UnitConversionTestCase{
 		{
 			Name:                  "unset",
 			ShouldFindAnnotation:  true,
@@ -121,13 +121,13 @@ func QuickAnswersUnitConversionEnabled(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to start logging: ", err)
 			}
 
-			if err := quickanswersutil.TriggerQuickAnswersUnitConversion(ctx, param, server, br, tconn); err != nil {
+			if err := policyquickanswers.TriggerQuickAnswersUnitConversion(ctx, param, server, br, tconn); err != nil {
 				s.Fatal("Failed to trigger and verify quick answers unit conversion: ", err)
 			}
 
 			// Stop logging and check the logs for annotation hashcode associated with
 			// the policy.
-			foundAnnotation, err := annotations.StopLoggingCheckLogs(ctx, cr, br, quickanswersutil.AnnotationHashCode)
+			foundAnnotation, err := annotations.StopLoggingCheckLogs(ctx, cr, br, policyquickanswers.AnnotationHashCode)
 			if err != nil {
 				s.Fatal("Failed to stop logging and check logs: ", err)
 			}

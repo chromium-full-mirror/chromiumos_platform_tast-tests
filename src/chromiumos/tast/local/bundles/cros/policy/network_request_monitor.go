@@ -18,8 +18,8 @@ import (
 	"chromiumos/tast/local/annotations"
 	"chromiumos/tast/local/bundles/cros/policy/calendarintegration"
 	"chromiumos/tast/local/bundles/cros/policy/passwordleakdetection"
-	"chromiumos/tast/local/bundles/cros/policy/quickanswersutil"
-	"chromiumos/tast/local/bundles/cros/policy/spellcheckutil"
+	qa "chromiumos/tast/local/bundles/cros/policy/quickanswers"
+	"chromiumos/tast/local/bundles/cros/policy/spellcheck"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
@@ -182,7 +182,7 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 	})
 
 	s.Run(ctx, "spell_check_service", func(ctx context.Context, s *testing.State) {
-		spellCheckParam := spellcheckutil.TestCase{
+		spellCheckParam := spellcheck.TestCase{
 			Name:              "disallow",
 			Value:             &policy.SpellCheckServiceEnabled{Val: false},
 			WantRestriction:   restriction.Disabled,
@@ -191,33 +191,33 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 			WantContextCheck:     "",
 			ShouldFindAnnotation: false,
 		}
-		if err := spellcheckutil.TriggerSpellCheck(ctx, spellCheckParam, cr, server, br, tconn); err != nil {
+		if err := spellcheck.TriggerSpellCheck(ctx, spellCheckParam, cr, server, br, tconn); err != nil {
 			s.Fatal("Failed to trigger and verify spellcheck: ", err)
 		}
-		hashCodes = append(hashCodes, spellcheckutil.AnnotationHashCode)
+		hashCodes = append(hashCodes, spellcheck.AnnotationHashCode)
 	})
 
 	s.Run(ctx, "quick_answers_service", func(ctx context.Context, s *testing.State) {
-		quickAnswersDefinitionParam := quickanswersutil.DefinitionTestCase{
+		quickAnswersDefinitionParam := qa.DefinitionTestCase{
 			Name:                  "disabled",
 			ShouldFindAnnotation:  false,
 			ShouldShowContextMenu: false,
 			Policy:                &policy.QuickAnswersDefinitionEnabled{Val: false},
 		}
-		if err := quickanswersutil.TriggerQuickAnswersDefinition(ctx, quickAnswersDefinitionParam, server, br, tconn); err != nil {
+		if err := qa.TriggerQuickAnswersDefinition(ctx, quickAnswersDefinitionParam, server, br, tconn); err != nil {
 			s.Fatal("Failed to trigger and verify quick answers definition: ", err)
 		}
 
-		quickAnswersUnitCoversionParam := quickanswersutil.UnitConversionTestCase{
+		quickAnswersUnitCoversionParam := qa.UnitConversionTestCase{
 			Name:                  "disabled",
 			ShouldFindAnnotation:  false,
 			ShouldShowContextMenu: false,
 			Policy:                &policy.QuickAnswersUnitConversionEnabled{Val: false},
 		}
-		if err := quickanswersutil.TriggerQuickAnswersUnitConversion(ctx, quickAnswersUnitCoversionParam, server, br, tconn); err != nil {
+		if err := qa.TriggerQuickAnswersUnitConversion(ctx, quickAnswersUnitCoversionParam, server, br, tconn); err != nil {
 			s.Fatal("Failed to trigger and verify quick answers unit conversion: ", err)
 		}
-		hashCodes = append(hashCodes, quickanswersutil.AnnotationHashCode)
+		hashCodes = append(hashCodes, qa.AnnotationHashCode)
 	})
 
 	s.Run(ctx, "password_leak_detection", func(ctx context.Context, s *testing.State) {

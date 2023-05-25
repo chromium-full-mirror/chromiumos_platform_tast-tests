@@ -15,7 +15,7 @@ import (
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/local/annotations"
-	"chromiumos/tast/local/bundles/cros/policy/spellcheckutil"
+	"chromiumos/tast/local/bundles/cros/policy/spellcheck"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
@@ -75,7 +75,7 @@ func SpellCheckServiceEnabled(ctx context.Context, s *testing.State) {
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()
 
-	for _, param := range []spellcheckutil.TestCase{
+	for _, param := range []spellcheck.TestCase{
 		{
 			Name:                 "allow",
 			Value:                &policy.SpellCheckServiceEnabled{Val: true},
@@ -128,13 +128,13 @@ func SpellCheckServiceEnabled(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to start logging: ", err)
 			}
 
-			if err := spellcheckutil.TriggerSpellCheck(ctx, param, cr, server, br, tconn); err != nil {
+			if err := spellcheck.TriggerSpellCheck(ctx, param, cr, server, br, tconn); err != nil {
 				s.Fatal("Failed to trigger and verify spellcheck: ", err)
 			}
 
 			// Stop logging and check the logs for annotation hashcode associated with
 			// the policy.
-			foundAnnotation, err := annotations.StopLoggingCheckLogs(ctx, cr, br, spellcheckutil.AnnotationHashCode)
+			foundAnnotation, err := annotations.StopLoggingCheckLogs(ctx, cr, br, spellcheck.AnnotationHashCode)
 			if err != nil {
 				s.Fatal("Failed to stop logging and check logs: ", err)
 			}
