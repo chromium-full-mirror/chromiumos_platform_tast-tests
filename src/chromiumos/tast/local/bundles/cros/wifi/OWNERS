@@ -3,4 +3,10 @@
 # found in the LICENSE file.
 #
 # Allow WiFi team to update documentation
-per-file *.md = file:chromiumos/third_party/autotest:/WIFI_OWNERS
+# per-file *.md = file:chromiumos/third_party/autotest:/WIFI_OWNERS
+rohitbm@chromium.org
+seewaifu@google.com
+yichiyan@google.com
+jessemcguire@google.com
+abergman@google.com
+asadrieh@google.com
