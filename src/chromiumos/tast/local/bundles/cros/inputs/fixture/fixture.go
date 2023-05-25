@@ -43,6 +43,7 @@ const (
 	diacriticsOnPhysicalKeyboardLongpress
 	virtualKeyboardMultitouch
 	handwritingLegacyRecognition
+	qsRevampEnabled
 )
 
 // List of fixture names for inputs.
@@ -200,7 +201,8 @@ func init() {
 			"essential-inputs-team@google.com",
 			"alvinjia@google.com",
 		},
-		Impl: inputsFixture(clamshellMode, false, false, browser.TypeAsh, autocorrectToggle),
+		// Need QsRevamp to access new audio settings UI.
+		Impl: inputsFixture(clamshellMode, false, false, browser.TypeAsh, autocorrectToggle, qsRevampEnabled),
 		// Need aloop for route playback to capture.
 		Parent:          fixture.StereoAloopLoaded,
 		SetUpTimeout:    chrome.LoginTimeout,
@@ -291,7 +293,8 @@ func init() {
 			"shengjun@chromium.org",
 			"essential-inputs-team@google.com",
 		},
-		Impl: inputsFixture(tabletMode, true, false, browser.TypeAsh),
+		// Need QsRevamp to access new audio settings UI.
+		Impl: inputsFixture(tabletMode, true, false, browser.TypeAsh, qsRevampEnabled),
 		// Need aloop for route playback to capture.
 		Parent:          fixture.StereoAloopLoaded,
 		SetUpTimeout:    chrome.LoginTimeout,
@@ -441,7 +444,8 @@ func init() {
 			"essential-inputs-team@google.com",
 			"alvinjia@google.com",
 		},
-		Impl: inputsFixture(clamshellMode, false, false, browser.TypeLacros, autocorrectToggle),
+		// Need QsRevamp to access new audio settings UI.
+		Impl: inputsFixture(clamshellMode, false, false, browser.TypeLacros, autocorrectToggle, qsRevampEnabled),
 		// Need aloop for route playback to capture.
 		Parent:          fixture.StereoAloopLoaded,
 		SetUpTimeout:    chrome.LoginTimeout,
@@ -533,7 +537,8 @@ func init() {
 			"shengjun@chromium.org",
 			"essential-inputs-team@google.com",
 		},
-		Impl: inputsFixture(tabletMode, true, false, browser.TypeLacros),
+		// Need QsRevamp to access new audio settings UI.
+		Impl: inputsFixture(tabletMode, true, false, browser.TypeLacros, qsRevampEnabled),
 		// Need aloop for route playback to capture.
 		Parent:          fixture.StereoAloopLoaded,
 		SetUpTimeout:    chrome.LoginTimeout,
@@ -699,6 +704,8 @@ func (f *inputsFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) int
 			opts = append(opts, chrome.ExtraArgs("--enable-features=VirtualKeyboardMultitouch"))
 		case handwritingLegacyRecognition:
 			opts = append(opts, chrome.ExtraArgs("--enable-features=HandwritingLegacyRecognition"))
+		case qsRevampEnabled:
+			opts = append(opts, chrome.EnableFeatures("QsRevamp"))
 		}
 	}
 
