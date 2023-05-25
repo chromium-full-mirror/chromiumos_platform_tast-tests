@@ -12,6 +12,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -84,6 +85,9 @@ type DeviceSettings struct {
 	AnimationPlaybackSpeed float32
 }
 
+// A node finder to turn Ambient off and on in Personalization App.
+var ambientToggleButton *nodewith.Finder = nodewith.Role(role.ToggleButton).ClassName("clickable").NameStartingWith("When your screen is idle")
+
 func toNearestSecond(d time.Duration) int {
 	return int(d.Round(time.Second).Seconds())
 }
@@ -146,15 +150,21 @@ func OpenAmbientSubpage(ui *uiauto.Context) uiauto.Action {
 
 // toggleAmbientMode returns an action to toggle ambient mode in ambient subpage.
 func toggleAmbientMode(currentMode string, ui *uiauto.Context) uiauto.Action {
-	toggleAmbientButton := nodewith.Role(role.ToggleButton)
 	return uiauto.Combine(fmt.Sprintf("toggle ambient mode - %s", currentMode),
-		ui.WaitUntilExists(toggleAmbientButton),
-		ui.LeftClick(toggleAmbientButton))
+		ui.WaitUntilExists(ambientToggleButton),
+		ui.LeftClick(ambientToggleButton))
 }
 
 // ambientModeEnabled checks whether ambient mode is on.
 func ambientModeEnabled(ctx context.Context, ui *uiauto.Context) (bool, error) {
-	return ui.IsNodeFound(ctx, nodewith.Role(role.ToggleButton).Name(OnStatus))
+	if err := ui.WaitUntilExists(ambientToggleButton)(ctx); err != nil {
+		return false, errors.Wrap(err, "failed to find ambient toggle button")
+	}
+	info, err := ui.Info(ctx, ambientToggleButton)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to get ambient toggle button info")
+	}
+	return info.Checked == checked.True, nil
 }
 
 // EnableAmbientMode enables ambient mode in Personalization Hub from Ambient Subpage.
