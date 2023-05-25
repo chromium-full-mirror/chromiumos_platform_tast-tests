@@ -28,7 +28,7 @@ func init() {
 		},
 		BugComponent: "b:1226026",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:cellular", "cellular_unstable"},
+		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active"},
 		Fixture:      "cellular",
 		Timeout:      2 * time.Minute,
 	})
