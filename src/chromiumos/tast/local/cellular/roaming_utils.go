@@ -10,7 +10,6 @@ import (
 
 	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/local/modemmanager"
-	"chromiumos/tast/local/network"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -53,22 +52,12 @@ func SetRoamingPolicy(ctx context.Context, allowRoaming, autoConnect bool) error
 // GetCellularNetwork returns the nick name of the current active network
 func GetCellularNetwork(ctx context.Context) (string, error) {
 	var networkName string
-	helper, err := NewHelper(ctx)
+	helper, err := NewHelperWithConnectedCellular(ctx)
 	if err != nil {
 		return networkName, errors.Wrap(err, "failed to create cellular.Helper")
 	}
 
-	iccid, err := helper.GetCurrentICCID(ctx)
-	if err != nil {
-		return networkName, errors.Wrap(err, "failed to fetch current network iccid")
-	}
-
-	cellularNetworkProvider, err := network.NewCellularNetworkProvider(ctx, false)
-	if err != nil {
-		return networkName, errors.Wrap(err, "failed to create cellular network provider")
-	}
-
-	networkName, err = cellularNetworkProvider.GetNetworkNameByIccid(ctx, iccid)
+	networkName, err = helper.GetCurrentNetworkName(ctx)
 	if networkName == "" {
 		return networkName, errors.Wrap(err, "failed to fetch network name by iccid")
 	}
