@@ -26,8 +26,18 @@ import (
 	"chromiumos/tast/local/dbusutil"
 	"chromiumos/tast/local/hwsec"
 	"chromiumos/tast/local/upstart"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+)
+
+// skipTPMInitVar is a runtime variable that specifies whether to skip
+// TPM initialization. This can be used to save time while debugging locally
+// for issues unrelated to the TPM.
+var skipTPMInitVar = testing.RegisterVarString(
+	"ready.skipTPMInit",
+	"",
+	"A boolean string (true/false) signifying whether or not to skip TPM initialization",
 )
 
 // Wait waits until the system is (marginally) ready for tests to run.
@@ -129,7 +139,9 @@ func Wait(ctx context.Context, systemServicesTimeout time.Duration) error {
 		if err := waitForCryptohomeService(ctx); err != nil {
 			testing.ContextLog(ctx, "Failed waiting for cryptohome D-Bus service: ", err)
 		} else {
-			if hasTPM(ctx) {
+			if strings.ToLower(skipTPMInitVar.Value()) == "true" {
+				testing.ContextLog(ctx, "Skipping TPM initialization because ready.skipTPMInit is set")
+			} else if hasTPM(ctx) {
 				if err := ensureTPMInitialized(ctx); err != nil {
 					testing.ContextLog(ctx, "Failed ensuring that TPM is initialized: ", err)
 				}
