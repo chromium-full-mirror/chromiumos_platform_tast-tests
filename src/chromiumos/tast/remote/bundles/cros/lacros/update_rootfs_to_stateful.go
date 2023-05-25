@@ -37,7 +37,7 @@ func init() {
 		Desc:         "Tests that Stateful Lacros is selected when it is newer than Rootfs Lacros",
 		Contacts:     []string{"chromeos-sw-engprod@google.com", "lacros-team@google.com", "hyungtaekim@chromium.org"},
 		BugComponent: "crbug:OS>LaCrOS",
-		Attr:         []string{"group:mainline", "informational"}, // running manually
+		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "lacros"},
 		ServiceDeps:  []string{"tast.cros.lacros.UpdateTestService"},
 		// lacrosComponent is a runtime var to specify a name of the component which Lacros is provisioned to.
@@ -87,10 +87,10 @@ func UpdateRootfsToStateful(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get the Ash version: ", err)
 	}
-	statefulLacrosVersion := rootfsLacrosVersion
+
 	skew := s.Param().(testCaseRtoS).skew
 	validSkew := s.Param().(testCaseRtoS).validSkew
-	statefulLacrosVersion.Increment(skew)
+	statefulLacrosVersion := rootfsLacrosVersion.Increment(skew)
 	if !statefulLacrosVersion.IsValid() {
 		s.Fatal("Invalid Stateful Lacros version: ", statefulLacrosVersion)
 	} else if rootfsLacrosVersion.IsNewerThan(statefulLacrosVersion) {

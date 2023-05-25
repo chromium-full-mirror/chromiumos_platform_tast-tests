@@ -13,6 +13,7 @@ import (
 	lacrosupdate "chromiumos/tast/remote/bundles/cros/lacros/update"
 	"chromiumos/tast/remote/bundles/cros/lacros/version"
 	lacrosservice "chromiumos/tast/services/cros/lacros"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
@@ -80,10 +81,9 @@ func UpdateStatefulToRootfs(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get the Ash version: ", err)
 	}
 
-	statefulLacrosVersion := rootfsLacrosVersion
 	skew := s.Param().(testCaseStoR).skew
 	validSkew := s.Param().(testCaseStoR).validSkew
-	statefulLacrosVersion.Decrement(skew)
+	statefulLacrosVersion := rootfsLacrosVersion.Decrement(skew)
 	s.Logf("Versions: ash=%s rootfs-lacros=%s stateful-lacros=%s", ashVersion.GetString(), rootfsLacrosVersion.GetString(), statefulLacrosVersion.GetString())
 	if !statefulLacrosVersion.IsValid() {
 		s.Fatal("Invalid Stateful Lacros version: ", statefulLacrosVersion)

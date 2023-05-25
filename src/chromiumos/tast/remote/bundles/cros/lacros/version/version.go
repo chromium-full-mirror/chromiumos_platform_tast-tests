@@ -69,22 +69,24 @@ func (v *Version) Patch() int64 {
 	return v.components[3]
 }
 
-// Increment increases version by given components, returns a copy of it.
+// Increment returns a copy of the receiver version, increased by the given components.
 func (v *Version) Increment(o *Version) Version {
-	v.components[0] += o.components[0]
-	v.components[1] += o.components[1]
-	v.components[2] += o.components[2]
-	v.components[3] += o.components[3]
-	return *v
+	ret := *v
+	ret.components[0] += o.components[0]
+	ret.components[1] += o.components[1]
+	ret.components[2] += o.components[2]
+	ret.components[3] += o.components[3]
+	return ret
 }
 
-// Decrement decreases version by given components, returns a copy of it.
+// Decrement returns a copy of the receiver version, decreased by the given components.
 func (v *Version) Decrement(o *Version) Version {
-	v.components[0] -= o.components[0]
-	v.components[1] -= o.components[1]
-	v.components[2] -= o.components[2]
-	v.components[3] -= o.components[3]
-	return *v
+	ret := *v
+	ret.components[0] -= o.components[0]
+	ret.components[1] -= o.components[1]
+	ret.components[2] -= o.components[2]
+	ret.components[3] -= o.components[3]
+	return ret
 }
 
 // IsNewerThan compares two version and returns true when lhs is newer than rhs.

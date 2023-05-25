@@ -13,6 +13,7 @@ import (
 	"chromiumos/tast/remote/bundles/cros/lacros/update"
 	"chromiumos/tast/remote/bundles/cros/lacros/version"
 	lacrosservice "chromiumos/tast/services/cros/lacros"
+
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
@@ -114,7 +115,6 @@ func UpdateStatefulToStateful(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get the Ash version: ", err)
 	}
-	baseVersion := rootfsLacrosVersion
 
 	// Deferred cleanup to always reset to the previous state with no provisioned files.
 	ctxForCleanup := ctx
@@ -127,9 +127,9 @@ func UpdateStatefulToStateful(ctx context.Context, s *testing.State) {
 		}
 	}(ctxForCleanup)
 
-	// Verify the updates from Stateful => Stateful.
+	// Verify the various update paths from Stateful => Stateful.
 	for _, updateInfo := range s.Param().([]updatePath) {
-		statefulLacrosVersion := baseVersion.Increment(updateInfo.skew)
+		statefulLacrosVersion := rootfsLacrosVersion.Increment(updateInfo.skew)
 		overrideComponent := updateInfo.channel
 
 		// TODO(hyungtaekim): Consider a helper function to check versions for all tests.
