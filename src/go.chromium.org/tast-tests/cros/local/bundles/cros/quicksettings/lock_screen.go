@@ -9,12 +9,12 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -47,6 +47,9 @@ func init() {
 // LockScreen tests that the screen can be locked from Quick Settings
 // and verifies its contents when the screen is locked.
 func LockScreen(ctx context.Context, s *testing.State) {
+	cleanup := quicksettings.SetQsRevampEnabled(true)
+	defer cleanup()
+
 	const (
 		username = "testuser@gmail.com"
 		password = "pass"
@@ -54,7 +57,8 @@ func LockScreen(ctx context.Context, s *testing.State) {
 		lockTimeout = 30 * time.Second
 	)
 
-	cr, err := chrome.New(ctx, chrome.FakeLogin(chrome.Creds{User: username, Pass: password}))
+	cr, err := chrome.New(ctx, chrome.FakeLogin(chrome.Creds{User: username, Pass: password}),
+		chrome.EnableFeatures("QsRevamp"))
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
@@ -66,22 +70,19 @@ func LockScreen(ctx context.Context, s *testing.State) {
 	}
 	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
 
-	// Take a screenshot to show a notification. Using the virtual keyboard is required since
-	// different physical keyboards can require different key combinations to take a screenshot.
 	keyboard, err := input.VirtualKeyboard(ctx)
 	if err != nil {
 		s.Fatal("Failed to get virtual keyboard: ", err)
 	}
 	defer keyboard.Close(ctx)
 
-	if err := keyboard.Accel(ctx, "Ctrl+F5"); err != nil {
-		s.Fatal("Failed to take a screenshot: ", err)
+	// Show a test notification.
+	title := "Test Title"
+	if _, err := browser.CreateTestNotification(ctx, tconn, browser.NotificationTypeBasic, title, "message"); err != nil {
+		s.Fatal("Failed to create test notification")
 	}
-
-	finder := nodewith.Role(role.Window).ClassName("ash/message_center/MessagePopup")
-
-	if err := uiauto.New(tconn).WithTimeout(30 * time.Second).WaitUntilExists(finder)(ctx); err != nil {
-		s.Fatal("Failed to find notification center: ", err)
+	if _, err := ash.WaitForNotification(ctx, tconn, 5*time.Second, ash.WaitTitle(title)); err != nil {
+		s.Fatal("Failed waiting for notification")
 	}
 
 	if err := quicksettings.LockScreen(ctx, tconn); err != nil {
@@ -103,6 +104,13 @@ func LockScreen(ctx context.Context, s *testing.State) {
 		}
 	}()
 
+	// Check if notifications are hidden. This opens the notifications center.
+	if hidden, err := quicksettings.NotificationsHidden(ctx, tconn); err != nil {
+		s.Fatal("Failed to check if notifications were hidden: ", err)
+	} else if !hidden {
+		s.Fatal("Notifications were not hidden")
+	}
+
 	// Explicitly show Quick Settings on the lock screen, so it will
 	// remain open for the UI verification steps.
 	if err := quicksettings.Show(ctx, tconn); err != nil {
@@ -110,27 +118,20 @@ func LockScreen(ctx context.Context, s *testing.State) {
 	}
 	defer quicksettings.Hide(ctx, tconn)
 
-	// Check if notifications are hidden.
-	if hidden, err := quicksettings.NotificationsHidden(ctx, tconn); err != nil {
-		s.Fatal("Failed to check if notifications were hidden: ", err)
-	} else if !hidden {
-		s.Error("Notifications were not hidden")
-	}
-
-	// Get the restricted featured pods.
-	restrictedPods, err := quicksettings.RestrictedSettingsPods(ctx)
+	// Get the restricted feature tiles.
+	restrictedTiles, err := quicksettings.RestrictedFeatureTiles(ctx)
 	if err != nil {
-		s.Fatal("Failed to get the restricted pod param: ", err)
+		s.Fatal("Failed to get the restricted tiles param: ", err)
 	}
 
-	// Verify that the pod icons are restricted on the locked screen.
-	for _, setting := range restrictedPods {
-		restricted, err := quicksettings.PodRestricted(ctx, tconn, setting)
+	// Verify that the tiles are restricted on the lock screen.
+	for _, tile := range restrictedTiles {
+		restricted, err := quicksettings.TileRestricted(ctx, tconn, tile)
 		if err != nil {
-			s.Fatalf("Failed to check restricted status of pod setting %v: %v", setting, err)
+			s.Fatalf("Failed to check restricted status of tile %v: %v", tile, err)
 		}
 		if !restricted {
-			s.Errorf("Pod setting %v not restricted: %v", setting, err)
+			s.Errorf("Tile setting %v not restricted: %v", tile, err)
 		}
 	}
 
@@ -143,8 +144,8 @@ func LockScreen(ctx context.Context, s *testing.State) {
 	}
 
 	// Loop through all the Quick Settings nodes of locked screen and verify if they exist.
+	ui := uiauto.New(tconn)
 	for node, finder := range checkNodes {
-		ui := uiauto.New(tconn)
 		if err := ui.WaitUntilExists(finder)(ctx); err != nil {
 			s.Fatalf("Failed to wait for %v node to exist: %v", node, err)
 		}

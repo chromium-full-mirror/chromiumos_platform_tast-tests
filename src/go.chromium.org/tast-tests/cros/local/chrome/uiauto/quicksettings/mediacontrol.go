@@ -15,7 +15,7 @@ import (
 )
 
 // MediaControlsPod is the 'Media controls' pod in the Quick Settings.
-var MediaControlsPod = nodewith.NameStartingWith("Media controls").HasClass("Button").Ancestor(RootFinder)
+var MediaControlsPod = nodewith.NameStartingWith("Media controls").HasClass("Button").Ancestor(LegacyRootFinder)
 
 // MediaControlsDetailView is the detailed Media controls view within the Quick Settings.
 var MediaControlsDetailView = nodewith.HasClass("UnifiedMediaControlsDetailedView")

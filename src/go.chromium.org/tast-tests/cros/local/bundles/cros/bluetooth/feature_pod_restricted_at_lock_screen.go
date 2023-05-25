@@ -33,12 +33,16 @@ func init() {
 		BugComponent: "b:1131776",
 		Attr:         []string{"group:bluetooth", "bluetooth_flaky"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      fixture.ChromeLoggedIn,
+		Fixture:      fixture.ChromeLoggedInQsRevampEnabled,
 	})
 }
 
 // FeaturePodRestrictedAtLockScreen verifies users are not supposed to use the Bluetooth feature pod at lock screen.
+// TODO(b/252870625): Rename this test to FeatureTileRestrictedAtLockScreen.
 func FeaturePodRestrictedAtLockScreen(ctx context.Context, s *testing.State) {
+	cleanup := quicksettings.SetQsRevampEnabled(true)
+	defer cleanup()
+
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -68,7 +72,7 @@ func FeaturePodRestrictedAtLockScreen(ctx context.Context, s *testing.State) {
 
 	// Users are not supposed to pair Bluetooth devices at lock screen.
 	// This attempt should be restricted by the disabled Bluetooth feature pod.
-	restricted, err := quicksettings.PodRestricted(ctx, tconn, quicksettings.SettingPodBluetooth)
+	restricted, err := quicksettings.TileRestricted(ctx, tconn, quicksettings.FeatureTileBluetooth)
 	if err != nil {
 		s.Fatal("Failed to check if Bluetooth is restricted: ", err)
 	}

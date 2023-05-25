@@ -62,12 +62,15 @@ func init() {
 
 // SignInScreen verifies Quick Settings contents from the signin screen.
 func SignInScreen(ctx context.Context, s *testing.State) {
+	cleanup := quicksettings.SetQsRevampEnabled(true)
+	defer cleanup()
 
 	// NoLogin is used to land in signin screen.
 	cr, err := chrome.New(
 		ctx,
 		chrome.NoLogin(),
 		chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
+		chrome.EnableFeatures("QsRevamp"),
 	)
 	if err != nil {
 		s.Fatal("Chrome startup failed: ", err)
@@ -78,7 +81,6 @@ func SignInScreen(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Creating login test API connection failed: ", err)
 	}
-	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
 
 	// Skip OOBE before Login screen.
 	oobeConn, err := cr.WaitForOOBEConnection(ctx)
@@ -95,6 +97,9 @@ func SignInScreen(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to show quick settings: ", err)
 	}
 	defer quicksettings.Hide(ctx, tconn)
+
+	// On failure, dump the UI tree while quick settings is still open.
+	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
 
 	param := s.Param().(testParameters)
 

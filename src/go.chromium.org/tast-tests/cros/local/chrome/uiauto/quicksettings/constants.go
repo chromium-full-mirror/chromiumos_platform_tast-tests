@@ -11,10 +11,9 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 )
 
-// RootFinder is the finder to find the Quick Settings area in the UI.
+// LegacyRootFinder is the finder to find the Quick Settings area in the UI.
 // It should be used when feature QsRevamp is disabled.
-// TODO(jamescook): Rename this to LegacyRootFinder.
-var RootFinder = nodewith.HasClass("UnifiedSystemTrayView")
+var LegacyRootFinder = nodewith.HasClass("UnifiedSystemTrayView")
 
 // QsRootFinder is the finder to find the Quick Settings area in the UI.
 // It should be used when feature QsRevamp is enabled.
@@ -26,13 +25,61 @@ var SystemTray = nodewith.HasClass("UnifiedSystemTray")
 // StatusAreaWidget is the finder to find the control widgets.
 var StatusAreaWidget = nodewith.Role(role.Pane).HasClass("ash/StatusAreaWidgetDelegate")
 
+// FeatureTileAccessibility is the finder for the "Accessibility" feature tile.
+// It only exists with QsRevamp.
+var FeatureTileAccessibility = nodewith.HasClass("FeatureTile").NameContaining("accessibility")
+
+// FeatureTileBluetooth is the finder for the "Bluetooth" feature tile.
+// It only exists with QsRevamp.
+var FeatureTileBluetooth = nodewith.HasClass("FeatureTile").NameContaining("Bluetooth")
+
+// FeatureTileCast is the finder for the "Cast screen" feature tile.
+// It only exists with QsRevamp.
+var FeatureTileCast = nodewith.HasClass("FeatureTile").NameContaining("cast")
+
+// FeatureTileDoNotDisturb is the finder for the "Do not disturb" feature tile.
+// It only exists with QsRevamp.
+var FeatureTileDoNotDisturb = nodewith.HasClass("FeatureTile").NameContaining("Do not disturb")
+
+// FeatureTileKeyboard is the finder for the "Keyboard" (IME) feature tile.
+// It only exists with QsRevamp.
+var FeatureTileKeyboard = nodewith.HasClass("FeatureTile").NameContaining("keyboard")
+
+// FeatureTileNetwork is the finder for the network feature tile. Its name
+// varies so find it by class.
+// This only exists with QsRevamp.
+var FeatureTileNetwork = nodewith.HasClass("NetworkFeatureTile")
+
+// FeatureTileScreenCapture is the finder for the "Screen capture" feature tile.
+// This only exists with QsRevamp.
+var FeatureTileScreenCapture = nodewith.HasClass("FeatureTile").NameContaining("Screen capture")
+
+// LiveCaptionButton is the finder for the "Toggle Live Caption" button.
+// It is a top-level button with QsRevamp.
+var LiveCaptionButton = nodewith.Role(role.ToggleButton).NameContaining("Live Caption")
+
+// NightLightButton is the finder for the "Toggle Night Light" button.
+// It is a top-level button with QsRevamp.
+var NightLightButton = nodewith.Role(role.ToggleButton).NameContaining("Night Light")
+
+// PowerMenuButton is the finder for the power menu button.
+// It only exists with QsRevamp.
+var PowerMenuButton = nodewith.Role(role.Button).NameContaining("Power menu")
+
+// PowerMenuLockItem is the finder for the "Lock" item in the power menu.
+// It only exists with QsRevamp.
+var PowerMenuLockItem = nodewith.Role(role.MenuItem).NameContaining("Lock")
+
 // CollapseButton is the finder for the collapse button, which collapses Quick Settings.
+// This button does not exist with QsRevamp.
 var CollapseButton = nodewith.Role(role.Button).HasClass("CollapseButton").Name("Collapse menu")
 
 // ExpandButton is the finder for the expand button, which expands Quick Settings.
+// This button does not exist with QsRevamp.
 var ExpandButton = nodewith.Role(role.Button).HasClass("CollapseButton").Name("Expand menu")
 
 // LockButton is the finder for Quick Settings' lock button.
+// This button does not exist with QsRevamp.
 var LockButton = nodewith.Name("Lock").HasClass("IconButton")
 
 // SettingsButton is the finder for the Quick Settings' setting button.
@@ -40,6 +87,7 @@ var LockButton = nodewith.Name("Lock").HasClass("IconButton")
 var SettingsButton = nodewith.Name("Settings").HasClass("IconButton")
 
 // ShutdownButton is the finder for the shutdown button in Quick Settings.
+// This button does not exist with QsRevamp.
 var ShutdownButton = nodewith.Name("Shut down").HasClass("IconButton")
 
 // SignoutButton is the finder for the 'Sign out' Quick Settings button.
@@ -86,10 +134,11 @@ var MicToggle = nodewith.Role(role.ToggleButton).Attribute("name", regexp.MustCo
 // ManagedInfoView is the finder for the Quick Settings management information display.
 var ManagedInfoView = nodewith.Role(role.Button).HasClass("EnterpriseManagedView")
 
-// BatteryView is the finder for the Quick Settings date/time display.
-var BatteryView = nodewith.Role(role.LabelText).HasClass("BatteryLabelView")
+// BatteryView is the finder for the Quick Settings battery display.
+var BatteryView = nodewith.Role(role.LabelText).NameContaining("Battery")
 
 // DateView is the finder for the Quick Settings date/time display.
+// This view does not exist with QsRevamp.
 var DateView = nodewith.Role(role.Button).HasClass("DateView")
 
 // SettingPod represents the name of a setting pod in Quick Settings.
@@ -100,6 +149,7 @@ type SettingPod string
 
 // List of quick setting names, derived from the corresponding pod icon button node names.
 // Character case in the names should exactly match the pod icon button node Name attribute.
+// These nodes do not exist with QsRevamp.
 const (
 	SettingPodAccessibility     SettingPod = "accessibility"
 	SettingPodBluetooth         SettingPod = "Bluetooth"

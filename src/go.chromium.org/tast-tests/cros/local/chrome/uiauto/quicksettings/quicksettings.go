@@ -31,6 +31,7 @@ import (
 
 const uiTimeout = 10 * time.Second
 
+// Whether these helper functions assume the new "QsRevamp" UI is enabled.
 var qsRevampEnabled = false
 
 // findStatusArea finds the status area UI node.
@@ -86,7 +87,7 @@ func GetRootFinder() *nodewith.Finder {
 	if qsRevampEnabled {
 		return QsRootFinder
 	}
-	return RootFinder
+	return LegacyRootFinder
 }
 
 // Rect returns a coords.Rect struct for the Quick Settings area, which contains
@@ -256,7 +257,14 @@ func ShowWithRetry(ctx context.Context, tconn *chrome.TestConn, timeout time.Dur
 }
 
 // PodIconButton generates nodewith.Finder for the specified quick setting feature pod icon button.
+// This function is not supported with QsRevamp. Use the constants quicksettings.FeatureTile*
+// instead.
 func PodIconButton(setting SettingPod) *nodewith.Finder {
+	if qsRevampEnabled {
+		// Not supported with QsRevamp, see function docs.
+		return nil
+	}
+
 	// The network pod cannot be easily found by its Name attribute in both logged-in and lock screen states.
 	// Instead, find it by its unique ClassName.
 	if setting == SettingPodNetwork {
@@ -269,7 +277,14 @@ func PodIconButton(setting SettingPod) *nodewith.Finder {
 }
 
 // PodLabelButton generates nodewith.Finder to enter the panel of the specified quick setting pod.
+// This function is not supported with QsRevamp. Use the constants quicksettings.FeatureTile*
+// instead.
 func PodLabelButton(setting SettingPod) *nodewith.Finder {
+	if qsRevampEnabled {
+		// Not supported with QsRevamp, see function docs.
+		return nil
+	}
+
 	if setting == SettingPodDoNotDisturb {
 		return nodewith.HasClass("FeaturePodLabelButton").NameContaining("notification")
 	}
@@ -349,19 +364,26 @@ func ToggleSetting(ctx context.Context, tconn *chrome.TestConn, setting SettingP
 	return nil
 }
 
-// PodRestricted checks if a pod icon is restricted and unable to be used on the lock screen.
-func PodRestricted(ctx context.Context, tconn *chrome.TestConn, setting SettingPod) (bool, error) {
-	cleanup, err := ensureVisible(ctx, tconn)
-	if err != nil {
-		return false, err
+// TileRestricted checks if a feature tile is restricted and unable to be used
+// on the lock screen.
+func TileRestricted(ctx context.Context, tconn *chrome.TestConn, tile *nodewith.Finder) (bool, error) {
+	if !qsRevampEnabled {
+		return false, errors.New("TileRestricted() requires QsRevamp enabled")
 	}
-	defer cleanup(ctx)
 
-	pod := PodIconButton(setting)
+	// It's slow to open and close quick settings each time a caller wants to
+	// verify a single tile is restricted. Instead require the caller to show
+	// settings once.
+	if shown, err := Shown(ctx, tconn); err != nil {
+		return false, errors.Wrap(err, "failed to check Shown()")
+	} else if !shown {
+		return false, errors.Wrap(err, "quick settings must be visible to call TileRestricted()")
+	}
+
 	ui := uiauto.New(tconn)
-	info, err := ui.Info(ctx, pod)
+	info, err := ui.Info(ctx, tile)
 	if err != nil {
-		return false, errors.Wrap(err, "failed to get the pod icon button info")
+		return false, errors.Wrap(err, "failed to get the feature tile info")
 	}
 	return info.Restriction == restriction.Disabled, nil
 }
@@ -403,8 +425,17 @@ func LockScreen(ctx context.Context, tconn *chrome.TestConn) error {
 	defer cleanup(ctx)
 
 	ui := uiauto.New(tconn)
-	if err := ui.WithTimeout(uiTimeout).LeftClick(LockButton)(ctx); err != nil {
-		return errors.Wrap(err, "failed to find and click lock button")
+	if qsRevampEnabled {
+		if err := ui.WithTimeout(uiTimeout).LeftClick(PowerMenuButton)(ctx); err != nil {
+			return errors.Wrap(err, "failed to find and click power menu button")
+		}
+		if err := ui.WithTimeout(uiTimeout).LeftClick(PowerMenuLockItem)(ctx); err != nil {
+			return errors.Wrap(err, "failed to find and click power menu lock item")
+		}
+	} else {
+		if err := ui.WithTimeout(uiTimeout).LeftClick(LockButton)(ctx); err != nil {
+			return errors.Wrap(err, "failed to find and click lock button")
+		}
 	}
 
 	if st, err := lockscreen.WaitState(ctx, tconn, func(st lockscreen.State) bool { return st.Locked && st.ReadyForPassword }, uiTimeout); err != nil {
@@ -415,26 +446,34 @@ func LockScreen(ctx context.Context, tconn *chrome.TestConn) error {
 
 }
 
-// NotificationsHidden checks that the 'Notifications are hidden' label appears and that no notifications are visible.
+// NotificationsHidden checks that the 'Notifications are hidden' notification
+// appears and that no other notifications are visible.
 func NotificationsHidden(ctx context.Context, tconn *chrome.TestConn) (bool, error) {
-	cleanup, err := ensureVisible(ctx, tconn)
-	if err != nil {
-		return false, err
+	if !qsRevampEnabled {
+		return false, errors.New("NotificationsHidden() requires QsRevamp enabled")
 	}
-	defer cleanup(ctx)
-
-	// Wait for the 'Notifications are hidden' label at the top of Quick Settings.
+	// Open the notification center.
 	ui := uiauto.New(tconn)
-	if err := ui.WithTimeout(uiTimeout).WaitUntilExists(nodewith.HasClass("NotificationHiddenView"))(ctx); err != nil {
-		return false, errors.Wrap(err, "failed to find notifications hidden view")
+	if err := ui.WithTimeout(uiTimeout).LeftClick(nodewith.HasClass("NotificationCenterTray"))(ctx); err != nil {
+		return false, errors.Wrap(err, "failed to open notification center")
 	}
 
-	// Also check that no notifications are shown in the UI.
-	exists, err := ui.IsNodeFound(ctx, nodewith.HasClass("AshNotificationView"))
-	if err != nil {
-		return false, errors.Wrap(err, "failed checking if notification node exists")
+	// Wait for the 'Notifications are hidden' notification to appear.
+	if err := ui.WithTimeout(uiTimeout).WaitUntilExists(nodewith.Role(role.StaticText).NameStartingWith("Notifications are hidden"))(ctx); err != nil {
+		return false, errors.Wrap(err, "failed to find notifications hidden text")
 	}
-	return !exists, nil
+
+	// Also check that no other notifications are shown in the UI. Must use
+	// role.GenericContainer because the notification title has class
+	// "AshNotificationView::NotificationTitleRow" and nodewith.HasClass() does
+	// a substring match.
+	nodes, err := ui.NodesInfo(ctx, nodewith.HasClass("AshNotificationView").Role(role.GenericContainer))
+	if err != nil {
+		return false, errors.Wrap(err, "failed getting notification node info")
+	}
+	success := len(nodes) == 1
+
+	return success, nil
 }
 
 // findSlider finds the UI node for the specified slider. Callers should defer releasing the returned node.
@@ -704,33 +743,39 @@ func SelectAudioOption(ctx context.Context, tconn *chrome.TestConn, device strin
 	return nil
 }
 
-// RestrictedSettingsPods returns the setting pods that are restricted when Quick Settings is opened while a user is not signed in.
-func RestrictedSettingsPods(ctx context.Context) ([]SettingPod, error) {
-	restrictedPods := []SettingPod{SettingPodNetwork}
+// RestrictedFeatureTiles returns a map from a descriptive name to a
+// nodewith.Finder for the feature tiles that are restricted when Quick Settings
+// is opened while a user is not signed in.
+func RestrictedFeatureTiles(ctx context.Context) (map[string]*nodewith.Finder, error) {
+	tiles := map[string]*nodewith.Finder{
+		"Network tile": FeatureTileNetwork,
+	}
 
 	// First check for the bluetooth pod on devices with at least 1 bluetooth adapter.
-	// If bluetooth adapters exists, add the bluetooth settingPod in the restrictedPods list.
+	// If bluetooth adapters exist, add the bluetooth tile to the tiles map.
 	adapters, err := bluez.Adapters(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to get Bluetooth adapters")
 	}
 	if len(adapters) > 0 {
-		restrictedPods = append(restrictedPods, SettingPodBluetooth)
+		tiles["Bluetooth tile"] = FeatureTileBluetooth
 	}
 
-	return restrictedPods, nil
+	return tiles, nil
 }
 
 // CommonElements returns a map that contains ui.FindParams for Quick Settings UI elements that are present in all sign-in states (signed in, signed out, screen locked).
 // The keys of the map are descriptive names for the UI elements.
 func CommonElements(ctx context.Context, tconn *chrome.TestConn, hasBattery, isLockedScreen bool) (map[string]*nodewith.Finder, error) {
+	if !qsRevampEnabled {
+		return nil, errors.New("CommonElements() requires QsRevamp enabled")
+	}
+
 	// Associate the params with a descriptive name for better error reporting.
 	getNodes := map[string]*nodewith.Finder{
-		"Shutdown button":   ShutdownButton,
-		"Collapse button":   CollapseButton,
 		"Volume slider":     VolumeSlider,
 		"Brightness slider": BrightnessSlider,
-		"Date/time display": DateView,
+		"Power menu":        PowerMenuButton,
 	}
 
 	if hasBattery {
@@ -739,24 +784,21 @@ func CommonElements(ctx context.Context, tconn *chrome.TestConn, hasBattery, isL
 
 	if isLockedScreen {
 		// Check that the expected accessibility UI element is shown in Quick Settings.
-		accessibility := PodIconButton(SettingPodAccessibility)
-		getNodes["Accessibility pod"] = accessibility
+		getNodes["Accessibility tile"] = FeatureTileAccessibility
 	} else {
-		// Get the restricted settings pods.
-		featuredPods, err := RestrictedSettingsPods(ctx)
+		// Get the restricted feaure tiles.
+		tileMap, err := RestrictedFeatureTiles(ctx)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to get the restricted pod param")
 		}
-
-		// Add the accessibility and keyboard pods, specific to signIn screen in featuredPods List.
-		featuredPods = append(featuredPods, SettingPodAccessibility)
-		featuredPods = append(featuredPods, SettingPodKeyboard)
-
-		// Loop through all the SettingsPod and generate the ui.FindParams for the specified quick settings pod.
-		for _, settingPod := range featuredPods {
-			podFinder := PodIconButton(settingPod)
-			getNodes[string(settingPod)+" pod"] = podFinder
+		// Merge the maps.
+		for k, v := range tileMap {
+			getNodes[k] = v
 		}
+
+		// Add the accessibility and keyboard tiles.
+		getNodes["Accessibility tile"] = FeatureTileAccessibility
+		getNodes["Keyboard tile"] = FeatureTileKeyboard
 	}
 	return getNodes, nil
 }

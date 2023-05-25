@@ -17,16 +17,16 @@ import (
 
 var (
 	// NetworkDetailedView is the detailed Network view within Quick Settings.
-	NetworkDetailedView = nodewith.HasClass("NetworkDetailedNetworkViewImpl").Ancestor(RootFinder)
+	NetworkDetailedView = nodewith.HasClass("NetworkDetailedNetworkViewImpl").Ancestor(LegacyRootFinder)
 
 	// NetworkListItemView is the network item list on the network view in Quick Settings.
-	NetworkListItemView = nodewith.HasClass("NetworkListNetworkItemView").Ancestor(RootFinder)
+	NetworkListItemView = nodewith.HasClass("NetworkListNetworkItemView").Ancestor(LegacyRootFinder)
 
 	// NetworkFeaturePodLabelButton is the label child of the Network feature pod button.
-	NetworkFeaturePodLabelButton = nodewith.HasClass("FeaturePodLabelButton").NameContaining("network").Ancestor(RootFinder)
+	NetworkFeaturePodLabelButton = nodewith.HasClass("FeaturePodLabelButton").NameContaining("network").Ancestor(LegacyRootFinder)
 
 	// networkSettingsButton is the button shown on the Network detailed view.
-	networkSettingsButton = nodewith.HasClass("IconButton").Name("Network settings").Ancestor(RootFinder)
+	networkSettingsButton = nodewith.HasClass("IconButton").Name("Network settings").Ancestor(LegacyRootFinder)
 
 	// NetworkDetailedViewWifiToggleButton is the WiFi toggle within the Network detailed view.
 	NetworkDetailedViewWifiToggleButton = nodewith.HasClass("TrayToggleButton").NameContaining("Wi-Fi").Ancestor(NetworkDetailedView)

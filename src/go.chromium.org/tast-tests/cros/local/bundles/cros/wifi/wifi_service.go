@@ -99,7 +99,7 @@ func (s *Service) JoinWifiFromQuickSettings(ctx context.Context, req *wifi.JoinW
 	defer quicksettings.Hide(cleanupCtx, res.tconn)
 	defer s.dumpUITreeWithScreenshotOnError(cleanupCtx, func() bool { return retErr != nil }, "quick_settings_ui_dump")
 
-	joinWiFiButton := nodewith.Name("Join other Wi-Fi networks").Role(role.Button).Ancestor(quicksettings.RootFinder)
+	joinWiFiButton := nodewith.Name("Join other Wi-Fi networks").Role(role.Button).Ancestor(quicksettings.LegacyRootFinder)
 	if err := res.ui.LeftClick(joinWiFiButton)(ctx); err != nil {
 		return &emptypb.Empty{}, errors.Wrap(err, "failed to click the join button")
 	}
