@@ -24,7 +24,7 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-// LoginPoolVar is the account pool information
+// LoginPoolVar is the account pool information.
 const LoginPoolVar = "arc.managedAccountPool"
 
 // InstallTypeForceInstalled is the install type for app that is force-installed.
@@ -48,7 +48,7 @@ const PlayStoreModeAllowList = "WHITELIST"
 // UIAutomatorPackages is a list of packages installed by UIAutomator.
 var UIAutomatorPackages = []string{"com.github.uiautomator.test", "com.github.uiautomator"}
 
-// SetupPolicyServerWithArcApps sets up a fake policy server with ARC enabled and a list of packages with the corresponding install type
+// SetupPolicyServerWithArcApps sets up a fake policy server with ARC enabled and a list of packages with the corresponding install type.
 func SetupPolicyServerWithArcApps(ctx context.Context, outDir, policyUser string, packages []string, installType, playStoreMode string) (fdms *fakedms.FakeDMS, retErr error) {
 	arcPolicy := CreateArcPolicyWithApps(packages, installType, playStoreMode)
 	arcEnabledPolicy := &policy.ArcEnabled{Val: true}
