@@ -40,12 +40,13 @@ const (
 	diffWindowHeight = 600
 )
 
+// CCAUILayout takes screenshot of CCA and verifies layout is as expected.
 func CCAUILayout(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(cca.FixtureData).Chrome
 	runTestWithApp := s.FixtValue().(cca.FixtureData).RunTestWithApp
 	switchScene := s.FixtValue().(cca.FixtureData).SwitchScene
 
-	if err := switchScene(s.DataPath("blank_1280x720.mjpeg")); err != nil {
+	if err := switchScene(ctx, cca.SceneData{Path: s.DataPath("blank_1280x720.mjpeg")}); err != nil {
 		s.Fatal("Failed to set up fake scene: ", err)
 	}
 

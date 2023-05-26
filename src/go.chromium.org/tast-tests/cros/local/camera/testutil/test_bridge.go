@@ -11,12 +11,14 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 
 	"github.com/mafredri/cdp/protocol/target"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -35,6 +37,7 @@ const (
 
 	jsonConfigPath    = "/var/cache/camera/test_config.json"
 	fakeHALConfigPath = "/run/camera/fake_hal.json"
+	fakeHALImageDir   = "/var/cache/camera/"
 )
 
 // TestBridge is used to communicate with CCA for test specific logic, such as test environment set-up/tear-down flow, performance/error monitoring.
@@ -74,7 +77,8 @@ func SetupTestConfig(ctx context.Context, cameraType UseCameraType) error {
 
 // FakeCameraImageConfig represents the config of the path to a real image.
 type FakeCameraImageConfig struct {
-	Path string `json:"path,omitempty"`
+	Path      string `json:"path,omitempty"`
+	ScaleMode string `json:"scale_mode,omitempty"`
 }
 
 // FakeCameraFormatsConfig represents the config of the video format.
@@ -118,6 +122,16 @@ func SetupFakeHALConfig(ctx context.Context) error {
 			{ID: 1, Connected: true},
 		},
 	})
+}
+
+// CopyFakeHALFrameImage copies the input image to a folder that camera service
+// can access, for fake HAL tests.
+func CopyFakeHALFrameImage(path string) (string, error) {
+	targetPath := filepath.Join(fakeHALImageDir, filepath.Base(path))
+	if err := fsutil.CopyFile(path, targetPath); err != nil {
+		return "", errors.Wrapf(err, "failed to copy from the given image: %v", path)
+	}
+	return targetPath, nil
 }
 
 // RemoveTestConfig removes the test config if it exists or returns nil otherwise.

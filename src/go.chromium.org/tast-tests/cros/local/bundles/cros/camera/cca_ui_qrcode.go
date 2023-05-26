@@ -35,16 +35,17 @@ func init() {
 		SoftwareDeps: []string{"camera_app", "chrome", "chrome_internal"},
 		Data:         []string{"qrcode_1280x960.mjpeg", "qrcode_text_1280x960.mjpeg"},
 		Params: []testing.Param{{
-			Fixture: "ccaTestBridgeReadyWithFakeCamera",
+			Fixture: "ccaTestBridgeReadyWithFakeHALCamera",
 		}, {
 			Name:              "lacros",
 			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           "ccaTestBridgeReadyWithFakeCameraLacros",
+			Fixture:           "ccaTestBridgeReadyWithFakeHALCameraLacros",
 		}},
 		BugComponent: "b:978428",
 	})
 }
 
+// CCAUIQRCode verifies that QR code scanning feature in CCA works.
 func CCAUIQRCode(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(cca.FixtureData).Chrome
 	bt := s.FixtValue().(cca.FixtureData).BrowserType
@@ -79,7 +80,7 @@ func CCAUIQRCode(ctx context.Context, s *testing.State) {
 	}} {
 		subTestCtx, cancel := context.WithTimeout(ctx, subTestTimeout)
 		s.Run(subTestCtx, tst.name, func(ctx context.Context, s *testing.State) {
-			if err := switchScene(s.DataPath(tst.scene)); err != nil {
+			if err := switchScene(ctx, cca.SceneData{Path: s.DataPath(tst.scene), ScaleMode: "contain"}); err != nil {
 				s.Fatal("Failed to setup QRCode scene: ", err)
 			}
 			if err := runTestWithApp(ctx, func(ctx context.Context, app *cca.App) error {

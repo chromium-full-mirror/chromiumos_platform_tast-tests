@@ -127,7 +127,7 @@ func CCAUIDocumentScanning(ctx context.Context, s *testing.State) {
 	runTestWithApp := s.FixtValue().(cca.FixtureData).RunTestWithApp
 	s.FixtValue().(cca.FixtureData).SetDebugParams(cca.DebugParams{SaveCameraFolderWhenFail: true})
 
-	if err := s.FixtValue().(cca.FixtureData).SwitchScene(s.DataPath("document_3264x2448.mjpeg")); err != nil {
+	if err := s.FixtValue().(cca.FixtureData).SwitchScene(ctx, cca.SceneData{Path: s.DataPath("document_3264x2448.mjpeg")}); err != nil {
 		s.Fatal("Failed to prepare document scene: ", err)
 	}
 

@@ -356,7 +356,7 @@ type FixtureData struct {
 	ResetTestBridge ResetTestBridgeFunc
 	// SwitchScene switches the camera scene to the given scene. This only works
 	// for fixtures using fake camera stream.
-	SwitchScene func(string) error
+	SwitchScene func(context.Context, SceneData) error
 	// RunTestWithApp runs the given function with the handling of the app
 	// start/stop.
 	RunTestWithApp func(context.Context, TestWithAppFunc, TestWithAppParams) error
@@ -695,13 +695,50 @@ func (f *fixture) stopAppIfExist(ctx context.Context, hasError bool) error {
 	return nil
 }
 
+// SceneData is the argument to switchScene.
+type SceneData struct {
+	// Path is the path to the image of the scene.
+	Path string
+	// ScaleMode is the mode to be used to scale the image. Can be either
+	// "contain", "cover" or "stretch", defaults to "stretch". This only works
+	// with fake HAL.
+	ScaleMode string
+}
+
 // switchScene switches the camera scene of fake camera to the given |scene|.
-func (f *fixture) switchScene(scene string) error {
+func (f *fixture) switchScene(ctx context.Context, scene SceneData) error {
+	if f.useCameraType == testutil.UseFakeHALCamera {
+		if scene.ScaleMode == "" {
+			scene.ScaleMode = "stretch"
+		}
+
+		targetPath, err := testutil.CopyFakeHALFrameImage(scene.Path)
+		if err != nil {
+			return err
+		}
+		if err := testutil.WriteFakeHALConfig(ctx, testutil.FakeHALConfig{
+			Cameras: []testutil.FakeCameraConfig{
+				{
+					ID:        1,
+					Connected: true,
+					Frames:    &testutil.FakeCameraImageConfig{Path: targetPath, ScaleMode: scene.ScaleMode},
+				},
+			},
+		}); err != nil {
+			return err
+		}
+		return nil
+	}
+
 	if f.cameraScene == "" {
 		return errors.New("failed to switch scene for non-fake camera stream")
 	}
 
-	if err := fsutil.CopyFile(scene, f.cameraScene); err != nil {
+	if scene.ScaleMode != "" {
+		return errors.New("ScaleMode only works with fake HAL")
+	}
+
+	if err := fsutil.CopyFile(scene.Path, f.cameraScene); err != nil {
 		return errors.Wrapf(err, "failed to copy from the given scene: %v", scene)
 	}
 	return nil

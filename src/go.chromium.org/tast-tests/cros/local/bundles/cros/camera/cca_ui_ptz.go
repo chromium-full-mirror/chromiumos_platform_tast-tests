@@ -148,11 +148,12 @@ func (ctrl *ptzControl) testToggle(ctx context.Context, app *cca.App) error {
 	return nil
 }
 
+// CCAUIPTZ verifies PTZ related functionalities.
 func CCAUIPTZ(ctx context.Context, s *testing.State) {
 	runTestWithApp := s.FixtValue().(cca.FixtureData).RunTestWithApp
 	switchScene := s.FixtValue().(cca.FixtureData).SwitchScene
 
-	if err := switchScene(s.DataPath("ptz_scene_1280x720.mjpeg")); err != nil {
+	if err := switchScene(ctx, cca.SceneData{Path: s.DataPath("ptz_scene_1280x720.mjpeg")}); err != nil {
 		s.Fatal("Failed to setup QRCode scene: ", err)
 	}
 
