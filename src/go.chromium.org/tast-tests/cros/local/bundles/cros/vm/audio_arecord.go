@@ -33,7 +33,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check that capture devices are listed correctly",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "normanbt@google.com"},
-		BugComponent: "b:1215417",
+		BugComponent: "b:1332660",
 		Attr:         []string{"group:mainline", "group:audio", "group:cq-medium", "group:hw_agnostic"},
 		Data:         []string{runAudioArecord},
 		Timeout:      3 * time.Minute,

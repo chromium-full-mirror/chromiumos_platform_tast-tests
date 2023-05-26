@@ -85,7 +85,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Benchmarks for scheduling latency with cyclictest binary",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "eddyhsu@chromium.org", "paulhsia@chromium.org", "cychiang@chromium.org"},
-		BugComponent: "b:1215417",
+		BugComponent: "b:1332660",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild", "group:audio"},
 		Data:         []string{runCyclicTest},
 		SoftwareDeps: []string{"cras", "vm_host", "chrome", "dlc"},

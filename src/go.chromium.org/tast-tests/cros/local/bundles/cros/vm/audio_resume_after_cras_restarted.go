@@ -34,7 +34,7 @@ func init() {
 		Desc:         "Check that aplay resumes playing after cras is restarted during the playback",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "pteerapong@chromium.org"},
 		// ChromeOS > Platform > Technologies > Audio > VM
-		BugComponent: "b:1215417",
+		BugComponent: "b:1332660",
 		Attr:         []string{"group:mainline"},
 		Data:         []string{runAudioResumeAfterCrasRestarted},
 		Timeout:      3 * time.Minute,
