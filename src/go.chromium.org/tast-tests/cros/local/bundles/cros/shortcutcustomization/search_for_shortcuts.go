@@ -120,14 +120,14 @@ func SearchForShortcuts(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to search with query: ", err)
 	}
 
-	// Select that result, which should navigate to the "Windows and Desks" page.
+	// Select that result, which should navigate to the "Windows and desks" page.
 	if err := mouse.Click(tconn, result.Location.CenterPoint(), mouse.LeftButton)(ctx); err != nil {
 		s.Fatal("Failed to click on search result: ", err)
 	}
-	// Verify subcategories within "Windows and Desks" are visible, since we should
+	// Verify subcategories within "Windows and desks" are visible, since we should
 	// now be on that page after clicking the search result.
 	windowsAndDesksSubcategories := []string{"Windows", "Desks"}
 	if err := shortcutcustomization.VerifySubcategory(ctx, ui, windowsAndDesksSubcategories); err != nil {
-		s.Fatal("Failed to find subcategories within windows and desks category: ", err)
+		s.Fatal("Failed to find subcategories within Windows and desks category: ", err)
 	}
 }

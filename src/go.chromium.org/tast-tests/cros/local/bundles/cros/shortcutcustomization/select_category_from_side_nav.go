@@ -81,7 +81,7 @@ func SelectCategoryFromSideNav(ctx context.Context, s *testing.State) {
 
 	// Shortcuts app opened to the “General” category by default.
 	// Verify "General" subcategories are visible.
-	generalSubcategories := []string{"General Controls", "Apps"}
+	generalSubcategories := []string{"General controls", "Apps"}
 	if err := sc.VerifySubcategory(ctx, ui, generalSubcategories); err != nil {
 		s.Fatal("Failed to find subcategories within General category: ", err)
 	}
@@ -178,17 +178,17 @@ func SelectCategoryFromSideNav(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	// Select "Windows and Desks" from the side nav.
-	windowsAndDesksCategory := nodewith.Name("Windows and Desks").Role(role.StaticText).Ancestor(shortcutCustomizationRootNode)
+	// Select "Windows and desks" from the side nav.
+	windowsAndDesksCategory := nodewith.Name("Windows and desks").Role(role.StaticText).Ancestor(shortcutCustomizationRootNode)
 	if err := ui.DoDefault(windowsAndDesksCategory)(ctx); err != nil {
-		s.Fatal("Failed to click Windows and Desks category: ", err)
+		s.Fatal("Failed to click Windows and desks category: ", err)
 	}
-	// Verify subcategories within "Windows and Desks" are visible.
+	// Verify subcategories within "Windows and desks" are visible.
 	windowsAndDesksSubcategories := []string{"Windows", "Desks"}
 	if err := sc.VerifySubcategory(ctx, ui, windowsAndDesksSubcategories); err != nil {
-		s.Fatal("Failed to find subcategories within windows and desks category: ", err)
+		s.Fatal("Failed to find subcategories within Windows and desks category: ", err)
 	}
-	// Verify shortcuts within "Windows and Desks" are visible.
+	// Verify shortcuts within "Windows and desks" are visible.
 	shortcutsInWindowsAndDesksCategory := []struct {
 		description string
 		keys        sc.ShortcutKeys
@@ -199,7 +199,7 @@ func SelectCategoryFromSideNav(ctx context.Context, s *testing.State) {
 	}
 	for _, shortcut := range shortcutsInWindowsAndDesksCategory {
 		if err := sc.VerifyShortcuts(ctx, ui, shortcut.description, shortcut.keys); err != nil {
-			s.Fatal("Failed to find shortcuts within Windows and Desks category: ", err)
+			s.Fatal("Failed to find shortcuts within Windows and desks category: ", err)
 		}
 	}
 

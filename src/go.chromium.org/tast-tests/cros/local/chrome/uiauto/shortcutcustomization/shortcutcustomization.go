@@ -68,7 +68,7 @@ func VerifyShortcutCustomizationIsLaunched(ctx context.Context, tconn *chrome.Te
 		return errors.Wrap(err, "could not find app in shelf after launch")
 	}
 	// Verify categories exist.
-	for _, category := range []string{"General", "Device", "Browser", "Text", "Windows and Desks", "Accessibility"} {
+	for _, category := range []string{"General", "Device", "Browser", "Text", "Windows and desks", "Accessibility"} {
 		if err := uiauto.Combine(fmt.Sprintf("Verify %q category exists", category),
 			ui.WaitUntilExists(nodewith.Name(category).Role(role.Button)),
 		)(ctx); err != nil {

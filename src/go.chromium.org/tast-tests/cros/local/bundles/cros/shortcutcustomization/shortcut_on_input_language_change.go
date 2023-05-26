@@ -131,10 +131,10 @@ func ShortcutOnInputLanguageChange(ctx context.Context, s *testing.State) {
 	if err := sc.VerifyShortcuts(ctx, ui, "Open Help in Explore app", sc.ShortcutKeys{Keys: "ctrl /", Role: role.Cell}); err != nil {
 		s.Fatal("Failed to find ctrl+/ for us input for 'Open Explore app' shortcut: ", err)
 	}
-	// Go to "Windows And Desks" from the side nav.
-	WindowAndDesksCategory := nodewith.Name("Windows and Desks").Role(role.StaticText).Ancestor(shortcutCustomizationRootNode)
+	// Go to "Windows and desks" from the side nav.
+	WindowAndDesksCategory := nodewith.Name("Windows and desks").Role(role.StaticText).Ancestor(shortcutCustomizationRootNode)
 	if err := ui.DoDefault(WindowAndDesksCategory)(ctx); err != nil {
-		s.Fatal("Failed to click Windows And Desks category: ", err)
+		s.Fatal("Failed to click Windows and desks category: ", err)
 	}
 	// Verify the US input shortcut for "Pin window to left" is "alt ["
 	if err := sc.VerifyShortcuts(ctx, ui, "Pin window to left", sc.ShortcutKeys{Keys: "alt [", Role: role.Cell}); err != nil {
@@ -153,9 +153,9 @@ func ShortcutOnInputLanguageChange(ctx context.Context, s *testing.State) {
 	if err := sc.VerifyShortcuts(ctx, ui, "Open Help in Explore app", sc.ShortcutKeys{Keys: "ctrl -", Role: role.Cell}); err != nil {
 		s.Fatal("Failed to find 'ctrl -' for German input for 'Open Explore app' shortcut: ", err)
 	}
-	// Go to "Windows And Desks" from the side nav.
-	if err := ui.DoDefault(nodewith.Name("Windows and Desks").Role(role.StaticText))(ctx); err != nil {
-		s.Fatal("Failed to click Windows And Desks category: ", err)
+	// Go to "Windows and desks" from the side nav.
+	if err := ui.DoDefault(nodewith.Name("Windows and desks").Role(role.StaticText))(ctx); err != nil {
+		s.Fatal("Failed to click Windows and desks category: ", err)
 	}
 	// Verify the German input shortcut for "Pin window to left" is "alt ü"
 	if err := sc.VerifyShortcuts(ctx, ui, "Pin window to left", sc.ShortcutKeys{Keys: "alt ü", Role: role.Cell}); err != nil {
