@@ -16,10 +16,10 @@ import (
 
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/reporters"
-	pb "chromiumos/tast/services/cros/firmware"
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast-tests/cros/common/flashrom"
 	"go.chromium.org/tast-tests/cros/common/servo"
+	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"

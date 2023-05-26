@@ -15,7 +15,7 @@ import (
 
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/cryptohome"
-	pb "chromiumos/tast/services/cros/camerabox"
+	pb "go.chromium.org/tast-tests/cros/services/cros/camerabox"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"

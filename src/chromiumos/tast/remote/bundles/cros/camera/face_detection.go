@@ -9,9 +9,9 @@ import (
 
 	"chromiumos/tast/remote/bundles/cros/camera/camerabox"
 	"chromiumos/tast/remote/bundles/cros/camera/face"
-	pb "chromiumos/tast/services/cros/camerabox"
 	"go.chromium.org/tast-tests/cros/common/camera/chart"
 	"go.chromium.org/tast-tests/cros/common/media/caps"
+	pb "go.chromium.org/tast-tests/cros/services/cros/camerabox"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
 )

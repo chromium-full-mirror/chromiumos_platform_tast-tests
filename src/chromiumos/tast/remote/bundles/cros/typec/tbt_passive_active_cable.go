@@ -15,8 +15,8 @@ import (
 	"time"
 
 	"chromiumos/tast/local/cswitch"
-	"chromiumos/tast/services/cros/typec"
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/services/cros/typec"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"

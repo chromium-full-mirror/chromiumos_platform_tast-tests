@@ -15,9 +15,9 @@ import (
 
 	"chromiumos/tast/remote/bundles/cros/wifi/wifiutil"
 	"chromiumos/tast/remote/wificell"
-	"chromiumos/tast/services/cros/chrome/uiauto/ossettings"
-	"chromiumos/tast/services/cros/chrome/uiauto/quicksettings"
-	"chromiumos/tast/services/cros/ui"
+	"go.chromium.org/tast-tests/cros/services/cros/chrome/uiauto/ossettings"
+	"go.chromium.org/tast-tests/cros/services/cros/chrome/uiauto/quicksettings"
+	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"

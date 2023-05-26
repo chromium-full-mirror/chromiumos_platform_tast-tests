@@ -14,7 +14,7 @@ import (
 	"google.golang.org/grpc"
 
 	"chromiumos/tast/local/faillog"
-	"chromiumos/tast/services/cros/baserpc"
+	"go.chromium.org/tast-tests/cros/services/cros/baserpc"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

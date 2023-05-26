@@ -13,8 +13,8 @@ import (
 	"google.golang.org/grpc"
 
 	"chromiumos/tast/local/screenshot"
-	"chromiumos/tast/services/cros/graphics"
-	pb "chromiumos/tast/services/cros/graphics"
+	"go.chromium.org/tast-tests/cros/services/cros/graphics"
+	pb "go.chromium.org/tast-tests/cros/services/cros/graphics"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

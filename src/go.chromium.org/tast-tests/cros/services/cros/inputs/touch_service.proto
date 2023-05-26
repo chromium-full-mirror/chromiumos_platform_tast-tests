@@ -1,0 +1,47 @@
+// Copyright 2022 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+syntax = "proto3";
+
+package tast.cros.inputs;
+
+import "google/protobuf/empty.proto";
+
+option go_package = "go.chromium.org/tast-tests/cros/services/cros/inputs";
+
+// TouchService provides functionalities to interact with the touchscreen
+// device.
+service TouchService {
+  // Swipe performs a swipe movement with a user defined number of touches. The
+  // touches are separated by (dx, dy). For example, in a 3-touch swipe, the
+  // touches begin at (x0, y0), (x0+dx, y0+dy), (x0+2dx, y0+2dy).
+  // If TimeMilliSeconds is less than 5 milliseconds, 5 milliseconds will be
+  // used instead.
+  rpc Swipe(SwipeRequest) returns (google.protobuf.Empty) {}
+}
+
+message SwipeRequest {
+  // x0 represents the x coordinate of the starting point of the swipe.
+  int32 x0 = 1;
+  // y0 represents the y coordinate of the starting point of the swipe.
+  int32 y0 = 2;
+  // x1 represents the x coordinate of the end point of the swipe.
+  int32 x1 = 3;
+  // y1 represents the y coordinate of the end point of the swipe.
+  int32 y1 = 4;
+  // dx represents the x coordinate of the offset between touches.
+  // Touches are separated by (dx, dy). For example, in a 3-touch swipe, the
+  // touches begin at (x0, y0), (x0+dx, y0+dy), (x0+2dx, y0+2dy).
+  int32 dx = 5;
+  // dy represents the y coordinate of the offset between touches.
+  // Touches are separated by (dx, dy). For example, in a 3-touch swipe, the
+  // touches begin at (x0, y0), (x0+dx, y0+dy), (x0+2dx, y0+2dy).
+  int32 dy = 6;
+  // Touches represents the number of touches and has to be larger than 0.
+  int32 touches = 7;
+  // TimeMilliSeconds represents how long the swipe should last. If
+  // TimeMilliSeconds is less than 5 milliseconds, 5 milliseconds will be used
+  // instead.
+  int32 time_milli_seconds = 8;
+}

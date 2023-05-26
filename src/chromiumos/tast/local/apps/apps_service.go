@@ -14,7 +14,7 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/common"
-	pb "chromiumos/tast/services/cros/apps"
+	pb "go.chromium.org/tast-tests/cros/services/cros/apps"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

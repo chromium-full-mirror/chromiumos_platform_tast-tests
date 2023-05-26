@@ -12,7 +12,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 
 	"chromiumos/tast/remote/cellular/callbox/manager"
-	"chromiumos/tast/services/cros/cellular"
+	"go.chromium.org/tast-tests/cros/services/cros/cellular"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

@@ -18,8 +18,8 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/policyutil"
-	pb "chromiumos/tast/services/cros/enterpriseconnectors"
 	"go.chromium.org/tast-tests/cros/common/policy"
+	pb "go.chromium.org/tast-tests/cros/services/cros/enterpriseconnectors"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

@@ -12,8 +12,8 @@ import (
 	"google.golang.org/grpc"
 
 	"chromiumos/tast/remote/bundles/cros/wwcb/utils"
-	"chromiumos/tast/services/cros/ui"
-	"chromiumos/tast/services/cros/wwcb"
+	"go.chromium.org/tast-tests/cros/services/cros/ui"
+	"go.chromium.org/tast-tests/cros/services/cros/wwcb"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/rpc"

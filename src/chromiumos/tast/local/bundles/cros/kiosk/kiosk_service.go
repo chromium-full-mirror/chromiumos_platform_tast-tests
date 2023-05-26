@@ -17,9 +17,9 @@ import (
 	"chromiumos/tast/local/kioskmode"
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/local/syslog"
-	ppb "chromiumos/tast/services/cros/kiosk"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
+	ppb "go.chromium.org/tast-tests/cros/services/cros/kiosk"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

@@ -407,7 +407,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 
 	...
-	fwService "chromiumos/tast/services/cros/firmware"
+	fwService "go.chromium.org/tast-tests/cros/services/cros/firmware"
 	"go.chromium.org/tast/core/rpc"
 )
 ```
@@ -459,7 +459,7 @@ Finally, call the `GetGBBFlags` RPC, and report results:
 At this point (after running `gofmt`), your test file should resemble [`codelab_rpc.txt`].
 
 [built-in gRPC support]: https://chromium.googlesource.com/chromiumos/platform/tast/+/HEAD/docs/writing_tests.md#Remote-procedure-calls-with-gRPC
-[BIOS service]: https://source.chromium.org/chromiumos/chromiumos/codesearch/+/main:src/platform/tast-tests/src/chromiumos/tast/services/cros/firmware/bios_service.proto
+[BIOS service]: https://source.chromium.org/chromiumos/chromiumos/codesearch/+/main:src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/services/cros/firmware/bios_service.proto
 [`codelab_rpc.txt`]: ./codelab_rpc.txt
 
 ## Simplify with Helper

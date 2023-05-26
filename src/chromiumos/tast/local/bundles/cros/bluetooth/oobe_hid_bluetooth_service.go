@@ -18,7 +18,7 @@ import (
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/oobe"
 	oobeHelper "chromiumos/tast/local/oobe"
-	pb "chromiumos/tast/services/cros/bluetooth"
+	pb "go.chromium.org/tast-tests/cros/services/cros/bluetooth"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

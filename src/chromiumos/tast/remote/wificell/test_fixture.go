@@ -37,8 +37,6 @@ import (
 	"chromiumos/tast/remote/wificell/router/legacy"
 	"chromiumos/tast/remote/wificell/router/openwrt"
 	"chromiumos/tast/remote/wificell/tethering"
-	"chromiumos/tast/services/cros/bluetooth"
-	"chromiumos/tast/services/cros/wifi"
 	"go.chromium.org/tast-tests/cros/common/network/arping"
 	"go.chromium.org/tast-tests/cros/common/network/firewall"
 	commoniw "go.chromium.org/tast-tests/cros/common/network/iw"
@@ -51,6 +49,8 @@ import (
 	"go.chromium.org/tast-tests/cros/common/wifi/security"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/base"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/wpa"
+	"go.chromium.org/tast-tests/cros/services/cros/bluetooth"
+	"go.chromium.org/tast-tests/cros/services/cros/wifi"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"

@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"chromiumos/tast/remote/firmware/serial"
-	pb "chromiumos/tast/services/cros/firmware"
 	commonSerial "go.chromium.org/tast-tests/cros/common/firmware/serial"
+	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
 )

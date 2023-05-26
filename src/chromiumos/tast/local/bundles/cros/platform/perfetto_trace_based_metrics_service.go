@@ -10,8 +10,8 @@ import (
 
 	"google.golang.org/grpc"
 
-	"chromiumos/tast/services/cros/platform"
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/services/cros/platform"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

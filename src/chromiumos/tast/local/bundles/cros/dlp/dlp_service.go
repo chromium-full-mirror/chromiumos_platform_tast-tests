@@ -35,7 +35,7 @@ import (
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/screenshot"
 	"chromiumos/tast/local/session"
-	pb "chromiumos/tast/services/cros/dlp"
+	pb "go.chromium.org/tast-tests/cros/services/cros/dlp"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

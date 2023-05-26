@@ -19,7 +19,7 @@ import (
 	"golang.org/x/sys/unix"
 	"google.golang.org/grpc"
 
-	"chromiumos/tast/services/cros/baserpc"
+	"go.chromium.org/tast-tests/cros/services/cros/baserpc"
 	"go.chromium.org/tast/core/errors"
 )
 

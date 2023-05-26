@@ -14,11 +14,11 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 
 	"chromiumos/tast/remote/policyutil"
-	ps "chromiumos/tast/services/cros/policy"
-	"chromiumos/tast/services/cros/wilco"
 	dtcpb "chromiumos/wilco_dtc"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
+	ps "go.chromium.org/tast-tests/cros/services/cros/policy"
+	"go.chromium.org/tast-tests/cros/services/cros/wilco"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"

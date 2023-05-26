@@ -25,8 +25,8 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/disk"
 	"chromiumos/tast/local/upstart"
-	arcpb "chromiumos/tast/services/cros/arc"
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	arcpb "go.chromium.org/tast-tests/cros/services/cros/arc"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"

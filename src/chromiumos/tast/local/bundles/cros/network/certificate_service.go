@@ -17,7 +17,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/common"
 	"chromiumos/tast/local/cryptohome"
-	pb "chromiumos/tast/services/cros/network"
+	pb "go.chromium.org/tast-tests/cros/services/cros/network"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"

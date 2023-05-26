@@ -6,7 +6,7 @@
 package protoutil
 
 import (
-	"chromiumos/tast/services/cros/wifi"
+	"go.chromium.org/tast-tests/cros/services/cros/wifi"
 	"go.chromium.org/tast/core/errors"
 )
 

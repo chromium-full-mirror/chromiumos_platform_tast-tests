@@ -30,7 +30,7 @@ import (
 	"chromiumos/tast/local/common"
 	"chromiumos/tast/local/coords"
 	"chromiumos/tast/local/screenshot"
-	pb "chromiumos/tast/services/cros/ui"
+	pb "go.chromium.org/tast-tests/cros/services/cros/ui"
 )
 
 func init() {

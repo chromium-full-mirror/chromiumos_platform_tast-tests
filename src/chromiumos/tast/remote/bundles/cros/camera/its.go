@@ -14,10 +14,10 @@ import (
 	"time"
 
 	"chromiumos/tast/remote/bundles/cros/camera/pre"
-	pb "chromiumos/tast/services/cros/camerabox"
 	"go.chromium.org/tast-tests/cros/common/camera/chart"
 	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	pb "go.chromium.org/tast-tests/cros/services/cros/camerabox"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

@@ -17,7 +17,7 @@ import (
 	"google.golang.org/grpc"
 
 	"chromiumos/tast/remote/dutfs"
-	"chromiumos/tast/services/cros/baserpc"
+	"go.chromium.org/tast-tests/cros/services/cros/baserpc"
 	"go.chromium.org/tast/core/testutil"
 )
 

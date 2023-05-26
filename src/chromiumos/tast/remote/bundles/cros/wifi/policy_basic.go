@@ -13,14 +13,14 @@ import (
 
 	"chromiumos/tast/remote/wificell"
 	ap "chromiumos/tast/remote/wificell/hostapd"
-	ps "chromiumos/tast/services/cros/policy"
-	"chromiumos/tast/services/cros/wifi"
 	"go.chromium.org/tast-tests/cros/common/crypto/certificate"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/common/wifi/security"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/tunneled1x"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/wpa"
+	ps "go.chromium.org/tast-tests/cros/services/cros/policy"
+	"go.chromium.org/tast-tests/cros/services/cros/wifi"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )

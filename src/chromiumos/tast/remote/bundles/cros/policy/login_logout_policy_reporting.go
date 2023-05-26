@@ -12,8 +12,8 @@ import (
 
 	"chromiumos/tast/remote/policyutil"
 	"chromiumos/tast/remote/reportingutil"
-	pspb "chromiumos/tast/services/cros/policy"
 	"go.chromium.org/tast-tests/cros/common/tape"
+	pspb "go.chromium.org/tast-tests/cros/services/cros/policy"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"

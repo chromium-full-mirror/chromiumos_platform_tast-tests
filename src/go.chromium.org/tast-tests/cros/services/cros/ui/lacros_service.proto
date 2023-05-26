@@ -1,0 +1,36 @@
+// Copyright 2022 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+syntax = "proto3";
+
+package tast.cros.browser;
+
+import "google/protobuf/empty.proto";
+
+option go_package = "go.chromium.org/tast-tests/cros/services/cros/ui";
+
+// LacrosChrome provides functions for managing lacros chrome lifecycle, like
+// creating and closing lacros chrome sessions.
+service LacrosService {
+  // Launch calls lacros.Launch to launch lacros. For it to be successful,
+  // it requires ChromeService.New to be called beforehand with
+  // appropriate args that Lacros is enabled.
+  rpc Launch(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  // LaunchWithURL is similar to Launch but opens the page with the given url.
+  rpc LaunchWithURL(LaunchWithURLRequest) returns (google.protobuf.Empty) {}
+
+  // Connect calls lacros.Connect to connect to a running lacros instance. Just
+  // like Launch, it requires ChromeService.New to be called beforehand.
+  // Close must be called later to clean up the associated resources.
+  rpc Connect(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  // Close releases the chrome session obtained by New.
+  // When there is no chrome session, calling Close returns an error.
+  rpc Close(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+}
+
+message LaunchWithURLRequest {
+  string url = 1;
+}

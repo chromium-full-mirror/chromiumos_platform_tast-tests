@@ -13,7 +13,7 @@ import (
 	"chromiumos/tast/remote/firmware/reporters"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast/core/rpc"
-	fwService "chromiumos/tast/services/cros/firmware"
+	fwService "go.chromium.org/tast-tests/cros/services/cros/firmware"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )

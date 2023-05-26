@@ -12,10 +12,10 @@ import (
 	"google.golang.org/grpc"
 
 	"chromiumos/tast/remote/bundles/cros/wwcb/utils"
-	pb "chromiumos/tast/services/cros/apps"
-	inputspb "chromiumos/tast/services/cros/inputs"
-	"chromiumos/tast/services/cros/ui"
-	"chromiumos/tast/services/cros/wwcb"
+	pb "go.chromium.org/tast-tests/cros/services/cros/apps"
+	inputspb "go.chromium.org/tast-tests/cros/services/cros/inputs"
+	"go.chromium.org/tast-tests/cros/services/cros/ui"
+	"go.chromium.org/tast-tests/cros/services/cros/wwcb"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/rpc"

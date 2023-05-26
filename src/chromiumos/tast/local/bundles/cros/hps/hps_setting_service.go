@@ -26,7 +26,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/ossettings"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/dbusutil"
-	pb "chromiumos/tast/services/cros/hps"
+	pb "go.chromium.org/tast-tests/cros/services/cros/hps"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

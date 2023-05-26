@@ -13,8 +13,8 @@ import (
 	"google.golang.org/grpc"
 
 	"chromiumos/tast/remote/crosserverutil"
-	inputspb "chromiumos/tast/services/cros/inputs"
-	uipb "chromiumos/tast/services/cros/ui"
+	inputspb "go.chromium.org/tast-tests/cros/services/cros/inputs"
+	uipb "go.chromium.org/tast-tests/cros/services/cros/ui"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

@@ -10,8 +10,8 @@ import (
 
 	"chromiumos/tast/remote/bluetooth"
 	"chromiumos/tast/remote/bundles/cros/bluetooth/bluetoothutil"
-	bts "chromiumos/tast/services/cros/bluetooth"
 	cbt "go.chromium.org/tast-tests/cros/common/chameleon/devices/common/bluetooth"
+	bts "go.chromium.org/tast-tests/cros/services/cros/bluetooth"
 	"go.chromium.org/tast/core/testing"
 )
 

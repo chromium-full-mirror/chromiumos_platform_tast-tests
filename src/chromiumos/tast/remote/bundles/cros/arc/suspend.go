@@ -13,8 +13,8 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/empty"
 
-	"chromiumos/tast/services/cros/arc"
-	arcpb "chromiumos/tast/services/cros/arc"
+	"go.chromium.org/tast-tests/cros/services/cros/arc"
+	arcpb "go.chromium.org/tast-tests/cros/services/cros/arc"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/ssh"

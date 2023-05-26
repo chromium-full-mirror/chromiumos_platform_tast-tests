@@ -8,7 +8,7 @@ import (
 	"context"
 
 	apb "chromiumos/system_api/attestation_proto"
-	hwsecpb "chromiumos/tast/services/cros/hwsec"
+	hwsecpb "go.chromium.org/tast-tests/cros/services/cros/hwsec"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"

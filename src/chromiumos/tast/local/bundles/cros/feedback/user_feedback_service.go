@@ -24,7 +24,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/common"
 	"chromiumos/tast/local/input"
-	pb "chromiumos/tast/services/cros/feedback"
+	pb "go.chromium.org/tast-tests/cros/services/cros/feedback"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

@@ -15,7 +15,7 @@ import (
 	cpb "chromiumos/system_api/bootlockbox_proto"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/dbusutil"
-	"chromiumos/tast/services/cros/security"
+	"go.chromium.org/tast-tests/cros/services/cros/security"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

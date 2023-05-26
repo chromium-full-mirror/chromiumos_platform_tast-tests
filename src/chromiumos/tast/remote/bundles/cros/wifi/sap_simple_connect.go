@@ -12,11 +12,11 @@ import (
 	"chromiumos/tast/remote/wificell"
 	"chromiumos/tast/remote/wificell/dutcfg"
 	"chromiumos/tast/remote/wificell/tethering"
-	"chromiumos/tast/services/cros/wifi"
 	"go.chromium.org/tast-tests/cros/common/network/ping"
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/common/wifi/security"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/wpa"
+	"go.chromium.org/tast-tests/cros/services/cros/wifi"
 
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"

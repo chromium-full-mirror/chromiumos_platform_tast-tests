@@ -11,8 +11,8 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"chromiumos/tast/remote/wificell"
-	"chromiumos/tast/services/cros/ui"
-	"chromiumos/tast/services/cros/wifi"
+	"go.chromium.org/tast-tests/cros/services/cros/ui"
+	"go.chromium.org/tast-tests/cros/services/cros/wifi"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"

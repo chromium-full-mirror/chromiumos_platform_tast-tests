@@ -14,7 +14,7 @@ import (
 
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/fixture"
-	"chromiumos/tast/services/cros/power"
+	"go.chromium.org/tast-tests/cros/services/cros/power"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"

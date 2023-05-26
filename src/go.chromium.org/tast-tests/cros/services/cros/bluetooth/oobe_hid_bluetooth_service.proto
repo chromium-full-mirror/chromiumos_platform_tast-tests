@@ -1,0 +1,36 @@
+// Copyright 2022 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+syntax = "proto3";
+
+package tast.cros.bluetooth;
+
+import "google/protobuf/empty.proto";
+
+option go_package = "go.chromium.org/tast-tests/cros/services/cros/bluetooth";
+
+// OobeHidBluetoothService allows bluetooth remote tests make calls to local,
+// bluetooth-specific functions necessary for testing bluetooth features.
+service OobeHidBluetoothService {
+  // NewChrome starts new chrome session in oobe, verifies that HID detection screen
+  // is shown. CloseChrome must be called later to clean up the associated resources.
+  rpc NewChrome(NewChromeRequest) returns (google.protobuf.Empty) {}
+
+  // CloseChrome releases the resources obtained by NewChrome.
+  rpc CloseChrome (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  // ProgressToWelcomeScreen Progresses from Oobe HID screen to welcome screen.
+  rpc ProgressToWelcomeScreen(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  // DisableBluetoothFromQuickSettings powers off the bluetooth adapter from quick settings.
+  rpc DisableBluetoothFromQuickSettings(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  // VerifyBluetoothIsEnabled verifies Bluetooth is enabled and mouse device is connected.
+  rpc VerifyBluetoothIsEnabled(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+}
+
+message NewChromeRequest {
+  // Key used in initializing chrome to OOBE.
+  string signinProfileTestExtension = 1;
+}

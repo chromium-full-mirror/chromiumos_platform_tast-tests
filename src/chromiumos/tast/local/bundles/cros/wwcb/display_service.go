@@ -25,7 +25,7 @@ import (
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/power"
 	"chromiumos/tast/local/screenshot"
-	"chromiumos/tast/services/cros/wwcb"
+	"go.chromium.org/tast-tests/cros/services/cros/wwcb"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

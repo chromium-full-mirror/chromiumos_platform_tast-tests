@@ -18,9 +18,9 @@ import (
 	"chromiumos/tast/local/modemfwd"
 	"chromiumos/tast/local/modemmanager"
 	"chromiumos/tast/local/upstart"
-	cellular_pb "chromiumos/tast/services/cros/cellular"
 	"go.chromium.org/tast-tests/cros/common/mmconst"
 	"go.chromium.org/tast-tests/cros/common/shillconst"
+	cellular_pb "go.chromium.org/tast-tests/cros/services/cros/cellular"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

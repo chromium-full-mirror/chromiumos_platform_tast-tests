@@ -13,10 +13,10 @@ import (
 
 	"chromiumos/tast/remote/policyutil"
 	"chromiumos/tast/remote/updateutil"
-	pspb "chromiumos/tast/services/cros/policy"
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
+	pspb "go.chromium.org/tast-tests/cros/services/cros/policy"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/lsbrelease"

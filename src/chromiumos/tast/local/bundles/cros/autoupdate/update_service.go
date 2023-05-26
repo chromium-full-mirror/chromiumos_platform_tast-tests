@@ -16,9 +16,9 @@ import (
 	"google.golang.org/grpc"
 
 	"chromiumos/tast/local/updateengine"
-	aupb "chromiumos/tast/services/cros/autoupdate"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	ue "go.chromium.org/tast-tests/cros/common/updateengine"
+	aupb "go.chromium.org/tast-tests/cros/services/cros/autoupdate"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/lsbrelease"
 	"go.chromium.org/tast/core/testing"

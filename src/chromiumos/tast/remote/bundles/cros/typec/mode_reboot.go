@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/services/cros/typec"
+	"go.chromium.org/tast-tests/cros/services/cros/typec"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"

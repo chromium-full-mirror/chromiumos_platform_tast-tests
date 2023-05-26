@@ -16,9 +16,9 @@ import (
 	"google.golang.org/grpc"
 
 	"chromiumos/tast/remote/firmware"
-	pb "chromiumos/tast/services/cros/shimlessrma"
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/common/servo"
+	pb "go.chromium.org/tast-tests/cros/services/cros/shimlessrma"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"

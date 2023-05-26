@@ -13,10 +13,10 @@ import (
 	"time"
 
 	"chromiumos/tast/remote/firmware"
-	pb "chromiumos/tast/services/cros/firmware"
 	common "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast-tests/cros/common/flashrom"
 	"go.chromium.org/tast-tests/cros/common/servo"
+	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"

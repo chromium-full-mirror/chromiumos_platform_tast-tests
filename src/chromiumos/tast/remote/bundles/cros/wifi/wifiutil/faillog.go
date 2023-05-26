@@ -9,7 +9,7 @@ import (
 
 	"google.golang.org/grpc"
 
-	"chromiumos/tast/services/cros/ui"
+	"go.chromium.org/tast-tests/cros/services/cros/ui"
 )
 
 // FaillogServiceName is the service needed for capture fail-logs.

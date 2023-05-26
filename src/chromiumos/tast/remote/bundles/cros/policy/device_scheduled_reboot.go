@@ -12,10 +12,10 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 
 	"chromiumos/tast/remote/policyutil"
-	kspb "chromiumos/tast/services/cros/kiosk"
-	pspb "chromiumos/tast/services/cros/policy"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
+	kspb "go.chromium.org/tast-tests/cros/services/cros/kiosk"
+	pspb "go.chromium.org/tast-tests/cros/services/cros/policy"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"

@@ -9,7 +9,7 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/services/cros/ui"
+	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast/core/errors"
 	"google.golang.org/protobuf/types/known/durationpb"
 )

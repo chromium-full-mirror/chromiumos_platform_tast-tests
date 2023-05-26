@@ -11,7 +11,7 @@ import (
 	"google.golang.org/grpc"
 
 	"chromiumos/tast/local/firmware"
-	fwpb "chromiumos/tast/services/cros/firmware"
+	fwpb "go.chromium.org/tast-tests/cros/services/cros/firmware"
 	"go.chromium.org/tast/core/testing"
 )
 

@@ -19,13 +19,13 @@ import (
 	"chromiumos/tast/remote/bundles/cros/wifi/wifiutil"
 	"chromiumos/tast/remote/wificell"
 	"chromiumos/tast/remote/wificell/hostapd"
-	"chromiumos/tast/services/cros/chrome/uiauto/quicksettings"
-	"chromiumos/tast/services/cros/network"
-	"chromiumos/tast/services/cros/ui"
 	"go.chromium.org/tast-tests/cros/common/crypto/certificate"
 	"go.chromium.org/tast-tests/cros/common/wifi/security"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/tunneled1x"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/wpaeap"
+	"go.chromium.org/tast-tests/cros/services/cros/chrome/uiauto/quicksettings"
+	"go.chromium.org/tast-tests/cros/services/cros/network"
+	"go.chromium.org/tast-tests/cros/services/cros/ui"
 )
 
 // handleCredentialTestParam is the parameter for the test.

@@ -1,0 +1,346 @@
+// Copyright 2023 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+syntax = "proto3";
+
+package tast.cros.bluetooth;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/duration.proto";
+
+option go_package = "go.chromium.org/tast-tests/cros/services/cros/bluetooth";
+
+// BluetoothService allows bluetooth remote tests make calls to the
+// local BluetoothFacade, an abstraction layer on top of the bluez and floss
+// bluetooth stacks.
+//
+// This service provides an endpoint for each method in the BluetoothFacade
+// interface, as well as endpoints for switching between bluez and floss. The
+// SetBluetoothStack method should be called first to specify the stack to use
+// and configure the DUT appropriately, then Enable to turn on bluetooth before
+// making other method calls.
+//
+// Note: This service is for interacting with the bluetooth stack directly, not
+// for performing UI actions. For UI-based bluetooth actions, use the
+// BluetoothUIService instead.
+service BluetoothService {
+  // SetBluetoothStack configures the DUT to use the specified bluetooth stack
+  // and initializes the BluetoothFacade as needed.
+  //
+  // Enable should be called after this if to ensure the adapter is powered on
+  // if it is to be used beyond calling IsPoweredOn.
+  rpc SetBluetoothStack(SetBluetoothStackRequest) returns (google.protobuf.Empty) {}
+
+  // StackType returns the BluetoothStackType the facade uses.
+  rpc StackType(google.protobuf.Empty) returns (StackTypeResponse) {}
+
+  // Enable will turn on the bluetooth daemons and power on adapter.
+  rpc Enable(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  // Disable will turn off the bluetooth daemons and power off adapter.
+  rpc Disable(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  // Reset resets the default adapter and turns it back on if powerOn is true.
+  rpc Reset(ResetRequest) returns (google.protobuf.Empty) {}
+
+  // AdapterProperties collects and returns the default adapter's properties.
+  rpc AdapterProperties(google.protobuf.Empty) returns (AdapterPropertiesResponse) {}
+
+  // IsPoweredOn returns true if the default adapter is enabled.
+  rpc IsPoweredOn(google.protobuf.Empty) returns (IsPoweredOnResponse) {}
+
+  // SetPowered sets the default adapter's enabled state.
+  rpc SetPowered(SetPoweredRequest) returns (google.protobuf.Empty) {}
+
+  // StartDiscovery starts the discovery of remote devices.
+  rpc StartDiscovery(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  // StopDiscovery stops the discovery of remote devices.
+  rpc StopDiscovery(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  // IsDiscovering checks if the adapter is discovering.
+  rpc IsDiscovering(google.protobuf.Empty) returns (IsDiscoveringResponse) {}
+
+  // IsDiscoverable returns true if the default adapter is discoverable.
+  rpc IsDiscoverable(google.protobuf.Empty) returns (IsDiscoverableResponse) {}
+
+  // SetDiscoverable sets whether the default adapter is discoverable.
+  rpc SetDiscoverable(SetDiscoverableRequest) returns (google.protobuf.Empty) {}
+
+  // SetDiscoverableWithTimeout sets whether the default adapter is
+  // discoverable. If discoverable is true, it will be set as discoverable for
+  // the provided timeout in seconds.
+  rpc SetDiscoverableWithTimeout(SetDiscoverableWithTimeoutRequest) returns (google.protobuf.Empty) {}
+
+  // IsPairable returns true if the default adapter is pairable.
+  rpc IsPairable(google.protobuf.Empty) returns (IsPairableResponse) {}
+
+  // SetPairable sets whether the default adapter is pairable.
+  rpc SetPairable(SetPairableRequest) returns (google.protobuf.Empty) {}
+
+  // Address returns the address of the default adapter.
+  rpc Address(google.protobuf.Empty) returns (AddressResponse) {}
+
+  // Name returns the name of the default adapter.
+  rpc Name(google.protobuf.Empty) returns (NameResponse) {}
+
+  // UUIDs returns the UUIDs of the default adapter.
+  rpc UUIDs(google.protobuf.Empty) returns (UUIDsResponse) {}
+
+  // Devices returns the addresses of all known devices.
+  rpc Devices(google.protobuf.Empty) returns (DevicesResponse) {}
+
+  // HasDevice checks if the adapter knows the device with the given address.
+  // A device is known if is paired or if it has been discovered by the adapter.
+  rpc HasDevice(HasDeviceRequest) returns (HasDeviceResponse) {}
+
+  // RemoveDevice removes/forgets a known device with the given address.
+  rpc RemoveDevice(RemoveDeviceRequest) returns (google.protobuf.Empty) {}
+
+  // ConnectDevice connects to a device with the given address.
+  rpc ConnectDevice(ConnectDeviceRequest) returns (google.protobuf.Empty) {}
+
+  // DisconnectDevice disconnects the device with the given address.
+  rpc DisconnectDevice(DisconnectDeviceRequest) returns (google.protobuf.Empty) {}
+
+  // DeviceProperties collects and returns a known device's properties.
+  rpc DeviceProperties(DevicePropertiesRequest) returns (DevicePropertiesResponse) {}
+
+  // DeviceIsConnected checks whether the device with the given address is
+  // connected.
+  rpc DeviceIsConnected(DeviceIsConnectedRequest) returns (DeviceIsConnectedResponse) {}
+
+  // DeviceIsPaired checks whether the device with the given address is paired.
+  rpc DeviceIsPaired(DeviceIsPairedRequest) returns (DeviceIsPairedResponse) {}
+
+  // DeviceAddress returns the address of a known device with the given name.
+  rpc DeviceAddress(DeviceAddressRequest) returns (DeviceAddressResponse) {}
+
+  // DeviceName returns the name of a known device with the given address.
+  rpc DeviceName(DeviceNameRequest) returns (DeviceNameResponse) {}
+
+  // DeviceAlias returns the alias of a known device with the given address.
+  rpc DeviceAlias(DeviceAliasRequest) returns (DeviceAliasResponse) {}
+
+  // DiscoverDevice will start discovery, wait until a device is found, and then
+  // stop discovery. A non-nil error return indicates that the adapter was able
+  // to successfully discover the device before the timeout was reached.
+  rpc DiscoverDevice(DiscoverDeviceRequest) returns (google.protobuf.Empty) {}
+
+  // PairDevice pairs a peer device with the given address and authentication
+  // pin. Device can be assumed to be both paired and connect to the DUT if this
+  // returns without error.
+  //
+  // DiscoverDevice should be called prior to PairDevice to ensure that the
+  // adapter knows of the device for pairing.
+  rpc PairDevice(PairDeviceRequest) returns (google.protobuf.Empty) {}
+
+  // EnabledOnBoot returns the value of the system setting that determines if
+  // the bluetooth adapter is enabled on boot.
+  // Note: This requires the chrome ui to have been loaded with the signin
+  // profile test extension key.
+  rpc EnabledOnBoot(google.protobuf.Empty) returns (EnabledOnBootResponse) {}
+
+  // SetEnabledOnBoot sets the value of the system setting that determines if
+  // the bluetooth adapter is enabled on boot.
+  // Note: This requires the chrome ui to have been loaded with the signin
+  // profile test extension key.
+  rpc SetEnabledOnBoot(SetEnabledOnBootRequest) returns (google.protobuf.Empty) {}
+}
+
+enum BluetoothStackType {
+  BLUETOOTH_STACK_TYPE_NULL = 0;
+  BLUETOOTH_STACK_TYPE_BLUEZ = 1;
+  BLUETOOTH_STACK_TYPE_FLOSS = 2;
+}
+
+message BluetoothAdapterProperties {
+  // powered is true if the adapter is powered on.
+  bool powered = 1;
+
+  // discovering is true if the adapter is in the discovering state.
+  bool discovering = 2;
+
+  // discoverable is true if the adapter is discoverable externally.
+  bool discoverable = 3;
+
+  // pairable is true if devices may be paired with the adapter.
+  bool pairable = 4;
+
+  // address is the external bluetooth mac address of the adapter.
+  string address = 5;
+
+  // name is the external bluetooth name of the DUT.
+  string name = 6;
+}
+
+message BluetoothDeviceProperties {
+  // address is the mac address of the bluetooth device.
+  string address = 1;
+
+  // name is the name of the bluetooth device.
+  string name = 2;
+
+  // alias is the alias of the bluetooth device.
+  string alias = 3;
+
+  // connected is true if the device is connected.
+  bool connected = 4;
+
+  // paired is true if the device is paired.
+  bool paired = 5;
+}
+
+
+message SetBluetoothStackRequest {
+  BluetoothStackType stackType = 1;
+}
+
+message StackTypeResponse {
+  BluetoothStackType stackType = 1;
+}
+
+message ResetRequest {
+  bool powerOn = 1;
+}
+
+message AdapterPropertiesResponse {
+  BluetoothAdapterProperties adapterProperties = 1;
+}
+
+message IsPoweredOnResponse {
+  bool isPoweredOn = 1;
+}
+
+message SetPoweredRequest {
+  bool powered = 1;
+}
+
+message IsDiscoveringResponse {
+  bool isDiscovering = 1;
+}
+
+message IsDiscoverableResponse {
+  bool isDiscoverable = 1;
+}
+
+message SetDiscoverableRequest {
+  bool discoverable = 1;
+}
+
+message SetDiscoverableWithTimeoutRequest {
+  bool discoverable = 1;
+  uint32 timeoutSeconds = 2;
+}
+
+message IsPairableResponse {
+  bool isPairable = 1;
+}
+
+message SetPairableRequest {
+  bool pairable = 1;
+}
+
+message AddressResponse {
+  string adapterAddress = 1;
+}
+
+message NameResponse {
+  string adapterName = 1;
+}
+
+message UUIDsResponse {
+  repeated string adapterUUIDs = 1;
+}
+
+message DevicesResponse {
+  repeated string knownDeviceAddresses = 1;
+}
+
+message HasDeviceRequest {
+  string deviceAddress = 1;
+}
+
+message HasDeviceResponse {
+  bool hasDevice = 1;
+}
+
+message RemoveDeviceRequest {
+  string deviceAddress = 1;
+}
+
+message ConnectDeviceRequest {
+  string deviceAddress = 1;
+}
+
+message DisconnectDeviceRequest {
+  string deviceAddress = 1;
+}
+
+message DevicePropertiesRequest {
+  string deviceAddress = 1;
+}
+
+message DevicePropertiesResponse {
+  BluetoothDeviceProperties deviceProperties = 1;
+}
+
+message DeviceIsConnectedRequest {
+  string deviceAddress = 1;
+}
+
+message DeviceIsConnectedResponse {
+  bool deviceIsConnected = 1;
+}
+
+message DeviceIsPairedRequest {
+  string deviceAddress = 1;
+}
+
+message DeviceIsPairedResponse {
+  bool deviceIsPaired = 1;
+}
+
+message DeviceAddressRequest {
+  string deviceName = 1;
+}
+
+message DeviceAddressResponse {
+  string deviceAddress = 1;
+}
+
+message DeviceNameRequest {
+  string deviceAddress = 1;
+}
+
+message DeviceNameResponse {
+  string deviceName = 1;
+}
+
+message DeviceAliasRequest {
+  string deviceAddress = 1;
+}
+
+message DeviceAliasResponse {
+  string deviceAlias = 1;
+}
+
+message DiscoverDeviceRequest {
+  reserved 2;
+  string deviceAddress = 1;
+  google.protobuf.Duration discoveryTimeout = 3;
+}
+
+message PairDeviceRequest {
+  string deviceAddress = 1;
+  string pin = 2;
+}
+
+message EnabledOnBootResponse {
+  bool adapter_enabled_on_boot = 1;
+}
+
+message SetEnabledOnBootRequest {
+  bool adapter_enabled_on_boot = 1;
+}

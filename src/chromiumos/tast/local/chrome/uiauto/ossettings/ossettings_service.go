@@ -15,9 +15,9 @@ import (
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/common"
-	"chromiumos/tast/services/cros/chrome/uiauto/ossettings"
-	pb "chromiumos/tast/services/cros/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/common/network/netconfigtypes"
+	"go.chromium.org/tast-tests/cros/services/cros/chrome/uiauto/ossettings"
+	pb "go.chromium.org/tast-tests/cros/services/cros/chrome/uiauto/ossettings"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

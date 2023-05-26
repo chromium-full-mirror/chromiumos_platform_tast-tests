@@ -15,8 +15,8 @@ import (
 
 	grpc "google.golang.org/grpc"
 
-	ts "chromiumos/tast/services/cros/tape"
 	"go.chromium.org/tast-tests/cros/common/tape"
+	ts "go.chromium.org/tast-tests/cros/services/cros/tape"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

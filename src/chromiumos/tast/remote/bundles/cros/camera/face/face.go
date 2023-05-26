@@ -12,7 +12,7 @@ import (
 	"regexp"
 	"strconv"
 
-	pb "chromiumos/tast/services/cros/camerabox"
+	pb "go.chromium.org/tast-tests/cros/services/cros/camerabox"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"

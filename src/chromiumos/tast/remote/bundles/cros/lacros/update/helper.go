@@ -11,9 +11,9 @@ import (
 
 	"chromiumos/tast/remote/bundles/cros/lacros/provision"
 	"chromiumos/tast/remote/bundles/cros/lacros/version"
-	"chromiumos/tast/services/cros/lacros"
-	lacrosservice "chromiumos/tast/services/cros/lacros"
 	lacroscommon "go.chromium.org/tast-tests/cros/common/cros/lacros"
+	"go.chromium.org/tast-tests/cros/services/cros/lacros"
+	lacrosservice "go.chromium.org/tast-tests/cros/services/cros/lacros"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh/linuxssh"

@@ -10,7 +10,7 @@ import (
 
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/fixture"
-	pb "chromiumos/tast/services/cros/firmware"
+	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/ssh"

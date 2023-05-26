@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"time"
 
-	ps "chromiumos/tast/services/cros/policy"
+	ps "go.chromium.org/tast-tests/cros/services/cros/policy"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

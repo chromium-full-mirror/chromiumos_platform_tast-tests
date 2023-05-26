@@ -12,7 +12,7 @@ import (
 	"google.golang.org/grpc"
 
 	"chromiumos/tast/local/profiler"
-	pb "chromiumos/tast/services/cros/wifi"
+	pb "go.chromium.org/tast-tests/cros/services/cros/wifi"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

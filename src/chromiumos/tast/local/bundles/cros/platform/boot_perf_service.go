@@ -13,7 +13,7 @@ import (
 	"google.golang.org/grpc"
 
 	"chromiumos/tast/local/bundles/cros/platform/bootperf"
-	"chromiumos/tast/services/cros/platform"
+	"go.chromium.org/tast-tests/cros/services/cros/platform"
 	"go.chromium.org/tast/core/testing"
 )
 

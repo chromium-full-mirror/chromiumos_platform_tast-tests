@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"chromiumos/tast/remote/wificell"
-	"chromiumos/tast/services/cros/wifi"
 	"go.chromium.org/tast-tests/cros/common/shillconst"
+	"go.chromium.org/tast-tests/cros/services/cros/wifi"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )

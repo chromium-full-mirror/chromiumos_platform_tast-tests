@@ -16,10 +16,10 @@ import (
 	"chromiumos/tast/remote/wificell"
 	"chromiumos/tast/remote/wificell/attenuator"
 	"chromiumos/tast/remote/wificell/hostapd"
-	"chromiumos/tast/services/cros/wifi"
 	"go.chromium.org/tast-tests/cros/common/network/wpacli"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/wifi/security"
+	"go.chromium.org/tast-tests/cros/services/cros/wifi"
 	"go.chromium.org/tast/core/testing"
 )
 

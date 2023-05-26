@@ -13,7 +13,7 @@ import (
 
 	"chromiumos/tast/local/common"
 	"chromiumos/tast/local/input"
-	pb "chromiumos/tast/services/cros/inputs"
+	pb "go.chromium.org/tast-tests/cros/services/cros/inputs"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

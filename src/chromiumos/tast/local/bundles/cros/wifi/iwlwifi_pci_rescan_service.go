@@ -11,7 +11,7 @@ import (
 	"google.golang.org/grpc"
 
 	"chromiumos/tast/local/bundles/cros/wifi/iwlwifirescan"
-	"chromiumos/tast/services/cros/wifi"
+	"go.chromium.org/tast-tests/cros/services/cros/wifi"
 	"go.chromium.org/tast/core/testing"
 )
 

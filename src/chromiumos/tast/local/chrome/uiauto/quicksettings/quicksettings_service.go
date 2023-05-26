@@ -13,7 +13,7 @@ import (
 
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/common"
-	pb "chromiumos/tast/services/cros/chrome/uiauto/quicksettings"
+	pb "go.chromium.org/tast-tests/cros/services/cros/chrome/uiauto/quicksettings"
 	"go.chromium.org/tast/core/testing"
 )
 

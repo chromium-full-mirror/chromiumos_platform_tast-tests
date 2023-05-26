@@ -13,7 +13,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 
 	"chromiumos/tast/remote/dutfs"
-	hwsecpb "chromiumos/tast/services/cros/hwsec"
+	hwsecpb "go.chromium.org/tast-tests/cros/services/cros/hwsec"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh/linuxssh"

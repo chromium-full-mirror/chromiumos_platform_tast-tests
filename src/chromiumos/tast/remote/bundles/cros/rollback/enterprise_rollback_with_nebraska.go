@@ -16,11 +16,11 @@ import (
 
 	"chromiumos/tast/remote/policyutil"
 	"chromiumos/tast/remote/updateutil"
-	aupb "chromiumos/tast/services/cros/autoupdate"
-	"chromiumos/tast/services/cros/nebraska"
-	pspb "chromiumos/tast/services/cros/policy"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
+	aupb "go.chromium.org/tast-tests/cros/services/cros/autoupdate"
+	"go.chromium.org/tast-tests/cros/services/cros/nebraska"
+	pspb "go.chromium.org/tast-tests/cros/services/cros/policy"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/rpc"

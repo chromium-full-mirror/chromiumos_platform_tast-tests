@@ -14,7 +14,7 @@ import (
 
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome"
-	cameraboxpb "chromiumos/tast/services/cros/camerabox"
+	cameraboxpb "go.chromium.org/tast-tests/cros/services/cros/camerabox"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

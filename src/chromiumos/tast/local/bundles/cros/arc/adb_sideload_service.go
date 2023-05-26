@@ -15,7 +15,7 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/localstate"
-	arcpb "chromiumos/tast/services/cros/arc"
+	arcpb "go.chromium.org/tast-tests/cros/services/cros/arc"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

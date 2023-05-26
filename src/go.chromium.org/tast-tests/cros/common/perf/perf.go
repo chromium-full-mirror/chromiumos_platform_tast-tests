@@ -38,7 +38,7 @@
 //
 // In order to "import values.proto", add a -I argument pointing at
 // src/go.chromium.org/tast-tests/cros/common/perf/perfpb/ to the protoc command in your
-// service's gen.go file. See src/chromiumos/tast/services/cros/arc/gen.go
+// service's gen.go file. See src/go.chromium.org/tast-tests/cros/services/cros/arc/gen.go
 // for an example.
 //
 // Service:

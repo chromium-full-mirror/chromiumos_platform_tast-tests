@@ -16,7 +16,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 
 	"chromiumos/tast/remote/firmware/fixture"
-	crash_service "chromiumos/tast/services/cros/crash"
+	crash_service "go.chromium.org/tast-tests/cros/services/cros/crash"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/rpc"

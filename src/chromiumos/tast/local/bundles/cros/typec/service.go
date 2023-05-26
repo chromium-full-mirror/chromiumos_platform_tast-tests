@@ -21,7 +21,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/quicksettings"
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/typecutils"
-	"chromiumos/tast/services/cros/typec"
+	"go.chromium.org/tast-tests/cros/services/cros/typec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

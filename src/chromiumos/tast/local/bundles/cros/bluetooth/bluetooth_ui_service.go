@@ -19,7 +19,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/quicksettings"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/common"
-	pb "chromiumos/tast/services/cros/bluetooth"
+	pb "go.chromium.org/tast-tests/cros/services/cros/bluetooth"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

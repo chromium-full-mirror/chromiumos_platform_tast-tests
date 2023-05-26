@@ -13,7 +13,7 @@ import (
 	"chromiumos/tast/remote/firmware/fixture"
 	input "chromiumos/tast/remote/inputs"
 	"chromiumos/tast/remote/powercontrol"
-	"chromiumos/tast/services/cros/inputs"
+	"go.chromium.org/tast-tests/cros/services/cros/inputs"
 
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"

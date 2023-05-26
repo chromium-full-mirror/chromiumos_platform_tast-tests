@@ -8,8 +8,8 @@ import (
 	"context"
 	"time"
 
-	factoryservice "chromiumos/tast/services/cros/factory"
 	factorycommon "go.chromium.org/tast-tests/cros/common/factory"
+	factoryservice "go.chromium.org/tast-tests/cros/services/cros/factory"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"

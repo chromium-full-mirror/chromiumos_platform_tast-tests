@@ -12,7 +12,7 @@ import (
 	"sort"
 	"strconv"
 
-	pb "chromiumos/tast/services/cros/firmware"
+	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/exec"

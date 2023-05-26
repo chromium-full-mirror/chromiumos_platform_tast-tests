@@ -24,9 +24,9 @@ import (
 	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
 	"chromiumos/tast/local/chrome/lacros/lacrosproc"
 	"chromiumos/tast/local/cryptohome"
-	lacrosservice "chromiumos/tast/services/cros/lacros"
 	lacroscommon "go.chromium.org/tast-tests/cros/common/cros/lacros"
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	lacrosservice "go.chromium.org/tast-tests/cros/services/cros/lacros"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"

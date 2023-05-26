@@ -11,7 +11,7 @@ import (
 	"google.golang.org/grpc"
 
 	"chromiumos/tast/local/bundles/cros/network/proxy"
-	"chromiumos/tast/services/cros/network"
+	"go.chromium.org/tast-tests/cros/services/cros/network"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

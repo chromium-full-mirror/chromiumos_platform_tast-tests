@@ -17,9 +17,9 @@ import (
 
 	"chromiumos/tast/remote/bundles/cros/arc/cache"
 	"chromiumos/tast/remote/bundles/cros/arc/dututils"
-	"chromiumos/tast/services/cros/arc"
-	arcpb "chromiumos/tast/services/cros/arc"
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/services/cros/arc"
+	arcpb "go.chromium.org/tast-tests/cros/services/cros/arc"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"

@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	fmpb "chromiumos/tast/services/cros/filemanager"
+	fmpb "go.chromium.org/tast-tests/cros/services/cros/filemanager"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"

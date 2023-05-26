@@ -13,8 +13,8 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
-	aupb "chromiumos/tast/services/cros/autoupdate"
-	"chromiumos/tast/services/cros/nebraska"
+	aupb "go.chromium.org/tast-tests/cros/services/cros/autoupdate"
+	"go.chromium.org/tast-tests/cros/services/cros/nebraska"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"

@@ -15,8 +15,8 @@ import (
 
 	"chromiumos/tast/local/bundles/cros/wilco/routines"
 	"chromiumos/tast/local/wilco"
-	wpb "chromiumos/tast/services/cros/wilco"
 	dtcpb "chromiumos/wilco_dtc"
+	wpb "go.chromium.org/tast-tests/cros/services/cros/wilco"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/timing"

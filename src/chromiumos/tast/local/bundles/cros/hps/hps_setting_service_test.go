@@ -11,7 +11,7 @@ import (
 
 	durationpb "google.golang.org/protobuf/types/known/durationpb"
 
-	pb "chromiumos/tast/services/cros/hps"
+	pb "go.chromium.org/tast-tests/cros/services/cros/hps"
 )
 
 const (

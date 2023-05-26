@@ -12,9 +12,9 @@ import (
 
 	"chromiumos/tast/local/dbusutil"
 	"chromiumos/tast/local/upstart"
-	aupb "chromiumos/tast/services/cros/autoupdate"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	ue "go.chromium.org/tast-tests/cros/common/updateengine"
+	aupb "go.chromium.org/tast-tests/cros/services/cros/autoupdate"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

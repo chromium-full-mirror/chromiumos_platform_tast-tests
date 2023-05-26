@@ -1,0 +1,12 @@
+// Copyright 2023 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+//go:generate protoc -I . --go_out=plugins=grpc:../../../../../.. nebraska.proto
+
+// Package nebraska provides a wrapper around the Nebraska local update server
+package nebraska
+
+// Run the following command in CrOS chroot to regenerate protocol buffer bindings:
+//
+// ~/trunk/src/platform/tast/tools/go.sh generate go.chromium.org/tast-tests/cros/services/cros/nebraska

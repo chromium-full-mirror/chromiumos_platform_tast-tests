@@ -18,7 +18,7 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/sysutil"
-	"chromiumos/tast/services/cros/power"
+	"go.chromium.org/tast-tests/cros/services/cros/power"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

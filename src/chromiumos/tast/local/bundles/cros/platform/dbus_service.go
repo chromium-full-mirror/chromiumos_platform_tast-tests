@@ -11,7 +11,7 @@ import (
 	"google.golang.org/grpc"
 
 	"chromiumos/tast/local/dbusutil"
-	"chromiumos/tast/services/cros/platform"
+	"go.chromium.org/tast-tests/cros/services/cros/platform"
 	"go.chromium.org/tast/core/testing"
 )
 

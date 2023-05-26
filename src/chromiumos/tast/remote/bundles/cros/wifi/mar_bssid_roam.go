@@ -17,10 +17,10 @@ import (
 	"chromiumos/tast/remote/wificell/dutcfg"
 	"chromiumos/tast/remote/wificell/hostapd"
 	"chromiumos/tast/remote/wificell/router/common/support"
-	"chromiumos/tast/services/cros/wifi"
 	cip "go.chromium.org/tast-tests/cros/common/network/ip"
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
+	"go.chromium.org/tast-tests/cros/services/cros/wifi"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

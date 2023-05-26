@@ -13,7 +13,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
-	pb "chromiumos/tast/services/cros/hps"
+	pb "go.chromium.org/tast-tests/cros/services/cros/hps"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"

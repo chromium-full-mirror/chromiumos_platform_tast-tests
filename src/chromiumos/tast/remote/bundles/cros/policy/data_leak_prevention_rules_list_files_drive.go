@@ -13,8 +13,8 @@ import (
 
 	"chromiumos/tast/remote/bundles/cros/policy/dlputil"
 	"chromiumos/tast/remote/reportingutil"
-	dlp "chromiumos/tast/services/cros/dlp"
 	"go.chromium.org/tast-tests/cros/common/fixture"
+	dlp "go.chromium.org/tast-tests/cros/services/cros/dlp"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"

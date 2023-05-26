@@ -16,7 +16,7 @@ import (
 
 	"chromiumos/tast/local/a11y/tts"
 	"chromiumos/tast/local/bundles/cros/arc/cache"
-	arcpb "chromiumos/tast/services/cros/arc"
+	arcpb "go.chromium.org/tast-tests/cros/services/cros/arc"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

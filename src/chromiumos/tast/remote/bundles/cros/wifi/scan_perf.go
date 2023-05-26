@@ -13,10 +13,10 @@ import (
 	remoteiw "chromiumos/tast/remote/network/iw"
 	"chromiumos/tast/remote/wificell"
 	ap "chromiumos/tast/remote/wificell/hostapd"
-	"chromiumos/tast/services/cros/wifi"
 	"go.chromium.org/tast-tests/cros/common/network/iw"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
+	"go.chromium.org/tast-tests/cros/services/cros/wifi"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"

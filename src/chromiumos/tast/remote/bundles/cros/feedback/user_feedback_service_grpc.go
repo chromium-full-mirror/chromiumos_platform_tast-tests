@@ -14,8 +14,8 @@ import (
 	"google.golang.org/grpc"
 
 	"chromiumos/tast/remote/crosserverutil"
-	fpb "chromiumos/tast/services/cros/feedback"
-	uipb "chromiumos/tast/services/cros/ui"
+	fpb "go.chromium.org/tast-tests/cros/services/cros/feedback"
+	uipb "go.chromium.org/tast-tests/cros/services/cros/ui"
 
 	"go.chromium.org/tast/core/testing"
 )

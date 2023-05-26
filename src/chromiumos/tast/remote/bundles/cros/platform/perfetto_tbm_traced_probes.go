@@ -10,7 +10,7 @@ import (
 	"android.googlesource.com/platform/external/perfetto/protos/perfetto/metrics/github.com/google/perfetto/perfetto_proto"
 
 	"chromiumos/tast/remote/bundles/cros/platform/perfetto"
-	"chromiumos/tast/services/cros/platform"
+	"go.chromium.org/tast-tests/cros/services/cros/platform"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
 )

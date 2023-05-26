@@ -11,8 +11,8 @@ import (
 	"strings"
 
 	"chromiumos/tast/remote/firmware/fixture"
-	pb "chromiumos/tast/services/cros/firmware"
 	"go.chromium.org/tast-tests/cros/common/firmware/bios"
+	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
 	"go.chromium.org/tast/core/testing"
 )
 

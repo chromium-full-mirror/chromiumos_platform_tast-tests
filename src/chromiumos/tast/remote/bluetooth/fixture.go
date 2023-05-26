@@ -16,11 +16,11 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"chromiumos/tast/remote/log"
-	bts "chromiumos/tast/services/cros/bluetooth"
-	"chromiumos/tast/services/cros/ui"
 	"go.chromium.org/tast-tests/cros/common/chameleon"
 	"go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast-tests/cros/common/utils"
+	bts "go.chromium.org/tast-tests/cros/services/cros/bluetooth"
+	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"

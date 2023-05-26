@@ -11,8 +11,8 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 
 	"chromiumos/tast/remote/firmware/fixture"
-	"chromiumos/tast/services/cros/arc"
-	arcpb "chromiumos/tast/services/cros/arc"
+	"go.chromium.org/tast-tests/cros/services/cros/arc"
+	arcpb "go.chromium.org/tast-tests/cros/services/cros/arc"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"

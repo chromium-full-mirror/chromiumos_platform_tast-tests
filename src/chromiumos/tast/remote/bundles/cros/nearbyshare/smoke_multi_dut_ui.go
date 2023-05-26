@@ -10,8 +10,8 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
-	"chromiumos/tast/services/cros/nearbyservice"
 	nearbycommon "go.chromium.org/tast-tests/cros/common/cros/nearbyshare"
+	"go.chromium.org/tast-tests/cros/services/cros/nearbyservice"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"

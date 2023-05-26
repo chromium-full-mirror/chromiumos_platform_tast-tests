@@ -25,8 +25,8 @@ import (
 	"chromiumos/tast/local/crosconfig"
 	"chromiumos/tast/local/firmware"
 	"chromiumos/tast/local/input"
-	fwpb "chromiumos/tast/services/cros/firmware"
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	fwpb "go.chromium.org/tast-tests/cros/services/cros/firmware"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

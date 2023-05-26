@@ -11,7 +11,7 @@ import (
 	"google.golang.org/grpc"
 
 	"chromiumos/tast/local/chrome"
-	pb "chromiumos/tast/services/cros/policy"
+	pb "go.chromium.org/tast-tests/cros/services/cros/policy"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

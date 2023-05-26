@@ -14,8 +14,8 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 
 	"chromiumos/tast/remote/crosserverutil"
-	pb "chromiumos/tast/services/cros/ui"
 	"go.chromium.org/tast-tests/cros/common/chrome/ash"
+	pb "go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast/core/testing"
 )
 

@@ -12,8 +12,8 @@ import (
 	"google.golang.org/protobuf/types/known/durationpb"
 
 	"chromiumos/tast/remote/powercontrol"
-	"chromiumos/tast/services/cros/ui"
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"

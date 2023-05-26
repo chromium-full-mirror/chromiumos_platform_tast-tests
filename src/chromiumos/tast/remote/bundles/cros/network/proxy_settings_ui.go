@@ -14,8 +14,8 @@ import (
 	"google.golang.org/protobuf/testing/protocmp"
 
 	"chromiumos/tast/remote/wificell"
-	"chromiumos/tast/services/cros/network"
-	"chromiumos/tast/services/cros/ui"
+	"go.chromium.org/tast-tests/cros/services/cros/network"
+	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

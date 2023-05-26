@@ -14,9 +14,9 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"chromiumos/tast/remote/bundles/cros/wwcb/utils"
-	pb "chromiumos/tast/services/cros/apps"
-	"chromiumos/tast/services/cros/ui"
-	"chromiumos/tast/services/cros/wwcb"
+	pb "go.chromium.org/tast-tests/cros/services/cros/apps"
+	"go.chromium.org/tast-tests/cros/services/cros/ui"
+	"go.chromium.org/tast-tests/cros/services/cros/wwcb"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"

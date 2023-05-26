@@ -12,9 +12,9 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"chromiumos/tast/remote/bluetooth"
-	bts "chromiumos/tast/services/cros/bluetooth"
-	"chromiumos/tast/services/cros/ui"
 	cbt "go.chromium.org/tast-tests/cros/common/chameleon/devices/common/bluetooth"
+	bts "go.chromium.org/tast-tests/cros/services/cros/bluetooth"
+	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"

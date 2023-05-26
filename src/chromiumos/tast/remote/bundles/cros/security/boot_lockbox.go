@@ -13,8 +13,8 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 
 	hwsecremote "chromiumos/tast/remote/hwsec"
-	"chromiumos/tast/services/cros/security"
 	"go.chromium.org/tast-tests/cros/common/hwsec"
+	"go.chromium.org/tast-tests/cros/services/cros/security"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"

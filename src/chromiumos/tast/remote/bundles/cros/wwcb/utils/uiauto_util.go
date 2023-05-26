@@ -11,8 +11,8 @@ import (
 	"path/filepath"
 	"time"
 
-	inputspb "chromiumos/tast/services/cros/inputs"
-	"chromiumos/tast/services/cros/ui"
+	inputspb "go.chromium.org/tast-tests/cros/services/cros/inputs"
+	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh/linuxssh"

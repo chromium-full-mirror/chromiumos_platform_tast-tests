@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package tast.cros.wifi;
+
+import "google/protobuf/empty.proto";
+
+option go_package = "go.chromium.org/tast-tests/cros/services/cros/wifi";
+
+// HPT Service starts and stop tracing on the DUT
+service HPTService {
+  rpc StartHPT(HPTRequest) returns (google.protobuf.Empty) {}
+  rpc StopHPT(HPTRequest) returns (google.protobuf.Empty) {}
+}
+
+message HPTRequest {
+  string OutDir = 1;
+  int32 SampleRateHz = 2;
+}

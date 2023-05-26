@@ -14,10 +14,10 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 
 	"chromiumos/tast/remote/powercontrol"
-	"chromiumos/tast/services/cros/inputs"
-	"chromiumos/tast/services/cros/platform"
-	"chromiumos/tast/services/cros/security"
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/services/cros/inputs"
+	"go.chromium.org/tast-tests/cros/services/cros/platform"
+	"go.chromium.org/tast-tests/cros/services/cros/security"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"

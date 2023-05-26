@@ -8,7 +8,7 @@ import (
 	"reflect"
 	"testing"
 
-	pb "chromiumos/tast/services/cros/firmware"
+	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
 )
 
 // flags converts a list of ints to a slice of pb.GBBFlags.

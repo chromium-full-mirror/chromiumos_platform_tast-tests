@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"chromiumos/tast/remote/bluetooth"
-	pb "chromiumos/tast/services/cros/bluetooth"
 	cbt "go.chromium.org/tast-tests/cros/common/chameleon/devices/common/bluetooth"
+	pb "go.chromium.org/tast-tests/cros/services/cros/bluetooth"
 	"go.chromium.org/tast/core/testing"
 	"google.golang.org/protobuf/types/known/durationpb"
 )

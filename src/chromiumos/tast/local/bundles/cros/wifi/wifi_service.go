@@ -28,8 +28,8 @@ import (
 	"chromiumos/tast/local/common"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/shill"
-	"chromiumos/tast/services/cros/wifi"
 	"go.chromium.org/tast-tests/cros/common/shillconst"
+	"go.chromium.org/tast-tests/cros/services/cros/wifi"
 )
 
 func init() {

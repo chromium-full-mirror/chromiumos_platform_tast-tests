@@ -10,8 +10,8 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	fwpb "chromiumos/tast/services/cros/firmware"
 	"go.chromium.org/tast-tests/cros/common/servo"
+	fwpb "go.chromium.org/tast-tests/cros/services/cros/firmware"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
 )

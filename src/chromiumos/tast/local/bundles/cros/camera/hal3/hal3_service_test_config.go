@@ -5,7 +5,7 @@
 package hal3
 
 import (
-	cameraboxpb "chromiumos/tast/services/cros/camerabox"
+	cameraboxpb "go.chromium.org/tast-tests/cros/services/cros/camerabox"
 )
 
 // ServiceTestConfigGenerator generates |TestConfig| from test request for HAL3Service.

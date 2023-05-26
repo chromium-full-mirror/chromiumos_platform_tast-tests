@@ -8,7 +8,7 @@ import (
 	"context"
 	"time"
 
-	ps "chromiumos/tast/services/cros/wifi"
+	ps "go.chromium.org/tast-tests/cros/services/cros/wifi"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
 )

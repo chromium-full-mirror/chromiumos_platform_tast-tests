@@ -22,17 +22,17 @@ import (
 	"chromiumos/tast/remote/bundles/cros/wifi/wifiutil"
 	"chromiumos/tast/remote/wificell"
 	ap "chromiumos/tast/remote/wificell/hostapd"
-	"chromiumos/tast/services/cros/chrome/uiauto/ossettings"
-	"chromiumos/tast/services/cros/chrome/uiauto/quicksettings"
-	"chromiumos/tast/services/cros/inputs"
-	ps "chromiumos/tast/services/cros/policy"
-	"chromiumos/tast/services/cros/ui"
-	"chromiumos/tast/services/cros/wifi"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/common/wifi/security"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/wpa"
+	"go.chromium.org/tast-tests/cros/services/cros/chrome/uiauto/ossettings"
+	"go.chromium.org/tast-tests/cros/services/cros/chrome/uiauto/quicksettings"
+	"go.chromium.org/tast-tests/cros/services/cros/inputs"
+	ps "go.chromium.org/tast-tests/cros/services/cros/policy"
+	"go.chromium.org/tast-tests/cros/services/cros/ui"
+	"go.chromium.org/tast-tests/cros/services/cros/wifi"
 )
 
 // QuickSettings indicates that quick setting needs to be used.

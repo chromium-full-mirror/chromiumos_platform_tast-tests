@@ -14,10 +14,10 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 
 	"chromiumos/tast/remote/gaiaenrollment"
-	"chromiumos/tast/services/cros/graphics"
-	ps "chromiumos/tast/services/cros/policy"
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/tape"
+	"go.chromium.org/tast-tests/cros/services/cros/graphics"
+	ps "go.chromium.org/tast-tests/cros/services/cros/policy"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/exec"
 	"go.chromium.org/tast/core/rpc"

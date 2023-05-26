@@ -17,7 +17,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/ossettings"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	pow "chromiumos/tast/local/power"
-	"chromiumos/tast/services/cros/power"
+	"go.chromium.org/tast-tests/cros/services/cros/power"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

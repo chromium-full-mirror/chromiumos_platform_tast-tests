@@ -9,9 +9,9 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/services/cros/arc"
-	arcpb "chromiumos/tast/services/cros/arc"
-	"chromiumos/tast/services/cros/security"
+	"go.chromium.org/tast-tests/cros/services/cros/arc"
+	arcpb "go.chromium.org/tast-tests/cros/services/cros/arc"
+	"go.chromium.org/tast-tests/cros/services/cros/security"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
 )

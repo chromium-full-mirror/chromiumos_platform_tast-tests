@@ -14,9 +14,9 @@ import (
 
 	"chromiumos/tast/local/chrome"
 	nc "chromiumos/tast/local/network/netconfig"
-	rpb "chromiumos/tast/services/cros/rollback"
 	"go.chromium.org/tast-tests/cros/common/network/netconfigtypes"
 	"go.chromium.org/tast-tests/cros/common/rollback"
+	rpb "go.chromium.org/tast-tests/cros/services/cros/rollback"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"

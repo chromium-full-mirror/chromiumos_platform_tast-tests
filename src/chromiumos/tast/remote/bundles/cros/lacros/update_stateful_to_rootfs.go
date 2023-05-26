@@ -12,7 +12,7 @@ import (
 	"chromiumos/tast/remote/bundles/cros/lacros/update"
 	lacrosupdate "chromiumos/tast/remote/bundles/cros/lacros/update"
 	"chromiumos/tast/remote/bundles/cros/lacros/version"
-	lacrosservice "chromiumos/tast/services/cros/lacros"
+	lacrosservice "go.chromium.org/tast-tests/cros/services/cros/lacros"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/rpc"

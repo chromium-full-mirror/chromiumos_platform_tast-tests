@@ -16,7 +16,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/common"
 	"chromiumos/tast/local/upstart"
-	pb "chromiumos/tast/services/cros/ui"
+	pb "go.chromium.org/tast-tests/cros/services/cros/ui"
 )
 
 func init() {

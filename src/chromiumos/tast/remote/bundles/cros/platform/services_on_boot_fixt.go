@@ -11,9 +11,9 @@ import (
 	"google.golang.org/protobuf/types/known/durationpb"
 
 	"chromiumos/tast/remote/firmware/fingerprint/rpcdut"
-	"chromiumos/tast/services/cros/platform"
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/upstart"
+	"go.chromium.org/tast-tests/cros/services/cros/platform"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )

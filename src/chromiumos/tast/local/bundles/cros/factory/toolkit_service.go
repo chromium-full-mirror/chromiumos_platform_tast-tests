@@ -11,7 +11,7 @@ import (
 	"google.golang.org/grpc"
 
 	"chromiumos/tast/local/bundles/cros/factory/toolkit"
-	factoryservice "chromiumos/tast/services/cros/factory"
+	factoryservice "go.chromium.org/tast-tests/cros/services/cros/factory"
 	"go.chromium.org/tast/core/testing"
 )
 

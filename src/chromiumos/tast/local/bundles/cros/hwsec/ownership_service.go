@@ -11,7 +11,7 @@ import (
 	"google.golang.org/grpc"
 
 	hwseclocal "chromiumos/tast/local/hwsec"
-	hwsecpb "chromiumos/tast/services/cros/hwsec"
+	hwsecpb "go.chromium.org/tast-tests/cros/services/cros/hwsec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

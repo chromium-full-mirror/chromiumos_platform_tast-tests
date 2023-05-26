@@ -16,11 +16,11 @@ import (
 
 	empty "github.com/golang/protobuf/ptypes/empty"
 
-	"chromiumos/tast/services/cros/arc"
-	"chromiumos/tast/services/cros/platform"
-	"chromiumos/tast/services/cros/security"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
+	"go.chromium.org/tast-tests/cros/services/cros/arc"
+	"go.chromium.org/tast-tests/cros/services/cros/platform"
+	"go.chromium.org/tast-tests/cros/services/cros/security"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"

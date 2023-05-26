@@ -8,9 +8,9 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/services/cros/bluetooth"
-	"chromiumos/tast/services/cros/ui"
 	"github.com/golang/protobuf/ptypes/empty"
+	"go.chromium.org/tast-tests/cros/services/cros/bluetooth"
+	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"google.golang.org/grpc"
 
 	"go.chromium.org/tast/core/errors"

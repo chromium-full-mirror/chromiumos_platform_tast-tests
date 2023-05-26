@@ -6,7 +6,7 @@
 package oobeutil
 
 import (
-	"chromiumos/tast/services/cros/ui"
+	"go.chromium.org/tast-tests/cros/services/cros/ui"
 )
 
 // SearchingForKeyboardNodeName is the node name in OOBE HID detection page,

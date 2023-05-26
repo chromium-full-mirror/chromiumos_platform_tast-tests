@@ -15,7 +15,7 @@ import (
 
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/crash"
-	crash_service "chromiumos/tast/services/cros/crash"
+	crash_service "go.chromium.org/tast-tests/cros/services/cros/crash"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

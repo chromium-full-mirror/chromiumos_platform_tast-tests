@@ -15,7 +15,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/ossettings"
 	"chromiumos/tast/local/chrome/uiauto/role"
-	aupb "chromiumos/tast/services/cros/autoupdate"
+	aupb "go.chromium.org/tast-tests/cros/services/cros/autoupdate"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

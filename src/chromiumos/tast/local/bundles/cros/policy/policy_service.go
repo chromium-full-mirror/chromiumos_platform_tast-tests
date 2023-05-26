@@ -28,9 +28,9 @@ import (
 	"chromiumos/tast/local/policyutil/externaldata"
 	"chromiumos/tast/local/session"
 	"chromiumos/tast/local/syslog"
-	ppb "chromiumos/tast/services/cros/policy"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
+	ppb "go.chromium.org/tast-tests/cros/services/cros/policy"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

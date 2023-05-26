@@ -20,9 +20,9 @@ import (
 
 	"chromiumos/tast/remote/firmware/reporters"
 	"chromiumos/tast/remote/firmware/rpm"
-	fwpb "chromiumos/tast/services/cros/firmware"
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast-tests/cros/common/servo"
+	fwpb "go.chromium.org/tast-tests/cros/services/cros/firmware"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"

@@ -11,9 +11,9 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
-	pspb "chromiumos/tast/services/cros/policy"
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/policy"
+	pspb "go.chromium.org/tast-tests/cros/services/cros/policy"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"

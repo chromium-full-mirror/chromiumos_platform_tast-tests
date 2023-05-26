@@ -17,10 +17,10 @@ import (
 
 	"chromiumos/tast/remote/firmware/bios"
 	"chromiumos/tast/remote/firmware/fixture"
-	pb "chromiumos/tast/services/cros/firmware"
 	common "go.chromium.org/tast-tests/cros/common/firmware"
 	commonbios "go.chromium.org/tast-tests/cros/common/firmware/bios"
 	"go.chromium.org/tast-tests/cros/common/servo"
+	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )

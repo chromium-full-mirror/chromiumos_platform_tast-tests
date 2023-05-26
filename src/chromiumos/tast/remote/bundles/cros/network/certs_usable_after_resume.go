@@ -18,11 +18,11 @@ import (
 
 	"chromiumos/tast/remote/wificell"
 	"chromiumos/tast/remote/wificell/hostapd"
-	"chromiumos/tast/services/cros/network"
-	"chromiumos/tast/services/cros/ui"
-	"chromiumos/tast/services/cros/wifi"
 	"go.chromium.org/tast-tests/cros/common/crypto/certificate"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/wpaeap"
+	"go.chromium.org/tast-tests/cros/services/cros/network"
+	"go.chromium.org/tast-tests/cros/services/cros/ui"
+	"go.chromium.org/tast-tests/cros/services/cros/wifi"
 )
 
 func init() {

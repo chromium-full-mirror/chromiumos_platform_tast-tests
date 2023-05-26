@@ -17,9 +17,9 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/cpu"
 	"chromiumos/tast/local/memory/metrics"
-	arcpb "chromiumos/tast/services/cros/arc"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/perf/perfpb"
+	arcpb "go.chromium.org/tast-tests/cros/services/cros/arc"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

@@ -1,0 +1,191 @@
+// Copyright 2022 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+syntax = "proto3";
+
+package tast.cros.firmware;
+
+import "google/protobuf/empty.proto";
+
+option go_package = "go.chromium.org/tast-tests/cros/services/cros/firmware";
+
+service KernelService {
+    // GetCgptTable returns structure containing metadata with CGPT partitions
+    rpc GetCgptTable (GetCgptTableRequest) returns (GetCgptTableResponse) {}
+
+    // GetRawHeader returns the raw header of CGPT partition (first 4096 bytes)
+    rpc GetRawHeader (GetRawHeaderRequest) returns (GetRawHeaderResponse) {}
+
+    // WriteRawHeader writes the raw CGPT header into chosen partitionpartition
+    rpc WriteRawHeader (WriteRawHeaderRequest) returns (google.protobuf.Empty) {}
+
+    // RestoreCgptAttributes restores CGPT partition attributes directly dumped from GetCgptTable
+    rpc RestoreCgptAttributes (RestoreCgptAttributesRequest) returns (google.protobuf.Empty) {}
+
+    // BackupPartition backs up partition and saves to a file.
+    rpc BackupPartition (Partition) returns (PartitionInfo) {}
+
+    // RestorePartition restores partition from backup.
+    rpc RestorePartition (PartitionInfo) returns (google.protobuf.Empty) {}
+
+    // BackupKernel backs up both kernel A and B copies and saves them to a file.
+    rpc BackupKernel (KernelBackup) returns (KernelBackup) {}
+
+    // RestoreKernel restores both kernel A and B from back ups.
+    rpc RestoreKernel (KernelBackup) returns (google.protobuf.Empty) {}
+
+    // EnsureBothKernelCopiesBootable makes sure both kernel copies are identical and bootable.
+    rpc EnsureBothKernelCopiesBootable (Partition) returns (google.protobuf.Empty) {}
+
+    // PrioritizeKernelCopy ensures DUT boots to expected kernel copy on next reboot (eg. KERN-A or KERN-B).
+    rpc PrioritizeKernelCopy (Partition) returns (google.protobuf.Empty) {}
+
+    // GetCurrentCopy returns the current label DUT is using or from the provided root device.
+    rpc GetCurrentCopy (Partition) returns (Partition) {}
+
+    // VerifyKernelCopy checks that DUT is currently booted to expected kernel copy.
+    rpc VerifyKernelCopy (Partition) returns (google.protobuf.Empty) {}
+
+    // BackupRootfsVerityHash saves the verity hash for given kernel from the corresponding rootfs partition.
+    rpc BackupRootfsVerityHash (PartitionInfo) returns (RootfsVerityHashBackup) {}
+
+    // RestoreRootfsVerityHash restores the verity hash for the corresponding rootfs partition from the backup.
+    rpc RestoreRootfsVerityHash (RootfsVerityHashBackup) returns (google.protobuf.Empty) {}
+
+    // CorruptRootfsVerityHash corrupts verity hash for given kernel copy.
+    rpc CorruptRootfsVerityHash (RootfsVerityHashBackup) returns (google.protobuf.Empty) {}
+
+    // GetKernelVersion uses vbutil_kernel to get the kernel version for a given partition.
+    rpc GetKernelVersion (Partition) returns (KernelVersion) {}
+
+    // SetKernelVersion uses vbutil_kernel to set the kernel version for a given partition.
+    rpc SetKernelVersion (KernelVersion) returns (google.protobuf.Empty) {}
+
+    // SetKernelHeaderMagic sets the header magic for the kernel, simulate a corrupted kernel copy by setting header to CORRUPTD.
+    rpc SetKernelHeaderMagic (KernelHeaderMagicInfo) returns (google.protobuf.Empty) {}
+
+    // GetCurrentRootDevice gets the path to the current root device.
+    rpc GetCurrentRootDevice (google.protobuf.Empty) returns (Partition) {}
+}
+
+// PartitionCopy holds the copy of the partition (eg. A for KERN-A or B for ROOT-B).
+enum PartitionCopy {
+    A = 0;
+    B = 1;
+    C = 2;
+}
+
+// PartitionName enumerates the partition labels seen in cgpt table.
+enum PartitionName {
+    KERNEL = 0;
+    MINIOS = 1;
+    ROOTFS = 2;
+}
+
+// KernelHeaderMagic the possible values for the kernel header magic.
+enum KernelHeaderMagic  {
+    CHROMEOS = 0;
+    CORRUPTD = 1;
+}
+
+// CgptPartitionAttribute holds the value for an individual attribute for a partitions in the cgpt table.
+message CgptPartitionAttribute {
+    string Name = 1;
+    int32 Value = 2;
+}
+
+// CgptPartition holds the data for an entire partition in the cgpt table.
+message CgptPartition {
+    string PartitionPath = 1;
+    int32 PartitionNumber = 2;
+    int32 Start = 3;
+    int32 Size = 4;
+    string Label = 5;
+    string Type = 6;
+    string UUID = 7;
+    repeated CgptPartitionAttribute Attrs = 8;
+}
+
+message GetCgptTableRequest {
+    string BlockDevice = 1; // Ensure BlockDevice includes a partition number. 
+}
+
+message GetCgptTableResponse {
+    map<string, CgptPartition> CgptTable = 1;
+}
+
+// GetRawHeaderRequest specifies the partition to return its raw header.d
+message GetRawHeaderRequest {
+    string PartitionPath = 1;
+}
+
+// GetRawHeaderResponse provides the actual raw header of specified partition.
+message GetRawHeaderResponse {
+    bytes RawHeader = 1;
+}
+
+// WriteHeaderRequest provides the partition and raw header being written to it.
+message WriteRawHeaderRequest {
+    string PartitionPath = 1;
+    bytes RawHeader = 2;
+}
+
+// RestoreCgptAttributesRequest restores all attributes for all partitions included in the CgptTable map.
+message RestoreCgptAttributesRequest {
+    string BlockDevice = 1;
+    map<string, CgptPartition> CgptTable = 2;
+}
+
+// Partition just holds the partition label to identify a particular partition.
+message Partition {
+    reserved 1;
+    string RootDev = 2; // If not provided, defaults to current rootdev, if providing ensure rootdev includes part number.
+    PartitionName Name = 3;
+    PartitionCopy Copy = 4;
+}
+
+// PartitionInfo represents the partition label, path for backup, and associated device and cgpt table.
+message PartitionInfo {
+    reserved 1;
+    string BackupPath = 2;
+    string RootDev = 3;
+    CgptPartition Table = 4;
+    PartitionName Name = 5;
+    PartitionCopy Copy = 6;
+}
+
+// KernelBackup holds the information for backups for KERN-A/B, ROOT-A/B.
+message KernelBackup {
+    PartitionInfo KernA = 1;
+    PartitionInfo KernB = 2;
+    PartitionInfo RootA = 3;
+    PartitionInfo RootB = 4;
+    bool BackupRootfs = 5;
+    string RootDev = 6;
+}
+
+// RootfsVerityHashBackup holds the offset and backup file for verity hash for rootfs.
+message RootfsVerityHashBackup {
+    reserved 1;
+    string RootDev = 2;
+    int64 Offset = 3;
+    int64 HashSize = 4;
+    string BackupPath = 5;
+    PartitionName Name = 6;
+    PartitionCopy Copy = 7;
+}
+
+// KernelVersion holds the kernel version retrieved from the vbutil_kernel cmd.
+message KernelVersion {
+    string RootDev = 1;
+    string Version = 2;
+    CgptPartition Table = 3;
+}
+
+// KernelHeaderMagicInfo is used for setting the kernel header magic for a kernel section.
+message KernelHeaderMagicInfo {
+    CgptPartition Table = 1;
+    KernelHeaderMagic Magic = 2;
+    bool ForceBoot = 3; // Force partition to be bootable after setting header magic.
+}

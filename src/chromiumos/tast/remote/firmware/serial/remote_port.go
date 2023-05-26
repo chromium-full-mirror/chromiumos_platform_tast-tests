@@ -7,7 +7,7 @@ package serial
 import (
 	"context"
 
-	pb "chromiumos/tast/services/cros/firmware"
+	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
 )
 
 // RemotePort allows communication with a serial port on a remote dut.

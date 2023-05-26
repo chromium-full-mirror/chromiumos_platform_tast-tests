@@ -15,9 +15,9 @@ import (
 
 	"chromiumos/tast/remote/bundles/cros/hps/fixture"
 	"chromiumos/tast/remote/bundles/cros/hps/utils"
-	pb "chromiumos/tast/services/cros/hps"
 	"go.chromium.org/tast-tests/cros/common/hps/hpsutil"
 	"go.chromium.org/tast-tests/cros/common/media/caps"
+	pb "go.chromium.org/tast-tests/cros/services/cros/hps"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"

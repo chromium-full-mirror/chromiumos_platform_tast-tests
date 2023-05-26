@@ -12,8 +12,8 @@ import (
 
 	"chromiumos/tast/local/common"
 	"chromiumos/tast/local/network/netconfig"
-	"chromiumos/tast/services/cros/network"
 	"go.chromium.org/tast-tests/cros/common/network/netconfigtypes"
+	"go.chromium.org/tast-tests/cros/services/cros/network"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"

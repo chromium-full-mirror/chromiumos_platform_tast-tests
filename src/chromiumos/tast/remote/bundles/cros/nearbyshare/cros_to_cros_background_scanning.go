@@ -10,9 +10,9 @@ import (
 	"time"
 
 	remotenearby "chromiumos/tast/remote/cros/nearbyshare"
-	"chromiumos/tast/services/cros/nearbyservice"
 	"go.chromium.org/tast-tests/cros/common/cros/crossdevice"
 	nearbycommon "go.chromium.org/tast-tests/cros/common/cros/nearbyshare"
+	"go.chromium.org/tast-tests/cros/services/cros/nearbyservice"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"

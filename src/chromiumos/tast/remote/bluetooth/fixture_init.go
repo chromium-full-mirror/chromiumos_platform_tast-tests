@@ -5,8 +5,8 @@
 package bluetooth
 
 import (
-	"chromiumos/tast/services/cros/ui"
 	"go.chromium.org/tast-tests/cros/common/tape"
+	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast/core/testing"
 )
 

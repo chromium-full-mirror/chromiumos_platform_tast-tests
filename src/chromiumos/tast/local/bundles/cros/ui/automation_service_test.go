@@ -13,7 +13,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/chrome/uiauto/state"
-	pb "chromiumos/tast/services/cros/ui"
+	pb "go.chromium.org/tast-tests/cros/services/cros/ui"
 )
 
 func TestToFinder(t *gotesting.T) {

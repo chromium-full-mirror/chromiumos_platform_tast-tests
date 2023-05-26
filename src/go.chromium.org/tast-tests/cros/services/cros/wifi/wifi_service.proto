@@ -1,0 +1,67 @@
+// Copyright 2022 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+syntax = "proto3";
+
+package tast.cros.wifi;
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/any.proto";
+
+option go_package = "go.chromium.org/tast-tests/cros/services/cros/wifi";
+
+// WifiService allows remote case to do WiFi UI operations through
+// Quick Settings and OS-Settings.
+service WifiService {
+  // JoinWifiFromQuickSettings joins to the specified wifi network from
+  // Quick Settings.
+  rpc JoinWifiFromQuickSettings(JoinWifiRequest) returns (google.protobuf.Empty) {}
+
+  // KnownNetworksControls opens the OS-Settings at "Known Networks" page and
+  // interacts/controls the known networks.
+  rpc KnownNetworksControls(KnownNetworksControlsRequest) returns (google.protobuf.Empty) {}
+
+  // WifiPageControl opens the OS-Settings at "Wi-Fi" page and
+  // interacts/controls the WiFi networks.
+  rpc WifiPageControl(WifiPageControlRequest) returns (google.protobuf.Empty) {}
+}
+
+message JoinWifiRequest {
+  message SecurityEapTls {
+    string client_cert = 1;
+    string ca_cert = 2;
+  }
+
+  string ssid = 1;
+  oneof security {
+    google.protobuf.Any none = 2;
+    string psk = 3;
+    SecurityEapTls eap_tls = 4;
+  }
+}
+
+message KnownNetworksControlsRequest {
+  enum KnownNetworkControl {
+    WaitUntilExist = 0;
+    WaitUntilGone = 1;
+    Forget = 2;
+    Disconnect = 3;
+    Connect = 4;
+    ShownAsShared = 5;
+  }
+
+  repeated string ssids = 1;
+  KnownNetworkControl control = 2;
+}
+
+message WifiPageControlRequest {
+  enum WifiPageControl {
+    WaitUntilExist = 0;
+    WaitUntilGone = 1;
+    WaitUntilConnected = 2;
+  }
+
+  string ssid = 1;
+  WifiPageControl control = 2;
+}

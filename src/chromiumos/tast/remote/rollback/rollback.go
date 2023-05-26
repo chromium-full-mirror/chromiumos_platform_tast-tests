@@ -16,8 +16,8 @@ import (
 
 	"chromiumos/tast/remote/policyutil"
 	"chromiumos/tast/remote/updateutil"
-	rpb "chromiumos/tast/services/cros/rollback"
 	"go.chromium.org/tast-tests/cros/common/hwsec"
+	rpb "go.chromium.org/tast-tests/cros/services/cros/rollback"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"

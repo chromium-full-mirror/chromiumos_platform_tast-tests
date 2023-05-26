@@ -11,7 +11,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 
-	"chromiumos/tast/services/cros/nebraska"
+	"go.chromium.org/tast-tests/cros/services/cros/nebraska"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

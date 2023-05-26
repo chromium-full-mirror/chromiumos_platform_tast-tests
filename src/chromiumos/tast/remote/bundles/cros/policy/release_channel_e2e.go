@@ -12,11 +12,11 @@ import (
 
 	"chromiumos/tast/remote/bundles/cros/policy/update"
 	"chromiumos/tast/remote/policyutil"
-	aupb "chromiumos/tast/services/cros/autoupdate"
-	pspb "chromiumos/tast/services/cros/policy"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/tape"
+	aupb "go.chromium.org/tast-tests/cros/services/cros/autoupdate"
+	pspb "go.chromium.org/tast-tests/cros/services/cros/policy"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/rpc"

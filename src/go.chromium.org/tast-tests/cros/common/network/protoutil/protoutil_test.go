@@ -8,8 +8,8 @@ import (
 	"reflect"
 	"testing"
 
-	"chromiumos/tast/services/cros/wifi"
 	"go.chromium.org/tast-tests/cros/common/shillconst"
+	"go.chromium.org/tast-tests/cros/services/cros/wifi"
 )
 
 func TestShillValMapConvert(t *testing.T) {
