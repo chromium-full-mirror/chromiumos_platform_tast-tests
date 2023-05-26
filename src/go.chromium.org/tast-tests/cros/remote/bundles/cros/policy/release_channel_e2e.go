@@ -24,11 +24,15 @@ import (
 )
 
 const releaseChannelE2ETimeout = 4 * time.Minute
+const omahaUpdateE2ETimeout = 15 * time.Minute
 
 type testParam struct {
 	ReleaseChannelPolicy tape.ReleaseChannelWithLtsEnum
 	ExpectedPolicies     []policy.Policy
 	expectedParameters   []string
+
+	testOmaha               bool
+	expectedLSBReleaseRegex map[string]string
 }
 
 func init() {
@@ -51,7 +55,6 @@ func init() {
 			"tast.cros.nebraska.Service",
 			"tast.cros.autoupdate.UpdateService",
 		},
-		Timeout: releaseChannelE2ETimeout,
 		Vars: []string{
 			tape.ServiceAccountVar,
 		},
@@ -61,7 +64,8 @@ func init() {
 			pci.SearchFlag(&policy.DeviceTargetVersionPrefix{}, pci.VerifiedValue),
 		},
 		Params: []testing.Param{{
-			Name: "lts",
+			Name:    "lts",
+			Timeout: releaseChannelE2ETimeout,
 			Val: testParam{
 				ReleaseChannelPolicy: tape.RELEASECHANNELWITHLTSENUM_RELEASE_CHANNEL_WITH_LTS_ENUM_LTS_CHANNEL,
 				ExpectedPolicies: []policy.Policy{
@@ -82,7 +86,8 @@ func init() {
 				Value: "screenplay-a1bdf4ff-f14d-43a5-90ec-17a4bd2cb397",
 			}},
 		}, {
-			Name: "stable",
+			Name:    "stable",
+			Timeout: releaseChannelE2ETimeout,
 			Val: testParam{
 				ReleaseChannelPolicy: tape.RELEASECHANNELWITHLTSENUM_RELEASE_CHANNEL_WITH_LTS_ENUM_STABLE_CHANNEL,
 				ExpectedPolicies: []policy.Policy{
@@ -99,7 +104,8 @@ func init() {
 				Value: "screenplay-54300da1-e6b1-4664-a175-ff3fc644a17b",
 			}},
 		}, {
-			Name: "beta",
+			Name:    "beta",
+			Timeout: releaseChannelE2ETimeout,
 			Val: testParam{
 				ReleaseChannelPolicy: tape.RELEASECHANNELWITHLTSENUM_RELEASE_CHANNEL_WITH_LTS_ENUM_BETA_CHANNEL,
 				ExpectedPolicies: []policy.Policy{
@@ -115,6 +121,26 @@ func init() {
 				// COM_FOUND_CUJ11_TASK3_WF1.
 				Value: "screenplay-cbd3450e-2c0e-4da8-9d55-8977a34e5e4b",
 			}},
+		}, {
+			Name:    "lts_omaha",
+			Timeout: omahaUpdateE2ETimeout + releaseChannelE2ETimeout,
+			Val: testParam{
+				ReleaseChannelPolicy: tape.RELEASECHANNELWITHLTSENUM_RELEASE_CHANNEL_WITH_LTS_ENUM_LTS_CHANNEL,
+				ExpectedPolicies: []policy.Policy{
+					&policy.ChromeOsReleaseChannel{Stat: policy.StatusSet, Val: "stable-channel"},
+					&policy.DeviceReleaseLtsTag{Stat: policy.StatusSet, Val: "lts"},
+					// TODO(b/272761788):  Current LTS milestone is 108. Ensure
+					// DeviceTargetVersionPrefix needs to be updated.
+					&policy.DeviceTargetVersionPrefix{Stat: policy.StatusSet, Val: "15183."},
+				},
+				expectedParameters: []string{"targetversionprefix=\"15183.\"", "ltstag=\"lts\"", "track=\"stable-channel\""},
+
+				testOmaha: true,
+				expectedLSBReleaseRegex: map[string]string{
+					"CHROMEOS_RELEASE_TRACK":   "^stable-channel$",
+					"CHROMEOS_RELEASE_VERSION": "^15183[.].+[.].+$",
+				},
+			},
 		}},
 	})
 }
@@ -222,5 +248,11 @@ func ReleaseChannelE2E(ctx context.Context, s *testing.State) {
 
 	if err := update.TriggerUpdateAndCheckNebraskaLogs(ctx, cl, param.expectedParameters); err != nil {
 		s.Error("Failed to verify update reqeust: ", err)
+	}
+
+	if param.testOmaha {
+		if err := update.PerformUpdateAndCheckImage(ctx, cl, param.expectedLSBReleaseRegex); err != nil {
+			s.Error("Failed to update device: ", err)
+		}
 	}
 }

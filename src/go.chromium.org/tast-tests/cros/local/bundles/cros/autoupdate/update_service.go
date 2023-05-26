@@ -10,6 +10,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
+	"path"
+	"strings"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -19,6 +22,8 @@ import (
 	ue "go.chromium.org/tast-tests/cros/common/updateengine"
 	"go.chromium.org/tast-tests/cros/local/updateengine"
 	aupb "go.chromium.org/tast-tests/cros/services/cros/autoupdate"
+
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/lsbrelease"
 	"go.chromium.org/tast/core/testing"
@@ -139,6 +144,37 @@ func (u *UpdateService) ResetUpdateEngine(ctx context.Context, req *empty.Empty)
 	return &empty.Empty{}, nil
 }
 
+// RevertUpdate reverts an installed update.
+// This function can always be called, even if an update has not been installed.
+// Function is idempotent.
+func (u *UpdateService) RevertUpdate(ctx context.Context, req *empty.Empty) (ret *empty.Empty, retErr error) {
+	testing.ContextLog(ctx, "Reverting installed updates")
+
+	// Do not return on error to always run all steps.
+	ret = &empty.Empty{}
+	retErr = nil
+
+	// Reset update engine status.
+	if err := testexec.CommandContext(ctx, "update_engine_client", "--reset_status").Run(testexec.DumpLogOnError); err != nil {
+		return &empty.Empty{}, errors.Wrap(err, "failed to reset udpate engine status")
+	}
+
+	// Set priority to the current partition.
+	if err := testexec.CommandContext(ctx, "bash", "-c", "(D=$(rootdev -s -d) P=$(rootdev -s); cgpt p -i$(($(echo ${P#$D} | sed 's/^[^0-9]*//')-1)) $D;)").Run(testexec.DumpLogOnError); err != nil {
+		testing.ContextLog(ctx, "Failed to reset priority using cgpt: ", err)
+		retErr = errors.Wrap(err, "failed to reset priority using cgpt")
+	}
+
+	// Do it again using chromeos-setgoodkernel just in case.
+	// chromeos-setgoodkernel should guarantee we reboot into the same slot next time.
+	if err := testexec.CommandContext(ctx, "chromeos-setgoodkernel").Run(testexec.DumpLogOnError); err != nil {
+		testing.ContextLog(ctx, "Failed to reset priority using chromeos-setgoodkernel: ", err)
+		retErr = errors.Wrap(err, "failed to reset priority using chromeos-setgoodkernel")
+	}
+
+	return
+}
+
 // EnsureUpdateEngineReady checks that update engine is running and idle.
 func (u *UpdateService) EnsureUpdateEngineReady(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
 	testing.ContextLog(ctx, "Ensuring update engine is ready")
@@ -188,6 +224,59 @@ func (u *UpdateService) StatefulLSBReleaseContent(ctx context.Context, req *empt
 	contentJSON, err := json.Marshal(content)
 	if err != nil {
 		return &aupb.LSBRelease{}, errors.Wrapf(err, "failed to serialize the content of %s", statefulPath)
+	}
+
+	return &aupb.LSBRelease{ContentJson: contentJSON}, nil
+}
+
+// InstalledLSBReleaseContent gets the content of /etc/lsb-release on the
+// alternative rootfs partition. The partition is mounted, the file read and
+// then the partition is unmounted.
+func (u *UpdateService) InstalledLSBReleaseContent(ctx context.Context, req *empty.Empty) (*aupb.LSBRelease, error) {
+	// Shorten deadline to leave time for cleanup.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
+	defer cancel()
+
+	alternativePartitionMap := map[string]string{
+		"/dev/nvme0n1p3": "/dev/nvme0n1p5",
+		"/dev/nvme0n1p5": "/dev/nvme0n1p3",
+	}
+
+	result, err := testexec.CommandContext(ctx, "rootdev", "-s").Output(testexec.DumpLogOnError)
+	if err != nil {
+		return nil, err
+	}
+
+	currentPartition := strings.TrimSpace(string(result))
+	alternativePartition, ok := alternativePartitionMap[currentPartition]
+	if !ok {
+		return nil, errors.Errorf("unknown root partition %q", currentPartition)
+	}
+
+	mountPath, err := ioutil.TempDir("", "mount")
+	if err != nil {
+		return nil, err
+	}
+	defer os.RemoveAll(mountPath)
+
+	// Make sure to unmount.
+	defer testexec.CommandContext(cleanupCtx, "umount", mountPath).Run(testexec.DumpLogOnError)
+
+	// Mount the alternative rootfs as read-only.
+	if err := testexec.CommandContext(ctx, "mount", "-o", "ro", alternativePartition, mountPath).Run(testexec.DumpLogOnError); err != nil {
+		return nil, errors.Wrap(err, "failed to mount the alternative rootfs")
+	}
+
+	lsbReleasePath := path.Join(mountPath, "etc", "lsb-release")
+	content, err := lsbrelease.LoadFrom(lsbReleasePath)
+	if err != nil {
+		return &aupb.LSBRelease{}, errors.Wrapf(err, "failed to retreive lsbrelease information from %q (mounted %q)", lsbReleasePath, alternativePartition)
+	}
+
+	contentJSON, err := json.Marshal(content)
+	if err != nil {
+		return &aupb.LSBRelease{}, errors.Wrapf(err, "failed to serialize %v", content)
 	}
 
 	return &aupb.LSBRelease{ContentJson: contentJSON}, nil

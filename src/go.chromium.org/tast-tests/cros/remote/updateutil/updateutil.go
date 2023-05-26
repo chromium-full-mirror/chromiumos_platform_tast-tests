@@ -445,3 +445,58 @@ func bucketContentToFile(ctx context.Context, gsFolder, logPath string) error {
 
 	return nil
 }
+
+// SignBoardName adds an entry to /mnt/stateful_partition/etc/lsb-release with a signed board name
+// to enable the DUT to receive updates.
+// Returns a callback that restores the original content of /mnt/stateful_partition/etc/lsb-release.
+func SignBoardName(ctx context.Context, client aupb.UpdateServiceClient) (func(ctx context.Context) error, error) {
+	// Get board name from /etc/lsb-release.
+	response, err := client.LSBReleaseContent(ctx, &empty.Empty{})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to read lsb-release")
+	}
+
+	var lsb map[string]string
+	if err := json.Unmarshal(response.ContentJson, &lsb); err != nil {
+		return nil, errors.Wrap(err, "failed to unmarshal lsb-relese content")
+	}
+
+	board, ok := lsb[lsbrelease.Board]
+	if !ok {
+		return nil, errors.New("failed to determine DUT board")
+	}
+	signedBoardName := board + "-signed-mp-v3keys"
+
+	// Get content of /mnt/stateful_partition/etc/lsb-release.
+	response, err = client.StatefulLSBReleaseContent(ctx, &empty.Empty{})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to read lsb-release on the stateful partition")
+	}
+
+	testing.ContextLogf(ctx, "Adding the %q board name to lsb-release in the stateful partition", signedBoardName)
+	var statefulLsb map[string]string
+	if err := json.Unmarshal(response.ContentJson, &statefulLsb); err != nil {
+		return nil, errors.Wrap(err, "failed to unmarshal stateful lsb-relese content")
+	}
+	statefulLsb[lsbrelease.Board] = signedBoardName
+
+	newStatefulLsbJSON, err := json.Marshal(statefulLsb)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to serialize stateful lsb-release content")
+	}
+
+	originalContent := response.ContentJson
+
+	if _, err := client.OverwriteStatefulLSBRelease(ctx, &aupb.LSBRelease{ContentJson: newStatefulLsbJSON}); err != nil {
+		return nil, errors.Wrap(err, "failed to overwrite lsb-release in the stateful partition")
+	}
+
+	return func(ctx context.Context) error {
+		if _, err := client.OverwriteStatefulLSBRelease(ctx, &aupb.LSBRelease{ContentJson: originalContent}); err != nil {
+			testing.ContextLog(ctx, "Failed to restore lsb-release in the stateful partition: ", err)
+			return err
+		}
+
+		return nil
+	}, nil
+}

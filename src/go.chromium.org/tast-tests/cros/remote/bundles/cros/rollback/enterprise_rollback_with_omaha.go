@@ -14,11 +14,11 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/remote/policyutil"
+	"go.chromium.org/tast-tests/cros/remote/updateutil"
 	aupb "go.chromium.org/tast-tests/cros/services/cros/autoupdate"
 	pspb "go.chromium.org/tast-tests/cros/services/cros/policy"
+
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/lsbrelease"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
@@ -104,15 +104,11 @@ func EnterpriseRollbackWithOmaha(ctx context.Context, s *testing.State) {
 		}
 
 		// Enable the DUT to receive updates.
-		originalContent, err := signBoardName(ctx, updateClient)
+		cleanup, err := updateutil.SignBoardName(ctx, updateClient)
 		if err != nil {
 			s.Fatal("Failed to enable the DUT to receive updates: ", err)
 		}
-		defer func(ctx context.Context, lsbContent []byte) {
-			if _, err := updateClient.OverwriteStatefulLSBRelease(ctx, &aupb.LSBRelease{ContentJson: lsbContent}); err != nil {
-				s.Log("Failed to restore lsb-release in the stateful partition: ", err)
-			}
-		}(cleanupCtx, originalContent)
+		defer cleanup(cleanupCtx)
 
 		// Enroll DUT.
 		pJSON, err := json.Marshal(policy.NewBlob())
@@ -186,50 +182,4 @@ func EnterpriseRollbackWithOmaha(ctx context.Context, s *testing.State) {
 		// Restart in an independent process, so the SSH connection can be closed before the restart.
 		s.DUT().Conn().CommandContext(rebootCtx, "nohup", "bash", "-c", "sleep 15; reboot;").Run() // Ignore the error.
 	}
-}
-
-// signBoardName adds an entry to /mnt/stateful_partition/etc/lsb-release with a signed board name
-// to enable the DUT to receive updates.
-// Returns with the original content of /mnt/stateful_partition/etc/lsb-release so it can be restored after the update.
-func signBoardName(ctx context.Context, client aupb.UpdateServiceClient) ([]byte, error) {
-	// Get board name from /etc/lsb-release.
-	response, err := client.LSBReleaseContent(ctx, &empty.Empty{})
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to read lsb-release")
-	}
-
-	var lsb map[string]string
-	if err := json.Unmarshal(response.ContentJson, &lsb); err != nil {
-		return nil, errors.Wrap(err, "failed to unmarshal lsb-relese content")
-	}
-
-	board, ok := lsb[lsbrelease.Board]
-	if !ok {
-		return nil, errors.New("failed to determine DUT board")
-	}
-	signedBoardName := board + "-signed-mp-v3keys"
-
-	// Get content of /mnt/stateful_partition/etc/lsb-release.
-	response, err = client.StatefulLSBReleaseContent(ctx, &empty.Empty{})
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to read lsb-release on the stateful partition")
-	}
-
-	testing.ContextLogf(ctx, "Adding the %q board name to lsb-release in the stateful partition", signedBoardName)
-	var statefulLsb map[string]string
-	if err := json.Unmarshal(response.ContentJson, &statefulLsb); err != nil {
-		return nil, errors.Wrap(err, "failed to unmarshal stateful lsb-relese content")
-	}
-	statefulLsb[lsbrelease.Board] = signedBoardName
-
-	newStatefulLsbJSON, err := json.Marshal(statefulLsb)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to serialize stateful lsb-release content")
-	}
-
-	if _, err := client.OverwriteStatefulLSBRelease(ctx, &aupb.LSBRelease{ContentJson: newStatefulLsbJSON}); err != nil {
-		return nil, errors.Wrap(err, "failed to overwrite lsb-release in the stateful partition")
-	}
-
-	return response.ContentJson, nil
 }
