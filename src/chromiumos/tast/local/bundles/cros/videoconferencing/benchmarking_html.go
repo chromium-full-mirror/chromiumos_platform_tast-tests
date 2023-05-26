@@ -28,12 +28,13 @@ import (
 
 const simpleURL = "/effects_video_script.html?resolution="
 const defaultResolution = 720
+const highResolution = 1080
 
 type simpleParams struct {
 
 	// TODO: Default resolution at 720p - enable higher res. by adding more generic images
 	// The resolution that the simple meet is going to run at.
-	// resolution int
+	resolution int
 	// Whether to enable platform blur or not.
 	platformBlur bool
 	// Whether to enable platform relight or not.
@@ -66,23 +67,50 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name: "no_effects_720p",
-				Val:  simpleParams{},
+				Val: simpleParams{
+					resolution: defaultResolution,
+				},
 			},
 			{
 				Name: "platform_blur_720p",
 				Val: simpleParams{
 					platformBlur: true,
+					resolution:   defaultResolution,
 				},
 			},
 			{
 				Name: "platform_relight_720p",
 				Val: simpleParams{
 					platformRelight: true,
+					resolution:      defaultResolution,
 				},
 			},
 			{
 				Name: "platform_blur_relight_720p",
 				Val: simpleParams{
+					resolution:      defaultResolution,
+					platformBlur:    true,
+					platformRelight: true,
+				},
+			},
+			{
+				Name: "platform_blur_1080p",
+				Val: simpleParams{
+					resolution:   highResolution,
+					platformBlur: true,
+				},
+			},
+			{
+				Name: "platform_relight_1080p",
+				Val: simpleParams{
+					resolution:      highResolution,
+					platformRelight: true,
+				},
+			},
+			{
+				Name: "platform_blur_relight_1080p",
+				Val: simpleParams{
+					resolution:      highResolution,
 					platformBlur:    true,
 					platformRelight: true,
 				},
@@ -146,8 +174,7 @@ func BenchmarkingHTML(ctx context.Context, s *testing.State) {
 	//  Open video on simple javascript browser.
 	testing.ContextLog(ctx, "Opening Simple Meeting")
 	srv := httptest.NewServer(http.FileServer(s.DataFileSystem()))
-	// TODO: Enable param resolution when available
-	url := srv.URL + simpleURL + strconv.Itoa(defaultResolution)
+	url := srv.URL + simpleURL + strconv.Itoa(param.resolution)
 
 	defer srv.Close()
 	conn, err := cr.NewConn(ctx, url, browser.WithNewWindow())
