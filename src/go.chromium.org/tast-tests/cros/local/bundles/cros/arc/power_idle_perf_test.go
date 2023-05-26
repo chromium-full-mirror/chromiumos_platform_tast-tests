@@ -36,6 +36,7 @@ func TestPowerIdlePerfParamsAreGenerated(t *testing.T) {
 		SoftwareDeps []string
 		HardwareDeps []string
 		Fixture      string
+		Timeout      string
 		Val          []valMember
 	}
 	var params []paramData
@@ -60,24 +61,42 @@ func TestPowerIdlePerfParamsAreGenerated(t *testing.T) {
 			attr    string
 			swdep   string
 			fixture string
+			timeout string
 		}{
 			{
 				"noarc",
 				"",
 				"arc", // to prevent _noarc tests from running on non-ARC boards
 				"chromeLoggedInDisableSyncNoFwUpdate",
+				"20 * time.Minute",
 			},
 			{
 				"",
 				"crosbolt_arc_perf_qual",
 				"android_container",
 				"arcBootedRestricted",
+				"20 * time.Minute",
 			},
 			{
 				"vm",
 				"crosbolt_arc_perf_qual",
 				"android_vm",
 				"arcBootedRestricted",
+				"20 * time.Minute",
+			},
+			{
+				"extended",
+				"crosbolt_weekly",
+				"android_container",
+				"arcBootedRestricted",
+				"75 * time.Minute",
+			},
+			{
+				"vm_extended",
+				"crosbolt_weekly",
+				"android_vm",
+				"arcBootedRestricted",
+				"75 * time.Minute",
 			},
 		} {
 			name := genTestName([]string{arcType.name, batteryMode.name})
@@ -86,6 +105,7 @@ func TestPowerIdlePerfParamsAreGenerated(t *testing.T) {
 				SoftwareDeps: []string{arcType.swdep},
 				HardwareDeps: []string{batteryMode.hwdep},
 				Fixture:      arcType.fixture,
+				Timeout:      arcType.timeout,
 				Val:          batteryMode.val,
 			}
 			if arcType.attr != "" && batteryMode.name == "" {
@@ -107,8 +127,12 @@ func TestPowerIdlePerfParamsAreGenerated(t *testing.T) {
 		Val: testArgsForPowerIdlePerf{
 			{{ range .Val }}{{ .Key }}: {{ .Value }},
 			{{ end }}
+			{{ if .Timeout }}
+			extendedTest: true,
+			{{ end }}
 		},
 		Fixture: "{{ .Fixture }}",
+		Timeout: {{ .Timeout }},
 	},
 	{{ end }}`, params)
 	genparams.Ensure(t, "power_idle_perf.go", code)
