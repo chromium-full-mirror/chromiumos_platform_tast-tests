@@ -62,6 +62,9 @@ func ManualTicketAccessWebsite(ctx context.Context, s *testing.State) {
 
 	// Start a Chrome instance that will fetch policies from the FakeDMS.
 	cr, err := chrome.New(ctx,
+		// TODO(b/260522530): remove this after KerberosInBrowser feature
+		// is launched (launch/4210638).
+		chrome.DisableFeatures("KerberosInBrowserRedirect"),
 		chrome.FakeLogin(chrome.Creds{User: fixtures.Username, Pass: fixtures.Password}),
 		chrome.DMSPolicy(fdms.URL),
 		chrome.KeepEnrollment())

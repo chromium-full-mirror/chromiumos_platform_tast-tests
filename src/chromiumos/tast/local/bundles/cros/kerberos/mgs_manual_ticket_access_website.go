@@ -13,6 +13,7 @@ import (
 	"chromiumos/tast/common/pci"
 	"chromiumos/tast/common/policy"
 	"chromiumos/tast/common/policy/fakedms"
+	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ime"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
@@ -61,6 +62,9 @@ func MgsManualTicketAccessWebsite(ctx context.Context, s *testing.State) {
 	mgs, cr, err := mgs.New(
 		ctx,
 		fdms,
+		// TODO(b/260522530): remove this after KerberosInBrowser feature
+		// is launched (launch/4210638).
+		mgs.ExtraChromeOptions(chrome.DisableFeatures("KerberosInBrowserRedirect")),
 		mgs.DefaultAccount(),
 		mgs.AutoLaunch(mgs.MgsAccountID),
 		mgs.AddPublicAccountPolicies(mgs.MgsAccountID, []policy.Policy{&policy.KerberosEnabled{Val: true},
