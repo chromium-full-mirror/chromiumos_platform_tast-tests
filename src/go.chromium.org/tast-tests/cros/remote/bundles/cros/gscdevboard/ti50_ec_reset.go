@@ -142,12 +142,12 @@ func verifyEcResetOnConsoleRebootCmd(ctx context.Context, s *testing.State, b ut
 
 	ecReset := events.FindFirst(ti50.GpioTi50EcRstL, utils.GpioEdgeFalling)
 	if ecReset == nil {
-		s.Error("EC not put in reset with GSC reboot TPMV command")
+		s.Error("EC not put in reset with GSC reboot console command")
 		// Must return so we don't dereference null below
 		return
 	}
 	ecResetReleased := events.FindFirstAfter(*ecReset, ti50.GpioTi50EcRstL)
 	if ecResetReleased == nil {
-		s.Error("EC not released from reset after GSC reboot TPMV command")
+		s.Error("EC not released from reset after GSC reboot console command")
 	}
 }
