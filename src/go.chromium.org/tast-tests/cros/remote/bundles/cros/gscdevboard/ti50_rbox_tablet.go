@@ -102,7 +102,7 @@ func Ti50RboxTablet(ctx context.Context, s *testing.State) {
 			resetDelayMs := assertReset.TimestampUS / 1000
 			// Allow 1% measurement error.
 			if resetDelayMs < uint64(float64(tabletEcResetHoldDelay.Milliseconds())*0.99) {
-				s.Errorf("EC_RST_L asserted before minimum 10 second hold %dms", resetDelayMs)
+				s.Errorf("EC_RST_L asserted before 10s minimum hold time: %dms", resetDelayMs)
 			} else {
 				s.Logf("EC_RST_L delayed by %dms", resetDelayMs)
 			}
@@ -126,8 +126,9 @@ func Ti50RboxTablet(ctx context.Context, s *testing.State) {
 		s.Error("GSC did not reset with reset key combo after 25 seconds")
 	} else {
 		timeForReset := time.Now().Sub(beforeReset)
-		if timeForReset < tabletGscResetHoldDelay {
-			s.Error("GSC reset before 20s minimum hold time ", timeForReset)
+		// Allow 1% measurement error.
+		if timeForReset.Milliseconds() < int64(float64(tabletGscResetHoldDelay.Milliseconds())*0.99) {
+			s.Error("GSC reset before 20s minimum hold time: ", timeForReset)
 		} else {
 			s.Log("GSC reset after ", timeForReset)
 		}

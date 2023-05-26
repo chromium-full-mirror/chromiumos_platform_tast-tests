@@ -16,11 +16,8 @@ import (
 )
 
 const (
-	// boxGscResetHoldDelay is how long GSC reset keys must be held to trigger GSC reset
-	boxGscResetHoldDelay = 10 * time.Second
-	// boxMinEcResetPulse is how long EC reset must be asserted. 10 ms is minimum, but allow
-	// test to have 1% drift fudge factor
-	boxMinEcResetPulse = 9900 * time.Microsecond
+	// boxMinEcResetPulse is how long EC reset must be asserted.
+	boxMinEcResetPulse = 10 * time.Millisecond
 	// deepSleepDelay the maximum amount of time we should wait in a test for deep sleep
 	boxMaxDeepSleepDelay = time.Minute
 )
@@ -136,7 +133,8 @@ func boxVerifyEcResetWithKeysInOrder(ctx context.Context, s *testing.State, b ut
 			s.Errorf("EC_RST_L did not de-assert after key combo released %s then %s", first, second)
 		} else {
 			assertTime := deassertReset.TimestampUS - assertReset.TimestampUS
-			if assertTime < uint64(boxMinEcResetPulse.Microseconds()) {
+			// Allow 1% measurement error.
+			if assertTime < uint64(float64(boxMinEcResetPulse.Microseconds())*0.99) {
 				s.Errorf("EC_RST_L did stay asserted long enough: %dus", assertTime)
 			} else {
 				s.Logf("EC_RST_L asserted for %dus", assertTime)

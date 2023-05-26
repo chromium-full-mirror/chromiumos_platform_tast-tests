@@ -18,9 +18,8 @@ import (
 const (
 	// clamshellGscResetHoldDelay is how long GSC reset keys must be held to trigger GSC reset
 	clamshellGscResetHoldDelay = 10 * time.Second
-	// clamshellMinEcResetPulse is how long EC reset must be asserted. 10 ms is minimum, but allow
-	// test to have 1% drift fudge factor
-	clamshellMinEcResetPulse = 9900 * time.Microsecond
+	// clamshellMinEcResetPulse is how long EC reset must be asserted.
+	clamshellMinEcResetPulse = 10 * time.Millisecond
 	// deepSleepDelay the maximum amount of time we should wait in a test for deep sleep
 	clamshellMaxDeepSleepDelay = time.Minute
 )
@@ -114,7 +113,8 @@ func Ti50RboxClamshell(ctx context.Context, s *testing.State) {
 		s.Error("GSC did not reset with reset key combo after 10 seconds")
 	} else {
 		timeForReset := time.Now().Sub(beforeReset)
-		if timeForReset < clamshellGscResetHoldDelay {
+		// Allow 1% measurement error.
+		if timeForReset.Milliseconds() < int64(float64(clamshellGscResetHoldDelay.Milliseconds())*0.99) {
 			s.Error("GSC reset before 10s minimum hold time: ", timeForReset)
 		} else {
 			s.Log("GSC reset after ", timeForReset)
@@ -169,7 +169,8 @@ func verifyEcResetWithKeysInOrder(ctx context.Context, s *testing.State, b utils
 			s.Errorf("EC_RST_L did not de-assert after key combo released %s then %s", first, second)
 		} else {
 			assertTime := deassertReset.TimestampUS - assertReset.TimestampUS
-			if assertTime < uint64(clamshellMinEcResetPulse.Microseconds()) {
+			// Allow 1% measurement error.
+			if assertTime < uint64(float64(clamshellMinEcResetPulse.Microseconds())*0.99) {
 				s.Errorf("EC_RST_L did stay asserted long enough: %dus", assertTime)
 			} else {
 				s.Logf("EC_RST_L asserted for %dus", assertTime)
