@@ -14,9 +14,9 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/kernel"
 	pb "chromiumos/tast/services/cros/firmware"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

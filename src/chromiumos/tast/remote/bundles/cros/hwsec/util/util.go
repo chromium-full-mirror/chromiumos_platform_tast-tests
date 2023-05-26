@@ -11,13 +11,13 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/common/hwsec"
-	"chromiumos/tast/common/pkcs11"
-	"chromiumos/tast/common/servo"
 	"chromiumos/tast/remote/dutfs"
 	fwfixture "chromiumos/tast/remote/firmware/fixture"
 	hwsecremote "chromiumos/tast/remote/hwsec"
 	"chromiumos/tast/remote/u2fd"
+	"go.chromium.org/tast-tests/cros/common/hwsec"
+	"go.chromium.org/tast-tests/cros/common/pkcs11"
+	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

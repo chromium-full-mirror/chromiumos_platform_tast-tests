@@ -11,13 +11,13 @@ import (
 	"sort"
 	"time"
 
-	"chromiumos/tast/common/perf"
-	"chromiumos/tast/common/wifi/security"
-	"chromiumos/tast/common/wifi/security/wpa"
 	"chromiumos/tast/remote/network/iperf"
 	"chromiumos/tast/remote/wificell"
 	"chromiumos/tast/remote/wificell/dutcfg"
 	"chromiumos/tast/remote/wificell/tethering"
+	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/common/wifi/security"
+	"go.chromium.org/tast-tests/cros/common/wifi/security/wpa"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"

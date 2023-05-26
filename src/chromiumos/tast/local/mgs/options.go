@@ -5,8 +5,8 @@
 package mgs
 
 import (
-	"chromiumos/tast/common/policy"
 	"chromiumos/tast/local/chrome"
+	"go.chromium.org/tast-tests/cros/common/policy"
 )
 
 // DefaultAccount applies default local account configuration using one

@@ -8,10 +8,10 @@ import (
 	"context"
 	"io/ioutil"
 
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/bundles/cros/telemetryextension/dep"
 	"chromiumos/tast/local/bundles/cros/telemetryextension/vendorutils"
 	"chromiumos/tast/local/crosconfig"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 
 	"go.chromium.org/tast/core/testing"
 )

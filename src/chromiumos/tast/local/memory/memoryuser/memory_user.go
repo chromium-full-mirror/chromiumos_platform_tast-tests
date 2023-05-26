@@ -16,8 +16,6 @@ import (
 
 	"github.com/shirou/gopsutil/v3/mem"
 
-	"chromiumos/tast/common/perf"
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
@@ -25,6 +23,8 @@ import (
 	"chromiumos/tast/local/memory/kernelmeter"
 	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/local/wpr"
+	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/fsutil"

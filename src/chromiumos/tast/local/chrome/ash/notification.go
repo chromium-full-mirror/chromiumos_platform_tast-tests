@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	commonash "chromiumos/tast/common/chrome/ash"
 	"chromiumos/tast/local/chrome"
+	commonash "go.chromium.org/tast-tests/cros/common/chrome/ash"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

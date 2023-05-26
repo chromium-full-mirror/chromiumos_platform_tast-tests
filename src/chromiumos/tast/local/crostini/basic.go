@@ -7,8 +7,8 @@ package crostini
 import (
 	"context"
 
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/vm"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 )
 
 // BasicCommandWorks executes a command in the container and returns

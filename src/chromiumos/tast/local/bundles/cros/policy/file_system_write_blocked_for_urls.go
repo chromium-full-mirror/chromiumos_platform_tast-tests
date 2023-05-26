@@ -11,11 +11,11 @@ import (
 	"net/url"
 	"path/filepath"
 
-	"chromiumos/tast/common/fixture"
-	"chromiumos/tast/common/pci"
-	"chromiumos/tast/common/policy"
 	filesystemreadwrite "chromiumos/tast/local/bundles/cros/policy/file_system_read_write"
 	"chromiumos/tast/local/chrome/browser"
+	"go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/common/pci"
+	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast/core/testing"
 )
 

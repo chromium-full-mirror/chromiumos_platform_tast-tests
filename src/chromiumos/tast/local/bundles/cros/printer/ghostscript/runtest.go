@@ -12,8 +12,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/printing/document"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/testing"
 )
 

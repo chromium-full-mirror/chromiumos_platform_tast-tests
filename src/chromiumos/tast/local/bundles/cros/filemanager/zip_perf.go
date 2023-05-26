@@ -11,7 +11,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"chromiumos/tast/common/perf"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/metrics"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -22,6 +21,7 @@ import (
 	"chromiumos/tast/local/cpu"
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/input"
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"

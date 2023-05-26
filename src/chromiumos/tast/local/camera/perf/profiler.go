@@ -20,10 +20,10 @@ import (
 	"sync"
 	"time"
 
-	"chromiumos/tast/common/perf"
-	"chromiumos/tast/common/perf/perfpb"
 	"chromiumos/tast/local/graphics"
 	"chromiumos/tast/local/profiler"
+	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/common/perf/perfpb"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

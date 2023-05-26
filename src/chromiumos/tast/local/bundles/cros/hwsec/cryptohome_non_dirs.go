@@ -9,9 +9,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"chromiumos/tast/common/hwsec"
 	"chromiumos/tast/local/bundles/cros/hwsec/util"
 	hwseclocal "chromiumos/tast/local/hwsec"
+	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

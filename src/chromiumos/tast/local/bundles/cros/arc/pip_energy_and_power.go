@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"chromiumos/tast/common/perf"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bundles/cros/arc/arcpipvideotest"
 	"chromiumos/tast/local/chrome"
@@ -21,6 +20,7 @@ import (
 	"chromiumos/tast/local/cpu"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/power"
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )

@@ -11,8 +11,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"chromiumos/tast/common/camera/chart"
-	"chromiumos/tast/common/testexec"
+	"go.chromium.org/tast-tests/cros/common/camera/chart"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/testing"
 )
 

@@ -15,8 +15,6 @@ import (
 	"strconv"
 	"time"
 
-	"chromiumos/tast/common/android/ui"
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/arc/optin"
@@ -26,6 +24,8 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/holdingspace"
 	"chromiumos/tast/local/cryptohome"
+	"go.chromium.org/tast-tests/cros/common/android/ui"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )

@@ -8,11 +8,11 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/common/perf"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bundles/cros/arc/inputlatency"
 	"chromiumos/tast/local/cpu"
 	"chromiumos/tast/local/input"
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast/core/testing"
 )
 

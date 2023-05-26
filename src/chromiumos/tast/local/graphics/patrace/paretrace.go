@@ -14,14 +14,14 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/common/android/adb"
-	"chromiumos/tast/common/android/ui"
-	"chromiumos/tast/common/perf"
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/power"
 	"chromiumos/tast/local/power/setup"
+	"go.chromium.org/tast-tests/cros/common/android/adb"
+	"go.chromium.org/tast-tests/cros/common/android/ui"
+	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"

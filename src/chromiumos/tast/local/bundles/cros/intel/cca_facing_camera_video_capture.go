@@ -11,10 +11,10 @@ import (
 	"regexp"
 	"time"
 
-	"chromiumos/tast/common/media/caps"
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/camera/cca"
 	"chromiumos/tast/local/media/devtools"
+	"go.chromium.org/tast-tests/cros/common/media/caps"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )

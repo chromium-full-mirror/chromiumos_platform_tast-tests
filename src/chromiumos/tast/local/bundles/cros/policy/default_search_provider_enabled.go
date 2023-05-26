@@ -9,10 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/common/fixture"
-	"chromiumos/tast/common/pci"
-	"chromiumos/tast/common/policy"
-	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/local/annotations"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
@@ -21,6 +17,10 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/browser/browserui"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/policyutil"
+	"go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/common/pci"
+	"go.chromium.org/tast-tests/cros/common/policy"
+	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"

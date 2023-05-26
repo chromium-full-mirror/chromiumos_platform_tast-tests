@@ -12,10 +12,10 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
-	"chromiumos/tast/common/policy"
 	"chromiumos/tast/remote/policyutil"
 	aupb "chromiumos/tast/services/cros/autoupdate"
 	pspb "chromiumos/tast/services/cros/policy"
+	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/lsbrelease"

@@ -14,9 +14,9 @@ import (
 	"github.com/mdlayher/vsock"
 	"google.golang.org/grpc"
 
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/local/vm"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

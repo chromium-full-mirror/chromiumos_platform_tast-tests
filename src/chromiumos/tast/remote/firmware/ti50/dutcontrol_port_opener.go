@@ -9,8 +9,8 @@ import (
 	"io"
 	"time"
 
-	"chromiumos/tast/common/firmware/serial"
 	"chromiumos/tast/remote/firmware/ti50/dutcontrol"
+	"go.chromium.org/tast-tests/cros/common/firmware/serial"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

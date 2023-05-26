@@ -10,10 +10,10 @@ import (
 	"os"
 	"time"
 
-	"chromiumos/tast/common/audio/withchameleon"
-	"chromiumos/tast/common/chameleon"
-	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/local/audio"
+	"go.chromium.org/tast-tests/cros/common/audio/withchameleon"
+	"go.chromium.org/tast-tests/cros/common/chameleon"
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast/core/testing"
 )
 

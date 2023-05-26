@@ -9,9 +9,9 @@ import (
 	"math/rand"
 	"time"
 
-	"chromiumos/tast/common/chrome/credconfig"
 	"chromiumos/tast/local/chrome/internal/config"
 	"chromiumos/tast/local/cryptohome"
+	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
 )
 
 const (

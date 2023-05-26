@@ -10,14 +10,14 @@ import (
 	"path"
 	"time"
 
-	"chromiumos/tast/common/chrome/credconfig"
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/cellular"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/webutil"
 	localTcpdump "chromiumos/tast/local/network/tcpdump"
 	"chromiumos/tast/local/upstart"
+	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"

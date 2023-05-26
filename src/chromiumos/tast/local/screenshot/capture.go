@@ -16,11 +16,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"chromiumos/tast/common/action"
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/coords"
+	"go.chromium.org/tast-tests/cros/common/action"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 )
 

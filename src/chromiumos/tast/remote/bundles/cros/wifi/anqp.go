@@ -10,12 +10,12 @@ import (
 	"reflect"
 	"time"
 
-	"chromiumos/tast/common/network/wpacli"
-	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/remote/bundles/cros/wifi/wifiutil"
 	"chromiumos/tast/remote/network/cmd"
 	"chromiumos/tast/remote/wificell"
 	"chromiumos/tast/remote/wificell/hostapd"
+	"go.chromium.org/tast-tests/cros/common/network/wpacli"
+	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

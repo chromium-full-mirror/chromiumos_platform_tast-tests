@@ -9,8 +9,6 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/common/perf"
-	"chromiumos/tast/common/tape"
 	"chromiumos/tast/local/accountmanager"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
@@ -18,6 +16,8 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast/core/testing"
 
 	"go.chromium.org/tast/core/ctxutil"

@@ -9,10 +9,10 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/common/flashrom"
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/fixture"
 	"chromiumos/tast/remote/firmware/reporters"
+	"go.chromium.org/tast-tests/cros/common/flashrom"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"

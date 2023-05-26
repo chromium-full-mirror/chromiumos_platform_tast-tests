@@ -10,9 +10,9 @@ import (
 
 	cryptossh "golang.org/x/crypto/ssh"
 
-	common "chromiumos/tast/common/firmware"
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/fixture"
+	common "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
 )

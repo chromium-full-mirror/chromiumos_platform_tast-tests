@@ -8,8 +8,8 @@ import (
 	"context"
 	"fmt"
 
-	"chromiumos/tast/common/network/iw"
 	"chromiumos/tast/remote/wificell/router/common/support"
+	"go.chromium.org/tast-tests/cros/common/network/iw"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

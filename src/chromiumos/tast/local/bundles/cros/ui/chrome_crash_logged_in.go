@@ -10,10 +10,10 @@ import (
 	"path/filepath"
 	"time"
 
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/bundles/cros/ui/chromecrash"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/crash"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/testing"
 )
 

@@ -7,10 +7,10 @@ package assistant
 import (
 	"context"
 
-	"chromiumos/tast/common/action"
 	"chromiumos/tast/local/assistant"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )

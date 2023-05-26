@@ -10,10 +10,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"chromiumos/tast/common/network/tcpdump"
-	"chromiumos/tast/common/wificell/router"
 	remotetcpdump "chromiumos/tast/remote/network/tcpdump"
 	"chromiumos/tast/remote/wificell/fileutil"
+	"go.chromium.org/tast-tests/cros/common/network/tcpdump"
+	"go.chromium.org/tast-tests/cros/common/wificell/router"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"

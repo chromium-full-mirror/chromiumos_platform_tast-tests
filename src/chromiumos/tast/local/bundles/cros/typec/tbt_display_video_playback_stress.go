@@ -11,7 +11,6 @@ import (
 	"regexp"
 	"time"
 
-	"chromiumos/tast/common/usbutils"
 	"chromiumos/tast/local/audio"
 	"chromiumos/tast/local/audio/crastestclient"
 	"chromiumos/tast/local/bundles/cros/typec/setup"
@@ -23,6 +22,7 @@ import (
 	"chromiumos/tast/local/mtbf/youtube"
 	"chromiumos/tast/local/power"
 	"chromiumos/tast/local/typecutils"
+	"go.chromium.org/tast-tests/cros/common/usbutils"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

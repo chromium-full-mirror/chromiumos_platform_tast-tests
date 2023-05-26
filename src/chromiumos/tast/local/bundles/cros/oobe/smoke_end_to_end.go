@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/common/hwsec"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
@@ -17,6 +16,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/state"
 	hwseclocal "chromiumos/tast/local/hwsec"
 	"chromiumos/tast/local/oobe"
+	"go.chromium.org/tast-tests/cros/common/hwsec"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"

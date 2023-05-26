@@ -10,10 +10,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"chromiumos/tast/common/media/caps"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/gtest"
 	"chromiumos/tast/local/media/binsetup"
+	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast/core/testing"
 )
 

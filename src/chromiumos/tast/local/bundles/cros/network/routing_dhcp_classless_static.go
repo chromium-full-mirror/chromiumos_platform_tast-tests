@@ -9,11 +9,11 @@ import (
 	"net"
 	"time"
 
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/network/routing"
 	"chromiumos/tast/local/network/virtualnet"
 	"chromiumos/tast/local/network/virtualnet/dnsmasq"
 	"chromiumos/tast/local/network/virtualnet/env"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

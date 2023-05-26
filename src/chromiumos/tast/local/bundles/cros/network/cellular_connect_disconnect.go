@@ -9,8 +9,6 @@ import (
 	"regexp"
 	"time"
 
-	"chromiumos/tast/common/pci"
-	"chromiumos/tast/common/policy"
 	"chromiumos/tast/local/cellular"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -18,6 +16,8 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/ossettings"
 	"chromiumos/tast/local/chrome/uiauto/quicksettings"
 	"chromiumos/tast/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/common/pci"
+	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast/core/testing"
 )
 

@@ -9,9 +9,9 @@ import (
 	"fmt"
 	"time"
 
-	group_owner "chromiumos/tast/common/network/wpacli"
-	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/remote/wificell"
+	group_owner "go.chromium.org/tast-tests/cros/common/network/wpacli"
+	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 
 	ap "chromiumos/tast/remote/wificell/hostapd"
 

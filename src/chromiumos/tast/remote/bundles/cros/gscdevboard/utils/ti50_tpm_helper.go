@@ -7,7 +7,7 @@ package utils
 import (
 	"encoding/hex"
 
-	"chromiumos/tast/common/firmware/ti50"
+	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
 )
 
 // TpmHelper allows interacting with GSC's TPM bus with higher level tpm commands until tpm2 lib

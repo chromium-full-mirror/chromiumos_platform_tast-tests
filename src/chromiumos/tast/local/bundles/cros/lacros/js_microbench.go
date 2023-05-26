@@ -13,10 +13,10 @@ import (
 	"path/filepath"
 	"time"
 
-	"chromiumos/tast/common/perf"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/lacros/lacrosperf"
 	"chromiumos/tast/local/cryptohome"
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

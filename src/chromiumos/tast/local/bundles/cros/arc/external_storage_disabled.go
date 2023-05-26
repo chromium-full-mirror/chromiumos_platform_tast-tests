@@ -8,12 +8,12 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/common/chrome/credconfig"
-	"chromiumos/tast/common/policy"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bundles/cros/arc/removablemedia"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/policyutil"
+	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
+	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast/core/testing"
 )
 

@@ -10,7 +10,6 @@ import (
 	"image/color"
 	"time"
 
-	androidui "chromiumos/tast/common/android/ui"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -18,6 +17,7 @@ import (
 	"chromiumos/tast/local/colorcmp"
 	"chromiumos/tast/local/coords"
 	"chromiumos/tast/local/screenshot"
+	androidui "go.chromium.org/tast-tests/cros/common/android/ui"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

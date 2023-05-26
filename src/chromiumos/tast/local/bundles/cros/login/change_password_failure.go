@@ -9,11 +9,11 @@ import (
 	"fmt"
 	"time"
 
-	"chromiumos/tast/common/chrome/credconfig"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto/lockscreen"
 	"chromiumos/tast/local/chrome/userutil"
 	"chromiumos/tast/local/input"
+	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
 	"go.chromium.org/tast/core/testing"
 )
 

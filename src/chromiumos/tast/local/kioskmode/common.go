@@ -4,7 +4,7 @@
 
 package kioskmode
 
-import "chromiumos/tast/common/policy"
+import "go.chromium.org/tast-tests/cros/common/policy"
 
 // TestData is a data type that can be used by tests to parameterize them for
 // Lacros launch.

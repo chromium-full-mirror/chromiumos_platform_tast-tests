@@ -14,9 +14,9 @@ import (
 	"github.com/golang/protobuf/jsonpb"
 	"golang.org/x/sys/unix"
 
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/vm"
 	dtcpb "chromiumos/wilco_dtc"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

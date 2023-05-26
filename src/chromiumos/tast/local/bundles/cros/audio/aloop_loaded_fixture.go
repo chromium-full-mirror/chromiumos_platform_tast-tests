@@ -11,10 +11,10 @@ import (
 	"strconv"
 	"time"
 
-	"chromiumos/tast/common/fixture"
-	upstartcommon "chromiumos/tast/common/upstart"
 	"chromiumos/tast/local/audio"
 	"chromiumos/tast/local/upstart"
+	"go.chromium.org/tast-tests/cros/common/fixture"
+	upstartcommon "go.chromium.org/tast-tests/cros/common/upstart"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

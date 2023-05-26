@@ -13,8 +13,8 @@ import (
 
 	"golang.org/x/sys/unix"
 
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/procutil"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

@@ -13,9 +13,9 @@ import (
 	"strings"
 	"text/template"
 
-	"chromiumos/tast/common/crypto/certificate"
-	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/local/bundles/cros/wifi/certutil"
+	"go.chromium.org/tast-tests/cros/common/crypto/certificate"
+	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast/core/errors"
 )
 

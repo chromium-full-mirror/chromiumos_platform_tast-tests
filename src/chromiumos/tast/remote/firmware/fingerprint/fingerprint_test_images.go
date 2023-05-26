@@ -13,10 +13,10 @@ import (
 	"strings"
 	"time"
 
-	fp "chromiumos/tast/common/fingerprint"
-	"chromiumos/tast/common/firmware/futility"
 	"chromiumos/tast/remote/dutfs"
 	"chromiumos/tast/remote/firmware/fingerprint/rpcdut"
+	fp "go.chromium.org/tast-tests/cros/common/fingerprint"
+	"go.chromium.org/tast-tests/cros/common/firmware/futility"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"

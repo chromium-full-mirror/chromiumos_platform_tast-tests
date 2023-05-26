@@ -7,10 +7,10 @@ package fixture
 import (
 	"context"
 
-	"chromiumos/tast/common/android/ui"
-	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome"
+	"go.chromium.org/tast-tests/cros/common/android/ui"
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast/core/testing"
 )
 

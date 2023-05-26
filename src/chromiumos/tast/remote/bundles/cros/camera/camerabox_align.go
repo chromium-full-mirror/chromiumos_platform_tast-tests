@@ -10,9 +10,9 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/common/camera/chart"
-	"chromiumos/tast/common/media/caps"
 	pb "chromiumos/tast/services/cros/camerabox"
+	"go.chromium.org/tast-tests/cros/common/camera/chart"
+	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"

@@ -13,8 +13,6 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/common/action"
-	"chromiumos/tast/common/perf"
 	"chromiumos/tast/local/audio"
 	"chromiumos/tast/local/audio/crastestclient"
 	"chromiumos/tast/local/chrome"
@@ -26,6 +24,8 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/graphics"
 	"chromiumos/tast/local/input"
+	"go.chromium.org/tast-tests/cros/common/action"
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

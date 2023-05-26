@@ -20,7 +20,7 @@ import (
 	"strconv"
 	"strings"
 
-	"chromiumos/tast/common/policy"
+	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast/core/testing"
 )
 

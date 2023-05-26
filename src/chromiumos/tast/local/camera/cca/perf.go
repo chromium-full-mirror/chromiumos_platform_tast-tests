@@ -12,9 +12,9 @@ import (
 	"regexp"
 	"time"
 
-	"chromiumos/tast/common/perf"
 	"chromiumos/tast/local/camera/testutil"
 	mediacpu "chromiumos/tast/local/media/cpu"
+	"go.chromium.org/tast-tests/cros/common/perf"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

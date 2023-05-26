@@ -5,8 +5,8 @@
 package mgs
 
 import (
-	"chromiumos/tast/common/policy"
 	"chromiumos/tast/local/chrome"
+	"go.chromium.org/tast-tests/cros/common/policy"
 )
 
 // Option is a self-referential function can be used to configure MGS mode.

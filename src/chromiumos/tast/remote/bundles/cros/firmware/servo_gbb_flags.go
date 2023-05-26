@@ -15,12 +15,12 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	common "chromiumos/tast/common/firmware"
-	commonbios "chromiumos/tast/common/firmware/bios"
-	"chromiumos/tast/common/servo"
 	"chromiumos/tast/remote/firmware/bios"
 	"chromiumos/tast/remote/firmware/fixture"
 	pb "chromiumos/tast/services/cros/firmware"
+	common "go.chromium.org/tast-tests/cros/common/firmware"
+	commonbios "go.chromium.org/tast-tests/cros/common/firmware/bios"
+	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )

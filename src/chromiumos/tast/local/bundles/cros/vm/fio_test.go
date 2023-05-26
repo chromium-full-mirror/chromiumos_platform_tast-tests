@@ -11,7 +11,7 @@ import (
 	"fmt"
 	"testing"
 
-	"chromiumos/tast/common/genparams"
+	"go.chromium.org/tast-tests/cros/common/genparams"
 )
 
 func TestFio(t *testing.T) {

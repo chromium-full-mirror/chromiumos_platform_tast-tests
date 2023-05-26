@@ -17,8 +17,8 @@ import (
 	"github.com/shirou/gopsutil/v3/process"
 	"golang.org/x/sync/errgroup"
 
-	"chromiumos/tast/common/perf"
 	"chromiumos/tast/local/memory/kernelmeter"
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

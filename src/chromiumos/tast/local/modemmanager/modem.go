@@ -12,8 +12,8 @@ import (
 
 	"github.com/godbus/dbus/v5"
 
-	"chromiumos/tast/common/mmconst"
 	"chromiumos/tast/local/dbusutil"
+	"go.chromium.org/tast-tests/cros/common/mmconst"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

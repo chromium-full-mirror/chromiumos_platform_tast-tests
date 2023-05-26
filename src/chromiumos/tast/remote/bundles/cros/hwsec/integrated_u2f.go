@@ -14,12 +14,12 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
-	"chromiumos/tast/common/hwsec"
-	"chromiumos/tast/common/pkcs11"
-	"chromiumos/tast/common/servo"
 	"chromiumos/tast/remote/bundles/cros/hwsec/util"
 	hwsecremote "chromiumos/tast/remote/hwsec"
 	"chromiumos/tast/services/cros/example"
+	"go.chromium.org/tast-tests/cros/common/hwsec"
+	"go.chromium.org/tast-tests/cros/common/pkcs11"
+	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"

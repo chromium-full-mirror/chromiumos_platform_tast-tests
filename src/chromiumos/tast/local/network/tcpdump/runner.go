@@ -5,8 +5,8 @@
 package tcpdump
 
 import (
-	"chromiumos/tast/common/network/tcpdump"
 	"chromiumos/tast/local/network/cmd"
+	"go.chromium.org/tast-tests/cros/common/network/tcpdump"
 )
 
 // Runner is an alias for common tcpdump Runner but only for local execution.

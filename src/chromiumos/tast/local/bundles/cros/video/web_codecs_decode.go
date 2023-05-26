@@ -7,9 +7,9 @@ package video
 import (
 	"context"
 
-	"chromiumos/tast/common/media/caps"
 	"chromiumos/tast/local/bundles/cros/video/webcodecs"
 	"chromiumos/tast/local/chrome"
+	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast/core/testing"
 )
 

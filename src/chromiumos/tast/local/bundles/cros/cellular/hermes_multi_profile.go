@@ -8,8 +8,8 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/common/hermesconst"
 	"chromiumos/tast/local/hermes"
+	"go.chromium.org/tast-tests/cros/common/hermesconst"
 	"go.chromium.org/tast/core/testing"
 )
 

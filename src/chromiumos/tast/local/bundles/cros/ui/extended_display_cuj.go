@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"time"
 
-	"chromiumos/tast/common/chameleon"
 	"chromiumos/tast/local/bundles/cros/ui/conference"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
@@ -19,6 +18,7 @@ import (
 	"chromiumos/tast/local/mtbf/youtube"
 	"chromiumos/tast/local/typecutils"
 	"chromiumos/tast/local/ui/cujrecorder"
+	"go.chromium.org/tast-tests/cros/common/chameleon"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"

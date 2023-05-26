@@ -7,7 +7,7 @@
 package policy
 
 import (
-	"chromiumos/tast/common/policy"
+	"go.chromium.org/tast-tests/cros/common/policy"
 )
 
 // RestrictiveDLPPolicyForClipboard returns a clipboard policy blocking clipboard from source to all destination urls.

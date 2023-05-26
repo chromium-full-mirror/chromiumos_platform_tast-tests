@@ -11,13 +11,13 @@ import (
 	"path"
 	"time"
 
-	"chromiumos/tast/common/media/caps"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/metrics"
 	"chromiumos/tast/local/media/constants"
 	"chromiumos/tast/local/media/histogram"
+	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast/core/testing"
 )
 

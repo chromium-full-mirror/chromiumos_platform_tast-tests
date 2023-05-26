@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"chromiumos/tast/common/upstart"
+	"go.chromium.org/tast-tests/cros/common/upstart"
 )
 
 func TestParseStatus(t *testing.T) {

@@ -9,8 +9,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"chromiumos/tast/common/fixture"
-	"chromiumos/tast/common/tape"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
@@ -21,6 +19,8 @@ import (
 	vdiApps "chromiumos/tast/local/vdi/apps"
 	"chromiumos/tast/local/vdi/apps/citrix"
 	"chromiumos/tast/local/vdi/apps/vmware"
+	"go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

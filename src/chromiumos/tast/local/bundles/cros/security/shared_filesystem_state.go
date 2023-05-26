@@ -16,7 +16,6 @@ import (
 
 	"github.com/shirou/gopsutil/v3/process"
 
-	ups "chromiumos/tast/common/upstart"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bundles/cros/security/sandboxing"
 	"chromiumos/tast/local/chrome"
@@ -24,6 +23,7 @@ import (
 	"chromiumos/tast/local/moblab"
 	"chromiumos/tast/local/session"
 	"chromiumos/tast/local/upstart"
+	ups "go.chromium.org/tast-tests/cros/common/upstart"
 	"go.chromium.org/tast/core/testing"
 )
 

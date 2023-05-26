@@ -18,10 +18,10 @@ import (
 	"golang.org/x/sys/unix"
 
 	pp "chromiumos/system_api/patchpanel_proto"
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/bundles/cros/vm/dlc"
 	patchpanel "chromiumos/tast/local/network/patchpanel_client"
 	"chromiumos/tast/local/vm"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

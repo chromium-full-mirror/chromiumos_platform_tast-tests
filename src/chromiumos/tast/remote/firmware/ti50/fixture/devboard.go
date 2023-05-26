@@ -11,8 +11,8 @@ import (
 
 	"google.golang.org/grpc"
 
-	"chromiumos/tast/common/firmware/ti50"
 	remoteTi50 "chromiumos/tast/remote/firmware/ti50"
+	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
 
 	"go.chromium.org/tast/core/testing"
 )

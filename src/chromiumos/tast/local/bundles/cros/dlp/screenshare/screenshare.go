@@ -10,10 +10,10 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/common/policy"
 	"chromiumos/tast/local/bundles/cros/dlp/restrictionlevel"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

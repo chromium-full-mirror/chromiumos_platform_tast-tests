@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"chromiumos/tast/common/perf"
+	"go.chromium.org/tast-tests/cros/common/perf"
 )
 
 func TestConvertFromProtobuf(t *testing.T) {

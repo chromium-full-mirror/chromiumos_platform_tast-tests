@@ -13,7 +13,6 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/common/perf"
 	"chromiumos/tast/local/bundles/cros/video/videovars"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/coords"
@@ -24,6 +23,7 @@ import (
 	"chromiumos/tast/local/media/logging"
 	"chromiumos/tast/local/media/videotype"
 	"chromiumos/tast/local/sysutil"
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/shutil"
 	"go.chromium.org/tast/core/testing"

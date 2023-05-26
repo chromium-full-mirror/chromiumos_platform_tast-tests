@@ -11,8 +11,8 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	"chromiumos/tast/common/policy"
 	"chromiumos/tast/local/chrome"
+	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

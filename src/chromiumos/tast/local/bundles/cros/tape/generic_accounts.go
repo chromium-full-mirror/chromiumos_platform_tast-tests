@@ -8,7 +8,7 @@ import (
 	"context"
 	"time"
 
-	tape2 "chromiumos/tast/common/tape"
+	tape2 "go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )

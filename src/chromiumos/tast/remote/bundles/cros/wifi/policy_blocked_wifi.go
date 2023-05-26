@@ -19,11 +19,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	"chromiumos/tast/common/pci"
-	"chromiumos/tast/common/policy"
-	tdreq "chromiumos/tast/common/testdevicerequirements"
-	"chromiumos/tast/common/wifi/security"
-	"chromiumos/tast/common/wifi/security/wpa"
 	"chromiumos/tast/remote/bundles/cros/wifi/wifiutil"
 	"chromiumos/tast/remote/wificell"
 	ap "chromiumos/tast/remote/wificell/hostapd"
@@ -33,6 +28,11 @@ import (
 	ps "chromiumos/tast/services/cros/policy"
 	"chromiumos/tast/services/cros/ui"
 	"chromiumos/tast/services/cros/wifi"
+	"go.chromium.org/tast-tests/cros/common/pci"
+	"go.chromium.org/tast-tests/cros/common/policy"
+	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
+	"go.chromium.org/tast-tests/cros/common/wifi/security"
+	"go.chromium.org/tast-tests/cros/common/wifi/security/wpa"
 )
 
 // QuickSettings indicates that quick setting needs to be used.

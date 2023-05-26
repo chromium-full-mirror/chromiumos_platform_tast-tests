@@ -10,8 +10,8 @@ import (
 	"os"
 	"path"
 
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/chrome/cuj"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 )
 

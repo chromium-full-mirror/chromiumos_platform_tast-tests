@@ -4,7 +4,7 @@
 
 package cujrecorder
 
-import "chromiumos/tast/common/perf"
+import "go.chromium.org/tast-tests/cros/common/perf"
 
 // CUJAshCommonMetricConfigs returns metrics which are required to be
 // collected by all CUJ tests from the Ash process only. This function

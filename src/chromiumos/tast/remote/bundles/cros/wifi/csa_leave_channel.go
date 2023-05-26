@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/remote/network/iw"
 	remoteiw "chromiumos/tast/remote/network/iw"
 	"chromiumos/tast/remote/wificell"
@@ -16,6 +15,7 @@ import (
 	"chromiumos/tast/remote/wificell/hostapd"
 	"chromiumos/tast/remote/wificell/router/common"
 	"chromiumos/tast/services/cros/wifi"
+	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )

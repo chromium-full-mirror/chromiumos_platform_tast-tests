@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"time"
 
-	"chromiumos/tast/common/perf"
 	"chromiumos/tast/local/bundles/cros/videoconferencing/effects"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/apps/thirdparty/googlemeet"
@@ -19,6 +18,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/power"
 	"chromiumos/tast/local/videoconferencing/fixture"
+	"go.chromium.org/tast-tests/cros/common/perf"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"

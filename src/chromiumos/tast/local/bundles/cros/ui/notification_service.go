@@ -11,11 +11,11 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 
-	commonash "chromiumos/tast/common/chrome/ash"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/common"
 	pb "chromiumos/tast/services/cros/ui"
+	commonash "go.chromium.org/tast-tests/cros/common/chrome/ash"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

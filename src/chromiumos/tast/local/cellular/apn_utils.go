@@ -9,8 +9,8 @@ import (
 	"fmt"
 	"strings"
 
-	"chromiumos/tast/common/mmconst"
-	"chromiumos/tast/common/shillconst"
+	"go.chromium.org/tast-tests/cros/common/mmconst"
+	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast/core/errors"
 )
 

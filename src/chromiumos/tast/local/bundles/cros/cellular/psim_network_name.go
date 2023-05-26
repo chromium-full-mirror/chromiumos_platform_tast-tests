@@ -7,11 +7,11 @@ package cellular
 import (
 	"context"
 
-	"chromiumos/tast/common/network/netconfigtypes"
-	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/local/cellular"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto/ossettings"
+	"go.chromium.org/tast-tests/cros/common/network/netconfigtypes"
+	"go.chromium.org/tast-tests/cros/common/shillconst"
 
 	"go.chromium.org/tast/core/testing"
 )

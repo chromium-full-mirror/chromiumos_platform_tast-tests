@@ -14,8 +14,8 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	pmpb "chromiumos/system_api/power_manager_proto"
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/upstart"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

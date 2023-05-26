@@ -15,8 +15,6 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/common/testexec"
-	upstartcommon "chromiumos/tast/common/upstart"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
@@ -26,6 +24,8 @@ import (
 	"chromiumos/tast/local/crostini/ui/settings"
 	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/local/vm"
+	"go.chromium.org/tast-tests/cros/common/testexec"
+	upstartcommon "go.chromium.org/tast-tests/cros/common/upstart"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

@@ -12,7 +12,6 @@ import (
 
 	"github.com/golang/protobuf/proto"
 
-	"chromiumos/tast/common/media/caps"
 	"chromiumos/tast/local/apps"
 	fpb "chromiumos/tast/local/bundles/cros/feedback/proto"
 	"chromiumos/tast/local/chrome"
@@ -23,6 +22,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/input"
+	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

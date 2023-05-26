@@ -13,9 +13,9 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 
-	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/crash"
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast/core/testing"
 )
 

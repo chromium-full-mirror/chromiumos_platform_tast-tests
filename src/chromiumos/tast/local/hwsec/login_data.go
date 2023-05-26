@@ -11,8 +11,8 @@ import (
 	"path"
 	"strings"
 
-	"chromiumos/tast/common/hwsec"
-	"chromiumos/tast/common/testexec"
+	"go.chromium.org/tast-tests/cros/common/hwsec"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

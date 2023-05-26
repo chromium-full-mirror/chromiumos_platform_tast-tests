@@ -7,7 +7,7 @@ package meta
 import (
 	"context"
 
-	"chromiumos/tast/common/servers"
+	"go.chromium.org/tast-tests/cros/common/servers"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

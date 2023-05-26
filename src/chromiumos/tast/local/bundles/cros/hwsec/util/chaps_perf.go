@@ -9,8 +9,8 @@ import (
 	"fmt"
 	"time"
 
-	"chromiumos/tast/common/hwsec"
-	"chromiumos/tast/common/pkcs11"
+	"go.chromium.org/tast-tests/cros/common/hwsec"
+	"go.chromium.org/tast-tests/cros/common/pkcs11"
 	"go.chromium.org/tast/core/errors"
 )
 

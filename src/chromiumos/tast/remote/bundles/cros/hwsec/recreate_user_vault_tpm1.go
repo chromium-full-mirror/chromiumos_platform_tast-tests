@@ -9,9 +9,9 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/common/hwsec"
 	"chromiumos/tast/remote/bundles/cros/hwsec/util"
 	hwsecremote "chromiumos/tast/remote/hwsec"
+	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )

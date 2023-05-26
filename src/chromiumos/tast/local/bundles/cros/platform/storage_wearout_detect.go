@@ -7,7 +7,7 @@ package platform
 import (
 	"context"
 
-	"chromiumos/tast/common/storage"
+	"go.chromium.org/tast-tests/cros/common/storage"
 	"go.chromium.org/tast/core/testing"
 )
 

@@ -11,10 +11,10 @@ import (
 	"net/http/httptest"
 	"time"
 
-	"chromiumos/tast/common/policy"
 	"chromiumos/tast/local/annotations"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
+	"go.chromium.org/tast-tests/cros/common/policy"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

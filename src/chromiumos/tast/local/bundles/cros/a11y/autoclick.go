@@ -10,12 +10,12 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/common/action"
 	"chromiumos/tast/local/a11y"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

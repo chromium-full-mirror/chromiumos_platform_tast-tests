@@ -13,14 +13,14 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	"chromiumos/tast/common/perf"
-	"chromiumos/tast/common/perf/perfpb"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/cpu"
 	"chromiumos/tast/local/power"
 	"chromiumos/tast/local/power/setup"
 	arcpb "chromiumos/tast/services/cros/arc"
+	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/common/perf/perfpb"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

@@ -10,13 +10,13 @@ import (
 	"strconv"
 	"time"
 
-	"chromiumos/tast/common/action"
-	"chromiumos/tast/common/chameleon"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/arc/optin"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/cpu"
+	"go.chromium.org/tast-tests/cros/common/action"
+	"go.chromium.org/tast-tests/cros/common/chameleon"
 	"go.chromium.org/tast/core/testing"
 )
 

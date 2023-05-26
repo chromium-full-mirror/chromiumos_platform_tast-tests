@@ -10,10 +10,10 @@ import (
 	"fmt"
 	"time"
 
-	"chromiumos/tast/common/fixture"
-	"chromiumos/tast/common/hwsec"
 	"chromiumos/tast/remote/bundles/cros/autoupdate/util"
 	"chromiumos/tast/remote/updateutil"
+	"go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/common/hwsec"
 
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"

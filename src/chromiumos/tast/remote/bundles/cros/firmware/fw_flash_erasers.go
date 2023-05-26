@@ -15,8 +15,8 @@ import (
 	"strconv"
 	"strings"
 
-	"chromiumos/tast/common/flashrom"
 	"chromiumos/tast/remote/firmware/fixture"
+	"go.chromium.org/tast-tests/cros/common/flashrom"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/ssh/linuxssh"

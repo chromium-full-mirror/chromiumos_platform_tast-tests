@@ -6,8 +6,8 @@
 package ping
 
 import (
-	"chromiumos/tast/common/network/ping"
 	"chromiumos/tast/remote/network/cmd"
+	"go.chromium.org/tast-tests/cros/common/network/ping"
 	"go.chromium.org/tast/core/ssh"
 )
 

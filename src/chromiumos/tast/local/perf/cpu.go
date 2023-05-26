@@ -17,7 +17,7 @@ import (
 
 	"github.com/shirou/gopsutil/v3/cpu"
 
-	"chromiumos/tast/common/perf"
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast/core/errors"
 )
 

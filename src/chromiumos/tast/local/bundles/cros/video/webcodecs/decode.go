@@ -13,10 +13,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/media/devtools"
 	"chromiumos/tast/local/media/encoding"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

@@ -10,7 +10,6 @@ import (
 	"context"
 	"fmt"
 
-	"chromiumos/tast/common/action"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/event"
@@ -18,6 +17,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/pointer"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/input"
+	"go.chromium.org/tast-tests/cros/common/action"
 )
 
 // FontStyle represents Bold, Italic, and Underline font styles.

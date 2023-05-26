@@ -9,8 +9,8 @@ import (
 	"strings"
 	"testing"
 
-	"chromiumos/tast/common/genparams"
 	"chromiumos/tast/local/bundles/cros/video/playback"
+	"go.chromium.org/tast-tests/cros/common/genparams"
 )
 
 // To regenerate the test parameters by running the following in a chroot:

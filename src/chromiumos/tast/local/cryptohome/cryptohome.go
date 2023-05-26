@@ -17,8 +17,8 @@ import (
 	"time"
 
 	uda "chromiumos/system_api/user_data_auth_proto"
-	"chromiumos/tast/common/hwsec"
 	hwseclocal "chromiumos/tast/local/hwsec"
+	"go.chromium.org/tast-tests/cros/common/hwsec"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

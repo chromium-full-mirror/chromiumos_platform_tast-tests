@@ -9,11 +9,11 @@ import (
 	"fmt"
 	"time"
 
-	"chromiumos/tast/common/wifi/security"
-	"chromiumos/tast/common/wifi/security/wpa"
 	"chromiumos/tast/remote/bundles/cros/wifi/wifiutil"
 	"chromiumos/tast/remote/wificell"
 	"chromiumos/tast/remote/wificell/tethering"
+	"go.chromium.org/tast-tests/cros/common/wifi/security"
+	"go.chromium.org/tast-tests/cros/common/wifi/security/wpa"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"

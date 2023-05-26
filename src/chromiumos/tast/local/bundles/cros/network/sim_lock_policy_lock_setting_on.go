@@ -8,10 +8,6 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/common/fixture"
-	"chromiumos/tast/common/pci"
-	"chromiumos/tast/common/policy"
-	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/cellular"
 	"chromiumos/tast/local/chrome"
@@ -24,6 +20,10 @@ import (
 	"chromiumos/tast/local/modemmanager"
 	"chromiumos/tast/local/policyutil"
 	"chromiumos/tast/local/policyutil/fixtures"
+	"go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/common/pci"
+	"go.chromium.org/tast-tests/cros/common/policy"
+	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )

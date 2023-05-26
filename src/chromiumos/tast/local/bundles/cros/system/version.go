@@ -9,8 +9,8 @@ import (
 	"context"
 	"strconv"
 
-	"chromiumos/tast/common/perf"
 	"chromiumos/tast/local/chrome/chromeproc"
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast/core/lsbrelease"
 	"go.chromium.org/tast/core/testing"
 )

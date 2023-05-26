@@ -10,12 +10,12 @@ import (
 
 	"github.com/godbus/dbus/v5"
 
-	"chromiumos/tast/common/mmconst"
-	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/local/cellular"
 	"chromiumos/tast/local/dbusutil"
 	"chromiumos/tast/local/hermes"
 	"chromiumos/tast/local/modemmanager"
+	"go.chromium.org/tast-tests/cros/common/mmconst"
+	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

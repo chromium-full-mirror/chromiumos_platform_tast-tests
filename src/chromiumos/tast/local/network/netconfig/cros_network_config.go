@@ -8,8 +8,8 @@ package netconfig
 import (
 	"context"
 
-	types "chromiumos/tast/common/network/netconfigtypes"
 	"chromiumos/tast/local/chrome"
+	types "go.chromium.org/tast-tests/cros/common/network/netconfigtypes"
 
 	"go.chromium.org/tast/core/errors"
 )

@@ -14,11 +14,11 @@ import (
 
 	empty "github.com/golang/protobuf/ptypes/empty"
 
-	fp "chromiumos/tast/common/fingerprint"
 	"chromiumos/tast/remote/dutfs"
 	"chromiumos/tast/remote/firmware/fingerprint"
 	"chromiumos/tast/remote/firmware/fingerprint/rpcdut"
 	"chromiumos/tast/services/cros/firmware"
+	fp "go.chromium.org/tast-tests/cros/common/fingerprint"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"

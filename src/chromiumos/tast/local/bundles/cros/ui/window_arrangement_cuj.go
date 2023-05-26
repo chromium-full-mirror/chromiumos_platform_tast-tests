@@ -10,8 +10,6 @@ import (
 	"net/http/httptest"
 	"time"
 
-	"chromiumos/tast/common/action"
-	"chromiumos/tast/common/perf"
 	"chromiumos/tast/local/audio/crastestclient"
 	"chromiumos/tast/local/bundles/cros/ui/windowarrangementcuj"
 	"chromiumos/tast/local/chrome"
@@ -28,6 +26,8 @@ import (
 	"chromiumos/tast/local/chrome/webutil"
 	"chromiumos/tast/local/power"
 	"chromiumos/tast/local/ui/cujrecorder"
+	"go.chromium.org/tast-tests/cros/common/action"
+	"go.chromium.org/tast-tests/cros/common/perf"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"

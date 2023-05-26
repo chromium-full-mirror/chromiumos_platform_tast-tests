@@ -8,10 +8,10 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/common/media/caps"
 	"chromiumos/tast/local/camera/cca"
 	"chromiumos/tast/local/cpu"
 	mediacpu "chromiumos/tast/local/media/cpu"
+	"go.chromium.org/tast-tests/cros/common/media/caps"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"

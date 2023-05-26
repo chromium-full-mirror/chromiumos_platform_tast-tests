@@ -5,8 +5,8 @@
 package tcpdump
 
 import (
-	"chromiumos/tast/common/network/tcpdump"
 	"chromiumos/tast/remote/network/cmd"
+	"go.chromium.org/tast-tests/cros/common/network/tcpdump"
 	"go.chromium.org/tast/core/ssh"
 )
 

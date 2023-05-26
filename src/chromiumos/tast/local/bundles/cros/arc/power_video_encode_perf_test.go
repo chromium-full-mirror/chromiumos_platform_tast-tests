@@ -7,7 +7,7 @@ package arc
 import (
 	"testing"
 
-	"chromiumos/tast/common/genparams"
+	"go.chromium.org/tast-tests/cros/common/genparams"
 )
 
 func TestPowerVideoEncodePerfParamsAreGenerated(t *testing.T) {

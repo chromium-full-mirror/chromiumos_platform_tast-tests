@@ -11,9 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/common/perf"
-	"chromiumos/tast/common/testexec"
-	cupstart "chromiumos/tast/common/upstart"
 	"chromiumos/tast/local/bluetooth/bluez"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
@@ -24,6 +21,9 @@ import (
 	"chromiumos/tast/local/power"
 	"chromiumos/tast/local/power/setup"
 	"chromiumos/tast/local/upstart"
+	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/common/testexec"
+	cupstart "go.chromium.org/tast-tests/cros/common/upstart"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )

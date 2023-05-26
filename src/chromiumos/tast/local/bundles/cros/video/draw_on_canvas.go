@@ -16,10 +16,10 @@ import (
 	"path"
 	"strings"
 
-	"chromiumos/tast/common/media/caps"
-	"chromiumos/tast/common/perf"
 	"chromiumos/tast/local/bundles/cros/video/play"
 	"chromiumos/tast/local/chrome"
+	"go.chromium.org/tast-tests/cros/common/media/caps"
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast/core/testing"
 )
 

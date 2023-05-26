@@ -8,8 +8,8 @@ import (
 	"context"
 	"strings"
 
-	"chromiumos/tast/common/android/adb"
-	"chromiumos/tast/common/testexec"
+	"go.chromium.org/tast-tests/cros/common/android/adb"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 )
 
 // Command returns a command in Android via adb.

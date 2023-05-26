@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/common/perf"
 	"chromiumos/tast/local/benchmark"
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast/core/testing"
 )
 

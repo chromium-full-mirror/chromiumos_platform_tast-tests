@@ -19,10 +19,10 @@ import (
 	"time"
 
 	pp "chromiumos/system_api/patchpanel_proto"
-	"chromiumos/tast/common/perf"
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/crostini"
 	patchpanel "chromiumos/tast/local/network/patchpanel_client"
+	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

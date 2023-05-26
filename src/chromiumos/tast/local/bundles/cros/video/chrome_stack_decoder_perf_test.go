@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"chromiumos/tast/common/genparams"
+	"go.chromium.org/tast-tests/cros/common/genparams"
 )
 
 // NB: If modifying any of the files or test specifications, be sure to

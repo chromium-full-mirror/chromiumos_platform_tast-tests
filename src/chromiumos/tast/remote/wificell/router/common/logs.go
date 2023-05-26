@@ -8,9 +8,9 @@ import (
 	"context"
 	"path/filepath"
 
-	"chromiumos/tast/common/utils"
 	"chromiumos/tast/remote/log"
 	"chromiumos/tast/remote/wificell/router/common/support"
+	"go.chromium.org/tast-tests/cros/common/utils"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"

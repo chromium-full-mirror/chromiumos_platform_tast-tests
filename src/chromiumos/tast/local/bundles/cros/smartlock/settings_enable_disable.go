@@ -9,11 +9,11 @@ import (
 	"context"
 	"time"
 
-	cdcommon "chromiumos/tast/common/cros/crossdevice"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/crossdevice"
 	"chromiumos/tast/local/chrome/crossdevice/smartlock"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
+	cdcommon "go.chromium.org/tast-tests/cros/common/cros/crossdevice"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )

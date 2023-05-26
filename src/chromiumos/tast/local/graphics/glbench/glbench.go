@@ -17,11 +17,11 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/common/perf"
 	"chromiumos/tast/local/cpu"
 	"chromiumos/tast/local/faillog"
 	"chromiumos/tast/local/graphics"
 	"chromiumos/tast/local/sysutil"
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

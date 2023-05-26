@@ -11,10 +11,10 @@ import (
 	"path"
 	"time"
 
-	"chromiumos/tast/common/usbutils"
 	"chromiumos/tast/local/bundles/cros/typec/typecutils"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/cryptohome"
+	"go.chromium.org/tast-tests/cros/common/usbutils"
 	"go.chromium.org/tast/core/testing"
 )
 

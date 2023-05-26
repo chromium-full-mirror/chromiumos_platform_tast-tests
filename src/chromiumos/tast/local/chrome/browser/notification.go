@@ -7,7 +7,7 @@ package browser
 import (
 	"context"
 
-	"chromiumos/tast/common/chrome/ash"
+	"go.chromium.org/tast-tests/cros/common/chrome/ash"
 	"go.chromium.org/tast/core/errors"
 )
 

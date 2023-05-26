@@ -12,10 +12,10 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	apb "chromiumos/system_api/attestation_proto"
-	"chromiumos/tast/common/hwsec"
-	"chromiumos/tast/common/testexec"
 	hwseclocal "chromiumos/tast/local/hwsec"
 	"chromiumos/tast/local/upstart"
+	"go.chromium.org/tast-tests/cros/common/hwsec"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )

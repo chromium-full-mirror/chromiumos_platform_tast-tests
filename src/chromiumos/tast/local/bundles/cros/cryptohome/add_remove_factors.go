@@ -12,11 +12,11 @@ import (
 	"time"
 
 	uda "chromiumos/system_api/user_data_auth_proto"
-	cryptohomecommon "chromiumos/tast/common/cryptohome"
-	"chromiumos/tast/common/hwsec"
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/dbusutil"
 	hwseclocal "chromiumos/tast/local/hwsec"
+	cryptohomecommon "go.chromium.org/tast-tests/cros/common/cryptohome"
+	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )

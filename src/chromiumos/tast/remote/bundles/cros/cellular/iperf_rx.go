@@ -11,10 +11,10 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
-	"chromiumos/tast/common/perf"
 	cbiperf "chromiumos/tast/remote/cellular/callbox/iperf"
 	"chromiumos/tast/remote/cellular/callbox/manager"
 	"chromiumos/tast/remote/network/iperf"
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast/core/testing"
 )
 

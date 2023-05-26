@@ -9,12 +9,12 @@ import (
 	"net"
 	"strings"
 
-	"chromiumos/tast/common/network/iw"
 	"chromiumos/tast/remote/wificell/dhcp"
 	"chromiumos/tast/remote/wificell/framesender"
 	"chromiumos/tast/remote/wificell/hostapd"
 	"chromiumos/tast/remote/wificell/http"
 	"chromiumos/tast/remote/wificell/pcap"
+	"go.chromium.org/tast-tests/cros/common/network/iw"
 	"go.chromium.org/tast/core/errors"
 )
 

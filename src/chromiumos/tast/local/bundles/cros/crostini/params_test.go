@@ -14,10 +14,10 @@ import (
 	"testing"
 	"time"
 
-	"chromiumos/tast/common/genparams"
 	"chromiumos/tast/local/bundles/cros/crostini/imetestutil"
 	"chromiumos/tast/local/chrome/devicemode"
 	"chromiumos/tast/local/crostini"
+	"go.chromium.org/tast-tests/cros/common/genparams"
 )
 
 // Struct used to specify extra test options for standard tests with ManaTEE variants.

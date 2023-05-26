@@ -12,9 +12,6 @@ import (
 	"strconv"
 	"time"
 
-	"chromiumos/tast/common/android/ui"
-	"chromiumos/tast/common/camera/chart"
-	dutcontrol "chromiumos/tast/common/camera/dut"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/assistant"
 	"chromiumos/tast/local/camera/testutil"
@@ -22,6 +19,9 @@ import (
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
 	"chromiumos/tast/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/common/android/ui"
+	"go.chromium.org/tast-tests/cros/common/camera/chart"
+	dutcontrol "go.chromium.org/tast-tests/cros/common/camera/dut"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"

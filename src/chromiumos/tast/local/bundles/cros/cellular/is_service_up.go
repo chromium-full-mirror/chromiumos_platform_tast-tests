@@ -7,10 +7,10 @@ package cellular
 import (
 	"context"
 
-	"chromiumos/tast/common/mmconst"
-	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/local/cellular"
 	"chromiumos/tast/local/modemmanager"
+	"go.chromium.org/tast-tests/cros/common/mmconst"
+	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast/core/testing"
 )
 

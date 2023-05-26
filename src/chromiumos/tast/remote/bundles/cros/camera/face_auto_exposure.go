@@ -9,11 +9,11 @@ import (
 	"fmt"
 	"time"
 
-	"chromiumos/tast/common/camera/chart"
-	"chromiumos/tast/common/media/caps"
 	"chromiumos/tast/remote/bundles/cros/camera/camerabox"
 	"chromiumos/tast/remote/bundles/cros/camera/face"
 	pb "chromiumos/tast/services/cros/camerabox"
+	"go.chromium.org/tast-tests/cros/common/camera/chart"
+	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

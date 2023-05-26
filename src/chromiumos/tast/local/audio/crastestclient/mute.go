@@ -8,7 +8,7 @@ package crastestclient
 import (
 	"context"
 
-	"chromiumos/tast/common/testexec"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 )
 
 // Mute lets DUT be muted. That is, after Mute() is done, DUT doesn't sound when a video plays.

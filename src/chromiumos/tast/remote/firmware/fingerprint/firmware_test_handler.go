@@ -10,13 +10,13 @@ import (
 
 	"google.golang.org/protobuf/types/known/durationpb"
 
-	fp "chromiumos/tast/common/fingerprint"
-	"chromiumos/tast/common/servo"
-	"chromiumos/tast/common/upstart"
 	"chromiumos/tast/remote/dutfs"
 	"chromiumos/tast/remote/firmware/fingerprint/rpcdut"
 	"chromiumos/tast/remote/sysutil"
 	"chromiumos/tast/services/cros/platform"
+	fp "go.chromium.org/tast-tests/cros/common/fingerprint"
+	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/upstart"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"

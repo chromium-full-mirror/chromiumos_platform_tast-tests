@@ -9,12 +9,12 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"chromiumos/tast/common/media/caps"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/gtest"
 	"chromiumos/tast/local/media/logging"
 	"chromiumos/tast/local/sysutil"
 	"chromiumos/tast/local/upstart"
+	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast/core/testing"
 )
 

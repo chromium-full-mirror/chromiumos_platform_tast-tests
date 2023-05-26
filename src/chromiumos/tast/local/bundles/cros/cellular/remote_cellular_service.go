@@ -12,8 +12,6 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 
-	"chromiumos/tast/common/mmconst"
-	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/local/cellular"
 	"chromiumos/tast/local/dbusutil"
 	"chromiumos/tast/local/hermes"
@@ -21,6 +19,8 @@ import (
 	"chromiumos/tast/local/modemmanager"
 	"chromiumos/tast/local/upstart"
 	cellular_pb "chromiumos/tast/services/cros/cellular"
+	"go.chromium.org/tast-tests/cros/common/mmconst"
+	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

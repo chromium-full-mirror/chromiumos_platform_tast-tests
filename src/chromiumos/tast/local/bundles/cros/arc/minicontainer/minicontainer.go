@@ -17,11 +17,11 @@ import (
 	"runtime"
 	"strings"
 
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bundles/cros/arc/cpuset"
 	"chromiumos/tast/local/syslog"
 	"chromiumos/tast/local/upstart"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

@@ -6,8 +6,8 @@
 package wpacli
 
 import (
-	"chromiumos/tast/common/network/wpacli"
 	"chromiumos/tast/remote/network/cmd"
+	"go.chromium.org/tast-tests/cros/common/network/wpacli"
 	"go.chromium.org/tast/core/ssh"
 )
 

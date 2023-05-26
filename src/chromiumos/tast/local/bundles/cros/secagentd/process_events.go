@@ -11,7 +11,6 @@ import (
 	"time"
 
 	rep "chromiumos/reporting"
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/bundles/cros/secagentd/secagentdcommon"
 	"chromiumos/tast/local/bundles/cros/secagentd/secagentddbusmonitor"
 	"chromiumos/tast/local/bundles/cros/secagentd/secagentdprocfsscraper"
@@ -19,6 +18,7 @@ import (
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/upstart"
 	xdr "chromiumos/xdr/secagentd"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"

@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/local/bundles/cros/deskapi/apis"
 	"chromiumos/tast/local/bundles/cros/deskapi/constants"
 	"chromiumos/tast/local/chrome"
@@ -19,6 +18,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/event"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )

@@ -14,10 +14,6 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/common/action"
-	"chromiumos/tast/common/async"
-	"chromiumos/tast/common/bond"
-	"chromiumos/tast/common/perf"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/apps/thirdparty/googledocs"
 	"chromiumos/tast/local/chrome/apps/thirdparty/googlemeet"
@@ -43,6 +39,10 @@ import (
 	"chromiumos/tast/local/loginstatus"
 	"chromiumos/tast/local/ui/cujrecorder"
 	"chromiumos/tast/local/webrtcinternals"
+	"go.chromium.org/tast-tests/cros/common/action"
+	"go.chromium.org/tast-tests/cros/common/async"
+	"go.chromium.org/tast-tests/cros/common/bond"
+	"go.chromium.org/tast-tests/cros/common/perf"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"

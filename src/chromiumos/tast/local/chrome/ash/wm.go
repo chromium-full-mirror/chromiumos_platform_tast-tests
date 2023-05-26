@@ -13,7 +13,6 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
-	"chromiumos/tast/common/action"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/display"
@@ -21,6 +20,7 @@ import (
 	"chromiumos/tast/local/coords"
 	"chromiumos/tast/local/crosconfig"
 	"chromiumos/tast/local/input"
+	"go.chromium.org/tast-tests/cros/common/action"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

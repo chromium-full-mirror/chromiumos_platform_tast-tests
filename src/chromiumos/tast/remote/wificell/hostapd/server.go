@@ -21,9 +21,9 @@ import (
 
 	"github.com/google/gopacket/layers"
 
-	"chromiumos/tast/common/network/daemonutil"
 	"chromiumos/tast/remote/network/iw"
 	"chromiumos/tast/remote/wificell/fileutil"
+	"go.chromium.org/tast-tests/cros/common/network/daemonutil"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/shutil"

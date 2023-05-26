@@ -18,7 +18,6 @@ import (
 	goselinux "github.com/opencontainers/selinux/go-selinux"
 	"golang.org/x/sys/unix"
 
-	"chromiumos/tast/common/tape"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/arc/playstore"
@@ -32,6 +31,7 @@ import (
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/screenshot"
 	"chromiumos/tast/local/upstart"
+	"go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

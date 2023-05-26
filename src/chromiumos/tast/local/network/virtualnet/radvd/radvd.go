@@ -16,8 +16,8 @@ import (
 	"strings"
 	"text/template"
 
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/network/virtualnet/env"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 )
 

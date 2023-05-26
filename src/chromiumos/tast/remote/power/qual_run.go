@@ -14,9 +14,9 @@ import (
 	"regexp"
 	"strconv"
 
-	"chromiumos/tast/common/utils"
 	"chromiumos/tast/remote/power/config"
 	"chromiumos/tast/remote/power/result"
+	"go.chromium.org/tast-tests/cros/common/utils"
 
 	"go.chromium.org/tast/core/errors"
 )

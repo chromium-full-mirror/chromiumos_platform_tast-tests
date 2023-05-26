@@ -16,8 +16,8 @@ import (
 	"android.googlesource.com/platform/external/perfetto/protos/perfetto/metrics/github.com/google/perfetto/perfetto_proto"
 	"github.com/gogo/protobuf/proto"
 
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/arc"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 )
 

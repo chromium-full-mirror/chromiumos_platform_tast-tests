@@ -14,9 +14,9 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
-	"chromiumos/tast/common/perf"
-	"chromiumos/tast/common/perf/perfpb"
 	"chromiumos/tast/services/cros/arc"
+	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/common/perf/perfpb"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
 )

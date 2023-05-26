@@ -15,8 +15,8 @@ import (
 
 	"golang.org/x/crypto/ssh"
 
-	"chromiumos/tast/common/servo"
 	"chromiumos/tast/remote/firmware"
+	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

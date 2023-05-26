@@ -16,9 +16,9 @@ import (
 	"strings"
 	"time"
 
-	fwCommon "chromiumos/tast/common/firmware"
-	"chromiumos/tast/common/servo"
 	fwpb "chromiumos/tast/services/cros/firmware"
+	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
+	"go.chromium.org/tast-tests/cros/common/servo"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"

@@ -23,8 +23,8 @@ import (
 	"github.com/tklauser/go-sysconf"
 	"google.golang.org/protobuf/proto"
 
-	"chromiumos/tast/common/action"
 	xdr "chromiumos/xdr/secagentd"
+	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

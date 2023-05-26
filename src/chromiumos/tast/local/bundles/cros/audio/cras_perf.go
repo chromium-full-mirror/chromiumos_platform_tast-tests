@@ -8,13 +8,13 @@ import (
 	"context"
 	"time"
 
-	perfpkg "chromiumos/tast/common/perf"
 	"chromiumos/tast/local/audio"
 	"chromiumos/tast/local/audio/crastestclient"
 	"chromiumos/tast/local/bundles/cros/audio/device"
 	"chromiumos/tast/local/procutil"
 	"chromiumos/tast/local/profiler"
 	"chromiumos/tast/local/sysutil"
+	perfpkg "go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )

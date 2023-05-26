@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/common/perf"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/arc/optin"
@@ -17,6 +16,7 @@ import (
 	"chromiumos/tast/local/chrome/metrics"
 	"chromiumos/tast/local/cpu"
 	"chromiumos/tast/local/disk"
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast/core/testing"
 
 	"go.chromium.org/tast/core/errors"

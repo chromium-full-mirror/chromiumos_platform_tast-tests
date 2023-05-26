@@ -10,9 +10,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	fp "chromiumos/tast/common/fingerprint"
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/crosconfig"
+	fp "go.chromium.org/tast-tests/cros/common/fingerprint"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

@@ -9,12 +9,12 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/chrome/lacros/lacrosfixt"
 	"chromiumos/tast/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/common/fixture"
 
 	"go.chromium.org/tast/core/testing"
 )

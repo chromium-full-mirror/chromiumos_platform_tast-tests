@@ -10,10 +10,10 @@ import (
 	"os"
 	"time"
 
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/audio"
 	"chromiumos/tast/local/bundles/cros/audio/soundcardinit"
 	"chromiumos/tast/local/crosconfig"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"

@@ -13,12 +13,12 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
-	policyBlob "chromiumos/tast/common/policy"
-	"chromiumos/tast/common/utils"
 	"chromiumos/tast/remote/policyutil"
 	"chromiumos/tast/remote/wificell/router/common/support"
 	"chromiumos/tast/services/cros/policy"
 	"chromiumos/tast/services/cros/wifi"
+	policyBlob "go.chromium.org/tast-tests/cros/common/policy"
+	"go.chromium.org/tast-tests/cros/common/utils"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"

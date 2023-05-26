@@ -18,8 +18,8 @@ import (
 
 	"google.golang.org/grpc"
 
-	common "chromiumos/tast/common/firmware/ti50"
 	"chromiumos/tast/remote/firmware/ti50/dutcontrol"
+	common "go.chromium.org/tast-tests/cros/common/firmware/ti50"
 
 	"go.chromium.org/tast/core/errors"
 )

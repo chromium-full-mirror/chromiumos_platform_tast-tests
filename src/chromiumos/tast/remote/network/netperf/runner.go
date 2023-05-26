@@ -11,9 +11,9 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/common/network/firewall"
 	"chromiumos/tast/remote/network/cmd"
 	remote_firewall "chromiumos/tast/remote/network/firewall"
+	"go.chromium.org/tast-tests/cros/common/network/firewall"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"

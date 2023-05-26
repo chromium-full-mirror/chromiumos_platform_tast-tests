@@ -15,13 +15,13 @@ import (
 
 	"github.com/golang/protobuf/proto"
 
-	"chromiumos/tast/common/android"
-	"chromiumos/tast/common/android/adb"
-	"chromiumos/tast/common/android/mobly"
-	"chromiumos/tast/common/android/ui"
-	nearbycommon "chromiumos/tast/common/cros/nearbyshare"
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/chrome/crossdevice"
+	"go.chromium.org/tast-tests/cros/common/android"
+	"go.chromium.org/tast-tests/cros/common/android/adb"
+	"go.chromium.org/tast-tests/cros/common/android/mobly"
+	"go.chromium.org/tast-tests/cros/common/android/ui"
+	nearbycommon "go.chromium.org/tast-tests/cros/common/cros/nearbyshare"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

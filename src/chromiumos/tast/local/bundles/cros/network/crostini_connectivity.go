@@ -8,11 +8,11 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/common/shillconst"
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/crostini"
 	"chromiumos/tast/local/network/routing"
 	"chromiumos/tast/local/vm"
+	"go.chromium.org/tast-tests/cros/common/shillconst"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

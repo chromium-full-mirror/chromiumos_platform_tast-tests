@@ -9,14 +9,14 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
-	"chromiumos/tast/common/hwsec"
-	"chromiumos/tast/common/pkcs11"
-	"chromiumos/tast/common/servo"
 	"chromiumos/tast/remote/bundles/cros/hwsec/util"
 	"chromiumos/tast/remote/dutfs"
 	hwsecremote "chromiumos/tast/remote/hwsec"
 	"chromiumos/tast/remote/u2fd"
 	webauthnpb "chromiumos/tast/services/cros/hwsec"
+	"go.chromium.org/tast-tests/cros/common/hwsec"
+	"go.chromium.org/tast-tests/cros/common/pkcs11"
+	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"

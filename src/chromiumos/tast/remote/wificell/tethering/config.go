@@ -5,11 +5,11 @@
 package tethering
 
 import (
-	"chromiumos/tast/common/shillconst"
-	"chromiumos/tast/common/wifi/security"
-	"chromiumos/tast/common/wifi/security/base"
-	"chromiumos/tast/common/wifi/security/wpa"
 	"chromiumos/tast/remote/wificell/hostapd"
+	"go.chromium.org/tast-tests/cros/common/shillconst"
+	"go.chromium.org/tast-tests/cros/common/wifi/security"
+	"go.chromium.org/tast-tests/cros/common/wifi/security/base"
+	"go.chromium.org/tast-tests/cros/common/wifi/security/wpa"
 	"go.chromium.org/tast/core/errors"
 )
 

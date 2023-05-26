@@ -8,9 +8,9 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/common/android/ui"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/input"
+	"go.chromium.org/tast-tests/cros/common/android/ui"
 	"go.chromium.org/tast/core/testing"
 )
 

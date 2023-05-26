@@ -9,12 +9,12 @@ import (
 	"fmt"
 	"time"
 
-	"chromiumos/tast/common/perf"
 	"chromiumos/tast/local/assistant"
 	"chromiumos/tast/local/bundles/cros/assistant/assistantutils"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/metrics"
 	"chromiumos/tast/local/ui"
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast/core/testing"
 )
 

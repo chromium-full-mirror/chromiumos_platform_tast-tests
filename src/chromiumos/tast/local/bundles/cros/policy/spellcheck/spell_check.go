@@ -9,7 +9,6 @@ import (
 	"context"
 	"net/http/httptest"
 
-	"chromiumos/tast/common/policy"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -18,6 +17,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/restriction"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/policyutil"
+	"go.chromium.org/tast-tests/cros/common/policy"
 
 	"go.chromium.org/tast/core/errors"
 )

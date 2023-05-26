@@ -9,7 +9,7 @@ import (
 	"encoding/hex"
 	"strings"
 
-	"chromiumos/tast/common/chameleon"
+	"go.chromium.org/tast-tests/cros/common/chameleon"
 	"go.chromium.org/tast/core/errors"
 )
 

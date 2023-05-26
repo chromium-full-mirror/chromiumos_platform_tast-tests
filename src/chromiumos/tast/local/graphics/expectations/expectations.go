@@ -19,9 +19,9 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/crosconfig"
 	"chromiumos/tast/local/graphics"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/lsbrelease"
 	"go.chromium.org/tast/core/testing"

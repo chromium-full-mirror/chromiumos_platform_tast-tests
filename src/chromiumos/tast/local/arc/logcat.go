@@ -8,7 +8,7 @@ import (
 	"context"
 	"regexp"
 
-	"chromiumos/tast/common/android/adb"
+	"go.chromium.org/tast-tests/cros/common/android/adb"
 )
 
 // RegexpPred returns a function to be passed to WaitForLogcat that returns true if a given regexp is matched in that line.

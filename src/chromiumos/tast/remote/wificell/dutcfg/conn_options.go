@@ -5,7 +5,7 @@
 // Package dutcfg provides utilities for controlling the DUT.
 package dutcfg
 
-import "chromiumos/tast/common/wifi/security"
+import "go.chromium.org/tast-tests/cros/common/wifi/security"
 
 // ConnConfig contains the connection variables.
 type ConnConfig struct {

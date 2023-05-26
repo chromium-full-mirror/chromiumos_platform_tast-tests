@@ -11,7 +11,7 @@ import (
 
 	"golang.org/x/sys/unix"
 
-	"chromiumos/tast/common/testexec"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 )
 

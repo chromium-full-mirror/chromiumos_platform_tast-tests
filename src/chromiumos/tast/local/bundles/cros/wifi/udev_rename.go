@@ -14,12 +14,12 @@ import (
 	"strings"
 	"time"
 
-	tdreq "chromiumos/tast/common/testdevicerequirements"
-	"chromiumos/tast/common/testexec"
-	upstartcommon "chromiumos/tast/common/upstart"
 	"chromiumos/tast/local/bundles/cros/wifi/stringset"
 	"chromiumos/tast/local/shill"
 	"chromiumos/tast/local/upstart"
+	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
+	"go.chromium.org/tast-tests/cros/common/testexec"
+	upstartcommon "go.chromium.org/tast-tests/cros/common/upstart"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

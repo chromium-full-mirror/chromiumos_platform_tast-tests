@@ -11,7 +11,7 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/common/shillconst"
+	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast/core/errors"
 )
 

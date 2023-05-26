@@ -9,11 +9,11 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
 	"chromiumos/tast/local/power"
 	"chromiumos/tast/local/power/setup"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"

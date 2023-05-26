@@ -14,10 +14,10 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 
-	"chromiumos/tast/common/hps/hpsutil"
-	"chromiumos/tast/common/media/caps"
 	"chromiumos/tast/remote/bundles/cros/hps/utils"
 	pb "chromiumos/tast/services/cros/hps"
+	"go.chromium.org/tast-tests/cros/common/hps/hpsutil"
+	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/ssh/linuxssh"

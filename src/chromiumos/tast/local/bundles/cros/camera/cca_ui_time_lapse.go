@@ -5,9 +5,9 @@
 package camera
 
 import (
-	"chromiumos/tast/common/media/caps"
 	"chromiumos/tast/local/camera/cca"
 	"context"
+	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"time"
 
 	"go.chromium.org/tast/core/errors"

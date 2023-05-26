@@ -11,8 +11,8 @@ import (
 	"fmt"
 	"time"
 
-	"chromiumos/tast/common/network/diag"
 	"chromiumos/tast/local/chrome"
+	"go.chromium.org/tast-tests/cros/common/network/diag"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

@@ -9,8 +9,8 @@ import (
 	"strconv"
 	"time"
 
-	"chromiumos/tast/common/perf"
 	"chromiumos/tast/local/chrome"
+	"go.chromium.org/tast-tests/cros/common/perf"
 
 	"go.chromium.org/tast/core/testing"
 )

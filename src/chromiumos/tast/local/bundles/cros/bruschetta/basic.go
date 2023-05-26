@@ -7,8 +7,8 @@ package bruschetta
 import (
 	"context"
 
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/bruschetta"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 
 	"go.chromium.org/tast/core/testing"
 )

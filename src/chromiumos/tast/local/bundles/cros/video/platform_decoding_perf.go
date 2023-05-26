@@ -12,10 +12,10 @@ import (
 	"go.chromium.org/tast/core/testing"
 	"golang.org/x/sync/errgroup"
 
-	"chromiumos/tast/common/perf"
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/bundles/cros/video/platform"
 	"chromiumos/tast/local/graphics"
+	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 )
 
 const (

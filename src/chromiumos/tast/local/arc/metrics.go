@@ -7,8 +7,8 @@ package arc
 import (
 	"context"
 
-	"chromiumos/tast/common/perf"
 	"chromiumos/tast/local/chrome"
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast/core/errors"
 )
 

@@ -17,14 +17,14 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/common/perf"
-	"chromiumos/tast/common/testexec"
-	upstartcommon "chromiumos/tast/common/upstart"
 	"chromiumos/tast/local/cpu"
 	"chromiumos/tast/local/crosconfig"
 	"chromiumos/tast/local/gtest"
 	"chromiumos/tast/local/sysutil"
 	"chromiumos/tast/local/upstart"
+	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/common/testexec"
+	upstartcommon "go.chromium.org/tast-tests/cros/common/upstart"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"

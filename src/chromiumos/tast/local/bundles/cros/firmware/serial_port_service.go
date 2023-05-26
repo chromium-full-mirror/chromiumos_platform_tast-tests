@@ -12,8 +12,8 @@ import (
 	"github.com/golang/protobuf/ptypes/wrappers"
 	"google.golang.org/grpc"
 
-	"chromiumos/tast/common/firmware/serial"
 	pb "chromiumos/tast/services/cros/firmware"
+	"go.chromium.org/tast-tests/cros/common/firmware/serial"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

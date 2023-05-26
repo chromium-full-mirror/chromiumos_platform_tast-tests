@@ -7,12 +7,12 @@ package mgs
 import (
 	"context"
 
-	"chromiumos/tast/common/fixture"
-	"chromiumos/tast/common/media/caps"
-	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/local/camera/cca"
 	"chromiumos/tast/local/camera/testutil"
 	"chromiumos/tast/local/mgs"
+	"go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/common/media/caps"
+	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast/core/testing"
 )
 

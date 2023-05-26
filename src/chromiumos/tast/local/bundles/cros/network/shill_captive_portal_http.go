@@ -9,13 +9,13 @@ import (
 	"net/http"
 	"time"
 
-	"chromiumos/tast/common/crypto/certificate"
-	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/local/bundles/cros/network/captiveportalconsts"
 	"chromiumos/tast/local/network/virtualnet"
 	"chromiumos/tast/local/network/virtualnet/certs"
 	"chromiumos/tast/local/network/virtualnet/subnet"
 	"chromiumos/tast/local/shill"
+	"go.chromium.org/tast-tests/cros/common/crypto/certificate"
+	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )

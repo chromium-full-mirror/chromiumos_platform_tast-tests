@@ -10,12 +10,12 @@ import (
 	"math"
 	"time"
 
-	"chromiumos/tast/common/perf"
-	tdreq "chromiumos/tast/common/testdevicerequirements"
-	"chromiumos/tast/common/wifi/security"
-	"chromiumos/tast/common/wifi/security/wpa"
 	"chromiumos/tast/remote/wificell"
 	"chromiumos/tast/remote/wificell/hostapd"
+	"go.chromium.org/tast-tests/cros/common/perf"
+	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
+	"go.chromium.org/tast-tests/cros/common/wifi/security"
+	"go.chromium.org/tast-tests/cros/common/wifi/security/wpa"
 	"go.chromium.org/tast/core/testing"
 )
 

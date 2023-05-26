@@ -14,9 +14,9 @@ import (
 
 	"github.com/godbus/dbus/v5"
 
-	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/local/dbusutil"
 	"chromiumos/tast/local/sysutil"
+	"go.chromium.org/tast-tests/cros/common/shillconst"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"

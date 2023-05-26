@@ -11,13 +11,13 @@ import (
 	"strconv"
 	"time"
 
-	"chromiumos/tast/common/policy"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/mouse"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/coords"
+	"go.chromium.org/tast-tests/cros/common/policy"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

@@ -12,8 +12,8 @@ package crostini
 import (
 	"testing"
 
-	"chromiumos/tast/common/genparams"
 	"chromiumos/tast/local/crostini"
+	"go.chromium.org/tast-tests/cros/common/genparams"
 )
 
 func TestSecureCopyPasteParams(t *testing.T) {

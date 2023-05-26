@@ -8,7 +8,7 @@ import (
 	"context"
 	"time"
 
-	fserial "chromiumos/tast/common/firmware/serial"
+	fserial "go.chromium.org/tast-tests/cros/common/firmware/serial"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/timing"
 )

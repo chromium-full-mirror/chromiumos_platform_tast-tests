@@ -9,10 +9,10 @@ import (
 	"path/filepath"
 	"time"
 
-	"chromiumos/tast/common/media/caps"
 	"chromiumos/tast/local/camera/testutil"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/gtest"
+	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )

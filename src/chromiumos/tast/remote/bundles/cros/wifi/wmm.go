@@ -7,9 +7,9 @@ package wifi
 import (
 	"context"
 
-	"chromiumos/tast/common/network/ping"
-	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/remote/wificell"
+	"go.chromium.org/tast-tests/cros/common/network/ping"
+	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast/core/testing"
 )
 

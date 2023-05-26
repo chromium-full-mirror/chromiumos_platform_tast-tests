@@ -8,10 +8,10 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/common/fixture"
-	"chromiumos/tast/common/tape"
 	"chromiumos/tast/services/cros/graphics"
 	pspb "chromiumos/tast/services/cros/policy"
+	"go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/common/tape"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"

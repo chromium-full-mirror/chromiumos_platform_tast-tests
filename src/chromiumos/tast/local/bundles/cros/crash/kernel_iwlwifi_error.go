@@ -11,11 +11,11 @@ import (
 	"strings"
 	"time"
 
-	tdreq "chromiumos/tast/common/testdevicerequirements"
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/crash"
 	"chromiumos/tast/local/network/iface"
 	"chromiumos/tast/local/shill"
+	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )

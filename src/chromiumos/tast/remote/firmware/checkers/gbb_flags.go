@@ -7,8 +7,8 @@ package checkers
 import (
 	"context"
 
-	"chromiumos/tast/common/firmware"
 	pb "chromiumos/tast/services/cros/firmware"
+	"go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast/core/errors"
 )
 

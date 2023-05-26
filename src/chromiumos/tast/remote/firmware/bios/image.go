@@ -11,8 +11,8 @@ import (
 	"os"
 	"strings"
 
-	commonbios "chromiumos/tast/common/firmware/bios"
-	"chromiumos/tast/common/testexec"
+	commonbios "go.chromium.org/tast-tests/cros/common/firmware/bios"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

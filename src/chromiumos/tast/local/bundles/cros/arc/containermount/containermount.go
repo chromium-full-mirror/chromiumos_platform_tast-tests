@@ -15,11 +15,11 @@ import (
 	"strconv"
 	"strings"
 
-	"chromiumos/tast/common/testexec"
-	upstartcommon "chromiumos/tast/common/upstart"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/sysutil"
 	"chromiumos/tast/local/upstart"
+	"go.chromium.org/tast-tests/cros/common/testexec"
+	upstartcommon "go.chromium.org/tast-tests/cros/common/upstart"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

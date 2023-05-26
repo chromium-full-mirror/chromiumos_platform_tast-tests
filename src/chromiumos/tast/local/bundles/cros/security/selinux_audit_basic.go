@@ -15,8 +15,8 @@ import (
 	"regexp"
 	"time"
 
-	upstartcommon "chromiumos/tast/common/upstart"
 	"chromiumos/tast/local/upstart"
+	upstartcommon "go.chromium.org/tast-tests/cros/common/upstart"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

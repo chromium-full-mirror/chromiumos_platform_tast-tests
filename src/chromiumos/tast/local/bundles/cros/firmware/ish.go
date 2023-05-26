@@ -8,8 +8,8 @@ import (
 	"bytes"
 	"context"
 
-	"chromiumos/tast/common/flashrom"
-	"chromiumos/tast/common/testexec"
+	"go.chromium.org/tast-tests/cros/common/flashrom"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 

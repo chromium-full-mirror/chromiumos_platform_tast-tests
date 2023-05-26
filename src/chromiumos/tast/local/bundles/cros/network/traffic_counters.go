@@ -19,8 +19,6 @@ import (
 	"time"
 
 	pp "chromiumos/system_api/patchpanel_proto"
-	"chromiumos/tast/common/shillconst"
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bundles/cros/network/vpn"
 	"chromiumos/tast/local/crostini"
@@ -31,6 +29,8 @@ import (
 	"chromiumos/tast/local/network/virtualnet/l4server"
 	"chromiumos/tast/local/network/virtualnet/subnet"
 	"chromiumos/tast/local/shill"
+	"go.chromium.org/tast-tests/cros/common/shillconst"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

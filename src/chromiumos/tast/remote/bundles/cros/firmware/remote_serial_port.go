@@ -8,9 +8,9 @@ import (
 	"context"
 	"time"
 
-	commonSerial "chromiumos/tast/common/firmware/serial"
 	"chromiumos/tast/remote/firmware/serial"
 	pb "chromiumos/tast/services/cros/firmware"
+	commonSerial "go.chromium.org/tast-tests/cros/common/firmware/serial"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
 )

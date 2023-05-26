@@ -10,8 +10,8 @@ import (
 	"io"
 	"os"
 
-	"chromiumos/tast/common/network/cmd"
-	"chromiumos/tast/common/testexec"
+	"go.chromium.org/tast-tests/cros/common/network/cmd"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 )
 

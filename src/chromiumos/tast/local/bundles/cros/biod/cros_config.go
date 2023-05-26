@@ -7,8 +7,8 @@ package biod
 import (
 	"context"
 
-	fp "chromiumos/tast/common/fingerprint"
 	"chromiumos/tast/local/crosconfig"
+	fp "go.chromium.org/tast-tests/cros/common/fingerprint"
 	"go.chromium.org/tast/core/testing"
 )
 

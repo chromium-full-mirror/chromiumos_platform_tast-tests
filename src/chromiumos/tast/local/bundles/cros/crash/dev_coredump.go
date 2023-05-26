@@ -8,8 +8,8 @@ import (
 	"context"
 	"os"
 
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/crash"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )

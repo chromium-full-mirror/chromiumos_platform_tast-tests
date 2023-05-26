@@ -13,8 +13,8 @@ import (
 	"testing"
 	"time"
 
-	"chromiumos/tast/common/genparams"
 	"chromiumos/tast/local/crostini"
+	"go.chromium.org/tast-tests/cros/common/genparams"
 )
 
 // MinimalSet is used because this test does not actually involve the container.

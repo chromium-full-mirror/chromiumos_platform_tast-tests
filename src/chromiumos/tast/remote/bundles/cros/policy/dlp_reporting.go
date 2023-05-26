@@ -11,11 +11,11 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
-	"chromiumos/tast/common/tape"
 	"chromiumos/tast/remote/bundles/cros/policy/dlputil"
 	"chromiumos/tast/remote/policyutil"
 	"chromiumos/tast/remote/reportingutil"
 	dlp "chromiumos/tast/services/cros/dlp"
+	"go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/ssh/linuxssh"

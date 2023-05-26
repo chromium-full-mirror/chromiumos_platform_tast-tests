@@ -9,11 +9,11 @@ import (
 	"strings"
 	"testing"
 
-	"chromiumos/tast/common/genparams"
-	"chromiumos/tast/common/media/caps"
 	"chromiumos/tast/local/bundles/cros/webrtc/peerconnection"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/graphics"
+	"go.chromium.org/tast-tests/cros/common/genparams"
+	"go.chromium.org/tast-tests/cros/common/media/caps"
 )
 
 // To regenerate the test parameters by running the following in a chroot:

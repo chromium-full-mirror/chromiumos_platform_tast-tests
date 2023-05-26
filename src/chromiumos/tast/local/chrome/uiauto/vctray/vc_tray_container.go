@@ -5,10 +5,10 @@
 package vctray
 
 import (
-	"chromiumos/tast/common/action"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"context"
+	"go.chromium.org/tast-tests/cros/common/action"
 	"strings"
 	"time"
 

@@ -8,9 +8,9 @@ import (
 	"context"
 	"fmt"
 
-	"chromiumos/tast/common/hermesconst"
 	"chromiumos/tast/local/hermes"
 	"chromiumos/tast/local/shill"
+	"go.chromium.org/tast-tests/cros/common/hermesconst"
 	"go.chromium.org/tast/core/errors"
 )
 

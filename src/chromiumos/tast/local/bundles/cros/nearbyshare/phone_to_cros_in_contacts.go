@@ -9,9 +9,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"chromiumos/tast/common/android"
-	"chromiumos/tast/common/cros/crossdevice"
-	nearbycommon "chromiumos/tast/common/cros/nearbyshare"
 	"chromiumos/tast/local/chrome/nearbyshare"
 	"chromiumos/tast/local/chrome/nearbyshare/nearbyfixture"
 	"chromiumos/tast/local/chrome/nearbyshare/nearbysnippet"
@@ -19,6 +16,9 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/screenshot"
+	"go.chromium.org/tast-tests/cros/common/android"
+	"go.chromium.org/tast-tests/cros/common/cros/crossdevice"
+	nearbycommon "go.chromium.org/tast-tests/cros/common/cros/nearbyshare"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )

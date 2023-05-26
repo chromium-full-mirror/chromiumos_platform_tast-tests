@@ -17,7 +17,6 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 
-	"chromiumos/tast/common/network/netconfigtypes"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/bundles/cros/network/proxysettings"
 	"chromiumos/tast/local/chrome"
@@ -32,6 +31,7 @@ import (
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/network/netconfig"
 	"chromiumos/tast/services/cros/network"
+	"go.chromium.org/tast-tests/cros/common/network/netconfigtypes"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"

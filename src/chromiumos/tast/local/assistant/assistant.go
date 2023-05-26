@@ -12,7 +12,6 @@ import (
 	"regexp"
 	"time"
 
-	"chromiumos/tast/common/hwsec"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
@@ -22,6 +21,7 @@ import (
 	hwseclocal "chromiumos/tast/local/hwsec"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/screenshot"
+	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"

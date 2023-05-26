@@ -5,7 +5,7 @@
 package cujrecorder
 
 import (
-	"chromiumos/tast/common/perf"
+	"go.chromium.org/tast-tests/cros/common/perf"
 )
 
 // AshCommonMetricConfigs returns SPERA common metrics which are

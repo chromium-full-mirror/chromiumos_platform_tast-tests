@@ -12,11 +12,11 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/empty"
 
-	"chromiumos/tast/common/pci"
-	"chromiumos/tast/common/policy"
 	"chromiumos/tast/remote/policyutil"
 	ps "chromiumos/tast/services/cros/policy"
 	"chromiumos/tast/services/cros/wilco"
+	"go.chromium.org/tast-tests/cros/common/pci"
+	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"

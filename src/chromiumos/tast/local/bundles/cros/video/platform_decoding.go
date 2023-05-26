@@ -12,10 +12,10 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/bundles/cros/video/platform"
 	"chromiumos/tast/local/graphics/expectations"
 	"chromiumos/tast/local/media/logging"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )

@@ -10,9 +10,9 @@ import (
 	"regexp"
 	"time"
 
-	"chromiumos/tast/common/hwsec"
 	"chromiumos/tast/local/crash"
 	hwseclocal "chromiumos/tast/local/hwsec"
+	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"

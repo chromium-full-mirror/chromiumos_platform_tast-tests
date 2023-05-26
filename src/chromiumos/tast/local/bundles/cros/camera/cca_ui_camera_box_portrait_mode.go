@@ -7,8 +7,8 @@ package camera
 import (
 	"context"
 
-	"chromiumos/tast/common/media/caps"
 	"chromiumos/tast/local/camera/cca"
+	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast/core/testing"
 )
 

@@ -10,10 +10,10 @@ import (
 
 	"github.com/godbus/dbus/v5"
 
-	"chromiumos/tast/common/hermesconst"
 	"chromiumos/tast/local/hermes"
 	"chromiumos/tast/local/modemmanager"
 	"chromiumos/tast/local/stork"
+	"go.chromium.org/tast-tests/cros/common/hermesconst"
 	"go.chromium.org/tast/core/testing"
 )
 

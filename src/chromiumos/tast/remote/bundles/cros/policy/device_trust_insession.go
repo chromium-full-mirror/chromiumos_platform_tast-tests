@@ -10,10 +10,10 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
-	"chromiumos/tast/common/fixture"
-	"chromiumos/tast/common/tape"
 	"chromiumos/tast/services/cros/enterpriseconnectors"
 	"chromiumos/tast/services/cros/graphics"
+	"go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"

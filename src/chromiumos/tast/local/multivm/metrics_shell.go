@@ -7,8 +7,8 @@ package multivm
 import (
 	"context"
 
-	"chromiumos/tast/common/perf"
 	"chromiumos/tast/local/memory/metrics"
+	"go.chromium.org/tast-tests/cros/common/perf"
 )
 
 // BaseMetrics is a thin wrapper around metrics.BaseMetrics.

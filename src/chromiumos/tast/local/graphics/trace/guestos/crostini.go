@@ -8,8 +8,8 @@ package guestos
 import (
 	"context"
 
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/vm"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 )
 
 // CrostiniGuestOS is an implementation of IGuestOS interface for Crostini

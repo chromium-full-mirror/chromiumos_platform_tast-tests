@@ -10,7 +10,6 @@ import (
 	"strconv"
 	"time"
 
-	"chromiumos/tast/common/action"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
@@ -20,6 +19,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/prompts"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/chrome/webutil"
+	"go.chromium.org/tast-tests/cros/common/action"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

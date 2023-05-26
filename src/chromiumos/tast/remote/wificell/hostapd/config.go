@@ -12,10 +12,10 @@ import (
 	"strconv"
 	"strings"
 
-	"chromiumos/tast/common/network/iw"
-	"chromiumos/tast/common/shillconst"
-	"chromiumos/tast/common/wifi/security"
-	"chromiumos/tast/common/wifi/security/base"
+	"go.chromium.org/tast-tests/cros/common/network/iw"
+	"go.chromium.org/tast-tests/cros/common/shillconst"
+	"go.chromium.org/tast-tests/cros/common/wifi/security"
+	"go.chromium.org/tast-tests/cros/common/wifi/security/base"
 	"go.chromium.org/tast/core/errors"
 )
 

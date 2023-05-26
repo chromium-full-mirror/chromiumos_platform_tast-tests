@@ -17,8 +17,8 @@ import (
 	"strings"
 	"testing"
 
-	"chromiumos/tast/common/genparams"
-	tdreq "chromiumos/tast/common/testdevicerequirements"
+	"go.chromium.org/tast-tests/cros/common/genparams"
+	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 )
 
 type simpleConnectParamsVal struct {

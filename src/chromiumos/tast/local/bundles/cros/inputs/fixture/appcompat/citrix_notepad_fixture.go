@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/local/bundles/cros/inputs/inputactions"
 	"chromiumos/tast/local/bundles/cros/inputs/util"
 	"chromiumos/tast/local/chrome"
@@ -22,6 +21,7 @@ import (
 	"chromiumos/tast/local/uidetection"
 	"chromiumos/tast/local/vdi/apps"
 	"chromiumos/tast/local/vdi/fixtures"
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast/core/testing"
 )
 

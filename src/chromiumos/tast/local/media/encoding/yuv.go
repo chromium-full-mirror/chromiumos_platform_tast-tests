@@ -15,9 +15,9 @@ import (
 	"strconv"
 	"strings"
 
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/coords"
 	"chromiumos/tast/local/media/videotype"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/shutil"

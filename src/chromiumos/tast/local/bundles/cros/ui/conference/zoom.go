@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"time"
 
-	"chromiumos/tast/common/action"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/apps/thirdparty/zoom"
 	"chromiumos/tast/local/chrome/browser"
@@ -17,6 +16,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/webutil"
 	"chromiumos/tast/local/input"
+	"go.chromium.org/tast-tests/cros/common/action"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

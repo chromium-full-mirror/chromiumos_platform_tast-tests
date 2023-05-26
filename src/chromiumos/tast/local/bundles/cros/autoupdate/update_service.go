@@ -15,10 +15,10 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 
-	"chromiumos/tast/common/testexec"
-	ue "chromiumos/tast/common/updateengine"
 	"chromiumos/tast/local/updateengine"
 	aupb "chromiumos/tast/services/cros/autoupdate"
+	"go.chromium.org/tast-tests/cros/common/testexec"
+	ue "go.chromium.org/tast-tests/cros/common/updateengine"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/lsbrelease"
 	"go.chromium.org/tast/core/testing"

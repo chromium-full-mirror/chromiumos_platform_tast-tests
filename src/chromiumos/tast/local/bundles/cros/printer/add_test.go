@@ -10,8 +10,8 @@ package printer
 import (
 	"testing"
 
-	"chromiumos/tast/common/genparams"
 	"chromiumos/tast/local/bundles/cros/printer/ippprint"
+	"go.chromium.org/tast-tests/cros/common/genparams"
 )
 
 // base adds two parameterized tests, one that uses the CUPS proxy for

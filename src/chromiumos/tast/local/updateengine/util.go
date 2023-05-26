@@ -10,11 +10,11 @@ import (
 	"regexp"
 	"strconv"
 
-	"chromiumos/tast/common/testexec"
-	ue "chromiumos/tast/common/updateengine"
 	"chromiumos/tast/local/dbusutil"
 	"chromiumos/tast/local/upstart"
 	aupb "chromiumos/tast/services/cros/autoupdate"
+	"go.chromium.org/tast-tests/cros/common/testexec"
+	ue "go.chromium.org/tast-tests/cros/common/updateengine"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

@@ -9,8 +9,8 @@ import (
 	"context"
 	"os"
 
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/session"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 )
 

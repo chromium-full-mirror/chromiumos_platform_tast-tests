@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"testing"
 
-	"chromiumos/tast/common/genparams"
-	"chromiumos/tast/common/media/caps"
+	"go.chromium.org/tast-tests/cros/common/genparams"
+	"go.chromium.org/tast-tests/cros/common/media/caps"
 )
 
 // NB: If modifying any of the files or test specifications, be sure to

@@ -11,7 +11,6 @@ import (
 	"net/http/httptest"
 	"time"
 
-	"chromiumos/tast/common/perf"
 	uiperf "chromiumos/tast/local/bundles/cros/ui/perf"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/ash"
@@ -21,6 +20,7 @@ import (
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/perfutil"
 	"chromiumos/tast/local/power"
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast/core/testing"
 )
 

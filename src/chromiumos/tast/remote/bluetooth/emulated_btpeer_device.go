@@ -8,8 +8,8 @@ import (
 	"context"
 	"fmt"
 
-	"chromiumos/tast/common/chameleon"
-	cbt "chromiumos/tast/common/chameleon/devices/common/bluetooth"
+	"go.chromium.org/tast-tests/cros/common/chameleon"
+	cbt "go.chromium.org/tast-tests/cros/common/chameleon/devices/common/bluetooth"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

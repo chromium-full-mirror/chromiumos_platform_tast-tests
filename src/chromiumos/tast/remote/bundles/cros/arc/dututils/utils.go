@@ -6,8 +6,8 @@
 package dututils
 
 import (
-	"chromiumos/tast/common/testexec"
 	"context"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"strings"
 
 	"go.chromium.org/tast/core/dut"

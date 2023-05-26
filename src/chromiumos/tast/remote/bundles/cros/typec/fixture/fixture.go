@@ -9,8 +9,8 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/common/servo"
 	"chromiumos/tast/remote/bundles/cros/typec/typecutils"
+	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast/core/testing"
 )
 

@@ -15,10 +15,10 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
-	"chromiumos/tast/common/servo"
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/fixture"
 	pb "chromiumos/tast/services/cros/firmware"
+	"go.chromium.org/tast-tests/cros/common/servo"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

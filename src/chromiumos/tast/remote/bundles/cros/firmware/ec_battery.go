@@ -11,8 +11,8 @@ import (
 	"strconv"
 	"time"
 
-	"chromiumos/tast/common/servo"
 	"chromiumos/tast/remote/firmware/fixture"
+	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"

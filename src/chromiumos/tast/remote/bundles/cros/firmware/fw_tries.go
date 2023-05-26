@@ -7,9 +7,9 @@ package firmware
 import (
 	"context"
 
-	fwCommon "chromiumos/tast/common/firmware"
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/fixture"
+	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast/core/testing"
 )
 

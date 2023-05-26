@@ -12,10 +12,10 @@ import (
 
 	golangSSH "golang.org/x/crypto/ssh"
 
-	"chromiumos/tast/common/flashrom"
-	"chromiumos/tast/common/servo"
 	"chromiumos/tast/remote/bundles/cros/firmware/utils"
 	"chromiumos/tast/remote/firmware"
+	"go.chromium.org/tast-tests/cros/common/flashrom"
+	"go.chromium.org/tast-tests/cros/common/servo"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"

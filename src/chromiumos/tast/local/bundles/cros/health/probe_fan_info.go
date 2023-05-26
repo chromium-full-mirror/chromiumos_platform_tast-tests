@@ -10,9 +10,9 @@ import (
 	"strconv"
 	"strings"
 
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/croshealthd"
 	"chromiumos/tast/local/jsontypes"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

@@ -16,9 +16,9 @@ import (
 	"strconv"
 	"strings"
 
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/sysutil"
 	pb "chromiumos/tast/services/cros/firmware"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"

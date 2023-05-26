@@ -8,7 +8,7 @@ import (
 	"context"
 	"fmt"
 
-	"chromiumos/tast/common/action"
+	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast/core/errors"
 )
 

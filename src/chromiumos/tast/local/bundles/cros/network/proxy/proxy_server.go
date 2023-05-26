@@ -16,8 +16,8 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/common/testexec"
 	patchpanel "chromiumos/tast/local/network/patchpanel_client"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

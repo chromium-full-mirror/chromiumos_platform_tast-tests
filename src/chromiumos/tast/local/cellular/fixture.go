@@ -10,10 +10,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"chromiumos/tast/common/fixture"
-	"chromiumos/tast/common/mmconst"
-	"chromiumos/tast/common/policy/fakedms"
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/hermes"
 	"chromiumos/tast/local/modemfwd"
@@ -22,6 +18,10 @@ import (
 	"chromiumos/tast/local/shill"
 	"chromiumos/tast/local/starfish"
 	"chromiumos/tast/local/upstart"
+	"go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/common/mmconst"
+	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

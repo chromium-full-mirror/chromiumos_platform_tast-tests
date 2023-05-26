@@ -7,7 +7,7 @@ package example
 import (
 	"context"
 
-	"chromiumos/tast/common/servo"
+	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast/core/testing"
 )
 

@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"strings"
 
-	"chromiumos/tast/common/firmware/ti50"
+	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
 )
 
 var (

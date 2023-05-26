@@ -11,7 +11,7 @@ import (
 	"context"
 	"strconv"
 
-	fwCommon "chromiumos/tast/common/firmware"
+	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast/core/errors"
 )
 

@@ -12,7 +12,6 @@ import (
 	"regexp"
 	"time"
 
-	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/local/bundles/cros/dlp/clipboard"
 	"chromiumos/tast/local/bundles/cros/dlp/dragdrop"
 	"chromiumos/tast/local/bundles/cros/dlp/policy"
@@ -31,6 +30,7 @@ import (
 	"chromiumos/tast/local/chrome/webutil"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/policyutil"
+	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

@@ -10,10 +10,10 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
-	"chromiumos/tast/common/servo"
-	"chromiumos/tast/common/xmlrpc"
 	"chromiumos/tast/remote/firmware/fixture"
 	"chromiumos/tast/services/cros/security"
+	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/xmlrpc"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"

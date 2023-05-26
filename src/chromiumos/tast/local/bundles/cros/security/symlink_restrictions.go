@@ -13,9 +13,9 @@ import (
 	"strings"
 	"syscall"
 
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/bundles/cros/security/filesetup"
 	"chromiumos/tast/local/sysutil"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/testing"
 )
 

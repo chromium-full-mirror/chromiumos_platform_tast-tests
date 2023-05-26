@@ -12,9 +12,9 @@ import (
 	"testing"
 	"time"
 
-	"chromiumos/tast/common/genparams"
-	"chromiumos/tast/common/media/caps"
 	"chromiumos/tast/local/chrome"
+	"go.chromium.org/tast-tests/cros/common/genparams"
+	"go.chromium.org/tast-tests/cros/common/media/caps"
 )
 
 const ffmpegMD5Path = "/usr/local/graphics/ffmpeg_md5sum"

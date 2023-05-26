@@ -6,8 +6,8 @@
 package ip
 
 import (
-	"chromiumos/tast/common/network/ip"
 	"chromiumos/tast/remote/network/cmd"
+	"go.chromium.org/tast-tests/cros/common/network/ip"
 	"go.chromium.org/tast/core/ssh"
 )
 

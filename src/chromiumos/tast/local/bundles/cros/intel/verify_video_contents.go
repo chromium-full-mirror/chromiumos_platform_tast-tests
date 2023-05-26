@@ -14,8 +14,6 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/common/usbutils"
 	"chromiumos/tast/local/audio"
 	"chromiumos/tast/local/audio/crastestclient"
 	"chromiumos/tast/local/chrome"
@@ -25,6 +23,8 @@ import (
 	"chromiumos/tast/local/hdcputils/urlconst"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/typecutils"
+	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/common/usbutils"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

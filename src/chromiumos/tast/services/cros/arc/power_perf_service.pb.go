@@ -11,8 +11,8 @@
 package arc
 
 import (
-	perfpb "chromiumos/tast/common/perf/perfpb"
 	context "context"
+	perfpb "go.chromium.org/tast-tests/cros/common/perf/perfpb"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"

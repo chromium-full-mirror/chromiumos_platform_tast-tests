@@ -8,9 +8,9 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/common/media/caps"
 	"chromiumos/tast/local/bundles/cros/camera/hal3"
 	"chromiumos/tast/local/chrome"
+	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )

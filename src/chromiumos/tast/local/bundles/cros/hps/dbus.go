@@ -10,9 +10,9 @@ import (
 	"github.com/godbus/dbus/v5"
 
 	pb "chromiumos/system_api/hps_proto"
-	"chromiumos/tast/common/hps/hpsutil"
 	"chromiumos/tast/local/dbusutil"
 	"chromiumos/tast/local/upstart"
+	"go.chromium.org/tast-tests/cros/common/hps/hpsutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )

@@ -10,10 +10,10 @@ import (
 	"path"
 	"strings"
 
-	"chromiumos/tast/common/action"
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/filesystem"
+	"go.chromium.org/tast-tests/cros/common/action"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 )
 

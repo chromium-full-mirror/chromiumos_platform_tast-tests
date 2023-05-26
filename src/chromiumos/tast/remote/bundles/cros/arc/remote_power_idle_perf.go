@@ -10,10 +10,10 @@ import (
 
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	"chromiumos/tast/common/perf"
 	"chromiumos/tast/remote/firmware/fixture"
 	"chromiumos/tast/remote/firmware/power"
 	"chromiumos/tast/services/cros/arc"
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
 )

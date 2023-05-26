@@ -10,7 +10,7 @@ import (
 	"net/http/httptest"
 	"time"
 
-	"chromiumos/tast/common/perf"
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 )

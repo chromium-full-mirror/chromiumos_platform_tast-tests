@@ -10,12 +10,12 @@ import (
 
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	"chromiumos/tast/common/wifi/security/wpa"
 	"chromiumos/tast/remote/bundles/cros/wifi/wifiutil"
 	"chromiumos/tast/remote/wificell"
 	"chromiumos/tast/remote/wificell/hostapd"
 	"chromiumos/tast/services/cros/chrome/uiauto/ossettings"
 	"chromiumos/tast/services/cros/ui"
+	"go.chromium.org/tast-tests/cros/common/wifi/security/wpa"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"

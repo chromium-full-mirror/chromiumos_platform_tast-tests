@@ -9,8 +9,8 @@ package utils
 import (
 	"context"
 
-	"chromiumos/tast/common/servo"
 	"chromiumos/tast/remote/firmware"
+	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast/core/errors"
 )
 

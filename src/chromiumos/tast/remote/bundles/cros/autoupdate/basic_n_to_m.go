@@ -7,9 +7,9 @@ package autoupdate
 import (
 	"context"
 
-	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/remote/bundles/cros/autoupdate/util"
 	"chromiumos/tast/remote/updateutil"
+	"go.chromium.org/tast-tests/cros/common/fixture"
 
 	"go.chromium.org/tast/core/testing"
 )

@@ -13,8 +13,8 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/common/chrome/credconfig"
 	"chromiumos/tast/remote/bundles/cros/meta/tastrun"
+	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"

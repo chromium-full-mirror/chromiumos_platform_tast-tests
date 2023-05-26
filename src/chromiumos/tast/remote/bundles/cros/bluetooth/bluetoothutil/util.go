@@ -9,8 +9,8 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/common/servo"
 	bts "chromiumos/tast/services/cros/bluetooth"
+	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"google.golang.org/protobuf/types/known/durationpb"

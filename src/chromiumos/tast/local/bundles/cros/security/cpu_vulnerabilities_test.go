@@ -12,8 +12,8 @@ package security
 import (
 	"testing"
 
-	"chromiumos/tast/common/genparams"
 	"chromiumos/tast/local/crostini"
+	"go.chromium.org/tast-tests/cros/common/genparams"
 )
 
 func TestSecurityParams(t *testing.T) {

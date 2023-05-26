@@ -10,13 +10,13 @@ import (
 	"fmt"
 	"time"
 
-	"chromiumos/tast/common/chrome/credconfig"
-	"chromiumos/tast/common/hwsec"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto/lockscreen"
 	"chromiumos/tast/local/chrome/userutil"
 	hwseclocal "chromiumos/tast/local/hwsec"
 	"chromiumos/tast/local/input"
+	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
+	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast/core/testing"
 )
 

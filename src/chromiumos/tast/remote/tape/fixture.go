@@ -8,7 +8,7 @@ package tape
 import (
 	"time"
 
-	"chromiumos/tast/common/tape"
+	"go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast/core/testing"
 )
 

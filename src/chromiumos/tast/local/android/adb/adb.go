@@ -9,8 +9,8 @@ import (
 	"context"
 	"os"
 
-	"chromiumos/tast/common/android/adb"
-	"chromiumos/tast/common/testexec"
+	"go.chromium.org/tast-tests/cros/common/android/adb"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

@@ -8,11 +8,11 @@ import (
 	"context"
 	"time"
 
-	lacroscommon "chromiumos/tast/common/cros/lacros"
 	"chromiumos/tast/remote/bundles/cros/lacros/provision"
 	"chromiumos/tast/remote/bundles/cros/lacros/update"
 	"chromiumos/tast/remote/bundles/cros/lacros/version"
 	lacrosservice "chromiumos/tast/services/cros/lacros"
+	lacroscommon "go.chromium.org/tast-tests/cros/common/cros/lacros"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/rpc"

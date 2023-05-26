@@ -10,15 +10,15 @@ import (
 	"net"
 	"time"
 
-	cip "chromiumos/tast/common/network/ip"
-	"chromiumos/tast/common/shillconst"
-	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/remote/bundles/cros/wifi/wifiutil"
 	"chromiumos/tast/remote/network/ip"
 	"chromiumos/tast/remote/wificell"
 	"chromiumos/tast/remote/wificell/dutcfg"
 	"chromiumos/tast/remote/wificell/hostapd"
 	"chromiumos/tast/remote/wificell/router/common/support"
+	cip "go.chromium.org/tast-tests/cros/common/network/ip"
+	"go.chromium.org/tast-tests/cros/common/shillconst"
+	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

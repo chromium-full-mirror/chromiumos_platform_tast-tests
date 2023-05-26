@@ -7,12 +7,12 @@ package mgs
 import (
 	"context"
 
-	"chromiumos/tast/common/fixture"
-	"chromiumos/tast/common/policy"
-	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/mgs"
 	"chromiumos/tast/local/strcmp"
+	"go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/common/policy"
+	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

@@ -14,10 +14,10 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
-	"chromiumos/tast/common/hwsec"
 	"chromiumos/tast/remote/policyutil"
 	"chromiumos/tast/remote/updateutil"
 	rpb "chromiumos/tast/services/cros/rollback"
+	"go.chromium.org/tast-tests/cros/common/hwsec"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"

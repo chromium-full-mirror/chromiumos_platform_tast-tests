@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/common/hps/hpsutil"
 	"chromiumos/tast/remote/sysutil"
+	"go.chromium.org/tast-tests/cros/common/hps/hpsutil"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"

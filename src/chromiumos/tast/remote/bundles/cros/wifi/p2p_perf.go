@@ -8,12 +8,12 @@ import (
 	"context"
 	"strconv"
 
-	group_owner "chromiumos/tast/common/network/wpacli"
-	"chromiumos/tast/common/perf"
-	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/remote/network/iperf"
 	"chromiumos/tast/remote/network/iw"
 	"chromiumos/tast/remote/wificell"
+	group_owner "go.chromium.org/tast-tests/cros/common/network/wpacli"
+	"go.chromium.org/tast-tests/cros/common/perf"
+	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"

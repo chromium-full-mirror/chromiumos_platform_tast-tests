@@ -13,10 +13,10 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/common/fixture"
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/audio"
 	"chromiumos/tast/local/crosconfig"
+	"go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"

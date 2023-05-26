@@ -7,8 +7,8 @@ package iperf
 import (
 	"context"
 
-	"chromiumos/tast/common/network/firewall"
 	fwremote "chromiumos/tast/remote/network/firewall"
+	"go.chromium.org/tast-tests/cros/common/network/firewall"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
 )

@@ -256,7 +256,7 @@ First, import the common servo library:
 ```go
 import (
 	...
-	"chromiumos/tast/common/servo"
+	"go.chromium.org/tast-tests/cros/common/servo"
 )
 ```
 
@@ -381,13 +381,13 @@ For reference on running tests with Servo, you can review the [relevant section]
 
 [Servo]: https://chromium.googlesource.com/chromiumos/third_party/hdctools/+/HEAD/docs/servo.md
 [runtime variable]: https://chromium.googlesource.com/chromiumos/platform/tast/+/HEAD/docs/writing_tests.md#Runtime-variables
-[`NewProxy`]: https://source.chromium.org/chromiumos/chromiumos/codesearch/+/main:src/platform/tast-tests/src/chromiumos/tast/common/servo/proxy.go?q=NewProxy
-[`NewDirect`]: https://source.chromium.org/chromiumos/chromiumos/codesearch/+/main:src/platform/tast-tests/src/chromiumos/tast/common/servo/servo.go?q=NewDirect
-[`GetString`]: https://source.chromium.org/chromiumos/chromiumos/codesearch/+/main:src/platform/tast-tests/src/chromiumos/tast/common/servo/methods.go?q=func.*GetString
-[`methods.go`]: https://source.chromium.org/chromiumos/chromiumos/codesearch/+/main:src/platform/tast-tests/src/chromiumos/tast/common/servo/methods.go
-[`KeypressControl`]: https://source.chromium.org/chromiumos/chromiumos/codesearch/+/main:src/platform/tast-tests/src/chromiumos/tast/common/servo/methods.go?q=%22type%20KeypressControl%22
-[`KeypressDuration`]: https://source.chromium.org/chromiumos/chromiumos/codesearch/+/main:src/platform/tast-tests/src/chromiumos/tast/common/servo/methods.go?q=%22type%20KeypressDuration%22
-[`KeypressWithDuration`]: https://source.chromium.org/chromiumos/chromiumos/codesearch/+/main:src/platform/tast-tests/src/chromiumos/tast/common/servo/methods.go?q=KeypressWithDuration
+[`NewProxy`]: https://source.chromium.org/chromiumos/chromiumos/codesearch/+/main:src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/common/servo/proxy.go?q=NewProxy
+[`NewDirect`]: https://source.chromium.org/chromiumos/chromiumos/codesearch/+/main:src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/common/servo/servo.go?q=NewDirect
+[`GetString`]: https://source.chromium.org/chromiumos/chromiumos/codesearch/+/main:src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/common/servo/methods.go?q=func.*GetString
+[`methods.go`]: https://source.chromium.org/chromiumos/chromiumos/codesearch/+/main:src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/common/servo/methods.go
+[`KeypressControl`]: https://source.chromium.org/chromiumos/chromiumos/codesearch/+/main:src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/common/servo/methods.go?q=%22type%20KeypressControl%22
+[`KeypressDuration`]: https://source.chromium.org/chromiumos/chromiumos/codesearch/+/main:src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/common/servo/methods.go?q=%22type%20KeypressDuration%22
+[`KeypressWithDuration`]: https://source.chromium.org/chromiumos/chromiumos/codesearch/+/main:src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/common/servo/methods.go?q=KeypressWithDuration
 [relevant section]: https://chromium.googlesource.com/chromiumos/platform/tast/+/HEAD/docs/running_tests.md#running-tests-with-servo
 [go/tast-running]: https://chromium.googlesource.com/chromiumos/platform/tast/+/HEAD/docs/running_tests.md
 [`codelab_servo.txt`]: ./codelab_servo.txt
@@ -631,7 +631,7 @@ Then use the `ModeSwitcher` to switch to recovery mode. The constants for differ
 ```go
 import (
 	...
-	fwCommon "chromiumos/tast/common/firmware"
+	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 )
 ```
 
@@ -664,7 +664,7 @@ At this point (after running `gofmt`), your test file should resemble [`codelab_
 
 [`ModeSwitcher`]: https://source.chromium.org/chromiumos/chromiumos/codesearch/+/main:src/platform/tast-tests/src/chromiumos/tast/remote/firmware/boot_mode.go?q=%22type%20ModeSwitcher%22
 [`NewModeSwitcher`]: https://source.chromium.org/chromiumos/chromiumos/codesearch/+/main:src/platform/tast-tests/src/chromiumos/tast/remote/firmware/boot_mode.go?q=%22func%20NewModeSwitcher%22
-[`common/firmware`]: https://source.chromium.org/chromiumos/chromiumos/codesearch/+/main:src/platform/tast-tests/src/chromiumos/tast/common/firmware/
+[`common/firmware`]: https://source.chromium.org/chromiumos/chromiumos/codesearch/+/main:src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/common/firmware/
 [`codelab_boot_mode.txt`]: ./codelab_boot_mode.txt
 
 ## Control start/end state with firmware.fixture

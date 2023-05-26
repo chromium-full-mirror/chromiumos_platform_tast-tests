@@ -14,7 +14,7 @@ import (
 	"regexp"
 	"strings"
 
-	"chromiumos/tast/common/testexec"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 )
 
 // IgtTest is used to describe the config used to run each test.

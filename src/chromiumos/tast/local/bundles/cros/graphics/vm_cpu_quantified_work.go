@@ -17,9 +17,9 @@ import (
 
 	//	"github.com/diskfs/go-diskfs"
 
-	"chromiumos/tast/common/perf"
 	"chromiumos/tast/local/cpu"
 	"chromiumos/tast/local/vm"
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

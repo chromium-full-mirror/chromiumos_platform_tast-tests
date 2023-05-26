@@ -10,7 +10,7 @@ import (
 	"regexp"
 	"strings"
 
-	"chromiumos/tast/common/testexec"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 )
 
 // DecoderArgsBuilderFn is the function type to generate the command line

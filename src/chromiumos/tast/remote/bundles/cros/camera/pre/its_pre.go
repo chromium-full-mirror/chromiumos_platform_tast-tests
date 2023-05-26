@@ -18,10 +18,10 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
-	"chromiumos/tast/common/android/adb"
-	"chromiumos/tast/common/testexec"
 	remoteadb "chromiumos/tast/remote/android/adb"
 	pb "chromiumos/tast/services/cros/camerabox"
+	"go.chromium.org/tast-tests/cros/common/android/adb"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"

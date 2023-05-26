@@ -8,10 +8,10 @@ import (
 	"context"
 	"time"
 
-	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/local/network/ip"
 	"chromiumos/tast/local/network/iw"
 	"chromiumos/tast/local/shill"
+	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )

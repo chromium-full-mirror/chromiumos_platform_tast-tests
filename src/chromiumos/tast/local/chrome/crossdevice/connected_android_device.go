@@ -13,10 +13,10 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/common/android/adb"
-	"chromiumos/tast/common/android/mobly"
-	"chromiumos/tast/common/android/ui"
-	"chromiumos/tast/common/testexec"
+	"go.chromium.org/tast-tests/cros/common/android/adb"
+	"go.chromium.org/tast-tests/cros/common/android/mobly"
+	"go.chromium.org/tast-tests/cros/common/android/ui"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

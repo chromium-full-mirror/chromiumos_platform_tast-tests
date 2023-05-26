@@ -15,10 +15,10 @@ import (
 	"time"
 
 	lpb "chromiumos/system_api/lorgnette_proto"
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/printing/ippusbbridge"
 	"chromiumos/tast/local/printing/usbprinter"
 	"chromiumos/tast/local/scanner/lorgnette"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

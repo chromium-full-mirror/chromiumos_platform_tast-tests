@@ -13,8 +13,8 @@ import (
 	"testing"
 	"time"
 
-	"chromiumos/tast/common/genparams"
 	"chromiumos/tast/local/crostini"
+	"go.chromium.org/tast-tests/cros/common/genparams"
 )
 
 func TestDebianUpgradeAlertParams(t *testing.T) {

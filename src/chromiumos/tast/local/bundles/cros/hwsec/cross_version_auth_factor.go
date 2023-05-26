@@ -8,12 +8,12 @@ import (
 	"context"
 
 	uda "chromiumos/system_api/user_data_auth_proto"
-	cryptohomecommon "chromiumos/tast/common/cryptohome"
-	"chromiumos/tast/common/hwsec"
 	"chromiumos/tast/local/bundles/cros/hwsec/fixture"
 	"chromiumos/tast/local/bundles/cros/hwsec/util"
 	"chromiumos/tast/local/dbusutil"
 	hwseclocal "chromiumos/tast/local/hwsec"
+	cryptohomecommon "go.chromium.org/tast-tests/cros/common/cryptohome"
+	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

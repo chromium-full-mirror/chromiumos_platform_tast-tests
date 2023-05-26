@@ -10,9 +10,9 @@ import (
 	"context"
 	"path/filepath"
 
-	"chromiumos/tast/common/camera/chart"
-	"chromiumos/tast/common/hps/hpsutil"
-	"chromiumos/tast/common/testexec"
+	"go.chromium.org/tast-tests/cros/common/camera/chart"
+	"go.chromium.org/tast-tests/cros/common/hps/hpsutil"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

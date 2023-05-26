@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/common/action"
 	"chromiumos/tast/local/drivefs"
+	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"

@@ -6,11 +6,11 @@ package firmware
 
 import (
 	"bufio"
-	fwCommon "chromiumos/tast/common/firmware"
-	"chromiumos/tast/common/servo"
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/fixture"
 	"context"
+	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
+	"go.chromium.org/tast-tests/cros/common/servo"
 	"regexp"
 	"strings"
 	"time"

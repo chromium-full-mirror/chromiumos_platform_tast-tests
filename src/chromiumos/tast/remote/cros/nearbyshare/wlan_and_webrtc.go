@@ -7,7 +7,7 @@ package nearbyshare
 import (
 	"time"
 
-	nearbycommon "chromiumos/tast/common/cros/nearbyshare"
+	nearbycommon "go.chromium.org/tast-tests/cros/common/cros/nearbyshare"
 	"go.chromium.org/tast/core/testing"
 )
 

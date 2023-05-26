@@ -7,9 +7,9 @@ package hwsec
 import (
 	"context"
 
-	"chromiumos/tast/common/hwsec"
 	"chromiumos/tast/local/session"
 	"chromiumos/tast/local/session/ownership"
+	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast/core/errors"
 )
 

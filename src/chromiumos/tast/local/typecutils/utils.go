@@ -18,11 +18,11 @@ import (
 	"google.golang.org/protobuf/testing/protocmp"
 
 	"chromiumos/policy/chromium/policy/enterprise_management_proto"
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/display"
 	"chromiumos/tast/local/graphics"
 	"chromiumos/tast/local/session"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

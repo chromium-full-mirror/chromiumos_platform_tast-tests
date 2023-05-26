@@ -12,9 +12,9 @@ import (
 	"strconv"
 	"time"
 
-	"chromiumos/tast/common/perf"
-	"chromiumos/tast/common/pkcs11/pkcs11test"
 	libhwseclocal "chromiumos/tast/local/hwsec"
+	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/common/pkcs11/pkcs11test"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )

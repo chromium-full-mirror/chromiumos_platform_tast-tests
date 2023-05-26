@@ -8,8 +8,6 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/common/fixture"
-	"chromiumos/tast/common/perf"
 	"chromiumos/tast/local/bundles/cros/spera/frontlineworkercuj"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
@@ -21,6 +19,8 @@ import (
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/mgs"
 	"chromiumos/tast/local/ui/cujrecorder"
+	"go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

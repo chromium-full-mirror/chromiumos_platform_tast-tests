@@ -7,8 +7,8 @@
 package firewall
 
 import (
-	"chromiumos/tast/common/network/firewall"
 	"chromiumos/tast/local/network/cmd"
+	"go.chromium.org/tast-tests/cros/common/network/firewall"
 )
 
 // Runner is an alias for common firewall Runner but only for local execution.

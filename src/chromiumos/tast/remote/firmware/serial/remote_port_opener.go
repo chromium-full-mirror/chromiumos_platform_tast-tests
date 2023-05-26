@@ -10,8 +10,8 @@ import (
 
 	"github.com/golang/protobuf/ptypes"
 
-	common "chromiumos/tast/common/firmware/serial"
 	pb "chromiumos/tast/services/cros/firmware"
+	common "go.chromium.org/tast-tests/cros/common/firmware/serial"
 	"go.chromium.org/tast/core/errors"
 )
 

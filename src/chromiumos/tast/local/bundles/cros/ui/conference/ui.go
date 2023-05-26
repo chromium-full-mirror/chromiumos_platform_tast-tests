@@ -8,9 +8,9 @@ import (
 	"context"
 	"fmt"
 
-	"chromiumos/tast/common/action"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/screenshot"
+	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast/core/testing"
 )
 

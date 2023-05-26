@@ -16,8 +16,8 @@ import (
 
 	"github.com/shirou/gopsutil/v3/cpu"
 
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/coords"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 )
 

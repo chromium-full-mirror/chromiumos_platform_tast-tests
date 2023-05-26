@@ -11,8 +11,8 @@ import (
 	"strconv"
 	"strings"
 
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/remote/network/cmd"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"

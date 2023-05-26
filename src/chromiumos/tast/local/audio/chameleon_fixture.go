@@ -11,8 +11,8 @@ import (
 	"net"
 	"time"
 
-	"chromiumos/tast/common/chameleon"
-	"chromiumos/tast/common/fixture"
+	"go.chromium.org/tast-tests/cros/common/chameleon"
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast/core/testing"
 )
 

@@ -11,10 +11,10 @@ import (
 	"path"
 	"time"
 
-	"chromiumos/tast/common/network/wpacli"
-	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/local/network/cmd"
 	"chromiumos/tast/local/shill"
+	"go.chromium.org/tast-tests/cros/common/network/wpacli"
+	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast/core/testing"
 )
 

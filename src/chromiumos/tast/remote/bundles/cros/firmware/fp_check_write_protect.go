@@ -9,10 +9,10 @@ import (
 	"strconv"
 	"time"
 
-	"chromiumos/tast/common/servo"
 	"chromiumos/tast/remote/firmware/fingerprint"
 	"chromiumos/tast/remote/firmware/fingerprint/rpcdut"
 	"chromiumos/tast/remote/firmware/reporters"
+	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

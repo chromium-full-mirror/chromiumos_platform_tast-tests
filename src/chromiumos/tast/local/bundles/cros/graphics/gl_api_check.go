@@ -10,8 +10,8 @@ import (
 	"strconv"
 	"time"
 
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/graphics"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

@@ -12,8 +12,8 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/common/crypto/certificate"
 	"chromiumos/tast/local/hostapd"
+	"go.chromium.org/tast-tests/cros/common/crypto/certificate"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

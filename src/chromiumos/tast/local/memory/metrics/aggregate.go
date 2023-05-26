@@ -7,9 +7,9 @@ package metrics
 import (
 	"fmt"
 
-	"chromiumos/tast/common/perf"
 	"chromiumos/tast/local/memory"
 	memoryarc "chromiumos/tast/local/memory/arc"
+	"go.chromium.org/tast-tests/cros/common/perf"
 )
 
 // ReportSummaryMetrics combines metrics taken from various sources, computes

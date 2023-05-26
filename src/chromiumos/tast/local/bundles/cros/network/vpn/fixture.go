@@ -10,13 +10,13 @@ import (
 	"path/filepath"
 	"time"
 
-	"chromiumos/tast/common/crypto/certificate"
-	"chromiumos/tast/common/pkcs11/netcertstore"
-	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/hwsec"
 	"chromiumos/tast/local/logsaver"
 	"chromiumos/tast/local/shill"
+	"go.chromium.org/tast-tests/cros/common/crypto/certificate"
+	"go.chromium.org/tast-tests/cros/common/pkcs11/netcertstore"
+	"go.chromium.org/tast-tests/cros/common/shillconst"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

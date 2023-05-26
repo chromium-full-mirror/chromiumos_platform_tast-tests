@@ -17,7 +17,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/audio"
 	"chromiumos/tast/local/audio/crastestclient"
@@ -25,6 +24,7 @@ import (
 	"chromiumos/tast/local/chrome/ash"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/quicksettings"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 )
 
 var stableModel = []string{

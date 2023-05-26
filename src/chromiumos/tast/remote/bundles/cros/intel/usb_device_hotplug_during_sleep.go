@@ -9,9 +9,9 @@ import (
 	"fmt"
 	"time"
 
-	"chromiumos/tast/common/servo"
-	"chromiumos/tast/common/usbutils"
 	"chromiumos/tast/remote/powercontrol"
+	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/usbutils"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"

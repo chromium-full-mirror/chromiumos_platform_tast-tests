@@ -8,7 +8,7 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/common/action"
+	"go.chromium.org/tast-tests/cros/common/action"
 )
 
 // runActionFor repeats action |a| until |minDuration| has passed.

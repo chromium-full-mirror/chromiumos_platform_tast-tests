@@ -10,12 +10,12 @@ import (
 	"path/filepath"
 	"time"
 
-	"chromiumos/tast/common/fixture"
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/audio"
 	"chromiumos/tast/local/bundles/cros/audio/data"
 	"chromiumos/tast/local/bundles/cros/audio/device"
 	"chromiumos/tast/local/bundles/cros/audio/internal"
+	"go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/testing"
 )
 

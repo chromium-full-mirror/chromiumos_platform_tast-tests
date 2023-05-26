@@ -9,16 +9,16 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
-	"chromiumos/tast/common/crypto/certificate"
-	"chromiumos/tast/common/network/diag"
-	"chromiumos/tast/common/wifi/security"
-	"chromiumos/tast/common/wifi/security/base"
-	"chromiumos/tast/common/wifi/security/dynamicwep"
-	"chromiumos/tast/common/wifi/security/wep"
-	"chromiumos/tast/common/wifi/security/wpa"
 	"chromiumos/tast/remote/wificell"
 	"chromiumos/tast/remote/wificell/hostapd"
 	"chromiumos/tast/services/cros/network"
+	"go.chromium.org/tast-tests/cros/common/crypto/certificate"
+	"go.chromium.org/tast-tests/cros/common/network/diag"
+	"go.chromium.org/tast-tests/cros/common/wifi/security"
+	"go.chromium.org/tast-tests/cros/common/wifi/security/base"
+	"go.chromium.org/tast-tests/cros/common/wifi/security/dynamicwep"
+	"go.chromium.org/tast-tests/cros/common/wifi/security/wep"
+	"go.chromium.org/tast-tests/cros/common/wifi/security/wpa"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
 )

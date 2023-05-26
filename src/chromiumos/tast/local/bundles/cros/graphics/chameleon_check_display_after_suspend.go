@@ -9,11 +9,11 @@ import (
 	"path/filepath"
 	"time"
 
-	"chromiumos/tast/common/chameleon"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/graphics"
 	"chromiumos/tast/local/power/suspend"
 	"chromiumos/tast/local/screenshot"
+	"go.chromium.org/tast-tests/cros/common/chameleon"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )

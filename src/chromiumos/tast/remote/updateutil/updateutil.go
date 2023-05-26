@@ -23,9 +23,9 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"chromiumos/tast/common/testexec"
 	aupb "chromiumos/tast/services/cros/autoupdate"
 	"chromiumos/tast/services/cros/nebraska"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"

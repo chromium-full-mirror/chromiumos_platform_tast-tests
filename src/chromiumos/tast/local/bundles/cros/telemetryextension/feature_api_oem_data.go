@@ -7,8 +7,8 @@ package telemetryextension
 import (
 	"context"
 
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/bundles/cros/telemetryextension/fixture"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

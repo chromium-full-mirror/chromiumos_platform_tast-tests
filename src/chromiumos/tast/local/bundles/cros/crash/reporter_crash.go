@@ -14,11 +14,11 @@ import (
 	"github.com/shirou/gopsutil/v3/host"
 	"golang.org/x/sys/unix"
 
-	commoncrash "chromiumos/tast/common/crash"
-	"chromiumos/tast/common/fixture"
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/crash"
+	commoncrash "go.chromium.org/tast-tests/cros/common/crash"
+	"go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

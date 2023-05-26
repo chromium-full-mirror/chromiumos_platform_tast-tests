@@ -6,8 +6,8 @@
 package wpacli
 
 import (
-	"chromiumos/tast/common/network/wpacli"
 	"chromiumos/tast/local/network/cmd"
+	"go.chromium.org/tast-tests/cros/common/network/wpacli"
 )
 
 // Runner is an alias for common wpacli Runner but only for local execution.

@@ -8,7 +8,7 @@ import (
 	"sort"
 	"testing"
 
-	"chromiumos/tast/common/genparams"
+	"go.chromium.org/tast-tests/cros/common/genparams"
 )
 
 // To regenerate the test parameters by running the following in a chroot:

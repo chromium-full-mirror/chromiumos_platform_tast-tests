@@ -11,13 +11,13 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/structpb"
 
-	"chromiumos/tast/common/network/netconfigtypes"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/common"
 	"chromiumos/tast/services/cros/chrome/uiauto/ossettings"
 	pb "chromiumos/tast/services/cros/chrome/uiauto/ossettings"
+	"go.chromium.org/tast-tests/cros/common/network/netconfigtypes"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

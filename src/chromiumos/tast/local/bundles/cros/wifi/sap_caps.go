@@ -10,9 +10,9 @@ import (
 	"path/filepath"
 	"reflect"
 
-	"chromiumos/tast/common/network/iw"
-	tdreq "chromiumos/tast/common/testdevicerequirements"
 	localiw "chromiumos/tast/local/network/iw"
+	"go.chromium.org/tast-tests/cros/common/network/iw"
+	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 	"go.chromium.org/tast/core/testing/wlan"

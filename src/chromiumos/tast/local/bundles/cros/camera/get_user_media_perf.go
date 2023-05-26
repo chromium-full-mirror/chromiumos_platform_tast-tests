@@ -12,14 +12,14 @@ import (
 
 	"go.chromium.org/tast/core/ctxutil"
 
-	"chromiumos/tast/common/media/caps"
-	"chromiumos/tast/common/perf"
 	"chromiumos/tast/local/bundles/cros/camera/getusermedia"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/lacros"
 	"chromiumos/tast/local/media/pre"
 	"chromiumos/tast/local/tracing"
+	"go.chromium.org/tast-tests/cros/common/media/caps"
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

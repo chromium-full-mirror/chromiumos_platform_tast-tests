@@ -13,7 +13,6 @@ import (
 	"path/filepath"
 	"time"
 
-	cdcommon "chromiumos/tast/common/cros/crossdevice"
 	"chromiumos/tast/local/chrome/crossdevice"
 	"chromiumos/tast/local/chrome/crossdevice/phonehub"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -21,6 +20,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/holdingspace"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/cryptohome"
+	cdcommon "go.chromium.org/tast-tests/cros/common/cros/crossdevice"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"

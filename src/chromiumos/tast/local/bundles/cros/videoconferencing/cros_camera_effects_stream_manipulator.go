@@ -5,10 +5,10 @@
 package videoconferencing
 
 import (
-	"chromiumos/tast/common/perf"
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/videoconferencing/fixture"
 	"context"
+	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"time"
 
 	"go.chromium.org/tast/core/testing"

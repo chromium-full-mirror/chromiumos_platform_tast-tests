@@ -13,7 +13,6 @@ import (
 	"fmt"
 	"time"
 
-	"chromiumos/tast/common/network/netconfigtypes"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
@@ -24,6 +23,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/restriction"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/input"
+	"go.chromium.org/tast-tests/cros/common/network/netconfigtypes"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

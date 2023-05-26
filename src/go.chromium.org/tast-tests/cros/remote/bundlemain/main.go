@@ -18,10 +18,10 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
-	"chromiumos/tast/common/hwsec"
 	"chromiumos/tast/remote/firmware/reporters"
 	hwsecremote "chromiumos/tast/remote/hwsec"
 	"chromiumos/tast/services/cros/baserpc"
+	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast/core/bundle"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"

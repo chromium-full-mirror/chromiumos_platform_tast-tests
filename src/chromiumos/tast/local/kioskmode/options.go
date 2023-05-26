@@ -5,8 +5,8 @@
 package kioskmode
 
 import (
-	"chromiumos/tast/common/policy"
 	"chromiumos/tast/local/chrome"
+	"go.chromium.org/tast-tests/cros/common/policy"
 )
 
 // ExtraPolicies adds extra policies to be applied with Kiosk app.

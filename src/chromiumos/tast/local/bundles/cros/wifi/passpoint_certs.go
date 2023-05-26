@@ -10,9 +10,9 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bundles/cros/wifi/passpoint"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -46,7 +46,7 @@ type pkcs11Object struct {
 func PasspointCerts(ctx context.Context, s *testing.State) {
 	// Fully qualified domain name of the Passpoint credentials.
 	// This value matches the domain of the certificate used by the AP,
-	// chromiumos/tast/common/crypto/certificate TestCert1().
+	// go.chromium.org/tast-tests/cros/common/crypto/certificate TestCert1().
 	const fqdn = "chromelab-wifi-testbed-server.mtv.google.com"
 	creds := passpoint.Credentials{
 		Domains: []string{fqdn},

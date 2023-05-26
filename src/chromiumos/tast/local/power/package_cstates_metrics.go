@@ -8,8 +8,8 @@ import (
 	"context"
 	"runtime"
 
-	"chromiumos/tast/common/perf"
 	"chromiumos/tast/local/cpu"
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

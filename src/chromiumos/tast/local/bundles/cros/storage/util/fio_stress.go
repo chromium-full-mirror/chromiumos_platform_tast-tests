@@ -13,8 +13,8 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/common/storage"
-	"chromiumos/tast/common/testexec"
+	"go.chromium.org/tast-tests/cros/common/storage"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

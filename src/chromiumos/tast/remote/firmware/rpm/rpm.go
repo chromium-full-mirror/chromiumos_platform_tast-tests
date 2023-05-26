@@ -11,8 +11,8 @@ import (
 	"strconv"
 	"time"
 
-	"chromiumos/tast/common/servo"
-	"chromiumos/tast/common/xmlrpc"
+	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/xmlrpc"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

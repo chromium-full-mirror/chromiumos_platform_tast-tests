@@ -12,8 +12,8 @@ import (
 	"strconv"
 	"strings"
 
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/crosconfig"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/shutil"

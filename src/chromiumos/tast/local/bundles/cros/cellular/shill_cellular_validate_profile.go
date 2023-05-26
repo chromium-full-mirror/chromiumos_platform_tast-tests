@@ -11,9 +11,9 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/common/mmconst"
 	"chromiumos/tast/local/cellular"
 	"chromiumos/tast/local/modemmanager"
+	"go.chromium.org/tast-tests/cros/common/mmconst"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

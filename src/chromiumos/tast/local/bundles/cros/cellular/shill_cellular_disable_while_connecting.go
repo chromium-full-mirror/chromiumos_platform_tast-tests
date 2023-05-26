@@ -9,8 +9,8 @@ import (
 	"sync"
 	"time"
 
-	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/local/cellular"
+	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"

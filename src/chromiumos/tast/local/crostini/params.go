@@ -57,10 +57,10 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/common/genparams"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/devicemode"
 	"chromiumos/tast/local/vm"
+	"go.chromium.org/tast-tests/cros/common/genparams"
 )
 
 // Param specifies how each set of crostini tests should be generated.

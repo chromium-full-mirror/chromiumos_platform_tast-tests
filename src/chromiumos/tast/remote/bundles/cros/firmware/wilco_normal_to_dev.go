@@ -12,9 +12,9 @@ import (
 	"regexp"
 	"time"
 
-	"chromiumos/tast/common/servo"
 	"chromiumos/tast/remote/firmware/fixture"
 	"chromiumos/tast/remote/firmware/reporters"
+	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast/core/testing"
 )
 

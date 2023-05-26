@@ -11,8 +11,8 @@ import (
 	"strconv"
 	"time"
 
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/tracing"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"

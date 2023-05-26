@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/common/action"
 	"chromiumos/tast/local/drivefs"
 	"chromiumos/tast/local/network"
+	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )

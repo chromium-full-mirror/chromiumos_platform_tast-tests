@@ -17,9 +17,9 @@ import (
 
 	"github.com/hashicorp/mdns"
 
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/bundles/cros/platform/p2p"
 	"chromiumos/tast/local/upstart"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

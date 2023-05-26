@@ -13,7 +13,6 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/common/action"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/chrome"
 	chromeApps "chromiumos/tast/local/chrome/apps"
@@ -26,6 +25,7 @@ import (
 	"chromiumos/tast/local/chrome/webutil"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/screenshot"
+	"go.chromium.org/tast-tests/cros/common/action"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

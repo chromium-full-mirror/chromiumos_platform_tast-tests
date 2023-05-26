@@ -7,9 +7,9 @@ package nearbyfixture
 import (
 	"time"
 
-	nearbycommon "chromiumos/tast/common/cros/nearbyshare"
 	"chromiumos/tast/local/chrome/crossdevice"
 	"chromiumos/tast/local/chrome/nearbyshare/nearbysnippet"
+	nearbycommon "go.chromium.org/tast-tests/cros/common/cros/nearbyshare"
 	"go.chromium.org/tast/core/testing"
 )
 

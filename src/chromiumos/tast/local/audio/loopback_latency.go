@@ -10,7 +10,7 @@ import (
 	"regexp"
 	"strconv"
 
-	"chromiumos/tast/common/perf"
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast/core/errors"
 )
 

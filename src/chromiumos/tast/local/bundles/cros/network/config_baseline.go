@@ -8,10 +8,10 @@ import (
 	"context"
 	"time"
 
-	types "chromiumos/tast/common/network/netconfigtypes"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/network/netconfig"
 	nc "chromiumos/tast/local/network/netconfig"
+	types "go.chromium.org/tast-tests/cros/common/network/netconfigtypes"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"

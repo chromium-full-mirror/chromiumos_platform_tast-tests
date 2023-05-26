@@ -8,8 +8,8 @@ import (
 	"context"
 	"path/filepath"
 
-	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/local/logsaver"
+	"go.chromium.org/tast-tests/cros/common/fixture"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

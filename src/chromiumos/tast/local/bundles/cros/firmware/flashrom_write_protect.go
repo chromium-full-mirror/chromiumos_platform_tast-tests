@@ -8,7 +8,7 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/common/flashrom"
+	"go.chromium.org/tast-tests/cros/common/flashrom"
 	"go.chromium.org/tast/core/testing"
 )
 

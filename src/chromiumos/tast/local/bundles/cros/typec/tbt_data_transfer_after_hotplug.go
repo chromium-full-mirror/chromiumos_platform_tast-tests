@@ -17,11 +17,11 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/bundles/cros/typec/setup"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/cswitch"
 	"chromiumos/tast/local/typecutils"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

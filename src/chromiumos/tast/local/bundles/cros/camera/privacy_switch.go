@@ -9,10 +9,10 @@ import (
 	"fmt"
 	"regexp"
 
-	"chromiumos/tast/common/media/caps"
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/camera/testutil"
 	"chromiumos/tast/local/crosconfig"
+	"go.chromium.org/tast-tests/cros/common/media/caps"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

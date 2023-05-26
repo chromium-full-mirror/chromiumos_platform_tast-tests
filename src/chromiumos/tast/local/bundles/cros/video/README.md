@@ -114,7 +114,7 @@ information about the video features support.
 [15-chipset-skl-capabilities.yaml]: https://source.chromium.org/chromiumos/chromiumos/codesearch/+/main:src/overlays/chipset-skl/chromeos-base/autotest-capability-chipset-skl/files/15-chipset-skl-capabilities.yaml;drc=45644e03a37aa93bf61d36dfdf2dc292940918e9
 [15-chipset-cml-capabilities.yaml]: https://source.chromium.org/chromiumos/chromiumos/codesearch/+/main:src/overlays/chipset-cml/chromeos-base/autotest-capability-chipset-cml/files/15-chipset-cml-capabilities.yaml;drc=ddc0b955b61ab659142c5e226e6ae17aac5860af
 [`autotest-capability-default`]: https://chromium.googlesource.com/chromiumos/overlays/chromiumos-overlay/+/ec7f22ef7d96f4325319dd2b641d820a6fffc5cb/chromeos-base/autotest-capability-default/
-[`caps` package]: https://source.chromium.org/chromiumos/chromiumos/codesearch/+/main:src/platform/tast-tests/src/chromiumos/tast/common/media/caps/caps.go;drc=0df001c7962506063c1d8ba6a1b0df11d093ed32
+[`caps` package]: https://source.chromium.org/chromiumos/chromiumos/codesearch/+/main:src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/common/media/caps/caps.go;drc=0df001c7962506063c1d8ba6a1b0df11d093ed32
 [`Play.vp8_hw`]: https://source.chromium.org/chromiumos/chromiumos/codesearch/+/main:src/platform/tast-tests/src/chromiumos/tast/local/bundles/cros/video/play.go;l=208;drc=2b77f33de4b453d9f7b73de36b6af38d355a04c4
 [`Play.vp9_hw`]: https://source.chromium.org/chromiumos/chromiumos/codesearch/+/main:src/platform/tast-tests/src/chromiumos/tast/local/bundles/cros/video/play.go;l=232;drc=2b77f33de4b453d9f7b73de36b6af38d355a04c4
 

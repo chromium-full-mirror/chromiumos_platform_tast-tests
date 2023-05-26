@@ -10,7 +10,7 @@ import (
 
 	"github.com/shirou/gopsutil/v3/mem"
 
-	"chromiumos/tast/common/perf"
+	"go.chromium.org/tast-tests/cros/common/perf"
 )
 
 // diffWait is the default duration to measure the baseline of memoryDataSource.

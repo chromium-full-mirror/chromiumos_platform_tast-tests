@@ -7,9 +7,9 @@ package network
 import (
 	"context"
 
-	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/local/bundles/cros/network/pre"
 	"chromiumos/tast/local/shill"
+	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast/core/testing"
 )
 

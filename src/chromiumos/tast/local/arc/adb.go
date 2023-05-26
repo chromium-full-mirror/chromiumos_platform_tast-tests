@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/common/android/adb"
+	"go.chromium.org/tast-tests/cros/common/android/adb"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

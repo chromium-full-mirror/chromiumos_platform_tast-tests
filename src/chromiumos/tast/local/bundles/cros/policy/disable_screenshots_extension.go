@@ -14,10 +14,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"chromiumos/tast/common/fixture"
-	"chromiumos/tast/common/pci"
-	"chromiumos/tast/common/policy"
-	"chromiumos/tast/common/policy/fakedms"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
@@ -27,6 +23,10 @@ import (
 	"chromiumos/tast/local/policyutil/fixtures"
 	"chromiumos/tast/local/screenshot"
 	"chromiumos/tast/local/sysutil"
+	"go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/common/pci"
+	"go.chromium.org/tast-tests/cros/common/policy"
+	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
@@ -161,8 +161,8 @@ func DisableScreenshotsExtension(ctx context.Context, s *testing.State) {
 				}
 			}(cleanupCtx)
 
-			// GoBigSleepLint: Minimum interval between captureVisibleTab requests 
-			// is 1 second, so we must sleep for 1 seconds to be able to take 
+			// GoBigSleepLint: Minimum interval between captureVisibleTab requests
+			// is 1 second, so we must sleep for 1 seconds to be able to take
 			// screenshot, otherwise API will return an error.
 			// Please check MAX_CAPTURE_VISIBLE_TAB_CALLS_PER_SECOND constant in
 			// chrome/common/extensions/api/tabs.json

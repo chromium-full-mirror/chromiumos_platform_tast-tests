@@ -11,11 +11,11 @@ import (
 	"path/filepath"
 	"time"
 
-	"chromiumos/tast/common/perf"
 	"chromiumos/tast/local/cpu"
 	"chromiumos/tast/local/gtest"
 	mediacpu "chromiumos/tast/local/media/cpu"
 	"chromiumos/tast/local/upstart"
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

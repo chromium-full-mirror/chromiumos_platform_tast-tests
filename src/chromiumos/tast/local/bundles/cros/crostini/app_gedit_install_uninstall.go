@@ -9,7 +9,6 @@ import (
 	"regexp"
 	"time"
 
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
 	"chromiumos/tast/local/chrome/uiauto/launcher"
@@ -19,6 +18,7 @@ import (
 	"chromiumos/tast/local/screenshot"
 	"chromiumos/tast/local/terminalapp"
 	"chromiumos/tast/local/uidetection"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"

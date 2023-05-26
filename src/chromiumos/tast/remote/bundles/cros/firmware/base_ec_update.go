@@ -21,11 +21,11 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"golang.org/x/mod/semver"
 
-	"chromiumos/tast/common/servo"
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/fixture"
 	fwpb "chromiumos/tast/services/cros/firmware"
+	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"

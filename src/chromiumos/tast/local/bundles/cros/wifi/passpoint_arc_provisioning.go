@@ -8,13 +8,13 @@ import (
 	"context"
 	"time"
 
-	tdreq "chromiumos/tast/common/testdevicerequirements"
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/bundles/cros/wifi/passpoint"
 	"chromiumos/tast/local/hostapd"
 	"chromiumos/tast/local/network/hwsim"
 	"chromiumos/tast/local/shill"
+	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -49,7 +49,7 @@ type passpointARCProvisioningTestCase struct {
 
 func PasspointARCProvisioning(ctx context.Context, s *testing.State) {
 	// Fully qualified domain name used to connect to the AP.
-	// This value must match the domain of the certificate used by the AP, chromiumos/tast/common/crypto/certificate TestCert1().
+	// This value must match the domain of the certificate used by the AP, go.chromium.org/tast-tests/cros/common/crypto/certificate TestCert1().
 	// This is because ARC fills its EAP domain suffix match with Passpoint credentials' FQDN.
 	const fqdn = "chromelab-wifi-testbed-server.mtv.google.com"
 

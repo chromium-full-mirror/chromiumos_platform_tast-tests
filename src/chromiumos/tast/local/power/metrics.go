@@ -5,7 +5,7 @@
 package power
 
 import (
-	"chromiumos/tast/common/perf"
+	"go.chromium.org/tast-tests/cros/common/perf"
 )
 
 var timelineSources = []perf.TimelineDatasource{

@@ -7,8 +7,8 @@ package video
 import (
 	"context"
 
-	"chromiumos/tast/common/media/caps"
 	"chromiumos/tast/local/media/logging"
+	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast/core/testing"
 )
 

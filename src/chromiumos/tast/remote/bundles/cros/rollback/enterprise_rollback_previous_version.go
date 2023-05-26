@@ -8,9 +8,9 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/remote/rollback"
 	"chromiumos/tast/remote/updateutil"
+	"go.chromium.org/tast-tests/cros/common/fixture"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"

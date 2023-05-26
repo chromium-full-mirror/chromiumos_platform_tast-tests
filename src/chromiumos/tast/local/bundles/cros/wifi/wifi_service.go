@@ -17,7 +17,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/dropdown"
@@ -30,6 +29,7 @@ import (
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/shill"
 	"chromiumos/tast/services/cros/wifi"
+	"go.chromium.org/tast-tests/cros/common/shillconst"
 )
 
 func init() {

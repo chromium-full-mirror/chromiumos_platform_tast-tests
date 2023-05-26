@@ -9,9 +9,9 @@ import (
 	"sort"
 	"time"
 
-	"chromiumos/tast/common/perf"
 	"chromiumos/tast/local/memory"
 	"chromiumos/tast/local/resourced"
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast/core/testing"
 )
 

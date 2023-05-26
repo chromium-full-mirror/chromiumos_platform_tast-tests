@@ -7,10 +7,10 @@ package mojo
 import (
 	"context"
 
-	"chromiumos/tast/common/hermesconst"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/hermes"
+	"go.chromium.org/tast-tests/cros/common/hermesconst"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

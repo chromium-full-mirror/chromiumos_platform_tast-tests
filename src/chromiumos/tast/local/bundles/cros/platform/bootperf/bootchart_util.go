@@ -13,7 +13,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"chromiumos/tast/common/testexec"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 )
 

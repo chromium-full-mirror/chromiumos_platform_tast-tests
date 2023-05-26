@@ -5,13 +5,13 @@
 package screencastify
 
 import (
-	"chromiumos/tast/common/action"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/browser/browserui"
 	"chromiumos/tast/local/chrome/uiauto/nodewith"
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"context"
+	"go.chromium.org/tast-tests/cros/common/action"
 	"time"
 
 	"go.chromium.org/tast/core/errors"

@@ -6,8 +6,8 @@
 package iw
 
 import (
-	"chromiumos/tast/common/network/iw"
 	"chromiumos/tast/local/network/cmd"
+	"go.chromium.org/tast-tests/cros/common/network/iw"
 )
 
 // Runner is an alias for common iw Runner but only for local execution.

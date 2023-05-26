@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/common/hermesconst"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/uiauto"
 	"chromiumos/tast/local/chrome/uiauto/faillog"
@@ -17,6 +16,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/hermes"
 	"chromiumos/tast/local/stork"
+	"go.chromium.org/tast-tests/cros/common/hermesconst"
 	"go.chromium.org/tast/core/testing"
 )
 

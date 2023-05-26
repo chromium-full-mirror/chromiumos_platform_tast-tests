@@ -8,10 +8,10 @@ import (
 	"context"
 	"time"
 
-	diagcommon "chromiumos/tast/common/network/diag"
-	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/local/bundles/cros/network/diag"
 	"chromiumos/tast/local/shill"
+	diagcommon "go.chromium.org/tast-tests/cros/common/network/diag"
+	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast/core/testing"
 )
 

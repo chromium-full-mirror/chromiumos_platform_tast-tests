@@ -10,7 +10,7 @@ import (
 	"io"
 	"os"
 
-	"chromiumos/tast/common/network/cmd"
+	"go.chromium.org/tast-tests/cros/common/network/cmd"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
 )

@@ -8,9 +8,9 @@ import (
 	"context"
 	"time"
 
-	diagcommon "chromiumos/tast/common/network/diag"
 	"chromiumos/tast/local/bundles/cros/network/diag"
 	"chromiumos/tast/local/bundles/cros/network/firewall"
+	diagcommon "go.chromium.org/tast-tests/cros/common/network/diag"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )

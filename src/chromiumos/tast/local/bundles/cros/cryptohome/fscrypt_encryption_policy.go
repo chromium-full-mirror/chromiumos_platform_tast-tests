@@ -11,9 +11,9 @@ import (
 
 	"github.com/google/fscrypt/metadata"
 
-	"chromiumos/tast/common/hwsec"
 	"chromiumos/tast/local/cryptohome"
 	hwseclocal "chromiumos/tast/local/hwsec"
+	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast/core/testing"
 )
 

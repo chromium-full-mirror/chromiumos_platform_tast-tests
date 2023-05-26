@@ -4,7 +4,7 @@
 
 package netconfig
 
-import "chromiumos/tast/common/network/netconfigtypes"
+import "go.chromium.org/tast-tests/cros/common/network/netconfigtypes"
 
 // This file contains helper functions for commonly used patterns that occur in connectivity tests using mojo.
 

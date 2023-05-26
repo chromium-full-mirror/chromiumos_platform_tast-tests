@@ -9,8 +9,8 @@ import (
 	"context"
 	"strings"
 
-	"chromiumos/tast/common/network/cmd"
 	remoteCmd "chromiumos/tast/remote/network/cmd"
+	"go.chromium.org/tast-tests/cros/common/network/cmd"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
 )

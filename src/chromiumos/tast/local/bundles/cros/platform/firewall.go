@@ -13,8 +13,8 @@ import (
 
 	"github.com/godbus/dbus/v5"
 
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/dbusutil"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

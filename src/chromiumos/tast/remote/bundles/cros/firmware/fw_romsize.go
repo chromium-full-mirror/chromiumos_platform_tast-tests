@@ -7,8 +7,8 @@ package firmware
 import (
 	"context"
 
-	"chromiumos/tast/common/flashrom"
 	"chromiumos/tast/remote/firmware/fixture"
+	"go.chromium.org/tast-tests/cros/common/flashrom"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )

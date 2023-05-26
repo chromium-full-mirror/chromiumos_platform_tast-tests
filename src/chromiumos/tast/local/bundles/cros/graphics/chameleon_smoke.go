@@ -10,9 +10,9 @@ import (
 	"strconv"
 	"time"
 
-	"chromiumos/tast/common/chameleon"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/graphics"
+	"go.chromium.org/tast-tests/cros/common/chameleon"
 	"go.chromium.org/tast/core/testing"
 )
 

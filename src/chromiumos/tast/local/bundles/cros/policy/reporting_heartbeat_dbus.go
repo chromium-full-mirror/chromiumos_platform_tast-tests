@@ -13,8 +13,8 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	rep "chromiumos/reporting"
-	"chromiumos/tast/common/fixture"
-	"chromiumos/tast/common/policy/fakedms"
+	"go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/dbusutil"

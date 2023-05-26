@@ -10,7 +10,6 @@ import (
 	"strconv"
 	"time"
 
-	"chromiumos/tast/common/perf"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/crostini"
@@ -19,6 +18,7 @@ import (
 	"chromiumos/tast/local/memory/memoryuser"
 	"chromiumos/tast/local/memory/metrics"
 	"chromiumos/tast/local/multivm"
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast/core/testing"
 )
 

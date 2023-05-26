@@ -16,7 +16,6 @@ import (
 
 	"github.com/godbus/dbus/v5"
 
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/chrome/metrics"
 	"chromiumos/tast/local/crash"
@@ -24,6 +23,7 @@ import (
 	"chromiumos/tast/local/dbusutil"
 	"chromiumos/tast/local/terminalapp"
 	"chromiumos/tast/local/vm"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

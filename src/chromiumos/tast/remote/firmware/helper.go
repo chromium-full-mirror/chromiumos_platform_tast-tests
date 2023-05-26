@@ -18,11 +18,11 @@ import (
 
 	gossh "golang.org/x/crypto/ssh"
 
-	fwCommon "chromiumos/tast/common/firmware"
-	"chromiumos/tast/common/servo"
 	"chromiumos/tast/remote/firmware/reporters"
 	"chromiumos/tast/remote/firmware/rpm"
 	fwpb "chromiumos/tast/services/cros/firmware"
+	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
+	"go.chromium.org/tast-tests/cros/common/servo"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"

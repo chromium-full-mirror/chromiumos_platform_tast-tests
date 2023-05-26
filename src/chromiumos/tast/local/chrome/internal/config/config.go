@@ -12,8 +12,8 @@ import (
 	"reflect"
 	"time"
 
-	"chromiumos/tast/common/chrome/credconfig"
 	"chromiumos/tast/local/session"
+	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
 
 	"go.chromium.org/tast/core/errors"
 )

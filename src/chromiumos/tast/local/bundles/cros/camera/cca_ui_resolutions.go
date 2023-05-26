@@ -15,8 +15,8 @@ import (
 	"github.com/abema/go-mp4"
 	"github.com/rwcarlsen/goexif/exif"
 
-	"chromiumos/tast/common/media/caps"
 	"chromiumos/tast/local/camera/cca"
+	"go.chromium.org/tast-tests/cros/common/media/caps"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"

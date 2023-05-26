@@ -9,8 +9,8 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/common/perf"
 	perfSrc "chromiumos/tast/local/perf"
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast/core/errors"
 )
 

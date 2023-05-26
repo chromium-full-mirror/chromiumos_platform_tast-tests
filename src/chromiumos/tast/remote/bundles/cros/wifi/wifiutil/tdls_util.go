@@ -13,9 +13,9 @@ import (
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 
-	"chromiumos/tast/common/network/iw"
 	remoteiw "chromiumos/tast/remote/network/iw"
 	"chromiumos/tast/remote/wificell/pcap"
+	"go.chromium.org/tast-tests/cros/common/network/iw"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
 )

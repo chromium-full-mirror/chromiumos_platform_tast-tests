@@ -7,8 +7,8 @@ package wifi
 import (
 	"context"
 
-	tdreq "chromiumos/tast/common/testdevicerequirements"
 	"chromiumos/tast/remote/wificell"
+	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"

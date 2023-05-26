@@ -8,10 +8,10 @@ import (
 	"context"
 	"time"
 
-	cbt "chromiumos/tast/common/chameleon/devices/common/bluetooth"
 	"chromiumos/tast/remote/bluetooth"
 	"chromiumos/tast/remote/bundles/cros/bluetooth/bluetoothutil"
 	bts "chromiumos/tast/services/cros/bluetooth"
+	cbt "go.chromium.org/tast-tests/cros/common/chameleon/devices/common/bluetooth"
 	"go.chromium.org/tast/core/testing"
 )
 

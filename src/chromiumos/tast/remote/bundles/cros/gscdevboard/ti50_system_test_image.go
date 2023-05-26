@@ -10,9 +10,9 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/common/firmware/ti50"
 	"chromiumos/tast/remote/bundles/cros/gscdevboard/utils"
 	"chromiumos/tast/remote/firmware/ti50/fixture"
+	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
 
 	"go.chromium.org/tast/core/testing"
 )

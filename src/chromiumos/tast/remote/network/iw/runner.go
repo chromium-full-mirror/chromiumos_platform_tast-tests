@@ -6,8 +6,8 @@
 package iw
 
 import (
-	"chromiumos/tast/common/network/iw"
 	"chromiumos/tast/remote/network/cmd"
+	"go.chromium.org/tast-tests/cros/common/network/iw"
 	"go.chromium.org/tast/core/ssh"
 )
 

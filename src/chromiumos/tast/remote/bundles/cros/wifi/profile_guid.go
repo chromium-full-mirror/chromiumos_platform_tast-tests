@@ -9,13 +9,13 @@ import (
 	"encoding/hex"
 	"strings"
 
-	"chromiumos/tast/common/network/protoutil"
-	"chromiumos/tast/common/shillconst"
-	tdreq "chromiumos/tast/common/testdevicerequirements"
-	"chromiumos/tast/common/wifi/security/wpa"
 	"chromiumos/tast/remote/wificell"
 	"chromiumos/tast/remote/wificell/hostapd"
 	"chromiumos/tast/services/cros/wifi"
+	"go.chromium.org/tast-tests/cros/common/network/protoutil"
+	"go.chromium.org/tast-tests/cros/common/shillconst"
+	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
+	"go.chromium.org/tast-tests/cros/common/wifi/security/wpa"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

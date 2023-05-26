@@ -7,7 +7,7 @@ package wifi
 import (
 	"testing"
 
-	"chromiumos/tast/common/network/iw"
+	"go.chromium.org/tast-tests/cros/common/network/iw"
 )
 
 func TestSupportsConcurrency(t *testing.T) {

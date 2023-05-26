@@ -16,8 +16,8 @@ import (
 
 	spb "chromiumos/system_api/seneschal_proto"   // protobufs for seneschal
 	cpb "chromiumos/system_api/vm_cicerone_proto" // protobufs for container management
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/dbusutil"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

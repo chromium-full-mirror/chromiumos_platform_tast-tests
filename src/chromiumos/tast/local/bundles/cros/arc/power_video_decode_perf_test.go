@@ -7,7 +7,7 @@ package arc
 import (
 	"testing"
 
-	"chromiumos/tast/common/genparams"
+	"go.chromium.org/tast-tests/cros/common/genparams"
 )
 
 // To update test parameters after modifying this file, run:

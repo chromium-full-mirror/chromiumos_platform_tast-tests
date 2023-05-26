@@ -10,12 +10,12 @@ import (
 
 	"github.com/godbus/dbus/v5"
 
-	"chromiumos/tast/common/crypto/certificate"
-	"chromiumos/tast/common/shillconst"
 	"chromiumos/tast/local/bundles/cros/network/veth"
 	"chromiumos/tast/local/bundles/cros/network/wiredhostapd"
 	"chromiumos/tast/local/hostapd"
 	"chromiumos/tast/local/shill"
+	"go.chromium.org/tast-tests/cros/common/crypto/certificate"
+	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

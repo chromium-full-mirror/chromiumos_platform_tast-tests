@@ -15,7 +15,7 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/common/servo"
+	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh/linuxssh"

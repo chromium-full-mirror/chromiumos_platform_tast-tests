@@ -7,8 +7,8 @@ package hwsec
 import (
 	"context"
 
-	"chromiumos/tast/common/hwsec"
 	hwseclocal "chromiumos/tast/local/hwsec"
+	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast/core/testing"
 )
 

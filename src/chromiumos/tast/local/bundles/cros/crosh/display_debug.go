@@ -10,9 +10,9 @@ import (
 	"fmt"
 	"reflect"
 
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/dbusutil"
 	"chromiumos/tast/local/debugd"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

@@ -14,10 +14,10 @@ import (
 
 	"github.com/mafredri/cdp/protocol/target"
 
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/arc"
 	"chromiumos/tast/local/chrome/browser"
 	"chromiumos/tast/local/chrome/browser/browserfixt"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -49,7 +49,7 @@ func init() {
 			Val:               browser.TypeAsh,
 			Fixture:           "arcBooted",
 		}, {
-			Name:              "lacros_vm",
+			Name: "lacros_vm",
 			// TODO(crbug.com/1446233): Remove "informational" attribute (flaky).
 			ExtraAttr:         []string{"informational"},
 			ExtraSoftwareDeps: []string{"android_vm", "lacros"},

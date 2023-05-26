@@ -17,9 +17,9 @@ import (
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 
-	"chromiumos/tast/common/tape"
 	"chromiumos/tast/remote/crosserverutil"
 	pb "chromiumos/tast/services/cros/ui"
+	"go.chromium.org/tast-tests/cros/common/tape"
 )
 
 const (

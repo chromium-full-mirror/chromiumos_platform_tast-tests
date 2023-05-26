@@ -8,9 +8,9 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/common/fixture"
-	ue "chromiumos/tast/common/updateengine"
 	"chromiumos/tast/remote/updateutil"
+	"go.chromium.org/tast-tests/cros/common/fixture"
+	ue "go.chromium.org/tast-tests/cros/common/updateengine"
 
 	"go.chromium.org/tast/core/lsbrelease"
 	"go.chromium.org/tast/core/testing"

@@ -10,10 +10,10 @@ import (
 	"net/http/httptest"
 	"time"
 
-	"chromiumos/tast/common/media/caps"
 	"chromiumos/tast/local/camera/cca"
 	"chromiumos/tast/local/camera/testpage"
 	"chromiumos/tast/local/chrome"
+	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

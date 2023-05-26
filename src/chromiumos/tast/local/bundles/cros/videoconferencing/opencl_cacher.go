@@ -9,10 +9,10 @@ import (
 	"os"
 	"time"
 
-	upstartcommon "chromiumos/tast/common/upstart"
 	"chromiumos/tast/local/bundles/cros/videoconferencing/effects"
 	"chromiumos/tast/local/upstart"
 	"chromiumos/tast/local/videoconferencing/fixture"
+	upstartcommon "go.chromium.org/tast-tests/cros/common/upstart"
 
 	"go.chromium.org/tast/core/testing"
 )

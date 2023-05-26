@@ -13,9 +13,9 @@ import (
 	"path/filepath"
 	"time"
 
-	"chromiumos/tast/common/camera/chart"
-	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/common/utils"
+	"go.chromium.org/tast-tests/cros/common/camera/chart"
+	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/common/utils"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"

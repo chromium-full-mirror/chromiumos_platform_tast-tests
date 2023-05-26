@@ -5,9 +5,9 @@
 package effects
 
 import (
-	"chromiumos/tast/common/hps/hpsutil"
-	"chromiumos/tast/common/testexec"
 	"context"
+	"go.chromium.org/tast-tests/cros/common/hps/hpsutil"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"os"
 	"regexp"
 	"sort"

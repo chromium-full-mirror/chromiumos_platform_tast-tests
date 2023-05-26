@@ -6,8 +6,8 @@
 package ping
 
 import (
-	"chromiumos/tast/common/network/ping"
 	"chromiumos/tast/local/network/cmd"
+	"go.chromium.org/tast-tests/cros/common/network/ping"
 )
 
 // NewLocalRunner creates a ping Runner on the given dut for local execution.

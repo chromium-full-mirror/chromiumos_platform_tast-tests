@@ -12,9 +12,9 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"chromiumos/tast/common/mmconst"
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/modemmanager"
+	"go.chromium.org/tast-tests/cros/common/mmconst"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

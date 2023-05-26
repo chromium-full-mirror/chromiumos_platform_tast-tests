@@ -5,10 +5,6 @@
 package bruschetta
 
 import (
-	"chromiumos/tast/common/fixture"
-	"chromiumos/tast/common/policy"
-	"chromiumos/tast/common/policy/fakedms"
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/chrome"
 	"chromiumos/tast/local/cryptohome"
 	"chromiumos/tast/local/policyutil"
@@ -19,6 +15,10 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/common/policy"
+	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"io"
 	"io/fs"
 	"os"

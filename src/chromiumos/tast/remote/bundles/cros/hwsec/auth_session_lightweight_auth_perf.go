@@ -10,10 +10,10 @@ import (
 	"time"
 
 	uda "chromiumos/system_api/user_data_auth_proto"
-	"chromiumos/tast/common/hwsec"
-	"chromiumos/tast/common/perf"
 	"chromiumos/tast/remote/bundles/cros/hwsec/util"
 	hwsecremote "chromiumos/tast/remote/hwsec"
+	"go.chromium.org/tast-tests/cros/common/hwsec"
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

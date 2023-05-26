@@ -12,12 +12,12 @@ import (
 	"github.com/godbus/dbus/v5"
 	"github.com/google/go-cmp/cmp"
 
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/bluetooth/bluez"
 	"chromiumos/tast/local/croshealthd"
 	"chromiumos/tast/local/dbusutil"
 	"chromiumos/tast/local/jsontypes"
 	"chromiumos/tast/local/set"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

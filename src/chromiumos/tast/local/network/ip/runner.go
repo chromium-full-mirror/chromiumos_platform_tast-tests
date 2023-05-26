@@ -6,8 +6,8 @@
 package ip
 
 import (
-	"chromiumos/tast/common/network/ip"
 	"chromiumos/tast/local/network/cmd"
+	"go.chromium.org/tast-tests/cros/common/network/ip"
 )
 
 // Runner is an alias for common ip Runner but only for local execution.

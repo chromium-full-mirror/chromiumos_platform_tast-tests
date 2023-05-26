@@ -7,8 +7,8 @@
 package firewall
 
 import (
-	"chromiumos/tast/common/network/firewall"
 	"chromiumos/tast/remote/network/cmd"
+	"go.chromium.org/tast-tests/cros/common/network/firewall"
 	"go.chromium.org/tast/core/ssh"
 )
 

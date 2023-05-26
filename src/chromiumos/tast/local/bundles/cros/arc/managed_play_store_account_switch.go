@@ -8,10 +8,10 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/common/android/ui"
-	"chromiumos/tast/common/chrome/credconfig"
-	"chromiumos/tast/common/pci"
-	"chromiumos/tast/common/policy"
+	"go.chromium.org/tast-tests/cros/common/android/ui"
+	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
+	"go.chromium.org/tast-tests/cros/common/pci"
+	"go.chromium.org/tast-tests/cros/common/policy"
 
 	"chromiumos/tast/local/accountmanager"
 	"chromiumos/tast/local/arc"

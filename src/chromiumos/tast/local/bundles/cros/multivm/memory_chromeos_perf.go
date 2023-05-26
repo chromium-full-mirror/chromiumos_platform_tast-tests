@@ -10,12 +10,12 @@ import (
 	"sort"
 	"time"
 
-	"chromiumos/tast/common/perf"
 	"chromiumos/tast/local/crostini"
 	"chromiumos/tast/local/memory"
 	"chromiumos/tast/local/memory/metrics"
 	"chromiumos/tast/local/multivm"
 	"chromiumos/tast/local/resourced"
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast/core/testing"
 )
 

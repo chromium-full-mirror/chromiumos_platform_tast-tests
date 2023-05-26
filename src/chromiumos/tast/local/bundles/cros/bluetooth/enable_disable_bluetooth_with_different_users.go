@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"time"
 
-	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/local/bluetooth"
 	"chromiumos/tast/local/bluetooth/bluez"
 	"chromiumos/tast/local/chrome"
@@ -20,6 +19,7 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/chrome/userutil"
 	"chromiumos/tast/local/input"
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"

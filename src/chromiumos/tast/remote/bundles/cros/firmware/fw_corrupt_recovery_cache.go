@@ -10,10 +10,10 @@ import (
 	"strings"
 	"time"
 
-	fwCommon "chromiumos/tast/common/firmware"
 	"chromiumos/tast/remote/firmware"
 	"chromiumos/tast/remote/firmware/fixture"
 	pb "chromiumos/tast/services/cros/firmware"
+	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"

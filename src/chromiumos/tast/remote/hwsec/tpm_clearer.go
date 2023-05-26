@@ -13,7 +13,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"chromiumos/tast/common/hwsec"
+	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

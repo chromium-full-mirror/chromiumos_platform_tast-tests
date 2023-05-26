@@ -10,9 +10,9 @@ import (
 	"strconv"
 	"time"
 
-	"chromiumos/tast/common/action"
 	"chromiumos/tast/remote/bundles/cros/shimlessrma/rmaweb"
 	"chromiumos/tast/remote/firmware/fixture"
+	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"

@@ -7,8 +7,8 @@ package util
 import (
 	"context"
 
-	"chromiumos/tast/common/hwsec"
 	hwsecremote "chromiumos/tast/remote/hwsec"
+	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 )

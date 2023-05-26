@@ -12,12 +12,12 @@ import (
 	"path/filepath"
 
 	lpb "chromiumos/system_api/lorgnette_proto"
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/bundles/cros/printer/usbprintertests"
 	"chromiumos/tast/local/printing/lp"
 	"chromiumos/tast/local/printing/usbprinter"
 	"chromiumos/tast/local/scanner/lorgnette"
 	"chromiumos/tast/local/usbutil"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

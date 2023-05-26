@@ -7,8 +7,8 @@ package oobe
 import (
 	"context"
 
-	"chromiumos/tast/common/fixture"
 	"chromiumos/tast/local/chrome"
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast/core/testing"
 )
 

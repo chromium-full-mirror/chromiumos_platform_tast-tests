@@ -8,9 +8,9 @@ import (
 	"context"
 	"regexp"
 
-	crossdevicecommon "chromiumos/tast/common/cros/crossdevice"
-	"chromiumos/tast/common/testexec"
 	"chromiumos/tast/local/chrome"
+	crossdevicecommon "go.chromium.org/tast-tests/cros/common/cros/crossdevice"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/lsbrelease"
 )

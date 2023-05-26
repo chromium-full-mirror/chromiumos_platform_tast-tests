@@ -8,7 +8,7 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/common/camera/chart"
+	"go.chromium.org/tast-tests/cros/common/camera/chart"
 	"go.chromium.org/tast/core/testing"
 )
 

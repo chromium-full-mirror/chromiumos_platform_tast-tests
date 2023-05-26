@@ -15,8 +15,6 @@ import (
 	"time"
 
 	pmpb "chromiumos/system_api/power_manager_proto"
-	"chromiumos/tast/common/testexec"
-	"chromiumos/tast/common/usbutils"
 	"chromiumos/tast/local/apps"
 	"chromiumos/tast/local/audio"
 	"chromiumos/tast/local/chrome"
@@ -27,6 +25,8 @@ import (
 	"chromiumos/tast/local/chrome/uiauto/role"
 	"chromiumos/tast/local/input"
 	"chromiumos/tast/local/power"
+	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/common/usbutils"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

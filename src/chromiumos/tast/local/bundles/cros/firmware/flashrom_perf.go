@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"chromiumos/tast/common/flashrom"
-	"chromiumos/tast/common/perf"
+	"go.chromium.org/tast-tests/cros/common/flashrom"
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast/core/testing"
 )
 

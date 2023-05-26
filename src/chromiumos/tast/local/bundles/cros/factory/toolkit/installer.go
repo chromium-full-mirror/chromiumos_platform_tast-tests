@@ -14,8 +14,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	factorycommon "chromiumos/tast/common/factory"
-	"chromiumos/tast/common/testexec"
+	factorycommon "go.chromium.org/tast-tests/cros/common/factory"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 )
 

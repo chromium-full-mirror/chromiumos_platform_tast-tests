@@ -10,8 +10,8 @@ import (
 	"strings"
 	"testing"
 
-	"chromiumos/tast/common/genparams"
 	"chromiumos/tast/local/chrome"
+	"go.chromium.org/tast-tests/cros/common/genparams"
 )
 
 // NB: If modifying any of the files or test specifications, be sure to

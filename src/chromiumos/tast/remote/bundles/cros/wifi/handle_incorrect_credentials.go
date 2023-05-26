@@ -16,16 +16,16 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	"chromiumos/tast/common/crypto/certificate"
-	"chromiumos/tast/common/wifi/security"
-	"chromiumos/tast/common/wifi/security/tunneled1x"
-	"chromiumos/tast/common/wifi/security/wpaeap"
 	"chromiumos/tast/remote/bundles/cros/wifi/wifiutil"
 	"chromiumos/tast/remote/wificell"
 	"chromiumos/tast/remote/wificell/hostapd"
 	"chromiumos/tast/services/cros/chrome/uiauto/quicksettings"
 	"chromiumos/tast/services/cros/network"
 	"chromiumos/tast/services/cros/ui"
+	"go.chromium.org/tast-tests/cros/common/crypto/certificate"
+	"go.chromium.org/tast-tests/cros/common/wifi/security"
+	"go.chromium.org/tast-tests/cros/common/wifi/security/tunneled1x"
+	"go.chromium.org/tast-tests/cros/common/wifi/security/wpaeap"
 )
 
 // handleCredentialTestParam is the parameter for the test.

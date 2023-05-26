@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"chromiumos/tast/common/genparams"
+	"go.chromium.org/tast-tests/cros/common/genparams"
 )
 
 type paramData struct {

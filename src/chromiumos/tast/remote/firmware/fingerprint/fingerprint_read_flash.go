@@ -7,7 +7,7 @@ package fingerprint
 import (
 	"context"
 
-	fp "chromiumos/tast/common/fingerprint"
+	fp "go.chromium.org/tast-tests/cros/common/fingerprint"
 	"go.chromium.org/tast/core/dut"
 )
 

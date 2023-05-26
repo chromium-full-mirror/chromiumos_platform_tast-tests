@@ -16,13 +16,13 @@ import (
 	"go.chromium.org/tast/core/testing"
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	"chromiumos/tast/common/crypto/certificate"
-	"chromiumos/tast/common/wifi/security/wpaeap"
 	"chromiumos/tast/remote/wificell"
 	"chromiumos/tast/remote/wificell/hostapd"
 	"chromiumos/tast/services/cros/network"
 	"chromiumos/tast/services/cros/ui"
 	"chromiumos/tast/services/cros/wifi"
+	"go.chromium.org/tast-tests/cros/common/crypto/certificate"
+	"go.chromium.org/tast-tests/cros/common/wifi/security/wpaeap"
 )
 
 func init() {
