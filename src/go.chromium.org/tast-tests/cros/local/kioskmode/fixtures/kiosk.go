@@ -112,9 +112,6 @@ func (f KioskFixtData) FakeDMS() *fakedms.FakeDMS {
 	return f.fakeDMS
 }
 
-// PolicyFileDump is the filename where the state of policies is dumped after the test ends.
-const PolicyFileDump = "policies.json"
-
 func (k *kioskFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	fdms, ok := s.ParentValue().(*fakedms.FakeDMS)
 	if !ok {
@@ -136,15 +133,20 @@ func (k *kioskFixture) SetUp(ctx context.Context, s *testing.FixtState) interfac
 		kioskmode.PublicAccountPolicies(k.autoLaunchKioskAppID, k.extraPublicAccountPolicies),
 	)
 	if err != nil {
-		path := filepath.Join(s.OutDir(), "kiosk_fixture_failure.png")
-		if err := screenshot.Capture(ctx, path); err != nil {
-			s.Error("Failed to take screenshot: ", err)
-		}
+		// Defer screenshot capture to make sure err is reported first.
+		defer func(ctx context.Context) {
+			if err := screenshot.Capture(ctx, filepath.Join(s.OutDir(), "kiosk_fixture.png")); err != nil {
+				s.Error("Failed to take screenshot: ", err)
+			}
+		}(cleanupCtx)
 		s.Fatal("Failed to create Chrome in kiosk mode: ", err)
 	}
 	// Make sure to clean up kiosk if an error occurs after this point.
 	defer func(ctx context.Context) {
 		if s.HasError() {
+			if err := screenshot.Capture(ctx, filepath.Join(s.OutDir(), "kiosk_fixture.png")); err != nil {
+				s.Error("Failed to take screenshot: ", err)
+			}
 			if err := kiosk.Close(ctx); err != nil {
 				s.Error("Failed to close Kiosk: ", err)
 			}
@@ -220,7 +222,7 @@ func (k *kioskFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
 	}
 
 	// Dump all policies as seen by Chrome to the tests OutDir.
-	if err := ioutil.WriteFile(filepath.Join(s.OutDir(), PolicyFileDump), b, 0644); err != nil {
+	if err := ioutil.WriteFile(filepath.Join(s.OutDir(), "policies.json"), b, 0644); err != nil {
 		s.Error("Failed to dump policies to file: ", err)
 	}
 }
