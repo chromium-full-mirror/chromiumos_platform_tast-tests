@@ -538,6 +538,20 @@ func Search(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, query string)
 	}
 }
 
+// ClearSearchField function returns a function that clears the search field by pressing Ctrl+A and Backspace.
+// KEY_ESC is not a good option here because it will close the launcher window if the search field is empty.
+func ClearSearchField(tconn *chrome.TestConn, kb *input.KeyboardEventWriter) uiauto.Action {
+	ui := uiauto.New(tconn)
+	searchBoxView := nodewith.HasClass("SearchBoxView").Visible().First()
+	searchField := nodewith.HasClass("Textfield").Role("textField").Ancestor(searchBoxView)
+
+	return uiauto.Combine("Clear the launcher search field",
+		ui.WaitUntilExists(searchField.Focused()),
+		kb.AccelAction("Ctrl+A"),
+		kb.TypeKeyAction(input.KEY_BACKSPACE),
+	)
+}
+
 // GetUndoButtonNameForSortType returns the undo button's name based on the sorting method.
 func GetUndoButtonNameForSortType(sortType SortType) string {
 	var undoButtonName string

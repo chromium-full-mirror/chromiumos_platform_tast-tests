@@ -33,6 +33,7 @@ const (
 	canberraWeather    = "canberra weather"
 	calculator45Plus45 = "45+45"
 	screenRotate       = "screen rotate"
+	calculator4Digits  = "1234+5678" // https://bugs.chromium.org/p/chromium/issues/detail?id=1432692
 )
 
 func init() {
@@ -88,24 +89,35 @@ func SearchQuality(ctx context.Context, s *testing.State) {
 	subtests := []searchQualityCase{
 		{
 			searchQuery: canberraWeather,
-			steps: uiauto.NamedCombine("Answer Card: Weather",
+			steps: uiauto.Retry(2, uiauto.NamedCombine("Answer Card: Weather",
+				launcher.ClearSearchField(tconn, kb),
 				launcher.Search(tconn, kb, canberraWeather),
 				launcher.WaitForCategorizedResultFromRegex(tconn, weatherPattern),
-			),
+			)),
 		},
 		{
 			searchQuery: calculator45Plus45,
-			steps: uiauto.NamedCombine("Answer Card: Caculator",
+			steps: uiauto.Retry(2, uiauto.NamedCombine("Answer Card: Calculator",
+				launcher.ClearSearchField(tconn, kb),
 				launcher.Search(tconn, kb, calculator45Plus45),
 				launcher.WaitForResult(tconn, "45+45, 90"),
-			),
+			)),
 		},
 		{
 			searchQuery: screenRotate,
-			steps: uiauto.NamedCombine("Answer Card: screen rotate",
+			steps: uiauto.Retry(2, uiauto.NamedCombine("Answer Card: screen rotate",
+				launcher.ClearSearchField(tconn, kb),
 				launcher.Search(tconn, kb, screenRotate),
 				launcher.WaitForResult(tconn, "Rotate screen 90 degrees, Shortcuts, Ctrl+ Shift+ BrowserRefresh"),
-			),
+			)),
+		},
+		{
+			searchQuery: calculator4Digits,
+			steps: uiauto.Retry(2, uiauto.NamedCombine("Answer Card: 4 digits calculator",
+				launcher.ClearSearchField(tconn, kb),
+				launcher.Search(tconn, kb, calculator4Digits),
+				launcher.WaitForResult(tconn, "1234+5678, 6912"),
+			)),
 		},
 	}
 
