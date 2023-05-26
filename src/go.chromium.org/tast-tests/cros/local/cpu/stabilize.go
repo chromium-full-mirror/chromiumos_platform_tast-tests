@@ -4,17 +4,21 @@
 
 package cpu
 
-import "context"
+import (
+	"context"
+	"time"
+)
 
 // WaitUntilStabilized waits for the stabilization of the CPU.
 // Currently, this waits for two conditions, one is the CPU's cooldown,
 // and the other is the CPU idle.
-func WaitUntilStabilized(ctx context.Context, cdConfig CoolDownConfig) error {
-	if _, err := WaitUntilCoolDown(ctx, cdConfig); err != nil {
-		return err
+func WaitUntilStabilized(ctx context.Context, cdConfig CoolDownConfig) (time.Duration, error) {
+	time, err := WaitUntilCoolDown(ctx, cdConfig)
+	if err != nil {
+		return 0, err
 	}
 	if err := WaitUntilIdle(ctx); err != nil {
-		return err
+		return 0, err
 	}
-	return nil
+	return time, nil
 }

@@ -98,7 +98,7 @@ func TouchPerf(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Waiting until CPU is stabilized")
-	if err := cpu.WaitUntilStabilized(ctx, cdConfig()); err != nil {
+	if _, err := cpu.WaitUntilStabilized(ctx, cdConfig()); err != nil {
 		s.Fatal("Could not wait until CPU is stabilized: ", err)
 	}
 

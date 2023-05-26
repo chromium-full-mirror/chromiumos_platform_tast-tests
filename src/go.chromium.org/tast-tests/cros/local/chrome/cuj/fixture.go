@@ -803,7 +803,7 @@ func (f *prepareCUJFixture) PreTest(ctx context.Context, s *testing.FixtTestStat
 	// all child fixtures's PreTest and the setup in each test main function do
 	// not do cpu intensive works. Otherwise, this needs to moved into body of
 	// tests.
-	if err := cpu.WaitUntilStabilized(ctx, CPUCoolDownConfig()); err != nil {
+	if _, err := cpu.WaitUntilStabilized(ctx, CPUCoolDownConfig()); err != nil {
 		// Log the cpu stabilizing wait failure instead of make it fatal.
 		// TODO(b/213238698): Include the error as part of test data.
 		s.Log("Failed to wait for CPU to become idle: ", err)

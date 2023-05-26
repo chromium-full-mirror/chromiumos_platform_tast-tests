@@ -149,7 +149,7 @@ func RunTest(ctx context.Context, config TestConfig, a *arc.ARC, cr *chrome.Chro
 	}
 
 	testing.ContextLog(ctx, "Waiting until CPU is stabilized")
-	if err := cpu.WaitUntilStabilized(ctx, coolDownConfig()); err != nil {
+	if _, err := cpu.WaitUntilStabilized(ctx, coolDownConfig()); err != nil {
 		return 0, errors.Wrap(err, "failed to wait until CPU is stabilized")
 	}
 

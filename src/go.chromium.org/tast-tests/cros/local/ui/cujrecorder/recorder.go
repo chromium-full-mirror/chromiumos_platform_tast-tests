@@ -863,7 +863,7 @@ func (r *Recorder) startRecording(ctx context.Context) (runCtx context.Context, 
 	if !skipCooldown && (r.options.CooldownBeforeRun || r.options.Mode == Benchmark) {
 		cdConfig := cpu.DefaultCoolDownConfig(cpu.CoolDownPreserveUI)
 		cdConfig.PollTimeout = CooldownTimeout
-		if err := cpu.WaitUntilStabilized(ctx, cdConfig); err != nil {
+		if _, err := cpu.WaitUntilStabilized(ctx, cdConfig); err != nil {
 			testing.ContextLog(ctx, "Failed to wait for CPU to become idle: ", err)
 		}
 	}

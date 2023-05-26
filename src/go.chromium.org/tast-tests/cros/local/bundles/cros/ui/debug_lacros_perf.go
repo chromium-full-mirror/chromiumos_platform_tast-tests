@@ -105,7 +105,7 @@ func init() {
 
 func DebugLacrosPerf(ctx context.Context, s *testing.State) {
 	// Wait for CPU to stabilize before test.
-	if err := cpu.WaitUntilStabilized(ctx, cuj.CPUCoolDownConfig()); err != nil {
+	if _, err := cpu.WaitUntilStabilized(ctx, cuj.CPUCoolDownConfig()); err != nil {
 		s.Log("Failed to wait for CPU to become idle: ", err)
 	}
 
@@ -177,6 +177,7 @@ func DebugLacrosPerf(ctx context.Context, s *testing.State) {
 		}
 
 		s.Logf("Wait for %v to gather more data", debugLacrosTestWaitDuration)
+		// GoBigSleepLint: It's used as a measurement step which is part of the performance testing logic.
 		if err := testing.Sleep(ctx, debugLacrosTestWaitDuration); err != nil {
 			return errors.Wrap(err, "failed to sleep")
 		}

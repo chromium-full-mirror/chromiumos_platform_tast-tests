@@ -409,7 +409,7 @@ func bootARC(ctx context.Context, s *testing.State, cr *chrome.Chrome, tconn *ch
 		return v, err
 	}
 
-	if err := cpu.WaitUntilStabilized(ctx, coolDownConfig()); err != nil {
+	if _, err := cpu.WaitUntilStabilized(ctx, coolDownConfig()); err != nil {
 		s.Fatal("Failed to wait until CPU is stabilized: ", err)
 	}
 

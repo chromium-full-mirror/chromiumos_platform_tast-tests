@@ -160,13 +160,10 @@ func PowerIdlePerf(ctx context.Context, s *testing.State) {
 	}
 	s.Log("Finished setup")
 
-	// Wait until CPU is cooled down and idle.
-	cooldownTime, err := cpu.WaitUntilCoolDown(ctx, cpu.IdleCoolDownConfig())
+	// Wait until CPU is stabilized (cooled down and idle).
+	cooldownTime, err := cpu.WaitUntilStabilized(ctx, cpu.IdleCoolDownConfig())
 	if err != nil {
-		s.Fatal("CPU failed to cool down: ", err)
-	}
-	if err := cpu.WaitUntilIdle(ctx); err != nil {
-		s.Fatal("CPU failed to idle: ", err)
+		s.Fatal("Failed to wait until CPU is stabilized: ", err)
 	}
 
 	out, err := testexec.CommandContext(ctx, "top", "-n1", "-b").Output(testexec.DumpLogOnError)

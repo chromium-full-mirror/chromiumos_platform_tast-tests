@@ -445,7 +445,7 @@ func (f *graphicsIdleFixture) SetUp(ctx context.Context, s *testing.FixtState) i
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
-	if err := cpu.WaitUntilStabilized(ctx, cpu.CoolDownConfig{
+	if _, err := cpu.WaitUntilStabilized(ctx, cpu.CoolDownConfig{
 		PollTimeout:              2 * time.Minute,
 		PollInterval:             2 * time.Second,
 		TemperatureThresholdMode: cpu.TemperatureThresholdPerModel,

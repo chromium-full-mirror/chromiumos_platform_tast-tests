@@ -98,7 +98,7 @@ func SetupCrosTestWithPage(ctx context.Context, cr *chrome.Chrome, url string, s
 	// Depending on the page, opening it may cause continuous CPU usage (e.g. WebGL aquarium),
 	// so wait until stabilized before opening the tab if we are instructed to do so.
 	if stabilize == StabilizeBeforeOpeningURL {
-		if err := cpu.WaitUntilStabilized(ctx, cooldownConfig); err != nil {
+		if _, err := cpu.WaitUntilStabilized(ctx, cooldownConfig); err != nil {
 			return nil, nil, err
 		}
 	}
@@ -116,7 +116,7 @@ func SetupCrosTestWithPage(ctx context.Context, cr *chrome.Chrome, url string, s
 
 	// For some tests, it is safe to wait for stabilization after opening the tab.
 	if stabilize == StabilizeAfterOpeningURL {
-		if err := cpu.WaitUntilStabilized(ctx, cooldownConfig); err != nil {
+		if _, err := cpu.WaitUntilStabilized(ctx, cooldownConfig); err != nil {
 			if cerr := cleanup(ctx); cerr != nil {
 				testing.ContextLog(ctx, "Failed to clean up: ", cerr)
 			}
@@ -162,7 +162,7 @@ func SetupLacrosTestWithPage(ctx context.Context, cr *chrome.Chrome, url string,
 	// Depending on the page, opening it may cause continuous CPU usage (e.g. WebGL aquarium),
 	// so wait until stabilized before opening the tab if we are instructed to do so.
 	if stabilize == StabilizeBeforeOpeningURL {
-		if err := cpu.WaitUntilStabilized(ctx, cooldownConfig); err != nil {
+		if _, err := cpu.WaitUntilStabilized(ctx, cooldownConfig); err != nil {
 			return nil, nil, nil, nil, err
 		}
 	}
@@ -177,7 +177,7 @@ func SetupLacrosTestWithPage(ctx context.Context, cr *chrome.Chrome, url string,
 
 	// For some specific tests, it is safe to wait for stabilization after opening the tab.
 	if stabilize == StabilizeAfterOpeningURL {
-		if err := cpu.WaitUntilStabilized(ctx, cooldownConfig); err != nil {
+		if _, err := cpu.WaitUntilStabilized(ctx, cooldownConfig); err != nil {
 			return nil, nil, nil, nil, err
 		}
 	}
