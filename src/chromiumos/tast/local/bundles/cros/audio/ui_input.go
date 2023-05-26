@@ -43,13 +43,14 @@ func init() {
 		BugComponent: "b:875484",
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.Speaker(), hwdep.Microphone()),
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      4 * time.Minute,
 		Pre:          chrome.LoggedIn(),
 		Params: []testing.Param{
 			{
-				Name: "gain",
-				Val:  gainSlider,
+				Name:      "gain",
+				Val:       gainSlider,
+				ExtraAttr: []string{"informational"},
 			},
 			{
 				Name: "mute",
