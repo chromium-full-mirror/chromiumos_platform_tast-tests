@@ -44,16 +44,17 @@ type RoutineParamsV2 struct {
 // RoutineResult on success or an error.
 func RunDiagRoutineV2(ctx context.Context, params RoutineParamsV2) (*RoutineResultV2, error) {
 	diagParams := []string{params.Routine, "--single_line_json"}
-	if params.Routine == RoutineMemoryV2 {
+	switch r := params.Routine; r {
+	case RoutineMemoryV2:
 		// 15000 KiB runs for about 3 seconds on a volteer machine.
 		diagParams = append(diagParams, "--max_testing_mem_kib=15000")
-	} else if params.Routine == RoutineCPUStressV2 {
-		// Runs the routine for 1 seconds.
+	case RoutineCPUStressV2:
+		// Runs the routine for 1 second.
 		diagParams = append(diagParams, "--length_seconds=1")
-	} else if params.Routine == RoutineCPUCacheV2 {
-		// Runs the routine for 1 seconds.
+	case RoutineCPUCacheV2:
+		// Runs the routine for 1 second.
 		diagParams = append(diagParams, "--length_seconds=1")
-	} else {
+	default:
 		// No extra parameters required for the following routines:
 		//   - RoutineAudioDriver
 		//   - RoutineUFSLifetime
