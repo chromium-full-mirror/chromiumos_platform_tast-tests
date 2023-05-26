@@ -36,6 +36,8 @@ func init() {
 	})
 }
 
+// DUTBehaviorOnECCommands verifies the behavior of DUT upon executing various
+// EC commands.
 func DUTBehaviorOnECCommands(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 2*time.Minute)
@@ -131,11 +133,6 @@ func DUTBehaviorOnECCommands(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to check for battery charge state OFF")
 	}
 
-	s.Log("Rebooting DUT with EC console command 're'")
-	if err := performRebootWithECCommand(ctx, h, dut); err != nil {
-		s.Fatal("Failed to reboot DUT with 're' EC command: ", err)
-	}
-
 	s.Log("Rebooting with 'reboot ap-off' command")
 	if err := performRebootApOff(ctx, h, dut); err != nil {
 		s.Fatal("Failed to perform reboot ap-off: ", err)
@@ -176,6 +173,17 @@ func DUTBehaviorOnECCommands(ctx context.Context, s *testing.State) {
 	}
 }
 
+func waitForG3AndBoot(ctx context.Context, h *firmware.Helper, dut *dut.DUT) error {
+	ecPowerG3State := "G3"
+	if err := h.WaitForPowerStates(ctx, 1*time.Second, 30*time.Second, ecPowerG3State); err != nil {
+		return errors.Wrap(err, "failed to verify EC power state after power long-press")
+	}
+	if err := firmware.BootDutViaPowerPress(ctx, h, dut); err != nil {
+		return errors.Wrap(err, "failed to power on DUT with servo power normal press")
+	}
+	return nil
+}
+
 // performServoPowerLongPress performs long press power button via servo, waits for G3 state
 // and power-on DUT with power normal press via servo.
 func performServoPowerLongPress(ctx context.Context, h *firmware.Helper, dut *dut.DUT) error {
@@ -189,12 +197,8 @@ func performServoPowerLongPress(ctx context.Context, h *firmware.Helper, dut *du
 	if err := dut.WaitUnreachable(sdCtx); err != nil {
 		return errors.Wrap(err, "failed to wait DUT unreachable")
 	}
-	ecPowerG3State := "G3"
-	if err := h.WaitForPowerStates(ctx, 1*time.Second, 30*time.Second, ecPowerG3State); err != nil {
-		return errors.Wrap(err, "failed to verify EC power state after power long-press")
-	}
-	if err := firmware.BootDutViaPowerPress(ctx, h, dut); err != nil {
-		return errors.Wrap(err, "failed to power on DUT with servo power normal press after power long-press")
+	if err := waitForG3AndBoot(ctx, h, dut); err != nil {
+		return errors.Wrap(err, "failed to wait for G3 state and boot the DUT after power long-press")
 	}
 	return nil
 }
@@ -206,8 +210,11 @@ func performRebootApOff(ctx context.Context, h *firmware.Helper, dut *dut.DUT) e
 	}
 	wtCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
 	defer cancel()
-	if err := dut.WaitConnect(wtCtx); err != nil {
+	if err := dut.WaitUnreachable(wtCtx); err != nil {
 		return errors.Wrap(err, "failed to wait connect DUT after reboot")
+	}
+	if err := waitForG3AndBoot(ctx, h, dut); err != nil {
+		return errors.Wrap(err, "failed to wait for G3 state and boot the DUT after 'reboot-ap'")
 	}
 	return nil
 }
@@ -223,12 +230,8 @@ func performApShutdown(ctx context.Context, h *firmware.Helper, dut *dut.DUT) er
 	if err := dut.WaitUnreachable(sdCtx); err != nil {
 		return errors.Wrap(err, "failed wait for unreachable")
 	}
-	ecPowerG3State := "G3"
-	if err := h.WaitForPowerStates(ctx, 1*time.Second, 30*time.Second, ecPowerG3State); err != nil {
-		return errors.Wrap(err, "failed to verify EC power state after 'apshutdown'")
-	}
-	if err := firmware.BootDutViaPowerPress(ctx, h, dut); err != nil {
-		return errors.Wrap(err, "failed to power on DUT with servo after 'apshutdown'")
+	if err := waitForG3AndBoot(ctx, h, dut); err != nil {
+		return errors.Wrap(err, "failed to wait for G3 state and boot the DUT after 'apshutdown'")
 	}
 	return nil
 }
@@ -247,20 +250,6 @@ func performHiberate(ctx context.Context, h *firmware.Helper, dut *dut.DUT) erro
 	testing.ContextLog(ctx, "Verify EC is non-responsive")
 	if err := h.Servo.CheckUnresponsiveEC(ctx); err != nil {
 		return errors.Wrap(err, "failed to check EC console to be non-resposive")
-	}
-	return nil
-}
-
-// performRebootWithECCommand perform DUT rebooting with 're' EC command and
-// wait for DUT to connect back.
-func performRebootWithECCommand(ctx context.Context, h *firmware.Helper, dut *dut.DUT) error {
-	if _, err := h.Servo.RunECCommandGetOutput(ctx, "re", []string{`Rebooting!`}); err != nil {
-		return errors.Wrap(err, "failed to execute 're' command on EC console")
-	}
-	wtCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
-	defer cancel()
-	if err := dut.WaitConnect(wtCtx); err != nil {
-		return errors.Wrap(err, "failed to wait connect DUT after reboot")
 	}
 	return nil
 }
