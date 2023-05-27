@@ -26,7 +26,7 @@ const (
 	speedtestTimeout = 2 * time.Minute
 	googleDotComIPv6 = "ipv6.google.com"
 	googleDotComIPv4 = "ipv4.google.com"
-	testIPv6DotCom   = "test-ipv6.com"
+	testIPv6DotCom   = "ipv6-test.com"
 )
 
 func logOutputToFile(ctx context.Context, log, fn string) {
