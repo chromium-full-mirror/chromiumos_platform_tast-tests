@@ -1,0 +1,183 @@
+// Copyright 2022 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package wallpaper
+
+import (
+	"context"
+	"path/filepath"
+	"time"
+
+	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/media/imgcmp"
+	"go.chromium.org/tast-tests/cros/local/personalization"
+	"go.chromium.org/tast-tests/cros/local/screenshot"
+	"go.chromium.org/tast-tests/cros/local/wallpaper"
+	"go.chromium.org/tast-tests/cros/local/wallpaper/constants"
+
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
+)
+
+type setGooglePhotosWallpaperParams struct {
+	album    string
+	isShared bool
+}
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func:         SetGooglePhotosWallpaper,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Test setting Google Photos wallpapers in the wallpaper app",
+		Contacts: []string{
+			"assistive-eng@google.com",
+			"xiaohuic@google.com",
+			"chromeos-sw-engprod@google.com",
+		},
+		// ChromeOS > Software > Personalization
+		BugComponent: "b:1006527",
+		Attr:         []string{"group:mainline", "informational"},
+		SoftwareDeps: []string{"chrome"},
+		Timeout:      5 * time.Minute,
+		Fixture:      "personalizationWithGooglePhotosWallpaper",
+		Params: []testing.Param{{
+			Name: "from_album",
+			Val: setGooglePhotosWallpaperParams{
+				album:    constants.GooglePhotosWallpaperAlbum,
+				isShared: false,
+			},
+		}, {
+			Name: "from_photos",
+			Val: setGooglePhotosWallpaperParams{
+				album:    "",
+				isShared: false,
+			},
+		}, {
+			Name: "from_shared_album",
+			Val: setGooglePhotosWallpaperParams{
+				album:    constants.GooglePhotosWallpaperSharedAlbum,
+				isShared: true,
+			},
+		}},
+	})
+}
+
+func SetGooglePhotosWallpaper(ctx context.Context, s *testing.State) {
+	cr := s.FixtValue().(*chrome.Chrome)
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to create Test API connection: ", err)
+	}
+
+	// Force Chrome to be in clamshell mode to make sure the wallpaper view is
+	// clearly visible for us to compare it with an expected RGBA color.
+	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
+	if err != nil {
+		s.Fatal("Failed to ensure DUT is not in tablet mode: ", err)
+	}
+	defer cleanup(cleanupCtx)
+
+	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
+
+	// The test has a dependency on network speed, so we give `uiauto.Context`
+	// ample time to wait for nodes to load.
+	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
+
+	album := s.Param().(setGooglePhotosWallpaperParams).album
+	isShared := s.Param().(setGooglePhotosWallpaperParams).isShared
+
+	// Cancel any daily refresh by selecting an online wallpaper
+	if err := uiauto.Combine("Set a new wallpaper and minimize wallpaper picker",
+		wallpaper.OpenWallpaperPicker(ui),
+		wallpaper.SelectCollection(ui, constants.CityscapesCollection),
+		wallpaper.SelectImage(ui, constants.CityscapesImage),
+		wallpaper.CloseWallpaperPicker(),
+	)(ctx); err != nil {
+		s.Fatal("Failed to set new wallpaper: ", err)
+	}
+
+	if err := uiauto.Combine("Set a new wallpaper and minimize wallpaper picker",
+		wallpaper.OpenWallpaperPicker(ui),
+		wallpaper.SelectCollection(ui, constants.GooglePhotosWallpaperCollection),
+		func(ctx context.Context) error {
+			if len(album) == 0 {
+				return nil
+			}
+			if err := ui.DoDefault(constants.GooglePhotosWallpaperAlbumsButton)(ctx); err != nil {
+				return err
+			}
+			if isShared {
+				sharedText := nodewith.Name("Shared").ClassName("secondary-text")
+				if err := ui.WaitUntilExists(sharedText)(ctx); err != nil {
+					return err
+				}
+			}
+			return wallpaper.SelectGooglePhotosAlbum(ui, album)(ctx)
+		},
+		wallpaper.SelectGooglePhotosPhoto(ui, constants.GooglePhotosWallpaperPhoto),
+	)(ctx); err != nil {
+		s.Fatal("Failed to set new wallpaper: ", err)
+	}
+
+	// Navigate to Google Photos subpage and select "Fill" mode for the selected wallpaper.
+	if err := uiauto.Combine("Navigate to Google Photos subpage and select Fill mode",
+		personalization.NavigateBreadcrumb(constants.GooglePhotosWallpaperCollection, ui),
+		ui.WaitUntilExists(constants.FillButton),
+		ui.LeftClick(constants.FillButton),
+		wallpaper.MinimizeWallpaperPicker(ui),
+	)(ctx); err != nil {
+		s.Fatal("Failed to select Fill mode: ", err)
+	}
+
+	// The expected percentage takes into account that the center cropped image is
+	// similar to the filled one.
+	const expectedPercent = 70
+	if err := wallpaper.ValidateBackground(cr,
+		constants.GooglePhotosWallpaperColor, expectedPercent)(ctx); err != nil {
+		s.Error("Failed to validate wallpaper background: ", err)
+	}
+
+	// Take a screenshot of the current wallpaper.
+	screenshot1, err := screenshot.GrabScreenshot(ctx, cr)
+	if err != nil {
+		s.Fatal("Failed to grab screenshot: ", err)
+	}
+
+	if err := uiauto.Combine("Choose new layout and minimize wallpaper picker",
+		wallpaper.OpenWallpaperPicker(ui),
+		wallpaper.SelectCollection(ui, constants.GooglePhotosWallpaperCollection),
+		ui.LeftClick(constants.CenterButton),
+		wallpaper.MinimizeWallpaperPicker(ui),
+	)(ctx); err != nil {
+		s.Fatal("Failed to set new wallpaper: ", err)
+	}
+
+	// Take a screenshot of the wallpaper with new layout.
+	screenshot2, err := screenshot.GrabScreenshot(ctx, cr)
+	if err != nil {
+		s.Fatal("Failed to grab screenshot: ", err)
+	}
+
+	// Verify that the wallpaper has indeed changed.
+	if err = wallpaper.ValidateDiff(screenshot1, screenshot2, expectedPercent); err != nil {
+		screenshot1Path := filepath.Join(s.OutDir(), "screenshot_1.png")
+		screenshot2Path := filepath.Join(s.OutDir(), "screenshot_2.png")
+		if err := imgcmp.DumpImageToPNG(ctx, &screenshot1, screenshot1Path); err != nil {
+			s.Errorf("Failed to dump image to %s: %v", screenshot1Path, err)
+		}
+		if err := imgcmp.DumpImageToPNG(ctx, &screenshot2, screenshot2Path); err != nil {
+			s.Errorf("Failed to dump image to %s: %v", screenshot2Path, err)
+		}
+		s.Fatal("Failed to validate wallpaper difference: ", err)
+	}
+}

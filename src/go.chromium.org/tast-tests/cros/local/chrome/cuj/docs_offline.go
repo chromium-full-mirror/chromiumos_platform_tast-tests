@@ -1,0 +1,108 @@
+// Copyright 2022 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package cuj
+
+import (
+	"context"
+	"time"
+
+	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/cws"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
+
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
+)
+
+// EnsureDocsOfflineInstalled ensures that docs offline extension is installed
+// for the browser. `br` is where the extension is installed to. `tconn` is a
+// TestConn to ash-chrome.
+func EnsureDocsOfflineInstalled(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn) error {
+	const (
+		docsOfflineID   = "ghbmnnjooekpmoecnnnilnnbdlolhkhi"
+		docsOfflineName = "Google Docs Offline"
+		docsOfflineURL  = "https://chrome.google.com/webstore/detail/google-docs-offline/ghbmnnjooekpmoecnnnilnnbdlolhkhi"
+	)
+	docsOfflineExt := cws.App{Name: docsOfflineName, URL: docsOfflineURL}
+
+	isInstalled, err := ash.ChromeAppInstalled(ctx, tconn, docsOfflineID)
+	if err != nil {
+		return errors.Wrap(err, "failed to check existence of docs offline extension")
+	}
+
+	if isInstalled {
+		testing.ContextLog(ctx, "Docs offline extension is already installed")
+		return nil
+	}
+
+	testing.ContextLog(ctx, "Install docs offline extension")
+	// Allow at maximum 2 minutes to install the extension. This normally only takes several seconds.
+	cwsCtx, cancel := context.WithTimeout(ctx, 2*time.Minute)
+	defer cancel()
+	cwsErr := cws.InstallApp(cwsCtx, br, tconn, docsOfflineExt)
+	if cwsErr != nil {
+		// If Docs Offline extention is included in /usr/share/google-chrome/extensions/,
+		// it will be installed by the Chrome automatically.
+		// Check if the extension has been installed even if the CWS installation fails.
+		isInstalled, err := ash.ChromeAppInstalled(ctx, tconn, docsOfflineID)
+		if err == nil && isInstalled {
+			testing.ContextLog(ctx, "Docs offline extension has been installed even though the CWS installation returned an error: ", cwsErr)
+			return nil
+		}
+	}
+	return cwsErr
+}
+
+// EnsureDocsOfflineEnabled ensures that docs offline extension is installed for
+// the browser and the current active user has it enabled in Drive's settings.
+// This function should be called before opening any docs if offline capability
+// is desired.
+func EnsureDocsOfflineEnabled(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn) (retErr error) {
+	if err := EnsureDocsOfflineInstalled(ctx, br, tconn); err != nil {
+		return errors.Wrap(err, "failed to install Docs offline extension")
+	}
+
+	// Open Drive settings page.
+	conn, err := br.NewConn(ctx, "https://drive.google.com/settings")
+	if err != nil {
+		return errors.Wrap(err, "failed to open Drive settings")
+	}
+	defer conn.Close()
+	defer conn.CloseTarget(ctx)
+
+	outDir, ok := testing.ContextOutDir(ctx)
+	if !ok || outDir == "" {
+		return errors.New("failed to get the out directory to dump UI tree on failures")
+	}
+
+	// Shorten context to allow for dumping UI tree in case of failure.
+	closeCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 2*time.Second)
+	defer cancel()
+
+	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnError(closeCtx, outDir, func() bool { return retErr != nil }, tconn, "docs_offline_dump")
+
+	// Wait for settings page to load and sync the account settings.
+	if err := webutil.WaitForQuiescence(ctx, conn, time.Minute); err != nil {
+		return errors.Wrap(err, "failed to wait for Drive settings to load")
+	}
+
+	// Make sure the "offline" checkbox is checked.
+	testing.ContextLog(ctx, "Making sure offline support is enabled")
+	if err := conn.Call(ctx, nil, `() => {
+		let offlineCheckbox = document.getElementsByName('offline')[0];
+		if (!offlineCheckbox.checked)
+			offlineCheckbox.click();
+	}`); err != nil {
+		return errors.Wrap(err, "failed to ensure offline checkbox checked")
+	}
+
+	testing.ContextLog(ctx, "Docs offline support enabled")
+	return nil
+}

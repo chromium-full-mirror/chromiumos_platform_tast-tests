@@ -1,0 +1,84 @@
+// Copyright 2022 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package nearbyfixture
+
+import (
+	"time"
+
+	nearbycommon "go.chromium.org/tast-tests/cros/common/cros/nearbyshare"
+	"go.chromium.org/tast-tests/cros/local/chrome/crossdevice"
+	"go.chromium.org/tast-tests/cros/local/chrome/nearbyshare/nearbysnippet"
+	"go.chromium.org/tast/core/testing"
+)
+
+// addDevAndroidFixtures registers fixtures for basic CrOS<->Android sharing tests.
+// The Android phone will be signed in with a GAIA account that is a member of the Nearby dev user group,
+// so it will be using the dev Nearby version.
+func addDevAndroidFixtures() {
+	// Fixtures for in-contacts sharing tests.
+	testing.AddFixture(&testing.Fixture{
+		Name: "nearbyShareDataUsageOfflineAllContactsDev",
+		Desc: "Nearby Share enabled on CrOS and Android configured with 'Data Usage' set to 'Offline',  'Visibility' set to 'All Contacts'",
+		Impl: NewNearbyShareFixture(fixtureOptions{
+			crosDataUsage:              nearbycommon.DataUsageOffline,
+			crosVisibility:             nearbycommon.VisibilityAllContacts,
+			androidDataUsage:           nearbysnippet.NearbySharingDataUsage_DATA_USAGE_OFFLINE,
+			androidVisibility:          nearbysnippet.NearbySharingVisibility_VISIBILITY_ALL_CONTACTS,
+			crosSelectAndroidAsContact: false,
+		}),
+		Contacts: []string{
+			"chromeos-sw-engprod@google.com",
+		},
+		Parent:          "nearbyShareGAIALoginAndroidAccountDev",
+		SetUpTimeout:    3*time.Minute + crossdevice.BugReportDuration,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  resetTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
+
+	// Fixtures for high-visibility sharing tests.
+	testing.AddFixture(&testing.Fixture{
+		Name:   "nearbyShareDataUsageOnlineNoOneDev",
+		Desc:   "Nearby Share enabled on CrOS and Android configured with 'Data Usage' set to 'Online' and 'Visibility' set to 'No One'",
+		Parent: "nearbyShareGAIALoginDev",
+		Impl: NewNearbyShareFixture(fixtureOptions{
+			crosDataUsage:              nearbycommon.DataUsageOnline,
+			crosVisibility:             nearbycommon.VisibilityNoOne,
+			androidDataUsage:           nearbysnippet.NearbySharingDataUsage_DATA_USAGE_ONLINE,
+			androidVisibility:          nearbysnippet.NearbySharingVisibility_VISIBILITY_HIDDEN,
+			crosSelectAndroidAsContact: false,
+		}),
+		Contacts: []string{
+			"chromeos-sw-engprod@google.com",
+		},
+		SetUpTimeout:    3*time.Minute + crossdevice.BugReportDuration,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  resetTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: "nearbyShareDataUsageOfflineNoOneDev",
+		Desc: "Nearby Share enabled on CrOS and Android configured with 'Data Usage' set to 'Offline' and 'Visibility' set to 'No One'",
+		Impl: NewNearbyShareFixture(fixtureOptions{
+			crosDataUsage:              nearbycommon.DataUsageOffline,
+			crosVisibility:             nearbycommon.VisibilityNoOne,
+			androidDataUsage:           nearbysnippet.NearbySharingDataUsage_DATA_USAGE_OFFLINE,
+			androidVisibility:          nearbysnippet.NearbySharingVisibility_VISIBILITY_HIDDEN,
+			crosSelectAndroidAsContact: false,
+		}),
+		Contacts: []string{
+			"chromeos-sw-engprod@google.com",
+		},
+		Parent:          "nearbyShareGAIALoginDev",
+		SetUpTimeout:    3*time.Minute + crossdevice.BugReportDuration,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  resetTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
+}

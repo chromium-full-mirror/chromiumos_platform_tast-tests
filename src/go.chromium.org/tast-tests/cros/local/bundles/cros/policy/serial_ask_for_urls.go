@@ -1,0 +1,158 @@
+// Copyright 2022 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package policy
+
+import (
+	"context"
+	"net/http"
+	"net/http/httptest"
+	"time"
+
+	"go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/common/pci"
+	"go.chromium.org/tast-tests/cros/common/policy"
+	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/serial"
+	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast-tests/cros/local/policyutil"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
+)
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func:         SerialAskForUrls,
+		LacrosStatus: testing.LacrosVariantExists,
+		Desc:         "Tests the behavior of the SerialAskForUrls policy by checking that it correctly configures access to the serial port selection prompt",
+		Contacts: []string{
+			"cros-engprod-muc@google.com",
+			"cmfcmf@google.com", // Test author
+		},
+		BugComponent: "b:1263917",
+		SoftwareDeps: []string{"chrome"},
+		Attr: []string{
+			"group:golden_tier",
+		},
+		Params: []testing.Param{
+			{
+				Fixture: fixture.ChromePolicyLoggedIn,
+				Val:     browser.TypeAsh,
+			}, {
+				Name:              "lacros",
+				Fixture:           fixture.LacrosPolicyLoggedIn,
+				Val:               browser.TypeLacros,
+				ExtraSoftwareDeps: []string{"lacros"},
+			},
+		},
+		Data: []string{serial.SerialTestPage},
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.DefaultSerialGuardSetting{}, pci.VerifiedFunctionalityUI),
+			pci.SearchFlag(&policy.SerialBlockedForUrls{}, pci.VerifiedFunctionalityUI),
+			pci.SearchFlag(&policy.SerialAskForUrls{}, pci.VerifiedFunctionalityUI),
+		},
+	})
+}
+
+// SerialAskForUrls tests the SerialAskForUrls policy.
+func SerialAskForUrls(ctx context.Context, s *testing.State) {
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
+
+	httpServer := httptest.NewServer(http.FileServer(s.DataFileSystem()))
+	defer httpServer.Close()
+
+	for _, param := range []struct {
+		name             string
+		wantSerialDialog bool
+		policies         []policy.Policy
+	}{
+		{
+			name:             "set",
+			wantSerialDialog: true,
+			policies: []policy.Policy{
+				&policy.SerialAskForUrls{Val: []string{httpServer.URL}}},
+		},
+		{
+			name:             "set_and_ask_by_default",
+			wantSerialDialog: true,
+			policies: []policy.Policy{
+				&policy.DefaultSerialGuardSetting{Val: serial.DefaultSerialGuardSettingAsk},
+				&policy.SerialAskForUrls{Val: []string{httpServer.URL}}},
+		},
+		{
+			name:             "set_and_block_by_default",
+			wantSerialDialog: true,
+			policies: []policy.Policy{
+				&policy.DefaultSerialGuardSetting{Val: serial.DefaultSerialGuardSettingBlock},
+				&policy.SerialAskForUrls{Val: []string{httpServer.URL}}},
+		},
+		{
+			name:             "set_non_matching_and_block_by_default",
+			wantSerialDialog: false,
+			policies: []policy.Policy{
+				&policy.DefaultSerialGuardSetting{Val: serial.DefaultSerialGuardSettingBlock},
+				&policy.SerialAskForUrls{Val: []string{"https://example.com"}}},
+		},
+		// TODO(crbug.com/1321219): The behavior of when these policies conflict
+		// with each other does not follow the documented behavior. According to the
+		// documentation, neither of both policies should be applied, but it looks
+		// like in reality, the request is always blocked.
+		//
+		// {
+		// 	name:             "conflict_and_block_by_default",
+		// 	wantSerialDialog: false,
+		// 	policies:           []policy.Policy{
+		// 		&policy.DefaultSerialGuardSetting{Val: defaultSerialGuardSettingBlock},
+		// 		&policy.SerialAskForUrls{Val: []string{httpServer.URL}},
+		// 		&policy.SerialBlockedForUrls{Val: []string{httpServer.URL}}},
+		// },
+		// {
+		// 	name:             "conflict_and_ask_by_default",
+		// 	wantSerialDialog: true,
+		// 	policies:           []policy.Policy{
+		// 		&policy.DefaultSerialGuardSetting{Val: defaultSerialGuardSettingAsk},
+		// 		&policy.SerialAskForUrls{Val: []string{httpServer.URL}},
+		// 		&policy.SerialBlockedForUrls{Val: []string{httpServer.URL}}},
+		// },
+		{
+			name:             "unset",
+			wantSerialDialog: true,
+			policies: []policy.Policy{
+				&policy.SerialAskForUrls{Stat: policy.StatusUnset}},
+		},
+	} {
+		s.Run(ctx, param.name, func(ctx context.Context, s *testing.State) {
+			// Reserve ten seconds for cleanup.
+			cleanupCtx := ctx
+			ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+			defer cancel()
+
+			// Perform cleanup.
+			if err := policyutil.ResetChrome(ctx, fdms, cr); err != nil {
+				s.Fatal("Failed to clean up: ", err)
+			}
+
+			// Update policies.
+			if err := policyutil.ServeAndVerify(ctx, fdms, cr, param.policies); err != nil {
+				s.Fatal("Failed to update policies: ", err)
+			}
+
+			// Setup browser based on the chrome type.
+			br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+			if err != nil {
+				s.Fatal("Failed to open the browser: ", err)
+			}
+			defer closeBrowser(cleanupCtx)
+			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.name)
+
+			if err := serial.TestSerialPortRequest(ctx, cr, br, httpServer.URL, param.wantSerialDialog); err != nil {
+				s.Fatal("Failed while testing serial port request: ", err)
+			}
+		})
+	}
+}

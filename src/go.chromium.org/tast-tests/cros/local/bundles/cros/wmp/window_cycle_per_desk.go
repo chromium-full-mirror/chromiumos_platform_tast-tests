@@ -1,0 +1,221 @@
+// Copyright 2022 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package wmp
+
+import (
+	"context"
+	"time"
+
+	"go.chromium.org/tast-tests/cros/local/apps"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/wmp/wmputils"
+	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
+)
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func:         WindowCyclePerDesk,
+		LacrosStatus: testing.LacrosVariantExists,
+		Desc:         "Checks Alt+Tab and Alt+Shift+Tab functionality for cycling windows for each desk",
+		Contacts: []string{
+			"chromeos-wms@google.com",
+			"hongyulong@chromium.org",
+			"chromeos-sw-engprod@google.com",
+		},
+		//  ChromeOS > Software > Window Management > Virtual Desks
+		BugComponent: "b:1238200",
+		Attr:         []string{"group:mainline", "group:hw_agnostic", "informational"},
+		SoftwareDeps: []string{"chrome", "no_kernel_upstream"},
+		SearchFlags: []*testing.StringPair{{
+			Key: "feature_id",
+			// Navigate to a window in the current desk.
+			Value: "screenplay-56a6ba3c-d691-4eb7-a487-ca25effa4288",
+		}},
+		Params: []testing.Param{{
+			Fixture: "chromeLoggedIn",
+		}, {
+			Name:              "lacros",
+			Fixture:           "lacros",
+			ExtraSoftwareDeps: []string{"lacros"},
+		}},
+	})
+}
+
+func WindowCyclePerDesk(ctx context.Context, s *testing.State) {
+	// Reserve for various cleanup.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to connect to test API: ", err)
+	}
+
+	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
+	if err != nil {
+		s.Fatal("Failed to ensure clamshell mode: ", err)
+	}
+	defer cleanup(cleanupCtx)
+
+	defer ash.CleanUpDesks(cleanupCtx, tconn)
+	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
+
+	// Ensure there is no window open before test starts.
+	if err := ash.CloseAllWindows(ctx, tconn); err != nil {
+		s.Fatal("Failed to ensure no window is open: ", err)
+	}
+
+	// Open one browser on the Desk1.
+	browserApp, err := apps.PrimaryBrowser(ctx, tconn)
+	if err != nil {
+		s.Fatal("Could not find browser app info: ", err)
+	}
+	if err := apps.Launch(ctx, tconn, browserApp.ID); err != nil {
+		s.Fatal("Failed to launch browser: ", err)
+	}
+	if err := ash.WaitForApp(ctx, tconn, browserApp.ID, time.Minute); err != nil {
+		s.Fatal("Browser did not appear in shelf after launch: ", err)
+	}
+
+	// Create 7 desks, and totally have 8 desks. Create a browser window for each desk.
+	totalDesks := 8
+	for i := 1; i < totalDesks; i++ {
+		if err = ash.CreateNewDesk(ctx, tconn); err != nil {
+			s.Fatal("Failed to create a new desk: ", err)
+		}
+
+		// Active the new created desk.
+		if err = ash.ActivateDeskAtIndex(ctx, tconn, i); err != nil {
+			s.Fatalf("Failed to activate desk with index %d: %v", i, err)
+		}
+		// Open one browser on the desk.
+		browserApp, err := apps.PrimaryBrowser(ctx, tconn)
+		if err != nil {
+			s.Fatal("Could not find browser app info: ", err)
+		}
+		if err := apps.Launch(ctx, tconn, browserApp.ID); err != nil {
+			s.Fatal("Failed to launch browser: ", err)
+		}
+		if _, err := ash.WaitForAnyWindow(ctx, tconn, func(w *ash.Window) bool { return w.OnActiveDesk && w.IsVisible && !w.IsAnimating }); err != nil {
+			s.Fatal("Failed to open and wait for browser window on active desk: ", err)
+		}
+	}
+
+	ac := uiauto.New(tconn)
+	// 3. Tests that when we active any desk (desk 5) and press alt-tab keys and enable the "Current desk" option.
+	if err := ash.ActivateDeskAtIndex(ctx, tconn, 5); err != nil {
+		s.Fatal("Failed to activate desk 5: ", err)
+	}
+
+	if err := ash.WaitUntilDesksFinishAnimating(ctx, tconn); err != nil {
+		s.Fatal("Failed to wait for desks to finish animating: ", err)
+	}
+
+	// Get the keyboard
+	keyboard, err := input.Keyboard(ctx)
+	if err != nil {
+		s.Fatal("Failed to get keyboard: ", err)
+	}
+	defer keyboard.Close(ctx)
+
+	if err := clickCurrentDeskButton(ctx, ac); err != nil {
+		s.Fatal("Failed to open Alt+Tab window to click Current desk button: ", err)
+	}
+
+	// 4. Tests that when we traverse all of the desks and enter the alt-tab window, the "Current desk" should be
+	// enabled based on the test 3.
+	for i := 0; i < totalDesks; i++ {
+		if err = ash.ActivateDeskAtIndex(ctx, tconn, i); err != nil {
+			s.Fatalf("Failed to activate desk %d: %v", i, err)
+		}
+		// FindAllWindows returns the windows existing on the active desk.
+		windows, err := ash.FindAllWindows(ctx, tconn, func(w *ash.Window) bool {
+			return w.OnActiveDesk
+		})
+		if err != nil {
+			s.Fatal("Failed to get all windows on active desk: ", err)
+		}
+		// Cycle windows for the active desk.
+		if err := wmputils.VerifyWindowsForCycleMenu(ctx, tconn, ac, windows); err != nil {
+			s.Fatalf("Failed to cycle windows for the active desk with index %d: %v", i, err)
+		}
+	}
+
+	// 5. Delete all desks and press alt-tab keys. All the active apps and browsers should be shown without any option
+	// at the top of the alt-tab window.
+	if err := ash.CleanUpDesks(ctx, tconn); err != nil {
+		s.Fatal("Failed to close all desks: ", err)
+	}
+	// Finder for the window cycle menu when there is only one desk.
+	windowCycleView := nodewith.ClassName("WindowCycleView")
+	// WindowCycleTabSlider contains the All desks button and Current desk button.
+	windowCycleTabSlider := nodewith.ClassName("WindowCycleTabSlider").Ancestor(windowCycleView)
+
+	// Make sure the cycle menu isn't open already before we try to alt+tab.
+	if err := ac.WithTimeout(5 * time.Second).WaitUntilGone(windowCycleView)(ctx); err != nil {
+		s.Fatal("Cycle menu unexpectedly open before pressing alt+tab: ", err)
+	}
+	if err := uiauto.Combine(
+		"check no window cycle tab slider when there is only one desk",
+		keyboard.AccelPressAction("Alt+Tab"),
+		ac.WithTimeout(5*time.Second).WaitUntilExists(windowCycleView),
+		ac.WithTimeout(5*time.Second).WaitUntilGone(windowCycleTabSlider),
+		keyboard.AccelReleaseAction("Alt+Tab"),
+	)(ctx); err != nil {
+		s.Fatal("Failed to bring up the cycle window: ", err)
+	}
+}
+
+func clickCurrentDeskButton(ctx context.Context, ac *uiauto.Context) error {
+	// Finder for the window cycle menu when there is only one desk.
+	cycleMenu := nodewith.ClassName("WindowCycleView")
+
+	// Get the keyboard
+	keyboard, err := input.Keyboard(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get keyboard")
+	}
+	defer keyboard.Close(ctx)
+
+	// Make sure the cycle menu isn't open already before we try to alt+tab.
+	if err := ac.WithTimeout(5 * time.Second).WaitUntilGone(cycleMenu)(ctx); err != nil {
+		return errors.Wrap(err, "cycle menu unexpectedly open before pressing Alt+Tab")
+	}
+
+	// Open cycle window and get app order.
+	if err := keyboard.AccelPress(ctx, "Alt"); err != nil {
+		return errors.Wrap(err, "failed to long press Alt")
+	}
+	defer keyboard.AccelRelease(ctx, "Alt")
+
+	if err := testing.Sleep(ctx, 500*time.Millisecond); err != nil {
+		return errors.Wrap(err, "failed to sleep before press tab to open Alt+Tab window")
+	}
+
+	if err := keyboard.Accel(ctx, "Tab"); err != nil {
+		return errors.Wrap(err, "failed to press Tab")
+	}
+
+	currentDeskToggleButton := nodewith.HasClass("WindowCycleTabSliderButton").Name("Current desk")
+	if err := ac.WithTimeout(5 * time.Second).WaitUntilExists(currentDeskToggleButton)(ctx); err != nil {
+		return errors.Wrap(err, "failed to get Current desk button")
+	}
+
+	// Click Current desk button.
+	if err := ac.LeftClick(currentDeskToggleButton)(ctx); err != nil {
+		return errors.Wrap(err, "failed to left click Current desk button")
+	}
+
+	return nil
+}

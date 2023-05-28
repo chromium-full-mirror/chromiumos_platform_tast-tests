@@ -1,0 +1,129 @@
+// Copyright 2022 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package taskswitchcuj
+
+import (
+	"context"
+	"time"
+
+	"go.chromium.org/tast-tests/cros/local/apps"
+	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
+
+	"go.chromium.org/tast/core/errors"
+)
+
+// simpleWebsites are websites to be opened in individual browsers
+// with no additional setup required.
+// 1. Chromium issue tracker -- considerable amount of elements.
+// 2. About Version -- lightweight website.
+var simpleWebsites = []string{
+	"https://bugs.chromium.org/p/chromium/issues/list",
+	"https://chromium.org/Home",
+}
+
+// openChromeTabs opens Chrome tabs and returns the number of windows
+// that were opened.
+//
+// This function opens an individual window for each URL in
+// simpleWebsites. It also opens a window with multiple tabs, to
+// increase RAM pressure during the test.
+func openChromeTabs(ctx context.Context, tconn, bTconn *chrome.TestConn, br *browser.Browser, bt browser.Type, tabletMode bool) (int, error) {
+	const numExtraWebsites = 2
+
+	// Keep track of the initial number of windows, to ensure
+	// we open the right number of windows.
+	initialWindows, err := ash.GetAllWindows(ctx, tconn)
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to get window list")
+	}
+	initialNumWindows := len(initialWindows)
+
+	// Open up a single window with a couple of tabs, to increase RAM pressure.
+	tabs, err := cuj.NewTabs(ctx, br, false, numExtraWebsites)
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to bulk open tabs")
+	}
+
+	// Lacros specific setup to close "New Tab" window.
+	if bt == browser.TypeLacros {
+		// Don't include the "New Tab" window in the initial window count.
+		initialNumWindows--
+
+		if err := browser.CloseTabByTitle(ctx, bTconn, "New Tab"); err != nil {
+			return 0, errors.Wrap(err, `failed to close "New Tab" tab`)
+		}
+	}
+
+	// Open up individual window for each website in simpleWebsites.
+	taskSwitchTabs, err := cuj.NewTabsByURLs(ctx, br, true, simpleWebsites)
+	if err != nil {
+		return 0, err
+	}
+	tabs = append(tabs, taskSwitchTabs...)
+
+	// Close all current connections to tabs, because we don't need them.
+	for _, t := range tabs {
+		if err := t.Conn.Close(); err != nil {
+			return 0, errors.Wrapf(err, "failed to close connection to %s", t.URL)
+		}
+	}
+
+	if !tabletMode {
+		if err := ash.ForEachWindow(ctx, tconn, func(w *ash.Window) error {
+			return ash.SetWindowStateAndWait(ctx, tconn, w.ID, ash.WindowStateNormal)
+		}); err != nil {
+			return 0, errors.Wrap(err, "failed to set each window to normal state")
+		}
+	}
+
+	// Expected number of browser windows should include the number of
+	// websites in |simpleWebsites| and the window with multiple tabs.
+	expectedNumBrowserWindows := len(simpleWebsites) + 1
+	if ws, err := ash.GetAllWindows(ctx, tconn); err != nil {
+		return 0, errors.Wrap(err, "failed to get window list after opening Chrome tabs")
+	} else if expectedNumWindows := expectedNumBrowserWindows + initialNumWindows; len(ws) != expectedNumWindows {
+		// Print out two window list mismatch details.
+		windowMismatchMsg := cuj.LogWindowMismatch(ctx, initialWindows, ws)
+		return 0, errors.Wrapf(err, "unexpected number of windows open after launching Chrome tabs, got: %d, expected: %d; %s", len(ws), expectedNumWindows, windowMismatchMsg)
+	}
+
+	return expectedNumBrowserWindows, nil
+}
+
+func openPWA(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, br *browser.Browser) (func(ctx context.Context) error, error) {
+	const (
+		// This value is used to properly uninstall the app during test
+		// cleanup. This name is different than apps.Meet.Name, which
+		// is why it is set separately.
+		nameInSettingsApp = "Google Meet"
+
+		// pwaURL is the url used to install the PWA.
+		pwaURL = "https://meet.google.com"
+	)
+
+	appID := apps.Meet.ID
+
+	alreadyInstalled, err := ash.ChromeAppInstalled(ctx, tconn, appID)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to check whether %s PWA has already been installed", nameInSettingsApp)
+	}
+
+	if alreadyInstalled {
+		if err := apps.Launch(ctx, tconn, appID); err != nil {
+			return nil, errors.Wrapf(err, "failed to launch %s PWA", nameInSettingsApp)
+		}
+	} else {
+		if err := apps.InstallPWAForURL(ctx, tconn, br, pwaURL, 30*time.Second); err != nil {
+			return nil, errors.Wrapf(err, "failed to install and launch %s PWA", nameInSettingsApp)
+		}
+	}
+	return func(ctx context.Context) error {
+		return ossettings.UninstallApp(ctx, tconn, cr, nameInSettingsApp, appID)
+	}, nil
+}

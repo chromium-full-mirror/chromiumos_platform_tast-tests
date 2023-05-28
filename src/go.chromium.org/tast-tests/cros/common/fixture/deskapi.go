@@ -4,7 +4,7 @@
 
 package fixture
 
-// Fixtured defined in chromiumos/tast/remote/policyutil/desk_api_fixture.go.
+// Fixtured defined in go.chromium.org/tast-tests/cros/remote/policyutil/desk_api_fixture.go.
 const (
 	// Enrolled desk API feature using TAPE leased account.
 	DeskAPI = "deskAPI"

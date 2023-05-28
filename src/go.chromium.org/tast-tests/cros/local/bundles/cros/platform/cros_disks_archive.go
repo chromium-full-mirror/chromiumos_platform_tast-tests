@@ -1,0 +1,27 @@
+// Copyright 2020 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package platform
+
+import (
+	"context"
+
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/platform/crosdisks"
+	"go.chromium.org/tast/core/testing"
+)
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func:         CrosDisksArchive,
+		Desc:         "Checks that cros-disks can mount various archive types",
+		Contacts:     []string{"chromeos-files-syd@google.com"},
+		BugComponent: "b:167289",
+		Attr:         []string{"group:mainline"},
+		Data:         crosdisks.PreparedArchives,
+	})
+}
+
+func CrosDisksArchive(ctx context.Context, s *testing.State) {
+	crosdisks.RunArchiveTests(ctx, s)
+}

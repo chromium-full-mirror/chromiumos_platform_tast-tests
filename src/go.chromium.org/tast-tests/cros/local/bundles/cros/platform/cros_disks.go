@@ -1,0 +1,29 @@
+// Copyright 2019 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package platform
+
+import (
+	"context"
+
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/platform/crosdisks"
+	"go.chromium.org/tast/core/testing"
+)
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func:         CrosDisks,
+		Desc:         "Verifies CrosDisks' D-Bus API works",
+		BugComponent: "b:167289",
+		Contacts: []string{
+			"chromeos-files-syd@google.com",
+		},
+		Attr: []string{"group:mainline"},
+	})
+}
+
+func CrosDisks(ctx context.Context, s *testing.State) {
+	// Run series of tests. Please see crosdisks package for details.
+	crosdisks.RunBasicTests(ctx, s)
+}

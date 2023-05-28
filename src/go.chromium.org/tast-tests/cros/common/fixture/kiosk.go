@@ -4,7 +4,7 @@
 
 package fixture
 
-// Fixtures defined in chromiumos/tast/local/kioskmode/fixtures/kiosk.go.
+// Fixtures defined in go.chromium.org/tast-tests/cros/local/kioskmode/fixtures/kiosk.go.
 const (
 	// KioskLoggedInAsh
 	KioskLoggedInAsh = "kioskLoggedInAsh"

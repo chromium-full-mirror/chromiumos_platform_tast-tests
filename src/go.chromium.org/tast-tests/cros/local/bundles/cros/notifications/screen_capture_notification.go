@@ -1,0 +1,150 @@
+// Copyright 2021 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package notifications
+
+import (
+	"context"
+	"regexp"
+	"strings"
+	"time"
+
+	"go.chromium.org/tast-tests/cros/local/apps"
+	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/clipboard"
+	"go.chromium.org/tast-tests/cros/local/cryptohome"
+	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast-tests/cros/local/screenshot"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
+)
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func:         ScreenCaptureNotification,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Test the behavior of screen capture notification and make sure that the clipboard and actions buttons work correctly after taking the screenshot",
+		Contacts:     []string{"leandre@chromium.org", "cros-status-area-eng@google.com", "chromeos-sw-engprod@google.com"},
+		BugComponent: "b:1246021", // ChromeOS > Software > System UI Surfaces > Notifications
+		SoftwareDeps: []string{"chrome"},
+		Attr:         []string{"group:mainline", "informational"},
+		Fixture:      "chromeLoggedIn",
+	})
+}
+
+func ScreenCaptureNotification(ctx context.Context, s *testing.State) {
+	cr := s.FixtValue().(*chrome.Chrome)
+
+	// Connect to Test API to use it with the UI library.
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to create Test API connection: ", err)
+	}
+
+	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
+	if err != nil {
+		s.Fatal("Failed to retrieve user's Downloads path: ", err)
+	}
+	// Remove all screenshots at the beginning.
+	if err = screenshot.RemoveScreenshots(downloadsPath); err != nil {
+		s.Fatal("Failed to remove screenshots: ", err)
+	}
+
+	// Initially, the clipboard size should be zero.
+	size, err := clipboard.GetClipboardItemsSize(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to get clipboard size: ", err)
+	}
+	if size != 0 {
+		s.Error("Clipboard size should initially be zero")
+	}
+
+	// Take a screenshot to show a notification. Using the virtual keyboard is required since
+	// different physical keyboards can require different key combinations to take a screenshot.
+	vkb, err := input.VirtualKeyboard(ctx)
+	if err != nil {
+		s.Fatal("Failed to get virtual keyboard: ", err)
+	}
+	defer vkb.Close(ctx)
+
+	if err := vkb.Accel(ctx, "Ctrl+F5"); err != nil {
+		s.Fatal("Failed to take a screenshot: ", err)
+	}
+
+	ui := uiauto.New(tconn)
+	popup := nodewith.Role(role.Window).ClassName("ash/message_center/MessagePopup")
+
+	// Verify that the screen capture popup notification is shown after taking the screenshot.
+	if err := ui.WithTimeout(30 * time.Second).WaitUntilExists(popup)(ctx); err != nil {
+		s.Fatal("Failed to find popup notification: ", err)
+	}
+
+	// Verify that screenshot is saved in Download folder.
+	has, err := screenshot.HasScreenshots(downloadsPath)
+	if err != nil {
+		s.Fatal("Failed to check whether screenshot is present: ", err)
+	}
+	if !has {
+		s.Error("Screenshot should be present in Download folder")
+	}
+
+	// Verify that the image has been copied to clipboard
+	// The clipboard size should not be zero now.
+	size, err = clipboard.GetClipboardItemsSize(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to get clipboard size: ", err)
+	}
+	if size == 0 {
+		s.Error("Clipboard size should not be zero")
+	}
+
+	t, err := clipboard.GetClipboardFirstItemType(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to get clipboard item's type: ", err)
+	}
+
+	// The item on top of the clipboard should be an image.
+	if !strings.Contains(t, "image") {
+		s.Error("Clipboard item should be an image instead of ", t)
+	}
+
+	// Click "delete" button.
+	deleteButton := nodewith.NameRegex(regexp.MustCompile("(?i)delete")).Role(role.Button)
+	if err := ui.LeftClick(deleteButton)(ctx); err != nil {
+		s.Fatal("Failed to click delete button: ", err)
+	}
+
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		// Verify that our screenshot is deleted (not present in the Download folder).
+		has, err = screenshot.HasScreenshots(downloadsPath)
+		if err != nil {
+			return errors.Wrap(err, "failed to check whether screenshot is present")
+		}
+		if has {
+			return errors.New("screenshot should not be present in Download folder")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+		s.Fatal("Failed to verify that screenshot is deleted: ", err)
+	}
+
+	// Take another screenshot.
+	if err := vkb.Accel(ctx, "Ctrl+F5"); err != nil {
+		s.Fatal("Failed to take a screenshot: ", err)
+	}
+
+	// Click edit button, check if Gallery app open up.
+	editButton := nodewith.NameRegex(regexp.MustCompile("(?i)edit")).Role(role.Button)
+	if err := ui.LeftClick(editButton)(ctx); err != nil {
+		s.Fatal("Failed to click edit button: ", err)
+	}
+
+	if err := ash.WaitForApp(ctx, tconn, apps.Gallery.ID, time.Minute); err != nil {
+		s.Error("Failed to wait for Gallery app to open: ", err)
+	}
+}

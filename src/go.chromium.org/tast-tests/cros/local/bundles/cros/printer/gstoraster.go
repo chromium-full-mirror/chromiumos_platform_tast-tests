@@ -1,0 +1,38 @@
+// Copyright 2019 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package printer
+
+import (
+	"context"
+
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/printer/ghostscript"
+	"go.chromium.org/tast/core/testing"
+)
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func:     Gstoraster,
+		Desc:     "Tests that the gstoraster CUPS filter produces expected output",
+		Contacts: []string{"project-bolton@google.com", "bmgordon@chromium.org"},
+		// ChromeOS > Platform > Services > Printing
+		BugComponent: "b:167231",
+		Attr: []string{
+			"group:mainline",
+			"group:paper-io",
+			"paper-io_printing",
+		},
+		SoftwareDeps: []string{"cups", "ghostscript"},
+		Data:         []string{"gstoraster_input.pdf", "gstoraster_golden.pwg"},
+	})
+}
+
+func Gstoraster(ctx context.Context, s *testing.State) {
+	const (
+		gsFilter = "gstoraster"
+		input    = "gstoraster_input.pdf"
+		golden   = "gstoraster_golden.pwg"
+	)
+	ghostscript.RunTest(ctx, s, gsFilter, s.DataPath(input), s.DataPath(golden), "" /*envVar*/)
+}

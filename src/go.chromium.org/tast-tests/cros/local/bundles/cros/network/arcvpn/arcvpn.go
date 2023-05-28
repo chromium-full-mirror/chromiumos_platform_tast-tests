@@ -1,0 +1,92 @@
+// Copyright 2022 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+// Package arcvpn interacts with the ARC-side fake VPN.
+package arcvpn
+
+import (
+	"context"
+	"fmt"
+	"regexp"
+	"strings"
+	"time"
+
+	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/arc"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/vpn"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
+)
+
+// These need to stay in sync with /vendor/google_arc/packages/system/ArcHostVpn
+const (
+	FacadeVPNPkg = "org.chromium.arc.hostvpn"
+	FacadeVPNSvc = "org.chromium.arc.hostvpn.ArcHostVpnService"
+)
+
+// These need to stay in sync with
+// //platform/tast-tests/android/ArcVpnTest/src/org/chromium/arc/testapp/arcvpn/ArcTestVpnService.java
+const (
+	VPNTestAppAPK       = "ArcVpnTest.apk"
+	VPNTestAppPkg       = "org.chromium.arc.testapp.arcvpn"
+	VPNTestAppAct       = "org.chromium.arc.testapp.arcvpn.MainActivity"
+	VPNTestAppSvc       = "org.chromium.arc.testapp.arcvpn.ArcTestVpnService"
+	VPNTestAppBroadcast = "org.chromium.arc.testapp.swap.LAUNCH_VPN"
+	TunIP               = "192.168.2.2"
+)
+
+// SetUpHostVPN create the host VPN server, but does not initiate a connection.
+// The returned vpn.Connection is immediately ready for Connect() to be called
+// on it. The caller should call Cleanup() on the returned Connection after the
+// test is done.
+func SetUpHostVPN(ctx context.Context, vpnType vpn.Type, opts ...vpn.Option) (*vpn.Connection, error) {
+	opts = append(opts, vpn.WithoutAutoConnect())
+	return vpn.StartConnection(ctx, nil, vpnType, opts...)
+}
+
+// SetARCVPNEnabled flips the flag in the current running ARC instance. If running multiple tests
+// within the same ARC instance, it's recommended to cleanup by flipping the flag back to the
+// expected default state afterwards. Since no state is persisted, new ARC instances will initialize
+// with the default state.
+func SetARCVPNEnabled(ctx context.Context, a *arc.ARC, enabled bool) error {
+	testing.ContextLogf(ctx, "Setting arc-host-vpn flag to %t", enabled)
+	cmd := a.Command(ctx, "dumpsys", "wifi", "set-arc-host-vpn", fmt.Sprintf("%t", enabled))
+	o, err := cmd.Output(testexec.DumpLogOnError)
+	if err != nil {
+		return errors.Wrap(err, "failed to execute 'set-arc-host-vpn' commmand")
+	}
+
+	if !strings.Contains(string(o), "sEnableArcHostVpnAdbFlag="+fmt.Sprintf("%t", enabled)) {
+		return errors.New("unable to set sEnableArcHostVpnAdbFlag to " + fmt.Sprintf("%t", enabled))
+	}
+	return nil
+}
+
+// WaitForARCServiceState checks if the Android service is running in the `expectedRunning` state.
+func WaitForARCServiceState(ctx context.Context, a *arc.ARC, pkg, svc string, expectedRunning bool) error {
+	testing.ContextLogf(ctx, "Check the state of %s/%s", pkg, svc)
+
+	// Poll since it might take some time for the service to start/stop.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		cmd := a.Command(ctx, "dumpsys", "activity", "services", pkg+"/"+svc)
+		o, err := cmd.Output(testexec.DumpLogOnError)
+		if err != nil {
+			return errors.Wrap(err, "failed to execute 'dumpsys activity services' commmand")
+		}
+
+		// Use raw string so we can directly use backslashes
+		matched, matchErr := regexp.Match(`ServiceRecord\{`, o)
+		if matched != expectedRunning || matchErr != nil {
+			if expectedRunning {
+				return errors.Wrap(matchErr, "expected, but didn't find ServiceRecord")
+			}
+			return errors.Wrap(matchErr, "didn't expect, but found ServiceRecord")
+		}
+
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+		return errors.Wrapf(err, "service not in expected running state of %t", expectedRunning)
+	}
+	return nil
+}

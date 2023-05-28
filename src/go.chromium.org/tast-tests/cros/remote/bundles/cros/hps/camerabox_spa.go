@@ -1,0 +1,170 @@
+// Copyright 2022 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package hps
+
+import (
+	"context"
+	"time"
+
+	"github.com/golang/protobuf/ptypes/empty"
+	"google.golang.org/grpc"
+
+	"go.chromium.org/tast-tests/cros/common/hps/hpsutil"
+	"go.chromium.org/tast-tests/cros/common/media/caps"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/hps/fixture"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/hps/utils"
+	pb "go.chromium.org/tast-tests/cros/services/cros/hps"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
+)
+
+type testParamForSpa struct {
+	spaOn               bool
+	usingLatestFirmware bool
+}
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func:         CameraboxSPA,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Verify that HPS does not respond when SPA is off",
+		Data:         []string{hpsutil.PersonPresentPageArchiveFilename},
+		Contacts: []string{
+			"chromeos-hps-swe@google.com",
+			"eunicesun@google.com",
+			"mblsha@google.com",
+		},
+		BugComponent: "b:1140302",
+		Attr:         []string{"group:camerabox", "group:hps", "hps_perbuild"},
+		Timeout:      6 * time.Minute,
+		HardwareDeps: hwdep.D(hwdep.HPS()),
+		SoftwareDeps: []string{"hps", "chrome", caps.BuiltinCamera},
+		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.hps.HpsService"},
+		Vars:         []string{"chart"},
+		Params: []testing.Param{
+			{
+				Name: "off",
+				Val: testParamForSpa{
+					spaOn:               false,
+					usingLatestFirmware: false,
+				},
+			},
+			{
+				Name: "on",
+				Val: testParamForSpa{
+					spaOn:               true,
+					usingLatestFirmware: false,
+				},
+			},
+			{
+				Name: "on_latestfw",
+				Val: testParamForSpa{
+					spaOn:               true,
+					usingLatestFirmware: true,
+				},
+				Fixture: fixture.HpsdUsingLatestFirmware,
+			},
+		},
+	})
+}
+
+func CameraboxSPA(ctx context.Context, s *testing.State) {
+	param := s.Param().(testParamForSpa)
+
+	dut := s.DUT()
+
+	// Creating hps context.
+	hctx, err := hpsutil.NewHpsContext(ctx, "", hpsutil.DeviceTypeBuiltin, s.OutDir(), dut.Conn())
+	if err != nil {
+		s.Fatal("Error creating HpsContext: ", err)
+	}
+
+	// Connecting to the chart tablet that will render the picture.
+	ctxForCleanupDisplayChart := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
+	hostPaths, displayChart, err := utils.SetupDisplay(ctx, s)
+	if err != nil {
+		s.Fatal("Error setting up display: ", err)
+	}
+	defer displayChart.Close(ctxForCleanupDisplayChart, s.OutDir())
+
+	// Connecting to Taeko.
+	cleanupCtx := ctx
+	ctx, cancel = ctxutil.Shorten(ctx, time.Minute)
+	defer cancel()
+	cl, err := rpc.Dial(ctx, dut, s.RPCHint())
+	if err != nil {
+		s.Fatal("Failed to setup grpc: ", err)
+	}
+	defer cl.Close(cleanupCtx)
+
+	client := pb.NewHpsServiceClient(cl.Conn)
+	req := &pb.StartUIWithCustomScreenPrivacySettingRequest{
+		Setting: utils.SecondPersonAlert,
+		Enable:  param.spaOn,
+	}
+	// Change the setting to true so that we can get the quickdim delay time.
+	if _, err := client.StartUIWithCustomScreenPrivacySetting(hctx.Ctx, req, grpc.WaitForReady(true)); err != nil {
+		s.Fatal("Failed to change setting: ", err)
+	}
+
+	// Wait for hpsd to finish starting the HPS peripheral and enabling the feature we requested.
+	waitReq := &pb.WaitForHpsRequest{
+		WaitForSense:  false,
+		WaitForNotify: param.spaOn,
+	}
+	if _, err := client.WaitForHps(ctx, waitReq); err != nil {
+		s.Fatal("Failed to wait for HPS to be ready: ", err)
+	}
+
+	// Check that HPS is running the expected firmware version.
+	if param.spaOn {
+		runningVersion, err := hpsutil.FetchRunningFirmwareVersion(hctx)
+		if err != nil {
+			s.Error("Error reading running firmware version: ", err)
+		}
+		firmwarePath := hpsutil.FirmwarePath
+		if param.usingLatestFirmware {
+			firmwarePath = hpsutil.LatestFirmwarePath
+		}
+		expectedVersion, err := hpsutil.FetchFirmwareVersionFromImage(hctx, firmwarePath)
+		if err != nil {
+			s.Error("Error reading firmware version from image: ", err)
+		}
+		if runningVersion != expectedVersion {
+			s.Errorf("HPS reports running firmware version %v but expected %v", runningVersion, expectedVersion)
+		}
+	}
+
+	// Render hps-internal page for debugging before waiting for dim.
+	if _, err := client.OpenHPSInternalsPage(hctx.Ctx, &empty.Empty{}); err != nil {
+		s.Fatal("Error open hps-internals: ", err)
+	}
+
+	// Index i is representing the number of people in an image too.
+	for key, val := range hostPaths {
+		displayChart.Display(ctx, val)
+		testing.Sleep(ctx, time.Second*5)
+		result, err := client.CheckSPAEyeIcon(ctx, &empty.Empty{})
+		if err != nil {
+			s.Fatal("Unexpected error occured: ", err)
+		}
+		if key == utils.OnePresence || key == utils.ZeroPresence {
+			if result.Value {
+				s.Fatal("Unexpected snooping alert")
+			}
+		}
+		if key == utils.TwoPresence {
+			if !result.Value && param.spaOn {
+				s.Fatal("No snooping alert")
+			}
+			if result.Value && !param.spaOn {
+				s.Fatal("Unexpected snooping alert")
+			}
+		}
+	}
+}

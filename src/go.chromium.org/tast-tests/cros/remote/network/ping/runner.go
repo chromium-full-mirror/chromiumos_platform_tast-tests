@@ -1,0 +1,17 @@
+// Copyright 2020 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+// Package ping provides a factory to run ping on DUT from remote machine.
+package ping
+
+import (
+	"go.chromium.org/tast-tests/cros/common/network/ping"
+	"go.chromium.org/tast-tests/cros/remote/network/cmd"
+	"go.chromium.org/tast/core/ssh"
+)
+
+// NewRemoteRunner creates a ping Runner on the given dut for remote execution.
+func NewRemoteRunner(host *ssh.Conn) *ping.Runner {
+	return ping.NewRunner(&cmd.RemoteCmdRunner{Host: host})
+}

@@ -1,0 +1,278 @@
+// Copyright 2021 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package ui
+
+import (
+	"context"
+	"path/filepath"
+	"time"
+
+	"github.com/golang/protobuf/ptypes/empty"
+	"google.golang.org/grpc"
+
+	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
+	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/browser/browserui"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/touch"
+	"go.chromium.org/tast-tests/cros/local/common"
+	pb "go.chromium.org/tast-tests/cros/services/cros/ui"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
+)
+
+func init() {
+	testing.AddService(&testing.Service{
+		Register: func(srv *grpc.Server, s *testing.ServiceState) {
+			pb.RegisterCheckVirtualKeyboardServiceServer(srv, &CheckVirtualKeyboardService{
+				sharedObject: common.SharedObjectsForServiceSingleton,
+			})
+		},
+	})
+}
+
+// CheckVirtualKeyboardService implements the methods defined in CheckVirtualKeyboardServiceServer.
+type CheckVirtualKeyboardService struct {
+	cr           *chrome.Chrome
+	br           *browser.Browser
+	closeBrowser uiauto.Action
+	tconn        *chrome.TestConn // from ash-chrome
+	sharedObject *common.SharedObjectsForService
+	uia          *uiauto.Context
+}
+
+// NewChromeLoggedIn Logs into a user session.
+func (cvk *CheckVirtualKeyboardService) NewChromeLoggedIn(ctx context.Context, req *pb.NewBrowserRequest) (_ *empty.Empty, errRet error) {
+	cvk.sharedObject.ChromeMutex.Lock()
+	defer cvk.sharedObject.ChromeMutex.Unlock()
+
+	if cvk.cr != nil {
+		return nil, errors.New("Chrome already available")
+	}
+
+	bt := browser.TypeLacros
+	cfg := lacrosfixt.NewConfig()
+	if req.BrowserType == pb.NewBrowserRequest_ASH {
+		bt = browser.TypeAsh
+		cfg = nil
+	}
+	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, bt, cfg)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		if errRet != nil {
+			closeBrowser(ctx)
+			cr.Close(ctx)
+		}
+	}()
+
+	cvk.cr = cr
+	cvk.br = br
+	cvk.closeBrowser = closeBrowser
+	tconn, err := cvk.cr.TestAPIConn(ctx)
+	if err != nil {
+		return nil, err
+	}
+	cvk.tconn = tconn
+	// Store the newly created chrome in the shared object so UtilsService or other services can use it.
+	cvk.sharedObject.Chrome = cr
+
+	return &empty.Empty{}, nil
+}
+
+// OpenChromePage opens a chrome page.
+func (cvk *CheckVirtualKeyboardService) OpenChromePage(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+	if cvk.cr == nil {
+		return nil, errors.New("Chrome not available")
+	}
+	// Open an empty page.
+	conn, err := cvk.br.NewConn(ctx, "chrome://newtab/")
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to open empty Chrome page")
+	}
+	defer conn.Close()
+
+	return &empty.Empty{}, nil
+}
+
+// TouchChromeAddressBar uses touch screen to send a tap on the address bar.
+func (cvk *CheckVirtualKeyboardService) TouchChromeAddressBar(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+	tc, err := touch.New(ctx, cvk.tconn)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create the touch context instance")
+	}
+	if err := tc.Tap(browserui.AddressBarFinder)(ctx); err != nil {
+		return nil, errors.Wrap(err, "unable to detect ChromeOS virtual keyboard")
+	}
+
+	return &empty.Empty{}, nil
+}
+
+// ClickChromeAddressBar sends a left click on the address bar.
+func (cvk *CheckVirtualKeyboardService) ClickChromeAddressBar(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+	uiauto := uiauto.New(cvk.tconn)
+	if err := uiauto.LeftClickUntil(
+		browserui.AddressBarFinder,
+		uiauto.WaitUntilExists(browserui.AddressBarFinder.Focused()),
+	)(ctx); err != nil {
+		return nil, errors.Wrap(err, "could not find the address bar")
+	}
+	return &empty.Empty{}, nil
+}
+
+// CheckVirtualKeyboardIsPresent checks whether the virtual keyboard is present.
+func (cvk *CheckVirtualKeyboardService) CheckVirtualKeyboardIsPresent(ctx context.Context, req *pb.CheckVirtualKeyboardRequest) (*pb.CheckVirtualKeyboardResponse, error) {
+	cvk.sharedObject.ChromeMutex.Lock()
+	defer cvk.sharedObject.ChromeMutex.Unlock()
+
+	if cvk.sharedObject.Chrome == nil {
+		return nil, errors.New("Chrome not available")
+	}
+
+	tconn, err := cvk.sharedObject.Chrome.TestAPIConn(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var exists bool
+	uiauto := uiauto.New(tconn)
+
+	vkNode := nodewith.Name("Chrome OS Virtual Keyboard").Role(role.RootWebArea).Visible()
+	if err := uiauto.WithTimeout(30 * time.Second).WaitUntilExists(vkNode)(ctx); err != nil {
+		if !req.IsDutTabletMode {
+			return &pb.CheckVirtualKeyboardResponse{
+				IsVirtualKeyboardPresent: exists,
+			}, nil
+		}
+		return nil, errors.Wrap(err, "unable to detect ChromeOS virtual keyboard")
+	}
+
+	exists = true
+	return &pb.CheckVirtualKeyboardResponse{IsVirtualKeyboardPresent: exists}, nil
+}
+
+// CloseChrome closes a Chrome session and cleans up the resources obtained by NewChrome.
+func (cvk *CheckVirtualKeyboardService) CloseChrome(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+	cvk.sharedObject.ChromeMutex.Lock()
+	defer cvk.sharedObject.ChromeMutex.Unlock()
+	if cvk.closeBrowser != nil {
+		cvk.closeBrowser(ctx)
+		cvk.closeBrowser = nil
+	}
+	if cvk.cr == nil {
+		return nil, errors.New("Chrome not available")
+	}
+	err := cvk.cr.Close(ctx)
+	cvk.cr = nil
+	// Clear the chrome in the shared object so UtilsService or other services can no longer refer to it.
+	cvk.sharedObject.Chrome = nil
+	return &empty.Empty{}, err
+}
+
+func saveLogsOnError(ctx context.Context, cvk *CheckVirtualKeyboardService, hasError func() bool, msg string) error {
+	outDir, ok := testing.ContextOutDir(ctx)
+	if !ok {
+		return errors.New("no output directory")
+	}
+	faillog.DumpUITreeOnError(ctx, filepath.Join(outDir, "CheckVirtualKeyboardService-"+msg), hasError, cvk.tconn)
+	faillog.SaveScreenshotOnError(ctx, cvk.cr, filepath.Join(outDir, "CheckVirtualKeyboardService-"+msg), hasError)
+	return nil
+}
+
+// ClickSearchBar left-clicks on the search bar when tablet mode if off,
+// and sends a tap on the touch screen instead when tablet mode is on.
+func (cvk *CheckVirtualKeyboardService) ClickSearchBar(ctx context.Context, req *pb.CheckVirtualKeyboardRequest) (*empty.Empty, error) {
+
+	cvk.sharedObject.ChromeMutex.Lock()
+	defer cvk.sharedObject.ChromeMutex.Unlock()
+
+	if cvk.sharedObject.Chrome == nil {
+		return nil, errors.New("Chrome not available")
+	}
+
+	tconn, err := cvk.sharedObject.Chrome.TestAPIConn(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Left-click if dut is not in tablet mode,
+	// otherwise send a tap on the touch screen.
+	searchBarNode := nodewith.ClassName("SearchBoxView").First()
+	if !req.IsDutTabletMode {
+		cvk.uia = uiauto.New(tconn)
+		if err := uiauto.Combine("open launcher and left click search bar",
+			launcher.Open(tconn),
+			cvk.uia.LeftClick(searchBarNode),
+		)(ctx); err != nil {
+			return &empty.Empty{}, err
+		}
+	} else {
+		tc, err := touch.New(ctx, tconn)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to create the touch context instance")
+		}
+		if err := tc.Tap(searchBarNode)(ctx); err != nil {
+			return nil, errors.Wrap(err, "could not tap the search bar")
+		}
+	}
+	return &empty.Empty{}, nil
+}
+
+// EnableOnscreenKeyboard enables the on-screen keyboard.
+func (cvk *CheckVirtualKeyboardService) EnableOnscreenKeyboard(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+	cvk.sharedObject.ChromeMutex.Lock()
+	defer cvk.sharedObject.ChromeMutex.Unlock()
+
+	cr := cvk.sharedObject.Chrome
+	if cr == nil {
+		return nil, errors.New("chrome is not instantiated")
+	}
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := quicksettings.ShowWithRetry(ctx, tconn, 5*time.Second); err != nil {
+		return nil, errors.Wrap(err, "failed to open Quick Settings")
+	}
+	defer quicksettings.Hide(ctx, tconn)
+
+	if err := quicksettings.OpenSettingsApp(ctx, tconn); err != nil {
+		return nil, errors.Wrap(err, "failed to open the Settings App from Quick Settings")
+	}
+
+	// Confirm that the Settings app is open by checking for the search box.
+	if err := uiauto.New(tconn).WaitUntilExists(ossettings.SearchBoxFinder)(ctx); err != nil {
+		return nil, errors.Wrap(err, "waiting for Settings app search box failed")
+	}
+
+	settings := ossettings.New(tconn)
+	defer settings.Close(ctx)
+
+	manageAccessibility := nodewith.Name("Keyboard and text input On-screen keyboard, dictation, Switch Access, and more").Role(role.Link)
+	onscreenButton := nodewith.Name("On-screen keyboard").Role(role.ToggleButton).Focusable()
+
+	if err := uiauto.Combine("Enable on-screen keyboard, using Accessibility",
+		settings.FocusAndWait(ossettings.Accessibility),
+		settings.LeftClick(ossettings.Accessibility),
+		settings.LeftClick(manageAccessibility),
+		settings.FocusAndWait(onscreenButton),
+		settings.LeftClick(onscreenButton),
+	)(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to enable on-screen keyboard")
+	}
+
+	return &empty.Empty{}, nil
+}

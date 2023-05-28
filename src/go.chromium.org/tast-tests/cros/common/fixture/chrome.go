@@ -4,7 +4,7 @@
 
 package fixture
 
-// Fixtures defined in chromiumos/tast/local/chrome/fixture.go
+// Fixtures defined in go.chromium.org/tast-tests/cros/local/chrome/fixture.go
 const (
 	// Logged into a user session.
 	ChromeLoggedIn = "chromeLoggedIn"

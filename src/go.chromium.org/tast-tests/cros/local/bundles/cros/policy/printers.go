@@ -1,0 +1,157 @@
+// Copyright 2022 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package policy
+
+import (
+	"context"
+	"fmt"
+	"time"
+
+	"go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/common/pci"
+	"go.chromium.org/tast-tests/cros/common/policy"
+	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
+	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/printmanagementapp"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/printpreview"
+	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast-tests/cros/local/policyutil"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
+)
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func:         Printers,
+		LacrosStatus: testing.LacrosVariantExists,
+		Desc:         "Behavior of Printers policy, checking that configured printers are available to users in the printer selection after setting the policy",
+		Contacts: []string{
+			"chromeos-commercial-printing@google.com",
+		},
+		// ChromeOS > Software > Commercial (Enterprise) > Printing
+		BugComponent: "b:1111614",
+		SoftwareDeps: []string{"chrome", "lacros"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+			"group:hw_agnostic",
+		},
+		Fixture: fixture.LacrosPolicyLoggedIn,
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.Printers{}, pci.VerifiedFunctionalityUI),
+			{
+				Key: "feature_id",
+				// Check that configured printers are accessible after setting the Printers policy (COM_FOUND_CUJ7_TASK3_WF1).
+				Value: "screenplay-87696fca-4b8c-410d-a5f7-b2b5f1391eb3",
+			},
+		},
+	})
+}
+
+// Printers tests the Printers policy.
+func Printers(ctx context.Context, s *testing.State) {
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
+
+	// Reserve ten seconds for cleanup.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	printerName := "Water Cooler Printer"
+	printersPolicy := &policy.Printers{Val: []string{
+		fmt.Sprintf(`{
+			"display_name": "%s",
+			"description": "The printer next to the water cooler.",
+			"manufacturer": "Printer Manufacturer",
+			"model": "Color Laser 2004",
+			"uri": "lpd://localhost:9101",
+			"uuid": "1c395fdb-5d93-4904-b246-b2c046e79d12",
+			"ppd_resource": {
+				"effective_model": "generic pcl 6/pcl xl printer pxlcolor",
+				"autoconf": false
+			}
+		}`, printerName)}}
+
+	if err := policyutil.ServeAndVerify(ctx, fdms, cr, []policy.Policy{printersPolicy}); err != nil {
+		s.Fatal("Failed to update policies: ", err)
+	}
+
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeLacros)
+	if err != nil {
+		s.Fatal("Failed to setup chrome: ", err)
+	}
+	defer closeBrowser(cleanupCtx)
+
+	// Connect to Test API to use it with the UI library.
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to create Test API connection: ", err)
+	}
+	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_")
+
+	printManagementApp, err := printmanagementapp.Launch(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to launch Print Management app: ", err)
+	}
+
+	// Be sure we clear the history before we start so when we check the history
+	// at the end of our test it will only have print jobs from this test.
+	if err := printManagementApp.ClearHistory()(ctx); err != nil {
+		s.Fatal("Failed to clear printing history: ", err)
+	}
+
+	// Open a new tab. The print dialog fails to open when invoking CTRL+P
+	// directly after calling `browserfixt.SetUp`, likely because the page
+	// isn't fully loaded yet. It also fails to open on about:blank pages, but
+	// works fine on chrome://newtab; see crbug.com/1290797.
+	conn, err := br.NewConn(ctx, "chrome://newtab")
+	if err != nil {
+		s.Fatal("Failed to connect to chrome: ", err)
+	}
+	defer conn.Close()
+
+	kb, err := input.Keyboard(ctx)
+	if err != nil {
+		s.Fatal("Failed to get the keyboard: ", err)
+	}
+	defer kb.Close(ctx)
+
+	ui := uiauto.New(tconn)
+	if err := uiauto.Combine("open Print Preview with a shortcut",
+		kb.AccelAction("Ctrl+P"),
+		printpreview.WaitForPrintPreview(tconn))(ctx); err != nil {
+		s.Fatal("Failed to open the Print Preview: ", err)
+	}
+
+	if err := printpreview.SelectPrinter(ctx, tconn, printerName); err != nil {
+		s.Fatal("Failed to select printer: ", err)
+	}
+
+	if err := printpreview.Print(ctx, tconn); err != nil {
+		s.Fatal("Failed to print: ", err)
+	}
+
+	// Wait for the print preview window to close. Otherwise, the print preview
+	// may still be in the process of closing when we launch the print
+	// management app, and, once fully closed, steal focus from the print
+	// management app
+	if err := ui.WaitUntilGone(printpreview.PrintPreviewNode)(ctx); err != nil {
+		s.Fatal("Failed to select printer in print destination popup and print: ", err)
+	}
+
+	if err := uiauto.Combine("Verify print job",
+		printManagementApp.Focus(),
+		printManagementApp.VerifyPrintJob(),
+	)(ctx); err != nil {
+		s.Fatal("Failed to check existence of print job: ", err)
+	}
+}

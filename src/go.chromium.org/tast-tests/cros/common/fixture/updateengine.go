@@ -4,7 +4,7 @@
 
 package fixture
 
-// Fixtures defined in chromiumos/tast/remote/updateutil/updateengine_fixture.go.
+// Fixtures defined in go.chromium.org/tast-tests/cros/remote/updateutil/updateengine_fixture.go.
 const (
 	// Fixture for tests that use update engine. Ensures that update engine status
 	// is reset at the end of the test.

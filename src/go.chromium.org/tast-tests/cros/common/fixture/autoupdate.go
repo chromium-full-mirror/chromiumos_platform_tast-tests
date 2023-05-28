@@ -4,7 +4,7 @@
 
 package fixture
 
-// Fixtures defined in chromiumos/tast/remote/updateutil/autoupdate_fixture.go.
+// Fixtures defined in go.chromium.org/tast-tests/cros/remote/updateutil/autoupdate_fixture.go.
 const (
 	// Fixture for autoupdate tests, ensures that the DUT stays on initially provisioned test image.
 	Autoupdate = "autoupdate"

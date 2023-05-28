@@ -5,7 +5,7 @@
 
 failed=0
 files=$(git diff-tree --no-commit-id --name-only -r "$1" -- \
-    src/chromiumos/tast/local/bundles/cros/crostini/)
+    src/go.chromium.org/tast-tests/cros/local/bundles/cros/crostini/)
 for file in ${files}; do
     if ! grep 'Pre:\s*crostini\.' "${file}" &>/dev/null; then
         # Doesn't look like it uses a Crostini precondition, ignore

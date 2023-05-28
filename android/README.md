@@ -49,7 +49,7 @@ should be written using standard android SDK only.
 If androidx or some other dependency is needed, it’s still possible to put your
 source code under ARC++ internal repository and use the prebuilt apk as
 external data
-([example](https://crsrc.org/o/src/platform/tast-tests/src/chromiumos/tast/local/bundles/cros/arc/data/ArcCompanionLibDemo.apk.external)).
+([example](https://crsrc.org/o/src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/local/bundles/cros/arc/data/ArcCompanionLibDemo.apk.external)).
 From maintenance perspective, this is not recommended.
 
 # About OWNERS

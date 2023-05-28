@@ -1,0 +1,136 @@
+// Copyright 2022 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package launcher
+
+import (
+	"context"
+	"regexp"
+	"time"
+
+	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
+)
+
+const answerCardFinderTimeout = 3 * time.Second
+
+// searchTestCase describes modes in which the launcher UI can be shown, and by which launcher test should generally be parameterized.
+// It additionally provides a search query and the expected result.
+// Use a struct because it makes the individual test cases more readable.
+type searchTestCase struct {
+	TabletMode     bool
+	SearchKeyword  string
+	ExpectedResult *nodewith.Finder
+	Retries        int
+}
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func:         AnswerCards,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Checks for omnibox answer cards in the launcher",
+		Contacts: []string{
+			"cros-system-ui-eng@google.com",
+			"yulunwu@chromium.org",
+			"chromeos-sw-engprod@google.com",
+		},
+		BugComponent: "b:1288350",
+		Fixture:      "chromeLoggedIn",
+		Attr:         []string{"group:mainline", "informational"},
+		SoftwareDeps: []string{"chrome"},
+		Params: []testing.Param{{
+			Name: "definition_card_clamshell",
+			Val: searchTestCase{TabletMode: false,
+				SearchKeyword:  "definition of flaky",
+				ExpectedResult: launcher.SearchResultListItemFinder.NameRegex(regexp.MustCompile("/.*/")),
+			},
+		}, {
+			Name: "translation_card_clamshell",
+			Val: searchTestCase{TabletMode: false,
+				SearchKeyword:  "translate hello into spanish",
+				ExpectedResult: launcher.SearchResultListItemFinder.NameContaining("Hola"),
+			},
+		}, {
+			Name: "addition_card_clamshell",
+			Val: searchTestCase{TabletMode: false,
+				SearchKeyword:  "1+1",
+				ExpectedResult: launcher.SearchResultListItemFinder.NameContaining("1+1, 2"),
+			},
+		}, {
+			Name: "unit_conversion_card_clamshell",
+			Val: searchTestCase{TabletMode: false,
+				SearchKeyword:  "455 lb in kg",
+				ExpectedResult: launcher.SearchResultListItemFinder.NameRegex(regexp.MustCompile("455 lb in kg, 206.*")),
+			},
+		}, {
+			Name: "stock_card_clamshell",
+			Val: searchTestCase{TabletMode: false,
+				SearchKeyword:  "goog stock",
+				ExpectedResult: launcher.SearchResultListItemFinder.NameRegex(regexp.MustCompile("NASDAQ")),
+			},
+		},
+		/* Disabled due to <1% pass rate over 30 days. See crbug/1364742
+		{
+			Name: "weather_card_clamshell",
+			Val: searchTestCase{TabletMode: false,
+				SearchKeyword:  "weather",
+				ExpectedResult: launcher.SearchResultListItemFinder.NameRegex(regexp.MustCompile("-?[1-9][0-9]*")),
+			},
+		},
+		{
+			Name:              "tablet_mode",
+			Val:               launcher.TestCase{TabletMode: true},
+			ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
+		}
+		*/
+		},
+	})
+}
+
+// AnswerCards checks inline answers for special queries.
+func AnswerCards(ctx context.Context, s *testing.State) {
+	cr := s.FixtValue().(*chrome.Chrome)
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to connect Test API: ", err)
+	}
+
+	kb, err := input.Keyboard(ctx)
+	if err != nil {
+		s.Fatal("Failed to find keyboard: ", err)
+	}
+	defer kb.Close(ctx)
+
+	testCase := s.Param().(searchTestCase)
+	tabletMode := testCase.TabletMode
+
+	// SetUpLauncherTest opens the launcher.
+	cleanup, err := launcher.SetUpLauncherTest(ctx, tconn, tabletMode, false /*stabilizeAppCount*/)
+	if err != nil {
+		s.Fatal("Failed to set up launcher test case: ", err)
+	}
+	defer cleanup(cleanupCtx)
+
+	ui := uiauto.New(tconn)
+
+	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_"+string(testCase.SearchKeyword))
+
+	if err := uiauto.Retry(3, uiauto.Combine("search launcher",
+		launcher.Search(tconn, kb, testCase.SearchKeyword),
+		ui.WaitUntilExists(testCase.ExpectedResult),
+		kb.TypeKeyAction(input.KEY_ESC)))(ctx); err != nil {
+		s.Fatal("Unable to show answer card for: ", testCase.SearchKeyword)
+	}
+}

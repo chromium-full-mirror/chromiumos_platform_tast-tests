@@ -1,0 +1,142 @@
+// Copyright 2020 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package lacros
+
+import (
+	"context"
+	"net/http"
+	"net/http/httptest"
+	"time"
+
+	"go.chromium.org/tast-tests/cros/local/audio"
+	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
+	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
+
+	"go.chromium.org/tast/core/testing"
+)
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func:         AudioPinnedStream,
+		LacrosStatus: testing.LacrosVariantExists,
+		Desc:         "Tests pinned stream on lacros",
+		Contacts:     []string{"lacros-team@google.com", "yuhsuan@chromium.org"},
+		Attr:         []string{"group:mainline", "group:audio"},
+		BugComponent: "crbug:OS>LaCrOS",
+		SoftwareDeps: []string{"chrome", "lacros"},
+		Fixture:      "lacrosAudioQsRevampEnabled",
+		Data:         []string{"media_session_60sec_test.ogg", "audio_playback_test.html"},
+		Params: []testing.Param{{
+			Name:              "play",
+			Val:               audio.OutputStream,
+			ExtraSoftwareDeps: []string{"lacros_stable"},
+		}, {
+			Name:              "record",
+			Val:               audio.InputStream,
+			ExtraSoftwareDeps: []string{"lacros_stable"},
+		}, {
+			Name:              "play_unstable",
+			Val:               audio.OutputStream,
+			ExtraAttr:         []string{"informational"},
+			ExtraSoftwareDeps: []string{"lacros_unstable"},
+		}, {
+			Name:              "record_unstable",
+			Val:               audio.InputStream,
+			ExtraAttr:         []string{"informational"},
+			ExtraSoftwareDeps: []string{"lacros_unstable"},
+		}},
+	})
+}
+
+func AudioPinnedStream(ctx context.Context, s *testing.State) {
+	cleanup := quicksettings.SetQsRevampEnabled(true)
+	defer cleanup()
+
+	// Load ALSA loopback module.
+	unload, err := audio.LoadAloop(ctx)
+	if err != nil {
+		s.Fatal("Failed to load ALSA loopback module: ", err)
+	}
+	defer unload(ctx)
+
+	tconn, err := s.FixtValue().(chrome.HasChrome).Chrome().TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to connect to test API: ", err)
+	}
+
+	l, err := lacros.Launch(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to launch lacros-chrome: ", err)
+	}
+	defer l.Close(ctx)
+
+	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
+	defer server.Close()
+
+	conn, err := l.NewConn(ctx, server.URL+"/audio_playback_test.html")
+	if err != nil {
+		s.Fatal(err, "failed to open new tab")
+	}
+	defer conn.Close()
+
+	deviceID := func(devName string) string {
+		var devID string
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			if err := conn.Call(ctx, &devID, `async function(deviceName) {
+				let devices = await navigator.mediaDevices.enumerateDevices();
+				return devices.find((dev) => dev.label == deviceName).deviceId;
+			}`, devName); err != nil {
+				return err
+			}
+			return nil
+		}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
+			s.Fatal("Failed to find loopback device: ", err)
+		}
+		return devID
+	}
+
+	if s.Param() == audio.InputStream {
+		loopbackID := deviceID("Loopback Capture")
+		if err := conn.Call(ctx, nil, `async function(loopbackId) {
+			let stream = await navigator.mediaDevices.getUserMedia({ audio: {deviceId: loopbackId}, video: false })
+			new MediaRecorder(stream).start();
+		}`, loopbackID); err != nil {
+			s.Fatalf("Failed to start recording on %s: %v", loopbackID, err)
+		}
+	} else {
+		loopbackID := deviceID("Loopback Playback")
+		if err := conn.Call(ctx, nil, `async function(loopbackId) {
+			await audio.setSinkId(loopbackId);
+		}`, loopbackID); err != nil {
+			s.Fatalf("Failed to set sink id to %s: %v", loopbackID, err)
+		}
+		if err := conn.Eval(ctx, "audio.play()", nil); err != nil {
+			s.Fatal("Failed to start playing: ", err)
+		}
+		if err := conn.WaitForExpr(ctx, "audio.currentTime > 0"); err != nil {
+			s.Fatal("Failed to wait for audio to play: ", err)
+		}
+	}
+
+	streams, err := crastestclient.WaitForStreams(ctx, 5*time.Second)
+	if err != nil {
+		s.Fatal("Failed to wait for streams: ", err)
+	}
+
+	containsLacrosPinnedStream := func(streams []crastestclient.StreamInfo) bool {
+		for _, stream := range streams {
+			if stream.ClientType == "CRAS_CLIENT_TYPE_LACROS" && stream.IsPinned == true {
+				return true
+			}
+		}
+		return false
+	}
+
+	if !containsLacrosPinnedStream(streams) {
+		s.Error("Failed to find the pinned stream")
+	}
+}

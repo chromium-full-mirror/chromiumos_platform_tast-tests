@@ -1,0 +1,103 @@
+// Copyright 2022 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package arc
+
+import (
+	"context"
+	"time"
+
+	"go.chromium.org/tast-tests/cros/common/android/ui"
+	"go.chromium.org/tast-tests/cros/local/arc"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
+)
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func:         MouseKeyEvent,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Checks mouse buttons emit the correct key events on ARC",
+		Contacts:     []string{"arc-framework+tast@google.com", "yhanada@chromium.org", "nergi@chromium.org"},
+		// ChromeOS > Software > ARC++ > Framework > Input
+		BugComponent: "b:536706",
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+		SoftwareDeps: []string{"chrome", "android_vm"},
+		Fixture:      "arcBooted",
+		Timeout:      3 * time.Minute,
+	})
+}
+
+func MouseKeyEvent(ctx context.Context, s *testing.State) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
+	defer cancel()
+
+	p := s.FixtValue().(*arc.PreData)
+	cr := p.Chrome
+	a := p.ARC
+	d := p.UIDevice
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Creating test API connection failed: ", err)
+	}
+
+	const (
+		apk          = "ArcMouseKeyEventTest.apk"
+		pkg          = "org.chromium.arc.testapp.mousekeyevent"
+		activityName = ".MainActivity"
+	)
+
+	s.Log("Installing app")
+	if err := a.Install(ctx, arc.APKPath(apk)); err != nil {
+		s.Fatal("Failed installing app: ", err)
+	}
+
+	act, err := arc.NewActivity(a, pkg, activityName)
+	if err != nil {
+		s.Fatal("Failed to create an activity: ", err)
+	}
+	defer act.Close(ctx)
+
+	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
+		s.Fatal("Failed to start an activity: ", err)
+	}
+	defer act.Stop(cleanupCtx, tconn)
+
+	// Ensure mouse cursor is in the center.
+	info, err := ash.GetARCAppWindowInfo(ctx, tconn, act.PackageName())
+	if err != nil {
+		s.Fatal("Failed to get window info of the activity: ", err)
+	}
+	cp := info.BoundsInRoot.CenterPoint()
+	if err := mouse.Move(tconn, cp, 0)(ctx); err != nil {
+		s.Fatal("Failed to move cursor to the center point: ", err)
+	}
+
+	if err := mouse.Press(tconn, mouse.ForwardButton)(ctx); err != nil {
+		s.Fatal("Failed to press forward button on mouse: ", err)
+	}
+	if err := mouse.Release(tconn, mouse.ForwardButton)(ctx); err != nil {
+		s.Fatal("Failed to release forward button on mouse: ", err)
+	}
+
+	if err := mouse.Press(tconn, mouse.BackButton)(ctx); err != nil {
+		s.Fatal("Failed to press back button on mouse: ", err)
+	}
+	if err := mouse.Release(tconn, mouse.BackButton)(ctx); err != nil {
+		s.Fatal("Failed to release forward button on mouse: ", err)
+	}
+
+	fieldID := pkg + ":id/generated_key_events"
+	output := "ACTION_DOWN : KEYCODE_FORWARD\n" +
+		"ACTION_UP : KEYCODE_FORWARD\n" +
+		"ACTION_DOWN : KEYCODE_BACK\n" +
+		"ACTION_UP : KEYCODE_BACK\n"
+	if err := d.Object(ui.ID(fieldID), ui.Text(output)).WaitForExists(ctx, 30*time.Second); err != nil {
+		s.Fatal("Failed to find field: ", err)
+	}
+}

@@ -1,0 +1,77 @@
+// Copyright 2023 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package ui
+
+import (
+	"context"
+	"time"
+
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/ui/videocuj"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
+
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
+)
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func:         VideoCUJ,
+		LacrosStatus: testing.LacrosVariantExists,
+		Desc:         "Measures the performance of a critical user journey of watching a video",
+		Contacts: []string{
+			"chromeos-perfmetrics-eng@google.com",
+			"ramsaroop@chromium.org",
+		},
+		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
+		Attr:         []string{"group:cuj"},
+		SoftwareDeps: []string{"chrome", "no_android_vm_t"},
+		Data:         []string{cujrecorder.SystemTraceConfigFile},
+		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
+		Timeout:      15 * time.Minute,
+		Params: []testing.Param{
+			{
+				Val:     browser.TypeAsh,
+				Fixture: "loggedInToCUJUser",
+			}, {
+				Name:              "lacros",
+				Val:               browser.TypeLacros,
+				Fixture:           "loggedInToCUJUserLacros",
+				ExtraSoftwareDeps: []string{"lacros"},
+			},
+
+			// Experimental variants.
+			{
+				Name:              "lacros_no_arc",
+				ExtraAttr:         []string{"cuj_experimental"},
+				Val:               browser.TypeLacros,
+				Fixture:           "loggedInToCUJUserLacrosWithoutARC",
+				ExtraSoftwareDeps: []string{"lacros"},
+			},
+			{
+				Name:      "backup_ref_ptr",
+				ExtraAttr: []string{"cuj_experimental"},
+				Val:       browser.TypeAsh,
+				Fixture:   "loggedInToCUJUserWithBackupRefPtr",
+			},
+			{
+				Name:      "field_trials",
+				ExtraAttr: []string{"cuj_experimental"},
+				Val:       browser.TypeAsh,
+				Fixture:   "loggedInToCUJUserWithFieldTrials",
+			},
+			{
+				Name:      "battery_saver",
+				ExtraAttr: []string{"cuj_experimental"},
+				Val:       browser.TypeAsh,
+				Fixture:   "loggedInToCUJUserWithBatterySaver",
+			},
+		},
+	})
+}
+
+func VideoCUJ(ctx context.Context, s *testing.State) {
+	videocuj.Run(ctx, s)
+}

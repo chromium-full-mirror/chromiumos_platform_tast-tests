@@ -4,7 +4,7 @@
 
 package fixture
 
-// Fixtures defined in chromiumos/tast/local/audio/
+// Fixtures defined in go.chromium.org/tast-tests/cros/local/audio/
 const (
 	CrasStopped = "crasStopped"
 

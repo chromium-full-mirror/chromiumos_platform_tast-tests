@@ -1,0 +1,173 @@
+// Copyright 2020 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package wifi
+
+import (
+	"context"
+	"time"
+
+	"github.com/golang/protobuf/ptypes/empty"
+
+	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wifi/wifiutil"
+	"go.chromium.org/tast-tests/cros/remote/wificell"
+	"go.chromium.org/tast-tests/cros/services/cros/wifi"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/testing"
+)
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func:         PersistenceBluetoothSansWifi,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Verifies that Bluetooth remains operational when Wifi is disabled on reboot",
+		Contacts: []string{
+			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
+		},
+		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
+		Attr:         []string{"group:wificell", "wificell_func"},
+		// Jacuzzi devices are prone to becoming inaccessible over ethernet on reboot which impacts future tests in the test suite (b/178529170).
+		// We will disable the persistence tests on jacuzzi devices as these tests perform a reboot (b:181057823).
+		// We choose not to use hwdep.SkipOnPlatform as the filter relies on an identifier internal to mosys.
+		// In the case for jacuzzi, the relevant platform identifier is actually kukui which is unintuitive (crbug.com/1124372).
+		// As a result, we have defined a softwaredep, no_eth_loss_on_reboot, to service as a skiplist for this test.
+		// TODO: remove this swdep when the jacuzzi issue is fixed (b:178449023)
+		SoftwareDeps: []string{"chrome", "reboot", "no_eth_loss_on_reboot"},
+		ServiceDeps: []string{
+			wificell.ShillServiceName,
+			"tast.cros.browser.ChromeService",
+			wificell.BluetoothServiceName,
+		},
+		Vars:    []string{"router"},
+		VarDeps: []string{"wifi.signinProfileTestExtensionManifestKey"},
+		// List of requirements this test satisfies.
+		Requirements: []string{tdreq.WiFiCoexSupportBT, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
+	})
+}
+
+func PersistenceBluetoothSansWifi(ctx context.Context, s *testing.State) {
+	credKey := s.RequiredVar("wifi.signinProfileTestExtensionManifestKey")
+	// Clean up on exit.
+	defer func(ctx context.Context) {
+		d := s.DUT()
+		r, err := rpc.Dial(ctx, d, s.RPCHint())
+		if err != nil {
+			s.Fatal("Failed to connect rpc: ", err)
+		}
+		defer r.Close(ctx)
+		// Enable wifi device.
+		wifiClient := wifi.NewShillServiceClient(r.Conn)
+		if _, err := wifiClient.SetWifiEnabled(ctx, &wifi.SetWifiEnabledRequest{Enabled: true}); err != nil {
+			s.Error("Could not enable Wifi through shill: ", err)
+		}
+	}(ctx)
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	func(ctx context.Context) {
+		d := s.DUT()
+		r, err := rpc.Dial(ctx, d, s.RPCHint())
+		if err != nil {
+			s.Fatal("Failed to connect rpc: ", err)
+		}
+		defer r.Close(ctx)
+
+		// Assert WiFi is up.
+		var tfOps []wificell.TFOption
+		if router, ok := s.Var("router"); ok && router != "" {
+			tfOps = append(tfOps, wificell.TFRouter(router))
+		}
+		// TODO(b/279663413): Tests should not manually initialize the wifi test fixture class.
+		tf, err := wificell.NewTestFixture(ctx, ctx, d, s.RPCHint(), tfOps...)
+		if err != nil {
+			s.Fatal("Failed to set up test fixture: ", err)
+		}
+		defer func(ctx context.Context) {
+			if err := tf.Close(ctx); err != nil {
+				s.Error("Failed to properly take down test fixture: ", err)
+			}
+		}(ctx)
+		ctx, cancel := tf.ReserveForClose(ctx)
+		defer cancel()
+
+		if err := wifiutil.AssertWifiEnabled(ctx, tf); err != nil {
+			s.Fatal("Wifi not functioning: ", err)
+		}
+
+		// Assert Bluetooth up.
+		chromeService, err := wifiutil.NewChromeServiceClient(ctx, r.Conn, credKey)
+		if err != nil {
+			s.Fatal("Failed to create new chrome service client: ", err)
+		}
+		defer func(ctx context.Context) {
+			_, err := chromeService.Close(ctx, &empty.Empty{})
+			if err != nil {
+				s.Error("Failed to close chrome service client: ", err)
+			}
+		}(ctx)
+		bluetoothService, err := wifiutil.NewBluetoothServiceClient(ctx, r.Conn)
+		if err != nil {
+			s.Fatal("Failed to create new bluetooth service client: ", err)
+		}
+		if err := wifiutil.AssertBluetoothEnabledState(ctx, bluetoothService, true); err != nil {
+			s.Fatal("Bluetooth not functioning: ", err)
+		}
+
+		// Disable WiFi.
+		wifiClient := wifi.NewShillServiceClient(r.Conn)
+		if _, err := wifiClient.SetWifiEnabled(ctx, &wifi.SetWifiEnabledRequest{Enabled: false}); err != nil {
+			s.Fatal("Could not disable Wifi: ", err)
+		}
+
+		// Assert WiFi is down.
+		if response, err := wifiClient.GetWifiEnabled(ctx, &empty.Empty{}); err != nil {
+			s.Fatal("Could not get WiFi status: ", err)
+		} else if response.Enabled {
+			s.Fatal("Wifi is on, expected to be off ")
+		}
+
+	}(ctx)
+
+	// Reboot the DUT.
+	if err := s.DUT().Reboot(ctx); err != nil {
+		s.Fatal("Failed to reboot DUT: ", err)
+	}
+
+	// Reinitialize gRPC connection with DUT after reboot as the current session is now stale.
+	d := s.DUT()
+	r, err := rpc.Dial(ctx, d, s.RPCHint())
+	if err != nil {
+		s.Fatal("Failed to connect rpc: ", err)
+	}
+	defer r.Close(ctx)
+
+	// Assert WiFi is down.
+	wifiClient := wifi.NewShillServiceClient(r.Conn)
+	if response, err := wifiClient.GetWifiEnabled(ctx, &empty.Empty{}); err != nil {
+		s.Fatal("Could not get WiFi status: ", err)
+	} else if response.Enabled {
+		s.Fatal("Wifi is on, expected to be off ")
+	}
+
+	// Assert Bluetooth is up.
+	chromeService, err := wifiutil.NewChromeServiceClient(ctx, r.Conn, credKey)
+	if err != nil {
+		s.Fatal("Failed to create new chrome service client: ", err)
+	}
+	defer func(ctx context.Context) {
+		_, err := chromeService.Close(ctx, &empty.Empty{})
+		if err != nil {
+			s.Error("Failed to close chrome service client: ", err)
+		}
+	}(ctx)
+	bluetoothService, err := wifiutil.NewBluetoothServiceClient(ctx, r.Conn)
+	if err != nil {
+		s.Fatal("Failed to create new bluetooth service client: ", err)
+	}
+	if err := wifiutil.AssertBluetoothEnabledState(ctx, bluetoothService, true); err != nil {
+		s.Fatal("Bluetooth not functioning: ", err)
+	}
+}

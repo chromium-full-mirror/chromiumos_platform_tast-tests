@@ -4,7 +4,7 @@
 
 package fixture
 
-// Fixture defined in chromiumos/tast/remote/bundles/cros/omaha/params/fixture.go.
+// Fixture defined in go.chromium.org/tast-tests/cros/remote/bundles/cros/omaha/params/fixture.go.
 const (
 	// Omaha is a fixture name.
 	Omaha = "omaha"

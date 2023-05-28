@@ -1,0 +1,174 @@
+// Copyright 2021 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package kerberos
+
+import (
+	"context"
+	"time"
+
+	"go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/common/pci"
+	"go.chromium.org/tast-tests/cros/common/policy"
+	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
+	"go.chromium.org/tast-tests/cros/local/apps"
+	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ime"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast-tests/cros/local/kerberos"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/testing"
+)
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func:         AutomaticTicketAccessFileSystem,
+		LacrosStatus: testing.LacrosVariantNeeded,
+		Desc:         "Checks the behavior of accessing a file system secured with Kerberos using the KerberosAccount policy",
+		Contacts: []string{
+			"cros-3pidp@google.com",
+			"slutskii@google.com",
+			"fsandrade@google.com",
+		},
+		// ChromeOS > Software > Commercial (Enterprise) > Identity > Active Directory
+		BugComponent: "b:1253670",
+		SoftwareDeps: []string{"chrome"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+		},
+		VarDeps: []string{"kerberos.username", "kerberos.password", "kerberos.domain"},
+		Fixture: fixture.FakeDMS,
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.KerberosAccounts{}, pci.VerifiedFunctionalityUI),
+			pci.SearchFlag(&policy.KerberosEnabled{}, pci.VerifiedFunctionalityUI),
+		},
+	})
+}
+
+func AutomaticTicketAccessFileSystem(ctx context.Context, s *testing.State) {
+	fdms := s.FixtValue().(*fakedms.FakeDMS)
+	username := s.RequiredVar("kerberos.username")
+	password := s.RequiredVar("kerberos.password")
+	domain := s.RequiredVar("kerberos.domain")
+	config := kerberos.ConstructConfig(domain, username)
+
+	kerberosAcc := policy.KerberosAccountsValue{
+		Principal: "${LOGIN_ID}" + "@" + domain,
+		Password:  "${PASSWORD}",
+		Krb5conf:  []string{config.RealmsConfig},
+	}
+
+	pb := policy.NewBlob()
+	pb.PolicyUser = username + "@managedchrome.com"
+	pb.AddPolicies([]policy.Policy{
+		&policy.KerberosEnabled{Val: true},
+		&policy.KerberosAccounts{
+			Val: []policy.KerberosAccountsValueIf{
+				&kerberosAcc,
+			},
+		},
+	})
+
+	if err := fdms.WritePolicyBlob(pb); err != nil {
+		s.Fatal("Failed to write policies to FakeDMS: ", err)
+	}
+
+	// Start a Chrome instance that will fetch policies from the FakeDMS.
+	cr, err := chrome.New(ctx,
+		chrome.FakeLogin(chrome.Creds{User: username + "@managedchrome.com", Pass: password}),
+		chrome.DMSPolicy(fdms.URL),
+		chrome.KeepEnrollment(),
+	)
+	if err != nil {
+		s.Fatal("Creating Chrome with deferred login failed: ", err)
+	}
+
+	defer func(ctx context.Context) {
+		// Use cr as a reference to close the last started Chrome instance.
+		if err := cr.Close(ctx); err != nil {
+			s.Error("Failed to close Chrome connection: ", err)
+		}
+	}(ctx)
+
+	ctx, cancel := ctxutil.Shorten(ctx, 15*time.Second)
+	defer cancel()
+
+	// Connect to Test API to use it with the UI library.
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to create Test API connection: ", err)
+	}
+
+	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_automatic_ticket")
+
+	_, err = apps.LaunchOSSettings(ctx, cr, "chrome://os-settings/kerberos")
+	if err != nil {
+		s.Fatal("Could not open kerberos section in OS settings: ", err)
+	}
+
+	ui := uiauto.New(tconn)
+
+	if err := ui.LeftClick(nodewith.Name("Kerberos tickets").Role(role.Link))(ctx); err != nil {
+		s.Fatal("Failed to open Kerberos tickets section: ", err)
+	}
+
+	s.Log("Waiting for Kerberos ticket to appear")
+	if err := ui.WaitUntilExists(nodewith.NameStartingWith(username).Role(role.StaticText))(ctx); err != nil {
+		s.Fatal("Failed to find Kerberos ticket: ", err)
+	}
+
+	// Check that ticket is active.
+	if err := ui.Exists(nodewith.Name("Active").Role(role.StaticText))(ctx); err != nil {
+		s.Fatal("Kerberos ticket is not active: ", err)
+	}
+
+	// Close the OS Settings app so the UI locators won't ghost one another.
+	apps.Close(ctx, tconn, apps.Settings.ID)
+
+	// Open the Files App.
+	files, err := filesapp.Launch(ctx, tconn)
+	if err != nil {
+		s.Fatal("Launching the Files App failed: ", err)
+	}
+
+	// Get a handle to the input keyboard.
+	keyboard, err := input.Keyboard(ctx)
+	if err != nil {
+		s.Fatal("Failed to get keyboard handle: ", err)
+	}
+	defer keyboard.Close(ctx)
+
+	// Change the keyboard layout to English(US). See crbug.com/1351417.
+	// If layout is already English(US), which is true for most of the cases,
+	// nothing happens.
+	ime.EnglishUS.InstallAndActivate(tconn)(ctx)
+
+	s.Log("Mounting SMB share")
+	fileShareURLTextBox := nodewith.Name("File share URL").Role(role.TextField)
+	if err := uiauto.Combine("add SMB file share",
+		files.ClickMoreMenuItem("Services", "SMB file share"),
+		ui.WaitForLocation(fileShareURLTextBox),
+		keyboard.TypeAction(config.RemoteFileSystemURI),
+		ui.LeftClick(nodewith.Name("Add").HasClass("action-button")),
+		ui.WaitUntilGone(fileShareURLTextBox),
+	)(ctx); err != nil {
+		s.Fatal("Failed to add SMB share: ", err)
+	}
+
+	if err := uiauto.Combine("wait for SMB to mount and open file",
+		files.OpenPath("Files - "+config.Folder, config.Folder),
+		files.WaitForFile(config.File),
+		files.SelectFile(config.File),
+	)(ctx); err != nil {
+		s.Fatal("Failed to interact with SMB mount: ", err)
+	}
+}

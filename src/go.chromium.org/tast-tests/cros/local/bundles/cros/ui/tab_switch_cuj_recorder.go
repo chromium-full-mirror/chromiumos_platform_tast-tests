@@ -1,0 +1,39 @@
+// Copyright 2020 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package ui
+
+import (
+	"context"
+	"path/filepath"
+	"time"
+
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/ui/tabswitchcuj"
+	"go.chromium.org/tast-tests/cros/local/wpr"
+	"go.chromium.org/tast/core/testing"
+)
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func:         TabSwitchCUJRecorder,
+		LacrosStatus: testing.LacrosVariantUnneeded, // used to record all web traffic via wpr so that later TabSwitchCUJ could run without really talking to real sites
+		Desc:         "Run tab-switching CUJ test in chromewpr recording mode",
+		Contacts: []string{
+			"chromeos-perfmetrics-eng@google.com",
+			"tclaiborne@chromium.org",
+			"xiyuan@chromium.org",
+			"yichenz@chromium.org",
+		},
+		// ChromeOS > Software > Performance > TPS
+		BugComponent: "b:1045832",
+		SoftwareDeps: []string{"chrome"},
+		Timeout:      10 * time.Minute,
+		Vars:         []string{"mute"},
+		Pre:          wpr.RecordMode(filepath.Join("/tmp", tabswitchcuj.WPRArchiveName)),
+	})
+}
+
+func TabSwitchCUJRecorder(ctx context.Context, s *testing.State) {
+	tabswitchcuj.Run(ctx, s)
+}

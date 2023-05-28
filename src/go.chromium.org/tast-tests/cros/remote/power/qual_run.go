@@ -1,0 +1,207 @@
+// Copyright 2023 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package power
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"io/fs"
+	"os"
+	"path"
+	"regexp"
+	"strconv"
+
+	"go.chromium.org/tast-tests/cros/common/utils"
+	"go.chromium.org/tast-tests/cros/remote/power/config"
+	"go.chromium.org/tast-tests/cros/remote/power/result"
+
+	"go.chromium.org/tast/core/errors"
+)
+
+// QualRun holds the power qual run information.
+type QualRun struct {
+	Config *config.Config
+	Tests  []string
+}
+
+// NewQualRun returns a new QualRun from a test configuration URL.
+func NewQualRun(ctx context.Context, url string) (*QualRun, error) {
+	configJSON, err := utils.FetchFromURL(ctx, url)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to fetch configuration from %s", url)
+	}
+
+	cfg := &config.Config{}
+	if err := json.Unmarshal([]byte(configJSON), cfg); err != nil {
+		return nil, errors.Wrap(err, "failed to unmarshal configuration")
+	}
+
+	tests, err := config.ValidateConfig(cfg)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to validate configuration")
+	}
+
+	return &QualRun{Config: cfg, Tests: tests}, nil
+}
+
+// GenerateReport generates the power qual run test report.
+func (r *QualRun) GenerateReport(ctx context.Context, skippedTests []string, inputDir, outputDir string) error {
+	if len(skippedTests) > 0 && r.Config.Control.FailOnSkippedTest {
+		return errors.Errorf("skipped tests are not allowed from the test control but got skipped test(s) %v ", skippedTests)
+	}
+
+	isSkipped := func(test string) bool {
+		for _, t := range skippedTests {
+			if t == test {
+				return true
+			}
+		}
+		return false
+	}
+
+	// Get test directories.
+	testsDir := path.Join(inputDir, "tests")
+	dirs, err := os.ReadDir(testsDir)
+	if err != nil {
+		return errors.Wrapf(err, "failed to read tests directory under %s", inputDir)
+	}
+
+	// Read the power test result for each test.
+	testPowers := map[string]result.Power{}
+	for _, t := range r.Tests {
+		if isSkipped(t) {
+			continue
+		}
+		dir, err := findTestDir(t, dirs)
+		if err != nil {
+			return errors.Wrapf(err, "failed to find %s test dir from %s", t, testsDir)
+		}
+		// Read the power metrics from the test power_log json file.
+		power, err := readPowerMetrics(path.Join(testsDir, dir, "power_log.json"))
+		if err != nil {
+			return errors.Wrapf(err, "failed to read power metrics for test %s", t)
+		}
+		testPowers[t] = power
+	}
+
+	// The power qual test final result.
+	res := result.Result{
+		FormatVersion: result.FormatVersion,
+		Name:          r.Config.Name,
+		Version:       r.Config.Version,
+	}
+	// Calculate result for each persona.
+	for _, p := range r.Config.Personas {
+		persona := result.Persona{
+			Name: p.Name,
+		}
+
+		var values []float64
+		var weights []float64
+		for _, t := range p.Tests {
+			if isSkipped(t.Name) {
+				persona.Skipped = append(persona.Skipped, t.Name)
+				continue
+			}
+			power := testPowers[t.Name]
+			persona.Tests = append(persona.Tests, result.Test{Name: t.Name, Weight: t.Weight, Power: power})
+			values = append(values, power.Average.MinutesBatteryLife)
+			weights = append(weights, t.Weight)
+		}
+		persona.Power = result.Power{
+			Average: result.Average{MinutesBatteryLife: weightedHarmonicMean(values, weights)},
+		}
+
+		res.Personas = append(res.Personas, persona)
+	}
+
+	bytes, err := json.MarshalIndent(res, "", " ")
+	if err != nil {
+		return errors.Wrap(err, "failed to marshal run results into JSON")
+	}
+	if err := os.WriteFile(path.Join(outputDir, "power_qual_result.json"), bytes, 0644); err != nil {
+		return errors.Wrap(err, "failed to write power qaul result to file")
+	}
+	return nil
+}
+
+// findTestDir finds the final directory for a test.
+func findTestDir(test string, dirs []fs.DirEntry) (dir string, err error) {
+	// The result for a test is put under the directory with the same name as the test.
+	// A test can be retried, and each retry will add a number suffix increasingly to the dir name.
+	// Valid test dir name examples:
+	// "power.ExampleUI.ash", "power.ExampleUI.ash.1", "power.ExampleUI.ash.2"
+
+	// Regular expression to match the test name or test name with number suffix.
+	re := regexp.MustCompile(fmt.Sprintf(`^%s(\.\d+)?$`, test))
+
+	var suffix int64 = -1
+	for _, d := range dirs {
+		if !d.IsDir() {
+			continue
+		}
+		matches := re.FindStringSubmatch(d.Name())
+		if len(matches) == 0 {
+			continue
+		}
+		var newSuffix int64 = 0
+		if matches[1] != "" {
+			newSuffix, err = strconv.ParseInt(matches[1], 10, 64)
+			if err != nil {
+				return
+			}
+		}
+		// Find the dir name with the largest suffix.
+		if newSuffix > suffix {
+			dir = d.Name()
+			suffix = newSuffix
+		}
+	}
+	if suffix == -1 {
+		err = errors.Errorf("test directory is not found for %s", test)
+	}
+	return
+}
+
+// powerLogResult is the mapping to the power_log.json content.
+type powerLogResult struct {
+	// We are interested with only the "power" field, with its sub-fields as defined in
+	// result.Power structure.
+	Power result.Power `json:"power"`
+}
+
+// readPowerMetrics reads the power metric values from the given power_log.json file.
+func readPowerMetrics(file string) (result.Power, error) {
+	bytes, err := os.ReadFile(file)
+	if err != nil {
+		return result.Power{}, errors.Wrapf(err, "failed to read file %s", file)
+	}
+	res := &powerLogResult{}
+	if err := json.Unmarshal(bytes, res); err != nil {
+		return result.Power{}, errors.Wrapf(err, "failed to unmarshal json from file %s", file)
+	}
+	return res.Power, nil
+}
+
+// weightedHarmonicMean returns the harmonic mean of the given values and weights.
+// A 0 value will be returned if for any reason the harmonic mean cannot be calculated.
+func weightedHarmonicMean(values, weights []float64) float64 {
+	// H = sum(weight_i) / sum(weight_i / value_i)
+	// See go/power-test-harmonic-mean
+	numerator := 0.0
+	denominator := 0.0
+	for i, v := range values {
+		if v == 0.0 {
+			return 0.0
+		}
+		denominator += weights[i] / v
+		numerator += weights[i]
+	}
+	if denominator == 0.0 {
+		return 0.0
+	}
+	return numerator / denominator
+}

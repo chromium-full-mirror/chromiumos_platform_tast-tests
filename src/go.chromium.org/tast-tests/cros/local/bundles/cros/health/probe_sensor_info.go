@@ -1,0 +1,143 @@
+// Copyright 2022 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package health
+
+import (
+	"context"
+	"math"
+	"os"
+	"sort"
+	"strconv"
+	"strings"
+
+	"github.com/google/go-cmp/cmp"
+
+	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/health/iioservice"
+	"go.chromium.org/tast-tests/cros/local/croshealthd"
+
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
+)
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func:         ProbeSensorInfo,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Checks that cros_healthd can fetch sensor info",
+		Contacts:     []string{"cros-tdm-tpe-eng@google.com"},
+		BugComponent: "b:982097",
+		// TODO(b/251306646): Promote to critical.
+		Attr:         []string{"group:mainline", "informational"},
+		SoftwareDeps: []string{"chrome", "diagnostics"},
+		Fixture:      "crosHealthdRunning",
+	})
+}
+
+type sensorInfo struct {
+	LidAngle *uint16            `json:"lid_angle"`
+	Sensors  []sensorAttributes `json:"sensors"`
+}
+
+type sensorAttributes struct {
+	Name     *string `json:"name"`
+	DeviceID int32   `json:"device_id"`
+	Type     string  `json:"type"`
+	Location string  `json:"location"`
+}
+
+// rawLidAngle parses the output of ectool and gets the raw value of lid angle.
+// The return string should be a number or "unreliable".
+func rawLidAngle(ctx context.Context) (string, error) {
+	// Check to see if a Google EC exists. If it does, use ectool to get the lid
+	// angle that should be reported. Otherwise, return "" if the device does not
+	// have a Google EC.
+	if _, err := os.Stat("/sys/class/chromeos/cros_ec"); err != nil {
+		if os.IsNotExist(err) {
+			return "", nil
+		}
+		return "", err
+	}
+
+	bStdout, bStderr, err := testexec.CommandContext(ctx, "ectool", "motionsense", "lid_angle").SeparatedOutput(testexec.DumpLogOnError)
+	if err != nil {
+		stderr := string(bStderr)
+		if strings.Contains(stderr, "INVALID_COMMAND") || strings.Contains(stderr, "INVALID_PARAM") {
+			// Some devices do not support lid_angle and return |INVALID_COMMAND| or
+			// |INVALID_PARAM|. Check stderr and return "" in these cases.
+			return "", nil
+		}
+		return "", errors.Wrap(err, "failed to run ectool command")
+	}
+
+	return strings.ReplaceAll(strings.TrimSpace(string(bStdout)), "Lid angle: ", ""), nil
+}
+
+func validateLidAngle(ctx context.Context, info *sensorInfo) error {
+	lidAngleRaw, err := rawLidAngle(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get lid angle")
+	}
+
+	if lidAngleRaw == "" || lidAngleRaw == "unreliable" {
+		if info.LidAngle != nil {
+			return errors.New("there is no reliable LidAngle, but cros_healthd report it")
+		}
+	} else {
+		lidAngle, err := strconv.ParseUint(lidAngleRaw, 10, 16)
+		if err != nil {
+			return err
+		}
+		if info.LidAngle == nil {
+			return errors.Errorf("failed. LidAngle doesn't match: got nil; want %v", lidAngle)
+		}
+		// The value of lid angle comes from the value of accelerometers on lid and
+		// base, which is dynamic without user interaction. We should have the lid
+		// angle tolerance.
+		const lidAngleTolerance = 1
+		if math.Abs(float64(*info.LidAngle)-float64(lidAngle)) > lidAngleTolerance {
+			return errors.Errorf("failed. LidAngle doesn't match and the difference is out of tolerance: got %v; want %v", *info.LidAngle, lidAngle)
+		}
+	}
+
+	return nil
+}
+
+func validateSensorAttributes(ctx context.Context, info *sensorInfo) error {
+	var got []iioservice.SensorAttributes
+	for _, sensor := range info.Sensors {
+		got = append(got, iioservice.SensorAttributes{
+			Name:     sensor.Name,
+			DeviceID: sensor.DeviceID,
+			Type:     sensor.Type,
+			Location: sensor.Location,
+		})
+	}
+	expected, err := iioservice.ExpectedSensorAttributes(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get expected sensor attributes")
+	}
+	if diff := cmp.Diff(expected, got); diff != "" {
+		return errors.Wrapf(err, "sensor attributes mismatch (-expected + got): %s", diff)
+	}
+	return nil
+}
+
+func ProbeSensorInfo(ctx context.Context, s *testing.State) {
+	params := croshealthd.TelemParams{Category: croshealthd.TelemCategorySensor}
+	var info sensorInfo
+	if err := croshealthd.RunAndParseJSONTelem(ctx, params, s.OutDir(), &info); err != nil {
+		s.Fatal("Failed to get sensor telemetry info: ", err)
+	}
+
+	sort.Slice(info.Sensors, func(i, j int) bool { return info.Sensors[i].DeviceID < info.Sensors[j].DeviceID })
+	if err := validateSensorAttributes(ctx, &info); err != nil {
+		s.Fatal("Failed to validate sensor attributes: ", err)
+	}
+
+	if err := validateLidAngle(ctx, &info); err != nil {
+		s.Fatal("Failed to validate lid angle: ", err)
+	}
+}

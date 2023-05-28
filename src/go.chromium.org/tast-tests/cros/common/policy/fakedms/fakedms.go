@@ -222,7 +222,7 @@ func (fdms *FakeDMS) WritePolicyBlobRaw(pJSON []byte) error {
 
 // allowedPersistentPackages lists packages that are allowed to set persistent settings for FakeDMS.
 var allowedPersistentPackages = []string{
-	"chromiumos/tast/local/policyutil/fixtures",
+	"go.chromium.org/tast-tests/cros/local/policyutil/fixtures",
 }
 
 // SetPersistentPolicies will ensure that the provided policies are always set.

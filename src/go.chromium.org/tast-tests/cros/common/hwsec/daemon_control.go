@@ -11,7 +11,7 @@ both local and local test; also, we also wait for D-Bus interfaces to be respons
 instead of only (re)starting them.
 
 Reference code:
-src/platform/tast-tests/src/chromiumos/tast/local/upstart/upstart.go
+src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/local/upstart/upstart.go
 */
 
 import (

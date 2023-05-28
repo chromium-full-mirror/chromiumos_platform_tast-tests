@@ -1,0 +1,190 @@
+// Copyright 2022 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package ui
+
+import (
+	"context"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"regexp"
+	"strings"
+	"time"
+
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/ui/chromecrash"
+	"go.chromium.org/tast-tests/cros/local/crash"
+	"go.chromium.org/tast-tests/cros/local/session"
+	"go.chromium.org/tast-tests/cros/local/upstart"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/fsutil"
+	"go.chromium.org/tast/core/testing"
+)
+
+const (
+	// chromeCrashEarlyCleanupTimeout is the amount of time we reserve for
+	// cleanup. We want to leave time to restart session manager and get it back
+	// into a good state.
+	chromeCrashEarlyCleanupTimeout = upstart.UIRestartTimeout
+
+	// chromeCrashEarlyCrashFileTimeout is the amount of time we wait for the
+	// crash files to appear. crash_reporter can take some time to collect info
+	// from the chrome binary; the default 15 seconds had led to flakes.
+	chromeCrashEarlyCrashFileTimeout = time.Minute
+
+	chromeCrashBaseName = `chrome\.\d{8}\.\d{6}\.\d+\.\d+`
+	chromeCrashMetaName = chromeCrashBaseName + `\.meta`
+	chromeCrashDmpName  = chromeCrashBaseName + `\.dmp`
+
+	// chromeCrashEarlyLooseModeFile is a file used by the "loose" subtest to tell
+	// crash reporter that it should accept larger-than-normal core files during
+	// this test. Must match crash-reporter's kSystemRunStateDirectory +
+	// kRunningLooseChromeCrashEarlyTestFile.
+	chromeCrashEarlyLooseModeFile = "/run/crash_reporter/running-loose-chrome-crash-early-test"
+)
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func:         ChromeCrashEarly,
+		LacrosStatus: testing.LacrosVariantNeeded,
+		Desc:         "Checks that if Chrome crashes before crashpad is initialized, the user collector collects the crash",
+		Contacts:     []string{"cros-telemetry@google.com", "iby@chromium.org"},
+		BugComponent: "b:1032705",
+		Attr:         []string{"group:mainline"},
+		SoftwareDeps: []string{"chrome", "crashpad"},
+		Timeout:      upstart.UIRestartTimeout + chromeCrashEarlyCleanupTimeout + chromeCrashEarlyCrashFileTimeout + time.Minute,
+		Params: []testing.Param{{
+			Name:              "strict",
+			Val:               false,
+			ExtraSoftwareDeps: []string{"chrome_internal"},
+		}, {
+			Name: "loose",
+			Val:  true,
+		}}})
+}
+
+// filterMetaFiles takes a list of filenames and returns all the files that end
+// in ".meta".
+func filterMetaFiles(files []string) []string {
+	var metaFiles []string
+	for _, file := range files {
+		if strings.HasSuffix(file, ".meta") {
+			metaFiles = append(metaFiles, file)
+		}
+	}
+	return metaFiles
+}
+
+// ChromeCrashEarly tests that the user collector can capture Chrome crashes that
+// happened before crashpad has had a chance to initialize.
+func ChromeCrashEarly(ctx context.Context, s *testing.State) {
+	// Give enough time for setting session manager back into a good state.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, chromeCrashEarlyCleanupTimeout)
+	defer cancel()
+
+	looseMode := s.Param().(bool)
+	if looseMode {
+		// The Chrome CQ runs tast tests against Chrome builds which are built with
+		// is_official_build = false. These builds generate much larger-than-normal
+		// core files, exceeding crash reporter's normal limits on the size of the
+		// core. Set the limit higher by touching
+		// /run/crash_reporter/running-loose-chrome-crash-early-test so that we can
+		// at least test other aspects of system.
+		if err := ioutil.WriteFile(chromeCrashEarlyLooseModeFile, nil, 0644); err != nil {
+			s.Fatal("Failed writing ChromeCrashEarly loose-mode file ", chromeCrashEarlyLooseModeFile, ": ", err)
+		}
+		defer func() {
+			if err := os.Remove(chromeCrashEarlyLooseModeFile); err != nil && !os.IsNotExist(err) {
+				s.Errorf("Failed to clean up %s: %s", chromeCrashEarlyLooseModeFile, err)
+			}
+		}()
+	} else {
+		if err := os.Remove(chromeCrashEarlyLooseModeFile); err != nil && !os.IsNotExist(err) {
+			s.Fatalf("Failed to remove %s: %s", chromeCrashEarlyLooseModeFile, err)
+		}
+	}
+
+	ct, err := chromecrash.NewCrashTester(ctx, chromecrash.Browser, chromecrash.MetaFile)
+	if err != nil {
+		s.Fatal("NewCrashTester failed: ", err)
+	}
+	defer ct.Close()
+
+	if err = crash.SetUpCrashTest(ctx, crash.WithMockConsent()); err != nil {
+		s.Fatal("SetUpCrashTest failed: ", err)
+	}
+	defer crash.TearDownCrashTest(cleanupCtx)
+
+	// Stop and then start session manager. This ensures we are logged out.
+	if err = upstart.RestartJob(ctx, "ui"); err != nil {
+		s.Fatal("Failed to restart ui job: ", err)
+	}
+
+	// Make sure that session manager is back into a good state before the next
+	// test starts by restarting it to clear the extra crash argument.
+	defer func() {
+		if err := upstart.RestartJob(cleanupCtx, "ui"); err != nil {
+			s.Log("Couldn't cleanup-restart ui job: ", err)
+		}
+	}()
+
+	// Tell session manager to restart Chrome with a early crash. Don't use chrome.New;
+	// the browser won't be up long enough for chrome.New to connect to it.
+	sm, err := session.NewSessionManager(ctx)
+	if err != nil {
+		s.Fatal("NewSessionManager failed: ", err)
+	}
+
+	testing.ContextLog(ctx, "Switching Chrome to crash loop & waiting for crash files")
+	extraArgs := chromecrash.GetExtraArgs(chromecrash.Crashpad, crash.MockConsent)
+	extraArgs = append(extraArgs, "--pre-crashpad-crash-test")
+	if _, err := sm.EnableChromeTesting(ctx, true, extraArgs, []string{}); err != nil {
+		s.Fatal("Start-crash-looping-Chrome call failed: ", err)
+	}
+	regexes := []string{chromeCrashMetaName, chromeCrashDmpName}
+	// Meta files generated by the early crash collection system will be collected
+	// by UserCollector not ChromeCollector.
+	const earlyCrashSignature = "upload_var_collector=user"
+	// And should be marked as being handled by the early Chrome crash code.
+	const earlyCrashSignature2 = "upload_var_early_chrome_crash=true"
+	// And should be product name Chrome_ChromeOS, NOT the ChromeOS product name
+	// normally used by UserCollector.
+	const expectedProductName = "upload_var_prod=Chrome_ChromeOS"
+	// And we should have a Chrome-like version number (four numbers separated
+	// by dots) not a ChromeOS-like version number.
+	expectedVersion := regexp.MustCompile(`upload_var_ver=\d+\.\d+\.\d+\.\d+\n`)
+	// Since we're not logged in, the crashes will be written to
+	// /home/chronos/crash/.
+	if files, err := crash.WaitForCrashFiles(ctx, []string{crash.LocalCrashDir}, regexes,
+		crash.MetaString(earlyCrashSignature), crash.MetaString(earlyCrashSignature2),
+		crash.MetaString(expectedProductName), crash.MetaRegExp(expectedVersion),
+		crash.Timeout(chromeCrashEarlyCrashFileTimeout)); err != nil {
+		// Failure investigation: Sometimes, it looks like util::IsReallyTestImage
+		// is returning false and thus preventing mock consent from working. Copy
+		// the various lsb-release files used by util::IsReallyTestImage to the
+		// test results.
+		if err := fsutil.CopyFile("/etc/lsb-release",
+			filepath.Join(s.OutDir(), "etc-lsb-release")); err != nil {
+			s.Log("Failed to copy /etc/lsb-release for forensic analysis: ", err)
+		}
+		if err := fsutil.CopyFile("/var/lib/crash_reporter/lsb-release",
+			filepath.Join(s.OutDir(), "var-lib-crash_reporter-lsb-release")); err != nil {
+			s.Log("Failed to copy /var/lib/crash_reporter/ for forensic analysis: ", err)
+		}
+		// Often, the meta file exists but doesn't have a match for one of the
+		// crash.MetaString or crash.MetaRegExp requirements above. Copy the meta
+		// files off so we can see which string is missing or corrupt.
+		if regexesNotFoundError, ok := err.(crash.RegexesNotFound); ok {
+			filesToSave := filterMetaFiles(regexesNotFoundError.Files)
+			if err := crash.MoveFilesToOut(ctx, s.OutDir(), filesToSave...); err != nil {
+				s.Log("Failed to copy crash files for forensic analysis: ", err)
+			}
+		}
+
+		s.Fatal("Couldn't find early crash files: ", err)
+	} else if err := crash.RemoveAllFiles(ctx, files); err != nil {
+		s.Log("Couldn't clean up files: ", err)
+	}
+}

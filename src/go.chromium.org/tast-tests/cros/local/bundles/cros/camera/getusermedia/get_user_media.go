@@ -1,0 +1,237 @@
+// Copyright 2019 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+// Package getusermedia provides code for webrtc.* tests related to getUserMedia(), see:
+// https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia.
+package getusermedia
+
+import (
+	"context"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"time"
+
+	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
+	"go.chromium.org/tast-tests/cros/local/media/logging"
+	"go.chromium.org/tast-tests/cros/local/media/vm"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
+)
+
+// chromeArgsWithFileCameraInput returns Chrome extra args as string slice
+// for video test with a Y4M/MJPEG fileName streamed as live camera input.
+// If verbose is true, it appends extra args for verbose logging.
+// NOTE(crbug.com/955079): performance test should unset verbose.
+func chromeArgsWithFileCameraInput(fileName string, verbose bool) []string {
+	args := []string{
+		// See https://webrtc.org/testing/
+		// Feed a test pattern to getUserMedia() instead of live camera input.
+		"--use-fake-device-for-media-stream",
+		// Avoid the need to grant camera/microphone permissions.
+		"--use-fake-ui-for-media-stream",
+		// Disable the autoplay policy not to be affected by actions from outside of tests.
+		// cf. https://developers.google.com/web/updates/2017/09/autoplay-policy-changes
+		"--autoplay-policy=no-user-gesture-required",
+		// Feed a Y4M test file to getUserMedia() instead of live camera input.
+		"--use-file-for-fake-video-capture=" + fileName,
+	}
+	if verbose {
+		args = append(args, logging.ChromeVmoduleFlag())
+	}
+	return args
+}
+
+// DataFiles returns a list of required files that tests that use this package
+// should include in their Data fields.
+func DataFiles() []string {
+	return []string{
+		"third_party/blackframe.js",
+		"third_party/munge_sdp.js",
+		"third_party/ssim.js",
+	}
+}
+
+// openPageAndCheckBucket opens getUserMediaFilename, and uses GetUserMedia() to
+// stream streamFile. Then it verifies that bucketValue on histogramName counts
+// up in the end of the test.
+func openPageAndCheckBucket(ctx context.Context, fileSystem http.FileSystem, getUserMediaFilename, streamFile, histogramName string, bucketValue int64) error {
+	chromeArgs := chromeArgsWithFileCameraInput(streamFile, true)
+	cr, err := chrome.New(ctx, chrome.ExtraArgs(chromeArgs...))
+	if err != nil {
+		return errors.Wrap(err, "failed to connect to Chrome")
+	}
+	defer cr.Close(ctx)
+
+	server := httptest.NewServer(http.FileServer(fileSystem))
+	defer server.Close()
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return err
+	}
+
+	initHistogram, err := metrics.GetHistogram(ctx, tconn, histogramName)
+	if err != nil {
+		return errors.Wrap(err, "failed to get initial histogram")
+	}
+	testing.ContextLogf(ctx, "Initial %s histogram: %v", histogramName, initHistogram.Buckets)
+
+	conn, err := cr.NewConn(ctx, server.URL+"/"+getUserMediaFilename)
+	if err != nil {
+		return errors.Wrapf(err, "failed to open page %s", getUserMediaFilename)
+	}
+	defer conn.Close()
+	// Close the tab to stop loopback after test.
+	defer conn.CloseTarget(ctx)
+
+	if err := conn.Eval(ctx, `(async() => {
+		  const constraints = {audio: false, video: true};
+		  const stream = await navigator.mediaDevices.getUserMedia(constraints);
+		  document.getElementById('localVideo').srcObject = stream;
+		})()`, nil); err != nil {
+		return errors.Wrap(err, "getUserMedia() establishment failed")
+	}
+
+	histogramDiff, err := metrics.WaitForHistogramUpdate(ctx, tconn, histogramName, initHistogram, 15*time.Second)
+	if err != nil {
+		return errors.Wrap(err, "failed getting histogram diff")
+	}
+
+	if len(histogramDiff.Buckets) > 1 {
+		return errors.Wrapf(err, "unexpected histogram update: %v", histogramDiff)
+	}
+
+	bucket := histogramDiff.Buckets[0]
+	// Expected histogram is [bucketValue, bucketValue+1, 1].
+	if bucket.Min != bucketValue || bucket.Max != bucketValue+1 || bucket.Count != 1 {
+		return errors.Wrapf(err, "unexpected histogram update: %v", bucket)
+	}
+
+	return nil
+}
+
+// cameraResults is a type for decoding JSON objects obtained from /data/web_api.html.
+type cameraResults []struct {
+	Width      int        `json:"width"`
+	Height     int        `json:"height"`
+	FrameStats FrameStats `json:"frameStats"`
+	Errors     []string   `json:"errors"`
+}
+
+// setPerf stores performance data of cameraResults into p.
+func (r *cameraResults) SetPerf(p *perf.Values) {
+	for _, result := range *r {
+		perfSuffix := fmt.Sprintf("%dx%d", result.Width, result.Height)
+		result.FrameStats.SetPerf(p, perfSuffix)
+	}
+}
+
+// VerboseLoggingMode describes whether video driver's verbose debug log is enabled.
+type VerboseLoggingMode int
+
+const (
+	// VerboseLogging enables verbose logging.
+	VerboseLogging VerboseLoggingMode = iota
+	// NoVerboseLogging disables verbose logging.
+	NoVerboseLogging
+)
+
+// ChromeInterface defines interface which includes methods which should be
+// implemented by all Chrome instances. (e.g. Lacros)
+type ChromeInterface interface {
+	NewConn(context.Context, string, ...browser.CreateTargetOption) (*chrome.Conn, error)
+	Close(ctx context.Context) error
+}
+
+// RunGetUserMedia run a test in /data/web_api.html.
+// duration specifies how long video capturing will run for each resolution.
+// If verbose is true, video drivers' verbose messages will be enabled.
+// verbose must be false for performance tests.
+func RunGetUserMedia(ctx context.Context, fileSystem http.FileSystem, cr ChromeInterface,
+	duration time.Duration, verbose VerboseLoggingMode) (cameraResults, error) {
+	if verbose == VerboseLogging {
+		vl, err := logging.NewVideoLogger()
+		if err != nil {
+			return nil, errors.New("failed to set values for verbose logging")
+		}
+		defer vl.Close()
+	}
+
+	var results cameraResults
+	var logs []string
+	err := RunTest(ctx, fileSystem, cr, "web_api.html", fmt.Sprintf("testGetUserMedia(%d)", duration/time.Second), &results, &logs)
+
+	testing.ContextLogf(ctx, "Results: %+v", results)
+
+	for _, result := range results {
+		if len(result.Errors) != 0 {
+			for _, msg := range result.Errors {
+				return nil, errors.Errorf("%dx%d: %s", result.Width, result.Height, msg)
+			}
+		}
+
+		if err := result.FrameStats.CheckTotalFrames(); err != nil {
+			return nil, errors.Wrapf(err, "%dx%d was not healthy", result.Width, result.Height)
+		}
+		// Only check the percentage of broken and black frames if we are
+		// running under QEMU, see crbug.com/898745.
+		if vm.IsRunningOnVM() {
+			if err := result.FrameStats.CheckBrokenFrames(); err != nil {
+				return nil, errors.Wrapf(err, "%dx%d was not healthy", result.Width, result.Height)
+			}
+		}
+	}
+
+	if err != nil {
+		testing.ContextLog(ctx, "Logs collected from JS:")
+		for _, log := range logs {
+			testing.ContextLog(ctx, log)
+		}
+		return nil, err
+	}
+
+	return results, nil
+}
+
+// RunImageCaptureAPI run a test in /data/web_api.html.
+// If verbose is true, video drivers' verbose messages will be enabled.
+// verbose must be false for performance tests.
+func RunImageCaptureAPI(ctx context.Context, fileSystem http.FileSystem, cr ChromeInterface,
+	verbose VerboseLoggingMode) error {
+	if verbose == VerboseLogging {
+		vl, err := logging.NewVideoLogger()
+		if err != nil {
+			return errors.Wrap(err, "failed to set values for verbose logging")
+		}
+		defer vl.Close()
+	}
+
+	var results cameraResults
+	var logs []string
+	err := RunTest(ctx, fileSystem, cr, "web_api.html", fmt.Sprintf("testImageCaptureAPI()"), &results, &logs)
+
+	testing.ContextLogf(ctx, "Results: %+v", results)
+
+	for _, result := range results {
+		if len(result.Errors) != 0 {
+			for _, msg := range result.Errors {
+				return errors.Errorf("%dx%d: %s", result.Width, result.Height, msg)
+			}
+		}
+	}
+
+	if err != nil {
+		testing.ContextLog(ctx, "Logs collected from JS:")
+		for _, log := range logs {
+			testing.ContextLog(ctx, log)
+		}
+		return err
+	}
+
+	return nil
+}

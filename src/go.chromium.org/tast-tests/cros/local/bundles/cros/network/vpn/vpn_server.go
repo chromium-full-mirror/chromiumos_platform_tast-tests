@@ -1,0 +1,782 @@
+// Copyright 2020 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package vpn
+
+import (
+	"context"
+	"fmt"
+	"io/ioutil"
+	"net"
+	"path/filepath"
+	"strings"
+	"time"
+
+	"go.chromium.org/tast-tests/cros/common/crypto/certificate"
+	"go.chromium.org/tast-tests/cros/local/network/virtualnet/env"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
+)
+
+const logName = "vpnlogs.txt"
+
+// Constants that used by the L2TP/IPsec and IKEv2 server.
+const (
+	caCertFile            = "etc/swanctl/x509ca/ca.cert"
+	charonCommand         = "/usr/libexec/ipsec/charon"
+	charonLogFile         = "var/log/charon.log"
+	charonPidFile         = "run/ipsec/charon.pid"
+	chapUser              = "chapuser"
+	chapSecret            = "chapsecret"
+	ikeClientIdentity     = "client-id"
+	ikeServerIdentity     = "C=US, ST=California, L=Mountain View, CN=chromelab-wifi-testbed-server.mtv.google.com"
+	ikev2ClientIPv4       = "192.168.1.128"
+	ikev2ClientIPv6       = "fd00::1"
+	ikev2ServerIPv4       = "192.168.1.99"
+	ikev2ServerIPv6       = "fd00::2"
+	ikev2InterfaceID      = "2"
+	ipsecPresharedKey     = "preshared-key"
+	makeIPsecDir          = "mkdir -p /run/ipsec"
+	poolIPv4              = "ikev2-vip-ipv4-pools"
+	poolIPv6              = "ikev2-vip-ipv6-pools"
+	pppdPidFile           = "run/ppp0.pid"
+	swanctlCommand        = "/usr/sbin/swanctl"
+	viciSocketFile        = "run/ipsec/charon.vici"
+	xauthUser             = "xauth_user"
+	xauthPassword         = "xauth_password"
+	xl2tpdCommand         = "/usr/sbin/xl2tpd"
+	xl2tpdConfigFile      = "etc/xl2tpd/xl2tpd.conf"
+	xl2tpdPidFile         = "run/xl2tpd.pid"
+	xl2tpdServerIPAddress = "192.168.1.99"
+)
+
+var (
+	strongSwanDirectories = []string{
+		"etc/swanctl",
+		"etc/swanctl/x509ca",
+		"etc/swanctl/x509",
+		"etc/swanctl/private",
+	}
+	l2tpDirectories = []string{
+		"etc/ppp",
+		"etc/xl2tpd",
+	}
+
+	strongSwanConfigs = map[string]string{
+		"etc/strongswan.conf": "charon {\n" +
+			"  filelog {\n" +
+			"    test_vpn {\n" +
+			"      path = {{.charon_logfile}}\n" +
+			"      default = 3\n" +
+			"      time_format = %b %e %T\n" +
+			"      dmn = 2\n" +
+			"      mgr = 2\n" +
+			"      ike = 2\n" +
+			"      net = 2\n" +
+			"    }\n" +
+			"  }\n" +
+			"{{if .push_dns}}\n" +
+			"  plugins {\n" +
+			"    attr {\n" +
+			"      dns = 192.168.1.99\n" +
+			"    }\n" +
+			"  }\n" +
+			"{{end}}\n" +
+			"  install_routes = no\n" +
+			"  ignore_routing_tables = 0\n" +
+			"  routing_table = 0\n" +
+			"}\n",
+
+		"etc/swanctl/swanctl.conf": "connections {\n" +
+			"  ikev1-l2tp-test {\n" +
+			"    version = 1\n" +
+			"    {{if .preshared_key}}" +
+			"      local-psk {\n" +
+			"        auth = psk\n" +
+			"      }\n" +
+			"      remote-psk {\n" +
+			"        auth = psk\n" +
+			"      }\n" +
+			"    {{end}}" +
+			"    {{if .xauth_user}}" +
+			"      remote-xauth {\n" +
+			"        auth = xauth\n" +
+			"      }\n" +
+			"    {{end}}" +
+			"    {{if .server_cert_id}}" +
+			"      local-cert {\n" +
+			"        auth = pubkey\n" +
+			"        id = {{.server_cert_id}}\n" +
+			"      }\n" +
+			"    {{end}}" +
+			"    {{if .ca_cert_file}}" +
+			"      remote-cert {\n" +
+			"        auth = pubkey\n" +
+			"        cacerts = /{{.ca_cert_file}}\n" +
+			"      }\n" +
+			"    {{end}}" +
+			"    children {\n" +
+			"      ikev1-l2tp {\n" +
+			"        local_ts = dynamic[/1701]\n" +
+			"        mode = transport\n" +
+			"      }\n" +
+			"    }\n" +
+			"  }\n" +
+			"" +
+			"  ikev2-test {\n" +
+			"    version = 2\n" +
+			"    pools = {{.pools}}\n" +
+			"    {{if .preshared_key}}" +
+			"      local-psk {\n" +
+			"        auth = psk\n" +
+			"        id={{.server_id}}\n" +
+			"      }\n" +
+			"      remote-psk {\n" +
+			"        auth = psk\n" +
+			"        id={{.client_id}}\n" +
+			"      }\n" +
+			"    {{end}}" +
+			"    {{if .eap_user}}" +
+			"      remote-eap {\n" +
+			"        auth = eap-mschapv2\n" +
+			"        eap_id = %any\n" +
+			"      }\n" +
+			"    {{end}}" +
+			"    {{if .server_cert_id}}" +
+			"      local-cert {\n" +
+			"        auth = pubkey\n" +
+			"        id = {{.server_cert_id}}\n" +
+			"      }\n" +
+			"    {{end}}" +
+			"    {{if .ca_cert_file}}" +
+			"      remote-cert {\n" +
+			"        auth = pubkey\n" +
+			"        cacerts = /{{.ca_cert_file}}\n" +
+			"      }\n" +
+			"    {{end}}" +
+			"    children {\n" +
+			"      ikev2 {\n" +
+			"        local_ts = 0.0.0.0/0,::/0\n" +
+			"        remote_ts = {{.remote_ts}}\n" +
+			"        {{if .if_id}}" +
+			"        if_id_in = {{.if_id}}\n" +
+			"        if_id_out = {{.if_id}}\n" +
+			"        {{end}}" +
+			"        mode = tunnel\n" +
+			"      }\n" +
+			"    }\n" +
+			"  }\n" +
+			"}\n" +
+			"" +
+			"secrets {\n" +
+			"  {{if .preshared_key}}" +
+			"  ike-1 {\n" +
+			"    secret = \"{{.preshared_key}}\"\n" +
+			"  }\n" +
+			"  {{end}}" +
+			"  {{if .xauth_user}}" +
+			"  xauth-1 {\n" +
+			"    id = {{.xauth_user}}\n" +
+			"    secret = {{.xauth_password}}\n" +
+			"  }\n" +
+			"  {{end}}" +
+			"  {{if .eap_user}}" +
+			"  eap-1 {\n" +
+			"    id = \"{{.eap_user}}\"\n" +
+			"    secret = \"{{.eap_password}}\"\n" +
+			"  }\n" +
+			"  {{end}}" +
+			"}\n" +
+			"pools {\n" +
+			"  {{if .client_vip_ipv4}}" +
+			"  ikev2-vip-ipv4-pools {\n" +
+			"    addrs = {{.client_vip_ipv4}}/32\n" +
+			"  }\n" +
+			"  {{end}}" +
+			"  {{if .client_vip_ipv6}}" +
+			"  ikev2-vip-ipv6-pools {\n" +
+			"    addrs = {{.client_vip_ipv6}}/128\n" +
+			"  }\n" +
+			"  {{end}}" +
+			"}\n",
+
+		"etc/passwd": "root:x:0:0:root:/root:/bin/bash\n" +
+			"vpn:*:20174:20174::/dev/null:/bin/false\n",
+
+		"etc/group": "vpn:x:20174:\n",
+
+		caCertFile:                       certificate.TestCert1().CACred.Cert,
+		"etc/swanctl/x509/server.cert":   certificate.TestCert1().ServerCred.Cert,
+		"etc/swanctl/private/server.key": certificate.TestCert1().ServerCred.PrivateKey,
+	}
+
+	l2tpConfigs = map[string]string{
+		xl2tpdConfigFile: "[global]\n" +
+			"\n" +
+			"[lns default]\n" +
+			"  ip range = 192.168.1.128-192.168.1.254\n" +
+			"  local ip = {{if .use_underlay_ip}}{{.netns_ip}}{{else}}{{.xl2tpd_server_ip_address}}{{end}}\n" +
+			"  require chap = yes\n" +
+			"  refuse pap = yes\n" +
+			"  require authentication = yes\n" +
+			"  name = LinuxVPNserver\n" +
+			"  ppp debug = yes\n" +
+			"  pppoptfile = /etc/ppp/options.xl2tpd\n" +
+			"  length bit = yes\n",
+
+		"etc/xl2tpd/l2tp-secrets": "*      them    l2tp-secret",
+
+		"etc/ppp/chap-secrets": "{{.chap_user}}        *       {{.chap_secret}}      *",
+
+		"etc/ppp/options.xl2tpd": "ipcp-accept-local\n" +
+			"ipcp-accept-remote\n" +
+			"noccp\n" +
+			"auth\n" +
+			"crtscts\n" +
+			"idle 1800\n" +
+			"mtu 1410\n" +
+			"mru 1410\n" +
+			"nodefaultroute\n" +
+			"debug\n" +
+			"lock\n" +
+			"proxyarp\n" +
+			"ms-dns {{.dns_server}}\n",
+	}
+)
+
+// Constants that used by OpenVPN server
+const (
+	openvpnCommand           = "/usr/sbin/openvpn"
+	openvpnConfigFile        = "etc/openvpn/openvpn.conf"
+	openvpnCaCertFile        = "etc/openvpn/ca.crt"
+	openvpnServerCertFile    = "etc/openvpn/server.crt"
+	openvpnServerKeyFile     = "etc/openvpn/server.key"
+	openvpnTLSAuthFile       = "etc/openvpn/ta.key"
+	openvpnDiffieHellmanFile = "etc/openvpn/diffie-hellman.pem"
+	openvpnExpectedAuthFile  = "etc/openvpn_expected_authentication.txt"
+	openvpnAuthScript        = "etc/openvpn_authentication_script.sh"
+	openvpnLogFile           = "var/log/openvpn.log"
+	openvpnPidFile           = "run/openvpn.pid"
+	openvpnStatusFile        = "tmp/openvpn.status"
+	openvpnUsername          = "username"
+	openvpnPassword          = "password"
+	openvpnServerIPv4Address = "10.11.12.1"
+	openvpnServerIPv6Address = "fdfd::1"
+)
+
+// dh1024PemKey is the Diffie–Hellman parameter which will be used by OpenVPN
+// server in the test. The value is borrowed from Autotest
+// (client/common_lib/cros/site_eap_certs.py)
+const dh1024PemKey = `-----BEGIN DH PARAMETERS-----
+MIGHAoGBAL/YrUzFuA5cPGzhXVqTvDugmPi9CpbWZx2+TCTKxZSjNiVJxcICSnql
+uZtkR3sOAiWn384E4ZQTBrYPUguOuFfbMTRooADhezaG9SXtrE9oeVy9avIO7xQK
+emZydO0bAsRV+eL0XkjGhSyhKoOvSIXaCbJUn7duEsfkICPRLWCrAgEC
+-----END DH PARAMETERS-----
+`
+
+// openvpnTLSAuthKey is the TLS auth key used by OpenVPN. This value is
+// generated by `openvpn --genkey --secret ta.key`
+const openvpnTLSAuthKey = `-----BEGIN OpenVPN Static key V1-----
+f2c67579a2e2b621d935b095d53d71d1
+5daf6933da213a80b89e2a29cd949823
+a281e06a6ffe8fdad456f6378da0e5a0
+5ed7cc168d106925c1b0050c971c6419
+dd9c6f0e90064e88ca598987326bcb21
+c3eb6f1b0b31b35e0793d4ee10363a4c
+f635d584c2008915c45b470a11395037
+e8483bba005944f9470fd85ec0b26fe1
+0ccd55c6880885855d73dd05af643f36
+bbd2b85685bee57aefb7fd569df32598
+a7bebf0b0c0ab13a1767eab17184f5f8
+d543ee0000ae8b8f5d387e51eaebe5e7
+837b9546a008c2c5e53c36d7ed7f1aef
+076b9fd4da2383bec4f3d082b8c6f77a
+15972ca985c52209e4651105fd76d81e
+515ed3702ac44d975e0cce5418960ed2
+-----END OpenVPN Static key V1-----`
+
+var (
+	openvpnRootDirectories = []string{"etc/openvpn"}
+	openvpnConfigs         = map[string]string{
+		openvpnCaCertFile:        certificate.TestCert1().CACred.Cert,
+		openvpnServerCertFile:    certificate.TestCert1().ServerCred.Cert,
+		openvpnServerKeyFile:     certificate.TestCert1().ServerCred.PrivateKey,
+		openvpnDiffieHellmanFile: dh1024PemKey,
+		openvpnTLSAuthFile:       openvpnTLSAuthKey,
+		openvpnAuthScript:        "#!/bin/bash\ndiff -q $1 {{.expected_authentication_file}}\n",
+		openvpnExpectedAuthFile:  "{{.username}}\n{{.password}}\n",
+		openvpnConfigFile: "ca /{{.ca_cert}}\n" +
+			"cert /{{.server_cert}}\n" +
+			"dev tun\n" +
+			"dh /{{.diffie_hellman_params_file}}\n" +
+			"keepalive 10 120\n" +
+			"local {{.netns_ip}}\n" +
+			"log /{{.log_file}}\n" +
+			"ifconfig-pool-persist /tmp/ipp.txt\n" +
+			"key /{{.server_key}}\n" +
+			"persist-key\n" +
+			"persist-tun\n" +
+			"port 1194\n" +
+			"proto udp\n" +
+			"server 10.11.12.0 255.255.255.0\n" +
+			"{{if .ipv6}} server-ipv6 fdfd::/64 {{end}}\n" +
+			"status /{{.status_file}}\n" +
+			"{{if .tls_auth_file}} tls-auth /{{.tls_auth_file}}\n {{end}}" +
+			"{{if .topology}}topology {{.topology}}{{end}}\n" +
+			"verb 5\n" +
+			"writepid /{{.pid_file}}\n" +
+			"tmp-dir /tmp\n" +
+			"{{if .default_route}}push \"redirect-gateway {{.flags}}\"\n {{end}}" +
+			"{{range .push_route}}push \"route {{.addr}} {{.mask}}\"\n{{end}}" +
+			"{{if .push_dns}}push \"dhcp-option DNS 10.11.12.1\"\n {{end}}" +
+			"{{.optional_user_verification}}\n",
+	}
+)
+
+// Constants that used by WireGuard server. Keys are generated randomly using
+// wireguard-tools, only for test usages.
+const (
+	wgClientPrivateKey           = "8Ez9VkVl2JL+OhrLZvV2FXsRJTqtBpykhErNef5dzns="
+	wgClientPublicKey            = "dN8f5XplOXpNDP1m9b1V3/AVuOogbw+HckGisfEAphA="
+	wgClientOverlayIPv4          = "10.12.14.2"
+	wgClientOverlayIPv4Prefix    = "32"
+	wgClientOverlayIPv6          = "fd00:0:0:0:1::"
+	wgClientOverlayIPv6Prefix    = "128"
+	wgServerPrivateKey           = "kKhUZZYELpnWFXZmHKvze5kMJ4UfViHo0aacwx9VSXo="
+	wgServerPublicKey            = "VL4pfwqKV4pWX1xJRmvceOZLTftNKi2PrFoBbJWNKXw="
+	wgServerOverlayIPv4          = "10.12.14.1"
+	wgServerOverlayIPv6          = "fd00:0:0:0:2::"
+	wgServerAllowedIPsIPv4       = "10.12.0.0/16"
+	wgServerAllowedIPsIPv6       = "fd00:0:0:0:2::/128"
+	wgServerListenPort           = "12345"
+	wgSecondServerPrivateKey     = "MKLi0UPHP09PwZDH0EPVd2mMTeGi98NDR8dfkzPuQHs="
+	wgSecondServerPublicKey      = "wJXMGS2jhLPy4x75yev7oh92OwjHFcSWio4U/pWLYzg="
+	wgSecondServerOverlayIPv4    = "10.14.16.1"
+	wgSecondServerOverlayIPv6    = "fd00:0:0:1:3::"
+	wgSecondServerAllowedIPsIPv4 = "10.14.0.0/16"
+	wgSecondServerAllowedIPsIPv6 = "fd00:0:0:1::/64"
+	wgSecondServerListenPort     = "54321"
+	wgPresharedKey               = "LqgZ5/qyT8J8nr25n9IEcUi+vOBkd3sphGn1ClhkHw0="
+	wgConfigFile                 = "tmp/wg.conf"
+)
+
+var (
+	wgConfigs = map[string]string{
+		wgConfigFile: "[Interface]\n" +
+			"PrivateKey = {{.server_private_key}}\n" +
+			"ListenPort = {{.server_listen_port}}\n" +
+			"\n" +
+			"[Peer]\n" +
+			"PublicKey = {{.client_public_key}}\n" +
+			"AllowedIPs = {{.client_ipv4}}/{{.client_ipv4_prefix}},{{.client_ipv6}}/{{.client_ipv6_prefix}}\n" +
+			"{{if .preshared_key}}PresharedKey = {{.preshared_key}}{{end}}",
+	}
+)
+
+// Server represents a VPN server that can be used in the test.
+type Server struct {
+	OverlayIfname string
+	OverlayIPv4   string
+	OverlayIPv6   string
+	UnderlayIP    string
+	serverRunner  *serverRunner
+	stopCommands  [][]string
+	pidFiles      []string
+	logFiles      []string
+}
+
+// StartServer starts a VPN server of type in the given env.
+// TODO(b/257379393): Create virtualnet Env if env is nil.
+func StartServer(ctx context.Context, env *env.Env, vpnType Type, opts ...Option) (*Server, error) {
+	config := NewConfig(vpnType, opts...)
+	return StartServerWithConfig(ctx, env, config)
+}
+
+// StartServerWithConfig starts a VPN server with config in the given env.
+func StartServerWithConfig(ctx context.Context, env *env.Env, config *Config) (*Server, error) {
+	if env == nil {
+		return nil, errors.New("env should not be nil")
+	}
+
+	switch config.Type {
+	case TypeIKEv2:
+		return startIKEv2Server(ctx, env, config.IPsecAuthType, config.IPType)
+	case TypeL2TPIPsec:
+		return startL2TPIPsecServer(ctx, env, config.IPsecAuthType, config.IPsecUseXauth, config.UnderlayIPIsOverlayIP)
+	case TypeOpenVPN:
+		return startOpenVPNServer(ctx, env, config)
+	case TypeWireGuard:
+		return StartWireGuardServer(ctx, env, wgClientPublicKey, config.WGUsePSK, false /*isSecondServer*/)
+	default:
+		return nil, errors.Errorf("unexpected VPN type %s", config.Type)
+	}
+}
+
+// startL2TPIPsecServer starts a L2TP/IPsec server.
+func startL2TPIPsecServer(ctx context.Context, env *env.Env, authType IPsecAuthType, ipsecUseXauth, underlayIPIsOverlayIP bool) (*Server, error) {
+	runner := newServerRunner(env)
+	server := &Server{
+		OverlayIfname: "ppp0",
+		serverRunner:  runner,
+		stopCommands:  [][]string{},
+		pidFiles:      []string{charonPidFile, xl2tpdPidFile, pppdPidFile},
+		logFiles:      []string{charonLogFile},
+	}
+
+	runner.AddRootDirectories(strongSwanDirectories)
+	runner.AddRootDirectories(l2tpDirectories)
+	runner.AddConfigTemplates(strongSwanConfigs)
+	runner.AddConfigTemplates(l2tpConfigs)
+
+	// Defaults to use the environment address as the DNS server.
+	envAddrs, err := env.GetVethInAddrs(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get env addresses")
+	}
+
+	configValues := map[string]interface{}{
+		"chap_user":                chapUser,
+		"chap_secret":              chapSecret,
+		"charon_logfile":           charonLogFile,
+		"xl2tpd_server_ip_address": xl2tpdServerIPAddress,
+		"use_underlay_ip":          underlayIPIsOverlayIP,
+		"dns_server":               envAddrs.IPv4Addr,
+	}
+
+	switch authType {
+	case AuthTypePSK:
+		configValues["preshared_key"] = ipsecPresharedKey
+	case AuthTypeCert:
+		configValues["server_cert_id"] = ikeServerIdentity
+		configValues["ca_cert_file"] = caCertFile
+	default:
+		return nil, errors.Errorf("L2TP/IPsec type %s is not defined", authType)
+	}
+
+	if ipsecUseXauth {
+		configValues["xauth_user"] = xauthUser
+		configValues["xauth_password"] = xauthPassword
+	}
+
+	configValues["pools"] = poolIPv4
+	configValues["remote_ts"] = ikev2ClientIPv4 + "/32"
+
+	// For running strongSwan VPN with flag --with-piddir=/run/ipsec. We
+	// want to use /run/ipsec for strongSwan runtime data dir instead of
+	// /run, and the cmdline flag applies to both client and server
+	runner.AddStartupCommand(makeIPsecDir)
+
+	runner.AddConfigValues(configValues)
+	runner.AddStartupCommand(fmt.Sprintf("%s &", charonCommand))
+
+	xl2tpdCmdStr := fmt.Sprintf("%s -c /%s -C /tmp/l2tpd.control", xl2tpdCommand, xl2tpdConfigFile)
+	runner.AddStartupCommand(xl2tpdCmdStr)
+
+	underlayIP, err := runner.Startup(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to start L2TP/IPsec server")
+	}
+
+	// After starting charon, execute `swanctl --load-all` to load the
+	// connection config. The execution may fail until the charon process is
+	// ready, so we use a Poll here.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		return runner.RunChroot(ctx, []string{swanctlCommand, "--load-all"})
+	}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
+		return nil, errors.Wrap(err, "failed to load swanctl config")
+	}
+
+	server.UnderlayIP = underlayIP
+	if underlayIPIsOverlayIP {
+		server.OverlayIPv4 = underlayIP
+	} else {
+		server.OverlayIPv4 = xl2tpdServerIPAddress
+	}
+	return server, nil
+}
+
+// startIKEv2Server starts an IKEv2 server.
+func startIKEv2Server(ctx context.Context, env *env.Env, authType IPsecAuthType, ipType IPType) (*Server, error) {
+	runner := newServerRunner(env)
+	server := &Server{
+		OverlayIfname: "xfrm1",
+		serverRunner:  runner,
+		stopCommands:  [][]string{{"/bin/ip", "link", "del", "xfrm1"}},
+		pidFiles:      []string{charonPidFile},
+		logFiles:      []string{charonLogFile},
+	}
+
+	runner.AddRootDirectories(strongSwanDirectories)
+	runner.AddConfigTemplates(strongSwanConfigs)
+
+	configValues := map[string]interface{}{
+		"chap_user":      chapUser,
+		"chap_secret":    chapSecret,
+		"charon_logfile": charonLogFile,
+		"if_id":          ikev2InterfaceID,
+		"push_dns":       true,
+	}
+
+	switch authType {
+	case AuthTypePSK:
+		configValues["client_id"] = ikeClientIdentity
+		configValues["preshared_key"] = ipsecPresharedKey
+		configValues["server_id"] = ikeServerIdentity
+	case AuthTypeCert:
+		configValues["ca_cert_file"] = caCertFile
+		configValues["server_cert_id"] = ikeServerIdentity
+	case AuthTypeEAP:
+		configValues["eap_user"] = xauthUser
+		configValues["eap_password"] = xauthPassword
+		configValues["server_cert_id"] = ikeServerIdentity
+	default:
+		return nil, errors.Errorf("IKEv2 type %s is not defined", authType)
+	}
+
+	var poolsArray []string
+	var remoteTsArray []string
+	if ipType == IPTypeIPv4 || ipType == IPTypeIPv4AndIPv6 {
+		configValues["client_vip_ipv4"] = ikev2ClientIPv4
+		poolsArray = append(poolsArray, poolIPv4)
+		remoteTsArray = append(remoteTsArray, ikev2ClientIPv4+"/32")
+	}
+	if ipType == IPTypeIPv6 || ipType == IPTypeIPv4AndIPv6 {
+		configValues["client_vip_ipv6"] = ikev2ClientIPv6
+		poolsArray = append(poolsArray, poolIPv6)
+		remoteTsArray = append(remoteTsArray, ikev2ClientIPv6+"/128")
+	}
+	configValues["pools"] = strings.Join(poolsArray, ",")
+	configValues["remote_ts"] = strings.Join(remoteTsArray, ",")
+
+	runner.AddConfigValues(configValues)
+
+	// For running strongSwan VPN with flag --with-piddir=/run/ipsec. We
+	// want to use /run/ipsec for strongSwan runtime data dir instead of
+	// /run, and the cmdline flag applies to both client and server
+	runner.AddStartupCommand(makeIPsecDir)
+	runner.AddStartupCommand(fmt.Sprintf("%s &", charonCommand))
+	runner.AddStartupCommand("ip link add xfrm1 type xfrm dev lo if_id " + ikev2InterfaceID)
+	runner.AddStartupCommand("ip addr add dev xfrm1 " + ikev2ServerIPv4 + "/24")
+	runner.AddStartupCommand("ip addr add dev xfrm1 " + ikev2ServerIPv6 + "/64")
+	runner.AddStartupCommand("ip link set dev xfrm1 up")
+
+	underlayIP, err := runner.Startup(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to start IKEv2 VPN server")
+	}
+
+	// After starting charon, execute `swanctl --load-all` to load the
+	// connection config. The execution may fail until the charon process is
+	// ready, so we use a Poll here.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		return runner.RunChroot(ctx, []string{swanctlCommand, "--load-all"})
+	}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
+		return nil, errors.Wrap(err, "failed to load swanctl config")
+	}
+
+	server.UnderlayIP = underlayIP
+	if ipType == IPTypeIPv4 || ipType == IPTypeIPv4AndIPv6 {
+		server.OverlayIPv4 = ikev2ServerIPv4
+	}
+	if ipType == IPTypeIPv6 || ipType == IPTypeIPv4AndIPv6 {
+		server.OverlayIPv6 = ikev2ServerIPv6
+	}
+
+	return server, nil
+}
+
+// startOpenVPNServer starts an OpenVPN server.
+func startOpenVPNServer(ctx context.Context, env *env.Env, config *Config) (*Server, error) {
+	runner := newServerRunner(env)
+	server := &Server{
+		OverlayIfname: "tun0",
+		serverRunner:  runner,
+		stopCommands:  [][]string{},
+		pidFiles:      []string{openvpnPidFile},
+		logFiles:      []string{openvpnLogFile},
+	}
+
+	runner.AddRootDirectories(openvpnRootDirectories)
+	runner.AddConfigTemplates(openvpnConfigs)
+	configValues := map[string]interface{}{
+		"ca_cert":                      openvpnCaCertFile,
+		"diffie_hellman_params_file":   openvpnDiffieHellmanFile,
+		"expected_authentication_file": openvpnExpectedAuthFile,
+		"optional_user_verification":   "",
+		"password":                     openvpnPassword,
+		"pid_file":                     openvpnPidFile,
+		"server_cert":                  openvpnServerCertFile,
+		"server_key":                   openvpnServerKeyFile,
+		"status_file":                  openvpnStatusFile,
+		"username":                     openvpnUsername,
+		"log_file":                     openvpnLogFile,
+		"push_dns":                     true,
+	}
+	switch config.IPType {
+	case IPTypeIPv4:
+		configValues["flags"] = "def1"
+	case IPTypeIPv6:
+		configValues["ipv6"] = true
+		configValues["flags"] = "ipv6 !ipv4"
+	case IPTypeIPv4AndIPv6:
+		configValues["ipv6"] = true
+		configValues["flags"] = "def1 ipv6"
+	}
+	if config.OpenVPNUseUserPassword {
+		configValues["optional_user_verification"] = fmt.Sprintf("auth-user-pass-verify /%s via-file\nscript-security 2", openvpnAuthScript)
+	}
+	if config.OpenVPNTLSAuth {
+		configValues["tls_auth_file"] = openvpnTLSAuthFile
+	}
+
+	defaultRoute := true
+	if len(config.includedRoutesV4) > 0 {
+		var routes []map[string]interface{}
+		for _, prefix := range config.includedRoutesV4 {
+			routes = append(routes, map[string]interface{}{
+				"addr": prefix.IP.String(),
+				"mask": net.ParseIP("255.255.255.255").Mask(prefix.Mask).String(),
+			})
+		}
+		configValues["push_route"] = routes
+		defaultRoute = false
+	}
+	if config.openvpnTopology != OpenVPNTopologyUnspecified {
+		configValues["topology"] = config.openvpnTopology.String()
+		defaultRoute = false
+	}
+	if defaultRoute {
+		configValues["default_route"] = true
+	}
+
+	runner.AddConfigValues(configValues)
+	runner.AddStartupCommand("chmod 755 " + openvpnAuthScript)
+	runner.AddStartupCommand(fmt.Sprintf("%s --config /%s &", openvpnCommand, openvpnConfigFile))
+	runner.NetEnv = []string{
+		"OPENSSL_CONF=/etc/ssl/openssl.cnf.compat",
+		"OPENSSL_CHROMIUM_SKIP_TRUSTED_PURPOSE_CHECK=1",
+	}
+
+	underlayIP, err := runner.Startup(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to start OpenVPN server")
+	}
+	server.UnderlayIP = underlayIP
+	server.OverlayIPv4 = openvpnServerIPv4Address
+	server.OverlayIPv6 = openvpnServerIPv6Address
+	return server, nil
+}
+
+// StartWireGuardServer starts a WireGuard server.
+func StartWireGuardServer(ctx context.Context, env *env.Env, clientPublicKey string, usePSK, isSecondServer bool) (*Server, error) {
+	runner := newServerRunner(env)
+	server := &Server{
+		OverlayIfname: "wg1",
+		serverRunner:  runner,
+		stopCommands:  [][]string{{"/bin/ip", "link", "del", "wg1"}},
+		pidFiles:      []string{},
+		logFiles:      []string{}, // No log for WireGuard server.
+	}
+
+	configValues := map[string]interface{}{
+		"client_public_key":  clientPublicKey,
+		"client_ipv4":        wgClientOverlayIPv4,
+		"client_ipv4_prefix": wgClientOverlayIPv4Prefix,
+		"client_ipv6":        wgClientOverlayIPv6,
+		"client_ipv6_prefix": wgClientOverlayIPv6Prefix,
+	}
+	if usePSK {
+		configValues["preshared_key"] = wgPresharedKey
+	}
+	if isSecondServer {
+		configValues["server_private_key"] = wgSecondServerPrivateKey
+		configValues["server_listen_port"] = wgSecondServerListenPort
+		server.OverlayIPv4 = wgSecondServerOverlayIPv4
+		server.OverlayIPv6 = wgSecondServerOverlayIPv6
+	} else {
+		configValues["server_private_key"] = wgServerPrivateKey
+		configValues["server_listen_port"] = wgServerListenPort
+		server.OverlayIPv4 = wgServerOverlayIPv4
+		server.OverlayIPv6 = wgServerOverlayIPv6
+	}
+
+	runner.AddConfigTemplates(wgConfigs)
+	runner.AddConfigValues(configValues)
+	runner.AddStartupCommand("ip link add wg1 type wireguard")
+	runner.AddStartupCommand("wg setconf wg1 /" + wgConfigFile)
+	runner.AddStartupCommand("ip addr add dev wg1 " + server.OverlayIPv4)
+	runner.AddStartupCommand("ip addr add dev wg1 " + server.OverlayIPv6)
+	runner.AddStartupCommand("ip link set dev wg1 up")
+	runner.AddStartupCommand("ip route add " + wgClientOverlayIPv4 + " dev wg1")
+	runner.AddStartupCommand("ip route add " + wgClientOverlayIPv6 + " dev wg1")
+
+	var err error
+	if server.UnderlayIP, err = runner.Startup(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to start WireGuard server")
+	}
+	return server, nil
+}
+
+// StopServer stop VPN server instance.
+func (s *Server) StopServer(ctx context.Context) error {
+	runner := s.serverRunner
+	for _, cmd := range s.stopCommands {
+		if err := runner.RunChroot(ctx, cmd); err != nil {
+			return errors.Wrapf(err, "failed to execute %v", cmd)
+		}
+	}
+
+	for _, pidFile := range s.pidFiles {
+		if err := runner.KillPidFile(ctx, pidFile, true); err != nil {
+			return errors.Wrapf(err, "failed to kill the PID file %v", pidFile)
+		}
+	}
+
+	return nil
+}
+
+func (s *Server) collectLogs(ctx context.Context) error {
+	var getLogErr error
+	content, err := s.serverRunner.GetLogContents(ctx, s.logFiles)
+	if err != nil {
+		getLogErr = errors.Wrap(err, "failed to get vpn log contents")
+	}
+
+	// Write the vpn logs to the file logName.
+	dir, ok := testing.ContextOutDir(ctx)
+	if !ok {
+		return errors.New("failed to get OutDir")
+	}
+
+	if err := ioutil.WriteFile(filepath.Join(dir, logName),
+		[]byte(content), 0644); err != nil {
+		return errors.Wrap(err, "failed to write vpnlogs output")
+	}
+
+	return getLogErr
+}
+
+// Exit does a best effort to stop the server, log the contents, and shut down the serverRunner.
+func (s *Server) Exit(ctx context.Context) error {
+	var lastErr error
+
+	// We should stop the server before call GetLogContents, since the charon
+	// process may not flush all the contents before exiting.
+	if err := s.StopServer(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to stop vpn server: ", err)
+		lastErr = err
+	}
+
+	if err := s.collectLogs(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to collect logs: ", err)
+		lastErr = err
+	}
+
+	if err := s.serverRunner.Shutdown(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to shutdown the serverRunner: ", err)
+		lastErr = err
+	}
+
+	return lastErr
+}

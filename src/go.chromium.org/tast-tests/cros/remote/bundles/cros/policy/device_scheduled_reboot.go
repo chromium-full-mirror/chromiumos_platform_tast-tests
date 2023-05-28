@@ -1,0 +1,140 @@
+// Copyright 2022 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package policy
+
+import (
+	"context"
+	"encoding/json"
+	"time"
+
+	"github.com/golang/protobuf/ptypes/empty"
+
+	"go.chromium.org/tast-tests/cros/common/pci"
+	"go.chromium.org/tast-tests/cros/common/policy"
+	"go.chromium.org/tast-tests/cros/remote/policyutil"
+	kspb "go.chromium.org/tast-tests/cros/services/cros/kiosk"
+	pspb "go.chromium.org/tast-tests/cros/services/cros/policy"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/testing"
+)
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func:         DeviceScheduledReboot,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Behavior of DeviceScheduledReboot policy for kiosk",
+		BugComponent: "b:1263917", // ChromeOS > Software > Commercial (Enterprise) > Testing
+		Contacts: []string{
+			"cros-policy-muc-eng@google.com",
+			"sanjaperisic@google.com", // Test author
+		},
+		Attr:         []string{"group:enrollment"},
+		SoftwareDeps: []string{"chrome", "reboot"},
+		ServiceDeps: []string{
+			"tast.cros.kiosk.KioskService", "tast.cros.hwsec.OwnershipService", "tast.cros.policy.PolicyService",
+		},
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.DeviceScheduledReboot{}, pci.VerifiedFunctionalityJS),
+		},
+		Timeout: 15 * time.Minute, // Test uses local time to schedule a reboot, waits for the reboot to happen and then waits for the device to reconnect.
+	})
+}
+
+// futureTime adds 2 minutes to the given time.
+func futureTime(hour, minute int32) (int, int) {
+	h := int(hour)
+	m := int(minute)
+	if m > 58 {
+		h = (h + 1) % 24
+	}
+	m = (m + 2) % 60
+	return h, m
+}
+
+func DeviceScheduledReboot(ctx context.Context, s *testing.State) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Minute)
+	defer cancel()
+
+	defer func(ctx context.Context) {
+		if err := policyutil.EnsureTPMAndSystemStateAreReset(ctx, s.DUT(), s.RPCHint()); err != nil {
+			s.Error("Failed to reset TPM: ", err)
+		}
+	}(cleanupCtx)
+	if err := policyutil.EnsureTPMAndSystemStateAreReset(ctx, s.DUT(), s.RPCHint()); err != nil {
+		s.Fatal("Failed to reset TPM: ", err)
+	}
+
+	cl, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())
+	if err != nil {
+		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
+	}
+	defer cl.Close(ctx)
+
+	policyClient := pspb.NewPolicyServiceClient(cl.Conn)
+	kioskClient := kspb.NewKioskServiceClient(cl.Conn)
+
+	if _, err := kioskClient.StartKiosk(ctx, &empty.Empty{}); err != nil {
+		s.Fatal(err, " failed to start kiosk")
+	}
+	defer func(ctx context.Context) {
+		cl, err = rpc.Dial(ctx, s.DUT(), s.RPCHint())
+		if err != nil {
+			s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
+		}
+		defer cl.Close(ctx)
+		kioskClient = kspb.NewKioskServiceClient(cl.Conn)
+		if _, err := kioskClient.CloseKiosk(ctx, &empty.Empty{}); err != nil {
+			s.Fatal(err, " failed to close kiosk")
+		}
+	}(cleanupCtx)
+
+	// Fetch current time and fast-forward 2 minutes.
+	currTime, err := policyClient.GetTimeOfDay(ctx, &empty.Empty{})
+	if err != nil {
+		s.Fatal(err, " failed to get current time")
+	}
+	hour, minute := futureTime(currTime.Hour, currTime.Minute)
+
+	deviceScheduledRebootPb := policy.NewBlob()
+	deviceScheduledRebootPb.AddPolicy(&policy.DeviceScheduledReboot{Val: &policy.DeviceScheduledRebootValue{
+		DayOfMonth: 11,
+		DayOfWeek:  "TUESDAY",
+		Frequency:  "DAILY",
+		RebootTime: &policy.DeviceScheduledRebootValueRebootTime{
+			Hour:   hour,
+			Minute: minute,
+		},
+	}})
+
+	deviceScheduledRebootJSON, err := json.Marshal(deviceScheduledRebootPb)
+	if err != nil {
+		s.Fatal("Failed to serialize policies: ", err)
+	}
+	if _, err = kioskClient.UpdatePolicies(ctx, &kspb.UpdatePoliciesRequest{
+		PolicyJson: deviceScheduledRebootJSON,
+	}); err != nil {
+		s.Fatal(err, " failed to start kiosk with policies")
+	}
+
+	func() {
+		sdCtx, cancel := context.WithTimeout(cleanupCtx, 7*time.Minute)
+		defer cancel()
+		s.Log("Wait for DUT to become unreachable")
+		if err := s.DUT().WaitUnreachable(sdCtx); err != nil {
+			s.Fatal("Failed to wait for unreachable: ", err)
+		}
+	}()
+
+	func() {
+		waitConnectCtx, cancel := context.WithTimeout(cleanupCtx, 3*time.Minute)
+		defer cancel()
+		s.Log("Wait for DUT to power ON")
+		if err := s.DUT().WaitConnect(waitConnectCtx); err != nil {
+			s.Fatal("Failed to reconnect to DUT: ", err)
+		}
+	}()
+}

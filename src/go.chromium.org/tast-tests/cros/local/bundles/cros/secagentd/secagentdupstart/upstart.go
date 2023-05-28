@@ -1,0 +1,44 @@
+// Copyright 2023 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+// Package secagentdupstart contains shared helpers for interacting with the
+// secagentd upstart service.
+package secagentdupstart
+
+import (
+	"context"
+	"time"
+
+	upstartcommon "go.chromium.org/tast-tests/cros/common/upstart"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/secagentd/secagentdprocfsscraper"
+	"go.chromium.org/tast-tests/cros/local/upstart"
+	"go.chromium.org/tast/core/testing"
+)
+
+// RestartSecagentd restarts the daemon with the given upstart args, verifies
+// that it is running as expected and returns the daemon pid.
+func RestartSecagentd(ctx context.Context, args ...upstart.Arg) (uint64, error) {
+	const name = "secagentd"
+
+	if err := upstart.RestartJob(ctx, name, args...); err != nil {
+		return 0, err
+	}
+	if err := upstart.WaitForJobStatus(ctx, name, upstartcommon.StartGoal, upstartcommon.RunningState, upstart.RejectWrongGoal, 5*time.Second); err != nil {
+		return 0, err
+	}
+	_, _, mjPid, err := upstart.JobStatus(ctx, name)
+	if err != nil {
+		return 0, err
+	}
+	// Upstart returns the minijail0 pid. secagentd is its child. Poll briefly
+	// to let minijail do its thing and start secagentd.
+	pid := uint64(0)
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		pid, err = secagentdprocfsscraper.GetOnlyChildPid(uint64(mjPid))
+		return err
+	}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
+		return 0, err
+	}
+	return pid, nil
+}

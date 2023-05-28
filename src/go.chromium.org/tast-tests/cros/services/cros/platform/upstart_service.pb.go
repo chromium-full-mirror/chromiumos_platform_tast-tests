@@ -125,7 +125,7 @@ func (x *JobStatusRequest) GetJobName() string {
 }
 
 // Definitions of "goal" and "state" described in
-// https://chromium.googlesource.com/chromiumos/platform/tast-tests/+/HEAD/src/chromiumos/tast/local/upstart/upstart.go
+// https://chromium.googlesource.com/chromiumos/platform/tast-tests/+/HEAD/src/go.chromium.org/tast-tests/cros/local/upstart/upstart.go
 type JobStatusResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

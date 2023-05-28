@@ -1,0 +1,84 @@
+// Copyright 2021 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package camera
+
+import (
+	"context"
+	"time"
+
+	"go.chromium.org/tast-tests/cros/common/media/caps"
+	"go.chromium.org/tast-tests/cros/local/camera/cca"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
+)
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func:         CCAUICameraBoxDocumentScanning,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Verifies that CCA can scan document on preview via CameraBox",
+		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
+		Attr:         []string{"group:camerabox"},
+		SoftwareDeps: []string{"camera_app", "chrome", "ondevice_document_scanner_rootfs_or_dlc", caps.BuiltinOrVividCamera},
+		Data:         []string{"document_scene.jpg"},
+		Vars:         []string{"chart"},
+		Fixture:      "ccaLaunchedInCameraBox",
+		Params: []testing.Param{{
+			Name:      "back",
+			ExtraAttr: []string{"camerabox_facing_back"},
+			Val:       cca.FacingBack,
+		}, {
+			Name:      "front",
+			ExtraAttr: []string{"camerabox_facing_front"},
+			Val:       cca.FacingFront,
+		}},
+		BugComponent: "b:978428",
+	})
+}
+
+// CCAUICameraBoxDocumentScanning tests that the detected document corners will be shown while under document scan mode.
+func CCAUICameraBoxDocumentScanning(ctx context.Context, s *testing.State) {
+	prepareChart := s.FixtValue().(cca.FixtureData).PrepareChart
+	chartHost, ok := s.Var("chart")
+	if !ok {
+		chartHost = ""
+	}
+	if err := prepareChart(ctx, chartHost, s.DataPath("document_scene.jpg")); err != nil {
+		s.Fatal("Failed to prepare chart: ", err)
+	}
+	s.FixtValue().(cca.FixtureData).SetDebugParams(cca.DebugParams{SaveScreenshotWhenFail: true})
+
+	app := s.FixtValue().(cca.FixtureData).App()
+	facing := s.Param().(cca.Facing)
+
+	if curFacing, err := app.GetFacing(ctx); err != nil {
+		s.Fatal("Failed to get facing: ", err)
+	} else if curFacing != facing {
+		if err := app.SwitchCamera(ctx); err != nil {
+			s.Fatal("Failed to switch camera: ", err)
+		}
+		if err := app.CheckFacing(ctx, facing); err != nil {
+			s.Fatalf("Failed to switch to the target camera %v: %v", facing, err)
+		}
+	}
+
+	// Switch to scan mode.
+	if err := app.SwitchMode(ctx, cca.Scan); err != nil {
+		s.Fatal("Failed to switch to scan mode: ", err)
+	}
+
+	// Verify that document corners are shown in the preview.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		result, err := app.Visible(ctx, cca.DocumentCorner)
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to check class of the document scan overlay"))
+		} else if !result {
+			return errors.Wrap(err, "no document is found")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+		s.Fatal("Failed to wait for corner indicator show up: ", err)
+	}
+}

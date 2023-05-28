@@ -8,7 +8,7 @@ import (
 	"context"
 	"time"
 
-	"chromiumos/tast/local/coords"
+	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast/core/errors"
 )
 

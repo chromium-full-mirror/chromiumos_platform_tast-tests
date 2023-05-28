@@ -4,7 +4,7 @@
 
 package fixture
 
-// Fixtures defined in chromiumos/tast/local/vdi/fixtures/vdi.go.
+// Fixtures defined in go.chromium.org/tast-tests/cros/local/vdi/fixtures/vdi.go.
 const (
 	// CitrixLaunched is a fixture name.
 	CitrixLaunched = "citrixLaunched"
@@ -14,7 +14,7 @@ const (
 	LacrosCitrixLaunched = "lacrosCitrixLaunched"
 )
 
-// Fixtures defined in chromiumos/tast/local/vdi/fixtures/vdi_msg.go.
+// Fixtures defined in go.chromium.org/tast-tests/cros/local/vdi/fixtures/vdi_msg.go.
 const (
 	// MgsCitrixLaunched is a fixture name.
 	MgsCitrixLaunched = "mgsCitrixLaunched"
@@ -24,7 +24,7 @@ const (
 	MgsLacrosCitrixLaunched = "mgsLacrosCitrixLaunched"
 )
 
-// Fixtures defined in chromiumos/tast/local/vdi/fixtures/vdi_kiosk.go.
+// Fixtures defined in go.chromium.org/tast-tests/cros/local/vdi/fixtures/vdi_kiosk.go.
 const (
 	// KioskCitrixLaunched is a fixture name.
 	KioskCitrixLaunched = "kioskCitrixLaunched"

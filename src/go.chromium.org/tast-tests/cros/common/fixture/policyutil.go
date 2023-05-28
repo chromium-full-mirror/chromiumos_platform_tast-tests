@@ -4,18 +4,18 @@
 
 package fixture
 
-// Fixture defined in chromiumos/tast/remote/policyutil/enrolled_fixture.go.
+// Fixture defined in go.chromium.org/tast-tests/cros/remote/policyutil/enrolled_fixture.go.
 const (
 	// Enrolled is a fixture name.
 	Enrolled = "enrolled"
 )
 
-// Fixture defined in chromiumos/tast/remote/policyutil/clean_ownership.go.
+// Fixture defined in go.chromium.org/tast-tests/cros/remote/policyutil/clean_ownership.go.
 const (
 	CleanOwnership = "cleanOwnership"
 )
 
-// Fixtures defined in chromiumos/tast/local/policyutil/fixtures/fakedms.go.
+// Fixtures defined in go.chromium.org/tast-tests/cros/local/policyutil/fixtures/fakedms.go.
 const (
 	// FakeDMS is a fixture name.
 	FakeDMS = "fakeDMS"
@@ -25,7 +25,7 @@ const (
 	FakeDMSUpdateEngineEnrolled = "fakeDMSUpdateEngineEnrolled"
 )
 
-// Fixtures defined in chromiumos/tast/local/policyutil/fixtures/chrome.go.
+// Fixtures defined in go.chromium.org/tast-tests/cros/local/policyutil/fixtures/chrome.go.
 const (
 	// ChromePolicyLoggedIn is a fixture name.
 	ChromePolicyLoggedIn = "chromePolicyLoggedIn"
@@ -57,13 +57,13 @@ const (
 	ChromePolicyRealUserLoggedIn = "chromePolicyRealUserLoggedIn"
 )
 
-// Fixtures defined in chromiumos/tast/local/mgs/fixture.go.
+// Fixtures defined in go.chromium.org/tast-tests/cros/local/mgs/fixture.go.
 const (
 	ManagedGuestSessionWithPWA       = "managedGuestSessionWithPWA"
 	ManagedGuestSessionWithPWALacros = "managedGuestSessionWithPWALacros"
 )
 
-// Fixtures defined in chromiumos/tast/local/policyutil/fixtures/lacros.go.
+// Fixtures defined in go.chromium.org/tast-tests/cros/local/policyutil/fixtures/lacros.go.
 const (
 	// LacrosPolicyLoggedIn is a fixture name.
 	LacrosPolicyLoggedIn = "lacrosPolicyLoggedIn"
@@ -85,7 +85,7 @@ const (
 	LacrosEnrolledLoggedIn = "lacrosEnrolledLoggedIn"
 )
 
-// Fixtures defined in chromiumos/tast/local/policyutil/fixtures/persistent.go.
+// Fixtures defined in go.chromium.org/tast-tests/cros/local/policyutil/fixtures/persistent.go.
 const (
 	// PersistentLacros is a fixture name.
 	PersistentLacros = "persistentLacros"

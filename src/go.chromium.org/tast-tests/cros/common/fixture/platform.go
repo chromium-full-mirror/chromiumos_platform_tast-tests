@@ -4,7 +4,7 @@
 
 package fixture
 
-// Fixtures defined in src/chromiumos/tast/remote/bundles/cros/platform/services_on_boot_fixt.go
+// Fixtures defined in src/go.chromium.org/tast-tests/cros/remote/bundles/cros/platform/services_on_boot_fixt.go
 const (
 	// ServicesOnBoot is a fixture for the local platform.ServiceOnBoot.* tests.
 	// This fixture reboots the device and waits until services are started.

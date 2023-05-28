@@ -1,0 +1,58 @@
+// Copyright 2018 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package hwsec
+
+import (
+	"context"
+
+	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/cryptohome"
+	"go.chromium.org/tast-tests/cros/local/upstart"
+	"go.chromium.org/tast/core/testing"
+)
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func:         LoginGuest,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Verifies the cryptohome is mounted for guest user login",
+		Contacts: []string{
+			"cros-hwsec@google.com",
+			"achuith@chromium.org",  // Original autotest author
+			"hidehiko@chromium.org", // Tast port author
+		},
+		BugComponent: "b:1188704",
+		SoftwareDeps: []string{"chrome"},
+		Attr:         []string{"group:mainline", "group:labqual"},
+	})
+}
+
+func LoginGuest(ctx context.Context, s *testing.State) {
+	func() {
+		cr, err := chrome.New(ctx, chrome.GuestLogin())
+		if err != nil {
+			s.Fatal("Failed to log in by Chrome: ", err)
+		}
+		defer cr.Close(ctx)
+
+		if mounted, err := cryptohome.IsMounted(ctx, cryptohome.GuestUser); err != nil {
+			s.Error("Failed to check mounted vault for guest user: ", err)
+		} else if !mounted {
+			s.Error("No mounted vault for guest user")
+		}
+	}()
+
+	// Emulate logout. chrome.Chrome.Close() does not log out. So, here,
+	// manually restart "ui" job for the emulation.
+	if err := upstart.RestartJob(ctx, "ui"); err != nil {
+		s.Fatal("Failed to log out: ", err)
+	}
+
+	if mounted, err := cryptohome.IsMounted(ctx, cryptohome.GuestUser); err != nil {
+		s.Error("Failed to check mounted vault for guest user: ", err)
+	} else if mounted {
+		s.Error("Mounted vault for guest user is still found after logout")
+	}
+}
