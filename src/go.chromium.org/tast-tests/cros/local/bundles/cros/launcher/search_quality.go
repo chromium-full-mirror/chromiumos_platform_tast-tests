@@ -10,10 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -36,27 +33,59 @@ const (
 	calculator4Digits  = "1234+5678" // https://bugs.chromium.org/p/chromium/issues/detail?id=1432692
 )
 
+// searchQualityTestCase struct encapsulates parameters for test.
+type searchQualityTestCase struct {
+	query          string
+	useRegex       bool
+	expectedResult string
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SearchQuality,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test different search query should shown content in the right category",
+		Desc:         "Test different search queries should show content in the right category",
 		Contacts:     []string{"launcher-search-notify@google.com", "xiuwen@google.com"},
 		BugComponent: "b:1257106",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
+		Fixture:      "chromeLoggedIn",
+
 		Params: []testing.Param{
 			{
-				Fixture: "chromeLoggedIn",
-				Val:     launcher.TestCase{TabletMode: false},
+				Name: "weather",
+				Val: searchQualityTestCase{
+					query:          canberraWeather,
+					useRegex:       true,
+					expectedResult: weatherPattern,
+				},
+			},
+			{
+				Name: "calculator",
+				Val: searchQualityTestCase{
+					query:          calculator45Plus45,
+					useRegex:       false,
+					expectedResult: "45+45, 90",
+				},
+			},
+			{
+				Name: "screenrotate",
+				Val: searchQualityTestCase{
+					query:          screenRotate,
+					useRegex:       false,
+					expectedResult: "Rotate screen 90 degrees, Shortcuts, Ctrl+ Shift+ BrowserRefresh",
+				},
+			},
+			{
+				Name: "calculatorlargenumber",
+				Val: searchQualityTestCase{
+					query:          calculator4Digits,
+					useRegex:       false,
+					expectedResult: "1234+5678, 6912",
+				},
 			},
 		},
 	})
-}
-
-type searchQualityCase struct {
-	searchQuery string
-	steps       uiauto.Action
 }
 
 // SearchQuality checks inline answers for special queries.
@@ -78,63 +107,30 @@ func SearchQuality(ctx context.Context, s *testing.State) {
 	}
 	defer kb.Close(ctx)
 
-	testCase := s.Param().(launcher.TestCase)
+	testCase := s.Param().(searchQualityTestCase)
 
-	cleanup, err := launcher.SetUpLauncherTest(ctx, tconn, testCase.TabletMode, false /*stabilizeAppCount*/)
+	cleanup, err := launcher.SetUpLauncherTest(ctx, tconn, false /*tabletMode*/, false /*stabilizeAppCount*/)
 	if err != nil {
 		s.Fatal("Failed to set up launcher test case: ", err)
 	}
 	defer cleanup(cleanupCtx)
 
-	subtests := []searchQualityCase{
-		{
-			searchQuery: canberraWeather,
-			steps: uiauto.Retry(2, uiauto.NamedCombine("Answer Card: Weather",
-				launcher.ClearSearchField(tconn, kb),
-				launcher.Search(tconn, kb, canberraWeather),
-				launcher.WaitForCategorizedResultFromRegex(tconn, weatherPattern),
-			)),
-		},
-		{
-			searchQuery: calculator45Plus45,
-			steps: uiauto.Retry(2, uiauto.NamedCombine("Answer Card: Calculator",
-				launcher.ClearSearchField(tconn, kb),
-				launcher.Search(tconn, kb, calculator45Plus45),
-				launcher.WaitForResult(tconn, "45+45, 90"),
-			)),
-		},
-		{
-			searchQuery: screenRotate,
-			steps: uiauto.Retry(2, uiauto.NamedCombine("Answer Card: screen rotate",
-				launcher.ClearSearchField(tconn, kb),
-				launcher.Search(tconn, kb, screenRotate),
-				launcher.WaitForResult(tconn, "Rotate screen 90 degrees, Shortcuts, Ctrl+ Shift+ BrowserRefresh"),
-			)),
-		},
-		{
-			searchQuery: calculator4Digits,
-			steps: uiauto.Retry(2, uiauto.NamedCombine("Answer Card: 4 digits calculator",
-				launcher.ClearSearchField(tconn, kb),
-				launcher.Search(tconn, kb, calculator4Digits),
-				launcher.WaitForResult(tconn, "1234+5678, 6912"),
-			)),
-		},
+	query := testCase.query
+	expectedResult := testCase.expectedResult
+
+	if err := uiauto.Retry(2, uiauto.NamedCombine(query,
+		launcher.ClearSearchField(tconn, kb),
+		launcher.Search(tconn, kb, query)))(ctx); err != nil {
+		s.Fatalf("Failed to search %s: %v", query, err)
 	}
 
-	ui := uiauto.New(tconn)
-	clearSearchButton := nodewith.Role(role.Button).Name("Clear searchbox text")
-
-	for _, subtest := range subtests {
-		s.Run(ctx, subtest.searchQuery, func(ctx context.Context, s *testing.State) {
-			defer ui.DoDefault(clearSearchButton)(cleanupCtx)
-
-			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_"+string(subtest.searchQuery))
-
-			if err := subtest.steps(ctx); err != nil {
-				s.Log(uiauto.RootDebugInfo(ctx, tconn))
-
-				s.Fatalf("Failed to search %s: %v", subtest.searchQuery, err)
-			}
-		})
+	if testCase.useRegex {
+		if err := launcher.WaitForCategorizedResultFromRegex(tconn, expectedResult)(ctx); err != nil {
+			s.Fatalf("Failed to verify the result of search %s: %v", query, err)
+		}
+	} else {
+		if err := launcher.WaitForResult(tconn, expectedResult)(ctx); err != nil {
+			s.Fatalf("Failed to verify the result of search %s: %v", query, err)
+		}
 	}
 }
