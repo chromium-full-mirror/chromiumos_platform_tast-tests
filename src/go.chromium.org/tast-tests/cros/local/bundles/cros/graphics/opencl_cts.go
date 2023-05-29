@@ -486,6 +486,14 @@ func init() {
 				Timeout: 10 * time.Minute,
 			},
 			{
+				Name: "api_kernel_attributes",
+				Val: oclctsTest{
+					executable: "test_api",
+					args:       "kernel_attributes",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
 				Name: "api_kernel_global_constant",
 				Val: oclctsTest{
 					executable: "test_api",
@@ -786,6 +794,22 @@ func init() {
 				Val: oclctsTest{
 					executable: "test_api",
 					args:       "native_kernel",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "api_negative_get_platform_ids",
+				Val: oclctsTest{
+					executable: "test_api",
+					args:       "negative_get_platform_ids",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "api_negative_get_platform_info",
+				Val: oclctsTest{
+					executable: "test_api",
+					args:       "negative_get_platform_info",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -1102,12 +1126,44 @@ func init() {
 				Timeout: 10 * time.Minute,
 			},
 			{
+				Name: "basic_async_copy_global_to_local2d",
+				Val: oclctsTest{
+					executable: "test_basic",
+					args:       "async_copy_global_to_local2D",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "basic_async_copy_global_to_local3d",
+				Val: oclctsTest{
+					executable: "test_basic",
+					args:       "async_copy_global_to_local3D",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
 				Name: "basic_async_copy_local_to_global",
 				Val: oclctsTest{
 					executable: "test_basic",
 					args:       "async_copy_local_to_global",
 				},
 				Timeout: 10 * time.Minute,
+			},
+			{
+				Name: "basic_async_copy_local_to_global2d",
+				Val: oclctsTest{
+					executable: "test_basic",
+					args:       "async_copy_local_to_global2D",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "basic_async_copy_local_to_global3d",
+				Val: oclctsTest{
+					executable: "test_basic",
+					args:       "async_copy_local_to_global3D",
+				},
+				Timeout: 1 * time.Minute,
 			},
 			{
 				Name: "basic_async_strided_copy_global_to_local",
@@ -1124,6 +1180,54 @@ func init() {
 					args:       "async_strided_copy_local_to_global",
 				},
 				Timeout: 10 * time.Minute,
+			},
+			{
+				Name: "basic_async_work_group_copy_fence_export_after_import_aliased_global",
+				Val: oclctsTest{
+					executable: "test_basic",
+					args:       "async_work_group_copy_fence_export_after_import_aliased_global",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "basic_async_work_group_copy_fence_export_after_import_aliased_global_and_local",
+				Val: oclctsTest{
+					executable: "test_basic",
+					args:       "async_work_group_copy_fence_export_after_import_aliased_global_and_local",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "basic_async_work_group_copy_fence_export_after_import_aliased_local",
+				Val: oclctsTest{
+					executable: "test_basic",
+					args:       "async_work_group_copy_fence_export_after_import_aliased_local",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "basic_async_work_group_copy_fence_import_after_export_aliased_global",
+				Val: oclctsTest{
+					executable: "test_basic",
+					args:       "async_work_group_copy_fence_import_after_export_aliased_global",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "basic_async_work_group_copy_fence_import_after_export_aliased_global_and_local",
+				Val: oclctsTest{
+					executable: "test_basic",
+					args:       "async_work_group_copy_fence_import_after_export_aliased_global_and_local",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "basic_async_work_group_copy_fence_import_after_export_aliased_local",
+				Val: oclctsTest{
+					executable: "test_basic",
+					args:       "async_work_group_copy_fence_import_after_export_aliased_local",
+				},
+				Timeout: 1 * time.Minute,
 			},
 			{
 				Name: "basic_barrier",
@@ -3450,6 +3554,278 @@ func init() {
 				Val: oclctsTest{
 					executable: "test_buffers",
 					args:       "sub_buffers_read_write",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "c11_atomics_atomic_compare_exchange_strong",
+				Val: oclctsTest{
+					executable: "test_c11_atomics",
+					args:       "atomic_compare_exchange_strong",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "c11_atomics_atomic_compare_exchange_weak",
+				Val: oclctsTest{
+					executable: "test_c11_atomics",
+					args:       "atomic_compare_exchange_weak",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "c11_atomics_atomic_exchange",
+				Val: oclctsTest{
+					executable: "test_c11_atomics",
+					args:       "atomic_exchange",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "c11_atomics_atomic_fence",
+				Val: oclctsTest{
+					executable: "test_c11_atomics",
+					args:       "atomic_fence",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "c11_atomics_atomic_fetch_add",
+				Val: oclctsTest{
+					executable: "test_c11_atomics",
+					args:       "atomic_fetch_add",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "c11_atomics_atomic_fetch_and",
+				Val: oclctsTest{
+					executable: "test_c11_atomics",
+					args:       "atomic_fetch_and",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "c11_atomics_atomic_fetch_max",
+				Val: oclctsTest{
+					executable: "test_c11_atomics",
+					args:       "atomic_fetch_max",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "c11_atomics_atomic_fetch_min",
+				Val: oclctsTest{
+					executable: "test_c11_atomics",
+					args:       "atomic_fetch_min",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "c11_atomics_atomic_fetch_or",
+				Val: oclctsTest{
+					executable: "test_c11_atomics",
+					args:       "atomic_fetch_or",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "c11_atomics_atomic_fetch_orand",
+				Val: oclctsTest{
+					executable: "test_c11_atomics",
+					args:       "atomic_fetch_orand",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "c11_atomics_atomic_fetch_sub",
+				Val: oclctsTest{
+					executable: "test_c11_atomics",
+					args:       "atomic_fetch_sub",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "c11_atomics_atomic_fetch_xor",
+				Val: oclctsTest{
+					executable: "test_c11_atomics",
+					args:       "atomic_fetch_xor",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "c11_atomics_atomic_fetch_xor2",
+				Val: oclctsTest{
+					executable: "test_c11_atomics",
+					args:       "atomic_fetch_xor2",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "c11_atomics_atomic_flag",
+				Val: oclctsTest{
+					executable: "test_c11_atomics",
+					args:       "atomic_flag",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "c11_atomics_atomic_init",
+				Val: oclctsTest{
+					executable: "test_c11_atomics",
+					args:       "atomic_init",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "c11_atomics_atomic_load",
+				Val: oclctsTest{
+					executable: "test_c11_atomics",
+					args:       "atomic_load",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "c11_atomics_atomic_store",
+				Val: oclctsTest{
+					executable: "test_c11_atomics",
+					args:       "atomic_store",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "c11_atomics_svm_atomic_compare_exchange_strong",
+				Val: oclctsTest{
+					executable: "test_c11_atomics",
+					args:       "svm_atomic_compare_exchange_strong",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "c11_atomics_svm_atomic_compare_exchange_weak",
+				Val: oclctsTest{
+					executable: "test_c11_atomics",
+					args:       "svm_atomic_compare_exchange_weak",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "c11_atomics_svm_atomic_exchange",
+				Val: oclctsTest{
+					executable: "test_c11_atomics",
+					args:       "svm_atomic_exchange",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "c11_atomics_svm_atomic_fence",
+				Val: oclctsTest{
+					executable: "test_c11_atomics",
+					args:       "svm_atomic_fence",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "c11_atomics_svm_atomic_fetch_add",
+				Val: oclctsTest{
+					executable: "test_c11_atomics",
+					args:       "svm_atomic_fetch_add",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "c11_atomics_svm_atomic_fetch_and",
+				Val: oclctsTest{
+					executable: "test_c11_atomics",
+					args:       "svm_atomic_fetch_and",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "c11_atomics_svm_atomic_fetch_max",
+				Val: oclctsTest{
+					executable: "test_c11_atomics",
+					args:       "svm_atomic_fetch_max",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "c11_atomics_svm_atomic_fetch_min",
+				Val: oclctsTest{
+					executable: "test_c11_atomics",
+					args:       "svm_atomic_fetch_min",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "c11_atomics_svm_atomic_fetch_or",
+				Val: oclctsTest{
+					executable: "test_c11_atomics",
+					args:       "svm_atomic_fetch_or",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "c11_atomics_svm_atomic_fetch_orand",
+				Val: oclctsTest{
+					executable: "test_c11_atomics",
+					args:       "svm_atomic_fetch_orand",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "c11_atomics_svm_atomic_fetch_sub",
+				Val: oclctsTest{
+					executable: "test_c11_atomics",
+					args:       "svm_atomic_fetch_sub",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "c11_atomics_svm_atomic_fetch_xor",
+				Val: oclctsTest{
+					executable: "test_c11_atomics",
+					args:       "svm_atomic_fetch_xor",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "c11_atomics_svm_atomic_fetch_xor2",
+				Val: oclctsTest{
+					executable: "test_c11_atomics",
+					args:       "svm_atomic_fetch_xor2",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "c11_atomics_svm_atomic_flag",
+				Val: oclctsTest{
+					executable: "test_c11_atomics",
+					args:       "svm_atomic_flag",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "c11_atomics_svm_atomic_init",
+				Val: oclctsTest{
+					executable: "test_c11_atomics",
+					args:       "svm_atomic_init",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "c11_atomics_svm_atomic_load",
+				Val: oclctsTest{
+					executable: "test_c11_atomics",
+					args:       "svm_atomic_load",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "c11_atomics_svm_atomic_store",
+				Val: oclctsTest{
+					executable: "test_c11_atomics",
+					args:       "svm_atomic_store",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -7270,6 +7646,14 @@ func init() {
 				Timeout: 1 * time.Minute,
 			},
 			{
+				Name: "computeinfo_pci_bus_info",
+				Val: oclctsTest{
+					executable: "test_computeinfo",
+					args:       "pci_bus_info",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
 				Name: "contractions_contractions_double_0",
 				Val: oclctsTest{
 					executable: "test_contractions",
@@ -7406,6 +7790,14 @@ func init() {
 				Timeout: 1 * time.Minute,
 			},
 			{
+				Name: "conversions_char_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
 				Name: "conversions_char_float",
 				Val: oclctsTest{
 					executable: "test_conversions",
@@ -7426,6 +7818,726 @@ func init() {
 				Val: oclctsTest{
 					executable: "test_conversions",
 					args:       "char_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_rte_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_rte_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_rte_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_rte_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_rte_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_rte_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_rte_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_rte_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_rte_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_rte_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_rte_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_rte_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_rte_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_rte_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_rte_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_rte_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_rte_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_rte_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_rte_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_rte_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_rtn_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_rtn_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_rtn_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_rtn_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_rtn_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_rtn_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_rtn_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_rtn_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_rtn_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_rtn_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_rtn_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_rtn_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_rtn_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_rtn_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_rtn_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_rtn_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_rtn_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_rtn_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_rtn_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_rtn_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_rtp_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_rtp_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_rtp_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_rtp_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_rtp_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_rtp_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_rtp_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_rtp_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_rtp_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_rtp_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_rtp_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_rtp_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_rtp_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_rtp_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_rtp_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_rtp_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_rtp_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_rtp_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_rtp_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_rtp_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_rtz_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_rtz_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_rtz_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_rtz_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_rtz_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_rtz_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_rtz_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_rtz_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_rtz_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_rtz_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_rtz_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_rtz_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_rtz_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_rtz_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_rtz_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_rtz_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_rtz_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_rtz_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_rtz_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_rtz_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_rte_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_rte_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_rte_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_rte_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_rte_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_rte_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_rte_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_rte_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_rte_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_rte_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_rte_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_rte_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_rte_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_rte_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_rte_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_rte_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_rte_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_rte_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_rte_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_rte_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_rtn_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_rtn_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_rtn_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_rtn_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_rtn_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_rtn_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_rtn_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_rtn_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_rtn_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_rtn_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_rtn_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_rtn_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_rtn_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_rtn_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_rtn_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_rtn_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_rtn_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_rtn_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_rtn_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_rtn_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_rtp_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_rtp_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_rtp_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_rtp_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_rtp_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_rtp_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_rtp_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_rtp_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_rtp_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_rtp_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_rtp_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_rtp_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_rtp_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_rtp_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_rtp_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_rtp_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_rtp_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_rtp_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_rtp_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_rtp_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_rtz_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_rtz_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_rtz_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_rtz_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_rtz_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_rtz_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_rtz_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_rtz_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_rtz_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_rtz_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_rtz_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_rtz_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_rtz_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_rtz_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_rtz_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_rtz_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_rtz_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_rtz_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_rtz_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_rtz_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_char_sat_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "char_sat_ushort -w -1",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -7470,10 +8582,818 @@ func init() {
 				Timeout: 1 * time.Minute,
 			},
 			{
+				Name: "conversions_double_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_rte_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_rte_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_rte_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_rte_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_rte_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_rte_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_rte_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_rte_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_rte_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_rte_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_rte_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_rte_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_rte_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_rte_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_rte_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_rte_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_rte_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_rte_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_rte_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_rte_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_rtn_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_rtn_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_rtn_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_rtn_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_rtn_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_rtn_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_rtn_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_rtn_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_rtn_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_rtn_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_rtn_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_rtn_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_rtn_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_rtn_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_rtn_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_rtn_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_rtn_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_rtn_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_rtn_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_rtn_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_rtp_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_rtp_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_rtp_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_rtp_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_rtp_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_rtp_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_rtp_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_rtp_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_rtp_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_rtp_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_rtp_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_rtp_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_rtp_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_rtp_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_rtp_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_rtp_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_rtp_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_rtp_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_rtp_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_rtp_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_rtz_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_rtz_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_rtz_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_rtz_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_rtz_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_rtz_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_rtz_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_rtz_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_rtz_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_rtz_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_rtz_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_rtz_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_rtz_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_rtz_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_rtz_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_rtz_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_rtz_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_rtz_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_rtz_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_rtz_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_sat_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_sat_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_sat_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_sat_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_sat_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_sat_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_sat_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_sat_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_sat_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_sat_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_sat_rte_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_sat_rte_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_sat_rte_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_sat_rte_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_sat_rte_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_sat_rte_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_sat_rte_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_sat_rte_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_sat_rte_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_sat_rte_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_sat_rte_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_sat_rte_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_sat_rte_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_sat_rte_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_sat_rte_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_sat_rte_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_sat_rte_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_sat_rte_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_sat_rte_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_sat_rte_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_sat_rtn_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_sat_rtn_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_sat_rtn_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_sat_rtn_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_sat_rtn_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_sat_rtn_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_sat_rtn_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_sat_rtn_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_sat_rtn_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_sat_rtn_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_sat_rtn_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_sat_rtn_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_sat_rtn_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_sat_rtn_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_sat_rtn_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_sat_rtn_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_sat_rtn_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_sat_rtn_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_sat_rtn_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_sat_rtn_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_sat_rtp_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_sat_rtp_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_sat_rtp_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_sat_rtp_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_sat_rtp_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_sat_rtp_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_sat_rtp_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_sat_rtp_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_sat_rtp_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_sat_rtp_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_sat_rtp_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_sat_rtp_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_sat_rtp_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_sat_rtp_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_sat_rtp_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_sat_rtp_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_sat_rtp_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_sat_rtp_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_sat_rtp_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_sat_rtp_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_sat_rtz_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_sat_rtz_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_sat_rtz_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_sat_rtz_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_sat_rtz_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_sat_rtz_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_sat_rtz_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_sat_rtz_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_sat_rtz_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_sat_rtz_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_sat_rtz_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_sat_rtz_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_sat_rtz_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_sat_rtz_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_sat_rtz_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_sat_rtz_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_sat_rtz_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_sat_rtz_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_sat_rtz_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_sat_rtz_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_sat_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_sat_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_sat_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_sat_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_sat_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_sat_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_sat_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_sat_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_sat_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_sat_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_double_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "double_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
 				Name: "conversions_float_char",
 				Val: oclctsTest{
 					executable: "test_conversions",
 					args:       "float_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_double -w -1",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -7498,6 +9418,726 @@ func init() {
 				Val: oclctsTest{
 					executable: "test_conversions",
 					args:       "float_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_rte_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_rte_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_rte_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_rte_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_rte_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_rte_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_rte_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_rte_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_rte_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_rte_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_rte_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_rte_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_rte_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_rte_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_rte_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_rte_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_rte_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_rte_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_rte_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_rte_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_rtn_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_rtn_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_rtn_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_rtn_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_rtn_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_rtn_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_rtn_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_rtn_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_rtn_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_rtn_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_rtn_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_rtn_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_rtn_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_rtn_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_rtn_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_rtn_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_rtn_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_rtn_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_rtn_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_rtn_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_rtp_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_rtp_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_rtp_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_rtp_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_rtp_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_rtp_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_rtp_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_rtp_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_rtp_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_rtp_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_rtp_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_rtp_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_rtp_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_rtp_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_rtp_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_rtp_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_rtp_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_rtp_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_rtp_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_rtp_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_rtz_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_rtz_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_rtz_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_rtz_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_rtz_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_rtz_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_rtz_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_rtz_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_rtz_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_rtz_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_rtz_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_rtz_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_rtz_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_rtz_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_rtz_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_rtz_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_rtz_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_rtz_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_rtz_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_rtz_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_sat_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_sat_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_sat_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_sat_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_sat_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_sat_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_sat_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_sat_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_sat_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_sat_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_sat_rte_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_sat_rte_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_sat_rte_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_sat_rte_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_sat_rte_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_sat_rte_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_sat_rte_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_sat_rte_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_sat_rte_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_sat_rte_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_sat_rte_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_sat_rte_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_sat_rte_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_sat_rte_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_sat_rte_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_sat_rte_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_sat_rte_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_sat_rte_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_sat_rte_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_sat_rte_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_sat_rtn_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_sat_rtn_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_sat_rtn_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_sat_rtn_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_sat_rtn_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_sat_rtn_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_sat_rtn_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_sat_rtn_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_sat_rtn_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_sat_rtn_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_sat_rtn_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_sat_rtn_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_sat_rtn_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_sat_rtn_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_sat_rtn_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_sat_rtn_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_sat_rtn_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_sat_rtn_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_sat_rtn_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_sat_rtn_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_sat_rtp_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_sat_rtp_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_sat_rtp_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_sat_rtp_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_sat_rtp_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_sat_rtp_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_sat_rtp_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_sat_rtp_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_sat_rtp_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_sat_rtp_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_sat_rtp_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_sat_rtp_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_sat_rtp_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_sat_rtp_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_sat_rtp_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_sat_rtp_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_sat_rtp_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_sat_rtp_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_sat_rtp_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_sat_rtp_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_sat_rtz_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_sat_rtz_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_sat_rtz_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_sat_rtz_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_sat_rtz_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_sat_rtz_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_sat_rtz_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_sat_rtz_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_sat_rtz_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_sat_rtz_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_sat_rtz_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_sat_rtz_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_sat_rtz_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_sat_rtz_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_sat_rtz_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_sat_rtz_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_sat_rtz_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_sat_rtz_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_sat_rtz_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_sat_rtz_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_sat_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_sat_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_sat_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_sat_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_sat_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_sat_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_sat_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_sat_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_float_sat_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "float_sat_ushort -w -1",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -7550,6 +10190,14 @@ func init() {
 				Timeout: 1 * time.Minute,
 			},
 			{
+				Name: "conversions_int_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
 				Name: "conversions_int_float",
 				Val: oclctsTest{
 					executable: "test_conversions",
@@ -7570,6 +10218,726 @@ func init() {
 				Val: oclctsTest{
 					executable: "test_conversions",
 					args:       "int_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_rte_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_rte_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_rte_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_rte_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_rte_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_rte_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_rte_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_rte_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_rte_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_rte_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_rte_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_rte_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_rte_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_rte_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_rte_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_rte_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_rte_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_rte_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_rte_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_rte_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_rtn_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_rtn_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_rtn_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_rtn_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_rtn_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_rtn_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_rtn_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_rtn_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_rtn_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_rtn_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_rtn_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_rtn_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_rtn_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_rtn_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_rtn_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_rtn_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_rtn_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_rtn_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_rtn_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_rtn_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_rtp_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_rtp_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_rtp_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_rtp_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_rtp_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_rtp_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_rtp_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_rtp_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_rtp_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_rtp_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_rtp_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_rtp_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_rtp_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_rtp_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_rtp_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_rtp_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_rtp_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_rtp_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_rtp_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_rtp_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_rtz_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_rtz_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_rtz_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_rtz_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_rtz_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_rtz_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_rtz_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_rtz_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_rtz_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_rtz_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_rtz_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_rtz_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_rtz_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_rtz_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_rtz_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_rtz_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_rtz_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_rtz_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_rtz_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_rtz_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_rte_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_rte_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_rte_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_rte_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_rte_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_rte_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_rte_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_rte_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_rte_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_rte_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_rte_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_rte_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_rte_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_rte_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_rte_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_rte_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_rte_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_rte_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_rte_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_rte_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_rtn_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_rtn_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_rtn_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_rtn_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_rtn_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_rtn_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_rtn_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_rtn_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_rtn_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_rtn_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_rtn_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_rtn_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_rtn_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_rtn_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_rtn_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_rtn_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_rtn_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_rtn_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_rtn_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_rtn_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_rtp_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_rtp_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_rtp_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_rtp_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_rtp_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_rtp_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_rtp_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_rtp_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_rtp_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_rtp_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_rtp_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_rtp_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_rtp_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_rtp_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_rtp_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_rtp_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_rtp_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_rtp_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_rtp_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_rtp_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_rtz_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_rtz_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_rtz_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_rtz_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_rtz_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_rtz_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_rtz_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_rtz_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_rtz_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_rtz_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_rtz_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_rtz_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_rtz_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_rtz_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_rtz_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_rtz_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_rtz_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_rtz_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_rtz_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_rtz_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_int_sat_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "int_sat_ushort -w -1",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -7622,6 +10990,14 @@ func init() {
 				Timeout: 1 * time.Minute,
 			},
 			{
+				Name: "conversions_long_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
 				Name: "conversions_long_float",
 				Val: oclctsTest{
 					executable: "test_conversions",
@@ -7642,6 +11018,726 @@ func init() {
 				Val: oclctsTest{
 					executable: "test_conversions",
 					args:       "long_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_rte_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_rte_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_rte_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_rte_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_rte_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_rte_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_rte_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_rte_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_rte_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_rte_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_rte_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_rte_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_rte_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_rte_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_rte_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_rte_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_rte_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_rte_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_rte_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_rte_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_rtn_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_rtn_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_rtn_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_rtn_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_rtn_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_rtn_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_rtn_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_rtn_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_rtn_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_rtn_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_rtn_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_rtn_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_rtn_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_rtn_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_rtn_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_rtn_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_rtn_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_rtn_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_rtn_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_rtn_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_rtp_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_rtp_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_rtp_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_rtp_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_rtp_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_rtp_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_rtp_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_rtp_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_rtp_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_rtp_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_rtp_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_rtp_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_rtp_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_rtp_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_rtp_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_rtp_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_rtp_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_rtp_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_rtp_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_rtp_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_rtz_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_rtz_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_rtz_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_rtz_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_rtz_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_rtz_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_rtz_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_rtz_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_rtz_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_rtz_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_rtz_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_rtz_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_rtz_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_rtz_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_rtz_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_rtz_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_rtz_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_rtz_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_rtz_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_rtz_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_rte_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_rte_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_rte_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_rte_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_rte_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_rte_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_rte_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_rte_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_rte_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_rte_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_rte_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_rte_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_rte_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_rte_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_rte_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_rte_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_rte_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_rte_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_rte_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_rte_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_rtn_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_rtn_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_rtn_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_rtn_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_rtn_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_rtn_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_rtn_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_rtn_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_rtn_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_rtn_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_rtn_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_rtn_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_rtn_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_rtn_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_rtn_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_rtn_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_rtn_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_rtn_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_rtn_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_rtn_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_rtp_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_rtp_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_rtp_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_rtp_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_rtp_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_rtp_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_rtp_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_rtp_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_rtp_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_rtp_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_rtp_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_rtp_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_rtp_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_rtp_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_rtp_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_rtp_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_rtp_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_rtp_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_rtp_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_rtp_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_rtz_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_rtz_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_rtz_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_rtz_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_rtz_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_rtz_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_rtz_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_rtz_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_rtz_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_rtz_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_rtz_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_rtz_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_rtz_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_rtz_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_rtz_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_rtz_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_rtz_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_rtz_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_rtz_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_rtz_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_long_sat_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "long_sat_ushort -w -1",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -7694,6 +11790,14 @@ func init() {
 				Timeout: 1 * time.Minute,
 			},
 			{
+				Name: "conversions_short_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
 				Name: "conversions_short_float",
 				Val: oclctsTest{
 					executable: "test_conversions",
@@ -7714,6 +11818,726 @@ func init() {
 				Val: oclctsTest{
 					executable: "test_conversions",
 					args:       "short_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_rte_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_rte_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_rte_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_rte_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_rte_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_rte_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_rte_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_rte_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_rte_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_rte_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_rte_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_rte_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_rte_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_rte_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_rte_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_rte_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_rte_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_rte_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_rte_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_rte_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_rtn_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_rtn_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_rtn_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_rtn_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_rtn_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_rtn_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_rtn_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_rtn_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_rtn_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_rtn_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_rtn_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_rtn_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_rtn_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_rtn_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_rtn_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_rtn_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_rtn_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_rtn_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_rtn_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_rtn_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_rtp_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_rtp_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_rtp_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_rtp_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_rtp_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_rtp_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_rtp_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_rtp_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_rtp_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_rtp_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_rtp_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_rtp_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_rtp_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_rtp_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_rtp_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_rtp_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_rtp_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_rtp_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_rtp_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_rtp_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_rtz_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_rtz_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_rtz_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_rtz_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_rtz_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_rtz_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_rtz_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_rtz_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_rtz_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_rtz_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_rtz_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_rtz_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_rtz_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_rtz_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_rtz_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_rtz_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_rtz_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_rtz_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_rtz_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_rtz_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_rte_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_rte_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_rte_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_rte_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_rte_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_rte_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_rte_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_rte_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_rte_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_rte_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_rte_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_rte_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_rte_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_rte_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_rte_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_rte_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_rte_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_rte_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_rte_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_rte_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_rtn_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_rtn_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_rtn_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_rtn_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_rtn_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_rtn_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_rtn_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_rtn_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_rtn_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_rtn_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_rtn_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_rtn_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_rtn_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_rtn_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_rtn_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_rtn_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_rtn_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_rtn_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_rtn_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_rtn_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_rtp_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_rtp_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_rtp_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_rtp_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_rtp_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_rtp_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_rtp_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_rtp_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_rtp_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_rtp_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_rtp_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_rtp_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_rtp_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_rtp_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_rtp_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_rtp_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_rtp_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_rtp_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_rtp_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_rtp_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_rtz_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_rtz_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_rtz_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_rtz_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_rtz_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_rtz_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_rtz_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_rtz_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_rtz_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_rtz_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_rtz_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_rtz_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_rtz_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_rtz_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_rtz_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_rtz_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_rtz_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_rtz_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_rtz_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_rtz_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_short_sat_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "short_sat_ushort -w -1",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -7766,6 +12590,14 @@ func init() {
 				Timeout: 1 * time.Minute,
 			},
 			{
+				Name: "conversions_uchar_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
 				Name: "conversions_uchar_float",
 				Val: oclctsTest{
 					executable: "test_conversions",
@@ -7786,6 +12618,726 @@ func init() {
 				Val: oclctsTest{
 					executable: "test_conversions",
 					args:       "uchar_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_rte_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_rte_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_rte_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_rte_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_rte_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_rte_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_rte_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_rte_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_rte_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_rte_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_rte_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_rte_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_rte_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_rte_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_rte_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_rte_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_rte_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_rte_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_rte_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_rte_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_rtn_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_rtn_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_rtn_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_rtn_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_rtn_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_rtn_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_rtn_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_rtn_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_rtn_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_rtn_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_rtn_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_rtn_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_rtn_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_rtn_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_rtn_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_rtn_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_rtn_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_rtn_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_rtn_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_rtn_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_rtp_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_rtp_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_rtp_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_rtp_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_rtp_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_rtp_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_rtp_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_rtp_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_rtp_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_rtp_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_rtp_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_rtp_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_rtp_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_rtp_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_rtp_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_rtp_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_rtp_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_rtp_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_rtp_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_rtp_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_rtz_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_rtz_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_rtz_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_rtz_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_rtz_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_rtz_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_rtz_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_rtz_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_rtz_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_rtz_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_rtz_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_rtz_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_rtz_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_rtz_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_rtz_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_rtz_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_rtz_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_rtz_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_rtz_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_rtz_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_rte_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_rte_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_rte_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_rte_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_rte_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_rte_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_rte_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_rte_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_rte_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_rte_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_rte_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_rte_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_rte_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_rte_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_rte_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_rte_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_rte_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_rte_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_rte_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_rte_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_rtn_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_rtn_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_rtn_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_rtn_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_rtn_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_rtn_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_rtn_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_rtn_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_rtn_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_rtn_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_rtn_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_rtn_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_rtn_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_rtn_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_rtn_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_rtn_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_rtn_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_rtn_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_rtn_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_rtn_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_rtp_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_rtp_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_rtp_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_rtp_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_rtp_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_rtp_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_rtp_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_rtp_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_rtp_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_rtp_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_rtp_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_rtp_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_rtp_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_rtp_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_rtp_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_rtp_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_rtp_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_rtp_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_rtp_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_rtp_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_rtz_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_rtz_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_rtz_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_rtz_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_rtz_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_rtz_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_rtz_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_rtz_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_rtz_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_rtz_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_rtz_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_rtz_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_rtz_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_rtz_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_rtz_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_rtz_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_rtz_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_rtz_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_rtz_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_rtz_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uchar_sat_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uchar_sat_ushort -w -1",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -7838,6 +13390,14 @@ func init() {
 				Timeout: 1 * time.Minute,
 			},
 			{
+				Name: "conversions_uint_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
 				Name: "conversions_uint_float",
 				Val: oclctsTest{
 					executable: "test_conversions",
@@ -7858,6 +13418,726 @@ func init() {
 				Val: oclctsTest{
 					executable: "test_conversions",
 					args:       "uint_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_rte_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_rte_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_rte_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_rte_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_rte_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_rte_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_rte_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_rte_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_rte_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_rte_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_rte_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_rte_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_rte_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_rte_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_rte_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_rte_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_rte_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_rte_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_rte_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_rte_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_rtn_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_rtn_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_rtn_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_rtn_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_rtn_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_rtn_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_rtn_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_rtn_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_rtn_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_rtn_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_rtn_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_rtn_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_rtn_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_rtn_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_rtn_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_rtn_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_rtn_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_rtn_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_rtn_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_rtn_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_rtp_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_rtp_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_rtp_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_rtp_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_rtp_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_rtp_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_rtp_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_rtp_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_rtp_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_rtp_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_rtp_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_rtp_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_rtp_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_rtp_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_rtp_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_rtp_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_rtp_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_rtp_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_rtp_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_rtp_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_rtz_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_rtz_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_rtz_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_rtz_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_rtz_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_rtz_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_rtz_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_rtz_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_rtz_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_rtz_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_rtz_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_rtz_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_rtz_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_rtz_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_rtz_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_rtz_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_rtz_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_rtz_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_rtz_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_rtz_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_rte_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_rte_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_rte_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_rte_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_rte_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_rte_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_rte_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_rte_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_rte_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_rte_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_rte_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_rte_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_rte_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_rte_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_rte_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_rte_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_rte_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_rte_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_rte_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_rte_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_rtn_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_rtn_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_rtn_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_rtn_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_rtn_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_rtn_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_rtn_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_rtn_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_rtn_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_rtn_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_rtn_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_rtn_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_rtn_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_rtn_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_rtn_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_rtn_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_rtn_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_rtn_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_rtn_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_rtn_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_rtp_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_rtp_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_rtp_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_rtp_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_rtp_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_rtp_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_rtp_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_rtp_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_rtp_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_rtp_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_rtp_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_rtp_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_rtp_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_rtp_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_rtp_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_rtp_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_rtp_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_rtp_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_rtp_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_rtp_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_rtz_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_rtz_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_rtz_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_rtz_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_rtz_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_rtz_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_rtz_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_rtz_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_rtz_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_rtz_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_rtz_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_rtz_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_rtz_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_rtz_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_rtz_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_rtz_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_rtz_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_rtz_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_rtz_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_rtz_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_uint_sat_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "uint_sat_ushort -w -1",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -7910,6 +14190,14 @@ func init() {
 				Timeout: 1 * time.Minute,
 			},
 			{
+				Name: "conversions_ulong_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
 				Name: "conversions_ulong_float",
 				Val: oclctsTest{
 					executable: "test_conversions",
@@ -7930,6 +14218,726 @@ func init() {
 				Val: oclctsTest{
 					executable: "test_conversions",
 					args:       "ulong_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_rte_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_rte_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_rte_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_rte_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_rte_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_rte_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_rte_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_rte_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_rte_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_rte_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_rte_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_rte_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_rte_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_rte_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_rte_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_rte_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_rte_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_rte_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_rte_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_rte_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_rtn_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_rtn_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_rtn_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_rtn_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_rtn_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_rtn_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_rtn_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_rtn_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_rtn_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_rtn_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_rtn_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_rtn_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_rtn_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_rtn_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_rtn_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_rtn_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_rtn_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_rtn_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_rtn_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_rtn_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_rtp_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_rtp_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_rtp_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_rtp_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_rtp_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_rtp_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_rtp_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_rtp_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_rtp_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_rtp_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_rtp_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_rtp_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_rtp_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_rtp_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_rtp_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_rtp_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_rtp_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_rtp_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_rtp_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_rtp_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_rtz_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_rtz_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_rtz_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_rtz_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_rtz_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_rtz_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_rtz_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_rtz_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_rtz_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_rtz_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_rtz_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_rtz_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_rtz_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_rtz_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_rtz_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_rtz_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_rtz_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_rtz_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_rtz_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_rtz_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_rte_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_rte_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_rte_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_rte_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_rte_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_rte_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_rte_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_rte_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_rte_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_rte_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_rte_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_rte_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_rte_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_rte_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_rte_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_rte_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_rte_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_rte_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_rte_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_rte_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_rtn_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_rtn_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_rtn_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_rtn_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_rtn_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_rtn_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_rtn_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_rtn_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_rtn_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_rtn_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_rtn_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_rtn_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_rtn_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_rtn_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_rtn_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_rtn_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_rtn_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_rtn_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_rtn_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_rtn_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_rtp_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_rtp_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_rtp_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_rtp_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_rtp_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_rtp_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_rtp_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_rtp_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_rtp_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_rtp_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_rtp_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_rtp_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_rtp_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_rtp_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_rtp_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_rtp_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_rtp_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_rtp_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_rtp_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_rtp_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_rtz_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_rtz_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_rtz_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_rtz_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_rtz_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_rtz_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_rtz_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_rtz_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_rtz_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_rtz_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_rtz_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_rtz_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_rtz_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_rtz_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_rtz_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_rtz_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_rtz_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_rtz_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_rtz_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_rtz_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ulong_sat_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ulong_sat_ushort -w -1",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -7982,6 +14990,14 @@ func init() {
 				Timeout: 1 * time.Minute,
 			},
 			{
+				Name: "conversions_ushort_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
 				Name: "conversions_ushort_float",
 				Val: oclctsTest{
 					executable: "test_conversions",
@@ -8002,6 +15018,726 @@ func init() {
 				Val: oclctsTest{
 					executable: "test_conversions",
 					args:       "ushort_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_rte_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_rte_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_rte_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_rte_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_rte_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_rte_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_rte_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_rte_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_rte_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_rte_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_rte_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_rte_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_rte_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_rte_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_rte_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_rte_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_rte_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_rte_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_rte_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_rte_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_rtn_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_rtn_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_rtn_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_rtn_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_rtn_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_rtn_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_rtn_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_rtn_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_rtn_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_rtn_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_rtn_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_rtn_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_rtn_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_rtn_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_rtn_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_rtn_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_rtn_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_rtn_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_rtn_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_rtn_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_rtp_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_rtp_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_rtp_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_rtp_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_rtp_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_rtp_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_rtp_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_rtp_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_rtp_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_rtp_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_rtp_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_rtp_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_rtp_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_rtp_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_rtp_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_rtp_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_rtp_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_rtp_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_rtp_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_rtp_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_rtz_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_rtz_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_rtz_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_rtz_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_rtz_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_rtz_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_rtz_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_rtz_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_rtz_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_rtz_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_rtz_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_rtz_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_rtz_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_rtz_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_rtz_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_rtz_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_rtz_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_rtz_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_rtz_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_rtz_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_rte_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_rte_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_rte_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_rte_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_rte_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_rte_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_rte_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_rte_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_rte_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_rte_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_rte_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_rte_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_rte_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_rte_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_rte_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_rte_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_rte_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_rte_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_rte_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_rte_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_rtn_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_rtn_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_rtn_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_rtn_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_rtn_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_rtn_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_rtn_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_rtn_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_rtn_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_rtn_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_rtn_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_rtn_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_rtn_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_rtn_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_rtn_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_rtn_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_rtn_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_rtn_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_rtn_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_rtn_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_rtp_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_rtp_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_rtp_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_rtp_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_rtp_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_rtp_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_rtp_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_rtp_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_rtp_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_rtp_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_rtp_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_rtp_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_rtp_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_rtp_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_rtp_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_rtp_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_rtp_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_rtp_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_rtp_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_rtp_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_rtz_char",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_rtz_char -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_rtz_double",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_rtz_double -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_rtz_float",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_rtz_float -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_rtz_int",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_rtz_int -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_rtz_long",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_rtz_long -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_rtz_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_rtz_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_rtz_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_rtz_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_rtz_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_rtz_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_rtz_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_rtz_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_rtz_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_rtz_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_short",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_short -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_uchar",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_uchar -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_uint",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_uint -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_ulong",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_ulong -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "conversions_ushort_sat_ushort",
+				Val: oclctsTest{
+					executable: "test_conversions",
+					args:       "ushort_sat_ushort -w -1",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -8042,6 +15778,22 @@ func init() {
 				Val: oclctsTest{
 					executable: "test_conversions",
 					args:       "ushort_ushort -w -1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "device_timer_device_and_host_timers",
+				Val: oclctsTest{
+					executable: "test_device_timer",
+					args:       "device_and_host_timers",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "device_timer_timer_resolution_queries",
+				Val: oclctsTest{
+					executable: "test_device_timer",
+					args:       "timer_resolution_queries",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -8266,6 +16018,174 @@ func init() {
 				Val: oclctsTest{
 					executable: "test_events",
 					args:       "waitlists",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "generic_address_space_builtin_functions",
+				Val: oclctsTest{
+					executable: "test_generic_address_space",
+					args:       "builtin_functions",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "generic_address_space_casting",
+				Val: oclctsTest{
+					executable: "test_generic_address_space",
+					args:       "casting",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "generic_address_space_chain_casting",
+				Val: oclctsTest{
+					executable: "test_generic_address_space",
+					args:       "chain_casting",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "generic_address_space_compare_pointers",
+				Val: oclctsTest{
+					executable: "test_generic_address_space",
+					args:       "compare_pointers",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "generic_address_space_conditional_casting",
+				Val: oclctsTest{
+					executable: "test_generic_address_space",
+					args:       "conditional_casting",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "generic_address_space_function_get_fence",
+				Val: oclctsTest{
+					executable: "test_generic_address_space",
+					args:       "function_get_fence",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "generic_address_space_function_to_address_space",
+				Val: oclctsTest{
+					executable: "test_generic_address_space",
+					args:       "function_to_address_space",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "generic_address_space_generic_advanced_casting",
+				Val: oclctsTest{
+					executable: "test_generic_address_space",
+					args:       "generic_advanced_casting",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "generic_address_space_generic_ptr_to_host_mem",
+				Val: oclctsTest{
+					executable: "test_generic_address_space",
+					args:       "generic_ptr_to_host_mem",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "generic_address_space_generic_ptr_to_host_mem_svm",
+				Val: oclctsTest{
+					executable: "test_generic_address_space",
+					args:       "generic_ptr_to_host_mem_svm",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "generic_address_space_generic_variable_const",
+				Val: oclctsTest{
+					executable: "test_generic_address_space",
+					args:       "generic_variable_const",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "generic_address_space_generic_variable_gentype",
+				Val: oclctsTest{
+					executable: "test_generic_address_space",
+					args:       "generic_variable_gentype",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "generic_address_space_generic_variable_volatile",
+				Val: oclctsTest{
+					executable: "test_generic_address_space",
+					args:       "generic_variable_volatile",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "generic_address_space_language_struct",
+				Val: oclctsTest{
+					executable: "test_generic_address_space",
+					args:       "language_struct",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "generic_address_space_language_union",
+				Val: oclctsTest{
+					executable: "test_generic_address_space",
+					args:       "language_union",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "generic_address_space_library_function",
+				Val: oclctsTest{
+					executable: "test_generic_address_space",
+					args:       "library_function",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "generic_address_space_max_number_of_params",
+				Val: oclctsTest{
+					executable: "test_generic_address_space",
+					args:       "max_number_of_params",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "generic_address_space_multiple_calls_same_function",
+				Val: oclctsTest{
+					executable: "test_generic_address_space",
+					args:       "multiple_calls_same_function",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "generic_address_space_ternary_operator_casting",
+				Val: oclctsTest{
+					executable: "test_generic_address_space",
+					args:       "ternary_operator_casting",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "generic_address_space_variable_get_fence",
+				Val: oclctsTest{
+					executable: "test_generic_address_space",
+					args:       "variable_get_fence",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "generic_address_space_variable_to_address_space",
+				Val: oclctsTest{
+					executable: "test_generic_address_space",
+					args:       "variable_to_address_space",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -9038,6 +16958,102 @@ func init() {
 				Timeout: 10 * time.Minute,
 			},
 			{
+				Name: "image_streams_clgetimagerequirementsinfoext_negative",
+				Val: oclctsTest{
+					executable: "test_image_streams",
+					args:       "clGetImageRequirementsInfoEXT_negative",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "image_streams_cl_image_requirements_max_val_ext_negative",
+				Val: oclctsTest{
+					executable: "test_image_streams",
+					args:       "cl_image_requirements_max_val_ext_negative",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "image_streams_cl_image_requirements_max_val_ext_positive",
+				Val: oclctsTest{
+					executable: "test_image_streams",
+					args:       "cl_image_requirements_max_val_ext_positive",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "image_streams_cl_image_requirements_size_ext_consistency",
+				Val: oclctsTest{
+					executable: "test_image_streams",
+					args:       "cl_image_requirements_size_ext_consistency",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "image_streams_cl_image_requirements_size_ext_negative",
+				Val: oclctsTest{
+					executable: "test_image_streams",
+					args:       "cl_image_requirements_size_ext_negative",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "image_streams_image2d_from_buffer_positive",
+				Val: oclctsTest{
+					executable: "test_image_streams",
+					args:       "image2d_from_buffer_positive",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "image_streams_image_from_buffer_alignment_negative",
+				Val: oclctsTest{
+					executable: "test_image_streams",
+					args:       "image_from_buffer_alignment_negative",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "image_streams_image_from_buffer_fill_positive",
+				Val: oclctsTest{
+					executable: "test_image_streams",
+					args:       "image_from_buffer_fill_positive",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "image_streams_image_from_buffer_read_positive",
+				Val: oclctsTest{
+					executable: "test_image_streams",
+					args:       "image_from_buffer_read_positive",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "image_streams_image_from_small_buffer_negative",
+				Val: oclctsTest{
+					executable: "test_image_streams",
+					args:       "image_from_small_buffer_negative",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "image_streams_imageinfo_image_from_buffer_positive",
+				Val: oclctsTest{
+					executable: "test_image_streams",
+					args:       "imageInfo_image_from_buffer_positive",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "image_streams_meminfo_image_from_buffer_positive",
+				Val: oclctsTest{
+					executable: "test_image_streams",
+					args:       "memInfo_image_from_buffer_positive",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
 				Name: "integer_ops_char_compare",
 				Val: oclctsTest{
 					executable: "test_integer_ops",
@@ -9068,6 +17084,30 @@ func init() {
 					args:       "char_shift",
 				},
 				Timeout: 10 * time.Minute,
+			},
+			{
+				Name: "integer_ops_extended_bit_ops_extract",
+				Val: oclctsTest{
+					executable: "test_integer_ops",
+					args:       "extended_bit_ops_extract",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "integer_ops_extended_bit_ops_insert",
+				Val: oclctsTest{
+					executable: "test_integer_ops",
+					args:       "extended_bit_ops_insert",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "integer_ops_extended_bit_ops_reverse",
+				Val: oclctsTest{
+					executable: "test_integer_ops",
+					args:       "extended_bit_ops_reverse",
+				},
+				Timeout: 1 * time.Minute,
 			},
 			{
 				Name: "integer_ops_int_compare",
@@ -9146,6 +17186,14 @@ func init() {
 				Val: oclctsTest{
 					executable: "test_integer_ops",
 					args:       "integer_divideAssign",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "integer_ops_integer_dot_product",
+				Val: oclctsTest{
+					executable: "test_integer_ops",
+					args:       "integer_dot_product",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -10526,6 +18574,678 @@ func init() {
 				Timeout: 1 * time.Minute,
 			},
 			{
+				Name: "non_uniform_work_group_non_uniform_1d_atomics",
+				Val: oclctsTest{
+					executable: "test_non_uniform_work_group",
+					args:       "non_uniform_1d_atomics",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "non_uniform_work_group_non_uniform_1d_barriers",
+				Val: oclctsTest{
+					executable: "test_non_uniform_work_group",
+					args:       "non_uniform_1d_barriers",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "non_uniform_work_group_non_uniform_1d_basic",
+				Val: oclctsTest{
+					executable: "test_non_uniform_work_group",
+					args:       "non_uniform_1d_basic",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "non_uniform_work_group_non_uniform_2d_atomics",
+				Val: oclctsTest{
+					executable: "test_non_uniform_work_group",
+					args:       "non_uniform_2d_atomics",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "non_uniform_work_group_non_uniform_2d_barriers",
+				Val: oclctsTest{
+					executable: "test_non_uniform_work_group",
+					args:       "non_uniform_2d_barriers",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "non_uniform_work_group_non_uniform_2d_basic",
+				Val: oclctsTest{
+					executable: "test_non_uniform_work_group",
+					args:       "non_uniform_2d_basic",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "non_uniform_work_group_non_uniform_3d_atomics",
+				Val: oclctsTest{
+					executable: "test_non_uniform_work_group",
+					args:       "non_uniform_3d_atomics",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "non_uniform_work_group_non_uniform_3d_barriers",
+				Val: oclctsTest{
+					executable: "test_non_uniform_work_group",
+					args:       "non_uniform_3d_barriers",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "non_uniform_work_group_non_uniform_3d_basic",
+				Val: oclctsTest{
+					executable: "test_non_uniform_work_group",
+					args:       "non_uniform_3d_basic",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "non_uniform_work_group_non_uniform_other_atomics",
+				Val: oclctsTest{
+					executable: "test_non_uniform_work_group",
+					args:       "non_uniform_other_atomics",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "non_uniform_work_group_non_uniform_other_barriers",
+				Val: oclctsTest{
+					executable: "test_non_uniform_work_group",
+					args:       "non_uniform_other_barriers",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "non_uniform_work_group_non_uniform_other_basic",
+				Val: oclctsTest{
+					executable: "test_non_uniform_work_group",
+					args:       "non_uniform_other_basic",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_address_space_0",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "address_space_0",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_address_space_1",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "address_space_1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_address_space_2",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "address_space_2",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_address_space_3",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "address_space_3",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_address_space_4",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "address_space_4",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_buffer_size",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "buffer_size",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_char_0",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "char_0",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_char_1",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "char_1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_char_2",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "char_2",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_float_0",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "float_0",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_float_10",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "float_10",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_float_11",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "float_11",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_float_1",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "float_1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_float_12",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "float_12",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_float_13",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "float_13",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_float_14",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "float_14",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_float_15",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "float_15",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_float_16",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "float_16",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_float_17",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "float_17",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_float_2",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "float_2",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_float_3",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "float_3",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_float_4",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "float_4",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_float_5",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "float_5",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_float_6",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "float_6",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_float_7",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "float_7",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_float_8",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "float_8",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_float_9",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "float_9",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_float_limits_0",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "float_limits_0",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_float_limits_1",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "float_limits_1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_float_limits_2",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "float_limits_2",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_half_0",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "half_0",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_half_1",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "half_1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_half_2",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "half_2",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_half_3",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "half_3",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_half_4",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "half_4",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_half_5",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "half_5",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_half_6",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "half_6",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_half_7",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "half_7",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_half_8",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "half_8",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_half_9",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "half_9",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_half_limits_0",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "half_limits_0",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_half_limits_1",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "half_limits_1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_half_limits_2",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "half_limits_2",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_hexadecimal_0",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "hexadecimal_0",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_hexadecimal_1",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "hexadecimal_1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_hexadecimal_2",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "hexadecimal_2",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_hexadecimal_3",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "hexadecimal_3",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_hexadecimal_4",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "hexadecimal_4",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_int_0",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "int_0",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_int_1",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "int_1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_int_2",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "int_2",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_int_3",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "int_3",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_int_4",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "int_4",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_int_5",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "int_5",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_int_6",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "int_6",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_int_7",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "int_7",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_int_8",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "int_8",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_octal_0",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "octal_0",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_octal_1",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "octal_1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_octal_2",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "octal_2",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_octal_3",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "octal_3",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_string_0",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "string_0",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_string_1",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "string_1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_string_2",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "string_2",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_unsigned_0",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "unsigned_0",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_unsigned_1",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "unsigned_1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_vector_0",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "vector_0",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_vector_1",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "vector_1",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_vector_2",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "vector_2",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_vector_3",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "vector_3",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_vector_4",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "vector_4",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "printf_vector_5",
+				Val: oclctsTest{
+					executable: "test_printf",
+					args:       "vector_5",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
 				Name: "profiling_copy_array",
 				Val: oclctsTest{
 					executable: "test_profiling",
@@ -11026,6 +19746,126 @@ func init() {
 				Val: oclctsTest{
 					executable: "test_samplerless_reads",
 					args:       "1Darray CL_UNSIGNED_INT8",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "samplerless_reads_1dbuffer_cl_float",
+				Val: oclctsTest{
+					executable: "test_samplerless_reads",
+					args:       "1Dbuffer CL_FLOAT",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "samplerless_reads_1dbuffer_cl_half_float",
+				Val: oclctsTest{
+					executable: "test_samplerless_reads",
+					args:       "1Dbuffer CL_HALF_FLOAT",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "samplerless_reads_1dbuffer_cl_signed_int16",
+				Val: oclctsTest{
+					executable: "test_samplerless_reads",
+					args:       "1Dbuffer CL_SIGNED_INT16",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "samplerless_reads_1dbuffer_cl_signed_int32",
+				Val: oclctsTest{
+					executable: "test_samplerless_reads",
+					args:       "1Dbuffer CL_SIGNED_INT32",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "samplerless_reads_1dbuffer_cl_signed_int8",
+				Val: oclctsTest{
+					executable: "test_samplerless_reads",
+					args:       "1Dbuffer CL_SIGNED_INT8",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "samplerless_reads_1dbuffer_cl_snorm_int16",
+				Val: oclctsTest{
+					executable: "test_samplerless_reads",
+					args:       "1Dbuffer CL_SNORM_INT16",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "samplerless_reads_1dbuffer_cl_snorm_int8",
+				Val: oclctsTest{
+					executable: "test_samplerless_reads",
+					args:       "1Dbuffer CL_SNORM_INT8",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "samplerless_reads_1dbuffer_cl_unorm_int_101010",
+				Val: oclctsTest{
+					executable: "test_samplerless_reads",
+					args:       "1Dbuffer CL_UNORM_INT_101010",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "samplerless_reads_1dbuffer_cl_unorm_int16",
+				Val: oclctsTest{
+					executable: "test_samplerless_reads",
+					args:       "1Dbuffer CL_UNORM_INT16",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "samplerless_reads_1dbuffer_cl_unorm_int8",
+				Val: oclctsTest{
+					executable: "test_samplerless_reads",
+					args:       "1Dbuffer CL_UNORM_INT8",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "samplerless_reads_1dbuffer_cl_unorm_short_555",
+				Val: oclctsTest{
+					executable: "test_samplerless_reads",
+					args:       "1Dbuffer CL_UNORM_SHORT_555",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "samplerless_reads_1dbuffer_cl_unorm_short_565",
+				Val: oclctsTest{
+					executable: "test_samplerless_reads",
+					args:       "1Dbuffer CL_UNORM_SHORT_565",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "samplerless_reads_1dbuffer_cl_unsigned_int16",
+				Val: oclctsTest{
+					executable: "test_samplerless_reads",
+					args:       "1Dbuffer CL_UNSIGNED_INT16",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "samplerless_reads_1dbuffer_cl_unsigned_int32",
+				Val: oclctsTest{
+					executable: "test_samplerless_reads",
+					args:       "1Dbuffer CL_UNSIGNED_INT32",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "samplerless_reads_1dbuffer_cl_unsigned_int8",
+				Val: oclctsTest{
+					executable: "test_samplerless_reads",
+					args:       "1Dbuffer CL_UNSIGNED_INT8",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -11837,11 +20677,148 @@ func init() {
 				},
 				Timeout: 1 * time.Minute,
 			},
+			{
+				Name: "workgroups_work_group_all",
+				Val: oclctsTest{
+					executable: "test_workgroups",
+					args:       "work_group_all",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "workgroups_work_group_any",
+				Val: oclctsTest{
+					executable: "test_workgroups",
+					args:       "work_group_any",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "workgroups_work_group_broadcast_1d",
+				Val: oclctsTest{
+					executable: "test_workgroups",
+					args:       "work_group_broadcast_1D",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "workgroups_work_group_broadcast_2d",
+				Val: oclctsTest{
+					executable: "test_workgroups",
+					args:       "work_group_broadcast_2D",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "workgroups_work_group_broadcast_3d",
+				Val: oclctsTest{
+					executable: "test_workgroups",
+					args:       "work_group_broadcast_3D",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "workgroups_work_group_reduce_add",
+				Val: oclctsTest{
+					executable: "test_workgroups",
+					args:       "work_group_reduce_add",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "workgroups_work_group_reduce_max",
+				Val: oclctsTest{
+					executable: "test_workgroups",
+					args:       "work_group_reduce_max",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "workgroups_work_group_reduce_min",
+				Val: oclctsTest{
+					executable: "test_workgroups",
+					args:       "work_group_reduce_min",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "workgroups_work_group_scan_exclusive_add",
+				Val: oclctsTest{
+					executable: "test_workgroups",
+					args:       "work_group_scan_exclusive_add",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "workgroups_work_group_scan_exclusive_max",
+				Val: oclctsTest{
+					executable: "test_workgroups",
+					args:       "work_group_scan_exclusive_max",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "workgroups_work_group_scan_exclusive_min",
+				Val: oclctsTest{
+					executable: "test_workgroups",
+					args:       "work_group_scan_exclusive_min",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "workgroups_work_group_scan_inclusive_add",
+				Val: oclctsTest{
+					executable: "test_workgroups",
+					args:       "work_group_scan_inclusive_add",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "workgroups_work_group_scan_inclusive_max",
+				Val: oclctsTest{
+					executable: "test_workgroups",
+					args:       "work_group_scan_inclusive_max",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "workgroups_work_group_scan_inclusive_min",
+				Val: oclctsTest{
+					executable: "test_workgroups",
+					args:       "work_group_scan_inclusive_min",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "workgroups_work_group_suggested_local_size_1d",
+				Val: oclctsTest{
+					executable: "test_workgroups",
+					args:       "work_group_suggested_local_size_1D",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "workgroups_work_group_suggested_local_size_2d",
+				Val: oclctsTest{
+					executable: "test_workgroups",
+					args:       "work_group_suggested_local_size_2D",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "workgroups_work_group_suggested_local_size_3d",
+				Val: oclctsTest{
+					executable: "test_workgroups",
+					args:       "work_group_suggested_local_size_3D",
+				},
+				Timeout: 1 * time.Minute,
+			},
 		},
 	},
 	)
 }
 
+// OpenclCts runs one test of the OpenCL-CTS to check the OpenCL compliance.
 func OpenclCts(ctx context.Context, s *testing.State) {
 	test := s.Param().(oclctsTest)
 
