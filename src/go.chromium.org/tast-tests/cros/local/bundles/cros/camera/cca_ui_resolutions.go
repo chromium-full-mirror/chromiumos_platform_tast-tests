@@ -27,18 +27,28 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CCAUIResolutions,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Opens CCA and verifies video recording related use cases",
+		Desc:         "Opens CCA and verifies resolution settings are applied correctly",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "kamchonlathorn@chromium.org"},
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
-		SoftwareDeps: []string{"camera_app", "chrome", "arc_camera3", caps.BuiltinOrVividCamera},
-		Fixture:      "ccaTestBridgeReady",
+		SoftwareDeps: []string{"camera_app", "chrome", "arc_camera3"},
 		// Default timeout (i.e. 2 minutes) is not enough for some devices to
 		// exercise all resolutions on all cameras.
 		Timeout:      5 * time.Minute,
 		BugComponent: "b:978428",
+		Params: []testing.Param{{
+			Name:              "real",
+			ExtraSoftwareDeps: []string{caps.BuiltinOrVividCamera},
+			Fixture:           "ccaTestBridgeReady",
+			Val:               none,
+		}, {
+			Name:    "fake_hal",
+			Fixture: "ccaTestBridgeReadyWithFakeHALCamera",
+			Val:     none,
+		}},
 	})
 }
 
+// CCAUIResolutions verifies resolution settings for CCA.
 func CCAUIResolutions(ctx context.Context, s *testing.State) {
 	runTestWithApp := s.FixtValue().(cca.FixtureData).RunTestWithApp
 	subTestTimeout := 2 * time.Minute
