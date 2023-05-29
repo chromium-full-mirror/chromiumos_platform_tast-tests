@@ -29,6 +29,7 @@ func waitForCameraSwitchState(ctx context.Context, a *cca.App, hasSwitch bool) e
 	return a.WaitForVisibleState(ctx, cca.SwitchDeviceButton, hasSwitch)
 }
 
+// CCAUIExternal checks that CCA behaves as expected when external camera is connected or disconnected.
 func CCAUIExternal(ctx context.Context, s *testing.State) {
 	app := s.FixtValue().(cca.FixtureData).App()
 	s.FixtValue().(cca.FixtureData).SetDebugParams(cca.DebugParams{SaveCameraFolderWhenFail: true})
@@ -49,9 +50,6 @@ func CCAUIExternal(ctx context.Context, s *testing.State) {
 	}); err != nil {
 		s.Fatal("Failed to write fake HAL config: ", err)
 	}
-	// Reverts to default fake HAL config in case other tests reuse the same fixture.
-	// The fixture teardown will remove the fake HAL config.
-	defer testutil.SetupFakeHALConfig(ctx)
 
 	if err := waitForCameraSwitchState(ctx, app, true); err != nil {
 		s.Fatal("Failed to wait for camera switch appear: ", err)

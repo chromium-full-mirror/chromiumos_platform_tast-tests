@@ -10,7 +10,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/camera/cca"
 	"go.chromium.org/tast-tests/cros/local/camera/testutil"
-	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -32,10 +31,6 @@ func init() {
 func CCAUIPreviewOptions(ctx context.Context, s *testing.State) {
 	runTestWithApp := s.FixtValue().(cca.FixtureData).RunTestWithApp
 
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
-
 	// setup multiple fake cameras for testing camera switching behavior.
 	if err := testutil.WriteFakeHALConfig(ctx, testutil.FakeHALConfig{
 		Cameras: []testutil.FakeCameraConfig{
@@ -45,7 +40,6 @@ func CCAUIPreviewOptions(ctx context.Context, s *testing.State) {
 	}); err != nil {
 		s.Fatal("Failed to write fake HAL config: ", err)
 	}
-	defer testutil.SetupFakeHALConfig(cleanupCtx)
 
 	subTestTimeout := 30 * time.Second
 	for _, tst := range []struct {

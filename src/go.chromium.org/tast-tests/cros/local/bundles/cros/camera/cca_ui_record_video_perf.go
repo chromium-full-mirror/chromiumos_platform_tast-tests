@@ -42,6 +42,7 @@ func init() {
 	})
 }
 
+// CCAUIRecordVideoPerf records video and measure performance.
 func CCAUIRecordVideoPerf(ctx context.Context, s *testing.State) {
 	startApp := s.FixtValue().(cca.FixtureData).StartApp
 	stopApp := s.FixtValue().(cca.FixtureData).StopApp
@@ -75,7 +76,6 @@ func CCAUIRecordVideoPerf(ctx context.Context, s *testing.State) {
 		}); err != nil {
 			s.Fatal("Failed to write fake HAL config: ", err)
 		}
-		defer testutil.SetupFakeHALConfig(cleanupCtx)
 	}
 
 	app, err := startApp(ctx)
