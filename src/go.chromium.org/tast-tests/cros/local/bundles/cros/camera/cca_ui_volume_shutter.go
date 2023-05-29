@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
 	"go.chromium.org/tast-tests/cros/local/camera/cca"
@@ -28,9 +27,9 @@ func init() {
 		Desc:         "Verify CCA volume button shutter related use cases",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "pihsun@chromium.org"},
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
-		SoftwareDeps: []string{"camera_app", "chrome", "proprietary_codecs", caps.BuiltinOrVividCamera},
+		SoftwareDeps: []string{"camera_app", "chrome", "proprietary_codecs"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-		Fixture:      "ccaLaunched",
+		Fixture:      "ccaLaunchedWithFakeHALCamera",
 		BugComponent: "b:978428",
 	})
 }
@@ -113,6 +112,7 @@ func (vh *volumeHelper) verifyVolumeChanged(ctx context.Context, doChange func()
 	return nil
 }
 
+// CCAUIVolumeShutter verifies volume button related behavior.
 func CCAUIVolumeShutter(ctx context.Context, s *testing.State) {
 	app := s.FixtValue().(cca.FixtureData).App()
 	cr := s.FixtValue().(cca.FixtureData).Chrome
