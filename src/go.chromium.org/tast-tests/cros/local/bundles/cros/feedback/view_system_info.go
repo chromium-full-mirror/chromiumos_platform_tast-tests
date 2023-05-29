@@ -47,16 +47,17 @@ func init() {
 		},
 		Attr:         []string{"group:mainline", "group:hw_agnostic", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		Timeout:      2 * time.Minute,
 		Params: []testing.Param{{
+			Timeout: 2 * time.Minute,
 			Val: viewSystemInfoParam{
 				uiautoTimeout:    20 * time.Second,
 				validatePerfData: false,
 			},
 		}, {
-			Name: "validate_perf_data",
+			Name:    "validate_perf_data",
+			Timeout: 4 * time.Minute, // This test waits for the perf-data item and needs more time to run.
 			Val: viewSystemInfoParam{
-				uiautoTimeout:    100 * time.Second,
+				uiautoTimeout:    200 * time.Second,
 				validatePerfData: true},
 		}},
 	})
