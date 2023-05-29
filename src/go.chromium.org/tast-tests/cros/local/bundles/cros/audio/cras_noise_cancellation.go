@@ -28,7 +28,7 @@ func init() {
 		Desc:         "Check noise cancellation in CRAS using aloop",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
 		BugComponent: "b:875484",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		Fixture:      fixture.StereoAloopLoaded,
 		Timeout:      3 * time.Minute,
 		SoftwareDeps: []string{"chrome"},
@@ -96,6 +96,7 @@ type crasNoiseCancellationParams struct {
 	extraChromeOptions       []chrome.Option
 }
 
+// CrasNoiseCancellation checks noise cancellation in CRAS using aloop.
 func CrasNoiseCancellation(ctx context.Context, s *testing.State) {
 	param := s.Param().(crasNoiseCancellationParams)
 
