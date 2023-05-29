@@ -1,0 +1,16 @@
+// Copyright 2023 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+syntax = "proto3";
+
+package tast.cros.vm;
+
+import "google/protobuf/empty.proto";
+
+option go_package = "go.chromium.org/tast-tests/cros/services/cros/vm";
+
+// VMService provides RPC methods to be used by VM remote test.
+service VMService {
+  rpc RunARC (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+}

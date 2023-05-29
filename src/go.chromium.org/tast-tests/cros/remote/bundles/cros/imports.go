@@ -48,6 +48,7 @@ import (
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/syzkaller"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/typec"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/ui"
+	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/vm"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/wifi"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/wilco"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb"

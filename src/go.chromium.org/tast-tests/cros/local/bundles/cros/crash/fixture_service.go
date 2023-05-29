@@ -52,7 +52,12 @@ func (c *FixtureService) SetUp(ctx context.Context, req *crash_service.SetUpCras
 		consentOpt = crash.WithConsent(cr)
 	}
 
-	if err := crash.SetUpCrashTest(ctx, consentOpt, crash.RebootingTest()); err != nil {
+	opts := []crash.Option{consentOpt, crash.RebootingTest()}
+	if req.DevImage {
+		opts = append(opts, crash.DevImage())
+	}
+
+	if err := crash.SetUpCrashTest(ctx, opts...); err != nil {
 		testing.ContextLog(ctx, "Error setting up crash test: ", err)
 		return nil, err
 	}
@@ -92,7 +97,12 @@ func (c *FixtureService) WaitForCrashFiles(ctx context.Context, req *crash_servi
 		return nil, errors.Wrap(err, "boot_collector did not complete")
 	}
 
-	files, err := crash.WaitForCrashFiles(ctx, req.GetDirs(), req.GetRegexes())
+	var opts []crash.WaitForCrashFilesOpt
+	timeout := req.GetTimeout().AsDuration()
+	if timeout != 0 {
+		opts = append(opts, crash.Timeout(timeout))
+	}
+	files, err := crash.WaitForCrashFiles(ctx, req.GetDirs(), req.GetRegexes(), opts...)
 	if err != nil {
 		testing.ContextLog(ctx, "Failed to wait for crash files: ", err)
 		return nil, errors.Wrap(err, "failed to wait for crash files")

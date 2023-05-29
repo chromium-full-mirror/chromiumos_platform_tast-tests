@@ -6,6 +6,7 @@ syntax = "proto3";
 
 package tast.cros.crash;
 
+import "google/protobuf/duration.proto";
 import "google/protobuf/empty.proto";
 
 option go_package = "go.chromium.org/tast-tests/cros/services/cros/crash";
@@ -48,6 +49,7 @@ message SetUpCrashTestRequest {
     REAL_CONSENT = 1;
   }
   ConsentType consent = 1;
+  bool devImage = 2;
 }
 
 message EnableCrashFilterRequest {
@@ -64,6 +66,7 @@ message EnableCrashFilterRequest {
 message WaitForCrashFilesRequest {
   repeated string dirs = 1;
   repeated string regexes = 2;
+  google.protobuf.Duration timeout = 3;
 }
 
 message WaitForCrashFilesResponse {
