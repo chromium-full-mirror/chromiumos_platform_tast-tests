@@ -14,6 +14,7 @@ import (
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type vpnRoutingTestCase struct {
@@ -75,22 +76,25 @@ func init() {
 				vpnType: vpn.TypeOpenVPN,
 				ipType:  vpn.IPTypeIPv4,
 			},
-			Fixture: "vpnEnvWithCerts",
+			Fixture:           "vpnEnvWithCerts",
+			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
 		}, {
 			Name: "openvpn_ipv6",
 			Val: vpnRoutingTestCase{
 				vpnType: vpn.TypeOpenVPN,
 				ipType:  vpn.IPTypeIPv6,
 			},
-			Fixture: "vpnEnvWithCerts",
+			Fixture:           "vpnEnvWithCerts",
+			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
 		}, {
 			Name: "openvpn_ipv4_ipv6",
 			Val: vpnRoutingTestCase{
 				vpnType: vpn.TypeOpenVPN,
 				ipType:  vpn.IPTypeIPv4AndIPv6,
 			},
-			Fixture:   "vpnEnvWithCerts",
-			ExtraAttr: []string{"group:cq-medium"},
+			Fixture:           "vpnEnvWithCerts",
+			ExtraAttr:         []string{"group:cq-medium"},
+			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
 		}, {
 			Name: "wireguard_ipv4",
 			Val: vpnRoutingTestCase{
