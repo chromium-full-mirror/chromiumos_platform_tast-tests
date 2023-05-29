@@ -31,8 +31,8 @@ const html = `<!DOCTYPE html>
 <input style="width: 100%" />
 `
 
-// Slower devices could take up to a minute to start Firefox.
-const firefoxStartupTimeout = time.Minute
+// Slower devices could take up to two minutes to start Firefox.
+const firefoxStartupTimeout = 2 * time.Minute
 const testPageName = "test_page.html"
 
 var firefoxWindow = nodewith.NameRegex(regexp.MustCompile(`.*Mozilla Firefox`)).Role(role.Window).First()

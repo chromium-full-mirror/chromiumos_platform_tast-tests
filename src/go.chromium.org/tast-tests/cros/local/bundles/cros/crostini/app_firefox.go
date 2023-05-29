@@ -106,7 +106,7 @@ func AppFirefox(ctx context.Context, s *testing.State) {
 	ui := uiauto.New(tconn)
 	firefoxWindow := nodewith.NameRegex(regexp.MustCompile(`.*Mozilla Firefox`)).Role(role.Window).First()
 
-	const startupTimeout = time.Minute // slower devices could take up to a minute to start Firefox
+	const startupTimeout = 2 * time.Minute // slower devices could take up to two minutes to start Firefox
 	if err := uiauto.Combine("verify Firefox",
 		launcher.SearchAndLaunchWithQuery(tconn, keyboard, "f", "Firefox ESR"),
 		ui.WithTimeout(startupTimeout).WaitUntilExists(firefoxWindow),

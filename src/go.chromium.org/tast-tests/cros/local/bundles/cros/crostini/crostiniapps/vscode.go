@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -42,6 +43,9 @@ var (
 	// VSCodeTestFile is the name of the file where test input is entered.
 	VSCodeTestFile = "test.go"
 )
+
+// Slower devices could take up to two minutes to start Firefox.
+const vsCodeStartupTimeout = 2 * time.Minute
 
 // InitialiseVSCode configures VS Code for testing by disabling cursor blinking, notifications, updates, and removing the "Getting Started" page.
 func InitialiseVSCode(ctx context.Context, cont *vm.Container, uda *uidetection.Context, ui *uiauto.Context, terminalApp *terminalapp.TerminalApp, keyboard *input.KeyboardEventWriter) error {
@@ -84,7 +88,7 @@ func launchAndCloseVSCode(uda *uidetection.Context, ui *uiauto.Context, terminal
 		// Launch Visual Studio Code.
 		terminalApp.RunCommand(keyboard, fmt.Sprintf("code --disable-extensions %s", VSCodeNewFile)),
 		// Waiting for the welcome page, it always shows when opening the app for the first time.
-		uda.WaitUntilExists(uidetection.Word("Welcome").WithinA11yNode(VSCodeWindow).First()),
+		uda.WithTimeout(vsCodeStartupTimeout).WaitUntilExists(uidetection.Word("Welcome").WithinA11yNode(VSCodeWindow).First()),
 		// Left click the app window header to focus.
 		// Do not click the center of the app window, which may unexpectedly.
 		// set the theme, see http://b/264336806.
@@ -102,7 +106,7 @@ func LaunchVSCodeForFile(uda *uidetection.Context, ui *uiauto.Context, terminalA
 		terminalApp.RunCommand(keyboard, fmt.Sprintf("code --disable-extensions %s", testFile)),
 		// Sometimes the first character got lost if input immediately.
 		// Wait until the menu exists, indicating the window is launched.
-		uda.WaitUntilExists(uidetection.Word("File").WithinA11yNode(VSCodeWindow).First()),
+		uda.WithTimeout(vsCodeStartupTimeout).WaitUntilExists(uidetection.Word("File").WithinA11yNode(VSCodeWindow).First()),
 		// Also wait for the editor tab to load before further input.
 		uda.WaitUntilExists(uidetection.Word(testFile).WithinA11yNode(VSCodeWindow).First()),
 		// Left click the app window to wait for input.
