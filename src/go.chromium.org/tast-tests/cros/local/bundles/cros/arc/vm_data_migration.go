@@ -74,9 +74,14 @@ func init() {
 		// ChromeOS > Software > ARC++ > Storage
 		BugComponent: "b:516669",
 		Attr:         []string{"group:mainline"},
-		SoftwareDeps: []string{"android_vm", "chrome"},
-		Data:         []string{vmDataMigrationTestImageFilename},
-		Timeout:      vmDataMigrationTestTimeout,
+		SoftwareDeps: []string{
+			"android_vm",
+			"chrome",
+			// ARCVM /data migration currently does not support LVM-enabled devices.
+			"no_lvm_stateful_partition",
+		},
+		Data:    []string{vmDataMigrationTestImageFilename},
+		Timeout: vmDataMigrationTestTimeout,
 		VarDeps: []string{
 			tape.ServiceAccountVar,
 			"ui.signinProfileTestExtensionManifestKey",
@@ -121,6 +126,7 @@ func init() {
 	})
 }
 
+// VMDataMigration implements the test scenario of arc.VMDataMigration.
 func VMDataMigration(ctx context.Context, s *testing.State) {
 	params := s.Param().(vmDataMigrationTestParams)
 	homeDataPath := s.DataPath(params.dataFileName)
