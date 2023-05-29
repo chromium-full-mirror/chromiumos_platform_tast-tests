@@ -23,14 +23,14 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CCAUIDocumentScanning,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that CCA can take a photo for document and generate the document file via file VCD",
+		Desc:         "Verifies that CCA can take a photo for document and generate the document file with fake HAL",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
 		SoftwareDeps: []string{"camera_app", "chrome", "ondevice_document_scanner_rootfs_or_dlc", caps.BuiltinOrVividCamera},
 		Data:         []string{"document_3264x2448.mjpeg"},
+		Fixture:      "ccaTestBridgeReadyWithFakeHALCamera",
 		Params: []testing.Param{{
-			Name:    "multi_page",
-			Fixture: "ccaTestBridgeReadyWithFakeCamera",
+			Name: "multi_page",
 			Val: []documentScanSubTest{
 				{
 					name: "testSavePhoto",
@@ -47,11 +47,15 @@ func init() {
 					run: func(ctx context.Context, app *cca.App, cr *chrome.Chrome) error {
 						return testUIChangeWithDifferentPageCount(ctx, app)
 					},
+				}, {
+					name: "testPreviewShowsDocCorner",
+					run: func(ctx context.Context, app *cca.App, cr *chrome.Chrome) error {
+						return testPreviewShowsDocCorner(ctx, app)
+					},
 				},
 			},
 		}, {
-			Name:    "manual_crop_multi_page",
-			Fixture: "ccaTestBridgeReadyWithFakeCamera",
+			Name: "manual_crop_multi_page",
 			Val: []documentScanSubTest{
 				{
 					name: "testFixCropArea",
@@ -103,33 +107,25 @@ var (
 	// derived from equation like the following with chrome developer tool:
 	// https://chromium.googlesource.com/chromiumos/platform/tast-tests/+/bd5e4f1ccbc59cc3e4dda6fa71eadedf295fca28/src/go.chromium.org/tast-tests/cros/local/bundles/cros/camera/data/cca_ui.js#207
 	doc1Area = &docArea{[4]docCorner{
-		docCorner{0.05298, 0.44720},
-		docCorner{0.03376, 0.84603},
-		docCorner{0.49621, 0.77297},
-		docCorner{0.46445, 0.39194},
+		{0.05298, 0.44720},
+		{0.03376, 0.84603},
+		{0.49621, 0.77297},
+		{0.46445, 0.39194},
 	}}
 	// The longer document on the right of camera scene.
 	doc2Area = &docArea{[4]docCorner{
-		docCorner{0.53727, 0.16051},
-		docCorner{0.56251, 0.88772},
-		docCorner{0.99996, 0.86272},
-		docCorner{0.89309, 0.15380},
+		{0.53727, 0.16051},
+		{0.56251, 0.88772},
+		{0.99996, 0.86272},
+		{0.89309, 0.15380},
 	}}
 )
 
 // CCAUIDocumentScanning is the entry point for local document scanning test.
-// We use File VCD with a video which has a document in the scene to simulate
-// the real usage when scanning document.
-// However, since document detection on preview only happens on CrOS VCD, we
-// cannot use File VCD to test it. Therefore, we will leave that part to another
-// test which is executed on a CameraBox.
 func CCAUIDocumentScanning(ctx context.Context, s *testing.State) {
 	runTestWithApp := s.FixtValue().(cca.FixtureData).RunTestWithApp
+	switchScene := s.FixtValue().(cca.FixtureData).SwitchScene
 	s.FixtValue().(cca.FixtureData).SetDebugParams(cca.DebugParams{SaveCameraFolderWhenFail: true})
-
-	if err := s.FixtValue().(cca.FixtureData).SwitchScene(ctx, cca.SceneData{Path: s.DataPath("document_3264x2448.mjpeg")}); err != nil {
-		s.Fatal("Failed to prepare document scene: ", err)
-	}
 
 	subTestTimeout := 30 * time.Second
 	for _, tst := range s.Param().([]documentScanSubTest) {
@@ -137,7 +133,15 @@ func CCAUIDocumentScanning(ctx context.Context, s *testing.State) {
 			subTestCtx, cancel := context.WithTimeout(ctx, subTestTimeout)
 			defer cancel()
 
+			if err := switchScene(ctx, cca.SceneData{Path: s.DataPath("document_3264x2448.mjpeg")}); err != nil {
+				s.Fatal("Failed to prepare document scene: ", err)
+			}
+
 			if err := runTestWithApp(subTestCtx, func(subTestCtx context.Context, app *cca.App) error {
+				if err := enterDocumentMode(ctx, app); err != nil {
+					return errors.Wrap(err, "failed to enter document mode")
+				}
+
 				return tst.run(subTestCtx, app, s.FixtValue().(cca.FixtureData).Chrome)
 			}, cca.TestWithAppParams{}); err != nil {
 				s.Errorf("Failed to pass %v subtest: %v", tst.name, err)
@@ -162,10 +166,6 @@ func enterDocumentMode(ctx context.Context, app *cca.App) error {
 
 // testSavePhoto tests if CCA can take a document photo and save the file as JPG correctly.
 func testSavePhoto(ctx context.Context, app *cca.App) (retErr error) {
-	if err := enterDocumentMode(ctx, app); err != nil {
-		return errors.Wrap(err, "failed to enter document mode")
-	}
-
 	if err := clickShutterAndWaitFor(ctx, app, cca.DocumentReview); err != nil {
 		return errors.Wrap(err, "failed to wait for review UI to show")
 	}
@@ -185,10 +185,6 @@ func testSavePhoto(ctx context.Context, app *cca.App) (retErr error) {
 
 // testSavePdf tests if CCA can take document photos and save the file as PDF correctly.
 func testSavePdf(ctx context.Context, app *cca.App) (retErr error) {
-	if err := enterDocumentMode(ctx, app); err != nil {
-		return errors.Wrap(err, "failed to enter document mode")
-	}
-
 	if err := clickShutterAndWaitFor(ctx, app, cca.DocumentReview); err != nil {
 		return errors.Wrap(err, "failed to wait for review UI to show")
 	}
@@ -220,10 +216,6 @@ func testSavePdf(ctx context.Context, app *cca.App) (retErr error) {
 
 // testUIChangeWithDifferentPageCount tests if CCA shows or hides the UI components correctly during different page counts.
 func testUIChangeWithDifferentPageCount(ctx context.Context, app *cca.App) (retErr error) {
-	if err := enterDocumentMode(ctx, app); err != nil {
-		return errors.Wrap(err, "failed to enter document mode")
-	}
-
 	// 1 page
 	if err := clickShutterAndWaitFor(ctx, app, cca.DocumentReview); err != nil {
 		return errors.Wrap(err, "failed to wait for review UI to show")
@@ -287,10 +279,6 @@ func testUIChangeWithDifferentPageCount(ctx context.Context, app *cca.App) (retE
 }
 
 func testFixCropArea(ctx context.Context, app *cca.App, cr *chrome.Chrome) error {
-	if err := enterDocumentMode(ctx, app); err != nil {
-		return errors.Wrap(err, "failed to enter document mode")
-	}
-
 	if err := clickShutterAndWaitFor(ctx, app, cca.DocumentReview); err != nil {
 		return errors.Wrap(err, "failed to wait for review UI to show")
 	}
@@ -397,6 +385,22 @@ func testFixCropArea(ctx context.Context, app *cca.App, cr *chrome.Chrome) error
 		return errors.Errorf("should crop the longer document after fix crop area, got document width: %v, height: %v", imageElSize.Width, imageElSize.Height)
 	}
 
+	return nil
+}
+
+func testPreviewShowsDocCorner(ctx context.Context, app *cca.App) error {
+	// Verify that document corners are shown in the preview.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		result, err := app.Visible(ctx, cca.DocumentCorner)
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to check visibility of the document scan overlay"))
+		} else if !result {
+			return errors.Wrap(err, "no document is found")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+		return errors.Wrap(err, "failed to wait for corner indicator show up")
+	}
 	return nil
 }
 
