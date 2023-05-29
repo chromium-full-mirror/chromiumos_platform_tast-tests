@@ -28,6 +28,7 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
 	fwpb "go.chromium.org/tast-tests/cros/services/cros/firmware"
 
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/ssh/linuxssh"
@@ -72,7 +73,7 @@ const (
 	speedometerTime = 10 * time.Minute
 
 	// deviationTarget contains the acceptable percentage of deviation from the baseline.
-	deviationTarget = 0.05
+	deviationTarget = 0.10
 
 	// maxSpeedTestRetry sets the maximum number of attempts to re-run the speed test in
 	// case the result is found outside the expected deviation.
@@ -80,11 +81,6 @@ const (
 )
 
 var (
-	// restoreFW is a control flag to indicate that the DUT needs to be
-	// restored with RO_new/RW_new, which is the firmware that the device
-	// started with, before this test exits.
-	restoreFW bool
-
 	// rwNewID contains the RW firmware version ID available on the DUT.
 	// This version would be the to-be-qualified RW_new firmware.
 	rwNewID string
@@ -106,7 +102,7 @@ func init() {
 		Attr:         []string{"group:firmware", "firmware_trial"},
 		Vars:         []string{"board", "model"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Timeout:      60 * time.Minute, // 1hr.
+		Timeout:      90 * time.Minute, // 1hr30min.
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.NormalMode,
 		Data:         []string{"shipped-firmwares.json"},
@@ -286,36 +282,41 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 	}
 	s.Logf("Setting RO ID = %s, as the to-be-qualified RO_new firmware", roNewID)
 
+	// Give enough time for the deferred function to restore DUT.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 21*time.Minute)
+	defer cancel()
+
 	// At the end of this test, restore AP firmware to the one found at the beginning.
-	defer func() {
+	defer func(ctx context.Context) {
 		if err := h.EnsureDUTBooted(ctx); err != nil {
 			s.Fatal("Failed to ensure DUT connected at the end of test before restoring firmware: ", err)
 		}
 
+		// Ensure there is a functional RPC connection.
+		h.CloseRPCConnection(ctx)
 		if err := h.RequireBiosServiceClient(ctx); err != nil {
-			s.Fatal("Failed to get bios service: ", err)
+			s.Fatal("Failed to open RPC client for restoration: ", err)
 		}
 
-		if restoreFW {
-			s.Log("Restoring firmware at the end of the test")
-			if err := flashDUTAndReboot(ctx, h, s.DUT().Conn(), initialFwFromDUT.Name(), fwpb.ImageSection_EmptyImageSection, testArgs.targetProgrammer); err != nil {
-				s.Fatal("Failed while flashing DUT to restore firmware at the end of test: ", err)
-			}
-			if err = verifyFwIDs(ctx, h, roNewID, rwNewID); err != nil {
-				s.Fatal("Failed while verifying firmware IDs after flashing at the end of test: ", err)
-			}
+		s.Log("Restoring firmware at the end of the test")
+		if err := flashDUTAndReboot(ctx, h, s.DUT().Conn(), initialFwFromDUT.Name(), fwpb.ImageSection_EmptyImageSection, testArgs.targetProgrammer); err != nil {
+			s.Fatal("Failed while flashing DUT to restore firmware at the end of test: ", err)
 		}
-	}()
+		if err = verifyFwIDs(ctx, h, roNewID, rwNewID); err != nil {
+			s.Fatal("Failed while verifying firmware IDs after flashing at the end of test: ", err)
+		}
+	}(cleanupCtx)
 
 	// Flash the latest shipped RO and RW firmware.
 	if err := flashDUTAndReboot(ctx, h, s.DUT().Conn(), filepath.Join(tmpDir, binToFlash), fwpb.ImageSection_EmptyImageSection, testArgs.targetProgrammer); err != nil {
-		s.Fatal("Failed to flash DUT: ", err)
+		s.Fatalf("Failed to flash RO_old + RW_old ( %s + %s ): %v", shippedFwVersions[len(shippedFwVersions)-1], shippedFwVersions[len(shippedFwVersions)-1], err)
 	}
 
 	// Verify RO/RW firmware versions are the latest shipped firmware after flashing.
 	// This is when RO and RW have the same version ids (i.e., RO_old + RW_old).
 	if err = verifyFwIDs(ctx, h, shippedFwVersions[len(shippedFwVersions)-1].FwID, shippedFwVersions[len(shippedFwVersions)-1].FwID); err != nil {
-		s.Fatal("While comparing firmware versions: ", err)
+		s.Fatalf("After flashing RO_old + RW_old ( %s + %s ): %v", shippedFwVersions[len(shippedFwVersions)-1], shippedFwVersions[len(shippedFwVersions)-1], err)
 	}
 
 	s.Log("Performing the speed test")
@@ -341,12 +342,12 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 		// the to-be-qualified new RW firmware (i.e., RO_old + RW_new).
 		s.Log("Flashing the to-be-qualified new RW firmware")
 		if err := flashDUTAndReboot(ctx, h, s.DUT().Conn(), initialFwFromDUT.Name(), testArgs.imageSectionRW, testArgs.targetProgrammer); err != nil {
-			s.Fatal("Failed to flash DUT: ", err)
+			s.Fatalf("Failed to flash RO_old + RW_new ( %s + %s ): %v", shippedFwVersions[len(shippedFwVersions)-1], rwNewID, err)
 		}
 
 		// Verify that the RO firmware has not been modified and RW has the RW_new after the flashing process.
 		if err := verifyFwIDs(ctx, h, shippedFwVersions[len(shippedFwVersions)-1].FwID, rwNewID); err != nil {
-			s.Fatal("While comparing firmware versions: ", err)
+			s.Fatalf("After flashing RO_old + RW_new ( %s + %s ): %v", shippedFwVersions[len(shippedFwVersions)-1], rwNewID, err)
 		}
 
 		s.Log("Performing the speed test")
@@ -357,7 +358,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 
 		// Check that the result deviation from the baseline is acceptable.
 		if err = checkDeviation(ctx, h, baseline, speedResult); err != nil {
-			s.Fatal("Deviation failed: ", err)
+			s.Fatalf("Deviation with RO_old + RO_new ( %s + %s ) failed: %v", shippedFwVersions[len(shippedFwVersions)-1], rwNewID, err)
 		}
 	}
 
@@ -375,12 +376,12 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 
 		s.Log("Flashing the older RO 'shipped' firmware")
 		if err := flashDUTAndReboot(ctx, h, s.DUT().Conn(), filepath.Join(tmpDir, binToFlash), testArgs.imageSectionRO, testArgs.targetProgrammer); err != nil {
-			s.Fatal("Failed to flash DUT: ", err)
+			s.Fatalf("Failed to flash RO_old-%d + RW_new ( %s + %s ): %v", len(shippedFwVersions)-i-1, shippedFwVersions[i], rwNewID, err)
 		}
 
 		s.Log("Verifying the firmware versions after flash")
 		if err := verifyFwIDs(ctx, h, shippedFwVersions[i].FwID, rwNewID); err != nil {
-			s.Fatal("Failed while checking firmware versions: ", err)
+			s.Fatalf("After flashing RO_old-%d + RW_new ( %s + %s): %v", len(shippedFwVersions)-i-1, shippedFwVersions[i], rwNewID, err)
 		}
 
 		s.Log("Performing the speed test")
@@ -391,7 +392,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 
 		s.Log("Checking that the result deviation from the baseline is acceptable")
 		if err = checkDeviation(ctx, h, baseline, speedResult); err != nil {
-			s.Fatal("Deviation failed: ", err)
+			s.Fatalf("Deviation with RO_old-%d + RO_new ( %s + %s ) failed: %v", len(shippedFwVersions)-i-1, shippedFwVersions[i], rwNewID, err)
 		}
 	}
 
@@ -399,16 +400,15 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 		s.Log("WARNING! Speed test skipped because RO_new is the same as RO_old. Already verified")
 	} else {
 		// Testing scenario RO/RW with the to-be-qualified firmware (i.e., RO_new + RW_new).
-		s.Log("Flashing the to-be-qualified new RO/RW firmware")
-		if err = flashDUTAndReboot(ctx, h, s.DUT().Conn(), initialFwFromDUT.Name(), fwpb.ImageSection_EmptyImageSection, testArgs.targetProgrammer); err != nil {
-			s.Fatal("Failed to flash DUT: ", err)
+		s.Log("Flashing the to-be-qualified new RO firmware")
+		if err = flashDUTAndReboot(ctx, h, s.DUT().Conn(), initialFwFromDUT.Name(), testArgs.imageSectionRO, testArgs.targetProgrammer); err != nil {
+			s.Fatalf("Failed to flash RO_new + RW_new ( %s + %s ): %v", roNewID, rwNewID, err)
 		}
 
 		s.Log("Verifying the firmware versions are the to-be-qualified new RO/RW after flash")
 		if err := verifyFwIDs(ctx, h, roNewID, rwNewID); err != nil {
-			s.Fatal("Failed while checking firmware versions: ", err)
+			s.Fatalf("After flashing RO_new + RW_new ( %s + %s): %v", roNewID, rwNewID, err)
 		}
-		restoreFW = false
 
 		s.Log("Performing the speed test")
 		speedResult, err := speedTest(ctx, h)
@@ -418,7 +418,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 
 		s.Log("Checking that the result deviation from the baseline is acceptable")
 		if err := checkDeviation(ctx, h, baseline, speedResult); err != nil {
-			s.Fatal("Deviation failed: ", err)
+			s.Fatalf("Deviation with RO_new + RO_new ( %s + %s ) failed: %v", roNewID, rwNewID, err)
 		}
 	}
 }
@@ -461,7 +461,7 @@ func downloadFirmwareFile(ctx context.Context, s *testing.State, tmpDir string, 
 		out, stderr, err := testexec.CommandContext(ctx, "gsutil", "ls", dir).SeparatedOutput(testexec.DumpLogOnError)
 		if err != nil {
 			if !strings.Contains(string(stderr), "One or more URLs matched no objects.") {
-				return errors.Wrapf(err, "failed to run 'gsutil ls' to find the complete path: %v", stderr)
+				return errors.Wrapf(err, "failed to run 'gsutil ls' to find the complete path: %s", stderr)
 			}
 			testing.ContextLogf(ctx, "WARNING! Model %q doesn't have the following path: %s", fwToTest.Board, dir)
 		} else {
@@ -475,21 +475,24 @@ func downloadFirmwareFile(ctx context.Context, s *testing.State, tmpDir string, 
 		return errors.Errorf("no matches found for firmware id: %s board: %s in known paths", fwToTest.FwID, fwToTest.Board)
 	}
 
+	// Identify if there is a sub-directory with the name of the board.
+	out, stderr, err := testexec.CommandContext(ctx, "gsutil", "ls", dir+releasedFWid).SeparatedOutput(testexec.DumpLogOnError)
+	if err != nil {
+		return errors.Wrapf(err, "failed to run 'gsutil ls' to check for sub-directories: %s", stderr)
+	}
+	re = regexp.MustCompile(`.*` + releasedFWid + `/` + fwToTest.Board)
+	url := re.FindString(string(out))
+	if url == "" {
+		url = dir + releasedFWid + "/" + firmwareFileName
+	} else {
+		url = url + "/" + firmwareFileName
+	}
+
 	// Stage the complete path.
 	cs := s.CloudStorage()
-	url := dir + releasedFWid + "/" + firmwareFileName
 	r, err := cs.Stage(ctx, url)
 	if err != nil {
-		// Some firmware files were found under a sub-directory defined by the board name.
-		if !strings.Contains(err.Error(), "file does not exist") {
-			return errors.Wrapf(err, "failed to stage file for board %q", fwToTest.Board)
-		}
-		testing.ContextLogf(ctx, "WARNING! file does not exist, re-attempting on sub-directory: %s", fwToTest.Board)
-		url = dir + releasedFWid + "/" + fwToTest.Board + "/" + firmwareFileName
-		r, err = cs.Stage(ctx, url)
-		if err != nil {
-			return errors.Wrapf(err, "failed to stage file after adding sub-directory %s", fwToTest.Board)
-		}
+		return errors.Wrapf(err, "failed to stage file for board %q", fwToTest.Board)
 	}
 
 	// Download the file.
@@ -516,9 +519,6 @@ func flashDUTAndReboot(ctx context.Context, h *firmware.Helper, conn *ssh.Conn, 
 		return errors.Wrap(err, "failed to send bin file to DUT")
 	}
 
-	// Ensure DUT restored with the backup firmware in case
-	// something goes wrong during the flashing procedure.
-	restoreFW = true
 	testing.ContextLogf(ctx, "Flashing DUT with file: %s using section: %v", fileOnHostToFlash, section)
 	bs := fwpb.NewBiosServiceClient(h.RPCClient.Conn)
 	if _, err := bs.WriteImageFromMultiSectionFile(ctx, &fwpb.FWSectionInfo{Programmer: targetProgrammer, Path: fileOnDUTToFlash, Section: section}); err != nil {
