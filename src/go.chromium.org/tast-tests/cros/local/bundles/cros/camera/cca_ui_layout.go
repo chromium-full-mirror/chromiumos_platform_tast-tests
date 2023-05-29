@@ -31,7 +31,7 @@ func init() {
 		Timeout:      3 * time.Minute,
 		HardwareDeps: cca.DeviceWithLayoutMonitored,
 		BugComponent: "b:978428",
-		Fixture:      "ccaTestBridgeReadyWithFakeCamera",
+		Fixture:      "ccaTestBridgeReadyWithFakeHALCamera",
 		Vars:         screenshot.ScreenDiffVars,
 	})
 }
@@ -72,7 +72,8 @@ func CCAUILayout(ctx context.Context, s *testing.State) {
 			WindowWidthDP:  diffWindowWidth,
 			WindowHeightDP: diffWindowHeight,
 			WindowState:    defaultWindowState,
-			RetryInterval:  2 * time.Second,
+			Retries:        8,
+			RetryInterval:  500 * time.Millisecond,
 		},
 		SkipDpiNormalization: true,
 	}
@@ -102,6 +103,9 @@ func CCAUILayout(ctx context.Context, s *testing.State) {
 }
 
 func checkAppLayout(ctx context.Context, app *cca.App, differ screenshot.Differ) error {
+	if err := app.HideFloatingUI(ctx); err != nil {
+		return errors.Wrap(err, "failed to hide floating UI")
+	}
 	// Verify photo/video/scan mode.
 	if err := checkEachModes(ctx, app, differ); err != nil {
 		return errors.Wrap(err, "failed to check the layout for each modes")
@@ -220,5 +224,5 @@ func checkPreviewOptions(ctx context.Context, app *cca.App, differ screenshot.Di
 
 func diffPage(ctx context.Context, app *cca.App, differ screenshot.Differ, pageName string) error {
 	// Diff the window.
-	return differ.DiffWindow(ctx, pageName, screenshot.Retries(2))(ctx)
+	return differ.DiffWindow(ctx, pageName)(ctx)
 }

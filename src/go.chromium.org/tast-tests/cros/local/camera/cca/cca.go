@@ -1492,6 +1492,15 @@ func (f *FPSObserver) AverageFPS(ctx context.Context) (float64, error) {
 	return averageFPS, nil
 }
 
+// HideFloatingUI hides all toasts, nudges and tooltips from CCA.
+func (a *App) HideFloatingUI(ctx context.Context) error {
+	// TODO(pihsun): Remove the check after Chrome is upreved and the function always exist.
+	if err := a.conn.Eval(ctx, "CCATest.hideFloatingUI?.()", nil); err != nil {
+		return errors.Wrap(err, "failed to hide floating UI")
+	}
+	return nil
+}
+
 // Stop stops the given FPS observer and release the associated JS object.
 func (f *FPSObserver) Stop(ctx context.Context) error {
 	defer f.jsObj.Release(ctx)
