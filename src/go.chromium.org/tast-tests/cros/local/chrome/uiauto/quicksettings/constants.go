@@ -62,6 +62,14 @@ var LiveCaptionButton = nodewith.Role(role.ToggleButton).NameContaining("Live Ca
 // It is a top-level button with QsRevamp.
 var NightLightButton = nodewith.Role(role.ToggleButton).NameContaining("Night Light")
 
+// DisplaySettingsButton is the finder for the "Show display settings" drill-in button.
+// It is a top-level button with QsRevamp.
+var DisplaySettingsButton = nodewith.Role(role.Button).NameContaining("display settings")
+
+// FeatureTileDarkTheme is the finder for the "Toggle Dark theme" feature tile.
+// It lives in the display settings detail page with QsRevamp.
+var FeatureTileDarkTheme = nodewith.HasClass("FeatureTile").NameContaining("Dark theme")
+
 // PowerMenuButton is the finder for the power menu button.
 // It only exists with QsRevamp.
 var PowerMenuButton = nodewith.Role(role.Button).NameContaining("Power menu")

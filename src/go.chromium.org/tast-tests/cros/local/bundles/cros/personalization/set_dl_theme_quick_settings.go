@@ -14,9 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/personalization"
 	"go.chromium.org/tast-tests/cros/local/wallpaper"
 	"go.chromium.org/tast-tests/cros/local/wallpaper/constants"
@@ -40,11 +38,14 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,
-		Fixture:      "personalizationWithClamshell",
+		Fixture:      "personalizationWithClamshellQsRevampEnabled",
 	})
 }
 
 func SetDLThemeQuickSettings(ctx context.Context, s *testing.State) {
+	qsCleanup := quicksettings.SetQsRevampEnabled(true)
+	defer qsCleanup()
+
 	cr := s.FixtValue().(*chrome.Chrome)
 
 	cleanupCtx := ctx
@@ -108,50 +109,16 @@ func SetDLThemeQuickSettings(ctx context.Context, s *testing.State) {
 }
 
 func toggleDarkThemeFromQuickSettings(ctx context.Context, tconn *chrome.TestConn, ui *uiauto.Context) error {
-	if err := quicksettings.Expand(ctx, tconn); err != nil {
-		return errors.Wrap(err, "failed to expand quick settings")
+	if err := quicksettings.Show(ctx, tconn); err != nil {
+		return errors.Wrap(err, "failed to show quick settings")
 	}
+	defer quicksettings.Hide(ctx, tconn)
 
-	darkThemePodIconButton := quicksettings.PodIconButton(quicksettings.SettingPodDarkTheme)
-	if err := ui.WaitUntilExists(darkThemePodIconButton)(ctx); err != nil {
-		return errors.Wrap(err, "dark theme pod icon button is not found")
-	}
-
-	pageIndicators := nodewith.Role(role.Button).ClassName("PageIndicatorView")
-	pages, err := ui.NodesInfo(ctx, pageIndicators)
-	if err != nil {
-		return errors.Wrap(err, "failed to get page indicator")
-	}
-
-	// If there is no page indicator (which means only one page of pod icons in Quick Settings),
-	// try to click on Dark theme pod icon button.
-	if len(pages) == 0 {
-		if err := ui.LeftClick(darkThemePodIconButton)(ctx); err != nil {
-			return errors.Wrap(err, "failed to toggle Dark theme")
-		}
-		return nil
-	}
-
-	// Although Dark theme pod icon button is available in Quick Settings, we don't know the
-	// exact page it resides. If we click on the Dark theme button in a wrong page, it would
-	// close Quick Settings bubble. Hence, we need to reopen the bubble in case it closes and
-	// try to click on the Dark theme button in all the pages.
-	// TODO: update the tast test when Quick Settings adds new infrastructure to not close
-	// the bubble accidentally.
-	for _, page := range pages {
-		if shown, err := quicksettings.Shown(ctx, tconn); err != nil {
-			return errors.Wrap(err, "failed to check quick settings visibility status")
-		} else if !shown {
-			if err := quicksettings.Expand(ctx, tconn); err != nil {
-				return errors.Wrap(err, "failed to expand quick settings")
-			}
-		}
-		if err := uiauto.Combine("Toggle Dark theme",
-			ui.LeftClick(nodewith.Role(page.Role).ClassName(page.ClassName).Name(page.Name)),
-			ui.LeftClick(darkThemePodIconButton),
-		)(ctx); err != nil {
-			return errors.Wrap(err, "failed to toggle Dark theme")
-		}
+	if err := uiauto.Combine("Toggle Dark theme",
+		ui.LeftClick(quicksettings.DisplaySettingsButton),
+		ui.LeftClick(quicksettings.FeatureTileDarkTheme),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to toggle Dark theme")
 	}
 	return nil
 }

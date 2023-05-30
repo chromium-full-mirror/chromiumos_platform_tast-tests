@@ -35,7 +35,10 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,
-		Fixture:      "chromeLoggedIn",
+		// This test does not need to be ported to QsRevamp because this UI flow
+		// does not exist with the new quick settings. The dark/light mode
+		// FeatureTile does not have a separate label that can be clicked.
+		Fixture: "chromeLoggedIn",
 	})
 }
 
