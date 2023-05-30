@@ -43,7 +43,6 @@ func init() {
 		Params: []testing.Param{{
 			Fixture: "virtualUsbPrinterModulesLoadedWithChromePolicyLoggedIn",
 			Val:     browser.TypeAsh,
-			Timeout: 4 * time.Minute,
 		}, {
 			Name:              "lacros",
 			ExtraSoftwareDeps: []string{"lacros"},
@@ -59,6 +58,7 @@ func init() {
 				Value: "screenplay-af2592d2-c335-4a0b-8330-a8f494423e58",
 			},
 		},
+		Timeout: 4 * time.Minute,
 	})
 }
 
