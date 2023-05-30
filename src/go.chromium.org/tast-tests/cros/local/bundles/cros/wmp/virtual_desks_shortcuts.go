@@ -303,6 +303,48 @@ func VirtualDesksShortcuts(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to exit overview mode: ", err)
 	}
 
+	// Test index-based desk switch accelerator.
+	if err := uiauto.Combine(
+		"switch to desk 1 with index-based accelerator",
+		kb.AccelAction("Search+Shift+1"),
+		ash.WaitForDesk(tconn, 0),
+	)(ctx); err != nil {
+		s.Fatal("Failed to switch to desk 1: ", err)
+	}
+
+	// Switch back to desk 2, where a browser window should still be open.
+	if err := uiauto.Combine(
+		"switch to desk 2 with index-based accelerator",
+		kb.AccelAction("Search+Shift+2"),
+		ash.WaitForDesk(tconn, 1),
+	)(ctx); err != nil {
+		s.Fatal("Failed to switch to desk 2: ", err)
+	}
+	if !findBrowserWindow(ctx, s, tconn, bt).OnActiveDesk {
+		s.Fatal("Browser window is not on the currently active desk (desk 2)")
+	}
+
+	// Test the all desk window shortcut.
+	if err := kb.Accel(ctx, "Search+Shift+A"); err != nil {
+		s.Fatal("Failed to toggle all desk window state for active window: ", err)
+	}
+
+	// Switch to desk 1 and verify that the window is on desk 1.
+	if err := ash.ActivateDeskAtIndex(ctx, tconn, 0); err != nil {
+		s.Fatal("Failed to activate desk 1: ", err)
+	}
+	if !findBrowserWindow(ctx, s, tconn, bt).OnActiveDesk {
+		s.Fatal("Browser window is not on the currently active desk (desk 1)")
+	}
+
+	// Switch back to desk 2 and verify that the window is still there.
+	if err := ash.ActivateDeskAtIndex(ctx, tconn, 1); err != nil {
+		s.Fatal("Failed to activate desk 2: ", err)
+	}
+	if !findBrowserWindow(ctx, s, tconn, bt).OnActiveDesk {
+		s.Fatal("Browser window is not on the currently active desk (desk 2)")
+	}
+
 	// Finally, remove desk 2. We expect to be back at desk 1.
 	if err := uiauto.Combine(
 		"remove the current virtual desk",
