@@ -14,8 +14,8 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/event"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -47,28 +47,21 @@ func Run(ctx context.Context, s *testing.State) {
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
+	blankConn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, s.Param().(browser.Type), chrome.BlankURL)
+	if err != nil {
+		s.Fatal("Failed to set up Chrome: ", err)
+	}
+	defer closeBrowser(cleanupCtx)
+	defer blankConn.Close()
+
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
-		s.Fatal("Failed to connect to test API: ", err)
+		s.Fatal("Failed to connect to test API connection: ", err)
 	}
 
-	var cs ash.ConnSource
-	var bTconn *chrome.TestConn
-	switch bt {
-	case browser.TypeLacros:
-		l, err := lacros.Launch(ctx, tconn)
-		if err != nil {
-			s.Fatal("Failed to launch Lacros: ", err)
-		}
-		defer l.Close(cleanupCtx)
-		cs = l
-
-		if bTconn, err = l.TestAPIConn(ctx); err != nil {
-			s.Fatal("Failed to connect to the Lacros TestAPIConn: ", err)
-		}
-	case browser.TypeAsh:
-		cs = cr
-		bTconn = tconn
+	bTconn, err := br.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to connect to browser test API connection: ", err)
 	}
 
 	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
@@ -131,7 +124,7 @@ func Run(ctx context.Context, s *testing.State) {
 
 	// Open all desks and windows for each desk. Additionally, initialize
 	// unique user input actions that will be performed on each desk.
-	onVisitActions, expectedNumWindows, err := setUpDesks(ctx, tconn, bTconn, cs, kw, mw, tpw, tw)
+	onVisitActions, expectedNumWindows, err := setUpDesks(ctx, tconn, bTconn, br, kw, mw, tpw, tw)
 	if err != nil {
 		s.Fatal("Failed to set up desks: ", err)
 	}
@@ -148,10 +141,14 @@ func Run(ctx context.Context, s *testing.State) {
 	}
 
 	if bt == browser.TypeLacros {
-		if err := browser.CloseTabByTitle(ctx, bTconn, "New Tab"); err != nil {
-			s.Fatal(`Failed to close "New Tab" tab: `, err)
+		if err := browser.CloseTabByTitle(ctx, bTconn, "about:blank"); err != nil {
+			s.Fatal(`Failed to close blank tab: `, err)
 		}
 	}
+
+	// Get a list of metrics to collect for each test phase.
+	ashMetrics, browserMetrics := cujrecorder.GetShortenedPerformanceMetrics()
+	ashMetrics = append(ashMetrics, "Ash.Desks.AnimationLatency.DeskActivation", "Ash.Desks.AnimationSmoothness.DeskActivation")
 
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
 		// Open a window within recorder.Run to ensure we collect
@@ -167,7 +164,7 @@ func Run(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "failed to get Google Slides URL")
 		}
 
-		slidesConn, err := cuj.NewTabByURL(ctx, cs, true, slidesURL)
+		slidesConn, err := recorder.NewConn(ctx, br, "Slides", slidesURL, browser.WithNewWindow())
 		if err != nil {
 			return errors.Wrap(err, "failed to open a Google Slides presentation")
 		}
@@ -188,6 +185,11 @@ func Run(ctx context.Context, s *testing.State) {
 			}
 
 			recorder.Annotate(ctx, "Cycle_through_desks_with_"+deskSwitcher.name)
+
+			stopSnapshot, err := recorder.StartSnapshot(ctx, deskSwitcher.name, ashMetrics, browserMetrics)
+			if err != nil {
+				return errors.Wrapf(err, "failed to start snapshot for %s", deskSwitcher.name)
+			}
 
 			i := 0
 			for endTime := time.Now().Add(deskSwitchingDuration); time.Now().Before(endTime); {
@@ -240,6 +242,10 @@ func Run(ctx context.Context, s *testing.State) {
 				cycles++
 			}
 
+			if err := stopSnapshot(ctx); err != nil {
+				return errors.Wrapf(err, "failed to stop snapshot for %s", deskSwitcher.name)
+			}
+
 			// Ensure that none of the windows crashed during the test.
 			ws, err := ash.GetAllWindows(ctx, tconn)
 			if err != nil {
@@ -255,7 +261,7 @@ func Run(ctx context.Context, s *testing.State) {
 
 		const chromeVersionURL = chrome.VersionURL
 		// Navigate away to record PageLoad.PaintTiming.NavigationToLargestContentfulPaint2.
-		if err := slidesConn.Conn.Navigate(ctx, chromeVersionURL); err != nil {
+		if err := slidesConn.Navigate(ctx, chromeVersionURL); err != nil {
 			if !strings.Contains(err.Error(), "the connection is closing") {
 				return errors.Wrapf(err, "failed to navigate to %s", chromeVersionURL)
 			}
@@ -266,11 +272,11 @@ func Run(ctx context.Context, s *testing.State) {
 				return strings.Contains(t.URL, slidesURL)
 			}
 			br := cr.Browser()
-			slidesConn.Conn, err = br.NewConnForTarget(ctx, matcher)
+			slidesConn, err = br.NewConnForTarget(ctx, matcher)
 			if err != nil {
 				return errors.Wrap(err, "failed to reconnect to Google Slides tab")
 			}
-			if err := slidesConn.Conn.Navigate(ctx, chromeVersionURL); err != nil {
+			if err := slidesConn.Navigate(ctx, chromeVersionURL); err != nil {
 				return errors.Wrapf(err, "failed to navigate to %s", chromeVersionURL)
 			}
 		}

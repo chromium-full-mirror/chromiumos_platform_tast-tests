@@ -247,6 +247,9 @@ func Run(ctx context.Context, s *testing.State) {
 	// Dump UI tree and screenshot before the cleanupPWA function.
 	defer faillog.DumpUITreeWithScreenshotOnError(closeCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 
+	// Get a list of metrics to collect for each test phase.
+	ashMetrics, browserMetrics := cujrecorder.GetShortenedPerformanceMetrics()
+
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
 		recorder.Annotate(ctx, "Open_Aquarium")
 		// Open another Chrome tab so we can save the tab connection.
@@ -286,6 +289,12 @@ func Run(ctx context.Context, s *testing.State) {
 
 		for _, taskSwitcher := range taskSwitchers {
 			recorder.Annotate(ctx, "Switch_windows_by_"+taskSwitcher.name)
+
+			stopSnapshot, err := recorder.StartSnapshot(ctx, taskSwitcher.name, ashMetrics, browserMetrics)
+			if err != nil {
+				return errors.Wrapf(err, "failed to start snapshot for %s", taskSwitcher.name)
+			}
+
 			s.Log(taskSwitcher.description)
 			cycles := 0
 			for endTime := time.Now().Add(taskSwitchingDuration); time.Now().Before(endTime); {
@@ -371,6 +380,10 @@ func Run(ctx context.Context, s *testing.State) {
 				cycles++
 			}
 			s.Logf("Switched task by %s %d times", taskSwitcher.name, cycles)
+
+			if err := stopSnapshot(ctx); err != nil {
+				return errors.Wrapf(err, "failed to stop snapshot for %s", taskSwitcher.name)
+			}
 
 			// Ensure the right number of windows are still opened.
 			if ws, err := ash.GetAllWindows(ctx, tconn); len(ws) != numWindows {
