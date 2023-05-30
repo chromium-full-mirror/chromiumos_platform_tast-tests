@@ -134,6 +134,7 @@ func MeetEffects(ctx context.Context, s *testing.State) {
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_with_meet")
 
 	if err := uiauto.Combine("configure Meet",
+		gm.MuteIfMicAvailable,
 		gm.ChangeSettings(
 			gm.SetSendResolution(googlemeet.ResolutionHD720P),
 		),

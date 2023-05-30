@@ -107,6 +107,7 @@ func MeetEffectsResolution(ctx context.Context, s *testing.State) {
 
 	resolution := s.Param().(string)
 	if err := uiauto.Combine("configure Meet",
+		gm.MuteIfMicAvailable,
 		gm.ChangeSettings(
 			gm.SetSendResolution(googlemeet.ResolutionOption(resolution)),
 		),
