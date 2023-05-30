@@ -68,15 +68,12 @@ func init() {
 					uiJobGoal:  upstartcommon.StopGoal,
 					uiJobState: upstartcommon.WaitingState,
 				},
-				ExtraAttr: []string{
-					"informational",
-					"group:criticalstaging",
-				},
 			},
 		},
 	})
 }
 
+// AloopLoadedFixture tests the AloopLoaded fixture.
 func AloopLoadedFixture(ctx context.Context, s *testing.State) {
 	const (
 		aloopModulePath = "/sys/module/snd_aloop/"
