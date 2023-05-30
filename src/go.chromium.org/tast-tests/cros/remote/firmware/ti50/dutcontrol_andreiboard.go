@@ -20,7 +20,6 @@ import (
 
 	common "go.chromium.org/tast-tests/cros/common/firmware/ti50"
 	"go.chromium.org/tast-tests/cros/remote/firmware/ti50/dutcontrol"
-
 	"go.chromium.org/tast/core/errors"
 )
 
@@ -69,7 +68,7 @@ func NewDUTControlAndreiboard(grpcConn *grpc.ClientConn, bufSize int, readTimeou
 		DataLen:     consoleDataLen,
 		ReadTimeout: readTimeout,
 	}
-	gscConsole := common.NewBufferedConsole("andrieboard.log", bufSize, gscOpener)
+	gscConsole := common.NewBufferedConsole("andreiboard.log", bufSize, gscOpener)
 
 	ecOpener := &DUTControlRawUARTPortOpener{
 		Client:      dutControlClient,
@@ -183,9 +182,9 @@ func (a *DUTControlAndreiboard) WriteSerial(ctx context.Context, bytes []byte) e
 	return a.gscConsole.WriteSerial(ctx, bytes)
 }
 
-// FlushSerial flushes un-read/written chars on gsc console.
-func (a *DUTControlAndreiboard) FlushSerial(ctx context.Context) error {
-	return a.gscConsole.FlushSerial(ctx)
+// ClearInput clears any pending input that hasn't been read yet.
+func (a *DUTControlAndreiboard) ClearInput(ctx context.Context) error {
+	return a.gscConsole.ClearInput(ctx)
 }
 
 // Close closes all open consoles.

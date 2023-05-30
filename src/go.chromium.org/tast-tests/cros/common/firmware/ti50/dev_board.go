@@ -33,8 +33,8 @@ type DevBoard interface {
 	ReadSerialSubmatch(ctx context.Context, re *regexp.Regexp) (output [][]byte, err error)
 	// WriteSerial writes to gsc console.
 	WriteSerial(ctx context.Context, bytes []byte) error
-	// FlushSerial flushes un-read/written chars on gsc console.
-	FlushSerial(ctx context.Context) error
+	// ClearInput clears any pending input that hasn't been read yet.
+	ClearInput(ctx context.Context) error
 	// OpenTitanToolCommand runs an arbitrary OpenTitan tool command (without up-/downloading any files).
 	OpenTitanToolCommand(ctx context.Context, cmd string, args ...string) (output map[string]interface{}, err error)
 	// PlainCommand executes a opentitantool subcommand that uses no file arguments.

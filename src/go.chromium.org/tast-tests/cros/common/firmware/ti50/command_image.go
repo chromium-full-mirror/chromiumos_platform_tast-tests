@@ -155,7 +155,7 @@ func (i *CommandImage) WaitUntilMatch(ctx context.Context, re *regexp.Regexp, in
 
 // GetPrompt gets a fresh prompt from the image by  the prompt.
 func (i *CommandImage) GetPrompt(ctx context.Context) error {
-	if err := i.board.FlushSerial(ctx); err != nil {
+	if err := i.board.ClearInput(ctx); err != nil {
 		return err
 	}
 	_, err := i.Command(ctx, "")

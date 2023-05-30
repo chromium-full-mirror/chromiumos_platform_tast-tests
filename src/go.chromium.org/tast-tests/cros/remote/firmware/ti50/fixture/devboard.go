@@ -13,7 +13,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
 	remoteTi50 "go.chromium.org/tast-tests/cros/remote/firmware/ti50"
-
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -162,6 +161,8 @@ func (i *devboardFixture) PreTest(ctx context.Context, s *testing.FixtTestState)
 }
 
 func (i *devboardFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
+	// Ensure any pending console output is written to log file.
+	i.v.devboard.ClearInput(ctx)
 	testing.ContextLog(ctx, "Ending OTT session")
 	// At this point, we should end the opentitantool session, that is, stop host emulator, or
 	// disconnect from devboard.

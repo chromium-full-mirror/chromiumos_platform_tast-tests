@@ -9,14 +9,11 @@ import (
 	"io"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/firmware/serial"
 	"go.chromium.org/tast-tests/cros/remote/firmware/ti50/dutcontrol"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
-
-// ErrReadTimeout indicates that a read operation exceeded the readTimeout configured on the port.
-// Subsequent reads may still succeed depending on the state of the port.
-var ErrReadTimeout = errors.New("read timeout")
 
 // DUTControlPort is a dutcontrol console port.
 type DUTControlPort struct {
@@ -49,7 +46,7 @@ func (p *DUTControlPort) Read(ctx context.Context, buf []byte) (n int, err error
 		}
 		return n, nil
 	case <-timer.C:
-		return 0, ErrReadTimeout
+		return 0, serial.ErrReadTimeout
 	case <-ctx.Done():
 		return 0, ctx.Err()
 	}

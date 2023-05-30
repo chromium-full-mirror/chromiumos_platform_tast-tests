@@ -5,33 +5,34 @@
 package ti50
 
 import (
+	"bytes"
 	"context"
 	"os"
 	"path/filepath"
 	"regexp"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/common/firmware/serial"
-
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
 // BufferedConsole represents a UART console that can be read or written to.
 type BufferedConsole struct {
-	filename              string
-	targetBufferUnread    []byte
-	targetBufferUnreadLen int
-	portOpener            serial.PortOpener
-	port                  serial.Port
-	logfile               *os.File
+	filename   string
+	readBuf    []byte
+	readBufLen int
+	portOpener serial.PortOpener
+	port       serial.Port
+	logfile    *os.File
 }
 
 // NewBufferedConsole returns a new buffered console.
 func NewBufferedConsole(filename string, bufMax int, portOpener serial.PortOpener) *BufferedConsole {
 	return &BufferedConsole{
-		filename:           filename,
-		targetBufferUnread: make([]byte, bufMax),
-		portOpener:         portOpener,
+		filename:   filename,
+		readBuf:    make([]byte, bufMax),
+		portOpener: portOpener,
 	}
 }
 
@@ -49,7 +50,7 @@ func (c *BufferedConsole) Open(ctx context.Context) error {
 		c.port.Close(ctx)
 		return errors.New("failed to get directory for saving files")
 	}
-	f, err := os.OpenFile(filepath.Join(dir, "andreiboard.log"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	f, err := os.OpenFile(filepath.Join(dir, c.filename), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		c.port.Close(ctx)
 		return err
@@ -84,98 +85,80 @@ func (c *BufferedConsole) appendToLogFile(ctx context.Context, buf []byte) error
 	if c.logfile == nil {
 		return errors.New("Logfile not opened")
 	}
+	ts := time.Now().UTC().Format("2006-01-02T15:04:05.000Z")
+	buf = bytes.ReplaceAll(buf, []byte("\n"), []byte("\n"+ts+" "))
 	_, err := c.logfile.Write(buf)
 	return err
 }
 
+func (c *BufferedConsole) readSerial(ctx context.Context) error {
+	if err := c.Open(ctx); err != nil {
+		return errors.Wrap(err, "port open error")
+	}
+	if c.readBufLen == len(c.readBuf) {
+		return errors.New("buffer full")
+	}
+	n, err := c.port.Read(ctx, c.readBuf[c.readBufLen:])
+	if n > 0 {
+		if err := c.appendToLogFile(ctx, c.readBuf[c.readBufLen:c.readBufLen+n]); err != nil {
+			testing.ContextLog(ctx, "Log file error: ", err)
+		}
+	}
+	c.readBufLen += n
+	if err != nil {
+		return errors.Wrap(err, "port read error")
+	}
+	if n == 0 {
+		return errors.New("read nothing")
+	}
+	return nil
+}
+
 // ReadSerialSubmatch reads from the serial port until regex is matched.
 func (c *BufferedConsole) ReadSerialSubmatch(ctx context.Context, re *regexp.Regexp) (output [][]byte, err error) {
-	if err := c.Open(ctx); err != nil {
-		return nil, errors.Wrap(err, "port open error")
-	}
-
-	buf := make([]byte, len(c.targetBufferUnread))
-	total := copy(buf, c.targetBufferUnread[:c.targetBufferUnreadLen])
 	for {
-		indices := re.FindSubmatchIndex(buf[:total])
+		indices := re.FindSubmatchIndex(c.readBuf[:c.readBufLen])
 		if indices != nil {
-			c.targetBufferUnreadLen = copy(c.targetBufferUnread, buf[indices[1]:total])
-			return re.FindSubmatch(buf[:total]), nil
+			buf := make([]byte, indices[1])
+			copy(buf, c.readBuf[:indices[1]])
+			c.readBufLen = copy(c.readBuf, c.readBuf[indices[1]:c.readBufLen])
+			return re.FindSubmatch(buf), nil
 		}
-		if total == len(c.targetBufferUnread) {
-			c.targetBufferUnreadLen = copy(c.targetBufferUnread, buf)
-			return nil, errors.Errorf("buffer is full (wanted %s)", re)
-		}
-		current, err := c.port.Read(ctx, buf[total:])
-		if current > 0 {
-			if err := c.appendToLogFile(ctx, buf[total:total+current]); err != nil {
-				testing.ContextLog(ctx, "Log file error: ", err)
-			}
-		}
-		total += current
+		err := c.readSerial(ctx)
 		if err != nil {
-			c.targetBufferUnreadLen = copy(c.targetBufferUnread, buf[:total])
-			return nil, errors.Wrapf(err, "port read error (wanted %s)", re)
-		}
-		if current == 0 {
-			break
+			return nil, errors.Wrapf(err, "(wanted %s)", re)
 		}
 	}
-
-	c.targetBufferUnreadLen = copy(c.targetBufferUnread, buf[:total])
-	return nil, errors.New("failed to find match")
 }
 
 // ReadSerialBytes reads from the serial port until number of bytes have been read.
 func (c *BufferedConsole) ReadSerialBytes(ctx context.Context, size int) (output []byte, err error) {
-	if err := c.Open(ctx); err != nil {
-		return nil, errors.Wrap(err, "port open error")
-	}
-
 	for {
-		if c.targetBufferUnreadLen >= size {
+		if c.readBufLen >= size {
 			buf := make([]byte, size)
-			copy(buf, c.targetBufferUnread)
+			copy(buf, c.readBuf)
 			// Remove the buffered data we are sending to caller
-			c.targetBufferUnreadLen = copy(c.targetBufferUnread, c.targetBufferUnread[size:c.targetBufferUnreadLen])
+			c.readBufLen = copy(c.readBuf, c.readBuf[size:c.readBufLen])
 			return buf, nil
 		}
 		// Try to read from port since we don't have enough data yet
-		current, err := c.port.Read(ctx, c.targetBufferUnread[c.targetBufferUnreadLen:])
-		if current > 0 {
-			if err := c.appendToLogFile(ctx, c.targetBufferUnread[c.targetBufferUnreadLen:c.targetBufferUnreadLen+current]); err != nil {
-				testing.ContextLog(ctx, "Log file error: ", err)
-			}
-		}
-		c.targetBufferUnreadLen += current
+		err := c.readSerial(ctx)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to get specified number of bytes")
-		}
-		if current == 0 {
-			return nil, errors.New("failed to get specified number of bytes")
 		}
 	}
 }
 
 // ClearInput clears any pending input that hasn't been read yet.
 func (c *BufferedConsole) ClearInput(ctx context.Context) error {
-	c.targetBufferUnreadLen = 0
-	if err := c.Open(ctx); err != nil {
-		return errors.Wrap(err, "port open error")
-	}
+	c.readBufLen = 0
 	for {
-		// Try to read from port since we don't have enough data yet
-		current, err := c.port.Read(ctx, c.targetBufferUnread)
-		if current > 0 {
-			if err := c.appendToLogFile(ctx, c.targetBufferUnread[:current]); err != nil {
-				testing.ContextLog(ctx, "Log file error: ", err)
-			}
-		}
-		if err != nil {
-			return errors.Wrap(err, "failed to clear input")
-		}
-		if current == 0 {
+		err := c.readSerial(ctx)
+		c.readBufLen = 0
+		if errors.Is(err, serial.ErrReadTimeout) {
 			return nil
+		} else if err != nil {
+			return err
 		}
 	}
 }
@@ -199,7 +182,7 @@ func (c *BufferedConsole) WriteSerial(ctx context.Context, b []byte) error {
 
 // FlushSerial flushes un-read/written chars.
 func (c *BufferedConsole) FlushSerial(ctx context.Context) error {
-	c.targetBufferUnreadLen = 0
+	c.readBufLen = 0
 	if c.port != nil {
 		err := c.port.Flush(ctx)
 		if err != nil {
