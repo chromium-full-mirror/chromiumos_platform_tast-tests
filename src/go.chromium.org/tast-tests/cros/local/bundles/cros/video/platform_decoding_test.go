@@ -1524,9 +1524,9 @@ func TestPlatformDecodingParams(t *testing.T) {
 		DecoderArgsBuilder: "platform.V4L2StatelessDecodeArgs",
 		Files:              av1Files,
 		Timeout:            defaultTimeout,
-		SoftwareDeps:       []string{"v4l2_codec"},
+		SoftwareDeps:       []string{"v4l2_codec", caps.HWDecodeAV1},
 		// TODO(b/242075797): use HW capabilities.
-		HardwareDeps: "hwdep.SupportsV4L2StatelessVideoDecoding(), hwdep.Model(\"tomato\", \"dojo\")",
+		HardwareDeps: "hwdep.SupportsV4L2StatelessVideoDecoding()",
 		Metadata:     genExtraData(av1Files),
 		Attr:         []string{"graphics_video_av1", "graphics_perbuild"},
 	})
@@ -1540,9 +1540,9 @@ func TestPlatformDecodingParams(t *testing.T) {
 				DecoderArgsBuilder: "platform.V4L2StatelessDecodeArgs",
 				Files:              files,
 				Timeout:            defaultTimeout,
-				SoftwareDeps:       []string{"v4l2_codec"},
+				SoftwareDeps:       []string{"v4l2_codec", caps.HWDecodeAV1},
 				// TODO(b/242075797): use HW capabilities.
-				HardwareDeps: "hwdep.SupportsV4L2StatelessVideoDecoding(), hwdep.Model(\"tomato\", \"dojo\")",
+				HardwareDeps: "hwdep.SupportsV4L2StatelessVideoDecoding()",
 				Metadata:     genExtraData(files),
 				Attr:         []string{"graphics_video_av1", "graphics_perbuild"},
 			}
