@@ -93,7 +93,7 @@ func init() {
 			ExtraAttr: []string{"group:mainline", "informational"},
 			ExtraData: []string{homeDataNamePiX86},
 			ExtraSoftwareDeps: []string{
-				"android_vm",
+				"android_vm_r",
 				"amd64",
 			},
 		}, {
@@ -107,7 +107,7 @@ func init() {
 			ExtraAttr: []string{"group:mainline", "informational"},
 			ExtraData: []string{homeDataNamePiArm},
 			ExtraSoftwareDeps: []string{
-				"android_vm",
+				"android_vm_r",
 				"arm",
 			},
 		}, {
@@ -124,7 +124,7 @@ func init() {
 				pci.SearchFlag(&policy.ArcEnabled{}, pci.VerifiedFunctionalityOS),
 			},
 			ExtraSoftwareDeps: []string{
-				"android_vm",
+				"android_vm_r",
 				"amd64",
 			},
 		}},
