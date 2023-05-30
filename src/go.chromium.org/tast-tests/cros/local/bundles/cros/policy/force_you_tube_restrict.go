@@ -28,9 +28,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Check if YouTube content restrictions work as specified by the ForceYouTubeRestrict policy",
 		Contacts: []string{
-			"sinhak@google.com",
+			"cros-edu-eng@google.com",
+			"sinhak@google.com", // Test author
 		},
-		BugComponent: "TBA",
+		BugComponent: "b:1363915", // ChromeOS Server Projects > Enterprise Management > Edu Features > Tast tests
 		SoftwareDeps: []string{"chrome"},
 		Attr: []string{
 			"group:golden_tier",

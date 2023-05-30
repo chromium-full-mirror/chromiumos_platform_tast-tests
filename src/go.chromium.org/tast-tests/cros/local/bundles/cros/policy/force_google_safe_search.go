@@ -28,9 +28,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Test the behavior of ForceGoogleSafeSearch policy: check if Google safe search is enabled based on the value of the policy",
 		Contacts: []string{
+			"cros-edu-eng@google.com",
 			"snijhara@google.com", // Test author
 		},
-		BugComponent: "TBA",
+		BugComponent: "b:1363915", // ChromeOS Server Projects > Enterprise Management > Edu Features > Tast tests
 		SoftwareDeps: []string{"chrome"},
 		Attr: []string{
 			"group:golden_tier",

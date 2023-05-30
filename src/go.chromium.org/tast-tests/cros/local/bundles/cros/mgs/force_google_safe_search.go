@@ -24,10 +24,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Verify behavior of ForceGoogleSafeSearch policy on Managed Guest Session",
 		Contacts: []string{
-			"chromeos-kiosk-eng+TAST@google.com",
+			"cros-edu-eng@google.com",
 			"cmfcmf@google.com", // Test author
 		},
-		BugComponent: "b:892153", // ChromeOS > Software > Commercial (Enterprise) > Kiosk
+		BugComponent: "b:1363915", // ChromeOS Server Projects > Enterprise Management > Edu Features > Tast tests
 		SoftwareDeps: []string{"reboot", "chrome"},
 		Attr: []string{
 			"group:golden_tier",
