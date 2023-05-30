@@ -18,7 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/annotations"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/calendarintegration"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/passwordleakdetection"
-	qa "go.chromium.org/tast-tests/cros/local/bundles/cros/policy/quickanswers"
+	policyquickanswers "go.chromium.org/tast-tests/cros/local/bundles/cros/policy/quickanswers"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/spellcheck"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -198,26 +198,26 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 	})
 
 	s.Run(ctx, "quick_answers_service", func(ctx context.Context, s *testing.State) {
-		quickAnswersDefinitionParam := qa.DefinitionTestCase{
+		quickAnswersDefinitionParam := policyquickanswers.DefinitionTestCase{
 			Name:                  "disabled",
 			ShouldFindAnnotation:  false,
 			ShouldShowContextMenu: false,
 			Policy:                &policy.QuickAnswersDefinitionEnabled{Val: false},
 		}
-		if err := qa.TriggerQuickAnswersDefinition(ctx, quickAnswersDefinitionParam, server, br, tconn); err != nil {
+		if err := policyquickanswers.TriggerQuickAnswersDefinition(ctx, quickAnswersDefinitionParam, server, br, tconn); err != nil {
 			s.Fatal("Failed to trigger and verify quick answers definition: ", err)
 		}
 
-		quickAnswersUnitCoversionParam := qa.UnitConversionTestCase{
+		quickAnswersUnitCoversionParam := policyquickanswers.UnitConversionTestCase{
 			Name:                  "disabled",
 			ShouldFindAnnotation:  false,
 			ShouldShowContextMenu: false,
 			Policy:                &policy.QuickAnswersUnitConversionEnabled{Val: false},
 		}
-		if err := qa.TriggerQuickAnswersUnitConversion(ctx, quickAnswersUnitCoversionParam, server, br, tconn); err != nil {
+		if err := policyquickanswers.TriggerQuickAnswersUnitConversion(ctx, quickAnswersUnitCoversionParam, server, br, tconn); err != nil {
 			s.Fatal("Failed to trigger and verify quick answers unit conversion: ", err)
 		}
-		hashCodes = append(hashCodes, qa.AnnotationHashCode)
+		hashCodes = append(hashCodes, policyquickanswers.AnnotationHashCode)
 	})
 
 	s.Run(ctx, "password_leak_detection", func(ctx context.Context, s *testing.State) {
