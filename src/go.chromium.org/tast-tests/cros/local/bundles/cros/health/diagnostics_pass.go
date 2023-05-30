@@ -1,4 +1,4 @@
-// Copyright 2021 The ChromiumOS Authors
+// Copyright 2023 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -18,14 +18,15 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DiagnosticsRun,
+		Func:         DiagnosticsPass,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests that the cros_healthd diagnostic routines can be run without errors",
+		Desc:         "Tests that the cros_healthd diagnostic routines can pass",
 		Contacts:     []string{"cros-tdm-tpe-eng@google.com"},
 		BugComponent: "b:982097",
 		SoftwareDeps: []string{"chrome", "diagnostics"},
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      "crosHealthdRunning",
+		// TODO(b/277548688): Monitor test results and promote stable tests to critical.
 		Params: []testing.Param{{
 			Name:              "battery_capacity",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineBatteryCapacity),
@@ -95,26 +96,18 @@ func init() {
 		}, {
 			Name: "http_firewall",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineHTTPFirewall),
-			// TODO(b/281464322): Promote to critical.
-			ExtraAttr: []string{"informational"},
 		}, {
 			Name: "https_firewall",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineHTTPSFirewall),
-			// TODO(b/281464322): Promote to critical.
-			ExtraAttr: []string{"informational"},
 		}, {
 			Name: "https_latency",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineHTTPSLatency),
 		}, {
 			Name: "memory",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineMemory),
-			// TODO(b/279849842): Promote to critical.
-			ExtraAttr: []string{"informational"},
 		}, {
 			Name: "sensitive_sensor",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineSensitiveSensor),
-			// TODO(b/280388091): Promote to critical.
-			ExtraAttr: []string{"informational"},
 		}, {
 			Name: "fingerprint",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineFingerprint),
@@ -122,8 +115,6 @@ func init() {
 			// cros_config. At this moment, only jinlon and drobit
 			// are enabled.
 			ExtraHardwareDeps: hwdep.D(hwdep.Model("jinlon", "drobit")),
-			// TODO(b/279374234): Promote to critical.
-			ExtraAttr: []string{"informational"},
 		}, {
 			Name: "fingerprint_alive",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineFingerprintAlive),
@@ -131,14 +122,10 @@ func init() {
 			// cros_config. At this moment, only jinlon and drobit
 			// are enabled.
 			ExtraHardwareDeps: hwdep.D(hwdep.Model("jinlon", "drobit")),
-			// TODO(b/279374234): Promote to critical.
-			ExtraAttr: []string{"informational"},
 		}, {
 			Name:              "emmc_lifetime",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineEMMCLifetime),
 			ExtraHardwareDeps: hwdep.D(hwdep.Emmc()),
-			// TODO(b/279707249): Promote to critical.
-			ExtraAttr: []string{"informational"},
 		}, {
 			Name:              "led_lit_up",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineLedLitUp),
@@ -146,45 +133,32 @@ func init() {
 		}, {
 			Name: "audio_set_volume",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineAudioSetVolume),
-			// TODO(b/279670424): Promote to critical.
-			ExtraAttr: []string{"informational"},
 		}, {
 			Name: "audio_set_gain",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineAudioSetGain),
-			// TODO(b/279670424): Promote to critical.
-			ExtraAttr: []string{"informational"},
 		}, {
-			Name: "bluetooth_power",
-			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineBluetoothPower),
-			// TODO(b/280388009): Promote to critical.
-			ExtraAttr:         []string{"informational"},
+			Name:              "bluetooth_power",
+			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineBluetoothPower),
 			ExtraHardwareDeps: hwdep.D(hwdep.Bluetooth()),
 		}, {
-			Name: "bluetooth_discovery",
-			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineBluetoothDiscovery),
-			// TODO(b/280388009): Promote to critical.
-			ExtraAttr:         []string{"informational"},
+			Name:              "bluetooth_discovery",
+			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineBluetoothDiscovery),
 			ExtraHardwareDeps: hwdep.D(hwdep.Bluetooth()),
 		}, {
-			Name: "bluetooth_scanning",
-			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineBluetoothScanning),
-			// TODO(b/280388009): Promote to critical.
-			ExtraAttr:         []string{"informational"},
+			Name:              "bluetooth_scanning",
+			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineBluetoothScanning),
 			ExtraHardwareDeps: hwdep.D(hwdep.Bluetooth()),
 		}, {
 			Name: "disk_read",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineDiskRead),
-			// TODO(b/282664940): Promote to critical.
-			ExtraAttr: []string{"informational"},
 		}},
 	})
 }
 
-// DiagnosticsRun is a paramaterized test that runs supported diagnostic
+// DiagnosticsPass is a paramaterized test that runs supported diagnostic
 // routines through cros_healthd. The purpose of this test is to ensure that the
-// routines can be run without errors, and not to check if the routines pass or
-// fail.
-func DiagnosticsRun(ctx context.Context, s *testing.State) {
+// routines can pass, which is a stricter version of DiagnosticsRun.* test.
+func DiagnosticsPass(ctx context.Context, s *testing.State) {
 	params := s.Param().(croshealthd.RoutineParams)
 	routine := params.Routine
 	s.Logf("Running routine: %s", routine)
@@ -193,20 +167,13 @@ func DiagnosticsRun(ctx context.Context, s *testing.State) {
 		s.Fatalf("Unable to run %s routine: %s", routine, err)
 	}
 
-	// Test a given routine and ensure that it can complete successfully without
-	// crashing or throwing errors. For example, some lab machines might have
-	// old batteries that would fail the diagnostic routines, but this should
-	// not fail the Tast test.
-	if result.Status != croshealthd.StatusPassed &&
-		result.Status != croshealthd.StatusFailed &&
-		result.Status != croshealthd.StatusNotRun {
-		s.Fatalf("Unexpected routine status for %q: got %q; want %q, %q, or %q; message = %q",
-			routine, result.Status, croshealthd.StatusPassed, croshealthd.StatusFailed, croshealthd.StatusNotRun, result.StatusMessage)
+	if result.Status != croshealthd.StatusPassed {
+		s.Fatalf("Unexpected routine status for %q routine : got %q; want Passed; message = %q",
+			routine, result.Status, result.StatusMessage)
 	}
 
-	// Check to see that if the routine was run, the progress is 100%
-	if result.Progress != 100 && result.Status != croshealthd.StatusNotRun {
-		s.Fatalf("Unexpected progress value for %q routine with status %q: got %d; want 100; message = %q",
-			routine, result.Status, result.Progress, result.StatusMessage)
+	if result.Progress != 100 {
+		s.Fatalf("Unexpected progress value for %q routine : got %d; want 100; message = %q",
+			routine, result.Progress, result.StatusMessage)
 	}
 }

@@ -94,6 +94,16 @@ type RoutineParams struct {
 	// cros-config is missing.
 }
 
+// NewRoutineParams creates and returns a diagnostic routine with default test
+// parameters.
+func NewRoutineParams(routine string) RoutineParams {
+	return RoutineParams{
+		Routine:                       routine,
+		Cancel:                        false,
+		DefaultNVMEWearLevelThreshold: 50,
+	}
+}
+
 // RunDiagRoutine runs the specified routine based on `params`. Returns a
 // RoutineResult on success or an error.
 func RunDiagRoutine(ctx context.Context, params RoutineParams) (*RoutineResult, error) {
