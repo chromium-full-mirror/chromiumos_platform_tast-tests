@@ -539,7 +539,7 @@ func (r *Recorder) AnnotateSection(ctx context.Context, annotation string) func(
 	return func(ctx context.Context) {
 		r.Annotate(ctx, annotation+"_end")
 		r.pv.Set(perf.Metric{
-			Name:      "AnnotationSectionDuration" + annotation,
+			Name:      "AnnotationSectionDuration." + annotation,
 			Unit:      "s",
 			Direction: perf.SmallerIsBetter,
 		}, float64(time.Since(startTime).Seconds()))
