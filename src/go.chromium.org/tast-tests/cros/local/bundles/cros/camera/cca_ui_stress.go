@@ -69,6 +69,11 @@ func init() {
 			Fixture:   "ccaTestBridgeReadyWithFakeCameraWithoutFakeScene",
 			Timeout:   5 * time.Minute,
 		}, {
+			Name:      "fake_hal",
+			ExtraAttr: []string{"group:mainline", "informational", "group:camera-libcamera"},
+			Fixture:   "ccaTestBridgeReadyWithFakeHALCamera",
+			Timeout:   5 * time.Minute,
+		}, {
 			// For stress testing manually with real camera and longer timeout.
 			Name:              "manual",
 			ExtraSoftwareDeps: []string{caps.BuiltinCamera},
@@ -399,6 +404,7 @@ func takeActionsRandomly(ctx context.Context, s *testing.State, app *cca.App) er
 	return nil
 }
 
+// CCAUIStress opens CCA and stress common operations.
 func CCAUIStress(ctx context.Context, s *testing.State) {
 	runTestWithApp := s.FixtValue().(cca.FixtureData).RunTestWithApp
 	s.FixtValue().(cca.FixtureData).SetDebugParams(cca.DebugParams{SaveScreenshotWhenFail: true, SaveCameraFolderWhenFail: true})
