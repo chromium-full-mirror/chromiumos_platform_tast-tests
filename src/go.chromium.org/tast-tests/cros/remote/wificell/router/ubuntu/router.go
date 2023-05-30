@@ -287,7 +287,19 @@ func (r *Router) netDevWithPhyID(ctx context.Context, phyID int, t iw.IfType) (*
 // monitorOnInterface finds an available monitor type interface on the same phy as a
 // busy interface with name=iface.
 func (r *Router) monitorOnInterface(ctx context.Context, iface string) (*iw.NetDev, error) {
-	return nil, nil
+	var ndev *iw.NetDev
+	// Find phy ID of iface.
+	for name, nd := range r.im.Busy {
+		if name == iface {
+			ndev = nd
+			break
+		}
+	}
+	if ndev == nil {
+		return nil, errors.Errorf("cannot find busy interface %s", iface)
+	}
+	phyID := ndev.PhyNum
+	return r.netDevWithPhyID(ctx, phyID, iw.IfTypeMonitor)
 }
 
 // StartHostapd starts the hostapd server.
@@ -468,12 +480,31 @@ func (r *Router) StopRawCapturer(ctx context.Context, capturer *pcap.Capturer) e
 
 // NewFrameSender creates a new framesender.Sender object.
 func (r *Router) NewFrameSender(ctx context.Context, iface string) (ret *framesender.Sender, retErr error) {
-	return nil, nil
+	nd, err := r.monitorOnInterface(ctx, iface)
+	if err != nil {
+		return nil, err
+	}
+	r.im.SetBusy(nd.IfName)
+	defer func() {
+		if retErr != nil {
+			r.im.SetAvailable(nd.IfName)
+		}
+	}()
+
+	if err := r.cloneMAC(ctx, nd.IfName, iface); err != nil {
+		return nil, errors.Wrap(err, "failed to clone MAC")
+	}
+	if err := r.ipr.SetLinkUp(ctx, nd.IfName); err != nil {
+		return nil, err
+	}
+	return framesender.New(r.host, nd.IfName, r.workDir()), nil
 }
 
 // CloseFrameSender closes frame sender and releases related resources.
 func (r *Router) CloseFrameSender(ctx context.Context, s *framesender.Sender) error {
-	return nil
+	err := r.ipr.SetLinkDown(ctx, s.Interface())
+	r.im.SetAvailable(s.Interface())
+	return err
 }
 
 // workDir returns the directory to place temporary files on router.
