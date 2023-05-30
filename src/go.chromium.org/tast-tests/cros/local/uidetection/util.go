@@ -79,25 +79,7 @@ func debugScreenshotPrefix(desc string) string {
 // 1. The screenshot that was sent to ACUITI.
 //
 // 2. The screenshot with detection outlines drawn over the image.
-func saveDebugImages(ctx context.Context, image image.Image, transformedImage []byte, locations []Location, desc string) {
-	// Use the transformed image instead of the raw screenshot if available,
-	// because this is the one that was sent to ACUITI.
-	if len(transformedImage) != 0 {
-		var err error
-		image, err = decodePNG(transformedImage)
-		if err != nil {
-			testing.ContextLogf(ctx, "INFO: couldn't save debug screenshots. Failed to decode transformed image: %s", err)
-			return
-		}
-
-		// Scale the bounding boxes to the resized image.
-		var scaledLocations []Location
-		for _, loc := range locations {
-			scaledLocations = append(scaledLocations, loc.withScale(resizingScale))
-		}
-		locations = scaledLocations
-	}
-
+func saveDebugImages(ctx context.Context, image image.Image, locations []Location, desc string) {
 	filenamePrefix := debugScreenshotPrefix(desc)
 	debugFilename := filenamePrefix + ".png"
 	if err := saveImageToOutput(ctx, image, debugFilename); err != nil {

@@ -339,7 +339,7 @@ func (f *Finder) locationPx(ctx context.Context, uda *Context, scaleFactor float
 		return nil, err
 	}
 
-	response, err := uda.detector.sendDetectionRequest(ctx, screenshotPng, f.request, uda.screenshotResizingStrategy, testMetadata(ctx, uda))
+	response, err := uda.detector.sendDetectionRequest(ctx, screenshotPng, f.request, uda.screenshotResizingStrategy, testMetadata(ctx, uda), uda.saveResizedScreenshots)
 	if err != nil {
 		return failure(errors.Wrap(err, "failed to resolve the UI detection request"))
 	}
@@ -361,7 +361,8 @@ func (f *Finder) locationPx(ctx context.Context, uda *Context, scaleFactor float
 			})
 	}
 
-	saveDebugImages(ctx, screenshot, response.TransformedImagePng, locations, f.desc)
+	saveDebugImages(ctx, screenshot, locations, f.desc)
+	handleResizedScreenshots(ctx, uda, response.ResizingScaleFactor, response.TransformedImagePng, locations, f.desc)
 
 	numMatches := len(locations)
 	switch {
@@ -381,4 +382,42 @@ func (f *Finder) locationPx(ctx context.Context, uda *Context, scaleFactor float
 		}
 		return &locations[f.nth], nil
 	}
+}
+
+func handleResizedScreenshots(ctx context.Context, uda *Context, resizingScaleFactor float32, transformedImagePng []byte, locations []Location, desc string) {
+	if resizingScaleFactor == 1.0 {
+		// Resizing not used.
+		return
+	}
+
+	if uda.screenshotResizingStrategy == ResizeAsFallback {
+		testing.ContextLogf(ctx,
+			"INFO: resized screenshot by %.1fx looking for element %q, as it was not detected on the original screenshot.",
+			resizingScaleFactor,
+			desc,
+		)
+	}
+
+	if uda.saveResizedScreenshots && len(transformedImagePng) == 0 {
+		testing.ContextLog(ctx, "INFO: a resized debug image was requested, but was not returned. Image size may have been too large.")
+		return
+	} else if !uda.saveResizedScreenshots || len(transformedImagePng) == 0 {
+		// No resized screenshot to save.
+		return
+	}
+
+	transformedImage, err := decodePNG(transformedImagePng)
+	if err != nil {
+		testing.ContextLogf(ctx, "INFO: couldn't save debug screenshots. Failed to decode transformed image: %s", err)
+		return
+	}
+
+	// Scale the bounding boxes to the resized image.
+	var scaledLocations []Location
+	for _, loc := range locations {
+		scaledLocations = append(scaledLocations, loc.withScale(resizingScale))
+	}
+	locations = scaledLocations
+
+	saveDebugImages(ctx, transformedImage, locations, desc+"-resized")
 }

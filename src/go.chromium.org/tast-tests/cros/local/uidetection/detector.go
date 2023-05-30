@@ -17,6 +17,8 @@ import (
 	"go.chromium.org/tast/core/errors"
 )
 
+const maxMsgSizeBytes = 20 * 1048576 // 20MB
+
 type uiDetector struct {
 	keyType string
 	key     string
@@ -36,15 +38,16 @@ const retryPolicy = `{
 		}
 	}]}`
 
-func (d *uiDetector) sendDetectionRequest(ctx context.Context, imagePng []byte, request *pb.DetectionRequest, resizingStrategy ScreenshotResizingStrategy, testMetadata *pb.TestMetadata) (*pb.UiDetectionResponse, error) {
+func (d *uiDetector) sendDetectionRequest(ctx context.Context, imagePng []byte, request *pb.DetectionRequest, resizingStrategy ScreenshotResizingStrategy, testMetadata *pb.TestMetadata, resizedDebugImagesEnabled bool) (*pb.UiDetectionResponse, error) {
 	// Create the UI detection request.
 	resizeImage := resizingStrategy == ResizeAsFallback
 	uiDetectionRequest := &pb.UiDetectionRequest{
-		ImagePng:           imagePng,
-		Request:            request,
-		ResizeImage:        &resizeImage,
-		ForceImageResizing: resizingStrategy == AlwaysResize,
-		TestMetadata:       testMetadata,
+		ImagePng:               imagePng,
+		Request:                request,
+		ResizeImage:            &resizeImage,
+		ForceImageResizing:     resizingStrategy == AlwaysResize,
+		TestMetadata:           testMetadata,
+		ReturnTransformedImage: resizedDebugImagesEnabled,
 	}
 
 	ctx = metadata.NewOutgoingContext(ctx, metadata.Pairs(d.keyType, d.key))
@@ -62,5 +65,5 @@ func (d *uiDetector) sendDetectionRequest(ctx context.Context, imagePng []byte, 
 
 	client := pb.NewUiDetectionServiceClient(conn)
 
-	return client.ExecuteDetection(ctx, uiDetectionRequest)
+	return client.ExecuteDetection(ctx, uiDetectionRequest, grpc.MaxCallRecvMsgSize(maxMsgSizeBytes))
 }

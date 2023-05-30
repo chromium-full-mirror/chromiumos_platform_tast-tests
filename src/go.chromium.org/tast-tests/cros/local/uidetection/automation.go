@@ -60,10 +60,10 @@ type ScreenshotResizingStrategy int
 
 // Holds all the resizing strategies that can be used.
 const (
-	// Default. Do not resize the original image. This minimises detection
+	// Do not resize the original image. This minimises detection
 	// latency.
 	ResizingDisabled ScreenshotResizingStrategy = iota
-	// Fall back to the resized image if no elements were detected using the
+	// Default. Fall back to the resized image if no elements were detected using the
 	// original image.
 	ResizeAsFallback
 	// Start with the resized image, and fall back to the original image if
@@ -83,6 +83,7 @@ type Context struct {
 	screenshotStrategy           ScreenshotStrategy
 	screenshotResizingStrategy   ScreenshotResizingStrategy
 	disableDynamicElementMasking bool
+	saveResizedScreenshots       bool
 }
 
 // New returns a new UI Detection automation instance.
@@ -100,7 +101,7 @@ func New(t *chrome.TestConn, keyType, key, server string) *Context {
 		},
 		options:                    DefaultOptions(),
 		screenshotStrategy:         StableScreenshot,
-		screenshotResizingStrategy: ResizingDisabled,
+		screenshotResizingStrategy: ResizeAsFallback,
 	}
 }
 
@@ -111,13 +112,15 @@ func NewDefault(t *chrome.TestConn) *Context {
 
 func (uda *Context) copy() *Context {
 	return &Context{
-		tconn:                      uda.tconn,
-		detector:                   uda.detector,
-		pollOpts:                   uda.pollOpts,
-		options:                    uda.options,
-		deviceInfo:                 uda.deviceInfo,
-		screenshotStrategy:         uda.screenshotStrategy,
-		screenshotResizingStrategy: uda.screenshotResizingStrategy,
+		tconn:                        uda.tconn,
+		detector:                     uda.detector,
+		pollOpts:                     uda.pollOpts,
+		options:                      uda.options,
+		deviceInfo:                   uda.deviceInfo,
+		screenshotStrategy:           uda.screenshotStrategy,
+		screenshotResizingStrategy:   uda.screenshotResizingStrategy,
+		disableDynamicElementMasking: uda.disableDynamicElementMasking,
+		saveResizedScreenshots:       uda.saveResizedScreenshots,
 	}
 }
 
@@ -169,6 +172,15 @@ func (uda *Context) WithScreenshotResizing() *Context {
 func (uda *Context) DisableDynamicElementMasking() *Context {
 	c := uda.copy()
 	c.disableDynamicElementMasking = true
+	return c
+}
+
+// SaveResizedScreenshots saves resized screenshots to the Tast output
+// directory for debugging. This option has a time and network overhead and is
+// intended for local development only.
+func (uda *Context) SaveResizedScreenshots() *Context {
+	c := uda.copy()
+	c.saveResizedScreenshots = true
 	return c
 }
 

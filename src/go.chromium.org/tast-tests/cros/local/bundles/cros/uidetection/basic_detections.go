@@ -124,6 +124,7 @@ func BasicDetections(ctx context.Context, s *testing.State) {
 		serverAddr := "staging-chromeosuidetection.sandbox.googleapis.com:443"
 		ud = uidetection.New(tconn, keyType, key, serverAddr)
 	}
+	ud = ud.SaveResizedScreenshots()
 
 	ui := uiauto.New(tconn)
 
