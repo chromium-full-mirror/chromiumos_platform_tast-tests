@@ -6,6 +6,7 @@ package network
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/shillconst"
@@ -251,7 +252,7 @@ func DNSProxy(ctx context.Context, s *testing.State) {
 			ns = append(ns, ip.NameServers...)
 		}
 		s.Log("Found nameservers: ", ns)
-		if err := m.SetDNSProxyDOHProviders(ctx, dns.ExampleDoHProvider, ns); err != nil {
+		if err := m.SetDNSProxyDOHProviders(ctx, map[string]interface{}{dns.ExampleDoHProvider: strings.Join(ns[:], ",")}); err != nil {
 			s.Fatal("Failed to set dns-proxy DoH providers: ", err)
 		}
 

@@ -699,12 +699,10 @@ func (m *Manager) RemoveFakeUserProfile(ctx context.Context, name string) error 
 	return nil
 }
 
-// SetDNSProxyDOHProviders updates the mapping of DoH provider to nameserver(s).
-// This maps all of the nameserver to a single DoH provider.
-func (m *Manager) SetDNSProxyDOHProviders(ctx context.Context, url string, ns []string) error {
-	return m.Call(ctx, "SetDNSProxyDOHProviders", map[string]interface{}{
-		url: strings.Join(ns, ","),
-	}).Err
+// SetDNSProxyDOHProviders updates the mapping of DoH providers to nameserver(s).
+// Nameservers are represented as string separated by ','.
+func (m *Manager) SetDNSProxyDOHProviders(ctx context.Context, dohProviders map[string]interface{}) error {
+	return m.Call(ctx, "SetDNSProxyDOHProviders", dohProviders).Err
 }
 
 // EnablePortalDetection will enable portal detection for the default technologies.
