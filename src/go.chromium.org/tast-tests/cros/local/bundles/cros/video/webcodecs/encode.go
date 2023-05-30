@@ -75,24 +75,24 @@ func VideoDataFiles() []string {
 // If numTemporalLayers is more than 1, then this computes SSIM and PSNR of bitstreams
 // whose represented frames are in temporal layers up to tid.
 func computeBitstreamQuality(ctx context.Context, yuvFile, outDir string, bitstreams [][]byte,
-	codec videotype.Codec, w, h, framerate, tid, numTemporalLayers int, tids []int) (psnr, ssim, vmaf float64, err error) {
+	codec videotype.Codec, w, h, framerate, tid, numTemporalLayers int, tids []int) (psnr, ssim float64, err error) {
 	var bitstreamFile string
 	if tid == numTemporalLayers-1 {
 		bitstreamFile, err = saveBitstream(bitstreams, codec, w, h, framerate)
 		if err != nil {
-			return psnr, ssim, vmaf, errors.Wrap(err, "failed preparing bitstream")
+			return psnr, ssim, errors.Wrap(err, "failed preparing bitstream")
 		}
 		defer os.Remove(bitstreamFile)
 	} else {
 		yuvFile, err = peelLayersFromYUVFile(ctx, yuvFile, w, h, tid, tids)
 		if err != nil {
-			return psnr, ssim, vmaf, errors.Wrap(err, "failed preparing yuv")
+			return psnr, ssim, errors.Wrap(err, "failed preparing yuv")
 		}
 		defer os.Remove(yuvFile)
 
 		bitstreamFile, err = saveTemporalLayerBitstream(bitstreams, codec, w, h, framerate, tid, tids)
 		if err != nil {
-			return psnr, ssim, vmaf, errors.Wrap(err, "failed preparing bitstream")
+			return psnr, ssim, errors.Wrap(err, "failed preparing bitstream")
 		}
 		defer os.Remove(bitstreamFile)
 	}
@@ -107,12 +107,12 @@ func computeBitstreamQuality(ctx context.Context, yuvFile, outDir string, bitstr
 		decoder = encoding.LibaomDecoder
 	}
 
-	psnr, ssim, vmaf, err = encoding.CompareFiles(ctx, decoder, yuvFile, bitstreamFile, outDir, coords.NewSize(w, h))
+	psnr, ssim, err = encoding.CompareFiles(ctx, decoder, yuvFile, bitstreamFile, outDir, coords.NewSize(w, h))
 	if err != nil {
-		return psnr, ssim, vmaf, errors.Wrap(err, "failed to decode and compare results")
+		return psnr, ssim, errors.Wrap(err, "failed to decode and compare results")
 	}
 
-	return psnr, ssim, vmaf, nil
+	return psnr, ssim, nil
 }
 
 // verifyTLStruct verifies temporalLayerIDs matches the expected temporal layer structures.
@@ -241,7 +241,7 @@ func RunEncodeTest(ctx context.Context, cs ash.ConnSource, fileSystem http.FileS
 
 	p := perf.NewValues()
 	for tid := 0; tid < numTemporalLayers; tid++ {
-		psnr, ssim, vmaf, err := computeBitstreamQuality(ctx, yuvFile, outDir, bitstreams,
+		psnr, ssim, err := computeBitstreamQuality(ctx, yuvFile, outDir, bitstreams,
 			testArgs.Codec, config.width, config.height, config.framerate,
 			tid, numTemporalLayers, temporalLayerIds)
 		if err != nil {
@@ -253,17 +253,14 @@ func RunEncodeTest(ctx context.Context, cs ash.ConnSource, fileSystem http.FileS
 
 		psnrStr := "PSNR"
 		ssimStr := "SSIM"
-		vmafStr := "VMAF"
 		if tlEncoding {
 			// +1 because tid is 0-indexed and scalabilityMode identifier
 			// (https://www.w3.org/TR/webrtc-svc/#scalabilitymodes) is 1-indexed.
 			psnrStr = fmt.Sprintf("%s.L1T%d", psnrStr, tid+1)
 			ssimStr = fmt.Sprintf("%s.L1T%d", ssimStr, tid+1)
-			vmafStr = fmt.Sprintf("%s.L1T%d", vmafStr, tid+1)
 		}
-		testing.ContextLogf(ctx, "%s: %fdB", psnrStr, psnr)
-		testing.ContextLogf(ctx, "%s: %f%%", ssimStr, ssim)
-		testing.ContextLogf(ctx, "%s: %f%%", vmafStr, vmaf)
+		testing.ContextLogf(ctx, "%s: %f", psnrStr, psnr)
+		testing.ContextLogf(ctx, "%s: %f", ssimStr, ssim)
 		p.Set(perf.Metric{
 			Name:      ssimStr,
 			Unit:      "percent",
@@ -274,11 +271,6 @@ func RunEncodeTest(ctx context.Context, cs ash.ConnSource, fileSystem http.FileS
 			Unit:      "dB",
 			Direction: perf.BiggerIsBetter,
 		}, psnr)
-		p.Set(perf.Metric{
-			Name:      vmafStr,
-			Unit:      "percent",
-			Direction: perf.BiggerIsBetter,
-		}, vmaf)
 	}
 
 	if err := p.Save(outDir); err != nil {
