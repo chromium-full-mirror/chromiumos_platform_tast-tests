@@ -20,7 +20,6 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
 	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
@@ -113,16 +112,16 @@ func CheckRecReason(ctx context.Context, h *firmware.Helper, ms *firmware.ModeSw
 		return errors.Wrap(err, "failed to remove watchdog for ccd")
 	}
 
-	if err := h.CloseRPCConnection(ctx); err != nil {
-		return errors.Wrap(err, "failed to close RPC connection")
-	}
-
 	if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
 		return errors.Wrap(err, "failed to warm reset DUT")
 	}
 
 	if err := h.RequireServo(ctx); err != nil {
 		return errors.Wrap(err, "failed to init servo")
+	}
+
+	if err := h.CloseRPCConnection(ctx); err != nil {
+		return errors.Wrap(err, "failed to close RPC connection")
 	}
 
 	// Recovery mode requires the DUT to boot the image on the USB.
@@ -387,7 +386,7 @@ func BackupAndRestoreAPFirmwareAndWriteProtect(ctx context.Context, DUT *dut.DUT
 		}
 
 		s.Log("Disable software write protect")
-		if out, err := flash.SoftwareWriteProtectDisable(ctx); err != nil {
+		if out, err := flash.SoftwareWriteProtectDisable(cleanupContext); err != nil {
 			s.Log(out)
 			s.Error("Failed to disable software write protect: ", err)
 		}
