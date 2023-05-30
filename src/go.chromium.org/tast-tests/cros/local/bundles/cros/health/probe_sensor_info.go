@@ -30,7 +30,7 @@ func init() {
 		Contacts:     []string{"cros-tdm-tpe-eng@google.com"},
 		BugComponent: "b:982097",
 		// TODO(b/251306646): Promote to critical.
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		SoftwareDeps: []string{"chrome", "diagnostics"},
 		Fixture:      "crosHealthdRunning",
 	})
@@ -125,6 +125,7 @@ func validateSensorAttributes(ctx context.Context, info *sensorInfo) error {
 	return nil
 }
 
+// ProbeSensorInfo is the main function of this tast test.
 func ProbeSensorInfo(ctx context.Context, s *testing.State) {
 	params := croshealthd.TelemParams{Category: croshealthd.TelemCategorySensor}
 	var info sensorInfo
