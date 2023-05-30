@@ -23,6 +23,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -92,10 +93,6 @@ func MultipleArcProfile(ctx context.Context, s *testing.State) {
 	}
 	defer d.Close(ctx)
 
-	if err := openARCSettings(ctx, tconn); err != nil {
-		s.Fatal("Failed to Open ARC Settings: ", err)
-	}
-
 	s.Log("Add ARC Account")
 	if err := addARCAccount(ctx, d, tconn, s); err != nil {
 		s.Fatal("Failed to Add Account: ", err)
@@ -160,12 +157,34 @@ func addARCAccount(ctx context.Context, arcDevice *androidui.Device, tconn *chro
 	secondUser := s.RequiredVar("arc.parentUser")
 	secondPassword := s.RequiredVar("arc.parentPassword")
 
-	if err := arc.ClickAddAccountInSettings(ctx, arcDevice, tconn); err != nil {
-		return errors.Wrap(err, "failed to open Add account dialog from ARC")
+	// Set up keyboard.
+	kb, err := input.Keyboard(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get keyboard")
 	}
+	defer kb.Close(ctx)
 
-	if err := accountmanager.AddAccount(ctx, tconn, secondUser, secondPassword); err != nil {
-		return errors.Wrap(err, "failed to add account")
+	if err := uiauto.Retry(3, func(ctx context.Context) error {
+		// Press "Esc" to close the window that left by previous try.
+		if err := kb.Accel(ctx, "Esc"); err != nil {
+			return errors.Wrap(err, "failed to press Esc key")
+		}
+
+		if err := openARCSettings(ctx, tconn); err != nil {
+			s.Fatal("Failed to Open ARC Settings: ", err)
+		}
+
+		if err := arc.ClickAddAccountInSettings(ctx, arcDevice, tconn); err != nil {
+			return errors.Wrap(err, "failed to open Add account dialog from ARC")
+		}
+
+		if err := accountmanager.AddAccount(ctx, tconn, secondUser, secondPassword); err != nil {
+			return errors.Wrap(err, "failed to add account")
+		}
+
+		return nil
+	})(ctx); err != nil {
+		return errors.Wrap(err, "failed to add after retry")
 	}
 
 	if err := ui.WaitUntilExists(nodewith.Name("Manage Android preferences").Role(role.Link).Focused())(ctx); err != nil {
