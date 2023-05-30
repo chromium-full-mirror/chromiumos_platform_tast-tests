@@ -444,19 +444,80 @@ func (r *Router) StopHTTP(ctx context.Context, httpServer *http.Server) error {
 }
 
 // StartCapture starts a packet capturer.
+// After getting a Capturer instance, c, the caller should call r.StopCapture(ctx, c) at the end,
+// and use the shortened ctx (provided by r.ReserveForStopCapture(ctx, c)) before r.StopCapture()
+// to reserve time for it to run.
 func (r *Router) StartCapture(ctx context.Context, name string, ch int, freqOps []iw.SetFreqOption, pcapOps ...pcap.Option) (ret *pcap.Capturer, retErr error) {
-	return nil, nil
+	ctx, st := timing.Start(ctx, "router.StartCapture")
+	defer st.End()
+
+	freq, err := hostapd.ChannelToFrequency(ch)
+	if err != nil {
+		return nil, err
+	}
+
+	nd, err := r.netDev(ctx, ch, iw.IfTypeMonitor)
+	if err != nil {
+		return nil, err
+	}
+	iface := nd.IfName
+	shared := r.im.IsPhyBusyAny(nd.PhyNum)
+
+	r.im.SetBusy(iface)
+	defer func() {
+		if retErr != nil {
+			r.im.SetAvailable(iface)
+		}
+	}()
+
+	if err := r.ipr.SetLinkUp(ctx, iface); err != nil {
+		return nil, err
+	}
+	defer func() {
+		if retErr != nil {
+			if err := r.ipr.SetLinkDown(ctx, iface); err != nil {
+				testing.ContextLogf(ctx, "Failed to set %s down, err=%s", iface, err.Error())
+			}
+		}
+	}()
+
+	if !shared {
+		// The interface is not shared, set up frequency and bandwidth.
+		if err := r.iwr.SetFreq(ctx, iface, freq, freqOps...); err != nil {
+			return nil, errors.Wrapf(err, "failed to set frequency for interface %s", iface)
+		}
+	} else {
+		testing.ContextLogf(ctx, "Skip configuring of the shared interface %s", iface)
+	}
+
+	c, err := pcap.StartCapturer(ctx, r.host, name, iface, r.workDir(), pcapOps...)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to start a packet capturer")
+	}
+	return c, nil
 }
 
 // ReserveForStopCapture returns a shortened ctx with cancel function.
 // The shortened ctx is used for running things before r.StopCapture() to reserve time for it to run.
 func (r *Router) ReserveForStopCapture(ctx context.Context, capturer *pcap.Capturer) (context.Context, context.CancelFunc) {
-	return ctx, nil
+	return capturer.ReserveForClose(ctx)
 }
 
 // StopCapture stops the packet capturer and releases related resources.
 func (r *Router) StopCapture(ctx context.Context, capturer *pcap.Capturer) error {
-	return nil
+	ctx, st := timing.Start(ctx, "router.StopCapture")
+	defer st.End()
+
+	var firstErr error
+	iface := capturer.Interface()
+	if err := capturer.Close(ctx); err != nil {
+		utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to stop capturer"))
+	}
+	if err := r.ipr.SetLinkDown(ctx, iface); err != nil {
+		utils.CollectFirstErr(ctx, &firstErr, err)
+	}
+	r.im.SetAvailable(iface)
+	return firstErr
 }
 
 // StartRawCapturer starts a capturer on an existing interface on the router instead of a
@@ -464,18 +525,18 @@ func (r *Router) StopCapture(ctx context.Context, capturer *pcap.Capturer) error
 // This function is useful for the tests that don't care the 802.11 frames but the behavior
 // of upper layer traffic and tests can capture packets directly on AP's interface.
 func (r *Router) StartRawCapturer(ctx context.Context, name, iface string, ops ...pcap.Option) (*pcap.Capturer, error) {
-	return nil, nil
+	return pcap.StartCapturer(ctx, r.host, name, iface, r.workDir(), ops...)
 }
 
 // ReserveForStopRawCapturer returns a shortened ctx with cancel function.
 // The shortened ctx is used for running things before r.StopRawCapture to reserve time for it.
 func (r *Router) ReserveForStopRawCapturer(ctx context.Context, capturer *pcap.Capturer) (context.Context, context.CancelFunc) {
-	return ctx, nil
+	return capturer.ReserveForClose(ctx)
 }
 
 // StopRawCapturer stops the packet capturer (no extra resources to release).
 func (r *Router) StopRawCapturer(ctx context.Context, capturer *pcap.Capturer) error {
-	return nil
+	return capturer.Close(ctx)
 }
 
 // NewFrameSender creates a new framesender.Sender object.
