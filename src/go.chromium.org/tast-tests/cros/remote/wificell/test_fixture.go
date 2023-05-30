@@ -48,10 +48,10 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/wificell/router/common/support"
 	"go.chromium.org/tast-tests/cros/remote/wificell/router/legacy"
 	"go.chromium.org/tast-tests/cros/remote/wificell/router/openwrt"
+	"go.chromium.org/tast-tests/cros/remote/wificell/router/ubuntu"
 	"go.chromium.org/tast-tests/cros/remote/wificell/tethering"
 	"go.chromium.org/tast-tests/cros/services/cros/bluetooth"
 	"go.chromium.org/tast-tests/cros/services/cros/wifi"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
@@ -295,7 +295,6 @@ func (tf *TestFixture) connectCompanion(ctx context.Context, hostname string, re
 	// Assumption is, that the key will be shared between DUTs.
 	sopt.KeyDir = tf.duts[DefaultDUT].dut.KeyDir()
 	sopt.KeyFile = tf.duts[DefaultDUT].dut.KeyFile()
-
 	var conn *ssh.Conn
 
 	if tf.hostUsers != nil {
@@ -1632,6 +1631,8 @@ func newRouter(ctx, daemonCtx context.Context, host *ssh.Conn, name string) (rou
 		return ax.NewRouter(ctx, daemonCtx, host, name)
 	case support.OpenWrtT:
 		return openwrt.NewRouter(ctx, daemonCtx, host, name)
+	case support.UbuntuT:
+		return ubuntu.NewRouter(ctx, daemonCtx, host, name)
 	case support.UnknownT:
 		return nil, errors.New("unable to resolve specific router type from host")
 	default:
@@ -1654,6 +1655,11 @@ func resolveRouterTypeFromHost(ctx context.Context, host *ssh.Conn) (support.Rou
 		return -1, err
 	} else if isAx {
 		return support.AxT, nil
+	}
+	if isUbuntu, err := ubuntu.HostIsUbuntuRouter(ctx, host); err != nil {
+		return -1, err
+	} else if isUbuntu {
+		return support.UbuntuT, nil
 	}
 	return support.UnknownT, nil
 }

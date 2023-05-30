@@ -28,6 +28,8 @@ const (
 	AxT
 	// OpenWrtT is the openwrt router type.
 	OpenWrtT
+	// UbuntuT is the Ubuntu router type.
+	UbuntuT
 	// UnknownT is an unknown router type.
 	UnknownT
 )
@@ -42,6 +44,8 @@ func ParseRouterType(rTypeStr string) (RouterType, error) {
 		rType = AxT
 	case "openwrt":
 		rType = OpenWrtT
+	case "ubuntu":
+		rType = UbuntuT
 	case "unknown", "auto":
 		rType = UnknownT
 	default:
@@ -60,6 +64,8 @@ func (rt RouterType) String() string {
 		typeStr = "AX"
 	case OpenWrtT:
 		typeStr = "OpenWrt"
+	case UbuntuT:
+		typeStr = "UbuntuT"
 	case UnknownT:
 		typeStr = "Unknown"
 	default:
