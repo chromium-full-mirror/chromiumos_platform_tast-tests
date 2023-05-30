@@ -28,7 +28,7 @@ func init() {
 		BugComponent: "b:1246070", // ChromeOS > Software > System UI Surfaces > Status Area
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		Pre:          chrome.LoggedIn(),
+		Fixture:      "chromeLoggedInQsRevampEnabled",
 		// kakadu audio is currently broken: https://crbug.com/1153016
 		// atlas is flaky: b/189732223
 		HardwareDeps: hwdep.D(hwdep.Microphone(), hwdep.SkipOnModel("kakadu", "atlas")),
@@ -37,7 +37,10 @@ func init() {
 
 // MicGainSlider tests that the mic gain slider can be adjusted up and down.
 func MicGainSlider(ctx context.Context, s *testing.State) {
-	cr := s.PreValue().(*chrome.Chrome)
+	cleanup := quicksettings.SetQsRevampEnabled(true)
+	defer cleanup()
+
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)

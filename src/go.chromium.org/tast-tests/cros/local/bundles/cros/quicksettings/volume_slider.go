@@ -34,7 +34,7 @@ func init() {
 		BugComponent: "b:1246070", // ChromeOS > Software > System UI Surfaces > Status Area
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "chromeLoggedIn",
+		Fixture:      "chromeLoggedInQsRevampEnabled",
 		HardwareDeps: hwdep.D(hwdep.Microphone(), hwdep.SkipOnModel("kakadu", "atlas")),
 	})
 }
@@ -75,6 +75,9 @@ func muteUnmuteVolume(ctx context.Context, tconn *chrome.TestConn, vh *audio.Hel
 
 // VolumeSlider tests that the volume slider can be adjusted up and down.
 func VolumeSlider(ctx context.Context, s *testing.State) {
+	cleanup := quicksettings.SetQsRevampEnabled(true)
+	defer cleanup()
+
 	cr := s.FixtValue().(*chrome.Chrome)
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
