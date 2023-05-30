@@ -27,10 +27,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Use the CrosNetworkConfig API during OOBE and after login to configure a basic network and check it is set as expected",
 		Contacts: []string{
-			"cros-networking@google.com",
+			"cros-connectivity@google.com",
 			"crisguerrero@chromium.com", // Test author
 		},
-		BugComponent: "b:156085",
+		BugComponent: "b:1131775", // ChromeOS > Software > System Services > Connectivity
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline"},
 		Timeout:      1 * time.Minute,
