@@ -62,39 +62,50 @@ func init() {
 	})
 }
 
-// validatePerfData validates that the perf-data content can be base64-decoded.
+// validatePerfData validates that the perf/perfetto-data content can be base64-decoded.
 func validatePerfData(ctx context.Context, ui *uiauto.Context) error {
-	// perf-data is multiline and needs to be expanded. Wait until it exists and click on it.
-	perfDataExpandButton := nodewith.NameStartingWith("Expand").NameContaining("perf-data").Role(role.Button)
-	if err := uiauto.Combine("Expand perf-data",
-		ui.WaitUntilExists(perfDataExpandButton),
-		ui.DoDefault(perfDataExpandButton),
-	)(ctx); err != nil {
-		return errors.Wrap(err, "failed to expand the perf-data item")
+	type PerfDataType struct {
+		Key   string
+		Magic string
+	}
+	dataTypes := []PerfDataType{
+		PerfDataType{"perf-data", "/Td6WFoA" /*xz header*/},
+		PerfDataType{"perfetto-data", "KLUv/Q" /*zstd header*/},
 	}
 
-	// Wait until the content of perf-data exists. The first line contains the description.
-	perfDataText := nodewith.NameStartingWith("perf-data contains performance profiling information").Role(role.StaticText)
-	if err := ui.WaitUntilExists(perfDataText)(ctx); err != nil {
-		return errors.Wrap(err, "failed to find perf-data")
-	}
+	for _, dataType := range dataTypes {
+		// The perf data keys are multiline and need to be expanded. Wait until the key exists and click on it.
+		perfDataExpandButton := nodewith.NameStartingWith("Expand").NameContaining(dataType.Key).Role(role.Button)
+		if err := uiauto.Combine("Expand "+dataType.Key,
+			ui.WaitUntilExists(perfDataExpandButton),
+			ui.DoDefault(perfDataExpandButton),
+		)(ctx); err != nil {
+			return errors.Wrapf(err, "failed to expand the %s item", dataType.Key)
+		}
 
-	perfDataInfo, err := ui.NodesInfo(ctx, perfDataText)
-	if err != nil || len(perfDataInfo) != 1 {
-		return errors.Wrap(err, "failed to extract node info")
-	}
-	text := perfDataInfo[0].Name
+		// Wait until the perf data content exists. We use the file's magic header to find the right data row.
+		perfDataText := nodewith.NameRegex(regexp.MustCompile("<base64>:.*" + dataType.Magic)).Role(role.StaticText)
+		if err := ui.WaitUntilExists(perfDataText)(ctx); err != nil {
+			return errors.Wrapf(err, "failed to find %s", dataType.Key)
+		}
 
-	// Extract the base64 blob.
-	base64BlobRe := regexp.MustCompile(`<base64>: ([0-9a-zA-Z\/\+]+=*)$`)
-	groups := base64BlobRe.FindStringSubmatch(text)
-	if len(groups) != 2 {
-		return errors.Errorf("unexpected perf-data content: %s", text)
-	}
-	perfDataBlob := groups[1]
+		perfDataInfo, err := ui.NodesInfo(ctx, perfDataText)
+		if err != nil || len(perfDataInfo) != 1 {
+			return errors.Wrapf(err, "failed to extract %s node info", dataType.Key)
+		}
+		text := perfDataInfo[0].Name
 
-	if _, err = base64.StdEncoding.DecodeString(perfDataBlob); err != nil {
-		return errors.Wrap(err, "failed to base64-decode perf data")
+		// Extract the base64 blob.
+		base64BlobRe := regexp.MustCompile(`<base64>: ([0-9a-zA-Z\/\+]+=*)$`)
+		groups := base64BlobRe.FindStringSubmatch(text)
+		if len(groups) != 2 {
+			return errors.Errorf("unexpected %s content: %s", dataType.Key, text)
+		}
+		perfDataBlob := groups[1]
+
+		if _, err = base64.StdEncoding.DecodeString(perfDataBlob); err != nil {
+			return errors.Wrapf(err, "failed to base64-decode %s", dataType.Key)
+		}
 	}
 
 	return nil
