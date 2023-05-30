@@ -575,33 +575,37 @@ func (r *Router) workDir() string {
 
 // NewBridge returns a bridge name for tests to use. Note that the caller is responsible to call ReleaseBridge.
 func (r *Router) NewBridge(ctx context.Context) (_ string, retErr error) {
-	return "", nil
+	bridgeID := r.nextBridgeID
+	r.nextBridgeID++
+	return common.NewBridge(ctx, r.ipr, bridgeID)
 }
 
 // ReleaseBridge releases the bridge.
 func (r *Router) ReleaseBridge(ctx context.Context, br string) error {
-	return nil
+	return common.ReleaseBridge(ctx, r.ipr, br)
 }
 
 // NewVethPair returns a veth pair for tests to use. Note that the caller is responsible to call ReleaseVethPair.
 func (r *Router) NewVethPair(ctx context.Context) (string, string, error) {
-	return "", "", nil
+	vethID := r.nextVethID
+	r.nextVethID++
+	return common.NewVethPair(ctx, r.ipr, vethID, false)
 }
 
 // ReleaseVethPair release the veth pair.
 // Note that each side of the pair can be passed to this method, but the test should only call the method once for each pair.
 func (r *Router) ReleaseVethPair(ctx context.Context, veth string) error {
-	return nil
+	return common.ReleaseVethPair(ctx, r.ipr, veth, false)
 }
 
 // BindVethToBridge binds the veth to bridge.
 func (r *Router) BindVethToBridge(ctx context.Context, veth, br string) error {
-	return nil
+	return common.BindVethToBridge(ctx, r.ipr, veth, br)
 }
 
 // UnbindVeth unbinds the veth to any other interface.
 func (r *Router) UnbindVeth(ctx context.Context, veth string) error {
-	return nil
+	return common.UnbindVeth(ctx, r.ipr, veth)
 }
 
 // Utilities for resource control.
