@@ -24,6 +24,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/spellcheck"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/useravatar"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/userfeedback"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/webrtclogupload"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
@@ -52,7 +53,8 @@ func init() {
 		BugComponent: "b:1129862",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
-		VarDeps:      []string{"policy.managedUserAccountPool"},
+		VarDeps: []string{"policy.managedUserAccountPool",
+			"ui.bond_credentials"},
 		Params: []testing.Param{{
 			Fixture: fixture.FakeDMS,
 			Val:     browser.TypeAsh,
@@ -79,6 +81,8 @@ func init() {
 			pci.SearchFlag(&policy.SpellCheckServiceEnabled{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.UserAvatarCustomizationSelectorsEnabled{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.UserFeedbackAllowed{}, pci.VerifiedFunctionalityUI),
+			pci.SearchFlag(&policy.WebRtcEventLogCollectionAllowed{}, pci.VerifiedValue),
+			pci.SearchFlag(&policy.WebRtcTextLogCollectionAllowed{}, pci.VerifiedValue),
 		},
 		Timeout: 5 * time.Minute,
 	})
@@ -96,6 +100,8 @@ func getPolicyList() []policy.Policy {
 		&policy.SpellCheckServiceEnabled{Val: false},
 		&policy.UserAvatarCustomizationSelectorsEnabled{Val: false},
 		&policy.UserFeedbackAllowed{Val: false},
+		&policy.WebRtcEventLogCollectionAllowed{Val: false},
+		&policy.WebRtcTextLogCollectionAllowed{Val: false},
 	}
 }
 
@@ -281,6 +287,17 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 		}
 		hashCodes = append(hashCodes, userfeedback.HelpContentProviderHashCode)
 		hashCodes = append(hashCodes, userfeedback.ChromeFeedbackReportAppHashCode)
+	})
+
+	s.Run(ctx, "webrtc_text_event_log_collection", func(ctx context.Context, s *testing.State) {
+		bondCreds := s.RequiredVar("ui.bond_credentials")
+
+		// The trigger will create upload for both text and event logs.
+		if err := webrtclogupload.TriggerWebRTCLogUploads(ctx, cr, br, tconn, bondCreds); err != nil {
+			s.Fatal("Failed to launch meet client: ", err)
+		}
+		hashCodes = append(hashCodes, webrtclogupload.TextLogCollectionHashID)
+		hashCodes = append(hashCodes, webrtclogupload.EventLogCollectionHashID)
 	})
 
 	// Stop logging and verify network traffic annotations associated with the
