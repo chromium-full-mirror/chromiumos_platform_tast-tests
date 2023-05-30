@@ -74,10 +74,6 @@ func init() {
 
 // E2EScenarios runs the PVS scenario tests against a DUT using the NextGen
 // workflow
-// Current preconditions:
-//   - .gitcookies are populated in ${CHRONOS_HOME}/.gitcookies
-//   - upload_config dir is populated in ${CHRONOS_HOME}/.pvs/
-//   - reverse tunnel is set up from the host to the dut on port 2223
 func E2EScenarios(ctx context.Context, s *testing.State) {
 	dut := s.DUT().Conn()
 	containerID := s.FixtValue().(string)

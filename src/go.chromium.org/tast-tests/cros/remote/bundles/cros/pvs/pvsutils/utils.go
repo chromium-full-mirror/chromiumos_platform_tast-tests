@@ -20,7 +20,7 @@ type testState interface {
 
 // RunAsChronos runs the given command as the chronos user on the given dut
 func RunAsChronos(ctx context.Context, dut *ssh.Conn, cmd string) (string, error) {
-	wrappedCmd := dut.CommandContext(ctx, "runuser", "-l", "chronos", "-c", cmd)
+	wrappedCmd := dut.CommandContext(ctx, "sudo", "--login", "-u", "chronos", "bash", "-c", cmd)
 	return runAsRoot(ctx, wrappedCmd)
 }
 
@@ -37,7 +37,7 @@ func removeAsRoot(ctx context.Context, dut *ssh.Conn, path string) (string, erro
 }
 
 func runAsChronosWithStdin(ctx context.Context, dut *ssh.Conn, cmd, stdin string) (string, error) {
-	wrappedCmd := dut.CommandContext(ctx, "runuser", "-l", "chronos", "-c", cmd)
+	wrappedCmd := dut.CommandContext(ctx, "sudo", "--login", "-u", "chronos", "bash", "-c", cmd)
 	wrappedCmd.Stdin = strings.NewReader(stdin)
 	return runAsRoot(ctx, wrappedCmd)
 }

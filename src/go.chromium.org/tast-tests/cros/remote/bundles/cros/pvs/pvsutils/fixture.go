@@ -15,6 +15,8 @@ import (
 )
 
 const chronosHome = "/home/chronos/user"
+const installDir = "/usr/local/share/shop_install"
+const gcloudSymlinkPath = "/usr/local/bin/gcloud"
 const uploadConfigJSON = `{"bucket":"chromeos-moblab-pvs-dev","service_account":"/home/chronos/user/.pvs/upload_config/.service_account.json","boto_key":""}`
 
 var pvsOutputDir = path.Join(chronosHome, ".pvs")
@@ -23,6 +25,7 @@ var gitCookiesPath = path.Join(chronosHome, ".gitcookies")
 var uploadConfigDir = path.Join(pvsOutputDir, "upload_config")
 var serviceAccountPath = path.Join(uploadConfigDir, ".service_account.json")
 var uploadConfigJSONPath = path.Join(uploadConfigDir, "upload_config.json")
+var gcloudPath = path.Join(installDir, "cipd", "gcloud")
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
@@ -51,6 +54,20 @@ func (f *pvsFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{
 	pvsHost := s.DUT().Conn()
 	dutHostname := s.CompanionDUT("dut").HostName()
 
+	// Change owner of shop install dir to chronos
+	// TODO(b/276726105): remove chronos permissions issue is resolved
+	chownInstallDir := pvsHost.CommandContext(ctx, "chown", "chronos", installDir)
+	if _, err := runAsRoot(ctx, chownInstallDir); err != nil {
+		s.Fatal("Error occured when chowning the install directory: ", err)
+	}
+
+	// Setup gcloud symlink
+	// TODO(b/276776309): remove once gcloud is no longer a dependency
+	symlinkGcloud := pvsHost.CommandContext(ctx, "ln", "-sf", gcloudPath, gcloudSymlinkPath)
+	if _, err := runAsRoot(ctx, symlinkGcloud); err != nil {
+		s.Fatal("Error occured when setting up gcloud symlink: ", err)
+	}
+
 	// Populate git cookies
 	gitCookies := s.RequiredVar("pvs.git_cookies")
 	if _, err := writeToFileAsChronos(ctx, pvsHost, gitCookies, gitCookiesPath); err != nil {
@@ -74,7 +91,7 @@ func (f *pvsFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{
 	}
 
 	// Run shop unpack
-	shopUnpack := fmt.Sprintf(`FORCE_DLM_SKU_ID=1111 shop unpack --dut %v --milestone 115 --chromeos-version 15465.0.0`, dutHostname)
+	shopUnpack := fmt.Sprintf(`SHOP_REF=tast-test PVS_IMAGE_TAG=tast-test FORCE_DLM_SKU_ID=0 shop unpack --dut %v`, dutHostname)
 	shopOutput, err := RunAsChronos(ctx, pvsHost, shopUnpack)
 	if err != nil {
 		s.Fatal("Error occured when running shop unpack: ", err)
