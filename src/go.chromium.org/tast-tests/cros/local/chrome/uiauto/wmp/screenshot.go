@@ -57,7 +57,7 @@ func LaunchScreenCapture(ctx context.Context, tconn *chrome.TestConn) error {
 		}
 	}(ctx, tconn)
 
-	return uiauto.New(tconn).LeftClick(quicksettings.PodIconButton(quicksettings.SettingPodScreenCapture))(ctx)
+	return uiauto.New(tconn).LeftClick(quicksettings.FeatureTileScreenCapture)(ctx)
 }
 
 // CaptureScreenshot captures screenshot based on the argument passed in i.e. fullscreen, partial or window.
