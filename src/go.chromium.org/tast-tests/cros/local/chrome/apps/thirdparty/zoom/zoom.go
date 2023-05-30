@@ -350,7 +350,7 @@ func InstallPWA(ctx context.Context, cr *chrome.Chrome, br *browser.Browser) err
 
 // ShowInterface moves mouse or taps in web area in order to make the menu interface reappear.
 func (zm *Zoom) ShowInterface(ctx context.Context) error {
-	return zm.ui.LeftClickUntil(mainLayoutCanvas,
+	return zm.ui.LeftClickUntil(zoomMainWebArea,
 		zm.ui.WaitForLocation(moreOptionsButton))(ctx)
 }
 
