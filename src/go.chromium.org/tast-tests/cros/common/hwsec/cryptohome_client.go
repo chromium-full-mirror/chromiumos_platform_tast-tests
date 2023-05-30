@@ -5,6 +5,7 @@
 package hwsec
 
 import (
+	"bytes"
 	"context"
 	"encoding/hex"
 	"fmt"
@@ -865,8 +866,25 @@ func (u *CryptohomeClient) RemoveAuthFactor(ctx context.Context, authSessionID, 
 	return err
 }
 
+// FetchStatusUpdateSignal fetches the status update signal that gets sent priodically after a user is locked out of an auth factor.
+func (u *CryptohomeClient) FetchStatusUpdateSignal(ctx context.Context, authSessionID string, broadcastID []byte) (*uda.AuthFactorStatusUpdate, error) {
+	binaryMsg, err := u.binary.fetchStatusUpdateSignal(ctx, authSessionID)
+	// Unmarshall the reply even if there was an error.
+	reply := &uda.AuthFactorStatusUpdate{}
+	if unmarshErr := proto.Unmarshal(binaryMsg, reply); unmarshErr != nil {
+		return nil, errors.Wrap(unmarshErr, "failed to unmarshal AuthFactorStatusUpdate reply")
+	}
+	if err != nil {
+		return reply, errors.Wrap(err, "failed to receive AuthFactorStatusUpdate Signal")
+	}
+	if bytes.Equal(reply.BroadcastId, broadcastID) == false {
+		return nil, errors.Wrap(err, "the broadcast id doesn't match between auth_session and AuthFactorStatusUpdateSignal")
+	}
+	return reply, nil
+}
+
 // AuthenticatePinAuthFactorWithStatusUpdate authenticates an AuthSession with a given authSessionID via pin and intercepts the AuthFactorStatusUpdate signal.
-func (u *CryptohomeClient) AuthenticatePinAuthFactorWithStatusUpdate(ctx context.Context, authSessionID, label, pin string) (*uda.AuthFactorStatusUpdate, error) {
+func (u *CryptohomeClient) AuthenticatePinAuthFactorWithStatusUpdate(ctx context.Context, authSessionID, label, pin string, broadcastID []byte) (*uda.AuthFactorStatusUpdate, error) {
 	binaryMsg, err := u.binary.authenticatePinAuthFactorWithStatusUpdate(ctx, authSessionID, label, pin)
 	// Unmarshal proto first, even if there was an error.
 	authenticateReply := &uda.AuthenticateAuthFactorReply{}
@@ -879,6 +897,9 @@ func (u *CryptohomeClient) AuthenticatePinAuthFactorWithStatusUpdate(ctx context
 	}
 	if err != nil {
 		return statusUpdateReply, errors.Wrap(err, "AuthenticateAuthFactor failed")
+	}
+	if bytes.Equal(statusUpdateReply.BroadcastId, broadcastID) == false {
+		return nil, errors.Wrap(err, "the broadcast id doesn't match between auth_session and AuthFactorStatusUpdateSignal")
 	}
 
 	return statusUpdateReply, nil

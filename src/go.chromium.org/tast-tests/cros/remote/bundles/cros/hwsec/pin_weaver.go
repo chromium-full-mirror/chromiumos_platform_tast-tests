@@ -192,9 +192,14 @@ func PINWeaver(ctx context.Context, s *testing.State) {
 	}
 
 	// Lockout the PIN this time.
-	_, err = attemptWrongPinToLockoutAndGetStatusUpdate(ctx, ctxForCleanUp, testUser1, cmdRunner, helper)
+	_, err = attemptWrongPinToLockoutAndGetStatusUpdate(ctx, ctxForCleanUp, testUser1, helper)
 	if err != nil {
 		s.Fatal("Failed to run attemptWrongPinToLockoutAndGetStatusUpdate with error: ", err)
+	}
+	// Check if the signal is sent again after a new session is established.
+	_, err = fetchStatusUpdateUponNewAuthSession(ctx, ctxForCleanUp, testUser1, helper)
+	if err != nil {
+		s.Fatal("Failed to fetch StatusUpdateSignal after a new AuthSession is established after the user is locked out with error: ", err)
 	}
 	if err = ensurePINLockedOut(ctx, testUser1, client); err != nil {
 		s.Fatal("Failed to run ensurePINLockedOut with error: ", err)
@@ -341,20 +346,39 @@ func attemptWrongPIN(ctx, ctxForCleanUp context.Context, testUser string, r *hws
 
 // attemptWrongPinToLockoutAndGetStatusUpdate should be called only when the next attempt is expected to lock the user out. This function will attempt the last attempt with the wrong pin and attaches
 // itself to the upcoming AuthFactorStatusUpdate signal.
-func attemptWrongPinToLockoutAndGetStatusUpdate(ctx, ctxForCleanUp context.Context, testUser string, r *hwsecremote.CmdRunnerRemote, helper *hwsecremote.CmdHelperRemote) (*uda.AuthFactorStatusUpdate, error) {
+func attemptWrongPinToLockoutAndGetStatusUpdate(ctx, ctxForCleanUp context.Context, testUser string, helper *hwsecremote.CmdHelperRemote) (*uda.AuthFactorStatusUpdate, error) {
 	cryptohomeHelper := helper.CryptohomeClient()
 
 	// Authenticate a new auth session via the new added PIN auth factor.
-	_, authSessionID, err := cryptohomeHelper.StartAuthSession(ctx, testUser, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT)
+	authSession, authSessionID, err := cryptohomeHelper.StartAuthSession(ctx, testUser, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to start auth session for PIN authentication")
 	}
 	defer cryptohomeHelper.InvalidateAuthSession(ctxForCleanUp, authSessionID)
 
 	var reply *uda.AuthFactorStatusUpdate
-	reply, err = cryptohomeHelper.AuthenticatePinAuthFactorWithStatusUpdate(ctx, authSessionID, authFactorLabelPIN, incorrectPINSecret)
+	reply, err = cryptohomeHelper.AuthenticatePinAuthFactorWithStatusUpdate(ctx, authSessionID, authFactorLabelPIN, incorrectPINSecret, authSession.BroadcastId)
 	if err == nil {
 		return nil, errors.Wrap(err, "authentication with wrong PIN succeeded unexpectedly or the status update signal was not received properly")
+	}
+	return reply, nil
+}
+
+// fetchStatusUpdateUponNewAuthSession attempts to fetch the signal after a user is locked out and a new AuthSession is established for them.
+func fetchStatusUpdateUponNewAuthSession(ctx, ctxForCleanUp context.Context, testUser string, helper *hwsecremote.CmdHelperRemote) (*uda.AuthFactorStatusUpdate, error) {
+	cryptohomeHelper := helper.CryptohomeClient()
+
+	// Authenticate a new auth session via the new added PIN auth factor.
+	authSession, authSessionID, err := cryptohomeHelper.StartAuthSession(ctx, testUser, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to start auth session for PIN authentication")
+	}
+	defer cryptohomeHelper.InvalidateAuthSession(ctxForCleanUp, authSessionID)
+
+	var reply *uda.AuthFactorStatusUpdate
+	reply, err = cryptohomeHelper.FetchStatusUpdateSignal(ctx, authSessionID, authSession.BroadcastId)
+	if err != nil {
+		return nil, errors.Wrap(err, "StatusUpdateSignal was not fetched or its BroadcastID did not match that of the AuthSession")
 	}
 	return reply, nil
 }

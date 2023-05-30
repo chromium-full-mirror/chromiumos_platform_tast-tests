@@ -246,6 +246,11 @@ func (c *cryptohomeBinary) authenticatePinAuthFactorWithStatusUpdate(ctx context
 	return c.call(ctx, args...)
 }
 
+func (c *cryptohomeBinary) fetchStatusUpdateSignal(ctx context.Context, authSessionID string) ([]byte, error) {
+	args := []string{"--action=fetch_status_update", "--output-format=binary-protobuf", "--auth_session_id=" + authSessionID}
+	return c.call(ctx, args...)
+}
+
 // authenticatePinAuthFactor calls "cryptohome --action=authenticate_auth_factor --pin=<pin>".
 func (c *cryptohomeBinary) authenticatePinAuthFactor(ctx context.Context, authSessionID, label, pin string) ([]byte, error) {
 	args := []string{"--action=authenticate_auth_factor", "--output-format=binary-protobuf", "--auth_session_id=" + authSessionID, "--key_label=" + label, "--pin=" + pin}
