@@ -78,7 +78,7 @@ var VolumeToggle = nodewith.Role(role.ToggleButton).NameStartingWith("Toggle Vol
 // MicGainSlider is the finder for the Quick Settings mic gain slider.
 // The Finder is identical to the volume slider, but it's located on a different
 // page of Quick Settings.
-var MicGainSlider = nodewith.Name("Volume").HasClass("QuickSettingsSlider").Role(role.Slider)
+var MicGainSlider = nodewith.Name("Microphone").HasClass("QuickSettingsSlider").Role(role.Slider)
 
 // MicToggle is the finder for the button that toggles the microphone's mute status.
 var MicToggle = nodewith.Role(role.ToggleButton).Attribute("name", regexp.MustCompile("Toggle Mic"))
