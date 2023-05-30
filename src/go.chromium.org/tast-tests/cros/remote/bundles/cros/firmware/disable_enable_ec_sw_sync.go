@@ -8,7 +8,7 @@ import (
 	"context"
 	"path/filepath"
 	"regexp"
-	"strings"
+	"time"
 
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast-tests/cros/common/flashrom"
@@ -52,13 +52,17 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService"},
 		Fixture:      fixture.NormalMode,
+		Timeout:      10 * time.Minute,
 	})
 }
 
+// DisableEnableECSWSync flashes EC using flashrom and enable disable EC SW sync.
 func DisableEnableECSWSync(ctx context.Context, s *testing.State) {
 	h := s.FixtValue().(*fixture.Value).Helper
 
 	pathToEC := ecPathVar.Value()
+
+	d := s.DUT()
 
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to init servo: ", err)
@@ -71,17 +75,22 @@ func DisableEnableECSWSync(ctx context.Context, s *testing.State) {
 	s.Log("Backing up current EC_RW region for safety")
 	ecPath, err := h.BiosServiceClient.BackupImageSection(ctx, &fwpb.FWSectionInfo{
 		Programmer: fwpb.Programmer_ECProgrammer,
-		Section:    fwpb.ImageSection_ECRWImageSection,
+		Section:    fwpb.ImageSection_ECROImageSection,
 	})
 	if err != nil {
 		s.Fatal("Failed to backup current EC_RW region: ", err)
 	}
 	s.Log("EC_RW region backup is stored at: ", ecPath.Path)
 
+	ecPathLocal := filepath.Join("/usr/local", filepath.Base(pathToEC))
+	s.Log("ecPathLocal: ", ecPathLocal)
+
 	defer func(ctx context.Context) {
-		s.Log("Wait for DUT to reconnect")
-		if err = h.DUT.WaitConnect(ctx); err != nil {
-			s.Fatal("Failed to reconnect to DUT: ", err)
+		h.CloseRPCConnection(ctx)
+
+		s.Log("Restoring EC image")
+		if err := d.Reboot(ctx); err != nil {
+			s.Fatal("Failed to ensure the DUT is booted: ", err)
 		}
 
 		s.Log("Reconnecting to RPC services on DUT")
@@ -94,10 +103,6 @@ func DisableEnableECSWSync(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to reconnect to BiosServiceClient on DUT: ", err)
 		}
 
-		s.Log("Restoring EC image")
-		if err := h.EnsureDUTBooted(ctx); err != nil {
-			s.Fatal("Failed to ensure the DUT is booted")
-		}
 		if _, err := h.BiosServiceClient.RestoreImageSection(ctx, ecPath); err != nil {
 			s.Error("Failed to restore EC image: ", err)
 		}
@@ -105,10 +110,11 @@ func DisableEnableECSWSync(ctx context.Context, s *testing.State) {
 		if _, err := h.DUT.Conn().CommandContext(ctx, "rm", ecPath.Path).Output(ssh.DumpLogOnError); err != nil {
 			s.Fatal("Failed to delete EC image from DUT: ", err)
 		}
-	}(ctx)
 
-	paths := strings.Split(pathToEC, "/")
-	ecPathLocal := filepath.Join("/usr/local", paths[len(paths)-1])
+		if err := d.Reboot(ctx); err != nil {
+			s.Fatal("Failed to ensure the DUT is booted")
+		}
+	}(ctx)
 
 	ecKeyPath := map[string]string{pathToEC: ecPathLocal}
 	if _, err := linuxssh.PutFiles(ctx, h.DUT.Conn(), ecKeyPath, linuxssh.DereferenceSymlinks); err != nil {
@@ -123,10 +129,10 @@ func DisableEnableECSWSync(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to verify EC version, versions should be the same, got: RO=%s, RW=%s, want: RO == RW", ro1, rw1)
 	}
 
-	s.Log("Clearing GBB flag DISABLE_EC_SOFTWARE_SYNC")
-	clear := pb.GBBFlagsState{Clear: []pb.GBBFlag{pb.GBBFlag_DISABLE_EC_SOFTWARE_SYNC}}
-	if err := fwCommon.ClearAndSetGBBFlags(ctx, s.DUT(), &clear); err != nil {
-		s.Fatal("Failed to clear GBB flag: ", err)
+	s.Log("Setting GBB flag DISABLE_EC_SOFTWARE_SYNC")
+	set := pb.GBBFlagsState{Set: []pb.GBBFlag{pb.GBBFlag_DISABLE_EC_SOFTWARE_SYNC}}
+	if err := fwCommon.ClearAndSetGBBFlags(ctx, s.DUT(), &set); err != nil {
+		s.Fatal("Failed to set GBB flag: ", err)
 	}
 
 	s.Log("Rebooting DUT")
@@ -163,9 +169,9 @@ func DisableEnableECSWSync(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to verify EC version, EC should change as per flashed EC binary got (%s, %s) RO (%s, %s) RW", ro2, ro3, rw2, rw3)
 	}
 
-	s.Log("Setting GBB flag DISABLE_EC_SOFTWARE_SYNC")
-	set := pb.GBBFlagsState{Set: []pb.GBBFlag{pb.GBBFlag_DISABLE_EC_SOFTWARE_SYNC}}
-	if err := fwCommon.ClearAndSetGBBFlags(ctx, s.DUT(), &set); err != nil {
+	s.Log("Clearing GBB flag DISABLE_EC_SOFTWARE_SYNC")
+	clear := pb.GBBFlagsState{Clear: []pb.GBBFlag{pb.GBBFlag_DISABLE_EC_SOFTWARE_SYNC}}
+	if err := fwCommon.ClearAndSetGBBFlags(ctx, s.DUT(), &clear); err != nil {
 		s.Fatal("Failed to clear GBB flag: ", err)
 	}
 
@@ -181,7 +187,6 @@ func DisableEnableECSWSync(ctx context.Context, s *testing.State) {
 	if ro4 == rw4 && ro4 != ro3 {
 		s.Fatalf("Failed to verify EC version, RW and RO regions of EC should not be the same version got %s=%s (RO, RW), RO version of EC should be version of EC flashed got %s=%s (RO, RO)", ro4, rw4, ro3, ro4)
 	}
-
 }
 
 // checkECVersion returns ro/rw version from ectool.
