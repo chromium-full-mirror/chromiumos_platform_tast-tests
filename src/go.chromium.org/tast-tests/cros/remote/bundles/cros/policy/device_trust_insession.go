@@ -137,7 +137,7 @@ func DeviceTrustInsession(ctx context.Context, s *testing.State) {
 		s.Fatal("Remote call ConnectToFakeIdP() failed: ", err)
 	}
 
-	if _, err = service.CheckFakeIdPStatus(ctx, &enterpriseconnectors.CheckFakeIdPStatusRequest{Expected: param.loginPossible}); err != nil {
+	if _, err = service.CheckFakeIdPStatus(ctx, &enterpriseconnectors.CheckFakeIdPStatusRequest{Expected: param.loginPossible, IsInSession: true}); err != nil {
 		s.Fatal("Remote call CheckFakeIdPStatus() failed: ", err)
 	}
 }

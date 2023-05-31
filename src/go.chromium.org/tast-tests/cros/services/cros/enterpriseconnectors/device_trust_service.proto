@@ -24,6 +24,7 @@ message ConnectToFakeIdPRequest {
 
 message CheckFakeIdPStatusRequest {
   bool expected = 1;
+  bool isInSession = 2;
 }
 
 // DeviceTrustService provides RPC methods to run device trust related operations

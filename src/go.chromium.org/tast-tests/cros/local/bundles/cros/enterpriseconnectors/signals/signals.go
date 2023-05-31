@@ -49,6 +49,7 @@ type clientSignals struct {
 	SerialNumber                     *string
 	SiteIsolationEnabled             *bool
 	SystemDNSServers                 *[]string
+	Trigger                          *int
 }
 
 const (
@@ -119,7 +120,7 @@ func verifyIsSettingEnum(value int) error {
 
 // verifySignalValues verifies that certain signals are in their value ranges or have pre-known values.
 // The function assumes that the signal structs have no fields with value null.
-func verifySignalValues(parsedServerSignals serverSignals, parsedClientSignals clientSignals) error {
+func verifySignalValues(parsedServerSignals serverSignals, parsedClientSignals clientSignals, isInSession bool) error {
 	// Check if the server and client signals have a valid format.
 	if err := checkIfSignalsAreFilled(parsedServerSignals); err != nil {
 		return errors.Wrap(err, "invalid format for server signals")
@@ -190,17 +191,29 @@ func verifySignalValues(parsedServerSignals serverSignals, parsedClientSignals c
 	}
 
 	// For the in-session case, check if the user is affiliated; i.e., the user affiliated ID is the same as the device affiliated ID.
-	if len(*parsedClientSignals.ProfileAffiliationIds) > 0 {
+	if isInSession {
 		if (*parsedClientSignals.ProfileAffiliationIds)[0] != (*parsedClientSignals.DeviceAffiliationIds)[0] {
 			return errors.Errorf("clientSignals.profileAffilationIds and clientSignals.deviceAffiliationIds needs to be the same, values were %s and %s", (*parsedClientSignals.ProfileAffiliationIds)[0], (*parsedClientSignals.DeviceAffiliationIds)[0])
 		}
+	}
+
+	// Checking the signal for the trigger which generated the device signals.
+	var expectedTrigger int
+	if isInSession {
+		expectedTrigger = 1
+	} else {
+		expectedTrigger = 2
+	}
+
+	if *parsedClientSignals.Trigger != expectedTrigger {
+		return errors.Errorf("unexpected value for clientSignals.trigger: got %q, want %q", *parsedClientSignals.Trigger, expectedTrigger)
 	}
 
 	return nil
 }
 
 // Verify tries to parse the signal strings to JSON and checks the signals for completeness and validity.
-func Verify(serverSignalsString, clientSignalsString []byte) error {
+func Verify(serverSignalsString, clientSignalsString []byte, isInSession bool) error {
 	parsedServerSignals, err := parseServerSignals(serverSignalsString)
 	if err != nil {
 		return errors.Wrap(err, "failed to parse server signals")
@@ -211,7 +224,7 @@ func Verify(serverSignalsString, clientSignalsString []byte) error {
 		return errors.Wrap(err, "failed to parse client signals")
 	}
 
-	if err = verifySignalValues(*parsedServerSignals, *parsedClientSignals); err != nil {
+	if err = verifySignalValues(*parsedServerSignals, *parsedClientSignals, isInSession); err != nil {
 		return errors.Wrap(err, "failed to verify signal values")
 	}
 
