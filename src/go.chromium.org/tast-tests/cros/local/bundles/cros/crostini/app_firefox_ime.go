@@ -128,7 +128,7 @@ func testUseIMEInFirefox(ctx context.Context, terminalApp *terminalapp.TerminalA
 	if err := uiauto.Combine("enter text in Firefox",
 		imeData.InputMethod.InstallAndActivate(tconn),
 		imeData.InputMethod.WaitUntilActivated(tconn),
-		imeData.EnterTestStringActionPK(keyboard),
+		imeData.EnterTestStringActionPK(keyboard, ui),
 		crostini.TakeAppScreenshot("firefox"),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to enter test string Firefox")

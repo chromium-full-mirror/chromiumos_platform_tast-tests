@@ -136,7 +136,7 @@ func testUseIMEInVSCode(ctx context.Context, terminalApp *terminalapp.TerminalAp
 		// TODO(b/274709150): Remove the following 2 lines after this bug is fixed.
 		keyboard.AccelAction("Backspace"),
 		keyboard.AccelAction("Backspace"),
-		imeData.EnterTestStringActionPK(keyboard),
+		imeData.EnterTestStringActionPK(keyboard, ui),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to enter test string")
 	}

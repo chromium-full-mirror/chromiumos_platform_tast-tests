@@ -7,6 +7,7 @@ package imetestutil
 
 import (
 	"context"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
@@ -21,7 +22,10 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-type enterInputActionPK func(keyboard *input.KeyboardEventWriter) uiauto.Action
+// PKCandidatesFinder is the finder for candidates in the IME candidates window.
+var PKCandidatesFinder = nodewith.Role(role.ImeCandidate).Onscreen()
+
+type enterInputActionPK func(keyboard *input.KeyboardEventWriter, ui *uiauto.Context) uiauto.Action
 
 // IMETestData represents a set of inputs for ime testing.
 type IMETestData struct {
@@ -39,7 +43,7 @@ var IMETestCases = imeTestDataMap{
 		ime.EnglishUS,
 		"Hello",
 		"Hello",
-		func(keyboard *input.KeyboardEventWriter) uiauto.Action {
+		func(keyboard *input.KeyboardEventWriter, ui *uiauto.Context) uiauto.Action {
 			return keyboard.TypeAction("Hello")
 		},
 	},
@@ -47,10 +51,13 @@ var IMETestCases = imeTestDataMap{
 		ime.Japanese,
 		"konnnitiha",
 		"こんにちは",
-		func(keyboard *input.KeyboardEventWriter) uiauto.Action {
+		func(keyboard *input.KeyboardEventWriter, ui *uiauto.Context) uiauto.Action {
 			return uiauto.Combine("Enter Japanese",
 				keyboard.TypeAction("konnnitiha"),
-				keyboard.AccelAction("Enter"),
+				uiauto.Combine("commit text",
+					keyboard.AccelAction("Enter"),
+					ui.WithTimeout(time.Second).WaitUntilGone(PKCandidatesFinder),
+				),
 			)
 		},
 	},
@@ -58,14 +65,11 @@ var IMETestCases = imeTestDataMap{
 		ime.Arabic,
 		"lvpfh",
 		"مرحبا",
-		func(keyboard *input.KeyboardEventWriter) uiauto.Action {
+		func(keyboard *input.KeyboardEventWriter, ui *uiauto.Context) uiauto.Action {
 			return keyboard.TypeAction("lvpfh")
 		},
 	},
 }
-
-// This is a long, all upper case string so that it can be more easily detected by uidetection.
-const japaneseCandidatesBoxTestString = "TIMLOHISCOOL"
 
 // ResetToDefaultIME can be called to reset the input method back to default (EnglishUS) at the end of a test. If it fails, it will only log the error, and not return an error so the test will NOT fail.
 func ResetToDefaultIME(ctx context.Context, tconn *chrome.TestConn) {
@@ -119,22 +123,25 @@ func TestJapaneseCandidatesBoxInEditor(ctx context.Context, ui *uiauto.Context, 
 // It assumes that a input field is already in focus, and the Japanese input method is enabled.
 func TestJapaneseCandidatesBox(ctx context.Context, ui *uiauto.Context, uda *uidetection.Context, keyboard *input.KeyboardEventWriter) error {
 
+	// This is a long, all upper case string so that it can be more easily detected by uidetection.
+	const japaneseCandidatesBoxTestString = "TIMLOHISCOOL"
+
 	testing.ContextLog(ctx, "Verifying suggestion box location for Japanese input")
 
 	if err := keyboard.TypeAction(japaneseCandidatesBoxTestString)(ctx); err != nil {
 		return err
 	}
 
-	// PKCandidatesFinder is the finder for candidates in the IME candidates window.
-	PKCandidatesFinder := nodewith.Role(role.ImeCandidate).Onscreen()
 	candidatesLoc, err := ui.Location(ctx, PKCandidatesFinder)
 	if err != nil {
 		return err
 	}
 	candidatePt := candidatesLoc.TopLeft()
 
-	// Commit the text.
-	if err := keyboard.AccelAction("Enter")(ctx); err != nil {
+	if err := uiauto.Combine("commit the text to remove the candidates box",
+		keyboard.AccelAction("Enter"),
+		ui.WithTimeout(time.Second).WaitUntilGone(PKCandidatesFinder),
+	)(ctx); err != nil {
 		return err
 	}
 

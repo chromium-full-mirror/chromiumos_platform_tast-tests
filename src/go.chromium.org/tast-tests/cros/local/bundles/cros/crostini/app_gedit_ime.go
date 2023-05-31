@@ -135,7 +135,7 @@ func testUseIMEInGeditFile(ctx context.Context, terminalApp *terminalapp.Termina
 		ui.LeftClick(appWindow),
 		inputMethod.InstallAndActivate(tconn),
 		inputMethod.WaitUntilActivated(tconn),
-		imeData.EnterTestStringActionPK(keyboard),
+		imeData.EnterTestStringActionPK(keyboard, ui),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to enter test string")
 	}

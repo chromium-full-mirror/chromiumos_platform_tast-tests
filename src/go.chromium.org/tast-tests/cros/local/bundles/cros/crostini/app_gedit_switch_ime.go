@@ -105,7 +105,7 @@ func testSwitchIMEInGeditFile(ctx context.Context, terminalApp *terminalapp.Term
 		// Activate and type in Japanese.
 		japaneseIMEData.InputMethod.InstallAndActivate(tconn),
 		japaneseIMEData.InputMethod.WaitUntilActivated(tconn),
-		japaneseIMEData.EnterTestStringActionPK(keyboard),
+		japaneseIMEData.EnterTestStringActionPK(keyboard, ui),
 		// Take screenshot.
 		crostini.TakeAppScreenshot("Japanese in gedit"),
 	)(ctx); err != nil {
@@ -122,7 +122,7 @@ func testSwitchIMEInGeditFile(ctx context.Context, terminalApp *terminalapp.Term
 		// Activate and type in English.
 		englishIMEData.InputMethod.InstallAndActivate(tconn),
 		englishIMEData.InputMethod.WaitUntilActivated(tconn),
-		englishIMEData.EnterTestStringActionPK(keyboard),
+		englishIMEData.EnterTestStringActionPK(keyboard, ui),
 		// Take screenshot.
 		crostini.TakeAppScreenshot("Japanese and English in gedit"),
 		// Press ctrl+S to save the file.
