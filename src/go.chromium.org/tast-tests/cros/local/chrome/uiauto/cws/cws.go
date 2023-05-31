@@ -34,6 +34,13 @@ type App struct {
 // pollOpts is the polling interval and timeout to be used on the Chrome Web Store.
 var pollOpts = &testing.PollOptions{Interval: time.Second, Timeout: InstallationTimeout}
 
+// InstallAppWithTimeout installs the specified Chrome app from Chrome Web Store with timeout.
+func InstallAppWithTimeout(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn, app App, timeout time.Duration) error {
+	installCtx, cancel := context.WithDeadline(ctx, time.Now().Add(timeout))
+	defer cancel()
+	return InstallApp(installCtx, br, tconn, app)
+}
+
 // InstallApp installs the specified Chrome app from the Chrome Web Store. This works for both ash-chrome and lacros-chrome browsers.
 // tconn is a connection to ash-chrome.
 func InstallApp(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn, app App) (retErr error) {
@@ -119,6 +126,13 @@ func InstallApp(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn
 		if err := uiauto.IfSuccessThen(ui.Exists(confirm), ui.LeftClick(confirm))(ctx); err != nil {
 			return testing.PollBreak(err)
 		}
+
+		// The newly installed extension can potentially open new tabs.
+		// Activating cws target should switch back to the installation page.
+		if err := cws.ActivateTarget(ctx); err != nil {
+			return testing.PollBreak(err)
+		}
+
 		return errors.Errorf("%s still installing", app.Name)
 	}, pollOpts); err != nil {
 		return errors.Wrapf(err, "failed to install %s", app.Name)

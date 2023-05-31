@@ -34,7 +34,7 @@ func init() {
 		BugComponent: "b:187682",
 		Timeout:      3 * time.Minute,
 		Attr: []string{
-			"group:video_conference", "video_conference_per_build", "group:external-dependency",
+			"group:video_conference", "group:external-dependency",
 		},
 		SoftwareDeps: []string{"chrome", "camera_feature_effects"},
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("betty")),
@@ -115,7 +115,7 @@ func TrayTriggersExtension(ctx context.Context, s *testing.State) {
 	}
 	defer cleanup(cleanupCtx)
 
-	if screencastify.InstallExtension(ctx, tconn, br); err != nil {
+	if err := screencastify.InstallExtension(ctx, tconn, br); err != nil {
 		s.Fatal("Failed to install Screencastify: ", err)
 	}
 	defer screencastify.UninstallExtension(cleanupCtx, tconn, br)

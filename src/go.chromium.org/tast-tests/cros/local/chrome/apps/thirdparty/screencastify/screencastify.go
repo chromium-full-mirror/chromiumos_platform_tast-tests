@@ -24,7 +24,7 @@ import (
 
 // InstallExtension installs Screencastify Chrome extension from Chrome Web Store.
 func InstallExtension(ctx context.Context, tconn *chrome.TestConn, br *browser.Browser) error {
-	return cws.InstallApp(ctx, br, tconn, cws.Screencastify)
+	return cws.InstallAppWithTimeout(ctx, br, tconn, cws.Screencastify, time.Minute)
 }
 
 // UninstallExtension uninstalls Screencastify Chrome extension from Chrome Web Store.
