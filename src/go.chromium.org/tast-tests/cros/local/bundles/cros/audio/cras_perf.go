@@ -82,6 +82,7 @@ func crasPerfOneIteration(ctx context.Context, s *testing.State, pid int, pv *pe
 
 	var out profiler.PerfStatCyclesPerSecondOutput
 	var outSched profiler.PerfSchedOutput
+	var outStat profiler.ProcStatOutput
 
 	profs := []profiler.Profiler{
 		profiler.Top(&profiler.TopOpts{
@@ -90,6 +91,7 @@ func crasPerfOneIteration(ctx context.Context, s *testing.State, pid int, pv *pe
 		profiler.Perf(profiler.PerfStatCyclesPerSecondOpts(&out, pid)),
 		profiler.Perf(profiler.PerfRecordOpts("", nil, profiler.PerfRecordCallgraph)),
 		profiler.Perf(profiler.PerfSchedOpts(&outSched, "cras")),
+		profiler.ProcStat(&outStat, pid),
 	}
 
 	s.Log("start audio")
@@ -136,14 +138,13 @@ func crasPerfOneIteration(ctx context.Context, s *testing.State, pid int, pv *pe
 		if err := runningProfs.End(ctx); err != nil {
 			s.Error("Failure in ending the profiler: ", err)
 		} else {
-			// Append one measurement to PerfValue.
+			// Append measurements to PerfValue.
 			pv.Append(perfpkg.Metric{
 				Name:      "cras_cycles_per_second",
 				Unit:      "cycles",
 				Direction: perfpkg.SmallerIsBetter,
 				Multiple:  true,
 			}, out.CyclesPerSecond[0].Value)
-
 			// The 2nd element holds the value for E-Cores.
 			if len(out.CyclesPerSecond) > 1 {
 				pv.Append(perfpkg.Metric{
@@ -153,14 +154,20 @@ func crasPerfOneIteration(ctx context.Context, s *testing.State, pid int, pv *pe
 					Multiple:  true,
 				}, out.CyclesPerSecond[1].Value)
 			}
-
-			// Append one measurement to PerfValue.
 			pv.Append(perfpkg.Metric{
 				Name:      "cras_max_latency_ms",
 				Unit:      "milliseconds",
 				Direction: perfpkg.SmallerIsBetter,
 				Multiple:  true,
 			}, outSched.MaxLatencyMs)
+			s.Log("CPU utilization: ", outStat.CPUUtilization())
+			pv.Append(perfpkg.Metric{
+				Name:      "cras_cpu_utilization",
+				Unit:      "cpus",
+				Direction: perfpkg.SmallerIsBetter,
+				Multiple:  true,
+			}, outStat.CPUUtilization())
+
 		}
 
 		if param.Playback {
