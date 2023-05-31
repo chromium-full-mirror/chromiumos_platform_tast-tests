@@ -55,6 +55,8 @@ const (
 	ChromeAdminDeskTemplatesLoggedIn = "chromeAdminDeskTemplatesLoggedIn"
 	// ChromePolicyRealUserLoggedIn is a fixture name.
 	ChromePolicyRealUserLoggedIn = "chromePolicyRealUserLoggedIn"
+	// ChromePolicyLoggedInDevToolsAvailable is a fixture name.
+	ChromePolicyLoggedInDevToolsAvailable = "chromePolicyLoggedInDevToolsAvailable"
 )
 
 // Fixtures defined in go.chromium.org/tast-tests/cros/local/mgs/fixture.go.

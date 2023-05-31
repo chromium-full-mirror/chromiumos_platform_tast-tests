@@ -44,7 +44,7 @@ func init() {
 		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier"},
-		Fixture:      fixture.ChromePolicyLoggedIn,
+		Fixture:      fixture.ChromePolicyLoggedInDevToolsAvailable,
 		Timeout:      4 * time.Minute, // There is a longer wait when installing the extension.
 		Params: []testing.Param{
 			{

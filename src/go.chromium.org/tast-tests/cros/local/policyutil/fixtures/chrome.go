@@ -270,6 +270,22 @@ func init() {
 		PostTestTimeout: 15 * time.Second,
 		Parent:          fixture.FakeDMS,
 	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:     fixture.ChromePolicyLoggedInDevToolsAvailable,
+		Desc:     "Logged into a user session with the DevTools available via command-line argument",
+		Contacts: []string{"crmullins@google.com", "dp-chromeos-eng@google.com"},
+		Impl: &policyChromeFixture{
+			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+				return []chrome.Option{chrome.ExtraArgs("--force-devtools-available")}, nil
+			},
+		},
+		SetUpTimeout:    chrome.ManagedUserLoginTimeout + cleanupTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+		PostTestTimeout: 15 * time.Second,
+		Parent:          fixture.FakeDMS,
+	})
 }
 
 type policyChromeFixture struct {
