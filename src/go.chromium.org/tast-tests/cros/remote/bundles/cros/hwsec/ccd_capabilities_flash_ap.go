@@ -27,7 +27,9 @@ func init() {
 		Func: CCDCapabilitiesFlashAP,
 		Desc: "Test to verify FlashAP CCD capability",
 		// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
-		Attr: []string{"group:firmware", "group:hwsec", "firmware_unstable"},
+		// TODO(b:240148863): Reenable this test by adding the proper groups
+		// once we have a stable way to verify this CCD capability
+		Attr: []string{},
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"cros-hwsec@google.com",
