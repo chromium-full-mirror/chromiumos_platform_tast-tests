@@ -11,6 +11,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/pci"
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -236,15 +237,26 @@ func saveLacrosFaillog(ctx context.Context, cr *chrome.Chrome) error {
 	return nil
 }
 
+func saveLaunchDurationMetrics(launchDuration time.Duration, outDir string) error {
+	pv := perf.NewValues()
+	pv.Set(perf.Metric{
+		Name:      "launch_time",
+		Unit:      "s",
+		Direction: perf.SmallerIsBetter,
+		Multiple:  false,
+	}, launchDuration.Seconds())
+	return pv.Save(outDir)
+}
+
 func Smoke(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 	param := s.Param().(smokeTestParam)
+	signinTestExtensionManifestKey := s.RequiredVar("ui.signinProfileTestExtensionManifestKey")
+	startTime := time.Now()
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, kioskmode.CleanupDuration)
 	defer cancel()
-
-	signinTestExtensionManifestKey := s.RequiredVar("ui.signinProfileTestExtensionManifestKey")
 
 	kiosk, cr, err := kioskmode.New(
 		ctx, fdms, signinTestExtensionManifestKey, param.kioskModeOptions(signinTestExtensionManifestKey)...,
@@ -294,5 +306,9 @@ func Smoke(ctx context.Context, s *testing.State) {
 		if err := verifyLacrosIsRunning(ctx, cr); err != nil {
 			s.Fatal("Could not verify lacros is running: ", err)
 		}
+	}
+
+	if err := saveLaunchDurationMetrics(time.Since(startTime), s.OutDir()); err != nil {
+		s.Error("Failed to save perf metrics: ", err)
 	}
 }
