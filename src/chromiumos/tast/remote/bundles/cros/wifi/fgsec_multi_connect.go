@@ -17,6 +17,7 @@ import (
 	"chromiumos/tast/common/wifi/security/wpaeap"
 	"chromiumos/tast/remote/wificell"
 	hap "chromiumos/tast/remote/wificell/hostapd"
+
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -38,7 +39,7 @@ func init() {
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 		},
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
-		Attr:         []string{"group:wificell", "wificell_func"},
+		Attr:         []string{"group:wificell", "wificell_func", "wificell_unstable"},
 		ServiceDeps:  []string{wificell.ShillServiceName},
 		Fixture:      "wificellFixtRouters",
 		Requirements: []string{tdreq.WiFiGenSupportWiFi, tdreq.WiFiGenSupportLegacy, tdreq.WiFiGenSupportPMF, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
