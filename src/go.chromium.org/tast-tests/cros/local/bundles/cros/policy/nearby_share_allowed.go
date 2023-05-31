@@ -8,13 +8,13 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/restriction"
@@ -36,8 +36,7 @@ func init() {
 		BugComponent: "b:1129862",
 		Attr:         []string{"group:golden_tier"},
 		SoftwareDeps: []string{"chrome"},
-		VarDeps:      []string{"policy.managedUserAccountPool"},
-		Fixture:      fixture.FakeDMS,
+		Fixture:      fixture.ChromePolicyRealUserLoggedIn,
 		Timeout:      3 * time.Minute,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.NearbyShareAllowed{}, pci.VerifiedFunctionalityUI),
@@ -63,34 +62,14 @@ func NearbyShareAllowed(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
-
-	gaiaCreds, err := credconfig.PickRandomCreds(
-		s.RequiredVar("policy.managedUserAccountPool"))
-	if err != nil {
-		s.Fatal("Failed to parse managed user creds: ", err)
-	}
-
-	policyBlob := policy.NewBlob()
-	policyBlob.PolicyUser = gaiaCreds.User
-	if err := fdms.WritePolicyBlob(policyBlob); err != nil {
-		s.Fatal("Failed to write policies to FakeDMS: ", err)
-	}
-
-	opts := []chrome.Option{
-		chrome.DMSPolicy(fdms.URL),  // FakeDMS for setting policies
-		chrome.GAIALogin(gaiaCreds), // Real GAIA to enable 'Connected devices'
-	}
-
-	cr, err := chrome.New(ctx, opts...)
-	if err != nil {
-		s.Fatal("Failed to start Chrome: ", err)
-	}
-	defer cr.Close(cleanupCtx)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
+
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
 	// Test the 'enabled' and 'disabled' cases only, since these are the valid values in DPanel.
 	// No test for 'unset' since this is not a valid value for this policy.
@@ -117,15 +96,8 @@ func NearbyShareAllowed(ctx context.Context, s *testing.State) {
 			}
 
 			// Update policies.
-			policies := []policy.Policy{param.policy}
-			policyBlob := policy.NewBlob()
-			policyBlob.PolicyUser = gaiaCreds.User
-			policyBlob.AddPolicies(policies)
-			if err := policyutil.ServeBlobAndRefresh(ctx, fdms, cr, policyBlob); err != nil {
+			if err := policyutil.ServeAndVerify(ctx, fdms, cr, []policy.Policy{param.policy}); err != nil {
 				s.Fatal("Failed to update policies: ", err)
-			}
-			if err := policyutil.Verify(ctx, tconn, policies); err != nil {
-				s.Fatal("Failed to verify updated policies: ", err)
 			}
 
 			// Open 'Connected devices' page in OS Settings.

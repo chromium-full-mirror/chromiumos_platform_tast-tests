@@ -10,7 +10,6 @@ import (
 	"net/http/httptest"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
@@ -20,7 +19,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 
@@ -41,18 +39,17 @@ func init() {
 		Attr:         []string{"group:golden_tier"},
 		Data:         []string{"password_leak_detection.html"},
 		SoftwareDeps: []string{"chrome"},
-		VarDeps:      []string{"policy.managedUserAccountPool"},
 		Timeout:      3 * time.Minute,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.PasswordLeakDetectionEnabled{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.SafeBrowsingProtectionLevel{}, pci.VerifiedValue),
 		},
 		Params: []testing.Param{{
-			Fixture: fixture.FakeDMS,
+			Fixture: fixture.ChromePolicyRealUserLoggedIn,
 			Val:     browser.TypeAsh,
 		}, {
 			Name:              "lacros",
-			Fixture:           fixture.PersistentLacros, // FakeDMS with lacros policy
+			Fixture:           fixture.LacrosPolicyRealUserLoggedIn,
 			ExtraSoftwareDeps: []string{"lacros"},
 			Val:               browser.TypeLacros,
 		}},
@@ -63,6 +60,7 @@ func init() {
 // policy disables the `lookup_single_password_leak` network call.
 func PasswordLeakDetectionEnabled(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
@@ -71,42 +69,6 @@ func PasswordLeakDetectionEnabled(ctx context.Context, s *testing.State) {
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()
 
-	gaiaCreds, err := credconfig.PickRandomCreds(
-		s.RequiredVar("policy.managedUserAccountPool"))
-	if err != nil {
-		s.Fatal("Failed to parse managed user creds: ", err)
-	}
-
-	policyBlob := policy.NewBlob()
-	policyBlob.PolicyUser = gaiaCreds.User
-	if err := fdms.WritePolicyBlob(policyBlob); err != nil {
-		s.Fatal("Failed to write policies to FakeDMS: ", err)
-	}
-
-	opts := []chrome.Option{
-		chrome.DMSPolicy(fdms.URL),  // FakeDMS for setting policies
-		chrome.GAIALogin(gaiaCreds), // Real GAIA to enable password leak detection
-	}
-
-	// Add lacros chrome opts for lacros runs only.
-	if s.Param().(browser.Type) == browser.TypeLacros {
-		opts, err = lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(opts...)).Opts()
-		if err != nil {
-			s.Fatal("Failed to compute lacros chrome options: ", err)
-		}
-	}
-
-	// Create a new chrome instance.
-	cr, err := chrome.New(ctx, opts...)
-	if err != nil {
-		s.Fatal("Failed to start Chrome: ", err)
-	}
-	defer cr.Close(cleanupCtx)
-
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to create Test API connection: ", err)
-	}
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
 	for _, param := range []passwordleakdetection.TestCase{
@@ -138,14 +100,8 @@ func PasswordLeakDetectionEnabled(ctx context.Context, s *testing.State) {
 				// Enable Safe Browsing, which is required for password leak detection.
 				&policy.SafeBrowsingProtectionLevel{Val: 1},
 			}
-			policyBlob := policy.NewBlob()
-			policyBlob.PolicyUser = gaiaCreds.User
-			policyBlob.AddPolicies(policies)
-			if err := policyutil.ServeBlobAndRefresh(ctx, fdms, cr, policyBlob); err != nil {
+			if err := policyutil.ServeAndVerify(ctx, fdms, cr, policies); err != nil {
 				s.Fatal("Failed to update policies: ", err)
-			}
-			if err := policyutil.Verify(ctx, tconn, policies); err != nil {
-				s.Fatal("Failed to verify updated policies: ", err)
 			}
 
 			// Setup a browser.
