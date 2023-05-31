@@ -133,8 +133,15 @@ func NewScreenRecorder(ctx context.Context, tconn *chrome.TestConn) (*ScreenReco
 	if err != nil {
 		return nil, err
 	}
-
 	// Choose to record the entire desktop/screen with no audio.
+	if err := ChooseScreenRecorder(ctx, tconn); err != nil {
+		return nil, err
+	}
+	return sr, nil
+}
+
+// ChooseScreenRecorder makes the selection to record the entire desktop screen.
+func ChooseScreenRecorder(ctx context.Context, tconn *chrome.TestConn) error {
 	ui := New(tconn)
 	shareScreenDialog := nodewith.Name("Choose what to share").HasClass("DesktopMediaPickerDialogView")
 	entireScreenTab := nodewith.Name("Entire Screen").Role(role.Tab).Ancestor(shareScreenDialog)
@@ -142,15 +149,12 @@ func NewScreenRecorder(ctx context.Context, tconn *chrome.TestConn) (*ScreenReco
 	// The share button becomes focusable after the entire desktop button is clicked.
 	shareButton := nodewith.Name("Share").Role(role.Button).Ancestor(shareScreenDialog).Focusable()
 
-	if err := Combine("start screen recorder through ui",
+	err := Combine("start screen recorder through ui",
 		ui.WithInterval(500*time.Millisecond).LeftClickUntil(entireScreenTab, ui.Exists(firstDisplay)),
 		ui.WithInterval(500*time.Millisecond).LeftClickUntil(firstDisplay, ui.Exists(shareButton)),
 		ui.LeftClickUntil(shareButton, ui.WithTimeout(time.Second).WaitUntilGone(shareButton)),
-	)(ctx); err != nil {
-		return nil, err
-	}
-
-	return sr, nil
+	)(ctx)
+	return err
 }
 
 // NewWindowRecorder creates a ScreenRecorder, using a window as the media stream.

@@ -20,6 +20,14 @@ service ScreenRecorderService {
 
   // Stop stops and saves the recording to the specified location.
   rpc Stop(google.protobuf.Empty) returns (StopResponse) {}
+
+  // StreamScreenRecording creates a new media recorder, records the screen and
+  // streams the content.
+  // Incremental data chunks can be appended to a file as they arrive and the
+  // resulting screen recording file will be valid.
+  // There can be only a single recording in progress at a time.
+  rpc StreamScreenRecording(StreamScreenRecordingRequest)
+      returns (stream StreamScreenRecordingResponse) {}
 }
 
 message StartRequest {
@@ -34,4 +42,15 @@ message StopResponse {
   // FileName specified the location in the file system where the recording was
   // saved.
   string file_name = 1;
+}
+
+message StreamScreenRecordingRequest {
+  // Interval is the time in milliseconds of how often screen recording messages
+  // are sent.
+  uint32 interval = 1;
+}
+
+message StreamScreenRecordingResponse {
+  bytes data = 1;
+  uint32 length = 2;
 }

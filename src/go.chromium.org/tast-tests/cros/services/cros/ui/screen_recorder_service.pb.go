@@ -129,6 +129,110 @@ func (x *StopResponse) GetFileName() string {
 	return ""
 }
 
+type StreamScreenRecordingRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// Interval is the time in milliseconds of how often screen recording messages
+	// are sent.
+	Interval uint32 `protobuf:"varint,1,opt,name=interval,proto3" json:"interval,omitempty"`
+}
+
+func (x *StreamScreenRecordingRequest) Reset() {
+	*x = StreamScreenRecordingRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_screen_recorder_service_proto_msgTypes[2]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *StreamScreenRecordingRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StreamScreenRecordingRequest) ProtoMessage() {}
+
+func (x *StreamScreenRecordingRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_screen_recorder_service_proto_msgTypes[2]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StreamScreenRecordingRequest.ProtoReflect.Descriptor instead.
+func (*StreamScreenRecordingRequest) Descriptor() ([]byte, []int) {
+	return file_screen_recorder_service_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *StreamScreenRecordingRequest) GetInterval() uint32 {
+	if x != nil {
+		return x.Interval
+	}
+	return 0
+}
+
+type StreamScreenRecordingResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Data   []byte `protobuf:"bytes,1,opt,name=data,proto3" json:"data,omitempty"`
+	Length uint32 `protobuf:"varint,2,opt,name=length,proto3" json:"length,omitempty"`
+}
+
+func (x *StreamScreenRecordingResponse) Reset() {
+	*x = StreamScreenRecordingResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_screen_recorder_service_proto_msgTypes[3]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *StreamScreenRecordingResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StreamScreenRecordingResponse) ProtoMessage() {}
+
+func (x *StreamScreenRecordingResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_screen_recorder_service_proto_msgTypes[3]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StreamScreenRecordingResponse.ProtoReflect.Descriptor instead.
+func (*StreamScreenRecordingResponse) Descriptor() ([]byte, []int) {
+	return file_screen_recorder_service_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *StreamScreenRecordingResponse) GetData() []byte {
+	if x != nil {
+		return x.Data
+	}
+	return nil
+}
+
+func (x *StreamScreenRecordingResponse) GetLength() uint32 {
+	if x != nil {
+		return x.Length
+	}
+	return 0
+}
+
 var File_screen_recorder_service_proto protoreflect.FileDescriptor
 
 var file_screen_recorder_service_proto_rawDesc = []byte{
@@ -142,20 +246,36 @@ var file_screen_recorder_service_proto_rawDesc = []byte{
 	0x69, 0x6c, 0x65, 0x4e, 0x61, 0x6d, 0x65, 0x22, 0x2b, 0x0a, 0x0c, 0x53, 0x74, 0x6f, 0x70, 0x52,
 	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1b, 0x0a, 0x09, 0x66, 0x69, 0x6c, 0x65, 0x5f,
 	0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x66, 0x69, 0x6c, 0x65,
-	0x4e, 0x61, 0x6d, 0x65, 0x32, 0x94, 0x01, 0x0a, 0x15, 0x53, 0x63, 0x72, 0x65, 0x65, 0x6e, 0x52,
-	0x65, 0x63, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x3d,
-	0x0a, 0x05, 0x53, 0x74, 0x61, 0x72, 0x74, 0x12, 0x1a, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63,
-	0x72, 0x6f, 0x73, 0x2e, 0x75, 0x69, 0x2e, 0x53, 0x74, 0x61, 0x72, 0x74, 0x52, 0x65, 0x71, 0x75,
-	0x65, 0x73, 0x74, 0x1a, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x12, 0x3c, 0x0a,
-	0x04, 0x53, 0x74, 0x6f, 0x70, 0x12, 0x16, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x1a, 0x2e,
-	0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x75, 0x69, 0x2e, 0x53, 0x74, 0x6f,
-	0x70, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x42, 0x32, 0x5a, 0x30, 0x67,
-	0x6f, 0x2e, 0x63, 0x68, 0x72, 0x6f, 0x6d, 0x69, 0x75, 0x6d, 0x2e, 0x6f, 0x72, 0x67, 0x2f, 0x74,
-	0x61, 0x73, 0x74, 0x2d, 0x74, 0x65, 0x73, 0x74, 0x73, 0x2f, 0x63, 0x72, 0x6f, 0x73, 0x2f, 0x73,
-	0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x73, 0x2f, 0x63, 0x72, 0x6f, 0x73, 0x2f, 0x75, 0x69, 0x62,
-	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x4e, 0x61, 0x6d, 0x65, 0x22, 0x3a, 0x0a, 0x1c, 0x53, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x53, 0x63,
+	0x72, 0x65, 0x65, 0x6e, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x71,
+	0x75, 0x65, 0x73, 0x74, 0x12, 0x1a, 0x0a, 0x08, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x76, 0x61, 0x6c,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x08, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x76, 0x61, 0x6c,
+	0x22, 0x4b, 0x0a, 0x1d, 0x53, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x53, 0x63, 0x72, 0x65, 0x65, 0x6e,
+	0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x69, 0x6e, 0x67, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x12, 0x12, 0x0a, 0x04, 0x64, 0x61, 0x74, 0x61, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52,
+	0x04, 0x64, 0x61, 0x74, 0x61, 0x12, 0x16, 0x0a, 0x06, 0x6c, 0x65, 0x6e, 0x67, 0x74, 0x68, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x06, 0x6c, 0x65, 0x6e, 0x67, 0x74, 0x68, 0x32, 0x8a, 0x02,
+	0x0a, 0x15, 0x53, 0x63, 0x72, 0x65, 0x65, 0x6e, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x65, 0x72,
+	0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x3d, 0x0a, 0x05, 0x53, 0x74, 0x61, 0x72, 0x74,
+	0x12, 0x1a, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x75, 0x69, 0x2e,
+	0x53, 0x74, 0x61, 0x72, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x16, 0x2e, 0x67,
+	0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x45,
+	0x6d, 0x70, 0x74, 0x79, 0x22, 0x00, 0x12, 0x3c, 0x0a, 0x04, 0x53, 0x74, 0x6f, 0x70, 0x12, 0x16,
+	0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66,
+	0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x1a, 0x1a, 0x2e, 0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72,
+	0x6f, 0x73, 0x2e, 0x75, 0x69, 0x2e, 0x53, 0x74, 0x6f, 0x70, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x22, 0x00, 0x12, 0x74, 0x0a, 0x15, 0x53, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x53, 0x63,
+	0x72, 0x65, 0x65, 0x6e, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x69, 0x6e, 0x67, 0x12, 0x2a, 0x2e,
+	0x74, 0x61, 0x73, 0x74, 0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x75, 0x69, 0x2e, 0x53, 0x74, 0x72,
+	0x65, 0x61, 0x6d, 0x53, 0x63, 0x72, 0x65, 0x65, 0x6e, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x69,
+	0x6e, 0x67, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2b, 0x2e, 0x74, 0x61, 0x73, 0x74,
+	0x2e, 0x63, 0x72, 0x6f, 0x73, 0x2e, 0x75, 0x69, 0x2e, 0x53, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x53,
+	0x63, 0x72, 0x65, 0x65, 0x6e, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x69, 0x6e, 0x67, 0x52, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x30, 0x01, 0x42, 0x32, 0x5a, 0x30, 0x67, 0x6f,
+	0x2e, 0x63, 0x68, 0x72, 0x6f, 0x6d, 0x69, 0x75, 0x6d, 0x2e, 0x6f, 0x72, 0x67, 0x2f, 0x74, 0x61,
+	0x73, 0x74, 0x2d, 0x74, 0x65, 0x73, 0x74, 0x73, 0x2f, 0x63, 0x72, 0x6f, 0x73, 0x2f, 0x73, 0x65,
+	0x72, 0x76, 0x69, 0x63, 0x65, 0x73, 0x2f, 0x63, 0x72, 0x6f, 0x73, 0x2f, 0x75, 0x69, 0x62, 0x06,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -170,19 +290,23 @@ func file_screen_recorder_service_proto_rawDescGZIP() []byte {
 	return file_screen_recorder_service_proto_rawDescData
 }
 
-var file_screen_recorder_service_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_screen_recorder_service_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_screen_recorder_service_proto_goTypes = []interface{}{
-	(*StartRequest)(nil),  // 0: tast.cros.ui.StartRequest
-	(*StopResponse)(nil),  // 1: tast.cros.ui.StopResponse
-	(*emptypb.Empty)(nil), // 2: google.protobuf.Empty
+	(*StartRequest)(nil),                  // 0: tast.cros.ui.StartRequest
+	(*StopResponse)(nil),                  // 1: tast.cros.ui.StopResponse
+	(*StreamScreenRecordingRequest)(nil),  // 2: tast.cros.ui.StreamScreenRecordingRequest
+	(*StreamScreenRecordingResponse)(nil), // 3: tast.cros.ui.StreamScreenRecordingResponse
+	(*emptypb.Empty)(nil),                 // 4: google.protobuf.Empty
 }
 var file_screen_recorder_service_proto_depIdxs = []int32{
 	0, // 0: tast.cros.ui.ScreenRecorderService.Start:input_type -> tast.cros.ui.StartRequest
-	2, // 1: tast.cros.ui.ScreenRecorderService.Stop:input_type -> google.protobuf.Empty
-	2, // 2: tast.cros.ui.ScreenRecorderService.Start:output_type -> google.protobuf.Empty
-	1, // 3: tast.cros.ui.ScreenRecorderService.Stop:output_type -> tast.cros.ui.StopResponse
-	2, // [2:4] is the sub-list for method output_type
-	0, // [0:2] is the sub-list for method input_type
+	4, // 1: tast.cros.ui.ScreenRecorderService.Stop:input_type -> google.protobuf.Empty
+	2, // 2: tast.cros.ui.ScreenRecorderService.StreamScreenRecording:input_type -> tast.cros.ui.StreamScreenRecordingRequest
+	4, // 3: tast.cros.ui.ScreenRecorderService.Start:output_type -> google.protobuf.Empty
+	1, // 4: tast.cros.ui.ScreenRecorderService.Stop:output_type -> tast.cros.ui.StopResponse
+	3, // 5: tast.cros.ui.ScreenRecorderService.StreamScreenRecording:output_type -> tast.cros.ui.StreamScreenRecordingResponse
+	3, // [3:6] is the sub-list for method output_type
+	0, // [0:3] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -218,6 +342,30 @@ func file_screen_recorder_service_proto_init() {
 				return nil
 			}
 		}
+		file_screen_recorder_service_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*StreamScreenRecordingRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_screen_recorder_service_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*StreamScreenRecordingResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -225,7 +373,7 @@ func file_screen_recorder_service_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_screen_recorder_service_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
@@ -258,6 +406,12 @@ type ScreenRecorderServiceClient interface {
 	Start(ctx context.Context, in *StartRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// Stop stops and saves the recording to the specified location.
 	Stop(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*StopResponse, error)
+	// StreamScreenRecording creates a new media recorder, records the screen and
+	// streams the content.
+	// Incremental data chunks can be appended to a file as they arrive and the
+	// resulting screen recording file will be valid.
+	// There can be only a single recording in progress at a time.
+	StreamScreenRecording(ctx context.Context, in *StreamScreenRecordingRequest, opts ...grpc.CallOption) (ScreenRecorderService_StreamScreenRecordingClient, error)
 }
 
 type screenRecorderServiceClient struct {
@@ -286,6 +440,38 @@ func (c *screenRecorderServiceClient) Stop(ctx context.Context, in *emptypb.Empt
 	return out, nil
 }
 
+func (c *screenRecorderServiceClient) StreamScreenRecording(ctx context.Context, in *StreamScreenRecordingRequest, opts ...grpc.CallOption) (ScreenRecorderService_StreamScreenRecordingClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_ScreenRecorderService_serviceDesc.Streams[0], "/tast.cros.ui.ScreenRecorderService/StreamScreenRecording", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &screenRecorderServiceStreamScreenRecordingClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type ScreenRecorderService_StreamScreenRecordingClient interface {
+	Recv() (*StreamScreenRecordingResponse, error)
+	grpc.ClientStream
+}
+
+type screenRecorderServiceStreamScreenRecordingClient struct {
+	grpc.ClientStream
+}
+
+func (x *screenRecorderServiceStreamScreenRecordingClient) Recv() (*StreamScreenRecordingResponse, error) {
+	m := new(StreamScreenRecordingResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // ScreenRecorderServiceServer is the server API for ScreenRecorderService service.
 type ScreenRecorderServiceServer interface {
 	// Start creates a new media recorder and starts to record the screen.
@@ -295,6 +481,12 @@ type ScreenRecorderServiceServer interface {
 	Start(context.Context, *StartRequest) (*emptypb.Empty, error)
 	// Stop stops and saves the recording to the specified location.
 	Stop(context.Context, *emptypb.Empty) (*StopResponse, error)
+	// StreamScreenRecording creates a new media recorder, records the screen and
+	// streams the content.
+	// Incremental data chunks can be appended to a file as they arrive and the
+	// resulting screen recording file will be valid.
+	// There can be only a single recording in progress at a time.
+	StreamScreenRecording(*StreamScreenRecordingRequest, ScreenRecorderService_StreamScreenRecordingServer) error
 }
 
 // UnimplementedScreenRecorderServiceServer can be embedded to have forward compatible implementations.
@@ -306,6 +498,9 @@ func (*UnimplementedScreenRecorderServiceServer) Start(context.Context, *StartRe
 }
 func (*UnimplementedScreenRecorderServiceServer) Stop(context.Context, *emptypb.Empty) (*StopResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Stop not implemented")
+}
+func (*UnimplementedScreenRecorderServiceServer) StreamScreenRecording(*StreamScreenRecordingRequest, ScreenRecorderService_StreamScreenRecordingServer) error {
+	return status.Errorf(codes.Unimplemented, "method StreamScreenRecording not implemented")
 }
 
 func RegisterScreenRecorderServiceServer(s *grpc.Server, srv ScreenRecorderServiceServer) {
@@ -348,6 +543,27 @@ func _ScreenRecorderService_Stop_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ScreenRecorderService_StreamScreenRecording_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(StreamScreenRecordingRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(ScreenRecorderServiceServer).StreamScreenRecording(m, &screenRecorderServiceStreamScreenRecordingServer{stream})
+}
+
+type ScreenRecorderService_StreamScreenRecordingServer interface {
+	Send(*StreamScreenRecordingResponse) error
+	grpc.ServerStream
+}
+
+type screenRecorderServiceStreamScreenRecordingServer struct {
+	grpc.ServerStream
+}
+
+func (x *screenRecorderServiceStreamScreenRecordingServer) Send(m *StreamScreenRecordingResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 var _ScreenRecorderService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "tast.cros.ui.ScreenRecorderService",
 	HandlerType: (*ScreenRecorderServiceServer)(nil),
@@ -361,6 +577,12 @@ var _ScreenRecorderService_serviceDesc = grpc.ServiceDesc{
 			Handler:    _ScreenRecorderService_Stop_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "StreamScreenRecording",
+			Handler:       _ScreenRecorderService_StreamScreenRecording_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "screen_recorder_service.proto",
 }
