@@ -62,6 +62,8 @@ var prunePaths = []string{
 	// Skip vdso .so files which are built together with the kernel without RELRO
 	"/lib/modules/*/vdso",
 	"/lib/modules/*/vdso32",
+	// Skip some bootloader files that are incorrectly detected as ELF files.
+	"/efi/syslinux",
 }
 
 // Allowed files for the BIND_NOW condition.
