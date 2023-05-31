@@ -151,6 +151,9 @@ func init() {
 		}, {
 			Name: "disk_read",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineDiskRead),
+		}, {
+			Name: "power_button",
+			Val:  croshealthd.NewRoutineParams(croshealthd.RoutinePowerButton),
 		}},
 	})
 }

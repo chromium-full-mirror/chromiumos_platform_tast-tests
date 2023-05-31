@@ -5,15 +5,18 @@
 package croshealthd
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/crosconfig"
+	"go.chromium.org/tast-tests/cros/local/input"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/shutil"
@@ -58,6 +61,7 @@ const (
 	RoutineBluetoothPower                 = "bluetooth_power"
 	RoutineBluetoothDiscovery             = "bluetooth_discovery"
 	RoutineBluetoothScanning              = "bluetooth_scanning"
+	RoutinePowerButton                    = "power_button"
 )
 
 // List of possible routine statuses
@@ -157,12 +161,16 @@ func RunDiagRoutine(ctx context.Context, params RoutineParams) (*RoutineResult, 
 	} else if params.Routine == RoutineDiskRead {
 		diagParams = append(diagParams, "--length_seconds=1")
 		diagParams = append(diagParams, "--file_size_mb=64")
+	} else if params.Routine == RoutinePowerButton {
+		diagParams = append(diagParams, "--length_seconds=5")
 	}
 
 	var output string
 	var err error
 	if params.Routine == RoutineLedLitUp {
 		output, err = runLEDDiag(ctx, diagParams)
+	} else if params.Routine == RoutinePowerButton {
+		output, err = runPowerButtonDiag(ctx, diagParams)
 	} else {
 		output, err = runDiag(ctx, diagParams)
 	}
@@ -232,6 +240,77 @@ func runLEDDiag(ctx context.Context, args []string) (string, error) {
 		return "", errors.Wrapf(err, "command failed with stdout: %q, stderr: %q", string(stdout), string(stderr))
 	}
 	return string(stdout), nil
+}
+
+// runPowerButtonDiag is a helper function similar to `runDiag` while simulating the
+// power button event for power button routine.
+func runPowerButtonDiag(ctx context.Context, args []string) (string, error) {
+	// Helper function to send events.
+	sendPowerButtonEvent := func(ew *input.RawEventWriter, val int32) error {
+		if err := ew.Event(input.EV_KEY, input.KEY_POWER, val); err != nil {
+			return errors.Wrapf(err, "failed to emit power button event with val = %d", val)
+		}
+		if err := ew.Sync(); err != nil {
+			return errors.Wrapf(err, "failed to sync power button event with val = %d", val)
+		}
+		return nil
+	}
+	pressPowerButton := func(ew *input.RawEventWriter) error {
+		return sendPowerButtonEvent(ew, 1)
+	}
+	releasePowerButton := func(ew *input.RawEventWriter) error {
+		return sendPowerButtonEvent(ew, 0)
+	}
+
+	// Find power button device.
+	deviceFound, powerButtonDevicePath, err := input.FindPowerKeyDevice(ctx)
+	if err != nil {
+		return "", err
+	} else if !deviceFound {
+		return "", errors.New("no input device for power button found")
+	}
+	testing.ContextLogf(ctx, "power button device found: %q", powerButtonDevicePath)
+
+	// Open the input device.
+	powerButtonEventWriter, err := input.Device(ctx, powerButtonDevicePath)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to open power button device")
+	}
+	defer releasePowerButton(powerButtonEventWriter)
+	defer powerButtonEventWriter.Close()
+
+	// Start cros_healthd routine.
+	var stdoutBuf bytes.Buffer
+	args = append([]string{"diag"}, args...)
+	runRoutineCmd := testexec.CommandContext(ctx, "cros-health-tool", args...)
+	runRoutineCmd.Stdout = &stdoutBuf
+	if err := runRoutineCmd.Start(); err != nil {
+		testing.ContextLogf(ctx, "stdout of command: %q", stdoutBuf.String())
+		runRoutineCmd.DumpLog(ctx)
+		return "", errors.Wrapf(err, "failed to run %q", shutil.EscapeSlice(runRoutineCmd.Args))
+	}
+	testing.ContextLogf(ctx, "Running %q", shutil.EscapeSlice(runRoutineCmd.Args))
+
+	// Toggle power button pressed and released state repeatedly until the routine finishes.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if err := pressPowerButton(powerButtonEventWriter); err != nil {
+			return err
+		}
+		if err := releasePowerButton(powerButtonEventWriter); err != nil {
+			return err
+		}
+		if strings.Contains(stdoutBuf.String(), "Status message") {
+			return nil
+		}
+		return errors.New("routine not finished")
+	}, &testing.PollOptions{Interval: 1 * time.Second, Timeout: 5 * time.Second}); err != nil {
+		return "", errors.Wrap(err, "routine timeout")
+	}
+
+	if err := runRoutineCmd.Wait(); err != nil {
+		return "", errors.Wrap(err, "failed to wait command")
+	}
+	return stdoutBuf.String(), nil
 }
 
 // getNVMEWearLevelThreshold reads the threshold value for NVME wear level from
