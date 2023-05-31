@@ -74,6 +74,7 @@ func RemoteSupportRegistration(ctx context.Context, s *testing.State) {
 	opts := []chrome.Option{
 		chrome.DMSPolicy(fdms.URL),  // FakeDMS for setting policies
 		chrome.GAIALogin(gaiaCreds), // Real GAIA to enable CRD
+		chrome.ExtraArgs("--force-devtools-available"),
 	}
 
 	if s.Param().(browser.Type) == browser.TypeLacros {
