@@ -34,7 +34,7 @@ func init() {
 			"cros-commercial-chromeapps-eng@google.com",
 			"giovax@google.com", // Test owner
 		},
-		BugComponent: "b:1263917",
+		BugComponent: "b:1253865", // ChromeOS > Software > Commercial (Enterprise) > Chrome Apps and Extensions
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier"},
 		Params: []testing.Param{{
