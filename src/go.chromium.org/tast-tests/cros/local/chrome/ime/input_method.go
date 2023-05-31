@@ -302,6 +302,15 @@ var Kannada = InputMethod{
 	VoiceLanguage:       LanguageKn,
 }
 
+// Khmer represents the input method of Khmer.
+var Khmer = InputMethod{
+	Name:                "Khmer",
+	ID:                  "vkd_km",
+	ShortLabel:          "KM",
+	HandwritingLanguage: LanguageKm,
+	VoiceLanguage:       LanguageKm,
+}
+
 // Malayalam represents the input method of Malayalam.
 var Malayalam = InputMethod{
 	Name:                "Malayalam",
@@ -316,6 +325,15 @@ var Marathi = InputMethod{
 	ID:                  "mr-t-i0-und",
 	HandwritingLanguage: LanguageMr,
 	VoiceLanguage:       LanguageMr,
+}
+
+// Myanmar represents the input method of Myanmar.
+var Myanmar = InputMethod{
+	Name:                "Myanmar",
+	ID:                  "vkd_my",
+	ShortLabel:          "MY",
+	HandwritingLanguage: LanguageMy,
+	VoiceLanguage:       LanguageMy,
 }
 
 // NepaliTransliteration represents the input method of Nepali transliteration.
@@ -390,6 +408,15 @@ var Sanskrit = InputMethod{
 	VoiceLanguage:       LanguageSa,
 }
 
+// Sinhala represents the input method of Sinhala.
+var Sinhala = InputMethod{
+	Name:                "Sinhala",
+	ID:                  "vkd_si",
+	ShortLabel:          "SI",
+	HandwritingLanguage: LanguageSi,
+	VoiceLanguage:       LanguageSi,
+}
+
 // Tamil represents the input method of Tamil.
 var Tamil = InputMethod{
 	Name:                "Tamil",
@@ -404,6 +431,14 @@ var Telugu = InputMethod{
 	ID:                  "te-t-i0-und",
 	HandwritingLanguage: LanguageTe,
 	VoiceLanguage:       LanguageTe,
+}
+
+// ThaiTis represents the input method of Thai (TIS).
+var ThaiTis = InputMethod{
+	Name:                "ThaiTis",
+	ID:                  "vkd_th_tis",
+	HandwritingLanguage: LanguageTh,
+	VoiceLanguage:       LanguageTh,
 }
 
 // Urdu represents the input method of Urdu.

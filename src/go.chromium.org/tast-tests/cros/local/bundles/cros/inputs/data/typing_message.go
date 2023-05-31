@@ -107,6 +107,26 @@ var TypingMessageHello = typingMessage{
 		LocationKeySeq:  strings.Split("lvpfh", ""),
 		ExpectedText:    "مرحبا",
 	},
+	ime.Khmer: {
+		CharacterKeySeq: strings.Split("abcdefghijklmnopqrstuvwxyz", ""),
+		LocationKeySeq:  strings.Split("abcdefghijklmnopqrstuvwxyz", ""),
+		ExpectedText:    "បចដេថងហិ្កលមនោផឆរសតុវឹខយឋ",
+	},
+	ime.Myanmar: {
+		CharacterKeySeq: strings.Split("abcdefghijklmnopqrstuvwxyz", ""),
+		LocationKeySeq:  strings.Split("abcdefghijklmnopqrstuvwxyz", ""),
+		ExpectedText:    "ဘေခိန်ါ့ငြုူာညသစဆမျအကလတထပဖ",
+	},
+	ime.Sinhala: {
+		CharacterKeySeq: strings.Split("abcdefghijklmnopqrstuvwxyz", ""),
+		LocationKeySeq:  strings.Split("abcdefghijklmnopqrstuvwxyz", ""),
+		ExpectedText:    "්ඉජාැටෙයසවනකපබදචුරිඑමඩඅංහ'",
+	},
+	ime.ThaiTis: {
+		CharacterKeySeq: strings.Split("abcdefghijklmnopqrstuvwxyz", ""),
+		LocationKeySeq:  strings.Split("abcdefghijklmnopqrstuvwxyz", ""),
+		ExpectedText:    "ฟิแกำดเ้ร่าสทืนยๆพหะีอไปัผ",
+	},
 }
 
 // TypingMessagePassword defines messages of input methods for passwordInputField.
