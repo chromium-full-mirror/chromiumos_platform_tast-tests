@@ -23,6 +23,7 @@ import (
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 const passphrase = "fourwordsalluppercase"
@@ -54,7 +55,7 @@ func init() {
 			"chadduffin@google.com",
 		},
 		BugComponent: "b:1131912", // ChromeOS > Software > System Services > Connectivity > WiFi
-		Attr:         []string{"group:wificell", "wificell_e2e_unstable"},
+		Attr:         []string{"group:wificell", "wificell_e2e"},
 		ServiceDeps: []string{
 			"tast.cros.browser.ChromeService",
 			"tast.cros.chrome.uiauto.ossettings.OsSettingsService",
@@ -63,6 +64,7 @@ func init() {
 			"tast.cros.ui.AutomationService",
 			wificell.ShillServiceName,
 		},
+		HardwareDeps: hwdep.D(hwdep.SkipOnModel("bruce", "sona", "syndra")),
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "wificellFixtWithCapture",
 		Requirements: []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
