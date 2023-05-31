@@ -8,7 +8,7 @@ This repository contains integration tests that are run by [Tast].
     *   [`local/`](helpers/local/) - Helpers for local tests that are compiled
         and installed to `/usr/local/libexec/tast/helpers/local/cros` by the
         `tast-local-helpers-cros` package.
-*   [`src/chromiumos/tast/`](src/chromiumos/tast/)
+*   [`src/go.chromium.org/tast-tests/cros/`](src/go.chromium.org/tast-tests/cros/)
     *   [`local/`](src/go.chromium.org/tast-tests/cros/local/) - Code related to local (i.e.
         on-device or "client") tests.
         *   [`bundles/`](src/go.chromium.org/tast-tests/cros/local/bundles/) - Local test
