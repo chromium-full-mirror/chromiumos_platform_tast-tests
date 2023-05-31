@@ -109,6 +109,15 @@ func (di *devInfo) isTrackpad() bool {
 		!di.hasBit(evGroup, uint16(BTN_STYLUS2))
 }
 
+// isStylus if this appears to be a stylus device.
+func (di *devInfo) isStylus() bool {
+	// Taken from HasStylus in ui/events/ozone/evdev/event_device_info.cc
+	return di.path != "" &&
+		(di.hasBit(keyGroup, uint16(BTN_TOOL_PEN)) ||
+			di.hasBit(keyGroup, uint16(BTN_STYLUS)) ||
+			di.hasBit(keyGroup, uint16(BTN_STYLUS2)))
+}
+
 // hasBit returns true if the n-th bit in di.bits is set.
 func (di *devInfo) hasBit(grp string, n uint16) bool {
 	bits, ok := di.bits[grp]
