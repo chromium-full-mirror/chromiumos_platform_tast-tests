@@ -192,6 +192,14 @@ func ConvertPowerPerfValue(ctx context.Context, values *perf.Values) (map[string
 		// metric.Name is guaranteed be non-empty string.
 		metricName = metricNameSlice[size-1]
 
+		// Ignore metrics unrelated to power. The power timeline can specify
+		// a "snapshotsSkipped" metric that is reported when grace periods are
+		// used for the perf.Timeline. Skip this metric, as it is mainly for
+		// auditing, and is not power specific.
+		if metricName == "snapshotsSkipped" {
+			continue
+		}
+
 		// Four scenarios to be considered:
 		// 1."system": used both by power and ARCVM team. To minimize interuption,
 		// a power metric type is not assigned to it. Manually adding a metric type
@@ -644,20 +652,31 @@ func SavePowerLogHTML(ctx context.Context, outDir string, powerLogDict map[strin
 	return nil
 }
 
-// GeneratePowerLogAndSaveToCrosbolt generates power_log.json and upload results to crosbolt.
-func GeneratePowerLogAndSaveToCrosbolt(ctx context.Context, outDir, testName string, values *perf.Values) error {
+// GeneratePowerLog returns the power dict and the power log dict, and
+// stores power_log.json and power_log.html.
+func GeneratePowerLog(ctx context.Context, outDir, testName string, values *perf.Values) (map[string]interface{}, map[string]interface{}, error) {
 	powerDict, err := ConvertPowerPerfValue(ctx, values)
 	if err != nil {
-		return errors.Wrap(err, "failed to convert power perf values to power dictionary")
+		return nil, nil, errors.Wrap(err, "failed to convert power perf values to power dictionary")
 	}
 	powerLogDict := CreatePowerLogDict(ctx, testName, powerDict)
 
 	if err := SavePowerLogJSON(ctx, outDir, powerLogDict); err != nil {
-		return errors.Wrap(err, "failed to generate power_log.json")
+		return nil, nil, errors.Wrap(err, "failed to generate power_log.json")
 	}
 
 	if err := SavePowerLogHTML(ctx, outDir, powerLogDict); err != nil {
-		return errors.Wrap(err, "failed to generate power_log.html")
+		return nil, nil, errors.Wrap(err, "failed to generate power_log.html")
+	}
+	return powerDict, powerLogDict, nil
+}
+
+// GeneratePowerLogAndSaveToCrosbolt generates power_log.{json, html}
+// and upload results to Crosbolt.
+func GeneratePowerLogAndSaveToCrosbolt(ctx context.Context, outDir, testName string, values *perf.Values) error {
+	powerDict, powerLogDict, err := GeneratePowerLog(ctx, outDir, testName, values)
+	if err != nil {
+		return errors.Wrap(err, "failed to generate power log")
 	}
 
 	if err := UploadToDashboard(ctx, powerLogDict, ""); err != nil {

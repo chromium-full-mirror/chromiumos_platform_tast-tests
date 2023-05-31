@@ -1278,6 +1278,18 @@ func (r *Recorder) stopMetrics(ctx context.Context) error {
 			}
 		} else {
 			r.pv.Merge(powerData)
+
+			if strings.ToLower(powerLogVar.Value()) == "true" {
+				dir, ok := testing.ContextOutDir(ctx)
+				if !ok || dir == "" {
+					return errors.New("failed to get the out directory")
+				}
+
+				// Save power_log.json and power_log.html.
+				if _, _, err := power.GeneratePowerLog(ctx, dir, "", powerData); err != nil {
+					return errors.Wrap(err, "failed to generate power log")
+				}
+			}
 		}
 	}
 

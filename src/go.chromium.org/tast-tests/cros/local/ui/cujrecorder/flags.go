@@ -65,3 +65,11 @@ var extraChromeCategoriesForTracing = testing.RegisterVarString(
 	`A comma-separated string specifying what extra chrome categories should be
 	 added to perfetto config for tracing`,
 )
+
+// powerLogVar is a runtime variable the specifies whether or not we should
+// save power_log.json and power_log.html for each run.
+var powerLogVar = testing.RegisterVarString(
+	"cujrecorder.powerLog",
+	"",
+	"A boolean string (true/false) signifying whether to save the power_log.json or power_log.html for each run",
+)
