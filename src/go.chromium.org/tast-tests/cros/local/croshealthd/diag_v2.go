@@ -19,11 +19,12 @@ import (
 
 // List of cros_healthd diagnostic routines.
 const (
-	RoutineMemoryV2    string = "memory_v2"
-	RoutineCPUStressV2 string = "cpu_stress_v2"
-	RoutineAudioDriver string = "audio_driver"
-	RoutineCPUCacheV2  string = "cpu_cache_v2"
-	RoutineUFSLifetime string = "ufs_lifetime"
+	RoutineMemoryV2      string = "memory_v2"
+	RoutineCPUStressV2   string = "cpu_stress_v2"
+	RoutineAudioDriver   string = "audio_driver"
+	RoutineCPUCacheV2    string = "cpu_cache_v2"
+	RoutineUFSLifetime   string = "ufs_lifetime"
+	RoutinePrimeSearchV2 string = "prime_search_v2"
 )
 
 // RoutineResultV2 contains the progress of the routine as a percentage and
@@ -52,6 +53,9 @@ func RunDiagRoutineV2(ctx context.Context, params RoutineParamsV2) (*RoutineResu
 		// Runs the routine for 1 second.
 		diagParams = append(diagParams, "--length_seconds=1")
 	case RoutineCPUCacheV2:
+		// Runs the routine for 1 second.
+		diagParams = append(diagParams, "--length_seconds=1")
+	case RoutinePrimeSearchV2:
 		// Runs the routine for 1 second.
 		diagParams = append(diagParams, "--length_seconds=1")
 	default:
