@@ -17,7 +17,7 @@ TAST_PKG_CACHE = pathlib.Path("/tmp/tast_list_packages_cache.json")
 TAST_CMD_CACHE = pathlib.Path("/tmp/tast_last_debugger_cmd.pickle")
 TEST_FORMAT = re.compile(r"[a-z0-9]+\.([A-Z][a-zA-Z0-9]*)(?:\.[a-z]+)?")
 TEST_PREFIX= re.compile(".*?/platform/tast-tests/src/")
-BUNDLE_FORMAT = re.compile("tast-tests/src/chromiumos/tast/(local|remote)/bundles")
+BUNDLE_FORMAT = re.compile("tast-tests/src/go.chromium.org/tast-tests/cros/(local|remote)/bundles")
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--dut", required=True, help="IP of dut")
@@ -46,7 +46,7 @@ if not TAST_PKG_CACHE.exists():
 # contents, we'll need to resolve it (and the path doesn't work, since it
 # was generated outside the chroot).
 args.current_file = re.sub("tast-tests/(local|remote)_tests",
-                           r"tast-tests/src/chromiumos/tast/\1/bundles/cros",
+                           r"tast-tests/src/go.chromium.org/tast-tests/cros/\1/bundles/cros",
                            args.current_file)
 
 @dataclasses.dataclass

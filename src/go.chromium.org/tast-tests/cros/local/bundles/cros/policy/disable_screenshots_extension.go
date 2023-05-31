@@ -61,7 +61,7 @@ func init() {
 			Val:               browser.TypeLacros,
 		}},
 		Data: append(extensionFiles, disableScreenshotsExtensionHTML),
-		// 2 minutes is the default local test timeout. Check localTestTimeout constant in tast/src/chromiumos/tast/internal/bundle/local.go.
+		// 2 minutes is the default local test timeout. Check localTestTimeout constant in tast/src/go.chromium.org/tast-tests/cros/internal/bundle/local.go.
 		Timeout: chrome.ManagedUserLoginTimeout + 2*time.Minute,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DisableScreenshots{}, pci.VerifiedFunctionalityJS),

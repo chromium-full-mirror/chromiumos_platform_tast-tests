@@ -84,7 +84,7 @@ This mitigates the risk of accidentally putting a DUT into into a state that wou
 If we find that our test is stable enough, then we can promote it to another attribute, like `firmware_ec` (or smoke, cr50, slow, ccd as appropriate).
 Please add linto@chromium.org to the gerrit review when moving to a stable suite.
 
-[attr.go]: https://chromium.googlesource.com/chromiumos/platform/tast/+/refs/heads/main/src/chromiumos/tast/internal/testing/attr.go
+[attr.go]: https://chromium.googlesource.com/chromiumos/platform/tast/+/refs/heads/main/src/go.chromium.org/tast/core/internal/testing/attr.go
 [go/effective-cq]: http://goto.google.com/effective-cq
 [go/faft-tast-via-tauto]: http://goto.google.com/faft-tast-via-tauto
 
