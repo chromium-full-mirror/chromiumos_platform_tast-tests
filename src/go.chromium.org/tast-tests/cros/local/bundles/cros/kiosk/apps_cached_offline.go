@@ -20,7 +20,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/kioskmode"
 	"go.chromium.org/tast-tests/cros/local/network"
 	local_firewall "go.chromium.org/tast-tests/cros/local/network/firewall"
-	"go.chromium.org/tast-tests/cros/local/syslog"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -107,12 +106,6 @@ func AppsCachedOffline(ctx context.Context, s *testing.State) {
 
 	s.Log("Trying to launch Kiosk app offline")
 	restartAndLaunchKiosk := func(ctx context.Context) error {
-		reader, err := syslog.NewReader(ctx, syslog.Program("chrome"))
-		if err != nil {
-			return errors.Wrap(err, "failed to start log reader")
-		}
-		defer reader.Close()
-
 		// Additionally block access to FakeDMS to make Chrome think it's offline.
 		firewallRunner := local_firewall.NewLocalRunner()
 		fdmsURL, err := url.Parse(fdms.URL)

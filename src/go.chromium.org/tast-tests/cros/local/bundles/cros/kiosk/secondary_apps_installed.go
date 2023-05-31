@@ -17,7 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/kioskmode"
-	"go.chromium.org/tast-tests/cros/local/syslog"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -145,12 +144,6 @@ func SecondaryAppsInstalled(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to get Test API connection: ", err)
 		}
 		defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, testConn)
-
-		reader, err := syslog.NewReader(ctx, syslog.Program("chrome"))
-		if err != nil {
-			s.Fatal("Failed to start log reader: ", err)
-		}
-		defer reader.Close()
 
 		if err := kioskmode.LaunchAppManually(ctx, testConn, appName); err != nil {
 			s.Fatal("Failed to start Kiosk application from Sign-in screen: ", err)
