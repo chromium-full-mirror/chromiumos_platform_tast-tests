@@ -28,7 +28,7 @@ type testCase struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         E2EScenarios,
-		Desc:         "Validate PVS",
+		Desc:         "Validates the PVS E2E scenario tests run successfully",
 		BugComponent: "b:1110659",
 		Contacts: []string{
 			"chromeos-pvs-eng@google.com",

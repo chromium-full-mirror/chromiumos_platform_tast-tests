@@ -18,10 +18,20 @@ type testState interface {
 	Fatalf(format string, args ...interface{})
 }
 
-// RunAsChronos runs the given command as the chronos user on the given dut
+// RunAsChronos runs the given command as the chronos user on the given dut.
 func RunAsChronos(ctx context.Context, dut *ssh.Conn, cmd string) (string, error) {
 	wrappedCmd := dut.CommandContext(ctx, "sudo", "--login", "-u", "chronos", "bash", "-c", cmd)
 	return runAsRoot(ctx, wrappedCmd)
+}
+
+// RunPVSSubcommand runs the given pvs subcommand against the given container on the given dut.
+func RunPVSSubcommand(ctx context.Context, dut *ssh.Conn, containerID, subcommand string) (string, error) {
+	pvsCommand := fmt.Sprintf(
+		`docker exec %q /usr/bin/gosu pvs pvs %v`,
+		containerID,
+		subcommand,
+	)
+	return RunAsChronos(ctx, dut, pvsCommand)
 }
 
 func runAsRoot(ctx context.Context, cmd *ssh.Cmd) (string, error) {
