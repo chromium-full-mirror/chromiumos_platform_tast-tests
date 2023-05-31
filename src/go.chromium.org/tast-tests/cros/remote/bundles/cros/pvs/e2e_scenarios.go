@@ -7,6 +7,7 @@ package pvs
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/pvs/pvsutils"
@@ -18,6 +19,11 @@ const (
 	scenarioTestRunnerPath = "/usr/libexec/pvs_scenario_test"
 	testDataPath           = "/usr/share/pvs/testdata"
 )
+
+type testCase struct {
+	scenarioName string
+	isSimulated  bool
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -34,39 +40,66 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name: "basic_pass_fail",
-				Val:  "TestBasicPassFailScenario",
+				Val: testCase{
+					scenarioName: "TestBasicPassFailScenario",
+					isSimulated:  false,
+				},
 			},
 			{
 				Name: "dependencies",
-				Val:  "TestDependenciesScenario",
+				Val: testCase{
+					scenarioName: "TestDependenciesScenario",
+					isSimulated:  false,
+				},
 			},
 			{
 				Name: "dependencies_skip",
-				Val:  "TestDependenciesSkipScenario",
+				Val: testCase{
+					scenarioName: "TestDependenciesSkipScenario",
+					isSimulated:  true,
+				},
 			},
 			{
 				Name: "dependencies_edge_case",
-				Val:  "TestDependenciesScenarioEdgeCase",
+				Val: testCase{
+					scenarioName: "TestDependenciesScenarioEdgeCase",
+					isSimulated:  false,
+				},
 			},
 			{
 				Name: "process_control_characters",
-				Val:  "TestProcessControlCharacters",
+				Val: testCase{
+					scenarioName: "TestProcessControlCharacters",
+					isSimulated:  false,
+				},
 			},
 			{
 				Name: "count_test_cases",
-				Val:  "TestCountTestCases",
+				Val: testCase{
+					scenarioName: "TestCountTestCases",
+					isSimulated:  false,
+				},
 			},
 			{
 				Name: "invalid_test_name",
-				Val:  "TestInvalidTestName",
+				Val: testCase{
+					scenarioName: "TestInvalidTestName",
+					isSimulated:  false,
+				},
 			},
 			{
 				Name: "pass_criteria",
-				Val:  "TestPassCriteria",
+				Val: testCase{
+					scenarioName: "TestPassCriteria",
+					isSimulated:  true,
+				},
 			},
 			{
 				Name: "dependencies_multi_sku",
-				Val:  "TestDependenciesMultiSKUScenario",
+				Val: testCase{
+					scenarioName: "TestDependenciesMultiSKUScenario",
+					isSimulated:  true,
+				},
 			},
 		},
 	})
@@ -77,13 +110,19 @@ func init() {
 func E2EScenarios(ctx context.Context, s *testing.State) {
 	dut := s.DUT().Conn()
 	containerID := s.FixtValue().(string)
-	scenarioTest := s.Param().(string)
+	testCase := s.Param().(testCase)
+	envVars := []string{
+		fmt.Sprintf("TESTDATA_DIR=%q", testDataPath),
+	}
+	if testCase.isSimulated {
+		envVars = append(envVars, "SIMULATED_DUT=1", "SIMULATED_TEST_RUNNER=1")
+	}
 	runScenarioTest := fmt.Sprintf(
-		`docker exec -e TESTDATA_DIR=%q %q /usr/bin/gosu pvs %q -test.v -test.run "^%v\$"`,
-		testDataPath,
+		`docker exec %v %q /usr/bin/gosu pvs %q -test.v -test.run "^%v\$"`,
+		fmt.Sprintf("-e %v", strings.Join(envVars, " -e ")),
 		containerID,
 		scenarioTestRunnerPath,
-		scenarioTest,
+		testCase.scenarioName,
 	)
 	if _, err := pvsutils.RunAsChronos(ctx, dut, runScenarioTest); err != nil {
 		s.Fatal("Error occured when running scenario test: ", err)
