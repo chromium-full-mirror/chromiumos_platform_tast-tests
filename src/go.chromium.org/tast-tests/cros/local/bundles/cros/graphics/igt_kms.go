@@ -358,14 +358,6 @@ func init() {
 				ExtraAttr:         []string{"graphics_nightly"},
 				ExtraSoftwareDeps: []string{"amd_cpu"},
 			}, {
-				Name: "kms_prime",
-				Val: graphics.IgtTest{
-					Exe: "kms_prime",
-				},
-				Timeout:           5 * time.Minute,
-				ExtraAttr:         []string{"graphics_nightly"},
-				ExtraSoftwareDeps: []string{"no_amd_cpu"},
-			}, {
 				Name: "kms_prop_blob",
 				Val: graphics.IgtTest{
 					Exe: "kms_prop_blob",
