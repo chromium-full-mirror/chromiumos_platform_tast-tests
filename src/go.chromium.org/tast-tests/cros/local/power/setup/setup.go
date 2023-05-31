@@ -403,7 +403,7 @@ func PowerTest(ctx context.Context, c *chrome.TestConn, options PowerTestOptions
 			s.Add(SetBacklightBrightnessLinearPercent(ctx, 0))
 		}
 		if options.KeyboardBrightness == SetKbBrightness {
-			s.Add(SetKeyboardBrightness(ctx, 24))
+			s.Add(SetKbBrightnessHoverALSLux(ctx, 0))
 		}
 		if options.KeyboardBrightness == SetKbBrightnessToZero {
 			s.Add(SetKeyboardBrightness(ctx, 0))
