@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/cellularconst"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
@@ -34,8 +35,7 @@ func init() {
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "group:cellular_crosbolt", "cellular_crosbolt_perf_nightly", "cellular_crosbolt_unstable"},
 		Fixture:      "cellular",
 		Timeout:      10 * time.Minute,
-		// Run only on Vell, as FM350 is the leading device for recovery
-		HardwareDeps: hwdep.D(hwdep.Model("vell")),
+		HardwareDeps: hwdep.D(hwdep.CellularModemType(cellularconst.ModemTypeFM350)),
 		SoftwareDeps: []string{"modemfwd"},
 		Params: []testing.Param{{
 			Name: "stress",
