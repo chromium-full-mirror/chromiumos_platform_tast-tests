@@ -431,7 +431,7 @@ func EnableSoftwareSync(ctx context.Context, h *firmware.Helper, syncBackup bool
 		testing.ContextLog(ctx, "Clearing GBB flag DISABLE_EC_SOFTWARE_SYNC")
 		req := pb.GBBFlagsState{Clear: []pb.GBBFlag{pb.GBBFlag_DISABLE_EC_SOFTWARE_SYNC}}
 
-		if err := fwCommon.ClearAndSetGBBFlags(ctx, h.DUT, &req); err != nil {
+		if _, err := fwCommon.ClearAndSetGBBFlags(ctx, h.DUT, &req); err != nil {
 			return nil, errors.Wrap(err, "failed to clear gbb flag")
 		}
 	}

@@ -149,7 +149,7 @@ func Cr50OpenOnBattery(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to switch to normal mode: ", err)
 	}
 	// Speed up booting in dev mode
-	if err := fwCommon.ClearAndSetGBBFlags(ctx, s.DUT(), &pb.GBBFlagsState{Set: []pb.GBBFlag{pb.GBBFlag_DEV_SCREEN_SHORT_DELAY}}); err != nil {
+	if _, err := fwCommon.ClearAndSetGBBFlags(ctx, s.DUT(), &pb.GBBFlagsState{Set: []pb.GBBFlag{pb.GBBFlag_DEV_SCREEN_SHORT_DELAY}}); err != nil {
 		s.Fatal("Error setting gbb flags: ", err)
 	}
 	if err := h.Servo.RemoveCCDWatchdogs(ctx); err != nil {

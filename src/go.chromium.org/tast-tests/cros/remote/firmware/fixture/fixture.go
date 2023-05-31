@@ -498,7 +498,7 @@ func (i *impl) TearDown(ctx context.Context, s *testing.FixtState) {
 			}
 
 			s.Log("Setting GBB flags to ", tempGBBFlags.Set)
-			if err := common.ClearAndSetGBBFlags(ctx, i.value.Helper.DUT, tempGBBFlags); err != nil {
+			if _, err := common.ClearAndSetGBBFlags(ctx, i.value.Helper.DUT, tempGBBFlags); err != nil {
 				s.Fatal("Restore GBB flags failed: ", err)
 			}
 			if common.GBBFlagsChanged(curr, tempGBBFlags, common.RebootRequiredGBBFlags()) {
@@ -524,7 +524,7 @@ func (i *impl) TearDown(ctx context.Context, s *testing.FixtState) {
 		}
 		if setGBBFlagsAfterReboot {
 			s.Log("Setting GBB flags to ", i.origGBBFlags.Set)
-			if err := common.ClearAndSetGBBFlags(ctx, i.value.Helper.DUT, i.origGBBFlags); err != nil {
+			if _, err := common.ClearAndSetGBBFlags(ctx, i.value.Helper.DUT, i.origGBBFlags); err != nil {
 				s.Fatal("Restore GBB flags failed: ", err)
 			}
 		}

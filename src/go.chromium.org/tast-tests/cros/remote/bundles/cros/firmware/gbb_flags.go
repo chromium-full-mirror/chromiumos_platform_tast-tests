@@ -48,7 +48,7 @@ func GBBFlags(ctx context.Context, s *testing.State) {
 
 	req := &pb.GBBFlagsState{Set: common.GBBToggle(old.Set, pb.GBBFlag_DEV_SCREEN_SHORT_DELAY), Clear: common.GBBToggle(old.Clear, pb.GBBFlag_DEV_SCREEN_SHORT_DELAY)}
 
-	if err = common.ClearAndSetGBBFlags(ctx, s.DUT(), req); err != nil {
+	if _, err = common.ClearAndSetGBBFlags(ctx, s.DUT(), req); err != nil {
 		s.Fatal("initial ClearAndSetGBBFlags failed: ", err)
 	}
 	ctxForCleanup := ctx
@@ -58,7 +58,7 @@ func GBBFlags(ctx context.Context, s *testing.State) {
 
 	checker := checkers.New(h)
 	defer func(ctx context.Context) {
-		if err := common.ClearAndSetGBBFlags(ctx, s.DUT(), old); err != nil {
+		if _, err := common.ClearAndSetGBBFlags(ctx, s.DUT(), old); err != nil {
 			s.Fatal("ClearAndSetGBBFlags to restore original values failed: ", err)
 		}
 

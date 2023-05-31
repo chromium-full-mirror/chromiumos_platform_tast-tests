@@ -131,7 +131,7 @@ func DisableEnableECSWSync(ctx context.Context, s *testing.State) {
 
 	s.Log("Setting GBB flag DISABLE_EC_SOFTWARE_SYNC")
 	set := pb.GBBFlagsState{Set: []pb.GBBFlag{pb.GBBFlag_DISABLE_EC_SOFTWARE_SYNC}}
-	if err := fwCommon.ClearAndSetGBBFlags(ctx, s.DUT(), &set); err != nil {
+	if _, err := fwCommon.ClearAndSetGBBFlags(ctx, s.DUT(), &set); err != nil {
 		s.Fatal("Failed to set GBB flag: ", err)
 	}
 
@@ -171,7 +171,7 @@ func DisableEnableECSWSync(ctx context.Context, s *testing.State) {
 
 	s.Log("Clearing GBB flag DISABLE_EC_SOFTWARE_SYNC")
 	clear := pb.GBBFlagsState{Clear: []pb.GBBFlag{pb.GBBFlag_DISABLE_EC_SOFTWARE_SYNC}}
-	if err := fwCommon.ClearAndSetGBBFlags(ctx, s.DUT(), &clear); err != nil {
+	if _, err := fwCommon.ClearAndSetGBBFlags(ctx, s.DUT(), &clear); err != nil {
 		s.Fatal("Failed to clear GBB flag: ", err)
 	}
 

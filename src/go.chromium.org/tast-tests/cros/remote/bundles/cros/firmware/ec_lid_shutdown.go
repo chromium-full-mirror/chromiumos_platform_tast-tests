@@ -68,7 +68,7 @@ func ECLidShutdown(ctx context.Context, s *testing.State) {
 
 		s.Log("Clear GBBFlag_DISABLE_LID_SHUTDOWN flag after test end")
 		flags := pb.GBBFlagsState{Clear: []pb.GBBFlag{pb.GBBFlag_DISABLE_LID_SHUTDOWN}, Set: []pb.GBBFlag{}}
-		if err := fwCommon.ClearAndSetGBBFlags(ctx, s.DUT(), &flags); err != nil {
+		if _, err := fwCommon.ClearAndSetGBBFlags(ctx, s.DUT(), &flags); err != nil {
 			s.Fatal("Failed to clear GBBFlag_DISABLE_LID_SHUTDOWN flag after test end: ", err)
 		}
 	}()
@@ -105,7 +105,7 @@ func setFlagBeforeRecMode(ctx context.Context, h *firmware.Helper, flag bool) (r
 		flagState = "setting"
 	}
 	testing.ContextLogf(ctx, "%s GBBFlag_DISABLE_LID_SHUTDOWN flag", flagState)
-	if err := fwCommon.ClearAndSetGBBFlags(ctx, h.DUT, &flags); err != nil {
+	if _, err := fwCommon.ClearAndSetGBBFlags(ctx, h.DUT, &flags); err != nil {
 		return errors.Wrapf(err, "failed %s GBBFlag_DISABLE_LID_SHUTDOWN flag", flagState)
 	}
 

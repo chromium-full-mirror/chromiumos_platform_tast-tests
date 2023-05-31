@@ -109,11 +109,12 @@ func GetGBBFlags(ctx context.Context, dut *dut.DUT) (*pb.GBBFlagsState, error) {
 }
 
 // ClearAndSetGBBFlags clears and sets specified GBB flags, leaving the rest unchanged.
-func ClearAndSetGBBFlags(ctx context.Context, dut *dut.DUT, state *pb.GBBFlagsState) error {
+func ClearAndSetGBBFlags(ctx context.Context, dut *dut.DUT, state *pb.GBBFlagsState) (bool, error) {
+	gbbFlagChanged := false
 	state = canonicalGBBFlagsState(state)
 	currentGBB, err := getGBBFlagsInt(ctx, dut)
 	if err != nil {
-		return err
+		return gbbFlagChanged, err
 	}
 	clearMask := CalcGBBMask(state.Clear)
 	setMask := CalcGBBMask(state.Set)
@@ -122,12 +123,13 @@ func ClearAndSetGBBFlags(ctx context.Context, dut *dut.DUT, state *pb.GBBFlagsSt
 	if newGBB != currentGBB {
 		testing.ContextLogf(ctx, "Setting GBB flags = %#x", newGBB)
 		if err := dut.Conn().CommandContext(ctx, "futility", "gbb", "--set", "--flash", fmt.Sprintf("--flags=%#x", newGBB)).Run(exec.DumpLogOnError); err != nil {
-			return errors.Wrap(err, "futility gbb --set")
+			return gbbFlagChanged, errors.Wrap(err, "futility gbb --set")
 		}
+		gbbFlagChanged = true
 	} else {
 		testing.ContextLog(ctx, "No GBB change required")
 	}
-	return nil
+	return gbbFlagChanged, nil
 }
 
 // CalcGBBBits returns the final GBB bits after applying clear and set to curr.

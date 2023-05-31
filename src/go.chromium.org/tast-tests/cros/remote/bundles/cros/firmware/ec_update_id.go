@@ -163,7 +163,7 @@ func ECUpdateID(ctx context.Context, s *testing.State) {
 	}(cleanupContext)
 
 	flags := pb.GBBFlagsState{Clear: []pb.GBBFlag{pb.GBBFlag_DISABLE_EC_SOFTWARE_SYNC}, Set: []pb.GBBFlag{pb.GBBFlag_DEV_SCREEN_SHORT_DELAY}}
-	if err := common.ClearAndSetGBBFlags(ctx, s.DUT(), &flags); err != nil {
+	if _, err := common.ClearAndSetGBBFlags(ctx, s.DUT(), &flags); err != nil {
 		s.Fatal("Error setting gbb flags: ", err)
 	}
 

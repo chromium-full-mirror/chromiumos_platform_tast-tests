@@ -172,10 +172,13 @@ func (ms ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMod
 		} else {
 			flags.Clear = append(flags.Clear, fwpb.GBBFlag_FORCE_DEV_SWITCH_ON, fwpb.GBBFlag_DEV_SCREEN_SHORT_DELAY, fwpb.GBBFlag_FORCE_DEV_BOOT_USB)
 		}
-		if err := fwCommon.ClearAndSetGBBFlags(ctx, h.DUT, &flags); err != nil {
+		gbbFlagChanged, err := fwCommon.ClearAndSetGBBFlags(ctx, h.DUT, &flags)
+		if err != nil {
 			return errors.Wrap(err, "setting GBB flags")
 		}
-		opts = append(opts, RebootForGBBFlagsChanged)
+		if gbbFlagChanged {
+			opts = append(opts, RebootForGBBFlagsChanged)
+		}
 	}
 
 	// When booting to a different image, such as normal vs. recovery, the new image might
