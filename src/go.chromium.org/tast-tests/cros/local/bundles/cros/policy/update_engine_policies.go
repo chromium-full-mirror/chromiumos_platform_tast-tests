@@ -87,6 +87,11 @@ func init() {
 				// Configure "Target version" in Admin Console and ensure that affected devices stay on selected version.
 				// COM_FOUND_CUJ12_TASK4_WF1
 				Value: "screenplay-5f27f0ec-9865-4b66-babe-4114811d2617",
+			}, {
+				Key: "feature_id",
+				// Can pin the OS version.
+				// COM_KIOSK_CUJ3_TASK2_WF1
+				Value: "screenplay-716d9d83-9b88-4034-94d3-0a4760bc835a",
 			}},
 		}, {
 			Name: "device_release_lts_tag",
