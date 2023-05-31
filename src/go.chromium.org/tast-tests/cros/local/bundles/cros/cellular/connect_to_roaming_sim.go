@@ -6,6 +6,7 @@ package cellular
 
 import (
 	"context"
+	//"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/cellular"
@@ -58,10 +59,10 @@ func ConnectToRoamingSim(ctx context.Context, s *testing.State) {
 
 	ui := uiauto.New(tconn).WithTimeout(60 * time.Second)
 
-	networkRowFinder := nodewith.HasClass("layout horizontal center flex").First()
-	networkDetailPageFinder := networkRowFinder.NameContaining(networkName + ", Connected").First()
-	if err = ui.LeftClick(networkDetailPageFinder)(ctx); err != nil {
-		s.Fatal("Failed to click on network row: ", err)
+	connectedCellularRow := nodewith.NameContaining(networkName + ", Connected").First()
+
+	if err = ui.LeftClick(connectedCellularRow)(ctx); err != nil {
+		s.Fatal("Failed to click on connected network row: ", err)
 	}
 
 	if err := uiauto.Combine("Disconnect from network",
