@@ -1069,9 +1069,9 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 		// Zoom out on the browser to maximize the number of visible video
 		// feeds. This needs to be done before the final layout mode has been set,
 		// so that Meet can properly recalculate how many inbound videos should
-		// be visible. Pressing Ctrl+Minus 3 times results in the zoom going from
-		// 100% -> 90% -> 80% -> 75%.
-		if err := inputsimulations.RepeatKeyPress(ctx, kw, "Ctrl+-", 3*time.Second, 3); err != nil {
+		// be visible. Pressing Ctrl+Minus 5 times results in the zoom going from
+		// 100% -> 90% -> 80% -> 75% -> 67% -> 50%.
+		if err := inputsimulations.RepeatKeyPress(ctx, kw, "Ctrl+-", 3*time.Second, 5); err != nil {
 			s.Fatal("Failed to repeatedly press Ctrl+Minus to zoom out: ", err)
 		}
 
@@ -1080,10 +1080,10 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to find the current browser zoom: ", err)
 		}
-		if zoomInfo.Name != "Zoom: 75%" {
-			s.Fatalf(`Unexpected zoom value: got %s; want "Zoom: 75%%"`, zoomInfo.Name)
+		if zoomInfo.Name != "Zoom: 50%" {
+			s.Fatalf(`Unexpected zoom value: got %s; want "Zoom: 50%%"`, zoomInfo.Name)
 		}
-		s.Log("Zoomed browser window to 75%")
+		s.Log("Zoomed browser window to 50%")
 	}
 
 	// Make sure the Meet call window hasn't crashed before starting the recorder.
