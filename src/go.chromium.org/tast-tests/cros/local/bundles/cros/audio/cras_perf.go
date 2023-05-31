@@ -187,6 +187,7 @@ func crasPerfOneIteration(ctx context.Context, s *testing.State, pid int, pv *pe
 
 }
 
+// CrasPerf measures the performance of CRAS.
 func CrasPerf(ctx context.Context, s *testing.State) {
 	const (
 		crasPath   = "/usr/bin/cras"
@@ -209,7 +210,6 @@ func CrasPerf(ctx context.Context, s *testing.State) {
 		s.Log("Iteration: ", i)
 
 		// Stop CRAS to make sure the audio device won't be occupied.
-		s.Log("Restarting CRAS")
 		if _, err := audio.RestartCras(ctx); err != nil {
 			s.Fatal("Failed to restart CRAS: ", err)
 		}
