@@ -55,6 +55,9 @@ func init() {
 type adaptiveChargingTestFunc = func(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn) error
 
 func AdaptiveCharging(ctx context.Context, s *testing.State) {
+	cleanup := quicksettings.SetQsRevampEnabled(true)
+	defer cleanup()
+
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
@@ -63,7 +66,8 @@ func AdaptiveCharging(ctx context.Context, s *testing.State) {
 	// the feature should be enabled by default.
 	cr, err := chrome.New(ctx,
 		chrome.EnableFeatures("AdaptiveCharging"),
-		chrome.ARCDisabled())
+		chrome.ARCDisabled(),
+		chrome.EnableFeatures("QsRevamp"))
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
@@ -148,16 +152,19 @@ func testChargeNow(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestCon
 		return err
 	}
 
-	// Show quicksettings in its collapsed state, which will ensure that the
-	// Adaptive Charging notification is fully visible. If quicksettings is in
-	// the expanded state, it may truncate the button, preventing it from being
-	// clicked.
-	if err := quicksettings.Collapse(ctx, tconn); err != nil {
-		return err
-	}
-	defer quicksettings.Hide(ctx, tconn)
-
+	// Wait for the notification center icon to become visible. It's not
+	// visible until a notification appears.
 	ui := uiauto.New(tconn)
+	notificationCenterIcon := nodewith.HasClass("NotificationCenterTray")
+	if err := ui.WithTimeout(time.Minute).WaitUntilExists(notificationCenterIcon)(ctx); err != nil {
+		return errors.Wrap(err, "failed to wait for the notification center icon to exist")
+	}
+
+	// Open the notification center to ensure the notification is visible.
+	if err := ui.LeftClick(notificationCenterIcon)(ctx); err != nil {
+		return errors.Wrap(err, "failed to click notification center icon")
+	}
+
 	chargeNowButton := nodewith.Name("Fully charge now").Role(role.Button)
 	if err := ui.WithTimeout(time.Minute).WaitUntilExists(chargeNowButton)(ctx); err != nil {
 		return errors.Wrap(err, "failed to wait for the Charge Now button to exist")
