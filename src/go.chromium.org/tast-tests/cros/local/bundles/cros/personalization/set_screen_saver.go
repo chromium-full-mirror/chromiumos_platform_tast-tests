@@ -27,7 +27,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SetScreensaver,
+		Func:         SetScreenSaver,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test setting screensaver in the personalization hub app",
 		Contacts: []string{
@@ -95,7 +95,7 @@ func init() {
 	})
 }
 
-func SetScreensaver(ctx context.Context, s *testing.State) {
+func SetScreenSaver(ctx context.Context, s *testing.State) {
 	testParams := s.Param().(ambient.TestParams)
 	cr := s.FixtValue().(*chrome.Chrome)
 

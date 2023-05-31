@@ -140,8 +140,8 @@ func SetDeviceSettings(
 func OpenAmbientSubpage(ctx context.Context, ui *uiauto.Context) error {
 	if err := uiauto.Combine("open Ambient Subpage",
 		personalization.OpenPersonalizationHub(ui),
-		personalization.OpenScreensaverSubpage(ui),
-		ui.WaitUntilExists(personalization.BreadcrumbNodeFinder(personalization.ScreensaverSubpageName)),
+		personalization.OpenScreenSaverSubpage(ui),
+		ui.WaitUntilExists(personalization.BreadcrumbNodeFinder(personalization.ScreenSaverSubpageName)),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to open Ambient subpage")
 	}
@@ -193,7 +193,7 @@ func waitForPhotoTransitions(
 	)
 }
 
-// TestLockScreenIdle performs screensaver test including locking screen, waiting for ambient mode
+// TestLockScreenIdle performs screen saver test including locking screen, waiting for ambient mode
 // to start, then escaping from ambient mode and returning to lockscreen again.
 func TestLockScreenIdle(
 	ctx context.Context,
@@ -285,7 +285,7 @@ func waitForAmbientStart(tconn *chrome.TestConn, ui *uiauto.Context, timeout tim
 			return errors.Wrap(err, "failed to wait for photo transitions")
 		}
 		if playTestVideo {
-			return showMediaStringInScreensaver(ctx, ui)
+			return showMediaStringInScreenSaver(ctx, ui)
 		}
 		if err := ui.WaitUntilExists(
 			nodewith.ClassName("LockScreenAmbientModeContainer").Role(role.Window),
@@ -296,9 +296,9 @@ func waitForAmbientStart(tconn *chrome.TestConn, ui *uiauto.Context, timeout tim
 	}
 }
 
-// showMediaStringInScreensaver returns an error if the media string is missing from
-// the screensaver.
-func showMediaStringInScreensaver(ctx context.Context, ui *uiauto.Context) error {
+// showMediaStringInScreenSaver returns an error if the media string is missing from
+// the screen saver.
+func showMediaStringInScreenSaver(ctx context.Context, ui *uiauto.Context) error {
 	// For the media string condition:
 	// .First() is needed because there are actually 2 media string "nodes"
 	// present in the UI tree during slideshow mode. The second node is
