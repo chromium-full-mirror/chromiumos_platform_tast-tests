@@ -47,7 +47,7 @@ func init() {
 		Desc:         "Test different search queries should show content in the right category",
 		Contacts:     []string{"launcher-search-notify@google.com", "xiuwen@google.com"},
 		BugComponent: "b:1257106",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:launcher_search_quality_daily"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedIn",
 
