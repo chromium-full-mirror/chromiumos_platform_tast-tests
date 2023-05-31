@@ -61,13 +61,13 @@ func TriggerPasswordLeakDetection(ctx context.Context, cr *chrome.Chrome, server
 		foundAnnotation := false
 		foundAnnotation, errorCheckingLogs = annotations.CheckLogs(ctx, cr, AnnotationHashCode)
 
-		if errorCheckingLogs != nil || foundAnnotation {
+		if foundAnnotation {
 			return nil
 		}
 
 		// Annotation not found yet, keep polling.
 		return errors.New("Annotation ID not found yet")
-	}, &testing.PollOptions{Timeout: 5 * time.Second})
+	}, &testing.PollOptions{Timeout: 5 * time.Second, Interval: 1 * time.Second})
 
 	if errorCheckingLogs != nil {
 		return errors.Wrap(errorCheckingLogs, "failed to check network logs")
