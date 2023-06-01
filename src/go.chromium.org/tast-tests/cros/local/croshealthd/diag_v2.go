@@ -78,12 +78,12 @@ func runDiagV2(ctx context.Context, args []string) (string, error) {
 	args = append([]string{"diag"}, args...)
 	cmd := testexec.CommandContext(ctx, "cros-health-tool", args...)
 	testing.ContextLogf(ctx, "Running %q", shutil.EscapeSlice(cmd.Args))
-	out, err := cmd.Output()
+	stdout, stderr, err := cmd.SeparatedOutput()
 	if err != nil {
 		cmd.DumpLog(ctx)
-		return "", errors.Wrapf(err, "failed to run %q", shutil.EscapeSlice(cmd.Args))
+		return "", errors.Wrapf(err, "command failed with stdout: %q, stderr: %q", string(stdout), string(stderr))
 	}
-	return string(out), nil
+	return string(stdout), nil
 }
 
 // parseDiagOutputV2 is a helper function that takes the `raw` output from running a

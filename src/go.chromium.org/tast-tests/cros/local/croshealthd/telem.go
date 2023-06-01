@@ -82,18 +82,18 @@ func RunTelem(ctx context.Context, params TelemParams, outDir string) ([]byte, e
 		}
 		args = append(args, "--process="+strings.Join(pidStrs, ","))
 	}
-	b, err := testexec.CommandContext(ctx, "cros-health-tool", args...).Output(testexec.DumpLogOnError)
+	stdout, stderr, err := testexec.CommandContext(ctx, "cros-health-tool", args...).SeparatedOutput(testexec.DumpLogOnError)
 	if err != nil {
-		return nil, errors.Wrap(err, "command failed")
+		return nil, errors.Wrapf(err, "command failed with stdout: %q, stderr: %q", string(stdout), string(stderr))
 	}
 
 	// Log output to file for debugging.
 	path := filepath.Join(outDir, "command_output.txt")
-	if err := ioutil.WriteFile(path, b, 0644); err != nil {
+	if err := ioutil.WriteFile(path, stdout, 0644); err != nil {
 		return nil, errors.Wrapf(err, "failed to write output to %s", path)
 	}
 
-	return b, nil
+	return stdout, nil
 }
 
 // RunAndParseJSONTelem runs RunTelem and parses the JSON output.
