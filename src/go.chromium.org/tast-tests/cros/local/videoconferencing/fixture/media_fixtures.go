@@ -39,16 +39,18 @@ const (
 	NoLogInWithInternalCameraAndEffectsEnabled = "noLogInWithInternalCameraAndEffectsEnabled"
 
 	// Fixtures with fake login.
-	LoggedInWithFakeHALAndEffectsEnabled       = "loggedInWithFakeHALAndEffectsEnabled"
-	LoggedInWithFakeHALAndEffectsDisabled      = "loggedInWithFakeHALAndEffectsDisabled"
-	LoggedInLacrosWithFakeHALAndEffectsEnabled = "loggedInLacrosWithFakeHALAndEffectsEnabled"
+	LoggedInWithFakeHALAndEffectsEnabled                 = "loggedInWithFakeHALAndEffectsEnabled"
+	LoggedInWithFakeHALAndEffectsEnabledNoScreenRecorder = "loggedInWithFakeHALAndEffectsEnabledNoScreenRecorder"
+	LoggedInWithFakeHALAndEffectsDisabled                = "loggedInWithFakeHALAndEffectsDisabled"
+	LoggedInLacrosWithFakeHALAndEffectsEnabled           = "loggedInLacrosWithFakeHALAndEffectsEnabled"
 
 	// Fixtures using GAIA login without specifying device mode.
-	GAIALoggedInWithFakeHALAndEffectsEnabled           = "gaiaLoggedInWithFakeHALAndEffectsEnabled"
-	GAIALoggedInWithFakeHALAndEffectsDisabled          = "gaiaLoggedInWithFakeHALAndEffectsDisabled"
-	GAIALoggedInLacrosWithFakeHALAndEffectsEnabled     = "gaiaLoggedInLacrosWithFakeHALAndEffectsEnabled"
-	GAIALoggedInARCWithFakeHALAndEffectsEnabled        = "gaiaLoggedInARCWithFakeHALAndEffectsEnabled"
-	GAIALoggedInARCWithInternalCameraAndEffectsEnabled = "gaiaLoggedInARCWithInternalCameraAndEffectsEnabled"
+	GAIALoggedInWithFakeHALAndEffectsEnabled                 = "gaiaLoggedInWithFakeHALAndEffectsEnabled"
+	GAIALoggedInWithFakeHALAndEffectsEnabledNoScreenRecorder = "gaiaLoggedInWithFakeHALAndEffectsEnabledNoScreenRecorderDisabled"
+	GAIALoggedInWithFakeHALAndEffectsDisabled                = "gaiaLoggedInWithFakeHALAndEffectsDisabled"
+	GAIALoggedInLacrosWithFakeHALAndEffectsEnabled           = "gaiaLoggedInLacrosWithFakeHALAndEffectsEnabled"
+	GAIALoggedInARCWithFakeHALAndEffectsEnabled              = "gaiaLoggedInARCWithFakeHALAndEffectsEnabled"
+	GAIALoggedInARCWithInternalCameraAndEffectsEnabled       = "gaiaLoggedInARCWithInternalCameraAndEffectsEnabled"
 
 	// Fixtures using GAIA login and specifying device mode.
 	GAIALoggedInClamshellWithFakeHALAndEffectsEnabled       = "gaiaLoggedInClamshellWithFakeHALAndEffectsEnabled"
@@ -116,6 +118,23 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name: LoggedInWithFakeHALAndEffectsEnabledNoScreenRecorder,
+		Desc: "A fixture with fake user logged in using fake HAL camera with platform effects enabled without the screen recorder",
+		Contacts: []string{
+			"chrome-knowledge-eng@google.com",
+			"shengjun@google.com",
+		},
+		Data:            []string{fakeHALImageInput},
+		Impl:            mediaSetupFixtureNoScreenRecorder(halCameraWithPlatformEffectsEnabled),
+		Parent:          loggedIn,
+		SetUpTimeout:    chrome.LoginTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name: LoggedInWithFakeHALAndEffectsDisabled,
 		Desc: "A fixture with fake user logged in using fake HAL camera with platform effects enabled",
 		Contacts: []string{
@@ -158,6 +177,23 @@ func init() {
 		},
 		Data:            []string{fakeHALImageInput},
 		Impl:            mediaSetupFixture(halCameraWithPlatformEffectsEnabled),
+		Parent:          gaiaLoggedIn,
+		SetUpTimeout:    chrome.LoginTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: GAIALoggedInWithFakeHALAndEffectsEnabledNoScreenRecorder,
+		Desc: "A fixture with gaia user logged in using fake HAL camera with platform effects enabled  without the screen recorder",
+		Contacts: []string{
+			"chrome-knowledge-eng@google.com",
+			"shengjun@google.com",
+		},
+		Data:            []string{fakeHALImageInput},
+		Impl:            mediaSetupFixtureNoScreenRecorder(halCameraWithPlatformEffectsEnabled),
 		Parent:          gaiaLoggedIn,
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
@@ -322,13 +358,18 @@ func mediaSetupFixture(camConfig cameraConfig) testing.FixtureImpl {
 	return &mediaFixtureImpl{camConfig: camConfig}
 }
 
+func mediaSetupFixtureNoScreenRecorder(camConfig cameraConfig) testing.FixtureImpl {
+	return &mediaFixtureImpl{camConfig: camConfig, disableScreenRecorder: true}
+}
+
 // mediaFixtureImpl implements testing.FixtureImpl.
 type mediaFixtureImpl struct {
-	camConfig cameraConfig
-	cleanup   []action.Action // A list of cleanup actions to be executed in teardown.
-	cr        *chrome.Chrome
-	tconn     *chrome.TestConn
-	recorder  *uiauto.ScreenRecorder
+	camConfig             cameraConfig
+	cleanup               []action.Action // A list of cleanup actions to be executed in teardown.
+	cr                    *chrome.Chrome
+	tconn                 *chrome.TestConn
+	recorder              *uiauto.ScreenRecorder
+	disableScreenRecorder bool
 }
 
 // FixtData is the data returned by SetUp and passed to tests.
@@ -436,7 +477,9 @@ func (f *mediaFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestState
 		return
 	}
 
-	f.recorder = uiauto.CreateAndStartScreenRecorder(ctx, f.tconn)
+	if !f.disableScreenRecorder {
+		f.recorder = uiauto.CreateAndStartScreenRecorder(ctx, f.tconn)
+	}
 }
 
 func (f *mediaFixtureImpl) PostTest(ctx context.Context, s *testing.FixtTestState) {

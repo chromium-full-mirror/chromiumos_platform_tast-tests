@@ -33,13 +33,13 @@ var keepWifiVar = testing.RegisterVarString(
 func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name: GAIALoggedInAndBenchmarkSetupFixture,
-		Desc: "Enter a fresh session logged in with OTA, setup power and disable wifi",
+		Desc: "Enter a fresh session logged in with OTA, setup power, disable wifi and screen recorder",
 		Contacts: []string{
 			"chromeos-platform-ml@google.com",
 			"zhaon@google.com",
 		},
 		Impl:            &benchmarkSetUpFixture{},
-		Parent:          GAIALoggedInWithFakeHALAndEffectsEnabled,
+		Parent:          GAIALoggedInWithFakeHALAndEffectsEnabledNoScreenRecorder,
 		SetUpTimeout:    2 * time.Minute,
 		ResetTimeout:    30 * time.Second,
 		TearDownTimeout: 30 * time.Second,
@@ -47,13 +47,13 @@ func init() {
 
 	testing.AddFixture(&testing.Fixture{
 		Name: LoggedInAndBenchmarkSetupFixture,
-		Desc: "Log in with a fake test user, setup power and disable wifi",
+		Desc: "Log in with a fake test user, setup power, disable wifi and screen recorder",
 		Contacts: []string{
 			"chromeos-platform-ml@google.com",
 			"zhaon@google.com",
 		},
 		Impl:            &benchmarkSetUpFixture{},
-		Parent:          LoggedInWithFakeHALAndEffectsEnabled,
+		Parent:          LoggedInWithFakeHALAndEffectsEnabledNoScreenRecorder,
 		SetUpTimeout:    2 * time.Minute,
 		ResetTimeout:    30 * time.Second,
 		TearDownTimeout: 30 * time.Second,
