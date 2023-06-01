@@ -6,6 +6,8 @@ package ossettings
 
 import (
 	"context"
+	"strings"
+	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -14,10 +16,11 @@ import (
 	"go.chromium.org/tast-tests/cros/common/network/netconfigtypes"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/common"
 	pb "go.chromium.org/tast-tests/cros/services/cros/chrome/uiauto/ossettings"
-
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -176,6 +179,47 @@ func (s *Service) AvailableWifiNetworks(ctx context.Context, e *emptypb.Empty) (
 				return nil, errors.Errorf("failed to extract SSID from %q", info.Name)
 			}
 			res.Ssids = append(res.Ssids, ss[1])
+		}
+		return res, nil
+	})
+}
+
+// KnownWifiNetworks returns the known WiFi networks appeared in WiFi known network page.
+func (s *Service) KnownWifiNetworks(ctx context.Context, e *emptypb.Empty) (*pb.KnownWifiNetworksResponse, error) {
+	return common.UseTconn(ctx, s.sharedObject, func(tconn *chrome.TestConn) (_ *pb.KnownWifiNetworksResponse, retErr error) {
+		cleanupCtx := ctx
+		ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+		defer cancel()
+
+		cr := s.sharedObject.Chrome
+		if cr == nil {
+			return nil, errors.New("Chrome has not been started")
+		}
+
+		ui := uiauto.New(tconn)
+		settings, err := Launch(ctx, tconn)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to launch OS Settings")
+		}
+		defer settings.Close(cleanupCtx)
+		defer faillog.DumpUITreeWithScreenshotWithTestAPIOnErrorToContextOutDir(cleanupCtx, func() bool { return retErr != nil }, tconn, "known_networks_ossettings")
+
+		const pageShortURL = "knownNetworks"
+		condition := ui.Exists(KnownNetworksHeading.Ancestor(WindowFinder))
+		if err := settings.NavigateToPageURL(ctx, cr, pageShortURL, condition); err != nil {
+			return nil, errors.Wrapf(err, "failed to navigate to page %q", pageShortURL)
+		}
+
+		infos, err := settings.NodesInfo(ctx, MoreActionsButton)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to retrieve the info of items in network list")
+		}
+
+		res := &pb.KnownWifiNetworksResponse{
+			Ssids: make([]string, 0, len(infos)),
+		}
+		for _, info := range infos {
+			res.Ssids = append(res.Ssids, strings.TrimPrefix(info.Name, MoreActionsButtonNamePrefix))
 		}
 		return res, nil
 	})

@@ -2196,12 +2196,12 @@ func (tf *TestFixture) StartTethering(ctx context.Context, dutIdx DutIdx, ops []
 	iwr := iw.NewRemoteRunner(tf.duts[dutIdx].dut.Conn())
 	selfManaged, err := iwr.IsRegulatorySelfManaged(ctx)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "Failed to read regulatory status: ")
+		return nil, nil, errors.Wrap(err, "failed to read regulatory status")
 	}
 
 	if !selfManaged {
 		if err := iwr.SetAndVerifyRegulatoryDomain(ctx, "US"); err != nil {
-			return nil, nil, errors.Wrap(err, "Failed to set regulatory domain to WiFi")
+			return nil, nil, errors.Wrap(err, "failed to set regulatory domain to WiFi")
 		}
 	}
 
@@ -2335,6 +2335,10 @@ func (tf *TestFixture) StopTethering(ctx context.Context, dutIdx DutIdx) (*wifi.
 func (tf *TestFixture) ReserveForStopTethering(ctx context.Context) (context.Context, context.CancelFunc) {
 	return ctxutil.Shorten(ctx, 15*time.Second)
 }
+
+// DUTRebootTimeout specifies the time duration of a DUT is ready for testing after the reboot triggers.
+// It could take up to 5 minutes to reboot a DUT, especially for low-end devices.
+const DUTRebootTimeout = 5 * time.Minute
 
 // RebootDUT reboots DUT and re-establishes wifiClient for the given DUT.
 // re-esablish wifiClient is required after rebooting due to the RPC client will be closed.

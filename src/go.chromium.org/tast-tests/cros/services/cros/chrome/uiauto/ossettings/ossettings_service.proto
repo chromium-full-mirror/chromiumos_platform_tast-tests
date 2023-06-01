@@ -42,6 +42,10 @@ service OsSettingsService {
   // This RPC requires the WiFi detail page to be opened, an error will be returned if
   // the page is not opened.
   rpc AvailableWifiNetworks(google.protobuf.Empty) returns (AvailableWifiNetworksResponse) {}
+
+  // KnownWifiNetworks looks for all known WiFi networks in known network view,
+  // returns a list of the SSID of known WiFi network.
+  rpc KnownWifiNetworks(google.protobuf.Empty) returns (KnownWifiNetworksResponse) {}
 }
 
 message OpenNetworkDetailPageRequest {
@@ -79,5 +83,9 @@ message EvalJSWithShadowPiercerRequest {
 }
 
 message AvailableWifiNetworksResponse {
+  repeated string ssids = 1;
+}
+
+message KnownWifiNetworksResponse {
   repeated string ssids = 1;
 }

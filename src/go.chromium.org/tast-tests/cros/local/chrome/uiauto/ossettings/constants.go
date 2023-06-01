@@ -336,3 +336,15 @@ var (
 
 	WifiNetworkDetailArrowButton = nodewith.NameRegex(WifiSubPageArrowButtonNameRegex).Role(role.Button).HasClass("subpage-arrow")
 )
+
+// Elements in "Known Networks" page (WiFi known networks).
+var (
+	// KnownNetworksHeading is the finder for the heading of the Known Networks page.
+	KnownNetworksHeading = nodewith.NameContaining("Known Networks").Role(role.Heading)
+
+	// MoreActionsButton is the finder for the more actions button of a known network.
+	MoreActionsButton = nodewith.NameStartingWith(MoreActionsButtonNamePrefix).Role(role.Button)
+)
+
+// MoreActionsButtonNamePrefix is the name prefix of MoreActionsButton.
+const MoreActionsButtonNamePrefix = "More actions for "
