@@ -6,14 +6,14 @@ package wificell
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
+	"path"
 	"strings"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
 
-	policyBlob "go.chromium.org/tast-tests/cros/common/policy"
+	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/common/utils"
 	"go.chromium.org/tast-tests/cros/remote/policyutil"
 	"go.chromium.org/tast-tests/cros/remote/wificell/router/common/support"
@@ -30,10 +30,12 @@ const (
 	// Give long enough timeout for SetUp() and TearDown() as they might need
 	// to reboot a broken DUT. SetUp() and Reset() have additional time allotted
 	// to reboot routers as well.
-	setUpTimeout    = 17 * time.Minute
-	tearDownTimeout = 5 * time.Minute
-	resetTimeout    = 11 * time.Minute
-	postTestTimeout = 5 * time.Second
+	setUpTimeout         = 17 * time.Minute
+	tearDownTimeout      = 5 * time.Minute
+	resetTimeout         = 11 * time.Minute
+	postTestTimeout      = 5 * time.Second
+	enrollmentRunTimeout = 4 * time.Minute
+	enrollRetry          = 4
 )
 
 func init() {
@@ -288,27 +290,6 @@ func (f *tastFixtureImpl) recoverUnhealthyDUT(ctx context.Context, d *dut.DUT, s
 	return nil
 }
 
-func (f *tastFixtureImpl) enrollChrome(ctx context.Context, s *testing.FixtState, dutIdx int) error {
-	pc := policy.NewPolicyServiceClient(f.tf.duts[dutIdx].rpc.Conn)
-	pJSON, err := json.Marshal(policyBlob.NewBlob())
-	if err != nil {
-		return errors.Wrap(err, "failed to serialize policies")
-	}
-
-	if _, err := pc.EnrollUsingChrome(ctx, &policy.EnrollUsingChromeRequest{
-		PolicyJson: pJSON,
-		SkipLogin:  true,
-	}); err != nil {
-		return errors.Wrap(err, "failed to enroll using Chrome")
-	}
-
-	if _, err = pc.StopChrome(ctx, &empty.Empty{}); err != nil {
-		return errors.Wrap(err, "failed to close Chrome instance")
-	}
-
-	return nil
-}
-
 func (f *tastFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	if f.features&TFFeaturesEnroll != 0 {
 		// Do this before NewTestFixture as DUT might be rebooted which will break tf.rpc.
@@ -424,8 +405,33 @@ func (f *tastFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) inter
 
 	if f.features&TFFeaturesEnroll != 0 {
 		for i := range f.tf.duts {
-			if err := f.enrollChrome(ctx, s, i); err != nil {
-				s.Fatal("Failed to enroll Chrome: ", err)
+			// TODO(b/243629567): Remove the retries when the enroll fixture is stable enough.
+			ok := false
+			for tries := 1; tries <= enrollRetry; tries++ {
+				// Make sure we have enough time to perform enrollment.
+				// This helps differentiate real issues from timeout hitting different components.
+				if deadline, ok := ctx.Deadline(); !ok {
+					s.Fatal("Missing deadline for context: ", ctx)
+				} else if diff := deadline.Sub(time.Now()); diff < enrollmentRunTimeout {
+					s.Fatalf("Not enought time to perform setup and enrollment: have %s; need %s", diff, enrollmentRunTimeout)
+				}
+
+				s.Logf("Attempting enrollment, try %d/%d", tries, enrollRetry)
+				attemptDir := path.Join(s.OutDir(), fmt.Sprintf("Attempt_%d", tries))
+				enrollCtx, cancel := context.WithTimeout(ctx, enrollmentRunTimeout)
+				defer cancel()
+
+				if err := policyutil.Enroll(enrollCtx, attemptDir, f.tf.duts[i].dut, f.tf.duts[i].rpc, fakedms.EnrollmentFakeDMSDir, false); err != nil {
+					s.Logf("Attempt %d failed", tries)
+				} else {
+					// When the enrollment is successful, there is no need to retry again.
+					s.Logf("Attempt %d succeded", tries)
+					ok = true
+					break
+				}
+			}
+			if !ok {
+				s.Fatal("Failed to enroll Chrome")
 			}
 		}
 	}

@@ -188,7 +188,13 @@ func (e *enrolledFixt) SetUp(ctx context.Context, s *testing.FixtState) interfac
 			s.Fatal("Failed DUT connection check after reboot: ", err)
 		}
 
-		if err := enroll(enrollCtx, attemptDir, s.DUT(), s.RPCHint(), e.fdmsDir); err != nil {
+		cl, err := rpc.Dial(enrollCtx, s.DUT(), s.RPCHint())
+		if err != nil {
+			s.Fatal("failed to connect to the RPC service on the DUT", err)
+		}
+		defer cl.Close(enrollCtx)
+
+		if err := Enroll(enrollCtx, attemptDir, s.DUT(), cl, e.fdmsDir, true); err != nil {
 			s.Logf("Attempt %d failed", tries)
 			errs = append(errs, err)
 		} else {
@@ -231,27 +237,32 @@ func (*enrolledFixt) Reset(ctx context.Context) error                        { r
 func (*enrolledFixt) PreTest(ctx context.Context, s *testing.FixtTestState)  {}
 func (*enrolledFixt) PostTest(ctx context.Context, s *testing.FixtTestState) {}
 
-func enroll(ctx context.Context, attemptDir string, dut *dut.DUT, rpcHint *testing.RPCHint, fdmsDir string) (retErr error) {
+func Enroll(ctx context.Context, attemptDir string, dut *dut.DUT, rpc *rpc.Client, fdmsDir string, stopFdms bool) (retErr error) {
 	// Reserve time for cleaning up and copying the logs from the DUT.
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	cl, err := rpc.Dial(ctx, dut, rpcHint)
-	if err != nil {
-		return errors.Wrap(err, "failed to connect to the RPC service on the DUT")
-	}
-	defer cl.Close(cleanupCtx)
+	ok := false
+	defer func(ctx context.Context) {
+		if !ok {
+			screenshotService := graphics.NewScreenshotServiceClient(rpc.Conn)
+			attemptNumber := path.Base(attemptDir)
+			if _, err := screenshotService.CaptureScreenshot(ctx,
+				&graphics.CaptureScreenshotRequest{FilePrefix: "enrollment" + attemptNumber},
+			); err != nil {
+				testing.ContextLog(ctx, "Failed to capture screenshot: ", err)
+			}
+		}
+	}(cleanupCtx)
 
-	policyClient := pspb.NewPolicyServiceClient(cl.Conn)
-
+	policyClient := pspb.NewPolicyServiceClient(rpc.Conn)
 	if _, err := policyClient.CreateFakeDMSDir(ctx, &pspb.CreateFakeDMSDirRequest{
 		Path: fdmsDir,
 	}); err != nil {
 		return errors.Wrap(err, "failed to create FakeDMS directory")
 	}
 
-	ok := false
 	defer func(ctx context.Context) {
 		if !ok {
 			if _, err := policyClient.RemoveFakeDMSDir(ctx, &pspb.RemoveFakeDMSDirRequest{
@@ -291,18 +302,6 @@ func enroll(ctx context.Context, attemptDir string, dut *dut.DUT, rpcHint *testi
 		}
 	}(cleanupCtx)
 
-	defer func(ctx context.Context) {
-		if !ok {
-			screenshotService := graphics.NewScreenshotServiceClient(cl.Conn)
-			attemptNumber := path.Base(attemptDir)
-			if _, err := screenshotService.CaptureScreenshot(ctx,
-				&graphics.CaptureScreenshotRequest{FilePrefix: "enrollment" + attemptNumber},
-			); err != nil {
-				testing.ContextLog(ctx, "Failed to capture screenshot: ", err)
-			}
-		}
-	}(cleanupCtx)
-
 	pJSON, err := json.Marshal(policy.NewBlob())
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal policy blob")
@@ -316,8 +315,14 @@ func enroll(ctx context.Context, attemptDir string, dut *dut.DUT, rpcHint *testi
 		return errors.Wrap(err, "failed to enroll using Chrome")
 	}
 
-	if _, err := policyClient.StopChromeAndFakeDMS(ctx, &empty.Empty{}); err != nil {
-		return errors.Wrap(err, "failed to stop Chrome and FakeDMS")
+	if stopFdms {
+		if _, err := policyClient.StopChromeAndFakeDMS(ctx, &empty.Empty{}); err != nil {
+			return errors.Wrap(err, "failed to stop Chrome and FakeDMS")
+		}
+	} else {
+		if _, err := policyClient.StopChrome(ctx, &empty.Empty{}); err != nil {
+			return errors.Wrap(err, "failed to stop Chrome")
+		}
 	}
 
 	ok = true
