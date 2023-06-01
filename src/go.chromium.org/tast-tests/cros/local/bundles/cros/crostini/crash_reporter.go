@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"golang.org/x/sys/unix"
 )
 
 const (
@@ -84,7 +85,7 @@ func checkExitError(err error) error {
 	}
 
 	waitStatus := exitError.Sys().(syscall.WaitStatus)
-	if syscall.Signal(waitStatus.ExitStatus()) != syscall.SIGABRT {
+	if unix.Signal(waitStatus.ExitStatus()) != unix.SIGABRT {
 		return errors.Wrap(err, "process failed for non-SIGABRT reason")
 	}
 

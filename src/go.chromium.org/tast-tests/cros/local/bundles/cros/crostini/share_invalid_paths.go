@@ -10,11 +10,11 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"syscall"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	"go.chromium.org/tast/core/testing"
+	"golang.org/x/sys/unix"
 )
 
 func init() {
@@ -77,10 +77,10 @@ func ShareInvalidPaths(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	devs := []int{syscall.S_IFBLK, syscall.S_IFIFO, syscall.S_IFCHR, syscall.S_IFSOCK}
+	devs := []int{unix.S_IFBLK, unix.S_IFIFO, unix.S_IFCHR, unix.S_IFSOCK}
 	for _, dev := range devs {
 		p := path.Join(downloads, fmt.Sprintf("dev_node%d", dev))
-		if err := syscall.Mknod(p, 0o600, dev); err != nil {
+		if err := unix.Mknod(p, 0o600, dev); err != nil {
 			s.Fatal("Failed to create dev node: ", err)
 		}
 		defer os.Remove(p)
