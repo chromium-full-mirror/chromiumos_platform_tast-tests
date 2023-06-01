@@ -192,10 +192,8 @@ func (f *FilesApp) OpenDir(dirName, expectedTitle string) uiauto.Action {
 		// For the picker and saver, we check that the button in the header exists.
 		roleType = role.Button
 	}
-	return uiauto.Combine("OpenDir",
-		f.LeftClick(nodewith.Name(dirName).Role(role.StaticText).Ancestor(dir)),
-		f.WaitUntilExists(nodewith.Name(expectedTitle).Role(roleType).First()),
-	)
+	return f.LeftClickUntil(nodewith.Name(dirName).Role(role.StaticText).Ancestor(dir),
+		f.WithTimeout(2*time.Second).WaitUntilExists(nodewith.Name(expectedTitle).Role(roleType).First()))
 }
 
 // FormatDevice returns a function that formats USB drive with the default options.
@@ -289,7 +287,7 @@ func (f *FilesApp) OpenContextMenu(fileName string) uiauto.Action {
 	// sized before it is shown and positioned.
 	return uiauto.Combine(fmt.Sprintf("OpenContextMenu(%s)", fileName),
 		f.SelectFile(fileName),
-		f.RightClick(file(fileName)),
+		f.ui.RightClickUntil(file(fileName), f.WaitUntilExists(nodewith.Role(role.MenuItem).First())),
 	)
 }
 

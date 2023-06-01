@@ -497,7 +497,7 @@ func ChangeDiskSize(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestCo
 	}
 	defer conn.Close()
 
-	curSize, err := UpdateDiskSizeSliderWithJS(ctx, conn, diskResizeDialogName, targetDiskSize, false)
+	curSize, err := UpdateDiskSizeSliderWithJS(ctx, conn, diskResizeDialogName, targetDiskSize, true)
 	if err != nil {
 		return 0, err
 	}
