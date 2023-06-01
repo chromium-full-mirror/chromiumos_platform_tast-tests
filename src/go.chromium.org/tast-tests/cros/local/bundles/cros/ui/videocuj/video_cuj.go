@@ -251,7 +251,7 @@ func Run(ctx context.Context, s *testing.State) {
 					return errors.Wrap(err, "failed to get initial video frame data")
 				}
 
-				stopSnapshot, err := recorder.StartSnapshot(ctx, fmt.Sprintf("%s.%s.%s.", videoPrefix, format.name, codec), ashMetrics, browserMetrics)
+				stopSnapshot, err := recorder.StartSnapshot(ctx, fmt.Sprintf("%s.%s.%s", videoPrefix, format.name, codec), ashMetrics, browserMetrics)
 				if err != nil {
 					return errors.Wrap(err, "failed to start recording a snapshot")
 				}

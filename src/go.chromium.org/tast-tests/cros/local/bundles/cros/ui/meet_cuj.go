@@ -1327,7 +1327,7 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 			for addingMoreBots {
 				// Prefix the metric with the number of people in the call.
 				// This is the number of bots in the call + the user themselves.
-				stopSnapshot, err = recorder.StartSnapshot(ctx, fmt.Sprintf("%dp.", botsInCall+1), ashMetrics, browserMetrics)
+				stopSnapshot, err = recorder.StartSnapshot(ctx, fmt.Sprintf("%dp", botsInCall+1), ashMetrics, browserMetrics)
 				if err != nil {
 					addBotsErr = errors.Wrapf(err, "failed to start snapshot for phase %d", currentPhase)
 					break

@@ -1562,6 +1562,8 @@ func (r *Recorder) NewConn(ctx context.Context, br *browser.Browser, shortTitle,
 // be called before calling StartSnapshot again. This stop function takes a new
 // snapshot of the Ash and browser metrics, and saves the diff between the metrics.
 // These metrics are saved under the original metric name prepended with |prefix|.
+// |prefix| is separated from the rest of the metric name automatically with a
+// period, so prefix should not include any period at the end of the string.
 //
 // For example, if we wanted to StartSnapshot for "EventLatency.TotalLatency", we
 // would do the following:
@@ -1582,6 +1584,14 @@ func (r *Recorder) StartSnapshot(ctx context.Context, prefix string, ashMetrics,
 		return nil, errors.New("existing snapshot already in progress")
 	}
 	r.takingSnapshot = true
+
+	// Add in a period to separate the prefix and the rest of the metric.
+	prefixRe := regexp.MustCompile(`^.+\.$`)
+	if prefixRe.MatchString(prefix) {
+		testing.ContextLogf(ctx, "prefix %s should not include a period separator at the end", prefix)
+	} else {
+		prefix += "."
+	}
 
 	// If we have more than 1 tconn saved, then the browser metrics
 	// must be Lacros based.

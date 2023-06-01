@@ -220,7 +220,7 @@ func GoogleSheetsCUJ(ctx context.Context, s *testing.State) {
 		}{
 			{
 				description:    "mouse_click",
-				snapshotPrefix: "ScrollMouseClick.",
+				snapshotPrefix: "ScrollMouseClick",
 				run: func(ctx context.Context) error {
 					sheetBounds, err := ui.Location(ctx, nodewith.Role("genericContainer").HasClass("grid-scrollable-wrapper"))
 					if err != nil {
@@ -240,7 +240,7 @@ func GoogleSheetsCUJ(ctx context.Context, s *testing.State) {
 			},
 			{
 				description:    "mouse_wheel",
-				snapshotPrefix: "ScrollMouseWheel.",
+				snapshotPrefix: "ScrollMouseWheel",
 				run: func(ctx context.Context) error {
 					return inputsimulations.ScrollMouseDownFor(ctx, mw, 200*time.Millisecond, individualScrollTimeout)
 				},
@@ -248,14 +248,14 @@ func GoogleSheetsCUJ(ctx context.Context, s *testing.State) {
 			},
 			{
 				description:    "trackpad_gestures",
-				snapshotPrefix: "ScrollTrackpadGestures.",
+				snapshotPrefix: "ScrollTrackpadGestures",
 				run: func(ctx context.Context) error {
 					return inputsimulations.ScrollDownFor(ctx, tpw, tw, 500*time.Millisecond, individualScrollTimeout)
 				},
 			},
 			{
 				description:    "key_press",
-				snapshotPrefix: "ScrollKeyPress.",
+				snapshotPrefix: "ScrollKeyPress",
 				run: func(ctx context.Context) error {
 					return inputsimulations.RepeatKeyPressFor(ctx, kw, "Down", 500*time.Millisecond, individualScrollTimeout)
 				},
