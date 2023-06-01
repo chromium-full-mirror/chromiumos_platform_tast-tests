@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromeos-test-assets-private/tast/crosint/arc/data_migration_rvc_x86_64_virtiofs_R116_15489_20230612.tbz2",
+  "size": 593432665,
+  "sha256sum": "20a012be77d1854dc10eb46d481d0c694d4dff8d0d777a28fe4c547c2b8287c8"
+}

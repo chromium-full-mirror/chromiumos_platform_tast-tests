@@ -36,20 +36,25 @@ import (
 // How to create archived home data to be used by this test:
 //  1. Flash the previous version of ARC++ (e.g. ARC++ P).
 //  2. Sign in with the specified test account (See arc.DataMigration.yaml for username/password).
-//  3. Wait until ARC++ boots and uninstall all unnecessary apps.
+//  3. Wait until ARC++ boots and uninstall all unnecessary apps. For managed test cases, make sure
+//     that the app to be installed during the test is available on the Play Store.
 //  4. (optional) Populate files under /data/ or install apps.
 //  5. ssh to DUT and create .tbz2 file by
 //     `cd /home/.shadow/<hash>/mount && tar --xattrs --selinux -cjf /tmp/<dest_file_name>.tbz2 .`
+//     Only for R->T test cases, run `settings put secure user_setup_complete 0` right before taking
+//     the snapshot to work around the Play Store reauthentication issue (b/285820960).
 //  6. Upload the tbz2 file into gs://chromiumos-test-assets-public/tast/cros/arc/ and update
 //     the .external file (See tast/local/bundles/cros/arc/data/data_migration_pi_x86_64.external).
 const (
-	homeDataNameNycX86            = "data_migration_nyc_x86_64"
-	homeDataNamePiX86             = "data_migration_pi_x86_64"
-	homeDataNamePiArm             = "data_migration_pi_arm64"
-	homeDataNameManagedPiX86      = "data_migration_managed_pi_x86_64"
-	arcDataMigrationUnmanagedPool = "arc_data_migration_unmanaged"
-	arcDataMigrationManagedPool   = "arc_data_migration_managed"
-	dataMigrationTestTimeout      = 10 * time.Minute
+	homeDataNameNycX86                = "data_migration_nyc_x86_64"
+	homeDataNamePiX86                 = "data_migration_pi_x86_64"
+	homeDataNamePiArm                 = "data_migration_pi_arm64"
+	homeDataNameRvcX86Virtiofs        = "data_migration_rvc_x86_64_virtiofs"
+	homeDataNameManagedPiX86          = "data_migration_managed_pi_x86_64"
+	homeDataNameManagedRvcX86Virtiofs = "data_migration_managed_rvc_x86_64_virtiofs"
+	arcDataMigrationUnmanagedPool     = "arc_data_migration_unmanaged"
+	arcDataMigrationManagedPool       = "arc_data_migration_managed"
+	dataMigrationTestTimeout          = 10 * time.Minute
 )
 
 type dataMigrationTestParams struct {
@@ -63,7 +68,7 @@ func init() {
 		Func:         DataMigration,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Boots ARC with /data created on the previous version of ARC and verifies Play Store can install an app",
-		Contacts:     []string{"arc-storage@google.com", "niwa@google.com"},
+		Contacts:     []string{"arc-storage@google.com", "momohatt@google.com", "niwa@google.com"},
 		// ChromeOS > Software > ARC++ > Storage
 		BugComponent: "b:516669",
 		// "no_qemu" is added for excluding betty from the target board list.
@@ -111,6 +116,21 @@ func init() {
 				"arm",
 			},
 		}, {
+			// Launch ARC T with virtio-fs /data created on ARC R (for x86).
+			Name: "r_to_t_x86_virtiofs",
+			Val: dataMigrationTestParams{
+				poolID:       arcDataMigrationUnmanagedPool,
+				dataFileName: homeDataNameRvcX86Virtiofs,
+				managed:      false,
+			},
+			ExtraAttr: []string{"group:mainline", "informational"},
+			ExtraData: []string{homeDataNameRvcX86Virtiofs},
+			ExtraSoftwareDeps: []string{
+				"android_vm_t",
+				"amd64",
+				"no_arcvm_virtio_blk_data",
+			},
+		}, {
 			// Launch ARC R with /data created on ARC P for managed user(for x86).
 			Name: "managed_p_to_r_x86",
 			Val: dataMigrationTestParams{
@@ -126,6 +146,24 @@ func init() {
 			ExtraSoftwareDeps: []string{
 				"android_r",
 				"amd64",
+			},
+		}, {
+			// Launch ARC T with virtio-fs /data created on ARC R for managed user (for x86).
+			Name: "managed_r_to_t_x86_virtiofs",
+			Val: dataMigrationTestParams{
+				poolID:       arcDataMigrationManagedPool,
+				dataFileName: homeDataNameManagedRvcX86Virtiofs,
+				managed:      true,
+			},
+			ExtraAttr: []string{"group:arc", "arc_core", "group:arc-functional"},
+			ExtraData: []string{homeDataNameManagedRvcX86Virtiofs},
+			ExtraSearchFlags: []*testing.StringPair{
+				pci.SearchFlag(&policy.ArcEnabled{}, pci.VerifiedFunctionalityOS),
+			},
+			ExtraSoftwareDeps: []string{
+				"android_vm_t",
+				"amd64",
+				"no_arcvm_virtio_blk_data",
 			},
 		}},
 	})
@@ -369,6 +407,10 @@ func checkGmsCoreVersion(ctx context.Context, a *arc.ARC, systemSdkVersion int) 
 		expectedVariant = 15 // PROD_RVC
 	case 31:
 		expectedVariant = 19 // PROD_SC
+	case 33:
+		// Skip checking variant for ARC T. In R->T upgrade, GMSCore version is not updated
+		// because prod-RVC GMSCore is compatible with T (b/284954303).
+		return nil
 	default:
 		return errors.Errorf("unexpected system SDK version: %d", systemSdkVersion)
 	}
