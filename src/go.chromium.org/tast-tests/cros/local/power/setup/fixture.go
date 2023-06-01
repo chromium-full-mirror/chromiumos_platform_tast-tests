@@ -312,7 +312,43 @@ func init() {
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
 	})
-
+	// Dark theme basic fixtures
+	testing.AddFixture(&testing.Fixture{
+		Name: "powerAshDark",
+		Desc: "Dark theme version of powerAsh",
+		Contacts: []string{
+			"chromeos-platform-power@google.com",
+			"mqg@chromium.org",
+		},
+		Impl: NewPowerUIFixture(PowerTestOptions{
+			NightLight:         DisableNightLight,
+			DarkTheme:          EnableDarkTheme,
+			KeyboardBrightness: SetKbBrightnessToZero,
+		}, PowerFixtureOptions{BrowserType: browser.TypeAsh}),
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: tearDownTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "powerLacrosDark",
+		Desc: "Dark theme version of powerLacros",
+		Contacts: []string{
+			"chromeos-platform-power@google.com",
+			"mqg@chromium.org",
+		},
+		Impl: NewPowerUIFixture(PowerTestOptions{
+			NightLight:         DisableNightLight,
+			DarkTheme:          EnableDarkTheme,
+			KeyboardBrightness: SetKbBrightnessToZero,
+		}, PowerFixtureOptions{BrowserType: browser.TypeLacros}),
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: tearDownTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
 }
 
 type powerSetUpFixture struct {

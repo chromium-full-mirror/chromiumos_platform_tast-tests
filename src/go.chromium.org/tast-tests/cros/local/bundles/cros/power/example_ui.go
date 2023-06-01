@@ -18,6 +18,7 @@ import (
 )
 
 var exampleUITimeParams = power.TimeParams{Interval: 1 * time.Second, Total: 10 * time.Second}
+var exampleUI5minTimeParams = power.TimeParams{Interval: 5 * time.Second, Total: 300 * time.Second}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -27,45 +28,66 @@ func init() {
 		BugComponent: "b:167191",
 		Contacts:     []string{"chromeos-platform-power@google.com"},
 		SoftwareDeps: []string{"chrome"},
-		Timeout:      1*time.Minute + power.RecorderTimeout,
 		Params: []testing.Param{{
 			Name:      "ash_kbbl",
 			Fixture:   "powerAshKbbl",
 			ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			Val:       exampleUITimeParams,
+			Timeout:   1*time.Minute + power.RecorderTimeout,
 		}, {
-			Name:    "ash",
-			Fixture: "powerAsh",
-			Val:     exampleUITimeParams,
+			Name:      "ash",
+			Fixture:   "powerAsh",
+			ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+			Val:       exampleUI5minTimeParams,
+			Timeout:   6*time.Minute + power.RecorderTimeout,
+		}, {
+			Name:      "ash_dark",
+			Fixture:   "powerAshDark",
+			ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+			Val:       exampleUI5minTimeParams,
+			Timeout:   6*time.Minute + power.RecorderTimeout,
 		}, {
 			Name:    "ash_gaia",
 			Fixture: "powerAshGAIA",
 			Val:     exampleUITimeParams,
+			Timeout: 1*time.Minute + power.RecorderTimeout,
 		}, {
 			Name:    "ash_arc",
 			Fixture: "powerAshARC",
 			Val:     exampleUITimeParams,
+			Timeout: 1*time.Minute + power.RecorderTimeout,
 		}, {
 			Name:              "lacros_kbbl",
 			Fixture:           "powerLacrosKbbl",
 			ExtraSoftwareDeps: []string{"lacros"},
 			Val:               exampleUITimeParams,
+			Timeout:           1*time.Minute + power.RecorderTimeout,
 		}, {
 			Name:              "lacros",
 			Fixture:           "powerLacros",
 			ExtraSoftwareDeps: []string{"lacros"},
 			ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
-			Val:               exampleUITimeParams,
+			Val:               exampleUI5minTimeParams,
+			Timeout:           6*time.Minute + power.RecorderTimeout,
+		}, {
+			Name:              "lacros_dark",
+			Fixture:           "powerLacrosDark",
+			ExtraSoftwareDeps: []string{"lacros"},
+			ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
+			Val:               exampleUI5minTimeParams,
+			Timeout:           6*time.Minute + power.RecorderTimeout,
 		}, {
 			Name:              "lacros_gaia",
 			Fixture:           "powerLacrosGAIA",
 			ExtraSoftwareDeps: []string{"lacros"},
 			Val:               exampleUITimeParams,
+			Timeout:           1*time.Minute + power.RecorderTimeout,
 		}, {
 			Name:              "lacros_arc",
 			Fixture:           "powerLacrosARC",
 			ExtraSoftwareDeps: []string{"lacros"},
 			Val:               exampleUITimeParams,
+			Timeout:           1*time.Minute + power.RecorderTimeout,
 		}},
 	})
 }
