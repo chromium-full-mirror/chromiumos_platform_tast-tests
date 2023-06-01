@@ -94,6 +94,7 @@ func BrowserCommonMetricConfigs() []MetricConfig {
 		NewCustomMetricConfig("EventLatency.KeyPressed.TotalLatency", "microseconds", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Event.Latency.EndToEnd.Mouse", "microseconds", perf.SmallerIsBetter),
 		NewCustomMetricConfig("EventLatency.MouseDragged.TotalLatency", "microseconds", perf.SmallerIsBetter),
+		NewCustomMetricConfig("EventLatency.MouseMoved.TotalLatency", "microseconds", perf.SmallerIsBetter),
 		NewCustomMetricConfig("EventLatency.MousePressed.TotalLatency", "microseconds", perf.SmallerIsBetter),
 		NewCustomMetricConfig("EventLatency.MouseReleased.TotalLatency", "microseconds", perf.SmallerIsBetter),
 		NewCustomMetricConfig("EventLatency.MouseWheel.TotalLatency", "microseconds", perf.SmallerIsBetter),

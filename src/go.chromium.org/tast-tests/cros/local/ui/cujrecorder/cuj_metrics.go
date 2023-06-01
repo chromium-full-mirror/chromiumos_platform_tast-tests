@@ -101,6 +101,7 @@ func CUJAshCommonMetricConfigs() []MetricConfig {
 		NewCustomMetricConfig("Ash.EventLatency.KeyPressed.TotalLatency", "microseconds", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Ash.EventLatency.KeyReleased.TotalLatency", "microseconds", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Ash.EventLatency.MouseDragged.TotalLatency", "microseconds", perf.SmallerIsBetter),
+		NewCustomMetricConfig("Ash.EventLatency.MouseMoved.TotalLatency", "microseconds", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Ash.EventLatency.MousePressed.TotalLatency", "microseconds", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Ash.EventLatency.MouseReleased.TotalLatency", "microseconds", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Ash.EventLatency.MouseWheel.TotalLatency", "microseconds", perf.SmallerIsBetter),
