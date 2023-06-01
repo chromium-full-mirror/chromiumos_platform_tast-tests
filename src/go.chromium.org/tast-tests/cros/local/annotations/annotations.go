@@ -21,6 +21,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (
@@ -69,6 +70,30 @@ func StartLogging(ctx context.Context, cr *chrome.Chrome, br *browser.Browser) e
 	return nil
 }
 
+// PrintAnnotationsAndCounts prints all the unique annotation hash codes
+// and number of times that annotation occurred.
+func PrintAnnotationsAndCounts(ctx context.Context, logFile []byte) {
+	testing.ContextLog(ctx, "Printing the Annotations found in the file:")
+	// Compile the regular expression.
+	pattern := regexp.MustCompile(`\"traffic_annotation\":(\d+),`)
+
+	// Find all matches of the regular expression.
+	annotations := pattern.FindAllSubmatch(logFile, -1)
+
+	// Create a map to store the unique annotations and their counts.
+	annotationCounts := make(map[string]int)
+
+	// Iterate over the annotations array.
+	for _, annotation := range annotations {
+		annotationCounts[string(annotation[1])]++
+	}
+
+	// Print the unique annotations and their counts.
+	for annotationStr, count := range annotationCounts {
+		testing.ContextLogf(ctx, "Annotation: %s: %d", annotationStr, count)
+	}
+}
+
 // StopLoggingCheckLogs clicks the "Stop logging" button on the net export page and checks logs for given annotation.
 func StopLoggingCheckLogs(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, annotation string) (foundAnnotation bool, err error) {
 	// Open the net-export page.
@@ -95,6 +120,7 @@ func StopLoggingCheckLogs(ctx context.Context, cr *chrome.Chrome, br *browser.Br
 	if err != nil {
 		return false, errors.Wrap(err, "failed to open logfile")
 	}
+
 	// Check if the traffic annotation exists in the log file.
 	isExist, err := regexp.Match(fmt.Sprintf("\"traffic_annotation\":%s", annotation), logFile)
 	if err != nil {
@@ -157,8 +183,8 @@ func StopLoggingCheckLogsFilterByTriggerTime(ctx context.Context, cr *chrome.Chr
 	return isExist && isValid, nil
 }
 
-// StopLoggingVerifyNoAnnotation clicks the "Stop logging" button on the net export page and verifies that none of the annotation hash codes in the given list are present in the logs.
-func StopLoggingVerifyNoAnnotation(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, annotationHashCodes []string) (foundAnnotation bool, err error) {
+// StopLoggingVerifyAnnotationSet clicks the "Stop logging" button on the net export page and verifies that either none or all of the annotation hash codes in the given list are present in the logs.
+func StopLoggingVerifyAnnotationSet(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, annotationsShouldBePresent bool, annotationHashCodes []string) (foundAnnotation bool, err error) {
 	// Open the net-export page.
 	netConn, err := NewNetExportConn(ctx, br)
 	if err != nil {
@@ -185,12 +211,15 @@ func StopLoggingVerifyNoAnnotation(ctx context.Context, cr *chrome.Chrome, br *b
 		return false, errors.Wrap(err, "failed to open logfile")
 	}
 
+	var oneAnnotationFound = false
 	var annotationsFound []string
 	for _, hashCode := range annotationHashCodes {
 		// Check if the traffic annotation exists in the log file.
 		annotationExists, err := regexp.Match(fmt.Sprintf("\"traffic_annotation\":%s", hashCode), logFile)
+		oneAnnotationFound = annotationExists || oneAnnotationFound
+
 		if err != nil {
-			return false, errors.Wrap(err, "failed to search annotation logfile")
+			return oneAnnotationFound, errors.Wrap(err, "failed to search annotation logfile")
 		}
 		if annotationExists {
 			annotationsFound = append(annotationsFound, hashCode)
@@ -199,13 +228,17 @@ func StopLoggingVerifyNoAnnotation(ctx context.Context, cr *chrome.Chrome, br *b
 
 	// Clean up file after reading.
 	if err := os.Remove(downloadLocation); err != nil {
-		return false, errors.Wrap(err, "failed to Clean file")
+		return oneAnnotationFound, errors.Wrap(err, "failed to Clean file")
 	}
 
-	if len(annotationsFound) > 0 {
-		return false, errors.Errorf("found unexpected annotations with the hash codes %+q", annotationsFound)
+	if !annotationsShouldBePresent {
+		if len(annotationsFound) > 0 {
+			return oneAnnotationFound, errors.Errorf("found unexpected annotations with the hash codes %+q", annotationsFound)
+		}
+	} else if len(annotationsFound) != len(annotationHashCodes) {
+		return oneAnnotationFound, errors.Errorf("Did not find as many annotations as expected. Actual annotations found: %+q", annotationsFound)
 	}
-	return true, nil
+	return oneAnnotationFound, nil
 }
 
 // NewNetExportConn navigates to chrome://net-export.

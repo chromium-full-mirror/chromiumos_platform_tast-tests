@@ -246,7 +246,7 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 
 	// Stop logging and verify network traffic annotations associated with the
 	// optional services are not found in the logs.
-	_, err = annotations.StopLoggingVerifyNoAnnotation(ctx, cr, br, hashCodes)
+	_, err = annotations.StopLoggingVerifyAnnotationSet(ctx, cr, br, false, hashCodes)
 	if err != nil {
 		s.Fatal("Failed to stop logging and verify logs: ", err)
 	}

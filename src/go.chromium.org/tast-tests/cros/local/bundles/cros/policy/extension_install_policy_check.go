@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
+	"go.chromium.org/tast-tests/cros/local/annotations"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -23,9 +24,10 @@ import (
 )
 
 type extensionInstallPolicyTestTable struct {
-	name         string          // name is the subtest name.
-	allowInstall bool            // whether the extension should be allowed to be installed or not.
-	policies     []policy.Policy // policies is a list of ExtensionInstallAllowlist, ExtensionInstallBlocklist policies.
+	name                 string          // name is the subtest name.
+	allowInstall         bool            // whether the extension should be allowed to be installed or not.
+	policies             []policy.Policy // policies is a list of ExtensionInstallAllowlist, ExtensionInstallBlocklist policies.
+	shouldFindAnnotation bool            // Whether network annotations should be present or not
 }
 
 // Google keep chrome extension.
@@ -58,6 +60,7 @@ func init() {
 							&policy.ExtensionInstallAllowlist{Val: []string{extensionID, chrome.TestExtensionID}},
 							&policy.ExtensionInstallBlocklist{Val: []string{"*"}},
 						},
+						shouldFindAnnotation: false,
 					},
 					{
 						name:         "allowlist_set_with_test_api_extension",
@@ -66,6 +69,7 @@ func init() {
 							&policy.ExtensionInstallAllowlist{Val: []string{chrome.TestExtensionID}},
 							&policy.ExtensionInstallBlocklist{Val: []string{"*"}},
 						},
+						shouldFindAnnotation: false,
 					},
 				},
 			},
@@ -78,11 +82,13 @@ func init() {
 						policies: []policy.Policy{
 							&policy.ExtensionInstallAllowlist{Val: []string{extensionID}},
 						},
+						shouldFindAnnotation: false,
 					},
 					{
-						name:         "allowlist_unset",
-						allowInstall: true,
-						policies:     []policy.Policy{},
+						name:                 "allowlist_unset",
+						allowInstall:         true,
+						policies:             []policy.Policy{},
+						shouldFindAnnotation: false,
 					},
 				},
 			},
@@ -96,6 +102,7 @@ func init() {
 							&policy.ExtensionInstallAllowlist{Val: []string{extensionID}},
 							&policy.ExtensionInstallBlocklist{Val: []string{extensionID}},
 						},
+						shouldFindAnnotation: false,
 					},
 					{
 						name:         "allowlist_unset",
@@ -103,6 +110,7 @@ func init() {
 						policies: []policy.Policy{
 							&policy.ExtensionInstallBlocklist{Val: []string{extensionID}},
 						},
+						shouldFindAnnotation: false,
 					},
 				},
 			},
@@ -117,6 +125,19 @@ func init() {
 func ExtensionInstallPolicyCheck(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
+
+	// Hash codes for NetworkTrafficAnnotationTags.
+	const extensionCrxFetcher = "21145003"
+	const extensionManifestFetcher = "5151071"
+	const extensionInstallSigner = "50464499"
+	const webstoreInstaller = "18764319"
+	const chromeAppsSocketapi = "8591273"
+	const downloadsAPIRunAsync = "121068967"
+	const pepperTCPSocket = "120623198"
+	const blinkExtensionResourceLoader = "84165821"
+
+	testAnnotations := []string{extensionCrxFetcher, extensionManifestFetcher, extensionInstallSigner, webstoreInstaller, chromeAppsSocketapi, downloadsAPIRunAsync,
+		pepperTCPSocket, blinkExtensionResourceLoader}
 
 	// Connect to Test API to use it with the UI library.
 	tconn, err := cr.TestAPIConn(ctx)
@@ -143,11 +164,26 @@ func ExtensionInstallPolicyCheck(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to update policies: ", err)
 			}
 
+			// Open the net-export page and start logging.
+			if err := annotations.StartLogging(ctx, cr, cr.Browser()); err != nil {
+				s.Fatal("Failed to start logging: ", err)
+			}
+
 			// Run actual test.
 			if allowInstall, err := isInstallationAllowed(ctx, tconn, cr); err != nil {
 				s.Fatal("Failed to check if extension can be installed: ", err)
 			} else if allowInstall != tc.allowInstall {
 				s.Errorf("Unexpected result: got %t; want %t", allowInstall, tc.allowInstall)
+			}
+
+			// Stop logging and check the logs to verify if all/none annotations
+			// are found.
+			foundAnnotation, err := annotations.StopLoggingVerifyAnnotationSet(ctx, cr, cr.Browser(), tc.shouldFindAnnotation, testAnnotations)
+			if err != nil {
+				s.Fatal("Unexpected error when verifying logs: Got: ", foundAnnotation, " Want:", tc.shouldFindAnnotation, " Error:", err)
+			}
+			if foundAnnotation != tc.shouldFindAnnotation {
+				s.Fatal("Unexpected outcome when verifying logs: Got: ", foundAnnotation, " Want:", tc.shouldFindAnnotation, " Error:", err)
 			}
 		})
 	}
