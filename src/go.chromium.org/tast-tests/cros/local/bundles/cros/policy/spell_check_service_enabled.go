@@ -19,9 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/restriction"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -75,34 +73,7 @@ func SpellCheckServiceEnabled(ctx context.Context, s *testing.State) {
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()
 
-	for _, param := range []spellcheck.TestCase{
-		{
-			Name:                 "allow",
-			Value:                &policy.SpellCheckServiceEnabled{Val: true},
-			WantRestriction:      restriction.Disabled,
-			WantSettingsCheck:    checked.True,
-			WantContextCheck:     checked.True,
-			ShouldFindAnnotation: true,
-		},
-		{
-			Name:              "disallow",
-			Value:             &policy.SpellCheckServiceEnabled{Val: false},
-			WantRestriction:   restriction.Disabled,
-			WantSettingsCheck: checked.False,
-			// "" means that there is no checkmark.
-			WantContextCheck:     "",
-			ShouldFindAnnotation: false,
-		},
-		{
-			Name:              "unset",
-			Value:             &policy.SpellCheckServiceEnabled{Stat: policy.StatusUnset},
-			WantRestriction:   restriction.None,
-			WantSettingsCheck: checked.False,
-			// "" means that there is no checkmark.
-			WantContextCheck:     "",
-			ShouldFindAnnotation: false,
-		},
-	} {
+	for index, param := range spellcheck.GetTestCases() {
 		s.Run(ctx, param.Name, func(ctx context.Context, s *testing.State) {
 			// Perform cleanup.
 			if err := policyutil.ResetChrome(ctx, fdms, cr); err != nil {
@@ -128,7 +99,7 @@ func SpellCheckServiceEnabled(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to start logging: ", err)
 			}
 
-			if err := spellcheck.TriggerSpellCheck(ctx, param, cr, server, br, tconn); err != nil {
+			if err := spellcheck.TriggerSpellCheck(ctx, s, cr, br, server, tconn, index); err != nil {
 				s.Fatal("Failed to trigger and verify spellcheck: ", err)
 			}
 

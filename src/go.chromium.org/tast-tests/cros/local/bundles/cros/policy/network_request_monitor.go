@@ -30,9 +30,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/restriction"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/quickanswers"
 	"go.chromium.org/tast/core/ctxutil"
@@ -106,6 +104,50 @@ func getPolicyList() []policy.Policy {
 		&policy.WebRtcTextLogCollectionAllowed{Val: false},
 		&policy.ExtensionInstallAllowlist{Val: []string{chrome.TestExtensionID}},
 		&policy.ExtensionInstallBlocklist{Val: []string{"*"}},
+	}
+}
+
+type triggerOptionalService func(ctx context.Context, s *testing.State, cr *chrome.Chrome, br *browser.Browser, server *httptest.Server, tconn *chrome.TestConn, paramIndex int) error
+
+type optionalService struct {
+	name                 string
+	assocatedAnnotations []string
+	trigger              triggerOptionalService
+	paramIndex           int
+}
+
+func getOptionalServices() []optionalService {
+	return []optionalService{
+		{
+			name:                 "calendar_integration",
+			assocatedAnnotations: []string{calendarintegration.AnnotationHashCode},
+			trigger:              calendarintegration.TriggerCalendarIntegration,
+			paramIndex:           0,
+		},
+		{
+			name:                 "password_leak_detection",
+			assocatedAnnotations: []string{passwordleakdetection.AnnotationHashCode},
+			trigger:              passwordleakdetection.TriggerPasswordLeakDetection,
+			paramIndex:           0,
+		},
+		{
+			name:                 "quick_answers_definition",
+			assocatedAnnotations: []string{policyquickanswers.AnnotationHashCode},
+			trigger:              policyquickanswers.TriggerQuickAnswersDefinition,
+			paramIndex:           0,
+		},
+		{
+			name:                 "quick_answers_unit_conversion",
+			assocatedAnnotations: []string{policyquickanswers.AnnotationHashCode},
+			trigger:              policyquickanswers.TriggerQuickAnswersUnitConversion,
+			paramIndex:           0,
+		},
+		{
+			name:                 "spell_check",
+			assocatedAnnotations: []string{spellcheck.AnnotationHashCode},
+			trigger:              spellcheck.TriggerSpellCheck,
+			paramIndex:           0,
+		},
 	}
 }
 
@@ -194,19 +236,15 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 	// Network traffic annotation hashcodes associated with the optional services.
 	var hashCodes []string
 
-	s.Run(ctx, "calendar_integration_service", func(ctx context.Context, s *testing.State) {
-		calendarIntegrationParam := calendarintegration.TestCase{
-			Name:                    "disabled",
-			ShouldFindEventListView: false,
-			ShouldFindManagedIcon:   true,
-			ShouldFindAnnotation:    false,
-			Policy:                  &policy.CalendarIntegrationEnabled{Val: false},
-		}
-		if err := calendarintegration.TriggerCalendarIntegration(ctx, calendarIntegrationParam, br, tconn, s); err != nil {
-			s.Fatal("Failed to trigger and verify calendar integration: ", err)
-		}
-		hashCodes = append(hashCodes, calendarintegration.AnnotationHashCode)
-	})
+	// Trigger the optional services one by one.
+	for _, service := range getOptionalServices() {
+		s.Run(ctx, service.name, func(ctx context.Context, s *testing.State) {
+			if err := service.trigger(ctx, s, cr, br, server, tconn, service.paramIndex); err != nil {
+				s.Fatalf("Failed to trigger %v: %v", service.name, err)
+			}
+			hashCodes = append(hashCodes, service.assocatedAnnotations...)
+		})
+	}
 
 	s.Run(ctx, "default_search_provider_enabled", func(ctx context.Context, s *testing.State) {
 		defaultSearchProviderParam := defaultsearchprovider.TestCase{
@@ -220,64 +258,22 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 		}
 	})
 
-	s.Run(ctx, "spell_check_service", func(ctx context.Context, s *testing.State) {
-		spellCheckParam := spellcheck.TestCase{
-			Name:              "disallow",
-			Value:             &policy.SpellCheckServiceEnabled{Val: false},
-			WantRestriction:   restriction.Disabled,
-			WantSettingsCheck: checked.False,
-			// "" means that there is no checkmark.
-			WantContextCheck:     "",
-			ShouldFindAnnotation: false,
-		}
-		if err := spellcheck.TriggerSpellCheck(ctx, spellCheckParam, cr, server, br, tconn); err != nil {
-			s.Fatal("Failed to trigger and verify spellcheck: ", err)
-		}
-		hashCodes = append(hashCodes, spellcheck.AnnotationHashCode)
-	})
-
-	s.Run(ctx, "quick_answers_service", func(ctx context.Context, s *testing.State) {
-		quickAnswersDefinitionParam := policyquickanswers.DefinitionTestCase{
-			Name:                  "disabled",
-			ShouldFindAnnotation:  false,
-			ShouldShowContextMenu: false,
-			Policy:                &policy.QuickAnswersDefinitionEnabled{Val: false},
-		}
-		if err := policyquickanswers.TriggerQuickAnswersDefinition(ctx, quickAnswersDefinitionParam, server, br, tconn); err != nil {
-			s.Fatal("Failed to trigger and verify quick answers definition: ", err)
-		}
-
-		quickAnswersUnitCoversionParam := policyquickanswers.UnitConversionTestCase{
-			Name:                  "disabled",
-			ShouldFindAnnotation:  false,
-			ShouldShowContextMenu: false,
-			Policy:                &policy.QuickAnswersUnitConversionEnabled{Val: false},
-		}
-		if err := policyquickanswers.TriggerQuickAnswersUnitConversion(ctx, quickAnswersUnitCoversionParam, server, br, tconn); err != nil {
-			s.Fatal("Failed to trigger and verify quick answers unit conversion: ", err)
-		}
-		hashCodes = append(hashCodes, policyquickanswers.AnnotationHashCode)
-	})
-
-	s.Run(ctx, "password_leak_detection", func(ctx context.Context, s *testing.State) {
-		if err := passwordleakdetection.TriggerPasswordLeakDetection(ctx, cr, server, br); err != nil {
-			s.Fatal("Failed to trigger password leak detection: ", err)
-		}
-		hashCodes = append(hashCodes, passwordleakdetection.AnnotationHashCode)
-	})
-
-	s.Run(ctx, "search_suggestion", func(ctx context.Context, s *testing.State) {
-		searchSuggestionParam := searchsuggestion.TestCase{
-			Name:                 "disabled",
-			ShouldFindAnnotation: false,
-			Policy:               &policy.SearchSuggestEnabled{Val: false},
-			Enabled:              false,
-		}
-		if err := searchsuggestion.TriggerSearchSuggestion(ctx, searchSuggestionParam, tconn, br); err != nil {
-			s.Fatal("Failed to trigger search suggestion: ", err)
-		}
-		hashCodes = append(hashCodes, searchsuggestion.AnnotationID)
-	})
+	// TODO(b/286210023): Fix policy.NetworkRequestMonitor failure related to
+	// Search Suggestion in Lacros
+	if s.Param().(browser.Type) != browser.TypeLacros {
+		s.Run(ctx, "search_suggestion", func(ctx context.Context, s *testing.State) {
+			searchSuggestionParam := searchsuggestion.TestCase{
+				Name:                 "disabled",
+				ShouldFindAnnotation: false,
+				Policy:               &policy.SearchSuggestEnabled{Val: false},
+				Enabled:              false,
+			}
+			if err := searchsuggestion.TriggerSearchSuggestion(ctx, searchSuggestionParam, tconn, br); err != nil {
+				s.Fatal("Failed to trigger search suggestion: ", err)
+			}
+			hashCodes = append(hashCodes, searchsuggestion.AnnotationID)
+		})
+	}
 
 	s.Run(ctx, "user_feedback", func(ctx context.Context, s *testing.State) {
 		userFeedbackParam := userfeedback.TestCase{

@@ -76,26 +76,7 @@ func QuickAnswersDefinitionEnabled(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to enable Quick Answers: ", err)
 	}
 
-	for _, param := range []policyquickanswers.DefinitionTestCase{
-		{
-			Name:                  "unset",
-			ShouldFindAnnotation:  true,
-			ShouldShowContextMenu: true,
-			Policy:                &policy.QuickAnswersDefinitionEnabled{Stat: policy.StatusUnset},
-		},
-		{
-			Name:                  "enabled",
-			ShouldFindAnnotation:  true,
-			ShouldShowContextMenu: true,
-			Policy:                &policy.QuickAnswersDefinitionEnabled{Val: true},
-		},
-		{
-			Name:                  "disabled",
-			ShouldFindAnnotation:  false,
-			ShouldShowContextMenu: false,
-			Policy:                &policy.QuickAnswersDefinitionEnabled{Val: false},
-		},
-	} {
+	for index, param := range policyquickanswers.GetDefinitionTestCases() {
 		s.Run(ctx, param.Name, func(ctx context.Context, s *testing.State) {
 			// Perform cleanup.
 			if err := policyutil.ResetChrome(ctx, fdms, cr); err != nil {
@@ -120,7 +101,7 @@ func QuickAnswersDefinitionEnabled(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to start logging: ", err)
 			}
 
-			if err := policyquickanswers.TriggerQuickAnswersDefinition(ctx, param, server, br, tconn); err != nil {
+			if err := policyquickanswers.TriggerQuickAnswersDefinition(ctx, s, cr, br, server, tconn, index); err != nil {
 				s.Fatal("Failed to trigger and verify quick answers definition: ", err)
 			}
 

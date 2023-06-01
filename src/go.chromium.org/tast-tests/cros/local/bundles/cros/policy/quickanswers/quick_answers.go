@@ -17,8 +17,8 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/event"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
-
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (
@@ -43,6 +43,33 @@ type DefinitionTestCase struct {
 	Policy                *policy.QuickAnswersDefinitionEnabled
 }
 
+// GetDefinitionTestCases returns the list of DefinitionTestCase objects on
+// which QuickAnswersDefinitionEnabled policy is tested.
+func GetDefinitionTestCases() []DefinitionTestCase {
+	// Reordering the DefinitionTestCase objects in the returned list may break
+	// tests.
+	return []DefinitionTestCase{
+		{
+			Name:                  "disabled",
+			ShouldFindAnnotation:  false,
+			ShouldShowContextMenu: false,
+			Policy:                &policy.QuickAnswersDefinitionEnabled{Val: false},
+		},
+		{
+			Name:                  "enabled",
+			ShouldFindAnnotation:  true,
+			ShouldShowContextMenu: true,
+			Policy:                &policy.QuickAnswersDefinitionEnabled{Val: true},
+		},
+		{
+			Name:                  "unset",
+			ShouldFindAnnotation:  true,
+			ShouldShowContextMenu: true,
+			Policy:                &policy.QuickAnswersDefinitionEnabled{Stat: policy.StatusUnset},
+		},
+	}
+}
+
 // UnitConversionTestCase defines test expectations based on the value of policy QuickAnswersUnitConversionEnabled.
 type UnitConversionTestCase struct {
 	Name                  string
@@ -51,8 +78,37 @@ type UnitConversionTestCase struct {
 	Policy                *policy.QuickAnswersUnitConversionEnabled
 }
 
+// GetUnitConversionTestCases returns the list of UnitConversionTestCase objects
+// on which QuickAnswersUnitConversionEnabled policy is tested.
+func GetUnitConversionTestCases() []UnitConversionTestCase {
+	// Reordering the UnitConversionTestCase objects in the returned list may
+	// break tests.
+	return []UnitConversionTestCase{
+		{
+			Name:                  "disabled",
+			ShouldFindAnnotation:  false,
+			ShouldShowContextMenu: false,
+			Policy:                &policy.QuickAnswersUnitConversionEnabled{Val: false},
+		},
+		{
+			Name:                  "enabled",
+			ShouldFindAnnotation:  true,
+			ShouldShowContextMenu: true,
+			Policy:                &policy.QuickAnswersUnitConversionEnabled{Val: true},
+		},
+		{
+			Name:                  "unset",
+			ShouldFindAnnotation:  true,
+			ShouldShowContextMenu: true,
+			Policy:                &policy.QuickAnswersUnitConversionEnabled{Stat: policy.StatusUnset},
+		},
+	}
+}
+
 // TriggerQuickAnswersDefinition attempts to trigger quick answers definition and checks if the policy works as defined in the DefinitionTestCase param.
-func TriggerQuickAnswersDefinition(ctx context.Context, param DefinitionTestCase, server *httptest.Server, br *browser.Browser, tconn *chrome.TestConn) (err error) {
+func TriggerQuickAnswersDefinition(ctx context.Context, _ *testing.State, _ *chrome.Chrome, br *browser.Browser, server *httptest.Server, tconn *chrome.TestConn, paramIndex int) (err error) {
+	param := GetDefinitionTestCases()[paramIndex]
+
 	// Open page with the query word on it.
 	conn, err := br.NewConn(ctx, server.URL+"/"+testFileName, browser.WithNewWindow())
 	if err != nil {
@@ -107,7 +163,9 @@ func TriggerQuickAnswersDefinition(ctx context.Context, param DefinitionTestCase
 }
 
 // TriggerQuickAnswersUnitConversion attempts to trigger quick answers unit conversion and checks if the policy works as defined in the UnitConversionTestCase param.
-func TriggerQuickAnswersUnitConversion(ctx context.Context, param UnitConversionTestCase, server *httptest.Server, br *browser.Browser, tconn *chrome.TestConn) (err error) {
+func TriggerQuickAnswersUnitConversion(ctx context.Context, _ *testing.State, _ *chrome.Chrome, br *browser.Browser, server *httptest.Server, tconn *chrome.TestConn, paramIndex int) (err error) {
+	param := GetUnitConversionTestCases()[paramIndex]
+
 	// Open page with source units on it.
 	conn, err := br.NewConn(ctx, server.URL+"/"+testFileName, browser.WithNewWindow())
 	if err != nil {

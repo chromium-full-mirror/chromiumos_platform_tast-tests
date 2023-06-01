@@ -71,23 +71,7 @@ func PasswordLeakDetectionEnabled(ctx context.Context, s *testing.State) {
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
-	for _, param := range []passwordleakdetection.TestCase{
-		{
-			Name:                 "unset",
-			ShouldFindAnnotation: true,
-			Policy:               &policy.PasswordLeakDetectionEnabled{Stat: policy.StatusUnset},
-		},
-		{
-			Name:                 "enabled",
-			ShouldFindAnnotation: true,
-			Policy:               &policy.PasswordLeakDetectionEnabled{Val: true},
-		},
-		{
-			Name:                 "disabled",
-			ShouldFindAnnotation: false,
-			Policy:               &policy.PasswordLeakDetectionEnabled{Val: false},
-		},
-	} {
+	for _, param := range passwordleakdetection.GetTestCases() {
 		s.Run(ctx, param.Name, func(ctx context.Context, s *testing.State) {
 			// Perform cleanup.
 			if err := policyutil.ResetChrome(ctx, fdms, cr); err != nil {
@@ -117,7 +101,7 @@ func PasswordLeakDetectionEnabled(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to start logging: ", err)
 			}
 
-			if err := passwordleakdetection.TriggerPasswordLeakDetection(ctx, cr, server, br); err != nil {
+			if err := passwordleakdetection.TriggerPasswordLeakDetection(ctx, s, cr, br, server, nil, 0); err != nil {
 				s.Fatal("Failed to trigger password leak detection: ", err)
 			}
 

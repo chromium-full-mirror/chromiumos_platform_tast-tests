@@ -19,7 +19,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
-
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -62,29 +61,7 @@ func CalendarIntegrationEnabled(ctx context.Context, s *testing.State) {
 	}
 	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
 
-	for _, param := range []calendarintegration.TestCase{
-		{
-			Name:                    "unset",
-			ShouldFindEventListView: true,
-			ShouldFindManagedIcon:   false,
-			ShouldFindAnnotation:    true,
-			Policy:                  &policy.CalendarIntegrationEnabled{Stat: policy.StatusUnset},
-		},
-		{
-			Name:                    "enabled",
-			ShouldFindEventListView: true,
-			ShouldFindManagedIcon:   false,
-			ShouldFindAnnotation:    true,
-			Policy:                  &policy.CalendarIntegrationEnabled{Val: true},
-		},
-		{
-			Name:                    "disabled",
-			ShouldFindEventListView: false,
-			ShouldFindManagedIcon:   true,
-			ShouldFindAnnotation:    false,
-			Policy:                  &policy.CalendarIntegrationEnabled{Val: false},
-		},
-	} {
+	for index, param := range calendarintegration.GetTestCases() {
 		s.Run(ctx, param.Name, func(ctx context.Context, s *testing.State) {
 			// Perform cleanup.
 			if err := policyutil.ResetChrome(ctx, fdms, cr); err != nil {
@@ -111,7 +88,7 @@ func CalendarIntegrationEnabled(ctx context.Context, s *testing.State) {
 				}
 			}
 
-			if err := calendarintegration.TriggerCalendarIntegration(ctx, param, br, tconn, s); err != nil {
+			if err := calendarintegration.TriggerCalendarIntegration(ctx, s, cr, br, nil, tconn, index); err != nil {
 				s.Fatal("Failed to trigger and verify calendar integration: ", err)
 			}
 

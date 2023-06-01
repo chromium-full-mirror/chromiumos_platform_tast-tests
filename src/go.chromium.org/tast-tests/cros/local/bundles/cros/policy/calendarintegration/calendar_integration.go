@@ -8,6 +8,7 @@ package calendarintegration
 
 import (
 	"context"
+	"net/http/httptest"
 	"strconv"
 	"time"
 
@@ -18,7 +19,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/coords"
-
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -36,10 +36,41 @@ type TestCase struct {
 	Policy                  *policy.CalendarIntegrationEnabled
 }
 
+// GetTestCases returns the list of TestCase objects on which
+// CalendarIntegrationEnabled policy is tested.
+func GetTestCases() []TestCase {
+	// Reordering the TestCase objects in the returned list may break tests.
+	return []TestCase{
+		{
+			Name:                    "disabled",
+			ShouldFindEventListView: false,
+			ShouldFindManagedIcon:   true,
+			ShouldFindAnnotation:    false,
+			Policy:                  &policy.CalendarIntegrationEnabled{Val: false},
+		},
+		{
+			Name:                    "enabled",
+			ShouldFindEventListView: true,
+			ShouldFindManagedIcon:   false,
+			ShouldFindAnnotation:    true,
+			Policy:                  &policy.CalendarIntegrationEnabled{Val: true},
+		},
+		{
+			Name:                    "unset",
+			ShouldFindEventListView: true,
+			ShouldFindManagedIcon:   false,
+			ShouldFindAnnotation:    true,
+			Policy:                  &policy.CalendarIntegrationEnabled{Stat: policy.StatusUnset},
+		},
+	}
+}
+
 // TriggerCalendarIntegration verifies calendar integration process works as
 // expected. i.e. the existence of the managed icon and event list view
 // depending on the policy value.
-func TriggerCalendarIntegration(ctx context.Context, param TestCase, br *browser.Browser, tconn *chrome.TestConn, s *testing.State) (err error) {
+func TriggerCalendarIntegration(ctx context.Context, s *testing.State, _ *chrome.Chrome, br *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, paramIndex int) (err error) {
+	param := GetTestCases()[paramIndex]
+
 	ui := uiauto.New(tconn)
 	dateTray := nodewith.HasClass("DateTray")
 

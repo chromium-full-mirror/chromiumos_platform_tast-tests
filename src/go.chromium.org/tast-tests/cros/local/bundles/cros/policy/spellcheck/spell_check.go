@@ -18,8 +18,8 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/restriction"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
-
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // AnnotationHashCode is the hashcode of network annotation tag
@@ -42,8 +42,44 @@ type TestCase struct {
 	ShouldFindAnnotation bool
 }
 
+// GetTestCases returns the list of TestCase objects on which
+// SpellCheckServiceEnabled policy is tested.
+func GetTestCases() []TestCase {
+	// Reordering the TestCase objects in the returned list may break tests.
+	return []TestCase{
+		{
+			Name:              "disallow",
+			Value:             &policy.SpellCheckServiceEnabled{Val: false},
+			WantRestriction:   restriction.Disabled,
+			WantSettingsCheck: checked.False,
+			// "" means that there is no checkmark.
+			WantContextCheck:     "",
+			ShouldFindAnnotation: false,
+		},
+		{
+			Name:                 "allow",
+			Value:                &policy.SpellCheckServiceEnabled{Val: true},
+			WantRestriction:      restriction.Disabled,
+			WantSettingsCheck:    checked.True,
+			WantContextCheck:     checked.True,
+			ShouldFindAnnotation: true,
+		},
+		{
+			Name:              "unset",
+			Value:             &policy.SpellCheckServiceEnabled{Stat: policy.StatusUnset},
+			WantRestriction:   restriction.None,
+			WantSettingsCheck: checked.False,
+			// "" means that there is no checkmark.
+			WantContextCheck:     "",
+			ShouldFindAnnotation: false,
+		},
+	}
+}
+
 // TriggerSpellCheck attempts to trigger spellcheck and verifies if the policy works as defined in the TestCase param.
-func TriggerSpellCheck(ctx context.Context, param TestCase, cr *chrome.Chrome, server *httptest.Server, br *browser.Browser, tconn *chrome.TestConn) (err error) {
+func TriggerSpellCheck(ctx context.Context, _ *testing.State, cr *chrome.Chrome, br *browser.Browser, server *httptest.Server, tconn *chrome.TestConn, paramIndex int) (err error) {
+	param := GetTestCases()[paramIndex]
+
 	// Inside ChromeOS settings, check that the button is restricted and set to the correct value.
 	if err := policyutil.OSSettingsPage(ctx, cr, "osSyncSetup").
 		SelectNode(ctx, nodewith.
