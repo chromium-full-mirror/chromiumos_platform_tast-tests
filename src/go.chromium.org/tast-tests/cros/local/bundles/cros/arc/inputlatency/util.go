@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"os"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -87,6 +88,8 @@ type InputEvent struct {
 	EventTimeNS int64
 	// Time (in ns) that the event was received by the app.
 	RecvTimeNS int64 `json:"receiveTimeNs"`
+	// Event action that was received by the app.
+	Action string `json:"action"`
 }
 
 // CalculateMetrics calculates mean, median, std dev, max and min for the given
@@ -227,6 +230,25 @@ func EvaluateLatency(ctx context.Context, s *testing.State, d *ui.Device,
 		Unit:      "milliseconds",
 		Direction: perf.SmallerIsBetter,
 	}, mean)
+
+	rawPv := perf.NewValues()
+	for _, event := range events {
+		rawPv.Append(perf.Metric{
+			Name:      event.Action,
+			Unit:      "milliseconds",
+			Direction: perf.SmallerIsBetter,
+			Multiple:  true,
+		}, float64(event.RecvTimeNS-event.EventTimeNS)/1000000.)
+	}
+
+	rawPvSaveDir := filepath.Join(s.OutDir(), "raw."+perfName)
+	// Save raw data for debugging purposes.
+	if err = os.Mkdir(rawPvSaveDir, 0755); err != nil {
+		s.Fatalf("Failed to create path %s", rawPvSaveDir)
+	}
+	if err := rawPv.Save(rawPvSaveDir); err != nil {
+		s.Fatal("Failed saving raw data: ", err)
+	}
 	return nil
 }
 
@@ -241,7 +263,7 @@ func Now() (int64, error) {
 
 // WaitForNextEventTime generates next event time with specific time interval in millisecond.
 func WaitForNextEventTime(ctx context.Context, a *arc.ARC, eventTimes *[]int64, ms time.Duration) error {
-	// Wait to generate next event time.
+	// GoBigSleepLint: Wait to generate next event time.
 	if err := testing.Sleep(ctx, ms*time.Millisecond); err != nil {
 		return errors.Wrap(err, "timeout while waiting to generate next event time")
 	}
