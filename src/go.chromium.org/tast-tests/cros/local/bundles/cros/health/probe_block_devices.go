@@ -42,6 +42,7 @@ type nonRemovableBlockDeviceInfo struct {
 	BytesWrittenSinceLastBoot       jsontypes.Uint64  `json:"bytes_written_since_last_boot"`
 	IoTimeSecondsSinceLastBoot      jsontypes.Uint64  `json:"io_time_seconds_since_last_boot"`
 	Name                            string            `json:"name"`
+	FirmwareString                  string            `json:"firmware_string"`
 	Path                            string            `json:"path"`
 	ReadTimeSecondsSinceLastBoot    jsontypes.Uint64  `json:"read_time_seconds_since_last_boot"`
 	Serial                          jsontypes.Uint32  `json:"serial"`
