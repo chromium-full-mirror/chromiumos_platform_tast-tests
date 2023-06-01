@@ -32,7 +32,7 @@ func init() {
 		Data:         []string{c2e2etest.X86ApkName, c2e2etest.ArmApkName},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted", // TODO(akahuang): Implement new precondition to boot ARC and enable verbose at chromium.
-		Timeout:      12 * time.Minute,
+		Timeout:      20 * time.Minute,
 		Params: []testing.Param{{
 			Name: "h264_1080p_i420",
 			Val: video.EncodeTestOptions{
@@ -132,8 +132,8 @@ func init() {
 // the system to be nice and quiet at the cost of waiting longer.
 func preBenchmarkIdle() cpu.IdleConfig {
 	idleConfig := cpu.DefaultIdleConfig()
-	idleConfig.Timeout = 10 * time.Minute
-	idleConfig.Steps = 10
+	idleConfig.Timeout = 15 * time.Minute
+	idleConfig.Steps = 15
 	return idleConfig
 }
 

@@ -6,10 +6,12 @@ package arc
 
 import (
 	"context"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/c2e2etest"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/video"
+	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -24,7 +26,7 @@ func init() {
 		Attr:         []string{"group:arc-video", "group:crosbolt", "crosbolt_perbuild"},
 		Data:         []string{c2e2etest.X86ApkName, c2e2etest.ArmApkName},
 		SoftwareDeps: []string{"chrome"},
-		Timeout:      video.PerfTestRuntime,
+		Timeout:      20 * time.Minute,
 		Params: []testing.Param{{
 			Name:              "h264_1080p_30fps",
 			Val:               video.DecodeTestOptions{TestVideo: "1080p_30fps_300frames.h264"},
@@ -365,6 +367,17 @@ func init() {
 	})
 }
 
+// videoDecodePreBenchmarkIdle returns the idle config that ensures CPU is idle before benchmarking.
+// Note that this is more stringent than the idle.DefaultIdleConfig as we really want
+// the system to be nice and quiet at the cost of waiting longer.
+func videoDecodePreBenchmarkIdle() cpu.IdleConfig {
+	idleConfig := cpu.DefaultIdleConfig()
+	idleConfig.Timeout = 15 * time.Minute
+	idleConfig.Steps = 15
+	return idleConfig
+}
+
 func VideoDecodeAccelPerf(ctx context.Context, s *testing.State) {
-	video.RunARCVideoPerfTest(ctx, s, s.Param().(video.DecodeTestOptions))
+	video.RunARCVideoPerfTest(ctx, s, s.Param().(video.DecodeTestOptions),
+		videoDecodePreBenchmarkIdle())
 }

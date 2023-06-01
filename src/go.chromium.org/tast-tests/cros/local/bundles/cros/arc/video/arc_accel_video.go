@@ -392,7 +392,8 @@ func reportFrameStats(logPath string) (float64, float64, error) {
 }
 
 // RunARCVideoPerfTest runs testFPS in c2_e2e_test and sets as perf metric.
-func RunARCVideoPerfTest(ctx context.Context, s *testing.State, opts DecodeTestOptions) {
+func RunARCVideoPerfTest(ctx context.Context, s *testing.State, opts DecodeTestOptions,
+	idleConfig cpu.IdleConfig) {
 	cleanUpBenchmark, err := mediacpu.SetUpBenchmark(ctx)
 	if err != nil {
 		s.Fatal("Failed to set up benchmark mode: ", err)
@@ -403,7 +404,7 @@ func RunARCVideoPerfTest(ctx context.Context, s *testing.State, opts DecodeTestO
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	if err := cpu.WaitUntilIdle(ctx); err != nil {
+	if err := cpu.WaitUntilIdleWithConfig(ctx, idleConfig); err != nil {
 		s.Fatal("Failed waiting for CPU to become idle: ", err)
 	}
 
