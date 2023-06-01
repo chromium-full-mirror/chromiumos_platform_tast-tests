@@ -28,6 +28,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Data:         inputlatency.AndroidData(),
 		Params: []testing.Param{{
+			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
 			ExtraSoftwareDeps: []string{"android_container"},
 			Fixture:           "arcBooted",
 		}, {
@@ -36,6 +37,7 @@ func init() {
 			Fixture:           "lacrosWithArcBooted",
 		}, {
 			Name:              "vm",
+			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Fixture:           "arcBooted",
 		}, {
