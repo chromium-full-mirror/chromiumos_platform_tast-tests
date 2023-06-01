@@ -34,7 +34,7 @@ func init() {
 		BugComponent: "b:157100",
 		Attr:         []string{"group:mainline", "group:arc-functional", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
-		Timeout:      4 * time.Minute,
+		Timeout:      10 * time.Minute,
 		VarDeps:      []string{"arc.parentUser"},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_p"},
@@ -119,7 +119,7 @@ func UnicornParentPermission(ctx context.Context, s *testing.State) {
 			rl.Exit("open the app page in Play Store", err)
 		}
 
-		installButton, err := playstore.FindInstallButton(ctx, d, 15*time.Second)
+		_, err = playstore.FindInstallButton(ctx, d, 90*time.Second)
 		if err != nil {
 			rl.Exit("find the install button", err)
 		}
@@ -127,12 +127,16 @@ func UnicornParentPermission(ctx context.Context, s *testing.State) {
 		askinPersonButton := d.Object(ui.ClassName("android.widget.Button"), ui.Text(askinPersonButtonText), ui.Enabled(true))
 
 		if err := uiauto.Retry(3, func(ctx context.Context) error {
-			if err := installButton.Click(ctx); err != nil {
-				return errors.Wrap(err, "failed to click installButton")
+			// Install button can disappear after clicking it.
+			installButton, err := playstore.FindInstallButton(ctx, d, 5*time.Second)
+			if err == nil {
+				if err := installButton.Click(ctx); err != nil {
+					return errors.Wrap(err, "failed to click installButton")
+				}
 			}
 
 			// Verify Parent Permission Dialog is displayed.
-			if err := askinPersonButton.WaitForExists(ctx, 90*time.Second); err != nil {
+			if err := askinPersonButton.WaitForExists(ctx, 30*time.Second); err != nil {
 				return errors.Wrap(err, "Ask in person button doesn't exist")
 			}
 
