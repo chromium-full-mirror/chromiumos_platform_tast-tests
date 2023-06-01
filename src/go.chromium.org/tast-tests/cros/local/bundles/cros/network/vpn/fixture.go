@@ -66,35 +66,59 @@ func init() {
 	})
 }
 
-// resetShillVPNState resets the VPN-related states in shill. Currently it will
-// remove all the existing VPN services in shill. Note that resetting all the
-// shill profiles and then restarting shill should be the most ideal way, but in
-// practice we found that restarting shill may cause tests flaky due to ssh
-// connection lost (b/228272750).
-func resetShillVPNState(ctx context.Context) error {
+// resetShillVPNState resets the VPN-related states in shill in a best-effort
+// way. Note that resetting all the shill profiles and then restarting shill
+// should be the most ideal way, but in practice we found that restarting shill
+// may cause tests flaky due to ssh connection lost (b/228272750).
+func resetShillVPNState(ctx context.Context) {
+	logErr := func(err error) {
+		testing.ContextLog(ctx, "Failed to reset VPN state: ", err)
+	}
+
 	m, err := shill.NewManager(ctx)
 	if err != nil {
-		return errors.Wrap(err, "failed to connect to shill Manager")
+		logErr(errors.Wrap(err, "failed to connect to shill Manager"))
+		return
 	}
 
-	for {
-		vpnSvc, err := m.FindMatchingService(ctx, map[string]interface{}{
-			shillconst.ServicePropertyType: shillconst.TypeVPN,
-		})
-		if err != nil && err.Error() == shillconst.ErrorMatchingServiceNotFound {
-			// No VPN services left.
-			break
-		}
+	// Remove all the existing VPN services in shill.
+	rmVPNSvcs := func() error {
+		svcs, _, err := m.ServicesByTechnology(ctx, shill.TechnologyVPN)
 		if err != nil {
-			return errors.Wrap(err, "failed to call FindMatchingService")
+			return errors.Wrap(err, "failed to get VPN services")
 		}
-		testing.ContextLog(ctx, "Removing VPN service: ", vpnSvc)
-		if err := vpnSvc.Remove(ctx); err != nil {
-			return errors.Wrap(err, "failed to remove VPN service")
+		for _, svc := range svcs {
+			testing.ContextLog(ctx, "Removing VPN service: ", svc)
+			if err := svc.Remove(ctx); err != nil {
+				return errors.Wrapf(err, "failed to remove VPN service %s", svc.ObjectPath())
+			}
 		}
+		return nil
+	}
+	if err := rmVPNSvcs(); err != nil {
+		logErr(err)
 	}
 
-	return nil
+	// Reset EphemeralPriority on Ethernet service to 0, otherwise the physical
+	// network may have a higher priority than the one created in virtualnet. Note
+	// that EphemeralPriority shouldn't be set on the physical Ethernet service in
+	// the test code, but it may happen automatically in some corner cases because
+	// of our ethernet_any service implementation.
+	resetEthSvcs := func() error {
+		svcs, _, err := m.ServicesByTechnology(ctx, shill.TechnologyEthernet)
+		if err != nil {
+			return errors.Wrap(err, "failed to get Ethernet services")
+		}
+		for _, svc := range svcs {
+			if err := svc.SetProperty(ctx, shillconst.ServicePropertyEphemeralPriority, 0); err != nil {
+				return errors.Wrapf(err, "failed to reset EphemeralPriority on %s", svc.ObjectPath())
+			}
+		}
+		return nil
+	}
+	if err := resetEthSvcs(); err != nil {
+		logErr(err)
+	}
 }
 
 // vpnFixture is a fixture to prepare environment that can be used to test VPN
@@ -141,10 +165,7 @@ func (f *vpnFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{
 		s.Error("Failed to start log saver: ", err)
 	}
 
-	if err := resetShillVPNState(ctx); err != nil {
-		// Failure here doesn't mean the following tests will fail, so continue the test anyway.
-		s.Log("Failed to reset VPN state in shill: ", err)
-	}
+	resetShillVPNState(ctx)
 
 	var certVals CertVals
 	if f.useCert {
@@ -192,10 +213,7 @@ func (f *vpnFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{
 }
 
 func (f *vpnFixture) Reset(ctx context.Context) error {
-	if err := resetShillVPNState(ctx); err != nil {
-		// Failure here doesn't mean the following tests will fail, so continue the test anyway.
-		testing.ContextLog(ctx, "Failed to reset VPN state in shill: ", err)
-	}
+	resetShillVPNState(ctx)
 	if !f.useCr {
 		return nil
 	}
