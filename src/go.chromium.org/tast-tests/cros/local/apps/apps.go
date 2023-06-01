@@ -30,6 +30,8 @@ type App struct {
 	Name string
 }
 
+// App IDs can be found at chrome://app-service-internals.
+
 // Borealis App represents the installer/launcher for the borealis.
 var Borealis = App{
 	ID:   "dkecggknbdokeipkgnhifhiokailichf",
@@ -357,6 +359,12 @@ var ProjectorV2 = App{
 var KeyboardSV = App{
 	ID:   "bhbpmkoclkgbgaefijcdgkfjghcmiijm",
 	Name: "Keyboard Shortcut Viewer",
+}
+
+// Viridi has details about the Viridi Steam game app.
+var Viridi = App{
+	ID:   "bipdjohdnebjjgpeankgpbmbcmjpfgpg",
+	Name: "Viridi",
 }
 
 // Zoom has details about the Zoom meeting app.
