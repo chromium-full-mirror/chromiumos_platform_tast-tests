@@ -53,6 +53,7 @@ func init() {
 const siteURL = "https://www.google.com/"
 const siteTitle = "Google"
 
+// DeleteBrowserHistory validates that browser history deletion works for Unicorn accounts.
 func DeleteBrowserHistory(ctx context.Context, s *testing.State) {
 	// Reserve time for cleanup.
 	cleanupCtx := ctx
@@ -93,7 +94,10 @@ func DeleteBrowserHistory(ctx context.Context, s *testing.State) {
 	if err = conn.Navigate(ctx, "chrome://history"); err != nil {
 		s.Fatal("Failed to navigate to chrome://history: ", err)
 	}
-	if err = ui.WaitUntilGone(link)(ctx); err != nil {
+	// In the case that history deletion fails, there may be a brief lag (usually <5s)
+	// before the link appears on the reloaded history page. To avoid reporting a false
+	// success, the test checks that the site is persistently gone.
+	if err = ui.WaitUntilGoneFor(link, 5*time.Second)(ctx); err != nil {
 		s.Fatal("Site remained in history after deletion attempt: ", err)
 	}
 }
