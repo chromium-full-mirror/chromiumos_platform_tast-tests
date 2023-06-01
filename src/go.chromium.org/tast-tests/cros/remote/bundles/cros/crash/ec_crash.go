@@ -22,6 +22,7 @@ import (
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -29,11 +30,12 @@ func init() {
 		Func: ECCrash,
 		Desc: "Verify artificial EC crash creates crash files",
 		Contacts: []string{
-			"cros-telemetry@google.com",
-			"mutexlox@chromium.org",
 			"chromeos-faft@google.com",
+			"cros-telemetry@google.com",
+			"robbarnes@google.com",
+			"mutexlox@chromium.org",
 		},
-		BugComponent: "b:1032705",
+		BugComponent: "b:167114",
 		Attr:         []string{"group:mainline", "informational", "group:firmware", "firmware_ec"},
 		Requirements: []string{"sys-fw-0022-v02"},
 		Timeout:      10 * time.Minute,
@@ -43,6 +45,21 @@ func init() {
 		// not (yet) support skipping tests if required vars are not provided.
 		// TODO(crbug.com/967901): Remove no_qemu dep once servo var is sufficient.
 		SoftwareDeps: []string{"device_crash", "ec_crash", "pstore", "reboot", "no_qemu"},
+		Params: []testing.Param{
+			{
+				Name:              "assert",
+				Val:               "crash assert",
+				ExtraHardwareDeps: hwdep.D(hwdep.ECFeatureAssertsPanic()),
+			},
+			{
+				Name: "divzero",
+				Val:  "crash divzero",
+			},
+			{
+				Name: "watchdog",
+				Val:  "crash watchdog",
+			},
+		},
 	})
 }
 
@@ -117,9 +134,9 @@ func ECCrash(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to remove CCD watchdog: ", err)
 	}
 
-	s.Log("Running crash command")
+	s.Log("Running crash command: ", s.Param().(string))
 	// This should reboot the device
-	if err := h.Servo.RunECCommand(ctx, "crash divzero"); err != nil {
+	if err := h.Servo.RunECCommand(ctx, s.Param().(string)); err != nil {
 		s.Fatal("Failed to run EC command: ", err)
 	}
 
