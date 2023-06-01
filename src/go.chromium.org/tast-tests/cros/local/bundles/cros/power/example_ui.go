@@ -47,6 +47,12 @@ func init() {
 			Val:       exampleUI5minTimeParams,
 			Timeout:   6*time.Minute + power.RecorderTimeout,
 		}, {
+			Name:      "ash_night",
+			Fixture:   "powerAshNightlight",
+			ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+			Val:       exampleUI5minTimeParams,
+			Timeout:   6*time.Minute + power.RecorderTimeout,
+		}, {
 			Name:    "ash_gaia",
 			Fixture: "powerAshGAIA",
 			Val:     exampleUITimeParams,
@@ -72,6 +78,13 @@ func init() {
 		}, {
 			Name:              "lacros_dark",
 			Fixture:           "powerLacrosDark",
+			ExtraSoftwareDeps: []string{"lacros"},
+			ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
+			Val:               exampleUI5minTimeParams,
+			Timeout:           6*time.Minute + power.RecorderTimeout,
+		}, {
+			Name:              "lacros_night",
+			Fixture:           "powerLacrosNightlight",
 			ExtraSoftwareDeps: []string{"lacros"},
 			ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 			Val:               exampleUI5minTimeParams,
