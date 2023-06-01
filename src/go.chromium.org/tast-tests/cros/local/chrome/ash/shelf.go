@@ -614,7 +614,22 @@ func AppRunning(ctx context.Context, tconn *chrome.TestConn, appID string) (bool
 	return false, errors.Errorf("app not found: %v", appID)
 }
 
-// AppShown checks if an app specified by appID is shown in the shelf.
+// IsAppOnShelf checks if an app with the given appID is on the shelf.
+func IsAppOnShelf(ctx context.Context, tconn *chrome.TestConn, appID string) (bool, error) {
+	shelfItems, err := ShelfItems(ctx, tconn)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to get shelf items")
+	}
+	for _, item := range shelfItems {
+		if item.AppID == appID {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+// AppShown checks if an app with the given appID is running and is shown in the
+// shelf.
 func AppShown(ctx context.Context, tconn *chrome.TestConn, appID string) (bool, error) {
 	var appShown bool
 	if err := tconn.Call(ctx, &appShown, "tast.promisify(chrome.autotestPrivate.isAppShown)", appID); err != nil {
