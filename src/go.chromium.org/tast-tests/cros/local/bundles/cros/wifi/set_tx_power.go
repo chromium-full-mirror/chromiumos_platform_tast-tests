@@ -6,7 +6,6 @@ package wifi
 
 import (
 	"context"
-	"time"
 
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/common/testexec"
@@ -113,10 +112,6 @@ func SetTXPower(ctx context.Context, s *testing.State) {
 				} else {
 					err = testexec.CommandContext(ctx, setTxPowerExe, args...).Run()
 				}
-				// GoBigSleepLint: Sleep between toggling states.  The mt76 driver queues messages which can be subject to
-				// resource exhaustion if the command is sent too rapidly.
-				// TODO(b/266084566): Find a better way to fix the root cause.
-				testing.Sleep(ctx, 7*time.Millisecond)
 				if supported && err != nil {
 					s.Errorf("Failed to set TX power for %s mode with reg domain %s and trigger source %s: %v", mode, domain, source, err)
 				} else if !supported && err == nil {
