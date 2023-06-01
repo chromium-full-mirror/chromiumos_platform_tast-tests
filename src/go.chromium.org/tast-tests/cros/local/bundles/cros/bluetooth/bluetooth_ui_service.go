@@ -21,6 +21,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/common"
 	pb "go.chromium.org/tast-tests/cros/services/cros/bluetooth"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -254,7 +255,7 @@ func (bui *BtUIService) RemoveAllSavedDevices(ctx context.Context, request *empt
 // described in the request using the Quick Settings UI.
 //
 // This method will ensure that any windows it had opened are closed before returning.
-func (bui *BtUIService) PairDeviceWithQuickSettings(ctx context.Context, req *pb.PairDeviceWithQuickSettingsRequest) (*emptypb.Empty, error) {
+func (bui *BtUIService) PairDeviceWithQuickSettings(ctx context.Context, req *pb.PairDeviceWithQuickSettingsRequest) (_ *emptypb.Empty, retErr error) {
 	cr := bui.sharedObject.Chrome
 	if cr == nil {
 		return nil, errors.New("Chrome has not been started")
@@ -264,17 +265,16 @@ func (bui *BtUIService) PairDeviceWithQuickSettings(ctx context.Context, req *pb
 		return nil, errors.Wrap(err, "failed to get sign-in profile test API conn")
 	}
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
 	if err := quicksettings.NavigateToBluetoothDetailedView(ctx, tconn); err != nil {
 		return nil, errors.Wrap(err, "failed to navigate to the detailed Bluetooth view")
 	}
-	defer quicksettings.Hide(ctx, tconn)
-
-	// On failure, dump the UI tree while quick settings is open.
-	contextOutDir, ok := testing.ContextOutDir(ctx)
-	if !ok {
-		return nil, errors.New("failed to get the context output directory")
-	}
-	defer faillog.DumpUITree(ctx, contextOutDir, tconn)
+	defer quicksettings.Hide(cleanupCtx, tconn)
+	// Capturing the state before closing the QuickSettings.
+	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnErrorToContextOutDir(cleanupCtx, func() bool { return retErr != nil }, tconn, "quick_settings_bluetooth_detailed_view_ui_dump")
 
 	ui := uiauto.New(tconn)
 	// Pre-QsRevamp there are two buttons labeled "Pair new device" (the whole
@@ -285,7 +285,10 @@ func (bui *BtUIService) PairDeviceWithQuickSettings(ctx context.Context, req *pb
 		return nil, errors.Wrap(err, "failed to open the pairing dialog")
 	}
 
-	defer func() {
+	defer func(ctx context.Context) {
+		// Capturing the state before closing the Bluetooth pair new device dialog.
+		faillog.DumpUITreeWithScreenshotWithTestAPIOnErrorToContextOutDir(ctx, func() bool { return retErr != nil }, tconn, "bluetooth_pair_new_device_dialog_ui_dump")
+
 		found, err := ui.IsNodeFound(ctx, quicksettings.BluetoothPairNewDeviceDialog)
 		if err != nil {
 			testing.ContextLog(ctx, "Failed to determine if the pairing dialog was still open")
@@ -298,7 +301,7 @@ func (bui *BtUIService) PairDeviceWithQuickSettings(ctx context.Context, req *pb
 			ui.Gone(quicksettings.BluetoothPairNewDeviceDialog))(ctx); err != nil {
 			testing.ContextLog(ctx, "Failed to close the pairing dialog")
 		}
-	}()
+	}(cleanupCtx)
 
 	// GoBigSleepLint: Include a short delay before attempting to pair with the Bluetooth
 	// peripheral since attempting to pair immediately results in flaky behavior where

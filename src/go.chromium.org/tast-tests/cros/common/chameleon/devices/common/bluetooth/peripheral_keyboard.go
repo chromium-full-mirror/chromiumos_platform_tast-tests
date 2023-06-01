@@ -7,6 +7,7 @@ package bluetooth
 import (
 	"context"
 
+	"go.chromium.org/tast-tests/cros/common/usbdevice"
 	"go.chromium.org/tast-tests/cros/common/xmlrpc"
 )
 
@@ -26,6 +27,10 @@ type KeyboardPeripheral interface {
 	// KeyboardSendString calls the Chameleond RPC method of the same name.
 	// Sends characters one-by-one over the BT link.
 	KeyboardSendString(ctx context.Context, stringToSend string) error
+
+	// KeyboardSendKeyEvent converts the incoming key into a Bluetooth HID report and
+	// sends the event by invoking the 'KeyboardSendTrace' Chameleond RPC method.
+	KeyboardSendKeyEvent(ctx context.Context, key byte) error
 }
 
 // CommonKeyboardPeripheral is a base implementation of KeyboardPeripheral that
@@ -48,6 +53,60 @@ func NewCommonKeyboardPeripheral(xmlrpcClient *xmlrpc.XMLRpc, methodNamePrefix s
 // details.
 func (c *CommonKeyboardPeripheral) KeyboardSendTrace(ctx context.Context, inputScanCodes []int) error {
 	return c.RPC("KeyboardSendTrace").Args(inputScanCodes).Call(ctx)
+}
+
+// KeyboardSendKeyEvent converts the incoming key into a Bluetooth HID report and
+// sends the event by invoking the 'KeyboardSendTrace' Chameleond RPC method.
+func (c *CommonKeyboardPeripheral) KeyboardSendKeyEvent(ctx context.Context, key byte) error {
+	// Leverage the `usbdevice` package to encode key codes, it currently allows for the setup of only one key.
+	k := usbdevice.NewUsbKeyboard(ctx)
+	k.Type(string(key))
+
+	// Definitions regarding [Human Interface Device Profile 1.1.1], see:
+	// 	https://www.bluetooth.com/specifications/specs/human-interface-device-profile-1-1-1/
+	const (
+		// Message type: DATA, see:
+		// 	3.1.1 Bluetooth HID Protocol Message Header
+		// 		Table 3.1: Bluetooth HID Protocol Message Type Codes
+		messageType = 0x0A
+
+		// Parameter: Input, see:
+		// 	3.1.1 Bluetooth HID Protocol Message Header
+		// 		Table 3.12: DATA Parameter Definition
+		parameter = 0x01
+
+		// The 1 byte Bluetooth HID Protocol Header (HIDP-Hdr),
+		// divided into two 4-bit fields: the HIDP Message type and a Parameter, see:
+		// 	3.1.1 Bluetooth HID Protocol Message Header
+		hidpHeader = messageType<<4 + parameter
+
+		// Report ID: Keyboard, see:
+		// 	3.3.2 Bluetooth HID device Boot Protocol Requirements
+		// 		Table 3.15: Bluetooth HID Boot Reports
+		reportID = 0x01
+	)
+
+	// A key event contains 2 reports, key press and release.
+	const reportCount = 2
+	reports := make([][]int, reportCount)
+	for i := 0; i < reportCount; i++ {
+		// The `usbdevice` retrieves data from its queue and when the queue is empty, the key release data will be thrown.
+		data, err := k.Data()
+		if err != nil {
+			return err
+		}
+
+		// Converting byte slice into integer slice as the RPC `KeyboardSendTrace` only accepts arguments in integers.
+		dataPayload := make([]int, len(data))
+		for i, b := range data {
+			dataPayload[i] = int(b)
+		}
+
+		report := append([]int{hidpHeader, reportID}, dataPayload...)
+		reports[i] = report
+	}
+
+	return c.RPC("KeyboardSendTrace").Args(reports).Call(ctx)
 }
 
 // KeyboardSendString calls the Chameleond RPC method of the same name.
