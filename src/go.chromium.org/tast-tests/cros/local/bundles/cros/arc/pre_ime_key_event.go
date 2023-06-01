@@ -35,7 +35,7 @@ func init() {
 		BugComponent: "b:537350",
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",
-		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic", "group:criticalstaging"},
 		Timeout:      4 * time.Minute,
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_p"},
