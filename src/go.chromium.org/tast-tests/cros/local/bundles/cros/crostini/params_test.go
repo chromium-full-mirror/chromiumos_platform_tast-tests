@@ -24,9 +24,7 @@ import (
 // By default the ManaTEE variants are not disabled but are **not** set as critical.
 // If the timeout is not changed, we set it to the default value.
 type testOptions struct {
-	disabledOnManatee bool
-	criticalOnManatee bool
-	timeout           time.Duration
+	timeout time.Duration
 }
 
 const DefaultStandardTimeout = 7 * time.Minute
@@ -39,7 +37,7 @@ var standardTests = map[string]testOptions{
 	"audio_basic.go": {},
 	// Audio playback configurations took about 6 minutes on model with echo reference
 	"audio_playback_configurations.go": {timeout: 10 * time.Minute},
-	"basic.go":                         {criticalOnManatee: true},
+	"basic.go":                         {},
 	"command_cd.go":                    {},
 	"command_ps.go":                    {},
 	"command_vim.go":                   {},
@@ -52,7 +50,7 @@ var standardTests = map[string]testOptions{
 	"home_directory_rename_file.go":    {},
 	"icon_and_username.go":             {},
 	"launch_terminal.go":               {},
-	"nested_vm.go":                     {disabledOnManatee: true},
+	"nested_vm.go":                     {},
 	"notify.go":                        {},
 	"no_access_to_downloads.go":        {},
 	"no_shared_folder.go":              {},
@@ -63,13 +61,13 @@ var standardTests = map[string]testOptions{
 	"remove_cancel.go":                 {},
 	"remove_ok.go":                     {},
 	"resize_cancel.go":                 {},
-	"resize_ok.go":                     {disabledOnManatee: true},
-	"resize_restart.go":                {disabledOnManatee: true},
-	"resize_space_constrained.go":      {disabledOnManatee: true},
+	"resize_ok.go":                     {},
+	"resize_restart.go":                {},
+	"resize_space_constrained.go":      {},
 	"restart.go":                       {},
 	"restart_icon.go":                  {},
-	"run_with_arc.go":                  {disabledOnManatee: true},
-	"shared_font_files.go":             {disabledOnManatee: true},
+	"run_with_arc.go":                  {},
+	"shared_font_files.go":             {},
 	"share_downloads_add_files.go":     {},
 	"share_downloads.go":               {},
 	"share_files_cancel.go":            {},
@@ -82,11 +80,11 @@ var standardTests = map[string]testOptions{
 	"share_invalid_paths.go":           {},
 	"sshfs_mount.go":                   {},
 	"sync_time.go":                     {},
-	"task_manager.go":                  {disabledOnManatee: true},
+	"task_manager.go":                  {},
 	"uninstall_invalid_app.go":         {},
 	"verify_app_x11.go":                {},
-	"vmc_extra_disk.go":                {disabledOnManatee: true},
-	"vmc_start.go":                     {disabledOnManatee: true},
+	"vmc_extra_disk.go":                {},
+	"vmc_start.go":                     {},
 	"webserver.go":                     {},
 	"xattrs.go":                        {},
 }
@@ -99,11 +97,8 @@ func TestFixTestParams(t *testing.T) {
 			customTimeout = DefaultStandardTimeout
 		}
 		params := crostini.MakeTestParamsFromList(t, []crostini.Param{{
-			Timeout:           customTimeout,
-			UseFixture:        true,
-			TestManatee:       !options.disabledOnManatee,
-			IsManateeCritical: options.criticalOnManatee,
-			ExtraSoftwareDeps: []string{"vm_host"},
+			Timeout:    customTimeout,
+			UseFixture: true,
 		}})
 		genparams.Ensure(t, filename, params)
 	}

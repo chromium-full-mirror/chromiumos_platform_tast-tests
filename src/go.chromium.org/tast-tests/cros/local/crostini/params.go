@@ -164,15 +164,6 @@ type Param struct {
 	// be added to all params of the test case as well.
 	TestLacros bool
 
-	// TestManatee controls whether the test case tests Manatee.
-	// If yes, an extra software dependency to "manatee" will be added.
-	TestManatee bool
-
-	// IsManateeCritical indicates whether the manatee test should be critical
-	// or not. This is only relevant if the TestManatee parameter is set
-	// and the given test has a manatee variant.
-	IsManateeCritical bool
-
 	// DeviceMode indicates whether the tests explicitly use use tablet mode
 	// or clamshell mode.
 	// The fixtures will force enable the given display mode in PreTest and
@@ -260,7 +251,6 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 
 	var itLacros = []iterator{{debianVersion: vm.DebianBullseye, stable: true}}
 	var itIME = []iterator{{debianVersion: vm.DebianBullseye, stable: true}, {debianVersion: vm.DebianBullseye, stable: false}}
-	var itManatee = []iterator{{debianVersion: vm.DebianBuster, stable: true}}
 
 	for _, testCase := range baseCases {
 		// Check here if it's possible for any iteration of
@@ -274,7 +264,7 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 			}
 		}
 
-		iterate := func(i iterator, bt browser.Type, isManatee, isIME bool, IMEName string) {
+		iterate := func(i iterator, bt browser.Type, isIME bool, IMEName string) {
 
 			if (testCase.IsNotMainline || testCase.OnlyStableBoards) && !i.stable {
 				// The stable/unstable distinction is only important for mainline tests
@@ -421,14 +411,6 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 				testParam.Val = "browser.TypeLacros"
 			}
 
-			if isManatee {
-				testParam.Name = combineName(name, "manatee")
-				if !testCase.IsManateeCritical {
-					testParam.ExtraAttr = append(testParam.ExtraAttr, "informational")
-				}
-				testParam.ExtraSoftwareDeps = append(extraSoftwareDeps, "manatee")
-			}
-
 			if testCase.UseFixture {
 				testParam.Fixture = fixture
 			} else {
@@ -439,23 +421,16 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 
 		if testCase.TestIME {
 			for _, i := range itIME {
-				iterate(i, "", false, true, testCase.IMEName)
+				iterate(i, "", true /* isIME */, testCase.IMEName)
 			}
 		} else {
 			for _, i := range itChrome {
-				iterate(i, "", false, false, "")
+				iterate(i, "", false /* isIME */, "")
 			}
 		}
-
 		if testCase.TestLacros {
 			for _, i := range itLacros {
-				iterate(i, browser.TypeLacros, false, false, "")
-			}
-		}
-
-		if testCase.TestManatee {
-			for _, i := range itManatee {
-				iterate(i, "", true, false, "")
+				iterate(i, browser.TypeLacros, false /* isIME */, "")
 			}
 		}
 	}
