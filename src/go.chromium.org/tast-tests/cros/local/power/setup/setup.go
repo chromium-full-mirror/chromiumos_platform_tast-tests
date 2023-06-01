@@ -293,6 +293,8 @@ const (
 	DoNotDisableNightLight NightLightMode = iota
 	// DisableNightLight indicates that Night Light should be disabled.
 	DisableNightLight
+	// EnableNightLight indicates that Night Light should be enabled.
+	EnableNightLight
 )
 
 // DarkThemeMode indicates what dark theme setup is needed for a test.
@@ -424,6 +426,9 @@ func PowerTest(ctx context.Context, c *chrome.TestConn, options PowerTestOptions
 		}
 		if options.NightLight == DisableNightLight {
 			s.Add(TurnOffNightLight(ctx, c))
+		}
+		if options.NightLight == EnableNightLight {
+			s.Add(TurnOnNightLight(ctx, c))
 		}
 		if options.DarkTheme == EnableDarkTheme {
 			s.Add(TurnOnDarkTheme(ctx, c))

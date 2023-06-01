@@ -65,3 +65,13 @@ func TurnOffNightLight(ctx context.Context, c *chrome.TestConn) (CleanupCallback
 		return nil
 	})
 }
+
+// TurnOnNightLight enables Night Light, and sets the schedule to 'Never' so
+// it won't turn off half way through a test.
+func TurnOnNightLight(ctx context.Context, c *chrome.TestConn) (CleanupCallback, error) {
+	return Nested(ctx, "night light", func(s *Setup) error {
+		s.Add(SetNightLightSchedule(ctx, c, settings.NightLightScheduleNever))
+		s.Add(SetNightLightEnabled(ctx, c, true))
+		return nil
+	})
+}
