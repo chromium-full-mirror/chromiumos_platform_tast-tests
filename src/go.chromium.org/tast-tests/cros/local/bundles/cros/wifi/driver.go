@@ -168,6 +168,7 @@ var expectedWLANDriver = map[wlan.DeviceID]map[string]string{
 		"5.4":  "wireless/realtek/rtw88/rtw88_8822ce.ko",
 		"5.10": "wireless/realtek/rtw88/rtw88_8822ce.ko",
 		"5.15": "wireless/realtek/rtw88/rtw88_8822ce.ko",
+		"6.1":  "wireless/realtek/rtw88/rtw88_8822ce.ko",
 	},
 	wlan.Realtek8852APCIE: {
 		"5.10": "wireless/realtek/rtw89/rtw89_8852ae.ko",
@@ -180,6 +181,7 @@ var expectedWLANDriver = map[wlan.DeviceID]map[string]string{
 		"5.4":  "wireless/mediatek/mt76/mt7921/mt7921e.ko",
 		"5.10": "wireless/mediatek/mt76/mt7921/mt7921e.ko",
 		"5.15": "wireless/mediatek/mt76/mt7921/mt7921e.ko",
+		"6.1":  "wireless/mediatek/mt76/mt7921/mt7921e.ko",
 	},
 	wlan.MediaTekMT7921SDIO: {
 		"5.10": "wireless/mediatek/mt76/mt7921/mt7921s.ko",
