@@ -9,9 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
-	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/local/cellular"
-	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -43,7 +41,7 @@ func ShillEnableAndConnect(ctx context.Context, s *testing.State) {
 	} else if wasAutoConnect {
 		defer func(ctx context.Context) {
 			if _, err := helper.SetServiceAutoConnect(ctx, true); err != nil {
-				s.Fatal("Failed to enable AutoConnect: ", err)
+				s.Fatal("Failed to re-enable AutoConnect: ", err)
 			}
 		}(ctxForAutoConnectCleanUp)
 	}
@@ -115,21 +113,9 @@ func ShillEnableAndConnect(ctx context.Context, s *testing.State) {
 	}
 
 	// Test Disable while connected.
-	// TODO(b:190541087): Use helper.Disable instead.
-	// Currently that causes ssh timeouts in the test runner for unknown reasons.
-	// This inlines helper.Disable with logging in between.
 	s.Log("Disable Cellular while Connected")
-	if err := helper.Manager.DisableTechnology(ctx, shill.TechnologyCellular); err != nil {
+	if _, err := helper.Disable(ctx); err != nil {
 		s.Fatal("Disable failed: ", err)
-	}
-
-	s.Log("Wait for disabled")
-	if err := helper.WaitForEnabledState(ctx, false); err != nil {
-		s.Fatal("Wait for disable failed: ", err)
-	}
-	s.Log("Wait for !powered")
-	if err := helper.Device.WaitForProperty(ctx, shillconst.DevicePropertyPowered, false, shillconst.DefaultTimeout); err != nil {
-		s.Fatal("Wait for !powered failed: ", err)
 	}
 
 	s.Log("Ensure no Cellular Service while disabled")
