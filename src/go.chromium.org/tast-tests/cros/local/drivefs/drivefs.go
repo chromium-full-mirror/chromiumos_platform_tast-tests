@@ -12,6 +12,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/filesystem"
 	"go.chromium.org/tast/core/errors"
@@ -32,6 +33,7 @@ type DriveFs struct {
 	mountPath        string
 	homeDir          string
 	persistableToken string
+	cliArgs          string
 }
 
 // NewDriveFs waits for `drivefs` to mount and then creates a new `DriveFs`
@@ -80,6 +82,7 @@ func (dfs *DriveFs) MountPath(elem ...string) string {
 //
 // Note: `Restart` should be called so `drivefs` picks up the new flags.
 func (dfs *DriveFs) WriteCommandLineFlags(flags string) error {
+	dfs.cliArgs = flags
 	return os.WriteFile(dfs.ConfigPath(driveFsCommandLineArgsFileName), []byte(flags), 0644)
 }
 
@@ -88,6 +91,7 @@ func (dfs *DriveFs) WriteCommandLineFlags(flags string) error {
 //
 // Note: `Restart` should be called so `drivefs` can be restarted without flags.
 func (dfs *DriveFs) ClearCommandLineFlags() error {
+	dfs.cliArgs = ""
 	return os.Remove(dfs.ConfigPath(driveFsCommandLineArgsFileName))
 }
 
@@ -104,6 +108,32 @@ func (dfs *DriveFs) Restart(ctx context.Context) error {
 	}
 	_, err := WaitForDriveFs(ctx, dfs.user)
 	return err
+}
+
+// ClearLocalData mimics the user pressing the Clear local data button on
+// chrome://drive-internals and ensures the feature flags are restored.
+func (dfs *DriveFs) ClearLocalData(ctx context.Context, cr *chrome.Chrome) error {
+	cachedCliArgs := dfs.cliArgs
+	pageConn, err := cr.NewConn(ctx, "chrome://drive-internals")
+	if err != nil {
+		return errors.Wrap(err, "failed to open chrome://drive-internals")
+	}
+	defer pageConn.Close()
+
+	if err := pageConn.Eval(ctx, "chrome.send('resetDriveFileSystem');", nil); err != nil {
+		return errors.Wrap(err, "failed to clear local data")
+	}
+	if err := pageConn.WaitForExpr(ctx, "$('reset-status-text').textContent === 'success'"); err != nil {
+		return errors.Wrap(err, "failed to wait for local data to clear successfully")
+	}
+	if _, err = WaitForDriveFs(ctx, dfs.user); err != nil {
+		return errors.Wrap(err, "failed to wait for drivefs to startup again")
+	}
+	// Only restore command line arguments if they exist.
+	if len(cachedCliArgs) > 0 {
+		return dfs.WriteCommandLineFlags(cachedCliArgs)
+	}
+	return nil
 }
 
 // SaveLogsOnError saves off DriveFS logs on failure. See `SaveDriveLogsOnError`.
