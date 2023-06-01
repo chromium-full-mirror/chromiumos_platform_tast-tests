@@ -19,10 +19,14 @@ import (
 
 // Recorder is a utility to measure power metrics during tests.
 type Recorder struct {
-	metrics  *perf.Timeline
+	// Fields passed in from NewRecorder().
+	interval time.Duration // The metrics collect interval.
 	outDir   string
 	testName string
 
+	// Fields used internally by the recorder.
+	dataSources []perf.TimelineDatasource
+	metrics     *perf.Timeline
 	isRecording bool
 }
 
@@ -54,14 +58,24 @@ func (r *Recorder) Cooldown(ctx context.Context) error {
 // Out:
 // error: propagate back to the test.
 func (r *Recorder) Start(ctx context.Context) error {
-	if err := r.metrics.Start(ctx); err != nil {
+	if r.isRecording {
+		return errors.New("recorder has already started recording")
+	}
+
+	metrics, err := perf.NewTimeline(ctx, r.dataSources, perf.Interval(r.interval))
+	if err != nil {
+		return errors.Wrap(err, "failed to build metrics timeline")
+	}
+
+	if err := metrics.Start(ctx); err != nil {
 		return errors.Wrap(err, "failed to start metrics")
 	}
 
-	if err := r.metrics.StartRecording(ctx); err != nil {
+	if err := metrics.StartRecording(ctx); err != nil {
 		return errors.Wrap(err, "failed to start recording")
 	}
 	r.isRecording = true
+	r.metrics = metrics
 
 	return nil
 }
@@ -141,6 +155,15 @@ func (r *Recorder) Close(ctx context.Context) error {
 	return nil
 }
 
+// RegisterMetrics registers test specific metrics to the recorder.
+// In:
+// metrics: timeline data sources to be registered.
+// Out:
+// None.
+func (r *Recorder) RegisterMetrics(metrics ...perf.TimelineDatasource) {
+	r.dataSources = append(r.dataSources, metrics...)
+}
+
 // NewRecorder creates and returns a new Recorder.
 // In:
 // ctx: context for the test.
@@ -150,16 +173,15 @@ func (r *Recorder) Close(ctx context.Context) error {
 // Out:
 // Recorder: collect power metrics in the test.
 // error: propagate back to the test.
+// TODO (b/284029849): remove error from the return values.
 func NewRecorder(ctx context.Context, interval time.Duration, outDir, testName string) (*Recorder, error) {
-	metrics, err := perf.NewTimeline(ctx, TestMetrics(), perf.Interval(interval))
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to build metrics timeline")
-	}
-
 	r := &Recorder{
-		metrics:  metrics,
+		interval: interval,
 		outDir:   outDir,
 		testName: testName,
+
+		dataSources: TestMetrics(),
+		isRecording: false,
 	}
 
 	return r, nil

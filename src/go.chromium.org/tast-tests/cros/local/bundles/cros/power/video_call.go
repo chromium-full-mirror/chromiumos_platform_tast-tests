@@ -136,13 +136,14 @@ func VideoCall(ctx context.Context, s *testing.State) {
 	}
 	defer kb.Close(cleanupCtx)
 
-	power.RegisterPowerMetrics(power.NewVideoFpsMetrics(videoConn))
-	power.RegisterPowerMetrics(power.NewWebRTCMetrics(videoConn))
-
 	r, err := power.NewRecorder(ctx, interval, s.OutDir(), s.TestName())
 	if err != nil {
 		s.Fatal("Cannot create a new Recorder to collect power metrics: ", err)
 	}
+	defer r.Close(cleanupCtx)
+	// Register test specific metrics.
+	r.RegisterMetrics(power.NewVideoFpsMetrics(videoConn), power.NewWebRTCMetrics(videoConn))
+
 	if err := r.Cooldown(ctx); err != nil {
 		s.Error("Cooldown failed: ", err)
 	}

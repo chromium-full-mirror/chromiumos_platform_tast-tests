@@ -21,13 +21,11 @@ var timelineSources = []perf.TimelineDatasource{
 	NewZramIOMetrics(),
 }
 
-// RegisterPowerMetrics register test specific metric for that power test.
-func RegisterPowerMetrics(metric perf.TimelineDatasource) {
-	timelineSources = append(timelineSources, metric)
-}
-
-// TestMetrics returns a slice of metrics that should be used for power
-// tests.
+// TestMetrics returns a slice of metrics that should be used for power tests.
 func TestMetrics() []perf.TimelineDatasource {
-	return timelineSources
+	// Duplicate the timelineSources into a new slice.
+	metricSources := make([]perf.TimelineDatasource, len(timelineSources))
+	copy(metricSources, timelineSources)
+
+	return metricSources
 }

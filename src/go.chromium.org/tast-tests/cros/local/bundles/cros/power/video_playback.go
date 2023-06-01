@@ -326,12 +326,14 @@ func VideoPlayback(ctx context.Context, s *testing.State) {
 		s.Fatalf("Can't copy video from %s to %s : %v", filePathOnDisk, filePathOnRAM, err)
 	}
 
-	power.RegisterPowerMetrics(power.NewVideoFpsMetrics(conn))
 	r, err := power.NewRecorder(ctx, 5*time.Second, s.OutDir(), s.TestName())
 	if err != nil {
 		s.Fatal("Cannot create a new Recorder to collect power metrics: ", err)
 	}
 	defer r.Close(cleanupCtx)
+	// Register test specific metrics.
+	r.RegisterMetrics(power.NewVideoFpsMetrics(conn))
+
 	if err := r.Cooldown(ctx); err != nil {
 		s.Error("Cooldown failed: ", err)
 	}
