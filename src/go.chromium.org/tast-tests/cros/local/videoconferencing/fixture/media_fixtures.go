@@ -501,6 +501,14 @@ func (f *mediaFixtureImpl) setupCamera(ctx context.Context) error {
 			fakeCameraConfig.Frames = &testutil.FakeCameraImageConfig{
 				Path: cameraCacheFolder + f.camConfig.fakeCameraInput,
 			}
+			fakeCameraConfig.SupportedFormats = []*testutil.FakeCameraFormatsConfig{&testutil.FakeCameraFormatsConfig{
+				Width:      1280,
+				Height:     720,
+				FrameRates: []int{30}}, &testutil.FakeCameraFormatsConfig{
+				Width:      1920,
+				Height:     1080,
+				FrameRates: []int{30}},
+			}
 		}
 
 		fakeHALConfig := testutil.FakeHALConfig{

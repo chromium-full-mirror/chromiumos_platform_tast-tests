@@ -91,10 +91,10 @@ type FakeCameraFormatsConfig struct {
 
 // FakeCameraConfig represents the config for a single camera for fake HAL.
 type FakeCameraConfig struct {
-	ID               int                      `json:"id"`
-	Connected        bool                     `json:"connected"`
-	Frames           *FakeCameraImageConfig   `json:"frames,omitempty"`
-	SupportedFormats *FakeCameraFormatsConfig `json:"supported_formats,omitempty"`
+	ID               int                        `json:"id"`
+	Connected        bool                       `json:"connected"`
+	Frames           *FakeCameraImageConfig     `json:"frames,omitempty"`
+	SupportedFormats []*FakeCameraFormatsConfig `json:"supported_formats,omitempty"`
 	// TODO(pihsun): Add other fields.
 }
 

@@ -67,11 +67,11 @@ func CCAUIRecordVideoPerf(ctx context.Context, s *testing.State) {
 		// Simulates a 4K camera.
 		if err := testutil.WriteFakeHALConfig(ctx, testutil.FakeHALConfig{
 			Cameras: []testutil.FakeCameraConfig{
-				{ID: 1, Connected: true, SupportedFormats: &testutil.FakeCameraFormatsConfig{
+				{ID: 1, Connected: true, SupportedFormats: []*testutil.FakeCameraFormatsConfig{&testutil.FakeCameraFormatsConfig{
 					Width:      3840,
 					Height:     2160,
 					FrameRates: []int{30},
-				}},
+				}}},
 			},
 		}); err != nil {
 			s.Fatal("Failed to write fake HAL config: ", err)
