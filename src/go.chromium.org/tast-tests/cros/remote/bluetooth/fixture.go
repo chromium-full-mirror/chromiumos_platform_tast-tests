@@ -291,23 +291,38 @@ func (fv *FixtValue) CompanionDUTConfig(companionNum uint) *DUTConfig {
 }
 
 type fixture struct {
-	features                      *fixtureFeatures
+	// Persistent vars, set just once in newFixture.
+	features        *fixtureFeatures
+	fastPairEnabled bool
+
+	// Stateful vars which are initialized during SetUp.
 	fv                            *FixtValue
 	bluetoothServicesDBusMonitors []*log.DBusMonitorCollector
-	fastPairEnabled               bool
 }
 
 func newFixture(features *fixtureFeatures) *fixture {
-	return &fixture{
+	tf := &fixture{
 		features: features,
-		fv:       &FixtValue{},
 	}
+	// Determine if fast pair is an enabled feature for later reference.
+	tf.fastPairEnabled = false
+	for _, feature := range tf.features.EnableFeatures {
+		if feature == chromeFeatureFastPairSavedDevices {
+			tf.fastPairEnabled = true
+			break
+		}
+	}
+	return tf
 }
 
 // SetUp preforms fixture setup actions. All fixtureFeatures are configured.
 //
 // This is necessary to implement testing.FixtureImpl.
 func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	// Ensure any stateful fixture properties are set to initial state.
+	tf.fv = &FixtValue{}
+	tf.bluetoothServicesDBusMonitors = nil
+
 	// Determine desired bluetooth stack for DUTs.
 	var btStack bts.BluetoothStackType
 	if tf.features.FlossEnabled {
@@ -323,15 +338,6 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 		signinProfileTestExtensionID, ok = s.Var(fixtureVarSigninKey)
 		if !ok {
 			s.Fatal("Failed to get sign-in key variable required for OOBE tests")
-		}
-	}
-
-	// Determine if fast pair is an enabled feature for later reference.
-	tf.fastPairEnabled = false
-	for _, feature := range tf.features.EnableFeatures {
-		if feature == chromeFeatureFastPairSavedDevices {
-			tf.fastPairEnabled = true
-			break
 		}
 	}
 
@@ -595,6 +601,7 @@ func (tf *fixture) TearDown(ctx context.Context, s *testing.FixtState) {
 func (tf *fixture) setUpBTPeers(ctx context.Context, s *testing.FixtState, requiredBTPeers int) error {
 	ctx, st := timing.Start(ctx, fmt.Sprintf("setUpBTPeers_%d", requiredBTPeers))
 	defer st.End()
+
 	if requiredBTPeers <= 0 {
 		return nil
 	}
