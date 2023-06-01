@@ -25,6 +25,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfaillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosproc"
+	"go.chromium.org/tast-tests/cros/local/chrome/versionutil"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	lacrosservice "go.chromium.org/tast-tests/cros/services/cros/lacros"
 
@@ -201,18 +202,18 @@ func (uts *UpdateTestService) GetBrowserVersion(ctx context.Context, req *lacros
 	var versions []string
 	switch req.Browser {
 	case lacrosservice.BrowserType_ASH:
-		version, err := uts.ashVersion(ctx)
+		version, err := versionutil.AshVersion(ctx)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to get the version for %v", req.Browser)
 		}
-		versions = append(versions, version)
+		versions = append(versions, version.String())
 
 	case lacrosservice.BrowserType_LACROS_ROOTFS:
-		version, err := uts.lacrosRootfsVersion(ctx)
+		version, err := versionutil.RootfsLacrosVersion()
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to get the version for %v", req.Browser)
 		}
-		versions = append(versions, version)
+		versions = append(versions, version.String())
 
 	// TODO: Implement case lacrosservice.BrowserType_LACROS_STATEFUL when needed.
 	default:
@@ -222,38 +223,6 @@ func (uts *UpdateTestService) GetBrowserVersion(ctx context.Context, req *lacros
 	return &lacrosservice.GetBrowserVersionResponse{
 		Versions: versions,
 	}, nil
-}
-
-// ashVersion returns non-empty version of Ash Chrome.
-// TODO(hyungtaekim): Move the function to a common place for other tests.
-func (uts *UpdateTestService) ashVersion(ctx context.Context) (string, error) {
-	out, err := testexec.CommandContext(ctx, "/opt/google/chrome/chrome", "--version").Output(testexec.DumpLogOnError)
-	if err != nil {
-		return "", err
-	}
-	version := versionRegexp.FindString(string(out))
-	if version == "" {
-		return "", errors.New("invalid version: " + version)
-	}
-	return version, nil
-}
-
-// lacrosRootfsVersion returns non-empty version of Lacros Chrome in Rootfs.
-// TODO(hyungtaekim): Move the function to a common place for other tests.
-func (uts *UpdateTestService) lacrosRootfsVersion(ctx context.Context) (string, error) {
-	metadata, err := ioutil.ReadFile("/opt/google/lacros/metadata.json")
-	if err != nil {
-		return "", err
-	}
-	metadataJSON := lacrosMetadata{}
-	if err := json.Unmarshal(metadata, &metadataJSON); err != nil {
-		return "", errors.Wrap(err, "failed to parse Rootfs Lacros Chrome version")
-	}
-	version := versionRegexp.FindString(metadataJSON.Content.Version)
-	if version == "" {
-		return "", errors.New("invalid version: " + version)
-	}
-	return version, nil
 }
 
 // setupChrome configures Ash Chrome to be able to launch Lacros with given options.

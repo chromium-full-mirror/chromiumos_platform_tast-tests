@@ -14,11 +14,11 @@ import (
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/chromeproc"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/chrome/versionutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -55,11 +55,11 @@ func VerifyFirstBootSequence(ctx context.Context, s *testing.State) {
 		s.Fatal("Settings app did not appear in shelf after launch: ", err)
 	}
 
-	v, err := chromeproc.Version(ctx)
+	v, err := versionutil.AshVersion(ctx)
 	if err != nil {
 		s.Error("Failed to get Chrome version: ", err)
 	}
-	version := strings.Join(v, ".")
+	version := v.String()
 
 	ui := uiauto.New(tconn).WithTimeout(20 * time.Second)
 	aboutCrOSTab := nodewith.NameContaining("About ChromeOS").Role(role.StaticText)

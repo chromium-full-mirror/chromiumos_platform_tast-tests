@@ -10,7 +10,7 @@ import (
 	"strconv"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
-	"go.chromium.org/tast-tests/cros/local/chrome/chromeproc"
+	"go.chromium.org/tast-tests/cros/local/chrome/versionutil"
 	"go.chromium.org/tast/core/lsbrelease"
 	"go.chromium.org/tast/core/testing"
 )
@@ -76,14 +76,14 @@ func Version(ctx context.Context, s *testing.State) {
 	}
 
 	// Report the Chrome version.
-	if chromeVersion, err := chromeproc.Version(ctx); err != nil {
+	if chromeVersion, err := versionutil.AshVersion(ctx); err != nil {
 		s.Error("Failed to get Chrome version: ", err)
 	} else {
-		s.Log("chromeVersion: ", chromeVersion)
+		s.Log("chromeVersion: ", chromeVersion.String())
 		// ChromeVersion consists of 4 digits. The second value is always zero.
-		convertAndSave(chromeVersion[0], "CHROME_MILESTONE", pv)
-		convertAndSave(chromeVersion[2], "CHROME_BUILD", pv)
-		convertAndSave(chromeVersion[3], "CHROME_PATCH", pv)
+		convertAndSave(strconv.FormatInt(chromeVersion.Major(), 10), "CHROME_MILESTONE", pv)
+		convertAndSave(strconv.FormatInt(chromeVersion.Build(), 10), "CHROME_BUILD", pv)
+		convertAndSave(strconv.FormatInt(chromeVersion.Patch(), 10), "CHROME_PATCH", pv)
 	}
 
 	// Report the ARC version.

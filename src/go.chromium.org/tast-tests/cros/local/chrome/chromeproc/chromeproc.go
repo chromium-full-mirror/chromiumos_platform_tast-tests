@@ -6,31 +6,11 @@
 package chromeproc
 
 import (
-	"context"
-	"regexp"
-
 	"github.com/shirou/gopsutil/v3/process"
 
-	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash/ashproc"
 	"go.chromium.org/tast-tests/cros/local/chrome/internal/chromeproc"
-	"go.chromium.org/tast/core/errors"
 )
-
-// Version returns the Chrome browser version. E.g. Chrome version W.X.Y.Z will be reported as a list of strings.
-func Version(ctx context.Context) ([]string, error) {
-	versionStr, err := testexec.CommandContext(ctx, ashproc.ExecPath, "--version").Output(testexec.DumpLogOnError)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get chrome version")
-	}
-
-	versionRE := regexp.MustCompile(`(\d+)\.(\d+)\.(\d+)\.(\d+)`)
-	matches := versionRE.FindStringSubmatch(string(versionStr))
-	if len(matches) <= 1 {
-		return nil, errors.Errorf("can't recognize version string: %s", string(versionStr))
-	}
-	return matches[1:], nil
-}
 
 // GetRootPID returns the PID of the root Chrome process.
 // This corresponds to the browser process.
