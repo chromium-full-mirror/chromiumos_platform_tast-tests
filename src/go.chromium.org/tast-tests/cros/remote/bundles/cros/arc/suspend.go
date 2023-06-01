@@ -7,17 +7,16 @@ package arc
 import (
 	"context"
 	"math"
-	"strconv"
 	"time"
 
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/empty"
 
+	"go.chromium.org/tast-tests/cros/remote/dut"
 	"go.chromium.org/tast-tests/cros/services/cros/arc"
 	arcpb "go.chromium.org/tast-tests/cros/services/cros/arc"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
-	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -154,11 +153,7 @@ func suspendDUT(ctx context.Context, s *testing.State, seconds int) {
 	s.Logf("Suspending DUT for %d seconds", seconds)
 	ctx, cancel := context.WithTimeout(ctx, time.Duration(seconds+30)*time.Second)
 	defer cancel()
-	if err := s.DUT().Conn().CommandContext(ctx,
-		"suspend_stress_test", "-c", "1",
-		"--suspend_min", strconv.Itoa(seconds),
-		"--suspend_max", strconv.Itoa(seconds),
-		"--nopm_print_times").Run(ssh.DumpLogOnError); err != nil {
+	if err := dut.SuspendDUT(ctx, s.DUT(), seconds); err != nil {
 		s.Fatal("Failed to suspend: ", err)
 	}
 	s.Log("Resumed")
@@ -180,9 +175,11 @@ func Suspend(ctx context.Context, s *testing.State) {
 		s.Fatal("SuspendService.Prepare returned an error: ", err)
 	}
 	defer func() {
+		// Finalize may fail if the service connection is lost.
+		// Resources used by the service will be freed up anyways, so ignoring the error here.
 		_, err = service.Finalize(ctx, &empty.Empty{})
 		if err != nil {
-			s.Fatal("SuspendService.Finalize returned an error: ", err)
+			s.Log("SuspendService.Finalize returned an error (ignorable): ", err)
 		}
 	}()
 
