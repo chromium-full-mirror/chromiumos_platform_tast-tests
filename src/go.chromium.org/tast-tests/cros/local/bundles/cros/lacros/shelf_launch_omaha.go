@@ -17,16 +17,15 @@ import (
 	lacroscommon "go.chromium.org/tast-tests/cros/common/cros/lacros"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/apps"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/lacros/versionutil"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/chromeproc"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfaillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosinfo"
+	"go.chromium.org/tast-tests/cros/local/chrome/versionutil"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/lsbrelease"
@@ -148,27 +147,26 @@ func ShelfLaunchOmaha(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get OS version: ", err)
 	}
-	ashVersionComponents, err := chromeproc.Version(ctx)
+	ashVersion, err := versionutil.AshVersion(ctx)
 	if err != nil {
 		s.Fatal("Failed to get Ash version: ", err)
 	}
-	ashVersion := strings.Join(ashVersionComponents, ".")
 	lacrosPlatform, err := supportedLacrosPlatform()
 	if err != nil {
 		s.Fatal("Failed to get lacros platform: ", err)
 	}
-	compatibleChannels, err := versionutil.CompatibleLacrosChannels(ctx, ashVersion, lacrosPlatform)
+	statefulLacrosVersions, err := versionutil.OmahaLacrosVersions(ctx, ashVersion, lacrosPlatform)
 	if err != nil {
-		s.Fatal("Failed to get Lacros channels compatible with Ash: ", err)
+		s.Fatal("Failed to get Lacros versions compatible with Ash: ", err)
 	}
 
-	s.Logf("ShelfLaunch with OS: %v, Ash: %v, stateful-lacros: %v channel(s) %v", osVersion, ashVersion, len(compatibleChannels), compatibleChannels)
+	s.Logf("ShelfLaunch with OS: %v, Ash: %v, stateful-lacros: %v channel(s) %v", osVersion, ashVersion, len(statefulLacrosVersions), statefulLacrosVersions)
 	cfg := lacrosfixt.NewConfig(lacrosfixt.Selection(lacros.Omaha))
 
 	// Run sub-tests to check if stateful-lacros is installable and launchable on the channels compatible with Ash
 	// from the older milestone to the newer.
 	for _, lacrosChannel := range []string{"stable", "beta", "dev", "canary"} {
-		lacrosVersion, ok := compatibleChannels[lacrosChannel]
+		lacrosVersion, ok := statefulLacrosVersions[lacrosChannel]
 		if !ok {
 			continue
 		}

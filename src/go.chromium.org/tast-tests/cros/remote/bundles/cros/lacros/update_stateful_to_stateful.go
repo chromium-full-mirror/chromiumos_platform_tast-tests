@@ -8,10 +8,10 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/chrome/version"
 	lacroscommon "go.chromium.org/tast-tests/cros/common/cros/lacros"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/lacros/provision"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/lacros/update"
-	"go.chromium.org/tast-tests/cros/remote/bundles/cros/lacros/version"
 	lacrosservice "go.chromium.org/tast-tests/cros/services/cros/lacros"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -21,7 +21,7 @@ import (
 
 type updatePath struct {
 	channel string
-	skew    *version.Version // version skew from rootfs-lacros
+	skew    *version.Delta // version skew from rootfs-lacros
 }
 
 // Test scenarios that represent different update paths to be tested in the parameterized tests.
@@ -30,37 +30,37 @@ var (
 	pathUpdateOnSameChannel = []updatePath{
 		{
 			channel: lacroscommon.LacrosDevComponent,
-			skew:    version.New(0, 1, 0, 0), // +0 major +1 minor from rootfs-lacros
+			skew:    version.NewDelta(0, 1, 0, 0), // +0 major +1 minor from rootfs-lacros
 		},
 		{
 			channel: lacroscommon.LacrosDevComponent,
-			skew:    version.New(1, 0, 0, 0), // +1 major +0 minor
+			skew:    version.NewDelta(1, 0, 0, 0), // +1 major +0 minor
 		},
 		{
 			channel: lacroscommon.LacrosDevComponent,
-			skew:    version.New(2, 0, 0, 0), // +2 major
+			skew:    version.NewDelta(2, 0, 0, 0), // +2 major
 		},
 	}
 	// 2. Upgrade to a channel of a newer milestone (eg, dev to canary) assuming that canary is one milestone ahead of dev.
 	pathUpgradeChannel = []updatePath{
 		{
 			channel: lacroscommon.LacrosDevComponent,
-			skew:    version.New(0, 1, 0, 0), // +0 major +1 minor on dev-channel
+			skew:    version.NewDelta(0, 1, 0, 0), // +0 major +1 minor on dev-channel
 		},
 		{
 			channel: lacroscommon.LacrosCanaryComponent,
-			skew:    version.New(1, 0, 0, 0), // +1 major +0 minor on canary-channel
+			skew:    version.NewDelta(1, 0, 0, 0), // +1 major +0 minor on canary-channel
 		},
 	}
 	// 3. Downgrade to a channel of an older milestone (eg, canary to dev)
 	pathDowngradeChannel = []updatePath{
 		{
 			channel: lacroscommon.LacrosCanaryComponent,
-			skew:    version.New(1, 0, 0, 0), // +1 major +0 minor on canary-channel
+			skew:    version.NewDelta(1, 0, 0, 0), // +1 major +0 minor on canary-channel
 		},
 		{
 			channel: lacroscommon.LacrosDevComponent,
-			skew:    version.New(0, 1, 0, 0), // +0 major +1 minor on dev-channel
+			skew:    version.NewDelta(0, 1, 0, 0), // +0 major +1 minor on dev-channel
 		},
 	}
 )
@@ -137,17 +137,17 @@ func UpdateStatefulToStateful(ctx context.Context, s *testing.State) {
 			s.Fatal("Invalid Stateful Lacros version: ", statefulLacrosVersion)
 		} else if !statefulLacrosVersion.IsNewerThan(rootfsLacrosVersion) {
 			s.Fatalf("Invalid Stateful Lacros version: %v, should not be older than Rootfs: %v", statefulLacrosVersion, rootfsLacrosVersion)
-		} else if !statefulLacrosVersion.IsSkewValid(ashVersion) {
-			s.Fatalf("Invalid Stateful Lacros version: %v, should be compatible with Ash: %v", statefulLacrosVersion, ashVersion)
+		} else if err := version.IsSkewValid(statefulLacrosVersion, ashVersion); err != nil {
+			s.Fatal("Stateful Lacros incompatible with Ash: ", err) // err will print both versions.
 		}
 
 		// Provision Stateful Lacros from the Rootfs Lacros image file with the simulated version and component.
-		if err := update.ProvisionLacrosFromRootfsLacrosImagePath(ctx, provision.TLSAddrVar.Value(), s.DUT(), statefulLacrosVersion.GetString(), overrideComponent); err != nil {
+		if err := update.ProvisionLacrosFromRootfsLacrosImagePath(ctx, provision.TLSAddrVar.Value(), s.DUT(), statefulLacrosVersion.String(), overrideComponent); err != nil {
 			s.Fatal("Failed to provision Stateful Lacros from Rootfs image source: ", err)
 		}
 
 		// Verify that the expected Stateful Lacros version/component is selected.
-		if err := update.VerifyLacrosUpdate(ctx, lacrosservice.BrowserType_LACROS_STATEFUL, statefulLacrosVersion.GetString(), overrideComponent, utsClient); err != nil {
+		if err := update.VerifyLacrosUpdate(ctx, lacrosservice.BrowserType_LACROS_STATEFUL, statefulLacrosVersion.String(), overrideComponent, utsClient); err != nil {
 			s.Fatal("Failed to verify provisioned Lacros version: ", err)
 		}
 	}

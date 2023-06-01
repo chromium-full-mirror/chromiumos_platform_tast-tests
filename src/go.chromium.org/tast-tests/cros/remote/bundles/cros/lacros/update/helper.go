@@ -9,9 +9,9 @@ import (
 	"context"
 	"path/filepath"
 
+	"go.chromium.org/tast-tests/cros/common/chrome/version"
 	lacroscommon "go.chromium.org/tast-tests/cros/common/cros/lacros"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/lacros/provision"
-	"go.chromium.org/tast-tests/cros/remote/bundles/cros/lacros/version"
 	"go.chromium.org/tast-tests/cros/services/cros/lacros"
 	lacrosservice "go.chromium.org/tast-tests/cros/services/cros/lacros"
 	"go.chromium.org/tast/core/dut"
