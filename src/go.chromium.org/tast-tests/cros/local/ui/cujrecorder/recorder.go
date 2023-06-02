@@ -1056,14 +1056,12 @@ func (r *Recorder) setUpPowerTest(ctx context.Context) (func(ctx context.Context
 
 	powerTestOptions := setup.PowerTestOptions{
 		// The default for the following options is to disable these settings.
-		Wifi:               setup.DisableWifiInterfaces,
-		NightLight:         setup.DisableNightLight,
-		Audio:              setup.Mute,
-		Bluetooth:          setup.DisableBluetoothInterfaces,
-		Powerd:             setup.DisablePowerd,
-		DPTF:               setup.DisableDPTF,
-		DarkTheme:          setup.EnableLightTheme,
-		KeyboardBrightness: setup.SetKbBrightnessToZero,
+		Wifi:       setup.DisableWifiInterfaces,
+		NightLight: setup.DisableNightLight,
+		Audio:      setup.Mute,
+		Bluetooth:  setup.DisableBluetoothInterfaces,
+		Powerd:     setup.DisablePowerd,
+		DPTF:       setup.DisableDPTF,
 	}
 	// Check recorder options and don't change them when required.
 	if r.options.DoNotChangeWifi || strings.ToLower(keepWifi.Value()) == "true" {
