@@ -19,4 +19,7 @@ const (
 
 	// For the testbed with Chameleon
 	ChameleonAudioTestbed = "chameleonAudioTestbed"
+
+	// Enable usage flexible loopback API by enabling Chrome feature flag.
+	FloopEnabled = "floopEnabled"
 )

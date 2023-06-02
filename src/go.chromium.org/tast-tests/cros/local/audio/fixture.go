@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/testing"
 )
@@ -17,10 +18,22 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            fixture.CrasStopped,
 		Desc:            "Ensure CRAS is stopped and audio devices are available for direct access",
-		Contacts:        []string{"aaronyu@google.com"},
+		Contacts:        []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
 		Impl:            crasStoppedFixture{},
 		SetUpTimeout:    20 * time.Second,
 		TearDownTimeout: 20 * time.Second,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:     fixture.FloopEnabled,
+		Desc:     "Enable Flexible loopback API usage and login to Chrome",
+		Contacts: []string{"chromeos-audio-bugs@google.com", "htcheong@google.com"},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{chrome.EnableFeatures("CrOSLateBootAudioFlexibleLoopback")}, nil
+		}),
+		SetUpTimeout:    chrome.LoginTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
 	})
 }
 
