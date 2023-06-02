@@ -704,7 +704,7 @@ func AudioLoopbackCorrectness(ctx context.Context, s *testing.State) {
 
 	for channel := 0; channel < len(expectedFreqs); channel++ {
 		expectedFreq := expectedFreqs[channel]
-		if err := audio.CheckFrequency(ctx, capturedData[channel], float64(captureRate), float64(expectedFreq), param.incorrectSlicesLimit); err != nil {
+		if err := audio.CheckFrequency(ctx, capturedData[channel], float64(captureRate), float64(expectedFreq), 10, param.incorrectSlicesLimit); err != nil {
 			s.Errorf("channel %d failed: %v", channel+1, err)
 		}
 	}

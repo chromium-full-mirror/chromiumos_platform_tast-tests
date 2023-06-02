@@ -171,7 +171,7 @@ func CrasStreamMix(ctx context.Context, s *testing.State) {
 	}
 
 	for channel := 0; channel < 2; channel++ {
-		if err := audio.CheckFrequency(ctx, tone[channel], float64(recording.Rate), float64(goldenFrequency), incorrectLimit); err != nil {
+		if err := audio.CheckFrequency(ctx, tone[channel], float64(recording.Rate), float64(goldenFrequency), 10, incorrectLimit); err != nil {
 			s.Errorf("channel %d failed: %v", channel+1, err)
 		}
 	}

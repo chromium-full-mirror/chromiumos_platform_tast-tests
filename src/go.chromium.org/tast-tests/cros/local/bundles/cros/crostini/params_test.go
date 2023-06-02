@@ -249,6 +249,37 @@ func TestAppTestParams(t *testing.T) {
 	}
 }
 
+var appNoBusterTests = []string{
+	"app_vlc.go",
+}
+
+func TestAppNoBusterTestParams(t *testing.T) {
+	for _, filename := range appNoBusterTests {
+		params := crostini.MakeTestParamsFromList(t, []crostini.Param{
+			{
+				Timeout:             15 * time.Minute,
+				StableHardwareDep:   "crostini.CrostiniAppStable",
+				UnstableHardwareDep: "crostini.CrostiniAppUnstable",
+				ExtraSoftwareDeps:   []string{"crostini_app"},
+				UseLargeContainer:   true,
+				UseFixture:          true,
+				DeviceMode:          devicemode.TabletMode,
+				NoBusterTest:        true,
+			},
+			{
+				Timeout:             15 * time.Minute,
+				StableHardwareDep:   "crostini.CrostiniAppStable",
+				UnstableHardwareDep: "crostini.CrostiniAppUnstable",
+				ExtraSoftwareDeps:   []string{"crostini_app"},
+				UseLargeContainer:   true,
+				UseFixture:          true,
+				DeviceMode:          devicemode.ClamshellMode,
+				NoBusterTest:        true,
+			}})
+		genparams.Ensure(t, filename, params)
+	}
+}
+
 var appClamshellOnlyTests = []string{
 	"app_maximize_restore_minimize_close.go",
 }

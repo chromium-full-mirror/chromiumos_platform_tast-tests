@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/crostini/vlc_test_video_20230609.mp4",
+  "size": 729264,
+  "sha256sum": "fb4c49ff05868af67604aa0bfd47b2d56e20cab3eec6ec34018beb1acd6dd8af"
+}
