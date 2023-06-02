@@ -106,7 +106,7 @@ func StandardizedKeyboardKeys(ctx context.Context, s *testing.State) {
 // the android application's layout when it is focused. This ensures they can all be
 // handled by android applications.
 func runStandardizedKeyboardKeysTest(ctx context.Context, testParameters standardizedtestutil.TestFuncParams) error {
-	kbd, err := input.Keyboard(ctx)
+	kbd, err := input.VirtualKeyboard(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to create virtual keyboard")
 	}
