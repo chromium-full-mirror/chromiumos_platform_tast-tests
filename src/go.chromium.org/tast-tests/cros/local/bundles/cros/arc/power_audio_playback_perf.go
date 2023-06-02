@@ -35,7 +35,7 @@ func init() {
 		// ChromeOS > Platform > Virtualization > ARC++ & ARCVM > ARC Audio
 		BugComponent: "b:879188",
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "arcBootedWithDisableSyncFlags",
+		Fixture:      "arcBootedWithDisableExternalStorage",
 		Attr:         []string{"group:crosbolt", "crosbolt_nightly"},
 		Params: []testing.Param{
 			{

@@ -61,10 +61,11 @@ func init() {
 		TearDownTimeout: ResetTimeout,
 	})
 
-	// arcBootedWithDisableSyncFlags is a fixture similar to arcBooted. The only difference from arcBooted is that ARC content sync is disabled to avoid noise during power/performance measurements.
+	// arcBootedWithDisableSyncFlags is a fixture similar to arcBooted. The only difference from arcBooted is that ARC content sync
+	// and Chrome firmware updates are disabled to avoid noise during power/performance measurements.
 	testing.AddFixture(&testing.Fixture{
 		Name: "arcBootedWithDisableSyncFlags",
-		Desc: "ARC is booted with disabling sync flags",
+		Desc: "ARC is booted with disabling sync flags and Chrome firmware updates",
 		Contacts: []string{
 			"niwa@chromium.org",
 			"arcvm-eng-team@google.com",
@@ -74,6 +75,7 @@ func init() {
 				chrome.ARCEnabled(),
 				chrome.UnRestrictARCCPU(),
 				chrome.ExtraArgs(DisableSyncFlags()...),
+				chrome.ExtraArgs("--disable-features=FirmwareUpdaterApp"),
 			}, nil
 		}),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
@@ -82,9 +84,32 @@ func init() {
 		TearDownTimeout: ResetTimeout,
 	})
 
-	// arcBootedRestricted is a fixture similar to arcBootedWithDisableSyncFlags. The only difference
-	// from arcBootedWithDisableSyncFlags is that CGroups is used to limit the CPU time of ARC, and
-	// that Chrome will not check for firmware updates.
+	// arcBootedWithDisableExternalStorage is a fixture similar to arcBootedWithDisableSyncFlags. The only difference from
+	// arcBootedWithDisableSyncFlags is that ARC external storage access is disabled to avoid noise during power/performance
+	// measurements for power/performance tests that do not require external storage access.
+	testing.AddFixture(&testing.Fixture{
+		Name: "arcBootedWithDisableExternalStorage",
+		Desc: "ARC is booted with disabling sync flags, firmware updates and external storage access",
+		Contacts: []string{
+			"alanding@chromium.org",
+			"arc-performance@google.com",
+		},
+		Impl: NewArcBootedFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{
+				chrome.ARCEnabled(),
+				chrome.UnRestrictARCCPU(),
+				chrome.ExtraArgs(DisableSyncFlags()...),
+				chrome.ExtraArgs("--disable-features=ArcExternalStorageAccess", "--disable-features=FirmwareUpdaterApp"),
+			}, nil
+		}),
+		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
+		ResetTimeout:    ResetTimeout,
+		PostTestTimeout: PostTestTimeout,
+		TearDownTimeout: ResetTimeout,
+	})
+
+	// arcBootedRestricted is a fixture similar to arcBootedWithDisableExternalStorage. The only difference
+	// from arcBootedWithDisableExternalStorage is that CGroups is used to limit the CPU time of ARC.
 	testing.AddFixture(&testing.Fixture{
 		Name: "arcBootedRestricted",
 		Desc: "ARC is booted in idle state",
@@ -96,7 +121,7 @@ func init() {
 			return []chrome.Option{
 				chrome.ARCEnabled(),
 				chrome.ExtraArgs(DisableSyncFlags()...),
-				chrome.ExtraArgs("--disable-features=FirmwareUpdaterApp"),
+				chrome.ExtraArgs("--disable-features=ArcExternalStorageAccess", "--disable-features=FirmwareUpdaterApp"),
 			}, nil
 		}),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,

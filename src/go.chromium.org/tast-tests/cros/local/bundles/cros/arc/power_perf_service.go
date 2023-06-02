@@ -85,7 +85,7 @@ func (c *PowerPerfService) Setup(ctx context.Context, _ *emptypb.Empty) (*emptyp
 	opts := []chrome.Option{
 		chrome.ARCEnabled(),
 		chrome.ExtraArgs(arc.DisableSyncFlags()...),
-		chrome.ExtraArgs("--disable-features=FirmwareUpdaterApp"),
+		chrome.ExtraArgs("--disable-features=ArcExternalStorageAccess", "--disable-features=FirmwareUpdaterApp"),
 	}
 	cr, err := chrome.New(ctx, opts...)
 	if err != nil {
@@ -134,12 +134,9 @@ func (c *PowerPerfService) Setup(ctx context.Context, _ *emptypb.Empty) (*emptyp
 	}
 
 	// Wait until CPU is cooled down and idle.
-	_, err = cpu.WaitUntilCoolDown(ctx, cpu.IdleCoolDownConfig())
+	_, err = cpu.WaitUntilStabilized(ctx, cpu.IdleCoolDownConfig())
 	if err != nil {
-		return nil, errors.Wrap(err, "CPU failed to cool down")
-	}
-	if err := cpu.WaitUntilIdle(ctx); err != nil {
-		return nil, errors.Wrap(err, "CPU failed to idle")
+		return nil, errors.Wrap(err, "CPU failed to stabilize")
 	}
 	if err := arc.CheckNoDex2Oat(td); err != nil {
 		return nil, errors.Wrap(err, "failed to verify dex2oat was not running")

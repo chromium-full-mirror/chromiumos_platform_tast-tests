@@ -46,7 +46,7 @@ func init() {
 		BugComponent: "b:632502",
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{c2e2etest.X86ApkName, c2e2etest.ArmApkName},
-		Fixture:      "arcBootedWithDisableSyncFlags",
+		Fixture:      "arcBootedWithDisableExternalStorage",
 		Attr:         []string{"group:crosbolt", "crosbolt_nightly"},
 		Timeout:      powerTestDuration,
 		Params: []testing.Param{
