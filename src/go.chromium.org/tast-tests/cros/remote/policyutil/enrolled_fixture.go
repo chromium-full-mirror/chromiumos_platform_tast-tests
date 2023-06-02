@@ -21,6 +21,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/remote/sysutil"
+	"go.chromium.org/tast-tests/cros/services/cros/baserpc"
 	"go.chromium.org/tast-tests/cros/services/cros/graphics"
 	pspb "go.chromium.org/tast-tests/cros/services/cros/policy"
 	"go.chromium.org/tast/core/ctxutil"
@@ -46,16 +47,21 @@ func init() {
 		SetUpTimeout:    enrollmentSetupTimeout,
 		TearDownTimeout: 5 * time.Minute,
 		ResetTimeout:    15 * time.Second,
+		PostTestTimeout: 15 * time.Second,
 		ServiceDeps: []string{
 			"tast.cros.policy.PolicyService",
 			"tast.cros.hwsec.OwnershipService",
 			"tast.cros.graphics.ScreenshotService",
+			"tast.cros.baserpc.FileSystem",
 		},
 	})
 }
 
+const installAttributesPath = "/home/.shadow/install_attributes.pb"
+
 type enrolledFixt struct {
-	fdmsDir string
+	fdmsDir   string
+	rpcClient *rpc.Client
 }
 
 func dumpVPDContent(ctx context.Context, d *dut.DUT) ([]byte, error) {
@@ -205,6 +211,15 @@ func (e *enrolledFixt) SetUp(ctx context.Context, s *testing.FixtState) interfac
 		}
 	}
 
+	if ok {
+		var err error
+		e.rpcClient, err = rpc.Dial(ctx, s.DUT(), s.RPCHint())
+		if err != nil {
+			s.Error("Failed to connect to DUT: ", err)
+			errs = append(errs, err)
+		}
+	}
+
 	// Converting errors to strings as an error array cannot be Unmarshalled.
 	var errorStrings []string
 	for _, err := range errs {
@@ -214,17 +229,16 @@ func (e *enrolledFixt) SetUp(ctx context.Context, s *testing.FixtState) interfac
 }
 
 func (e *enrolledFixt) TearDown(ctx context.Context, s *testing.FixtState) {
+	defer e.rpcClient.Close(ctx)
+
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
 	if err := EnsureTPMAndSystemStateAreReset(ctx, s.DUT(), s.RPCHint()); err != nil {
 		s.Fatal("Failed to reset TPM: ", err)
 	}
 
-	cl, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())
-	if err != nil {
-		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
-	}
-	defer cl.Close(ctx)
-
-	pc := pspb.NewPolicyServiceClient(cl.Conn)
+	pc := pspb.NewPolicyServiceClient(e.rpcClient.Conn)
 
 	if _, err := pc.RemoveFakeDMSDir(ctx, &pspb.RemoveFakeDMSDirRequest{
 		Path: e.fdmsDir,
@@ -233,9 +247,31 @@ func (e *enrolledFixt) TearDown(ctx context.Context, s *testing.FixtState) {
 	}
 }
 
-func (*enrolledFixt) Reset(ctx context.Context) error                        { return nil }
-func (*enrolledFixt) PreTest(ctx context.Context, s *testing.FixtTestState)  {}
-func (*enrolledFixt) PostTest(ctx context.Context, s *testing.FixtTestState) {}
+// Check if device state has been lost.
+func (e *enrolledFixt) Reset(ctx context.Context) error {
+	pc := baserpc.NewFileSystemClient(e.rpcClient.Conn)
+
+	if _, err := pc.Stat(ctx, &baserpc.StatRequest{
+		Name: installAttributesPath,
+	}); err != nil {
+		return errors.Wrap(err, "install_attributes.pb missing, enrollment lost")
+	}
+
+	return nil
+}
+
+func (*enrolledFixt) PreTest(ctx context.Context, s *testing.FixtTestState) {}
+
+// Tests need to make sure not to clear enrollment. Report a test error if it happens.
+func (e *enrolledFixt) PostTest(ctx context.Context, s *testing.FixtTestState) {
+	pc := baserpc.NewFileSystemClient(e.rpcClient.Conn)
+
+	if _, err := pc.Stat(ctx, &baserpc.StatRequest{
+		Name: installAttributesPath,
+	}); err != nil {
+		s.Error("install_attributes.pb missing, enrollment likely lost, check if chrome.KeepEnrollment() was passed: ", err)
+	}
+}
 
 func Enroll(ctx context.Context, attemptDir string, dut *dut.DUT, rpc *rpc.Client, fdmsDir string, stopFdms bool) (retErr error) {
 	// Reserve time for cleaning up and copying the logs from the DUT.
