@@ -7,6 +7,7 @@ package audio
 import (
 	"context"
 
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
 	"go.chromium.org/tast/core/testing"
@@ -19,7 +20,9 @@ func init() {
 		Contacts: []string{
 			"chromeos-audio-bugs@google.com",
 			"aaronyu@google.com",
+			"htcheong@google.com",
 		},
+		Fixture:      fixture.FloopEnabled,
 		BugComponent: "b:875484",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 	})
