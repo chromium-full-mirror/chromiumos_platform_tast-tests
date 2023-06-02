@@ -105,7 +105,7 @@ func ECTabletMode(ctx context.Context, s *testing.State) {
 	// DUTs over a warm reset. For steps that verify that devices would warm reset into
 	// tablet mode, we could maybe manually test the platforms listed in skipWarmResetList by
 	// physically folding them into a tablet mode position first.
-	skipWarmResetList := []string{"jacuzzi", "hatch"}
+	skipWarmResetList := []string{"jacuzzi", "hatch", "strongbad"}
 	skipWarmReset := func(dutPlatform string, knownList []string) bool {
 		for _, name := range knownList {
 			if name == dutPlatform {
@@ -114,14 +114,30 @@ func ECTabletMode(ctx context.Context, s *testing.State) {
 		}
 		return false
 	}
+	var powerCycleDUT func() error
 	if !skipWarmReset(h.Board, skipWarmResetList) {
-		s.Log("Power-cycle DUT with a warm reset")
+		powerCycleDUT = func() error {
+			s.Log("Power-cycling DUT with a warm reset")
+			return h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset)
+		}
+	}
+	// Warm reset cancels the tablet mode emulation on Strongbad machines,
+	// but running the remote 'reboot' command preserves it.
+	// To-do: revisit and run the reboot command on all machines, after some
+	// more local testing.
+	if h.Board == "strongbad" {
+		powerCycleDUT = func() error {
+			s.Log("Running reboot command remotely on DUT")
+			return h.DUT.Conn().CommandContext(ctx, "reboot").Run()
+		}
+	}
+	if powerCycleDUT != nil {
 		h.CloseRPCConnection(ctx)
-		if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
-			s.Fatal("Failed to reboot DUT by servo: ", err)
+		if err := powerCycleDUT(); err != nil {
+			s.Fatal("Failed to power-cycle DUT: ", err)
 		}
 		s.Log("Wait for DUT to power ON")
-		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
+		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 3*time.Minute)
 		defer cancelWaitConnect()
 
 		if err := d.WaitConnect(waitConnectCtx); err != nil {
@@ -183,7 +199,7 @@ func ECTabletMode(ctx context.Context, s *testing.State) {
 				if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.DurTab); err != nil {
 					return errors.Wrap(err, "error pressing power_key:tab")
 				}
-
+				// GoBigSleepLint: Simulate a specific speed of power button press to turn display on and off.
 				if err := testing.Sleep(ctx, 1*time.Second); err != nil {
 					return errors.Wrap(err, "error in sleeping for 1 second after pressing on the power key")
 				}
