@@ -150,7 +150,7 @@ func MousePerf(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get SDK version: ", err)
 	}
 	// When left-clicking on mouse, it injects ACTION_DOWN, ACTION_BUTTON_PRESS, ACTION_UP, and ACTION_BUTTON_RELEASE.
-	// On R, the framework also injects ACTION_HOVER_ENTER, ACTION_HOVER_MOVE, ACTION_HOVER_EXIT
+	// On R and above, the framework also injects ACTION_HOVER_EXIT, ACTION_HOVER_ENTER, ACTION_HOVER_MOVE
 	// Check latency for these actions.
 	var numLeftClickGroupEvents int
 	if ver >= arc.SDKR {
@@ -167,8 +167,8 @@ func MousePerf(ctx context.Context, s *testing.State) {
 		}
 		lastEventTime := eventTimes[len(eventTimes)-1]
 		if ver >= arc.SDKR {
-			// ACTION_HOVER_ENTER, ACTION_HOVER_MOVE, ACTION_HOVER_EXIT are generated together.
-			eventTimes = append(eventTimes, lastEventTime, lastEventTime, lastEventTime)
+			// ACTION_HOVER_EXIT is generated before ACTION_DOWN.
+			eventTimes = append(eventTimes, lastEventTime)
 		}
 		// ACTION_DOWN and ACTION_BUTTON_PRESS are generated together.
 		eventTimes = append(eventTimes, eventTimes[len(eventTimes)-1])
@@ -181,6 +181,10 @@ func MousePerf(ctx context.Context, s *testing.State) {
 		// ACTION_UP and ACTION_BUTTON_RELEASE.
 		lastEventTime = eventTimes[len(eventTimes)-1]
 		eventTimes = append(eventTimes, lastEventTime)
+		if ver >= arc.SDKR {
+			// ACTION_HOVER_ENTER, ACTION_HOVER_MOVE are generated after ACTION_BUTTON_RELEASE.
+			eventTimes = append(eventTimes, lastEventTime, lastEventTime)
+		}
 		if err := m.Release(); err != nil {
 			s.Fatal("Unable to inject Release mouse event: ", err)
 		}
