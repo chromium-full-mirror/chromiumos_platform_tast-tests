@@ -39,6 +39,7 @@ func (crasStoppedFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	const sleepDuration = time.Second
 
 	s.Logf("Sleeping for %s to wait for audio device to be ready", sleepDuration)
+	// GoBigSleepLint: sleep is the only way to wait for audio device being ready as probing unnecessarily open the device.
 	if err := testing.Sleep(ctx, sleepDuration); err != nil {
 		s.Fatal("Sleep failed: ", err)
 	}
