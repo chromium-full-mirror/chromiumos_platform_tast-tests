@@ -617,8 +617,9 @@ func (a *App) GetDeviceID(ctx context.Context) (DeviceID, error) {
 
 // State returns whether a state is active in CCA.
 func (a *App) State(ctx context.Context, state string) (bool, error) {
+	// TODO(b/281625728): Remove this function once we change all usages to observe on UI instead.
 	var result bool
-	if err := a.conn.Call(ctx, &result, "Tast.getState", state); err != nil {
+	if err := a.conn.Call(ctx, &result, "CCATest.getState", state); err != nil {
 		return false, errors.Wrapf(err, "failed to get state: %v", state)
 	}
 	return result, nil
@@ -975,9 +976,7 @@ func (a *App) CheckFacing(ctx context.Context, expected Facing) error {
 
 // Mirrored returns whether mirroring is on.
 func (a *App) Mirrored(ctx context.Context) (bool, error) {
-	var actual bool
-	err := a.conn.Eval(ctx, "Tast.getState('mirror')", &actual)
-	return actual, err
+	return a.State(ctx, "mirror")
 }
 
 // CheckReviewUIExists returns whether the review UI exists.
@@ -1002,7 +1001,7 @@ func (a *App) CheckReviewUIExists(ctx context.Context, mode Mode) error {
 
 // ConfirmResult clicks the confirm button or the cancel button according to the given isConfirmed.
 func (a *App) ConfirmResult(ctx context.Context, isConfirmed bool, mode Mode) error {
-	if err := a.conn.WaitForExpr(ctx, "Tast.getState('review-result') || Tast.getState('view-review') === true"); err != nil {
+	if err := a.WaitForState(ctx, "view-review", true); err != nil {
 		return errors.Wrap(err, "failed to wait for review ui showing up")
 	}
 
@@ -1213,7 +1212,8 @@ func (a *App) SwitchMode(ctx context.Context, mode Mode) error {
 
 // WaitForState waits until state become active/inactive.
 func (a *App) WaitForState(ctx context.Context, state string, active bool) error {
-	code := fmt.Sprintf("Tast.getState(%q) === %t", state, active)
+	// TODO(b/281625728): Remove this function once we change all usages to observe on UI instead.
+	code := fmt.Sprintf("CCATest.getState(%q) === %t", state, active)
 	if err := a.conn.WaitForExpr(ctx, code); err != nil {
 		return errors.Wrapf(err, "failed to wait for state %s to set to %v", state, active)
 	}
@@ -1300,21 +1300,15 @@ func (a *App) OutputCodeCoverage(ctx context.Context) error {
 	return nil
 }
 
-// TriggerConfiguration triggers configuration by calling trigger() and waits for camera configuration finishing.
+// TriggerConfiguration triggers configuration by calling trigger() and waits
+// for camera configuration finishing. This ensures that the
+// |CameraConfiguringState| goes from false -> true -> false.
 func (a *App) TriggerConfiguration(ctx context.Context, trigger func() error) error {
-	// waitNextConfiguration() returns a Promise instance, so Eval waits for its settled state.
-	// For its workaround, wrap by a closure.
-	var waiting chrome.JSObject
-	if err := a.conn.Eval(ctx, `(p => () => p)(Tast.waitNextConfiguration())`, &waiting); err != nil {
-		return errors.Wrap(err, "failed to start watching congiruation update")
+	if _, err := a.TriggerStateChange(ctx, "camera-configuring", true, trigger); err != nil {
+		return errors.Wrap(err, "failed to wait for camera to start configured")
 	}
-	defer waiting.Release(ctx)
-	if err := trigger(); err != nil {
-		return err
-	}
-	// And then unwrap the promise to wait its settled state.
-	if err := a.conn.Call(ctx, nil, `(p) => p()`, &waiting); err != nil {
-		return errors.Wrap(err, "failed to waiting for the completion configuration update")
+	if err := a.WaitForState(ctx, "camera-configuring", false); err != nil {
+		return errors.Wrap(err, "failed to wait for camera to finish configured")
 	}
 	return nil
 }
@@ -1323,10 +1317,11 @@ func (a *App) TriggerConfiguration(ctx context.Context, trigger func() error) er
 // its value changing from |!expected| to |expected| and returns when the
 // change happens.
 func (a *App) TriggerStateChange(ctx context.Context, state string, expected bool, trigger func() error) (time.Time, error) {
+	// TODO(b/281625728): Remove this function once we change all usages to observe on UI instead.
 	var wrappedPromise chrome.JSObject
 	if err := a.conn.Call(ctx, &wrappedPromise, `
 	  (state, expected) => {
-		const p = Tast.observeStateChange(state, expected);
+		const p = CCATest.waitStateChange(state, expected);
 		return () => p;
 	  }
 	  `, state, expected); err != nil {
