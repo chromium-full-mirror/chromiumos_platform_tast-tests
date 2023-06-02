@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
+	"go.chromium.org/tast-tests/cros/local/annotations"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
@@ -75,25 +76,33 @@ func SearchSuggestEnabled(ctx context.Context, s *testing.State) {
 	}
 	defer keyboard.Close(ctx)
 
+	// Hash code for NetworkTrafficAnnotationTag with id omnibox_suggest.
+	const omniboxSuggestHashCode = "47815025"
+
 	for _, param := range []struct {
 		name    string
 		enabled bool                         // enabled is the expected enabled state of the virtual keyboard.
 		policy  *policy.SearchSuggestEnabled // policy is the policy we test.
+		// shouldFindAnnotation states whether omnibox_suggest annotation should be found in the net-export log.
+		shouldFindAnnotation bool
 	}{
 		{
-			name:    "unset",
-			enabled: true,
-			policy:  &policy.SearchSuggestEnabled{Stat: policy.StatusUnset},
+			name:                 "unset",
+			enabled:              true,
+			policy:               &policy.SearchSuggestEnabled{Stat: policy.StatusUnset},
+			shouldFindAnnotation: true,
 		},
 		{
-			name:    "disabled",
-			enabled: false,
-			policy:  &policy.SearchSuggestEnabled{Val: false},
+			name:                 "disabled",
+			enabled:              false,
+			policy:               &policy.SearchSuggestEnabled{Val: false},
+			shouldFindAnnotation: false,
 		},
 		{
-			name:    "enabled",
-			enabled: true,
-			policy:  &policy.SearchSuggestEnabled{Val: true},
+			name:                 "enabled",
+			enabled:              true,
+			policy:               &policy.SearchSuggestEnabled{Val: true},
+			shouldFindAnnotation: true,
 		},
 	} {
 		s.Run(ctx, param.name, func(ctx context.Context, s *testing.State) {
@@ -121,6 +130,11 @@ func SearchSuggestEnabled(ctx context.Context, s *testing.State) {
 			}
 			defer conn.Close()
 
+			// Open the net-export page and start logging.
+			if err := annotations.StartLogging(ctx, cr, br); err != nil {
+				s.Fatal("Failed to start logging: ", err)
+			}
+
 			// Try to open a tab.
 			if err := keyboard.Accel(ctx, "ctrl+t"); err != nil {
 				s.Fatal("Failed to write events: ", err)
@@ -136,8 +150,7 @@ func SearchSuggestEnabled(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to find and click the address bar: ", err)
 			}
 
-			// Wait for a second before typing to make sure the module for
-			// suggestions is loaded.
+			// GoBigSleepLint - Wait for a second before typing to make sure the module for suggestions is loaded.
 			testing.Sleep(ctx, time.Second)
 
 			// Type something so suggestions pop up.
@@ -166,6 +179,20 @@ func SearchSuggestEnabled(ctx context.Context, s *testing.State) {
 
 			if suggest != param.enabled {
 				s.Errorf("Unexpected existence of search suggestions: got %t; want %t", suggest, param.enabled)
+			}
+
+			// Stop logging and check the logs for omnibox_suggest NetworkTrafficAnnotationTag.
+			foundAnnotation, err := annotations.StopLoggingCheckLogs(ctx, cr, br, omniboxSuggestHashCode)
+			if err != nil {
+				s.Fatal("Failed to stop logging and check logs: ", err)
+			}
+
+			if foundAnnotation && !param.shouldFindAnnotation {
+				s.Fatal("Found unexpected NetworkTrafficAnnotationTag with id omnibox_suggest")
+			}
+
+			if !foundAnnotation && param.shouldFindAnnotation {
+				s.Fatal("Did not find expected NetworkTrafficAnnotationTag with id omnibox_suggest")
 			}
 		})
 	}
