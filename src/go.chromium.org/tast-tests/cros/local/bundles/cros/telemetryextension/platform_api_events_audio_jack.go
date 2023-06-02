@@ -140,7 +140,10 @@ func PlatformAPIEventsAudioJack(ctx context.Context, s *testing.State) {
 			return testing.PollBreak(errors.Wrap(jsErr, "unable to call start and stop APIs, aborting test"))
 		}
 
-		return errors.Wrap(err, "failed to wait for audio jack event")
+		if err != nil {
+			return errors.Wrap(err, "failed to wait for audio jack event")
+		}
+		return nil
 	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
 		s.Fatal("Failed to get response from Telemetry extension service worker: ", err)
 	}
