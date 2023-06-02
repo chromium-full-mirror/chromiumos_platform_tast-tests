@@ -37,6 +37,7 @@ const (
 	gpuStateMetricType         = "gpuidle."
 	packageCstatesMetricType   = "cpupkg."
 	batterySOCMetricType       = "battery."
+	histogramMetricType        = "histogram."
 	powerRelatedMetricType     = "power."
 	thermalMetricType          = "temperature."
 	webrtcBitrateMetricType    = "webrtc_bitrate."
@@ -59,6 +60,7 @@ var validMetricTypeMap = map[string]bool{
 	"gpufreq_wavg":      true,
 	"gpuidle":           true,
 	"cpupkg":            true,
+	"histogram":         true,
 	"power":             true,
 	"temperature":       true,
 	"webrtc_bitrate":    true,
@@ -79,6 +81,7 @@ const (
 	fpsMetricTypeUnit              = "fps"
 	gpuFreqMetricTypeUnit          = "megahertz"
 	gpuStateMetricTypeUnit         = "percent"
+	histogramLatencyMetricTypeUnit = "ms"
 	packageCstatesMetricTypeUnit   = "percent"
 	powerRelatedMetricTypeUnit     = "W"
 	thermalMetricTypeUnit          = "celsius"
