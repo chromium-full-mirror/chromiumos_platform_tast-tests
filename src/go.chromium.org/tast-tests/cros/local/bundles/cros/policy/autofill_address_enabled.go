@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
+	"go.chromium.org/tast-tests/cros/local/annotations"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
@@ -28,6 +29,10 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+)
+
+const (
+	autofillQueryAnnotationHash = "88863520"
 )
 
 func init() {
@@ -115,28 +120,32 @@ func AutofillAddressEnabled(ctx context.Context, s *testing.State) {
 	}
 
 	for _, param := range []struct {
-		name            string
-		wantRestriction restriction.Restriction
-		wantChecked     checked.Checked
-		policy          *policy.AutofillAddressEnabled
+		name                 string
+		wantRestriction      restriction.Restriction
+		wantChecked          checked.Checked
+		shouldFindAnnotation bool
+		policy               *policy.AutofillAddressEnabled
 	}{
 		{
-			name:            "unset",
-			wantRestriction: restriction.None,
-			wantChecked:     checked.True,
-			policy:          &policy.AutofillAddressEnabled{Stat: policy.StatusUnset},
+			name:                 "unset",
+			wantRestriction:      restriction.None,
+			wantChecked:          checked.True,
+			shouldFindAnnotation: true,
+			policy:               &policy.AutofillAddressEnabled{Stat: policy.StatusUnset},
 		},
 		{
-			name:            "allow",
-			wantRestriction: restriction.None,
-			wantChecked:     checked.True,
-			policy:          &policy.AutofillAddressEnabled{Val: true},
+			name:                 "allow",
+			wantRestriction:      restriction.None,
+			wantChecked:          checked.True,
+			shouldFindAnnotation: true,
+			policy:               &policy.AutofillAddressEnabled{Val: true},
 		},
 		{
-			name:            "deny",
-			wantRestriction: restriction.Disabled,
-			wantChecked:     checked.False,
-			policy:          &policy.AutofillAddressEnabled{Val: false},
+			name:                 "deny",
+			wantRestriction:      restriction.Disabled,
+			wantChecked:          checked.False,
+			shouldFindAnnotation: false,
+			policy:               &policy.AutofillAddressEnabled{Val: false},
 		},
 	} {
 		s.Run(ctx, param.name, func(ctx context.Context, s *testing.State) {
@@ -158,6 +167,11 @@ func AutofillAddressEnabled(ctx context.Context, s *testing.State) {
 			defer closeBrowser(cleanupCtx)
 
 			defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.name)
+
+			// Open the net-export page and start logging.
+			if err := annotations.StartLogging(ctx, cr, br); err != nil {
+				s.Fatal("Failed to start logging: ", err)
+			}
 
 			if err := policyutil.SettingsPage(ctx, cr, br, "addresses").
 				SelectNode(ctx, nodewith.
@@ -232,6 +246,14 @@ func AutofillAddressEnabled(ctx context.Context, s *testing.State) {
 						s.Fatal("Address was not set properly. Actual value " + valueFromHTML + " doesnt match with expected " + address.fieldValue)
 					}
 				}
+			}
+			foundAnnotation := false
+			if foundAnnotation, err = annotations.StopLoggingCheckLogs(ctx, cr, br, autofillQueryAnnotationHash); err != nil {
+				s.Fatal("Failed to stop logging and check logs: ", err)
+			}
+
+			if foundAnnotation != param.shouldFindAnnotation {
+				s.Fatalf("Unexpected autofill annotation result: got %t expected %t", foundAnnotation, param.shouldFindAnnotation)
 			}
 		})
 	}
