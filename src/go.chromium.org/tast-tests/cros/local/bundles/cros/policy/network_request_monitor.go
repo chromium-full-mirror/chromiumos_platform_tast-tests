@@ -22,6 +22,7 @@ import (
 	policyquickanswers "go.chromium.org/tast-tests/cros/local/bundles/cros/policy/quickanswers"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/searchsuggestion"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/spellcheck"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/useravatar"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/userfeedback"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -75,6 +76,7 @@ func init() {
 			pci.SearchFlag(&policy.SearchSuggestEnabled{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.SearchSuggestEnabled{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.SpellCheckServiceEnabled{}, pci.VerifiedFunctionalityUI),
+			pci.SearchFlag(&policy.UserAvatarCustomizationSelectorsEnabled{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.UserFeedbackAllowed{}, pci.VerifiedFunctionalityUI),
 		},
 		Timeout: 5 * time.Minute,
@@ -91,6 +93,7 @@ func getPolicyList() []policy.Policy {
 		&policy.QuickAnswersUnitConversionEnabled{Val: false},
 		&policy.SearchSuggestEnabled{Val: false},
 		&policy.SpellCheckServiceEnabled{Val: false},
+		&policy.UserAvatarCustomizationSelectorsEnabled{Val: false},
 		&policy.UserFeedbackAllowed{Val: false},
 	}
 }
@@ -115,8 +118,9 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 	}
 
 	opts := []chrome.Option{
-		chrome.DMSPolicy(fdms.URL),  // FakeDMS for setting policies.
-		chrome.GAIALogin(gaiaCreds), // Some of the optional service tests need a real GAIA account.
+		chrome.DMSPolicy(fdms.URL),        // FakeDMS for setting policies.
+		chrome.GAIALogin(gaiaCreds),       // Some of the optional service tests need a real GAIA account.
+		chrome.ExtraArgs("--log-net-log"), // Enable netlog on startup.
 	}
 	// If browser type is lacros, handle differently.
 	if s.Param().(browser.Type) == browser.TypeLacros {
@@ -283,5 +287,31 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 	_, err = annotations.StopLoggingVerifyAnnotationSet(ctx, cr, br, false, hashCodes)
 	if err != nil {
 		s.Fatal("Failed to stop logging and verify logs: ", err)
+	}
+
+	// Note: In lacros mode, for unknown reasons, we are unable to stop the
+	// browser network logging after we run this logic. We should ensure this
+	// runs after the stop logging call.
+	s.Run(ctx, "user_avatar_customization", func(ctx context.Context, s *testing.State) {
+		userAvatarCustomizationParam := useravatar.CustomizationTestCase{
+			Name:                      "disabled",
+			ShouldFindAnnotation:      false,
+			ShouldFindCustomSelectors: false,
+			Policy:                    &policy.UserAvatarCustomizationSelectorsEnabled{Val: false},
+		}
+		if err := useravatar.TriggerUserAvatarCustomization(ctx, userAvatarCustomizationParam, tconn); err != nil {
+			s.Fatal("Failed to trigger user avatar customization: ", err)
+		}
+	})
+
+	// Check annotations that are only present in the netlog created on startup.
+	// As of now, we only have one annotation where this is necessary. If we add
+	// more annotations in the future, we should consider refactoring this test.
+	foundAnnotation, err := annotations.CheckLogsFromFile(ctx, cr, useravatar.AnnotationHashCode, annotations.UserDirNetLogFile)
+	if err != nil {
+		s.Fatalf("Failed to check logs for %s: %v", annotations.UserDirNetLogFile, err)
+	}
+	if foundAnnotation {
+		s.Fatalf("Annotation %s should not have been found", useravatar.AnnotationHashCode)
 	}
 }

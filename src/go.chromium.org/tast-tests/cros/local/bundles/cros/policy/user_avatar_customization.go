@@ -14,17 +14,13 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/annotations"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/useravatar"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
-	"go.chromium.org/tast-tests/cros/local/personalization"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -56,18 +52,6 @@ func init() {
 //  3. Verify that custom selectors are shown or not shown, based on policy
 //  4. Verify network annotation for profile image fetch is controlled by policy
 func UserAvatarCustomization(ctx context.Context, s *testing.State) {
-	const (
-		chooseFromFileButtonName = "Choose a file"
-		takePhotoButtonName      = "Take a photo"
-		takeVideoButtonName      = "Create a looping video"
-		profileImageName         = "Google profile photo"
-
-		avatarButtonContainerClass = "avatar-button-container"
-		imageContainerClass        = "image-container"
-
-		annotationID = "108903331" // signed_in_profile_avatar
-	)
-
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
@@ -92,32 +76,27 @@ func UserAvatarCustomization(ctx context.Context, s *testing.State) {
 		chrome.ExtraArgs("--log-net-log"), // Enable netlog on startup
 	}
 
-	for _, param := range []struct {
-		name                      string
-		shouldFindAnnotation      bool
-		shouldFindCustomSelectors bool
-		policy                    *policy.UserAvatarCustomizationSelectorsEnabled
-	}{
+	for _, param := range []useravatar.CustomizationTestCase{
 		{
-			name:                      "unset",
-			shouldFindAnnotation:      true,
-			shouldFindCustomSelectors: true,
-			policy:                    &policy.UserAvatarCustomizationSelectorsEnabled{Stat: policy.StatusUnset},
+			Name:                      "unset",
+			ShouldFindAnnotation:      true,
+			ShouldFindCustomSelectors: true,
+			Policy:                    &policy.UserAvatarCustomizationSelectorsEnabled{Stat: policy.StatusUnset},
 		},
 		{
-			name:                      "enabled",
-			shouldFindAnnotation:      true,
-			shouldFindCustomSelectors: true,
-			policy:                    &policy.UserAvatarCustomizationSelectorsEnabled{Val: true},
+			Name:                      "enabled",
+			ShouldFindAnnotation:      true,
+			ShouldFindCustomSelectors: true,
+			Policy:                    &policy.UserAvatarCustomizationSelectorsEnabled{Val: true},
 		},
 		{
-			name:                      "disabled",
-			shouldFindAnnotation:      false,
-			shouldFindCustomSelectors: false,
-			policy:                    &policy.UserAvatarCustomizationSelectorsEnabled{Val: false},
+			Name:                      "disabled",
+			ShouldFindAnnotation:      false,
+			ShouldFindCustomSelectors: false,
+			Policy:                    &policy.UserAvatarCustomizationSelectorsEnabled{Val: false},
 		},
 	} {
-		s.Run(ctx, param.name, func(ctx context.Context, s *testing.State) {
+		s.Run(ctx, param.Name, func(ctx context.Context, s *testing.State) {
 			// Start Chrome. Note that we restart Chrome for each test case to reset the netlog.
 			cr, err := chrome.New(ctx, opts...)
 			if err != nil {
@@ -147,7 +126,7 @@ func UserAvatarCustomization(ctx context.Context, s *testing.State) {
 			}
 
 			// Update policies.
-			policies := []policy.Policy{param.policy}
+			policies := []policy.Policy{param.Policy}
 			policyBlob := policy.NewBlob()
 			policyBlob.PolicyUser = gaiaCreds.User
 			policyBlob.AddPolicies(policies)
@@ -158,66 +137,15 @@ func UserAvatarCustomization(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to verify updated policies: ", err)
 			}
 
-			ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
-
-			// Open user avatar personalization app. Note: We retry here because sometimes the button
-			// to open the user avatar subpage does not load properly.
-			breadcrumbAvatar := personalization.BreadcrumbNodeFinder(personalization.AvatarSubpageName)
-			if err := testing.Poll(ctx, func(ctx context.Context) error {
-				// Close any previously opened personalization apps.
-				if err := ash.CloseAllWindows(ctx, tconn); err != nil {
-					return errors.Wrap(err, "failed to close app window")
-				}
-
-				// Open avatar subpage.
-				if err := uiauto.Combine("open avatar subpage",
-					personalization.OpenPersonalizationHub(ui),
-					personalization.OpenAvatarSubpage(ui),
-					ui.WithTimeout(3*time.Second).WaitUntilExists(breadcrumbAvatar),
-				)(ctx); err != nil {
-					s.Log("Failed to open avatar subpage: ", err)
-					return errors.Wrap(err, "failed to open avatar subpage")
-				}
-
-				return nil // exit successfully
-			}, &testing.PollOptions{Timeout: 15 * time.Second}); err != nil {
-				s.Fatal("Failed to open avatar personalization app: ", err)
-			}
-
-			chooseFromFileSelector := selectorFinder(chooseFromFileButtonName, avatarButtonContainerClass)
-			takePhotoSelector := selectorFinder(takePhotoButtonName, avatarButtonContainerClass)
-			takeVideoSelector := selectorFinder(takeVideoButtonName, avatarButtonContainerClass)
-			profileImageSelector := selectorFinder(profileImageName, imageContainerClass)
-
-			if param.shouldFindCustomSelectors {
-				if err := uiauto.Combine("Verify custom selectors are shown",
-					ui.WaitUntilExists(chooseFromFileSelector),
-					ui.WaitUntilExists(takePhotoSelector),
-					ui.WaitUntilExists(takeVideoSelector),
-					ui.WaitUntilExists(profileImageSelector),
-				)(ctx); err != nil {
-					s.Fatal("Failed to verify custom selectors are shown: ", err)
-				}
-			} else {
-				if err := uiauto.Combine("Verify custom selectors are not shown",
-					ui.WaitUntilGone(chooseFromFileSelector),
-					ui.WaitUntilGone(takePhotoSelector),
-					ui.WaitUntilGone(takeVideoSelector),
-					ui.WaitUntilGone(profileImageSelector),
-				)(ctx); err != nil {
-					s.Fatal("Failed to verify custom selectors are not shown: ", err)
-				}
+			if err := useravatar.TriggerUserAvatarCustomization(ctx, param, tconn); err != nil {
+				s.Fatal("Failed to trigger and verify user avatar customization: ", err)
 			}
 
 			// Check netlog for network annotation.
-			foundAnnotation, err := annotations.CheckLogsFromFile(ctx, cr, annotationID, annotations.UserDirNetLogFile)
-			if param.shouldFindAnnotation != foundAnnotation {
-				s.Fatalf("Annotation mismatch. Expected: %t. Actual: %t", param.shouldFindAnnotation, foundAnnotation)
+			foundAnnotation, err := annotations.CheckLogsFromFile(ctx, cr, useravatar.AnnotationHashCode, annotations.UserDirNetLogFile)
+			if param.ShouldFindAnnotation != foundAnnotation {
+				s.Fatalf("Annotation mismatch. Expected: %t. Actual: %t", param.ShouldFindAnnotation, foundAnnotation)
 			}
 		})
 	}
-}
-
-func selectorFinder(name, class string) *nodewith.Finder {
-	return nodewith.Role(role.ListBoxOption).Name(name).HasClass(class)
 }
