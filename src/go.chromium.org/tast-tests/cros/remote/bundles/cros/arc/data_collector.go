@@ -607,7 +607,7 @@ func DataCollector(ctx context.Context, s *testing.State) {
 			baseName := strings.TrimSuffix(response.GmsCoreCacheName, filepath.Ext(response.GmsCoreCacheName))
 			localGMSCoreCache := filepath.Join(tempDir, baseName)
 
-			if err := cache.InstallGmsCoreCaches(ctx, jarPath, tempDir, localGMSTar, localGMSManifest, localGMSCoreCache); err != nil {
+			if err := cache.InstallGmsCoreCaches(ctx, jarPath, tempDir, localGMSTar, localGMSManifest, localGMSCoreCache, true /* enforceMatchingTimestamp */); err != nil {
 				s.Fatal("Failed to install GMS core caches: ", err)
 			}
 

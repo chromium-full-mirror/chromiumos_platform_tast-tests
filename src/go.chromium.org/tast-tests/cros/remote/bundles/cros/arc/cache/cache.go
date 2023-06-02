@@ -142,8 +142,10 @@ func ValidatePackagesCache(ctx context.Context, jarPath, sourcePath, referencePa
 	return nil
 }
 
-// InstallGmsCoreCaches installs GMS Core caches based on files from manifestPath and tarPath.
-func InstallGmsCoreCaches(ctx context.Context, jarPath, rootDir, tarPath, manifestPath, outDir string) error {
+// InstallGmsCoreCaches installs GMS Core caches based on files from manifestPath and tarPath where
+// enforceMatchingTimestamp will determine whether to require manifest entry timestamp and timestamp
+// of actual system image apk files to match from the system-root rootDir path.
+func InstallGmsCoreCaches(ctx context.Context, jarPath, rootDir, tarPath, manifestPath, outDir string, enforceMatchingTimestamp bool) error {
 	const javaClass = "org.chromium.arc.cachebuilder.GmsCoreCacheInstaller"
 	if tarPath == manifestPath {
 		return errors.New("failed to run cache installer due to invalid identical tar and manifest paths")
@@ -154,10 +156,16 @@ func InstallGmsCoreCaches(ctx context.Context, jarPath, rootDir, tarPath, manife
 	if !strings.Contains(rootDir, "/") || !strings.Contains(outDir, "/") {
 		return errors.New("failed to run cache installer, please specify valid directories")
 	}
+	var enforceMatchingTimestampStr string
+	if enforceMatchingTimestamp {
+		enforceMatchingTimestampStr = "yes"
+	} else {
+		enforceMatchingTimestampStr = "no"
+	}
 
 	if err := testexec.CommandContext(
 		ctx, "sudo", "java", "-cp", jarPath, javaClass,
-		"--system-root", rootDir, "--gms-caches", tarPath,
+		"--system-root", rootDir, "--gms-caches", tarPath, "--enforce-matching-timestamp", enforceMatchingTimestampStr,
 		"--manifest", manifestPath, "--output-dir", outDir).Run(testexec.DumpLogOnError); err != nil {
 		return err
 	}
