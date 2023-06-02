@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/calendarintegration"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/passwordleakdetection"
 	policyquickanswers "go.chromium.org/tast-tests/cros/local/bundles/cros/policy/quickanswers"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/searchsuggestion"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/spellcheck"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -67,6 +68,8 @@ func init() {
 			pci.SearchFlag(&policy.QuickAnswersUnitConversionEnabled{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.QuickAnswersUnitConversionEnabled{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.SafeBrowsingProtectionLevel{}, pci.VerifiedValue),
+			pci.SearchFlag(&policy.SearchSuggestEnabled{}, pci.VerifiedFunctionalityUI),
+			pci.SearchFlag(&policy.SearchSuggestEnabled{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.SpellCheckServiceEnabled{}, pci.VerifiedFunctionalityUI),
 		},
 	})
@@ -79,6 +82,7 @@ func getPolicyList() []policy.Policy {
 		&policy.PasswordLeakDetectionEnabled{Val: false},
 		&policy.QuickAnswersDefinitionEnabled{Val: false},
 		&policy.QuickAnswersUnitConversionEnabled{Val: false},
+		&policy.SearchSuggestEnabled{Val: false},
 		&policy.SpellCheckServiceEnabled{Val: false},
 	}
 }
@@ -225,6 +229,19 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to trigger password leak detection: ", err)
 		}
 		hashCodes = append(hashCodes, passwordleakdetection.AnnotationHashCode)
+	})
+
+	s.Run(ctx, "search_suggestion", func(ctx context.Context, s *testing.State) {
+		searchSuggestionParam := searchsuggestion.TestCase{
+			Name:                 "disabled",
+			ShouldFindAnnotation: false,
+			Policy:               &policy.SearchSuggestEnabled{Val: false},
+			Enabled:              false,
+		}
+		if err := searchsuggestion.TriggerSearchSuggestion(ctx, searchSuggestionParam, tconn, br); err != nil {
+			s.Fatal("Failed to trigger search suggestion: ", err)
+		}
+		hashCodes = append(hashCodes, searchsuggestion.AnnotationID)
 	})
 
 	// Stop logging and verify network traffic annotations associated with the
