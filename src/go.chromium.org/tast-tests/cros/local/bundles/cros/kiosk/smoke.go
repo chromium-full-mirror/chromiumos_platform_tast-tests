@@ -82,6 +82,8 @@ func init() {
 			"group:medium_low_tier",
 			"group:hardware",
 			"group:complementary",
+			"group:crosbolt",
+			"crosbolt_nightly",
 		},
 		// Enough time for kioskmode.New, kiosk launch, and kiosk.Close.
 		Timeout:      kioskmode.SetupDuration + kioskmode.LaunchDuration + kioskmode.CleanupDuration,
