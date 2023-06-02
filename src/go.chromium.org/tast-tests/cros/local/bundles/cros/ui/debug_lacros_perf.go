@@ -49,7 +49,6 @@ func init() {
 		Desc:         "Temporary tests to help debug lacros performance issues",
 		Contacts:     []string{"chromeos-perfmetrics-eng@google.com", "erikchen@chromium.org"},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
-		Attr:         []string{"group:cuj"},
 		SoftwareDeps: []string{"chrome", "no_android_vm_t"},
 		Data:         []string{cujrecorder.SystemTraceConfigFile},
 		Timeout:      cuj.CPUStablizationTimeout + debugLacrosTestWaitDuration,
