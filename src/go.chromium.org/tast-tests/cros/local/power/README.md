@@ -88,16 +88,17 @@ it opens the browser with a blank page and maximizes the browser window.
 
 ## Start power metrics collection
 
-Cool down the test device and start collecting power metrics. Note that
-depending on the test specific setup and workload, cool down process might need
-to be adjusted. Cooling down the device is needed because at the start of the
-test, setting up the device for testing usually results in power consumption
-that is higher than the average power consumption of the workload. Without
-cooling down the device first, the test will report higher power consumption
-than the workload really takes, then the test loses its purpose to measure
-power consumption and estimate battery life.
+Cool down the test device and start collecting power metrics.
+
+* `interval 	time.Duration` The time duration between two subsequent metric snapshots.
+
+Note: Depending on the test specific setup and workload, cool down process might need to be adjusted.
+
+Cooling down the device is necessary, as the setup process can result in higher power consumption than the average power consumption of the actual workload.
+
+Without cooling down, the test results can be skewed, and thus loses its purpose to measure accurate power consumption and estimate battery life.
 ```go
-	r, err := power.NewRecorder(ctx, interval, s.OutDir(), s.TestName())
+	r, err := power.NewRecorder(ctx, sampleInterval, s.OutDir(), s.TestName())
 	if err != nil {
 		s.Fatal("Cannot create a new Recorder to collect power metrics: ", err)
 	}
@@ -139,7 +140,7 @@ create data visualizations.
 ## Look at the collected power metrics
 To understand what metrics are collected, see [metrics.md].
 
-[metrics.md]: https://crsrc.org/o/src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/local/power/doc/metrics.md
+[metrics.md]: https://crsrc.org/o/src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/local/power/docs/metrics.md
 
 ### Local visualization
 A local html data visualization of the collected power metrics is at
