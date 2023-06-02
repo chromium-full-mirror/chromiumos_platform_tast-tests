@@ -20,12 +20,13 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         HostSpeedtest,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Runs Speedtest on cellular interface",
-		Contacts:     []string{"chromeos-cellular-team@google.com", "madhavadas@google.com"},
+		Desc:         "Runs Speedtest on cellular interface and capture power consumption data",
+		Contacts:     []string{"chromeos-cellular-team@google.com", "madhavadas@google.com", "rmao@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular_crosbolt", "cellular_crosbolt_perf_nightly", "cellular_crosbolt_unstable"},
+		Attr:         []string{"group:cellular", "cellular_power", "cellular_sim_active", "group:cellular_crosbolt", "cellular_crosbolt_perf_nightly", "cellular_crosbolt_unstable"},
 		HardwareDeps: hwdep.D(hwdep.Cellular()),
-		Timeout:      4 * time.Minute,
+		Timeout:      6 * time.Minute,
+		Fixture:      "cellularPower",
 	})
 }
 
@@ -36,6 +37,10 @@ func HostSpeedtest(ctx context.Context, s *testing.State) {
 	}
 
 	verifyHostIPSpeedTest := func(ctx context.Context) error {
+		const powerBaselineTime = 1 * time.Minute
+		//GoBigSleepLint: provide power baseline before speedtest
+		testing.Sleep(ctx, powerBaselineTime)
+
 		uploadSpeed, downloadSpeed, err := cellular.RunHostIPSpeedTest(ctx, testexec.CommandContext, "/usr/local/bin")
 		if err != nil {
 			return errors.Wrap(err, "failed speed test")
@@ -57,6 +62,9 @@ func HostSpeedtest(ctx context.Context, s *testing.State) {
 		if err := perfValues.Save(s.OutDir()); err != nil {
 			return errors.Wrap(err, "failed saving perf data")
 		}
+
+		//GoBigSleepLint: provide power baseline after speedtest
+		testing.Sleep(ctx, powerBaselineTime)
 		return nil
 	}
 

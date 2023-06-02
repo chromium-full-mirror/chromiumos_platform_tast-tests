@@ -113,6 +113,18 @@ func init() {
 		TearDownTimeout: 5 * time.Second,
 		Impl:            &cellularFixture{useRoaming: false, checkSim: true},
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name:            "cellularPower",
+		Desc:            "Power tests for cellular connectivity",
+		Contacts:        []string{"chromeos-cellular-team@google.com", "rmao@google.com"},
+		SetUpTimeout:    4 * time.Minute,
+		ResetTimeout:    5 * time.Second,
+		PreTestTimeout:  4 * time.Minute,
+		PostTestTimeout: 3 * time.Minute,
+		TearDownTimeout: 5 * time.Second,
+		Impl:            &cellularFixture{checkSim: true},
+		Parent:          "powerMetricsNoUI",
+	})
 }
 
 // cellularFixture implements testing.FixtureImpl.
