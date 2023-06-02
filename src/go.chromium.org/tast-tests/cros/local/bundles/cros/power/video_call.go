@@ -108,6 +108,11 @@ func VideoCall(ctx context.Context, s *testing.State) {
 	defer videoConn.Close()
 	defer videoConn.CloseTarget(cleanupCtx)
 
+	bTconn, err := br.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to get browser test API connection: ", err)
+	}
+
 	videoWin, err := ash.WaitForAnyWindow(ctx, tconn, ash.BrowserTypeMatch(bt))
 	if err != nil {
 		s.Fatal("Failed to open a browser window: ", err)
@@ -139,7 +144,11 @@ func VideoCall(ctx context.Context, s *testing.State) {
 	r := power.NewRecorder(ctx, interval, s.OutDir(), s.TestName())
 	defer r.Close(cleanupCtx)
 	// Register test specific metrics.
-	r.RegisterMetrics(power.NewVideoFpsMetrics(videoConn), power.NewWebRTCMetrics(videoConn))
+	r.RegisterMetrics(
+		power.NewVideoFpsMetrics(videoConn),
+		power.NewWebRTCMetrics(videoConn),
+		power.NewHistogramMetrics(bTconn, []string{"Event.Latency.EndToEnd.KeyPress", "EventLatency.KeyPressed.TotalLatency"}),
+	)
 
 	if err := r.Cooldown(ctx); err != nil {
 		s.Error("Cooldown failed: ", err)
