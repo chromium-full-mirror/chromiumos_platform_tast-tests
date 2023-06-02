@@ -477,13 +477,6 @@ func (a *App) checkVideoState(ctx context.Context, active bool, duration time.Du
 	return nil
 }
 
-// IsWindowMinimized returns true if the current app window is minimized.
-func (a *App) IsWindowMinimized(ctx context.Context) (bool, error) {
-	var isMinimized bool
-	err := a.conn.Eval(ctx, "Tast.isMinimized()", &isMinimized)
-	return isMinimized, err
-}
-
 // WaitForVideoActive waits for the video to become active for 1 second.
 func (a *App) WaitForVideoActive(ctx context.Context) error {
 	return a.checkVideoState(ctx, true, time.Second)
@@ -1227,35 +1220,8 @@ func (a *App) WaitForState(ctx context.Context, state string, active bool) error
 	return nil
 }
 
-// WaitForMinimized waits for app window to be minimized/restored.
-func (a *App) WaitForMinimized(ctx context.Context, minimized bool) error {
-	const timeout = 5 * time.Second
-	return testing.Poll(ctx, func(ctx context.Context) error {
-		actual, err := a.IsWindowMinimized(ctx)
-		if err != nil {
-			return testing.PollBreak(errors.Wrap(err, "failed to check if window is minimized"))
-		}
-		if actual != minimized {
-			return errors.New("failed to wait for window minimized/restored")
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: timeout})
-}
-
-// CheckGridOption checks whether grid option enable state is as expected.
-func (a *App) CheckGridOption(ctx context.Context, expected bool) error {
-	var actual bool
-	if err := a.conn.Eval(ctx, "Tast.getState('grid')", &actual); err != nil {
-		return err
-	}
-	if actual != expected {
-		return errors.Errorf("unexpected grid option enablement: got %v, want %v", actual, expected)
-	}
-	return nil
-}
-
 // RunThroughCameras runs function f in app after switching to each available camera.
-// The f is called with paramter of the switched camera facing.
+// The f is called with parameter of the switched camera facing.
 // The error returned by f is passed to caller of this function.
 func (a *App) RunThroughCameras(ctx context.Context, f func(Facing) error) error {
 	numCameras, err := a.GetNumOfCameras(ctx)

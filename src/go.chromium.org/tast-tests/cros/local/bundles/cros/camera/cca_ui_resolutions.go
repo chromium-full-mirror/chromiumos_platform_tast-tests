@@ -39,11 +39,9 @@ func init() {
 			Name:              "real",
 			ExtraSoftwareDeps: []string{caps.BuiltinOrVividCamera},
 			Fixture:           "ccaTestBridgeReady",
-			Val:               none,
 		}, {
 			Name:    "fake_hal",
 			Fixture: "ccaTestBridgeReadyWithFakeHALCamera",
-			Val:     none,
 		}},
 	})
 }
@@ -65,11 +63,6 @@ func CCAUIResolutions(ctx context.Context, s *testing.State) {
 		subTestCtx, cancel := context.WithTimeout(ctx, subTestTimeout)
 		s.Run(subTestCtx, tst.name, func(ctx context.Context, s *testing.State) {
 			if err := runTestWithApp(ctx, func(ctx context.Context, app *cca.App) error {
-				if noMenu, err := app.State(ctx, "no-resolution-settings"); err != nil {
-					return errors.Wrap(err, `failed to get "no-resolution-settings" state`)
-				} else if noMenu {
-					return errors.New("resolution settings menu is not available on device")
-				}
 				return tst.testFunc(ctx, app)
 			}, cca.TestWithAppParams{}); err != nil {
 				s.Errorf("Failed to pass %v subtest: %v", tst.name, err)
@@ -358,18 +351,18 @@ func clickThroughAllPhotoResolutionOptions(ctx context.Context, app *cca.App, fa
 	}
 	defer app.CloseSettingMenu(cleanupCtx, cca.PhotoResolutionMenu)
 
-	photoResolotionOptions := cca.FrontPhotoResolutionOptions
+	photoResolutionOptions := cca.FrontPhotoResolutionOptions
 	if facing == cca.FacingBack {
-		photoResolotionOptions = cca.BackPhotoResolutionOptions
+		photoResolutionOptions = cca.BackPhotoResolutionOptions
 	}
 
-	numOptions, err := app.CountUI(ctx, photoResolotionOptions)
+	numOptions, err := app.CountUI(ctx, photoResolutionOptions)
 	if err != nil {
 		return errors.Wrap(err, "failed to count the aspect ratio options")
 	}
 
 	for index := 0; index < numOptions; index++ {
-		if err := clickOptionAndWaitConfiguration(ctx, app, photoResolotionOptions, index); err != nil {
+		if err := clickOptionAndWaitConfiguration(ctx, app, photoResolutionOptions, index); err != nil {
 			return errors.Wrap(err, "failed to click the aspect ratio option and wait for the configration done")
 		}
 
