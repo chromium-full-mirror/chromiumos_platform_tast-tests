@@ -28,6 +28,7 @@ func init() {
 		Attr:         []string{"informational", "group:mainline", "group:camera-libcamera"},
 		SoftwareDeps: []string{"camera_app", "chrome"},
 		Data:         []string{"blank_1280x720.mjpeg"},
+		Timeout:      2 * time.Minute,
 		HardwareDeps: cca.DeviceWithLayoutMonitored,
 		BugComponent: "b:978428",
 		Fixture:      "ccaTestBridgeReadyWithFakeCamera",
@@ -40,7 +41,7 @@ const (
 	diffWindowHeight = 600
 )
 
-// CCAUILayout takes screenshot of CCA and verifies layout is as expected.
+// CCAUILayout takes screenshots and compares to the ground truth on the Gold server to ensure no unexpected UI changes are introduced.
 func CCAUILayout(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(cca.FixtureData).Chrome
 	runTestWithApp := s.FixtValue().(cca.FixtureData).RunTestWithApp
@@ -88,6 +89,12 @@ func CCAUILayout(ctx context.Context, s *testing.State) {
 	defer differ.DieOnFailedDiffs()
 
 	if err := runTestWithApp(ctx, func(ctx context.Context, app *cca.App) error {
+		// TODO(b/285276951): Replace with a better way to workaround such issue.
+		// GoBigSleepLint - Sleep to wait for the multitask menu indicator to dismiss.
+		if err := testing.Sleep(ctx, 10*time.Second); err != nil {
+			return errors.Wrap(err, "failed to sleep to wait for the multitask menu indicator dismiss")
+		}
+
 		return checkAppLayout(ctx, app, differ)
 	}, cca.TestWithAppParams{}); err != nil {
 		s.Fatal("Failed when checking app layout: ", err)
