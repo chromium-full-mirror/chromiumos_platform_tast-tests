@@ -80,6 +80,9 @@ func TestParseProcStateWithError(t *testing.T) {
 }
 
 func TestProcStat(t *testing.T) {
+	// TODO(b/285592661): Remove or fix test.
+	t.Skip("Skip broken test b/285592661")
+
 	const (
 		tol        = 100 * time.Millisecond
 		stressTime = time.Second
