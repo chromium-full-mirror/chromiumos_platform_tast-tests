@@ -144,6 +144,12 @@ func Run(ctx context.Context, s *testing.State) {
 		return nil
 	}
 
+	// Shorten the context further so that we still have time for other cleanup,
+	// even the IME removal in the for loop doesn't take too much time.
+	cleanupCtx := ctx
+	ctx, cancel = ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
 	// Before typing any paragraph, install all required languages.
 	for _, p := range paragraphs {
 		if err := p.language.Install(tconn)(ctx); err != nil {
@@ -155,10 +161,10 @@ func Run(ctx context.Context, s *testing.State) {
 				fmt.Sprintf("remove %v", p.language),
 				p.language.Remove(tconn),
 				p.language.WaitUntilRemoved(tconn),
-			)(closeCtx)
+			)(cleanupCtx)
 		}
 	}
-	defer ime.DefaultInputMethod.Activate(tconn)(closeCtx)
+	defer ime.DefaultInputMethod.Activate(tconn)(cleanupCtx)
 
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
 		recorder.Annotate(ctx, "Open_new_Google_Doc")
