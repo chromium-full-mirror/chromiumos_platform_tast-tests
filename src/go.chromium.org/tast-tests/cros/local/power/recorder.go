@@ -172,10 +172,8 @@ func (r *Recorder) RegisterMetrics(metrics ...perf.TimelineDatasource) {
 // testName: name of the test.
 // Out:
 // Recorder: collect power metrics in the test.
-// error: propagate back to the test.
-// TODO (b/284029849): remove error from the return values.
-func NewRecorder(ctx context.Context, interval time.Duration, outDir, testName string) (*Recorder, error) {
-	r := &Recorder{
+func NewRecorder(ctx context.Context, interval time.Duration, outDir, testName string) *Recorder {
+	return &Recorder{
 		interval: interval,
 		outDir:   outDir,
 		testName: testName,
@@ -183,6 +181,4 @@ func NewRecorder(ctx context.Context, interval time.Duration, outDir, testName s
 		dataSources: TestMetrics(),
 		isRecording: false,
 	}
-
-	return r, nil
 }

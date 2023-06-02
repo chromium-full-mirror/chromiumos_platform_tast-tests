@@ -60,10 +60,7 @@ func ExampleNoUIManualMetrics(ctx context.Context, s *testing.State) {
 	interval := s.Param().(power.TimeParams).Interval
 	total := s.Param().(power.TimeParams).Total
 
-	r, err := power.NewRecorder(ctx, interval, s.OutDir(), s.TestName())
-	if err != nil {
-		s.Fatal("Cannot create a new Recorder to collect power metrics: ", err)
-	}
+	r := power.NewRecorder(ctx, interval, s.OutDir(), s.TestName())
 	defer r.Close(cleanupCtx)
 	if err := r.Cooldown(ctx); err != nil {
 		s.Error("Cooldown failed: ", err)

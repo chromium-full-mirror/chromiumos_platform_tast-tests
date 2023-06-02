@@ -69,10 +69,7 @@ func Browsing(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to maximize the browser window: ", err)
 	}
 
-	r, err := power.NewRecorder(ctx, 20*time.Second, s.OutDir(), s.TestName())
-	if err != nil {
-		s.Fatal("Cannot create a new Recorder to collect power metrics: ", err)
-	}
+	r := power.NewRecorder(ctx, 20*time.Second, s.OutDir(), s.TestName())
 	defer r.Close(cleanupCtx)
 	if err := r.Cooldown(ctx); err != nil {
 		s.Error("Cooldown failed: ", err)

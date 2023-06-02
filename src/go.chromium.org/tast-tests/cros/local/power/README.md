@@ -98,10 +98,8 @@ Cooling down the device is necessary, as the setup process can result in higher 
 
 Without cooling down, the test results can be skewed, and thus loses its purpose to measure accurate power consumption and estimate battery life.
 ```go
-	r, err := power.NewRecorder(ctx, sampleInterval, s.OutDir(), s.TestName())
-	if err != nil {
-		s.Fatal("Cannot create a new Recorder to collect power metrics: ", err)
-	}
+	r := power.NewRecorder(ctx, sampleInterval, s.OutDir(), s.TestName())
+	defer r.Close(cleanupCtx)
 	if err := r.Cooldown(ctx); err != nil {
 		s.Error("Cooldown failed: ", err)
 	}

@@ -36,10 +36,7 @@ func ExampleNoUIRecord(ctx context.Context, s *testing.State) {
 
 	const interval = 1 * time.Second // Power metrics collect interval.
 
-	r, err := power.NewRecorder(ctx, interval, s.OutDir(), s.TestName())
-	if err != nil {
-		s.Fatal("Cannot create a new Recorder to collect power metrics: ", err)
-	}
+	r := power.NewRecorder(ctx, interval, s.OutDir(), s.TestName())
 	defer r.Close(cleanupCtx)
 
 	if err := r.Record(ctx, func(ctx context.Context) error {

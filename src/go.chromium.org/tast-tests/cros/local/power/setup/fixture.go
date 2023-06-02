@@ -423,10 +423,7 @@ func (f *powerMetricsNoUIFixture) Reset(ctx context.Context) error {
 }
 
 func (f *powerMetricsNoUIFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
-	recorder, err := power.NewRecorder(ctx, 1*time.Second, s.OutDir(), s.TestName())
-	if err != nil {
-		s.Fatal("Cannot create a new Recorder to collect power metrics: ", err)
-	}
+	recorder := power.NewRecorder(ctx, 1*time.Second, s.OutDir(), s.TestName())
 	if err := recorder.Cooldown(ctx); err != nil {
 		s.Error("Cooldown failed: ", err)
 	}

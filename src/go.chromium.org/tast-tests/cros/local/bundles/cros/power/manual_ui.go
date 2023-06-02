@@ -95,10 +95,7 @@ func ManualUI(ctx context.Context, s *testing.State) {
 	}
 
 	testing.ContextLog(ctx, "Start setting up the power recorder")
-	r, err := power.NewRecorder(ctx, time.Second, s.OutDir(), s.TestName())
-	if err != nil {
-		s.Fatal("Cannot create a new Recorder to collect power metrics: ", err)
-	}
+	r := power.NewRecorder(ctx, time.Second, s.OutDir(), s.TestName())
 	defer r.Close(cleanupCtx)
 	if err := r.Cooldown(ctx); err != nil {
 		s.Error("Cooldown failed: ", err)
