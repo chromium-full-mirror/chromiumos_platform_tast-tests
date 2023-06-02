@@ -30,7 +30,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Performs maximize/restore/minimize/close actions on apps windows",
 		Contacts:     []string{"clumptini+oncall@google.com", "alvinjia@google.com"},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		Vars:         screenshot.ScreenDiffVars,
 		SoftwareDeps: []string{"chrome", "vm_host", "amd64"},
 		BugComponent: "b:1122570",

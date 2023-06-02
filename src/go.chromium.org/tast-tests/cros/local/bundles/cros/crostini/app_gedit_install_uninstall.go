@@ -30,7 +30,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Install Gedit, check rendering, icons, saving and uninstall behavior",
 		Contacts:     []string{"clumptini@google.com", "alvinjia@google.com"},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		Vars:         screenshot.ScreenDiffVars,
 		SoftwareDeps: []string{"chrome", "vm_host"},
 		BugComponent: "b:1122570",
