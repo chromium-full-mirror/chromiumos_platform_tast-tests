@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"go.chromium.org/tast-tests/cros/common/wifi/security"
@@ -22,18 +23,30 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+const (
+	rememberedNetworksPersistDefaultTimeout = 3 * time.Minute
+	suspendResumeTimeout                    = time.Minute
+)
+
+type rememberedNetworksPersistParam struct {
+	testScenario    func(context.Context, *wificell.TestFixture) error
+	tryReuseSession bool
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         RememberedNetworksPersist,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify remembered networks persist across suspend/resume",
+		Desc:         "Verify remembered networks persist across suspend/resume, reboot and logout/login",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"cros-conn-test-team@google.com",
 			"toby.leung@cienet.com",
+			"cj.tsai@cienet.com",
 			"cienet-development@googlegroups.com",
+			"chromeos-connectivity-cienet-external@google.com",
 		},
-		BugComponent: "b:1131912",
+		BugComponent: "b:1131912", // ChromeOS > Software > System Services > Connectivity > WiFi
 		Attr:         []string{"group:wificell", "wificell_e2e_unstable"},
 		ServiceDeps: []string{
 			wificell.ShillServiceName,
@@ -42,6 +55,35 @@ func init() {
 		},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "wificellFixt",
+		Params: []testing.Param{
+			{
+				Name: "suspend",
+				Val: rememberedNetworksPersistParam{
+					testScenario: func(ctx context.Context, tf *wificell.TestFixture) error {
+						return tf.DUTWifiClient(wificell.DefaultDUT).Suspend(ctx, 10*time.Second)
+					},
+					tryReuseSession: true,
+				},
+				Timeout: rememberedNetworksPersistDefaultTimeout + suspendResumeTimeout,
+			}, {
+				Name:              "reboot",
+				ExtraSoftwareDeps: []string{"reboot"},
+				Val: rememberedNetworksPersistParam{
+					testScenario: func(ctx context.Context, tf *wificell.TestFixture) error {
+						return tf.RebootDUT(ctx, wificell.DefaultDUT)
+					},
+				},
+				Timeout: rememberedNetworksPersistDefaultTimeout + wificell.DUTRebootTimeout,
+			}, {
+				Name: "re_login",
+				Val: rememberedNetworksPersistParam{
+					// The re-login action can be done by initiating a new Chrome session which is
+					// already done automatically for each test case.
+					testScenario: func(ctx context.Context, tf *wificell.TestFixture) error { return nil },
+				},
+				Timeout: rememberedNetworksPersistDefaultTimeout,
+			},
+		},
 	})
 }
 
@@ -57,7 +99,7 @@ type rememberedNetworksTestNetworks struct {
 	ssidPrefix string
 }
 
-// RememberedNetworksPersist verifies remembered networks persist across suspend/resume.
+// RememberedNetworksPersist verifies remembered networks persist across suspend/resume, reboot and logout/login.
 func RememberedNetworksPersist(ctx context.Context, s *testing.State) {
 	var (
 		tf       = s.FixtValue().(*wificell.TestFixture)
@@ -76,64 +118,50 @@ func RememberedNetworksPersist(ctx context.Context, s *testing.State) {
 	)
 
 	s.Log("Configuring APs")
-	for _, network := range networks {
+	for _, networkConfig := range networks {
 		apOpts := []hostapd.Option{
 			hostapd.Channel(1),
 			hostapd.Mode(hostapd.Mode80211g),
-			hostapd.SSID(hostapd.RandomSSID(network.ssidPrefix)),
+			hostapd.SSID(hostapd.RandomSSID(networkConfig.ssidPrefix)),
 		}
 
-		if network.isHidden {
+		if networkConfig.isHidden {
 			apOpts = append(apOpts, hostapd.Hidden())
 		}
 
 		cleanupAPCtx := ctx
 
 		var err error
-		if network.ap, err = tf.ConfigureAP(ctx, apOpts, network.apConfig); err != nil {
+		if networkConfig.ap, err = tf.ConfigureAP(ctx, apOpts, networkConfig.apConfig); err != nil {
 			s.Fatal("Failed to configure the AP: ", err)
 		}
 		defer func(ctx context.Context) {
-			if err := tf.DeconfigAP(ctx, network.ap); err != nil {
+			if err := tf.DeconfigAP(ctx, networkConfig.ap); err != nil {
 				s.Error("Failed to deconfig the AP: ", err)
 			}
 		}(cleanupAPCtx)
 
 		var cancel context.CancelFunc
-		ctx, cancel = tf.ReserveForDeconfigAP(ctx, network.ap)
+		ctx, cancel = tf.ReserveForDeconfigAP(ctx, networkConfig.ap)
 		defer cancel()
 	}
 
-	// cleanupCtx is the context with time reserved, used for cleaning up resources other than the AP.
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
-	defer cancel()
-
 	rpcClient := tf.DUTRPC(wificell.DefaultDUT)
+	test := s.Param().(rememberedNetworksPersistParam)
+
 	ssids, err := addRememberedNetworks(ctx, networks, tf, rpcClient)
 	if err != nil {
 		s.Fatal("Failed to add remembered networks: ", err)
 	}
 
-	s.Log("Suspending DUT")
-	if err := tf.DUTWifiClient(wificell.DefaultDUT).Suspend(ctx, 10*time.Second); err != nil {
-		s.Fatal("Failed to perform system suspend: ", err)
+	if err := test.testScenario(ctx, tf); err != nil {
+		s.Fatal("Failed to perform test scenario: ", err)
 	}
 
-	cr := ui.NewChromeServiceClient(rpcClient.Conn)
-	// Creating a new session will clear the network setting, need to ensure reuse the existing session after resume.
-	if _, err := cr.New(ctx, &ui.NewRequest{TryReuseSession: true, KeepState: true}); err != nil {
-		s.Fatal("Failed to connect chrome: ", err)
-	}
-	defer cr.Close(cleanupCtx, &emptypb.Empty{})
-
-	wifiUIService := wifi.NewWifiServiceClient(rpcClient.Conn)
-	if err := confirmNetworksRemembered(ctx, wifiUIService, ssids); err != nil {
-		s.Fatal("Failed to verify the added networks are in remembered networks list: ", err)
-	}
-
-	if err := confirmNetworksConnectable(ctx, wifiUIService, ssids); err != nil {
-		s.Fatal("Failed to verify the remembered networks can be connected: ", err)
+	// Retrieve resource again due to rebooting could cause RPC client closing.
+	rpcClient = tf.DUTRPC(wificell.DefaultDUT)
+	if err := loginAndVerifyRememberedNetworksPersist(ctx, rpcClient.Conn, test.tryReuseSession, ssids); err != nil {
+		s.Fatal("Failed to verify remembered networks persist after login: ", err)
 	}
 }
 
@@ -163,6 +191,32 @@ func addRememberedNetworks(ctx context.Context, networks []*rememberedNetworksTe
 	}
 
 	return ssids, nil
+}
+
+func loginAndVerifyRememberedNetworksPersist(ctx context.Context, conn *grpc.ClientConn, tryReuseSession bool, ssids []string) error {
+	cr := ui.NewChromeServiceClient(conn)
+	wifiUIService := wifi.NewWifiServiceClient(conn)
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
+	loginRequest := &ui.NewRequest{KeepState: true, TryReuseSession: tryReuseSession}
+
+	if _, err := cr.New(ctx, loginRequest); err != nil {
+		return errors.Wrap(err, "failed to connect chrome")
+	}
+	defer cr.Close(cleanupCtx, &emptypb.Empty{})
+
+	if err := confirmNetworksRemembered(ctx, wifiUIService, ssids); err != nil {
+		return errors.Wrap(err, "failed to verify the added networks are in remembered networks list")
+	}
+
+	if err := confirmNetworksConnectable(ctx, wifiUIService, ssids); err != nil {
+		return errors.Wrap(err, "failed to verify the remembered networks can be connected")
+	}
+
+	return nil
 }
 
 // confirmNetworksRemembered verifies the networks existed in 'Known Networks' list by checking the node can be found.
