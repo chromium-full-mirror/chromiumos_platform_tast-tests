@@ -11,6 +11,7 @@ import (
 	"github.com/godbus/dbus/v5"
 
 	pmpb "chromiumos/system_api/power_manager_proto"
+
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 
@@ -135,11 +136,15 @@ func TurnOnDisplay(ctx context.Context) error {
 }
 
 // EnableBatterySaver checks that PowerManager is running, enables battery
-// saver, and waits for the signal to propegate to components.
+// saver, and waits for the signal to propagate to components.
 func EnableBatterySaver(ctx context.Context) error {
 	// Enabling battery saver should finish quickly.
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
+
+	if err := upstart.EnsureJobRunning(ctx, "powerd"); err != nil {
+		return errors.Wrap(err, "failed to ensure powerd running")
+	}
 
 	testing.ContextLog(ctx, "Enabling battery saver")
 
@@ -160,7 +165,7 @@ func EnableBatterySaver(ctx context.Context) error {
 		return errors.New("battery saver is not enabled")
 	}
 
-	// GoBigSleepLint: Wait a bit to make sure the signal propegates everywhere.
+	// GoBigSleepLint: Wait a bit to make sure the signal propagates everywhere.
 	// There is no direct way to know if all battery saver levers have received
 	// the signal, so we need to just sleep.
 	if err := testing.Sleep(ctx, 3*time.Second); err != nil {
@@ -175,6 +180,10 @@ func DisableBatterySaver(ctx context.Context) error {
 	// Turning off battery saver should finish quickly.
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
+
+	if err := upstart.EnsureJobRunning(ctx, "powerd"); err != nil {
+		return errors.Wrap(err, "failed to ensure powerd running")
+	}
 
 	testing.ContextLog(ctx, "Disabling battery saver")
 
