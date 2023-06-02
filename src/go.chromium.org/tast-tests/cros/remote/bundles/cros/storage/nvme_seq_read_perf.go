@@ -6,6 +6,7 @@ package storage
 
 import (
 	"context"
+	"time"
 
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/storage/util"
@@ -26,6 +27,7 @@ func init() {
 		SoftwareDeps: []string{"crossystem"},
 		Fixture:      fixture.USBDevModeWithReinstall,
 		Requirements: []string{tdreq.NvmeStorageSeqReadTp},
+		Timeout:      10 * time.Minute,
 	})
 }
 

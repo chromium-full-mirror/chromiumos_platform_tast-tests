@@ -6,6 +6,7 @@ package storage
 
 import (
 	"context"
+	"time"
 
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/storage/util"
@@ -23,6 +24,7 @@ func init() {
 		BugComponent: "b:974567",
 		Data:         util.Configs,
 		Requirements: []string{tdreq.RemovableStorageSeqTp},
+		Timeout:      10 * time.Minute,
 	})
 }
 
