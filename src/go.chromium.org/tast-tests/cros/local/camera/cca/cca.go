@@ -158,7 +158,6 @@ const (
 type App struct {
 	conn        *chrome.Conn
 	cr          *chrome.Chrome
-	scriptPaths []string
 	outDir      string // Output directory to save the execution result
 	appLauncher testutil.AppLauncher
 	appWindow   *testutil.AppWindow
@@ -193,10 +192,9 @@ func (r *Resolution) AspectRatio() float64 {
 }
 
 // Init launches a CCA instance, evaluates the helper script within it and waits
-// until its AppWindow interactable. The scriptPath should be the data path to
-// the helper script cca_ui.js. The returned App instance must be closed when
-// the test is finished.
-func Init(ctx context.Context, cr *chrome.Chrome, scriptPaths []string, outDir string, appLauncher testutil.AppLauncher, tb *testutil.TestBridge) (_ *App, retErr error) {
+// until its AppWindow interactable. The returned App instance must be closed
+// when the test is finished.
+func Init(ctx context.Context, cr *chrome.Chrome, outDir string, appLauncher testutil.AppLauncher, tb *testutil.TestBridge) (_ *App, retErr error) {
 	// Since we don't use "cros-camera" service for fake camera, there is no need
 	// to ensure it is running.
 	if tb.CameraType != testutil.UseFakeVCDCamera {
@@ -229,7 +227,7 @@ func Init(ctx context.Context, cr *chrome.Chrome, scriptPaths []string, outDir s
 			return err
 		}
 
-		return loadScripts(ctx, conn, scriptPaths)
+		return loadScripts(ctx, conn)
 	}(); err != nil {
 		if closeErr := testutil.CloseApp(ctx, cr, conn, appLauncher.UseSWAWindow); closeErr != nil {
 			testing.ContextLog(ctx, "Failed to close app: ", closeErr)
@@ -244,7 +242,7 @@ func Init(ctx context.Context, cr *chrome.Chrome, scriptPaths []string, outDir s
 	}
 
 	testing.ContextLog(ctx, "CCA launched")
-	app := &App{conn, cr, scriptPaths, outDir, appLauncher, appWindow, tb.CameraType}
+	app := &App{conn, cr, outDir, appLauncher, appWindow, tb.CameraType}
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
@@ -271,26 +269,8 @@ func Init(ctx context.Context, cr *chrome.Chrome, scriptPaths []string, outDir s
 	return app, nil
 }
 
-func loadScripts(ctx context.Context, conn *chrome.Conn, scriptPaths []string) error {
-	for _, scriptPath := range scriptPaths {
-		script, err := os.ReadFile(scriptPath)
-		if err != nil {
-			return err
-		}
-		if err := conn.Eval(ctx, string(script), nil); err != nil {
-			return err
-		}
-	}
-	if err := loadNewScripts(ctx, conn); err != nil {
-		return err
-	}
-	return nil
-}
-
-// loadNewScripts loads the necessary scripts for running tests in CCA.
-// TODO(b/242800694): Rename this function to "loadScripts" and remove the
-// existing one once the migration completed.
-func loadNewScripts(ctx context.Context, conn *chrome.Conn) error {
+// loadScripts loads the necessary scripts for running tests in CCA.
+func loadScripts(ctx context.Context, conn *chrome.Conn) error {
 	code := `(async function() {
 		const {CCATest} = await import('/js/test/cca_test.js');
 		window.CCATest = CCATest;
@@ -302,8 +282,8 @@ func loadNewScripts(ctx context.Context, conn *chrome.Conn) error {
 }
 
 // New launches a CCA instance. The returned App instance must be closed when the test is finished.
-func New(ctx context.Context, cr *chrome.Chrome, scriptPaths []string, outDir string, tb *testutil.TestBridge) (*App, error) {
-	return Init(ctx, cr, scriptPaths, outDir, testutil.AppLauncher{
+func New(ctx context.Context, cr *chrome.Chrome, outDir string, tb *testutil.TestBridge) (*App, error) {
+	return Init(ctx, cr, outDir, testutil.AppLauncher{
 		LaunchApp: func(ctx context.Context, tconn *chrome.TestConn) error {
 			return apps.LaunchSystemWebApp(ctx, tconn, "Camera", "chrome://camera-app/views/main.html")
 		},
@@ -436,7 +416,7 @@ func (a *App) Restart(ctx context.Context, tb *testutil.TestBridge) error {
 	if err := a.Close(ctx); err != nil {
 		return err
 	}
-	newApp, err := Init(ctx, a.cr, a.scriptPaths, a.outDir, a.appLauncher, tb)
+	newApp, err := Init(ctx, a.cr, a.outDir, a.appLauncher, tb)
 	if err != nil {
 		return err
 	}
@@ -1407,7 +1387,7 @@ func (a *App) Refresh(ctx context.Context, tb *testutil.TestBridge) error {
 	}
 	a.appWindow = newAppWindow
 
-	if err := loadScripts(ctx, a.conn, a.scriptPaths); err != nil {
+	if err := loadScripts(ctx, a.conn); err != nil {
 		return errors.Wrap(err, "failed to load scripts")
 	}
 	return nil

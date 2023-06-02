@@ -58,7 +58,6 @@ func init() {
 		Name:            "ccaLaunchedInCameraBox",
 		Desc:            "Launched CCA in a Camera Box",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
-		Data:            []string{"cca_ui.js"},
 		Impl:            &fixture{launchCCAInCameraBox: true, launchCCA: true},
 		Parent:          "remoteCameraBox",
 		SetUpTimeout:    setUpTimeout,
@@ -72,7 +71,6 @@ func init() {
 		Name:            "ccaLaunched",
 		Desc:            "Launched CCA",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
-		Data:            []string{"cca_ui.js"},
 		Impl:            &fixture{launchCCA: true},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
@@ -85,7 +83,6 @@ func init() {
 		Name:            "ccaLaunchedGuestWithFakeHALCamera",
 		Desc:            "Launched CCA",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
-		Data:            []string{"cca_ui.js"},
 		Impl:            &fixture{useCameraType: testutil.UseFakeHALCamera, guestMode: true, launchCCA: true},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
@@ -98,7 +95,6 @@ func init() {
 		Name:            "ccaLaunchedWithFakeVCDCamera",
 		Desc:            "Launched CCA with fake VCD camera input",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
-		Data:            []string{"cca_ui.js"},
 		Impl:            &fixture{useCameraType: testutil.UseFakeVCDCamera, launchCCA: true},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
@@ -111,7 +107,6 @@ func init() {
 		Name:            "ccaLaunchedWithFakeHALCamera",
 		Desc:            "Launched CCA with fake camera HAL input",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "pihsun@chromium.org"},
-		Data:            []string{"cca_ui.js"},
 		Impl:            &fixture{useCameraType: testutil.UseFakeHALCamera, launchCCA: true},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
@@ -124,7 +119,6 @@ func init() {
 		Name:            "ccaLaunchedWithFakeVCDCameraFinchOn",
 		Desc:            "Launched CCA with fake VCD camera input with finch field trial config enabled",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
-		Data:            []string{"cca_ui.js"},
 		Impl:            &fixture{useCameraType: testutil.UseFakeVCDCamera, launchCCA: true, fieldTrialConfig: "enable"},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
@@ -138,7 +132,6 @@ func init() {
 		Name:            "ccaLaunchedWithHoldingSpaceIntegrationEnabled",
 		Desc:            "Launched CCA with holding space integration enabled",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "cros-system-ui-eng@google.com", "dmblack@google.com"},
-		Data:            []string{"cca_ui.js"},
 		Impl:            &fixture{launchCCA: true, enableFeatures: []feature{"HoldingSpaceCameraAppIntegration"}},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
@@ -151,7 +144,6 @@ func init() {
 		Name:            "ccaLaunchedWithFakeVCDCameraFinchOff",
 		Desc:            "Launched CCA with fake VCD camera input with finch field trial config disabled",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
-		Data:            []string{"cca_ui.js"},
 		Impl:            &fixture{useCameraType: testutil.UseFakeVCDCamera, launchCCA: true, fieldTrialConfig: "disable"},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
@@ -164,7 +156,6 @@ func init() {
 		Name:            "ccaTestBridgeReady",
 		Desc:            "Set up test bridge for CCA",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
-		Data:            []string{"cca_ui.js"},
 		Impl:            &fixture{},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
@@ -175,7 +166,6 @@ func init() {
 		Name:            "ccaTestBridgeReadyLacros",
 		Desc:            "Set up test bridge for CCA",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
-		Data:            []string{"cca_ui.js"},
 		Impl:            &fixture{lacros: true},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
@@ -187,7 +177,6 @@ func init() {
 		Desc: `Set up test bridge for CCA with fake camera. Any tests using this
 		       fixture should switch the camera scene before opening camera`,
 		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
-		Data:            []string{"cca_ui.js"},
 		Impl:            &fixture{useCameraType: testutil.UseFakeVCDCamera, fakeScene: true},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
@@ -198,7 +187,6 @@ func init() {
 		Name:            "ccaTestBridgeReadyWithFakeCameraWithoutFakeScene",
 		Desc:            `Set up test bridge for CCA with fake camera without fake scene`,
 		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
-		Data:            []string{"cca_ui.js"},
 		Impl:            &fixture{useCameraType: testutil.UseFakeVCDCamera},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
@@ -210,7 +198,6 @@ func init() {
 		Desc: `Set up test bridge for CCA with fake camera. Any tests using this
 		       fixture should switch the camera scene before opening camera`,
 		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
-		Data:            []string{"cca_ui.js"},
 		Impl:            &fixture{useCameraType: testutil.UseFakeVCDCamera, fakeScene: true, lacros: true},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
@@ -221,7 +208,6 @@ func init() {
 		Name:            "ccaTestBridgeReadyWithFakeHALCamera",
 		Desc:            "Set up test bridge for CCA with fake camera HAL input",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "pihsun@chromium.org"},
-		Data:            []string{"cca_ui.js"},
 		Impl:            &fixture{useCameraType: testutil.UseFakeHALCamera},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
@@ -232,7 +218,6 @@ func init() {
 		Name:            "ccaTestBridgeReadyWithFakeHALCameraLacros",
 		Desc:            "Set up test bridge for CCA with fake camera HAL input and lacros",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "pihsun@chromium.org"},
-		Data:            []string{"cca_ui.js"},
 		Impl:            &fixture{useCameraType: testutil.UseFakeHALCamera, lacros: true},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
@@ -243,7 +228,6 @@ func init() {
 		Name:            "ccaTestBridgeReadyWithFakeHALCameraBypassPermissionClamshell",
 		Desc:            "Set up test bridge for CCA with fake camera HAL input bypassPermission on clamshell mode on",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "pihsun@chromium.org"},
-		Data:            []string{"cca_ui.js"},
 		Impl:            &fixture{useCameraType: testutil.UseFakeHALCamera, bypassPermission: true, forceClamshell: true},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
@@ -254,7 +238,6 @@ func init() {
 		Name:            "ccaTestBridgeReadyWithArc",
 		Desc:            "Set up test bridge for CCA with ARC enabled",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
-		Data:            []string{"cca_ui.js"},
 		Impl:            &fixture{arcBooted: true},
 		SetUpTimeout:    setUpTimeout + arc.BootTimeout + ui.StartTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
@@ -265,7 +248,6 @@ func init() {
 		Name:            "ccaTestBridgeReadyWithArcFakeHALCamera",
 		Desc:            "Set up test bridge for CCA with ARC enabled and fake camera HAL",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "pihsun@chromium.org"},
-		Data:            []string{"cca_ui.js"},
 		Impl:            &fixture{arcBooted: true, useCameraType: testutil.UseFakeHALCamera},
 		SetUpTimeout:    setUpTimeout + arc.BootTimeout + ui.StartTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
@@ -276,7 +258,6 @@ func init() {
 		Name:            "ccaTestBridgeReadyWithAutoFramingForceEnabled",
 		Desc:            "Set up test bridge for CCA with Auto Framing force enabled",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "kamesan@chromium.org", "chromeos-camera-eng@google.com"},
-		Data:            []string{"cca_ui.js"},
 		Impl:            &fixture{forceEnableAutoFraming: true},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
@@ -288,7 +269,6 @@ func init() {
 		Name:            "ccaLaunchedWithTimeLapseOnFakeHALCamera",
 		Desc:            "Launched CCA with fake camera HAL input and with time-lapse flag enabled",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "kamchonlathorn@chromium.org"},
-		Data:            []string{"cca_ui.js"},
 		Impl:            &fixture{useCameraType: testutil.UseFakeHALCamera, enableFeatures: []feature{timeLapse}, launchCCA: true},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
@@ -302,7 +282,6 @@ func init() {
 		Name:            "ccaTestBridgeReadyWithTimeLapse",
 		Desc:            "Set up test bridge for CCA with time-lapse flag enabled",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "kamchonlathorn@chromium.org"},
-		Data:            []string{"cca_ui.js"},
 		Impl:            &fixture{enableFeatures: []feature{timeLapse}},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
@@ -378,7 +357,6 @@ type fixture struct {
 	brightnessVal string
 
 	lacros                 bool
-	scriptPaths            []string
 	useCameraType          testutil.UseCameraType
 	fakeScene              bool
 	arcBooted              bool
@@ -419,8 +397,7 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 			"--use-fake-device-for-media-stream=fps=30"))
 
 		if f.fakeScene {
-			dataDir := filepath.Dir(s.DataPath("cca_ui.js"))
-			f.cameraScene = filepath.Join(dataDir, "camera_scene.mjpeg")
+			f.cameraScene = filepath.Join(os.TempDir(), "camera_scene.mjpeg")
 			chromeOpts = append(chromeOpts, chrome.ExtraArgs(
 				// Set the default camera scene as the input of the fake stream.
 				// The content of the scene can be dynamically changed during tests.
@@ -505,7 +482,6 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 		s.Fatal("Failed to construct test bridge: ", err)
 	}
 	f.tb = tb
-	f.scriptPaths = []string{s.DataPath("cca_ui.js")}
 
 	success = true
 	return FixtureData{
@@ -651,7 +627,7 @@ func (f *fixture) startApp(ctx context.Context) (*App, error) {
 		return nil, errors.Wrap(err, "failed to clear camera folder")
 	}
 
-	app, err := New(ctx, f.cr, f.scriptPaths, f.outDir, f.tb)
+	app, err := New(ctx, f.cr, f.outDir, f.tb)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to open CCA")
 	}

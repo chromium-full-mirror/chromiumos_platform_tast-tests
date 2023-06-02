@@ -6,7 +6,6 @@ package camera
 
 import (
 	"context"
-	"io/ioutil"
 	"regexp"
 	"strings"
 
@@ -28,7 +27,6 @@ func init() {
 		Contacts:     []string{"chromeos-camera-eng@google.com", "intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		Vars:         []string{"servo"},
 		SoftwareDeps: []string{"chrome"},
-		Data:         []string{"cca_ui.js"},
 		ServiceDeps:  []string{"tast.cros.camera.CCAService"},
 		HardwareDeps: hwdep.D(hwdep.X86()),
 		Params: []testing.Param{
@@ -82,12 +80,6 @@ func CCAUIMultiCameraSuspendResume(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
 	defer cr.CloseChrome(ctx, &empty.Empty{})
-
-	scriptContent, err := ioutil.ReadFile(s.DataPath("cca_ui.js"))
-	if err != nil {
-		s.Fatal("Failed to load camera script: ", err)
-	}
-	testRequest.ScriptContents = [][]byte{scriptContent}
 
 	_, err = cr.OpenCamera(ctx, testRequest)
 	if err != nil {

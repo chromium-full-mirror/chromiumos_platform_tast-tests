@@ -34,7 +34,6 @@ func init() {
 		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
 		SoftwareDeps: []string{"camera_app", "chrome"},
-		Data:         []string{"cca_ui.js"},
 		Fixture:      "chromePolicyLoggedIn",
 		BugComponent: "b:978428",
 		SearchFlags: []*testing.StringPair{
@@ -49,13 +48,12 @@ func CCAUIPolicy(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 
-	scripts := []string{s.DataPath("cca_ui.js")}
 	outDir := s.OutDir()
 
 	subTestTimeout := 30 * time.Second
 	for _, tst := range []struct {
 		name     string
-		testFunc func(context.Context, *chrome.Chrome, []string, string) error
+		testFunc func(context.Context, *chrome.Chrome, string) error
 		policy   []policy.Policy
 	}{{
 		"testNoPolicy",
@@ -80,7 +78,7 @@ func CCAUIPolicy(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to serve policy: ", err)
 			}
 
-			if err := tst.testFunc(ctx, cr, scripts, outDir); err != nil {
+			if err := tst.testFunc(ctx, cr, outDir); err != nil {
 				s.Fatalf("Failed to run subtest %v: %v", tst.name, err)
 			}
 		})
@@ -100,14 +98,14 @@ func servePolicy(ctx context.Context, fdms *fakedms.FakeDMS, cr *chrome.Chrome, 
 }
 
 // testNoPolicy tests without any policy and expects CCA works fine.
-func testNoPolicy(ctx context.Context, cr *chrome.Chrome, scripts []string, outDir string) error {
+func testNoPolicy(ctx context.Context, cr *chrome.Chrome, outDir string) error {
 	tb, err := testutil.NewTestBridge(ctx, cr, testutil.UseFakeHALCamera)
 	if err != nil {
 		return errors.Wrap(err, "failed to construct test bridge")
 	}
 	defer tb.TearDown(ctx)
 
-	app, err := cca.New(ctx, cr, scripts, outDir, tb)
+	app, err := cca.New(ctx, cr, outDir, tb)
 	if err != nil {
 		return errors.Wrap(err, "failed to start CCA with no policy")
 	}
@@ -116,7 +114,7 @@ func testNoPolicy(ctx context.Context, cr *chrome.Chrome, scripts []string, outD
 
 // testBlockCameraFeature tries to block camera feature and expects a message
 // box "Camera is blocked" will show when launching CCA through the launcher.
-func testBlockCameraFeature(ctx context.Context, cr *chrome.Chrome, scripts []string, outDir string) error {
+func testBlockCameraFeature(ctx context.Context, cr *chrome.Chrome, outDir string) error {
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to get test extension connection")
@@ -150,14 +148,14 @@ func testBlockCameraFeature(ctx context.Context, cr *chrome.Chrome, scripts []st
 
 // testBlockVideoCapture tries to block video capture and expects CCA fails to
 // initialize since the preview won't show.
-func testBlockVideoCapture(ctx context.Context, cr *chrome.Chrome, scripts []string, outDir string) error {
+func testBlockVideoCapture(ctx context.Context, cr *chrome.Chrome, outDir string) error {
 	tb, err := testutil.NewTestBridge(ctx, cr, testutil.UseFakeHALCamera)
 	if err != nil {
 		return errors.Wrap(err, "failed to construct test bridge")
 	}
 	defer tb.TearDown(ctx)
 
-	app, err := cca.New(ctx, cr, scripts, outDir, tb)
+	app, err := cca.New(ctx, cr, outDir, tb)
 	if err == nil {
 		var errJS *cca.ErrJS
 		if err := app.Close(ctx); err != nil && !errors.As(err, &errJS) {

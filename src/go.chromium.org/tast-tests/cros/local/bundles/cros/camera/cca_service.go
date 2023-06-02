@@ -7,7 +7,6 @@ package camera
 import (
 	"context"
 	"io/ioutil"
-	"os"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -31,11 +30,10 @@ func init() {
 
 // CCAService implements tast.cros.camera.CCAService.
 type CCAService struct {
-	s              *testing.ServiceState
-	cr             *chrome.Chrome
-	app            *cca.App
-	tb             *testutil.TestBridge
-	tmpScriptPaths *[]string
+	s   *testing.ServiceState
+	cr  *chrome.Chrome
+	app *cca.App
+	tb  *testutil.TestBridge
 }
 
 var modeMap = map[camera.CameraMode]cca.Mode{
@@ -112,15 +110,6 @@ func (c *CCAService) OpenCamera(ctx context.Context, req *camera.CameraTestReque
 	if !ok {
 		return nil, errors.New("failed to get remote output directory")
 	}
-	var tmpScriptPaths []string
-	for _, scriptContent := range req.ScriptContents {
-		tempFilePath, err := tempFilePathForScript(ctx, scriptContent)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to put script contents into temp file")
-		}
-		tmpScriptPaths = append(tmpScriptPaths, tempFilePath)
-	}
-	c.tmpScriptPaths = &tmpScriptPaths
 
 	tb, err := testutil.NewTestBridge(ctx, c.cr, testutil.UseRealCamera)
 	if err != nil {
@@ -132,7 +121,7 @@ func (c *CCAService) OpenCamera(ctx context.Context, req *camera.CameraTestReque
 		return nil, errors.Wrap(err, "failed to clear saved directory")
 	}
 
-	app, err := cca.New(ctx, c.cr, tmpScriptPaths, outDir, tb)
+	app, err := cca.New(ctx, c.cr, outDir, tb)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to open CCA")
 	}
@@ -195,9 +184,6 @@ func (c *CCAService) CloseCamera(ctx context.Context, req *empty.Empty) (*empty.
 
 	err := c.app.Close(ctx)
 	c.tb.TearDown(ctx)
-	for _, path := range *c.tmpScriptPaths {
-		os.Remove(path)
-	}
 	return &empty.Empty{}, err
 }
 

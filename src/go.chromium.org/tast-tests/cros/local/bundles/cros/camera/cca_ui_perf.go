@@ -26,7 +26,6 @@ func init() {
 		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
-		Data:         []string{"cca_ui.js"},
 		// Three subtests each have 200s timeout and one subtest have 300s timeout.
 		// 200s * 4 + 300s = 19 minutes (rounded up)
 		Timeout:      19 * time.Minute,

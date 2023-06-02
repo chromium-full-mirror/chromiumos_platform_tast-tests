@@ -41,11 +41,9 @@ const (
 
 // TestParams holds the parameters to run the test main logic.
 type TestParams struct {
-	Tier        cuj.Tier
-	BrowserType browser.Type
-	WebSource   cuj.WebSourceType
-	// CCASriptPaths is the script paths used by CCA package to do camera testing.
-	CCAScriptPaths  []string
+	Tier            cuj.Tier
+	BrowserType     browser.Type
+	WebSource       cuj.WebSourceType
 	OutDir          string
 	TraceConfigPath string
 	TabletMode      bool
@@ -236,7 +234,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, params *TestParams) error {
 		if err := switchWindows(ctx, tconn, resources, tabletMode); err != nil {
 			return errors.Wrap(err, "failed to switch windows")
 		}
-		if err := takePhotoAndVideo(ctx, cr, params.CCAScriptPaths, outDir); err != nil {
+		if err := takePhotoAndVideo(ctx, cr, outDir); err != nil {
 			return errors.Wrap(err, "failed to take photo and video")
 		}
 		if err := cuj.GenerateADF(ctx, tconn, tabletMode); err != nil {
@@ -508,11 +506,7 @@ func switchWindows(ctx context.Context, tconn *chrome.TestConn, resources *runRe
 	return nil
 }
 
-func takePhotoAndVideo(ctx context.Context, cr *chrome.Chrome, scriptPaths []string, outDir string) error {
-	if len(scriptPaths) == 0 {
-		testing.ContextLog(ctx, "Skip take photo and video")
-		return nil
-	}
+func takePhotoAndVideo(ctx context.Context, cr *chrome.Chrome, outDir string) error {
 	testing.ContextLog(ctx, "Take photo and video")
 
 	tb, err := testutil.NewTestBridgeWithoutTestConfig(ctx, cr, testutil.UseRealCamera)
@@ -525,7 +519,7 @@ func takePhotoAndVideo(ctx context.Context, cr *chrome.Chrome, scriptPaths []str
 		return errors.Wrap(err, "failed to clear saved directory")
 	}
 
-	app, err := cca.New(ctx, cr, scriptPaths, outDir, tb)
+	app, err := cca.New(ctx, cr, outDir, tb)
 	if err != nil {
 		return errors.Wrap(err, "failed to open CCA")
 	}

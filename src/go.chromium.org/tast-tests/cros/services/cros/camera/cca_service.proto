@@ -66,8 +66,6 @@ message CameraTestRequest {
   CameraMode mode = 1;
   // Facing of camera to be tested.
   Facing facing = 2;
-  // Script contents which should be loaded when initializing CCA instance.
-  repeated bytes script_contents = 3;
 }
 
 message CameraTestResponse {

@@ -26,7 +26,7 @@ func init() {
 		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
 		SoftwareDeps: []string{"camera_app", "chrome"},
-		Data:         []string{"camera_page.html", "camera_page.js", "cca_ui.js"},
+		Data:         []string{"camera_page.html", "camera_page.js"},
 		Fixture:      "ccaTestBridgeReadyWithFakeHALCameraBypassPermissionClamshell",
 		BugComponent: "b:978428",
 	})

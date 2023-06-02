@@ -54,7 +54,6 @@ const (
 // RunParams holds the parameters to run the test main logic.
 type RunParams struct {
 	tier            cuj.Tier
-	ccaScriptPaths  []string // ccaSriptPaths is the scirpt paths used by CCA package to do camera testing.
 	outDir          string
 	appName         string
 	account         string // account is the one used by Spotify APP to do login.
@@ -64,10 +63,9 @@ type RunParams struct {
 }
 
 // NewRunParams constructs a RunParams struct and returns the pointer to it.
-func NewRunParams(tier cuj.Tier, ccaScriptPaths []string, outDir, appName, account, traceConfigPath string,
+func NewRunParams(tier cuj.Tier, outDir, appName, account, traceConfigPath string,
 	tabletMode, enableBT bool) *RunParams {
 	return &RunParams{tier: tier,
-		ccaScriptPaths:  ccaScriptPaths,
 		outDir:          outDir,
 		appName:         appName,
 		account:         account,
@@ -267,7 +265,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, bt browser.Type, a *arc.ARC, pa
 			if err = appSpotify.Play(ctx, apputil.NewMedia("Photograph", "Song • Ed Sheeran")); err != nil {
 				return errors.Wrap(err, "failed to play Spotify")
 			}
-			// Let spotify continue to play for some time.
+			// GoBigSleepLint: Let spotify continue to play for some time.
 			if err := testing.Sleep(ctx, 3*time.Second); err != nil {
 				return errors.Wrap(err, "failed to sleep")
 			}
@@ -288,7 +286,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, bt browser.Type, a *arc.ARC, pa
 			return errors.Wrap(err, "failed to switch windows")
 		}
 
-		if err := takePhotoAndVideo(ctx, cr, params.ccaScriptPaths, params.outDir); err != nil {
+		if err := takePhotoAndVideo(ctx, cr, params.outDir); err != nil {
 			return errors.Wrap(err, "failed to take photo and video")
 		}
 
@@ -407,7 +405,7 @@ func openAndSwitchTabs(ctx context.Context, br *browser.Browser, tconn *chrome.T
 				return errors.Wrap(err, `volume not changed after press "VolumeUp"`)
 			}
 
-			// After applying new volume, stay on the tab with the volume for 2 seconds before applying next one.
+			// GoBigSleepLint: After applying new volume, stay on the tab with the volume for 2 seconds before applying next one.
 			if err := testing.Sleep(ctx, 2*time.Second); err != nil {
 				return errors.Wrap(err, "failed to sleep")
 			}
@@ -556,7 +554,7 @@ func switchWindows(ctx context.Context, tconn *chrome.TestConn, params *RunParam
 	return nil
 }
 
-func takePhotoAndVideo(ctx context.Context, cr *chrome.Chrome, scriptPaths []string, outDir string) error {
+func takePhotoAndVideo(ctx context.Context, cr *chrome.Chrome, outDir string) error {
 	tb, err := testutil.NewTestBridgeWithoutTestConfig(ctx, cr, testutil.UseRealCamera)
 	if err != nil {
 		return errors.Wrap(err, "failed to construct test bridge")
@@ -567,7 +565,7 @@ func takePhotoAndVideo(ctx context.Context, cr *chrome.Chrome, scriptPaths []str
 		return errors.Wrap(err, "failed to clear saved directory")
 	}
 
-	app, err := cca.New(ctx, cr, scriptPaths, outDir, tb)
+	app, err := cca.New(ctx, cr, outDir, tb)
 	if err != nil {
 		return errors.Wrap(err, "failed to open CCA")
 	}

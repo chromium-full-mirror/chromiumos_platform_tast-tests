@@ -46,7 +46,7 @@ func init() {
 			"ui.bt_devicename", // Required for Bluetooth subtests.
 			"ui.collectTrace",  // Optional. Expecting "enable" or "disable", default is "disable".
 		},
-		Data: []string{"cca_ui.js", cujrecorder.SystemTraceConfigFile},
+		Data: []string{cujrecorder.SystemTraceConfigFile},
 		Attr: []string{"group:camera_dependent"},
 		Params: []testing.Param{
 			{
@@ -328,8 +328,7 @@ func EverydayMultiTaskingCUJ(ctx context.Context, s *testing.State) {
 	if collect, ok := s.Var("ui.collectTrace"); ok && collect == "enable" {
 		traceConfigPath = s.DataPath(cujrecorder.SystemTraceConfigFile)
 	}
-	ccaScriptPaths := []string{s.DataPath("cca_ui.js")}
-	testRunParams := et.NewRunParams(tier, ccaScriptPaths, s.OutDir(), app, account, traceConfigPath, tabletMode, enableBT)
+	testRunParams := et.NewRunParams(tier, s.OutDir(), app, account, traceConfigPath, tabletMode, enableBT)
 	if err := et.Run(ctx, cr, param.browserType, a, testRunParams); err != nil {
 		s.Fatal("Failed to run everyday multi-tasking cuj test: ", err)
 	}

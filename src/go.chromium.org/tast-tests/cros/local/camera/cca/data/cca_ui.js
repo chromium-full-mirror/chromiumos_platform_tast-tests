@@ -1,1 +1,0 @@
-../../../bundles/cros/camera/data/cca_ui.js

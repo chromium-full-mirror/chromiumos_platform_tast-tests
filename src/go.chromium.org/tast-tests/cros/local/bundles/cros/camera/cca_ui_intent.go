@@ -93,7 +93,6 @@ func init() {
 		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
 		SoftwareDeps: []string{"camera_app", "chrome", "proprietary_codecs"},
-		Data:         []string{"cca_ui.js"},
 		Timeout:      7 * time.Minute,
 		Fixture:      "ccaTestBridgeReadyWithArcFakeHALCamera",
 		Params: []testing.Param{{
@@ -138,7 +137,6 @@ func CCAUIIntent(ctx context.Context, s *testing.State) {
 
 	testing.ContextLog(ctx, "Starting intent behavior tests")
 
-	scripts := []string{s.DataPath("cca_ui.js")}
 	outDir := s.OutDir()
 
 	androidDataDir, err := arc.AndroidDataDir(ctx, cr.NormalizedUser())
@@ -261,7 +259,7 @@ func CCAUIIntent(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to clear saved directory: ", err)
 			}
 
-			if err := checkIntentBehavior(ctx, cr, a, uiDevice, tc.IntentOptions, scripts, outDir, tb); err != nil {
+			if err := checkIntentBehavior(ctx, cr, a, uiDevice, tc.IntentOptions, outDir, tb); err != nil {
 				s.Error("Failed when checking intent behavior: ", err)
 			}
 		})
@@ -280,7 +278,7 @@ func CCAUIIntent(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to clear saved directory: ", err)
 		}
 
-		if err := checkInstancesCoexistence(ctx, cr, a, scripts, outDir, tb, uiDevice); err != nil {
+		if err := checkInstancesCoexistence(ctx, cr, a, outDir, tb, uiDevice); err != nil {
 			s.Error("Failed for instances coexistence test: ", err)
 		}
 	})
@@ -288,7 +286,7 @@ func CCAUIIntent(ctx context.Context, s *testing.State) {
 }
 
 // launchIntent launches CCA intent with different options.
-func launchIntent(ctx context.Context, cr *chrome.Chrome, a *arc.ARC, options intentOptions, scripts []string, outDir string, tb *testutil.TestBridge, uiDevice *ui.Device) (*cca.App, error) {
+func launchIntent(ctx context.Context, cr *chrome.Chrome, a *arc.ARC, options intentOptions, outDir string, tb *testutil.TestBridge, uiDevice *ui.Device) (*cca.App, error) {
 	launchByIntent := func(ctx context.Context, tconn *chrome.TestConn) error {
 		args := []string{"start", "-n", fmt.Sprintf("%s/%s", testAppPkg, testAppActivity), "-e", "action", options.Action}
 		if options.URI != "" {
@@ -311,7 +309,7 @@ func launchIntent(ctx context.Context, cr *chrome.Chrome, a *arc.ARC, options in
 		}
 		return nil
 	}
-	return cca.Init(ctx, cr, scripts, outDir, testutil.AppLauncher{
+	return cca.Init(ctx, cr, outDir, testutil.AppLauncher{
 		LaunchApp:    launchByIntent,
 		UseSWAWindow: false,
 	}, tb)
@@ -335,12 +333,12 @@ func ensureTestAppClose(ctx context.Context, a *arc.ARC) {
 }
 
 // checkIntentBehavior checks basic control flow for handling intent with different options.
-func checkIntentBehavior(ctx context.Context, cr *chrome.Chrome, a *arc.ARC, uiDevice *ui.Device, options intentOptions, scripts []string, outDir string, tb *testutil.TestBridge) (retErr error) {
+func checkIntentBehavior(ctx context.Context, cr *chrome.Chrome, a *arc.ARC, uiDevice *ui.Device, options intentOptions, outDir string, tb *testutil.TestBridge) (retErr error) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
 	defer cancel()
 
-	app, err := launchIntent(ctx, cr, a, options, scripts, outDir, tb, uiDevice)
+	app, err := launchIntent(ctx, cr, a, options, outDir, tb, uiDevice)
 	defer ensureTestAppClose(cleanupCtx, a)
 	if err != nil {
 		return err
@@ -505,13 +503,13 @@ func checkAutoCloseBehavior(ctx context.Context, cr *chrome.Chrome, app *cca.App
 }
 
 // checkInstancesCoexistence checks number of CCA windows showing in multiple launch request scenario.
-func checkInstancesCoexistence(ctx context.Context, cr *chrome.Chrome, a *arc.ARC, scripts []string, outDir string, tb *testutil.TestBridge, uiDevice *ui.Device) (retErr error) {
+func checkInstancesCoexistence(ctx context.Context, cr *chrome.Chrome, a *arc.ARC, outDir string, tb *testutil.TestBridge, uiDevice *ui.Device) (retErr error) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
 	defer cancel()
 
 	// Launch regular CCA.
-	regularApp, err := cca.New(ctx, cr, scripts, outDir, tb)
+	regularApp, err := cca.New(ctx, cr, outDir, tb)
 	if err != nil {
 		return errors.Wrap(err, "failed to launch CCA")
 	}
@@ -528,14 +526,14 @@ func checkInstancesCoexistence(ctx context.Context, cr *chrome.Chrome, a *arc.AR
 		URI:          "",
 		Mode:         cca.Photo,
 		TestBehavior: captureConfirmAndDone,
-	}, scripts, outDir, tb, uiDevice)
+	}, outDir, tb, uiDevice)
 	defer ensureTestAppClose(cleanupCtx, a)
 	if err != nil {
 		return errors.Wrap(err, "failed to launch CCA by intent")
 	}
 	defer ensureCCAClose(cleanupCtx, intentApp)
 
-	// Check if the regular CCA is suspeneded.
+	// Check if the regular CCA is suspended.
 	if err := regularApp.WaitForState(ctx, "suspend", true); err != nil {
 		return errors.Wrap(err, "regular app instance does not suspend after launching intent")
 	}

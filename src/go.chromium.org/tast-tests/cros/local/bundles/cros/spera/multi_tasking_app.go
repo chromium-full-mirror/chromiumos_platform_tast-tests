@@ -43,7 +43,7 @@ func init() {
 			"spera.MultiTaskingApp.operateCamera", // Optional. Expecting "true" or "false", default is "true".
 			"spera.MultiTaskingApp.web_source",    // Optional. Expecting "google" or "external", default is "google".
 		},
-		Data: []string{"cca_ui.js", cujrecorder.SystemTraceConfigFile},
+		Data: []string{cujrecorder.SystemTraceConfigFile},
 		Attr: []string{"group:camera_dependent"},
 		Params: []testing.Param{
 			{
@@ -121,11 +121,6 @@ func MultiTaskingApp(ctx context.Context, s *testing.State) {
 	if collect, ok := s.Var("spera.collectTrace"); ok && collect == "enable" {
 		traceConfigPath = s.DataPath(cujrecorder.SystemTraceConfigFile)
 	}
-	var ccaScriptPaths []string
-	if v, ok := s.Var("spera.MultiTaskingApp.operateCamera"); !ok || strings.ToLower(v) != "false" {
-		// If there is no variable, the camera should be operated.
-		ccaScriptPaths = []string{s.DataPath("cca_ui.js")}
-	}
 
 	webSource := cuj.GoogleWebSource
 	ws, ok := s.Var("spera.MultiTaskingApp.web_source")
@@ -137,7 +132,6 @@ func MultiTaskingApp(ctx context.Context, s *testing.State) {
 		Tier:            param.tier,
 		BrowserType:     param.browserType,
 		WebSource:       webSource,
-		CCAScriptPaths:  ccaScriptPaths,
 		OutDir:          s.OutDir(),
 		TraceConfigPath: traceConfigPath,
 		TabletMode:      tabletMode,

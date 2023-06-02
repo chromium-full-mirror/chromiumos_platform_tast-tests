@@ -34,7 +34,6 @@ func init() {
 			"group:hardware",
 			"group:medium_low_tier",
 		},
-		Data:    []string{"cca_ui.js"},
 		Fixture: fixture.FakeDMSEnrolled,
 	})
 }
@@ -53,7 +52,6 @@ func Camera(ctx context.Context, s *testing.State) {
 	}
 	defer mgs.Close(ctx)
 
-	scripts := []string{s.DataPath("cca_ui.js")}
 	outDir := s.OutDir()
 	tb, err := testutil.NewTestBridge(ctx, cr, testutil.UseRealCamera)
 	if err != nil {
@@ -61,7 +59,7 @@ func Camera(ctx context.Context, s *testing.State) {
 	}
 	defer tb.TearDown(ctx)
 
-	app, err := cca.New(ctx, cr, scripts, outDir, tb)
+	app, err := cca.New(ctx, cr, outDir, tb)
 	if err != nil {
 		s.Fatal("Failed to start CCA with no policy: ", err)
 	}

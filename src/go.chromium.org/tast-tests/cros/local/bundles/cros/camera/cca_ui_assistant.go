@@ -35,7 +35,6 @@ func init() {
 		Contacts:     []string{"chromeos-camera-eng@google.com", "pihsun@chromium.org"},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "chrome_internal", "camera_app", caps.BuiltinOrVividCamera},
-		Data:         []string{"cca_ui.js"},
 		Fixture:      "ccaTestBridgeReady",
 		BugComponent: "b:978428",
 	})
@@ -66,7 +65,6 @@ func CCAUIAssistant(ctx context.Context, s *testing.State) {
 		}
 	}()
 
-	scripts := []string{s.DataPath("cca_ui.js")}
 	outDir := s.OutDir()
 
 	for _, tc := range []struct {
@@ -126,7 +124,7 @@ func CCAUIAssistant(ctx context.Context, s *testing.State) {
 			startTime := time.Now()
 			options := tc.Options
 
-			app, err := launchAssistant(ctx, cr, options, scripts, outDir, tb)
+			app, err := launchAssistant(ctx, cr, options, outDir, tb)
 			if err != nil {
 				s.Fatal("Failed to launch assistant: ", err)
 			}
@@ -171,13 +169,13 @@ func CCAUIAssistant(ctx context.Context, s *testing.State) {
 }
 
 // launchAssistant launches CCA intent with different options.
-func launchAssistant(ctx context.Context, cr *chrome.Chrome, options assistantOptions, scripts []string, outDir string, tb *testutil.TestBridge) (*cca.App, error) {
+func launchAssistant(ctx context.Context, cr *chrome.Chrome, options assistantOptions, outDir string, tb *testutil.TestBridge) (*cca.App, error) {
 	launchByAssistant := func(ctx context.Context, tconn *chrome.TestConn) error {
 		_, err := assistant.SendTextQuery(ctx, tconn, options.Query)
 		return err
 	}
 
-	return cca.Init(ctx, cr, scripts, outDir, testutil.AppLauncher{
+	return cca.Init(ctx, cr, outDir, testutil.AppLauncher{
 		LaunchApp:    launchByAssistant,
 		UseSWAWindow: false,
 	}, tb)
