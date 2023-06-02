@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/services/cros/platform"
 	cryptossh "golang.org/x/crypto/ssh"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -92,6 +93,7 @@ const (
 	serviceDepBluetoothService   = "tast.cros.bluetooth.BluetoothService"
 	serviceDepBluetoothUIService = "tast.cros.bluetooth.BluetoothUIService"
 	serviceDepChromeService      = "tast.cros.browser.ChromeService"
+	serviceDepUpstartService     = "tast.cros.platform.UpstartService"
 )
 
 // DUT D-Bus services.
@@ -199,6 +201,9 @@ type DUTConfig struct {
 
 	// ChromeService is a client of the ChromeService that is used to start Chrome.
 	ChromeService ui.ChromeServiceClient
+
+	// UpstartService is a client of the UpstartService that manages system jobs.
+	UpstartService platform.UpstartServiceClient
 }
 
 func newDUTConfig(ctx context.Context, dut *dut.DUT, RPCHint *testing.RPCHint) (*DUTConfig, error) {
@@ -212,6 +217,7 @@ func newDUTConfig(ctx context.Context, dut *dut.DUT, RPCHint *testing.RPCHint) (
 		BluetoothService:   bts.NewBluetoothServiceClient(rpcClient.Conn),
 		BluetoothUIService: bts.NewBluetoothUIServiceClient(rpcClient.Conn),
 		ChromeService:      ui.NewChromeServiceClient(rpcClient.Conn),
+		UpstartService:     platform.NewUpstartServiceClient(rpcClient.Conn),
 	}, nil
 }
 
@@ -270,6 +276,9 @@ type FixtValue struct {
 	// The first item in this list refers to the primary DUT, and subsequent items
 	// refer to companion DUTs.
 	DUTConfigs []*DUTConfig
+
+	// UpstartService is a client of the UpstartService that manages system jobs.
+	UpstartService platform.UpstartServiceClient
 }
 
 // PrimaryDUTConfig returns the DUTConfig for the primary DUT.
@@ -361,6 +370,7 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 	tf.fv.BluetoothUIService = primaryDUTConfig.BluetoothUIService
 	tf.fv.BluetoothService = primaryDUTConfig.BluetoothService
 	tf.fv.ChromeService = primaryDUTConfig.ChromeService
+	tf.fv.UpstartService = primaryDUTConfig.UpstartService
 
 	// Configure companion DUT.
 	if tf.features.RequireCompanionDUT {
@@ -458,6 +468,13 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 				ExtraArgs:                    extraArgs,
 			}); err != nil {
 				s.Fatalf("Failed to log into chrome on DUT %s: %v", dutName, err)
+			}
+		} else {
+			s.Logf("Stopping Chrome UI job on DUT %s", dutName)
+			if _, err := dutConfig.UpstartService.StopJob(ctx, &platform.StopJobRequest{
+				JobName: "ui",
+			}); err != nil {
+				s.Fatalf("Failed to stop Chrome UI job on DUT %s: %v", dutName, err)
 			}
 		}
 

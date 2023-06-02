@@ -33,6 +33,7 @@ func init() {
 			serviceDepBluetoothUIService,
 			serviceDepBluetoothService,
 			serviceDepChromeService,
+			serviceDepUpstartService,
 		},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -57,6 +58,7 @@ func init() {
 			serviceDepBluetoothUIService,
 			serviceDepBluetoothService,
 			serviceDepChromeService,
+			serviceDepUpstartService,
 		},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -83,6 +85,7 @@ func init() {
 			serviceDepBluetoothUIService,
 			serviceDepBluetoothService,
 			serviceDepChromeService,
+			serviceDepUpstartService,
 		},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -109,6 +112,7 @@ func init() {
 			serviceDepBluetoothUIService,
 			serviceDepBluetoothService,
 			serviceDepChromeService,
+			serviceDepUpstartService,
 		},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -135,6 +139,7 @@ func init() {
 			serviceDepBluetoothUIService,
 			serviceDepBluetoothService,
 			serviceDepChromeService,
+			serviceDepUpstartService,
 		},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -161,6 +166,7 @@ func init() {
 			serviceDepBluetoothUIService,
 			serviceDepBluetoothService,
 			serviceDepChromeService,
+			serviceDepUpstartService,
 		},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -187,6 +193,7 @@ func init() {
 			serviceDepBluetoothUIService,
 			serviceDepBluetoothService,
 			serviceDepChromeService,
+			serviceDepUpstartService,
 		},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -213,6 +220,7 @@ func init() {
 			serviceDepBluetoothUIService,
 			serviceDepBluetoothService,
 			serviceDepChromeService,
+			serviceDepUpstartService,
 		},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -239,6 +247,7 @@ func init() {
 			serviceDepBluetoothUIService,
 			serviceDepBluetoothService,
 			serviceDepChromeService,
+			serviceDepUpstartService,
 		},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -265,6 +274,7 @@ func init() {
 			serviceDepBluetoothUIService,
 			serviceDepBluetoothService,
 			serviceDepChromeService,
+			serviceDepUpstartService,
 		},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -293,6 +303,7 @@ func init() {
 			serviceDepBluetoothUIService,
 			serviceDepBluetoothService,
 			serviceDepChromeService,
+			serviceDepUpstartService,
 		},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -321,6 +332,7 @@ func init() {
 			serviceDepBluetoothUIService,
 			serviceDepBluetoothService,
 			serviceDepChromeService,
+			serviceDepUpstartService,
 		},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -349,6 +361,7 @@ func init() {
 			serviceDepBluetoothUIService,
 			serviceDepBluetoothService,
 			serviceDepChromeService,
+			serviceDepUpstartService,
 		},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -377,6 +390,7 @@ func init() {
 			serviceDepBluetoothUIService,
 			serviceDepBluetoothService,
 			serviceDepChromeService,
+			serviceDepUpstartService,
 		},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -405,6 +419,7 @@ func init() {
 			serviceDepBluetoothUIService,
 			serviceDepBluetoothService,
 			serviceDepChromeService,
+			serviceDepUpstartService,
 		},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -433,6 +448,7 @@ func init() {
 			serviceDepBluetoothUIService,
 			serviceDepBluetoothService,
 			serviceDepChromeService,
+			serviceDepUpstartService,
 		},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -461,6 +477,7 @@ func init() {
 			serviceDepBluetoothUIService,
 			serviceDepBluetoothService,
 			serviceDepChromeService,
+			serviceDepUpstartService,
 		},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -489,6 +506,7 @@ func init() {
 			serviceDepBluetoothUIService,
 			serviceDepBluetoothService,
 			serviceDepChromeService,
+			serviceDepUpstartService,
 		},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -519,6 +537,7 @@ func init() {
 			serviceDepBluetoothUIService,
 			serviceDepBluetoothService,
 			serviceDepChromeService,
+			serviceDepUpstartService,
 		},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -549,6 +568,7 @@ func init() {
 			serviceDepBluetoothUIService,
 			serviceDepBluetoothService,
 			serviceDepChromeService,
+			serviceDepUpstartService,
 		},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -584,6 +604,7 @@ func init() {
 			serviceDepBluetoothUIService,
 			serviceDepBluetoothService,
 			serviceDepChromeService,
+			serviceDepUpstartService,
 		},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -619,6 +640,7 @@ func init() {
 			serviceDepBluetoothUIService,
 			serviceDepBluetoothService,
 			serviceDepChromeService,
+			serviceDepUpstartService,
 		},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -656,6 +678,7 @@ func init() {
 			serviceDepBluetoothUIService,
 			serviceDepBluetoothService,
 			serviceDepChromeService,
+			serviceDepUpstartService,
 		},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -693,6 +716,7 @@ func init() {
 			serviceDepBluetoothUIService,
 			serviceDepBluetoothService,
 			serviceDepChromeService,
+			serviceDepUpstartService,
 		},
 	})
 }
