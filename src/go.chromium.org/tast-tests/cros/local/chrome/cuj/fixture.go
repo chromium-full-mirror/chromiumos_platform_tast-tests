@@ -929,6 +929,7 @@ type loggedInToCUJUserFixture struct {
 	docsBlocker        bool
 	disableARC         bool
 	enableChromeVox    bool
+	cleanupTheme       func(ctx context.Context) error
 }
 
 func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -1039,6 +1040,13 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 	}
 	if err := ash.SetShelfBehavior(ctx, tconn, info.ID, ash.ShelfBehaviorNeverAutoHide); err != nil {
 		s.Fatal("Failed to set the shelf behavior to 'never auto-hide' for display ID ", info.ID)
+	}
+
+	// Set the theme to light mode to ensure power usage consistency
+	// between each test.
+	f.cleanupTheme, err = setup.TurnOnLightTheme(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to turn on light theme: ", err)
 	}
 
 	enablePlayStore := true
@@ -1165,15 +1173,21 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 func (f *loggedInToCUJUserFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 	chrome.Unlock()
 
+	if f.cleanupTheme != nil {
+		if err := f.cleanupTheme(ctx); err != nil {
+			s.Log("Failed to cleanup theme: ", err)
+		}
+	}
+
 	if f.enableChromeVox {
 		tconn, err := f.cr.TestAPIConn(ctx)
 		if err != nil {
-			s.Log("Failed to get the test conn")
+			s.Log("Failed to get the test conn: ", err)
 		}
 
 		kw, err := input.Keyboard(ctx)
 		if err != nil {
-			s.Log("Failed to create keyboard")
+			s.Log("Failed to create keyboard: ", err)
 		}
 		defer kw.Close(ctx)
 
@@ -1183,7 +1197,7 @@ func (f *loggedInToCUJUserFixture) TearDown(ctx context.Context, s *testing.Fixt
 			kw.AccelAction("Ctrl+Alt+z"),
 			ui.WaitUntilGone(nodewith.HasClass("AccessibilityBubbleContainer")),
 		)(ctx); err != nil {
-			s.Log("Failed to disable ChromeVox")
+			s.Log("Failed to disable ChromeVox: ", err)
 		}
 
 		if err := crastestclient.Unmute(ctx); err != nil {
