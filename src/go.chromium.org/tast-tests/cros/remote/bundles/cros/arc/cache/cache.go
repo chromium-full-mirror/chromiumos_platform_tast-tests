@@ -174,3 +174,29 @@ func InstallGmsCoreCaches(ctx context.Context, jarPath, rootDir, tarPath, manife
 	}
 	return nil
 }
+
+// GeneratePackagesCache generates packages cache based on files in the vendor image where useReference means
+// packages reference will be used for dynamic generation.
+func GeneratePackagesCache(ctx context.Context, jarPath, rootDir, androidPath, vendorTmpDir, packagesCache, fileHashCache, packagesReference string, useReference bool) error {
+	const javaClass = "org.chromium.arc.cachebuilder.CacheGenerator"
+	if androidPath == "" || vendorTmpDir == "" || packagesCache == "" || fileHashCache == "" {
+		return errors.New("failed to run cache generator with invalid empty path(s)")
+	}
+	args := []string{
+		"java", "-cp", jarPath, javaClass,
+		"--system-root", rootDir,
+		"--vendor-root", androidPath,
+		"--vendor-root", vendorTmpDir,
+		"--output", packagesCache, "--output-apk-hashes", fileHashCache,
+	}
+	if useReference {
+		if packagesReference == "" {
+			return errors.New("failed to run cache generator with invalid empty reference path")
+		}
+		args = append(args, "--reference", packagesReference, "--generate", "yes")
+	}
+	if err := testexec.CommandContext(ctx, "sudo", args...).Run(testexec.DumpLogOnError); err != nil {
+		return err
+	}
+	return nil
+}
