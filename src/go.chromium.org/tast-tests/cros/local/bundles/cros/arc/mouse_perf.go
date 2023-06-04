@@ -145,19 +145,10 @@ func MousePerf(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Injecting mouse left-click events")
-	ver, err := arc.SDKVersion()
-	if err != nil {
-		s.Fatal("Failed to get SDK version: ", err)
-	}
 	// When left-clicking on mouse, it injects ACTION_DOWN, ACTION_BUTTON_PRESS, ACTION_UP, and ACTION_BUTTON_RELEASE.
-	// On R and above, the framework also injects ACTION_HOVER_EXIT, ACTION_HOVER_ENTER, ACTION_HOVER_MOVE
+	// The framework also injects three additional actions: ACTION_HOVER_EXIT, ACTION_HOVER_ENTER, and ACTION_HOVER_ENTER for P / ACTION_HOVER_MOVE for R+.
 	// Check latency for these actions.
-	var numLeftClickGroupEvents int
-	if ver >= arc.SDKR {
-		numLeftClickGroupEvents = 7
-	} else {
-		numLeftClickGroupEvents = 4
-	}
+	numLeftClickGroupEvents := 7
 
 	numLeftClickEvents := numLeftClicks * numLeftClickGroupEvents
 	eventTimes = make([]int64, 0, numLeftClickEvents)
@@ -166,25 +157,17 @@ func MousePerf(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to generate event time: ", err)
 		}
 		lastEventTime := eventTimes[len(eventTimes)-1]
-		if ver >= arc.SDKR {
-			// ACTION_HOVER_EXIT is generated before ACTION_DOWN.
-			eventTimes = append(eventTimes, lastEventTime)
-		}
-		// ACTION_DOWN and ACTION_BUTTON_PRESS are generated together.
-		eventTimes = append(eventTimes, eventTimes[len(eventTimes)-1])
+		// ACTION_HOVER_EXIT, ACTION_DOWN and ACTION_BUTTON_PRESS are generated for mouse press.
+		eventTimes = append(eventTimes, lastEventTime, lastEventTime)
 		if err := m.Press(); err != nil {
 			s.Fatal("Unable to inject Press mouse event: ", err)
 		}
 		if err := inputlatency.WaitForNextEventTime(ctx, a, &eventTimes, waitMS); err != nil {
 			s.Fatal("Failed to generate event time: ", err)
 		}
-		// ACTION_UP and ACTION_BUTTON_RELEASE.
 		lastEventTime = eventTimes[len(eventTimes)-1]
-		eventTimes = append(eventTimes, lastEventTime)
-		if ver >= arc.SDKR {
-			// ACTION_HOVER_ENTER, ACTION_HOVER_MOVE are generated after ACTION_BUTTON_RELEASE.
-			eventTimes = append(eventTimes, lastEventTime, lastEventTime)
-		}
+		// ACTION_UP, ACTION_BUTTON_RELEASE, ACTION_HOVER_ENTER, ACTION_HOVER_MOVE/ACTION_HOVER_ENTER for mouse release.
+		eventTimes = append(eventTimes, lastEventTime, lastEventTime, lastEventTime)
 		if err := m.Release(); err != nil {
 			s.Fatal("Unable to inject Release mouse event: ", err)
 		}
