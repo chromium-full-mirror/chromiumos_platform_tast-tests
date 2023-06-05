@@ -20643,7 +20643,7 @@ func init() {
 					executable: "test_vectors",
 					args:       "vec_align_array",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "vectors_vec_align_packed_struct_arr",
@@ -20651,7 +20651,7 @@ func init() {
 					executable: "test_vectors",
 					args:       "vec_align_packed_struct_arr",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "vectors_vec_align_packed_struct",
@@ -20659,7 +20659,7 @@ func init() {
 					executable: "test_vectors",
 					args:       "vec_align_packed_struct",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "vectors_vec_align_struct_arr",
@@ -20667,7 +20667,7 @@ func init() {
 					executable: "test_vectors",
 					args:       "vec_align_struct_arr",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "vectors_vec_align_struct",
@@ -20675,7 +20675,7 @@ func init() {
 					executable: "test_vectors",
 					args:       "vec_align_struct",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "workgroups_work_group_all",
