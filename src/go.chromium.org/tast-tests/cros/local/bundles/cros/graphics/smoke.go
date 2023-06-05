@@ -48,10 +48,7 @@ func init() {
 		}, {
 			Name:      "platform",
 			ExtraData: []string{"screenshot1_reference.png", "screenshot2_reference.png"},
-			ExtraSoftwareDeps: []string{
-				// TODO(b:237052709): Reenable when i915 issue is fixed.
-				"no_manatee"},
-			Val: smokePlatform,
+			Val:       smokePlatform,
 		}},
 		Timeout: 5 * time.Minute,
 	})
