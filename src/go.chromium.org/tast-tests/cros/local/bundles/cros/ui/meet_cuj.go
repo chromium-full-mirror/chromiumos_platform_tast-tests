@@ -1295,9 +1295,9 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 		}, "measure GPU counters")
 
 		var addBotsErr error
-		stopc := make(chan struct{})
+		stopAddBotsC := make(chan struct{})
 		defer func(ctx context.Context) {
-			close(stopc)
+			close(stopAddBotsC)
 			if addBotsErr != nil {
 				retErr = errors.Wrapf(retErr, "failed to run bot phases during the Meet call: %v", addBotsErr)
 			}
@@ -1375,7 +1375,7 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 					// and the optional screensharing connection.
 					expectedParticipantCount += numBotsToAdd
 
-				case <-stopc:
+				case <-stopAddBotsC:
 					testing.ContextLog(ctx, "add_bots: Background signaled to stop")
 					addBotsErr = errors.Errorf("failed to complete phase %d, background signaled to stop", currentPhase)
 					addingMoreBots = false
@@ -1394,18 +1394,38 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 
 		// Record trace for 30 seconds.
 		// See go/trace-in-cuj-tests about rules for tracing.
+		var tracingErr error
 		traceDuration := 30 * time.Second
-		if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
-			return errors.Wrap(err, "failed to start tracing")
+		stopTracingC := make(chan struct{})
+		defer func(ctx context.Context) {
+			close(stopTracingC)
+			if tracingErr != nil {
+				retErr = errors.Wrapf(retErr, "failed to complete tracing: %v", tracingErr)
+			}
+		}(ctx)
+
+		startTracingRoutine := func(ctx context.Context) {
+			async.Run(ctx, func(ctx context.Context) {
+				if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
+					tracingErr = errors.Wrap(err, "failed to start tracing")
+					return
+				}
+
+				for {
+					select {
+					case <-time.After(traceDuration):
+						if err := recorder.StopTracing(ctx); err != nil {
+							tracingErr = errors.Wrap(err, "failed to stop tracing")
+						}
+						return
+					case <-stopTracingC:
+						testing.ContextLog(ctx, "tracing: Background signaled to stop")
+						tracingErr = errors.New("failed to complete tracing, background signaled to stop")
+						return
+					}
+				}
+			}, /*prefix=*/ "Tracing")
 		}
-		// GoBigSleepLint: Wait for the tracing to collect data.
-		if err := testing.Sleep(ctx, traceDuration); err != nil {
-			return errors.Wrap(err, "failed to sleep")
-		}
-		if err := recorder.StopTracing(ctx); err != nil {
-			return errors.Wrap(err, "failed to stop tracing")
-		}
-		meetTimeout = time.Duration(meetTimeout - traceDuration)
 
 		if meet.docs {
 			if err := collaborationWindow.ActivateWindow(ctx, tconn); err != nil {
@@ -1464,6 +1484,8 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 					taskSwitch,
 				)
 			}
+
+			startTracingRoutine(ctx)
 
 			// Start an annotation section for typing on the Google Doc.
 			endTypingSection := recorder.AnnotateSection(ctx, "Type_on_docs")
@@ -1563,6 +1585,8 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 			centerX, centerY, offsetX, offsetY := contentArea.CenterPoint().X, contentArea.CenterPoint().Y, 10, 10
 			end := time.Now().Add(meetTimeout)
 
+			startTracingRoutine(ctx)
+
 			// Start an annotation section for interacting with the Jamboard.
 			endJamboardInteractions := recorder.AnnotateSection(ctx, "Jamboard_interactions")
 			for end.Sub(time.Now()).Seconds() > 42 {
@@ -1583,6 +1607,8 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 			}
 			endJamboardInteractions(ctx)
 			meetTimeout = end.Sub(time.Now())
+		} else {
+			startTracingRoutine(ctx)
 		}
 
 		// Ensures that meet session is long enough. graphics.MeasureGPUCounters
