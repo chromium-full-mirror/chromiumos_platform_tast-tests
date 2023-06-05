@@ -30,7 +30,7 @@ func init() {
 		Func:         UnicornCannotAddNonEduAccount,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Veirfy that unicorn account cannot add a non-EDU secondary android account",
-		Contacts:     []string{"arc-commercial@google.com", "cros-arc-te@google.com", "cpiao@google.com"},
+		Contacts:     []string{"arc-commercial@google.com", "cros-arc-te@google.com", "jinrongwu@google.com"},
 		// ChromeOS > Software > ARC++ > Commercial
 		BugComponent: "b:157100",
 		Attr:         []string{"group:mainline", "informational", "group:arc-functional", "group:hw_agnostic"},

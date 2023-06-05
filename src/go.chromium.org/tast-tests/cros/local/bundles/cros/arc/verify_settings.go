@@ -29,7 +29,7 @@ func init() {
 		Func:         VerifySettings,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies ARC++ settings work as intended",
-		Contacts:     []string{"cros-arc-te@google.com", "arc-core@google.com", "cpiao@google.com"},
+		Contacts:     []string{"cros-arc-te@google.com", "arc-core@google.com", "jinrongwu@google.com"},
 		// ChromeOS > Software > ARC++ > EngProd
 		BugComponent: "b:1052117",
 		Attr:         []string{"group:arc", "arc_core", "group:arc-functional"},

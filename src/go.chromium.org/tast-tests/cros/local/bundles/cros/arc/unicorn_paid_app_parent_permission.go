@@ -24,7 +24,7 @@ func init() {
 		Func:         UnicornPaidAppParentPermission,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks if paid app installation triggers Parent Permission For Unicorn Account",
-		Contacts:     []string{"arc-commercial@google.com", "cros-arc-te@google.com", "cpiao@google.com"},
+		Contacts:     []string{"arc-commercial@google.com", "cros-arc-te@google.com", "jinrongwu@google.com"},
 		// ChromeOS > Software > ARC++ > Commercial
 		BugComponent: "b:157100",
 		Attr:         []string{"group:mainline", "group:arc-functional", "group:hw_agnostic"},
