@@ -25,6 +25,7 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.Cellular()),
 		Timeout:      10 * time.Minute,
 		Fixture:      "cellular",
+		Requirements: []string{"cell-hwSys-0009-v01", "cell-hwSys-0010-v01", "cell-hwSys-0011-v01", "cell-hwSys-0012-v01"},
 	})
 }
 

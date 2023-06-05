@@ -27,6 +27,7 @@ func init() {
 		Timeout:      10 * time.Minute,
 		Fixture:      "cellular",
 		Vars:         []string{"cellular.ShillSafetyDance.seed"},
+		Requirements: []string{"cell-m2-0006-v01", "cell-m2-0007-v01"},
 	})
 }
 

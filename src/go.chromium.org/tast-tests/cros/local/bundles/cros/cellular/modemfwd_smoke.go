@@ -24,6 +24,7 @@ func init() {
 		Fixture:      "cellular",
 		SoftwareDeps: []string{"modemfwd"},
 		Timeout:      7 * time.Minute,
+		Requirements: []string{"cell-fwDrv-0004-v01"},
 	})
 }
 
