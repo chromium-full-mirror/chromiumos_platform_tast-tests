@@ -82,8 +82,6 @@ func init() {
 			Val: bluetoothInfoTestParams{
 				SkipSupportedCapabilities: true,
 			},
-			// TODO(b/280387742): Promote to critical.
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			Name: "supported_capabilities",
 			Val: bluetoothInfoTestParams{
@@ -341,6 +339,7 @@ func validateConnectedDevices(ctx context.Context, got []deviceInfo) error {
 	return nil
 }
 
+// ProbeBluetoothInfo is the main function of this tast test.
 func ProbeBluetoothInfo(ctx context.Context, s *testing.State) {
 	skipSupportedCapabilities := s.Param().(bluetoothInfoTestParams).SkipSupportedCapabilities
 
