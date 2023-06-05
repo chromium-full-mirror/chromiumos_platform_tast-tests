@@ -38,6 +38,7 @@ func init() {
 		}, {
 			Name:              "vm",
 			Val:               memoryPressureParams{enableARC: true, useHugePages: false, bt: browser.TypeAsh},
+			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}, {
 			Name:              "huge_pages_vm",
@@ -46,6 +47,7 @@ func init() {
 		}, {
 			Name:              "container",
 			Val:               memoryPressureParams{enableARC: true, useHugePages: false, bt: browser.TypeAsh},
+			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
 			ExtraSoftwareDeps: []string{"android_p"},
 		}, {
 			Name:              "lacros",

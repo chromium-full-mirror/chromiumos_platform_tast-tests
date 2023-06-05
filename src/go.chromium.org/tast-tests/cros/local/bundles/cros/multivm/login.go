@@ -40,6 +40,7 @@ func init() {
 		}, {
 			Name:              "arc",
 			Pre:               multivm.ArcStarted(),
+			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}, {
 			Name:              "arc_lacros",
@@ -48,6 +49,7 @@ func init() {
 		}, {
 			Name:              "arc_p",
 			Pre:               multivm.ArcStarted(),
+			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
 			ExtraSoftwareDeps: []string{"android_p"},
 		}, {
 			Name:              "crostini",
