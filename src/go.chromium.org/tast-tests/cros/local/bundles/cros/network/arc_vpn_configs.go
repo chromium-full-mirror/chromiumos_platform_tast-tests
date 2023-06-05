@@ -97,41 +97,12 @@ func verifyVPNWithTestCase(ctx context.Context, a *arc.ARC, tc arcVPNConfigsTest
 	if err := arc.ExpectPingSuccess(ctx, a, "vpn", conn.Server.OverlayIPv4); err != nil {
 		return errors.Wrapf(err, "failed to ping %s from ARC over 'vpn'", conn.Server.OverlayIPv4)
 	}
-	cmd := a.Command(ctx, "dumpsys", "wifi", "networks", "transport", "vpn")
-	o, err := cmd.Output(testexec.DumpLogOnError)
-	if err != nil {
-		return errors.Wrap(err, "failed to execute 'dumpsys wifi networks transport vpn'")
-	}
-	oStr := string(o)
-	// On P, the VpnService.Builder#setMetered API isn't available for us to override the value
-	// and VPNs are considered metered by default.
-	arcVersion, err := arc.SDKVersion()
-	if err != nil {
-		return errors.Wrap(err, "failed to get ARC SDK version")
-	}
-	if arcVersion == arc.SDKP {
-		tc.metered = true
-	}
-	if err := checkMatch(oStr, `capabilities=.*`, `NOT_METERED`, !tc.metered); err != nil {
-		return errors.Wrap(err, "failed to verify capabilities on ARC VPN network")
-	}
-	for _, domain := range tc.searchDomains {
-		if err := checkMatch(oStr, `domains=.*`, domain, true); err != nil {
-			return errors.Wrap(err, "failed to verify search domains on ARC VPN network")
-		}
-	}
-	// Use the output of ifconfig instead of dumpsys because Android P doesn't set the MTU
-	// property on the VPN's LinkProperties (which is what the dumpsys reads from). So the
-	// dumpsys output will always report a MTU of 0 on P (this is fixed in R). ifconfig reports
-	// it correctly on both P and R.
-	// TODO: We can switch to the dumpsys output once b/233322908 is fixed.
-	cmd = a.Command(ctx, "ifconfig", "tun0")
-	o, err = cmd.Output(testexec.DumpLogOnError)
-	if err != nil {
-		return errors.Wrap(err, "failed to execute 'ifconfig tun0'")
-	}
-	if err := checkMatch(string(o), `MTU:.*`, fmt.Sprint(tc.mtu), true); err != nil {
-		return errors.Wrap(err, "failed to verify MTU on ARC VPN network")
+
+	// Poll since it might take some time for all the fields to get propagated to ARC
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		return checkConfig(ctx, a, tc)
+	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+		return err
 	}
 
 	// Disconnect from the connection. Verify the state and connectivity in ARC.
@@ -197,4 +168,45 @@ func checkMatch(input, lineRegex, valueRegex string, expectMatch bool) error {
 	}
 	// We expected to match, but didn't, return error
 	return errors.Errorf("failed to find target value %q in lines %q", valueRegex, failedMatches)
+}
+
+// checkConfig will check that the expected VPN config's fields are set in ARC.
+func checkConfig(ctx context.Context, a *arc.ARC, tc arcVPNConfigsTestCase) error {
+	cmd := a.Command(ctx, "dumpsys", "wifi", "networks", "transport", "vpn")
+	o, err := cmd.Output(testexec.DumpLogOnError)
+	if err != nil {
+		return errors.Wrap(err, "failed to execute 'dumpsys wifi networks transport vpn'")
+	}
+	oStr := string(o)
+	// On P, the VpnService.Builder#setMetered API isn't available for us to override the value
+	// and VPNs are considered metered by default.
+	arcVersion, err := arc.SDKVersion()
+	if err != nil {
+		return errors.Wrap(err, "failed to get ARC SDK version")
+	}
+	if arcVersion == arc.SDKP {
+		tc.metered = true
+	}
+	if err := checkMatch(oStr, `capabilities=.*`, `NOT_METERED`, !tc.metered); err != nil {
+		return errors.Wrap(err, "failed to verify capabilities on ARC VPN network")
+	}
+	for _, domain := range tc.searchDomains {
+		if err := checkMatch(oStr, `domains=.*`, domain, true); err != nil {
+			return errors.Wrap(err, "failed to verify search domains on ARC VPN network")
+		}
+	}
+	// Use the output of ifconfig instead of dumpsys because Android P doesn't set the MTU
+	// property on the VPN's LinkProperties (which is what the dumpsys reads from). So the
+	// dumpsys output will always report a MTU of 0 on P (this is fixed in R). ifconfig reports
+	// it correctly on both P and R.
+	// TODO: We can switch to the dumpsys output once b/233322908 is fixed.
+	cmd = a.Command(ctx, "ifconfig", "tun0")
+	o, err = cmd.Output(testexec.DumpLogOnError)
+	if err != nil {
+		return errors.Wrap(err, "failed to execute 'ifconfig tun0'")
+	}
+	if err := checkMatch(string(o), `MTU:.*`, fmt.Sprint(tc.mtu), true); err != nil {
+		return errors.Wrap(err, "failed to verify MTU on ARC VPN network")
+	}
+	return nil
 }
