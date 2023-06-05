@@ -119,6 +119,7 @@ func UnicornParentPermission(ctx context.Context, s *testing.State) {
 			rl.Exit("open the app page in Play Store", err)
 		}
 
+		// This covers the time to provision ARC and load Play Store UI.
 		_, err = playstore.FindInstallButton(ctx, d, 90*time.Second)
 		if err != nil {
 			rl.Exit("find the install button", err)
@@ -129,10 +130,12 @@ func UnicornParentPermission(ctx context.Context, s *testing.State) {
 		if err := uiauto.Retry(3, func(ctx context.Context) error {
 			// Install button can disappear after clicking it.
 			installButton, err := playstore.FindInstallButton(ctx, d, 5*time.Second)
-			if err == nil {
-				if err := installButton.Click(ctx); err != nil {
-					return errors.Wrap(err, "failed to click installButton")
-				}
+			if err != nil {
+				return errors.Wrap(err, "install button is missing")
+			}
+
+			if err := installButton.Click(ctx); err != nil {
+				return errors.Wrap(err, "failed to click installButton")
 			}
 
 			// Verify Parent Permission Dialog is displayed.
