@@ -92,7 +92,7 @@ func TestFixTestParams(t *testing.T) {
 }
 
 var crostiniTests = map[string]time.Duration{
-	"crostini_cellular_network_connectivity.go": 10 * time.Minute,
+	"crostini_network_connectivity.go": 10 * time.Minute,
 }
 
 func TestFixCrostiniTestParams(t *testing.T) {

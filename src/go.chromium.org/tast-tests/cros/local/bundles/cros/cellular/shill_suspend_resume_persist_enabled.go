@@ -21,7 +21,7 @@ type persistEnabledTestParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ShillCellularSuspendResumePersistEnabled,
+		Func:         ShillSuspendResumePersistEnabled,
 		Desc:         "Verifies that cellular maintains enabled state around Suspend/Resume",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "danielwinkler@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
@@ -44,7 +44,7 @@ func init() {
 	})
 }
 
-func ShillCellularSuspendResumePersistEnabled(ctx context.Context, s *testing.State) {
+func ShillSuspendResumePersistEnabled(ctx context.Context, s *testing.State) {
 	params := s.Param().(persistEnabledTestParams)
 
 	helper, _, err := cellular.NewHelperWithSim(ctx)

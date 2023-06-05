@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -16,18 +15,20 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         HostCellularNetworkConnectivity,
+		Func:         ArcNetworkConnectivity,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that host has network connectivity via cellular interface",
+		Desc:         "Verifies that Arc has network connectivity via cellular interface",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "madhavadas@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "cellular_run_isolated"},
-		Fixture:      "cellular",
+		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active"},
+		SoftwareDeps: []string{"chrome", "vm_host"},
+		Fixture:      "cellularArcBooted",
 		Timeout:      4 * time.Minute,
 	})
 }
 
-func HostCellularNetworkConnectivity(ctx context.Context, s *testing.State) {
+func ArcNetworkConnectivity(ctx context.Context, s *testing.State) {
+	a := s.FixtValue().(*cellular.FixtData).ARC
 	helper, err := cellular.NewHelperWithConnectedCellular(ctx)
 	if err != nil {
 		s.Fatal("Failed to create connected cellular.Helper (precondition): ", err)
@@ -39,14 +40,13 @@ func HostCellularNetworkConnectivity(ctx context.Context, s *testing.State) {
 	}
 	s.Log("ipv4: ", ipv4, " ipv6: ", ipv6)
 
-	verifyHostIPConnectivity := func(ctx context.Context) error {
-		if err := cellular.VerifyIPConnectivity(ctx, testexec.CommandContext, ipv4, ipv6, "/bin"); err != nil {
+	verifyIPConnectivity := func(ctx context.Context) error {
+		if err := cellular.VerifyArcIPConnectivity(ctx, ipv4, ipv6, a); err != nil {
 			return errors.Wrap(err, "failed connectivity test")
 		}
 		return nil
 	}
-
-	if err := helper.RunTestOnCellularInterface(ctx, verifyHostIPConnectivity); err != nil {
+	if err := helper.RunTestOnCellularInterface(ctx, verifyIPConnectivity); err != nil {
 		s.Fatal("Failed to run test on cellular interface: ", err)
 	}
 }

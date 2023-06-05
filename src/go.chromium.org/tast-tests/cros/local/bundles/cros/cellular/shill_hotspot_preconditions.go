@@ -19,7 +19,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ShillCellularHotspotPreconditions,
+		Func:         ShillHotspotPreconditions,
 		Desc:         "Verifies that cellular is ready for the hotspot feature. This test is not a complete test, and it will be continuously updated as progress is made in the hotspot project",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "andrewlassalle@google.com", "aleksandermj@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
@@ -29,7 +29,7 @@ func init() {
 	})
 }
 
-func ShillCellularHotspotPreconditions(ctx context.Context, s *testing.State) {
+func ShillHotspotPreconditions(ctx context.Context, s *testing.State) {
 	helper, _, err := cellular.NewHelperWithSim(ctx)
 	if err != nil {
 		s.Fatal("Failed to create cellular.Helper (precondition): ", err)

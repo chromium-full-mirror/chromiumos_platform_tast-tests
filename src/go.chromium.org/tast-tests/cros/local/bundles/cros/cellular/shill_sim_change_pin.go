@@ -17,7 +17,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ShillCellularSimChangePin,
+		Func:         ShillSimChangePin,
 		Desc:         "Verifies that the cellular device SIM PIN can be changed",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "srikanthkumar@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
@@ -28,8 +28,8 @@ func init() {
 	})
 }
 
-// ShillCellularSimChangePin tests successfully changing SIM pin.
-func ShillCellularSimChangePin(ctx context.Context, s *testing.State) {
+// ShillSimChangePin tests successfully changing SIM pin.
+func ShillSimChangePin(ctx context.Context, s *testing.State) {
 	if _, err := modemmanager.NewModemWithSim(ctx); err != nil {
 		s.Fatal("Could not find MM dbus object with a valid sim: ", err)
 	}

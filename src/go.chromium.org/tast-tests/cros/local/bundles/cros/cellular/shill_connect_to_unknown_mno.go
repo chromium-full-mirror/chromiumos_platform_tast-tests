@@ -27,7 +27,7 @@ type unknownMNOTestParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ShillCellularConnectToUnknownMno,
+		Func:         ShillConnectToUnknownMno,
 		Desc:         "Verifies that the cellular device can connect to a network with no information in the MODB",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "andrewlassalle@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
@@ -42,7 +42,7 @@ func init() {
 	})
 }
 
-func ShillCellularConnectToUnknownMno(ctx context.Context, s *testing.State) {
+func ShillConnectToUnknownMno(ctx context.Context, s *testing.State) {
 	params := s.Param().(unknownMNOTestParam)
 	modbOverrideProto := params.ModbOverrideProto
 	expectedLastGoodAPN := params.ExpectedLastGoodAPN

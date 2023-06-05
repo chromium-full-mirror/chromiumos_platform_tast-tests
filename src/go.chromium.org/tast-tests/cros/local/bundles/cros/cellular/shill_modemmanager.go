@@ -16,7 +16,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ShillCellularModemmanager,
+		Func:         ShillModemmanager,
 		Desc:         "Verifies that Shill behaves correctly when modemmanager is restarted",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "stevenjb@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
@@ -25,7 +25,7 @@ func init() {
 	})
 }
 
-func ShillCellularModemmanager(ctx context.Context, s *testing.State) {
+func ShillModemmanager(ctx context.Context, s *testing.State) {
 	helper, modem1, err := cellular.NewHelperWithSim(ctx)
 	if err != nil {
 		s.Fatal("Failed to create cellular.Helper (precondition): ", err)

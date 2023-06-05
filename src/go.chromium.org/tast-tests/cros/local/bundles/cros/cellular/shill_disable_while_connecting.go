@@ -18,7 +18,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ShillCellularDisableWhileConnecting,
+		Func:         ShillDisableWhileConnecting,
 		Desc:         "Verifies that the modem can handle being disabled while connecting in Shill",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "ejcaruso@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
@@ -29,7 +29,7 @@ func init() {
 	})
 }
 
-func ShillCellularDisableWhileConnecting(ctx context.Context, s *testing.State) {
+func ShillDisableWhileConnecting(ctx context.Context, s *testing.State) {
 	helper, _, err := cellular.NewHelperWithSim(ctx)
 	if err != nil {
 		s.Fatal("Failed to create cellular.Helper (precondition): ", err)

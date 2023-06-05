@@ -25,7 +25,7 @@ type shillCellularCustomAPNTestParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ShillCellularCustomApn,
+		Func:         ShillCustomApn,
 		Desc:         "Verifies that the device can connect to cellular when using custom APNs",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "andrewlassalle@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
@@ -43,7 +43,7 @@ func init() {
 	})
 }
 
-func ShillCellularCustomApn(ctx context.Context, s *testing.State) {
+func ShillCustomApn(ctx context.Context, s *testing.State) {
 	params := s.Param().(shillCellularCustomAPNTestParam)
 	testNewAPNUIRevamp := params.TestNewAPNUIRevamp
 	modbOverrideProto := "test_no_apns.pbf"

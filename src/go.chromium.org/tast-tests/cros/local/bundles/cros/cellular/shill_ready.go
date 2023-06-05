@@ -15,7 +15,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ShillCellularReady,
+		Func:         ShillReady,
 		Desc:         "Verifies that Shill is running and that a Cellular Device and connectable Service are present",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "cros-network-health-team@google.com", "stevenjb@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
@@ -24,7 +24,7 @@ func init() {
 	})
 }
 
-func ShillCellularReady(ctx context.Context, s *testing.State) {
+func ShillReady(ctx context.Context, s *testing.State) {
 	helper, err := cellular.NewHelper(ctx)
 	if err != nil {
 		s.Fatal("Failed to create cellular.Helper: ", err)

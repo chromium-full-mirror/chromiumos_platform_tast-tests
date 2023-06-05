@@ -25,7 +25,7 @@ type autoconnectTestParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ShillCellularSuspendResumeAutoconnect,
+		Func:         ShillSuspendResumeAutoconnect,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that cellular maintains autoconnect state around Suspend/Resume",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "danielwinkler@google.com"},
@@ -50,7 +50,7 @@ func init() {
 	})
 }
 
-func ShillCellularSuspendResumeAutoconnect(ctx context.Context, s *testing.State) {
+func ShillSuspendResumeAutoconnect(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	params := s.Param().(autoconnectTestParams)
 

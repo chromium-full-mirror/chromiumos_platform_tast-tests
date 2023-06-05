@@ -16,7 +16,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         HostCellularStressEnableDisable,
+		Func:         HostStressEnableDisable,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that host has network connectivity via cellular interface",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "madhavadas@google.com"},
@@ -27,7 +27,7 @@ func init() {
 	})
 }
 
-func HostCellularStressEnableDisable(ctx context.Context, s *testing.State) {
+func HostStressEnableDisable(ctx context.Context, s *testing.State) {
 	helper, _, err := cellular.NewHelperWithSim(ctx)
 	if err != nil {
 		s.Fatal("Failed to create cellular.Helper (precondition): ", err)

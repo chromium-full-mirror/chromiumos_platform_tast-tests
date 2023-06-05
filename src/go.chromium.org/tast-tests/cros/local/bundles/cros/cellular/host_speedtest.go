@@ -18,7 +18,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         HostCellularSpeedtest,
+		Func:         HostSpeedtest,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Runs Speedtest on cellular interface",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "madhavadas@google.com"},
@@ -29,7 +29,7 @@ func init() {
 	})
 }
 
-func HostCellularSpeedtest(ctx context.Context, s *testing.State) {
+func HostSpeedtest(ctx context.Context, s *testing.State) {
 	helper, err := cellular.NewHelperWithConnectedCellular(ctx)
 	if err != nil {
 		s.Fatal("Failed to create connected cellular.Helper (precondition): ", err)

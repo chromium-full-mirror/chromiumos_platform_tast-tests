@@ -6,8 +6,10 @@ package cellular
 
 import (
 	"context"
+	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/modemmanager"
 	"go.chromium.org/tast/core/ctxutil"
@@ -16,8 +18,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ShillCellularSimPukLock,
-		Desc:         "Verifies that cellular device SIM PUK lock",
+		Func:         ShillSimFailedEnablePinLock,
+		Desc:         "Verifies that cellular device SIM lock can't be enabled with incorrect PIN",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "srikanthkumar@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_sim_pinlock"},
@@ -27,8 +29,8 @@ func init() {
 	})
 }
 
-// ShillCellularSimPukLock tests successfully enabling sim lock and locking the sim with puk-lock.
-func ShillCellularSimPukLock(ctx context.Context, s *testing.State) {
+// ShillSimFailedEnablePinLock checks sim lock can not be enabled with incorrect PIN.
+func ShillSimFailedEnablePinLock(ctx context.Context, s *testing.State) {
 	if _, err := modemmanager.NewModemWithSim(ctx); err != nil {
 		s.Fatal("Could not find MM dbus object with a valid sim: ", err)
 	}
@@ -47,6 +49,7 @@ func ShillCellularSimPukLock(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Could not get current ICCID: ", err)
 	}
+
 	currentPin, currentPuk, err := helper.GetPINAndPUKForICCID(ctx, iccid)
 	if err != nil {
 		s.Fatal("Could not get Pin and Puk : ", err)
@@ -55,48 +58,58 @@ func ShillCellularSimPukLock(ctx context.Context, s *testing.State) {
 		s.Fatal("Unable to find PUK code for ICCID : ", iccid)
 	}
 
-	s.Log("Attempting to enable sim pin lock and set in puk lock state")
-	if err = helper.PukLockSim(ctx, currentPin); err != nil {
-		// Unlock and disable pin lock if failed after locking pin.
-		if errNew := helper.ClearSIMLock(ctx, currentPin, currentPuk); errNew != nil {
-			s.Log("Failed to clear default pin lock in puklocksim: ", errNew)
+	// Check if SIM is locked
+	if helper.IsSimLockEnabled(ctx) || helper.IsSimPukLocked(ctx) {
+		// Unlock and disable pin lock.
+		if err = helper.ClearSIMLock(ctx, currentPin, currentPuk); err != nil {
+			s.Fatal("Failed to clear PIN/PUK lock: ", err)
 		}
-		s.Fatal("Failed to enable puk lock: ", err)
 	}
 
+	s.Log("Attempting to enable SIM lock with incorrect pin")
+	badPin, err := helper.BadPin(ctx, currentPin)
+	if err != nil {
+		s.Fatal("Failed to generate random pin based on current pin")
+	}
 	// Shorten deadline to leave time for cleanup
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
 
+	err = helper.Device.RequirePin(ctx, badPin, true)
+	if err == nil {
+		defer func(ctx context.Context) {
+			// Unlock and disable bad pin lock.
+			if err = helper.Device.RequirePin(ctx, badPin, false); err != nil {
+				s.Fatal("Failed to disable bad pin lock: ", err)
+			}
+		}(cleanupCtx)
+		s.Fatal("Failed as able to enable pin with bad pin")
+	}
+	s.Log("Bad pin used to lock device: ", badPin)
+
 	defer func(ctx context.Context) {
 		// Unlock and disable pin lock.
 		if err = helper.ClearSIMLock(ctx, currentPin, currentPuk); err != nil {
-			s.Fatal("Failed to clear default pin lock: ", err)
+			s.Fatal("Failed to clear PIN/PUK lock: ", err)
 		}
 	}(cleanupCtx)
 
-	if retriesLeft, err := helper.GetRetriesLeft(ctx); err != nil {
-		s.Fatal("Could not get pin retries left: ", err)
-	} else if retriesLeft <= 1 {
-		s.Fatal("No retries left to try error state after puk locked")
+	if strings.Contains(err.Error(), shillconst.ErrorPinFailure) {
+		s.Log("Got expected pin lock error for incorrect pin: ", err)
+	} else {
+		// Unlock dut and raise error.
+		helper.Device.RequirePin(ctx, badPin, false)
+		s.Fatal("Failed to get expected error with incorrect pin: ", err)
 	}
 
-	// Get default puk, pin from initialize and unlock using puk.
-	if err = helper.Device.UnblockPin(ctx, currentPuk, currentPin); err != nil {
-		s.Fatal("Could not unlock puk: ", err)
+	// ResetModem needed on Fibocom modems to read SIM lock status
+	if _, err := helper.ResetModem(ctx); err != nil {
+		s.Log("Failed to reset modem: ", err)
 	}
 
-	locked := helper.IsSimPukLocked(ctx)
-	if locked {
-		s.Fatal("Failed to do puk unlock-manual repair needed on dut: ", err)
-	}
-	pinLocked := helper.IsSimPinLocked(ctx)
-	if pinLocked {
-		s.Log("Pin-lock got locked while unlocking the puk-lock: ", err)
-	}
-	enabled := helper.IsSimLockEnabled(ctx)
-	if !enabled {
-		s.Fatal("SIM lock got disabled when attemping to unlock a puk-locked sim: ", err)
+	enabled := helper.IsSimPukLocked(ctx)
+	if enabled {
+		s.Log("SIM got PUK locked by incorrect pin: ", badPin)
 	}
 }

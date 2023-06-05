@@ -16,7 +16,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ShillCellularSimPinLock,
+		Func:         ShillSimPinLock,
 		Desc:         "Verifies that cellular device SIM PIN lock",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "srikanthkumar@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
@@ -27,8 +27,8 @@ func init() {
 	})
 }
 
-// ShillCellularSimPinLock tests enabling sim lock and locking the sim with pin-lock.
-func ShillCellularSimPinLock(ctx context.Context, s *testing.State) {
+// ShillSimPinLock tests enabling sim lock and locking the sim with pin-lock.
+func ShillSimPinLock(ctx context.Context, s *testing.State) {
 	if _, err := modemmanager.NewModemWithSim(ctx); err != nil {
 		s.Fatal("Could not find MM dbus object with a valid sim: ", err)
 	}

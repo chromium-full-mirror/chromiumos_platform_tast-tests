@@ -17,7 +17,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ShillCellularRoaming,
+		Func:         ShillRoaming,
 		Desc:         "Verifies that AllowRoaming is respected by Shill",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "cros-network-health-team@google.com", "pholla@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
@@ -27,7 +27,7 @@ func init() {
 	})
 }
 
-func ShillCellularRoaming(ctx context.Context, s *testing.State) {
+func ShillRoaming(ctx context.Context, s *testing.State) {
 	helper, modem, err := cellular.NewHelperWithSim(ctx)
 	if err != nil {
 		s.Fatal("Failed to create cellular.Helper (precondition): ", err)

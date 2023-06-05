@@ -35,7 +35,7 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ShillCellularEntitlementCheck,
+		Func:         ShillEntitlementCheck,
 		Desc:         "Verifies the entitlement check feature for tethering works. The test depends on an entitlement check server running on the callbox",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "andrewlassalle@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
@@ -75,7 +75,7 @@ func init() {
 	})
 }
 
-func ShillCellularEntitlementCheck(ctx context.Context, s *testing.State) {
+func ShillEntitlementCheck(ctx context.Context, s *testing.State) {
 	params := s.Param().(shillCellularEntitlementCheckTestParam)
 	modbOverrideProto := params.ModbOverrideProto
 	expectedEntitlementCheckResult := params.ExpectedEntitlementCheckResult

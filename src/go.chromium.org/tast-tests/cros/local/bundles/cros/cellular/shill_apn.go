@@ -27,7 +27,7 @@ type apnTestParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ShillCellularApn,
+		Func:         ShillApn,
 		Desc:         "Verifies that the cellular device can connect with different APN configurations",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "andrewlassalle@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
@@ -94,7 +94,7 @@ func init() {
 	})
 }
 
-func ShillCellularApn(ctx context.Context, s *testing.State) {
+func ShillApn(ctx context.Context, s *testing.State) {
 	params := s.Param().(apnTestParam)
 	modbOverrideProto := params.ModbOverrideProto
 	expectedLastGoodAPN := params.ExpectedLastGoodAPN

@@ -18,7 +18,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ShillCellularSafetyDance,
+		Func:         ShillSafetyDance,
 		Desc:         "Stress tests enable/disable/connect/disconnect operations in the Cellular Service",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "aleksandermj@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
@@ -26,11 +26,11 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.Cellular()),
 		Timeout:      10 * time.Minute,
 		Fixture:      "cellular",
-		Vars:         []string{"cellular.ShillCellularSafetyDance.seed"},
+		Vars:         []string{"cellular.ShillSafetyDance.seed"},
 	})
 }
 
-func ShillCellularSafetyDance(ctx context.Context, s *testing.State) {
+func ShillSafetyDance(ctx context.Context, s *testing.State) {
 	helper, _, err := cellular.NewHelperWithSim(ctx)
 	if err != nil {
 		s.Fatal("Failed to create cellular.Helper (precondition): ", err)
@@ -52,7 +52,7 @@ func ShillCellularSafetyDance(ctx context.Context, s *testing.State) {
 
 	// Run setup random sequence
 	var seed int64
-	if seedStr, ok := s.Var("cellular.ShillCellularSafetyDance.seed"); ok {
+	if seedStr, ok := s.Var("cellular.ShillSafetyDance.seed"); ok {
 		val, err := strconv.ParseInt(seedStr, 10, 64)
 		if err != nil {
 			s.Fatalf("Invalid seed value given: %s", seedStr)

@@ -19,7 +19,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ShillCellularEnableAndConnect,
+		Func:         ShillEnableAndConnect,
 		Desc:         "Verifies that Shill can enable, disable, connect, and disconnect to a Cellular Service",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "cros-network-health-team@google.com", "stevenjb@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
@@ -30,7 +30,7 @@ func init() {
 	})
 }
 
-func ShillCellularEnableAndConnect(ctx context.Context, s *testing.State) {
+func ShillEnableAndConnect(ctx context.Context, s *testing.State) {
 	helper, _, err := cellular.NewHelperWithSim(ctx)
 	if err != nil {
 		s.Fatal("Failed to create cellular.Helper (precondition): ", err)

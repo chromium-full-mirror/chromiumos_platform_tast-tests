@@ -21,7 +21,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ShillCellularValidateProfile,
+		Func:         ShillValidateProfile,
 		Desc:         "Verifies that change in profile property able to connect after shill reset, mimics OS update",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "srikanthkumar@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
@@ -32,8 +32,8 @@ func init() {
 	})
 }
 
-// ShillCellularValidateProfile Validates profile apn changes before and after the shill reset.
-func ShillCellularValidateProfile(ctx context.Context, s *testing.State) {
+// ShillValidateProfile Validates profile apn changes before and after the shill reset.
+func ShillValidateProfile(ctx context.Context, s *testing.State) {
 	const (
 		incorrectAPNProto  = "callbox_attach_ipv4_incorrect_apn.pbf"
 		testDefaultProfile = "test_profile.txt"
