@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/annotations"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/calendarintegration"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/defaultsearchprovider"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/passwordleakdetection"
 	policyquickanswers "go.chromium.org/tast-tests/cros/local/bundles/cros/policy/quickanswers"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/searchsuggestion"
@@ -63,6 +64,8 @@ func init() {
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.CalendarIntegrationEnabled{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.CalendarIntegrationEnabled{}, pci.VerifiedFunctionalityOS),
+			pci.SearchFlag(&policy.DefaultSearchProviderEnabled{}, pci.VerifiedFunctionalityUI),
+			pci.SearchFlag(&policy.DefaultSearchProviderEnabled{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.PasswordLeakDetectionEnabled{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.QuickAnswersDefinitionEnabled{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.QuickAnswersDefinitionEnabled{}, pci.VerifiedFunctionalityOS),
@@ -82,6 +85,7 @@ func init() {
 func getPolicyList() []policy.Policy {
 	return []policy.Policy{
 		&policy.CalendarIntegrationEnabled{Val: false},
+		&policy.DefaultSearchProviderEnabled{Val: false},
 		&policy.PasswordLeakDetectionEnabled{Val: false},
 		&policy.QuickAnswersDefinitionEnabled{Val: false},
 		&policy.QuickAnswersUnitConversionEnabled{Val: false},
@@ -187,6 +191,18 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to trigger and verify calendar integration: ", err)
 		}
 		hashCodes = append(hashCodes, calendarintegration.AnnotationHashCode)
+	})
+
+	s.Run(ctx, "default_search_provider_enabled", func(ctx context.Context, s *testing.State) {
+		defaultSearchProviderParam := defaultsearchprovider.TestCase{
+			Name:                 "disabled",
+			ShouldFindAnnotation: false,
+			Value:                &policy.DefaultSearchProviderEnabled{Val: false},
+			Enabled:              false,
+		}
+		if err := defaultsearchprovider.TriggerDefaultSearchProvider(ctx, defaultSearchProviderParam, tconn, br); err != nil {
+			s.Fatal("Failed to trigger default search provider: ", err)
+		}
 	})
 
 	s.Run(ctx, "spell_check_service", func(ctx context.Context, s *testing.State) {
