@@ -22,6 +22,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type volumeControlTier int
@@ -48,15 +49,17 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Pre:          chrome.LoggedIn(),
 		Params: []testing.Param{{
-			Name:      "volume_only",
-			ExtraAttr: []string{"group:mainline", "informational"},
+			Name:              "volume_only",
+			ExtraAttr:         []string{"group:mainline", "informational"},
+			ExtraHardwareDeps: hwdep.D(hwdep.Speaker()),
 			Val: volumeControlParam{
 				tier:              volumeOnly,
 				expectedAudioNode: "INTERNAL_SPEAKER",
 			},
 		}, {
-			Name:      "with_audio",
-			ExtraAttr: []string{"group:intel-gating"},
+			Name:              "with_audio",
+			ExtraAttr:         []string{"group:intel-gating"},
+			ExtraHardwareDeps: hwdep.D(hwdep.Speaker()),
 			Val: volumeControlParam{
 				tier:              withAudio,
 				expectedAudioNode: "INTERNAL_SPEAKER",
@@ -148,6 +151,7 @@ func VolumeControl(ctx context.Context, s *testing.State) {
 
 		s.Log("Play the audio file for 5 seconds")
 		// Sample time for the audio to play for 5 seconds.
+		// GoBigSleepLint: sleep to let the device playback for constant amount of time.
 		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 			s.Fatal("Error while waiting during sample time: ", err)
 		}
