@@ -60,7 +60,7 @@ func init() {
 			"chromeos-commercial-remote-management@google.com",
 			"igorcov@chromium.org", // Test author
 		},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:cq-medium"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.ChromeEnrolledLoggedIn,
 		Timeout:      3 * time.Minute,

@@ -41,7 +41,7 @@ func init() {
 		// ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
 		BugComponent: "b:1207311",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:cq-medium"},
 	})
 }
 

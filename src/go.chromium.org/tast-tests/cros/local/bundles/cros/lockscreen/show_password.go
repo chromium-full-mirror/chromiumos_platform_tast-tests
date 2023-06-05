@@ -42,7 +42,8 @@ func init() {
 			"group:golden_tier",
 			"group:medium_low_tier",
 			"group:hardware",
-			"group:complementary"},
+			"group:complementary",
+			"group:cq-medium"},
 		Params: []testing.Param{{
 			Val: testParameters{false, false},
 		}, {

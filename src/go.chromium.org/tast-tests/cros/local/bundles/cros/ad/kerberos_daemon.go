@@ -29,7 +29,7 @@ func init() {
 		},
 		// ChromeOS > Software > Commercial (Enterprise) > Identity > Active Directory
 		BugComponent: "b:1253670",
-		Attr:         []string{"group:mainline", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic", "group:cq-medium"},
 	})
 }
 
