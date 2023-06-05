@@ -76,8 +76,6 @@ const (
 	BIOSExt = ".bios_log"
 	// CoreExt is the extension for core files.
 	CoreExt = ".core"
-	// HypervisorExt is the extension for hypervisor crash files.
-	HypervisorExt = ".hypervisor_log"
 	// MinidumpExt is the extension for minidump crash files.
 	MinidumpExt = ".dmp"
 	// LogExt is the extension for log files containing additional information that are written by crash_reporter.
@@ -142,7 +140,6 @@ func isCrashFile(filename string) bool {
 	knownExts := []string{
 		BIOSExt,
 		CoreExt,
-		HypervisorExt,
 		MinidumpExt,
 		LogExt,
 		ProclogExt,
