@@ -164,13 +164,16 @@ func startAddAccount(ctx context.Context, kb *input.KeyboardEventWriter, ui *uia
 	okButton := nodewith.NameRegex(regexp.MustCompile("(OK|Continue)")).Role(role.Button).Ancestor(root)
 	if err := uiauto.Combine("Click on OK and proceed",
 		ui.WaitUntilExists(okButton),
-		ui.LeftClick(okButton),
+		ui.LeftClickUntil(okButton, ui.Gone(okButton)),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to click OK. Is Account addition dialog open?")
 	}
 
 	// Use long timeout to wait for the initial Gaia webpage load.
 	if err := ui.WithTimeout(LongUITimeout).WaitUntilExists(nodewith.Role(role.Iframe).Ancestor(root))(ctx); err != nil {
+		if existsErr := ui.Exists(nodewith.ClassName("spinner-layer").Ancestor(root)); existsErr == nil {
+			return errors.Wrap(err, "failed to find the iframe: the page didn't load")
+		}
 		return errors.Wrap(err, "failed to find the iframe")
 	}
 
