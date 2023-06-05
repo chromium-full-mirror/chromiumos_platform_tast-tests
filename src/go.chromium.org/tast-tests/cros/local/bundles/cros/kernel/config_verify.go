@@ -366,7 +366,8 @@ func addExtraCheckForChromeOS(kcc *kernelConfigCheck, ver *sysutil.KernelVersion
 	// NaCl; allow mprotect+PROT_EXEC on noexec mapped files.
 	kcc.value["MMAP_NOEXEC_TAINT"] = "0"
 
-	kcc.builtin = append(kcc.builtin, "ESD_FS")
+	// "ESD_FS" was removed in 6.1.
+	kcc.optional = append(kcc.optional, "ESD_FS")
 
 	// Security; prevent overflows that can be checked at compile-time.
 	kcc.builtin = append(kcc.builtin, "FORTIFY_SOURCE")
