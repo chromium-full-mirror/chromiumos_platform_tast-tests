@@ -58,8 +58,6 @@ func ARCVPNDisabled(ctx context.Context, s *testing.State) {
 	if err := routing.ExpectPingSuccessWithTimeout(ctx, conn.Server.OverlayIPv4, "chronos", 10*time.Second); err != nil {
 		s.Fatalf("Failed to ping from host %s: %v", conn.Server.OverlayIPv4, err)
 	}
-	// Currently, ARC VPN is disabled by default.
-	// TODO(b/147256449): Explicitly disable ARC VPN once the feature becomes enabled-by-defalt
 	if err := arcvpn.WaitForARCServiceState(ctx, a, arcvpn.FacadeVPNPkg, arcvpn.FacadeVPNSvc, false); err != nil {
 		s.Fatalf("Failed to stop %s: %v", arcvpn.FacadeVPNSvc, err)
 	}
