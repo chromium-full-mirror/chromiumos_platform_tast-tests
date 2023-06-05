@@ -12,6 +12,7 @@ import (
 
 	"github.com/godbus/dbus/v5"
 
+	"go.chromium.org/tast-tests/cros/local/crosconfig"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/errors"
@@ -70,11 +71,41 @@ func RestartCras(ctx context.Context) (*Cras, error) {
 	}
 
 	// Wait for CRAS to be online.
-	cras, err := NewCras(ctx)
+	var cras *Cras
+	var err error
+	if newCrasNeedsRetryInRestartCras(ctx) {
+		err = testing.Poll(ctx,
+			func(ctx context.Context) error {
+				cras, err = NewCras(ctx)
+				return err
+			},
+			&testing.PollOptions{
+				Interval: time.Second,
+				Timeout:  10 * time.Second,
+			},
+		)
+	} else {
+		cras, err = NewCras(ctx)
+	}
 	if err == nil {
 		testing.ContextLog(ctx, "CRAS restarted")
 	}
 	return cras, err
+}
+
+// newCrasNeedsRetryInRestartCras tells whether NewCras should be retried in the RestartCras.
+//
+// TODO(b/283800653): Remove this workaround.
+func newCrasNeedsRetryInRestartCras(ctx context.Context) bool {
+	board, err := crosconfig.Get(ctx, "/arc/build-properties", "product")
+	if err != nil {
+		testing.ContextLogf(ctx, "Cannot get board: %s; assuming newCrasNeedsRetryInRestartCras() = false", err)
+		return false
+	}
+	if board == "puff" {
+		return true
+	}
+	return false
 }
 
 // CrasNode contains the metadata of Node in Cras.
