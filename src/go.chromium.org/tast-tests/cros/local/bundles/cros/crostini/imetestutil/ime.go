@@ -53,11 +53,11 @@ var IMETestCases = imeTestDataMap{
 		"こんにちは",
 		func(keyboard *input.KeyboardEventWriter, ui *uiauto.Context) uiauto.Action {
 			return uiauto.Combine("Enter Japanese",
+				setHiraganaMode(ui),
 				keyboard.TypeAction("konnnitiha"),
-				uiauto.Combine("commit text",
-					keyboard.AccelAction("Enter"),
-					ui.WithTimeout(time.Second).WaitUntilGone(PKCandidatesFinder),
-				),
+				keyboard.AccelAction("Enter"),
+				// Wait for the text to be committed.
+				ui.WithTimeout(time.Second).WaitUntilGone(PKCandidatesFinder),
 			)
 		},
 	},
@@ -69,6 +69,17 @@ var IMETestCases = imeTestDataMap{
 			return keyboard.TypeAction("lvpfh")
 		},
 	},
+}
+
+func setHiraganaMode(ui *uiauto.Context) uiauto.Action {
+	// The IME menu tray should exist by default when a new IMEs are added.
+	imeMenuTrayButtonFinder := nodewith.Name("IME menu button").Role(role.Button)
+	hiraganaOptionFinder := nodewith.Name("Hiragana").Role(role.CheckBox)
+	return uiauto.Combine("set Japanese input to hiragana mode via IME tray",
+		ui.DoDefault(imeMenuTrayButtonFinder),
+		ui.DoDefault(hiraganaOptionFinder),
+		ui.WithTimeout(time.Second).WaitUntilGone(hiraganaOptionFinder),
+	)
 }
 
 // ResetToDefaultIME can be called to reset the input method back to default (EnglishUS) at the end of a test. If it fails, it will only log the error, and not return an error so the test will NOT fail.
