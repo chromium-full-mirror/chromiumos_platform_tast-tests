@@ -6,6 +6,8 @@ package firmware
 
 import (
 	"context"
+	"io/ioutil"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -65,6 +67,19 @@ func DetachableDevScreen(ctx context.Context, s *testing.State) {
 	if err := h.RequireConfig(ctx); err != nil {
 		s.Fatal("Requiring config")
 	}
+
+	// Upload firmware log to Testhaus at the end of the test.
+	defer func() {
+		logPath := "/sys/firmware/log"
+		output, err := h.Reporter.CatFile(ctx, logPath)
+		if err != nil {
+			s.Fatal("Failed to read firmware log: ", err)
+		}
+		destPath := filepath.Join(s.OutDir(), "firmware.log")
+		if err := ioutil.WriteFile(destPath, []byte(output), 0666); err != nil {
+			s.Fatal("Failed to write firmware log: ", err)
+		}
+	}()
 
 	cs := s.CloudStorage()
 	var opts []firmware.SetupUSBOption
@@ -153,8 +168,8 @@ func DetachableDevScreen(ctx context.Context, s *testing.State) {
 		if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "G3", "S5"); err != nil {
 			s.Fatal("Failed to get power state at G3: ", err)
 		}
-		// Sleeping for 5 seconds ensures the DUT's power completely off.
 		s.Log("Sleeping for 5 seconds")
+		// GoBigSleepLint: Short delay after power-off to ensure firmware log records fully cleared.
 		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 			s.Fatal("Failed to wait for 5sec: ", err)
 		}
@@ -162,6 +177,7 @@ func DetachableDevScreen(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to power on DUT: ", err)
 		}
 		s.Logf("Sleeping for %s (FirmwareScreen) ", h.Config.FirmwareScreen)
+		// GoBigSleepLint: Delay to wait for the firmware screen during boot-up.
 		if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
 			s.Fatalf("Failed to sleep for %s: %v", h.Config.FirmwareScreen, err)
 		}
@@ -302,8 +318,9 @@ func testTriggerSelectMenuOption(ctx context.Context, h *firmware.Helper, trigge
 				return errors.Wrap(err, "failed to press space")
 			}
 			testing.ContextLogf(ctx, "Sleeping %s (KeypressDelay)", h.Config.KeypressDelay)
+			// GoBigSleepLint: Simulate a specific speed of button presses.
 			if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
-				return errors.Wrapf(err, "failed to press %s seconds", h.Config.KeypressDelay)
+				return errors.Wrapf(err, "failed to sleep %s", h.Config.KeypressDelay)
 			}
 			testing.ContextLog(ctx, "Pressing ENTER")
 			if err := h.Servo.KeypressWithDuration(ctx, servo.Enter, servo.DurTab); err != nil {
@@ -324,9 +341,6 @@ func testTriggerSelectMenuOption(ctx context.Context, h *firmware.Helper, trigge
 			if err := nTimesTraverseSelect(ctx, h, servo.VolumeUpHold, 2, "Show Debug Info"); err != nil {
 				return errors.Wrap(err, "failed to select Debug Info")
 			}
-			if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
-				return errors.Wrapf(err, "failed to wait %s", h.Config.KeypressDelay)
-			}
 			// While at the debug info page, press ctrld to boot because this screen doesn't time out.
 			if err := h.Servo.KeypressWithDuration(ctx, servo.CtrlD, servo.DurTab); err != nil {
 				return errors.Wrap(err, "failed to press ctrld")
@@ -337,9 +351,6 @@ func testTriggerSelectMenuOption(ctx context.Context, h *firmware.Helper, trigge
 		err = func() error {
 			if err := nTimesTraverseSelect(ctx, h, servo.VolumeDownHold, 2, "Advanced Options"); err != nil {
 				return errors.Wrap(err, "failed to select Advanced Options")
-			}
-			if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
-				return errors.Wrapf(err, "failed to wait %s", h.Config.KeypressDelay)
 			}
 			// While at the advanced options page, press ctrld to boot because this screen doesn't time out.
 			if err := h.Servo.KeypressWithDuration(ctx, servo.CtrlD, servo.DurTab); err != nil {
@@ -362,16 +373,18 @@ func nTimesTraverseSelect(ctx context.Context, h *firmware.Helper, upOrDown serv
 		if err := h.Servo.SetInt(ctx, upOrDown, 100); err != nil {
 			return errors.Wrapf(err, "pressing %s", upOrDown)
 		}
-		if err := testing.Sleep(ctx, 3*time.Second); err != nil {
-			return errors.Wrap(err, "sleeping for 3s")
+		// GoBigSleepLint: Simulate a specific speed of button presses.
+		if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
+			return errors.Wrapf(err, "failed to sleep for %s", h.Config.KeypressDelay)
 		}
 	}
 	testing.ContextLogf(ctx, "Selecting %q", menuOpt)
 	if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.DurTab); err != nil {
 		return errors.Wrapf(err, "selecting %s", menuOpt)
 	}
-	if err := testing.Sleep(ctx, 3*time.Second); err != nil {
-		return errors.Wrap(err, "sleeping for 3s")
+	// GoBigSleepLint: Simulate a specific speed of button presses.
+	if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
+		return errors.Wrapf(err, "failed to sleep for %s", h.Config.KeypressDelay)
 	}
 	return nil
 }

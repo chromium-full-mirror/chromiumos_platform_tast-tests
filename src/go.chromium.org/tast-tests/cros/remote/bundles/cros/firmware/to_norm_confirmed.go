@@ -6,6 +6,8 @@ package firmware
 
 import (
 	"context"
+	"io/ioutil"
+	"path/filepath"
 	"time"
 
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
@@ -46,6 +48,19 @@ func ToNormConfirmed(ctx context.Context, s *testing.State) {
 		s.Fatal("Creating mode switcher: ", err)
 	}
 
+	// Upload firmware log to Testhaus at the end of the test.
+	defer func() {
+		logPath := "/sys/firmware/log"
+		output, err := h.Reporter.CatFile(ctx, logPath)
+		if err != nil {
+			s.Fatal("Failed to read firmware log: ", err)
+		}
+		destPath := filepath.Join(s.OutDir(), "firmware.log")
+		if err := ioutil.WriteFile(destPath, []byte(output), 0666); err != nil {
+			s.Fatal("Failed to write firmware log: ", err)
+		}
+	}()
+
 	cs := s.CloudStorage()
 	var opts []firmware.SetupUSBOption
 	opts = append(opts, firmware.DontFlashIfSameMilestone)
@@ -66,8 +81,8 @@ func ToNormConfirmed(ctx context.Context, s *testing.State) {
 		if err := ms.RebootToMode(ctx, fwCommon.BootModeNormal, opts...); err != nil {
 			s.Fatal("Failed to boot to normal mode: ", err)
 		}
-		// Add a short delay to ensure power button released from RebootToMode.
-		if err := testing.Sleep(ctx, time.Second); err != nil {
+		// GoBigSleepLint: Simulate a specific speed of button presses.
+		if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
 			s.Fatalf("Failed to sleep before testing trigger %s: %v", trigger, err)
 		}
 		switch trigger {
