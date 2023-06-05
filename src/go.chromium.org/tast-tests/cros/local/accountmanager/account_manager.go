@@ -33,6 +33,9 @@ const DefaultUITimeout = 20 * time.Second
 // LongUITimeout is for interaction with webpages to make sure that page is loaded.
 const LongUITimeout = time.Minute
 
+// ChromeSyncConsentScreenTitle is the title of the consent screen for turning on Chrome browser sync.
+const ChromeSyncConsentScreenTitle = "Turn on sync"
+
 // ARCAccountOptions is a struct containing options for `CheckIsAccountPresentInARC` call.
 type ARCAccountOptions struct {
 	// Name of the account to be checked.
