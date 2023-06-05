@@ -154,10 +154,6 @@ func BatteryCharging(ctx context.Context, s *testing.State) {
 			if err := cmd.Start(); err != nil {
 				return err
 			}
-			// Delay for some time to ensure the suspend command has fully propagated.
-			if err := testing.Sleep(ctx, 10*time.Second); err != nil {
-				return errors.Wrap(err, "failed to sleep")
-			}
 			// Check for DUT in S0ix, S3, S5, or G3 power state.
 			if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, 1*time.Minute, "S0ix", "S3", "S5", "G3"); err != nil {
 				// Stainless reported some DUTs at S0 and unreachable after suspend.
@@ -205,21 +201,8 @@ func BatteryCharging(ctx context.Context, s *testing.State) {
 			}
 		}
 
-		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 5*time.Minute)
-		defer cancelWaitConnect()
-
-		if err := h.WaitConnect(waitConnectCtx); err != nil {
-			checkPowerState := func() string {
-				s.Log("Checking for the DUT's power state")
-				state, err := h.Servo.GetECSystemPowerState(ctx)
-				if err != nil {
-					s.Log("Error getting power state: ", err)
-					return "unknown"
-				}
-				return state
-			}
-			value := checkPowerState()
-			s.Fatalf("Failed to reconnect to DUT after waking DUT from suspend: %v, got DUT at power state: %s", err, value)
+		if err := waitConnectFromSuspend(ctx, h); err != nil {
+			s.Fatal("Failed to reconnect to DUT after waking DUT from suspend: ", err)
 		}
 
 		// CCD might be locked after DUT has woken up.
@@ -423,4 +406,51 @@ func findUSBPortWithState(ctx context.Context, h *firmware.Helper, ecTool *firmw
 		testing.ContextLogf(ctx, "Found: %s", portInfo)
 	}
 	return ports, nil
+}
+
+func waitConnectFromSuspend(ctx context.Context, h *firmware.Helper) error {
+	checkPowerState := func() string {
+		testing.ContextLog(ctx, "Checking for the DUT's power state")
+		state, err := h.Servo.GetECSystemPowerState(ctx)
+		if err != nil {
+			testing.ContextLog(ctx, "Error getting power state: ", err)
+			return "unknown"
+		}
+		return state
+	}
+	powerCycleEthernet := func() error {
+		ok, err := h.Servo.HasControl(ctx, string(servo.DutEthPwrEn))
+		if err != nil {
+			return errors.Wrap(err, "checking control DutEthPwrEn")
+		}
+		if !ok {
+			return errors.New("control DutEthPwrEn doesn't exist")
+		}
+		if err := h.Servo.ToggleOffOn(ctx, servo.DutEthPwrEn); err != nil {
+			return err
+		}
+		return nil
+	}
+	var err error
+	const retry = 1
+	for i := 0; i <= retry; i++ {
+		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 5*time.Minute)
+		defer cancelWaitConnect()
+
+		err = h.WaitConnect(waitConnectCtx)
+		if err == nil {
+			return nil
+		}
+		// Don't power cycle the ethernet at the last retry.
+		if i == retry {
+			continue
+		}
+		testing.ContextLog(ctx, "Resetting ethernet dongle power")
+		if err := powerCycleEthernet(); err != nil {
+			testing.ContextLog(ctx, "Failed to power cycle ethernet dongle: ", err)
+			break
+		}
+	}
+	value := checkPowerState()
+	return errors.Wrapf(err, "dut unreachable with power state %s", value)
 }
