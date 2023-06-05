@@ -8,24 +8,18 @@ import (
 	"go.chromium.org/tast-tests/cros/common/perf"
 )
 
-var timelineSources = []perf.TimelineDatasource{
-	NewCpuidleStateMetrics(),
-	NewRAPLPowerMetrics(),
-	NewSysfsBatteryMetrics(),
-	NewSysfsThermalMetrics(),
-	NewPackageCStatesMetrics(),
-	NewProcfsCPUMetrics(),
-	NewFanMetrics(),
-	NewGPUStateMetrics(),
-	NewGPUFreqMetrics(),
-	NewZramIOMetrics(),
-}
-
 // TestMetrics returns a slice of metrics that should be used for power tests.
 func TestMetrics() []perf.TimelineDatasource {
-	// Duplicate the timelineSources into a new slice.
-	metricSources := make([]perf.TimelineDatasource, len(timelineSources))
-	copy(metricSources, timelineSources)
-
-	return metricSources
+	return []perf.TimelineDatasource{
+		NewCpuidleStateMetrics(),
+		NewRAPLPowerMetrics(),
+		NewSysfsBatteryMetrics(),
+		NewSysfsThermalMetrics(),
+		NewPackageCStatesMetrics(),
+		NewProcfsCPUMetrics(),
+		NewFanMetrics(),
+		NewGPUStateMetrics(),
+		NewGPUFreqMetrics(),
+		NewZramIOMetrics(),
+	}
 }
