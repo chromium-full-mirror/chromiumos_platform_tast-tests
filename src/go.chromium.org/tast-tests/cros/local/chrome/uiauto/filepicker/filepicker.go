@@ -34,8 +34,8 @@ func Find(ctx context.Context, tconn *chrome.TestConn) (*FilePicker, error) {
 
 // OpenDir returns a function that opens one of the directories shown in the navigation tree.
 // An error is returned if dir is not found or does not open.
-func (f *FilePicker) OpenDir(dirName string) uiauto.Action {
-	return f.filesApp.OpenDir(dirName, dirName)
+func (f *FilePicker) OpenDir(dirName, expectedTitle string) uiauto.Action {
+	return f.filesApp.OpenDir(dirName, expectedTitle)
 }
 
 // OpenFile returns a function that executes double click on a file to open it.

@@ -294,7 +294,7 @@ func uploadFile(tconn *chrome.TestConn, fileName string) uiauto.Action {
 			return errors.Wrap(err, "failed to find the file picker")
 		}
 		return uiauto.Combine(fmt.Sprintf("upload file %q", fileName),
-			filePicker.OpenDir(filesapp.Downloads),
+			filePicker.OpenDir(filesapp.Downloads, filesapp.Downloads),
 			filePicker.OpenFile(fileName),
 		)(ctx)
 	}

@@ -54,7 +54,7 @@ type TestConfig struct {
 	// Name of the test file to be used in the test.
 	FileName string
 	// Optional: Expected title of the Ash window of the Files app when opened |DirName| on the
-	// navigation tree. When unspecified, |filesapp.FilesTitlePrefix + DirName| will be used.
+	// navigation tree. When unspecified, |DirName| will be used.
 	DirTitle string
 	// File content of the provided test file.
 	FileContent string
@@ -66,8 +66,6 @@ type TestConfig struct {
 	// Optional: If set to true, skip checking if the test app can write to the test file opened
 	// from Files app.
 	ReadOnly bool
-	// Optional: If set to true, skip checking if the test app can open the file via SAF.
-	SkipSAF bool
 }
 
 // TestFilesAppIntegration tests ARC storage integration with Files app for a test file in the
@@ -77,11 +75,11 @@ type TestConfig struct {
 //     content read by the Android app.
 //  2. (optional, only when TestConfig.ReadOnly is false) Modify the file with the Android app and
 //     validate the modification on the CrOS side with Files app's QuickView.
-//  3. (optional, only when TestConfig.SkipSAF is false) Open the file with the Android app via SAF
-//     and validate the content read by the Android app (which is shown on its UI).
+//  3. Open the file with the Android app via SAF and validate the content read by the Android app
+//     (which is shown on its UI).
 func TestFilesAppIntegration(ctx context.Context, a *arc.ARC, cr *chrome.Chrome, d *androidui.Device, config TestConfig) error {
 	if config.DirTitle == "" {
-		config.DirTitle = filesapp.FilesTitlePrefix + config.DirName
+		config.DirTitle = config.DirName
 	}
 
 	testing.ContextLogf(ctx, "Performing TestFilesAppIntegration on: %s", config.DirName)
@@ -98,10 +96,8 @@ func TestFilesAppIntegration(ctx context.Context, a *arc.ARC, cr *chrome.Chrome,
 	if err := testOpenFromFilesApp(ctx, a, cr, d, config); err != nil {
 		return errors.Wrap(err, "failed to open a file from Files app")
 	}
-	if !config.SkipSAF {
-		if err := testOpenViaSAF(ctx, a, cr, d, config); err != nil {
-			return errors.Wrap(err, "failed to open a file via SAF")
-		}
+	if err := testOpenViaSAF(ctx, a, cr, d, config); err != nil {
+		return errors.Wrap(err, "failed to open a file via SAF")
 	}
 	return nil
 }
@@ -184,7 +180,7 @@ func openWithTestApp(ctx context.Context, files *filesapp.FilesApp, config TestC
 	testing.ContextLog(ctx, "Opening the test file with ArcFileEditorTest")
 
 	return uiauto.Combine("open the test file with ArcFileEditorTest",
-		files.OpenPath(config.DirTitle, config.DirName, config.SubDirectories...),
+		files.OpenPath(filesapp.FilesTitlePrefix+config.DirTitle, config.DirName, config.SubDirectories...),
 		// Note: due to the banner loading, this may still be flaky.
 		// If that is the case, we may want to increase the interval and timeout for this next call.
 		files.SelectFile(config.FileName),
@@ -196,7 +192,7 @@ func openWithTestApp(ctx context.Context, files *filesapp.FilesApp, config TestC
 // indication that the backend metadata is ready.
 func waitForFileType(ctx context.Context, files *filesapp.FilesApp, config TestConfig) error {
 	if err := uiauto.Combine("select the test file with Files app",
-		files.OpenPath(config.DirTitle, config.DirName, config.SubDirectories...),
+		files.OpenPath(filesapp.FilesTitlePrefix+config.DirTitle, config.DirName, config.SubDirectories...),
 		files.SelectFile(config.FileName))(ctx); err != nil {
 		return errors.Wrap(err, "failed to select the test file with Files app")
 	}
@@ -264,7 +260,7 @@ func testOpenViaSAF(ctx context.Context, a *arc.ARC, cr *chrome.Chrome, d *andro
 	if err != nil {
 		return errors.Wrap(err, "failed to find file picker")
 	}
-	actions := []uiauto.Action{filePicker.OpenDir(config.DirName)}
+	actions := []uiauto.Action{filePicker.OpenDir(config.DirName, config.DirTitle)}
 	for _, subdir := range config.SubDirectories {
 		actions = append(actions, filePicker.OpenFile(subdir))
 	}
@@ -290,7 +286,7 @@ func validateWriteResult(ctx context.Context, files *filesapp.FilesApp, config T
 	defer keyboard.Close(ctx)
 
 	return uiauto.Combine("validate the content of test file with QuickView",
-		files.OpenPath(config.DirTitle, config.DirName, config.SubDirectories...),
+		files.OpenPath(filesapp.FilesTitlePrefix+config.DirTitle, config.DirName, config.SubDirectories...),
 		files.SelectFile(config.FileName),
 		keyboard.AccelAction("Space"),
 		files.WithTimeout(5*time.Second).WaitUntilExists(nodewith.Name(config.FileContent+messageAddedByApp).Role(role.StaticText)),

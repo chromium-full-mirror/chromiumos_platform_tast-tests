@@ -338,7 +338,7 @@ func testFileAttachedForBrowserAndFile(
 	// Open file in test_dir.
 	// Note: Use 20s timeout to let the picker retry opening the file.
 	if err := uiauto.Combine("open file",
-		files.OpenDir("test_dir"),
+		files.OpenDir("test_dir", "test_dir"),
 		files.WithTimeout(20*time.Second).OpenFile(ulFileName),
 	)(ctx); err != nil {
 		s.Fatal("Failed to open file: ", err)
