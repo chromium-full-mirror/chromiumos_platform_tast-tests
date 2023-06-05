@@ -30,6 +30,9 @@ const (
 	// syzkallerRunDuration represents the overall run duration of the fuzzer.
 	syzkallerRunDuration = 50 * time.Minute
 
+	// defaultProcs is the number of syz-executor instances running on the DUT.
+	defaultProcs = 5
+
 	// gsURL points to the GCS bucket for syzkaller artifacts.
 	gsURL = "gs://syzkaller-ctp-corpus"
 
@@ -190,6 +193,11 @@ func bryaModels() []string {
 	}
 }
 
+var boardProcs = map[string]int{
+	"strongbad": 10,
+	"trogdor":   8,
+}
+
 // Wrapper runs Syzkaller against DUTs with KASAN and KCOV enabled.
 func Wrapper(ctx context.Context, s *testing.State) {
 	d := s.DUT()
@@ -300,6 +308,12 @@ func Wrapper(ctx context.Context, s *testing.State) {
 	}
 	s.Log("Target: ", target)
 
+	procs := defaultProcs
+	if p, ok := boardProcs[board]; ok {
+		procs = p
+	}
+	s.Log("Using procs: ", procs)
+
 	// Create syzkaller configuration file.
 	// Generating reproducers is unlikely to work as :
 	// [1] Corpus is not shared across two runs of the test.
@@ -313,7 +327,7 @@ func Wrapper(ctx context.Context, s *testing.State) {
 		Workdir:   syzkallerWorkdir,
 		Syzkaller: artifactsDir,
 		Type:      "isolated",
-		Procs:     5,
+		Procs:     procs,
 		DUTConfig: dutConfig{
 			Targets:       []string{d.HostName()},
 			TargetDir:     "/usr/local/tmp",
