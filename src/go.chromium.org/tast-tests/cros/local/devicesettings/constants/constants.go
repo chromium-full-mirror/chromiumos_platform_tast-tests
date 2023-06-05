@@ -19,10 +19,10 @@ var (
 	TouchpadRow = nodewith.Name("Touchpad").Role(role.GenericContainer)
 	// TrackPointRow is a finder for the TrackPoint subpage in device settings.
 	TrackPointRow = nodewith.Name("TrackPoint").Role(role.GenericContainer)
-	// CustomizeKeyboardKeys is a finder for the Remap keys subpage in
+	// CustomizeKeyboardKeys is a finder for the built-in keyboard Remap keys subpage in
 	// the keyboard settings page.
 	CustomizeKeyboardKeys = nodewith.NameContaining(
-		"Customize keyboard keys").Role(role.Link)
+		"Customize keyboard keys").Role(role.Link).Nth(1)
 )
 
 // List of modifier keys.
