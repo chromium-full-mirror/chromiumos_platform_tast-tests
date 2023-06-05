@@ -37,7 +37,14 @@ func MonitorUnuploadedCrashEvent(ctx context.Context, s *testing.State) {
 	if err := sleepCmd.Signal(unix.SIGSEGV); err != nil {
 		s.Fatal("Failed to crash the sleep command: ", err)
 	}
-	sleepCmd.Wait()
+	err := sleepCmd.Wait()
+	waitStatus, ok := testexec.GetWaitStatus(err)
+	if !ok {
+		s.Fatal("Failed to get sleep's wait status: ", err)
+	}
+	if !waitStatus.Signaled() || waitStatus.Signal() != unix.SIGSEGV {
+		s.Fatal("Failed to crash sleep: ", err)
+	}
 
 	// Consent for metrics.
 	if err := testexec.CommandContext(ctx, "metrics_client", "-C").Run(); err != nil {
