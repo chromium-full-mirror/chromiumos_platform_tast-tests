@@ -20,9 +20,8 @@ import (
 	"go.chromium.org/tast-tests/cros/local/crostini"
 )
 
-// Struct used to specify extra test options for standard tests with ManaTEE variants.
-// By default the ManaTEE variants are not disabled but are **not** set as critical.
-// If the timeout is not changed, we set it to the default value.
+// Struct used to specify extra test options for standard tests.  If the timeout
+// is not changed, we set it to the default value.
 type testOptions struct {
 	timeout time.Duration
 }
@@ -30,9 +29,6 @@ type testOptions struct {
 const DefaultStandardTimeout = 7 * time.Minute
 
 // Map crostini tests by file and their extra test options (if any).
-// For tests that are broken on manatee runs but not on non-manatee buster_stable builds
-// please file bugs directly in the manatee-specific component: http://b/issues?q=componentid:988046
-// For context on certain tests being disabled on manatee, see: http://b/221317548#comment9
 var standardTests = map[string]testOptions{
 	"audio_basic.go": {},
 	// Audio playback configurations took about 6 minutes on model with echo reference
