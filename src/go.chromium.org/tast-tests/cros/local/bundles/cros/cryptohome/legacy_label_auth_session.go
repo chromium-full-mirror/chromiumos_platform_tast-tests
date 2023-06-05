@@ -6,6 +6,7 @@ package cryptohome
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	uda "chromiumos/system_api/user_data_auth_proto"
@@ -18,7 +19,7 @@ import (
 )
 
 type testParam struct {
-	keyDataEnabled bool
+	disableKeyData bool
 }
 
 func init() {
@@ -34,10 +35,10 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name: "with_key_data",
-				Val:  testParam{keyDataEnabled: true},
+				Val:  testParam{disableKeyData: false},
 			}, {
 				Name: "without_key_data",
-				Val:  testParam{keyDataEnabled: false},
+				Val:  testParam{disableKeyData: true},
 			},
 		},
 		Timeout: 60 * time.Second,
@@ -82,24 +83,39 @@ func LegacyLabelAuthSession(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to remove old vault for preparation: ", err)
 	}
 
-	// Create persistent user with a vault keyset that has an empty label.
-	keyDataEnabled := s.Param().(testParam).keyDataEnabled
-	if err := testTool.CreateVaultKeyset(ctx, userName /*keyDataLabel=*/, "", userPassword, keyDataEnabled); err != nil {
-		s.Fatal("Failed to create VaultKeyset: ", err)
+	// Create the user with a persistent vault and add a kiosk credential.
+	// This should produce a VK factor.
+	if err := client.WithAuthSession(ctx, userName, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
+		if err := client.CreatePersistentUser(ctx, authSessionID); err != nil {
+			return errors.Wrap(err, "failed to create persistent user")
+		}
+		if _, err := client.PreparePersistentVault(ctx, authSessionID, false /*ecryptfs*/); err != nil {
+			return errors.Wrap(err, "failed to prepare new persistent vault")
+		}
+
+		// Create persistent user with a vault keyset that has an empty label.
+		disableKeyData := s.Param().(testParam).disableKeyData
+		if err := testTool.CreateVaultKeyset(ctx, authSessionID, userPassword /*keyDataLabel=*/, "", uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD, disableKeyData); err != nil {
+			return errors.Wrap(err, "failed to create VaultKeyset")
+		}
+
+		keys, err := client.ListVaultKeys(ctx, userName)
+		if err != nil {
+			return errors.Wrap(err, "failed to list keys")
+		}
+		if len(keys) != 1 || keys[0] != legacyKeyLabel {
+			keysString := strings.Join(keys, ", ")
+			return errors.Wrap(err, "unexpected keys: "+keysString)
+		}
+
+		if err := client.UnmountAll(ctx); err != nil {
+			return errors.Wrap(err, "failed to unmount vaults for re-mounting")
+		}
+		return nil
+	}); err != nil {
+		s.Fatal("Failed to create and set up the user: ", err)
 	}
 	defer cryptohome.RemoveVault(cleanupCtx, userName)
-
-	keys, err := client.ListVaultKeys(ctx, userName)
-	if err != nil {
-		s.Fatal("Failed to list keys: ", err)
-	}
-	if len(keys) != 1 || keys[0] != legacyKeyLabel {
-		s.Fatal("Unexpected keys: ", keys)
-	}
-
-	if err := client.UnmountAll(ctx); err != nil {
-		s.Fatal("Failed to unmount vaults for re-mounting: ", err)
-	}
 
 	// Verify authentication using the new APIs.
 	if err := client.WithAuthSession(ctx, userName, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {

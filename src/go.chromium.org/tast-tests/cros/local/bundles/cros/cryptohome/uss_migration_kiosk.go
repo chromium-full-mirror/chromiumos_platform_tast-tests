@@ -65,7 +65,6 @@ func init() {
 
 func UssMigrationKiosk(ctx context.Context, s *testing.State) {
 	const (
-		ownerName       = "owner@bar.baz"
 		cleanupTime     = 20 * time.Second
 		kioskKeysetFile = "master.0" // nocheck
 		ussFile         = "/user_secret_stash/uss.0"
@@ -102,60 +101,45 @@ func UssMigrationKiosk(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to remove old vault for preparation: ", err)
 	}
 
-	// Set up an auth factor with USS migration disabled.
-	if err := cryptochrome.WithUssMigration(ctx, false /*enabled*/, func() error {
-		// Put the system into USS disabled mode, to ensure we get VK credentials.
-		disableUssCleanup, err := helper.DisableUserSecretStash(ctx)
-		if err != nil {
-			return errors.Wrap(err, "unable to disable USS before creating credentials")
+	// Create the user with a persistent vault and add a kiosk credential.
+	// This should produce a VK factor.
+	if err := client.WithAuthSession(ctx, cryptohome.KioskUser, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
+		if err := client.CreatePersistentUser(ctx, authSessionID); err != nil {
+			return errors.Wrap(err, "failed to create persistent user")
 		}
-		defer disableUssCleanup(cleanupCtx)
-
-		// Create the user with a persistent vault and add a kiosk credential.
-		// This should produce a VK factor.
-		if err := client.WithAuthSession(ctx, cryptohome.KioskUser, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
-			if err := client.CreatePersistentUser(ctx, authSessionID); err != nil {
-				return errors.Wrap(err, "failed to create persistent user")
-			}
-			if _, err := client.PreparePersistentVault(ctx, authSessionID, false /*ecryptfs*/); err != nil {
-				return errors.Wrap(err, "failed to prepare new persistent vault")
-			}
-
-			// Create the actual kiosk credential, depending on the current modeof operation.
-			if userParam.testLegacyKiosk {
-				// In the legacy setup, create a keydata-less credential with no identifying info.
-				if err := testTool.CreateLegacyKioskVaultKeyset(ctx, cryptohome.KioskUser); err != nil {
-					return errors.Wrap(err, "failed to create VaultKeyset")
-				}
-			} else {
-				// In the typed setup, create a modern kiosk VK using the standard auth factor API.
-				if err := client.AddKioskAuthFactor(ctx, authSessionID); err != nil {
-					return errors.Wrap(err, "failed to add kiosk credentials")
-				}
-			}
-
-			// Check that the kiosk VaultKeyset file is created.
-			if err := cryptohome.CheckKeyBackingStoreExists(ctx, kioskKeysetFile, cryptohome.KioskUser); err != nil {
-				return errors.Wrap(err, "kiosk keyset file was not created")
-			}
-
-			if err := cryptohome.WriteFileForPersistence(ctx, cryptohome.KioskUser); err != nil {
-				return errors.Wrap(err, "failed to write test file")
-			}
-			return nil
-		}); err != nil {
-			return errors.Wrap(err, "failed to create and set up the user")
+		if _, err := client.PreparePersistentVault(ctx, authSessionID, false /*ecryptfs*/); err != nil {
+			return errors.Wrap(err, "failed to prepare new persistent vault")
 		}
 
-		// Unmount all user vaults.
-		if err := cryptohome.UnmountVault(ctx, cryptohome.KioskUser); err != nil {
-			return errors.Wrap(err, "failed to unmount vault after pre-migration mount")
+		// Create the actual kiosk credential, depending on the current modeof operation.
+		creationLabel := userParam.kioskLabel
+		if userParam.testLegacyKiosk {
+			creationLabel = ""
+		}
+		// In the typed setup, create a modern kiosk VK using the standard auth factor API.
+		// In the legacy setup, create a keydata-less credential with no identifying info.
+		if err := testTool.CreateVaultKeyset(ctx, authSessionID, cryptohome.KioskUser /*keyDataLabel=*/, creationLabel, uda.AuthFactorType_AUTH_FACTOR_TYPE_KIOSK, userParam.testLegacyKiosk); err != nil {
+			return errors.Wrap(err, "failed to create VaultKeyset")
+		}
+
+		// Check that the kiosk VaultKeyset file is created.
+		if err := cryptohome.CheckKeyBackingStoreExists(ctx, kioskKeysetFile, cryptohome.KioskUser); err != nil {
+			return errors.Wrap(err, "kiosk keyset file was not created")
+		}
+
+		if err := cryptohome.WriteFileForPersistence(ctx, cryptohome.KioskUser); err != nil {
+			return errors.Wrap(err, "failed to write test file")
 		}
 		return nil
 	}); err != nil {
-		s.Fatal("Setup while USS migration was disabled failed: ", err)
+		s.Fatal("Failed to create and set up the user: ", err)
 	}
-	defer client.RemoveVault(cleanupCtx, ownerName)
+
+	// Unmount all user vaults.
+	if err := cryptohome.UnmountVault(ctx, cryptohome.KioskUser); err != nil {
+		s.Fatal("Failed to unmount vault after pre-migration mount: ", err)
+	}
+	defer client.RemoveVault(cleanupCtx, cryptohome.KioskUser)
 
 	// Enable migration to verify the migration process.
 	if err := cryptochrome.WithUssMigration(ctx, true /*enabled*/, func() error {

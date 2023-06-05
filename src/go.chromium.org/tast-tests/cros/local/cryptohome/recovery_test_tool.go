@@ -14,6 +14,7 @@ import (
 	"os"
 	"path/filepath"
 
+	uda "chromiumos/system_api/user_data_auth_proto"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 )
@@ -200,27 +201,19 @@ func (c *RecoveryTestTool) CreateRecoveryRequest(ctx context.Context) error {
 }
 
 // CreateVaultKeyset calls "--action=create_vault_keyset".
-func (c *RecoveryTestTool) CreateVaultKeyset(ctx context.Context, username, keyDataLabel, passkey string, enableKeyData bool) error {
+func (c *RecoveryTestTool) CreateVaultKeyset(ctx context.Context, authSessionID, passkey, keyDataLabel string, authFactorType uda.AuthFactorType, disableKeyData bool) error {
 	args := []string{
 		"--action=create_vault_keyset",
-		"--username=" + username,
-		"--key_data_label=" + keyDataLabel,
+		"--auth_session_id=" + authSessionID,
 		"--passkey=" + passkey,
+		"--key_data_label=" + keyDataLabel,
 	}
-	if !enableKeyData {
-		args = append(args, "--enable_key_data=false")
+	if disableKeyData {
+		args = append(args, "--disable_key_data=true")
 	}
-	return c.call(ctx, args...)
-}
-
-// CreateLegacyKioskVaultKeyset calls "--action=create_vault_keyset".
-func (c *RecoveryTestTool) CreateLegacyKioskVaultKeyset(ctx context.Context, username string) error {
-	args := []string{
-		"--action=create_vault_keyset",
-		"--username=" + username,
-		"--passkey=" + username,
-		"--enable_key_data=false",
-		"--use_public_mount_salt=true",
+	switch authFactorType {
+	case uda.AuthFactorType_AUTH_FACTOR_TYPE_KIOSK:
+		args = append(args, "--use_public_mount_salt=true")
 	}
 	return c.call(ctx, args...)
 }
