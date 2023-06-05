@@ -7,14 +7,16 @@ package fixture
 
 import (
 	"context"
+	"io/ioutil"
+	"os"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 
 	"go.chromium.org/tast/core/testing"
 )
@@ -31,8 +33,13 @@ const (
 	gaiaLoggedInLacrosClamshell = "gaiaLoggedInLacrosClamshellForVideoConferencing"
 	gaiaLoggedInLacrosTablet    = "gaiaLoggedInLacrosTabletForVideoConferencing"
 
+	baseLoggedInWithFakeVCExtension       = "baseLoggedInWithFakeVCExtension"
+	baseLoggedInLacrosWithFakeVCExtension = "baseLoggedInLacrosWithFakeVCExtension"
+
 	noLoggedIn = "noLoggedInForVideoConferencing"
 )
+
+var fakeVCExtension = "fake_vc_extension.zip"
 
 const (
 	resetTimeout    = 30 * time.Second
@@ -218,12 +225,54 @@ func init() {
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: baseLoggedInWithFakeVCExtension,
+		Desc: "A fixture with fake user logged in and fake VC extension installed",
+		Contacts: []string{
+			"chrome-knowledge-eng@google.com",
+			"shengjun@google.com",
+		},
+		Data:            []string{fakeVCExtension},
+		Impl:            baseSetupFixtureWithFakeExtension(browser.TypeAsh, nil),
+		Parent:          fixture.StereoAloopLoaded,
+		SetUpTimeout:    chrome.LoginTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: baseLoggedInLacrosWithFakeVCExtension,
+		Desc: "A fixture with fake user logged in Lacros and fake VC extension installed",
+		Contacts: []string{
+			"chrome-knowledge-eng@google.com",
+			"shengjun@google.com",
+		},
+		Data:            []string{fakeVCExtension},
+		Impl:            baseSetupFixtureWithFakeExtension(browser.TypeLacros, nil),
+		Parent:          fixture.StereoAloopLoaded,
+		SetUpTimeout:    chrome.LoginTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
 }
 
 func baseSetupFixture(browserType browser.Type, fOpts chrome.OptionsCallback) testing.FixtureImpl {
 	return &baseSetupFixtureImpl{
 		browserType: browserType,
 		fOpts:       fOpts,
+	}
+}
+
+func baseSetupFixtureWithFakeExtension(browserType browser.Type, fOpts chrome.OptionsCallback) testing.FixtureImpl {
+	return &baseSetupFixtureImpl{
+		browserType: browserType,
+		fOpts:       fOpts,
+		installExt:  true,
 	}
 }
 
@@ -239,7 +288,7 @@ type baseSetupFixtureImpl struct {
 	browserType browser.Type           // Whether Ash or Lacros is used for test
 	fOpts       chrome.OptionsCallback // Function to return chrome options.
 	tconn       *chrome.TestConn
-	recorder    *uiauto.ScreenRecorder
+	installExt  bool // Whether to install fake VC extension.
 }
 
 func (f *baseSetupFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -254,7 +303,27 @@ func (f *baseSetupFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) 
 		chrome.DisableFeatures("WindowLayoutMenu"),
 	}
 
-	var err error
+	if f.installExt {
+		s.Log("Copying extension to temp directory")
+		extDir, err := ioutil.TempDir("", "videoconferencing")
+		if err != nil {
+			s.Fatal("Failed to create temp dir: ", err)
+		}
+		defer os.RemoveAll(extDir)
+
+		if err := testexec.CommandContext(ctx, "unzip", s.DataPath(fakeVCExtension), "-d", extDir).Run(testexec.DumpLogOnError); err != nil {
+			s.Fatal("Failed to unzip fake extension : ", err)
+		}
+
+		extPath := extDir + "/vc_extension"
+		// Set option to install unpacked extension.
+		if f.browserType == browser.TypeAsh {
+			opts = append(opts, chrome.UnpackedExtension(extPath))
+		} else {
+			opts = append(opts, chrome.LacrosUnpackedExtension(extPath))
+		}
+	}
+
 	if f.fOpts != nil {
 		fOpts, err := f.fOpts(ctx, s)
 		if err != nil {

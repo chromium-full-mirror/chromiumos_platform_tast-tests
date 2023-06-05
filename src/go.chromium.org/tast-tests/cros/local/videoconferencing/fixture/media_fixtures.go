@@ -57,6 +57,10 @@ const (
 	GAIALoggedInTabletWithFakeHALAndEffectsEnabled          = "gaiaLoggedInTabletWithFakeHALAndEffectsEnabled"
 	GAIALoggedInLacrosClamshellWithFakeHALAndEffectsEnabled = "gaiaLoggedInLacrosClamshellWithFakeHALAndEffectsEnabled"
 	GAIALoggedInLacrosTabletWithFakeHALAndEffectsEnabled    = "gaiaLoggedInLacrosTabletWithFakeHALAndEffectsEnabled"
+
+	// List of fixture names for video conferencing testing with fake VC extension installed.
+	LoggedInWithFakeVCExtension       = "loggedInWithFakeVCExtension"
+	LoggedInLacrosWithFakeVCExtension = "loggedInLacrosWithFakeVCExtension"
 )
 
 type platformEffectLevel int
@@ -346,6 +350,38 @@ func init() {
 		},
 		Impl:            mediaSetupFixture(internalCameraWithPlatformEffectsEnabled),
 		Parent:          noLoggedIn,
+		SetUpTimeout:    chrome.LoginTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: LoggedInWithFakeVCExtension,
+		Desc: "A fixture with fake user logged in and fake VC extension installed",
+		Contacts: []string{
+			"chrome-knowledge-eng@google.com",
+			"shengjun@google.com",
+		},
+		Impl:            mediaSetupFixture(internalCameraWithPlatformEffectsEnabled),
+		Parent:          baseLoggedInWithFakeVCExtension,
+		SetUpTimeout:    chrome.LoginTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: LoggedInLacrosWithFakeVCExtension,
+		Desc: "A fixture with fake user logged in Lacros and fake VC extension installed",
+		Contacts: []string{
+			"chrome-knowledge-eng@google.com",
+			"shengjun@google.com",
+		},
+		Impl:            mediaSetupFixture(internalCameraWithPlatformEffectsEnabled),
+		Parent:          baseLoggedInLacrosWithFakeVCExtension,
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,

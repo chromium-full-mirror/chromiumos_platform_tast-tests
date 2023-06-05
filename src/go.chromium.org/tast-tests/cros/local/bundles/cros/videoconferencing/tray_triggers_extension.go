@@ -8,9 +8,8 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/common"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/fakeextension"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/apps/thirdparty/screencastify"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -38,6 +37,16 @@ func init() {
 		},
 		SoftwareDeps: []string{"chrome", "camera_feature_effects"},
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("betty")),
+		Params: []testing.Param{
+			{
+				Fixture: fixture.LoggedInWithFakeVCExtension,
+			},
+			{
+				Name:              "lacros",
+				ExtraSoftwareDeps: []string{"lacros"},
+				Fixture:           fixture.LoggedInLacrosWithFakeVCExtension,
+			},
+		},
 		SearchFlags: []*testing.StringPair{
 			{
 				// Trigger VC tray with Camera on Chrome Extension.
@@ -80,19 +89,10 @@ func init() {
 				Value: "screenplay-09f693df-f573-4880-a4cf-707b6f78aa03",
 			},
 		},
-		Params: []testing.Param{
-			{
-				Fixture: fixture.GAIALoggedInWithFakeHALAndEffectsEnabled,
-			},
-			{
-				Name:              "lacros",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Fixture:           fixture.GAIALoggedInLacrosWithFakeHALAndEffectsEnabled,
-			},
-		},
 	})
 }
 
+// TrayTriggersExtension checks VC tray can be triggered by Chrome extension.
 func TrayTriggersExtension(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
@@ -109,94 +109,73 @@ func TrayTriggersExtension(ctx context.Context, s *testing.State) {
 
 	browserType := s.FixtValue().(fixture.FixtData).BrowserType()
 
-	br, cleanup, err := browserfixt.SetUp(ctx, cr, browserType)
+	_, br, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, browserType, chrome.NewTabURL)
 	if err != nil {
 		s.Fatal("Failed to launch browser: ", err)
 	}
 	defer cleanup(cleanupCtx)
 
-	if err := screencastify.InstallExtension(ctx, tconn, br); err != nil {
-		s.Fatal("Failed to install Screencastify: ", err)
-	}
-	defer screencastify.UninstallExtension(cleanupCtx, tconn, br)
-
-	if err := screencastify.Login(ctx, cr, tconn, br); err != nil {
-		s.Fatal("Failed to login Screencastify: ", err)
+	if err := fakeextension.GrantAVPermissions(ctx, br); err != nil {
+		s.Fatal("Failed to grant AV permissions: ", err)
 	}
 
 	vcTray := vctray.New(ctx, tconn)
 
-	// By default, only audio is activated by launching extension popup.
-	s.Run(ctx, "mic_only", func(ctx context.Context, s *testing.State) {
-		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_mic_only")
-		sc, err := screencastify.Launch(ctx, cr, tconn)
-		if err != nil {
-			s.Fatal("Failed to launch Screencastify extension: ", err)
-		}
-
-		if err := uiauto.Combine("verify default status of media device usage",
-			vcTray.WaitUntilExists,
-			vcTray.WaitUntilState(vctray.DevMicrophone, vctray.DeviceInUse),
-			vcTray.WaitUntilState(vctray.DevCamera, vctray.DeviceHidden),
-			vcTray.WaitUntilState(vctray.DevScreen, vctray.DeviceHidden),
-		)(ctx); err != nil {
-			s.Fatal("Failed to verify the default status of media device usage: ", err)
-		}
-
-		// Toggle off microphone will hide vcTray as no other media devices are used.
-		if err := uiauto.Combine("toggle off microphone to hide vcTray",
-			sc.ToggleMicrophone(false),
-			vcTray.WaitUntilGone,
-		)(ctx); err != nil {
-			s.Fatal("Failed to verify that extension triggers vcTray by microphone: ", err)
-		}
-	})
+	extUI, err := fakeextension.Launch(ctx, cr, tconn)
+	if err != nil {
+		s.Fatal("Failed to launch extension: ", err)
+	}
 
 	// Verify extension triggers vcTray on camera.
 	s.Run(ctx, "cam_only", func(ctx context.Context, s *testing.State) {
 		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_cam_only")
-		sc, err := screencastify.Launch(ctx, cr, tconn)
-		if err != nil {
-			s.Fatal("Failed to launch Screencastify extension: ", err)
-		}
 
-		if err := uiauto.Combine("record webcam only",
-			sc.SetRecordType(screencastify.RecordTypeCameraOnly),
-			// Mic is automatically enabled when camera is selected.
-			sc.ToggleMicrophone(false),
-			sc.StartRecording,
-			sc.WaitUntilCameraRecordingStarted,
+		if err := uiauto.Combine("activate camera",
+			extUI.StartVideo,
 			vcTray.WaitUntilState(vctray.DevMicrophone, vctray.DeviceHidden),
 			vcTray.WaitUntilState(vctray.DevCamera, vctray.DeviceInUse),
 			vcTray.WaitUntilState(vctray.DevScreen, vctray.DeviceHidden),
+			// Sleep 1s to wait for video rendering.
+			uiauto.Sleep(time.Second),
 		)(ctx); err != nil {
 			s.Fatal("Failed to verify that extension triggers vcTray by camera: ", err)
 		}
 
-		// Return to app only works on camera record.
-		// Verify returnToApp via vcTray.
-		if err := common.VerifyReturnToApp(ctx, tconn); err != nil {
-			s.Fatal("Failed to verify returnToApp: ", err)
+		if err := uiauto.RetrySilently(3, uiauto.Combine("deactivate camera",
+			extUI.StopVideo,
+			vcTray.WaitUntilGone,
+		))(ctx); err != nil {
+			s.Fatal("Failed to verify that vcTray is gone after deactivating camera: ", err)
+		}
+	})
+
+	s.Run(ctx, "mic_only", func(ctx context.Context, s *testing.State) {
+		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_mic_only")
+
+		if err := uiauto.Combine("activate microphone",
+			extUI.StartAudio,
+			vcTray.WaitUntilState(vctray.DevMicrophone, vctray.DeviceInUse),
+			vcTray.WaitUntilState(vctray.DevCamera, vctray.DeviceHidden),
+			vcTray.WaitUntilState(vctray.DevScreen, vctray.DeviceHidden),
+		)(ctx); err != nil {
+			s.Fatal("Failed to verify activting microphone: ", err)
 		}
 
-		if err := uiauto.Combine("stop camera record",
-			sc.StopRecordingOnPreviewPage,
+		// Toggle off microphone will hide vcTray as no other media devices are used.
+		if err := uiauto.Combine("deactivate microphone",
+			extUI.StopAudio,
 			vcTray.WaitUntilGone,
 		)(ctx); err != nil {
-			s.Fatal("Failed to verify that vcTray is gone after stopping sharing screen: ", err)
+			s.Fatal("Failed to verify deactivating microphone: ", err)
 		}
 	})
 
 	// Verify extension triggers vcTray on sharing screen.
 	s.Run(ctx, "screen_only", func(ctx context.Context, s *testing.State) {
 		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_screen_only")
-		sc, err := screencastify.Launch(ctx, cr, tconn)
-		if err != nil {
-			s.Fatal("Failed to launch Screencastify extension: ", err)
-		}
 
 		if err := uiauto.Combine("share screen only",
-			sc.ShareEntireScreen(false, false),
+			extUI.StartScreenCapture,
 			vcTray.WaitUntilState(vctray.DevMicrophone, vctray.DeviceHidden),
 			vcTray.WaitUntilState(vctray.DevCamera, vctray.DeviceHidden),
 			vcTray.WaitUntilState(vctray.DevScreen, vctray.DeviceInUse),
@@ -204,14 +183,8 @@ func TrayTriggersExtension(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to verify that extension triggers vcTray by sharing screen: ", err)
 		}
 
-		// Share screen can only be stopped from extension popup.
-		sc, err = screencastify.Launch(ctx, cr, tconn)
-		if err != nil {
-			s.Fatal("Failed to launch Screencastify extension: ", err)
-		}
-
 		if err := uiauto.Combine("stop screen share",
-			sc.StopRecordingOnPopupWindow,
+			extUI.StopScreenCapture,
 			vcTray.WaitUntilGone,
 		)(ctx); err != nil {
 			s.Fatal("Failed to verify that vcTray is gone after stopping sharing screen: ", err)
