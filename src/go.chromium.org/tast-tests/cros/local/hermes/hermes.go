@@ -8,10 +8,12 @@ package hermes
 
 import (
 	"context"
+	"encoding/json"
+	"io/ioutil"
 	"reflect"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/hermesconst"
+	"github.com/godbus/dbus/v5"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -24,7 +26,7 @@ const (
 
 // WaitForHermesIdle waits for Chrome to refresh installed profiles before returning.
 func WaitForHermesIdle(ctx context.Context, timeout time.Duration) error {
-	if err := testing.Poll(ctx, func(ctx context.Context) (e error) {
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		return waitForHermesIdleHelper(ctx)
 	}, &testing.PollOptions{Timeout: timeout}); err != nil {
 		return errors.Wrap(err, "Timed out while checking if Hermes is idle")
@@ -37,16 +39,36 @@ func waitForHermesIdleHelper(ctx context.Context) error {
 	if err != nil {
 		return errors.Wrap(err, "unable to get available EUICCs")
 	}
-	for _, euiccPath := range euiccPaths {
-		obj, err := dbusutil.NewDBusObject(ctx, hermesconst.DBusHermesService, hermesconst.DBusHermesEuiccInterface, euiccPath)
-		if err != nil {
-			return errors.Wrap(err, "unable to get EUICC object")
-		}
-		if err := testing.Poll(ctx, func(ctx context.Context) (e error) {
-			return CheckProperty(ctx, obj, hermesconst.EuiccPropertyProfileRefreshedAtLeastOnce, true)
-		}, nil); err != nil {
-			return errors.Wrap(err, "Timed out waiting for ProfilesRefreshedAtleastOnce==true")
-		}
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		return ensureEUICCSRefreshed(euiccPaths)
+	}, nil); err != nil {
+		return errors.Wrap(err, "Timed out waiting for Chrome to refresh profiles")
+	}
+	return nil
+}
+
+func ensureEUICCSRefreshed(euiccPaths []dbus.ObjectPath) error {
+	jsonBytes, err := ioutil.ReadFile("/home/chronos/Local State")
+	if err != nil {
+		return errors.Wrap(err, "unable to read Chrome state")
+	}
+
+	var localState map[string]interface{}
+	err = json.Unmarshal(jsonBytes, &localState)
+	if err != nil {
+		return errors.Wrap(err, "unable to unmarshal Chrome state")
+	}
+
+	c, ok := localState["cros_esim"].(map[string]interface{})
+	if !ok {
+		return errors.Wrap(err, "unable to read Chrome eSIM cache")
+	}
+	refreshedEuiccs, ok := c["refreshed_euiccs"].([]interface{})
+	if !ok {
+		return errors.Wrap(err, "unable to read refreshed EUICCs")
+	}
+	if len(refreshedEuiccs) != len(euiccPaths) {
+		return errors.Wrap(err, "profiles haven't been refreshed from EUICCs")
 	}
 	return nil
 }
