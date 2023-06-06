@@ -207,7 +207,12 @@ func setUpTestBridge(ctx context.Context, cr *chrome.Chrome) (*chrome.Conn, *chr
 
 	const code = `
 	  async function() {
-		const workerPath = '/js/test_bridge.js';
+		let workerPath = '/js/test_bridge.js';
+		if (window.trustedTypes) {
+			const testBridgeUrlPolicy = trustedTypes.createPolicy(
+			'ash-webui-test-script', {createScriptURL: () => '/js/test_bridge.js'});
+			workerPath = testBridgeUrlPolicy.createScriptURL('');
+		}
 		const sharedWorker = new SharedWorker(workerPath, {type: 'module'});
 		const Comlink = await import('/js/lib/comlink.js');
 		return Comlink.wrap(sharedWorker.port);
