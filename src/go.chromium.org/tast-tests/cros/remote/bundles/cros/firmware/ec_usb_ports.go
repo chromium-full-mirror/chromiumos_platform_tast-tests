@@ -37,7 +37,7 @@ func init() {
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_ec"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
-		Requirements: []string{"sys-fw-0022-v01"},
+		Requirements: []string{"sys-fw-0022-v02"},
 		Fixture:      fixture.NormalMode,
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{

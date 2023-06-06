@@ -42,7 +42,7 @@ func init() {
 		Attr:         []string{"group:firmware"},
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Lid()),
-		Requirements: []string{"sys-fw-0022-v01"},
+		Requirements: []string{"sys-fw-0022-v02"},
 		ServiceDeps:  []string{"tast.cros.firmware.UtilsService"},
 		Timeout:      10 * time.Minute,
 		Params: []testing.Param{

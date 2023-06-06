@@ -28,7 +28,7 @@ func init() {
 		Attr:         []string{"group:firmware", "firmware_ec"},
 		Fixture:      fixture.DevMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
-		Requirements: []string{"sys-fw-0022-v01"},
+		Requirements: []string{"sys-fw-0022-v02"},
 	})
 }
 

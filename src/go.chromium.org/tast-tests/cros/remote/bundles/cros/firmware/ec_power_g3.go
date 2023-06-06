@@ -44,7 +44,7 @@ func init() {
 			{
 				Name:              "shutdown",
 				ExtraAttr:         []string{"firmware_ec"},
-				ExtraRequirements: []string{"sys-fw-0022-v01"},
+				ExtraRequirements: []string{"sys-fw-0022-v02"},
 				Val: powerG3Params{
 					PowerOffMethod: shutdownCommand,
 				},
@@ -53,7 +53,7 @@ func init() {
 			{
 				Name:              "power_button",
 				ExtraAttr:         []string{"firmware_ec", "firmware_bringup"},
-				ExtraRequirements: []string{"sys-fw-0022-v01"},
+				ExtraRequirements: []string{"sys-fw-0022-v02"},
 				Val: powerG3Params{
 					PowerOffMethod: longPowerButtonPress,
 				},
