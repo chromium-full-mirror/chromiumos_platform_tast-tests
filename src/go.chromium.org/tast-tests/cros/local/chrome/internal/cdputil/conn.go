@@ -283,7 +283,7 @@ func (c *Conn) WaitForExpr(ctx context.Context, expr string, ea ErrorAction, tim
 			return falseErr
 		}
 		return nil
-	}, &testing.PollOptions{Interval: 10 * time.Millisecond, Timeout: timeout}); err != nil {
+	}, &testing.PollOptions{Interval: 200 * time.Millisecond, Timeout: timeout}); err != nil {
 		return err
 	}
 	return nil
