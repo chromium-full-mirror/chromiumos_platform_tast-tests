@@ -44,6 +44,7 @@ const (
 	virtualKeyboardMultitouch
 	handwritingLegacyRecognition
 	qsRevampEnabled
+	emojiPickerGifSupport
 )
 
 // List of fixture names for inputs.
@@ -55,6 +56,7 @@ const (
 	ClamshellVKRestart                            = "clamshellVKRestart"
 	ClamshellNonVKWithDiacriticsOnPKLongpress     = "clamshellWithDiacriticsOnPKLongpress"
 	ClamshellNonVK                                = "clamshellNonVK"
+	ClamshellNonVKGifSupport                      = "clamshellNonVKGifSupport"
 	ClamshellNonVKStereoAloopLoaded               = "clamshellNonVKStereoAloopLoaded"
 	ClamshellNonVKInGuest                         = "clamshellNonVKInGuest"
 	ClamshellNonVKRestart                         = "clamshellNonVKRestart"
@@ -188,6 +190,21 @@ func init() {
 			"essential-inputs-team@google.com",
 		},
 		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeAsh, autocorrectToggle),
+		SetUpTimeout:    chrome.LoginTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: ClamshellNonVKGifSupport,
+		Desc: "Clamshell mode with VK disabled and GIF Support in Emoji Picker",
+		Contacts: []string{
+			"alvinjia@google.com",
+			"shengjun@chromium.org",
+			"essential-inputs-team@google.com",
+		},
+		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeAsh, autocorrectToggle, emojiPickerGifSupport),
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -706,6 +723,8 @@ func (f *inputsFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) int
 			opts = append(opts, chrome.ExtraArgs("--enable-features=HandwritingLegacyRecognition"))
 		case qsRevampEnabled:
 			opts = append(opts, chrome.EnableFeatures("QsRevamp"))
+		case emojiPickerGifSupport:
+			opts = append(opts, chrome.ExtraArgs(("--enable-features=SystemEmojiPickerGIFSupport")))
 		}
 	}
 

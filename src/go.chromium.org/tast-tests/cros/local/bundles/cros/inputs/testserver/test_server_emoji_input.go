@@ -88,3 +88,35 @@ func (its *InputsTestServer) InputEmojiWithEmojiPickerSearch(uc *useractions.Use
 			},
 		})
 }
+
+// InputGifWithEmojiPickerSearch returns a user action to input GIF with PK emoji picker on E14S test server using search.
+func (its *InputsTestServer) InputGifWithEmojiPickerSearch(uc *useractions.UserContext, inputField InputField, keyboard *input.KeyboardEventWriter, searchString string) uiauto.Action {
+
+	emojiResultFinder := nodewith.NameContaining("GIF").First()
+	ui := emojipicker.NewUICtx(its.tconn)
+
+	action := uiauto.Combine(fmt.Sprintf("input emoji with emoji picker on field %v", inputField),
+		its.Clear(inputField),
+		its.TriggerEmojiPickerFromContextMenu(inputField),
+		ui.LeftClickUntil(emojipicker.SearchFieldFinder, ui.WithTimeout(time.Second).WaitUntilExists(emojipicker.SearchFieldFinder)),
+		keyboard.TypeAction(searchString),
+		util.WaitForFieldEmpty(its.tconn, emojipicker.NodeFinder.Name("😄").First()),
+		ui.LeftClickUntil(emojiResultFinder, ui.WithTimeout(time.Second).WaitUntilGone(emojipicker.RootFinder)),
+		its.WaitUntilFieldContainsImages(inputField),
+	)
+
+	return uiauto.UserAction(
+		"Input GIF by search in Emoji Picker",
+		action,
+		uc,
+		&useractions.UserActionCfg{
+			Attributes: map[string]string{
+				useractions.AttributeFeature:      useractions.FeatureEmojiPicker,
+				useractions.AttributeInputField:   string(inputField),
+				useractions.AttributeTestScenario: fmt.Sprintf("Search %q for GIF then submit", searchString),
+			},
+			Tags: []useractions.ActionTag{
+				useractions.ActionTagEssentialInputs,
+			},
+		})
+}

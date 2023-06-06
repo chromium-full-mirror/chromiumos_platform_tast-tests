@@ -69,6 +69,9 @@ const (
 	TextAreaAutoShiftOff        InputField = "autocapitalize off"
 	OffscreenTextField          InputField = "offscreen"
 
+	// This field is used to test GIF insertion from Emoji Picker.
+	ContentEditableInputField InputField = "contentEditableInputField"
+
 	// MakeTextButton is used to show password field.
 	MakeTextButton ButtonName = "makeTextButton"
 
@@ -149,6 +152,27 @@ const html = `<!DOCTYPE html>
 <textarea rows="3" aria-label="autocapitalize off" autocapitalize="none" style="width: 100%"></textarea>
 <br /><br />
 <textarea style="position: absolute; top: 6000px; height: 30px; width: 100%;" aria-label="offscreen"></textarea>
+
+<pre>&lt;div contentEditable="true" /&gt;</pre>
+<div id="content-editable-editing-field" aria-label="contentEditableInputField"
+     contenteditable="true" style="border: 1px solid black; min-height: 30px"></div>
+<script type="text/javascript">
+  window.addEventListener("load", () => {
+    const editingField = document.querySelector("#content-editable-editing-field");
+    editingField.addEventListener("paste", (evt) => {
+      if (evt.clipboardData.items) {
+        for (const item of evt.clipboardData.items) {
+          if (item.kind === "file" && item.type.startsWith("image/")) {
+            const imageElement = document.createElement("img");
+            imageElement.src = URL.createObjectURL(item.getAsFile());
+            editingField.appendChild(imageElement);
+            return evt.preventDefault();
+          }
+        }
+      }
+    });
+  });
+</script>
 `
 
 // InputsTestServer is an unified server instance being used to manage web server and connection.
@@ -387,6 +411,14 @@ func (its *InputsTestServer) WaitForFieldToBeActive(inputField InputField) uiaut
 		// method. See b/235417796 for more.
 		uiauto.Sleep(500*time.Millisecond),
 	)
+}
+
+// WaitUntilFieldContainsImages returns an action waiting for images inserted in certain input field.
+func (its *InputsTestServer) WaitUntilFieldContainsImages(inputField InputField) uiauto.Action {
+	return func(ctx context.Context) error {
+		return its.pc.WaitForExprWithTimeout(ctx,
+			fmt.Sprintf(`document.querySelectorAll("*[aria-label='%s'] img").length > 0`, inputField), 3*time.Second)
+	}
 }
 
 // ClickFieldAndWaitForActive returns an action clicking the input field and waiting for it to be active.
