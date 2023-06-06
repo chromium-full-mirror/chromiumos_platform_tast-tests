@@ -52,7 +52,7 @@ func init() {
 		},
 		BugComponent: "crbug:UI>Browser>Autofill",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{},
+		Attr:         []string{"group:golden_tier"},
 		Params: []testing.Param{{
 			Fixture: fixture.ChromePolicyLoggedIn,
 			Val:     browser.TypeAsh,
@@ -252,9 +252,10 @@ func AutofillCreditCardEnabled(ctx context.Context, s *testing.State) {
 				}
 
 				// Trigger the autofill on the credit card form page.
-				autofillPopup := nodewith.Role(role.ListBoxOption).ClassName("AutofillPopupSuggestionView")
+				nameTextBox := nodewith.Role(role.TextField).Name("Name on card")
+				autofillPopup := nodewith.Role(role.ListBoxOption).ClassName("PopupCellView").First()
 				if err := uiauto.Combine("clicking the Name on card field and choosing the suggested credit card",
-					ui.DoDefaultUntil(nodewith.Role(role.InlineTextBox).Name("Name on card"), ui.Exists(autofillPopup)),
+					ui.DoDefaultUntil(nameTextBox, ui.Exists(autofillPopup)),
 					ui.DoDefaultUntil(autofillPopup, ui.Exists(nodewith.Role(role.InlineTextBox).Name(creditCardFields[0].fieldValue))),
 				)(ctx); err != nil {
 					s.Fatal("Failed to trigger and use credit card autofill: ", err)
