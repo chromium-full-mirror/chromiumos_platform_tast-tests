@@ -25,7 +25,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DaisyChainViaDock,
+		Func:         DaisyChain,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Daisy chain two external display together via Dock, do video verification by camera connecting to the host",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
@@ -38,12 +38,11 @@ func init() {
 	})
 }
 
-func DaisyChainViaDock(ctx context.Context, s *testing.State) {
+func DaisyChain(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	dockingID := s.RequiredVar("DockingID")
 	extDispID1 := s.RequiredVar("ExtDispID1")
 	extDispID2 := s.RequiredVar("ExtDispID2")
 
@@ -70,12 +69,15 @@ func DaisyChainViaDock(ctx context.Context, s *testing.State) {
 	}
 	defer dut.Conn().CommandContext(cleanupCtx, "rm", remoteTXTPath).Output()
 
-	// Open IP power to supply docking power.
-	ipPowerPorts := []int{1}
-	if err := utils.OpenIppower(ctx, ipPowerPorts); err != nil {
-		s.Fatal("Failed to power on docking station: ", err)
+	dockingID, hasDockingID := s.Var("DockingID")
+	if hasDockingID {
+		// Open IP power to supply docking power.
+		ipPowerPorts := []int{1}
+		if err := utils.OpenIppower(ctx, ipPowerPorts); err != nil {
+			s.Fatal("Failed to power on docking station: ", err)
+		}
+		defer utils.CloseIppower(cleanupCtx, ipPowerPorts)
 	}
-	defer utils.CloseIppower(cleanupCtx, ipPowerPorts)
 
 	// Initialize fixtures to find the connected devices.
 	if err := utils.InitFixture(ctx); err != nil {
@@ -88,16 +90,25 @@ func DaisyChainViaDock(ctx context.Context, s *testing.State) {
 	}
 
 	extDispIDArray := []string{extDispID1, extDispID2}
-	if err := utils.MappingWithDockFixture(ctx, s, extDispIDArray, dockingID); err != nil {
-		s.Fatal("Failed to mapping display fixture to camera: ", err)
+
+	if hasDockingID {
+		if err := utils.MappingWithDockFixture(ctx, s, extDispIDArray, dockingID); err != nil {
+			s.Fatal("Failed to mapping display fixture to camera: ", err)
+		}
+	} else {
+		if err := utils.MappingDisplayFixtureToCamera(ctx, s, extDispIDArray); err != nil {
+			s.Fatal("Failed to mapping display fixture to camera: ", err)
+		}
 	}
 
 	if err := utils.ControlFixture(ctx, extDispID1, "on"); err != nil {
 		s.Fatal("Failed to connect to the first external display: ", err)
 	}
 
-	if err := utils.ControlFixture(ctx, dockingID, "on"); err != nil {
-		s.Fatal("Failed to connect to the docking station: ", err)
+	if hasDockingID {
+		if err := utils.ControlFixture(ctx, dockingID, "on"); err != nil {
+			s.Fatal("Failed to connect to the docking station: ", err)
+		}
 	}
 
 	displaySvc := wwcb.NewDisplayServiceClient(cl.Conn)
@@ -135,7 +146,6 @@ func DaisyChainViaDock(ctx context.Context, s *testing.State) {
 	// GoBigSleepLint: Wait for the monitor to turn on screen.
 	testing.Sleep(ctx, 30*time.Second)
 
-	filesWindowName := "Files - My files"
 	galleryWindowName := fmt.Sprintf("Gallery - %s", utils.VideoFile)
 
 	for _, test := range []struct {
@@ -150,12 +160,10 @@ func DaisyChainViaDock(ctx context.Context, s *testing.State) {
 		if _, err := appsSvc.LaunchApp(ctx, &pb.LaunchAppRequest{AppName: "Files", TimeoutSecs: 60}); err != nil {
 			s.Fatal("Failed to launch Filesapp: ", err)
 		}
-		defer utils.CloseWindow(ctx, keyboardSvc, uiautoSvc, filesWindowName)
 
 		if err := utils.OpenMediaFileOnFilesapp(ctx, uiautoSvc, utils.VideoFile); err != nil {
 			s.Fatal("Failed to open media file on Filesapp: ", err)
 		}
-		defer utils.CloseWindow(ctx, keyboardSvc, uiautoSvc, galleryWindowName)
 
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
 			if _, err := displaySvc.SwitchWindowToDisplay(ctx, &wwcb.QueryRequest{DisplayIndex: int32(test.extDispIndex), WindowTitle: galleryWindowName}); err != nil {
@@ -166,16 +174,19 @@ func DaisyChainViaDock(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to switch Gallery window to the external display: ", err)
 		}
 
-		if _, err := keyboardSvc.Accel(ctx, &inputspb.AccelRequest{Key: "fullscreen"}); err != nil {
-			s.Fatal("Failed to type fullscreen: ", err)
-		}
-
 		if err := utils.ClickOnPlayButton(ctx, uiautoSvc); err != nil {
 			s.Fatal("Failed to click on play button on the Gallery: ", err)
+		}
+
+		if err := utils.ClickFullScreenButton(ctx, uiautoSvc); err != nil {
+			s.Fatal("Failed to click on fullscreen on the Gallery: ", err)
 		}
 
 		if err := utils.VerifyVideo(ctx, s, test.extDispID, 30); err != nil {
 			s.Fatal("Failed to verify video on the external display: ", err)
 		}
+
+		utils.CloseWindow(ctx, keyboardSvc, uiautoSvc, galleryWindowName)
+		appsSvc.CloseApp(ctx, &pb.CloseAppRequest{AppName: "Files", TimeoutSecs: 60})
 	}
 }
