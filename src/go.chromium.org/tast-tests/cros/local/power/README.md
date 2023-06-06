@@ -173,3 +173,5 @@ criteria to view data visualization.
 
 ### Crosbolt dashboard
 http://go/crosbolt and filter the criteria to view.
+
+To monitor regression through crosbolt, see go/power-test-regression.
