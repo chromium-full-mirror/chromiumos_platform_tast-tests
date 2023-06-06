@@ -62,6 +62,7 @@ func SELinuxFilesSystem(ctx context.Context, s *testing.State) {
 		{Path: "/run/dbus", Context: "cros_run_dbus"},
 		{Path: "/run/dbus.pid", Context: "cros_dbus_daemon_pid_file"},
 		{Path: "/run/dbus/system_bus_socket", Context: "cros_system_bus_socket"},
+		{Path: "/run/featured/active", Context: "cros_run_featured_active", Recursive: true},
 		{Path: "/run/frecon", Context: "cros_run_frecon", Recursive: true},
 		{Path: "/run/metrics", Context: "cros_run_metrics"},
 		{Path: "/run/metrics/external", Context: "cros_run_metrics_external"},
