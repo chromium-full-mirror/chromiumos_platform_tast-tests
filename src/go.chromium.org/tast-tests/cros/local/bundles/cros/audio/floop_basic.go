@@ -23,7 +23,7 @@ func init() {
 			"htcheong@google.com",
 		},
 		Fixture:      fixture.FloopEnabled,
-		BugComponent: "b:875484",
+		BugComponent: "b:776546",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 	})
 }

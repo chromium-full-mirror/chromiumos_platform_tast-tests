@@ -50,7 +50,7 @@ func init() {
 		Func:         UCMSequences,
 		Desc:         "Exercise UCM config enable/disable sequences",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
-		BugComponent: "b:875484",
+		BugComponent: "b:776546",
 		Attr:         []string{"group:mainline"},
 		Timeout:      1 * time.Minute,
 		HardwareDeps: hwdep.D(

@@ -38,7 +38,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies local audio playback through default app and exercises various audio player controls",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
-		BugComponent: "b:875484",
+		BugComponent: "b:776546",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline"},
 		Fixture:      "chromeLoggedInQsRevampEnabled",

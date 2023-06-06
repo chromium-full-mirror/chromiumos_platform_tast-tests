@@ -20,7 +20,7 @@ func init() {
 		Func:         CrasBenchSmoke,
 		Desc:         "Smoke test of cras_bench",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "paulhsia@chromium.org", "cychiang@chromium.org"},
-		BugComponent: "b:875484",
+		BugComponent: "b:776546",
 		Attr:         []string{"group:mainline"},
 		Timeout:      2 * time.Minute,
 		Params: []testing.Param{

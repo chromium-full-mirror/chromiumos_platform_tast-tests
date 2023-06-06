@@ -32,7 +32,7 @@ func init() {
 		Attr:         []string{"group:mainline", "group:audio", "informational"},
 		Desc:         "Captures output audio via loopback and verifies that CRAS plays multiple streams correctly",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "judyhsiao@chromium.org", "yuhsuan@chromium.org"},
-		BugComponent: "b:875484",
+		BugComponent: "b:776546",
 		SoftwareDeps: []string{"audio_stable", "chrome"},
 		Pre:          chrome.LoggedIn(),
 		Timeout:      3 * time.Minute,

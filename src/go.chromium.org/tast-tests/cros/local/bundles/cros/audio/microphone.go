@@ -29,7 +29,7 @@ func init() {
 			"chromeos-audio-bugs@google.com",
 			"cychiang@chromium.org",
 		},
-		BugComponent: "b:875484",
+		BugComponent: "b:776546",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"audio_stable"},
 		// TODO(b:268542791): Skip hoglin until the issue is fixed.

@@ -24,7 +24,7 @@ func init() {
 		Func:         CrasSpeakOnMuteDetectionTransitions,
 		Desc:         "Test CRAS detection of speaking while on mute with system state changes",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
-		BugComponent: "b:875484", // ChromeOS > Platform > Technologies > Audio > Test > Tast
+		BugComponent: "b:776546", // ChromeOS > Platform > Technologies > Audio > Test > Tast
 		Attr:         []string{"group:mainline"},
 		Fixture:      fixture.StereoAloopLoadedWithoutUI,
 		Data:         []string{data.TheQuickBrownFoxWav},

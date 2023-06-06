@@ -31,7 +31,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies supported audio file formats",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
-		BugComponent: "b:875484",
+		BugComponent: "b:776546",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline"},
 		HardwareDeps: hwdep.D(hwdep.Speaker()),

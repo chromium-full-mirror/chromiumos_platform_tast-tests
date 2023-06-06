@@ -32,7 +32,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies audio playback during display off with charger connected and disconnected",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
-		BugComponent: "b:875484",
+		BugComponent: "b:776546",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
 		ServiceDeps:  []string{"tast.cros.ui.AudioService"},

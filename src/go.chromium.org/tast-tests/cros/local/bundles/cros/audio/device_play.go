@@ -20,7 +20,7 @@ func init() {
 			"chromeos-audio-bugs@google.com",
 			"cychiang@chromium.org",
 		},
-		BugComponent: "b:875484",
+		BugComponent: "b:776546",
 		HardwareDeps: hwdep.D(hwdep.Speaker()),
 		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{

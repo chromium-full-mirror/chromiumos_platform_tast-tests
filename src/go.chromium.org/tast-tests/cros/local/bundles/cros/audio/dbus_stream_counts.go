@@ -28,7 +28,7 @@ func init() {
 			// TODO(b/267614582): Fix platform specific failure.
 			hwdep.SkipOnPlatform("corsola"),
 		),
-		BugComponent: "b:875484",
+		BugComponent: "b:776546",
 		Attr:         []string{"group:mainline"},
 	})
 }

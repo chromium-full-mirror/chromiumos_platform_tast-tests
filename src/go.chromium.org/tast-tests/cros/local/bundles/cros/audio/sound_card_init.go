@@ -26,7 +26,7 @@ func init() {
 		// b/221241958: Skip helios as it is an old project before sound_card_init.
 		HardwareDeps: hwdep.D(hwdep.SmartAmp(), hwdep.SkipOnModel("atlas", "nocturne", "volteer2", "helios")),
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "judyhsiao@chromium.org", "cychiang@chromium.org"},
-		BugComponent: "b:875484",
+		BugComponent: "b:776546",
 		Attr:         []string{"group:mainline"},
 		Timeout:      1 * time.Minute,
 		Params: []testing.Param{

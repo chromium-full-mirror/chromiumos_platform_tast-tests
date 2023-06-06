@@ -25,7 +25,7 @@ func init() {
 		Func:         CrasRecord,
 		Desc:         "Verifies CRAS record function works correctly",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "yuhsuan@chromium.org", "cychiang@chromium.org"},
-		BugComponent: "b:875484",
+		BugComponent: "b:776546",
 		HardwareDeps: hwdep.D(hwdep.Microphone()),
 		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{

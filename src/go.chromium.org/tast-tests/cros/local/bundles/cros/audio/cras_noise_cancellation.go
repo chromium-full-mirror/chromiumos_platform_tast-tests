@@ -27,7 +27,7 @@ func init() {
 		Func:         CrasNoiseCancellation,
 		Desc:         "Check noise cancellation in CRAS using aloop",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
-		BugComponent: "b:875484",
+		BugComponent: "b:776546",
 		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		Fixture:      fixture.StereoAloopLoaded,
 		Timeout:      3 * time.Minute,

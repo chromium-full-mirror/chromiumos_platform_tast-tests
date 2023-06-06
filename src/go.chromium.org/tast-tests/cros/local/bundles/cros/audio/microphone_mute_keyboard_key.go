@@ -27,7 +27,7 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 			"rtinkoff@chromium.org",
 		},
-		BugComponent: "b:875484",
+		BugComponent: "b:776546",
 		// TODO(https://crbug.com/1266507): Remove "informational" once stable.
 		// TODO(https://crbug.com/1271209): Add a formal HW dependency for devices with KEY_MICMUTE.
 		Attr:         []string{"group:mainline", "informational"},

@@ -31,7 +31,7 @@ func init() {
 		Func:         HeadphoneVolumeSlider,
 		Desc:         "System volume slider works fine for audio playback in 3.5mm headset in lockscreen",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
-		BugComponent: "b:875484",
+		BugComponent: "b:776546",
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedIn",

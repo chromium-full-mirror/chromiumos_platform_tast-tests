@@ -28,7 +28,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Play local audio file through default app and check if the audio is routing through expected device",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
-		BugComponent: "b:875484",
+		BugComponent: "b:776546",
 		SoftwareDeps: []string{"chrome"},
 		Pre:          chrome.LoggedIn(),
 		HardwareDeps: hwdep.D(hwdep.Speaker()),

@@ -33,7 +33,7 @@ func init() {
 		Func:         EchoRefDevice,
 		Desc:         "The manual test script for smart amp AVL. It verifies that the echo reference device records the speaker playback correctly",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "judyhsiao@chromium.org", "yuhsuan@chromium.org"},
-		BugComponent: "b:875484",
+		BugComponent: "b:776546",
 		Attr:         []string{"group:audio_audiobox"},
 		SoftwareDeps: []string{"audio_stable"},
 		HardwareDeps: hwdep.D(hwdep.Speaker(), hwdep.SmartAmp()),

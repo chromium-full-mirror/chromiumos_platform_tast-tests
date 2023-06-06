@@ -73,7 +73,7 @@ func init() {
 		Func:         CyclicBench,
 		Desc:         "Benchmarks for scheduling latency with cyclictest binary",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "eddyhsu@chromium.org", "paulhsia@chromium.org", "cychiang@chromium.org"},
-		BugComponent: "b:875484",
+		BugComponent: "b:776546",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"cras"},
 		Timeout:      3 * time.Minute,
