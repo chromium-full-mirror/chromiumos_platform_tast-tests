@@ -1164,7 +1164,7 @@ func init() {
 					BrowserType:       browser.TypeAsh,
 				},
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_enc_h264_1080_30", "autotest-capability:hw_dec_h264_1080_30", "thread_safe_libva_backend"},
-				Fixture:           "chromeVideoWithGlobalVaapiLockDisabled",
+				Fixture:           "chromeVideoWithFakeWebcamAndGlobalVaapiLockDisabled",
 			},
 			{
 				Name: "vp8_720p_hw_enc_hw_dec_global_vaapi_lock_disabled",
@@ -1177,7 +1177,7 @@ func init() {
 					BrowserType:       browser.TypeAsh,
 				},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp8_1080_30", "autotest-capability:hw_dec_vp8_1080_30", "thread_safe_libva_backend"},
-				Fixture:           "chromeVideoWithGlobalVaapiLockDisabled",
+				Fixture:           "chromeVideoWithFakeWebcamAndGlobalVaapiLockDisabled",
 			},
 			{
 				Name: "vp9_720p_hw_enc_hw_dec_global_vaapi_lock_disabled",
@@ -1190,7 +1190,7 @@ func init() {
 					BrowserType:       browser.TypeAsh,
 				},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp9_1080_30", "autotest-capability:hw_dec_vp9_1080_30", "thread_safe_libva_backend"},
-				Fixture:           "chromeVideoWithGlobalVaapiLockDisabled",
+				Fixture:           "chromeVideoWithFakeWebcamAndGlobalVaapiLockDisabled",
 			},
 			{
 				Name: "av1_720p_hw_enc_hw_dec_global_vaapi_lock_disabled",
@@ -1203,7 +1203,7 @@ func init() {
 					BrowserType:       browser.TypeAsh,
 				},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_av1_1080_30", "autotest-capability:hw_dec_av1_1080_30", "thread_safe_libva_backend"},
-				Fixture:           "chromeVideoWithGlobalVaapiLockDisabled",
+				Fixture:           "chromeVideoWithFakeWebcamAndGlobalVaapiLockDisabled",
 			},
 		},
 	})

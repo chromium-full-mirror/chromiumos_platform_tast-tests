@@ -372,7 +372,7 @@ func TestRTCPeerConnectionPerfParams(t *testing.T) {
 			Name:         fmt.Sprintf("%s_720p_%s_%s_global_vaapi_lock_disabled", codec, enc, dec),
 			ParamData:    paramData,
 			SoftwareDeps: swDeps,
-			Fixture:      "chromeVideoWithGlobalVaapiLockDisabled",
+			Fixture:      "chromeVideoWithFakeWebcamAndGlobalVaapiLockDisabled",
 		}
 		sourceDatas = append(sourceDatas, sourceData)
 	}
