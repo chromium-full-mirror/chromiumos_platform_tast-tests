@@ -6,8 +6,10 @@ package health
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -16,6 +18,8 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/health/utils"
 	"go.chromium.org/tast-tests/cros/local/croshealthd"
 	"go.chromium.org/tast-tests/cros/local/jsontypes"
+
+	"go.chromium.org/tast-tests/cros/common/testexec"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/lsbrelease"
@@ -75,11 +79,28 @@ func ProbeSystemInfo(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get SystemInfo.DMIInfo(-expected + got): ", d)
 	}
 	if testParam.checkPsr {
-		if g.PSRInfo == nil {
-			s.Fatal("PSR cros-healthd retrieval is not working")
+		out, err := testexec.CommandContext(ctx, "intel-psrtool", "-s").Output()
+		strOut := string(out)
+		if err != nil {
+			if g.PSRInfo == nil {
+				s.Log("PSR is not available: ", strOut)
+				return
+			}
+			s.Fatal("Failed to execute 'intel-psrtool -s' command: ", err)
 		}
-		if err := expectedPSRInfo(g.PSRInfo); err != nil {
-			s.Fatal("Failed to get expected system info: ", err)
+		if strings.Contains(strOut, "PSR log availability: Available") {
+			if g.PSRInfo == nil {
+				s.Fatal("PSR cros-healthd retrieval is not working")
+			}
+			psrOut, err := runAndParseIntelPsrTool(ctx)
+			if err != nil {
+				s.Fatal("Failed to get intel-psrtool output: ", err)
+			}
+			if err := verifyPSRInfo(psrOut, g.PSRInfo); err != nil {
+				s.Fatal("Failed to get expected system info: ", err)
+			}
+		} else {
+			s.Log("PSR is not available: ", strOut)
 		}
 	}
 }
@@ -349,52 +370,74 @@ func expectedDMIInfo(ctx context.Context) (*dmiInfo, error) {
 	return &r, nil
 }
 
-// expectedPSRInfo - We can only get the values from an ioctl call to /dev/mei0
-func expectedPSRInfo(psr *psrInfo) error {
-
-	if psr.LogState == nil {
-		return errors.New("Missing LogState")
+func runAndParseIntelPsrTool(ctx context.Context) (map[string]string, error) {
+	out, err := testexec.CommandContext(ctx, "intel-psrtool", "-d").Output()
+	if err != nil {
+		return nil, errors.Errorf("failed to execute 'intel-psrtool -d' command: %s", err)
 	}
-	if psr.UUID == nil {
-		return errors.New("Missing UUID")
-	}
-	if psr.UPID == nil {
-		return errors.New("Missing UPID")
-	}
-	if psr.LogStartDate == nil {
-		return errors.New("Missing LogStartDate")
-	}
-	if psr.OEMName == nil {
-		return errors.New("Missing OEMName")
-	}
-	if psr.OEMMake == nil {
-		return errors.New("Missing OEMMake")
-	}
-	if psr.OEMModel == nil {
-		return errors.New("Missing OEMModel")
-	}
-	if psr.ManufactureCountry == nil {
-		return errors.New("Missing ManufactureCountry")
-	}
-	if psr.UptimeSeconds == nil {
-		return errors.New("Missing UptimeSeconds")
-	}
-	if psr.S5Counter == nil {
-		return errors.New("Missing S5Counter")
-	}
-	if psr.S4Counter == nil {
-		return errors.New("Missing S4Counter")
-	}
-	if psr.S3Counter == nil {
-		return errors.New("Missing S3Counter")
-	}
-	if psr.WarmResetCounter == nil {
-		return errors.New("Missing WarmResetCounter")
-	}
-	if psr.Events == nil {
-		return errors.New("Missing Events")
+	strOut := string(out)
+	psrToolOutput := make(map[string]string)
+	r := regexp.MustCompile(`\t(.*):(.*)`)
+	for _, match := range r.FindAllStringSubmatch(strOut, -1) {
+		k := strings.TrimSpace(match[1])
+		v := strings.TrimSpace(match[2])
+		psrToolOutput[k] = v
 	}
 
+	return psrToolOutput, nil
+}
+
+func verifyPSRInfo(psrMap map[string]string, psr *psrInfo) error {
+	logStateCros := strings.ToUpper(*psr.LogState)
+	logStateTool := strings.ReplaceAll(psrMap["Log State"], " ", "")
+	if logStateCros != logStateTool {
+		return errors.Errorf("log_state: %s does not match %s", logStateCros, logStateTool)
+	}
+	uuidTool := strings.Replace(psrMap["Platform Service Record ID"], "-", "", -1)
+	if *psr.UUID != uuidTool {
+		return errors.Errorf("uuid: %s does not match %s", *psr.UUID, uuidTool)
+	}
+	upidTool := strings.Replace(psrMap["Unique Platform ID"], "-", "", -1)
+	if *psr.UPID != upidTool {
+		return errors.Errorf("upid: %s does not match %s", *psr.UPID, upidTool)
+	}
+	nameCros := strings.TrimSpace(*psr.OEMName)
+	if nameCros != psrMap["OEM Name"] {
+		return errors.Errorf("oem_name: %s does not match %s", nameCros, psrMap["OEM Name"])
+	}
+	makeCros := strings.TrimSpace(*psr.OEMMake)
+	if makeCros != psrMap["OEM Make"] {
+		return errors.Errorf("oem_make: %s does not match %s", makeCros, psrMap["OEM Make"])
+	}
+	modelCros := strings.TrimSpace(*psr.OEMModel)
+	if modelCros != psrMap["OEM Model"] {
+		return errors.Errorf("oem_model: %s does not match %s", modelCros, psrMap["OEM Model"])
+	}
+	countryCros := strings.TrimSpace(*psr.ManufactureCountry)
+	countryTool := psrMap["Country of Manufacturer"]
+	if countryCros != countryTool {
+		return errors.Errorf("manufacture_country: %s does not match %s", countryCros, countryTool)
+	}
+	s5Cros := fmt.Sprint(*psr.S5Counter)
+	s5Tool := psrMap["Cumulative number of S0->S5"]
+	if s5Cros != s5Tool {
+		return errors.Errorf("s5_counter: %s does not match %s", s5Cros, s5Tool)
+	}
+	s4Cros := fmt.Sprint(*psr.S4Counter)
+	s4Tool := psrMap["Cumulative number of S0->S4"]
+	if s4Cros != s4Tool {
+		return errors.Errorf("s4_counter: %s does not match %s", s4Cros, s4Tool)
+	}
+	s3Cros := fmt.Sprint(*psr.S3Counter)
+	s3Tool := psrMap["Cumulative number of S0->S3"]
+	if s3Cros != s3Tool {
+		return errors.Errorf("s3_counter: %s does not match %s", s3Cros, s3Tool)
+	}
+	warmResetCros := fmt.Sprint(*psr.WarmResetCounter)
+	warmResetTool := psrMap["Cumulative number of warm resets"]
+	if warmResetCros != warmResetTool {
+		return errors.Errorf("warm_reset_counter: %s does not match %s", warmResetCros, warmResetTool)
+	}
 	return nil
 }
 
