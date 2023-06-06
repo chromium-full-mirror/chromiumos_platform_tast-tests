@@ -162,6 +162,11 @@ func newCommonKernelConfigCheck(ver *sysutil.KernelVersion, arch string) *kernel
 
 		// Needed for tethering of Android phones
 		"USB_NET_RNDIS_HOST",
+
+		// Generic USB CDC drivers: wired ethernet, LTE data, older tethering
+		"USB_USBNET",
+		"USB_NET_CDCETHER",
+		"USB_NET_CDC_NCM",
 	}
 	enabled := []string{
 		// Either module or enabled, depending on platform.
