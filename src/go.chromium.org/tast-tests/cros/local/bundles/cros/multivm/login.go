@@ -106,13 +106,13 @@ func Login(ctx context.Context, s *testing.State) {
 		s.Error("Failed to collect memory metrics: ", err)
 	}
 
-	// Cool down a little post login, before we start a quiet period.
 	s.Log("No activity for a short while to cool down")
+	// GoBigSleepLint: Cool down a little post login, before starting memory measurements.
 	testing.Sleep(ctx, postLoginCoolDownDuration)
 
 	s.Log("Measuring system memory and pressure in idle state")
 	basemem.Reset()
-	// Let the system quiesce for a while and measure its memory consumption.
+	// GoBigSleepLint: Let the system quiesce for a while and measure its memory consumption.
 	testing.Sleep(ctx, quietDuration)
 	s.Log("Will now collect idle perf values")
 	if err := metrics.LogMemoryStats(ctx, basemem, arc, p, s.OutDir(), "_quiesce"); err != nil {
