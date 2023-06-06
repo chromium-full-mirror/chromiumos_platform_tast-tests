@@ -422,8 +422,8 @@ func (c *Cras) SetNoiseCancellationEnabled(ctx context.Context, enabled bool) er
 	return c.call(ctx, "SetNoiseCancellationEnabled", enabled).Err
 }
 
-// GetAudioTestFeatureFlag returns the value of CrOSLateBootAudioTestFeatureFlag as seen by CRAS.
-func (c *Cras) GetAudioTestFeatureFlag(ctx context.Context) (enabled bool, err error) {
-	err = c.call(ctx, "GetAudioTestFeatureFlag").Store(&enabled)
+// GetFeatureFlagForTest returns the enabled status of the given feature as seen by CRAS.
+func (c *Cras) GetFeatureFlagForTest(ctx context.Context, flagName string) (enabled bool, err error) {
+	err = c.call(ctx, "GetFeatureFlagForTest", flagName).Store(&enabled)
 	return enabled, err
 }

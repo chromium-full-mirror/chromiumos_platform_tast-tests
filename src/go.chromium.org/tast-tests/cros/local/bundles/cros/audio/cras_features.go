@@ -56,7 +56,7 @@ func CrasFeatures(ctx context.Context, s *testing.State) {
 
 // crasFeaturesOneIteration runs one iteration of the CrasFeatures test.
 func crasFeaturesOneIteration(ctx context.Context, cras *audio.Cras, featureEnabled bool) error {
-	const testFeatureFlag = "CrOSLateBootAudioTestFeatureFlag"
+	const testFeatureFlag = "CrOSLateBootDisabledByDefault"
 
 	var flagOption chrome.Option
 	if featureEnabled {
@@ -81,13 +81,13 @@ func crasFeaturesOneIteration(ctx context.Context, cras *audio.Cras, featureEnab
 	defer cr.Close(cleanupCtx)
 
 	return testing.Poll(ctx, func(ctx context.Context) error {
-		flagValue, err := cras.GetAudioTestFeatureFlag(ctx)
+		flagValue, err := cras.GetFeatureFlagForTest(ctx, testFeatureFlag)
 		if err != nil {
 			return testing.PollBreak(err)
 		}
-		testing.ContextLogf(ctx, "GetAudioTestFeatureFlag() = %v", flagValue)
+		testing.ContextLogf(ctx, "GetAudioTestFeatureFlag(%q) = %v", testFeatureFlag, flagValue)
 		if flagValue != featureEnabled {
-			return errors.Errorf("GetAudioTestFeatureFlag() = %v; want %v", flagValue, featureEnabled)
+			return errors.Errorf("GetAudioTestFeatureFlag(%q) = %v; want %v", testFeatureFlag, flagValue, featureEnabled)
 		}
 		return nil
 	}, &testing.PollOptions{
