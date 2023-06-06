@@ -21,6 +21,7 @@ import (
 	policyquickanswers "go.chromium.org/tast-tests/cros/local/bundles/cros/policy/quickanswers"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/searchsuggestion"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/spellcheck"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/userfeedback"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
@@ -71,7 +72,9 @@ func init() {
 			pci.SearchFlag(&policy.SearchSuggestEnabled{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.SearchSuggestEnabled{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.SpellCheckServiceEnabled{}, pci.VerifiedFunctionalityUI),
+			pci.SearchFlag(&policy.UserFeedbackAllowed{}, pci.VerifiedFunctionalityUI),
 		},
+		Timeout: 5 * time.Minute,
 	})
 }
 
@@ -84,6 +87,7 @@ func getPolicyList() []policy.Policy {
 		&policy.QuickAnswersUnitConversionEnabled{Val: false},
 		&policy.SearchSuggestEnabled{Val: false},
 		&policy.SpellCheckServiceEnabled{Val: false},
+		&policy.UserFeedbackAllowed{Val: false},
 	}
 }
 
@@ -242,6 +246,20 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to trigger search suggestion: ", err)
 		}
 		hashCodes = append(hashCodes, searchsuggestion.AnnotationID)
+	})
+
+	s.Run(ctx, "user_feedback", func(ctx context.Context, s *testing.State) {
+		userFeedbackParam := userfeedback.TestCase{
+			Name:                 "disabled",
+			ShouldFindAnnotation: false,
+			Value:                &policy.UserFeedbackAllowed{Val: false},
+			WantReportOption:     false,
+		}
+		if err := userfeedback.TriggerUserFeedback(ctx, userFeedbackParam, tconn, br); err != nil {
+			s.Fatal("Failed to trigger user feedback: ", err)
+		}
+		hashCodes = append(hashCodes, userfeedback.HelpContentProviderHashCode)
+		hashCodes = append(hashCodes, userfeedback.ChromeFeedbackReportAppHashCode)
 	})
 
 	// Stop logging and verify network traffic annotations associated with the
