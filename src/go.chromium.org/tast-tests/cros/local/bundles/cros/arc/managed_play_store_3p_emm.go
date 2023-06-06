@@ -42,7 +42,7 @@ func init() {
 		},
 		Params: []testing.Param{
 			{
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
 			},
 			{
