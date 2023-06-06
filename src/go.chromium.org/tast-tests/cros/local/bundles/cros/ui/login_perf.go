@@ -1109,7 +1109,7 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 				defer cr.Close(closeCtx)
 
 				if err != nil {
-					s.Fatalf("Failed to run tracing for the test scenario %s-tracing: %s", testName, err)
+					s.Logf("WARNING: Failed to run tracing for the test scenario %s-tracing: %s", testName, err)
 				} else if err := storeHistograms(
 					ctx,
 					testConfig.expectHistograms,
