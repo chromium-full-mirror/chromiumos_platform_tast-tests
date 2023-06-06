@@ -20,9 +20,8 @@ func init() {
 		Contacts: []string{
 			"chromeos-sensors-eng@google.com",
 			"gwendal@chromium.com",
-			"mathewk@chromium.org", // Test author
 		},
-		Attr: []string{"group:mainline", "group:criticalstaging", "group:cq-medium"},
+		Attr: []string{"group:mainline", "group:cq-medium"},
 	})
 }
 
