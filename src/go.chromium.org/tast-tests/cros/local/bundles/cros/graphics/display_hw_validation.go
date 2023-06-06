@@ -209,8 +209,9 @@ func init() {
 					Exe:      "kms_vrr",
 					Subtests: []string{"flip-basic"},
 				},
-				Timeout:   5 * time.Minute,
-				ExtraAttr: []string{"graphics_weekly"},
+				Timeout:           5 * time.Minute,
+				ExtraAttr:         []string{"graphics_weekly"},
+				ExtraHardwareDeps: hwdep.D(hwdep.VRR()),
 			},
 			{
 				Name: "testdisplay",

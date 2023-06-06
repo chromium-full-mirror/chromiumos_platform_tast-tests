@@ -12,6 +12,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/graphics"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -255,8 +256,9 @@ func init() {
 						"flip-dpms",
 					},
 				},
-				Timeout:   5 * time.Minute,
-				ExtraAttr: []string{"graphics_nightly"},
+				Timeout:           5 * time.Minute,
+				ExtraAttr:         []string{"graphics_nightly"},
+				ExtraHardwareDeps: hwdep.D(hwdep.VRR()),
 			},
 			{
 				Name: "amdgpu",

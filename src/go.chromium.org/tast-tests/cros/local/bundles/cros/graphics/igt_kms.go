@@ -366,8 +366,9 @@ func init() {
 			Val: graphics.IgtTest{
 				Exe: "kms_vrr",
 			},
-			Timeout:   5 * time.Minute,
-			ExtraAttr: []string{"graphics_nightly"},
+			Timeout:           5 * time.Minute,
+			ExtraAttr:         []string{"graphics_nightly"},
+			ExtraHardwareDeps: hwdep.D(hwdep.VRR()),
 		}, {
 			Name: "sw_sync",
 			Val: graphics.IgtTest{
