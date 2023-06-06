@@ -8,6 +8,7 @@ package terminalapp
 import (
 	"context"
 	"fmt"
+	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -458,4 +459,24 @@ func LaunchTmux(ctx context.Context, tconn *chrome.TestConn) (ta *TerminalApp, r
 		return nil, err
 	}
 	return ta, nil
+}
+
+// Create the special file to not have the shell defaults modify PS1.  This is
+// useful for tests which depend on the prompt string containing "localhost".
+func DontModifyPS1(ctx context.Context) (cleanUp func(), err error) {
+	filePath := "/run/dont-modify-ps1-for-testing"
+	err = os.WriteFile(filePath, []byte(""), 0644)
+	if err != nil {
+		testing.ContextLogf(ctx, "Error writing %s: %v", filePath, err)
+		return func() {}, nil
+	}
+
+	cleanUp = func() {
+		err := os.Remove(filePath)
+		if err != nil {
+			testing.ContextLogf(ctx, "Error unlinking %s: %v", filePath, err)
+		}
+	}
+
+	return cleanUp, nil
 }

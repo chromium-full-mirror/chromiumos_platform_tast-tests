@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast-tests/cros/local/terminalapp"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -41,6 +42,12 @@ func Crosh(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
+
+	cleanup, err := terminalapp.DontModifyPS1(ctx)
+	if err != nil {
+		s.Fatal("Failed to set DontModifyPS1: ", err)
+	}
+	defer cleanup()
 
 	cr, err := chrome.New(ctx, chrome.EnableFeatures("TerminalAlternativeEmulator"))
 	if err != nil {
