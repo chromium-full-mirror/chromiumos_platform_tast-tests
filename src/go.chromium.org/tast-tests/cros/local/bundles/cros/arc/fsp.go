@@ -15,10 +15,12 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/cws"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
@@ -121,7 +123,7 @@ func Fsp(ctx context.Context, s *testing.State) {
 	}
 
 	// By unzipping, it will create a pseudo file system accessible by FSP.
-	if err := unzipFile(ctx, tconn, fspZipFile, "My files", unarchiverName); err != nil {
+	if err := unzipFile(ctx, cr, tconn, fspZipFile, filesapp.MyFiles, unarchiverName, s.OutDir()); err != nil {
 		s.Fatal("Unzip test zip file failed: ", err)
 	}
 
@@ -157,7 +159,11 @@ func installTextAppIfNotInstalled(ctx context.Context, cr *chrome.Chrome, tconn 
 }
 
 // unzipFile unzips the specified "zipFile" located at "folder" using the "unarchiver".
-func unzipFile(ctx context.Context, tconn *chrome.TestConn, zipFile, folder, unarchiver string) error {
+func unzipFile(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, zipFile, folder, unarchiver, outDir string) (retErr error) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
 	msg := "Opening the test zip file with " + unarchiver
 	testing.ContextLog(ctx, msg)
 
@@ -166,12 +172,15 @@ func unzipFile(ctx context.Context, tconn *chrome.TestConn, zipFile, folder, una
 		return errors.Wrap(err, "launching the Files App failed")
 	}
 	// Close the Files App window to avoid having two windows in TestOpenWithAndroidApp.
-	defer files.Close(ctx)
+	defer files.Close(cleanupCtx)
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, outDir, func() bool { return retErr != nil }, cr, "unzip_failure")
 
 	return uiauto.Combine(msg,
 		files.OpenPath(filesapp.FilesTitlePrefix+folder, folder),
 		files.SelectFile(zipFile),
 		files.LeftClick(nodewith.Name("Open").Role(role.Button)),
 		files.LeftClick(nodewith.Name(unarchiver).Role(role.StaticText)),
+		// Wait until the unzipped file appears in the navigation tree.
+		files.WithTimeout(time.Minute).WaitUntilExists(nodewith.Name(zipFile).Role(role.TreeItem)),
 	)(ctx)
 }
