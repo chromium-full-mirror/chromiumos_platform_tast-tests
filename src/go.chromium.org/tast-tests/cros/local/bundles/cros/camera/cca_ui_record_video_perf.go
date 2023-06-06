@@ -64,14 +64,46 @@ func CCAUIRecordVideoPerf(ctx context.Context, s *testing.State) {
 	}
 
 	if useFakeHAL {
-		// Simulates a 4K camera.
+		// Simulates a 4K camera. Need to add other resolutions to satisfy the minimal requirement for camera3 API.
 		if err := testutil.WriteFakeHALConfig(ctx, testutil.FakeHALConfig{
 			Cameras: []testutil.FakeCameraConfig{
-				{ID: 1, Connected: true, SupportedFormats: []*testutil.FakeCameraFormatsConfig{&testutil.FakeCameraFormatsConfig{
-					Width:      3840,
-					Height:     2160,
-					FrameRates: []int{30},
-				}}},
+				{ID: 1, Connected: true, SupportedFormats: []*testutil.FakeCameraFormatsConfig{
+					{
+						Width:      3840,
+						Height:     2160,
+						FrameRates: []int{30},
+					},
+					{
+						Width:      1920,
+						Height:     1080,
+						FrameRates: []int{30},
+					},
+					{
+						Width:      1280,
+						Height:     960,
+						FrameRates: []int{30},
+					},
+					{
+						Width:      1280,
+						Height:     720,
+						FrameRates: []int{30},
+					},
+					{
+						Width:      640,
+						Height:     480,
+						FrameRates: []int{30},
+					},
+					{
+						Width:      640,
+						Height:     360,
+						FrameRates: []int{30},
+					},
+					{
+						Width:      320,
+						Height:     240,
+						FrameRates: []int{30},
+					},
+				}},
 			},
 		}); err != nil {
 			s.Fatal("Failed to write fake HAL config: ", err)
