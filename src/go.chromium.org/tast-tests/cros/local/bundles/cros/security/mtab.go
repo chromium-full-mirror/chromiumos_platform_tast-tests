@@ -140,7 +140,7 @@ func Mtab(ctx context.Context, s *testing.State) {
 	}
 
 	// Regular expression matching mounts under /run/daemon-store, and corresponding spec.
-	daemonStoreRegexp := regexp.MustCompile("^/run/daemon-store/([^/]+)$")
+	daemonStoreRegexp := regexp.MustCompile("^/run/daemon-store(-cache)?/([^/]+)$")
 	daemonStoreSpec := mountSpec{nil, "tmpfs", defaultRW + ",mode=755"}
 
 	// Mounts that are modified for dev/test images and thus ignored when checking /etc/mtab.
@@ -240,7 +240,7 @@ func Mtab(ctx context.Context, s *testing.State) {
 				s.Errorf("Mount %v in %v is owned by %d:%d; want 0:0", info.mount, mtab, st.Uid, st.Gid)
 			}
 			// They should also have corresponding dirs in /etc/daemon-store.
-			etcDir := filepath.Join("/etc/daemon-store", matches[1])
+			etcDir := filepath.Join("/etc/daemon-store", matches[2])
 			if _, err := os.Stat(etcDir); err != nil {
 				s.Errorf("Mount %v in %v has bad config dir %v: %v", info.mount, mtab, etcDir, err)
 			}
