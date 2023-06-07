@@ -93,6 +93,10 @@ func newCommonKernelConfigCheck(ver *sysutil.KernelVersion, arch string) *kernel
 		"MODULES",
 		"PRINTK",
 		"SECURITY",
+		// Security; make sure kexec kernels and modules come from the
+		// rootfs.
+		"SECURITY_LOADPIN",
+		"SECURITY_LOADPIN_ENFORCE",
 		// Security; enables the SECCOMP application API.
 		"SECCOMP",
 		// Security; blocks direct physical memory access.
