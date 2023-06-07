@@ -132,12 +132,15 @@ func verifyLibreOfficeApp(ctx context.Context, ui *uiauto.Context, tconn *chrome
 	fullAppName := fmt.Sprintf("LibreOffice %s", appName)
 	appWindow := nodewith.NameRegex(regexp.MustCompile(`.*` + fullAppName)).Role(role.Window).HasClass("RootView").First()
 
-	var waitWindow, waitClose uiauto.Action
+	var closeExtraNode, waitClose uiauto.Action
 	if extraNode != nil {
-		waitWindow = ui.WithTimeout(time.Minute).WaitUntilExists(extraNode)
+		closeExtraNode = uiauto.IfSuccessThen(
+			ui.WithTimeout(15*time.Second).WaitUntilExists(extraNode),
+			keyboard.AccelAction("Esc"),
+		)
 		waitClose = ui.WithTimeout(10 * time.Second).WaitUntilGone(extraNode)
 	} else {
-		waitWindow = func(ctx context.Context) error { return nil }
+		closeExtraNode = func(ctx context.Context) error { return nil }
 		waitClose = func(ctx context.Context) error { return nil }
 	}
 
@@ -149,10 +152,12 @@ func verifyLibreOfficeApp(ctx context.Context, ui *uiauto.Context, tconn *chrome
 
 	if err := uiauto.Combine("verify "+fullAppName,
 		ui.WithTimeout(2*time.Minute).WaitUntilExists(appWindow),
-		waitWindow,
-		keyboard.AccelAction("Esc"),
+		closeExtraNode,
 		waitClose,
-		d.DiffWindow(ctx, fullAppName, screenshot.Retries(2)),
+		// In tablet mode, the on-screen keyboard warning may cause the
+		// screenshot testing to fail.
+		ui.WaitUntilGone(nodewith.Name("The on-screen keyboard doesn't work in Linux apps yet").First()),
+		d.DiffWindow(ctx, fullAppName, screenshot.Retries(3), screenshot.RetryInterval(600*time.Millisecond)),
 	)(ctx); err != nil {
 		return errors.Wrapf(err, "failed to capture %s window", fullAppName)
 	}
