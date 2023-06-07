@@ -201,7 +201,7 @@ func PolicyBlockedWifi(ctx context.Context, s *testing.State) {
 	localCtx := localContext{ctx, rpcClient.Conn, wifiSvc, params.wifiCred}
 
 	// Configure 3 access points for blocked, non blocked, blocked+preferred SSIDs.
-	nonBlockedApOptions := []ap.Option{ap.Mode(ap.Mode80211nMixed), ap.Channel(108), ap.HTCaps(ap.HTCapHT20), ap.SSID(notBlockedSSID)}
+	nonBlockedApOptions := []ap.Option{ap.Mode(ap.Mode80211nMixed), ap.Channel(108), ap.HTCaps(ap.HTCapHT20), ap.SpectrumManagement(), ap.SSID(notBlockedSSID)}
 	blockedApOptions := []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(1), ap.HTCaps(ap.HTCapHT20), ap.SSID(blockedSSID)}
 	blockedPreferredApOptions := []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1), ap.SSID(blockedPreferredSSID)}
 
