@@ -84,7 +84,7 @@ func WilcoChargingFromUSBC(ctx context.Context, s *testing.State) {
 		s.Log("Waiting for reconnection to DUT")
 		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
 		defer cancelWaitConnect()
-		if err := h.DUT.WaitConnect(waitConnectCtx); err != nil {
+		if err := h.WaitConnect(waitConnectCtx); err != nil {
 			return err
 		}
 		return nil
@@ -145,7 +145,7 @@ func WilcoChargingFromUSBC(ctx context.Context, s *testing.State) {
 		s.Log("Waiting for reconnection to DUT")
 		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
 		defer cancelWaitConnect()
-		if err := h.DUT.WaitConnect(waitConnectCtx); err != nil {
+		if err := h.WaitConnect(waitConnectCtx); err != nil {
 			return err
 		}
 		return nil

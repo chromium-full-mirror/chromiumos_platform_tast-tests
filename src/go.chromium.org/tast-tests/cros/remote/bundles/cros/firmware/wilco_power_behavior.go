@@ -182,7 +182,7 @@ func WilcoPowerBehavior(ctx context.Context, s *testing.State) {
 						defer cancelWaitConnect()
 
 						s.Log("Checking if DUT woke up from a press on power button")
-						err := d.WaitConnect(waitConnectCtx)
+						err := h.WaitConnect(waitConnectCtx)
 						if err == nil {
 							s.Fatal("DUT woke up unexpectedly")
 						}
@@ -202,7 +202,7 @@ func WilcoPowerBehavior(ctx context.Context, s *testing.State) {
 	// Expect a timeout in waiting for DUT to reconnect.
 	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 1*time.Minute)
 	defer cancelWaitConnect()
-	err = d.WaitConnect(waitConnectCtx)
+	err = h.WaitConnect(waitConnectCtx)
 	switch err.(type) {
 	case nil:
 		// When tested manually, drallion duts woke up from opening lid.
@@ -224,7 +224,7 @@ func WilcoPowerBehavior(ctx context.Context, s *testing.State) {
 		waitConnectFromPressPowerCtx, cancelWaitConnectFromPressPower := context.WithTimeout(ctx, 2*time.Minute)
 		defer cancelWaitConnectFromPressPower()
 		s.Log("Checking that DUT wakes up from a press on power button")
-		if err := d.WaitConnect(waitConnectFromPressPowerCtx); err != nil {
+		if err := h.WaitConnect(waitConnectFromPressPowerCtx); err != nil {
 			s.Fatal("Failed to reconnect to DUT: ", err)
 		}
 	}

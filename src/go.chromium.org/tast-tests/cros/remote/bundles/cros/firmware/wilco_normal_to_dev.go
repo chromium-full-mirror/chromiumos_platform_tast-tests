@@ -38,7 +38,6 @@ func init() {
 
 func WilcoNormalToDev(ctx context.Context, s *testing.State) {
 	h := s.FixtValue().(*fixture.Value).Helper
-	d := s.DUT()
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to connect to servo: ", err)
 	}
@@ -98,7 +97,7 @@ func WilcoNormalToDev(ctx context.Context, s *testing.State) {
 	s.Log("Waiting for connection to DUT")
 	connectCtx, cancel := context.WithTimeout(ctx, 5*time.Minute)
 	defer cancel()
-	if err := d.WaitConnect(connectCtx); err != nil {
+	if err := h.WaitConnect(connectCtx); err != nil {
 		s.Fatal("Failed to connect to DUT: ", err)
 	}
 

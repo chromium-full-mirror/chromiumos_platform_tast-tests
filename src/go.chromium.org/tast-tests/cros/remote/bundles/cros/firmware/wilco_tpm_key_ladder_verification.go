@@ -37,7 +37,6 @@ func init() {
 
 func WilcoTPMKeyLadderVerification(ctx context.Context, s *testing.State) {
 	h := s.FixtValue().(*fixture.Value).Helper
-	d := s.DUT()
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to connect to servo: ", err)
 	}
@@ -123,7 +122,7 @@ func WilcoTPMKeyLadderVerification(ctx context.Context, s *testing.State) {
 		}
 		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 3*time.Minute)
 		defer cancelWaitConnect()
-		err := d.WaitConnect(waitConnectCtx)
+		err := h.WaitConnect(waitConnectCtx)
 		switch err.(type) {
 		case nil:
 			if !step.expectDUTReconnected {
