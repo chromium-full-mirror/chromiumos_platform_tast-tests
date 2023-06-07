@@ -18,7 +18,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         BasicLxdNext,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests Crostini starts up with LXD 4.0",
+		Desc:         "Tests Crostini starts up with LXD 5.0",
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		SoftwareDeps: []string{"chrome", "vm_host", "dlc"},
 		Attr:         []string{"group:mainline"},
@@ -41,7 +41,7 @@ func init() {
 func BasicLxdNext(ctx context.Context, s *testing.State) {
 	cont := s.FixtValue().(crostini.FixtureData).Cont
 
-	r := regexp.MustCompile("^Client version: 4.0.[0-9]+\nServer version: 4.0.[0-9]+\n$")
+	r := regexp.MustCompile("^Client version: 5.0.[0-9]+\nServer version: 5.0.[0-9]+\n$")
 
 	cmd := cont.VM.Command(ctx,
 		// These variables get set *outside* the VM by crostini_client, so we have to add them manually here.

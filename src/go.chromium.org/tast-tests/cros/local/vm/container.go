@@ -797,17 +797,24 @@ func (c *Container) CheckSnapshot(ctx context.Context, snapshotName string) (boo
 
 	// There is only one item in the array.
 	// The type of sp[0]["snapshots"] is interface{},
-	// but actually it is []interface{}.
+	// but actually it is []interface{} or a json null (in lxc v5).
 	// Need to convert it.
-	snapshots, ok := sp[0]["snapshots"].([]interface{})
+	sn, ok := sp[0]["snapshots"]
 	if !ok {
-		return false, errors.New("the format of lxc list is not correct")
+		return false, errors.New("the output of lxc list contains no snapshots")
+	}
+	if sn == nil {
+		return false, nil
+	}
+	snapshots, ok := sn.([]interface{})
+	if !ok {
+		return false, errors.New("the output of lxc list should contain snapshots array")
 	}
 	for _, i := range snapshots {
 		// Each slice of snapshots is a map[string]interface{}.
 		snpt, ok := i.(map[string]interface{})
 		if !ok {
-			return false, errors.New("the format of lxc list is not correct")
+			return false, errors.New("the output of lxc list contains ill-formed snapshots")
 		}
 
 		// Check the snapshot name.

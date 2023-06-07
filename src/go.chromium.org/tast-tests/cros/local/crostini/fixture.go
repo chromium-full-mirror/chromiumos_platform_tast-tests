@@ -246,11 +246,11 @@ func init() {
 
 	testing.AddFixture(&testing.Fixture{
 		Name:     "chromeLoggedInForCrostiniLxdNext",
-		Desc:     "Logged into a session (with LXD 4.0)",
+		Desc:     "Logged into a session (with LXD 5.0)",
 		Contacts: []string{"clumptini+oncall@google.com"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			opts := generateChromeOpts(s)
-			opts = append(opts, chrome.EnableFeatures("CrostiniUseLxd4"))
+			opts = append(opts, chrome.EnableFeatures("CrostiniUseLxd5"))
 			return opts, nil
 		}),
 		SetUpTimeout:    chrome.LoginTimeout,
@@ -261,7 +261,7 @@ func init() {
 
 	testing.AddFixture(&testing.Fixture{
 		Name:            "crostiniBullseyeWithLxdNext",
-		Desc:            "Install Crostini with Bullseye and LXD 4.0",
+		Desc:            "Install Crostini with Bullseye and LXD 5.0",
 		Contacts:        []string{"clumptini+oncall@google.com"},
 		Impl:            &crostiniFixture{preData: preTestDataBullseye},
 		SetUpTimeout:    installationTimeout,
