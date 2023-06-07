@@ -2,17 +2,30 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+// This test is similar to MonitorUploadedCrashEvent. If you make any changes,
+// please also apply the same change to MonitorUploadedCrashEvent if it's
+// applicable.
+
 package health
 
 import (
+	"bufio"
+	"bytes"
 	"context"
-	"regexp"
+	"encoding/json"
 
 	"golang.org/x/sys/unix"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/testing"
 )
+
+// JSON fields of unuploaded crash events.
+type unuploadedCrashInfo struct {
+	CaptureTime float64 `json:"capture_time"`
+	CrashType   int     `json:"crash_type"`
+	LocalID     string  `json:"local_id"`
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -26,6 +39,48 @@ func init() {
 		SoftwareDeps: []string{"chrome", "diagnostics"},
 		Fixture:      "crosHealthdRunning",
 	})
+}
+
+// checkUnuploadedOutput checks the output. Returns true if OK.
+func checkUnuploadedOutput(ctx context.Context, s *testing.State, stdout []byte) bool {
+	// Sample output:
+	// Subscribe to crash events successfully.
+	// Crash event received: {"capture_time":1686094638,"crash_type":0,"local_id":"de95be1e8e9fa3f23a3b79743806a255"}
+	// Crash event received: {"capture_time":1686097875,"crash_type":0,"local_id":"e678e596590f52a86ac76dea8b0849f4"}
+	// Crash event received: {"capture_time":1686094545,"crash_type":0,"local_id":"9bd36ec364a908d135b83dc150306766"}
+	// Crash event received: {"capture_time":1686094545,"crash_type":0,"local_id":"9bd36ec364a908d135b83dc150306766","upload_info":{"crash_report_id":"bf510c0d4136e24f","creation_time":1686097916.592052,"offset":0}}
+	// Crash event received: {"capture_time":1686094638,"crash_type":0,"local_id":"de95be1e8e9fa3f23a3b79743806a255","upload_info":{"crash_report_id":"0596fc4bcf9f05ca","creation_time":1686097916.592052,"offset":1}}
+	scanner := bufio.NewScanner(bytes.NewReader(stdout))
+	for scanner.Scan() {
+		line := scanner.Bytes()
+		// Skip the "Crash event received:" prefix and jump to the first
+		// curly brace if it exists.
+		_, line, found := bytes.Cut(line, []byte{'{'})
+		if !found {
+			s.Log("Not able to find { in ", scanner.Text(), " Move onto the next line")
+			continue
+		}
+		line = append([]byte{'{'}, line...)
+
+		// Parse the rest of the line as json.
+		decoder := json.NewDecoder(bytes.NewReader(line))
+		decoder.DisallowUnknownFields()
+		// As crashInfo doesn't have the upload_info field, uploaded
+		// crashes won't be matched here.
+		var crash unuploadedCrashInfo
+		if err := decoder.Decode(&crash); err != nil {
+			s.Log("Not able to parse ", scanner.Text(), ": ", err, " Move onto the next line")
+			continue
+		}
+		// Check that the crash struct have been filled with some info.
+		if crash.CaptureTime == 0 {
+			s.Log("Not able to extract crash info from ", scanner.Text(), " Move onto the next line")
+			continue
+		}
+		s.Log("Extracted unuploaded crash event from ", scanner.Text())
+		return true
+	}
+	return false
 }
 
 func MonitorUnuploadedCrashEvent(ctx context.Context, s *testing.State) {
@@ -67,10 +122,7 @@ func MonitorUnuploadedCrashEvent(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to detect unuploaded crash event, stderr: ", string(stderr), ", stdout: ", string(stdout))
 	}
 
-	// The pattern will not match uploaded crashes due to the lack of the
-	// "uploaded_info" field.
-	crashOutputPattern := regexp.MustCompile(`\{"capture_time":\d+,"crash_type":\d+,"local_id":"\S+"\}`)
-	if !crashOutputPattern.MatchString(string(stdout)) {
+	if !checkUnuploadedOutput(ctx, s, stdout) {
 		s.Fatal("Failed to detect unuploaded event, event output: ", string(stdout))
 	}
 }
