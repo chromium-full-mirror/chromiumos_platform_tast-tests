@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
@@ -16,7 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
-	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -111,31 +111,6 @@ func DevModeFwScreen(ctx context.Context, s *testing.State) {
 		goRoutineRequired = true
 	}
 
-	var holdUp, releaseUp, pressedKey string
-	if goRoutineRequired {
-		pressedKey = "<up>"
-		row, col, err := h.Servo.GetKeyRowCol(pressedKey)
-		if err != nil {
-			s.Fatalf("Failed to get key column and row of %s: %v", pressedKey, err)
-		}
-
-		holdUp = fmt.Sprintf("kbpress %d %d 1", col, row)
-		releaseUp = fmt.Sprintf("kbpress %d %d 0", col, row)
-	}
-
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
-
-	// Ensure release on a key that was pressed at the end of test.
-	defer func(ctx context.Context, pressedKey, releaseKey string) {
-		if pressedKey != "" {
-			if err := h.Servo.RunECCommand(ctx, releaseKey); err != nil {
-				s.Fatalf("Failed to release %s key: %v", pressedKey, err)
-			}
-		}
-	}(cleanupCtx, pressedKey, releaseUp)
-
 	/*
 		Notes: This test is parameterized so that steps 1~4 are run in
 		'DevModeFwScreen.usb', and steps 5~8 in 'DevModeFwScreen'.
@@ -173,7 +148,7 @@ func DevModeFwScreen(ctx context.Context, s *testing.State) {
 	defer func() {
 		close(done)
 	}()
-	for _, steps := range []struct {
+	for iter, steps := range []struct {
 		devBootUSB      string
 		testedShortCuts []servo.KeypressControl
 		usbRequired     bool
@@ -188,6 +163,7 @@ func DevModeFwScreen(ctx context.Context, s *testing.State) {
 		{"0", []servo.KeypressControl{servo.CtrlU, servo.CtrlD}, false, fwCommon.BootModeDev},
 		{"1", []servo.KeypressControl{servo.CtrlU, servo.CtrlD}, false, fwCommon.BootModeDev},
 	} {
+		s.Logf("-------- iteration: %d --------", iter)
 		// Run test steps that depend on a usb when there's one present.
 		if testOpt.usbPresent != steps.usbRequired {
 			continue
@@ -229,24 +205,21 @@ func DevModeFwScreen(ctx context.Context, s *testing.State) {
 		}
 		s.Logf("Found ap status: %s %s", apPower, screenState)
 
+		var wg sync.WaitGroup
+
 		dutAtFwScreen := false
 		if goRoutineRequired {
 			index := 0
 			s.Log("Pressing <up> key in the background")
 			go func(dutAtFwScreen *bool) {
+				defer wg.Done()
+				wg.Add(1)
 				for {
 					if err := func() error {
-						if err := h.Servo.RunECCommand(ctx, holdUp); err != nil {
-							return errors.Wrapf(err, "failed to press and hold %s key", pressedKey)
+						// Press the up key every 2 seconds.
+						if err := h.Servo.KeypressWithDuration(ctx, servo.ArrowUp, servo.DurTab); err != nil {
+							return errors.Wrapf(err, "failed to press %s", servo.ArrowUp)
 						}
-						// Delay for 2 seconds to ensure that the press was effective.
-						if err := testing.Sleep(ctx, devModeKeypressDelay); err != nil {
-							return errors.Wrapf(err, "failed to sleep for %s seconds", devModeKeypressDelay)
-						}
-						if err := h.Servo.RunECCommand(ctx, releaseUp); err != nil {
-							return errors.Wrapf(err, "failed to release %s key", pressedKey)
-						}
-						// Delay for 2 seconds to ensure that release was effective.
 						if err := testing.Sleep(ctx, devModeKeypressDelay); err != nil {
 							return errors.Wrapf(err, "failed to sleep for %s seconds", devModeKeypressDelay)
 						}
@@ -344,6 +317,7 @@ func DevModeFwScreen(ctx context.Context, s *testing.State) {
 		}
 		if goRoutineRequired {
 			done <- true
+			wg.Wait()
 		}
 
 		s.Logf("Checking for DUT in %s mode", steps.expectedMode)
