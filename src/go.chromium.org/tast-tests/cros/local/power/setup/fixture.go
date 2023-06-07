@@ -34,9 +34,10 @@ const (
 
 // PowerFixtureOptions describes options used by the fixture only.
 type PowerFixtureOptions struct {
-	BrowserType     browser.Type
-	EnableGAIALogin bool
-	EnableARC       bool
+	BrowserType      browser.Type
+	BrowserExtraOpts []chrome.Option
+	EnableGAIALogin  bool
+	EnableARC        bool
 }
 
 func init() {
@@ -584,6 +585,7 @@ func (f *powerUIFixture) SetUp(ctx context.Context, s *testing.FixtState) interf
 		// b/228256145 to avoid powerd restart.
 		chrome.DisableFeatures("FirmwareUpdaterApp"),
 	}
+	opts = append(opts, f.powerFixtureOption.BrowserExtraOpts...)
 
 	if f.powerFixtureOption.EnableGAIALogin {
 		gaiaLoginOpt, err := gaiaLoginOption(ctx)
