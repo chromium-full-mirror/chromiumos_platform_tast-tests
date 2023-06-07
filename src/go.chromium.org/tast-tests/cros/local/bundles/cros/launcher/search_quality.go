@@ -25,19 +25,12 @@ import (
 // 17, mostly cloudy, see more forcase for Canberra
 const weatherPattern = `(?i)^\d+,\s*.*(?:sunny|clear|cloudy|showers|rain|thunderstorms|overcast|haze|fog|mist|drizzle|snow|sleet|windy).*\bCanberra\b`
 
-// Query's content.
-const (
-	canberraWeather    = "canberra weather"
-	calculator45Plus45 = "45+45"
-	screenRotate       = "screen rotate"
-	calculator4Digits  = "1234+5678" // https://bugs.chromium.org/p/chromium/issues/detail?id=1432692
-)
-
 // searchQualityTestCase struct encapsulates parameters for test.
 type searchQualityTestCase struct {
 	query          string
 	useRegex       bool
 	expectedResult string
+	category       string
 }
 
 func init() {
@@ -52,36 +45,178 @@ func init() {
 		Fixture:      "chromeLoggedIn",
 
 		Params: []testing.Param{
+			// --- Answer card test cases. ---
 			{
-				Name: "weather",
+				Name: "answer_card_calculator",
 				Val: searchQualityTestCase{
-					query:          canberraWeather,
-					useRegex:       true,
-					expectedResult: weatherPattern,
-				},
-			},
-			{
-				Name: "calculator",
-				Val: searchQualityTestCase{
-					query:          calculator45Plus45,
+					query:          "45+45",
 					useRegex:       false,
 					expectedResult: "45+45, 90",
+					category:       "Answer Card",
 				},
 			},
+			// See details in: https://bugs.chromium.org/p/chromium/issues/detail?id=1432692.
 			{
-				Name: "screenrotate",
+				Name: "answer_card_calculator_large_number",
 				Val: searchQualityTestCase{
-					query:          screenRotate,
-					useRegex:       false,
-					expectedResult: "Rotate screen 90 degrees, Shortcuts, Ctrl+ Shift+ BrowserRefresh",
-				},
-			},
-			{
-				Name: "calculatorlargenumber",
-				Val: searchQualityTestCase{
-					query:          calculator4Digits,
+					query:          "1234+5678",
 					useRegex:       false,
 					expectedResult: "1234+5678, 6912",
+					category:       "Answer Card",
+				},
+			},
+			{
+				Name: "answer_card_caps_lock",
+				Val: searchQualityTestCase{
+					query:          "caps lock",
+					useRegex:       false,
+					expectedResult: "Turn Caps Lock on and off, Shortcuts, Alt+ Launcher",
+					category:       "Answer Card",
+				},
+			},
+			{
+				Name: "answer_card_screen_rotate",
+				Val: searchQualityTestCase{
+					query:          "screen rotate",
+					useRegex:       false,
+					expectedResult: "Rotate screen 90 degrees, Shortcuts, Ctrl+ Shift+ BrowserRefresh",
+					category:       "Answer Card",
+				},
+			},
+			{
+				Name: "answer_card_weather",
+				Val: searchQualityTestCase{
+					query:          "canberra weather",
+					useRegex:       true,
+					expectedResult: weatherPattern,
+					category:       "Answer Card",
+				},
+			},
+
+			// --- Best match test cases. ---
+			{
+				Name: "best_match_app_chrome",
+				Val: searchQualityTestCase{
+					query:          "chrome",
+					useRegex:       false,
+					expectedResult: "Chrome, Installed App",
+					category:       "Best Match",
+				},
+			},
+			{
+				Name: "best_match_apps_files",
+				Val: searchQualityTestCase{
+					query:          "files",
+					useRegex:       false,
+					expectedResult: "Files, Installed App",
+					category:       "Best Match",
+				},
+			},
+			{
+				Name: "best_match_apps_settings",
+				Val: searchQualityTestCase{
+					query:          "settings",
+					useRegex:       false,
+					expectedResult: "Settings, Installed App",
+					category:       "Best Match",
+				},
+			},
+			{
+				Name: "best_match_apps_snapchat",
+				Val: searchQualityTestCase{
+					query:          "chrome",
+					useRegex:       false,
+					expectedResult: "Chrome, Installed App",
+					category:       "Best Match",
+				},
+			},
+			{
+				Name: "best_match_files_downloads",
+				Val: searchQualityTestCase{
+					query:          "downloads",
+					useRegex:       false,
+					expectedResult: "Downloads, MyFiles",
+					category:       "Best Match",
+				},
+			},
+			// TODO(b/286171481): Unsupported, we need to enabled showoff launcher search feature flag.
+			{
+				Name: "best_match_help_manage_account",
+				Val: searchQualityTestCase{
+					query:          "manage account",
+					useRegex:       false,
+					expectedResult: "Manage Google Accounts on your Chromebook, Help",
+					category:       "Best Match",
+				},
+			},
+			{
+				Name: "best_match_settings_bluetooth",
+				Val: searchQualityTestCase{
+					query:          "bluetooth",
+					useRegex:       false,
+					expectedResult: "Bluetooth, Bluetooth, Settings",
+					category:       "Best Match",
+				},
+			},
+			{
+				Name: "best_match_settings_display_size",
+				Val: searchQualityTestCase{
+					query:          "display size",
+					useRegex:       false,
+					expectedResult: "Display size, Displays, Settings",
+					category:       "Best Match",
+				},
+			},
+			{
+				Name: "best_match_settings_language",
+				Val: searchQualityTestCase{
+					query:          "language",
+					useRegex:       false,
+					expectedResult: "Languages, Languages and inputs, Settings",
+					category:       "Best Match",
+				},
+			},
+			{
+				Name: "best_match_settings_reverse_scroll",
+				Val: searchQualityTestCase{
+					query:          "reverse scroll",
+					useRegex:       false,
+					expectedResult: "Touchpad reverse scrolling, Mouse and touchpad, Settings",
+					category:       "Best Match",
+				},
+			},
+
+			// --- Apps test cases. ---
+			{
+				Name: "apps_keyboard_shortcut",
+				Val: searchQualityTestCase{
+					query:          "keyboard shortcut",
+					useRegex:       false,
+					expectedResult: "Key Shortcuts, Installed App",
+					category:       "Apps",
+				},
+			},
+
+			// --- Help app test cases. ---
+			{
+				Name: "help_new_tab",
+				Val: searchQualityTestCase{
+					query:          "new tab",
+					useRegex:       false,
+					expectedResult: "Open the link in a new tab, Shortcuts, Drag the link to a blank area on the tab strip",
+					category:       "Help",
+				},
+			},
+
+			// --- Play store test cases. ---
+			// TODO(b/286171481): Unsupported, we need to change fixture to support arc++ app search.
+			{
+				Name: "play_store_snapchat",
+				Val: searchQualityTestCase{
+					query:          "snapchat",
+					useRegex:       false,
+					expectedResult: "Snapchat, Play Store",
+					category:       "Play Store",
 				},
 			},
 		},
@@ -124,12 +259,22 @@ func SearchQuality(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to search %s: %v", query, err)
 	}
 
-	if testCase.useRegex {
-		if err := launcher.WaitForCategorizedResultFromRegex(tconn, expectedResult)(ctx); err != nil {
-			s.Fatalf("Failed to verify the result of search %s: %v", query, err)
+	// TODO(b/286171481): Uses if/else temporarily before `WaitForResult` is extended to support categorical search.
+	if testCase.category == "Answer Card" {
+		if testCase.useRegex {
+			if err := launcher.WaitForCategorizedResultFromRegex(tconn, expectedResult)(ctx); err != nil {
+				s.Fatalf("Failed to verify the result of search %s: %v", query, err)
+			}
+		} else {
+			if err := launcher.WaitForResult(tconn, expectedResult)(ctx); err != nil {
+				s.Fatalf("Failed to verify the result of search %s: %v", query, err)
+			}
 		}
 	} else {
-		if err := launcher.WaitForResult(tconn, expectedResult)(ctx); err != nil {
+		if err := uiauto.NamedCombine(query,
+			launcher.WaitForCategoryLabel(tconn, testCase.category+" , search result category", testCase.category),
+			launcher.WaitForCategorizedResult(tconn, testCase.category+" , search result category", testCase.expectedResult),
+		)(ctx); err != nil {
 			s.Fatalf("Failed to verify the result of search %s: %v", query, err)
 		}
 	}
