@@ -32,9 +32,16 @@ func init() {
 		BugComponent: "b:1288350",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
-		// TODO(b/232996538): reenable on taniks when it passes.
-		HardwareDeps: hwdep.D(hwdep.SkipOnModel("taniks")),
-		Fixture:      "chromeLoggedIn",
+		Params: []testing.Param{{
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("taniks")),
+		}, {
+			// Informational on taniks until we're sure it's stable.
+			// http://b/232996538
+			Name:              "taniks",
+			ExtraAttr:         []string{"informational"},
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("taniks")),
+		}},
+		Fixture: "chromeLoggedIn",
 	})
 }
 
