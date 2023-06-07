@@ -34,13 +34,11 @@ func init() {
 			"cros-enterprise-security@google.com",
 			"aashay@google.com",
 			"jasonling@google.com",
+			"rborzello@google.com",
 		},
 		// ChromeOS > Security > ChromeOS Enterprise Security
 		BugComponent: "b:1208373",
 		Attr: []string{
-			"group:mainline",
-			"informational",
-			"group:criticalstaging",
 			"group:golden_tier",
 			"group:medium_low_tier",
 			"group:hardware",
