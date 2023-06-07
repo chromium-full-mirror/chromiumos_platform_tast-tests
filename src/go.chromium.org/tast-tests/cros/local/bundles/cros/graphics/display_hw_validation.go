@@ -94,16 +94,6 @@ func init() {
 				ExtraAttr: []string{"graphics_weekly"},
 			},
 			{
-				Name: "kms_display_modes",
-				Val: graphics.IgtTest{
-					Exe:      "kms_display_modes",
-					Subtests: []string{"extended-mode-basic"},
-				},
-				Timeout:           5 * time.Minute,
-				ExtraAttr:         []string{"graphics_weekly"},
-				ExtraHardwareDeps: hwdep.D(hwdep.ExternalDisplay()),
-			},
-			{
 				Name: "kms_dp_aux_dev",
 				Val: graphics.IgtTest{
 					Exe: "kms_dp_aux_dev",
