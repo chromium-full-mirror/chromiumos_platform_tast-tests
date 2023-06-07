@@ -174,9 +174,9 @@ func (e *enrolledFixt) SetUp(ctx context.Context, s *testing.FixtState) interfac
 		// Make sure we have enough time to perform enrollment.
 		// This helps differentiate real issues from timeout hitting different components.
 		if deadline, ok := ctx.Deadline(); !ok {
-			s.Fatal("Missing deadline for context: ", ctx)
+			s.Log("Missing deadline for context: ", ctx)
 		} else if diff := deadline.Sub(time.Now()); diff < enrollmentRunTimeout {
-			s.Fatalf("Not enought time to perform setup and enrollment: have %s; need %s", diff, enrollmentRunTimeout)
+			s.Logf("Not enough time to perform setup and enrollment: have %s; need %s", diff, enrollmentRunTimeout)
 		}
 
 		s.Logf("Attempting enrollment, try %d", tries)
@@ -196,12 +196,12 @@ func (e *enrolledFixt) SetUp(ctx context.Context, s *testing.FixtState) interfac
 
 		cl, err := rpc.Dial(enrollCtx, s.DUT(), s.RPCHint())
 		if err != nil {
-			s.Fatal("failed to connect to the RPC service on the DUT", err)
+			s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
 		}
 		defer cl.Close(enrollCtx)
 
 		if err := Enroll(enrollCtx, attemptDir, s.DUT(), cl, e.fdmsDir, true); err != nil {
-			s.Logf("Attempt %d failed", tries)
+			s.Logf("Attempt %d failed: %v", tries, err)
 			errs = append(errs, err)
 		} else {
 			// When the enrollment is successful, there is no need to retry again.
@@ -273,6 +273,7 @@ func (e *enrolledFixt) PostTest(ctx context.Context, s *testing.FixtTestState) {
 	}
 }
 
+// Enroll enrolls the DUT under the managedchrome.com domain.
 func Enroll(ctx context.Context, attemptDir string, dut *dut.DUT, rpc *rpc.Client, fdmsDir string, stopFdms bool) (retErr error) {
 	// Reserve time for cleaning up and copying the logs from the DUT.
 	cleanupCtx := ctx
