@@ -170,7 +170,7 @@ func (e *enrolledFixt) SetUp(ctx context.Context, s *testing.FixtState) interfac
 	}()
 
 	// TODO(b/243629567): Remove the retries when the fixture is stable enough.
-	for tries := 1; tries < 5; tries++ {
+	for tries := 1; tries < 4; tries++ {
 		// Make sure we have enough time to perform enrollment.
 		// This helps differentiate real issues from timeout hitting different components.
 		if deadline, ok := ctx.Deadline(); !ok {
