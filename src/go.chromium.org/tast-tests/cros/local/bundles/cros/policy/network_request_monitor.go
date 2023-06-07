@@ -52,7 +52,7 @@ func init() {
 		},
 		BugComponent: "b:1129862",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:golden_tier"},
 		VarDeps: []string{"policy.managedUserAccountPool",
 			"ui.bond_credentials"},
 		Params: []testing.Param{{
