@@ -13,26 +13,12 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/annotations"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/extensioninstall"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
-
-type extensionInstallPolicyTestTable struct {
-	name                 string          // name is the subtest name.
-	allowInstall         bool            // whether the extension should be allowed to be installed or not.
-	policies             []policy.Policy // policies is a list of ExtensionInstallAllowlist, ExtensionInstallBlocklist policies.
-	shouldFindAnnotation bool            // Whether network annotations should be present or not
-}
-
-// Google keep chrome extension.
-const extensionID = "lpcaedmchfhocbbapmcbpinfpgnhiddi"
-const extensionURL = "https://chrome.google.com/webstore/detail/" + extensionID
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -41,9 +27,10 @@ func init() {
 		Desc:         "Checks the behavior of ExtensionInstallAllowlist, ExtensionInstallBlocklist policies",
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
+			"dp-chromeos-eng@google.com",
 			"swapnilgupta@google.com", //Test Author
 		},
-		BugComponent: "b:1263917",
+		BugComponent: "b:1129862",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier"},
 		Fixture:      fixture.ChromePolicyLoggedInDevToolsAvailable,
@@ -51,66 +38,66 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name: "blocklist_wildcard",
-				Val: []extensionInstallPolicyTestTable{
+				Val: []extensioninstall.TestCase{
 					{
-						name:         "allowlist_set",
-						allowInstall: true,
-						policies: []policy.Policy{
+						Name:         "allowlist_set",
+						AllowInstall: true,
+						Policies: []policy.Policy{
 							// Test API extension should be specified in allow list, otherwise it would get disabled automatically.
-							&policy.ExtensionInstallAllowlist{Val: []string{extensionID, chrome.TestExtensionID}},
+							&policy.ExtensionInstallAllowlist{Val: []string{extensioninstall.ExtensionID, chrome.TestExtensionID}},
 							&policy.ExtensionInstallBlocklist{Val: []string{"*"}},
 						},
-						shouldFindAnnotation: false,
+						ShouldFindAnnotation: false,
 					},
 					{
-						name:         "allowlist_set_with_test_api_extension",
-						allowInstall: false,
-						policies: []policy.Policy{
+						Name:         "allowlist_set_with_test_api_extension",
+						AllowInstall: false,
+						Policies: []policy.Policy{
 							&policy.ExtensionInstallAllowlist{Val: []string{chrome.TestExtensionID}},
 							&policy.ExtensionInstallBlocklist{Val: []string{"*"}},
 						},
-						shouldFindAnnotation: false,
+						ShouldFindAnnotation: false,
 					},
 				},
 			},
 			{
 				Name: "blocklist_unset",
-				Val: []extensionInstallPolicyTestTable{
+				Val: []extensioninstall.TestCase{
 					{
-						name:         "allowlist_set",
-						allowInstall: true,
-						policies: []policy.Policy{
-							&policy.ExtensionInstallAllowlist{Val: []string{extensionID}},
+						Name:         "allowlist_set",
+						AllowInstall: true,
+						Policies: []policy.Policy{
+							&policy.ExtensionInstallAllowlist{Val: []string{extensioninstall.ExtensionID}},
 						},
-						shouldFindAnnotation: false,
+						ShouldFindAnnotation: false,
 					},
 					{
-						name:                 "allowlist_unset",
-						allowInstall:         true,
-						policies:             []policy.Policy{},
-						shouldFindAnnotation: false,
+						Name:                 "allowlist_unset",
+						AllowInstall:         true,
+						Policies:             []policy.Policy{},
+						ShouldFindAnnotation: false,
 					},
 				},
 			},
 			{
 				Name: "blocklist_set",
-				Val: []extensionInstallPolicyTestTable{
+				Val: []extensioninstall.TestCase{
 					{
-						name:         "allowlist_set",
-						allowInstall: false,
-						policies: []policy.Policy{
-							&policy.ExtensionInstallAllowlist{Val: []string{extensionID}},
-							&policy.ExtensionInstallBlocklist{Val: []string{extensionID}},
+						Name:         "allowlist_set",
+						AllowInstall: false,
+						Policies: []policy.Policy{
+							&policy.ExtensionInstallAllowlist{Val: []string{extensioninstall.ExtensionID}},
+							&policy.ExtensionInstallBlocklist{Val: []string{extensioninstall.ExtensionID}},
 						},
-						shouldFindAnnotation: false,
+						ShouldFindAnnotation: false,
 					},
 					{
-						name:         "allowlist_unset",
-						allowInstall: false,
-						policies: []policy.Policy{
-							&policy.ExtensionInstallBlocklist{Val: []string{extensionID}},
+						Name:         "allowlist_unset",
+						AllowInstall: false,
+						Policies: []policy.Policy{
+							&policy.ExtensionInstallBlocklist{Val: []string{extensioninstall.ExtensionID}},
 						},
-						shouldFindAnnotation: false,
+						ShouldFindAnnotation: false,
 					},
 				},
 			},
@@ -126,33 +113,20 @@ func ExtensionInstallPolicyCheck(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 
-	// Hash codes for NetworkTrafficAnnotationTags.
-	const extensionCrxFetcher = "21145003"
-	const extensionManifestFetcher = "5151071"
-	const extensionInstallSigner = "50464499"
-	const webstoreInstaller = "18764319"
-	const chromeAppsSocketapi = "8591273"
-	const downloadsAPIRunAsync = "121068967"
-	const pepperTCPSocket = "120623198"
-	const blinkExtensionResourceLoader = "84165821"
-
-	testAnnotations := []string{extensionCrxFetcher, extensionManifestFetcher, extensionInstallSigner, webstoreInstaller, chromeAppsSocketapi, downloadsAPIRunAsync,
-		pepperTCPSocket, blinkExtensionResourceLoader}
-
 	// Connect to Test API to use it with the UI library.
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
-	tcs, ok := s.Param().([]extensionInstallPolicyTestTable)
+	tcs, ok := s.Param().([]extensioninstall.TestCase)
 	if !ok {
 		s.Fatal("Failed to convert test cases to the desired type")
 	}
 
 	for _, tc := range tcs {
-		s.Run(ctx, tc.name, func(ctx context.Context, s *testing.State) {
-			defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_"+tc.name)
+		s.Run(ctx, tc.Name, func(ctx context.Context, s *testing.State) {
+			defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_"+tc.Name)
 
 			// Perform cleanup.
 			if err := policyutil.ResetChrome(ctx, fdms, cr); err != nil {
@@ -160,7 +134,7 @@ func ExtensionInstallPolicyCheck(ctx context.Context, s *testing.State) {
 			}
 
 			// Update policies.
-			if err := policyutil.ServeAndVerify(ctx, fdms, cr, tc.policies); err != nil {
+			if err := policyutil.ServeAndVerify(ctx, fdms, cr, tc.Policies); err != nil {
 				s.Fatal("Failed to update policies: ", err)
 			}
 
@@ -170,67 +144,19 @@ func ExtensionInstallPolicyCheck(ctx context.Context, s *testing.State) {
 			}
 
 			// Run actual test.
-			if allowInstall, err := isInstallationAllowed(ctx, tconn, cr); err != nil {
-				s.Fatal("Failed to check if extension can be installed: ", err)
-			} else if allowInstall != tc.allowInstall {
-				s.Errorf("Unexpected result: got %t; want %t", allowInstall, tc.allowInstall)
+			if err := extensioninstall.TriggerExtensionInstall(ctx, tc, tconn, cr.Browser()); err != nil {
+				s.Fatal("Test case failed: ", err)
 			}
 
 			// Stop logging and check the logs to verify if all/none annotations
 			// are found.
-			foundAnnotation, err := annotations.StopLoggingVerifyAnnotationSet(ctx, cr, cr.Browser(), tc.shouldFindAnnotation, testAnnotations)
+			foundAnnotation, err := annotations.StopLoggingVerifyAnnotationSet(ctx, cr, cr.Browser(), tc.ShouldFindAnnotation, extensioninstall.GetAnnotations())
 			if err != nil {
-				s.Fatal("Unexpected error when verifying logs: Got: ", foundAnnotation, " Want:", tc.shouldFindAnnotation, " Error:", err)
+				s.Fatal("Unexpected error when verifying logs: Got: ", foundAnnotation, " Want:", tc.ShouldFindAnnotation, " Error:", err)
 			}
-			if foundAnnotation != tc.shouldFindAnnotation {
-				s.Fatal("Unexpected outcome when verifying logs: Got: ", foundAnnotation, " Want:", tc.shouldFindAnnotation, " Error:", err)
+			if foundAnnotation != tc.ShouldFindAnnotation {
+				s.Fatal("Unexpected outcome when verifying logs: Got: ", foundAnnotation, " Want:", tc.ShouldFindAnnotation, " Error:", err)
 			}
 		})
 	}
-
-}
-
-// isInstallationAllowed verifies whether the extension should be allowed to install or not.
-func isInstallationAllowed(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome) (bool, error) {
-	// Ensure google cookies are accepted, it appears when we open the extension link.
-	if err := policyutil.EnsureGoogleCookiesAccepted(ctx, cr.Browser()); err != nil {
-		return false, errors.Wrap(err, "failed to accept cookies")
-	}
-
-	addfinder := nodewith.Role(role.Button).Name("Add to Chrome")
-	blockedfinder := nodewith.Role(role.Button).Name("Blocked by admin")
-
-	// Open the Chrome Web Store page of the extension.
-	conn, err := cr.NewConn(ctx, extensionURL)
-	if err != nil {
-		return false, errors.Wrap(err, "failed to connect to chrome")
-	}
-	defer conn.Close()
-
-	var allowInstall bool
-	ui := uiauto.New(tconn)
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		// For blocked extensions, there should be a blocked button.
-
-		if blocked, err := ui.IsNodeFound(ctx, blockedfinder.First()); err != nil {
-			return testing.PollBreak(errors.Wrap(err, "failed to check Blocked by admin button"))
-		} else if blocked {
-			allowInstall = false
-			return nil
-		}
-
-		// For allowed extensions, there should be a button to add them.
-		if allowed, err := ui.IsNodeFound(ctx, addfinder.First()); err != nil {
-			return testing.PollBreak(errors.Wrap(err, "failed to check Add to chrome button"))
-		} else if allowed {
-			allowInstall = true
-			return nil
-		}
-
-		return errors.New("failed to determine the outcome")
-	}, &testing.PollOptions{Timeout: 20 * time.Second}); err != nil {
-		return false, err
-	}
-
-	return allowInstall, nil
 }

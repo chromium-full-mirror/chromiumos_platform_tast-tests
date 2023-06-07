@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/annotations"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/calendarintegration"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/defaultsearchprovider"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/extensioninstall"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/passwordleakdetection"
 	policyquickanswers "go.chromium.org/tast-tests/cros/local/bundles/cros/policy/quickanswers"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/searchsuggestion"
@@ -34,7 +35,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/restriction"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/quickanswers"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -83,6 +83,8 @@ func init() {
 			pci.SearchFlag(&policy.UserFeedbackAllowed{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.WebRtcEventLogCollectionAllowed{}, pci.VerifiedValue),
 			pci.SearchFlag(&policy.WebRtcTextLogCollectionAllowed{}, pci.VerifiedValue),
+			pci.SearchFlag(&policy.ExtensionInstallBlocklist{}, pci.VerifiedFunctionalityUI),
+			pci.SearchFlag(&policy.ExtensionInstallAllowlist{}, pci.VerifiedFunctionalityUI),
 		},
 		Timeout: 5 * time.Minute,
 	})
@@ -102,6 +104,8 @@ func getPolicyList() []policy.Policy {
 		&policy.UserFeedbackAllowed{Val: false},
 		&policy.WebRtcEventLogCollectionAllowed{Val: false},
 		&policy.WebRtcTextLogCollectionAllowed{Val: false},
+		&policy.ExtensionInstallAllowlist{Val: []string{chrome.TestExtensionID}},
+		&policy.ExtensionInstallBlocklist{Val: []string{"*"}},
 	}
 }
 
@@ -298,6 +302,23 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 		}
 		hashCodes = append(hashCodes, webrtclogupload.TextLogCollectionHashID)
 		hashCodes = append(hashCodes, webrtclogupload.EventLogCollectionHashID)
+	})
+
+	s.Run(ctx, "extension_install", func(ctx context.Context, s *testing.State) {
+		extensionInstallParam := extensioninstall.TestCase{
+			Name:                 "disabled",
+			ShouldFindAnnotation: false,
+			Policies: []policy.Policy{
+				// Test API extension should be specified in allow list, otherwise it would get disabled automatically.
+				&policy.ExtensionInstallAllowlist{Val: []string{chrome.TestExtensionID}},
+				&policy.ExtensionInstallBlocklist{Val: []string{"*"}},
+			},
+			AllowInstall: false,
+		}
+		if err := extensioninstall.TriggerExtensionInstall(ctx, extensionInstallParam, tconn, br); err != nil {
+			s.Fatal("Failed to trigger extension install: ", err)
+		}
+		hashCodes = append(hashCodes, extensioninstall.GetAnnotationsForUmbrellaTest()...)
 	})
 
 	// Stop logging and verify network traffic annotations associated with the
