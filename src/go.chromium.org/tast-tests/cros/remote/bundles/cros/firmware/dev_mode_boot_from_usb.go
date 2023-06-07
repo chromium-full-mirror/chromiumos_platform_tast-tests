@@ -7,6 +7,7 @@ package firmware
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"io/ioutil"
 	"path/filepath"
 	"strconv"
@@ -49,10 +50,14 @@ func init() {
 		}, {
 			Name: "no_usb",
 			Val: &ctrluParams{
-				validUSB:         false, // Test b:200305314.
-				reconnectTimeout: 2 * time.Minute,
+				validUSB: false, // Test b:200305314.
+				// To-do: replace with DelayRebootToPing in the future, but monitor results from
+				// chromium: 4548855 first to find out how each machine varies in their boot-up
+				// time. 8 minutes appeared to help when the test was run on leased machines,
+				// though this duration might have also covered the time for remote connection.
+				reconnectTimeout: 8 * time.Minute,
 			},
-			Timeout: 20 * time.Minute,
+			Timeout: 30 * time.Minute,
 		}},
 	})
 }
@@ -62,11 +67,6 @@ func DevModeBootFromUSB(ctx context.Context, s *testing.State) {
 
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to init servo: ", err)
-	}
-
-	ms, err := firmware.NewModeSwitcher(ctx, h)
-	if err != nil {
-		s.Fatal("Failed to create mode switcher: ", err)
 	}
 
 	s.Log("Setting dev boot usb value to 1")
@@ -110,16 +110,23 @@ func DevModeBootFromUSB(ctx context.Context, s *testing.State) {
 		}
 	}
 
+	ms, err := firmware.NewModeSwitcher(ctx, h)
+	if err != nil {
+		s.Fatal("Failed to create mode switcher: ", err)
+	}
+
 	// Rebooting DUT would ensure previous records wiped in
 	// the firmware log, and start a new one.
 	if err := ms.PowerOff(ctx); err != nil {
 		s.Fatal("Failed to power off dut: ", err)
 	}
-
+	// GoBigSleepLint: On some machines, it takes time for the firmware log to
+	// be completely cleaned following power-off.
 	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 		s.Fatal("Failed to sleep for 5 seconds: ", err)
 	}
 
+	h.CloseRPCConnection(ctx)
 	s.Log("Rebooting the DUT with cold reset")
 	if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
 		s.Fatal("Failed to reboot the DUT with cold reset: ", err)
@@ -128,17 +135,20 @@ func DevModeBootFromUSB(ctx context.Context, s *testing.State) {
 	// Store a copy of the firmware log on the local machine,
 	// which would get uploaded to Stainless for debugging purposes.
 	defer func(ctx context.Context) {
-		output, err := h.Reporter.CatFile(ctx, "/sys/firmware/log")
-		if err != nil {
-			s.Fatal("Failed to read firmware log: ", err)
-		}
-		destPath := filepath.Join(s.OutDir(), "firmware.log")
-		if err := ioutil.WriteFile(destPath, []byte(output), 0666); err != nil {
-			s.Fatal("Failed to write firmware log: ", err)
+		if h.DUT.Connected(ctx) && s.HasError() {
+			output, err := h.Reporter.CatFile(ctx, "/sys/firmware/log")
+			if err != nil {
+				s.Fatal("Failed to read firmware log: ", err)
+			}
+			destPath := filepath.Join(s.OutDir(), "firmware.log")
+			if err := ioutil.WriteFile(destPath, []byte(output), 0666); err != nil {
+				s.Fatal("Failed to write firmware log: ", err)
+			}
 		}
 	}(cleanupCtx)
 
 	s.Logf("Sleeping %s (FirmwareScreen)", h.Config.FirmwareScreen)
+	// GoBigSleepLint: Wait for firmware screen.
 	if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
 		s.Fatalf("Failed to sleep for %s (FirmwareScreen): %v", h.Config.FirmwareScreen, err)
 	}
@@ -147,6 +157,13 @@ func DevModeBootFromUSB(ctx context.Context, s *testing.State) {
 	// might be too short for a few specific duts. Increase the number of
 	// presses on ctrl_u to ensure that at least one of them is effective.
 	for i := 0; i < 3; i++ {
+		// Document ap states for debugging purposes.
+		apPower, screenState, err := h.Servo.GetAPState(ctx)
+		if err != nil {
+			s.Log("Failed to get ap status: ", err)
+		} else {
+			s.Logf("Found ap %s and screen status %s", apPower, screenState)
+		}
 		s.Logf("Testing shortcuts %q", servo.CtrlU)
 		if err := h.Servo.KeypressWithDuration(ctx, servo.CtrlU, servo.DurTab); err != nil {
 			s.Fatalf("Failed to press %s: %v", servo.CtrlU, err)
@@ -161,14 +178,19 @@ func DevModeBootFromUSB(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to press space: ", err)
 			}
 		}
-
-		if err := testing.Sleep(ctx, 2*time.Second); err != nil {
-			s.Fatal("Failed to sleep for 2 second: ", err)
+		// GoBigSleepLint: Simulate a specific speed of button presses.
+		if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
+			s.Fatalf("Failed to sleep for %v second: %v", h.Config.KeypressDelay, err)
 		}
 
 		s.Log(ctx, "Pressing esc to return to the developer screen")
 		if err := h.Servo.PressKey(ctx, "<esc>", servo.DurTab); err != nil {
 			s.Fatal("Failed to press esc key: ", err)
+		}
+
+		// GoBigSleepLint: Simulate a specific speed of button presses.
+		if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
+			s.Fatalf("Failed to sleep for %v second: %v", h.Config.KeypressDelay, err)
 		}
 
 	}
@@ -204,7 +226,8 @@ func DevModeBootFromUSB(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to set USBMux: ", err)
 		}
 
-		// In order to press ctrl_u sucessfully, sleep is required.
+		// GoBigSleepLint: Wait for a short delay here because the dut might not
+		// immediately see the USB device when it's connected.
 		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 			s.Fatal("Failed to sleep for 5 seconds: ", err)
 		}
@@ -216,6 +239,13 @@ func DevModeBootFromUSB(ctx context.Context, s *testing.State) {
 			}
 		}
 
+		apPower, screenState, err := h.Servo.GetAPState(ctx)
+		if err != nil {
+			s.Log("Failed to get ap status: ", err)
+		} else {
+			s.Logf("Found ap %s and screen status %s", apPower, screenState)
+		}
+
 		// Pressing ctrl_u here should boot DUT from the USB.
 		s.Logf("Testing shortcuts %q", servo.CtrlU)
 		if err := h.Servo.KeypressWithDuration(ctx, servo.CtrlU, servo.DurTab); err != nil {
@@ -223,12 +253,10 @@ func DevModeBootFromUSB(ctx context.Context, s *testing.State) {
 		}
 	}
 
+	sshConnectionStart := time.Now()
 	// When there's no valid usb, pressing ctrl_d would help duts
 	// leave the firmware screen and continue booting to ChromeOS.
 	if !testOpt.validUSB {
-		if err := testing.Sleep(ctx, 2*time.Second); err != nil {
-			s.Fatal("Failed to sleep for 2 seconds: ", err)
-		}
 		s.Log("Pressing ctrl_d to leave firmware screen")
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
 			if err := h.Servo.KeypressWithDuration(ctx, servo.CtrlD, servo.DurTab); err != nil {
@@ -236,8 +264,8 @@ func DevModeBootFromUSB(ctx context.Context, s *testing.State) {
 			}
 			ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 			defer cancel()
-			return h.DUT.WaitConnect(ctx)
-		}, &testing.PollOptions{Timeout: testOpt.reconnectTimeout, Interval: 2 * time.Second}); err != nil {
+			return h.WaitConnect(ctx)
+		}, &testing.PollOptions{Timeout: testOpt.reconnectTimeout}); err != nil {
 			s.Fatal("Failed to reconnect to dut after pressing ctrl d: ", err)
 		}
 	} else {
@@ -248,6 +276,10 @@ func DevModeBootFromUSB(ctx context.Context, s *testing.State) {
 		if err := h.WaitConnect(waitConnectCtx); err != nil {
 			s.Fatal("Failed to reconnect to DUT: ", err)
 		}
+	}
+	waitConnectDuration := time.Since(sshConnectionStart).Seconds()
+	if err := recordWaitConnectDuration(ctx, h, s.OutDir(), waitConnectDuration); err != nil {
+		s.Log("Unexpected error while record ssh time duration: ", err)
 	}
 	// ctrlUFailMsgs contain possible strings found in the firmware log
 	// when pressing ctrl_u to boot from usb fails. When tested manually,
@@ -289,4 +321,31 @@ func DevModeBootFromUSB(ctx context.Context, s *testing.State) {
 	if testOpt.validUSB != bootedFromRemovableDevice {
 		s.Fatalf("Expected dut to boot from USB: %v, but got: %v", testOpt.validUSB, bootedFromRemovableDevice)
 	}
+}
+
+func recordWaitConnectDuration(ctx context.Context, h *firmware.Helper, outDir string, waitConnectDuration float64) error {
+	servoVersion, err := h.Servo.GetServoVersion(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get servo version")
+	}
+	data := struct {
+		Board       string  `json:"board"`
+		Model       string  `json:"model"`
+		Servo       string  `json:"servo"`
+		WaitConnect float64 `json:"waitconnect"`
+	}{
+		Board:       h.Board,
+		Model:       h.Model,
+		Servo:       servoVersion,
+		WaitConnect: waitConnectDuration,
+	}
+	content, err := json.MarshalIndent(data, "", " ")
+	if err != nil {
+		return errors.Wrap(err, "marshalling data about reconnect duration to JSON")
+	}
+	filename := filepath.Join(outDir, "waitConnect.json")
+	if err := ioutil.WriteFile(filename, content, 0666); err != nil {
+		return errors.Wrap(err, "failed to save waitConnect duration to file")
+	}
+	return nil
 }
