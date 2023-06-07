@@ -28,6 +28,13 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.UpdateEngine, // Ensure to update engine status is idle and to reset between tests (b/263421799).
+		SearchFlags: []*testing.StringPair{{
+			Key: "feature_id",
+			// On a new/powerwashed device go through OOBE until enterprise
+			// enrollment via system tray button is offered.
+			// COM_FOUND_CUJ26_TASK2_WF1
+			Value: "screenplay-2adcbdb3-5afc-4ddc-96de-052657e41c27",
+		}},
 	})
 }
 

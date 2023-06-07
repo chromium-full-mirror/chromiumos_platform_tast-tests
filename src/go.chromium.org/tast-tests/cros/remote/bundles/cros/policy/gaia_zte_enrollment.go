@@ -47,10 +47,8 @@ func init() {
 			Value: "screenplay-6f0905f0-9ecd-4974-b4a1-7e4b828b5dc2",
 		}, {
 			Key: "feature_id",
-			// Enroll an unmanaged device to an OU to ensure that correct
-			// policies are applied on the device and then move the same
-			// device to another OU to ensure that policies are correctly
-			// updated on the device.
+			// Enroll an unmanaged device that was pre-provisioned for ZTE to
+			// ensure it enrolls without user interaction.
 			// COM_FOUND_CUJ25_TASK4_WF1
 			Value: "screenplay-cd82fc31-3640-4ccb-ba06-33ddffa54733",
 		}},
