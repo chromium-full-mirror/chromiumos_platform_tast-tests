@@ -17,6 +17,7 @@ import (
 	"time"
 
 	uda "chromiumos/system_api/user_data_auth_proto"
+
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
 
@@ -445,21 +446,13 @@ func CheckKeyBackingStoreExists(ctx context.Context, keysetPath, userName string
 	return nil
 }
 
-// TestPinCounterMechanism tests that PIN is locked out after too many wrong trials and can be reset by the correct password
-func TestPinCounterMechanism(ctx context.Context, userName, passwordLabel, userPassword, pinLabel, userPin, wrongPin string, client *hwsec.CryptohomeClient) error {
+// TestPinCounterWithAuthSession tests that PIN is locked out after too many wrong trials and can be reset by the correct password.
+func TestPinCounterWithAuthSession(ctx context.Context, authSessionID, passwordLabel, userPassword, pinLabel, userPin, wrongPin string, client *hwsec.CryptohomeClient) error {
 	const numberOfWrongAttemptToNotLock = 4
 	const numberOfWrongAttemptToLock = 5
-
-	// Start an Auth session and get an authSessionID.
-	_, authSessionID, err := client.StartAuthSession(ctx, userName, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT)
-	if err != nil {
-		return errors.Wrap(err, "failed to start Auth session")
-	}
-	defer client.InvalidateAuthSession(ctx, authSessionID)
-
 	// Try authenticate with wrong PIN to increase the PIN counter, but don't lock out.
 	for i := 0; i < numberOfWrongAttemptToNotLock; i++ {
-		_, err = client.AuthenticatePinAuthFactor(ctx, authSessionID, pinLabel, wrongPin)
+		_, err := client.AuthenticatePinAuthFactor(ctx, authSessionID, pinLabel, wrongPin)
 		if err == nil {
 			return errors.Wrap(err, "authentication with wrong PIN succeeded unexpectedly")
 		}
@@ -472,6 +465,7 @@ func TestPinCounterMechanism(ctx context.Context, userName, passwordLabel, userP
 
 	// Try authenticate with wrong PIN 5 times to lock out the PIN.
 	replyError := &uda.AuthenticateAuthFactorReply{}
+	var err error
 	for i := 0; i < numberOfWrongAttemptToLock; i++ {
 		replyError, err = client.AuthenticatePinAuthFactor(ctx, authSessionID, pinLabel, wrongPin)
 		if err == nil {
@@ -501,4 +495,19 @@ func TestPinCounterMechanism(ctx context.Context, userName, passwordLabel, userP
 		return errors.Wrap(err, "authenticating with correct PIN failed after the counter is reset")
 	}
 	return nil
+}
+
+// TestPinCounterMechanism tests that PIN is locked out after too many wrong trials and can be reset by the correct password
+func TestPinCounterMechanism(ctx context.Context, userName, passwordLabel, userPassword, pinLabel, userPin, wrongPin string, client *hwsec.CryptohomeClient) error {
+	const numberOfWrongAttemptToNotLock = 4
+	const numberOfWrongAttemptToLock = 5
+
+	// Start an Auth session and get an authSessionID.
+	_, authSessionID, err := client.StartAuthSession(ctx, userName, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT)
+	if err != nil {
+		return errors.Wrap(err, "failed to start Auth session")
+	}
+	defer client.InvalidateAuthSession(ctx, authSessionID)
+
+	return TestPinCounterWithAuthSession(ctx, authSessionID, passwordLabel, userPassword, pinLabel, userPin, wrongPin, client)
 }
