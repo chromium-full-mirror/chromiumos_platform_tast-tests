@@ -373,7 +373,8 @@ func Hibernate(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create tape client: ", err)
 	}
 
-	var timeout int32 = 600 // 600 seconds.
+	const timeoutPerCycle int32 = 300 // 300 seconds.
+	timeout := timeoutPerCycle * int32(cycles)
 	// Create an account manager and lease a test account for the duration of the test.
 	accManager, account, err := tape.NewOwnedTestAccountManagerFromClient(ctx, tapeClient, true /*lock*/, tape.WithTimeout(timeout), tape.WithPoolID(tape.DefaultManaged))
 	if err != nil {
