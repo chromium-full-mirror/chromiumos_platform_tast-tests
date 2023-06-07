@@ -34,7 +34,7 @@ func init() {
 			"dp-chromeos-eng@google.com",
 			"princya@chromium.org", // Test author
 		},
-		BugComponent: "b:1263917",
+		BugComponent: "b:1129862",
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Attr:         []string{"group:golden_tier"},
 		Params: []testing.Param{{

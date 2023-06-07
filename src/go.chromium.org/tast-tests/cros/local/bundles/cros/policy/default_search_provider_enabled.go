@@ -29,9 +29,10 @@ func init() {
 		Desc:         "Behavior of DefaultSearchProviderEnabled policy: check if a search provider is being automatically used",
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
+			"dp-chromeos-eng@google.com",
 			"anastasiian@chromium.org",
 		},
-		BugComponent: "b:1263917",
+		BugComponent: "b:1129862",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier"},
 		Params: []testing.Param{{

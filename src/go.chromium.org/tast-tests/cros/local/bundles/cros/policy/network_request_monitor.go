@@ -45,6 +45,7 @@ func init() {
 		Desc:         "Verifies that the optional services are not making any unwanted network requests when disabled",
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
+			"dp-chromeos-eng@google.com",
 			"ramyagopalan@google.com",
 			"shahinmd@google.com", // Test author.
 		},
