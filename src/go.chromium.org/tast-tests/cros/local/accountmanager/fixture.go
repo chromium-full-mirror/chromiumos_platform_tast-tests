@@ -48,6 +48,7 @@ func init() {
 				chrome.GAIALoginPool(s.RequiredVar("accountmanager.accountPool")),
 				chrome.EnableFeatures("ArcAccountRestrictions"),
 				chrome.ARCSupported(),
+				chrome.UnRestrictARCCPU(),
 				chrome.ExtraArgs(arc.DisableSyncFlags()...))).Opts()
 		}),
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
@@ -110,6 +111,7 @@ func (f *accountManagerTestFixture) SetUp(ctx context.Context, s *testing.FixtSt
 		chrome.GAIALoginPool(s.RequiredVar("accountmanager.accountPool")),
 		chrome.EnableFeatures("ArcAccountRestrictions"),
 		chrome.ARCSupported(),
+		chrome.UnRestrictARCCPU(),
 		chrome.ExtraArgs(arc.DisableSyncFlags()...),
 	}
 
