@@ -399,17 +399,18 @@ func (y *YtApp) SwitchQuality(ctx context.Context, quality Quality) error {
 		cuj.FindAndClick(qualityButton, uiWaitTime),
 		captureScreenshot("after-click-quality.png"),
 		clickAdvancedButton,
-		y.clickQualityOption(quality),
+		ClickQualityOption(y.d, y.cr, y.outDir, quality),
 	))(ctx)
 }
 
-func (y *YtApp) clickQualityOption(quality Quality) action.Action {
+// ClickQualityOption clicks the desired video quality option.
+func ClickQualityOption(d *ui.Device, cr *chrome.Chrome, outDir string, quality Quality) action.Action {
 	return func(ctx context.Context) error {
 		var qualityOption *ui.Object
-		options := y.d.Object(androidui.ID(optionsID))
+		options := d.Object(androidui.ID(optionsID))
 		if err := options.Exists(ctx); err == nil {
-			qualityList := y.d.Object(androidui.ID(optionsID))
-			qualityView := y.d.Object(androidui.ClassName(optionsClassName))
+			qualityList := d.Object(androidui.ID(optionsID))
+			qualityView := d.Object(androidui.ClassName(optionsClassName))
 			if err := qualityList.GetChild(ctx, qualityView); err != nil {
 				return errors.Wrapf(err, "failed to get %+v child", qualityList)
 			}
@@ -426,22 +427,22 @@ func (y *YtApp) clickQualityOption(quality Quality) action.Action {
 			}
 			targetQualityIndex := qualityOptionsCount - qualityPosition
 			testing.ContextLog(ctx, "Select target quality button with class name at index: ", targetQualityIndex)
-			qualityOption = y.d.Object(androidui.ClassName(optionsClassName), androidui.Index(targetQualityIndex), androidui.Clickable(true))
+			qualityOption = d.Object(androidui.ClassName(optionsClassName), androidui.Index(targetQualityIndex), androidui.Clickable(true))
 		} else {
 			testing.ContextLog(ctx, "Select target quality button with text: ", quality)
 			qualityListItemID := youtubePkg + ":id/list_item_text"
-			qualityOption = y.d.Object(androidui.ID(qualityListItemID), androidui.Text(string(quality)))
+			qualityOption = d.Object(androidui.ID(qualityListItemID), androidui.Text(string(quality)))
 		}
 		// There might be 60 and 30 fps options shown in the same time.
 		// Capture screenshot of the quality options list for further debugging.
-		if err := screenshot.CaptureChrome(ctx, y.cr, filepath.Join(y.outDir, "quality_list.png")); err != nil {
+		if err := screenshot.CaptureChrome(ctx, cr, filepath.Join(outDir, "quality_list.png")); err != nil {
 			testing.ContextLog(ctx, "Failed to capture screenshot for the quality options list")
 		}
 		if err := cuj.FindAndClick(qualityOption, uiWaitTime)(ctx); err != nil {
 			return errors.Wrap(err, "failed to find/click the quality option")
 		}
 
-		qualityMessageText := y.d.Object(androidui.ID(qualityMessageID), ui.TextContains(string(quality)))
+		qualityMessageText := d.Object(androidui.ID(qualityMessageID), ui.TextContains(string(quality)))
 		if err := qualityMessageText.WaitUntilGone(ctx, uiWaitTime); err != nil {
 			return errors.Wrap(err, "failed to wait the quality message gone")
 		}

@@ -38,6 +38,7 @@ func init() {
 	})
 }
 
+// ArcYoutubeCUJ measures the performance of critical user journey for the YouTube ARC app.
 func ArcYoutubeCUJ(ctx context.Context, s *testing.State) {
 	// Reserve ten seconds for cleanup.
 	cleanupCtx := ctx
@@ -114,6 +115,16 @@ func ArcYoutubeCUJ(ctx context.Context, s *testing.State) {
 
 		const uiTimeout = 15 * time.Second
 		clickSearchButton := func(ctx context.Context) error {
+			navigateUpButton := d.Object(
+				ui.ClassName("android.widget.ImageButton"),
+				ui.Description("Navigate up"),
+				ui.PackageName(ytAppPkgName),
+			)
+			// If the app is currently not on the home page, go back to it.
+			if err := cuj.ClickIfExist(navigateUpButton, 5*time.Second)(ctx); err != nil {
+				return errors.Wrap(err, "failed to click navigate up button")
+			}
+
 			searchImageViewButton := d.Object(
 				ui.ClassName("android.widget.ImageView"),
 				ui.Description("Search"),
@@ -137,7 +148,7 @@ func ArcYoutubeCUJ(ctx context.Context, s *testing.State) {
 		searchVideo := func(videoID string) uiauto.Action {
 			return func(ctx context.Context) error {
 				searchQueryField := d.Object(
-					ui.Text("Search YouTube"),
+					ui.ID(ytAppPkgName+":id/search_edit_text"),
 					ui.ClassName("android.widget.EditText"),
 					ui.PackageName(ytAppPkgName),
 				)
@@ -153,24 +164,17 @@ func ArcYoutubeCUJ(ctx context.Context, s *testing.State) {
 		}
 
 		const retryTimes = 3
-		if err := uiauto.Retry(retryTimes, uiauto.NamedCombine("search video",
-			clickSearchButton,
-			searchVideo(testVideoID),
-		))(ctx); err != nil {
-			return errors.Wrap(err, "failed to search video")
-		}
-
-		// Click the desired video.
 		video := d.Object(
 			ui.ClassName("android.view.ViewGroup"),
 			ui.DescriptionContains("Google I/O 2016 - Keynote"),
 			ui.PackageName(ytAppPkgName),
 		)
-		if err := video.WaitForExists(ctx, uiTimeout); err != nil {
-			return errors.Wrap(err, "failed to wait for search results")
-		}
-		if err := video.Click(ctx); err != nil {
-			return errors.Wrap(err, "failed to click for video")
+		if err := uiauto.Retry(retryTimes, uiauto.NamedCombine("search video",
+			clickSearchButton,
+			searchVideo(testVideoID),
+			cuj.FindAndClick(video, uiTimeout),
+		))(ctx); err != nil {
+			return errors.Wrap(err, "failed to search video")
 		}
 
 		// Wait for the seek bar.
@@ -254,20 +258,29 @@ func ArcYoutubeCUJ(ctx context.Context, s *testing.State) {
 				return errors.New(`"Quality unavailable" message is shown, cannot change quality`)
 			}
 
+			advanceOption := d.Object(
+				ui.ClassName("android.view.ViewGroup"),
+				// The fourth button is "Advance".
+				ui.Index(3),
+				ui.PackageName(ytAppPkgName),
+				ui.Clickable(true),
+			)
 			advanceView := d.Object(
 				ui.ClassName("android.widget.TextView"),
 				ui.TextContains("Advance"),
 				ui.PackageName(ytAppPkgName),
 			)
-			if err := advanceView.Click(ctx); err != nil {
-				return errors.Wrap(err, "failed to click the advance view")
+			// There might be two different ARC dump hierarchies that affect
+			// how nodes are captured.
+			advanceButton, err := cuj.FindAnyExists(ctx, uiTimeout, advanceOption, advanceView)
+			if err != nil {
+				return errors.Wrap(err, "failed to find Advance button")
 			}
-			fps60Button := d.Object(
-				ui.ClassName("android.widget.TextView"),
-				ui.TextContains(string(youtube.Quality1080P60)),
-				ui.PackageName(ytAppPkgName),
-			)
-			return fps60Button.Click(ctx)
+			if err := advanceButton.Click(ctx); err != nil {
+				return errors.Wrap(err, "failed to click Advance button")
+			}
+
+			return youtube.ClickQualityOption(d, cr, s.OutDir(), youtube.Quality1080P60)(ctx)
 		}
 		if err := uiauto.Retry(retryTimes, uiauto.NamedAction("switch quality", switchQuality))(ctx); err != nil {
 			return errors.Wrap(err, "failed to switch quality")
