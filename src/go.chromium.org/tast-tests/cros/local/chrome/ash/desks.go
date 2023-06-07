@@ -72,12 +72,13 @@ func CleanUpDesks(ctx context.Context, tconn *chrome.TestConn) error {
 		if err := tconn.Call(ctx, &success, "tast.promisify(chrome.autotestPrivate.removeActiveDesk)"); err != nil {
 			return errors.Wrap(err, "failed to remove desk")
 		}
-		// In overview mode, there is no desk removal animation to wait for, and so
-		// chrome.autotestPrivate.removeActiveDesk returns immediately, but we
-		// still need to allow at least a brief moment for the desk removal to be
-		// fully processed. If we just call chrome.autotestPrivate.removeActiveDesk
-		// in a tight loop in overview mode, it may repeatedly return true forever.
-		// See b/253687177.
+		// GoBigSleepLint: It's used as a warm-up step which is part of the
+		// performance testing logic. In overview mode, there is no desk removal
+		// animation to wait for, and so chrome.autotestPrivate.removeActiveDesk
+		// returns immediately, but we still need to allow at least a brief moment
+		// for the desk removal to be fully processed. If we just call
+		// chrome.autotestPrivate.removeActiveDesk in a tight loop in overview mode,
+		// it may repeatedly return true forever. See b/253687177.
 		if err := testing.Sleep(ctx, time.Second); err != nil {
 			return errors.Wrap(err, "failed to wait a second")
 		}
@@ -389,13 +390,14 @@ func DeleteAllSavedDesks(ctx context.Context, ac *uiauto.Context, tconn *chrome.
 	// Delete all saved desks one by one.
 	for i := range savedDeskInfo {
 		firstSavedDesk := savedDesk.First()
+		firstCloseButton := closeButton.First()
 		if err := ac.MouseMoveTo(firstSavedDesk, 0)(ctx); err != nil {
 			return errors.Wrapf(err, "failed to mouse over to saved desk at position %v", i+1)
 		}
 		if err := uiauto.Combine(
 			"Delete saved desks",
-			ac.WaitUntilExists(closeButton),
-			ac.DoDefault(closeButton),
+			ac.WaitUntilExists(firstCloseButton),
+			ac.DoDefault(firstCloseButton),
 			ac.WaitUntilExists(deleteDialog),
 			kb.AccelAction("Enter"),
 		)(ctx); err != nil {
@@ -408,8 +410,23 @@ func DeleteAllSavedDesks(ctx context.Context, ac *uiauto.Context, tconn *chrome.
 
 // DeleteDeskTemplateByName deletes desk template with savedDeskName.
 func DeleteDeskTemplateByName(ctx context.Context, ac *uiauto.Context, tconn *chrome.TestConn, savedDeskName string) error {
+	savedDeskNameView := nodewith.ClassName("SavedDeskNameView")
+	savedDeskNameViewInfo, err := ac.NodesInfo(ctx, savedDeskNameView)
+	if err != nil {
+		return errors.Wrap(err, "failed to find saved desks")
+	}
+	savedDeskIndex := -1
+	for i, info := range savedDeskNameViewInfo {
+		if info.Name == savedDeskName {
+			savedDeskIndex = i
+		}
+	}
+	if savedDeskIndex == -1 {
+		return errors.Errorf("cannot find index for saved desk with name %s", savedDeskName)
+	}
+
 	savedDesk := nodewith.ClassName("SavedDeskNameView").Name(savedDeskName)
-	closeButton := nodewith.ClassName("IconButton").Name("Delete")
+	closeButton := nodewith.ClassName("IconButton").Name("Delete").Nth(savedDeskIndex)
 	deleteDialog := nodewith.ClassName("SavedDeskDialog")
 
 	kb, err := input.Keyboard(ctx)
