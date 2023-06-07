@@ -11,6 +11,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 
@@ -48,60 +49,111 @@ type sensorAttributes struct {
 	Location string  `json:"location"`
 }
 
-// rawLidAngle parses the output of ectool and gets the raw value of lid angle.
-// The return string should be a number or "unreliable".
-func rawLidAngle(ctx context.Context) (string, error) {
-	// Check to see if a Google EC exists. If it does, use ectool to get the lid
-	// angle that should be reported. Otherwise, return "" if the device does not
-	// have a Google EC.
-	if _, err := os.Stat("/sys/class/chromeos/cros_ec"); err != nil {
-		if os.IsNotExist(err) {
-			return "", nil
-		}
-		return "", err
-	}
+var errUnreliableLidAngle = errors.New("unreliable lid angle")
 
+// getLidAngleFromEctool parses the output of ectool and gets the value of lid angle.
+func getLidAngleFromEctool(ctx context.Context) (uint16, error) {
 	bStdout, bStderr, err := testexec.CommandContext(ctx, "ectool", "motionsense", "lid_angle").SeparatedOutput(testexec.DumpLogOnError)
 	if err != nil {
 		stderr := string(bStderr)
 		if strings.Contains(stderr, "INVALID_COMMAND") || strings.Contains(stderr, "INVALID_PARAM") {
 			// Some devices do not support lid_angle and return |INVALID_COMMAND| or
 			// |INVALID_PARAM|. Check stderr and return "" in these cases.
-			return "", nil
+			return 0, errUnreliableLidAngle
 		}
-		return "", errors.Wrap(err, "failed to run ectool command")
+		return 0, errors.Wrap(err, "failed to run ectool command")
 	}
 
-	return strings.ReplaceAll(strings.TrimSpace(string(bStdout)), "Lid angle: ", ""), nil
+	raw := strings.ReplaceAll(strings.TrimSpace(string(bStdout)), "Lid angle: ", "")
+	if raw == "unreliable" {
+		return 0, errUnreliableLidAngle
+	}
+
+	lidAngle, err := strconv.ParseUint(raw, 10, 16)
+	if err != nil {
+		return 0, errors.Wrapf(err, "failed to convert lid angle to uint, raw value: %s", raw)
+	}
+	return uint16(lidAngle), nil
 }
 
-func validateLidAngle(ctx context.Context, info *sensorInfo) error {
-	lidAngleRaw, err := rawLidAngle(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to get lid angle")
-	}
-
-	if lidAngleRaw == "" || lidAngleRaw == "unreliable" {
-		if info.LidAngle != nil {
-			return errors.New("there is no reliable LidAngle, but cros_healthd report it")
-		}
-	} else {
-		lidAngle, err := strconv.ParseUint(lidAngleRaw, 10, 16)
+func pollLidAngleFromEctool(ctx context.Context) (uint16, error) {
+	// Since lid angle could be nil when the device is in motion, we poll lid
+	// angle from ectool to make sure the it is not temporarily unreliable.
+	var lidAngle uint16
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		value, err := getLidAngleFromEctool(ctx)
 		if err != nil {
+			if !errors.Is(err, errUnreliableLidAngle) {
+				return testing.PollBreak(err)
+			}
 			return err
 		}
-		if info.LidAngle == nil {
-			return errors.Errorf("failed. LidAngle doesn't match: got nil; want %v", lidAngle)
+		lidAngle = value
+		return nil
+	}, &testing.PollOptions{Interval: time.Second, Timeout: 5 * time.Second}); err != nil {
+		return 0, err
+	}
+	return lidAngle, nil
+}
+
+// validateLidAngle checks if the lid angle value obtained from cros_healthd is
+// nearly the same as the value obtained from EC.
+func validateLidAngle(ctx context.Context, got uint16, reliable bool) error {
+	// Check to see if a Google EC exists. If it does, use ectool to get the lid
+	// angle that should be reported.
+	if _, err := os.Stat("/sys/class/chromeos/cros_ec"); err != nil {
+		if !os.IsNotExist(err) {
+			return err
 		}
-		// The value of lid angle comes from the value of accelerometers on lid and
-		// base, which is dynamic without user interaction. We should have the lid
-		// angle tolerance.
-		const lidAngleTolerance = 1
-		if math.Abs(float64(*info.LidAngle)-float64(lidAngle)) > lidAngleTolerance {
-			return errors.Errorf("failed. LidAngle doesn't match and the difference is out of tolerance: got %v; want %v", *info.LidAngle, lidAngle)
+		if reliable {
+			return errors.Errorf("failed to find EC but cros_healthd report reliable lid angle: %v", got)
 		}
+		return nil
 	}
 
+	want, err := pollLidAngleFromEctool(ctx)
+	if err != nil {
+		if !errors.Is(err, errUnreliableLidAngle) {
+			return err
+		}
+		if reliable {
+			return errors.Errorf("failed to get reliable lid angle measurement but cros_healthd report one: %v", got)
+		}
+		return nil
+	}
+
+	if !reliable {
+		return errors.Errorf("got expected lid angle measurement: %v but cros_healthd did not report one", want)
+	}
+
+	// Given we read the lid angle with ectool directly or indirectly through
+	// cros_healthd, we should get the same value. Add a tolerance in case there
+	// is a slight variation in measurements.
+	const lidAngleTolerance = 1
+	if math.Abs(float64(got)-float64(want)) > lidAngleTolerance {
+		return errors.Errorf("failed. LidAngle doesn't match and the difference is out of tolerance: got %v; want %v", got, want)
+	}
+
+	return nil
+}
+
+func pollLidAngleFromCrosHealthTool(ctx context.Context, params croshealthd.TelemParams, outDir string, info *sensorInfo) error {
+	// Early return if we already collected reliable lid angle from cros_healthd.
+	if info.LidAngle != nil {
+		return nil
+	}
+
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if err := croshealthd.RunAndParseJSONTelem(ctx, params, outDir, info); err != nil {
+			return testing.PollBreak(err)
+		}
+		if info.LidAngle == nil {
+			return errUnreliableLidAngle
+		}
+		return nil
+	}, &testing.PollOptions{Interval: time.Second, Timeout: 5 * time.Second}); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -138,7 +190,20 @@ func ProbeSensorInfo(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to validate sensor attributes: ", err)
 	}
 
-	if err := validateLidAngle(ctx, &info); err != nil {
+	// Since lid angle could be nil when the device is in motion, we poll lid
+	// angle from Healthd to make sure the it is not temporarily unreliable.
+	err := pollLidAngleFromCrosHealthTool(ctx, params, s.OutDir(), &info)
+	if err != nil && !errors.Is(err, errUnreliableLidAngle) {
+		s.Fatal("Failed to get lid angle info: ", err)
+	}
+
+	var lidAngle uint16 = 0
+	reliable := (info.LidAngle != nil)
+	if reliable {
+		lidAngle = *info.LidAngle
+	}
+	// Validate lid angle from cros_healthd even if it is unreliable.
+	if err := validateLidAngle(ctx, lidAngle, reliable); err != nil {
 		s.Fatal("Failed to validate lid angle: ", err)
 	}
 }
