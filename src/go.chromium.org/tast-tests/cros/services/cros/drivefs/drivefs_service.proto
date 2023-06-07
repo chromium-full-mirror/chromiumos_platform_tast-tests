@@ -1,0 +1,23 @@
+// Copyright 2023 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+syntax = "proto3";
+
+package tast.cros.drivefs;
+
+option go_package = "go.chromium.org/tast-tests/cros/services/cros/drivefs";
+
+// Waits for the `username` drivefs process to become mounted.
+message WaitForMountRequest {
+  string username = 1;
+}
+
+message WaitForMountResponse {
+  string MountPath = 1;
+}
+
+// DriveFsService is the service to perform DriveFS related operations.
+service DriveFsService {
+  rpc WaitForMount (WaitForMountRequest) returns (WaitForMountResponse) {}
+}
