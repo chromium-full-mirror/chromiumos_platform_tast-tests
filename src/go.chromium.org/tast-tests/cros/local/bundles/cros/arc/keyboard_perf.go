@@ -21,7 +21,11 @@ func init() {
 		Func:         KeyboardPerf,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Test ARC keyboard system performance",
-		Contacts:     []string{"arc-performance@google.com", "khmel@chromium.org"},
+		Contacts: []string{
+			"arc-performance@google.com",
+			"hungmn@chromium.org",
+			"alanding@chromium.org",
+		},
 		// ChromeOS > Software > ARC++ > Performance
 		BugComponent: "b:168382",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},

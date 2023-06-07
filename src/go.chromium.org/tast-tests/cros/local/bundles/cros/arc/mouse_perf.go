@@ -21,7 +21,11 @@ func init() {
 		Func:         MousePerf,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Test ARC mouse system performance",
-		Contacts:     []string{"arc-performance@google.com", "alanding@chromium.org"},
+		Contacts: []string{
+			"arc-performance@google.com",
+			"hungmn@chromium.org",
+			"alanding@chromium.org",
+		},
 		// ChromeOS > Software > ARC++ > Performance
 		BugComponent: "b:168382",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
