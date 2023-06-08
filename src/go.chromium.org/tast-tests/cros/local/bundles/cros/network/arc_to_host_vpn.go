@@ -12,7 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/arcvpn"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/vpn"
-	"go.chromium.org/tast-tests/cros/local/network/routing"
+	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -77,7 +77,7 @@ func ARCToHostVPN(ctx context.Context, s *testing.State) {
 	}
 
 	// Host traffic gets routed to the ARC VPN correctly.
-	if err := routing.ExpectPingSuccessWithTimeout(ctx, arcvpn.TunIP, "chronos", 10*time.Second); err != nil {
+	if err := ping.ExpectPingSuccessWithTimeout(ctx, arcvpn.TunIP, "chronos", 10*time.Second); err != nil {
 		s.Fatalf("Failed to ping %s from host: %v", arcvpn.TunIP, err)
 	}
 
@@ -97,7 +97,7 @@ func ARCToHostVPN(ctx context.Context, s *testing.State) {
 	}
 
 	// Host and ARC traffic are routed correctly.
-	if err := routing.ExpectPingSuccessWithTimeout(ctx, conn.Server.OverlayIPv4, "chronos", 10*time.Second); err != nil {
+	if err := ping.ExpectPingSuccessWithTimeout(ctx, conn.Server.OverlayIPv4, "chronos", 10*time.Second); err != nil {
 		s.Fatalf("Failed to ping from host %s: %v", conn.Server.OverlayIPv4, err)
 	}
 	if err := arc.ExpectPingSuccess(ctx, a, "vpn", conn.Server.OverlayIPv4); err != nil {

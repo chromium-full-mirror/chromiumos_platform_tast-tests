@@ -10,7 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/vpn"
 	"go.chromium.org/tast-tests/cros/local/network/dumputil"
-	"go.chromium.org/tast-tests/cros/local/network/routing"
+	"go.chromium.org/tast-tests/cros/local/network/ping"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -159,7 +159,7 @@ func VPNRouting(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to addrs from physical env: ", err)
 	}
-	if err := routing.ExpectPingSuccessWithTimeout(ctx, physicalAddrs.IPv6Addrs[0].String(), "chronos", 10*time.Second); err != nil {
+	if err := ping.ExpectPingSuccessWithTimeout(ctx, physicalAddrs.IPv6Addrs[0].String(), "chronos", 10*time.Second); err != nil {
 		s.Fatal("Cannot reach physical env by IPv6: ", err)
 	}
 
@@ -254,7 +254,7 @@ func VPNRouting(ctx context.Context, s *testing.State) {
 		}
 	}
 	for _, ip := range reachableIPs {
-		if err := routing.ExpectPingSuccessWithTimeout(ctx, ip.ip, "chronos", 10*time.Second); err != nil {
+		if err := ping.ExpectPingSuccessWithTimeout(ctx, ip.ip, "chronos", 10*time.Second); err != nil {
 			s.Errorf("Failed to ping %s %s: %v", ip.role, ip.ip, err)
 		}
 	}
@@ -268,7 +268,7 @@ func VPNRouting(ctx context.Context, s *testing.State) {
 		testing.ContextLog(ctx, "Skip IPv6 blocking check for WireGuard")
 		return
 	}
-	if err := routing.ExpectPingFailure(ctx, physicalAddrs.IPv6Addrs[0].String(), "chronos"); err != nil {
+	if err := ping.ExpectPingFailure(ctx, physicalAddrs.IPv6Addrs[0].String(), "chronos"); err != nil {
 		s.Fatal("IPv6 ping should fail: ", err)
 	}
 }

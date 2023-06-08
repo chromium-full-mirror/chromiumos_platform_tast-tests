@@ -10,7 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/vpn"
-	"go.chromium.org/tast-tests/cros/local/network/routing"
+	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -162,7 +162,7 @@ func AlwaysOnVPNRouting(ctx context.Context, s *testing.State) {
 	}
 
 	// Test system traffic is not blocked if the VPN is not connectable for both modes.
-	if err := routing.ExpectPingSuccessWithTimeout(ctx, physicalAddr, "root", 10*time.Second); err != nil {
+	if err := ping.ExpectPingSuccessWithTimeout(ctx, physicalAddr, "root", 10*time.Second); err != nil {
 		s.Errorf("User %s failed to ping %v: %v", "root", physicalAddr, err)
 	}
 
@@ -170,11 +170,11 @@ func AlwaysOnVPNRouting(ctx context.Context, s *testing.State) {
 	const user = "chronos"
 	switch vpnMode {
 	case shillconst.AlwaysOnVPNModeStrict:
-		if err := routing.ExpectPingFailure(ctx, physicalAddr, user); err != nil {
+		if err := ping.ExpectPingFailure(ctx, physicalAddr, user); err != nil {
 			s.Errorf("User %s succeeded to ping %v in strict mode: %v", user, physicalAddr, err)
 		}
 	case shillconst.AlwaysOnVPNModeBestEffort:
-		if err := routing.ExpectPingSuccessWithTimeout(ctx, physicalAddr, user, 10*time.Second); err != nil {
+		if err := ping.ExpectPingSuccessWithTimeout(ctx, physicalAddr, user, 10*time.Second); err != nil {
 			s.Errorf("User %s failed to ping %v: %v", user, physicalAddr, err)
 		}
 	}

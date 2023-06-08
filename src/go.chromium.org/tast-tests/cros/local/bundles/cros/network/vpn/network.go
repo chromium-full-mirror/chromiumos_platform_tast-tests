@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/shillconst"
-	"go.chromium.org/tast-tests/cros/local/network/routing"
+	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/env"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/subnet"
@@ -107,7 +107,7 @@ func CreateNetworkTopology(ctx context.Context) (*Network, error) {
 		return nil, errors.Wrap(err, "failed to get addresses from 2nd server")
 	}
 	for _, addr := range []net.IP{addrs.IPv4Addr, addrs.IPv6Addrs[0]} {
-		if err := routing.ExpectPingSuccessWithTimeout(ctx, addr.String(), "chronos", 20*time.Second); err != nil {
+		if err := ping.ExpectPingSuccessWithTimeout(ctx, addr.String(), "chronos", 20*time.Second); err != nil {
 			return nil, errors.Wrap(err, "failed to verify server connectivity")
 		}
 	}

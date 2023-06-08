@@ -12,7 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/swap"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/arcvpn"
-	"go.chromium.org/tast-tests/cros/local/network/routing"
+	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -90,7 +90,7 @@ func ArcVpnVmmSwap(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to start %s: %v", arcvpn.VPNTestAppSvc, err)
 	}
 
-	if err := routing.ExpectPingSuccessWithTimeout(ctx, arcvpn.TunIP, "chronos", 10*time.Second); err != nil {
+	if err := ping.ExpectPingSuccessWithTimeout(ctx, arcvpn.TunIP, "chronos", 10*time.Second); err != nil {
 		s.Fatalf("Failed to ping %s from host: %v", arcvpn.TunIP, err)
 	}
 
@@ -105,7 +105,7 @@ func ArcVpnVmmSwap(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Revalidating VPN after swap")
-	if err := routing.ExpectPingSuccessWithTimeout(ctx, arcvpn.TunIP, "chronos", 10*time.Second); err != nil {
+	if err := ping.ExpectPingSuccessWithTimeout(ctx, arcvpn.TunIP, "chronos", 10*time.Second); err != nil {
 		s.Fatalf("Failed to ping %s from host: %v", arcvpn.TunIP, err)
 	}
 }

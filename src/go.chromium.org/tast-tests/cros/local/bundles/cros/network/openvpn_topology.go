@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/vpn"
-	"go.chromium.org/tast-tests/cros/local/network/routing"
+	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -108,12 +108,12 @@ func OpenVPNTopology(ctx context.Context, s *testing.State) {
 		{privateEnvIPs.IPv4Addr.String(), "root", "private IPv4"},
 	}
 	for _, tc := range reachableIPs {
-		if err := routing.ExpectPingSuccessWithTimeout(ctx, tc.ip, tc.user, 10*time.Second); err != nil {
+		if err := ping.ExpectPingSuccessWithTimeout(ctx, tc.ip, tc.user, 10*time.Second); err != nil {
 			s.Errorf("Failed to ping %s %s as %s: %v", tc.role, tc.ip, tc.user, err)
 		}
 	}
 	for _, tc := range unreachableIPs {
-		if err := routing.ExpectPingFailure(ctx, tc.ip, tc.user); err != nil {
+		if err := ping.ExpectPingFailure(ctx, tc.ip, tc.user); err != nil {
 			s.Errorf("Unexpected ping success for %s %s as %s: %v", tc.role, tc.ip, tc.user, err)
 		}
 	}

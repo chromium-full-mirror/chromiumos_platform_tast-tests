@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/network/dhcp"
+	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast-tests/cros/local/network/routing"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet"
 	"go.chromium.org/tast/core/ctxutil"
@@ -111,6 +112,7 @@ func RoutingDualStackLoseDHCP(ctx context.Context, s *testing.State) {
 	// fails this time, IPv4 failure event will be triggered in shill.
 	const timeout = leaseTime + routing.DHCPTimeout
 	testing.ContextLogf(ctx, "Waiting %s for DHCP timeout on test network", timeout)
+	// GoBigSleepLint: sleep to let the DHCP timeout
 	testing.Sleep(ctx, timeout)
 
 	// Check that IPv4 address has disappeared from the IPConfig.
@@ -155,7 +157,7 @@ func RoutingDualStackLoseDHCP(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get addrs from test server: ", err)
 	}
 	for _, addr := range []string{routerAddr.IPv4Addr.String(), serverAddr.IPv4Addr.String()} {
-		if err := routing.ExpectPingFailure(ctx, addr, "root"); err != nil {
+		if err := ping.ExpectPingFailure(ctx, addr, "root"); err != nil {
 			s.Errorf("%s should not be reachable: %v", addr, err)
 		}
 	}

@@ -16,6 +16,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/crypto/certificate"
 	"go.chromium.org/tast-tests/cros/common/shillconst"
+	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast-tests/cros/local/network/routing"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet"
 	"go.chromium.org/tast-tests/cros/local/shill"
@@ -378,7 +379,7 @@ func (c *Connection) Connect(ctx context.Context) error {
 	if err := c.service.WaitForConnectedOrError(ctx); err != nil {
 		return errors.Wrap(err, "failed to wait for service connected")
 	}
-	if err := routing.ExpectPingSuccessWithTimeout(ctx, c.Server.OverlayIPv4, "chronos", 5*time.Second); err != nil {
+	if err := ping.ExpectPingSuccessWithTimeout(ctx, c.Server.OverlayIPv4, "chronos", 5*time.Second); err != nil {
 		return errors.Wrap(err, "failed to verify VPN routing")
 	}
 

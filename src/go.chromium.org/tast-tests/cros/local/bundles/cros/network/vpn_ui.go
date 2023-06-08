@@ -17,7 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
-	"go.chromium.org/tast-tests/cros/local/network/routing"
+	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -195,7 +195,7 @@ func VPNUI(ctx context.Context, s *testing.State) {
 		reachableIPs = append(reachableIPs, vpnServer.OverlayIPv6)
 	}
 	for _, ip := range reachableIPs {
-		if err := routing.ExpectPingSuccessWithTimeout(ctx, ip, "chronos", 10*time.Second); err != nil {
+		if err := ping.ExpectPingSuccessWithTimeout(ctx, ip, "chronos", 10*time.Second); err != nil {
 			s.Errorf("Failed to ping %s: %v", ip, err)
 		}
 	}

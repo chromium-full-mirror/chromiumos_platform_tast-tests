@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast-tests/cros/local/network/routing"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/dnsmasq"
@@ -264,13 +265,13 @@ func RoutingDHCPClasslessStatic(ctx context.Context, s *testing.State) {
 	}
 
 	for _, u := range []string{"root", "chronos"} {
-		if err := routing.ExpectPingFailure(ctx, testServerAddrs.IPv4Addr.String(), u); err != nil {
+		if err := ping.ExpectPingFailure(ctx, testServerAddrs.IPv4Addr.String(), u); err != nil {
 			s.Errorf("Test server should not be reachable as user %s: %v", u, err)
 		}
-		if err := routing.ExpectPingSuccessWithTimeout(ctx, server1.IP.String(), u, 3*time.Second); err != nil {
+		if err := ping.ExpectPingSuccessWithTimeout(ctx, server1.IP.String(), u, 3*time.Second); err != nil {
 			s.Errorf("Failed to verify server behind same gateway as user %s: %v", u, err)
 		}
-		if err := routing.ExpectPingSuccessWithTimeout(ctx, server2.IP.String(), u, 3*time.Second); err != nil {
+		if err := ping.ExpectPingSuccessWithTimeout(ctx, server2.IP.String(), u, 3*time.Second); err != nil {
 			s.Errorf("Failed to verify server behind other gateway as user %s: %v", u, err)
 		}
 	}

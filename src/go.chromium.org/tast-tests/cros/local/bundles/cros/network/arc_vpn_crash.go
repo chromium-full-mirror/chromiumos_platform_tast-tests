@@ -12,7 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/arcvpn"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/vpn"
-	"go.chromium.org/tast-tests/cros/local/network/routing"
+	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -60,7 +60,7 @@ func ARCVPNCrash(ctx context.Context, s *testing.State) {
 	if err := arcvpn.WaitForARCServiceState(ctx, a, arcvpn.FacadeVPNPkg, arcvpn.FacadeVPNSvc, true); err != nil {
 		s.Fatalf("Failed to start %s: %v", arcvpn.FacadeVPNSvc, err)
 	}
-	if err := routing.ExpectPingSuccessWithTimeout(ctx, conn.Server.OverlayIPv4, "chronos", 10*time.Second); err != nil {
+	if err := ping.ExpectPingSuccessWithTimeout(ctx, conn.Server.OverlayIPv4, "chronos", 10*time.Second); err != nil {
 		s.Fatalf("Failed to ping from host %s: %v", conn.Server.OverlayIPv4, err)
 	}
 	if err := arc.ExpectPingSuccess(ctx, a, "vpn", conn.Server.OverlayIPv4); err != nil {
@@ -73,7 +73,7 @@ func ARCVPNCrash(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to stop %s: %v", arcvpn.FacadeVPNSvc, err)
 	}
 	// VPN should still be reachable even without ArcHostVpnService
-	if err := routing.ExpectPingSuccessWithTimeout(ctx, conn.Server.OverlayIPv4, "chronos", 10*time.Second); err != nil {
+	if err := ping.ExpectPingSuccessWithTimeout(ctx, conn.Server.OverlayIPv4, "chronos", 10*time.Second); err != nil {
 		s.Fatalf("Failed to ping from host %s: %v", conn.Server.OverlayIPv4, err)
 	}
 	// arc0/eth0 are hardcoded in ARC as the iface of our fake ethernet network that VPN traffic

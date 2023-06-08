@@ -14,7 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/vpn"
-	"go.chromium.org/tast-tests/cros/local/network/routing"
+	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast/core/ctxutil"
@@ -175,7 +175,7 @@ func WireguardCrosh(ctx context.Context, s *testing.State) {
 		// Since wg is stateless, connected state does not mean VPN tunnel is setup.
 		// Check routing here to make sure service is configured properly.
 		for _, addr := range []string{peer1.OverlayIPv4, peer1.OverlayIPv6, peer2.OverlayIPv4, peer2.OverlayIPv6} {
-			if err := routing.ExpectPingSuccessWithTimeout(ctx, addr, "chronos", 10*time.Second); err != nil {
+			if err := ping.ExpectPingSuccessWithTimeout(ctx, addr, "chronos", 10*time.Second); err != nil {
 				s.Fatal("Failed to verify ping after connect: ", err)
 			}
 		}

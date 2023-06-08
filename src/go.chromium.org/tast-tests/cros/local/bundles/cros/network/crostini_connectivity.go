@@ -11,6 +11,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/crostini"
+	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast-tests/cros/local/network/routing"
 	"go.chromium.org/tast-tests/cros/local/vm"
 	"go.chromium.org/tast/core/ctxutil"
@@ -111,7 +112,7 @@ func CrostiniConnectivity(ctx context.Context, s *testing.State) {
 	}
 	pingAddrs = append(pingAddrs, routing.TestDomainNameV6)
 	for _, target := range pingAddrs {
-		if err := routing.ExpectPingSuccessWithTimeout(ctx, target, "chronos", 10*time.Second); err != nil {
+		if err := ping.ExpectPingSuccessWithTimeout(ctx, target, "chronos", 10*time.Second); err != nil {
 			s.Errorf("Network verification failed: %v is not reachable as user %s on host: %v", target, "chronos", err)
 		}
 	}

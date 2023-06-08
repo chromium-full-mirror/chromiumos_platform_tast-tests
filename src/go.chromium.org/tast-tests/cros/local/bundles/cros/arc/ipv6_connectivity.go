@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	patchpanel "go.chromium.org/tast-tests/cros/local/network/patchpanel_client"
+	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast-tests/cros/local/network/routing"
 	"go.chromium.org/tast-tests/cros/local/shill"
 
@@ -105,7 +106,7 @@ func IPv6Connectivity(ctx context.Context, s *testing.State) {
 	pingAddrs = append(pingAddrs, routing.TestDomainNameV6)
 
 	for _, target := range pingAddrs {
-		if err := routing.ExpectPingSuccessWithTimeout(ctx, target, "chronos", 10*time.Second); err != nil {
+		if err := ping.ExpectPingSuccessWithTimeout(ctx, target, "chronos", 10*time.Second); err != nil {
 			s.Errorf("Network verification failed: %v is not reachable as user %s on host: %v", target, "chronos", err)
 		}
 	}

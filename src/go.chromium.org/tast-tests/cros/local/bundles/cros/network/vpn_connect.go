@@ -11,7 +11,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/vpn"
 	"go.chromium.org/tast-tests/cros/local/network/dumputil"
-	"go.chromium.org/tast-tests/cros/local/network/routing"
+	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -296,7 +296,7 @@ func VPNConnect(ctx context.Context, s *testing.State) {
 		s.Fatal("VPN service state changed to failure")
 	}
 	// Do a simple ping check to make sure we are really connected.
-	if err := routing.ExpectPingSuccessWithTimeout(ctx, conn.Server.OverlayIPv4, "chronos", 10*time.Second); err != nil {
+	if err := ping.ExpectPingSuccessWithTimeout(ctx, conn.Server.OverlayIPv4, "chronos", 10*time.Second); err != nil {
 		s.Fatalf("Failed to ping %s: %v", conn.Server.OverlayIPv4, err)
 	}
 }

@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/vpn"
-	"go.chromium.org/tast-tests/cros/local/network/routing"
+	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -64,10 +64,10 @@ func VPNSourceRouting(ctx context.Context, s *testing.State) {
 	vaddr := conn.Server.OverlayIPv4
 
 	test := func(user, goodIP, badIP string) {
-		if err := routing.ExpectPingSuccessWithTimeout(ctx, goodIP, user, 10*time.Second); err != nil {
+		if err := ping.ExpectPingSuccessWithTimeout(ctx, goodIP, user, 10*time.Second); err != nil {
 			s.Errorf("User %s failed to ping %v: %v", user, goodIP, err)
 		}
-		if err := routing.ExpectPingFailure(ctx, badIP, user); err != nil {
+		if err := ping.ExpectPingFailure(ctx, badIP, user); err != nil {
 			s.Errorf("User %s able to ping %v: %v", user, badIP, err)
 		}
 	}
