@@ -129,3 +129,14 @@ func deletePingEntriesInConntrack(ctx context.Context) error {
 	}
 	return nil
 }
+
+// VerifyInternetConnectivity keeps pinging gstatic.com with |timeout| to verify
+// the Internet connectivity as user chronos. Return nil if ping succeeds.
+func VerifyInternetConnectivity(ctx context.Context, timeout time.Duration) error {
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		return expectPingSuccess(ctx, "gstatic.com", "chronos")
+	}, &testing.PollOptions{Timeout: timeout, Interval: 200 * time.Millisecond}); err != nil {
+		return errors.Wrapf(err, "failed to reach gstatic.com within %s", timeout)
+	}
+	return nil
+}

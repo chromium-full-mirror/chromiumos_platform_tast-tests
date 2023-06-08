@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/vpn"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast/core/ctxutil"
@@ -54,7 +55,7 @@ func VPNPolicy(ctx context.Context, s *testing.State) {
 	}
 
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 20*time.Second)
 	defer cancel()
 
 	networkEnv, err := vpn.CreateNetworkTopology(ctx)
@@ -64,6 +65,11 @@ func VPNPolicy(ctx context.Context, s *testing.State) {
 	defer func() {
 		if err := networkEnv.TearDown(cleanupCtx); err != nil {
 			s.Error("Failed to tear down network topology for VPN tests: ", err)
+		}
+		// TODO(b/286348339): use a smaller timeout value after b/286348339 is resolved.
+		if err := ping.VerifyInternetConnectivity(cleanupCtx, 20*time.Second); err != nil {
+			// Only printing log instead of report error here, to avoid lab network issue causing test flakiness.
+			testing.ContextLog(cleanupCtx, "Failed to restore Internet connectivity after test: ", err)
 		}
 	}()
 
