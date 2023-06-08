@@ -15,6 +15,7 @@ import (
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/errors"
@@ -27,6 +28,16 @@ type params struct {
 	usbPresent       bool
 	reconnectTimeout time.Duration
 }
+
+type dmfsKeyVal int
+
+const (
+	dmfsCtrlD dmfsKeyVal = iota
+	dmfsCtrlU
+	dmfsUpKey
+	dmfsUpArrowKey
+	dmfsSpace
+)
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -45,10 +56,14 @@ func init() {
 		Fixture:      fixture.DevMode,
 		Params: []testing.Param{{
 			Val: &params{
-				usbPresent:       false,
-				reconnectTimeout: 2 * time.Minute,
+				usbPresent: false,
+				// To-do: replace with DelayRebootToPing in the future, but monitor results from
+				// chromium: 4548855 first to find out how each machine varies in their boot-up
+				// time. 8 minutes appeared to help when the test was run on leased machines,
+				// though this duration might have also covered the time for remote connection.
+				reconnectTimeout: 8 * time.Minute,
 			},
-			Timeout: 20 * time.Minute,
+			Timeout: 50 * time.Minute,
 		}, {
 			Name: "usb",
 			Val: &params{
@@ -106,10 +121,7 @@ func DevModeFwScreen(ctx context.Context, s *testing.State) {
 	// For DUTs using MenuSwitcher, or TabletDetachableSwitcher, we would
 	// use a goroutine to keep pressing the <up> key in the background,
 	// to prevent exit from firmware screen because of timeout.
-	var goRoutineRequired bool
-	if h.Config.ModeSwitcherType == firmware.MenuSwitcher || h.Config.ModeSwitcherType == firmware.TabletDetachableSwitcher {
-		goRoutineRequired = true
-	}
+	goRoutineRequired := h.Config.ModeSwitcherType == firmware.MenuSwitcher || h.Config.ModeSwitcherType == firmware.TabletDetachableSwitcher
 
 	/*
 		Notes: This test is parameterized so that steps 1~4 are run in
@@ -143,25 +155,41 @@ func DevModeFwScreen(ctx context.Context, s *testing.State) {
 			with ctrl+D would allow boot to continue into dev mode and
 			from main storage.
 	*/
-	devModeKeypressDelay := 2 * time.Second
-	done := make(chan bool, 1)
-	defer func() {
-		close(done)
-	}()
+
+	// If the dut is a wilco or detachable device, send usb keyboard key '<uparrow>'.
+	// Otherwise, use the key '<up>' to avoid fw screen timeout.
+	extendFwScreenKey := dmfsUpKey
+	if goRoutineRequired {
+		if err := h.RequireRPCClient(ctx); err != nil {
+			s.Fatal("Failed to open RPC client: ", err)
+		}
+		fs := dutfs.NewClient(h.RPCClient.Conn)
+		crosECPath := "/dev/cros_ec"
+		crosEC, err := fs.Exists(ctx, crosECPath)
+		if err != nil {
+			s.Fatal("Failed to verify if DUT has cros ec: ", err)
+		}
+		if err := h.CloseRPCConnection(ctx); err != nil {
+			s.Fatal("Failed to close RPC connection: ", err)
+		}
+		if !crosEC || (h.Config.ModeSwitcherType == firmware.TabletDetachableSwitcher) {
+			extendFwScreenKey = dmfsUpArrowKey
+		}
+	}
 	for iter, steps := range []struct {
 		devBootUSB      string
-		testedShortCuts []servo.KeypressControl
+		testedShortCuts []dmfsKeyVal
 		usbRequired     bool
 		expectedMode    fwCommon.BootMode
 	}{
-		{"0", []servo.KeypressControl{servo.CtrlD}, true, fwCommon.BootModeDev},
-		{"1", []servo.KeypressControl{servo.CtrlD}, true, fwCommon.BootModeDev},
-		{"0", []servo.KeypressControl{servo.CtrlU, servo.CtrlD}, true, fwCommon.BootModeDev},
-		{"1", []servo.KeypressControl{servo.CtrlU, servo.CtrlD}, true, fwCommon.BootModeUSBDev},
-		{"0", []servo.KeypressControl{servo.CtrlD}, false, fwCommon.BootModeDev},
-		{"1", []servo.KeypressControl{servo.CtrlD}, false, fwCommon.BootModeDev},
-		{"0", []servo.KeypressControl{servo.CtrlU, servo.CtrlD}, false, fwCommon.BootModeDev},
-		{"1", []servo.KeypressControl{servo.CtrlU, servo.CtrlD}, false, fwCommon.BootModeDev},
+		{"0", []dmfsKeyVal{dmfsCtrlD}, true, fwCommon.BootModeDev},
+		{"1", []dmfsKeyVal{dmfsCtrlU}, true, fwCommon.BootModeDev},
+		{"0", []dmfsKeyVal{dmfsCtrlU, dmfsCtrlD}, true, fwCommon.BootModeDev},
+		{"1", []dmfsKeyVal{dmfsCtrlU, dmfsCtrlD}, true, fwCommon.BootModeUSBDev},
+		{"0", []dmfsKeyVal{dmfsCtrlD}, false, fwCommon.BootModeDev},
+		{"1", []dmfsKeyVal{dmfsCtrlD}, false, fwCommon.BootModeDev},
+		{"0", []dmfsKeyVal{dmfsCtrlU, dmfsCtrlD}, false, fwCommon.BootModeDev},
+		{"1", []dmfsKeyVal{dmfsCtrlU, dmfsCtrlD}, false, fwCommon.BootModeDev},
 	} {
 		s.Logf("-------- iteration: %d --------", iter)
 		// Run test steps that depend on a usb when there's one present.
@@ -188,6 +216,7 @@ func DevModeFwScreen(ctx context.Context, s *testing.State) {
 		}
 
 		s.Logf("Waiting %s for DUT to get into firmware screen", h.Config.FirmwareScreen)
+		// GoBigSleepLint: Wait for the firmware screen.
 		if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
 			s.Fatalf("Failed to sleep for %s to wait for firmware screen: %v", h.Config.FirmwareScreen, err)
 		}
@@ -206,67 +235,12 @@ func DevModeFwScreen(ctx context.Context, s *testing.State) {
 		s.Logf("Found ap status: %s %s", apPower, screenState)
 
 		var wg sync.WaitGroup
-
 		dutAtFwScreen := false
+		done := make(chan bool, 1)
+		keyPressErrChan := make(chan error, 1)
 		if goRoutineRequired {
-			index := 0
-			s.Log("Pressing <up> key in the background")
-			go func(dutAtFwScreen *bool) {
-				defer wg.Done()
-				wg.Add(1)
-				for {
-					if err := func() error {
-						// Press the up key every 2 seconds.
-						if err := h.Servo.KeypressWithDuration(ctx, servo.ArrowUp, servo.DurTab); err != nil {
-							return errors.Wrapf(err, "failed to press %s", servo.ArrowUp)
-						}
-						if err := testing.Sleep(ctx, devModeKeypressDelay); err != nil {
-							return errors.Wrapf(err, "failed to sleep for %s seconds", devModeKeypressDelay)
-						}
-
-						// Pressing the up key would ensure an extended stay at the
-						// firmware screen, beyond the default timeout of 30 secs.
-						// Start pressing and testing shortcuts in the background
-						// during the extended period.
-						if *dutAtFwScreen {
-							if index < len(steps.testedShortCuts) {
-								s.Logf("Pressing key %q", steps.testedShortCuts[index])
-								if err := h.Servo.KeypressWithDuration(ctx, steps.testedShortCuts[index], servo.DurTab); err != nil {
-									return errors.Wrapf(err, "failed to press %s", steps.testedShortCuts[index])
-								}
-
-								s.Logf("Sleeping for %s seconds", devModeKeypressDelay)
-								if err := testing.Sleep(ctx, devModeKeypressDelay); err != nil {
-									return errors.Wrapf(err, "failed to sleep for %s seconds", devModeKeypressDelay)
-								}
-								index++
-							} else {
-								// To avoid DUT stuck at the firmware screen, after all shortcuts were
-								// tested, press ctrl_d till DUT connected.
-								s.Logf("Pressing key %q", servo.CtrlD)
-								if err := h.Servo.KeypressWithDuration(ctx, servo.CtrlD, servo.DurTab); err != nil {
-									return errors.Wrapf(err, "failed to press %s", servo.CtrlD)
-								}
-
-								s.Logf("Sleeping for %s seconds", devModeKeypressDelay)
-								if err := testing.Sleep(ctx, devModeKeypressDelay); err != nil {
-									return errors.Wrapf(err, "failed to sleep for %s seconds", devModeKeypressDelay)
-								}
-							}
-						}
-						return nil
-					}(); err != nil && !errors.Is(err, context.Canceled) {
-						s.Fatal("Found unexpected error: ", err)
-					}
-
-					select {
-					case <-done:
-						return
-					default:
-					}
-				}
-			}(&dutAtFwScreen)
-
+			testing.ContextLog(ctx, "Pressing <up> key in the background for extended stay at fw screen")
+			go testShortCutsInBackground(ctx, h, extendFwScreenKey, &dutAtFwScreen, steps.testedShortCuts, keyPressErrChan, done, &wg)
 			// The default timeout at the firmware screen is 30 seconds.
 			// Check that pressing the <up> key has worked around this timeout,
 			// and that DUT remains disconnected.
@@ -281,7 +255,6 @@ func DevModeFwScreen(ctx context.Context, s *testing.State) {
 				s.Fatal("Unexpected error in waiting for DUT to reconnect: ", err)
 			}
 			s.Log("DUT is still at dev screen")
-
 			// Trigger the shortcuts to be tested.
 			dutAtFwScreen = true
 		} else {
@@ -291,23 +264,20 @@ func DevModeFwScreen(ctx context.Context, s *testing.State) {
 			// eventually boot to ChromeOS. But, if ctrl+D did not work, the space
 			// key would stop the boot up process, and DUT would end up disconnected.
 			for _, shortcut := range steps.testedShortCuts {
-				s.Logf("Testing shortcuts %q", shortcut)
-				if err := h.Servo.KeypressWithDuration(ctx, shortcut, servo.DurTab); err != nil {
-					s.Fatalf("Failed to press %s: %v", shortcut, err)
-				}
-
-				s.Logf("Sleeping %s (KeypressDelay)", devModeKeypressDelay)
-				if err := testing.Sleep(ctx, devModeKeypressDelay); err != nil {
-					s.Fatalf("Failed to sleep for %s seconds: %v", devModeKeypressDelay, err)
+				if err := dmfsPressKey(ctx, h, shortcut, servo.DurTab); err != nil {
+					s.Fatal("Failed to simulate key press: ", err)
 				}
 			}
 
 			s.Log(ctx, "Pressing SPACE key to keep DUT in dev screen")
-			if err := h.Servo.PressKey(ctx, " ", servo.DurTab); err != nil {
+			if err := dmfsPressKey(ctx, h, dmfsSpace, servo.DurTab); err != nil {
 				s.Fatal("Failed to press SPACE to stop in dev screen: ", err)
 			}
 		}
 
+		if len(keyPressErrChan) != 0 {
+			s.Fatal("Unexpected error while pressing keys: ", <-keyPressErrChan)
+		}
 		s.Log("Waiting for DUT to reconnect")
 		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, testOpt.reconnectTimeout)
 		defer cancelWaitConnect()
@@ -316,7 +286,8 @@ func DevModeFwScreen(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to reconnect to DUT: ", err)
 		}
 		if goRoutineRequired {
-			done <- true
+			close(done)
+			close(keyPressErrChan)
 			wg.Wait()
 		}
 
@@ -329,5 +300,74 @@ func DevModeFwScreen(ctx context.Context, s *testing.State) {
 			s.Fatalf("Expected DUT in %s mode, but got: %s", steps.expectedMode, curr)
 		}
 	}
+}
 
+func dmfsPressKey(ctx context.Context, h *firmware.Helper, key dmfsKeyVal, keypressDuration servo.KeypressDuration) error {
+	var err error
+	switch key {
+	case dmfsCtrlD:
+		testing.ContextLog(ctx, "Pressing ctrlD")
+		err = h.Servo.KeypressWithDuration(ctx, servo.CtrlD, keypressDuration)
+	case dmfsCtrlU:
+		testing.ContextLog(ctx, "Pressing ctrlU")
+		err = h.Servo.KeypressWithDuration(ctx, servo.CtrlU, keypressDuration)
+	case dmfsUpKey:
+		err = h.Servo.PressKey(ctx, "<up>", keypressDuration)
+	case dmfsSpace:
+		testing.ContextLog(ctx, "Pressing space key")
+		err = h.Servo.PressKey(ctx, " ", keypressDuration)
+	case dmfsUpArrowKey:
+		err = h.Servo.PressUSBKey(ctx, "<uparrow>", keypressDuration)
+	default:
+		return errors.Errorf("found unknown key %d", key)
+	}
+	if err != nil {
+		return err
+	}
+	// GoBigSleepLint: Simulate a specific speed of key presses.
+	if err := testing.Sleep(ctx, 2*time.Second); err != nil {
+		return errors.Wrap(err, "failed to sleep")
+	}
+	return nil
+}
+
+func testShortCutsInBackground(ctx context.Context, h *firmware.Helper, extendFwScreenKey dmfsKeyVal, dutAtFwScreen *bool, testedShortCuts []dmfsKeyVal, keyPressErrChan chan error, done chan bool, wg *sync.WaitGroup) {
+	counter := 0
+	defer wg.Done()
+	wg.Add(1)
+	for {
+		if err := func() error {
+			if err := dmfsPressKey(ctx, h, extendFwScreenKey, servo.DurTab); err != nil {
+				return errors.Wrap(err, "failed to extend fw screen")
+			}
+			// Pressing the up key would ensure an extended stay at the
+			// firmware screen, beyond the default timeout of 30 secs.
+			// Start pressing and testing shortcuts in the background
+			// during the extended period.
+			if *dutAtFwScreen {
+				if counter < len(testedShortCuts) {
+					if err := dmfsPressKey(ctx, h, testedShortCuts[counter], servo.DurTab); err != nil {
+						return errors.Wrap(err, "failed to simulate key press")
+					}
+					counter++
+				} else {
+					// To avoid DUT stuck at the firmware screen, after all shortcuts were
+					// tested, press ctrl_d till DUT connected.
+					if err := dmfsPressKey(ctx, h, dmfsCtrlD, servo.DurTab); err != nil {
+						return errors.Wrap(err, "failed to simulate key press")
+					}
+				}
+			}
+			return nil
+		}(); err != nil && !errors.Is(err, context.Canceled) {
+			keyPressErrChan <- err
+			return
+		}
+
+		select {
+		case <-done:
+			return
+		default:
+		}
+	}
 }
