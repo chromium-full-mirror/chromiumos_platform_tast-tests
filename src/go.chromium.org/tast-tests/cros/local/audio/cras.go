@@ -427,3 +427,21 @@ func (c *Cras) GetFeatureFlagForTest(ctx context.Context, flagName string) (enab
 	err = c.call(ctx, "GetFeatureFlagForTest", flagName).Store(&enabled)
 	return enabled, err
 }
+
+// WaitUntilFeatureFlagHasValue waits until the feature flag named by flagName has the value expected.
+func (c *Cras) WaitUntilFeatureFlagHasValue(ctx context.Context, flagName string, expected bool) error {
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		flagValue, err := c.GetFeatureFlagForTest(ctx, flagName)
+		if err != nil {
+			return testing.PollBreak(err)
+		}
+		testing.ContextLogf(ctx, "GetAudioTestFeatureFlag(%q) = %v", flagName, flagValue)
+		if flagValue != expected {
+			return errors.Errorf("GetAudioTestFeatureFlag(%q) = %v; want %v", flagName, flagValue, expected)
+		}
+		return nil
+	}, &testing.PollOptions{
+		Timeout:  10 * time.Second,
+		Interval: time.Second,
+	})
+}

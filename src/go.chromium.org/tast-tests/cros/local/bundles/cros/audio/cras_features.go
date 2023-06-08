@@ -80,18 +80,5 @@ func crasFeaturesOneIteration(ctx context.Context, cras *audio.Cras, featureEnab
 	}
 	defer cr.Close(cleanupCtx)
 
-	return testing.Poll(ctx, func(ctx context.Context) error {
-		flagValue, err := cras.GetFeatureFlagForTest(ctx, testFeatureFlag)
-		if err != nil {
-			return testing.PollBreak(err)
-		}
-		testing.ContextLogf(ctx, "GetAudioTestFeatureFlag(%q) = %v", testFeatureFlag, flagValue)
-		if flagValue != featureEnabled {
-			return errors.Errorf("GetAudioTestFeatureFlag(%q) = %v; want %v", testFeatureFlag, flagValue, featureEnabled)
-		}
-		return nil
-	}, &testing.PollOptions{
-		Timeout:  10 * time.Second,
-		Interval: time.Second,
-	})
+	return cras.WaitUntilFeatureFlagHasValue(ctx, testFeatureFlag, featureEnabled)
 }
