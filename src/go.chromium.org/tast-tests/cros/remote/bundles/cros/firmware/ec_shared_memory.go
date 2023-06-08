@@ -58,9 +58,10 @@ func ECSharedMemory(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to check shared memory: ", err)
 	}
 
-	s.Log("Crash EC unaligned")
-	if err := h.Servo.RunECCommand(ctx, "crash unaligned"); err != nil {
-		s.Fatal("Failed to send 'crash unaligned' to EC: ", err)
+	// The crash type is arbitrary
+	s.Log("Crash EC divzero")
+	if err := h.Servo.RunECCommand(ctx, "crash divzero"); err != nil {
+		s.Fatal("Failed to send 'crash divzero' to EC: ", err)
 	}
 
 	if err := h.DUT.WaitConnect(ctx); err != nil {
