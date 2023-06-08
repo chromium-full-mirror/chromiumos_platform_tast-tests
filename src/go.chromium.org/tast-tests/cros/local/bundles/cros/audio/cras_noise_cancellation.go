@@ -63,9 +63,6 @@ func init() {
 					extraCaptureFlags: []string{
 						"--effects=aec",
 					},
-					extraChromeOptions: []chrome.Option{
-						chrome.EnableFeatures("CrOSLateBootAudioAPNoiseCancellation"),
-					},
 				},
 			},
 			{
@@ -77,9 +74,6 @@ func init() {
 					expectedRMSTolerance:     0.01,
 					extraCaptureFlags: []string{
 						"--effects=aec",
-					},
-					extraChromeOptions: []chrome.Option{
-						chrome.EnableFeatures("CrOSLateBootAudioAPNoiseCancellation"),
 					},
 				},
 			},
@@ -93,7 +87,6 @@ type crasNoiseCancellationParams struct {
 	expectedRMS              float64
 	expectedRMSTolerance     float64
 	extraCaptureFlags        []string
-	extraChromeOptions       []chrome.Option
 }
 
 // CrasNoiseCancellation checks noise cancellation in CRAS using aloop.
@@ -103,7 +96,12 @@ func CrasNoiseCancellation(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, chrome.ResetTimeout)
 	defer cancel()
-	cr, err := chrome.New(ctx, param.extraChromeOptions...)
+
+	var chromeOpts []chrome.Option
+	if param.noiseCancellationEnabled {
+		chromeOpts = append(chromeOpts, chrome.EnableFeatures("CrOSLateBootAudioAPNoiseCancellation"))
+	}
+	cr, err := chrome.New(ctx, chromeOpts...)
 	defer cr.Close(cleanupCtx)
 
 	if err := dlc.Install(ctx, "nc-ap-dlc", ""); err != nil {
@@ -117,6 +115,11 @@ func CrasNoiseCancellation(ctx context.Context, s *testing.State) {
 	cras, err := audio.NewCras(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to CRAS: ", err)
+	}
+	if param.noiseCancellationEnabled {
+		if err := cras.WaitUntilFeatureFlagHasValue(ctx, "CrOSLateBootAudioAPNoiseCancellation", true); err != nil {
+			s.Fatal("Feature flag not propagated to CRAS: ", err)
+		}
 	}
 	if err := cras.SetNoiseCancellationEnabled(ctx, param.noiseCancellationEnabled); err != nil {
 		s.Fatal("Failed to SetNoiseCancellationEnabled: ", err)
