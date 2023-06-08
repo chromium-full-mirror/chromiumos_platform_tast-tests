@@ -41,16 +41,17 @@ On the DUT they can be found under
 
 Please follow
 [AOSP Java style](https://source.android.com/docs/setup/contribute/code-style)
-unless there's a specific reason.
+unless there is a specific reason not to.
 
-Currently we have a limitation that we cannot use any external library for
-building apks (b/217501318), including androidx support library, all code
-should be written using standard android SDK only.
-If androidx or some other dependency is needed, it’s still possible to put your
-source code under ARC++ internal repository and use the prebuilt apk as
+Currently, we have a limitation that prevents us from using any external
+library for building apks (b/217501318).
+This includes the androidx support library.
+All code must be written using the standard Android SDK only.
+If androidx or some other dependencies are needed, it’s still possible to place your
+source code in the ARC++ internal repository and use the prebuilt apk as
 external data
 ([example](https://crsrc.org/o/src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/local/bundles/cros/arc/data/ArcCompanionLibDemo.apk.external)).
-From maintenance perspective, this is not recommended.
+However, this is not recommended from a maintenance perspective.
 
 # About OWNERS
 
