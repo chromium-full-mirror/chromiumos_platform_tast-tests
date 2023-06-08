@@ -424,6 +424,8 @@ func init() {
 			return []chrome.Option{
 				chrome.ARCEnabled(),
 				chrome.EnableFeatures("ArcVmmSwapPolicy:arc_silence_interval_sec/1"),
+				chrome.UnRestrictARCCPU(),
+				chrome.ExtraArgs(DisableSyncFlags()...),
 			}, nil
 		}, "SKIP_SWAP_TBW_MANAGEMENT=true"),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
