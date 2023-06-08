@@ -70,7 +70,7 @@ func crasFeaturesOneIteration(ctx context.Context, cras *audio.Cras, featureEnab
 
 	cr, err := chrome.New(
 		ctx,
-		// org.chromium.ChromeFeatureService does not need login to work.
+		// org.chromium.ChromeFeaturesService does not need login to work.
 		// Don't login to speed up the test.
 		chrome.NoLogin(),
 		flagOption,
