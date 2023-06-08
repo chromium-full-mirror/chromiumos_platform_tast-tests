@@ -434,6 +434,12 @@ func reportMaxHistogramValue(
 // logout is a proxy to chrome.autotestPrivate.logout
 func logout(ctx context.Context, cr *chrome.Chrome, l *lacros.Lacros) error {
 	testing.ContextLog(ctx, "Sign out: started")
+
+	// Limit sign-out attempt to 1 minute (so that we could retry early).
+	cleanupContext := ctx
+	ctx, cancel := context.WithTimeout(ctx, time.Minute)
+	defer cancel()
+
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to test api")
@@ -470,11 +476,11 @@ func logout(ctx context.Context, cr *chrome.Chrome, l *lacros.Lacros) error {
 
 	select {
 	case <-sw.Signals:
-		testing.ContextLog(ctx, "Got SessionStateChanged signal")
+		testing.ContextLog(cleanupContext, "Got SessionStateChanged signal")
 	case <-ctx.Done():
 		return errors.Wrap(ctx.Err(), "didn't get SessionStateChanged signal")
 	}
-	testing.ContextLog(ctx, "Sign out: done")
+	testing.ContextLog(cleanupContext, "Sign out: done")
 	return nil
 }
 
@@ -617,7 +623,10 @@ func initializeLoginPerfTest(ctx context.Context,
 	if err := setAlwaysRestoreSettings(ctx, tconn); err != nil {
 		return chrome.Creds{}, errors.Wrap(err, "failed to adjust always restore settings")
 	}
-	return creds, logout(ctx, cr, l)
+	if err := logout(ctx, cr, l); err != nil {
+		return creds, errors.Wrap(err, "failed to log out")
+	}
+	return creds, nil
 }
 
 // testFunction is the actual test flow that could executed multiple times to get average data or generate tracing.
@@ -974,7 +983,10 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 					if err := testing.Sleep(ctx, 20*time.Second); err != nil {
 						return errors.Wrap(err, "failed to sleep for 20 seconds")
 					}
-					return logout(ctx, cr, l)
+					if err := logout(ctx, cr, l); err != nil {
+						return errors.Wrap(err, "failed to log out")
+					}
+					return nil
 				}()
 				if err != nil {
 					s.Fatal("Failed to create new browser windows: ", err)
@@ -1088,7 +1100,10 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 						); err != nil {
 							return errors.Wrap(err, "storeHistograms failed")
 						}
-						return logout(ctx, cr, l)
+						if err := logout(ctx, cr, l); err != nil {
+							return errors.Wrap(err, "failed to log out")
+						}
+						return nil
 					}); err != nil {
 					s.Fatalf("Failed to run test scenario %s: %s", testName, err)
 				}
