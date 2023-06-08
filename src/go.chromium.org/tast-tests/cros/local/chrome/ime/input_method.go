@@ -482,8 +482,10 @@ var inputMethods = []InputMethod{
 	Gujarati,
 	Hindi,
 	Kannada,
+	Khmer,
 	Malayalam,
 	Marathi,
+	Myanmar,
 	NepaliTransliteration,
 	Norwegian,
 	Odia,
@@ -492,8 +494,10 @@ var inputMethods = []InputMethod{
 	Punjabi,
 	Russian,
 	Sanskrit,
+	Sinhala,
 	Tamil,
 	Telugu,
+	ThaiTis,
 	Urdu,
 }
 

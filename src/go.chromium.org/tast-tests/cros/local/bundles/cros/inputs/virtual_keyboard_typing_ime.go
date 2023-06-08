@@ -23,25 +23,29 @@ import (
 )
 
 var typingTestIMEs = []ime.InputMethod{
-	ime.EnglishUS,
-	ime.JapaneseWithUSKeyboard,
-	ime.ChinesePinyin,
-	ime.EnglishUSWithInternationalKeyboard,
-	ime.EnglishUK,
-	ime.SpanishSpain,
-	ime.Swedish,
-	ime.EnglishCanada,
 	ime.AlphanumericWithJapaneseKeyboard,
-	ime.Japanese,
-	ime.FrenchFrance,
 	ime.Cantonese,
 	ime.ChineseCangjie,
+	ime.ChinesePinyin,
+	ime.EnglishCanada,
+	ime.EnglishUK,
+	ime.EnglishUS,
+	ime.EnglishUSWithInternationalKeyboard,
+	ime.FrenchFrance,
+	ime.Japanese,
+	ime.JapaneseWithUSKeyboard,
 	ime.Korean,
-	ime.Arabic,
+	ime.SpanishSpain,
+	ime.Swedish,
 }
 
 var typingTestIMEsUpstream = []ime.InputMethod{
+	ime.Arabic,
 	ime.EnglishSouthAfrica,
+	ime.Khmer,
+	ime.Myanmar,
+	ime.Sinhala,
+	ime.ThaiTis,
 }
 
 var typingTestMessages = []data.Message{data.TypingMessageHello}
@@ -69,7 +73,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
 				Val:               typingTestIMEsUpstream,
 				Fixture:           fixture.TabletVK,
-				ExtraAttr:         []string{"informational", "group:input-tools-upstream"},
+				ExtraAttr:         []string{"informational", "group:input-tools-upstream", "group:criticalstaging"},
 				ExtraSearchFlags:  util.IMESearchFlags(typingTestIMEsUpstream),
 			},
 			{
