@@ -126,6 +126,13 @@ type SearchBoxState struct {
 	GhostText string // The ghost text contents of the launcher's search box
 }
 
+// SearchCategoryInfo speifies the search quality information for each test.
+type SearchCategoryInfo struct {
+	Category  string
+	NeedRegex bool
+	Result    string
+}
+
 // WaitForCategoryLabel waits for a search result list view of type 'category'
 // to be created and labeled.
 func WaitForCategoryLabel(tconn *chrome.TestConn, category, categoryLabel string) uiauto.Action {
@@ -147,6 +154,28 @@ func WaitForCategorizedResult(tconn *chrome.TestConn, category, result string) u
 func WaitForCategorizedResultFromRegex(tconn *chrome.TestConn, pattern string) uiauto.Action {
 	ui := uiauto.New(tconn)
 	return ui.WaitUntilExists(SearchResultListItemFinder.NameRegex(regexp.MustCompile(pattern)))
+}
+
+// WaitForResultWithCategory waits for a search result via the given category type and verification method.
+func WaitForResultWithCategory(tconn *chrome.TestConn, searchInfo SearchCategoryInfo) uiauto.Action {
+	ui := uiauto.New(tconn)
+	category := searchInfo.Category
+	needRegex := searchInfo.NeedRegex
+	result := searchInfo.Result
+
+	if category == "Answer Card" {
+		if needRegex {
+			return ui.WaitUntilExists(SearchResultListItemFinder.NameRegex(regexp.MustCompile(result)))
+		}
+		return ui.WaitUntilExists(SearchResultListItemFinder.NameContaining(result))
+	}
+
+	categoryName := category + " , search result category"
+	return uiauto.Combine(fmt.Sprintf("Wait for %s", category),
+		ui.WaitUntilExists(SearchResultListLabelFinder.Name(category).Ancestor(SearchResultListViewFinder.Name(categoryName))),
+		ui.WaitUntilExists(SearchResultListItemFinder.NameContaining(result).Ancestor(SearchResultListViewFinder.Name(categoryName))),
+	)
+
 }
 
 // WaitForResult waits for 'result'.

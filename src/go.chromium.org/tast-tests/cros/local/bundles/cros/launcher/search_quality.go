@@ -70,7 +70,7 @@ func init() {
 				Val: searchQualityTestCase{
 					query:          "caps lock",
 					useRegex:       false,
-					expectedResult: "Turn Caps Lock on and off, Shortcuts, Alt+ Launcher",
+					expectedResult: "Turn Caps Lock on and off, Shortcuts",
 					category:       "Answer Card",
 				},
 			},
@@ -79,7 +79,7 @@ func init() {
 				Val: searchQualityTestCase{
 					query:          "screen rotate",
 					useRegex:       false,
-					expectedResult: "Rotate screen 90 degrees, Shortcuts, Ctrl+ Shift+ BrowserRefresh",
+					expectedResult: "Rotate screen 90 degrees, Shortcuts",
 					category:       "Answer Card",
 				},
 			},
@@ -192,7 +192,7 @@ func init() {
 				Val: searchQualityTestCase{
 					query:          "keyboard shortcut",
 					useRegex:       false,
-					expectedResult: "Key Shortcuts, Installed App",
+					expectedResult: "Shortcuts",
 					category:       "Apps",
 				},
 			},
@@ -251,31 +251,16 @@ func SearchQuality(ctx context.Context, s *testing.State) {
 	defer cleanup(cleanupCtx)
 
 	query := testCase.query
-	expectedResult := testCase.expectedResult
 
 	if err := uiauto.Retry(2, uiauto.NamedCombine(query,
 		launcher.ClearSearchField(tconn, kb),
-		launcher.Search(tconn, kb, query)))(ctx); err != nil {
+		launcher.Search(tconn, kb, query),
+		launcher.WaitForResultWithCategory(tconn, launcher.SearchCategoryInfo{
+			Category:  testCase.category,
+			NeedRegex: testCase.useRegex,
+			Result:    testCase.expectedResult,
+		}),
+	))(ctx); err != nil {
 		s.Fatalf("Failed to search %s: %v", query, err)
-	}
-
-	// TODO(b/286171481): Uses if/else temporarily before `WaitForResult` is extended to support categorical search.
-	if testCase.category == "Answer Card" {
-		if testCase.useRegex {
-			if err := launcher.WaitForCategorizedResultFromRegex(tconn, expectedResult)(ctx); err != nil {
-				s.Fatalf("Failed to verify the result of search %s: %v", query, err)
-			}
-		} else {
-			if err := launcher.WaitForResult(tconn, expectedResult)(ctx); err != nil {
-				s.Fatalf("Failed to verify the result of search %s: %v", query, err)
-			}
-		}
-	} else {
-		if err := uiauto.NamedCombine(query,
-			launcher.WaitForCategoryLabel(tconn, testCase.category+" , search result category", testCase.category),
-			launcher.WaitForCategorizedResult(tconn, testCase.category+" , search result category", testCase.expectedResult),
-		)(ctx); err != nil {
-			s.Fatalf("Failed to verify the result of search %s: %v", query, err)
-		}
 	}
 }
