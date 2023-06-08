@@ -20,9 +20,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         FeaturePodRestrictedAtLockScreen,
+		Func:         FeatureRestrictedAtLockScreen,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies users are not supposed to use the Bluetooth feature pod at lock screen",
+		Desc:         "Verifies users are not able to use the quick settings Bluetooth feature at the lock screen",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"cros-conn-test-team@google.com",
@@ -37,9 +37,8 @@ func init() {
 	})
 }
 
-// FeaturePodRestrictedAtLockScreen verifies users are not supposed to use the Bluetooth feature pod at lock screen.
-// TODO(b/252870625): Rename this test to FeatureTileRestrictedAtLockScreen.
-func FeaturePodRestrictedAtLockScreen(ctx context.Context, s *testing.State) {
+// FeatureRestrictedAtLockScreen verifies users are not able to use the quick settings Bluetooth feature at the lock screen.
+func FeatureRestrictedAtLockScreen(ctx context.Context, s *testing.State) {
 	cleanup := quicksettings.SetQsRevampEnabled(true)
 	defer cleanup()
 
