@@ -78,6 +78,7 @@ func RemoteSupportRegistration(ctx context.Context, s *testing.State) {
 	}
 
 	if s.Param().(browser.Type) == browser.TypeLacros {
+		opts = append(opts, chrome.LacrosExtraArgs("--force-devtools-available"))
 		opts, err = lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(opts...)).Opts()
 		if err != nil {
 			s.Fatal("Failed to compute lacros chrome options: ", err)
