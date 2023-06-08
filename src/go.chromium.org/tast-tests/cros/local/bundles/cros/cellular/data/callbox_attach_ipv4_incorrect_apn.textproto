@@ -10,7 +10,8 @@ mno {
     mobile_apn {
       apn : "callbox-incorrect-ipv4"
       ip_type: IPV4
-      is_attach_apn: true
+      type: DEFAULT
+      type: IA
       username: "username1"
       password: "password1"
       localized_name {
