@@ -250,7 +250,11 @@ func SAPAssocStressRound(ctx context.Context, tf *wificell.TestFixture, tetherin
 // SAPOnOffStressTest runs Soft AP On/Off Stress Test.
 func SAPOnOffStressTest(ctx context.Context, s *testing.State, tf *wificell.TestFixture, tc SAPOnOffStressTestcase,
 	rounds int, thresholds ResourceThreshold, processes string, pv *perf.Values) error {
-	options := tc.TetheringOpts
+	iface, err := tf.DUTClientInterface(ctx, wificell.DefaultDUT)
+	if err != nil {
+		return errors.Wrap(err, "DUT: failed to get the client WiFi interface")
+	}
+	options := append([]tethering.Option{tethering.PriIface(iface)}, tc.TetheringOpts...)
 	fac := tc.SecConfFac
 	tf.UseWpaCliAPI(tc.UseWpaCliAPI)
 	resInfo, err := GetResourceInfo(ctx, tf.DUT(wificell.DefaultDUT).Conn(), processes)
@@ -315,7 +319,7 @@ func SAPOnOffStressRound(ctx context.Context, tf *wificell.TestFixture, tetherin
 	}
 	startupTime = tetheringResp.ExecutionTime.AsDuration()
 	defer func(ctx context.Context) {
-		tetheringResp, err = tf.StopTethering(ctx, wificell.DefaultDUT)
+		tetheringResp, err = tf.StopTethering(ctx, wificell.DefaultDUT, tetheringConf)
 		if retErr != nil {
 			// We can't overwrite ret value.
 			if err != nil {

@@ -620,10 +620,12 @@ message TetheringRequest {
   string psk = 6;
   string cipher = 7;
   bool use_wpa_cli_api = 8;
+  string pri_iface = 9;
 }
 
 message StopTetheringRequest {
   bool use_wpa_cli_api = 1;
+  string pri_iface = 2;
 }
 
 message TetheringResponse {

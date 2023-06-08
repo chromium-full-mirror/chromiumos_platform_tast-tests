@@ -3056,13 +3056,70 @@ func (s *ShillService) StartTethering(ctx context.Context, request *wifi.Tetheri
 		ChannelWidth: uint32(info.Width), ExecutionTime: durationpb.New(time.Since(startTime))}, nil
 }
 
-func (s *ShillService) startSupplicantTethering(ctx context.Context, request *wifi.TetheringRequest) error {
+func (s *ShillService) ScanAndFetchRegion(ctx context.Context, ifName string) error {
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		var err error
+
+		// Check if support SSID is present in scan results.
+		scanData, err := local_iw.NewLocalRunner().TimedScan(ctx, ifName, nil, nil)
+		if err != nil || scanData == nil {
+			return errors.Wrap(err, "failed to scan")
+		}
+		// Make sure Regdomain is set now.
+		domain, err := local_iw.NewLocalRunner().PhyRegulatoryDomain(ctx, "phy0")
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to read regulatory status"))
+		}
+		// We've set AP to the US country code. However, some drivers may implement subset of that domain (99).
+		// So we should be happy with regdomain that is just different than `00`.
+		if domain == "00" {
+			return errors.New("wrong domain, required != 00, got 00")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: time.Second}); err != nil {
+		return errors.Wrap(err, "failed to get a correct regdomain")
+	}
+
+	return nil
+}
+
+func (s *ShillService) startSupplicantTethering(ctx context.Context, request *wifi.TetheringRequest) (retErr error) {
 	ctx, cancel := reserveForReturn(ctx)
 	defer cancel()
 
 	ctx, st := timing.Start(ctx, "wifi_service.StartTethering")
 	defer st.End()
 	testing.ContextLog(ctx, "Attempting to start tethering via WPA Supplicant with config: ", request)
+
+	// There are three possible places, where config file can be found.
+	paths := []string{"/usr/lib64/shill/shims/wpa_supplicant.conf",
+		"/usr/lib/shill/shims/wpa_supplicant.conf",
+		"/usr/lib/shill/shim/wpa_supplicant.conf",
+	}
+
+	path := ""
+	var err error
+	for _, path = range paths {
+		if _, err = os.Stat(path); err == nil {
+			// It is enough if one copy of the config is found.
+			break
+		}
+	}
+	if err != nil {
+		return errors.Wrap(err, "failed to find supplicant conf path")
+	}
+
+	// Add primary interface under wpa_supplicant's control.
+	err = s.AddInterface(ctx, request.PriIface, "nl80211", path)
+	if err != nil {
+		return errors.Wrap(err, "failed to add primary interface to supplicant")
+	}
+	defer func(ctx context.Context) {
+		if retErr == nil {
+			return
+		}
+		s.RemoveInterface(ctx, request.PriIface)
+	}(ctx)
 
 	const macBitLocal = 0x2
 	const macBitMulticast = 0x1
@@ -3075,48 +3132,50 @@ func (s *ShillService) startSupplicantTethering(ctx context.Context, request *wi
 	mac[0] = (mac[0] &^ macBitMulticast) | macBitLocal
 
 	// Add interface to the system.
-	err := local_iw.NewLocalRunner().AddInterface(ctx, "phy0", apIfName, iw.IfSetTypeAP, &mac)
+	err = local_iw.NewLocalRunner().AddInterface(ctx, "phy0", apIfName, iw.IfSetTypeAP, &mac)
 	if err != nil {
 		return errors.Wrap(err, "failed to add interface to system")
 	}
-
-	// There are three possible places, where config file can be found.
-	paths := []string{"/usr/lib64/shill/shims/wpa_supplicant.conf",
-		"/usr/lib/shill/shims/wpa_supplicant.conf",
-		"/usr/lib/shill/shim/wpa_supplicant.conf",
-	}
-
-	path := ""
-	for _, path = range paths {
-		if _, err = os.Stat(path); err == nil {
-			// It is enough if one copy of the config is found.
-			break
+	defer func(ctx context.Context) {
+		if retErr == nil {
+			return
 		}
-	}
-	if err != nil {
-		return errors.Wrap(err, "failed to find supplicant conf path")
-	}
+		local_iw.NewLocalRunner().RemoveInterface(ctx, apIfName)
+	}(ctx)
 
 	// Add new interface under wpa_supplicant's control.
 	err = s.AddInterface(ctx, apIfName, "nl80211", path)
 	if err != nil {
-		local_iw.NewLocalRunner().RemoveInterface(ctx, apIfName)
 		return errors.Wrap(err, "failed to add interface to supplicant")
+	}
+	defer func(ctx context.Context) {
+		if retErr == nil {
+			return
+		}
+		s.RemoveInterface(ctx, apIfName)
+	}(ctx)
+
+	// Do a scan to fetch region domain for self-managed solution.
+	selfManaged, err := local_iw.NewLocalRunner().IsRegulatorySelfManaged(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to read regulatory status")
+	}
+
+	if selfManaged {
+		if err := s.ScanAndFetchRegion(ctx, apIfName); err != nil {
+			return errors.Wrap(err, "failed to fetch regulatory domain from 11d scan")
+		}
 	}
 
 	err = s.startSoftAP(ctx, request)
 	if err != nil {
 		localwpacli.NewLocalRunnerOnIface(apIfName).StopSoftAP(ctx)
-		s.RemoveInterface(ctx, apIfName)
-		local_iw.NewLocalRunner().RemoveInterface(ctx, apIfName)
 		return errors.Wrap(err, "failed to start SoftAP")
 	}
 
 	if err := s.startDHCPServer(ctx); err != nil {
 		s.stopDHCPServer(ctx)
 		localwpacli.NewLocalRunnerOnIface(apIfName).StopSoftAP(ctx)
-		s.RemoveInterface(ctx, apIfName)
-		local_iw.NewLocalRunner().RemoveInterface(ctx, apIfName)
 		return errors.Wrap(err, "failed to start DHCP server")
 	}
 
@@ -3214,14 +3273,14 @@ func (s *ShillService) StopTethering(ctx context.Context, request *wifi.StopTeth
 	var err error
 	startTime := time.Now()
 	if request.UseWpaCliApi {
-		err = s.stopSupplicantTethering(ctx, nil)
+		err = s.stopSupplicantTethering(ctx, request)
 	} else {
-		err = s.stopShillTethering(ctx, nil)
+		err = s.stopShillTethering(ctx, request)
 	}
 	return &wifi.TetheringResponse{ExecutionTime: durationpb.New(time.Since(startTime))}, err
 }
 
-func (s *ShillService) stopSupplicantTethering(ctx context.Context, _ *empty.Empty) error {
+func (s *ShillService) stopSupplicantTethering(ctx context.Context, request *wifi.StopTetheringRequest) error {
 	var firstErr error
 	ctx, cancel := reserveForReturn(ctx)
 	defer cancel()
@@ -3240,11 +3299,11 @@ func (s *ShillService) stopSupplicantTethering(ctx context.Context, _ *empty.Emp
 
 	s.RemoveInterface(ctx, apIfName)
 	local_iw.NewLocalRunner().RemoveInterface(ctx, apIfName)
-
+	s.RemoveInterface(ctx, request.PriIface)
 	return firstErr
 }
 
-func (s *ShillService) stopShillTethering(ctx context.Context, _ *empty.Empty) error {
+func (s *ShillService) stopShillTethering(ctx context.Context, request *wifi.StopTetheringRequest) error {
 	var firstErr error
 	ctx, cancel := reserveForReturn(ctx)
 	defer cancel()

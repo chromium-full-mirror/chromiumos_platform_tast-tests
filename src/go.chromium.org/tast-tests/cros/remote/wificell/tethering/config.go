@@ -80,6 +80,13 @@ func PSK(psk string) Option {
 	}
 }
 
+// PriIface returns an Option which sets the primary interface in tethering WiFi downstream config.
+func PriIface(iface string) Option {
+	return func(c *Config) {
+		c.PriIface = iface
+	}
+}
+
 // Config is the configuration to start tethering session on a DUT.
 type Config struct {
 	NoUL           bool            // No uplink is used
@@ -90,6 +97,7 @@ type Config struct {
 	Cipher         wpa.Cipher      // Downlink Wi-Fi cipher
 	PSK            string          // Downlink Wi-Fi pre-shared key
 	SecConf        security.Config // Downlink Wi-Fi security config
+	PriIface       string          // Downlink Wi-Fi primary interface
 }
 
 // NewConfig creates a Config with given options.

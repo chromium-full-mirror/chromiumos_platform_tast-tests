@@ -107,18 +107,20 @@ func init() {
 func SAPOnOffStress(ctx context.Context, s *testing.State) {
 	/*
 		This test checks the soft AP resource utilization on associate/disassociate:
-		1- Measure initial memory/open fd values.
-		2- In loop (1..N)
-		2a -Configure the main DUT as a soft AP.
-		2b- Configures the Companion DUT as a STA.
-		2c- Connects the the STA to the soft AP.
-		2d- Verify the connection by running ping from the STA.
-		2e- Deconfigure the STA.
-		2g- Deconfigure the soft AP.
-		2f- Record intermediate memory/open fd values.
-		2g- Check that tracked processes PIDs haven't changed.
-		3- Measure final memory/open fd values.
-		4- Make sure memory in use did not rise substantially and number of FDs is stable.
+		1- Disable the station interface.
+		2- Measure initial memory/open fd values.
+		3- In loop (1..N)
+		3a -Configure the main DUT as a soft AP.
+		3b- Configures the Companion DUT as a STA.
+		3c- Connects the the STA to the soft AP.
+		3d- Verify the connection by running ping from the STA.
+		3e- Deconfigure the STA.
+		3f- Deconfigure the soft AP.
+		3g- Record intermediate memory/open fd values.
+		3h- Check that tracked processes PIDs haven't changed.
+		4- Measure final memory/open fd values.
+		5- Make sure memory in use did not rise substantially and number of FDs is stable.
+		6- Re-enable the station interface.
 	*/
 	// Thresholds for acceptable changes of various counters (in %).
 	var thresholds = wifiutil.ResourceThreshold{"vsz": 5, "fd": 0}

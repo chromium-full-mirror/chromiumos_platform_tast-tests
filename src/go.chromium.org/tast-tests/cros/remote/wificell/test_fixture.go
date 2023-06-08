@@ -18,7 +18,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/network/arping"
 	"go.chromium.org/tast-tests/cros/common/network/firewall"
-	commoniw "go.chromium.org/tast-tests/cros/common/network/iw"
 	"go.chromium.org/tast-tests/cros/common/network/ping"
 	"go.chromium.org/tast-tests/cros/common/network/protoutil"
 	"go.chromium.org/tast-tests/cros/common/network/wpacli"
@@ -2184,7 +2183,7 @@ func (tf *TestFixture) UseWpaCliAPI(enable bool) {
 }
 
 // SeedRegdomain sets up AP which broadcasts country information, so that all self-managed devices in the wificell get their regdomain seeded.
-func (tf *TestFixture) SeedRegdomain(ctx context.Context, dutIdx DutIdx) error {
+func (tf *TestFixture) SeedRegdomain(ctx context.Context) error {
 	// One AP is enough for all testcases.
 	ssid := hostapd.RandomSSID("SUPPORT_SSID")
 	apIface, err := tf.ConfigureAPOnRouterID(ctx, 0, []hostapd.Option{
@@ -2196,56 +2195,6 @@ func (tf *TestFixture) SeedRegdomain(ctx context.Context, dutIdx DutIdx) error {
 		return errors.Wrap(err, "failed to configure AP")
 	}
 	tf.seederIface = apIface
-
-	testing.ContextLog(ctx, "Supporting AP setup done. Waiting for the regdomain information to be propagated")
-
-	// Make sure we have the regdomain set.
-	ifName, err := tf.DUTWifiClient(DefaultDUT).Interface(ctx)
-	if err != nil {
-		if err := tf.DeconfigSeedingAP(ctx); err != nil {
-			testing.ContextLog(ctx, "Failed to deconfig seeding AP: ", err) // Do nothing else, the primary error is more important.
-		}
-		return errors.Wrap(err, "failed to read WiFi Interface name")
-	}
-	iwr := iw.NewRemoteRunner(tf.DUTConn(dutIdx))
-
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		var err error
-
-		// Check if support SSID is present in scan results.
-		scanData, err := iwr.TimedScan(ctx, ifName, nil, nil)
-		if err != nil || scanData == nil {
-			return errors.Wrap(err, "failed to scan")
-		}
-		findSSID := func(d []*commoniw.BSSData, ssid string) bool {
-			for _, e := range d {
-				if e.SSID == ssid {
-					return true
-				}
-			}
-			return false
-		}
-		if !findSSID(scanData.BSSList, ssid) {
-			return errors.Errorf("SSID %s not found in scan, SSIDs: %v", ssid, scanData.BSSList)
-		}
-		// Make sure Regdomain is set now.
-		domain, err := iwr.PhyRegulatoryDomain(ctx, "phy0")
-		if err != nil {
-			return testing.PollBreak(errors.Wrap(err, "failed to read regulatory status"))
-		}
-		// We've set AP to the US country code. However, some drivers may implement subset of that domain (99).
-		// So we should be happy with regdomain that is just different than `00`.
-		if domain == "00" {
-			return errors.New("wrong domain, required != 00, got 00")
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: time.Second}); err != nil {
-		if err := tf.DeconfigSeedingAP(ctx); err != nil {
-			testing.ContextLog(ctx, "Failed to deconfig seeding AP: ", err) // Do nothing else, the primary error is more important.
-		}
-		return errors.Wrap(err, "failed to get a correct regdomain")
-	}
-
 	return nil
 }
 
@@ -2278,6 +2227,19 @@ func (tf *TestFixture) StartTethering(ctx context.Context, dutIdx DutIdx, ops []
 		}
 	}
 
+	// Disable station mode to get rid of station interface scan
+	ctxForEnablingWiFi := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 2*time.Second)
+	defer cancel()
+	if err := tf.DUTWifiClient(dutIdx).SetWifiEnabled(ctx, false); err != nil {
+		return nil, nil, errors.Wrap(err, "DUT: failed to disable the wifi, err: ")
+	}
+	defer func(ctx context.Context) {
+		if retErr != nil {
+			tf.DUTWifiClient(dutIdx).SetWifiEnabled(ctx, true)
+		}
+	}(ctxForEnablingWiFi)
+
 	c, err := tethering.NewConfig(ops...)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to create tethering config")
@@ -2289,6 +2251,7 @@ func (tf *TestFixture) StartTethering(ctx context.Context, dutIdx DutIdx, ops []
 		Ssid:              []byte(c.SSID),
 		Band:              c.Band.String(),
 		UseWpaCliApi:      tf.useWpaCliAPI,
+		PriIface:          c.PriIface,
 	}
 
 	if fac != nil {
@@ -2321,13 +2284,13 @@ func (tf *TestFixture) StartTethering(ctx context.Context, dutIdx DutIdx, ops []
 	}
 	defer func(ctx context.Context) {
 		if retErr != nil {
-			tf.StopTethering(ctx, dutIdx)
+			tf.StopTethering(ctx, dutIdx, c)
 		}
 	}(ctx)
 	// The assumption is, that we don't need to return the new context as that would
 	// be relevant only in case of error further in this function only
 	// (precisely: in StartCapture()), so it won't be used anyway.
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	ctx, cancel = ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
 	if (c.Band == tethering.Band5g && resp.Channel <= 14) ||
@@ -2388,17 +2351,21 @@ func (tf *TestFixture) StartTethering(ctx context.Context, dutIdx DutIdx, ops []
 }
 
 // StopTethering attempts to stop the tethering session for the specified DUT.
-func (tf *TestFixture) StopTethering(ctx context.Context, dutIdx DutIdx) (*wifi.TetheringResponse, error) {
+func (tf *TestFixture) StopTethering(ctx context.Context, dutIdx DutIdx, c *tethering.Config) (*wifi.TetheringResponse, error) {
 	ctx, st := timing.Start(ctx, "tf.StopTethering")
 	defer st.End()
 
-	resp, err := tf.duts[dutIdx].wifiClient.StopTethering(ctx, &wifi.StopTetheringRequest{UseWpaCliApi: tf.useWpaCliAPI})
+	resp, err := tf.duts[dutIdx].wifiClient.StopTethering(ctx, &wifi.StopTetheringRequest{UseWpaCliApi: tf.useWpaCliAPI, PriIface: c.PriIface})
 	if tf.tetheringCapturer != nil {
 		p := tf.pcap.object.(support.Capture)
 		p.StopCapture(ctx, tf.tetheringCapturer)
 	}
 	if err != nil {
 		return nil, errors.Wrap(err, "client failed to stop tethering session")
+	}
+	// Re-enable station mode
+	if err := tf.DUTWifiClient(dutIdx).SetWifiEnabled(ctx, true); err != nil {
+		return nil, errors.Wrap(err, "DUT: failed to enable the wifi, err: ")
 	}
 
 	return resp, nil

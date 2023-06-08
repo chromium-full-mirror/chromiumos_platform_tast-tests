@@ -115,18 +115,20 @@ func init() {
 func SAPAssocStress(ctx context.Context, s *testing.State) {
 	/*
 		This test checks the soft AP resource utilization on associate/disassociate:
-		1- Configures the main DUT as a soft AP.
-		2- Measure initial memory/open fd values.
-		3- In loop (1..N)
-		3a- Configures the Companion DUT as a STA.
-		3b- Connects the the STA to the soft AP.
-		3c- Verify the connection by running ping from the STA.
-		3d- Deconfigure the STA.
+		1- Disable the station interface.
+		2- Configures the main DUT as a soft AP.
+		3- Measure initial memory/open fd values.
+		4- In loop (1..N)
+		4a- Configures the Companion DUT as a STA.
+		4b- Connects the the STA to the soft AP.
+		4c- Verify the connection by running ping from the STA.
+		4d- Deconfigure the STA.
 		4e- Record intermediate memory/open fd values.
 		4f- Check that tracked processes PIDs haven't changed.
-		4- Measure final memory/open fd values.
-		5- Make sure memory in use did not rise substantially and number of FDs is stable.
-		6- Deconfigure the soft AP.
+		5- Measure final memory/open fd values.
+		6- Make sure memory in use did not rise substantially and number of FDs is stable.
+		7- Deconfigure the soft AP.
+		8- Re-enable the station interface.
 	*/
 	// Thresholds for acceptable changes of various counters (in %).
 	var thresholds = wifiutil.ResourceThreshold{"vsz": 5, "fd": 0}
@@ -139,13 +141,17 @@ func SAPAssocStress(ctx context.Context, s *testing.State) {
 
 	testOnce := func(ctx context.Context, s *testing.State, tc sapAssocStressTestcase) {
 		tf.UseWpaCliAPI(tc.useWpaCliAPI)
-		tetheringConf, _, err := tf.StartTethering(ctx, wificell.DefaultDUT, tc.tetheringOpts, tc.secConfFac)
+		iface, err := tf.DUTClientInterface(ctx, wificell.DefaultDUT)
+		if err != nil {
+			s.Fatal("DUT: failed to get the client WiFi interface, err: ", err)
+		}
+		tetheringConf, _, err := tf.StartTethering(ctx, wificell.DefaultDUT, append([]tethering.Option{tethering.PriIface(iface)}, tc.tetheringOpts...), tc.secConfFac)
 		if err != nil {
 			s.Fatal("Failed to start tethering session on DUT, err: ", err)
 		}
 
 		defer func(ctx context.Context) {
-			if _, err := tf.StopTethering(ctx, wificell.DefaultDUT); err != nil {
+			if _, err := tf.StopTethering(ctx, wificell.DefaultDUT, tetheringConf); err != nil {
 				s.Error("Failed to stop tethering session on DUT, err: ", err)
 			}
 		}(ctx)

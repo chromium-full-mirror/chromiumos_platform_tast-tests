@@ -331,12 +331,14 @@ func SAPPerf(ctx context.Context, s *testing.State) {
 	/*
 		This test checks throughput performance of the chromebook by using
 		the following steps:
-		1- Configures the main DUT as a soft AP.
-		2- Configures the Companion DUT as a STA.
-		3- Connects the the STA to the soft AP.
-		4- Verify the connection by running iperf test.
-		5- Deconfigure the STA.
-		6- Deconfigure the soft AP.
+		1- Disable the station interface.
+		2- Configures the main DUT as a soft AP.
+		3- Configures the Companion DUT as a STA.
+		4- Connects the the STA to the soft AP.
+		5- Verify the connection by running iperf test.
+		6- Deconfigure the STA.
+		7- Deconfigure the soft AP.
+		8- Re-enable the station interface.
 	*/
 	tf := s.FixtValue().(*wificell.TestFixture)
 	if tf.NumberOfDUTs() < 2 {
@@ -355,12 +357,16 @@ func SAPPerf(ctx context.Context, s *testing.State) {
 
 	testOnce := func(ctx context.Context, s *testing.State, tc sapPerfTestcase) {
 		tf.UseWpaCliAPI(tc.useWpaCliAPI)
-		tetheringConf, _, err := tf.StartTethering(ctx, wificell.DefaultDUT, tc.tetheringOpts, tc.secConfFac)
+		iface, err := tf.DUTClientInterface(ctx, wificell.DefaultDUT)
+		if err != nil {
+			s.Fatal("DUT: failed to get the client WiFi interface, err: ", err)
+		}
+		tetheringConf, _, err := tf.StartTethering(ctx, wificell.DefaultDUT, append([]tethering.Option{tethering.PriIface(iface)}, tc.tetheringOpts...), tc.secConfFac)
 		if err != nil {
 			s.Fatal("Failed to start tethering session on DUT, err: ", err)
 		}
 		defer func(ctx context.Context) {
-			if _, err := tf.StopTethering(ctx, wificell.DefaultDUT); err != nil {
+			if _, err := tf.StopTethering(ctx, wificell.DefaultDUT, tetheringConf); err != nil {
 				s.Error("Failed to stop tethering session on DUT, err: ", err)
 			}
 		}(ctx)
