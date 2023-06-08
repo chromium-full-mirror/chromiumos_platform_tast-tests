@@ -27,6 +27,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/pointer"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
@@ -193,6 +194,12 @@ func Run(ctx context.Context, s *testing.State) {
 		recorder.Annotate(ctx, "Maximize_window")
 		if err := ash.SetWindowStateAndWait(ctx, tconn, ws[0].ID, ash.WindowStateMaximized); err != nil {
 			return errors.Wrap(err, "failed to set window state to maximized")
+		}
+
+		// Wait for root web area to exist to ensure the UI elements are captured.
+		docsRootWebArea := nodewith.NameContaining("Google Docs").Role(role.RootWebArea)
+		if err := ac.WaitUntilExists(docsRootWebArea)(ctx); err != nil {
+			return errors.Wrap(err, "failed to wait for docs root web area")
 		}
 
 		// Close any potential security alert that pops up.

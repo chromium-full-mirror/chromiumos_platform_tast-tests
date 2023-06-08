@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
+	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj/inputsimulations"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -176,7 +177,13 @@ func QuickCheckCUJ(ctx context.Context, s *testing.State) {
 		elapsed = time.Since(start)
 		s.Log("Elapsed ms: ", elapsed.Milliseconds())
 
+		// Close any potential security alert that pops up.
+		if err := cuj.DismissCriticalSecurityAlert(ctx, tconn, conn); err != nil {
+			return errors.Wrap(err, "failed to dismiss Critical Security Alert")
+		}
+
 		s.Log("Waiting to simulate a user passively reading the email thread (top scroll position)")
+		// GoBigSleepLint: Sleep to simulate user action.
 		if err := testing.Sleep(ctx, 10*time.Second); err != nil {
 			return errors.Wrap(err, "failed to sleep (top scroll position)")
 		}
@@ -200,6 +207,7 @@ func QuickCheckCUJ(ctx context.Context, s *testing.State) {
 		}
 
 		s.Log("Waiting to simulate a user passively reading the email thread (middle scroll position)")
+		// GoBigSleepLint: Sleep to simulate user action.
 		if err := testing.Sleep(ctx, 25*time.Second); err != nil {
 			return errors.Wrap(err, "failed to sleep (middle scroll position)")
 		}
@@ -210,6 +218,7 @@ func QuickCheckCUJ(ctx context.Context, s *testing.State) {
 		}
 
 		s.Log("Waiting to simulate a user passively reading the email thread (bottom scroll position)")
+		// GoBigSleepLint: Sleep to simulate user action.
 		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 			return errors.Wrap(err, "failed to sleep (bottom scroll position)")
 		}

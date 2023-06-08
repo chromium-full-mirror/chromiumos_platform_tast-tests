@@ -174,6 +174,11 @@ func GoogleSlidesCUJ(ctx context.Context, s *testing.State) {
 				return errors.Wrap(err, "failed to scroll down with down arrow")
 			}
 
+			// Close any potential security alert that pops up.
+			if err := cuj.DismissCriticalSecurityAlert(ctx, tconn, slidesConn); err != nil {
+				return errors.Wrap(err, "failed to dismiss Critical Security Alert")
+			}
+
 			// At fixed intervals, stop scrolling and click a menu item
 			// to ensure we collect mouse metrics.
 			fileMenu := nodewith.Name("File").HasClass("menu-button")
