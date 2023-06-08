@@ -163,25 +163,25 @@ func init() {
 		Parent:          "gpuWatchHangs",
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name: "cpuIdleForCUJ",
-		Desc: "The fixture to wait DUT cpu to idle for CUJ tests",
+		Name: "prepareForCUJWithCharge",
+		Desc: "The fixture to wait DUT cpu to stabilize for CUJ tests",
 		Contacts: []string{
 			"jane.yang@cienet.com",
 			"cros-sw-perf@google.com",
 		},
-		Impl:            &cpuIdleForCUJFixture{},
+		Impl:            &prepareCUJFixture{chargeBattery: true},
 		PreTestTimeout:  CPUIdleTimeout + BatteryChargingTimeout + 5*time.Second,
 		PostTestTimeout: postTestTimeout,
 		Parent:          "gpuWatchHangs",
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name: "cpuIdleForEnrolledCUJ",
-		Desc: "The fixture to wait DUT cpu to idle for logged in with gaia user on an enrolled device",
+		Name: "prepareForCUJEnrolledWithCharge",
+		Desc: "The fixture to wait DUT cpu to stabilize for logged in with gaia user on an enrolled device",
 		Contacts: []string{
 			"alston.huang@cienet.com",
 			"cros-sw-perf@google.com",
 		},
-		Impl:            &cpuIdleForCUJFixture{},
+		Impl:            &prepareCUJFixture{chargeBattery: true},
 		SetUpTimeout:    chrome.EnrollmentAndLoginTimeout + chrome.GAIALoginTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
@@ -240,7 +240,7 @@ func init() {
 			// Some tests will connect to websites hosted locally with HTTPs and this flag allows invalid certificates for resources loaded from localhost.
 			chromeExtraOpts: []chrome.Option{chrome.ExtraArgs("--allow-insecure-localhost")},
 		},
-		Parent:          "cpuIdleForCUJ",
+		Parent:          "prepareForCUJWithCharge",
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -263,7 +263,7 @@ func init() {
 			fakeCameraFileName: highResFakeCameraFileName,
 			chromeExtraOpts:    []chrome.Option{chrome.ExtraArgs("--allow-insecure-localhost")},
 		},
-		Parent:          "cpuIdleForCUJ",
+		Parent:          "prepareForCUJWithCharge",
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -282,7 +282,7 @@ func init() {
 			keepState:          true,
 			fakeCamera:         true,
 			fakeCameraFileName: lowResFakeCameraFileName},
-		Parent:          "cpuIdleForCUJ",
+		Parent:          "prepareForCUJWithCharge",
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -296,7 +296,7 @@ func init() {
 			"cros-sw-perf@google.com",
 		},
 		Impl:            &loggedInToCUJUserFixture{bt: browser.TypeLacros},
-		Parent:          "cpuIdleForCUJ",
+		Parent:          "prepareForCUJ",
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -317,7 +317,7 @@ func init() {
 			// Some tests will connect to websites hosted locally with HTTPs and this flag allows invalid certificates for resources loaded from localhost.
 			chromeExtraOpts: []chrome.Option{chrome.LacrosExtraArgs("--allow-insecure-localhost")},
 		},
-		Parent:          "cpuIdleForCUJ",
+		Parent:          "prepareForCUJWithCharge",
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -340,7 +340,7 @@ func init() {
 			fakeCameraFileName: highResFakeCameraFileName,
 			chromeExtraOpts:    []chrome.Option{chrome.LacrosExtraArgs("--allow-insecure-localhost")},
 		},
-		Parent:          "cpuIdleForCUJ",
+		Parent:          "prepareForCUJWithCharge",
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -359,7 +359,7 @@ func init() {
 			keepState:          true,
 			fakeCamera:         true,
 			fakeCameraFileName: lowResFakeCameraFileName},
-		Parent:          "cpuIdleForCUJ",
+		Parent:          "prepareForCUJWithCharge",
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -373,7 +373,7 @@ func init() {
 			"cros-sw-perf@google.com",
 		},
 		Impl:            &loggedInToCUJUserFixture{},
-		Parent:          "cpuIdleForEnrolledCUJ",
+		Parent:          "prepareForCUJEnrolledWithCharge",
 		SetUpTimeout:    chrome.EnrollmentAndLoginTimeout + chrome.GAIALoginTimeout + optin.OptinTimeout + 2*time.Minute,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -391,7 +391,7 @@ func init() {
 			"cros-sw-perf@google.com",
 		},
 		Impl:            &loggedInToCUJUserFixture{bt: browser.TypeLacros},
-		Parent:          "cpuIdleForEnrolledCUJ",
+		Parent:          "prepareForCUJEnrolledWithCharge",
 		SetUpTimeout:    chrome.EnrollmentAndLoginTimeout + chrome.GAIALoginTimeout + optin.OptinTimeout + 2*time.Minute,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -435,7 +435,7 @@ func init() {
 			bt:              browser.TypeLacros,
 			docsBlocker:     true,
 		},
-		Parent:          "cpuIdleForCUJ",
+		Parent:          "prepareForCUJ",
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -505,7 +505,7 @@ func init() {
 			},
 			bt: browser.TypeAsh,
 		},
-		Parent:          "cpuIdleForCUJ",
+		Parent:          "prepareForCUJ",
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -529,7 +529,7 @@ func init() {
 			bt:          browser.TypeAsh,
 			docsBlocker: true,
 		},
-		Parent:          "cpuIdleForCUJ",
+		Parent:          "prepareForCUJ",
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -550,7 +550,7 @@ func init() {
 			},
 			bt: browser.TypeAsh,
 		},
-		Parent:          "cpuIdleForCUJ",
+		Parent:          "prepareForCUJ",
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -574,7 +574,7 @@ func init() {
 			bt:          browser.TypeAsh,
 			docsBlocker: true,
 		},
-		Parent:          "cpuIdleForCUJ",
+		Parent:          "prepareForCUJ",
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -593,7 +593,7 @@ func init() {
 			bt:         browser.TypeLacros,
 			disableARC: true,
 		},
-		Parent:          "cpuIdleForCUJ",
+		Parent:          "prepareForCUJ",
 		SetUpTimeout:    chrome.GAIALoginTimeout + 2*time.Minute,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -614,7 +614,7 @@ func init() {
 			},
 			bt: browser.TypeAsh,
 		},
-		Parent:          "cpuIdleForCUJ",
+		Parent:          "prepareForCUJ",
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -659,7 +659,7 @@ func init() {
 			bt:              browser.TypeAsh,
 			enableChromeVox: true,
 		},
-		Parent:          "cpuIdleForCUJ",
+		Parent:          "prepareForCUJ",
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
@@ -773,58 +773,6 @@ func CPUCoolDownConfig() cpu.CoolDownConfig {
 	return cdConfig
 }
 
-type prepareCUJFixture struct {
-	skipCPUCooldown bool
-}
-
-func (f *prepareCUJFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	return nil
-}
-
-func (f *prepareCUJFixture) TearDown(ctx context.Context, s *testing.FixtState) {
-}
-
-func (f *prepareCUJFixture) Reset(ctx context.Context) error {
-	return nil
-}
-
-func (f *prepareCUJFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
-	if strings.ToLower(isLocalVar.Value()) == "true" {
-		s.Log("Skipping CPU cooldown because local testing variable is set")
-		return
-	}
-
-	if f.skipCPUCooldown {
-		s.Log("Skipping CPU cooldown because of fixture")
-		return
-	}
-
-	// Wait for cpu to stabilize before test. Note this only works as expected if
-	// all child fixtures's PreTest and the setup in each test main function do
-	// not do cpu intensive works. Otherwise, this needs to moved into body of
-	// tests.
-	if _, err := cpu.WaitUntilStabilized(ctx, CPUCoolDownConfig()); err != nil {
-		// Log the cpu stabilizing wait failure instead of make it fatal.
-		// TODO(b/213238698): Include the error as part of test data.
-		s.Log("Failed to wait for CPU to become idle: ", err)
-	}
-
-	// Ensure display on to record UI performance correctly. Keep trying for 2 min
-	// since it could take 2 min for `powerd` dbus service to be accessible via
-	// dbus from tast. See b/244752048. Also, ensure the display is on after
-	// waiting for the CPU to idle, because idling could take up to 10 minutes,
-	// and the display will turn off in 7.5 minutes.
-	if err := testing.Poll(ctx, power.TurnOnDisplay, &testing.PollOptions{
-		Interval: 10 * time.Second,
-		Timeout:  2 * time.Minute,
-	}); err != nil {
-		s.Fatal("Failed to turn on display: ", err)
-	}
-}
-
-func (f *prepareCUJFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
-}
-
 // chargeBatteryCapacity allows charging of the battery for 3 minutes if battery capacity
 // is not higher than a pre-defined level (minimumBatteryCapacity+lowBatteryShutdownPercent).
 func chargeBatteryCapacity(ctx context.Context, minimumBatteryCapacity float64, chargeBatteryTestPollOpt *testing.PollOptions) error {
@@ -872,37 +820,63 @@ func ChargeBatteryCapacityBeforePowerTest(ctx context.Context) error {
 	return nil
 }
 
-type cpuIdleForCUJFixture struct{}
+type prepareCUJFixture struct {
+	skipCPUCooldown bool
+	chargeBattery   bool
+}
 
-func (f *cpuIdleForCUJFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+func (f *prepareCUJFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	return nil
 }
 
-func (f *cpuIdleForCUJFixture) TearDown(ctx context.Context, s *testing.FixtState) {
+func (f *prepareCUJFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 }
 
-func (f *cpuIdleForCUJFixture) Reset(ctx context.Context) error {
+func (f *prepareCUJFixture) Reset(ctx context.Context) error {
 	return nil
 }
 
-func (f *cpuIdleForCUJFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
-	if err := ChargeBatteryCapacityBeforePowerTest(ctx); err != nil {
-		testing.ContextLog(ctx, "Failed to charge battery capacity before power test: ", err)
-	}
-
+func (f *prepareCUJFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
 	if strings.ToLower(isLocalVar.Value()) == "true" {
-		s.Log("Skipping waiting until CPU is idle because local testing variable is set")
+		s.Log("Skipping CPU cooldown because local testing variable is set")
 		return
 	}
 
-	// Wait for cpu to idle before test.
-	if err := cpu.WaitUntilIdle(ctx); err != nil {
-		// Log the cpu idle wait failure instead of make it fatal.
-		testing.ContextLog(ctx, "Failed to wait for CPU to become idle: ", err)
+	if f.skipCPUCooldown {
+		s.Log("Skipping CPU cooldown because of fixture")
+		return
+	}
+
+	if f.chargeBattery {
+		if err := ChargeBatteryCapacityBeforePowerTest(ctx); err != nil {
+			testing.ContextLog(ctx, "Failed to charge battery capacity before power test: ", err)
+		}
+	}
+
+	// Wait for cpu to stabilize before test. Note this only works as expected if
+	// all child fixtures's PreTest and the setup in each test main function do
+	// not do cpu intensive works. Otherwise, this needs to moved into body of
+	// tests.
+	if _, err := cpu.WaitUntilStabilized(ctx, CPUCoolDownConfig()); err != nil {
+		// Log the cpu stabilizing wait failure instead of make it fatal.
+		// TODO(b/213238698): Include the error as part of test data.
+		s.Log("Failed to wait for CPU to become idle: ", err)
+	}
+
+	// Ensure display on to record UI performance correctly. Keep trying for 2 min
+	// since it could take 2 min for `powerd` dbus service to be accessible via
+	// dbus from tast. See b/244752048. Also, ensure the display is on after
+	// waiting for the CPU to idle, because idling could take up to 10 minutes,
+	// and the display will turn off in 7.5 minutes.
+	if err := testing.Poll(ctx, power.TurnOnDisplay, &testing.PollOptions{
+		Interval: 10 * time.Second,
+		Timeout:  2 * time.Minute,
+	}); err != nil {
+		s.Fatal("Failed to turn on display: ", err)
 	}
 }
 
-func (f *cpuIdleForCUJFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
+func (f *prepareCUJFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
 }
 
 // FixtureData is the struct returned by the preconditions.
