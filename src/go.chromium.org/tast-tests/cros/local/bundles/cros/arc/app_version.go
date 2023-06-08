@@ -119,10 +119,16 @@ func openAppInfoPage(ctx context.Context, tconn *chrome.TestConn) error {
 	}
 
 	moreSettingsButton := nodewith.Name("More settings and permissions").Role(role.Link)
+	managePermissions := nodewith.Name("Manage permissions").Role(role.Link)
 	if err := uiauto.Combine("check context menu of play store app on the shelf",
 		ash.RightClickApp(tconn, apps.PlayStore.Name),
 		openPlayStoreAppInfoPage(),
-		ui.LeftClick(moreSettingsButton))(ctx); err != nil {
+
+		// ARC-T has "Manage permissions" instead of "More settings and permissions"
+		uiauto.IfFailThen(
+			ui.LeftClick(moreSettingsButton),
+			ui.LeftClick(managePermissions),
+		))(ctx); err != nil {
 		return errors.Wrap(err, "failed to open app info for Play Store app")
 	}
 	return nil
