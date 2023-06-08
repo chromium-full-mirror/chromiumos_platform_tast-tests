@@ -106,8 +106,10 @@ func DeviceInfoUtilCheck(ctx context.Context) []string {
 		"storage_type": `\S+`,                        // storage type should not be empty.
 	}
 	// number check for reads as float/int.
-	numberCheck := []string{"cpu_count", "cpu_cores", "cpu_cores", "cpu_threads", "cpu_cache",
-		"memory_size", "memory_frequency", "storage_size"}
+	// TODO: b/282991186 - Add "memory_frequency" to numberCheck when reading
+	// RAM frequency on ARM-based ChromeOS devices is available.
+	numberCheck := []string{"cpu_count", "cpu_cores", "cpu_cores", "cpu_threads",
+		"memory_size", "storage_size"}
 
 	deviceInfo := GetDeviceInfo(ctx)
 

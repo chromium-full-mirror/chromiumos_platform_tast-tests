@@ -81,8 +81,8 @@ func GetECVersion(ctx context.Context) string {
 	const path = "/dev/cros_ec"
 	f, err := os.ReadFile(path)
 	if err != nil {
-		testing.ContextLog(ctx, "Failed to read EC dev file: ", err)
-		return ""
+		testing.ContextLog(ctx, "Device does not have a chromium EC")
+		return getWilcoECVersion(ctx)
 	}
 	ecInfo := strings.Split(strings.TrimSpace(string(f)), "\n")
 	if len(ecInfo) != 4 {
@@ -98,6 +98,24 @@ func GetECVersion(ctx context.Context) string {
 		testing.ContextLogf(ctx, "Failed to determine active EC copy: %s", activeCopy)
 		return ""
 	}
+}
+
+// getWilcoECVersion reads the version of Wilco EC on Drallion and Sarien board.
+// See details in go/wilco-ec.
+func getWilcoECVersion(ctx context.Context) string {
+	const cmd = "cbmem -c | grep -m 1 EC.Label"
+	readResult, err := testexec.CommandContext(ctx, "bash", "-c", cmd).Output()
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to get Wilco EC version")
+		return ""
+	}
+	ecInfo := strings.Split(strings.TrimSpace(string(readResult)), ":")
+	if len(ecInfo) != 2 {
+		testing.ContextLogf(ctx, "Failed to parse Wilco EC version: %s", string(readResult))
+		return ""
+	}
+	// To make format close to chromium EC.
+	return "wilco_" + strings.TrimSpace(ecInfo[1])
 }
 
 // GetKernelVersion returns the kernel version.
@@ -362,7 +380,7 @@ func GetCPUCacheSize(ctx context.Context) float64 {
 	path := "/sys/devices/system/cpu/cpu0/cache/index3/size"
 	readResult, err := testexec.CommandContext(ctx, "cat", path).Output()
 	if err != nil {
-		testing.ContextLog(ctx, "Failed to get CPU cache size")
+		testing.ContextLog(ctx, "Device does not have a L3 cache")
 		return 0
 	}
 	if strings.Contains(string(readResult), "K") {
@@ -392,14 +410,32 @@ func GetGPUModel(ctx context.Context) string {
 	readResult, err := testexec.CommandContext(ctx, "bash", "-c", cmd).Output()
 	if err != nil {
 		testing.ContextLog(ctx, "Failed to get GPU model from lshw")
-		return ""
+		return getGPUModelOnARM(ctx)
 	}
 	fields := strings.Split(string(readResult), "display")
 	if len(fields) < 2 {
-		testing.ContextLog(ctx, "Failed to parse GPU model name")
-		return ""
+		testing.ContextLog(ctx, "Failed to parse GPU model name from lshw")
+		return getGPUModelOnARM(ctx)
 	}
 	return strings.TrimSpace(fields[1])
+}
+
+// getGPUModelOnARM reads the GPU vendor + GPU family on ARM.
+// Currently ARM-based ChromeOS devices does not have display/graphics sections
+// in lshw so we need a workaround to read from system.
+func getGPUModelOnARM(ctx context.Context) string {
+	const readScript = "/usr/local/graphics/hardware_probe"
+	vendorRead, err := testexec.CommandContext(ctx, readScript, "--gpu-vendor").Output()
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to get GPU model: Cannot read gpu vendor")
+		return ""
+	}
+	familyRead, err := testexec.CommandContext(ctx, readScript, "--gpu-family").Output()
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to get GPU model: Cannot read gpu family")
+		return ""
+	}
+	return strings.TrimSpace(string(vendorRead)) + "_" + strings.TrimSpace(string(familyRead))
 }
 
 // GetMemoryType returns the memory type e.g. LPDDR3
