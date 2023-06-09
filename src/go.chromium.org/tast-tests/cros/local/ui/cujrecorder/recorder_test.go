@@ -6,10 +6,15 @@ package cujrecorder
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
+	"sort"
 	"testing"
 
+	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast/core/testutil"
 )
 
@@ -85,5 +90,100 @@ func TestAddExtraChromeTraceCategories(t *testing.T) {
 	}
 	if newConfigStr != expectedNewConfig {
 		t.Fatalf("The new config is not expected; expect %s, got %s", expectedNewConfig, newConfigStr)
+	}
+}
+
+func TestProcessMetricsRecord(t *testing.T) {
+	metricCountName := "MetricCount"
+	metricMemoryName := "MetricMemory"
+
+	countMetricConfig := NewCustomMetricConfig(metricCountName, "count", perf.SmallerIsBetter)
+	memoryMetricConfig := NewMemoryMetricConfig(metricMemoryName, "MB")
+
+	records := map[browser.Type]map[string]*record{
+		browser.TypeAsh: {
+			metricCountName: &record{
+				config:     countMetricConfig,
+				totalCount: 1,
+				Sum:        2,
+			},
+			metricMemoryName: &record{
+				config:     memoryMetricConfig,
+				totalCount: 5,
+				Sum:        10,
+			},
+		},
+		browser.TypeLacros: {
+			metricCountName: &record{
+				config:     countMetricConfig,
+				totalCount: 3,
+				Sum:        4,
+			},
+			metricMemoryName: &record{
+				config:     memoryMetricConfig,
+				totalCount: 6,
+				Sum:        12,
+			},
+		},
+	}
+
+	processed, err := processMetricRecords(records)
+	if err != nil {
+		t.Fatal("Failed to process records: ", err)
+	}
+
+	expected := map[string]*record{
+		"MetricCount": &record{
+			config:     countMetricConfig,
+			totalCount: 4, // Sum of totalCount from ash and lacro
+			Sum:        6, // Sum of Sum from ash and lacros
+		},
+		"MetricCount_ash-Chrome": &record{
+			config:     countMetricConfig,
+			totalCount: 1,
+			Sum:        2,
+		},
+		"MetricCount_lacros-Chrome": &record{
+			config:     countMetricConfig,
+			totalCount: 3,
+			Sum:        4,
+		},
+		"MetricMemory": &record{
+			config:     memoryMetricConfig,
+			totalCount: 1, // Always 1
+			Sum:        4, // Sum of the averages from ash and lacros
+		},
+		"MetricMemory_ash-Chrome": &record{
+			config:     memoryMetricConfig,
+			totalCount: 5,
+			Sum:        10,
+		},
+		"MetricMemory_lacros-Chrome": &record{
+			config:     memoryMetricConfig,
+			totalCount: 6,
+			Sum:        12,
+		},
+	}
+
+	if !reflect.DeepEqual(processed, expected) {
+		t.Error("Unexpected processed results")
+
+		dump := func(r map[string]*record) {
+			var keys []string
+			for key := range r {
+				keys = append(keys, key)
+			}
+			sort.Strings(keys)
+
+			fmt.Println("{")
+			for _, key := range keys {
+				fmt.Println("  ", key, " : ", r[key])
+			}
+			fmt.Println("}")
+		}
+		fmt.Println("expected:")
+		dump(expected)
+		fmt.Println("processed:")
+		dump(processed)
 	}
 }

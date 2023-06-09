@@ -965,7 +965,10 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 		// Delay for logging memory metrics is set to 6 minutes. Considering most of CUJ tests
 		// are longer than 10 minutes, this could guarantee at least one histogram for each
 		// memory metric.
-		opts = append(opts, chrome.ExtraArgs("--test-memory-log-delay-in-minutes=6"))
+		const MemLogDelayArg = "--test-memory-log-delay-in-minutes=6"
+		opts = append(opts,
+			chrome.ExtraArgs(MemLogDelayArg),
+			chrome.LacrosExtraArgs(MemLogDelayArg))
 
 		extraArgs := extraArgsVar.Value()
 		if extraArgs != "" {

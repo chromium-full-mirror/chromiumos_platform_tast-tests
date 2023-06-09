@@ -77,6 +77,22 @@ var annotationRe = regexp.MustCompile("^[a-zA-Z0-9_-]{1,240}$")
 // powertopModels defines the models that auto run `powertopRecorder`.
 var powertopModels = []string{"redrix"}
 
+// metricRecordMethod determines how the collected metrics are recorded.
+type metricRecordMethod int
+
+const (
+	// metricRecordMethodNeutral records metrics by treating all samples from
+	// different sources equally. Used for metrics such as latency, smoothness
+	// where samples does not happen on top of each other and average represents
+	// overall system status.
+	metricRecordMethodNeutral = iota
+	// metricRecordMethodSumAverageBySource records metrics from different sources
+	// by adding up the average of the samples from each source. Used for metrics
+	// such as memory where the samples should be added up to represent the system
+	// status.
+	metricRecordMethodSumAverageBySource
+)
+
 // MetricConfig is the configuration for the recorder.
 type MetricConfig struct {
 	// The name of the histogram to be recorded.
@@ -101,6 +117,10 @@ type MetricConfig struct {
 
 	// The map between enum values and names.
 	enumValues map[int64]string
+
+	// Determines how samples from different sources (i.e. browsers) should be
+	// recorded.
+	recordMethod metricRecordMethod
 }
 
 // NewSmoothnessMetricConfig creates a new MetricConfig instance for collecting
@@ -136,6 +156,19 @@ func NewBootAndShutdownCustomMetricConfig(histogramName, unit string, direction 
 // and the given histogram name and enum values map as defined in tools/metrics/histograms/enums.xml.
 func NewEnumCustomMetricConfig(histogramName string, enumValues map[int64]string) MetricConfig {
 	return MetricConfig{histogramName: histogramName, bootAndShutdown: false, histogramType: enumHistogram, enumValues: enumValues}
+}
+
+// NewMemoryMetricConfig creates a new MetricConfig for the given histogram
+// name, unit, and direction. The data is recorded using
+// metricRecordMethodSumAverageBySource.
+func NewMemoryMetricConfig(histogramName, unit string) MetricConfig {
+	return MetricConfig{
+		histogramName:   histogramName,
+		unit:            unit,
+		direction:       perf.SmallerIsBetter,
+		bootAndShutdown: false,
+		histogramType:   countHistogram,
+		recordMethod:    metricRecordMethodSumAverageBySource}
 }
 
 type record struct {
@@ -183,12 +216,7 @@ func (rec *record) saveMetric(pv *perf.Values, name string) {
 			}, float64(bucket.Count))
 		}
 	case countHistogram:
-		pv.Set(perf.Metric{
-			Name:      name,
-			Unit:      rec.config.unit,
-			Variant:   "average",
-			Direction: rec.config.direction,
-		}, float64(rec.Sum)/float64(rec.totalCount))
+		fallthrough
 	default:
 		// If rec.config.histogramType is not set,
 		// treat it as count histograms by default.
@@ -398,7 +426,7 @@ func (r *Recorder) AddCollectedMetrics(tconn *chrome.TestConn, bt browser.Type, 
 // connection.
 func (r *Recorder) AddCommonMetrics(tconn, bTconn *chrome.TestConn) error {
 	var bt browser.Type
-	if tconn == bTconn {
+	if *tconn == *bTconn {
 		bt = browser.TypeAsh
 	} else {
 		bt = browser.TypeLacros
@@ -412,7 +440,7 @@ func (r *Recorder) AddCommonMetrics(tconn, bTconn *chrome.TestConn) error {
 	if err := r.AddCollectedMetrics(tconn, browser.TypeAsh, CUJAnyChromeCommonMetricConfigs()...); err != nil {
 		return errors.Wrap(err, "failed to add Ash AnyChrome common metrics")
 	}
-	if tconn != bTconn {
+	if bt == browser.TypeLacros {
 		if err := r.AddCollectedMetrics(bTconn, browser.TypeLacros, CUJLacrosCommonMetricConfigs()...); err != nil {
 			return errors.Wrap(err, "failed to add Lacros common metrics")
 		}
@@ -1357,27 +1385,12 @@ func (r *Recorder) stopMetrics(ctx context.Context) error {
 	}
 	displayInfo.Record(r.pv)
 
-	allRecords := make(map[string]*record) // Combined records from all browsers.
-
-	// Record records by browser.
-	for bt, records := range r.records {
-		for name, rec := range records {
-			if rec.totalCount == 0 {
-				continue
-			}
-			// Append metric name with browser type as the new metric name, for example:
-			// - EventLatency.TotalLatency_ash-Chrome,
-			// - PageLoad.InteractiveTiming.InputDelay3_lacros-Chrome
-			rec.saveMetric(r.pv, fmt.Sprintf("%s_%s-Chrome", name, bt))
-			// Combine the record.
-			if _, ok := allRecords[name]; !ok {
-				allRecords[name] = &record{config: rec.config}
-			}
-			if err := allRecords[name].combine(rec); err != nil {
-				return err
-			}
-		}
+	// Combined records from all browsers.
+	allRecords, err := processMetricRecords(r.records)
+	if err != nil {
+		return err
 	}
+
 	var crasUnderruns float64
 	// Record combined records from all tconns.
 	for name, rec := range allRecords {
@@ -1428,6 +1441,48 @@ func (r *Recorder) stopMetrics(ctx context.Context) error {
 	collectMSPH(ctx, r.pv)
 
 	return nil
+}
+
+// processMetricRecords iterates through `records` and generate a list of to be recorded.
+func processMetricRecords(perBrowserRecords map[browser.Type]map[string]*record) (map[string]*record, error) {
+	allRecords := make(map[string]*record)
+
+	accumulatedAverage := make(map[string]float64)
+	for bt, records := range perBrowserRecords {
+		for name, rec := range records {
+			if rec.totalCount == 0 {
+				continue
+			}
+
+			// Append metric name with browser type as the new metric name, for example:
+			// - EventLatency.TotalLatency_ash-Chrome,
+			// - PageLoad.InteractiveTiming.InputDelay3_lacros-Chrome
+			perBrowserName := fmt.Sprintf("%s_%s-Chrome", name, bt)
+			allRecords[perBrowserName] = rec
+
+			// Combine the record from different browsers.
+			if _, ok := allRecords[name]; !ok {
+				allRecords[name] = &record{config: rec.config}
+			}
+			switch rec.config.recordMethod {
+			case metricRecordMethodSumAverageBySource:
+				allRecords[name].totalCount = 1
+				accumulatedAverage[name] += float64(rec.Sum) / float64(rec.totalCount)
+			case metricRecordMethodNeutral:
+				fallthrough
+			default:
+				if err := allRecords[name].combine(rec); err != nil {
+					return nil, err
+				}
+			}
+		}
+	}
+
+	// Update `Sum` from `accumulatedAverage`.
+	for name, averageSum := range accumulatedAverage {
+		allRecords[name].Sum = int64(averageSum)
+	}
+	return allRecords, nil
 }
 
 // Run conducts the test scenario f, and collects the related metrics for the
@@ -1644,7 +1699,7 @@ func (r *Recorder) StartSnapshot(ctx context.Context, prefix string, ashMetrics,
 			for _, hist := range diffs {
 				metric, ok := r.records[browserTypes[i]][hist.Name]
 				if !ok {
-					return errors.Wrapf(err, "metric %q is not being recorded by the recorder", hist.Name)
+					return errors.Wrapf(err, "metric %q is not being recorded by the recorder for %v", hist.Name, browserTypes[i])
 				}
 
 				newRecord := &record{

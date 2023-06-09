@@ -115,9 +115,6 @@ func CUJAshCommonMetricConfigs() []MetricConfig {
 		NewCustomMetricConfig("Compositing.Display.OverlayProcessorUsingStrategy.NumOverlaysFailed", "overlay_candidates", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Compositing.Display.OverlayProcessorUsingStrategy.NumOverlaysAttempted", "overlay_candidates", perf.BiggerIsBetter),
 		NewCustomMetricConfig("Viz.FrameSink.GpuBusyDuration", "microseconds", perf.SmallerIsBetter),
-		NewCustomMetricConfig("Memory.Gpu.PrivateMemoryFootprint", "MB", perf.SmallerIsBetter),
-		NewCustomMetricConfig("Memory.Total.TileMemory", "MB", perf.SmallerIsBetter),
-		NewCustomMetricConfig("Memory.Experimental.Gpu2.SharedImages", "MB", perf.SmallerIsBetter),
 		NewEnumCustomMetricConfig("Compositing.Display.HardwareDisplayController.SchedulePageFlipResult",
 			map[int64]string{
 				0: "Success",
@@ -165,9 +162,15 @@ func CUJBrowserCommonMetricConfigs() []MetricConfig {
 // be collected by CUJ tests from any Chrome binary running (could be
 // from both Ash and Lacros in parallel). This function automatically
 // retrieves all SPERA metrics defined in AnyChromeCommonMetricConfigs
-// and adds more.
+// and adds more. The metrics would be reported as combined in the original
+// metrics names, and separately for each browser type under the original
+// name + browser type suffix.
 func CUJAnyChromeCommonMetricConfigs() []MetricConfig {
-	return AnyChromeCommonMetricConfigs()
+	return append(AnyChromeCommonMetricConfigs(),
+		NewMemoryMetricConfig("Memory.Gpu.PrivateMemoryFootprint", "MB"),
+		NewMemoryMetricConfig("Memory.Total.TileMemory", "MB"),
+		NewMemoryMetricConfig("Memory.Experimental.Gpu2.SharedImages", "MB"),
+	)
 }
 
 // GetShortenedPerformanceMetrics returns a list of Ash metrics and a list
