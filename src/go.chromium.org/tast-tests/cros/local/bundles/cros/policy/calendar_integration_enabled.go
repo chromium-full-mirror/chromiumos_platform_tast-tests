@@ -18,7 +18,9 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -59,10 +61,22 @@ func CalendarIntegrationEnabled(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
-	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	// Set up keyboard.
+	kb, err := input.VirtualKeyboard(ctx)
+	if err != nil {
+		s.Fatal("Failed to get keyboard: ", err)
+	}
+	defer kb.Close(cleanupCtx)
 
 	for index, param := range calendarintegration.GetTestCases() {
 		s.Run(ctx, param.Name, func(ctx context.Context, s *testing.State) {
+			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.Name)
+
 			// Perform cleanup.
 			if err := policyutil.ResetChrome(ctx, fdms, cr); err != nil {
 				s.Fatal("Failed to clean up: ", err)
@@ -78,11 +92,14 @@ func CalendarIntegrationEnabled(ctx context.Context, s *testing.State) {
 			if err != nil {
 				s.Fatal("Failed to open the browser: ", err)
 			}
-			defer closeBrowser(ctx)
+			defer closeBrowser(cleanupCtx)
 
-			// Open the net-export page and start logging. Skip for lacros until we
-			// fix b/278750986.
-			if !isLacros(s) {
+			// Open the net-export page and start logging.
+			if isLacros(s) {
+				if err := annotations.StartOSLogging(ctx, cr, br, kb); err != nil {
+					s.Fatal("Failed to start logging: ", err)
+				}
+			} else {
 				if err := annotations.StartLogging(ctx, cr, br); err != nil {
 					s.Fatal("Failed to start logging: ", err)
 				}
@@ -92,23 +109,20 @@ func CalendarIntegrationEnabled(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to trigger and verify calendar integration: ", err)
 			}
 
-			// Check for annotation. Skip for lacros until we fix b/278750986.
-			if !isLacros(s) {
-				didFindAnnotation := false
-				// Stop logging and check the logs for annotation.
-				if foundAnnotation, err := annotations.StopLoggingCheckLogs(ctx, cr, br, calendarintegration.AnnotationHashCode); err != nil {
+			// Stop logging and check the logs for annotation.
+			foundAnnotation := false
+			if isLacros(s) {
+				if foundAnnotation, err = annotations.StopOSLoggingCheckLogs(ctx, cr, br, kb, calendarintegration.AnnotationHashCode); err != nil {
 					s.Fatal("Failed to stop logging and check logs: ", err)
-				} else if foundAnnotation == true {
-					didFindAnnotation = true
 				}
+			} else {
+				if foundAnnotation, err = annotations.StopLoggingCheckLogs(ctx, cr, br, calendarintegration.AnnotationHashCode); err != nil {
+					s.Fatal("Failed to stop logging and check logs: ", err)
+				}
+			}
 
-				if param.ShouldFindAnnotation && didFindAnnotation == false {
-					s.Fatal("Did not find expected NetworkTrafficAnnotationTag with id calendar_get_events")
-				}
-
-				if !param.ShouldFindAnnotation && didFindAnnotation == true {
-					s.Fatal("Found unexpected NetworkTrafficAnnotationTag with id calendar_get_events")
-				}
+			if param.ShouldFindAnnotation != foundAnnotation {
+				s.Fatalf("Unexpected state of calendar_get_events annotation: got %t wanted %t", foundAnnotation, param.ShouldFindAnnotation)
 			}
 		})
 	}
