@@ -540,7 +540,10 @@ func HasZram() bool {
 	if len(lines) < 2 {
 		return false
 	}
-	return strings.HasPrefix(lines[1], "/dev/zram")
+
+	// Zram swap device in /proc/swaps can be either /dev/zram0 or /zram0, the
+	// explanation can be found in b/248317295.
+	return strings.HasPrefix(lines[1], "/zram")
 }
 
 // LogMemoryParameters logs various kernel parameters as well as some
