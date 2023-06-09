@@ -294,10 +294,11 @@ type baseSetupFixtureImpl struct {
 func (f *baseSetupFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	// Set VC related flags by default for all fixtures.
 	var opts = []chrome.Option{
-		chrome.EnableFeatures("SpeakOnMuteEnabled"),
+		chrome.EnableFeatures("CrosPrivacyHub"),
 		chrome.EnableFeatures("VideoConference"),
 		chrome.EnableFeatures("CrOSLateBootAudioFlexibleLoopback"),
 		chrome.EnableFeatures("SystemLiveCaption"),
+		chrome.ExtraArgs("--disable-sync"),
 		// Disable WindowLayoutMenu to prevent `Keep hovering for more layout options` nudge.
 		// The nudge is overlap with app window and causes screen diff flakiness.
 		chrome.DisableFeatures("WindowLayoutMenu"),
