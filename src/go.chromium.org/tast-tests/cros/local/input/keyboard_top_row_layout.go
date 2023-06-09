@@ -74,6 +74,11 @@ var topRowScanCodeMap = map[EventCode]int32{
 // KeyboardTopRowLayout returns the layout of the top row (function keys) for a given keyboard.
 // This is because not all Chromebook keyboards have the same functionality associated to the functions keys.
 // As an example, the Toggle Zoom key could be mapped to F3 or F4 depending on the Chromebook model.
+// NOTE: If the given keyboard is generated through `input.Keyboard` and can be either an internal or external keyboard,
+// this function can yield inaccurate results. `input.VirtualKeyboard` is guaranteed to always give the correct result from
+// this KeyboardTopRowLayout. `input.Keyboard` will only always give the correct result from this function if the `InternalKeyboard`
+// hardware dependency is applied to the test.
+// TODO(b/286466129): Improve internal vs external detection of keyboards to better deduce the default.
 func KeyboardTopRowLayout(ctx context.Context, ew *KeyboardEventWriter) (*TopRowLayout, error) {
 	// "mapping 1" and "mapping 2" taken from:
 	// https://cs.chromium.org/chromium/src/ui/chromeos/events/event_rewriter_chromeos.cc?l=1143&rcl=3028a8be77afd57282d664b6bb07f6d4d01edc55
