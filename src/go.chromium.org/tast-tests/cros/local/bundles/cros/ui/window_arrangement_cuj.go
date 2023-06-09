@@ -41,7 +41,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures the performance of critical user journey for window arrangements",
 		Contacts: []string{
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 			"yichenz@chromium.org",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS

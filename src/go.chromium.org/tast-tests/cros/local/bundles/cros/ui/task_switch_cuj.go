@@ -22,7 +22,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures the performance of the critical user journey for task switching",
 		Contacts: []string{
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 			"ramsaroop@chromium.org",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS

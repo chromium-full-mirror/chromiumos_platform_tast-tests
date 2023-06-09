@@ -25,7 +25,7 @@ func init() {
 		// TODO(b/234063928): Remove crosbolt attributes when TabSwitchCUJ runs stably on suite cuj.
 		Attr: []string{"group:cuj"},
 		Contacts: []string{
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 			"yichenz@chromium.org",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS

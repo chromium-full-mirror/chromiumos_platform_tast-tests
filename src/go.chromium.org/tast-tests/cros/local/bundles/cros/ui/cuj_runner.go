@@ -19,7 +19,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded, // disabled experimental test, review this again when re-enabled
 		Desc:         "Run a CUJ json config and measure performance",
 		Contacts: []string{
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 			"xiyuan@chromium.org",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS

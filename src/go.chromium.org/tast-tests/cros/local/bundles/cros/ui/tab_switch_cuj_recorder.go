@@ -20,8 +20,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded, // used to record all web traffic via wpr so that later TabSwitchCUJ could run without really talking to real sites
 		Desc:         "Run tab-switching CUJ test in chromewpr recording mode",
 		Contacts: []string{
-			"chromeos-perfmetrics-eng@google.com",
-			"tclaiborne@chromium.org",
+			"cros-sw-perf@google.com",
 			"xiyuan@chromium.org",
 			"yichenz@chromium.org",
 		},

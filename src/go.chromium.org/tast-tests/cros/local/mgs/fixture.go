@@ -39,7 +39,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:     fixture.ManagedGuestSessionWithPWA,
 		Desc:     "Fixture to log into a managed guest session with apps installed",
-		Contacts: []string{"alston.huang@cienet.com", "chromeos-perfmetrics-eng@google.com"},
+		Contacts: []string{"alston.huang@cienet.com", "cros-sw-perf@google.com"},
 		Impl: &guestSessionFixture{
 			webApps:   driveWebApp,
 			bt:        browser.TypeAsh,
@@ -59,7 +59,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:     fixture.ManagedGuestSessionWithPWALacros,
 		Desc:     "Fixture to log into a managed guest session with apps installed and used for lacros variation of CUJ tests",
-		Contacts: []string{"alston.huang@cienet.com", "jason.hsiao@cienet.com", "chromeos-perfmetrics-eng@google.com"},
+		Contacts: []string{"alston.huang@cienet.com", "jason.hsiao@cienet.com", "cros-sw-perf@google.com"},
 		Impl: &guestSessionFixture{
 			webApps:   driveWebApp,
 			bt:        browser.TypeLacros,

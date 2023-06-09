@@ -50,7 +50,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures the presentation time of window dragging in overview in tablet mode",
 		Contacts: []string{
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 			"xiyuan@chromium.org",
 			"chromeos-wmp@google.com",
 		},

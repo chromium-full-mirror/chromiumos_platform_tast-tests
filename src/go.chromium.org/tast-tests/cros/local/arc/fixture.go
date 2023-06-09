@@ -320,7 +320,7 @@ func init() {
 		Name: "lacrosWithArcBooted",
 		Desc: "Lacros Chrome from a pre-built image with ARC booted",
 		Contacts: []string{
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 			"xiyuan@chromium.org",
 		},
 		Impl: NewArcBootedFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
@@ -337,7 +337,7 @@ func init() {
 		Name: "lacrosWithArcBootedInTabletMode",
 		Desc: "Lacros Chrome from a pre-built image with ARC booted in tablet mode",
 		Contacts: []string{
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 			"xiyuan@chromium.org",
 		},
 		Impl: NewArcBootedFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
@@ -354,7 +354,7 @@ func init() {
 		Name: "lacrosWithArcBootedAndPlayStore",
 		Desc: "Lacros Chrome from a pre-built image with ARC booted and the Play Store enabled",
 		Contacts: []string{
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 			"xiyuan@chromium.org",
 		},
 		Vars: []string{"ui.gaiaPoolDefault"},

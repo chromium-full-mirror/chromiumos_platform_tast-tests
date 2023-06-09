@@ -30,7 +30,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures animation smoothness of screen unlock",
 		Contacts: []string{
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 			"xiyuan@chromium.org",
 			"oshima@chromium.org",
 		},

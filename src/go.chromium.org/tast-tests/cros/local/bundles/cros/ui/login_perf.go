@@ -82,7 +82,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures performance and UI smoothness of ChromeOS login",
 		Contacts: []string{
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 			"chromeos-wmp@google.com",
 			"alemate@google.com",
 			"oshima@google.com",

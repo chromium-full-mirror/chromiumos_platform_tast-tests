@@ -29,7 +29,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnknown,
 		Desc:         "Measures the animation smoothness of tab hover card animation",
 		Contacts: []string{
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 			"yichenz@chromium.org",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS

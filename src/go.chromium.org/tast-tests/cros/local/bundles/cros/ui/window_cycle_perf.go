@@ -33,7 +33,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures the animation smoothness of window cycle animations when Alt + tabbing",
 		Contacts: []string{
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 			"xiyuan@chromium.org",
 			"chromeos-wmp@google.com",
 		},

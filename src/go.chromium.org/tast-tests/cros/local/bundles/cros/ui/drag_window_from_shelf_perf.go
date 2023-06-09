@@ -31,7 +31,7 @@ func init() {
 		Desc:         "Measures the presentation time of dragging a window from the shelf in tablet mode",
 		Contacts: []string{
 			"chromeos-wm-corexp@google.com",
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 			"tbarzic@chromium.org",
 			"xdai@chromium.org",
 		},

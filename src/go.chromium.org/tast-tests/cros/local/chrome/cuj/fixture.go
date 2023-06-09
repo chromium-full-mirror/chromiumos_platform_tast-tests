@@ -143,7 +143,7 @@ func init() {
 		Desc: "The fixture to prepare DUT for CUJ tests",
 		Contacts: []string{
 			"xiyuan@chromium.org",
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 		},
 		Impl:            &prepareCUJFixture{},
 		PreTestTimeout:  CPUStablizationTimeout,
@@ -155,7 +155,7 @@ func init() {
 		Desc: "The fixture to prepare DUT for CUJ tests without CPU cooldown",
 		Contacts: []string{
 			"vincentchiang@google.com",
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 		},
 		Impl:            &prepareCUJFixture{skipCPUCooldown: true},
 		PreTestTimeout:  CPUStablizationTimeout,
@@ -167,7 +167,7 @@ func init() {
 		Desc: "The fixture to wait DUT cpu to idle for CUJ tests",
 		Contacts: []string{
 			"jane.yang@cienet.com",
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 		},
 		Impl:            &cpuIdleForCUJFixture{},
 		PreTestTimeout:  CPUIdleTimeout + BatteryChargingTimeout + 5*time.Second,
@@ -179,7 +179,7 @@ func init() {
 		Desc: "The fixture to wait DUT cpu to idle for logged in with gaia user on an enrolled device",
 		Contacts: []string{
 			"alston.huang@cienet.com",
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 		},
 		Impl:            &cpuIdleForCUJFixture{},
 		SetUpTimeout:    chrome.EnrollmentAndLoginTimeout + chrome.GAIALoginTimeout,
@@ -194,7 +194,7 @@ func init() {
 		Desc: "The main fixture used for UI CUJ tests",
 		Contacts: []string{
 			"xiyuan@chromium.org",
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 		},
 		Impl:            &loggedInToCUJUserFixture{bt: browser.TypeAsh},
 		Parent:          "prepareForCUJ",
@@ -210,7 +210,7 @@ func init() {
 		Desc: "The main fixture used for UI CUJ tests using an enterprise account, with WebRTC event logging",
 		Contacts: []string{
 			"xiyuan@chromium.org",
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 		},
 		Data: docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
@@ -232,7 +232,7 @@ func init() {
 		Desc: "The CUJ test fixture which keeps login state",
 		Contacts: []string{
 			"xiyuan@chromium.org",
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 		},
 		Impl: &loggedInToCUJUserFixture{
 			keepState: true,
@@ -253,7 +253,7 @@ func init() {
 		Desc: "The CUJ test fixture which keeps login state and uses fake camera",
 		Contacts: []string{
 			"jane.yang@cienet.com",
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 		},
 		Data: []string{highResFakeCameraFileName},
 		Impl: &loggedInToCUJUserFixture{
@@ -274,7 +274,7 @@ func init() {
 		Desc: "The CUJ test fixture which keeps login state and uses low resolution fake camera",
 		Contacts: []string{
 			"jane.yang@cienet.com",
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 		},
 		Data: append(docsBlockerFiles, lowResFakeCameraFileName),
 		Impl: &loggedInToCUJUserFixture{
@@ -293,7 +293,7 @@ func init() {
 		Desc: "Fixture used for lacros variation of UI CUJ tests",
 		Contacts: []string{
 			"xiyuan@chromium.org",
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 		},
 		Impl:            &loggedInToCUJUserFixture{bt: browser.TypeLacros},
 		Parent:          "cpuIdleForCUJ",
@@ -309,7 +309,7 @@ func init() {
 		Desc: "Fixture keeping login status and used for lacros variation of CUJ tests",
 		Contacts: []string{
 			"xliu@cienet.com",
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 		},
 		Impl: &loggedInToCUJUserFixture{
 			keepState: true,
@@ -330,7 +330,7 @@ func init() {
 		Desc: "Fixture keeping login status, used fake camera for lacros variation of CUJ tests",
 		Contacts: []string{
 			"jane.yang@cienet.com",
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 		},
 		Data: []string{highResFakeCameraFileName},
 		Impl: &loggedInToCUJUserFixture{
@@ -351,7 +351,7 @@ func init() {
 		Desc: "Fixture keeping login status, used low resolution fake camera for lacros variation of CUJ tests",
 		Contacts: []string{
 			"jane.yang@cienet.com",
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 		},
 		Data: append(docsBlockerFiles, lowResFakeCameraFileName),
 		Impl: &loggedInToCUJUserFixture{
@@ -370,7 +370,7 @@ func init() {
 		Desc: "Logged in with gaia user on an enrolled device",
 		Contacts: []string{
 			"alston.huang@cienet.com",
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 		},
 		Impl:            &loggedInToCUJUserFixture{},
 		Parent:          "cpuIdleForEnrolledCUJ",
@@ -388,7 +388,7 @@ func init() {
 		Desc: "Logged in with gaia user on an enrolled device and used for lacros variation of CUJ tests",
 		Contacts: []string{
 			"jane.yang@cienet.com",
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 		},
 		Impl:            &loggedInToCUJUserFixture{bt: browser.TypeLacros},
 		Parent:          "cpuIdleForEnrolledCUJ",
@@ -406,7 +406,7 @@ func init() {
 		Desc: "CUJ test fixture with WebRTC event logging",
 		Contacts: []string{
 			"ramsaroop@chromium.org",
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 		},
 		Data: docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
@@ -427,7 +427,7 @@ func init() {
 		Desc: "Lacros variation of loggedInToCUJUserWithWebRTCEventLogging",
 		Contacts: []string{
 			"ramsaroop@chromium.org",
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 		},
 		Data: docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
@@ -448,7 +448,7 @@ func init() {
 		Desc: "CUJ test fixture with the OneGroupPerRenderer feature enabled",
 		Contacts: []string{
 			"ramsaroop@google.com",
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 		},
 		Data: docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
@@ -473,7 +473,7 @@ func init() {
 		Desc: "CUJ test fixture with the MainThreadCompositingPriority feature enabled",
 		Contacts: []string{
 			"youssefesmat@google.com",
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 		},
 		Data: docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
@@ -497,7 +497,7 @@ func init() {
 		Desc: "CUJ fixture with BackupRefPtr enabled",
 		Contacts: []string{
 			"ramsaroop@google.com",
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 		},
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
@@ -518,7 +518,7 @@ func init() {
 		Desc: "Variant of loggedInToCUJUserWithBackupRefPtr with WebRTCEventLogging enabled",
 		Contacts: []string{
 			"ramsaroop@google.com",
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 		},
 		Data: docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
@@ -542,7 +542,7 @@ func init() {
 		Desc: "CUJ fixture with all field trials enabled",
 		Contacts: []string{
 			"ramsaroop@google.com",
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 		},
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
@@ -563,7 +563,7 @@ func init() {
 		Desc: "Variant of loggedInToCUJUserWithFieldTrials with WebRTCEventLogging enabled",
 		Contacts: []string{
 			"ramsaroop@google.com",
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 		},
 		Data: docsBlockerFiles,
 		Impl: &loggedInToCUJUserFixture{
@@ -587,7 +587,7 @@ func init() {
 		Desc: "Variant of loggedInToCUJUser with ARC disabled",
 		Contacts: []string{
 			"ramsaroop@google.com",
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 		},
 		Impl: &loggedInToCUJUserFixture{
 			bt:         browser.TypeLacros,
@@ -606,7 +606,7 @@ func init() {
 		Desc: "CUJ fixture with AppRescue enabled",
 		Contacts: []string{
 			"ramsaroop@google.com",
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 		},
 		Impl: &loggedInToCUJUserFixture{
 			chromeExtraOpts: []chrome.Option{
@@ -628,7 +628,7 @@ func init() {
 		Contacts: []string{
 			"cwd@google.com",
 			"cros-vm-technology@google.com",
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 		},
 		Impl:            &batterySaverFixture{},
 		Parent:          "loggedInToCUJUser",
@@ -641,7 +641,7 @@ func init() {
 		Contacts: []string{
 			"cwd@google.com",
 			"cros-vm-technology@google.com",
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 		},
 		Impl:            &batterySaverFixture{},
 		Parent:          "loggedInToCUJUserWithWebRTCEventLogging",
@@ -653,7 +653,7 @@ func init() {
 		Desc: "CUJ fixture with ChromeVox enabled",
 		Contacts: []string{
 			"ramsaroop@google.com",
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 		},
 		Impl: &loggedInToCUJUserFixture{
 			bt:              browser.TypeAsh,
@@ -672,7 +672,7 @@ func init() {
 		Desc: "CUJ fixture that skips CPU cooldown",
 		Contacts: []string{
 			"vincentchiang@google.com",
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 		},
 		Impl:            &loggedInToCUJUserFixture{bt: browser.TypeAsh},
 		Parent:          "prepareForCUJWithoutCooldown",
@@ -687,7 +687,7 @@ func init() {
 		Desc: "Lacros CUJ fixture that skips CPU cooldown",
 		Contacts: []string{
 			"vincentchiang@google.com",
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 		},
 		Impl:            &loggedInToCUJUserFixture{bt: browser.TypeLacros},
 		Parent:          "prepareForCUJWithoutCooldown",

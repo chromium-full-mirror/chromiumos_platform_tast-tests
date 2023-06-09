@@ -21,7 +21,7 @@ func init() {
 		Func:         DesksCUJ,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures the performance of critical user journey for virtual desks",
-		Contacts:     []string{"chromeos-perfmetrics-eng@google.com", "ramsaroop@chromium.org"},
+		Contacts:     []string{"cros-sw-perf@google.com", "ramsaroop@chromium.org"},
 		BugComponent: "b:1045832",
 		Attr:         []string{"group:cuj"},
 		SoftwareDeps: []string{"chrome", "no_android_vm_t"},

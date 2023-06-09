@@ -22,7 +22,7 @@ func init() {
 		Desc: "Base fixture for TabSwitchCUJ with WPR",
 		Contacts: []string{
 			"xiyuan@chromium.org",
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 		},
 		Impl:            wpr.NewFixture(WPRArchiveName, wpr.Replay),
 		SetUpTimeout:    chrome.LoginTimeout + 7*time.Minute,
@@ -36,7 +36,7 @@ func init() {
 		Desc: "Composed fixture for TabSwitchCUJ with WPR",
 		Contacts: []string{
 			"xiyuan@chromium.org",
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 		},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return s.ParentValue().(wpr.FixtValue).FOpt()(ctx, s)
@@ -52,7 +52,7 @@ func init() {
 		Desc: "Composed fixture for TabSwitchCUJ with WPR",
 		Contacts: []string{
 			"xiyuan@chromium.org",
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 		},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			opts, err := s.ParentValue().(wpr.FixtValue).FOpt()(ctx, s)
@@ -75,7 +75,7 @@ func init() {
 		Desc: "Variant of tabSwitchCUJWPRAsh with BackupRefPtr enabled",
 		Contacts: []string{
 			"ramsaroop@chromium.org",
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 		},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			opts, err := s.ParentValue().(wpr.FixtValue).FOpt()(ctx, s)
@@ -96,7 +96,7 @@ func init() {
 		Desc: "Variant of tabSwitchCUJWPRAsh with all field trials enabled",
 		Contacts: []string{
 			"ramsaroop@chromium.org",
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 		},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			opts, err := s.ParentValue().(wpr.FixtValue).FOpt()(ctx, s)

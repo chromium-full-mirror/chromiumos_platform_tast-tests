@@ -23,7 +23,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "CUJ running browser benchmarks",
 		Contacts: []string{
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 			"vincentchiang@chromium.org",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS

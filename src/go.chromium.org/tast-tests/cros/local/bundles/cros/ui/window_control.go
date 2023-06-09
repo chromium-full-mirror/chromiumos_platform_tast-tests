@@ -30,7 +30,7 @@ func init() {
 		Desc:         "Check if the performance around window controlling is good enough; go/cros-ui-perftests-cq#heading=h.fwfk0yg3teo1",
 		Contacts: []string{
 			"chromeos-wm-corexp@google.com",
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 			"oshima@chromium.org",
 			"afakhry@chromium.org",
 		},

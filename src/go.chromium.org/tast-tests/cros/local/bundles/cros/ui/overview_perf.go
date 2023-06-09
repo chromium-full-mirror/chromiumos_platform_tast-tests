@@ -36,7 +36,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures animation smoothness of entering/exiting the overview mode",
 		Contacts: []string{
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 			"oshima@chromium.org",
 			"xiyuan@chromium.org",
 		},

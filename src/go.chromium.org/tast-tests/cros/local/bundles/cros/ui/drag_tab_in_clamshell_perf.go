@@ -31,7 +31,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Measures the presentation time of dragging a tab in clamshell mode",
 		Contacts: []string{
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 			"yichenz@chromium.org",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
