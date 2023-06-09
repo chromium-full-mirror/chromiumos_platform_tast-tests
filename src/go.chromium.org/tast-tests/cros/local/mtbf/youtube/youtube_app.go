@@ -43,6 +43,7 @@ const (
 	moreOptionsID    = youtubePkg + ":id/player_overflow_button"
 	optionsID        = youtubePkg + ":id/bottom_sheet_list"
 	dismissID        = youtubePkg + ":id/dismiss"
+	qualityMessageID = youtubePkg + ":id/message"
 	optionsClassName = "android.view.ViewGroup"
 	uiWaitTime       = 5 * time.Second // this is for arc-obj, not for uiauto.Context
 	retryTimes       = 3
@@ -208,7 +209,7 @@ func (y *YtApp) SearchAndPlayVideo(ctx context.Context, video VideoSrc) error {
 	)
 
 	searchButton := y.d.Object(androidui.ID(searchButtonID))
-	if err := cuj.ClickIfExist(searchButton, 2*uiWaitTime)(ctx); err != nil {
+	if err := cuj.FindAndClick(searchButton, 2*uiWaitTime)(ctx); err != nil {
 		return errors.Wrap(err, "failed to click search button")
 	}
 
@@ -310,7 +311,6 @@ func (y *YtApp) SwitchQuality(ctx context.Context, quality Quality) error {
 		qualityText                   = "Quality"
 		advancedText                  = "Advanced"
 		moreOptionsText               = "More options"
-		qualityUnavailableMessageID   = youtubePkg + ":id/message"
 		qualityUnavailableMessageText = "Quality unavailable"
 	)
 
@@ -346,7 +346,7 @@ func (y *YtApp) SwitchQuality(ctx context.Context, quality Quality) error {
 	clickAdvancedButton := func(context.Context) error {
 		// Sometimes clicking `Quality` button will show "Quality unavailable"
 		// message and changing quality will not be allowed.
-		qualityUnavailableText := y.d.Object(androidui.ID(qualityUnavailableMessageID), ui.Text(qualityUnavailableMessageText))
+		qualityUnavailableText := y.d.Object(androidui.ID(qualityMessageID), ui.Text(qualityUnavailableMessageText))
 		if err := qualityUnavailableText.WaitForExists(ctx, 3*time.Second); err == nil {
 			return errors.Errorf("%q message is shown, cannot change quality", qualityUnavailableMessageText)
 		}
@@ -413,6 +413,11 @@ func (y *YtApp) clickQualityOption(quality Quality) action.Action {
 		}
 		if err := cuj.FindAndClick(qualityOption, uiWaitTime)(ctx); err != nil {
 			return errors.Wrap(err, "failed to find/click the quality option")
+		}
+
+		qualityMessageText := y.d.Object(androidui.ID(qualityMessageID), ui.TextContains(string(quality)))
+		if err := qualityMessageText.WaitUntilGone(ctx, uiWaitTime); err != nil {
+			return errors.Wrap(err, "failed to wait the quality message gone")
 		}
 		return nil
 	}
