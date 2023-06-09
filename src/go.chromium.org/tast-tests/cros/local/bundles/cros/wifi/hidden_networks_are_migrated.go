@@ -26,6 +26,7 @@ const migrateTimeout = time.Second * 5
 
 type testConfig struct {
 	hidden bool
+	shared bool
 }
 
 func init() {
@@ -39,14 +40,28 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "hiddenNetworkMigrationEnabled",
 		Params: []testing.Param{{
-			Name: "not_hidden",
+			Name: "not_shared_and_not_hidden",
 			Val: &testConfig{
 				hidden: false,
+				shared: false,
 			},
 		}, {
-			Name: "hidden",
+			Name: "not_shared_and_hidden",
 			Val: &testConfig{
 				hidden: true,
+				shared: false,
+			},
+		}, {
+			Name: "shared_and_not_hidden",
+			Val: &testConfig{
+				hidden: false,
+				shared: true,
+			},
+		}, {
+			Name: "shared_and_hidden",
+			Val: &testConfig{
+				hidden: true,
+				shared: true,
 			},
 		}},
 		Timeout: time.Second * 60,
@@ -84,6 +99,7 @@ func HiddenNetworksAreMigrated(ctx context.Context, s *testing.State) {
 	}
 
 	isHidden := s.Param().(*testConfig).hidden
+	isShared := s.Param().(*testConfig).shared
 
 	var wifiConfigProperties *types.WiFiConfigProperties
 	if isHidden {
@@ -105,7 +121,7 @@ func HiddenNetworksAreMigrated(ctx context.Context, s *testing.State) {
 	if _, err := networkConfig.ConfigureNetwork(ctx, types.ConfigProperties{
 		TypeConfig: types.NetworkTypeConfigProperties{
 			Wifi: wifiConfigProperties,
-		}}, true /*shared*/); err != nil {
+		}}, isShared /*shared*/); err != nil {
 		s.Fatal("Failed to configure network: ", err)
 	}
 
@@ -122,9 +138,9 @@ func HiddenNetworksAreMigrated(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to migrate the hidden network: ", err)
 		}
 	} else {
-		// We sleep instead of polling since we expect that the network is not forgetten by the migration code.
-		// The migration code is triggered once every minute, and since we don't know when the last time it was
-		// triggered was we must wait at least one full minute to guarantee it has run.
+		// GoBigSleepLint: We sleep instead of polling since we expect that the network is not forgetten by the migration code.
+		// The migration code is triggered once every minute, and since we don't know when the last time it was triggered was
+		// we must wait at least one full minute to guarantee it has run.
 		testing.Sleep(ctx, migrateTimeout)
 
 		if found, err := wifiManager.HasMatchingAP(ctx, networkSSID); err != nil {
