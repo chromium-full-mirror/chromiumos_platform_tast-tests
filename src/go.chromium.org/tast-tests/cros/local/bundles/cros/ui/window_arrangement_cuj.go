@@ -46,7 +46,7 @@ func init() {
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Attr:         []string{"group:cuj"},
-		SoftwareDeps: []string{"chrome", "chrome_internal", "no_android_vm_t"},
+		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Timeout:      30 * time.Minute,
 		Data:         []string{"shaka_720.webm", "pip.html", cujrecorder.SystemTraceConfigFile},

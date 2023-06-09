@@ -42,7 +42,7 @@ func init() {
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Attr:         []string{"group:cuj"},
-		SoftwareDeps: []string{"chrome", "no_android_vm_t"},
+		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Params: []testing.Param{{
 			Val:     browser.TypeAsh,

@@ -104,7 +104,7 @@ func init() {
 			hwdep.SkipOnModel("kaisa"),
 			hwdep.SkipOnModel("kench"),
 		),
-		SoftwareDeps: []string{"chrome", "no_android_vm_t"},
+		SoftwareDeps: []string{"chrome"},
 		Data:         []string{cujrecorder.SystemTraceConfigFile},
 		Vars: []string{
 			"mute",

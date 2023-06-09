@@ -24,7 +24,7 @@ func init() {
 		Contacts:     []string{"cros-sw-perf@google.com", "ramsaroop@chromium.org"},
 		BugComponent: "b:1045832",
 		Attr:         []string{"group:cuj"},
-		SoftwareDeps: []string{"chrome", "no_android_vm_t"},
+		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Data:         []string{cujrecorder.SystemTraceConfigFile},
 		Timeout:      30 * time.Minute,

@@ -38,7 +38,7 @@ func init() {
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Attr:         []string{"group:cuj"},
-		SoftwareDeps: []string{"chrome", "no_android_vm_t"},
+		SoftwareDeps: []string{"chrome"},
 		Data:         []string{cujrecorder.SystemTraceConfigFile},
 		Timeout:      15 * time.Minute,
 		Params: []testing.Param{

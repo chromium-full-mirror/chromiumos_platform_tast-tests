@@ -88,7 +88,7 @@ func init() {
 			"oshima@google.com",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
-		SoftwareDeps: []string{"chrome", "no_android_vm_t"},
+		SoftwareDeps: []string{"chrome"},
 		VarDeps: []string{
 			"ui.signinProfileTestExtensionManifestKey",
 			"ui.gaiaPoolDefault",
