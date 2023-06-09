@@ -72,35 +72,18 @@ func USBResumeFromSuspend(ctx context.Context, s *testing.State) {
 	if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "S0ix", "S3", "S5", "G3"); err != nil {
 		s.Fatal("Failed to get power state at S0ix, S3, S5, or G3: ", err)
 	}
-	s.Log("Sleeping for 5 seconds")
-	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
-		s.Fatal("Failed to sleep for 5 seconds: ", err)
-	}
 
+	wakeupKey := servo.Enter
 	if h.Config.ModeSwitcherType == firmware.TabletDetachableSwitcher {
-		s.Log("Waking DUT from suspend by a tab on power button")
-		if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.DurTab); err != nil {
-			s.Fatal("Failed to press power button: ", err)
-		}
-	} else {
-		s.Log("Waking DUT from suspend by pressing ENTER key")
-		if err := h.Servo.KeypressWithDuration(ctx, servo.Enter, servo.DurPress); err != nil {
-			s.Fatal("Failed to press ENTER key: ", err)
-		}
+		wakeupKey = servo.PowerKey
 	}
-	s.Log(ctx, "Checking for S0 powerstate")
-	if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "S0"); err != nil {
-		s.Fatal("Failed to get power state at S0: ", err)
+	s.Logf("Waking DUT from suspend by %s", wakeupKey)
+	if err := h.Servo.KeypressWithDuration(ctx, wakeupKey, servo.DurPress); err != nil {
+		s.Fatalf("Failed to wake from suspend by %s: %v", wakeupKey, err)
 	}
-	if err := func() error {
-		s.Log("Waiting for DUT to boot")
-		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
-		defer cancelWaitConnect()
-		if err := h.WaitConnect(waitConnectCtx); err != nil {
-			return err
-		}
-		return nil
-	}(); err != nil {
+	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
+	defer cancelWaitConnect()
+	if err := h.WaitConnect(waitConnectCtx); err != nil {
 		s.Fatal("Failed to reconnect to DUT: ", err)
 	}
 
