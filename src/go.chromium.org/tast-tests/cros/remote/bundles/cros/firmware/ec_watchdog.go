@@ -38,7 +38,8 @@ func ECWatchdog(ctx context.Context, s *testing.State) {
 		// exceed the hardware watchdog timer because the timer isn't 100% reliable.
 		// If there are other platforms that use a longer watchdog timeout, this
 		// may need to be adjusted.
-		watchdogDelay = 3700 * time.Millisecond
+		watchdogDelayMS = 3700
+		watchdogDelay   = watchdogDelayMS * time.Millisecond
 		// Delay of EC power on.
 		ecBootDelay = 1000 * time.Millisecond
 	)
@@ -58,18 +59,23 @@ func ECWatchdog(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to fetch current boot ID: ", err)
 	}
 
-	s.Log("Trigger a watchdog reset and power on system again")
+	s.Log("Trigger an IO sync")
 	err = h.DUT.Conn().CommandContext(ctx, "sync").Run(ssh.DumpLogOnError)
 	if err != nil {
 		s.Fatal("Failed to sync IO on DUT before calling watchdog: ", err)
 	}
-	s.Log("Trigger watchdog event")
-	err = h.Servo.RunECCommand(ctx, fmt.Sprintf("waitms %d", watchdogDelay))
+
+	cmd := fmt.Sprintf("waitms %d", watchdogDelayMS)
+	s.Logf("Trigger watchdog event %q", cmd)
+	err = h.Servo.RunECCommand(ctx, cmd)
 	if err != nil {
 		s.Fatal("Failed to send watchdog timer command to EC: ", err)
 	}
-	s.Log("Sleep during watchdog reset")
-	if err = testing.Sleep(ctx, watchdogDelay+ecBootDelay); err != nil {
+
+	delay := time.Duration(watchdogDelay + ecBootDelay)
+	s.Logf("Sleep %s during watchdog reset", delay)
+	// GoBigSleepLint: wait for watchdog to kick in and reset
+	if err = testing.Sleep(ctx, delay); err != nil {
 		s.Fatal("Failed to sleep during waiting for EC to get up: ", err)
 	}
 	s.Log("Wait for DUT to reconnect")
@@ -82,4 +88,6 @@ func ECWatchdog(ctx context.Context, s *testing.State) {
 	if newBootID == oldBootID {
 		s.Fatal("Failed to reboot trigger watchdog reset, old boot ID is the same as new boot ID")
 	}
+
+	s.Logf("Boot ID old: %s, new: %s", newBootID, oldBootID)
 }
