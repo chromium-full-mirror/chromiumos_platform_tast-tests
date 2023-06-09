@@ -56,6 +56,14 @@ func init() {
 				Timeout:           7 * time.Minute, // A lenient limit for launching Lacros Chrome.
 				Val:               browser.TypeLacros,
 			},
+			{
+				Name:              "lacros_fake_vcd",
+				Fixture:           "chromeVideoLacrosWithFakeWebcam",
+				ExtraAttr:         []string{"informational"},
+				ExtraSoftwareDeps: []string{"lacros"},
+				Timeout:           7 * time.Minute, // A lenient limit for launching Lacros Chrome.
+				Val:               browser.TypeLacros,
+			},
 		},
 		BugComponent: "b:978428",
 	})
