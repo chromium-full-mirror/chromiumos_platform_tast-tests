@@ -22,6 +22,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/pointer"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 	"go.chromium.org/tast/core/ctxutil"
@@ -144,6 +145,17 @@ func GoogleSlidesCUJ(ctx context.Context, s *testing.State) {
 		s.Logf("Going through the Google Slides file for %s", slidesScrollTimeout)
 
 		ac := uiauto.New(tconn)
+		slidesRootWebArea := nodewith.NameContaining("Google Slides").Role(role.RootWebArea)
+		documentContentFocused := nodewith.Name("Document content").Role(role.TextField).Ancestor(slidesRootWebArea).Focused()
+		if err := uiauto.Combine("click web area to focus on web content",
+			ac.LeftClick(slidesRootWebArea),
+			// Click at |slidesRootWebArea| might focus on the web area or
+			// the document content.
+			// Both focused status indicate the web content is focused.
+			ac.WaitUntilAnyExists(slidesRootWebArea.Focused(), documentContentFocused),
+		)(ctx); err != nil {
+			return err
+		}
 
 		// Keep track of the number of iterations we run the
 		// scroll-down cycle for. This allows us to control how often
