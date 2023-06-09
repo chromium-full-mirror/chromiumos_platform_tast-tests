@@ -18,7 +18,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/power"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -381,6 +380,47 @@ func init() {
 			DarkTheme:          EnableLightTheme,
 			KeyboardBrightness: SetKbBrightnessToZero,
 		}, PowerFixtureOptions{BrowserType: browser.TypeLacros}),
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: tearDownTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: "powerAshPlatformAudio",
+		Desc: "PowerAsh customized for testing platform audio features",
+		Contacts: []string{
+			"chromeos-platform-power@google.com",
+			"mqg@chromium.org",
+			"aaronyu@google.com",
+		},
+		Impl: NewPowerUIFixture(
+			PowerTestOptions{
+				// CRAS depends on Chrome for DLC and features service.
+				UI: DoNotChangeUI,
+				// Audio should be handled within the test itself.
+				Audio: DoNotChangeAudio,
+				// Minimize interference.
+				KeyboardBrightness: SetKbBrightnessToZero,
+				Wifi:               DisableWifiInterfaces,
+				Backlight:          SetBacklightToZero,
+				// Disable these features even though we already set brightness to 0,
+				// just in case that nightlight/dark theme brings stress to the CPU.
+				NightLight: DisableNightLight,
+				DarkTheme:  EnableLightTheme,
+			},
+			PowerFixtureOptions{
+				BrowserType: browser.TypeAsh,
+				BrowserExtraOpts: []chrome.Option{
+					// Prevent interference of audio preferences.
+					// See go/tast-fakecrasaudioclient.
+					chrome.ExtraArgs("--use-fake-cras-audio-client-for-dbus"),
+					// Feature flags.
+					chrome.EnableFeatures("CrOSLateBootAudioAPNoiseCancellation"),
+				},
+			},
+		),
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: tearDownTimeout,
