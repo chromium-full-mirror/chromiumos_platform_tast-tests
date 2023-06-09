@@ -53,6 +53,8 @@ type timeoutError struct {
 	*errors.E
 }
 
+var getKBLightFnc func(h *firmware.Helper, ctx context.Context) (int, error)
+
 // CheckKeyboardBacklightFunctionality confirms keyboard backlight support and verifies its functionality.
 func CheckKeyboardBacklightFunctionality(ctx context.Context, s *testing.State) {
 	h := s.FixtValue().(*fixture.Value).Helper
@@ -73,12 +75,6 @@ func CheckKeyboardBacklightFunctionality(ctx context.Context, s *testing.State) 
 
 	if err := h.RequireRPCClient(ctx); err != nil {
 		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
-	}
-
-	// Temporary sleep would help prevent the streaming RPC call error.
-	s.Log("Sleeping for a few seconds before starting a new Chrome")
-	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
-		s.Fatal("Failed to sleep for a few seconds: ", err)
 	}
 
 	s.Log("Starting a new Chrome")
@@ -115,38 +111,6 @@ func CheckKeyboardBacklightFunctionality(ctx context.Context, s *testing.State) 
 		}
 	}()
 
-	// Current hardware depencies might miss out on DUTs that actually don't
-	// support keyboard backlight. "EC_KB_BL_EN" and "KB_BL_EN" appear to be
-	// two common names for the gpio in control. Checking whether these gpios
-	// exist would probably help with better sorting out the false positives.
-	// The list may expand to include more gpio names.
-	kbLightGpioNames := []string{"EC_KB_BL_EN", "KB_BL_EN"}
-	s.Logf("Checking if the following keyboard backlight gpios exist: %s", strings.Join(kbLightGpioNames, ", "))
-	if err := grepKbLightGPIO(ctx, h, kbLightGpioNames); err != nil {
-		s.Log("Unexpected output when checking on gpio: ", err)
-	}
-
-	s.Log("Checking for available led paths")
-	ledPaths := "/sys/class/leds"
-	out, err := s.DUT().Conn().CommandContext(ctx, "ls", ledPaths).Output()
-	if err != nil {
-		s.Log("Could not list '/sys/class/leds': ", err)
-	} else {
-		var paths []string
-		for _, val := range strings.Split(string(out), "\n") {
-			if val == "" {
-				continue
-			}
-			paths = append(paths, strings.TrimSpace(val))
-		}
-		s.Logf("Found %s", paths)
-	}
-
-	initValue, err := checkInitKBBacklight(ctx, h)
-	if err != nil {
-		s.Fatal("Failed to check initial keybaord backlight value: ", err)
-	}
-
 	kbLightUp := "<f7>"
 	kbLightDown := "<f6>"
 	modelsWithShiftedShortcuts := []string{"atlas", "eve"}
@@ -161,6 +125,15 @@ func CheckKeyboardBacklightFunctionality(ctx context.Context, s *testing.State) 
 	}(h.Model, modelsWithShiftedShortcuts) {
 		kbLightUp = "<f6>"
 		kbLightDown = "<f5>"
+	}
+
+	// Initialize the method for getting kb light value.
+	getKBLightFnc = func(h *firmware.Helper, ctx context.Context) (int, error) {
+		return h.Servo.GetKBBacklight(ctx)
+	}
+	initValue, err := checkInitKBBacklight(ctx, h, kbLightUp)
+	if err != nil {
+		s.Fatal("Failed to check initial keybaord backlight value: ", err)
 	}
 	switch initValue {
 	case 0:
@@ -228,21 +201,15 @@ func CheckKeyboardBacklightFunctionality(ctx context.Context, s *testing.State) 
 }
 
 // checkInitKBBacklight presses on a key and checks the initial keyboard backlight value.
-func checkInitKBBacklight(ctx context.Context, h *firmware.Helper) (int, error) {
-	// Press on a key and check the initial keyboard brightness value.
-	if err := h.Servo.KeypressWithDuration(ctx, servo.Enter, servo.DurPress); err != nil {
-		return 0, errors.Wrap(err, "failed to press ENTER to check initial kb backlight")
+func checkInitKBBacklight(ctx context.Context, h *firmware.Helper, initPress string) (int, error) {
+	// Press kb-light-up shortcut and check for the initial keyboard brightness value.
+	if err := pressShortcut(ctx, h, initPress); err != nil {
+		return 0, errors.Wrap(err, "failed to check initial kb backlight")
 	}
-	// Delay by 1 second to wait for keyboard to be lit up.
-	if err := testing.Sleep(ctx, time.Second); err != nil {
-		return 0, errors.Wrap(err, "error in sleeping for 1 second after pressing on the ENTER key")
-	}
-
-	kbLight, err := h.Servo.GetKBBacklight(ctx)
+	kbLight, err := getKBLightFnc(h, ctx)
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to get kb backlight")
 	}
-
 	return kbLight, nil
 }
 
@@ -268,23 +235,9 @@ func adjustKBBacklight(ctx context.Context, h *firmware.Helper, d *dut.DUT, extr
 		testing.ContextLog(ctx, "Checking initial kb light pwm failed: ", err)
 	}
 
-	kbLight, err := h.Servo.GetKBBacklight(ctx)
+	kbLight, err := getKBLightFnc(h, ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to get kb backlight")
-	}
-
-	// Log output from running the 'backlight_tool' command. If kb light is absent,
-	// this command would return: 'No backlight in /sys/class/leds matched by *:kbd_backlight'.
-	// Otherwise, it will respond with a kb light percentage value. To-do: Verify its accuracy
-	// first via the test script, and potentially move it to hwdep.KeyboardBacklight() later.
-	hasKbLight := true
-	out, err := h.DUT.Conn().CommandContext(ctx, "backlight_tool", "--keyboard", "--get_brightness").CombinedOutput()
-	if err != nil {
-		testing.ContextLog(ctx, "Could not obtain output from backlight_tool: ", err)
-	}
-	outStr := strings.TrimSpace(string(out))
-	if strings.Contains(outStr, "No backlight in") {
-		hasKbLight = false
 	}
 
 	// Set a specific duration on adjusting the kb light.
@@ -292,32 +245,32 @@ func adjustKBBacklight(ctx context.Context, h *firmware.Helper, d *dut.DUT, extr
 	for shouldContinue(kbLight, extremeValue, action) {
 		timeNow := time.Now()
 		if timeNow.After(endTime) {
+			// If checking KB light value from ec failed, scan the powerd log instead.
+			getKBLightFnc = func(h *firmware.Helper, ctx context.Context) (int, error) {
+				return getKBLightValFromPowerd(ctx, h)
+			}
+			kbLightPowerd, err := getKBLightFnc(h, ctx)
+			if err != nil {
+				testing.ContextLog(ctx, "Failed to get kb backlight from the powerd log")
+			}
+			if !shouldContinue(kbLightPowerd, extremeValue, action) {
+				return nil
+			}
 			// At timeout, check the final pwm value for kb light if it exists.
 			finalPwm, err := checkKbLightPwm(ctx, d)
 			if err != nil {
 				testing.ContextLog(ctx, "Checking final kb light pwm failed: ", err)
 			}
 			hwdepResults := checkKBLightDependency(ctx, h)
-			// Check for KB brightness from the powerd log at timeout.
-			bashCmd := "grep keyboard_backlight_controller.*Setting' 'brightness /var/log/power_manager/powerd.LATEST | tail -1"
-			out, err := h.DUT.Conn().CommandContext(ctx, "bash", "-c", bashCmd).Output()
-			if err != nil {
-				testing.ContextLog(ctx, "Capturing powerd log failed: ", err)
-			}
-			kbLightLog := "unknwon"
-			if len(out) != 0 {
-				output := strings.TrimSpace(string(out))
-				kbLightLog = output[strings.Index(output, "Setting"):]
-			}
 			return &timeoutError{E: errors.Errorf(
-				"timeout in adjusting kb backlight. Got kb light initial pwm val: %s, final pwm val: %s, and hwdep val: %q, backlight_tool returns kb light present: %t, powerd log: %s",
-				initialPwm, finalPwm, hwdepResults, hasKbLight, kbLightLog)}
+				"timeout in adjusting kb backlight. Got kb light initial pwm val: %s, final pwm val: %s, and hwdep val: %q, powerd log: %d",
+				initialPwm, finalPwm, hwdepResults, kbLightPowerd)}
 		}
 		testing.ContextLogf(ctx, "Attempting to match, current: %d, expected: %d", kbLight, extremeValue)
 		if err := pressShortcut(ctx, h, actionKey); err != nil {
 			return errors.Wrap(err, "failed to adjust kb backlight brightness")
 		}
-		kbLight, err = h.Servo.GetKBBacklight(ctx)
+		kbLight, err = getKBLightFnc(h, ctx)
 		if err != nil {
 			return errors.Wrap(err, "failed to get kb backlight")
 		}
@@ -353,37 +306,6 @@ func pressShortcut(ctx context.Context, h *firmware.Helper, actionKey string) er
 		return nil
 	}(ctx); err != nil {
 		return err
-	}
-	return nil
-}
-
-// grepKbLightGPIO accepts a list of gpio names, and logs their values if found.
-func grepKbLightGPIO(ctx context.Context, h *firmware.Helper, gpios []string) error {
-	if err := h.Servo.RunECCommand(ctx, "chan save"); err != nil {
-		return errors.Wrap(err, "failed to send 'chan save' to EC")
-	}
-	if err := h.Servo.RunECCommand(ctx, "chan 0"); err != nil {
-		return errors.Wrap(err, "failed to send 'chan 0' to EC")
-	}
-	for _, name := range gpios {
-		var (
-			reFoundGpio    = regexp.MustCompile(fmt.Sprintf(`(?i)(0|1)[^\n\r]*\s%s`, name))
-			reNotFoundGpio = regexp.MustCompile(`Parameter\s+(\d+)\s+invalid`)
-			checkGpio      = `(` + reFoundGpio.String() + `|` + reNotFoundGpio.String() + `)`
-		)
-		cmd := fmt.Sprintf("gpioget %s", name)
-		out, err := h.Servo.RunECCommandGetOutput(ctx, cmd, []string{checkGpio})
-		if err != nil {
-			return errors.Wrapf(err, "failed to run command %v, got error", cmd)
-		}
-		if match := reFoundGpio.FindStringSubmatch(out[0][0]); match != nil {
-			testing.ContextLogf(ctx, "Found gpio %s with value %s", name, match[1])
-		} else {
-			testing.ContextLogf(ctx, "Did not find gpio: %s", name)
-		}
-	}
-	if err := h.Servo.RunECCommand(ctx, "chan restore"); err != nil {
-		return errors.Wrap(err, "failed to send 'chan restore' to EC")
 	}
 	return nil
 }
@@ -426,4 +348,19 @@ func checkKBLightDependency(ctx context.Context, h *firmware.Helper) map[string]
 		hwdepValsMap[path] = string(kbLight)
 	}
 	return hwdepValsMap
+}
+
+// getKBLightValFromPowerd captures the keyboard backlight value from the powerd log.
+func getKBLightValFromPowerd(ctx context.Context, h *firmware.Helper) (int, error) {
+	bashCmd := "grep keyboard_backlight_controller.*Setting' 'brightness /var/log/power_manager/powerd.LATEST | tail -1"
+	out, err := h.DUT.Conn().CommandContext(ctx, "bash", "-c", bashCmd).Output()
+	if err != nil {
+		return 0, err
+	}
+	reg := regexp.MustCompile(`Setting brightness to (\d+)`)
+	val := reg.FindSubmatch(out)
+	if len(val) == 0 {
+		return 0, errors.New("unable to find match for kb backlight brightness value")
+	}
+	return strconv.Atoi(string(val[1]))
 }
