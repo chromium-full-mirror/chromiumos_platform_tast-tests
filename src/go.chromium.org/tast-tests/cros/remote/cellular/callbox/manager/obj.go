@@ -73,6 +73,8 @@ const (
 	CellularTechnologyWCDMA CellularTechnology = "WCDMA"
 	// CellularTechnologyNR5GNSA represents a 5G NSA cellular network.
 	CellularTechnologyNR5GNSA CellularTechnology = "NR5G_NSA"
+	// CellularTechnologyNR5GSA represents a 5G SA cellular network.
+	CellularTechnologyNR5GSA CellularTechnology = "NR5G_SA"
 )
 
 // IPAddressType represents a network IP type.
@@ -189,6 +191,7 @@ const (
 type CellConfiguration struct {
 	Band                   Band              `json:"band,omitempty"`
 	Bandwidth              Bandwidth         `json:"bw,omitempty"`
+	NRARFCN                int               `json:"nr_arfcn,omitempty"`
 	Mimo                   MimoMode          `json:"mimo,omitempty"`
 	RxPower                RxPower           `json:"pdl,omitempty"`
 	TxPower                TxPower           `json:"pul,omitempty"`
@@ -252,6 +255,13 @@ func TxPowerOption(power TxPower) CellOption {
 func DRXOption(DRX *DRXConfiguration) CellOption {
 	return func(opt *CellConfiguration) {
 		opt.DRX = DRX
+	}
+}
+
+// NRARFCNOption configures the cell NR ARFCN (frequency channel).
+func NRARFCNOption(nrARFCN int) CellOption {
+	return func(opt *CellConfiguration) {
+		opt.NRARFCN = nrARFCN
 	}
 }
 

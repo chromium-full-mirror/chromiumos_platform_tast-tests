@@ -31,9 +31,8 @@ func init() {
 			{
 				// names are defined <tech>_<#CCs>_<MIMO>_<CA BANDS>
 				Name:      "lte_cc1_x1_b3",
-				ExtraAttr: []string{"cellular_cmw_callbox"},
+				ExtraAttr: []string{"cellular_cmw_callbox", "cellular_cmx_callbox"},
 				Val: &manager.ConfigureCallboxRequestBody{
-					Hardware:     manager.CallboxHardwareCMW,
 					CellularType: manager.CellularTechnologyLTE,
 					Parameters: []manager.CellConfiguration{
 						manager.NewLteCellConfiguration(
@@ -45,9 +44,8 @@ func init() {
 			},
 			{
 				Name:      "lte_cc1_x2_b3",
-				ExtraAttr: []string{"cellular_cmw_callbox"},
+				ExtraAttr: []string{"cellular_cmw_callbox", "cellular_cmx_callbox"},
 				Val: &manager.ConfigureCallboxRequestBody{
-					Hardware:     manager.CallboxHardwareCMW,
 					CellularType: manager.CellularTechnologyLTE,
 					Parameters: []manager.CellConfiguration{
 						manager.NewLteCellConfiguration(
@@ -59,9 +57,8 @@ func init() {
 			},
 			{
 				Name:      "lte_cc2_x1x1_b3b7",
-				ExtraAttr: []string{"cellular_cmw_callbox"},
+				ExtraAttr: []string{"cellular_cmw_callbox", "cellular_cmx_callbox"},
 				Val: &manager.ConfigureCallboxRequestBody{
-					Hardware:     manager.CallboxHardwareCMW,
 					CellularType: manager.CellularTechnologyLTE,
 					Parameters: []manager.CellConfiguration{
 						manager.NewLteCellConfiguration(
@@ -80,9 +77,8 @@ func init() {
 				// 3CA not supported on FM101.
 				// TODO(b/275646150) group models by modem in cellular.knownVariants to make modem-bases restrictions more complete.
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("pujjo")),
-				ExtraAttr:         []string{"cellular_cmw_callbox"},
+				ExtraAttr:         []string{"cellular_cmw_callbox", "cellular_cmx_callbox"},
 				Val: &manager.ConfigureCallboxRequestBody{
-					Hardware:     manager.CallboxHardwareCMW,
 					CellularType: manager.CellularTechnologyLTE,
 					Parameters: []manager.CellConfiguration{
 						manager.NewLteCellConfiguration(
@@ -104,10 +100,7 @@ func init() {
 				Name: "lte_cc1_x4_b3",
 				// 4x4 lte is only supported on CMX
 				ExtraAttr: []string{"cellular_cmx_callbox"},
-				// TODO(b/273954565): remove hwdep once drone push has landed so R&S carrier names can be used
-				ExtraHardwareDeps: hwdep.D(hwdep.Model("vell")),
 				Val: &manager.ConfigureCallboxRequestBody{
-					Hardware:     manager.CallboxHardwareCMX,
 					CellularType: manager.CellularTechnologyLTE,
 					Parameters: []manager.CellConfiguration{
 						manager.NewLteCellConfiguration(
@@ -118,12 +111,26 @@ func init() {
 				},
 			},
 			{
-				Name:      "nr5g_cc1_x1_b1n78",
+				Name:      "lte_cc2_x4x4_b3b7",
 				ExtraAttr: []string{"cellular_cmx_callbox"},
-				// TODO(b/273954565): remove hwdep once drone push has landed so R&S carrier names can be used
-				ExtraHardwareDeps: hwdep.D(hwdep.Model("vell")),
 				Val: &manager.ConfigureCallboxRequestBody{
-					Hardware:     manager.CallboxHardwareCMX,
+					CellularType: manager.CellularTechnologyLTE,
+					Parameters: []manager.CellConfiguration{
+						manager.NewLteCellConfiguration(
+							manager.BandOption(3),
+							manager.AntennaOption(manager.MimoMode4x4, manager.TransmissionMode3),
+						),
+						manager.NewLteCellConfiguration(
+							manager.BandOption(7),
+							manager.AntennaOption(manager.MimoMode4x4, manager.TransmissionMode3),
+						),
+					},
+				},
+			},
+			{
+				Name:      "nr5gnsa_cc2_x4x4_b1n78",
+				ExtraAttr: []string{"cellular_cmx_callbox"},
+				Val: &manager.ConfigureCallboxRequestBody{
 					CellularType: manager.CellularTechnologyNR5GNSA,
 					Parameters: []manager.CellConfiguration{
 						manager.NewLteCellConfiguration(
@@ -132,6 +139,110 @@ func init() {
 						),
 						manager.New5GNSACellConfiguration(
 							manager.NBandOption(78),
+							manager.AntennaOption(manager.MimoMode4x4, manager.TransmissionMode3),
+						),
+					},
+				},
+			},
+			{
+				Name:      "nr5gnsa_cc3_x4x4x4_b3b1n78",
+				ExtraAttr: []string{"cellular_cmx_callbox"},
+				Val: &manager.ConfigureCallboxRequestBody{
+					CellularType: manager.CellularTechnologyNR5GNSA,
+					Parameters: []manager.CellConfiguration{
+						manager.NewLteCellConfiguration(
+							manager.BandOption(3),
+							manager.AntennaOption(manager.MimoMode4x4, manager.TransmissionMode3),
+						),
+						manager.NewLteCellConfiguration(
+							manager.BandOption(1),
+							manager.AntennaOption(manager.MimoMode4x4, manager.TransmissionMode3),
+						),
+						manager.New5GNSACellConfiguration(
+							manager.NBandOption(78),
+							manager.AntennaOption(manager.MimoMode4x4, manager.TransmissionMode3),
+						),
+					},
+				},
+			},
+			{
+				Name:      "nr5gnsa_cc4_x4x4x4x4_b3b1b7n78",
+				ExtraAttr: []string{"cellular_cmx_callbox"},
+				Val: &manager.ConfigureCallboxRequestBody{
+					CellularType: manager.CellularTechnologyNR5GNSA,
+					Parameters: []manager.CellConfiguration{
+						manager.NewLteCellConfiguration(
+							manager.BandOption(3),
+							manager.AntennaOption(manager.MimoMode4x4, manager.TransmissionMode3),
+						),
+						manager.NewLteCellConfiguration(
+							manager.BandOption(1),
+							manager.AntennaOption(manager.MimoMode4x4, manager.TransmissionMode3),
+						),
+						manager.NewLteCellConfiguration(
+							manager.BandOption(7),
+							manager.AntennaOption(manager.MimoMode4x4, manager.TransmissionMode3),
+						),
+						manager.New5GNSACellConfiguration(
+							manager.NBandOption(78),
+							manager.AntennaOption(manager.MimoMode4x4, manager.TransmissionMode3),
+						),
+					},
+				},
+			},
+			{
+				Name:      "nr5gnsa_cc3_x4x4x4_b1n78n78",
+				ExtraAttr: []string{"cellular_cmx_callbox"},
+				Val: &manager.ConfigureCallboxRequestBody{
+					CellularType: manager.CellularTechnologyNR5GNSA,
+					Parameters: []manager.CellConfiguration{
+						manager.NewLteCellConfiguration(
+							manager.BandOption(1),
+							manager.AntennaOption(manager.MimoMode4x4, manager.TransmissionMode3),
+						),
+						manager.New5GNSACellConfiguration(
+							manager.NBandOption(78),
+							manager.NRARFCNOption(630942),
+							manager.AntennaOption(manager.MimoMode4x4, manager.TransmissionMode3),
+						),
+						manager.New5GNSACellConfiguration(
+							manager.NBandOption(78),
+							manager.NRARFCNOption(640054),
+							manager.BandwidthOption(manager.Bandwidth20MHz),
+							manager.AntennaOption(manager.MimoMode4x4, manager.TransmissionMode3),
+						),
+					},
+				},
+			},
+			{
+				Name:      "nr5gsa_cc1_x4_n78",
+				ExtraAttr: []string{"cellular_cmx_callbox"},
+				Val: &manager.ConfigureCallboxRequestBody{
+					CellularType: manager.CellularTechnologyNR5GSA,
+					Parameters: []manager.CellConfiguration{
+						manager.New5GNSACellConfiguration(
+							manager.NBandOption(78),
+							manager.AntennaOption(manager.MimoMode4x4, manager.TransmissionMode3),
+						),
+					},
+				},
+			},
+			{
+				Name:      "nr5gsa_cc2_x4x4_n78n78",
+				ExtraAttr: []string{"cellular_cmx_callbox"},
+				Val: &manager.ConfigureCallboxRequestBody{
+					CellularType: manager.CellularTechnologyNR5GSA,
+					Parameters: []manager.CellConfiguration{
+						manager.New5GNSACellConfiguration(
+							manager.NBandOption(78),
+							manager.RxPowerOption(manager.NewRxPower(-70)),
+							manager.NRARFCNOption(630942),
+							manager.AntennaOption(manager.MimoMode4x4, manager.TransmissionMode3),
+						),
+						manager.New5GNSACellConfiguration(
+							manager.NBandOption(78),
+							manager.RxPowerOption(manager.NewRxPower(-70)),
+							manager.NRARFCNOption(640054),
 							manager.AntennaOption(manager.MimoMode4x4, manager.TransmissionMode3),
 						),
 					},
