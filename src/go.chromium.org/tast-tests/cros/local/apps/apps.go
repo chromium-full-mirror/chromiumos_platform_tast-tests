@@ -385,6 +385,12 @@ var Text = App{
 	Name: "Text",
 }
 
+// Asphalt8 has details about the Asphalt8 Game app.
+var Asphalt8 = App{
+	ID:   "jabjbdmildinpcomplomlhlocemeidbl",
+	Name: "Asphalt 8",
+}
+
 // Launch launches an app specified by appID.
 func Launch(ctx context.Context, tconn *chrome.TestConn, appID string) error {
 	_, err := getInstalledAppID(ctx, tconn, func(app *ash.ChromeApp) bool { return app.AppID == appID }, nil)
