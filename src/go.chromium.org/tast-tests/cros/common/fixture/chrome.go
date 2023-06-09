@@ -58,4 +58,6 @@ const (
 	ChromeLoggedInWithInputDeviceSettingsSplit = "chromeLoggedInWithInputDeviceSettingsSplit"
 	// Logged into a user session with VM display marked as external, allowing display mode change.
 	ChromeLoggedInWithForceVMDisplayExternal = "chromeLoggedInWithForceVMDisplayExternal"
+	// Logged into a user session with Jelly enabled.
+	ChromeLoggedInWithJelly = "chromeLoggedInWithJelly"
 )
