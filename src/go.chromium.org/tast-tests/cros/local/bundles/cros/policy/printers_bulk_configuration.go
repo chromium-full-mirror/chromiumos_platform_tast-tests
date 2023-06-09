@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/strcmp"
 	"go.chromium.org/tast/core/ctxutil"
@@ -60,6 +61,11 @@ func PrintersBulkConfiguration(ctx context.Context, s *testing.State) {
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
+	}
+
+	// Internet connectivity needed because PrintersBulkConfiguration is an external data policy.
+	if err := ping.VerifyInternetConnectivity(ctx, 10*time.Second); err != nil {
+		s.Fatal("Cannot fetch external data policy, no internet connectivity: ", err)
 	}
 
 	// All the common policies that define the printers configuration, allowlist and blocklist.
