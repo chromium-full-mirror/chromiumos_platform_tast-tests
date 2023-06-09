@@ -30,8 +30,7 @@ type meetParams struct {
 	appRelight      bool
 	platformBlur    bool
 	platformRelight bool
-	// Whether to use the low res ("full") segmentation model or not.
-	useLowResModel bool
+	modelType       effects.ModelType
 }
 
 func init() {
@@ -71,13 +70,7 @@ func init() {
 				Name: "platform_blur_720p",
 				Val: meetParams{
 					platformBlur: true,
-				},
-			},
-			{
-				Name: "platform_blur_720p_low_segm",
-				Val: meetParams{
-					platformBlur:   true,
-					useLowResModel: true,
+					modelType:    effects.KHd,
 				},
 			},
 			{
@@ -90,13 +83,7 @@ func init() {
 				Name: "platform_relight_720p",
 				Val: meetParams{
 					platformRelight: true,
-				},
-			},
-			{
-				Name: "platform_relight_720p_low_segm",
-				Val: meetParams{
-					platformRelight: true,
-					useLowResModel:  true,
+					modelType:       effects.KHd,
 				},
 			},
 			{
@@ -111,6 +98,21 @@ func init() {
 				Val: meetParams{
 					platformBlur:    true,
 					platformRelight: true,
+					modelType:       effects.KHd,
+				},
+			},
+			{
+				Name: "platform_blur_720p_low_segm",
+				Val: meetParams{
+					platformBlur: true,
+					modelType:    effects.KFull,
+				},
+			},
+			{
+				Name: "platform_relight_720p_low_segm",
+				Val: meetParams{
+					platformRelight: true,
+					modelType:       effects.KFull,
 				},
 			},
 			{
@@ -118,7 +120,117 @@ func init() {
 				Val: meetParams{
 					platformBlur:    true,
 					platformRelight: true,
-					useLowResModel:  true,
+					modelType:       effects.KFull,
+				},
+			},
+			{
+				Name: "platform_blur_720p_256_fast",
+				Val: meetParams{
+					platformBlur: true,
+					modelType:    effects.K256Fast,
+				},
+			},
+			{
+				Name: "platform_relight_720p_256_fast",
+				Val: meetParams{
+					platformRelight: true,
+					modelType:       effects.K256Fast,
+				},
+			},
+			{
+				Name: "platform_blur_relight_720p_256_fast",
+				Val: meetParams{
+					platformBlur:    true,
+					platformRelight: true,
+					modelType:       effects.K256Fast,
+				},
+			},
+			{
+				Name: "platform_blur_720p_256_precise",
+				Val: meetParams{
+					platformBlur: true,
+					modelType:    effects.K256Precise,
+				},
+			},
+			{
+				Name: "platform_relight_720p_256_precise",
+				Val: meetParams{
+					platformRelight: true,
+					modelType:       effects.K256Precise,
+				},
+			},
+			{
+				Name: "platform_blur_relight_720p_256_precise",
+				Val: meetParams{
+					platformBlur:    true,
+					platformRelight: true,
+					modelType:       effects.K256Precise,
+				},
+			},
+			{
+				Name: "platform_blur_720p_384_fast",
+				Val: meetParams{
+					platformBlur: true,
+					modelType:    effects.K384Fast,
+				},
+			},
+			{
+				Name: "platform_relight_720p_384_fast",
+				Val: meetParams{
+					platformRelight: true,
+					modelType:       effects.K384Fast,
+				},
+			},
+			{
+				Name: "platform_blur_relight_720p_384_fast",
+				Val: meetParams{
+					platformBlur:    true,
+					platformRelight: true,
+					modelType:       effects.K384Fast,
+				},
+			},
+			{
+				Name: "platform_blur_720p_384_precise",
+				Val: meetParams{
+					platformBlur: true,
+					modelType:    effects.K384Precise,
+				},
+			},
+			{
+				Name: "platform_relight_720p_384_precise",
+				Val: meetParams{
+					platformRelight: true,
+					modelType:       effects.K384Precise,
+				},
+			},
+			{
+				Name: "platform_blur_relight_720p_384_precise",
+				Val: meetParams{
+					platformBlur:    true,
+					platformRelight: true,
+					modelType:       effects.K384Precise,
+				},
+			},
+			{
+				Name: "platform_blur_720p_512v4036",
+				Val: meetParams{
+					platformBlur: true,
+					modelType:    effects.K512v4036,
+				},
+			},
+			{
+				Name: "platform_relight_720p_512v4036",
+				Val: meetParams{
+					platformRelight: true,
+					modelType:       effects.K512v4036,
+				},
+			},
+			{
+				Name: "platform_blur_relight_720p_512v4036",
+				Val: meetParams{
+					platformBlur:    true,
+					platformRelight: true,
+					modelType:       effects.K512v4036,
 				},
 			},
 		},
@@ -175,6 +287,18 @@ func BenchmarkingMeet(ctx context.Context, s *testing.State) {
 	}
 	defer cleanup(closeCtx)
 
+	cleanupApply, err := effects.ApplyPlatformEffects(ctx, param.platformBlur, param.platformRelight, param.modelType)
+	if err != nil {
+		s.Fatal("Failed to apply platform effects: ", err)
+	}
+	if cleanupApply != nil {
+		defer func() {
+			if err := cleanupApply(ctx); err != nil {
+				s.Error("Failed to clean up apply platform effects: ", err)
+			}
+		}()
+	}
+
 	gm, err := googlemeet.StartNewMeeting(ctx, cr, br, conn,
 		map[string]string{
 			"e": "ForceSegmentationModelVariant::GpuMid",
@@ -196,18 +320,6 @@ func BenchmarkingMeet(ctx context.Context, s *testing.State) {
 		gm.ApplyVideoEffects(gm.SetEffectBlur(param.appBlur)),
 	)(ctx); err != nil {
 		s.Fatal("Failed to configure Meet: ", err)
-	}
-
-	cleanupApply, err := effects.ApplyPlatformEffects(ctx, param.platformBlur, param.platformRelight, param.useLowResModel)
-	if err != nil {
-		s.Fatal("Failed to apply platform effects: ", err)
-	}
-	if cleanupApply != nil {
-		defer func() {
-			if err := cleanupApply(ctx); err != nil {
-				s.Error("Failed to clean up apply platform effects: ", err)
-			}
-		}()
 	}
 
 	testing.ContextLog(ctx, "Letting things settle for 5 seconds")
