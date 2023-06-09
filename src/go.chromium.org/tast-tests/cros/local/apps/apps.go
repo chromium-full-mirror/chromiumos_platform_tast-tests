@@ -391,6 +391,12 @@ var Asphalt8 = App{
 	Name: "Asphalt 8",
 }
 
+// SuperTuxKart has details about the SuperTuxKart Game app.
+var SuperTuxKart = App{
+	ID:   "pcngdpbcmobdidkoebcgkdfnfiigcpmg",
+	Name: "SuperTuxKart",
+}
+
 // Launch launches an app specified by appID.
 func Launch(ctx context.Context, tconn *chrome.TestConn, appID string) error {
 	_, err := getInstalledAppID(ctx, tconn, func(app *ash.ChromeApp) bool { return app.AppID == appID }, nil)

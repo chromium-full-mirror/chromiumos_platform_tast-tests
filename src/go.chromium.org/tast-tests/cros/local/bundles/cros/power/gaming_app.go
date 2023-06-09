@@ -52,6 +52,12 @@ func init() {
 					game: gameapp.NewAsphalt8,
 				},
 			},
+			{
+				Name: "super_tux_kart",
+				Val: gamingAppParams{
+					game: gameapp.NewSuperTuxKart,
+				},
+			},
 		},
 	})
 }
@@ -60,6 +66,7 @@ func init() {
 func GamingApp(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(setup.PowerUIFixtureData).Cr
 	a := s.FixtValue().(setup.PowerUIFixtureData).ARC
+
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
