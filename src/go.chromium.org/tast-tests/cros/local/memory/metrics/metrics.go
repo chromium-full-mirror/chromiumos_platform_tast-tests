@@ -184,20 +184,11 @@ func LogMemoryStats(ctx context.Context, base *BaseMemoryStats, a *arc.ARC, p *p
 
 	var vmSummary *memoryarc.VMSummary
 	if a != nil {
-		const dumpsysRetries = 3
-		for i := 0; i < dumpsysRetries; i++ {
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
 			vmSummary, err = memoryarc.GetDumpsysMeminfoMetrics(ctx, a, outdir, suffix)
-			if err != nil {
-				testing.ContextLog(ctx, "Failed to collect ARC dumpsys meminfo metrics: ", err)
-				if err := testing.Sleep(ctx, 5*time.Second); err != nil {
-					return errors.Wrap(err, "failed to sleep between dumpsys meminfo retries")
-				}
-			} else {
-				break
-			}
-		}
-		if vmSummary == nil {
-			testing.ContextLogf(ctx, "Failed to collect ARC dumpsys meminfo metrics after %d tries", dumpsysRetries)
+			return err
+		}, &testing.PollOptions{Timeout: time.Minute, Interval: 5 * time.Second}); err != nil {
+			testing.ContextLog(ctx, "Failed to collect ARC dumpsys meminfo metrics: ", err)
 		}
 	}
 
