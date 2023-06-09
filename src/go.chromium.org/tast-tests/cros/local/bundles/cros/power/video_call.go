@@ -6,6 +6,7 @@ package power
 
 import (
 	"context"
+	"regexp"
 	"time"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -89,14 +90,15 @@ func VideoCall(ctx context.Context, s *testing.State) {
 	}
 	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
 
-	uiauto := uiauto.New(tconn)
+	ui := uiauto.New(tconn)
 
 	// TODO(b/280888518): Add preset
 	const (
-		urlVideo       = "https://storage.googleapis.com/chromiumos-test-assets-public/power_VideoCall/power_VideoCall.webrtc.html?preset=high"
-		urlDoc         = "http://crospower.page.link/power_VideoCall_doc"
-		permBubbleName = "storage.googleapis.com wants to"
-		titleDoc       = "power_VideoCall Doc"
+		urlVideo            = "https://storage.googleapis.com/chromiumos-test-assets-public/power_VideoCall/power_VideoCall.webrtc.html?preset=high"
+		urlDoc              = "http://crospower.page.link/power_VideoCall_doc"
+		permBubbleName      = "storage.googleapis.com wants to"
+		cameraDataNameRegex = "id : camera_.* fps: .*"
+		titleDoc            = "power_VideoCall Doc"
 	)
 
 	// Open a VideoWindow and snap to the left
@@ -158,15 +160,27 @@ func VideoCall(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to navigate: ", err)
 	}
 
+	// Check whether we need camera permission by find one of these
+	// * Allow button for camera permission
+	// * cameraData node which indicate that the camera is already recorded
 	bubble := nodewith.NameStartingWith(permBubbleName).First()
 	allow := nodewith.Name("Allow").Role(role.Button).Ancestor(bubble)
-	if err := uiauto.WaitUntilExists(allow)(ctx); err != nil {
+	cameraData := nodewith.NameRegex(regexp.MustCompile(cameraDataNameRegex)).First()
+
+	foundNode, err := ui.FindAnyExists(ctx, allow, cameraData)
+	if err != nil {
 		s.Fatal("Failed to find the permission bubble: ", err)
 	}
 
+	// Click the allow button if found, and wait until cameraData node exists
 	pc := pointer.NewMouse(tconn)
-	if err := pc.Click(allow)(ctx); err != nil {
-		s.Fatal("Failed to click permission bubble: ", err)
+	if foundNode == allow {
+		if err := pc.Click(allow)(ctx); err != nil {
+			s.Fatal("Failed to click permission bubble: ", err)
+		}
+		if err := ui.WaitUntilExists(cameraData)(ctx); err != nil {
+			s.Fatal("Failed to find the fps data note: ", err)
+		}
 	}
 
 	// GoBigSleepLint: Wait 5 seconds for WebRTC bandwidth to stabilize
