@@ -238,6 +238,8 @@ func ArcYoutubeCUJ(ctx context.Context, s *testing.State) {
 			if err := d.PressKeyCode(ctx, ui.KEYCODE_TAB, 0); err != nil {
 				return errors.Wrap(err, "failed to press TAB")
 			}
+			// Capture screenshot of the options list for further debugging.
+			recorder.CustomScreenshot(ctx)
 			if err := d.PressKeyCode(ctx, ui.KEYCODE_ENTER, 0); err != nil {
 				return errors.Wrap(err, "failed to press ENTER")
 			}
