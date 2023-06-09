@@ -13,6 +13,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
+	"go.chromium.org/tast-tests/cros/local/arc/swap"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 
@@ -428,7 +429,7 @@ func init() {
 				chrome.ExtraArgs(DisableSyncFlags()...),
 			}, nil
 		}, "SKIP_SWAP_TBW_MANAGEMENT=true"),
-		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
+		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + swap.UnrestrictedTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,

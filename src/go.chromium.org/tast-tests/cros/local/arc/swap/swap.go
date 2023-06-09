@@ -9,6 +9,7 @@ import (
 	"context"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/shirou/gopsutil/v3/process"
 
@@ -47,7 +48,10 @@ const (
 )
 
 const (
-	daemonStoreBase = "/run/daemon-store/crosvm"
+	// UnrestrictedTimeout is the maximum amount of time that swapping out is
+	// expected to take when ARC is running with chrome.UnRestrictARCCPU().
+	UnrestrictedTimeout = 60 * time.Second
+	daemonStoreBase     = "/run/daemon-store/crosvm"
 )
 
 var (
