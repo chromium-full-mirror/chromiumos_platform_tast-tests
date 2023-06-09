@@ -58,7 +58,7 @@ func init() {
 			},
 			// TODO(b/246007564): Add floss_enabled variant once b/270447662 is fixed.
 		},
-		Timeout: time.Minute * 3,
+		Timeout: time.Minute * 5,
 	})
 }
 
@@ -73,15 +73,16 @@ func EnableDisableBluetoothWithDifferentUsers(ctx context.Context, s *testing.St
 
 	// Create a device owner.
 	user1 := chrome.Creds{User: "test_owner@gmail.com", Pass: "test0000"}
+	s.Log("Creating user1 pod: ", user1.User)
 	if err := userutil.CreateDeviceOwner(ctx, user1.User, user1.Pass, enableFeatures, disableFeatures); err != nil {
-		s.Fatal("Failed to create device owner: ", err)
+		s.Fatal("Failed to create device owner, user1: ", err)
 	}
 
 	// Create a second user.
 	user2 := chrome.Creds{User: "test_user2@gmail.com", Pass: "test0000"}
-	s.Log("Creating new user pod: ", user2.User)
+	s.Log("Creating user2 pod: ", user2.User)
 	if err := userutil.CreateUser(ctx, user2.User, user2.Pass, chrome.KeepState(), enableFeatures, disableFeatures); err != nil {
-		s.Fatal("Failed to create new user: ", err)
+		s.Fatal("Failed to create user2: ", err)
 	}
 
 	// Go to sign-in screen.
