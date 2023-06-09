@@ -144,7 +144,7 @@ func (d *Display) CaptionHeight(ctx context.Context) (h int, err error) {
 			return -1, errors.Wrap(err, "failed to parse captionHeight value")
 		}
 		return i, nil
-	case SDKR, SDKS, SDKT:
+	case SDKR, SDKS, SDKT, SDKU:
 		uniqueID, err := scrapeUniqueID(output, d.DisplayID)
 		if err != nil {
 			return -1, errors.Wrap(err, "failed to parse display unique id")
@@ -209,7 +209,7 @@ func scrapeDensity(output []byte, displayID, sdkVersion int) (density float64, e
 		if err != nil {
 			return -1, err
 		}
-		// In Android R and later, we are looking for:
+		// In Android R to T, we are looking for:
 		//   DisplayDeviceInfo{...: uniqueId="local:1886094531531010", ...}
 		//     ...
 		//     mDisplayInfo=DisplayInfo{..., density=2.0, ...}
@@ -217,6 +217,20 @@ func scrapeDensity(output []byte, displayID, sdkVersion int) (density float64, e
 			`^\s+DisplayDeviceInfo{.+uniqueId="%s".+$`+ // Match Display Devices section.
 			`(?:\s+.*$)+?`+ // Skip entire lines...
 			`\s+mDisplayInfo=.+density=(\d\.\d+)?`, uniqueID) // ...until density is matched.
+		re = regexp.MustCompile(s)
+	case SDKU:
+		uniqueID, err := scrapeUniqueID(output, displayID)
+		if err != nil {
+			return -1, err
+		}
+		// In Android U and later, we are looking for:
+		//   DisplayDeviceInfo{...: uniqueId="local:1886094531531010", ...}
+		//     ...
+		//     mStaticDisplayInfo=StaticDisplayInfo{..., density=2.0, ...}
+		s := fmt.Sprintf(`(?m)`+ // Enable multiline.
+			`^\s+DisplayDeviceInfo{.+uniqueId="%s".+$`+ // Match Display Devices section.
+			`(?:\s+.*$)+?`+ // Skip entire lines...
+			`\s+mStaticDisplayInfo=.+density=(\d\.\d+)?`, uniqueID) // ...until density is matched.
 		re = regexp.MustCompile(s)
 	default:
 		return -1, errors.Errorf("unsupported Android version %d", sdkVersion)
@@ -352,7 +366,7 @@ func scrapeDisplaySize(output []byte, isStableSize bool, displayID, sdkVersion i
 				`^\s*Display: mDisplayId=0\n` + // Match displayId 0 (internal display).
 				`\s*init=([0-9]+)x([0-9]+)`) // Gather 'init=' bounds.
 		}
-	case SDKR, SDKS, SDKT:
+	case SDKR, SDKS, SDKT, SDKU:
 		// For ARC R and later, dump output from `dumpsys display`
 		if isStableSize {
 			// Looking for:

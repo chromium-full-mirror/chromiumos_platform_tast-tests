@@ -539,6 +539,8 @@ func (ac *Activity) MoveWindow(ctx context.Context, tconn *chrome.TestConn, t ti
 		return ac.moveWindowR(ctx, tconn, t, toBounds, fromBounds)
 	case SDKT:
 		return ac.moveWindowT(ctx, tconn, t, toBounds, fromBounds)
+	case SDKU:
+		return ac.moveWindowU(ctx, tconn, t, toBounds, fromBounds)
 	default:
 		return errors.Errorf("unsupported SDK version: %d", sdkVer)
 	}
@@ -640,6 +642,17 @@ func (ac *Activity) moveWindowT(ctx context.Context, tconn *chrome.TestConn, t t
 	return ac.moveWindowR(ctx, tconn, t, toBounds, fromBounds)
 }
 
+// moveWindowU moves the activity's window to a new location.
+// t represents the duration of the movement.
+// toBounds represent the destination bounds (in px).
+// fromBounds represent the source bounds (in px).
+// moveWindowU only works with WindowStateNormal and WindowStatePIP windows. Will fail otherwise.
+// moveWindowU performs the movement using a mouse drag.
+func (ac *Activity) moveWindowU(ctx context.Context, tconn *chrome.TestConn, t time.Duration, toBounds, fromBounds coords.Rect) error {
+	// Delegate to T version because there isn't a significant difference.
+	return ac.moveWindowT(ctx, tconn, t, toBounds, fromBounds)
+}
+
 // ResizeWindow resizes the activity's window.
 // border represents from where the resize should start.
 // to represents the coordinates for for the new border's position, in pixels.
@@ -665,6 +678,11 @@ func (ac *Activity) ResizeWindow(ctx context.Context, tconn *chrome.TestConn, bo
 		return nil
 	case SDKT:
 		if err := ac.resizeWindowT(ctx, tconn, border, to, time.Second); err != nil {
+			return errors.Wrap(err, "could not resize window")
+		}
+		return nil
+	case SDKU:
+		if err := ac.resizeWindowU(ctx, tconn, border, to, time.Second); err != nil {
 			return errors.Wrap(err, "could not resize window")
 		}
 		return nil
@@ -812,6 +830,17 @@ func (ac *Activity) resizeWindowT(ctx context.Context, tconn *chrome.TestConn, b
 	return ac.resizeWindowR(ctx, tconn, border, to, t)
 }
 
+// resizeWindowU resizes the activity's window.
+// border represents from where the resize should start.
+// to represents the coordinates for for the new border's position, in pixels.
+// t represents the duration of the resize.
+// resizeWindowU only works with WindowStateNormal and WindowStatePIP windows. Will fail otherwise.
+// resizeWindowU performs the resizing using a mouse drag.
+func (ac *Activity) resizeWindowU(ctx context.Context, tconn *chrome.TestConn, border BorderType, to coords.Point, t time.Duration) error {
+	// Delegate to T version because there isn't a significant difference.
+	return ac.resizeWindowT(ctx, tconn, border, to, t)
+}
+
 // SetWindowState sets the window state. Note this method is async, so ensure to call ash.WaitForArcAppWindowState after this.
 // Supported states: WindowStateNormal, WindowStateMaximized, WindowStateFullscreen, WindowStateMinimized
 func (ac *Activity) SetWindowState(ctx context.Context, tconn *chrome.TestConn, state WindowState) error {
@@ -829,6 +858,8 @@ func (ac *Activity) SetWindowState(ctx context.Context, tconn *chrome.TestConn, 
 		return ac.setWindowStateS(ctx, tconn, state)
 	case SDKT:
 		return ac.setWindowStateT(ctx, tconn, state)
+	case SDKU:
+		return ac.setWindowStateU(ctx, tconn, state)
 	default:
 		return errors.Errorf("unsupported SDK version: %d", sdkVer)
 	}
@@ -891,6 +922,13 @@ func (ac *Activity) setWindowStateS(ctx context.Context, tconn *chrome.TestConn,
 func (ac *Activity) setWindowStateT(ctx context.Context, tconn *chrome.TestConn, state WindowState) error {
 	// Delegate to S version because there isn't significant difference.
 	return ac.setWindowStateS(ctx, tconn, state)
+}
+
+// setWindowStateU sets the window state. Note this method is async, so ensure to call ash.WaitForArcAppWindowState after this.
+// Supported states: WindowStateNormal, WindowStateMaximized, WindowStateFullscreen, WindowStateMinimized
+func (ac *Activity) setWindowStateU(ctx context.Context, tconn *chrome.TestConn, state WindowState) error {
+	// Delegate to T version because there is not a significant difference.
+	return ac.setWindowStateT(ctx, tconn, state)
 }
 
 func windowStateToWMEvent(state WindowState) (ash.WMEventType, error) {
@@ -1013,6 +1051,7 @@ func (ac *Activity) swipe(ctx context.Context, from, to coords.Point, t time.Dur
 		return errors.Wrap(err, "failed to start the swipe gesture")
 	}
 
+	// GoBigSleepLint: holding the touch to preveng triggering gestures
 	if err := testing.Sleep(ctx, delayToPreventGesture); err != nil {
 		return errors.Wrap(err, "timeout while sleeping")
 	}
@@ -1114,6 +1153,7 @@ func dragWithPause(ctx context.Context, tconn *chrome.TestConn, from, to coords.
 	if firstErr := mouse.Move(tconn, from, 0)(ctx); firstErr != nil {
 		return firstErr
 	}
+	// GoBigSleepLint: sleeping to prevent unexpected drag events
 	if firstErr := testing.Sleep(ctx, time.Second); firstErr != nil {
 		return firstErr
 	}

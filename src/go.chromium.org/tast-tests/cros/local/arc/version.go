@@ -29,6 +29,9 @@ const (
 
 	// SDKT is the SDK version of Android T.
 	SDKT = 33
+
+	// SDKU is the SDK version of Android U.
+	SDKU = 34
 )
 
 // SDKVersion returns the ARC's Android SDK version for the current ARC image

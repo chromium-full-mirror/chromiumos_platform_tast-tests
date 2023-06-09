@@ -265,8 +265,8 @@ func testPIPInternal(ctx context.Context, s *testing.State, cr *chrome.Chrome, t
 		defer pipAct.Stop(ctx, tconn)
 
 		if multiActivityPIP {
-			// Wait for pipAct to finish settling on top of the base activity. Minimize could be called before on the base activity
-			// otherwise.
+			// GoBigSleepLint: Wait for pipAct to finish settling on top of the base activity.
+			// Minimize could be called before on the base activity otherwise.
 			if err := testing.Sleep(ctx, time.Second); err != nil {
 				return errors.Wrap(err, "failed to sleep waiting for MAPIP")
 			}
@@ -487,6 +487,7 @@ func testPIPToggleTabletMode(ctx context.Context, cr *chrome.Chrome, tconn *chro
 	}
 	defer ash.SetTabletModeEnabled(ctx, tconn, tabletEnabled)
 
+	// GoBigSleepLint: The reason is described below.
 	// TODO(takise): Currently there's no way to know if "everything's been done and nothing's changed on both Chrome and Android side".
 	// We are thinking of adding a new sync logic for Tast tests, but until it gets done, we need to sleep for a while here.
 	testing.Sleep(ctx, time.Second)
@@ -692,6 +693,8 @@ func expandPIPViaMenuTouch(ctx context.Context, cr *chrome.Chrome, tconn *chrome
 		return expandPIPViaMenuTouchR(ctx, cr, tconn, dispMode, restoreWindowState)
 	case arc.SDKT:
 		return expandPIPViaMenuTouchT(ctx, cr, tconn, dispMode, restoreWindowState)
+	case arc.SDKU:
+		return expandPIPViaMenuTouchU(ctx, cr, tconn, dispMode, restoreWindowState)
 	default:
 		return errors.Errorf("unsupported SDK version: %d", sdkVer)
 	}
@@ -796,6 +799,14 @@ func expandPIPViaMenuTouchR(ctx context.Context, cr *chrome.Chrome, tconn *chrom
 func expandPIPViaMenuTouchT(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, dispMode *display.DisplayMode, restoreWindowState ash.WindowStateType) error {
 	// Delegate to R version because there isn't a significant difference.
 	return expandPIPViaMenuTouchR(ctx, cr, tconn, dispMode, restoreWindowState)
+}
+
+// expandPIPViaMenuTouchU performs a mouse click to the center of PIP window and expands PIP.
+// After moving the mouse to the center of the PIP window it waits until the PIP menu is visible
+// before the expand icon is clicked.
+func expandPIPViaMenuTouchU(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, dispMode *display.DisplayMode, restoreWindowState ash.WindowStateType) error {
+	// Delegate to T version because there isn't a significant difference.
+	return expandPIPViaMenuTouchT(ctx, cr, tconn, dispMode, restoreWindowState)
 }
 
 // waitForPIPWindow keeps looking for a PIP window until it appears on the Chrome side.
