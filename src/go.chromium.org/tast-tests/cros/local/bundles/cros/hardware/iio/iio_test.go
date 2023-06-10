@@ -86,7 +86,7 @@ func TestNoDeviceDir(t *testing.T) {
 func TestSensorRead(t *testing.T) {
 	defer setupTestFiles(t, map[string]string{
 		"iio:device0/name":           "cros-ec-accel",
-		"iio:device0/location":       "lid",
+		"iio:device0/label":          "accel-display",
 		"iio:device0/scale":          "0.5",
 		"iio:device0/in_accel_x_raw": "10",
 		"iio:device0/in_accel_y_raw": "12",
@@ -96,6 +96,13 @@ func TestSensorRead(t *testing.T) {
 	sensors, err := GetSensors(context.Background())
 	if err != nil {
 		t.Fatal("Error getting sensors: ", err)
+	}
+
+	expectedSensors := []*Sensor{
+		{Device{"iio:device0"}, Accel, Lid, 0, 0, .5, 0, 0, false},
+	}
+	if !reflect.DeepEqual(expectedSensors, sensors) {
+		t.Errorf("Expected sensors %v but got %v", expectedSensors, sensors)
 	}
 
 	reading, err := sensors[0].Read()

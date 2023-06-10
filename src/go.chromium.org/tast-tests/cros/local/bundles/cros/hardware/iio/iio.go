@@ -37,7 +37,7 @@ var errUnknownDeviceFound = errors.New("unknown Device found")
 type SensorName string
 
 // SensorLocation is the location of the sensor in the DUT which is reported by
-// the EC and exposed by the kernel in /sys/bus/iio/devices/iio:device*/location.
+// the EC and exposed by the kernel in /sys/bus/iio/devices/iio:device*/label.
 type SensorLocation string
 
 // ActivityID is the ID of the activity which is reported by the EC.
@@ -89,11 +89,11 @@ const (
 
 const (
 	// Base means that the sensor is located in the base of the DUT.
-	Base SensorLocation = "base"
+	Base SensorLocation = "accel-base"
 	// Lid means that the sensor is located in the lid of the DUT.
-	Lid SensorLocation = "lid"
+	Lid SensorLocation = "accel-display"
 	// Camera means that the sensor is located near the camera.
-	Camera SensorLocation = "camera"
+	Camera SensorLocation = "accel-camera"
 	// None means that the sensor location is not known or not applicable.
 	None SensorLocation = "none"
 )
@@ -132,6 +132,12 @@ var sensorLocations = map[SensorLocation]struct{}{
 	Base:   {},
 	Lid:    {},
 	Camera: {},
+}
+
+var sensorLegacyLocationConverters = map[string]SensorLocation{
+	"base":   Base,
+	"lid":    Lid,
+	"camera": Camera,
 }
 
 // readingNames is a map from the type of sensor to the sensor specific part of the
@@ -207,7 +213,7 @@ func GetSensors(ctx context.Context) ([]*Sensor, error) {
 // Sensor if it is a valid EC sensor.
 func parseSensor(devName string) (*Sensor, error) {
 	var sensor Sensor
-	var location SensorLocation
+	var location SensorLocation = None
 	var name SensorName
 	var id, minFreq, maxFreq int
 	var scale float64
@@ -230,15 +236,18 @@ func parseSensor(devName string) (*Sensor, error) {
 		return nil, errUnknownDeviceFound
 	}
 
-	loc, err := sensor.ReadAttr("location")
-	if err == nil {
-		location = SensorLocation(loc)
-
+	if lbl, err := sensor.ReadAttr("label"); err == nil {
+		location = SensorLocation(lbl)
 		if _, ok := sensorLocations[location]; !ok {
+			return nil, errors.Errorf("unknown sensor label %q", lbl)
+		}
+	} else if loc, err := sensor.ReadAttr("location"); err == nil {
+		// |location| attribute is for older kernels.
+		var ok bool
+		location, ok = sensorLegacyLocationConverters[loc]
+		if !ok {
 			return nil, errors.Errorf("unknown sensor location %q", loc)
 		}
-	} else {
-		location = None
 	}
 
 	s, err := sensor.ReadAttr("scale")
