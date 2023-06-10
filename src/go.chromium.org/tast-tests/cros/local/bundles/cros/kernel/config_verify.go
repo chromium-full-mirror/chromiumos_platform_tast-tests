@@ -167,6 +167,9 @@ func newCommonKernelConfigCheck(ver *sysutil.KernelVersion, arch string) *kernel
 		"USB_USBNET",
 		"USB_NET_CDCETHER",
 		"USB_NET_CDC_NCM",
+
+		// Vendor Specific USB Ethernet driver support
+		"USB_RTL8152",
 	}
 	enabled := []string{
 		// Either module or enabled, depending on platform.
