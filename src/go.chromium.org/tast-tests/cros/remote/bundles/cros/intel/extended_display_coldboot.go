@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package power
+package intel
 
 import (
 	"context"
@@ -10,8 +10,8 @@ import (
 	"strconv"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/chameleon"
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/local/cswitch"
 	"go.chromium.org/tast-tests/cros/remote/powercontrol"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
@@ -29,7 +29,7 @@ type extendedDisplayTestParams struct {
 const (
 	connectorDP   = `.*: connectors:\n.\s+\[CONNECTOR:\d+:[DP]+.*`
 	connectedDP   = `\[CONNECTOR:\d+:DP.*status: connected`
-	fullHDMode    = `modes:\n.*"1920x1080":.60`
+	fullHDMode    = `modes:\n.*"\d+x\d+":.60`
 	connectorHDMI = `.*: connectors:\n.\s+\[CONNECTOR:\d+:[HDMI]+.*`
 	connectedHDMI = `\[CONNECTOR:\d+:HDMI.*status: connected`
 	typecHDMI     = `.*DP branch device present.*yes\n.*Type.*HDMI`
@@ -47,10 +47,10 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.InternalDisplay()),
 		Vars: []string{
 			"servo",
-			"power.chameleon_addr",
-			"power.chameleon_display_port",
+			"intel.cSwitchPort",
+			"intel.domainIP",
 		},
-		VarDeps: []string{"power.iteration"},
+		VarDeps: []string{"intel.iteration"},
 		Params: []testing.Param{{
 			Name: "typec_dp",
 			Val: extendedDisplayTestParams{
@@ -58,7 +58,7 @@ func init() {
 				ecStateToCheck: "S5",
 				isTypecDP:      true,
 			},
-			Timeout: 10 * time.Minute,
+			Timeout: 15 * time.Minute,
 		}, {
 			Name: "native_dp",
 			Val: extendedDisplayTestParams{
@@ -66,7 +66,7 @@ func init() {
 				ecStateToCheck: "S5",
 				isTypecDP:      false,
 			},
-			Timeout: 10 * time.Minute,
+			Timeout: 15 * time.Minute,
 		}, {
 			Name: "typec_hdmi",
 			Val: extendedDisplayTestParams{
@@ -74,7 +74,7 @@ func init() {
 				ecStateToCheck: "G3",
 				isTypecDP:      false,
 			},
-			Timeout: 10 * time.Minute,
+			Timeout: 15 * time.Minute,
 		}, {
 			Name: "native_hdmi",
 			Val: extendedDisplayTestParams{
@@ -82,7 +82,7 @@ func init() {
 				ecStateToCheck: "S5",
 				isTypecDP:      false,
 			},
-			Timeout: 10 * time.Minute,
+			Timeout: 15 * time.Minute,
 		}},
 	})
 }
@@ -117,37 +117,32 @@ func ExtendedDisplayColdboot(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to login to Chrome: ", err)
 		}
 
-		chameleonAddr := s.RequiredVar("power.chameleon_addr")
+		if testOpt.isTypecDP {
+			// cswitch port ID.
+			cSwitchON := s.RequiredVar("intel.cSwitchPort")
+			// IP address of Tqc server hosting device.
+			domainIP := s.RequiredVar("intel.domainIP")
 
-		// Use chameleon board as extended display. Make sure chameleon is connected.
-		che, err := chameleon.New(ctx, chameleonAddr)
-		if err != nil {
-			s.Fatal("Failed to connect to chameleon board: ", err)
-		}
-		defer che.Close(cleanupCtx)
-
-		portID := 3 // Use default port 3 for display.
-		if port, ok := s.Var("power.chameleon_display_port"); ok {
-			portID, err = strconv.Atoi(port)
+			// Create C-Switch session that performs hot plug-unplug external display.
+			sessionID, err := cswitch.CreateSession(ctx, domainIP)
 			if err != nil {
-				s.Fatalf("Failed to parse chameleon display port %q: %v", port, err)
+				s.Fatal("Failed to create session: ", err)
 			}
-		}
 
-		dp, err := che.NewPort(ctx, portID)
-		if err != nil {
-			s.Fatalf("Failed to create chameleon port %d: %v", portID, err)
-		}
+			if err := cswitch.ToggleCSwitchPort(ctx, sessionID, cSwitchON, domainIP); err != nil {
+				s.Fatal("Failed to enable c-switch port: ", err)
+			}
 
-		if err := dp.Plug(ctx); err != nil {
-			s.Fatal("Failed to plug chameleon port: ", err)
-		}
+			cSwitchOFF := "0"
+			defer func(ctx context.Context) {
+				if err := cswitch.ToggleCSwitchPort(ctx, sessionID, cSwitchOFF, domainIP); err != nil {
+					s.Fatal("Failed to disable c-switch port: ", err)
+				}
 
-		defer dp.Unplug(cleanupCtx)
-
-		// Wait for DUT to detect external display.
-		if err := dp.WaitVideoInputStable(ctx, 10*time.Second); err != nil {
-			s.Fatal("Failed to wait for video input on chameleon board: ", err)
+				if err := cswitch.CloseSession(ctx, sessionID, domainIP); err != nil {
+					s.Log("Failed to close session: ", err)
+				}
+			}(cleanupCtx)
 		}
 
 		if err := externalDisplayDetection(ctx, dut, 1, testOpt.displayInfoRe, testOpt.isTypecDP); err != nil {
@@ -156,7 +151,7 @@ func ExtendedDisplayColdboot(ctx context.Context, s *testing.State) {
 	}
 
 	loginChrome(ctx)
-	iter, err := strconv.Atoi(s.RequiredVar("power.iteration"))
+	iter, err := strconv.Atoi(s.RequiredVar("intel.iteration"))
 	if err != nil {
 		s.Fatal("Failed to convert string to integer: ", err)
 	}

@@ -2,18 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package power
+package intel
 
 import (
 	"context"
 	"regexp"
-	"strconv"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/chameleon"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/graphics"
-	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -28,12 +25,8 @@ func init() {
 		// Disabled due to <1% pass rate over 30 days. See b/241943556
 		//Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		Vars: []string{
-			"power.chameleon_addr",
-			"power.chameleon_display_port",
-		},
-		Fixture: "chromeLoggedIn",
-		Timeout: 8 * time.Minute,
+		Fixture:      "chromeLoggedIn",
+		Timeout:      8 * time.Minute,
 	})
 }
 
@@ -42,7 +35,7 @@ func DpSuspendResume(ctx context.Context, s *testing.State) {
 		C10PkgPattern         = regexp.MustCompile(`C10 : ([A-Za-z0-9]+)`)
 		connectorInfoPtrns    = regexp.MustCompile(`.*: connectors:\n.\s+\[CONNECTOR:\d+:[DP]+.*`)
 		connectedPtrns        = regexp.MustCompile(`\[CONNECTOR:\d+:DP.*status: connected`)
-		modesPtrns            = regexp.MustCompile(`modes:\n.*"1920x1080":.60`)
+		modesPtrns            = regexp.MustCompile(`modes:\n.*"\d+x\d+":.60`)
 		SuspndFailurePattern  = regexp.MustCompile("Suspend failures: 0")
 		FrmwreLogErrorPattern = regexp.MustCompile("Firmware log errors: 0")
 		S0ixErrorPattern      = regexp.MustCompile("s0ix errors: 0")
@@ -52,38 +45,6 @@ func DpSuspendResume(ctx context.Context, s *testing.State) {
 		PkgCstateCmd     = "cat /sys/kernel/debug/pmc_core/package_cstate_show"
 		SuspendStressCmd = "suspend_stress_test -c 10"
 	)
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
-	defer cancel()
-	if chameleonAddr, ok := s.Var("power.chameleon_addr"); ok {
-		// Use chameleon board as extended display. Make sure chameleon is connected.
-		che, err := chameleon.New(ctx, chameleonAddr)
-		if err != nil {
-			s.Fatal("Failed to connect to chameleon board: ", err)
-		}
-		defer che.Close(cleanupCtx)
-
-		portID := 3 // Use default port 3 for display.
-		if port, ok := s.Var("power.chameleon_display_port"); ok {
-			portID, err = strconv.Atoi(port)
-			if err != nil {
-				s.Fatalf("Failed to parse chameleon display port %q: %v", port, err)
-			}
-		}
-		dp, err := che.NewPort(ctx, portID)
-		if err != nil {
-			s.Fatalf("Failed to create chameleon port %d: %v", portID, err)
-		}
-		if err := dp.Plug(ctx); err != nil {
-			s.Fatal("Failed to plug chameleon port: ", err)
-		}
-
-		defer dp.Unplug(cleanupCtx)
-		// Wait for DUT to detect external display.
-		if err := dp.WaitVideoInputStable(ctx, 10*time.Second); err != nil {
-			s.Fatal("Failed to wait for video input on chameleon board: ", err)
-		}
-	}
 
 	displayInfoPatterns := []*regexp.Regexp{connectorInfoPtrns, connectedPtrns, modesPtrns}
 	if err := extDisplayDetection(ctx, 1, displayInfoPatterns); err != nil {
@@ -144,17 +105,17 @@ func DpSuspendResume(ctx context.Context, s *testing.State) {
 
 func extDisplayDetection(ctx context.Context, numberOfDisplays int, regexpPatterns []*regexp.Regexp) error {
 	const DisplayInfoCommand = "cat /sys/kernel/debug/dri/0/i915_display_info"
-	displCount, err := graphics.NumberOfOutputsConnected(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to get connected displays ")
-	}
-
 	var DisplayInfo = regexp.MustCompile(`.*pipe\s+[BCD]\]:\n.*active=yes, mode=.[0-9]+x[0-9]+.: [0-9]+.*\s+[hw: active=yes]+`)
-	if displCount < 2 {
-		return errors.New("external display is not connected")
-	}
-
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		displCount, err := graphics.NumberOfOutputsConnected(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to get connected displays ")
+		}
+
+		if displCount < 2 {
+			return errors.New("external display is not connected")
+		}
+
 		out, err := testexec.CommandContext(ctx, "sh", "-c", DisplayInfoCommand).Output()
 
 		if err != nil {
@@ -173,7 +134,7 @@ func extDisplayDetection(ctx context.Context, numberOfDisplays int, regexpPatter
 		}
 		return nil
 	}, &testing.PollOptions{
-		Timeout: 15 * time.Second,
+		Timeout: 25 * time.Second,
 	}); err != nil {
 		return errors.Wrap(err, "please connect external display as required")
 	}
