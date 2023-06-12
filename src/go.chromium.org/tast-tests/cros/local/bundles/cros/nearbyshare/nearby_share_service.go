@@ -368,6 +368,18 @@ func (n *NearbyService) AcceptIncomingShareNotificationAndWaitForCompletion(ctx 
 	return &empty.Empty{}, nil
 }
 
+// WaitForIncomingShareCompletionNotification waits for transfer completed notifications. Used in self share tests.
+func (n *NearbyService) WaitForIncomingShareCompletionNotification(ctx context.Context, req *nearbyservice.CrOSReceiveFilesRequest) (*empty.Empty, error) {
+	if n.cr == nil {
+		return nil, errors.New("Chrome not available")
+	}
+	testing.ContextLog(ctx, "Waiting for receiving-complete notification on CrOS receiver")
+	if err := nearbyshare.WaitForReceivingCompleteNotification(ctx, n.tconn, req.SenderName, time.Duration(req.TransferTimeoutSeconds)*time.Second); err != nil {
+		return nil, errors.Wrap(err, "failed waiting for notification to indicate sharing has completed on CrOS")
+	}
+	return &empty.Empty{}, nil
+}
+
 // AcceptFastInitiationNotification accepts the incoming fast initiation notification. Fast initiation is shown when a nearby device is trying to find a share target. Used by background scanning tests.
 func (n *NearbyService) AcceptFastInitiationNotification(ctx context.Context, req *nearbyservice.CrOSAcceptFastInitiationNotificationRequest) (*empty.Empty, error) {
 	if n.cr == nil {

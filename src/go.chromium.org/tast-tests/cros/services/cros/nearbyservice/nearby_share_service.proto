@@ -60,6 +60,12 @@ service NearbyShareService {
   rpc AcceptIncomingShareNotificationAndWaitForCompletion(
       CrOSReceiveFilesRequest) returns (google.protobuf.Empty) {}
 
+  // WaitForIncomingShareCompletionNotification is used in self share transfer
+  // where the receiving Chromebook does not need to accept a transfer, and
+  // instead receives only the transfer complete notification.
+  rpc WaitForIncomingShareCompletionNotification(
+      CrOSReceiveFilesRequest) returns (google.protobuf.Empty) {}
+
   // Accepts the notification that appears when a nearby device is trying to
   // discover a share target. This puts the user into high visibility mode.
   rpc AcceptFastInitiationNotification(

@@ -35,6 +35,8 @@ const (
 	webRTC                  = "NearbySharingWebRtc"
 	wlan                    = "NearbySharingWifiLan"
 	floss                   = "Floss"
+	selfShareAutoAccept     = "NearbySharingSelfShareAutoAccept"
+	selfShareUI             = "NearbySharingSelfShareUI"
 )
 
 // NewNearbyShareFixture creates a fixture for Nearby Share tests in different configurations.
@@ -43,7 +45,22 @@ func NewNearbyShareFixture(dataUsage nearbycommon.DataUsage, visibility nearbyco
 		dataUsage:              dataUsage,
 		visibility:             visibility,
 		skipReceiverOnboarding: skipReceiverOnboarding,
+		sameGaiaLogin:          false,
 		enabledFeatures:        enabledFeatures,
+		disabledFeatures:       disabledFeatures,
+		// TODO(crbug/1127165): Remove after data is supported in fixture.
+		testFiles: []string{"small_jpg.zip", "small_png.zip", "big_txt.zip"},
+	}
+}
+
+// NewNearbyShareSelfShareFixture creates a fixture for Nearby Share Self Share tests in different configurations.
+func NewNearbyShareSelfShareFixture(dataUsage nearbycommon.DataUsage, visibility nearbycommon.Visibility, skipReceiverOnboarding bool, enabledFeatures, disabledFeatures []string) testing.FixtureImpl {
+	return &nearbyShareFixture{
+		dataUsage:              dataUsage,
+		visibility:             visibility,
+		skipReceiverOnboarding: skipReceiverOnboarding,
+		sameGaiaLogin:          true,
+		enabledFeatures:        append(enabledFeatures, selfShareAutoAccept, selfShareUI),
 		disabledFeatures:       disabledFeatures,
 		// TODO(crbug/1127165): Remove after data is supported in fixture.
 		testFiles: []string{"small_jpg.zip", "small_png.zip", "big_txt.zip"},
@@ -69,6 +86,7 @@ type nearbyShareFixture struct {
 	dataUsage              nearbycommon.DataUsage
 	visibility             nearbycommon.Visibility
 	skipReceiverOnboarding bool
+	sameGaiaLogin          bool
 	enabledFeatures        []string
 	disabledFeatures       []string
 	testFiles              []string
@@ -191,8 +209,16 @@ func (f *nearbyShareFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 	f.receiverRPCClient = cl2
 	receiverDisplayName := nearbycommon.RandomDeviceName(crosBaseName)
 	s.Log("Enabling Nearby Share on DUT2 (Receiver). Name: ", receiverDisplayName)
-	receiverUsername := s.RequiredVar("nearbyshare.cros2_username")
-	receiverPassword := s.RequiredVar("nearbyshare.cros2_password")
+
+	// Features like Self Share require that both devices are logged into the same Gaia.
+	s.Log("Logging into both DUTs with the same GAIA login = ", f.sameGaiaLogin)
+	receiverUsername := s.RequiredVar("nearbyshare.cros_username")
+	receiverPassword := s.RequiredVar("nearbyshare.cros_password")
+	if !f.sameGaiaLogin {
+		receiverUsername = s.RequiredVar("nearbyshare.cros2_username")
+		receiverPassword = s.RequiredVar("nearbyshare.cros2_password")
+	}
+
 	s.Log("skipReceiverOnboarding = ", f.skipReceiverOnboarding)
 	receiver, err := f.enableNearbyShare(ctx, s, cl2, receiverDisplayName, receiverUsername, receiverPassword, senderUsername, nearbyStaticIDReceiverStr, keepState, f.skipReceiverOnboarding, f.enabledFeatures, f.disabledFeatures)
 	if err != nil {

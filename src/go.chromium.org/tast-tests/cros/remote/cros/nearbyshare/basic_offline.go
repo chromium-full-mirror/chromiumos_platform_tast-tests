@@ -71,4 +71,22 @@ func addBasicOfflineFixtures() {
 		PreTestTimeout:  resetTimeout,
 		PostTestTimeout: resetTimeout,
 	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:     "nearbyShareRemoteDataUsageOfflineSelfShare",
+		Desc:     "Fixture for Nearby Share's CB -> CB tests. Each DUT is signed in to the same real GAIA account. Configured with 'Data Usage' set to 'Offline' and 'Visibility' set to 'All Contacts'",
+		Impl:     NewNearbyShareSelfShareFixture(nearbycommon.DataUsageOffline, nearbycommon.VisibilityAllContacts /*skipReceiverOnboarding=*/, true /*enabledFeatures=*/, []string{} /*disabledFeatures=*/, []string{}),
+		Contacts: []string{"chromeos-sw-engprod@google.com"},
+		Vars: []string{
+			"nearbyshare.cros_username",
+			"nearbyshare.cros_password",
+			nearbycommon.KeepStateVar,
+		},
+		ServiceDeps:     []string{"tast.cros.nearbyservice.NearbyShareService"},
+		SetUpTimeout:    3 * time.Minute,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  resetTimeout,
+		PostTestTimeout: resetTimeout,
+	})
 }
