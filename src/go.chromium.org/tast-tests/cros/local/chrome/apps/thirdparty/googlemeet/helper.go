@@ -20,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
 )
 
 // MeetHelper is an interface defines the operations performed in MeetCUJ.
@@ -72,7 +73,10 @@ func (h *HRTelemetryHelper) Close(ctx context.Context) error {
 // IsInMeeting checks whether the connection is in a meeting room.
 // hrTelemetryApi is defined only after granting video permissions.
 func (h *HRTelemetryHelper) IsInMeeting(ctx context.Context, timeout time.Duration) error {
-	err := h.meetConn.WaitForExprWithTimeout(ctx, "hrTelemetryApi.isInMeeting()", time.Minute)
+	if err := webutil.WaitForQuiescence(ctx, h.meetConn, time.Minute); err != nil {
+		testing.ContextLog(ctx, "Failed to wait for meet page to achieve quiescence: ", err)
+	}
+	err := h.meetConn.WaitForExprWithTimeout(ctx, "hrTelemetryApi.isInMeeting()", 10*time.Second)
 	return h.checkError(ctx, err)
 }
 
@@ -86,10 +90,22 @@ func (h *HRTelemetryHelper) checkError(ctx context.Context, err error) error {
 	}
 
 	const (
-		errAPINotDefined    = "hrTelemetryApi is not defined"
-		errSignedOut        = "the account has been signed out"
-		errConnectionFailed = "failed to connect to meeting room"
+		errIsNotInMeeting     = "\"!!(hrTelemetryApi.isInMeeting())\" is false"
+		errAPINotDefined      = "hrTelemetryApi is not defined"
+		errSignedOut          = "the account has been signed out"
+		errConnectionFailed   = "failed to connect to meeting room"
+		errNavigateToHomePage = "navigate to the meet home page for unknown reason"
 	)
+
+	ui := uiauto.New(h.tconn)
+	// Wrap error message navigating to the meet home page for unknown reason.
+	if strings.Contains(err.Error(), errIsNotInMeeting) {
+		newMeetingButton := nodewith.Name("New meeting").Role(role.Button)
+		if ui.Exists(newMeetingButton)(ctx) == nil {
+			return errors.Wrap(err, errNavigateToHomePage)
+		}
+		return err
+	}
 
 	// Use string comparison because error loses its type after wrapping.
 	// If the error doesn't contain "hrTelemetryApi is not defined", the original error is returned.
@@ -97,7 +113,6 @@ func (h *HRTelemetryHelper) checkError(ctx context.Context, err error) error {
 		return err
 	}
 
-	ui := uiauto.New(h.tconn)
 	// There may be multiple connection messages with same ancestor, so add First() here.
 	connectionMessage := nodewith.Name("Still trying to get in...").Role(role.StaticText).First()
 	signInLink := nodewith.Name("Sign in").Role(role.Link)
