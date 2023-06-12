@@ -48,7 +48,7 @@ func init() {
 			{
 				Name:              "floss_enabled",
 				Fixture:           "chromeLoggedInAsUserWithFastPairAnd1BTPeerFlossEnabled",
-				ExtraAttr:         []string{"bluetooth_flaky"},
+				ExtraAttr:         []string{"bluetooth_floss_flaky"},
 				ExtraSoftwareDeps: []string{"bluetooth_floss"},
 			},
 		},

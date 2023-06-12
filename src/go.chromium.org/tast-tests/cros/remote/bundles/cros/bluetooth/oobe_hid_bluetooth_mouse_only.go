@@ -50,7 +50,7 @@ func init() {
 				Name:              "floss_enabled",
 				Fixture:           "chromeOobeWith1BTPeerFlossEnabled",
 				ExtraSoftwareDeps: []string{"bluetooth_floss"},
-				ExtraAttr:         []string{"bluetooth_flaky"},
+				ExtraAttr:         []string{"bluetooth_floss_flaky"},
 			},
 		},
 		Timeout: time.Minute * 2,
