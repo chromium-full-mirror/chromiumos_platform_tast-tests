@@ -157,7 +157,7 @@ func init() {
 			Name: "bluetooth_power",
 			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineBluetoothPower),
 			// TODO(b/280388009): Promote to critical.
-			ExtraAttr:         []string{"informational"},
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			ExtraHardwareDeps: hwdep.D(hwdep.Bluetooth()),
 		}, {
 			Name: "bluetooth_discovery",
