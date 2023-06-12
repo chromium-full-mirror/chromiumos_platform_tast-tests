@@ -503,8 +503,12 @@ func UploadToDashboard(ctx context.Context, powerLogDict map[string]interface{},
 	}
 	urlParams := url.Values{}
 	urlParams.Add("data", string(powerLogJSON))
-	if _, err = http.PostForm(urlActual, urlParams); err != nil {
+	resp, err := http.PostForm(urlActual, urlParams)
+	if err != nil {
 		return errors.Wrap(err, "failed to upload to power dashboard")
+	}
+	if resp.StatusCode != http.StatusOK {
+		return errors.New("unsuccessful http response from power dashboard: " + resp.Status)
 	}
 	return nil
 }
