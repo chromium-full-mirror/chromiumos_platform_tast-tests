@@ -303,7 +303,9 @@ func runPowerButtonDiag(ctx context.Context, args []string) (string, error) {
 			return nil
 		}
 		return errors.New("routine not finished")
-	}, &testing.PollOptions{Interval: 1 * time.Second, Timeout: 5 * time.Second}); err != nil {
+	}, &testing.PollOptions{Interval: 1 * time.Second,
+		// The routine runs for 5 seconds. Add extra 2 seconds as a buffer.
+		Timeout: 7 * time.Second}); err != nil {
 		return "", errors.Wrap(err, "routine timeout")
 	}
 
