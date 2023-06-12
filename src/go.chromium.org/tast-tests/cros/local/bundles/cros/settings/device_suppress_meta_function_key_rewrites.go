@@ -110,7 +110,7 @@ func DeviceSuppressMetaFunctionKeyRewrites(ctx context.Context, s *testing.State
 	}
 
 	// Turn off the toggle to suppress meta + function key rewrites.
-	topRowKeyButton := nodewith.NameContaining("change the behavior of function keys")
+	topRowKeyButton := nodewith.NameContaining("change the behavior of function keys").First()
 	if err := uiauto.Combine("Verify if the toggle is turned off",
 		ui.WaitUntilExists(topRowKeyButton),
 		ui.DoDefault(topRowKeyButton),
