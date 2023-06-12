@@ -74,6 +74,8 @@ func init() {
 			Val:               testParam{false, true, browser.TypeLacros},
 			ExtraSoftwareDeps: []string{"lacros"},
 		}},
+		// `cpu.WaitUntilIdle` takes up to 2 minutes + we start Chrome multiple times.
+		Timeout: 4 * time.Minute,
 	})
 }
 
