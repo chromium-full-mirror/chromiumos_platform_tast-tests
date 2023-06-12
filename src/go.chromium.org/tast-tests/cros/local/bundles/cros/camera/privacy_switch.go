@@ -28,7 +28,7 @@ func init() {
 			"ribalda@chromium.org",
 		},
 		BugComponent: "b:1093480",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "group:criticalstaging", "informational"},
 		SoftwareDeps: []string{caps.BuiltinUSBCamera},
 	})
 }
