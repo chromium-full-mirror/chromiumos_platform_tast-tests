@@ -33,7 +33,7 @@ func init() {
 		Contacts:     []string{"chromeos-a11y-eng@google.com", "neis@chromium.org"},
 		BugComponent: "b:1272672",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline", "informational"},
 		Params: []testing.Param{{
 			Name:    "ash",
 			Fixture: "chromeLoggedIn",
