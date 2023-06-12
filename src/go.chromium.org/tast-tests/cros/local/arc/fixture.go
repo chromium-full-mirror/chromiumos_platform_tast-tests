@@ -421,14 +421,14 @@ func init() {
 			"kawasin@google.com",
 			"hikalium@chromium.org",
 		},
-		Impl: NewArcBootedWithConfigFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+		Impl: NewArcBootedWithConfigAndTimeoutFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
 				chrome.ARCEnabled(),
 				chrome.EnableFeatures("ArcVmmSwapPolicy:arc_silence_interval_sec/1"),
 				chrome.UnRestrictARCCPU(),
 				chrome.ExtraArgs(DisableSyncFlags()...),
 			}, nil
-		}, "SKIP_SWAP_TBW_MANAGEMENT=true"),
+		}, "SKIP_SWAP_TBW_MANAGEMENT=true", BootTimeout+swap.UnrestrictedTimeout),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + swap.UnrestrictedTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
 		PostTestTimeout: PostTestTimeout,
@@ -445,6 +445,7 @@ type bootedFixture struct {
 	playStoreOptin    bool   // Opt into PlayStore.
 	enableUIAutomator bool   // Enable UI Automator
 	arcvmConfig       string // Append config to arcvm_dev.conf
+	bootTimeout       time.Duration
 
 	fOpt chrome.OptionsCallback // Function to return chrome options.
 }
@@ -459,9 +460,18 @@ func NewArcBootedFixture(fOpts chrome.OptionsCallback) testing.FixtureImpl {
 // the specified config appended to arcvm_dev.conf. ARCEnabled() will always be added to the Chrome
 // options returned by OptionsCallback.
 func NewArcBootedWithConfigFixture(fOpts chrome.OptionsCallback, arcvmConfig string) testing.FixtureImpl {
+	return NewArcBootedWithConfigAndTimeoutFixture(fOpts, arcvmConfig, BootTimeout)
+}
+
+// NewArcBootedWithConfigAndTimeoutFixture returns a FixtureImpl with a
+// OptionsCallback function provided, the specified config appended to
+// arcvm_dev.conf, and a custom timeout. ARCEnabled() will always be added to
+// the Chrome options returned by OptionsCallback.
+func NewArcBootedWithConfigAndTimeoutFixture(fOpts chrome.OptionsCallback, arcvmConfig string, bootTimeout time.Duration) testing.FixtureImpl {
 	return &bootedFixture{
 		enableUIAutomator: true,
 		arcvmConfig:       arcvmConfig,
+		bootTimeout:       bootTimeout,
 		fOpt: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			opts, err := fOpts(ctx, s)
 			if err != nil {
@@ -578,7 +588,11 @@ func (f *bootedFixture) SetUp(ctx context.Context, s *testing.FixtState) interfa
 		}
 	}
 
-	arc, err := New(ctx, s.OutDir())
+	bootTimeout := f.bootTimeout
+	if bootTimeout == 0 {
+		bootTimeout = BootTimeout
+	}
+	arc, err := NewWithTimeout(ctx, s.OutDir(), bootTimeout)
 	if err != nil {
 		s.Fatal("Failed to start ARC: ", err)
 	}
