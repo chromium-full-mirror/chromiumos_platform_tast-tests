@@ -93,10 +93,6 @@ func newCommonKernelConfigCheck(ver *sysutil.KernelVersion, arch string) *kernel
 		"MODULES",
 		"PRINTK",
 		"SECURITY",
-		// Security; make sure kexec kernels and modules come from the
-		// rootfs.
-		"SECURITY_LOADPIN",
-		"SECURITY_LOADPIN_ENFORCE",
 		// Security; enables the SECCOMP application API.
 		"SECCOMP",
 		// Security; blocks direct physical memory access.
@@ -260,6 +256,9 @@ func newCommonKernelConfigCheck(ver *sysutil.KernelVersion, arch string) *kernel
 		// Security; harden the SLAB/SLUB allocators against common freelist exploit methods.
 		builtin = append(builtin, "SLAB_FREELIST_RANDOM")
 		builtin = append(builtin, "SLAB_FREELIST_HARDENED")
+		// Security; make sure kexec kernels and modules come from the rootfs
+		builtin = append(builtin, "SECURITY_LOADPIN")
+		builtin = append(builtin, "SECURITY_LOADPIN_ENFORCE")
 		// Security; initialize uninitialized local variables, variable fields, and padding.
 		// (Clang only).
 		if ver.IsOrLater(5, 4) {
