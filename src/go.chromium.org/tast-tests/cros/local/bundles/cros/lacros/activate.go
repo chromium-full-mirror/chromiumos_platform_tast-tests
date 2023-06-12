@@ -35,7 +35,7 @@ func init() {
 		Params: []testing.Param{{
 			Name:      "no_keep_alive",
 			Fixture:   "lacros",
-			ExtraAttr: []string{"group:criticalstaging"},
+			ExtraAttr: []string{},
 		}, {
 			Name:    "keep_alive",
 			Fixture: "lacrosKeepAlive",
