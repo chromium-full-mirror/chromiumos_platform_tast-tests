@@ -131,7 +131,6 @@ func GetDeviceByGUID(ctx context.Context, expectedGUID string) (*Device, error) 
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to connect to system bus")
 	}
-	defer conn.Close()
 	fwupd := conn.Object(dbusName, dbusPath)
 
 	var devices []map[string]dbus.Variant
