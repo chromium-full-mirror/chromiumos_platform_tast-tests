@@ -64,6 +64,33 @@ var EnglishUSWithExtendedKeyboard = InputMethod{
 	VoiceLanguage:       LanguageEn,
 }
 
+// EnglishUSWithDvorakKeyboard represents the input method of English (US) with Dvorak keyboard.
+var EnglishUSWithDvorakKeyboard = InputMethod{
+	Name:                "English (US) with Dvorak keyboard",
+	ID:                  "xkb:us:dvorak:eng",
+	ShortLabel:          "DV",
+	HandwritingLanguage: LanguageEn,
+	VoiceLanguage:       LanguageEn,
+}
+
+// EnglishUSWithColemakKeyboard represents the input method of English (US) with Colemak keyboard.
+var EnglishUSWithColemakKeyboard = InputMethod{
+	Name:                "English (US) with Colemak keyboard",
+	ID:                  "xkb:us:colemak:eng",
+	ShortLabel:          "CO",
+	HandwritingLanguage: LanguageEn,
+	VoiceLanguage:       LanguageEn,
+}
+
+// EnglishUSWithWorkmanKeyboard represents the input method of English (US) with Workman keyboard.
+var EnglishUSWithWorkmanKeyboard = InputMethod{
+	Name:                "English (US) with Workman keyboard",
+	ID:                  "xkb:us:workman:eng",
+	ShortLabel:          "WM",
+	HandwritingLanguage: LanguageEn,
+	VoiceLanguage:       LanguageEn,
+}
+
 // EnglishUK represents the input method of English (UK).
 var EnglishUK = InputMethod{
 	Name:                "English (UK)",
@@ -262,12 +289,61 @@ var Arabic = InputMethod{
 	VoiceLanguage:       LanguageAr,
 }
 
+// Bulgarian represents the input method of Bulgarian.
+var Bulgarian = InputMethod{
+	Name:                "Bulgarian",
+	ID:                  "xkb:bg::bul",
+	ShortLabel:          "BG",
+	HandwritingLanguage: LanguageBg,
+	VoiceLanguage:       LanguageBg,
+}
+
 // Catalan represents the input method of Catalan.
 var Catalan = InputMethod{
 	Name:                "Catalan",
 	ID:                  "xkb:es:cat:cat",
 	HandwritingLanguage: LanguageCa,
 	VoiceLanguage:       LanguageCa,
+}
+
+// Croatian represents the input method of Croatian.
+var Croatian = InputMethod{
+	Name:                "Croatian",
+	ID:                  "xkb:hr::scr",
+	HandwritingLanguage: LanguageHr,
+	VoiceLanguage:       LanguageHr,
+}
+
+// Czech represents the input method of Czech.
+var Czech = InputMethod{
+	Name:                "Czech",
+	ID:                  "xkb:cz::cze",
+	HandwritingLanguage: LanguageCs,
+	VoiceLanguage:       LanguageCs,
+}
+
+// Danish represents the input method of Danish.
+var Danish = InputMethod{
+	Name:                "Danish",
+	ID:                  "xkb:dk::dan",
+	HandwritingLanguage: LanguageDa,
+	VoiceLanguage:       LanguageDa,
+}
+
+// Finnish represents the input method of Finnish.
+var Finnish = InputMethod{
+	Name:                "Finnish",
+	ID:                  "xkb:fi::fin",
+	HandwritingLanguage: LanguageFi,
+	VoiceLanguage:       LanguageFi,
+}
+
+// Georgian represents the input method of Georgian.
+var Georgian = InputMethod{
+	Name:                "Georgian",
+	ID:                  "xkb:ge::geo",
+	HandwritingLanguage: LanguageKa,
+	VoiceLanguage:       LanguageKa,
 }
 
 // GreekTransliteration represents the input method of Greek Transliteration.
@@ -286,12 +362,52 @@ var Gujarati = InputMethod{
 	VoiceLanguage:       LanguageGu,
 }
 
+// Hebrew represents the input method of Hebrew.
+var Hebrew = InputMethod{
+	Name:                "Hebrew",
+	ID:                  "xkb:il::heb",
+	HandwritingLanguage: LanguageHe,
+	VoiceLanguage:       LanguageHe,
+}
+
 // Hindi represents the input method of Hindi.
 var Hindi = InputMethod{
 	Name:                "Hindi",
 	ID:                  "hi-t-i0-und",
 	HandwritingLanguage: LanguageHi,
 	VoiceLanguage:       LanguageHi,
+}
+
+// Hungarian represents the input method of Hungarian.
+var Hungarian = InputMethod{
+	Name:                "Hungarian",
+	ID:                  "xkb:hu::hun",
+	HandwritingLanguage: LanguageHu,
+	VoiceLanguage:       LanguageHu,
+}
+
+// Icelandic represents the input method of Icelandic.
+var Icelandic = InputMethod{
+	Name:                "Icelandic",
+	ID:                  "xkb:is::ice",
+	HandwritingLanguage: LanguageIs,
+	VoiceLanguage:       LanguageIs,
+}
+
+// Irish represents the input method of Irish.
+var Irish = InputMethod{
+	Name:                "Irish",
+	ID:                  "xkb:ie::ga",
+	HandwritingLanguage: LanguageGa,
+	VoiceLanguage:       LanguageGa,
+}
+
+// Italian represents the input method of Italian.
+var Italian = InputMethod{
+	Name:                "Italian",
+	ID:                  "xkb:it::ita",
+	HandwritingLanguage: LanguageIt,
+	VoiceLanguage:       LanguageIt,
 }
 
 // Kannada represents the input method of Kannada.
@@ -311,6 +427,30 @@ var Khmer = InputMethod{
 	VoiceLanguage:       LanguageKm,
 }
 
+// Kazakh represents the input method of Kazakh.
+var Kazakh = InputMethod{
+	Name:                "Kazakh",
+	ID:                  "xkb:kz::kaz",
+	HandwritingLanguage: LanguageKk,
+	VoiceLanguage:       LanguageKk,
+}
+
+// Latvian represents the input method of Latvian.
+var Latvian = InputMethod{
+	Name:                "Latvian",
+	ID:                  "xkb:lv:apostrophe:lav",
+	HandwritingLanguage: LanguageLv,
+	VoiceLanguage:       LanguageLv,
+}
+
+// Macedonian represents the input method of Macedonian.
+var Macedonian = InputMethod{
+	Name:                "Macedonian",
+	ID:                  "xkb:mk::mkd",
+	HandwritingLanguage: LanguageMk,
+	VoiceLanguage:       LanguageMk,
+}
+
 // Malayalam represents the input method of Malayalam.
 var Malayalam = InputMethod{
 	Name:                "Malayalam",
@@ -319,12 +459,28 @@ var Malayalam = InputMethod{
 	VoiceLanguage:       LanguageMl,
 }
 
+// Maltese represents the input method of Maltese.
+var Maltese = InputMethod{
+	Name:                "Maltese",
+	ID:                  "xkb:mt::mlt",
+	HandwritingLanguage: LanguageMt,
+	VoiceLanguage:       LanguageMt,
+}
+
 // Marathi represents the input method of Marathi.
 var Marathi = InputMethod{
 	Name:                "Marathi",
 	ID:                  "mr-t-i0-und",
 	HandwritingLanguage: LanguageMr,
 	VoiceLanguage:       LanguageMr,
+}
+
+// Mongolian represents the input method of Mongolian.
+var Mongolian = InputMethod{
+	Name:                "Mongolian",
+	ID:                  "xkb:mn::mon",
+	HandwritingLanguage: LanguageMn,
+	VoiceLanguage:       LanguageMn,
 }
 
 // Myanmar represents the input method of Myanmar.
@@ -384,12 +540,28 @@ var Polish = InputMethod{
 	VoiceLanguage:       LanguagePl,
 }
 
+// Portuguese represents the input method of Portuguese.
+var Portuguese = InputMethod{
+	Name:                "Portuguese",
+	ID:                  "xkb:pt::por",
+	HandwritingLanguage: LanguagePt,
+	VoiceLanguage:       LanguagePt,
+}
+
 // Punjabi represents the input method of Punjabi.
 var Punjabi = InputMethod{
 	Name:                "Punjabi",
 	ID:                  "pa-t-i0-und",
 	HandwritingLanguage: LanguagePa,
 	VoiceLanguage:       LanguagePa,
+}
+
+// Romanian represents the input method of Romanian.
+var Romanian = InputMethod{
+	Name:                "Romanian",
+	ID:                  "xkb:ro::rum",
+	HandwritingLanguage: LanguageRo,
+	VoiceLanguage:       LanguageRo,
 }
 
 // Russian represents the input method of Russian.
@@ -408,6 +580,14 @@ var Sanskrit = InputMethod{
 	VoiceLanguage:       LanguageSa,
 }
 
+// Serbian represents the input method of Serbian.
+var Serbian = InputMethod{
+	Name:                "Serbian",
+	ID:                  "xkb:rs::srp",
+	HandwritingLanguage: LanguageSr,
+	VoiceLanguage:       LanguageSr,
+}
+
 // Sinhala represents the input method of Sinhala.
 var Sinhala = InputMethod{
 	Name:                "Sinhala",
@@ -415,6 +595,22 @@ var Sinhala = InputMethod{
 	ShortLabel:          "SI",
 	HandwritingLanguage: LanguageSi,
 	VoiceLanguage:       LanguageSi,
+}
+
+// Slovak represents the input method of Slovak.
+var Slovak = InputMethod{
+	Name:                "Slovak",
+	ID:                  "xkb:sk::slo",
+	HandwritingLanguage: LanguageSk,
+	VoiceLanguage:       LanguageSk,
+}
+
+// Slovenian represents the input method of Slovenian.
+var Slovenian = InputMethod{
+	Name:                "Slovenian",
+	ID:                  "xkb:si::slv",
+	HandwritingLanguage: LanguageSl,
+	VoiceLanguage:       LanguageSl,
 }
 
 // Tamil represents the input method of Tamil.
@@ -441,6 +637,14 @@ var ThaiTis = InputMethod{
 	VoiceLanguage:       LanguageTh,
 }
 
+// Turkish represents the input method of Turkish.
+var Turkish = InputMethod{
+	Name:                "Turkish",
+	ID:                  "xkb:tr:f:tur",
+	HandwritingLanguage: LanguageTr,
+	VoiceLanguage:       LanguageTr,
+}
+
 // Urdu represents the input method of Urdu.
 var Urdu = InputMethod{
 	Name:                "Urdu",
@@ -457,6 +661,9 @@ var inputMethods = []InputMethod{
 	EnglishUS,
 	EnglishUSWithInternationalKeyboard,
 	EnglishUSWithExtendedKeyboard,
+	EnglishUSWithDvorakKeyboard,
+	EnglishUSWithColemakKeyboard,
+	EnglishUSWithWorkmanKeyboard,
 	EnglishUK,
 	EnglishSouthAfrica,
 	SpanishSpain,
@@ -478,26 +685,48 @@ var inputMethods = []InputMethod{
 	DutchNetherlands,
 	Korean,
 	Arabic,
+	Bulgarian,
+	Croatian,
+	Czech,
+	Danish,
+	Finnish,
+	Georgian,
 	GreekTransliteration,
 	Gujarati,
+	Hebrew,
 	Hindi,
+	Hungarian,
+	Icelandic,
+	Irish,
+	Italian,
 	Kannada,
+	Kazakh,
 	Khmer,
+	Latvian,
+	Macedonian,
 	Malayalam,
+	Maltese,
 	Marathi,
 	Myanmar,
+	Mongolian,
 	NepaliTransliteration,
 	Norwegian,
 	Odia,
 	PersianTransliteration,
 	Polish,
+	Portuguese,
 	Punjabi,
+	Romanian,
 	Russian,
 	Sanskrit,
+	Serbian,
 	Sinhala,
+	Slovak,
+	Slovenian,
 	Tamil,
 	Telugu,
 	ThaiTis,
+	Turkish,
 	Urdu,
 }
 
@@ -741,6 +970,11 @@ func (im InputMethod) SetVKAutoCorrection(tconn *chrome.TestConn, acLevel AutoCo
 func (im InputMethod) SetVKEnableCapitalization(tconn *chrome.TestConn, isEnabled bool) action.Action {
 	settings := map[string]interface{}{"virtualKeyboardEnableCapitalization": isEnabled}
 	return im.SetSettings(tconn, settings)
+}
+
+// InputMethods returns in-use (available) IMEs in ChromeOS.
+func InputMethods() []InputMethod {
+	return inputMethods
 }
 
 // AutoCorrectionLevel describes the auto correction level of an input method.
