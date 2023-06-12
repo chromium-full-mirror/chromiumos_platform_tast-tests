@@ -110,10 +110,10 @@ func AddProfileNoAccount(ctx context.Context, s *testing.State) {
 
 	s.Log("Adding a new profile")
 	addProfileRoot := nodewith.Name("Set up your new Chrome profile").Role(role.RootWebArea)
-	customizeProfileRoot := nodewith.Name("Customize your Chrome profile").Role(role.RootWebArea)
+	customizeProfileRoot := nodewith.Name("Welcome!").Role(role.Dialog)
 	if err := uiauto.Combine("click on nextButton",
 		ui.DoDefault(nodewith.Name("Continue without an account").Role(role.Button).Focusable().Ancestor(addProfileRoot)),
-		ui.DoDefault(nodewith.NameStartingWith("Add a name").Role(role.TextField).Focusable().Required().Ancestor(customizeProfileRoot)),
+		ui.DoDefault(nodewith.NameStartingWith("Rename your profile").Role(role.TextField).Focusable().Required().Ancestor(customizeProfileRoot)),
 		kb.TypeAction(newProfileName),
 		ui.DoDefault(nodewith.Name("Done").Role(role.Button).Focusable().Ancestor(customizeProfileRoot)),
 	)(ctx); err != nil {
