@@ -8,9 +8,10 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/network/netconfigtypes"
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 
 	"go.chromium.org/tast/core/testing"
@@ -70,21 +71,24 @@ func RoamingStatusLabel(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set roaming property: ", err)
 	}
 
-	_, err = cellular.NewHelperWithConnectedCellular(ctx)
-	if err != nil {
-		s.Fatal("Failed to connect to a cellular network: ", err)
-	}
-
 	networkName, err := cellular.GetCellularNetwork(ctx)
 	if err != nil {
 		s.Fatal("Failed to get a cellular network: ", err)
 	}
 
-	app, err := ossettings.OpenNetworkDetailPage(ctx, tconn, cr, networkName, netconfigtypes.Cellular)
+	app, err := ossettings.OpenMobileDataSubpage(ctx, tconn, cr)
 	if err != nil {
-		s.Fatal("Failed to open network detail page: ", networkName)
+		s.Fatal("Failed to open mobile data sub page: ", err)
 	}
 	defer app.Close(ctx)
+
+	ui := uiauto.New(tconn).WithTimeout(60 * time.Second)
+
+	connectedCellularRow := nodewith.NameContaining(networkName + ", Connected").First()
+
+	if err = ui.LeftClick(connectedCellularRow)(ctx); err != nil {
+		s.Fatal("Failed to click on connected network row: ", err)
+	}
 
 	roamingSubLabel, err := app.RoamingSubLabel(ctx, cr)
 	if err != nil {

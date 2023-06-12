@@ -6,7 +6,6 @@ package cellular
 
 import (
 	"context"
-	//"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/cellular"
