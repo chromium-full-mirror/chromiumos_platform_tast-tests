@@ -38,8 +38,8 @@ const failedToSetupKeyboardErr = "failed to setup keyboard"
 // failedToUseKeyboardErr is error message for failed keyboard usage.
 const failedToUseKeyboardErr = "failed to use keyboard"
 
-// failedToDeleteCACertErr is error message for CA certificate deletion failed.
-const failedToDeleteCACertErr = "failed to delete CA cert"
+// failedToDeleteCertErr is error message for certificate deletion failure.
+const failedToDeleteCertErr = "failed to delete cert"
 
 // failedToPressOkErr is error message for failed interaction with "OK" button in UI.
 const failedToPressOkErr = "failed to press OK button"
@@ -52,6 +52,9 @@ const KeyboardKey = "keyboard"
 
 // ManageCertSettingsWebArea is UI element finder for "Settings - Manage certificates" root web area.
 var ManageCertSettingsWebArea = nodewith.Name("Settings - Manage certificates").Role("rootWebArea")
+
+// CertificatesPageURL is a certificates page url.
+const CertificatesPageURL = "chrome://settings/certificates"
 
 // PressOkButton presses the "OK" on the dialog with the provided `parent`.
 // On some dialogs the "OK" button is generally a bit flaky, and on devices
@@ -132,6 +135,18 @@ func ImportCACert(ctx context.Context, ui *uiauto.Context, caCertFileName string
 	return nil
 }
 
+// IsClientCertImported checks if client certificate is present in the list of imported certificates.
+func IsClientCertImported(ctx context.Context, ui *uiauto.Context, clientOrg string) (status bool) {
+	if err := uiauto.Combine("check client cert",
+		ui.DoDefault(nodewith.Name("Your certificates").Role(role.Tab)),
+		ui.WaitUntilExists(nodewith.Name("Your certificates").ClassName("tab selected")),
+		ui.WithTimeout(3*time.Second).WaitUntilExists(nodewith.Name(clientOrg).First()),
+	)(ctx); err == nil {
+		return true
+	}
+	return false
+}
+
 // ImportClientCertImpl uses the provided buttonName on the
 // chrome://settings/certificates page to manually import
 // the client certificate from file.
@@ -155,13 +170,12 @@ func ImportClientCertImpl(ctx context.Context, ui *uiauto.Context, clientCertFil
 		ui.WaitUntilExists(passwordTextBox.Ancestor(passwordDialog).State("focusable", true)),
 		ui.DoDefault(passwordTextBox.Ancestor(passwordDialog)),
 		kb.TypeAction(certFilePassword),
+		kb.AccelAction("enter"),
+		ui.WithTimeout(3*time.Second).WaitUntilGone(passwordTextBox.Ancestor(passwordDialog)),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to import client certificate")
 	}
 
-	if err := PressOkButton(ctx, ui, ManageCertSettingsWebArea); err != nil {
-		return errors.Wrap(err, failedToPressOkErr)
-	}
 	return nil
 }
 
@@ -225,7 +239,7 @@ func OpenActionMenuForClientCertificate(ctx context.Context, ui *uiauto.Context,
 		ui.DoDefault(nodewith.Name("More actions").Role(role.Button)),
 		ui.WaitUntilExists(nodewith.Name("View").Role(role.MenuItem)),
 	)(ctx); err != nil {
-		return errors.Wrap(err, failedToDeleteCACertErr)
+		return err
 	}
 	return nil
 }
@@ -237,7 +251,7 @@ func DeleteClientCert(ctx context.Context, ui *uiauto.Context, clientOrg string)
 	}
 
 	if err := ui.DoDefault(nodewith.Name("Delete").Role(role.MenuItem))(ctx); err != nil {
-		return errors.Wrap(err, failedToDeleteCACertErr)
+		return errors.Wrap(err, failedToDeleteCertErr)
 	}
 
 	if err := PressOkButton(ctx, ui, ManageCertSettingsWebArea); err != nil {
@@ -245,7 +259,7 @@ func DeleteClientCert(ctx context.Context, ui *uiauto.Context, clientOrg string)
 	}
 
 	if err := ui.WaitUntilGone(nodewith.Name(clientOrg))(ctx); err != nil {
-		errors.Wrap(err, failedToDeleteCACertErr)
+		errors.Wrap(err, failedToDeleteCertErr)
 	}
 	return nil
 }
@@ -265,7 +279,7 @@ func DeleteCACert(ctx context.Context, ui *uiauto.Context, caOrgName, caOrg stri
 		ui.DoDefault(deleteButton),
 		ui.WaitUntilExists(nodewith.NameContaining("Delete CA certificate").First()),
 	)(ctx); err != nil {
-		return errors.Wrap(err, failedToDeleteCACertErr)
+		return errors.Wrap(err, failedToDeleteCertErr)
 	}
 
 	if err := PressOkButton(ctx, ui, ManageCertSettingsWebArea); err != nil {
@@ -273,7 +287,7 @@ func DeleteCACert(ctx context.Context, ui *uiauto.Context, caOrgName, caOrg stri
 	}
 
 	if err := ui.WaitUntilGone(nodewith.Name(caOrgName))(ctx); err != nil {
-		return errors.Wrap(err, failedToDeleteCACertErr)
+		return errors.Wrap(err, failedToDeleteCertErr)
 	}
 	return nil
 }

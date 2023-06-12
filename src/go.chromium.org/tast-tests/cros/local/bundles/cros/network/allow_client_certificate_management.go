@@ -92,6 +92,13 @@ func expectImportClientCertSuccess(ctx context.Context, s *testing.State, ui *ui
 	}
 }
 
+// expectClientCertNotImported checks that client certificate is not present in the list of imported certificates.
+func expectClientCertNotImported(ctx context.Context, s *testing.State, ui *uiauto.Context) {
+	if status := utils.IsClientCertImported(ctx, ui, clientCertificateOrg); status == true {
+		s.Fatal("Clients certificate is already present in system")
+	}
+}
+
 // expectImportNoBindClientCertSuccess imports client certificate using "Import" button
 // on the certificate management page.
 func expectImportNoBindClientCertSuccess(ctx context.Context, s *testing.State, ui *uiauto.Context) {
@@ -217,7 +224,7 @@ func AllowClientCertificateManagement(ctx context.Context, s *testing.State) {
 			// with certificates are forbidden.
 			if !param.canManageUserCert {
 				// Opening a new tab in browser.
-				conn, err := cr.NewConn(ctx, "chrome://settings/certificates")
+				conn, err := cr.NewConn(ctx, utils.CertificatesPageURL)
 				if err != nil {
 					s.Fatal("Failed to open a new tab in browser: ", err)
 				}
@@ -232,13 +239,14 @@ func AllowClientCertificateManagement(ctx context.Context, s *testing.State) {
 			}
 
 			// Opening a new tab in browser.
-			conn, err := cr.NewConn(ctx, "chrome://settings/certificates")
+			conn, err := cr.NewConn(ctx, utils.CertificatesPageURL)
 			if err != nil {
 				s.Fatal("Failed to open a new tab in browser: ", err)
 			}
 			defer conn.Close()
 
 			if param.canManageUserCert {
+				expectClientCertNotImported(ctx, s, ui)
 				expectImportClientCertSuccess(ctx, s, ui)
 				expectDeleteClientCertSuccess(ctx, s, ui)
 				expectImportNoBindClientCertSuccess(ctx, s, ui)
@@ -246,7 +254,26 @@ func AllowClientCertificateManagement(ctx context.Context, s *testing.State) {
 			} else {
 				expectImportClientCertNotPossible(ctx, s, ui)
 				expectDeleteClientCertNotPossible(ctx, s, ui)
+
+				// Reset policy and perform cleanup.
+				if err := policyutil.ResetChrome(ctx, fdms, cr); err != nil {
+					s.Fatal("Failed to clean up: ", err)
+				}
+				conn, err := cr.NewConn(ctx, utils.CertificatesPageURL)
+				if err != nil {
+					s.Fatal("Failed to open a new tab in browser: ", err)
+				}
+				defer conn.Close()
+				expectDeleteClientCertSuccess(ctx, s, ui)
 			}
+
 		})
 	}
+	// Make sure that cleanup done.
+	conn, err := cr.NewConn(ctx, utils.CertificatesPageURL)
+	if err != nil {
+		s.Fatal("Failed to open a new tab in browser: ", err)
+	}
+	defer conn.Close()
+	expectClientCertNotImported(ctx, s, ui)
 }
