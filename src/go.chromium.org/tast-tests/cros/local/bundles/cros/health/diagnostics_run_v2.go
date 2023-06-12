@@ -29,34 +29,34 @@ func init() {
 		Params: []testing.Param{{
 			Name:      "memory_v2",
 			Val:       croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineMemoryV2},
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			ExtraAttr: []string{"informational"},
 		}, {
 			Name:      "cpu_stress_v2",
 			Val:       croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineCPUStressV2},
 			Timeout:   5 * time.Minute,
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			ExtraAttr: []string{"informational"},
 		}, {
 			Name:      "audio_driver",
 			Val:       croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineAudioDriver},
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			ExtraAttr: []string{"informational"},
 		}, {
 			Name:    "cpu_cache_v2",
 			Val:     croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineCPUCacheV2},
 			Timeout: 5 * time.Minute,
 			// TODO(b/281766836): Promote tast to critical
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			ExtraAttr: []string{"informational"},
 		}, {
 			Name: "ufs_lifetime",
 			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineUFSLifetime},
 			// TODO(b/283724445): Promote tast to critical.
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
+			ExtraAttr:         []string{"informational"},
 			ExtraHardwareDeps: hwdep.D(hwdep.Ufs()),
 		}, {
 			Name:    "prime_search_v2",
 			Val:     croshealthd.RoutineParamsV2{Routine: croshealthd.RoutinePrimeSearchV2},
 			Timeout: 5 * time.Minute,
 			// TODO(b/285065218): Promote tast to critical
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			ExtraAttr: []string{"informational"},
 		}}})
 }
 

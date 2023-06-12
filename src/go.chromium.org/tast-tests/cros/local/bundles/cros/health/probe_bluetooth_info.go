@@ -88,7 +88,7 @@ func init() {
 				SkipSupportedCapabilities: false,
 			},
 			// TODO(b/280387742): Merge this back to the main test.
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			ExtraAttr: []string{"informational"},
 		}},
 	})
 }
