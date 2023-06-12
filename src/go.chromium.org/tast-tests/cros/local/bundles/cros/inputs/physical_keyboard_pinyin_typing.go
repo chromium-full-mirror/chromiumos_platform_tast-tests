@@ -62,7 +62,7 @@ func init() {
 				Fixture:           fixture.LacrosClamshellNonVK,
 				Val:               ime.ChineseTraditionalPinyin,
 				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
+				ExtraAttr:         []string{"informational"},
 				ExtraSearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.ChineseTraditionalPinyin}),
 			},
 		},

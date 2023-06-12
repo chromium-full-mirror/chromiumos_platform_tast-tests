@@ -67,7 +67,7 @@ func init() {
 				Fixture:           fixture.TabletVKStereoAloopLoaded,
 				Val:               voiceTestIMEsNewData,
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
-				ExtraAttr:         []string{"informational", "group:criticalstaging", "group:input-tools-upstream"},
+				ExtraAttr:         []string{"informational", "group:input-tools-upstream"},
 				ExtraSearchFlags:  util.IMESearchFlags(voiceTestIMEsNewData),
 			},
 			{
@@ -84,7 +84,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
 				ExtraSoftwareDeps: []string{"lacros_stable", "lacros"},
 				ExtraSearchFlags:  util.IMESearchFlags(voiceTestIMEsNewData),
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
+				ExtraAttr:         []string{"informational"},
 			},
 		},
 	})

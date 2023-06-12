@@ -39,7 +39,7 @@ func init() {
 		Params: []testing.Param{
 			{
 				Fixture:           fixture.ClamshellNonVK,
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
+				ExtraAttr:         []string{"informational"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(pre.StableModels...), hwdep.SkipOnModel("kefka")),
 			},
 			{

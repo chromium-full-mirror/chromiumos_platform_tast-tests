@@ -23,7 +23,7 @@ func init() {
 		BugComponent: "b:167212", // ChromeOS > Platform > Services > Input
 		SoftwareDeps: []string{"inputs_deps", "chrome"},
 		Timeout:      3 * time.Minute,
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      "chromeLoggedIn",
 		HardwareDeps: hwdep.D(hwdep.Keyboard(), hwdep.FormFactor(hwdep.Convertible, hwdep.Clamshell, hwdep.Detachable), hwdep.SkipOnModel("kodama")),
 	})

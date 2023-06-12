@@ -37,7 +37,7 @@ func init() {
 		Desc:         "Checks that virtual keyboard shows digits as candidates when user typing in password field",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
-		Attr:         []string{"group:mainline", "group:input-tools", "group:criticalstaging", "informational"},
+		Attr:         []string{"group:mainline", "group:input-tools", "informational"},
 		SearchFlags:  util.IMESearchFlags(imes),
 		SoftwareDeps: []string{"inputs_deps", "chrome", "google_virtual_keyboard"},
 		HardwareDeps: hwdep.D(pre.InputsStableModels),
