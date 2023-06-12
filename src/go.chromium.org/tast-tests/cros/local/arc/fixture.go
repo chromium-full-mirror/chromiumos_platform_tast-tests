@@ -154,6 +154,29 @@ func init() {
 		TearDownTimeout: ResetTimeout,
 	})
 
+	// arcBootedWithPlayStoreQsRevampEnabled is similar to fixture arcBootedWithPlayStore and has quick settings revamp enabled.
+	testing.AddFixture(&testing.Fixture{
+		Name: "arcBootedWithPlayStoreQsRevampEnabled",
+		Desc: "ARC is booted with sync flags disabled and quick settings revamp enabled",
+		Vars: []string{"ui.gaiaPoolDefault"},
+		Contacts: []string{
+			"jamescook@google.com",
+			"cros-status-area-eng@google.com",
+		},
+		Impl: NewArcBootedWithPlayStoreFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{
+				chrome.EnableFeatures("QsRevamp"),
+				chrome.ExtraArgs(DisableSyncFlags()...),
+				chrome.UnRestrictARCCPU(),
+				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+			}, nil
+		}),
+		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + BootTimeout + 2*time.Minute,
+		ResetTimeout:    ResetTimeout,
+		PostTestTimeout: PostTestTimeout,
+		TearDownTimeout: ResetTimeout,
+	})
+
 	// arcBootedWithPlayStoreAndBluetoothBlueZ is a fixture similar to arcBootedWithPlayStore along with Bluetooth-BlueZ is enabled.
 	testing.AddFixture(&testing.Fixture{
 		Name: "arcBootedWithPlayStoreAndBluetoothBlueZ",
@@ -405,6 +428,27 @@ func init() {
 				chrome.ARCEnabled(),
 				chrome.UnRestrictARCCPU(),
 				chrome.EnableFeatures("PasspointARCSupport"),
+			}, nil
+		}),
+		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
+		ResetTimeout:    ResetTimeout,
+		PostTestTimeout: PostTestTimeout,
+		TearDownTimeout: ResetTimeout,
+	})
+
+	// arcBootedQsRevampEnabled is similar to fixture arcBooted and has quick settings revamp enabled.
+	testing.AddFixture(&testing.Fixture{
+		Name: "arcBootedQsRevampEnabled",
+		Desc: "ARC is booted with quick settings revamp enabled",
+		Contacts: []string{
+			"jamescook@google.com",
+			"cros-status-area-eng@google.com",
+		},
+		Impl: NewArcBootedFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{
+				chrome.ARCEnabled(),
+				chrome.UnRestrictARCCPU(),
+				chrome.EnableFeatures("QsRevamp"),
 			}, nil
 		}),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,

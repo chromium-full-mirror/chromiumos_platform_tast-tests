@@ -52,7 +52,7 @@ func init() {
 		// ChromeOS > Platform > Virtualization > ARC++ & ARCVM > ARC Audio
 		BugComponent: "b:879188",
 		SoftwareDeps: []string{"chrome", "arc"},
-		Fixture:      "arcBooted",
+		Fixture:      "arcBootedQsRevampEnabled",
 		Attr:         []string{"group:mainline", "group:audio"},
 		Timeout:      3 * time.Minute,
 		Params: []testing.Param{
@@ -574,6 +574,9 @@ func AudioLoopbackCorrectness(ctx context.Context, s *testing.State) {
 		keyChannelConfig   = "channel_config"
 		keyPerformanceMode = "perf_mode"
 	)
+
+	cleanup := quicksettings.SetQsRevampEnabled(true)
+	defer cleanup()
 
 	a := s.FixtValue().(*arc.PreData).ARC
 	cr := s.FixtValue().(*arc.PreData).Chrome

@@ -33,13 +33,16 @@ func init() {
 		BugComponent: "b:1052117", // ChromeOS > Software > ARC++ > EngProd
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "arc"},
-		Fixture:      "arcBootedWithPlayStore",
+		Fixture:      "arcBootedWithPlayStoreQsRevampEnabled",
 		Timeout:      3*time.Minute + apputil.InstallationTimeout,
 	})
 }
 
 // YoutubeAppPlayingWhenUnfocused keeps youtube app playing while window focus shifted.
 func YoutubeAppPlayingWhenUnfocused(ctx context.Context, s *testing.State) {
+	cleanup := quicksettings.SetQsRevampEnabled(true)
+	defer cleanup()
+
 	cr := s.FixtValue().(*arc.PreData).Chrome
 	a := s.FixtValue().(*arc.PreData).ARC
 	device := s.FixtValue().(*arc.PreData).UIDevice

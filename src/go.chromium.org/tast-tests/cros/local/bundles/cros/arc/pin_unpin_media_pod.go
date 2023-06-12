@@ -42,7 +42,7 @@ func init() {
 		SoftwareDeps: []string{"chrome", "chrome_internal", "arc"},
 		// There are two apps to be installed in this case.
 		Timeout: 2*time.Minute + 2*apputil.InstallationTimeout,
-		Fixture: "arcBootedWithPlayStore",
+		Fixture: "arcBootedWithPlayStoreQsRevampEnabled",
 	})
 }
 
@@ -55,6 +55,9 @@ const (
 
 // PinUnpinMediaPod checks the pin/unpin/re-pin for media control pod.
 func PinUnpinMediaPod(ctx context.Context, s *testing.State) {
+	cleanupQs := quicksettings.SetQsRevampEnabled(true)
+	defer cleanupQs()
+
 	cr := s.FixtValue().(*arc.PreData).Chrome
 	a := s.FixtValue().(*arc.PreData).ARC
 	device := s.FixtValue().(*arc.PreData).UIDevice
@@ -203,7 +206,7 @@ func unpinAndVerify(ui *uiauto.Context, tconn *chrome.TestConn) uiauto.Action {
 		ui.WaitUntilExists(dialogView.Role(role.ListItem).NameStartingWith(ytAppVideo)),
 		quicksettings.UnpinMediaControlsPod(tconn),
 		reopenQuickSettings(tconn),
-		ui.WaitUntilExists(quicksettings.MediaControlsPod),
+		ui.WaitUntilExists(quicksettings.MediaControlsPod()),
 	)
 }
 
@@ -218,7 +221,7 @@ func pinAndVerify(ui *uiauto.Context, tconn *chrome.TestConn, title string) uiau
 		ui.WaitUntilExists(detailView.Role(role.ListItem).NameStartingWith(ytAppVideo)),
 		quicksettings.PinMediaControlsPod(tconn),
 		reopenQuickSettings(tconn),
-		ui.WaitUntilGone(quicksettings.MediaControlsPod),
+		ui.WaitUntilGone(quicksettings.MediaControlsPod()),
 	)
 }
 

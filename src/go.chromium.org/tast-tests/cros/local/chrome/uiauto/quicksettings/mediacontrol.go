@@ -14,9 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 )
 
-// MediaControlsPod is the 'Media controls' pod in the Quick Settings.
-var MediaControlsPod = nodewith.NameStartingWith("Media controls").HasClass("Button").Ancestor(LegacyRootFinder)
-
 // MediaControlsDetailView is the detailed Media controls view within the Quick Settings.
 var MediaControlsDetailView = nodewith.HasClass("UnifiedMediaControlsDetailedView")
 
@@ -25,6 +22,11 @@ var PinnedMediaControls = nodewith.Role(role.Button).Name("Control your music, v
 
 // MediaControlsDialog is the opened 'Media controls' panel in shelf.
 var MediaControlsDialog = nodewith.Role(role.Dialog).Name("Media controls").HasClass("RootView")
+
+// MediaControlsPod returns the 'Media controls' pod in Quick Settings.
+func MediaControlsPod() *nodewith.Finder {
+	return nodewith.NameStartingWith("Media controls").HasClass("Button").Ancestor(GetRootFinder())
+}
 
 // PinMediaControlsPod pins the Media controls pod from the detail page.
 func PinMediaControlsPod(tconn *chrome.TestConn) uiauto.Action {
@@ -56,7 +58,7 @@ func NavigateToMediaControlsSubpage(tconn *chrome.TestConn, title string) uiauto
 
 		ui := uiauto.New(tconn)
 		return uiauto.Combine("click the Media controls title",
-			ui.LeftClick(nodewith.Name(title).HasClass("Label").Ancestor(MediaControlsPod)),
+			ui.LeftClick(nodewith.Name(title).HasClass("Label").Ancestor(MediaControlsPod())),
 			ui.WaitUntilExists(MediaControlsDetailView),
 		)(ctx)
 	}

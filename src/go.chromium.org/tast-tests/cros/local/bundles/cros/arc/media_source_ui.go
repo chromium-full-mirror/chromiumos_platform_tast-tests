@@ -47,12 +47,15 @@ func init() {
 		Data:         []string{testfile},
 		// There are two apps to be installed in this case.
 		Timeout: 2*time.Minute + 2*apputil.InstallationTimeout,
-		Fixture: "arcBootedWithPlayStore",
+		Fixture: "arcBootedWithPlayStoreQsRevampEnabled",
 	})
 }
 
 // MediaSourceUI checks the media control is displaying the most recent activated media source.
 func MediaSourceUI(ctx context.Context, s *testing.State) {
+	cleanup := quicksettings.SetQsRevampEnabled(true)
+	defer cleanup()
+
 	cr := s.FixtValue().(*arc.PreData).Chrome
 	a := s.FixtValue().(*arc.PreData).ARC
 	device := s.FixtValue().(*arc.PreData).UIDevice
@@ -137,13 +140,13 @@ func MediaSourceUI(ctx context.Context, s *testing.State) {
 				}
 			}
 
-			if err := quicksettings.Expand(ctx, tconn); err != nil {
-				s.Fatal("Failed to expand quicksettings: ", err)
+			if err := quicksettings.Show(ctx, tconn); err != nil {
+				s.Fatal("Failed to show quicksettings: ", err)
 			}
 			defer quicksettings.Hide(cleanupCtx, tconn)
 			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, outDir, s.HasError, cr, "ui_quicksettings")
 
-			resourceName := nodewith.Name(media.Subtitle).HasClass("Label").Ancestor(quicksettings.MediaControlsPod)
+			resourceName := nodewith.Name(media.Subtitle).HasClass("Label").Ancestor(quicksettings.MediaControlsPod())
 			if err := ui.WaitUntilExists(resourceName)(ctx); err != nil {
 				s.Fatal("Failed to check media control UI: ", err)
 			}

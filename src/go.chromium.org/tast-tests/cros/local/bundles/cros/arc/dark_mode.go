@@ -12,9 +12,7 @@ import (
 	arcpkg "go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/personalization"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -30,12 +28,14 @@ func init() {
 		BugComponent: "b:537221",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "android_vm"},
-		Fixture:      "arcBooted",
+		Fixture:      "arcBootedQsRevampEnabled",
 		Timeout:      chrome.GAIALoginTimeout + arcpkg.BootTimeout + 120*time.Second,
 	})
 }
 
 func DarkMode(ctx context.Context, s *testing.State) {
+	cleanup := quicksettings.SetQsRevampEnabled(true)
+	defer cleanup()
 
 	cr := s.FixtValue().(*arcpkg.PreData).Chrome
 	arc := s.FixtValue().(*arcpkg.PreData).ARC
@@ -78,48 +78,16 @@ func DarkMode(ctx context.Context, s *testing.State) {
 
 // toggleDarkThemeFromQuickSettings opens the Quick Settings and then toggles the Dark Theme.
 func toggleDarkThemeFromQuickSettings(ctx context.Context, tconn *chrome.TestConn, ui *uiauto.Context) error {
-	if err := quicksettings.Expand(ctx, tconn); err != nil {
-		return errors.Wrap(err, "failed to expand quick settings")
+	if err := quicksettings.Show(ctx, tconn); err != nil {
+		return errors.Wrap(err, "failed to show quick settings")
 	}
+	defer quicksettings.Hide(ctx, tconn)
 
-	darkThemePodIconButton := quicksettings.PodIconButton(quicksettings.SettingPodDarkTheme)
-	if err := ui.WaitUntilExists(darkThemePodIconButton)(ctx); err != nil {
-		return errors.Wrap(err, "dark theme pod icon button is not found")
-	}
-
-	pageIndicators := nodewith.Role(role.Button).ClassName("PageIndicatorView")
-	pages, err := ui.NodesInfo(ctx, pageIndicators)
-	if err != nil {
-		return errors.Wrap(err, "failed to get page indicator")
-	}
-
-	// If there is no page indicator (which means only one page of pod icons in Quick Settings),
-	// try to click on Dark theme pod icon button.
-	if len(pages) == 0 {
-		if err := ui.LeftClick(darkThemePodIconButton)(ctx); err != nil {
-			return errors.Wrap(err, "failed to toggle Dark theme")
-		}
-		return nil
-	}
-
-	// Although Dark theme pod icon button is available in Quick Settings, we don't know the
-	// exact page it resides. If we click on the Dark theme button in a wrong page, it would
-	// close Quick Settings bubble. Hence, we need to reopen the bubble in case it closes and
-	// try to click on the Dark theme button in all the pages.
-	for _, page := range pages {
-		if shown, err := quicksettings.Shown(ctx, tconn); err != nil {
-			return errors.Wrap(err, "failed to check quick settings visibility status")
-		} else if !shown {
-			if err := quicksettings.Expand(ctx, tconn); err != nil {
-				return errors.Wrap(err, "failed to expand quick settings")
-			}
-		}
-		if err := uiauto.Combine("Toggle Dark theme",
-			ui.LeftClick(nodewith.Role(page.Role).ClassName(page.ClassName).Name(page.Name)),
-			ui.LeftClick(darkThemePodIconButton),
-		)(ctx); err != nil {
-			return errors.Wrap(err, "failed to toggle Dark theme")
-		}
+	if err := uiauto.Combine("Toggle Dark theme",
+		ui.LeftClick(quicksettings.DisplaySettingsButton),
+		ui.LeftClick(quicksettings.FeatureTileDarkTheme),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to toggle Dark theme")
 	}
 	return nil
 }
