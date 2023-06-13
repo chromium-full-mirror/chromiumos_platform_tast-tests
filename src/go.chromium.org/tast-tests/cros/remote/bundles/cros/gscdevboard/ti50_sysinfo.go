@@ -25,7 +25,7 @@ func init() {
 			"chromeos-faft@google.com", // CrOS Firmware Developers
 			"jbk@chromium.org",         // Test Author
 		},
-		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
+		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
 		Attr:         []string{"group:gsc", "gsc_dt_ab", "gsc_ot_fpga_cw310", "gsc_he", "gsc_image_ti50"},
 		Fixture:      fixture.Ti50CcdOpen,
 	})
