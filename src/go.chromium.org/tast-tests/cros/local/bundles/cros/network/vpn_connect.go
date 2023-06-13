@@ -30,14 +30,9 @@ func init() {
 		// ChromeOS > Platform > System > Networking
 		BugComponent: "b:156085",
 		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"chrome"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		// We use different fixtures in different tests, based on whether they need
-		// certificates or not. Note that for tests of IKEv2 and L2TP/IPsec with
-		// certs, although they do not involve Chrome by intention, but Chrome may
-		// change the cert properties of them proactively, and thus we need Chrome
-		// is logged-in as the same user with our fake TPM. Also see
-		// b/192425378#comment5.
+		// certificates or not.
 		Params: []testing.Param{{
 			Name: "ikev2_psk",
 			Val: vpnConnectTestParams{
@@ -56,7 +51,7 @@ func init() {
 					vpn.WithIPsecAuthType(vpn.AuthTypeCert),
 				},
 			},
-			Fixture:           "vpnEnvWithCertsAndChromeLoggedIn",
+			Fixture:           "vpnEnvWithCerts",
 			ExtraSoftwareDeps: []string{"ikev2"},
 		}, {
 			Name: "ikev2_eap_mschapv2",
@@ -66,7 +61,7 @@ func init() {
 					vpn.WithIPsecAuthType(vpn.AuthTypeEAP),
 				},
 			},
-			Fixture:           "vpnEnvWithCertsAndChromeLoggedIn",
+			Fixture:           "vpnEnvWithCerts",
 			ExtraSoftwareDeps: []string{"ikev2"},
 		}, {
 			Name: "l2tp_ipsec_psk",
@@ -117,7 +112,7 @@ func init() {
 					vpn.WithIPsecAuthType(vpn.AuthTypeCert),
 				},
 			},
-			Fixture: "vpnEnvWithCertsAndChromeLoggedIn",
+			Fixture: "vpnEnvWithCerts",
 		}, {
 			Name: "openvpn",
 			Val: vpnConnectTestParams{
