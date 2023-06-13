@@ -26,10 +26,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Behavior of ShowLogoutButtonInTray policy, check if a logout button is shown based on the value of the policy",
 		Contacts: []string{
-			"cros-engprod-muc@google.com",
+			"chromeos-kiosk-eng+TAST@google.com",
 			"alexanderhartl@google.com", // Test author
 		},
-		BugComponent: "b:1263917",
+		BugComponent: "b:892153", // ChromeOS > Software > Commercial (Enterprise) > Kiosk
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier"},
 		Fixture:      fixture.ChromePolicyLoggedIn,
