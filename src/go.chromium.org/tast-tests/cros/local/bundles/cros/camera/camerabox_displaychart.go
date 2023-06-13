@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/camera/chart"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -22,6 +23,7 @@ func init() {
 		Desc:         "Verifies whether display chart script working normally",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "beckerh@chromium.org"},
 		Attr:         []string{"group:mainline", "informational"},
+		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		BugComponent: "b:167281",
 	})
 }
