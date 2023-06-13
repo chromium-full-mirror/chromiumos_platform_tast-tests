@@ -49,6 +49,7 @@ var (
 	rootWindow          = nodewith.NameStartingWith("Terminal").Role(role.Window).ClassName("BrowserFrame")
 	homeTab             = nodewith.Name("Terminal").Role(role.Window).ClassName("BrowserFrame")
 	terminalLeaveButton = nodewith.Name("Leave").Role(role.Button).HasClass("MdTextButton")
+	terminalTextField   = nodewith.Name("Terminal input").Role(role.TextField)
 
 	webArea = nodewith.NameRegex(regexp.MustCompile(`\@penguin\: `)).Role(role.RootWebArea)
 	// Prompt is the input prefix.
@@ -354,6 +355,7 @@ func (ta *TerminalApp) RunCommand(keyboard *input.KeyboardEventWriter, cmd strin
 	return uiauto.Combine("run command "+cmd,
 		// Focus on the Terminal window.
 		ta.ui.LeftClick(linuxTab),
+		ta.ui.WaitUntilExists(terminalTextField.Focused().Editable()),
 		// Type command.
 		keyboard.TypeAction(cmd),
 		// Press Enter.
@@ -461,8 +463,9 @@ func LaunchTmux(ctx context.Context, tconn *chrome.TestConn) (ta *TerminalApp, r
 	return ta, nil
 }
 
-// Create the special file to not have the shell defaults modify PS1.  This is
-// useful for tests which depend on the prompt string containing "localhost".
+// DontModifyPS1 creates the special file to not have the shell defaults modify
+// PS1. This is useful for tests which depend on the prompt string containing
+// "localhost".
 func DontModifyPS1(ctx context.Context) (cleanUp func(), err error) {
 	filePath := "/run/dont-modify-ps1-for-testing"
 	err = os.WriteFile(filePath, []byte(""), 0644)

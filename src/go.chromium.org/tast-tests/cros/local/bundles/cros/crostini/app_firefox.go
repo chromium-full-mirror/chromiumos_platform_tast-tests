@@ -111,8 +111,8 @@ func AppFirefox(ctx context.Context, s *testing.State) {
 		launcher.SearchAndLaunchWithQuery(tconn, keyboard, "f", "Firefox ESR"),
 		ui.WithTimeout(startupTimeout).WaitUntilExists(firefoxWindow),
 		uiauto.IfFailThen(
-			ud.WaitUntilExists(uidetection.TextBlock([]string{"Welcome", "to", "Firefox"}).WithinA11yNode(firefoxWindow).First()),
-			ud.WaitUntilExists(uidetection.TextBlock([]string{"New", "Tab"}).WithinA11yNode(firefoxWindow).First()),
+			ud.WithTimeout(startupTimeout).WaitUntilExists(uidetection.TextBlock([]string{"Welcome", "to", "Firefox"}).WithinA11yNode(firefoxWindow).First()),
+			ud.WithTimeout(startupTimeout).WaitUntilExists(uidetection.TextBlock([]string{"Get", "started"}).WithinA11yNode(firefoxWindow).First()),
 		),
 		ui.WithInterval(time.Second).RetryUntil(
 			keyboard.AccelAction("ctrl+w"),
