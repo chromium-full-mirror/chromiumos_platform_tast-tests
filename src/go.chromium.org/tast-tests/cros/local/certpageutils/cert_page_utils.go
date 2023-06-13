@@ -147,6 +147,19 @@ func IsClientCertImported(ctx context.Context, ui *uiauto.Context, clientOrg str
 	return false
 }
 
+// IsCACertOrgExists checks if CA certificate's org is present in the list of CA certificates orgs.
+func IsCACertOrgExists(ctx context.Context, ui *uiauto.Context, caOrg string) (status bool) {
+	caCertOrgText := nodewith.Name(caOrg).Role(role.StaticText)
+	if err := uiauto.Combine("Find CA org in orgs list",
+		ui.DoDefault(nodewith.Name("Authorities").Role(role.Tab)),
+		ui.WaitUntilExists(nodewith.Name("Authorities").ClassName("tab selected")),
+		ui.WithTimeout(3*time.Second).WaitUntilExists(caCertOrgText),
+	)(ctx); err == nil {
+		return true
+	}
+	return false
+}
+
 // ImportClientCertImpl uses the provided buttonName on the
 // chrome://settings/certificates page to manually import
 // the client certificate from file.

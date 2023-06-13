@@ -75,7 +75,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"reboot", "chrome"},
 		Fixture:      fixture.ChromePolicyLoggedIn,
-		Timeout:      3 * time.Minute,
+		Timeout:      5 * time.Minute,
 		Data:         []string{caCertFile},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.CACertificateManagementAllowed{}, pci.VerifiedFunctionalityUI),
@@ -257,6 +257,14 @@ func expectManageCACertNotPossible(ctx context.Context, s *testing.State, ui *ui
 	}
 }
 
+// expectCACertNotImported checks that CA certificate's org is not present in the list of known orgs for CA certificates .
+// We are checking only org and not checking exact certificates, because even org should not exist.
+func expectCACertNotImported(ctx context.Context, s *testing.State, ui *uiauto.Context) {
+	if status := utils.IsCACertOrgExists(ctx, ui, userCaOrg); status == true {
+		s.Fatal("CA Org is already present in system")
+	}
+}
+
 // AllowCACertificateManagement tests that user can or can not manage CA certificates
 // based on the policy setting. Policy description is here https://chromeenterprise.google/policies/#ClientCertificateManagementAllowed
 func AllowCACertificateManagement(ctx context.Context, s *testing.State) {
@@ -355,15 +363,17 @@ func AllowCACertificateManagement(ctx context.Context, s *testing.State) {
 
 			// Import user's certificate which will be used for testing, if operations
 			// with certificates are forbidden after the policy is applied.
+			isCleanupCertRequired := false
 			if !param.canManageUserCACert {
 				// Opening a new tab in browser.
-				conn, err := cr.NewConn(ctx, "chrome://settings/certificates")
+				conn, err := cr.NewConn(ctx, utils.CertificatesPageURL)
 				if err != nil {
 					s.Fatal("Failed to open a new tab in browser: ", err)
 				}
 				defer conn.Close()
 
 				expectImportUserCACertSuccess(ctx, s, ui)
+				isCleanupCertRequired = true
 			}
 
 			// Update policies.
@@ -375,7 +385,7 @@ func AllowCACertificateManagement(ctx context.Context, s *testing.State) {
 			}
 
 			// Opening a new tab in browser on certificates page.
-			conn, err := cr.NewConn(ctx, "chrome://settings/certificates")
+			conn, err := cr.NewConn(ctx, utils.CertificatesPageURL)
 			if err != nil {
 				s.Fatal("Failed to open a new tab in browser: ", err)
 			}
@@ -385,6 +395,7 @@ func AllowCACertificateManagement(ctx context.Context, s *testing.State) {
 			expectManagePolicyProvidedCACertNotPossible(ctx, s, ui, policyProvidedCaOrg, policyProvidedCaCertName)
 
 			if param.canManageUserCACert {
+				expectCACertNotImported(ctx, s, ui)
 				expectImportUserCACertSuccess(ctx, s, ui)
 				expectEditTrustUserCACertSuccess(ctx, s, ui)
 				expectDeleteUserCACertSuccess(ctx, s, ui)
@@ -399,6 +410,26 @@ func AllowCACertificateManagement(ctx context.Context, s *testing.State) {
 			} else {
 				expectManageCACertNotPossible(ctx, s, ui, providedCaOrg, providedCaCertName)
 			}
+
+			// Reset policy and delete cert if cert deletion was forbidden by policy during test.
+			if isCleanupCertRequired {
+				if err := policyutil.ResetChrome(ctx, fdms, cr); err != nil {
+					s.Fatal("Failed to clean up: ", err)
+				}
+				conn, err := cr.NewConn(ctx, utils.CertificatesPageURL)
+				if err != nil {
+					s.Fatal("Failed to open a new tab in browser: ", err)
+				}
+				defer conn.Close()
+				expectDeleteUserCACertSuccess(ctx, s, ui)
+			}
 		})
 	}
+	// Make sure that cleanup done.
+	conn, err := cr.NewConn(ctx, utils.CertificatesPageURL)
+	if err != nil {
+		s.Fatal("Failed to open a new tab in browser: ", err)
+	}
+	defer conn.Close()
+	expectCACertNotImported(ctx, s, ui)
 }
