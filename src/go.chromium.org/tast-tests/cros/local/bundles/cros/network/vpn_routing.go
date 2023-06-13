@@ -31,7 +31,7 @@ func init() {
 		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
 		// ChromeOS > Platform > System > Networking
 		BugComponent: "b:156085",
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{{
 			Name: "ikev2_ipv4",
@@ -39,6 +39,7 @@ func init() {
 				vpnType: vpn.TypeIKEv2,
 				ipType:  vpn.IPTypeIPv4,
 			},
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			Fixture:           "vpnEnv",
 			ExtraSoftwareDeps: []string{"ikev2"},
 		}, {
@@ -47,6 +48,7 @@ func init() {
 				vpnType: vpn.TypeIKEv2,
 				ipType:  vpn.IPTypeIPv6,
 			},
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			Fixture:           "vpnEnv",
 			ExtraSoftwareDeps: []string{"ikev2"},
 		}, {
@@ -55,6 +57,7 @@ func init() {
 				vpnType: vpn.TypeIKEv2,
 				ipType:  vpn.IPTypeIPv4AndIPv6,
 			},
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			Fixture:           "vpnEnv",
 			ExtraSoftwareDeps: []string{"ikev2"},
 		}, {
@@ -62,14 +65,16 @@ func init() {
 			Val: vpnRoutingTestCase{
 				vpnType: vpn.TypeL2TPIPsec,
 			},
-			Fixture: "vpnEnv",
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			Fixture:   "vpnEnv",
 		}, {
 			Name: "l2tp_ipsec_evil",
 			Val: vpnRoutingTestCase{
 				vpnType:               vpn.TypeL2TPIPsec,
 				underlayIPIsOverlayIP: true,
 			},
-			Fixture: "vpnEnv",
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			Fixture:   "vpnEnv",
 		}, {
 			Name: "openvpn_ipv4",
 			Val: vpnRoutingTestCase{
@@ -101,6 +106,7 @@ func init() {
 				vpnType: vpn.TypeWireGuard,
 				ipType:  vpn.IPTypeIPv4,
 			},
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			Fixture:           "vpnEnv",
 			ExtraSoftwareDeps: []string{"wireguard"},
 		}, {
@@ -110,6 +116,7 @@ func init() {
 				ipType:     vpn.IPTypeIPv4,
 				wgTwoPeers: true,
 			},
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			Fixture:           "vpnEnv",
 			ExtraSoftwareDeps: []string{"wireguard"},
 		}, {
@@ -118,6 +125,7 @@ func init() {
 				vpnType: vpn.TypeWireGuard,
 				ipType:  vpn.IPTypeIPv6,
 			},
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			Fixture:           "vpnEnv",
 			ExtraSoftwareDeps: []string{"wireguard"},
 		}, {
@@ -126,6 +134,7 @@ func init() {
 				vpnType: vpn.TypeWireGuard,
 				ipType:  vpn.IPTypeIPv4AndIPv6,
 			},
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			Fixture:           "vpnEnv",
 			ExtraSoftwareDeps: []string{"wireguard"},
 		}},
