@@ -15,6 +15,11 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+type inputMethodDescriptor struct {
+	KeyboardLayout string `json:"keyboardLayout"`
+	// Add more fields from ash/input_method/InputMethodDescriptor as needed.
+}
+
 // AddAndSetInputMethod adds the IME identified by imeID and then sets it to the current input method.
 // Note: this function will not do anything if the IME already exists.
 func AddAndSetInputMethod(ctx context.Context, tconn *chrome.TestConn, imeID string) error {
@@ -87,7 +92,8 @@ func WaitForInputMethodActivatedWithSleep(ctx context.Context, tconn *chrome.Tes
 	if err := WaitForInputMethodMatches(ctx, tconn, imeID, 20*time.Second); err != nil {
 		return errors.Wrapf(err, "failed to wait for IME to be %q", imeID)
 	}
-	// Change IME takes time to install. There is no method to verify readiness of IME decoder.
+	// GoBigSleepLint: Change IME takes time to install. There is no method to verify readiness
+	// of IME decoder.
 	// This problem will be solved once decoder moved from Nacl to IME service.
 	// TODO(b/157686038): Use API to identify completion of changing language
 	return testing.Sleep(ctx, warmUpTime)
@@ -109,6 +115,14 @@ func CurrentInputMethod(ctx context.Context, tconn *chrome.TestConn) (string, er
 	var imeID string
 	err := tconn.Call(ctx, &imeID, `tast.promisify(chrome.inputMethodPrivate.getCurrentInputMethod)`)
 	return imeID, err
+}
+
+// CurrentInputMethodKeyboardLayout returns the keyboard layout of current IME obtained
+// via chrome.autotestPrivate.getCurrentInputMethodKeyboardLayout API.
+func CurrentInputMethodKeyboardLayout(ctx context.Context, tconn *chrome.TestConn) (string, error) {
+	result := inputMethodDescriptor{}
+	err := tconn.Call(ctx, &result, `tast.promisify(chrome.autotestPrivate.getCurrentInputMethodDescriptor)`)
+	return result.KeyboardLayout, err
 }
 
 // WaitForInputMethodMatches repeatedly checks until the current IME matches expectation.
