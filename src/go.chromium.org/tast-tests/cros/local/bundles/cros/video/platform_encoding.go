@@ -981,7 +981,7 @@ func PlatformEncoding(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to extract FPS: ", err)
 	}
 
-	psnr, ssim, err := encoding.CompareFiles(ctx, testOpt.decoder, yuvFile, encodedFile, s.OutDir(), testOpt.size)
+	psnr, ssim, vmaf, err := encoding.CompareFiles(ctx, testOpt.decoder, yuvFile, encodedFile, s.OutDir(), testOpt.size)
 	if err != nil {
 		s.Fatal("Failed to decode and compare results: ", err)
 	}
@@ -1002,6 +1002,11 @@ func PlatformEncoding(ctx context.Context, s *testing.State) {
 		Unit:      "dB",
 		Direction: perf.BiggerIsBetter,
 	}, psnr)
+	p.Set(perf.Metric{
+		Name:      "VMAF",
+		Unit:      "percent",
+		Direction: perf.BiggerIsBetter,
+	}, vmaf)
 
 	if energyDiff != nil && energyErr == nil {
 		energyDiff.ReportWattPerfMetrics(p, "", timeDelta)
