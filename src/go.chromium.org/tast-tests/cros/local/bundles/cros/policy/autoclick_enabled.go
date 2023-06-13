@@ -31,10 +31,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Behavior of AutoclickEnabled policy: checking if autoclick is enabled or not",
 		Contacts: []string{
-			"cros-engprod-muc@google.com",
+			"chromeos-a11y-eng@google.com",
+			"akihiroota@google.com",
 			"alexanderhartl@google.com", // Test author
 		},
-		BugComponent: "b:1263917",
+		BugComponent: "b:1272890",
 		SoftwareDeps: []string{"chrome"},
 		// TODO(crbug.com/1186655): Enable test when the policy can be disabled.
 		Attr:    []string{},

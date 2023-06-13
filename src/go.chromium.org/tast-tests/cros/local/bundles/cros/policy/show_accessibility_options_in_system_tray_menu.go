@@ -31,10 +31,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Behavior of ShowAccessibilityOptionsInSystemTrayMenu policy: check the a11y option in the system tray, and the status of the related option in the settings",
 		Contacts: []string{
-			"cros-engprod-muc@google.com",
+			"chromeos-a11y-eng@google.com",
+			"akihiroota@google.com",
 			"gabormagda@google.com", // Test author
 		},
-		BugComponent: "b:1263917",
+		BugComponent: "b:1272890",
 		Attr:         []string{"group:golden_tier"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.ChromePolicyLoggedIn,
