@@ -5,12 +5,15 @@
 package croshealthd
 
 import (
+	"bytes"
 	"context"
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/input"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/shutil"
@@ -25,6 +28,7 @@ const (
 	RoutineCPUCacheV2    string = "cpu_cache_v2"
 	RoutineUFSLifetime   string = "ufs_lifetime"
 	RoutinePrimeSearchV2 string = "prime_search_v2"
+	RoutineVolumeButton  string = "volume_button"
 )
 
 // RoutineResultV2 contains the progress of the routine as a percentage and
@@ -58,6 +62,10 @@ func RunDiagRoutineV2(ctx context.Context, params RoutineParamsV2) (*RoutineResu
 	case RoutinePrimeSearchV2:
 		// Runs the routine for 1 second.
 		diagParams = append(diagParams, "--length_seconds=1")
+	case RoutineVolumeButton:
+		// Runs the routine for 5 second.
+		diagParams = append(diagParams, "--length_seconds=5")
+		diagParams = append(diagParams, "--button_type=up")
 	default:
 		// No extra parameters required for the following routines:
 		//   - RoutineAudioDriver
@@ -65,7 +73,11 @@ func RunDiagRoutineV2(ctx context.Context, params RoutineParamsV2) (*RoutineResu
 	}
 	var output string
 	var err error
-	output, err = runDiagV2(ctx, diagParams)
+	if params.Routine == RoutineVolumeButton {
+		output, err = runVolumeButtonDiag(ctx, diagParams)
+	} else {
+		output, err = runDiagV2(ctx, diagParams)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -84,6 +96,46 @@ func runDiagV2(ctx context.Context, args []string) (string, error) {
 		return "", errors.Wrapf(err, "command failed with stdout: %q, stderr: %q", string(stdout), string(stderr))
 	}
 	return string(stdout), nil
+}
+
+// runVolumeButtonDiag is a helper function similar to `runDiagV2` while simulating the
+// volume button event for volume button routine.
+func runVolumeButtonDiag(ctx context.Context, args []string) (string, error) {
+	kb, err := input.VirtualKeyboard(ctx)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to open the keyboard")
+	}
+	defer kb.Close(ctx)
+
+	// Start cros_healthd routine.
+	var stdoutBuf bytes.Buffer
+	args = append([]string{"diag"}, args...)
+	runRoutineCmd := testexec.CommandContext(ctx, "cros-health-tool", args...)
+	runRoutineCmd.Stdout = &stdoutBuf
+	if err := runRoutineCmd.Start(); err != nil {
+		testing.ContextLogf(ctx, "stdout of command: %q", stdoutBuf.String())
+		runRoutineCmd.DumpLog(ctx)
+		return "", errors.Wrapf(err, "failed to run %q", shutil.EscapeSlice(runRoutineCmd.Args))
+	}
+	testing.ContextLogf(ctx, "Running %q", shutil.EscapeSlice(runRoutineCmd.Args))
+
+	// Press the volume button repeatedly until the routine finishes.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if err = kb.Accel(ctx, "volumeup"); err != nil {
+			return errors.Wrap(err, "failed to press VolumeUp")
+		}
+		if strings.Contains(stdoutBuf.String(), "Status: ") {
+			return nil
+		}
+		return errors.New("routine not finished")
+	}, &testing.PollOptions{Interval: 1 * time.Second, Timeout: 6 * time.Second}); err != nil {
+		return "", errors.Wrap(err, "routine timeout")
+	}
+
+	if err := runRoutineCmd.Wait(); err != nil {
+		return "", errors.Wrap(err, "failed to wait command")
+	}
+	return stdoutBuf.String(), nil
 }
 
 // parseDiagOutputV2 is a helper function that takes the `raw` output from running a

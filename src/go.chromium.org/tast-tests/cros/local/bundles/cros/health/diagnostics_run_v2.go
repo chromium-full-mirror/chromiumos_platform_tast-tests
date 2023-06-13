@@ -57,6 +57,11 @@ func init() {
 			Timeout: 5 * time.Minute,
 			// TODO(b/285065218): Promote tast to critical
 			ExtraAttr: []string{"informational"},
+		}, {
+			Name: "volume_button",
+			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineVolumeButton},
+			// TODO(b/272217292): Promote tast to critical.
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}}})
 }
 
