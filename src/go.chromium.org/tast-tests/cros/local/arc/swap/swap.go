@@ -14,7 +14,9 @@ import (
 	"github.com/shirou/gopsutil/v3/process"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/procutil"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -166,5 +168,30 @@ func Disable(ctx context.Context, socketPath string) error {
 	if err := testexec.CommandContext(ctx, "crosvm", "swap", "disable", socketPath).Run(); err != nil {
 		return errors.Wrap(err, "enable vmm-swap")
 	}
+	return nil
+}
+
+// ForceEnableSwap immediately swaps ARCVM memory to disk with vmm-swap,
+// ignoring any disk write limits.
+func ForceEnableSwap(ctx context.Context) error {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
+	keyboard, err := input.Keyboard(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get keyboard")
+	}
+	defer keyboard.Close(cleanupCtx)
+
+	// Use Chrome's force enable vmm-swap keyboard shortcut to immediately
+	// trigger swap and bypass disk write limits. This shortcut is used for
+	// demoing and testing vmm-swap and may go away when vmm-swap is more
+	// mature, but we can use it for now.
+	err = keyboard.Accel(ctx, "Ctrl+Alt+Shift+O")
+	if err != nil {
+		return errors.Wrap(err, "failed to inject force swap keys")
+	}
+
 	return nil
 }
