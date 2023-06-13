@@ -182,26 +182,26 @@ func (r *Runner) Values() *Values {
 // calling the scenario/store function and as the prefix for the trace data
 // file. The name can be empty, in which case the runner uses default prefix
 // values.
-func (r *Runner) RunMultiple(ctx context.Context, name string, scenario ScenarioFunc, store StoreFunc) ([]error, error) {
+func (r *Runner) RunMultiple(ctx context.Context, name string, scenario ScenarioFunc, store StoreFunc) ([]string, error) {
 	runPrefix := name
 	if name == "" {
 		runPrefix = "run"
 	}
 	successCount := 0
-	var runErrors []error
+	var runErrors []string
 
 	appendRunError := func(index int, e error) error {
 		if e == nil {
 			return nil
 		}
-		runErrors = append(runErrors, errors.Wrap(e, "failed to run the test scenario"))
+		runErrors = append(runErrors, fmt.Sprintf("\nRun %d of %d failed with: %+v", index, r.maxRuns, e))
 		if r.maxRuns-len(runErrors) < r.minSuccessfulRuns-successCount {
 			return errors.Wrapf(e,
 				"failed to get the required number of "+
 					"succesful runs (%d); got (%d/%d) "+
-					"successful runs, with errors: %v",
+					"successful runs, with %d errors: %v",
 				r.minSuccessfulRuns, successCount,
-				index+1, runErrors)
+				r.maxRuns, len(runErrors), runErrors)
 		}
 		return nil
 	}

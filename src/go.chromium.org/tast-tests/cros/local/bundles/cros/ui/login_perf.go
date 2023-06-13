@@ -1063,9 +1063,9 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 				testName := s.TestName() + metricsReportingSuffix
 				s.Logf("Starting test: %q", testName)
 
-				// Performaance run.
+				// Performance run.
 				// Metrics are collected and saved to `pv`.
-				var allRunErrors []error
+				var allRunErrors []string
 				if allRunErrors, err = r.RunMultiple(
 					ctx,
 					testName,
