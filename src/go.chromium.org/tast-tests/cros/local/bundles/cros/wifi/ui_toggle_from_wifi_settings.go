@@ -26,7 +26,7 @@ func init() {
 		Desc:         "Enable and disable WiFi from ChromeOS Settings UI",
 		Contacts:     []string{"cros-network-health-team@google.com", "intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
-		Attr:         []string{"group:mainline", "informational", "group:intel-gating"},
+		Attr:         []string{"group:mainline", "informational", "group:intel-gating", "group:intel-nda"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedIn",
 	})

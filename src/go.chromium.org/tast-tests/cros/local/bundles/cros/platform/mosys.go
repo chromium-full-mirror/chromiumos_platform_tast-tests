@@ -24,7 +24,7 @@ func init() {
 			"ningappa.tirakannavar@intel.com",
 		},
 		BugComponent: "b:970793", // ChromeOS > Platform > Enablement > Firmware > mosys
-		Attr:         []string{"group:mainline", "group:intel-gating"},
+		Attr:         []string{"group:mainline", "group:intel-gating", "group:intel-nda"},
 		// Tests are parametrized, so that we can promote some of them
 		// to critical and leave the rest as informational.
 		Params: []testing.Param{

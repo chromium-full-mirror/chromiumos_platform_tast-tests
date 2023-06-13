@@ -29,7 +29,7 @@ func init() {
 		Desc:         "Plays YouTube video, performs screen rotation using display APIs and checks for any frame drops and if the audio is routing through expected device",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com", "andrescj@google.com", "chromeos-gfx-video@google.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:intel-nda"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.Speaker()),
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeGraphics",

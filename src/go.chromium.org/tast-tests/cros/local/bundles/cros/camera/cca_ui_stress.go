@@ -54,7 +54,7 @@ func init() {
 		Params: []testing.Param{{
 			Name:              "real",
 			ExtraSoftwareDeps: []string{caps.BuiltinCamera},
-			ExtraAttr:         []string{"group:mainline", "informational", "group:camera-libcamera", "group:intel-convertible"},
+			ExtraAttr:         []string{"group:mainline", "informational", "group:camera-libcamera", "group:intel-nda", "group:intel-convertible"},
 			Fixture:           "ccaTestBridgeReady",
 			Timeout:           5 * time.Minute,
 		}, {

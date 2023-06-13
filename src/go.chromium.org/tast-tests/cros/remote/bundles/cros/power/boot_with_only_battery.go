@@ -29,6 +29,7 @@ func init() {
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
+		Attr:         []string{"group:intel-nda"},
 		Vars:         []string{"servo"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Battery()),
 		Fixture:      fixture.NormalMode,

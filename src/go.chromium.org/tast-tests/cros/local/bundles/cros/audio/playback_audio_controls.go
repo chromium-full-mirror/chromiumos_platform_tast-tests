@@ -46,6 +46,7 @@ func init() {
 		Params: []testing.Param{
 			{
 				ExtraSoftwareDeps: []string{"audio_stable"},
+				ExtraAttr:         []string{"group:intel-nda"},
 			}, {
 				Name:              "unstable_platform",
 				ExtraSoftwareDeps: []string{"audio_unstable"},

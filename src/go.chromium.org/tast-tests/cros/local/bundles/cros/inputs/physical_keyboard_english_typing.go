@@ -37,7 +37,8 @@ func init() {
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{
 			{
-				Fixture: fixture.ClamshellNonVK,
+				Fixture:   fixture.ClamshellNonVK,
+				ExtraAttr: []string{"group:intel-nda"},
 			},
 			{
 				Name:              "lacros",

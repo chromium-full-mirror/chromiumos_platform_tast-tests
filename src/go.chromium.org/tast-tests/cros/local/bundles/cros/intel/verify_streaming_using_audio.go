@@ -27,6 +27,7 @@ func init() {
 		Desc:         "Verifies Audio - Streaming using audio streaming apps",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
+		Attr:         []string{"group:intel-nda"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedIn",
 		Timeout:      7 * time.Minute,

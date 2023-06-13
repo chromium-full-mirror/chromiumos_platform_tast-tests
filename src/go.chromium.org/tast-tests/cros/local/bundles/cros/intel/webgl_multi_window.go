@@ -39,9 +39,10 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedIn",
 		Params: []testing.Param{{
-			Name:    "quick",
-			Val:     2,
-			Timeout: 5 * time.Minute,
+			Name:      "quick",
+			Val:       2,
+			Timeout:   5 * time.Minute,
+			ExtraAttr: []string{"group:intel-nda"},
 		}, {
 			Name:    "bronze",
 			Val:     10,
@@ -115,7 +116,7 @@ func WebGLMultiWindow(ctx context.Context, s *testing.State) {
 			}
 			totalFPS += intFPS
 			totalIterations++
-			// sleeping for 30s to get average FPS.
+			// GoBigSleepLint: sleeping for 30s to get average FPS.
 			if err := testing.Sleep(ctx, 30*time.Second); err != nil {
 				s.Fatal("Failed to sleep for 30 seconds: ", err)
 			}

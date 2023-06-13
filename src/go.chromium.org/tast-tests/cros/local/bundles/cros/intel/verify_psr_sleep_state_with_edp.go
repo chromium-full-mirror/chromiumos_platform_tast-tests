@@ -30,6 +30,7 @@ func init() {
 		Desc:         "Verify PSR sleep states with eDP panel",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291",
+		Attr:         []string{"group:intel-nda"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedInPsrEnableDisable",
 		Timeout:      8 * time.Minute,

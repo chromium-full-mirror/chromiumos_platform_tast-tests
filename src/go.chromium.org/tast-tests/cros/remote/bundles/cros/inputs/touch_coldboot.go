@@ -29,6 +29,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.inputs.TouchscreenService"},
 		HardwareDeps: hwdep.D(hwdep.TouchScreen(), hwdep.X86()),
+		Attr:         []string{"group:intel-nda"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel.
 		Fixture:      fixture.NormalMode,
 		Timeout:      15 * time.Minute,

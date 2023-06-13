@@ -33,6 +33,7 @@ func init() {
 		BugComponent: "b:157291",
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.Microphone()),
+		Attr:         []string{"group:intel-nda"},
 		Timeout:      10 * time.Minute,
 		Fixture:      "chromeLoggedIn",
 	})
@@ -104,7 +105,7 @@ func RecordAudio(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open file in downloads: ", err)
 	}
 
-	// Sample time for the audio to play for 5 seconds.
+	// GoBigSleepLint: Sample time for the audio to play for 5 seconds.
 	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 		s.Fatal("Failed to sleep: ", err)
 	}

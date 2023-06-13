@@ -36,9 +36,10 @@ func init() {
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Battery()),
 		Params: []testing.Param{{
-			Name:    "clamshell",
-			Val:     false,
-			Timeout: 30 * time.Minute,
+			Name:      "clamshell",
+			Val:       false,
+			Timeout:   30 * time.Minute,
+			ExtraAttr: []string{"group:intel-nda"},
 		}, {
 			Name:      "tablet",
 			Val:       true,

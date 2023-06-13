@@ -45,6 +45,7 @@ func init() {
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"inputs_deps", "chrome"},
+		Attr:         []string{"group:intel-nda"},
 		Data:         []string{"canvas.html"},
 		HardwareDeps: hwdep.D(hwdep.TouchScreen(), hwdep.X86()),
 		Fixture:      "chromeLoggedIn",
@@ -283,6 +284,7 @@ func drawOnCanvas(ctx context.Context, info *display.Info) error {
 		if err := stw.End(); err != nil {
 			return errors.Wrap(err, "failed to end touch event")
 		}
+		// GoBigSleepLint: Have a sleep so that the drawn line is smooth.
 		if err := testing.Sleep(ctx, 100*time.Millisecond); err != nil {
 			return errors.Wrap(err, "failed to sleep")
 		}
@@ -302,6 +304,7 @@ func drawOnCanvas(ctx context.Context, info *display.Info) error {
 		if err := stw.Move(input.TouchCoord(centerX+x), input.TouchCoord(centerY+y)); err != nil {
 			return errors.Wrap(err, "failed to move the touch event")
 		}
+		// GoBigSleepLint: Have a sleep so that drawn circle is smooth.
 		if err := testing.Sleep(ctx, 15*time.Millisecond); err != nil {
 			return errors.Wrap(err, "failed to sleep")
 		}

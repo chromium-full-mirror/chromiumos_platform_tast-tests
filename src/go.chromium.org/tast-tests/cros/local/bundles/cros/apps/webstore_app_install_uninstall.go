@@ -27,7 +27,7 @@ func init() {
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:intel-nda"},
 		Params: []testing.Param{
 			{
 				Name: "google_photo",

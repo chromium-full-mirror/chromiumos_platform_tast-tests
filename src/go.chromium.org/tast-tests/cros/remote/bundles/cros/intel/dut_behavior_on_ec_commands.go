@@ -31,6 +31,7 @@ func init() {
 		SoftwareDeps: []string{"chrome", "reboot"},
 		VarDeps:      []string{"servo"},
 		HardwareDeps: hwdep.D(hwdep.Battery()),
+		Attr:         []string{"group:intel-nda"},
 		Fixture:      fixture.NormalMode,
 		Timeout:      12 * time.Minute,
 	})

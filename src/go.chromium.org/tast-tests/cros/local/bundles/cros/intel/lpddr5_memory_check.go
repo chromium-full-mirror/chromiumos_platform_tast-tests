@@ -21,6 +21,7 @@ func init() {
 		Desc:         "Verifies maximum data rate of LPDDR5 memory",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
+		Attr:         []string{"group:intel-nda"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.Model("craask")),
 		Fixture:      "chromeLoggedIn",

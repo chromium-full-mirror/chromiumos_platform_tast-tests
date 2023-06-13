@@ -41,7 +41,7 @@ func init() {
 		SoftwareDeps: []string{"chrome", "reboot"},
 		Vars:         []string{"servo"},
 		// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
-		Attr:         []string{"group:firmware", "firmware_unstable"},
+		Attr:         []string{"group:firmware", "firmware_unstable", "group:intel-nda"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Fixture:      fixture.NormalMode,
 		Params: []testing.Param{{

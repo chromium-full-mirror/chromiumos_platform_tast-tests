@@ -27,7 +27,7 @@ func init() {
 			"pathan.jilani@intel.com",
 		},
 		BugComponent: "b:982097",
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:intel-nda"},
 		SoftwareDeps: []string{"chrome", "diagnostics"},
 		Fixture:      "crosHealthdRunning",
 	})

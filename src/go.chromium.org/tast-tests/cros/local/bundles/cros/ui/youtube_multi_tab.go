@@ -30,6 +30,7 @@ func init() {
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.Speaker()),
 		SoftwareDeps: []string{"chrome"},
+		Attr:         []string{"group:intel-nda"},
 		Fixture:      "chromeGraphics",
 		Timeout:      10 * time.Minute,
 	})

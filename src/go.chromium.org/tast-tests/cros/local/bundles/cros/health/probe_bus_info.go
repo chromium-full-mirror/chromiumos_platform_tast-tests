@@ -52,6 +52,7 @@ func init() {
 				checkThunderbolt: false,
 				checkProgIf:      false,
 			},
+			ExtraAttr: []string{"group:intel-nda"},
 		}, {
 			Name: "thunderbolt",
 			Val: busInfoTestParams{

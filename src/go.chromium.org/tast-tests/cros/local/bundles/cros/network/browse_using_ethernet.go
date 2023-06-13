@@ -28,8 +28,9 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedIn",
 		Params: []testing.Param{{
-			Name: "native",
-			Val:  ethernet{ethtype: "native"},
+			Name:      "native",
+			Val:       ethernet{ethtype: "native"},
+			ExtraAttr: []string{"group:intel-nda"},
 		}, {
 			Name: "type_a",
 			Val:  ethernet{ethtype: "typeA"},

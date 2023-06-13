@@ -40,6 +40,7 @@ func init() {
 		Params: []testing.Param{
 			{
 				ExtraSoftwareDeps: []string{"audio_stable"},
+				ExtraAttr:         []string{"group:intel-nda"},
 			}, {
 				Name:              "unstable_platform",
 				ExtraSoftwareDeps: []string{"audio_unstable"},
@@ -142,7 +143,7 @@ func CheckingAudioFormats(ctx context.Context, s *testing.State) {
 			s.Fatalf("Failed to open the audio file %q: %v", file, err)
 		}
 
-		// Sample time for the audio to play for 5 seconds.
+		// GoBigSleepLint: Sample time for the audio to play for 5 seconds.
 		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 			s.Fatal("Error while waiting during sample time: ", err)
 		}

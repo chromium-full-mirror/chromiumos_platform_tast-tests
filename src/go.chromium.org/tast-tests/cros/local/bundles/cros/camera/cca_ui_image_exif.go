@@ -25,7 +25,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies captured imaging metadata information on EXIF, using userfacing camera",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
-		Attr:         []string{"group:mainline", "group:camera-libcamera", "informational"},
+		Attr:         []string{"group:mainline", "group:camera-libcamera", "informational", "group:intel-nda"},
 		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
 		Fixture:      "ccaLaunched",
 		BugComponent: "b:978428",

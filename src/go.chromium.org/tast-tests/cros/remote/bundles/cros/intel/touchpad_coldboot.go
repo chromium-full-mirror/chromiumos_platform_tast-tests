@@ -33,6 +33,7 @@ func init() {
 		BugComponent: "b:157291",
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.inputs.TouchpadService"},
+		Attr:         []string{"group:intel-nda"},
 		HardwareDeps: hwdep.D(hwdep.Touchpad(), hwdep.X86()),
 		Fixture:      fixture.NormalMode,
 		Timeout:      15 * time.Minute,

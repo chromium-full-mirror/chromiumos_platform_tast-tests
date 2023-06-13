@@ -36,6 +36,7 @@ func init() {
 		BugComponent: "b:157291",
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.TouchScreen()),
+		Attr:         []string{"group:intel-nda"},
 		Timeout:      5 * time.Minute,
 		Fixture:      "chromeLoggedIn",
 	})

@@ -34,8 +34,9 @@ func init() {
 			Name: "external_facing",
 			Val:  cca.FacingExternal,
 		}, {
-			Name: "user_facing",
-			Val:  cca.FacingFront,
+			Name:      "user_facing",
+			Val:       cca.FacingFront,
+			ExtraAttr: []string{"group:intel-nda"},
 		}},
 	})
 }

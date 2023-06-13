@@ -55,6 +55,7 @@ func init() {
 		Fixture:      "crosHealthdRunning",
 		Params: []testing.Param{{
 			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform("brya-kernelnext")),
+			ExtraAttr:         []string{"group:intel-nda"},
 		}, {
 			// TODO(b/277564353): Remove this after the brya-kernelnext issue is fixed.
 			Name:              "brya_kernelnext",

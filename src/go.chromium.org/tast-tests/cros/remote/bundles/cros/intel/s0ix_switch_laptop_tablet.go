@@ -28,7 +28,7 @@ func init() {
 		BugComponent: "b:157291",
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{},
+		Attr:         []string{"group:intel-nda"},
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Timeout:      10 * time.Minute,

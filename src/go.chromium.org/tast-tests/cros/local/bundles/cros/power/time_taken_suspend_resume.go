@@ -33,6 +33,7 @@ func init() {
 			"ambalavanan.m.m@intel.com",
 		},
 		SoftwareDeps: []string{"chrome"},
+		Attr:         []string{"group:intel-nda"},
 		Vars: []string{
 			"power.TimeTakenSuspendResume.defaultSuspendTime",
 			"power.TimeTakenSuspendResume.defaultResumeTime",

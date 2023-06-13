@@ -21,7 +21,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Opens CCA, rotate the display using display APIs and take picture or record video in every orientation using multi-cameras",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
-		Attr:         []string{"group:mainline", "group:camera-libcamera", "informational"},
+		Attr:         []string{"group:mainline", "group:camera-libcamera", "informational", "group:intel-nda"},
 		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
 		Fixture:      "ccaLaunched",
 		Params: []testing.Param{{

@@ -29,6 +29,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.camera.CCAService"},
 		HardwareDeps: hwdep.D(hwdep.X86()),
+		Attr:         []string{"group:intel-nda"},
 		Params: []testing.Param{
 			{
 				Name: "user_facing_photo",

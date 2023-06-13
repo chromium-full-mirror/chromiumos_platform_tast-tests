@@ -41,7 +41,7 @@ func init() {
 		}, {
 			Name:      "floss_enabled",
 			Fixture:   "bluetoothEnabledWithFloss",
-			ExtraAttr: []string{"bluetooth_floss", "group:intel-gating"},
+			ExtraAttr: []string{"bluetooth_floss", "group:intel-gating", "group:intel-nda"},
 		}},
 	})
 }

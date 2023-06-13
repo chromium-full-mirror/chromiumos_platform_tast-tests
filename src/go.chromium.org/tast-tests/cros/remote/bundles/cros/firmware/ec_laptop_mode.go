@@ -66,6 +66,7 @@ func init() {
 			Val: &testArgs{
 				formFactor: "clamshell",
 			},
+			ExtraAttr: []string{"group:intel-nda"},
 		}, {
 			Name:              "detachable",
 			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Detachable), hwdep.Keyboard(), hwdep.Touchpad()),
@@ -110,7 +111,7 @@ func ECLaptopMode(ctx context.Context, s *testing.State) {
 			return false, errors.Wrap(err, "requiring RPC utils")
 		}
 
-		s.Log("Sleeping for a few seconds before starting a new Chrome")
+		// GoBigSleepLint: Sleeping for a few seconds before starting a new Chrome.
 		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 			return false, errors.Wrap(err, "failed to wait for a few seconds")
 		}
@@ -154,6 +155,7 @@ func ECLaptopMode(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to power off DUT: ", err)
 		}
 
+		// GoBigSleepLint: Sleeping for a few seconds after DUT power off.
 		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 			s.Fatal("Failed to sleep for 5 seconds: ", err)
 		}
@@ -180,7 +182,7 @@ func ECLaptopMode(ctx context.Context, s *testing.State) {
 			s.Fatal("Requiring RPC utils: ", err)
 		}
 
-		s.Log("Sleeping for a few seconds before starting a new Chrome")
+		// GoBigSleepLint: Sleeping for a few seconds before starting a new Chrome.
 		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 			s.Fatal("Failed to wait for a few seconds: ", err)
 		}
@@ -282,7 +284,7 @@ func ECLaptopMode(ctx context.Context, s *testing.State) {
 			// Close chrome instance at the end of the test.
 			defer screenLockService.CloseChrome(ctx, &empty.Empty{})
 
-			// Allow some delay for enhancing stability.
+			// GoBigSleepLint: Allow some delay for enhancing stability.
 			if err := testing.Sleep(ctx, 10*time.Second); err != nil {
 				s.Fatal("Failed to sleep for 10 seconds: ", err)
 			}
@@ -308,7 +310,7 @@ func ECLaptopMode(ctx context.Context, s *testing.State) {
 			}
 		}
 
-		// Wait for some delay for display to fully settle down,
+		// GoBigSleepLint: Wait for some delay for display to fully settle down,
 		// after a transition between Chrome sessions.
 		if err := testing.Sleep(ctx, 3*time.Second); err != nil {
 			s.Fatal("Failed to sleep: ", err)
@@ -326,7 +328,7 @@ func ECLaptopMode(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to tap on the power button: ", err)
 		}
 
-		// Wait for a short delay.
+		// GoBigSleepLint: Wait for a short delay.
 		if err := testing.Sleep(ctx, time.Second); err != nil {
 			s.Fatal("Failed to sleep: ", err)
 		}
@@ -364,7 +366,7 @@ func ECLaptopMode(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to tap on the power button: ", err)
 			}
 
-			// Wait for a short delay.
+			// GoBigSleepLint: Wait for a short delay.
 			if err := testing.Sleep(ctx, 2*time.Second); err != nil {
 				s.Fatal("Failed to sleep: ", err)
 			}
@@ -390,7 +392,7 @@ func ECLaptopMode(ctx context.Context, s *testing.State) {
 			if i <= 8 {
 				powerMenuDur += 100 * time.Millisecond
 			}
-			// Wait for a short delay.
+			// GoBigSleepLint: Wait for a short delay.
 			if err := testing.Sleep(ctx, 2*time.Second); err != nil {
 				return errors.Wrap(err, "failed to sleep")
 			}
@@ -446,7 +448,7 @@ func ECLaptopMode(ctx context.Context, s *testing.State) {
 					return testing.PollBreak(errors.Wrap(err, "failed to tap on the power button"))
 				}
 
-				// Wait for a short delay.
+				// GoBigSleepLint: Wait for a short delay.
 				if err := testing.Sleep(ctx, time.Second); err != nil {
 					s.Fatal("Failed to sleep: ", err)
 				}
@@ -474,10 +476,10 @@ func ECLaptopMode(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to press and hold on the power button for 3 second: ", err)
 		}
 
-		// To avoid false positive cases, delay for checking on the power states.
+		s.Logf("Sleeping for %v before checking on the power state", h.Config.ShutdownTimeout)
+		// GoBigSleepLint: To avoid false positive cases, delay for checking on the power states.
 		// Without this delay, if DUT turns down after 2~3 seconds, checking on
 		// the power state during shutdown might still return S0.
-		s.Logf("Sleeping for %v before checking on the power state", h.Config.ShutdownTimeout)
 		if err := testing.Sleep(ctx, h.Config.ShutdownTimeout); err != nil {
 			s.Fatal("Failed to sleep: ", err)
 		}

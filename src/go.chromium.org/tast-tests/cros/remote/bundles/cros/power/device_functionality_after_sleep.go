@@ -57,9 +57,10 @@ func init() {
 			Val:     deviceFunctionality{functionality: systemIdleWithUsb2},
 			Timeout: 10 * time.Minute,
 		}, {
-			Name:    "only_system_idle",
-			Val:     deviceFunctionality{functionality: onlySystemIdle},
-			Timeout: 20 * time.Minute,
+			Name:      "only_system_idle",
+			Val:       deviceFunctionality{functionality: onlySystemIdle},
+			Timeout:   20 * time.Minute,
+			ExtraAttr: []string{"group:intel-nda"},
 		}},
 	})
 }
@@ -85,7 +86,7 @@ func DeviceFunctionalityAfterSleep(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
 	defer client.CloseChrome(ctx, &empty.Empty{})
-	// Wait for the DUT to login completely.
+	// GoBigSleepLint: Wait for the DUT to login completely.
 	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 		s.Error("Failed to wait for the DUT to login completely")
 	}
@@ -247,8 +248,7 @@ func performSystemIdle(ctx context.Context, h *firmware.Helper, isLongDuration b
 	defer resetPowerPolicy(ctx, h)
 
 	if isLongDuration {
-		// After display goes OFF, keep DUT undisturbed for 10 minutes.
-		testing.ContextLog(ctx, "Keeping DUT undisturbed for 10 minutes")
+		// GoBigSleepLint: After display goes OFF, keep DUT undisturbed for 10 minutes.
 		if err := testing.Sleep(ctx, 10*time.Minute); err != nil {
 			return errors.Wrap(err, "failed to sleep for 10 minutes")
 		}
@@ -311,7 +311,7 @@ func resetPowerPolicy(ctx context.Context, h *firmware.Helper) error {
 		return errors.Wrap(err, "failed to disable idle suspend and restart powerd")
 	}
 
-	// set_power_policy will fail right after restarting powerd.
+	// GoBigSleepLint: set_power_policy will fail right after restarting powerd.
 	if err := testing.Sleep(ctx, 2*time.Second); err != nil {
 		return errors.Wrap(err, "failed to sleep after restarting powerd")
 	}

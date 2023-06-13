@@ -28,6 +28,7 @@ func init() {
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
+		Attr:         []string{"group:intel-nda"},
 		Vars:         []string{"servo"},
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
 		Timeout:      4 * time.Minute,
@@ -80,7 +81,7 @@ func DUTWakethroughLid(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
 	defer client.CloseChrome(ctx, &empty.Empty{})
-	// Wait 5 seconds after login before lid close.
+	// GoBigSleepLint: Wait 5 seconds after login before lid close.
 	// TODO: Need to remove testing.Sleep().
 	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 		s.Fatal("Failed while waiting during sample time: ", err)

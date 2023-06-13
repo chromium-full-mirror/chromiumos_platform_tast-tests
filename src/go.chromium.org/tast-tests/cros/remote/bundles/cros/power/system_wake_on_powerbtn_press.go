@@ -26,6 +26,7 @@ func init() {
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
+		Attr:         []string{"group:intel-nda"},
 		Vars:         []string{"servo"},
 		Timeout:      10 * time.Minute,
 	})

@@ -27,6 +27,7 @@ func init() {
 		BugComponent: "b:157291",
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
 		SoftwareDeps: []string{"chrome"},
+		Attr:         []string{"group:intel-nda"},
 		VarDeps:      []string{"servo"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.X86()),
 		Timeout:      7 * time.Minute,
@@ -78,7 +79,7 @@ func PerformColdRebootDuringS0ix(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to verfiy power config value for S0ix: ", err)
 	}
 
-	// As soon as Chrome login, if suspend command is executed
+	// GoBigSleepLint: As soon as Chrome login, if suspend command is executed
 	// DUT fails to go to suspend/unreachable state.
 	// So, short sleep of 1s is expected before suspending DUT.
 	if err := testing.Sleep(ctx, time.Second); err != nil {

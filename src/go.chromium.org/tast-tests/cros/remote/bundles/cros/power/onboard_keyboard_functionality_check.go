@@ -41,6 +41,7 @@ func init() {
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.ui.AudioService"},
+		Attr:         []string{"group:intel-nda"},
 		VarDeps:      []string{"servo"},
 		Params: []testing.Param{{
 			Name:              "suspend_resume",

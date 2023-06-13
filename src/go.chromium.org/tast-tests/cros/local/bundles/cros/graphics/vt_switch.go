@@ -39,6 +39,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Fixture:      "chromeGraphics",
+		Attr:         []string{"group:intel-nda"},
 		Params: []testing.Param{{
 			Name:      "smoke",
 			ExtraAttr: []string{"group:mainline", "informational", "group:graphics", "graphics_nightly"},
@@ -81,7 +82,7 @@ func openVT1(ctx context.Context) error {
 	}
 	// Delete link
 	os.Remove(freconCurrentPath)
-	// Allowing some wait time for switching to happen.
+	// GoBigSleepLint: Allowing some wait time for switching to happen.
 	// TODO(b:198837833): Replace with testing.Poll to query the current vts node.
 	if err = testing.Sleep(ctx, waitTime); err != nil {
 		return errors.Wrap(err, "error while waiting for switching to VT1")
@@ -103,7 +104,7 @@ func openVT2(ctx context.Context) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to switch to VT2 through frecon escape code")
 	}
-	// Allowing some wait time for switching to happen.
+	// GoBigSleepLint: Allowing some wait time for switching to happen.
 	// TODO(b:198837833): Replace with testing.Poll to query the current vts node.
 	if err = testing.Sleep(ctx, waitTime); err != nil {
 		return errors.Wrap(err, "error while waiting for switching to VT2")

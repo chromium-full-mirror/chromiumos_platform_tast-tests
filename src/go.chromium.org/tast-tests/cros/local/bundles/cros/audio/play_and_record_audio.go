@@ -32,6 +32,7 @@ func init() {
 		Desc:         "Play local audio file and record it simultaneously. Then play the recorded audio and verify if it routes through expected audio node",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:776546",
+		Attr:         []string{"group:intel-nda"},
 		HardwareDeps: hwdep.D(hwdep.Speaker(), hwdep.Microphone()),
 		SoftwareDeps: []string{"chrome"},
 		Pre:          chrome.LoggedIn(),
@@ -123,7 +124,7 @@ func PlayAndRecordAudio(ctx context.Context, s *testing.State) {
 	if err := files.OpenFile(recWavFileName)(ctx); err != nil {
 		s.Fatalf("Failed to open the audio file %q: %v", recWavFileName, err)
 	}
-	// Sample time for the audio to play for 5 seconds.
+	// GoBigSleepLint: Sample time for the audio to play for 5 seconds.
 	testing.Sleep(ctx, 5*time.Second)
 
 	// Deleting the files and closing the audio player.

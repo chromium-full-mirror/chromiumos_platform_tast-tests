@@ -38,8 +38,9 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Timeout:      15 * time.Minute,
 		Params: []testing.Param{{
-			Name: "typea",
-			Val:  regexp.MustCompile(`If 0.*Class=.*480M`),
+			Name:      "typea",
+			Val:       regexp.MustCompile(`If 0.*Class=.*480M`),
+			ExtraAttr: []string{"group:intel-nda"},
 		}, {
 			Name: "typec",
 			Val:  regexp.MustCompile(`If 0.*Class=.*5000M`),

@@ -44,6 +44,7 @@ func init() {
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291",
 		SoftwareDeps: []string{"chrome"},
+		Attr:         []string{"group:intel-nda"},
 		Data:         []string{"canvas.html"},
 		Timeout:      5 * time.Minute,
 		HardwareDeps: hwdep.D(hwdep.Touchpad(), hwdep.X86()),

@@ -30,6 +30,7 @@ func init() {
 		Desc:         "Verifies VT-d functionality",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291",
+		Attr:         []string{"group:intel-nda"},
 		SoftwareDeps: []string{"chrome", "vm_host", "dlc"},
 		HardwareDeps: crostini.CrostiniStable,
 		Fixture:      "crostiniBullseyeRestart",

@@ -24,7 +24,7 @@ func init() {
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:intel-nda"},
 		Data:         []string{"1080p_60fps_600frames.vp8.webm", "video.html", "playback.js"},
 		Fixture:      "chromeLoggedIn",
 		Timeout:      3 * time.Minute,

@@ -53,7 +53,8 @@ func init() {
 			Val: lidCloseTestParams{
 				tabletMode: false,
 			},
-			Timeout: 10 * time.Minute,
+			Timeout:   10 * time.Minute,
+			ExtraAttr: []string{"group:intel-nda"},
 		}, {
 			Name:    "tablet_mode",
 			Fixture: fixture.NormalMode,

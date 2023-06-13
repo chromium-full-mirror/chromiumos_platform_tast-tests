@@ -27,6 +27,7 @@ func init() {
 		Desc:         "Platform should support ARC++ install/uninstall apps",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291",
+		Attr:         []string{"group:intel-nda"},
 		SoftwareDeps: []string{"android_p", "chrome"},
 		Timeout:      chrome.GAIALoginTimeout + arc.BootTimeout + 10*time.Minute,
 		Fixture:      "arcBootedWithPlayStore",

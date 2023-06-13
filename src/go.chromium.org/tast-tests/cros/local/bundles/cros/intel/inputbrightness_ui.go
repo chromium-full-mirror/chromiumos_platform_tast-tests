@@ -36,7 +36,7 @@ func init() {
 		},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:intel-nda"},
 		Fixture:      "chromePolicyLoggedIn",
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.ScreenBrightnessPercent{}, pci.VerifiedFunctionalityUI),

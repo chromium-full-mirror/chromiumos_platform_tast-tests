@@ -41,8 +41,9 @@ func init() {
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		Fixture:      fixture.NormalMode,
 		Params: []testing.Param{{
-			Name: "native",
-			Val:  ethernet{ethType: "native"},
+			Name:      "native",
+			Val:       ethernet{ethType: "native"},
+			ExtraAttr: []string{"group:intel-nda"},
 		}, {
 			Name: "type_a",
 			Val:  ethernet{ethType: "typeA"},

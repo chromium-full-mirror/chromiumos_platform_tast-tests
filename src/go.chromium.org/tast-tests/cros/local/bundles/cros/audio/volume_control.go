@@ -50,7 +50,7 @@ func init() {
 		Pre:          chrome.LoggedIn(),
 		Params: []testing.Param{{
 			Name:              "volume_only",
-			ExtraAttr:         []string{"group:mainline", "informational"},
+			ExtraAttr:         []string{"group:mainline", "informational", "group:intel-nda"},
 			ExtraHardwareDeps: hwdep.D(hwdep.Speaker()),
 			Val: volumeControlParam{
 				tier:              volumeOnly,
@@ -58,7 +58,7 @@ func init() {
 			},
 		}, {
 			Name:              "with_audio",
-			ExtraAttr:         []string{"group:intel-gating"},
+			ExtraAttr:         []string{"group:intel-gating", "group:intel-nda"},
 			ExtraHardwareDeps: hwdep.D(hwdep.Speaker()),
 			Val: volumeControlParam{
 				tier:              withAudio,

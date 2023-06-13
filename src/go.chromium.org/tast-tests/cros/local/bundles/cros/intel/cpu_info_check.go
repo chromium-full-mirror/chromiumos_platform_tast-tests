@@ -22,6 +22,7 @@ func init() {
 		Desc:         "Verifies CPU info test",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291",
+		Attr:         []string{"group:intel-nda"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.Model("rex")),
 	})

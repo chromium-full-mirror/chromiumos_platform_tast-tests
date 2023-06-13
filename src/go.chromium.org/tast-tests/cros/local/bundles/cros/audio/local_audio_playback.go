@@ -34,7 +34,7 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.Speaker()),
 		Params: []testing.Param{{
 			Name:      "internal_speaker",
-			ExtraAttr: []string{"group:mainline", "informational", "group:intel-gating"},
+			ExtraAttr: []string{"group:mainline", "informational", "group:intel-gating", "group:intel-nda"},
 			Val:       "Speaker (internal)",
 		}, {
 			Name: "headphone",
@@ -119,7 +119,7 @@ func LocalAudioPlayback(ctx context.Context, s *testing.State) {
 		}
 	}()
 
-	// Sample time for the audio to play for 5 seconds.
+	// GoBigSleepLint: Sample time for the audio to play for 5 seconds.
 	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 		s.Fatal("Error while waiting during sample time: ", err)
 	}

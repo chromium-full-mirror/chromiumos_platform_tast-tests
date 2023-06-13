@@ -21,7 +21,7 @@ func init() {
 		Desc:         "Verfifies display zoom to small and large",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
 		BugComponent: "b:157291",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:intel-nda"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Fixture:      "chromeLoggedIn",

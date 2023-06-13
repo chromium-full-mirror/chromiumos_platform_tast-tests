@@ -27,6 +27,7 @@ func init() {
 		Desc:         "Enable On-screen keyboard",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
+		Attr:         []string{"group:intel-nda"},
 		SoftwareDeps: []string{"inputs_deps", "chrome"},
 		Fixture:      "chromeLoggedIn",
 	})

@@ -42,6 +42,7 @@ func init() {
 				tabletMode:      false,
 				detectionStatus: "enabled",
 			},
+			ExtraAttr: []string{"group:intel-nda"},
 		}, {
 			Name: "tablet_mode",
 			Val: touchpadTestParams{

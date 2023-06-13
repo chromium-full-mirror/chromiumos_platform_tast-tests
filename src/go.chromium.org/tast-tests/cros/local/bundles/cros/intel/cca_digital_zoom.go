@@ -30,7 +30,7 @@ func init() {
 		SoftwareDeps: []string{"camera_app", "chrome"},
 		Timeout:      5 * time.Minute,
 		Fixture:      "ccaLaunchedWithFakeVCDCamera",
-		Attr:         []string{"group:camera_dependent"},
+		Attr:         []string{"group:camera_dependent", "group:intel-nda"},
 		Params: []testing.Param{{
 			Name: "photo",
 			Val:  photoTaking,

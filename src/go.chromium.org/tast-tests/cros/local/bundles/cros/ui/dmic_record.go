@@ -33,6 +33,7 @@ func init() {
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		HardwareDeps: hwdep.D(hwdep.Microphone(), hwdep.Speaker()),
+		Attr:         []string{"group:intel-nda"},
 		Fixture:      "chromeLoggedIn",
 	})
 }
@@ -147,7 +148,7 @@ func DMICRecord(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to open the audio file %q: %v", recWavFileName, err)
 	}
 
-	// Sample time for the audio to play for 5 seconds.
+	// GoBigSleepLint: Sample time for the audio to play for 5 seconds.
 	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 		s.Fatal("Failed to sleep: ", err)
 	}

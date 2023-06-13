@@ -54,7 +54,8 @@ func init() {
 				tabletMode: false,
 				val:        10,
 			},
-			Timeout: 10 * time.Minute,
+			ExtraAttr: []string{"group:intel-nda"},
+			Timeout:   10 * time.Minute,
 		}, {
 			Name:    "stability_test_tablet_mode",
 			Fixture: fixture.NormalMode,
@@ -71,6 +72,7 @@ func init() {
 				tabletMode: false,
 				val:        1,
 			},
+			ExtraAttr: []string{"group:intel-nda"},
 		}, {
 			Name:    "entry_exit_tablet_mode",
 			Fixture: fixture.NormalMode,

@@ -59,18 +59,21 @@ func init() {
 			Name: "h264",
 			Val: videoContent{contentUrls: []string{urlconst.H264SD, urlconst.H264HD, urlconst.H264UHD, urlconst.H264Fullsample, urlconst.H264CBCS},
 				proxyURL: urlconst.ProxyURL},
-			Timeout: 9 * time.Minute,
+			Timeout:   9 * time.Minute,
+			ExtraAttr: []string{"group:intel-nda"},
 		}, {
 			Name: "vp9",
 			Val: videoContent{contentUrls: []string{urlconst.VP9Subsample, urlconst.VP9Superframe},
 				proxyURL: urlconst.ProxyURL},
-			Timeout: 4 * time.Minute,
+			Timeout:   4 * time.Minute,
+			ExtraAttr: []string{"group:intel-nda"},
 		}, {
 			Name: "hevc",
 			Val: videoContent{contentUrls: []string{urlconst.HEVCclip,
 				urlconst.HEVCCBCS, urlconst.HEVC4K, urlconst.HEVCclipSD, urlconst.HEVCclipHD},
 				proxyURL: urlconst.ProxyURL},
-			Timeout: 9 * time.Minute,
+			Timeout:   9 * time.Minute,
+			ExtraAttr: []string{"group:intel-nda"},
 		}, {
 			// Test H/W topology requires DUT connected to external typec DP 4K display.
 			Name: "h264_uhd_hdcpv2_4k_display",

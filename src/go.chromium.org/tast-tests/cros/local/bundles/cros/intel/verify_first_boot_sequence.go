@@ -32,6 +32,7 @@ func init() {
 		BugComponent: "b:157291",
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
+		Attr:         []string{"group:intel-nda"},
 		Timeout:      10 * time.Minute,
 		Fixture:      "chromeLoggedIn",
 	})

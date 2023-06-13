@@ -27,6 +27,7 @@ func init() {
 		Desc:         "Checking the availability of all basic thermal participants",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291",
+		Attr:         []string{"group:intel-nda"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,
 		Fixture:      "chromeLoggedIn",

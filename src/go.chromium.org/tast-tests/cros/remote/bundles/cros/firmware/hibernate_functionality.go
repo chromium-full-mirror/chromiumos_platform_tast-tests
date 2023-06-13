@@ -35,7 +35,7 @@ func init() {
 		Vars:         []string{"servo"},
 		// TODO(b/199674322): Add back to firmware_unstable when this test passes.
 		// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
-		Attr:         []string{},
+		Attr:         []string{"group:intel-nda"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Fixture:      fixture.NormalMode,
 		LacrosStatus: testing.LacrosVariantUnneeded,
@@ -106,7 +106,7 @@ func HibernateFunctionality(ctx context.Context, s *testing.State) {
 			}
 		}
 	}(ctx)
-	// Wait for a short delay between cutting power supply.
+	// GoBigSleepLint: Wait for a short delay between cutting power supply.
 	if err := testing.Sleep(ctx, 2*time.Second); err != nil {
 		s.Fatal("Failed to sleep: ", err)
 	}
@@ -133,7 +133,7 @@ func HibernateFunctionality(ctx context.Context, s *testing.State) {
 	if err := h.Servo.RunECCommand(ctx, kbPressVOL); err != nil {
 		s.Fatal("Failed to press volume up key: ", err)
 	}
-	// Wait for a short delay after putting DUT in hibernation.
+	// GoBigSleepLint: Wait for a short delay after putting DUT in hibernation.
 	if err := testing.Sleep(ctx, 4*time.Second); err != nil {
 		s.Fatal("Failed to sleep: ", err)
 	}

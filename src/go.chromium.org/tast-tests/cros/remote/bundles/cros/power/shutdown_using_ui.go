@@ -30,6 +30,7 @@ func init() {
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		SoftwareDeps: []string{"chrome", "reboot"},
 		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.ui.AutomationService"},
+		Attr:         []string{"group:intel-nda"},
 		VarDeps:      []string{"servo"},
 		Timeout:      15 * time.Minute,
 	})

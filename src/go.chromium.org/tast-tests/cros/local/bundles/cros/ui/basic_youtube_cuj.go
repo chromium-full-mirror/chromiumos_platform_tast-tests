@@ -37,7 +37,7 @@ func init() {
 			"chromeos-gfx-video@google.com",
 		},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:intel-nda"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.Speaker()),
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "loggedInAndKeepState",

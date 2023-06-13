@@ -32,7 +32,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Vars:         []string{"servo"},
 		// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
-		Attr:    []string{"group:firmware", "firmware_unstable"},
+		Attr:    []string{"group:firmware", "firmware_unstable", "group:intel-nda"},
 		Fixture: fixture.NormalMode,
 	})
 }
