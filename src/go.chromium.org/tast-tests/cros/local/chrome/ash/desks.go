@@ -457,14 +457,8 @@ func ExitAndReenterLibrary(ctx context.Context, ac *uiauto.Context, tconn *chrom
 	if err := SetOverviewModeAndWait(ctx, tconn, false); err != nil {
 		return errors.Wrap(err, "failed to exit overview mode")
 	}
-	if err := ac.WithInterval(2*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
-		return errors.Wrap(err, "failed to wait for overview animation to be completed")
-	}
 	if err := SetOverviewModeAndWait(ctx, tconn, true); err != nil {
 		return errors.Wrap(err, "failed to enter overview mode")
-	}
-	if err := ac.WithInterval(2*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
-		return errors.Wrap(err, "failed to wait for overview animation to be completed")
 	}
 	if err := EnterLibraryPage(ctx, ac); err != nil {
 		return errors.Wrap(err, "failed to enter library page")
