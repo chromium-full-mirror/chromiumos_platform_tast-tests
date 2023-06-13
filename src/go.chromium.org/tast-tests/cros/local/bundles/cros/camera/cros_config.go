@@ -14,32 +14,64 @@ import (
 	"go.chromium.org/tast/core/autocaps"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
+
+const crosConfigCmdFail = "failed to execute cros_config"
+
+// These are just a few examples, the actual list is too long.
+// TODO(b/260046862): enable on all devices.
+var crosConfigReadyModels = []string{
+	"atlas",
+	"nautilus",
+	"primus",
+	"jinlon",
+	"vell",
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CrosConfig,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check and verify camera configuration",
-		Contacts:     []string{"chromeos-camera-eng@google.com", "rabbim@chromium.org"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "yerlandinata@chromium.org"},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{caps.BuiltinCamera},
+		HardwareDeps: hwdep.D(hwdep.Model(crosConfigReadyModels...)),
 		BugComponent: "b:167281",
 	})
 }
 
-func hasCameraConfig(ctx context.Context) error {
-	_, err := crosconfig.Get(ctx, "/camera", "count")
+func hasCameraConfig(ctx context.Context) (bool, error) {
+	countStr, err := crosconfig.Get(ctx, "/camera", "count")
 	if crosconfig.IsNotFound(err) {
-		return errors.Wrap(err, "cros_config camera is not available")
+		return false, nil
 	}
 	if err != nil {
-		return errors.Wrap(err, "failed to execute cros_config")
+		return false, errors.Wrap(err, crosConfigCmdFail)
 	}
-	return nil
+
+	count, err := strconv.Atoi(countStr)
+	if err != nil {
+		return false, err
+	}
+
+	if count < 1 {
+		return false, nil
+	}
+
+	_, err = crosconfig.Get(ctx, "/camera/devices/0", "interface")
+	if crosconfig.IsNotFound(err) {
+		return false, nil
+	}
+	if err != nil {
+		return false, errors.Wrap(err, crosConfigCmdFail)
+	}
+
+	return true, nil
 }
 
-func verifyContent(ctx context.Context) error {
+func verifyConfigConsistency(ctx context.Context) error {
 	cameraCount := 0
 	foundUsb := false
 	foundMipi := false
@@ -51,7 +83,7 @@ func verifyContent(ctx context.Context) error {
 			break
 		}
 		if err != nil {
-			return errors.Wrap(err, "failed to execute cros_config for camera devices")
+			return errors.Wrapf(err, "%s for camera devices", crosConfigCmdFail)
 		}
 		if cameraType == "usb" {
 			foundUsb = true
@@ -66,7 +98,7 @@ func verifyContent(ctx context.Context) error {
 	// verify /camera/count equals to the number of /camera/devices/*
 	configCount, err := crosconfig.Get(ctx, "/camera/", "count")
 	if err != nil {
-		return errors.Wrap(err, "failed to execute cros_config for camera count")
+		return errors.Wrapf(err, "%s for camera count", crosConfigCmdFail)
 	}
 
 	if configCount != strconv.Itoa(cameraCount) {
@@ -99,10 +131,15 @@ func verifyContent(ctx context.Context) error {
 
 // CrosConfig checks if camera config available and verify it's content
 func CrosConfig(ctx context.Context, s *testing.State) {
-	if err := hasCameraConfig(ctx); err != nil {
-		s.Fatal("Failed to get camera config: ", err)
+	// TODO(b/260046862): enable on all devices.
+	hasConfig, err := hasCameraConfig(ctx)
+	if err != nil {
+		s.Fatal("Failed to get camera config: ", err.Error())
 	}
-	if err := verifyContent(ctx); err != nil {
+	if !hasConfig {
+		s.Fatal("Device doesn't have camera config in cros_config")
+	}
+	if err := verifyConfigConsistency(ctx); err != nil {
 		s.Fatalf("Content of the config file could not be verified :%v", err)
 	}
 }
