@@ -341,7 +341,11 @@ func GetPlayStoreState(ctx context.Context, tconn *chrome.TestConn) (map[string]
 
 // DumpLogCat saves logcat to test output directory.
 func DumpLogCat(ctx context.Context, filesuffix string) error {
-	cmd := testexec.CommandContext(ctx, "/usr/sbin/android-sh", "-c", "/system/bin/logcat -d")
+	// android-sh can block forever. Limit shell command run time.
+	shellCtx, cancel := context.WithTimeout(ctx, 2*time.Minute)
+	defer cancel()
+
+	cmd := testexec.CommandContext(shellCtx, "/usr/sbin/android-sh", "-c", "/system/bin/logcat -d")
 	log, err := cmd.Output(testexec.DumpLogOnError)
 	if err != nil {
 		return errors.Wrap(err, "failed to pull logcat")
