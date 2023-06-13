@@ -152,9 +152,6 @@ func checkCellularConnection(ctx context.Context, connect bool) (bool, error) {
 	}
 
 	// Verify that a connectable Cellular service exists and ensure it is connected.
-	// b/249592531: Reattach gets triggered every time on this test because |ResetShill| clears the default profile,
-	// deleting the previous value of UseAttachApn. If the new APN is an attach APN, the Reattach is triggered a second time.
-	// Because of Reattach, the service changes when an attach APN is changed.
 	service, err := helper.FindServiceForDevice(ctx)
 	if err != nil {
 		return false, errors.Wrap(err, "unable to find cellular service for device")
