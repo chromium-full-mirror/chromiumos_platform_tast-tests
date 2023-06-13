@@ -20,6 +20,8 @@ import (
 )
 
 var (
+	// systemBus is the shared connection to the system bus.
+	// Do not access directly. Access through SystemBus().
 	systemBus    *dbus.Conn
 	systemBusMux sync.Mutex
 )
@@ -93,14 +95,11 @@ func busOptions() []dbus.ConnOption {
 func SystemBus() (conn *dbus.Conn, err error) {
 	systemBusMux.Lock()
 	defer systemBusMux.Unlock()
-	if systemBus != nil {
+	if systemBus != nil && systemBus.Connected() {
 		return systemBus, nil
 	}
-	conn, err = dbus.ConnectSystemBus(busOptions()...)
-	if conn != nil {
-		systemBus = conn
-	}
-	return
+	systemBus, err = dbus.ConnectSystemBus(busOptions()...)
+	return systemBus, err
 }
 
 // SystemBusPrivate returns a new private connection to the system bus.
