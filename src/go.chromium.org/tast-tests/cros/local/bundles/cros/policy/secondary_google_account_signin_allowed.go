@@ -29,10 +29,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test behavior of SecondaryGoogleAccountSigninAllowed policy: check if Add account button is restricted based on the value of the policy", // TODO(chromium:1128915): Add test cases for signin screen.
 		Contacts: []string{
-			"cros-engprod-muc@google.com",
+			"team-dent@google.com",
+			"sinhak@google.com",
+			"anastasiian@google.com",
 			"alexanderhartl@google.com", // Test author
 		},
-		BugComponent: "b:1263917",
+		BugComponent: "b:1279804",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier"},
 		Fixture:      fixture.FakeDMS,
