@@ -26,10 +26,9 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Behavior of the NewTabPageLocation policy",
 		Contacts: []string{
-			"cros-engprod-muc@google.com",
-			"mpolzer@google.com", // Test author
+			"chrome-desktop-ntp@google.com",
 		},
-		BugComponent: "b:1263917",
+		BugComponent: "b:373898",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier"},
 		Params: []testing.Param{{
