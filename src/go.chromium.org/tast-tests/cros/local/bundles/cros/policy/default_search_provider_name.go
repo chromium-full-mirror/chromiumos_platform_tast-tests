@@ -33,10 +33,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Behavior of DefaultSearchProviderName policy: check if specified provider name is displayed correctly",
 		Contacts: []string{
-			"cros-engprod-muc@google.com",
-			"jaflis@google.org", // Test author
+			"chrome-desktop-search@google.com",
+			"jdonnelly@google.com",
 		},
-		BugComponent: "b:1263917",
+		BugComponent: "crbug:UI>Browser>Omnibox",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier"},
 		Params: []testing.Param{{

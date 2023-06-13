@@ -29,11 +29,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Behavior of SearchSuggestEnabled policy, check if a search suggestions are shown based on the value of the policy",
 		Contacts: []string{
-			"cros-engprod-muc@google.com",
-			"dp-chromeos-eng@google.com",
+			"chrome-desktop-search@google.com",
+			"jdonnelly@google.com",
 			"alexanderhartl@google.com", // Test author
 		},
-		BugComponent: "b:1129862",
+		BugComponent: "crbug:UI>Browser>Omnibox",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier"},
 		Params: []testing.Param{{
