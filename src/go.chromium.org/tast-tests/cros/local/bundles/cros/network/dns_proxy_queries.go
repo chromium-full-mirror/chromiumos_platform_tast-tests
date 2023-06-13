@@ -52,6 +52,13 @@ func DNSProxyQueries(ctx context.Context, s *testing.State) {
 	}
 	defer env.Cleanup(cleanupCtx)
 
+	// Wait for DNS proxy to be ready after the network change.
+	// The propagation is expected to happen very quickly (<100 ms).
+	// GoBigSleepLint: The sleep is necessary as there is currently no
+	// way of querying DNS proxy's state.
+	// TODO(b/281778714): Add a way to query DNS proxy's state.
+	testing.Sleep(ctx, 1*time.Second)
+
 	tc := []dns.ProxyTestCase{{Client: dns.System}, {Client: dns.User}, {Client: dns.Chrome}}
 
 	s.Log("Querying through Do53")
@@ -81,6 +88,7 @@ func DNSProxyQueries(ctx context.Context, s *testing.State) {
 	// expected to pass even without the sleep on the normal case.
 	// GoBigSleepLint: The sleep is necessary as there is currently no
 	// way of querying DNS proxy's state.
+	// TODO(b/281778714): Add a way to query DNS proxy's state.
 	testing.Sleep(ctx, 1*time.Second)
 
 	s.Log("Querying through DoH")
