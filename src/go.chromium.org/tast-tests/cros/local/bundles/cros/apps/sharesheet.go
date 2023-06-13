@@ -38,7 +38,7 @@ func init() {
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		Data:         []string{"sharesheet_manifest.json", "sharesheet_service.js", "sharesheet_index.html", "sharesheet_icon.png"},
 		SoftwareDeps: []string{"chrome"},
-		Pre:          chrome.LoggedIn(),
+		Fixture:      "chromeLoggedIn",
 	})
 }
 
@@ -47,8 +47,9 @@ type fileNameAndContents struct {
 	contents string
 }
 
+// Sharesheet verifies that sharing a file from Files app to a PWA works.
 func Sharesheet(ctx context.Context, s *testing.State) {
-	cr := s.PreValue().(*chrome.Chrome)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
