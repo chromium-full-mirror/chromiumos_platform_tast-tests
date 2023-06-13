@@ -67,6 +67,10 @@ func init() {
 
 func DetachableInsertOptScreens(ctx context.Context, s *testing.State) {
 	h := s.FixtValue().(*fixture.Value).Helper
+	ms, err := firmware.NewModeSwitcher(ctx, h)
+	if err != nil {
+		s.Fatal("Creating mode switcher: ", err)
+	}
 
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to init servo: ", err)
@@ -74,11 +78,6 @@ func DetachableInsertOptScreens(ctx context.Context, s *testing.State) {
 
 	if err := h.RequireConfig(ctx); err != nil {
 		s.Fatal("Requiring config: ", err)
-	}
-
-	// Ensure no external devices connected for DUTs to boot from.
-	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxOff); err != nil {
-		s.Fatal("Failed to power off usbkey: ", err)
 	}
 
 	for _, tc := range []struct {
@@ -89,7 +88,7 @@ func DetachableInsertOptScreens(ctx context.Context, s *testing.State) {
 	}{
 		{
 			caseName:      powerBtnOnInsertMenu,
-			buttonPresses: []testKeys{recBtn, powerBtnUntilPoweroff},
+			buttonPresses: []testKeys{powerBtnUntilPoweroff},
 			steps: map[string][]func(ctx context.Context, h *firmware.Helper) error{
 				"kukui":     {waitForPowerOff, setDUTPowerOn},
 				"strongbad": {waitForPowerOff, setDUTPowerOn},
@@ -114,7 +113,7 @@ func DetachableInsertOptScreens(ctx context.Context, s *testing.State) {
 				to_dev_action: Enabling dev-mode...
 			*/
 			caseName:      volumeUpDownEffective,
-			buttonPresses: []testKeys{recBtn, volumeUpDown, volumeDown, volumeUp},
+			buttonPresses: []testKeys{volumeUpDown, volumeDown, volumeUp},
 			steps: map[string][]func(ctx context.Context, h *firmware.Helper) error{
 				"kukui":     {enableDevMode},
 				"strongbad": {apResetUsingECCmd},
@@ -151,7 +150,7 @@ func DetachableInsertOptScreens(ctx context.Context, s *testing.State) {
 				SetVirtualDevMode: Enabling developer mode...
 			*/
 			caseName:      volumeUpDownUndetected,
-			buttonPresses: []testKeys{recBtn, volumeUpDown, volumeUpDown},
+			buttonPresses: []testKeys{volumeUpDown, volumeUpDown},
 			steps: map[string][]func(ctx context.Context, h *firmware.Helper) error{
 				"kukui":     {enableDevMode},
 				"strongbad": {apResetUsingECCmd},
@@ -170,14 +169,8 @@ func DetachableInsertOptScreens(ctx context.Context, s *testing.State) {
 		},
 	} {
 
-		// Power cycle the DUT to clear the firmware log, so that records prior
-		// to this point are wiped.
-		if err := h.Servo.SetPowerState(ctx, servo.PowerStateOff); err != nil {
-			s.Fatal("Failed to power off DUT: ", err)
-		}
-
-		if err := waitForPowerOff(ctx, h); err != nil {
-			s.Fatal("Failed to get power state at G3: ", err)
+		if err := ms.EnableRecMode(ctx, servo.USBMuxOff); err != nil {
+			s.Fatal("Failed to enable recovery mode: ", err)
 		}
 
 		for _, key := range tc.buttonPresses {
@@ -220,17 +213,6 @@ func pressBtnOnFWScreen(ctx context.Context, h *firmware.Helper, key testKeys) e
 		err = h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.DurTab)
 	case powerBtnUntilPoweroff:
 		err = h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.Dur(h.Config.HoldPwrButtonNoPowerdShutdown))
-	case recBtn:
-		err = func() error {
-			if err := h.Servo.SetPowerState(ctx, servo.PowerStateRec); err != nil {
-				return errors.Wrap(err, "failed to set power_state to rec")
-			}
-			// GoBigSleepLint: Delay to wait for the firmware screens.
-			if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
-				return errors.Wrapf(err, "failed to sleep for %s", h.Config.FirmwareScreen)
-			}
-			return nil
-		}()
 	default:
 		err = errors.New("no key detected")
 	}

@@ -48,6 +48,10 @@ func init() {
 
 func DetachableUntrustedKeyboard(ctx context.Context, s *testing.State) {
 	h := s.FixtValue().(*fixture.Value).Helper
+	ms, err := firmware.NewModeSwitcher(ctx, h)
+	if err != nil {
+		s.Fatal("Creating mode switcher: ", err)
+	}
 
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to init servo: ", err)
@@ -82,23 +86,10 @@ func DetachableUntrustedKeyboard(ctx context.Context, s *testing.State) {
 		// Expect to_dev screen menu selection at default.
 		{keyboardF9F10, []string{"volumeUpDown", "keyBoardF9", "keyboardF10", "enter"}},
 	} {
-		if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxOff); err != nil {
-			s.Fatal("Failed to power off usbkey: ", err)
+		if err := ms.EnableRecMode(ctx, servo.USBMuxOff); err != nil {
+			s.Fatal("Failed to enable recovery mode: ", err)
 		}
 
-		// Power cycle the DUT to clear the firmware log, so that records prior
-		// to this point are wiped.
-		if err := h.Servo.SetPowerState(ctx, servo.PowerStateOff); err != nil {
-			s.Fatal("Failed to power off DUT: ", err)
-		}
-		if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "G3"); err != nil {
-			s.Fatal("Failed to get power state at G3: ", err)
-		}
-
-		s.Log("Booting the DUT to recovery mode")
-		if err := h.Servo.SetPowerState(ctx, servo.PowerStateRec); err != nil {
-			s.Fatal("Failed to set power_state to rec: ", err)
-		}
 		// GoBigSleepLint: Sleep for model specific time to wait for firmware screen.
 		if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
 			s.Fatalf("Failed to sleep for %s", h.Config.FirmwareScreen)
