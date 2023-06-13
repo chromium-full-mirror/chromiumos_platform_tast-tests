@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -42,6 +43,12 @@ var chromeKeepStateVar = testing.RegisterVarString(
 	"chrome.keepState",
 	"false",
 	"chrome.KeepState decides whether to pass KeepState to Chrome.New by default",
+)
+
+var chromeReuseSession = testing.RegisterVarString(
+	"chrome.tryReuseSession",
+	"false",
+	"chrome.tryReuseSession decides whether to pass TryReuseSession to Chrome.New by default",
 )
 
 const (
@@ -251,6 +258,13 @@ func New(ctx context.Context, opts ...Option) (c *Chrome, retErr error) {
 	keepState := chromeKeepStateVar.Value()
 	if keepState == "true" {
 		opts = append(opts, KeepState())
+	}
+	shouldTryReuse, err := strconv.ParseBool(chromeReuseSession.Value())
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to parse %v(%v) to bool", chromeReuseSession.Name(), chromeReuseSession.Value())
+	}
+	if shouldTryReuse {
+		opts = append(opts, TryReuseSession())
 	}
 
 	ctx, st := timing.Start(ctx, "chrome_new")
