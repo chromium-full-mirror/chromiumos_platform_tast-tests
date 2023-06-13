@@ -65,7 +65,7 @@ func init() {
 		Desc:         "Check that we can probe cros_healthd for various probe data points",
 		Contacts:     []string{"cros-tdm-tpe-eng@google.com"},
 		BugComponent: "b:982097",
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "diagnostics"},
 		Fixture:      "crosHealthdRunning",
 	})
