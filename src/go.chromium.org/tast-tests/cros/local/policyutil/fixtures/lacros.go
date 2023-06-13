@@ -154,6 +154,22 @@ func init() {
 		PostTestTimeout: 15 * time.Second,
 		Parent:          fixture.PersistentLacrosEnrolled,
 	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:     fixture.LacrosEnrolledLoggedInShortMetricsInterval,
+		Desc:     "Fixture for a running FakeDMS with lacros on enrolled device that reports metric every second",
+		Contacts: []string{"sugandhagoyal@google.com", "dp-chromeos-eng@google.com"},
+		Impl: &policyChromeFixture{
+			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+				return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(chrome.LacrosExtraArgs("--metrics-upload-interval=1"))).Opts()
+			},
+		},
+		SetUpTimeout:    chrome.LoginTimeout + cleanupTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+		PostTestTimeout: 15 * time.Second,
+		Parent:          fixture.PersistentLacrosEnrolled,
+	})
 }
 
 type policyRealUserFixture struct {

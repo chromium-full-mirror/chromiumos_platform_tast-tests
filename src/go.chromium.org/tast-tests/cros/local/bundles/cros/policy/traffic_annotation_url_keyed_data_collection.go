@@ -10,20 +10,18 @@ import (
 	"net/http/httptest"
 	"time"
 
-	policyannotations "go.chromium.org/tast-tests/cros/local/bundles/cros/policy/policy_annotations"
-
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/annotations"
+	ukm "go.chromium.org/tast-tests/cros/local/bundles/cros/policy/urlkeydatacollection"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -32,21 +30,27 @@ const ukmTestURL = "https://www.google.com"
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         TrafficAnnotationURLKeyedDataCollection,
-		LacrosStatus: testing.LacrosVariantNeeded,
-		Desc:         "This test checks the network annotataion for UKM policy to make sure we are not sending network traffic when it's off",
+		LacrosStatus: testing.LacrosVariantExists,
+		Desc:         "This test checks the network annotation for UKM policy to make sure we are not sending network traffic when it's off",
 		Contacts: []string{
-			"chrome-ess-engprod@google.com",
+			"dp-chromeos-eng@google.com",
 			"meyron@google.com",
 			"rzakarian@google.com",
 		},
-		BugComponent: "b:1152652", // Chrome Operations > BrApp EngProd > ESS > Enterprise Infra
+		BugComponent: "b:1129862", // ChromeOS > Privacy > DPChromeOS > DPChromeOS Engineering
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:golden_tier"},
 		Timeout:      8 * time.Minute,
 		Params: []testing.Param{
 			{
 				Fixture: fixture.ChromeEnrolledLoggedInShortMetricsInterval,
 				Val:     browser.TypeAsh,
+			},
+			{
+				Name:              "lacros",
+				ExtraSoftwareDeps: []string{"lacros"},
+				Fixture:           fixture.LacrosEnrolledLoggedInShortMetricsInterval,
+				Val:               browser.TypeLacros,
 			},
 		},
 		Data: []string{"autofill_address_enabled.html"},
@@ -70,45 +74,7 @@ func TrafficAnnotationURLKeyedDataCollection(ctx context.Context, s *testing.Sta
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()
 
-	const ukmNetworkAnnotationID = "727478"
-	for _, param := range []policyannotations.AnnotationTestParams{
-		{
-			Name:                  "ukm_true_msbb_true",
-			AnnotationLogExpected: true,
-			Policies: []policy.Policy{
-				&policy.UrlKeyedAnonymizedDataCollectionEnabled{Val: true},
-				&policy.SyncDisabled{Val: false},
-				&policy.EnableSyncConsent{Val: true},
-			},
-		},
-		{
-			Name:                  "ukm_false_msbb_false",
-			AnnotationLogExpected: false,
-			Policies: []policy.Policy{
-				&policy.UrlKeyedAnonymizedDataCollectionEnabled{Val: false},
-				&policy.SyncDisabled{Val: true},
-				&policy.EnableSyncConsent{Val: false},
-			},
-		},
-		{
-			Name:                  "ukm_false_msbb_true",
-			AnnotationLogExpected: false,
-			Policies: []policy.Policy{
-				&policy.UrlKeyedAnonymizedDataCollectionEnabled{Val: false},
-				&policy.SyncDisabled{Val: false},
-				&policy.EnableSyncConsent{Val: true},
-			},
-		},
-		{
-			Name:                  "ukm_true_msbb_false",
-			AnnotationLogExpected: true,
-			Policies: []policy.Policy{
-				&policy.UrlKeyedAnonymizedDataCollectionEnabled{Val: true},
-				&policy.SyncDisabled{Val: true},
-				&policy.EnableSyncConsent{Val: false},
-			},
-		},
-	} {
+	for index, param := range ukm.TestCases() {
 		s.Run(ctx, param.Name, func(ctx context.Context, s *testing.State) {
 			// Perform cleanup.
 			if err := policyutil.ResetChrome(ctx, fdms, cr); err != nil {
@@ -133,90 +99,28 @@ func TrafficAnnotationURLKeyedDataCollection(ctx context.Context, s *testing.Sta
 				s.Fatal("Failed to start logging: ", err)
 			}
 
-			ukmAppConn, err := navigateToPageAndLogElement(ctx, br,
-				"chrome://ukm", `document.getElementsByClassName("ukm-collection-status")[0]`)
+			if err := ukm.TriggerAndVerifyUkmApp(ctx, s, cr, br, nil, nil, index); err != nil {
+				s.Fatal("Failed to verify log on ukm app: ", err)
+			}
+
+			hashCodes := []string{ukm.UkmNetworkAnnotationID}
+
+			// wait to allow ukm time to write to log
+			// (writes every 20 seconds, starting after 1 minute).
+			hcLogStatus, err := annotations.PollMultipleAnnotation(ctx, cr, 80*time.Second, 10*time.Second, hashCodes)
 			if err != nil {
-				s.Fatal("Failed to open website: ", err)
+				s.Fatal("Failed to poll hashcode in log: ", err)
 			}
-			defer ukmAppConn.Close()
-
-			// Open the website to log to ukm.
-			conn, err := br.NewConn(ctx, ukmTestURL)
-			if err != nil {
-				s.Fatal("Failed to open website: ", err)
-			}
-			defer conn.Close()
-
-			// verify logs on ukm app.
-			if err := verifyOnUkmApp(ctx, ukmAppConn, param); err != nil {
-				s.Fatal("Failed verify log on ukm app: ", err)
-			}
-
-			// wait to allow ukm time to write to log (writes every 20 seconds, starting after 1 minute).
-			foundAnnotationErr := testing.Poll(ctx, func(ctx context.Context) (err error) {
-				// Check the logs for given annotation.
-				isFound, err := annotations.CheckLogs(ctx, cr, ukmNetworkAnnotationID)
-				if err != nil {
-					return testing.PollBreak(err)
-				}
-
-				if isFound {
-					return nil
-				}
-				return errors.New("Annotation ID not found yet")
-			}, &testing.PollOptions{
-				Timeout:  80 * time.Second,
-				Interval: 10 * time.Second,
-			})
 
 			// Stop logging.
 			if err := annotations.StopLogging(ctx, cr, br); err != nil {
 				s.Fatal("Failed to stop logging and check logs: ", err)
 			}
 
-			annotationFound := foundAnnotationErr == nil
-			if annotationFound != param.AnnotationLogExpected {
-				s.Fatal("Found: ", annotationFound, " But expected: ", param.AnnotationLogExpected)
+			if hcLogStatus[ukm.UkmNetworkAnnotationID] != param.AnnotationLogExpected {
+				s.Fatalf("Unexpected annotation; got: %t, want: %t", hcLogStatus[ukm.UkmNetworkAnnotationID],
+					param.AnnotationLogExpected)
 			}
 		})
 	}
-}
-
-// verifyOnUkmApp - verifying that the test url is logged the ukm app.
-func verifyOnUkmApp(ctx context.Context, ukmAppConn *chrome.Conn, param policyannotations.AnnotationTestParams) error {
-	if param.AnnotationLogExpected {
-		refreshBtn := `document.getElementById("refresh").click()`
-		if err := ukmAppConn.Eval(ctx, refreshBtn, nil); err != nil {
-			return errors.Wrap(err, "failed to refresh")
-		}
-
-		// Find a row in UKM.
-		urlxPath := `//td[contains(@class, 'url') and normalize-space(text()) = '` + ukmTestURL + `/']`
-		xpathFinder := `document.evaluate("` + urlxPath +
-			`", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue`
-		if err := ukmAppConn.WaitForExprWithTimeout(ctx, xpathFinder, 3*time.Second); err != nil {
-			return errors.Wrap(err, "failed to find url in the ukm app")
-		}
-	}
-
-	return nil
-}
-
-// navigateToPageAndLogElement - used to navigate to a page and log the contents of an element on it.
-func navigateToPageAndLogElement(ctx context.Context, br *browser.Browser, url, element string) (newConn *chrome.Conn, err error) {
-	conn, err := br.NewConn(ctx, url)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to open url app "+url)
-	}
-
-	if err := conn.WaitForExpr(ctx, element); err != nil {
-		return nil, errors.Wrap(err, "failed to wait for the element "+element)
-	}
-	var content string
-	if err := conn.Eval(ctx, element+".innerText", &content); err != nil {
-		return nil, errors.Wrap(err, "failed to get element "+element)
-	}
-	testing.ContextLog(ctx, content)
-
-	return conn, nil
 }

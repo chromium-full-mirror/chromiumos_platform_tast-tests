@@ -69,8 +69,6 @@ const (
 const (
 	// LacrosPolicyLoggedIn is a fixture name.
 	LacrosPolicyLoggedIn = "lacrosPolicyLoggedIn"
-	// LacrosPolicyLoggedInShortMetricsInterval is a fixture name.
-	LacrosPolicyLoggedInShortMetricsInterval = "lacrosPolicyLoggedInShortMetricsInterval"
 	// LacrosPolicyLoggedInWithKeepAlive is a fixture name.
 	LacrosPolicyLoggedInWithKeepAlive = "lacrosPolicyLoggedInWithKeepAlive"
 	// LacrosPolicyLoggedInFeatureJourneys is a fixture name.
@@ -85,6 +83,8 @@ const (
 	LacrosAdminDeskTemplatesLoggedIn = "lacrosAdminDeskTemplatesLoggedIn"
 	// LacrosEnrolledLoggedIn is a fixture name.
 	LacrosEnrolledLoggedIn = "lacrosEnrolledLoggedIn"
+	// LacrosEnrolledLoggedInShortMetricsInterval is a fixture name.
+	LacrosEnrolledLoggedInShortMetricsInterval = "lacrosEnrolledLoggedInShortMetricsInterval"
 )
 
 // Fixtures defined in go.chromium.org/tast-tests/cros/local/policyutil/fixtures/persistent.go.

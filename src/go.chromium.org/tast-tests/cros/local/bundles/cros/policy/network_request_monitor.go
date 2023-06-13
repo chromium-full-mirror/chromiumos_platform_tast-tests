@@ -23,6 +23,7 @@ import (
 	policyquickanswers "go.chromium.org/tast-tests/cros/local/bundles/cros/policy/quickanswers"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/searchsuggestion"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/spellcheck"
+	ukm "go.chromium.org/tast-tests/cros/local/bundles/cros/policy/urlkeydatacollection"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/useravatar"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/userfeedback"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -78,6 +79,7 @@ func init() {
 			pci.SearchFlag(&policy.SearchSuggestEnabled{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.SearchSuggestEnabled{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.SpellCheckServiceEnabled{}, pci.VerifiedFunctionalityUI),
+			pci.SearchFlag(&policy.UrlKeyedAnonymizedDataCollectionEnabled{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.UserAvatarCustomizationSelectorsEnabled{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.UserFeedbackAllowed{}, pci.VerifiedFunctionalityUI),
 		},
@@ -99,8 +101,8 @@ type optionalService struct {
 	trigger triggerOptionalService
 	// Data files required to be copied to the dut before triggering the service.
 	dataFiles []string
-	// When ignore is set to true for a service, this service will not be
-	// triggered in this test.
+	// Annotation is logged with delay.
+	delayedAnnotation bool
 }
 
 func optionalServices() []optionalService {
@@ -163,6 +165,14 @@ func optionalServices() []optionalService {
 			policies:              []policy.Policy{&policy.SpellCheckServiceEnabled{Val: false}},
 			trigger:               spellcheck.TriggerSpellCheck,
 			dataFiles:             spellcheck.GetDataFiles(),
+		},
+		{
+			name:                  "url_keyed_data_collection",
+			associatedAnnotations: []string{ukm.UkmNetworkAnnotationID},
+			policies:              []policy.Policy{&policy.UrlKeyedAnonymizedDataCollectionEnabled{Val: false}},
+			trigger:               ukm.TriggerAndVerifyUkmApp,
+			dataFiles:             []string{},
+			delayedAnnotation:     true,
 		},
 		{
 			name:                  "user_feedback",
@@ -229,9 +239,10 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 	}
 
 	opts := []chrome.Option{
-		chrome.DMSPolicy(fdms.URL),        // FakeDMS for setting policies.
-		chrome.GAIALogin(gaiaCreds),       // Some of the optional service tests need a real GAIA account.
-		chrome.ExtraArgs("--log-net-log"), // Enable netlog on startup.
+		chrome.DMSPolicy(fdms.URL),                      // FakeDMS for setting policies.
+		chrome.GAIALogin(gaiaCreds),                     // Some of the optional service tests need a real GAIA account.
+		chrome.ExtraArgs("--log-net-log"),               // Enable netlog on startup.
+		chrome.ExtraArgs("--metrics-upload-interval=1"), // Reduce upload interval for UKM.
 	}
 	// If browser type is lacros, handle differently.
 	if s.Param().(browser.Type) == browser.TypeLacros {
@@ -305,14 +316,27 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 	// Network traffic annotation hashcodes associated with the optional services.
 	var hashCodes []string
 
+	// Network traffic annotation hashcodes that are not immediately logged in net-log
+	// and need to be checked by polling net-log.
+	var pollHashCodes []string
+
 	// Trigger the optional services one by one.
 	for _, service := range optionalServices() {
 		s.Run(ctx, service.name, func(ctx context.Context, s *testing.State) {
 			if err := service.trigger(ctx, s, cr, br, server, tconn, 0); err != nil {
 				s.Fatalf("Failed to trigger %v: %v", service.name, err)
 			}
-			hashCodes = append(hashCodes, service.associatedAnnotations...)
+			if service.delayedAnnotation {
+				pollHashCodes = append(pollHashCodes, service.associatedAnnotations...)
+			} else {
+				hashCodes = append(hashCodes, service.associatedAnnotations...)
+			}
 		})
+	}
+
+	hcLogStatus, err := annotations.PollMultipleAnnotation(ctx, cr, 80*time.Second, 10*time.Second, pollHashCodes)
+	if err != nil {
+		s.Fatal("Failed to poll hashcode in log: ", err)
 	}
 
 	// Stop logging and verify network traffic annotations associated with the
@@ -329,6 +353,17 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 		if _, err := annotations.StopOSLoggingVerifyAnnotationSet(ctx, cr, br, kb, false, hashCodes); err != nil {
 			s.Fatal("Failed to stop OS logging and verify logs: ", err)
 		}
+	}
+
+	// List all hashcodes that were found while polling.
+	var hcFound []string
+	for hc, found := range hcLogStatus {
+		if found {
+			hcFound = append(hcFound, hc)
+		}
+	}
+	if len(hcFound) > 0 {
+		s.Fatalf("Found unexpected annotations with the hash codes %+q", hcFound)
 	}
 
 	// Note: In lacros mode, for unknown reasons, we are unable to stop the

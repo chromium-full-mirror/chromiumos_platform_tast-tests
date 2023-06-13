@@ -592,3 +592,58 @@ func setFileName(desiredFileName string, ui *uiauto.Context, kb *input.KeyboardE
 		}, &testing.PollOptions{Interval: time.Second, Timeout: 15 * time.Second})
 	}
 }
+
+// PollMultipleAnnotation checks collection of hashcodes in net-log.
+// If annotation is found in net-log then status of annotation is updated
+// to True in hashmap.
+// Return annotation status map and error from polling.
+func PollMultipleAnnotation(ctx context.Context, cr *chrome.Chrome, timeout, interval time.Duration, pollHashCodes []string) (map[string]bool, error) {
+	// Map captures presence of required annotations in net-log.
+	var hcLogStatus = make(map[string]bool)
+
+	for _, hc := range pollHashCodes {
+		hcLogStatus[hc] = false
+	}
+
+	// Wait to get annotation written to log.
+	startTime := time.Now()
+	err := testing.Poll(ctx,
+		func(ctx context.Context) (err error) {
+			for hc, found := range hcLogStatus {
+				// If annotation is not found already, check for annotation in net-log.
+				if !found {
+					exists, errorCheckingLogs := CheckLogs(ctx, cr, hc)
+					// Break the poll if error has been encountered while
+					// checking net-log.
+					if errorCheckingLogs != nil {
+						return testing.PollBreak(errorCheckingLogs)
+					}
+
+					hcLogStatus[hc] = exists
+				}
+			}
+
+			// When timeout has reached and errors have not been encountered so far.
+			// Return without error to end the polling.
+			if time.Since(startTime) >= timeout {
+				return nil
+			}
+
+			// Return with error so that polling can continue
+			// if all required annotations have not been found yet.
+			for _, found := range hcLogStatus {
+				if !found {
+					return errors.New("not all annotations were found")
+				}
+			}
+
+			// Return without error if all required annotations have been found
+			// and no further polling is required.
+			return nil
+		}, &testing.PollOptions{
+			Interval: interval,
+		})
+
+	// Return the status of logs and any error encountered.
+	return hcLogStatus, err
+}
