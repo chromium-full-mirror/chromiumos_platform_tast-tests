@@ -66,14 +66,23 @@ const (
 	loginPerfTraceConfigFileName                          = "login_perf_trace_config.pbtxt"
 )
 
+// Supported ARC modes
+const (
+	noarc        = "noarc"
+	arcenabled   = "arcenabled"
+	arcsupported = "arcsupported"
+)
+
 type loginPerfTestParam struct {
-	checkArcAllModes bool             // Whether to check the "arcsupported" mode. When false only "noarc" and "arcenabled" are checked.
-	checkTabletMode  bool             // Whether to check the Tablet mode in addition to the Clamshell mode.
-	bt               browser.Type     // browser.{TypeAsh/TypeLacros}
-	lacrosSelection  lacros.Selection // lacros.{Omaha,Rootfs}
-	lacrosMode       lacros.Mode      // lacros.{LacrosPrimary,LacrosOnly}
-	preloadLacros    bool             // Whether to enable LacrosLaunchAtLoginScreen feature
-	dropCaches       bool             // Whether to drop block caches before starting test.
+	windows            []int            // List of number of session restored windows.
+	arcmodes           []string         // List of ARC modes to test.
+	checkTabletMode    bool             // Whether to check the Tablet mode in addition to the Clamshell mode.
+	bt                 browser.Type     // browser.{TypeAsh/TypeLacros}
+	lacrosSelection    lacros.Selection // lacros.{Omaha,Rootfs}
+	lacrosMode         lacros.Mode      // lacros.{LacrosPrimary,LacrosOnly}
+	preloadLacros      bool             // Whether to enable LacrosLaunchAtLoginScreen feature
+	dropCaches         bool             // Whether to drop block caches before starting test.
+	sleepAtLoginScreen time.Duration    // Test will sleep at the login screen for the specified duration.
 }
 
 func init() {
@@ -94,83 +103,147 @@ func init() {
 			"ui.gaiaPoolDefault",
 		},
 		// Test runs login / chrome restart 120+ times.
-		Timeout: 120 * time.Minute,
-		Data:    []string{"animation.html", "animation.js", loginPerfTraceConfigFileName},
+		Data: []string{"animation.html", "animation.js", loginPerfTraceConfigFileName},
 		Params: []testing.Param{{
 			Name:      "ash_chrome",
 			ExtraAttr: []string{"group:cuj"},
+			Timeout:   90 * time.Minute,
 			Val: loginPerfTestParam{
-				true, // checkArcAllModes
+				[]int{2, 8}, // windows
+				[]string{noarc, arcenabled, arcsupported}, // arcmodes
 				true, // checkTabletMode
 				browser.TypeAsh,
 				lacros.NotSelected,
 				lacros.NotSpecified,
 				false, // preloadLacros
 				false, // dropCaches
+				0,     // sleepAtLoginScreen
+			},
+		}, {
+			Name:      "ash_chrome_delay_login",
+			ExtraAttr: []string{"group:cuj"},
+			Timeout:   30 * time.Minute,
+			Val: loginPerfTestParam{
+				[]int{8},                    // windows
+				[]string{noarc, arcenabled}, // arcmodes
+				false,                       // checkTabletMode
+				browser.TypeAsh,
+				lacros.NotSelected,
+				lacros.NotSpecified,
+				false,           // preloadLacros
+				false,           // dropCaches
+				5 * time.Second, // sleepAtLoginScreen
 			},
 		}, {
 			Name:      "ash_chrome_cold_boot",
 			ExtraAttr: []string{"group:cuj"},
+			Timeout:   40 * time.Minute,
 			Val: loginPerfTestParam{
-				false, // checkArcAllModes
-				false, // checkTabletMode
+				[]int{2, 8},                 // windows
+				[]string{noarc, arcenabled}, // arcmodes
+				false,                       // checkTabletMode
 				browser.TypeAsh,
 				lacros.NotSelected,
 				lacros.NotSpecified,
 				false, // preloadLacros
 				true,  // dropCaches
+				0,     // sleepAtLoginScreen
 			},
 		}, {
 			Name:              "lacros_chrome_root_fs_primary",
 			ExtraAttr:         []string{"group:cuj"},
 			ExtraSoftwareDeps: []string{"lacros"},
+			Timeout:           90 * time.Minute,
 			Val: loginPerfTestParam{
-				true, // checkArcAllModes
+				[]int{2, 8},
+				[]string{noarc, arcenabled, arcsupported},
 				true, // checkTabletMode
 				browser.TypeLacros,
 				lacros.Rootfs,
 				lacros.LacrosPrimary,
 				false, // preloadLacros
 				false, // dropCaches
+				0,     // sleepAtLoginScreen
 			},
 		}, {
 			Name:              "lacros_chrome_root_fs_primary_cold_boot",
 			ExtraAttr:         []string{"group:cuj"},
 			ExtraSoftwareDeps: []string{"lacros"},
+			Timeout:           40 * time.Minute,
 			Val: loginPerfTestParam{
-				false, // checkArcAllModes
+				[]int{2, 8},
+				[]string{noarc, arcenabled},
 				false, // checkTabletMode
 				browser.TypeLacros,
 				lacros.Rootfs,
 				lacros.LacrosPrimary,
 				false, // preloadLacros
 				true,  // dropCaches
+				0,     // sleepAtLoginScreen
+			},
+		}, {
+			Name:              "lacros_chrome_root_fs_primary_delay_login",
+			ExtraAttr:         []string{"group:cuj"},
+			ExtraSoftwareDeps: []string{"lacros"},
+			Timeout:           30 * time.Minute,
+			Val: loginPerfTestParam{
+				[]int{8},
+				[]string{noarc, arcenabled},
+				false, // checkTabletMode
+				browser.TypeLacros,
+				lacros.Rootfs,
+				lacros.LacrosPrimary,
+				true,            // preloadLacros
+				false,           // dropCaches
+				5 * time.Second, // sleepAtLoginScreen
+			},
+		}, {
+			Name:              "lacros_chrome_root_fs_primary_cold_boot_delay_login",
+			ExtraAttr:         []string{"group:cuj"},
+			ExtraSoftwareDeps: []string{"lacros"},
+			Timeout:           30 * time.Minute,
+			Val: loginPerfTestParam{
+				[]int{8},
+				[]string{noarc, arcenabled},
+				false, // checkTabletMode
+				browser.TypeLacros,
+				lacros.Rootfs,
+				lacros.LacrosPrimary,
+				true,            // preloadLacros
+				true,            // dropCaches
+				5 * time.Second, // sleepAtLoginScreen
 			},
 		}, {
 			Name:              "lacros_chrome_root_fs_primary_enable_preload",
 			ExtraAttr:         []string{"group:cuj"},
 			ExtraSoftwareDeps: []string{"lacros"},
+			Timeout:           40 * time.Minute,
 			Val: loginPerfTestParam{
-				false, // checkArcAllModes
+				[]int{2, 8},
+				[]string{noarc, arcenabled},
 				false, // checkTabletMode
 				browser.TypeLacros,
 				lacros.Rootfs,
 				lacros.LacrosPrimary,
 				true,  // preloadLacros
 				false, // dropCaches
+				0,     // sleepAtLoginScreen
 			},
 		}, {
 			Name:              "lacros_chrome_root_fs_primary_enable_preload_cold_boot",
 			ExtraAttr:         []string{"group:cuj"},
 			ExtraSoftwareDeps: []string{"lacros"},
+			Timeout:           40 * time.Minute,
 			Val: loginPerfTestParam{
-				false, // checkArcAllModes
+				[]int{2, 8},
+				[]string{noarc, arcenabled},
 				false, // checkTabletMode
 				browser.TypeLacros,
 				lacros.Rootfs,
 				lacros.LacrosPrimary,
 				true, // preloadLacros
 				true, // dropCaches
+				0,    // sleepAtLoginScreen
 			},
 		}, {
 			Name: "lacros_chrome_omaha_primary",
@@ -178,14 +251,17 @@ func init() {
 			ExtraAttr:         []string{},
 			ExtraHardwareDeps: hwdep.D(hwdep.Model("kasumi", "vilboz" /* amd64 */, "krane" /* arm */)),
 			ExtraSoftwareDeps: []string{"lacros"},
+			Timeout:           90 * time.Minute,
 			Val: loginPerfTestParam{
-				true, // checkArcAllModes
+				[]int{2, 8},
+				[]string{noarc, arcenabled, arcsupported},
 				true, // checkTabletMode
 				browser.TypeLacros,
 				lacros.Omaha,
 				lacros.LacrosPrimary,
 				false, // preloadLacros
 				false, // dropCaches
+				0,     // sleepAtLoginScreen
 			},
 		}},
 	})
@@ -275,6 +351,14 @@ func loginPerfStartToLoginScreen(
 		func(st lockscreen.State) bool { return st.ReadyForPassword },
 		30*time.Second); err != nil {
 		return nil, errors.Wrapf(err, "failed waiting for the login screen to be ready for password entry: last state: %+v", st)
+	}
+
+	if testConfig.param.sleepAtLoginScreen != 0 {
+		s.Logf("Sleeping for %v before trying to log in", testConfig.param.sleepAtLoginScreen)
+		// GoBigSleepLint: This sleep is a test parameter.
+		if err := testing.Sleep(ctx, testConfig.param.sleepAtLoginScreen); err != nil {
+			return nil, errors.Wrapf(err, "failed to sleep at the login screen for %v", testConfig.param.sleepAtLoginScreen)
+		}
 	}
 
 	return cr, nil
@@ -898,19 +982,10 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 
 	url := server.URL + "/animation.html"
 
-	const (
-		noarc        = "noarc"
-		arcenabled   = "arcenabled"
-		arcsupported = "arcsupported"
-	)
 	arcmodes := []string{noarc}
+	// If arc is not supported, limit arcmodes to "noarc" case only.
 	if arc.Supported() {
-		// param.checkArcAllModes controls whether to check all Arc modes or only enabled/disabled.
-		if param.checkArcAllModes {
-			arcmodes = append(arcmodes, arcenabled, arcsupported)
-		} else {
-			arcmodes = append(arcmodes, arcenabled)
-		}
+		arcmodes = param.arcmodes
 	}
 
 	displCount, err := graphics.NumberOfOutputsConnected(ctx)
@@ -922,7 +997,7 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 	// Run the login flow for various situations.
 	// - change the number of browser windows, 2 or 8
 	// - the window system status; clamshell mode or tablet mode.
-	for _, windows := range []int{2, 8} {
+	for _, windows := range param.windows {
 		for _, arcMode := range arcmodes {
 			var arcOpt []chrome.Option
 			switch arcMode {
