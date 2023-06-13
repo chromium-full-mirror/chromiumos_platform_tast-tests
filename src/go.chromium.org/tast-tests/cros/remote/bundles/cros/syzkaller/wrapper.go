@@ -46,6 +46,9 @@ const (
 	// syzCorpusCorrupt is an informational string indicating that a corrupt corpus
 	// database was found.
 	syzCorpusCorrupt = "failed to deserialize database header"
+
+	// syzSeedProcessed indicates that the seed corpus has been fully processed.
+	syzSeedProcessed = "triageQLen 0"
 )
 
 // A global runtime variable to indicate the test is running locally.
@@ -695,7 +698,7 @@ func logValidity(fname string) error {
 	}
 
 	var unknown []string
-	var newInpFound, corpusCorrupt bool
+	var newInpFound, corpusCorrupt, seedProcessed bool
 	for _, line := range lines {
 		if strings.Contains(line, syzUnknownEnabled) {
 			unknown = append(unknown, line)
@@ -706,6 +709,9 @@ func logValidity(fname string) error {
 		if strings.Contains(line, syzCorpusCorrupt) {
 			corpusCorrupt = true
 		}
+		if strings.Contains(line, syzSeedProcessed) {
+			seedProcessed = true
+		}
 	}
 	if len(unknown) != 0 {
 		return errors.Errorf("unsupported enabled syscall[s] found: [%v]", unknown)
@@ -715,6 +721,9 @@ func logValidity(fname string) error {
 	}
 	if corpusCorrupt {
 		return errors.New("corpus found to be corrupted")
+	}
+	if !seedProcessed {
+		return errors.New("did not finish executing the seed corpus")
 	}
 
 	return nil
