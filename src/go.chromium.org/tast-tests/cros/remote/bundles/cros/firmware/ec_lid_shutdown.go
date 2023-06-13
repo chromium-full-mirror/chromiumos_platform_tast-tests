@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -50,19 +51,21 @@ func ECLidShutdown(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set usb mux state to off: ", err)
 	}
 
-	defer func() {
+	cleanupContext := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 2*time.Minute)
+	defer cancel()
+	defer func(ctx context.Context) {
 		s.Log("Resetting DUT after test")
 		if err := h.Servo.OpenLid(ctx); err != nil {
 			s.Fatal("Failed to re open lid: ", err)
 		}
 
-		h.DisconnectDUT(ctx)
 		if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
 			s.Fatal("Failed to reset DUT: ", err)
 		}
 
 		s.Log("Reconnecting to DUT")
-		if err := h.WaitConnect(ctx); err != nil {
+		if err := h.EnsureDUTBooted(ctx); err != nil {
 			s.Fatal("Failed to connect to DUT: ", err)
 		}
 
@@ -71,11 +74,23 @@ func ECLidShutdown(ctx context.Context, s *testing.State) {
 		if _, err := fwCommon.ClearAndSetGBBFlags(ctx, s.DUT(), &flags); err != nil {
 			s.Fatal("Failed to clear GBBFlag_DISABLE_LID_SHUTDOWN flag after test end: ", err)
 		}
-	}()
+	}(cleanupContext)
 
 	s.Log("Set flag then go to recovery mode, expect S0 after lid close")
 	if err := setFlagBeforeRecMode(ctx, h, true); err != nil {
 		s.Fatal("Failed to power on and off correctly with GBBFlag_DISABLE_LID_SHUTDOWN set: ", err)
+	}
+
+	if err := h.Servo.OpenLid(ctx); err != nil {
+		s.Fatal("Failed to open lid: ", err)
+	}
+	testing.ContextLog(ctx, "Resetting DUT")
+	if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
+		s.Fatal("Failed to reset dut: ", err)
+	}
+	testing.ContextLog(ctx, "Reconnecting to DUT")
+	if err := h.EnsureDUTBooted(ctx); err != nil {
+		s.Fatal("Failed to reconnect to DUT: ", err)
 	}
 
 	s.Log("Clear flag then go to recovery mode, expect G3 after lid close")
@@ -85,18 +100,6 @@ func ECLidShutdown(ctx context.Context, s *testing.State) {
 }
 
 func setFlagBeforeRecMode(ctx context.Context, h *firmware.Helper, flag bool) (reterr error) {
-	h.DisconnectDUT(ctx)
-	if err := h.Servo.OpenLid(ctx); err != nil {
-		return errors.Wrap(err, "failed to re open lid")
-	}
-	testing.ContextLog(ctx, "Resetting DUT")
-	if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
-		return errors.Wrap(err, "powering off DUT")
-	}
-	testing.ContextLog(ctx, "Reconnecting to DUT")
-	if err := h.WaitConnect(ctx); err != nil {
-		return errors.Wrap(err, "failed to connect to DUT")
-	}
 
 	flags := pb.GBBFlagsState{Clear: []pb.GBBFlag{pb.GBBFlag_DISABLE_LID_SHUTDOWN}, Set: []pb.GBBFlag{}}
 	flagState := "clearing"
@@ -109,29 +112,38 @@ func setFlagBeforeRecMode(ctx context.Context, h *firmware.Helper, flag bool) (r
 		return errors.Wrapf(err, "failed %s GBBFlag_DISABLE_LID_SHUTDOWN flag", flagState)
 	}
 
-	h.DisconnectDUT(ctx)
 	testing.ContextLog(ctx, "Booting to recovery")
 	if err := h.Servo.SetPowerState(ctx, servo.PowerStateRec); err != nil {
 		return errors.Wrap(err, "powering off DUT")
+	}
+
+	if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "S0"); err != nil {
+		return errors.Wrap(err, "failed to wait for S0 powerstate")
 	}
 
 	if err := h.Servo.CloseLid(ctx); err != nil {
 		return errors.Wrap(err, "failed to close lid")
 	}
 
-	// Immediately checking for powerstate might cause a false positive since it might not have time to transition.
-	testing.ContextLog(ctx, "Sleep so lid close has time to affect power_state")
-	if err := testing.Sleep(ctx, 10*time.Second); err != nil {
-		return errors.Wrap(err, "failed to sleep for 10s")
+	if flag {
+		testing.ContextLog(ctx, "Sleep so lid close has time to affect power_state")
+		// GoBigSleepLint: Immediately checking for S0 powerstate might cause a false positive since it was in S0 before lidclose
+		// so we want to wait a bit to make sure the DUT had time to settle into a powerstate.
+		if err := testing.Sleep(ctx, 10*time.Second); err != nil {
+			return errors.Wrap(err, "failed to sleep for 10s")
+		}
+
+		if currPowerState, err := h.Servo.GetECSystemPowerState(ctx); err != nil {
+			return errors.Wrap(err, "failed to check powerstate")
+		} else if currPowerState != "S0" {
+			return errors.Errorf("expected DUT to remain in S0, but got powerstate %v instead", currPowerState)
+		}
+		return nil
 	}
 
-	expectedPowerState := "G3"
-	if flag {
-		expectedPowerState = "S0"
-	}
-	testing.ContextLogf(ctx, "Waiting for %s powerstate", expectedPowerState)
-	if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, expectedPowerState); err != nil {
-		return errors.Wrapf(err, "failed to get %s powerstate", expectedPowerState)
+	testing.ContextLog(ctx, "Waiting for G3 powerstate")
+	if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "G3"); err != nil {
+		return errors.Wrap(err, "failed to get G3 powerstate")
 	}
 
 	return nil
