@@ -15,7 +15,6 @@ import (
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/common/testexec"
-	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/errors"
@@ -156,26 +155,6 @@ func DevModeFwScreen(ctx context.Context, s *testing.State) {
 			from main storage.
 	*/
 
-	// If the dut is a wilco or detachable device, send usb keyboard key '<uparrow>'.
-	// Otherwise, use the key '<up>' to avoid fw screen timeout.
-	extendFwScreenKey := dmfsUpKey
-	if goRoutineRequired {
-		if err := h.RequireRPCClient(ctx); err != nil {
-			s.Fatal("Failed to open RPC client: ", err)
-		}
-		fs := dutfs.NewClient(h.RPCClient.Conn)
-		crosECPath := "/dev/cros_ec"
-		crosEC, err := fs.Exists(ctx, crosECPath)
-		if err != nil {
-			s.Fatal("Failed to verify if DUT has cros ec: ", err)
-		}
-		if err := h.CloseRPCConnection(ctx); err != nil {
-			s.Fatal("Failed to close RPC connection: ", err)
-		}
-		if !crosEC || (h.Config.ModeSwitcherType == firmware.TabletDetachableSwitcher) {
-			extendFwScreenKey = dmfsUpArrowKey
-		}
-	}
 	for iter, steps := range []struct {
 		devBootUSB      string
 		testedShortCuts []dmfsKeyVal
@@ -240,7 +219,7 @@ func DevModeFwScreen(ctx context.Context, s *testing.State) {
 		keyPressErrChan := make(chan error, 1)
 		if goRoutineRequired {
 			testing.ContextLog(ctx, "Pressing <up> key in the background for extended stay at fw screen")
-			go testShortCutsInBackground(ctx, h, extendFwScreenKey, &dutAtFwScreen, steps.testedShortCuts, keyPressErrChan, done, &wg)
+			go testShortCutsInBackground(ctx, h, &dutAtFwScreen, steps.testedShortCuts, keyPressErrChan, done, &wg)
 			// The default timeout at the firmware screen is 30 seconds.
 			// Check that pressing the <up> key has worked around this timeout,
 			// and that DUT remains disconnected.
@@ -249,7 +228,11 @@ func DevModeFwScreen(ctx context.Context, s *testing.State) {
 			defer cancelWaitConnectShort()
 			err := h.WaitConnect(waitConnectShortCtx)
 			if err == nil {
-				s.Fatalf("DUT exited fw screen and reconnected unexpectedly, got ap info prior to pressing the up key: %s %s", apPower, screenState)
+				var errMessage error
+				if len(keyPressErrChan) != 0 {
+					errMessage = <-keyPressErrChan
+				}
+				s.Fatalf("DUT exited fw screen and reconnected unexpectedly, goroutine error: %v, ap state info prior to pressing the up key: %s %s", errMessage, apPower, screenState)
 			}
 			if !strings.Contains(err.Error(), context.DeadlineExceeded.Error()) {
 				s.Fatal("Unexpected error in waiting for DUT to reconnect: ", err)
@@ -312,12 +295,10 @@ func dmfsPressKey(ctx context.Context, h *firmware.Helper, key dmfsKeyVal, keypr
 		testing.ContextLog(ctx, "Pressing ctrlU")
 		err = h.Servo.KeypressWithDuration(ctx, servo.CtrlU, keypressDuration)
 	case dmfsUpKey:
-		err = h.Servo.PressKey(ctx, "<up>", keypressDuration)
+		err = h.Servo.KeypressWithDuration(ctx, servo.ArrowUp, keypressDuration)
 	case dmfsSpace:
 		testing.ContextLog(ctx, "Pressing space key")
 		err = h.Servo.PressKey(ctx, " ", keypressDuration)
-	case dmfsUpArrowKey:
-		err = h.Servo.PressUSBKey(ctx, "<uparrow>", keypressDuration)
 	default:
 		return errors.Errorf("found unknown key %d", key)
 	}
@@ -331,13 +312,13 @@ func dmfsPressKey(ctx context.Context, h *firmware.Helper, key dmfsKeyVal, keypr
 	return nil
 }
 
-func testShortCutsInBackground(ctx context.Context, h *firmware.Helper, extendFwScreenKey dmfsKeyVal, dutAtFwScreen *bool, testedShortCuts []dmfsKeyVal, keyPressErrChan chan error, done chan bool, wg *sync.WaitGroup) {
+func testShortCutsInBackground(ctx context.Context, h *firmware.Helper, dutAtFwScreen *bool, testedShortCuts []dmfsKeyVal, keyPressErrChan chan error, done chan bool, wg *sync.WaitGroup) {
 	counter := 0
 	defer wg.Done()
 	wg.Add(1)
 	for {
 		if err := func() error {
-			if err := dmfsPressKey(ctx, h, extendFwScreenKey, servo.DurTab); err != nil {
+			if err := dmfsPressKey(ctx, h, dmfsUpKey, servo.DurTab); err != nil {
 				return errors.Wrap(err, "failed to extend fw screen")
 			}
 			// Pressing the up key would ensure an extended stay at the

@@ -262,7 +262,7 @@ func enterDiagMode(ctx context.Context, h *firmware.Helper) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to check the AP state")
 	}
-	if apPower != "on" || screen != "(F)" {
+	if apPower != "on" || screen != "F" {
 		return errors.Errorf("failed to boot to recovery screen. Found AP: %s%s", apPower, screen)
 	}
 	// Read the UART stream just to make sure there isn't buffered data.
