@@ -24,6 +24,8 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
+	"go.chromium.org/tast/core/testing/wlan"
 )
 
 func init() {
@@ -48,6 +50,8 @@ func init() {
 			"tast.cros.chrome.uiauto.ossettings.OsSettingsService",
 		},
 		SoftwareDeps: []string{"chrome", "reboot"},
+		// TODO(b/284522381, b/189972561): Remove the restrictions once the issue is resolved.
+		HardwareDeps: hwdep.D(hwdep.SkipOnWifiDevice(wlan.QualcommWCN3990, wlan.MediaTekMT7921PCIE)),
 		Fixture:      "wificellFixt",
 		Timeout:      7 * time.Minute, // It could take up to 4 minutes to reboot the DUT.
 		Params: []testing.Param{
