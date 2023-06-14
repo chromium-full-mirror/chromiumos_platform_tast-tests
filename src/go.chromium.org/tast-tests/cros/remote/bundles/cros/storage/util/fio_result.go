@@ -105,6 +105,12 @@ func reportJobRWResult(ctx context.Context, testRes map[string]interface{}, pref
 				Unit:      "KB_per_sec",
 				Direction: perf.BiggerIsBetter,
 			}, v)
+		} else if k == "_iops" {
+			perfValues.Set(perf.Metric{
+				Name:      "_" + prefix + k,
+				Unit:      "iops",
+				Direction: perf.BiggerIsBetter,
+			}, v)
 		}
 	}
 }

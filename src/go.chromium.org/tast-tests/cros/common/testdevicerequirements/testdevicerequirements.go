@@ -301,4 +301,28 @@ const (
 
 	// RemovableStorageSeqTp with The ChromeOS device MUST support >= 40 MBps throughput to external storage devices.
 	RemovableStorageSeqTp = "rmvbl-general-0001-v01"
+
+	// Storage16kReadIOPs with The ChromeOS device non-volatile storage MUST support >= 1500 16kB random read IOPS.
+	Storage16kReadIOPs = "store-performance-0001-v01"
+
+	// Storage16kWriteIOPs with The ChromeOS device non-volatile storage MUST support >= 150 16kB random write IOPS.
+	Storage16kWriteIOPs = "store-performance-0003-v01"
+
+	// EmmcStorage16kReadLatency with If the ChromeOS device uses eMMC to provide non-volatile storage, its eMMC storage device latency MUST NOT exceed 35ms for the 99th percentile of 16k random reads, with iodepth=4 workload.
+	EmmcStorage16kReadLatency = "store-emmc-0019-v01"
+
+	// EmmcStorage16kWriteLatency with If the ChromeOS device uses eMMC to provide non-volatile storage, its eMMC storage device latency MUST NOT exceed 35ms for the 99th percentile of 16k random writes, with iodepth=4 workload.
+	EmmcStorage16kWriteLatency = "store-emmc-0020-v01"
+
+	// NvmeStorage16kReadLatency with If the ChromeOS device uses NVMe to provide non-volatile storage, its NVMe storage device latency MUST NOT exceed 12ms for the 99th percentile of 16k random reads, with iodepth=4 workload.
+	NvmeStorage16kReadLatency = "store-nvme-0015-v01"
+
+	// NvmeStorage16kWriteLatency with If the ChromeOS device uses NVMe to provide non-volatile storage, its NVMe storage device latency MUST NOT exceed 12ms for the 99th percentile of 16k random writes, with iodepth=4 workload.
+	NvmeStorage16kWriteLatency = "store-nvme-0016-v01"
+
+	// UfsStorage16kReadLatency with If the ChromeOS device uses UFS to provide non-volatile storage, its UFS storage device latency MUST NOT exceed 12ms for the 99th percentile of 16k random reads, with iodepth=4 workload.
+	UfsStorage16kReadLatency = "store-ufs-0030-v01"
+
+	// UfsStorage16kWriteLatency with If the ChromeOS device uses UFS to provide non-volatile storage, its UFS storage device latency MUST NOT exceed 12ms for the 99th percentile of 16k random writes, with iodepth=4 workload.
+	UfsStorage16kWriteLatency = "store-ufs-0031-v01"
 )

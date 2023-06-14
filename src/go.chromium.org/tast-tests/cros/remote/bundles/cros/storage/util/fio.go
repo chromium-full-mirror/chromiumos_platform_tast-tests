@@ -20,6 +20,8 @@ var (
 	Configs = []string{
 		"seq_read",
 		"seq_write",
+		"16k_read",
+		"16k_write",
 	}
 )
 
