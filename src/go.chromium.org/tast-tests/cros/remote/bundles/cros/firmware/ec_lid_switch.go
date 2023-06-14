@@ -39,7 +39,7 @@ func init() {
 			"tij@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:firmware"},
+		Attr:         []string{"group:firmware", "firmware_ec"},
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Lid()),
 		Requirements: []string{"sys-fw-0022-v02"},
@@ -50,27 +50,18 @@ func init() {
 				Name:              "check_key_press",
 				Val:               checkKeyPresses,
 				ExtraHardwareDeps: hwdep.D(hwdep.Keyboard()),
-				ExtraAttr:         []string{"firmware_ec"},
 			},
 			{
 				Name: "open_lid_to_boot",
 				Val:  bootWithLid,
-				// Original test in suites: faft_ec, faft_ec_fw_qual, faft_ec_tot.
-				ExtraAttr: []string{"firmware_ec"},
 			},
 			{
 				Name: "close_lid_to_shutdown",
 				Val:  shutdownWithLid,
-				// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
-				ExtraAttr: []string{"firmware_unstable"},
 			},
 			{
-				// powerd_dbus_suspend is not very stable so leaving this in unstable.
-				// This wasn't a test case in autotest so it's hard to determine the expected amount of stability.
 				Name: "open_lid_to_unsuspend",
 				Val:  unsuspendWithLid,
-				// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
-				ExtraAttr: []string{"firmware_unstable"},
 			},
 		},
 	})
