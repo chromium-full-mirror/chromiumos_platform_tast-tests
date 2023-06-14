@@ -12,13 +12,9 @@ import (
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/nearbyshare"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/restriction"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -49,13 +45,6 @@ func init() {
 //   - When enabled: A 'Set up' button should be displayed
 //   - When disabled: A on/off toggle should be set to off, and be disabled
 func NearbyShareAllowed(ctx context.Context, s *testing.State) {
-	const (
-		connectedDevicesURL      = "multidevice"
-		connectedDevicesPageName = "Connected devices"
-		setupButtonName          = "Set up"
-		toggleName               = "Nearby Share"
-	)
-
 	// Shorten the context to make room for cleanup jobs.
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
@@ -73,64 +62,31 @@ func NearbyShareAllowed(ctx context.Context, s *testing.State) {
 
 	// Test the 'enabled' and 'disabled' cases only, since these are the valid values in DPanel.
 	// No test for 'unset' since this is not a valid value for this policy.
-	for _, param := range []struct {
-		name             string
-		shouldBeDisabled bool
-		policy           *policy.NearbyShareAllowed
-	}{
+	for _, param := range []nearbyshare.TestCase{
 		{
-			name:             "enabled",
-			shouldBeDisabled: false,
-			policy:           &policy.NearbyShareAllowed{Val: true},
+			Name:             "enabled",
+			ShouldBeDisabled: false,
+			Policy:           &policy.NearbyShareAllowed{Val: true},
 		},
 		{
-			name:             "disabled",
-			shouldBeDisabled: true,
-			policy:           &policy.NearbyShareAllowed{Val: false},
+			Name:             "disabled",
+			ShouldBeDisabled: true,
+			Policy:           &policy.NearbyShareAllowed{Val: false},
 		},
 	} {
-		s.Run(ctx, param.name, func(ctx context.Context, s *testing.State) {
+		s.Run(ctx, param.Name, func(ctx context.Context, s *testing.State) {
 			// Perform cleanup.
 			if err := policyutil.ResetChrome(ctx, fdms, cr); err != nil {
 				s.Fatal("Failed to clean up: ", err)
 			}
 
 			// Update policies.
-			if err := policyutil.ServeAndVerify(ctx, fdms, cr, []policy.Policy{param.policy}); err != nil {
+			if err := policyutil.ServeAndVerify(ctx, fdms, cr, []policy.Policy{param.Policy}); err != nil {
 				s.Fatal("Failed to update policies: ", err)
 			}
 
-			// Open 'Connected devices' page in OS Settings.
-			ui := uiauto.New(tconn)
-			settings, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, connectedDevicesURL,
-				ui.WaitUntilExists(nodewith.Name(connectedDevicesPageName).First()))
-			if err != nil {
-				s.Fatal("Failed to launch Connected devices OS Settings page: ", err)
-			}
-
-			if param.shouldBeDisabled {
-				// Verify toggle is set to disabled.
-				if isEnabled, err := settings.IsToggleOptionEnabled(ctx, cr, toggleName); err != nil {
-					s.Fatal("Failed to get current toggle value: ", err)
-				} else if isEnabled {
-					s.Fatal("Toggle is enabled when it should be disabled: ", err)
-				}
-
-				// Verify toggle is restricted (cannot be changed).
-				nearbyShareToggle := nodewith.Name(toggleName).Role(role.ToggleButton)
-				info, err := ui.Info(ctx, nearbyShareToggle)
-				if err != nil {
-					s.Fatal("Failed to get info about nearby share toggle: ", err)
-				}
-				if info.Restriction != restriction.Disabled {
-					s.Fatal("Nearby share toggle is not restricted: ", err)
-				}
-			} else {
-				// Verify 'Set up' button is displayed.
-				nearbyShareSetupButton := nodewith.Name(setupButtonName).Role(role.Button)
-				if err := ui.WaitUntilExists(nearbyShareSetupButton)(ctx); err != nil {
-					s.Fatal("Nearby share 'Set up' button missing: ", err)
-				}
+			if err := nearbyshare.VerifyNearbySharePermissions(ctx, param, cr, tconn); err != nil {
+				s.Fatal("Failed to verify Nearby Share permissions: ", err)
 			}
 		})
 	}

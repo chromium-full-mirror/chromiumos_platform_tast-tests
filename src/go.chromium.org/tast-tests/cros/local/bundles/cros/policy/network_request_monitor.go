@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/annotations"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/calendarintegration"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/defaultsearchprovider"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/nearbyshare"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/passwordleakdetection"
 	policyquickanswers "go.chromium.org/tast-tests/cros/local/bundles/cros/policy/quickanswers"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/searchsuggestion"
@@ -66,6 +67,7 @@ func init() {
 			pci.SearchFlag(&policy.CalendarIntegrationEnabled{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.DefaultSearchProviderEnabled{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.DefaultSearchProviderEnabled{}, pci.VerifiedFunctionalityOS),
+			pci.SearchFlag(&policy.NearbyShareAllowed{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.PasswordLeakDetectionEnabled{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.QuickAnswersDefinitionEnabled{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.QuickAnswersDefinitionEnabled{}, pci.VerifiedFunctionalityOS),
@@ -277,6 +279,19 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 		}
 		hashCodes = append(hashCodes, userfeedback.HelpContentProviderHashCode)
 		hashCodes = append(hashCodes, userfeedback.ChromeFeedbackReportAppHashCode)
+	})
+
+	s.Run(ctx, "nearby_share", func(ctx context.Context, s *testing.State) {
+		param := nearbyshare.TestCase{
+			Name:             "disabled",
+			ShouldBeDisabled: true,
+			Policy:           &policy.NearbyShareAllowed{Val: false},
+		}
+		if err := nearbyshare.VerifyNearbySharePermissions(ctx, param, cr, tconn); err != nil {
+			s.Fatal("Failed to verify Nearby Share setup is disabled: ", err)
+		}
+		// No network annotations are checked for this service, since the network
+		// calls only occur after Nearby Share setup is complete.
 	})
 
 	// Stop logging and verify network traffic annotations associated with the
