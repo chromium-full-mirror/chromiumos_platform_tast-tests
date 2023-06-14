@@ -6,14 +6,15 @@ package effects
 
 import (
 	"context"
-	"go.chromium.org/tast-tests/cros/common/hps/hpsutil"
-	"go.chromium.org/tast-tests/cros/common/testexec"
 	"os"
 	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
+
+	"go.chromium.org/tast-tests/cros/common/hps/hpsutil"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -26,6 +27,8 @@ const (
 	fieldFilter      = `:\s+(\d+) kB`
 	crosCameraFilter = `root(\s+)(\d+)(.+)cros_camera_service`
 
+	// DefaultTimeInterval defines the default time interval duration for power metric collection.
+	DefaultTimeInterval = 5 * time.Second
 	// DefaultTestDuration defines the default test duration of 5 minutes in seconds.
 	DefaultTestDuration = 60 * 5
 )

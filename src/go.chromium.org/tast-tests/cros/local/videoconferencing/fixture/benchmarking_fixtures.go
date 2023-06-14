@@ -11,7 +11,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
-
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -73,6 +73,10 @@ type benchmarkSetUpFixture struct {
 }
 
 func (f *benchmarkSetUpFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
 	// Ensure display on to record ui performance correctly.
 	if err := power.TurnOnDisplay(ctx); err != nil {
 		s.Fatal("Failed to turn on display: ", err)
@@ -85,9 +89,6 @@ func (f *benchmarkSetUpFixture) SetUp(ctx context.Context, s *testing.FixtState)
 		s.Fatal("Failed to connect to the test API connection: ", err)
 	}
 
-	var sup *setup.Setup
-	sup, f.powerCleanup = setup.New("VCBenchmarking")
-
 	options := setup.PowerTestOptions{
 		NightLight: setup.DisableNightLight,
 	}
@@ -95,10 +96,17 @@ func (f *benchmarkSetUpFixture) SetUp(ctx context.Context, s *testing.FixtState)
 	if keepState == "false" {
 		options.Wifi = setup.DisableWifiInterfaces
 	}
-	sup.Add(setup.PowerTest(ctx, f.tconn, options, setup.NewBatteryDischarge(false /*discharge*/, true /*ignoreErr*/, setup.DefaultDischargeThreshold)))
-	if err := sup.Check(ctx); err != nil {
-		s.Fatal("Power setup failed: ", err)
+
+	cleanup, err := setup.PowerTestSetup(ctx, "powerUIFixture", f.tconn, &options)
+	if err != nil {
+		s.Fatal("Power fixture failed: ", err)
 	}
+	defer func() {
+		if s.HasError() {
+			cleanup(cleanupCtx)
+		}
+	}()
+	f.powerCleanup = cleanup
 
 	return BenchmarkSetUpFixtureData{Chrome: f.cr, TestAPIConn: f.tconn}
 }

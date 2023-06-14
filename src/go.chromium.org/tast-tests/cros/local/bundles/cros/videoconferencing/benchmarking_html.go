@@ -137,12 +137,15 @@ func BenchmarkingHTML(ctx context.Context, s *testing.State) {
 
 	var err error
 	testDuration := effects.DefaultTestDuration
+	metricInterval := effects.DefaultTimeInterval
 
 	if varValue, ok := s.Var("videoconferencing.test_duration"); ok {
 		testDuration, err = strconv.Atoi(varValue)
 		if err != nil || testDuration <= 0 {
 			s.Fatal("Failed to parse videoconferencing.test_duration: ", err)
 		}
+		// Interval set to 1 second when using custom test duration.
+		metricInterval = 1 * time.Second
 
 	}
 
@@ -155,6 +158,9 @@ func BenchmarkingHTML(ctx context.Context, s *testing.State) {
 			s.Error("Failed to clean up apply platform effects: ", err)
 		}
 	}()
+
+	r := power.NewRecorder(ctx, metricInterval, s.OutDir(), s.TestName())
+	defer r.Close(closeCtx)
 
 	p := perf.NewValues()
 	fixt := s.FixtValue().(fixture.BenchmarkSetUpFixtureData)
@@ -220,6 +226,10 @@ func BenchmarkingHTML(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to let things settle: ", err)
 	}
 
+	if err := r.Start(ctx); err != nil {
+		s.Fatal("Cannot start collecting power metrics: ", err)
+	}
+
 	// Take initial power snapshot.
 	powerStart := time.Now()
 	raplEnergyBefore, err := power.NewRAPLSnapshot()
@@ -235,6 +245,11 @@ func BenchmarkingHTML(ctx context.Context, s *testing.State) {
 		s.Error("Failed to report fps and frame duration metrics: ", err)
 	}
 
+	if err := r.Finish(ctx); err != nil {
+		s.Error("Cannot finish collecting power metrics: ", err)
+	}
+
+	// TODO: Remove manual power metric collection
 	powerEnd := time.Now()
 	powerDuration := int(powerEnd.Sub(powerStart).Seconds())
 	if raplEnergyBefore != nil {
