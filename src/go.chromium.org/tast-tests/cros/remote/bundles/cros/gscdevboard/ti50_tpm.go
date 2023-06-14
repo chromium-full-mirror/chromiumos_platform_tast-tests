@@ -35,8 +35,9 @@ func init() {
 			Name: "spi",
 			Val:  "SPI",
 		}, {
-			Name: "i2c",
-			Val:  "I2C",
+			Name:      "i2c",
+			Val:       "I2C",
+			ExtraAttr: []string{"gsc_ot_fpga_cw310"},
 		}},
 	})
 }
