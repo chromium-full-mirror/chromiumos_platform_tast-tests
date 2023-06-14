@@ -50,7 +50,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.firmware.UtilsService"},
 		HardwareDeps: hwdep.D(
-			hwdep.Model("soraka", "krane", "kakadu", "katsu", "homestar", "wormdingler", "quackingstick"),
+			hwdep.Model("coachz", "soraka", "krane", "kakadu", "katsu", "homestar", "wormdingler", "nocturne", "quackingstick"),
 			hwdep.ChromeEC(),
 		),
 		Fixture: fixture.DevModeGBB,
@@ -117,6 +117,7 @@ func BaseECUpdate(ctx context.Context, s *testing.State) {
 	// testing and the following hammer file:
 	// https://chromium.googlesource.com/chromiumos/platform/ec/+/HEAD/board/hammer/variants.h
 	hammerConfigsMap := map[string]hammerRequiredVariables{
+		"coachz":        {pid: "20556", vid: "6353", usbPath: "1-1.4"},
 		"nocturne":      {pid: "20528", vid: "6353", usbPath: "1-7"},
 		"soraka":        {pid: "20523", vid: "6353", usbPath: "1-2"},
 		"krane":         {pid: "20540", vid: "6353", usbPath: "1-1.1"},
@@ -241,7 +242,7 @@ func BaseECUpdate(ctx context.Context, s *testing.State) {
 	// Given that DUT's base ec is running an old firmware,
 	// detaching then re-attaching base would trigger an update
 	// notification window to pop up in a logged in session.
-	if err := triggerAndFindNotification(ctx, ecTool, utilServiceClient, dut, hammerConfigs.pid); err != nil {
+	if err := triggerAndFindNotification(ctx, ecTool, utilServiceClient, dut, originalBaseEC.roProtected); err != nil {
 		currentBaseEC, errBaseEC := getBaseECInfo(ctx, dut, hammerConfigs.pid)
 		if errBaseEC != nil {
 			s.Fatal("Failed to trigger and find notification window, and while getting base ec info: ", errBaseEC)
@@ -249,23 +250,24 @@ func BaseECUpdate(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to trigger and find notification window [current base ec version: %s, ro protected: %t, wp_screw: %t]: %v", currentBaseEC.version, currentBaseEC.roProtected, wpScrewInBool, err)
 	}
 
-	s.Log("Power-cycling DUT with a warm reset")
-	h.CloseRPCConnection(ctx)
-	if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
-		s.Fatal("Failed to reboot DUT by servo: ", err)
-	}
-	s.Log("Waiting for DUT to power ON")
-	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
-	defer cancelWaitConnect()
+	if !originalBaseEC.roProtected {
+		s.Log("Power-cycling DUT with a warm reset")
+		h.CloseRPCConnection(ctx)
+		if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
+			s.Fatal("Failed to reboot DUT by servo: ", err)
+		}
+		s.Log("Waiting for DUT to power ON")
+		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
+		defer cancelWaitConnect()
 
-	if err := s.DUT().WaitConnect(waitConnectCtx); err != nil {
-		s.Fatal("Failed to reconnect to DUT: ", err)
+		if err := h.WaitConnect(waitConnectCtx); err != nil {
+			s.Fatal("Failed to reconnect to DUT: ", err)
+		}
 	}
-
 	requiredReboot = false
 
-	s.Log("Saving the base ec firmware version after reboot ")
-	newBaseEC, err := getBaseECInfo(ctx, dut, crosCfgRes.ProductId)
+	s.Log("Saving the current base ec firmware version")
+	newBaseEC, err := getBaseECInfo(ctx, dut, hammerConfigs.pid)
 	if err != nil {
 		s.Fatal("Failed to check base ec's version: ", err)
 	}
@@ -352,7 +354,7 @@ func getBaseECInfo(ctx context.Context, dut *dut.DUT, productIDDecimal string) (
 	return baseEC, nil
 }
 
-func triggerAndFindNotification(ctx context.Context, ecTool *firmware.ECTool, utilSvcClient fwpb.UtilsServiceClient, dut *dut.DUT, hammerPid string) error {
+func triggerAndFindNotification(ctx context.Context, ecTool *firmware.ECTool, utilSvcClient fwpb.UtilsServiceClient, dut *dut.DUT, roProtected bool) error {
 	// Check for the hammerd process ID from the hammerd log before
 	// and after power cycling the base. On builds newer than R108,
 	// Stainless reported some strongbad duts failing the test because
@@ -403,7 +405,7 @@ func triggerAndFindNotification(ctx context.Context, ecTool *firmware.ECTool, ut
 			return errors.Wrap(err, "failed to switch the basestate")
 		}
 
-		// Allow some delay to ensure base attached/detached by setting the gpio.
+		// GoBigSleepLint: Allow some delay to ensure base attached/detached by setting the gpio.
 		if err := testing.Sleep(ctx, 10*time.Second); err != nil {
 			return errors.Wrap(err, "failed to sleep for 10 seconds for the command to fully propagate to the DUT")
 		}
@@ -437,6 +439,11 @@ func triggerAndFindNotification(ctx context.Context, ecTool *firmware.ECTool, ut
 		Name: title,
 	}
 	if _, err := utilSvcClient.FindSingleNode(ctx, &req); err != nil {
+		if roProtected == true && strings.Contains(err.Error(), context.DeadlineExceeded.Error()) {
+			// When RO locked, broken RW would get restored by hammerd silently.
+			testing.ContextLog(ctx, "Found RO locked, skip verifying pop-up window")
+			return nil
+		}
 		if originalHammerdID == newHammerdID {
 			return errors.Wrap(err, "hammerd did not restart following base power-cycle")
 		}
