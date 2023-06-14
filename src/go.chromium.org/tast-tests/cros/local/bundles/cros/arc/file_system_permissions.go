@@ -23,7 +23,7 @@ func init() {
 		// ChromeOS > Software > ARC++ > Storage
 		BugComponent: "b:516669",
 		// TODO(yusukes,ricardoq): ARCVM does not need the test. Remove this once we retire ARC container.
-		SoftwareDeps: []string{"android_p", "chrome"},
+		SoftwareDeps: []string{"android_container", "chrome"},
 		Fixture:      "arcBooted",
 		// Informational because the test is flaky. See https://crbug.com/1018776
 		// b:238260020 - disable aged (>1y) unpromoted informational tests

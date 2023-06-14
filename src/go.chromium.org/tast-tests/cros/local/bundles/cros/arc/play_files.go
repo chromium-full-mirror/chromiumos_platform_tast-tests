@@ -38,7 +38,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"capybara.jpg"},
 		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 			Val:               "/run/arc/sdcard/write/emulated/0",
 		}, {
 			Name:              "vm",

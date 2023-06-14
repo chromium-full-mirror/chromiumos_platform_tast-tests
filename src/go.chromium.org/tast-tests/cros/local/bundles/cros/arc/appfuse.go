@@ -24,7 +24,7 @@ func init() {
 		// ChromeOS > Software > ARC++ > Storage
 		BugComponent: "b:516669",
 		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"android_p", "chrome"},
+		SoftwareDeps: []string{"android_container", "chrome"},
 		Fixture:      "arcBooted",
 	})
 }
