@@ -33,10 +33,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Behavior of DeletePrintJobHistoryAllowed policy, checking the corresponding button state after setting the policy",
 		Contacts: []string{
-			"chromeos-commercial-printing@google.com",
+			"cros-peripherals@google.com",
+			"gavinwill@google.com",
 		},
-		// ChromeOS > Software > Commercial (Enterprise) > Printing
-		BugComponent: "b:1111614",
+		// ChromeOS > Software > System Services > Peripherals > Printing
+		BugComponent: "b:1131981",
 		SoftwareDeps: []string{"chrome"},
 		Attr: []string{
 			"group:golden_tier",
