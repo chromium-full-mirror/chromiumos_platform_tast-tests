@@ -25,10 +25,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check ReportUploadFrequency by observing /var/log/messages",
 		Contacts: []string{
-			"cros-engprod-muc@google.com",
-			"zubeil@google.com", // Test author
+			"cros-reporting-team@google.com",
+			"albertojuarez@google.com",
 		},
-		BugComponent: "b:1263917",
+		BugComponent: "b:817866",
 		Attr:         []string{"group:golden_tier"},
 		SoftwareDeps: []string{"reboot", "chrome"},
 		Fixture:      fixture.ChromeEnrolledLoggedIn,
