@@ -38,7 +38,7 @@ func init() {
 			// Informational on taniks until we're sure it's stable.
 			// http://b/232996538
 			Name:              "taniks",
-			ExtraAttr:         []string{"informational"},
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			ExtraHardwareDeps: hwdep.D(hwdep.Model("taniks")),
 		}},
 		Fixture: "chromeLoggedIn",
