@@ -27,10 +27,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Behavior of AllowedLanguages policy, checking the correspoding checkbox states (count) after setting the policy",
 		Contacts: []string{
-			"cros-engprod-muc@google.com",
+			"cros-borders-eng@google.com",
+			"dvallet@google.com",
 			"mohamedaomar@google.com", // Test author
 		},
-		BugComponent: "b:1263917",
+		BugComponent: "b:934840",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier"},
 		Fixture:      fixture.ChromePolicyLoggedIn,
