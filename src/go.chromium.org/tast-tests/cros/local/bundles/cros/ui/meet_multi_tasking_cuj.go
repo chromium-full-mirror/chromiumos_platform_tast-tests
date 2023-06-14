@@ -271,14 +271,16 @@ func MeetMultiTaskingCUJ(ctx context.Context, s *testing.State) {
 	}
 
 	ensureElementGetsScrolled := func(conn *chrome.Conn, element string) error {
-		var scrollTop int
-		if err := conn.Eval(ctx, fmt.Sprintf("parseInt(%s.scrollTop)", element), &scrollTop); err != nil {
-			return errors.Wrap(err, "failed to get the number of pixels that the scrollbar is scrolled vertically")
-		}
-		if scrollTop == 0 {
-			return errors.Errorf("%s is not getting scrolled", element)
-		}
-		return nil
+		return testing.Poll(ctx, func(ctx context.Context) error {
+			var scrollTop int
+			if err := conn.Eval(ctx, fmt.Sprintf("parseInt(%s.scrollTop)", element), &scrollTop); err != nil {
+				return testing.PollBreak(errors.Wrap(err, "failed to get the number of pixels that the scrollbar is scrolled vertically"))
+			}
+			if scrollTop == 0 {
+				return errors.Errorf("%s is not getting scrolled", element)
+			}
+			return nil
+		}, &testing.PollOptions{Interval: time.Second, Timeout: time.Minute})
 	}
 
 	pv := perf.NewValues()
@@ -294,6 +296,11 @@ func MeetMultiTaskingCUJ(ctx context.Context, s *testing.State) {
 
 	if err := recorder.AddCommonMetrics(tconn, bTconn); err != nil {
 		s.Fatal("Failed to add common metrics to recorder: ", err)
+	}
+
+	// Add an empty screenshot recorder.
+	if err := recorder.AddScreenshotRecorder(ctx, 0, 0); err != nil {
+		s.Log("Failed to add screenshot recorder: ", err)
 	}
 
 	if err := recorder.Run(ctx, func(ctx context.Context) (retErr error) {
@@ -368,8 +375,9 @@ func MeetMultiTaskingCUJ(ctx context.Context, s *testing.State) {
 			return err
 		}
 
-		// Pop-up content regarding paperless mode might show up.
-		gotItButton := nodewith.Name("Got it!").Role(role.Button)
+		// Click "Got it" to close the pop-up if it exists.
+		docsRootWebArea := nodewith.NameContaining("Google Docs").Role(role.RootWebArea)
+		gotItButton := nodewith.NameContaining("Got it").Role(role.Button).Ancestor(docsRootWebArea)
 		if err := uiauto.IfSuccessThen(ui.WithTimeout(10*time.Second).WaitUntilExists(gotItButton), ui.LeftClick(gotItButton))(ctx); err != nil {
 			return errors.Wrap(err, "failed to click the Got it button")
 		}
@@ -379,15 +387,16 @@ func MeetMultiTaskingCUJ(ctx context.Context, s *testing.State) {
 		}
 
 		// Move mouse to the google docs website window.
-		docsRootWebArea := nodewith.NameContaining("Google Docs").Role(role.RootWebArea)
-		docsCanvas := nodewith.Role(role.Canvas).Ancestor(docsRootWebArea).First()
+		docsCanvas := nodewith.Role(role.Canvas).Ancestor(docsRootWebArea).Onscreen().First()
 		if err := ui.MouseMoveTo(docsCanvas, 0)(ctx); err != nil {
 			return errors.Wrap(err, "failed to move mouse to the google docs website")
 		}
+		// Capture screenshot to see if the cursor is on the docs canvas.
+		recorder.CustomScreenshot(ctx)
 
 		// Scroll down the Docs file.
 		s.Logf("Scrolling down the Google Docs file for %s", docsScrollTimeout)
-		if err := inputsimulations.ScrollDownFor(ctx, tpw, tw, 500*time.Millisecond, docsScrollTimeout); err != nil {
+		if err := inputsimulations.ScrollDownFor(ctx, tpw, tw, 2*time.Second, docsScrollTimeout); err != nil {
 			return err
 		}
 
