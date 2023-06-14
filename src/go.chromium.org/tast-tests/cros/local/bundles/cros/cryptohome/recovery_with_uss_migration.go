@@ -10,6 +10,7 @@ import (
 
 	uda "chromiumos/system_api/user_data_auth_proto"
 
+	cryptohomecommon "go.chromium.org/tast-tests/cros/common/cryptohome"
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
@@ -72,11 +73,11 @@ func RecoveryWithUSSMigration(ctx context.Context, s *testing.State) {
 	}
 
 	// Setup the recovery test tool and fakes.
-	testTool, err := cryptohome.NewRecoveryTestToolWithFakeMediator()
+	testTool, err := cryptohomecommon.NewRecoveryTestToolWithFakeMediator(cmdRunner)
 	if err != nil {
 		s.Fatal("Failed to initialize RecoveryTestTool: ", err)
 	}
-	defer func(s *testing.State, testTool *cryptohome.RecoveryTestTool) {
+	defer func(s *testing.State, testTool *cryptohomecommon.RecoveryTestTool) {
 		if err := testTool.RemoveDir(); err != nil {
 			s.Error("Failed to remove dir: ", err)
 		}
@@ -89,26 +90,20 @@ func RecoveryWithUSSMigration(ctx context.Context, s *testing.State) {
 
 	// Set up an auth factor with USS migration disabled.
 	if err := func() error {
-		// Put the system into USS disabled mode, to ensure we get VK credentials.
-		disableUssCleanup, err := helper.DisableUserSecretStash(ctx)
-		if err != nil {
-			return errors.Wrap(err, "unable to disable USS before creating credentials")
-		}
-		defer disableUssCleanup(ctxForCleanUp)
-
+		// Set up a VaultKeyset, auth factor is created.
 		setupUser := func(authSessionID string) error {
-			// Set up the user with a password and PIN auth factor.
+			// Set up the user with a password and PIN VaultKeyset.
 			if err := client.CreatePersistentUser(ctx, authSessionID); err != nil {
 				return errors.Wrap(err, "failed to create persistent user")
 			}
 			if _, err := client.PreparePersistentVault(ctx, authSessionID /*ecryptfs=*/, false); err != nil {
 				return errors.Wrap(err, "failed to prepare new persistent vault")
 			}
-			if err := client.AddAuthFactor(ctx, authSessionID, passwordLabel, userPassword); err != nil {
-				return errors.Wrap(err, "failed to add a password authfactor")
+			if err := testTool.CreateVaultKeyset(ctx, authSessionID, userPassword /*keyDataLabel=*/, passwordLabel, uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD /*disableKeyData=*/, false); err != nil {
+				return errors.Wrap(err, "failed to create password VaultKeyset")
 			}
-			if err := client.AddPinAuthFactor(ctx, authSessionID, pinLabel, userPin); err != nil {
-				return errors.Wrap(err, "failed to add a pin authfactor")
+			if err := testTool.CreateVaultKeyset(ctx, authSessionID, userPin /*keyDataLabel=*/, pinLabel, uda.AuthFactorType_AUTH_FACTOR_TYPE_PIN /*disableKeyData=*/, false); err != nil {
+				return errors.Wrap(err, "failed to create pin VaultKeyset")
 			}
 
 			// Write a test file to verify persistence.
@@ -126,25 +121,26 @@ func RecoveryWithUSSMigration(ctx context.Context, s *testing.State) {
 
 		// Create and mount the persistent user.
 		if err := client.WithAuthSession(ctx, userName, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, setupUser); err != nil {
-			return errors.Wrap(err, "failed to create and set up the user")
+			s.Fatal("Failed to create and set up the user: ", err)
 		}
 
 		// Unmount all user vaults.
 		if err := cryptohome.UnmountVault(ctx, userName); err != nil {
-			return errors.Wrap(err, "failed to unmount vault after pre-migration mount")
+			s.Fatal("Failed to unmount vault after pre-migration mount: ", err)
 		}
 
 		// Check that password factor has not been migrated.
 		if err := cryptohome.CheckKeyBackingStoreExists(ctx, passwordFactorFile, userName); err == nil {
-			return errors.New("Password auth factor file was created before migration should have happened")
+			s.Fatal("Password auth factor file was created before migration should have happened")
 		}
+
 		return nil
 	}(); err != nil {
 		s.Fatal("Setup while USS migration was disabled failed: ", err)
 	}
 	defer cryptohome.RemoveVault(ctxForCleanUp, userName)
 
-	// Switch cryptohome into USS mode.
+	// Explicitly switch cryptohome into USS mode.
 	enableUssCleanup, err := helper.EnableUserSecretStash(ctx)
 	if err != nil {
 		s.Fatal("Unable to enable USS after creating credentials: ", err)

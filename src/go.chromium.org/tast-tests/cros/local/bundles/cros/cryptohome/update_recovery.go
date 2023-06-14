@@ -13,6 +13,7 @@ import (
 
 	uda "chromiumos/system_api/user_data_auth_proto"
 
+	cryptohomecommon "go.chromium.org/tast-tests/cros/common/cryptohome"
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
@@ -100,11 +101,11 @@ func UpdateRecovery(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to write a file to the vault: ", err)
 	}
 
-	testTool, err := cryptohome.NewRecoveryTestToolWithFakeMediator()
+	testTool, err := cryptohomecommon.NewRecoveryTestToolWithFakeMediator(cmdRunner)
 	if err != nil {
 		s.Fatal("Failed to initialize RecoveryTestTool: ", err)
 	}
-	defer func(s *testing.State, testTool *cryptohome.RecoveryTestTool) {
+	defer func(s *testing.State, testTool *cryptohomecommon.RecoveryTestTool) {
 		if err := testTool.RemoveDir(); err != nil {
 			s.Error("Failed to remove dir: ", err)
 		}

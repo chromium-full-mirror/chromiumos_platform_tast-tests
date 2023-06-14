@@ -10,6 +10,7 @@ import (
 
 	uda "chromiumos/system_api/user_data_auth_proto"
 
+	cryptohomecommon "go.chromium.org/tast-tests/cros/common/cryptohome"
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
@@ -65,6 +66,12 @@ func UssMigrationUpdateAuthFactor(ctx context.Context, s *testing.State) {
 	}
 	daemonController := helper.DaemonController()
 
+	// Setup the recovery test tool and fakes.
+	testTool, err := cryptohomecommon.NewRecoveryTestToolWithFakeMediator(cmdRunner)
+	if err != nil {
+		s.Fatal("Failed to initialize RecoveryTestTool: ", err)
+	}
+
 	// Wait for cryptohomed to become available if needed.
 	if err := daemonController.Ensure(ctx, hwsec.CryptohomeDaemon); err != nil {
 		s.Fatal("Failed to ensure cryptohomed: ", err)
@@ -78,16 +85,9 @@ func UssMigrationUpdateAuthFactor(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to remove old vault for preparation: ", err)
 	}
 
-	// 1. Create a new user with VaultKeysets. Disable USS and USS migration for this initial
-	// setup.
+	// 1. Create a new user with VaultKeysets.
 	if err := func() error {
-		// Disable UserSecretStash.
-		cleanupUSSDisabled, err := helper.DisableUserSecretStash(ctx)
-		if err != nil {
-			return errors.Wrap(err, "failed to disable UserSecretStash")
-		}
-		defer cleanupUSSDisabled(ctxForCleanup)
-
+		// 1. Create a new user with VaultKeysets.
 		if err := client.WithAuthSession(ctx, userName, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
 
 			// Create user vault.
@@ -101,9 +101,9 @@ func UssMigrationUpdateAuthFactor(ctx context.Context, s *testing.State) {
 			}
 			defer client.Unmount(ctxForCleanup, userName)
 
-			// Add password AuthFactor.
-			if err := client.AddAuthFactor(ctx, authSessionID, passwordLabel, userPassword); err != nil {
-				return errors.Wrap(err, "failed to add password AuthFactor")
+			// Add password VaultKeyset.
+			if err := testTool.CreateVaultKeyset(ctx, authSessionID, userPassword /*keyDataLabel=*/, passwordLabel, uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD /*disableKeyData=*/, false); err != nil {
+				return errors.Wrap(err, "failed to add password VaultKeyset")
 			}
 
 			// Check that the password VaultKeyset file is created.
@@ -111,9 +111,9 @@ func UssMigrationUpdateAuthFactor(ctx context.Context, s *testing.State) {
 				return errors.Wrap(err, "failed to check password VaultKeyset file")
 			}
 
-			// Add PIN AuthFactor.
-			if err := client.AddPinAuthFactor(ctx, authSessionID, pinLabel, userPin); err != nil {
-				return errors.Wrap(err, "failed to add PIN AuthFactor")
+			// Add PIN VaultKeyset.
+			if err := testTool.CreateVaultKeyset(ctx, authSessionID, userPin /*keyDataLabel=*/, pinLabel, uda.AuthFactorType_AUTH_FACTOR_TYPE_PIN /*disableKeyData=*/, false); err != nil {
+				return errors.Wrap(err, "failed to add pin VaultKeyset")
 			}
 
 			// Check that the PIN VaultKeyset file is created.

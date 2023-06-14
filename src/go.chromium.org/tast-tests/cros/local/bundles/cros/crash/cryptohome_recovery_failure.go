@@ -12,6 +12,7 @@ import (
 
 	uda "chromiumos/system_api/user_data_auth_proto"
 
+	recoverytool "go.chromium.org/tast-tests/cros/common/cryptohome"
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/crash"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
@@ -142,11 +143,11 @@ func induceRecoveryRequestFailure(ctx context.Context) error {
 		return errors.Wrap(err, "failed to add a password authfactor")
 	}
 
-	testTool, err := cryptohome.NewRecoveryTestToolWithFakeMediator()
+	testTool, err := recoverytool.NewRecoveryTestToolWithFakeMediator(cmdRunner)
 	if err != nil {
 		return errors.Wrap(err, "failed to initialize RecoveryTestTool")
 	}
-	defer func(testTool *cryptohome.RecoveryTestTool) error {
+	defer func(testTool *recoverytool.RecoveryTestTool) error {
 		if err := testTool.RemoveDir(); err != nil {
 			return errors.Wrap(err, "failed to remove dir")
 		}

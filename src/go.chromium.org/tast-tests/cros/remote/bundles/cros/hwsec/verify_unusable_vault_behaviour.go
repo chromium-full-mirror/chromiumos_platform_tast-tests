@@ -9,6 +9,8 @@ import (
 	"context"
 	"time"
 
+	uda "chromiumos/system_api/user_data_auth_proto"
+	cryptohomecommon "go.chromium.org/tast-tests/cros/common/cryptohome"
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/hwsec/util"
 	hwsecremote "go.chromium.org/tast-tests/cros/remote/hwsec"
@@ -39,6 +41,11 @@ func VerifyUnusableVaultBehaviour(ctx context.Context, s *testing.State) {
 	const CryptohomeErrorMountPointBusyErrorNumber = 6
 
 	cmdRunner := hwsecremote.NewCmdRunner(s.DUT())
+	client := hwsec.NewCryptohomeClient(cmdRunner)
+	testTool, err := cryptohomecommon.NewRecoveryTestToolWithFakeMediator(cmdRunner)
+	if err != nil {
+		s.Fatal("Failed to initialize RecoveryTestTool: ", err)
+	}
 
 	helper, err := hwsecremote.NewHelper(cmdRunner, s.DUT())
 	if err != nil {
@@ -46,13 +53,6 @@ func VerifyUnusableVaultBehaviour(ctx context.Context, s *testing.State) {
 	}
 
 	utility := helper.CryptohomeClient()
-
-	// Disable UserSecretStash to use VaultKeyset.
-	cleanupFunction, err := helper.DisableUserSecretStash(ctx)
-	if err != nil {
-		s.Fatal("Failed to disable the UserSecretStash experiment: ", err)
-	}
-	defer cleanupFunction(ctx)
 
 	// Reserve time for cleanupFunction.
 	ctx, cancel := ctxutil.Shorten(ctx, 15*time.Second)
@@ -71,9 +71,25 @@ func VerifyUnusableVaultBehaviour(ctx context.Context, s *testing.State) {
 
 	s.Log("Phase 1: mounts vault for the test user")
 
-	if err := utility.MountVault(ctx, util.Password1Label, hwsec.NewPassAuthConfig(util.FirstUsername, util.FirstPassword1), true, hwsec.NewVaultConfig()); err != nil {
-		s.Fatal("Failed to create user vault: ", err)
+	if err := client.WithAuthSession(ctx, util.FirstUsername, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
+
+		if err := client.CreatePersistentUser(ctx, authSessionID); err != nil {
+			return errors.Wrap(err, "failed to create persistent user")
+		}
+		if _, err := client.PreparePersistentVault(ctx, authSessionID, false /*ecryptfs*/); err != nil {
+			return errors.Wrap(err, "failed to prepare new persistent vault")
+		}
+		// Add password VaultKeyset.
+		if err := testTool.CreateVaultKeyset(ctx, authSessionID, util.FirstPassword1 /*keyDataLabel=*/, util.Password1Label, uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD /*disableKeyData=*/, false); err != nil {
+			return errors.Wrap(err, "failed to add password VaultKeyset")
+		}
+
+		return nil
+	}); err != nil {
+		s.Fatal("Failed to create and set up the user: ", err)
 	}
+	defer utility.RemoveVault(ctx, util.FirstUsername)
+
 	if err := hwsec.WriteUserTestContent(ctx, utility, cmdRunner, util.FirstUsername, util.TestFileName1, util.TestFileContent); err != nil {
 		s.Fatal("Failed to write user test content: ", err)
 	}
@@ -87,9 +103,21 @@ func VerifyUnusableVaultBehaviour(ctx context.Context, s *testing.State) {
 	if err := helper.Reboot(ctx); err != nil {
 		s.Fatal("Failed to reboot: ", err)
 	}
-	if err := utility.MountVault(ctx, util.Password1Label, hwsec.NewPassAuthConfig(util.FirstUsername, util.FirstPassword1), false, hwsec.NewVaultConfig()); err != nil {
-		s.Fatal("Failed to mount user vault: ", err)
+	if err := client.WithAuthSession(ctx, util.FirstUsername, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
+		// Authenticate the same AuthSession using authSessionID.
+		// If we cannot authenticate, do not proceed with mount and unmount.
+		if _, err := client.AuthenticateAuthFactor(ctx, authSessionID, util.Password1Label, util.FirstPassword1); err != nil {
+			return errors.Wrap(err, "failed to authenticate AuthFactor")
+		}
+
+		if _, err := client.PreparePersistentVault(ctx, authSessionID, false /*ecryptfs*/); err != nil {
+			return errors.Wrap(err, "failed to prepare new persistent vault")
+		}
+		return nil
+	}); err != nil {
+		s.Fatal("Failed to create and set up the user: ", err)
 	}
+	defer utility.RemoveVault(ctx, util.FirstUsername)
 
 	// User vault should already exist and shouldn't be destroyed.
 	if content, err := hwsec.ReadUserTestContent(ctx, utility, cmdRunner, util.FirstUsername, util.TestFileName1); err != nil {
@@ -115,8 +143,22 @@ func VerifyUnusableVaultBehaviour(ctx context.Context, s *testing.State) {
 	if _, err := cmdRunner.Run(ctx, "rm", "-rf", userKeysetFile); err != nil {
 		s.Fatal("Failed to remove the keyset file: ", err)
 	}
-	// Mount with no valid keyset shall vail...
-	if err = utility.MountVault(ctx, util.Password1Label, hwsec.NewPassAuthConfig(util.FirstUsername, util.FirstPassword1), true, hwsec.NewVaultConfig()); err == nil {
+	// Mount with no valid keyset shall fail...
+	if err = client.WithAuthSession(ctx, util.FirstUsername, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
+
+		if err := client.CreatePersistentUser(ctx, authSessionID); err != nil {
+			return errors.Wrap(err, "failed to create persistent user")
+		}
+		// Add password VaultKeyset.
+		if err := testTool.CreateVaultKeyset(ctx, authSessionID, util.FirstPassword1 /*keyDataLabel=*/, util.Password1Label, uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD /*disableKeyData=*/, false); err != nil {
+			return errors.Wrap(err, "failed to add password VaultKeyset")
+		}
+
+		if _, err := client.PreparePersistentVault(ctx, authSessionID, false /*ecryptfs*/); err != nil {
+			return errors.Wrap(err, "failed to prepare new persistent vault")
+		}
+		return nil
+	}); err == nil {
 		s.Fatal("Mount was expected to fail but succeeded")
 	}
 	var exitErr *hwsec.CmdExitError

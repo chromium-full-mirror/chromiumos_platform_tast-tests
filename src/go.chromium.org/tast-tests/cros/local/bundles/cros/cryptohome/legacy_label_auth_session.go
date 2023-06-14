@@ -10,6 +10,7 @@ import (
 	"time"
 
 	uda "chromiumos/system_api/user_data_auth_proto"
+	cryptocommon "go.chromium.org/tast-tests/cros/common/cryptohome"
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
@@ -63,7 +64,7 @@ func LegacyLabelAuthSession(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create hwsec local helper: ", err)
 	}
-	testTool, err := cryptohome.NewRecoveryTestToolWithFakeMediator()
+	testTool, err := cryptocommon.NewRecoveryTestToolWithFakeMediator(cmdRunner)
 	if err != nil {
 		s.Fatal("Failed to initialize RecoveryTestTool: ", err)
 	}

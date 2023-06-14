@@ -90,11 +90,11 @@ func RecoveryError(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to add a password authfactor: ", err)
 	}
 
-	testTool, err := cryptohome.NewRecoveryTestToolWithFakeMediator()
+	testTool, err := cryptohomecommon.NewRecoveryTestToolWithFakeMediator(cmdRunner)
 	if err != nil {
 		s.Fatal("Failed to initialize RecoveryTestTool: ", err)
 	}
-	defer func(s *testing.State, testTool *cryptohome.RecoveryTestTool) {
+	defer func(s *testing.State, testTool *cryptohomecommon.RecoveryTestTool) {
 		if err := testTool.RemoveDir(); err != nil {
 			s.Error("Failed to remove dir: ", err)
 		}

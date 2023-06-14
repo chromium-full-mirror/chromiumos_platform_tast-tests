@@ -13,8 +13,9 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"go.chromium.org/tast-tests/cros/common/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/cryptohome"
+	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -84,7 +85,8 @@ var ledgerInfo = cryptohome.LedgerInfo{
 }
 
 func RecoveryCryptoWithServer(ctx context.Context, s *testing.State) {
-	testTool, newErr := cryptohome.NewRecoveryTestTool(hsmPubKey, ledgerInfo)
+	cmdRunner := hwseclocal.NewCmdRunner()
+	testTool, newErr := cryptohome.NewRecoveryTestTool(cmdRunner, hsmPubKey, ledgerInfo)
 	if newErr != nil {
 		s.Fatal("Failed to initialize RecoveryTestTool", newErr)
 	}

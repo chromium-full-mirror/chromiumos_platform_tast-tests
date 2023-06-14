@@ -10,6 +10,7 @@ import (
 
 	uda "chromiumos/system_api/user_data_auth_proto"
 
+	cryptohomecommon "go.chromium.org/tast-tests/cros/common/cryptohome"
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
@@ -70,6 +71,12 @@ func UssMigrationPinPassword(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to ensure cryptohomed: ", err)
 	}
 
+	// Setup the recovery test tool and fakes.
+	testTool, err := cryptohomecommon.NewRecoveryTestToolWithFakeMediator(cmdRunner)
+	if err != nil {
+		s.Fatal("Failed to initialize RecoveryTestTool: ", err)
+	}
+
 	// Clean up obsolete state, in case there's any.
 	if err := client.UnmountAll(ctx); err != nil {
 		s.Error("Failed to unmount vaults for preparation: ", err)
@@ -80,13 +87,6 @@ func UssMigrationPinPassword(ctx context.Context, s *testing.State) {
 
 	// 1. Create a new user with VaultKeysets. Disable USS and migration for initial setup.
 	if err := func() error {
-		// Disable UserSecretStash.
-		cleanupUSSDisabled, err := helper.DisableUserSecretStash(ctx)
-		if err != nil {
-			return errors.Wrap(err, "failed to disable UserSecretStash")
-		}
-		defer cleanupUSSDisabled(ctxForCleanup)
-
 		if err := client.WithAuthSession(ctx, userName, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
 			// Create user vault.
 			if err := client.CreatePersistentUser(ctx, authSessionID); err != nil {
@@ -98,16 +98,16 @@ func UssMigrationPinPassword(ctx context.Context, s *testing.State) {
 			}
 			defer client.Unmount(ctxForCleanup, userName)
 			// Add password AuthFactor.
-			if err := client.AddAuthFactor(ctx, authSessionID, passwordLabel, userPassword); err != nil {
-				return errors.Wrap(err, "failed to add password AuthFactor")
+			if err := testTool.CreateVaultKeyset(ctx, authSessionID, userPassword /*keyDataLabel=*/, passwordLabel, uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD /*disableKeyData=*/, false); err != nil {
+				return errors.Wrap(err, "failed to create password AuthFactor")
 			}
 			// Check that the password VaultKeyset file is created.
 			if err := cryptohome.CheckKeyBackingStoreExists(ctx, passwordKeysetFile, userName); err != nil {
 				return errors.Wrap(err, "failed to check password VaultKeyset file")
 			}
 			// Add PIN AuthFactor.
-			if err := client.AddPinAuthFactor(ctx, authSessionID, pinLabel, userPin); err != nil {
-				return errors.Wrap(err, "failed to add PIN AuthFactor")
+			if err := testTool.CreateVaultKeyset(ctx, authSessionID, userPin /*keyDataLabel=*/, pinLabel, uda.AuthFactorType_AUTH_FACTOR_TYPE_PIN /*disableKeyData=*/, false); err != nil {
+				return errors.Wrap(err, "failed to create password AuthFactor")
 			}
 			// Check that the PIN VaultKeyset file is created.
 			if err := cryptohome.CheckKeyBackingStoreExists(ctx, pinKeysetFile, userName); err != nil {

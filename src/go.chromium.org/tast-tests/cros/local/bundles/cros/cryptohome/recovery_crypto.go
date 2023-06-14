@@ -7,7 +7,8 @@ package cryptohome
 import (
 	"context"
 
-	"go.chromium.org/tast-tests/cros/local/cryptohome"
+	cryptohomecommon "go.chromium.org/tast-tests/cros/common/cryptohome"
+	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -35,11 +36,12 @@ func init() {
 }
 
 func RecoveryCrypto(ctx context.Context, s *testing.State) {
-	testTool, newErr := cryptohome.NewRecoveryTestToolWithFakeMediator()
+	cmdRunner := hwseclocal.NewCmdRunner()
+	testTool, newErr := cryptohomecommon.NewRecoveryTestToolWithFakeMediator(cmdRunner)
 	if newErr != nil {
 		s.Fatal("Failed to initialize RecoveryTestTool", newErr)
 	}
-	defer func(s *testing.State, testTool *cryptohome.RecoveryTestTool) {
+	defer func(s *testing.State, testTool *cryptohomecommon.RecoveryTestTool) {
 		if err := testTool.RemoveDir(); err != nil {
 			s.Error("Failed to remove dir: ", err)
 		}

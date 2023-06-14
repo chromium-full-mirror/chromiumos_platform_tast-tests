@@ -17,7 +17,7 @@ import (
 
 	uda "chromiumos/system_api/user_data_auth_proto"
 
-	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -60,12 +60,16 @@ type RecoveryTestTool struct {
 	mediatorPubKeyHex string
 	// custom ledger info, is set only when `mediatorPubKeyHex` is set.
 	ledgerInfo LedgerInfo
+	// Runner to interact with the cryptohome-test-tool binary
+	// For more details of the arguments of the functions in this file,
+	// please check //src/platform2/cryptohome/cryptohome-test-tool.cc.
+	runner hwsec.CmdRunner
 }
 
 // NewRecoveryTestToolWithFakeMediator creates a new instance of RecoveryTestTool with generated directory.
 // The instance will use fake (local) mediation.
 // Call RemoveDir in the end of the test.
-func NewRecoveryTestToolWithFakeMediator() (*RecoveryTestTool, error) {
+func NewRecoveryTestToolWithFakeMediator(r hwsec.CmdRunner) (*RecoveryTestTool, error) {
 	// Create a temp directory.
 	name, err := ioutil.TempDir("", "cryptohome_test_tool_out_*")
 	if err != nil {
@@ -74,13 +78,14 @@ func NewRecoveryTestToolWithFakeMediator() (*RecoveryTestTool, error) {
 	return &RecoveryTestTool{
 		tmpFolderName:     name,
 		mediatorPubKeyHex: "",
+		runner:            r,
 	}, nil
 }
 
 // NewRecoveryTestTool creates a new instance of RecoveryTestTool with generated directory.
 // The instance will not use fake mediation. Use Save* methods to set the real server replies.
 // Call RemoveDir in the end of the test.
-func NewRecoveryTestTool(mediatorPubKeyHex string, ledgerInfo LedgerInfo) (*RecoveryTestTool, error) {
+func NewRecoveryTestTool(r hwsec.CmdRunner, mediatorPubKeyHex string, ledgerInfo LedgerInfo) (*RecoveryTestTool, error) {
 	// Create a temp directory.
 	name, err := ioutil.TempDir("", "cryptohome_test_tool_out_*")
 	if err != nil {
@@ -90,6 +95,7 @@ func NewRecoveryTestTool(mediatorPubKeyHex string, ledgerInfo LedgerInfo) (*Reco
 		tmpFolderName:     name,
 		mediatorPubKeyHex: mediatorPubKeyHex,
 		ledgerInfo:        ledgerInfo,
+		runner:            r,
 	}, nil
 }
 
@@ -99,8 +105,8 @@ func (c *RecoveryTestTool) useFakeMediator() bool {
 }
 
 // call calls the test tool with provided parameters.
-func (c *RecoveryTestTool) call(ctx context.Context, args ...string) error {
-	return testexec.CommandContext(ctx, "cryptohome-test-tool", args...).Run(testexec.DumpLogOnError)
+func (c *RecoveryTestTool) call(ctx context.Context, args ...string) ([]byte, error) {
+	return c.runner.Run(ctx, "cryptohome-test-tool", args...)
 }
 
 // getFullFilePath returns the full file name inside the generated directory.
@@ -194,7 +200,8 @@ func (c *RecoveryTestTool) CreateHsmPayload(ctx context.Context) error {
 		args = append(args, c.getFileParam("mediator_pub_key_in_file", customMediatorPubKeyFile))
 	}
 
-	return c.call(ctx, args...)
+	_, err := c.call(ctx, args...)
+	return err
 }
 
 // CreateRecoveryRequest calls "--action=recovery_crypto_create_recovery_request" step.
@@ -214,7 +221,8 @@ func (c *RecoveryTestTool) CreateRecoveryRequest(ctx context.Context) error {
 			c.getFileParam("epoch_response_in_file", customEpochResponseFile),
 		)
 	}
-	return c.call(ctx, args...)
+	_, err := c.call(ctx, args...)
+	return err
 }
 
 // CreateVaultKeyset calls "--action=create_vault_keyset".
@@ -229,10 +237,16 @@ func (c *RecoveryTestTool) CreateVaultKeyset(ctx context.Context, authSessionID,
 		args = append(args, "--disable_key_data=true")
 	}
 	switch authFactorType {
+	case uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD:
+		args = append(args, "--auth_factor_type=password")
+	case uda.AuthFactorType_AUTH_FACTOR_TYPE_PIN:
+		args = append(args, "--auth_factor_type=pin")
 	case uda.AuthFactorType_AUTH_FACTOR_TYPE_KIOSK:
-		args = append(args, "--use_public_mount_salt=true")
+		args = append(args, "--use_public_mount_salt=true",
+			"--auth_factor_type=kiosk")
 	}
-	return c.call(ctx, args...)
+	_, err := c.call(ctx, args...)
+	return err
 }
 
 // FakeMediate calls "--action=recovery_crypto_mediate" step.
@@ -240,11 +254,12 @@ func (c *RecoveryTestTool) FakeMediate(ctx context.Context) error {
 	if !c.useFakeMediator() {
 		return errors.New("cannot use fake mediator")
 	}
-	return c.call(ctx,
+	_, err := c.call(ctx,
 		"--action=recovery_crypto_mediate",
 		c.getFileParam("recovery_request_in_file", recoveryRequestFile),
 		c.getFileParam("recovery_response_out_file", recoveryResponseFile),
 	)
+	return err
 }
 
 // Decrypt calls "--action=recovery_crypto_decrypt" step.
@@ -273,7 +288,8 @@ func (c *RecoveryTestTool) Decrypt(ctx context.Context) error {
 			c.getFileParam("ledger_info_in_file", ledgerInfoFile),
 		)
 	}
-	return c.call(ctx, args...)
+	_, err := c.call(ctx, args...)
+	return err
 }
 
 // Validate compares secret created by CreateHsmPayload with secret derived by Decrypt. They are expected to be the same.
@@ -304,7 +320,7 @@ func (c *RecoveryTestTool) FakeMediateWithRequest(ctx context.Context, requestHe
 		return "", errors.Wrapf(err, "could not write the recovery request file (%s)", recoveryRequestFile)
 	}
 
-	if err := c.call(ctx,
+	if _, err := c.call(ctx,
 		"--action=recovery_crypto_mediate",
 		c.getFileParam("recovery_request_in_file", recoveryRequestFile),
 		c.getFileParam("recovery_response_out_file", recoveryResponseFile),
@@ -326,7 +342,7 @@ func (c *RecoveryTestTool) FetchFakeEpochResponseHex(ctx context.Context) (strin
 		return "", errors.New("cannot use fake mediator")
 	}
 
-	if err := c.call(ctx,
+	if _, err := c.call(ctx,
 		"--action=recovery_crypto_get_fake_epoch",
 		c.getFileParam("epoch_response_out_file", epochResponseFile),
 	); err != nil {
@@ -347,7 +363,7 @@ func (c *RecoveryTestTool) FetchFakeMediatorPubKeyHex(ctx context.Context) (stri
 		return "", errors.New("cannot use fake mediator")
 	}
 
-	if err := c.call(ctx,
+	if _, err := c.call(ctx,
 		"--action=recovery_crypto_get_fake_mediator_pub_key",
 		c.getFileParam("mediator_pub_key_out_file", mediatorPubKeyFile),
 	); err != nil {
@@ -368,7 +384,7 @@ func (c *RecoveryTestTool) FetchFakeLedgerInfo(ctx context.Context) (*LedgerInfo
 		return nil, errors.New("cannot use fake mediator")
 	}
 
-	if err := c.call(ctx,
+	if _, err := c.call(ctx,
 		"--action=recovery_crypto_get_fake_ledger_info",
 		c.getFileParam("ledger_info_out_file", ledgerInfoFile),
 	); err != nil {
