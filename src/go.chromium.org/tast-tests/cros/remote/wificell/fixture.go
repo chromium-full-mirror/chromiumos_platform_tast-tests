@@ -36,7 +36,7 @@ const (
 	resetTimeout         = 11 * time.Minute
 	postTestTimeout      = 5 * time.Second
 	enrollmentRunTimeout = 4 * time.Minute
-	enrollRetry          = 4
+	enrollRetry          = 3
 )
 
 func init() {
