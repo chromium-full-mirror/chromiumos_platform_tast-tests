@@ -28,10 +28,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Behavior of the DisableScreenshots policy, check whether screenshot can be taken by pressing hotkeys",
 		Contacts: []string{
-			"cros-engprod-muc@google.com",
-			"poromov@google.com", // Policy owner
+			"chromeos-wmp@google.com",
+			"afakhry@google.com",
 		},
-		BugComponent: "b:1263917",
+		BugComponent: "b:1253115",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier"},
 		Fixture:      fixture.ChromePolicyLoggedIn,
@@ -95,7 +95,7 @@ func DisableScreenshotsHotkey(ctx context.Context, s *testing.State) {
 		s.Run(ctx, tc.name, func(ctx context.Context, s *testing.State) {
 			defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_"+tc.name)
 
-			// Minimum interval between screenshot commands is 1 second, so we
+			// GoBigSleepLint: Minimum interval between screenshot commands is 1 second, so we
 			// must sleep for 1 seconds to be able to take screenshot,
 			// otherwise hotkey pressing will be ignored.
 			//
