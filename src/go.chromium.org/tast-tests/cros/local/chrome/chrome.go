@@ -413,6 +413,7 @@ func (c *Chrome) Close(ctx context.Context) error {
 
 	if c.sess != nil {
 		c.sess.Close(ctx)
+		c.sess = nil
 	}
 
 	if dir, ok := testing.ContextOutDir(ctx); ok {
