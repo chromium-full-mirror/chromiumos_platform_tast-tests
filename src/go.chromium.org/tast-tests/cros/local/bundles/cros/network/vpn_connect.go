@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type vpnConnectTestParams struct {
@@ -29,21 +30,14 @@ func init() {
 		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
 		// ChromeOS > Platform > System > Networking
 		BugComponent: "b:156085",
-		Attr:         []string{"group:mainline", "informational"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		// We use different fixtures in different tests, based on whether they need
-		// certificates or not.
+		// certificates or not. The following configurations are covered by
+		// VPNRouting tests so we don't need them here.
+		// - IKEv2 with PSK;
+		// - L2TP/IPsec with PSK;
+		// - wireguard without PSK.
 		Params: []testing.Param{{
-			Name: "ikev2_psk",
-			Val: vpnConnectTestParams{
-				vpnType: vpn.TypeIKEv2,
-				opts: []vpn.Option{
-					vpn.WithIPsecAuthType(vpn.AuthTypePSK),
-				},
-			},
-			Fixture:           "vpnEnv",
-			ExtraSoftwareDeps: []string{"ikev2"},
-		}, {
 			Name: "ikev2_cert",
 			Val: vpnConnectTestParams{
 				vpnType: vpn.TypeIKEv2,
@@ -52,6 +46,8 @@ func init() {
 				},
 			},
 			Fixture:           "vpnEnvWithCerts",
+			ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
 			ExtraSoftwareDeps: []string{"ikev2"},
 		}, {
 			Name: "ikev2_eap_mschapv2",
@@ -62,16 +58,9 @@ func init() {
 				},
 			},
 			Fixture:           "vpnEnvWithCerts",
+			ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
 			ExtraSoftwareDeps: []string{"ikev2"},
-		}, {
-			Name: "l2tp_ipsec_psk",
-			Val: vpnConnectTestParams{
-				vpnType: vpn.TypeL2TPIPsec,
-				opts: []vpn.Option{
-					vpn.WithIPsecAuthType(vpn.AuthTypePSK),
-				},
-			},
-			Fixture: "vpnEnv",
 		}, {
 			Name: "l2tp_ipsec_psk_xauth",
 			Val: vpnConnectTestParams{
@@ -81,7 +70,8 @@ func init() {
 					vpn.WithL2TPIPsecXAuth(vpn.L2TPIPsecXauthCorrect),
 				},
 			},
-			Fixture: "vpnEnv",
+			Fixture:   "vpnEnv",
+			ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
 		}, {
 			Name: "l2tp_ipsec_psk_xauth_missing_user",
 			Val: vpnConnectTestParams{
@@ -92,7 +82,8 @@ func init() {
 				},
 				shouldFail: true,
 			},
-			Fixture: "vpnEnv",
+			Fixture:   "vpnEnv",
+			ExtraAttr: []string{"group:network"},
 		}, {
 			Name: "l2tp_ipsec_psk_xauth_wrong_user",
 			Val: vpnConnectTestParams{
@@ -103,7 +94,8 @@ func init() {
 				},
 				shouldFail: true,
 			},
-			Fixture: "vpnEnv",
+			Fixture:   "vpnEnv",
+			ExtraAttr: []string{"group:network"},
 		}, {
 			Name: "l2tp_ipsec_cert",
 			Val: vpnConnectTestParams{
@@ -112,7 +104,9 @@ func init() {
 					vpn.WithIPsecAuthType(vpn.AuthTypeCert),
 				},
 			},
-			Fixture: "vpnEnvWithCerts",
+			Fixture:           "vpnEnvWithCerts",
+			ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
 		}, {
 			Name: "openvpn",
 			Val: vpnConnectTestParams{
@@ -122,7 +116,9 @@ func init() {
 					vpn.WithOpenVPNTLSAuth(),
 				},
 			},
-			Fixture: "vpnEnvWithCerts",
+			Fixture:           "vpnEnvWithCerts",
+			ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
 		}, {
 			Name: "openvpn_user_pass",
 			Val: vpnConnectTestParams{
@@ -132,7 +128,9 @@ func init() {
 					vpn.WithOpenVPNUseUserPassword(),
 				},
 			},
-			Fixture: "vpnEnvWithCerts",
+			Fixture:           "vpnEnvWithCerts",
+			ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
 		}, {
 			Name: "openvpn_cert_verify",
 			Val: vpnConnectTestParams{
@@ -142,7 +140,9 @@ func init() {
 					vpn.WithOpenVPNCertVerify(vpn.OpenVPNCertVerifyCorrect),
 				},
 			},
-			Fixture: "vpnEnvWithCerts",
+			Fixture:           "vpnEnvWithCerts",
+			ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
 		}, {
 			Name: "openvpn_cert_verify_wrong_hash",
 			Val: vpnConnectTestParams{
@@ -153,7 +153,9 @@ func init() {
 				},
 				shouldFail: true,
 			},
-			Fixture: "vpnEnvWithCerts",
+			Fixture:           "vpnEnvWithCerts",
+			ExtraAttr:         []string{"group:network"},
+			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
 		}, {
 			Name: "openvpn_cert_verify_wrong_subject",
 			Val: vpnConnectTestParams{
@@ -164,7 +166,9 @@ func init() {
 				},
 				shouldFail: true,
 			},
-			Fixture: "vpnEnvWithCerts",
+			Fixture:           "vpnEnvWithCerts",
+			ExtraAttr:         []string{"group:network"},
+			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
 		}, {
 			Name: "openvpn_cert_verify_wrong_cn",
 			Val: vpnConnectTestParams{
@@ -175,7 +179,9 @@ func init() {
 				},
 				shouldFail: true,
 			},
-			Fixture: "vpnEnvWithCerts",
+			Fixture:           "vpnEnvWithCerts",
+			ExtraAttr:         []string{"group:network"},
+			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
 		}, {
 			Name: "openvpn_cert_verify_cn_only",
 			Val: vpnConnectTestParams{
@@ -185,14 +191,9 @@ func init() {
 					vpn.WithOpenVPNCertVerify(vpn.OpenVPNCertVerifyCNOnly),
 				},
 			},
-			Fixture: "vpnEnvWithCerts",
-		}, {
-			Name: "wireguard",
-			Val: vpnConnectTestParams{
-				vpnType: vpn.TypeWireGuard,
-			},
-			Fixture:           "vpnEnv",
-			ExtraSoftwareDeps: []string{"wireguard"},
+			Fixture:           "vpnEnvWithCerts",
+			ExtraAttr:         []string{"group:network"},
+			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
 		}, {
 			Name: "wireguard_psk",
 			Val: vpnConnectTestParams{
@@ -202,6 +203,7 @@ func init() {
 				},
 			},
 			Fixture:           "vpnEnv",
+			ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 			ExtraSoftwareDeps: []string{"wireguard"},
 		}, {
 			Name: "wireguard_generate_key",
@@ -212,6 +214,7 @@ func init() {
 				},
 			},
 			Fixture:           "vpnEnv",
+			ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 			ExtraSoftwareDeps: []string{"wireguard"},
 		}},
 	})
