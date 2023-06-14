@@ -108,7 +108,7 @@ func Attestation(ctx context.Context, s *testing.State) {
 
 			// TODO(b/165426637): Enable it after we inject the fake device policy with customer ID.
 			if username != "" {
-				if err := at.SignEnterpriseChallenge(ctx, username, hwsec.DefaultCertLabel); err != nil {
+				if err := at.SignEnterpriseChallenge(ctx, apb.VerifiedAccessFlow_ENTERPRISE_USER, username, hwsec.DefaultCertLabel); err != nil {
 					s.Fatal("Failed to sign enterprise challenge: ", err)
 				}
 			}

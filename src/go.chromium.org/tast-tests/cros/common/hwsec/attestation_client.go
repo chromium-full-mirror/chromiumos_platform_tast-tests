@@ -9,6 +9,7 @@ import (
 	"encoding/hex"
 
 	apb "chromiumos/system_api/attestation_proto"
+
 	"go.chromium.org/tast/core/errors"
 )
 
@@ -136,20 +137,24 @@ func (u *AttestationClient) FinishCertRequest(ctx context.Context, resp, usernam
 // SignEnterpriseVAChallenge performs SPKAC for the challenge.
 func (u *AttestationClient) SignEnterpriseVAChallenge(
 	ctx context.Context,
+	flowType apb.VerifiedAccessFlow,
 	vaType VAType,
 	username,
 	label,
 	domain,
 	deviceID string,
-	includeSignedPublicKey bool,
+	includeSignedPublicKey,
+	includeCertificate bool,
 	challenge []byte) (string, error) {
 	apbVAType := apb.VAType(vaType)
 	reply, err := u.ac.SignEnterpriseChallenge(ctx, &apb.SignEnterpriseChallengeRequest{
+		FlowType:               &flowType,
 		KeyLabel:               &label,
 		Username:               &username,
 		Domain:                 &domain,
 		DeviceId:               []byte(deviceID),
 		IncludeSignedPublicKey: &includeSignedPublicKey,
+		IncludeCertificate:     &includeCertificate,
 		Challenge:              challenge,
 		VaType:                 &apbVAType,
 	})

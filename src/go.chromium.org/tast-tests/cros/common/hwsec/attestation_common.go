@@ -24,6 +24,7 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	apb "chromiumos/system_api/attestation_proto"
+
 	"go.chromium.org/tast/core/errors"
 )
 
@@ -101,12 +102,14 @@ type attestationClient interface {
 	// SignEnterpriseVAChallenge performs SPKAC for the challenge.
 	SignEnterpriseVAChallenge(
 		ctx context.Context,
+		flowType apb.VerifiedAccessFlow,
 		vaType VAType,
 		username,
 		label,
 		domain,
 		deviceID string,
-		includeSignedPublicKey bool,
+		includeSignedPublicKey,
+		includeCertificate bool,
 		challenge []byte) (string, error)
 	// SignSimpleChallenge signs the challenge with the specified key.
 	SignSimpleChallenge(ctx context.Context, username, label string, challenge []byte) (string, error)
@@ -268,7 +271,7 @@ func getDecodedVAChallenge(ctx context.Context, retryCount int) ([]byte, error) 
 }
 
 // SignEnterpriseChallenge gets the challenge from default VA server, perform SPKAC, and sends the signed challenge back to verify it
-func (at *AttestationTest) SignEnterpriseChallenge(ctx context.Context, username, label string) error {
+func (at *AttestationTest) SignEnterpriseChallenge(ctx context.Context, flowType apb.VerifiedAccessFlow, username, label string) error {
 	// In case the request fails for any reason, retry for 5 times.
 	challenge, err := at.va.GetDecodedVAChallenge(ctx)
 	if err != nil {
@@ -276,11 +279,13 @@ func (at *AttestationTest) SignEnterpriseChallenge(ctx context.Context, username
 	}
 	signedChallenge, err := at.ac.SignEnterpriseVAChallenge(
 		ctx,
+		flowType,
 		0,
 		username,
 		label,
 		username,
 		"fake_device_id",
+		true,
 		true,
 		challenge)
 	if err != nil {
