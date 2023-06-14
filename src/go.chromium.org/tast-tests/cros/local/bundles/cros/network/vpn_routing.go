@@ -106,7 +106,6 @@ func init() {
 				vpnType: vpn.TypeWireGuard,
 				ipType:  vpn.IPTypeIPv4,
 			},
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			Fixture:           "vpnEnv",
 			ExtraSoftwareDeps: []string{"wireguard"},
 		}, {
@@ -116,7 +115,6 @@ func init() {
 				ipType:     vpn.IPTypeIPv4,
 				wgTwoPeers: true,
 			},
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			Fixture:           "vpnEnv",
 			ExtraSoftwareDeps: []string{"wireguard"},
 		}, {
@@ -125,7 +123,6 @@ func init() {
 				vpnType: vpn.TypeWireGuard,
 				ipType:  vpn.IPTypeIPv6,
 			},
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			Fixture:           "vpnEnv",
 			ExtraSoftwareDeps: []string{"wireguard"},
 		}, {
@@ -134,7 +131,6 @@ func init() {
 				vpnType: vpn.TypeWireGuard,
 				ipType:  vpn.IPTypeIPv4AndIPv6,
 			},
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			Fixture:           "vpnEnv",
 			ExtraSoftwareDeps: []string{"wireguard"},
 		}},
