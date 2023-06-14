@@ -842,6 +842,12 @@ func (h *Helper) WaitConnect(ctx context.Context, opts ...WaitConnectOption) err
 	if h.DUT == nil {
 		return h.waitDutS0(ctx)
 	}
+	// Resetting ethernet dongle might speed up connection to the dut.
+	// At the moment, it seems that only servo v4.1 supports this feature.
+	// Don't fail if the control didn't work, and log the error instead.
+	if err := h.ResetServoEthernetDongle(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to reset ethernet dongle: ", err)
+	}
 	testing.ContextLogf(ctx, "Waiting for %s to connect", h.DUT.HostName())
 	for {
 		// SetDUTPDDataRole would fail when DUT is still in the process
@@ -1620,4 +1626,17 @@ func (h *Helper) CheckPowerSupplyDeviceStates(ctx context.Context) (*powerSupply
 		return nil, err
 	}
 	return &data, nil
+}
+
+// ResetServoEthernetDongle resets the ethernet dongle if it supports.
+func (h *Helper) ResetServoEthernetDongle(ctx context.Context) error {
+	ok, err := h.Servo.HasControl(ctx, string(servo.DutEthPwrEn))
+	if err != nil {
+		return errors.Wrapf(err, "failed to check control %v", servo.DutEthPwrEn)
+	}
+	if !ok {
+		return errors.Errorf("control %v doesn't exist", servo.DutEthPwrEn)
+	}
+	testing.ContextLog(ctx, "Resetting the enthernet dongle")
+	return h.Servo.ToggleOffOn(ctx, servo.DutEthPwrEn)
 }

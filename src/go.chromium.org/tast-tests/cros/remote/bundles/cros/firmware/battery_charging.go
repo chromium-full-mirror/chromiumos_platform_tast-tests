@@ -418,39 +418,14 @@ func waitConnectFromSuspend(ctx context.Context, h *firmware.Helper) error {
 		}
 		return state
 	}
-	powerCycleEthernet := func() error {
-		ok, err := h.Servo.HasControl(ctx, string(servo.DutEthPwrEn))
-		if err != nil {
-			return errors.Wrap(err, "checking control DutEthPwrEn")
-		}
-		if !ok {
-			return errors.New("control DutEthPwrEn doesn't exist")
-		}
-		if err := h.Servo.ToggleOffOn(ctx, servo.DutEthPwrEn); err != nil {
-			return err
-		}
-		return nil
-	}
-	var err error
-	const retry = 1
-	for i := 0; i <= retry; i++ {
-		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 5*time.Minute)
-		defer cancelWaitConnect()
 
-		err = h.WaitConnect(waitConnectCtx)
-		if err == nil {
-			return nil
-		}
-		// Don't power cycle the ethernet at the last retry.
-		if i == retry {
-			continue
-		}
-		testing.ContextLog(ctx, "Resetting ethernet dongle power")
-		if err := powerCycleEthernet(); err != nil {
-			testing.ContextLog(ctx, "Failed to power cycle ethernet dongle: ", err)
-			break
-		}
+	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 5*time.Minute)
+	defer cancelWaitConnect()
+
+	err := h.WaitConnect(waitConnectCtx)
+	if err != nil {
+		value := checkPowerState()
+		return errors.Wrapf(err, "dut unreachable with power state %s", value)
 	}
-	value := checkPowerState()
-	return errors.Wrapf(err, "dut unreachable with power state %s", value)
+	return nil
 }
