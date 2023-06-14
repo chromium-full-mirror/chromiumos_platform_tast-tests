@@ -31,7 +31,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CertsUsableAndPersist,
 		LacrosStatus: testing.LacrosVariantNeeded,
-		Desc:         "Verify that installed certificates are usable after suspend and resume",
+		Desc:         "Verify that installed certificates are usable and persist after different test scenarios",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"chromeos-connectivity-engprod@google.com",
@@ -57,18 +57,52 @@ func init() {
 		Fixture:      "wificellFixt",
 		Params: []testing.Param{
 			{
-				Val: false, /* isLacros */
+				Name: "suspend",
+				Val: &certsUsableTestParams{
+					testScenario: suspendAndRestore,
+					numTrials:    1,
+					// WiFi should be auto-reconnected on resume, wait for it to reconnect.
+					shouldAutoConnect: true,
+				},
+			}, {
+				Name: "relogin",
+				Val: &certsUsableTestParams{
+					testScenario: reLoginAndRestore,
+					numTrials:    1,
+				},
+			}, {
+				Name: "relogin_stress",
+				Val: &certsUsableTestParams{
+					testScenario: reLoginAndRestore,
+					numTrials:    3,
+				},
 			},
 			// TODO(crbug/1366609): Enable lacros test once the bug is fixed.
 		},
-		Timeout: 7 * time.Minute,
+		Timeout: 15 * time.Minute,
 	})
 }
 
-// CertsUsableAndPersist verifies that installed certificates are usable after suspend and resume.
+type certsUsableTestParams struct {
+	// testScenario is the action to be tested, certificate should be usable and persist after this action.
+	testScenario func(ctx context.Context, tf *wificell.TestFixture, isLacros bool) error
+
+	// numTrials is a number of the trials for the test scenario.
+	numTrials int
+
+	shouldAutoConnect, isLacros bool
+}
+
+type certificateDetail struct {
+	*network.Certificate
+	certificate.CertStore
+}
+
+type certificates map[network.Certificate_Type]*certificateDetail
+
+// CertsUsableAndPersist verifies that installed certificates are usable and persist after different test scenarios.
 func CertsUsableAndPersist(ctx context.Context, s *testing.State) {
 	testCerts := cert.LoadCertsFromVars()
-	const clientCertPassword = "12345"
 
 	tf := s.FixtValue().(*wificell.TestFixture)
 
@@ -92,9 +126,10 @@ func CertsUsableAndPersist(ctx context.Context, s *testing.State) {
 	ctx, cancel = ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	isLacros := s.Param().(bool)
+	params := s.Param().(*certsUsableTestParams)
+
 	startChromeReq := &ui.NewRequest{}
-	if isLacros {
+	if params.isLacros {
 		startChromeReq.Lacros = &ui.Lacros{}
 	}
 
@@ -105,9 +140,8 @@ func CertsUsableAndPersist(ctx context.Context, s *testing.State) {
 	}
 	defer crSvc.Close(cleanupCtx, &emptypb.Empty{})
 
-	var lacrosSvc ui.LacrosServiceClient
-	if isLacros {
-		lacrosSvc = ui.NewLacrosServiceClient(rpcClient.Conn)
+	if params.isLacros {
+		lacrosSvc := ui.NewLacrosServiceClient(rpcClient.Conn)
 		if _, err := lacrosSvc.Launch(ctx, &emptypb.Empty{}); err != nil {
 			s.Fatal("Failed to launch lacros: ", err)
 		}
@@ -116,7 +150,7 @@ func CertsUsableAndPersist(ctx context.Context, s *testing.State) {
 
 	certSvc := network.NewCertificateServiceClient(rpcClient.Conn)
 	if _, err := certSvc.Init(ctx, &network.InitRequest{
-		IsLacros: isLacros,
+		IsLacros: params.isLacros,
 		InitType: network.InitRequest_LAUNCH,
 	}); err != nil {
 		s.Fatal("Failed to initialize the certificate service: ", err)
@@ -135,7 +169,7 @@ func CertsUsableAndPersist(ctx context.Context, s *testing.State) {
 						Type:         network.Certificate_CLIENT,
 						Name:         testCerts.ClientCred.Info.CommonName,
 						Organization: testCerts.ClientCred.Info.Organization,
-						Password:     clientCertPassword,
+						Password:     "12345",
 					},
 					CertStore: testCerts,
 				},
@@ -186,8 +220,11 @@ func CertsUsableAndPersist(ctx context.Context, s *testing.State) {
 			}
 			defer dumpUITreeWithScreenshotOnError(cleanupCtx, rpcClient, s.HasError, "before_delete_certs")
 
-			wifiUIClient := wifi.NewWifiServiceClient(rpcClient.Conn)
-			if _, err := wifiUIClient.JoinWifiFromQuickSettings(ctx, &wifi.JoinWifiRequest{
+			if err := certsImported(ctx, certSvc, test.certDetails); err != nil {
+				s.Fatal("Failed to verify certificates are all imported: ", err)
+			}
+
+			joinEAPNetworkReq := &wifi.JoinWifiRequest{
 				Ssid: ap.Config().SSID,
 				Security: &wifi.JoinWifiRequest_EapTls{
 					EapTls: &wifi.JoinWifiRequest_SecurityEapTls{
@@ -199,52 +236,67 @@ func CertsUsableAndPersist(ctx context.Context, s *testing.State) {
 							test.certDetails[network.Certificate_CA].Name),
 					},
 				},
-			}); err != nil {
-				s.Fatalf("Failed to connect to wifi %q: %v", ap.Config().SSID, err)
 			}
 			defer tf.CleanDisconnectDUTFromWifi(cleanupCtx, wificell.DefaultDUT)
 
-			wifiClient := tf.DUTWifiClient(wificell.DefaultDUT)
-			if err := wifiClient.Suspend(ctx, 5*time.Second); err != nil {
-				s.Fatal("Failed to suspend DUT: ", err)
+			if err := verifyCertUsable(ctx, tf, joinEAPNetworkReq, ap.Config().SSID); err != nil {
+				s.Fatal("Failed to verify that the certificates are usable: ", err)
 			}
 
-			if err := restoreAfterResume(ctx, crSvc, lacrosSvc, certSvc); err != nil {
-				s.Fatal("Failed to reconnect to resources after resume: ", err)
-			}
-
-			// Verify the certificates are still imported.
-			for _, certDetail := range test.certDetails {
-				if response, err := certSvc.IsCertImported(ctx, certDetail.Certificate); err != nil {
-					s.Fatalf("Failed to verify the certificate %+v has imported: %v", certDetail.Certificate, err)
-				} else if !response.IsImported {
-					s.Fatalf("The certificate %+v was not imported", certDetail.Certificate)
+			for i := 0; i < params.numTrials; i++ {
+				if err := params.testScenario(ctx, tf, params.isLacros); err != nil {
+					s.Fatal("Failed to complete the test scenario: ", err)
 				}
 			}
 
-			// Verify the certificates are still valid.
-			if err := wifiClient.WaitForConnected(ctx, ap.Config().SSID, true); err != nil {
-				s.Fatalf("Failed to wait for wifi %q to connect: %v", ap.Config().SSID, err)
+			if params.shouldAutoConnect {
+				wifiClient := tf.DUTWifiClient(wificell.DefaultDUT)
+				if err := wifiClient.WaitForConnected(ctx, ap.Config().SSID, true); err != nil {
+					s.Fatalf("Failed to wait for WiFi %q to connect: %v", ap.Config().SSID, err)
+				}
+
+				// Disconnect from WiFi and cleanup configurations to further verify that certificates are usable and persist.
+				if err := tf.CleanDisconnectDUTFromWifi(cleanupCtx, wificell.DefaultDUT); err != nil {
+					s.Fatal("Failed to disconnect from WiFi and cleanup WiFi configurations: ", err)
+				}
+			}
+
+			// Verify the certificates are still persist.
+			if err := certsImported(ctx, certSvc, test.certDetails); err != nil {
+				s.Fatal("Failed to verify certificates are all imported: ", err)
+			}
+
+			// Verify the certificates are still usable.
+			if err := verifyCertUsable(ctx, tf, joinEAPNetworkReq, ap.Config().SSID); err != nil {
+				s.Fatal("Failed to verify that the certificates are usable and persist: ", err)
 			}
 		})
 	}
 }
 
-// restoreAfterResume restores the services after DUT resumed from suspend.
-// After suspend and resume, the connections built in the test would be invalid,
-// reconnect to the services to restore control to the Certificates Manager.
-func restoreAfterResume(ctx context.Context, crSvc ui.ChromeServiceClient, lacrosSvc ui.LacrosServiceClient, certSvc network.CertificateServiceClient) error {
+// suspendAndRestore suspends the DUT for a while and then
+// restores resources associate with chrome.Chrome instance,
+// including chrome.Chrome instance, lacros and certificate manager.
+func suspendAndRestore(ctx context.Context, tf *wificell.TestFixture, isLacros bool) error {
+	wifiClient := tf.DUTWifiClient(wificell.DefaultDUT)
+	if err := wifiClient.Suspend(ctx, 5*time.Second); err != nil {
+		return errors.Wrap(err, "failed to suspend DUT")
+	}
+
+	rpcClient := tf.DUTRPC(wificell.DefaultDUT)
+	crSvc := ui.NewChromeServiceClient(rpcClient.Conn)
 	if _, err := crSvc.Reconnect(ctx, &emptypb.Empty{}); err != nil {
 		return errors.Wrap(err, "failed to reconnect to the Chrome session")
 	}
 
-	isLacros := lacrosSvc != nil
 	if isLacros {
+		lacrosSvc := ui.NewLacrosServiceClient(rpcClient.Conn)
 		if _, err := lacrosSvc.Connect(ctx, &emptypb.Empty{}); err != nil {
 			return errors.Wrap(err, "failed to reconnect to lacros")
 		}
 	}
 
+	certSvc := network.NewCertificateServiceClient(rpcClient.Conn)
 	if _, err := certSvc.Init(ctx, &network.InitRequest{
 		IsLacros: isLacros,
 		InitType: network.InitRequest_CONNECT,
@@ -255,9 +307,78 @@ func restoreAfterResume(ctx context.Context, crSvc ui.ChromeServiceClient, lacro
 	return nil
 }
 
-type certificateDetail struct {
-	*network.Certificate
-	certificate.CertStore
+// reLoginAndRestore re-login the chrome.Chrome session by starting a new one.
+// This method also ensure resources are all well-managed by closing them before re-login.
+func reLoginAndRestore(ctx context.Context, tf *wificell.TestFixture, isLacros bool) error {
+	rpcClient := tf.DUTRPC(wificell.DefaultDUT)
+
+	certSvc := network.NewCertificateServiceClient(rpcClient.Conn)
+	if _, err := certSvc.Close(ctx, &emptypb.Empty{}); err != nil {
+		return errors.Wrap(err, "failed to close the certificate manager")
+	}
+
+	lacrosSvc := ui.NewLacrosServiceClient(rpcClient.Conn)
+	if isLacros {
+		if _, err := lacrosSvc.Close(ctx, &emptypb.Empty{}); err != nil {
+			return errors.Wrap(err, "failed to close the lacros")
+		}
+	}
+
+	crSvc := ui.NewChromeServiceClient(rpcClient.Conn)
+	if _, err := crSvc.Close(ctx, &emptypb.Empty{}); err != nil {
+		return errors.Wrap(err, "failed to close the chrome session")
+	}
+
+	startChromeReq := &ui.NewRequest{KeepState: true}
+	if isLacros {
+		startChromeReq.Lacros = &ui.Lacros{}
+	}
+	if _, err := crSvc.New(ctx, startChromeReq); err != nil {
+		return errors.Wrap(err, "failed to re-login to the chrome")
+	}
+
+	if isLacros {
+		if _, err := lacrosSvc.Launch(ctx, &emptypb.Empty{}); err != nil {
+			return errors.Wrap(err, "failed to launch the lacros")
+		}
+	}
+
+	if _, err := certSvc.Init(ctx, &network.InitRequest{
+		IsLacros: isLacros,
+		InitType: network.InitRequest_LAUNCH,
+	}); err != nil {
+		return errors.Wrap(err, "failed to initialize the certificate service")
+	}
+
+	return nil
+}
+
+// verifyCertUsable verifies that the certificates are available and usable by trying to join to the network.
+// Joining a WEP network requires a certificate, so the join attempt ensures that certificates are available.
+// This method also expects the network to be connected, which means that the certificates are usable.
+func verifyCertUsable(ctx context.Context, tf *wificell.TestFixture, joinEAPNetworkReq *wifi.JoinWifiRequest, ssid string) error {
+	wifiUIClient := wifi.NewWifiServiceClient(tf.DUTRPC(wificell.DefaultDUT).Conn)
+	if _, err := wifiUIClient.JoinWifiFromQuickSettings(ctx, joinEAPNetworkReq); err != nil {
+		return errors.Wrapf(err, "failed to connect to WiFi %q", ssid)
+	}
+
+	wifiClient := tf.DUTWifiClient(wificell.DefaultDUT)
+	if err := wifiClient.WaitForConnected(ctx, ssid, true); err != nil {
+		return errors.Wrapf(err, "failed to wait for WiFi %q to connect", ssid)
+	}
+	return nil
+}
+
+// certsImported verifies that |certificates| are all imported.
+func certsImported(ctx context.Context, certSvc network.CertificateServiceClient, certificates certificates) error {
+	for _, cert := range certificates {
+		if response, err := certSvc.IsCertImported(ctx, cert.Certificate); err != nil {
+			return errors.Wrapf(err, "failed to verify certificate %+v is imported", cert.Certificate)
+		} else if !response.IsImported {
+			return errors.Errorf("certificate %+v is not imported", cert.Certificate)
+		}
+	}
+	return nil
 }
 
 func importCert(ctx context.Context, dutConn *ssh.Conn, certSvc network.CertificateServiceClient, certDetail *certificateDetail) (retErr error) {
