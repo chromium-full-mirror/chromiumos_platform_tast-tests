@@ -81,7 +81,7 @@ const (
 	fpsMetricTypeUnit              = "fps"
 	gpuFreqMetricTypeUnit          = "megahertz"
 	gpuStateMetricTypeUnit         = "percent"
-	histogramLatencyMetricTypeUnit = "ms"
+	histogramLatencyMetricTypeUnit = "us"
 	packageCstatesMetricTypeUnit   = "percent"
 	powerRelatedMetricTypeUnit     = "W"
 	thermalMetricTypeUnit          = "celsius"
