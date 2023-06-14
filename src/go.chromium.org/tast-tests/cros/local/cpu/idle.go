@@ -45,8 +45,8 @@ func DefaultPkgIdleConfig() IdleConfig {
 	return IdleConfig{
 		Timeout:             3 * time.Minute,
 		CPUUsagePercentBase: 5.0,
-		CPUUsagePercentMax:  30.0,
-		Steps:               6,
+		CPUUsagePercentMax:  40.0,
+		Steps:               8,
 	}
 }
 
