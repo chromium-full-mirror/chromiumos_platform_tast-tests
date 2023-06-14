@@ -70,6 +70,9 @@ func RetrieveMotionMarkScore(ctx context.Context, benchmarkConn *chrome.Conn, sc
 		return errors.New("MotionMark crashed during the test")
 	}
 	for metric, value := range benchmarkScores {
+		if value < 10 {
+			return errors.Errorf("MotionMark %s subtest failed; got a score of %f", metric, value)
+		}
 		scores[motionMarkPrefix+metric] = value
 	}
 	return nil
