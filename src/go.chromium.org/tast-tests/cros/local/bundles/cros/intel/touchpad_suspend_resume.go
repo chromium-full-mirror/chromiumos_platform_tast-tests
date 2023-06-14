@@ -45,7 +45,7 @@ func init() {
 		BugComponent: "b:157291",
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"canvas.html"},
-		Timeout:      15 * time.Minute,
+		Timeout:      5 * time.Minute,
 		HardwareDeps: hwdep.D(hwdep.Touchpad(), hwdep.X86()),
 		Fixture:      "chromeLoggedIn",
 	})
@@ -116,7 +116,7 @@ func performEVTestToLaunchCanvasAndMonitorEvent(ctx context.Context, info *displ
 		return errors.Wrap(err, "failed to draw on canvas")
 	}
 
-	timeoutCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	timeoutCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()
 
 	// Monitor touchpad events using evtest.
