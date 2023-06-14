@@ -11,6 +11,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/graphics"
 	"go.chromium.org/tast-tests/cros/local/gtest"
 	mediacpu "go.chromium.org/tast-tests/cros/local/media/cpu"
 	"go.chromium.org/tast-tests/cros/local/sysutil"
@@ -53,6 +54,13 @@ func ImageProcessorPerf(ctx context.Context, s *testing.State) {
 	const measureDuration = 5 * time.Second
 	const cleanupTime = 5 * time.Second
 	p := perf.NewValues()
+
+	// Measure GPU Performance
+	// Don't need to manually wait for GPU Counters to finish since
+	// media cpu logic below will take twice as long to complete
+	// and is blocking.
+	go graphics.MeasureGPUCounters(ctx, measureDuration, p)
+
 	measurements, err := mediacpu.MeasureProcessUsage(ctx, measureDuration, mediacpu.KillProcess, gtest.New(
 		filepath.Join(chrome.BinTestDir, exec),
 		gtest.Logfile(filepath.Join(s.OutDir(), exec+".log")),
