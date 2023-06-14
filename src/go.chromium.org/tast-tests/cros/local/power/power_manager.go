@@ -14,9 +14,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast-tests/cros/local/upstart"
-
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/testing"
 )
 
 const (
@@ -131,87 +129,6 @@ func TurnOnDisplay(ctx context.Context) error {
 	}
 	if err := powerd.HandleWakeNotification(ctx); err != nil {
 		return errors.Wrap(err, "failed to call HandleWakeNotification D-Bus method")
-	}
-	return nil
-}
-
-// EnableBatterySaver checks that PowerManager is running, enables battery
-// saver, and waits for the signal to propagate to components.
-func EnableBatterySaver(ctx context.Context) error {
-	// Enabling battery saver should finish quickly.
-	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
-	defer cancel()
-
-	if err := upstart.EnsureJobRunning(ctx, "powerd"); err != nil {
-		return errors.Wrap(err, "failed to ensure powerd running")
-	}
-
-	testing.ContextLog(ctx, "Enabling battery saver")
-
-	powerd, err := NewPowerManager(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to create a PowerManager object")
-	}
-
-	if err := powerd.SetBatterySaverModeState(ctx, true); err != nil {
-		return errors.Wrap(err, "failed to set battery saver state")
-	}
-
-	bsmState, err := powerd.GetBatterySaverModeState(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to get battery saver state")
-	}
-	if bsmState.Enabled == nil || !*(bsmState.Enabled) {
-		return errors.New("battery saver is not enabled")
-	}
-
-	// GoBigSleepLint: Wait a bit to make sure the signal propagates everywhere.
-	// There is no direct way to know if all battery saver levers have received
-	// the signal, so we need to just sleep.
-	if err := testing.Sleep(ctx, 3*time.Second); err != nil {
-		return errors.Wrap(err, "failed to wait for battery saver state to propegate")
-	}
-	return nil
-}
-
-// DisableBatterySaver waits for PowerManager to be running, verifies that
-// battery saver is enabled, and then disables battery saver.
-func DisableBatterySaver(ctx context.Context) error {
-	// Turning off battery saver should finish quickly.
-	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
-	defer cancel()
-
-	if err := upstart.EnsureJobRunning(ctx, "powerd"); err != nil {
-		return errors.Wrap(err, "failed to ensure powerd running")
-	}
-
-	testing.ContextLog(ctx, "Disabling battery saver")
-
-	powerd, err := NewPowerManager(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to create a PowerManager object")
-	}
-
-	// If powerd was disabled during the test, it might take a while for it to
-	// come back.
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		bsmState, err := powerd.GetBatterySaverModeState(ctx)
-		if err != nil {
-			return err
-		}
-		if bsmState == nil {
-			return errors.New("bsmState is nil")
-		}
-		if bsmState.Enabled == nil || *bsmState.Enabled == false {
-			return errors.New("bsmState.Enabled is not true")
-		}
-		return nil
-	}, nil); err != nil {
-		testing.ContextLog(ctx, "Failed to wait for powerd before disabling battery saver mode: ", err)
-	}
-
-	if err := powerd.SetBatterySaverModeState(ctx, false); err != nil {
-		testing.ContextLog(ctx, "Failed to disable battery saver mode: ", err)
 	}
 	return nil
 }

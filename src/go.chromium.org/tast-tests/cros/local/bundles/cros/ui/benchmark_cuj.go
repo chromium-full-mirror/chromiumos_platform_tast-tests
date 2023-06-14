@@ -27,7 +27,6 @@ func init() {
 			"vincentchiang@chromium.org",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
-		Attr:         []string{"group:cuj"},
 		SoftwareDeps: []string{"chrome"},
 		Vars: []string{
 			// Iterations are limited by the specific benchmark:
@@ -36,18 +35,20 @@ func init() {
 		},
 		Params: []testing.Param{
 			{
-				Name:    "speedometer",
-				Timeout: defaultTimeout,
-				Fixture: "loggedInToCUJUserWithoutCooldown",
+				Name:      "speedometer",
+				ExtraAttr: []string{"group:cuj"},
+				Timeout:   defaultTimeout,
+				Fixture:   "loggedInToCUJUserWithoutCooldown",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.SpeedometerInfo,
 				},
 			},
 			{
-				Name:    "lacros_speedometer",
-				Timeout: defaultTimeout,
-				Fixture: "loggedInToCUJUserLacrosWithoutCooldown",
+				Name:      "lacros_speedometer",
+				ExtraAttr: []string{"group:cuj"},
+				Timeout:   defaultTimeout,
+				Fixture:   "loggedInToCUJUserLacrosWithoutCooldown",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeLacros,
 					BenchmarkInfo: benchmarkcuj.SpeedometerInfo,
@@ -55,18 +56,20 @@ func init() {
 				ExtraSoftwareDeps: []string{"lacros"},
 			},
 			{
-				Name:    "motionmark",
-				Timeout: defaultTimeout,
-				Fixture: "loggedInToCUJUser",
+				Name:      "motionmark",
+				ExtraAttr: []string{"group:cuj"},
+				Timeout:   defaultTimeout,
+				Fixture:   "loggedInToCUJUser",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.MotionMarkInfo,
 				},
 			},
 			{
-				Name:    "lacros_motionmark",
-				Timeout: defaultTimeout,
-				Fixture: "loggedInToCUJUserLacros",
+				Name:      "lacros_motionmark",
+				ExtraAttr: []string{"group:cuj"},
+				Timeout:   defaultTimeout,
+				Fixture:   "loggedInToCUJUserLacros",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeLacros,
 					BenchmarkInfo: benchmarkcuj.MotionMarkInfo,
@@ -74,18 +77,20 @@ func init() {
 				ExtraSoftwareDeps: []string{"lacros"},
 			},
 			{
-				Name:    "jetstream",
-				Timeout: defaultTimeout,
-				Fixture: "loggedInToCUJUser",
+				Name:      "jetstream",
+				ExtraAttr: []string{"group:cuj"},
+				Timeout:   defaultTimeout,
+				Fixture:   "loggedInToCUJUser",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.JetStreamInfo,
 				},
 			},
 			{
-				Name:    "lacros_jetstream",
-				Timeout: defaultTimeout,
-				Fixture: "loggedInToCUJUserLacros",
+				Name:      "lacros_jetstream",
+				ExtraAttr: []string{"group:cuj"},
+				Timeout:   defaultTimeout,
+				Fixture:   "loggedInToCUJUserLacros",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeLacros,
 					BenchmarkInfo: benchmarkcuj.JetStreamInfo,
@@ -93,18 +98,20 @@ func init() {
 				ExtraSoftwareDeps: []string{"lacros"},
 			},
 			{
-				Name:    "kraken",
-				Timeout: defaultTimeout,
-				Fixture: "loggedInToCUJUser",
+				Name:      "kraken",
+				ExtraAttr: []string{"group:cuj"},
+				Timeout:   defaultTimeout,
+				Fixture:   "loggedInToCUJUser",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.KrakenInfo,
 				},
 			},
 			{
-				Name:    "lacros_kraken",
-				Timeout: defaultTimeout,
-				Fixture: "loggedInToCUJUserLacros",
+				Name:      "lacros_kraken",
+				ExtraAttr: []string{"group:cuj"},
+				Timeout:   defaultTimeout,
+				Fixture:   "loggedInToCUJUserLacros",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeLacros,
 					BenchmarkInfo: benchmarkcuj.KrakenInfo,
@@ -112,23 +119,71 @@ func init() {
 				ExtraSoftwareDeps: []string{"lacros"},
 			},
 			{
-				Name:    "octane",
-				Timeout: defaultTimeout,
-				Fixture: "loggedInToCUJUser",
+				Name:      "octane",
+				ExtraAttr: []string{"group:cuj"},
+				Timeout:   defaultTimeout,
+				Fixture:   "loggedInToCUJUser",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.OctaneInfo,
 				},
 			},
 			{
-				Name:    "lacros_octane",
-				Timeout: defaultTimeout,
-				Fixture: "loggedInToCUJUserLacros",
+				Name:      "lacros_octane",
+				ExtraAttr: []string{"group:cuj"},
+				Timeout:   defaultTimeout,
+				Fixture:   "loggedInToCUJUserLacros",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeLacros,
 					BenchmarkInfo: benchmarkcuj.OctaneInfo,
 				},
 				ExtraSoftwareDeps: []string{"lacros"},
+			},
+			// Battery saver tests only run manually
+			{
+				Name:    "battery_saver_speedometer",
+				Timeout: defaultTimeout,
+				Fixture: "loggedInToCUJUserWithBatterySaverWithoutCooldown",
+				Val: benchmarkcuj.BenchmarkTest{
+					BrowserType:   browser.TypeAsh,
+					BenchmarkInfo: benchmarkcuj.SpeedometerInfo,
+				},
+			},
+			{
+				Name:    "battery_saver_motionmark",
+				Timeout: defaultTimeout,
+				Fixture: "loggedInToCUJUserWithBatterySaver",
+				Val: benchmarkcuj.BenchmarkTest{
+					BrowserType:   browser.TypeAsh,
+					BenchmarkInfo: benchmarkcuj.MotionMarkInfo,
+				},
+			},
+			{
+				Name:    "battery_saver_jetstream",
+				Timeout: defaultTimeout,
+				Fixture: "loggedInToCUJUserWithBatterySaver",
+				Val: benchmarkcuj.BenchmarkTest{
+					BrowserType:   browser.TypeAsh,
+					BenchmarkInfo: benchmarkcuj.JetStreamInfo,
+				},
+			},
+			{
+				Name:    "battery_saver_kraken",
+				Timeout: defaultTimeout,
+				Fixture: "loggedInToCUJUserWithBatterySaver",
+				Val: benchmarkcuj.BenchmarkTest{
+					BrowserType:   browser.TypeAsh,
+					BenchmarkInfo: benchmarkcuj.KrakenInfo,
+				},
+			},
+			{
+				Name:    "battery_saver_octane",
+				Timeout: defaultTimeout,
+				Fixture: "loggedInToCUJUserWithBatterySaver",
+				Val: benchmarkcuj.BenchmarkTest{
+					BrowserType:   browser.TypeAsh,
+					BenchmarkInfo: benchmarkcuj.OctaneInfo,
+				},
 			},
 		},
 	})

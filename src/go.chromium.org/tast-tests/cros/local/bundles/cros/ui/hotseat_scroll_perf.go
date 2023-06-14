@@ -35,19 +35,32 @@ func init() {
 			"andrewxu@chromium.org",
 			"newcomer@chromium.org",
 		},
-		Attr: []string{"group:crosbolt", "crosbolt_perbuild"},
 		// ChromeOS > Software > System UI Surfaces > Shelf
 		BugComponent: "b:1288352",
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-		Fixture:      "chromeLoggedInWith100FakeApps",
 		Params: []testing.Param{
 			{
-				Name: "clamshell_mode",
-				Val:  false,
+				Name:      "clamshell_mode",
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+				Val:       false,
+				Fixture:   "chromeLoggedInWith100FakeApps",
 			},
 			{
-				Val: true,
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+				Val:       true,
+				Fixture:   "chromeLoggedInWith100FakeApps",
+			},
+			// Battery saver tests only run manually
+			{
+				Name:    "clamshell_mode_battery_saver",
+				Val:     false,
+				Fixture: "chromeLoggedInWith100FakeAppsWithBatterySaver",
+			},
+			{
+				Name:    "battery_saver",
+				Val:     true,
+				Fixture: "chromeLoggedInWith100FakeAppsWithBatterySaver",
 			},
 		},
 	})

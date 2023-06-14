@@ -16,6 +16,8 @@ const (
 	ChromeLoggedInGuest = "chromeLoggedInGuest"
 	// Logged into a user session with 100 fake apps.
 	ChromeLoggedInWith100FakeApps = "chromeLoggedInWith100FakeApps"
+	// Logged into a user session with 100 fake apps and battery saver enabled.
+	ChromeLoggedInWith100FakeAppsWithBatterySaver = "chromeLoggedInWith100FakeAppsWithBatterySaver"
 	// Logged into a user session with 100 fake apps and the passthrough command decoder enabled.
 	ChromeLoggedInWith100FakeAppsPassthroughCmdDecoder = "chromeLoggedInWith100FakeAppsPassthroughCmdDecoder"
 	// Logged into a session with Gaia user where CalendarView is enabled.

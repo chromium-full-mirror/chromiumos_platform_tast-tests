@@ -77,6 +77,25 @@ func init() {
 		TearDownTimeout: ResetTimeout,
 	})
 
+	testing.AddFixture(&testing.Fixture{
+		Name: fixture.ChromeLoggedInWith100FakeAppsWithBatterySaver,
+		Desc: "Logged into a user session with 100 fake apps and battery saver enabled",
+		Contacts: []string{
+			"cwd@google.com",
+			"cros-vm-technology@google.com",
+			"cros-sw-perf@google.com",
+		},
+		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
+			return []Option{
+				EnableFeatures("CrosBatterySaver", "CrosBatterySaverAlwaysOn"),
+			}, nil
+		}),
+		Parent:          "install100Apps",
+		SetUpTimeout:    LoginTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: ResetTimeout,
+	})
+
 	// TOOD(b/233238923): Remove when passthrough is enabled by default.
 	testing.AddFixture(&testing.Fixture{
 		Name:     fixture.ChromeLoggedInWith100FakeAppsPassthroughCmdDecoder,

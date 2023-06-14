@@ -252,6 +252,31 @@ func init() {
 		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInAndKeepStateWithBatterySaver",
+		Desc: "The CUJ test fixture which keeps login state and turns on battery saver",
+		Contacts: []string{
+			"cwd@google.com",
+			"cros-vm-technology@google.com",
+			"chromeos-perfmetrics-eng@google.com",
+		},
+		Impl: &loggedInToCUJUserFixture{
+			keepState: true,
+			bt:        browser.TypeAsh,
+			// Some tests will connect to websites hosted locally with HTTPs and this flag allows invalid certificates for resources loaded from localhost.
+			chromeExtraOpts: []chrome.Option{
+				chrome.ExtraArgs("--allow-insecure-localhost"),
+				chrome.EnableFeatures("CrosBatterySaver", "CrosBatterySaverAlwaysOn"),
+			},
+		},
+		Parent:          "prepareForCUJWithCharge",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
+	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInAndKeepStateWithFakeCamera",
 		Desc: "The CUJ test fixture which keeps login state and uses fake camera",
 		Contacts: []string{
@@ -713,10 +738,19 @@ func init() {
 			"cros-vm-technology@google.com",
 			"cros-sw-perf@google.com",
 		},
-		Impl:            &batterySaverFixture{},
-		Parent:          "loggedInToCUJUser",
-		SetUpTimeout:    batterySaverTimeout,
-		TearDownTimeout: batterySaverTimeout,
+		Impl: &loggedInToCUJUserFixture{
+			bt: browser.TypeAsh,
+			chromeExtraOpts: []chrome.Option{
+				chrome.EnableFeatures("CrosBatterySaver", "CrosBatterySaverAlwaysOn"),
+			},
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithWebRTCEventLoggingAndBatterySaver",
@@ -726,10 +760,22 @@ func init() {
 			"cros-vm-technology@google.com",
 			"cros-sw-perf@google.com",
 		},
-		Impl:            &batterySaverFixture{},
-		Parent:          "loggedInToCUJUserWithWebRTCEventLogging",
-		SetUpTimeout:    batterySaverTimeout,
-		TearDownTimeout: batterySaverTimeout,
+		Data: docsBlockerFiles,
+		Impl: &loggedInToCUJUserFixture{
+			chromeExtraOpts: []chrome.Option{
+				chrome.ExtraArgs(webRTCEventLogCommandFlag),
+				chrome.EnableFeatures("CrosBatterySaver", "CrosBatterySaverAlwaysOn"),
+			},
+			bt:          browser.TypeAsh,
+			docsBlocker: true,
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithChromeVox",
@@ -758,6 +804,27 @@ func init() {
 			"cros-sw-perf@google.com",
 		},
 		Impl:            &loggedInToCUJUserFixture{bt: browser.TypeAsh},
+		Parent:          "prepareForCUJWithoutCooldown",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithBatterySaverWithoutCooldown",
+		Desc: "CUJ fixture that skips CPU cooldown and has battery saver active",
+		Contacts: []string{
+			"cwd@google.com",
+			"cros-vm-technology@google.com",
+			"chromeos-perfmetrics-eng@google.com",
+		},
+		Impl: &loggedInToCUJUserFixture{
+			bt: browser.TypeAsh,
+			chromeExtraOpts: []chrome.Option{
+				chrome.EnableFeatures("CrosBatterySaver", "CrosBatterySaverAlwaysOn"),
+			},
+		},
 		Parent:          "prepareForCUJWithoutCooldown",
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
@@ -1438,32 +1505,4 @@ func (f *loggedInToCUJUserFixture) PostTest(ctx context.Context, s *testing.Fixt
 			s.Logf("Failed to delete %q: %s", filename, err)
 		}
 	}
-}
-
-type batterySaverFixture struct{}
-
-func (f *batterySaverFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	if err := power.EnableBatterySaver(ctx); err != nil {
-		s.Error("Failed to enable battery saver: ", err)
-	}
-
-	// Return our parent value so that we can add this fixture as a child without
-	// breaking existing tests.
-	return s.ParentValue()
-}
-
-func (f *batterySaverFixture) TearDown(ctx context.Context, s *testing.FixtState) {
-	if err := power.DisableBatterySaver(ctx); err != nil {
-		s.Error("Failed to disable battery saver: ", err)
-	}
-}
-
-func (f *batterySaverFixture) Reset(ctx context.Context) error {
-	return nil
-}
-
-func (f *batterySaverFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
-}
-
-func (f *batterySaverFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
 }

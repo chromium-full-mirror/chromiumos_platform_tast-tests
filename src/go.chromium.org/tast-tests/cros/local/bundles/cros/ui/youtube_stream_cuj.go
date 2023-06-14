@@ -26,40 +26,62 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         YoutubeStreamCUJ,
 		LacrosStatus: testing.LacrosVariantUnknown,
-		Desc:         "Plays YouTube video of different quality and checks for any frame drops and if the audio is routing through expected device",
+		Desc:         "Plays YouTube video of different quality and checks for any frame drops and if the audio is routing through expected device. Also includes variants to measure with battery saver enabled",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com", "andrescj@google.com", "chromeos-gfx-video@google.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
-		Attr:         []string{"group:mainline", "informational", "group:intel-nda"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.Speaker()),
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "loggedInAndKeepState",
 		Params: []testing.Param{{
-			Name: "1080p30",
+			Name:      "1080p30",
+			Fixture:   "loggedInAndKeepState",
+			ExtraAttr: []string{"group:mainline", "informational", "group:intel-nda"},
 			Val: youtube.VideoSrc{
 				URL:     "https://www.youtube.com/watch?v=Zv11L-ZfrSg",
 				Title:   "Ultimate Wild Animals Collection in 8K ULTRA HD / 8K TV",
 				Quality: "1080p",
 			},
 		}, {
-			Name: "1080p60",
+			Name:      "1080p60",
+			Fixture:   "loggedInAndKeepState",
+			ExtraAttr: []string{"group:mainline", "informational", "group:intel-nda"},
 			Val: youtube.VideoSrc{
 				URL:     "https://www.youtube.com/watch?v=LXb3EKWsInQ",
 				Title:   "COSTA RICA IN 4K 60fps HDR (ULTRA HD)",
 				Quality: "1080p60",
 			},
 		}, {
-			Name: "1440p30",
+			Name:      "1440p30",
+			Fixture:   "loggedInAndKeepState",
+			ExtraAttr: []string{"group:mainline", "informational", "group:intel-nda"},
 			Val: youtube.VideoSrc{
 				URL:     "https://www.youtube.com/watch?v=Zv11L-ZfrSg",
 				Title:   "Ultimate Wild Animals Collection in 8K ULTRA HD / 8K TV",
 				Quality: "1440p",
 			},
 		}, {
-			Name: "1440p60",
+			Name:      "1440p60",
+			Fixture:   "loggedInAndKeepState",
+			ExtraAttr: []string{"group:mainline", "informational", "group:intel-nda"},
 			Val: youtube.VideoSrc{
 				URL:     "https://www.youtube.com/watch?v=LXb3EKWsInQ",
 				Title:   "COSTA RICA IN 4K 60fps HDR (ULTRA HD)",
 				Quality: "1440p60",
+			},
+		}, { // Battery saver tests only run manually
+			Name:    "1080p30_battery_saver",
+			Fixture: "loggedInAndKeepStateWithBatterySaver",
+			Val: youtube.VideoSrc{
+				URL:     "https://www.youtube.com/watch?v=Zv11L-ZfrSg",
+				Title:   "Ultimate Wild Animals Collection in 8K ULTRA HD / 8K TV",
+				Quality: "1080p",
+			},
+		}, {
+			Name:    "1440p30_battery_saver",
+			Fixture: "loggedInAndKeepStateWithBatterySaver",
+			Val: youtube.VideoSrc{
+				URL:     "https://www.youtube.com/watch?v=Zv11L-ZfrSg",
+				Title:   "Ultimate Wild Animals Collection in 8K ULTRA HD / 8K TV",
+				Quality: "1440p",
 			},
 		}},
 	})
