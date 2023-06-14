@@ -32,7 +32,7 @@ func init() {
 			"joelhockey@chromium.org",
 		},
 		BugComponent: "b:1122570",
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      2 * time.Minute,
 	})

@@ -45,7 +45,7 @@ func init() {
 			"mutexlox@google.com",
 		},
 		BugComponent: "b:1096648",
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
 			Name: "experiment_enabled_without_params",

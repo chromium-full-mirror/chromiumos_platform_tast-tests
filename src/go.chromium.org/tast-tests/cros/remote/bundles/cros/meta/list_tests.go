@@ -20,7 +20,7 @@ func init() {
 		Desc:         "Verifies that the tast command can list tests",
 		Contacts:     []string{"tast-core@google.com", "nya@chromium.org"},
 		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
-		Attr:         []string{"group:mainline", "group:meta"},
+		Attr:         []string{"group:mainline", "group:meta", "group:hw_agnostic"},
 	})
 }
 

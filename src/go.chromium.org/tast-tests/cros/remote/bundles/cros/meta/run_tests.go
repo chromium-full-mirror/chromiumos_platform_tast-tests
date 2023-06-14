@@ -81,7 +81,7 @@ func init() {
 					"fixtures/metaLocalDataFilesFixture/fixture_data_external.txt": "This is an external data file.\n",
 				},
 			},
-			ExtraAttr: []string{"group:mainline", "group:meta"},
+			ExtraAttr: []string{"group:mainline", "group:meta", "group:hw_agnostic"},
 		}, {
 			Name: "files_remote",
 			Val: runTestsParam{
@@ -110,7 +110,7 @@ func init() {
 					{Name: "meta.LocalPanic", Errors: []tastrun.TestError{{Reason: "Panic: intentionally panicking"}}},
 				},
 			},
-			ExtraAttr: []string{"group:mainline", "group:meta"},
+			ExtraAttr: []string{"group:mainline", "group:meta", "group:hw_agnostic"},
 		}, {
 			Name: "vars",
 			Val: runTestsParam{
@@ -127,7 +127,7 @@ func init() {
 					"tests/meta.RemoteVars/var.txt": remoteVarValue,
 				},
 			},
-			ExtraAttr: []string{"group:mainline", "group:meta"},
+			ExtraAttr: []string{"group:mainline", "group:meta", "group:hw_agnostic"},
 		}},
 	})
 }

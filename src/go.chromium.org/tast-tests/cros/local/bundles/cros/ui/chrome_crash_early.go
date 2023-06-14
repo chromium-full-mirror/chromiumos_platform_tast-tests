@@ -51,7 +51,7 @@ func init() {
 		Desc:         "Checks that if Chrome crashes before crashpad is initialized, the user collector collects the crash",
 		Contacts:     []string{"cros-telemetry@google.com", "iby@chromium.org"},
 		BugComponent: "b:1032705",
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "crashpad"},
 		Timeout:      upstart.UIRestartTimeout + chromeCrashEarlyCleanupTimeout + chromeCrashEarlyCrashFileTimeout + time.Minute,
 		Params: []testing.Param{{

@@ -67,6 +67,7 @@ func init() {
 				consent: crash.MockConsent,
 			},
 			ExtraSoftwareDeps: []string{"crashpad"},
+			ExtraAttr:         []string{"group:hw_agnostic"},
 		}, {
 			Name: "gpu_process_breakpad",
 			Val: chromeCrashNotLoggedInParams{
@@ -103,6 +104,7 @@ func init() {
 				consent: crash.MockConsent,
 			},
 			ExtraSoftwareDeps: []string{"crashpad"},
+			ExtraAttr:         []string{"group:hw_agnostic"},
 		}, {
 			Name: "broker_breakpad_mock_consent",
 			Val: chromeCrashNotLoggedInParams{

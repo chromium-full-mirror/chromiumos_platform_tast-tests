@@ -48,7 +48,7 @@ func init() {
 					CorrectWord:  "hello",
 					UndoMethod:   autocorrect.ViaPopupUsingPK,
 				},
-				ExtraAttr: []string{"group:input-tools-upstream", "group:cq-medium"},
+				ExtraAttr: []string{"group:input-tools-upstream", "group:cq-medium", "group:hw_agnostic"},
 			},
 			{
 				Name:    "en_us_2",
@@ -59,7 +59,7 @@ func init() {
 					CorrectWord:  "world",
 					UndoMethod:   autocorrect.ViaPopupUsingMouse,
 				},
-				ExtraAttr: []string{"group:input-tools-upstream"},
+				ExtraAttr: []string{"group:input-tools-upstream", "group:hw_agnostic"},
 			},
 			{
 				Name:              "en_us_1_lacros",

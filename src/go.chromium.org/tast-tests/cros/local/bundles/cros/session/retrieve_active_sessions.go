@@ -24,7 +24,7 @@ func init() {
 			"hidehiko@chromium.org",
 		},
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 	})
 }
 

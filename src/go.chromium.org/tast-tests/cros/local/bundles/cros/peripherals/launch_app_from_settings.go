@@ -41,7 +41,7 @@ func init() {
 		},
 		// ChromeOS > Software > System Services > Peripherals > Printing
 		BugComponent: "b:1131981",
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{
 			{

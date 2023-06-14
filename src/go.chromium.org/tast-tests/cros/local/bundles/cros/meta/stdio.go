@@ -18,7 +18,7 @@ func init() {
 		Desc:         "Ensures that accessing stdin/stdout does not harm test execution",
 		Contacts:     []string{"tast-core@google.com", "nya@chromium.org"},
 		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
-		Attr:         []string{"group:mainline", "group:meta"},
+		Attr:         []string{"group:mainline", "group:meta", "group:hw_agnostic"},
 	})
 }
 

@@ -41,7 +41,7 @@ func init() {
 			"chrome",
 			"chrome_internal",
 		},
-		Attr: []string{"group:mainline"},
+		Attr: []string{"group:mainline", "group:hw_agnostic"},
 		VarDeps: []string{
 			"ui.gaiaPoolDefault",
 			"ui.signinProfileTestExtensionManifestKey",

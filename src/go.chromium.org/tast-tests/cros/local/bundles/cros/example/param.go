@@ -21,7 +21,7 @@ func init() {
 		Desc:         "Parameterized test example",
 		Contacts:     []string{"tast-core@google.com", "nya@chromium.org"},
 		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		Params: []testing.Param{{
 			Name: "dog",
 			Val: animal{

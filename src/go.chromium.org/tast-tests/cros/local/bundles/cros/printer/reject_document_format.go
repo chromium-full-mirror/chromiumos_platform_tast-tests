@@ -28,6 +28,7 @@ func init() {
 			"group:mainline",
 			"group:paper-io",
 			"paper-io_printing",
+			"group:hw_agnostic",
 		},
 		Timeout:      2 * time.Minute,
 		SoftwareDeps: []string{"cups", "virtual_usb_printer"},

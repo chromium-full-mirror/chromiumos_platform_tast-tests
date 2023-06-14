@@ -32,7 +32,7 @@ func init() {
 		},
 		BugComponent: "b:327040", // ChromeOS > External > Parallels
 		SoftwareDeps: []string{"chrome", "plugin_vm"},
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		Fixture:      fixture.ChromePolicyLoggedIn,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.PluginVmDataCollectionAllowed{}, pci.VerifiedFunctionalityOS),

@@ -35,12 +35,12 @@ func init() {
 		},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
-			ExtraAttr: []string{"group:mainline"},
+			ExtraAttr: []string{"group:mainline", "group:hw_agnostic"},
 			Fixture:   fixture.ChromePolicyLoggedIn,
 			Val:       browser.TypeAsh,
 		}, {
 			Name:              "lacros",
-			ExtraAttr:         []string{"group:golden_tier"},
+			ExtraAttr:         []string{"group:golden_tier", "group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"lacros"},
 			Fixture:           fixture.LacrosPolicyLoggedIn,
 			Val:               browser.TypeLacros,

@@ -41,6 +41,7 @@ func init() {
 			Name:              "tablet_mode",
 			Val:               launcher.TestCase{TabletMode: true},
 			ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
+			ExtraAttr:         []string{"group:hw_agnostic"},
 		}},
 	})
 }

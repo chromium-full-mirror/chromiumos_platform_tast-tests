@@ -30,7 +30,7 @@ func init() {
 			"hidehiko@chromium.org",
 		},
 		Data: []string{"testcert.p12"},
-		Attr: []string{"group:mainline"},
+		Attr: []string{"group:mainline", "group:hw_agnostic"},
 	})
 }
 

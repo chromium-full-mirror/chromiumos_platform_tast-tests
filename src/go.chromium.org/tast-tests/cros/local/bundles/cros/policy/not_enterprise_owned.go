@@ -24,7 +24,7 @@ func init() {
 			"vsavu@google.com", // Test author
 			"nya@chromium.org",
 		},
-		Attr: []string{"group:mainline", "group:cq-medium"},
+		Attr: []string{"group:mainline", "group:cq-medium", "group:hw_agnostic"},
 	})
 }
 

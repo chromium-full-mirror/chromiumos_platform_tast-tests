@@ -29,7 +29,7 @@ func init() {
 			"nya@chromium.org",
 			"tast-owners@google.com",
 		},
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		BugComponent: "b:1034649", // ChromeOS > Test > Harness > Tast > Libraries
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      30 * time.Second,

@@ -10,6 +10,7 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	"chromiumos/policy/chromium/policy/enterprise_management_proto"
+
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/session"
 	"go.chromium.org/tast-tests/cros/local/session/ownership"
@@ -26,7 +27,7 @@ func init() {
 			"hidehiko@chromium.org",
 		},
 		Data: []string{"testcert.p12"},
-		Attr: []string{"group:mainline"},
+		Attr: []string{"group:mainline", "group:hw_agnostic"},
 	})
 }
 

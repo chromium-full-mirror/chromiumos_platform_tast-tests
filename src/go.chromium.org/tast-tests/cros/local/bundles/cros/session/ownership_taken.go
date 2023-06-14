@@ -10,6 +10,7 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	"chromiumos/policy/chromium/policy/enterprise_management_proto"
+
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/session"
 	"go.chromium.org/tast/core/testing"
@@ -26,7 +27,7 @@ func init() {
 		// ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
 		BugComponent: "b:1207311",
 		SoftwareDeps: []string{"chrome", "tpm"},
-		Attr:         []string{"group:mainline", "group:asan"},
+		Attr:         []string{"group:mainline", "group:asan", "group:hw_agnostic"},
 	})
 }
 

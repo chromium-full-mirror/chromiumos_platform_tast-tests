@@ -42,13 +42,13 @@ func init() {
 				Name:              "tablet",
 				Fixture:           fixture.TabletVK,
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
-				ExtraAttr:         []string{"group:input-tools-upstream"},
+				ExtraAttr:         []string{"group:input-tools-upstream", "group:hw_agnostic"},
 			},
 			{
 				Name:              "a11y",
 				Fixture:           fixture.ClamshellVK,
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
-				ExtraAttr:         []string{"group:input-tools-upstream"},
+				ExtraAttr:         []string{"group:input-tools-upstream", "group:hw_agnostic"},
 			},
 			{
 				Name:              "informational",

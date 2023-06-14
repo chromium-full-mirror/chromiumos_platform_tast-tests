@@ -22,7 +22,7 @@ func init() {
 		Contacts:     []string{"nya@chromium.org", "chromeos-ui@google.com"},
 		BugComponent: "b:1034649", // ChromeOS > Test > Harness > Tast > Libraries
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		Params: []testing.Param{{
 			Val: browser.TypeAsh,
 		}, {

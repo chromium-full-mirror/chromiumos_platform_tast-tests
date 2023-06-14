@@ -14,6 +14,7 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	"chromiumos/policy/chromium/policy/enterprise_management_proto"
+
 	"go.chromium.org/tast-tests/cros/local/chrome/ash/ashproc"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/procutil"
@@ -37,7 +38,7 @@ func init() {
 		BugComponent: "b:1207311",
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"testcert.p12"},
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 	})
 }
 

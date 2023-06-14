@@ -50,7 +50,7 @@ func init() {
 					typingKeys:           "[e",
 					expectedTypingResult: "ê",
 				},
-				ExtraAttr:        []string{"group:input-tools-upstream"},
+				ExtraAttr:        []string{"group:input-tools-upstream", "group:hw_agnostic"},
 				ExtraSearchFlags: util.IMESearchFlags([]ime.InputMethod{ime.FrenchFrance}),
 			},
 			{
@@ -61,7 +61,7 @@ func init() {
 					typingKeys:           "'a",
 					expectedTypingResult: "á",
 				},
-				ExtraAttr:        []string{"group:input-tools-upstream"},
+				ExtraAttr:        []string{"group:input-tools-upstream", "group:hw_agnostic"},
 				ExtraSearchFlags: util.IMESearchFlags([]ime.InputMethod{ime.EnglishUSWithInternationalKeyboard}),
 			},
 			{
@@ -72,7 +72,7 @@ func init() {
 					typingKeys:           "''",
 					expectedTypingResult: "´",
 				},
-				ExtraAttr:        []string{"group:input-tools-upstream"},
+				ExtraAttr:        []string{"group:input-tools-upstream", "group:hw_agnostic"},
 				ExtraSearchFlags: util.IMESearchFlags([]ime.InputMethod{ime.EnglishUSWithInternationalKeyboard}),
 			},
 			{
@@ -84,7 +84,7 @@ func init() {
 					expectedTypingResult: "ê",
 				},
 				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraAttr:         []string{"group:input-tools-upstream"},
+				ExtraAttr:         []string{"group:input-tools-upstream", "group:hw_agnostic"},
 				ExtraSearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.FrenchFrance}),
 			},
 			{
@@ -96,7 +96,7 @@ func init() {
 					expectedTypingResult: "á",
 				},
 				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraAttr:         []string{"group:input-tools-upstream"},
+				ExtraAttr:         []string{"group:input-tools-upstream", "group:hw_agnostic"},
 				ExtraSearchFlags:  util.IMESearchFlags([]ime.InputMethod{ime.EnglishUSWithInternationalKeyboard}),
 			},
 			{

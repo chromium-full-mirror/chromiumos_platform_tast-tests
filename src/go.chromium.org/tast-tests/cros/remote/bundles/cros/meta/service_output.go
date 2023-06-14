@@ -21,7 +21,7 @@ func init() {
 		Desc:         "Ensure OutDir works for gRPC services",
 		Contacts:     []string{"tast-core@google.com", "nya@chromium.org"},
 		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		ServiceDeps:  []string{"tast.cros.meta.FileOutputService"},
 	})
 }

@@ -30,6 +30,7 @@ func init() {
 		},
 		Attr: []string{
 			"group:mainline",
+			"group:hw_agnostic",
 		},
 		VarDeps: []string{
 			"ui.gaiaPoolDefault",

@@ -45,7 +45,7 @@ func init() {
 			Val: chromeTestParams{
 				numTrial: 1,
 				bt:       browser.TypeAsh},
-			ExtraAttr: []string{"group:mainline"},
+			ExtraAttr: []string{"group:mainline", "group:hw_agnostic"},
 			Timeout:   chrome.LoginTimeout + 45*time.Second,
 		}, {
 			Name:              "lacros",
@@ -53,7 +53,7 @@ func init() {
 			Val: chromeTestParams{
 				numTrial: 1,
 				bt:       browser.TypeLacros},
-			ExtraAttr: []string{"group:mainline"},
+			ExtraAttr: []string{"group:mainline", "group:hw_agnostic"},
 			Timeout:   chrome.LoginTimeout + 45*time.Second,
 		}, {
 			Name: "stress",

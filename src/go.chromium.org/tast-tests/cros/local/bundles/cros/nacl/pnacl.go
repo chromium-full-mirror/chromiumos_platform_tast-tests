@@ -34,7 +34,7 @@ func init() {
 		Data:         extensionFiles,
 		SoftwareDeps: []string{"chrome", "nacl"},
 		BugComponent: "b:1258585", // ChromeOS Public Tracker > Enterprise & Edu > NaCl
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		Params: []testing.Param{{
 			Val: browser.TypeAsh,
 		},

@@ -43,6 +43,7 @@ func init() {
 			Name:              "unstable",
 			Fixture:           fixture.LoggedIn,
 			ExtraHardwareDeps: hwdep.D(pre.AppsUnstableModels),
+			ExtraAttr:         []string{"group:hw_agnostic"},
 			// b:238260020 - disable aged (>1y) unpromoted informational tests
 			// ExtraAttr:         []string{"group:mainline", "informational"},
 		}, {

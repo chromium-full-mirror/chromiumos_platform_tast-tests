@@ -13,6 +13,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/meta/tastrun"
 	"go.chromium.org/tast/core/testing"
+
 	// Register the fixtures to remote bundle.
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/meta/fixture"
 )
@@ -23,7 +24,7 @@ func init() {
 		Desc:         "Verifies that Tast can run remote fixtures",
 		Contacts:     []string{"tast-core@google.com", "oka@chromium.org"},
 		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 	})
 }
 

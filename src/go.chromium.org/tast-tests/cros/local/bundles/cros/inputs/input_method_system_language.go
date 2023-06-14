@@ -44,7 +44,7 @@ func init() {
 			{
 				Name:              "es",
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
-				ExtraAttr:         []string{"group:input-tools-upstream"},
+				ExtraAttr:         []string{"group:input-tools-upstream", "group:hw_agnostic"},
 				Val: testParameters{
 					regionCode:           "es",
 					defaultInputMethodID: ime.SpanishSpain.ID,
@@ -80,7 +80,7 @@ func init() {
 			}, {
 				Name:              "jp",
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
-				ExtraAttr:         []string{"group:input-tools-upstream"},
+				ExtraAttr:         []string{"group:input-tools-upstream", "group:hw_agnostic"},
 				Val: testParameters{
 					regionCode:           "jp",
 					defaultInputMethodID: ime.AlphanumericWithJapaneseKeyboard.ID,

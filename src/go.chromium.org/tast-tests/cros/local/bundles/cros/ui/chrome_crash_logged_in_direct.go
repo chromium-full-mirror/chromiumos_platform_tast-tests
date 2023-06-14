@@ -41,6 +41,7 @@ func init() {
 				fileType: chromecrash.MetaFile,
 			},
 			ExtraSoftwareDeps: []string{"crashpad"},
+			ExtraAttr:         []string{"group:hw_agnostic"},
 		}},
 	})
 }
