@@ -83,7 +83,6 @@ func DevModeTabKey(ctx context.Context, s *testing.State) {
 	}()
 
 	waitDUTReconnect := func(ctx context.Context) error {
-		s.Log("Waiting for the DUT to reconnect")
 		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
 		defer cancelWaitConnect()
 		if err := h.WaitConnect(waitConnectCtx); err != nil {
@@ -96,7 +95,7 @@ func DevModeTabKey(ctx context.Context, s *testing.State) {
 	// Retry if it wasn't found in the firmware log.
 	var err error
 	var mainFwScreenID firmware.FwScreenID
-	const retry = 2
+	const retry = 1
 	for i := 0; i <= retry; i++ {
 		mainFwScreenID, err = checkFwScreenType(ctx, h, logPath)
 		if err == nil {
@@ -119,16 +118,28 @@ func DevModeTabKey(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to check fw screen type: ", err)
 	}
 
-	// Disable dev_boot_usb and dev_boot_altfw to remove the associated options
-	// on the dev fw screen, and to ensure consistency in the traverse sequence.
-	s.Log("Disabling dev_boot_usb & dev_boot_altfw")
-	if err := h.DUT.Conn().CommandContext(ctx, "crossystem", "dev_boot_usb=0", "dev_boot_altfw=0").Run(); err != nil {
-		s.Fatal("Failed to disable dev_boot_usb & dev_boot_altfw: ", err)
+	// Models released after May 16th have the "boot from external disk"
+	// option always visible on the firmware menu.
+	// Set 'crossystem dev_boot_usb' to 1 and 'crossystem dev_boot_altfw'
+	// to 0, so that the menu layout becomes consistent on all machines.
+	s.Log("Enabling dev_boot_usb and disabling dev_boot_altfw")
+	if err := h.DUT.Conn().CommandContext(ctx, "crossystem", "dev_boot_usb=1", "dev_boot_altfw=0").Run(); err != nil {
+		s.Fatal("Failed to set dev_boot_usb & dev_boot_altfw in crossystem: ", err)
 	}
-	if devBootUsb, err := h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamDevBootUsb); err != nil {
-		s.Fatal("Failed to get crossystem dev_boot_usb: ", err)
-	} else if devBootUsb != "0" {
-		s.Fatal("Crossystem param dev_boot_usb was not set to 0")
+	for _, tc := range []struct {
+		param     reporters.CrossystemParam
+		expectVal string
+	}{
+		{reporters.CrossystemParamDevBootUsb, "1"},
+		{reporters.CrossystemParamDevBootAltfw, "0"},
+	} {
+		val, err := h.Reporter.CrossystemParam(ctx, tc.param)
+		if err != nil {
+			s.Fatalf("Failed to get crossystem %s: %v", tc.param, err)
+		}
+		if val != tc.expectVal {
+			s.Fatalf("Crossystem param %s was not set to %s", tc.param, tc.expectVal)
+		}
 	}
 
 	// Power cycle the DUT to clear the firmware log, so that records prior
@@ -140,8 +151,9 @@ func DevModeTabKey(ctx context.Context, s *testing.State) {
 	if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "G3"); err != nil {
 		s.Fatal("Failed to get power state at G3: ", err)
 	}
-	// Sleeping for 5 seconds ensures the DUT's power completely off.
 	s.Log("Sleeping for 5 seconds")
+	// GoBigSleepLint: Sleeping for 5 seconds ensures power-off has
+	// completely cleared the dut's firmware log.
 	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 		s.Fatal("Failed to wait for 5sec: ", err)
 	}
@@ -149,6 +161,7 @@ func DevModeTabKey(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to power on DUT: ", err)
 	}
 	s.Logf("Sleeping for %s (FirmwareScreen)", h.Config.FirmwareScreen)
+	// GoBigSleepLint: Delay to wait for the firmware screen during boot-up.
 	if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
 		s.Fatalf("Failed to sleep for %s: %v", h.Config.FirmwareScreen, err)
 	}
@@ -303,24 +316,25 @@ func checkDebugInfo(ctx context.Context, h *firmware.Helper, mainFwScreen firmwa
 
 func blindlyNavigateThruMenu(ctx context.Context, h *firmware.Helper, mainFwScreenID firmware.FwScreenID, ffIsChromebox bool) error {
 	var (
-		upKey    = "<up>"
-		downKey  = "<down>"
+		upKey    = "arrow_up"
+		downKey  = "arrow_down"
 		spaceKey = " "
 		enterKey = "<enter>"
 		escKey   = "<esc>"
 		tabKey   = "<tab>"
 	)
-	if h.Config.ModeSwitcherType == firmware.TabletDetachableSwitcher || ffIsChromebox {
-		upKey = "<uparrow>"
-		downKey = "<downarrow>"
-	}
 
 	ecKBPress := func(key string) error {
 		var err error
-		if h.Config.ModeSwitcherType == firmware.TabletDetachableSwitcher || ffIsChromebox {
-			err = h.Servo.PressUSBKey(ctx, key, servo.DurTab)
-		} else {
-			err = h.Servo.PressKey(ctx, key, servo.DurTab)
+		switch key {
+		case upKey, downKey:
+			err = h.Servo.KeypressWithDuration(ctx, servo.KeypressControl(key), servo.DurTab)
+		default:
+			if h.Config.ModeSwitcherType == firmware.TabletDetachableSwitcher || ffIsChromebox {
+				err = h.Servo.PressUSBKey(ctx, key, servo.DurTab)
+			} else {
+				err = h.Servo.PressKey(ctx, key, servo.DurTab)
+			}
 		}
 		if err != nil {
 			return errors.Wrapf(err, "failed to press %s", key)
@@ -401,7 +415,7 @@ func blindlyNavigateThruMenu(ctx context.Context, h *firmware.Helper, mainFwScre
 			{1, tabKey, false},
 			// Send tab key on the Advanced Options screen to display debug info.
 			{2, escKey, false},
-			{2, downKey, true},
+			{3, downKey, true},
 			{1, tabKey, false},
 			// Send tab key on the Firmware Log screen to display debug info.
 			{1, escKey, false},
