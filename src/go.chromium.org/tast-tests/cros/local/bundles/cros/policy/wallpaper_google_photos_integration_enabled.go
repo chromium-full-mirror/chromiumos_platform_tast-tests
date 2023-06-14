@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
@@ -208,7 +209,9 @@ func WallpaperGooglePhotosIntegrationEnabled(ctx context.Context, s *testing.Sta
 
 			foundAnnotations, err := allAnnotationsFound(ctx, cr)
 			if err != nil {
-				s.Fatal("Failed to look for annotations: ", err)
+				// Log the error but proceed so the annotation check conditions are hit.
+				// This is not an error condition for the disabled test.
+				s.Log("Failed while looking for annotations: ", err)
 			}
 
 			// Stop logging.
@@ -238,24 +241,27 @@ func WallpaperGooglePhotosIntegrationEnabled(ctx context.Context, s *testing.Sta
 }
 
 func allAnnotationsFound(ctx context.Context, cr *chrome.Chrome) (foundAnnotations map[string]bool, err error) {
-	wallpaperGooglePhotosEnabledAnnotationIDFound, err := annotations.CheckLogs(ctx, cr, wallpaperGooglePhotosEnabledAnnotationID)
-	if err != nil {
-		return nil, err
-	}
+	annotationFoundMap := map[string]bool{
+		wallpaperGooglePhotosEnabledAnnotationID: false,
+		wallpaperGooglePhotosAlbumsAnnotationID:  false,
+		wallpaperGooglePhotosPhotosAnnotationID:  false}
+	err = testing.Poll(ctx, func(ctx context.Context) error {
+		allFound := true
+		for annotationID, alreadyFound := range annotationFoundMap {
+			if !alreadyFound {
+				annotationFoundMap[annotationID], err = annotations.CheckLogs(ctx, cr, annotationID)
+				if err != nil {
+					return errors.Wrap(err, "failed reading logs")
+				}
+			}
+			allFound = allFound && annotationFoundMap[annotationID]
+		}
 
-	wallpaperGooglePhotosAlbumsAnnotationIDFound, err := annotations.CheckLogs(ctx, cr, wallpaperGooglePhotosAlbumsAnnotationID)
-	if err != nil {
-		return nil, err
-	}
+		if allFound {
+			return nil
+		}
+		return errors.New("All annotations have not been found yet")
+	}, &testing.PollOptions{Timeout: 5 * time.Second, Interval: 1 * time.Second})
 
-	wallpaperGooglePhotosPhotosAnnotationIDFound, err := annotations.CheckLogs(ctx, cr, wallpaperGooglePhotosPhotosAnnotationID)
-	if err != nil {
-		return nil, err
-	}
-
-	return map[string]bool{
-			wallpaperGooglePhotosEnabledAnnotationID: wallpaperGooglePhotosEnabledAnnotationIDFound,
-			wallpaperGooglePhotosAlbumsAnnotationID:  wallpaperGooglePhotosAlbumsAnnotationIDFound,
-			wallpaperGooglePhotosPhotosAnnotationID:  wallpaperGooglePhotosPhotosAnnotationIDFound},
-		nil
+	return annotationFoundMap, err
 }
