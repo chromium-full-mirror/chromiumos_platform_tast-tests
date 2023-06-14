@@ -24,6 +24,7 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	xdr "chromiumos/xdr/secagentd"
+
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -35,6 +36,7 @@ const (
 	statSize = 52
 	// This corresponds to the number of distinct BPFs in use by secagentd and
 	// needs to be kept in sync manually.
+	// TODO(b:287180930): Increase to 3 after fieldtrial config for network lands.
 	expSecagentdBpfMaps = 2
 )
 
@@ -228,7 +230,7 @@ func WaitForBpfMaps(ctx context.Context, pid uint64) error {
 		if err != nil {
 			return testing.PollBreak(errors.Wrap(err, "failed to read proc map"))
 		}
-		if strings.Count(string(buff), "bpf-map") != expSecagentdBpfMaps {
+		if strings.Count(string(buff), "bpf-map") < expSecagentdBpfMaps {
 			return errors.New("Did not find the expected number of BPF maps")
 		}
 		return nil

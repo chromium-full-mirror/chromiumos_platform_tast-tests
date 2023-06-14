@@ -12,6 +12,7 @@ import (
 
 	rep "chromiumos/reporting"
 	xdr "chromiumos/xdr/secagentd"
+
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/secagentd/secagentdcommon"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/secagentd/secagentddbusmonitor"
@@ -157,7 +158,7 @@ func testOneProcessEventsParams(ctx context.Context, s *testing.State, param pro
 	}
 
 	if err := secagentdprocfsscraper.WaitForBpfMaps(ctx, agentPid); err != nil {
-		s.Fatal("Failed to verify secagentd is ready to test")
+		s.Fatal("Failed to verify secagentd is ready to test: ", err)
 	}
 
 	// Launch a long running process and scrape procfs.
