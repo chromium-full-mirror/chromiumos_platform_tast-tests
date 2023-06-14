@@ -11,6 +11,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/common/usbutils"
+	"go.chromium.org/tast-tests/cros/local/cswitch"
 	"go.chromium.org/tast-tests/cros/remote/powercontrol"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
@@ -28,7 +29,7 @@ func init() {
 		BugComponent: "b:157291",
 		SoftwareDeps: []string{"chrome", "reboot"},
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
-		VarDeps:      []string{"servo"},
+		VarDeps:      []string{"servo", "intel.USBDeviceHotplugDuringSleep.cSwitchPort", "intel.USBDeviceHotplugDuringSleep.domainIP"},
 		HardwareDeps: hwdep.D(hwdep.X86()),
 		Timeout:      5 * time.Minute,
 	})
@@ -53,6 +54,12 @@ func USBDeviceHotplugDuringSleep(ctx context.Context, s *testing.State) {
 			s.Fatalf("Failed to execute %s command: %v", cmd, err)
 		}
 	}
+
+	const cSwitchOFF = "0"
+	// cswitch port ID.
+	cSwitchON := s.RequiredVar("intel.USBDeviceHotplugDuringSleep.cSwitchPort")
+	// IP address of Tqc server hosting device.
+	domainIP := s.RequiredVar("intel.USBDeviceHotplugDuringSleep.domainIP")
 
 	const (
 		enableIdleSuspendCommand  = "echo 0 > /var/lib/power_manager/disable_idle_suspend"
@@ -87,19 +94,19 @@ func USBDeviceHotplugDuringSleep(ctx context.Context, s *testing.State) {
 	cmdRun(enableIdleSuspendCommand)
 	cmdRun(restartPowerdCommand)
 
-	initialMuxState, err := pxy.Servo().GetUSBMuxState(ctx)
-	if err != nil {
-		s.Fatal("Failed to get USB Mux state info: ", err)
-	}
-	defer pxy.Servo().SetUSBMuxState(cleanupCtx, initialMuxState)
-
 	// Perform initial Chrome login.
 	if err := powercontrol.ChromeOSLogin(ctx, dut, s.RPCHint()); err != nil {
 		s.Fatal("Failed to log in to Chrome: ", err)
 	}
 
-	if err := pxy.Servo().SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
-		s.Fatal("Failed to plug USB storage device to DUT: ", err)
+	// Create C-Switch session that performs hot plug-unplug pendrive.
+	sessionID, err := cswitch.CreateSession(ctx, domainIP)
+	if err != nil {
+		s.Fatal("Failed to create session: ", err)
+	}
+
+	if err := cswitch.ToggleCSwitchPort(ctx, sessionID, cSwitchON, domainIP); err != nil {
+		s.Fatal("Failed to enable c-switch port: ", err)
 	}
 
 	// Check for USB storage device detection.
@@ -107,8 +114,12 @@ func USBDeviceHotplugDuringSleep(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to detect USB storage device: ", err)
 	}
 
-	if err := pxy.Servo().SetUSBMuxState(ctx, servo.USBMuxHost); err != nil {
-		s.Fatal("Failed to unplug USB storage device from DUT: ", err)
+	if err := cswitch.ToggleCSwitchPort(ctx, sessionID, cSwitchOFF, domainIP); err != nil {
+		s.Fatal("Failed to disable c-switch port: ", err)
+	}
+
+	if err := waitForUSBStorageDetection(ctx, dut); err == nil {
+		s.Fatal("Failed to unplug USB storage device after suspend: ", err)
 	}
 
 	slpOpSetPre, pkgOpSetPre, err := powercontrol.SlpAndC10PackageValues(ctx, dut)
@@ -120,8 +131,8 @@ func USBDeviceHotplugDuringSleep(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to perform suspend and wake DUT: ", err)
 	}
 
-	if err := pxy.Servo().SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
-		s.Fatal("Failed to hotplug USB storage device to DUT during suspend: ", err)
+	if err := cswitch.ToggleCSwitchPort(ctx, sessionID, cSwitchON, domainIP); err != nil {
+		s.Fatal("Failed to enable c-switch port: ", err)
 	}
 
 	if err := powercontrol.PowerOntoDUT(ctx, pxy, dut); err != nil {
