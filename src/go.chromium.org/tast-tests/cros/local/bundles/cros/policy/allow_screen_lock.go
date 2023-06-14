@@ -30,10 +30,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Behavior of AllowScreenLock policy, checking whether the screen can be locked after setting the policy",
 		Contacts: []string{
-			"cros-engprod-muc@google.com",
-			"gabormagda@google.com", // Test author
+			"cros-lurs@google.com",
+			"ultrotter@google.com",
+			"antrim@google.com",
+			"emaxx@google.com",
 		},
-		BugComponent: "b:1263917",
+		BugComponent: "b:1277523",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier"},
 		Fixture:      fixture.ChromePolicyLoggedIn,

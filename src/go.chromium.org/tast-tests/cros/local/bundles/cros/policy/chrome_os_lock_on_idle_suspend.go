@@ -9,6 +9,7 @@ import (
 	"time"
 
 	pmpb "chromiumos/system_api/power_manager_proto"
+
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
@@ -34,11 +35,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Behavior of ChromeOsLockOnIdleSuspend policy, checking the correspoding toggle button states (restriction and checked) and the lock screen after the lid is closed",
 		Contacts: []string{
-			"cros-engprod-muc@google.com",
-			"gabormagda@google.com", // Test author
-			"artyomchen@google.com", // Test author
+			"cros-lurs@google.com",
+			"ultrotter@google.com",
+			"antrim@google.com",
+			"emaxx@google.com",
 		},
-		BugComponent: "b:1263917",
+		BugComponent: "b:1277523",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier"},
 		Fixture:      fixture.ChromePolicyLoggedIn,
