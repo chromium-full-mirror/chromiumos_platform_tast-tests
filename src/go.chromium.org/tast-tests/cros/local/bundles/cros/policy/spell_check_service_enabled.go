@@ -32,11 +32,10 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Behavior of SpellCheckServiceEnabled policy",
 		Contacts: []string{
-			"cros-engprod-muc@google.com",
-			"phweiss@google.com", // Test author
-			"pmarko@google.com",  // Policy owner
+			"chrome-language@google.com",
+			"megjablon@google.com",
 		},
-		BugComponent: "b:1263917",
+		BugComponent: "crbug:UI>Browser>Language>Spellcheck",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier"},
 		Params: []testing.Param{{
