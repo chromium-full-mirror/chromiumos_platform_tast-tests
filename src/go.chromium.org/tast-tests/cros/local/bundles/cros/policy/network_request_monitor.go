@@ -18,14 +18,12 @@ import (
 	"go.chromium.org/tast-tests/cros/local/annotations"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/calendarintegration"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/defaultsearchprovider"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/extensioninstall"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/passwordleakdetection"
 	policyquickanswers "go.chromium.org/tast-tests/cros/local/bundles/cros/policy/quickanswers"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/searchsuggestion"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/spellcheck"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/useravatar"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/userfeedback"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/webrtclogupload"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
@@ -79,10 +77,6 @@ func init() {
 			pci.SearchFlag(&policy.SpellCheckServiceEnabled{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.UserAvatarCustomizationSelectorsEnabled{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.UserFeedbackAllowed{}, pci.VerifiedFunctionalityUI),
-			pci.SearchFlag(&policy.WebRtcEventLogCollectionAllowed{}, pci.VerifiedValue),
-			pci.SearchFlag(&policy.WebRtcTextLogCollectionAllowed{}, pci.VerifiedValue),
-			pci.SearchFlag(&policy.ExtensionInstallBlocklist{}, pci.VerifiedFunctionalityUI),
-			pci.SearchFlag(&policy.ExtensionInstallAllowlist{}, pci.VerifiedFunctionalityUI),
 		},
 		Timeout: 5 * time.Minute,
 	})
@@ -100,10 +94,6 @@ func getPolicyList() []policy.Policy {
 		&policy.SpellCheckServiceEnabled{Val: false},
 		&policy.UserAvatarCustomizationSelectorsEnabled{Val: false},
 		&policy.UserFeedbackAllowed{Val: false},
-		&policy.WebRtcEventLogCollectionAllowed{Val: false},
-		&policy.WebRtcTextLogCollectionAllowed{Val: false},
-		&policy.ExtensionInstallAllowlist{Val: []string{chrome.TestExtensionID}},
-		&policy.ExtensionInstallBlocklist{Val: []string{"*"}},
 	}
 }
 
@@ -287,34 +277,6 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 		}
 		hashCodes = append(hashCodes, userfeedback.HelpContentProviderHashCode)
 		hashCodes = append(hashCodes, userfeedback.ChromeFeedbackReportAppHashCode)
-	})
-
-	s.Run(ctx, "webrtc_text_event_log_collection", func(ctx context.Context, s *testing.State) {
-		bondCreds := s.RequiredVar("ui.bond_credentials")
-
-		// The trigger will create upload for both text and event logs.
-		if err := webrtclogupload.TriggerWebRTCLogUploads(ctx, cr, br, tconn, bondCreds); err != nil {
-			s.Fatal("Failed to launch meet client: ", err)
-		}
-		hashCodes = append(hashCodes, webrtclogupload.TextLogCollectionHashID)
-		hashCodes = append(hashCodes, webrtclogupload.EventLogCollectionHashID)
-	})
-
-	s.Run(ctx, "extension_install", func(ctx context.Context, s *testing.State) {
-		extensionInstallParam := extensioninstall.TestCase{
-			Name:                 "disabled",
-			ShouldFindAnnotation: false,
-			Policies: []policy.Policy{
-				// Test API extension should be specified in allow list, otherwise it would get disabled automatically.
-				&policy.ExtensionInstallAllowlist{Val: []string{chrome.TestExtensionID}},
-				&policy.ExtensionInstallBlocklist{Val: []string{"*"}},
-			},
-			AllowInstall: false,
-		}
-		if err := extensioninstall.TriggerExtensionInstall(ctx, extensionInstallParam, tconn, br); err != nil {
-			s.Fatal("Failed to trigger extension install: ", err)
-		}
-		hashCodes = append(hashCodes, extensioninstall.GetAnnotationsForUmbrellaTest()...)
 	})
 
 	// Stop logging and verify network traffic annotations associated with the
