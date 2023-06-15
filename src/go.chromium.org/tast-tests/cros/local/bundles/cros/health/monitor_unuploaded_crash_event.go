@@ -13,6 +13,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"time"
 
 	"golang.org/x/sys/unix"
 
@@ -38,6 +39,12 @@ func init() {
 		Attr:         []string{"group:criticalstaging", "group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "diagnostics"},
 		Fixture:      "crosHealthdRunning",
+		// crash_sender (invoked by cros_healthd) needs more time to run
+		// because crash_sender would hold off for 30 seconds if the
+		// crash meta file is too new. See the comments above
+		// |SenderBase::Options::hold_off_time| in
+		// platform2/crash-reporter/crash_sender_base.h.
+		Timeout: 4 * time.Minute,
 	})
 }
 
