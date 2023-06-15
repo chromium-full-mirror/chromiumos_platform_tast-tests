@@ -984,7 +984,13 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 
 	const longUITimeout = time.Minute
 	// Check and grant permissions.
-	if err := prompts.ClearPotentialPrompts(tconn, longUITimeout, prompts.ShowNotificationsPrompt, prompts.AllowAVPermissionPrompt)(ctx); err != nil {
+	if err := prompts.ClearPotentialPrompts(
+		tconn,
+		longUITimeout,
+		prompts.ShowNotificationsPrompt,
+		prompts.AllowAVPermissionPrompt,
+		prompts.AllowMicrophoneAndCameraPermissionPrompt,
+	)(ctx); err != nil {
 		s.Fatal("Failed to grant permissions: ", err)
 	}
 
