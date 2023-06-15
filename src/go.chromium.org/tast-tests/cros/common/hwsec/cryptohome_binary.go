@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	uda "chromiumos/system_api/user_data_auth_proto"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/shutil"
 )
@@ -295,6 +296,12 @@ func (c *cryptohomeBinary) addPinAuthFactor(ctx context.Context, authSessionID, 
 	return c.call(ctx, args...)
 }
 
+// addFingerprintAuthFactor calls "cryptohome --action=add_auth_factor --fingerprint".
+func (c *cryptohomeBinary) addFingerprintAuthFactor(ctx context.Context, authSessionID, label string) ([]byte, error) {
+	args := []string{"--action=add_auth_factor", "--auth_session_id=" + authSessionID, "--key_label=" + label, "--fingerprint"}
+	return c.call(ctx, args...)
+}
+
 // addRecoveryAuthFactor calls "cryptohome --action=add_auth_factor --recovery_mediator_pub_key=mediatorPubKeyHex".
 func (c *cryptohomeBinary) addRecoveryAuthFactor(ctx context.Context, authSessionID, label, mediatorPubKeyHex, userGaiaID, deviceUserID string) ([]byte, error) {
 	args := []string{"--action=add_auth_factor",
@@ -402,5 +409,11 @@ func (c *cryptohomeBinary) fetchRecoveryRequest(ctx context.Context, authSession
 // listAuthFactors returns auth factors by calling "cryptohome --action=list_auth_factors".
 func (c *cryptohomeBinary) listAuthFactors(ctx context.Context, username string) ([]byte, error) {
 	args := []string{"--output-format=binary-protobuf", "--action=list_auth_factors", "--user=" + username}
+	return c.call(ctx, args...)
+}
+
+// prepareThenAddFpAuthFactor returns the responses by calling "cryptohome --action=prepare_and_add_auth_factor --fingerprint".
+func (c *cryptohomeBinary) prepareThenAddFpAuthFactor(ctx context.Context, authSessionID, label string) ([]byte, error) {
+	args := []string{"--action=prepare_and_add_auth_factor", "--fingerprint", "--auth_session_id=" + authSessionID, "--key_label=" + label}
 	return c.call(ctx, args...)
 }

@@ -963,9 +963,15 @@ func (u *CryptohomeClient) AddAuthFactor(ctx context.Context, authSessionID, lab
 	return err
 }
 
-// AddPinAuthFactor creates an auth factor for the user with given password.
+// AddPinAuthFactor creates a pin auth factor for the user.
 func (u *CryptohomeClient) AddPinAuthFactor(ctx context.Context, authSessionID, label, pin string) error {
 	_, err := u.binary.addPinAuthFactor(ctx, authSessionID, label, pin)
+	return err
+}
+
+// AddFingerprintAuthFactor creates a fingerprint auth factor for the user.
+func (u *CryptohomeClient) AddFingerprintAuthFactor(ctx context.Context, authSessionID, label string) error {
+	_, err := u.binary.addFingerprintAuthFactor(ctx, authSessionID, label)
 	return err
 }
 
@@ -1110,6 +1116,15 @@ func (u *CryptohomeClient) ListAuthFactors(ctx context.Context, user string) (*u
 	}
 
 	return reply, nil
+}
+
+// PrepareThenAddFpAuthFactor prepares and adds an fingerprint auth factor.
+// Since the CLI output contains all PrepareAuthFactor reply, progress signal, and AddAuthFactor
+// reply, just return the execution error and log the output.
+func (u *CryptohomeClient) PrepareThenAddFpAuthFactor(ctx context.Context, authSessionID, label string) error {
+	binaryMsg, err := u.binary.prepareThenAddFpAuthFactor(ctx, authSessionID, label)
+	testing.ContextLogf(ctx, "prepareAddFpAuthFactor returns with %q", binaryMsg)
+	return err
 }
 
 // WithAuthSession will execute a given block of code within an active
