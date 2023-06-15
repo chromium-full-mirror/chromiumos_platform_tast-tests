@@ -89,6 +89,7 @@ func getPolicyList() []policy.Policy {
 	return []policy.Policy{
 		&policy.CalendarIntegrationEnabled{Val: false},
 		&policy.DefaultSearchProviderEnabled{Val: false},
+		&policy.NearbyShareAllowed{Val: false},
 		&policy.PasswordLeakDetectionEnabled{Val: false},
 		&policy.QuickAnswersDefinitionEnabled{Val: false},
 		&policy.QuickAnswersUnitConversionEnabled{Val: false},
