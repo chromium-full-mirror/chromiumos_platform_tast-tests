@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
@@ -19,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
 
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -281,15 +283,33 @@ func BootMode(ctx context.Context, s *testing.State) {
 			s.Log("USB path: ", usbdev)
 			if tc.checkToNoGoodScreen {
 				opts = append(opts, firmware.CheckToNoGoodScreen)
-				// An invalid USB is required to check for the NOGOOD screen.
-				if err := h.CorruptUSBKey(ctx, usbdev); err != nil {
-					s.Fatal("Failed to corrupt the USB: ", err)
-				}
-				defer func(ctx context.Context) {
-					if err := h.RestoreUSBKey(ctx); err != nil {
-						s.Fatal("Failed to restore the USB: ", err)
+				// ChromeOS kernel is at /dev/sdx2.
+				kernelPart := usbdev + "2"
+				err := testing.Poll(ctx, func(ctx context.Context) error {
+					_, stderr, err := h.ServoProxy.SeparatedOutputCommand(ctx, true, "fdisk", "-l", kernelPart)
+					if err != nil {
+						return errors.Errorf("validating usb kernel at %s: %v, got stderr: %q", kernelPart, err, stderr)
 					}
-				}(ctxCleanUp)
+					return nil
+				}, &testing.PollOptions{Timeout: 5 * time.Second, Interval: 1 * time.Second})
+
+				switch err.(type) {
+				case nil:
+					// An invalid USB is required to check for the NOGOOD screen.
+					if err := h.CorruptUSBKey(ctx, usbdev); err != nil {
+						s.Fatal("Failed to corrupt the USB: ", err)
+					}
+					defer func(ctx context.Context) {
+						if err := h.RestoreUSBKey(ctx); err != nil {
+							s.Fatal("Failed to restore the USB: ", err)
+						}
+					}(ctxCleanUp)
+				default:
+					if !strings.Contains(err.Error(), "No such file or directory") {
+						s.Fatal("Failed to get fdisk output: ", err)
+					}
+					s.Logf("Kernel part %s does not exist, usb device already invalid", kernelPart)
+				}
 			}
 		}
 		s.Logf("Transitioning to %s mode with options %+v", tc.bootToMode, opts)

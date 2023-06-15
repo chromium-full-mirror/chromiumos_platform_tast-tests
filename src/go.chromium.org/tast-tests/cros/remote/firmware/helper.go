@@ -755,7 +755,7 @@ func (h *Helper) RestoreUSBKey(ctx context.Context) (retErr error) {
 	stdin := strings.NewReader("CHROMEOS")
 
 	if err := h.ServoProxy.InputCommand(ctx, true, stdin, "dd", fmt.Sprintf("of=%s", kernelPart), "oflag=sync", "conv=notrunc,nocreat"); err != nil {
-		return errors.Wrap(err, "failed to corrupt kernel magic")
+		return errors.Wrap(err, "failed to restore kernel magic")
 	}
 	return nil
 }
@@ -1353,12 +1353,17 @@ func (h *Helper) CheckUSBOnServoHost(ctx context.Context) (string, error) {
 	if usbdev == "" {
 		return "", errors.New("no USB key detected")
 	}
-	// Document usb model and serial numbers for debugging purposes,
-	modelName, serialNumber, err := h.getUSBModelAndSerial(ctx, usbdev)
-	if err != nil {
-		testing.ContextLog(ctx, "Failed to get info about usb: ", err)
-	} else {
+	// Document usb model and serial numbers for debugging purposes.
+	var modelName, serialNumber string
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		var errInPoll error
+		if modelName, serialNumber, errInPoll = h.getUSBModelAndSerial(ctx, usbdev); errInPoll != nil {
+			return errInPoll
+		}
 		testing.ContextLogf(ctx, "Got usb model: %s, serial number: %s", modelName, serialNumber)
+		return nil
+	}, &testing.PollOptions{Timeout: 5 * time.Second, Interval: 1 * time.Second}); err != nil {
+		testing.ContextLog(ctx, "Failed to get info about usb: ", err)
 	}
 	/*
 		Some USBs would drop connection after a short period of time.
