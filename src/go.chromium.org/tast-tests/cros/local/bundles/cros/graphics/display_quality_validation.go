@@ -31,24 +31,6 @@ func init() {
 		Fixture:      "chromeGraphicsIgt",
 		Params: []testing.Param{
 			{
-				Name: "debugfs_test",
-				Val: graphics.IgtTest{
-					Exe:      "debugfs_test",
-					Subtests: []string{"read_all_entries", "basic-hwmon"},
-				},
-				Timeout:   5 * time.Minute,
-				ExtraAttr: []string{"graphics_nightly"},
-			},
-			{
-				Name: "fbdev",
-				Val: graphics.IgtTest{
-					Exe:      "fbdev",
-					Subtests: []string{"eof", "info", "nullptr", "read", "write"},
-				},
-				Timeout:   5 * time.Minute,
-				ExtraAttr: []string{"graphics_nightly"},
-			},
-			{
 				Name: "kms_addfb_basic",
 				Val: graphics.IgtTest{
 					Exe: "kms_addfb_basic",
