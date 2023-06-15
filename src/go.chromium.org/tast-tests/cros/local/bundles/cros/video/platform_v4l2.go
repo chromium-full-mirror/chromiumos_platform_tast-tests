@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/shutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 // v4l2SummaryRegExp is the regexp to find the summary result from the binary log.
@@ -31,6 +32,9 @@ func init() {
 		},
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		Attr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+		// TODO(b/280450423): revisit this issue after Asurada kernel uprev
+		// from current kernel 5.4
+		HardwareDeps: hwdep.D(hwdep.SkipOnModel("hayato", "spherion")),
 		SoftwareDeps: []string{"v4l2_codec"},
 		Timeout:      2 * time.Minute,
 		Fixture:      "gpuWatchHangs",
