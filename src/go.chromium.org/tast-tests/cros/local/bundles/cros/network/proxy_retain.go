@@ -45,7 +45,7 @@ func init() {
 			"chadduffin@chromium.org",
 		},
 		BugComponent: "b:1131775", // ChromeOS > Software > System Services > Connectivity
-		Attr:         []string{"group:network", "network_e2e_unstable"},
+		Attr:         []string{"group:network", "network_e2e"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"ui.signinProfileTestExtensionManifestKey"},
 		Fixture:      "shillReset",

@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -34,13 +35,15 @@ func init() {
 		},
 		BugComponent: "b:1131775", // ChromeOS > Software > System Services > Connectivity
 		// TODO(b/275127708): Move this test to network suite.
-		Attr: []string{"group:wificell", "wificell_e2e_unstable"},
+		Attr: []string{"group:wificell", "wificell_e2e"},
 		ServiceDeps: []string{
 			"tast.cros.browser.ChromeService",
 			"tast.cros.network.ProxySettingService",
 			"tast.cros.ui.ChromeUIService",
 			wificell.ShillServiceName,
 		},
+		// TODO (b/284498579): Remove hwdep once issue is resolved.
+		HardwareDeps: hwdep.D(hwdep.SkipOnModel("bruce", "sona", "syndra")),
 		SoftwareDeps: []string{"chrome"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		Timeout:      10 * time.Minute,
