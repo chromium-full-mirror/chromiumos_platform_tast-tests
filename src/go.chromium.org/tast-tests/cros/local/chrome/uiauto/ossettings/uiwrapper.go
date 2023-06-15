@@ -74,6 +74,11 @@ func (s *OSSettings) WaitUntilGone(finder *nodewith.Finder) uiauto.Action {
 	return s.ui.WaitUntilGone(finder.FinalAncestor(WindowFinder))
 }
 
+// EnsureGoneFor calls ui.EnsureGoneFor scoping the finder to the Settings app.
+func (s *OSSettings) EnsureGoneFor(finder *nodewith.Finder, duration time.Duration) uiauto.Action {
+	return s.ui.EnsureGoneFor(finder.FinalAncestor(WindowFinder), duration)
+}
+
 // LeftClick calls ui.LeftClick scoping the finder to the Settings app.
 func (s *OSSettings) LeftClick(finder *nodewith.Finder) uiauto.Action {
 	return s.ui.LeftClick(finder.FinalAncestor(WindowFinder))

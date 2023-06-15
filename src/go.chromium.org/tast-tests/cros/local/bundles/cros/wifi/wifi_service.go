@@ -19,6 +19,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/dropdown"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -174,26 +175,25 @@ func (s *Service) KnownNetworksControls(ctx context.Context, req *wifi.KnownNetw
 	defer s.dumpUITreeWithScreenshotOnError(ctx, func() bool { return retErr != nil }, "known_networks_controls")
 
 	for _, ssid := range req.Ssids {
-		settingsNodeFinder := nodewith.Ancestor(ossettings.WindowFinder)
-		networkItem := settingsNodeFinder.Name(ssid).Role(role.Link)
+		networkItem := nodewith.Name(ssid).Role(role.Link)
 
 		switch req.Control {
 		case wifi.KnownNetworksControlsRequest_WaitUntilExist:
-			if err := res.ui.WaitUntilExists(networkItem)(ctx); err != nil {
+			if err := settings.WaitUntilExists(networkItem)(ctx); err != nil {
 				return &emptypb.Empty{}, err
 			}
 		case wifi.KnownNetworksControlsRequest_WaitUntilGone:
 			if err := uiauto.Combine("ensure Wifi finder gone",
-				res.ui.WaitUntilGone(networkItem),
-				res.ui.EnsureGoneFor(networkItem, 5*time.Second),
+				settings.WaitUntilGone(networkItem),
+				settings.EnsureGoneFor(networkItem, 5*time.Second),
 			)(ctx); err != nil {
 				return &emptypb.Empty{}, err
 			}
 		case wifi.KnownNetworksControlsRequest_Forget:
 			if err := uiauto.Combine(fmt.Sprintf("forget network %q", ssid),
-				res.ui.LeftClick(settingsNodeFinder.Name("More actions for "+ssid).Role(role.Button)),
-				res.ui.LeftClick(settingsNodeFinder.Name("Forget").Role(role.MenuItem)),
-				res.ui.WaitUntilGone(networkItem),
+				settings.LeftClick(nodewith.Name("More actions for "+ssid).Role(role.Button)),
+				settings.LeftClick(nodewith.Name("Forget").Role(role.MenuItem)),
+				settings.WaitUntilGone(networkItem),
 			)(ctx); err != nil {
 				return &emptypb.Empty{}, err
 			}
@@ -202,9 +202,9 @@ func (s *Service) KnownNetworksControls(ctx context.Context, req *wifi.KnownNetw
 			}
 		case wifi.KnownNetworksControlsRequest_Disconnect:
 			if err := uiauto.Combine(fmt.Sprintf("disconnect network %q", req.Ssids),
-				res.ui.LeftClick(networkItem),
-				res.ui.LeftClick(settingsNodeFinder.Name("Disconnect").Role(role.Button)),
-				res.ui.WaitUntilExists(settingsNodeFinder.Name("Not Connected").Role(role.StaticText)),
+				settings.LeftClick(networkItem),
+				settings.LeftClick(nodewith.Name("Disconnect").Role(role.Button)),
+				settings.WaitUntilExists(nodewith.Name("Not Connected").Role(role.StaticText)),
 			)(ctx); err != nil {
 				return &emptypb.Empty{}, err
 			}
@@ -215,12 +215,13 @@ func (s *Service) KnownNetworksControls(ctx context.Context, req *wifi.KnownNetw
 			}
 		case wifi.KnownNetworksControlsRequest_Connect:
 			if err := uiauto.Combine("connect to known network",
-				res.ui.LeftClick(networkItem),
-				res.ui.LeftClick(settingsNodeFinder.Name("Connect").Role(role.Button)),
-				res.ui.WaitUntilExists(settingsNodeFinder.NameStartingWith("Connected").Role(role.StaticText)),
+				settings.LeftClick(networkItem),
+				settings.LeftClick(nodewith.Name("Connect").Role(role.Button)),
+				waitUntilConnected(res.tconn, settings),
 			)(ctx); err != nil {
 				return &emptypb.Empty{}, err
 			}
+
 			// The connect control clicks on the network and navigate to another page.
 			// Need to navigate back to "Known Networks" for the next iteration.
 			if err := settings.NavigateToPageURL(ctx, res.cr, pageShortURL, condition); err != nil {
@@ -233,8 +234,8 @@ func (s *Service) KnownNetworksControls(ctx context.Context, req *wifi.KnownNetw
 			r := regexp.MustCompile(`(You are sharing this network with other users of this device|This network is shared with you)`)
 
 			if err := uiauto.Combine("check network is shown as shared",
-				res.ui.LeftClick(networkItem),
-				res.ui.WaitUntilExists(settingsNodeFinder.NameRegex(r).Role(role.StaticText)),
+				settings.LeftClick(networkItem),
+				settings.WaitUntilExists(nodewith.NameRegex(r).Role(role.StaticText)),
 			)(ctx); err != nil {
 				return &emptypb.Empty{}, err
 			}
@@ -336,4 +337,30 @@ func setTextField(ui *uiauto.Context, kb *input.KeyboardEventWriter, textField *
 		kb.AccelAction("backspace"),
 		kb.TypeAction(text),
 	)
+}
+
+func waitUntilConnected(tconn *chrome.TestConn, settings *ossettings.OSSettings) uiauto.Action {
+	return func(ctx context.Context) error {
+		return testing.Poll(ctx, func(ctx context.Context) error {
+			notifications, err := ash.Notifications(ctx, tconn)
+			if err != nil {
+				return testing.PollBreak(errors.Wrap(err, "failed to get all visible notifications"))
+			}
+
+			for _, notification := range notifications {
+				titleMatched := ash.WaitTitle("Network connection error")(notification)
+				if titleMatched {
+					return testing.PollBreak(errors.New("failed to wait until network is connected: connection error"))
+				}
+			}
+
+			if found, err := settings.IsNodeFound(ctx, nodewith.NameStartingWith("Connected").Role(role.StaticText)); err != nil {
+				return testing.PollBreak(errors.Wrap(err, "failed to check if network is not connected"))
+			} else if !found {
+				return errors.New("network is not connected")
+			}
+
+			return nil
+		}, &testing.PollOptions{Timeout: 15 * time.Second, Interval: 300 * time.Millisecond})
+	}
 }
