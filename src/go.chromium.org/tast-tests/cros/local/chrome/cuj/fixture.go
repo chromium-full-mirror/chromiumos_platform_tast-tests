@@ -170,7 +170,7 @@ func init() {
 			"cros-sw-perf@google.com",
 		},
 		Impl:            &prepareCUJFixture{chargeBattery: true},
-		PreTestTimeout:  CPUIdleTimeout + BatteryChargingTimeout + 5*time.Second,
+		PreTestTimeout:  CPUStablizationTimeout + BatteryChargingTimeout + 5*time.Second,
 		PostTestTimeout: postTestTimeout,
 		Parent:          "gpuWatchHangs",
 	})
@@ -185,7 +185,7 @@ func init() {
 		SetUpTimeout:    chrome.EnrollmentAndLoginTimeout + chrome.GAIALoginTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
+		PreTestTimeout:  CPUStablizationTimeout + BatteryChargingTimeout + 5*time.Second,
 		PostTestTimeout: postTestTimeout,
 		Parent:          "gpuWatchHangsEnrolled",
 	})
