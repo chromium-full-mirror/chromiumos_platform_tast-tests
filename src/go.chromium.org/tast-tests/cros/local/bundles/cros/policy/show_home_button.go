@@ -30,10 +30,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Test the behavior of ShowHomeButton policy: check if a home button is shown based on the value of the policy",
 		Contacts: []string{
-			"cros-engprod-muc@google.com",
+			"chrome-desktop-ui-sea@google.com",
+			"dpenning@google.com",
 			"alexanderhartl@google.com", // Test author
 		},
-		BugComponent: "b:1263917",
+		BugComponent: "crbug:UI>Browser>Core",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier"},
 		Params: []testing.Param{{
