@@ -125,7 +125,7 @@ func MappingDisplayFixtureToCamera(ctx context.Context, s *testing.State, displa
 		ControlFixture(ctx, uid, "off")
 	}
 
-	// In order to prevent switch fixture function not in time.
+	// GoBigSleepLint: In order to prevent switch fixture function not in time.
 	testing.Sleep(ctx, 3000)
 
 	// Init all webcam pixel color.
@@ -149,7 +149,7 @@ func MappingDisplayFixtureToCamera(ctx context.Context, s *testing.State, displa
 		// Open displayFixture one by one.
 		ControlFixture(ctx, uid, "on")
 
-		// In order to prevent switch fixture function not in time.
+		// GoBigSleepLint: In order to prevent switch fixture function not in time.
 		testing.Sleep(ctx, 30*time.Second)
 
 		// Find chromebook camera index.
@@ -297,7 +297,7 @@ func VerifyVideo(ctx context.Context, s *testing.State, uid string, duration int
 					return errors.New("webcam with '" + uid + "' webcam write file error")
 				}
 
-				frameColor, err := getColor(imgFileName)
+				frameColor, err := GetColor(imgFileName)
 
 				// some jpeg file from webcam need to add Dht
 				if err != nil {
@@ -308,7 +308,7 @@ func VerifyVideo(ctx context.Context, s *testing.State, uid string, duration int
 						return errors.New("webcam with '" + uid + "' webcam write file error")
 					}
 
-					frameColor, err = getColor(imgFileName)
+					frameColor, err = GetColor(imgFileName)
 
 					if err != nil {
 						testing.ContextLog(ctx, "jpeg file from webcam had decode issue")
@@ -473,8 +473,8 @@ func getAvgPixelFromWebcam(ctx context.Context, s *testing.State, devPort string
 	return p, nil
 }
 
-// getColor is for get color from JPEG file.
-func getColor(fileName string) (string, error) {
+// GetColor is for get color from JPEG file.
+func GetColor(fileName string) (string, error) {
 	image.RegisterFormat("jpeg", "jpeg", jpeg.Decode, jpeg.DecodeConfig)
 	file, err := os.Open(fileName)
 
