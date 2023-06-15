@@ -12,7 +12,27 @@ func TestAsusHPHaveNoIntersection(t *gotesting.T) {
 	for _, a := range asusModelList {
 		for _, h := range hpModelList {
 			if a == h {
-				t.Errorf("Asus and HP have common item: %q", a)
+				t.Errorf("Asus and HP have a common item: %q", a)
+			}
+		}
+	}
+}
+
+func TestAsusLenovoHaveNoIntersection(t *gotesting.T) {
+	for _, a := range asusModelList {
+		for _, l := range lenovoModelList {
+			if a == l {
+				t.Errorf("Asus and Lenovo have a common item: %q", a)
+			}
+		}
+	}
+}
+
+func TestHPLenovoHaveNoIntersection(t *gotesting.T) {
+	for _, h := range hpModelList {
+		for _, l := range lenovoModelList {
+			if h == l {
+				t.Errorf("HP and Lenovo have a common item: %q", h)
 			}
 		}
 	}

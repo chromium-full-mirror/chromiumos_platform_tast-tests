@@ -36,6 +36,11 @@ func init() {
 				Val:               "HP",
 				ExtraHardwareDeps: dep.HPModels(),
 			},
+			{
+				Name:              "lenovo",
+				Val:               "Lenovo",
+				ExtraHardwareDeps: dep.LenovoModels(),
+			},
 		},
 	})
 }
