@@ -43,11 +43,11 @@ func init() {
 			Val:               testParams{},
 		}, {
 			Name:              "vm",
+			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Val:               testParams{},
 		}, {
 			Name:              "no_guest_ureadahead_vm",
-			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Val: testParams{
 				chromeArgs: []string{"--arcvm-ureadahead-mode=disabled"},
