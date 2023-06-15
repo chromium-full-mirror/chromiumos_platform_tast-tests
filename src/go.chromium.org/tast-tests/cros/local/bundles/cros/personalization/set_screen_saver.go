@@ -160,7 +160,7 @@ func prepareScreenSaver(tconn *chrome.TestConn, ui *uiauto.Context, testParams a
 			return errors.Wrapf(err, "failed to select %v", testParams.Theme)
 		}
 
-		topicSourceContainer := nodewith.Role(role.RadioButton).NameContaining(testParams.TopicSource)
+		topicSourceContainer := nodewith.Role(role.RadioButton).NameContaining(testParams.TopicSource).Ancestor(nodewith.Attribute("description", "Image source"))
 		albumsFinder := nodewith.Role(role.ListBoxOption).HasClass("album")
 
 		if err := uiauto.Combine("Choose topic source",
