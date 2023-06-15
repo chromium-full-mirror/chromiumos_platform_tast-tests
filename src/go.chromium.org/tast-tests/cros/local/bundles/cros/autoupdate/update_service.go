@@ -241,6 +241,10 @@ func (u *UpdateService) InstalledLSBReleaseContent(ctx context.Context, req *emp
 	alternativePartitionMap := map[string]string{
 		"/dev/nvme0n1p3": "/dev/nvme0n1p5",
 		"/dev/nvme0n1p5": "/dev/nvme0n1p3",
+		"/dev/mmcblk1p3": "/dev/mmcblk1p5",
+		"/dev/mmcblk1p5": "/dev/mmcblk1p3",
+		"/dev/sda3":      "/dev/sda5",
+		"/dev/sda5":      "/dev/sda3",
 	}
 
 	result, err := testexec.CommandContext(ctx, "rootdev", "-s").Output(testexec.DumpLogOnError)
