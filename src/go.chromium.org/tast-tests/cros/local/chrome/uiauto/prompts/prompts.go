@@ -31,11 +31,17 @@ type Prompt struct {
 var (
 	showNotificationsPromptFinder = nodewith.NameContaining("Show notifications").HasClass("RootView").Role(role.AlertDialog)
 	avPermPromptFinder            = nodewith.NameRegex(regexp.MustCompile(".*Use your (microphone|camera).*")).HasClass("RootView").Role(role.AlertDialog).First()
+	avMeetPermPromptFinder        = nodewith.NameContaining("see and hear you").Role(role.Dialog).First()
 	leaveSitePromptFinder         = nodewith.Name("Leave site?").ClassName("RootView").Role(role.Dialog).First()
 )
 
 // General dismiss button finders for prompts.
 var (
+	// There are multiple buttons that contain the "Allow" string.
+	// To distinguish multiple buttons, the regular expression must contain
+	// all possible strings and NameContaining("Allow") can't be used.
+	AllowAVButtonRe     = regexp.MustCompile("^(Allow|Allow this time|Allow microphone and camera)$")
+	AllowAVButtonFinder = nodewith.NameRegex(AllowAVButtonRe).Role(role.Button)
 	AllowButtonFinder   = nodewith.Name("Allow").Role(role.Button)
 	DismissButtonFinder = nodewith.Name("Dismiss").Role(role.Button)
 	CloseButtonFinder   = nodewith.Name("Close").Role(role.Button)
@@ -54,7 +60,17 @@ var ShowNotificationsPrompt = Prompt{
 var AllowAVPermissionPrompt = Prompt{
 	Name:              "allow microphone and camera",
 	PromptFinder:      avPermPromptFinder,
-	ClearButtonFinder: AllowButtonFinder.Ancestor(avPermPromptFinder),
+	ClearButtonFinder: AllowAVButtonFinder.Ancestor(avPermPromptFinder),
+}
+
+// AllowMicrophoneAndCameraPermissionPrompt represents the browser prompt to request permission for microphone and camera.
+var AllowMicrophoneAndCameraPermissionPrompt = Prompt{
+	Name:         "do you want people to see and hear you in the meeting?",
+	PromptFinder: avMeetPermPromptFinder,
+	// There are two types of dialogs that should be closed.
+	// Possible ancestors are |avPermPromptFinder| and |avMeetPermPromptFinder|.
+	// So use First() instead of Ancestor().
+	ClearButtonFinder: AllowAVButtonFinder.First(),
 }
 
 // LeaveSitePrompt represents the browser prompt to request permission for leaving site.
