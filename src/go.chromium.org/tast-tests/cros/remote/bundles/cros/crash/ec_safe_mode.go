@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -33,7 +34,8 @@ func init() {
 		Attr:         []string{"group:mainline", "informational", "group:firmware", "firmware_unstable"},
 		Timeout:      10 * time.Minute,
 		Fixture:      fixture.NormalMode,
-		SoftwareDeps: []string{"device_crash", "ec_crash", "ec_system_safe_mode", "pstore", "reboot", "no_qemu"},
+		SoftwareDeps: []string{"device_crash", "ec_crash", "pstore", "reboot", "no_qemu"},
+		HardwareDeps: hwdep.D(hwdep.ECFeatureSystemSafeMode()),
 	})
 }
 
