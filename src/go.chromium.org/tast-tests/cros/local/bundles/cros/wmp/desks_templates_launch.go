@@ -14,9 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/event"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/saveddesks"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -114,9 +112,7 @@ func DesksTemplatesLaunch(ctx context.Context, s *testing.State) {
 	if err := ash.SetOverviewModeAndWait(ctx, tconn, true); err != nil {
 		s.Fatal("Failed to set overview mode: ", err)
 	}
-	if err := ac.WithInterval(2*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
-		s.Fatal("Failed to wait for the animation to be completed: ", err)
-	}
+
 	defer ash.SetOverviewModeAndWait(cleanupCtx, tconn, false)
 
 	// Save current desk as `Template 1` of type `Template`.
@@ -144,9 +140,6 @@ func DesksTemplatesLaunch(ctx context.Context, s *testing.State) {
 	// Enter overview mode.
 	if err := ash.SetOverviewModeAndWait(ctx, tconn, true); err != nil {
 		s.Fatal("Failed to set overview mode: ", err)
-	}
-	if err := ac.WithInterval(2*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
-		s.Fatal("Failed to wait for the animation to be completed: ", err)
 	}
 
 	// Save current desk as `Saved Desk 1` of type `SaveAndRecall`.
@@ -178,9 +171,6 @@ func DesksTemplatesLaunch(ctx context.Context, s *testing.State) {
 	if err := ash.SetOverviewModeAndWait(ctx, tconn, true); err != nil {
 		s.Fatal("Failed to set overview mode: ", err)
 	}
-	if err := ac.WithInterval(2*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
-		s.Fatal("Failed to wait for the animation to be completed: ", err)
-	}
 
 	// Enter library page.
 	if err := ash.EnterLibraryPage(ctx, ac); err != nil {
@@ -206,9 +196,6 @@ func DesksTemplatesLaunch(ctx context.Context, s *testing.State) {
 	if err := ash.SetOverviewModeAndWait(ctx, tconn, false); err != nil {
 		s.Fatal("Failed to set overview mode: ", err)
 	}
-	if err := ac.WithInterval(2*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
-		s.Fatal("Failed to wait for the animation to be completed: ", err)
-	}
 
 	// Close Play Store.
 	if err := optin.ClosePlayStore(ctx, tconn); err != nil {
@@ -228,9 +215,6 @@ func DesksTemplatesLaunch(ctx context.Context, s *testing.State) {
 	// Enter overview mode.
 	if err := ash.SetOverviewModeAndWait(ctx, tconn, true); err != nil {
 		s.Fatal("Failed to set overview mode: ", err)
-	}
-	if err := ac.WithInterval(2*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
-		s.Fatal("Failed to wait for the animation to be completed: ", err)
 	}
 
 	// Enter library page.
@@ -257,9 +241,6 @@ func DesksTemplatesLaunch(ctx context.Context, s *testing.State) {
 	if err := ash.SetOverviewModeAndWait(ctx, tconn, false); err != nil {
 		s.Fatal("Failed to set overview mode: ", err)
 	}
-	if err := ac.WithInterval(2*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
-		s.Fatal("Failed to wait for the animation to be completed: ", err)
-	}
 
 	if err := saveddesks.VerifyWindowCount(ctx, tconn, len(appsList)); err != nil {
 		s.Fatal("Failed to verify window count: ", err)
@@ -283,9 +264,6 @@ func DesksTemplatesLaunch(ctx context.Context, s *testing.State) {
 	// Enter overview mode.
 	if err := ash.SetOverviewModeAndWait(ctx, tconn, true); err != nil {
 		s.Fatal("Failed to set overview mode: ", err)
-	}
-	if err := ac.WithInterval(2*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
-		s.Fatal("Failed to wait for the animation to be completed: ", err)
 	}
 
 	// Enter library page.

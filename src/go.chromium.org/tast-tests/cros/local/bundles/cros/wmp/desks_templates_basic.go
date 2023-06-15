@@ -13,9 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/event"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/saveddesks"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -111,9 +109,7 @@ func DesksTemplatesBasic(ctx context.Context, s *testing.State) {
 	if err := ash.SetOverviewModeAndWait(ctx, tconn, true); err != nil {
 		s.Fatal("Failed to set overview mode: ", err)
 	}
-	if err := ac.WithInterval(2*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
-		s.Fatal("Failed to wait for the animation to be completed: ", err)
-	}
+
 	defer ash.SetOverviewModeAndWait(cleanupCtx, tconn, false)
 
 	// Save current desk as `Template 1` of type `Template`.
@@ -142,9 +138,6 @@ func DesksTemplatesBasic(ctx context.Context, s *testing.State) {
 	if err := ash.SetOverviewModeAndWait(ctx, tconn, true); err != nil {
 		s.Fatal("Failed to set overview mode: ", err)
 	}
-	if err := ac.WithInterval(2*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
-		s.Fatal("Failed to wait for the animation to be completed: ", err)
-	}
 
 	// Save current desk as `Saved Desk 1` of type `SaveAndRecall`.
 	if err := ash.SaveCurrentDesk(ctx, ac, ash.SaveAndRecall, "Saved Desk 1"); err != nil {
@@ -164,9 +157,6 @@ func DesksTemplatesBasic(ctx context.Context, s *testing.State) {
 	// Exit overview mode.
 	if err := ash.SetOverviewModeAndWait(ctx, tconn, false); err != nil {
 		s.Fatal("Failed to set overview mode: ", err)
-	}
-	if err := ac.WithInterval(2*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
-		s.Fatal("Failed to wait for the animation to be completed: ", err)
 	}
 
 	// Verify window count.
@@ -191,9 +181,6 @@ func DesksTemplatesBasic(ctx context.Context, s *testing.State) {
 	// Exit overview mode.
 	if err := ash.SetOverviewModeAndWait(ctx, tconn, false); err != nil {
 		s.Fatal("Failed to exit overview mode: ", err)
-	}
-	if err := ac.WithInterval(2*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
-		s.Fatal("Failed to wait for overview animation to be completed: ", err)
 	}
 
 	// Verify that the app windows are closed.

@@ -11,7 +11,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/event"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/errors"
@@ -232,14 +231,8 @@ func SaveCurrentDesk(ctx context.Context, ac *uiauto.Context, savedDeskType Save
 	if err := kb.Type(ctx, savedDeskName); err != nil {
 		return errors.Wrapf(err, "cannot type %q: ", savedDeskName)
 	}
-	if err := ac.WithInterval(2*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
-		return errors.Wrap(err, "failed to wait for typing animation to be completed")
-	}
 	if err := kb.Accel(ctx, "Enter"); err != nil {
 		return errors.Wrap(err, "cannot press 'Enter'")
-	}
-	if err := ac.WithInterval(2*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
-		return errors.Wrap(err, "failed to wait for exit name nudge animation to be completed")
 	}
 	return nil
 }

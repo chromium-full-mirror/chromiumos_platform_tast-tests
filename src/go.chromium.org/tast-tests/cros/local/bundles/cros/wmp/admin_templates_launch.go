@@ -19,7 +19,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/event"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
@@ -130,9 +129,7 @@ func AdminTemplatesLaunch(ctx context.Context, s *testing.State) {
 			if err := ash.SetOverviewModeAndWait(ctx, tconn, true); err != nil {
 				s.Fatal("Failed to set overview mode: ", err)
 			}
-			if err := ac.WithInterval(2*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
-				s.Fatal("Failed to wait for overview animation to be completed: ", err)
-			}
+
 			// Find the "Library" button.
 			templatesButton := nodewith.Name("Library")
 			desksTemplatesGridView := nodewith.ClassName("SavedDeskLibraryView")
@@ -184,9 +181,6 @@ func AdminTemplatesLaunch(ctx context.Context, s *testing.State) {
 			// Exit overview mode and wait.
 			if err = ash.SetOverviewModeAndWait(ctx, tconn, false); err != nil {
 				s.Fatal("Failed to exit overview mode: ", err)
-			}
-			if err := ac.WithInterval(2*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
-				s.Fatal("Failed to wait for overview animation to be completed: ", err)
 			}
 
 			// Verifies that there are the app windows.
