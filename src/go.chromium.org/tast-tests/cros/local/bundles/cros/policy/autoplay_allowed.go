@@ -30,12 +30,12 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         AutoplayAllowed,
 		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Checking if autoplay is allowed on websites or nor, depending on the value of the policy",
+		Desc:         "Checking if autoplay is allowed on websites or not, depending on the value of the policy",
 		Contacts: []string{
-			"cros-engprod-muc@google.com",
+			"chrome-media-ux@google.com",
 			"alexanderhartl@google.com", // Test author
 		},
-		BugComponent: "b:1263917",
+		BugComponent: "b:753367",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier"},
 		Params: []testing.Param{{
