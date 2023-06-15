@@ -30,8 +30,18 @@ func init() {
 			"ti50-core@google.com",
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
-		Attr:         []string{"group:gsc", "gsc_dt_ab", "gsc_image_sta"},
-		Fixture:      fixture.SystemTestAutoDevboard,
+		Attr:         []string{"group:gsc", "gsc_dt_ab"},
+		Params: []testing.Param{{
+			Name:      "sta",
+			Val:       true, // hasKernelTests
+			Fixture:   fixture.SystemTestAutoDevboard,
+			ExtraAttr: []string{"gsc_image_sta"}, // TODO(b/287468118) Add gsc_he
+		}, {
+			Name:      "sta2",
+			Val:       false, // hasKernelTests
+			Fixture:   fixture.SystemTestAuto2Devboard,
+			ExtraAttr: []string{"gsc_image_sta2"}, // TODO(b/287501498) Add gsc_he
+		}},
 	})
 }
 
@@ -52,8 +62,11 @@ func Ti50SystemTestImage(ctx context.Context, s *testing.State) {
 	// Deassert PLT_RST_L to prevent deep sleep while tests are running.
 	board.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
 
-	s.Log("Kernel tests:")
-	checkTestResults(ctx, s, board, "KERNEL")
+	hasKernelTests := s.Param().(bool)
+	if hasKernelTests {
+		s.Log("Kernel tests:")
+		checkTestResults(ctx, s, board, "KERNEL")
+	}
 
 	s.Log("App tests:")
 	checkTestResults(ctx, s, board, "APP")

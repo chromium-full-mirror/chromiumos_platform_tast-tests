@@ -28,6 +28,10 @@ const (
 	// connection
 	SystemTestAutoDevboard = "systemTestAutoDevboard"
 
+	// SystemTestAuto2Devboard fixture flashes a system_test_auto_2 image and sets up a devboard
+	// connection
+	SystemTestAuto2Devboard = "systemTestAuto2Devboard"
+
 	setUpTimeout    = 2 * time.Minute
 	resetTimeout    = 5 * time.Second
 	tearDownTimeout = 5 * time.Second
@@ -55,6 +59,18 @@ func init() {
 		Desc:            "Uses devboardsvc to flash a system_test_auto image",
 		Contacts:        []string{"tast-fw-library-reviewers@google.com", "jbettis@google.com"},
 		Impl:            &devboardFixture{image: SystemTestAutoImage},
+		Vars:            []string{DevBoardService, BuildURL, FwConfigJSON, Chip, Variant, Slot},
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: tearDownTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name:            SystemTestAuto2Devboard,
+		Desc:            "Uses devboardsvc to flash a system_test_auto_2 image",
+		Contacts:        []string{"tast-fw-library-reviewers@google.com", "jbettis@google.com"},
+		Impl:            &devboardFixture{image: SystemTestAuto2Image},
 		Vars:            []string{DevBoardService, BuildURL, FwConfigJSON, Chip, Variant, Slot},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,

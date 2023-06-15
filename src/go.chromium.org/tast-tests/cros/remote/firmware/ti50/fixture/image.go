@@ -47,6 +47,9 @@ const (
 	// SystemTestAutoImage fixture downloads the system_test_auto image bin.
 	SystemTestAutoImage ImageType = "system_test_auto"
 
+	// SystemTestAuto2Image fixture downloads the system_test_auto_2 image bin.
+	SystemTestAuto2Image ImageType = "system_test_auto_2"
+
 	// imageBin is the name of the image file, it is the same for both images.
 	imageBin = "ti50_Unknown_PrePVT_ti50-accessory-nodelocked-ro-premp.bin"
 
@@ -187,6 +190,11 @@ func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProp
 			name = "full_image." + slot + ".signed.bin"
 		} else {
 			name = "full_image.signed.bin"
+		}
+		if testbedProperties.TestbedType == "gsc_he" {
+			chip = "host_emulation"
+			variant = "host_emulation"
+			name = "image.A.bin"
 		}
 		iv.imagePath = filepath.Join(inputURL, "build", string(imageType), chip, variant, name)
 		iv.configPaths = []string{filepath.Join(inputURL, "ports", chip, "software", "tools", string(imageType)+"_"+chip+".json")}
