@@ -164,9 +164,13 @@ func dvfs(ctx context.Context) error {
 		"/sys/devices/soc/13000000.mfgsys-gpu/",
 		// MT8173_419
 		"/sys/devices/platform/soc/13000000.mfgsys-gpu/",
-		// MT8183
+		// MT8183 (v6.1+ / upstream DT)
+		"/sys/devices/platform/soc/13040000.gpu/",
+		// MT8183 (legacy downstream DT)
 		"/sys/devices/platform/soc/13040000.mali/",
-		// MT8192
+		// MT8192 (v6.1+ / upstream DT)
+		"/sys/devices/platform/soc/13000000.gpu/",
+		// MT8192 (legacy downstream DT)
 		"/sys/devices/platform/soc/13000000.mali/",
 	})
 	if err != nil {
