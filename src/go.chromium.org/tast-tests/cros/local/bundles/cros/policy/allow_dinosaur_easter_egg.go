@@ -27,11 +27,10 @@ func init() {
 		Func:         AllowDinosaurEasterEgg,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Behavior of AllowDinosaurEasterEgg policy on both Ash and Lacros browser",
-		BugComponent: "b:1111617", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Policy Stack
+		BugComponent: "b:1363915",
 		Contacts: []string{
-			"chromeos-commercial-remote-management@google.com",
-			"vsavu@google.com", // Test author
-			"mohamedaomar@google.com",
+			"cros-edu-eng@google.com",
+			"dorianbrandon@google.com",
 		},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
