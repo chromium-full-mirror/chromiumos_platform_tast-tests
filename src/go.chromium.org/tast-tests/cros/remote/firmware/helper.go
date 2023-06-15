@@ -1384,7 +1384,8 @@ func (h *Helper) CheckUSBOnServoHost(ctx context.Context) (string, error) {
 	testing.ContextLogf(ctx, "Output from fdisk -l %q: %s", usbdev, fdiskOutput)
 	// Following ChromiumOS Developer Guide, USB size should be bigger than 8GB:
 	// https://chromium.googlesource.com/chromiumos/docs/+/HEAD/developer_guide.md#put-your-image-on-a-usb-disk
-	if err := checkUSBStorage(ctx, string(fdiskOutput), 8); err != nil {
+	// But the actual images appear to be 6.15GiB, so verify at 6.5 instead.
+	if err := checkUSBStorage(ctx, string(fdiskOutput), 6.5); err != nil {
 		return "", errors.Wrapf(err, "failed to verify usb storage, got usb model: %s, serial number: %s", modelName, serialNumber)
 	}
 	return usbdev, nil
