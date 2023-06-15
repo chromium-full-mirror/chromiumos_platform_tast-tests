@@ -36,30 +36,8 @@ type DataResult struct {
 	FpsData      []float64 `json:"fpsData"`
 }
 
-// ModelType is an enum to select the segmentation model type.
-type ModelType string
-
-const (
-	// KNone is the empty string used for no effects.
-	KNone ModelType = ""
-	// KHd is the standard "HD" model.
-	KHd ModelType = "hd"
-	// KFull is the standard "low res" model.
-	KFull ModelType = "full"
-	// K256Precise is an experimental / temporary model.
-	K256Precise ModelType = "256precise"
-	// K256Fast is an experimental / temporary model.
-	K256Fast ModelType = "256fast"
-	// K384Precise is an experimental / temporary model.
-	K384Precise ModelType = "384precise"
-	// K384Fast is an experimental / temporary model.
-	K384Fast ModelType = "384fast"
-	// K512v4036 is an experimental / temporary model.
-	K512v4036 ModelType = "512v4036"
-)
-
 // ApplyPlatformEffects applies the configured platform effects.
-func ApplyPlatformEffects(ctx context.Context, blur, relight bool, modelType ModelType) (func(ctx context.Context) error, error) {
+func ApplyPlatformEffects(ctx context.Context, blur, relight, useLowResModel bool) (func(ctx context.Context) error, error) {
 	testing.ContextLog(ctx, "Configuring platform effects")
 	if err := os.Mkdir(platformEffectsOverrideDir, 0755); err != nil && !os.IsExist(err) {
 		return nil, errors.Wrap(err, "failed to write platform override")
@@ -80,27 +58,12 @@ func ApplyPlatformEffects(ctx context.Context, blur, relight bool, modelType Mod
 	} else if relight {
 		platformEffects.Effect = "relight"
 	}
-
-	platformEffects.GpuAPI = "vulkan"
-	if modelType == KHd {
-		platformEffects.SegmentationModelType = string(KHd)
-	} else if modelType == K256Precise {
-		platformEffects.SegmentationModelType = string(K256Precise)
-	} else if modelType == K256Fast {
-		platformEffects.SegmentationModelType = string(K256Fast)
-	} else if modelType == K384Precise {
-		platformEffects.SegmentationModelType = string(K384Precise)
-	} else if modelType == K384Fast {
-		platformEffects.SegmentationModelType = string(K384Fast)
-	} else if modelType == K512v4036 {
-		platformEffects.SegmentationModelType = string(K512v4036)
-	} else if modelType == KFull {
-		platformEffects.SegmentationModelType = string(KFull)
+	if useLowResModel {
+		platformEffects.SegmentationModelType = "full"
 		platformEffects.GpuAPI = "opencl"
-	} else if modelType == KNone {
-		// Do nothing.
 	} else {
-		return nil, errors.Wrap(errors.New("invalid model config"), "invalid model config")
+		platformEffects.SegmentationModelType = "hd"
+		platformEffects.GpuAPI = "vulkan"
 	}
 
 	platformEffectsJSON, err := json.Marshal(platformEffects)

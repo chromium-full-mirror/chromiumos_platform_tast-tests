@@ -39,6 +39,10 @@ type simpleParams struct {
 	platformBlur bool
 	// Whether to enable platform relight or not.
 	platformRelight bool
+	// Whether to use the low res ("full") segmentation model or not. Not used here, since
+	// BenchmarkHTML always uses the high res ("hd") model, but is a bit easier to understand
+	// as a variable.
+	useLowResModel bool
 }
 
 func init() {
@@ -142,7 +146,7 @@ func BenchmarkingHTML(ctx context.Context, s *testing.State) {
 
 	}
 
-	cleanupApply, err := effects.ApplyPlatformEffects(ctx, param.platformBlur, param.platformRelight, effects.KHd)
+	cleanupApply, err := effects.ApplyPlatformEffects(ctx, param.platformBlur, param.platformRelight, param.useLowResModel)
 	if err != nil {
 		s.Fatal("Failed to apply platform effects: ", err)
 	}
