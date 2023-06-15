@@ -88,6 +88,7 @@ func Wait(ctx context.Context, systemServicesTimeout time.Duration) error {
 	}
 
 	// If system-services doesn't enter "start/running", everything's probably broken, so give up.
+	testing.ContextLog(ctx, "Ensuring system-services service is running")
 	const systemServicesJob = "system-services"
 	if err := upstart.WaitForJobStatus(ctx, systemServicesJob, upstartcommon.StartGoal, upstartcommon.RunningState,
 		upstart.TolerateWrongGoal, systemServicesTimeout); err != nil {
@@ -97,6 +98,7 @@ func Wait(ctx context.Context, systemServicesTimeout time.Duration) error {
 	// Start the ui job if it is not running. When the ui job is stopped, some
 	// daemons (e.g. debugd) are also stopped, so it is not useful to wait for
 	// them without starting the ui job.
+	testing.ContextLog(ctx, "Ensuring ui service is running")
 	if err := upstart.EnsureJobRunning(ctx, "ui"); err != nil {
 		return errors.Wrap(err, "failed to start ui")
 	}
@@ -121,8 +123,13 @@ func Wait(ctx context.Context, systemServicesTimeout time.Duration) error {
 			// Some Chrome-OS-derived systems may not have all of these jobs.
 			if !upstart.JobExists(ctx, job) {
 				ch <- nil
-			} else if err := upstart.WaitForJobStatus(ctx, job, upstartcommon.StartGoal, upstartcommon.RunningState,
-				upstart.TolerateWrongGoal, time.Minute); err == nil {
+				return
+			}
+
+			testing.ContextLogf(ctx, "Ensuring %s service is running", job)
+			err := upstart.WaitForJobStatus(ctx, job, upstartcommon.StartGoal, upstartcommon.RunningState, upstart.TolerateWrongGoal, time.Minute)
+			if err == nil {
+				testing.ContextLogf(ctx, "Success: %s service setup complete", job)
 				ch <- nil
 			} else {
 				ch <- &jobError{job, err}
@@ -135,6 +142,7 @@ func Wait(ctx context.Context, systemServicesTimeout time.Duration) error {
 		}
 	}
 
+	testing.ContextLog(ctx, "Ensuring cryptohomed service is running")
 	if upstart.JobExists(ctx, "cryptohomed") {
 		if err := waitForCryptohomeService(ctx); err != nil {
 			testing.ContextLog(ctx, "Failed waiting for cryptohome D-Bus service: ", err)
@@ -151,9 +159,13 @@ func Wait(ctx context.Context, systemServicesTimeout time.Duration) error {
 			}
 		}
 	}
+	testing.ContextLog(ctx, "cryptohomed service is running")
+
+	testing.ContextLog(ctx, "setting up backup attestation db with fake google keys")
 	if err := hwsec.BackupAttestationDbWithFakeGoogleKeys(ctx); err != nil {
 		testing.ContextLog(ctx, "Failed to backup attestation database: ", err)
 	}
+	testing.ContextLog(ctx, "backup attestation db setup complete")
 
 	return nil
 }
@@ -277,6 +289,7 @@ func waitForCryptohomeService(ctx context.Context) error {
 	if uptime < minUptime {
 		d := minUptime - uptime
 		testing.ContextLogf(ctx, "Waiting %v for cryptohomed to stabilize", d.Round(time.Millisecond))
+		// GoBigSleepLint, there is a requirement of uptime.
 		if err := testing.Sleep(ctx, d); err != nil {
 			return err
 		}
@@ -355,8 +368,7 @@ func ensureTPMInitialized(ctx context.Context) error {
 	testing.ContextLog(ctx, "TPM not initialized; taking ownership now to ensure that tests aren't blocked during login")
 	if owned {
 		testing.ContextLog(ctx, "TPM is already owned; finishing initialization")
-	}
-	if err := testexec.CommandContext(ctx, "tpm_manager_client", "take_ownership").Run(); err != nil {
+	} else if err := testexec.CommandContext(ctx, "tpm_manager_client", "take_ownership").Run(); err != nil {
 		return errors.Wrap(err, "tpm_manager_client take_ownership failed")
 	}
 	// Don't wait for attestation prepared when we are using TPM runtime selection.
