@@ -24,12 +24,16 @@ import (
 )
 
 const majorVersionPinningE2ETimeout = 5 * time.Minute
+const pinningOmahaUpdateE2ETimeout = 15 * time.Minute
 
 type majorVersionPinningE2ETestParam struct {
 	releaseChannelPolicy tape.ReleaseChannelWithLtsEnum
 	targetMilestone      string
 	expectedPolicies     []policy.Policy
 	expectedParameters   []string
+
+	testOmaha               bool
+	expectedLSBReleaseRegex map[string]string
 }
 
 func init() {
@@ -51,7 +55,6 @@ func init() {
 			"tast.cros.nebraska.Service",
 			"tast.cros.autoupdate.UpdateService",
 		},
-		Timeout: majorVersionPinningE2ETimeout,
 		Vars: []string{
 			tape.ServiceAccountVar,
 		},
@@ -62,7 +65,8 @@ func init() {
 		},
 		// TODO(b/279132490): Add a screenplay once it is created.
 		Params: []testing.Param{{
-			Name: "lts",
+			Name:    "lts",
+			Timeout: majorVersionPinningE2ETimeout,
 			Val: majorVersionPinningE2ETestParam{
 				releaseChannelPolicy: tape.RELEASECHANNELWITHLTSENUM_RELEASE_CHANNEL_WITH_LTS_ENUM_LTS_CHANNEL,
 				targetMilestone:      "108.* (long-term support)",
@@ -74,7 +78,8 @@ func init() {
 				expectedParameters: []string{"targetversionprefix=\"15183.\"", "ltstag=\"lts\""},
 			},
 		}, {
-			Name: "stable",
+			Name:    "stable",
+			Timeout: majorVersionPinningE2ETimeout,
 			Val: majorVersionPinningE2ETestParam{
 				releaseChannelPolicy: tape.RELEASECHANNELWITHLTSENUM_RELEASE_CHANNEL_WITH_LTS_ENUM_STABLE_CHANNEL,
 				targetMilestone:      "112.*",
@@ -83,6 +88,41 @@ func init() {
 					&policy.DeviceTargetVersionPrefix{Stat: policy.StatusSet, Val: "15359."},
 				},
 				expectedParameters: []string{"targetversionprefix=\"15359.\""},
+			},
+		}, {
+			Name:    "lts_omaha",
+			Timeout: majorVersionPinningE2ETimeout + pinningOmahaUpdateE2ETimeout,
+			Val: majorVersionPinningE2ETestParam{
+				releaseChannelPolicy: tape.RELEASECHANNELWITHLTSENUM_RELEASE_CHANNEL_WITH_LTS_ENUM_LTS_CHANNEL,
+				targetMilestone:      "108.* (long-term support)",
+				expectedPolicies: []policy.Policy{
+					&policy.ChromeOsReleaseChannel{Stat: policy.StatusSet, Val: "stable-channel"},
+					&policy.DeviceReleaseLtsTag{Stat: policy.StatusSet, Val: "lts"},
+					&policy.DeviceTargetVersionPrefix{Stat: policy.StatusSet, Val: "15183."},
+				},
+				expectedParameters: []string{"targetversionprefix=\"15183.\"", "ltstag=\"lts\""},
+				testOmaha:          true,
+				expectedLSBReleaseRegex: map[string]string{
+					"CHROMEOS_RELEASE_TRACK":   "^stable-channel$",
+					"CHROMEOS_RELEASE_VERSION": "^15183[.].+[.].+$",
+				},
+			},
+		}, {
+			Name:    "stable_omaha",
+			Timeout: majorVersionPinningE2ETimeout + pinningOmahaUpdateE2ETimeout,
+			Val: majorVersionPinningE2ETestParam{
+				releaseChannelPolicy: tape.RELEASECHANNELWITHLTSENUM_RELEASE_CHANNEL_WITH_LTS_ENUM_STABLE_CHANNEL,
+				targetMilestone:      "112.*",
+				expectedPolicies: []policy.Policy{
+					&policy.ChromeOsReleaseChannel{Stat: policy.StatusSet, Val: "stable-channel"},
+					&policy.DeviceTargetVersionPrefix{Stat: policy.StatusSet, Val: "15359."},
+				},
+				expectedParameters: []string{"targetversionprefix=\"15359.\""},
+				testOmaha:          true,
+				expectedLSBReleaseRegex: map[string]string{
+					"CHROMEOS_RELEASE_TRACK":   "^stable-channel$",
+					"CHROMEOS_RELEASE_VERSION": "^15359[.].+[.].+$",
+				},
 			},
 		}},
 	})
@@ -192,5 +232,11 @@ func MajorVersionPinningE2E(ctx context.Context, s *testing.State) {
 
 	if err := update.TriggerUpdateAndCheckNebraskaLogs(ctx, cl, param.expectedParameters); err != nil {
 		s.Error("Failed to verify update request: ", err)
+	}
+
+	if param.testOmaha {
+		if err := update.PerformUpdateAndCheckImage(ctx, cl, param.expectedLSBReleaseRegex); err != nil {
+			s.Error("Failed to update device: ", err)
+		}
 	}
 }
