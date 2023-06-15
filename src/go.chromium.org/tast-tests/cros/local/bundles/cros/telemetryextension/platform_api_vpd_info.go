@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"os"
 	"reflect"
+	"strings"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/telemetryextension/fixture"
 	"go.chromium.org/tast-tests/cros/local/crosconfig"
@@ -88,6 +89,8 @@ func fetchVPDInfo(ctx context.Context) (vpdInfoResponse, error) {
 	if err != nil {
 		return vpdInfoResponse{}, errors.Wrap(err, "failed to fetch model_name VPD field")
 	}
+	// cros_healthd trims model name.
+	modelName = strings.TrimSpace(modelName)
 
 	serialNumber, err := fetchOptionalVpdField("/sys/firmware/vpd/ro/serial_number")
 	if err != nil {
