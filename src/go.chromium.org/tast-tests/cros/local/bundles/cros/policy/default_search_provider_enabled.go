@@ -65,30 +65,7 @@ func DefaultSearchProviderEnabled(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
-	// When searching for “abc” Annotation is recorded even when policy is
-	// set to false, because a Url is loaded with http://abc
-	// vs when policy is set to true/unset, URL loaded is
-	// http://google.com/q=abc
-	for _, param := range []defaultsearchprovider.TestCase{
-		{
-			Name:                 "enabled",
-			Enabled:              true,
-			Value:                &policy.DefaultSearchProviderEnabled{Val: true},
-			ShouldFindAnnotation: true,
-		},
-		{
-			Name:                 "disabled",
-			Enabled:              false,
-			Value:                &policy.DefaultSearchProviderEnabled{Val: false},
-			ShouldFindAnnotation: true, // The Disabled value is not supported by the Google Admin console.
-		},
-		{
-			Name:                 "unset",
-			Enabled:              true,
-			Value:                &policy.DefaultSearchProviderEnabled{Stat: policy.StatusUnset},
-			ShouldFindAnnotation: true,
-		},
-	} {
+	for index, param := range defaultsearchprovider.GetTestCases() {
 		s.Run(ctx, param.Name, func(ctx context.Context, s *testing.State) {
 			// Perform cleanup.
 			if err := policyutil.ResetChrome(ctx, fdms, cr); err != nil {
@@ -111,12 +88,12 @@ func DefaultSearchProviderEnabled(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to start logging: ", err)
 			}
 
-			if err := defaultsearchprovider.TriggerDefaultSearchProvider(ctx, param, tconn, br); err != nil {
+			if err := defaultsearchprovider.TriggerDefaultSearchProvider(ctx, s, cr, br, nil, tconn, index); err != nil {
 				s.Fatal("Failed to trigger default search provider: ", err)
 			}
 
 			// Stop logging and check the logs for navigation_url_loader NetworkTrafficAnnotationTag.
-			foundAnnotation, err := annotations.StopLoggingCheckLogs(ctx, cr, br, defaultsearchprovider.AnnotationID)
+			foundAnnotation, err := annotations.StopLoggingCheckLogs(ctx, cr, br, defaultsearchprovider.AnnotationHashCode)
 			if err != nil {
 				s.Fatal("Failed to stop logging and check logs: ", err)
 			}

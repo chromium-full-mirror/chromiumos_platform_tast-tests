@@ -62,26 +62,7 @@ func SearchSuggestEnabled(ctx context.Context, s *testing.State) {
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
-	for _, param := range []searchsuggestion.TestCase{
-		{
-			Name:                 "unset",
-			ShouldFindAnnotation: true,
-			Policy:               &policy.SearchSuggestEnabled{Stat: policy.StatusUnset},
-			Enabled:              true,
-		},
-		{
-			Name:                 "disabled",
-			ShouldFindAnnotation: false,
-			Policy:               &policy.SearchSuggestEnabled{Val: false},
-			Enabled:              false,
-		},
-		{
-			Name:                 "enabled",
-			ShouldFindAnnotation: true,
-			Policy:               &policy.SearchSuggestEnabled{Val: true},
-			Enabled:              true,
-		},
-	} {
+	for index, param := range searchsuggestion.GetTestCases() {
 		s.Run(ctx, param.Name, func(ctx context.Context, s *testing.State) {
 			// Perform cleanup.
 			if err := policyutil.ResetChrome(ctx, fdms, cr); err != nil {
@@ -110,12 +91,12 @@ func SearchSuggestEnabled(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to start logging: ", err)
 			}
 
-			if err := searchsuggestion.TriggerSearchSuggestion(ctx, param, tconn, br); err != nil {
-				s.Fatal("Failed to trigger password leak detection: ", err)
+			if err := searchsuggestion.TriggerSearchSuggestion(ctx, s, cr, br, nil, tconn, index); err != nil {
+				s.Fatal("Failed to trigger search suggestion: ", err)
 			}
 
 			// Stop logging and check netlog for network annotation.
-			foundAnnotation, err := annotations.StopLoggingCheckLogs(ctx, cr, br, searchsuggestion.AnnotationID)
+			foundAnnotation, err := annotations.StopLoggingCheckLogs(ctx, cr, br, searchsuggestion.AnnotationHashCode)
 			if err != nil {
 				s.Fatal("Failed to stop logging and check logs: ", err)
 			}

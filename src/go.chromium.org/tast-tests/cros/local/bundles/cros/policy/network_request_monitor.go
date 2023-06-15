@@ -117,6 +117,21 @@ func getOptionalServices() []optionalService {
 			paramIndex:           0,
 		},
 		{
+			name: "default_search_provider",
+			// Annotation will be found even when the policy is disabled.
+			assocatedAnnotations: []string{},
+			trigger:              defaultsearchprovider.TriggerDefaultSearchProvider,
+			paramIndex:           0,
+		},
+		{
+			name: "nearby_share",
+			// No network annotations are checked for this service, since the network
+			// calls only occur after Nearby Share setup is complete.
+			assocatedAnnotations: []string{},
+			trigger:              nearbyshare.VerifyNearbySharePermissions,
+			paramIndex:           0,
+		},
+		{
 			name:                 "password_leak_detection",
 			assocatedAnnotations: []string{passwordleakdetection.AnnotationHashCode},
 			trigger:              passwordleakdetection.TriggerPasswordLeakDetection,
@@ -135,9 +150,21 @@ func getOptionalServices() []optionalService {
 			paramIndex:           0,
 		},
 		{
+			name:                 "search_suggestion",
+			assocatedAnnotations: []string{searchsuggestion.AnnotationHashCode},
+			trigger:              searchsuggestion.TriggerSearchSuggestion,
+			paramIndex:           0,
+		},
+		{
 			name:                 "spell_check",
 			assocatedAnnotations: []string{spellcheck.AnnotationHashCode},
 			trigger:              spellcheck.TriggerSpellCheck,
+			paramIndex:           0,
+		},
+		{
+			name:                 "user_feedback",
+			assocatedAnnotations: []string{userfeedback.HelpContentProviderHashCode, userfeedback.ChromeFeedbackReportAppHashCode},
+			trigger:              userfeedback.TriggerUserFeedback,
 			paramIndex:           0,
 		},
 	}
@@ -237,62 +264,6 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 			hashCodes = append(hashCodes, service.assocatedAnnotations...)
 		})
 	}
-
-	s.Run(ctx, "default_search_provider_enabled", func(ctx context.Context, s *testing.State) {
-		defaultSearchProviderParam := defaultsearchprovider.TestCase{
-			Name:                 "disabled",
-			ShouldFindAnnotation: false,
-			Value:                &policy.DefaultSearchProviderEnabled{Val: false},
-			Enabled:              false,
-		}
-		if err := defaultsearchprovider.TriggerDefaultSearchProvider(ctx, defaultSearchProviderParam, tconn, br); err != nil {
-			s.Fatal("Failed to trigger default search provider: ", err)
-		}
-	})
-
-	// TODO(b/286210023): Fix policy.NetworkRequestMonitor failure related to
-	// Search Suggestion in Lacros
-	if s.Param().(browser.Type) != browser.TypeLacros {
-		s.Run(ctx, "search_suggestion", func(ctx context.Context, s *testing.State) {
-			searchSuggestionParam := searchsuggestion.TestCase{
-				Name:                 "disabled",
-				ShouldFindAnnotation: false,
-				Policy:               &policy.SearchSuggestEnabled{Val: false},
-				Enabled:              false,
-			}
-			if err := searchsuggestion.TriggerSearchSuggestion(ctx, searchSuggestionParam, tconn, br); err != nil {
-				s.Fatal("Failed to trigger search suggestion: ", err)
-			}
-			hashCodes = append(hashCodes, searchsuggestion.AnnotationID)
-		})
-	}
-
-	s.Run(ctx, "user_feedback", func(ctx context.Context, s *testing.State) {
-		userFeedbackParam := userfeedback.TestCase{
-			Name:                 "disabled",
-			ShouldFindAnnotation: false,
-			Value:                &policy.UserFeedbackAllowed{Val: false},
-			WantReportOption:     false,
-		}
-		if err := userfeedback.TriggerUserFeedback(ctx, userFeedbackParam, tconn, br); err != nil {
-			s.Fatal("Failed to trigger user feedback: ", err)
-		}
-		hashCodes = append(hashCodes, userfeedback.HelpContentProviderHashCode)
-		hashCodes = append(hashCodes, userfeedback.ChromeFeedbackReportAppHashCode)
-	})
-
-	s.Run(ctx, "nearby_share", func(ctx context.Context, s *testing.State) {
-		param := nearbyshare.TestCase{
-			Name:             "disabled",
-			ShouldBeDisabled: true,
-			Policy:           &policy.NearbyShareAllowed{Val: false},
-		}
-		if err := nearbyshare.VerifyNearbySharePermissions(ctx, param, cr, tconn); err != nil {
-			s.Fatal("Failed to verify Nearby Share setup is disabled: ", err)
-		}
-		// No network annotations are checked for this service, since the network
-		// calls only occur after Nearby Share setup is complete.
-	})
 
 	// Stop logging and verify network traffic annotations associated with the
 	// optional services are not found in the logs.

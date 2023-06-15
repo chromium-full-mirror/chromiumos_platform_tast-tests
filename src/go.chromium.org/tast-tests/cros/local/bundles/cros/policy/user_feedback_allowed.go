@@ -78,26 +78,7 @@ func UserFeedbackAllowed(ctx context.Context, s *testing.State) {
 	// The popup to send feedback to Google is opened in two ways: 1) Key
 	// combination (Alt+Shift+I); 2) From the menu (Chrome Menu > Help >
 	// Report an Issue). In this test, we are checking policy using scenario 1).
-	for _, param := range []userfeedback.TestCase{
-		{
-			Name:                 "allow",
-			Value:                &policy.UserFeedbackAllowed{Val: true},
-			WantReportOption:     true,
-			ShouldFindAnnotation: true,
-		},
-		{
-			Name:                 "deny",
-			Value:                &policy.UserFeedbackAllowed{Val: false},
-			WantReportOption:     false,
-			ShouldFindAnnotation: false,
-		},
-		{
-			Name:                 "unset",
-			Value:                &policy.UserFeedbackAllowed{Stat: policy.StatusUnset},
-			WantReportOption:     true,
-			ShouldFindAnnotation: true,
-		},
-	} {
+	for index, param := range userfeedback.GetTestCases() {
 		s.Run(ctx, param.Name, func(ctx context.Context, s *testing.State) {
 			// Perform cleanup.
 			if err := policyutil.ResetChrome(ctx, fdms, cr); err != nil {
@@ -121,7 +102,7 @@ func UserFeedbackAllowed(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to start logging: ", err)
 			}
 
-			if err := userfeedback.TriggerUserFeedback(ctx, param, tconn, br); err != nil {
+			if err := userfeedback.TriggerUserFeedback(ctx, s, cr, br, nil, tconn, index); err != nil {
 				s.Fatal("Failed to trigger password leak detection: ", err)
 			}
 

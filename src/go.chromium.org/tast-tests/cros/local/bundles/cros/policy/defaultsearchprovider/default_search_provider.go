@@ -8,6 +8,7 @@ package defaultsearchprovider
 
 import (
 	"context"
+	"net/http/httptest"
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/common/policy"
@@ -17,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/browser/browserui"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // TestCase defines test expectations based on the policy value.
@@ -25,21 +27,53 @@ type TestCase struct {
 	Name string
 	// Enabled is the expected enabled state of the policy.
 	Enabled bool
-	Value   *policy.DefaultSearchProviderEnabled // Value is the policy value.
+	// Value is the policy value.
+	Value *policy.DefaultSearchProviderEnabled
 	// ShouldFindAnnotation states whether navigation_url_loader annotation
 	// should be found in the net-export log.
 	ShouldFindAnnotation bool
 }
 
+// GetTestCases returns the list of TestCase objects on which
+// DefaultSearchProviderEnabled policy is tested.
+func GetTestCases() []TestCase {
+	// Reordering the TestCase objects in the returned list may break tests.
+	return []TestCase{
+		{
+			Name:    "disabled",
+			Enabled: false,
+			Value:   &policy.DefaultSearchProviderEnabled{Val: false},
+			// When searching for “abc” Annotation is recorded even when policy is set
+			// to false, because a Url is loaded with http://abc vs when policy is set
+			// to true/unset, URL loaded is http://google.com/q=abc.
+			ShouldFindAnnotation: true,
+		},
+		{
+			Name:                 "enabled",
+			Enabled:              true,
+			Value:                &policy.DefaultSearchProviderEnabled{Val: true},
+			ShouldFindAnnotation: true,
+		},
+		{
+			Name:                 "unset",
+			Enabled:              true,
+			Value:                &policy.DefaultSearchProviderEnabled{Stat: policy.StatusUnset},
+			ShouldFindAnnotation: true,
+		},
+	}
+}
+
 const (
-	// AnnotationID is the hashcode for annotation navigation_url_loader.
-	AnnotationID = "63171670"
+	// AnnotationHashCode is the hashcode for annotation navigation_url_loader.
+	AnnotationHashCode = "63171670"
 	// search engine checked in the test
 	defaultSearchEngine = "google.com"
 )
 
 // TriggerDefaultSearchProvider verifies the default search provider policy.
-func TriggerDefaultSearchProvider(ctx context.Context, param TestCase, tconn *chrome.TestConn, br *browser.Browser) (err error) {
+func TriggerDefaultSearchProvider(ctx context.Context, _ *testing.State, _ *chrome.Chrome, br *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, paramIndex int) (err error) {
+	param := GetTestCases()[paramIndex]
+
 	addressBarNode := browserui.AddressBarFinder
 
 	// Set up keyboard.

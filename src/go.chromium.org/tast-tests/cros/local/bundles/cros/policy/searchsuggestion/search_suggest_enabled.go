@@ -8,6 +8,7 @@ package searchsuggestion
 
 import (
 	"context"
+	"net/http/httptest"
 	"strings"
 	"time"
 
@@ -30,13 +31,38 @@ type TestCase struct {
 	Enabled              bool
 }
 
-const (
-	// AnnotationID is the hashcode for annotation omnibox_suggest.
-	AnnotationID = "47815025"
-)
+// AnnotationHashCode is the hashcode for annotation omnibox_suggest.
+const AnnotationHashCode = "47815025"
+
+// GetTestCases returns the list of TestCase objects on which
+// SearchSuggestEnabled policy is tested.
+func GetTestCases() []TestCase {
+	// Reordering the TestCase objects in the returned list may break tests.
+	return []TestCase{
+		{
+			Name:                 "disabled",
+			ShouldFindAnnotation: false,
+			Policy:               &policy.SearchSuggestEnabled{Val: false},
+			Enabled:              false,
+		},
+		{
+			Name:                 "enabled",
+			ShouldFindAnnotation: true,
+			Policy:               &policy.SearchSuggestEnabled{Val: true},
+			Enabled:              true,
+		},
+		{
+			Name:                 "unset",
+			ShouldFindAnnotation: true,
+			Policy:               &policy.SearchSuggestEnabled{Stat: policy.StatusUnset},
+			Enabled:              true,
+		},
+	}
+}
 
 // TriggerSearchSuggestion verifies suggestions are not shown when policy is off.
-func TriggerSearchSuggestion(ctx context.Context, param TestCase, tconn *chrome.TestConn, br *browser.Browser) (err error) {
+func TriggerSearchSuggestion(ctx context.Context, _ *testing.State, _ *chrome.Chrome, br *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, paramIndex int) (err error) {
+	param := GetTestCases()[paramIndex]
 
 	// Open a keyboard device.
 	keyboard, err := input.Keyboard(ctx)

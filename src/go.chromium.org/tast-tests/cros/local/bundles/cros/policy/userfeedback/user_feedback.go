@@ -8,6 +8,7 @@ package userfeedback
 
 import (
 	"context"
+	"net/http/httptest"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/policy"
@@ -18,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // TestCase defines test expectations based on the policy value.
@@ -34,8 +36,37 @@ const (
 	ChromeFeedbackReportAppHashCode = "134729048" // chrome_feedback_report_app
 )
 
-// TriggerUserFeedback verifies feedback app doesnt send reports when policy is off.
-func TriggerUserFeedback(ctx context.Context, param TestCase, tconn *chrome.TestConn, br *browser.Browser) (err error) {
+// GetTestCases returns the list of TestCase objects on which
+// UserFeedbackAllowed policy is tested.
+func GetTestCases() []TestCase {
+	// Reordering the TestCase objects in the returned list may break tests.
+	return []TestCase{
+		{
+			Name:                 "deny",
+			Value:                &policy.UserFeedbackAllowed{Val: false},
+			WantReportOption:     false,
+			ShouldFindAnnotation: false,
+		},
+		{
+			Name:                 "allow",
+			Value:                &policy.UserFeedbackAllowed{Val: true},
+			WantReportOption:     true,
+			ShouldFindAnnotation: true,
+		},
+		{
+			Name:                 "unset",
+			Value:                &policy.UserFeedbackAllowed{Stat: policy.StatusUnset},
+			WantReportOption:     true,
+			ShouldFindAnnotation: true,
+		},
+	}
+}
+
+// TriggerUserFeedback verifies feedback app doesnt send reports when policy is
+// off.
+func TriggerUserFeedback(ctx context.Context, _ *testing.State, _ *chrome.Chrome, br *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, paramIndex int) (err error) {
+	param := GetTestCases()[paramIndex]
+
 	ui := uiauto.New(tconn).WithTimeout(5 * time.Second)
 
 	// Open Chrome to run test.

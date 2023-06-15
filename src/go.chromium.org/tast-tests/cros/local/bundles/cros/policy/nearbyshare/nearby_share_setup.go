@@ -7,15 +7,18 @@ package nearbyshare
 
 import (
 	"context"
+	"net/http/httptest"
 
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/restriction"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // TestCase defines test expectations based on the value of policy
@@ -26,10 +29,29 @@ type TestCase struct {
 	Policy           *policy.NearbyShareAllowed
 }
 
-// VerifyNearbySharePermissions opens the 'Connected devices' page in
-// OS Settings and verifies that Nearby Share is disabled based on policy value.
-func VerifyNearbySharePermissions(ctx context.Context, param TestCase, cr *chrome.Chrome,
-	tconn *chrome.TestConn) (err error) {
+// GetTestCases returns the list of TestCase objects on which
+// NearbyShareAllowed policy is tested.
+func GetTestCases() []TestCase {
+	// Reordering the TestCase objects in the returned list may break tests.
+	return []TestCase{
+		{
+			Name:             "disabled",
+			ShouldBeDisabled: true,
+			Policy:           &policy.NearbyShareAllowed{Val: false},
+		},
+		{
+			Name:             "enabled",
+			ShouldBeDisabled: false,
+			Policy:           &policy.NearbyShareAllowed{Val: true},
+		},
+	}
+}
+
+// VerifyNearbySharePermissions opens the 'Connected devices' page in OS
+// Settings and verifies that Nearby Share is disabled based on policy value.
+func VerifyNearbySharePermissions(ctx context.Context, _ *testing.State, cr *chrome.Chrome, _ *browser.Browser, _ *httptest.Server, tconn *chrome.TestConn, paramIndex int) (err error) {
+	param := GetTestCases()[paramIndex]
+
 	const (
 		connectedDevicesURL      = "multidevice"
 		connectedDevicesPageName = "Connected devices"

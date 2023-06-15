@@ -62,18 +62,7 @@ func NearbyShareAllowed(ctx context.Context, s *testing.State) {
 
 	// Test the 'enabled' and 'disabled' cases only, since these are the valid values in DPanel.
 	// No test for 'unset' since this is not a valid value for this policy.
-	for _, param := range []nearbyshare.TestCase{
-		{
-			Name:             "enabled",
-			ShouldBeDisabled: false,
-			Policy:           &policy.NearbyShareAllowed{Val: true},
-		},
-		{
-			Name:             "disabled",
-			ShouldBeDisabled: true,
-			Policy:           &policy.NearbyShareAllowed{Val: false},
-		},
-	} {
+	for index, param := range nearbyshare.GetTestCases() {
 		s.Run(ctx, param.Name, func(ctx context.Context, s *testing.State) {
 			// Perform cleanup.
 			if err := policyutil.ResetChrome(ctx, fdms, cr); err != nil {
@@ -85,7 +74,7 @@ func NearbyShareAllowed(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to update policies: ", err)
 			}
 
-			if err := nearbyshare.VerifyNearbySharePermissions(ctx, param, cr, tconn); err != nil {
+			if err := nearbyshare.VerifyNearbySharePermissions(ctx, s, cr, nil, nil, tconn, index); err != nil {
 				s.Fatal("Failed to verify Nearby Share permissions: ", err)
 			}
 		})
