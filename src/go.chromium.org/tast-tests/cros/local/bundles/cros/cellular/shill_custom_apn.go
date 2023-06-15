@@ -6,6 +6,7 @@ package cellular
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"time"
 
@@ -141,6 +142,7 @@ func ShillCustomApn(ctx context.Context, s *testing.State) {
 	lastMatchingGoodAPN := ""
 	optionalAPNExist := false
 	optionalAPNSucceeded := false
+	counter := 0
 	for _, knownAPN := range knownAPNs {
 
 		isConnected, err := service.IsConnected(ctx)
@@ -158,7 +160,16 @@ func ShillCustomApn(ctx context.Context, s *testing.State) {
 		if testNewAPNUIRevamp {
 			// Append all other APNs after the one we are testing if the current APN is an attach APN. It should work either way.
 			apn := knownAPN.GetAPNForShill()
-			apns := []map[string]string{apn}
+			wrongApn := make(map[string]string)
+			for k, v := range apn {
+				wrongApn[k] = v
+			}
+			// Add a different wrong-apn every time to avoid throttling algorithms in the modem.
+			wrongApn[shillconst.DevicePropertyCellularAPNInfoApnName] = fmt.Sprintf("wrong-apn%d", counter)
+			counter++
+			// Start with a wrong APN to ensure the round robin works correctly.
+			apns := []map[string]string{wrongApn}
+			apns = append(apns, apn)
 			if knownAPN.IsAttachAPN() {
 				for _, knownAPN2 := range knownAPNs {
 					apn2 := knownAPN2.GetAPNForShill()
@@ -201,7 +212,7 @@ func ShillCustomApn(ctx context.Context, s *testing.State) {
 		if knownAPN.Optional {
 			optionalAPNExist = true
 		}
-
+		testing.ContextLog(ctx, "Testing APN: ", knownAPN.APNInfo[shillconst.DevicePropertyCellularAPNInfoApnName])
 		if err := helper.ConnectToServiceWithTimeout(ctx, service, 60*time.Second); err != nil {
 			if knownAPN.Optional {
 				continue
