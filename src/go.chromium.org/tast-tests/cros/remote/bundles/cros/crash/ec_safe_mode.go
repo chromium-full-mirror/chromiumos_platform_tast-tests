@@ -21,6 +21,11 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
+type testParameters struct {
+	crashCommand   string
+	expectSafeMode bool
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: ECSafeMode,
@@ -36,6 +41,44 @@ func init() {
 		Fixture:      fixture.NormalMode,
 		SoftwareDeps: []string{"device_crash", "ec_crash", "pstore", "reboot", "no_qemu"},
 		HardwareDeps: hwdep.D(hwdep.ECFeatureSystemSafeMode()),
+		Params: []testing.Param{
+			{
+				Name: "assert",
+				Val: testParameters{
+					crashCommand:   "crash assert",
+					expectSafeMode: true,
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.ECFeatureAssertsPanic()),
+			},
+			{
+				Name: "divzero",
+				Val: testParameters{
+					crashCommand:   "crash divzero",
+					expectSafeMode: true,
+				},
+			},
+			{
+				Name: "stack",
+				Val: testParameters{
+					crashCommand:   "crash stack",
+					expectSafeMode: true,
+				},
+			},
+			{
+				Name: "unaligned",
+				Val: testParameters{
+					crashCommand:   "crash unaligned",
+					expectSafeMode: true,
+				},
+			},
+			{
+				Name: "watchdog",
+				Val: testParameters{
+					crashCommand:   "crash watchdog",
+					expectSafeMode: false,
+				},
+			},
+		},
 	})
 }
 
@@ -52,6 +95,9 @@ const (
 // ECSafeMode verifies that EC safe mode runs and Kernel syncs logs
 func ECSafeMode(ctx context.Context, s *testing.State) {
 	var timerInfoLine string
+
+	param := s.Param().(testParameters)
+
 	d := s.DUT()
 
 	h := s.FixtValue().(*fixture.Value).Helper
@@ -135,9 +181,9 @@ func ECSafeMode(ctx context.Context, s *testing.State) {
 		s.Error("Failed to find timer info line from EC log: ", err)
 	}
 
-	s.Log("Running crash command")
+	s.Log("Running crash command: ", param.crashCommand)
 	// This should reboot the device
-	if err := h.Servo.RunECCommand(ctx, "crash divzero"); err != nil {
+	if err := h.Servo.RunECCommand(ctx, param.crashCommand); err != nil {
 		s.Fatal("Failed to run EC command: ", err)
 	}
 
@@ -170,19 +216,25 @@ func ECSafeMode(ctx context.Context, s *testing.State) {
 	if panicinfoFlags&panicDataFlagTruncated != 0 {
 		s.Error("PANIC_DATA_FLAG_TRUNCATED is set in panic info flags")
 	}
-	if panicinfoFlags&panicDataFlagSafeModeStarted == 0 {
-		s.Error("PANIC_DATA_FLAG_SAFE_MODE_STARTED is not set in panic info flags")
-	}
 	if panicinfoFlags&panicDataFlagSafeModeFailPreconditions != 0 {
 		s.Error("PANIC_DATA_FLAG_SAFE_MODE_FAIL_PRECONDITIONS is set in panic info flags")
 	}
-	/* Get cros_ec log from previous boot */
-	ecPreviousLog, err := linuxssh.ReadFile(cleanupCtx, d.Conn(), "/var/log/cros_ec.previous")
-	if err != nil || len(ecPreviousLog) == 0 {
-		s.Fatal("Failed to read cros_ec.previous: ", err)
-	}
-	/* Verify timer info line is present */
-	if !strings.Contains(string(ecPreviousLog), timerInfoLine) {
-		s.Fatalf("Time info line %q is missing from cros_ec.previous", timerInfoLine)
+	if param.expectSafeMode {
+		if panicinfoFlags&panicDataFlagSafeModeStarted == 0 {
+			s.Error("PANIC_DATA_FLAG_SAFE_MODE_STARTED is not set in panic info flags")
+		}
+		/* Get cros_ec log from previous boot */
+		ecPreviousLog, err := linuxssh.ReadFile(cleanupCtx, d.Conn(), "/var/log/cros_ec.previous")
+		if err != nil || len(ecPreviousLog) == 0 {
+			s.Fatal("Failed to read cros_ec.previous: ", err)
+		}
+		/* Verify timer info line is present */
+		if !strings.Contains(string(ecPreviousLog), timerInfoLine) {
+			s.Fatalf("Time info line %q is missing from cros_ec.previous", timerInfoLine)
+		}
+	} else {
+		if panicinfoFlags&panicDataFlagSafeModeStarted != 0 {
+			s.Error("PANIC_DATA_FLAG_SAFE_MODE_STARTED set unexpectedly in panic info flags")
+		}
 	}
 }
