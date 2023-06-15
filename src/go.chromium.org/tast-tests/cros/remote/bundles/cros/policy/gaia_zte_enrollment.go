@@ -31,11 +31,11 @@ func init() {
 		Func:         GAIAZTEEnrollment,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "ZTE GAIA Enroll a device without checking policies",
-		BugComponent: "b:1111632", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Enrollment
 		Contacts: []string{
 			"chromeos-commercial-remote-management@google.com",
-			"rzakarian@google.com", // Test author
+			"vsavu@google.com",
 		},
+		BugComponent: "b:1111632",
 		Attr:         []string{"group:dmserver-zteenrollment-daily"},
 		SoftwareDeps: []string{"reboot", "chrome"},
 		ServiceDeps:  []string{"tast.cros.policy.PolicyService", "tast.cros.tape.Service", "tast.cros.hwsec.OwnershipService", "tast.cros.graphics.ScreenshotService"},

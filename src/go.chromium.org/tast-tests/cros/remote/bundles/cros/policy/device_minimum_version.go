@@ -26,8 +26,6 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Behavior of DeviceMinimumVersion policy",
 		Contacts: []string{
-			"cros-engprod-muc@google.com",
-			"snijhara@google.com", // Test author
 			"chromeos-commercial-remote-management@google.com",
 		},
 		BugComponent: "b:1031231",

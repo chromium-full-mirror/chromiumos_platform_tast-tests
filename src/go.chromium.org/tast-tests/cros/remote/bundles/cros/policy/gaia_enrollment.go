@@ -28,9 +28,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "GAIA Enroll a device without checking policies",
 		Contacts: []string{
-			"cros-engprod-muc@google.com",
-			"rzakarian@google.com", // Test author
 			"chromeos-commercial-remote-management@google.com",
+			"vsavu@google.com",
 		},
 		BugComponent: "b:1111632",
 		Attr:         []string{"group:dpanel-end2end", "group:dmserver-enrollment-daily"},

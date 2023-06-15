@@ -30,9 +30,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "GAIA Enroll a device to a Bytebot domain and check PluginVmUserId policy",
 		Contacts: []string{
-			"cros-engprod-muc@google.com",
-			"rzakarian@google.com", // Test author
 			"chromeos-commercial-remote-management@google.com",
+			"vsavu@google.com",
 		},
 		BugComponent: "b:1111632",
 		Attr:         []string{"group:dmserver-enrollment-daily"},
