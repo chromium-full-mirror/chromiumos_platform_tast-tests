@@ -623,3 +623,14 @@ func (i *Instance) Erase(ctx context.Context, regionNames []string) ([]byte, err
 	testing.ContextLog(ctx, "Flashrom erase successful: ", cmdArgs)
 	return out, nil
 }
+
+// NoOp runs flashrom with no arguments other than the verbosity.
+//
+// flashrom prints some useful info (more useful with -V).
+// Returns the output of flashrom.
+func (i *Instance) NoOp(ctx context.Context) (string, error) {
+	cmdArgs := []string{dutFlashromPath}
+	cmdArgs = i.appendVerbosityArg(cmdArgs)
+	out, err := i.runCommandLine(ctx, cmdArgs)
+	return string(out), err
+}
