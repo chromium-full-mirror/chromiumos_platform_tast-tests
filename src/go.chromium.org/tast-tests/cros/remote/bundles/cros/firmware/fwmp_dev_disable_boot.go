@@ -243,6 +243,15 @@ func FwmpDevDisableBoot(ctx context.Context, s *testing.State) {
 				foundScreens = append(foundScreens, fmt.Sprintf("screen=0x%s, %s", screen[1], screen[2]))
 			}
 		}
+
+		// Document the result of fwmp when DUT boots unexpectedly into dev mode.
+		combinedOutput, err := s.DUT().Conn().CommandContext(ctx, "cryptohome", "--action=get_firmware_management_parameters").CombinedOutput(ssh.DumpLogOnError)
+		if err != nil {
+			s.Logf("Running 'cryptohome' on DUT failed: %v, and received: %s", err, combinedOutput)
+		} else {
+			s.Logf("Got current fwmp result: %s", combinedOutput)
+		}
+
 		s.Fatalf("DUT booted unexpectedly into dev mode after FWMP flags set to 0x1, and went through the following firmware screens: %s", strings.Join(foundScreens, "; "))
 	}
 
