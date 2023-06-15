@@ -59,6 +59,8 @@ func init() {
 				ExtraSoftwareDeps: []string{"android_vm"},
 			},
 		},
+		// TODO(b/276847225): Reduce timeout if we can move arc boot to fixture.
+		Timeout: 5 * time.Minute,
 		Data: []string{
 			"download.html",
 			"data.txt",
