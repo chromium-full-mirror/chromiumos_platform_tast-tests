@@ -63,6 +63,20 @@ sysctl -w kernel.panic_on_warn=1
 dmesg --clear
 `
 
+var driversToModprobe = [...]string{
+	"bluetooth",
+	"fuse",
+	"hci_vhci",
+	"ip6table_nat",
+	"rfcomm",
+	"tun",
+	"uinput",
+	"veth",
+	"xt_cgroup",
+	"xt_MASQUERADE",
+	"zram",
+}
+
 const (
 	arm   = "arm"
 	arm64 = "arm64"
@@ -642,6 +656,9 @@ func loadEnabledSyscalls(fpath, board string) (drivers, enabledSyscalls []string
 			drivers = append(drivers, config.Driver)
 			scriptContents = scriptContents + strings.Join(config.StartupCmds, "\n") + "\n"
 		}
+	}
+	for _, d := range driversToModprobe {
+		scriptContents = scriptContents + fmt.Sprintf("modprobe %v\n", d)
 	}
 
 	return drivers, enabledSyscalls, scriptContents, nil
