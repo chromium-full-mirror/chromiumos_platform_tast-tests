@@ -16,6 +16,8 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vctray"
 	"go.chromium.org/tast-tests/cros/local/input/voice"
 	"go.chromium.org/tast-tests/cros/local/videoconferencing/fixture"
@@ -82,7 +84,7 @@ func init() {
 	})
 }
 
-var speakOnMuteToast = nodewith.NameStartingWith("Are you talking?").HasClass("SystemToastInnerLabel")
+var speakOnMuteNudge = nodewith.NameStartingWith("Are you talking?").Role(role.StaticText).First()
 
 func MeetSpeakOnMute(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
@@ -99,6 +101,10 @@ func MeetSpeakOnMute(ctx context.Context, s *testing.State) {
 	// Setup CRAS Aloop for audio test.
 	if err := voice.ActivateAloopNodes(ctx, tconn, voice.LoopbackCapture); err != nil {
 		s.Fatal("Failed to load Aloop: ", err)
+	}
+
+	if err := ossettings.ToggleMuteNudgeWithErrorDump(cr, tconn, true, s.OutDir())(ctx); err != nil {
+		s.Fatal("Failed to toggle on mute nudge: ", err)
 	}
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui")
@@ -141,30 +147,30 @@ func MeetSpeakOnMute(ctx context.Context, s *testing.State) {
 
 	ui := uiauto.New(tconn)
 
-	speakAndWaitForToast := uiauto.Combine("mute and speak",
+	speakAndWaitForNudge := uiauto.Combine("mute and speak",
 		vcTray.ToggleAVDevice(vctray.DevMicrophone, false),
 		uiauto.Retry(10, uiauto.Combine("",
 			func(ctx context.Context) error {
 				return audio.PlayWavToPCM(ctx, s.DataPath(audioInputFile), "hw:Loopback,0")
 			},
-			ui.WithTimeout(time.Second).WaitUntilExists(speakOnMuteToast),
+			ui.WithTimeout(time.Second).WaitUntilExists(speakOnMuteNudge),
 		)),
 	)
 
-	if err := speakAndWaitForToast(ctx); err != nil {
-		s.Fatal("Failed to input audio and wait for toast: ", err)
+	if err := speakAndWaitForNudge(ctx); err != nil {
+		s.Fatal("Failed to input audio and wait for nudge: ", err)
 	}
 
-	if err := uiauto.Combine("unmute clears toast",
+	if err := uiauto.Combine("unmute clears nudge",
 		vcTray.ToggleAVDevice(vctray.DevMicrophone, true),
-		ui.WaitUntilGone(speakOnMuteToast),
+		ui.WaitUntilGone(speakOnMuteNudge),
 	)(ctx); err != nil {
 		s.Fatal("Failed to verify unmute: ", err)
 	}
 
-	// Toast time frame should reset by unmute.
-	// Mute and speak again should trigger the toast.
-	if err := speakAndWaitForToast(ctx); err != nil {
-		s.Fatal("Failed to input audio and wait for toast after reset: ", err)
+	// Nudge time frame should reset by unmute.
+	// Mute and speak again should trigger the Nudge.
+	if err := speakAndWaitForNudge(ctx); err != nil {
+		s.Fatal("Failed to input audio and wait for nudge after reset: ", err)
 	}
 }
