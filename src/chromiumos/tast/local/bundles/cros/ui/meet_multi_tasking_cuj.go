@@ -240,7 +240,13 @@ func MeetMultiTaskingCUJ(ctx context.Context, s *testing.State) {
 	webview := nodewith.ClassName("ContentsWebView").Role(role.WebView)
 
 	// Check and grant permissions.
-	if err := prompts.ClearPotentialPrompts(tconn, time.Minute, prompts.ShowNotificationsPrompt, prompts.AllowAVPermissionPrompt)(ctx); err != nil {
+	if err := prompts.ClearPotentialPrompts(
+		tconn,
+		time.Minute,
+		prompts.ShowNotificationsPrompt,
+		prompts.AllowAVPermissionPrompt,
+		prompts.AllowMicrophoneAndCameraPermissionPrompt,
+	)(ctx); err != nil {
 		s.Fatal("Failed to grant permissions: ", err)
 	}
 
