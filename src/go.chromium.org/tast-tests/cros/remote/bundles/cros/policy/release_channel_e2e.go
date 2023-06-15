@@ -141,6 +141,34 @@ func init() {
 					"CHROMEOS_RELEASE_VERSION": "^15183[.].+[.].+$",
 				},
 			},
+		}, {
+			Name:    "stable_omaha",
+			Timeout: omahaUpdateE2ETimeout + releaseChannelE2ETimeout,
+			Val: testParam{
+				ReleaseChannelPolicy: tape.RELEASECHANNELWITHLTSENUM_RELEASE_CHANNEL_WITH_LTS_ENUM_STABLE_CHANNEL,
+				ExpectedPolicies: []policy.Policy{
+					&policy.ChromeOsReleaseChannel{Stat: policy.StatusSet, Val: "stable-channel"},
+				},
+				expectedParameters: []string{"track=\"stable-channel\""},
+				testOmaha:          true,
+				expectedLSBReleaseRegex: map[string]string{
+					"CHROMEOS_RELEASE_TRACK": "^stable-channel$",
+				},
+			},
+		}, {
+			Name:    "beta_omaha",
+			Timeout: omahaUpdateE2ETimeout + releaseChannelE2ETimeout,
+			Val: testParam{
+				ReleaseChannelPolicy: tape.RELEASECHANNELWITHLTSENUM_RELEASE_CHANNEL_WITH_LTS_ENUM_BETA_CHANNEL,
+				ExpectedPolicies: []policy.Policy{
+					&policy.ChromeOsReleaseChannel{Stat: policy.StatusSet, Val: "beta-channel"},
+				},
+				expectedParameters: []string{"track=\"beta-channel\""},
+				testOmaha:          true,
+				expectedLSBReleaseRegex: map[string]string{
+					"CHROMEOS_RELEASE_TRACK": "^beta-channel$",
+				},
+			},
 		}},
 	})
 }
