@@ -29,18 +29,19 @@ func init() {
 		},
 		// ChromeOS > Software > ARC++ > Core > Play Store Setup
 		BugComponent: "b:1131344",
-		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		VarDeps:      []string{"ui.gaiaPoolDefault"},
 		SoftwareDeps: []string{"chrome", "play_store"},
 		Params: []testing.Param{{
-			ExtraAttr:         []string{"group:cq-minimal"},
+			ExtraAttr:         []string{"group:cq-minimal", "informational", "group:criticalstaging"},
 			ExtraSoftwareDeps: []string{"android_container"},
 		}, {
 			Name:              "container_r",
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			ExtraSoftwareDeps: []string{"android_container_r"},
 		}, {
 			Name:              "vm",
-			ExtraAttr:         []string{"group:cq-minimal"},
+			ExtraAttr:         []string{"group:cq-minimal", "informational"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}},
 		Timeout: 6 * time.Minute,
