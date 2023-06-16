@@ -94,13 +94,19 @@ it opens the browser with a blank page and maximizes the browser window.
 
 Cool down the test device and start collecting power metrics.
 
-* `interval 	time.Duration` The time duration between two subsequent metric snapshots.
+* `sampleInterval` provided as a `time.Duration` type, describes the interval
+between two metric snapshots. Consider dividing your total test time into an
+appropriate measurement interval. For example, if your total test is length
+`300 * time.Second`, the `sampleInterval` could be `5 * time.Second`.
 
-Note: Depending on the test specific setup and workload, cool down process might need to be adjusted.
+Note: Depending on the test specific setup and workload, cool down process might
+ need to be adjusted.
 
-Cooling down the device is necessary, as the setup process can result in higher power consumption than the average power consumption of the actual workload.
+Cooling down the device is necessary, as the setup process can result in higher
+power consumption than the average power consumption of the actual workload.
 
-Without cooling down, the test results can be skewed, and thus loses its purpose to measure accurate power consumption and estimate battery life.
+Without cooling down, the test results can be skewed, and thus loses its purpose
+ to measure accurate power consumption and estimate battery life.
 ```go
 	r := power.NewRecorder(ctx, sampleInterval, s.OutDir(), s.TestName())
 	defer r.Close(cleanupCtx)
