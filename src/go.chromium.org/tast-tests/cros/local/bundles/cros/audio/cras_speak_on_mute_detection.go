@@ -96,7 +96,7 @@ func init() {
 					speechSource:      speaker,
 					expectedDetection: false,
 				},
-				ExtraAttr: []string{"informational"},
+				ExtraAttr: []string{"informational", "group:criticalstaging"},
 			},
 			{
 				Name: "rtc_stream_without_apm_at_speaker", // testplan#8
@@ -110,13 +110,13 @@ func init() {
 					speechSource:      speaker,
 					expectedDetection: false,
 				},
-				ExtraAttr: []string{"informational"},
+				ExtraAttr: []string{"informational", "group:criticalstaging"},
 			},
 			{
 				Name: "rtc_stream_with_apm_unmuted", // testplan#9
 				Val: crasSpeakOnMuteDetectionParam{
 					featureEnabled: true,
-					inputMuted:     true,
+					inputMuted:     false,
 					clientStream: clientStreamConfig{
 						rtc: true,
 						apm: true,
@@ -124,7 +124,7 @@ func init() {
 					speechSource:      mouth,
 					expectedDetection: false,
 				},
-				ExtraAttr: []string{"informational"},
+				ExtraAttr: []string{"informational", "group:criticalstaging"},
 			},
 			{
 				Name: "rtc_stream_with_apm_feature_disabled", // testplan#10
