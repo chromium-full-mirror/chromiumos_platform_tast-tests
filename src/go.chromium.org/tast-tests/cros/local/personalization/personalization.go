@@ -9,7 +9,6 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
-	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -147,7 +146,7 @@ func SearchForAppInLauncher(query, result string, kb *input.KeyboardEventWriter,
 
 // SetBacklightColor selects a color based on its index in the color options of keyboard backlight and verifies the correct color is selected.
 func SetBacklightColor(ctx context.Context, ui *uiauto.Context, colorIndex int) error {
-	colorOptionFinder := nodewith.HasClass("selectable").Nth(colorIndex)
+	colorOptionFinder := nodewith.Role(role.RadioButton).Ancestor(nodewith.HasClass("selectable").Nth(colorIndex))
 
 	if err := ui.DoDefault(colorOptionFinder)(ctx); err != nil {
 		return errors.Wrapf(err, "failed to click on color option at index %v", colorIndex)
@@ -158,7 +157,7 @@ func SetBacklightColor(ctx context.Context, ui *uiauto.Context, colorIndex int) 
 		if err != nil {
 			return errors.Wrap(err, "failed to get color option info")
 		}
-		if !strings.Contains(colorOptionInfo.ClassName, "tast-selected-color") {
+		if colorOptionInfo.HTMLAttributes["aria-checked"] != "true" {
 			return errors.Errorf("color at index %v should be selected", colorIndex)
 		}
 		return nil
