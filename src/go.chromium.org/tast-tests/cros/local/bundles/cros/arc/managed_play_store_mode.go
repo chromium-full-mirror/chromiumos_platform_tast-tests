@@ -52,7 +52,6 @@ func init() {
 					shouldBeEmpty: true,
 				},
 				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			},
 			{
 				Name: "allowlist_vm",
@@ -88,7 +87,6 @@ func init() {
 					shouldBeEmpty: false,
 				},
 				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			},
 			{
 				Name: "blocklist_vm",
