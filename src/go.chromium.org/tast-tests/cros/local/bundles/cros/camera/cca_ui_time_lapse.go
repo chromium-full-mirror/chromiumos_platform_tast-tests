@@ -6,9 +6,10 @@ package camera
 
 import (
 	"context"
+	"time"
+
 	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/local/camera/cca"
-	"time"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -22,7 +23,7 @@ func init() {
 		Contacts:     []string{"chromeos-camera-eng@google.com", "kamchonlathorn@chromium.org"},
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
 		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
-		Timeout:      8 * time.Minute,
+		Timeout:      9 * time.Minute,
 		Fixture:      "ccaLaunchedWithTimeLapseOnFakeHALCamera",
 		BugComponent: "b:978428",
 	})
@@ -37,7 +38,6 @@ func CCAUITimeLapse(ctx context.Context, s *testing.State) {
 		s.Error("Failed to switch to time-lapse mode")
 	}
 	// TODO(b/236800499): Test pausing/resuming the recording.
-	// TODO(b/280392334): Test recording while the window is minimized.
 	for _, tc := range []struct {
 		name    string
 		run     func(context.Context, *cca.App) error
@@ -45,6 +45,7 @@ func CCAUITimeLapse(ctx context.Context, s *testing.State) {
 	}{
 		{"testSimpleRecording", testSimpleRecording, 2 * time.Minute},
 		{"testAutoSpeedRecording", testAutoSpeedRecording, 4 * time.Minute},
+		{"testRecordInMinimizedWindow", testRecordInMinimizedWindow, time.Minute},
 	} {
 		subTestCtx, cancel := context.WithTimeout(ctx, tc.timeout)
 		s.Run(subTestCtx, tc.name, func(ctx context.Context, s *testing.State) {
@@ -68,6 +69,45 @@ func testAutoSpeedRecording(ctx context.Context, app *cca.App) error {
 	return recordTimeLapseFor(ctx, app, 3*time.Minute)
 }
 
+// testRecordInMinimizedWindow tests that time-lapse video recording continues
+// even when CCA window being minimized and restore.
+func testRecordInMinimizedWindow(ctx context.Context, app *cca.App) error {
+	const activeRecordTime = 5 * time.Second
+	const minimizedRecordTime = 10 * time.Second
+	// Starts recording a time-lapse video.
+	startTime, err := app.StartRecording(ctx, cca.TimerOff)
+	if err != nil {
+		return errors.Wrap(err, "failed to start recording a time-lapse video")
+	}
+	if err := performActivityForDuration(ctx, "Record a time-lapse video", activeRecordTime); err != nil {
+		return err
+	}
+	// Minimizes the window and let the recording continue.
+	if err := app.MinimizeWindow(ctx); err != nil {
+		return errors.Wrap(err, "failed to minimize the window")
+	}
+	if err := performActivityForDuration(ctx, "Keep recording in the minimized window", minimizedRecordTime); err != nil {
+		return err
+	}
+	// Restores the window and continues recording.
+	if err := app.RestoreWindow(ctx); err != nil {
+		return errors.Wrap(err, "failed to restore the window")
+	}
+	if err := app.Focus(ctx); err != nil {
+		return errors.Wrap(err, "failed to focus the window")
+	}
+	if err := performActivityForDuration(ctx, "Record after the window is restored", activeRecordTime); err != nil {
+		return err
+	}
+	// Stops the recording and verifies the video duration.
+	fileInfo, _, err := app.StopRecording(ctx, cca.TimerOff, startTime)
+	if err != nil {
+		return errors.Wrap(err, "failed to stop recording the time-lapse video")
+	}
+	expectedDuration := activeRecordTime + minimizedRecordTime + activeRecordTime
+	return validateTimeLapseDuration(ctx, app, fileInfo.Name(), expectedDuration)
+}
+
 // recordTimeLapseFor records in time-lapse mode for |recordTime| and verifies the record time.
 func recordTimeLapseFor(ctx context.Context, app *cca.App, recordTime time.Duration) error {
 	testing.ContextLogf(ctx, "Recording a time-lapse video for %v seconds", recordTime)
@@ -75,17 +115,17 @@ func recordTimeLapseFor(ctx context.Context, app *cca.App, recordTime time.Durat
 	if err != nil {
 		return errors.Wrap(err, "failed to record a time-lapse video")
 	}
-	filePath, err := app.FilePathInSavedDir(ctx, fileInfo.Name())
-	if err != nil {
-		return errors.Wrap(err, "failed to get file path in saved path")
-	}
-	return validateTimeLapseDuration(ctx, app, filePath, recordTime)
+	return validateTimeLapseDuration(ctx, app, fileInfo.Name(), recordTime)
 }
 
 // validateTimeLapseDuration validates if the duration of the result video
 // matches with the recorded time and the recorded speed.
-func validateTimeLapseDuration(ctx context.Context, app *cca.App, path string, recordTime time.Duration) error {
-	duration, err := cca.VideoDuration(ctx, path)
+func validateTimeLapseDuration(ctx context.Context, app *cca.App, fileName string, recordTime time.Duration) error {
+	filePath, err := app.FilePathInSavedDir(ctx, fileName)
+	if err != nil {
+		return errors.Wrap(err, "failed to get file path in saved path")
+	}
+	duration, err := cca.VideoDuration(ctx, filePath)
 	if err != nil {
 		return err
 	}
@@ -95,6 +135,16 @@ func validateTimeLapseDuration(ctx context.Context, app *cca.App, path string, r
 	}
 	if (duration - expectedDuration).Abs() > timeLapseTolerance {
 		return errors.Errorf("incorrect result video duration get %v; want %v with tolerance %v", duration, expectedDuration, timeLapseTolerance)
+	}
+	return nil
+}
+
+// performActivityForDuration sleeps to perform the activity for the specified |duration|.
+func performActivityForDuration(ctx context.Context, activity string, duration time.Duration) error {
+	testing.ContextLogf(ctx, "%v for %v", activity, duration)
+	// GoBigSleepLint: Perform the activity for |duration|.
+	if err := testing.Sleep(ctx, duration); err != nil {
+		return errors.Wrapf(err, "failed to sleep to %v", activity)
 	}
 	return nil
 }
