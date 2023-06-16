@@ -36,6 +36,9 @@ func init() {
 					dlcID:           "nc-ap-dlc",
 					dlcSharedObject: "libdenoiser.so",
 				},
+				ExtraSoftwareDeps: []string{
+					"amd64", // libdenoiser.so is amd64 only.
+				},
 			},
 		},
 	})
