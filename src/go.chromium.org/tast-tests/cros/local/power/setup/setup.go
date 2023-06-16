@@ -166,7 +166,7 @@ type BatteryDischarge struct {
 }
 
 // DefaultDischargeThreshold is the default battery discharge threshold.
-const DefaultDischargeThreshold = 2.0
+const DefaultDischargeThreshold = 15.0
 
 // fulfill performs the battery discharge during power test setup.
 func (battery *BatteryDischarge) fulfill(ctx context.Context, s *Setup) {
