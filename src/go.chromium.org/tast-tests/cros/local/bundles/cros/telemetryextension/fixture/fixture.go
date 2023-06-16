@@ -372,7 +372,12 @@ func (f *telemetryExtensionFixture) setupConnectionToExtension(ctx context.Conte
 }
 
 func (f *telemetryExtensionFixture) addSkipOEMNameCheckChromeArg(ctx context.Context, opts *[]chrome.Option) {
-	if f.skipOEMNameCheck {
+	if !f.skipOEMNameCheck {
+		return
+	}
+	if f.bt == browser.TypeLacros {
+		*opts = append(*opts, chrome.LacrosExtraArgs("--telemetry-extension-skip-manufacturer-check-for-testing"))
+	} else {
 		*opts = append(*opts, chrome.ExtraArgs("--telemetry-extension-skip-manufacturer-check-for-testing"))
 	}
 }
