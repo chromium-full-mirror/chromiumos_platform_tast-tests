@@ -63,7 +63,7 @@ func LaunchFirefoxWithTestPage(ctx context.Context, tconn *chrome.TestConn, uda 
 		ui.WithTimeout(firefoxStartupTimeout).WaitUntilExists(firefoxWindow),
 		maximizeWindow,
 		// Wait until the page is loaded.
-		uda.WaitUntilExists(testPageTab),
+		uda.WithScreenshotStrategy(uidetection.ImmediateScreenshot).WaitUntilExists(testPageTab),
 	)(ctx); err != nil {
 		return err
 	}
