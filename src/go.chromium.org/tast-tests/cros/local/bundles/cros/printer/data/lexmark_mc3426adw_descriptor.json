@@ -1,0 +1,37 @@
+{
+    "Name": "Lexmark MC3426adw",
+    "RegularSettings": {
+        "Dropdowns": {
+            "Layout": {
+                "Values": ["Portrait", "Landscape"]
+            },
+            "Color": {
+				"Values": ["Black and white", "Color"]
+            },
+            "Paper size": {
+                "Values": ["A4", "A5", "A6", "Envelope #10", "Envelope #9", "Envelope B5", "Envelope C5", "Envelope DL", "Envelope Monarch", "Executive", "Foolscap", "Hagaki Postcard", "JIS B5", "Legal", "Letter", "Oficio", "Statement"]
+            },
+            "Pages per sheet": {
+                "Values": ["1", "2", "4", "6", "9", "16"]
+            },
+            "Margins": {
+                "Values": ["Default", "None", "Minimum", "Custom"],
+                "Dependencies": {
+                    "Pages per sheet": "1"
+                }
+            }
+        },
+        "Checkboxes": {
+            "Print on both sides": {},
+            "Headers and footers": {},
+            "Background graphics": {}
+        }
+    },
+    "AdvancedSettings": {
+        "Input Tray": ["Auto", "Envelope", "Manual Slot", "Tray 1"],
+        "Job sheets": ["None", "classified", "confidential", "secret", "Standard", "topsecret", "unclassified"],
+        "Output bin": ["Face down"],
+        "Page delivery": ["reverse-order", "same-order"],
+        "Print quality": ["Normal", "High"]
+    }
+}

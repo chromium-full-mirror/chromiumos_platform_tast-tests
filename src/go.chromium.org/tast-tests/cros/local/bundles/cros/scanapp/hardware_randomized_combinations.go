@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/scanapp/scanning"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -62,6 +63,26 @@ func init() {
 				Val:       "hp_laserjet_mfp_m234dw_descriptor.json",
 				ExtraData: []string{"hp_laserjet_mfp_m234dw_descriptor.json"},
 				ExtraAttr: []string{"paper-io_mfp_printscan"},
+			}, {
+				//MFP in lab
+				Name:      "lexmark_mc3426adw",
+				Val:       "lexmark_mc3426adw_descriptor.json",
+				ExtraData: []string{"lexmark_mc3426adw_descriptor.json"},
+				ExtraAttr: []string{"paper-io_mfp_printscan"},
+			}, {
+				//MFP in lab
+				Name:              "usb_canon_tr4700_series",
+				Val:               "usb_canon_tr4700_series_descriptor.json",
+				ExtraData:         []string{"usb_canon_tr4700_series_descriptor.json"},
+				ExtraAttr:         []string{"paper-io_mfp_printscan"},
+				ExtraHardwareDeps: hwdep.D(hwdep.Model("treeya")),
+			}, {
+				//MFP in lab
+				Name:              "usb_hp_deskjet_2700_series",
+				Val:               "usb_hp_deskjet_2700_series_descriptor.json",
+				ExtraData:         []string{"usb_hp_deskjet_2700_series_descriptor.json"},
+				ExtraAttr:         []string{"paper-io_mfp_printscan"},
+				ExtraHardwareDeps: hwdep.D(hwdep.Model("lazor")),
 			},
 		},
 	})

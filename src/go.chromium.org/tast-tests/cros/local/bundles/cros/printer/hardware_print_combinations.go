@@ -22,6 +22,7 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type testParam struct {
@@ -153,6 +154,73 @@ func init() {
 				ExtraData: []string{"hp_laserjet_mfp_m234dw_descriptor.json"},
 				ExtraAttr: []string{"paper-io_mfp_printscan"},
 				Fixture:   "lacros",
+			}, {
+				//MFP in test lab
+				Name: "lexmark_mc3426adw",
+				Val: &testParam{
+					descriptorPath: "lexmark_mc3426adw_descriptor.json",
+					browserType:    browser.TypeAsh,
+				},
+				ExtraData: []string{"lexmark_mc3426adw_descriptor.json"},
+				ExtraAttr: []string{"paper-io_mfp_printscan"},
+				Fixture:   "chromeLoggedIn",
+			}, {
+				//MFP in test lab
+				Name:              "lacros_lexmark_mc3426adw",
+				ExtraSoftwareDeps: []string{"lacros"},
+				Val: &testParam{
+					descriptorPath: "lexmark_mc3426adw_descriptor.json",
+					browserType:    browser.TypeLacros,
+				},
+				ExtraData: []string{"lexmark_mc3426adw_descriptor.json"},
+				ExtraAttr: []string{"paper-io_mfp_printscan"},
+				Fixture:   "lacros",
+			}, {
+				//MFP in test lab
+				Name: "usb_canon_tr4700_series",
+				Val: &testParam{
+					descriptorPath: "usb_canon_tr4700_series_descriptor.json",
+					browserType:    browser.TypeAsh,
+				},
+				ExtraData:         []string{"usb_canon_tr4700_series_descriptor.json"},
+				ExtraAttr:         []string{"paper-io_mfp_printscan"},
+				Fixture:           "chromeLoggedIn",
+				ExtraHardwareDeps: hwdep.D(hwdep.Model("treeya")),
+			}, {
+				//MFP in test lab
+				Name:              "lacros_usb_canon_tr4700_series",
+				ExtraSoftwareDeps: []string{"lacros"},
+				Val: &testParam{
+					descriptorPath: "usb_canon_tr4700_series_descriptor.json",
+					browserType:    browser.TypeLacros,
+				},
+				ExtraData:         []string{"usb_canon_tr4700_series_descriptor.json"},
+				ExtraAttr:         []string{"paper-io_mfp_printscan"},
+				Fixture:           "lacros",
+				ExtraHardwareDeps: hwdep.D(hwdep.Model("treeya")),
+			}, {
+				//MFP in test lab
+				Name: "usb_hp_deskjet_2700_series",
+				Val: &testParam{
+					descriptorPath: "usb_hp_deskjet_2700_series_descriptor.json",
+					browserType:    browser.TypeAsh,
+				},
+				ExtraData:         []string{"usb_hp_deskjet_2700_series_descriptor.json"},
+				ExtraAttr:         []string{"paper-io_mfp_printscan"},
+				Fixture:           "chromeLoggedIn",
+				ExtraHardwareDeps: hwdep.D(hwdep.Model("lazor")),
+			}, {
+				//MFP in test lab
+				Name:              "lacros_usb_hp_deskjet_2700_series",
+				ExtraSoftwareDeps: []string{"lacros"},
+				Val: &testParam{
+					descriptorPath: "usb_hp_deskjet_2700_series_descriptor.json",
+					browserType:    browser.TypeLacros,
+				},
+				ExtraData:         []string{"usb_hp_deskjet_2700_series_descriptor.json"},
+				ExtraAttr:         []string{"paper-io_mfp_printscan"},
+				Fixture:           "lacros",
+				ExtraHardwareDeps: hwdep.D(hwdep.Model("lazor")),
 			},
 			// printers in BLD lab: un-comment to test them
 			/*{
