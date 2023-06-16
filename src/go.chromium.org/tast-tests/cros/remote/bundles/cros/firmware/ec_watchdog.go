@@ -33,6 +33,9 @@ func init() {
 
 func ECWatchdog(ctx context.Context, s *testing.State) {
 	const (
+		// Small delay to make ensure watchdog does not kick in too early.
+		noWatchdogDelayMS = 500
+		noWatchdogDelay   = noWatchdogDelayMS * time.Millisecond
 		// Delay of spin-wait in ms. Nuvoton boards set the hardware watchdog to
 		// 3187.5ms and also sets a timer to 2200ms. Set the timeout long enough to
 		// exceed the hardware watchdog timer because the timer isn't 100% reliable.
@@ -47,6 +50,8 @@ func ECWatchdog(ctx context.Context, s *testing.State) {
 		oldBootID string
 		newBootID string
 		err       error
+		cmd       string
+		delay     time.Duration
 	)
 
 	h := s.FixtValue().(*fixture.Value).Helper
@@ -65,14 +70,39 @@ func ECWatchdog(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to sync IO on DUT before calling watchdog: ", err)
 	}
 
-	cmd := fmt.Sprintf("waitms %d", watchdogDelayMS)
+	// No reboot test
+
+	cmd = fmt.Sprintf("waitms %d", noWatchdogDelayMS)
+	s.Logf("Short delay %q, expect no reboot", cmd)
+	err = h.Servo.RunECCommand(ctx, cmd)
+	if err != nil {
+		s.Fatal("Failed to send watchdog timer command to EC: ", err)
+	}
+
+	delay = time.Duration(noWatchdogDelay + ecBootDelay)
+	s.Logf("Wait %s", delay)
+	// GoBigSleepLint: wait to ensure no reset happened
+	if err = testing.Sleep(ctx, delay); err != nil {
+		s.Fatal("Failed to sleep during waiting for EC to get up: ", err)
+	}
+
+	if newBootID, err = h.Reporter.BootID(ctx); err != nil {
+		s.Fatal("Failed to fetch current boot ID: ", err)
+	}
+	if newBootID != oldBootID {
+		s.Fatal("Unexpected device reboot")
+	}
+
+	// Reboot test
+
+	cmd = fmt.Sprintf("waitms %d", watchdogDelayMS)
 	s.Logf("Trigger watchdog event %q", cmd)
 	err = h.Servo.RunECCommand(ctx, cmd)
 	if err != nil {
 		s.Fatal("Failed to send watchdog timer command to EC: ", err)
 	}
 
-	delay := time.Duration(watchdogDelay + ecBootDelay)
+	delay = time.Duration(watchdogDelay + ecBootDelay)
 	s.Logf("Sleep %s during watchdog reset", delay)
 	// GoBigSleepLint: wait for watchdog to kick in and reset
 	if err = testing.Sleep(ctx, delay); err != nil {
