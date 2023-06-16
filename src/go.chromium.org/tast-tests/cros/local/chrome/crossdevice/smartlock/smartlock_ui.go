@@ -46,9 +46,9 @@ func ToggleSmartLockEnabled(ctx context.Context, enable bool, tconn *chrome.Test
 	if err != nil {
 		return errors.Wrap(err, "failed to open Connected devices page in OS Settings")
 	}
-	settingsConn, err := settings.ChromeConn(ctx, cr)
+	settingsConn, err := crossdevicesettings.OSSettingsWithShadowPiercer(ctx, tconn, cr, crossdevicesettings.ConnectedDevicesSettingsURL /*existingConn=*/, true)
 	if err != nil {
-		return errors.Wrap(err, "failed to connect to OS settings target")
+		return err
 	}
 	defer settingsConn.Close()
 

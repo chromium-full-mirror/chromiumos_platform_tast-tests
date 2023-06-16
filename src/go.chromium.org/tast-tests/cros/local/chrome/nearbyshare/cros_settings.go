@@ -11,18 +11,15 @@ import (
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
+	"go.chromium.org/tast-tests/cros/local/chrome/crossdevice/crossdevicesettings"
 	"go.chromium.org/tast/core/errors"
 )
 
-// JS for driving the Nearby Share subpage of OS settings.
+// JS for driving the Nearby Share subpage of OS settings. Relies on `shadowPiercingQuery`,
+// so ensure it is loaded before using this JS.
 const (
 	// nearbySettingsSubpageJS is the locator for the settings-nearby-share-subpage element, which is the root element for accessing the subpage.
-	nearbySettingsSubpageJS = `document.querySelector("os-settings-ui").shadowRoot` +
-		`.querySelector("os-settings-main").shadowRoot` +
-		`.querySelector("os-settings-page").shadowRoot` +
-		`.querySelector("settings-multidevice-page").shadowRoot` +
-		`.querySelector("settings-nearby-share-subpage")`
+	nearbySettingsSubpageJS                             = `shadowPiercingQuery("settings-nearby-share-subpage")`
 	showVisibilityDialogJS                              = nearbySettingsSubpageJS + `.showVisibilityDialog_ = true`
 	contactVisibilityJS                                 = nearbySettingsSubpageJS + `.shadowRoot.querySelector("nearby-share-contact-visibility-dialog").shadowRoot.getElementById("contactVisibility")`
 	onboardingSetUpJs                                   = nearbySettingsSubpageJS + `.shadowRoot.querySelector("#setUpButton").click()`
@@ -57,14 +54,9 @@ func (n *NearbySettings) Close(ctx context.Context) error {
 
 // nearbySettingsConn opens OS settings to the Nearby Share subpage and returns a Chrome conn to the page.
 func nearbySettingsConn(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome) (*chrome.Conn, error) {
-	_, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, nearbySettingsURL, func(context.Context) error { return nil })
+	settingsConn, err := crossdevicesettings.OSSettingsWithShadowPiercer(ctx, tconn, cr, settingsURL+nearbySettingsURL /*existingConn=*/, false)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to launch OS Settings to Nearby Share page")
-	}
-
-	settingsConn, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURL(settingsURL+nearbySettingsURL))
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to start Chrome session to OS settings")
+		return nil, err
 	}
 	if err = settingsConn.WaitForExpr(ctx, nearbySettingsSubpageJS); err != nil {
 		return nil, errors.Wrap(err, "failed waiting for nearby subpage to load")
@@ -156,9 +148,9 @@ func EnableNearbyShareInVisibilitySelectionPage(ctx context.Context, tconn *chro
 
 // GetNearbySettings connects to an existing OS settings Nearby Share subpage.
 func GetNearbySettings(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome) (*NearbySettings, error) {
-	settingsConn, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURLPrefix(settingsURL+nearbySettingsURL))
+	settingsConn, err := crossdevicesettings.OSSettingsWithShadowPiercer(ctx, tconn, cr, settingsURL+nearbySettingsURL /*existingConn=*/, true)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to start Chrome session to OS settings")
+		return nil, err
 	}
 	if err = settingsConn.WaitForExpr(ctx, nearbySettingsSubpageJS); err != nil {
 		return nil, errors.Wrap(err, "failed waiting for nearby subpage to load")

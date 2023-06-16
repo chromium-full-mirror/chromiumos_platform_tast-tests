@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/crossdevice/crossdevicesettings"
 	"go.chromium.org/tast/core/errors"
 )
 
@@ -59,9 +60,9 @@ func StartReceiving(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chro
 
 // GetReceiveSurface establishes a connection to the current receive surface if there is one.
 func GetReceiveSurface(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome) (*ReceiveSurface, error) {
-	settingsConn, err := cr.NewConnForTarget(ctx, chrome.MatchTargetURLPrefix(settingsURL+nearbySettingsURL+"?receive"))
+	settingsConn, err := crossdevicesettings.OSSettingsWithShadowPiercer(ctx, tconn, cr, settingsURL+nearbySettingsURL+"?receive" /*existingConn=*/, true)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to start Chrome session to OS settings")
+		return nil, err
 	}
 	if err = settingsConn.WaitForExpr(ctx, nearbySettingsSubpageJS); err != nil {
 		return nil, errors.Wrap(err, "failed waiting for nearby subpage to load")
