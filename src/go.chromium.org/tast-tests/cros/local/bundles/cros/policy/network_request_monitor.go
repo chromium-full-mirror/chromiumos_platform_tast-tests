@@ -102,70 +102,70 @@ func getPolicyList() []policy.Policy {
 type triggerOptionalService func(ctx context.Context, s *testing.State, cr *chrome.Chrome, br *browser.Browser, server *httptest.Server, tconn *chrome.TestConn, paramIndex int) error
 
 type optionalService struct {
-	name                 string
-	assocatedAnnotations []string
-	trigger              triggerOptionalService
-	paramIndex           int
+	name                  string
+	associatedAnnotations []string
+	trigger               triggerOptionalService
+	paramIndex            int
 }
 
 func getOptionalServices() []optionalService {
 	return []optionalService{
 		{
-			name:                 "calendar_integration",
-			assocatedAnnotations: []string{calendarintegration.AnnotationHashCode},
-			trigger:              calendarintegration.TriggerCalendarIntegration,
-			paramIndex:           0,
+			name:                  "calendar_integration",
+			associatedAnnotations: []string{calendarintegration.AnnotationHashCode},
+			trigger:               calendarintegration.TriggerCalendarIntegration,
+			paramIndex:            0,
 		},
 		{
 			name: "default_search_provider",
 			// Annotation will be found even when the policy is disabled.
-			assocatedAnnotations: []string{},
-			trigger:              defaultsearchprovider.TriggerDefaultSearchProvider,
-			paramIndex:           0,
+			associatedAnnotations: []string{},
+			trigger:               defaultsearchprovider.TriggerDefaultSearchProvider,
+			paramIndex:            0,
 		},
 		{
 			name: "nearby_share",
 			// No network annotations are checked for this service, since the network
 			// calls only occur after Nearby Share setup is complete.
-			assocatedAnnotations: []string{},
-			trigger:              nearbyshare.VerifyNearbySharePermissions,
-			paramIndex:           0,
+			associatedAnnotations: []string{},
+			trigger:               nearbyshare.VerifyNearbySharePermissions,
+			paramIndex:            0,
 		},
 		{
-			name:                 "password_leak_detection",
-			assocatedAnnotations: []string{passwordleakdetection.AnnotationHashCode},
-			trigger:              passwordleakdetection.TriggerPasswordLeakDetection,
-			paramIndex:           0,
+			name:                  "password_leak_detection",
+			associatedAnnotations: []string{passwordleakdetection.AnnotationHashCode},
+			trigger:               passwordleakdetection.TriggerPasswordLeakDetection,
+			paramIndex:            0,
 		},
 		{
-			name:                 "quick_answers_definition",
-			assocatedAnnotations: []string{policyquickanswers.AnnotationHashCode},
-			trigger:              policyquickanswers.TriggerQuickAnswersDefinition,
-			paramIndex:           0,
+			name:                  "quick_answers_definition",
+			associatedAnnotations: []string{policyquickanswers.AnnotationHashCode},
+			trigger:               policyquickanswers.TriggerQuickAnswersDefinition,
+			paramIndex:            0,
 		},
 		{
-			name:                 "quick_answers_unit_conversion",
-			assocatedAnnotations: []string{policyquickanswers.AnnotationHashCode},
-			trigger:              policyquickanswers.TriggerQuickAnswersUnitConversion,
-			paramIndex:           0,
+			name:                  "quick_answers_unit_conversion",
+			associatedAnnotations: []string{policyquickanswers.AnnotationHashCode},
+			trigger:               policyquickanswers.TriggerQuickAnswersUnitConversion,
+			paramIndex:            0,
 		},
 		{
-			name:                 "search_suggestion",
-			assocatedAnnotations: []string{searchsuggestion.AnnotationHashCode},
-			trigger:              searchsuggestion.TriggerSearchSuggestion,
-			paramIndex:           0,
+			name:                  "search_suggestion",
+			associatedAnnotations: []string{searchsuggestion.AnnotationHashCode},
+			trigger:               searchsuggestion.TriggerSearchSuggestion,
+			paramIndex:            0,
 		},
 		{
-			name:                 "spell_check",
-			assocatedAnnotations: []string{spellcheck.AnnotationHashCode},
-			trigger:              spellcheck.TriggerSpellCheck,
-			paramIndex:           0,
+			name:                  "spell_check",
+			associatedAnnotations: []string{spellcheck.AnnotationHashCode},
+			trigger:               spellcheck.TriggerSpellCheck,
+			paramIndex:            0,
 		},
 		{
-			name:                 "user_feedback",
-			assocatedAnnotations: []string{userfeedback.HelpContentProviderHashCode, userfeedback.ChromeFeedbackReportAppHashCode},
-			trigger:              userfeedback.TriggerUserFeedback,
-			paramIndex:           0,
+			name:                  "user_feedback",
+			associatedAnnotations: []string{userfeedback.HelpContentProviderHashCode, userfeedback.ChromeFeedbackReportAppHashCode},
+			trigger:               userfeedback.TriggerUserFeedback,
+			paramIndex:            0,
 		},
 	}
 }
@@ -261,7 +261,7 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 			if err := service.trigger(ctx, s, cr, br, server, tconn, service.paramIndex); err != nil {
 				s.Fatalf("Failed to trigger %v: %v", service.name, err)
 			}
-			hashCodes = append(hashCodes, service.assocatedAnnotations...)
+			hashCodes = append(hashCodes, service.associatedAnnotations...)
 		})
 	}
 
