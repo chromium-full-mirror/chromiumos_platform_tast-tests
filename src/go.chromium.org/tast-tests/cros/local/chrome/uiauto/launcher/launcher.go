@@ -397,7 +397,7 @@ func SearchAndLaunchWithQuery(tconn *chrome.TestConn, kb *input.KeyboardEventWri
 			uiauto.Combine(fmt.Sprintf("SearchAndLaunchWithQuery(%s, %s)", query, appName),
 				Open(tconn),
 				Search(tconn, kb, query),
-				ui.WithInterval(time.Second).LeftClickUntil(appSearchFinder, ui.WithTimeout(2*time.Second).WaitUntilGone(appSearchFinder)),
+				ui.WithInterval(time.Second).WithTimeout(10*time.Second).LeftClickUntil(appSearchFinder, ui.WithTimeout(2*time.Second).WaitUntilGone(appSearchFinder)),
 			), &testing.PollOptions{Interval: time.Second, Timeout: time.Minute})
 	}
 }
@@ -552,10 +552,12 @@ func AppItemViewFinder(appName string) *nodewith.Finder {
 // Search return a function that executes a search query.
 // Launcher should be open already.
 func Search(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, query string) uiauto.Action {
+	searchBoxView := nodewith.HasClass("SearchBoxView").Visible().First()
+	searchField := nodewith.HasClass("Textfield").Role("textField").Ancestor(searchBoxView)
 	return func(ctx context.Context) error {
 		// Click the search box.
 		ui := uiauto.New(tconn)
-		if err := ui.LeftClick(nodewith.HasClass("SearchBoxView").Visible().First())(ctx); err != nil {
+		if err := ui.LeftClickUntilFocused(searchField)(ctx); err != nil {
 			return errors.Wrap(err, "failed to click launcher searchbox")
 		}
 
