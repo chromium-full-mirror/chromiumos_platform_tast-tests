@@ -84,91 +84,97 @@ func init() {
 	})
 }
 
-// getPolicyList returns the list of policies to be set at the beginning of the test.
-func getPolicyList() []policy.Policy {
-	return []policy.Policy{
-		&policy.CalendarIntegrationEnabled{Val: false},
-		&policy.DefaultSearchProviderEnabled{Val: false},
-		&policy.NearbyShareAllowed{Val: false},
-		&policy.PasswordLeakDetectionEnabled{Val: false},
-		&policy.QuickAnswersDefinitionEnabled{Val: false},
-		&policy.QuickAnswersUnitConversionEnabled{Val: false},
-		&policy.SearchSuggestEnabled{Val: false},
-		&policy.SpellCheckServiceEnabled{Val: false},
-		&policy.UserAvatarCustomizationSelectorsEnabled{Val: false},
-		&policy.UserFeedbackAllowed{Val: false},
-	}
-}
-
 type triggerOptionalService func(ctx context.Context, s *testing.State, cr *chrome.Chrome, br *browser.Browser, server *httptest.Server, tconn *chrome.TestConn, paramIndex int) error
 
 type optionalService struct {
-	name                  string
+	// name of the optional service.
+	name string
+	// Hashcodes of annotations associated with the service.
 	associatedAnnotations []string
-	trigger               triggerOptionalService
-	paramIndex            int
+	// policies associated with this service. Those policies will be set to the
+	// specified value before triggering the optional services.
+	policies []policy.Policy
+	// The function which triggers the optional service.
+	trigger triggerOptionalService
 }
 
-func getOptionalServices() []optionalService {
+func optionalServices() []optionalService {
 	return []optionalService{
 		{
 			name:                  "calendar_integration",
 			associatedAnnotations: []string{calendarintegration.AnnotationHashCode},
+			policies:              []policy.Policy{&policy.CalendarIntegrationEnabled{Val: false}},
 			trigger:               calendarintegration.TriggerCalendarIntegration,
-			paramIndex:            0,
 		},
 		{
 			name: "default_search_provider",
 			// Annotation will be found even when the policy is disabled.
 			associatedAnnotations: []string{},
+			policies:              []policy.Policy{&policy.DefaultSearchProviderEnabled{Val: false}},
 			trigger:               defaultsearchprovider.TriggerDefaultSearchProvider,
-			paramIndex:            0,
 		},
 		{
 			name: "nearby_share",
 			// No network annotations are checked for this service, since the network
 			// calls only occur after Nearby Share setup is complete.
 			associatedAnnotations: []string{},
+			policies:              []policy.Policy{&policy.NearbyShareAllowed{Val: false}},
 			trigger:               nearbyshare.VerifyNearbySharePermissions,
-			paramIndex:            0,
 		},
 		{
 			name:                  "password_leak_detection",
 			associatedAnnotations: []string{passwordleakdetection.AnnotationHashCode},
+			policies:              []policy.Policy{&policy.PasswordLeakDetectionEnabled{Val: false}},
 			trigger:               passwordleakdetection.TriggerPasswordLeakDetection,
-			paramIndex:            0,
 		},
 		{
 			name:                  "quick_answers_definition",
 			associatedAnnotations: []string{policyquickanswers.AnnotationHashCode},
+			policies:              []policy.Policy{&policy.QuickAnswersDefinitionEnabled{Val: false}},
 			trigger:               policyquickanswers.TriggerQuickAnswersDefinition,
-			paramIndex:            0,
 		},
 		{
 			name:                  "quick_answers_unit_conversion",
 			associatedAnnotations: []string{policyquickanswers.AnnotationHashCode},
+			policies:              []policy.Policy{&policy.QuickAnswersUnitConversionEnabled{Val: false}},
 			trigger:               policyquickanswers.TriggerQuickAnswersUnitConversion,
-			paramIndex:            0,
 		},
 		{
 			name:                  "search_suggestion",
 			associatedAnnotations: []string{searchsuggestion.AnnotationHashCode},
+			policies:              []policy.Policy{&policy.SearchSuggestEnabled{Val: false}},
 			trigger:               searchsuggestion.TriggerSearchSuggestion,
-			paramIndex:            0,
 		},
 		{
 			name:                  "spell_check",
 			associatedAnnotations: []string{spellcheck.AnnotationHashCode},
+			policies:              []policy.Policy{&policy.SpellCheckServiceEnabled{Val: false}},
 			trigger:               spellcheck.TriggerSpellCheck,
-			paramIndex:            0,
 		},
 		{
 			name:                  "user_feedback",
 			associatedAnnotations: []string{userfeedback.HelpContentProviderHashCode, userfeedback.ChromeFeedbackReportAppHashCode},
+			policies:              []policy.Policy{&policy.UserFeedbackAllowed{Val: false}},
 			trigger:               userfeedback.TriggerUserFeedback,
-			paramIndex:            0,
 		},
 	}
+}
+
+// concatPolicyLists concats the lists of policies associated with the optional
+// services and returns a single list.
+func concatPolicyLists() []policy.Policy {
+	// In lacros mode, for unknown reasons, we are unable to stop the browser
+	// network logging after we run user avatar customization logic. We need to
+	// ensure this runs after the stop logging call. That is why the function
+	// optionalServices() does not return user avatar customization service. We
+	// will separately trigger this service after we stop browser network logging.
+	// Adding the policy related to user avatar customization service as it is not
+	// returned by the function optionalServices().
+	policies := []policy.Policy{&policy.UserAvatarCustomizationSelectorsEnabled{Val: false}}
+	for _, service := range optionalServices() {
+		policies = append(policies, service.policies...)
+	}
+	return policies
 }
 
 func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
@@ -214,7 +220,8 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
-	// Enable the pref that indicates the user has enabled the Quick Answers services.
+	// Enable the pref that indicates the user has enabled the Quick Answers
+	// services.
 	if err := quickanswers.SetPrefValue(ctx, tconn, "settings.quick_answers.enabled", true); err != nil {
 		s.Fatal("Failed to enable Quick Answers: ", err)
 	}
@@ -229,9 +236,11 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 	}
 
 	// Update policies.
-	policies := getPolicyList()
+	policies := concatPolicyLists()
 	policyBlob.AddPolicies(policies)
-	// Updates policies in Chrome by updating the the policy blob of FakeDMS. This allows using a custom PolicyUser for the policy blob instead of the default one.
+	// Updates policies in Chrome by updating the the policy blob of FakeDMS. This
+	// allows using a custom PolicyUser for the policy blob instead of the default
+	// one.
 	if err := policyutil.ServeBlobAndRefresh(ctx, fdms, cr, policyBlob); err != nil {
 		s.Fatal("Failed to update policies: ", err)
 	}
@@ -257,9 +266,9 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 	var hashCodes []string
 
 	// Trigger the optional services one by one.
-	for _, service := range getOptionalServices() {
+	for _, service := range optionalServices() {
 		s.Run(ctx, service.name, func(ctx context.Context, s *testing.State) {
-			if err := service.trigger(ctx, s, cr, br, server, tconn, service.paramIndex); err != nil {
+			if err := service.trigger(ctx, s, cr, br, server, tconn, 0); err != nil {
 				s.Fatalf("Failed to trigger %v: %v", service.name, err)
 			}
 			hashCodes = append(hashCodes, service.associatedAnnotations...)
