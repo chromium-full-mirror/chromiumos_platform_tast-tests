@@ -64,6 +64,7 @@ func init() {
 						"--effects=aec",
 					},
 				},
+				ExtraSoftwareDeps: []string{"ap_noise_cancellation"},
 			},
 			{
 				Name: "nc_44100hz",
@@ -76,6 +77,7 @@ func init() {
 						"--effects=aec",
 					},
 				},
+				ExtraSoftwareDeps: []string{"ap_noise_cancellation"},
 			},
 		},
 	})
