@@ -36,13 +36,6 @@ const (
 	postTestTimeout       = 30 * time.Second
 	uninstallationTimeout = 2 * time.Minute
 
-	chronosUID = 1000
-	crosvmUID  = 299
-
-	// installOemString is an OEM string set during install to signal to the
-	// VM that it should install itself to the permanent disk.
-	installOemString = "refvm:install=true"
-
 	// referenceVMInstaller is the installer image for the reference VM.
 	referenceVMInstaller     = "refvm.qcow2"
 	referenceVMInstallerHash = "refvm.qcow2.SHA256"
@@ -163,7 +156,8 @@ func (f *bruschettaFixture) SetUp(ctx context.Context, s *testing.FixtState) int
 					"policy_update_action": "NONE",
 				},
 				"oem_strings": []interface{}{
-					installOemString,
+					"refvm:install=true",
+					"refvm:noninteractive=true",
 				},
 			},
 		},
