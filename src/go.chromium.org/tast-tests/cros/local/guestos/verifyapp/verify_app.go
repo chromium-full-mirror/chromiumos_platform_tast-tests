@@ -12,19 +12,20 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/crostini"
+	"go.chromium.org/tast-tests/cros/local/guestos"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/vm"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
 // RunTest executes a test application directly from the command
 // line in the terminal and verifies that it renders the majority of pixels on
 // the screen in the specified color.
-func RunTest(ctx context.Context, s *testing.State, cr *chrome.Chrome, cont *vm.Container, conf crostini.DemoConfig) {
+func RunTest(ctx context.Context, outDir string, cr *chrome.Chrome, guest vm.Guest, conf guestos.DemoConfig) error {
 	keyboard, err := input.Keyboard(ctx)
 	if err != nil {
-		s.Fatal("Failed to find keyboard device: ", err)
+		return errors.Wrap(err, "failed to find keyboard device")
 	}
 	defer keyboard.Close(ctx)
 
@@ -33,22 +34,24 @@ func RunTest(ctx context.Context, s *testing.State, cr *chrome.Chrome, cont *vm.
 	nrgba := color.NRGBAModel.Convert(conf.DominantColor).(color.NRGBA)
 	commandColor := fmt.Sprintf("--bgcolor=0x%02x%02x%02x", nrgba.R, nrgba.G, nrgba.B)
 	commandTitle := fmt.Sprintf("--title=%s_terminal", conf.Name)
-	cmd := cont.Command(ctx, conf.AppPath, commandColor, commandTitle)
+	cmd := guest.Command(ctx, conf.AppPath, commandColor, commandTitle)
 	if err := cmd.Start(); err != nil {
-		s.Fatalf("Failed launching %v: %v", conf.AppPath, err)
+		return errors.Wrapf(err, "failed launching %v", conf.AppPath)
 	}
 	defer cmd.Wait(testexec.DumpLogOnError)
 	defer cmd.Kill()
 
-	if err := crostini.MatchScreenshotDominantColor(ctx, cr, conf.DominantColor, filepath.Join(s.OutDir(), conf.Name+"_screenshot.png")); err != nil {
-		s.Fatalf("Failed to see screenshot %q: %v", conf.Name, err)
+	if err := guestos.MatchScreenshotDominantColor(ctx, cr, conf.DominantColor, filepath.Join(outDir, conf.Name+"_screenshot.png")); err != nil {
+		return errors.Wrapf(err, "failed to see screenshot %q", conf.Name)
 	}
 
 	// Terminate the app now so that if there's a failure in the
 	// screenshot then we can get its output which may give us useful information
 	// about display errors.
-	s.Logf("Closing %v with keypress", conf.Name)
+	testing.ContextLogf(ctx, "Closing %v with keypress", conf.Name)
 	if err := keyboard.Accel(ctx, "Enter"); err != nil {
-		s.Error("Failed to type Enter key: ", err)
+		testing.ContextLog(ctx, "Failed to type Enter key: ", err)
 	}
+
+	return nil
 }

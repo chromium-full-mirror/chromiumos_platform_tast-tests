@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/colorcmp"
 	"go.chromium.org/tast-tests/cros/local/crostini"
+	"go.chromium.org/tast-tests/cros/local/guestos"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/testing"
 )
@@ -69,7 +70,7 @@ func MousePerf(ctx context.Context, s *testing.State) {
 	doMouseMove := func(ctx context.Context) error {
 		// We want to make sure the app is running and visible (foregrounded),
 		// so match a screenshot against the colour the app is known to render in.
-		if err := crostini.MatchScreenshotDominantColor(ctx, cr, colorcmp.RGB(127, 0, 255), filepath.Join(s.OutDir(), "screenshot.png")); err != nil {
+		if err := guestos.MatchScreenshotDominantColor(ctx, cr, colorcmp.RGB(127, 0, 255), filepath.Join(s.OutDir(), "screenshot.png")); err != nil {
 			return err
 		}
 		for i := 0; i < 400; i++ {

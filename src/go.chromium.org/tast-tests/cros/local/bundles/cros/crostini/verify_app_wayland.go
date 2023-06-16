@@ -8,10 +8,11 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/crostini/verifyapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/crostini"
+	"go.chromium.org/tast-tests/cros/local/guestos"
+	"go.chromium.org/tast-tests/cros/local/guestos/verifyapp"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -80,5 +81,8 @@ func VerifyAppWayland(ctx context.Context, s *testing.State) {
 	}
 	defer cleanup(ctx)
 
-	verifyapp.RunTest(ctx, s, cr, cont, crostini.WaylandDemoConfig())
+	err = verifyapp.RunTest(ctx, s.OutDir(), cr, cont, guestos.WaylandDemoConfig())
+	if err != nil {
+		s.Fatal("Failed to run test: ", err)
+	}
 }

@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/colorcmp"
 	"go.chromium.org/tast-tests/cros/local/crostini"
+	"go.chromium.org/tast-tests/cros/local/guestos"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/shutil"
 	"go.chromium.org/tast/core/testing"
@@ -263,7 +264,7 @@ func Toolkit(ctx context.Context, s *testing.State) {
 	}(cleanupCtx)
 
 	// The toolkit applications will render a magenta window.
-	if err := crostini.MatchScreenshotDominantColor(ctx, cr, colorcmp.RGB(255, 0, 255), filepath.Join(s.OutDir(), "screenshot.png")); err != nil {
+	if err := guestos.MatchScreenshotDominantColor(ctx, cr, colorcmp.RGB(255, 0, 255), filepath.Join(s.OutDir(), "screenshot.png")); err != nil {
 		s.Fatal("Failed during screenshot check: ", err)
 	}
 }

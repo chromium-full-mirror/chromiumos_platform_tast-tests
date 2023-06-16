@@ -8,8 +8,9 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/crostini/verifyapp"
 	"go.chromium.org/tast-tests/cros/local/crostini"
+	"go.chromium.org/tast-tests/cros/local/guestos"
+	"go.chromium.org/tast-tests/cros/local/guestos/verifyapp"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -58,5 +59,8 @@ func init() {
 func VerifyAppX11(ctx context.Context, s *testing.State) {
 	pre := s.FixtValue().(crostini.FixtureData)
 
-	verifyapp.RunTest(ctx, s, pre.Chrome, pre.Cont, crostini.X11DemoConfig())
+	err := verifyapp.RunTest(ctx, s.OutDir(), pre.Chrome, pre.Cont, guestos.X11DemoConfig())
+	if err != nil {
+		s.Fatal("Failed to run test: ", err)
+	}
 }

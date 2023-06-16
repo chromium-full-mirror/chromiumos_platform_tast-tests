@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/colorcmp"
 	"go.chromium.org/tast-tests/cros/local/crostini"
+	"go.chromium.org/tast-tests/cros/local/guestos"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -321,7 +322,7 @@ func SecureCopyPaste(ctx context.Context, s *testing.State) {
 	if !maximized {
 		s.Fatal("Failed to find the secure_blocker window to maximize")
 	}
-	if err := crostini.MatchScreenshotDominantColor(ctx, cr, colorcmp.RGB(0, 0, 0), filepath.Join(s.OutDir(), "screenshot.png")); err != nil {
+	if err := guestos.MatchScreenshotDominantColor(ctx, cr, colorcmp.RGB(0, 0, 0), filepath.Join(s.OutDir(), "screenshot.png")); err != nil {
 		s.Fatal("Failed during screenshot check: ", err)
 	}
 

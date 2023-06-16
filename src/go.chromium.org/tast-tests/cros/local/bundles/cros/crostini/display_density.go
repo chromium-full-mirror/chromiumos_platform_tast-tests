@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/crostini"
+	"go.chromium.org/tast-tests/cros/local/guestos"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/shutil"
 	"go.chromium.org/tast/core/testing"
@@ -36,7 +37,7 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniStable,
 				Fixture:           "crostiniBuster",
 				Timeout:           7 * time.Minute,
-				Val:               crostini.WaylandDemoConfig(),
+				Val:               guestos.WaylandDemoConfig(),
 			}, {
 				Name:              "wayland_buster_unstable",
 				ExtraAttr:         []string{"informational"},
@@ -44,14 +45,14 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniUnstable,
 				Fixture:           "crostiniBuster",
 				Timeout:           7 * time.Minute,
-				Val:               crostini.WaylandDemoConfig(),
+				Val:               guestos.WaylandDemoConfig(),
 			}, {
 				Name:              "wayland_bullseye_stable",
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniStable,
 				Fixture:           "crostiniBullseye",
 				Timeout:           7 * time.Minute,
-				Val:               crostini.WaylandDemoConfig(),
+				Val:               guestos.WaylandDemoConfig(),
 			}, {
 				Name:              "wayland_bullseye_unstable",
 				ExtraAttr:         []string{"informational"},
@@ -59,14 +60,14 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniUnstable,
 				Fixture:           "crostiniBullseye",
 				Timeout:           7 * time.Minute,
-				Val:               crostini.WaylandDemoConfig(),
+				Val:               guestos.WaylandDemoConfig(),
 			}, {
 				Name:              "x11_buster_stable",
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniStable,
 				Fixture:           "crostiniBuster",
 				Timeout:           7 * time.Minute,
-				Val:               crostini.X11DemoConfig(),
+				Val:               guestos.X11DemoConfig(),
 			}, {
 				Name:              "x11_buster_unstable",
 				ExtraAttr:         []string{"informational"},
@@ -74,14 +75,14 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniUnstable,
 				Fixture:           "crostiniBuster",
 				Timeout:           7 * time.Minute,
-				Val:               crostini.X11DemoConfig(),
+				Val:               guestos.X11DemoConfig(),
 			}, {
 				Name:              "x11_bullseye_stable",
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniStable,
 				Fixture:           "crostiniBullseye",
 				Timeout:           7 * time.Minute,
-				Val:               crostini.X11DemoConfig(),
+				Val:               guestos.X11DemoConfig(),
 			}, {
 				Name:              "x11_bullseye_unstable",
 				ExtraAttr:         []string{"informational"},
@@ -89,7 +90,7 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniUnstable,
 				Fixture:           "crostiniBullseye",
 				Timeout:           7 * time.Minute,
-				Val:               crostini.X11DemoConfig(),
+				Val:               guestos.X11DemoConfig(),
 			},
 		},
 	})
@@ -100,7 +101,7 @@ func DisplayDensity(ctx context.Context, s *testing.State) {
 	tconn := pre.Tconn
 	cont := pre.Cont
 	keyboard := pre.KB
-	conf := s.Param().(crostini.DemoConfig)
+	conf := s.Param().(guestos.DemoConfig)
 
 	// Use a shortened context for test operations to reserve time for cleanup.
 	cleanupCtx := ctx
