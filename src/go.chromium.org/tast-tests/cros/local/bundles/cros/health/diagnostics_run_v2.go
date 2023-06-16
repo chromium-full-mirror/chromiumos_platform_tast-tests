@@ -36,9 +36,8 @@ func init() {
 			Timeout:   5 * time.Minute,
 			ExtraAttr: []string{"informational"},
 		}, {
-			Name:      "audio_driver",
-			Val:       croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineAudioDriver},
-			ExtraAttr: []string{"informational"},
+			Name: "audio_driver",
+			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineAudioDriver},
 		}, {
 			Name:    "cpu_cache_v2",
 			Val:     croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineCPUCacheV2},
