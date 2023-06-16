@@ -8,8 +8,10 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -17,12 +19,9 @@ import (
 
 const (
 	// ConnectedDevicesSettingsURL is the path to the connected device settings page.
-	ConnectedDevicesSettingsURL = "multidevice/features"
+	ConnectedDevicesSettingsURL = "chrome://os-settings/multidevice/features"
 	// MultidevicePageJS is the JS locator for the multidevice settings page.
-	MultidevicePageJS = `document.querySelector("os-settings-ui").shadowRoot` +
-		`.querySelector("os-settings-main").shadowRoot` +
-		`.querySelector("os-settings-page").shadowRoot` +
-		`.querySelector("settings-multidevice-page")`
+	MultidevicePageJS = `shadowPiercingQuery("settings-multidevice-page")`
 	// MultideviceSubpageJS is the JS locator for the multidevice settings subpage element.
 	MultideviceSubpageJS = MultidevicePageJS + `.shadowRoot` +
 		`.querySelector("settings-multidevice-subpage")`
@@ -30,17 +29,52 @@ const (
 	ConnectedDeviceToggleVisibleJS = MultidevicePageJS + `.shouldShowToggle_()`
 )
 
+// OSSettingsWithShadowPiercer returns a Chrome conn to OS settings with the `shadowPiercingQuery` function loaded.
+// This function enables element location that can look within nested shadow roots. All functions that interact
+// with multidevice settings pages in OS Settings rely on `shadowPiercingQuery` to execute JS and drive the pages,
+// so any interactions with the OS Settings through a Chrome conn should be done using this function.
+func OSSettingsWithShadowPiercer(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, url string, existingConn bool) (*chrome.Conn, error) {
+	launchURL := url
+	if url == "" {
+		launchURL = "chrome://os-settings/"
+	}
+	var conn *chrome.Conn
+	var err error
+	if existingConn {
+		conn, err = cr.NewConnForTarget(ctx, chrome.MatchTargetURLPrefix(launchURL))
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to start Chrome session to existing OS settings with URL %v", launchURL)
+		}
+	} else {
+		// Close any existing settings windows before re-launching.
+		shown, err := ash.AppShown(ctx, tconn, apps.Settings.ID)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to check if OS Settings is open")
+		}
+		if shown {
+			if err := apps.Close(ctx, tconn, apps.Settings.ID); err != nil {
+				return nil, errors.Wrap(err, "failed to close already opened OS Settings instance")
+			}
+		}
+		conn, err = apps.LaunchOSSettings(ctx, cr, launchURL)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to start Chrome session to OS settings with URL %v", launchURL)
+		}
+	}
+	// Execute some arbitrary JS with `EvalWithShadowPiercer` to ensure `shadowPiercingQuery` is loaded.
+	if err := webutil.EvalWithShadowPiercer(ctx, conn, "true", nil); err != nil {
+		return nil, errors.Wrap(err, "failed to load shadow piercer")
+	}
+	return conn, nil
+}
+
 // WaitForConnectedDevice waits for the Android device to appear in the 'Connected device' section of OS Settings.
 // Note: it can take up to 5 minutes for an Android device to successfully pair with the Chromebook.
 // To account for this, the deadline of the passed in context should expire no sooner than 5 minutes from when this function is called.
 func WaitForConnectedDevice(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome) error {
-	settings, err := ossettings.Launch(ctx, tconn)
+	settingsConn, err := OSSettingsWithShadowPiercer(ctx, tconn, cr /*url=*/, "" /*existingConn=*/, false)
 	if err != nil {
-		return errors.Wrap(err, "failed to launch OS settings")
-	}
-	settingsConn, err := settings.ChromeConn(ctx, cr)
-	if err != nil {
-		return errors.Wrap(err, "failed to start Chrome session to OS settings")
+		return err
 	}
 	defer settingsConn.Close()
 

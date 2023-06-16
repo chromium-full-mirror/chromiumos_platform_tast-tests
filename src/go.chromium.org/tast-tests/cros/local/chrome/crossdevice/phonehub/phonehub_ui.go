@@ -16,7 +16,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -41,13 +40,9 @@ const (
 // Enable enables Phone Hub from OS Settings using JS. Assumes a connected device has already been paired.
 // Hide should be called afterwards to close the Phone Hub tray. It is left open here so callers can capture the UI state upon error if needed.
 func Enable(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome) error {
-	settings, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, crossdevicesettings.ConnectedDevicesSettingsURL, func(context.Context) error { return nil })
+	settingsConn, err := crossdevicesettings.OSSettingsWithShadowPiercer(ctx, tconn, cr, crossdevicesettings.ConnectedDevicesSettingsURL /*existingConn=*/, false)
 	if err != nil {
-		return errors.Wrap(err, "failed to launch OS settings at the multidevice feature page")
-	}
-	settingsConn, err := settings.ChromeConn(ctx, cr)
-	if err != nil {
-		return errors.Wrap(err, "failed to start Chrome session to OS settings")
+		return err
 	}
 	defer settingsConn.Close()
 
@@ -248,17 +243,13 @@ func DownloadMostRecentPhoto(ctx context.Context, tconn *chrome.TestConn) error 
 
 // ToggleRecentPhotosSetting toggles the Recent Photos setting using JS. This assumes that a connected device has already been paired.
 func ToggleRecentPhotosSetting(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, enable bool) error {
-	settings, err := ossettings.Launch(ctx, tconn)
+	settingsConn, err := crossdevicesettings.OSSettingsWithShadowPiercer(ctx, tconn, cr /*url=*/, "" /*existingConn=*/, false)
 	if err != nil {
-		return errors.Wrap(err, "failed to launch OS settings")
-	}
-	settingsConn, err := settings.ChromeConn(ctx, cr)
-	if err != nil {
-		return errors.Wrap(err, "failed to start Chrome session to OS settings")
+		return err
 	}
 	defer settingsConn.Close()
 
-	_, err = ossettings.LaunchAtPageURL(ctx, tconn, cr, crossdevicesettings.ConnectedDevicesSettingsURL, func(context.Context) error { return nil })
+	settingsConn, err = crossdevicesettings.OSSettingsWithShadowPiercer(ctx, tconn, cr, crossdevicesettings.ConnectedDevicesSettingsURL /*existingConn=*/, false)
 	if err != nil {
 		return errors.Wrap(err, "failed to re-launch OS Settings to the multidevice feature page")
 	}
