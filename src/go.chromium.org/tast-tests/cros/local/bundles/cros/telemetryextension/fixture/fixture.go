@@ -175,6 +175,13 @@ func (f *telemetryExtensionFixture) SetUp(ctx context.Context, s *testing.FixtSt
 		s.Fatal("Failed to setup Chrome for consumers: ", err)
 	}
 
+	// GoBigSleepLint: TODO(b/287416180): Find fix for the
+	// actual error instead of this workaround.
+	// Add a timeout to wait until the owner is retrieved.
+	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+		s.Fatal("Unable to pause after Ash launch")
+	}
+
 	br, closeBr, err := browserfixt.SetUp(ctx, f.cr, f.bt)
 	if err != nil {
 		s.Fatal("Failed to open the browser: ", err)
