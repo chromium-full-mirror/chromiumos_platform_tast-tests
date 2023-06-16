@@ -85,7 +85,8 @@ type bruschettaFixture struct {
 	// tconn is the test connection to chrome.
 	tconn *chrome.TestConn
 	// How far into the VM log we've read.
-	logOffset int
+	logOffset    int
+	bruschettaVM *vm.BruschettaVM
 }
 
 // FixtureData is the data returned by SetUp and passed to tests.
@@ -99,7 +100,8 @@ type FixtureData struct {
 	// VM is the running VM instance.
 	VM *vm.VM
 	// Tconn is the test connection to Chrome.
-	Tconn *chrome.TestConn
+	Tconn        *chrome.TestConn
+	BruschettaVM *vm.BruschettaVM
 }
 
 func (f *bruschettaFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -172,11 +174,12 @@ func (f *bruschettaFixture) SetUp(ctx context.Context, s *testing.FixtState) int
 		s.Fatal("Failed to get concierge: ", err)
 	}
 
-	vm, err := vm.NewSystemRecognizedVM(concierge, false, 0, vm.Bruschetta)
+	newVM, err := vm.NewSystemRecognizedVM(concierge, false, 0, vm.Bruschetta)
 	if err != nil {
 		s.Fatal("Failed to get VM object: ", err)
 	}
-	f.vm = vm
+	f.vm = newVM
+	f.bruschettaVM = &vm.BruschettaVM{VM: newVM}
 
 	// Skip past logs that might be left over from previous tests.
 	existingLogs, err := f.vm.RetrieveLogs(ctx)
@@ -229,10 +232,11 @@ func (f *bruschettaFixture) SetUp(ctx context.Context, s *testing.FixtState) int
 	}
 
 	return FixtureData{
-		FakeDMS: f.fakeDMS,
-		Chrome:  f.chrome,
-		Tconn:   f.tconn,
-		VM:      f.vm,
+		FakeDMS:      f.fakeDMS,
+		Chrome:       f.chrome,
+		Tconn:        f.tconn,
+		VM:           f.vm,
+		BruschettaVM: f.bruschettaVM,
 	}
 }
 
