@@ -96,6 +96,11 @@ func testPowerdReceivedPowerkey(ctx context.Context, h *firmware.Helper) error {
 		return errors.Wrap(err, "failed to press power key on DUT")
 	}
 
+	// GoBigSleepLint: Wait a short amount to make sure dbus monitor had enough time to log power key press acknowledgement.
+	if err := testing.Sleep(ctx, time.Second); err != nil {
+		return errors.Wrap(err, "failed to sleep for 1s")
+	}
+
 	var buff bytes.Buffer
 	dumpErr := powerDBusMonitor.Dump(&buff)
 
@@ -123,7 +128,7 @@ func testPowerdReceivedPowerkey(ctx context.Context, h *firmware.Helper) error {
 		return errors.Wrap(err, "failed to dump dbus-monitor logs to buffer")
 	}
 	logs := buff.String()
-	testing.ContextLog(ctx, "DUT did not power off from short power key press, verifying poewr key press acknowledged by powerd")
+	testing.ContextLog(ctx, "DUT did not power off from short power key press, verifying power key press acknowledged by powerd")
 	if !strings.Contains(logs, "path=/org/chromium/PowerManager; interface=org.chromium.PowerManager; member=HandlePowerButtonAcknowledgment") {
 		return errors.Errorf("failed to detect powerkey dbus signal from power manager: %v", logs)
 	}
