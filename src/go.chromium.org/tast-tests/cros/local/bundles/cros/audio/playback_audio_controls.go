@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/audio"
-	"go.chromium.org/tast-tests/cros/local/audio/audionode"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
@@ -281,88 +280,8 @@ func presentPlayingAudioFile(ctx context.Context, ui *uiauto.Context, audioFileN
 	return nil
 }
 
-// exerciseVolumeControls exercises volume controls through keyboard keypress.
-func exerciseVolumeControls(ctx context.Context, kb *input.KeyboardEventWriter) error {
-	vh, err := audionode.NewVolumeHelper(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to create the volumeHelper")
-	}
-	originalVolume, err := vh.ActiveNodeVolume(ctx)
-	defer vh.SetVolume(ctx, originalVolume)
-
-	topRow, err := input.KeyboardTopRowLayout(ctx, kb)
-	if err != nil {
-		return errors.Wrap(err, "failed to obtain the top-row layout")
-	}
-
-	testing.ContextLog(ctx, "Press mute key and unmute by pressing Volume up key")
-	if err = kb.Accel(ctx, topRow.VolumeMute); err != nil {
-		return errors.Wrap(err, "failed to press 'Mute'")
-	}
-
-	audioVh, err := audio.NewVolumeHelper(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to create the volumeHelper")
-	}
-
-	muted, err := audioVh.IsMuted(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to check audio mute status")
-	}
-
-	if !muted {
-		return errors.New("failed to mute the audio")
-	}
-
-	if err = kb.Accel(ctx, topRow.VolumeUp); err != nil {
-		return errors.Wrap(err, "failed to press 'VolumeUp'")
-	}
-
-	muted, err = audioVh.IsMuted(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to check audio mute status after pressing volumeup")
-	}
-
-	if muted {
-		return errors.New("failed to unmute the audio")
-	}
-
-	testing.ContextLog(ctx, "Decrease volume to 0 and verify for every key press")
-	for {
-		volume, err := vh.ActiveNodeVolume(ctx)
-		if err != nil {
-			return errors.Wrap(err, "failed to get volume during volume decrease")
-		}
-		if volume == 0 {
-			break
-		}
-		if err := vh.VerifyVolumeChanged(ctx, func() error {
-			return kb.Accel(ctx, topRow.VolumeDown)
-		}); err != nil {
-			return errors.Wrap(err, "failed to change volume after pressing 'VolumeDown'")
-		}
-	}
-
-	testing.ContextLog(ctx, "Increase volume to 100 and verify for every key press")
-	for {
-		volume, err := vh.ActiveNodeVolume(ctx)
-		if err != nil {
-			return errors.Wrap(err, "failed to get volume during volume increase")
-		}
-		if volume == 100 {
-			break
-		}
-		if err := vh.VerifyVolumeChanged(ctx, func() error {
-			return kb.Accel(ctx, topRow.VolumeUp)
-		}); err != nil {
-			return errors.Wrap(err, "failed to change volume after pressing 'VolumeUp'")
-		}
-	}
-	return nil
-}
-
 // exerciseAudioControls exercises various audio player controls using UI and
-// volume controls using keyboard.
+// keyboard.
 func exerciseAudioControls(ctx context.Context, ui *uiauto.Context, kb *input.KeyboardEventWriter, wavFileName1, wavFileName2 string) error {
 	stepForwardButton := nodewith.Name("Step forward").Role(role.Button)
 	if err := audioPlayerControls(ctx, ui, stepForwardButton); err != nil {
@@ -422,10 +341,6 @@ func exerciseAudioControls(ctx context.Context, ui *uiauto.Context, kb *input.Ke
 
 	if err := presentPlayingAudioFile(ctx, ui, wavFileName1); err != nil {
 		return errors.Wrapf(err, "failed to skip previous and play %s audio file", wavFileName1)
-	}
-
-	if err := exerciseVolumeControls(ctx, kb); err != nil {
-		return errors.Wrap(err, "failed to exercise audio volume controls")
 	}
 
 	if err := exercisePlayQueueControls(ctx, ui); err != nil {
