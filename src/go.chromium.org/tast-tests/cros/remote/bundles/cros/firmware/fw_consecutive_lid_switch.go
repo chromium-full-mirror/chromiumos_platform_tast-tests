@@ -70,13 +70,6 @@ func FWConsecutiveLidSwitch(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Chrome instance: ", err)
 	}
 
-	defer func() {
-		s.Log("Closing Chrome instance")
-		if _, err := h.RPCUtils.CloseChrome(ctx, &empty.Empty{}); err != nil {
-			s.Fatal("Failed to close Chrome instance: ", err)
-		}
-	}()
-
 	s.Log("Opening lid for the first time to be sure")
 	if err := h.Servo.OpenLid(ctx); err != nil {
 		s.Fatal("Failed to open lid: ", err)
@@ -95,6 +88,7 @@ func FWConsecutiveLidSwitch(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to close lid: ", err)
 		}
 
+		// GoBigSleepLint: DuT operation dependency
 		if err := testing.Sleep(ctx, lidDelay); err != nil {
 			s.Fatal("Failed to sleep during closed lid delay: ", err)
 		}
@@ -103,10 +97,13 @@ func FWConsecutiveLidSwitch(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to make DUT unreachable: ", err)
 		}
 
+		h.CloseRPCConnection(ctx)
+
 		if err := h.Servo.OpenLid(ctx); err != nil {
 			s.Fatal("Failed to open lid: ", err)
 		}
 
+		// GoBigSleepLint: DuT operation dependency
 		if err := testing.Sleep(ctx, wakeDelay); err != nil {
 			s.Fatal("Failed to sleep during wake delay: ", err)
 		}
@@ -115,6 +112,7 @@ func FWConsecutiveLidSwitch(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to connect to DUT: ", err)
 		}
 
+		// GoBigSleepLint: DuT operation dependency
 		if err := testing.Sleep(ctx, lidDelay); err != nil {
 			s.Fatal("Failed to sleep during open lid delay: ", err)
 		}
