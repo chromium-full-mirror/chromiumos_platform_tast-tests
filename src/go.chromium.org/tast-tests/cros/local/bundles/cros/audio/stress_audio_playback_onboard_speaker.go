@@ -37,26 +37,27 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.Speaker()),
 		Fixture:      "chromeLoggedIn",
-		// TODO(b/238157101): We are not running this test on any bots intentionally.
-		// ambalavanan.m.m@intel.com needs to add this test as part of a new suite.
 		Params: []testing.Param{{
 			Name: "bronze",
 			Val: audioStressTestParams{
 				stressDuration: 6 * time.Hour,
 			},
-			Timeout: 6*time.Hour + 10*time.Minute,
+			ExtraAttr: []string{"group:intel-reliability-bronze"},
+			Timeout:   6*time.Hour + 10*time.Minute,
 		}, {
 			Name: "silver",
 			Val: audioStressTestParams{
 				stressDuration: 9 * time.Hour,
 			},
-			Timeout: 9*time.Hour + 10*time.Minute,
+			ExtraAttr: []string{"group:intel-reliability-silver"},
+			Timeout:   9*time.Hour + 10*time.Minute,
 		}, {
 			Name: "gold",
 			Val: audioStressTestParams{
 				stressDuration: 12 * time.Hour,
 			},
-			Timeout: 12*time.Hour + 10*time.Minute,
+			ExtraAttr: []string{"group:intel-reliability-gold"},
+			Timeout:   12*time.Hour + 10*time.Minute,
 		}},
 	})
 }
@@ -184,6 +185,7 @@ func StressAudioPlaybackOnboardSpeaker(ctx context.Context, s *testing.State) {
 				sleepingDuration = 2 * time.Minute
 			}
 
+			// GoBigSleepLint: Sleep for 2 minutes or remaining time.
 			if err := testing.Sleep(ctx, sleepingDuration); err != nil {
 				s.Fatal("Failed to sleep: ", err)
 			}

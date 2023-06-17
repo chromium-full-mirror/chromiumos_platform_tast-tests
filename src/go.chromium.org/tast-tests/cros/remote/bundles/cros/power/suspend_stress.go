@@ -31,17 +31,20 @@ func init() {
 		SoftwareDeps: []string{"chrome", "reboot"},
 		VarDeps:      []string{"servo"},
 		Params: []testing.Param{{
-			Name:    "bronze",
-			Val:     500,
-			Timeout: 250 * time.Minute,
+			Name:      "bronze",
+			Val:       500,
+			Timeout:   250 * time.Minute,
+			ExtraAttr: []string{"group:intel-stability-bronze"},
 		}, {
-			Name:    "silver",
-			Val:     1000,
-			Timeout: 500 * time.Minute,
+			Name:      "silver",
+			Val:       1000,
+			Timeout:   500 * time.Minute,
+			ExtraAttr: []string{"group:intel-stability-silver"},
 		}, {
-			Name:    "gold",
-			Val:     2500,
-			Timeout: 1250 * time.Minute,
+			Name:      "gold",
+			Val:       2500,
+			Timeout:   1250 * time.Minute,
+			ExtraAttr: []string{"group:intel-stability-gold"},
 		}}})
 }
 

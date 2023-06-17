@@ -47,20 +47,23 @@ func init() {
 			Fixture:   "chromeLoggedIn",
 			ExtraAttr: []string{"group:mainline", "informational"},
 		}, {
-			Name:    "bronze",
-			Val:     videoDuration{minutes: 6 * 60}, // 6 hours.
-			Timeout: 375 * time.Minute,
-			Fixture: "chromeLoggedIn",
+			Name:      "bronze",
+			Val:       videoDuration{minutes: 6 * 60}, // 6 hours.
+			Timeout:   375 * time.Minute,
+			Fixture:   "chromeLoggedIn",
+			ExtraAttr: []string{"group:intel-reliability-bronze"},
 		}, {
-			Name:    "silver",
-			Val:     videoDuration{minutes: 9 * 60}, // 9 hours.
-			Timeout: 555 * time.Minute,
-			Fixture: "chromeLoggedIn",
+			Name:      "silver",
+			Val:       videoDuration{minutes: 9 * 60}, // 9 hours.
+			Timeout:   555 * time.Minute,
+			Fixture:   "chromeLoggedIn",
+			ExtraAttr: []string{"group:intel-reliability-silver"},
 		}, {
-			Name:    "gold",
-			Val:     videoDuration{minutes: 12 * 60}, // 12 hours.
-			Timeout: 735 * time.Minute,
-			Fixture: "chromeLoggedIn",
+			Name:      "gold",
+			Val:       videoDuration{minutes: 12 * 60}, // 12 hours.
+			Timeout:   735 * time.Minute,
+			Fixture:   "chromeLoggedIn",
+			ExtraAttr: []string{"group:intel-reliability-gold"},
 		},
 		}})
 }
