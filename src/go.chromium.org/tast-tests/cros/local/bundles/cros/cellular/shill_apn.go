@@ -156,7 +156,8 @@ func ShillApn(ctx context.Context, s *testing.State) {
 
 	apnName := serviceLastAttachAPN[shillconst.DevicePropertyCellularAPNInfoApnName]
 	if apnName != expectedLastAttachAPN {
-		s.Fatalf("Last Attach APN doesn't match: got %q, want %q", apnName, expectedLastAttachAPN)
+		err := cellular.TagKnownBugOnModemType(ctx, nil, "b/287791293", []cellularconst.ModemType{cellularconst.ModemTypeFM101})
+		s.Fatalf("Last Attach APN doesn't match: got %q, want %q. %s", apnName, expectedLastAttachAPN, cellular.ErrorToCleanString(err))
 	}
 
 	apnName = serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnName]
