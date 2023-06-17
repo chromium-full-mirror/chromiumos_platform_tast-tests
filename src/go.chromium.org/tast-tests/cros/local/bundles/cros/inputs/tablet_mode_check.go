@@ -28,7 +28,7 @@ func init() {
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"inputs_deps", "chrome"},
-		Attr:         []string{},
+		Attr:         []string{"group:intel-convertible"},
 		Fixture:      "chromeLoggedIn",
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Touchpad(), hwdep.Keyboard(), hwdep.FormFactor(hwdep.Convertible)),
 	})

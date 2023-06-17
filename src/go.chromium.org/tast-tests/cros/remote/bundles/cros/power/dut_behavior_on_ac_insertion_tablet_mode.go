@@ -32,6 +32,7 @@ func init() {
 		SoftwareDeps: []string{"chrome", "reboot"},
 		Vars:         []string{"servo"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
+		Attr:         []string{"group:intel-convertible"},
 		Timeout:      10 * time.Minute,
 		Fixture:      fixture.NormalMode,
 	})

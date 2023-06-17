@@ -48,6 +48,7 @@ func init() {
 				tabletMode:      true,
 				detectionStatus: "disabled",
 			},
+			ExtraAttr: []string{"group:intel-convertible"},
 		}},
 	})
 }

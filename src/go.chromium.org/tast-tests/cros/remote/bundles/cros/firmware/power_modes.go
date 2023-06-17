@@ -52,8 +52,9 @@ func init() {
 		Attr:    []string{"group:firmware", "firmware_unstable"},
 		Fixture: fixture.NormalMode,
 		Params: []testing.Param{{
-			Name: "coldreset",
-			Val:  powerModeTestParams{powermode: coldReset},
+			Name:      "coldreset",
+			Val:       powerModeTestParams{powermode: coldReset},
+			ExtraAttr: []string{"group:intel-convertible"},
 		}, {
 			Name: "shutdown",
 			Val:  powerModeTestParams{powermode: shutDown},

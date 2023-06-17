@@ -15,6 +15,7 @@ import (
 	"time"
 
 	pmpb "chromiumos/system_api/power_manager_proto"
+
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/common/usbutils"
 	"go.chromium.org/tast-tests/cros/local/apps"
@@ -43,6 +44,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"volumeUp.txt", "volumeDown.txt"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Touchpad(), hwdep.Keyboard(), hwdep.FormFactor(hwdep.Convertible)),
+		Attr:         []string{"group:intel-convertible"},
 		Timeout:      5 * time.Minute,
 		Fixture:      "chromeLoggedIn",
 	})

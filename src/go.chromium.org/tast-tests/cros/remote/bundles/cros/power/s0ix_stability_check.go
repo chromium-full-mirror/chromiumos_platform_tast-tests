@@ -50,6 +50,7 @@ func init() {
 			Val: s0ixCheckTestParams{
 				tabletMode: true,
 			},
+			ExtraAttr: []string{"group:intel-convertible"},
 		}},
 	})
 }

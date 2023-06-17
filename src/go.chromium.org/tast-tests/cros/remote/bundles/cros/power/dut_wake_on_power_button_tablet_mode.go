@@ -32,6 +32,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.FormFactor(hwdep.Convertible, hwdep.Detachable)),
+		Attr:         []string{"group:intel-convertible"},
 		VarDeps:      []string{"servo"},
 		Timeout:      10 * time.Minute,
 	})

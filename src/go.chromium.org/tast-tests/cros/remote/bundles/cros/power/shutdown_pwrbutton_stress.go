@@ -37,7 +37,7 @@ func init() {
 			"power.iterations",
 			"power.mode", // Optional. Expecting "tablet". By defaault power.mode will be "clamshell".
 		},
-		Attr:    []string{"group:mainline", "informational"},
+		Attr:    []string{"group:mainline", "informational", "group:intel-convertible"},
 		Timeout: 40 * time.Minute,
 	})
 }

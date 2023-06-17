@@ -62,7 +62,8 @@ func init() {
 				tabletMode: true,
 				val:        10,
 			},
-			Timeout: 10 * time.Minute,
+			ExtraAttr: []string{"group:intel-convertible"},
+			Timeout:   10 * time.Minute,
 		}, {
 			Name:    "entry_exit_clamshell_mode",
 			Fixture: fixture.NormalMode,
@@ -77,6 +78,7 @@ func init() {
 				tabletMode: true,
 				val:        1,
 			},
+			ExtraAttr: []string{"group:intel-convertible"},
 		}, {
 			Name:    "stress_test",
 			Fixture: fixture.NormalMode,
@@ -207,7 +209,7 @@ func S3SuspendResume(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to be in S3 state. PowerdConfig want %q; got %q", expectedValue, actualValue)
 	}
 
-	// expected time sleep 8 seconds to ensure DUT switch to S3.
+	// GoBigSleepLint: expected time sleep 8 seconds to ensure DUT switch to S3.
 	// otherwise premature wake, suspend failure errors are expected.
 	if err := testing.Sleep(ctx, 8*time.Second); err != nil {
 		s.Fatal("Failed to sleep: ", err)

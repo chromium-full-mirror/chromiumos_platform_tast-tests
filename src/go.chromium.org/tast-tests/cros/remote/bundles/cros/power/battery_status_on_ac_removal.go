@@ -52,7 +52,8 @@ func init() {
 				iter:       1,
 				tabletMode: true,
 			},
-			Timeout: 20 * time.Minute,
+			Timeout:   20 * time.Minute,
+			ExtraAttr: []string{"group:intel-convertible"},
 		},
 		}})
 }
@@ -298,7 +299,7 @@ func checkTabletModeStatus(ctx context.Context, h *firmware.Helper) (bool, error
 	if err := h.RequireRPCUtils(ctx); err != nil {
 		return false, errors.Wrap(err, "requiring RPC utils")
 	}
-	testing.ContextLog(ctx, "Sleeping for a few seconds before starting a new Chrome")
+	// GoBigSleepLint: Sleeping for a few seconds before starting a new Chrome.
 	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 		return false, errors.Wrap(err, "failed to wait for a few seconds")
 	}

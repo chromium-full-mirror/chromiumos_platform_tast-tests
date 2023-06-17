@@ -40,9 +40,10 @@ func init() {
 			Val:     false,
 			Timeout: 30 * time.Minute,
 		}, {
-			Name:    "tablet",
-			Val:     true,
-			Timeout: 30 * time.Minute,
+			Name:      "tablet",
+			Val:       true,
+			Timeout:   30 * time.Minute,
+			ExtraAttr: []string{"group:intel-convertible"},
 		}},
 	})
 }

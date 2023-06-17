@@ -60,7 +60,8 @@ func init() {
 			Val: lidCloseTestParams{
 				tabletMode: true,
 			},
-			Timeout: 10 * time.Minute,
+			ExtraAttr: []string{"group:intel-convertible"},
+			Timeout:   10 * time.Minute,
 		}},
 	})
 }
@@ -203,7 +204,7 @@ func S3EntryExitAfterLidClose(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to enter S3 state. PowerdConfig want %q; got %q", expectedValue, actualValue)
 	}
 
-	// expected time sleep 5 seconds to ensure dut switch to s3.
+	// GoBigSleepLint: expected time sleep 5 seconds to ensure dut switch to s3.
 	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 		s.Fatal("Failed to sleep: ", err)
 	}

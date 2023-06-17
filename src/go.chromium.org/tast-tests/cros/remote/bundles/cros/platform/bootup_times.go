@@ -55,9 +55,10 @@ func init() {
 			"platform.mode", // Optional. Expecting "tablet". By default platform.mode will be "clamshell".
 		},
 		Params: []testing.Param{{
-			Name:    "reboot",
-			Val:     bootupTimes{bootType: reboot},
-			Timeout: 5 * time.Minute,
+			Name:      "reboot",
+			Val:       bootupTimes{bootType: reboot},
+			Timeout:   5 * time.Minute,
+			ExtraAttr: []string{"group:intel-convertible"},
 		}, {
 			Name:    "vt2_reboot",
 			Val:     bootupTimes{bootType: vt2Reboot},
@@ -67,9 +68,10 @@ func init() {
 			Val:     bootupTimes{bootType: lidCloseOpen},
 			Timeout: 5 * time.Minute,
 		}, {
-			Name:    "power_button",
-			Val:     bootupTimes{bootType: powerButton},
-			Timeout: 5 * time.Minute,
+			Name:      "power_button",
+			Val:       bootupTimes{bootType: powerButton},
+			Timeout:   5 * time.Minute,
+			ExtraAttr: []string{"group:intel-convertible"},
 		}, {
 			Name:              "from_s5",
 			Val:               bootupTimes{bootType: bootFromS5},
@@ -280,7 +282,7 @@ func BootupTimes(ctx context.Context, s *testing.State) {
 			}
 		}
 
-		// expected time sleep 5 seconds to ensure dut switch to s5.
+		// GoBigSleepLint: Expected time sleep 5 seconds to ensure DUT switch to s5.
 		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 			s.Fatal("Failed to sleep: ", err)
 		}
@@ -473,7 +475,7 @@ func openVT2(ctx context.Context, kb inputs.KeyboardServiceClient) error {
 		return errors.Wrapf(err, "failed to press key %q", keyboardKey)
 	}
 	waitTime := 5 * time.Second // wait time for switching to happen.
-	// Allowing some wait time for switching to happen.
+	// GoBigSleepLint: Allowing some wait time for switching to happen.
 	// TODO(b:198837833): Replace with testing.Poll to query the current vts node.
 	if err := testing.Sleep(ctx, waitTime); err != nil {
 		return errors.Wrap(err, "failed while waiting for switching to VT2")
