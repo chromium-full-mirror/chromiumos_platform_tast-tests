@@ -48,8 +48,8 @@ func init() {
 func FWConsecutiveLidSwitch(ctx context.Context, s *testing.State) {
 
 	const (
-		lidDelay  time.Duration = 2 * time.Second
-		wakeDelay time.Duration = 10 * time.Second
+		sleepDelay time.Duration = 1 * time.Second
+		wakeDelay  time.Duration = 1 * time.Second
 	)
 
 	cycles, err := strconv.Atoi(runCycles.Value())
@@ -107,7 +107,7 @@ func FWConsecutiveLidSwitch(ctx context.Context, s *testing.State) {
 		}
 
 		// GoBigSleepLint: DuT operation dependency
-		if err := testing.Sleep(ctx, lidDelay); err != nil {
+		if err := testing.Sleep(ctx, sleepDelay); err != nil {
 			s.Fatal("Failed to sleep during closed lid delay: ", err)
 		}
 
@@ -131,7 +131,7 @@ func FWConsecutiveLidSwitch(ctx context.Context, s *testing.State) {
 		}
 
 		// GoBigSleepLint: DuT operation dependency
-		if err := testing.Sleep(ctx, lidDelay); err != nil {
+		if err := testing.Sleep(ctx, sleepDelay); err != nil {
 			s.Fatal("Failed to sleep during open lid delay: ", err)
 		}
 
