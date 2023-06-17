@@ -8,7 +8,6 @@ import (
 	"context"
 	"os"
 	"path/filepath"
-	"time"
 
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
@@ -111,6 +110,8 @@ func LocalAudioPlayback(ctx context.Context, s *testing.State) {
 	if err := files.OpenDownloads()(ctx); err != nil {
 		s.Fatal("Failed to open Downloads folder in files app: ", err)
 	}
+	// Open the audio file.
+	// The audio file automatically plays once it is opened in the gallery app.
 	if err := files.OpenFile(wavFileName)(ctx); err != nil {
 		s.Fatalf("Failed to open the audio file %q: %v", wavFileName, err)
 	}
@@ -120,11 +121,6 @@ func LocalAudioPlayback(ctx context.Context, s *testing.State) {
 			s.Error("Failed to close Audio player: ", err)
 		}
 	}()
-
-	// GoBigSleepLint: Sample time for the audio to play for 5 seconds.
-	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
-		s.Fatal("Error while waiting during sample time: ", err)
-	}
 
 	// Select output device.
 	if err := quicksettings.Show(ctx, tconn); err != nil {
@@ -146,6 +142,8 @@ func LocalAudioPlayback(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get the selected audio device: ", err)
 	}
 
+	// Check that there is running audio stream, and the used device matches the
+	// selected output device.
 	devName, err := crastestclient.FirstRunningDevice(ctx, audio.OutputStream)
 	if err != nil {
 		s.Fatal("Failed to detect running output device: ", err)
