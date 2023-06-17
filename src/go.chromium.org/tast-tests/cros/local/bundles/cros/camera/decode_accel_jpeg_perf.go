@@ -36,16 +36,8 @@ func init() {
 		SoftwareDeps: []string{"chrome", caps.HWDecodeJPEG},
 		Data: []string{"peach_pi-1280x720.jpg", "pink-nature-1920x1080.jpg",
 			"red-squirrel-2560x1920.jpg", "bonsai-tree-3840x2160.jpg"},
-		// The default timeout is not long enough for the unittest to finish.
-		// The decode latency for 1280x720 resolution can take up to 20 ms, time
-		// needed : 20 ms * 10000 times * 2 runs (SW,HW) + 1 min (CPU idle time) ~ 7 min.
-		// Similarly,
-		// 1920x1080 up to 25 ms, ~ 10 min
-		// 2560x1920 up to 30 ms, ~ 11 min
-		// 3840x2160 up to 40 ms, ~ 15 min
-		// Total time < 44 min.
-		// Set the timeout to 44m.
-		Timeout:      44 * time.Minute,
+		// TODO(b/287584650): Modify the gtest to finish in a given time so we can control the timeout.
+		Timeout:      60 * time.Minute,
 		BugComponent: "b:167281",
 	})
 }
