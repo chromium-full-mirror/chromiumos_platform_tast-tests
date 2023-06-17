@@ -6,6 +6,7 @@ package firmware
 
 import (
 	"context"
+	"strconv"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -13,6 +14,13 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
+)
+
+var (
+	runCycles = testing.RegisterVarString(
+		"firmware.FWConsecutiveLidSwitch.RunCycles",
+		"100",
+		"The number of lid open/close cycles")
 )
 
 func init() {
@@ -40,10 +48,20 @@ func init() {
 func FWConsecutiveLidSwitch(ctx context.Context, s *testing.State) {
 
 	const (
-		testRetries int           = 100
-		lidDelay    time.Duration = 2 * time.Second
-		wakeDelay   time.Duration = 10 * time.Second
+		lidDelay  time.Duration = 2 * time.Second
+		wakeDelay time.Duration = 10 * time.Second
 	)
+
+	cycles, err := strconv.Atoi(runCycles.Value())
+	if err != nil {
+		s.Fatalf("Bad value %v is set for variable %v: %v",
+			runCycles.Value(), runCycles.Name(), err)
+	}
+	if cycles < 1 {
+		s.Fatalf("%v must be positive instead of %v",
+			runCycles.Name(), cycles)
+		return
+	}
 
 	h := s.FixtValue().(*fixture.Value).Helper
 
@@ -81,8 +99,8 @@ func FWConsecutiveLidSwitch(ctx context.Context, s *testing.State) {
 	}
 	s.Log("Current boot ID: ", initialBootID)
 
-	for r := 0; r <= testRetries; r++ {
-		s.Logf("Consecutive lid switch %d/%d", r, testRetries)
+	for r := 0; r < cycles; r++ {
+		s.Logf("Consecutive lid switch %d/%d", r, cycles)
 
 		if err := h.Servo.CloseLid(ctx); err != nil {
 			s.Fatal("Failed to close lid: ", err)
