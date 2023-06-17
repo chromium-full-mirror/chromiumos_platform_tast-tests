@@ -355,6 +355,14 @@ func TagKnownBugOnBoard(ctx context.Context, errIn error, bugNumber string, boar
 	return errIn
 }
 
+// ErrorToCleanString returns the string value of |errIn| if not nil, otherwise returns an empty string.
+func ErrorToCleanString(errIn error) string {
+	if errIn == nil {
+		return ""
+	}
+	return fmt.Sprintf("%q", errIn)
+}
+
 // GetShillUpstartArgsForVerboseLogging Returns the upstart arguments to configure verbose logging in shill.
 func GetShillUpstartArgsForVerboseLogging() []upstart.Arg {
 	return []upstart.Arg{upstart.WithArg("SHILL_LOG_SCOPES", verboseShillLogScopes),
