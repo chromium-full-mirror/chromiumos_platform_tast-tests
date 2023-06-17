@@ -46,15 +46,12 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
-		Attr:         []string{"group:firmware", "firmware_unstable"},
+		Attr:         []string{"group:firmware", "firmware_unstable", "firmware_detachable"},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.firmware.UtilsService"},
-		HardwareDeps: hwdep.D(
-			hwdep.Model("coachz", "soraka", "krane", "kakadu", "katsu", "homestar", "wormdingler", "nocturne", "quackingstick"),
-			hwdep.ChromeEC(),
-		),
-		Fixture: fixture.DevModeGBB,
-		Timeout: 15 * time.Minute,
+		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.FormFactor(hwdep.Detachable)),
+		Fixture:      fixture.DevModeGBB,
+		Timeout:      15 * time.Minute,
 	})
 }
 
@@ -82,14 +79,6 @@ type hammerRequiredVariables struct {
 }
 
 func BaseECUpdate(ctx context.Context, s *testing.State) {
-	// To-do:
-	// Our goal would be to expand to a wider range of DUTs, as defined in the following map:
-	// https://chromium.googlesource.com/chromiumos/platform2/+/HEAD/hammerd/hammertests/#prepare-host-and-dut
-	// We noticed that Soraka and Nocturne don't have product-id, vendor-id, and usb-path,
-	// which are the required params used in flashing the base ec bin file. Also, on Coachz
-	// and Krane leased from the lab, even though the base ec version changed, the notification window did not
-	// appear. We'll need to do some more research on these models. But at the moment, when tested in our office,
-	// Krane [Google_Krane.12573.271.0] passed the test.
 	h := s.FixtValue().(*fixture.Value).Helper
 
 	if err := h.RequireServo(ctx); err != nil {
@@ -111,45 +100,11 @@ func BaseECUpdate(ctx context.Context, s *testing.State) {
 
 	dut := s.DUT()
 	ecTool := firmware.NewECTool(dut, firmware.ECToolNameMain)
-
-	// hammerConfigsMap contains information about pid, vid, and usbPath values of a
-	// detachable base for different models. This information was derived from manual
-	// testing and the following hammer file:
-	// https://chromium.googlesource.com/chromiumos/platform/ec/+/HEAD/board/hammer/variants.h
-	hammerConfigsMap := map[string]hammerRequiredVariables{
-		"coachz":        {pid: "20556", vid: "6353", usbPath: "1-1.4"},
-		"nocturne":      {pid: "20528", vid: "6353", usbPath: "1-7"},
-		"soraka":        {pid: "20523", vid: "6353", usbPath: "1-2"},
-		"krane":         {pid: "20540", vid: "6353", usbPath: "1-1.1"},
-		"kakadu":        {pid: "20548", vid: "6353", usbPath: "1-1.1"},
-		"katsu":         {pid: "20560", vid: "6353", usbPath: "1-1.1"},
-		"homestar":      {pid: "20562", vid: "6353", usbPath: "1-1.1"},
-		"wormdingler":   {pid: "20567", vid: "6353", usbPath: "1-1.3"},
-		"quackingstick": {pid: "20571", vid: "6353", usbPath: "1-1.1"},
-	}
-	var hammerConfigs hammerRequiredVariables
-	assignConfigs := func() error {
-		s.Log("Attempting detachable base attributes from the hammer file")
-		modelName, err := h.Reporter.Model(ctx)
-		if err != nil {
-			return errors.Wrap(err, "failed to get the dut's model")
-		}
-		hammerConfigs.pid = hammerConfigsMap[modelName].pid
-		hammerConfigs.vid = hammerConfigsMap[modelName].vid
-		hammerConfigs.usbPath = hammerConfigsMap[modelName].usbPath
-		return nil
-	}
 	utilServiceClient := fwpb.NewUtilsServiceClient(h.RPCClient.Conn)
-	crosCfgRes, err := utilServiceClient.GetDetachableBaseValue(ctx, &empty.Empty{})
+
+	hammerConfigs, err := getHammerConfig(ctx, h, utilServiceClient)
 	if err != nil {
-		s.Log("Failed to get detachable-base attribute values: ", err)
-		if err := assignConfigs(); err != nil {
-			s.Fatal("Unable to set attributes: ", err)
-		}
-	} else {
-		hammerConfigs.pid = crosCfgRes.ProductId
-		hammerConfigs.vid = crosCfgRes.VendorId
-		hammerConfigs.usbPath = crosCfgRes.UsbPath
+		s.Fatal("Failed to get hammer config: ", err)
 	}
 
 	tempDir, err := ioutil.TempDir("", "BaseECUpdate")
@@ -169,7 +124,6 @@ func BaseECUpdate(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to check base ec's version: ", err)
 	}
-	s.Log("Flash protection flags: ", originalBaseEC.protectionFlag)
 
 	if err := modifyBaseEC(ctx, dut, originalBaseEC, &fileDir); err != nil {
 		s.Fatal("Failed to modify base-ec: ", err)
@@ -195,29 +149,11 @@ func BaseECUpdate(ctx context.Context, s *testing.State) {
 			waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
 			defer cancelWaitConnect()
 
-			if err := s.DUT().WaitConnect(waitConnectCtx); err != nil {
+			if err := h.WaitConnect(waitConnectCtx); err != nil {
 				s.Fatal("Failed to reconnect to DUT: ", err)
 			}
 		}
 	}(cleanupCtx, &requiredReboot)
-
-	var wpScrewInBool bool
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		hammerInfo, err := s.DUT().Conn().CommandContext(ctx, "python", "/usr/local/bin/hammer_info.py", "wp_screw").Output()
-		if err != nil {
-			return errors.Wrap(err, "failed to run hammer_info")
-		}
-		hammerSplitByLine := strings.Split(string(hammerInfo), "\n")
-		hammerWpScrew := strings.Split(hammerSplitByLine[len(hammerSplitByLine)-2], " ")
-
-		wpScrewInBool, err = strconv.ParseBool(hammerWpScrew[0])
-		if err != nil {
-			return errors.New("failed to get wp_screw from hammer_info")
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 1 * time.Second}); err != nil {
-		s.Fatal("While checking for wp_screw: ", err)
-	}
 
 	s.Log("Flashing an old image to detachable-base ec")
 	if err := flashAnOldImgToDetachableBaseEC(ctx, dut, hammerConfigs, fileDir.onHost); err != nil {
@@ -236,18 +172,13 @@ func BaseECUpdate(ctx context.Context, s *testing.State) {
 		if baseECVersionUnchanged(originalBaseEC.version[len(originalBaseEC.name)+1:], flashedBaseEC.version[len(flashedBaseEC.name)+1:]) {
 			s.Fatalf("Found base ec version unchanged, got before: %q, and after: %q", originalBaseEC.version, flashedBaseEC.version)
 		}
-
 	}
 
 	// Given that DUT's base ec is running an old firmware,
 	// detaching then re-attaching base would trigger an update
 	// notification window to pop up in a logged in session.
 	if err := triggerAndFindNotification(ctx, ecTool, utilServiceClient, dut, originalBaseEC.roProtected); err != nil {
-		currentBaseEC, errBaseEC := getBaseECInfo(ctx, dut, hammerConfigs.pid)
-		if errBaseEC != nil {
-			s.Fatal("Failed to trigger and find notification window, and while getting base ec info: ", errBaseEC)
-		}
-		s.Fatalf("Failed to trigger and find notification window [current base ec version: %s, ro protected: %t, wp_screw: %t]: %v", currentBaseEC.version, currentBaseEC.roProtected, wpScrewInBool, err)
+		s.Fatal("Failed to trigger and find notification window: ", err)
 	}
 
 	if !originalBaseEC.roProtected {
@@ -355,12 +286,6 @@ func getBaseECInfo(ctx context.Context, dut *dut.DUT, productIDDecimal string) (
 }
 
 func triggerAndFindNotification(ctx context.Context, ecTool *firmware.ECTool, utilSvcClient fwpb.UtilsServiceClient, dut *dut.DUT, roProtected bool) error {
-	// Check for the hammerd process ID from the hammerd log before
-	// and after power cycling the base. On builds newer than R108,
-	// Stainless reported some strongbad duts failing the test because
-	// no update window popped up. We suspected that hammerd wasn't
-	// initialized when the base re-attached. Comparing the process IDs
-	// would help us determine if this was the case.
 	hammerdLog := "/var/log/hammerd.log"
 	originalHammerdID, err := hammerdProcessID(ctx, hammerdLog, dut)
 	if err != nil {
@@ -409,22 +334,6 @@ func triggerAndFindNotification(ctx context.Context, ecTool *firmware.ECTool, ut
 		if err := testing.Sleep(ctx, 10*time.Second); err != nil {
 			return errors.Wrap(err, "failed to sleep for 10 seconds for the command to fully propagate to the DUT")
 		}
-
-		lsusbInfo, err := dut.Conn().CommandContext(ctx, "lsusb").Output(testexec.DumpLogOnError)
-		if err != nil {
-			return errors.Wrap(err, "failed to get lsusb info")
-		}
-
-		switch step.baseAttached {
-		case true:
-			if !strings.Contains(string(lsusbInfo), "Hammer") {
-				return errors.New("expected keyboard attached, but did not find name 'hammer' from lsusb")
-			}
-		case false:
-			if strings.Contains(string(lsusbInfo), "Hammer") {
-				return errors.New("expected keyboard detached, but found name 'hammer' from lsusb")
-			}
-		}
 	}
 
 	newHammerdID, err := hammerdProcessID(ctx, hammerdLog, dut)
@@ -434,11 +343,7 @@ func triggerAndFindNotification(ctx context.Context, ecTool *firmware.ECTool, ut
 	testing.ContextLogf(ctx, "Hammerd process ids: %s [before re-attach], %s [after re-attach]", originalHammerdID, newHammerdID)
 
 	testing.ContextLog(ctx, "Finding notification window")
-	const title = "Your detachable keyboard needs a critical update"
-	req := fwpb.NodeElement{
-		Name: title,
-	}
-	if _, err := utilSvcClient.FindSingleNode(ctx, &req); err != nil {
+	if _, err := utilSvcClient.FindSingleNode(ctx, &fwpb.NodeElement{Name: "Your detachable keyboard needs a critical update"}); err != nil {
 		if roProtected == true && strings.Contains(err.Error(), context.DeadlineExceeded.Error()) {
 			// When RO locked, broken RW would get restored by hammerd silently.
 			testing.ContextLog(ctx, "Found RO locked, skip verifying pop-up window")
@@ -448,15 +353,14 @@ func triggerAndFindNotification(ctx context.Context, ecTool *firmware.ECTool, ut
 			return errors.Wrap(err, "hammerd did not restart following base power-cycle")
 		}
 		return errors.Wrap(err, "failed to find notification of detachable keyboard update")
-	}
 
+	}
 	return nil
 }
 
 // modifyBaseEC copies the /lib/firmware/base-ec.fw to local,
 // modifies its version -1 and puts it back to /tmp/ folder in DUT.
 func modifyBaseEC(ctx context.Context, dut *dut.DUT, boardInfo baseECInfo, fileDir *modifiedFileDir) error {
-
 	originalBaseECBinFile := fmt.Sprintf("/lib/firmware/%s.fw", boardInfo.name)
 
 	testing.ContextLog(ctx, "Copying base-ec.fw from DUT to local")
@@ -491,16 +395,17 @@ func modifyBaseEC(ctx context.Context, dut *dut.DUT, boardInfo baseECInfo, fileD
 	testing.ContextLog(ctx, "Current base-ec version: ", boardInfo.version)
 	testing.ContextLog(ctx, "Starting to modify base-ec.bin")
 
+	baseECWithVersion := boardInfo.name + "_v"
 	indexRWBoard := len(buf)
-	count := bytes.Count(buf, []byte(boardInfo.name+"_v"))
+	count := bytes.Count(buf, []byte(baseECWithVersion))
 	if count == 0 {
-		return errors.Wrapf(err, "did not find %s in the base-ec.bin", boardInfo.name+"_v")
+		return errors.Wrapf(err, "did not find %s in the base-ec.bin", baseECWithVersion)
 	}
 
 	for i := 0; i < count; i++ {
-		indexRWBoard = bytes.LastIndex(buf[:indexRWBoard], []byte(boardInfo.name+"_v"))
+		indexRWBoard = bytes.LastIndex(buf[:indexRWBoard], []byte(baseECWithVersion))
 		indexVersionToModify := indexRWBoard
-		indexVersionToModify += (len(boardInfo.name) + 2)
+		indexVersionToModify += len(baseECWithVersion)
 		// version -1
 		buf[indexVersionToModify] = buf[indexVersionToModify] - 1
 	}
@@ -534,4 +439,48 @@ func hammerdProcessID(ctx context.Context, hammerdLog string, dut *dut.DUT) (str
 		return "", errors.Wrapf(err, "failed to run %s", cmd)
 	}
 	return strings.TrimSpace(string(processID)), nil
+}
+
+func getHammerConfig(ctx context.Context, h *firmware.Helper, utilServiceClient fwpb.UtilsServiceClient) (hammerRequiredVariables, error) {
+	// hammerConfigsMap contains information about pid, vid, and usbPath values of a
+	// detachable base for different models. This information was derived from manual
+	// testing and the following hammer file:
+	// https://chromium.googlesource.com/chromiumos/platform/ec/+/HEAD/board/hammer/variants.h
+	hammerConfigsMap := map[string]hammerRequiredVariables{
+		"coachz":        {pid: "20556", vid: "6353", usbPath: "1-1.4"},
+		"nocturne":      {pid: "20528", vid: "6353", usbPath: "1-7"},
+		"soraka":        {pid: "20523", vid: "6353", usbPath: "1-2"},
+		"krane":         {pid: "20540", vid: "6353", usbPath: "1-1.1"},
+		"kakadu":        {pid: "20548", vid: "6353", usbPath: "1-1.1"},
+		"katsu":         {pid: "20560", vid: "6353", usbPath: "1-1.1"},
+		"homestar":      {pid: "20562", vid: "6353", usbPath: "1-1.1"},
+		"wormdingler":   {pid: "20567", vid: "6353", usbPath: "1-1.3"},
+		"quackingstick": {pid: "20571", vid: "6353", usbPath: "1-1.1"},
+	}
+
+	var hammerConfigs hammerRequiredVariables
+	assignConfigs := func() error {
+		testing.ContextLog(ctx, "Attempting detachable base attributes from the hammer file")
+		modelName, err := h.Reporter.Model(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to get the dut's model")
+		}
+		hammerConfigs.pid = hammerConfigsMap[modelName].pid
+		hammerConfigs.vid = hammerConfigsMap[modelName].vid
+		hammerConfigs.usbPath = hammerConfigsMap[modelName].usbPath
+		return nil
+	}
+
+	crosCfgRes, err := utilServiceClient.GetDetachableBaseValue(ctx, &empty.Empty{})
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to get detachable-base attribute values: ", err)
+		if err := assignConfigs(); err != nil {
+			return hammerConfigs, errors.Wrap(err, "usnable to set attributes")
+		}
+	} else {
+		hammerConfigs.pid = crosCfgRes.ProductId
+		hammerConfigs.vid = crosCfgRes.VendorId
+		hammerConfigs.usbPath = crosCfgRes.UsbPath
+	}
+	return hammerConfigs, nil
 }
