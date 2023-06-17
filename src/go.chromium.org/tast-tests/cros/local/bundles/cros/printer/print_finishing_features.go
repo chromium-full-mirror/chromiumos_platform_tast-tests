@@ -28,7 +28,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/printpreview"
 	"go.chromium.org/tast-tests/cros/local/input"
-	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast-tests/cros/local/printing/lp"
 	"go.chromium.org/tast-tests/cros/local/printing/printer"
 
@@ -160,11 +159,6 @@ func PrintFinishingFeatures(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to stop IPPEverywherePrinter: ", err)
 		}
 	}(ctx)
-
-	// Adding a printer in settings requires internet connectivity.
-	if err := ping.VerifyInternetConnectivity(ctx, 10*time.Second); err != nil {
-		s.Fatal("Cannot add a printer, no internet connectivity: ", err)
-	}
 
 	// Open OS Settings and navigate to the Printing page.
 	ui := uiauto.New(tconn)
