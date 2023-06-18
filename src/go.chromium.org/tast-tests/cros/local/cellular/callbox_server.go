@@ -9,6 +9,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"regexp"
 
 	"go.chromium.org/tast-tests/cros/common/mmconst"
 	"go.chromium.org/tast-tests/cros/common/testexec"
@@ -25,6 +26,7 @@ type CallboxServer struct {
 	DNS1      string
 	DutIP     string
 	Interface string
+	IsIPv6    bool
 }
 type dnsAddress struct {
 	url string
@@ -61,16 +63,31 @@ func NewCallboxServer(ctx context.Context) (*CallboxServer, error) {
 	}
 	var dutIP string
 	var dns1 string
+	isIPv6 := false
 	ip := bearer.IP4Config().Address
 	if ip != "" {
 		dutIP = ip
 		dns1 = bearer.IP4Config().DNS1
 	} else {
-		dutIP = bearer.IP6Config().Address
+		ipCommand := []string{"ip", "-6", "addr", "show", "dev", interfaceName, "scope", "global", "primary"}
+		stdout, stderr, err := testexec.CommandContext(ctx, ipCommand[0], ipCommand[1:]...).SeparatedOutput()
+		if err != nil {
+			if string(stderr) != "" {
+				testing.ContextLog(ctx, "command stderr: ", string(stderr))
+			}
+			return nil, errors.Wrap(err, "failed to get ipv6 address")
+		}
+		r := regexp.MustCompile(`([a-f0-9:]+:+[a-f0-9]+)\/`)
+		m := r.FindStringSubmatch(string(stdout))
+		if len(m) != r.NumSubexp()+1 {
+			return nil, errors.New("could not parse ip addr result")
+		}
+		dutIP = m[1]
 		dns1 = bearer.IP6Config().DNS1
+		isIPv6 = true
 	}
 
-	server := CallboxServer{apnName: apn, DNS1: dns1, DutIP: dutIP, Interface: interfaceName}
+	server := CallboxServer{apnName: apn, DNS1: dns1, DutIP: dutIP, IsIPv6: isIPv6, Interface: interfaceName}
 	return &server, nil
 }
 
@@ -96,11 +113,13 @@ func (srv *CallboxServer) sendServerCommand(ctx context.Context, srvCommand stri
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal command")
 	}
-
-	var curlCommand []string
-	curlCommand = []string{"sudo", "-u", "shill", "curl", "--connect-timeout", "5", "--max-time", "10",
+	ipType := "ipv4"
+	if srv.IsIPv6 {
+		ipType = "ipv6"
+	}
+	curlCommand := []string{"sudo", "-u", "shill", "curl", "--connect-timeout", "5", "--max-time", "10",
 		fmt.Sprintf("http://server-callbox.cros:%d/server_command", serverPort),
-		"--interface", srv.Interface, "--dns-interface", srv.Interface, "--dns-servers", srv.DNS1,
+		"--interface", srv.Interface, "--dns-interface", srv.Interface, "--dns-servers", srv.DNS1, fmt.Sprintf("--dns-%s-addr", ipType), srv.DutIP,
 		"--request", "POST", "--header", "Content-Type:application/json",
 		"--data-raw", string(message)}
 
