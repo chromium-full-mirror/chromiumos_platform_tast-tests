@@ -37,6 +37,7 @@ func init() {
 		ServiceDeps:  []string{"tast.cros.power.BatteryService"},
 		VarDeps:      []string{"servo"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Battery()),
+		Attr:         []string{"group:intel-stress"},
 		Fixture:      fixture.NormalMode,
 		Timeout:      30 * time.Minute,
 	})

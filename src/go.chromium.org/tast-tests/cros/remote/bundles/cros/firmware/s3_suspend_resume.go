@@ -88,7 +88,8 @@ func init() {
 				tabletMode: false,
 				val:        100,
 			},
-			Timeout: 28 * time.Minute,
+			ExtraAttr: []string{"group:intel-stress"},
+			Timeout:   28 * time.Minute,
 		}},
 	})
 }

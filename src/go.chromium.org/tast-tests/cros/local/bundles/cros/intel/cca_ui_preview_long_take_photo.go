@@ -21,7 +21,7 @@ func init() {
 		SoftwareDeps: []string{"camera_app", "chrome"},
 		Fixture:      "ccaLaunched",
 		Timeout:      62 * time.Minute, // Timeout for long duration.
-		Attr:         []string{"group:camera_dependent"},
+		Attr:         []string{"group:camera_dependent", "group:intel-stress"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 	})
 }
@@ -34,7 +34,7 @@ func CCAUIPreviewLongTakePhoto(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to maximize window: ", err)
 	}
 
-	// Sleeping for 1 hour.
+	// GoBigSleepLint: Sleeping for 1 hour.
 	if err := testing.Sleep(ctx, 60*time.Minute); err != nil {
 		s.Fatal("Failed to sleep: ", err)
 	}

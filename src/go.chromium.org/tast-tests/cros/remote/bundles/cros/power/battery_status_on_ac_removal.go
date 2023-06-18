@@ -45,7 +45,8 @@ func init() {
 				iter:       5,
 				tabletMode: false,
 			},
-			Timeout: time.Hour,
+			ExtraAttr: []string{"group:intel-stress"},
+			Timeout:   time.Hour,
 		}, {
 			Name: "tabletmode",
 			Val: batteryStatusTestParam{

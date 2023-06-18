@@ -50,7 +50,7 @@ func init() {
 		SoftwareDeps: []string{"chrome", "crossystem"},
 		HardwareDeps: hwdep.D(hwdep.Battery()),
 		Fixture:      fixture.NormalMode,
-
+		Attr:         []string{"group:intel-stress"},
 		Params: []testing.Param{{
 			Name: "s0ix",
 			Val: chargingRateTestParam{
@@ -167,7 +167,7 @@ func MeasureChargingRate(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to perform power setting in idle mode: ", err)
 		}
 
-		s.Log("Charging DUT for 1 minute when dut is idle")
+		// GoBigSleepLint: Charging DUT for 1 minute when dut is idle.
 		if err := testing.Sleep(ctx, 1*time.Minute); err != nil {
 			s.Fatal("Failed to be in idle mode: ", err)
 		}
@@ -178,8 +178,8 @@ func MeasureChargingRate(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to get battery level: ", err)
 		}
 
-		// For 5 minutes, observe battery charging status.
 		s.Log("Charging DUT for 5 minutes when dut is idle")
+		// GoBigSleepLint: For 5 minutes, observe battery charging status.
 		if err := testing.Sleep(ctx, 5*time.Minute); err != nil {
 			s.Fatal("Failed to sleep: ", err)
 		}
@@ -232,8 +232,8 @@ func MeasureChargingRate(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to get battery level: ", err)
 		}
 
-		// For 10 minutes, observe battery charging status.
 		s.Log("Charging DUT for 10 minutes after closing lid")
+		// GoBigSleepLint: For 10 minutes, observe battery charging status.
 		if err := testing.Sleep(ctx, 10*time.Minute); err != nil {
 			s.Fatal("Failed to sleep: ", err)
 		}

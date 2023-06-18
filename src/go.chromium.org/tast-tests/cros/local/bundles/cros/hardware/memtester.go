@@ -44,9 +44,10 @@ func init() {
 			Val:     memtesterParams{mode: single, memoryUsage: 0.50, iteration: 1},
 			Timeout: 1 * iterationDuration,
 		}, {
-			Name:    "single_bronze",
-			Val:     memtesterParams{mode: single, memoryUsage: 0.50, iteration: 25},
-			Timeout: 25 * iterationDuration,
+			Name:      "single_bronze",
+			Val:       memtesterParams{mode: single, memoryUsage: 0.50, iteration: 25},
+			Timeout:   25 * iterationDuration,
+			ExtraAttr: []string{"group:intel-stress"},
 		}, {
 			Name:    "single_silver",
 			Val:     memtesterParams{mode: single, memoryUsage: 0.50, iteration: 50},
@@ -60,9 +61,10 @@ func init() {
 			Val:     memtesterParams{mode: dual, memoryUsage: 0.40, iteration: 1},
 			Timeout: 1 * iterationDuration,
 		}, {
-			Name:    "dual_bronze",
-			Val:     memtesterParams{mode: dual, memoryUsage: 0.40, iteration: 25},
-			Timeout: 25 * iterationDuration,
+			Name:      "dual_bronze",
+			Val:       memtesterParams{mode: dual, memoryUsage: 0.40, iteration: 25},
+			Timeout:   25 * iterationDuration,
+			ExtraAttr: []string{"group:intel-stress"},
 		}, {
 			Name:    "dual_silver",
 			Val:     memtesterParams{mode: dual, memoryUsage: 0.40, iteration: 50},
