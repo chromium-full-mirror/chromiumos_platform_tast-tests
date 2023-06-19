@@ -188,6 +188,8 @@ const (
 	ServicePropertySecurityClass       = "SecurityClass"
 	ServicePropertySSID                = "SSID"
 	ServicePropertyWiFiBSSID           = "WiFi.BSSID"
+	ServicePropertyWiFiBSSIDAllowlist  = "WiFi.BSSIDAllowlist"
+	ServicePropertyWiFiBSSIDRequested  = "WiFi.BSSIDRequested"
 	ServicePropertyWiFiFrequency       = "WiFi.Frequency"
 	ServicePropertyWiFiFrequencyList   = "WiFi.FrequencyList"
 	ServicePropertyWiFiHexSSID         = "WiFi.HexSSID"
