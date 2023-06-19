@@ -49,13 +49,8 @@ func WilcoNormalToDev(ctx context.Context, s *testing.State) {
 	if err := h.SetDUTPower(ctx, true); err != nil {
 		s.Fatal("Unable to connect charger: ", err)
 	}
-	deviceStates, err := h.CheckPowerSupplyDeviceStates(ctx)
-	if err != nil {
-		s.Fatal("Failed to check for current AC state: ", err)
-	}
-	s.Log("Verifying charger connected")
-	if deviceStates.ACOnline != "yes" {
-		s.Fatalf("Expected ac online, but got %s", deviceStates.ACOnline)
+	if err := h.CheckChgFrmPwrSuppInfo(ctx, true); err != nil {
+		s.Fatal("Failed to check charger: ", err)
 	}
 
 	defer func() {

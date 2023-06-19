@@ -1633,6 +1633,33 @@ func (h *Helper) CheckPowerSupplyDeviceStates(ctx context.Context) (*powerSupply
 	return &data, nil
 }
 
+// CheckChgFrmPwrSuppInfo compares the ac status from the remote
+// command, 'power_supply_info', against an expected value. This
+// is especially useful for devices that don't support servo control
+// 'charger_attached', such as those in the Wilco family.
+func (h *Helper) CheckChgFrmPwrSuppInfo(ctx context.Context, connectAC bool) error {
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		deviceStates, err := h.CheckPowerSupplyDeviceStates(ctx)
+		if err != nil {
+			return err
+		}
+		switch connectAC {
+		case true:
+			if deviceStates.ACOnline != "yes" {
+				return errors.Errorf("expected ac online, but got %s", deviceStates.ACOnline)
+			}
+		case false:
+			if deviceStates.ACOnline != "no" {
+				return errors.Errorf("expected ac offline, but got %s", deviceStates.ACOnline)
+			}
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 2 * time.Second}); err != nil {
+		return err
+	}
+	return nil
+}
+
 // ResetServoEthernetDongle resets the ethernet dongle if it supports.
 func (h *Helper) ResetServoEthernetDongle(ctx context.Context) error {
 	ok, err := h.Servo.HasControl(ctx, string(servo.DutEthPwrEn))

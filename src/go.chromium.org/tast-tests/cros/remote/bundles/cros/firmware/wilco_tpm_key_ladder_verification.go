@@ -130,8 +130,12 @@ func WilcoTPMKeyLadderVerification(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get config: ", err)
 	}
 
-	if err := setCharger(ctx, h, true); err != nil {
-		s.Fatal("Failed to set charger: ", err)
+	s.Log("Connecting charger")
+	if err := h.SetDUTPower(ctx, true); err != nil {
+		s.Fatal("Unable to connect charger: ", err)
+	}
+	if err := h.CheckChgFrmPwrSuppInfo(ctx, true); err != nil {
+		s.Fatal("Failed to check charger: ", err)
 	}
 
 	// Disconnect USB to ensure that recovery screen would be reached.
@@ -172,6 +176,15 @@ func WilcoTPMKeyLadderVerification(ctx context.Context, s *testing.State) {
 		acIsConnected bool
 		bootMode      fwCommon.BootMode
 	}
+	defer func() {
+		s.Log("Connecting charger")
+		if err := h.SetDUTPower(ctx, true); err != nil {
+			s.Fatal("Unable to connect charger: ", err)
+		}
+		if err := h.CheckChgFrmPwrSuppInfo(ctx, true); err != nil {
+			s.Fatal("Failed to check charger: ", err)
+		}
+	}()
 	currentState := dutStates{dutConnected: true, acIsConnected: true, bootMode: fwCommon.BootModeNormal}
 	for _, step := range runCases {
 		// Reboot DUT to ensure that it is awake, prior to verifying
@@ -183,8 +196,12 @@ func WilcoTPMKeyLadderVerification(ctx context.Context, s *testing.State) {
 			}
 		}
 		if step.connectAC != currentState.acIsConnected {
-			if err := setCharger(ctx, h, step.connectAC); err != nil {
-				s.Fatal("Failed to set charger: ", err)
+			s.Logf("Setting charger connect: %t", step.connectAC)
+			if err := h.SetDUTPower(ctx, step.connectAC); err != nil {
+				s.Fatalf("Failed to set charger to %t", step.connectAC)
+			}
+			if err := h.CheckChgFrmPwrSuppInfo(ctx, step.connectAC); err != nil {
+				s.Fatal("Failed to check charger: ", err)
 			}
 		}
 		currentState.acIsConnected = step.connectAC
@@ -307,33 +324,6 @@ func rebootWithColdReset(ctx context.Context, h *firmware.Helper) error {
 	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
 	defer cancelWaitConnect()
 	if err := h.WaitConnect(waitConnectCtx); err != nil {
-		return errors.Wrap(err, "failed to reconnect to DUT")
-	}
-	return nil
-}
-
-func setCharger(ctx context.Context, h *firmware.Helper, connectAC bool) error {
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		testing.ContextLogf(ctx, "Setting charger connect: %t", connectAC)
-		if err := h.SetDUTPower(ctx, connectAC); err != nil {
-			return err
-		}
-		deviceStates, err := h.CheckPowerSupplyDeviceStates(ctx)
-		if err != nil {
-			return err
-		}
-		switch connectAC {
-		case true:
-			if deviceStates.ACOnline != "yes" {
-				return errors.Errorf("expected ac online, but got %s", deviceStates.ACOnline)
-			}
-		case false:
-			if deviceStates.ACOnline != "no" {
-				return errors.Errorf("expected ac offline, but got %s", deviceStates.ACOnline)
-			}
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 2 * time.Second}); err != nil {
 		return errors.Wrap(err, "failed to reconnect to DUT")
 	}
 	return nil
