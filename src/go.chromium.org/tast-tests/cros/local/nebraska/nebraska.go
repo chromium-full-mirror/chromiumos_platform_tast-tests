@@ -267,6 +267,11 @@ func (n *Nebraska) SetIgnoreAppID(ctx context.Context, ignoreAppID bool) error {
 	return configureNebraska(ctx, n.Port, "ignore_appid", fmt.Sprint(ignoreAppID))
 }
 
+// SetInvalidateLastUpdate configures Nebraska to return an invalidation of installed update.
+func (n *Nebraska) SetInvalidateLastUpdate(ctx context.Context, value bool) error {
+	return configureNebraska(ctx, n.Port, "invalidate_last_update", fmt.Sprint(value))
+}
+
 func configureNebraska(ctx context.Context, port int, key, value string) error {
 	command := fmt.Sprintf("curl -X POST -d '{%q: %v}' %s", key, value, configURL(port))
 

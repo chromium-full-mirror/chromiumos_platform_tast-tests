@@ -95,3 +95,12 @@ func (s *Service) ReadLog(ctx context.Context, req *empty.Empty) (*nebraska.Read
 		Data: updateServerLog,
 	}, nil
 }
+
+// SetInvalidateLastUpdate configures Nebraska to return an invalidation of installed update.
+func (s *Service) SetInvalidateLastUpdate(ctx context.Context, req *nebraska.SetInvalidateLastUpdateRequest) (*empty.Empty, error) {
+	if err := s.instance.SetInvalidateLastUpdate(ctx, req.InvalidateLastUpdate); err != nil {
+		return nil, err
+	}
+
+	return &empty.Empty{}, nil
+}

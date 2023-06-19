@@ -18,6 +18,8 @@ service Service {
   rpc UpdatePayload (UpdatePayloadRequest) returns (google.protobuf.Empty) {}
 
   rpc ReadLog (google.protobuf.Empty) returns (ReadLogResponse) {}
+
+  rpc SetInvalidateLastUpdate (SetInvalidateLastUpdateRequest) returns (google.protobuf.Empty) {}
 }
 
 message StartRequest {
@@ -42,4 +44,8 @@ message StartResponse {
 
 message ReadLogResponse {
   bytes data = 1;
+}
+
+message SetInvalidateLastUpdateRequest {
+  bool invalidateLastUpdate = 1;
 }
