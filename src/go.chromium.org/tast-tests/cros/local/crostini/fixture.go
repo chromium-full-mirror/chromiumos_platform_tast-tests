@@ -115,6 +115,24 @@ func init() {
 		Vars:            []string{"keepState"},
 	})
 
+	// NOTE: This is a temporary fixture that has only been added to verify
+	// whether or not ARC is the source of Crostini tast test flakes. This
+	// shouldn't be used in other cases.
+	testing.AddFixture(&testing.Fixture{
+		Name:     "chromeLoggedInForCrostiniWithoutArc",
+		Desc:     "Logged into a session without Arc enabled. This should only be used to verify performance issues on certain devices",
+		Contacts: []string{"clumptini+oncall@google.com"},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			opts := generateChromeOpts(s)
+			opts = append(opts, chrome.ARCDisabled())
+			return opts, nil
+		}),
+		SetUpTimeout:    chrome.LoginTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+		Vars:            []string{"keepState"},
+	})
+
 	testing.AddFixture(&testing.Fixture{
 		Name:            "crostiniBuster",
 		Desc:            "Install Crostini with Buster",
@@ -226,6 +244,23 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		TearDownTimeout: uninstallationTimeout,
 		Parent:          "chromeLoggedInForCrostini",
+		Vars:            []string{"keepState"},
+		Data:            []string{GetContainerMetadataArtifact("bullseye", true), GetContainerRootfsArtifact("bullseye", true)},
+	})
+
+	// NOTE: This is a temporary fixture that has only been added to verify
+	// whether or not ARC is the source of Crostini tast test flakes. This
+	// shouldn't be used in other cases.
+	testing.AddFixture(&testing.Fixture{
+		Name:            "crostiniBullseyeLargeContainerWithoutArc",
+		Desc:            "Install Crostini with Bullseye in large container with apps installed",
+		Contacts:        []string{"clumptini+oncall@google.com"},
+		Impl:            &crostiniFixture{preData: preTestDataBullseyeLC},
+		SetUpTimeout:    installationTimeout + uninstallationTimeout,
+		ResetTimeout:    checkContainerTimeout,
+		PostTestTimeout: postTestTimeout,
+		TearDownTimeout: uninstallationTimeout,
+		Parent:          "chromeLoggedInForCrostiniWithoutArc",
 		Vars:            []string{"keepState"},
 		Data:            []string{GetContainerMetadataArtifact("bullseye", true), GetContainerRootfsArtifact("bullseye", true)},
 	})

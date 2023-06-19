@@ -73,6 +73,22 @@ func init() {
 		Data:            []string{GetContainerMetadataArtifact("bullseye", true), GetContainerRootfsArtifact("bullseye", true)},
 	})
 
+	// NOTE: This is a temporary fixture that has only been added to verify
+	// whether or not ARC is the source of Crostini tast test flakes. This
+	// shouldn't be used in other cases.
+	testing.AddFixture(&testing.Fixture{
+		Name:            "crostiniBullseyeLargeContainerClamshellWithoutArc",
+		Desc:            "Install Crostini with Bullseye in large container with apps installed in clamshell mode with Arc disabled",
+		Contacts:        []string{"clumptini+oncall@google.com"},
+		Impl:            &crostiniAppsFixture{deviceMode: devicemode.ClamshellMode},
+		SetUpTimeout:    installationTimeout + uninstallationTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout + restartCrostiniTimeout,
+		Parent:          "crostiniBullseyeLargeContainerWithoutArc",
+		Vars:            append([]string{"keepState"}, screenshot.ScreenDiffVars...),
+		Data:            []string{GetContainerMetadataArtifact("bullseye", true), GetContainerRootfsArtifact("bullseye", true)},
+	})
+
 	//  Tablet mode is not supported with IME enabled for now, so only Clamshell fixtures are available.
 	testing.AddFixture(&testing.Fixture{
 		Name:            "crostiniBullseyeLargeContainerClamshellWithIME",
