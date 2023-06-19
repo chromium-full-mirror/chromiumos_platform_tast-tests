@@ -17,7 +17,9 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
+	"go.chromium.org/tast-tests/cros/local/loginstatus"
 
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -359,6 +361,25 @@ func (f *baseSetupFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestS
 func (f *baseSetupFixtureImpl) PostTest(ctx context.Context, s *testing.FixtTestState) {}
 
 func (f *baseSetupFixtureImpl) Reset(ctx context.Context) error {
+	// Check oauth2 token is still valid. If not, return an error to restart
+	// chrome and re-login.
+	if f.cr.LoginMode() == "GAIA" {
+		if st, err := loginstatus.GetLoginStatus(ctx, f.tconn); err != nil {
+			return errors.Wrap(err, "failed to get login status")
+		} else if !*st.HasValidOauth2Token {
+			return errors.New("invalid oauth2 token")
+		}
+	}
+
+	if err := f.cr.Responded(ctx); err != nil {
+		return errors.Wrap(err, "existing Chrome connection is unusable")
+	}
+	if err := f.cr.ResetState(ctx); err != nil {
+		return errors.Wrap(err, "failed resetting existing Chrome session")
+	}
+	if err := f.tconn.WaitForExpr(ctx, `document.readyState === "complete"`); err != nil {
+		return errors.Wrap(err, "test API extension becomes unavailable")
+	}
 	return nil
 }
 
