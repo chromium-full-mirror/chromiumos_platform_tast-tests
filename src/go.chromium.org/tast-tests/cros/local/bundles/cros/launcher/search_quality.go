@@ -51,7 +51,7 @@ func init() {
 				Val: searchQualityTestCase{
 					query:          "45+45",
 					useRegex:       false,
-					expectedResult: "45+45, 90",
+					expectedResult: "= 90",
 					category:       "Answer Card",
 				},
 			},
@@ -61,7 +61,7 @@ func init() {
 				Val: searchQualityTestCase{
 					query:          "1234+5678",
 					useRegex:       false,
-					expectedResult: "1234+5678, 6912",
+					expectedResult: "= 6912",
 					category:       "Answer Card",
 				},
 			},

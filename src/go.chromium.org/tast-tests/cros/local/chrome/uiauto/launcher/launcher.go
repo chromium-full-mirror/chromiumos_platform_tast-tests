@@ -33,6 +33,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast-tests/cros/local/uidetection"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -160,14 +161,17 @@ func WaitForCategorizedResultFromRegex(tconn *chrome.TestConn, pattern string) u
 func WaitForResultWithCategory(tconn *chrome.TestConn, searchInfo SearchCategoryInfo) uiauto.Action {
 	ui := uiauto.New(tconn)
 	category := searchInfo.Category
-	needRegex := searchInfo.NeedRegex
 	result := searchInfo.Result
 
-	if category == "Answer Card" {
-		if needRegex {
-			return ui.WaitUntilExists(SearchResultListItemFinder.NameRegex(regexp.MustCompile(result)))
-		}
+	switch {
+	case category == "Answer Card" && searchInfo.NeedRegex:
+		return ui.WaitUntilExists(SearchResultListItemFinder.NameRegex(regexp.MustCompile(result)))
+
+	case category == "Answer Card":
 		return ui.WaitUntilExists(SearchResultListItemFinder.NameContaining(result))
+
+	case category == "Images":
+		return ui.WaitUntilExists(nodewith.Role(role.Button).HasClass("ImageButton").NameContaining(result))
 	}
 
 	categoryName := category + " , search result category"
@@ -175,7 +179,6 @@ func WaitForResultWithCategory(tconn *chrome.TestConn, searchInfo SearchCategory
 		ui.WaitUntilExists(SearchResultListLabelFinder.Name(category).Ancestor(SearchResultListViewFinder.Name(categoryName))),
 		ui.WaitUntilExists(SearchResultListItemFinder.NameContaining(result).Ancestor(SearchResultListViewFinder.Name(categoryName))),
 	)
-
 }
 
 // WaitForResult waits for 'result'.
@@ -1507,4 +1510,9 @@ func UninstallsAppUsingContextMenu(ctx context.Context, tconn *chrome.TestConn, 
 		return errors.Wrap(err, "failed to remove the app on recent apps")
 	}
 	return nil
+}
+
+// VerifyTextWithUIDetection returns an action checking the given text is shown on screen using ACUITI.
+func VerifyTextWithUIDetection(ud *uidetection.Context, expectedText string) action.Action {
+	return ud.WaitUntilExists(uidetection.Word(expectedText).First())
 }
