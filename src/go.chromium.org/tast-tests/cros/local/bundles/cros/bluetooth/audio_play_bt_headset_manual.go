@@ -30,6 +30,7 @@ func init() {
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
+		Attr:         []string{"group:intel-bt"},
 		Vars:         []string{"bluetooth.btHeadset"},
 		Fixture:      "chromeLoggedIn",
 	})

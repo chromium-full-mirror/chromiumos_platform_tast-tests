@@ -34,6 +34,7 @@ func init() {
 		BugComponent: "b:776546",
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		SoftwareDeps: []string{"chrome"},
+		Attr:         []string{"group:intel-jack"},
 		Fixture:      "chromeLoggedIn",
 	})
 }

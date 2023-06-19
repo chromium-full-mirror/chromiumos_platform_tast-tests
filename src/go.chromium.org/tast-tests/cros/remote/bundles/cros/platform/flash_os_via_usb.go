@@ -25,6 +25,7 @@ func init() {
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"crossystem", "flashrom"},
+		Attr:         []string{"group:intel-flashing"},
 		Fixture:      fixture.DevMode,
 		Timeout:      20 * time.Minute,
 		Params: []testing.Param{{

@@ -38,9 +38,10 @@ func init() {
 		Vars:         []string{"bluetooth.btDeviceName"},
 		Fixture:      "chromeLoggedIn",
 		Params: []testing.Param{{
-			Name:    "bronze",
-			Val:     10,
-			Timeout: 10 * time.Minute,
+			Name:      "bronze",
+			Val:       10,
+			Timeout:   10 * time.Minute,
+			ExtraAttr: []string{"group:intel-bt"},
 		}, {
 			Name:    "silver",
 			Val:     15,

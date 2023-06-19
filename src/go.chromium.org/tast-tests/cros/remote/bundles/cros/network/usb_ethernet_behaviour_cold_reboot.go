@@ -42,8 +42,9 @@ func init() {
 			Val:       regexp.MustCompile(`If 0.*Class=.*480M`),
 			ExtraAttr: []string{"group:intel-nda"},
 		}, {
-			Name: "typec",
-			Val:  regexp.MustCompile(`If 0.*Class=.*5000M`),
+			Name:      "typec",
+			Val:       regexp.MustCompile(`If 0.*Class=.*5000M`),
+			ExtraAttr: []string{"group:intel-type-c-eth-dongle"},
 		}},
 	})
 }

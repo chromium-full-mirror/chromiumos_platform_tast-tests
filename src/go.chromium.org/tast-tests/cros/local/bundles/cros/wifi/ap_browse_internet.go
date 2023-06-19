@@ -24,7 +24,7 @@ func init() {
 		Contacts:     []string{"cros-network-health-team@google.com", "intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{},
+		Attr:         []string{"group:intel-wlan"},
 		Vars:         []string{"wifissid", "wifipassword"},
 	})
 }

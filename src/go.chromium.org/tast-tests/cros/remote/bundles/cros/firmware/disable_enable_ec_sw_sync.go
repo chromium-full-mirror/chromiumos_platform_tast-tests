@@ -51,6 +51,7 @@ func init() {
 		SoftwareDeps: []string{"flashrom"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService"},
+		Attr:         []string{"group:intel-flashing"},
 		Fixture:      fixture.NormalMode,
 		Timeout:      10 * time.Minute,
 	})

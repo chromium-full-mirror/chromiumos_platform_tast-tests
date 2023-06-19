@@ -41,7 +41,8 @@ func init() {
 			Val: audioStress{
 				stressDuration: 3 * time.Hour,
 			},
-			Timeout: 3*time.Hour + 10*time.Minute,
+			ExtraAttr: []string{"group:intel-bt"},
+			Timeout:   3*time.Hour + 10*time.Minute,
 		}, {
 			Name: "silver",
 			Val: audioStress{

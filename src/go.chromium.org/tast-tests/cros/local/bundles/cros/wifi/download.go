@@ -36,7 +36,7 @@ func init() {
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedIn",
-		Attr:         []string{},
+		Attr:         []string{"group:intel-wlan"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Vars:         []string{"wifissid", "wifipassword", "iterations"},
 		Params: []testing.Param{{

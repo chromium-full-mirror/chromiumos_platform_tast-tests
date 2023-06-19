@@ -19,6 +19,7 @@ func init() {
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
+		Attr:         []string{"group:intel-bt"},
 		Vars:         []string{"bluetooth.monoHeadset"},
 		Fixture:      "chromeLoggedIn",
 		LacrosStatus: testing.LacrosVariantUnneeded,

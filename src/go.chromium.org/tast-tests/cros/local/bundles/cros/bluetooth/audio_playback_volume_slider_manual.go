@@ -31,6 +31,7 @@ func init() {
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
+		Attr:         []string{"group:intel-bt"},
 		Vars:         []string{"bluetooth.btHeadset"},
 		Fixture:      "chromeLoggedIn",
 	})
@@ -188,7 +189,7 @@ func AudioPlaybackVolumeSliderManual(ctx context.Context, s *testing.State) {
 		}
 	}()
 
-	// Sample time for the audio to play for 5 seconds.
+	// GoBigSleepLint: Sample time for the audio to play for 5 seconds.
 	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 		s.Error("Failed to sleep: ", err)
 	}

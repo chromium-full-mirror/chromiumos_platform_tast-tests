@@ -32,6 +32,7 @@ func init() {
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.Speaker()),
+		Attr:         []string{"group:intel-bt"},
 		Vars:         []string{"bluetooth.btDeviceName"},
 		Fixture:      "chromeLoggedIn",
 	})

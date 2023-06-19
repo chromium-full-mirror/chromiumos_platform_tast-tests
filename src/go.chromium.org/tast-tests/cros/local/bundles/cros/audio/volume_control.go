@@ -70,6 +70,7 @@ func init() {
 				tier:              withAudio,
 				expectedAudioNode: "HEADPHONE",
 			},
+			ExtraAttr: []string{"group:intel-jack"},
 		}},
 	})
 }

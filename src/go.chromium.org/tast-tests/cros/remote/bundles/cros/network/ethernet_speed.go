@@ -45,8 +45,9 @@ func init() {
 			Val:       ethernet{ethType: "native"},
 			ExtraAttr: []string{"group:intel-nda"},
 		}, {
-			Name: "type_a",
-			Val:  ethernet{ethType: "typeA"},
+			Name:      "type_c",
+			Val:       ethernet{ethType: "typeC"},
+			ExtraAttr: []string{"group:intel-type-c-eth-dongle"},
 		}},
 	})
 }
@@ -56,7 +57,7 @@ func EthernetSpeed(ctx context.Context, s *testing.State) {
 
 	testOpts := s.Param().(ethernet)
 
-	if testOpts.ethType == "typeA" {
+	if testOpts.ethType == "typeC" {
 		usbDetectionRe := regexp.MustCompile(`Class=.*(480M|5000M|10G|20G)`)
 		out, err := h.DUT.Conn().CommandContext(ctx, "lsusb", "-t").Output()
 		if err != nil {

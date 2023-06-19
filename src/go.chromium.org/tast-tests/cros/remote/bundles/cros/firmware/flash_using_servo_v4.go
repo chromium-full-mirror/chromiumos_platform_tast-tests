@@ -35,6 +35,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		VarDeps:      []string{"servo"},
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService", "tast.cros.security.BootLockboxService"},
+		Attr:         []string{"group:intel-flashing"},
 		Fixture:      fixture.NormalMode,
 		Vars:         []string{"firmware.firmwarePath"},
 		Timeout:      30 * time.Minute,

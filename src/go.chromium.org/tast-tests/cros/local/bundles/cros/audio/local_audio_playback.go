@@ -37,8 +37,9 @@ func init() {
 			ExtraAttr: []string{"group:mainline", "informational", "group:intel-gating", "group:intel-nda"},
 			Val:       "Speaker (internal)",
 		}, {
-			Name: "headphone",
-			Val:  "Headphone",
+			Name:      "headphone",
+			Val:       "Headphone",
+			ExtraAttr: []string{"group:intel-jack"},
 		}, {
 			Name: "usb_speaker",
 			Val:  "USB",
