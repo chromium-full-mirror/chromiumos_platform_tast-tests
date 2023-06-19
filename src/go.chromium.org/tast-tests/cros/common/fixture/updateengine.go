@@ -11,4 +11,7 @@ const (
 	UpdateEngine = "updateEngine"
 	// UpdateEngineEnrolled provides enrollment as well.
 	UpdateEngineEnrolled = "updateEngineEnrolled"
+	// UpdateEngineCleanOwnership provides clean ownership and takes care of status for
+	// update engine.
+	UpdateEngineCleanOwnership = "updateEngineCleanOwnership"
 )

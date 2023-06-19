@@ -46,6 +46,24 @@ func init() {
 			"tast.cros.autoupdate.UpdateService",
 		},
 	})
+
+	// UpdateEngineCleanOwnership is a combination of CleanOwnership with UpdateEngine
+	// on top of it, to take care of update_engine daemon cleanup.
+	testing.AddFixture(&testing.Fixture{
+		Name: fixture.UpdateEngineCleanOwnership,
+		Desc: "Fixture providing clean ownership and udpate engine reset",
+		Contacts: []string{
+			"igorcov@chromium.org",
+			"chromeos-commercial-remote-management@google.com",
+		},
+		Parent:          fixture.CleanOwnership, // Clean device ownership.
+		Impl:            &updateEngineFixture{},
+		PreTestTimeout:  30 * time.Second,
+		PostTestTimeout: 30 * time.Second,
+		ServiceDeps: []string{
+			"tast.cros.autoupdate.UpdateService",
+		},
+	})
 }
 
 type updateEngineFixture struct{}
