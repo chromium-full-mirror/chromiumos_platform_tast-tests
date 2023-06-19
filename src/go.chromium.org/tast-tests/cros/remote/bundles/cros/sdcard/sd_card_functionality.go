@@ -36,6 +36,7 @@ func init() {
 		SoftwareDeps: []string{"chrome", "reboot"},
 		Vars:         []string{"servo", "sdcard.functionality_iterations"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
+		Attr:         []string{"group:intel-usb-set1"},
 		Timeout:      15 * time.Minute,
 		Params: []testing.Param{{
 			Name: "shutdown",

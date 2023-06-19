@@ -45,6 +45,7 @@ func init() {
 		ServiceDeps:  []string{"tast.cros.ui.ScreenLockService"},
 		VarDeps:      []string{"servo"},
 		HardwareDeps: hwdep.D(hwdep.X86()),
+		Attr:         []string{"group:intel-usb-set2"},
 		Params: []testing.Param{{
 			Name:    "close_lid",
 			Val:     usbHIDTestParam{closeLid, "Human Interface Device", "1.5M", 1},

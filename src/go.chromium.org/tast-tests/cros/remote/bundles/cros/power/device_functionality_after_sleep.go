@@ -49,13 +49,15 @@ func init() {
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		Fixture:      fixture.NormalMode,
 		Params: []testing.Param{{
-			Name:    "lid_close_open_with_usb2",
-			Val:     deviceFunctionality{functionality: lidCloseOpenWithUsb2},
-			Timeout: 10 * time.Minute,
+			Name:      "lid_close_open_with_usb2",
+			Val:       deviceFunctionality{functionality: lidCloseOpenWithUsb2},
+			ExtraAttr: []string{"group:intel-usb-set1"},
+			Timeout:   10 * time.Minute,
 		}, {
-			Name:    "system_idle_with_usb2",
-			Val:     deviceFunctionality{functionality: systemIdleWithUsb2},
-			Timeout: 10 * time.Minute,
+			Name:      "system_idle_with_usb2",
+			Val:       deviceFunctionality{functionality: systemIdleWithUsb2},
+			ExtraAttr: []string{"group:intel-usb-set1"},
+			Timeout:   10 * time.Minute,
 		}, {
 			Name:      "only_system_idle",
 			Val:       deviceFunctionality{functionality: onlySystemIdle},
@@ -248,6 +250,7 @@ func performSystemIdle(ctx context.Context, h *firmware.Helper, isLongDuration b
 	defer resetPowerPolicy(ctx, h)
 
 	if isLongDuration {
+		testing.ContextLog(ctx, "Keeping DUT undisturbed for 10 minutes")
 		// GoBigSleepLint: After display goes OFF, keep DUT undisturbed for 10 minutes.
 		if err := testing.Sleep(ctx, 10*time.Minute); err != nil {
 			return errors.Wrap(err, "failed to sleep for 10 minutes")

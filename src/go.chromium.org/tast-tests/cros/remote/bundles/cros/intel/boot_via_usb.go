@@ -26,6 +26,7 @@ func init() {
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291",
 		SoftwareDeps: []string{"crossystem", "flashrom"},
+		Attr:         []string{"group:intel-type-c-usb"},
 		Fixture:      fixture.NormalMode,
 		Timeout:      5 * time.Minute,
 	})

@@ -26,6 +26,7 @@ func init() {
 		Desc:         "Copy files between Downloads and USB (and vice versa)",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		SoftwareDeps: []string{"chrome"},
+		Attr:         []string{"group:intel-usb-set1"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		Vars:         []string{"typec.usbDetectionName"},
 		Fixture:      "chromeLoggedIn",

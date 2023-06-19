@@ -48,7 +48,8 @@ func init() {
 				noOfConnectedDevice: 1, // Test H/W tolopoly requires One USB Type-A Human Interface Device like Keyboard/Mouse.
 				usbDeviceClassName:  "Human Interface Device",
 			},
-			Timeout: 5 * time.Minute,
+			ExtraAttr: []string{"group:intel-usb-set2"},
+			Timeout:   5 * time.Minute,
 		}, {
 			Name: "hid_coldboot_stress",
 			Val: usbDeviceTestParam{
@@ -57,7 +58,8 @@ func init() {
 				noOfConnectedDevice: 2, // Test H/W tolopoly requires Two USB Type-A Human Interface Device like Keyboard/Mouse.
 				usbDeviceClassName:  "Human Interface Device",
 			},
-			Timeout: 20 * time.Minute,
+			ExtraAttr: []string{"group:intel-usb-set2"},
+			Timeout:   20 * time.Minute,
 		}, {
 			Name: "usb2_pendrive_coldboot",
 			Val: usbDeviceTestParam{
@@ -66,7 +68,8 @@ func init() {
 				noOfConnectedDevice: 1, // Test H/W tolopoly requires One USB Type-A 2.0 pendrive.
 				usbDeviceClassName:  "Mass Storage",
 			},
-			Timeout: 20 * time.Minute,
+			ExtraAttr: []string{"group:intel-usb-set1"},
+			Timeout:   20 * time.Minute,
 		}, {
 			Name: "usb3_pendrive_coldboot",
 			Val: usbDeviceTestParam{
@@ -75,7 +78,8 @@ func init() {
 				noOfConnectedDevice: 1, // Test H/W tolopoly requires One USB Type-A 3.0 pendrive.
 				usbDeviceClassName:  "Mass Storage",
 			},
-			Timeout: 20 * time.Minute,
+			ExtraAttr: []string{"group:intel-usb-set1"},
+			Timeout:   20 * time.Minute,
 		},
 		}})
 }

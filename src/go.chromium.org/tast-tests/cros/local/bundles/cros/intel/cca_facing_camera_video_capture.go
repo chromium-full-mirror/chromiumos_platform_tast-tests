@@ -31,8 +31,9 @@ func init() {
 		Fixture:      "ccaLaunched",
 		Attr:         []string{"group:camera_dependent"},
 		Params: []testing.Param{{
-			Name: "external_facing",
-			Val:  cca.FacingExternal,
+			Name:      "external_facing",
+			Val:       cca.FacingExternal,
+			ExtraAttr: []string{"group:intel-usb-cam"},
 		}, {
 			Name:      "user_facing",
 			Val:       cca.FacingFront,

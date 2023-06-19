@@ -31,6 +31,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		VarDeps:      []string{"servo", "intel.sdCardDetectionName"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.X86()),
+		Attr:         []string{"group:intel-usb-set1"},
 		Params: []testing.Param{{
 			Name:    "plug",
 			Val:     true,

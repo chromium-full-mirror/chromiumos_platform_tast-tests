@@ -32,8 +32,9 @@ func init() {
 			Val:       ethernet{ethtype: "native"},
 			ExtraAttr: []string{"group:intel-nda"},
 		}, {
-			Name: "type_a",
-			Val:  ethernet{ethtype: "typeA"},
+			Name:      "type_a",
+			Val:       ethernet{ethtype: "typeA"},
+			ExtraAttr: []string{"group:intel-usb-set1"},
 		}},
 	})
 }

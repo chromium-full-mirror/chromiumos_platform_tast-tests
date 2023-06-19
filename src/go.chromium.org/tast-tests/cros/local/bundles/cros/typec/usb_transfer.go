@@ -29,11 +29,13 @@ func init() {
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		Fixture:      "chromeLoggedIn",
 		Params: []testing.Param{{
-			Name: "usb2",
-			Val:  "480M",
+			Name:      "usb2",
+			Val:       "480M",
+			ExtraAttr: []string{"group:intel-usb-set1"},
 		}, {
-			Name: "usb3",
-			Val:  "5000M",
+			Name:      "usb3",
+			Val:       "5000M",
+			ExtraAttr: []string{"group:intel-type-c-usb"},
 		}},
 	})
 }
