@@ -191,7 +191,7 @@ func ALSAConformance(ctx context.Context, s *testing.State) {
 	}
 
 	defer func(ctx context.Context) {
-		// Sleep for 10 seconds to reset drivers and then restart CRAS.
+		// GoBigSleepLint: Sleep for 10 seconds to reset drivers and then restart CRAS.
 		testing.Sleep(ctx, 10*time.Second)
 		s.Log("Starting CRAS")
 		if err := upstart.EnsureJobRunning(ctx, "cras"); err != nil {
