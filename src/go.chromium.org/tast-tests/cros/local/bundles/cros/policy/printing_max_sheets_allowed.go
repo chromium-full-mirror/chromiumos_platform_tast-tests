@@ -75,7 +75,7 @@ func fetchMaxSheetsAllowedFromPrintPreview(ctx context.Context, s *testing.State
 		s.Fatal("Failed to select the first page to print: ", err)
 	}
 
-	numberOfCopiesIsAllowed := func(numberOfCopiesToCheck int) bool {
+	verifyRestrictionForNumberOfCopies := func(numberOfCopiesToCheck int, expectedRestriction restriction.Restriction) {
 		printButton := nodewith.Name("Print").Role(role.Button)
 		copiesSpinButton := nodewith.Name("Copies").Role(role.SpinButton)
 
@@ -84,8 +84,6 @@ func fetchMaxSheetsAllowedFromPrintPreview(ctx context.Context, s *testing.State
 				ui.DoDefault(copiesSpinButton),
 				kb.AccelAction("Ctrl+A"),
 				kb.TypeAction(fmt.Sprint(numberOfCopiesToSet)),
-				// Focus on the print button so that the changes are applied.
-				ui.FocusAndWait(printButton),
 			)(ctx); err != nil {
 				s.Fatal("Can't set the number of copies")
 			}
@@ -93,26 +91,16 @@ func fetchMaxSheetsAllowedFromPrintPreview(ctx context.Context, s *testing.State
 
 		setNumberOfCopies(numberOfCopiesToCheck)
 
-		printNodeInfo, err := ui.Info(ctx, printButton)
-		if err != nil {
-			s.Fatal("Failed to check the state of 'Print' button: ", err)
+		if err := ui.WaitForRestriction(printButton, expectedRestriction)(ctx); err != nil {
+			s.Fatalf("Expected restriction %q was never reached for %d copies: %s", expectedRestriction, numberOfCopiesToCheck, err)
 		}
 
-		result := (printNodeInfo.Restriction == restriction.None)
-
-		// Change the number of copies to the default value in order to enable UI elements.
+		// Change the number of copies back to the default value in order to enable UI elements.
 		setNumberOfCopies(1)
-
-		return result
 	}
 
-	if !numberOfCopiesIsAllowed(expectedMaxSheetsAllowed) {
-		s.Fatalf("We should be able to print %d sheets, but it's not allowed", expectedMaxSheetsAllowed)
-	}
-
-	if numberOfCopiesIsAllowed(expectedMaxSheetsAllowed + 1) {
-		s.Fatalf("We shouldn't be able to print %d sheets, but it's allowed", expectedMaxSheetsAllowed+1)
-	}
+	verifyRestrictionForNumberOfCopies(expectedMaxSheetsAllowed, restriction.None)
+	verifyRestrictionForNumberOfCopies(expectedMaxSheetsAllowed+1, restriction.Disabled)
 
 	return printingtest.SettingValues{
 		DefaultValue:    "",
