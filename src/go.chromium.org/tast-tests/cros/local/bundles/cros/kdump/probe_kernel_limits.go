@@ -19,7 +19,7 @@ func init() {
 		Contacts: []string{"chromeos-kdump@google.com",
 			"ribalda@google.com"},
 		BugComponent: "b:1193840",
-		Attr:         []string{"group:mainline", "group:criticalstaging", "informational"},
+		Attr:         []string{"group:mainline"},
 	})
 }
 
