@@ -15,6 +15,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/audio"
+	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
 	"go.chromium.org/tast-tests/cros/local/crosconfig"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
@@ -172,15 +173,18 @@ func ALSAConformance(ctx context.Context, s *testing.State) {
 	// 1. Support label to force the test run on DUT having a headphone jack. (crbug.com/936807)
 	// 2. Have a method to get correct PCM name from CRAS. (b/142910355).
 	if err := cras.SetActiveNodeByType(ctx, "INTERNAL_MIC"); err != nil {
+		crastestclient.DumpAudioDiagnostics(ctx, s.OutDir())
 		s.Fatal("Failed to set internal mic active: ", err)
 	}
 
 	if err := cras.SetActiveNodeByType(ctx, "INTERNAL_SPEAKER"); err != nil {
+		crastestclient.DumpAudioDiagnostics(ctx, s.OutDir())
 		s.Fatal("Failed to set internal speaker active: ", err)
 	}
 
 	crasNodes, err := cras.GetNodes(ctx)
 	if err != nil {
+		crastestclient.DumpAudioDiagnostics(ctx, s.OutDir())
 		s.Fatal("Failed to obtain CRAS nodes: ", err)
 	}
 
