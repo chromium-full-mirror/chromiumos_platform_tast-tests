@@ -182,13 +182,23 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 	}
 
 	// Get the model name from 'crossystem fwid'.
-	rwfwid, err := h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamFwid)
+	initialRwFwid, err := h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamFwid)
 	if err != nil {
 		s.Fatal("Failed to get crossystem fwid: ", err)
 	}
-	splitout := strings.Split(rwfwid, ".")
-	splitout = strings.Split(splitout[0], "_")
-	fwidModel := strings.ToLower(splitout[1])
+	re := regexp.MustCompile(`Google_([a-z-A-Z]*)\.(\d*\.\d*.\d*)`)
+	match := re.FindStringSubmatch(initialRwFwid)
+	if len(match) != 3 {
+		s.Fatalf("Unexpected fw id format from crossystem %v, got: %s", reporters.CrossystemParamFwid, initialRwFwid)
+	}
+	fwidModel := strings.ToLower(match[1])
+	initialRwFwid = match[2]
+
+	// Get the initial active section.
+	initialActSection, err := h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamMainfwAct)
+	if err != nil {
+		s.Fatal("Failed to get crossystem mainfw_act: ", err)
+	}
 
 	// Verify h.Model is defined.
 	if h.Model == "" {
@@ -288,7 +298,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	// At the end of this test, restore AP firmware to the one found at the beginning.
-	defer func(ctx context.Context) {
+	defer func(ctx context.Context, roNewID, initialRwFwid, initialActSection string, initialFwFromDUT *os.File, testArgs *apROBootabilityPerformanceArgs) {
 		if err := h.EnsureDUTBooted(ctx); err != nil {
 			s.Fatal("Failed to ensure DUT connected at the end of test before restoring firmware: ", err)
 		}
@@ -303,10 +313,27 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 		if err := flashDUTAndReboot(ctx, h, s.DUT().Conn(), initialFwFromDUT.Name(), fwpb.ImageSection_EmptyImageSection, testArgs.targetProgrammer); err != nil {
 			s.Fatal("Failed while flashing DUT to restore firmware at the end of test: ", err)
 		}
-		if err = verifyFwIDs(ctx, h, roNewID, rwNewID); err != nil {
+
+		bootingSection, err := h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamMainfwAct)
+		if err != nil {
+			s.Fatal("Failed to get the active firmware section: ", err)
+		}
+
+		// Ensuring that DUT ends up running the initial RW active section.
+		if bootingSection != initialActSection {
+			if err := h.DUT.Conn().CommandContext(ctx, "crossystem", "fw_try_next="+initialActSection).Run(ssh.DumpLogOnError); err != nil {
+				s.Fatal("Failed to set crossystem fw_try_next: ", err)
+			}
+
+			if err := safeReboot(ctx, h); err != nil {
+				s.Fatal("While rebooting at the end of the test: ", err)
+			}
+		}
+
+		if err = verifyFwIDs(ctx, h, roNewID, initialRwFwid); err != nil {
 			s.Fatal("Failed while verifying firmware IDs after flashing at the end of test: ", err)
 		}
-	}(cleanupCtx)
+	}(cleanupCtx, roNewID, initialRwFwid, initialActSection, initialFwFromDUT, testArgs)
 
 	// Flash the latest shipped RO and RW firmware.
 	if err := flashDUTAndReboot(ctx, h, s.DUT().Conn(), filepath.Join(tmpDir, binToFlash), fwpb.ImageSection_EmptyImageSection, testArgs.targetProgrammer); err != nil {
@@ -519,16 +546,25 @@ func flashDUTAndReboot(ctx context.Context, h *firmware.Helper, conn *ssh.Conn, 
 		return errors.Wrap(err, "failed to send bin file to DUT")
 	}
 
-	testing.ContextLogf(ctx, "Flashing DUT with file: %s using section: %v", fileOnHostToFlash, section)
+	testing.ContextLogf(flashingCtx, "Flashing DUT with file: %s using section: %v", fileOnHostToFlash, section)
 	bs := fwpb.NewBiosServiceClient(h.RPCClient.Conn)
-	if _, err := bs.WriteImageFromMultiSectionFile(ctx, &fwpb.FWSectionInfo{Programmer: targetProgrammer, Path: fileOnDUTToFlash, Section: section}); err != nil {
+	if _, err := bs.WriteImageFromMultiSectionFile(flashingCtx, &fwpb.FWSectionInfo{Programmer: targetProgrammer, Path: fileOnDUTToFlash, Section: section}); err != nil {
 		return errors.Wrap(err, "failed to flash DUT with the multi-section bin file")
 	}
 
+	// Reboot DUT for flash to take effect.
+	if err := safeReboot(flashingCtx, h); err != nil {
+		return errors.Wrap(err, "while rebooting after flash")
+	}
+
+	return nil
+}
+
+// safeReboot will close RPC connection, reboot DUT and Open a new RPC connection.
+func safeReboot(ctx context.Context, h *firmware.Helper) error {
 	// Close RPC connection before reboot.
 	h.CloseRPCConnection(ctx)
 
-	// Reboot DUT for flash to take effect.
 	testing.ContextLog(ctx, "Power-cycling DUT with a cold reset")
 	if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
 		return errors.Wrap(err, "failed to reboot DUT by servo")
@@ -585,9 +621,9 @@ func speedTest(ctx context.Context, h *firmware.Helper) (float64, error) {
 	speedometerCtx, cancelspeedometerCtx := context.WithTimeout(ctx, speedometerTime)
 	defer cancelspeedometerCtx()
 
-	testing.ContextLog(ctx, "Sleeping for a few seconds before starting a new Chrome")
+	testing.ContextLog(speedometerCtx, "Sleeping for a few seconds before starting a new Chrome")
 	// GoBigSleepLint: Delay for the DUT to fully settle before starting a new chrome session.
-	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+	if err := testing.Sleep(speedometerCtx, 5*time.Second); err != nil {
 		return 0.0, errors.Wrap(err, "failed to wait for a few seconds")
 	}
 
