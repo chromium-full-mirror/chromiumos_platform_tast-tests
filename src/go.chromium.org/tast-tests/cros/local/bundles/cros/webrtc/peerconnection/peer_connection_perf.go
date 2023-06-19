@@ -212,7 +212,8 @@ func measureRTCStats(ctx context.Context, conn *chrome.Conn, streamWidth, stream
 // statistics. If videoGridDimension is larger than 1, then the real time <video>
 // is plugged into a videoGridDimension x videoGridDimension grid with copies
 // of videoURL being played, similar to a mosaic video call.
-func peerConnectionPerf(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrome, loopbackURL, videoURL, outDir string, params RTCTestParams, p *perf.Values) error {
+func peerConnectionPerf(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrome,
+	s *testing.State, loopbackURL, videoURL string, params RTCTestParams, p *perf.Values) error {
 	if err := cpu.WaitUntilIdle(ctx); err != nil {
 		return errors.Wrap(err, "failed waiting for CPU to become idle")
 	}
@@ -266,7 +267,7 @@ func peerConnectionPerf(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrom
 		return errors.Wrap(err, "failed to measure")
 	}
 
-	var gpuErr, cStateErr, cpuErr, batErr error
+	var gpuErr, cStateErr, cpuErr, batErr, traceErr error
 	var wg sync.WaitGroup
 	wg.Add(4)
 	go func() {
@@ -285,6 +286,13 @@ func peerConnectionPerf(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrom
 		defer wg.Done()
 		batErr = graphics.MeasureSystemPowerConsumption(ctx, tconn, cpuMeasuring, p)
 	}()
+	if params.TraceChromeEvents {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			traceErr = measureChromeTraceEvents(ctx, s, p)
+		}()
+	}
 	wg.Wait()
 	if gpuErr != nil {
 		return errors.Wrap(gpuErr, "failed to measure GPU counters")
@@ -298,6 +306,9 @@ func peerConnectionPerf(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrom
 	if batErr != nil {
 		return errors.Wrap(batErr, "failed to measure system power consumption")
 	}
+	if traceErr != nil {
+		return errors.Wrap(gpuErr, "failed to measure decoding/encoding chrome trace events")
+	}
 
 	testing.ContextLogf(ctx, "Metric: %+v", p)
 	return nil
@@ -305,11 +316,12 @@ func peerConnectionPerf(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrom
 
 // RunRTCPeerConnectionPerf starts a Chrome instance (with or without hardware video decoder and encoder),
 // opens a WebRTC loopback page and collects performance measures in p.
-func RunRTCPeerConnectionPerf(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrome, fileSystem http.FileSystem, outDir string, params RTCTestParams) error {
+func RunRTCPeerConnectionPerf(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrome,
+	s *testing.State, params RTCTestParams) error {
 	// Time reserved for cleanup.
 	const cleanupTime = 5 * time.Second
 
-	server := httptest.NewServer(http.FileServer(fileSystem))
+	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()
 	loopbackURL := server.URL + "/" + LoopbackFile
 
@@ -328,10 +340,10 @@ func RunRTCPeerConnectionPerf(ctx context.Context, cs ash.ConnSource, cr *chrome
 		videoGridURL = server.URL + "/" + params.VideoGridFile
 	}
 	p := perf.NewValues()
-	if err := peerConnectionPerf(ctx, cs, cr, loopbackURL, videoGridURL, outDir, params, p); err != nil {
+	if err := peerConnectionPerf(ctx, cs, cr, s, loopbackURL, videoGridURL, params, p); err != nil {
 		return err
 	}
 
-	p.Save(outDir)
+	p.Save(s.OutDir())
 	return nil
 }

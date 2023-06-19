@@ -38,6 +38,7 @@ type rtcTestParamsData struct {
 	DisplayMediaType                      string
 	BrowserType                           string
 	VerifyOutOfProcessVideoEncodingIsUsed bool
+	TraceChromeEvents                     bool
 }
 
 type rtcPerfTestSourceData struct {
@@ -217,6 +218,7 @@ func TestRTCPeerConnectionPerfParams(t *testing.T) {
 							StreamWidth:       resolution.Width,
 							StreamHeight:      resolution.Height,
 							BrowserType:       "browser.TypeAsh",
+							TraceChromeEvents: isHardwareDecoderImpl(dec) || isHardwareEncoderImpl(enc),
 						}
 						var streamTypeStr string
 						if stream != vanilla {
@@ -282,6 +284,7 @@ func TestRTCPeerConnectionPerfParams(t *testing.T) {
 				Svc:               "L1T3",
 				DisplayMediaType:  displayMediaTypeStr,
 				BrowserType:       "browser.TypeAsh",
+				TraceChromeEvents: true,
 			}
 			var captureFixtureMap = map[peerconnection.DisplayMediaType]map[bool]string{
 				peerconnection.CaptureMonitor: map[bool]string{false: "chromeScreenCapture", true: "chromeZeroCopyScreenCapture"},
@@ -318,6 +321,7 @@ func TestRTCPeerConnectionPerfParams(t *testing.T) {
 				StreamWidth:       k720p.Width,
 				StreamHeight:      k720p.Height,
 				BrowserType:       "browser.TypeAsh",
+				TraceChromeEvents: false,
 			}
 			if enc == oopVE {
 				paramData.VerifyOutOfProcessVideoEncodingIsUsed = true
@@ -343,6 +347,7 @@ func TestRTCPeerConnectionPerfParams(t *testing.T) {
 			StreamWidth:       k720p.Width,
 			StreamHeight:      k720p.Height,
 			BrowserType:       "browser.TypeLacros",
+			TraceChromeEvents: false,
 		}
 		sourceData := rtcPerfTestSourceData{
 			Name:         fmt.Sprintf("%s_720p_lacros_hw_enc_hw_dec", codec),
@@ -365,6 +370,7 @@ func TestRTCPeerConnectionPerfParams(t *testing.T) {
 			StreamWidth:       k720p.Width,
 			StreamHeight:      k720p.Height,
 			BrowserType:       "browser.TypeAsh",
+			TraceChromeEvents: true,
 		}
 		swDeps := softwareCodecsDeps(codec, enc, dec)
 		swDeps = append(swDeps, "thread_safe_libva_backend")
@@ -400,6 +406,7 @@ func TestRTCPeerConnectionPerfParams(t *testing.T) {
 				{{ if .ParamData.VerifyOutOfProcessVideoEncodingIsUsed }}
 				VerifyOutOfProcessVideoEncodingIsUsed: {{ .ParamData.VerifyOutOfProcessVideoEncodingIsUsed }},
 				{{ end }}
+                TraceChromeEvents: {{ .ParamData.TraceChromeEvents }},
 			},
 			{{ if .HardwareDeps }}
 			ExtraHardwareDeps: hwdep.D({{ .HardwareDeps }}),

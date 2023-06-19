@@ -96,6 +96,7 @@ type RTCTestParams struct {
 	BrowserType browser.Type
 	// VerifyOutOfProcessVideoEncodingIsUsed denotes if we should verify that a utility encoder process was started.
 	VerifyOutOfProcessVideoEncodingIsUsed bool
+	TraceChromeEvents                     bool
 }
 
 // RunRTCPeerConnection launches a loopback RTCPeerConnection and inspects that the
