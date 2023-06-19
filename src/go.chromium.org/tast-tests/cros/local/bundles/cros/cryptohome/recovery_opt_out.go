@@ -12,6 +12,7 @@ import (
 	"time"
 
 	uda "chromiumos/system_api/user_data_auth_proto"
+
 	cryptohomecommon "go.chromium.org/tast-tests/cros/common/cryptohome"
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
@@ -126,7 +127,11 @@ func RecoveryOptOut(ctx context.Context, s *testing.State) {
 		if err != nil {
 			return errors.Wrap(err, "failed to mediate")
 		}
-		return client.AuthenticateRecoveryAuthFactor(ctx, authSessionID, label, epoch, response)
+		ledgerInfo, err := testTool.FetchFakeLedgerInfo(ctx)
+		if err != nil {
+			s.Fatal("Failed to get ledger info: ", err)
+		}
+		return client.AuthenticateRecoveryAuthFactor(ctx, authSessionID, label, epoch, response, ledgerInfo.Name, ledgerInfo.KeyHash, ledgerInfo.PublicKey)
 	}
 
 	// Add a recovery auth factor to the user.

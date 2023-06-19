@@ -12,6 +12,7 @@ import (
 	"time"
 
 	uda "chromiumos/system_api/user_data_auth_proto"
+
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
@@ -134,7 +135,12 @@ func UpdateRecovery(ctx context.Context, s *testing.State) {
 			return authSessionID, errors.Wrap(err, "failed to mediate")
 		}
 
-		if err := client.AuthenticateRecoveryAuthFactor(ctx, authSessionID, recoveryLabel, epoch, response); err != nil {
+		ledgerInfo, err := testTool.FetchFakeLedgerInfo(ctx)
+		if err != nil {
+			return authSessionID, errors.Wrap(err, "failed to get ledger info")
+		}
+
+		if err := client.AuthenticateRecoveryAuthFactor(ctx, authSessionID, recoveryLabel, epoch, response, ledgerInfo.Name, ledgerInfo.KeyHash, ledgerInfo.PublicKey); err != nil {
 			return authSessionID, errors.Wrap(err, "failed to authenticate recovery auth factor")
 		}
 		if _, err := client.PreparePersistentVault(ctx, authSessionID, false /*ecryptfs*/); err != nil {

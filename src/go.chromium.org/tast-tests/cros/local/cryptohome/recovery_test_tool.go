@@ -9,19 +9,23 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 
 	uda "chromiumos/system_api/user_data_auth_proto"
+
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (
 	destinationShareFile                 = "dst"
 	extendedPcrBoundDestinationShareFile = "dst_extended_pcr"
+	ledgerInfoFile                       = "ledger_info"
 	rsaPrivKeyFile                       = "rsa_priv_key"
 	channelPubKeyFile                    = "channel_pub"
 	channelPrivKeyFile                   = "channel_priv"
@@ -39,11 +43,23 @@ const (
 	recoveryIDFile                       = "recovery_id"
 )
 
+// LedgerInfo stores public properties of a recovery ledger. This information
+// is passed to Cryptohome to let it determine which ledger is used (in
+// production, it's Chrome's responsibility to do so).
+type LedgerInfo struct {
+	Name    string `json:"name"`
+	KeyHash string `json:"key_hash"`
+	// Ledger's public key (base64 encoded).
+	PublicKey string `json:"public_key"`
+}
+
 // RecoveryTestTool is a command line test tool for cryptohome recovery testing.
 type RecoveryTestTool struct {
 	tmpFolderName string
 	// custom mediator key, if not set - the fake mediator (with fake mediator key) will be used.
 	mediatorPubKeyHex string
+	// custom ledger info, is set only when `mediatorPubKeyHex` is set.
+	ledgerInfo LedgerInfo
 }
 
 // NewRecoveryTestToolWithFakeMediator creates a new instance of RecoveryTestTool with generated directory.
@@ -64,7 +80,7 @@ func NewRecoveryTestToolWithFakeMediator() (*RecoveryTestTool, error) {
 // NewRecoveryTestTool creates a new instance of RecoveryTestTool with generated directory.
 // The instance will not use fake mediation. Use Save* methods to set the real server replies.
 // Call RemoveDir in the end of the test.
-func NewRecoveryTestTool(mediatorPubKeyHex string) (*RecoveryTestTool, error) {
+func NewRecoveryTestTool(mediatorPubKeyHex string, ledgerInfo LedgerInfo) (*RecoveryTestTool, error) {
 	// Create a temp directory.
 	name, err := ioutil.TempDir("", "cryptohome_test_tool_out_*")
 	if err != nil {
@@ -73,6 +89,7 @@ func NewRecoveryTestTool(mediatorPubKeyHex string) (*RecoveryTestTool, error) {
 	return &RecoveryTestTool{
 		tmpFolderName:     name,
 		mediatorPubKeyHex: mediatorPubKeyHex,
+		ledgerInfo:        ledgerInfo,
 	}, nil
 }
 
@@ -242,8 +259,17 @@ func (c *RecoveryTestTool) Decrypt(ctx context.Context) error {
 		c.getFileParam("recovery_secret_out_file", recoverySecretDecryptedFile),
 	}
 	if !c.useFakeMediator() {
+		ledgerInfoJSON, err := json.Marshal(c.ledgerInfo)
+		if err != nil {
+			return errors.Wrap(err, "failed to marshal ledgerInfo to json")
+		}
+		if err := c.writeFile(ledgerInfoFile, []byte(ledgerInfoJSON)); err != nil {
+			return errors.Wrapf(err, "could not write the ledger info file (%s)", ledgerInfoFile)
+		}
+
 		args = append(args,
 			c.getFileParam("epoch_response_in_file", customEpochResponseFile),
+			c.getFileParam("ledger_info_in_file", ledgerInfoFile),
 		)
 	}
 	return c.call(ctx, args...)
@@ -332,4 +358,31 @@ func (c *RecoveryTestTool) FetchFakeMediatorPubKeyHex(ctx context.Context) (stri
 		return "", errors.Wrapf(err, "could not read the mediator pub key file (%s)", mediatorPubKeyHex)
 	}
 	return string(mediatorPubKeyHex), nil
+}
+
+// FetchFakeLedgerInfo calls "--action=recovery_crypto_get_fake_ledger_info".
+// Returns ledger info on success.
+func (c *RecoveryTestTool) FetchFakeLedgerInfo(ctx context.Context) (*LedgerInfo, error) {
+	if !c.useFakeMediator() {
+		return nil, errors.New("cannot use fake mediator")
+	}
+
+	if err := c.call(ctx,
+		"--action=recovery_crypto_get_fake_ledger_info",
+		c.getFileParam("ledger_info_out_file", ledgerInfoFile),
+	); err != nil {
+		return nil, errors.Wrap(err, "could not perform recovery_crypto_get_fake_ledger_info")
+	}
+
+	ledgerInfoJSON, err := ioutil.ReadFile(c.getFullFilePath(ledgerInfoFile))
+	if err != nil {
+		return nil, errors.Wrapf(err, "could not read the ledger info file (%s)", ledgerInfoFile)
+	}
+
+	var result LedgerInfo
+	if err := json.Unmarshal(ledgerInfoJSON, &result); err != nil {
+		testing.ContextLogf(ctx, "Failed unmarshaling json: %s", ledgerInfoJSON)
+		return nil, errors.Wrap(err, "failed unmarshaling json")
+	}
+	return &result, nil
 }

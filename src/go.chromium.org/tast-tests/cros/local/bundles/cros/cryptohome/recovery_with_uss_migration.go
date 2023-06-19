@@ -9,6 +9,7 @@ import (
 	"time"
 
 	uda "chromiumos/system_api/user_data_auth_proto"
+
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	cryptochrome "go.chromium.org/tast-tests/cros/local/cryptohome/chrome"
@@ -228,8 +229,13 @@ func RecoveryWithUSSMigration(ctx context.Context, s *testing.State) {
 				return errors.Wrap(err, "failed to mediate")
 			}
 
+			ledgerInfo, err := testTool.FetchFakeLedgerInfo(ctx)
+			if err != nil {
+				s.Fatal("Failed to get ledger info: ", err)
+			}
+
 			// Authenticate using recovery.
-			if err := client.AuthenticateRecoveryAuthFactor(ctx, authSessionID, recoveryLabel, epoch, response); err != nil {
+			if err := client.AuthenticateRecoveryAuthFactor(ctx, authSessionID, recoveryLabel, epoch, response, ledgerInfo.Name, ledgerInfo.KeyHash, ledgerInfo.PublicKey); err != nil {
 				return errors.Wrap(err, "failed to authenticate recovery auth factor")
 			}
 

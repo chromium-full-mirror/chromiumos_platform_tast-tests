@@ -9,6 +9,7 @@ import (
 	"time"
 
 	uda "chromiumos/system_api/user_data_auth_proto"
+
 	cryptohomecommon "go.chromium.org/tast-tests/cros/common/cryptohome"
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
@@ -133,14 +134,19 @@ func RecoveryError(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get recovery request: ", err)
 	}
 
+	ledgerInfo, err := testTool.FetchFakeLedgerInfo(ctx)
+	if err != nil {
+		s.Fatal("Failed to get ledger info: ", err)
+	}
+
 	// Authenticate with `responseEpochErrHex` - transient error is expected.
-	err = client.AuthenticateRecoveryAuthFactor(ctx, authSessionID, recoveryLabel, epoch, responseEpochErrHex)
+	err = client.AuthenticateRecoveryAuthFactor(ctx, authSessionID, recoveryLabel, epoch, responseEpochErrHex, ledgerInfo.Name, ledgerInfo.KeyHash, ledgerInfo.PublicKey)
 	if err := cryptohomecommon.ExpectCryptohomeErrorCode(err, uda.CryptohomeErrorCode_CRYPTOHOME_ERROR_RECOVERY_TRANSIENT); err != nil {
 		s.Fatal("Failed to get the correct error code for transient error: ", err)
 	}
 
 	// Authenticate with `responseFatalErrHex` - fatal error is expected.
-	err = client.AuthenticateRecoveryAuthFactor(ctx, authSessionID, recoveryLabel, epoch, responseFatalErrHex)
+	err = client.AuthenticateRecoveryAuthFactor(ctx, authSessionID, recoveryLabel, epoch, responseFatalErrHex, ledgerInfo.Name, ledgerInfo.KeyHash, ledgerInfo.PublicKey)
 	if err := cryptohomecommon.ExpectCryptohomeErrorCode(err, uda.CryptohomeErrorCode_CRYPTOHOME_ERROR_RECOVERY_FATAL); err != nil {
 		s.Fatal("Failed to get the correct error code for fatal error: ", err)
 	}

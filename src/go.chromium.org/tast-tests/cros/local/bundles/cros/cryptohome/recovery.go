@@ -9,6 +9,7 @@ import (
 	"time"
 
 	uda "chromiumos/system_api/user_data_auth_proto"
+
 	cryptohomecommon "go.chromium.org/tast-tests/cros/common/cryptohome"
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
@@ -145,8 +146,13 @@ func Recovery(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "failed to mediate")
 		}
 
+		ledgerInfo, err := testTool.FetchFakeLedgerInfo(ctx)
+		if err != nil {
+			s.Fatal("Failed to get ledger info: ", err)
+		}
+
 		// Authenticate using recovery.
-		if err := client.AuthenticateRecoveryAuthFactor(ctx, authSessionID, recoveryLabel, epoch, response); err != nil {
+		if err := client.AuthenticateRecoveryAuthFactor(ctx, authSessionID, recoveryLabel, epoch, response, ledgerInfo.Name, ledgerInfo.KeyHash, ledgerInfo.PublicKey); err != nil {
 			return errors.Wrap(err, "failed to authenticate recovery auth factor")
 		}
 		if _, err := client.PreparePersistentVault(ctx, authSessionID, false /*ecryptfs*/); err != nil {
@@ -172,7 +178,7 @@ func Recovery(ctx context.Context, s *testing.State) {
 		}
 
 		// Re-authentication via recovery should fail now should fail now.
-		err = client.AuthenticateRecoveryAuthFactor(ctx, authSessionID, recoveryLabel, epoch, response)
+		err = client.AuthenticateRecoveryAuthFactor(ctx, authSessionID, recoveryLabel, epoch, response, ledgerInfo.Name, ledgerInfo.KeyHash, ledgerInfo.PublicKey)
 		if err := cryptohomecommon.ExpectCryptohomeErrorCode(err, uda.CryptohomeErrorCode_CRYPTOHOME_ERROR_KEY_NOT_FOUND); err != nil {
 			return errors.Wrap(err, "failed to get the correct error code after auth factor removal")
 		}
