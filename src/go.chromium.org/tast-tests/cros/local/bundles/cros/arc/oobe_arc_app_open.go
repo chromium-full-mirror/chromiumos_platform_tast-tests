@@ -63,7 +63,9 @@ func OobeArcAppOpen(ctx context.Context, s *testing.State) {
 	cr, err := chrome.New(ctx,
 		chrome.DontSkipOOBEAfterLogin(),
 		chrome.ARCSupported(),
-		chrome.GAIALogin(chrome.Creds{User: username, Pass: password}))
+		chrome.GAIALogin(chrome.Creds{User: username, Pass: password}),
+		// TODO(b/287862720): Update the test to go through CHOOBE flow and stop disabling the features.
+		chrome.ExtraArgs("--disable-features=OobeChoobe,OobeDisplaySize,OobeTouchpadScrollDirection"))
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {

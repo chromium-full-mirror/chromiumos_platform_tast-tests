@@ -85,6 +85,8 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 	}
 
 	options = append(options, chrome.ExtraArgs("--enable-features=OobeGaiaInfoScreen"))
+	// TODO(b/287862720): Update the test to go through CHOOBE flow and stop disabling the features.
+	options = append(options, chrome.ExtraArgs("--disable-features=OobeChoobe,OobeDisplaySize,OobeTouchpadScrollDirection"))
 
 	cr, err := chrome.New(ctx, options...)
 	if err != nil {
