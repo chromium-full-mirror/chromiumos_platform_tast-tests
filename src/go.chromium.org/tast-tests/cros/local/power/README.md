@@ -142,20 +142,27 @@ create data visualizations.
 	if err := r.Finish(ctx); err != nil {
 		s.Error("Cannot finish collecting power metrics: ", err)
 	}
-}
+```
+### Adding custom perf metrics
+If you have custom `perf` values to report, you can call `Finish` and provide one or more custom values to the recorder.
+
+All collected power metrics are located at `tests/<TEST NAME>/power_log.json`.
+
+```go
+	if err := r.Finish(ctx, p1, p2, etc. ); err != nil {
+		s.Error("Cannot finish collecting power metrics: ", err)
+	}
 ```
 
+
 ## Look at the collected power metrics
-To understand what metrics are collected, see [metrics.md].
+To understand the metrics that are collected, see [metrics.md].
 
 [metrics.md]: https://crsrc.org/o/src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/local/power/docs/metrics.md
 
 ### Local visualization
 A local html data visualization of the collected power metrics is at
 `tests/<TEST NAME>/power_log.html`.
-
-If there is necessity for custom data processing pipeline, the collected power
-metrics are located at `tests/<TEST NAME>/power_log.json`.
 
 ### Power dashboard
 The previously mentioned `tests/<TEST NAME>/power_log.html` contains a link to

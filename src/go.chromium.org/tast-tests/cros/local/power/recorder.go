@@ -105,9 +105,10 @@ func (r *Recorder) Start(ctx context.Context) error {
 // Finish collecting power metrics and post-processing data.
 // In:
 // ctx: context for the test.
+// vs: additional custom perf values to publish.
 // Out:
 // error: propagate back to the test.
-func (r *Recorder) Finish(ctx context.Context) error {
+func (r *Recorder) Finish(ctx context.Context, vs ...*perf.Values) error {
 	if !r.isRecording {
 		return errors.New("recorder is not recording")
 	}
@@ -116,6 +117,8 @@ func (r *Recorder) Finish(ctx context.Context) error {
 	if err != nil {
 		return errors.Wrap(err, "error while recording power metrics")
 	}
+
+	p.Merge(vs...)
 
 	if err := GeneratePowerLogAndSaveToCrosbolt(ctx, r.outDir, r.testName, p); err != nil {
 		return errors.Wrap(err, "failed to generate power_log.json and/or save perf data for crosbolt")
