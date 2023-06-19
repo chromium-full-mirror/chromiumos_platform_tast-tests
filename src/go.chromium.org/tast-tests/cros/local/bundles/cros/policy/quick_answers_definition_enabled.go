@@ -38,7 +38,7 @@ func init() {
 		BugComponent: "b:1129862",
 		Attr:         []string{"group:commercial_limited"},
 		SoftwareDeps: []string{"chrome"},
-		Data:         []string{"quick_answers.html"},
+		Data:         policyquickanswers.GetDataFiles(),
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.QuickAnswersDefinitionEnabled{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.QuickAnswersDefinitionEnabled{}, pci.VerifiedFunctionalityOS),

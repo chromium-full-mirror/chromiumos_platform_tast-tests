@@ -76,6 +76,12 @@ func GetTestCases() []TestCase {
 	}
 }
 
+// GetDataFiles returns the list of data files needed to be copied to the dut
+// for running tests related to spell check.
+func GetDataFiles() []string {
+	return []string{"spell_checking.html"}
+}
+
 // TriggerSpellCheck attempts to trigger spellcheck and verifies if the policy works as defined in the TestCase param.
 func TriggerSpellCheck(ctx context.Context, _ *testing.State, cr *chrome.Chrome, br *browser.Browser, server *httptest.Server, tconn *chrome.TestConn, paramIndex int) (err error) {
 	param := GetTestCases()[paramIndex]

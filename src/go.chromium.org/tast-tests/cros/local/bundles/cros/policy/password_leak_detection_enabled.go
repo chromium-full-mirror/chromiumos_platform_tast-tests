@@ -37,7 +37,7 @@ func init() {
 		},
 		BugComponent: "b:1129862",
 		Attr:         []string{"group:golden_tier"},
-		Data:         []string{"password_leak_detection.html"},
+		Data:         passwordleakdetection.GetDataFiles(),
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      3 * time.Minute,
 		SearchFlags: []*testing.StringPair{

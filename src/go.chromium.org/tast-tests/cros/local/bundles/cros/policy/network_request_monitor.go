@@ -62,7 +62,7 @@ func init() {
 			Fixture:           fixture.PersistentLacros, // FakeDMS with lacros policy.
 			Val:               browser.TypeLacros,
 		}},
-		Data: []string{"spell_checking.html", "quick_answers.html", "password_leak_detection.html"},
+		Data: concatDataFileLists(),
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.CalendarIntegrationEnabled{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.CalendarIntegrationEnabled{}, pci.VerifiedFunctionalityOS),
@@ -95,8 +95,12 @@ type optionalService struct {
 	// policies associated with this service. Those policies will be set to the
 	// specified value before triggering the optional services.
 	policies []policy.Policy
-	// The function which triggers the optional service.
+	// The function which triggers the optiona service.
 	trigger triggerOptionalService
+	// Data files required to be copied to the dut before triggering the service.
+	dataFiles []string
+	// When ignore is set to true for a service, this service will not be
+	// triggered in this test.
 }
 
 func optionalServices() []optionalService {
@@ -106,6 +110,7 @@ func optionalServices() []optionalService {
 			associatedAnnotations: []string{calendarintegration.AnnotationHashCode},
 			policies:              []policy.Policy{&policy.CalendarIntegrationEnabled{Val: false}},
 			trigger:               calendarintegration.TriggerCalendarIntegration,
+			dataFiles:             []string{},
 		},
 		{
 			name: "default_search_provider",
@@ -113,6 +118,7 @@ func optionalServices() []optionalService {
 			associatedAnnotations: []string{},
 			policies:              []policy.Policy{&policy.DefaultSearchProviderEnabled{Val: false}},
 			trigger:               defaultsearchprovider.TriggerDefaultSearchProvider,
+			dataFiles:             []string{},
 		},
 		{
 			name: "nearby_share",
@@ -121,42 +127,49 @@ func optionalServices() []optionalService {
 			associatedAnnotations: []string{},
 			policies:              []policy.Policy{&policy.NearbyShareAllowed{Val: false}},
 			trigger:               nearbyshare.VerifyNearbySharePermissions,
+			dataFiles:             []string{},
 		},
 		{
 			name:                  "password_leak_detection",
 			associatedAnnotations: []string{passwordleakdetection.AnnotationHashCode},
 			policies:              []policy.Policy{&policy.PasswordLeakDetectionEnabled{Val: false}},
 			trigger:               passwordleakdetection.TriggerPasswordLeakDetection,
+			dataFiles:             passwordleakdetection.GetDataFiles(),
 		},
 		{
 			name:                  "quick_answers_definition",
 			associatedAnnotations: []string{policyquickanswers.AnnotationHashCode},
 			policies:              []policy.Policy{&policy.QuickAnswersDefinitionEnabled{Val: false}},
 			trigger:               policyquickanswers.TriggerQuickAnswersDefinition,
+			dataFiles:             policyquickanswers.GetDataFiles(),
 		},
 		{
 			name:                  "quick_answers_unit_conversion",
 			associatedAnnotations: []string{policyquickanswers.AnnotationHashCode},
 			policies:              []policy.Policy{&policy.QuickAnswersUnitConversionEnabled{Val: false}},
 			trigger:               policyquickanswers.TriggerQuickAnswersUnitConversion,
+			dataFiles:             policyquickanswers.GetDataFiles(),
 		},
 		{
 			name:                  "search_suggestion",
 			associatedAnnotations: []string{searchsuggestion.AnnotationHashCode},
 			policies:              []policy.Policy{&policy.SearchSuggestEnabled{Val: false}},
 			trigger:               searchsuggestion.TriggerSearchSuggestion,
+			dataFiles:             []string{},
 		},
 		{
 			name:                  "spell_check",
 			associatedAnnotations: []string{spellcheck.AnnotationHashCode},
 			policies:              []policy.Policy{&policy.SpellCheckServiceEnabled{Val: false}},
 			trigger:               spellcheck.TriggerSpellCheck,
+			dataFiles:             spellcheck.GetDataFiles(),
 		},
 		{
 			name:                  "user_feedback",
 			associatedAnnotations: []string{userfeedback.HelpContentProviderHashCode, userfeedback.ChromeFeedbackReportAppHashCode},
 			policies:              []policy.Policy{&policy.UserFeedbackAllowed{Val: false}},
 			trigger:               userfeedback.TriggerUserFeedback,
+			dataFiles:             []string{},
 		},
 	}
 }
@@ -176,6 +189,16 @@ func concatPolicyLists() []policy.Policy {
 		policies = append(policies, service.policies...)
 	}
 	return policies
+}
+
+// concatDataFileLists concats the lists of dataFiles needed to be copied to the
+// dut to trigger the optional services and returns a single list.
+func concatDataFileLists() []string {
+	var dataFiles []string
+	for _, service := range optionalServices() {
+		dataFiles = append(dataFiles, service.dataFiles...)
+	}
+	return dataFiles
 }
 
 func NetworkRequestMonitor(ctx context.Context, s *testing.State) {

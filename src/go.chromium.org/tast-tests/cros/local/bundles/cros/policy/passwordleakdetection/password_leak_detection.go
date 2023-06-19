@@ -59,6 +59,12 @@ func GetTestCases() []TestCase {
 	}
 }
 
+// GetDataFiles returns the list of data files needed to be copied to the dut
+// for running tests related to password leak detection.
+func GetDataFiles() []string {
+	return []string{"password_leak_detection.html"}
+}
+
 // TriggerPasswordLeakDetection triggers password leak detection process when
 // enabled.
 // Note that there are a couple potential ways to trigger this:

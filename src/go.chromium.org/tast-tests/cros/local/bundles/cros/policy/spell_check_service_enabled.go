@@ -48,7 +48,7 @@ func init() {
 			Fixture:           fixture.LacrosPolicyLoggedIn,
 			Val:               browser.TypeLacros,
 		}},
-		Data: []string{"spell_checking.html"},
+		Data: spellcheck.GetDataFiles(),
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.SpellCheckServiceEnabled{}, pci.VerifiedFunctionalityUI),
 		},

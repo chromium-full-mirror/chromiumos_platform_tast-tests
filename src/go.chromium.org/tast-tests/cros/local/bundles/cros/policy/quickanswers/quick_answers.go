@@ -105,6 +105,12 @@ func GetUnitConversionTestCases() []UnitConversionTestCase {
 	}
 }
 
+// GetDataFiles returns the list of data files needed to be copied to the dut
+// for running tests related to quick answers.
+func GetDataFiles() []string {
+	return []string{"quick_answers.html"}
+}
+
 // TriggerQuickAnswersDefinition attempts to trigger quick answers definition and checks if the policy works as defined in the DefinitionTestCase param.
 func TriggerQuickAnswersDefinition(ctx context.Context, _ *testing.State, _ *chrome.Chrome, br *browser.Browser, server *httptest.Server, tconn *chrome.TestConn, paramIndex int) (err error) {
 	param := GetDefinitionTestCases()[paramIndex]
