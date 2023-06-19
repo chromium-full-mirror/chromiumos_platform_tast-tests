@@ -36,10 +36,9 @@ type openLocation int
 // from the test in Lacros. It could cause an error to happen, get opened in
 // Lacros on in Ash as an application.
 const (
-	openInLacros              openLocation = iota // Opens URL in Lacros
-	openInLacrosAsUnreachable                     // Navigates to an unreachable page in Lacros
-	openInLacrosAsBlocked                         // Navigation gets blocked in Lacros
-	openInAshAsApplication                        // Opens in Ash as an application
+	openInLacros           openLocation = iota // Opens URL in Lacros
+	openInLacrosAsBlocked                      // Navigation gets blocked in Lacros
+	openInAshAsApplication                     // Opens in Ash as an application
 )
 
 // This structure defines the URL to test and the expected result.
@@ -95,11 +94,6 @@ func URLRedirect(ctx context.Context, s *testing.State) {
 				url:              "chrome://version/",
 				tabTitleInLacros: "About Version"},
 		}, {
-			// chrome:// URL's not opening in Lacros or Ash
-			subtest: "no_lacros_sys_internals",
-			params: urlRedirectParams{mode: openInLacrosAsUnreachable,
-				url: "chrome://sys-internals/"},
-		}, {
 			// URLs which get blocked in Lacros and Ash.
 			subtest: "unknown_blocked_os_link",
 			params: urlRedirectParams{mode: openInLacrosAsBlocked,
@@ -130,7 +124,13 @@ func URLRedirect(ctx context.Context, s *testing.State) {
 				appID:         "ohgadnbbmdopcjbkpfpmpafheioihjid",
 				appTitleInAsh: "ChromeOS-URLs - Credits"},
 		}, {
-			subtest: "system_internals",
+			subtest: "system_internals_chrome",
+			params: urlRedirectParams{mode: openInAshAsApplication,
+				url:           "chrome://sys-internals/",
+				appID:         "ohgadnbbmdopcjbkpfpmpafheioihjid",
+				appTitleInAsh: "ChromeOS-URLs - System Internals"},
+		}, {
+			subtest: "system_internals_os",
 			params: urlRedirectParams{mode: openInAshAsApplication,
 				url:           "os://sys-internals/",
 				appID:         "ohgadnbbmdopcjbkpfpmpafheioihjid",
@@ -156,6 +156,8 @@ func URLRedirect(ctx context.Context, s *testing.State) {
 		},
 	} {
 		s.Run(ctx, tc.subtest, func(ctx context.Context, s *testing.State) {
+			ctx, cancel := context.WithTimeout(ctx, time.Minute)
+			defer cancel()
 			testURLRedirect(ctx, s, tc.params, tc.subtest)
 		})
 	}
@@ -245,36 +247,6 @@ func testURLRedirect(ctx context.Context, s *testing.State, params urlRedirectPa
 			return errors.New("proper window not found")
 		}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
 			s.Fatalf("Cannot find correct Ash application window (%v): %v", params.appTitleInAsh, err)
-		}
-	case openInLacrosAsUnreachable:
-		// 2. The URL is unknown and was not reachable.
-		s.Log("Testing if opened in Lacros but produces error - ", params.url)
-		// Wait for navigation to finish.
-		conn, err := l.NewConnForTarget(ctx, chrome.MatchTargetURL(params.url))
-		if err != nil {
-			s.Fatal("Cannot find target: ", err)
-		}
-		err = conn.Close()
-		if err != nil {
-			s.Fatal("Cannot close conn from finding unreachable target: ", err)
-		}
-
-		// Note: As the navigation was done via keyboard, we didn't get any failure
-		// and have to figure out the outcome of the tab (window) title instead.
-		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			wins, title, err := determineNumberOfLacrosWindowsAndTitle(ctx, atconn)
-			if err != nil {
-				return testing.PollBreak(errors.Wrap(err, "cannot determine number of Lacros windows"))
-			}
-			if wins != 1 {
-				return testing.PollBreak(errors.Errorf("number of lacros window mismatched: got %d, want 1", wins))
-			}
-			if unreachableNavigation(title, params.url) {
-				return nil
-			}
-			return errors.New("proper window not found")
-		}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
-			s.Fatal("Navigating to unreachable destination failed with: ", err)
 		}
 	case openInLacrosAsBlocked:
 		// 3. The URL navigation was blocked as it was a security risk.
