@@ -8,6 +8,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
@@ -17,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -56,11 +58,16 @@ func LocalAudioPlayback(ctx context.Context, s *testing.State) {
 	expectedOutputDevice := s.Param().(string)
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
+	timeForCleanup := 10 * time.Second
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, timeForCleanup)
+	defer cancel()
+
 	// Mute the device to avoid noisiness.
 	if err := crastestclient.Mute(ctx); err != nil {
 		s.Fatal("Failed to mute: ", err)
 	}
-	defer crastestclient.Unmute(ctx)
+	defer crastestclient.Unmute(cleanupCtx)
 
 	// Generate sine raw input file that lasts 30 seconds.
 	rawFileName := "30SEC.raw"
@@ -94,19 +101,19 @@ func LocalAudioPlayback(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to find keyboard: ", err)
 	}
-	defer kb.Close(ctx)
+	defer kb.Close(cleanupCtx)
 
 	// Open the test API.
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create test API connection: ", err)
 	}
-	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
+	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 	files, err := filesapp.Launch(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to launch the Files App: ", err)
 	}
-	defer files.Close(ctx)
+	defer files.Close(cleanupCtx)
 	if err := files.OpenDownloads()(ctx); err != nil {
 		s.Fatal("Failed to open Downloads folder in files app: ", err)
 	}
@@ -117,7 +124,7 @@ func LocalAudioPlayback(ctx context.Context, s *testing.State) {
 	}
 	// Closing the audio player.
 	defer func() {
-		if kb.Accel(ctx, "Ctrl+W"); err != nil {
+		if kb.Accel(cleanupCtx, "Ctrl+W"); err != nil {
 			s.Error("Failed to close Audio player: ", err)
 		}
 	}()
@@ -126,7 +133,7 @@ func LocalAudioPlayback(ctx context.Context, s *testing.State) {
 	if err := quicksettings.Show(ctx, tconn); err != nil {
 		s.Fatal("Failed to show Quick Settings")
 	}
-	defer quicksettings.Hide(ctx, tconn)
+	defer quicksettings.Hide(cleanupCtx, tconn)
 
 	if err := quicksettings.SelectAudioOption(ctx, tconn, expectedOutputDevice); err != nil {
 		s.Fatal("Failed to select audio option: ", err)
