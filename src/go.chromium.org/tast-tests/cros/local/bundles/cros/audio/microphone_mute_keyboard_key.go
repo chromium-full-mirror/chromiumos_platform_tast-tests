@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -30,7 +31,7 @@ func init() {
 		BugComponent: "b:776546",
 		// TODO(https://crbug.com/1266507): Remove "informational" once stable.
 		// TODO(https://crbug.com/1271209): Add a formal HW dependency for devices with KEY_MICMUTE.
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.Model("gimble", "wormdingler")),
 	})
@@ -76,12 +77,23 @@ func MicrophoneMuteKeyboardKey(ctx context.Context, s *testing.State) {
 
 	// If the output of cras_test_client reports that "capture" is muted, then we've
 	// successfully muted the mic.
-	outMuted, err := testexec.CommandContext(
-		runCtx, "cras_test_client").Output()
-	matchedMuted, err := regexp.Match("Capture Muted : Muted", outMuted)
-	if !matchedMuted {
-		s.Fatal("Failed to mute microphone")
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		outMuted, err := testexec.CommandContext(runCtx, "cras_test_client").Output()
+		if err != nil {
+			s.Fatal("Failed to run cras_test_client after mute via the keyboard key: ", err)
+		}
+		matchedMuted, err := regexp.Match("Capture Muted : Muted", outMuted)
+		if err != nil {
+			s.Fatal("Failed to parse cras_test_client output: ", err)
+		}
+		if !matchedMuted {
+			return errors.Wrap(err, "microphone is not muted")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
+		s.Fatal("Failed to mute microphone: ", err)
 	}
+
 	s.Log("Mic successfully muted")
 
 	// Test un-mute via the keyboard key.
@@ -92,11 +104,24 @@ func MicrophoneMuteKeyboardKey(ctx context.Context, s *testing.State) {
 
 	// If the output of cras_test_client reports that "capture" is not muted, then we've
 	// successfully muted the mic.
-	outUnmuted, err := testexec.CommandContext(
-		runCtx, "cras_test_client").Output()
-	matchedUnmuted, err := regexp.Match("Capture Muted : Not muted", outUnmuted)
-	if !matchedUnmuted {
-		s.Fatal("Failed to un-mute microphone")
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		outUnmuted, err := testexec.CommandContext(
+			runCtx, "cras_test_client").Output()
+		if err != nil {
+			s.Fatal("Failed to run cras_test_client after un-mute via the keyboard key: ", err)
+		}
+		matchedUnmuted, err := regexp.Match("Capture Muted : Not muted", outUnmuted)
+		if err != nil {
+			s.Fatal("Failed to parse cras_test_client output: ", err)
+		}
+
+		if !matchedUnmuted {
+			return errors.Wrap(err, "microphone is not un-muted")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
+		s.Fatal("Failed to un-mute microphone: ", err)
 	}
+
 	s.Log("Mic successfully un-muted")
 }
