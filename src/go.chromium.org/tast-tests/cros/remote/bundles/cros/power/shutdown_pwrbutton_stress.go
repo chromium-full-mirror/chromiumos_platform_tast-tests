@@ -7,7 +7,6 @@ package power
 import (
 	"context"
 	"regexp"
-	"strconv"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
@@ -34,12 +33,31 @@ func init() {
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.FormFactor(hwdep.Convertible, hwdep.Detachable)),
 		Vars: []string{"servo",
-			"power.iterations",
 			"power.mode", // Optional. Expecting "tablet". By defaault power.mode will be "clamshell".
 		},
-		Attr:    []string{"group:mainline", "informational", "group:intel-convertible"},
-		Timeout: 40 * time.Minute,
-	})
+		Params: []testing.Param{
+			{
+				Name:      "quick",
+				Val:       2,
+				ExtraAttr: []string{"group:mainline", "informational", "group:intel-convertible"},
+				Timeout:   5 * time.Minute,
+			},
+			{
+				Name:      "bronze",
+				Val:       10,
+				ExtraAttr: []string{"group:intel-stress"},
+				Timeout:   20 * time.Minute,
+			}, {
+				Name:    "silver",
+				Val:     15,
+				Timeout: 30 * time.Minute,
+			}, {
+				Name:    "gold",
+				Val:     20,
+				Timeout: 40 * time.Minute,
+			},
+		}})
+
 }
 
 // ShutdownPwrbuttonStress Perform shutdown using power button.
@@ -49,18 +67,14 @@ func ShutdownPwrbuttonStress(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	dut := s.DUT()
-	servoHostPort, ok := s.Var("servo")
+	servoHostPort, _ := s.Var("servo")
 	pxy, err := servo.NewProxy(ctx, servoHostPort, dut.KeyFile(), dut.KeyDir())
 	if err != nil {
 		s.Fatal("Failed to connect to servo: ", err)
 	}
 
 	defer pxy.Close(ctxForCleanUp)
-	defaultIter := 2
-	newIter, ok := s.Var("power.iterations")
-	if ok {
-		defaultIter, _ = strconv.Atoi(newIter)
-	}
+	iterations := s.Param().(int)
 
 	// Get the initial tablet_mode_angle settings to restore at the end of test.
 	re := regexp.MustCompile(`tablet_mode_angle=(\d+) hys=(\d+)`)
@@ -103,8 +117,8 @@ func ShutdownPwrbuttonStress(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to login to chrome: ", err)
 	}
 
-	for i := 1; i <= defaultIter; i++ {
-		s.Logf("Iteration: %d / %d", i, defaultIter)
+	for i := 1; i <= iterations; i++ {
+		s.Logf("Iteration: %d / %d", i, iterations)
 		if err := pxy.Servo().KeypressWithDuration(ctx, servo.PowerKey, servo.DurLongPress); err != nil {
 			s.Fatal("Failed to power long press: ", err)
 		}

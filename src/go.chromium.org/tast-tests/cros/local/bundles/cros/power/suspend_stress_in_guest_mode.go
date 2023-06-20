@@ -15,13 +15,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-var (
-	powerItrVar = testing.RegisterVarString(
-		"power.SuspendStressInGuestMode.itr",
-		"2",
-		"It takes number of iterations as input")
-)
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         SuspendStressInGuestMode,
@@ -30,10 +23,28 @@ func init() {
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
 		SoftwareDeps: []string{"chrome", "no_qemu"},
-		Attr:         []string{"group:mainline", "informational"},
-		Vars:         []string{"power.SuspendStressInGuestMode.itr"},
-		Timeout:      5 * time.Hour,
-	})
+		Params: []testing.Param{
+			{
+				Name:      "quick",
+				Val:       "2",
+				ExtraAttr: []string{"group:mainline", "informational"},
+				Timeout:   5 * time.Minute,
+			},
+			{
+				Name:      "bronze",
+				Val:       "100",
+				ExtraAttr: []string{"group:intel-stress"},
+				Timeout:   2 * time.Hour,
+			}, {
+				Name:    "silver",
+				Val:     "250",
+				Timeout: 3 * time.Hour,
+			}, {
+				Name:    "gold",
+				Val:     "500",
+				Timeout: 5 * time.Hour,
+			},
+		}})
 }
 
 // SuspendStressInGuestMode Suspend Stress test memory check in GuestMode.
@@ -44,14 +55,15 @@ func SuspendStressInGuestMode(ctx context.Context, s *testing.State) {
 		S0ixErrorPattern        = regexp.MustCompile("s0ix errors: ([0-9]+)")
 		S2IdleErrorPattern      = regexp.MustCompile("s2idle errors: ([0-9]+)")
 	)
-	s.Log("Iterations: ", powerItrVar.Value())
 	opts := []chrome.Option{chrome.GuestLogin(), chrome.KeepState()}
 	cr, err := chrome.New(ctx, opts...)
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
 	defer cr.Close(ctx)
-	out, err := testexec.CommandContext(ctx, "suspend_stress_test", "--memory_check", "--suspend_min=10", "--suspend_max=10", "-c", powerItrVar.Value()).Output()
+	iterations := s.Param().(string)
+	out, err := testexec.CommandContext(ctx, "suspend_stress_test", "--memory_check", "--suspend_min=10", "--suspend_max=10", "-c", iterations).Output()
+	testing.ContextLog(ctx, string(out))
 	if err != nil {
 		s.Fatal("Failed to execute suspend_stress_test command: ", err)
 	}

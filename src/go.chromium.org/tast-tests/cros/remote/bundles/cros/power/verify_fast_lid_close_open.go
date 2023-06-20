@@ -6,7 +6,6 @@ package power
 
 import (
 	"context"
-	"strconv"
 	"strings"
 	"time"
 
@@ -26,12 +25,33 @@ func init() {
 		Desc:         "To verify Fast lid close open multiple times",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
-		Vars:         []string{"power.iterations"},
 		SoftwareDeps: []string{"chrome"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
 		Fixture:      fixture.NormalMode,
-	})
+		Params: []testing.Param{
+			{
+				Name:    "quick",
+				Val:     2,
+				Timeout: 5 * time.Minute,
+			},
+			{
+				Name:      "bronze",
+				Val:       100,
+				ExtraAttr: []string{"group:intel-reliability-bronze"},
+				Timeout:   20 * time.Minute,
+			}, {
+				Name:      "silver",
+				Val:       500,
+				ExtraAttr: []string{"group:intel-reliability-silver"},
+				Timeout:   30 * time.Minute,
+			}, {
+				Name:      "gold",
+				Val:       1000,
+				ExtraAttr: []string{"group:intel-reliability-gold"},
+				Timeout:   40 * time.Minute,
+			},
+		}})
 }
 
 func VerifyFastLidCloseOpen(ctx context.Context, s *testing.State) {
@@ -50,14 +70,7 @@ func VerifyFastLidCloseOpen(ctx context.Context, s *testing.State) {
 	if err := powercontrol.ChromeOSLogin(ctx, s.DUT(), s.RPCHint()); err != nil {
 		s.Fatal("Failed to login to chrome: ", err)
 	}
-	iteration := 1
-	if val, ok := s.Var("power.iterations"); ok {
-		i, err := strconv.Atoi(val)
-		if err != nil {
-			s.Fatal("Failed to convert var to int: ", err)
-		}
-		iteration = i
-	}
+	iterations := s.Param().(int)
 
 	s.Log("Capturing EC log")
 	if err := h.Servo.SetOnOff(ctx, servo.ECUARTCapture, servo.On); err != nil {
@@ -76,8 +89,8 @@ func VerifyFastLidCloseOpen(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	for i := 1; i <= iteration; i++ {
-		s.Logf("Iteration: %d/%d", i, iteration)
+	for i := 1; i <= iterations; i++ {
+		s.Logf("Iteration: %d/%d", i, iterations)
 		// testing.Sleep(ctx, 2*time.Second)
 
 		// Emulate DUT lid closing.
