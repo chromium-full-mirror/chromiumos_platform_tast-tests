@@ -35,7 +35,7 @@ func init() {
 			{
 				Name:              "dsp_am",
 				ExtraSoftwareDeps: []string{"dlc"},
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				Val:               crasbench.AM,
 			},
 			{
@@ -46,7 +46,7 @@ func init() {
 				Name:              "alsa",
 				ExtraHardwareDeps: hwdep.D(hwdep.Speaker()),
 				Val:               crasbench.Alsa,
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			},
 		},
 	})
