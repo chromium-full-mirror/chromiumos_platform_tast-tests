@@ -43,21 +43,11 @@ func init() {
 		Data:         []string{"volumeDown.txt", "volumeUp.txt"},
 		Vars:         []string{"typec.cSwitchPort", "typec.domainIP"},
 		Fixture:      "chromeLoggedIn",
-		Params: []testing.Param{{
-			Name:    "type_c",
-			Val:     "USB",
-			Timeout: 5 * time.Minute,
-		}, {
-			Name:    "type_a",
-			Val:     "USB2.0",
-			Timeout: 5 * time.Minute,
-		},
-		}})
+	})
 }
 
 // HotplugUSBHeadsetAudioPlayback test requires the following H/W topology to run.
 // 1. DUT ------> C-Switch(device that performs hot plug-unplug) ----> USB-C Headset.
-// 2. DUT ------> C-Switch(device that performs hot plug-unplug) ----> typec adapter ----> USB-A Headset.
 func HotplugUSBHeadsetAudioPlayback(ctx context.Context, s *testing.State) {
 	// Shorten deadline to leave time for cleanup.
 	cleanupCtx := ctx
@@ -136,8 +126,25 @@ func HotplugUSBHeadsetAudioPlayback(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get DUT volume info before volume down: ", err)
 	}
 
-	usbType := s.Param().(string)
-	if err := usbHeadsetEvents(ctx, s.DataPath(usbVolumeDownFile), usbType); err != nil {
+	const usbType = "USB"
+
+	cras, err := audio.NewCras(ctx)
+	if err != nil {
+		s.Fatal("Failed to connect to cras: ", err)
+	}
+
+	deviceName, deviceType, err := cras.SelectedOutputDevice(ctx)
+	if err != nil {
+		s.Fatal("Failed to get an audio output device from cras: ", err)
+	}
+
+	if usbType != deviceType {
+		s.Fatalf("Failed to verify the type of the audio output device: got %q; want %q", deviceType, usbType)
+	}
+
+	devName := strings.Split(deviceName, ":")
+
+	if err := usbHeadsetEvents(ctx, s.DataPath(usbVolumeDownFile), devName[0]); err != nil {
 		s.Fatal("Failed to perform volume-down with USB headset volumeDown button: ", err)
 	}
 
@@ -150,7 +157,7 @@ func HotplugUSBHeadsetAudioPlayback(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to volume down with USB headset button press")
 	}
 
-	if err := usbHeadsetEvents(ctx, s.DataPath(usbVolumeUpFile), usbType); err != nil {
+	if err := usbHeadsetEvents(ctx, s.DataPath(usbVolumeUpFile), devName[0]); err != nil {
 		s.Fatal("Failed to perform volume-up with USB headset volumeUp button: ", err)
 	}
 
