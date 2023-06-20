@@ -12,8 +12,8 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/hermes"
 	"go.chromium.org/tast-tests/cros/local/shill"
-	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -60,6 +60,20 @@ func ShillSuspendResumeAutoconnect(ctx context.Context, s *testing.State) {
 
 	helper := s.FixtValue().(*cellular.FixtData).Helper
 
+	//Chrome's eSIM cache may not exist because fixtures may delete Chrome's state.
+	//Login to Chrome first and wait for Chrome to refresh its cache via Hermes.
+	//This allows us to do suspend-resume-autoconnect testing without interference
+	//from Chrome/Hermes.
+	cr, err := chrome.New(ctx)
+	if err != nil {
+		s.Fatal("Failed to start Chrome (precondition): ", err)
+	}
+	defer cr.Close(cleanupCtx)
+
+	if err := hermes.WaitForHermesIdle(ctx, 120*time.Second); err != nil {
+		testing.ContextLog(ctx, "Could not confirm if Hermes is idle: ", err)
+	}
+
 	// Disable Ethernet and/or WiFi if present and defer re-enabling.
 	// Shill documentation shows that autoconnect will only be used if there
 	// is no other service available, so it is necessary to only have
@@ -94,15 +108,6 @@ func ShillSuspendResumeAutoconnect(ctx context.Context, s *testing.State) {
 	if err := testexec.CommandContext(ctx, "powerd_dbus_suspend", "--suspend_for_sec=10").Run(); err != nil {
 		s.Fatal("Failed to perform system suspend (precondition): ", err)
 	}
-
-	// The reconnection will not occur from the login screen, so we log in.
-	cr, err := chrome.New(ctx, chrome.GuestLogin())
-	if err != nil {
-		s.Fatal("Failed to start Chrome (precondition): ", err)
-	}
-	defer cr.Close(cleanupCtx)
-	// chrome.Chrome.Close() will not log the user out.
-	defer upstart.RestartJob(ctx, "ui")
 
 	if err := helper.WaitForEnabledState(ctx, true); err != nil {
 		s.Fatal("Cellular not enabled after resume")
