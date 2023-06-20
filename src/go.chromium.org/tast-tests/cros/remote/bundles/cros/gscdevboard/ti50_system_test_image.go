@@ -35,12 +35,12 @@ func init() {
 			Name:      "sta",
 			Val:       true, // hasKernelTests
 			Fixture:   fixture.SystemTestAutoDevboard,
-			ExtraAttr: []string{"gsc_image_sta"}, // TODO(b/287468118) Add gsc_he
+			ExtraAttr: []string{"gsc_image_sta"}, // TODO(b/287468118 b/288103083) Add gsc_he
 		}, {
 			Name:      "sta2",
 			Val:       false, // hasKernelTests
 			Fixture:   fixture.SystemTestAuto2Devboard,
-			ExtraAttr: []string{"gsc_image_sta2"}, // TODO(b/287501498) Add gsc_he
+			ExtraAttr: []string{"gsc_image_sta2", "gsc_he"},
 		}},
 	})
 }
