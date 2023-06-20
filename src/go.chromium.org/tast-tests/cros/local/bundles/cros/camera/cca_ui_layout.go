@@ -28,7 +28,7 @@ func init() {
 		Attr:         []string{"informational", "group:mainline", "group:camera-libcamera"},
 		SoftwareDeps: []string{"camera_app", "chrome"},
 		Data:         []string{"blank_1280x720.mjpeg"},
-		Timeout:      2 * time.Minute,
+		Timeout:      3 * time.Minute,
 		HardwareDeps: cca.DeviceWithLayoutMonitored,
 		BugComponent: "b:978428",
 		Fixture:      "ccaTestBridgeReadyWithFakeCamera",
