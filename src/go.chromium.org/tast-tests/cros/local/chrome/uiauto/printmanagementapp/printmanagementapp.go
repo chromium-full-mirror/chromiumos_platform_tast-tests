@@ -62,10 +62,10 @@ func (p *PrintManagementApp) ClearHistory() uiauto.Action {
 		// dialog won't appear.  Only try and click it if it appears.
 		uiauto.IfSuccessThen(p.VerifyHistoryLabel(),
 			uiauto.Combine("clear print job history and confirm",
-				p.ui.LeftClick(PrintManagementDeleteHistoryButton),
+				p.ui.DoDefault(PrintManagementDeleteHistoryButton),
 				p.ui.WithTimeout(5*time.Second).WaitUntilExists(printManagementDeleteConfirmButton),
-				p.ui.LeftClick(printManagementDeleteConfirmButton),
-				p.ui.EnsureGoneFor(printManagementPrintJobEntry, 20*time.Second))),
+				p.ui.DoDefault(printManagementDeleteConfirmButton),
+				p.ui.WaitUntilGone(printManagementPrintJobEntry))),
 	)
 }
 
