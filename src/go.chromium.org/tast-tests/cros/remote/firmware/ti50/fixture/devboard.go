@@ -45,7 +45,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            Ti50Devboard,
 		Desc:            "Uses devboardsvc to flash a Ti50 image",
-		Contacts:        []string{"tast-fw-library-reviewers@google.com", "jbettis@google.com"},
+		Contacts:        []string{"tast-fw-library-reviewers@google.com", "ecgh@google.com"},
 		Impl:            &devboardFixture{image: Ti50Image},
 		Vars:            []string{DevBoardService, BuildURL, FwConfigJSON, Chip, Variant, Slot},
 		SetUpTimeout:    setUpTimeout,
@@ -57,7 +57,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            SystemTestAutoDevboard,
 		Desc:            "Uses devboardsvc to flash a system_test_auto image",
-		Contacts:        []string{"tast-fw-library-reviewers@google.com", "jbettis@google.com"},
+		Contacts:        []string{"tast-fw-library-reviewers@google.com", "ecgh@google.com"},
 		Impl:            &devboardFixture{image: SystemTestAutoImage},
 		Vars:            []string{DevBoardService, BuildURL, FwConfigJSON, Chip, Variant, Slot},
 		SetUpTimeout:    setUpTimeout,
@@ -69,7 +69,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            SystemTestAuto2Devboard,
 		Desc:            "Uses devboardsvc to flash a system_test_auto_2 image",
-		Contacts:        []string{"tast-fw-library-reviewers@google.com", "jbettis@google.com"},
+		Contacts:        []string{"tast-fw-library-reviewers@google.com", "ecgh@google.com"},
 		Impl:            &devboardFixture{image: SystemTestAuto2Image},
 		Vars:            []string{DevBoardService, BuildURL, FwConfigJSON, Chip, Variant, Slot},
 		SetUpTimeout:    setUpTimeout,

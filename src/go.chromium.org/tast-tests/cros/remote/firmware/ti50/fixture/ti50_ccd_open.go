@@ -36,7 +36,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:           Ti50CcdOpen,
 		Desc:           "Ensures that CCD is open and TPM is cleared before every test",
-		Contacts:       []string{"tast-fw-library-reviewers@google.com", "jbettis@google.com"},
+		Contacts:       []string{"tast-fw-library-reviewers@google.com", "ecgh@google.com"},
 		Impl:           &ccdOpenImpl{},
 		PreTestTimeout: testLabOpenTimeout,
 		Parent:         Ti50Devboard,
