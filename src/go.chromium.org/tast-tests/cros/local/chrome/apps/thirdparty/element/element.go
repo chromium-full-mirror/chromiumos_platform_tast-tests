@@ -43,8 +43,9 @@ const (
 	roomNameFieldID    = elementIDPrefix + "formTextInputTextInputEditText"
 	searchFieldID      = elementIDPrefix + "search_src_text"
 
-	buttonClass = "android.widget.Button"
-	textClass   = "android.widget.TextView"
+	buttonClass      = "android.widget.Button"
+	textClass        = "android.widget.TextView"
+	imageButtonClass = "android.widget.ImageButton"
 
 	retryTimes       = 3
 	longUITimeout    = 30 * time.Second
@@ -300,7 +301,7 @@ func (e *Element) CreateRoom(roomName string) uiauto.Action {
 // The room will be deleted after seven days after the last member leaves.
 func (e *Element) LeaveCurrentRoom() uiauto.Action {
 	toolBar := e.d.Object(ui.ResourceID(elementIDPrefix + "includeRoomToolbar"))
-	navigateUpButton := e.d.Object(ui.Description("Navigate up"), ui.ClassName("android.widget.ImageButton"))
+	navigateUpButton := e.d.Object(ui.PackageName(elementPackage), ui.Description("Navigate up"), ui.ClassName(imageButtonClass))
 	moreText := e.d.Object(ui.Text("More"), ui.ResourceID(elementIDPrefix+"itemProfileSectionView"))
 	leaveRoomButton := e.d.Object(ui.Text("Leave Room"), ui.ResourceID(actionTitleID))
 	leaveButton := e.d.Object(ui.Text("LEAVE"), ui.ClassName(buttonClass))
@@ -372,7 +373,7 @@ func (e *Element) sendMessageAndWait(expectedMessage string) uiauto.Action {
 
 // RenameCurrentRoom renames the current room.
 func (e *Element) RenameCurrentRoom(newRoomName string) uiauto.Action {
-	moreOptionsButton := e.d.Object(ui.Description("More options"), ui.Clickable(true))
+	moreOptionsButton := e.d.Object(ui.PackageName(elementPackage), ui.Description("More options"), ui.Clickable(true))
 	optionTitle := e.d.Object(ui.Text("Settings"), ui.ResourceID(elementIDPrefix+"title"))
 	roomSettingsTitle := e.d.Object(ui.Text("Room settings"), ui.ResourceID(actionTitleID))
 	openRoomSettings := uiauto.NamedCombine("open room settings",
@@ -381,17 +382,25 @@ func (e *Element) RenameCurrentRoom(newRoomName string) uiauto.Action {
 		apputil.WaitForExists(roomSettingsTitle, defaultUITimeout),
 	)
 
+	navigateUpButton := e.d.Object(ui.PackageName(elementPackage), ui.Description("Navigate up"), ui.ClassName(imageButtonClass))
+	discardChangeButton := e.d.Object(ui.Text("DISCARD CHANGES"), ui.ClassName(buttonClass))
+	returnToSettingsPage := uiauto.Combine("return to settings page",
+		apputil.FindAndClick(navigateUpButton, defaultUITimeout),
+		apputil.ClickIfExist(discardChangeButton, defaultUITimeout),
+	)
+
 	saveButton := e.d.Object(ui.Text("SAVE"), ui.ResourceID(elementIDPrefix+"roomSettingsSaveAction"))
 	newToolbarTitle := e.d.Object(ui.Text(newRoomName), ui.ResourceID(elementIDPrefix+"roomSettingsToolbarTitleView"))
 	setRoomNameAndSave := uiauto.Combine("set room name and save",
 		// Return to the room settings page when retrying.
 		uiauto.IfFailThen(
 			roomSettingsTitle.Exists,
-			e.navigateUpToObject(roomSettingsTitle),
+			returnToSettingsPage,
 		),
 		apputil.FindAndClick(roomSettingsTitle, defaultUITimeout),
 		e.typeText(roomNameFieldID, newRoomName),
 		apputil.FindAndClick(saveButton, defaultUITimeout),
+		apputil.WaitUntilGone(saveButton, defaultUITimeout),
 		apputil.WaitForExists(newToolbarTitle, defaultUITimeout),
 	)
 	return uiauto.NamedCombine("rename current room as "+newRoomName,
@@ -448,7 +457,7 @@ func (e *Element) typeText(fieldID, text string) uiauto.Action {
 // navigateUpToObject keeps clicking the "Navigate up" button to go back
 // to the previous page until the |expectedObject| appears.
 func (e *Element) navigateUpToObject(expectedObject *ui.Object) uiauto.Action {
-	navigateUpButton := e.d.Object(ui.Description("Navigate up"), ui.ClassName("android.widget.ImageButton"))
+	navigateUpButton := e.d.Object(ui.PackageName(elementPackage), ui.Description("Navigate up"), ui.ClassName(imageButtonClass))
 	return uiauto.IfFailThen(
 		expectedObject.Exists,
 		e.ui.WithTimeout(longUITimeout).RetryUntil(
