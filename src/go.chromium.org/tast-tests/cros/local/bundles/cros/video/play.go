@@ -485,7 +485,7 @@ func init() {
 			},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         []string{"bear-320x240.h264.mp4"},
-			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "video_decoder_legacy_supported", "proprietary_codecs"},
+			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "video_decoder_legacy_supported", "proprietary_codecs", "v4l2_codec"},
 			Fixture:           "chromeAlternateVideoDecoder",
 		}, {
 			Name: "vp8_hw_alt",
@@ -497,7 +497,7 @@ func init() {
 			},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         []string{"bear-320x240.vp8.webm"},
-			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "video_decoder_legacy_supported"},
+			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "video_decoder_legacy_supported", "v4l2_codec"},
 			Fixture:           "chromeAlternateVideoDecoder",
 		}, {
 			Name: "vp9_hw_alt",
@@ -509,7 +509,7 @@ func init() {
 			},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         []string{"bear-320x240.vp9.webm"},
-			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "video_decoder_legacy_supported"},
+			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "video_decoder_legacy_supported", "v4l2_codec"},
 			Fixture:           "chromeAlternateVideoDecoder",
 		}, {
 			Name: "vp9_2_hw_alt",
@@ -524,7 +524,7 @@ func init() {
 			// VP9 Profile 2 is only supported by the direct Video Decoder so we only
 			// want to run this case if that is not enabled by default, i.e. if the
 			// platform is configured to use the legacy video decoder by default.
-			ExtraSoftwareDeps: []string{"video_decoder_legacy", "video_decoder_legacy_supported", caps.HWDecodeVP9_2},
+			ExtraSoftwareDeps: []string{"video_decoder_legacy", "video_decoder_legacy_supported", "v4l2_codec", caps.HWDecodeVP9_2},
 			Fixture:           "chromeAlternateVideoDecoder",
 		}},
 	})

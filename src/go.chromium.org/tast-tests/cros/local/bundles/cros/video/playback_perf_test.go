@@ -189,7 +189,7 @@ func TestPlaybackPerfParams(t *testing.T) {
 			params = append(params,
 				genPlaybackParam(codec, genPlaybackPerfDataPath(codec, resolution, fps),
 					resolution, fps, dec, "alt", "chromeAlternateVideoDecoder",
-					[]string{"video_decoder_legacy_supported"}))
+					[]string{"video_decoder_legacy_supported", "v4l2_codec"}))
 		}
 	}
 	// long

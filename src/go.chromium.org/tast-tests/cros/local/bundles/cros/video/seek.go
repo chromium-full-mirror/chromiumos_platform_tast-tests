@@ -262,7 +262,7 @@ func init() {
 			},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         []string{"720_h264.mp4"},
-			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "video_decoder_legacy_supported", "proprietary_codecs"},
+			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "video_decoder_legacy_supported", "proprietary_codecs", "v4l2_codec"},
 			Fixture:           "chromeAlternateVideoDecoder",
 		}, {
 			Name: "vp8_alt",
@@ -273,7 +273,7 @@ func init() {
 			},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         []string{"720_vp8.webm"},
-			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "video_decoder_legacy_supported"},
+			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "video_decoder_legacy_supported", "v4l2_codec"},
 			Fixture:           "chromeAlternateVideoDecoder",
 		}, {
 			Name: "vp9_alt",
@@ -284,7 +284,7 @@ func init() {
 			},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         []string{"720_vp9.webm"},
-			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "video_decoder_legacy_supported"},
+			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "video_decoder_legacy_supported", "v4l2_codec"},
 			Fixture:           "chromeAlternateVideoDecoder",
 		}, {
 			Name: "switch_h264_alt",
@@ -295,7 +295,7 @@ func init() {
 			},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         []string{"smpte_bars_resolution_ladder.h264.mp4"},
-			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "video_decoder_legacy_supported", "proprietary_codecs"},
+			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "video_decoder_legacy_supported", "proprietary_codecs", "v4l2_codec"},
 			Fixture:           "chromeAlternateVideoDecoder",
 		}, {
 			Name: "switch_vp8_alt",
@@ -306,7 +306,7 @@ func init() {
 			},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         []string{"smpte_bars_resolution_ladder.vp8.webm"},
-			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "video_decoder_legacy_supported"},
+			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "video_decoder_legacy_supported", "v4l2_codec"},
 			Fixture:           "chromeAlternateVideoDecoder",
 		}, {
 			Name: "switch_vp9_alt",
@@ -317,7 +317,7 @@ func init() {
 			},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         []string{"smpte_bars_resolution_ladder.vp9.webm"},
-			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "video_decoder_legacy_supported"},
+			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "video_decoder_legacy_supported", "v4l2_codec"},
 			Fixture:           "chromeAlternateVideoDecoder",
 		}, {
 			Name: "stress_vp8_alt",
@@ -328,7 +328,7 @@ func init() {
 			},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_weekly"},
 			ExtraData:         []string{"720_vp8.webm"},
-			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "video_decoder_legacy_supported"},
+			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "video_decoder_legacy_supported", "v4l2_codec"},
 			Timeout:           20 * time.Minute,
 			Fixture:           "chromeAlternateVideoDecoder",
 		}, {
@@ -340,7 +340,7 @@ func init() {
 			},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_weekly"},
 			ExtraData:         []string{"720_vp9.webm"},
-			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "video_decoder_legacy_supported"},
+			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "video_decoder_legacy_supported", "v4l2_codec"},
 			Timeout:           20 * time.Minute,
 			Fixture:           "chromeAlternateVideoDecoder",
 		}, {
@@ -352,7 +352,7 @@ func init() {
 			},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_weekly"},
 			ExtraData:         []string{"720_h264.mp4"},
-			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "video_decoder_legacy_supported", "proprietary_codecs"},
+			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "video_decoder_legacy_supported", "proprietary_codecs", "v4l2_codec"},
 			Timeout:           20 * time.Minute,
 			Fixture:           "chromeAlternateVideoDecoder",
 		}},
