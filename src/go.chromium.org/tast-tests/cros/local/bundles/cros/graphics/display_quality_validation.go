@@ -132,6 +132,7 @@ func init() {
 						"hang-read-crc",
 						"compare-crc-sanitycheck",
 						"suspend-read-crc"},
+					DisableHangCheck: true,
 				},
 				Timeout:   5 * time.Minute,
 				ExtraAttr: []string{"graphics_nightly"},
