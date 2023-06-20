@@ -263,7 +263,8 @@ func sendSuggestionFeedBack(ctx context.Context, tconn *chrome.TestConn) error {
 	defer kb.Close(ctx)
 
 	// Enter issue description.
-	if err := kb.Type(ctx, "This is a test description"); err != nil {
+	description := `Writing a long description so that test does not run into "Add more details" warning message. Please ignore this text.`
+	if err := kb.Type(ctx, description); err != nil {
 		return errors.Wrap(err, "failed to enter issue description")
 	}
 
