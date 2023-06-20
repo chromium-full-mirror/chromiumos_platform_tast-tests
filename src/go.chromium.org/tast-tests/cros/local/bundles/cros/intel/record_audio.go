@@ -6,8 +6,10 @@ package intel
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -60,9 +62,28 @@ func RecordAudio(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to check arecord command: ", err)
 	}
-	if strings.Contains(string(out), "no soundcards found") {
+	arecordOutput := string(out)
+	if strings.Contains(arecordOutput, "no soundcards found") {
 		s.Fatal("Failed to recognize sound cards")
 	}
+
+	if !strings.Contains(arecordOutput, "DMIC") {
+		s.Fatal("Failed to find DMIC in arecord command")
+	}
+
+	re := regexp.MustCompile(`card (\d+):`)
+	cardInfo := re.FindAllStringSubmatch(arecordOutput, -1)
+	if cardInfo == nil {
+		s.Fatal("Failed to get card info from arecord command")
+	}
+	cardNo := cardInfo[0][1]
+
+	reDevice := regexp.MustCompile(`device (\d+):\sDMIC`)
+	deviceInfo := reDevice.FindAllStringSubmatch(arecordOutput, -1)
+	if deviceInfo == nil {
+		s.Fatal("Failed to get device info from arecord command")
+	}
+	deviceNo := deviceInfo[0][1]
 
 	recWavFileName := "30SEC_REC.wav"
 	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
@@ -71,11 +92,12 @@ func RecordAudio(ctx context.Context, s *testing.State) {
 	}
 	recWavFile := filepath.Join(downloadsPath, recWavFileName)
 
-	arecordArgs := []string{"-Dhw:0,1", // device name.
-		"-d", "30", // duration.
-		"-f", "dat", // format.
-		"-c", "2", //  number of channels.
-		recWavFile, // output file.
+	arecordArgs := []string{fmt.Sprintf("-Dhw:%s,%s", cardNo, deviceNo),
+		"-d", "30", // duration
+		"-f", "S32_LE", // format
+		"-c", "4", // number of channels
+		"-r", "48000", // sample rate
+		recWavFile, // output file
 	}
 	cmd := testexec.CommandContext(ctx, "arecord", arecordArgs...)
 	if err := cmd.Run(testexec.DumpLogOnError); err != nil {
