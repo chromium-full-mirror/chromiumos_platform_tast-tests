@@ -16,7 +16,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -32,16 +31,7 @@ func init() {
 		BugComponent: "b:1288350",
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
-		Params: []testing.Param{{
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("taniks")),
-		}, {
-			// Informational on taniks until we're sure it's stable.
-			// http://b/232996538
-			Name:              "taniks",
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("taniks")),
-		}},
-		Fixture: "chromeLoggedIn",
+		Fixture:      "chromeLoggedIn",
 	})
 }
 
