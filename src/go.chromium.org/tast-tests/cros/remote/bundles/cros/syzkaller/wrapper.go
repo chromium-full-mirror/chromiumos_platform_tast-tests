@@ -65,12 +65,15 @@ dmesg --clear
 
 var driversToModprobe = [...]string{
 	"bluetooth",
+	"cdc_ether",
 	"fuse",
 	"hci_vhci",
 	"ip6table_nat",
+	"r8153_ecm",
 	"rfcomm",
 	"tun",
 	"uinput",
+	"usbnet",
 	"veth",
 	"xt_cgroup",
 	"xt_MASQUERADE",
@@ -425,7 +428,7 @@ func Wrapper(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to wait on syz-manager: ", err)
 		}
 
-		// Fetch coverage from syz-manager before stopping syz-manager.
+		// Fetch coverage and modules info from syz-manager before stopping syz-manager.
 		// Upload coverage only if the test is not running locally.
 		if err := saveCoverage(
 			ctx,
@@ -510,21 +513,43 @@ func saveCorpus(ctx context.Context, cred, board, corpusPath string) error {
 // saveCoverage should only be used when running the test as scheduled in the lab.
 func saveCoverage(ctx context.Context, cred, outDir, board, kernelCommit string, uploadCover bool) error {
 	timestamp := time.Now().Format("2006-01-02-15:04:05")
-	coverName := fmt.Sprintf("rawcover-%v-%v-%v", board, timestamp, kernelCommit)
-	coverFile := filepath.Join(outDir, coverName)
-
-	testing.ContextLog(ctx, "Retrieving rawcoverage to ", coverFile)
-	coverURL := fmt.Sprintf("http://%v:%v/rawcover32", syzManagerHost, syzManagerPort)
-	if err := testexec.CommandContext(ctx, "wget", coverURL, "-O", coverFile).Run(testexec.DumpLogOnError); err != nil {
-		return errors.Wrap(err, "unable to retrieve rawcover")
+	artifacts := []struct {
+		name string
+		url  string
+	}{
+		{
+			name: fmt.Sprintf("rawcover-%v-%v-%v", board, timestamp, kernelCommit),
+			url:  fmt.Sprintf("http://%v:%v/rawcover32", syzManagerHost, syzManagerPort),
+		},
+		{
+			name: fmt.Sprintf("modules-%v-%v-%v", board, timestamp, kernelCommit),
+			url:  fmt.Sprintf("http://%v:%v/modules", syzManagerHost, syzManagerPort),
+		},
 	}
+	for _, art := range artifacts {
+		var uploadURL string
+		artFile := filepath.Join(outDir, art.name)
 
-	if uploadCover {
-		// Note: No coverage is uploaded when running this test locally.
-		uploadURL := fmt.Sprintf("%s/rawcover32/%s", gsURL, coverName)
+		if uploadCover {
+			uploadURL = fmt.Sprintf("%s/rawcover32/%s", gsURL, art.name)
+		}
+		if err := saveRunArtifact(ctx, cred, artFile, art.url, uploadURL); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func saveRunArtifact(ctx context.Context, cred, artFile, url, uploadURL string) error {
+	testing.ContextLogf(ctx, "Retrieving from [%v] to [%v]", url, artFile)
+	if err := testexec.CommandContext(ctx, "wget", url, "-O", artFile).Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrapf(err, "unable to retrieve info from [%v]", url)
+	}
+	if uploadURL != "" {
+		// Note: No info is uploaded when running this test locally.
 		testing.ContextLog(ctx, "Uploading to ", uploadURL)
-		if err := gsutilCmd(ctx, cred, "copy", coverFile, uploadURL).Run(testexec.DumpLogOnError); err != nil {
-			return errors.Wrap(err, "failed to save coverage file")
+		if err := gsutilCmd(ctx, cred, "copy", artFile, uploadURL).Run(testexec.DumpLogOnError); err != nil {
+			return errors.Wrapf(err, "failed to upload to [%v]", uploadURL)
 		}
 		testing.ContextLog(ctx, "Uploaded to ", uploadURL)
 	}
