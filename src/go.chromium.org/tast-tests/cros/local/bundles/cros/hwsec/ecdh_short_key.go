@@ -20,7 +20,7 @@ func init() {
 		Desc: "Verifies a short ECC key (leading byte(s) of X/Y coordinate being 0) works correctly",
 		Contacts: []string{
 			"cros-hwsec@google.com",
-			"cylai@google.com", // Test author.
+			"yich@google.com", // Test author.
 		},
 		BugComponent: "b:1188704",
 		Attr:         []string{"group:mainline", "informational", "group:hwsec_infra"},

@@ -15,7 +15,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ClearOwnership,
 		Desc:         "Verifies that the TPM ownership can be cleared",
-		Contacts:     []string{"cros-hwsec@google.com", "cylai@chromium.org"},
+		Contacts:     []string{"cros-hwsec@google.com", "yich@google.com"},
 		BugComponent: "b:1188704",
 		SoftwareDeps: []string{"reboot", "tpm_clear_allowed"},
 		Attr:         []string{"group:hwsec_destructive_func", "group:tpm_manager"},

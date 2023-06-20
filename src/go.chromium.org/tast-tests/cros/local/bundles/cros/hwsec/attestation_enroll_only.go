@@ -17,7 +17,7 @@ func init() {
 		Func:         AttestationEnrollOnly,
 		Desc:         "Verifies attestation-related functionality",
 		Attr:         []string{"group:mainline", "informational", "group:attestation"},
-		Contacts:     []string{"cros-hwsec@google.com", "cylai@chromium.org"},
+		Contacts:     []string{"cros-hwsec@google.com", "chingkang@google.com"},
 		BugComponent: "b:1188704",
 		SoftwareDeps: []string{"tpm", "endorsement", "no_tpm_dynamic"},
 	})

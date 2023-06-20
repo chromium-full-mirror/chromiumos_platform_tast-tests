@@ -11,6 +11,7 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	apb "chromiumos/system_api/attestation_proto"
+
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
 	"go.chromium.org/tast/core/errors"
@@ -22,7 +23,7 @@ func init() {
 		Func:         Attestation,
 		Desc:         "Verifies attestation-related functionality",
 		Attr:         []string{"group:mainline", "informational", "firmware_cr50", "group:firmware", "group:attestation"},
-		Contacts:     []string{"cros-hwsec@google.com", "cylai@chromium.org"},
+		Contacts:     []string{"cros-hwsec@google.com", "chingkang@google.com"},
 		BugComponent: "b:1188704",
 		SoftwareDeps: []string{"tpm", "endorsement", "no_tpm_dynamic"},
 		Timeout:      4 * time.Minute,

@@ -17,7 +17,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         LoginDuringTakingOwnership,
 		Desc:         "Verifies that login is workin during TPM ownership is being taken",
-		Contacts:     []string{"cros-hwsec@google.com", "cylai@chromium.org"},
+		Contacts:     []string{"cros-hwsec@google.com", "yich@google.com"},
 		BugComponent: "b:1188704",
 		SoftwareDeps: []string{"reboot", "tpm_clear_allowed"},
 		Attr:         []string{"group:hwsec_destructive_func"},

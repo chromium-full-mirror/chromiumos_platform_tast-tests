@@ -12,6 +12,7 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	apb "chromiumos/system_api/attestation_proto"
+
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
@@ -25,7 +26,7 @@ func init() {
 		Func:         AttestationNoExternalServer,
 		Desc:         "Verifies attestation-related functionality with the locally PCA and VA response",
 		Attr:         []string{"group:mainline", "informational", "group:attestation"},
-		Contacts:     []string{"cros-hwsec@google.com", "cylai@chromium.org"},
+		Contacts:     []string{"cros-hwsec@google.com", "chingkang@google.com"},
 		BugComponent: "b:1188704",
 		SoftwareDeps: []string{"tpm", "no_tpm_dynamic"},
 		Fixture:      "ussAuthSessionFixture",

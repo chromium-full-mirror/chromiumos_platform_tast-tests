@@ -20,7 +20,6 @@ func init() {
 		Desc: "Fixture cleaning TPM ownership and system state. DUT might reboot before and after all tests using the fixture",
 		Contacts: []string{
 			"cros-hwsec@google.com",
-			"cylai@google.com",
 			"yich@google.com"},
 		Impl:            &cleanOwner{},
 		SetUpTimeout:    3*time.Minute + /* b/239013478 */ 2*time.Minute,

@@ -17,7 +17,7 @@ func init() {
 		Func:         AttestationEID,
 		Desc:         "Verifies that enrollment ID is available",
 		Attr:         []string{"group:mainline", "group:attestation"},
-		Contacts:     []string{"cros-hwsec@google.com", "cylai@chromium.org"},
+		Contacts:     []string{"cros-hwsec@google.com", "chingkang@google.com"},
 		BugComponent: "b:1188704",
 		SoftwareDeps: []string{"tpm", "endorsement", "no_tpm_dynamic"},
 	})
