@@ -20,7 +20,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Smoke test for the Platform Camera Service",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "hidenorik@chromium.org"},
-		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera", "group:cq-medium"},
+		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera", "group:cq-medium", "group:camera-stability"},
 		SoftwareDeps: []string{"arc_camera3", caps.BuiltinCamera},
 		BugComponent: "b:167281",
 	})
