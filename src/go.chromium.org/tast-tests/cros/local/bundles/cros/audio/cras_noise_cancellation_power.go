@@ -27,6 +27,7 @@ func init() {
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
 		Fixture:      "powerAshPlatformAudio",
 		SoftwareDeps: []string{"chrome"},
+		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		Timeout:      3*time.Minute + power.RecorderTimeout,
 		Params: []testing.Param{
 			{
