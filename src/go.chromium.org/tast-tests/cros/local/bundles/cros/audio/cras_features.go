@@ -26,7 +26,7 @@ func init() {
 		Func:         CrasFeatures,
 		Desc:         "CRAS can talk to feature_library correctly",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
-		BugComponent: "b:875484",
+		BugComponent: "b:776546",
 		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		Timeout:      crasFeaturesIterations * (crasFeaturesTimeoutPerIteration + chrome.ResetTimeout),
 		SoftwareDeps: []string{"chrome"},
