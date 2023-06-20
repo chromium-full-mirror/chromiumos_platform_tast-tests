@@ -75,6 +75,8 @@ var mergeThresholdSize480Models = []string{
 	"skolas",
 	"taeko",
 	"taniks",
+	"uldren",
+	"uldren360",
 	"vell",
 	"voema",
 	"volet",
