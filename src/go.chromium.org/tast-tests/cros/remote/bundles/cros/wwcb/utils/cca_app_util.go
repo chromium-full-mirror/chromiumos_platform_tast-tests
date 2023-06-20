@@ -1,0 +1,293 @@
+// Copyright 2023 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+// Package utils used to do some component excution function.
+package utils
+
+import (
+	"context"
+	"os"
+	"regexp"
+	"time"
+
+	"go.chromium.org/tast-tests/cros/remote/dutfs"
+	"go.chromium.org/tast-tests/cros/services/cros/ui"
+	"go.chromium.org/tast/core/dut"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
+)
+
+var (
+	// CameraWindowFinder is the finder of camera ap window.
+	CameraWindowFinder = &ui.Finder{
+		NodeWiths: []*ui.NodeWith{
+			{Value: &ui.NodeWith_Name{Name: "Camera"}},
+			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_WINDOW}},
+			{Value: &ui.NodeWith_First{First: true}},
+		},
+	}
+
+	// startRecordFinder is the finder used to start recording on the camera app.
+	startRecordFinder = &ui.Finder{
+		NodeWiths: []*ui.NodeWith{
+			{Value: &ui.NodeWith_HasClass{HasClass: "shutter"}},
+			{Value: &ui.NodeWith_Name{Name: "Start recording"}},
+			{Value: &ui.NodeWith_Focusable{}},
+			{Value: &ui.NodeWith_Ancestor{Ancestor: CameraWindowFinder}},
+		},
+	}
+
+	// stopRecordFinder is the finder used to stop recording on the camera app.
+	stopRecordFinder = &ui.Finder{
+		NodeWiths: []*ui.NodeWith{
+			{Value: &ui.NodeWith_HasClass{HasClass: "shutter"}},
+			{Value: &ui.NodeWith_Name{Name: "Stop recording"}},
+			{Value: &ui.NodeWith_Focusable{}},
+			{Value: &ui.NodeWith_Ancestor{Ancestor: CameraWindowFinder}},
+		},
+	}
+
+	// takePhotoFinder is the finder used to take photo on the camera app.
+	takePhotoFinder = &ui.Finder{
+		NodeWiths: []*ui.NodeWith{
+			{Value: &ui.NodeWith_HasClass{HasClass: "shutter"}},
+			{Value: &ui.NodeWith_Name{Name: "Take photo"}},
+			{Value: &ui.NodeWith_Focusable{}},
+			{Value: &ui.NodeWith_Ancestor{Ancestor: CameraWindowFinder}},
+		},
+	}
+
+	// previewContentFinder is the finder used to preview camera.
+	previewContentFinder = &ui.Finder{
+		NodeWiths: []*ui.NodeWith{
+			{Value: &ui.NodeWith_HasClass{HasClass: "preview-content"}},
+			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_CANVAS}},
+			{Value: &ui.NodeWith_Ancestor{Ancestor: CameraWindowFinder}},
+		},
+	}
+
+	// videoModeFinder is the finder used to switch to record video mode on the camera app.
+	videoModeFinder = &ui.Finder{
+		NodeWiths: []*ui.NodeWith{
+			{Value: &ui.NodeWith_Name{Name: "Switch to record video"}},
+			{Value: &ui.NodeWith_Focusable{}},
+			{Value: &ui.NodeWith_Ancestor{Ancestor: CameraWindowFinder}},
+		},
+	}
+
+	// photoModeFinder is the finder used to switch to take photo mode on the camera app.
+	photoModeFinder = &ui.Finder{
+		NodeWiths: []*ui.NodeWith{
+			{Value: &ui.NodeWith_Name{Name: "Switch to take photo"}},
+			{Value: &ui.NodeWith_Focusable{}},
+			{Value: &ui.NodeWith_Ancestor{Ancestor: CameraWindowFinder}},
+		},
+	}
+
+	// switchDeviceFinder is the finder used to switch camera device on the camera app.
+	switchDeviceFinder = &ui.Finder{
+		NodeWiths: []*ui.NodeWith{
+			{Value: &ui.NodeWith_Name{Name: "Switch to next camera"}},
+			{Value: &ui.NodeWith_Focusable{}},
+			{Value: &ui.NodeWith_Ancestor{Ancestor: CameraWindowFinder}},
+		},
+	}
+)
+
+// CameraPath is an absolute path on DUT.
+const CameraPath = "/home/chronos/user/MyFiles/Camera"
+
+const (
+	// VideoMode is the mode used to record video.
+	VideoMode = "video"
+	// PhotoMode is the mode used to take photo.
+	PhotoMode = "photo"
+)
+
+var (
+	// PhotoPattern is the filename format of photos taken by CCA.
+	PhotoPattern = regexp.MustCompile(`^IMG_\d{8}_\d{6}[^.]*\.jpg$`)
+	// VideoPattern is the filename format of videos recorded by CCA.
+	VideoPattern = regexp.MustCompile(`^VID_\d{8}_\d{6}[^.]*\.mp4$`)
+)
+
+// WaitForFinderLocationStable waits for the finder to be stable, since the app take time to present.
+func WaitForFinderLocationStable(ctx context.Context, uiautoSvc ui.AutomationServiceClient, finder *ui.Finder) error {
+	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: finder}); err != nil {
+		return errors.Wrap(err, "failed to wait until the finder exists")
+	}
+
+	var finderLocation string
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		resp, err := uiautoSvc.Info(ctx, &ui.InfoRequest{Finder: finder})
+		if err != nil {
+			return errors.Wrap(err, "failed to get the finder info")
+		}
+
+		if resp.NodeInfo.Location.String() != finderLocation {
+			finderLocation = resp.NodeInfo.Location.String()
+			return errors.New("Unable to find the stable finder location")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 15 * time.Second, Interval: 5 * time.Second}); err != nil {
+		return err
+	}
+	return nil
+}
+
+// TakeSinglePhoto returns a file info using the Camera app to capture a photo.
+func TakeSinglePhoto(ctx context.Context, uiautoSvc ui.AutomationServiceClient, fs *dutfs.Client, dir string) (os.FileInfo, error) {
+	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: takePhotoFinder}); err != nil {
+		return nil, errors.Wrap(err, "failed to wait for shutter button from context menu")
+	}
+
+	photoStartTime := time.Now()
+	if _, err := uiautoSvc.LeftClick(ctx, &ui.LeftClickRequest{Finder: takePhotoFinder}); err != nil {
+		return nil, errors.Wrap(err, "failed to click shutter button from context menu")
+	}
+
+	photoInfo, err := waitForFileSaved(ctx, fs, dir, PhotoPattern, photoStartTime, 5*time.Second)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to wait for photo file saved")
+	}
+	return photoInfo, nil
+}
+
+// RecordVideo returns a file info using the Camera app to record video.
+func RecordVideo(ctx context.Context, uiautoSvc ui.AutomationServiceClient, fs *dutfs.Client, d time.Duration, dir string) (os.FileInfo, error) {
+	videoStartTime := time.Now()
+	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: startRecordFinder}); err != nil {
+		return nil, errors.Wrap(err, "failed to wait for start recording button from context menu")
+	}
+
+	if _, err := uiautoSvc.LeftClick(ctx, &ui.LeftClickRequest{Finder: startRecordFinder}); err != nil {
+		return nil, errors.Wrap(err, "failed to click the start recording button from context menu")
+	}
+
+	// GoBigSleepLint: Wait for recording video.
+	testing.Sleep(ctx, d)
+
+	if _, err := uiautoSvc.LeftClick(ctx, &ui.LeftClickRequest{Finder: stopRecordFinder}); err != nil {
+		return nil, errors.Wrap(err, "failed to click the stop recording button from context menu")
+	}
+
+	videoFileInfo, err := waitForFileSaved(ctx, fs, dir, VideoPattern, videoStartTime, 15*time.Second)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to wait for the video file saved")
+	}
+
+	return videoFileInfo, nil
+}
+
+// SwitchCCAMode switches Camera app mode by UI automation.
+func SwitchCCAMode(ctx context.Context, uiautoSvc ui.AutomationServiceClient, mode string) error {
+	var modeFinder *ui.Finder
+	var shutterFinder *ui.Finder
+	if mode == VideoMode {
+		modeFinder = videoModeFinder
+		shutterFinder = startRecordFinder
+	} else {
+		modeFinder = photoModeFinder
+		shutterFinder = takePhotoFinder
+	}
+
+	resp, _ := uiautoSvc.IsNodeFound(ctx, &ui.IsNodeFoundRequest{Finder: shutterFinder})
+	if resp.Found {
+		return nil
+	}
+
+	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: modeFinder}); err != nil {
+		return errors.Wrap(err, "failed to wait for mode from context menu")
+	}
+
+	if _, err := uiautoSvc.LeftClick(ctx, &ui.LeftClickRequest{Finder: modeFinder}); err != nil {
+		return errors.Wrap(err, "failed to click the mode from context menu")
+	}
+
+	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: shutterFinder}); err != nil {
+		return errors.Wrap(err, "failed to wait for shutter from context menu")
+	}
+
+	if err := WaitForFinderLocationStable(ctx, uiautoSvc, previewContentFinder); err != nil {
+		return errors.Wrap(err, "failed to wait for preview content to be stable from context menu")
+	}
+	return nil
+}
+
+// SwitchCCACamera switches to the next camera on the camera app.
+func SwitchCCACamera(ctx context.Context, dut *dut.DUT, uiautoSvc ui.AutomationServiceClient) error {
+	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: switchDeviceFinder}); err != nil {
+		return errors.Wrap(err, "failed to wait for switch button from context menu")
+	}
+
+	if _, err := uiautoSvc.LeftClick(ctx, &ui.LeftClickRequest{Finder: switchDeviceFinder}); err != nil {
+		return errors.Wrap(err, "failed to to click switch button from context menu")
+	}
+	return nil
+}
+
+// ConnectUSBDevice returns the USB device info using command "lsusb" to find the difference before and after connect the fixture.
+func ConnectUSBDevice(ctx context.Context, dut *dut.DUT, usbDeviceID string) (string, error) {
+	before, err := GetUSBDevice(ctx, dut)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to get USB devices")
+	}
+
+	if err := ControlFixture(ctx, usbDeviceID, "on"); err != nil {
+		return "", errors.Wrapf(err, "failed to control fixture %s: ", usbDeviceID)
+	}
+
+	var usbDeviceInfo string
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		after, err := GetUSBDevice(ctx, dut)
+		if err != nil {
+			return errors.Wrap(err, "failed to get USB devices after connect the fixture")
+		}
+		diff := FindDifference(after, before)
+
+		if len(diff) != 1 {
+			return errors.Errorf("Expect DUT would increase one USB device, but got %v", diff)
+		}
+
+		usbDeviceInfo = diff[0]
+
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: time.Second}); err != nil {
+		return "", errors.Wrap(err, "failed to find the USB device info after fixture is connected")
+	}
+
+	return usbDeviceInfo, nil
+}
+
+// waitForFileSaved waits for the presence of the captured file with file name matching the specified
+// pattern, size larger than zero, and modified time after the specified timestamp.
+func waitForFileSaved(ctx context.Context, fs *dutfs.Client, dir string, pat *regexp.Regexp, ts time.Time, timeout time.Duration) (os.FileInfo, error) {
+	var result os.FileInfo
+	seen := make(map[string]struct{})
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		files, err := fs.ReadDir(ctx, dir)
+		if err != nil {
+			return errors.Wrap(err, "failed to read the camera directory")
+		}
+		for _, file := range files {
+			if file.Size() == 0 || file.ModTime().Before(ts) {
+				continue
+			}
+			if _, ok := seen[file.Name()]; ok {
+				continue
+			}
+			seen[file.Name()] = struct{}{}
+			testing.ContextLog(ctx, "New file found: ", file.Name())
+			if pat.MatchString(file.Name()) {
+				testing.ContextLog(ctx, "Found a match: ", file.Name())
+				result = file
+				return nil
+			}
+		}
+		return errors.New("no matching output file found")
+	}, &testing.PollOptions{Timeout: timeout}); err != nil {
+		return nil, errors.Wrapf(err, "no matching output file found after %v", timeout)
+	}
+	return result, nil
+}
