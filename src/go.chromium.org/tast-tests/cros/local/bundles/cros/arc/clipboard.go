@@ -40,15 +40,12 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",
 		Data:         []string{"clipboard.html", "clipboard_image.html"},
+		Attr:         []string{"group:mainline", "informational"},
 		Params: []testing.Param{{
-			// b:238260020 - disable aged (>1y) unpromoted informational tests
-			// ExtraAttr:         []string{"group:mainline", "informational"},
-			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraSoftwareDeps: []string{"android_container"},
 		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
-			// b:238260020 - disable aged (>1y) unpromoted informational tests
-			// ExtraAttr:         []string{"group:mainline", "informational"},
 		}},
 	})
 }
@@ -476,7 +473,8 @@ func Clipboard(ctx context.Context, s *testing.State) {
 				// take a long time even for a single iteration (e.g. around 1
 				// second), so we are forced to give a relatively high upper bound
 				// for the overall timeout.
-				Timeout: 5 * time.Second,
+				Timeout: 22 * time.Second,
+				Interval: 3 * time.Second,
 			})
 			if err != nil {
 				s.Fatal("Failed during paste retry loop: ", err)
