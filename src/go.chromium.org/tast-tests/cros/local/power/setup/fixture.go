@@ -92,6 +92,32 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name: "powerNoUIPlatformAudio",
+		Desc: "The powerNoUINoWiFi fixture customized for testing platform audio features that do not depend on ash running",
+		Contacts: []string{
+			"chromeos-platform-power@google.com",
+			"mqg@chromium.org",
+			"aaronyu@google.com",
+		},
+		Impl: NewPowerNoUIFixture(
+			PowerTestOptions{
+				UI: DisableUI,
+				// Audio should be handled within the test itself.
+				Audio: DoNotChangeAudio,
+				// Minimize interference.
+				KeyboardBrightness: SetKbBrightnessToZero,
+				Wifi:               DisableWifiInterfaces,
+				Backlight:          SetBacklightToZero,
+			},
+		),
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: tearDownTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name: "powerMetricsNoUI",
 		Desc: "Set up test environment for tests needing no UI or backlight, collect power metrics, visualize and upload data",
 		Contacts: []string{
