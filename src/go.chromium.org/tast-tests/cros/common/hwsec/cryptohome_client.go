@@ -7,6 +7,7 @@ package hwsec
 import (
 	"bytes"
 	"context"
+	"encoding/binary"
 	"encoding/hex"
 	"fmt"
 	"path/filepath"
@@ -21,7 +22,6 @@ import (
 
 	cpb "chromiumos/system_api/cryptohome_proto"
 	uda "chromiumos/system_api/user_data_auth_proto"
-
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -49,6 +49,18 @@ func getLastLine(s string) string {
 		return ""
 	}
 	return lines[len(lines)-1]
+}
+
+// parseDelimitedBinaryProtos parses the binaryMsg that is written in delimited-binary-protobuf format. These types of messages are formatted as |4-byte size||data||4-byte size||data|....
+func parseDelimitedBinaryProtos(ctx context.Context, binaryMsg []byte) [][]byte {
+	var res [][]byte
+	var index, size uint32
+	for index = 0; index+4 < uint32(len(binaryMsg)); index += size {
+		size = binary.LittleEndian.Uint32(binaryMsg[index : index+4])
+		index += 4
+		res = append(res, binaryMsg[index:index+size])
+	}
+	return res
 }
 
 // UserDataAuthReplyWithError is an interface type that represent common UserDataAuth API protobuf reply that contains error in
@@ -880,25 +892,59 @@ func (u *CryptohomeClient) FetchStatusUpdateSignal(ctx context.Context, broadcas
 	return reply, nil
 }
 
-// AuthenticatePinAuthFactorWithStatusUpdate authenticates an AuthSession with a given authSessionID via pin and intercepts the AuthFactorStatusUpdate signal.
-func (u *CryptohomeClient) AuthenticatePinAuthFactorWithStatusUpdate(ctx context.Context, authSessionID, label, pin string, broadcastID []byte) (*uda.AuthFactorStatusUpdate, error) {
-	binaryMsg, err := u.binary.authenticatePinAuthFactorWithStatusUpdate(ctx, authSessionID, broadcastID, label, pin)
-	// Unmarshal proto first, even if there was an error.
+// StartAuthSessionWithStatusUpdate starts an AuthSession for a user and fetches the StatusUpdate signal that is sent. It returns the StartAuthSessionReply proto and the
+// generated Auth Session ID as well as the AuthFactorStatusUpdate.
+func (u *CryptohomeClient) StartAuthSessionWithStatusUpdate(ctx context.Context, user string, isEphemeral bool, authIntent uda.AuthIntent) (*uda.StartAuthSessionReply, *uda.AuthFactorStatusUpdate, error) {
+	startAuthSessionReply := &uda.StartAuthSessionReply{}
+	statusUpdateReply := &uda.AuthFactorStatusUpdate{}
+	binaryMsg, err := u.binary.startAuthSessionWithStatusUpdate(ctx, user, isEphemeral, authIntent)
+	replies := parseDelimitedBinaryProtos(ctx, binaryMsg)
+	if len(replies) < 2 {
+		return nil, nil, errors.New("only one reply was found while two was expected, either the signal was not received or the reply could not be parsed")
+	}
+	if err != nil {
+		return nil, nil, err
+	}
+	if err := proto.Unmarshal(replies[0], startAuthSessionReply); err != nil {
+		return nil, nil, err
+	}
+	authSessionID := startAuthSessionReply.AuthSessionId
+	if authSessionID == nil {
+		return nil, nil, errors.New("didn't find auth session in output")
+	}
+	if unmarshErr := proto.Unmarshal(replies[1], statusUpdateReply); unmarshErr != nil {
+		return startAuthSessionReply, nil, errors.Wrap(unmarshErr, "failed to unmarshal AuthFactorStatusUpdate reply")
+	}
+	if bytes.Equal(statusUpdateReply.BroadcastId, startAuthSessionReply.BroadcastId) == false {
+		return startAuthSessionReply, nil, errors.Wrap(err, "the broadcast id doesn't match between auth_session and AuthFactorStatusUpdateSignal")
+	}
+	return startAuthSessionReply, statusUpdateReply, nil
+}
+
+// FailAuthenticatePinAuthFactorAndFetchStatusUpdate authenticates an AuthSession with a given authSessionID via pin and intercepts the AuthFactorStatusUpdate signal.
+// As we are intending to catch the status update signal, we intend the authentication to fail. So on a failed authentication, we will return nil, because that is the expected
+// behavior. We will return error if the output could not be unmarshalled or if the status update signal is not fetched properly or if the authentication has succeeded.
+func (u *CryptohomeClient) FailAuthenticatePinAuthFactorAndFetchStatusUpdate(ctx context.Context, authSessionID, label, pin string, broadcastID []byte) (*uda.AuthFactorStatusUpdate, error) {
+
+	binaryMsg, err := u.binary.authenticatePinAuthFactorWithStatusUpdate(ctx, authSessionID, label, pin, broadcastID)
+	replies := parseDelimitedBinaryProtos(ctx, binaryMsg)
+	if len(replies) < 2 {
+		return nil, errors.New("Only one reply was found while two was expected, either the signal was not received or the reply couldn't be parsed")
+	}
 	authenticateReply := &uda.AuthenticateAuthFactorReply{}
-	if unmarshErr := proto.Unmarshal(binaryMsg, authenticateReply); unmarshErr != nil {
+	if unmarshErr := proto.Unmarshal(replies[0], authenticateReply); unmarshErr != nil {
 		return nil, errors.Wrap(unmarshErr, "failed to unmarshal AuthenticateAuthFactor reply")
 	}
 	statusUpdateReply := &uda.AuthFactorStatusUpdate{}
-	if unmarshErr := proto.Unmarshal(binaryMsg, statusUpdateReply); unmarshErr != nil {
+	if unmarshErr := proto.Unmarshal(replies[1], statusUpdateReply); unmarshErr != nil {
 		return nil, errors.Wrap(unmarshErr, "failed to unmarshal AuthFactorStatusUpdate reply")
-	}
-	if err != nil {
-		return statusUpdateReply, errors.Wrap(err, "AuthenticateAuthFactor failed")
 	}
 	if bytes.Equal(statusUpdateReply.BroadcastId, broadcastID) == false {
 		return nil, errors.Wrap(err, "the broadcast id doesn't match between auth_session and AuthFactorStatusUpdateSignal")
 	}
-
+	if err == nil {
+		return nil, errors.Wrap(err, "the authentication was expeceted to fail but it succeeded")
+	}
 	return statusUpdateReply, nil
 }
 
@@ -982,6 +1028,12 @@ func (u *CryptohomeClient) AddAuthFactor(ctx context.Context, authSessionID, lab
 // AddPinAuthFactor creates a pin auth factor for the user.
 func (u *CryptohomeClient) AddPinAuthFactor(ctx context.Context, authSessionID, label, pin string) error {
 	_, err := u.binary.addPinAuthFactor(ctx, authSessionID, label, pin)
+	return err
+}
+
+// AddModernPinAuthFactor creates a modern pin auth factor for the user.
+func (u *CryptohomeClient) AddModernPinAuthFactor(ctx context.Context, authSessionID, label, pin string) error {
+	_, err := u.binary.addModernPinAuthFactor(ctx, authSessionID, label, pin)
 	return err
 }
 

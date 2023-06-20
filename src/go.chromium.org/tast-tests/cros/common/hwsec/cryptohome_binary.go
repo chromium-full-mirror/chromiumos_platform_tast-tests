@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	uda "chromiumos/system_api/user_data_auth_proto"
-
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/shutil"
 )
@@ -242,9 +241,20 @@ func (c *cryptohomeBinary) removeAuthFactor(ctx context.Context, authSessionID, 
 	return c.call(ctx, args...)
 }
 
-// authenticatePinAuthFactorWithStatusUpdate calls "cryptohome --action=authenticate_with_status_update --pin=<pin>".
-func (c *cryptohomeBinary) authenticatePinAuthFactorWithStatusUpdate(ctx context.Context, authSessionID string, broadcastID []byte, label, pin string) ([]byte, error) {
-	args := []string{"--action=authenticate_with_status_update", "--output-format=binary-protobuf", "--auth_session_id=" + authSessionID, "--broadcast_id=" + hex.EncodeToString(broadcastID), "--key_label=" + label, "--pin=" + pin}
+// authenticatePinAuthFactorWithStatusUpdate calls "cryptohome --action=authenticate_with_status_update --pin=<pin>" and gets the output in a delimited format so it could be
+// parsed to get both AuthenticateAuthFactorReply and AuthFactorStatusUpdateReply.
+func (c *cryptohomeBinary) authenticatePinAuthFactorWithStatusUpdate(ctx context.Context, authSessionID, label, pin string, broadcastID []byte) ([]byte, error) {
+	args := []string{"--action=authenticate_with_status_update", "--output-format=delimited-binary-protobuf", "--auth_session_id=" + authSessionID, "--broadcast_id=" + hex.EncodeToString(broadcastID), "--key_label=" + label, "--pin=" + pin}
+	return c.call(ctx, args...)
+}
+
+// startAuthSessionWithStatusUpdate calls "cryptohome --action=start_auth_session" and gets the output in a delimited format so it could be parsed to get both startAuthSessionReply
+// and AuthFactorStatusUpdateReply.
+func (c *cryptohomeBinary) startAuthSessionWithStatusUpdate(ctx context.Context, username string, isEphemeral bool, authIntent uda.AuthIntent) ([]byte, error) {
+	args := []string{"--action=start_auth_session_with_status_update", "--output-format=delimited-binary-protobuf", "--user=" + username, "--auth_intent=" + authIntent.String()}
+	if isEphemeral {
+		args = append(args, "--ensure_ephemeral")
+	}
 	return c.call(ctx, args...)
 }
 
@@ -300,6 +310,12 @@ func (c *cryptohomeBinary) addAuthFactor(ctx context.Context, authSessionID, lab
 // addPinAuthFactor calls "cryptohome --action=add_auth_factor --pin=<pin>".
 func (c *cryptohomeBinary) addPinAuthFactor(ctx context.Context, authSessionID, label, pin string) ([]byte, error) {
 	args := []string{"--action=add_auth_factor", "--auth_session_id=" + authSessionID, "--key_label=" + label, "--pin=" + pin}
+	return c.call(ctx, args...)
+}
+
+// addModernPinAuthFactor calls "cryptohome --action=add_auth_factor --pin=<pin> with --timed_lockout parameter to set up a modern pin".
+func (c *cryptohomeBinary) addModernPinAuthFactor(ctx context.Context, authSessionID, label, pin string) ([]byte, error) {
+	args := []string{"--action=add_auth_factor", "--auth_session_id=" + authSessionID, "--key_label=" + label, "--pin=" + pin, "--timed_lockout"}
 	return c.call(ctx, args...)
 }
 

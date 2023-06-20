@@ -6,6 +6,7 @@ package hwsec
 
 import (
 	"context"
+	"encoding/hex"
 	"math"
 	"sort"
 	"strconv"
@@ -357,9 +358,9 @@ func attemptWrongPinToLockoutAndGetStatusUpdate(ctx, ctxForCleanUp context.Conte
 	defer cryptohomeHelper.InvalidateAuthSession(ctxForCleanUp, authSessionID)
 
 	var reply *uda.AuthFactorStatusUpdate
-	reply, err = cryptohomeHelper.AuthenticatePinAuthFactorWithStatusUpdate(ctx, authSessionID, authFactorLabelPIN, incorrectPINSecret, authSession.BroadcastId)
-	if err == nil {
-		return nil, errors.Wrap(err, "authentication with wrong PIN succeeded unexpectedly or the status update signal was not received properly")
+	reply, err = cryptohomeHelper.FailAuthenticatePinAuthFactorAndFetchStatusUpdate(ctx, authSessionID, authFactorLabelPIN, incorrectPINSecret, authSession.BroadcastId)
+	if err != nil {
+		return nil, errors.Wrap(err, "the authentication succeeded with pin although we were expecting it to fail or failed to get the status update signal")
 	}
 	return reply, nil
 }
@@ -369,18 +370,12 @@ func fetchStatusUpdateUponNewAuthSession(ctx, ctxForCleanUp context.Context, tes
 	cryptohomeHelper := helper.CryptohomeClient()
 
 	// Authenticate a new auth session via the new added PIN auth factor.
-	authSession, authSessionID, err := cryptohomeHelper.StartAuthSession(ctx, testUser, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT)
+	authSession, authFactorStatusUpdate, err := cryptohomeHelper.StartAuthSessionWithStatusUpdate(ctx, testUser, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to start auth session for PIN authentication")
 	}
-	defer cryptohomeHelper.InvalidateAuthSession(ctxForCleanUp, authSessionID)
-
-	var reply *uda.AuthFactorStatusUpdate
-	reply, err = cryptohomeHelper.FetchStatusUpdateSignal(ctx, authSession.BroadcastId)
-	if err != nil {
-		return nil, errors.Wrap(err, "StatusUpdateSignal was not fetched or its BroadcastID did not match that of the AuthSession")
-	}
-	return reply, nil
+	defer cryptohomeHelper.InvalidateAuthSession(ctxForCleanUp, hex.EncodeToString(authSession.AuthSessionId))
+	return authFactorStatusUpdate, nil
 }
 
 // authenticateWithCorrectPIN authenticates a given user with the correct PIN.
