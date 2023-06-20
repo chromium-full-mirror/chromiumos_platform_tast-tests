@@ -35,6 +35,7 @@ func PushFileToDUT(ctx context.Context, s *testing.State, dut *dut.DUT, fileName
 	}, linuxssh.DereferenceSymlinks); err != nil {
 		return "", errors.Wrapf(err, "failed to send data to remote data path %v", remotePath)
 	}
+
 	return remotePath, nil
 }
 
@@ -114,6 +115,7 @@ func ClickOnPlayButton(ctx context.Context, uiautoSvc ui.AutomationServiceClient
 			return errors.Wrap(err, "failed to click on play button")
 		}
 	}
+
 	return nil
 }
 
@@ -159,6 +161,89 @@ func ClickFullScreenButton(ctx context.Context, uiautoSvc ui.AutomationServiceCl
 	if _, err := uiautoSvc.LeftClick(
 		ctx, &ui.LeftClickRequest{Finder: connectButtonNode}); err != nil {
 		return errors.Wrap(err, "failed to click the connect button")
+	}
+
+	return nil
+}
+
+// OpenMediaFileWithGallery clicks the file on the Filesapp and open it with the Gallery app.
+func OpenMediaFileWithGallery(ctx context.Context, uiautoSvc ui.AutomationServiceClient, fileName string) (string, error) {
+	filesappWindowFinder := &ui.Finder{
+		NodeWiths: []*ui.NodeWith{
+			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_WINDOW}},
+			{Value: &ui.NodeWith_Name{Name: "Files - My files"}},
+			{Value: &ui.NodeWith_First{First: true}},
+		},
+	}
+
+	fileNameFinder := &ui.Finder{
+		NodeWiths: []*ui.NodeWith{
+			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_STATIC_TEXT}},
+			{Value: &ui.NodeWith_Name{Name: fileName}},
+			{Value: &ui.NodeWith_Ancestor{Ancestor: filesappWindowFinder}},
+		},
+	}
+
+	openButtonFinder := &ui.Finder{
+		NodeWiths: []*ui.NodeWith{
+			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_BUTTON}},
+			{Value: &ui.NodeWith_Name{Name: "Open"}},
+			{Value: &ui.NodeWith_Ancestor{Ancestor: filesappWindowFinder}},
+		},
+	}
+
+	galleryWindow := fmt.Sprintf("Gallery - %s", fileName)
+	galleryWindowFinder := &ui.Finder{
+		NodeWiths: []*ui.NodeWith{
+			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_WINDOW}},
+			{Value: &ui.NodeWith_Name{Name: galleryWindow}},
+		},
+	}
+
+	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: filesappWindowFinder}); err != nil {
+		return "", errors.Wrap(err, "failed to wait for FilesApp showing on screen")
+	}
+
+	if _, err := uiautoSvc.LeftClick(ctx, &ui.LeftClickRequest{Finder: fileNameFinder}); err != nil {
+		return "", errors.Wrap(err, "failed to click on the filename")
+	}
+
+	if _, err := uiautoSvc.LeftClick(ctx, &ui.LeftClickRequest{Finder: openButtonFinder}); err != nil {
+		return "", errors.Wrap(err, "failed to click on the open button")
+	}
+
+	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: galleryWindowFinder}); err != nil {
+		return "", errors.Wrap(err, "failed to wait for Gallery window showing on screen")
+	}
+
+	return galleryWindow, nil
+}
+
+// ClickOnMaximizeButton clicks on the maximize button of the given window name.
+func ClickOnMaximizeButton(ctx context.Context, uiautoSvc ui.AutomationServiceClient, windowName string) error {
+	window := &ui.Finder{
+		NodeWiths: []*ui.NodeWith{
+			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_WINDOW}},
+			{Value: &ui.NodeWith_Name{Name: windowName}},
+			{Value: &ui.NodeWith_First{First: true}},
+		},
+	}
+
+	maxButton := &ui.Finder{
+		NodeWiths: []*ui.NodeWith{
+			{Value: &ui.NodeWith_Name{Name: "Maximize"}},
+			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_BUTTON}},
+			{Value: &ui.NodeWith_First{First: true}},
+			{Value: &ui.NodeWith_Ancestor{Ancestor: window}},
+		},
+	}
+
+	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: maxButton}); err != nil {
+		return errors.Wrap(err, "failed to wait for maximize button from context menu")
+	}
+
+	if _, err := uiautoSvc.LeftClick(ctx, &ui.LeftClickRequest{Finder: maxButton}); err != nil {
+		return errors.Wrap(err, "failed to click on maximize button from context menu")
 	}
 
 	return nil
