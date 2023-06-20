@@ -17,7 +17,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Mosys,
 		Desc:         "Checks the mosys command's functionality",
-		SoftwareDeps: []string{"mosys"},
+		SoftwareDeps: []string{"factory_flow", "mosys"},
 		Contacts: []string{
 			"mka@chromium.org",
 			"kasaiah.bogineni@intel.com",
