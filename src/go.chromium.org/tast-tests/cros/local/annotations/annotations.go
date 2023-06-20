@@ -533,12 +533,12 @@ func GetAnnotationTimes(annotation string, logFile []byte) (realTimes []time.Tim
 	}
 
 	// Get annotation offset times.
-	var annotationTimeTicks []int
+	var annotationTimeTicks []uint64
 	annotationPrefix := fmt.Sprintf("\"traffic_annotation\":%s", annotation)
 	re := regexp.MustCompile(fmt.Sprintf(`%s.*\"time\":\"(\d+)`, annotationPrefix))
 	matches := re.FindAllSubmatch(logFile, -1)
 	for _, match := range matches {
-		matchTimeTick, err := strconv.Atoi(string(match[1]))
+		matchTimeTick, err := strconv.ParseUint(string(match[1]), 10, 64)
 		if err == nil {
 			annotationTimeTicks = append(annotationTimeTicks, matchTimeTick)
 		}
@@ -554,13 +554,13 @@ func GetAnnotationTimes(annotation string, logFile []byte) (realTimes []time.Tim
 }
 
 // GetStartTimeTick gets the log start time in milliseconds. If timeTickOffset is not found, returns 0 with error.
-func GetStartTimeTick(logFile []byte) (int, error) {
+func GetStartTimeTick(logFile []byte) (uint64, error) {
 	re := regexp.MustCompile(`timeTickOffset\":(\d+)`)
 	matches := re.FindSubmatch(logFile)
 	if matches == nil {
 		return 0, errors.New("failed to find timeTickOffset in logfile")
 	}
-	return strconv.Atoi(string(matches[1]))
+	return strconv.ParseUint(string(matches[1]), 10, 64)
 }
 
 // setFileName sets the file name in file app during the save file process.

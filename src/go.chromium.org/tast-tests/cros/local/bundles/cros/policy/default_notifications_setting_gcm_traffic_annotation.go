@@ -56,7 +56,7 @@ func init() {
 			Fixture:           fixture.LacrosPolicyLoggedIn,
 			Val:               browser.TypeLacros,
 		}},
-		Timeout: 4 * time.Minute,
+		Timeout: 5 * time.Minute,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DefaultNotificationsSetting{}, pci.VerifiedFunctionalityUI),
 		},
@@ -162,8 +162,8 @@ func DefaultNotificationsSettingGcmTrafficAnnotation(ctx context.Context, s *tes
 
 			// GoBigSleepLint: wait for Chrome startup GCM registrations to complete.
 			// GCM registrations happen in the background and may be recognized as false positives by this test.
-			// Wait 15 seconds to allow background registrations to occur before logging.
-			if err := testing.Sleep(ctx, 15*time.Second); err != nil {
+			// Wait 20 seconds to allow background registrations to occur before logging.
+			if err := testing.Sleep(ctx, 20*time.Second); err != nil {
 				s.Fatal("Failed while waiting for Chrome startup GCM registrations to complete: ", err)
 			}
 
@@ -227,7 +227,7 @@ func DefaultNotificationsSettingGcmTrafficAnnotation(ctx context.Context, s *tes
 				s.Fatal("Failed to stop logging and check logs: ", err)
 			}
 			if param.shouldFindAnnotation != foundAnnotation {
-				s.Fatalf("Annotation mismatch. Expected: %t. Actual: %t", param.shouldFindAnnotation, foundAnnotation)
+				s.Fatalf("Annotation mismatch. Got: %t. Expected: %t", foundAnnotation, param.shouldFindAnnotation)
 			}
 		})
 	}
