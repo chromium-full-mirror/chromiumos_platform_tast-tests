@@ -109,11 +109,11 @@ func Fixture(ctx context.Context, s *testing.State) {
 			s.Error("Failed to create marker directory: ", err)
 		}
 	} else {
-		err := h.DUT.Conn().CommandContext(ctx, "test", "-d", "/mnt/stateful_partition/please_delete_me").Run()
+		err := h.DUT.Conn().CommandContext(ctx, "bash", "-c", "test -d /mnt/stateful_partition/please_delete_me").Run()
 		if err == nil {
 			s.Error("Marker directory unexpectedly found")
 		} else if exitErr, ok := err.(*cryptossh.ExitError); !ok {
-			s.Errorf("test -d returned %T; want *cryptossh.ExitError", err)
+			s.Errorf("test -d returned %T; want *cryptossh.ExitError: %v", err, err)
 		} else if code := exitErr.ExitStatus(); code != 1 {
 			s.Errorf("test -d returned exit code %d; want 1", code)
 		}
