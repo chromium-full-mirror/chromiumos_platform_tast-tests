@@ -73,30 +73,12 @@ func init() {
 				browser.TypeLacros, lacros.Rootfs, lacros.LacrosOnly,
 			},
 		}, {
-			Name:              "rootfs_primary",
-			ExtraSoftwareDeps: []string{"lacros"},
+			Name: "chrome",
 			Val: testParameters{
-				browser.TypeLacros, lacros.Rootfs, lacros.LacrosPrimary,
+				// lacrosSelection and lacrosMode are actually ignored when bt is TypeAsh
+				browser.TypeAsh, lacros.NotSelected, lacros.NotSpecified,
 			},
-		},
-			/* Disabled due to <1% pass rate over 30 days. See b/246818834
-			{
-				Name:              "omaha_primary",
-				ExtraSoftwareDeps: []string{"lacros"},
-				ExtraHardwareDeps: hwdep.D(hwdep.Model("kled", "enguarde", "samus", "sparky", "phaser")), // Only run on a subset of devices since it downloads from omaha and it will not use our lab's caching mechanisms. We don't want to overload our lab.
-				Val: testParameters{
-					browser.TypeLacros, lacros.Omaha, lacros.LacrosPrimary,
-				},
-			},
-			*/
-			{
-
-				Name: "chrome",
-				Val: testParameters{
-					// lacrosSelection and lacrosMode are actually ignored when bt is TypeAsh
-					browser.TypeAsh, lacros.NotSelected, lacros.NotSpecified,
-				},
-			}},
+		}},
 		Vars:    []string{"lacros.StartupPerf.iterations", "lacros.StartupPerf.credentials", "skipInitialLogin", "skipRegularLogin"},
 		VarDeps: []string{"ui.gaiaPoolDefault"},
 	})
