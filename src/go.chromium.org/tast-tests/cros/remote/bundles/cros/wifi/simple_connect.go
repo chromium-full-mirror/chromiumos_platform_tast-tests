@@ -217,11 +217,15 @@ func init() {
 					},
 				}},
 			}, {
-				// Verifies that DUT can connect to a hidden network on 2.4GHz and 5GHz channels.
-				Name: "hidden",
+				// Verifies that DUT can connect to a hidden network on 2.4GHz channel.
+				Name: "hidden24g",
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(6), ap.Hidden()},
-				}, {
+				}},
+			}, {
+				// Verifies that DUT can connect to a hidden network on 5GHz channels.
+				Name: "hidden5ht20",
+				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT20), ap.Hidden()},
 				}, {
 					apOpts: []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT20), ap.Hidden()},

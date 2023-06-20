@@ -214,18 +214,23 @@ func simpleConnect80211ax() []simpleConnectParams {
 	}}
 }
 
-func simpleConnectHidden() simpleConnectParams {
-	return simpleConnectParams{
-		Name: "hidden",
-		Doc:  simpleConnectDocPref("a hidden network on 2.4GHz and 5GHz channels."),
+func simpleConnectHidden() []simpleConnectParams {
+	return []simpleConnectParams{{
+		Name: "hidden24g",
+		Doc:  simpleConnectDocPref("a hidden network on 2.4GHz channel."),
 		Val: []simpleConnectParamsVal{
 			{APOpts: "ap.Mode(ap.Mode80211g), ap.Channel(6), ap.Hidden()"},
+		},
+	}, {
+		Name: "hidden5ht20",
+		Doc:  simpleConnectDocPref("a hidden network on 5GHz channels."),
+		Val: []simpleConnectParamsVal{
 			{APOpts: "ap.Mode(ap.Mode80211nPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT20), ap.Hidden()"},
 			{APOpts: "ap.Mode(ap.Mode80211nPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT20), ap.Hidden()"},
 		},
 		ExtraHardwareDepsDoc: []string{"TODO(b/189972561) Enable this test on Trogdor once active scanning on 5 GHz channel is enabled."},
 		ExtraHardwareDeps:    `hwdep.D(hwdep.SkipOnPlatform("strongbad", "strongbad64", "strongbad-kernelnext", "trogdor", "trogdor64", "trogdor-kernelnext"))`,
-	}
+	}}
 }
 
 func simpleConnectWEP() []simpleConnectParams {
@@ -827,7 +832,7 @@ func TestSimpleConnect(t *testing.T) {
 	ps = append(ps, simpleConnect80211nsgi())
 	ps = append(ps, simpleConnect80211ac()...)
 	ps = append(ps, simpleConnect80211ax()...)
-	ps = append(ps, simpleConnectHidden())
+	ps = append(ps, simpleConnectHidden()...)
 	ps = append(ps, simpleConnectWEP()...)
 	ps = append(ps, simpleConnectWEPHidden())
 	ps = append(ps, simpleConnectWPA()...)
