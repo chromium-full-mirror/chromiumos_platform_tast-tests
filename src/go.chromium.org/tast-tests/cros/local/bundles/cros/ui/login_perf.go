@@ -150,7 +150,7 @@ func init() {
 				0,     // sleepAtLoginScreen
 			},
 		}, {
-			Name:              "lacros_chrome_root_fs_primary",
+			Name:              "lacros_chrome_root_fs_only",
 			ExtraAttr:         []string{"group:cuj"},
 			ExtraSoftwareDeps: []string{"lacros"},
 			Timeout:           90 * time.Minute,
@@ -160,13 +160,13 @@ func init() {
 				true, // checkTabletMode
 				browser.TypeLacros,
 				lacros.Rootfs,
-				lacros.LacrosPrimary,
+				lacros.LacrosOnly,
 				false, // preloadLacros
 				false, // dropCaches
 				0,     // sleepAtLoginScreen
 			},
 		}, {
-			Name:              "lacros_chrome_root_fs_primary_cold_boot",
+			Name:              "lacros_chrome_root_fs_only_cold_boot",
 			ExtraAttr:         []string{"group:cuj"},
 			ExtraSoftwareDeps: []string{"lacros"},
 			Timeout:           40 * time.Minute,
@@ -176,13 +176,13 @@ func init() {
 				false, // checkTabletMode
 				browser.TypeLacros,
 				lacros.Rootfs,
-				lacros.LacrosPrimary,
+				lacros.LacrosOnly,
 				false, // preloadLacros
 				true,  // dropCaches
 				0,     // sleepAtLoginScreen
 			},
 		}, {
-			Name:              "lacros_chrome_root_fs_primary_delay_login",
+			Name:              "lacros_chrome_root_fs_only_delay_login",
 			ExtraAttr:         []string{"group:cuj"},
 			ExtraSoftwareDeps: []string{"lacros"},
 			Timeout:           30 * time.Minute,
@@ -192,13 +192,13 @@ func init() {
 				false, // checkTabletMode
 				browser.TypeLacros,
 				lacros.Rootfs,
-				lacros.LacrosPrimary,
+				lacros.LacrosOnly,
 				true,            // preloadLacros
 				false,           // dropCaches
 				5 * time.Second, // sleepAtLoginScreen
 			},
 		}, {
-			Name:              "lacros_chrome_root_fs_primary_cold_boot_delay_login",
+			Name:              "lacros_chrome_root_fs_only_cold_boot_delay_login",
 			ExtraAttr:         []string{"group:cuj"},
 			ExtraSoftwareDeps: []string{"lacros"},
 			Timeout:           30 * time.Minute,
@@ -208,13 +208,13 @@ func init() {
 				false, // checkTabletMode
 				browser.TypeLacros,
 				lacros.Rootfs,
-				lacros.LacrosPrimary,
+				lacros.LacrosOnly,
 				true,            // preloadLacros
 				true,            // dropCaches
 				5 * time.Second, // sleepAtLoginScreen
 			},
 		}, {
-			Name:              "lacros_chrome_root_fs_primary_enable_preload",
+			Name:              "lacros_chrome_root_fs_only_enable_preload",
 			ExtraAttr:         []string{"group:cuj"},
 			ExtraSoftwareDeps: []string{"lacros"},
 			Timeout:           40 * time.Minute,
@@ -224,13 +224,13 @@ func init() {
 				false, // checkTabletMode
 				browser.TypeLacros,
 				lacros.Rootfs,
-				lacros.LacrosPrimary,
+				lacros.LacrosOnly,
 				true,  // preloadLacros
 				false, // dropCaches
 				0,     // sleepAtLoginScreen
 			},
 		}, {
-			Name:              "lacros_chrome_root_fs_primary_enable_preload_cold_boot",
+			Name:              "lacros_chrome_root_fs_only_enable_preload_cold_boot",
 			ExtraAttr:         []string{"group:cuj"},
 			ExtraSoftwareDeps: []string{"lacros"},
 			Timeout:           40 * time.Minute,
@@ -240,13 +240,13 @@ func init() {
 				false, // checkTabletMode
 				browser.TypeLacros,
 				lacros.Rootfs,
-				lacros.LacrosPrimary,
+				lacros.LacrosOnly,
 				true, // preloadLacros
 				true, // dropCaches
 				0,    // sleepAtLoginScreen
 			},
 		}, {
-			Name: "lacros_chrome_omaha_primary",
+			Name: "lacros_chrome_omaha_only",
 			// Disabled per b/246818834.
 			ExtraAttr:         []string{},
 			ExtraHardwareDeps: hwdep.D(hwdep.Model("kasumi", "vilboz" /* amd64 */, "krane" /* arm */)),
@@ -258,7 +258,7 @@ func init() {
 				true, // checkTabletMode
 				browser.TypeLacros,
 				lacros.Omaha,
-				lacros.LacrosPrimary,
+				lacros.LacrosOnly,
 				false, // preloadLacros
 				false, // dropCaches
 				0,     // sleepAtLoginScreen

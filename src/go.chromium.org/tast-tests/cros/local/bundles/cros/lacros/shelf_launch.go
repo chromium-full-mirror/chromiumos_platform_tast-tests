@@ -44,12 +44,12 @@ func init() {
 			ExtraSoftwareDeps: []string{"lacros_unstable"},
 			ExtraAttr:         []string{"informational"},
 		}, {
-			Name:              "primary",
-			Fixture:           "lacrosPrimary",
+			Name:              "only",
+			Fixture:           "lacrosOnly",
 			ExtraSoftwareDeps: []string{"lacros_stable"},
 		}, {
-			Name:              "primary_unstable",
-			Fixture:           "lacrosPrimary",
+			Name:              "only_unstable",
+			Fixture:           "lacrosOnly",
 			ExtraSoftwareDeps: []string{"lacros_unstable"},
 			ExtraAttr:         []string{"informational"},
 		}},
