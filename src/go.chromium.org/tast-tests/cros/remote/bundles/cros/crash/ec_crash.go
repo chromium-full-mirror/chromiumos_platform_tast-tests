@@ -56,6 +56,10 @@ func init() {
 				Val:  "crash divzero",
 			},
 			{
+				Name: "unaligned",
+				Val:  "crash unaligned",
+			},
+			{
 				Name: "watchdog",
 				Val:  "crash watchdog",
 			},
