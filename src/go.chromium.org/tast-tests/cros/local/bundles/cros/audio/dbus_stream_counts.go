@@ -13,7 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -24,10 +23,6 @@ func init() {
 			"chromeos-audio-bugs@google.com",
 			"aaronyu@google.com",
 		},
-		HardwareDeps: hwdep.D(
-			// TODO(b/267614582): Fix platform specific failure.
-			hwdep.SkipOnPlatform("corsola"),
-		),
 		BugComponent: "b:776546",
 		Attr:         []string{"group:mainline"},
 	})
@@ -107,13 +102,15 @@ func DBusStreamCounts(ctx context.Context, s *testing.State) {
 	}
 	defer stopClient(s, lacrosClient)
 
-	// Check that the stream count is the same after streamCountChangeTimeout.
+	// GoBigSleepLint: Check that the stream count is the same after streamCountChangeTimeout.
 	// We assumed that if a bug causes the stream count to change incorrectly,
 	// it changes soon and changes only once.
 	// If we observed the same stream count after streamCountChangeTimeout,
 	// we are confident that it won't change anymore and
 	// assume the implementation is correct.
-	testing.Sleep(ctx, streamCountChangeTimeout)
+	if err := testing.Sleep(ctx, streamCountChangeTimeout); err != nil {
+		s.Fatal("Cannot sleep: ", err)
+	}
 	if err := checkNonChromeOutputStreamCount(ctx, cras, 1); err != nil {
 		s.Error("Error checking non-chrome stream count, with clients: testClient + chromeClient + lacrosClient: ", err)
 	}
