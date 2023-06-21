@@ -31,9 +31,9 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         LanguagepacksHandwrittingDlcDownload,
 		Desc:         "Test language packs handwritting dlc mounting",
-		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
+		Contacts:     []string{"cros-borders-eng@google.com", "xiuwen@google.com"},
 		BugComponent: "b:934840",
-		Attr:         []string{"group:mainline", "group:input-tools", "informational"},
+		Attr:         []string{"group:language_packs_hw_recognition_dlc_download_daily"},
 		LacrosStatus: testing.LacrosVariantExists,
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Timeout:      5 * time.Minute,
