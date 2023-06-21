@@ -46,14 +46,14 @@ func init() {
 				tabletMode: false,
 			},
 			ExtraAttr: []string{"group:intel-stress"},
-			Timeout:   time.Hour,
+			Timeout:   time.Hour * 2,
 		}, {
 			Name: "tabletmode",
 			Val: batteryStatusTestParam{
 				iter:       1,
 				tabletMode: true,
 			},
-			Timeout:   20 * time.Minute,
+			Timeout:   time.Hour * 2,
 			ExtraAttr: []string{"group:intel-convertible"},
 		},
 		}})
@@ -123,7 +123,7 @@ func BatteryStatusOnACRemoval(ctx context.Context, s *testing.State) {
 	defer client.Close(cleanupCtx, &empty.Empty{})
 
 	defer func(ctx context.Context) {
-		s.Log("Plugging power supply")
+		s.Log("Test defer, finishing: Plugging power supply")
 		if err := h.SetDUTPower(ctx, true); err != nil {
 			s.Error("Failed to connect charger: ", err)
 		}
@@ -138,15 +138,24 @@ func BatteryStatusOnACRemoval(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to get battery level: ", err)
 		}
 		// Putting battery within testable range.
-		if initialCharge >= 95 {
+
+		targetDischarge := initialCharge
+		targetCharge := initialCharge + 3
+
+		if initialCharge >= 92 {
+			// Handle the case where we need some headroom to charge/discharge
+			targetCharge = 95
+			targetDischarge = 92
+
 			s.Log("Stopping power supply")
 			if err := h.SetDUTPower(ctx, false); err != nil {
 				s.Fatal("Failed to remove charger: ", err)
 			}
-			request := power.BatteryRequest{MaxPercentage: 90}
+			request := power.BatteryRequest{MaxPercentage: float32(targetDischarge)}
 			if _, err := client.DrainBattery(ctx, &request); err != nil {
 				s.Fatal("Failed to drain battery: ", err)
 			}
+
 		}
 
 		s.Log("Plugging power supply")
@@ -178,7 +187,6 @@ func BatteryStatusOnACRemoval(ctx context.Context, s *testing.State) {
 		}
 
 		// Charging the DUT for 3%.
-		targetCharge := initialCharge + 3
 		s.Logf("Waiting for battery to reach %d%%", targetCharge)
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
 			pct, err := getChargePercentage(ctx, h)
@@ -212,13 +220,13 @@ func BatteryStatusOnACRemoval(ctx context.Context, s *testing.State) {
 		}
 
 		// Discharging DUT for 3%.
-		s.Logf("Discharging DUT till %d%%", initialCharge)
-		request := power.BatteryRequest{MaxPercentage: float32(initialCharge)}
+		s.Logf("Discharging DUT till %d%%", targetDischarge)
+		request := power.BatteryRequest{MaxPercentage: float32(targetDischarge)}
 		if _, err := client.DrainBattery(ctx, &request); err != nil {
 			s.Fatal("Failed to drain battery: ", err)
 		}
 
-		// Verifying battery charging with power_supply_info command.
+		// Verifying battery discharging with power_supply_info command.
 		s.Log("Checking battery information for charging")
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
 			if charging, err := isBatteryCharging(ctx, h); err != nil {
