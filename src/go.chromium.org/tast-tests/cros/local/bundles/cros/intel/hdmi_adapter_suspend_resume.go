@@ -2,17 +2,16 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package power
+package intel
 
 import (
 	"context"
 	"io/ioutil"
 	"regexp"
-	"strconv"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/chameleon"
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/cswitch"
 	"go.chromium.org/tast-tests/cros/local/graphics"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -48,22 +47,21 @@ var (
 	*/
 	displayInfoRe     = regexp.MustCompile(`.*pipe\s+[BCD]\]:\n.*active=yes, mode=.[0-9]+x[0-9]+.: [0-9]+.*\s+[hw: active=yes]+`)
 	connectorInfoRe   = regexp.MustCompile(`.*: connectors:\n.\s+\[CONNECTOR:\d+:[HDMI]+.*`)
-	connectedStatusRe = regexp.MustCompile(`\[CONNECTOR:\d+:HDMI.*status: connected`)
-	modesRe           = regexp.MustCompile(`modes:\n.*"1920x1080":.60`)
+	connectedStatusRe = regexp.MustCompile(`.*DP branch device present.*yes\n.*Type.*HDMI`)
+	modesRe           = regexp.MustCompile(`modes:\n.*"\d+x\d+":.60`)
 )
 
 var (
-	c10PackageRe       = regexp.MustCompile(`C10 : ([A-Za-z0-9]+)`)
-	suspendFailureRe   = regexp.MustCompile("Suspend failures: 0")
-	firmwareLogErrorRe = regexp.MustCompile("Firmware log errors: 0")
-	s0ixErrorRe        = regexp.MustCompile("s0ix errors: 0")
-	usbDetectionRe     = regexp.MustCompile(`If 0.*Class=.*5000M`)
+	c10PackagesRe       = regexp.MustCompile(`C10 : ([A-Za-z0-9]+)`)
+	suspendFailuresRe   = regexp.MustCompile("Suspend failures: 0")
+	firmwareLogErrorsRe = regexp.MustCompile("Firmware log errors: 0")
+	s0ixErrorsRe        = regexp.MustCompile("s0ix errors: 0")
 )
 
 const (
-	slpS0File         = "/sys/kernel/debug/pmc_core/slp_s0_residency_usec"
-	packageCstateFile = "/sys/kernel/debug/pmc_core/package_cstate_show"
-	displayInfoFile   = "/sys/kernel/debug/dri/0/i915_display_info"
+	slpS0Files         = "/sys/kernel/debug/pmc_core/slp_s0_residency_usec"
+	packageCstateFiles = "/sys/kernel/debug/pmc_core/package_cstate_show"
+	displayInfoFile    = "/sys/kernel/debug/dri/0/i915_display_info"
 )
 
 func init() {
@@ -75,8 +73,8 @@ func init() {
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
 		Vars: []string{
-			"power.chameleon_addr",         // Only needed when using chameleon board as extended display.
-			"power.chameleon_display_port", // The port connected as extended display. Default is 3.
+			"intel.cSwitchPort",
+			"intel.domainIP",
 		},
 		Fixture: "chromeLoggedIn",
 		Timeout: 8 * time.Minute,
@@ -88,41 +86,27 @@ func HdmiAdapterSuspendResume(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
 	defer cancel()
 
-	// Use chameleon board as extended display. Make sure chameleon is connected.
-	chameleonAddr := s.RequiredVar("power.chameleon_addr")
-	che, err := chameleon.New(ctx, chameleonAddr)
-	if err != nil {
-		s.Fatal("Failed to connect to chameleon board: ", err)
-	}
-	defer che.Close(cleanupCtx)
+	const cSwitchOFF = "0"
+	// cswitch port ID.
+	cSwitchON := s.RequiredVar("intel.cSwitchPort")
+	// IP address of Tqc server hosting device.
+	domainIP := s.RequiredVar("intel.domainIP")
 
-	portID := 3 // Use default port 3 for display.
-	if port, ok := s.Var("power.chameleon_display_port"); ok {
-		portID, err = strconv.Atoi(port)
-		if err != nil {
-			s.Fatalf("Failed to parse chameleon display port %q: %v", port, err)
+	// Create C-Switch session that performs hot plug-unplug on USB4 device.
+	sessionID, err := cswitch.CreateSession(ctx, domainIP)
+	if err != nil {
+		s.Fatal("Failed to create session: ", err)
+	}
+
+	if err := cswitch.ToggleCSwitchPort(ctx, sessionID, cSwitchON, domainIP); err != nil {
+		s.Fatal("Failed to enable c-switch port: ", err)
+	}
+
+	defer func(ctx context.Context) {
+		if err := closeCswitchConnection(ctx, cSwitchOFF, sessionID, domainIP); err != nil {
+			s.Fatal("Failed to close cswitch: ", err)
 		}
-	}
-
-	dp, err := che.NewPort(ctx, portID)
-	if err != nil {
-		s.Fatalf("Failed to create chameleon port %d: %v", portID, err)
-	}
-	defer dp.Unplug(cleanupCtx)
-
-	if err := dp.Plug(ctx); err != nil {
-		s.Fatal("Failed to plug chameleon port: ", err)
-	}
-	testing.ContextLog(ctx, "Chameleon plugged successfully")
-
-	// Wait for DUT to detect external display.
-	if err := dp.WaitVideoInputStable(ctx, 10*time.Second); err != nil {
-		s.Fatal("Failed to wait for video input on chameleon board: ", err)
-	}
-
-	if err := assertAdapterConnected(ctx); err != nil {
-		s.Fatal("Failed to detect typec HDMI adapter: ", err)
-	}
+	}(cleanupCtx)
 
 	if err := assertExternalMonitorConnected(ctx, 1); err != nil {
 		s.Fatal("Failed plugging external display: ", err)
@@ -136,13 +120,18 @@ func HdmiAdapterSuspendResume(ctx context.Context, s *testing.State) {
 		return string(out)
 	}
 
-	slpOpSetPre := cmdOutput(ctx, slpS0File)
-	pkgOpSetOutput := cmdOutput(ctx, packageCstateFile)
-	matchSetPre := c10PackageRe.FindStringSubmatch(pkgOpSetOutput)
+	slpOpSetPre := cmdOutput(ctx, slpS0Files)
+	pkgOpSetOutput := cmdOutput(ctx, packageCstateFiles)
+	matchSetPre := c10PackagesRe.FindStringSubmatch(pkgOpSetOutput)
 	if matchSetPre == nil {
 		s.Fatal("Failed to match pre PkgCstate value: ", pkgOpSetOutput)
 	}
 	pkgOpSetPre := matchSetPre[1]
+
+	// GoBigSleepLint:Screen visible in extenal is taking time due to which Sleep is required before suspend stress.
+	if err := testing.Sleep(ctx, 20*time.Second); err != nil {
+		s.Fatal("Failed to sleep: ", err)
+	}
 
 	testing.ContextLog(ctx, "Executing suspend_stress_test for 10 cycles")
 	stressOut, err := testexec.CommandContext(ctx, "suspend_stress_test", "-c", "10").Output()
@@ -150,15 +139,11 @@ func HdmiAdapterSuspendResume(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to execute suspend_stress_test command: ", err)
 	}
 
-	suspendErrors := []*regexp.Regexp{suspendFailureRe, firmwareLogErrorRe, s0ixErrorRe}
+	suspendErrors := []*regexp.Regexp{suspendFailuresRe, firmwareLogErrorsRe, s0ixErrorsRe}
 	for _, errmsg := range suspendErrors {
 		if !(errmsg.MatchString(string(stressOut))) {
 			s.Fatalf("Failed expected %q, but failures are non-zero", errmsg)
 		}
-	}
-
-	if err := assertAdapterConnected(ctx); err != nil {
-		s.Fatal("Failed to detect typec HDMI adapter after suspend-resume: ", err)
 	}
 
 	if err := assertExternalMonitorConnected(ctx, 1); err != nil {
@@ -169,12 +154,8 @@ func HdmiAdapterSuspendResume(ctx context.Context, s *testing.State) {
 		s.Fatal("Asserting SLP Counter: ", err)
 	}
 
-	if err := assertPackageCState(ctx, pkgOpSetPre); err != nil {
+	if err := assertPackageCStates(ctx, pkgOpSetPre); err != nil {
 		s.Fatal("Asserting Package C-State failed: ", err)
-	}
-
-	if err := assertAdapterConnected(ctx); err != nil {
-		s.Fatal("Failed to detect typec HDMI adapter: ", err)
 	}
 
 	if err := assertExternalMonitorConnected(ctx, 1); err != nil {
@@ -183,9 +164,9 @@ func HdmiAdapterSuspendResume(ctx context.Context, s *testing.State) {
 }
 
 func assertSLPCounter(ctx context.Context, slpOpSetPre string) error {
-	slpOpSetPost, err := ioutil.ReadFile(slpS0File)
+	slpOpSetPost, err := ioutil.ReadFile(slpS0Files)
 	if err != nil {
-		return errors.Wrapf(err, "failed to read %q file", slpS0File)
+		return errors.Wrapf(err, "failed to read %q file", slpS0Files)
 	}
 	if slpOpSetPre == string(slpOpSetPost) {
 		return errors.Errorf("failed SLP counter value must be different than the value %q noted most recently %q", slpOpSetPre, slpOpSetPost)
@@ -196,12 +177,12 @@ func assertSLPCounter(ctx context.Context, slpOpSetPre string) error {
 	return nil
 }
 
-func assertPackageCState(ctx context.Context, pkgOpSetPre string) error {
-	pkgOpSetPostOutput, err := ioutil.ReadFile(packageCstateFile)
+func assertPackageCStates(ctx context.Context, pkgOpSetPre string) error {
+	pkgOpSetPostOutput, err := ioutil.ReadFile(packageCstateFiles)
 	if err != nil {
-		return errors.Wrapf(err, "failed to read %q file", packageCstateFile)
+		return errors.Wrapf(err, "failed to read %q file", packageCstateFiles)
 	}
-	matchSetPost := c10PackageRe.FindStringSubmatch(string(pkgOpSetPostOutput))
+	matchSetPost := c10PackagesRe.FindStringSubmatch(string(pkgOpSetPostOutput))
 	if matchSetPost == nil {
 		return errors.Errorf("failed to match post PkgCstate value: %q", pkgOpSetPostOutput)
 	}
@@ -217,15 +198,15 @@ func assertPackageCState(ctx context.Context, pkgOpSetPre string) error {
 
 func assertExternalMonitorConnected(ctx context.Context, numberOfDisplays int) error {
 	displayInfoPatterns := []*regexp.Regexp{connectorInfoRe, connectedStatusRe, modesRe}
-	displCount, err := graphics.NumberOfOutputsConnected(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to get connected displays ")
-	}
-	if displCount < 2 {
-		return errors.New("external display is not connected")
-	}
-
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		displCount, err := graphics.NumberOfOutputsConnected(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to get connected displays ")
+		}
+		if displCount < 2 {
+			return errors.New("external display is not connected")
+		}
+
 		out, err := ioutil.ReadFile(displayInfoFile)
 		if err != nil {
 			return errors.Wrap(err, "failed to run display info command ")
@@ -249,13 +230,20 @@ func assertExternalMonitorConnected(ctx context.Context, numberOfDisplays int) e
 	return nil
 }
 
-func assertAdapterConnected(ctx context.Context) error {
-	out, err := testexec.CommandContext(ctx, "lsusb", "-t").Output()
-	if err != nil {
-		return errors.Wrap(err, "failed to execute lsusb command")
-	}
-	if !usbDetectionRe.MatchString(string(out)) {
-		return errors.New("typec HDMI adapter is not connected")
+func closeCswitchConnection(ctx context.Context, cSwitchOFF, sessionID, domainIP string) error {
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if err := cswitch.ToggleCSwitchPort(ctx, sessionID, cSwitchOFF, domainIP); err != nil {
+			return errors.Wrap(err, "failed to disable c-switch port")
+		}
+
+		if err := cswitch.CloseSession(ctx, sessionID, domainIP); err != nil {
+			return errors.Wrap(err, "failed to close session")
+		}
+		return nil
+	}, &testing.PollOptions{
+		Timeout: 10 * time.Second,
+	}); err != nil {
+		return errors.Wrap(err, "failed to close cswitch connection")
 	}
 	return nil
 }
