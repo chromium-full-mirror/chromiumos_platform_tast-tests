@@ -408,6 +408,10 @@ func Wrapper(ctx context.Context, s *testing.State) {
 		if err := exec.Command("cp", logFile.Name(), tastResultsDir).Run(); err != nil {
 			s.Fatal("Failed to copy syzkaller logfile: ", err)
 		}
+		s.Log("Copying syzkaller config to tast results directory")
+		if err := exec.Command("cp", configFile.Name(), tastResultsDir).Run(); err != nil {
+			s.Fatal("Failed to copy syzkaller config: ", err)
+		}
 	}()
 
 	done := make(chan bool)
