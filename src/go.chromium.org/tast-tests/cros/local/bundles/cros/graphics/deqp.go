@@ -299,7 +299,7 @@ func deqpParallel(ctx context.Context, s *testing.State, opts deqpParms) {
 		s.Fatal("Failed to created temp dir: ", err)
 	}
 	defer os.RemoveAll(tmpDir)
-	filters, err := deqprunner.GetCaseListFilters(ctx, "deqp")
+	filters, err := deqprunner.GetCaseListFilters(ctx, deqprunner.Deqp, deqprunner.Host)
 	if err != nil {
 		s.Fatal("Could not get filters from file: ", err)
 	}

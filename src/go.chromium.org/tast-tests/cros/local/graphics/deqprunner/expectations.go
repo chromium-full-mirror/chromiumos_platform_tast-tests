@@ -17,6 +17,24 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+type runnerCategory string
+
+var (
+	// Deqp is to run deqprunner against deqp tests.
+	Deqp runnerCategory = "deqp"
+	// Piglit is to run deqprunner against piglit tests.
+	Piglit runnerCategory = "piglit"
+)
+
+type runnerEnvironment string
+
+var (
+	// Host is running deqprunner in host environment.
+	Host runnerEnvironment = ""
+	// Borealis is running deqprunner in borealis environment.
+	Borealis runnerEnvironment = "-borealis"
+)
+
 // CaseListFilters contain lists on their tests based on expectations
 type CaseListFilters struct {
 	Skips  []string
@@ -52,10 +70,10 @@ func MakeFilterCmd(filters CaseListFilters, tmpDir string) ([]string, error) {
 	return outCommand, nil
 }
 
-// readExpectations reads expectations from all-chipsets-borealis and ${gpu}-borealis expectations files and return a combined list of expectations.
-func readExpectations(ctx context.Context, subfolder, gpu, suffix string) ([]string, error) {
+// readExpectations reads expectations from all-chipsets and ${gpu} expectations files and return a combined list of expectations.
+func readExpectations(ctx context.Context, category runnerCategory, gpu string, environment runnerEnvironment, suffix string) ([]string, error) {
 	readLines := func(name string) ([]string, error) {
-		path := filepath.Join("/usr/local/graphics/expectations/"+subfolder+"/", name)
+		path := filepath.Join("/usr/local/graphics/expectations/", string(category), name)
 		out, err := ioutil.ReadFile(path)
 		if err != nil {
 			if errors.Is(err, os.ErrNotExist) {
@@ -81,12 +99,11 @@ func readExpectations(ctx context.Context, subfolder, gpu, suffix string) ([]str
 	}
 
 	var result []string
-	// We compute an union of expectations common for all boards/chipsets and chipset borealis-specific expectations.
-	// TODO(pwang): Add board-specific expectations
-	// TODO: Investigate the relationship between host expectations and borealis expectations.
+	// We compute an union of expectations common for all boards/chipsets expectations.
 	testing.ContextLog(ctx, "Warning: Not attempting to load board-specific host expectations (rare)")
-	for _, t := range []string{"all-chipsets-borealis", gpu + "-borealis"} {
-		exp, err := readLines(t + suffix)
+	for _, t := range []string{"all-chipsets", gpu} {
+		fileName := t + string(environment) + suffix
+		exp, err := readLines(fileName)
 		if err != nil {
 			return nil, err
 		}
@@ -96,7 +113,7 @@ func readExpectations(ctx context.Context, subfolder, gpu, suffix string) ([]str
 }
 
 // GetCaseListFilters reads the skip/fails/flakes filter list by probing the hardware information and returns list of expectations.
-func GetCaseListFilters(ctx context.Context, subfolder string) (CaseListFilters, error) {
+func GetCaseListFilters(ctx context.Context, category runnerCategory, environment runnerEnvironment) (CaseListFilters, error) {
 	/* The expected fails list will be entries like
 	   'dEQP-SUITE.test.name,Crash', such as you find in a failures.csv,
 	   results.csv, or the "Some failures found:" stdout output of a previous
@@ -130,15 +147,15 @@ func GetCaseListFilters(ctx context.Context, subfolder string) (CaseListFilters,
 		return CaseListFilters{}, errors.Wrap(err, "failed to get gpu information")
 	}
 	gpu := gpus[0]
-	skips, err := readExpectations(ctx, subfolder, gpu, "-skips.txt")
+	skips, err := readExpectations(ctx, category, gpu, environment, "-skips.txt")
 	if err != nil {
 		return CaseListFilters{}, errors.Wrap(err, "failed to set up skips expectations")
 	}
-	fails, err := readExpectations(ctx, subfolder, gpu, "-fails.txt")
+	fails, err := readExpectations(ctx, category, gpu, environment, "-fails.txt")
 	if err != nil {
 		return CaseListFilters{}, errors.Wrap(err, "failed to set up fails expectations")
 	}
-	flakes, err := readExpectations(ctx, subfolder, gpu, "-flakes.txt")
+	flakes, err := readExpectations(ctx, category, gpu, environment, "-flakes.txt")
 	if err != nil {
 		return CaseListFilters{}, errors.Wrap(err, "failed to set up flakes expectations")
 	}
