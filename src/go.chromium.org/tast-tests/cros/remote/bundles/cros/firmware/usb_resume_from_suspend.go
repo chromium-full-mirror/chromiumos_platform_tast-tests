@@ -68,9 +68,14 @@ func USBResumeFromSuspend(ctx context.Context, s *testing.State) {
 	if err := h.DUT.Conn().CommandContext(ctx, "powerd_dbus_suspend").Start(); err != nil {
 		s.Fatal("Failed to suspend DUT: ", err)
 	}
+	waitUnreachableCtx, cancelUnreachable := context.WithTimeout(ctx, 2*time.Minute)
+	defer cancelUnreachable()
+	if err := h.DUT.WaitUnreachable(waitUnreachableCtx); err != nil {
+		s.Fatal("Failed to wait DUT unreachable: ", err)
+	}
 	s.Log("Checking for S0ix, S3, S5, or G3 powerstate")
 	if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "S0ix", "S3", "S5", "G3"); err != nil {
-		s.Fatal("Failed to get power state at S0ix, S3, S5, or G3: ", err)
+		s.Fatal("Failed to get power state at S0ix, S3, S5, or G3, but found dut disconnected: ", err)
 	}
 
 	wakeupKey := servo.Enter
