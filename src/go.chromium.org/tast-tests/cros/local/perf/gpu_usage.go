@@ -245,8 +245,41 @@ func (ds *GPUUsageDataSource) Start(ctx context.Context) error {
 		return nil
 	}
 	testing.ContextLog(ctx, "Start tracking GPU usage metrics")
-	// TODO (b/277656113): Collect the initial GPU usage info and save to ds.drms.
+	// Collect the initial GPU usage info of each DRM.
+	drms, samplingTime, err := ds.getGPUInfo(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to collect initial metrics")
+	}
 
+	// Save GPU usage for each DRM into ds.drms.
+	for minor, drm := range drms {
+		if ds.drms[minor] == nil {
+			ds.drms[minor] = newDrmUsage(minor)
+		}
+		drmSaved := ds.drms[minor]
+
+		// Loop through all the processes having GPU utilization for the DRM.
+		for proc, perProcUtil := range drm.utilizationSamples[0] {
+			// Save the processes and engines related to this DRM.
+			drmSaved.allProcesses[proc] = true
+			for engine := range perProcUtil {
+				drmSaved.allEngines[engine] = true
+			}
+		}
+		// Keep the GPU utilization time so utilization percentage can be
+		// obtained during next snapshot.
+		drmSaved.lastUtilization = drm.utilizationSamples[0]
+
+		// Loop through all the processes having GPU memory usage for the DRM.
+		for proc, perProcMemory := range drm.memorySamples[0] {
+			// Save the processes and memory kind related to this DRM.
+			drmSaved.allProcesses[proc] = true
+			for kind := range perProcMemory {
+				drmSaved.allMemoryKinds[kind] = true
+			}
+		}
+	}
+	ds.lastTime = samplingTime
 	return nil
 }
 
@@ -256,8 +289,65 @@ func (ds *GPUUsageDataSource) Snapshot(ctx context.Context, values *perf.Values)
 		return nil
 	}
 	startTime := time.Now()
-	// TODO (b/277656113): Collect GPU usage info for each DRM and save to ds.drms.
+	// Collect the current GPU usage info of each DRM.
+	drms, samplingTime, err := ds.getGPUInfo(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get GPU usage info")
+	}
 
+	samplingDuration := samplingTime.Sub(ds.lastTime)
+
+	// Loop through all the processes having GPU utilization for the DRM
+	// during this snapshot.
+	for minor, drm := range drms {
+		if ds.drms[minor] == nil {
+			ds.drms[minor] = newDrmUsage(minor)
+		}
+		drmSaved := ds.drms[minor]
+
+		// Get utilization percentage from the lastUtilization, keyed by the
+		// process.
+		utilDiffs := make(map[string]gpuUtilization)
+		// Loop through all the processes having GPU utilization for the DRM.
+		for proc, perProcUtil := range drm.utilizationSamples[0] {
+			drmSaved.allProcesses[proc] = true
+			utilDiffs[proc] = make(gpuUtilization)
+			for engine, perEngineUtil := range perProcUtil {
+				drmSaved.allEngines[engine] = true
+				lastValue := 0.0
+				if lastProcUtil, ok := drmSaved.lastUtilization[proc]; ok {
+					lastValue = lastProcUtil[engine]
+				}
+				// Utilization percentage is calculated from the usage time
+				// divided by the sampling duration.
+				util := (perEngineUtil - lastValue) / float64(samplingDuration) * 100
+				// Ensure utilization is not over 100%.
+				if util > 100.0 {
+					addLog(ds.logs, logUtilSampleAdjustment, &log{1,
+						fmt.Sprintf("%s: got %f for proc %s and engine %s", logUtilSampleAdjustment, util, proc, engine)})
+					util = 100.0
+				}
+				utilDiffs[proc][engine] = util
+			}
+		}
+		// Keep the GPU utilization time so utilization percentage can be
+		// obtained during next snapshot.
+		drmSaved.lastUtilization = drm.utilizationSamples[0]
+
+		// Loop through all the processes having GPU memory usage for the DRM.
+		for proc, perProcMemory := range drm.memorySamples[0] {
+			drmSaved.allProcesses[proc] = true
+			for kind := range perProcMemory {
+				drmSaved.allMemoryKinds[kind] = true
+			}
+		}
+		// Attach the samples of the current snapshot to the saved DRM usage
+		// sample slice.
+		drmSaved.utilizationSamples = append(drmSaved.utilizationSamples, utilDiffs)
+		drmSaved.memorySamples = append(drmSaved.memorySamples, drm.memorySamples[0])
+	}
+
+	ds.lastTime = samplingTime
 	ds.snapshotTime = append(ds.snapshotTime, time.Now().Sub(startTime))
 	return nil
 }
