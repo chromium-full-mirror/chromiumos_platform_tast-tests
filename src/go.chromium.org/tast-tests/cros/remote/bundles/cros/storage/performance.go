@@ -58,6 +58,66 @@ func init() {
 			Val:               "16k_write",
 			ExtraHardwareDeps: hwdep.D(hwdep.Ufs()),
 			ExtraRequirements: []string{tdreq.Storage16kWriteIOPs, tdreq.UfsStorage16kWriteLatency},
+		}, {
+			Name:              "nvme_4k_read",
+			Val:               "4k_read",
+			ExtraHardwareDeps: hwdep.D(hwdep.Nvme()),
+			ExtraRequirements: []string{tdreq.NvmeStorage4kReadLatency},
+		}, {
+			Name:              "nvme_4k_write",
+			Val:               "4k_write",
+			ExtraHardwareDeps: hwdep.D(hwdep.Nvme()),
+			ExtraRequirements: []string{tdreq.NvmeStorage4kWriteLatency},
+		}, {
+			Name:              "emmc_4k_read",
+			Val:               "4k_read",
+			ExtraHardwareDeps: hwdep.D(hwdep.Emmc()),
+			ExtraRequirements: []string{tdreq.EmmcStorage4kReadLatency},
+		}, {
+			Name:              "emmc_4k_write",
+			Val:               "4k_write",
+			ExtraHardwareDeps: hwdep.D(hwdep.Emmc()),
+			ExtraRequirements: []string{tdreq.EmmcStorage4kWriteLatency},
+		}, {
+			Name:              "ufs_4k_read",
+			Val:               "4k_read",
+			ExtraHardwareDeps: hwdep.D(hwdep.Ufs()),
+			ExtraRequirements: []string{tdreq.UfsStorage4kReadLatency},
+		}, {
+			Name:              "ufs_4k_write",
+			Val:               "4k_write",
+			ExtraHardwareDeps: hwdep.D(hwdep.Ufs()),
+			ExtraRequirements: []string{tdreq.UfsStorage4kWriteLatency},
+		}, {
+			Name:              "nvme_4k_read_qd4",
+			Val:               "4k_read_qd4",
+			ExtraHardwareDeps: hwdep.D(hwdep.Nvme()),
+			ExtraRequirements: []string{tdreq.NvmeStorage4kQD4ReadLatency},
+		}, {
+			Name:              "nvme_4k_write_qd4",
+			Val:               "4k_write_qd4",
+			ExtraHardwareDeps: hwdep.D(hwdep.Nvme()),
+			ExtraRequirements: []string{tdreq.NvmeStorage4kQD4WriteLatency},
+		}, {
+			Name:              "emmc_4k_read_qd4",
+			Val:               "4k_read_qd4",
+			ExtraHardwareDeps: hwdep.D(hwdep.Emmc()),
+			ExtraRequirements: []string{tdreq.EmmcStorage4kQD4ReadLatency},
+		}, {
+			Name:              "emmc_4k_write_qd4",
+			Val:               "4k_write_qd4",
+			ExtraHardwareDeps: hwdep.D(hwdep.Emmc()),
+			ExtraRequirements: []string{tdreq.EmmcStorage4kQD4WriteLatency},
+		}, {
+			Name:              "ufs_4k_read_qd4",
+			Val:               "4k_read_qd4",
+			ExtraHardwareDeps: hwdep.D(hwdep.Ufs()),
+			ExtraRequirements: []string{tdreq.UfsStorage4kQD4ReadLatency},
+		}, {
+			Name:              "ufs_4k_write_qd4",
+			Val:               "4k_write_qd4",
+			ExtraHardwareDeps: hwdep.D(hwdep.Ufs()),
+			ExtraRequirements: []string{tdreq.UfsStorage4kQD4WriteLatency},
 		}},
 	})
 }

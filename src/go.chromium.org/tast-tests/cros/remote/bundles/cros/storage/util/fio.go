@@ -22,6 +22,10 @@ var (
 		"seq_write",
 		"16k_read",
 		"16k_write",
+		"4k_read",
+		"4k_write",
+		"4k_read_qd4",
+		"4k_write_qd4",
 	}
 )
 

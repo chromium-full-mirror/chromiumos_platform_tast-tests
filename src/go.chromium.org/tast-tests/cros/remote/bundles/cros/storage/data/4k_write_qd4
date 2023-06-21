@@ -1,0 +1,18 @@
+; Copyright 2023 The ChromiumOS Authors
+; Use of this source code is governed by a BSD-style license that can be
+; found in the LICENSE file.
+;
+; 4k random writes at the front of the disk with iodepth=4.
+;
+
+[4k_write]
+time_based
+
+ioengine=libaio
+iodepth=4
+direct=1
+
+readwrite=randwrite
+
+bs=4k
+norandommap

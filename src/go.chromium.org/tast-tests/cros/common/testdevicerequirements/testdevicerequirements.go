@@ -325,4 +325,40 @@ const (
 
 	// UfsStorage16kWriteLatency with If the ChromeOS device uses UFS to provide non-volatile storage, its UFS storage device latency MUST NOT exceed 12ms for the 99th percentile of 16k random writes, with iodepth=4 workload.
 	UfsStorage16kWriteLatency = "store-ufs-0031-v01"
+
+	// EmmcStorage4kReadLatency with If the ChromeOS device uses eMMC to provide non-volatile storage, its eMMC storage device latency MUST NOT exceed 35ms for the 99th percentile of 4k random reads, with iodepth=1 workload.
+	EmmcStorage4kReadLatency = "store-emmc-0015-v01"
+
+	// EmmcStorage4kWriteLatency with If the ChromeOS device uses eMMC to provide non-volatile storage, its eMMC storage device latency MUST NOT exceed 35ms for the 99th percentile of 4k random writes, with iodepth=1 workload.
+	EmmcStorage4kWriteLatency = "store-emmc-0016-v01"
+
+	// EmmcStorage4kQD4ReadLatency with If the ChromeOS device uses eMMC to provide non-volatile storage, its eMMC storage device latency MUST NOT exceed 35ms for the 99th percentile of 4k random reads, with iodepth=4 workload.
+	EmmcStorage4kQD4ReadLatency = "store-emmc-0017-v01"
+
+	// EmmcStorage4kQD4WriteLatency with If the ChromeOS device uses eMMC to provide non-volatile storage, its eMMC storage device latency MUST NOT exceed 35ms for the 99th percentile of 4k random writes, with iodepth=4 workload.
+	EmmcStorage4kQD4WriteLatency = "store-emmc-0018-v01"
+
+	// NvmeStorage4kReadLatency with If the ChromeOS device uses NVMe to provide non-volatile storage, its NVMe storage device latency MUST NOT exceed 12ms for the 99th percentile of 4k random reads, with iodepth=1 workload.
+	NvmeStorage4kReadLatency = "store-nvme-0011-v01"
+
+	// NvmeStorage4kWriteLatency with If the ChromeOS device uses NVMe to provide non-volatile storage, its NVMe storage device latency MUST NOT exceed 12ms for the 99th percentile of 4k random writes, with iodepth=1 workload.
+	NvmeStorage4kWriteLatency = "store-nvme-0012-v01"
+
+	// NvmeStorage4kQD4ReadLatency with  If the ChromeOS device uses NVMe to provide non-volatile storage, its NVMe storage device latency MUST NOT exceed 12ms for the 99th percentile of 4k random reads, with iodepth=4 workload.
+	NvmeStorage4kQD4ReadLatency = "store-nvme-0013-v01"
+
+	// NvmeStorage4kQD4WriteLatency with If the ChromeOS device uses NVMe to provide non-volatile storage, its NVMe storage device latency MUST NOT exceed 12ms for the 99th percentile of 4k random writes, with iodepth=4 workload.
+	NvmeStorage4kQD4WriteLatency = "store-nvme-0014-v01"
+
+	// UfsStorage4kReadLatency with If the ChromeOS device uses UFS to provide non-volatile storage, its UFS storage device latency MUST NOT exceed 12ms for the 99th percentile of 4k random reads, with iodepth=1 workload.
+	UfsStorage4kReadLatency = "store-ufs-0026-v01"
+
+	// UfsStorage4kWriteLatency with If the ChromeOS device uses UFS to provide non-volatile storage, its UFS storage device latency MUST NOT exceed 12ms for the 99th percentile of 4k random writes, with iodepth=1 workload.
+	UfsStorage4kWriteLatency = "store-ufs-0027-v01"
+
+	// UfsStorage4kQD4ReadLatency with If the ChromeOS device uses UFS to provide non-volatile storage, its UFS storage device latency MUST NOT exceed 12ms for the 99th percentile of 4k random reads, with iodepth=4 workload.
+	UfsStorage4kQD4ReadLatency = "store-ufs-0028-v01"
+
+	// UfsStorage4kQD4WriteLatency with If the ChromeOS device uses UFS to provide non-volatile storage, its UFS storage device latency MUST NOT exceed 12ms for the 99th percentile of 4k random writes, with iodepth=4 workload.
+	UfsStorage4kQD4WriteLatency = "store-ufs-0029-v01"
 )
