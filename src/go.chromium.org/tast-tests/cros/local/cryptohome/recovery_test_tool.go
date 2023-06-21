@@ -255,6 +255,7 @@ func (c *RecoveryTestTool) Decrypt(ctx context.Context) error {
 		c.getFileParam("channel_priv_key_in_file", channelPrivKeyFile),
 		c.getFileParam("ephemeral_pub_key_in_file", ephemeralPubKeyFile),
 		c.getFileParam("destination_share_in_file", destinationShareFile),
+		c.getFileParam("serialized_hsm_payload_in_file", hsmPayloadFile),
 		c.getFileParam("extended_pcr_bound_destination_share_in_file", extendedPcrBoundDestinationShareFile),
 		c.getFileParam("recovery_secret_out_file", recoverySecretDecryptedFile),
 	}
