@@ -108,6 +108,8 @@ func iterateResolutionAndRecord(ctx context.Context, app *cca.App) error {
 		if err := app.ClickWithIndex(ctx, resolutionOptions, index); err != nil {
 			return errors.Wrap(err, "failed to click on resolution item")
 		}
+		// GoBigSleepLint: Need a sleep of 1 Second without sleep, we get nothing recorded popup.
+		testing.Sleep(ctx, 1*time.Second)
 		if err := recordVideoAndCheckProfile(ctx, app); err != nil {
 			return errors.Wrap(err, "failed to record video and verify profile")
 		}
