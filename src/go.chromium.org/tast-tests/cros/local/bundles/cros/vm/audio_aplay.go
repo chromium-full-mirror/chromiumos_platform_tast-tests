@@ -34,7 +34,7 @@ func init() {
 		Desc:         "Check that playback devices are listed correctly",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "pteerapong@google.com"},
 		BugComponent: "b:1332660",
-		Attr:         []string{"group:mainline", "group:audio", "group:cq-medium", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "group:audio", "group:cq-medium"},
 		Data:         []string{runAudioAplay},
 		Timeout:      3 * time.Minute,
 		SoftwareDeps: []string{"vm_host", "chrome", "dlc"},

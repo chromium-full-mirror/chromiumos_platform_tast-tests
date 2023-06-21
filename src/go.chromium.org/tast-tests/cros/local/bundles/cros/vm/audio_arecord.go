@@ -34,7 +34,7 @@ func init() {
 		Desc:         "Check that capture devices are listed correctly",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "normanbt@google.com"},
 		BugComponent: "b:1332660",
-		Attr:         []string{"group:mainline", "group:audio", "group:cq-medium", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "group:audio", "group:cq-medium"},
 		Data:         []string{runAudioArecord},
 		Timeout:      3 * time.Minute,
 		SoftwareDeps: []string{"vm_host", "chrome", "dlc"},
