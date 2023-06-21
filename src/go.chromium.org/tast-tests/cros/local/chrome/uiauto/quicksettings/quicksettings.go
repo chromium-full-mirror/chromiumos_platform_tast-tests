@@ -73,6 +73,21 @@ func clickAndWaitForAnimation(ctx context.Context, tconn *chrome.TestConn, node 
 	return nil
 }
 
+// Init configures the package with the correct value of feature QsRevamp,
+// depending on its state in chrome. The state might vary because the feature
+// flag default was flipped in a chrome uprev, or because a test explicitly
+// opted-in or opted-out of the feature. Returns a cleanup function which
+// callers should defer.
+func Init(ctx context.Context, tconn *chrome.TestConn) (func(), error) {
+	var qs bool
+	if err := tconn.Call(ctx, &qs,
+		"tast.promisify(chrome.autotestPrivate.isFeatureEnabled)", "QsRevamp"); err != nil {
+		return nil, errors.Wrap(err, "failed to get QsRevamp feature state")
+	}
+	qsRevampEnabled = qs
+	return func() { qsRevampEnabled = false }, nil
+}
+
 // SetQsRevampEnabled configures the package to assume the feature QsRevamp is
 // either enabled or disabled. Returns a cleanup function which callers should
 // defer.

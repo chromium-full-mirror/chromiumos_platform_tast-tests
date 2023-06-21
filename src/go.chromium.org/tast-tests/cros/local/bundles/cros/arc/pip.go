@@ -118,7 +118,7 @@ func init() {
 			Val:               pipContainerTests,
 			ExtraAttr:         []string{"group:mainline", "informational"},
 			ExtraSoftwareDeps: []string{"android_container"},
-			Fixture:           "arcBooted",
+			Fixture:           "arcBootedQsRevampEnabled",
 		}, {
 			Name:              "lacros",
 			Val:               pipContainerLacrosTests,
@@ -130,7 +130,7 @@ func init() {
 			Val:               pipVMTests,
 			ExtraAttr:         []string{"group:mainline", "informational"},
 			ExtraSoftwareDeps: []string{"android_vm"},
-			Fixture:           "arcBooted",
+			Fixture:           "arcBootedQsRevampEnabled",
 		}, {
 			Name:              "lacros_vm",
 			Val:               pipVMLacrosTests,
@@ -153,6 +153,12 @@ func PIP(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
+
+	cleanup, err := quicksettings.Init(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to init quicksettings: ", err)
+	}
+	defer cleanup()
 
 	a := s.FixtValue().(*arc.PreData).ARC
 	dev := s.FixtValue().(*arc.PreData).UIDevice
@@ -421,7 +427,7 @@ func testPIPGravityQuickSettings(ctx context.Context, cr *chrome.Chrome, tconn *
 		return errors.Wrap(err, "the PIP window must be along the right edge of the display")
 	}
 
-	// 1) The PIP window should move to the left of the Quick Settings area.
+	// 1) The PIP window should move out of the way of the Quick Settings area.
 
 	testing.ContextLog(ctx, "Showing Quick Settings area")
 	if err := quicksettings.Show(ctx, tconn); err != nil {
@@ -434,10 +440,16 @@ func testPIPGravityQuickSettings(ctx context.Context, cr *chrome.Chrome, tconn *
 	if err != nil {
 		return errors.Wrap(err, "failed to get quick settings rect")
 	}
-	statusLeftPX := int(math.Round(float64(statusRectDP.Left) * dispMode.DeviceScaleFactor))
 
-	if err = waitForNewBoundsWithMargin(ctx, tconn, statusLeftPX-collisionWindowWorkAreaInsetsPX, right, dispMode.DeviceScaleFactor, pipPositionErrorMarginPX); err != nil {
-		return errors.Wrap(err, "the PIP window must move to the left when Quick Settings gets shown")
+	pipRectDP, err := waitForNewBounds(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get pip rect")
+	}
+
+	// Which direction the PIP window moves to avoid quick settings depends on
+	// the screen size. Just ensure that the two windows do not overlap.
+	if !statusRectDP.Intersection(pipRectDP).Empty() {
+		return errors.Errorf("quick settings bounds %+v intersects with PIP bounds %+v", statusRectDP, pipRectDP)
 	}
 
 	// 2) The PIP window should move close the right border when Quick Settings is dismissed.
@@ -886,4 +898,22 @@ func waitForNewBoundsWithMargin(ctx context.Context, tconn *chrome.TestConn, exp
 
 		return nil
 	}, &testing.PollOptions{Timeout: 10 * time.Second})
+}
+
+// waitForNewBounds waits until Chrome animation completes and returns the bounds
+// of the PIP window in DP.
+func waitForNewBounds(ctx context.Context, tconn *chrome.TestConn) (coords.Rect, error) {
+	var rect coords.Rect
+	err := testing.Poll(ctx, func(ctx context.Context) error {
+		window, err := getPIPWindow(ctx, tconn)
+		if err != nil {
+			return errors.New("failed to Get PIP window")
+		}
+		if window.IsAnimating {
+			return errors.New("the window is still animating")
+		}
+		rect = window.BoundsInRoot
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second})
+	return rect, err
 }
