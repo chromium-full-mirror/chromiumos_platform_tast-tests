@@ -63,10 +63,6 @@ func OobeArc(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to go through the oobe flow: ", err)
 	}
 
-	if err := oobeutil.CompleteTabletOnboarding(ctx, ui); err != nil {
-		s.Fatal("Failed to test oobe Arc tablet flow: ", err)
-	}
-
 	s.Log("Verify Play Store is On")
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		playStoreState, err := optin.GetPlayStoreState(ctx, tconn)

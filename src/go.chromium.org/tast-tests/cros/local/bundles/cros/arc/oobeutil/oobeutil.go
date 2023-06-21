@@ -15,12 +15,20 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/state"
+
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // CompleteOnboardingFlow function goes through the onboarding flow screens.
 func CompleteOnboardingFlow(ctx context.Context, ui *uiauto.Context) error {
+	const (
+		termTimeout            = 30 * time.Second
+		anyDialogTimeout       = 5 * time.Second
+		anyActionButtonTimeout = 1 * time.Minute
+	)
 	consolidatedConsentHeader := nodewith.Name("Review these terms and control your data").Role(role.Dialog)
-	if err := ui.WithTimeout(30 * time.Second).WaitUntilExists(consolidatedConsentHeader)(ctx); err != nil {
+	if err := ui.WithTimeout(termTimeout).WaitUntilExists(consolidatedConsentHeader)(ctx); err != nil {
 		return err
 	}
 
@@ -37,34 +45,51 @@ func CompleteOnboardingFlow(ctx context.Context, ui *uiauto.Context) error {
 		}
 	}
 
-	skip := nodewith.Name("Skip").Role(role.Button)
-	noThanks := nodewith.Name("No thanks").Role(role.Button)
-	next := nodewith.Name("Next").Role(role.Button)
-	getStarted := nodewith.Name("Get started").Role(role.Button)
-	syncAccept := nodewith.NameRegex(regexp.MustCompile("Accept and continue|Turn on sync")).Role(role.Button)
-	err = uiauto.Combine("go through the oobe flow screens after the consolidated consent screen",
+	if err := uiauto.Combine("accept and continue",
 		ui.WaitUntilExists(acceptAndContinue),
 		ui.LeftClickUntil(acceptAndContinue, ui.Gone(acceptAndContinue)),
-		uiauto.IfSuccessThen(ui.WithTimeout(60*time.Second).WaitUntilExists(syncAccept), ui.LeftClick(syncAccept)),
-		uiauto.IfSuccessThen(ui.WithTimeout(10*time.Second).WaitUntilExists(skip), ui.LeftClickUntil(skip, ui.Gone(skip))),
-		uiauto.IfSuccessThen(ui.WithTimeout(10*time.Second).WaitUntilExists(skip), ui.LeftClick(skip)),
-		uiauto.IfSuccessThen(ui.WithTimeout(60*time.Second).WaitUntilExists(noThanks), ui.LeftClickUntil(noThanks, ui.Gone(noThanks))),
-		uiauto.IfSuccessThen(ui.WithTimeout(60*time.Second).WaitUntilExists(noThanks), ui.LeftClick(noThanks)),
-		uiauto.IfSuccessThen(ui.WithTimeout(10*time.Second).WaitUntilExists(next), ui.LeftClick(next)),
-		uiauto.IfSuccessThen(ui.WithTimeout(10*time.Second).WaitUntilExists(getStarted), ui.LeftClick(getStarted)),
-	)(ctx)
-	return err
-}
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to accept terms")
+	}
 
-// CompleteTabletOnboarding function goes through the the tablet specific oobe screens
-func CompleteTabletOnboarding(ctx context.Context, ui *uiauto.Context) error {
-	next := nodewith.Name("Next").Role(role.Button)
-	getStarted := nodewith.Name("Get started").Role(role.Button)
-	err := uiauto.Combine("go through the tablet specific flow",
-		uiauto.IfSuccessThen(ui.WithTimeout(30*time.Second).WaitUntilExists(next), ui.LeftClickUntil(next, ui.Gone(next))),
-		uiauto.IfSuccessThen(ui.WithTimeout(30*time.Second).WaitUntilExists(next), ui.LeftClickUntil(next, ui.Gone(next))),
-		uiauto.IfSuccessThen(ui.WithTimeout(30*time.Second).WaitUntilExists(next), ui.LeftClick(next)),
-		uiauto.IfSuccessThen(ui.WithTimeout(30*time.Second).WaitUntilExists(getStarted), ui.LeftClick(getStarted)),
-	)(ctx)
-	return err
+	anyDialog := nodewith.First().Role(role.Dialog)
+	anyActionButton := nodewith.NameRegex(regexp.MustCompile(
+		"Skip|" +
+			"No thanks|" +
+			"Next|" +
+			"Accept and continue|" +
+			"Turn on sync|" +
+			"Get started")).First().Role(role.Button)
+
+	lastActionTime := time.Now()
+	for {
+		if err := ui.Exists(anyActionButton)(ctx); err == nil {
+			// Some action button is detected. Click it
+			testing.ContextLog(ctx, "Detected action button")
+			if err := ui.LeftClickUntil(anyActionButton, ui.Gone(anyActionButton))(ctx); err != nil {
+				return errors.Wrap(err, "failed to click button")
+			}
+
+			testing.ContextLog(ctx, "Action button has been clicked")
+			lastActionTime = time.Now()
+			continue
+		}
+
+		if err := ui.WithTimeout(anyDialogTimeout).WaitUntilExists(anyDialog)(ctx); err == nil {
+			// Some dialog is still shown.
+			if time.Since(lastActionTime) > anyActionButtonTimeout {
+				return errors.New("failed to detect action button")
+			}
+			continue
+		}
+
+		// Double sure any dialog is gone.
+		if err := ui.Gone(anyDialog)(ctx); err != nil {
+			return errors.Wrap(err, "failed to confirm dialog is gone")
+		}
+
+		break
+	}
+
+	return nil
 }

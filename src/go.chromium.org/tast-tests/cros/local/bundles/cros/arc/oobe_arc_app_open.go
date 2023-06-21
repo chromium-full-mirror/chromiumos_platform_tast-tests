@@ -78,19 +78,6 @@ func OobeArcAppOpen(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to go through the oobe flow: ", err)
 	}
 
-	tabletMode, err := ash.TabletModeEnabled(ctx, tconn)
-	if err != nil {
-		s.Fatal("Failed to check if tablet mode is enabled: ", err)
-	}
-
-	s.Log("Tablet mode state: ", tabletMode)
-	// Go through the the tablet specific oobe screens.
-	if tabletMode {
-		if err := oobeutil.CompleteTabletOnboarding(ctx, ui); err != nil {
-			s.Fatal("Failed to test oobe Arc tablet flow: ", err)
-		}
-	}
-
 	// Setup ARC.
 	a, err := arc.New(ctx, s.OutDir())
 	if err != nil {
