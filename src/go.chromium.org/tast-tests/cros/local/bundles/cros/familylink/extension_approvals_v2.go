@@ -24,9 +24,9 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ExtensionApprovalsV2,
-		LacrosStatus: testing.LacrosVariantNeeded,
+		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks if Unicorn user can add extension with parent permission in the V2 UI",
-		Contacts:     []string{"chromeos-sw-engprod@google.com", "courtneywong@chromium.org", "cros-families-eng+test@google.com"},
+		Contacts:     []string{"chromeos-sw-engprod@google.com", "cros-families-eng+test@google.com", "courtneywong@chromium.org"},
 		// ChromeOS > Software > Family > Parental controls
 		BugComponent: "b:1090157",
 		Attr:         []string{"group:mainline", "informational"},
@@ -38,7 +38,15 @@ func init() {
 			"family.parentEmail",
 			"family.parentPassword",
 		},
-		Fixture: "familyLinkUnicornLoginWithExtensionApprovalsV2",
+		Params: []testing.Param{{
+			Val:     browser.TypeAsh,
+			Fixture: "familyLinkUnicornLoginWithExtensionApprovalsV2",
+		}, {
+			Name:              "lacros",
+			ExtraSoftwareDeps: []string{"lacros"},
+			Val:               browser.TypeLacros,
+			Fixture:           "familyLinkUnicornLoginWithLacrosAndExtensionApprovalsV2",
+		}},
 	})
 }
 
@@ -58,14 +66,12 @@ func ExtensionApprovalsV2(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create test API connection")
 	}
 
-	// TODO(b/279664134): Remove passing only Ash in here when Lacros is enabled for Extension Approvals V2.
-	if err := familylink.WaitForBoolPrefValueFromAshOrLacros(ctx, tconn, browser.TypeAsh, "profile.managed.extensions_may_request_permissions", true, 4*time.Minute); err != nil {
+	if err := familylink.WaitForBoolPrefValueFromAshOrLacros(ctx, tconn, s.Param().(browser.Type), "profile.managed.extensions_may_request_permissions", true, 4*time.Minute); err != nil {
 		s.Fatal("Failed to wait for pref: ", err)
 	}
 
 	// Set up browser.
-	// TODO(b/279664134): Remove passing only Ash in here when Lacros is enabled for Extension Approvals V2.
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
 	if err != nil {
 		s.Fatal("Failed to set up browser: ", err)
 	}

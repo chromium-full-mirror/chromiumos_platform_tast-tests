@@ -74,7 +74,7 @@ func init() {
 		Name:     "familyLinkUnicornLoginWithLacros",
 		Desc:     "Supervised Family Link user login with Unicorn account",
 		Contacts: []string{"galenemco@chromium.org", "cros-families-eng+test@google.com"},
-		Impl:     NewFamilyLinkFixtureLacros("family.parentEmail", "family.parentPassword", "family.unicornEmail", "family.unicornPassword", true),
+		Impl:     NewFamilyLinkFixtureLacros("family.parentEmail", "family.parentPassword", "family.unicornEmail", "family.unicornPassword", true, chrome.LacrosDisableFeatures("LocalExtensionApprovalsV2")),
 		Vars: []string{
 			"family.parentEmail",
 			"family.parentPassword",
@@ -261,6 +261,25 @@ func init() {
 		Desc:     "Supervised Family Link user login with Unicorn account and local extension approvals V2 enabled",
 		Contacts: []string{"courtneywong@chromium.org", "cros-families-eng+test@google.com"},
 		Impl:     NewFamilyLinkFixture("family.parentEmail", "family.parentPassword", "family.unicornEmail", "family.unicornPassword", true, chrome.EnableFeatures("LocalExtensionApprovalsV2")),
+		Vars: []string{
+			"family.parentEmail",
+			"family.parentPassword",
+			"family.unicornEmail",
+			"family.unicornPassword",
+		},
+		SetUpTimeout:    chrome.GAIALoginChildTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  resetTimeout,
+		PostTestTimeout: resetTimeout,
+	})
+
+	// TODO(b/282026286): Clean up this fixture when V2 is fully launched.
+	testing.AddFixture(&testing.Fixture{
+		Name:     "familyLinkUnicornLoginWithLacrosAndExtensionApprovalsV2",
+		Desc:     "Supervised Family Link user login with Unicorn account and local extension approvals V2 enabled",
+		Contacts: []string{"cros-families-eng+test@google.com", "courtneywong@chromium.org"},
+		Impl:     NewFamilyLinkFixtureLacros("family.parentEmail", "family.parentPassword", "family.unicornEmail", "family.unicornPassword", true, chrome.EnableFeatures("LocalExtensionApprovalsV2")),
 		Vars: []string{
 			"family.parentEmail",
 			"family.parentPassword",
