@@ -43,15 +43,6 @@ func init() {
 			Fixture:           "lacros",
 			ExtraSoftwareDeps: []string{"lacros_unstable"},
 			ExtraAttr:         []string{"informational"},
-		}, {
-			Name:              "only",
-			Fixture:           "lacrosOnly",
-			ExtraSoftwareDeps: []string{"lacros_stable"},
-		}, {
-			Name:              "only_unstable",
-			Fixture:           "lacrosOnly",
-			ExtraSoftwareDeps: []string{"lacros_unstable"},
-			ExtraAttr:         []string{"informational"},
 		}},
 		Vars: screenshot.ScreenDiffVars,
 	})

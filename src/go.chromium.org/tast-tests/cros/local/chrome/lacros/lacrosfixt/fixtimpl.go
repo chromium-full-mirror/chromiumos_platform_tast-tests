@@ -157,33 +157,6 @@ func init() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 
-	// lacrosPrimary is a fixture to bring up Lacros as a primary browser from the rootfs partition by default.
-	// This is DEPRECATED. Use the "lacros" fixture instead.
-	testing.AddFixture(&testing.Fixture{
-		Name:     "lacrosPrimary",
-		Desc:     "Lacros Chrome from rootfs as a primary browser",
-		Contacts: []string{"hyungtaekim@chromium.org", "lacros-team@google.com"},
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return NewConfig(Mode(lacros.LacrosPrimary)).Opts()
-		}),
-		SetUpTimeout:    chrome.LoginTimeout + 1*time.Minute,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	// lacrosOnly is a fixture to bring up Lacros as the only browser from the rootfs partition by default.
-	testing.AddFixture(&testing.Fixture{
-		Name:     "lacrosOnly",
-		Desc:     "Lacros Chrome from rootfs as the only browser",
-		Contacts: []string{"hyungtaekim@chromium.org", "lacros-team@google.com"},
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return NewConfig(Mode(lacros.LacrosOnly)).Opts()
-		}),
-		SetUpTimeout:    chrome.LoginTimeout + 1*time.Minute,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
 	// lacrosDisableSync is a fixture to bring up Lacros as the only browser from the rootfs partition by default, with disabled app sync.
 	testing.AddFixture(&testing.Fixture{
 		Name:     "lacrosDisableSync",
@@ -298,19 +271,6 @@ func init() {
 		Contacts: []string{"iby@google.com"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return NewConfig(ChromeOptions(chrome.EnableStackSampledMetrics())).Opts()
-		}),
-		SetUpTimeout:    chrome.LoginTimeout + 1*time.Minute,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	// lacrosLogin is used to test Lacros with a guest user login.
-	testing.AddFixture(&testing.Fixture{
-		Name:     "lacrosGuest",
-		Desc:     "Lacros Chrome logged into a guest user session",
-		Contacts: []string{"lacros-team@google.com"},
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return NewConfig(Mode(lacros.LacrosPrimary), KeepAlive(false), ChromeOptions(chrome.GuestLogin())).Opts()
 		}),
 		SetUpTimeout:    chrome.LoginTimeout + 1*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
