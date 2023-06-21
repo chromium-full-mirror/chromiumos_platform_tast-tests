@@ -104,6 +104,7 @@ func DetachableDevScreen(ctx context.Context, s *testing.State) {
 	const (
 		debugInfoScreen   string = `VbDisplayDebugInfo:(\n|.)*?TPM:[^\n\r]*`
 		advancedOptScreen string = `vb2ex_display_ui: screen=0x120`
+		usbPartitionInfo  string = `\/dev\/sd[a-z][0-9](.)*(ChromeOS root fs|ChromeOS kernel)[\r\n]`
 	)
 
 	devWarningScreen := []testCase{
@@ -155,10 +156,6 @@ func DetachableDevScreen(ctx context.Context, s *testing.State) {
 		if err := h.DUT.Conn().CommandContext(ctx, "crossystem", "dev_boot_usb=1").Run(ssh.DumpLogOnError); err != nil {
 			s.Fatal("Failed to enable dev_boot_usb: ", err)
 		}
-		s.Log("Enabling USB connection to DUT")
-		if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
-			s.Fatal("Failed to enable USB: ", err)
-		}
 		// Power cycle the DUT to clear the firmware log, so that records prior
 		// to this test are wiped.
 		if err := h.Servo.SetPowerState(ctx, servo.PowerStateOff); err != nil {
@@ -186,6 +183,21 @@ func DetachableDevScreen(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to enter dev screen: ", err)
 			}
 		}
+
+		// Enable USB connection when DUT has reached the firmware
+		// screen to be tested.
+		s.Log("Enabling USB connection to DUT")
+		if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
+			s.Fatal("Failed to enable USB: ", err)
+		}
+		usbMuxState, err := h.Servo.GetUSBMuxState(ctx)
+		if err != nil {
+			s.Fatal("Failed to check usb mux state: ", err)
+		}
+		if usbMuxState != servo.USBMuxDUT {
+			s.Fatalf("Expected dut_sees_usb, but got: %s", usbMuxState)
+		}
+
 		if step.trigger.pressKeyOrButton != "" {
 			if err := testTriggerPressKeyOrButton(ctx, h, step.trigger.pressKeyOrButton); err != nil {
 				s.Fatalf("Failed to press %s: %v", step.trigger.pressKeyOrButton, err)
@@ -223,7 +235,17 @@ func DetachableDevScreen(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to check boot device type: ", err)
 		}
 		if bootFromUSB != step.bootFromUSB {
-			s.Fatalf("Expected boot from device: %s, but got: %s", bootedDeviceType(step.bootFromUSB), bootedDeviceType(bootFromUSB))
+			var foundBootableUSB bool
+			out, err := h.Reporter.CommandOutput(ctx, "fdisk", "-l")
+			if err != nil {
+				s.Log("Failed to get fdisk output: ", err)
+			}
+			re := regexp.MustCompile(usbPartitionInfo)
+			usbPartitions := re.FindStringSubmatch(string(out))
+			if usbPartitions != nil {
+				foundBootableUSB = true
+			}
+			s.Fatalf("Expected boot from device: %s, but got: %s, found bootable usb: %t", bootedDeviceType(step.bootFromUSB), bootedDeviceType(bootFromUSB), foundBootableUSB)
 		}
 		s.Log("Checking for DUT's boot mode")
 		currentMode, err := h.Reporter.CurrentBootMode(ctx)
