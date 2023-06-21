@@ -52,15 +52,18 @@ var playBillingWebApk = webapk.WebAPK{
 var DataFiles = append(pwaFiles, playBillingWebApk.ApkDataPath)
 
 func init() {
+	fixtureConfig := arc.DefaultBootedFixtureConfig()
+	fixtureConfig.PlayStoreOptin = true
+	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{
+				chrome.ExtraArgs(append([]string{"--disable-popup-blocking"}, arc.DisableSyncFlags()...)...),
+				chrome.GAIALoginPool(s.RequiredVar(accountPool))}, nil
+		}
 	testing.AddFixture(&testing.Fixture{
 		Name:     "arcBootedForPlayBilling",
 		Desc:     "The fixture starts chrome with ARC supported used for Play Billing tests and disables popup blocking",
 		Contacts: []string{"benreich@chromium.org", "jshikaram@chromium.org"},
-		Impl: arc.NewArcBootedWithPlayStoreFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ExtraArgs(append([]string{"--disable-popup-blocking"}, arc.DisableSyncFlags()...)...),
-				chrome.GAIALoginPool(s.RequiredVar(accountPool))}, nil
-		}),
+		Impl: arc.NewArcBootedFixture(fixtureConfig),
 		// Add two minutes to setup time to allow extra Play Store UI operations.
 		SetUpTimeout: chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
 		ResetTimeout: chrome.ResetTimeout,

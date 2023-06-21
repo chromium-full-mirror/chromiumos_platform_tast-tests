@@ -88,17 +88,20 @@ func init() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 
+	fixtureConfig := arc.DefaultBootedFixtureConfig()
+	fixtureConfig.PlayStoreOptin = true
+	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{
+				chrome.EnableFeatures("MediaAppPhotosIntegrationImage:minPhotosVersionForImage/1.0"),
+				chrome.ExtraArgs(arc.DisableSyncFlags()...),
+				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault"))}, nil
+		}
 	testing.AddFixture(&testing.Fixture{
 		Name:     ArcBootedWithGalleryPhotosImageFeature,
 		Desc:     "ARC is booted with the MediaAppPhotosIntegrationImage feature flag enabled",
 		Contacts: []string{"bugsnash@chromium.org", "jinrongwu@google.com"},
 		Vars:     []string{"ui.gaiaPoolDefault"},
-		Impl: arc.NewArcBootedWithPlayStoreFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.EnableFeatures("MediaAppPhotosIntegrationImage:minPhotosVersionForImage/1.0"),
-				chrome.ExtraArgs(arc.DisableSyncFlags()...),
-				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault"))}, nil
-		}),
+		Impl: arc.NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + arc.BootTimeout + ui.StartTimeout,
 		ResetTimeout:    arc.ResetTimeout,
 		PostTestTimeout: arc.PostTestTimeout,

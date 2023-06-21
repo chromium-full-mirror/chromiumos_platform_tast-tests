@@ -48,11 +48,14 @@ func benchmarkARCFixtureOptions(ctx context.Context, s *testing.FixtState) ([]ch
 }
 
 func init() {
+	fixtureConfig := arc.DefaultBootedFixtureConfig()
+	fixtureConfig.PlayStoreOptin = true
+	fixtureConfig.FOpts = benchmarkARCFixtureOptions
 	testing.AddFixture(&testing.Fixture{
 		Name:     BenchmarkARCFixture,
 		Desc:     "The fixture starts chrome with ARC supported",
 		Contacts: []string{"xliu@cienet.com"},
-		Impl:     arc.NewArcBootedWithPlayStoreFixture(benchmarkARCFixtureOptions),
+		Impl:     arc.NewArcBootedFixture(fixtureConfig),
 		// Add two minutes to setup time to allow extra Play Store UI operations.
 		SetUpTimeout: chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
 		ResetTimeout: chrome.ResetTimeout,

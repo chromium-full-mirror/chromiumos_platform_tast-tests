@@ -36,15 +36,15 @@ func init() {
 			"niwa@chromium.org",
 			"arcvm-eng-team@google.com",
 		},
-		Impl: NewArcBootedFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{chrome.ARCEnabled(), chrome.UnRestrictARCCPU()}, nil
-		}),
+		Impl:            NewArcBootedFixture(DefaultBootedFixtureConfig()),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
 
+	fixtureConfig := DefaultBootedFixtureConfig()
+	fixtureConfig.EnableUIAutomator = false
 	// arcBootedWithoutUIAutomator is a fixture similar to arcBooted. The only difference from arcBooted is that UI Automator is not enabled.
 	testing.AddFixture(&testing.Fixture{
 		Name: "arcBootedWithoutUIAutomator",
@@ -53,15 +53,22 @@ func init() {
 			"niwa@chromium.org",
 			"arcvm-eng-team@google.com",
 		},
-		Impl: NewArcBootedWithoutUIAutomatorFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{chrome.ARCEnabled(), chrome.UnRestrictARCCPU()}, nil
-		}),
+		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout,
 		ResetTimeout:    ResetTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
 
+	fixtureConfig = DefaultBootedFixtureConfig()
+	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+		return []chrome.Option{
+			chrome.ARCEnabled(),
+			chrome.UnRestrictARCCPU(),
+			chrome.ExtraArgs(DisableSyncFlags()...),
+			chrome.ExtraArgs("--disable-features=FirmwareUpdaterApp"),
+		}, nil
+	}
 	// arcBootedWithDisableSyncFlags is a fixture similar to arcBooted. The only difference from arcBooted is that ARC content sync
 	// and Chrome firmware updates are disabled to avoid noise during power/performance measurements.
 	testing.AddFixture(&testing.Fixture{
@@ -71,20 +78,22 @@ func init() {
 			"niwa@chromium.org",
 			"arcvm-eng-team@google.com",
 		},
-		Impl: NewArcBootedFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ARCEnabled(),
-				chrome.UnRestrictARCCPU(),
-				chrome.ExtraArgs(DisableSyncFlags()...),
-				chrome.ExtraArgs("--disable-features=FirmwareUpdaterApp"),
-			}, nil
-		}),
+		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
 
+	fixtureConfig = DefaultBootedFixtureConfig()
+	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+		return []chrome.Option{
+			chrome.ARCEnabled(),
+			chrome.UnRestrictARCCPU(),
+			chrome.ExtraArgs(DisableSyncFlags()...),
+			chrome.ExtraArgs("--disable-features=ArcExternalStorageAccess", "--disable-features=FirmwareUpdaterApp"),
+		}, nil
+	}
 	// arcBootedWithDisableExternalStorage is a fixture similar to arcBootedWithDisableSyncFlags. The only difference from
 	// arcBootedWithDisableSyncFlags is that ARC external storage access is disabled to avoid noise during power/performance
 	// measurements for power/performance tests that do not require external storage access.
@@ -95,20 +104,21 @@ func init() {
 			"alanding@chromium.org",
 			"arc-performance@google.com",
 		},
-		Impl: NewArcBootedFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ARCEnabled(),
-				chrome.UnRestrictARCCPU(),
-				chrome.ExtraArgs(DisableSyncFlags()...),
-				chrome.ExtraArgs("--disable-features=ArcExternalStorageAccess", "--disable-features=FirmwareUpdaterApp"),
-			}, nil
-		}),
+		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
 
+	fixtureConfig = DefaultBootedFixtureConfig()
+	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+		return []chrome.Option{
+			chrome.ARCEnabled(),
+			chrome.ExtraArgs(DisableSyncFlags()...),
+			chrome.ExtraArgs("--disable-features=ArcExternalStorageAccess", "--disable-features=FirmwareUpdaterApp"),
+		}, nil
+	}
 	// arcBootedRestricted is a fixture similar to arcBootedWithDisableExternalStorage. The only difference
 	// from arcBootedWithDisableExternalStorage is that CGroups is used to limit the CPU time of ARC.
 	testing.AddFixture(&testing.Fixture{
@@ -118,19 +128,22 @@ func init() {
 			"alanding@chromium.org",
 			"arc-performance@google.com",
 		},
-		Impl: NewArcBootedFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ARCEnabled(),
-				chrome.ExtraArgs(DisableSyncFlags()...),
-				chrome.ExtraArgs("--disable-features=ArcExternalStorageAccess", "--disable-features=FirmwareUpdaterApp"),
-			}, nil
-		}),
+		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
 
+	fixtureConfig = DefaultBootedFixtureConfig()
+	fixtureConfig.PlayStoreOptin = true
+	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+		return []chrome.Option{
+			chrome.ExtraArgs(DisableSyncFlags()...),
+			chrome.UnRestrictARCCPU(),
+			chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+		}, nil
+	}
 	// arcBootedWithPlayStore is a fixture similar to arcBooted along with GAIA login and Play Store Optin.
 	testing.AddFixture(&testing.Fixture{
 		Name: "arcBootedWithPlayStore",
@@ -141,19 +154,23 @@ func init() {
 			"niwa@chromium.org",
 			"arcvm-eng-team@google.com",
 		},
-		Impl: NewArcBootedWithPlayStoreFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ExtraArgs(DisableSyncFlags()...),
-				chrome.UnRestrictARCCPU(),
-				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
-			}, nil
-		}),
+		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + BootTimeout + 2*time.Minute,
 		ResetTimeout:    ResetTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
 
+	fixtureConfig = DefaultBootedFixtureConfig()
+	fixtureConfig.PlayStoreOptin = true
+	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+		return []chrome.Option{
+			chrome.EnableFeatures("QsRevamp"),
+			chrome.ExtraArgs(DisableSyncFlags()...),
+			chrome.UnRestrictARCCPU(),
+			chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+		}, nil
+	}
 	// arcBootedWithPlayStoreQsRevampEnabled is similar to fixture arcBootedWithPlayStore and has quick settings revamp enabled.
 	testing.AddFixture(&testing.Fixture{
 		Name: "arcBootedWithPlayStoreQsRevampEnabled",
@@ -163,20 +180,23 @@ func init() {
 			"jamescook@google.com",
 			"cros-status-area-eng@google.com",
 		},
-		Impl: NewArcBootedWithPlayStoreFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.EnableFeatures("QsRevamp"),
-				chrome.ExtraArgs(DisableSyncFlags()...),
-				chrome.UnRestrictARCCPU(),
-				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
-			}, nil
-		}),
+		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + BootTimeout + 2*time.Minute,
 		ResetTimeout:    ResetTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
 
+	fixtureConfig = DefaultBootedFixtureConfig()
+	fixtureConfig.PlayStoreOptin = true
+	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+		return []chrome.Option{
+			chrome.DisableFeatures("Floss"),
+			chrome.ExtraArgs(DisableSyncFlags()...),
+			chrome.UnRestrictARCCPU(),
+			chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+		}, nil
+	}
 	// arcBootedWithPlayStoreAndBluetoothBlueZ is a fixture similar to arcBootedWithPlayStore along with Bluetooth-BlueZ is enabled.
 	testing.AddFixture(&testing.Fixture{
 		Name: "arcBootedWithPlayStoreAndBluetoothBlueZ",
@@ -188,20 +208,23 @@ func init() {
 			"kinwang.lao@cienet.com",
 			"cienet-development@googlegroups.com",
 		},
-		Impl: NewArcBootedWithPlayStoreFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.DisableFeatures("Floss"),
-				chrome.ExtraArgs(DisableSyncFlags()...),
-				chrome.UnRestrictARCCPU(),
-				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
-			}, nil
-		}),
+		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + BootTimeout + 2*time.Minute,
 		ResetTimeout:    ResetTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
 
+	fixtureConfig = DefaultBootedFixtureConfig()
+	fixtureConfig.PlayStoreOptin = true
+	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+		return []chrome.Option{
+			chrome.EnableFeatures("Floss"),
+			chrome.ExtraArgs(DisableSyncFlags()...),
+			chrome.UnRestrictARCCPU(),
+			chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
+		}, nil
+	}
 	// arcBootedWithPlayStoreAndBluetoothFloss is a fixture similar to arcBootedWithPlayStore along with Bluetooth-Floss is enabled.
 	testing.AddFixture(&testing.Fixture{
 		Name: "arcBootedWithPlayStoreAndBluetoothFloss",
@@ -213,20 +236,21 @@ func init() {
 			"kinwang.lao@cienet.com",
 			"cienet-development@googlegroups.com",
 		},
-		Impl: NewArcBootedWithPlayStoreFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.EnableFeatures("Floss"),
-				chrome.ExtraArgs(DisableSyncFlags()...),
-				chrome.UnRestrictARCCPU(),
-				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
-			}, nil
-		}),
+		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + BootTimeout + 2*time.Minute,
 		ResetTimeout:    ResetTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
 
+	fixtureConfig = DefaultBootedFixtureConfig()
+	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+		return []chrome.Option{
+			chrome.ARCEnabled(),
+			chrome.UnRestrictARCCPU(),
+			chrome.ExtraArgs("--force-tablet-mode=touch_view", "--enable-virtual-keyboard"),
+		}, nil
+	}
 	// arcBootedInTabletMode is a fixture similar to arcBooted. The only difference from arcBooted is that Chrome is launched in tablet mode in this fixture.
 	testing.AddFixture(&testing.Fixture{
 		Name: "arcBootedInTabletMode",
@@ -235,19 +259,22 @@ func init() {
 			"niwa@chromium.org",
 			"arcvm-eng-team@google.com",
 		},
-		Impl: NewArcBootedFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ARCEnabled(),
-				chrome.UnRestrictARCCPU(),
-				chrome.ExtraArgs("--force-tablet-mode=touch_view", "--enable-virtual-keyboard"),
-			}, nil
-		}),
+		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
 
+	fixtureConfig = DefaultBootedFixtureConfig()
+	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+		return []chrome.Option{chrome.ARCEnabled(), chrome.UnRestrictARCCPU(), chrome.ExtraArgs(
+			"--vmodule=" + strings.Join([]string{
+				"*/media/gpu/chromeos/*=2",
+				"*/media/gpu/vaapi/*=2",
+				"*/media/gpu/v4l2/*=2",
+				"*/components/arc/video_accelerator/*=2"}, ","))}, nil
+	}
 	// arcBootedWithVideoLogging is a fixture similar to arcBooted, but with additional Chrome video logging enabled.
 	testing.AddFixture(&testing.Fixture{
 		Name: "arcBootedWithVideoLogging",
@@ -256,20 +283,21 @@ func init() {
 			"niwa@chromium.org",
 			"arcvm-eng-team@google.com",
 		},
-		Impl: NewArcBootedFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{chrome.ARCEnabled(), chrome.UnRestrictARCCPU(), chrome.ExtraArgs(
-				"--vmodule=" + strings.Join([]string{
-					"*/media/gpu/chromeos/*=2",
-					"*/media/gpu/vaapi/*=2",
-					"*/media/gpu/v4l2/*=2",
-					"*/components/arc/video_accelerator/*=2"}, ","))}, nil
-		}),
+		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
 
+	fixtureConfig = DefaultBootedFixtureConfig()
+	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+		return []chrome.Option{
+			chrome.ARCEnabled(),
+			chrome.UnRestrictARCCPU(),
+			chrome.ExtraArgs("--enable-features=OutOfProcessVideoDecoding"),
+		}, nil
+	}
 	// arcBootedWithOutOfProcessVideoDecoding is a fixture similar to arcBooted. The only difference from arcBooted is that Chrome is launched with out-of-process
 	// video decoding in this fixture.
 	testing.AddFixture(&testing.Fixture{
@@ -279,19 +307,23 @@ func init() {
 			"andrescj@chromium.org",
 			"chromeos-gfx-video@google.com",
 		},
-		Impl: NewArcBootedFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ARCEnabled(),
-				chrome.UnRestrictARCCPU(),
-				chrome.ExtraArgs("--enable-features=OutOfProcessVideoDecoding"),
-			}, nil
-		}),
+		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
 
+	fixtureConfig = DefaultBootedFixtureConfig()
+	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+		return []chrome.Option{chrome.ARCEnabled(), chrome.UnRestrictARCCPU(), chrome.ExtraArgs(
+			"--enable-features=OutOfProcessVideoDecoding",
+			"--vmodule="+strings.Join([]string{
+				"*/media/gpu/chromeos/*=2",
+				"*/media/gpu/vaapi/*=2",
+				"*/media/gpu/v4l2/*=2",
+				"*/components/arc/video_accelerator/*=2"}, ","))}, nil
+	}
 	// arcBootedWithVideoLoggingAndOutOfProcessVideoDecoding is a fixture similar to arcBootedWithVideoLogging, but Chrome is launched with out-of-process video
 	// decoding.
 	testing.AddFixture(&testing.Fixture{
@@ -301,15 +333,7 @@ func init() {
 			"andrescj@chromium.org",
 			"chromeos-gfx-video@google.com",
 		},
-		Impl: NewArcBootedFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{chrome.ARCEnabled(), chrome.UnRestrictARCCPU(), chrome.ExtraArgs(
-				"--enable-features=OutOfProcessVideoDecoding",
-				"--vmodule="+strings.Join([]string{
-					"*/media/gpu/chromeos/*=2",
-					"*/media/gpu/vaapi/*=2",
-					"*/media/gpu/v4l2/*=2",
-					"*/components/arc/video_accelerator/*=2"}, ","))}, nil
-		}),
+		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
 		PostTestTimeout: PostTestTimeout,
@@ -317,6 +341,16 @@ func init() {
 	})
 
 	// arcBootedWithVideoLoggingVD is a fixture similar to arcBootedWithVideoLogging, but with additional Chrome
+	fixtureConfig = DefaultBootedFixtureConfig()
+	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+		return []chrome.Option{chrome.ARCEnabled(), chrome.UnRestrictARCCPU(), chrome.ExtraArgs(
+			"--vmodule=" + strings.Join([]string{
+				"*/media/gpu/chromeos/*=2",
+				"*/media/gpu/vaapi/*=2",
+				"*/media/gpu/v4l2/*=2",
+				"*/components/arc/video_accelerator/*=2"}, ","))}, nil
+	}
+	fixtureConfig.ArcvmConfig = "!--video-decoder\n--video-decoder=libvda-vd\n"
 	// video logging enabled and the mojo::VideoDecoder stack enabled.
 	testing.AddFixture(&testing.Fixture{
 		Name: "arcBootedWithVideoLoggingVD",
@@ -324,20 +358,17 @@ func init() {
 		Contacts: []string{
 			"arcvm-eng-team@google.com",
 		},
-		Impl: NewArcBootedWithConfigFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{chrome.ARCEnabled(), chrome.UnRestrictARCCPU(), chrome.ExtraArgs(
-				"--vmodule=" + strings.Join([]string{
-					"*/media/gpu/chromeos/*=2",
-					"*/media/gpu/vaapi/*=2",
-					"*/media/gpu/v4l2/*=2",
-					"*/components/arc/video_accelerator/*=2"}, ","))}, nil
-		}, "!--video-decoder\n--video-decoder=libvda-vd\n"),
+		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
 
+	fixtureConfig = DefaultBootedFixtureConfig()
+	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+		return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(chrome.ARCEnabled(), chrome.UnRestrictARCCPU())).Opts()
+	}
 	// lacrosWithArcBooted is a fixture that combines the functionality of arcBooted and lacros.
 	testing.AddFixture(&testing.Fixture{
 		Name: "lacrosWithArcBooted",
@@ -346,15 +377,17 @@ func init() {
 			"cros-sw-perf@google.com",
 			"xiyuan@chromium.org",
 		},
-		Impl: NewArcBootedFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(chrome.ARCEnabled(), chrome.UnRestrictARCCPU())).Opts()
-		}),
+		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
 
+	fixtureConfig = DefaultBootedFixtureConfig()
+	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+		return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(chrome.ARCEnabled(), chrome.UnRestrictARCCPU(), chrome.ExtraArgs("--force-tablet-mode=touch_view", "--enable-virtual-keyboard"))).Opts()
+	}
 	// lacrosWithArcBootedInTabletMode is a fixture similar to lacrosWithArcBooted. The only difference is that Chrome is launched in tablet mode in this fixture.
 	testing.AddFixture(&testing.Fixture{
 		Name: "lacrosWithArcBootedInTabletMode",
@@ -363,15 +396,22 @@ func init() {
 			"cros-sw-perf@google.com",
 			"xiyuan@chromium.org",
 		},
-		Impl: NewArcBootedFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(chrome.ARCEnabled(), chrome.UnRestrictARCCPU(), chrome.ExtraArgs("--force-tablet-mode=touch_view", "--enable-virtual-keyboard"))).Opts()
-		}),
+		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
 
+	fixtureConfig = DefaultBootedFixtureConfig()
+	fixtureConfig.PlayStoreOptin = true
+	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+		return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
+			chrome.ARCEnabled(),
+			chrome.ExtraArgs(DisableSyncFlags()...),
+			chrome.UnRestrictARCCPU(),
+			chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")))).Opts()
+	}
 	// lacrosWithArcBootedAndPlayStore is a fixture that combines the functionality of arcBootedWithPlayStore and lacros.
 	testing.AddFixture(&testing.Fixture{
 		Name: "lacrosWithArcBootedAndPlayStore",
@@ -380,20 +420,22 @@ func init() {
 			"cros-sw-perf@google.com",
 			"xiyuan@chromium.org",
 		},
-		Vars: []string{"ui.gaiaPoolDefault"},
-		Impl: NewArcBootedWithPlayStoreFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
-				chrome.ARCEnabled(),
-				chrome.ExtraArgs(DisableSyncFlags()...),
-				chrome.UnRestrictARCCPU(),
-				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")))).Opts()
-		}),
+		Vars:            []string{"ui.gaiaPoolDefault"},
+		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + BootTimeout + 2*time.Minute,
 		ResetTimeout:    ResetTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
 
+	fixtureConfig = DefaultBootedFixtureConfig()
+	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+		return []chrome.Option{
+			chrome.ARCEnabled(),
+			chrome.UnRestrictARCCPU(),
+			chrome.ExtraArgs("--enable-features=ArcInputOverlayAlphaV2"),
+		}, nil
+	}
 	// arcBootedWithInputOverlay is a fixture similar to arcBooted but with the input overlay flag enabled.
 	testing.AddFixture(&testing.Fixture{
 		Name: "arcBootedWithInputOverlayAlphaV2",
@@ -403,19 +445,21 @@ func init() {
 			"pjlee@google.com",
 			"cuicuiruan@google.com",
 		},
-		Impl: NewArcBootedFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ARCEnabled(),
-				chrome.UnRestrictARCCPU(),
-				chrome.ExtraArgs("--enable-features=ArcInputOverlayAlphaV2"),
-			}, nil
-		}),
+		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
 
+	fixtureConfig = DefaultBootedFixtureConfig()
+	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+		return []chrome.Option{
+			chrome.ARCEnabled(),
+			chrome.UnRestrictARCCPU(),
+			chrome.EnableFeatures("PasspointARCSupport"),
+		}, nil
+	}
 	testing.AddFixture(&testing.Fixture{
 		Name: "arcBootedWithPasspoint",
 		Desc: "ARC is booted with kPasspointARCSupport feature enabled",
@@ -423,19 +467,21 @@ func init() {
 			"jasongustaman@google.com",
 			"cros-networking@google.com",
 		},
-		Impl: NewArcBootedFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ARCEnabled(),
-				chrome.UnRestrictARCCPU(),
-				chrome.EnableFeatures("PasspointARCSupport"),
-			}, nil
-		}),
+		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
 
+	fixtureConfig = DefaultBootedFixtureConfig()
+	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+		return []chrome.Option{
+			chrome.ARCEnabled(),
+			chrome.UnRestrictARCCPU(),
+			chrome.EnableFeatures("QsRevamp"),
+		}, nil
+	}
 	// arcBootedQsRevampEnabled is similar to fixture arcBooted and has quick settings revamp enabled.
 	testing.AddFixture(&testing.Fixture{
 		Name: "arcBootedQsRevampEnabled",
@@ -444,19 +490,24 @@ func init() {
 			"jamescook@google.com",
 			"cros-status-area-eng@google.com",
 		},
-		Impl: NewArcBootedFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ARCEnabled(),
-				chrome.UnRestrictARCCPU(),
-				chrome.EnableFeatures("QsRevamp"),
-			}, nil
-		}),
+		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
 
+	fixtureConfig = DefaultBootedFixtureConfig()
+	fixtureConfig.BootTimeout = BootTimeout + swap.UnrestrictedTimeout
+	fixtureConfig.ArcvmConfig = "SKIP_SWAP_TBW_MANAGEMENT=true"
+	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+		return []chrome.Option{
+			chrome.ARCEnabled(),
+			chrome.EnableFeatures("ArcVmmSwapPolicy:arc_silence_interval_sec/1"),
+			chrome.UnRestrictARCCPU(),
+			chrome.ExtraArgs(DisableSyncFlags()...),
+		}, nil
+	}
 	testing.AddFixture(&testing.Fixture{
 		Name: "arcBootedBoostedVmmSwap",
 		Desc: "ARC is booted and Chrome will use a very short timeout for vmm swap",
@@ -465,14 +516,7 @@ func init() {
 			"kawasin@google.com",
 			"hikalium@chromium.org",
 		},
-		Impl: NewArcBootedWithConfigAndTimeoutFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ARCEnabled(),
-				chrome.EnableFeatures("ArcVmmSwapPolicy:arc_silence_interval_sec/1/swapout_interval_sec/1"),
-				chrome.UnRestrictARCCPU(),
-				chrome.ExtraArgs(DisableSyncFlags()...),
-			}, nil
-		}, "SKIP_SWAP_TBW_MANAGEMENT=true", BootTimeout+swap.UnrestrictedTimeout),
+		Impl:            NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + swap.UnrestrictedTimeout + ui.StartTimeout,
 		ResetTimeout:    ResetTimeout,
 		PostTestTimeout: PostTestTimeout,
@@ -494,30 +538,46 @@ type bootedFixture struct {
 	fOpt chrome.OptionsCallback // Function to return chrome options.
 }
 
-// NewArcBootedFixture returns a FixtureImpl with a OptionsCallback function provided.
+
+// BootedFixtureConfig configures the fixture in NewArcBootedFixture
+type BootedFixtureConfig struct {
+	// OptionsCallback function to provide functions to chrome.
+	FOpts chrome.OptionsCallback
+	// specified config appended to arcvm_dev.conf.
+	ArcvmConfig string
+	// Timeout to wait for ARC boot to complete.
+	BootTimeout time.Duration
+	// Whether or not to enable UI automator.
+	EnableUIAutomator bool
+	// Whether or not to opt into the play store.
+	PlayStoreOptin bool
+}
+
+
+// DefaultBootedFixtureConfig provides sane defaults for most tests.
+func DefaultBootedFixtureConfig() BootedFixtureConfig {
+	return BootedFixtureConfig{
+		FOpts: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{chrome.ARCEnabled(), chrome.UnRestrictARCCPU()}, nil
+		},
+		// specified config appended to arcvm_dev.conf.
+		ArcvmConfig:         "",
+		BootTimeout:         BootTimeout,
+		EnableUIAutomator:   true,
+		PlayStoreOptin:      false,
+	}
+}
+
+// NewArcBootedFixture returns a FixtureImpl for ARC
 // ARCEnabled() will always be added to the Chrome options returned by OptionsCallback.
-func NewArcBootedFixture(fOpts chrome.OptionsCallback) testing.FixtureImpl {
-	return NewArcBootedWithConfigFixture(fOpts, "")
-}
-
-// NewArcBootedWithConfigFixture returns a FixtureImpl with a OptionsCallback function provided and
-// the specified config appended to arcvm_dev.conf. ARCEnabled() will always be added to the Chrome
-// options returned by OptionsCallback.
-func NewArcBootedWithConfigFixture(fOpts chrome.OptionsCallback, arcvmConfig string) testing.FixtureImpl {
-	return NewArcBootedWithConfigAndTimeoutFixture(fOpts, arcvmConfig, BootTimeout)
-}
-
-// NewArcBootedWithConfigAndTimeoutFixture returns a FixtureImpl with a
-// OptionsCallback function provided, the specified config appended to
-// arcvm_dev.conf, and a custom timeout. ARCEnabled() will always be added to
-// the Chrome options returned by OptionsCallback.
-func NewArcBootedWithConfigAndTimeoutFixture(fOpts chrome.OptionsCallback, arcvmConfig string, bootTimeout time.Duration) testing.FixtureImpl {
+func NewArcBootedFixture(arcBootedFixtureConfig BootedFixtureConfig) testing.FixtureImpl {
 	return &bootedFixture{
-		enableUIAutomator: true,
-		arcvmConfig:       arcvmConfig,
-		bootTimeout:       bootTimeout,
+		enableUIAutomator:   arcBootedFixtureConfig.EnableUIAutomator,
+		arcvmConfig:         arcBootedFixtureConfig.ArcvmConfig,
+		playStoreOptin:      arcBootedFixtureConfig.PlayStoreOptin,
+		bootTimeout:         arcBootedFixtureConfig.BootTimeout,
 		fOpt: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			opts, err := fOpts(ctx, s)
+			opts, err := arcBootedFixtureConfig.FOpts(ctx, s)
 			if err != nil {
 				return nil, err
 			}
@@ -532,51 +592,6 @@ func NewMtbfArcBootedFixture(fOpts chrome.OptionsCallback) testing.FixtureImpl {
 		enableUIAutomator: false,
 		playStoreOptin:    true,
 		fOpt:              fOpts,
-	}
-}
-
-// NewArcBootedWithoutUIAutomatorFixture is same as NewArcBootedFixture but does not install UIAutomator by default.
-func NewArcBootedWithoutUIAutomatorFixture(fOpts chrome.OptionsCallback) testing.FixtureImpl {
-	return &bootedFixture{
-		enableUIAutomator: false,
-		fOpt: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			opts, err := fOpts(ctx, s)
-			if err != nil {
-				return nil, err
-			}
-			return append(opts, chrome.ARCEnabled(), chrome.ExtraArgs("--disable-features=ArcResizeLock")), nil
-		},
-	}
-}
-
-// NewArcBootedWithDarkModeFixture is same as NewArcBootedFixture but enables Dark Light Mode.
-func NewArcBootedWithDarkModeFixture(fOpts chrome.OptionsCallback) testing.FixtureImpl {
-	return &bootedFixture{
-		enableUIAutomator: false,
-		fOpt: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			opts, err := fOpts(ctx, s)
-			if err != nil {
-				return nil, err
-			}
-			return append(opts, chrome.ARCEnabled(), chrome.ExtraArgs("--disable-features=ArcResizeLock"), chrome.EnableFeatures("DarkLightMode")), nil
-		},
-	}
-}
-
-// NewArcBootedWithPlayStoreFixture returns a FixtureImpl with a OptionsCallback function
-// provided.
-// ARCSupported() will always be added to the Chrome options returned by OptionsCallback.
-func NewArcBootedWithPlayStoreFixture(fOpts chrome.OptionsCallback) testing.FixtureImpl {
-	return &bootedFixture{
-		playStoreOptin:    true,
-		enableUIAutomator: true,
-		fOpt: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			opts, err := fOpts(ctx, s)
-			if err != nil {
-				return nil, err
-			}
-			return append(opts, chrome.ARCSupported()), nil
-		},
 	}
 }
 
