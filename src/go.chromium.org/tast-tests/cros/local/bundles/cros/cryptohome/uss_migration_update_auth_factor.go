@@ -9,6 +9,7 @@ import (
 	"time"
 
 	uda "chromiumos/system_api/user_data_auth_proto"
+
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	cryptochrome "go.chromium.org/tast-tests/cros/local/cryptohome/chrome"
@@ -140,9 +141,21 @@ func UssMigrationUpdateAuthFactor(ctx context.Context, s *testing.State) {
 
 	// 2. Test that updating a PIN migrates the PIN factor to USS.
 	if err := cryptochrome.WithUssMigration(ctx, true /*enabled*/, func() error {
+
+		// Authenticate with password to migrate password to USS.
+		if err := client.WithAuthSession(ctx, userName, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
+			if _, err := client.AuthenticateAuthFactor(ctx, authSessionID, passwordLabel, userPassword); err != nil {
+				return errors.Wrap(err, "failed to authenticate with password AuthFactor")
+			}
+			return nil
+		}); err != nil {
+			return errors.Wrap(err, "failed to test authenticate before PIN AuthFactor migration")
+		}
+
+		// Test PIN migration during UpdateAuthFactor.
 		if err := client.WithAuthSession(ctx, userName, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
 
-			// Authenticate with password as a prerequisite to update PIN and migrate password to USS.
+			// Authenticate with password as a prerequisite to update PIN.
 			if _, err := client.AuthenticateAuthFactor(ctx, authSessionID, passwordLabel, userPassword); err != nil {
 				return errors.Wrap(err, "failed to authenticate with password AuthFactor")
 			}
