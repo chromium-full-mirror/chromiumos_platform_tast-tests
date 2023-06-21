@@ -43,7 +43,6 @@ func init() {
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		Fixture:      fixture.DevMode,
 		SoftwareDeps: []string{"chrome"},
-		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Params: []testing.Param{{
 			Name:              "chromebox",
 			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Chromebox)),
@@ -147,9 +146,31 @@ func DevModeTabKey(ctx context.Context, s *testing.State) {
 	if err := h.DUT.Conn().CommandContext(ctx, "poweroff").Start(); err != nil {
 		s.Fatal("Failed to run poweroff cmd: ", err)
 	}
-	s.Log(ctx, "Checking for G3 powerstate")
-	if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "G3"); err != nil {
-		s.Fatal("Failed to get power state at G3: ", err)
+	// If dut has chrome ec, check for power state reaching G3 after 'poweroff'.
+	// On Wilco machines, verify ap status marked as 'off' from cr50 command 'ccdstate'.
+	hasEC, err := h.Servo.HasControl(ctx, string(servo.ECChip))
+	if err != nil {
+		s.Fatal("Failed to check for chrome ec: ", err)
+	}
+	if hasEC {
+		s.Log("Checking for G3 powerstate")
+		if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "G3"); err != nil {
+			s.Fatal("Failed to get power state at G3: ", err)
+		}
+	} else {
+		s.Log("Verifying DUT's AP is off")
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			apState, err := h.Servo.RunCR50CommandGetOutput(ctx, "ccdstate", []string{`AP:(\s+\w+)`})
+			if err != nil {
+				return errors.Wrap(err, "failed to run cr50 command")
+			}
+			if strings.TrimSpace(apState[0][1]) != "off" {
+				return errors.Wrapf(err, "unexpected AP state: %s", strings.TrimSpace(apState[0][1]))
+			}
+			return nil
+		}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: time.Second}); err != nil {
+			s.Fatal("Failed to check for dut powered off: ", err)
+		}
 	}
 	s.Log("Sleeping for 5 seconds")
 	// GoBigSleepLint: Sleeping for 5 seconds ensures power-off has
@@ -304,6 +325,9 @@ func checkDebugInfo(ctx context.Context, h *firmware.Helper, mainFwScreen firmwa
 	regs := `HWID:(\n|.)*?kernel_subkey:[^\n\r]*`
 	if mainFwScreen == firmware.DeveloperMode {
 		regs = `HWID:(\n|.)*?TPM state:[^\n\r]*`
+	}
+	if h.Board == "drallion" {
+		regs = `HWID:(\n|.)*?gbb.recovery_key:[^\n\r]*`
 	}
 
 	re := regexp.MustCompile(regs)
