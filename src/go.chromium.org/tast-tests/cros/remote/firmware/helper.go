@@ -973,6 +973,15 @@ func (h *Helper) OpenCCD(ctx context.Context, ensureTestlab, resetCCD bool) erro
 	switch ccdLevel {
 	case servo.Open:
 		testing.ContextLog(ctx, "CCD is ", ccdLevel)
+	case servo.Unlock:
+		// The "unlock" state requires a password to change CCD
+		// state to "open". But, if testlab was enabled, we could
+		// directly make use of testlab.
+		if testlab == "off" {
+			return errors.New("found CCD unlock and testlab off, enable testlab before running test")
+		}
+		testing.ContextLog(ctx, "WARNING: CCD has password set, but testlab enabled")
+		fallthrough
 	case servo.Lock:
 		// Attempt to open CCD.
 		if testlab == "off" {
