@@ -52,7 +52,7 @@ func init() {
 			"iby@chromium.org",
 		},
 		BugComponent: "b:1087262",
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "stack_sampled_metrics"},
 		Params: []testing.Param{{
 			Name:    "ash",
