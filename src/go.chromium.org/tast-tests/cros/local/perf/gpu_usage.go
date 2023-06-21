@@ -6,8 +6,15 @@ package perf
 
 import (
 	"context"
+	"fmt"
+	"io/fs"
+	"io/ioutil"
+	"math"
+	"sort"
+	"sync"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/async"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/sysutil"
 	"go.chromium.org/tast/core/errors"
@@ -273,4 +280,180 @@ func (ds *GPUUsageDataSource) Stop(ctx context.Context, values *perf.Values) err
 
 	}
 	return nil
+}
+
+const (
+	procDirPath = "/proc"
+)
+
+// gpuInfo contains the info read from the fdinfo file that shows the GPU usage.
+type gpuInfo struct {
+	minor        uint32    // The DRM minor identifying which DRM is used.
+	file         string    // The file path where the usage info is read from.
+	samplingTime time.Time // When the GPU usage info is read.
+	drmClient    string    // The id of the DRM client that is using the GPU.
+
+	utilization gpuUtilization // GPU Utilization.
+	memory      gpuMemory      // Memory utilization.
+	logs        logs           // Logs occurred when reading info from this file.
+}
+
+// procInfo contains the GPU usage info read for each process.
+type procInfo struct {
+	useGPU bool   // Whether the process has used the GPU.
+	pid    string // Process id.
+	name   string // Process name.
+
+	gpuUsage []*gpuInfo // Multiple instances of GPU usage info of the process.
+	logs     logs       // Logs occurred when reading GPU info for this process.
+}
+
+// getGPUInfo gets the GPU usage information for all the processes that use
+// GPU on a per DRM basis.
+// The sampling time is also returned.
+func (ds *GPUUsageDataSource) getGPUInfo(ctx context.Context) (map[uint32]*drmUsage, time.Time, error) {
+	processes, err := ds.gpuClientProcesses(ctx)
+	if err != nil {
+		return nil, time.Time{}, errors.Wrap(err, "failed to obtain GPU client processes")
+	}
+
+	var procNames []string
+	for proc := range processes {
+		procNames = append(procNames, proc)
+	}
+	// Sort by proc Name, so we can ignore processes by the
+	// order in case their DRM clients are the same.
+	sort.Strings(procNames)
+
+	drms := make(map[uint32]*drmUsage)
+
+	// A map for checking unique DRM client IDs that a process uses.
+	// Key is the combination of the DRM device number minor and DRM Client ID.
+	uniqueDrmClientIDs := make(map[string]bool)
+	// Find the latest reading time as the sampling time.
+	var samplingTime time.Time
+
+	for _, proc := range procNames {
+		gpuResults := processes[proc]
+		for _, r := range gpuResults {
+			minor := r.minor
+			drm, ok := drms[minor]
+			if !ok {
+				drm = &drmUsage{
+					drmMinor: minor,
+					// Only use the first element to store GPU utilization and memory data
+					// for the DRM for the current snapshot.
+					utilizationSamples: []map[string]gpuUtilization{make(map[string]gpuUtilization)},
+					memorySamples:      []map[string]gpuMemory{make(map[string]gpuMemory)},
+				}
+				drms[minor] = drm
+			}
+			gu := drm.utilizationSamples[0]
+			gm := drm.memorySamples[0]
+
+			key := fmt.Sprintf("%d_%s", minor, r.drmClient)
+			if uniqueDrmClientIDs[key] {
+				// Ignore the duplicate DRM client.
+				continue
+			}
+			uniqueDrmClientIDs[key] = true
+			// Add the info into the result map.
+			if gu[proc] == nil {
+				gu[proc] = r.utilization
+			} else {
+				// Add up to the existing utilization.
+				for engine, num := range r.utilization {
+					gu[proc][engine] += num
+				}
+			}
+			if gm[proc] == nil {
+				gm[proc] = r.memory
+			} else {
+				// Add up to the existing memory.
+				for kind, num := range r.memory {
+					gm[proc][kind] += num
+				}
+			}
+			if samplingTime.Before(r.samplingTime) {
+				samplingTime = r.samplingTime
+			}
+		}
+	}
+
+	return drms, samplingTime, nil
+}
+
+// gpuClientProcesses returns all the processes that use the GPU.
+// A list of gpuInfo for each process will be returned.
+func (ds *GPUUsageDataSource) gpuClientProcesses(ctx context.Context) (map[string][]*gpuInfo, error) {
+	procDir, err := ioutil.ReadDir(procDirPath)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to read %s directory", procDirPath)
+	}
+
+	procNum := len(procDir)
+	// Maximum number of goroutines for concurrent processing. The number
+	// balances the snapshot time and potential goroutine overhead.
+	maxConcurrency := 8
+	// Split processes into groups. Each group will be handled by a goroutine.
+	var concurrencyGroups [][]fs.FileInfo
+	groupSize := int(math.Ceil(float64(procNum) / float64(maxConcurrency)))
+	for i := 0; i < procNum; i += groupSize {
+		end := i + groupSize
+		if end > procNum {
+			end = procNum
+		}
+		concurrencyGroups = append(concurrencyGroups, procDir[i:end])
+	}
+	// Make buffered channels so the goroutines can send info back
+	// without being blocked.
+	readResults := make(chan *procInfo, procNum)
+	readErrs := make(chan error, procNum)
+
+	var wg sync.WaitGroup
+	wg.Add(len(concurrencyGroups))
+	// Use goroutine to analyze processes concurrently.
+	asyncRun := func(procGrp []fs.FileInfo) {
+		async.Run(ctx, func(ctx context.Context) {
+			analyzeProc(procGrp, readResults, readErrs, &wg)
+		}, "analyzeProc")
+	}
+	for _, procGrp := range concurrencyGroups {
+		asyncRun(procGrp)
+	}
+	wg.Wait()
+	close(readResults)
+	close(readErrs)
+
+	if len(readErrs) > 0 {
+		// Return with the first error.
+		return nil, errors.Wrap(<-readErrs, "failed to analyze proc info")
+	}
+
+	processes := make(map[string][]*gpuInfo)
+
+	for r := range readResults {
+		for pattern, log := range r.logs {
+			addLog(ds.logs, pattern, log)
+		}
+		if !r.useGPU {
+			continue
+		}
+		// Use <process name>_<process id> as key.
+		processes[fmt.Sprintf("%s_%s", r.name, r.pid)] = r.gpuUsage
+	}
+
+	return processes, nil
+}
+
+// analyzeProc analyzes the files under each process and get the GPU usage info
+// if it uses GPU.
+func analyzeProc(procs []fs.FileInfo, results chan *procInfo, errs chan error, wg *sync.WaitGroup) {
+	defer wg.Done()
+	result := &procInfo{logs: make(logs)}
+
+	// TODO (b/277656113): read all process fdinfo files to see if they contain
+	// GPU usage info. Put the gpuInfo into the result.
+
+	results <- result
 }
