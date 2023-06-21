@@ -20,6 +20,11 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+type dtTestParams struct {
+	testApps       []apps.App
+	closePlayStore bool
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DesksTemplatesLaunch,
@@ -45,17 +50,17 @@ func init() {
 		VarDeps: []string{"ui.gaiaPoolDefault"},
 		Params: []testing.Param{{
 			Fixture:   "savedDesksEnableWithoutArc",
-			Val:       []apps.App{apps.FilesSWA},
+			Val:       dtTestParams{[]apps.App{apps.FilesSWA}, false},
 			ExtraAttr: []string{"group:criticalstaging"},
 		}, {
 			Name:              "lacros",
 			Fixture:           "savedDesksEnabledLacrosWithArcBooted",
-			Val:               []apps.App{apps.FilesSWA, apps.PlayStore},
+			Val:               dtTestParams{[]apps.App{apps.FilesSWA, apps.PlayStore}, true},
 			ExtraSoftwareDeps: []string{"lacros", "android_vm"},
 		}, {
 			Name:              "arc_enabled",
 			Fixture:           "savedDesksEnableWithArc",
-			Val:               []apps.App{apps.FilesSWA, apps.PlayStore},
+			Val:               dtTestParams{[]apps.App{apps.FilesSWA, apps.PlayStore}, true},
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}},
 	})
@@ -70,8 +75,9 @@ func DesksTemplatesLaunch(ctx context.Context, s *testing.State) {
 
 	cr := s.FixtValue().(*saveddesks.SavedDeskFixtData).Chrome
 
-	// Set up the apps to launch list.
-	appsList := s.Param().([]apps.App)
+	// Set up the apps to launch list and close play store flag.
+	appsList := s.Param().(dtTestParams).testApps
+	closePlayStore := s.Param().(dtTestParams).closePlayStore
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -197,9 +203,11 @@ func DesksTemplatesLaunch(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set overview mode: ", err)
 	}
 
-	// Close Play Store.
-	if err := optin.ClosePlayStore(ctx, tconn); err != nil {
-		s.Fatal("Failed to close Play Store: ", err)
+	// If Play Store is an included in the app launch list then close Play Store.
+	if closePlayStore {
+		if err := optin.ClosePlayStore(ctx, tconn); err != nil {
+			s.Fatal("Failed to close Play Store: ", err)
+		}
 	}
 
 	// Close all existing windows.
@@ -246,9 +254,11 @@ func DesksTemplatesLaunch(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to verify window count: ", err)
 	}
 
-	// Close Play Store.
-	if err := optin.ClosePlayStore(ctx, tconn); err != nil {
-		s.Fatal("Failed to close Play Store: ", err)
+	// If Play Store is an included in the app launch list then close Play Store.
+	if closePlayStore {
+		if err := optin.ClosePlayStore(ctx, tconn); err != nil {
+			s.Fatal("Failed to close Play Store: ", err)
+		}
 	}
 
 	// Close all existing windows.
