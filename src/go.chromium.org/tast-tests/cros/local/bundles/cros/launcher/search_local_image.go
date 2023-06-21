@@ -56,6 +56,15 @@ func init() {
 				},
 				Fixture: fixture.LauncherImageSearch,
 			},
+			{
+				Name: "search_by_paper_then_click",
+				Val: testParam{
+					TabletMode:     false,
+					Query:          "paper",
+					ExpectedResult: "Thoughts",
+				},
+				Fixture: fixture.LauncherImageSearchIca,
+			},
 		},
 	})
 }
@@ -93,7 +102,8 @@ func SearchLocalImage(ctx context.Context, s *testing.State) {
 	picturePreview := nodewith.Role(role.Button).HasClass("ImageButton").NameContaining("search_local_images")
 	picture := nodewith.Role(role.Window).HasClass("WebContentsViewAura").NameContaining("search_local_images")
 
-	if err := uiauto.NamedCombine("Search for image",
+	if err := uiauto.Retry(2, uiauto.NamedCombine("Search for image",
+		launcher.ClearSearchField(tconn, kb),
 		launcher.Search(tconn, kb, query),
 		launcher.WaitForResultWithCategory(tconn, launcher.SearchCategoryInfo{
 			Category:  "Images",
@@ -102,7 +112,7 @@ func SearchLocalImage(ctx context.Context, s *testing.State) {
 		}),
 		ui.LeftClickUntil(picturePreview, ui.WithTimeout(3*time.Second).WaitUntilExists(picture)),
 		launcher.VerifyTextWithUIDetection(ud, expectedResult),
-	)(ctx); err != nil {
+	))(ctx); err != nil {
 		s.Fatal("Failed to search image: ", err)
 	}
 }

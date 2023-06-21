@@ -7,9 +7,11 @@ package fixture
 
 import (
 	"context"
+	"path/filepath"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/testing"
 )
@@ -34,6 +36,7 @@ type imageSearchFixtureImpl struct {
 	tconn        *chrome.TestConn
 	cr           *chrome.Chrome
 	kb           *input.KeyboardEventWriter
+	recorder     *uiauto.ScreenRecorder
 }
 
 // ImageSearchFixtData is the data returned by SetUp and passed to tests.
@@ -116,11 +119,23 @@ func (f *imageSearchFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState
 }
 
 func (f *imageSearchFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
-
+	recorder, err := uiauto.NewScreenRecorder(ctx, f.tconn)
+	if err != nil {
+		s.Log("Failed to create screen recorder: ", err)
+		return
+	}
+	if err := recorder.Start(ctx, f.tconn); err != nil {
+		s.Log("Failed to start screen recorder: ", err)
+		return
+	}
+	f.recorder = recorder
 }
 
 func (f *imageSearchFixtureImpl) PostTest(ctx context.Context, s *testing.FixtTestState) {
-
+	// Do nothing if the recorder is not initialized.
+	if f.recorder != nil {
+		f.recorder.StopAndSaveOnError(ctx, filepath.Join(s.OutDir(), "record.webm"), s.HasError)
+	}
 }
 
 func (f *imageSearchFixtureImpl) Reset(ctx context.Context) error {
