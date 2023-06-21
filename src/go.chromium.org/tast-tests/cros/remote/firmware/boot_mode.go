@@ -316,7 +316,7 @@ func (ms ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMod
 		}
 		// Reconnect to the DUT.
 		testing.ContextLog(ctx, "Reestablishing connection to DUT")
-		connectCtx, cancel := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
+		connectCtx, cancel := context.WithTimeout(ctx, h.Config.USBImageBootTimeout)
 		defer cancel()
 		if err := h.WaitConnect(connectCtx); err != nil {
 			return errors.Wrapf(err, "failed to reconnect to DUT after booting to %s", toMode)
@@ -1010,7 +1010,7 @@ func (ms *ModeSwitcher) fwScreenToUSBDevMode(ctx context.Context) error {
 			defer cancel()
 			connectTimeout += time.Second
 			return h.DUT.WaitConnect(ctx)
-		}, &testing.PollOptions{Timeout: h.Config.DelayRebootToPing}); err != nil {
+		}, &testing.PollOptions{Timeout: h.Config.USBImageBootTimeout}); err != nil {
 			return errors.Wrap(err, "failed to reconnect to DUT")
 		}
 	default:

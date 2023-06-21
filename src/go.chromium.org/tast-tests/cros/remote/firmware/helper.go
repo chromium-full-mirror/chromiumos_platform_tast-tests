@@ -1530,7 +1530,7 @@ func (h *Helper) validateUSBConn(ctx context.Context) error {
 // Reference for NOGOOD Screen and Broken Screen:
 // https://chromium.googlesource.com/chromiumos/docs/+/HEAD/firmware_test_manual.md#firmware-screen-names
 func (h *Helper) WaitDUTConnectDuringBootFromUSB(ctx context.Context, expBoot bool) error {
-	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
+	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.USBImageBootTimeout)
 	defer cancelWaitConnect()
 
 	err := h.WaitConnect(waitConnectCtx)

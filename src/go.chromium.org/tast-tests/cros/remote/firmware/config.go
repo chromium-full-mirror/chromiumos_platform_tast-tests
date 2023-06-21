@@ -92,6 +92,7 @@ type Config struct {
 	// Generally, these raw fields should not be accessed by tests and libraries.
 	// Nevertheless, the raw fields must be exported in order for them to be set by json.Unmarshal.
 	RawDelayRebootToPing             float64 `json:"delay_reboot_to_ping"`
+	RawUSBImageBootTimeout           float64 `json:"usb_image_boot_timeout"`
 	RawECBootToPwrButton             float64 `json:"ec_boot_to_pwr_button"`
 	RawFirmwareScreen                float64 `json:"firmware_screen"`
 	RawHoldPwrButtonNoPowerdShutdown float64 `json:"hold_pwr_button_nopowerd_shutdown"`
@@ -106,6 +107,7 @@ type Config struct {
 
 	// Actual duration fields are populated during NewConfig based on raw JSON duration values, defined above.
 	DelayRebootToPing             time.Duration
+	USBImageBootTimeout           time.Duration
 	ECBootToPwrButton             time.Duration
 	FirmwareScreen                time.Duration
 	HoldPwrButtonNoPowerdShutdown time.Duration
@@ -214,6 +216,7 @@ func NewConfig(cfgFilepath, board, model string) (*Config, error) {
 
 	// Populate actual durations based on raw JSON values.
 	cfg.DelayRebootToPing = toSeconds(cfg.RawDelayRebootToPing)
+	cfg.USBImageBootTimeout = toSeconds(cfg.RawUSBImageBootTimeout)
 	cfg.ECBootToPwrButton = toSeconds(cfg.RawECBootToPwrButton)
 	cfg.FirmwareScreen = toSeconds(cfg.RawFirmwareScreen)
 	cfg.HoldPwrButtonNoPowerdShutdown = toSeconds(cfg.RawHoldPwrButtonNoPowerdShutdown)

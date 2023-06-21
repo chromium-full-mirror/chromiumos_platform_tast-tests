@@ -333,8 +333,7 @@ func BootMode(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to reboot the DUT with hard reset: ", err)
 		}
 		s.Log("Waiting for connection to DUT")
-		reconnectTimeout := 8 * time.Minute
-		connectCtx, cancel := context.WithTimeout(ctx, reconnectTimeout)
+		connectCtx, cancel := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
 		defer cancel()
 		if err := h.WaitConnect(connectCtx); err != nil {
 			s.Fatal("Failed to connect to DUT: ", err)
