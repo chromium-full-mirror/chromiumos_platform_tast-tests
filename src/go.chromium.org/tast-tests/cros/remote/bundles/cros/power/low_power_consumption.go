@@ -62,7 +62,7 @@ func init() {
 			{
 				Name:              "suspend",
 				Val:               "suspend",
-				ExtraRequirements: []string{"pwr-batLife-0007-v01"},
+				ExtraRequirements: []string{"pwr-batLife-0007-v01", "pwr-batLife-0007-v02"},
 			},
 			{
 				Name:              "shutdown",
