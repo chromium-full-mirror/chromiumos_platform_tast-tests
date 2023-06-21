@@ -5,6 +5,7 @@
 package perf
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"io/fs"
@@ -14,6 +15,8 @@ import (
 	"path"
 	"regexp"
 	"sort"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -578,7 +581,111 @@ func analyzeFile(pidDirPath string, f fs.FileInfo) (*gpuInfo, error) {
 
 // gpuFdinfo reads the GPU information from fdinfo file.
 func gpuFdinfo(result *gpuInfo) error {
-	// TODO (b/277656113): parse the fdinfo file content, and save results into
-	// gpuInfo
+	// An example of the fdinfo file is:
+	//
+	// kohaku-rev6 ~ # cat /proc/10236/fdinfo/46
+	// pos:	0
+	// flags:	0100002
+	// mnt_id:	22
+	// ino:	125
+	// drm-driver:	i915
+	// drm-client-id:	22
+	// drm-pdev:	0000:00:02.0
+	// drm-engine-render:	0 ns
+	// drm-engine-copy:	0 ns
+	// drm-engine-video:	0 ns
+	// drm-engine-video-enhance:	0 ns
+	// drm-total-memory:	102 MiB
+	// drm-shared-memory:	102 MiB
+	// drm-active-memory:	0
+	engineRegexp := regexp.MustCompile(`^drm-engine-(.+):\s*(\d+)\s*(.*)$`)
+	memoryRegexp1 := regexp.MustCompile(`^drm-(.+)-memory:\s*(\d+)\s*(.*)$`)
+	memoryRegexp2 := regexp.MustCompile(`^drm-memory-(.+):\s*(\d+)\s*(.*)$`)
+	clientIDRegexp := regexp.MustCompile(`^drm-client-id:\s*(.+)$`)
+
+	path := result.file
+	f, err := os.Open(path)
+	if err != nil {
+		// File might have already been deleted.
+		if os.IsNotExist(err) {
+			addLog(result.logs, logNoLongerExist,
+				&log{1, fmt.Sprintf("%s for %s: %v", logNoLongerExist, path, err)})
+			return nil
+		}
+		return errors.Wrapf(err, "failed to open fdinfo file %s", path)
+	}
+	defer f.Close()
+
+	var clientID string
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		lineText := strings.TrimSpace(scanner.Text())
+		engineMatches := engineRegexp.FindStringSubmatch(lineText)
+		if engineMatches != nil {
+			engine := engineMatches[1]
+			usage := engineMatches[2]
+			unit := engineMatches[3]
+
+			value, err := strconv.ParseFloat(usage, 64)
+			if err != nil {
+				return errors.Wrapf(err, "failed to parse value %s in line %q in %s", usage, lineText, path)
+			}
+			if value != 0.0 {
+				if unit == "" {
+					// Unit missing has been found in certain models, such as
+					// redrix/brya. Log it.
+					addLog(result.logs, logUtilizationUnitMissing,
+						&log{1, fmt.Sprintf("%s in line %q in %s; assume it is ns", logUtilizationUnitMissing, lineText, path)})
+
+				} else if unit != "ns" {
+					return errors.Errorf("utilization unit %q in line %q is not ns in %s", unit, lineText, path)
+				}
+			}
+			result.utilization[engine] = value
+			continue
+		}
+
+		memoryMatches := memoryRegexp1.FindStringSubmatch(lineText)
+		if memoryMatches == nil {
+			memoryMatches = memoryRegexp2.FindStringSubmatch(lineText)
+		}
+		if memoryMatches != nil {
+			kind := memoryMatches[1]
+			usage := memoryMatches[2]
+			unit := memoryMatches[3]
+
+			value, err := strconv.ParseFloat(usage, 64)
+			if err != nil {
+				return errors.Wrapf(err, "failed to parse value %s in line %q in %s", usage, lineText, path)
+			}
+			if value != 0.0 {
+				if unit == "" {
+					return errors.Errorf("memory has no unit in line %q in %s", lineText, path)
+				}
+				if unit == "MiB" {
+					value *= 1024
+				} else if unit != "KiB" {
+					return errors.Errorf("memory has unsupported unit %s in line %q in %s", unit, lineText, path)
+				}
+			}
+			result.memory[kind] = value
+			continue
+		}
+
+		clientIDMatches := clientIDRegexp.FindStringSubmatch(lineText)
+		if clientIDMatches != nil {
+			clientID = clientIDMatches[1]
+		}
+	}
+
+	if clientID == "" {
+		// Found missing client ID in certain models, such as steelix/corsola.
+		addLog(result.logs, logClientIDMissing,
+			&log{1, fmt.Sprintf("%s in %s", logClientIDMissing, path)})
+
+	}
+	result.drmClient = clientID
+	result.samplingTime = time.Now()
+
 	return nil
 }
