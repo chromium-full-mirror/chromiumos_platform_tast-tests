@@ -10,19 +10,22 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/familylink"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         LocalWebApprovals,
-		LacrosStatus: testing.LacrosVariantNeeded,
+		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that parent can approve blocked sites locally",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
@@ -35,11 +38,24 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,
 		Vars:         []string{"unicorn.matureSite", "family.parentEmail", "family.parentPassword"},
-		Fixture:      "familyLinkUnicornLoginWithWebApprovals",
+		Params: []testing.Param{{
+			Val:     browser.TypeAsh,
+			Fixture: "familyLinkUnicornLogin",
+		}, {
+			Name:              "lacros",
+			ExtraSoftwareDeps: []string{"lacros"},
+			Val:               browser.TypeLacros,
+			Fixture:           "familyLinkUnicornLoginWithLacros",
+		}},
 	})
 }
 
 func LocalWebApprovals(ctx context.Context, s *testing.State) {
+	// Reserve time for cleanup.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
 	tconn := s.FixtValue().(familylink.HasTestConn).TestConn()
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
@@ -49,14 +65,20 @@ func LocalWebApprovals(ctx context.Context, s *testing.State) {
 	testing.Sleep(ctx, 5*time.Second)
 
 	matureSite := s.RequiredVar("unicorn.matureSite")
-	conn, err := cr.NewConn(ctx, matureSite)
 
+	ui := uiauto.New(tconn).WithTimeout(20 * time.Second)
+
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
+	if err != nil {
+		s.Fatal("Failed to set up browser: ", err)
+	}
+	defer closeBrowser(cleanupCtx)
+
+	conn, err := br.NewConn(ctx, matureSite)
 	if err != nil {
 		s.Fatal("Failed to navigate to website: ", err)
 	}
 	defer conn.Close()
-
-	ui := uiauto.New(tconn).WithTimeout(20 * time.Second)
 
 	if err := ui.WaitUntilExists(nodewith.Name("This site is blocked").Role(role.StaticText))(ctx); err != nil {
 		s.Fatal("Mature website is not blocked for Unicorn user: ", err)
