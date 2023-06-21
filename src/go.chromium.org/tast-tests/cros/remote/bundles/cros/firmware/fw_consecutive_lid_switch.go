@@ -93,11 +93,6 @@ func FWConsecutiveLidSwitch(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open lid: ", err)
 	}
 
-	// GoBigSleepLint: DuT operation dependency
-	if err := testing.Sleep(ctx, wakeDelay); err != nil {
-		s.Fatal("Failed to sleep after first open: ", err)
-	}
-
 	initialBootID, err := h.Reporter.BootID(ctx)
 	if err != nil {
 		s.Fatal("Failed to acquire current boot ID: ", err)
@@ -124,11 +119,6 @@ func FWConsecutiveLidSwitch(ctx context.Context, s *testing.State) {
 
 		if err := h.Servo.OpenLid(ctx); err != nil {
 			s.Fatal("Failed to open lid: ", err)
-		}
-
-		// GoBigSleepLint: DuT operation dependency
-		if err := testing.Sleep(ctx, wakeDelay); err != nil {
-			s.Fatal("Failed to sleep during wake delay: ", err)
 		}
 
 		if err := h.DUT.WaitConnect(ctx); err != nil {
