@@ -10,9 +10,14 @@ import (
 	"io/fs"
 	"io/ioutil"
 	"math"
+	"os"
+	"path"
+	"regexp"
 	"sort"
 	"sync"
 	"time"
+
+	"golang.org/x/sys/unix"
 
 	"go.chromium.org/tast-tests/cros/common/async"
 	"go.chromium.org/tast-tests/cros/common/perf"
@@ -106,12 +111,11 @@ const (
 	logClientIDMissing        = "No DRM client id is found"
 
 	// Log patternsfor reading process fdinfo.
-	logSysStatConvertion = "Failed to convert fdinfo Sys() to Stat_t"
-	logNotDir            = "The path is not a directory"
-	logDirNotExist       = "The path does not exist"
-	logStatFileErr       = "Cannot get file stat"
-	logNoLongerExist     = "File is no longer existent"
-	logFdNotExist        = "Corresponding FD file does not exist"
+	logNotDir        = "The path is not a directory"
+	logDirNotExist   = "The path does not exist"
+	logStatFileErr   = "Cannot get file stat"
+	logNoLongerExist = "File is no longer existent"
+	logFdNotExist    = "Corresponding FD file does not exist"
 
 	// Log patterns for utilization adjustment.
 	logUtilSampleAdjustment = "Adjust utilization for values greater than one"
@@ -284,6 +288,8 @@ func (ds *GPUUsageDataSource) Stop(ctx context.Context, values *perf.Values) err
 
 const (
 	procDirPath = "/proc"
+	// Device number major part for DRM GPU devices. 226 indicates a DRM device.
+	drmMajor uint32 = 226
 )
 
 // gpuInfo contains the info read from the fdinfo file that shows the GPU usage.
@@ -450,10 +456,129 @@ func (ds *GPUUsageDataSource) gpuClientProcesses(ctx context.Context) (map[strin
 // if it uses GPU.
 func analyzeProc(procs []fs.FileInfo, results chan *procInfo, errs chan error, wg *sync.WaitGroup) {
 	defer wg.Done()
-	result := &procInfo{logs: make(logs)}
+	for _, proc := range procs {
+		if !proc.IsDir() {
+			continue
+		}
+		pid := proc.Name() // File name is the process id.
+		// Matches directories with numeric names.
+		match, _ := regexp.MatchString(`\d+`, pid)
+		if !match {
+			continue
+		}
+		result := &procInfo{pid: pid, logs: make(logs)}
+		pidDirPath := path.Join(procDirPath, pid)
 
-	// TODO (b/277656113): read all process fdinfo files to see if they contain
-	// GPU usage info. Put the gpuInfo into the result.
+		// Read "stat" file to get the process name.
+		content, err := ioutil.ReadFile(path.Join(pidDirPath, "stat"))
+		if err != nil {
+			continue
+		}
+		// The stat file has content like:
+		// 25013 (chrome) S 24952 ...
+		// We'll get the process name in the parentheses.
+		reg := regexp.MustCompile(`^\d+\s+\((.*)\)`)
+		matches := reg.FindStringSubmatch(string(content))
+		if matches == nil {
+			continue
+		}
+		result.name = matches[1]
 
-	results <- result
+		fdinfoDirPath := path.Join(pidDirPath, "fdinfo")
+		fdinfoDirStat, err := os.Stat(fdinfoDirPath)
+		if err != nil {
+			// Check if the "fdinfo" directory is under the process directory.
+			if os.IsNotExist(err) {
+				addLog(result.logs, logDirNotExist,
+					&log{1, fmt.Sprintf("%s for %s: %v", logDirNotExist, fdinfoDirPath, err)})
+				results <- result
+				continue
+			}
+			errs <- errors.Wrapf(err, "failed to get dir stat info of %s", fdinfoDirPath)
+			return
+		}
+		if !fdinfoDirStat.IsDir() {
+			addLog(result.logs, logNotDir,
+				&log{1, fmt.Sprintf("%s for %s", logNotDir, fdinfoDirPath)})
+			results <- result
+			continue
+		}
+		// Get all files under <pid>/fdinfo/.
+		fdinfoDir, err := ioutil.ReadDir(fdinfoDirPath)
+		if err != nil {
+			errs <- errors.Wrapf(err, "failed to read dir of %s", fdinfoDirPath)
+			return
+		}
+
+		for _, f := range fdinfoDir {
+			r, err := analyzeFile(pidDirPath, f)
+			if err != nil {
+				errs <- errors.Wrap(err, "failed to analyze file")
+				return
+			}
+			for pattern, log := range r.logs {
+				addLog(result.logs, pattern, log)
+			}
+			if r.drmClient == "" {
+				// Not a DRM client.
+				continue
+			}
+			result.useGPU = true
+			result.gpuUsage = append(result.gpuUsage, r)
+		}
+		results <- result
+	}
+}
+
+// analyzeFile analyzes the fdinfo file and its corresponding fd file, and get
+// the GPU usage from the fdinfo file.
+func analyzeFile(pidDirPath string, f fs.FileInfo) (*gpuInfo, error) {
+	result := &gpuInfo{
+		utilization: make(gpuUtilization),
+		memory:      make(gpuMemory),
+		logs:        make(logs),
+	}
+
+	if !f.Mode().IsRegular() {
+		return result, nil
+	}
+	// Check corresponding fd file to see if it is a DRM client.
+	fdFilePath := path.Join(pidDirPath, "fd", f.Name())
+	var statT unix.Stat_t
+	err := unix.Stat(fdFilePath, &statT)
+	if err != nil {
+		if os.IsNotExist(err) {
+			addLog(result.logs, logFdNotExist,
+				&log{1, fmt.Sprintf("%s for %s: %v", logFdNotExist, fdFilePath, err)})
+			return result, nil
+		}
+		addLog(result.logs, logStatFileErr,
+			&log{1, fmt.Sprintf("%s for %s: %v", logStatFileErr, fdFilePath, err)})
+		return result, nil
+	}
+
+	// DRM client must be a character device. Make sure the CharDevice bit is
+	// set in the file's mode.
+	if (statT.Mode & unix.S_IFCHR) != unix.S_IFCHR {
+		return result, nil
+	}
+
+	rdev := statT.Rdev
+	if unix.Major(rdev) != drmMajor {
+		return result, nil
+	}
+
+	result.minor = unix.Minor(rdev)
+	result.file = path.Join(pidDirPath, "fdinfo", f.Name())
+	if err := gpuFdinfo(result); err != nil {
+		return nil, errors.Wrap(err, "failed to get GPU fdinfo")
+	}
+	return result, nil
+}
+
+// gpuFdinfo reads the GPU information from fdinfo file.
+func gpuFdinfo(result *gpuInfo) error {
+	// TODO (b/277656113): parse the fdinfo file content, and save results into
+	// gpuInfo
+	return nil
 }
