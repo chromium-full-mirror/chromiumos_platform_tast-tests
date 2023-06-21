@@ -67,6 +67,13 @@ func init() {
 type fixtSerializedStringFixture struct{}
 
 func (fixtSerializedStringFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	s.AttachErrorHandlers(
+		func(errMsg string) {
+			testing.ContextLog(ctx, "Got error: ", errMsg)
+		},
+		func(errMsg string) {
+			testing.ContextLog(ctx, "Got fatal error: ", errMsg)
+		})
 	v := ""
 	if err := s.ParentFillValue(&v); err != nil {
 		s.Fatal("Failed to get remote parent string value in Setup: ", err)
