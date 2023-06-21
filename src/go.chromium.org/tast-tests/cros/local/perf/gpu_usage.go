@@ -234,7 +234,7 @@ func (ds *GPUUsageDataSource) Setup(ctx context.Context, prefix, intervalName st
 		ds.skip = true
 	}
 	// TODO (b/277656113): Remove the following line after this serial of CLs
-	// are all merged.
+	// are all merged and the feature is ready to be used by a TPS test.
 	ds.skip = true // Disable it temporarily until this feature is ready.
 	return nil
 }
@@ -359,8 +359,140 @@ func (ds *GPUUsageDataSource) Stop(ctx context.Context, values *perf.Values) err
 	}
 	testing.ContextLog(ctx, "Stop tracking GPU usage metrics")
 
-	for range ds.drms {
-		// TODO (b/277656113): Record GPU usage of each DRM into the perf values.
+	// Loop through all the saved GPU usage on a per DRM basis.
+	for minor, drm := range ds.drms {
+		// Total GPU utilization by all processes for the DRM, keyed by the
+		// engine.
+		totalUtilization := make(map[string][]float64)
+		for engine := range drm.allEngines {
+			totalUtilization[engine] = make([]float64, len(drm.utilizationSamples))
+		}
+		// Total GPU memory by all processes for the DRM, keyed by the memory
+		// kind.
+		totalMemory := make(map[string][]float64)
+		for kind := range drm.allMemoryKinds {
+			totalMemory[kind] = make([]float64, len(drm.memorySamples))
+		}
+		// Flags to track whether the DRM has been used during the test.
+		drmHasUtilization := false
+		drmHasMemory := false
+		// Loop through all the processes that have been recorded for the DRM.
+		for proc := range drm.allProcesses {
+			// Map used to store the utilization samples on a per engine basis.
+			processUtilization := make(map[string][]float64)
+			for engine := range drm.allEngines {
+				processUtilization[engine] = nil
+			}
+			// Map used to store the memory samples on a per memory kind basis.
+			processMemory := make(map[string][]float64)
+			for kind := range drm.allMemoryKinds {
+				processMemory[kind] = nil
+			}
+
+			// Flags to track whether the process used the GPU during the test.
+			processHasEngineUtilization := make(map[string]bool)
+			processHasKindMemory := make(map[string]bool)
+			// Loop through all GPU utilization samples.
+			for i, samples := range drm.utilizationSamples {
+				procSamples, ok := samples[proc]
+				if !ok {
+					// Samples are not captured for this proc in this snapshot.
+					// Use zero values.
+					for engine := range drm.allEngines {
+						processUtilization[engine] = append(processUtilization[engine], 0.0)
+						totalUtilization[engine][i] += 0.0
+					}
+					continue
+				}
+				for engine := range drm.allEngines {
+					processUtilization[engine] = append(processUtilization[engine], procSamples[engine])
+					// Accumulate the tolat utilization for this engine.
+					util := totalUtilization[engine][i] + procSamples[engine]
+					// Ensure total engine utilization is not over 100%.
+					if util > 100.0 {
+						addLog(ds.logs, logUtilTotalAdjustment, &log{1,
+							fmt.Sprintf("%s: got %f for engine %s", logUtilTotalAdjustment, util, engine)})
+						util = 100.0
+					}
+					totalUtilization[engine][i] = util
+					if procSamples[engine] > 0 {
+						drmHasUtilization = true
+						processHasEngineUtilization[engine] = true
+					}
+				}
+			}
+			// Loop through all GPU memory samples.
+			for i, samples := range drm.memorySamples {
+				procSamples, ok := samples[proc]
+				if !ok {
+					// Samples are not captured for this proc in this snapshot.
+					// Use zero values.
+					for kind := range drm.allMemoryKinds {
+						processMemory[kind] = append(processMemory[kind], 0.0)
+						totalMemory[kind][i] += 0.0
+					}
+					continue
+				}
+				for kind := range drm.allMemoryKinds {
+					processMemory[kind] = append(processMemory[kind], procSamples[kind])
+					// Accumulate the tolat memory for this memory kind.
+					totalMemory[kind][i] += procSamples[kind]
+					if procSamples[kind] > 0 {
+						drmHasMemory = true
+						processHasKindMemory[kind] = true
+					}
+				}
+			}
+			// Add per-process metric values.
+			for engine := range drm.allEngines {
+				if !processHasEngineUtilization[engine] {
+					continue
+				}
+				values.Set(perf.Metric{
+					Name:      fmt.Sprintf("%sGPU.Usage.DRM%d.Utilization.%s.%s", ds.prefix, minor, engine, proc),
+					Unit:      "percent",
+					Direction: perf.SmallerIsBetter,
+					Multiple:  true,
+					Interval:  ds.intervalName,
+				}, processUtilization[engine]...)
+
+			}
+			for kind := range drm.allMemoryKinds {
+				if !processHasKindMemory[kind] {
+					continue
+				}
+				values.Set(perf.Metric{
+					Name:      fmt.Sprintf("%sGPU.Usage.DRM%d.Memory.%s.%s", ds.prefix, minor, kind, proc),
+					Unit:      "KiB",
+					Direction: perf.SmallerIsBetter,
+					Multiple:  true,
+					Interval:  ds.intervalName,
+				}, processMemory[kind]...)
+			}
+		}
+		// Add total metric values.
+		if drmHasUtilization {
+			for engine := range drm.allEngines {
+				values.Set(perf.Metric{
+					Name:      fmt.Sprintf("%sGPU.Usage.DRM%d.Utilization.%s", ds.prefix, minor, engine),
+					Unit:      "percent",
+					Direction: perf.SmallerIsBetter,
+					Multiple:  true,
+					Interval:  ds.intervalName,
+				}, totalUtilization[engine]...)
+			}
+		}
+		if drmHasMemory {
+			for kind := range drm.allMemoryKinds {
+				values.Set(perf.Metric{
+					Name:      fmt.Sprintf("%sGPU.Usage.DRM%d.Memory.%s", ds.prefix, minor, kind),
+					Unit:      "KiB",
+					Direction: perf.SmallerIsBetter,
+					Multiple:  true,
+					Interval:  ds.intervalName,
+				}, totalMemory[kind]...)
+			}
+		}
 	}
 
 	for pattern, log := range ds.logs {
