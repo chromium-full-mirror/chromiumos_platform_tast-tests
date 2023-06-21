@@ -30,6 +30,7 @@ func init() {
 		Desc:         "Behavior of SearchSuggestEnabled policy, check if a search suggestions are shown based on the value of the policy",
 		Contacts: []string{
 			"chrome-desktop-search@google.com",
+			"dp-chromeos-eng@google.com",
 			"jdonnelly@google.com",
 			"alexanderhartl@google.com", // Test author
 		},

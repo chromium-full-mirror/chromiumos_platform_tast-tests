@@ -27,6 +27,7 @@ func init() {
 		Desc:         "Checks the behavior of ExtensionInstallAllowlist, ExtensionInstallBlocklist policies",
 		Contacts: []string{
 			"cros-commercial-chromeapps-eng@google.com",
+			"dp-chromeos-eng@google.com",
 			"giovax@google.com",
 		},
 		BugComponent: "b:1253865",
