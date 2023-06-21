@@ -29,9 +29,10 @@ import (
 )
 
 type networkProtocolDetails struct {
-	cmd      *testexec.Cmd
-	protocol string
-	ipAddr   string
+	senderCmd   *testexec.Cmd
+	receiverCmd *testexec.Cmd
+	protocol    string
+	ipAddr      string
 }
 
 type networkType string
@@ -40,6 +41,7 @@ const (
 	icmp  networkType = "ICMP"
 	tcp   networkType = "TCP"
 	tcpV6 networkType = "TCPV6"
+	udp   networkType = "UDP"
 )
 
 func init() {
@@ -69,6 +71,10 @@ func init() {
 		}, {
 			Name: "tcp_v6",
 			Val:  tcpV6,
+		}, {
+			Name:      "udp",
+			Val:       udp,
+			ExtraAttr: []string{"group:mainline", "informational"},
 		}},
 	})
 }
@@ -112,12 +118,19 @@ func NetworkEvents(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Fail to get NetworkProtocolDetails: ", err)
 	}
-	cmd := details.cmd
+	senderCmd := details.senderCmd
+	receiverCmd := details.receiverCmd
 
-	if err := cmd.Start(); err != nil {
-		s.Fatalf("Error starting %q: %v ", cmd, err)
+	if receiverCmd != nil {
+		if err := receiverCmd.Start(); err != nil {
+			s.Fatalf("Error starting %q: %v ", receiverCmd, err)
+		}
 	}
-	cmdPid := uint64(cmd.Process.Pid)
+
+	if err := senderCmd.Start(); err != nil {
+		s.Fatalf("Error starting %q: %v ", senderCmd, err)
+	}
+	cmdPid := uint64(senderCmd.Process.Pid)
 	s.Logf("Pid is %d", cmdPid)
 
 	// Wait for the current batch to be flushed.
@@ -130,12 +143,19 @@ func NetworkEvents(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to sleep: ", err)
 	}
 
-	if err := cmd.Kill(); err != nil {
-		s.Fatalf("Failed to kill %q: %v", cmd, err)
+	if err := senderCmd.Kill(); err != nil {
+		s.Fatalf("Failed to kill %q: %v", senderCmd, err)
 	}
 	// Don't check the error here because it will likely just say
 	// "signal: Killed"
-	cmd.Wait()
+	senderCmd.Wait()
+
+	if receiverCmd != nil {
+		if err := receiverCmd.Kill(); err != nil {
+			s.Fatalf("Failed to kill %q: %v", receiverCmd, err)
+		}
+		receiverCmd.Wait()
+	}
 
 	// Collect the log of EnqueueRecord dbus calls to Missived.
 	calledMethods, err := stop()
@@ -180,15 +200,13 @@ func NetworkEvents(ctx context.Context, s *testing.State) {
 			foundPid := false
 			foundProtocol := false
 			for _, flow := range bFlows {
-				if flow.GetProcess() != nil {
-					if flow.GetProcess().GetCanonicalPid() == cmdPid {
-						foundPid = true
-						if flow.NetworkFlow.Protocol.String() == details.protocol && (details.ipAddr == "" || *flow.NetworkFlow.RemoteIp == details.ipAddr) {
-							foundProtocol = true
-							s.Logf("%s is captured", flow.NetworkFlow.Protocol.String())
-						}
-						s.Log(flow.String())
+				if (flow.GetParentProcess() != nil && flow.GetParentProcess().GetCanonicalPid() == cmdPid) || (flow.GetProcess() != nil && flow.GetProcess().GetCanonicalPid() == cmdPid) {
+					foundPid = true
+					if flow.NetworkFlow.Protocol.String() == details.protocol && (details.ipAddr == "" || *flow.NetworkFlow.RemoteIp == details.ipAddr) {
+						foundProtocol = true
+						s.Logf("%s is captured", flow.NetworkFlow.Protocol.String())
 					}
+					s.Log(flow.String())
 				}
 			}
 
@@ -208,11 +226,12 @@ func getNetworkProtocolDetails(ctx context.Context, network networkType) (networ
 	case icmp:
 		// 8.8.8.8 is google DNS IPv4 address.
 		ipAddr := "8.8.8.8"
-		cmd := testexec.CommandContext(ctx, "/bin/ping", ipAddr)
+		cmd := testexec.CommandContext(ctx, "sh", "-c", fmt.Sprintf("ping %s", ipAddr))
 
 		return networkProtocolDetails{
-			cmd:      cmd,
-			protocol: "ICMP",
+			senderCmd:   cmd,
+			receiverCmd: nil,
+			protocol:    "ICMP",
 			// TODO(jasonling): ICMP doesn't capture IP addr in the event.
 			ipAddr: "",
 		}, nil
@@ -223,22 +242,43 @@ func getNetworkProtocolDetails(ctx context.Context, network networkType) (networ
 		}
 
 		ipAddr := strings.TrimSuffix(string(out), "\n")
-		cmd := testexec.CommandContext(ctx, "/usr/local/bin/wget", "-P", "/tmp", ipAddr)
+		cmd := testexec.CommandContext(ctx, "sh", "-c", fmt.Sprintf("wget -P /tmp %s", ipAddr))
 
 		return networkProtocolDetails{
-			cmd:      cmd,
-			protocol: "TCP",
-			ipAddr:   ipAddr,
+			senderCmd:   cmd,
+			receiverCmd: nil,
+			protocol:    "TCP",
+			ipAddr:      ipAddr,
 		}, nil
 	case tcpV6:
 		// 2001:4860:4860::8888 is google DNS IPv6 address.
-		ipAddr := "2001:4860:4860::8888"
+		ipAddr := "fe80::f6f5:e8ff:fe50:eadc%eth0"
 		cmd := testexec.CommandContext(ctx, "sh", "-c", fmt.Sprintf("echo \"Hello, TCP\" | nc -6 %s 53", ipAddr))
 
 		return networkProtocolDetails{
-			cmd:      cmd,
-			protocol: "TCP",
-			ipAddr:   ipAddr,
+			senderCmd:   cmd,
+			receiverCmd: nil,
+			protocol:    "TCP",
+			ipAddr:      ipAddr,
+		}, nil
+	case udp:
+		// Choose the account to use based on the IP address of the chromebook.
+		cmdStr := `ifconfig eth0 | grep "inet " | awk '{print $2}'`
+		out, err := testexec.CommandContext(ctx, "sh", "-c", cmdStr).Output()
+		if err != nil {
+			return networkProtocolDetails{}, errors.Wrap(err, "fail to get IPv4 address")
+		}
+
+		ipAddr := strings.TrimSuffix(string(out), "\n")
+
+		senderCmd := testexec.CommandContext(ctx, "sh", "-c", fmt.Sprintf("echo \"Hello, UDP\" | nc -u %s 8080", ipAddr))
+		receiverCmd := testexec.CommandContext(ctx, "sh", "-c", "nc -u -l -p 8080")
+
+		return networkProtocolDetails{
+			senderCmd:   senderCmd,
+			receiverCmd: receiverCmd,
+			protocol:    "UDP",
+			ipAddr:      ipAddr,
 		}, nil
 	}
 	return networkProtocolDetails{}, errors.Errorf("An unexpected network type is received: %s", network)
