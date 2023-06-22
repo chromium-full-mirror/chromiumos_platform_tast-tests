@@ -1,0 +1,46 @@
+# Metadata information for this directory.
+#
+# For more information on DIR_METADATA files, see:
+#   https://source.chromium.org/chromium/infra/infra/+/HEAD:go/src/infra/tools/dirmd/README.md
+#
+# For the schema of this file, see Metadata message:
+#   https://source.chromium.org/chromium/infra/infra/+/HEAD:go/src/infra/tools/dirmd/proto/dir_metadata.proto
+
+buganizer {
+  component_id: 1034754 # ChromeOS > Test > Harness > Tast > Framework
+}
+
+team_email: "tast-users@chromium.org"
+
+chromeos {
+  cq {
+    source_test_plans {
+      test_plan_starlark_files {
+        host: "chrome-internal.googlesource.com"
+        project: "chromeos/config-internal"
+        path: "test/plans/v2/ctpv1_compatible/legacy_default_tast_hw.star"
+      }
+      # Per-category directories should get their own config to run only the
+      # relevant hardware tests. Exclude from this general hardware test config.
+      # Note that they still run all VM tests below.
+      path_regexp_excludes: "src/go\\.chromium\\.org/tast-tests/cros/(local|remote)/bundles/cros/.+/.+"
+      # Firmware libraries define their own testing config because they are
+      # only imported by firmware tests.
+      # TODO(b/291923441): Enforce this dep graph constraint via linting.
+      path_regexp_excludes: "src/go\\.chromium\\.org/tast-tests/cros/common/servo/.+"
+      path_regexp_excludes: "src/go\\.chromium\\.org/tast-tests/cros/(local|remote|common)/firmware/.+"
+    }
+    source_test_plans {
+      test_plan_starlark_files {
+        host: "chrome-internal.googlesource.com"
+        project: "chromeos/config-internal"
+        path: "test/plans/v2/ctpv1_compatible/legacy_default_vm.star"
+      }
+      # Firmware tests and libraries don't need to run in VMs.
+      path_regexp_excludes: "src/go\\.chromium\\.org/tast-tests/cros/common/servo/.+"
+      path_regexp_excludes: "src/go\\.chromium\\.org/tast-tests/cros/(local|remote|common)/firmware/.+"
+      path_regexp_excludes: "src/go\\.chromium\\.org/tast-tests/cros/(local|remote)/bundles/cros/firmware/.+"
+      path_regexp_excludes: "src/go\\.chromium\\.org/tast-tests/cros/remote/bundles/cros/gscdevboard"
+    }
+  }
+}

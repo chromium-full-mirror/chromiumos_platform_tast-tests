@@ -1,0 +1,37 @@
+# Metadata information for this directory.
+#
+# For more information on DIR_METADATA files, see:
+#   https://source.chromium.org/chromium/infra/infra/+/HEAD:go/src/infra/tools/dirmd/README.md
+#
+# For the schema of this file, see Metadata message:
+#   https://source.chromium.org/chromium/infra/infra/+/HEAD:go/src/infra/tools/dirmd/proto/dir_metadata.proto
+
+chromeos {
+  cq {
+    source_test_plans {
+      # Firmware libraries are only imported by firmware tests (including
+      # recursive imports). This directory is excluded from the repo-level
+      # SourceTestPlan, which runs all Tast tests, so define a firmware-specific
+      # SourceTestPlan here.
+      #
+      # See b/192666773#comment33 for background.
+      test_plan_starlark_files {
+        host: "chrome-internal.googlesource.com"
+        project: "chromeos/config-internal"
+        path: "test/plans/v2/ctpv1_compatible/templated/tast_categories.star"
+        template_parameters {
+          suite_name: "bvt-tast-cq-cft-firmware"
+          tag_criteria {
+            tags: "group:mainline"
+            tag_excludes: "informational"
+            test_names: "tast.firmware.*"
+          }
+        }
+      }
+      # ti50 directories only affect tests that run on special Ti50 devboard HW,
+      # so running Chromebook HW tests does not provide value. See b/286228244
+      # for background.
+      path_regexp_excludes: "src/go.chromium.org/tast-tests/cros/common/firmware/ti50"
+    }
+  }
+}
