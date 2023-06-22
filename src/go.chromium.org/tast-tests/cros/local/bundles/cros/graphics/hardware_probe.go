@@ -6,9 +6,8 @@ package graphics
 
 import (
 	"context"
-	"path/filepath"
 
-	"go.chromium.org/tast-tests/cros/local/graphics"
+	"go.chromium.org/tast-tests/cros/local/graphics/hardwareprobe"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -36,8 +35,7 @@ func init() {
 
 // HardwareProbe verifies we can successfully retrieve various device information via hardware_probe.
 func HardwareProbe(ctx context.Context, s *testing.State) {
-	file := filepath.Join(s.OutDir(), "hardware_probe.json")
-	result, err := graphics.GetHardwareProbeResult(ctx, file)
+	result, err := hardwareprobe.GetHardwareProbeResult(ctx)
 	if err != nil {
 		s.Fatal("Failed to run hardware_probe: ", err)
 	}

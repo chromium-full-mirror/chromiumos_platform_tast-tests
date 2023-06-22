@@ -16,6 +16,7 @@ import (
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/graphics/hardwareprobe"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -424,18 +425,12 @@ func GetGPUModel(ctx context.Context) string {
 // Currently ARM-based ChromeOS devices does not have display/graphics sections
 // in lshw so we need a workaround to read from system.
 func getGPUModelOnARM(ctx context.Context) string {
-	const readScript = "/usr/local/graphics/hardware_probe"
-	vendorRead, err := testexec.CommandContext(ctx, readScript, "--gpu-vendor").Output()
+	result, err := hardwareprobe.GetHardwareProbeResult(ctx)
 	if err != nil {
-		testing.ContextLog(ctx, "Failed to get GPU model: Cannot read gpu vendor")
+		testing.ContextLog(ctx, "Failed to get HardwareProbe result")
 		return ""
 	}
-	familyRead, err := testexec.CommandContext(ctx, readScript, "--gpu-family").Output()
-	if err != nil {
-		testing.ContextLog(ctx, "Failed to get GPU model: Cannot read gpu family")
-		return ""
-	}
-	return strings.TrimSpace(string(vendorRead)) + "_" + strings.TrimSpace(string(familyRead))
+	return result.GPUInfo[0].Vendor + "_" + result.GPUInfo[0].Family
 }
 
 // GetMemoryType returns the memory type e.g. LPDDR3

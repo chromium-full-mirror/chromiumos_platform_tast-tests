@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/graphics/hardwareprobe"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
@@ -165,7 +166,7 @@ func parseSysfsMemory(ctx context.Context, file string) (map[string]int, error) 
 	if err != nil {
 		return nil, errors.Wrapf(err, " error encountered while reading file %s ", file)
 	}
-	soc, err := CPUFamily(ctx)
+	soc, err := hardwareprobe.CPUFamily(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "Machine CPU family is not supported")
 	}

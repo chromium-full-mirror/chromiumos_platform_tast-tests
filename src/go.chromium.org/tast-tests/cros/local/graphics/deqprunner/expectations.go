@@ -12,7 +12,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"go.chromium.org/tast-tests/cros/local/graphics"
+	"go.chromium.org/tast-tests/cros/local/graphics/hardwareprobe"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -142,7 +142,7 @@ func GetCaseListFilters(ctx context.Context, category runnerCategory, environmen
 	   but it's harmless to have unused tests in the lists and makes
 	   copy-and-paste mistakes less likely.
 	*/
-	gpus, err := graphics.GPUFamilies(ctx)
+	gpus, err := hardwareprobe.GPUFamilies(ctx)
 	if err != nil {
 		return CaseListFilters{}, errors.Wrap(err, "failed to get gpu information")
 	}

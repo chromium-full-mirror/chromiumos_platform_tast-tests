@@ -21,7 +21,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/crosconfig"
-	"go.chromium.org/tast-tests/cros/local/graphics"
+	"go.chromium.org/tast-tests/cros/local/graphics/hardwareprobe"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/lsbrelease"
 	"go.chromium.org/tast/core/testing"
@@ -220,7 +220,7 @@ func getDeviceChipset(ctx context.Context) (string, error) {
 		return overrideChipset.Value(), nil
 	}
 
-	gpu, err := graphics.GPUFamilies(ctx)
+	gpu, err := hardwareprobe.GPUFamilies(ctx)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to get GPU chipset")
 	}

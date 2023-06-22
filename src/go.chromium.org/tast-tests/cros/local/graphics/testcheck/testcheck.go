@@ -9,6 +9,8 @@ import (
 	"strings"
 	gotesting "testing"
 
+	// We have to import graphics package so that fixture declaration chain can be established.
+	_ "go.chromium.org/tast-tests/cros/local/graphics"
 	"go.chromium.org/tast/core/testing"
 	tastcheck "go.chromium.org/tast/core/testing/testcheck"
 )
