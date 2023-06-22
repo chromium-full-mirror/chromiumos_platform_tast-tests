@@ -39,8 +39,8 @@ func init() {
 			"tij@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		// TODO: When stable, change firmware_unstable to a different attr and add linto@chromium.org to gerrit review.
-		Attr:         []string{"group:firmware", "firmware_unstable"},
+		Attr:         []string{"group:firmware", "firmware_ec"},
+		Requirements: []string{"sys-fw-0022-v02"},
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		SoftwareDeps: []string{"chrome"},
@@ -164,6 +164,7 @@ func testWakeWithLid(ctx context.Context, h *firmware.Helper) error {
 	}
 
 	testing.ContextLogf(ctx, "Sleeping for %s", dutWakeDelay)
+	// GoBigSleepLint: Sleep long enough for DUT to unsuspend and verify DUT remains suspended after that.
 	if err := testing.Sleep(ctx, dutWakeDelay); err != nil {
 		return err
 	}
@@ -200,6 +201,8 @@ func closeAndOpenLid(ctx context.Context, h *firmware.Helper, delay time.Duratio
 	}
 
 	testing.ContextLogf(ctx, "Sleeping for %s", delay)
+	// GoBigSleepLint: Remain in suspend state for variable length of time before
+	// opening lid to verify it still wakes even after a while.
 	if err := testing.Sleep(ctx, delay); err != nil {
 		return err
 	}
