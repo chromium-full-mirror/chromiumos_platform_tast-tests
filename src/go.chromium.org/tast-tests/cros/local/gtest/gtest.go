@@ -94,6 +94,10 @@ type GTest struct {
 	// Note that "-1" means infinite.
 	repeat int
 
+	// alsoRunDisabledTests specified whether disabled tests also runs. If
+	// this is true, then --gtest_also_run_disabled_tests is set.
+	alsoRunDisabledTests bool
+
 	// extraArgs will be passed to the test execution. Note that all
 	// --gtest* prefixed commandline flags should be constructed from
 	// GTest struct internally, so it is an error to include --gtest* flags
@@ -139,6 +143,11 @@ func Repeat(repeat int) option {
 	return func(t *GTest) { t.repeat = repeat }
 }
 
+// AlsoRunDisabledTests returns an option with setting --gtest_also_run_disabled_tests.
+func AlsoRunDisabledTests() option {
+	return func(t *GTest) { t.alsoRunDisabledTests = true }
+}
+
 // ExtraArgs returns an option to pass more arguments than gtest arguments
 // for execution.
 func ExtraArgs(args ...string) option {
@@ -172,6 +181,9 @@ func (t *GTest) Args() ([]string, error) {
 	}
 	if t.repeat != 0 {
 		args = append(args, "--gtest_repeat="+strconv.Itoa(t.repeat))
+	}
+	if t.alsoRunDisabledTests {
+		args = append(args, "--gtest_also_run_disabled_tests")
 	}
 
 	// Verify extraArgs and append them.

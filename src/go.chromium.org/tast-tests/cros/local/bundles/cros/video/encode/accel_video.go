@@ -370,6 +370,7 @@ func RunAccelVideoPerfTest(ctx context.Context, s *testing.State, opts TestOptio
 		// Repeat enough times to run for full measurement duration. We don't
 		// use -1 here as this can result in huge log files (b/138822793).
 		gtest.Repeat(1000),
+		gtest.AlsoRunDisabledTests(),
 		gtest.ExtraArgs(testArgs...),
 		gtest.UID(int(sysutil.ChronosUID)),
 	))
