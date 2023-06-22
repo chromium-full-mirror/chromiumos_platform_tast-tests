@@ -299,6 +299,36 @@ const (
 	// NvmeStorageSeqWriteTp with If the ChromeOS device uses NVMe to provide non-volatile storage, its NVMe storage device MUST support >= 100 MB/second sequential write operations.
 	NvmeStorageSeqWriteTp = "store-nvme-0009-v01"
 
+	// NvmeStorageSeqReadLatency with If the ChromeOS device uses NVMe to provide non-volatile storage, its NVMe storage device latency MUST NOT exceed 12ms for the 99th percentile of 512k sequential reads, with iodepth=1 workload.
+	NvmeStorageSeqReadLatency = "store-nvme-0017-v01"
+
+	// NvmeStorageSeqWriteLatency with If the ChromeOS device uses NVMe to provide non-volatile storage, its NVMe storage device latency MUST NOT exceed 12ms for the 99th percentile of 512k sequential writes, with iodepth=1 workload.
+	NvmeStorageSeqWriteLatency = "store-nvme-0018-v01"
+
+	// EmmcStorageSeqReadTp with If the ChromeOS device uses eMMC to provide non-volatile storage, its eMMC storage device MUST support >= 50 MB/second sequential read operations.
+	EmmcStorageSeqReadTp = "store-emmc-0011-v01"
+
+	// EmmcStorageSeqWriteTp with If the ChromeOS device uses eMMC to provide non-volatile storage, its eMMC storage device MUST support >= 20 MB/second sequential write operations.
+	EmmcStorageSeqWriteTp = "store-emmc-0013-v01"
+
+	// EmmcStorageSeqReadLatency with If the ChromeOS device uses eMMC to provide non-volatile storage, its eMMC storage device latency MUST NOT exceed 35ms for the 99th percentile of 512k sequential reads, with iodepth=1 workload.
+	EmmcStorageSeqReadLatency = "store-emmc-0021-v01"
+
+	// EmmcStorageSeqWriteLatency with If the ChromeOS device uses eMMC to provide non-volatile storage, its eMMC storage device latency MUST NOT exceed 35ms for the 99th percentile of 512k sequential writes, with iodepth=1 workload.
+	EmmcStorageSeqWriteLatency = "store-emmc-0022-v01"
+
+	// UfsStorageSeqReadTp with If the ChromeOS device uses UFS to provide non-volatile storage, its UFS storage device MUST support >= 250 MB/second sequential read operations.
+	UfsStorageSeqReadTp = "store-ufs-0014-v01"
+
+	// UfsStorageSeqWriteTp with If the ChromeOS device uses UFS to provide non-volatile storage, its UFS storage device MUST support >= 100 MB/second sequential write operations.
+	UfsStorageSeqWriteTp = "store-ufs-0016-v01"
+
+	// UfsStorageSeqReadLatency with If the ChromeOS device uses UFS to provide non-volatile storage, its UFS storage device latency MUST NOT exceed 12ms for the 99th percentile of 512k sequential reads, with iodepth=1 workload.
+	UfsStorageSeqReadLatency = "store-ufs-0032-v01"
+
+	// UfsStorageSeqWriteLatency with If the ChromeOS device uses UFS to provide non-volatile storage, its UFS storage device latency MUST NOT exceed 12ms for the 99th percentile of 512k sequential writes, with iodepth=1 workload.
+	UfsStorageSeqWriteLatency = "store-ufs-0033-v01"
+
 	// RemovableStorageSeqTp with The ChromeOS device MUST support >= 40 MBps throughput to external storage devices.
 	RemovableStorageSeqTp = "rmvbl-general-0001-v01"
 

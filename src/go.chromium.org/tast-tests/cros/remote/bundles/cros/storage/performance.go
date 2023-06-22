@@ -118,6 +118,36 @@ func init() {
 			Val:               "4k_write_qd4",
 			ExtraHardwareDeps: hwdep.D(hwdep.Ufs()),
 			ExtraRequirements: []string{tdreq.UfsStorage4kQD4WriteLatency},
+		}, {
+			Name:              "nvme_seq_read",
+			Val:               "seq_read",
+			ExtraHardwareDeps: hwdep.D(hwdep.Nvme()),
+			ExtraRequirements: []string{tdreq.NvmeStorageSeqReadTp, tdreq.NvmeStorageSeqReadLatency},
+		}, {
+			Name:              "nvme_seq_write",
+			Val:               "seq_write",
+			ExtraHardwareDeps: hwdep.D(hwdep.Nvme()),
+			ExtraRequirements: []string{tdreq.NvmeStorageSeqWriteTp, tdreq.NvmeStorageSeqWriteLatency},
+		}, {
+			Name:              "emmc_seq_read",
+			Val:               "seq_read",
+			ExtraHardwareDeps: hwdep.D(hwdep.Emmc()),
+			ExtraRequirements: []string{tdreq.EmmcStorageSeqReadTp, tdreq.EmmcStorageSeqReadLatency},
+		}, {
+			Name:              "emmc_seq_write",
+			Val:               "seq_write",
+			ExtraHardwareDeps: hwdep.D(hwdep.Emmc()),
+			ExtraRequirements: []string{tdreq.EmmcStorageSeqWriteTp, tdreq.EmmcStorageSeqWriteLatency},
+		}, {
+			Name:              "ufs_seq_read",
+			Val:               "seq_read",
+			ExtraHardwareDeps: hwdep.D(hwdep.Ufs()),
+			ExtraRequirements: []string{tdreq.UfsStorageSeqReadTp, tdreq.UfsStorageSeqReadLatency},
+		}, {
+			Name:              "ufs_seq_write",
+			Val:               "seq_write",
+			ExtraHardwareDeps: hwdep.D(hwdep.Ufs()),
+			ExtraRequirements: []string{tdreq.UfsStorageSeqWriteTp, tdreq.UfsStorageSeqWriteLatency},
 		}},
 	})
 }
