@@ -12,7 +12,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"strconv"
-	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -104,7 +103,6 @@ func StartOSLogging(ctx context.Context, cr *chrome.Chrome, br *browser.Browser,
 	resetButton := nodewith.Name("Start Over").Role(role.Button)
 	startButton := nodewith.Name("Start Logging to Disk").Role(role.Button)
 	saveButton := nodewith.Name("Save").Role(role.Button)
-	fileNameField := nodewith.Name("File name").Role(role.TextField).State(state.Focused, true)
 	ui := uiauto.New(tconn)
 	if err := uiauto.Combine("Start net export session",
 		ui.WaitUntilExists(netExportWindow),
@@ -116,10 +114,8 @@ func StartOSLogging(ctx context.Context, cr *chrome.Chrome, br *browser.Browser,
 		// Click 'Start' button to begin net export session.
 		ui.WaitUntilExists(startButton),
 		ui.DoDefault(startButton),
-		// Change file name in file picker. Exclude file extension since this is
-		// already present.
-		ui.WaitUntilExists(fileNameField),
-		kb.TypeAction(strings.TrimSuffix(OsDownloadName, filepath.Ext(OsDownloadName))),
+		// Set file name for netlog file.
+		setFileName(OsDownloadName, ui, kb),
 		// Click 'Save' button in file app.
 		ui.WaitUntilExists(saveButton),
 		ui.WaitUntilEnabled(saveButton),
@@ -201,25 +197,8 @@ func StopLoggingCheckLogs(ctx context.Context, cr *chrome.Chrome, br *browser.Br
 // the os://net-export app, and returns true if the given network annotation was
 // present in the net log file.
 func StopOSLoggingCheckLogs(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, kb *input.KeyboardEventWriter, annotation string) (foundAnnotation bool, err error) {
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		return false, errors.Wrap(err, "failed to create Test API connection")
-	}
-
-	// Open the net-export page.
-	netConn, err := NewOSNetExportConn(ctx, br, tconn, kb)
-	if err != nil {
-		return false, errors.Wrap(err, "failed to load "+OsNetExportURL)
-	}
-	defer netConn.Close()
-
-	stopButton := nodewith.Name("Stop Logging").Role(role.Button)
-	ui := uiauto.New(tconn)
-	if err := uiauto.Combine("Stop net export session",
-		ui.WaitUntilExists(stopButton),
-		ui.DoDefault(stopButton),
-	)(ctx); err != nil {
-		return false, errors.Wrap(err, "failed to stop net export session")
+	if err := stopOSLogging(ctx, cr, br, kb); err != nil {
+		return false, errors.Wrap(err, "failed to stop logging")
 	}
 
 	// Get the net export log file.
@@ -313,6 +292,10 @@ func StopLoggingVerifyAnnotationSet(ctx context.Context, cr *chrome.Chrome, br *
 	downloadName := "chrome-net-export-log.json"
 	downloadLocation := filepath.Join(downloadsPath, downloadName)
 
+	return verifyAnnotationSet(downloadLocation, annotationsShouldBePresent, annotationHashCodes)
+}
+
+func verifyAnnotationSet(downloadLocation string, annotationsShouldBePresent bool, annotationHashCodes []string) (foundAnnotation bool, err error) {
 	// Read the net export log file.
 	logFile, err := ioutil.ReadFile(downloadLocation)
 	if err != nil {
@@ -349,6 +332,24 @@ func StopLoggingVerifyAnnotationSet(ctx context.Context, cr *chrome.Chrome, br *
 	return oneAnnotationFound, nil
 }
 
+// StopOSLoggingVerifyAnnotationSet clicks the "Stop logging" button on the net
+// export page and verifies that either none or all of the annotation hash codes
+// in the given list are present in the logs.
+func StopOSLoggingVerifyAnnotationSet(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, kb *input.KeyboardEventWriter, annotationsShouldBePresent bool, annotationHashCodes []string) (foundAnnotation bool, err error) {
+	if err := stopOSLogging(ctx, cr, br, kb); err != nil {
+		return false, errors.Wrap(err, "failed to stop logging")
+	}
+
+	// Get the net export log file.
+	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
+	if err != nil {
+		return false, errors.Wrap(err, "failed to get user's Download path")
+	}
+	downloadLocation := filepath.Join(downloadsPath, OsDownloadName)
+
+	return verifyAnnotationSet(downloadLocation, annotationsShouldBePresent, annotationHashCodes)
+}
+
 // NewNetExportConn navigates to chrome://net-export.
 func NewNetExportConn(ctx context.Context, br *browser.Browser) (conn *chrome.Conn, err error) {
 	// Open the net-export page.
@@ -363,7 +364,7 @@ func NewNetExportConn(ctx context.Context, br *browser.Browser) (conn *chrome.Co
 // in Lacros mode.
 func NewOSNetExportConn(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn, kb *input.KeyboardEventWriter) (conn *chrome.Conn, err error) {
 	// Connect to a new tab.
-	conn, err = br.NewConnForTarget(ctx, chrome.MatchTargetURL(chrome.NewTabURL))
+	conn, err = br.NewConn(ctx, chrome.NewTabURL)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to find a new tab page")
 	}
@@ -389,6 +390,18 @@ func CheckLogs(ctx context.Context, cr *chrome.Chrome, annotation string) (found
 		return false, errors.Wrap(err, "failed to get user's Download path")
 	}
 	downloadLocation := filepath.Join(downloadsPath, DownloadName)
+
+	return CheckLogsFromFile(ctx, cr, annotation, downloadLocation)
+}
+
+// CheckOSLogs checks OS logs for given annotation.
+func CheckOSLogs(ctx context.Context, cr *chrome.Chrome, annotation string) (foundAnnotation bool, err error) {
+	// Get the net export log file.
+	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
+	if err != nil {
+		return false, errors.Wrap(err, "failed to get user's Download path")
+	}
+	downloadLocation := filepath.Join(downloadsPath, OsDownloadName)
 
 	return CheckLogsFromFile(ctx, cr, annotation, downloadLocation)
 }
@@ -433,6 +446,52 @@ func StopLogging(ctx context.Context, cr *chrome.Chrome, br *browser.Browser) er
 	// Clean up file after reading
 	if err := os.Remove(downloadLocation); err != nil {
 		return errors.Wrap(err, "failed to Clean file")
+	}
+
+	return nil
+}
+
+// StopOSLogging clicks the "Stop logging" button and deletes the logs.
+func StopOSLogging(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, kb *input.KeyboardEventWriter) error {
+	if err := stopOSLogging(ctx, cr, br, kb); err != nil {
+		return errors.Wrap(err, "failed to stop OS logging")
+	}
+
+	// Get the net export log file.
+	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
+	if err != nil {
+		return errors.Wrap(err, "failed to get user's Download path")
+	}
+	downloadLocation := filepath.Join(downloadsPath, OsDownloadName)
+
+	// Clean up file after reading.
+	if err := os.Remove(downloadLocation); err != nil {
+		return errors.Wrap(err, "failed to Clean file")
+	}
+
+	return nil
+}
+
+func stopOSLogging(ctx context.Context, cr *chrome.Chrome, br *browser.Browser, kb *input.KeyboardEventWriter) error {
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to create Test API connection")
+	}
+
+	// Open the net-export page.
+	netConn, err := NewOSNetExportConn(ctx, br, tconn, kb)
+	if err != nil {
+		return errors.Wrap(err, "failed to load "+OsNetExportURL)
+	}
+	defer netConn.Close()
+
+	stopButton := nodewith.Name("Stop Logging").Role(role.Button)
+	ui := uiauto.New(tconn)
+	if err := uiauto.Combine("Stop net export session",
+		ui.WaitUntilExists(stopButton),
+		ui.DoDefault(stopButton),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to stop net export session")
 	}
 
 	return nil
@@ -502,4 +561,32 @@ func GetStartTimeTick(logFile []byte) (int, error) {
 		return 0, errors.New("failed to find timeTickOffset in logfile")
 	}
 	return strconv.Atoi(string(matches[1]))
+}
+
+// setFileName sets the file name in file app during the save file process.
+// This function uses polling with retries and verification because this process
+// is flaky and can result in incorrectly set file names.
+func setFileName(desiredFileName string, ui *uiauto.Context, kb *input.KeyboardEventWriter) uiauto.Action {
+	fileNameField := nodewith.Name("File name").Role(role.TextField).State(state.Focused, true)
+
+	return func(ctx context.Context) error {
+		return testing.Poll(ctx, func(ctx context.Context) error {
+			if err := uiauto.Combine("Change file name in file picker",
+				ui.WaitUntilExists(fileNameField),
+				kb.AccelAction("ctrl+a"),
+				kb.TypeAction(desiredFileName),
+			)(ctx); err != nil {
+				return errors.Wrap(err, "failed to change file name")
+			}
+
+			fileNameFieldInfo, err := ui.Info(ctx, fileNameField)
+			if err != nil {
+				return errors.Wrap(err, "failed to read file name")
+			}
+			if fileNameFieldInfo.Value != desiredFileName {
+				return errors.Wrapf(err, "file name was not renamed correctly = got %s, want %s", fileNameFieldInfo.Value, desiredFileName)
+			}
+			return nil
+		}, &testing.PollOptions{Interval: time.Second, Timeout: 5 * time.Second})
+	}
 }

@@ -56,6 +56,7 @@ func init() {
 func UserFeedbackAllowed(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
+	isLacros := s.Param().(browser.Type) == browser.TypeLacros
 
 	// Reserve ten seconds for cleanup.
 	cleanupCtx := ctx
@@ -98,15 +99,26 @@ func UserFeedbackAllowed(ctx context.Context, s *testing.State) {
 			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.Name+"_key_combination")
 
 			// Open the net-export page and start logging.
-			if err := annotations.StartLogging(ctx, cr, br); err != nil {
-				s.Fatal("Failed to start logging: ", err)
+			if isLacros {
+				if err := annotations.StartOSLogging(ctx, cr, br, keyboard); err != nil {
+					s.Fatal("Failed to start OS logging: ", err)
+				}
+			} else {
+				if err := annotations.StartLogging(ctx, cr, br); err != nil {
+					s.Fatal("Failed to start logging: ", err)
+				}
 			}
 
 			if err := userfeedback.TriggerUserFeedback(ctx, s, cr, br, nil, tconn, index); err != nil {
-				s.Fatal("Failed to trigger password leak detection: ", err)
+				s.Fatal("Failed to trigger user feedback: ", err)
 			}
 
-			foundAnnotationHelpContentProvider, err := annotations.CheckLogs(ctx, cr, userfeedback.HelpContentProviderHashCode)
+			foundAnnotationHelpContentProvider := false
+			if isLacros {
+				foundAnnotationHelpContentProvider, err = annotations.CheckOSLogs(ctx, cr, userfeedback.HelpContentProviderHashCode)
+			} else {
+				foundAnnotationHelpContentProvider, err = annotations.CheckLogs(ctx, cr, userfeedback.HelpContentProviderHashCode)
+			}
 			if err != nil {
 				s.Fatal("Failed to check logs: ", err)
 			}
@@ -116,7 +128,12 @@ func UserFeedbackAllowed(ctx context.Context, s *testing.State) {
 			// and is sometimes delayed in logging.
 			foundAnnotationErr := testing.Poll(ctx, func(ctx context.Context) (err error) {
 				// Check the logs for given annotation.
-				isFound, err := annotations.CheckLogs(ctx, cr, userfeedback.ChromeFeedbackReportAppHashCode)
+				isFound := false
+				if isLacros {
+					isFound, err = annotations.CheckOSLogs(ctx, cr, userfeedback.ChromeFeedbackReportAppHashCode)
+				} else {
+					isFound, err = annotations.CheckLogs(ctx, cr, userfeedback.ChromeFeedbackReportAppHashCode)
+				}
 				if err != nil {
 					return testing.PollBreak(err)
 				}
@@ -132,8 +149,14 @@ func UserFeedbackAllowed(ctx context.Context, s *testing.State) {
 			foundAnnotationChromeFeedbackReportApp := foundAnnotationErr == nil
 
 			// Stop logging.
-			if err := annotations.StopLogging(ctx, cr, br); err != nil {
-				s.Fatal("Failed to stop logging: ", err)
+			if isLacros {
+				if err := annotations.StopOSLogging(ctx, cr, br, keyboard); err != nil {
+					s.Fatal("Failed to stop logging: ", err)
+				}
+			} else {
+				if err := annotations.StopLogging(ctx, cr, br); err != nil {
+					s.Fatal("Failed to stop logging: ", err)
+				}
 			}
 
 			if foundAnnotationHelpContentProvider != param.ShouldFindAnnotation {

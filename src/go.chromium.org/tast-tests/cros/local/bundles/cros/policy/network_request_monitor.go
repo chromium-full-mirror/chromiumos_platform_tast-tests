@@ -30,6 +30,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/quickanswers"
 	"go.chromium.org/tast/core/ctxutil"
@@ -179,11 +180,19 @@ func concatPolicyLists() []policy.Policy {
 
 func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
+	isLacros := s.Param().(browser.Type) == browser.TypeLacros
 
 	// Reserve ten seconds for cleanup.
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
+
+	// Set up keyboard.
+	kb, err := input.VirtualKeyboard(ctx)
+	if err != nil {
+		s.Fatal("Failed to get keyboard: ", err)
+	}
+	defer kb.Close(cleanupCtx)
 
 	gaiaCreds, err := credconfig.PickRandomCreds(s.RequiredVar("policy.managedUserAccountPool"))
 	if err != nil {
@@ -262,6 +271,14 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start logging: ", err)
 	}
 
+	// If running in lacros mode, also start an OS net-export session. Annotations
+	// in the OS (Ash) binary will only be present in the OS net-export log file.
+	if isLacros {
+		if err := annotations.StartOSLogging(ctx, cr, br, kb); err != nil {
+			s.Fatal("Failed to start logging: ", err)
+		}
+	}
+
 	// Network traffic annotation hashcodes associated with the optional services.
 	var hashCodes []string
 
@@ -280,6 +297,15 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 	_, err = annotations.StopLoggingVerifyAnnotationSet(ctx, cr, br, false, hashCodes)
 	if err != nil {
 		s.Fatal("Failed to stop logging and verify logs: ", err)
+	}
+	// Also check OS logs during lacros runs. Note that technically annotations
+	// would either be present in the browser logs or the OS logs, depending on
+	// which binary (Ash vs Lacros) they are part of. For now, we just check for
+	// all annotations in both log files.
+	if isLacros {
+		if _, err := annotations.StopOSLoggingVerifyAnnotationSet(ctx, cr, br, kb, false, hashCodes); err != nil {
+			s.Fatal("Failed to stop OS logging and verify logs: ", err)
+		}
 	}
 
 	// Note: In lacros mode, for unknown reasons, we are unable to stop the
