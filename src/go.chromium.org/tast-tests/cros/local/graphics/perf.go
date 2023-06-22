@@ -211,10 +211,10 @@ func collectMaliPerformanceCounters(ctx context.Context, interval time.Duration)
 	}
 
 	accuBusy := float64(0.0)
-	const samplePeriod = time.Second
+	const samplePeriod = 100 * time.Millisecond
 	numSamples := int(interval / samplePeriod)
 	for i := 0; i < numSamples; i++ {
-		maliStatsCmd := exec.Command("mali_stats", "-u", "10000")
+		maliStatsCmd := exec.Command("mali_stats", "-u", "100000")
 		var out bytes.Buffer
 		var stderr bytes.Buffer
 		maliStatsCmd.Stdout = &out
@@ -239,8 +239,8 @@ func collectMaliPerformanceCounters(ctx context.Context, interval time.Duration)
 	}
 
 	counters = make(map[string]time.Duration)
-	counters["rcs"] = time.Duration(accuBusy / 100.0 * float64(time.Second))
-	counters["total"] = time.Duration(float64(numSamples) * float64(time.Second))
+	counters["rcs"] = time.Duration(accuBusy / 100.0 * float64(time.Millisecond*100))
+	counters["total"] = time.Duration(float64(numSamples) * float64(time.Millisecond*100))
 
 	return counters, 0, nil
 }
