@@ -40,7 +40,7 @@ func init() {
 			"chromeos-dlp@google.com",
 		},
 		BugComponent: "b:892101",
-		Attr:         []string{"group:dmserver-enrollment-daily"},
+		Attr:         []string{"group:data-leak-prevention-dmserver-enrollment-daily"},
 		SoftwareDeps: []string{"reboot", "chrome"},
 		ServiceDeps: []string{
 			"tast.cros.hwsec.OwnershipService",
