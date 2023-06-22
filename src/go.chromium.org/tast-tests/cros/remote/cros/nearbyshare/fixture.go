@@ -35,8 +35,7 @@ const (
 	webRTC                  = "NearbySharingWebRtc"
 	wlan                    = "NearbySharingWifiLan"
 	floss                   = "Floss"
-	selfShareAutoAccept     = "NearbySharingSelfShareAutoAccept"
-	selfShareUI             = "NearbySharingSelfShareUI"
+	selfShare               = "NearbySharingSelfShare"
 )
 
 // NewNearbyShareFixture creates a fixture for Nearby Share tests in different configurations.
@@ -60,7 +59,7 @@ func NewNearbyShareSelfShareFixture(dataUsage nearbycommon.DataUsage, visibility
 		visibility:             visibility,
 		skipReceiverOnboarding: skipReceiverOnboarding,
 		sameGaiaLogin:          true,
-		enabledFeatures:        append(enabledFeatures, selfShareAutoAccept, selfShareUI),
+		enabledFeatures:        append(enabledFeatures, selfShare),
 		disabledFeatures:       disabledFeatures,
 		// TODO(crbug/1127165): Remove after data is supported in fixture.
 		testFiles: []string{"small_jpg.zip", "small_png.zip", "big_txt.zip"},
