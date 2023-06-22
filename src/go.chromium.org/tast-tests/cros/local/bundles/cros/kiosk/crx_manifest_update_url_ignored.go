@@ -198,23 +198,8 @@ func openExtensionAndCheckTitleChange(ctx context.Context, s *testing.State, kio
 
 	ui := uiauto.New(tconn)
 
-	// UI needs some time to be stable to interact, see also start_app_from_sign_in_screen.go
-	// I was not able to find another stable way to interact with the UI.
-	// GoBigSleepLint: TODO(b/280952514) "Apps" button in sign in screen needs some time.
-	testing.Sleep(ctx, 3*time.Second)
-
-	testing.ContextLog(ctx, "Opening Kiosk app from signin screen")
-	kioskAppsBtn := nodewith.Name("Apps").ClassName("MenuButton")
-	testExtensionButton := nodewith.Name(originalAppTitle).ClassName("MenuItemView")
-	versionNode := nodewith.NameStartingWith("Version: ").First()
-
-	if err := uiauto.Combine("Open TestExtension via menu",
-		ui.WaitUntilExists(kioskAppsBtn),
-		ui.LeftClick(kioskAppsBtn),
-		ui.WaitUntilExists(testExtensionButton),
-		ui.LeftClick(testExtensionButton),
-	)(ctx); err != nil {
-		s.Fatal("Failed to start extension: ", err)
+	if err := kioskmode.LaunchAppManually(ctx, tconn, originalAppTitle); err != nil {
+		s.Fatal("Failed to start Kiosk app from Sign-in screen: ", err)
 	}
 
 	// Wait for Kiosk launch.
@@ -223,6 +208,7 @@ func openExtensionAndCheckTitleChange(ctx context.Context, s *testing.State, kio
 	}
 
 	// Wait for extension UI to be visible.
+	versionNode := nodewith.NameStartingWith("Version: ").First()
 	if err := ui.WaitUntilExists(versionNode)(ctx); err != nil {
 		s.Fatal("Failed to wait for extension to launch: ", err)
 	}
