@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/bond"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/effects"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -32,7 +33,10 @@ type meetParams struct {
 	platformRelight bool
 	// Whether to use the low res ("full") segmentation model or not.
 	useLowResModel bool
+	botCount       int
 }
+
+const botDuration = 7 * time.Minute
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -50,6 +54,9 @@ func init() {
 		Vars: []string{
 			// How many minutes to capture metrics.
 			"videoconferencing.test_duration",
+		},
+		VarDeps: []string{
+			"ui.bond_credentials",
 		},
 		Attr: []string{"group:ml_benchmark", "ml_benchmark_nightly"},
 		Data: []string{
@@ -121,6 +128,76 @@ func init() {
 					useLowResModel:  true,
 				},
 			},
+			{
+				Name: "no_effects_720p_4ppl",
+				Val: meetParams{
+					botCount: 3,
+				},
+			},
+			{
+				Name: "app_blur_720p_4ppl",
+				Val: meetParams{
+					appBlur:  true,
+					botCount: 3,
+				},
+			},
+			{
+				Name: "platform_relight_720p_4ppl",
+				Val: meetParams{
+					platformRelight: true,
+					botCount:        3,
+				},
+			},
+			{
+				Name: "platform_blur_720p_4ppl",
+				Val: meetParams{
+					platformBlur: true,
+					botCount:     3,
+				},
+			},
+			{
+				Name: "platform_blur_relight_720p_4ppl",
+				Val: meetParams{
+					platformBlur:    true,
+					platformRelight: true,
+					botCount:        3,
+				},
+			},
+			{
+				Name: "no_effects_720p_10ppl",
+				Val: meetParams{
+					botCount: 9,
+				},
+			},
+			{
+				Name: "app_blur_720p_10ppl",
+				Val: meetParams{
+					appBlur:  true,
+					botCount: 9,
+				},
+			},
+			{
+				Name: "platform_relight_720p_10ppl",
+				Val: meetParams{
+					platformRelight: true,
+					botCount:        9,
+				},
+			},
+			{
+				Name: "platform_blur_720p_10ppl",
+				Val: meetParams{
+					platformBlur: true,
+					botCount:     9,
+				},
+			},
+			{
+				Name: "platform_blur_relight_720p_10ppl",
+				Val: meetParams{
+					platformBlur:    true,
+					platformRelight: true,
+					botCount:        9,
+				},
+			},
 		},
 	})
 }
@@ -181,13 +258,55 @@ func BenchmarkingMeet(ctx context.Context, s *testing.State) {
 	}
 	defer cleanup(closeCtx)
 
-	gm, err := googlemeet.StartNewMeeting(ctx, cr, br, conn,
-		map[string]string{
-			"e": "ForceSegmentationModelVariant::GpuMid",
-		}, googlemeet.WithAllPermissions)
-	if err != nil {
-		s.Fatal("Failed to start meeting: ", err)
+	// Create a new meeting with bots.
+	var gm *googlemeet.GoogleMeet
+	if param.botCount > 0 {
+		creds := s.RequiredVar("ui.bond_credentials")
+		bc, err := bond.NewClient(ctx, bond.WithCredsJSON([]byte(creds)))
+		if err != nil {
+			s.Fatal("Failed to create a bond client: ", err)
+		}
+		defer bc.Close()
+
+		var meetingCode string
+		func() {
+			sctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+			defer cancel()
+			meetingCode, err = bc.CreateConference(sctx)
+			if err != nil {
+				s.Fatal("Failed to create a conference room: ", err)
+			}
+		}()
+
+		testing.ContextLog(ctx, "Meeting created with code: ", meetingCode)
+
+		func() {
+			sctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+			defer cancel()
+			_, _, err := bc.AddBots(sctx, meetingCode, param.botCount, botDuration)
+			if err != nil {
+				s.Fatal("Failed to add bots: ", err)
+			}
+		}()
+
+		gm, err = googlemeet.JoinMeeting(ctx, cr, br, conn, meetingCode,
+			map[string]string{
+				"e": "ForceSegmentationModelVariant::GpuMid",
+			}, googlemeet.WithAllPermissions)
+		if err != nil {
+			s.Fatal("Failed to join meeting: ", err)
+		}
+
+	} else {
+		gm, err = googlemeet.StartNewMeeting(ctx, cr, br, conn,
+			map[string]string{
+				"e": "ForceSegmentationModelVariant::GpuMid",
+			}, googlemeet.WithAllPermissions)
+		if err != nil {
+			s.Fatal("Failed to start meeting: ", err)
+		}
 	}
+
 	defer gm.Close(closeCtx)
 
 	// Configure Meeting.
