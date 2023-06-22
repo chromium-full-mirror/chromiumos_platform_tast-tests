@@ -65,6 +65,7 @@ dmesg --clear
 
 var driversToModprobe = [...]string{
 	"bluetooth",
+	"bridge",
 	"cdc_ether",
 	"fuse",
 	"hci_vhci",
