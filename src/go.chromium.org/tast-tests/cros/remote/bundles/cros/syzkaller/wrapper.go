@@ -59,7 +59,7 @@ var isLocal = testing.RegisterVarString(
 )
 
 const startupScriptContents = `
-sysctl -w kernel.panic_on_warn=1
+sysctl -w kernel.panic_on_warn=%v
 dmesg --clear
 `
 
@@ -76,6 +76,7 @@ var driversToModprobe = [...]string{
 	"uinput",
 	"usbnet",
 	"veth",
+	"xfrm_interface",
 	"xt_cgroup",
 	"xt_MASQUERADE",
 	"zram",
@@ -309,6 +310,7 @@ func Wrapper(ctx context.Context, s *testing.State) {
 	}
 	s.Log("Drivers: ", drivers)
 	s.Log("Enabled syscalls: ", enabledSyscalls)
+	s.Log("Script contents: ", scriptContents)
 
 	// Load periodic commands.
 	pCmd, err := loadPeriodic(s.DataPath("periodic.json"), board)
@@ -670,7 +672,8 @@ func loadEnabledSyscalls(fpath, board string) (drivers, enabledSyscalls []string
 		return nil, nil, "", err
 	}
 
-	scriptContents = startupScriptContents
+	panicOnWarn := time.Now().Day() % 2
+	scriptContents = fmt.Sprintf(startupScriptContents, panicOnWarn)
 	for _, config := range feconfig {
 		if len(config.Boards) > 0 && len(config.ExcludeBoards) > 0 {
 			return nil, nil, "", errors.Errorf("non-empty Boards and ExcludeBoards found for [%v]", config.Driver)
