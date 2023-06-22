@@ -36,7 +36,7 @@ func init() {
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 		},
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
-		Attr:         []string{"group:wificell", "wificell_perf", "wificell_unstable"},
+		Attr:         []string{"group:wificell", "wificell_perf", "wificell_openwrt", "wificell_unstable"},
 		ServiceDeps:  []string{wificell.ShillServiceName},
 		Fixture:      "wificellFixtWithCapture",
 		Timeout:      time.Minute * 5, // The average test time doubled.
