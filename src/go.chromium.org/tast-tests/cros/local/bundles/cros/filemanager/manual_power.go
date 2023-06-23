@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/power"
+	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -17,13 +18,13 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ManualPower,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Measures power usage for 1 minute",
+		Desc:         "Measures power usage for 15 minutes",
 		BugComponent: "b:167289",
 		Contacts: []string{
 			"chromeos-files-syd@google.com",
 			"joelhockey@google.org",
 		},
-		Timeout: 20 * time.Minute,
+		Timeout: 15 * time.Minute,
 	})
 }
 
@@ -33,6 +34,17 @@ func ManualPower(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
+
+	// Set up the testing environment.
+	cleanup, err := setup.PowerTestSetup(ctx, "setup", nil, &setup.PowerTestOptions{})
+	if err != nil {
+		s.Fatal("Power setup failed: ", err)
+	}
+	defer func() {
+		if s.HasError() {
+			cleanup(cleanupCtx)
+		}
+	}()
 
 	r := power.NewRecorder(ctx, 5*time.Second, s.OutDir(), s.TestName())
 	testing.ContextLog(ctx, "Cooldown")
