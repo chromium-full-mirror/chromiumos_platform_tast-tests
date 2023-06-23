@@ -508,6 +508,25 @@ func LockScreen(ctx context.Context, tconn *chrome.TestConn) error {
 
 }
 
+// ShowNotificationCenter opens the notification center. The notification
+// center button does not show unless a notification exists, so this function
+// first waits for the button to appear. This function is useful if a test
+// wants to show a notification view without it timing out.
+func ShowNotificationCenter(ctx context.Context, tconn *chrome.TestConn) error {
+	if !qsRevampEnabled {
+		return errors.New("ShowNotificationCenter() requires QsRevamp enabled")
+	}
+	ui := uiauto.New(tconn)
+	notificationCenterIcon := nodewith.HasClass("NotificationCenterTray")
+	if err := ui.WithTimeout(uiTimeout).WaitUntilExists(notificationCenterIcon)(ctx); err != nil {
+		return errors.Wrap(err, "failed to wait for the notification center icon to exist, perhaps there are no notifications?")
+	}
+	if err := ui.WithTimeout(uiTimeout).LeftClick(notificationCenterIcon)(ctx); err != nil {
+		return errors.Wrap(err, "failed to click notification center icon")
+	}
+	return nil
+}
+
 // NotificationsHidden checks that the 'Notifications are hidden' notification
 // appears and that no other notifications are visible.
 func NotificationsHidden(ctx context.Context, tconn *chrome.TestConn) (bool, error) {

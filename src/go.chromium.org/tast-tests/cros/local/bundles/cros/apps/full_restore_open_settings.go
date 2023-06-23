@@ -39,7 +39,7 @@ func init() {
 
 func FullRestoreOpenSettings(ctx context.Context, s *testing.State) {
 	func() {
-		cr, err := chrome.New(ctx, chrome.EnableFeatures("FullRestore"))
+		cr, err := chrome.New(ctx, chrome.EnableFeatures("FullRestore", "QsRevamp"))
 		if err != nil {
 			s.Fatal("Failed to start Chrome: ", err)
 		}
@@ -70,7 +70,7 @@ func FullRestoreOpenSettings(ctx context.Context, s *testing.State) {
 			// By default, On startup is set to ask every time after reboot
 			// and there is an alertdialog asking the user to select whether to restore or not.
 			chrome.RemoveNotification(false),
-			chrome.EnableFeatures("FullRestore"),
+			chrome.EnableFeatures("FullRestore", "QsRevamp"),
 			chrome.EnableRestoreTabs(),
 			chrome.KeepState())
 		if err != nil {
@@ -107,17 +107,16 @@ func FullRestoreOpenSettings(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to wait for Settings apps page: ", err)
 		}
 
-		// After clicking the SETTINGS button, the notification is hidden in the system tray.
-		// Show the quick settings to find the notification.
-		if err := quicksettings.Show(ctx, tconn); err != nil {
-			s.Fatal("Failed to wait for quick setting: ", err)
+		cleanup, err := quicksettings.Init(ctx, tconn)
+		if err != nil {
+			s.Fatal("Failed to init quick settings: ", err)
 		}
+		defer cleanup()
 
-		collapseButton := nodewith.Name("Collapse menu").Role(role.Button).Ancestor(quicksettings.LegacyRootFinder)
-		// The quick settings view is so big that the Restore notification is collapsed.
-		// Collapse it if it is expanded.
-		if err := uiauto.IfSuccessThen(ui.WithTimeout(3*time.Second).WaitUntilExists(collapseButton), ui.LeftClick(collapseButton))(ctx); err != nil {
-			s.Fatal("Failed to collapse quick settings: ", err)
+		// After clicking the SETTINGS button, the notification is hidden in the system tray.
+		// Show the notification center to find the notification.
+		if err := quicksettings.ShowNotificationCenter(ctx, tconn); err != nil {
+			s.Fatal("Failed to show notification center: ", err)
 		}
 
 		notificationDialog := nodewith.HasClass("AshNotificationView").NameStartingWith("Restore apps?")
