@@ -33,7 +33,7 @@ func init() {
 		},
 		// Chrome OS Server Projects > Enterprise Management > Commercial Productivity
 		BugComponent: "b:1020793",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "no_kernel_upstream"},
 		Timeout:      chrome.GAIALoginTimeout + arc.BootTimeout + 180*time.Second,
 		SearchFlags: []*testing.StringPair{{
@@ -43,19 +43,20 @@ func init() {
 		}},
 		VarDeps: []string{"ui.gaiaPoolDefault"},
 		Params: []testing.Param{{
-			Fixture:   "savedDesksEnableWithoutArc",
-			Val:       []apps.App{apps.FilesSWA},
-			ExtraAttr: []string{"group:criticalstaging"},
+			Fixture: "savedDesksEnableWithoutArc",
+			Val:     []apps.App{apps.FilesSWA},
 		}, {
 			Name:              "lacros",
 			Fixture:           "savedDesksEnabledLacrosWithArcBooted",
 			Val:               []apps.App{apps.FilesSWA, apps.PlayStore},
 			ExtraSoftwareDeps: []string{"lacros", "android_vm"},
+			ExtraAttr:         []string{"informational"},
 		}, {
 			Name:              "arc_enabled",
 			Fixture:           "savedDesksEnableWithArc",
 			Val:               []apps.App{apps.FilesSWA, apps.PlayStore},
 			ExtraSoftwareDeps: []string{"android_vm"},
+			ExtraAttr:         []string{"informational"},
 		}},
 	})
 }

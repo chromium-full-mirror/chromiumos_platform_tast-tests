@@ -40,7 +40,7 @@ func init() {
 		},
 		// Chrome OS Server Projects > Enterprise Management > Commercial Productivity
 		BugComponent: "b:1020793",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      chrome.GAIALoginTimeout + arc.BootTimeout + 180*time.Second,
 		VarDeps:      []string{"ui.gaiaPoolDefault"},
@@ -50,12 +50,12 @@ func init() {
 			pci.SearchFlag(&policy.DeskTemplatesEnabled{}, pci.VerifiedFunctionalityUI),
 		},
 		Params: []testing.Param{{
-			Fixture:   fixture.ChromeAdminDeskTemplatesLoggedIn,
-			ExtraAttr: []string{"group:criticalstaging"},
+			Fixture: fixture.ChromeAdminDeskTemplatesLoggedIn,
 		}, {
 			Name:              "lacros",
 			ExtraSoftwareDeps: []string{"lacros"},
 			Fixture:           fixture.LacrosAdminDeskTemplatesLoggedIn,
+			ExtraAttr:         []string{"informational"},
 		}},
 	})
 }
