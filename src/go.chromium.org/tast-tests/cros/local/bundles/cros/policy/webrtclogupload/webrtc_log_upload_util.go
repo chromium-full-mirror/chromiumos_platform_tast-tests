@@ -202,6 +202,10 @@ func TriggerWebRTCLogUploads(ctx context.Context, cr *chrome.Chrome, br *browser
 		return errors.Wrap(err, "failed to find the Meet window")
 	}
 
+	if err := ensureMicAndCamAllowed(ctx, tconn); err != nil {
+		return errors.Wrap(err, "failed to ensure microphone and camera are allowed")
+	}
+
 	const longUITimeout = time.Minute
 	// Check and grant permissions.
 	if err := prompts.ClearPotentialPrompts(tconn, longUITimeout, prompts.ShowNotificationsPrompt, prompts.AllowAVPermissionPrompt)(ctx); err != nil {
@@ -226,6 +230,37 @@ func TriggerWebRTCLogUploads(ctx context.Context, cr *chrome.Chrome, br *browser
 	return nil
 }
 
+// ensureMicAndCamAllowed checks if modal is present on Meets app and
+// permits microphone and camera use.
+func ensureMicAndCamAllowed(ctx context.Context, tconn *chrome.TestConn) error {
+	ui := uiauto.New(tconn)
+
+	allowCam := nodewith.Name("Allow camera").Role(role.Button)
+	allowMicCam := nodewith.Name("Allow microphone and camera").Role(role.Button)
+
+	// Click the "Allow camera" button if present.
+	if err := ui.WithTimeout(5 * time.Second).Exists(allowCam)(ctx); err == nil {
+		if err := uiauto.Combine("Click 'Allow camera' button",
+			ui.DoDefault(allowCam),
+			ui.WaitUntilGone(allowCam),
+		)(ctx); err != nil {
+			return errors.Wrap(err, "failed to click 'Allow camera' button")
+		}
+	}
+
+	// Click the "Allow microphone and camera" button if present.
+	if err := ui.WithTimeout(5 * time.Second).Exists(allowMicCam)(ctx); err == nil {
+		if err := uiauto.Combine("Click 'Allow microphone and camera' button",
+			ui.DoDefault(allowMicCam),
+			ui.WaitUntilGone(allowMicCam),
+		)(ctx); err != nil {
+			return errors.Wrap(err, "failed to click 'Allow microphone and camera' button")
+		}
+	}
+
+	return nil
+}
+
 // sendSuggestionFeedBack helps to create content in WebRTC text and event logs.
 // Log file should have some content to trigger log upload and annotation.
 func sendSuggestionFeedBack(ctx context.Context, tconn *chrome.TestConn) error {
@@ -240,7 +275,11 @@ func sendSuggestionFeedBack(ctx context.Context, tconn *chrome.TestConn) error {
 	suggestSend := nodewith.Name("Send").Ancestor(meetRootWebArea).Role(role.Button)
 
 	if err := uiauto.Combine("Click 'Report a problem' button",
-		ui.DoDefault(moreOptions),
+		// More than one 'More options' buttons are present in Meets app with
+		// same name and properties.
+		// First Button in ui tree is in participant picture area.
+		// Required button in main viewing area is present second in order in ui.
+		ui.DoDefault(moreOptions.Nth(1)),
 		uiLongWait.WaitUntilExists(reportProblem),
 
 		ui.DoDefault(reportProblem),
