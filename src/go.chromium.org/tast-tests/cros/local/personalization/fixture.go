@@ -15,17 +15,6 @@ import (
 
 func getTimeOfDayOption() chrome.Option {
 	return chrome.EnableFeatures(
-		// FeatureManagement flags are normally added on the chrome command line
-		// if the feature_management module deems a device capable enough at
-		// run-time. For testing purposes though, we want to override what the
-		// feature_management module says to ensure that all the necessary
-		// codepaths are enabled for the test to pass. If these flags are not
-		// explicitly overridden, time of day tests will pass on models that are
-		// qualified and fail on others. This removes the complexity of having
-		// to limit time of day tests to a specific set of device models, which
-		// can evolve year to year.
-		"FeatureManagementTimeOfDayScreenSaver",
-		"FeatureManagementTimeOfDayWallpaper",
 		"Jelly",
 		"TimeOfDayScreenSaver",
 		"TimeOfDayWallpaper")
