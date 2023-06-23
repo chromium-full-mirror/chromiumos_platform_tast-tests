@@ -37,7 +37,6 @@ import (
 type testParameters struct {
 	bt              browser.Type
 	lacrosSelection lacros.Selection
-	lacrosMode      lacros.Mode
 }
 
 // spVars represents the configurable parameters for the StartupPerf benchmark.
@@ -70,13 +69,13 @@ func init() {
 			Name:              "rootfs_only",
 			ExtraSoftwareDeps: []string{"lacros"},
 			Val: testParameters{
-				browser.TypeLacros, lacros.Rootfs, lacros.LacrosOnly,
+				browser.TypeLacros, lacros.Rootfs,
 			},
 		}, {
 			Name: "chrome",
 			Val: testParameters{
-				// lacrosSelection and lacrosMode are actually ignored when bt is TypeAsh
-				browser.TypeAsh, lacros.NotSelected, lacros.NotSpecified,
+				// lacrosSelection is actually ignored when bt is TypeAsh
+				browser.TypeAsh, lacros.NotSelected,
 			},
 		}},
 		Vars:    []string{"lacros.StartupPerf.iterations", "lacros.StartupPerf.credentials", "skipInitialLogin", "skipRegularLogin"},
@@ -118,9 +117,7 @@ type startupMetrics struct {
 // developers.
 func StartupPerf(ctx context.Context, s *testing.State) {
 	param := s.Param().(testParameters)
-	cfg := lacrosfixt.NewConfig(
-		lacrosfixt.Selection(param.lacrosSelection),
-		lacrosfixt.Mode(param.lacrosMode))
+	cfg := lacrosfixt.NewConfig(lacrosfixt.Selection(param.lacrosSelection))
 
 	// This is the page title used to connect in the browser, right after the initial login, is
 	// performed. This same title will be used later, during the regular login, to test if browser

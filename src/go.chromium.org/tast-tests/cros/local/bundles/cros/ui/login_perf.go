@@ -79,7 +79,6 @@ type loginPerfTestParam struct {
 	checkTabletMode    bool             // Whether to check the Tablet mode in addition to the Clamshell mode.
 	bt                 browser.Type     // browser.{TypeAsh/TypeLacros}
 	lacrosSelection    lacros.Selection // lacros.{Omaha,Rootfs}
-	lacrosMode         lacros.Mode      // lacros.{LacrosPrimary,LacrosOnly}
 	preloadLacros      bool             // Whether to enable LacrosLaunchAtLoginScreen feature
 	dropCaches         bool             // Whether to drop block caches before starting test.
 	sleepAtLoginScreen time.Duration    // Test will sleep at the login screen for the specified duration.
@@ -114,7 +113,6 @@ func init() {
 				true, // checkTabletMode
 				browser.TypeAsh,
 				lacros.NotSelected,
-				lacros.NotSpecified,
 				false, // preloadLacros
 				false, // dropCaches
 				0,     // sleepAtLoginScreen
@@ -129,7 +127,6 @@ func init() {
 				false,                       // checkTabletMode
 				browser.TypeAsh,
 				lacros.NotSelected,
-				lacros.NotSpecified,
 				false,           // preloadLacros
 				false,           // dropCaches
 				5 * time.Second, // sleepAtLoginScreen
@@ -144,7 +141,6 @@ func init() {
 				false,                       // checkTabletMode
 				browser.TypeAsh,
 				lacros.NotSelected,
-				lacros.NotSpecified,
 				false, // preloadLacros
 				true,  // dropCaches
 				0,     // sleepAtLoginScreen
@@ -160,7 +156,6 @@ func init() {
 				true, // checkTabletMode
 				browser.TypeLacros,
 				lacros.Rootfs,
-				lacros.LacrosOnly,
 				false, // preloadLacros
 				false, // dropCaches
 				0,     // sleepAtLoginScreen
@@ -176,7 +171,6 @@ func init() {
 				false, // checkTabletMode
 				browser.TypeLacros,
 				lacros.Rootfs,
-				lacros.LacrosOnly,
 				false, // preloadLacros
 				true,  // dropCaches
 				0,     // sleepAtLoginScreen
@@ -192,7 +186,6 @@ func init() {
 				false, // checkTabletMode
 				browser.TypeLacros,
 				lacros.Rootfs,
-				lacros.LacrosOnly,
 				true,            // preloadLacros
 				false,           // dropCaches
 				5 * time.Second, // sleepAtLoginScreen
@@ -208,7 +201,6 @@ func init() {
 				false, // checkTabletMode
 				browser.TypeLacros,
 				lacros.Rootfs,
-				lacros.LacrosOnly,
 				true,            // preloadLacros
 				true,            // dropCaches
 				5 * time.Second, // sleepAtLoginScreen
@@ -224,7 +216,6 @@ func init() {
 				false, // checkTabletMode
 				browser.TypeLacros,
 				lacros.Rootfs,
-				lacros.LacrosOnly,
 				true,  // preloadLacros
 				false, // dropCaches
 				0,     // sleepAtLoginScreen
@@ -240,7 +231,6 @@ func init() {
 				false, // checkTabletMode
 				browser.TypeLacros,
 				lacros.Rootfs,
-				lacros.LacrosOnly,
 				true, // preloadLacros
 				true, // dropCaches
 				0,    // sleepAtLoginScreen
@@ -258,7 +248,6 @@ func init() {
 				true, // checkTabletMode
 				browser.TypeLacros,
 				lacros.Omaha,
-				lacros.LacrosOnly,
 				false, // preloadLacros
 				false, // dropCaches
 				0,     // sleepAtLoginScreen
@@ -957,9 +946,7 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	param := s.Param().(loginPerfTestParam)
-	lacrosCfg := lacrosfixt.NewConfig(
-		lacrosfixt.Selection(param.lacrosSelection),
-		lacrosfixt.Mode(param.lacrosMode))
+	lacrosCfg := lacrosfixt.NewConfig(lacrosfixt.Selection(param.lacrosSelection))
 
 	// Log in and log out to create a user pod on the login screen.
 	creds, err := initializeLoginPerfTest(

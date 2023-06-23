@@ -235,9 +235,7 @@ func (uts *UpdateTestService) setupChrome(ctx context.Context, options []string,
 
 	// Enable Lacros with default options.
 	// Do not specify which lacros to select between Rootfs and Stateful in which mode as this test is to verify the selection logic itself.
-	lacrosOpts, err := lacrosfixt.NewConfig(
-		lacrosfixt.Selection(lacros.NotSelected),
-		lacrosfixt.Mode(lacros.NotSpecified)).Opts()
+	lacrosOpts, err := lacrosfixt.NewConfig(lacrosfixt.Selection(lacros.NotSelected)).Opts()
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to get default options")
 	}

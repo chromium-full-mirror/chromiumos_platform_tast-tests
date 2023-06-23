@@ -34,7 +34,7 @@ func BackwardRun(ctx context.Context, chromeOpts []chrome.Option) (*chrome.Chrom
 	chromeOpts = append(chromeOpts,
 		chrome.KeepState(),
 		chrome.RemoveNotification(false),
-		chrome.DisableFeatures("LacrosSupport"),
+		chrome.DisableFeatures("LacrosOnly"),
 	)
 
 	crDoNotUse, err := chrome.New(ctx, chromeOpts...)

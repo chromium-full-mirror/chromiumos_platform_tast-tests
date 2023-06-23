@@ -80,7 +80,7 @@ func MigrateExtensionState(ctx context.Context, s *testing.State) {
 
 func prepareExtensionState(ctx context.Context, extDir string) error {
 	// TODO(ythjkt): Call more extension api which store values on disk from https://developer.chrome.com/docs/extensions/reference/.
-	cr, err := chrome.New(ctx, chrome.DisableFeatures("LacrosSupport"), chrome.UnpackedExtension(extDir))
+	cr, err := chrome.New(ctx, chrome.DisableFeatures("LacrosOnly"), chrome.UnpackedExtension(extDir))
 	if err != nil {
 		return errors.Wrap(err, "failed to start chrome")
 	}

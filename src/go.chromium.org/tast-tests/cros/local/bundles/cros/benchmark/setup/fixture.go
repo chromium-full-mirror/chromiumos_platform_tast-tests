@@ -11,7 +11,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast/core/testing"
 )
@@ -28,7 +27,7 @@ const (
 	// It brings up Chrome.
 	BenchmarkChromeFixture = "benchmarkChromeFixture"
 	// BenchmarkLacrosFixture is a fixture name that will be registered to tast.
-	// It brings up Chrome in lacros only mode.
+	// It brings up Chrome with Lacros enabled.
 	BenchmarkLacrosFixture = "benchmarkLacrosFixture"
 )
 
@@ -77,7 +76,7 @@ func init() {
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:     BenchmarkLacrosFixture,
-		Desc:     "The fixture starts chrome with GAIA login and ARC Supported in lacros only mode",
+		Desc:     "The fixture starts chrome with GAIA login and ARC Supported and Lacros enabled",
 		Contacts: []string{"xliu@cienet.com", "jason.hsiao@cienet.com"},
 		// Although ARCSupported is provided as an option to bring up the ARC on DUT, we will not
 		// use ARC in the test so we don't need set up ARC/ADB. Use LoggedIn Fixture.
@@ -86,10 +85,7 @@ func init() {
 			if err != nil {
 				s.Fatal("Failed to get bench mark ARC fixture options: ", err)
 			}
-			return lacrosfixt.NewConfig(
-				lacrosfixt.Mode(lacros.LacrosOnly),
-				lacrosfixt.ChromeOptions(opts...),
-			).Opts()
+			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(opts...)).Opts()
 		}),
 		SetUpTimeout:    chrome.GAIALoginTimeout,
 		ResetTimeout:    chrome.ResetTimeout,

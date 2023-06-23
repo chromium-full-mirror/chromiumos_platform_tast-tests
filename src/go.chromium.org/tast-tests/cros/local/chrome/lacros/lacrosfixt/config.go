@@ -32,13 +32,6 @@ func Selection(selection lacros.Selection) Option {
 	}
 }
 
-// Mode returns an Option which sets the mode on the lacros config.
-func Mode(mode lacros.Mode) Option {
-	return func(c *Config) {
-		c.mode = mode
-	}
-}
-
 // KeepAlive returns an Option which sets lacros keep-alive to the desired
 // value. Do not use this unless you are explicitly testing the keep-alive
 // feature or features that depend on it. For example, this should /not/ be used
@@ -74,7 +67,6 @@ func EnableHDR() Option {
 // Config holds runtime vars or other variables needed to set up Lacros.
 type Config struct {
 	selection     lacros.Selection
-	mode          lacros.Mode
 	keepAlive     bool
 	installWebApp bool
 	chromeOpts    []chrome.Option
@@ -88,7 +80,6 @@ type Config struct {
 func NewConfig(ops ...Option) *Config {
 	cfg := &Config{
 		selection:     lacros.Rootfs,
-		mode:          lacros.NotSpecified,
 		keepAlive:     false,
 		installWebApp: false,
 		enableFRE:     false,
@@ -161,9 +152,7 @@ func (cfg *Config) Opts() ([]chrome.Option, error) {
 	opts = append(opts, chrome.LacrosExtraArgs("--enable-hangout-services-extension-for-testing"))
 
 	// Enable Lacros.
-	// Note that specifying the feature LacrosSupport has side-effects, so
-	// we specify it even if the lacros path is being overridden by lacros.DeployedBinary.
-	opts = append(opts, chrome.EnableFeatures("LacrosSupport"))
+	opts = append(opts, chrome.EnableFeatures("LacrosSupport", "LacrosPrimary", "LacrosOnly"))
 	switch cfg.selection {
 	case lacros.Rootfs:
 		opts = append(opts, chrome.ExtraArgs("--lacros-selection=rootfs"))
@@ -177,15 +166,6 @@ func (cfg *Config) Opts() ([]chrome.Option, error) {
 			return nil, errors.Wrap(err, "invalid lacros.DeployedBinary value")
 		}
 		opts = append(opts, chrome.ExtraArgs("--lacros-chrome-path="+cfg.deployedPath))
-	}
-
-	// Set required options based on lacros.Mode.
-	// If NotSpecified, use LacrosOnly.
-	switch cfg.mode {
-	case lacros.LacrosPrimary:
-		opts = append(opts, chrome.EnableFeatures("LacrosPrimary"))
-	case lacros.LacrosOnly, lacros.NotSpecified:
-		opts = append(opts, chrome.EnableFeatures("LacrosPrimary", "LacrosOnly"))
 	}
 
 	if !cfg.keepAlive {

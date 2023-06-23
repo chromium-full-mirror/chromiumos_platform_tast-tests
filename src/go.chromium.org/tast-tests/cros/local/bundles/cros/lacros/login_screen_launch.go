@@ -31,8 +31,7 @@ import (
 type loginScreenLaunchTestParam struct {
 	browserType     browser.Type
 	lacrosSelection lacros.Selection
-	lacrosMode      lacros.Mode // Ignored when browserType == TypeAsh.
-	keepAlive       bool        // Ignored when browserType == TypeAsh.
+	keepAlive       bool // Ignored when browserType == TypeAsh.
 }
 
 func init() {
@@ -62,7 +61,6 @@ func init() {
 				Val: loginScreenLaunchTestParam{
 					browser.TypeLacros,
 					lacros.Rootfs,
-					lacros.LacrosOnly,
 					false, // keepAlive disabled
 				},
 			},
@@ -72,7 +70,6 @@ func init() {
 				Val: loginScreenLaunchTestParam{
 					browser.TypeLacros,
 					lacros.Rootfs,
-					lacros.LacrosOnly,
 					true, // keepAlive enabled
 				},
 			},
@@ -82,7 +79,6 @@ func init() {
 				Val: loginScreenLaunchTestParam{
 					browser.TypeAsh,
 					lacros.Rootfs,
-					lacros.NotSpecified,
 					false, // ignored
 				},
 			},
@@ -244,7 +240,6 @@ func LoginScreenLaunch(ctx context.Context, s *testing.State) {
 	params := s.Param().(loginScreenLaunchTestParam)
 	lacrosCfg := lacrosfixt.NewConfig(
 		lacrosfixt.Selection(params.lacrosSelection),
-		lacrosfixt.Mode(params.lacrosMode),
 		lacrosfixt.KeepAlive(params.keepAlive))
 
 	// Launch Chrome.

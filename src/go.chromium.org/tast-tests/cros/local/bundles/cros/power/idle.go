@@ -19,7 +19,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
@@ -219,7 +218,7 @@ func Idle(ctx context.Context, s *testing.State) {
 		chrome.DisableFeatures("FirmwareUpdaterApp"),
 	}
 
-	cr, err := browserfixt.NewChrome(ctx, bt, lacrosfixt.NewConfig(lacrosfixt.Mode(lacros.LacrosOnly)), opts...)
+	cr, err := browserfixt.NewChrome(ctx, bt, lacrosfixt.NewConfig(), opts...)
 	if err != nil {
 		s.Fatal("Failed to login session: ", err)
 	}

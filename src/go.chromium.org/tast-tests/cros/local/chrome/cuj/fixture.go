@@ -23,7 +23,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -979,8 +978,7 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 				opts = append(opts, chrome.ExtraArgs("--lacros-chrome-additional-env=WAYLAND_DEBUG=1"))
 			}
 
-			opts, err = lacrosfixt.NewConfig(lacrosfixt.Mode(lacros.LacrosOnly),
-				lacrosfixt.ChromeOptions(opts...)).Opts()
+			opts, err = lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(opts...)).Opts()
 			if err != nil {
 				s.Fatal("Failed to get lacros options: ", err)
 			}

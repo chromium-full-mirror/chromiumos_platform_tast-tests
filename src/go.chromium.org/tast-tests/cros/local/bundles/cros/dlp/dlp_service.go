@@ -69,7 +69,7 @@ func (service *DataLeakPreventionService) EnrollAndLogin(ctx context.Context, re
 	var lcfg *lacrosfixt.Config
 	if req.EnableLacros {
 		bt = browser.TypeLacros
-		lcfg = lacrosfixt.NewConfig(lacrosfixt.Mode(lacros.NotSpecified), lacrosfixt.Selection(lacros.NotSelected))
+		lcfg = lacrosfixt.NewConfig(lacrosfixt.Selection(lacros.NotSelected))
 	}
 
 	cr, err := browserfixt.NewChrome(ctx, bt, lcfg, opts...)

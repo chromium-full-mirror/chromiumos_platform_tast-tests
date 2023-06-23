@@ -43,15 +43,3 @@ const (
 	// NotSelected is used for tests that don't need to specify what lacros to select. eg, AutoUpdate that verifies the selection logic itself.
 	NotSelected Selection = "NotSelected"
 )
-
-// Mode describes whether Lacros is enabled as a primary browser or else.
-type Mode string
-
-// Valid values for Mode.
-// LacrosSideBySide is no longer supported in Tast, while it is still served
-// for developers in Chrome.
-const (
-	LacrosPrimary Mode = "LacrosPrimary"
-	LacrosOnly    Mode = "LacrosOnly"
-	NotSpecified  Mode = "NotSpecified"
-)

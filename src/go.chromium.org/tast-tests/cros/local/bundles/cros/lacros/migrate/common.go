@@ -92,7 +92,7 @@ func Run(ctx context.Context, chromeOpts []chrome.Option, opts []lacrosfixt.Opti
 // ClearMigrationState resets profile migration by running Ash with Lacros disabled.
 func ClearMigrationState(ctx context.Context) error {
 	// First restart Chrome with Lacros disabled in order to reset profile migration.
-	cr, err := chrome.New(ctx, chrome.DisableFeatures("LacrosSupport"))
+	cr, err := chrome.New(ctx, chrome.DisableFeatures("LacrosOnly"))
 	if err != nil {
 		return errors.Wrap(err, "failed to start chrome")
 	}

@@ -56,9 +56,8 @@ func (svc *ChromeService) New(ctx context.Context, req *pb.NewRequest) (_ *empty
 
 	var lcfg *lacrosfixt.Config
 	var bt browser.Type
-	// Enable Lacros if |req.Lacros| is set and Mode is not Lacros_MODE_DISABLED.
-	// Otherwise, disable Lacros.
-	if req.GetLacros() != nil && req.GetLacros().GetMode() != pb.Lacros_MODE_DISABLED {
+	// Enable Lacros iff |req.Lacros| is set.
+	if req.GetLacros() != nil {
 		bt = browser.TypeLacros
 		lcfg, err = toLacrosConfig(req)
 		if err != nil {
@@ -66,7 +65,7 @@ func (svc *ChromeService) New(ctx context.Context, req *pb.NewRequest) (_ *empty
 		}
 	} else {
 		bt = browser.TypeAsh
-		opts = append(opts, chrome.DisableFeatures("LacrosSupport"))
+		opts = append(opts, chrome.DisableFeatures("LacrosOnly"))
 	}
 
 	switch req.GetArcMode() {
@@ -199,7 +198,7 @@ func toOptions(req *pb.NewRequest) ([]chrome.Option, error) {
 
 	if len(req.EnableFeatures) > 0 {
 		for _, feature := range req.EnableFeatures {
-			if feature == "LacrosSupport" {
+			if feature == "LacrosOnly" {
 				return nil, errors.Errorf("To enable Lacros, define `lacros` field in request, but got: [%v]", req)
 			}
 		}
@@ -257,18 +256,6 @@ func toLacrosConfig(req *pb.NewRequest) (lcfg *lacrosfixt.Config, err error) {
 		return nil, errors.Errorf("lacros should be set in NewRequest: %v", req)
 	}
 
-	var mode lacros.Mode
-	switch req.GetLacros().GetMode() {
-	case pb.Lacros_MODE_UNSPECIFIED:
-		mode = lacros.NotSpecified
-	case pb.Lacros_MODE_PRIMARY:
-		mode = lacros.LacrosPrimary
-	case pb.Lacros_MODE_ONLY:
-		mode = lacros.LacrosOnly
-	default:
-		return nil, errors.Errorf("unsupported mode: %v", req.GetLacros().GetMode())
-	}
-
 	var selection lacros.Selection
 	switch req.GetLacros().GetSelection() {
 	case pb.Lacros_SELECTION_UNSPECIFIED:
@@ -281,6 +268,6 @@ func toLacrosConfig(req *pb.NewRequest) (lcfg *lacrosfixt.Config, err error) {
 		return nil, errors.Errorf("unsupported selection: %v", req.GetLacros().GetSelection())
 	}
 
-	lcfg = lacrosfixt.NewConfig(lacrosfixt.Mode(mode), lacrosfixt.Selection(selection), lacrosfixt.KeepAlive(req.LacrosKeepAlive))
+	lcfg = lacrosfixt.NewConfig(lacrosfixt.Selection(selection), lacrosfixt.KeepAlive(req.LacrosKeepAlive))
 	return lcfg, nil
 }

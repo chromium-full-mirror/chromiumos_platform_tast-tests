@@ -54,7 +54,7 @@ func Migrate(ctx context.Context, s *testing.State) {
 // prepareAshProfile resets profile migration and sets up profile data.
 func prepareAshProfile(ctx context.Context, s *testing.State, kb *input.KeyboardEventWriter) {
 	// First restart Chrome with Lacros disabled in order to reset profile migration.
-	cr, err := chrome.New(ctx, chrome.DisableFeatures("LacrosSupport"))
+	cr, err := chrome.New(ctx, chrome.DisableFeatures("LacrosOnly"))
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
