@@ -4,9 +4,21 @@
 
 package oci
 
+import (
+	"fmt"
+	"runtime"
+	"strings"
+)
+
 // For docker.io/library/hello-world
 const (
 	HelloWorldImage     = "hello-world.tar"
 	HelloWorldContainer = "hello-world"
 	HelloWorldString    = "Hello from Docker!"
 )
+
+// ImageForArch returns the name of the container image for the host architecture.
+func ImageForArch(imageName string) string {
+	base := strings.TrimSuffix(imageName, ".tar")
+	return fmt.Sprintf("%s-%s.tar", base, runtime.GOARCH)
+}

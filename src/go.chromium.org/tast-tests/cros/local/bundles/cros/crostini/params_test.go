@@ -395,7 +395,7 @@ func TestContainerTestParams(t *testing.T) {
 	for filename, options := range containerTests {
 		params := crostini.MakeTestParamsFromList(t, []crostini.Param{{
 			Timeout:           15 * time.Minute,
-			ExtraData:         []string{"hello-world.tar"},
+			ExtraData:         []string{"hello-world-amd64.tar", "hello-world-arm64.tar"},
 			ExtraSoftwareDeps: []string{"vm_host"},
 			UseLargeContainer: true,
 			UseFixture:        true,
