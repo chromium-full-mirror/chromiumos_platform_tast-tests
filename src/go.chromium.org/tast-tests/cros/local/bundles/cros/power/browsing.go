@@ -37,7 +37,9 @@ func init() {
 		BugComponent: "b:167191", // ChromeOS > Platform > System > Power
 		Contacts:     []string{"chromeos-platform-power@google.com"},
 		SoftwareDeps: []string{"chrome"},
-		// Test will run for 1 hour plus 5 minutes buffer time.
+		Vars: []string{
+			"config_name", // Used in "custom" variant. The name of config file.
+		},
 		Params: []testing.Param{{
 			Name:    "ash",
 			Fixture: "powerAsh",
@@ -59,6 +61,17 @@ func init() {
 			Fixture:           "powerLacros",
 			Timeout:           time.Hour + setupTimeoutBuffer + power.RecorderTimeout,
 			Val:               browsingTestParam{ConfigName: "live", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}},
+			ExtraSoftwareDeps: []string{"lacros"},
+		}, {
+			Name:    "custom_ash",
+			Fixture: "powerAsh",
+			Timeout: time.Hour + setupTimeoutBuffer + power.RecorderTimeout,
+			Val:     browsingTestParam{ConfigName: "custom", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}},
+		}, {
+			Name:              "custom_lacros",
+			Fixture:           "powerLacros",
+			Timeout:           time.Hour + setupTimeoutBuffer + power.RecorderTimeout,
+			Val:               browsingTestParam{ConfigName: "custom", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}},
 			ExtraSoftwareDeps: []string{"lacros"},
 		}},
 	})
@@ -132,6 +145,15 @@ func Browsing(ctx context.Context, s *testing.State) {
 	configName := s.Param().(browsingTestParam).ConfigName
 	interval := s.Param().(browsingTestParam).TimeParams.Interval
 	totalTime := s.Param().(browsingTestParam).TimeParams.Total
+
+	if configName == "custom" {
+		if v, ok := s.Var("config_name"); ok {
+			configName = v
+		} else {
+			s.Fatal("Use custom version without specified config name")
+		}
+	}
+
 	configURL := urlPrefix + configName + configURLSuffix
 
 	configJSON, err := utils.FetchFromURL(ctx, configURL)
