@@ -34,7 +34,9 @@ var (
 		`hangcheck recover!`,
 
 		// amdgpu
-		`amdgpu: GPU reset begin!`,
+		`GPU reset`,
+		`Error scheduling IBs`,
+		`VRAM is lost`,
 
 		// mediatek
 		`mtk-mdp.*: cmdq timeout`,
