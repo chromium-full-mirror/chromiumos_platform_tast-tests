@@ -330,6 +330,27 @@ func ensureVisible(ctx context.Context, tconn *chrome.TestConn) (func(ctx contex
 	}, nil
 }
 
+// BluetoothEnabled returns whether the bluetooth feature tile is toggled in
+// quick settings. In order to check the setting, quick settings will be shown
+// if it's not already, but the original state will be restored once the check
+// is complete.
+func BluetoothEnabled(ctx context.Context, tconn *chrome.TestConn) (bool, error) {
+	if !qsRevampEnabled {
+		return false, errors.New("BluetoothEnabled() requires QsRevamp enabled")
+	}
+
+	cleanup, err := ensureVisible(ctx, tconn)
+	if err != nil {
+		return false, err
+	}
+	defer cleanup(ctx)
+
+	ui := uiauto.New(tconn)
+	// FeatureTiles do not expose an explicit toggled state to the UI node tree
+	// so the best we can do is search for the tooltip string.
+	return ui.IsNodeFound(ctx, FeatureTileBluetooth.NameContaining("Bluetooth is on"))
+}
+
 // SettingEnabled checks if the specified quick setting is on or off.
 // In order to check the setting, Quick Settings will be shown if it's not already,
 // but the original state will be restored once the check is complete.

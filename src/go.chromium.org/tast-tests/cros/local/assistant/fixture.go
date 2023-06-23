@@ -69,6 +69,26 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name: "assistantBaseQsRevampEnabled",
+		Desc: "Chrome session for assistant testing with QsRevamp feature",
+		Contacts: []string{
+			"assistive-eng@google.com",
+			"jamescook@google.com",
+		},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{
+				VerboseLogging(),
+				ashNoNudgesExtraArg(),
+				chrome.ExtraArgs(arc.DisableSyncFlags()...),
+				chrome.EnableFeatures("QsRevamp"),
+			}, nil
+		}),
+		SetUpTimeout:    chrome.LoginTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name: "assistantBaseWithStartAudioDecoderOnDemand",
 		Desc: "Chrome session for assistant testing with StartAssistantAudioDecoderOnDemand flag",
 		Contacts: []string{
@@ -165,6 +185,23 @@ func init() {
 			"assistive-eng@google.com",
 		},
 		Parent: "assistantBase",
+		Impl: NewAssistantFixture(func(s *testing.FixtState) FixtData {
+			return FixtData{
+				Chrome: s.ParentValue().(*chrome.Chrome),
+			}
+		}),
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: "assistantQsRevampEnabled",
+		Desc: "Assistant is enabled and QsRevamp is enabled",
+		Contacts: []string{
+			"jamescook@google.com",
+			"assistive-eng@google.com",
+		},
+		Parent: "assistantBaseQsRevampEnabled",
 		Impl: NewAssistantFixture(func(s *testing.FixtState) FixtData {
 			return FixtData{
 				Chrome: s.ParentValue().(*chrome.Chrome),
@@ -306,6 +343,25 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name: "assistantBaseWithLibassistantV2QsRevampEnabled",
+		Desc: "Chrome session for assistant testing with LibAssistantV2 feature and QsRevamp feature",
+		Contacts: []string{
+			"assistive-eng@google.com",
+			"jamescook@google.com",
+		},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{
+				VerboseLogging(),
+				ashNoNudgesExtraArg(),
+				chrome.EnableFeatures("LibAssistantV2", "QsRevamp"),
+			}, nil
+		}),
+		SetUpTimeout:    chrome.LoginTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name: "assistantWithLibassistantV2",
 		Desc: "Assistant is enabled with Libassistant V2 feature",
 		Contacts: []string{
@@ -313,6 +369,23 @@ func init() {
 			"wutao@google.com",
 		},
 		Parent: "assistantBaseWithLibassistantV2",
+		Impl: NewAssistantFixture(func(s *testing.FixtState) FixtData {
+			return FixtData{
+				Chrome: s.ParentValue().(*chrome.Chrome),
+			}
+		}),
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: "assistantWithLibassistantV2QsRevampEnabled",
+		Desc: "Assistant is enabled with Libassistant V2 feature and QsRevamp feature",
+		Contacts: []string{
+			"assistive-eng@google.com",
+			"jamescook@google.com",
+		},
+		Parent: "assistantBaseWithLibassistantV2QsRevampEnabled",
 		Impl: NewAssistantFixture(func(s *testing.FixtState) FixtData {
 			return FixtData{
 				Chrome: s.ParentValue().(*chrome.Chrome),

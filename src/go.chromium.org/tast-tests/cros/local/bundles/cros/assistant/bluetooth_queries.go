@@ -37,11 +37,11 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name:              "libassistant_v2",
-				Fixture:           "assistantWithLibassistantV2",
+				Fixture:           "assistantWithLibassistantV2QsRevampEnabled",
 				ExtraSoftwareDeps: []string{"dlc"},
 			},
 			{
-				Fixture: "assistant",
+				Fixture: "assistantQsRevampEnabled",
 			},
 		},
 	})
@@ -56,6 +56,12 @@ func BluetoothQueries(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Creating test API connection failed: ", err)
 	}
+
+	cleanup, err := quicksettings.Init(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to init quick settings")
+	}
+	defer cleanup()
 
 	// Open the Settings window, where we can verify Bluetooth/Wifi status
 	if err := apps.Launch(ctx, tconn, apps.Settings.ID); err != nil {
@@ -119,12 +125,12 @@ func BluetoothQueries(ctx context.Context, s *testing.State) {
 			s.Fatal("Bluetooth button (Settings app) was not toggled by the Assistant: ", err)
 		}
 
-		// Check Bluetooth quick setting pod as well.
+		// Check Bluetooth quick setting tile as well.
 		s.Log("Checking bluetooth status in Quick Settings")
-		if btPodStatus, err := quicksettings.SettingEnabled(ctx, tconn, quicksettings.SettingPodBluetooth); err != nil {
+		if btStatus, err := quicksettings.BluetoothEnabled(ctx, tconn); err != nil {
 			s.Fatal("Failed to get Bluetooth quick setting status: ", err)
-		} else if btPodStatus != status {
-			s.Fatal("Bluetooth quick setting pod was not toggled by the Assistant")
+		} else if btStatus != status {
+			s.Fatal("Bluetooth quick setting tile was not toggled by the Assistant")
 		}
 	}
 }
