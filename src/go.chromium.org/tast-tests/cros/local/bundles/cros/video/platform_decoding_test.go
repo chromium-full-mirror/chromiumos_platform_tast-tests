@@ -1385,7 +1385,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 					if stateness == "Stateless" {
 						param.Attr = append(param.Attr, "graphics_perbuild")
 					} else {
-						param.Attr = append(param.Attr, "graphics_nightly")
+						param.Attr = append(param.Attr, "graphics_weekly")
 					}
 					hardwareDeps := commonHardwareDeps
 
@@ -1440,7 +1440,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 			if stateness == "Stateless" {
 				param.Attr = append(param.Attr, "graphics_perbuild")
 			} else {
-				param.Attr = append(param.Attr, "graphics_nightly")
+				param.Attr = append(param.Attr, "graphics_weekly")
 			}
 
 			params = append(params, param)
@@ -1469,7 +1469,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 			if stateness == "Stateless" {
 				param.Attr = append(param.Attr, "graphics_perbuild")
 			} else {
-				param.Attr = append(param.Attr, "graphics_nightly")
+				param.Attr = append(param.Attr, "graphics_weekly")
 			}
 			params = append(params, param)
 		}
@@ -1492,7 +1492,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 			if stateness == "Stateless" {
 				param.Attr = append(param.Attr, "graphics_perbuild")
 			} else {
-				param.Attr = append(param.Attr, "graphics_nightly")
+				param.Attr = append(param.Attr, "graphics_weekly")
 			}
 			params = append(params, param)
 		}
@@ -1512,7 +1512,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 			SoftwareDeps:       []string{"v4l2_codec", caps.HWDecodeVP9},
 			HardwareDeps:       strings.Join(commonHardwareDeps, ", "),
 			Metadata:           genExtraData([]string{vp9SVCFile}),
-			Attr:               []string{"graphics_video_vp9", "graphics_nightly"},
+			Attr:               []string{"graphics_video_vp9", "graphics_weekly"},
 		})
 	}
 
