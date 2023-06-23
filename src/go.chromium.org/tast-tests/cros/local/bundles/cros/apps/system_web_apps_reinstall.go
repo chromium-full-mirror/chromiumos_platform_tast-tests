@@ -54,7 +54,7 @@ func SystemWebAppsReinstall(ctx context.Context, s *testing.State) {
 		ctx, cancel := ctxutil.Shorten(ctx, signoutTimeout)
 		defer cancel()
 
-		cr, tconn, err := createChrome(ctx)
+		cr, tconn, err := createChrome(ctx, chrome.EnableFeatures("QsRevamp"))
 		if err != nil {
 			return errors.Wrap(err, "failed to create Chrome instance")
 
@@ -96,7 +96,7 @@ func SystemWebAppsReinstall(ctx context.Context, s *testing.State) {
 		ctx, cancel := ctxutil.Shorten(ctx, signoutTimeout)
 		defer cancel()
 
-		cr, tconn, err := createChrome(ctx, chrome.KeepState(), chrome.EnableFeatures("AlwaysReinstallSystemWebApps"))
+		cr, tconn, err := createChrome(ctx, chrome.KeepState(), chrome.EnableFeatures("AlwaysReinstallSystemWebApps", "QsRevamp"))
 		if err != nil {
 			return errors.Wrap(err, "failed to create Chrome instance")
 		}
@@ -222,6 +222,12 @@ func signOut(ctx context.Context, tconn *chrome.TestConn) error {
 		return errors.Wrap(err, "failed to watch for session state change D-Bus signal")
 	}
 	defer sw.Close(ctx)
+
+	cleanup, err := quicksettings.Init(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to init quick settings")
+	}
+	defer cleanup()
 
 	if err := quicksettings.SignOut(ctx, tconn); err != nil {
 		return errors.Wrap(err, "failed to sign out with quick settings")

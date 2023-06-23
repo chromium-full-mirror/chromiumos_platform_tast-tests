@@ -873,18 +873,30 @@ func SignOut(ctx context.Context, tconn *chrome.TestConn) error {
 		return errors.Wrap(err, "failed to open Uber tray")
 	}
 
-	buttonFound, err := ui.IsNodeFound(ctx, SignoutButton)
-	if err != nil {
-		return errors.Wrap(err, "failed to find the sign out button")
-	}
-	if !buttonFound {
-		return errors.New("signout button was not found")
+	if !qsRevampEnabled {
+		// In legacy quick settings the sign out button is at the top level.
+		buttonFound, err := ui.IsNodeFound(ctx, SignoutButton)
+		if err != nil {
+			return errors.Wrap(err, "failed to find the sign out button")
+		}
+		if !buttonFound {
+			return errors.New("signout button was not found")
+		}
+
+		// We ignore errors here because when we click on "Sign out" button
+		// Chrome shuts down and the connection is closed. So we will always get an
+		// error.
+		ui.LeftClick(SignoutButton)(ctx)
+		return nil
 	}
 
-	// We ignore errors here because when we click on "Sign out" button
-	// Chrome shuts down and the connection is closed. So we will always get an
-	// error.
-	ui.LeftClick(SignoutButton)(ctx)
+	// Sign out is in the power menu.
+	if err := ui.WithTimeout(uiTimeout).LeftClick(PowerMenuButton)(ctx); err != nil {
+		return errors.Wrap(err, "failed to find and click power menu button")
+	}
+	// Ignore errors here because clicking the "Sign out" item causes Chrome to
+	// shut down, which closes the connection and always generates an error.
+	ui.WithTimeout(uiTimeout).LeftClick(PowerMenuSignOutItem)(ctx)
 	return nil
 }
 

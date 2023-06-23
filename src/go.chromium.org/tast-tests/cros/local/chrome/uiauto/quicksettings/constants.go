@@ -78,6 +78,10 @@ var PowerMenuButton = nodewith.Role(role.Button).NameContaining("Power menu")
 // It only exists with QsRevamp.
 var PowerMenuLockItem = nodewith.Role(role.MenuItem).NameContaining("Lock")
 
+// PowerMenuSignOutItem is the finder for the "Sign out" item in the power menu.
+// It only exists with QsRevamp.
+var PowerMenuSignOutItem = nodewith.Role(role.MenuItem).NameContaining("Sign out")
+
 // CollapseButton is the finder for the collapse button, which collapses Quick Settings.
 // This button does not exist with QsRevamp.
 var CollapseButton = nodewith.Role(role.Button).HasClass("CollapseButton").Name("Collapse menu")
