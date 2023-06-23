@@ -24,7 +24,7 @@ func init() {
 			"chromeos-files-syd@google.com",
 			"joelhockey@google.org",
 		},
-		Timeout: 15 * time.Minute,
+		Timeout: 20 * time.Minute,
 	})
 }
 
@@ -32,11 +32,16 @@ func init() {
 // the device is already logged in.
 func ManualPower(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
 
-	// Set up the testing environment.
-	cleanup, err := setup.PowerTestSetup(ctx, "setup", nil, &setup.PowerTestOptions{})
+	// Set up with options to match 'powerAsh' in power fixtures.
+	// We can match KeyboardBrightness, but not NightLight or DarkTheme
+	// since we don't have a valid TestConn.
+	options := &setup.PowerTestOptions{
+		KeyboardBrightness: setup.SetKbBrightnessToZero,
+	}
+	cleanup, err := setup.PowerTestSetup(ctx, "setup", nil, options)
 	if err != nil {
 		s.Fatal("Power setup failed: ", err)
 	}
