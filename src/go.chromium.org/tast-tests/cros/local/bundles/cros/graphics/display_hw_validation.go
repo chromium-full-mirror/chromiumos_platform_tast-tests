@@ -13,7 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/graphics"
 
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -37,8 +36,9 @@ func init() {
 					Exe:      "kms_addfb_basic",
 					Subtests: []string{"unused-modifier", "invalid-smem-bo-on-discrete", "legacy-format"},
 				},
-				Timeout:   5 * time.Minute,
-				ExtraAttr: []string{"graphics_weekly"},
+				Timeout:           5 * time.Minute,
+				ExtraAttr:         []string{"graphics_weekly"},
+				ExtraRequirements: []string{"gpu-kern-0004-v01", "gpu-kern-0012-v01"},
 			},
 			{
 				Name: "kms_atomic",
@@ -46,40 +46,45 @@ func init() {
 					Exe:      "kms_atomic",
 					Subtests: []string{"plane-primary-legacy", "plane-overlay-legacy", "plane-cursor-legacy"},
 				},
-				Timeout:   5 * time.Minute,
-				ExtraAttr: []string{"graphics_weekly"},
+				Timeout:           5 * time.Minute,
+				ExtraAttr:         []string{"graphics_weekly"},
+				ExtraRequirements: []string{"gpu-kern-0037-v01", "gpu-kern-0002-v01", "gpu-kern-0003-v01", "gpu-kern-0006-v01", "gpu-kern-0007-v01", "gpu-kern-0009-v01"},
 			},
 			{
 				Name: "kms_atomic_interruptible",
 				Val: graphics.IgtTest{
 					Exe: "kms_atomic_interruptible",
 				},
-				Timeout:   5 * time.Minute,
-				ExtraAttr: []string{"graphics_weekly"},
+				Timeout:           5 * time.Minute,
+				ExtraAttr:         []string{"graphics_weekly"},
+				ExtraRequirements: []string{"gpu-kern-0037-v01"},
 			},
 			{
 				Name: "kms_bw",
 				Val: graphics.IgtTest{
 					Exe: "kms_bw",
 				},
-				Timeout:   5 * time.Minute,
-				ExtraAttr: []string{"graphics_weekly"},
+				Timeout:           5 * time.Minute,
+				ExtraAttr:         []string{"graphics_weekly"},
+				ExtraRequirements: []string{"vid-out-0001-v01", "vid-out-0002-v03"},
 			},
 			{
 				Name: "kms_concurrent",
 				Val: graphics.IgtTest{
 					Exe: "kms_concurrent",
 				},
-				Timeout:   5 * time.Minute,
-				ExtraAttr: []string{"graphics_weekly"},
+				Timeout:           5 * time.Minute,
+				ExtraAttr:         []string{"graphics_weekly"},
+				ExtraRequirements: []string{"gpu-kern-0002-v01", "gpu-kern-0044-v01"},
 			},
 			{
 				Name: "kms_cursor_crc",
 				Val: graphics.IgtTest{
 					Exe: "kms_cursor_crc",
 				},
-				Timeout:   15 * time.Minute,
-				ExtraAttr: []string{"graphics_weekly"},
+				Timeout:           15 * time.Minute,
+				ExtraAttr:         []string{"graphics_weekly"},
+				ExtraRequirements: []string{"gpu-kern-0038-v01"},
 			},
 			{
 				Name: "kms_cursor_legacy",
@@ -90,16 +95,18 @@ func init() {
 						"flip-vs-cursor-crc-legacy",
 						"basic-busy-flip-before-cursor-legacy"},
 				},
-				Timeout:   20 * time.Minute,
-				ExtraAttr: []string{"graphics_weekly"},
+				Timeout:           20 * time.Minute,
+				ExtraAttr:         []string{"graphics_weekly"},
+				ExtraRequirements: []string{"gpu-kern-0010-v01"},
 			},
 			{
 				Name: "kms_dp_aux_dev",
 				Val: graphics.IgtTest{
 					Exe: "kms_dp_aux_dev",
 				},
-				Timeout:   5 * time.Minute,
-				ExtraAttr: []string{"graphics_weekly"},
+				Timeout:           5 * time.Minute,
+				ExtraAttr:         []string{"graphics_weekly"},
+				ExtraRequirements: []string{"gpu-kern-0006-v01"},
 			},
 			{
 				Name: "kms_flip",
@@ -108,16 +115,18 @@ func init() {
 					Subtests:         []string{"basic-plain-flip"},
 					DisableHangCheck: true,
 				},
-				Timeout:   30 * time.Minute,
-				ExtraAttr: []string{"graphics_weekly"},
+				Timeout:           30 * time.Minute,
+				ExtraAttr:         []string{"graphics_weekly"},
+				ExtraRequirements: []string{"gpu-kern-0006-v01", "gpu-kern-0007-v01"},
 			},
 			{
 				Name: "kms_invalid_mode",
 				Val: graphics.IgtTest{
 					Exe: "kms_invalid_mode",
 				},
-				Timeout:   5 * time.Minute,
-				ExtraAttr: []string{"graphics_weekly"},
+				Timeout:           5 * time.Minute,
+				ExtraAttr:         []string{"graphics_weekly"},
+				ExtraRequirements: []string{"vid-out-0001-v01", "vid-out-0002-v03"},
 			},
 			{
 				Name: "kms_panel_fitting",
@@ -125,8 +134,9 @@ func init() {
 					Exe:      "kms_panel_fitting",
 					Subtests: []string{"legacy"},
 				},
-				Timeout:   5 * time.Minute,
-				ExtraAttr: []string{"graphics_weekly"},
+				Timeout:           5 * time.Minute,
+				ExtraAttr:         []string{"graphics_weekly"},
+				ExtraRequirements: []string{"gpu-kern-0025-v01"},
 			},
 			{
 				Name: "kms_pipe_crc_basic",
@@ -134,8 +144,9 @@ func init() {
 					Exe:              "kms_pipe_crc_basic",
 					DisableHangCheck: true,
 				},
-				Timeout:   5 * time.Minute,
-				ExtraAttr: []string{"graphics_weekly"},
+				Timeout:           5 * time.Minute,
+				ExtraAttr:         []string{"graphics_weekly"},
+				ExtraRequirements: []string{"gpu-kern-0038-v01"},
 			},
 			{
 				Name: "kms_plane",
@@ -143,8 +154,9 @@ func init() {
 					Exe:      "kms_plane",
 					Subtests: []string{"pixel-format", "plane-panning-top-left", "plane-panning-bottom-right"},
 				},
-				Timeout:   5 * time.Minute,
-				ExtraAttr: []string{"graphics_weekly"},
+				Timeout:           5 * time.Minute,
+				ExtraAttr:         []string{"graphics_weekly"},
+				ExtraRequirements: []string{"gpu-kern-0003-v01", "gpu-kern-0038-v01"},
 			},
 			{
 				Name: "kms_plane_alpha_blend",
@@ -152,64 +164,61 @@ func init() {
 					Exe:      "kms_plane_alpha_blend",
 					Subtests: []string{"alpha-basic"},
 				},
+				ExtraRequirements: []string{"gpu-kern-0024-v01"},
 			},
 			{
 				Name: "kms_plane_cursor",
 				Val: graphics.IgtTest{
 					Exe: "kms_plane_cursor",
 				},
-				Timeout:   5 * time.Minute,
-				ExtraAttr: []string{"graphics_weekly"},
+				Timeout:           5 * time.Minute,
+				ExtraAttr:         []string{"graphics_weekly"},
+				ExtraRequirements: []string{"gpu-kern-0024-v01"},
 			},
 			{
 				Name: "kms_plane_scaling",
 				Val: graphics.IgtTest{
 					Exe: "kms_plane_scaling",
 				},
-				Timeout:   5 * time.Minute,
-				ExtraAttr: []string{"graphics_weekly"},
+				Timeout:           5 * time.Minute,
+				ExtraAttr:         []string{"graphics_weekly"},
+				ExtraRequirements: []string{"gpu-kern-0003-v01", "gpu-kern-0014-v01", "gpu-kern-0039-v01", "gpu-kern-0040-v01", "gpu-kern-0041-v01"},
 			},
 			{
 				Name: "kms_rotation_crc",
 				Val: graphics.IgtTest{
 					Exe: "kms_rotation_crc",
 				},
-				Timeout:   5 * time.Minute,
-				ExtraAttr: []string{"graphics_weekly"},
+				Timeout:           5 * time.Minute,
+				ExtraAttr:         []string{"graphics_weekly"},
+				ExtraRequirements: []string{"gpu-kern-0027-v01"},
 			},
 			{
 				Name: "kms_scaling_modes",
 				Val: graphics.IgtTest{
 					Exe: "kms_scaling_modes",
 				},
-				Timeout:   5 * time.Minute,
-				ExtraAttr: []string{"graphics_weekly"},
+				Timeout:           5 * time.Minute,
+				ExtraAttr:         []string{"graphics_weekly"},
+				ExtraRequirements: []string{"gpu-kern-0025-v01"},
 			},
 			{
 				Name: "kms_setmode",
 				Val: graphics.IgtTest{
 					Exe: "kms_setmode",
 				},
-				Timeout:   5 * time.Minute,
-				ExtraAttr: []string{"graphics_weekly"},
-			},
-			{
-				Name: "kms_vrr",
-				Val: graphics.IgtTest{
-					Exe:      "kms_vrr",
-					Subtests: []string{"flip-basic"},
-				},
 				Timeout:           5 * time.Minute,
 				ExtraAttr:         []string{"graphics_weekly"},
-				ExtraHardwareDeps: hwdep.D(hwdep.VRR()),
+				ExtraRequirements: []string{"vid-out-0001-v01", "vid-out-0002-v03"},
 			},
 			{
 				Name: "testdisplay",
 				Val: graphics.IgtTest{
 					Exe: "testdisplay",
 				},
-				Timeout:   5 * time.Minute,
-				ExtraAttr: []string{"graphics_weekly"},
+				Timeout:           5 * time.Minute,
+				ExtraAttr:         []string{"graphics_weekly"},
+				ExtraRequirements: []string{"vid-out-0011-v01", "vid-out-0012-v01", "gpu-kern-0006-v01"},
 			},
 		},
 	})
