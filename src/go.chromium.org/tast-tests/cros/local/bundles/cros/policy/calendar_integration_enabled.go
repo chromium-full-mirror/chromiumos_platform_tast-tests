@@ -12,13 +12,12 @@ import (
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
-	"go.chromium.org/tast-tests/cros/local/annotations"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/calendarintegration"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
-	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast-tests/cros/local/netexport"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -66,13 +65,6 @@ func CalendarIntegrationEnabled(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	// Set up keyboard.
-	kb, err := input.VirtualKeyboard(ctx)
-	if err != nil {
-		s.Fatal("Failed to get keyboard: ", err)
-	}
-	defer kb.Close(cleanupCtx)
-
 	for index, param := range calendarintegration.GetTestCases() {
 		s.Run(ctx, param.Name, func(ctx context.Context, s *testing.State) {
 			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.Name)
@@ -95,30 +87,20 @@ func CalendarIntegrationEnabled(ctx context.Context, s *testing.State) {
 			defer closeBrowser(cleanupCtx)
 
 			// Open the net-export page and start logging.
-			if isLacros(s) {
-				if err := annotations.StartOSLogging(ctx, cr, br, kb); err != nil {
-					s.Fatal("Failed to start logging: ", err)
-				}
-			} else {
-				if err := annotations.StartLogging(ctx, cr, br); err != nil {
-					s.Fatal("Failed to start logging: ", err)
-				}
+			netExport, err := netexport.Start(ctx, cr, br, s.Param().(browser.Type))
+			if err != nil {
+				s.Fatal("Failed to start net export: ", err)
 			}
+			defer netExport.Cleanup(cleanupCtx)
 
 			if err := calendarintegration.TriggerCalendarIntegration(ctx, s, cr, br, nil, tconn, index); err != nil {
 				s.Fatal("Failed to trigger and verify calendar integration: ", err)
 			}
 
-			// Stop logging and check the logs for annotation.
-			foundAnnotation := false
-			if isLacros(s) {
-				if foundAnnotation, err = annotations.StopOSLoggingCheckLogs(ctx, cr, br, kb, calendarintegration.AnnotationHashCode); err != nil {
-					s.Fatal("Failed to stop logging and check logs: ", err)
-				}
-			} else {
-				if foundAnnotation, err = annotations.StopLoggingCheckLogs(ctx, cr, br, calendarintegration.AnnotationHashCode); err != nil {
-					s.Fatal("Failed to stop logging and check logs: ", err)
-				}
+			// Check the net log for annotation.
+			foundAnnotation, err := netExport.Find(calendarintegration.AnnotationHashCode)
+			if err != nil {
+				s.Fatal("Failed to check logs: ", err)
 			}
 
 			if param.ShouldFindAnnotation != foundAnnotation {
@@ -126,8 +108,4 @@ func CalendarIntegrationEnabled(ctx context.Context, s *testing.State) {
 			}
 		})
 	}
-}
-
-func isLacros(s *testing.State) bool {
-	return s.Param().(browser.Type) == browser.TypeLacros
 }

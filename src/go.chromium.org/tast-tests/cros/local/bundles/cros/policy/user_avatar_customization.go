@@ -13,11 +13,11 @@ import (
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
-	"go.chromium.org/tast-tests/cros/local/annotations"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/useravatar"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast-tests/cros/local/netexport"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -121,6 +121,8 @@ func UserAvatarCustomization(ctx context.Context, s *testing.State) {
 			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(),
 				s.HasError, cr, "ui_tree")
 
+			netExport := netexport.FromCommandLineArg()
+
 			if err := policyutil.ResetChrome(ctx, fdms, cr); err != nil {
 				s.Fatal("Failed to clean up: ", err)
 			}
@@ -142,7 +144,10 @@ func UserAvatarCustomization(ctx context.Context, s *testing.State) {
 			}
 
 			// Check netlog for network annotation.
-			foundAnnotation, err := annotations.CheckLogsFromFile(ctx, cr, useravatar.AnnotationHashCode, annotations.UserDirNetLogFile)
+			foundAnnotation, err := netExport.Find(useravatar.AnnotationHashCode)
+			if err != nil {
+				s.Fatal("Failed to search net log file for annotation: ", err)
+			}
 			if param.ShouldFindAnnotation != foundAnnotation {
 				s.Fatalf("Annotation mismatch. Expected: %t. Actual: %t", param.ShouldFindAnnotation, foundAnnotation)
 			}
