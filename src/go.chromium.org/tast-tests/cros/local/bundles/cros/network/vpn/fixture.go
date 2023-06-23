@@ -12,10 +12,10 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/crypto/certificate"
 	"go.chromium.org/tast-tests/cros/common/pkcs11/netcertstore"
-	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/hwsec"
 	"go.chromium.org/tast-tests/cros/local/logsaver"
+	"go.chromium.org/tast-tests/cros/local/network/virtualnet"
 	"go.chromium.org/tast-tests/cros/local/shill"
 
 	"go.chromium.org/tast/core/errors"
@@ -99,24 +99,7 @@ func resetShillVPNState(ctx context.Context) {
 		logErr(err)
 	}
 
-	// Reset EphemeralPriority on Ethernet service to 0, otherwise the physical
-	// network may have a higher priority than the one created in virtualnet. Note
-	// that EphemeralPriority shouldn't be set on the physical Ethernet service in
-	// the test code, but it may happen automatically in some corner cases because
-	// of our ethernet_any service implementation.
-	resetEthSvcs := func() error {
-		svcs, _, err := m.ServicesByTechnology(ctx, shill.TechnologyEthernet)
-		if err != nil {
-			return errors.Wrap(err, "failed to get Ethernet services")
-		}
-		for _, svc := range svcs {
-			if err := svc.SetProperty(ctx, shillconst.ServicePropertyEphemeralPriority, 0); err != nil {
-				return errors.Wrapf(err, "failed to reset EphemeralPriority on %s", svc.ObjectPath())
-			}
-		}
-		return nil
-	}
-	if err := resetEthSvcs(); err != nil {
+	if err := virtualnet.ResetEthernetEphemeralPriority(ctx, m); err != nil {
 		logErr(err)
 	}
 }

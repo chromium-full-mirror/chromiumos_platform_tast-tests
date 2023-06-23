@@ -98,6 +98,24 @@ type EnvOptions struct {
 	ResolveHostToIP net.IP
 }
 
+// ResetEthernetEphemeralPriority sets Ethernet services EphemeralPriority to 0,
+// otherwise the physical network may have a higher priority than the one
+// created in virtualnet. Note that EphemeralPriority shouldn't be set on the
+// physical Ethernet service in the test code, but it may happen automatically
+// in some corner cases because of our ethernet_any service implementation.
+func ResetEthernetEphemeralPriority(ctx context.Context, m *shill.Manager) error {
+	svcs, _, err := m.ServicesByTechnology(ctx, shill.TechnologyEthernet)
+	if err != nil {
+		return errors.Wrap(err, "failed to get Ethernet services")
+	}
+	for _, svc := range svcs {
+		if err := svc.SetProperty(ctx, shillconst.ServicePropertyEphemeralPriority, 0); err != nil {
+			return errors.Wrapf(err, "failed to reset EphemeralPriority on %s", svc.ObjectPath())
+		}
+	}
+	return nil
+}
+
 // CreateRouterEnv creates a virtualnet Env with the given options. On success,
 // returns the corresponding shill Service and Env object. It's caller's
 // responsibility to call Cleanup() on the returned Env object.
