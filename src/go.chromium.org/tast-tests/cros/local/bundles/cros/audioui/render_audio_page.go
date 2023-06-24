@@ -51,7 +51,7 @@ func RenderAudioPage(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	// Open chrome with audio settings enabled.
-	cr, err := chrome.New(ctx, chrome.EnableFeatures("AudioSettingsPage"))
+	cr, err := chrome.New(ctx, chrome.EnableFeatures("AudioSettingsPage", "QsRevamp"))
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
@@ -63,6 +63,12 @@ func RenderAudioPage(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect Test API: ", err)
 	}
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
+
+	cleanup, err := quicksettings.Init(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to init quicksettings: ", err)
+	}
+	defer cleanup()
 
 	if err := oss.LaunchOsSettingsAudioPageFromQuickSettings(ctx, tconn); err != nil {
 		s.Fatal("Failed to open OS Settings audio page from Quick Settings: ", err)

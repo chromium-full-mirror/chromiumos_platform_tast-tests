@@ -57,7 +57,7 @@ func LockScreen(ctx context.Context, s *testing.State) {
 		lockTimeout = 30 * time.Second
 	)
 
-	cr, err := chrome.New(ctx, chrome.FakeLogin(chrome.Creds{User: username, Pass: password}))
+	cr, err := chrome.New(ctx, chrome.FakeLogin(chrome.Creds{User: username, Pass: password}), chrome.EnableFeatures("QsRevamp"))
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
@@ -87,6 +87,12 @@ func LockScreen(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx, tconn)
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
+
+	cleanup, err := quicksettings.Init(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to init quicksettings: ", err)
+	}
+	defer cleanup()
 
 	if err := quicksettings.OpenAudioSettings(ctx, tconn); err != nil {
 		s.Fatal("Failed to open Quick Settings audio detail view")

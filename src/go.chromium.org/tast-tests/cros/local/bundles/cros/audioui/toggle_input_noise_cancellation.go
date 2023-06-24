@@ -56,7 +56,7 @@ func ToggleInputNoiseCancellation(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	// Open chrome with audio settings enabled.
-	cr, err := chrome.New(ctx, chrome.EnableFeatures("AudioSettingsPage"))
+	cr, err := chrome.New(ctx, chrome.EnableFeatures("AudioSettingsPage", "QsRevamp"))
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
@@ -73,6 +73,12 @@ func ToggleInputNoiseCancellation(ctx context.Context, s *testing.State) {
 		// Ensure quick settings closed at the end of the test.
 		quicksettings.Hide(ctx, tconn)
 	}(cleanupCtx)
+
+	cleanup, err := quicksettings.Init(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to init quicksettings: ", err)
+	}
+	defer cleanup()
 
 	if err := oss.LaunchOsSettingsAudioPageFromQuickSettings(ctx, tconn); err != nil {
 		s.Fatal("Failed to open OS Settings audio page from Quick Settings: ", err)
