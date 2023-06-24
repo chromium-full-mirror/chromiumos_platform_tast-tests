@@ -35,9 +35,10 @@ func ShillDisableWhileConnecting(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create cellular.Helper (precondition): ", err)
 	}
 
-	// Disable AutoConnect so that enable does not connect.
+	// Disable AutoConnect so when we enable the cellular device the
+	// default service does not automatically connect.
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 20*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
 	defer cancel()
 	if wasAutoConnect, err := helper.SetServiceAutoConnect(ctx, false); err != nil {
 		s.Fatal("Failed to disable AutoConnect: ", err)
@@ -49,9 +50,19 @@ func ShillDisableWhileConnecting(ctx context.Context, s *testing.State) {
 		}(cleanupCtx)
 	}
 
-	// Simply disconnecting the service here causes the later connection attempt to
-	// succeed too quickly for the test to catch it with the disable. Instead, disable
-	// and enable the device.
+	// Always attempt to re-enable cellular and connect back to the default
+	// service to ensure that the test has left the DUT in a good state.
+	defer func(ctx context.Context) {
+		if _, err := helper.Enable(ctx); err != nil {
+			s.Fatal("Failed to re-enable device before finishing: ", err)
+		}
+		if _, err := helper.ConnectToDefault(ctx); err != nil {
+			s.Fatal("Failed to re-connect to service before finishing: ", err)
+		}
+	}(cleanupCtx)
+
+	// Simply disconnecting the service here causes the later connection attempt to succeed too
+	// quickly for the test to catch it with the disable. Instead, disable and enable the device.
 	s.Log("Toggling device")
 	if _, err := helper.Disable(ctx); err != nil {
 		s.Fatal("Failed to disable device: ", err)
@@ -59,12 +70,6 @@ func ShillDisableWhileConnecting(ctx context.Context, s *testing.State) {
 	if _, err := helper.Enable(ctx); err != nil {
 		s.Fatal("Failed to enable device: ", err)
 	}
-
-	defer func(ctx context.Context) {
-		if _, err := helper.Enable(ctx); err != nil {
-			s.Fatal("Failed to re-enable device: ", err)
-		}
-	}(cleanupCtx)
 
 	service, err := helper.FindServiceForDevice(ctx)
 	if err != nil {
