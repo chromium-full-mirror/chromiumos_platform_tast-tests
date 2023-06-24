@@ -30,7 +30,7 @@ func init() {
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "bailideng@google.com"},
 		BugComponent: "b:776546",
 		SoftwareDeps: []string{"chrome"},
-		Pre:          chrome.LoggedIn(),
+		Fixture:      "chromeLoggedInQsRevampEnabled",
 		HardwareDeps: hwdep.D(hwdep.Speaker()),
 		Params: []testing.Param{{
 			Name:      "internal_speaker",
@@ -55,7 +55,7 @@ func init() {
 // moment, but they soon are reverted by UI. See (b/191602192) for details.
 func LocalAudioPlayback(ctx context.Context, s *testing.State) {
 	expectedOutputDevice := s.Param().(string)
-	cr := s.PreValue().(*chrome.Chrome)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	// Mute the device to avoid noisiness.
 	if err := crastestclient.Mute(ctx); err != nil {
@@ -125,6 +125,12 @@ func LocalAudioPlayback(ctx context.Context, s *testing.State) {
 	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 		s.Fatal("Error while waiting during sample time: ", err)
 	}
+
+	cleanup, err := quicksettings.Init(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to init quicksettings: ", err)
+	}
+	defer cleanup()
 
 	// Select output device.
 	if err := quicksettings.Show(ctx, tconn); err != nil {
