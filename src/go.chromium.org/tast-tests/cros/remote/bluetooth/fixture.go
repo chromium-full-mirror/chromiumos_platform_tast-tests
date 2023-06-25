@@ -7,6 +7,7 @@ package bluetooth
 import (
 	"context"
 	"fmt"
+	"math"
 	"path/filepath"
 	"strings"
 	"time"
@@ -23,12 +24,20 @@ import (
 	qs "go.chromium.org/tast-tests/cros/services/cros/chrome/uiauto/quicksettings"
 	"go.chromium.org/tast-tests/cros/services/cros/platform"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/ssh"
+	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/timing"
+
+	// for power measurement
+	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/services/cros/power"
+
+	"github.com/golang/protobuf/ptypes/empty"
 )
 
 // Fixture variable keys.
@@ -97,6 +106,7 @@ const (
 	serviceDepAudioService         = "tast.cros.ui.AudioService"
 	serviceDepChromeService        = "tast.cros.browser.ChromeService"
 	serviceDepQuickSettingsService = "tast.cros.chrome.uiauto.quicksettings.QuickSettingsService"
+	serviceDepMetricsService       = "tast.cros.power.MetricsService"
 )
 
 // DUT D-Bus services.
@@ -115,6 +125,11 @@ const (
 	// chromeFeatureFloss is enabled when FlossEnabled fixture feature is true,
 	// and disabled when it is false.
 	chromeFeatureFloss = "Floss"
+)
+
+// Power measurement parameters.
+const (
+	DefaultBTPowerIntervalSecond = 5
 )
 
 // Fixture timeouts.
@@ -177,6 +192,9 @@ type fixtureFeatures struct {
 	// FlossEnabled allows for switching the bluetooth stack on the DUT to use floss
 	// or bluez. To use floss, set this to "true", otherwise bluez will be used.
 	FlossEnabled bool
+
+	// PowerEnabled allows for power measurement
+	PowerEnabled bool
 }
 
 // DUTConfig groups DUT-specific fixture configs and utils.
@@ -214,6 +232,10 @@ type DUTConfig struct {
 	// QuickSettingsService is a client of the QuickSettingsService that manages
 	// UI related services in the quick settings.
 	QuickSettingsService qs.QuickSettingsServiceClient
+
+	// PowerMetricsService is a client of the MetricsService that measures the power
+	// consumption.
+	PowerMetricsService power.MetricsServiceClient
 }
 
 func newDUTConfig(ctx context.Context, dut *dut.DUT, RPCHint *testing.RPCHint) (*DUTConfig, error) {
@@ -230,6 +252,7 @@ func newDUTConfig(ctx context.Context, dut *dut.DUT, RPCHint *testing.RPCHint) (
 		UpstartService:       platform.NewUpstartServiceClient(rpcClient.Conn),
 		AudioService:         ui.NewAudioServiceClient(rpcClient.Conn),
 		QuickSettingsService: qs.NewQuickSettingsServiceClient(rpcClient.Conn),
+		PowerMetricsService:  power.NewMetricsServiceClient(rpcClient.Conn),
 	}, nil
 }
 
@@ -297,6 +320,9 @@ type FixtValue struct {
 
 	// UpstartService is a client of the UpstartService that manages system jobs.
 	UpstartService platform.UpstartServiceClient
+
+	// PowerMetricsService is a client of MetricsService to record the power consumption.
+	PowerMetricsService power.MetricsServiceClient
 }
 
 // PrimaryDUTConfig returns the DUTConfig for the primary DUT.
@@ -315,6 +341,77 @@ func (fv *FixtValue) CompanionDUTConfig(companionNum uint) *DUTConfig {
 		panic("companionNums start at 1 for the first companion DUT")
 	}
 	return fv.DUTConfigs[companionNum]
+}
+
+// StartPowerRecording to start a recording for power metrics.
+func (fv *FixtValue) StartPowerRecording(ctx context.Context) error {
+	testing.ContextLog(ctx, "Start recording power metrics")
+	if _, err := fv.PowerMetricsService.Start(ctx, &empty.Empty{}); err != nil {
+		return errors.Wrap(err, "failed to start recording power metrics")
+	}
+	return nil
+}
+
+// StopPowerRecording to stop the existing power recording.
+func (fv *FixtValue) StopPowerRecording(ctx context.Context, uploadTestName string) (*perf.Values, error) {
+
+	path, ok := testing.ContextOutDir(ctx)
+	if !ok {
+		return nil, errors.New("failed to get OutDir")
+	}
+	remotePath := filepath.Join(path, "power_metrics")
+
+	testing.ContextLog(ctx, "Stop recording power metrics")
+	request := power.FinishRequest{Upload: true, OutDir: remotePath, TestName: uploadTestName}
+	values, err := fv.PowerMetricsService.Finish(ctx, &request)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to stop recording power metrics")
+	}
+
+	for i, dutConfig := range fv.DUTConfigs {
+		dut := dutConfig.DUT
+		powerDir := fmt.Sprintf("power_dut%d_%s", i, uploadTestName)
+		logPathDst := filepath.Join(path, powerDir)
+		if err := linuxssh.GetFile(ctx, dut.Conn(), remotePath, logPathDst, linuxssh.PreserveSymlinks); err != nil {
+			testing.ContextLogf(ctx, "Failed to copy %s from DUT to local path: %s. Error: %s", remotePath, logPathDst, err)
+		}
+		// Delete the log files from the DUT so that we have a clean run.
+		if err := dut.Conn().CommandContext(ctx, "rm", "-r", remotePath).Run(); err != nil {
+			testing.ContextLogf(ctx, "Failed to remove the log files from the DUT at the end of test: %s", err)
+		}
+	}
+
+	// Convert perfpb.Values to perf.Values
+	return perf.NewValuesFromProto(values), nil
+}
+
+// GetPowerMetrics calculates the mean value of requested power metrics.
+func (fv *FixtValue) GetPowerMetrics(ctx context.Context, powerResults *perf.Values, metricsName string) (float64, error) {
+
+	var powerMean float64 = -1
+	for key, value := range powerResults.GetValues() {
+		if key.Name == metricsName {
+			if len(value) == 0 {
+				return -1, errors.New("measurement is empty")
+			}
+			var total float64 = 0
+			for _, v := range value {
+				total += v
+			}
+			mean := total / float64(len(value))
+			var powerSd float64 = 0
+			for _, v := range value {
+				powerSd += math.Pow(v-mean, 2)
+			}
+			powerSd = math.Sqrt(powerSd / float64(len(value)))
+			testing.ContextLogf(ctx, "\t%s=%.4f sd=%.4f n=%d", key.Name, mean, powerSd, len(value))
+			powerMean = mean
+		}
+	}
+	if powerMean == -1 {
+		return -1, errors.New("no power measurement found")
+	}
+	return powerMean, nil
 }
 
 type fixture struct {
@@ -391,6 +488,7 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 	tf.fv.UpstartService = primaryDUTConfig.UpstartService
 	tf.fv.AudioService = primaryDUTConfig.AudioService
 	tf.fv.QuickSettingsService = primaryDUTConfig.QuickSettingsService
+	tf.fv.PowerMetricsService = primaryDUTConfig.PowerMetricsService
 
 	// Configure companion DUT.
 	if tf.features.RequireCompanionDUT {
@@ -404,6 +502,11 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 		}
 		tf.fv.DUTConfigs = append(tf.fv.DUTConfigs, companionDUTConfig)
 	}
+
+	// Cleanup if anything goes wrong during Setup
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
 
 	// Perform per-DUT setup actions.
 	for _, dutConfig := range tf.fv.DUTConfigs {
@@ -513,7 +616,30 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 			s.Errorf("Failed to reset state of DUT %s: %v", dutName, err)
 		}
 
-		s.Logf("SetUp for DUT %s completed", dutName)
+		// Set up power test
+		if tf.features.PowerEnabled {
+			// Create message SetupRequest
+			s.Log("Set up for power measurement")
+			setupRequest := power.SetupRequest{Fixture: power.SetupRequest_NO_UI_NO_WIFI_BT,
+				IntervalSecond: DefaultBTPowerIntervalSecond}
+
+			if _, err := dutConfig.PowerMetricsService.Setup(ctx, &setupRequest); err != nil {
+				s.Fatal("Failed to set up metrics service: ", err)
+			}
+
+			defer func(ctx context.Context) {
+				if !s.HasError() {
+					return
+				}
+				if _, err := dutConfig.PowerMetricsService.Cleanup(ctx, &empty.Empty{}); err != nil {
+					s.Error("Clean up power metrics failed: ", err)
+				}
+			}(cleanupCtx)
+
+			s.Logf("Set up of power measurement for DUT %s completed", dutName)
+		}
+
+		s.Logf("Set up for DUT %s completed", dutName)
 	}
 
 	// Save collected bluez D-Bus messages collected thus far.
@@ -595,6 +721,13 @@ func (tf *fixture) TearDown(ctx context.Context, s *testing.FixtState) {
 			// Clean up chrome login state.
 			if _, err := dutConfig.ChromeService.Close(ctx, &emptypb.Empty{}); err != nil {
 				s.Error("Failed to close Chrome on the DUT: ", err)
+			}
+		}
+
+		// Cleanup for power metrics service
+		if tf.features.PowerEnabled {
+			if _, err := dutConfig.PowerMetricsService.Cleanup(ctx, &empty.Empty{}); err != nil {
+				s.Error("Clean up power metrics failed: ", err)
 			}
 		}
 

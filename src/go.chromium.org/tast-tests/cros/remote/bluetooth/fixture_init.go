@@ -5,9 +5,20 @@
 package bluetooth
 
 import (
+	"time"
+
 	"go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast/core/testing"
+)
+
+const (
+	// BluetoothCooldownTimeout is the max amount of time that Bluetooth allows
+	// for all combined cooldown items. This includes:
+	// 5 minutes max amount of time needed for device temperature to cooldown
+	// 2 minutes max amount of time needed for cpu idle state activity to drop
+	// 3 minutes max amount of time needed for cpu pkg state activity to drop
+	BluetoothCooldownTimeout = 10 * time.Minute
 )
 
 func init() {
@@ -86,6 +97,62 @@ func init() {
 			serviceDepBluetoothService,
 			serviceDepChromeService,
 			serviceDepUpstartService,
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "chromeUIDisabledWith1BTPeerPowerFlossEnabled",
+		Desc: "Disables Chrome UI, enables Bluetooth Floss stack with power measurements, and connects to 1 btpeer",
+		Contacts: []string{
+			"jiangzp@google.com",
+			"chromeos-bt-team@google.com",
+		},
+		Impl: newFixture(&fixtureFeatures{
+			EnableChromeUI: false,
+			BTPeerCount:    1,
+			FlossEnabled:   true,
+			PowerEnabled:   true,
+		}),
+		Vars: []string{
+			fixtureVarBTPeers,
+		},
+		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer + BluetoothCooldownTimeout,
+		ResetTimeout:    resetTimeout + btpeerResetBuffer,
+		TearDownTimeout: tearDownTimeout + btpeerResetBuffer,
+		PostTestTimeout: postTestTimeout,
+		ServiceDeps: []string{
+			serviceDepBluetoothUIService,
+			serviceDepBluetoothService,
+			serviceDepChromeService,
+			serviceDepUpstartService,
+			serviceDepMetricsService,
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "chromeUIDisabledWith1BTPeerPowerFlossDisabled",
+		Desc: "Disables Chrome UI, enables Bluetooth BlueZ stack with power measurements, and connects to 1 btpeer",
+		Contacts: []string{
+			"jiangzp@google.com",
+			"chromeos-bt-team@google.com",
+		},
+		Impl: newFixture(&fixtureFeatures{
+			EnableChromeUI: false,
+			BTPeerCount:    1,
+			FlossEnabled:   false,
+			PowerEnabled:   true,
+		}),
+		Vars: []string{
+			fixtureVarBTPeers,
+		},
+		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer + BluetoothCooldownTimeout,
+		ResetTimeout:    resetTimeout + btpeerResetBuffer,
+		TearDownTimeout: tearDownTimeout + btpeerResetBuffer,
+		PostTestTimeout: postTestTimeout,
+		ServiceDeps: []string{
+			serviceDepBluetoothUIService,
+			serviceDepBluetoothService,
+			serviceDepChromeService,
+			serviceDepUpstartService,
+			serviceDepMetricsService,
 		},
 	})
 	testing.AddFixture(&testing.Fixture{
