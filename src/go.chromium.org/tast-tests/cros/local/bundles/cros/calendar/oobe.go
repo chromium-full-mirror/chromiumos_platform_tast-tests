@@ -36,7 +36,7 @@ func init() {
 	})
 }
 
-// This test verifies that we can open the calendar with the correct landing page on the OOBE screen.
+// Oobe verifies that we can open the calendar with the correct landing page on the OOBE screen.
 // But it should not show the event list when clicking on a date cell.
 func Oobe(ctx context.Context, s *testing.State) {
 	cr, err := chrome.New(
@@ -44,6 +44,7 @@ func Oobe(ctx context.Context, s *testing.State) {
 		chrome.Region("us"),
 		chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
 		chrome.EnableFeatures("CalendarView"),
+		chrome.EnableFeatures("QsRevamp"),
 		chrome.NoLogin())
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)

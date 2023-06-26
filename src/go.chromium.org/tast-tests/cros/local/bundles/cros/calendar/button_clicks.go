@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -41,35 +40,16 @@ func ButtonClicks(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
-	s.Log("Start testing calendar view from quick settings")
-	if err := quicksettings.Expand(ctx, tconn); err != nil {
-		s.Fatal("Failed to open quick settings")
-	}
-
 	ui := uiauto.New(tconn)
 
-	// Opening the calendar view from the quick setting's page and back to the main view several times.
-	const iterations = 5
-	for i := 0; i < iterations; i++ {
-		s.Logf("Opening Calendar view (iteration %d of %d)", i+1, iterations)
-
-		if err := ui.LeftClick(quicksettings.DateView)(ctx); err != nil {
-			s.Fatal("Failed to click the DateView in quick settings bubble: ", err)
-		}
-
-		backButton := nodewith.Name("Previous menu").ClassName("IconButton")
-		if err := ui.LeftClick(backButton)(ctx); err != nil {
-			s.Fatal("Failed to click the BackButton in calendar view bubble: ", err)
-		}
-
+	s.Log("Start testing calendar view from date tray")
+	dateTray := nodewith.HasClass("DateTray")
+	if err := ui.DoDefault(dateTray)(ctx); err != nil {
+		s.Fatal("Failed to click the date tray: ", err)
 	}
 
 	// Comparing the time before and after opening the calendar view just in case this test is run at the very end of a year, e.g. Dec 31 23:59:59.
 	beforeOpeningCalendarYear := time.Now().Year()
-
-	if err := ui.LeftClick(quicksettings.DateView)(ctx); err != nil {
-		s.Fatal("Failed to click the DateView in quick settings page: ", err)
-	}
 
 	calendarView := nodewith.ClassName("CalendarView")
 	mainHeaderTriView := nodewith.ClassName("TriView").Ancestor(calendarView).Nth(0)

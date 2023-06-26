@@ -93,10 +93,11 @@ func init() {
 
 	testing.AddFixture(&testing.Fixture{
 		Name:     fixture.ChromeLoggedInWithCalendarView,
-		Desc:     "Logged into a session with Gaia user where CalendarView is enabled",
+		Desc:     "Logged into a session with Gaia user where there are calendar events",
 		Contacts: []string{"jiamingc@google.com"},
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
-			return []Option{GAIALoginPool(s.RequiredVar("calendar.googleCalendarAccountPool")), EnableFeatures("CalendarView")}, nil
+			// TODO(b/252870625): Remove QsRevamp when it is enabled by default in tast tests.
+			return []Option{GAIALoginPool(s.RequiredVar("calendar.googleCalendarAccountPool")), EnableFeatures("CalendarView", "QsRevamp")}, nil
 		}),
 		Vars:            []string{"calendar.googleCalendarAccountPool"},
 		SetUpTimeout:    LoginTimeout,
@@ -109,7 +110,8 @@ func init() {
 		Desc:     "Logged into a session with Gaia user where there are events set up to join Hangout meetings",
 		Contacts: []string{"leandre@google.com", "jiamingc@google.com"},
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
-			return []Option{GAIALoginPool(s.RequiredVar("calendar.googleCalendarAccountPool")), EnableFeatures("PrivacyIndicators")}, nil
+			// TODO(b/252870625): Remove QsRevamp when it is enabled by default in tast tests.
+			return []Option{GAIALoginPool(s.RequiredVar("calendar.googleCalendarAccountPool")), EnableFeatures("PrivacyIndicators", "QsRevamp")}, nil
 		}),
 		Vars:            []string{"calendar.googleCalendarAccountPool"},
 		SetUpTimeout:    LoginTimeout,
@@ -122,7 +124,8 @@ func init() {
 		Desc:     "Logged into a session with Gaia user where there are upcoming events",
 		Contacts: []string{"cros-status-area-eng@google.com", "samcackett@google.com"},
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
-			return []Option{GAIALoginPool(s.RequiredVar("calendar.upcomingEventsAccountPool")), EnableFeatures("CalendarJelly")}, nil
+			// TODO(b/252870625): Remove QsRevamp when it is enabled by default in tast tests.
+			return []Option{GAIALoginPool(s.RequiredVar("calendar.upcomingEventsAccountPool")), EnableFeatures("CalendarJelly", "QsRevamp")}, nil
 		}),
 		Vars:            []string{"calendar.upcomingEventsAccountPool"},
 		SetUpTimeout:    LoginTimeout,
