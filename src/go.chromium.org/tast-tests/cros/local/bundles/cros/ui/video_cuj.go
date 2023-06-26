@@ -44,13 +44,6 @@ func init() {
 
 			// Experimental variants.
 			{
-				Name:              "lacros_no_arc",
-				ExtraAttr:         []string{"cuj_experimental"},
-				Val:               browser.TypeLacros,
-				Fixture:           "loggedInToCUJUserLacrosWithoutARC",
-				ExtraSoftwareDeps: []string{"lacros"},
-			},
-			{
 				Name:      "backup_ref_ptr",
 				ExtraAttr: []string{"cuj_experimental"},
 				Val:       browser.TypeAsh,

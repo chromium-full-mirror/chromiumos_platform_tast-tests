@@ -47,7 +47,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{cujrecorder.SystemTraceConfigFile},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-		Timeout:      20 * time.Minute,
+		Timeout:      15 * time.Minute,
 		Params: []testing.Param{
 			{
 				Val:     browser.TypeAsh,

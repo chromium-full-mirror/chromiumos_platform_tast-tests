@@ -81,7 +81,7 @@ const (
 	vp9 videoCodecReport = 1
 )
 
-const defaultTestTimeout = 30 * time.Minute
+const defaultTestTimeout = 25 * time.Minute
 
 var (
 	createDumpSectionReg = regexp.MustCompile("(Create Dump)|(Create a WebRTC-Internals dump)")
@@ -116,19 +116,20 @@ func init() {
 		Params: []testing.Param{
 			{
 				Timeout:   defaultTestTimeout,
-				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
+				ExtraAttr: []string{"group:cuj"},
 				Val: meetTest{
 					bots:        []int{1, 3, 15},
 					layout:      googlemeet.TiledLayout,
 					cam:         true,
 					zoomOut:     true,
+					effects:     true,
 					browserType: browser.TypeAsh,
 				},
 				Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
 			}, {
 				Name:      "docs",
 				Timeout:   defaultTestTimeout,
-				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
+				ExtraAttr: []string{"group:cuj"},
 				Val: meetTest{
 					bots:        []int{1, 3, 15},
 					layout:      googlemeet.TiledLayout,
@@ -145,7 +146,7 @@ func init() {
 			{
 				Name:      "docs_lacros",
 				Timeout:   defaultTestTimeout,
-				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
+				ExtraAttr: []string{"group:cuj"},
 				Val: meetTest{
 					bots:        []int{1, 3, 15},
 					layout:      googlemeet.TiledLayout,
@@ -160,71 +161,8 @@ func init() {
 				Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingLacros",
 				ExtraSoftwareDeps: []string{"lacros"},
 			},
-			// 2p Meet variants. Each of these variants are of lower priority,
-			// so run them on fewer devices.
-			{
-				Name:      "2p",
-				Timeout:   defaultTestTimeout,
-				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
-				Val: meetTest{
-					bots:        []int{1},
-					layout:      googlemeet.TiledLayout,
-					cam:         true,
-					browserType: browser.TypeAsh,
-				},
-				Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
-			},
-			{
-				Name:      "lacros_2p",
-				Timeout:   defaultTestTimeout,
-				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
-				Val: meetTest{
-					bots:        []int{1},
-					layout:      googlemeet.TiledLayout,
-					cam:         true,
-					browserType: browser.TypeLacros,
-				},
-				Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingLacros",
-				ExtraSoftwareDeps: []string{"lacros"},
-			},
-
 			// 4p Meet variants.
 			{
-				Name:      "4p",
-				Timeout:   defaultTestTimeout,
-				ExtraAttr: []string{"group:cuj"},
-				Val: meetTest{
-					bots:        []int{3},
-					layout:      googlemeet.TiledLayout,
-					cam:         true,
-					browserType: browser.TypeAsh,
-				},
-				Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
-			}, {
-				Name:    "4p_enterprise",
-				Timeout: defaultTestTimeout,
-				// Lower priority test, so run on fewer devices.
-				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
-				Val: meetTest{
-					bots:        []int{3},
-					layout:      googlemeet.TiledLayout,
-					cam:         true,
-					browserType: browser.TypeAsh,
-				},
-				Fixture: "loggedInToCUJUserEnterpriseWithWebRTCEventLogging",
-			}, {
-				Name:      "lacros_4p",
-				Timeout:   defaultTestTimeout,
-				ExtraAttr: []string{"group:cuj"},
-				Val: meetTest{
-					bots:        []int{3},
-					layout:      googlemeet.TiledLayout,
-					cam:         true,
-					browserType: browser.TypeLacros,
-				},
-				Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingLacros",
-				ExtraSoftwareDeps: []string{"lacros"},
-			}, {
 				Name:      "4p_present_notes_split",
 				Timeout:   defaultTestTimeout,
 				ExtraAttr: []string{"group:cuj"},
@@ -254,20 +192,7 @@ func init() {
 				Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingLacros",
 				ExtraSoftwareDeps: []string{"lacros"},
 			},
-
-			// 16p Meet variants.
 			{
-				Name:      "16p",
-				Timeout:   defaultTestTimeout,
-				ExtraAttr: []string{"group:cuj"},
-				Val: meetTest{
-					bots:        []int{15},
-					layout:      googlemeet.TiledLayout,
-					cam:         true,
-					browserType: browser.TypeAsh,
-				},
-				Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
-			}, {
 				Name:      "16p_enterprise",
 				Timeout:   defaultTestTimeout,
 				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
@@ -278,21 +203,10 @@ func init() {
 					browserType: browser.TypeAsh,
 				},
 				Fixture: "loggedInToCUJUserEnterpriseWithWebRTCEventLogging",
-			}, {
-				Name:      "lacros_16p",
-				Timeout:   defaultTestTimeout,
-				ExtraAttr: []string{"group:cuj"},
-				Val: meetTest{
-					bots:        []int{15},
-					layout:      googlemeet.TiledLayout,
-					cam:         true,
-					browserType: browser.TypeLacros,
-				},
-				Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingLacros",
-				ExtraSoftwareDeps: []string{"lacros"},
 			},
 
-			// 49p Meet variant.
+			// TODO(crbug/1410581): Consider deprecating this test once
+			// analysis on 49p_maincompositing is complete.
 			{
 				Name:      "49p",
 				Timeout:   defaultTestTimeout,
@@ -329,23 +243,6 @@ func init() {
 					browserType: browser.TypeAsh,
 				},
 				Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
-			}, {
-				// 16p_present_notes_split variant with
-				// OneGroupPerRenderer enabled.
-				Name:      "16p_present_notes_split_cgroup",
-				Timeout:   defaultTestTimeout,
-				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
-				Val: meetTest{
-					bots:        []int{15},
-					layout:      googlemeet.TiledLayout,
-					present:     true,
-					docs:        true,
-					split:       true,
-					cam:         true,
-					zoomOut:     true,
-					browserType: browser.TypeAsh,
-				},
-				Fixture: "loggedInToCUJUserWithOneGroupPerRenderer",
 			}, {
 				// 16p_present_notes_split variant with
 				// MainThreadCompositingPriority enabled.
@@ -411,8 +308,82 @@ func init() {
 				},
 				Fixture: "loggedInToCUJUserWithFieldTrialsAndWebRTCEventLogging",
 			},
+			{
+				// Variant of 4p with presenting and notes split with battery saver
+				// enabled.
+				Name:      "4p_present_notes_split_battery_saver",
+				Timeout:   defaultTestTimeout,
+				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
+				Val: meetTest{
+					bots:        []int{3},
+					layout:      googlemeet.TiledLayout,
+					present:     true,
+					docs:        true,
+					split:       true,
+					cam:         true,
+					browserType: browser.TypeAsh,
+				},
+				Fixture: "loggedInToCUJUserWithWebRTCEventLoggingAndBatterySaver",
+			},
 
 			// Inactive variants. No group should be specified for these tests.
+			{
+				Name:    "4p_enterprise",
+				Timeout: defaultTestTimeout,
+				// Lower priority test, so run on fewer devices.
+				Val: meetTest{
+					bots:        []int{3},
+					layout:      googlemeet.TiledLayout,
+					cam:         true,
+					browserType: browser.TypeAsh,
+				},
+				Fixture: "loggedInToCUJUserEnterpriseWithWebRTCEventLogging",
+			},
+			{
+				Name:    "4p",
+				Timeout: defaultTestTimeout,
+				Val: meetTest{
+					bots:        []int{3},
+					layout:      googlemeet.TiledLayout,
+					cam:         true,
+					browserType: browser.TypeAsh,
+				},
+				Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
+			}, {
+				Name:    "lacros_4p",
+				Timeout: defaultTestTimeout,
+				Val: meetTest{
+					bots:        []int{3},
+					layout:      googlemeet.TiledLayout,
+					cam:         true,
+					browserType: browser.TypeLacros,
+				},
+				Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingLacros",
+				ExtraSoftwareDeps: []string{"lacros"},
+			},
+			{
+				Name:    "2p",
+				Timeout: defaultTestTimeout,
+				Val: meetTest{
+					bots:        []int{1},
+					layout:      googlemeet.TiledLayout,
+					cam:         true,
+					browserType: browser.TypeAsh,
+				},
+				Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
+			},
+			{
+				Name:    "lacros_2p",
+				Timeout: defaultTestTimeout,
+				Val: meetTest{
+					bots:        []int{1},
+					layout:      googlemeet.TiledLayout,
+					cam:         true,
+					browserType: browser.TypeLacros,
+				},
+				Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingLacros",
+				ExtraSoftwareDeps: []string{"lacros"},
+			},
 			{
 				Name:    "2p_enterprise",
 				Timeout: defaultTestTimeout,
@@ -533,24 +504,27 @@ func init() {
 				Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingLacros",
 				ExtraSoftwareDeps: []string{"lacros"},
 			},
-
-			// Experimental variants.
 			{
-				// Variant of 4p with presenting and notes split with battery saver
-				// enabled.
-				Name:      "4p_present_notes_split_battery_saver",
-				Timeout:   defaultTestTimeout,
-				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
+				Name:    "16p",
+				Timeout: defaultTestTimeout,
 				Val: meetTest{
-					bots:        []int{3},
+					bots:        []int{15},
 					layout:      googlemeet.TiledLayout,
-					present:     true,
-					docs:        true,
-					split:       true,
 					cam:         true,
 					browserType: browser.TypeAsh,
 				},
-				Fixture: "loggedInToCUJUserWithWebRTCEventLoggingAndBatterySaver",
+				Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
+			}, {
+				Name:    "lacros_16p",
+				Timeout: defaultTestTimeout,
+				Val: meetTest{
+					bots:        []int{15},
+					layout:      googlemeet.TiledLayout,
+					cam:         true,
+					browserType: browser.TypeLacros,
+				},
+				Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingLacros",
+				ExtraSoftwareDeps: []string{"lacros"},
 			},
 		},
 	})
@@ -1673,7 +1647,7 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 	}
 
 	// Report info from chrome://webrtc-internals.
-	webRTCUI := ui.WithTimeout(10 * time.Minute)
+	webRTCUI := ui.WithTimeout(3 * time.Minute)
 	if path, err := dumpWebRTCInternals(ctx, tconn, webRTCUI, cr.NormalizedUser()); err != nil {
 		s.Error("Failed to download dump from chrome://webrtc-internals: ", err)
 		// Take a screenshot with the chrome://webrtc-internals tab in

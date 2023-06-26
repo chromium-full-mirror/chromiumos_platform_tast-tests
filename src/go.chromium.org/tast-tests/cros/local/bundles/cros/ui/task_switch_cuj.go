@@ -65,14 +65,6 @@ func init() {
 					BrowserType: browser.TypeLacros,
 					Tablet:      true,
 				},
-			}, {
-				// Pilot test on "noibat" that has HDMI dongle installed.
-				Name:              "noibat",
-				ExtraHardwareDeps: hwdep.D(hwdep.Model("noibat")),
-				Fixture:           "loggedInToCUJUser",
-				Val: taskswitchcuj.TaskSwitchTest{
-					BrowserType: browser.TypeAsh,
-				},
 			},
 
 			// Experimental variants.
@@ -107,16 +99,6 @@ func init() {
 				Fixture:           "loggedInToCUJUserWithBatterySaver",
 				Val: taskswitchcuj.TaskSwitchTest{
 					BrowserType: browser.TypeAsh,
-				},
-			},
-			{
-				Name:              "tablet_battery_saver",
-				ExtraAttr:         []string{"cuj_experimental"},
-				ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-				Fixture:           "loggedInToCUJUserWithBatterySaver",
-				Val: taskswitchcuj.TaskSwitchTest{
-					BrowserType: browser.TypeAsh,
-					Tablet:      true,
 				},
 			},
 		},

@@ -30,7 +30,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{cujrecorder.SystemTraceConfigFile},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-		Timeout:      30 * time.Minute,
+		Timeout:      20 * time.Minute,
 		Params: []testing.Param{
 			{
 				Val:     browser.TypeAsh,
@@ -44,22 +44,10 @@ func init() {
 
 			// Experimental variants.
 			{
-				Name:      "backup_ref_ptr",
-				ExtraAttr: []string{"cuj_experimental"},
-				Val:       browser.TypeAsh,
-				Fixture:   "loggedInToCUJUserWithBackupRefPtr",
-			},
-			{
 				Name:      "field_trials",
 				ExtraAttr: []string{"cuj_experimental"},
 				Val:       browser.TypeAsh,
 				Fixture:   "loggedInToCUJUserWithFieldTrials",
-			},
-			{
-				Name:      "battery_saver",
-				ExtraAttr: []string{"cuj_experimental"},
-				Val:       browser.TypeAsh,
-				Fixture:   "loggedInToCUJUserWithBatterySaver",
 			},
 			{
 				Name:      "chromevox",

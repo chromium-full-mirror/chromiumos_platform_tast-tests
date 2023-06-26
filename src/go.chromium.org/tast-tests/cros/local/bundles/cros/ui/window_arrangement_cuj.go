@@ -48,7 +48,7 @@ func init() {
 		Attr:         []string{"group:cuj"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-		Timeout:      30 * time.Minute,
+		Timeout:      15 * time.Minute,
 		Data:         []string{"shaka_720.webm", "pip.html", cujrecorder.SystemTraceConfigFile},
 		Params: []testing.Param{
 			{
@@ -82,41 +82,6 @@ func init() {
 				},
 				Fixture:           "loggedInToCUJUserLacros",
 				ExtraSoftwareDeps: []string{"lacros"},
-			},
-
-			// Experimental variants.
-			{
-				Name:      "clamshell_mode_backup_ref_ptr",
-				ExtraAttr: []string{"cuj_experimental"},
-				Val: windowarrangementcuj.TestParam{
-					BrowserType: browser.TypeAsh,
-				},
-				Fixture: "loggedInToCUJUserWithBackupRefPtr",
-			},
-			{
-				Name:      "clamshell_mode_field_trials",
-				ExtraAttr: []string{"cuj_experimental"},
-				Val: windowarrangementcuj.TestParam{
-					BrowserType: browser.TypeAsh,
-				},
-				Fixture: "loggedInToCUJUserWithFieldTrials",
-			},
-			{
-				Name:      "battery_saver",
-				ExtraAttr: []string{"cuj_experimental"},
-				Val: windowarrangementcuj.TestParam{
-					BrowserType: browser.TypeAsh,
-				},
-				Fixture: "loggedInToCUJUserWithBatterySaver",
-			},
-			{
-				Name:      "tablet_mode_battery_saver",
-				ExtraAttr: []string{"cuj_experimental"},
-				Val: windowarrangementcuj.TestParam{
-					BrowserType: browser.TypeAsh,
-					Tablet:      true,
-				},
-				Fixture: "loggedInToCUJUserWithBatterySaver",
 			},
 		},
 	})
