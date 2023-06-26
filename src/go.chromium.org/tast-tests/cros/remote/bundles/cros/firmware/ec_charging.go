@@ -95,14 +95,6 @@ func ECCharging(ctx context.Context, s *testing.State) {
 			TrickleChargingThreshold)
 	}
 
-	origPdRole, err := h.Servo.GetPDRole(ctx)
-	if err != nil {
-		s.Fatal("Failed to retrieve original USB PD role for Servo: ", err)
-	}
-	if origPdRole == servo.PDRoleNA {
-		s.Fatal("Test requires Servo V4 or never to for operating DUT power delivery role through servo_pd_role")
-	}
-
 	// This needs a check for whether we actually need to discharge.
 	s.Log("Initiating battery discharging")
 	if err := h.Servo.SetPDRole(ctx, servo.PDRoleSnk); err != nil {
@@ -150,8 +142,4 @@ func ECCharging(ctx context.Context, s *testing.State) {
 			cs["batt.current"], cs["chg.current"])
 	}
 
-	s.Log("Getting back to original USB PD role")
-	if err := h.Servo.SetPDRole(ctx, origPdRole); err != nil {
-		s.Fatal("Failed to get back to original USB PD role: ", err)
-	}
 }
