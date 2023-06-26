@@ -350,6 +350,36 @@ const (
 	// NvmeStorage16kWriteLatency with If the ChromeOS device uses NVMe to provide non-volatile storage, its NVMe storage device latency MUST NOT exceed 12ms for the 99th percentile of 16k random writes, with iodepth=4 workload.
 	NvmeStorage16kWriteLatency = "store-nvme-0016-v01"
 
+	// UfsStorageControllerVersion with If the ChromeOS device uses UFS to provide non-volatile storage, its UFS controller MUST support UFS2.1 or higher.
+	UfsStorageControllerVersion = "store-ufs-0002-v01"
+
+	// UfsStorageControllerGear with If the ChromeOS device uses UFS to provide non-volatile storage, its UFS controller MUST support Rate-Series-B HS-Gear3 or higher.
+	UfsStorageControllerGear = "store-ufs-0004-v01"
+
+	// UfsStorageControllerTxLanes with If the ChromeOS device uses UFS to provide non-volatile storage, its UFS controller SHOULD support 2 Tx lanes.
+	UfsStorageControllerTxLanes = "store-ufs-0005-v01"
+
+	// UfsStorageControllerRxLanes with If the ChromeOS device uses UFS to provide non-volatile storage, its UFS controller SHOULD support 2 Rx lanes.
+	UfsStorageControllerRxLanes = "store-ufs-0006-v01"
+
+	// UfsStorageDeviceVersion with If the ChromeOS device uses UFS to provide non-volatile storage, its UFS storage device MUST support UFS2.1 or higher.
+	UfsStorageDeviceVersion = "store-ufs-0007-v01"
+
+	// UfsStorageDeviceGear with If the ChromeOS device uses UFS to provide non-volatile storage, its UFS storage device MUST support Rate-Series-B HS-Gear3 or higher.
+	UfsStorageDeviceGear = "store-ufs-0009-v01"
+
+	// UfsStorageDeviceTxLanes with If the ChromeOS device uses UFS to provide non-volatile storage, its UFS storage device SHOULD support 2 Tx lanes.
+	UfsStorageDeviceTxLanes = "store-ufs-0010-v01"
+
+	// UfsStorageDeviceRxLanes with If the ChromeOS device uses UFS to provide non-volatile storage, its UFS storage device SHOULD support 2 Rx lanes.
+	UfsStorageDeviceRxLanes = "store-ufs-0011-v01"
+
+	// UfsStorageHealthDescriptor with If the ChromeOS device uses UFS to provide non-volatile storage, its UFS storage device MUST provide health info via Health Descriptor
+	UfsStorageHealthDescriptor = "store-ufs-0013-v01"
+
+	// UfsStorageProvisioningType If the ChromeOS device uses UFS to provide non-volatile storage, its UFS storage MUST support LUNs bProvisioningType == 03h - thin-provisioning with TPRZ == 1 according to JESD220C 12.2.3.5
+	UfsStorageProvisioningType = "store-ufs-0018-v01"
+
 	// UfsStorage16kReadLatency with If the ChromeOS device uses UFS to provide non-volatile storage, its UFS storage device latency MUST NOT exceed 12ms for the 99th percentile of 16k random reads, with iodepth=4 workload.
 	UfsStorage16kReadLatency = "store-ufs-0030-v01"
 
