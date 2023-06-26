@@ -25,15 +25,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-// scaledRect returns a scaled rectangle with keeping it's center unchanged.
-func scaledRect(r coords.Rect, coeff float64) coords.Rect {
-	var x = r.CenterX()
-	var y = r.CenterY()
-	var w = int(float64(r.Width) * coeff)
-	var h = int(float64(r.Height) * coeff)
-	return coords.NewRect(x-w/2, y-h/2, w, h)
-}
-
 // SaveImage saves a given image.Image as png.
 func SaveImage(outDir, name string, img image.Image) error {
 	f, err := os.Create(fmt.Sprintf("%s/%s", outDir, name))
@@ -122,9 +113,9 @@ func LaunchCameraAndTakeScreenshot(ctx context.Context, cr *chrome.Chrome,
 	// We need to have a subRectPX, as the rectPX holds
 	// the entire viewing area of the camera app
 	// (with buttons & UI elements we shall not capture).
-	var subRectPX = scaledRect(*rectPX, 0.70)
+	var subRectPX = rectPX.WithScaleAboutCenter(0.70, 0.70)
 	subRectPX.Top = rectPX.Top
-	subRectPX = scaledRect(subRectPX, 0.90)
+	subRectPX = subRectPX.WithScaleAboutCenter(0.90, 0.90)
 
 	// Polling at most 10 sec till camera will start showing a stream
 	// (as the camera takes 1-2 sec to start capturing

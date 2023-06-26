@@ -68,6 +68,13 @@ func (s Size) Empty() bool {
 	return s.Height == 0 || s.Width == 0
 }
 
+// Scaled returns new Size that is scaled by passed factors.
+// Factors = 1.0 will return the same Size.
+func (s Size) Scaled(factorW, factorH float64) Size {
+	return Size{Width: int(math.Round(float64(s.Width) * factorW)),
+		Height: int(math.Round(float64(s.Height) * factorH))}
+}
+
 // Rect represents a rectangular region.
 type Rect struct {
 	Left   int `json:"left"`
@@ -234,6 +241,14 @@ func (r Rect) WithResizeAboutCenter(w, h int) Rect {
 	// r.CenterPoint().X would be computed as r.Left+r.Width/2. These X computations
 	// would agree because -w/2+w/2 will cancel out no matter which way w/2 is rounded.
 	// Same deal for Y.
+}
+
+// WithScaleAboutCenter returns a scaled rectangle with keeping it's
+// center unchanged. Factors to be > 0. Factors == 1 produce the same Rect.
+func (r Rect) WithScaleAboutCenter(factorW, factorH float64) Rect {
+	var w = int(float64(r.Width) * factorW)
+	var h = int(float64(r.Height) * factorH)
+	return r.WithResizeAboutCenter(w, h)
 }
 
 // convertBounds is used by ConvertBoundsFromDPToPX and ConvertBoundsFromPXToDP.
