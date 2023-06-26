@@ -126,6 +126,7 @@ func init() {
 					PPDFile:      "printer_add_canonmg2900.ppd",
 					PrintFile:    "2page.pdf",
 					ExpectedFile: "printer_add_canonmg2900_golden.bin",
+					Options:      []string{"print-color-mode=rgb"},
 				},
 				ExtraData: []string{"2page.pdf", "printer_add_canonmg2900.ppd", "printer_add_canonmg2900_golden.bin"},
 			}, {

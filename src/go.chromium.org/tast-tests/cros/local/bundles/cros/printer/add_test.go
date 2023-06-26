@@ -89,7 +89,7 @@ func TestAddParams(t *testing.T) {
 		test("oki_tray4", "printer_add_oki.ppd.gz", "printer_add_oki_tray4_golden.ps", "media-source=tray-4"),
 
 		// Add
-		iTest2("canon", "printer_add_canonmg2900.ppd", "printer_add_canonmg2900_golden.bin"),
+		iTest2("canon", "printer_add_canonmg2900.ppd", "printer_add_canonmg2900_golden.bin", "print-color-mode=rgb"),
 		test("dymo_lw", "printer_add_dymo_printer_lw450.ppd", "printer_add_dymo_lw_printer_golden.bin"),
 		test("dymo_lm", "printer_add_dymo_printer_lm450.ppd", "printer_add_dymo_lm_printer_golden.bin"),
 		test("epson", "printer_EpsonWF3620.ppd", "printer_add_epson_printer_golden.ps"),
