@@ -39,6 +39,24 @@ func chargingInt(raw, suffix string) (value int) {
 	return value
 }
 
+// setupChan sets the channel / reporting from EC to be quiet.
+func setupChan(ctx context.Context, h *firmware.Helper, s *testing.State) func() {
+	if err := h.Servo.RunECCommand(ctx, "chan save"); err != nil {
+		s.Fatal("Failed to send 'chan save' to EC: ", err)
+	}
+
+	if err := h.Servo.RunECCommand(ctx, "chan 0"); err != nil {
+		s.Fatal("Failed to send 'chan 0' to EC: ", err)
+	}
+
+	return func() {
+		s.Log("Restoring channel messaging")
+		if err := h.Servo.RunECCommand(ctx, "chan restore"); err != nil {
+			s.Fatal("Failed to send 'chan restore' to EC: ", err)
+		}
+	}
+}
+
 // ECCharging discharges the DUT then checks its voltages
 // and current to determine its charging circuitry and EC
 // reporting is working as intended
@@ -53,19 +71,8 @@ func ECCharging(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to init servo: ", err)
 	}
 
-	if err := h.Servo.RunECCommand(ctx, "chan save"); err != nil {
-		s.Fatal("Failed to send 'chan save' to EC: ", err)
-	}
-
-	if err := h.Servo.RunECCommand(ctx, "chan 0"); err != nil {
-		s.Fatal("Failed to send 'chan 0' to EC: ", err)
-	}
-
-	defer func() {
-		if err := h.Servo.RunECCommand(ctx, "chan restore"); err != nil {
-			s.Fatal("Failed to send 'chan restore' to EC: ", err)
-		}
-	}()
+	cleanup := setupChan(ctx, h, s) // Make things quiet.
+	defer cleanup()
 
 	cs, err := firmware.GetChargingState(ctx, h)
 	if err != nil {
@@ -74,6 +81,7 @@ func ECCharging(ctx context.Context, s *testing.State) {
 	if cs["global.ac"] != "1" {
 		s.Fatal("DUT is not plugged to AC charger")
 	}
+
 	if cs["global.state"] != "charge" {
 		s.Fatal("DUT is not charging (DUT is on AC but does not report charging)")
 	}
@@ -95,6 +103,7 @@ func ECCharging(ctx context.Context, s *testing.State) {
 		s.Fatal("Test requires Servo V4 or never to for operating DUT power delivery role through servo_pd_role")
 	}
 
+	// This needs a check for whether we actually need to discharge.
 	s.Log("Initiating battery discharging")
 	if err := h.Servo.SetPDRole(ctx, servo.PDRoleSnk); err != nil {
 		s.Fatal("Failed to initialize battery discharging: ", err)
@@ -116,6 +125,8 @@ func ECCharging(ctx context.Context, s *testing.State) {
 	if err := h.DUT.Conn().CommandContext(ctx, "bash", "-c", stressingScript).Run(); err != nil {
 		s.Fatal("Failed to discharge battery using CPU stress: ", err)
 	}
+
+	// This should reset the charge state to Src and also check full charge state as above.
 
 	cs, err = firmware.GetChargingState(ctx, h)
 	if err != nil {
