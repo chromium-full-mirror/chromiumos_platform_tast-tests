@@ -18,7 +18,6 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -34,8 +33,6 @@ func init() {
 		Attr:         []string{"informational", "group:mainline"},
 		// For "no_tpm_dynamic" - see http://b/251789202.
 		SoftwareDeps: []string{"pinweaver", "tpm", "no_tpm_dynamic", "chrome"},
-		// TODO(b/195385797): Remove this when the bug is fixed.
-		HardwareDeps: hwdep.D(hwdep.SkipOnModel("gooey")),
 	})
 }
 

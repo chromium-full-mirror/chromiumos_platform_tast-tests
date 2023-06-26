@@ -11,6 +11,7 @@ import (
 	"time"
 
 	uda "chromiumos/system_api/user_data_auth_proto"
+
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/crash"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
@@ -18,7 +19,6 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -32,8 +32,6 @@ func init() {
 		BugComponent: "b:1032705",
 		Fixture:      "ussAuthSessionFixture",
 		Attr:         []string{"group:mainline", "informational"},
-		// TODO(b/195385797): Run on gooey when the bug is fixed.
-		HardwareDeps: hwdep.D(hwdep.SkipOnModel("gooey")),
 	})
 }
 

@@ -20,7 +20,6 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -43,8 +42,6 @@ func init() {
 			"group:cryptohome",
 		},
 		SoftwareDeps: []string{"pinweaver"},
-		// TODO(b/195385797): Run on gooey when the bug is fixed.
-		HardwareDeps: hwdep.D(hwdep.SkipOnModel("gooey")),
 		Fixture:      "ussAuthSessionFixture",
 	})
 }

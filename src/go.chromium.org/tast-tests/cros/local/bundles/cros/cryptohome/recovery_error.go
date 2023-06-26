@@ -16,7 +16,6 @@ import (
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -39,8 +38,6 @@ func init() {
 		Fixture: "ussAuthSessionFixture",
 		// For "no_tpm_dynamic" - see http://b/251789202.
 		SoftwareDeps: []string{"tpm", "no_tpm_dynamic"},
-		// TODO(b/195385797): Run on gooey when the bug is fixed.
-		HardwareDeps: hwdep.D(hwdep.SkipOnModel("gooey")),
 	})
 }
 

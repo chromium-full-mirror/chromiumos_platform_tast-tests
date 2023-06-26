@@ -17,7 +17,6 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -33,17 +32,6 @@ func init() {
 		// For "no_tpm_dynamic" - see http://b/251789202.
 		SoftwareDeps: []string{"pinweaver", "tpm", "no_tpm_dynamic"},
 		Fixture:      "ussAuthSessionFixture",
-		Params: []testing.Param{
-			{
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("gooey")),
-			},
-			// TODO(b/195385797): Move this to critical when the bug is fixed.
-			{
-				Name:              "informational",
-				ExtraAttr:         []string{"informational"},
-				ExtraHardwareDeps: hwdep.D(hwdep.Model("gooey")),
-			},
-		},
 	})
 }
 
