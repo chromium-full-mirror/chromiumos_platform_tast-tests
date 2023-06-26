@@ -1411,11 +1411,6 @@ func TestPlatformDecodingParams(t *testing.T) {
 						}
 					}
 
-					if stateness == "Stateless" {
-						// TODO(b/227480076): re-enable on RockChip devices (bob, gru, kevin) if needed in the future.
-						hardwareDeps = append(hardwareDeps, "hwdep.SkipCPUSocFamily([]string{\"rockchip\"})")
-					}
-
 					param.HardwareDeps = strings.Join(hardwareDeps, ", ")
 					params = append(params, param)
 				}

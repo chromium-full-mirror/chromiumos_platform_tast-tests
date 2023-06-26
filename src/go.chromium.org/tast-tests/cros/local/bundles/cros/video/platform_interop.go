@@ -100,7 +100,7 @@ func init() {
 				},
 				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp8_1080_30"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipCPUSocFamily([]string{"rockchip"}), hwdep.SupportsV4L2StatelessVideoDecoding()),
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatelessVideoDecoding()),
 			},
 			{
 				Name: "vp8_180_vaapi_to_sw",
@@ -177,7 +177,7 @@ func init() {
 				},
 				ExtraData:         []string{"gipsrestat-320x180.vp9.webm"},
 				ExtraSoftwareDeps: []string{"v4l2_codec", "autotest-capability:hw_enc_vp8_1080_30", "autotest-capability:hw_dec_vp8_1080_30"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipCPUSocFamily([]string{"rockchip"}), hwdep.SupportsV4L2StatelessVideoDecoding()),
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatelessVideoDecoding()),
 			},
 			{
 				Name: "vp9_180_sw_to_vaapi",

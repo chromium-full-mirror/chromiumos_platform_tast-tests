@@ -265,10 +265,6 @@ func TestPlatformInteropParamParams(t *testing.T) {
 						HardwareDeps:          getHardwareDeps(decoder),
 						Data:                  []string{sourceFile.Name},
 					}
-					// TODO(b/263796767): Enable this on RK3399.
-					if decoder == v4l2Stateless && codec == "vp8" {
-						param.HardwareDeps = "hwdep.SkipCPUSocFamily([]string{\"rockchip\"}), " + param.HardwareDeps
-					}
 					params = append(params, param)
 				}
 			}
