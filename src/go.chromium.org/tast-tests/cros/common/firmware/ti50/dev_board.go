@@ -56,6 +56,7 @@ type DevBoard interface {
 }
 
 // TestbedType represents a kind of testbed, including which GSC devboard, debugger and wiring.
+// Please update AllTestbedTypes() after editing.
 type TestbedType string
 
 const (
@@ -71,3 +72,8 @@ const (
 	// GscHostEmulation is not a physical testbed, but an emulation on a Linux host computer.
 	GscHostEmulation TestbedType = "gsc_he"
 )
+
+// AllTestbedTypes returns all the possible testbed types.
+func AllTestbedTypes() []TestbedType {
+	return []TestbedType{GscDauntlessAndreiboard, GscOpentitanCw310Fpga, GscHostEmulation}
+}

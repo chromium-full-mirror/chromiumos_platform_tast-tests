@@ -11,9 +11,11 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
 	remoteTi50 "go.chromium.org/tast-tests/cros/remote/firmware/ti50"
 
 	"go.chromium.org/tast/core/errors"
@@ -28,6 +30,9 @@ const (
 	// BuildURL is the arg name for the directory of the gs build or full path of the image (local or in gs).
 	BuildURL = "buildurl"
 
+	// LatestPrefix allows BuildURL to be specified as latest-<branch> obtain the latest available images.
+	LatestPrefix = "latest-"
+
 	// FwConfigJSON is the arg name for the json configuration file (for use in case buildurl
 	// specifies a single .bin file, rather than a directory).
 	FwConfigJSON = "fw_configjson"
@@ -41,15 +46,6 @@ const (
 	// Slot can be left empty, or set to either 'A' or 'B'.
 	Slot = "slot"
 
-	// Ti50Image fixture downloads the ti50 image bin.
-	Ti50Image ImageType = "ti50"
-
-	// SystemTestAutoImage fixture downloads the system_test_auto image bin.
-	SystemTestAutoImage ImageType = "system_test_auto"
-
-	// SystemTestAuto2Image fixture downloads the system_test_auto_2 image bin.
-	SystemTestAuto2Image ImageType = "system_test_auto_2"
-
 	// imageBin is the name of the image file, it is the same for both images.
 	imageBin = "ti50_Unknown_PrePVT_ti50-accessory-nodelocked-ro-premp.bin"
 
@@ -58,9 +54,30 @@ const (
 
 	gsPrefix = "gs://"
 
+	// ToTBranch is the Tip-of-Tree branch having artifacts at postSubmitArtifactsBuilder.
+	ToTBranch                  string = "tot"
+	postSubmitArtifactsBuilder        = "chromeos-image-archive/firmware-ti50-postsubmit"
+
 	imageDownloadTimeout = 30 * time.Second
 	imageDeleteTimeout   = 5 * time.Second
 )
+
+// ImageType declarations, please update AllImageTypes() after editing.
+const (
+	// Ti50Image fixture downloads the ti50 image bin.
+	Ti50Image ImageType = "ti50"
+
+	// SystemTestAutoImage fixture downloads the system_test_auto image bin.
+	SystemTestAutoImage ImageType = "system_test_auto"
+
+	// SystemTestAuto2Image fixture downloads the system_test_auto_2 image bin.
+	SystemTestAuto2Image ImageType = "system_test_auto_2"
+)
+
+// AllImageTypes returns all the possible image types.
+func AllImageTypes() []ImageType {
+	return []ImageType{Ti50Image, SystemTestAutoImage, SystemTestAuto2Image}
+}
 
 // ImageValue provides access to a image binary along with json configuration files.
 type ImageValue struct {
@@ -100,6 +117,15 @@ func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProp
 		return iv, nil
 	}
 
+	if inputURL[:len(LatestPrefix)] == LatestPrefix {
+		latestURL, err := findLatestCompletedBuildURL(ctx, inputURL[len(LatestPrefix):])
+		if err != nil {
+			return nil, err
+		}
+		testing.ContextLogf(ctx, "Found %s for %s", latestURL, inputURL)
+		inputURL = latestURL
+	}
+
 	if len(inputURL) > len(gsPrefix) && inputURL[:len(gsPrefix)] == gsPrefix {
 		fullURL := inputURL
 		jsonURL := ""
@@ -110,21 +136,14 @@ func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProp
 			testing.ContextLogf(ctx, "Looking for tast directory: gsutil %s", strings.Join(args, " "))
 			cmd := exec.CommandContext(ctx, "gsutil", args...)
 			if err := cmd.Run(); err == nil {
+
+				imageDir, err := imageDirectory(testbedProperties.TestbedType, imageType)
+				if err != nil {
+					return nil, err
+				}
 				// Cloud directory (branch or main) has a "tast/" subdirectory,
 				// use images from there.
-
-				var prefix string
-				switch testbedProperties.TestbedType {
-				case "gsc_dt_ab":
-					prefix = "andreiboard-"
-				case "gsc_ot_fpga_cw310":
-					prefix = "opentitan-"
-				case "gsc_he":
-					prefix = "host_emulation-"
-				default:
-					return nil, errors.Errorf("unknown testbed type: %q", testbedProperties.TestbedType)
-				}
-				tastDir := filepath.Join(inputURL[len(gsPrefix):], "tast", prefix+string(imageType))
+				tastDir := filepath.Join(inputURL[len(gsPrefix):], "tast", imageDir)
 				fullURL = gsPrefix + filepath.Join(tastDir, "image*.bin")
 				jsonURL = gsPrefix + filepath.Join(tastDir, "opentitantool_fw_config.json")
 			} else {
@@ -204,4 +223,70 @@ func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProp
 	iv.imagePath = inputURL
 	iv.configPaths = configPaths
 	return iv, nil
+}
+
+// findLatestCompletedBuildURL finds the most recent build with the full set of image artifacts.
+func findLatestCompletedBuildURL(ctx context.Context, branch string) (string, error) {
+	var branchGsPrefix string
+
+	switch branch {
+	case ToTBranch:
+		branchGsPrefix = gsPrefix + postSubmitArtifactsBuilder
+	default:
+		return "", errors.New("unrecognied branch " + branch)
+	}
+
+	args := []string{"ls", branchGsPrefix}
+	testing.ContextLogf(ctx, "Listing builds for %s: gsutil %s", branch, strings.Join(args, " "))
+	cmd := exec.CommandContext(ctx, "gsutil", args...)
+	output, err := cmd.Output()
+	if err != nil {
+		return "", err
+	}
+	builds := strings.Split(string(output), "\n")
+	sort.Strings(builds)
+
+	for i := len(builds) - 1; i >= 0; i-- {
+		buildComplete := true
+		build := builds[i]
+	Loop:
+		for _, boardType := range ti50.AllTestbedTypes() {
+			for _, imageType := range AllImageTypes() {
+				dir, err := imageDirectory(boardType, imageType)
+				if err != nil {
+					return "", err
+				}
+
+				if !gsURLExists(ctx, build+filepath.Join("tast", dir)) {
+					buildComplete = false
+					break Loop
+				}
+			}
+		}
+		if buildComplete {
+			return build, nil
+		}
+	}
+	return "", errors.New("found no completed builds for " + branch)
+}
+
+// gsURLExists retruns whether a gs URL is valid.
+func gsURLExists(ctx context.Context, url string) bool {
+	args := []string{"ls", url}
+	cmd := exec.CommandContext(ctx, "gsutil", args...)
+	return cmd.Run() == nil
+}
+
+// imageDirectory returns the image directory under the tast folder.
+func imageDirectory(t ti50.TestbedType, i ImageType) (string, error) {
+	switch t {
+	case "gsc_dt_ab":
+		return "andreiboard-" + string(i), nil
+	case "gsc_ot_fpga_cw310":
+		return "opentitan-" + string(i), nil
+	case "gsc_he":
+		return "host_emulation-" + string(i), nil
+	default:
+		return "", errors.New("unknown testbed type: " + string(t))
+	}
 }
