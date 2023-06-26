@@ -231,7 +231,12 @@ func UpdateEnginePolicies(ctx context.Context, s *testing.State) {
 		defer updateServer.Close(ctx)
 
 		// Set the policy and check that the attribute is set.
-		if err := policyutil.ServeAndVerify(ctx, fdms, cr, param.policyValues); err != nil {
+		// TODO(b/285292962): Replace poll with a test-agnostic workaround.
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			return policyutil.ServeAndVerify(ctx, fdms, cr, param.policyValues)
+		}, &testing.PollOptions{
+			Timeout: 30 * time.Second,
+		}); err != nil {
 			s.Fatal("Failed to update policies: ", err)
 		}
 
@@ -268,8 +273,13 @@ func UpdateEnginePolicies(ctx context.Context, s *testing.State) {
 		defer updateServer.Close(ctx)
 
 		// Clear policies to make sure attribute is not always sent.
-		if err := policyutil.ServeAndVerify(ctx, fdms, cr, []policy.Policy{}); err != nil {
-			s.Fatal("Failed to clear policies: ", err)
+		// TODO(b/285292962): Replace poll with a test-agnostic workaround.
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			return policyutil.ServeAndVerify(ctx, fdms, cr, []policy.Policy{})
+		}, &testing.PollOptions{
+			Timeout: 30 * time.Second,
+		}); err != nil {
+			s.Fatal("Failed to update policies: ", err)
 		}
 
 		if err := triggerUpdate(ctx, nebraska.UpdateURL(updateServer.Port, true)); err != nil {
