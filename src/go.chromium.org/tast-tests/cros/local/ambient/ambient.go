@@ -8,6 +8,7 @@ package ambient
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -40,6 +41,10 @@ const (
 	FloatOnBy     = "Float on by"
 )
 
+// AlbumSelectedClassName specifies the label given to ambient albums that have
+// been selected in the hub.
+const AlbumSelectedClassName = "album-selected"
+
 // Default values for TestParams' fields.
 const (
 	// Slide show mode only requires downloading and decoding 2 photos before the
@@ -47,14 +52,15 @@ const (
 	// 16 photos before starting (with an internal timeout after which screen
 	// saver starts anyways if it can't prepare all 16). Since this is
 	// significantly more than slide show, the timeout should be larger.
-	AmbientStartSlideShowDefaultTimeout = 15 * time.Second
-	AmbientStartAnimationDefaultTimeout = 30 * time.Second
-	// Not used. Animation playback speed does not apply to slide show yet.
-	SlideShowDefaultPlaybackSpeed = 1
+	StartSlideShowDefaultTimeout = 15 * time.Second
+	StartAnimationDefaultTimeout = 30 * time.Second
+	// Keeps the animation playback speed set at the default (no fast forwarding).
+	// For use with themes that do not use lottie animations.
+	AnimationDefaultPlaybackSpeed = 1
 	// Typical animation cycle duration is currently 60 seconds. 60 seconds / 20
 	// = 3 second cycle duration. This should give the test ample time to iterate
 	// through 2 full animation cycles, giving it sufficient test coverage.
-	AnimationDefaultPlaybackSpeed = 20
+	AnimationFastForwardPlaybackSpeed = 20
 )
 
 // TestVideoSrc contains an example Youtube video to play for testing
@@ -67,11 +73,19 @@ var TestVideoSrc = youtube.VideoSrc{
 
 // TestParams for each test case.
 type TestParams struct {
-	TopicSource            string
-	Theme                  string
+	TopicSource string
+	Theme       string
+	// Only used if the `Theme` is a Lottie-animated theme. Specifies the
+	// animation's playback rate so that the test can run faster.
 	AnimationPlaybackSpeed float32
-	AnimationStartTimeout  time.Duration
-	PlayTestVideo          bool // whether we want to test the media player in ambient mode
+	// Amount of time to wait for an ambient session to start (can include things
+	// like downloading photos, etc). Applies to all themes.
+	StartupTimeout time.Duration
+	// Whether we want to test the media player in ambient mode. Note this is not
+	// the same as the `VideoTheme`. This tests the ambient media string (ex:
+	// launch ambient mode with a YT video playing in the background). It is not
+	// theme-specific.
+	PlayTestVideo bool
 }
 
 // DeviceSettings that must be set on the DUT before the test begins. These
@@ -207,19 +221,18 @@ func TestLockScreenIdle(
 	cr *chrome.Chrome,
 	tconn *chrome.TestConn,
 	ui *uiauto.Context,
-	ambientStartTimeout time.Duration,
-	playTestVideo bool,
+	testParams TestParams,
 ) uiauto.Action {
 	return func(ctx context.Context) error {
 		return uiauto.Combine("start, hide, and restart screen saver",
 			lockScreen(ctx, tconn),
-			waitForAmbientStart(tconn, ui, ambientStartTimeout, playTestVideo),
+			waitForAmbientStart(tconn, ui, testParams),
 			hideAmbientMode(tconn, ui, mouseMove),
-			waitForAmbientStart(tconn, ui, ambientStartTimeout, playTestVideo),
+			waitForAmbientStart(tconn, ui, testParams),
 			hideAmbientMode(tconn, ui, mouseClick),
-			waitForAmbientStart(tconn, ui, ambientStartTimeout, playTestVideo),
+			waitForAmbientStart(tconn, ui, testParams),
 			hideAmbientMode(tconn, ui, keyboardClick),
-			waitForAmbientStart(tconn, ui, ambientStartTimeout, playTestVideo),
+			waitForAmbientStart(tconn, ui, testParams),
 		)(ctx)
 	}
 }
@@ -286,17 +299,17 @@ func UnlockScreen(tconn *chrome.TestConn, username, password string) uiauto.Acti
 
 // waitForAmbientStart returns an action to wait for ambient mode to start and validate
 // the number of photo transitions during ambient mode.
-func waitForAmbientStart(tconn *chrome.TestConn, ui *uiauto.Context, timeout time.Duration, playTestVideo bool) uiauto.Action {
+func waitForAmbientStart(tconn *chrome.TestConn, ui *uiauto.Context, testParams TestParams) uiauto.Action {
 	return func(ctx context.Context) error {
 		if err := waitForPhotoTransitions(
 			ctx,
 			tconn,
 			2,
-			timeout,
+			testParams.StartupTimeout,
 		); err != nil {
 			return errors.Wrap(err, "failed to wait for photo transitions")
 		}
-		if playTestVideo {
+		if testParams.PlayTestVideo {
 			return showMediaStringInScreenSaver(ctx, ui)
 		}
 		if err := ui.WaitUntilExists(
@@ -395,4 +408,41 @@ func keyboardClick(ctx context.Context, ui *uiauto.Context) error {
 		return err
 	}
 	return nil
+}
+
+// IsAlbumSelected returns whether the `albumInfo` provided has been selected in
+// the hub.
+func IsAlbumSelected(albumInfo *uiauto.NodeInfo) bool {
+	return strings.Contains(albumInfo.ClassName, AlbumSelectedClassName)
+}
+
+// FindAlbumWithName returns the album in `allAlbums` whose name matches
+// `albumName`. Returns nil if an album with matching name is not found.
+func FindAlbumWithName(albumName string, allAlbums []uiauto.NodeInfo) *uiauto.NodeInfo {
+	for _, album := range allAlbums {
+		if album.Name == albumName {
+			return &album
+		}
+	}
+	return nil
+}
+
+// SelectAlbum selects the album with the given `albumInfo` in the hub.
+func SelectAlbum(ctx context.Context, ui *uiauto.Context, albumInfo *uiauto.NodeInfo) error {
+	selectedAlbumNode := nodewith.HasClass(AlbumSelectedClassName).Name(albumInfo.Name)
+	return uiauto.Retry(3, uiauto.Combine("select album",
+		ui.Gone(selectedAlbumNode),
+		ui.MouseClickAtLocation(0, albumInfo.Location.CenterPoint()),
+		ui.WithTimeout(3*time.Second).WaitUntilExists(selectedAlbumNode),
+	))(ctx)
+}
+
+// DeselectAlbum deselects the album with the given `albumInfo` in the hub.
+func DeselectAlbum(ctx context.Context, ui *uiauto.Context, albumInfo *uiauto.NodeInfo) error {
+	selectedAlbumNode := nodewith.HasClass(AlbumSelectedClassName).Name(albumInfo.Name)
+	return uiauto.Retry(3, uiauto.Combine("deselect album",
+		ui.Exists(selectedAlbumNode),
+		ui.MouseClickAtLocation(0, albumInfo.Location.CenterPoint()),
+		ui.WithTimeout(3*time.Second).WaitUntilGone(selectedAlbumNode),
+	))(ctx)
 }

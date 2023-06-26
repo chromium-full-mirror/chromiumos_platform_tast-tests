@@ -6,7 +6,6 @@ package personalization
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/ambient"
@@ -48,8 +47,8 @@ func init() {
 				Val: ambient.TestParams{
 					TopicSource:            ambient.GooglePhotos,
 					Theme:                  ambient.SlideShow,
-					AnimationPlaybackSpeed: ambient.SlideShowDefaultPlaybackSpeed,
-					AnimationStartTimeout:  ambient.AmbientStartSlideShowDefaultTimeout,
+					AnimationPlaybackSpeed: ambient.AnimationDefaultPlaybackSpeed,
+					StartupTimeout:         ambient.StartSlideShowDefaultTimeout,
 					PlayTestVideo:          false,
 				},
 			},
@@ -58,8 +57,8 @@ func init() {
 				Val: ambient.TestParams{
 					TopicSource:            ambient.ArtGallery,
 					Theme:                  ambient.SlideShow,
-					AnimationPlaybackSpeed: ambient.SlideShowDefaultPlaybackSpeed,
-					AnimationStartTimeout:  ambient.AmbientStartSlideShowDefaultTimeout,
+					AnimationPlaybackSpeed: ambient.AnimationDefaultPlaybackSpeed,
+					StartupTimeout:         ambient.StartSlideShowDefaultTimeout,
 					PlayTestVideo:          false,
 				},
 			},
@@ -76,8 +75,8 @@ func init() {
 				Val: ambient.TestParams{
 					TopicSource:            ambient.ArtGallery,
 					Theme:                  ambient.FeelTheBreeze,
-					AnimationPlaybackSpeed: ambient.AnimationDefaultPlaybackSpeed,
-					AnimationStartTimeout:  ambient.AmbientStartAnimationDefaultTimeout,
+					AnimationPlaybackSpeed: ambient.AnimationFastForwardPlaybackSpeed,
+					StartupTimeout:         ambient.StartAnimationDefaultTimeout,
 					PlayTestVideo:          false,
 				},
 			},
@@ -86,8 +85,8 @@ func init() {
 				Val: ambient.TestParams{
 					TopicSource:            ambient.ArtGallery,
 					Theme:                  ambient.FloatOnBy,
-					AnimationPlaybackSpeed: ambient.AnimationDefaultPlaybackSpeed,
-					AnimationStartTimeout:  ambient.AmbientStartAnimationDefaultTimeout,
+					AnimationPlaybackSpeed: ambient.AnimationFastForwardPlaybackSpeed,
+					StartupTimeout:         ambient.StartAnimationDefaultTimeout,
 					PlayTestVideo:          true,
 				},
 			},
@@ -145,7 +144,7 @@ func SetScreenSaver(ctx context.Context, s *testing.State) {
 	}
 
 	if err := uiauto.Combine("Run screen saver and unlock screen",
-		ambient.TestLockScreenIdle(cr, tconn, ui, testParams.AnimationStartTimeout, testParams.PlayTestVideo),
+		ambient.TestLockScreenIdle(cr, tconn, ui, testParams),
 		ambient.UnlockScreen(tconn, cr.Creds().User, cr.Creds().Pass))(ctx); err != nil {
 		s.Fatalf("Failed to run %v/%v screen saver: %v", testParams.TopicSource, testParams.Theme, err)
 	}
@@ -185,30 +184,20 @@ func prepareScreenSaver(tconn *chrome.TestConn, ui *uiauto.Context, testParams a
 			if testParams.TopicSource == ambient.GooglePhotos {
 				// Select all Google Photos albums.
 				for i, album := range albums {
-					if strings.Contains(album.ClassName, "album-selected") {
+					if ambient.IsAlbumSelected(&album) {
 						return errors.Errorf("Google Photos album %d should be unselected", i)
 					}
-					selectedAlbumNode := nodewith.HasClass("album-selected").Name(album.Name)
-					if err := uiauto.Retry(3, uiauto.Combine("select Google Photo album",
-						ui.Gone(selectedAlbumNode),
-						ui.MouseClickAtLocation(0, album.Location.CenterPoint()),
-						ui.WithTimeout(3*time.Second).WaitUntilExists(selectedAlbumNode),
-					))(ctx); err != nil {
+					if err := ambient.SelectAlbum(ctx, ui, &album); err != nil {
 						return errors.Wrapf(err, "failed to select Google Photos album %d", i)
 					}
 				}
 			} else if testParams.TopicSource == ambient.ArtGallery {
 				// Turn off all but one art gallery album.
 				for i, album := range albums[1:] {
-					if !strings.Contains(album.ClassName, "album-selected") {
+					if !ambient.IsAlbumSelected(&album) {
 						return errors.Errorf("Art album %d should be selected", i)
 					}
-					selectedAlbumNode := nodewith.HasClass("album-selected").Name(album.Name)
-					if err := uiauto.Retry(3, uiauto.Combine("deselect Art Gallery album",
-						ui.Exists(selectedAlbumNode),
-						ui.MouseClickAtLocation(0, album.Location.CenterPoint()),
-						ui.WithTimeout(3*time.Second).WaitUntilGone(selectedAlbumNode),
-					))(ctx); err != nil {
+					if err := ambient.DeselectAlbum(ctx, ui, &album); err != nil {
 						return errors.Wrapf(err, "failed to deselect Art Gallery album %d", i)
 					}
 				}
