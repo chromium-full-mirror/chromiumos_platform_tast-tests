@@ -34,8 +34,9 @@ var (
 		`hangcheck recover!`,
 
 		// amdgpu
+		`Error scheduling IBs`, // b/288942766
 		`GPU reset`,
-		`Error scheduling IBs`,
+		`VM_L2_PROTECTION_FAULT_STATUS`, // b/271644551
 		`VRAM is lost`,
 
 		// mediatek
