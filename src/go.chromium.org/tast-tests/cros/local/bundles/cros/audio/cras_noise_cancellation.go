@@ -54,7 +54,7 @@ func init() {
 				},
 			},
 			{
-				Name: "nc",
+				Name: "aec_nc",
 				Val: crasNoiseCancellationParams{
 					noiseCancellationEnabled: true,
 					captureRate:              48000,
@@ -67,7 +67,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"ap_noise_cancellation"},
 			},
 			{
-				Name: "nc_44100hz",
+				Name: "aec_nc_44100hz",
 				Val: crasNoiseCancellationParams{
 					noiseCancellationEnabled: true,
 					captureRate:              44100,
@@ -75,6 +75,41 @@ func init() {
 					expectedRMSTolerance:     0.01,
 					extraCaptureFlags: []string{
 						"--effects=aec",
+					},
+				},
+				ExtraSoftwareDeps: []string{"ap_noise_cancellation"},
+			},
+			{
+				Name: "nc",
+				Val: crasNoiseCancellationParams{
+					noiseCancellationEnabled: true,
+					captureRate:              48000,
+					expectedRMS:              0.03,
+					expectedRMSTolerance:     0.01,
+				},
+				ExtraSoftwareDeps: []string{"ap_noise_cancellation"},
+			},
+			{
+				Name: "nc_44100hz",
+				Val: crasNoiseCancellationParams{
+					noiseCancellationEnabled: true,
+					captureRate:              44100,
+					expectedRMS:              0.03,
+					expectedRMSTolerance:     0.01,
+				},
+				ExtraSoftwareDeps: []string{"ap_noise_cancellation"},
+			},
+			{
+				Name: "nc_disallow_empty_apm",
+				Val: crasNoiseCancellationParams{
+					noiseCancellationEnabled: true,
+					captureRate:              48000,
+					// Should have the same RMS as no_effects because
+					// CrasProcessor is not allowed to run without APM in this test.
+					expectedRMS:          0.4,
+					expectedRMSTolerance: 0.1,
+					extraChromeOpts: []chrome.Option{
+						chrome.DisableFeatures("CrOSLateBootAudioEmptyAPMForCrasProcessor"),
 					},
 				},
 				ExtraSoftwareDeps: []string{"ap_noise_cancellation"},
@@ -89,6 +124,7 @@ type crasNoiseCancellationParams struct {
 	expectedRMS              float64
 	expectedRMSTolerance     float64
 	extraCaptureFlags        []string
+	extraChromeOpts          []chrome.Option
 }
 
 // CrasNoiseCancellation checks noise cancellation in CRAS using aloop.
@@ -99,7 +135,7 @@ func CrasNoiseCancellation(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, chrome.ResetTimeout)
 	defer cancel()
 
-	chromeOpts := []chrome.Option{chrome.EnableFeatures("QsRevamp")}
+	chromeOpts := append(param.extraChromeOpts, chrome.EnableFeatures("QsRevamp"))
 	if param.noiseCancellationEnabled {
 		chromeOpts = append(chromeOpts, chrome.EnableFeatures("CrOSLateBootAudioAPNoiseCancellation"))
 	}
