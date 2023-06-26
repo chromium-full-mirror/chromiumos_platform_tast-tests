@@ -6,10 +6,8 @@ package lacros
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"go.chromium.org/tast-tests/cros/common/chrome/version"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
@@ -47,22 +45,6 @@ func CompareVersionWithAsh(ctx context.Context, s *testing.State) {
 		lacrosVersion, err = versionutil.VersionFromExecPath(ctx, filepath.Join(deployedPath, "chrome"))
 		if err != nil {
 			s.Fatal("Failed to get the deployed Lacros version: ", err)
-		}
-
-		// TODO(b/285225974): Move to a common place if it is useful for other tests.
-		// Safeguard: Throw an error if --lacros-chrome-path is set in /etc/chrome_dev.conf for override and doesn't match the deployedPath.
-		config, err := ioutil.ReadFile("/etc/chrome_dev.conf")
-		if err == nil {
-			for _, line := range strings.Split(string(config), "\n") {
-				tokens := strings.SplitN(strings.TrimSpace(line), "=", 2)
-				if len(tokens) == 2 && tokens[0] == "--lacros-chrome-path" {
-					overridePath := tokens[1]
-					if deployedPath != overridePath {
-						s.Fatal("Found --lacros-chrome-path in /etc/chrome_def.conf, but it doesn't match the lacros.DeployedBinary var")
-					}
-					break
-				}
-			}
 		}
 	}
 
