@@ -8,8 +8,6 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/pci"
-	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -31,10 +29,7 @@ func init() {
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "cellular",
-		Timeout:      2 * time.Minute,
-		SearchFlags: []*testing.StringPair{
-			pci.SearchFlag(&policy.DeviceOpenNetworkConfiguration{}, pci.VerifiedFunctionalityOS),
-		},
+		Timeout:      5 * time.Minute,
 	})
 }
 

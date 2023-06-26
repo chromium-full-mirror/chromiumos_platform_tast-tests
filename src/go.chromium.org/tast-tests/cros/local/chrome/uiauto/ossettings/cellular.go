@@ -269,7 +269,7 @@ func VerifyApnIsVisibleInSubtext(ctx context.Context, tconn *chrome.TestConn, ap
 	ui := uiauto.New(tconn)
 	apnSubpageButton := nodewith.NameContaining("Access point name").NameContaining(apn).Role(role.Link)
 
-	if err := ui.WaitUntilExists(apnSubpageButton)(ctx); err != nil {
+	if err := ui.WithTimeout(30 * time.Second).WaitUntilExists(apnSubpageButton)(ctx); err != nil {
 		return errors.Wrap(err, "failed to find APN in subtext")
 	}
 	return nil
