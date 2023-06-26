@@ -19,6 +19,11 @@ const (
 
 // ImageForArch returns the name of the container image for the host architecture.
 func ImageForArch(imageName string) string {
+	arch := runtime.GOARCH
+	// Crostini is ARM64 even if the host is ARM32.
+	if arch == "arm" {
+		arch = "arm64"
+	}
 	base := strings.TrimSuffix(imageName, ".tar")
-	return fmt.Sprintf("%s-%s.tar", base, runtime.GOARCH)
+	return fmt.Sprintf("%s-%s.tar", base, arch)
 }
