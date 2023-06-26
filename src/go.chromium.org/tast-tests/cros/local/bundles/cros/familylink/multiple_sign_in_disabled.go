@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/state"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -43,8 +44,13 @@ func MultipleSignInDisabled(ctx context.Context, s *testing.State) {
 	// Unicorn user is logged in.
 	tconn := s.FixtValue().(familylink.HasTestConn).TestConn()
 
-	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
 	ui := uiauto.New(tconn)
+
+	cleanup, err := quicksettings.Init(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to init quicksettings: ", err)
+	}
+	defer cleanup()
 
 	s.Log("Opening the system status tray")
 	if err := quicksettings.Show(ctx, tconn); err != nil {
@@ -52,17 +58,31 @@ func MultipleSignInDisabled(ctx context.Context, s *testing.State) {
 	}
 	defer quicksettings.Hide(ctx, tconn)
 
+	// On failure, dump the UI tree while quicksettings is still open.
+	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
+
+	s.Log("Opening power menu")
+	if err := ui.LeftClick(quicksettings.PowerMenuButton)(ctx); err != nil {
+		s.Fatal("Failed to find and click power menu button: ", err)
+	}
+	// Close the menu when done.
+	defer ui.LeftClick(quicksettings.PowerMenuButton)(ctx)
+
 	s.Log("Attempting to add multiple profiles")
 	userEmail := s.RequiredVar("family.unicornEmail")
-	s.Logf("Looking for user email %q", userEmail)
-	userProfileIcon := nodewith.NameContaining(userEmail).Role(role.Button)
-	if err := ui.WaitUntilExists(userProfileIcon)(ctx); err != nil {
-		s.Fatal("Failed to find the user profile icon: ", err)
+	s.Logf("Looking for user email menu item %q", userEmail)
+	emailMenuItem := nodewith.NameContaining(userEmail).Role(role.MenuItem)
+	if err := ui.WaitUntilExists(emailMenuItem)(ctx); err != nil {
+		s.Fatal("Failed to find the user email menu item: ", err)
 	}
 
 	// Family Link users are never allowed to use multi-user sign-
-	// in, so the the profile icon button should be disabled.
-	if err := ui.WaitUntilExists(userProfileIcon.Focusable())(ctx); err == nil {
-		s.Fatal("User profile button should be disabled for Family Link users: ", err)
+	// in, so the the menu item should be disabled.
+	info, err := ui.Info(ctx, emailMenuItem)
+	if err != nil {
+		s.Fatal("Failed to get info for email menu item: ", err)
+	}
+	if info.State[state.Focusable] {
+		s.Fatal("User profile button should be disabled for Family Link users")
 	}
 }
