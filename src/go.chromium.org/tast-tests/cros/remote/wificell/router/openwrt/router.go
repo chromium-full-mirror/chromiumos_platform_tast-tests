@@ -753,27 +753,12 @@ func (r *Router) NewFrameSender(ctx context.Context, iface string) (ret *framese
 	if err != nil {
 		return nil, err
 	}
-	r.im.SetBusy(nd.IfName)
-	defer func() {
-		if retErr != nil {
-			r.im.SetAvailable(nd.IfName)
-		}
-	}()
-
-	if err := r.cloneMAC(ctx, nd.IfName, iface); err != nil {
-		return nil, errors.Wrap(err, "failed to clone MAC")
-	}
-	if err := r.ipr.SetLinkUp(ctx, nd.IfName); err != nil {
-		return nil, err
-	}
-	return framesender.New(r.host, nd.IfName, r.workDir()), nil
+	return common.NewFrameSender(ctx, r.ipr, r.im, nd, r.host, r.workDir(), iface)
 }
 
 // CloseFrameSender closes frame sender and releases related resources.
 func (r *Router) CloseFrameSender(ctx context.Context, s *framesender.Sender) error {
-	err := r.ipr.SetLinkDown(ctx, s.Interface())
-	r.im.SetAvailable(s.Interface())
-	return err
+	return common.CloseFrameSender(ctx, r.ipr, r.im, s)
 }
 
 // monitorOnInterface finds an available monitor type interface on the same phy as a
@@ -792,13 +777,4 @@ func (r *Router) monitorOnInterface(ctx context.Context, iface string) (*iw.NetD
 	}
 	phyID := ndev.PhyNum
 	return r.netDevWithPhyID(ctx, phyID, iw.IfTypeMonitor)
-}
-
-// cloneMAC clones the MAC address of src to dst.
-func (r *Router) cloneMAC(ctx context.Context, dst, src string) error {
-	mac, err := r.ipr.MAC(ctx, src)
-	if err != nil {
-		return err
-	}
-	return r.ipr.SetMAC(ctx, dst, mac)
 }
