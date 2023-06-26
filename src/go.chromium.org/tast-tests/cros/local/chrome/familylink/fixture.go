@@ -273,43 +273,6 @@ func init() {
 		PreTestTimeout:  resetTimeout,
 		PostTestTimeout: resetTimeout,
 	})
-
-	// TODO(b/282993597): Remove both history deletion fixtures after the feature is enabled.
-	testing.AddFixture(&testing.Fixture{
-		Name:     "familyLinkUnicornLoginWithHistoryDeletion",
-		Desc:     "Supervised Family Link user login with Unicorn account and browser history deletion enabled",
-		Contacts: []string{"amberhaynes@chromium.org", "cros-families-eng+test@google.com"},
-		Impl:     NewFamilyLinkFixture("family.parentEmail", "family.parentPassword", "family.unicornEmail", "family.unicornPassword", true, chrome.EnableFeatures("AllowHistoryDeletionForChildAccounts")),
-		Vars: []string{
-			"family.parentEmail",
-			"family.parentPassword",
-			"family.unicornEmail",
-			"family.unicornPassword",
-		},
-		SetUpTimeout:    chrome.GAIALoginChildTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  resetTimeout,
-		PostTestTimeout: resetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:     "familyLinkUnicornLoginWithLacrosAndHistoryDeletion",
-		Desc:     "Supervised Family Link user login with Unicorn account and browser history deletion enabled",
-		Contacts: []string{"amberhaynes@chromium.org", "cros-families-eng+test@google.com"},
-		Impl:     NewFamilyLinkFixtureLacros("family.parentEmail", "family.parentPassword", "family.unicornEmail", "family.unicornPassword", true, chrome.EnableFeatures("AllowHistoryDeletionForChildAccounts")),
-		Vars: []string{
-			"family.parentEmail",
-			"family.parentPassword",
-			"family.unicornEmail",
-			"family.unicornPassword",
-		},
-		SetUpTimeout:    chrome.GAIALoginChildTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  resetTimeout,
-		PostTestTimeout: resetTimeout,
-	})
 }
 
 type familyLinkFixture struct {

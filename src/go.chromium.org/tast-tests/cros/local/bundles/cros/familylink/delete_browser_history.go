@@ -39,12 +39,12 @@ func init() {
 		Timeout:      5 * time.Minute,
 		Vars:         []string{"unicorn.allowedSite", "unicorn.allowedSiteTitle"},
 		Params: []testing.Param{{
-			Fixture: "familyLinkUnicornLoginWithHistoryDeletion",
+			Fixture: "familyLinkUnicornLogin",
 			Val:     browser.TypeAsh,
 		}, {
 			Name:              "lacros",
 			ExtraSoftwareDeps: []string{"lacros"},
-			Fixture:           "familyLinkUnicornLoginWithLacrosAndHistoryDeletion",
+			Fixture:           "familyLinkUnicornLoginWithLacros",
 			Val:               browser.TypeLacros,
 		}},
 	})
