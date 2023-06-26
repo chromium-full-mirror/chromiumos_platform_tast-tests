@@ -483,6 +483,10 @@ func (r *Router) StopHTTP(ctx context.Context, httpServer *http.Server) error {
 // and use the shortened ctx (provided by r.ReserveForStopCapture(ctx, c)) before r.StopCapture()
 // to reserve time for it to run.
 func (r *Router) StartCapture(ctx context.Context, name string, ch int, freqOps []iw.SetFreqOption, pcapOps ...pcap.Option) (ret *pcap.Capturer, retErr error) {
+	nd, err := r.netDev(ctx, ch, iw.IfTypeMonitor)
+	if err != nil {
+		return nil, err
+	}
 	ctx, st := timing.Start(ctx, "router.StartCapture")
 	defer st.End()
 
@@ -491,10 +495,6 @@ func (r *Router) StartCapture(ctx context.Context, name string, ch int, freqOps 
 		return nil, err
 	}
 
-	nd, err := r.netDev(ctx, ch, iw.IfTypeMonitor)
-	if err != nil {
-		return nil, err
-	}
 	iface := nd.IfName
 	shared := r.im.IsPhyBusyAny(nd.PhyNum)
 
@@ -547,19 +547,7 @@ func (r *Router) ReserveForStopCapture(ctx context.Context, capturer *pcap.Captu
 
 // StopCapture stops the packet capturer and releases related resources.
 func (r *Router) StopCapture(ctx context.Context, capturer *pcap.Capturer) error {
-	ctx, st := timing.Start(ctx, "router.StopCapture")
-	defer st.End()
-
-	var firstErr error
-	iface := capturer.Interface()
-	if err := capturer.Close(ctx); err != nil {
-		utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to stop capturer"))
-	}
-	if err := r.ipr.SetLinkDown(ctx, iface); err != nil {
-		utils.CollectFirstErr(ctx, &firstErr, err)
-	}
-	r.im.SetAvailable(iface)
-	return firstErr
+	return common.StopCapture(ctx, r.ipr, r.im, capturer)
 }
 
 // StartRawCapturer starts a capturer on an existing interface on the router instead of a

@@ -569,71 +569,20 @@ func (r *Router) StopHTTP(ctx context.Context, httpServer *http.Server) error {
 
 // StartCapture starts a packet capturer.
 func (r *Router) StartCapture(ctx context.Context, name string, ch int, freqOps []iw.SetFreqOption, pcapOps ...pcap.Option) (_ *pcap.Capturer, retErr error) {
-	ctx, st := timing.Start(ctx, "router.StartCapture")
-	defer st.End()
-
-	freq, err := hostapd.ChannelToFrequency(ch)
-	if err != nil {
-		return nil, err
-	}
-
 	nd, err := r.netDev(ctx, ch, iw.IfTypeMonitor)
 	if err != nil {
 		return nil, err
 	}
-	iface := nd.IfName
-	shared := r.im.IsPhyBusyAny(nd.PhyNum)
-
-	r.im.SetBusy(iface)
-	defer func() {
-		if retErr != nil {
-			r.im.SetAvailable(iface)
-		}
-	}()
-
-	if err := r.ipr.SetLinkUp(ctx, iface); err != nil {
-		return nil, err
-	}
-	defer func() {
-		if retErr != nil {
-			if err := r.ipr.SetLinkDown(ctx, iface); err != nil {
-				testing.ContextLogf(ctx, "Failed to set %s down, err=%s", iface, err.Error())
-			}
-		}
-	}()
-
-	if !shared {
-		// The interface is not shared, set up frequency and bandwidth.
-		if err := r.iwr.SetFreq(ctx, iface, freq, freqOps...); err != nil {
-			return nil, errors.Wrapf(err, "failed to set frequency for interface %s", iface)
-		}
-	} else {
-		testing.ContextLogf(ctx, "Skip configuring of the shared interface %s", iface)
-	}
-
-	c, err := pcap.StartCapturer(ctx, r.host, name, iface, r.workDir(), pcapOps...)
+	c, err := common.StartCapture(ctx, nd, r.host, r.ipr, r.im, r.iwr, r.workDir(), name, ch, freqOps, pcapOps...)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to start a packet capturer")
+		r.activeServices.capture = append(r.activeServices.capture, c)
 	}
-	r.activeServices.capture = append(r.activeServices.capture, c)
-	return c, nil
+	return c, err
 }
 
 // StopCapture stops the packet capturer and releases related resources.
 func (r *Router) StopCapture(ctx context.Context, capturer *pcap.Capturer) error {
-	ctx, st := timing.Start(ctx, "router.StopCapture")
-	defer st.End()
-
-	var firstErr error
-	iface := capturer.Interface()
-	if err := capturer.Close(ctx); err != nil {
-		utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to stop capturer"))
-	}
-	if err := r.ipr.SetLinkDown(ctx, iface); err != nil {
-		utils.CollectFirstErr(ctx, &firstErr, err)
-	}
-	r.im.SetAvailable(iface)
-
+	firstErr := common.StopCapture(ctx, r.ipr, r.im, capturer)
 	// Remove from active services.
 	for i, service := range r.activeServices.capture {
 		if capturer == service {
