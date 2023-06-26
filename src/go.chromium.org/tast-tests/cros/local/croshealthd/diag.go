@@ -16,6 +16,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/crosconfig"
+	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast-tests/cros/local/input"
 
 	"go.chromium.org/tast/core/errors"
@@ -279,6 +280,11 @@ func runPowerButtonDiag(ctx context.Context, args []string) (string, error) {
 	defer releasePowerButton(powerButtonEventWriter)
 	defer powerButtonEventWriter.Close()
 
+	obj, err := dbusutil.NewDBusObject(ctx, "org.chromium.PowerManager", "org.chromium.PowerManager", "/org/chromium/PowerManager")
+	if err != nil {
+		return "", errors.Wrap(err, "failed to connect to PowerManager D-Bus service")
+	}
+
 	// Start cros_healthd routine.
 	var stdoutBuf bytes.Buffer
 	args = append([]string{"diag"}, args...)
@@ -293,11 +299,20 @@ func runPowerButtonDiag(ctx context.Context, args []string) (string, error) {
 
 	// Toggle power button pressed and released state repeatedly until the routine finishes.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		// Ignore power button press for 1_000_000 microseconds = 1 seconds.
+		// This is to avoid shutting down the DUT by accident.
+		if err := obj.Call(ctx, "IgnoreNextPowerButtonPress", int64(1_000_000)).Err; err != nil {
+			return errors.Wrap(err, "failed to call IgnoreNextPowerButtonPress")
+		}
 		if err := pressPowerButton(powerButtonEventWriter); err != nil {
 			return err
 		}
 		if err := releasePowerButton(powerButtonEventWriter); err != nil {
 			return err
+		}
+		// Setting the timeout to 0 to cancel the previously set period.
+		if err := obj.Call(ctx, "IgnoreNextPowerButtonPress", int64(0)).Err; err != nil {
+			return errors.Wrap(err, "failed to cancel IgnoreNextPowerButtonPress")
 		}
 		if strings.Contains(stdoutBuf.String(), "Status message") {
 			return nil
