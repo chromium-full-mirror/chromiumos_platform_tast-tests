@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
+	"go.chromium.org/tast-tests/cros/local/annotations"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
@@ -36,10 +37,11 @@ import (
 )
 
 const (
-	autofillCreditCardCertFile   = "certificate.pem"
-	autofillCreditCardKeyFile    = "key.pem"
-	autofillCreditCardCaCertFile = "ca-cert.pem"
-	autofillCreditCardHTMLFile   = "autofill_credit_card_enabled.html"
+	autofillCreditCardCertFile       = "certificate.pem"
+	autofillCreditCardKeyFile        = "key.pem"
+	autofillCreditCardCaCertFile     = "ca-cert.pem"
+	autofillCreditCardHTMLFile       = "autofill_credit_card_enabled.html"
+	autofillCreditCardAnnotationHash = "88863520"
 )
 
 func init() {
@@ -49,7 +51,8 @@ func init() {
 		Desc:         "Behavior of AutofillCreditCardEnabled policy, checking the correspoding toggle button states (restriction and checked) after setting the policy",
 		Contacts: []string{
 			"chrome-autofill@google.com", // Feature owner
-		},
+			"dp-chromeos-eng@google.com",
+                },
 		BugComponent: "crbug:UI>Browser>Autofill",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier"},
@@ -129,28 +132,32 @@ func AutofillCreditCardEnabled(ctx context.Context, s *testing.State) {
 	}
 
 	for _, param := range []struct {
-		name            string
-		wantRestriction restriction.Restriction
-		wantChecked     checked.Checked
-		policy          *policy.AutofillCreditCardEnabled
+		name                 string
+		wantRestriction      restriction.Restriction
+		wantChecked          checked.Checked
+		shouldFindAnnotation bool
+		policy               *policy.AutofillCreditCardEnabled
 	}{
 		{
-			name:            "unset",
-			wantRestriction: restriction.None,
-			wantChecked:     checked.True,
-			policy:          &policy.AutofillCreditCardEnabled{Stat: policy.StatusUnset},
+			name:                 "unset",
+			wantRestriction:      restriction.None,
+			wantChecked:          checked.True,
+			shouldFindAnnotation: true,
+			policy:               &policy.AutofillCreditCardEnabled{Stat: policy.StatusUnset},
 		},
 		{
-			name:            "allow",
-			wantRestriction: restriction.None,
-			wantChecked:     checked.True,
-			policy:          &policy.AutofillCreditCardEnabled{Val: true},
+			name:                 "allow",
+			wantRestriction:      restriction.None,
+			wantChecked:          checked.True,
+			shouldFindAnnotation: true,
+			policy:               &policy.AutofillCreditCardEnabled{Val: true},
 		},
 		{
-			name:            "deny",
-			wantRestriction: restriction.Disabled,
-			wantChecked:     checked.False,
-			policy:          &policy.AutofillCreditCardEnabled{Val: false},
+			name:                 "deny",
+			wantRestriction:      restriction.Disabled,
+			wantChecked:          checked.False,
+			shouldFindAnnotation: false,
+			policy:               &policy.AutofillCreditCardEnabled{Val: false},
 		},
 	} {
 		s.Run(ctx, param.name, func(ctx context.Context, s *testing.State) {
@@ -171,6 +178,11 @@ func AutofillCreditCardEnabled(ctx context.Context, s *testing.State) {
 			}
 			defer closeBrowser(cleanupCtx)
 			defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree_"+param.name)
+
+			// Open the net-export page and start logging.
+			if err := annotations.StartLogging(ctx, cr, br); err != nil {
+				s.Fatal("Failed to start logging: ", err)
+			}
 
 			// Ensure saving payment methods toggle is accordingly enabled/disabled.
 			if err := policyutil.SettingsPage(ctx, cr, br, "payments").
@@ -271,6 +283,14 @@ func AutofillCreditCardEnabled(ctx context.Context, s *testing.State) {
 						s.Errorf("Credit card field was not set properly; got %q, want %q", valueFromHTML, creditCardField.fieldValue)
 					}
 				}
+			}
+			foundAnnotation := false
+			if foundAnnotation, err = annotations.StopLoggingCheckLogs(ctx, cr, br, autofillCreditCardAnnotationHash); err != nil {
+				s.Fatal("Failed to stop logging and check logs: ", err)
+			}
+
+			if foundAnnotation != param.shouldFindAnnotation {
+				s.Fatalf("Unexpected autofill annotation result: got %t expected %t", foundAnnotation, param.shouldFindAnnotation)
 			}
 		})
 	}
