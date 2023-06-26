@@ -902,6 +902,7 @@ func (ms *ModeSwitcher) FwScreenToDevMode(ctx context.Context, opts ...ModeSwitc
 					return err
 				}
 			} else if h.Config.PowerButtonDevSwitch {
+				testing.ContextLog(ctx, "Sleeping for 5 seconds")
 				// GoBigSleepLint: Frequent presses of the power key might power off the dut accidentally.
 				// Add a short delay to ensure that it doesn't get enforced at the wrong time, for example,
 				// on the "OS verification is OFF" screen, or when the dut is already past the firmware
@@ -911,6 +912,13 @@ func (ms *ModeSwitcher) FwScreenToDevMode(ctx context.Context, opts ...ModeSwitc
 				}
 				testing.ContextLog(ctx, "Pressing power key")
 				if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.DurPress); err != nil {
+					return err
+				}
+				testing.ContextLog(ctx, "Sleeping for 5 seconds")
+				// GoBigSleepLint: On drallion devices, servo.PowerKey press takes times to become effective.
+				// Add a short delay here to avoid pressing the esc key too early, and bringing the DUT back
+				// to the insert screen, where pressing servo.PowerKey would power off the machine.
+				if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 					return err
 				}
 				// For wilco devices, pressing the power button twice on the welcome page will power-off the DUT.
