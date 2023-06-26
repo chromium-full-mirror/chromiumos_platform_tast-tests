@@ -18,6 +18,8 @@ import (
 const (
 	liveCaptionSubPageURL = "audioAndCaptions"
 	liveCaptionToggleName = "Live Caption"
+	pdfOCRSubPageURL      = "textToSpeech"
+	pdfOCRToggleName      = "Convert PDF images to text"
 )
 
 // ToggleLiveCaption toggles on/off live caption option in Accessibiility tab.
@@ -33,6 +35,23 @@ func ToggleLiveCaption(cr *chrome.Chrome, tconn *chrome.TestConn, value bool) ac
 		return uiauto.Combine("toggle live caption",
 			ui.WaitUntilExists(nodewith.Name(liveCaptionToggleName).Role(role.ToggleButton)),
 			settings.SetToggleOption(cr, liveCaptionToggleName, value),
+		)(ctx)
+	}
+}
+
+// TogglePDFOCR toggles on/off the PDF OCR feature in the Accessibiility page.
+func TogglePDFOCR(cr *chrome.Chrome, tconn *chrome.TestConn, value bool) action.Action {
+	return func(ctx context.Context) error {
+		ui := uiauto.New(tconn)
+		ttsHeading := nodewith.NameStartingWith("Text-to-Speech").Role(role.Heading)
+		settings, err := LaunchAtPageURL(ctx, tconn, cr, pdfOCRSubPageURL, ui.Exists(ttsHeading))
+		if err != nil {
+			return errors.Wrap(err, "failed to open Text-to-Speech setting page")
+		}
+		defer settings.Close(ctx)
+		return uiauto.Combine("toggle PDF OCR",
+			ui.WaitUntilExists(nodewith.Name(pdfOCRToggleName).Role(role.ToggleButton)),
+			settings.SetToggleOption(cr, pdfOCRToggleName, value),
 		)(ctx)
 	}
 }

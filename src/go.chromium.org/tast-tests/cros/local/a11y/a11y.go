@@ -101,6 +101,16 @@ func VerifySodaInstalled(ctx context.Context) error {
 	return nil
 }
 
+// VerifyScreenAIInstalled checks if the screen-ai dlc is installed.
+func VerifyScreenAIInstalled(ctx context.Context) error {
+	const screenAIMnt = "/run/imageloader/screen-ai/package/root"
+	if _, err := os.Stat(screenAIMnt); err != nil {
+		return errors.Wrap(err, "dlc screen-ai is not installed")
+	}
+
+	return nil
+}
+
 // TTSFeatureInputs represents data used for setting up an accessibility
 // feature that uses TTS e.g. ChromeVox or Select-to-Speak. HTML specifies the
 // web content to load and run a test on.

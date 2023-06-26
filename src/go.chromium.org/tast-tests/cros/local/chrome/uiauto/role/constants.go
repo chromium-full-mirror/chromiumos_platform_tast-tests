@@ -150,6 +150,7 @@ const (
 	Pane                   Role = "pane"
 	Paragraph              Role = "paragraph"
 	PdfActionableHighlight Role = "pdfActionableHighlight"
+	PdfRoot                Role = "pdfRoot"
 	PluginObject           Role = "pluginObject"
 	PopUpButton            Role = "popUpButton"
 	Portal                 Role = "portal"
