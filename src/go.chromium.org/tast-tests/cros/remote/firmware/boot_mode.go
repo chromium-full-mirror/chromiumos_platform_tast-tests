@@ -38,11 +38,11 @@ const (
 	// PowerStateInterval is the interval to wait before polling DUT powerstate.
 	PowerStateInterval = 1 * time.Second
 
-	// usbVisibleTime is the time to wait after making the USB stick visible to DUT
-	usbVisibleTime = 5 * time.Second
+	// UsbVisibleTime is the time to wait after making the USB stick visible to DUT
+	UsbVisibleTime = 5 * time.Second
 
-	// usbDisableTime is the time to wait for USB to be disabled.
-	usbDisableTime = 5 * time.Second
+	// UsbDisableTime is the time to wait for USB to be disabled.
+	UsbDisableTime = 5 * time.Second
 )
 
 // ModeSwitcher enables booting the DUT into different firmware boot modes (normal, dev, rec).
@@ -278,6 +278,7 @@ func (ms ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMod
 			return errors.Wrap(err, "powering off DUT")
 		}
 		testing.ContextLog(ctx, "Sleeping for 20 seconds")
+		// GoBigSleepLint: b/268492022 Ensure DUT fully off before setting it on.
 		if err := testing.Sleep(ctx, 20*time.Second); err != nil {
 			return errors.Wrap(err, "failed to sleep for 20 seconds")
 		}
@@ -433,8 +434,9 @@ func (ms ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMod
 			if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
 				return err
 			}
-			testing.ContextLogf(ctx, "Sleeping %s to let USB become visible to DUT", usbVisibleTime)
-			if err := testing.Sleep(ctx, usbVisibleTime); err != nil {
+			testing.ContextLogf(ctx, "Sleeping %s to let USB become visible to DUT", UsbVisibleTime)
+			// GoBigSleepLint: It takes some time for usb mux state to take effect.
+			if err := testing.Sleep(ctx, UsbVisibleTime); err != nil {
 				return err
 			}
 			testing.ContextLog(ctx, "Rebooting")
@@ -554,8 +556,9 @@ func (ms *ModeSwitcher) ModeAwareReboot(ctx context.Context, resetType ResetType
 		if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
 			return err
 		}
-		testing.ContextLogf(ctx, "Sleeping %s to let USB become visible to DUT", usbVisibleTime)
-		if err := testing.Sleep(ctx, usbVisibleTime); err != nil {
+		testing.ContextLogf(ctx, "Sleeping %s to let USB become visible to DUT", UsbVisibleTime)
+		// GoBigSleepLint: It takes some time for usb mux state to take effect.
+		if err := testing.Sleep(ctx, UsbVisibleTime); err != nil {
 			return err
 		}
 	}
@@ -701,6 +704,7 @@ func (ms *ModeSwitcher) devModeFWScreenBypass(ctx context.Context) error {
 			// 2. Hold volume_up for 100ms 3 times to get to the first menu item.
 			// 3. Press power twice to select Developer Options -> Boot From Internal Disk.
 			testing.ContextLogf(ctx, "Sleeping %s (FirmwareScreen)", h.Config.FirmwareScreen)
+			// GoBigSleepLint: Sleeping for model specific time.
 			if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
 				return errors.Wrapf(err, "sleeping for %s (FirmwareScreen) to wait for INSERT screen", h.Config.FirmwareScreen)
 			}
@@ -866,7 +870,7 @@ func (ms *ModeSwitcher) FwScreenToDevMode(ctx context.Context, opts ...ModeSwitc
 			return errors.Wrap(err, "failed to power off usbkey")
 		}
 		// GoBigSleepLint: It takes some time for usb mux state to take effect.
-		if err := testing.Sleep(ctx, usbDisableTime); err != nil {
+		if err := testing.Sleep(ctx, UsbDisableTime); err != nil {
 			return errors.Wrap(err, "failed to sleep after setting usb mux state disable")
 		}
 		testing.ContextLog(ctx, "Booting to the recovery screen with the bad USB powered off")
@@ -1052,6 +1056,7 @@ func (ms *ModeSwitcher) EnableRecMode(ctx context.Context, usbMux servo.USBMuxSt
 		return errors.Wrap(err, "powering off DUT")
 	}
 	testing.ContextLog(ctx, "Sleeping for 20 seconds")
+	// GoBigSleepLint: b/268492022 Ensure DUT fully off before setting it on.
 	if err := testing.Sleep(ctx, 20*time.Second); err != nil {
 		return errors.Wrap(err, "failed to sleep for 20 seconds")
 	}
@@ -1065,9 +1070,9 @@ func (ms *ModeSwitcher) EnableRecMode(ctx context.Context, usbMux servo.USBMuxSt
 			return errors.Wrapf(err, "setting usb mux state to %s while DUT is off", usbMux)
 		}
 	}
-	// Powering off the USB mux has some side effects that take some time. Specifically, you can't turn
+	// GoBigSleepLint: Powering off the USB mux has some side effects that take some time. Specifically, you can't turn
 	// it back on again too quickly or the USB stick fails.
-	if err := testing.Sleep(ctx, usbDisableTime); err != nil {
+	if err := testing.Sleep(ctx, UsbDisableTime); err != nil {
 		return errors.Wrapf(err, "sleeping before setting usb mux state to %s", usbMux)
 	}
 	if usbMux != servo.USBMuxDUT {

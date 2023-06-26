@@ -1282,18 +1282,16 @@ func (h *Helper) OpenCCDNoTestlab(ctx context.Context) error {
 			}
 			return errors.Wrap(err, "failed to reconnect to DUT")
 		}
-	} else {
-		// Reboot was not required for opening CCD. Allow some delay here to ensure that
-		// DUT's CCD level has changed and settled.
-		testing.ContextLogf(ctx, "Sleeping for %s", 10*time.Second)
-		if err := testing.Sleep(ctx, 10*time.Second); err != nil {
-			return errors.Wrap(err, "failed to sleep")
-		}
 	}
 
 	// Verify CCD is open.
-	if err = h.VerifyCCDIsOpen(ctx); err != nil {
-		return errors.Wrap(err, "while verifying CCD level at the end of OpenCCDNoTestlab")
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if err = h.VerifyCCDIsOpen(ctx); err != nil {
+			return errors.Wrap(err, "while verifying CCD level at the end of OpenCCDNoTestlab")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 5 * time.Second, Interval: 1 * time.Second}); err != nil {
+		return err
 	}
 	return nil
 }
@@ -1341,17 +1339,18 @@ func (h *Helper) CheckUSBOnServoHost(ctx context.Context) (string, error) {
 	testing.ContextLog(ctx, "Validating image usbkey on servo")
 	// Power cycling the USB key helps to make it visible to the host.
 	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
-		return "", errors.Wrap(err, "failed to power off usbkey")
+		return "", errors.Wrap(err, "failed to set dut_sees_usbkey")
 	}
-	if err := testing.Sleep(ctx, 2*time.Second); err != nil {
-		return "", errors.Wrap(err, "sleep 2s")
+	// GoBigSleepLint: It takes some time for usb mux state to take effect.
+	if err := testing.Sleep(ctx, UsbVisibleTime); err != nil {
+		return "", errors.Wrap(err, "failed to sleep")
 	}
 	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxOff); err != nil {
 		return "", errors.Wrap(err, "failed to power off usbkey")
 	}
-	// After setting the usb to off, you can't touch it for 2s.
-	if err := testing.Sleep(ctx, 2*time.Second); err != nil {
-		return "", errors.Wrap(err, "sleep 2s")
+	// GoBigSleepLint: It takes some time for usb mux state to take effect.
+	if err := testing.Sleep(ctx, UsbDisableTime); err != nil {
+		return "", errors.Wrap(err, "failed to sleep")
 	}
 	// This call is super slow.
 	var err error
@@ -1374,14 +1373,11 @@ func (h *Helper) CheckUSBOnServoHost(ctx context.Context) (string, error) {
 	}, &testing.PollOptions{Timeout: 5 * time.Second, Interval: 1 * time.Second}); err != nil {
 		testing.ContextLog(ctx, "Failed to get info about usb: ", err)
 	}
-	/*
-		Some USBs would drop connection after a short period of time.
-		Wait for 2 minutes before listing usb content to ensure that
-		full information would be captured. If the usb disconnected,
-		running fdisk would likely output an error similar to the
-		following: 'fdisk: cannot open /dev/sdb: No such file or directory'
-	*/
 	testing.ContextLog(ctx, "Sleeping 120 seconds before listing usb content")
+	// GoBigSleepLint: Some USBs would drop connection after a short period of time.
+	// Wait for 2 minutes before listing usb content to ensure that full information
+	// would be captured. If the usb disconnected, running fdisk would likely output
+	// an error similar to the following: 'fdisk: cannot open /dev/sdb: No such file or directory'.
 	if err := testing.Sleep(ctx, 120*time.Second); err != nil {
 		return "", errors.Wrap(err, "failed to sleep for 120 seconds")
 	}
@@ -1494,7 +1490,8 @@ func (h *Helper) validateUSBConn(ctx context.Context) error {
 		return errors.Wrap(err, "failed to power on USB")
 	}
 	testing.ContextLog(ctx, "Waiting for a short delay")
-	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+	// GoBigSleepLint: It takes some time for usb mux state to take effect.
+	if err := testing.Sleep(ctx, UsbVisibleTime); err != nil {
 		return errors.Wrap(err, "failed to sleep")
 	}
 	// The bash commands would attempt steps as follows:
