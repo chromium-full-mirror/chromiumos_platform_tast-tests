@@ -22,8 +22,7 @@ func init() {
 		Desc:         "Stress test suspend resume, verify modem is in right state after each resume",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "rmao@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		// TODO(b/284012028): Reenable test once b/285885808 is fixed.
-		// Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "cellular_run_isolated"},
+		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_stress"},
 		Fixture:      "cellular",
 		Timeout:      60 * time.Minute,
 		SoftwareDeps: []string{"chrome"},
