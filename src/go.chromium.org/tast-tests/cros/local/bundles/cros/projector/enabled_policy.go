@@ -97,8 +97,8 @@ func EnabledPolicy(ctx context.Context, s *testing.State) {
 			if err != nil {
 				s.Fatal("Chrome startup failed: ", err)
 			}
-			defer policyutil.ResetChrome(cleanupCtx, fdms, cr)
 			defer cr.Close(cleanupCtx)
+			defer policyutil.ResetChrome(cleanupCtx, fdms, cr)
 			tconn, err := cr.TestAPIConn(ctx)
 			defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
