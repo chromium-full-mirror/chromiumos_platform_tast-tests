@@ -26,7 +26,7 @@ func init() {
 		Desc:         "Host VPN configs are reflected properly in ARC VPN",
 		Contacts:     []string{"cros-networking@google.com", "cassiewang@google.com"},
 		BugComponent: "b:156085",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		Fixture:      "shillResetWithArcBooted",
 		SoftwareDeps: []string{"arc", "wireguard"},
 	})
