@@ -82,9 +82,10 @@ func init() {
 
 // Value allows tests to obtain a ti50 devboard.
 type Value struct {
-	grpcConn  *grpc.ClientConn
-	devboard  *remoteTi50.DUTControlAndreiboard
-	ImagePath string
+	grpcConn    *grpc.ClientConn
+	devboard    *remoteTi50.DUTControlAndreiboard
+	ImagePath   string
+	TestbedType ti50.TestbedType
 }
 
 // DevBoard returns the existing DevBoard connection instance.
@@ -114,6 +115,7 @@ func (i *devboardFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	if err != nil {
 		s.Fatal("querying testbed: ", err)
 	}
+	i.v.TestbedType = testbedProperties.TestbedType
 
 	iv, err := downloadImage(ctx, testbedProperties, i.image, s)
 	if err != nil {

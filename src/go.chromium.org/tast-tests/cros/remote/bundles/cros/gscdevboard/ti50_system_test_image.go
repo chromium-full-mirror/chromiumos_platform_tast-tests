@@ -35,7 +35,7 @@ func init() {
 			Name:      "sta",
 			Val:       true, // hasKernelTests
 			Fixture:   fixture.SystemTestAutoDevboard,
-			ExtraAttr: []string{"gsc_image_sta"}, // TODO(b/287468118 b/288103083) Add gsc_he
+			ExtraAttr: []string{"gsc_image_sta", "gsc_he"},
 		}, {
 			Name:      "sta2",
 			Val:       false, // hasKernelTests
@@ -64,8 +64,13 @@ func Ti50SystemTestImage(ctx context.Context, s *testing.State) {
 
 	hasKernelTests := s.Param().(bool)
 	if hasKernelTests {
-		s.Log("Kernel tests:")
-		checkTestResults(ctx, s, board, "KERNEL")
+		if f.TestbedType == ti50.GscHostEmulation {
+			// TODO(b/287468118 b/288103083) Kernel tests should pass in host emulation.
+			s.Log("Skipping kernel tests due to host emulation bugs")
+		} else {
+			s.Log("Kernel tests:")
+			checkTestResults(ctx, s, board, "KERNEL")
+		}
 	}
 
 	s.Log("App tests:")
