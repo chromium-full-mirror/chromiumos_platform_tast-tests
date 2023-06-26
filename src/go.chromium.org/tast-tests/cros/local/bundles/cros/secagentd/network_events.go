@@ -42,6 +42,7 @@ const (
 	tcp   networkType = "TCP"
 	tcpV6 networkType = "TCPV6"
 	udp   networkType = "UDP"
+	udpV6 networkType = "UDPV6"
 )
 
 func init() {
@@ -69,12 +70,16 @@ func init() {
 			Val:       tcp,
 			ExtraAttr: []string{"group:mainline", "informational"},
 		}, {
-			Name: "tcp_v6",
-			Val:  tcpV6,
+			Name:      "tcp_v6",
+			Val:       tcpV6,
+			ExtraAttr: []string{"group:mainline", "informational"},
 		}, {
 			Name:      "udp",
 			Val:       udp,
 			ExtraAttr: []string{"group:mainline", "informational"},
+		}, {
+			Name: "udp_v6",
+			Val:  udpV6,
 		}},
 	})
 }
@@ -251,13 +256,14 @@ func getNetworkProtocolDetails(ctx context.Context, network networkType) (networ
 			ipAddr:      ipAddr,
 		}, nil
 	case tcpV6:
-		// 2001:4860:4860::8888 is google DNS IPv6 address.
-		ipAddr := "fe80::f6f5:e8ff:fe50:eadc%eth0"
-		cmd := testexec.CommandContext(ctx, "sh", "-c", fmt.Sprintf("echo \"Hello, TCP\" | nc -6 %s 53", ipAddr))
+		// ::1 is localhost.
+		ipAddr := "::1"
+		senderCmd := testexec.CommandContext(ctx, "sh", "-c", fmt.Sprintf("echo \"Hello, TCP\" | nc -6 %s 8080", ipAddr))
+		receiverCmd := testexec.CommandContext(ctx, "sh", "-c", "nc -6 -l -p 8080")
 
 		return networkProtocolDetails{
-			senderCmd:   cmd,
-			receiverCmd: nil,
+			senderCmd:   senderCmd,
+			receiverCmd: receiverCmd,
 			protocol:    "TCP",
 			ipAddr:      ipAddr,
 		}, nil
@@ -273,6 +279,18 @@ func getNetworkProtocolDetails(ctx context.Context, network networkType) (networ
 
 		senderCmd := testexec.CommandContext(ctx, "sh", "-c", fmt.Sprintf("echo \"Hello, UDP\" | nc -u %s 8080", ipAddr))
 		receiverCmd := testexec.CommandContext(ctx, "sh", "-c", "nc -u -l -p 8080")
+
+		return networkProtocolDetails{
+			senderCmd:   senderCmd,
+			receiverCmd: receiverCmd,
+			protocol:    "UDP",
+			ipAddr:      ipAddr,
+		}, nil
+	case udpV6:
+		// ::1 is localhost.
+		ipAddr := "::1"
+		senderCmd := testexec.CommandContext(ctx, "sh", "-c", fmt.Sprintf("echo \"Hello, TCP\" | nc -6 -u %s 8080", ipAddr))
+		receiverCmd := testexec.CommandContext(ctx, "sh", "-c", "nc -6 -u -l -p 8080")
 
 		return networkProtocolDetails{
 			senderCmd:   senderCmd,
