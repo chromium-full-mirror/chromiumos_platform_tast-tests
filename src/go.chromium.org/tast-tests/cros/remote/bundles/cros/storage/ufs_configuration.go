@@ -14,6 +14,7 @@ import (
 )
 
 const storageInfoPath = "/mnt/stateful_partition/encrypted/var/log/storage_info.txt"
+const wbFeatureBit = 8
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -35,6 +36,11 @@ func init() {
 			tdreq.UfsStorageDeviceRxLanes,
 			tdreq.UfsStorageHealthDescriptor,
 			tdreq.UfsStorageProvisioningType,
+			tdreq.UfsWriteBoosterSupport,
+			tdreq.UfsWriteBoosterSpaceMode,
+			tdreq.UfsWriteBoosterType,
+			tdreq.UfsMinWriteBoosterSize,
+			tdreq.UfsRecomendedWriteBoosterSize,
 		},
 	})
 }
@@ -53,6 +59,8 @@ func UfsConfiguration(ctx context.Context, s *testing.State) {
 		"bDeviceLifeTimeEstA",
 		"bDeviceLifeTimeEstB",
 		"bProvisioningType",
+		"bWriteBoosterBufferPreserveUserSpaceEn",
+		"bWriteBoosterBufferType",
 	}
 
 	localPeerKeys := []string{
@@ -104,6 +112,44 @@ func UfsConfiguration(ctx context.Context, s *testing.State) {
 			Direction: perf.BiggerIsBetter,
 		}, float64(-1))
 	}
+
+	ufsFeatures, ok := util.FindSingleInt64ValueUfs(ctx, storageInfo, "dExtendedUFSFeaturesSupport")
+	if !ok {
+		s.Fatal("Could not verify UFS extended features")
+	}
+
+	wbSupported := float64(0)
+
+	if ufsFeatures&(1<<wbFeatureBit) != 0 {
+		wbSupported = float64(1)
+	}
+
+	perfValues.Set(perf.Metric{
+		Name:      "_WriteBoosterSupport",
+		Unit:      "value",
+		Direction: perf.BiggerIsBetter,
+	}, wbSupported)
+
+	wbFraction := float64(0)
+
+	if wbSupported > 0 {
+		wbSize, ok := util.FindSingleInt64ValueUfs(ctx, storageInfo, "dNumSharedWriteBoosterBufferAllocUnits")
+		if !ok {
+			s.Fatal("Could not read wb size")
+		}
+		lun0Size, ok := util.FindSingleInt64ValueUfs(ctx, storageInfo, "dNumAllocUnits")
+		if !ok {
+			s.Fatal("Could not read lun0 size")
+		}
+
+		wbFraction = float64(wbSize) / float64(lun0Size)
+	}
+
+	perfValues.Set(perf.Metric{
+		Name:      "_WriteBoosterFraction",
+		Unit:      "value",
+		Direction: perf.BiggerIsBetter,
+	}, wbFraction)
 
 	if err := perfValues.Save(s.OutDir()); err != nil {
 		s.Fatal("Can't save keyval results: ", err)

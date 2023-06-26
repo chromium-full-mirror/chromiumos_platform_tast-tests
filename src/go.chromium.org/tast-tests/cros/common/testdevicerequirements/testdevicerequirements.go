@@ -380,6 +380,21 @@ const (
 	// UfsStorageProvisioningType If the ChromeOS device uses UFS to provide non-volatile storage, its UFS storage MUST support LUNs bProvisioningType == 03h - thin-provisioning with TPRZ == 1 according to JESD220C 12.2.3.5
 	UfsStorageProvisioningType = "store-ufs-0018-v01"
 
+	// UfsWriteBoosterSupport with If the ChromeOS device uses UFS to provide non-volatile storage, its UFS storage SHOULD support Write Booster feacture according to UFS-3.1 13.4.17
+	UfsWriteBoosterSupport = "store-ufs-0020-v01"
+
+	// UfsWriteBoosterSpaceMode with If the ChromeOS device uses UFS to provide non-volatile storage, and its UFS storage supports Write Booster, it MUST support bWriteBoosterBufferPreserveUserSpaceEn == 1 - ‘Preserve user space’ configuration mode for Write Booster Buffer.
+	UfsWriteBoosterSpaceMode = "store-ufs-0021-v01"
+
+	// UfsWriteBoosterType with If the ChromeOS device uses UFS to provide non-volatile storage, and its UFS storage supports Write Booster, it MUST support bWriteBoosterBufferType == 1 - ‘Single shared buffer type’ configuration mode for Write Booster Buffer.
+	UfsWriteBoosterType = "store-ufs-0022-v01"
+
+	// UfsMinWriteBoosterSize with If the ChromeOS device uses UFS to provide non-volatile storage, and its UFS storage supports Write Booster, it MUST support allocating at least 5% of device’s total capacity as Write Booster buffer.
+	UfsMinWriteBoosterSize = "store-ufs-0023-v01"
+
+	// UfsRecomendedWriteBoosterSize with If the ChromeOS device uses UFS to provide non-volatile storage, and its UFS storage supports Write Booster, it SHOULD support allocating at least 10% of device’s total capacity as Write Booster buffer.
+	UfsRecomendedWriteBoosterSize = "store-ufs-0024-v01"
+
 	// UfsStorage16kReadLatency with If the ChromeOS device uses UFS to provide non-volatile storage, its UFS storage device latency MUST NOT exceed 12ms for the 99th percentile of 16k random reads, with iodepth=4 workload.
 	UfsStorage16kReadLatency = "store-ufs-0030-v01"
 
