@@ -10,6 +10,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
 	"go.chromium.org/tast/core/testing"
 )
@@ -33,7 +34,7 @@ func init() {
 // ToggleCellularFromQuickSettings tests that a user can successfully toggle
 // the Cellular state using the Quick Settings.
 func ToggleCellularFromQuickSettings(ctx context.Context, s *testing.State) {
-	cr, err := chrome.New(ctx)
+	cr, err := chrome.New(ctx, chrome.EnableFeatures("QsRevamp"))
 	if err != nil {
 		s.Fatal("Failed to create new chrome instance: ", err)
 	}
@@ -50,6 +51,13 @@ func ToggleCellularFromQuickSettings(ctx context.Context, s *testing.State) {
 
 	ui := uiauto.New(tconn)
 
+	cleanup, err := quicksettings.Init(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to init quicksettings: ", err)
+	}
+	defer cleanup()
+	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree")
+
 	if err := quicksettings.NavigateToNetworkDetailedView(ctx, tconn); err != nil {
 		s.Fatal("Failed to navigate to the detailed Network view: ", err)
 	}
@@ -57,9 +65,11 @@ func ToggleCellularFromQuickSettings(ctx context.Context, s *testing.State) {
 	if _, err := helper.Enable(ctx); err != nil {
 		s.Fatal("Failed to enable Cellular: ", err)
 	}
+
+	// QsRevamp does not use a button with a checked state, so look for the name.
 	if err := uiauto.Combine("Wait until cellular is enabled in UI and not inhibited",
-		ui.WaitUntilCheckedState(quicksettings.NetworkDetailedViewMobileDataToggle, true),
-		ui.WaitUntilEnabled(quicksettings.NetworkDetailedViewMobileDataToggle),
+		ui.WaitUntilExists(quicksettings.NetworkDetailedViewMobileDataToggle().NameContaining("Mobile data is turned on")),
+		ui.WaitUntilEnabled(quicksettings.NetworkDetailedViewMobileDataToggle()),
 	)(ctx); err != nil {
 		s.Fatal("Failed: ", err)
 	}
@@ -70,7 +80,7 @@ func ToggleCellularFromQuickSettings(ctx context.Context, s *testing.State) {
 	for i := 0; i < iterations; i++ {
 		s.Logf("Toggling Cellular (iteration %d of %d)", i+1, iterations)
 
-		if err := ui.LeftClick(quicksettings.NetworkDetailedViewMobileDataToggle)(ctx); err != nil {
+		if err := ui.LeftClick(quicksettings.NetworkDetailedViewMobileDataToggle())(ctx); err != nil {
 			s.Fatal("Failed to click on cellular toggle button")
 		}
 
@@ -78,9 +88,16 @@ func ToggleCellularFromQuickSettings(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to toggle Cellular state: ", err)
 		}
 
+		// QsRevamp does not use a button with a checked state, so look for the name.
+		var name string
+		if state {
+			name = "Mobile data is turned on"
+		} else {
+			name = "Mobile data is turned off"
+		}
 		if err := uiauto.Combine("Wait until cellular is in expected state in UI and not inhibited",
-			ui.WaitUntilCheckedState(quicksettings.NetworkDetailedViewMobileDataToggle, state),
-			ui.WaitUntilEnabled(quicksettings.NetworkDetailedViewMobileDataToggle),
+			ui.WaitUntilExists(quicksettings.NetworkDetailedViewMobileDataToggle().NameContaining(name)),
+			ui.WaitUntilEnabled(quicksettings.NetworkDetailedViewMobileDataToggle()),
 		)(ctx); err != nil {
 			s.Fatal("Failed: ", err)
 		}

@@ -66,7 +66,7 @@ func (s *Service) ToggleOption(ctx context.Context, req *pb.ToggleOptionRequest)
 		var toggleButton *nodewith.Finder
 		switch req.GetToggleButton() {
 		case pb.ToggleOptionRequest_Wifi:
-			toggleButton = NetworkDetailedViewWifiToggleButton
+			toggleButton = NetworkDetailedViewWifiToggleButton()
 
 			if err := NavigateToNetworkDetailedView(ctx, tconn); err != nil {
 				return &emptypb.Empty{}, errors.Wrap(err, "failed to navigate to network detailed view")
@@ -85,7 +85,7 @@ func (s *Service) ToggleOption(ctx context.Context, req *pb.ToggleOptionRequest)
 // the view is not presented.
 func (s *Service) AvailableWifiNetworks(ctx context.Context, e *empty.Empty) (*pb.AvailableWifiNetworksResponse, error) {
 	return common.UseTconn(ctx, s.sharedObject, func(tconn *chrome.TestConn) (_ *pb.AvailableWifiNetworksResponse, retErr error) {
-		infos, err := uiauto.New(tconn).NodesInfo(ctx, NetworkListItemView)
+		infos, err := uiauto.New(tconn).NodesInfo(ctx, NetworkListItemView())
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to retrieve the info of items in network list")
 		}

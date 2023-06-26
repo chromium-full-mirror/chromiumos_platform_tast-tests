@@ -88,6 +88,12 @@ func Init(ctx context.Context, tconn *chrome.TestConn) (func(), error) {
 	return func() { qsRevampEnabled = false }, nil
 }
 
+// QsRevampEnabled returns whether this package has been configured to assume
+// feature QsRevamp is enabled in chrome, usually by calling Init() above.
+func QsRevampEnabled() bool {
+	return qsRevampEnabled
+}
+
 // SetQsRevampEnabled configures the package to assume the feature QsRevamp is
 // either enabled or disabled. Returns a cleanup function which callers should
 // defer.

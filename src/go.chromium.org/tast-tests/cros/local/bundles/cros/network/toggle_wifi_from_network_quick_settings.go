@@ -29,7 +29,7 @@ func init() {
 		BugComponent: "b:1131775", // ChromeOS > Software > System Services > Connectivity
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "chromeLoggedIn",
+		Fixture:      "chromeLoggedInQsRevampEnabled",
 		Timeout:      3 * time.Minute,
 	})
 }
@@ -60,6 +60,12 @@ func ToggleWifiFromNetworkQuickSettings(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to enable Wi-Fi: ", err)
 	}
 
+	cleanup, err := quicksettings.Init(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to init quicksettings: ", err)
+	}
+	defer cleanup()
+
 	if err := quicksettings.NavigateToNetworkDetailedView(ctx, tconn); err != nil {
 		s.Fatal("Failed to navigate to the detailed Network view: ", err)
 	}
@@ -71,7 +77,7 @@ func ToggleWifiFromNetworkQuickSettings(ctx context.Context, s *testing.State) {
 	for i := 0; i < iterations; i++ {
 		s.Logf("Toggling WiFi (iteration %d of %d)", i+1, iterations)
 
-		if err := ui.LeftClick(quicksettings.NetworkDetailedViewWifiToggleButton)(ctx); err != nil {
+		if err := ui.LeftClick(quicksettings.NetworkDetailedViewWifiToggleButton())(ctx); err != nil {
 			s.Fatal("Failed to click the WiFi toggle: ", err)
 		}
 

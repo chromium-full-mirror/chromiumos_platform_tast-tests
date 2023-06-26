@@ -74,7 +74,7 @@ func Quicksettings(ctx context.Context, s *testing.State) {
 
 	// Model name is provided with "_" instead of spaces, so replace to match the UI label.
 	deviceName := strings.Replace(deviceInfo.ModelName, "_", " ", -1)
-	mobileNetworkView := nodewith.Role("button").NameRegex(regexp.MustCompile("(?i)connect to .*" + deviceName)).Ancestor(quicksettings.NetworkDetailedView)
+	mobileNetworkView := nodewith.Role("button").NameRegex(regexp.MustCompile("(?i)connect to .*" + deviceName)).Ancestor(quicksettings.NetworkDetailedView())
 
 	// Click on the button to connect to the mobile device.
 	if err := ui.LeftClick(mobileNetworkView)(ctx); err != nil {
@@ -97,7 +97,7 @@ func Quicksettings(ctx context.Context, s *testing.State) {
 	}
 
 	// Ensure a connection has been established.
-	detailsBtn := nodewith.Role("button").NameRegex(regexp.MustCompile("(?i)open settings for .*" + deviceName)).Ancestor(quicksettings.NetworkDetailedView)
+	detailsBtn := nodewith.Role("button").NameRegex(regexp.MustCompile("(?i)open settings for .*" + deviceName)).Ancestor(quicksettings.NetworkDetailedView())
 
 	// Since the test has no exposure to the contents of the NetworkListNetworkItemView, we check that the button's label has
 	// changed to indicate that it has intiated a network connection.

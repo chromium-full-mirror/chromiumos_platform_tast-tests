@@ -33,7 +33,7 @@ func init() {
 // QuickSettingsOnNonCellularDevice tests that quick settings does not display
 // mobile data settings on a non cellular device
 func QuickSettingsOnNonCellularDevice(ctx context.Context, s *testing.State) {
-	cr, err := chrome.New(ctx)
+	cr, err := chrome.New(ctx, chrome.EnableFeatures("QsRevamp"))
 	if err != nil {
 		s.Fatal("Failed to create new chrome instance: ", err)
 	}
@@ -43,13 +43,19 @@ func QuickSettingsOnNonCellularDevice(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
+	cleanup, err := quicksettings.Init(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to init quicksettings: ", err)
+	}
+	defer cleanup()
+
 	ui := uiauto.New(tconn)
 
 	if err := quicksettings.NavigateToNetworkDetailedView(ctx, tconn); err != nil {
 		s.Fatal("Failed to navigate to the detailed Network view: ", err)
 	}
 
-	if err := ui.Exists(quicksettings.NetworkDetailedViewMobileDataToggle)(ctx); err == nil {
+	if err := ui.Exists(quicksettings.NetworkDetailedViewMobileDataToggle())(ctx); err == nil {
 		s.Fatal("Mobile data toggle is present on a non cellular device")
 	}
 

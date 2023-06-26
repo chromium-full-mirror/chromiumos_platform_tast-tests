@@ -16,24 +16,6 @@ import (
 )
 
 var (
-	// NetworkDetailedView is the detailed Network view within Quick Settings.
-	NetworkDetailedView = nodewith.HasClass("NetworkDetailedNetworkViewImpl").Ancestor(LegacyRootFinder)
-
-	// NetworkListItemView is the network item list on the network view in Quick Settings.
-	NetworkListItemView = nodewith.HasClass("NetworkListNetworkItemView").Ancestor(LegacyRootFinder)
-
-	// NetworkFeaturePodLabelButton is the label child of the Network feature pod button.
-	NetworkFeaturePodLabelButton = nodewith.HasClass("FeaturePodLabelButton").NameContaining("network").Ancestor(LegacyRootFinder)
-
-	// networkSettingsButton is the button shown on the Network detailed view.
-	networkSettingsButton = nodewith.HasClass("IconButton").Name("Network settings").Ancestor(LegacyRootFinder)
-
-	// NetworkDetailedViewWifiToggleButton is the WiFi toggle within the Network detailed view.
-	NetworkDetailedViewWifiToggleButton = nodewith.HasClass("TrayToggleButton").NameContaining("Wi-Fi").Ancestor(NetworkDetailedView)
-
-	// NetworkDetailedViewMobileDataToggle is the switch to enable/disable Mobile data within network quick settings
-	NetworkDetailedViewMobileDataToggle = nodewith.Name("Mobile data").HasClass("TrayToggleButton").Ancestor(NetworkDetailedView)
-
 	// AddCellularButton is the finder for adding new SIM profiles in Quick Settings.
 	AddCellularButton = nodewith.Name("Add new cellular network").Role(role.Button)
 )
@@ -51,9 +33,16 @@ func NavigateToNetworkDetailedView(ctx context.Context, tconn *chrome.TestConn) 
 			return err
 		}
 
-		return uiauto.Combine("click the Network feature pod label",
-			ui.WithTimeout(5*time.Second).LeftClick(NetworkFeaturePodLabelButton),
-			ui.WithTimeout(5*time.Second).WaitUntilExists(NetworkDetailedView),
+		// The network item depends on whether QsRevamp is enabled or not.
+		var networkItem *nodewith.Finder
+		if QsRevampEnabled() {
+			networkItem = FeatureTileNetwork
+		} else {
+			networkItem = nodewith.HasClass("FeaturePodLabelButton").NameContaining("network").Ancestor(LegacyRootFinder)
+		}
+		return uiauto.Combine("click the Network item in quick setttings",
+			ui.WithTimeout(5*time.Second).LeftClick(networkItem),
+			ui.WithTimeout(5*time.Second).WaitUntilExists(NetworkDetailedView()),
 		)(ctx)
 	}, &testing.PollOptions{Timeout: time.Minute, Interval: time.Second})
 }
@@ -63,8 +52,39 @@ func NavigateToNetworkDetailedView(ctx context.Context, tconn *chrome.TestConn) 
 func OpenNetworkSettings(ctx context.Context, tconn *chrome.TestConn) error {
 	ui := uiauto.New(tconn)
 
+	networkSettingsButton := nodewith.HasClass("IconButton").Name("Network settings").Ancestor(GetRootFinder())
 	return uiauto.Combine("click the Network settings",
 		ui.LeftClick(networkSettingsButton),
-		ui.WaitUntilGone(NetworkDetailedView),
+		ui.WaitUntilGone(NetworkDetailedView()),
 	)(ctx)
+}
+
+// NetworkDetailedView returns the detailed Network view within Quick Settings.
+func NetworkDetailedView() *nodewith.Finder {
+	return nodewith.HasClass("NetworkDetailedNetworkViewImpl").Ancestor(GetRootFinder())
+}
+
+// NetworkListItemView returns the network item list on the network view in Quick Settings.
+func NetworkListItemView() *nodewith.Finder {
+	return nodewith.HasClass("NetworkListNetworkItemView").Ancestor(GetRootFinder())
+}
+
+// NetworkDetailedViewWifiToggleButton returns the WiFi toggle within the Network detailed view.
+func NetworkDetailedViewWifiToggleButton() *nodewith.Finder {
+	// Legacy quick settings uses a TrayToggleButton.
+	if !QsRevampEnabled() {
+		return nodewith.HasClass("TrayToggleButton").NameContaining("Wi-Fi").Ancestor(NetworkDetailedView())
+	}
+	// QsRevamp uses an ordinary button.
+	return nodewith.Role(role.Button).NameContaining("Toggle Wi-Fi").Ancestor(NetworkDetailedView())
+}
+
+// NetworkDetailedViewMobileDataToggle returns the switch to enable/disable Mobile data within network quick settings.
+func NetworkDetailedViewMobileDataToggle() *nodewith.Finder {
+	// Legacy quick settings uses a TrayToggleButton.
+	if !QsRevampEnabled() {
+		return nodewith.Name("Mobile data").HasClass("TrayToggleButton").Ancestor(NetworkDetailedView())
+	}
+	// QsRevamp uses an ordinary button.
+	return nodewith.Role(role.Button).NameContaining("Toggle mobile data").Ancestor(NetworkDetailedView())
 }
