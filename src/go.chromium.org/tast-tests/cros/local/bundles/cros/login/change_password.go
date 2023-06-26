@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/userutil"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -62,6 +63,12 @@ func ChangePassword(ctx context.Context, s *testing.State) {
 
 	cmdRunner := hwseclocal.NewCmdRunner()
 	cryptohome := hwsec.NewCryptohomeClient(cmdRunner)
+
+	// TODO(b/286348339): use a smaller timeout value after b/286348339 is resolved.
+	if err := ping.VerifyInternetConnectivity(ctx, 20*time.Second); err != nil {
+		// Only printing log instead of report error here, to avoid lab network issue causing test flakiness.
+		testing.ContextLog(ctx, "Failed to verify Internet connectivity before test: ", err)
+	}
 
 	// Isolate the step to leverage `defer` pattern.
 	func() {
