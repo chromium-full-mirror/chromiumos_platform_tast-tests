@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -27,6 +28,7 @@ func init() {
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
 		Fixture:      "powerAshPlatformAudio",
 		SoftwareDeps: []string{"chrome"},
+		HardwareDeps: hwdep.D(hwdep.Microphone(), hwdep.Speaker()),
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		Timeout:      3*time.Minute + power.RecorderTimeout,
 		Params: []testing.Param{
