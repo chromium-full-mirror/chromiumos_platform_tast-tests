@@ -242,3 +242,32 @@ func FindInterface(ctx context.Context, dut *dut.DUT, ifName string) error {
 		return errors.Errorf("Unable to find the %s interface", ifName)
 	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 200 * time.Microsecond})
 }
+
+// ListProcessInfo lists on its standard output file information about files opened by processes.
+func ListProcessInfo(ctx context.Context, dut *dut.DUT, file string) ([]string, error) {
+	out, err := dut.Conn().CommandContext(ctx, "lsof", file).Output(testexec.DumpLogOnError)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to execute lsof command")
+	}
+	return strings.Fields(string(out)), err
+}
+
+// BuiltinUsbCamerasFromV4L2Test returns a list of builtin usb camera paths.
+func BuiltinUsbCamerasFromV4L2Test(ctx context.Context, dut *dut.DUT) ([]string, error) {
+	cmd := dut.Conn().CommandContext(ctx, "media_v4l2_test", "--list_builtin_usbcam")
+	out, err := cmd.Output(testexec.DumpLogOnError)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to run media_v4l2_test")
+	}
+	return strings.Fields(string(out)), nil
+}
+
+// USBCamerasFromV4L2Test returns a list of usb camera paths.
+func USBCamerasFromV4L2Test(ctx context.Context, dut *dut.DUT) ([]string, error) {
+	cmd := dut.Conn().CommandContext(ctx, "media_v4l2_test", "--list_usbcam")
+	out, err := cmd.Output(testexec.DumpLogOnError)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to run media_v4l2_test")
+	}
+	return strings.Fields(string(out)), nil
+}
