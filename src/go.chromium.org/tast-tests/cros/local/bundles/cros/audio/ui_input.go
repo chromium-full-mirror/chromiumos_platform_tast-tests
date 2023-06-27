@@ -45,7 +45,7 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.Speaker(), hwdep.Microphone()),
 		Attr:         []string{"group:mainline"},
 		Timeout:      4 * time.Minute,
-		Pre:          chrome.LoggedIn(),
+		Fixture:      "chromeLoggedInQsRevampEnabled",
 		Params: []testing.Param{
 			{
 				Name: "gain",
@@ -256,7 +256,7 @@ func UIInput(ctx context.Context, s *testing.State) {
 	const cleanupTime = 60 * time.Second
 
 	// system-tray-mic-gain is enabled as default on R86+ images.
-	cr := s.PreValue().(*chrome.Chrome)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
@@ -266,6 +266,12 @@ func UIInput(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, cleanupTime)
 	defer cancel()
+
+	cleanup, err := quicksettings.Init(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to init quicksettings: ", err)
+	}
+	defer cleanup()
 
 	// Set up the keyboard, which is used to increment/decrement the slider.
 	// TODO(b/187793602): use better slider automation controls if possible, instead of keyboard controls.

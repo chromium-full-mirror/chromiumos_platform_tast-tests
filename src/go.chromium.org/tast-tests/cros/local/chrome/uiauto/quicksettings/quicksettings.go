@@ -588,18 +588,25 @@ func NotificationsHidden(ctx context.Context, tconn *chrome.TestConn) (bool, err
 
 // findSlider finds the UI node for the specified slider. Callers should defer releasing the returned node.
 func findSlider(ctx context.Context, tconn *chrome.TestConn, slider SliderType) (*nodewith.Finder, error) {
+	finder := SliderParamMap[slider]
+
 	// The mic gain slider is on the audio settings page of Quick Settings, so we need to navigate there first.
 	if slider == SliderTypeMicGain {
 		if err := OpenAudioSettings(ctx, tconn); err != nil {
 			return nil, err
 		}
+		// Quick settings may have multiple sliders, one per microphone. The
+		// active microphone's slider is the only focusable one.
+		if qsRevampEnabled {
+			finder = finder.Focusable()
+		}
 	}
 
 	ui := uiauto.New(tconn)
-	if err := ui.WithTimeout(uiTimeout).WaitUntilExists(SliderParamMap[slider])(ctx); err != nil {
+	if err := ui.WithTimeout(uiTimeout).WaitUntilExists(finder)(ctx); err != nil {
 		return nil, errors.Wrapf(err, "failed finding the %v slider", slider)
 	}
-	return SliderParamMap[slider], nil
+	return finder, nil
 }
 
 // OpenAudioSettings opens Quick Settings' audio settings page. It does nothing if the page is already open.
@@ -796,18 +803,24 @@ func MicEnabled(ctx context.Context, tconn *chrome.TestConn) (bool, error) {
 	if err := kb.Accel(ctx, "Tab"); err != nil {
 		return false, errors.Wrap(err, "failed to press Tab to bring focus into Quick Settings")
 	}
-	if err := ui.EnsureFocused(MicToggle)(ctx); err != nil {
+	// Quick settings may have multiple sliders, one per microphone. The active
+	// microphone's slider is the only focusable one. Focus it so it scrolls to
+	// be visible.
+	slider := MicGainSlider.Focusable()
+	if err := ui.EnsureFocused(slider)(ctx); err != nil {
 		return false, errors.Wrap(err, "failed to scroll mic toggle into view")
 	}
-	info, err := ui.Info(ctx, MicToggle)
+	// This slider's mic toggle has the mute state.
+	info, err := ui.Info(ctx, MicToggle.Ancestor(slider))
 	if err != nil {
-		return false, errors.Wrap(err, "failed to get the pod icon button info")
+		return false, errors.Wrap(err, "failed to get the mic toggle info")
 	}
-	return info.Checked == checked.True, nil
+	return strings.Contains(info.Name, "Mic is on"), nil
 }
 
-// ToggleMic toggles the microphone's enabled state by clicking the microphone icon adjacent to the slider.
-// If the microphone is already in the desired state, this will do nothing.
+// ToggleMic toggles the microphone's enabled state by click the mute toggle
+// button for the active microphone. If the microphone is already in the desired
+// state, this will do nothing.
 func ToggleMic(ctx context.Context, tconn *chrome.TestConn, enable bool) error {
 	cleanup, err := ensureVisible(ctx, tconn)
 	if err != nil {
@@ -822,7 +835,11 @@ func ToggleMic(ctx context.Context, tconn *chrome.TestConn, enable bool) error {
 		return err
 	} else if current != enable {
 		ui := uiauto.New(tconn)
-		if err := ui.DoDefault(MicToggle)(ctx); err != nil {
+		// Quick settings may have multiple sliders, one per microphone. The
+		// active microphone's slider is the only focusable one. Click the mute
+		// toggle for that slider.
+		slider := MicGainSlider.Focusable()
+		if err := ui.DoDefault(MicToggle.Ancestor(slider))(ctx); err != nil {
 			return errors.Wrap(err, "failed to click mic toggle button")
 		}
 	}
