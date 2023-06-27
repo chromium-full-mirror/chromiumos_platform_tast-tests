@@ -30,9 +30,10 @@ func init() {
 			Fixture:   "bluetoothEnabledWithBlueZ",
 			ExtraAttr: []string{"bluetooth_flaky"},
 		}, {
-			Name:      "floss_enabled",
-			Fixture:   "bluetoothEnabledWithFloss",
-			ExtraAttr: []string{"bluetooth_floss"},
+			Name:              "floss_enabled",
+			Fixture:           "bluetoothEnabledWithFloss",
+			ExtraAttr:         []string{"bluetooth_floss"},
+			ExtraSoftwareDeps: []string{"bluetooth_floss"},
 		}},
 	})
 }

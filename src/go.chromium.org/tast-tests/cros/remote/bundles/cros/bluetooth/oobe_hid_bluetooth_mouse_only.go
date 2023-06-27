@@ -39,7 +39,7 @@ func init() {
 			"tast.cros.ui.AutomationService",
 			"tast.cros.ui.ChromeUIService",
 		},
-		HardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Chromebox, hwdep.Chromebit)),
+		HardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Chromebase, hwdep.Chromebox, hwdep.Chromebit)),
 		Params: []testing.Param{
 			{
 				Name:      "floss_disabled",
@@ -61,6 +61,9 @@ func init() {
 func OobeHidBluetoothMouseOnly(ctx context.Context, s *testing.State) {
 	// This test waits for UI elements to become visible that frequently take more than the default of 15 seconds.
 	const defaultTimeout time.Duration = time.Second * 30
+
+	// Bluetooth peers have been observed to take longer than |defaultTimeout| to become ready and be found.
+	const searchingTimeout time.Duration = time.Second * 90
 
 	fv := s.FixtValue().(*bluetooth.FixtValue)
 
@@ -99,7 +102,7 @@ func OobeHidBluetoothMouseOnly(ctx context.Context, s *testing.State) {
 	}
 
 	// Verify pointer device is found.
-	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.FoundPointerNodeName, defaultTimeout); err != nil {
+	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.FoundPointerNodeName, searchingTimeout); err != nil {
 		s.Fatal("Failed to find node: ", err)
 	}
 
@@ -118,7 +121,7 @@ func OobeHidBluetoothMouseOnly(ctx context.Context, s *testing.State) {
 	}
 
 	// Verify pointer device is found.
-	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.FoundPointerNodeName, defaultTimeout); err != nil {
+	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.FoundPointerNodeName, searchingTimeout); err != nil {
 		s.Fatal("Failed to find node: ", err)
 	}
 
