@@ -479,6 +479,8 @@ func TileRestricted(ctx context.Context, tconn *chrome.TestConn, tile *nodewith.
 
 // OpenSettingsApp will launch the Settings app by clicking on the Settings icon and wait
 // for its icon to appear in the shelf. Quick Settings will be opened if not already shown.
+// NOTE: If your test just needs to open OS settings prefer ossettings.Launch() as it does
+// not require opening quick settings.
 func OpenSettingsApp(ctx context.Context, tconn *chrome.TestConn) error {
 	cleanup, err := ensureVisible(ctx, tconn)
 	if err != nil {

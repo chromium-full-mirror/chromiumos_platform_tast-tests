@@ -14,7 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/state"
 	"go.chromium.org/tast/core/ctxutil"
@@ -52,10 +51,10 @@ func AllSections(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	if err := quicksettings.OpenSettingsApp(ctx, tconn); err != nil {
-		s.Fatal("Failed to open OS settings: ", err)
+	osSettings, err := ossettings.Launch(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to launch OS Settings: ", err)
 	}
-	osSettings := ossettings.New(tconn)
 	defer osSettings.Close(cleanupCtx)
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_dump")
