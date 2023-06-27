@@ -26,8 +26,6 @@ func init() {
 		BugComponent: "b:776546",
 		Attr: []string{
 			"group:mainline",
-			// TODO(b/288038399): Promote test.
-			"informational", "group:criticalstaging",
 			"group:hw_agnostic",
 		},
 	})
