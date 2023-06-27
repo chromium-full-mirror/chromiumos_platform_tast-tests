@@ -33,7 +33,7 @@ func init() {
 		VarDeps:      []string{"ui.gaiaPoolDefault"},
 		SoftwareDeps: []string{"chrome", "play_store"},
 		Params: []testing.Param{{
-			ExtraAttr:         []string{"group:cq-minimal", "informational", "group:criticalstaging"},
+			ExtraAttr:         []string{"group:cq-minimal"},
 			ExtraSoftwareDeps: []string{"android_container"},
 		}, {
 			Name:              "container_r",
