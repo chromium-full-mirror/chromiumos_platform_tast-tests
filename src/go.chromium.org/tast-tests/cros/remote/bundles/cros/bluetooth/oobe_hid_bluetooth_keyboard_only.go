@@ -41,7 +41,7 @@ func init() {
 			"tast.cros.ui.AutomationService",
 			"tast.cros.ui.ChromeUIService",
 		},
-		HardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Chromebox, hwdep.Chromebit)),
+		HardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Chromebase, hwdep.Chromebox, hwdep.Chromebit)),
 		Params: []testing.Param{
 			{
 				Name:      "floss_disabled",
@@ -63,6 +63,9 @@ func init() {
 func OobeHidBluetoothKeyboardOnly(ctx context.Context, s *testing.State) {
 	// This test waits for UI elements to become visible that frequently take more than the default of 15 seconds.
 	const defaultTimeout time.Duration = time.Second * 30
+
+	// Bluetooth peers have been observed to take longer than |defaultTimeout| to become ready and be found.
+	const searchingTimeout time.Duration = time.Second * 90
 
 	fv := s.FixtValue().(*bluetooth.FixtValue)
 
@@ -99,7 +102,7 @@ func OobeHidBluetoothKeyboardOnly(ctx context.Context, s *testing.State) {
 
 	// Verify keyboard device is pairing.
 	// TODO(b/254524000): use approraite authentication method.
-	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.PairingKeyboardNodeName, defaultTimeout); err != nil {
+	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.PairingKeyboardNodeName, searchingTimeout); err != nil {
 		s.Fatal("Failed to find node: ", err)
 	}
 
@@ -117,7 +120,7 @@ func OobeHidBluetoothKeyboardOnly(ctx context.Context, s *testing.State) {
 	}
 
 	// Verify keyboard device is pairing.
-	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.PairingKeyboardNodeName, defaultTimeout); err != nil {
+	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.PairingKeyboardNodeName, searchingTimeout); err != nil {
 		s.Fatal("Failed to find node: ", err)
 	}
 

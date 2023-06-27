@@ -29,9 +29,10 @@ func init() {
 			Fixture:   "bluetoothMojoJSObjectWithBlueZ",
 			ExtraAttr: []string{"bluetooth_flaky"},
 		}, {
-			Name:      "floss_enabled",
-			Fixture:   "bluetoothMojoJSObjectWithFloss",
-			ExtraAttr: []string{"bluetooth_floss_flaky"},
+			Name:              "floss_enabled",
+			Fixture:           "bluetoothMojoJSObjectWithFloss",
+			ExtraAttr:         []string{"bluetooth_floss_flaky"},
+			ExtraSoftwareDeps: []string{"bluetooth_floss"},
 		}},
 	})
 }

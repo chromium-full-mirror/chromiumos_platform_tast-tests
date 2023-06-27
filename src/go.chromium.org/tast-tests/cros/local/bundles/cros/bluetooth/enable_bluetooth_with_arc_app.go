@@ -47,9 +47,10 @@ func init() {
 				stackType: common.BluetoothStackTypeBluez,
 			},
 		}, {
-			Name:      "floss",
-			Fixture:   "arcBootedWithPlayStoreAndBluetoothFloss",
-			ExtraAttr: []string{"bluetooth_floss_flaky"},
+			Name:              "floss",
+			Fixture:           "arcBootedWithPlayStoreAndBluetoothFloss",
+			ExtraAttr:         []string{"bluetooth_floss_flaky"},
+			ExtraSoftwareDeps: []string{"bluetooth_floss"},
 			Val: testParam{
 				stackType: common.BluetoothStackTypeFloss,
 			},
