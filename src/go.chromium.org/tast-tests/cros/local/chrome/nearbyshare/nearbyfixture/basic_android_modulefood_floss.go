@@ -176,4 +176,46 @@ func addFlossModulefoodAndroidFixtures() {
 		PreTestTimeout:  resetTimeout,
 		PostTestTimeout: postTestTimeout,
 	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:   "nearbyShareDataUsageOfflineSelfShareFloss",
+		Desc:   "Nearby Share enabled on CrOS and Android configured with 'Data Usage' set to 'Offline' and 'Visibility' set to 'No One'. Each DUT is signed in to the same real GAIA account.",
+		Parent: "nearbyShareGAIALoginAndroidAccountFloss",
+		Impl: NewNearbyShareFixture(fixtureOptions{
+			crosDataUsage:              nearbycommon.DataUsageOffline,
+			crosVisibility:             nearbycommon.VisibilityAllContacts,
+			androidDataUsage:           nearbysnippet.NearbySharingDataUsage_DATA_USAGE_OFFLINE,
+			androidVisibility:          nearbysnippet.NearbySharingVisibility_VISIBILITY_ALL_CONTACTS,
+			crosSelectAndroidAsContact: false,
+		}),
+		Contacts: []string{
+			"chromeos-sw-engprod@google.com",
+		},
+		SetUpTimeout:    3*time.Minute + crossdevice.BugReportDuration,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  resetTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:   "nearbyShareDataUsageOnlineSelfShareFloss",
+		Desc:   "Nearby Share enabled on CrOS and Android configured with 'Data Usage' set to 'Online' and 'Visibility' set to 'No One'. Each DUT is signed in to the same real GAIA account.",
+		Parent: "nearbyShareGAIALoginAndroidAccountFloss",
+		Impl: NewNearbyShareFixture(fixtureOptions{
+			crosDataUsage:              nearbycommon.DataUsageOnline,
+			crosVisibility:             nearbycommon.VisibilityAllContacts,
+			androidDataUsage:           nearbysnippet.NearbySharingDataUsage_DATA_USAGE_ONLINE,
+			androidVisibility:          nearbysnippet.NearbySharingVisibility_VISIBILITY_ALL_CONTACTS,
+			crosSelectAndroidAsContact: false,
+		}),
+		Contacts: []string{
+			"chromeos-sw-engprod@google.com",
+		},
+		SetUpTimeout:    3*time.Minute + crossdevice.BugReportDuration,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  resetTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
 }

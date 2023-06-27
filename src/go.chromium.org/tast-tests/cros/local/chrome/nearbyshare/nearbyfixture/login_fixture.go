@@ -79,6 +79,7 @@ func init() {
 	)
 
 	flossOpt := []chrome.Option{chrome.EnableFeatures("Floss")}
+	selfShareOpt := []chrome.Option{chrome.EnableFeatures("NearbySharingSelfShare")}
 
 	// Basic login fixtures for general CrOS<->Android sharing. The Android account for these fixtures uses the modulefood version of Nearby Share.
 	testing.AddFixture(&testing.Fixture{
@@ -136,7 +137,7 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 		},
 		Parent: "nearbyShareAndroidSetup",
-		Impl:   NewNearbyShareLogin(false, false, true, defaultMediums, nil),
+		Impl:   NewNearbyShareLogin(false, false, true, defaultMediums, selfShareOpt),
 		Vars: []string{
 			defaultCrOSUsername,
 			defaultCrOSPassword,
@@ -160,7 +161,7 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 		},
 		Parent: "nearbyShareAndroidSetup",
-		Impl:   NewNearbyShareLogin(false, false, true, defaultMediums, flossOpt),
+		Impl:   NewNearbyShareLogin(false, false, true, defaultMediums, append(flossOpt, selfShareOpt...)),
 		Vars: []string{
 			defaultCrOSUsername,
 			defaultCrOSPassword,
@@ -209,7 +210,7 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 		},
 		Parent: "nearbyShareAndroidSetupProd",
-		Impl:   NewNearbyShareLogin(false, false, true, defaultMediums, nil),
+		Impl:   NewNearbyShareLogin(false, false, true, defaultMediums, selfShareOpt),
 		Vars: []string{
 			defaultCrOSUsername,
 			defaultCrOSPassword,
@@ -258,7 +259,7 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 		},
 		Parent: "nearbyShareAndroidSetupDev",
-		Impl:   NewNearbyShareLogin(false, false, true, defaultMediums, nil),
+		Impl:   NewNearbyShareLogin(false, false, true, defaultMediums, selfShareOpt),
 		Vars: []string{
 			defaultCrOSUsername,
 			defaultCrOSPassword,
