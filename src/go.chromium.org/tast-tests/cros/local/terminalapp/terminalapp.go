@@ -46,6 +46,7 @@ var (
 	bruschettaLink      = nodewith.Name("Bruschetta").Role(role.Link)
 	linuxTab            = nodewith.NameContaining("@penguin: ").Role(role.Window).ClassName("BrowserFrame")
 	bruschettaTab       = nodewith.NameContaining("chronos@localhost: ").Role(role.Window).ClassName("BrowserFrame")
+	sshTab              = nodewith.NameContaining("chronos@localhost:").Role(role.Window).ClassName("BrowserFrame")
 	rootWindow          = nodewith.NameStartingWith("Terminal").Role(role.Window).ClassName("BrowserFrame")
 	homeTab             = nodewith.Name("Terminal").Role(role.Window).ClassName("BrowserFrame")
 	terminalLeaveButton = nodewith.Name("Leave").Role(role.Button).HasClass("MdTextButton")
@@ -66,6 +67,7 @@ type TerminalApp struct {
 	tconn *chrome.TestConn
 	ui    *uiauto.Context
 	Kb    *input.KeyboardEventWriter
+	tab   *nodewith.Finder
 }
 
 func launch(ctx context.Context, tconn *chrome.TestConn, link, tab *nodewith.Finder) (*TerminalApp, error) {
@@ -113,7 +115,7 @@ func find(ctx context.Context, tconn *chrome.TestConn, link, tab *nodewith.Finde
 		return nil, errors.Wrap(err, "failed to find keyboard")
 	}
 
-	terminalApp := &TerminalApp{tconn: tconn, ui: ui, Kb: kb}
+	terminalApp := &TerminalApp{tconn: tconn, ui: ui, Kb: kb, tab: tab}
 	if err := terminalApp.WaitForPrompt()(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to wait for terminal prompt")
 	}
@@ -159,7 +161,7 @@ func LaunchSSH(ctx context.Context, tconn *chrome.TestConn, sshArgs string) (*Te
 	}
 
 	ui := uiauto.New(tconn)
-	var ta = &TerminalApp{tconn: tconn, ui: ui, Kb: kb}
+	var ta = &TerminalApp{tconn: tconn, ui: ui, Kb: kb, tab: sshTab}
 
 	if err := uiauto.Combine("launch ssh",
 		ta.SetUpSSHConnection(sshArgs),
@@ -360,7 +362,7 @@ func (ta *TerminalApp) ShutdownCrostini(cont *vm.Container) uiauto.Action {
 func (ta *TerminalApp) RunCommand(keyboard *input.KeyboardEventWriter, cmd string) uiauto.Action {
 	return uiauto.Combine("run command "+cmd,
 		// Focus on the Terminal window.
-		ta.ui.LeftClick(linuxTab),
+		ta.ui.LeftClick(ta.tab),
 		ta.ui.WaitUntilExists(terminalTextField.Focused().Editable()),
 		// Type command.
 		keyboard.TypeAction(cmd),
@@ -372,7 +374,7 @@ func (ta *TerminalApp) RunCommand(keyboard *input.KeyboardEventWriter, cmd strin
 func (ta *TerminalApp) Exit(keyboard *input.KeyboardEventWriter) uiauto.Action {
 	return uiauto.Combine("exit Terminal window",
 		ta.RunCommand(keyboard, "exit"),
-		ta.ui.WithTimeout(time.Minute).WaitUntilGone(linuxTab),
+		ta.ui.WithTimeout(time.Minute).WaitUntilGone(ta.tab),
 		ta.Kb.AccelAction("Ctrl+Shift+W"))
 }
 
