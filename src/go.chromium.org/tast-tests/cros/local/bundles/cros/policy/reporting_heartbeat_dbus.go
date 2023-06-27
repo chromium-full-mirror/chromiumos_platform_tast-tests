@@ -31,7 +31,7 @@ func init() {
 			"albertojuarez@google.com", // Test author
 		},
 		BugComponent: "b:817866", // Chrome OS Server Projects > Enterprise Management > Reporting
-		Attr:         []string{"group:mainline", "group:criticalstaging", "informational", "group:dmserver-enrollment-daily", "group:enterprise-reporting"},
+		Attr:         []string{"group:mainline", "group:criticalstaging", "informational", "group:enterprise-reporting-daily", "group:enterprise-reporting"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.FakeDMS,
 		Timeout:      2 * time.Minute,
