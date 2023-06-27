@@ -43,7 +43,7 @@ func init() {
 		Func:         ARCCameraAppPerf,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures the performance when interacting with the ARC camera app",
-		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org", "arcvm-eng@google.com"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "seannli@google.com", "arcvm-eng@google.com"},
 		SoftwareDeps: []string{"chrome", caps.BuiltinOrVividCamera},
 		Fixture:      "arcBootedWithDisableExternalStorage",
 		Data:         []string{arcapp.CameraAppApk},

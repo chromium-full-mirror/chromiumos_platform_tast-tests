@@ -23,7 +23,7 @@ func init() {
 		Func:         CCAUICoexistence,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies CCA can coexist with web page with camera open",
-		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "seannli@google.com"},
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
 		SoftwareDeps: []string{"camera_app", "chrome"},
 		Data:         []string{"camera_page.html", "camera_page.js"},

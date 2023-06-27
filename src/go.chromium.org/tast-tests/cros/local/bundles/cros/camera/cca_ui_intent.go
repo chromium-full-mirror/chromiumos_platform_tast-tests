@@ -90,7 +90,7 @@ func init() {
 		Func:         CCAUIIntent,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies if the camera intents fired from Android apps could be delivered and handled by CCA",
-		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
+		Contacts:     []string{"chromeos-camera-eng@google.com", "seannli@google.com"},
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
 		SoftwareDeps: []string{"camera_app", "chrome", "proprietary_codecs"},
 		Timeout:      7 * time.Minute,
