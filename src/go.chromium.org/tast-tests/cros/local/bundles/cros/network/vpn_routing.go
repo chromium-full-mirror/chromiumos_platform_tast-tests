@@ -39,7 +39,6 @@ func init() {
 				vpnType: vpn.TypeIKEv2,
 				ipType:  vpn.IPTypeIPv4,
 			},
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			Fixture:           "vpnEnv",
 			ExtraSoftwareDeps: []string{"ikev2"},
 		}, {
@@ -48,7 +47,6 @@ func init() {
 				vpnType: vpn.TypeIKEv2,
 				ipType:  vpn.IPTypeIPv6,
 			},
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			Fixture:           "vpnEnv",
 			ExtraSoftwareDeps: []string{"ikev2"},
 		}, {
@@ -57,7 +55,6 @@ func init() {
 				vpnType: vpn.TypeIKEv2,
 				ipType:  vpn.IPTypeIPv4AndIPv6,
 			},
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			Fixture:           "vpnEnv",
 			ExtraSoftwareDeps: []string{"ikev2"},
 		}, {
