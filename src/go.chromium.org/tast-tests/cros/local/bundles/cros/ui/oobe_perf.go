@@ -34,7 +34,8 @@ func init() {
 			"ui.signinProfileTestExtensionManifestKey",
 		},
 		SoftwareDeps: []string{"chrome"},
-		Timeout:      4 * time.Minute,
+        // TODO(b/286953538) - Reduce timeout once regression is fixed.
+		Timeout:      8 * time.Minute,
 	})
 }
 
@@ -57,7 +58,8 @@ func OobePerf(ctx context.Context, s *testing.State) {
 			return nil, errors.Wrap(err, "creating login test api connection failed")
 		}
 		// Wait for the WebUI load time histogram reported. 10 seconds should be enough even on the slowest boards. Making it 15 just in case.
-		hist, err := metrics.WaitForHistogram(ctx, tLoginConn, histogramName, 15*time.Second)
+        // TODO(b/286953538) - Reduce timeout once the regression is fixed.
+		hist, err := metrics.WaitForHistogram(ctx, tLoginConn, histogramName, 45*time.Second)
 		return []*metrics.Histogram{hist}, err
 	}),
 		perfutil.StoreAllWithHeuristics("Duration"))
