@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/policyutil/fixtures"
 	"go.chromium.org/tast-tests/cros/local/terminalapp"
@@ -87,6 +88,7 @@ type bruschettaFixture struct {
 	// How far into the VM log we've read.
 	logOffset    int
 	bruschettaVM *vm.BruschettaVM
+	kb           *input.KeyboardEventWriter
 }
 
 // FixtureData is the data returned by SetUp and passed to tests.
@@ -102,6 +104,7 @@ type FixtureData struct {
 	// Tconn is the test connection to Chrome.
 	Tconn        *chrome.TestConn
 	BruschettaVM *vm.BruschettaVM
+	KB           *input.KeyboardEventWriter
 }
 
 func (f *bruschettaFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -231,12 +234,17 @@ func (f *bruschettaFixture) SetUp(ctx context.Context, s *testing.FixtState) int
 		s.Fatal("Failed to get running VM info: ", err)
 	}
 
+	if f.kb, err = input.Keyboard(ctx); err != nil {
+		s.Fatal("Failed to create keyboard device: ", err)
+	}
+
 	return FixtureData{
 		FakeDMS:      f.fakeDMS,
 		Chrome:       f.chrome,
 		Tconn:        f.tconn,
 		VM:           f.vm,
 		BruschettaVM: f.bruschettaVM,
+		KB:           f.kb,
 	}
 }
 
@@ -275,6 +283,13 @@ func (f *bruschettaFixture) TearDown(ctx context.Context, s *testing.FixtState) 
 
 	if err := f.saveLogs(ctx, s.OutDir(), "tear_down"); err != nil {
 		s.Error("Failed to save VM logs from fixture teardown: ", err)
+	}
+
+	if f.kb != nil {
+		if err := f.kb.Close(ctx); err != nil {
+			s.Log("Failure closing keyboard: ", err)
+		}
+		f.kb = nil
 	}
 }
 
