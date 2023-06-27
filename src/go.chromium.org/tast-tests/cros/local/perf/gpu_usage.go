@@ -198,6 +198,10 @@ type GPUUsageDataSource struct {
 	logs logs
 	// snapshotTime keeps track of the snapshot duration.
 	snapshotTime []time.Duration
+	// procNums tracks the number of processes analyzed for each snapshot.
+	procNums []int
+	// fileNums tracks the number of files analyzed for each snapshot.
+	fileNums []int
 }
 
 // Assert that GPUInfoSource can be used in perf.Timeline.
@@ -498,14 +502,21 @@ func (ds *GPUUsageDataSource) Stop(ctx context.Context, values *perf.Values) err
 	for pattern, log := range ds.logs {
 		testing.ContextLogf(ctx, "GPU usage log pattern: %q; occurrence number: %d; example: %s", pattern, log.count, log.example)
 	}
-	if len(ds.snapshotTime) > 0 {
+	snapshots := float64(len(ds.snapshotTime))
+	if snapshots > 0 {
 		var totalDuration float64
-		for _, d := range ds.snapshotTime {
+		var totalProc int
+		var totalFile int
+		for i, d := range ds.snapshotTime {
 			totalDuration += float64(d / time.Millisecond)
+			totalProc += ds.procNums[i]
+			totalFile += ds.fileNums[i]
 		}
-		// Print the snapshot average time so the performance of the GPU usage
+		// Print the snapshot statistics so the performance of the GPU usage
 		// collection can be evaluated.
-		testing.ContextLogf(ctx, "GPU usage average time of doing snapshot: %f ms", totalDuration/float64(len(ds.snapshotTime)))
+		testing.ContextLogf(ctx,
+			"GPU usage average time of doing snapshot: %f ms; average number of processes and files analyzed per snapshot: %f, %f",
+			totalDuration/snapshots, float64(totalProc)/snapshots, float64(totalFile)/snapshots)
 
 	}
 	return nil
@@ -537,6 +548,7 @@ type procInfo struct {
 
 	gpuUsage []*gpuInfo // Multiple instances of GPU usage info of the process.
 	logs     logs       // Logs occurred when reading GPU info for this process.
+	fileNum  int        // Number of fdinfo files analyzed.
 }
 
 // getGPUInfo gets the GPU usage information for all the processes that use
@@ -663,7 +675,9 @@ func (ds *GPUUsageDataSource) gpuClientProcesses(ctx context.Context) (map[strin
 
 	processes := make(map[string][]*gpuInfo)
 
+	fileNum := 0
 	for r := range readResults {
+		fileNum += r.fileNum
 		for pattern, log := range r.logs {
 			addLog(ds.logs, pattern, log)
 		}
@@ -673,6 +687,8 @@ func (ds *GPUUsageDataSource) gpuClientProcesses(ctx context.Context) (map[strin
 		// Use <process name>_<process id> as key.
 		processes[fmt.Sprintf("%s_%s", r.name, r.pid)] = r.gpuUsage
 	}
+	ds.fileNums = append(ds.fileNums, fileNum)
+	ds.procNums = append(ds.procNums, procNum)
 
 	return processes, nil
 }
@@ -735,6 +751,7 @@ func analyzeProc(procs []fs.FileInfo, results chan *procInfo, errs chan error, w
 			return
 		}
 
+		result.fileNum = len(fdinfoDir)
 		for _, f := range fdinfoDir {
 			r, err := analyzeFile(pidDirPath, f)
 			if err != nil {
