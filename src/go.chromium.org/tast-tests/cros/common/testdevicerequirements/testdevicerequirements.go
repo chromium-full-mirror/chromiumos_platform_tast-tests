@@ -338,6 +338,30 @@ const (
 	// Storage16kWriteIOPs with The ChromeOS device non-volatile storage MUST support >= 150 16kB random write IOPS.
 	Storage16kWriteIOPs = "store-performance-0003-v01"
 
+	// EmmcStorageControllerRevision with If the ChromeOS device uses eMMC to provide non-volatile storage, its eMMC controller MUST support eMMC5.1
+	EmmcStorageControllerRevision = "store-emmc-0003-v01"
+
+	// EmmcStorageControllerHS with If the ChromeOS device uses eMMC to provide non-volatile storage, its eMMC controller MUST support HS400-ES mode.
+	EmmcStorageControllerHS = "store-emmc-0004-v01"
+
+	// EmmcStorageControllerCqeSupport with If the ChromeOS device uses eMMC to provide non-volatile storage, its eMMC controller SHOULD support CQE
+	EmmcStorageControllerCqeSupport = "store-emmc-0005-v01"
+
+	// EmmcStorageControllerCqeActive with If the ChromeOS device uses eMMC to provide non-volatile storage, and if its eMMC controller supports CQE, the ChromeOS device MUST enable CQE.
+	EmmcStorageControllerCqeActive = "store-emmc-0006-v01"
+
+	// EmmcStorageDeviceRevision with If the ChromeOS device uses eMMC to provide non-volatile storage, its eMMC storage device MUST support eMMC5.1
+	EmmcStorageDeviceRevision = "store-emmc-0007-v01"
+
+	// EmmcStorageDeviceHS with If the ChromeOS device uses eMMC to provide non-volatile storage, its eMMC storage device MUST support HS400-ES mode.
+	EmmcStorageDeviceHS = "store-emmc-0008-v01"
+
+	// EmmcStorageDeviceFFU with If the ChromeOS device uses eMMC to provide non-volatile storage, its eMMC storage device MUST support FFU according to sections 6.6.18 and A.12 of JESD84-B51
+	EmmcStorageDeviceFFU = "store-emmc-0009-v01"
+
+	// EmmcStorageDeviceExtCsd with If the ChromeOS device uses eMMC to provide non-volatile storage, its eMMC storage device MUST provide health info via ExtCsd.
+	EmmcStorageDeviceExtCsd = "store-emmc-0010-v01"
+
 	// EmmcStorage16kReadLatency with If the ChromeOS device uses eMMC to provide non-volatile storage, its eMMC storage device latency MUST NOT exceed 35ms for the 99th percentile of 16k random reads, with iodepth=4 workload.
 	EmmcStorage16kReadLatency = "store-emmc-0019-v01"
 

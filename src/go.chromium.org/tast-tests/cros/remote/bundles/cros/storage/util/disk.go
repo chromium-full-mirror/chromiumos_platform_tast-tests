@@ -35,14 +35,6 @@ const (
 	MmcDisk
 )
 
-// Disk structure represents a block device.
-type Disk struct {
-	Path string
-	Name string
-	Size int
-	Type DiskType
-}
-
 // DiskTypeToString returns string name of a disk type.
 func DiskTypeToString(t DiskType) string {
 	switch t {
@@ -62,6 +54,90 @@ func DiskTypeToString(t DiskType) string {
 		return "SD card"
 	}
 	return "invalid enum type"
+}
+
+// Disk structure represents a block device.
+type Disk struct {
+	Path string
+	Name string
+	Size int
+	Type DiskType
+}
+
+func (d *Disk) debugfsEntry() string {
+	switch d.Type {
+	case EmmcDisk:
+		fallthrough
+	case MmcDisk:
+		return "mmc" + d.Name[len(d.Name)-1:]
+	default:
+		return "not_implemented_debugfs_entry"
+	}
+}
+
+// ReadDebugfsString reads string from the debugfs of the device.
+func (d *Disk) ReadDebugfsString(ctx context.Context, dut *dut.DUT, relativePath string) (string, error) {
+	path := "/sys/kernel/debug/" + d.debugfsEntry() + "/" + relativePath
+	data, err := RunCmdWithStringOutput(ctx, dut, "cat", path)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to read sysfs path: "+path)
+	}
+	return data, nil
+}
+
+// ReadDebugfsHexInt64 reads hex int from the debugfs of the device.
+func (d *Disk) ReadDebugfsHexInt64(ctx context.Context, dut *dut.DUT, relativePath string) (int64, error) {
+	strVal, err := d.ReadDebugfsString(ctx, dut, relativePath)
+	if err != nil {
+		return 0, err
+	}
+	if strVal[0:2] == "0x" {
+		strVal = strVal[2:]
+	}
+	value, err := strconv.ParseInt(strVal, 16, 64)
+	if err != nil {
+		return 0, errors.Wrapf(err, "failed to parse %q as int64 from %q", strVal, relativePath)
+	}
+	return value, nil
+}
+
+// ReadSysfsString reads string from the sysfs of the device.
+func (d *Disk) ReadSysfsString(ctx context.Context, dut *dut.DUT, relativePath string) (string, error) {
+	path := "/sys/block/" + d.Name + "/" + relativePath
+	data, err := RunCmdWithStringOutput(ctx, dut, "cat", path)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to read sysfs path: "+path)
+	}
+	return data, nil
+}
+
+// ReadSysfsHexInt64 reads hex int from the sysfs of the device.
+func (d *Disk) ReadSysfsHexInt64(ctx context.Context, dut *dut.DUT, relativePath string) (int64, error) {
+	strVal, err := d.ReadSysfsString(ctx, dut, relativePath)
+	if err != nil {
+		return 0, err
+	}
+	if strVal[0:2] == "0x" {
+		strVal = strVal[2:]
+	}
+	value, err := strconv.ParseInt(strVal, 16, 64)
+	if err != nil {
+		return 0, errors.Wrapf(err, "failed to parse %q as int64 from %q", strVal, relativePath)
+	}
+	return value, nil
+}
+
+// ReadSysfsInt64 reads decimal int from the sysfs of the device.
+func (d *Disk) ReadSysfsInt64(ctx context.Context, dut *dut.DUT, relativePath string) (int64, error) {
+	strVal, err := d.ReadSysfsString(ctx, dut, relativePath)
+	if err != nil {
+		return 0, err
+	}
+	value, err := strconv.ParseInt(strVal, 10, 64)
+	if err != nil {
+		return 0, errors.Wrapf(err, "failed to parse %q as int64 from %q", strVal, relativePath)
+	}
+	return value, nil
 }
 
 func getRootDevName(ctx context.Context, dut *dut.DUT) (string, error) {
