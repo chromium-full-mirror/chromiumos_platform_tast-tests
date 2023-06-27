@@ -45,7 +45,7 @@ func init() {
 		Desc:         "Measures the performance when interacting with the ARC camera app",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "seannli@google.com", "arcvm-eng@google.com"},
 		SoftwareDeps: []string{"chrome", caps.BuiltinOrVividCamera},
-		Fixture:      "arcBootedWithDisableExternalStorage",
+		Fixture:      "arcWithWorkingCameraForPerf",
 		Data:         []string{arcapp.CameraAppApk},
 		Attr:         []string{"group:crosbolt", "crosbolt_nightly"},
 		Timeout:      20 * time.Minute,

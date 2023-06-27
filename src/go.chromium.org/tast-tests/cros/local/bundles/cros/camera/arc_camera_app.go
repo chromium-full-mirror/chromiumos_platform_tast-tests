@@ -28,7 +28,7 @@ func init() {
 		Contacts:     []string{"chromeos-camera-eng@google.com", "seannli@google.com"},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", caps.BuiltinOrVividCamera},
-		Fixture:      "arcBootedRestricted",
+		Fixture:      "arcWithWorkingCamera",
 		BugComponent: "b:978428",
 	})
 }

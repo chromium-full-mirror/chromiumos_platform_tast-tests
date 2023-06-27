@@ -25,7 +25,7 @@ func init() {
 		Contacts:     []string{"chromeos-camera-eng@google.com", "shik@chromium.org"},
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera"},
 		SoftwareDeps: []string{"chrome", caps.BuiltinOrVividCamera},
-		Pre:          arc.Booted(),
+		Fixture:      "arcWithWorkingCamera",
 		Data:         []string{arcapp.CameraAppApk},
 		Timeout:      4 * time.Minute,
 		Params: []testing.Param{{
@@ -45,7 +45,7 @@ func ARCCameraOrientation(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
 	defer cancel()
 
-	cr := s.PreValue().(arc.PreData).Chrome
+	cr := s.FixtValue().(*arc.PreData).Chrome
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to get Test API connection: ", err)
@@ -58,7 +58,7 @@ func ARCCameraOrientation(ctx context.Context, s *testing.State) {
 	}
 	defer cleanup(cleanupCtx)
 
-	a := s.PreValue().(arc.PreData).ARC
+	a := s.FixtValue().(*arc.PreData).ARC
 	// Install camera testing app.
 	if err := a.Install(ctx, s.DataPath(arcapp.CameraAppApk)); err != nil {
 		s.Fatal("Failed to install the APK: ", err)
