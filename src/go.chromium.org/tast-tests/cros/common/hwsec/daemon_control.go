@@ -110,6 +110,15 @@ var AttestationDaemon = &DaemonInfo{
 	DBusName:   "org.chromium.Attestation",
 }
 
+// BiometricsDaemon represents the DaemonsInfo for biod.
+var BiometricsDaemon = &DaemonInfo{
+	Name:       "biod",
+	DaemonName: "biod",
+	HasDBus:    true,
+	DBusName:   "org.chromium.BiometricsDaemon",
+	Optional:   true,
+}
+
 // CryptohomeDaemon represents the DaemonsInfo for cryptohome.
 var CryptohomeDaemon = &DaemonInfo{
 	Name:       "cryptohome",

@@ -17,11 +17,13 @@ const (
 	fixtureSetUpTimeout    = 1 * time.Minute
 	fixtureResetTimeout    = 1 * time.Minute
 	fixtureTearDownTimeout = 1 * time.Minute
+
+	ussAuthSessionFixtureName = "ussAuthSessionFixture"
 )
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name: "ussAuthSessionFixture",
+		Name: ussAuthSessionFixtureName,
 		Desc: "Set up the USS flag experiement flag for Auth Session",
 		Contacts: []string{
 			"lziest@google.com",
