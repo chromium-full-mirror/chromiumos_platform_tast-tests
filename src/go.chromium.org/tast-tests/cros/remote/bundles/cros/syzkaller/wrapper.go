@@ -72,6 +72,7 @@ var driversToModprobe = [...]string{
 	"ip6table_nat",
 	"r8153_ecm",
 	"rfcomm",
+	"sit",
 	"tun",
 	"uinput",
 	"usbnet",
