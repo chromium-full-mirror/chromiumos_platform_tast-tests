@@ -40,11 +40,11 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
-			Fixture: "chromeLoggedIn",
+			Fixture: "chromeLoggedInQsRevampEnabled",
 			Val:     browser.TypeAsh,
 		}, {
 			Name:              "lacros",
-			Fixture:           "lacros",
+			Fixture:           "lacrosQsRevampEnabled",
 			ExtraSoftwareDeps: []string{"lacros"},
 			Val:               browser.TypeLacros,
 		}},
@@ -60,6 +60,12 @@ func DoNotDisturbOSSettings(ctx context.Context, s *testing.State) {
 	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
 
 	ui := uiauto.New(tconn).WithTimeout(waitForNotificationTimeout)
+
+	cleanup, err := quicksettings.Init(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to init quicksettings: ", err)
+	}
+	defer cleanup()
 
 	// Setup a browser.
 	bt := s.Param().(browser.Type)
@@ -87,7 +93,7 @@ func DoNotDisturbOSSettings(ctx context.Context, s *testing.State) {
 	}
 
 	// Confirm that Quick Settings panel also reflects its 'DND' toggle to be on.
-	if dndEnabled, err := quicksettings.SettingEnabled(ctx, tconn, quicksettings.SettingPodDoNotDisturb); err != nil {
+	if dndEnabled, err := quicksettings.DoNotDisturbEnabled(ctx, tconn); err != nil {
 		s.Fatal("Failed to check if Quick Settings Do Not Disturb toggle is ON: ", err)
 	} else if !dndEnabled {
 		s.Error("Do Not Disturb toggle is OFF when it should be ON")
@@ -122,7 +128,7 @@ func DoNotDisturbOSSettings(ctx context.Context, s *testing.State) {
 	}
 
 	// Confirm that Quick Settings panel also reflects its 'DND' toggle to be off.
-	if dndEnabled, err := quicksettings.SettingEnabled(ctx, tconn, quicksettings.SettingPodDoNotDisturb); err != nil {
+	if dndEnabled, err := quicksettings.DoNotDisturbEnabled(ctx, tconn); err != nil {
 		s.Fatal("Failed to check if Quick Settings Do Not Disturb toggle is OFF: ", err)
 	} else if dndEnabled {
 		s.Error("Do Not Disturb toggle is ON when it should be OFF")

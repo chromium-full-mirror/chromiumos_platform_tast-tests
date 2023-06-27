@@ -39,11 +39,11 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
-			Fixture: "chromeLoggedIn",
+			Fixture: "chromeLoggedInQsRevampEnabled",
 			Val:     browser.TypeAsh,
 		}, {
 			Name:              "lacros",
-			Fixture:           "lacros",
+			Fixture:           "lacrosQsRevampEnabled",
 			ExtraSoftwareDeps: []string{"lacros"},
 			Val:               browser.TypeLacros,
 		}},
@@ -57,6 +57,12 @@ func Smoke(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
+
+	cleanupQs, err := quicksettings.Init(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to init quicksettings: ", err)
+	}
+	defer cleanupQs()
 
 	// Setup a browser.
 	bt := s.Param().(browser.Type)
@@ -117,11 +123,13 @@ func Smoke(ctx context.Context, s *testing.State) {
 	}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
 		s.Fatal("Failed waiting for notification to dismiss: ", err)
 	}
-	s.Log("Open quick settings")
-	if err := quicksettings.Show(ctx, tconn); err != nil {
-		s.Fatal("Failed to show quick settings: ", err)
+	s.Log("Open notification center")
+	if err := quicksettings.ShowNotificationCenter(ctx, tconn); err != nil {
+		s.Fatal("Failed to show notification center: ", err)
 	}
-	defer quicksettings.Hide(ctx, tconn)
+	// Closing all notifications ensures the notification center closes.
+	defer ash.CloseNotifications(ctx, tconn)
+
 	s.Log("Closing notification from notification centre")
 	if err := closeNotification(ctx, tconn); err != nil {
 		s.Fatal("Failed to close notification: ", err)

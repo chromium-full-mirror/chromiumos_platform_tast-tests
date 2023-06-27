@@ -49,6 +49,19 @@ func init() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 
+	// lacrosQsRevampEnabled is the same as lacros, but has feature QsRevamp enabled.
+	testing.AddFixture(&testing.Fixture{
+		Name:     "lacrosQsRevampEnabled",
+		Desc:     "Lacros Chrome from a pre-built image, with QsRevamp enabled",
+		Contacts: []string{"jamescook@google.com", "lacros-team@google.com"},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return NewConfig(ChromeOptions(chrome.EnableFeatures("QsRevamp"))).Opts()
+		}),
+		SetUpTimeout:    chrome.LoginTimeout + 1*time.Minute,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
 	// lacrosPerf is the same as lacros, but has some options specific for perf tests.
 	testing.AddFixture(&testing.Fixture{
 		Name:     "lacrosPerf",

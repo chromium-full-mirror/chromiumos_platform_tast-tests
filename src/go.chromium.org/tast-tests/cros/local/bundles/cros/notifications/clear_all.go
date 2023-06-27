@@ -36,11 +36,11 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
-			Fixture: "chromeLoggedIn",
+			Fixture: "chromeLoggedInQsRevampEnabled",
 			Val:     browser.TypeAsh,
 		}, {
 			Name:              "lacros",
-			Fixture:           "lacros",
+			Fixture:           "lacrosQsRevampEnabled",
 			ExtraSoftwareDeps: []string{"lacros"},
 			Val:               browser.TypeLacros,
 		}},
@@ -57,6 +57,12 @@ func ClearAll(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
+
+	cleanupQs, err := quicksettings.Init(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to init quicksettings: ", err)
+	}
+	defer cleanupQs()
 
 	// Setup a browser.
 	bt := s.Param().(browser.Type)
@@ -88,11 +94,12 @@ func ClearAll(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	// Open Quick Settings to ensure the 'Clear all' button is available.
-	if err := quicksettings.Show(ctx, tconn); err != nil {
-		s.Fatal("Failed to open Quick Settings: ", err)
+	// Open notification center to ensure the 'Clear all' button is available.
+	if err := quicksettings.ShowNotificationCenter(ctx, tconn); err != nil {
+		s.Fatal("Failed to open notification center: ", err)
 	}
-	defer quicksettings.Hide(ctx, tconn)
+	// Hiding all notifications ensures the notification center closes.
+	defer ash.CloseNotifications(ctx, tconn)
 
 	ui := uiauto.New(tconn)
 	clearAll := nodewith.Name("Clear all").Role(role.StaticText)
