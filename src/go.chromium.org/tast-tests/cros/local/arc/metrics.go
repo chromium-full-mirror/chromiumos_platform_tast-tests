@@ -56,6 +56,18 @@ func (k *AppKills) LogPerfMetrics(p *perf.Values, suffix string) {
 	p.Set(perf.Metric{Name: "arc_total_kills" + suffix, Unit: "count", Direction: perf.SmallerIsBetter}, float64(k.Total()))
 }
 
+// AppendPerfMetrics appends a perf.Metric for every kill counter, and a total.
+func (k *AppKills) AppendPerfMetrics(p *perf.Values, suffix string) {
+	p.Append(perf.Metric{Name: "arc_oom_kills" + suffix, Unit: "count", Direction: perf.SmallerIsBetter, Multiple: true}, float64(k.Oom))
+	p.Append(perf.Metric{Name: "arc_lmkd_foreground_kills" + suffix, Unit: "count", Direction: perf.SmallerIsBetter, Multiple: true}, float64(k.LmkdForeground))
+	p.Append(perf.Metric{Name: "arc_lmkd_perceptible_kills" + suffix, Unit: "count", Direction: perf.SmallerIsBetter, Multiple: true}, float64(k.LmkdPerceptible))
+	p.Append(perf.Metric{Name: "arc_lmkd_cached_kills" + suffix, Unit: "count", Direction: perf.SmallerIsBetter, Multiple: true}, float64(k.LmkdCached))
+	p.Append(perf.Metric{Name: "arc_pressure_foreground_kills" + suffix, Unit: "count", Direction: perf.SmallerIsBetter, Multiple: true}, float64(k.PressureForeground))
+	p.Append(perf.Metric{Name: "arc_pressure_perceptible_kills" + suffix, Unit: "count", Direction: perf.SmallerIsBetter, Multiple: true}, float64(k.PressurePerceptible))
+	p.Append(perf.Metric{Name: "arc_pressure_cached_kills" + suffix, Unit: "count", Direction: perf.SmallerIsBetter, Multiple: true}, float64(k.PressureCached))
+	p.Append(perf.Metric{Name: "arc_total_kills" + suffix, Unit: "count", Direction: perf.SmallerIsBetter, Multiple: true}, float64(k.Total()))
+}
+
 // GetAppKills reports how many apps have been killed by Android's Low Memory
 // Killer Demon or ArcProcessService or Android's Linux OOM Killer.
 func GetAppKills(ctx context.Context, tconn *chrome.TestConn) (*AppKills, error) {

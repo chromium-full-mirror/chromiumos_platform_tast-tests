@@ -26,6 +26,13 @@ type testParams struct {
 	chromeArgs []string
 }
 
+type bootMetrics struct {
+	appLaunchDuration     time.Duration
+	appShownDuration      time.Duration
+	enabledScreenDuration time.Duration
+	appKills              *arc.AppKills
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         RegularBoot,
@@ -70,7 +77,7 @@ func RegularBoot(ctx context.Context, s *testing.State) {
 	const iterationCount = 5
 	perfValues := perf.NewValues()
 	for i := 0; i < iterationCount; i++ {
-		appLaunchDuration, appShownDuration, enabledScreenDuration, err := performArcRegularBoot(ctx, s.OutDir(), creds)
+		bootMetrics, err := performArcRegularBoot(ctx, s.OutDir(), creds)
 		if err != nil {
 			s.Fatal("Failed to do regular boot: ", err)
 		}
@@ -80,19 +87,20 @@ func RegularBoot(ctx context.Context, s *testing.State) {
 			Unit:      "seconds",
 			Direction: perf.SmallerIsBetter,
 			Multiple:  true,
-		}, appLaunchDuration.Seconds())
+		}, bootMetrics.appLaunchDuration.Seconds())
 		perfValues.Append(perf.Metric{
 			Name:      "app_shown_time",
 			Unit:      "seconds",
 			Direction: perf.SmallerIsBetter,
 			Multiple:  true,
-		}, appShownDuration.Seconds())
+		}, bootMetrics.appShownDuration.Seconds())
 		perfValues.Append(perf.Metric{
 			Name:      "boot_progress_enable_screen",
 			Unit:      "seconds",
 			Direction: perf.SmallerIsBetter,
 			Multiple:  true,
-		}, enabledScreenDuration.Seconds())
+		}, bootMetrics.enabledScreenDuration.Seconds())
+		bootMetrics.appKills.AppendPerfMetrics(perfValues, "")
 	}
 
 	if err := perfValues.Save(s.OutDir()); err != nil {
@@ -151,8 +159,7 @@ func performArcInitialBoot(ctx context.Context, credPool string, chromeArgs []st
 // represents here the overhead from tast Chrome login implementation.
 // This also resets system caches before login to simulate scenario when user uses Chromebook after
 // reboot.
-// TODO (khmel): Change return value as a struct.
-func performArcRegularBoot(ctx context.Context, testDir string, creds chrome.Creds) (time.Duration, time.Duration, time.Duration, error) {
+func performArcRegularBoot(ctx context.Context, testDir string, creds chrome.Creds) (*bootMetrics, error) {
 	// Use custom cooling config that is bit relaxed from default implementation
 	// in order to reduce failure rate especially on AMD low-end devices.
 	coolDownConfig := cpu.CoolDownConfig{
@@ -162,13 +169,15 @@ func performArcRegularBoot(ctx context.Context, testDir string, creds chrome.Cre
 		CoolDownMode:         cpu.CoolDownStopUI,
 	}
 
+	var result bootMetrics
+
 	if _, err := cpu.WaitUntilCoolDown(ctx, coolDownConfig); err != nil {
-		return 0, 0, 0, errors.Wrap(err, "failed to wait until CPU is cooled down")
+		return &result, errors.Wrap(err, "failed to wait until CPU is cooled down")
 	}
 
 	// Drop caches to simulate cold start when data not in system caches already.
 	if err := disk.DropCaches(ctx); err != nil {
-		return 0, 0, 0, errors.Wrap(err, "failed to drop caches")
+		return &result, errors.Wrap(err, "failed to drop caches")
 	}
 
 	opts := []chrome.Option{
@@ -183,49 +192,57 @@ func performArcRegularBoot(ctx context.Context, testDir string, creds chrome.Cre
 	testing.ContextLog(ctx, "Create Chrome")
 	cr, err := chrome.New(ctx, opts...)
 	if err != nil {
-		return 0, 0, 0, errors.Wrap(err, "failed to connect to Chrome")
+		return &result, errors.Wrap(err, "failed to connect to Chrome")
 	}
 	defer cr.Close(ctx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
-		return 0, 0, 0, errors.Wrap(err, "failed to create test connection")
+		return &result, errors.Wrap(err, "failed to create test connection")
 	}
 
 	testing.ContextLog(ctx, "Starting Play Store window deferred")
 	if err := apps.Launch(ctx, tconn, apps.PlayStore.ID); err != nil {
-		return 0, 0, 0, errors.Wrap(err, "failed to launch Play Store")
+		return &result, errors.Wrap(err, "failed to launch Play Store")
 	}
 
 	if err := optin.WaitForPlayStoreShown(ctx, tconn, 2*time.Minute); err != nil {
-		return 0, 0, 0, errors.Wrap(err, "failed to wait Play Store shown")
+		return &result, errors.Wrap(err, "failed to wait Play Store shown")
 	}
 
 	delay, err := readFirstAppLaunchHistogram(ctx, tconn, "Arc.FirstAppLaunchDelay.TimeDelta")
 	if err != nil {
-		return 0, 0, 0, err
+		return &result, err
 	}
 
 	request, err := readFirstAppLaunchHistogram(ctx, tconn, "Arc.FirstAppLaunchRequest.TimeDelta")
 	if err != nil {
-		return 0, 0, 0, err
+		return &result, err
 	}
 
 	delayShown, err := readFirstAppLaunchHistogram(ctx, tconn, "Arc.FirstAppLaunchDelay.TimeDeltaUntilAppLaunch")
 	if err != nil {
-		return 0, 0, 0, err
+		return &result, err
 	}
 
 	a, err := arc.New(ctx, testDir)
 	if err != nil {
-		return 0, 0, 0, errors.Wrap(err, "failed to connect to ARC")
+		return &result, errors.Wrap(err, "failed to connect to ARC")
 	}
 	p, err := perfboot.GetPerfValues(ctx, tconn, a)
 	if err != nil {
-		return 0, 0, 0, errors.Wrap(err, "failed to extract ARC boot metrics")
+		return &result, errors.Wrap(err, "failed to extract ARC boot metrics")
+	}
+	result.appLaunchDuration = request + delay
+	result.appShownDuration = request + delayShown
+	result.enabledScreenDuration = p["boot_progress_enable_screen"]
+
+	result.appKills, err = arc.GetAppKills(ctx, tconn)
+	if err != nil {
+		return &result, errors.Wrap(err, "failed to get app kill counts")
 	}
 
-	return request + delay, request + delayShown, p["boot_progress_enable_screen"], nil
+	return &result, nil
 }
 
 // readFirstAppLaunchHistogram reads histogram and converts it to Duration.

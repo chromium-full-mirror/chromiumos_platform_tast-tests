@@ -164,6 +164,7 @@ type measuredValues struct {
 	signInTime         float64
 	bootTime           float64
 	energyUsage        *power.RAPLValues
+	appKills           *arc.AppKills
 }
 
 // createChrome creates Chrome session used to perform ARC opt-ins. Normally it is created only
@@ -245,6 +246,7 @@ func AuthPerf(ctx context.Context, s *testing.State) {
 	var signInTimes []float64
 	var bootTimes []float64
 	var energyUsage []*power.RAPLValues
+	var appKills []*arc.AppKills
 
 	for len(playStoreShownTimes) < successBootCount {
 		s.Logf("Running ARC opt-in iteration #%d out of %d",
@@ -287,6 +289,7 @@ func AuthPerf(ctx context.Context, s *testing.State) {
 		networkWaitTimes = append(networkWaitTimes, v.networkWaitTime)
 		signInTimes = append(signInTimes, v.signInTime)
 		bootTimes = append(bootTimes, v.bootTime)
+		appKills = append(appKills, v.appKills)
 		if v.energyUsage != nil {
 			energyUsage = append(energyUsage, v.energyUsage)
 		}
@@ -350,6 +353,10 @@ func AuthPerf(ctx context.Context, s *testing.State) {
 
 	for _, rapl := range energyUsage {
 		rapl.ReportPerfMetrics(perfValues, "power_")
+	}
+
+	for _, appKill := range appKills {
+		appKill.AppendPerfMetrics(perfValues, "")
 	}
 
 	// Outputs comma separated results to the log.
@@ -504,6 +511,12 @@ func bootARC(ctx context.Context, s *testing.State, cr *chrome.Chrome, tconn *ch
 		return v, errors.Wrap(err, "failed to parse time")
 	}
 	v.bootTime = float64(tInit.Sub(tPreStart).Milliseconds())
+
+	v.appKills, err = arc.GetAppKills(ctx, tconn)
+	if err != nil {
+		return v, errors.Wrap(err, "failed to get app kill counts")
+	}
+
 	return v, nil
 }
 

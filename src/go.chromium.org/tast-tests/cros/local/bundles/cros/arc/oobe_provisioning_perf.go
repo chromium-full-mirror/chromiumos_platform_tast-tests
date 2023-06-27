@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/oobeutil"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -22,6 +23,11 @@ type testParamOobeProvisioningPerf struct {
 	browserType browser.Type
 	username    string
 	password    string
+}
+
+type oobeMetrics struct {
+	provisioningTime time.Duration
+	appKills         *arc.AppKills
 }
 
 func init() {
@@ -108,12 +114,13 @@ func OobeProvisioningPerf(ctx context.Context, s *testing.State) {
 
 	failBootCount := 0
 	var provisioningTimes []time.Duration
+	var appKills []*arc.AppKills
 
 	for len(provisioningTimes) < successBootCount {
 		s.Logf("Running ARC provisioning iteration #%d out of %d",
 			len(provisioningTimes)+1, successBootCount)
 
-		provisioningTime, err := oobeProvisioningPerfIteration(ctx, s, gaia)
+		oobeMetrics, err := oobeProvisioningPerfIteration(ctx, s, gaia)
 		if err != nil {
 			failBootCount++
 			s.Log("Error found during the ARC provisioning: ", err)
@@ -125,7 +132,8 @@ func OobeProvisioningPerf(ctx context.Context, s *testing.State) {
 			continue
 		}
 
-		provisioningTimes = append(provisioningTimes, provisioningTime)
+		provisioningTimes = append(provisioningTimes, oobeMetrics.provisioningTime)
+		appKills = append(appKills, oobeMetrics.appKills)
 	}
 
 	perfValues := perf.NewValues()
@@ -139,13 +147,19 @@ func OobeProvisioningPerf(ctx context.Context, s *testing.State) {
 		}, x.Seconds())
 	}
 
+	for _, appKill := range appKills {
+		appKill.AppendPerfMetrics(perfValues, "")
+	}
+
 	if err := perfValues.Save(s.OutDir()); err != nil {
 		s.Fatal("Failed saving perf data: ", err)
 	}
 }
 
-func oobeProvisioningPerfIteration(ctx context.Context, s *testing.State, gaia chrome.Option) (time.Duration, error) {
+func oobeProvisioningPerfIteration(ctx context.Context, s *testing.State, gaia chrome.Option) (*oobeMetrics, error) {
 	const histogramName = "Arc.UiAvailable.OobeProvisioning.TimeDelta.Unmanaged"
+
+	var result oobeMetrics
 
 	cr, err := chrome.New(ctx,
 		chrome.DontSkipOOBEAfterLogin(),
@@ -153,30 +167,36 @@ func oobeProvisioningPerfIteration(ctx context.Context, s *testing.State, gaia c
 		gaia)
 
 	if err != nil {
-		return 0, err
+		return &result, err
 	}
 	defer cr.Close(ctx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
-		return 0, err
+		return &result, err
 	}
 
 	ui := uiauto.New(tconn)
 	if err := oobeutil.CompleteOnboardingFlow(ctx, ui); err != nil {
-		return 0, err
+		return &result, err
 	}
 
 	testing.ContextLog(ctx, "OOBE is done. Waiting for provisioning metric")
 	metric, err := metrics.WaitForHistogram(ctx, tconn, histogramName, 3*time.Minute)
 	if err != nil {
-		return 0, errors.Wrapf(err, "failed to get %s histogram", histogramName)
+		return &result, errors.Wrapf(err, "failed to get %s histogram", histogramName)
 	}
 
 	timeMs, err := metric.Mean()
 	if err != nil {
-		return 0, errors.Wrapf(err, "failed to read %s histogram", histogramName)
+		return &result, errors.Wrapf(err, "failed to read %s histogram", histogramName)
+	}
+	result.provisioningTime = time.Duration(timeMs * float64(time.Millisecond))
+
+	result.appKills, err = arc.GetAppKills(ctx, tconn)
+	if err != nil {
+		return &result, errors.Wrap(err, "failed to get app kill counts")
 	}
 
-	return time.Duration(timeMs * float64(time.Millisecond)), nil
+	return &result, nil
 }
