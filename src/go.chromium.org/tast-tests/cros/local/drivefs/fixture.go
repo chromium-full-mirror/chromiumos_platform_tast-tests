@@ -288,8 +288,10 @@ func (f *fixture) PostTest(ctx context.Context, s *testing.FixtTestState) {}
 
 // cleanUp makes a best effort attempt to restore the state to where it was pretest.
 func (f *fixture) cleanUp(ctx context.Context, s *testing.FixtState) {
-	if err := ash.CloseAllWindows(ctx, f.tconn); err != nil {
-		s.Error("Failed trying to close all windows: ", err)
+	if f.tconn != nil {
+		if err := ash.CloseAllWindows(ctx, f.tconn); err != nil {
+			s.Error("Failed trying to close all windows: ", err)
+		}
 	}
 
 	f.tconn = nil
@@ -307,16 +309,18 @@ func (f *fixture) cleanUp(ctx context.Context, s *testing.FixtState) {
 	// Note this removal can take a while ~1s per file and may end up exceeding
 	// the timeout, this is not a failure as the next run will try to remove the
 	// files that weren't deleted in time.
-	fileList, err := f.APIClient.ListAllFilesOlderThan(ctx, time.Hour)
-	if err != nil {
-		s.Error("Failed to list all my drive files: ", err)
-	} else {
-		s.Logf("Attempting to remove %d files older than 1 hour", len(fileList.Files))
-		for _, i := range fileList.Files {
-			if err := f.APIClient.RemoveFileByID(ctx, i.Id); err != nil {
-				s.Logf("Failed to remove file %q (%s): %v", i.Name, i.Id, err)
-			} else {
-				s.Logf("Successfully removed file %q (%s, %s)", i.Name, i.Id, i.ModifiedTime)
+	if f.APIClient != nil {
+		fileList, err := f.APIClient.ListAllFilesOlderThan(ctx, time.Hour)
+		if err != nil {
+			s.Error("Failed to list all my drive files: ", err)
+		} else {
+			s.Logf("Attempting to remove %d files older than 1 hour", len(fileList.Files))
+			for _, i := range fileList.Files {
+				if err := f.APIClient.RemoveFileByID(ctx, i.Id); err != nil {
+					s.Logf("Failed to remove file %q (%s): %v", i.Name, i.Id, err)
+				} else {
+					s.Logf("Successfully removed file %q (%s, %s)", i.Name, i.Id, i.ModifiedTime)
+				}
 			}
 		}
 	}
