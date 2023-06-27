@@ -6,6 +6,7 @@ package scanapp
 
 import (
 	"context"
+	"path/filepath"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
@@ -13,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/scanapp"
+	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/power/suspend"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -69,12 +71,22 @@ func LongScan(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
+	myFilesPath, err := cryptohome.MyFilesPath(ctx, cr.NormalizedUser())
+	if err != nil {
+		s.Fatal("Failed to retrieve users MyFiles path: ", err)
+	}
+	defaultScanPattern := filepath.Join(myFilesPath, scanapp.DefaultScanFilePattern)
 	// Launch the Scan app, configure the settings, and perform scans.
 	app, err := scanapp.Launch(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to launch app: ", err)
 	}
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_long_scan_app_launch")
+	defer func() {
+		if err := scanapp.RemoveScans(defaultScanPattern); err != nil {
+			s.Error("Failed to remove scans: ", err)
+		}
+	}()
 
 	if err := app.ClickMoreSettings()(ctx); err != nil {
 		s.Fatal("Failed to expand More settings: ", err)
