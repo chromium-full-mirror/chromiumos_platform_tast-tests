@@ -5,14 +5,12 @@
 package vm
 
 import (
-	"bytes"
 	"context"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 )
 
 const (
-	bruschettaVMName  = "bru"
 	fakeContainerName = "penguin"
 )
 
@@ -23,10 +21,16 @@ type BruschettaVM struct {
 
 // Command runs a command in a Bruschetta VM.
 func (bru *BruschettaVM) Command(ctx context.Context, vshArgs ...string) *testexec.Cmd {
-	args := append([]string{"--vm_name=" + bruschettaVMName, "--owner_id=" + bru.VM.Concierge.ownerID, "--target_container=" + fakeContainerName, "--"}, vshArgs...)
-	cmd := testexec.CommandContext(ctx, "vsh", args...)
-	// Add an empty buffer for stdin to force allocating a pipe. vsh uses
-	// epoll internally and generates a warning (EPERM) if stdin is /dev/null.
-	cmd.Stdin = &bytes.Buffer{}
-	return cmd
+	return containerCommand(ctx, bru.VM.Name(), fakeContainerName, bru.VM.Concierge.GetOwnerID(), vshArgs...)
+}
+
+// ReadFile reads the content of file using command cat and returns it as a string.
+func (bru *BruschettaVM) ReadFile(ctx context.Context, filePath string) (content string, err error) {
+	return readFile(ctx, bru, filePath)
+}
+
+// CheckFileContent checks that the content of the specified file equals to the given string.
+// Returns error if fail to read content or the contest does not equal to the given string.
+func (bru *BruschettaVM) CheckFileContent(ctx context.Context, filePath, testString string) error {
+	return checkFileContent(ctx, bru, filePath, testString)
 }

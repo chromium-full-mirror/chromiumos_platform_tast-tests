@@ -5,7 +5,6 @@
 package vm
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -523,14 +522,7 @@ func (c *Container) GetFileList(ctx context.Context, path string) (fileList []st
 // CheckFileContent checks that the content of the specified file equals to the given string.
 // Returns error if fail to read content or the contest does not equal to the given string.
 func (c *Container) CheckFileContent(ctx context.Context, filePath, testString string) error {
-	content, err := c.ReadFile(ctx, filePath)
-	if err != nil {
-		return errors.Wrapf(err, "failed to cat the result %s", filePath)
-	}
-	if content != testString {
-		return errors.Wrapf(err, "want %s, got %q", testString, content)
-	}
-	return nil
+	return checkFileContent(ctx, c, filePath, testString)
 }
 
 // WriteFile creates a file in the container using echo.
@@ -551,13 +543,7 @@ func (c *Container) RemoveAll(ctx context.Context, path string) error {
 
 // ReadFile reads the content of file using command cat and returns it as a string.
 func (c *Container) ReadFile(ctx context.Context, filePath string) (content string, err error) {
-	cmd := c.Command(ctx, "cat", filePath)
-	result, err := cmd.Output()
-	if err != nil {
-		return "", errors.Wrapf(err, "failed to cat the content of %s", filePath)
-	}
-
-	return string(result), nil
+	return readFile(ctx, c, filePath)
 }
 
 // Cleanup removes all the files under the specific path.
@@ -825,21 +811,6 @@ func (c *Container) CheckSnapshot(ctx context.Context, snapshotName string) (boo
 	}
 
 	return false, nil
-}
-
-// containerCommand returns a testexec.Cmd with a vsh command that will run in
-// the specified container.
-func containerCommand(ctx context.Context, vmName, containerName, ownerID string, vshArgs ...string) *testexec.Cmd {
-	args := append([]string{"--vm_name=" + vmName,
-		"--target_container=" + containerName,
-		"--owner_id=" + ownerID,
-		"--"},
-		vshArgs...)
-	cmd := testexec.CommandContext(ctx, "vsh", args...)
-	// Add an empty buffer for stdin to force allocating a pipe. vsh uses
-	// epoll internally and generates a warning (EPERM) if stdin is /dev/null.
-	cmd.Stdin = &bytes.Buffer{}
-	return cmd
 }
 
 // DefaultContainerCommand returns a testexec.Cmd with a vsh command that will run in

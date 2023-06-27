@@ -6,12 +6,10 @@ package crostini
 
 import (
 	"context"
-	"fmt"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/testexec"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/crostini"
+	"go.chromium.org/tast-tests/cros/local/guestos"
 	"go.chromium.org/tast-tests/cros/local/terminalapp"
 	"go.chromium.org/tast/core/testing"
 )
@@ -69,36 +67,7 @@ func CommandVim(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open Terminal app: ", err)
 	}
 
-	// Check that vim is preinstalled.
-	if err := cont.Command(ctx, "vim", "--version").Run(testexec.DumpLogOnError); err != nil {
-		s.Fatal("Failed to execute vim")
-	}
-
-	const (
-		testFile   = "test.txt"
-		testString = "This is a test string."
-	)
-
-	if err := uiauto.Combine("create a file with vim",
-		// Open file through running command vim filename in Terminal.
-		terminalApp.RunCommand(keyboard, fmt.Sprintf("vim %s", testFile)),
-		// Type i to enter edit mode.
-		keyboard.TypeAction("i"),
-		// Type test string into the new file.
-		keyboard.TypeAction(testString),
-		// Press ESC to exit edit mode.
-		keyboard.TypeAction(string('\x1b')),
-		// Type :x to save.
-		keyboard.TypeAction(":x"),
-		// Press Enter.
-		keyboard.AccelAction("Enter"),
-		// Wait for vim to exit
-		terminalApp.WaitForPrompt())(ctx); err != nil {
-		s.Fatal("Failed to create file with vim in Terminal: ", err)
-	}
-
-	// Check the content of the test file.
-	if err := cont.CheckFileContent(ctx, testFile, testString+"\n"); err != nil {
-		s.Fatal("The content of the file is wrong: ", err)
+	if err := guestos.CommandVim(ctx, terminalApp, keyboard, cont); err != nil {
+		s.Fatal("Vim test failed: ", err)
 	}
 }
