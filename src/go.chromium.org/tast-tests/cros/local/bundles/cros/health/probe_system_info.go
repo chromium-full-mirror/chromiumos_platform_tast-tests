@@ -53,6 +53,7 @@ func init() {
 			Val: psrInfoTestParams{
 				checkPsr: true,
 			},
+			ExtraSoftwareDeps: []string{"intel_psr"},
 		}},
 	})
 }
