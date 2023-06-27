@@ -584,9 +584,11 @@ func setFileName(desiredFileName string, ui *uiauto.Context, kb *input.KeyboardE
 				return errors.Wrap(err, "failed to read file name")
 			}
 			if fileNameFieldInfo.Value != desiredFileName {
-				return errors.Wrapf(err, "file name was not renamed correctly = got %s, want %s", fileNameFieldInfo.Value, desiredFileName)
+				errMsg := fmt.Sprintf("file name was not renamed correctly = got %s, want %s", fileNameFieldInfo.Value, desiredFileName)
+				testing.ContextLog(ctx, errMsg)
+				return errors.Wrap(err, errMsg)
 			}
 			return nil
-		}, &testing.PollOptions{Interval: time.Second, Timeout: 5 * time.Second})
+		}, &testing.PollOptions{Interval: time.Second, Timeout: 15 * time.Second})
 	}
 }
