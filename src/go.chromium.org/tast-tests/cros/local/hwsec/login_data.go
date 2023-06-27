@@ -10,9 +10,11 @@ import (
 	"os"
 	"path"
 	"strings"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -73,7 +75,10 @@ func SaveLoginData(ctx context.Context, daemonController *hwsec.DaemonController
 	if err := stopHwsecDaemons(ctx, daemonController, includeTpm); err != nil {
 		return err
 	}
-	defer ensureHwsecDaemons(ctx, daemonController, includeTpm)
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 20*time.Second)
+	defer cancel()
+	defer ensureHwsecDaemons(cleanupCtx, daemonController, includeTpm)
 
 	paths := []string{
 		"/home/.shadow",
@@ -117,7 +122,10 @@ func LoadLoginData(ctx context.Context, daemonController *hwsec.DaemonController
 	if err := stopHwsecDaemons(ctx, daemonController, includeTpm); err != nil {
 		return err
 	}
-	defer ensureHwsecDaemons(ctx, daemonController, includeTpm)
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 20*time.Second)
+	defer cancel()
+	defer ensureHwsecDaemons(cleanupCtx, daemonController, includeTpm)
 
 	// Remove the `/home/.shadow` first to prevent any unexpected file remaining.
 	if err := os.RemoveAll("/home/.shadow"); err != nil {
