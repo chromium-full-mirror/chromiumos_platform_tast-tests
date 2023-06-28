@@ -201,6 +201,7 @@ func (b *BluetoothFlossFacade) assertEnabled() error {
 
 // Reset resets the default adapter and turns it back on if powerOn is true.
 func (b *BluetoothFlossFacade) Reset(ctx context.Context, powerOn bool) error {
+	testing.ContextLog(ctx, "Starting reset of floss bluetooth adapter state")
 	if err := b.assertEnabled(); err != nil {
 		return err
 	}
@@ -211,36 +212,72 @@ func (b *BluetoothFlossFacade) Reset(ctx context.Context, powerOn bool) error {
 		return errors.Wrap(err, "failed to check if bluetooth is powered on")
 	}
 	if !powered {
+		testing.ContextLog(ctx, "Powering on floss adapter")
 		if err := b.SetPowered(ctx, true); err != nil {
 			return errors.Wrap(err, "failed to turn on bluetooth")
 		}
 	}
-	deviceAddresses, err := b.Devices(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to fetch bonded devices")
-	}
-	for _, address := range deviceAddresses {
-		if err := b.RemoveDevice(ctx, address); err != nil {
-			return errors.Wrapf(err, "failed to remove bonded device with address %q", address)
-		}
-	}
 	if b.discoveryObserver != nil {
+		testing.ContextLog(ctx, "Closing preexisting discovery observer")
 		if err := b.discoveryObserver.Close(ctx); err != nil {
 			return err
 		}
 		b.discoveryObserver = nil
 	}
+	testing.ContextLog(ctx, "Checking for known devices")
+	deviceAddresses, err := b.Devices(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to fetch bonded devices")
+	}
+	testing.ContextLogf(ctx, "Found %d known devices", len(deviceAddresses))
+	removedDevices := false
+	for _, address := range deviceAddresses {
+		testing.ContextLogf(ctx, "Removing device with address %q", address)
+		if err := b.RemoveDevice(ctx, address); err != nil {
+			return errors.Wrapf(err, "failed to remove bonded device with address %q", address)
+		}
+		removedDevices = true
+	}
+	if removedDevices {
+		deviceAddresses, err = b.Devices(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to fetch bonded devices")
+		}
+		if len(deviceAddresses) != 0 {
+			return errors.Errorf("failed to remove all known devices, still found %d known devices after removal", len(deviceAddresses))
+		}
+		testing.ContextLog(ctx, "All known devices have been removed")
+	}
 
 	// Turn bluetooth off, then turn it back on if desired.
+	// An additional power cycle is added if devices were removed to validate
+	// their removal.
+	testing.ContextLog(ctx, "Powering off floss adapter")
 	if err := b.SetPowered(ctx, false); err != nil {
 		return errors.Wrap(err, "failed to turn off bluetooth")
 	}
-	if powerOn {
+	if powerOn || removedDevices {
+		testing.ContextLog(ctx, "Powering on floss adapter")
 		if err := b.SetPowered(ctx, true); err != nil {
 			return errors.Wrap(err, "failed to turn on bluetooth")
 		}
+		testing.ContextLog(ctx, "Validating that floss adapter still does not have any known devices after power cycle")
+		deviceAddresses, err = b.Devices(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to fetch bonded devices")
+		}
+		if len(deviceAddresses) != 0 {
+			return errors.Errorf("found %d known devices after power cycle", len(deviceAddresses))
+		}
+		testing.ContextLog(ctx, "No known devices found")
+		if !powerOn {
+			testing.ContextLog(ctx, "Powering off floss adapter")
+			if err := b.SetPowered(ctx, false); err != nil {
+				return errors.Wrap(err, "failed to turn off bluetooth")
+			}
+		}
 	}
-
+	testing.ContextLog(ctx, "Completed reset of floss bluetooth adapter state")
 	return nil
 }
 
