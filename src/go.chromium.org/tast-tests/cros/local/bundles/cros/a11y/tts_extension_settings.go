@@ -78,7 +78,7 @@ func TTSExtensionSettings(ctx context.Context, s *testing.State) {
 		settingsWindowTitle string
 		openSettings        func(ctx context.Context, ui *uiauto.Context) error
 	}{{
-		settingsWindowTitle: "ChromeVox Options",
+		settingsWindowTitle: "Settings - ChromeVox",
 		openSettings: func(ctx context.Context, ui *uiauto.Context) (retErr error) {
 			return uiauto.Combine("open ChromeVox settings",
 				ui.DoDefault(nodewith.Name("ChromeVox settings").Role(role.Link)),

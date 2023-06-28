@@ -67,7 +67,7 @@ func ChromevoxNumberReadingStyle(ctx context.Context, s *testing.State) {
 		},
 		{
 			chromevox.OpenOptionsPage,
-			[]tts.SpeechExpectation{tts.NewStringExpectation("ChromeVox Options")},
+			[]tts.SpeechExpectation{tts.NewStringExpectation("Settings - ChromeVox")},
 		},
 		{
 			[]string{chromevox.Find},

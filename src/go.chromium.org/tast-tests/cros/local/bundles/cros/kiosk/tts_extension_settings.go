@@ -135,7 +135,7 @@ func TTSExtensionSettings(ctx context.Context, s *testing.State) {
 			ui.DoDefault(nodewith.Name("ChromeVox settings").Role(role.Link)),
 			ui.WaitUntilExists(nodewith.
 				Name("Enable verbose descriptions").
-				Ancestor(nodewith.Name("ChromeVox Options").Role(role.RootWebArea)).
+				Ancestor(nodewith.Name("Settings - ChromeVox").Role(role.RootWebArea)).
 				First())),
 	}, {
 		name: "eSpeak-NG",
