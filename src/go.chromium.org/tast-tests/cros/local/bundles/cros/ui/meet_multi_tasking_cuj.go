@@ -81,7 +81,6 @@ func MeetMultiTaskingCUJ(ctx context.Context, s *testing.State) {
 	const (
 		createConfTimeout   = 30 * time.Second
 		addBotTimeout       = 100 * time.Second
-		docsURL             = "https://docs.google.com/document/d/1NvbdoWF6OrZxenReot5HptK0xvmzK1WKY5TgifoQtko/edit?usp=sharing"
 		docsScrollTimeout   = 30 * time.Second
 		slidesURL           = "https://docs.google.com/presentation/d/1lItrhkgBqXF_bsP-tOqbjcbBFa86--m3DT5cLxegR2k/edit?usp=sharing&resourcekey=0-FmuN4N-UehRS2q4CdQzRXA"
 		slidesScrollTimeout = 30 * time.Second
@@ -270,17 +269,16 @@ func MeetMultiTaskingCUJ(ctx context.Context, s *testing.State) {
 		return nil
 	}
 
-	ensureElementGetsScrolled := func(conn *chrome.Conn, element string) error {
-		return testing.Poll(ctx, func(ctx context.Context) error {
-			var scrollTop int
-			if err := conn.Eval(ctx, fmt.Sprintf("parseInt(%s.scrollTop)", element), &scrollTop); err != nil {
-				return testing.PollBreak(errors.Wrap(err, "failed to get the number of pixels that the scrollbar is scrolled vertically"))
-			}
-			if scrollTop == 0 {
-				return errors.Errorf("%s is not getting scrolled", element)
-			}
-			return nil
-		}, &testing.PollOptions{Interval: time.Second, Timeout: time.Minute})
+	ensureElementGetsScrolled := func(ctx context.Context, conn *chrome.Conn, element string) error {
+		s.Log("Ensure element gets scrolled")
+		var scrollTop int
+		if err := conn.Eval(ctx, fmt.Sprintf("parseInt(%s.scrollTop)", element), &scrollTop); err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to get the number of pixels that the scrollbar is scrolled vertically"))
+		}
+		if scrollTop == 0 {
+			return errors.Errorf("%s is not getting scrolled", element)
+		}
+		return nil
 	}
 
 	pv := perf.NewValues()
@@ -362,6 +360,10 @@ func MeetMultiTaskingCUJ(ctx context.Context, s *testing.State) {
 		// 1. Multi-tasking with Google Docs by opening a large Docs file and scrolling through the file.
 		// ================================================================================
 
+		docsURL, err := cuj.GetTestDocURL(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to get Google Doc URL")
+		}
 		docsConn, err := cs.NewConn(ctx, docsURL, browser.WithNewWindow())
 		if err != nil {
 			return errors.Wrap(err, "failed to open the google docs website")
@@ -396,12 +398,12 @@ func MeetMultiTaskingCUJ(ctx context.Context, s *testing.State) {
 
 		// Scroll down the Docs file.
 		s.Logf("Scrolling down the Google Docs file for %s", docsScrollTimeout)
-		if err := inputsimulations.ScrollDownFor(ctx, tpw, tw, 2*time.Second, docsScrollTimeout); err != nil {
+		if err := inputsimulations.ScrollDownFor(ctx, tpw, tw, 500*time.Millisecond, docsScrollTimeout); err != nil {
 			return err
 		}
 
 		// Ensure the file gets scrolled.
-		if err := ensureElementGetsScrolled(docsConn, "document.getElementsByClassName('kix-appview-editor')[0]"); err != nil {
+		if err := ensureElementGetsScrolled(ctx, docsConn, "document.getElementsByClassName('kix-appview-editor')[0]"); err != nil {
 			return err
 		}
 
@@ -436,7 +438,7 @@ func MeetMultiTaskingCUJ(ctx context.Context, s *testing.State) {
 		}
 
 		// Ensure the slides deck gets scrolled.
-		if err := ensureElementGetsScrolled(slidesConn, "document.getElementsByClassName('punch-filmstrip-scroll')[0]"); err != nil {
+		if err := ensureElementGetsScrolled(ctx, slidesConn, "document.getElementsByClassName('punch-filmstrip-scroll')[0]"); err != nil {
 			return err
 		}
 
