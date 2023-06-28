@@ -81,4 +81,25 @@ func addDevAndroidFixtures() {
 		PreTestTimeout:  resetTimeout,
 		PostTestTimeout: postTestTimeout,
 	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:   "nearbyShareDataUsageOfflineSelfShareDev",
+		Desc:   "Nearby Share enabled on CrOS and Android configured with 'Data Usage' set to 'Offline' and 'Visibility' set to 'All Contacts'. Each DUT is signed in to the same real GAIA account.",
+		Parent: "nearbyShareGAIALoginAndroidAccountDev",
+		Impl: NewNearbyShareFixture(fixtureOptions{
+			crosDataUsage:              nearbycommon.DataUsageOffline,
+			crosVisibility:             nearbycommon.VisibilityAllContacts,
+			androidDataUsage:           nearbysnippet.NearbySharingDataUsage_DATA_USAGE_OFFLINE,
+			androidVisibility:          nearbysnippet.NearbySharingVisibility_VISIBILITY_ALL_CONTACTS,
+			crosSelectAndroidAsContact: false,
+		}),
+		Contacts: []string{
+			"chromeos-sw-engprod@google.com",
+		},
+		SetUpTimeout:    3*time.Minute + crossdevice.BugReportDuration,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  resetTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
 }
