@@ -87,8 +87,11 @@ func HdmiAdapterSuspendResume(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	const cSwitchOFF = "0"
-	// cswitch port ID.
-	cSwitchON := s.RequiredVar("intel.cSwitchPort")
+	// The Type-C HDMI is connected to C-Switch in P1 as per the intel_cswitch_set1 suite setup.
+	cswitchVar := "1"
+	if cswitchON, ok := s.Var("intel.cSwitchPort"); ok {
+		cswitchVar = cswitchON
+	}
 	// IP address of Tqc server hosting device.
 	domainIP := s.RequiredVar("intel.domainIP")
 
@@ -98,7 +101,7 @@ func HdmiAdapterSuspendResume(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create session: ", err)
 	}
 
-	if err := cswitch.ToggleCSwitchPort(ctx, sessionID, cSwitchON, domainIP); err != nil {
+	if err := cswitch.ToggleCSwitchPort(ctx, sessionID, cswitchVar, domainIP); err != nil {
 		s.Fatal("Failed to enable c-switch port: ", err)
 	}
 
@@ -151,7 +154,7 @@ func HdmiAdapterSuspendResume(ctx context.Context, s *testing.State) {
 	}
 
 	if err := assertSLPCounter(ctx, slpOpSetPre); err != nil {
-		s.Fatal("Asserting SLP Counter: ", err)
+		s.Fatal("Failed asserting SLP Counter: ", err)
 	}
 
 	if err := assertPackageCStates(ctx, pkgOpSetPre); err != nil {

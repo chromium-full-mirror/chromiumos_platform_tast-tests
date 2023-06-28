@@ -57,8 +57,11 @@ func HotplugUSBHeadsetAudioPlayback(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(*chrome.Chrome)
 	// Config file which contains expected values of USB4/TBT parameters.
 	const testConfig = "test_config.json"
-	// cswitch port ID.
-	cSwitchON := s.RequiredVar("typec.cSwitchPort")
+	// The Type-C Headset is connected to C-Switch in P3 as per the intel_cswitch_set1 suite setup.
+	cswitchVar := "3"
+	if cswitchON, ok := s.Var("typec.cSwitchPort"); ok {
+		cswitchVar = cswitchON
+	}
 	// IP address of Tqc server hosting device.
 	domainIP := s.RequiredVar("typec.domainIP")
 
@@ -99,7 +102,7 @@ func HotplugUSBHeadsetAudioPlayback(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	if err := cswitch.ToggleCSwitchPort(ctx, sessionID, cSwitchON, domainIP); err != nil {
+	if err := cswitch.ToggleCSwitchPort(ctx, sessionID, cswitchVar, domainIP); err != nil {
 		s.Fatal("Failed to enable c-switch port: ", err)
 	}
 
@@ -126,8 +129,6 @@ func HotplugUSBHeadsetAudioPlayback(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get DUT volume info before volume down: ", err)
 	}
 
-	const usbType = "USB"
-
 	cras, err := audio.NewCras(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to cras: ", err)
@@ -138,13 +139,14 @@ func HotplugUSBHeadsetAudioPlayback(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get an audio output device from cras: ", err)
 	}
 
-	if usbType != deviceType {
-		s.Fatalf("Failed to verify the type of the audio output device: got %q; want %q", deviceType, usbType)
+	const expectedUSBType = "USB"
+	if expectedUSBType != deviceType {
+		s.Fatalf("Failed to verify the type of the audio output device: got %q; want %q", deviceType, expectedUSBType)
 	}
 
-	devName := strings.Split(deviceName, ":")
+	devName := strings.Split(deviceName, ":")[0]
 
-	if err := usbHeadsetEvents(ctx, s.DataPath(usbVolumeDownFile), devName[0]); err != nil {
+	if err := usbHeadsetEvents(ctx, s.DataPath(usbVolumeDownFile), devName); err != nil {
 		s.Fatal("Failed to perform volume-down with USB headset volumeDown button: ", err)
 	}
 
@@ -157,7 +159,7 @@ func HotplugUSBHeadsetAudioPlayback(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to volume down with USB headset button press")
 	}
 
-	if err := usbHeadsetEvents(ctx, s.DataPath(usbVolumeUpFile), devName[0]); err != nil {
+	if err := usbHeadsetEvents(ctx, s.DataPath(usbVolumeUpFile), devName); err != nil {
 		s.Fatal("Failed to perform volume-up with USB headset volumeUp button: ", err)
 	}
 

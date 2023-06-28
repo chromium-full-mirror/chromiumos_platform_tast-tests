@@ -79,8 +79,11 @@ func YoutubeStreamHDMIDisplay(ctx context.Context, s *testing.State) {
 		Quality: "1440p60",
 	}
 
-	// cswitch port ID.
-	cSwitchON := s.RequiredVar("ui.cSwitchPort")
+	// The Type-C HDMI is connected to C-Switch in P1 as per the intel_cswitch_set1 suite setup.
+	cswitchVar := "1"
+	if cswitchON, ok := s.Var("ui.cSwitchPort"); ok {
+		cswitchVar = cswitchON
+	}
 	// IP address of Tqc server hosting device.
 	domainIP := s.RequiredVar("ui.domainIP")
 
@@ -90,7 +93,7 @@ func YoutubeStreamHDMIDisplay(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create session: ", err)
 	}
 
-	cSwitchOFF := "0"
+	const cSwitchOFF = "0"
 	defer func(ctx context.Context) {
 		if err := cswitch.ToggleCSwitchPort(ctx, sessionID, cSwitchOFF, domainIP); err != nil {
 			s.Fatal("Failed to disable c-switch port: ", err)
@@ -101,7 +104,7 @@ func YoutubeStreamHDMIDisplay(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	if err := cswitch.ToggleCSwitchPort(ctx, sessionID, cSwitchON, domainIP); err != nil {
+	if err := cswitch.ToggleCSwitchPort(ctx, sessionID, cswitchVar, domainIP); err != nil {
 		s.Fatal("Failed to enable c-switch port: ", err)
 	}
 
@@ -109,14 +112,14 @@ func YoutubeStreamHDMIDisplay(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to find the settings app in the available Chrome apps: ", err)
 	}
 
+	if err := typecutils.CheckDisplayInfo(ctx, true, false); err != nil {
+		s.Fatal("Failed to check display info: ", err)
+	}
+
 	cui := uiauto.New(tconn)
 	info, err := display.GetInfo(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to get display info: ", err)
-	}
-
-	if err := typecutils.CheckDisplayInfo(ctx, true, false); err != nil {
-		s.Fatal("Failed to check display info: ", err)
 	}
 
 	if err := typecutils.SetDisplayResolution(ctx, tconn, &info[1], 3840, 2160, cr); err != nil {

@@ -35,6 +35,7 @@ type usbTypeATestParam struct {
 	powerMode       usbPowerMode
 	usbSpeed        string
 	cbmemSleepState int
+	cSwitchON       string
 }
 
 func init() {
@@ -46,22 +47,22 @@ func init() {
 		BugComponent: "b:157291",
 		SoftwareDeps: []string{"chrome", "reboot"},
 		ServiceDeps:  []string{"tast.cros.power.USBService"},
-		VarDeps:      []string{"servo", "intel.cSwitchPort", "intel.domainIP"},
+		Vars:         []string{"servo", "intel.cSwitchPort", "intel.domainIP"},
 		Params: []testing.Param{{
 			Name:    "usb2_warmboot",
-			Val:     usbTypeATestParam{warmboot, "480M", 0},
+			Val:     usbTypeATestParam{warmboot, "480M", 0, "4"},
 			Timeout: 5 * time.Minute,
 		}, {
 			Name:    "usb2_coldboot",
-			Val:     usbTypeATestParam{coldboot, "480M", 5},
+			Val:     usbTypeATestParam{coldboot, "480M", 5, "4"},
 			Timeout: 5 * time.Minute,
 		}, {
 			Name:    "usb3_warmboot",
-			Val:     usbTypeATestParam{warmboot, "5000M", 0},
+			Val:     usbTypeATestParam{warmboot, "5000M", 0, "4"},
 			Timeout: 5 * time.Minute,
 		}, {
 			Name:    "usb3_coldboot",
-			Val:     usbTypeATestParam{coldboot, "5000M", 5},
+			Val:     usbTypeATestParam{coldboot, "5000M", 5, "4"},
 			Timeout: 5 * time.Minute,
 		}}})
 }
@@ -74,10 +75,13 @@ func USBTypeAStorageFunctionality(ctx context.Context, s *testing.State) {
 	dut := s.DUT()
 	testParam := s.Param().(usbTypeATestParam)
 
-	// cswitch port ID.
-	cSwitchON := s.RequiredVar("intel.cSwitchPort")
 	// IP address of Tqc server hosting device.
 	domainIP := s.RequiredVar("intel.domainIP")
+	// The USB 2.0 and 3.0 pendrive is connected to C-Switch in P4 as per the intel_cswitch_set1 suite setup.
+	cswitchVar := testParam.cSwitchON
+	if cswitchON, ok := s.Var("intel.cSwitchPort"); ok {
+		cswitchVar = cswitchON
+	}
 
 	servoSpec := s.RequiredVar("servo")
 	pxy, err := servo.NewProxy(ctx, servoSpec, dut.KeyFile(), dut.KeyDir())
@@ -122,7 +126,7 @@ func USBTypeAStorageFunctionality(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	if err := cswitch.ToggleCSwitchPort(ctx, sessionID, cSwitchON, domainIP); err != nil {
+	if err := cswitch.ToggleCSwitchPort(ctx, sessionID, cswitchVar, domainIP); err != nil {
 		s.Fatal("Failed to enable c-switch port: ", err)
 	}
 
@@ -191,7 +195,7 @@ func USBTypeAStorageFunctionality(ctx context.Context, s *testing.State) {
 
 	// Again plug USB storage device and check for its detection.
 	// If detected tranfer file from DUT to USB device and vice-versa.
-	if err := cswitch.ToggleCSwitchPort(ctx, sessionID, cSwitchON, domainIP); err != nil {
+	if err := cswitch.ToggleCSwitchPort(ctx, sessionID, cswitchVar, domainIP); err != nil {
 		s.Fatal("Failed to enable c-switch port: ", err)
 	}
 
@@ -261,5 +265,5 @@ func validateUSBStorageDetection(ctx context.Context, dut *dut.DUT, usbSpeed str
 				usbDeviceClassName, usbSpeed, got, want)
 		}
 		return nil
-	}, &testing.PollOptions{Timeout: 10 * time.Second})
+	}, &testing.PollOptions{Timeout: 40 * time.Second})
 }

@@ -23,13 +23,14 @@ import (
 type displayTestParams struct {
 	tabletMode    bool
 	displayInfoRe map[string]*regexp.Regexp
+	cswitchPort   string
 }
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: DisplayDetection,
-                LacrosStatus: testing.LacrosVariantUnneeded,
-                Desc: "Verifies external display detection",
+		Func:         DisplayDetection,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Verifies external display detection",
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
@@ -45,6 +46,8 @@ func init() {
 			Fixture: "chromeLoggedIn",
 			Val: displayTestParams{
 				tabletMode: false,
+				// The Type-C DP is connected to C-Switch in P2 as per the intel_cswitch_set1 suite setup.
+				cswitchPort: "2",
 				displayInfoRe: map[string]*regexp.Regexp{
 					"connectorInfoPtrns": regexp.MustCompile(`.*: connectors:\n.\s+\[CONNECTOR:\d+:[DP]+.*`),
 					"connectedPtrns":     regexp.MustCompile(`\[CONNECTOR:\d+:DP.*status: connected`),
@@ -57,6 +60,8 @@ func init() {
 			Fixture: "chromeLoggedIn",
 			Val: displayTestParams{
 				tabletMode: true,
+				// The Type-C DP is connected to C-Switch in P2 as per the intel_cswitch_set1 suite setup.
+				cswitchPort: "2",
 				displayInfoRe: map[string]*regexp.Regexp{
 					"connectorInfoPtrns": regexp.MustCompile(`.*: connectors:\n.\s+\[CONNECTOR:\d+:[DP]+.*`),
 					"connectedPtrns":     regexp.MustCompile(`\[CONNECTOR:\d+:DP.*status: connected`),
@@ -69,6 +74,8 @@ func init() {
 			Fixture: "chromeLoggedIn",
 			Val: displayTestParams{
 				tabletMode: false,
+				// The Type-C HDMI is connected to C-Switch in P1 as per the intel_cswitch_set1 suite setup.
+				cswitchPort: "1",
 				displayInfoRe: map[string]*regexp.Regexp{
 					"connectorInfoPtrns": regexp.MustCompile(`.*: connectors:\n.\s+\[CONNECTOR:\d+:[HDMI]+.*`),
 					"connectedPtrns":     regexp.MustCompile(`.*DP branch device present.*yes\n.*Type.*HDMI`),
@@ -81,6 +88,8 @@ func init() {
 			Fixture: "chromeLoggedIn",
 			Val: displayTestParams{
 				tabletMode: true,
+				// The Type-C HDMI is connected to C-Switch in P1 as per the intel_cswitch_set1 suite setup.
+				cswitchPort: "1",
 				displayInfoRe: map[string]*regexp.Regexp{
 					"connectorInfoPtrns": regexp.MustCompile(`.*: connectors:\n.\s+\[CONNECTOR:\d+:[HDMI]+.*`),
 					"connectedPtrns":     regexp.MustCompile(`.*DP branch device present.*yes\n.*Type.*HDMI`),
@@ -120,8 +129,11 @@ func DisplayDetection(ctx context.Context, s *testing.State) {
 		defer cleanup(cleanupCtx)
 	}
 
-	// cswitch port ID.
-	cSwitchON := s.RequiredVar("intel.cSwitchPort")
+	cswitchVar := testOpt.cswitchPort
+	if cswitchON, ok := s.Var("intel.cSwitchPort"); ok {
+		cswitchVar = cswitchON
+	}
+
 	// IP address of Tqc server hosting device.
 	domainIP := s.RequiredVar("intel.domainIP")
 
@@ -139,7 +151,7 @@ func DisplayDetection(ctx context.Context, s *testing.State) {
 	for i := 1; i <= iterCount; i++ {
 		s.Logf("Iteration: %d/%d", i, iterCount)
 		s.Log("Plugging external display to DUT")
-		if err := cswitch.ToggleCSwitchPort(ctx, sessionID, cSwitchON, domainIP); err != nil {
+		if err := cswitch.ToggleCSwitchPort(ctx, sessionID, cswitchVar, domainIP); err != nil {
 			s.Fatal("Failed to enable c-switch port: ", err)
 		}
 

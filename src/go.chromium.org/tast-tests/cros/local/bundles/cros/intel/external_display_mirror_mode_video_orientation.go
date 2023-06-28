@@ -52,9 +52,11 @@ func ExternalDisplayMirrorModeVideoOrientation(ctx context.Context, s *testing.S
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
-
-	// cswitch port ID.
-	cSwitchON := s.RequiredVar("intel.cSwitchPort")
+	// The Type-C HDMI is connected to C-Switch in P1 as per the intel_cswitch_set1 suite setup.
+	cswitchVar := "1"
+	if cswitchON, ok := s.Var("intel.cSwitchPort"); ok {
+		cswitchVar = cswitchON
+	}
 	// IP address of Tqc server hosting device.
 	domainIP := s.RequiredVar("intel.domainIP")
 
@@ -65,7 +67,7 @@ func ExternalDisplayMirrorModeVideoOrientation(ctx context.Context, s *testing.S
 	}
 	defer cswitch.CloseSession(cleanupCtx, sessionID, domainIP)
 
-	if err := cswitch.ToggleCSwitchPort(ctx, sessionID, cSwitchON, domainIP); err != nil {
+	if err := cswitch.ToggleCSwitchPort(ctx, sessionID, cswitchVar, domainIP); err != nil {
 		s.Fatal("Failed to enable c-switch port: ", err)
 	}
 	const cSwitchOFF = "0"

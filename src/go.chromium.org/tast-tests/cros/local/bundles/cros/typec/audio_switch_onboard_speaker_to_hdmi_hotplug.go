@@ -84,8 +84,12 @@ func AudioSwitchOnboardSpeakerToHDMIHotplug(ctx context.Context, s *testing.Stat
 
 	// Config file which contains expected values of USB4/TBT parameters.
 	const testConfig = "test_config.json"
-	// cswitch port ID.
-	cSwitchON := s.RequiredVar("typec.cSwitchPort")
+
+	// The Type-C HDMI is connected to C-Switch in P1 as per the intel_cswitch_set1 suite setup.
+	cswitchVar := "1"
+	if cswitchON, ok := s.Var("typec.cSwitchPort"); ok {
+		cswitchVar = cswitchON
+	}
 	// IP address of Tqc server hosting device.
 	domainIP := s.RequiredVar("typec.domainIP")
 
@@ -173,7 +177,7 @@ func AudioSwitchOnboardSpeakerToHDMIHotplug(ctx context.Context, s *testing.Stat
 	iter := s.Param().(int)
 	for i := 1; i <= iter; i++ {
 		s.Logf("Iteration: %d/%d", i, iter)
-		if err := cswitch.ToggleCSwitchPort(ctx, sessionID, cSwitchON, domainIP); err != nil {
+		if err := cswitch.ToggleCSwitchPort(ctx, sessionID, cswitchVar, domainIP); err != nil {
 			s.Fatal("Failed to enable c-switch port: ", err)
 		}
 

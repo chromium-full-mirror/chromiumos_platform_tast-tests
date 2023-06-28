@@ -24,6 +24,7 @@ import (
 type displayFunctionalities struct {
 	isTypecHDMI bool
 	isTypecDP   bool
+	cSwitchON   string
 }
 
 func init() {
@@ -42,12 +43,16 @@ func init() {
 			Name: "hdmi",
 			Val: displayFunctionalities{
 				isTypecHDMI: true,
+				// The Type-C HDMI is connected to C-Switch in P1 as per the intel_cswitch_set1 suite setup.
+				cSwitchON: "1",
 			},
 			Timeout: 5 * time.Minute,
 		}, {
 			Name: "dp",
 			Val: displayFunctionalities{
 				isTypecDP: true,
+				// The Type-C DP is connected to C-Switch in P2 as per the intel_cswitch_set1 suite setup.
+				cSwitchON: "2",
 			},
 			Timeout: 5 * time.Minute,
 		}},
@@ -66,8 +71,10 @@ func ExternalDisplayPlugUnplugVideoPlayback(ctx context.Context, s *testing.Stat
 	// Config file which contains expected values of USB4 parameters.
 	const jsonTestConfig = "test_config.json"
 
-	// cswitch port ID.
-	cSwitchON := s.RequiredVar("typec.cSwitchPort")
+	cswitchVar := testParms.cSwitchON
+	if cswitchON, ok := s.Var("typec.cSwitchPort"); ok {
+		cswitchVar = cswitchON
+	}
 	// IP address of Tqc server hosting device.
 	domainIP := s.RequiredVar("typec.domainIP")
 
@@ -87,7 +94,7 @@ func ExternalDisplayPlugUnplugVideoPlayback(ctx context.Context, s *testing.Stat
 		s.Fatal("Failed to create session: ", err)
 	}
 
-	cSwitchOFF := "0"
+	const cSwitchOFF = "0"
 	defer func(ctx context.Context) {
 		if err := cswitch.ToggleCSwitchPort(ctx, sessionID, cSwitchOFF, domainIP); err != nil {
 			s.Fatal("Failed to disable c-switch port: ", err)
@@ -97,7 +104,7 @@ func ExternalDisplayPlugUnplugVideoPlayback(ctx context.Context, s *testing.Stat
 		}
 	}(cleanupCtx)
 
-	if err := cswitch.ToggleCSwitchPort(ctx, sessionID, cSwitchON, domainIP); err != nil {
+	if err := cswitch.ToggleCSwitchPort(ctx, sessionID, cswitchVar, domainIP); err != nil {
 		s.Fatal("Failed to enable c-switch port: ", err)
 	}
 
