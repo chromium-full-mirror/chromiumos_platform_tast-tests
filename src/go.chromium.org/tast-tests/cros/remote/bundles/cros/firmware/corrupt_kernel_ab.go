@@ -73,7 +73,7 @@ func CorruptKernelAB(ctx context.Context, s *testing.State) {
 		s.Fatal("Creating mode switcher: ", err)
 	}
 
-	kernelBackup, err := h.KernelServiceClient.BackupKernel(ctx, &pb.KernelBackup{BackupRootfs: true})
+	kernelBackup, err := h.KernelServiceClient.BackupKernel(ctx, &pb.KernelBackup{})
 	if err != nil {
 		s.Fatal("Failed to back up KERN-A and KERN-B: ", err)
 	}
@@ -99,8 +99,6 @@ func CorruptKernelAB(ctx context.Context, s *testing.State) {
 		rmargs := []string{
 			kernelBackup.KernA.BackupPath,
 			kernelBackup.KernB.BackupPath,
-			kernelBackup.RootA.BackupPath,
-			kernelBackup.RootB.BackupPath,
 		}
 		if _, err := h.DUT.Conn().CommandContext(ctx, "rm", rmargs...).Output(ssh.DumpLogOnError); err != nil {
 			s.Fatal("Failed to delete backup files: ", err)
