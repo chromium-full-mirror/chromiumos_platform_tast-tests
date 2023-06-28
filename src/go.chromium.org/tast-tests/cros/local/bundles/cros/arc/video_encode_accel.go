@@ -40,18 +40,16 @@ func init() {
 		Params: []testing.Param{{
 			Name: "h264_192p_i420",
 			Val: video.EncodeTestOptions{
-				Profile:     videotype.H264MainProf,
-				Params:      video.Bear192P,
-				PixelFormat: videotype.I420,
+				Profile: videotype.H264MainProf,
+				Params:  video.Bear192P,
 			},
 			ExtraData:         []string{video.Bear192P.Name},
 			ExtraSoftwareDeps: []string{"android_p", caps.HWEncodeH264},
 		}, {
 			Name: "h264_192p_i420_vm",
 			Val: video.EncodeTestOptions{
-				Profile:     videotype.H264MainProf,
-				Params:      video.Bear192P,
-				PixelFormat: videotype.I420,
+				Profile: videotype.H264MainProf,
+				Params:  video.Bear192P,
 			},
 			ExtraData:         []string{video.Bear192P.Name},
 			ExtraSoftwareDeps: []string{"android_vm", caps.HWEncodeH264},
@@ -59,60 +57,59 @@ func init() {
 		}, {
 			Name: "h264_360p_i420",
 			Val: video.EncodeTestOptions{
-				Profile:     videotype.H264MainProf,
-				Params:      video.Tulip360P,
-				PixelFormat: videotype.I420},
+				Profile: videotype.H264MainProf,
+				Params:  video.Tulip360P,
+			},
 			ExtraData:         []string{video.Tulip360P.Name},
 			ExtraSoftwareDeps: []string{"android_p", caps.HWEncodeH264},
 		}, {
 			Name: "h264_360p_i420_vm",
 			Val: video.EncodeTestOptions{
-				Profile:     videotype.H264MainProf,
-				Params:      video.Tulip360P,
-				PixelFormat: videotype.I420},
+				Profile: videotype.H264MainProf,
+				Params:  video.Tulip360P,
+			},
 			ExtraData:         []string{video.Tulip360P.Name},
 			ExtraSoftwareDeps: []string{"android_vm", caps.HWEncodeH264},
 			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform(video.EncoderBlocklistVM...)),
 		}, {
 			Name: "h264_720p_i420",
 			Val: video.EncodeTestOptions{
-				Profile:     videotype.H264MainProf,
-				Params:      video.Tulip720P,
-				PixelFormat: videotype.I420},
+				Profile: videotype.H264MainProf,
+				Params:  video.Tulip720P,
+			},
 			ExtraData:         []string{video.Tulip720P.Name},
 			ExtraSoftwareDeps: []string{"android_p", caps.HWEncodeH264},
 		}, {
 			Name: "h264_720p_i420_vm",
 			Val: video.EncodeTestOptions{
-				Profile:     videotype.H264MainProf,
-				Params:      video.Tulip720P,
-				PixelFormat: videotype.I420},
+				Profile: videotype.H264MainProf,
+				Params:  video.Tulip720P,
+			},
 			ExtraData:         []string{video.Tulip720P.Name},
 			ExtraSoftwareDeps: []string{"android_vm", caps.HWEncodeH264},
 			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform(video.EncoderBlocklistVM...)),
 		}, {
 			Name: "h264_1080p_i420",
 			Val: video.EncodeTestOptions{
-				Profile:     videotype.H264MainProf,
-				Params:      video.Crowd1080P,
-				PixelFormat: videotype.I420},
+				Profile: videotype.H264MainProf,
+				Params:  video.Crowd1080P,
+			},
 			ExtraData:         []string{video.Crowd1080P.Name},
 			ExtraSoftwareDeps: []string{"android_p", caps.HWEncodeH264},
 		}, {
 			Name: "h264_1080p_i420_vm",
 			Val: video.EncodeTestOptions{
-				Profile:     videotype.H264MainProf,
-				Params:      video.Crowd1080P,
-				PixelFormat: videotype.I420},
+				Profile: videotype.H264MainProf,
+				Params:  video.Crowd1080P,
+			},
 			ExtraData:         []string{video.Crowd1080P.Name},
 			ExtraSoftwareDeps: []string{"android_vm", caps.HWEncodeH264},
 			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform(video.EncoderBlocklistVM...)),
 		}, {
 			Name: "vp8_192p_i420_vm",
 			Val: video.EncodeTestOptions{
-				Profile:     videotype.VP8Prof,
-				Params:      video.Bear192P,
-				PixelFormat: videotype.I420,
+				Profile: videotype.VP8Prof,
+				Params:  video.Bear192P,
 			},
 			ExtraData:         []string{video.Bear192P.Name},
 			ExtraSoftwareDeps: []string{"android_vm", caps.HWEncodeVP8},
@@ -122,9 +119,9 @@ func init() {
 		}, {
 			Name: "vp8_360p_i420_vm",
 			Val: video.EncodeTestOptions{
-				Profile:     videotype.VP8Prof,
-				Params:      video.Tulip360P,
-				PixelFormat: videotype.I420},
+				Profile: videotype.VP8Prof,
+				Params:  video.Tulip360P,
+			},
 			ExtraData:         []string{video.Tulip360P.Name},
 			ExtraSoftwareDeps: []string{"android_vm", caps.HWEncodeVP8},
 			ExtraHardwareDeps: hwdep.D(
@@ -133,9 +130,9 @@ func init() {
 		}, {
 			Name: "vp8_720p_i420_vm",
 			Val: video.EncodeTestOptions{
-				Profile:     videotype.VP8Prof,
-				Params:      video.Tulip720P,
-				PixelFormat: videotype.I420},
+				Profile: videotype.VP8Prof,
+				Params:  video.Tulip720P,
+			},
 			ExtraData:         []string{video.Tulip720P.Name},
 			ExtraSoftwareDeps: []string{"android_vm", caps.HWEncodeVP8},
 			ExtraHardwareDeps: hwdep.D(
@@ -144,9 +141,9 @@ func init() {
 		}, {
 			Name: "vp8_1080p_i420_vm",
 			Val: video.EncodeTestOptions{
-				Profile:     videotype.VP8Prof,
-				Params:      video.Crowd1080P,
-				PixelFormat: videotype.I420},
+				Profile: videotype.VP8Prof,
+				Params:  video.Crowd1080P,
+			},
 			ExtraData:         []string{video.Crowd1080P.Name},
 			ExtraSoftwareDeps: []string{"android_vm", caps.HWEncodeVP8},
 			ExtraHardwareDeps: hwdep.D(
@@ -155,9 +152,8 @@ func init() {
 		}, {
 			Name: "vp9_192p_i420_vm",
 			Val: video.EncodeTestOptions{
-				Profile:     videotype.VP9Prof,
-				Params:      video.Bear192P,
-				PixelFormat: videotype.I420,
+				Profile: videotype.VP9Prof,
+				Params:  video.Bear192P,
 			},
 			ExtraData:         []string{video.Bear192P.Name},
 			ExtraSoftwareDeps: []string{"android_vm", caps.HWEncodeVP9},
@@ -167,9 +163,9 @@ func init() {
 		}, {
 			Name: "vp9_360p_i420_vm",
 			Val: video.EncodeTestOptions{
-				Profile:     videotype.VP9Prof,
-				Params:      video.Tulip360P,
-				PixelFormat: videotype.I420},
+				Profile: videotype.VP9Prof,
+				Params:  video.Tulip360P,
+			},
 			ExtraData:         []string{video.Tulip360P.Name},
 			ExtraSoftwareDeps: []string{"android_vm", caps.HWEncodeVP9},
 			ExtraHardwareDeps: hwdep.D(
@@ -178,9 +174,9 @@ func init() {
 		}, {
 			Name: "vp9_720p_i420_vm",
 			Val: video.EncodeTestOptions{
-				Profile:     videotype.VP9Prof,
-				Params:      video.Tulip720P,
-				PixelFormat: videotype.I420},
+				Profile: videotype.VP9Prof,
+				Params:  video.Tulip720P,
+			},
 			ExtraData:         []string{video.Tulip720P.Name},
 			ExtraSoftwareDeps: []string{"android_vm", caps.HWEncodeVP9},
 			ExtraHardwareDeps: hwdep.D(
@@ -189,9 +185,9 @@ func init() {
 		}, {
 			Name: "vp9_1080p_i420_vm",
 			Val: video.EncodeTestOptions{
-				Profile:     videotype.VP9Prof,
-				Params:      video.Crowd1080P,
-				PixelFormat: videotype.I420},
+				Profile: videotype.VP9Prof,
+				Params:  video.Crowd1080P,
+			},
 			ExtraData:         []string{video.Crowd1080P.Name},
 			ExtraSoftwareDeps: []string{"android_vm", caps.HWEncodeVP9},
 			ExtraHardwareDeps: hwdep.D(

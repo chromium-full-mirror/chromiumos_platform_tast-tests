@@ -21,7 +21,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/media/videotype"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -55,7 +54,6 @@ func init() {
 				Val: video.EncodeTestOptions{
 					Profile:              videotype.H264MainProf,
 					Params:               video.Crowd1080P,
-					PixelFormat:          videotype.I420,
 					BatteryDischargeMode: setup.ForceBatteryDischarge,
 				},
 				ExtraData:         []string{video.Crowd1080P.Name},
@@ -68,7 +66,6 @@ func init() {
 				Val: video.EncodeTestOptions{
 					Profile:              videotype.H264MainProf,
 					Params:               video.Crowd1080P,
-					PixelFormat:          videotype.I420,
 					BatteryDischargeMode: setup.ForceBatteryDischarge,
 				},
 				ExtraData:         []string{video.Crowd1080P.Name},
@@ -80,7 +77,6 @@ func init() {
 				Val: video.EncodeTestOptions{
 					Profile:              videotype.H264MainProf,
 					Params:               video.Crowd1080P,
-					PixelFormat:          videotype.I420,
 					BatteryDischargeMode: setup.NoBatteryDischarge,
 				},
 				ExtraData:         []string{video.Crowd1080P.Name},
@@ -93,7 +89,6 @@ func init() {
 				Val: video.EncodeTestOptions{
 					Profile:              videotype.H264MainProf,
 					Params:               video.Crowd1080P,
-					PixelFormat:          videotype.I420,
 					BatteryDischargeMode: setup.NoBatteryDischarge,
 				},
 				ExtraData:         []string{video.Crowd1080P.Name},
@@ -131,7 +126,7 @@ func PowerVideoEncodePerf(ctx context.Context, s *testing.State) {
 	}
 
 	// Extract video to create the raw video stream that will be encoded.
-	rawVideoPath, err := encoding.PrepareYUV(ctx, s.DataPath(opts.Params.Name), opts.PixelFormat, opts.Params.Size)
+	rawVideoPath, err := encoding.DecodeInI420(ctx, s.DataPath(opts.Params.Name))
 	if err != nil {
 		s.Fatal("Failed to prepare YUV file: ", err)
 	}
@@ -178,7 +173,7 @@ func PowerVideoEncodePerf(ctx context.Context, s *testing.State) {
 	// Run video encoder test in loop.
 	encodeOutFile := filepath.Join(arcFilePath, strings.TrimSuffix(opts.Params.Name, ".vp9.webm")+".h264")
 	streamDataArgs := encoding.CreateStreamDataArg(opts.Params, opts.Profile,
-		opts.PixelFormat, arcFilePath+"/"+filepath.Base(rawVideoPath), encodeOutFile)
+		videotype.I420, arcFilePath+"/"+filepath.Base(rawVideoPath), encodeOutFile)
 	testArgs := []string{
 		streamDataArgs,
 		"--run_at_fps",

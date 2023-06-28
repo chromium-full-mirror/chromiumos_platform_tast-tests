@@ -79,8 +79,6 @@ type EncodeTestOptions struct {
 	Profile videotype.CodecProfile
 	// Params contains the test parameters for the e2e video encode test.
 	Params encoding.StreamParams
-	// PixelFormat is the format of the raw input video data.
-	PixelFormat videotype.PixelFormat
 	// EncoderType indicates whether a HW or SW encoder will be used.
 	EncoderType EncoderType
 	// BatteryDischargeMode specifies battery usage during a test.
@@ -121,7 +119,7 @@ func runARCVideoEncoderTest(ctx context.Context, s *testing.State, a *arc.ARC,
 
 	// Prepare video stream.
 	params := opts.Params
-	streamPath, err := encoding.PrepareYUV(ctx, s.DataPath(params.Name), opts.PixelFormat, params.Size)
+	streamPath, err := encoding.DecodeInI420(ctx, s.DataPath(params.Name))
 	if err != nil {
 		s.Fatal("Failed to prepare YUV file: ", err)
 	}
@@ -155,7 +153,7 @@ func runARCVideoEncoderTest(ctx context.Context, s *testing.State, a *arc.ARC,
 	outPath := filepath.Join(arcFilePath, encodeOutFile)
 
 	commonArgs := []string{
-		encoding.CreateStreamDataArg(params, opts.Profile, opts.PixelFormat, arcFilePath+"/"+filepath.Base(streamPath), outPath),
+		encoding.CreateStreamDataArg(params, opts.Profile, videotype.I420, arcFilePath+"/"+filepath.Base(streamPath), outPath),
 	}
 	for _, ba := range bas {
 		if opts.EncoderType == SoftwareEncoder {
@@ -231,7 +229,7 @@ func runARCBinaryWithArgs(ctx context.Context, s *testing.State, a *arc.ARC, com
 		s.Log("Starting CPU measurements")
 		measurements, err := mediacpu.MeasureUsage(ctx, ba.measureDuration)
 		if err != nil {
-			return errors.Wrapf(err, "failed to run (measure CPU and power consumption): %v", err)
+			return errors.Wrap(err, "failed to run (measure CPU and power consumption)")
 		}
 		cpuUsage := measurements["cpu"]
 		// TODO(b/143190876): Don't write value to disk, as this can increase test flakiness.

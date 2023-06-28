@@ -36,9 +36,8 @@ func init() {
 		Params: []testing.Param{{
 			Name: "h264_1080p_i420",
 			Val: video.EncodeTestOptions{
-				Profile:     videotype.H264MainProf,
-				Params:      video.Crowd1080P,
-				PixelFormat: videotype.I420,
+				Profile: videotype.H264MainProf,
+				Params:  video.Crowd1080P,
 			},
 			ExtraAttr:         []string{"group:arc-video", "group:crosbolt", "crosbolt_perbuild"},
 			ExtraData:         []string{video.Crowd1080P.Name},
@@ -48,7 +47,6 @@ func init() {
 			Val: video.EncodeTestOptions{
 				Profile:     videotype.H264MainProf,
 				Params:      video.Crowd1080P,
-				PixelFormat: videotype.I420,
 				EncoderType: video.SoftwareEncoder,
 			},
 			ExtraData:         []string{video.Crowd1080P.Name},
@@ -56,9 +54,8 @@ func init() {
 		}, {
 			Name: "h264_1080p_i420_vm",
 			Val: video.EncodeTestOptions{
-				Profile:     videotype.H264MainProf,
-				Params:      video.Crowd1080P,
-				PixelFormat: videotype.I420,
+				Profile: videotype.H264MainProf,
+				Params:  video.Crowd1080P,
 			},
 			ExtraAttr:         []string{"group:arc-video", "group:crosbolt", "crosbolt_perbuild"},
 			ExtraData:         []string{video.Crowd1080P.Name},
@@ -69,7 +66,6 @@ func init() {
 			Val: video.EncodeTestOptions{
 				Profile:     videotype.H264MainProf,
 				Params:      video.Crowd1080P,
-				PixelFormat: videotype.I420,
 				EncoderType: video.SoftwareEncoder,
 			},
 			ExtraData:         []string{video.Crowd1080P.Name},
@@ -77,9 +73,8 @@ func init() {
 		}, {
 			Name: "vp8_1080p_i420_vm",
 			Val: video.EncodeTestOptions{
-				Profile:     videotype.VP8Prof,
-				Params:      video.Crowd1080P,
-				PixelFormat: videotype.I420,
+				Profile: videotype.VP8Prof,
+				Params:  video.Crowd1080P,
 			},
 			ExtraAttr:         []string{"group:arc-video", "group:crosbolt", "crosbolt_perbuild"},
 			ExtraData:         []string{video.Crowd1080P.Name},
@@ -92,7 +87,6 @@ func init() {
 			Val: video.EncodeTestOptions{
 				Profile:     videotype.VP8Prof,
 				Params:      video.Crowd1080P,
-				PixelFormat: videotype.I420,
 				EncoderType: video.SoftwareEncoder,
 			},
 			ExtraData:         []string{video.Crowd1080P.Name},
@@ -100,9 +94,8 @@ func init() {
 		}, {
 			Name: "vp9_1080p_i420_vm",
 			Val: video.EncodeTestOptions{
-				Profile:     videotype.VP9Prof,
-				Params:      video.Crowd1080P,
-				PixelFormat: videotype.I420,
+				Profile: videotype.VP9Prof,
+				Params:  video.Crowd1080P,
 			},
 			ExtraAttr:         []string{"group:arc-video", "group:crosbolt", "crosbolt_perbuild"},
 			ExtraData:         []string{video.Crowd1080P.Name},
@@ -115,7 +108,6 @@ func init() {
 			Val: video.EncodeTestOptions{
 				Profile:     videotype.VP9Prof,
 				Params:      video.Crowd1080P,
-				PixelFormat: videotype.I420,
 				EncoderType: video.SoftwareEncoder,
 			},
 			ExtraData:         []string{video.Crowd1080P.Name},

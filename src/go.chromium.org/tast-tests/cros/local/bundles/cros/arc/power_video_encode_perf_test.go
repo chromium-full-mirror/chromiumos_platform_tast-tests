@@ -70,7 +70,6 @@ func TestPowerVideoEncodePerfParamsAreGenerated(t *testing.T) {
 				Val: append([]valMember{
 					{"Profile", "videotype.H264MainProf"},
 					{"Params", "video.Crowd1080P"},
-					{"PixelFormat", "videotype.I420"},
 				}, batteryMode.val...),
 				Attr: arcType.attr,
 			}

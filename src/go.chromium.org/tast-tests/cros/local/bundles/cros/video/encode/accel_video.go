@@ -16,7 +16,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/video/videovars"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/gtest"
 	mediacpu "go.chromium.org/tast-tests/cros/local/media/cpu"
@@ -171,8 +170,7 @@ func RunAccelVideoTest(ctx context.Context, s *testing.State, opts TestOptions) 
 	}
 	defer vl.Close()
 
-	yuvPath, err := encoding.PrepareYUV(ctx, s.DataPath(opts.webMName),
-		videotype.I420, coords.NewSize(0, 0) /* placeholder size */)
+	yuvPath, err := encoding.DecodeInI420(ctx, s.DataPath(opts.webMName))
 	if err != nil {
 		s.Fatal("Failed to create a yuv file: ", err)
 	} else if videovars.ShouldRemoveArtifacts(ctx) {
@@ -258,8 +256,7 @@ func RunAccelVideoPerfTest(ctx context.Context, s *testing.State, opts TestOptio
 	}
 	defer cleanUpBenchmark(ctx)
 
-	yuvPath, err := encoding.PrepareYUV(ctx, s.DataPath(opts.webMName),
-		videotype.I420, coords.NewSize(0, 0) /* placeholder size */)
+	yuvPath, err := encoding.DecodeInI420(ctx, s.DataPath(opts.webMName))
 	if err != nil {
 		s.Fatal("Failed to create a yuv file: ", err)
 	} else if videovars.ShouldRemoveArtifacts(ctx) {

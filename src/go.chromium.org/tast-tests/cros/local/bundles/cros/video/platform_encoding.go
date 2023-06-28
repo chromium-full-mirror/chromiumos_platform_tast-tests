@@ -20,7 +20,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/video/videovars"
 	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/media/encoding"
-	"go.chromium.org/tast-tests/cros/local/media/videotype"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/shutil"
@@ -941,7 +940,7 @@ func init() {
 func PlatformEncoding(ctx context.Context, s *testing.State) {
 	testOpt := s.Param().(testParam)
 
-	yuvFile, err := encoding.PrepareYUV(ctx, s.DataPath(testOpt.filename), videotype.I420, coords.NewSize(0, 0) /* placeholder size */)
+	yuvFile, err := encoding.DecodeInI420(ctx, s.DataPath(testOpt.filename))
 	if err != nil {
 		s.Fatal("Failed to prepare YUV file: ", err)
 	} else if videovars.ShouldRemoveArtifacts(ctx) {

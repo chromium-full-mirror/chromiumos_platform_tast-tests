@@ -233,7 +233,7 @@ func RunEncodeTest(ctx context.Context, cs ash.ConnSource, fileSystem http.FileS
 		}
 	}
 
-	yuvFile, err := encoding.PrepareYUV(ctx, videoFile, videotype.I420, coords.NewSize(0, 0) /* placeholder size */)
+	yuvFile, err := encoding.DecodeInI420(ctx, videoFile)
 	if err != nil {
 		return errors.Wrap(err, "failed to prepare YUV file")
 	}
