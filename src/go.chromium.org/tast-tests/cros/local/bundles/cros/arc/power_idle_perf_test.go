@@ -37,6 +37,7 @@ func TestPowerIdlePerfParamsAreGenerated(t *testing.T) {
 		HardwareDeps []string
 		Fixture      string
 		Timeout      string
+		Extended     string
 		Val          []valMember
 	}
 	var params []paramData
@@ -57,11 +58,12 @@ func TestPowerIdlePerfParamsAreGenerated(t *testing.T) {
 		},
 	} {
 		for _, arcType := range []struct {
-			name    string
-			attr    string
-			swdep   string
-			fixture string
-			timeout string
+			name     string
+			attr     string
+			swdep    string
+			fixture  string
+			timeout  string
+			extended string
 		}{
 			{
 				"noarc",
@@ -69,6 +71,7 @@ func TestPowerIdlePerfParamsAreGenerated(t *testing.T) {
 				"arc", // to prevent _noarc tests from running on non-ARC boards
 				"chromeLoggedInDisableSyncNoFwUpdate",
 				"20 * time.Minute",
+				"false",
 			},
 			{
 				"",
@@ -76,6 +79,7 @@ func TestPowerIdlePerfParamsAreGenerated(t *testing.T) {
 				"android_container",
 				"arcBootedRestricted",
 				"20 * time.Minute",
+				"false",
 			},
 			{
 				"vm",
@@ -83,6 +87,7 @@ func TestPowerIdlePerfParamsAreGenerated(t *testing.T) {
 				"android_vm",
 				"arcBootedRestricted",
 				"20 * time.Minute",
+				"false",
 			},
 			{
 				"extended",
@@ -90,6 +95,7 @@ func TestPowerIdlePerfParamsAreGenerated(t *testing.T) {
 				"android_container",
 				"arcBootedRestricted",
 				"75 * time.Minute",
+				"true",
 			},
 			{
 				"vm_extended",
@@ -97,6 +103,7 @@ func TestPowerIdlePerfParamsAreGenerated(t *testing.T) {
 				"android_vm",
 				"arcBootedRestricted",
 				"75 * time.Minute",
+				"true",
 			},
 		} {
 			name := genTestName([]string{arcType.name, batteryMode.name})
@@ -106,6 +113,7 @@ func TestPowerIdlePerfParamsAreGenerated(t *testing.T) {
 				HardwareDeps: []string{batteryMode.hwdep},
 				Fixture:      arcType.fixture,
 				Timeout:      arcType.timeout,
+				Extended:     arcType.extended,
 				Val:          batteryMode.val,
 			}
 			if arcType.attr != "" && batteryMode.name == "" {
@@ -127,9 +135,7 @@ func TestPowerIdlePerfParamsAreGenerated(t *testing.T) {
 		Val: testArgsForPowerIdlePerf{
 			{{ range .Val }}{{ .Key }}: {{ .Value }},
 			{{ end }}
-			{{ if .Timeout }}
-			extendedTest: true,
-			{{ end }}
+			extendedTest: {{ .Extended }},
 		},
 		Fixture: "{{ .Fixture }}",
 		Timeout: {{ .Timeout }},
