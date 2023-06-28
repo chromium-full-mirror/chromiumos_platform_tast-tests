@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -19,7 +20,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/coords"
-	"go.chromium.org/tast-tests/cros/local/personalization"
 	"go.chromium.org/tast-tests/cros/local/uidetection"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -76,20 +76,11 @@ func setSolidWhiteWallpaper(ctx context.Context, tconn *chrome.TestConn, s *test
 	return nil
 }
 
-func setLightMode(ui *uiauto.Context) uiauto.Action {
-	return uiauto.Combine("Enable light mode",
-		personalization.OpenPersonalizationHub(ui),
-		personalization.ToggleLightMode(ui),
-		personalization.ClosePersonalizationHub(ui),
-	)
-}
-
-func setAutoThemeMode(ui *uiauto.Context) uiauto.Action {
-	return uiauto.Combine("Enable auto theme mode",
-		personalization.OpenPersonalizationHub(ui),
-		personalization.ToggleAutoMode(ui),
-		personalization.ClosePersonalizationHub(ui),
-	)
+func setAutoThemeMode(ctx context.Context, tconn *chrome.TestConn, enabled bool) error {
+	if err := tconn.Call(ctx, nil, `tast.promisify(chrome.autotestPrivate.forceAutoThemeMode)`, enabled); err != nil {
+		return errors.Wrap(err, "failed to set auto theme mode setting")
+	}
+	return nil
 }
 
 func BasicDetections(ctx context.Context, s *testing.State) {
@@ -161,24 +152,16 @@ func BasicDetections(ctx context.Context, s *testing.State) {
 	maximizeButton := nodewith.Role(role.Button).ClassName("FrameSizeButton").Name("Maximize")
 
 	// Use light mode and the default wallpaper to minimise icon detection flakiness.
-	if err := setLightMode(ui)(ctx); err != nil {
+	if err := setAutoThemeMode(ctx, tconn, false); err != nil {
 		s.Fatal("Failed to set light mode: ", err)
 	}
-	defer func(cleanupCtx context.Context) {
-		// If Chrome is open, minimise it to make the desktop visible.
-		if err := uiauto.IfSuccessThen(verifyChromeIsShown, ud.LeftClick(chromeIcon))(cleanupCtx); err != nil {
-			s.Fatal("Failed to minimise Chrome: ", err)
-		}
-		if err := setAutoThemeMode(ui)(cleanupCtx); err != nil {
-			s.Fatal("Failed to set auto theme mode: ", err)
-		}
-	}(cleanupCtx)
-
-	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "basic_detections")
+	defer setAutoThemeMode(cleanupCtx, tconn, true)
 
 	if err := setSolidWhiteWallpaper(ctx, tconn, s); err != nil {
 		s.Fatal("Failed to switch to the default wallpaper: ", err)
 	}
+
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "basic_detections")
 
 	// Perform UI interaction to click Chrome logo to open Chrome,
 	// click "Add shortcut", and click "cancel".
@@ -254,4 +237,6 @@ func BasicDetections(ctx context.Context, s *testing.State) {
 	if detectionTime.Before(startTime) {
 		s.Fatal("Timer found that element appeared before it was started")
 	}
+
+	apps.Close(cleanupCtx, tconn, apps.Chrome.ID)
 }
