@@ -429,10 +429,17 @@ func startAccumulatingUtterances(ctx context.Context, conn *chrome.Conn, engineD
 	`, nil)
 	}
 
+	// Google TTS has a built-in member that can be modified to signal that this
+	// is a Tast test. Once window.testUtterances is defined and isTastTest_ is
+	// set to true, Google TTS will begin populating window.testUtterances with
+	// utterance data.
 	return conn.Eval(ctx, `
 	if (!window.testUtterances) {
     window.testUtterances = [];
-    chrome.ttsEngine.onSpeak.addListener((utterance, options) => window.testUtterances.push({utterance: utterance, options: options}));
+  }
+
+  if (!window.engine.isTastTest_) {
+    window.engine.isTastTest_ = true;
   }
 `, nil)
 }
