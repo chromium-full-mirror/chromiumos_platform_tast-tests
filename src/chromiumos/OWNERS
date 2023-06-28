@@ -1,0 +1,14 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+#
+# When making changes, also update PolicyReviewers in the GwsQ config:
+# https://source.corp.google.com/piper///depot/google3/chrome_platform/tast/gerrit.gwsq
+
+# Disallow the use of src/chromiumos in tast-tests
+
+rohitbm@chromium.org
+seewaifu@google.com
+yichiyan@google.com
+abergman@google.com
+asadrieh@google.com
