@@ -23,13 +23,13 @@ enum HAL3CameraTest {
   JEA = 3;
   MODULE = 4;
   PERF = 5;
-  PORTRAIT_MODE = 6;
   PREVIEW = 7;
   RECORDING = 8;
   STILL_CAPTURE = 9;
   STILL_CAPTURE_ZSL = 10;
   STREAM = 11;
   FACE_DETECTION = 12;
+  reserved 6;
 }
 
 message RunTestRequest {

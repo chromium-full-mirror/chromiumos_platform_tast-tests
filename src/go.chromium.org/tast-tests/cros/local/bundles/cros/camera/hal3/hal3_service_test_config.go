@@ -38,21 +38,6 @@ func (gen faceDetectionServiceCfgGenerator) TestConfig(req *cameraboxpb.RunTestR
 	}
 }
 
-// portraitModeServiceCfgGenerator implements |ServiceTestConfigGenerator| and
-// generates |TestConfig| to run portrait mode test.
-type portraitModeServiceCfgGenerator struct {
-}
-
-// TestConfig gets test config for running hal3test for portrait mode.
-func (gen portraitModeServiceCfgGenerator) TestConfig(req *cameraboxpb.RunTestRequest) TestConfig {
-	return TestConfig{
-		GtestFilter:            "Camera3FrameTest/Camera3PortraitModeTest.*",
-		ConnectToCameraService: true,
-		GeneratePerfLog:        false,
-		PortraitModeTestData:   "portrait_4096x3072.jpg",
-	}
-}
-
 // ServiceTestConfigGenerators maps from test type to test config generator for HAL3Service.
 var ServiceTestConfigGenerators = map[cameraboxpb.HAL3CameraTest]ServiceTestConfigGenerator{
 	cameraboxpb.HAL3CameraTest_DEVICE:            defaultServiceCfgGenerator{DeviceTestConfig},
@@ -61,7 +46,6 @@ var ServiceTestConfigGenerators = map[cameraboxpb.HAL3CameraTest]ServiceTestConf
 	cameraboxpb.HAL3CameraTest_JEA:               defaultServiceCfgGenerator{JEATestConfig},
 	cameraboxpb.HAL3CameraTest_MODULE:            defaultServiceCfgGenerator{ModuleTestConfig},
 	cameraboxpb.HAL3CameraTest_PERF:              defaultServiceCfgGenerator{PerfTestConfig},
-	cameraboxpb.HAL3CameraTest_PORTRAIT_MODE:     portraitModeServiceCfgGenerator{},
 	cameraboxpb.HAL3CameraTest_PREVIEW:           defaultServiceCfgGenerator{PreviewTestConfig},
 	cameraboxpb.HAL3CameraTest_RECORDING:         defaultServiceCfgGenerator{RecordingTestConfig},
 	cameraboxpb.HAL3CameraTest_STILL_CAPTURE:     defaultServiceCfgGenerator{StillCaptureTestConfig},
