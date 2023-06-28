@@ -5,12 +5,8 @@
 package gscdevboard
 
 import (
-	"bytes"
 	"context"
-	"regexp"
 	"time"
-
-	"github.com/google/go-tpm/tpm2"
 
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/gscdevboard/utils"
@@ -33,56 +29,23 @@ func init() {
 		Fixture:      fixture.Ti50CcdOpen,
 		Params: []testing.Param{{
 			Name: "spi",
-			Val:  "SPI",
+			Val:  ti50.TpmBusSpi,
 		}, {
 			Name:      "i2c",
-			Val:       "I2C",
+			Val:       ti50.TpmBusI2c,
 			ExtraAttr: []string{"gsc_ot_fpga_cw310"},
 		}},
 	})
 }
 
 func Ti50Tpm(ctx context.Context, s *testing.State) {
-	mode := s.Param().(string)
+	bus := s.Param().(ti50.TpmBus)
 
 	f := s.FixtValue().(*fixture.Value)
 	b := utils.NewDevboardHelper(f.DevBoard(), s)
 	i := ti50.NewCrOSImage(b)
-	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 
-	var strap ti50.GpioStrap
-	var bus ti50.TpmBus
-	switch mode {
-	case "SPI":
-		strap = ti50.TpmSpi
-		bus = ti50.TpmBusSpi
-	case "I2C":
-		strap = ti50.TpmI2c
-		bus = ti50.TpmBusI2c
-	}
-
-	s.Logf("Restarting Ti50 with %s straps", mode)
-	b.GpioApplyStrap(ctx, strap, ti50.CcdSuzyQ, ti50.FfClamshell)
-	th.MustSucceed(b.Reset(ctx), "Reset board")
-	m, err := b.ReadSerialSubmatch(ctx, regexp.MustCompile(`Strap config: .* TPM Bus: ([^;]+);`))
-	if err != nil || string(m[1]) != mode {
-		s.Fatal("Wrong TPM strap")
-	}
-	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
-
-	// Tell Ti50 that the AP came out of reset.  This will cause Ti50 to start responding to
-	// TPM commands.
-	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
-
-	tpmHandle := b.Tpm(ctx, bus)
-	didVid := tpmHandle.ReadRegister(ti50.TpmRegDidVid)
-	if !bytes.Equal(didVid, ti50.TpmDidVidValue) {
-		s.Error("Unexpected TPM DID_VID: ", didVid)
-	}
-
-	if err := tpm2.Startup(tpmHandle, tpm2.StartupClear); err != nil {
-		s.Error("TPM startup error: ", err)
-	}
+	tpmHandle := b.ResetAndTpmStartup(ctx, i, bus, ti50.CcdSuzyQ, ti50.FfClamshell)
 
 	// Read boot mode as a simple check of vendor command.
 	bm, err := tpmHandle.TpmvGetBootMode()

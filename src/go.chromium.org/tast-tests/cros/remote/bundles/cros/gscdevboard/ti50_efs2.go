@@ -79,20 +79,8 @@ func Ti50Efs2(ctx context.Context, s *testing.State) {
 	f := s.FixtValue().(*fixture.Value)
 	b := utils.NewDevboardHelper(f.DevBoard(), s)
 	i := ti50.NewCrOSImage(b)
-	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 
-	s.Log("Restarting ti50 with CCD, SPI, and Clamshell straps")
-	b.GpioApplyStrap(ctx, ti50.CcdSuzyQ, ti50.TpmSpi, ti50.FfClamshell)
-	th.MustSucceed(b.Reset(ctx), "Reset board")
-	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
-
-	s.Log("Simulate AP turning and calling TPM startup to allow TPM commands")
-	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
-
-	tpm := b.Tpm(ctx, ti50.TpmBusSpi)
-	if err := tpm2.Startup(tpm, tpm2.StartupClear); err != nil {
-		s.Fatal("TPM did not startup: ", err)
-	}
+	tpm := b.ResetAndTpmStartup(ctx, i, ti50.TpmBusSpi, ti50.CcdSuzyQ, ti50.FfClamshell)
 
 	// Undefine the space to ensure we are in a good state. Not a failure if doesn't work/
 	tpm2.NVUndefineSpace(tpm, ti50.EmptyPassword, ti50.RootPlatformHandle, ti50.KernelFileID)

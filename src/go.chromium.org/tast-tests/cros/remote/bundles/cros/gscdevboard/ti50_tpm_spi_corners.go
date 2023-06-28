@@ -35,22 +35,7 @@ func Ti50TpmSpiCorners(ctx context.Context, s *testing.State) {
 	f := s.FixtValue().(*fixture.Value)
 	b := utils.NewDevboardHelper(f.DevBoard(), s)
 	i := ti50.NewCrOSImage(b)
-	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
-	tpmHandle := b.Tpm(ctx, ti50.TpmBusSpi)
-
-	b.GpioApplyStrap(ctx, ti50.TpmSpi, ti50.CcdDisconnected, ti50.FfClamshell)
-	th.MustSucceed(b.Reset(ctx), "Reset board")
-	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
-
-	// Turn AP on
-	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
-	testing.Sleep(ctx, time.Second) // GoBigSleepLint: AP on time
-
-	// First, read DIDVID register to make sure that Ti50 is awake.
-	didVid := tpmHandle.ReadRegister(ti50.TpmRegDidVid)
-	if !bytes.Equal(didVid, ti50.TpmDidVidValue) {
-		s.Error("Unexpected TPM DID_VID: ", didVid)
-	}
+	tpmHandle := b.ResetAndTpmStartup(ctx, i, ti50.TpmBusSpi, ti50.CcdDisconnected, ti50.FfClamshell)
 
 	// Perform irregular SPI TPM transaction, ask for content of status register, but never
 	// read the bytes.
@@ -61,7 +46,7 @@ func Ti50TpmSpiCorners(ctx context.Context, s *testing.State) {
 
 	// Now read DIDVID register again.  This should cause previously enqueued status register
 	// data to be discarded from the Dauntless SPI fifo.
-	didVid = tpmHandle.ReadRegister(ti50.TpmRegDidVid)
+	didVid := tpmHandle.ReadRegister(ti50.TpmRegDidVid)
 	if !bytes.Equal(didVid, ti50.TpmDidVidValue) {
 		s.Error("Unexpected TPM DID_VID after partial SPI transaction: ", didVid)
 	}

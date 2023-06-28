@@ -36,22 +36,7 @@ func Ti50TpmI2cCorners(ctx context.Context, s *testing.State) {
 	f := s.FixtValue().(*fixture.Value)
 	b := utils.NewDevboardHelper(f.DevBoard(), s)
 	i := ti50.NewCrOSImage(b)
-	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
-	tpmHandle := b.Tpm(ctx, ti50.TpmBusI2c)
-
-	b.GpioApplyStrap(ctx, ti50.TpmI2c, ti50.CcdDisconnected, ti50.FfClamshell)
-	th.MustSucceed(b.Reset(ctx), "Reset board")
-	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
-
-	// Turn AP on
-	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
-	testing.Sleep(ctx, time.Second) // GoBigSleepLint: AP on time
-
-	// First, read DIDVID register to make sure that Ti50 is ready to respond.
-	didVid := tpmHandle.ReadRegister(ti50.TpmRegDidVid)
-	if !bytes.Equal(didVid, ti50.TpmDidVidValue) {
-		s.Error("Unexpected TPM DID_VID: ", didVid)
-	}
+	tpmHandle := b.ResetAndTpmStartup(ctx, i, ti50.TpmBusI2c, ti50.CcdDisconnected, ti50.FfClamshell)
 
 	// Below the low level OpenTitanToolCommand() is used to send I2C transactions in various
 	// ways, which do not form valid TPM commands.  If we find that other tests need to
@@ -67,7 +52,7 @@ func Ti50TpmI2cCorners(ctx context.Context, s *testing.State) {
 
 	// Now read DIDVID register again.  This should cause previously enqueued status register
 	// data to be discarded from the Dauntless I2C fifo.
-	didVid = tpmHandle.ReadRegister(ti50.TpmRegDidVid)
+	didVid := tpmHandle.ReadRegister(ti50.TpmRegDidVid)
 	if !bytes.Equal(didVid, ti50.TpmDidVidValue) {
 		s.Error("Unexpected TPM DID_VID after partial I2C transaction: ", didVid)
 	}

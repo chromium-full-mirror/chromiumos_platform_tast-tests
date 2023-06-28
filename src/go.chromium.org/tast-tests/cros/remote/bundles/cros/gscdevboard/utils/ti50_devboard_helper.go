@@ -5,6 +5,7 @@
 package utils
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -12,7 +13,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/google/go-tpm/tpm2"
+
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
+	"go.chromium.org/tast/core/testing"
 )
 
 var (
@@ -237,4 +241,40 @@ func (h DevboardHelper) GpioMonitorFinish(ctx context.Context, session GpioMonit
 // go-tpm documentation: https://pkg.go.dev/github.com/google/go-tpm@v0.3.3/tpm2
 func (h DevboardHelper) Tpm(ctx context.Context, bus ti50.TpmBus) *TpmHelper {
 	return &TpmHelper{ti50.NewTpmHandle(ctx, h, bus), h}
+}
+
+// ResetAndTpmStartup resets the board with I2C or SPI TPM strap, reads TpmRegDidVid, then sends
+// tpm2.Startup command.
+func (h DevboardHelper) ResetAndTpmStartup(ctx context.Context, i *ti50.CrOSImage, bus ti50.TpmBus, straps ...ti50.GpioStrap) *TpmHelper {
+	switch bus {
+	case ti50.TpmBusSpi:
+		straps = append(straps, ti50.TpmSpi)
+	case ti50.TpmBusI2c:
+		straps = append(straps, ti50.TpmI2c)
+	}
+	testing.ContextLogf(ctx, "Restarting Ti50 for %s TPM", bus)
+	h.GpioApplyStrap(ctx, straps...)
+	th := FirmwareTestingHelper{FirmwareTestingHelperDelegate: h}
+	th.MustSucceed(h.Reset(ctx), "Reset board")
+	m, err := h.ReadSerialSubmatch(ctx, regexp.MustCompile(`Strap config: .* TPM Bus: ([^;]+);`))
+	if err != nil || strings.ToLower(string(m[1])) != string(bus) {
+		h.Fatalf("Wrong TPM strap")
+	}
+	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
+
+	// Tell Ti50 that the AP came out of reset.  This will cause Ti50 to start responding to
+	// TPM commands.
+	h.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
+
+	tpmHandle := h.Tpm(ctx, bus)
+	didVid := tpmHandle.ReadRegister(ti50.TpmRegDidVid)
+	if !bytes.Equal(didVid, ti50.TpmDidVidValue) {
+		h.Fatalf("Unexpected TPM DID_VID: %v", didVid)
+	}
+
+	if err := tpm2.Startup(tpmHandle, tpm2.StartupClear); err != nil {
+		h.Fatalf("TPM startup error: %v", err)
+	}
+
+	return tpmHandle
 }
