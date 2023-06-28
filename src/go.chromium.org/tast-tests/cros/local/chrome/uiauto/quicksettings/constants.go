@@ -33,6 +33,10 @@ var FeatureTileAccessibility = nodewith.HasClass("FeatureTile").NameContaining("
 // It only exists with QsRevamp.
 var FeatureTileBluetooth = nodewith.HasClass("FeatureTile").NameContaining("Bluetooth")
 
+// FeatureTileBluetoothToggle is the finder for the toggle button that is part
+// of the Bluetooth feature tile. It only exists with QsRevamp.
+var FeatureTileBluetoothToggle = nodewith.Role(role.Button).NameContaining("Toggle Bluetooth").Ancestor(FeatureTileBluetooth)
+
 // FeatureTileCast is the finder for the "Cast screen" feature tile.
 // It only exists with QsRevamp.
 var FeatureTileCast = nodewith.HasClass("FeatureTile").NameContaining("cast")
