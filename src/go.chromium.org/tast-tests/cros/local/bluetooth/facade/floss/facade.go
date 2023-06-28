@@ -118,10 +118,11 @@ func (b *BluetoothFlossFacade) IsAlive(ctx context.Context) (bool, error) {
 // Enable will turn on the bluetooth daemons and power on adapter.
 func (b *BluetoothFlossFacade) Enable(ctx context.Context) error {
 	b.flossEnabled = false
-	if b.managerClient == nil {
-		if err := b.initializeManagerClient(ctx); err != nil {
-			return err
-		}
+	if err := SetFlossEnabled(ctx, true); err != nil {
+		return errors.Wrap(err, "failed to set floss as enabled")
+	}
+	if err := b.initializeManagerClient(ctx); err != nil {
+		return err
 	}
 	if err := b.SetPowered(ctx, true); err != nil {
 		return errors.Wrap(err, "failed to enable floss adapter")
