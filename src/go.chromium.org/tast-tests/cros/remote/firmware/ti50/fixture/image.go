@@ -117,7 +117,7 @@ func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProp
 		return iv, nil
 	}
 
-	if inputURL[:len(LatestPrefix)] == LatestPrefix {
+	if strings.HasPrefix(inputURL, LatestPrefix) {
 		latestURL, err := findLatestCompletedBuildURL(ctx, inputURL[len(LatestPrefix):])
 		if err != nil {
 			return nil, err
@@ -126,11 +126,11 @@ func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProp
 		inputURL = latestURL
 	}
 
-	if len(inputURL) > len(gsPrefix) && inputURL[:len(gsPrefix)] == gsPrefix {
+	if strings.HasPrefix(inputURL, gsPrefix) {
 		fullURL := inputURL
 		jsonURL := ""
 		// Assume URL is a build folder if it doesn't end in .bin.
-		if inputURL[len(inputURL)-4:] != ".bin" {
+		if strings.HasSuffix(inputURL, ".bin") {
 			tastURL := gsPrefix + filepath.Join(inputURL[len(gsPrefix):], "tast")
 			args := []string{"ls", tastURL}
 			testing.ContextLogf(ctx, "Looking for tast directory: gsutil %s", strings.Join(args, " "))
