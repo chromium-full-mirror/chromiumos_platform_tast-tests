@@ -69,10 +69,7 @@ const (
 	retryTimes = 3
 )
 
-var (
-	meetWebArea = nodewith.NameContaining(meetTitle).Role(role.RootWebArea)
-	youText     = nodewith.Name("You").Role(role.StaticText).Ancestor(meetWebArea)
-)
+var meetWebArea = nodewith.NameContaining(meetTitle).Role(role.RootWebArea)
 
 // Join joins a new conference room.
 func (conf *GoogleMeetConference) Join(ctx context.Context, room string) (err error) {
@@ -288,13 +285,21 @@ func (conf *GoogleMeetConference) changeLayout(layoutOption googlemeet.LayoutOpt
 		}
 
 		checkLayoutChanged := func(ctx context.Context) error {
-			spotlightLayoutButton := nodewith.Name("Can't show you in a tile in this layout").Role(role.Button)
-			// If it's spotlight layout, this button will be displayed in its own grid.
-			if layoutOption == googlemeet.SpotlightLayout {
-				return ui.WaitUntilExists(spotlightLayoutButton)(ctx)
-			}
-
-			return ui.WaitUntilGone(spotlightLayoutButton)(ctx)
+			return testing.Poll(ctx, func(ctx context.Context) error {
+				grids, err := conf.getGrids(ctx)
+				if err != nil {
+					return errors.Wrap(err, "failed to find grids")
+				}
+				// Spotlight layout is expected to have at most 1~2 grids.
+				if layoutOption == googlemeet.SpotlightLayout && len(grids) <= 2 {
+					return nil
+				}
+				// Tiled layout expects more than 2 grids.
+				if layoutOption == googlemeet.TiledLayout && len(grids) > 2 {
+					return nil
+				}
+				return errors.New("Grids are still loading now")
+			}, &testing.PollOptions{Interval: time.Second, Timeout: 10 * time.Second})
 		}
 
 		checkTiledGrids := func(layoutOption googlemeet.LayoutOption) action.Action {
@@ -351,7 +356,7 @@ func (conf *GoogleMeetConference) changeLayout(layoutOption googlemeet.LayoutOpt
 func (conf *GoogleMeetConference) BackgroundChange(ctx context.Context) error {
 	gm := conf.gm
 	pinToMainScreen := func(ctx context.Context) error {
-		pinBtn := nodewith.NameContaining("Pin yourself").Role(role.Button)
+		pinBtn := nodewith.NameContaining("Pin").Role(role.Button)
 		if err := conf.ui.WaitUntilExists(pinBtn)(ctx); err != nil {
 			// If there are no participants in the room, the pin button will not be displayed.
 			return ParticipantError(errors.Wrap(err, "failed to find the button to pin to main screen; other participants might have left"))

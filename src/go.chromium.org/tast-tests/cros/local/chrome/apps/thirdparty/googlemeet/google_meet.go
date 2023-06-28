@@ -46,13 +46,12 @@ var (
 	// Find the web view of Meet window.
 	meetRootWebArea = nodewith.NameContaining(appName).Role(role.RootWebArea)
 
-	moreOptionsButton = nodewith.Name("More options").Role(role.PopUpButton).Ancestor(meetRootWebArea)
-
 	endMeetingButton = nodewith.Name("Leave call").Role(role.Button).Ancestor(meetRootWebArea)
 	// Use end meeting button to identify whether it is currently in a meeting.
 	inMeetingIdentifier = endMeetingButton
 
-	youText = nodewith.Name("You").Role(role.StaticText).Ancestor(meetRootWebArea)
+	// There may be multiple static text, just return first one under meet page.
+	firstText = nodewith.Role(role.StaticText).Ancestor(meetRootWebArea).First()
 
 	// There may be multiple "Stop sharing" buttons, so add First() here.
 	stopSharing = nodewith.Name("Stop sharing").Role(role.Button).First()
@@ -301,8 +300,8 @@ func (gm *GoogleMeet) EnterFullScreen(ctx context.Context) error {
 	}
 
 	return ui.Retry(3, uiauto.NamedCombine("enter full screen",
-		// Double-click the "You" text to enter full screen.
-		ui.DoubleClick(youText),
+		// Double-click the first text in meet page to enter full screen.
+		ui.DoubleClick(firstText),
 		ash.WaitForFullscreenConditionWithTitle(gm.tconn, appName, true, 10*time.Second),
 	))(ctx)
 }
@@ -316,8 +315,8 @@ func (gm *GoogleMeet) ExitFullScreen(ctx context.Context) error {
 	}
 
 	return ui.Retry(3, uiauto.NamedCombine("exit full screen",
-		// Double-click the "You" text to exit full screen.
-		ui.DoubleClick(youText),
+		// Double-click the first text in meet page to exit full screen.
+		ui.DoubleClick(firstText),
 		ash.WaitForFullscreenConditionWithTitle(gm.tconn, appName, false, 10*time.Second),
 	))(ctx)
 }
@@ -603,7 +602,7 @@ func (gm *GoogleMeet) TypingInChat(kb *input.KeyboardEventWriter, message string
 	// There may be multiple "Send a message" fields, so add First() here.
 	chatTextField := chatText.Role(role.TextField).First()
 	openChatPanel := uiauto.NamedCombine("open chat panel",
-		ui.LeftClick(youText),
+		ui.LeftClick(firstText),
 		ui.DoDefault(chatButton),
 		// Some low end DUTs need very long time to load chat window in 49 tiles.
 		ui.WithTimeout(2*time.Minute).WaitUntilExists(chatTextField.Focusable()),
@@ -612,7 +611,8 @@ func (gm *GoogleMeet) TypingInChat(kb *input.KeyboardEventWriter, message string
 	// There may be multiple "Send a message" buttons, so add First() here.
 	chatTextButton := chatText.Role(role.Button).First()
 	// There may be multiple message texts, so add First() here.
-	messageText := nodewith.NameContaining(message).Role(role.StaticText).First()
+	messageRe := regexp.MustCompile("(?i)" + message)
+	messageText := nodewith.NameRegex(messageRe).Role(role.StaticText).First()
 	enterText := uiauto.NamedCombine("type message",
 		ui.WithTimeout(longUITimeout).DoDefaultUntil(chatTextButton,
 			ui.WaitUntilExists(chatTextField.Editable().Focused())),

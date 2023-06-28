@@ -41,7 +41,7 @@ func (gm *GoogleMeet) OpenSettings(ctx context.Context) error {
 	}
 
 	return uiauto.Combine("open Meet settings page",
-		gm.ui.DoDefault(moreOptionsButton),
+		gm.doDefaultMoreOptions,
 		gm.ui.DoDefaultUntil(settingsButton, gm.ui.WithTimeout(shortUITimeout).WaitUntilExists(settingsDialog)),
 	)(ctx)
 }
@@ -168,17 +168,17 @@ const (
 	DynamicEffect EffectOption = "Immersive background"
 )
 
-var videoEffectsPageHeading = nodewith.Name("Effects").Role(role.Heading).Ancestor(meetRootWebArea)
+var effectsText = nodewith.Name("Effects").Role(role.StaticText).Ancestor(meetRootWebArea)
 
 // OpenVideoEffects opens video effects page in GoogleMeet.
 func (gm *GoogleMeet) OpenVideoEffects(ctx context.Context) error {
 	applyVisualEffectsButton := nodewith.Name("Apply visual effects").Role(role.MenuItem).Ancestor(meetRootWebArea)
 
 	return uiauto.Combine("open video effects setting dialog",
-		gm.ui.WithTimeout(mediumUITimeout).DoDefaultUntil(moreOptionsButton,
+		gm.ui.WithTimeout(mediumUITimeout).RetryUntil(gm.doDefaultMoreOptions,
 			gm.ui.WaitUntilExists(applyVisualEffectsButton)),
 		gm.ui.WithTimeout(mediumUITimeout).DoDefaultUntil(applyVisualEffectsButton,
-			gm.ui.WaitUntilExists(videoEffectsPageHeading)),
+			gm.ui.WaitUntilExists(effectsText)),
 	)(ctx)
 }
 
@@ -189,7 +189,7 @@ func (gm *GoogleMeet) CloseVideoEffects(ctx context.Context) error {
 	return uiauto.Combine("close video effects setting dialog",
 		gm.ui.DoDefaultUntil(
 			closeApplyVisualEffectsButton,
-			gm.ui.WithTimeout(shortUITimeout).WaitUntilGone(videoEffectsPageHeading),
+			gm.ui.WithTimeout(shortUITimeout).WaitUntilGone(effectsText),
 		),
 	)(ctx)
 }
@@ -241,7 +241,6 @@ func (gm *GoogleMeet) SetEffectOnJoinPage(effectOption EffectOption) action.Acti
 // OpenChangeLayout opens change layout page in GoogleMeet.
 func (gm *GoogleMeet) OpenChangeLayout(ctx context.Context) error {
 	ui := gm.ui
-	moreOptions := nodewith.Name("More options").Role(role.PopUpButton)
 	changeLayoutItem := nodewith.Name("Change layout").Role(role.MenuItem).Ancestor(meetRootWebArea)
 
 	if err := ui.Exists(changeLayoutDialog)(ctx); err == nil {
@@ -253,10 +252,23 @@ func (gm *GoogleMeet) OpenChangeLayout(ctx context.Context) error {
 	// Therefore, here extend the timeout and increase the number of retry.
 	return ui.Retry(5, uiauto.NamedCombine("open Meet layout page",
 		uiauto.IfFailThen(ui.Exists(changeLayoutItem),
-			ui.WithTimeout(longUITimeout).DoDefaultUntil(moreOptions, ui.WaitUntilExists(changeLayoutItem))),
+			ui.WithTimeout(longUITimeout).RetryUntil(gm.doDefaultMoreOptions, ui.WaitUntilExists(changeLayoutItem))),
 		ui.DoDefault(changeLayoutItem),
 		ui.WithTimeout(longUITimeout).WaitUntilExists(changeLayoutDialog)),
 	)(ctx)
+}
+
+// doDefaultMoreOptions finds the correct 'More Option' button and clicks
+// 'More Option' button via DoDefault.
+func (gm *GoogleMeet) doDefaultMoreOptions(ctx context.Context) error {
+	moreOptionsFinder := nodewith.Name("More options").Role(role.PopUpButton)
+	moreOptionsButtons, err := gm.ui.NodesInfo(ctx, moreOptionsFinder)
+	if err != nil || len(moreOptionsButtons) < 1 {
+		return errors.Wrap(err, "failed to find more options button")
+	}
+	// Sometimes, the UI has two identical "More Options" buttons, which requires
+	// selecting the last one to be the correct button.
+	return gm.ui.DoDefault(moreOptionsFinder.Nth(len(moreOptionsButtons) - 1))(ctx)
 }
 
 // CloseChangeLayout closes the change layout page in GoogleMeet.
