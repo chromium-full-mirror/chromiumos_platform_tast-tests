@@ -749,6 +749,11 @@ func (h *Helper) RestoreUSBKey(ctx context.Context) (retErr error) {
 	if usbdev == "" {
 		return errors.New("no USB key detected")
 	}
+	testing.ContextLogf(ctx, "Sleeping %s to let USB become visible to DUT", UsbVisibleTime)
+	// GoBigSleepLint: It takes some time for usb mux state to take effect.
+	if err := testing.Sleep(ctx, UsbVisibleTime); err != nil {
+		return err
+	}
 	testing.ContextLog(ctx, "Uncorrupting ChromeOS image name on usbkey")
 	// ChromeOS kernel is at /dev/sdx2.
 	kernelPart := usbdev + "2"

@@ -245,9 +245,25 @@ func BootMode(ctx context.Context, s *testing.State) {
 		}
 	}
 	if tc.checkToNoGoodScreen {
-		_, err := h.CheckUSBOnServoHost(ctx)
+		usbdev, err := h.CheckUSBOnServoHost(ctx)
 		if err != nil {
 			s.Fatal("Failed to check the usb device on servo host: ", err)
+		}
+		// Previously, the dd commands used in corrupting usb devices had
+		// the side effect of creating plain files, until chromium:4564073.
+		// Delete those files if they exist.
+		// Switch the usb direction to the dut first, and if the kernel path
+		// is still visible on the servo host, this path most likely points
+		// to the unwanted file. To-do: remove when stable.
+		if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
+			s.Fatal("Failed to set dut_sees_usbkey: ", err)
+		}
+		// ChromeOS kernel is at /dev/sdx2.
+		kernelPart := usbdev + "2"
+		if _, stderr, err := h.ServoProxy.SeparatedOutputCommand(ctx, true, "rm", kernelPart); err != nil {
+			if !strings.Contains(string(stderr), "No such file or directory") {
+				s.Fatal("Failed to run rm command: ", err)
+			}
 		}
 	}
 
