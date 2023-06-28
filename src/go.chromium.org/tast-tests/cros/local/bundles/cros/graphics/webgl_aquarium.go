@@ -10,6 +10,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -20,11 +21,11 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/graphics"
+	"go.chromium.org/tast-tests/cros/local/screenshot"
 	"go.chromium.org/tast/core/testing"
 )
 
 const (
-	waitTimeForBrowser = 5 * time.Second
 	// Time to allow fishes to run before recording metrics.
 	runFishesFor = 30 * time.Second
 	// The time to wait just after stating to play the aquarium so that CPU usage gets stable.
@@ -133,15 +134,29 @@ func WebGLAquarium(ctx context.Context, s *testing.State) {
 
 	url := path.Join(server.URL, "aquarium.html")
 	browserType := s.Param().(aquariumParamData).browserType
-	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, s.FixtValue().(chrome.HasChrome).Chrome(), browserType, url)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browserType, url)
 	if err != nil {
 		s.Fatal("Failed to set up browser: ", err)
 	}
 	defer closeBrowser(ctx)
 	defer conn.Close()
 
+	// Dump debug files and take a screenshot if test fails.
+	defer func() {
+		if !s.HasError() {
+			return
+		}
+		path := filepath.Join(s.OutDir(), "screenshot.png")
+		screenshot.CaptureChrome(ctx, cr, path)
+		graphics.DumpGraphicsDebugFiles(ctx, s.OutDir())
+	}()
+
 	if err = conn.WaitForExpr(ctx, "document.readyState === 'complete'"); err != nil {
 		s.Fatal("Page failed to load: ", err)
+	}
+	if err = conn.WaitForExpr(ctx, "gl !== null"); err != nil {
+		s.Fatal("Failed to create gl context: ", err)
 	}
 	elemID := strings.Replace("document.getElementsById(*)", "*", fishSettings[numFish][0], 1)
 	if err = conn.Call(ctx, nil, "setSetting", elemID, fishSettings[numFish][1]); err != nil {
@@ -183,7 +198,6 @@ func WebGLAquarium(ctx context.Context, s *testing.State) {
 	if cpuErr != nil {
 		s.Fatal("Failed to measure CPU/Package power", cpuErr)
 	}
-
 	defer func() {
 		if err := pv.Save(s.OutDir()); err != nil {
 			s.Error("Failed to save perf data: ", err)
